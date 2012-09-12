@@ -5,7 +5,7 @@ Created on 12/09/2012
 '''
 
 
-import unittest
+import os, unittest
 import convert_roipac
 from shared import IfgConstants
 
@@ -41,8 +41,26 @@ class ConversionTests(unittest.TestCase):
 		result = convert_roipac.filename_pair(base)
 		self.assertEqual( (base, exp_hdr), result)
 
+		
+	def test_roipac_to_ehdr_header(self):
+		dest = "/tmp/ehdr.hdr"
+		hdr = "../../tests/headers/geo_060619-060828.unw.rsc"
+		convert_roipac.roipac_to_ehdr_header(hdr, dest)
+		
+		with open(dest) as f:
+			text = f.read()
+			self.assertTrue("ncols 5451" in text)
+			self.assertTrue("nrows 4366" in text)
+			self.assertTrue("cellsize 0.0002777" in text) # compare to 7 places
+			self.assertTrue("xllcorner 150.3377777" in text) # compare to 7 places
+			exp_yll = "yllcorner " + str(round(-33.4122222 - (4366 * 0.0002777), 3))
+			self.assertTrue(exp_yll in text, "Got " + exp_yll)
+			
+		os.remove(dest)
 
-	def test_convert_roipac_single_band(self):
+
+
+	def test_convert_roipac(self):
 		raise NotImplementedError
 		#expected = "../../tests/sydney_test/obs/geo_060619-061002.tif"
 		#convert_roipac.convert_roipac(src, dest, fmt)
