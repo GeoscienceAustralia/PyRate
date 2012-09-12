@@ -1,0 +1,8 @@
+syntax: glob
+*.pyo
+*.pyc
+.project
+.pydevproject
+
+syntax: regexp
+^tmp$
