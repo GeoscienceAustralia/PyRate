@@ -7,7 +7,7 @@ Created on 12/09/2012
 '''
 
 import os
-from shared import IfgConstants
+from shared import IfgConstants, ROI_PAC_HEADER_FILE_EXT
 
 
 def convert_roipac(src, dest, fmt):
@@ -25,9 +25,13 @@ def convert_roipac(src, dest, fmt):
 	raise NotImplementedError
 
 
+def filename_pair(base):
+	"""Returns tuple of paths: (roi_pac data, roi_pac header file)"""
+	return (base, "%s.%s" % (base, ROI_PAC_HEADER_FILE_EXT))
+
 
 def _read_roipac_header(hdr):
-	"""Parses ROI_PAC header file into a dict"""
+	"""Parses ROI_PAC header file to a dict"""
 	if os.path.isfile(hdr):
 		with open(hdr) as f:
 			text = f.read()		

@@ -33,3 +33,19 @@ class ConversionTests(unittest.TestCase):
 		self.assertEqual(hdrs[IfgConstants.Y_FIRST], -34.170000000)
 		self.assertEqual(hdrs[IfgConstants.Y_STEP], -0.000833333)
 		self.assertEqual(hdrs[IfgConstants.WAVELENGTH], 0.0562356424)
+		
+	
+	def test_filename_pair(self):
+		base = "project/run/geo_070709-080310.unw"
+		exp_hdr = "project/run/geo_070709-080310.unw.rsc"
+		result = convert_roipac.filename_pair(base)
+		self.assertEqual( (base, exp_hdr), result)
+
+
+	def test_convert_roipac_single_band(self):
+		raise NotImplementedError
+		#expected = "../../tests/sydney_test/obs/geo_060619-061002.tif"
+		#convert_roipac.convert_roipac(src, dest, fmt)
+		
+	# TODO: def test_convert_roipac_dual_band(self):
+	
