@@ -44,8 +44,11 @@ def _read_roipac_header(hdr):
 	else:
 		text = hdr
 	
-	lines = [e.split() for e in text.split("\n") if e != ""]
-	headers = dict(lines)
+	try:
+		lines = [e.split() for e in text.split("\n") if e != ""]
+		headers = dict(lines)
+	except ValueError:
+		raise RoipacException("Unable to parse header content:\n%s" % text)
 	
 	for k in headers.keys():
 		if k in IfgConstants.INT_HEADERS:
