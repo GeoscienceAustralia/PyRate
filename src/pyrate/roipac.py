@@ -39,7 +39,7 @@ def filename_pair(base):
 
 def parse_header(hdr):
 	"""Parses ROI_PAC header file to a dict"""
-	if os.path.isfile(hdr):
+	if os.path.isfile(hdr) or os.path.islink(hdr):
 		with open(hdr) as f:
 			text = f.read()		
 	else:
@@ -65,27 +65,30 @@ def parse_header(hdr):
 	return headers
 
 
-def to_ehdr_header(hdr, dest):
+def to_ehdr_header(hdr, dest=None):
 	"""Convenience function to convert a ROI_PAC header to EHdr format. 'hdr' can be
 	a path to a header file, or a dict of header elements. 'dest' is path to save to"""
-	if os.path.isfile(hdr):
-		hdr = parse_header(hdr)
+	if os.path.isfile(hdr) or os.path.islink(hdr):
+		H = parse_header(hdr)
+		if dest is None:
+			i = hdr.index("unw.rsc")
+			dest = hdr[:i] + "hdr"
 	
-	cellsize = hdr[X_STEP] 
-	if cellsize != abs(hdr[Y_STEP]):
+	cellsize = H[X_STEP] 
+	if cellsize != abs(H[Y_STEP]):
 		raise RoipacException("Unequal X and Y axis cell sizes: %s, %s" %
-												(cellsize, hdr[Y_STEP]) )
+												(cellsize, H[Y_STEP]) )
 	
 	# calc coords of lower left corner (EHdr format uses this) 
-	yllcorner = hdr[Y_FIRST] + (hdr[FILE_LENGTH] * hdr[Y_STEP])
+	yllcorner = H[Y_FIRST] + (H[FILE_LENGTH] * H[Y_STEP])
 	if yllcorner > 90 or yllcorner < -90:
 		raise RoipacException("Invalid Y latitude for yllcorner: %s" % yllcorner)
 		
 	with open(dest, "w") as f:
-		f.write("ncols %s\n" % hdr[WIDTH])
-		f.write("nrows %s\n" % hdr[FILE_LENGTH])
-		f.write("cellsize %s\n" % hdr[X_STEP])
-		f.write("xllcorner %s\n" % hdr[X_FIRST])
+		f.write("ncols %s\n" % H[WIDTH])
+		f.write("nrows %s\n" % H[FILE_LENGTH])
+		f.write("cellsize %s\n" % H[X_STEP])
+		f.write("xllcorner %s\n" % H[X_FIRST])
 		f.write("yllcorner %s\n" % yllcorner)
 		f.write("nbands 2\n")
 		f.write("byteorder lsb\n")
