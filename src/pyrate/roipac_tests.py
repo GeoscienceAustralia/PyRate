@@ -5,7 +5,7 @@ Created on 12/09/2012
 '''
 
 
-import os, shutil, unittest
+import os, unittest
 from osgeo import gdal
 
 import roipac
@@ -62,10 +62,10 @@ class ConversionTests(unittest.TestCase):
 
 
 	def test_ehdr_header_defaults(self):
-		# is default header filename generated & recognised by GDAL
-		base_hdr = "../../tests/headers/geo_060619-060828.unw.rsc"
+		# is default header filename generated & recognised by GDAL?
+		base_hdr = os.path.abspath("../../tests/headers/geo_060619-060828.unw.rsc")
 		hdr = "/tmp/geo_060619-060828.unw.rsc"
-		shutil.copy(base_hdr, hdr)
+		os.symlink(base_hdr, hdr)
 		exp_hdr = "/tmp/geo_060619-060828.hdr"
 		
 		if os.path.exists(exp_hdr): os.remove(exp_hdr)
