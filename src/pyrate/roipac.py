@@ -37,7 +37,7 @@ def filename_pair(base):
 	return (base, "%s.%s" % (base, ROI_PAC_HEADER_FILE_EXT))
 
 
-def _read_roipac_header(hdr):
+def parse_header(hdr):
 	"""Parses ROI_PAC header file to a dict"""
 	if os.path.isfile(hdr):
 		with open(hdr) as f:
@@ -65,11 +65,11 @@ def _read_roipac_header(hdr):
 	return headers
 
 
-def roipac_to_ehdr_header(hdr, dest):
+def to_ehdr_header(hdr, dest):
 	"""Convenience function to convert a ROI_PAC header to EHdr format. 'hdr' can be
 	a path to a header file, or a dict of header elements. 'dest' is path to save to"""
 	if os.path.isfile(hdr):
-		hdr = _read_roipac_header(hdr)
+		hdr = parse_header(hdr)
 	
 	cellsize = hdr[X_STEP] 
 	if cellsize != abs(hdr[Y_STEP]):
