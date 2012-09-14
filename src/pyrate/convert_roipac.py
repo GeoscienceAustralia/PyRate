@@ -8,7 +8,9 @@ Created on 12/09/2012
 
 import os
 from osgeo import gdal
-from shared import IfgConstants, ROI_PAC_HEADER_FILE_EXT
+from ifgconstants import INT_HEADERS, STR_HEADERS, X_STEP, Y_STEP
+from ifgconstants import X_FIRST, Y_FIRST, WIDTH, FILE_LENGTH
+from shared import ROI_PAC_HEADER_FILE_EXT
 
 
 
@@ -50,9 +52,9 @@ def _read_roipac_header(hdr):
 		raise RoipacException("Unable to parse header content:\n%s" % text)
 	
 	for k in headers.keys():
-		if k in IfgConstants.INT_HEADERS:
+		if k in INT_HEADERS:
 			headers[k] = int(headers[k])
-		elif k in IfgConstants.STR_HEADERS:
+		elif k in STR_HEADERS:
 			headers[k] = str(headers[k])
 		else:
 			try:
@@ -69,21 +71,21 @@ def roipac_to_ehdr_header(hdr, dest):
 	if os.path.isfile(hdr):
 		hdr = _read_roipac_header(hdr)
 	
-	cellsize = hdr[IfgConstants.X_STEP] 
-	if cellsize != abs(hdr[IfgConstants.Y_STEP]):
+	cellsize = hdr[X_STEP] 
+	if cellsize != abs(hdr[Y_STEP]):
 		raise RoipacException("Unequal X and Y axis cell sizes: %s, %s" %
-												(cellsize, hdr[IfgConstants.Y_STEP]) )
+												(cellsize, hdr[Y_STEP]) )
 	
 	# calc coords of lower left corner (EHdr format uses this) 
-	yllcorner = hdr[IfgConstants.Y_FIRST] + (hdr[IfgConstants.FILE_LENGTH] * hdr[IfgConstants.Y_STEP])
+	yllcorner = hdr[Y_FIRST] + (hdr[FILE_LENGTH] * hdr[Y_STEP])
 	if yllcorner > 90 or yllcorner < -90:
 		raise RoipacException("Invalid Y latitude for yllcorner: %s" % yllcorner)
 		
 	with open(dest, "w") as f:
-		f.write("ncols %s\n" % hdr[IfgConstants.WIDTH])
-		f.write("nrows %s\n" % hdr[IfgConstants.FILE_LENGTH])
-		f.write("cellsize %s\n" % hdr[IfgConstants.X_STEP])
-		f.write("xllcorner %s\n" % hdr[IfgConstants.X_FIRST])
+		f.write("ncols %s\n" % hdr[WIDTH])
+		f.write("nrows %s\n" % hdr[FILE_LENGTH])
+		f.write("cellsize %s\n" % hdr[X_STEP])
+		f.write("xllcorner %s\n" % hdr[X_FIRST])
 		f.write("yllcorner %s\n" % yllcorner)
 		f.write("nbands 2\n")
 		f.write("byteorder lsb\n")
