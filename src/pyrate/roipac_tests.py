@@ -62,25 +62,32 @@ class ConversionTests(unittest.TestCase):
 
 
 	def test_ehdr_header_defaults(self):
-		# is default header filename generated & recognised by GDAL?
-		base_hdr = os.path.abspath("../../tests/headers/geo_060619-060828.unw.rsc")
-		hdr = "/tmp/geo_060619-060828.unw.rsc"
+		# test default header filename
+		base_hdr = os.path.abspath("../../tests/single/geo_060619-061002.unw.rsc")
+		hdr = "/tmp/geo_060619-061002.unw.rsc"
 		os.symlink(base_hdr, hdr)
-		exp_hdr = "/tmp/geo_060619-060828.hdr"
+		exp_hdr = "/tmp/geo_060619-061002.hdr"
 		
 		if os.path.exists(exp_hdr): os.remove(exp_hdr)
 		roipac.to_ehdr_header(hdr)
 		self.assertTrue(os.path.exists(exp_hdr))
 		
-		# TODO: is the output recognised by GDAL? Needs data file
-		#gdal.UseExceptions()
-		#ds = gdal.Open(hdr)
-		#self.assertTrue(ds is not None)
-		#bands = ds.GetRasterBand(1), ds.GetRasterBand(1)
-		#self.assertTrue(all(bands))
-		os.remove(exp_hdr)
-		os.remove(hdr)
+		# add data to /tmp for GDAL test
+		base_data = os.path.abspath("../../tests/single/geo_060619-061002.unw")
+		exp_data = "/tmp/geo_060619-061002.unw" 
+		os.symlink(base_data, exp_data)
 		
+		# test GDAL can open the data with the new header & cleanup
+		gdal.UseExceptions()
+		ds = gdal.Open(exp_data)
+		self.assertTrue(ds is not None)
+		bands = ds.GetRasterBand(1), ds.GetRasterBand(1)
+		self.assertTrue(all(bands))
+		
+		del bands, ds
+		os.unlink(exp_data)
+		os.remove(exp_hdr)
+		os.unlink(hdr)
 
 
 	def test_convert_roipac(self):
