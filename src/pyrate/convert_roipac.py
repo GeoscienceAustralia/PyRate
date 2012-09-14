@@ -9,7 +9,6 @@ Created on 12/09/2012
 import os
 from osgeo import gdal
 from shared import IfgConstants, ROI_PAC_HEADER_FILE_EXT
-from osgeo.gdalconst import GDT_Float32
 
 
 
@@ -86,6 +85,9 @@ def roipac_to_ehdr_header(hdr, dest):
 		f.write("cellsize %s\n" % hdr[IfgConstants.X_STEP])
 		f.write("xllcorner %s\n" % hdr[IfgConstants.X_FIRST])
 		f.write("yllcorner %s\n" % yllcorner)
+		f.write("nbands 2\n")
+		f.write("byteorder lsb\n")
+		f.write("layout bil\n")
 		f.write("nbits 32\n")
 		f.write("pixeltype float\n")
 

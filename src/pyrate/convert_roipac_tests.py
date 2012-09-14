@@ -59,6 +59,11 @@ class ConversionTests(unittest.TestCase):
 		os.remove(dest)
 
 
+	def test_roipac_to_ehdr_header_gdal_compatibility(self):
+		# TODO: test default header filename is recognised by GDAL 
+		raise NotImplementedError
+
+
 
 	def test_convert_roipac(self):
 		raise NotImplementedError
