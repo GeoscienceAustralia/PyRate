@@ -18,6 +18,12 @@ class ConversionTests(unittest.TestCase):
 	SHORT_HEADER_PATH = "../../tests/sydney_test/obs/geo_060619-061002.unw.rsc"
 	FULL_HEADER_PATH  = "../../tests/headers/geo_060619-060828.unw.rsc"
 	FULL_HEADER_PATH2 = "../../tests/single/geo_060619-061002.unw.rsc"
+
+
+	def test_convert_roipac(self):
+		raise NotImplementedError
+		#expected = "../../tests/sydney_test/obs/geo_060619-061002.tif"
+		#roipac.roipac(src, dest, fmt)
 	
 
 	def test_read_short_roipac_header(self):
@@ -118,15 +124,9 @@ class ConversionTests(unittest.TestCase):
 		ds = gdal.Open(exp_data)
 		self.assertTrue(ds is not None)
 		bands = ds.GetRasterBand(1), ds.GetRasterBand(1)
-		self.assertTrue(all(bands))
+		self.assertTrue(all(bands)) # both bands exist? 
 		
 		del bands, ds
 		os.unlink(exp_data)
 		os.remove(exp_hdr)
 		os.unlink(hdr)
-
-
-	def test_convert_roipac(self):
-		raise NotImplementedError
-		#expected = "../../tests/sydney_test/obs/geo_060619-061002.tif"
-		#roipac.roipac(src, dest, fmt)

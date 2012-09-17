@@ -41,7 +41,7 @@ def parse_date(dstr):
 	"""Parses ROI_PAC 'yymmdd' or 'yymmdd-yymmdd' to date or date tuple"""
 	def to_date(ds):
 		year, month, day = [int(ds[i:i+2]) for i in range(0,6,2)]
-		year += 1900 if (year <= 99 and year >= 70) else 2000
+		year += 1900 if (year <= 99 and year >= 50) else 2000
 		return datetime.date(year, month, day)
 		
 	if "-" in dstr: # ranged date
