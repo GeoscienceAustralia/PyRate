@@ -58,5 +58,4 @@ def _parse_pars(pars):
 def parse_namelist(nml):
 	"""Parses name list file into array of paths""" 
 	with open(nml) as f:
-		lines = f.readlines()
-		return [ln.strip() for ln in lines if ln != ""]
+		return [ln.strip() for ln in f.readlines() if ln != ""]
