@@ -6,10 +6,11 @@ Created on 12/09/2012
 				 ben.davies@anu.edu.au
 '''
 
-import os
-from osgeo import gdal
-from ifgconstants import INT_HEADERS, STR_HEADERS, X_STEP, Y_STEP
-from ifgconstants import X_FIRST, Y_FIRST, WIDTH, FILE_LENGTH
+import os, datetime
+
+from ifgconstants import INT_HEADERS, STR_HEADERS, FLOAT_HEADERS, DATE_HEADERS
+from ifgconstants import X_STEP, Y_STEP, FILE_LENGTH
+from ifgconstants import X_FIRST, Y_FIRST, WIDTH
 from shared import ROI_PAC_HEADER_FILE_EXT
 
 
@@ -36,6 +37,18 @@ def filename_pair(base):
 	"""Returns tuple of paths: (roi_pac data, roi_pac header file)"""
 	return (base, "%s.%s" % (base, ROI_PAC_HEADER_FILE_EXT))
 
+def parse_date(dstr):
+	"""Parses ROI_PAC 'yymmdd' or 'yymmdd-yymmdd' to date or date tuple"""
+	def to_date(ds):
+		year, month, day = [int(ds[i:i+2]) for i in range(0,6,2)]
+		year += 1900 if (year <= 99 and year >= 70) else 2000
+		return datetime.date(year, month, day)
+		
+	if "-" in dstr: # ranged date
+		return tuple([to_date(d) for d in dstr.split("-")])
+	else:
+		return to_date(dstr)
+
 
 def parse_header(hdr):
 	"""Parses ROI_PAC header file to a dict"""
@@ -56,11 +69,12 @@ def parse_header(hdr):
 			headers[k] = int(headers[k])
 		elif k in STR_HEADERS:
 			headers[k] = str(headers[k])
+		elif k in FLOAT_HEADERS:
+			headers[k] = float(headers[k])
+		elif k in DATE_HEADERS:
+			headers[k] = parse_date(headers[k])
 		else:
-			try:
-				headers[k] = float(headers[k])
-			except ValueError:
-				raise RoipacException("Unrecognised header element %s: %s " % (k, headers[k]) )
+			raise RoipacException("Unrecognised header element %s: %s " % (k, headers[k]) )
 	
 	return headers
 

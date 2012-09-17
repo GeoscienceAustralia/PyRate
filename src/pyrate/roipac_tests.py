@@ -6,6 +6,7 @@ Created on 12/09/2012
 
 
 import os, unittest
+import datetime
 from osgeo import gdal
 
 import roipac
@@ -14,11 +15,13 @@ import ifgconstants as IFC
 
 class ConversionTests(unittest.TestCase):
 	
-	HEADER_PATH = "../../tests/sydney_test/obs/geo_060619-061002.unw.rsc"
+	SHORT_HEADER_PATH = "../../tests/sydney_test/obs/geo_060619-061002.unw.rsc"
+	FULL_HEADER_PATH  = "../../tests/headers/geo_060619-060828.unw.rsc"
+	FULL_HEADER_PATH2 = "../../tests/single/geo_060619-061002.unw.rsc"
 	
 
-	def test_read_roipac_header(self):
-		f = open(self.HEADER_PATH)
+	def test_read_short_roipac_header(self):
+		f = open(self.SHORT_HEADER_PATH)
 		header_text = f.read()
 		f.close()
 		
@@ -30,11 +33,44 @@ class ConversionTests(unittest.TestCase):
 
 
 	def test_read_roipac_header_file(self):
-		hdrs = roipac.parse_header(self.HEADER_PATH)
+		hdrs = roipac.parse_header(self.SHORT_HEADER_PATH)
 		self.assertEqual(hdrs[IFC.X_STEP], 0.000833333)
 		self.assertEqual(hdrs[IFC.Y_FIRST], -34.170000000)
 		self.assertEqual(hdrs[IFC.Y_STEP], -0.000833333)
 		self.assertEqual(hdrs[IFC.WAVELENGTH], 0.0562356424)
+	
+	
+	def test_parse_short_date_pre2000(self):
+		dstr = "980416"
+		self.assertEqual(datetime.date(1998, 4, 16), roipac.parse_date(dstr))
+
+
+	def test_parse_short_date_post2000(self):
+		dstr = "081006"
+		self.assertEqual(datetime.date(2008, 10, 6), roipac.parse_date(dstr))
+
+
+	def test_parse_date_range(self):
+		dstr = "980416-081006"
+		exp = (datetime.date(1998, 4, 16), datetime.date(2008, 10, 6))
+		self.assertEqual(exp, roipac.parse_date(dstr))
+
+	
+	def test_read_full_roipac_header(self):
+		"Tests full original header can be parsed correctly"
+		hdrs = roipac.parse_header(self.FULL_HEADER_PATH)
+		
+		# check dates are parsed correctly
+		date0 = datetime.date(2006, 6, 19) # from  "DATE 060619" header
+		date12 = (date0, datetime.date(2006, 8, 28)) # from DATE12   060619-060828    
+		self.assertEqual(hdrs[IFC.DATE], date0)
+		self.assertEqual(hdrs[IFC.DATE12], date12)
+		
+		
+	def test_read_full_roipac_header2(self):
+		"Tests header from cropped original dataset is parsed correctly"
+		hdrs = roipac.parse_header(self.FULL_HEADER_PATH)
+		self.assertTrue(hdrs is not None)
 		
 	
 	def test_filename_pair(self):
@@ -94,6 +130,3 @@ class ConversionTests(unittest.TestCase):
 		raise NotImplementedError
 		#expected = "../../tests/sydney_test/obs/geo_060619-061002.tif"
 		#roipac.roipac(src, dest, fmt)
-		
-	# TODO: def test_convert_roipac_dual_band(self):
-	
