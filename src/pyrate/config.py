@@ -5,6 +5,11 @@ Created on 17/09/2012
 @author: bpd900
 '''
 
+from numpy import unique, histogram 
+
+from ifgconstants import DATE, DATE12
+
+
 # constants for lookups
 NUMBER_OF_SETS = 'nsets'
 IFG_FILE_LIST = 'ifgfilelist'
@@ -42,7 +47,7 @@ def parse_conf_file(conf_file):
 
 
 def _parse_pars(pars):
-	"""TODO"""
+	"""Parses and converts config file params from text"""
 	for k in PARAM_CONVERSION.keys():
 		if pars.has_key(k):
 			conversion_func = PARAM_CONVERSION[k][0]
@@ -59,3 +64,27 @@ def parse_namelist(nml):
 	"""Parses name list file into array of paths""" 
 	with open(nml) as f:
 		return [ln.strip() for ln in f.readlines() if ln != ""]
+
+
+
+class EpochList(object):
+	
+	def __init__(self, date=None, repeat=None, span=None):
+		self.date = date
+		self.repeat = repeat
+		self.span = span
+
+
+def get_epochs(ifgs):
+	masters = [i.header[DATE] for i in ifgs]
+	slaves = [i.header[DATE12][-1] for i in ifgs]
+		
+	combined = masters + slaves
+	#date_set, _, n = unique(combined)  # TODO: need newer numpy
+	date_set = unique(combined)
+		
+	hist = histogram(date_set, bins=len(date_set))
+	
+	span = None
+	
+	return EpochList(date_set, hist, span)
