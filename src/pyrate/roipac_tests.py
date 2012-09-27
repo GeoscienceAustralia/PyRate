@@ -21,9 +21,11 @@ class ConversionTests(unittest.TestCase):
 
 
 	def test_convert_roipac(self):
-		raise NotImplementedError
+		# TODO: test data files can be opened, new headers generated, data is readable
+		
 		#expected = "../../tests/sydney_test/obs/geo_060619-061002.tif"
 		#roipac.roipac(src, dest, fmt)
+		raise NotImplementedError
 	
 
 	def test_read_short_roipac_header(self):

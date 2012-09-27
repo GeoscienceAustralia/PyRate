@@ -6,12 +6,12 @@ Created on 12/09/2012
 				 ben.davies@anu.edu.au
 '''
 
-import os, datetime
+import os, re, datetime
 
 from ifgconstants import INT_HEADERS, STR_HEADERS, FLOAT_HEADERS, DATE_HEADERS
+from ifgconstants import ROI_PAC_HEADER_FILE_EXT, DATE, DATE12
 from ifgconstants import X_STEP, Y_STEP, FILE_LENGTH
 from ifgconstants import X_FIRST, Y_FIRST, WIDTH
-from shared import ROI_PAC_HEADER_FILE_EXT
 
 
 
@@ -75,6 +75,19 @@ def parse_header(hdr):
 			headers[k] = parse_date(headers[k])
 		else:
 			raise RoipacException("Unrecognised header element %s: %s " % (k, headers[k]) )
+	
+	if headers.has_key(DATE) is False or headers.has_key(DATE12) is False:
+		# probably have short form header without dates, get date from path
+		p = re.compile(r'[0-9]+-[0-9]+')
+		m = p.search(hdr)
+		
+		if m:
+			s = m.group()
+			min_date_len = 13 # assumes "nnnnnn-nnnnnn" format
+			if len(s) >= min_date_len:
+				date12 = parse_date(s)
+				headers[DATE] = date12[0]
+				headers[DATE12] = date12
 	
 	return headers
 
