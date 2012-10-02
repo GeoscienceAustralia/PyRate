@@ -37,9 +37,9 @@ PARAM_CONVERSION = { OBS_DIR : (None, "obs"),
 
 def parse_conf_file(conf_file):
 	"""Returns a dict for the key:value pairs from the .conf file"""
-	with open(conf_file) as f:		
-		lines = [line for line in f.read().splitlines() if line != "" and line[0] not in "%#"]
-		lines = [line.split() for line in lines]
+	with open(conf_file) as f:
+		txt = f.read().splitlines()
+		lines = [line.split() for line in txt if line != "" and line[0] not in "%#"]
 		lines = [(e[0].rstrip(":"), e[1]) for e in lines] # strip colons from keys
 		parameters = dict(lines)
 		_parse_pars(parameters)	
@@ -82,9 +82,8 @@ def get_epochs(ifgs):
 	combined = masters + slaves
 	#date_set, _, n = unique(combined)  # TODO: need newer numpy
 	date_set = unique(combined)
-		
-	hist = histogram(date_set, bins=len(date_set))
 	
+	hist = None # TODO: histogram([d.toordinal() for d in date_set], bins=len(date_set))
 	span = None
 	
 	return EpochList(date_set, hist, span)

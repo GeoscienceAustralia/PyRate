@@ -4,10 +4,12 @@ Created on 17/09/2012
 '''
 
 import unittest
-import glob
+import datetime
+from os.path import join
 
 from shared import Ifg
 import config
+
 
 
 class ConfigTests(unittest.TestCase):
@@ -36,17 +38,27 @@ class ConfigTests(unittest.TestCase):
 
 
 	def test_get_epochs(self):
-		exp_date = [20060619, 20060828, 20061002, 20061106, 20061211, 20070115,
-							20070219, 20070326, 20070430, 20070604, 20070709, 20070813,
-							20070917]
+		def str2date(s):
+			segs = s[:4], s[4:6], s[6:] # year, month, day
+			return datetime.date(*[int(s) for s in segs])
+		
+		raw_date = ['20060619', '20060828', '20061002', '20061106', '20061211',
+							'20070115', '20070219', '20070326', '20070430', '20070604',
+							'20070709', '20070813', '20070917']
+		exp_date = [str2date(d) for d in raw_date]
 		exp_repeat = [1,1,3,3,4,3,3,3,3,3,3,2,2]
 		exp_span = [0, 0.1916, 0.2875, 0.3833, 0.4791, 0.5749, 0.6708, 0.7666,
 							0.8624, 0.9582, 1.0541, 1.1499, 1.2457]
 		
-		paths = "../../tests/sydney_test/obs/geo*.unw"
-		ifgs = [Ifg(path) for path in glob.glob(paths)]
-		epochs = config.get_epochs(ifgs)
-		self.assertEqual(exp_date, epochs.date)
+		base = "../../tests/sydney_test/obs"
+		paths = join(base, "ifms_17")
+		with open(paths) as f:
+			ifgs = [Ifg(join(base, path)) for path in f.readlines()]
+			epochs = config.get_epochs(ifgs)
+		
+		self.assertEqual(len(exp_date), len(epochs.date) )
+		self.assertTrue((exp_date == epochs.date).all())
+		
 		self.assertEqual(exp_repeat, epochs.repeat)
 		self.assertEqual(exp_span, epochs.span)
 
