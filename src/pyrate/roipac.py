@@ -35,7 +35,8 @@ def convert_roipac(src, dest, fmt):
 
 def filename_pair(base):
 	"""Returns tuple of paths: (roi_pac data, roi_pac header file)"""
-	return (base, "%s.%s" % (base, ROI_PAC_HEADER_FILE_EXT))
+	b = base.strip()
+	return (b, "%s.%s" % (b, ROI_PAC_HEADER_FILE_EXT))
 
 def parse_date(dstr):
 	"""Parses ROI_PAC 'yymmdd' or 'yymmdd-yymmdd' to date or date tuple"""
