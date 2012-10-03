@@ -68,6 +68,7 @@ def parse_namelist(nml):
 
 
 class EpochList(object):
+	'''TODO'''
 
 	def __init__(self, date=None, repeat=None, span=None):
 		self.date = date
@@ -90,6 +91,3 @@ def get_epochs(ifgs):
 	#slavenum = n[len(ifgs) / 2:]
 
 	return EpochList(dates, repeat, span)
-
-def get_ifg_list():
-	return None
