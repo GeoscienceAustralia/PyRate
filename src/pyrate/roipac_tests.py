@@ -81,7 +81,15 @@ class ConversionTests(unittest.TestCase):
 
 
 	def test_timespan(self):
-		raise NotImplementedError
+		"""Ensures the TIME_SPAN_YEAR element is present after parsing short header"""
+		hdrs = roipac.parse_header(self.SHORT_HEADER_PATH)
+		self.assertTrue(hdrs.has_key(IFC.TIME_SPAN_YEAR))
+
+		# check time span calc
+		master = datetime.date(2006, 06, 19)
+		slave = datetime.date(2006, 10, 02)
+		diff = (slave - master).days / 365.25
+		self.assertEqual(diff, hdrs[IFC.TIME_SPAN_YEAR])
 
 
 	def test_read_full_roipac_header2(self):
