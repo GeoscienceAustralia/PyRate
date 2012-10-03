@@ -46,6 +46,10 @@ LOOK_REF4 = "LOOK_REF4"
 LAT_REF4 = "LAT_REF4"
 LON_REF4 = "LON_REF4"
 
+# custom header aliases
+MASTER = "MASTER"
+SLAVE = "SLAVE"
+
 # store type for each of the header items
 INT_HEADERS = [WIDTH, FILE_LENGTH, XMIN, XMAX, YMIN, YMAX, RLOOKS, ALOOKS ]
 STR_HEADERS = [X_UNIT, Y_UNIT, ORBIT_NUMBER ]
