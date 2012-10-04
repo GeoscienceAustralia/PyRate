@@ -3,7 +3,7 @@ Tool to convert rasters from ROIPAC to another data format
 
 Created on 12/09/2012
 @author: Ben Davies, ANUSF
-				 ben.davies@anu.edu.au
+         ben.davies@anu.edu.au
 '''
 
 import os, re, datetime
@@ -15,28 +15,11 @@ from ifgconstants import X_FIRST, Y_FIRST, WIDTH, MASTER, SLAVE
 
 
 
-def convert_roipac(src, dest, fmt):
-
-	# Two options for conversion:
-	# 1) Fake an EHdr header and then read using GDAL normally
-	# - is a bit of a hack
-	# - misses the other header items, these have to be copied in as metadata later, replicating part of #2 anyway
-	# - reuses GDAL for the double band data
-	#
-	# 2) Read header and binary directly
-	# - avoids faking the header/cleaner
-	#
-	# header file has to be read anyway
-	#
-	# TODO: read 1 and 2 band files
-
-	raise NotImplementedError
-
-
 def filename_pair(base):
 	"""Returns tuple of paths: (roi_pac data, roi_pac header file)"""
 	b = base.strip()
 	return (b, "%s.%s" % (b, ROI_PAC_HEADER_FILE_EXT))
+
 
 def parse_date(dstr):
 	"""Parses ROI_PAC 'yymmdd' or 'yymmdd-yymmdd' to date or date tuple"""
@@ -99,8 +82,8 @@ def parse_header(hdr_file):
 
 
 def to_ehdr_header(hdr, dest=None):
-	"""Convenience function to convert a ROI_PAC header to EHdr format. 'hdr' can be
-	a path to a header file, or a dict of header elements. 'dest' is path to save to"""
+	"""Converts a ROI_PAC header to equivalent EHdr format, allowing GDAL to read
+	ROIPAC. 'hdr' is the .rsc header path. 'dest' is an alternate path to save to"""
 	if os.path.isfile(hdr) or os.path.islink(hdr):
 		H = parse_header(hdr)
 		if dest is None:
@@ -109,8 +92,8 @@ def to_ehdr_header(hdr, dest=None):
 
 	cellsize = H[X_STEP]
 	if cellsize != abs(H[Y_STEP]):
-		raise RoipacException("Unequal X and Y axis cell sizes: %s, %s" %
-												(cellsize, H[Y_STEP]) )
+		err = "Unequal X and Y axis cell sizes: %s, %s" % (cellsize, H[Y_STEP])
+		raise RoipacException(err)
 
 	# calc coords of lower left corner (EHdr format uses this)
 	yllcorner = H[Y_FIRST] + (H[FILE_LENGTH] * H[Y_STEP])
@@ -128,7 +111,6 @@ def to_ehdr_header(hdr, dest=None):
 		f.write("layout bil\n")
 		f.write("nbits 32\n")
 		f.write("pixeltype float\n")
-
 
 
 class RoipacException(Exception):

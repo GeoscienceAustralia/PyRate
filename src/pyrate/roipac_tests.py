@@ -5,9 +5,11 @@ Created on 12/09/2012
 '''
 
 
-import os, unittest
-import datetime
-from osgeo import gdal
+import os, unittest, datetime
+from numpy import amin, amax, zeros
+from numpy.testing import assert_array_equal
+
+from gdal import Open, UseExceptions
 
 import roipac
 import ifgconstants as IFC
@@ -18,15 +20,6 @@ class ConversionTests(unittest.TestCase):
 	SHORT_HEADER_PATH = "../../tests/sydney_test/obs/geo_060619-061002.unw.rsc"
 	FULL_HEADER_PATH  = "../../tests/headers/geo_060619-060828.unw.rsc"
 	FULL_HEADER_PATH2 = "../../tests/single/geo_060619-061002.unw.rsc"
-
-
-	def test_convert_roipac(self):
-		# TODO: test data files can be opened, new headers generated, data is readable
-
-		#expected = "../../tests/sydney_test/obs/geo_060619-061002.tif"
-		#roipac.roipac(src, dest, fmt)
-		raise NotImplementedError
-
 
 	def test_read_short_roipac_header(self):
 		hdrs = roipac.parse_header(self.SHORT_HEADER_PATH)
@@ -122,7 +115,7 @@ class ConversionTests(unittest.TestCase):
 		os.remove(dest)
 
 
-	def test_ehdr_header_defaults(self):
+	def test_to_ehdr_header_defaults(self):
 		# test default header filename
 		base_hdr = os.path.abspath("../../tests/single/geo_060619-061002.unw.rsc")
 		hdr = "/tmp/geo_060619-061002.unw.rsc"
@@ -139,8 +132,8 @@ class ConversionTests(unittest.TestCase):
 		os.symlink(base_data, exp_data)
 
 		# test GDAL can open the data with the new header & cleanup
-		gdal.UseExceptions()
-		ds = gdal.Open(exp_data)
+		UseExceptions()
+		ds = Open(exp_data)
 		self.assertTrue(ds is not None)
 		bands = ds.GetRasterBand(1), ds.GetRasterBand(1)
 		self.assertTrue(all(bands)) # both bands exist?
@@ -149,3 +142,46 @@ class ConversionTests(unittest.TestCase):
 		os.unlink(exp_data)
 		os.remove(exp_hdr)
 		os.unlink(hdr)
+
+
+	def test_to_ehdr_header_with_data(self):
+		# ensure giving the data file breaks to_ehdr_header()
+		src = "../../tests/sydney_test/obs/geo_060619-061002.unw"
+		try:
+			roipac.to_ehdr_header(src)
+			self.fail("Should not be able to accept .unw data file")
+		except:
+			pass
+
+
+	def test_to_ehdr_header_gdal(self):
+		# test data files can be opened, new headers generated, data is readable
+		hdr = "../../tests/sydney_test/obs/geo_060619-061002.unw.rsc"
+		ehdr = "../../tests/sydney_test/obs/geo_060619-061002.hdr"
+		self.assertFalse(os.path.exists(ehdr)) # ensure header isn't already there
+
+		roipac.to_ehdr_header(hdr)
+		self.assertTrue(os.path.exists(ehdr))
+
+		# open with GDAL and ensure there is data
+		src = "../../tests/sydney_test/obs/geo_060619-061002.unw"
+		ds = Open(src)
+		self.assertTrue(ds is not None)
+		band = ds.GetRasterBand(1)
+		data = band.ReadAsArray()
+		self.assertTrue(amin(data) != 0)
+
+		# ensure decent data is retrieved
+		mx = amax(data)
+		self.assertTrue(mx != 0)
+		self.assertTrue(data.ptp() != 0)
+
+		# check faked band 2 for 0s
+		shape = data.shape
+		band = ds.GetRasterBand(2)
+		data = band.ReadAsArray()
+		assert_array_equal(data, zeros(shape))
+		del band, ds
+
+		# cleanup
+		os.remove(ehdr)
