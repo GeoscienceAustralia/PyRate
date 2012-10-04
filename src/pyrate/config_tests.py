@@ -8,8 +8,8 @@ from os.path import join
 
 from numpy.testing import assert_array_almost_equal
 
-from shared import Ifg
 import config
+from shared import Ifg
 
 
 

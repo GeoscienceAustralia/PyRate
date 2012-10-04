@@ -12,7 +12,14 @@ class Ifg(object):
 
 	def __init__(self, path):
 		self.data_path, self.hdr_path = roipac.filename_pair(path)
-		self.header = roipac.parse_header(self.hdr_path)
+		header = roipac.parse_header(self.hdr_path)
+
+		# dynamically include header items as class attributes
+		for key, value in header.iteritems():
+			if self.__dict__.has_key(key):
+				raise Exception("Attribute %s exists for Interferogram %s" % (key, path))
+			self.__dict__[key] = value
+
 		self.dataset = None
 
 		self.max_variance = None

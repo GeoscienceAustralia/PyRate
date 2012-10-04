@@ -14,13 +14,12 @@ class PyRateTests(unittest.TestCase):
 	def test_pyrate_main(self):
 		cwd = os.getcwd()
 		td = "../../tests/sydney_test"
-		
+
 		os.chdir(td)
-		
+
 		main.main(verbose=True)
-		
-		
-		os.chdir
+
+		os.chdir(cwd)
 
 
 if __name__ == "__main__":

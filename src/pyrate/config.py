@@ -7,8 +7,6 @@ Created on 17/09/2012
 
 from numpy import unique, reshape, histogram
 
-from ifgconstants import DATE, DATE12
-
 
 # constants for lookups
 NUMBER_OF_SETS = 'nsets'
@@ -27,12 +25,11 @@ PERP_BASELINE_FLAG = 'basepflag'
 # format is    key : (conversion, default value)
 # None = no conversion
 PARAM_CONVERSION = { OBS_DIR : (None, "obs"),
-											IFG_FILE_LIST : (None, "ifg.list"),
-											OUT_DIR : (None, "out"),
-											PERP_BASELINE_FLAG : (bool, True),
-											AMPLITUDE_FLAG : (bool, False),
-											NUM_SETS : (int, 1),
-										}
+					IFG_FILE_LIST : (None, "ifg.list"),
+					OUT_DIR : (None, "out"),
+					PERP_BASELINE_FLAG : (bool, True),
+					AMPLITUDE_FLAG : (bool, False),
+					NUM_SETS : (int, 1), }
 
 
 def parse_conf_file(conf_file):
@@ -77,8 +74,8 @@ class EpochList(object):
 
 
 def get_epochs(ifgs):
-	masters = [i.header[DATE] for i in ifgs]
-	slaves = [i.header[DATE12][-1] for i in ifgs]
+	masters = [i.MASTER for i in ifgs]
+	slaves = [i.SLAVE for i in ifgs]
 
 	combined = masters + slaves
 	dates, n = unique(combined, False, True)
@@ -86,8 +83,4 @@ def get_epochs(ifgs):
 
 	# absolute span for each date from the zero/start point
 	span = [ (dates[i] - dates[0]).days / 365.25 for i in range(len(dates)) ]
-
-	#masnum = n[:len(ifgs) / 2]
-	#slavenum = n[len(ifgs) / 2:]
-
 	return EpochList(dates, repeat, span)
