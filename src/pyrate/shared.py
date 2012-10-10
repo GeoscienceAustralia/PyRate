@@ -8,7 +8,8 @@ import roipac
 
 
 class Ifg(object):
-	"""TODO:"""
+	"""Interferogram class, representing the difference between two acquisitions
+	and other related data."""
 
 	def __init__(self, path):
 		self.data_path, self.hdr_path = roipac.filename_pair(path)
@@ -17,10 +18,11 @@ class Ifg(object):
 		# dynamically include header items as class attributes
 		for key, value in header.iteritems():
 			if self.__dict__.has_key(key):
-				raise Exception("Attribute %s exists for Interferogram %s" % (key, path))
+				msg = "Attribute %s already exists for %s" % (key, path)
+				raise Exception(msg)
 			self.__dict__[key] = value
 
-		self.dataset = None
+		self.dataset = None # for GDAL dataset
 
 		self.max_variance = None
 		self.alpha = None
