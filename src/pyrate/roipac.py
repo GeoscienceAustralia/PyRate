@@ -112,6 +112,8 @@ def to_ehdr_header(hdr, dest=None):
 		f.write("nbits 32\n")
 		f.write("pixeltype float\n")
 
+	return dest
+
 
 class RoipacException(Exception):
 	pass
