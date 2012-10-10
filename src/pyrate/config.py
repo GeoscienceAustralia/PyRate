@@ -5,6 +5,7 @@ Created on 17/09/2012
 @author: bpd900
 '''
 
+import numpy
 from numpy import unique, reshape, histogram
 
 
@@ -84,3 +85,27 @@ def get_epochs(ifgs):
 	# absolute span for each date from the zero/start point
 	span = [ (dates[i] - dates[0]).days / 365.25 for i in range(len(dates)) ]
 	return EpochList(dates, repeat, span)
+
+
+def prepare_ifgs(ifgs, conversion=None, amplitude=None, projection=None):
+	raise NotImplementedError
+
+
+def _check_xy_steps(ifgs):
+	'''Validates X_STEP and Y_STEP for given list of interferograms. Returns True
+	if the valeus for X_STEP match (and for Y_STEP)'''
+	xsteps = numpy.array([i.X_STEP for i in ifgs])
+	if not numpy.all(xsteps == xsteps[0]):
+		return False
+
+	ysteps = numpy.array([i.Y_STEP for i in ifgs])
+	return numpy.all(ysteps == ysteps[0])
+
+
+
+
+
+
+
+
+

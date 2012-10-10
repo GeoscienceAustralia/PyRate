@@ -4,8 +4,8 @@ Created on 17/09/2012
 '''
 
 import unittest, datetime
+from glob import glob
 from os.path import join
-
 from numpy.testing import assert_array_almost_equal
 
 import config
@@ -65,5 +65,22 @@ class ConfigTests(unittest.TestCase):
 		assert_array_almost_equal(exp_span, epochs.span, decimal=4)
 
 
+	def test_check_xy_steps(self):
+		search = "../../tests/sydney_test/obs/*.unw"
+		files = glob(search)
+		ifgs = [Ifg(f) for f in files]
+		self.assertTrue(len(ifgs) > 0)
+		self.assertTrue(config._check_xy_steps(ifgs))
+
+		# test failure from breaking X/Y steps
+		ifgs[1].X_STEP *= 2
+		self.assertFalse(config._check_xy_steps(ifgs))
+
+		ifgs[1].X_STEP /= 2
+		ifgs[1].Y_STEP /= 2
+		self.assertFalse(config._check_xy_steps(ifgs))
+
+
 if __name__ == "__main__":
 	unittest.main()
+
