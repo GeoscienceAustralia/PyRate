@@ -4,6 +4,9 @@ Created on 12/09/2012
 @author: bpd900
 '''
 
+import os
+import gdal
+
 import roipac
 
 
@@ -14,6 +17,7 @@ class Ifg(object):
 	def __init__(self, path):
 		self.data_path, self.hdr_path = roipac.filename_pair(path)
 		header = roipac.parse_header(self.hdr_path)
+		self.ehdr_path = None # path to EHdr format header
 
 		# dynamically include header items as class attributes
 		for key, value in header.iteritems():
@@ -22,8 +26,34 @@ class Ifg(object):
 				raise Exception(msg)
 			self.__dict__[key] = value
 
-		self.dataset = None # for GDAL dataset
+		self.dataset = None # for GDAL dataset obj
+		self.band = None
 
+		# TODO: what are these for?
 		self.max_variance = None
 		self.alpha = None
 		self.nodata_fraction = None
+
+
+	def __str__(self):
+		return "Ifg('%s')" % self.data_path
+
+
+	def open(self):
+		'''Opens a interferogram dataset for reading. Creates ESRI/EHdr format
+		header in the data dir, so GDAL has access to recognised header.'''
+		if self.ehdr_path is None:
+			self.ehdr_path = roipac.to_ehdr_header(self.hdr_path)
+			self.dataset = gdal.Open(self.data_path)
+		else:
+			if self.dataset is not None:
+				msg = "open() already called for %s" % self
+				raise IfGException(msg)
+
+
+class IfGException(Exception):
+	'''Generic exception class for interferogram errors'''
+	pass
+
+
+
