@@ -48,10 +48,10 @@ class Ifg(object):
 		else:
 			if self.dataset is not None:
 				msg = "open() already called for %s" % self
-				raise IfGException(msg)
+				raise IfgException(msg)
 
 
-class IfGException(Exception):
+class IfgException(Exception):
 	'''Generic exception class for interferogram errors'''
 	pass
 

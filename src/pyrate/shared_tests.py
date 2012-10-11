@@ -33,7 +33,7 @@ class SharedTests(unittest.TestCase):
 		self.assertTrue(isinstance(ifg.dataset, Dataset))
 
 		# ensure open cannot be called twice
-		self.failUnlessRaises(shared.IfGException, ifg.open)
+		self.failUnlessRaises(shared.IfgException, ifg.open)
 		os.remove(ifg.ehdr_path)
 
 
