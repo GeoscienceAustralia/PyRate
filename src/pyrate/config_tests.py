@@ -10,7 +10,7 @@ from numpy.testing import assert_array_almost_equal
 
 import config
 from shared import Ifg
-
+from ifgconstants import X_FIRST, Y_FIRST, WIDTH, FILE_LENGTH, X_STEP, Y_STEP
 
 
 class ConfigTests(unittest.TestCase):
@@ -71,21 +71,40 @@ class IfgPrepTests(unittest.TestCase):
 		search = "../../tests/sydney_test/obs/*.unw"
 		files = glob(search)
 		self.ifgs = [Ifg(f) for f in files]
+		self.assertTrue(len(self.ifgs) > 0)
 
 	def test_check_xy_steps(self):
-		self.assertTrue(len(self.ifgs) > 0)
-		self.assertTrue(config._check_xy_steps(self.ifgs))
+		self.assertTrue(config._check_xy_extents(self.ifgs))
 
-		# test failure from breaking X/Y steps
+	def test_check_xy_steps_failure(self):
+		# test failure from breaking X and Y steps
 		self.ifgs[1].X_STEP *= 2
-		self.assertFalse(config._check_xy_steps(self.ifgs))
-
-		self.ifgs[1].X_STEP /= 2
+		self.assertEqual(config._check_xy_extents(self.ifgs), X_STEP)
+		self.ifgs[1].X_STEP /= 2 # revert X step
 		self.ifgs[1].Y_STEP /= 2
-		self.assertFalse(config._check_xy_steps(self.ifgs))
+		self.assertEqual(config._check_xy_extents(self.ifgs), Y_STEP)
+
+	def test_check_xy_extents(self):
+		self.assertTrue(config._check_xy_extents(self.ifgs))
+
+	def test_check_xy_extents_failure(self):
+		# test failure due to breaking X and Y extents
+		self.ifgs[2].X_FIRST += 10
+		self.assertEqual(config._check_xy_extents(self.ifgs), X_FIRST)
+		self.ifgs[2].X_FIRST -= 10 # revert
+		self.ifgs[2].Y_FIRST /= 2
+		self.assertEqual(config._check_xy_extents(self.ifgs), Y_FIRST)
+
+	def test_check_xy_extents_failure2(self):
+		# validate length and width
+		self.ifgs[3].WIDTH *= 2
+		self.assertEqual(config._check_xy_extents(self.ifgs), WIDTH)
+		self.ifgs[3].WIDTH /= 2 # revert X extent
+		self.ifgs[3].FILE_LENGTH /= 2
+		self.assertEqual(config._check_xy_extents(self.ifgs), FILE_LENGTH)
 
 	def test_prepare_ifgs_no_looks(self):
-		params = { config.IFG_LKSX : 0, config.IFG_LKSY : 0 }
+		params = { config.IFG_LKSX : 0, config.IFG_LKSY : 0, config.IFG_CROP_OPT : None }
 		config.prepare_ifgs(self.ifgs, params)
 
 	def test_prepare_ifgs_looks(self):

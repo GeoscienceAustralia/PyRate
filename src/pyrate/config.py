@@ -8,7 +8,8 @@ Created on 17/09/2012
 import numpy
 from numpy import unique, reshape, histogram
 
-from shared import Ifg, IfgException
+from shared import Ifg, IfgException, PyRateException
+from ifgconstants import X_FIRST, Y_FIRST, WIDTH, FILE_LENGTH, X_STEP, Y_STEP
 
 
 # constants for lookups
@@ -22,8 +23,13 @@ AMPLITUDE_FLAG = 'ampflag'
 PERP_BASELINE_FLAG = 'basepflag'
 
 IFG_CROP_OPT = 'ifgcropopt' # 1: minimum, 2: maximum, 3: customize, 4: all ifms already same size
-IFG_LKSX = 'ifglksx'  # INT
-IFG_LKSY = 'ifglksy' # INT
+IFG_LKSX = 'ifglksx'
+IFG_LKSY = 'ifglksy'
+
+IFG_XFIRST = 'ifgxfirst'
+IFG_XLAST = 'ifgxlast'
+IFG_YFIRST = 'ifgyfirst'
+IFG_YLAST = 'ifgylast'
 
 
 # Lookup to help convert args to correct type/defaults
@@ -38,6 +44,10 @@ PARAM_CONVERSION = { OBS_DIR : (None, "obs"),
 					IFG_CROP_OPT : (int, None),
 					IFG_LKSX : (int, 0),
 					IFG_LKSY : (int, 0),
+					IFG_XFIRST : (float, None),
+					IFG_XLAST : (float, None),
+					IFG_YFIRST : (float, None),
+					IFG_YLAST : (float, None),
 				}
 
 
@@ -96,33 +106,21 @@ def get_epochs(ifgs):
 
 
 def prepare_ifgs(ifgs, params, conversion=None, amplitude=None, projection=None):
-
-	# TODO: initial port of the ugly prepifg.m code
-	res = _check_xy_steps(ifgs)
-	if res is False:
-		msg = "Cell sizes unequal for supplied interferograms"
+	'''TODO: partial port of the ugly prepifg.m code'''
+	res = _check_xy_extents(ifgs)
+	if res is not True:
+		msg = res + " unequal for supplied interferograms"
 		raise IfgException(msg)
 
-	# TODO: handle multilooking
-	# TODO: does the multilooking need to be in squares? ie. SX==SY?
-	if params[IFG_LKSX] > 0 and params[IFG_LKSY] > 0:
-		raise NotImplementedError
-	else:
-		raise NotImplementedError
+	# handle conversion, line of sight etc of the data?
 
 
-def _check_xy_steps(ifgs):
-	'''Validates X_STEP and Y_STEP for given list of interferograms. Returns True
-	if the values for X_STEP match (and for Y_STEP)'''
-	xsteps = numpy.array([i.X_STEP for i in ifgs])
-	if not numpy.all(xsteps == xsteps[0]):
-		return False
+def _check_xy_extents(ifgs):
+	'''Validates data extents, origin and pixel sizes for given interferograms.
+	Returns True if extents match, otherwise name of mismatching element.'''
+	for var in [X_FIRST, Y_FIRST, WIDTH, FILE_LENGTH, X_STEP, Y_STEP]:
+		values = numpy.array([getattr(i, var) for i in ifgs])
+		if not (values == values[0]).all():
+			return var
 
-	ysteps = numpy.array([i.Y_STEP for i in ifgs])
-	return numpy.all(ysteps == ysteps[0])
-
-
-
-
-
-
+	return True
