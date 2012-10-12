@@ -55,5 +55,7 @@ class IfgException(Exception):
 	'''Generic exception class for interferogram errors'''
 	pass
 
-
+class PyRateException(Exception):
+	'''Generic exception class for PyRate S/W errors'''
+	pass
 
