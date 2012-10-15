@@ -106,6 +106,7 @@ def to_ehdr_header(hdr, dest=None):
 		f.write("cellsize %s\n" % H[X_STEP])
 		f.write("xllcorner %s\n" % H[X_FIRST])
 		f.write("yllcorner %s\n" % yllcorner)
+		f.write("nodata 0\n")
 		f.write("nbands 2\n")
 		f.write("byteorder lsb\n")
 		f.write("layout bil\n")

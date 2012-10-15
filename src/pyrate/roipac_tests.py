@@ -158,7 +158,8 @@ class ConversionTests(unittest.TestCase):
 		# test data files can be opened, new headers generated, data is readable
 		hdr = "../../tests/sydney_test/obs/geo_060619-061002.unw.rsc"
 		ehdr = "../../tests/sydney_test/obs/geo_060619-061002.hdr"
-		self.assertFalse(os.path.exists(ehdr)) # ensure header isn't already there
+		if os.path.exists(ehdr):
+			os.remove(ehdr) # can be left behind if the test fails
 
 		roipac.to_ehdr_header(hdr)
 		self.assertTrue(os.path.exists(ehdr))
@@ -168,6 +169,8 @@ class ConversionTests(unittest.TestCase):
 		ds = Open(src)
 		self.assertTrue(ds is not None)
 		band = ds.GetRasterBand(1)
+		nodata = band.GetNoDataValue()
+		self.assertEqual(nodata, 0)
 		data = band.ReadAsArray()
 		self.assertTrue(amin(data) != 0)
 
