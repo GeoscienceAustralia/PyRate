@@ -1,7 +1,7 @@
 '''
 Created on 12/09/2012
 @author: Ben Davies, ANUSF
-				 ben.davies@anu.edu.au
+		 ben.davies@anu.edu.au
 '''
 
 
@@ -85,6 +85,13 @@ class ConversionTests(unittest.TestCase):
 		self.assertEqual(diff, hdrs[IFC.TIME_SPAN_YEAR])
 
 
+	def test_xylast(self):
+		# Test the X_LAST and Y_LAST header elements are added
+		hdrs = roipac.parse_header(self.FULL_HEADER_PATH)
+		self.assertAlmostEqual(hdrs[IFC.X_LAST], 151.8516666666)
+		self.assertAlmostEqual(hdrs[IFC.Y_LAST], -34.6247222222)		
+
+
 	def test_read_full_roipac_header2(self):
 		"Tests header from cropped original dataset is parsed correctly"
 		hdrs = roipac.parse_header(self.FULL_HEADER_PATH)
@@ -163,6 +170,7 @@ class ConversionTests(unittest.TestCase):
 
 		roipac.to_ehdr_header(hdr)
 		self.assertTrue(os.path.exists(ehdr))
+		os.system("cp %s %s" % (ehdr, "~/projects/dg9/downsamp.hdr") )
 
 		# open with GDAL and ensure there is data
 		src = "../../tests/sydney_test/obs/geo_060619-061002.unw"

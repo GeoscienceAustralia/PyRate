@@ -11,7 +11,7 @@ import os, re, datetime
 from ifgconstants import INT_HEADERS, STR_HEADERS, FLOAT_HEADERS, DATE_HEADERS
 from ifgconstants import ROI_PAC_HEADER_FILE_EXT, DATE, DATE12
 from ifgconstants import X_STEP, Y_STEP, FILE_LENGTH, TIME_SPAN_YEAR
-from ifgconstants import X_FIRST, Y_FIRST, WIDTH, MASTER, SLAVE
+from ifgconstants import X_FIRST, X_LAST, Y_FIRST, Y_LAST, WIDTH, MASTER, SLAVE
 
 
 
@@ -78,6 +78,11 @@ def parse_header(hdr_file):
 
 	# replace timespan as ROI_PAC is ~4 hours different to (slave - master)
 	headers[TIME_SPAN_YEAR] = (headers[SLAVE] - headers[MASTER]).days / 365.25
+	if not headers.has_key(X_LAST):
+		headers[X_LAST] = headers[X_FIRST] + (headers[X_STEP] * (headers[WIDTH] - 1))
+	if not headers.has_key(Y_LAST):
+		headers[Y_LAST] = headers[Y_FIRST] + (headers[Y_STEP] * (headers[FILE_LENGTH] - 1))
+	
 	return headers
 
 
