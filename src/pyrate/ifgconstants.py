@@ -49,6 +49,9 @@ LON_REF4 = "LON_REF4"
 # custom header aliases
 MASTER = "MASTER"
 SLAVE = "SLAVE"
+X_LAST = "X_LAST"
+Y_LAST = "Y_LAST"
+
 
 # store type for each of the header items
 INT_HEADERS = [WIDTH, FILE_LENGTH, XMIN, XMAX, YMIN, YMAX, RLOOKS, ALOOKS ]
