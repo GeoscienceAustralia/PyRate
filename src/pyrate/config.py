@@ -103,24 +103,3 @@ def get_epochs(ifgs):
 	# absolute span for each date from the zero/start point
 	span = [ (dates[i] - dates[0]).days / 365.25 for i in range(len(dates)) ]
 	return EpochList(dates, repeat, span)
-
-
-def prepare_ifgs(ifgs, params, conversion=None, amplitude=None, projection=None):
-	'''TODO: partial port of the ugly prepifg.m code'''
-	res = _check_xy_extents(ifgs)
-	if res is not True:
-		msg = res + " unequal for supplied interferograms"
-		raise IfgException(msg)
-
-	# handle conversion, line of sight etc of the data?
-
-
-def _check_xy_extents(ifgs):
-	'''Validates data extents, origin and pixel sizes for given interferograms.
-	Returns True if extents match, otherwise name of mismatching element.'''
-	for var in [X_FIRST, Y_FIRST, WIDTH, FILE_LENGTH, X_STEP, Y_STEP]:
-		values = numpy.array([getattr(i, var) for i in ifgs])
-		if not (values == values[0]).all():
-			return var
-
-	return True
