@@ -14,8 +14,14 @@ class Ifg(object):
 	"""Interferogram class, representing the difference between two acquisitions
 	and other related data."""
 
-	def __init__(self, path):
-		self.data_path, self.hdr_path = roipac.filename_pair(path)
+	def __init__(self, path, hdr_path=None):
+		if hdr_path:
+			# handle non default header (eg. for look files in other formats)
+			self.data_path, self.hdr_path = path, hdr_path
+		else:
+			# default the header path
+			self.data_path, self.hdr_path = roipac.filename_pair(path)
+		
 		header = roipac.parse_header(self.hdr_path)
 		self.ehdr_path = None # path to EHdr format header
 
