@@ -88,8 +88,8 @@ class ConversionTests(unittest.TestCase):
 	def test_xylast(self):
 		# Test the X_LAST and Y_LAST header elements are added
 		hdrs = roipac.parse_header(self.FULL_HEADER_PATH)
-		self.assertAlmostEqual(hdrs[IFC.X_LAST], 151.8516666666)
-		self.assertAlmostEqual(hdrs[IFC.Y_LAST], -34.6247222222)		
+		self.assertAlmostEqual(hdrs[IFC.X_LAST], 151.8519444445)
+		self.assertAlmostEqual(hdrs[IFC.Y_LAST], -34.625)
 
 
 	def test_read_full_roipac_header2(self):

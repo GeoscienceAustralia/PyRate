@@ -43,8 +43,8 @@ class SharedTests(unittest.TestCase):
 	def test_xylast(self):
 		# ensure the X|Y_LAST header element has been created 
 		self.ifg.open()
-		for a in ["X_LAST", "Y_LAST"]:
-			self.assertTrue(hasattr(self.ifg, a))
+		self.assertAlmostEqual(self.ifg.X_LAST, 150.9491667)
+		self.assertAlmostEqual(self.ifg.Y_LAST, -34.23)
 
 
 if __name__ == "__main__":

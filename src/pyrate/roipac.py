@@ -78,10 +78,12 @@ def parse_header(hdr_file):
 
 	# replace timespan as ROI_PAC is ~4 hours different to (slave - master)
 	headers[TIME_SPAN_YEAR] = (headers[SLAVE] - headers[MASTER]).days / 365.25
+	
+	# add custom X|Y_LAST for convenience
 	if not headers.has_key(X_LAST):
-		headers[X_LAST] = headers[X_FIRST] + (headers[X_STEP] * (headers[WIDTH] - 1))
+		headers[X_LAST] = headers[X_FIRST] + (headers[X_STEP] * (headers[WIDTH]))
 	if not headers.has_key(Y_LAST):
-		headers[Y_LAST] = headers[Y_FIRST] + (headers[Y_STEP] * (headers[FILE_LENGTH] - 1))
+		headers[Y_LAST] = headers[Y_FIRST] + (headers[Y_STEP] * (headers[FILE_LENGTH]))
 	
 	return headers
 
