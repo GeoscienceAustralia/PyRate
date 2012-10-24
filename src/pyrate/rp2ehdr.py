@@ -6,9 +6,10 @@ import sys
 from pyrate.roipac import to_ehdr_header
 
 
-usage = "Usage: rp2ehdr.py [ROIPAC unw.rsc path]\n" 
-if len(sys.argv) != 2:
+usage = "Usage: rp2ehdr.py [ROIPAC unw.rsc files ...]\n" 
+if len(sys.argv) < 2:
 	sys.stderr.write(usage)
 	sys.exit()
 
-to_ehdr_header(sys.argv[1])
+for path in sys.argv[1:]:
+	to_ehdr_header(path)
