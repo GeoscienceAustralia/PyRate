@@ -176,7 +176,15 @@ class ConversionTests(unittest.TestCase):
 		src = "../../tests/sydney_test/obs/geo_060619-061002.unw"
 		ds = Open(src)
 		self.assertTrue(ds is not None)
+		
+		# check faked amplitude band 1 for 0s
 		band = ds.GetRasterBand(1)
+		data = band.ReadAsArray()
+		shape = data.shape
+		assert_array_equal(data, zeros(shape))		
+		
+		# check phase (band 2) for data
+		band = ds.GetRasterBand(2)
 		nodata = band.GetNoDataValue()
 		self.assertEqual(nodata, 0)
 		data = band.ReadAsArray()
@@ -185,14 +193,7 @@ class ConversionTests(unittest.TestCase):
 		# ensure decent data is retrieved
 		mx = amax(data)
 		self.assertTrue(mx != 0)
-		self.assertTrue(data.ptp() != 0)
-
-		# check faked band 2 for 0s
-		shape = data.shape
-		band = ds.GetRasterBand(2)
-		data = band.ReadAsArray()
-		assert_array_equal(data, zeros(shape))
-		del band, ds
-
+		self.assertTrue(data.ptp() != 0)		
+		
 		# cleanup
 		os.remove(ehdr)
