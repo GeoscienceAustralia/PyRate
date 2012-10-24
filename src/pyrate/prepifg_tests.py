@@ -14,7 +14,7 @@ except:
 import prepifg
 from shared import Ifg
 from config import OBS_DIR, IFG_CROP_OPT, IFG_LKSX, IFG_LKSY, IFG_FILE_LIST
-
+from config import IFG_XFIRST, IFG_XLAST, IFG_YFIRST, IFG_YLAST
 
 
 class OutputTests(unittest.TestCase):
@@ -37,8 +37,8 @@ class OutputTests(unittest.TestCase):
 	def test_default_max_extents(self):
 		"""Test ifgcropopt=2 gives datasets cropped to max extents bounding box."""
 		
-		# create dummy params file (large paths to prevent chdir calls)
-		params = {IFG_CROP_OPT: 2, IFG_LKSX: 1, IFG_LKSY: 1}
+		# create dummy params file (relative paths to prevent chdir calls)
+		params = {IFG_CROP_OPT: prepifg.MAXIMUM_CROP, IFG_LKSX: 1, IFG_LKSY: 1}
 		params[IFG_FILE_LIST] = join(self.testdir, 'obs/ifms')
 		params[OBS_DIR] = join(self.testdir,"obs/")
 		
@@ -59,14 +59,13 @@ class OutputTests(unittest.TestCase):
 	def test_min_extents(self):
 		"""Test ifgcropopt=1 crops datasets to min extents."""
 		
-		# create dummy params file (large paths to prevent chdir calls)
-		params = {IFG_CROP_OPT: 1, IFG_LKSX: 1, IFG_LKSY: 1}
+		# create dummy params file (relative paths to prevent chdir calls)
+		params = {IFG_CROP_OPT: prepifg.MINIMUM_CROP, IFG_LKSX: 1, IFG_LKSY: 1}
 		params[IFG_FILE_LIST] = join(self.testdir, 'obs/ifms')
 		params[OBS_DIR] = join(self.testdir,"obs/")
 		
-		prepifg.prepare_ifgs(params)
-		
 		# output files should have same extents
+		prepifg.prepare_ifgs(params)
 		ifg = Ifg(self.exp_files[0], self.hdr_files[0])
 		ifg.open()
 		gt = ifg.dataset.GetGeoTransform()
@@ -74,6 +73,29 @@ class OutputTests(unittest.TestCase):
 		for i,j in zip(gt, exp_gt):
 			self.assertAlmostEqual(i, j)
 		assert_geotransform_equal(self.exp_files)
+	
+	
+	def test_custom_extents(self):
+		# create dummy params file (relative paths to prevent chdir calls)
+		params = {IFG_CROP_OPT: prepifg.CUSTOM_CROP, IFG_LKSX: 1, IFG_LKSY: 1}
+		xs = 0.000833333
+		ys = -xs
+		params[IFG_XFIRST] = 150.91 + (7 * xs)
+		params[IFG_YFIRST] = -34.17 + (16 * ys)
+		params[IFG_XLAST] = 150.9491667 + xs
+		params[IFG_YLAST] = -34.23 - (4 * xs)
+		params[IFG_FILE_LIST] = join(self.testdir, 'obs/ifms')
+		params[OBS_DIR] = join(self.testdir,"obs/")
+		
+		# output files should have same extents
+		prepifg.prepare_ifgs(params)
+		ifg = Ifg(self.exp_files[0], self.hdr_files[0])
+		ifg.open()
+		gt = ifg.dataset.GetGeoTransform()
+		exp_gt = (params[IFG_XFIRST], xs, 0, params[IFG_YFIRST], 0, ys)
+		for i,j in zip(gt, exp_gt):
+			self.assertAlmostEqual(i, j)
+		assert_geotransform_equal(self.exp_files)		
 
 
 	def test_nodata(self):

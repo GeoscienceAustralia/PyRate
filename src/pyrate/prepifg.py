@@ -9,6 +9,7 @@ from subprocess import check_call
 
 from shared import Ifg
 from config import OBS_DIR, IFG_CROP_OPT, IFG_LKSX, IFG_LKSY, IFG_FILE_LIST
+from config import IFG_XFIRST, IFG_XLAST, IFG_YFIRST, IFG_YLAST
 from ifgconstants import X_FIRST, Y_FIRST
 
 # Constants
@@ -44,7 +45,10 @@ def prepare_ifgs(params):
 
 	elif crop_opt == CUSTOM_CROP:
 		# TODO: warn if the extents don't match up with the grid
-		raise NotImplementedError
+		xmin = params[IFG_XFIRST]
+		ymax = params[IFG_YFIRST]
+		xmax = params[IFG_XLAST]
+		ymin = params[IFG_YLAST]
 		
 	elif crop_opt == NO_CROP:
 		raise NotImplementedError("Same as maximum for IFGs of same size")
