@@ -27,21 +27,23 @@ def prepare_ifgs(params):
 	ifgs = [Ifg(p) for p in paths]
 	for i in ifgs:
 		i.open() # creates header files if needed
-	
-	
+		
 	# TODO: for CROP, LOOKING, RESCALE, use gdalwarp  eg:  gdalwarp -te 1 -2 5 2 -tr 2 2 -r bilinear
-	
 	crop_opt = params[IFG_CROP_OPT]
 	if crop_opt == MINIMUM_CROP:
-		raise NotImplementedError
+		xmin = max([i.X_FIRST for i in ifgs])
+		ymax = min([i.Y_FIRST for i in ifgs])
+		xmax = min([i.X_LAST for i in ifgs])
+		ymin = max([i.Y_LAST for i in ifgs])
 		
 	elif crop_opt == MAXIMUM_CROP:
 		xmin = min([i.X_FIRST for i in ifgs])
 		ymax = max([i.Y_FIRST for i in ifgs])
 		xmax = max([i.X_LAST for i in ifgs])
 		ymin = min([i.Y_LAST for i in ifgs])
-		
+
 	elif crop_opt == CUSTOM_CROP:
+		# TODO: warn if the extents don't match up with the grid
 		raise NotImplementedError
 		
 	elif crop_opt == NO_CROP:

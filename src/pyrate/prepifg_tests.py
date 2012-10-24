@@ -32,7 +32,7 @@ class OutputTests(unittest.TestCase):
 		for f in self.exp_files:
 			if exists(f):
 				os.remove(f)
-	
+
 
 	def test_default_max_extents(self):
 		"""Test ifgcropopt=2 gives datasets cropped to max extents bounding box."""
@@ -52,7 +52,27 @@ class OutputTests(unittest.TestCase):
 		gt = ifg.dataset.GetGeoTransform()
 		exp_gt = (150.91, 0.000833333, 0, -34.17, 0, -0.000833333) # copied from gdalinfo output
 		for i,j in zip(gt, exp_gt):
-			self.assertAlmostEqual(i, j)		
+			self.assertAlmostEqual(i, j)
+		assert_geotransform_equal(self.exp_files)
+
+
+	def test_min_extents(self):
+		"""Test ifgcropopt=1 crops datasets to min extents."""
+		
+		# create dummy params file (large paths to prevent chdir calls)
+		params = {IFG_CROP_OPT: 1, IFG_LKSX: 1, IFG_LKSY: 1}
+		params[IFG_FILE_LIST] = join(self.testdir, 'obs/ifms')
+		params[OBS_DIR] = join(self.testdir,"obs/")
+		
+		prepifg.prepare_ifgs(params)
+		
+		# output files should have same extents
+		ifg = Ifg(self.exp_files[0], self.hdr_files[0])
+		ifg.open()
+		gt = ifg.dataset.GetGeoTransform()
+		exp_gt = (150.911666666, 0.000833333, 0, -34.174166665, 0, -0.000833333) # copied from gdalinfo output
+		for i,j in zip(gt, exp_gt):
+			self.assertAlmostEqual(i, j)
 		assert_geotransform_equal(self.exp_files)
 
 
