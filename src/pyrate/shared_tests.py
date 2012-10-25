@@ -9,7 +9,7 @@ from gdal import Dataset, UseExceptions
 UseExceptions()
 
 import shared
-from shared import Ifg
+from shared import Ifg, IfgException
 
 class SharedTests(unittest.TestCase):
 	
@@ -45,6 +45,30 @@ class SharedTests(unittest.TestCase):
 		self.ifg.open()
 		self.assertAlmostEqual(self.ifg.X_LAST, 150.9491667)
 		self.assertAlmostEqual(self.ifg.Y_LAST, -34.23)
+	
+	
+	def test_amp_band(self):
+		try:	
+			_ = self.ifg.amp_band
+			self.fail("Should not be able to access band without open dataset")
+		except IfgException, ex:
+			pass
+		
+		self.ifg.open()
+		data = self.ifg.amp_band.ReadAsArray()
+		self.assertEqual(data.shape, (72,47) )
+		
+	
+	def test_phase_band(self):
+		try:	
+			_ = self.ifg.phase_band
+			self.fail("Should not be able to access band without open dataset")
+		except IfgException, ex:
+			pass
+		
+		self.ifg.open()
+		data = self.ifg.phase_band.ReadAsArray()
+		self.assertEqual(data.shape, (72,47) )
 
 
 if __name__ == "__main__":
