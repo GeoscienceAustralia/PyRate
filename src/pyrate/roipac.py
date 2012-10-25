@@ -90,7 +90,7 @@ def parse_header(hdr_file):
 
 def to_ehdr_header(hdr, dest=None):
 	"""Converts a ROI_PAC header to equivalent EHdr format, allowing GDAL to read
-	ROIPAC. 'hdr' is the .rsc header path. 'dest' is an alternate path to save to"""
+	ROIPAC. 'hdr' is the .rsc header path. 'dest' is alternate path to save to."""
 	if os.path.isfile(hdr) or os.path.islink(hdr):
 		H = parse_header(hdr)
 		if dest is None:
@@ -99,14 +99,17 @@ def to_ehdr_header(hdr, dest=None):
 
 	cellsize = H[X_STEP]
 	if cellsize != abs(H[Y_STEP]):
-		err = "Unequal X and Y axis cell sizes: %s, %s" % (cellsize, H[Y_STEP])
-		raise RoipacException(err)
+		msg = "Unequal X and Y axis cell sizes: %s, %s" % (cellsize, H[Y_STEP])
+		raise RoipacException(msg)
 
-	# calc coords of lower left corner (EHdr format uses this)
+	# calc coords of lower left corner
 	yllcorner = H[Y_FIRST] + (H[FILE_LENGTH] * H[Y_STEP])
 	if yllcorner > 90 or yllcorner < -90:
 		raise RoipacException("Invalid Y latitude for yllcorner: %s" % yllcorner)
-
+	
+	# create ESRI/EHdr format header, using ROIPAC defaults
+	# NB: ROIPAC uses 0 for phase NODATA, which isn't quite correct. Use zero for
+	# now, which allows GDAL to recognise NODATA cells
 	with open(dest, "w") as f:
 		f.write("ncols %s\n" % H[WIDTH])
 		f.write("nrows %s\n" % H[FILE_LENGTH])
