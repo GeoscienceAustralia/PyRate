@@ -8,7 +8,10 @@ from os.path import join, splitext
 from math import modf
 from subprocess import check_call
 
+from numpy import where, nan
+
 from shared import Ifg
+from roipac import filename_pair
 from config import OBS_DIR, IFG_CROP_OPT, IFG_LKSX, IFG_LKSY, IFG_FILE_LIST
 from config import IFG_XFIRST, IFG_XLAST, IFG_YFIRST, IFG_YLAST
 from ifgconstants import X_FIRST, Y_FIRST, X_LAST, Y_LAST
@@ -85,9 +88,18 @@ def prepare_ifgs(params, use_exceptions=False, verbose=False):
 	for i in ifgs:
 		s = splitext(i.data_path)
 		looks_path = s[0] + "_TODO" + ".tif" 
-		args = ["gdalwarp", "-te"] + extents + [i.data_path, looks_path]
+		args = ["gdalwarp", "-srcnodata", "None", "-te"] + extents + [i.data_path, looks_path]
 		if not verbose: args.append("-q")
-		check_call(args)	
+		check_call(args)
+		
+		# set phase NODATA to nan 
+		header = filename_pair(i.data_path)[1]
+		ifg = Ifg(looks_path, header)
+		ifg.open(readonly=False)
+		ifg.phase_band.SetNoDataValue(nan)
+		
+		# TODO: convert 0 cells to NaNs 			
+		#data = ifg.phase_band.ReadAsArray()
 
 
 class PreprocessingException(Exception):

@@ -6,6 +6,7 @@ import os
 import unittest
 from os.path import exists, join
 
+from numpy import isnan
 try:
 	from osgeo import gdal
 except:
@@ -54,14 +55,17 @@ class OutputTests(unittest.TestCase):
 		return params
 
 
+	def _default_extents_param(self):
+		# create dummy params file (relative paths to prevent chdir calls)
+		return {IFG_LKSX: 1, IFG_LKSY: 1, IFG_FILE_LIST: join(self.testdir, 'obs/ifms'),
+						OBS_DIR: join(self.testdir,"obs/") }	
+
+
 	def test_default_max_extents(self):
 		"""Test ifgcropopt=2 gives datasets cropped to max extents bounding box."""
-		
-		# create dummy params file (relative paths to prevent chdir calls)
-		params = {IFG_CROP_OPT: prepifg.MAXIMUM_CROP, IFG_LKSX: 1, IFG_LKSY: 1}
-		params[IFG_FILE_LIST] = join(self.testdir, 'obs/ifms')
-		params[OBS_DIR] = join(self.testdir,"obs/")
-		
+
+		params = self._default_extents_param()
+		params[IFG_CROP_OPT] = prepifg.MAXIMUM_CROP 
 		prepifg.prepare_ifgs(params)
 		for f in self.exp_files:
 			self.assertTrue(exists(f), msg="Output files not created")
@@ -79,11 +83,8 @@ class OutputTests(unittest.TestCase):
 	def test_min_extents(self):
 		"""Test ifgcropopt=1 crops datasets to min extents."""
 		
-		# create dummy params file (relative paths to prevent chdir calls)
-		params = {IFG_CROP_OPT: prepifg.MINIMUM_CROP, IFG_LKSX: 1, IFG_LKSY: 1}
-		params[IFG_FILE_LIST] = join(self.testdir, 'obs/ifms')
-		params[OBS_DIR] = join(self.testdir,"obs/")
-		
+		params = self._default_extents_param()		
+		params[IFG_CROP_OPT] = prepifg.MINIMUM_CROP
 		prepifg.prepare_ifgs(params)
 		ifg = Ifg(self.exp_files[0], self.hdr_files[0])
 		ifg.open()
@@ -107,6 +108,8 @@ class OutputTests(unittest.TestCase):
 			self.assertAlmostEqual(i, j)
 		assert_geotransform_equal(self.exp_files)
 		
+		# TODO: ensure extents are as specified?
+		
 	
 	def test_custom_extents_misalignment(self):
 		"""Test misaligned cropping extents raise errors."""
@@ -122,9 +125,16 @@ class OutputTests(unittest.TestCase):
 
 
 	def test_nodata(self):
-		# TODO: ensure the nodata values are copied correctly for each band
-		pass
-
+		"""Verify NODATA values are copied correctly for both bands"""
+		params = self._default_extents_param()		
+		params[IFG_CROP_OPT] = prepifg.MINIMUM_CROP
+		prepifg.prepare_ifgs(params)
+		
+		for ex, hdr in zip(self.exp_files, self.hdr_files):
+			ifg = Ifg(ex, hdr)
+			ifg.open()			
+			# NB: amplitude band doesn't have a NODATA value
+			self.assertTrue(isnan(ifg.dataset.GetRasterBand(2).GetNoDataValue()))		
 
 
 def assert_geotransform_equal(files):
