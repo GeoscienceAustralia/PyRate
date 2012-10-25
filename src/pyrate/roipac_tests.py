@@ -187,12 +187,10 @@ class ConversionTests(unittest.TestCase):
 		band = ds.GetRasterBand(2)
 		nodata = band.GetNoDataValue()
 		self.assertEqual(nodata, 0) # check default ROIPAC NODATA 
-		data = band.ReadAsArray()
-		self.assertTrue(amin(data) != 0)
-
+		
 		# ensure decent data is retrieved
-		mx = amax(data)
-		self.assertTrue(mx != 0)
+		data = band.ReadAsArray()
+		self.assertTrue(amin(data) != 0) # ignore max as NODATA is 0
 		self.assertTrue(data.ptp() != 0)		
 		
 		# cleanup
