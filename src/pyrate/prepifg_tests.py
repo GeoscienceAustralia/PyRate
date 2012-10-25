@@ -6,7 +6,8 @@ import os
 import unittest
 from os.path import exists, join
 
-from numpy import isnan
+from numpy import  isnan, nanmax, nanmin
+
 try:
 	from osgeo import gdal
 except:
@@ -132,9 +133,28 @@ class OutputTests(unittest.TestCase):
 		
 		for ex, hdr in zip(self.exp_files, self.hdr_files):
 			ifg = Ifg(ex, hdr)
-			ifg.open()			
+			ifg.open()	
 			# NB: amplitude band doesn't have a NODATA value
-			self.assertTrue(isnan(ifg.dataset.GetRasterBand(2).GetNoDataValue()))		
+			self.assertTrue(isnan(ifg.dataset.GetRasterBand(2).GetNoDataValue()))
+
+
+	def test_nans(self):
+		"""Verify that NaNs replace 0 in the multilooked phase band"""
+		params = self._default_extents_param()		
+		params[IFG_CROP_OPT] = prepifg.MINIMUM_CROP
+		prepifg.prepare_ifgs(params)
+		
+		for ex, hdr in zip(self.exp_files, self.hdr_files):
+			ifg = Ifg(ex, hdr)
+			ifg.open()
+			
+			phase = ifg.phase_band.ReadAsArray()
+			self.assertFalse((phase == 0).any() )
+			self.assertTrue((isnan(phase)).any() )
+		
+		self.assertAlmostEqual(nanmax(phase), 4.247, 3) # copied from gdalinfo
+		self.assertAlmostEqual(nanmin(phase), 0.009, 3) # copied from gdalinfo
+
 
 
 def assert_geotransform_equal(files):

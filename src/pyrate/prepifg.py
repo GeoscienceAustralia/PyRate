@@ -88,18 +88,18 @@ def prepare_ifgs(params, use_exceptions=False, verbose=False):
 	for i in ifgs:
 		s = splitext(i.data_path)
 		looks_path = s[0] + "_TODO" + ".tif" 
-		args = ["gdalwarp", "-srcnodata", "None", "-te"] + extents + [i.data_path, looks_path]
+		args = ["gdalwarp", "-overwrite", "-srcnodata", "None", "-te"] + extents + [i.data_path, looks_path]
 		if not verbose: args.append("-q")
 		check_call(args)
 		
-		# set phase NODATA to nan 
+		# set cells with phase == 0 and NODATA to NaN
 		header = filename_pair(i.data_path)[1]
 		ifg = Ifg(looks_path, header)
 		ifg.open(readonly=False)
 		ifg.phase_band.SetNoDataValue(nan)
-		
-		# TODO: convert 0 cells to NaNs 			
-		#data = ifg.phase_band.ReadAsArray()
+		data = ifg.phase_band.ReadAsArray()
+		data = where(data == 0, nan, data) # 0s to NaNs 		
+		ifg.phase_band.WriteArray(data)
 
 
 class PreprocessingException(Exception):
