@@ -186,7 +186,7 @@ class ConversionTests(unittest.TestCase):
 		# check phase (band 2) for data
 		band = ds.GetRasterBand(2)
 		nodata = band.GetNoDataValue()
-		self.assertEqual(nodata, 0)
+		self.assertEqual(nodata, 0) # check default ROIPAC NODATA 
 		data = band.ReadAsArray()
 		self.assertTrue(amin(data) != 0)
 
