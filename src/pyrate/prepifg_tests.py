@@ -172,6 +172,23 @@ class OutputTests(unittest.TestCase):
 		for f in self.exp_files:
 			self.assertTrue(exists(f))
 		
+		# is resampled dataset the correct size?
+		ifgs = [Ifg(p, h) for p,h in zip(self.exp_files, self.hdr_files)]
+		for i in ifgs:
+			i.open()
+			self.assertEqual(i.dataset.RasterXSize, 20 / scale)
+			self.assertEqual(i.dataset.RasterYSize, 28 / scale)
+			
+			self.fail("TODO: multilooking")
+
+	
+	def test_equal_resolution(self):
+		raise NotImplementedError
+
+
+	def test_fix_old_headers(self):
+		raise NotImplementedError
+	
 		
 		
 

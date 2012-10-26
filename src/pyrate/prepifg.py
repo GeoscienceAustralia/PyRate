@@ -14,7 +14,7 @@ from shared import Ifg
 from roipac import filename_pair
 from config import OBS_DIR, IFG_CROP_OPT, IFG_LKSX, IFG_LKSY, IFG_FILE_LIST
 from config import IFG_XFIRST, IFG_XLAST, IFG_YFIRST, IFG_YLAST
-from ifgconstants import X_FIRST, Y_FIRST, X_LAST, Y_LAST
+from ifgconstants import X_FIRST, Y_FIRST, X_LAST, Y_LAST, X_STEP, Y_STEP
 
 # Constants
 MINIMUM_CROP = 1
@@ -22,6 +22,9 @@ MAXIMUM_CROP = 2
 CUSTOM_CROP = 3
 NO_CROP = 4
 GRID_TOL = 1e-6
+
+# TODO: should test if resolution is equal for the grids
+
 
 
 def prepare_ifgs(params, use_exceptions=False, verbose=False):
@@ -67,7 +70,7 @@ def prepare_ifgs(params, use_exceptions=False, verbose=False):
 			
 			# handle cases where division gives remainder near zero, or just < 1
 			if remainder > GRID_TOL and remainder < (1 - GRID_TOL):								
-				msg = "%s crop extent is not within %s of the grid coords" % (par, GRID_TOL)
+				msg = "%s crop extent not within %s of grid coordinate" % (par, GRID_TOL)
 				if use_exceptions:
 					raise PreprocessingException(msg)
 				else:
@@ -79,18 +82,25 @@ def prepare_ifgs(params, use_exceptions=False, verbose=False):
 		raise NotImplementedError("Same as maximum for IFGs of same size")
 		
 	else:
-		raise PreprocessingException("Uncrecognised crop option: %s" % crop_opt)
+		raise PreprocessingException("Unrecognised crop option: %s" % crop_opt)
 	
-	# use GDAL to reproject dataset
-	extents = [str(s) for s in (xmin, ymin, xmax, ymax) ]
+	# calculate args for gdalwarp reprojection
+	extents = [str(s) for s in (xmin, ymin, xmax, ymax) ]	
 	resolution = None
+	if params[IFG_LKSX] > 1 or params[IFG_LKSY] > 1:
+		resolution = [str(params[IFG_LKSX] * i.X_STEP),
+									str(params[IFG_LKSY] * i.Y_STEP) ]
 	
 	for i in ifgs:
 		s = splitext(i.data_path)
-		looks_path = s[0] + "_%srlks.tif" % params[IFG_LKSY] # NB: TODO hardcoded to .tif  
-		args = ["gdalwarp", "-overwrite", "-srcnodata", "None", "-te"] + extents + [i.data_path, looks_path]
-		if not verbose: args.append("-q")
-		check_call(args)
+		looks_path = s[0] + "_%srlks.tif" % params[IFG_LKSY] # NB: hardcoded to .tif  
+		cmd = ["gdalwarp", "-overwrite", "-srcnodata", "None", "-te"] + extents
+		if resolution:
+			cmd += ["-tr"] + resolution
+		
+		if not verbose: cmd.append("-q")		
+		cmd += [i.data_path, looks_path]		
+		check_call(cmd)
 		
 		# set cells with phase == 0 and NODATA to NaN
 		header = filename_pair(i.data_path)[1]
