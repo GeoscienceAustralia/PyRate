@@ -157,7 +157,22 @@ class OutputTests(unittest.TestCase):
 
 
 	def test_multilook(self):
-		raise NotImplementedError
+		"""Test resampling method by resampling by a factor of 4"""
+		scale = 4		
+		params = self._custom_extents_param()		
+		params[IFG_LKSX] = scale
+		params[IFG_LKSY] = scale
+		prepifg.prepare_ifgs(params)
+		
+		# check file names have been updated
+		for f in self.exp_files:
+			self.assertFalse(exists(f))
+				
+		self.exp_files = [ s.replace('_1r', '_%sr' % scale) for s in self.exp_files]
+		for f in self.exp_files:
+			self.assertTrue(exists(f))
+		
+		
 		
 
 
