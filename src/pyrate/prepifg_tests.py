@@ -158,8 +158,8 @@ class OutputTests(unittest.TestCase):
 
 	def test_multilook(self):
 		"""Test resampling method by resampling by a factor of 4"""
-		scale = 4		
-		params = self._custom_extents_param()		
+		scale = 4
+		params = self._custom_extents_param()
 		params[IFG_LKSX] = scale
 		params[IFG_LKSY] = scale
 		prepifg.prepare_ifgs(params)
@@ -182,15 +182,31 @@ class OutputTests(unittest.TestCase):
 			self.fail("TODO: multilooking")
 
 	
-	def test_equal_resolution(self):
-		raise NotImplementedError
+	def test_mimatching_resolution(self):
+		"""Ensure failure if supplied layers have different resolutions"""
+		params = self._default_extents_param()
+		params[IFG_CROP_OPT] = prepifg.MAXIMUM_CROP
+		params[IFG_FILE_LIST] = join(self.testdir, 'obs/ifms_res')
+		self.assertRaises(prepifg.PreprocessingException, prepifg.prepare_ifgs, params)
 
 
 	def test_fix_old_headers(self):
+		# TODO: ensure old header values are replaced in new objects (or create new header file?) 
 		raise NotImplementedError
-	
+
+
+	def test_invalid_looks(self):
+		params = self._custom_extents_param()
 		
+		values = [0, -1, -10, -100000.6, ""]
+		for v in values:
+			params[IFG_LKSX] = v
+			self.assertRaises(prepifg.PreprocessingException, prepifg.prepare_ifgs, params)
 		
+		params[IFG_LKSX] = 1
+		for v in values:
+			params[IFG_LKSX] = v
+			self.assertRaises(prepifg.PreprocessingException, prepifg.prepare_ifgs, params)
 
 
 

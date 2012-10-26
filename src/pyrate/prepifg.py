@@ -6,9 +6,10 @@ Created on 23/10/2012
 import os, sys
 from os.path import join, splitext
 from math import modf
+from numbers import Number
 from subprocess import check_call
 
-from numpy import where, nan
+from numpy import array, where, nan
 
 from shared import Ifg
 from roipac import filename_pair
@@ -23,16 +24,18 @@ CUSTOM_CROP = 3
 NO_CROP = 4
 GRID_TOL = 1e-6
 
-# TODO: should test if resolution is equal for the grids
-
 
 
 def prepare_ifgs(params, use_exceptions=False, verbose=False):
+	"""Produces multilooked/resampled data files for PyRate analysis"""
+	
+	check_looks(params)
 	with open(params[IFG_FILE_LIST]) as f:
 		filelist = f.readlines()
 	
 	paths = [join(params[OBS_DIR], p) for p in filelist ]
 	ifgs = [Ifg(p) for p in paths]
+	check_resolution(ifgs)	
 	for i in ifgs:
 		i.open()
 		
@@ -110,6 +113,28 @@ def prepare_ifgs(params, use_exceptions=False, verbose=False):
 		data = ifg.phase_band.ReadAsArray()
 		data = where(data == 0, nan, data) # 0s to NaNs 		
 		ifg.phase_band.WriteArray(data)
+
+
+def check_resolution(ifgs):
+	"""Verifies Ifg resolutions are equal for the given grids"""
+	for var in [X_STEP, Y_STEP]:
+		values = array([getattr(i, var) for i in ifgs])
+		if not (values == values[0]).all():
+			msg = "Grid resolution does not match for %s" % var
+			raise PreprocessingException(msg)
+
+
+def check_looks(params):
+	"""Verifies looks parameters are valid"""
+	xscale = params[IFG_LKSX]
+	yscale = params[IFG_LKSY]
+	if not (isinstance(xscale, Number) and isinstance(yscale, Number)):
+		msg = "Non-numeric looks parameter(s), x: %s, y: %s" % (xscale, yscale)
+		raise PreprocessingException(msg)
+	
+	if not (xscale > 0 and yscale > 0):
+		msg = "Invalid looks parameter(s), x: %s, y: %s" % (xscale, yscale)
+		raise PreprocessingException(msg)
 
 
 class PreprocessingException(Exception):
