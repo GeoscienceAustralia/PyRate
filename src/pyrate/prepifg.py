@@ -31,9 +31,9 @@ def prepare_ifgs(params, use_exceptions=False, verbose=False):
 	paths = [join(params[OBS_DIR], p) for p in filelist ]
 	ifgs = [Ifg(p) for p in paths]
 	for i in ifgs:
-		i.open() # creates header files if needed
+		i.open()
 		
-	# TODO: for CROP, LOOKING, RESCALE, use gdalwarp  eg:  gdalwarp -te 1 -2 5 2 -tr 2 2 -r bilinear
+	# calculate crop option for passing to gdalwarp
 	crop_opt = params[IFG_CROP_OPT]
 	if crop_opt == MINIMUM_CROP:
 		xmin = max([i.X_FIRST for i in ifgs])
@@ -87,7 +87,7 @@ def prepare_ifgs(params, use_exceptions=False, verbose=False):
 	
 	for i in ifgs:
 		s = splitext(i.data_path)
-		looks_path = s[0] + "_TODO" + ".tif" 
+		looks_path = s[0] + "_%srlks.tif" % params[IFG_LKSY] # NB: TODO hardcoded to .tif  
 		args = ["gdalwarp", "-overwrite", "-srcnodata", "None", "-te"] + extents + [i.data_path, looks_path]
 		if not verbose: args.append("-q")
 		check_call(args)

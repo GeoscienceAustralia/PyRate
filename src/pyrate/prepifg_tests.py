@@ -32,7 +32,7 @@ class OutputTests(unittest.TestCase):
 		tmp = ["obs/geo_060619-061002.unw.rsc", "obs/geo_070326-070917.unw.rsc"]
 		self.hdr_files = [join(self.testdir, t) for t in tmp]
 		
-		tmp = ["obs/geo_060619-061002_TODO.tif", "obs/geo_070326-070917_TODO.tif"]	
+		tmp = ["obs/geo_060619-061002_1rlks.tif", "obs/geo_070326-070917_1rlks.tif"]	
 		self.exp_files = [join(self.testdir, t) for t in tmp]
 
 
@@ -154,6 +154,11 @@ class OutputTests(unittest.TestCase):
 		
 		self.assertAlmostEqual(nanmax(phase), 4.247, 3) # copied from gdalinfo
 		self.assertAlmostEqual(nanmin(phase), 0.009, 3) # copied from gdalinfo
+
+
+	def test_multilook(self):
+		raise NotImplementedError
+		
 
 
 
