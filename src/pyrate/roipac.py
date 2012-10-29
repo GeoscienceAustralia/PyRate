@@ -13,6 +13,9 @@ from ifgconstants import ROI_PAC_HEADER_FILE_EXT, DATE, DATE12
 from ifgconstants import X_STEP, Y_STEP, FILE_LENGTH, TIME_SPAN_YEAR
 from ifgconstants import X_FIRST, X_LAST, Y_FIRST, Y_LAST, WIDTH, MASTER, SLAVE
 
+# constants
+ROIPAC_HEADER_LEFT_JUSTIFY = 18
+
 
 
 def filename_pair(base):
@@ -124,6 +127,14 @@ def to_ehdr_header(hdr, dest=None):
 		f.write("pixeltype float\n")
 
 	return dest
+
+
+def write_roipac_header(params, dest_path):
+	"""Writes ROIPAC format header given a dict of parameters"""
+	with open(dest_path, 'w') as dest:
+		for i in params.items():
+			line = i[0].ljust(ROIPAC_HEADER_LEFT_JUSTIFY) + str(i[1]) + "\n"
+			dest.write(line)	
 
 
 class RoipacException(Exception):
