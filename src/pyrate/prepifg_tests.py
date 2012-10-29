@@ -116,10 +116,8 @@ class OutputTests(unittest.TestCase):
 		for i,j in zip(gt, exp_gt):
 			self.assertAlmostEqual(i, j)
 		assert_geotransform_equal(self.exp_files)
-		
-		# TODO: ensure extents are as specified?
-		
-	
+
+
 	def test_custom_extents_misalignment(self):
 		"""Test misaligned cropping extents raise errors."""
 		
