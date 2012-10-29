@@ -15,10 +15,11 @@ from scipy.stats.stats import nanmean
 from numpy import array, where, nan, isnan, mean, float32, zeros
 
 from shared import Ifg
-from roipac import filename_pair
+from roipac import filename_pair, write_roipac_header
 from config import OBS_DIR, IFG_CROP_OPT, IFG_LKSX, IFG_LKSY, IFG_FILE_LIST
 from config import IFG_XFIRST, IFG_XLAST, IFG_YFIRST, IFG_YLAST
 from ifgconstants import X_FIRST, Y_FIRST, X_LAST, Y_LAST, X_STEP, Y_STEP
+from ifgconstants import WIDTH, FILE_LENGTH, WAVELENGTH
 
 # Constants
 MINIMUM_CROP = 1
@@ -121,10 +122,12 @@ def prepare_ifgs(params, use_exceptions=False, verbose=False):
 		check_call(cmd)		
 		
 		# Add missing metadata to new interferograms
-		header = filename_pair(i.data_path)[1] # TODO: need new generated header around here
-		ifg = Ifg(looks_path, header)
+		ifg = Ifg(looks_path, i.hdr_path)
 		ifg.open(readonly=False)
 		ifg.phase_band.SetNoDataValue(nan) # phase == 0 is incoherent
+		
+		new_hdr_path = filename_pair(looks_path)[1]
+		_create_new_roipac_header(i, ifg)
 		
 		# data is only None if there is no resampling
 		if data is None:
@@ -152,7 +155,25 @@ def resample(data, xscale, yscale):
 			dest[y,x] = mean(non_nans)
 	
 	return dest
+
+
+def _create_new_roipac_header(src_ifg, new_ifg, dest=None):
+	"""Translates an existing ROIPAC Ifg header to new values following cropping
+	and resampling."""
 	
+	geotrans = new_ifg.dataset.GetGeoTransform()
+	newpars = { WIDTH: new_ifg.dataset.RasterXSize,
+		FILE_LENGTH: new_ifg.dataset.RasterYSize,
+		X_FIRST: geotrans[0],
+		X_STEP: geotrans[1],
+		Y_FIRST: geotrans[3],
+		Y_STEP: geotrans[5],
+		WAVELENGTH: src_ifg.WAVELENGTH }
+	
+	if dest is None:
+		dest = filename_pair(new_ifg.data_path)[1]
+	write_roipac_header(newpars, dest)
+
 
 def check_resolution(ifgs):
 	"""Verifies Ifg resolutions are equal for the given grids"""

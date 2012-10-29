@@ -21,12 +21,14 @@ gdal.UseExceptions()
 
 import prepifg
 from shared import Ifg
+from roipac import filename_pair
 from config import OBS_DIR, IFG_CROP_OPT, IFG_LKSX, IFG_LKSY, IFG_FILE_LIST
 from config import IFG_XFIRST, IFG_XLAST, IFG_YFIRST, IFG_YLAST
 
 
+
 class OutputTests(unittest.TestCase):
-	"""TODO"""
+	"""Tests aspects of the prepifg.py script, such as resampling, """
 	
 	def setUp(self):
 		self.xs = 0.000833333
@@ -38,11 +40,13 @@ class OutputTests(unittest.TestCase):
 		
 		tmp = ["obs/geo_060619-061002_1rlks.tif", "obs/geo_070326-070917_1rlks.tif"]	
 		self.exp_files = [join(self.testdir, t) for t in tmp]
+		self.exp_hdr_files = [s + ".rsc" for s in self.exp_files]
 
 
 	def tearDown(self):
-		# clear tmp output files after each run
-		for f in self.exp_files:
+		# TODO: clean out *.hdr files?
+		# clear temp output files after each run
+		for f in self.exp_files + self.exp_hdr_files:
 			if exists(f):
 				os.remove(f)
 
@@ -161,9 +165,8 @@ class OutputTests(unittest.TestCase):
 
 
 	def test_multilook(self):
-		"""Test resampling method by resampling by a factor of 4"""
-		
-		scale = 4
+		"""Test resampling method using a resampling factor of 4"""		
+		scale = 4 # assumes square cells
 		params = self._custom_extents_param()
 		params[IFG_LKSX] = scale
 		params[IFG_LKSY] = scale
@@ -174,6 +177,7 @@ class OutputTests(unittest.TestCase):
 			self.assertFalse(exists(f))
 				
 		self.exp_files = [ s.replace('_1r', '_%sr' % scale) for s in self.exp_files]
+		self.exp_hdr_files = [filename_pair(s)[1] for s in self.exp_files]
 		for f in self.exp_files:
 			self.assertTrue(exists(f))
 		
@@ -193,8 +197,8 @@ class OutputTests(unittest.TestCase):
 			act = i.phase_band.ReadAsArray()
 			assert_array_almost_equal(exp_resample, act)	
 
-	
-	def test_mismatching_resolution(self):
+
+	def test_mismatching_resolution_failure(self):
 		"""Ensure failure if supplied layers have different resolutions"""
 		params = self._default_extents_param()
 		params[IFG_CROP_OPT] = prepifg.MAXIMUM_CROP
@@ -203,14 +207,33 @@ class OutputTests(unittest.TestCase):
 
 
 	def test_new_rsc_header(self):
-		# TODO: ensure old header values are replaced in new objects (or create new header file?) 
-		raise NotImplementedError
+		# Verify new ROIPAC header files are created when resampling 
+		scale = 2 # assumes square cells
+		params = self._custom_extents_param()
+		params[IFG_LKSX] = scale
+		params[IFG_LKSY] = scale
+		prepifg.prepare_ifgs(params)
+		
+		self.exp_files = [ s.replace('_1r', '_%sr' % scale) for s in self.exp_files]
+		self.exp_hdr_files = [s + ".rsc" for s in self.exp_files] 
+		ifgs = [Ifg(p) for p in self.exp_files]
+		
+		for i in ifgs:
+			self.assertEqual(i.WIDTH, 20 / scale)
+			self.assertEqual(i.FILE_LENGTH, 28 / scale)
+			self.assertEqual(i.X_FIRST, params[IFG_XFIRST])
+			self.assertEqual(i.Y_FIRST, params[IFG_YFIRST])
+			
+			orig_xres = 0.000833333
+			orig_yres = -0.000833333
+			self.assertEqual(i.X_STEP, scale * orig_xres)
+			self.assertEqual(i.Y_STEP, scale * orig_yres)
 
 
 	def test_invalid_looks(self):
-		"""Verify only numeric values can be given for multilooking."""
-		params = self._custom_extents_param()
+		"""Verify only numeric values can be given for multilooking"""
 		
+		params = self._custom_extents_param()		
 		values = [0, -1, -10, -100000.6, ""]
 		for v in values:
 			params[IFG_LKSX] = v
