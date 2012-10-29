@@ -7,6 +7,7 @@ import os, sys
 from os.path import join, splitext
 from math import modf
 from numbers import Number
+from tempfile import mkstemp
 from itertools import product
 from subprocess import check_call
 
@@ -103,15 +104,15 @@ def prepare_ifgs(params, use_exceptions=False, verbose=False):
 		# resampling method (gdalwarp lacks Pirate averaging method)
 		data = None
 		if resolution:			
-			tmp = "z.tif~" # TODO: use Python temp file methods
-			check_call(cmd + [i.data_path, tmp])
-			ifg_tmp = Ifg(tmp, i.hdr_path)
+			tmp_path = mkstemp()[1]
+			check_call(cmd + [i.data_path, tmp_path])
+			ifg_tmp = Ifg(tmp_path, i.hdr_path)
 			ifg_tmp.open()
 			data = ifg_tmp.phase_band.ReadAsArray()
 			data = where(data == 0, nan, data) # flag incoherent cells as NaN
 			data = resample(data, params[IFG_LKSX], params[IFG_LKSY])
 			del ifg_tmp
-			os.remove(tmp)
+			os.remove(tmp_path)
 									
 			# args to change resolution for final outout
 			cmd += ["-tr"] + [str(r) for r in resolution]
