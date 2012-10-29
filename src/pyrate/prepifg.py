@@ -7,9 +7,11 @@ import os, sys
 from os.path import join, splitext
 from math import modf
 from numbers import Number
+from itertools import product
 from subprocess import check_call
 
-from numpy import array, where, nan
+from scipy.stats.stats import nanmean
+from numpy import array, where, nan, isnan, mean, float32, zeros
 
 from shared import Ifg
 from roipac import filename_pair
@@ -76,10 +78,7 @@ def prepare_ifgs(params, use_exceptions=False, verbose=False):
 				msg = "%s crop extent not within %s of grid coordinate" % (par, GRID_TOL)
 				if use_exceptions:
 					raise PreprocessingException(msg)
-				else:
-					sys.stderr.write("WARN: ")
-					sys.stderr.write(msg)
-					sys.stderr.write('\n')
+				sys.stderr.write("WARN: %s\n" % msg)
 		
 	elif crop_opt == NO_CROP:
 		raise NotImplementedError("Same as maximum for IFGs of same size")
@@ -91,29 +90,68 @@ def prepare_ifgs(params, use_exceptions=False, verbose=False):
 	extents = [str(s) for s in (xmin, ymin, xmax, ymax) ]	
 	resolution = None
 	if params[IFG_LKSX] > 1 or params[IFG_LKSY] > 1:
-		resolution = [str(params[IFG_LKSX] * i.X_STEP),
-									str(params[IFG_LKSY] * i.Y_STEP) ]
+		resolution = [params[IFG_LKSX] * i.X_STEP, params[IFG_LKSY] * i.Y_STEP ]
 	
+	# generate args for gdalwarp for each interferogram
 	for i in ifgs:
 		s = splitext(i.data_path)
 		looks_path = s[0] + "_%srlks.tif" % params[IFG_LKSY] # NB: hardcoded to .tif  
 		cmd = ["gdalwarp", "-overwrite", "-srcnodata", "None", "-te"] + extents
-		if resolution:
-			cmd += ["-tr"] + resolution
-		
 		if not verbose: cmd.append("-q")		
-		cmd += [i.data_path, looks_path]		
-		check_call(cmd)
+				
+		# HACK: if resampling, cut original seg with gdalwarp & perform tile averaging
+		# resampling method (gdalwarp lacks Pirate averaging method)
+		data = None
+		if resolution:			
+			tmp = "z.tif~" # TODO: use Python temp file methods
+			check_call(cmd + [i.data_path, tmp])
+			ifg_tmp = Ifg(tmp, i.hdr_path)
+			ifg_tmp.open()
+			data = ifg_tmp.phase_band.ReadAsArray()
+			data = where(data == 0, nan, data) # flag incoherent cells as NaN
+			data = resample(data, params[IFG_LKSX], params[IFG_LKSY])
+			del ifg_tmp
+			os.remove(tmp)
+									
+			# args to change resolution for final outout
+			cmd += ["-tr"] + [str(r) for r in resolution]
 		
-		# set cells with phase == 0 and NODATA to NaN
-		header = filename_pair(i.data_path)[1]
+		cmd += [i.data_path, looks_path]
+		check_call(cmd)		
+		
+		# Add missing metadata to new interferograms
+		header = filename_pair(i.data_path)[1] # TODO: need new generated header around here
 		ifg = Ifg(looks_path, header)
 		ifg.open(readonly=False)
-		ifg.phase_band.SetNoDataValue(nan)
-		data = ifg.phase_band.ReadAsArray()
-		data = where(data == 0, nan, data) # 0s to NaNs 		
+		ifg.phase_band.SetNoDataValue(nan) # phase == 0 is incoherent
+		
+		# data is only None if there is no resampling
+		if data is None:
+			data = ifg.phase_band.ReadAsArray()
+			data = where(data == 0, nan, data) # flag incoherent cells as NaN
+		
 		ifg.phase_band.WriteArray(data)
 
+
+def resample(data, xscale, yscale):
+	"""Resamples/averages 'data' from tile size given by scaling factors. Assumes
+	incoherent cells have been converted to NaNs."""
+	
+	ysize, xsize = data.shape
+	xres, yres = (xsize / xscale), (ysize / yscale)
+	dest = zeros((yres, xres), dtype=float32) * nan
+	
+	# alternate mean without nans
+	# TODO: threshold for # NaN cells?
+	for y,x in product(xrange(yres), xrange(xres)):
+		tile = data[y * yscale : (y+1) * yscale, x * xscale : (x+1) * xscale]
+		non_nans = [ tile[crd] for crd in product(xrange(yscale), xrange(xscale)) if not isnan(tile[crd])]
+		
+		if non_nans:
+			dest[y,x] = mean(non_nans)
+	
+	return dest
+	
 
 def check_resolution(ifgs):
 	"""Verifies Ifg resolutions are equal for the given grids"""

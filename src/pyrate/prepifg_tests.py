@@ -4,9 +4,13 @@
 
 import os
 import unittest
+from itertools import product
 from os.path import exists, join
 
-from numpy import  isnan, nanmax, nanmin
+from math import floor
+from scipy.stats.stats import nanmean
+from numpy import  isnan, nanmax, nanmin, ones, nan, mean
+from numpy.testing import assert_array_almost_equal
 
 try:
 	from osgeo import gdal
@@ -158,6 +162,7 @@ class OutputTests(unittest.TestCase):
 
 	def test_multilook(self):
 		"""Test resampling method by resampling by a factor of 4"""
+		
 		scale = 4
 		params = self._custom_extents_param()
 		params[IFG_LKSX] = scale
@@ -174,15 +179,22 @@ class OutputTests(unittest.TestCase):
 		
 		# is resampled dataset the correct size?
 		ifgs = [Ifg(p, h) for p,h in zip(self.exp_files, self.hdr_files)]
-		for i in ifgs:
+		for n,i in enumerate(ifgs):
 			i.open()
 			self.assertEqual(i.dataset.RasterXSize, 20 / scale)
 			self.assertEqual(i.dataset.RasterYSize, 28 / scale)
 			
-			self.fail("TODO: multilooking")
+			# verify resampling
+			path = join(self.testdir, "obs/%s.tif" % n)
+			ds = gdal.Open(path)
+			src_data = ds.GetRasterBand(2).ReadAsArray()
+			exp_resample = multilooking(src_data, scale, scale)
+			self.assertEqual(exp_resample.shape, (7,5))
+			act = i.phase_band.ReadAsArray()
+			assert_array_almost_equal(exp_resample, act)	
 
 	
-	def test_mimatching_resolution(self):
+	def test_mismatching_resolution(self):
 		"""Ensure failure if supplied layers have different resolutions"""
 		params = self._default_extents_param()
 		params[IFG_CROP_OPT] = prepifg.MAXIMUM_CROP
@@ -190,12 +202,13 @@ class OutputTests(unittest.TestCase):
 		self.assertRaises(prepifg.PreprocessingException, prepifg.prepare_ifgs, params)
 
 
-	def test_fix_old_headers(self):
+	def test_new_rsc_header(self):
 		# TODO: ensure old header values are replaced in new objects (or create new header file?) 
 		raise NotImplementedError
 
 
 	def test_invalid_looks(self):
+		"""Verify only numeric values can be given for multilooking."""
 		params = self._custom_extents_param()
 		
 		values = [0, -1, -10, -100000.6, ""]
@@ -208,6 +221,32 @@ class OutputTests(unittest.TestCase):
 			params[IFG_LKSX] = v
 			self.assertRaises(prepifg.PreprocessingException, prepifg.prepare_ifgs, params)
 
+
+def multilooking(src, xscale, yscale):
+	"""Port of looks.m from MATLAB Pirate. Args src and dest are numpy arrays."""
+		
+	rows, cols = src.shape
+	rows_lowres = int(floor(rows / yscale))
+	cols_lowres = int(floor(cols / xscale))
+	dest = ones((rows_lowres, cols_lowres)) * nan
+
+	# TODO: threshold of valid pixels
+
+	size = xscale * yscale
+	for r in range(rows_lowres):
+		for c in range(cols_lowres):
+			ys = r * yscale
+			ye = ys + yscale
+			xs = c * xscale
+			xe = xs + xscale
+			
+			# nanmean only works on one axis
+			patch = src[ys:ye, xs:xe]
+			reshaped = patch.reshape(size)
+			if not isnan(reshaped).all():
+				dest[r,c] = nanmean(reshaped)
+	
+	return dest
 
 
 def assert_geotransform_equal(files):
