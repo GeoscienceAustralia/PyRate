@@ -80,6 +80,7 @@ class OutputTests(unittest.TestCase):
 			self.assertTrue(exists(f), msg="Output files not created")
 
 		# output files should have same extents
+		# NB: also verifies gdalwarop correctly copies geotransform across
 		ifg = Ifg(self.exp_files[0], self.hdr_files[0])
 		ifg.open()
 		gt = ifg.dataset.GetGeoTransform()
@@ -99,11 +100,12 @@ class OutputTests(unittest.TestCase):
 		ifg.open()
 		
 		# output files should have same extents
+		# NB: also verifies gdalwarop correctly copies geotransform across
 		gt = ifg.dataset.GetGeoTransform()
 		exp_gt = (150.911666666, 0.000833333, 0, -34.172499999, 0, -0.000833333) # copied from gdalinfo output
 		for i,j in zip(gt, exp_gt):
 			self.assertAlmostEqual(i, j)
-		assert_geotransform_equal(self.exp_files)
+		assert_geotransform_equal(self.exp_files) 
 	
 	
 	def test_custom_extents(self):
@@ -241,6 +243,16 @@ class OutputTests(unittest.TestCase):
 		for v in values:
 			params[IFG_LKSX] = v
 			self.assertRaises(prepifg.PreprocessingException, prepifg.prepare_ifgs, params)
+
+
+	def test_nan_threshold(self):
+		# TODO: test threshold based on number of NaNs per averaging tile 
+		raise NotImplementedError
+
+
+	def test_los_conversion(self):
+		# TODO: needs LOS matrix
+		raise NotImplementedError
 
 
 def multilooking(src, xscale, yscale):
