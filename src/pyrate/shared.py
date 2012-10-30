@@ -6,7 +6,13 @@ Created on 12/09/2012
 '''
 
 import os
-import gdal, gdalconst
+
+try:
+	from osgeo import gdal, gdalconst 
+except:
+	import gdal, gdalconst
+
+gdal.UseExceptions()
 
 import roipac
 
@@ -18,7 +24,7 @@ import roipac
 class Ifg(object):
 	"""Interferogram class, representing the difference between two acquisitions.
 	Ifg objects double as a container for related data."""
-
+	
 	def __init__(self, path, hdr_path=None):
 		if hdr_path:
 			# handle non default header (eg. for look files in other formats)
