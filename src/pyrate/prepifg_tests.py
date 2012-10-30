@@ -9,8 +9,8 @@ from os.path import exists, join
 
 from math import floor
 from scipy.stats.stats import nanmean
-from numpy import  isnan, nanmax, nanmin, ones, nan, mean
-from numpy.testing import assert_array_almost_equal
+from numpy import  isnan, nanmax, nanmin, ones, nan, mean, array, reshape
+from numpy.testing import assert_array_almost_equal, assert_array_equal
 
 try:
 	from osgeo import gdal
@@ -170,7 +170,7 @@ class OutputTests(unittest.TestCase):
 		params = self._custom_extents_param()
 		params[IFG_LKSX] = scale
 		params[IFG_LKSY] = scale
-		prepifg.prepare_ifgs(params)
+		prepifg.prepare_ifgs(params, threshold=1.0) # all nans, ignore cell
 		
 		# check file names have been updated
 		for f in self.exp_files:
@@ -244,10 +244,41 @@ class OutputTests(unittest.TestCase):
 			params[IFG_LKSX] = v
 			self.assertRaises(prepifg.PreprocessingException, prepifg.prepare_ifgs, params)
 
+	
+	def test_nan_threshold_inputs(self):
+		data = ones((1,1))
+		for thresh in [-10, -1, -0.5, 1.000001, 10]:
+			self.assertRaises(ValueError, prepifg.resample, data, 2, 2, thresh)
+
 
 	def test_nan_threshold(self):
-		# TODO: test threshold based on number of NaNs per averaging tile 
-		raise NotImplementedError
+		# test threshold based on number of NaNs per averaging tile
+		data = ones((2,10))
+		data[0,3:] = nan
+		data[1,7:] = nan
+		
+		# key: NaN threshold as a % of pixels, expected result
+		expected = [ (0.0, [1, nan, nan, nan, nan]),
+								(0.25, [1, nan, nan, nan, nan]),
+								(0.5, [1, 1, nan, nan, nan]),								
+								(0.75, [1, 1, 1, nan, nan]),
+								(1.0, [1, 1, 1, 1, nan])  ]
+		
+		for thresh, exp in expected:
+			res = prepifg.resample(data, xscale=2, yscale=2, threshold=thresh)
+			assert_array_equal(res, reshape(exp, res.shape))
+
+
+	def test_nan_threshold_alt(self):
+		# test threshold on odd numbers
+		data = ones((3,6))
+		data[0] = nan
+		data[1,2:5] = nan
+		
+		expected = [ (0.4, [nan,nan]), (0.5, [1, nan]), (0.7, [1, 1]) ]
+		for thresh, exp in expected:
+			res = prepifg.resample(data, xscale=3, yscale=3, threshold=thresh)
+			assert_array_equal(res, reshape(exp, res.shape))		
 
 
 	def test_los_conversion(self):

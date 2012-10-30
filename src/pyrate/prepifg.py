@@ -30,7 +30,7 @@ GRID_TOL = 1e-6
 
 
 
-def prepare_ifgs(params, use_exceptions=False, verbose=False):
+def prepare_ifgs(params, threshold=0.5, use_exceptions=False, verbose=False):
 	"""Produces multilooked/resampled data files for PyRate analysis"""
 	
 	check_looks(params)
@@ -111,7 +111,7 @@ def prepare_ifgs(params, use_exceptions=False, verbose=False):
 			ifg_tmp.open()
 			data = ifg_tmp.phase_band.ReadAsArray()
 			data = where(data == 0, nan, data) # flag incoherent cells as NaN
-			data = resample(data, params[IFG_LKSX], params[IFG_LKSY])
+			data = resample(data, params[IFG_LKSX], params[IFG_LKSY], threshold)
 			del ifg_tmp
 			os.remove(tmp_path)
 									
@@ -137,21 +137,28 @@ def prepare_ifgs(params, use_exceptions=False, verbose=False):
 		ifg.phase_band.WriteArray(data)
 
 
-def resample(data, xscale, yscale):
+# TODO: refactor out to another module?
+def resample(data, xscale, yscale, threshold):
 	"""Resamples/averages 'data' from tile size given by scaling factors. Assumes
-	incoherent cells have been converted to NaNs."""
+	incoherent cells have been converted to NaNs. threshold is the minimum allowable
+	proportion of NaN cells (range from 0-1), eg. 0.25 = 1/4 or more as NaNs results
+	in a NaN value for the output cell."""
 	
+	if threshold < 0 or threshold > 1:
+		raise ValueError("threshold must be >= 0 and <= 1")
+		
 	ysize, xsize = data.shape
 	xres, yres = (xsize / xscale), (ysize / yscale)
 	dest = zeros((yres, xres), dtype=float32) * nan
-	
-	# alternate mean without nans
-	# TODO: threshold for # NaN cells?
+	tile_cell_count = xscale * yscale 
+		
+	# calc mean without nans (fractional threshold ignores tiles with excess NaNs)
 	for y,x in product(xrange(yres), xrange(xres)):
 		tile = data[y * yscale : (y+1) * yscale, x * xscale : (x+1) * xscale]
 		non_nans = [ tile[crd] for crd in product(xrange(yscale), xrange(xscale)) if not isnan(tile[crd])]
+		nan_fraction = (tile_cell_count - len(non_nans)) / float(tile_cell_count)
 		
-		if non_nans:
+		if nan_fraction < threshold or (nan_fraction == 0 and threshold == 0):		
 			dest[y,x] = mean(non_nans)
 	
 	return dest
