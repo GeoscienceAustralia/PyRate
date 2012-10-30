@@ -1,6 +1,7 @@
 '''
-Created on 12/09/2012
+Contains objects common to multiple parts of PyRate  
 
+Created on 12/09/2012
 @author: bpd900
 '''
 
@@ -9,10 +10,14 @@ import gdal, gdalconst
 
 import roipac
 
+# TODO: add phase_data and amplitude_data properties?
+#     Problem: property links to FULL dataset, which may be slower than row by row access
+#         row by row access would be efficient, but needes wavelength converted layers
+
 
 class Ifg(object):
-	"""Interferogram class, representing the difference between two acquisitions
-	and other related data."""
+	"""Interferogram class, representing the difference between two acquisitions.
+	Ifg objects double as a container for related data."""
 
 	def __init__(self, path, hdr_path=None):
 		if hdr_path:
@@ -44,6 +49,10 @@ class Ifg(object):
 
 	def __str__(self):
 		return "Ifg('%s')" % self.data_path
+
+
+	def __repr__(self):
+		return "Ifg('%s', '%s')" % (self.data_path, self.hdr_path)
 
 
 	def open(self, readonly=True):
