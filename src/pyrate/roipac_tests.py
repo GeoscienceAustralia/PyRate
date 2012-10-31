@@ -170,28 +170,27 @@ class ConversionTests(unittest.TestCase):
 
 		roipac.to_ehdr_header(hdr)
 		self.assertTrue(os.path.exists(ehdr))
-		os.system("cp %s %s" % (ehdr, "~/projects/dg9/downsamp.hdr") )
 
 		# open with GDAL and ensure there is data
 		src = "../../tests/sydney_test/obs/geo_060619-061002.unw"
 		ds = Open(src)
 		self.assertTrue(ds is not None)
-		
+
 		# check faked amplitude band 1 for 0s
 		band = ds.GetRasterBand(1)
 		data = band.ReadAsArray()
 		shape = data.shape
-		assert_array_equal(data, zeros(shape))		
-		
+		assert_array_equal(data, zeros(shape))
+
 		# check phase (band 2) for data
 		band = ds.GetRasterBand(2)
 		nodata = band.GetNoDataValue()
-		self.assertEqual(nodata, 0) # check default ROIPAC NODATA 
-		
+		self.assertEqual(nodata, 0) # check default ROIPAC NODATA
+
 		# ensure decent data is retrieved
 		data = band.ReadAsArray()
 		self.assertTrue(amin(data) != 0) # ignore max as NODATA is 0
-		self.assertTrue(data.ptp() != 0)		
-		
+		self.assertTrue(data.ptp() != 0)
+
 		# cleanup
 		os.remove(ehdr)
