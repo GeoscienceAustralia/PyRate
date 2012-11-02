@@ -9,13 +9,14 @@ Created on 12/09/2012
 import os, re, datetime
 
 from ifgconstants import INT_HEADERS, STR_HEADERS, FLOAT_HEADERS, DATE_HEADERS
-from ifgconstants import ROI_PAC_HEADER_FILE_EXT, DATE, DATE12
+from ifgconstants import ROI_PAC_HEADER_FILE_EXT, DATE, DATE12, DATUM
 from ifgconstants import X_STEP, Y_STEP, FILE_LENGTH, TIME_SPAN_YEAR
 from ifgconstants import X_FIRST, X_LAST, Y_FIRST, Y_LAST, WIDTH, MASTER, SLAVE
 
 # constants
 ROIPAC_HEADER_LEFT_JUSTIFY = 18
-
+PIXELTYPE_INT = "signedint"
+PIXELTYPE_FLOAT = "float"
 
 
 def filename_pair(base):
@@ -59,28 +60,29 @@ def parse_header(hdr_file):
 			headers[k] = parse_date(headers[k])
 		else:
 			raise RoipacException("Unrecognised header element %s: %s " % (k, headers[k]) )
+	
+	# process dates from filename if rsc file doesn't have them (skip this for DEMs)
+	if not headers.has_key(DATUM):
+		if headers.has_key(DATE) is False or headers.has_key(DATE12) is False:
+			p = re.compile(r'[0-9]+-[0-9]+')
+			m = p.search(hdr_file)
+			
+			if m:
+				s = m.group()
+				min_date_len = 13 # assumes "nnnnnn-nnnnnn" format
+				if len(s) >= min_date_len:
+					date12 = parse_date(s)
+					headers[DATE] = date12[0]
+					headers[DATE12] = date12
+			else:
+				raise RoipacException("Filename does not include master/slave dates: %s" % hdr_file)
 
-	if headers.has_key(DATE) is False or headers.has_key(DATE12) is False:
-		# probably have short form header without dates, get date from path
-		p = re.compile(r'[0-9]+-[0-9]+')
-		m = p.search(hdr_file)
+		# add master and slave alias headers
+		headers[MASTER] = headers[DATE]
+		headers[SLAVE] = headers[DATE12][-1]
 
-		if m:
-			s = m.group()
-			min_date_len = 13 # assumes "nnnnnn-nnnnnn" format
-			if len(s) >= min_date_len:
-				date12 = parse_date(s)
-				headers[DATE] = date12[0]
-				headers[DATE12] = date12
-		else:
-			raise RoipacException("Filename does not include master/slave dates: %s" % hdr_file)
-
-	# add master and slave alias headers
-	headers[MASTER] = headers[DATE]
-	headers[SLAVE] = headers[DATE12][-1]
-
-	# replace timespan as ROI_PAC is ~4 hours different to (slave - master)
-	headers[TIME_SPAN_YEAR] = (headers[SLAVE] - headers[MASTER]).days / 365.25
+		# replace timespan as ROI_PAC is ~4 hours different to (slave - master)
+		headers[TIME_SPAN_YEAR] = (headers[SLAVE] - headers[MASTER]).days / 365.25
 	
 	# add custom X|Y_LAST for convenience
 	if not headers.has_key(X_LAST):
@@ -93,12 +95,26 @@ def parse_header(hdr_file):
 
 def to_ehdr_header(hdr, dest=None):
 	"""Converts a ROI_PAC header to equivalent EHdr format, allowing GDAL to read
-	ROIPAC. 'hdr' is the .rsc header path. 'dest' is alternate path to save to."""
+	ROIPAC. 'hdr' is the .rsc header path. 'dest' is alternate path to save to. If
+	None, dest is defaulted to the 'base_file_name.hdr' """
 	if os.path.isfile(hdr) or os.path.islink(hdr):
 		H = parse_header(hdr)
+		is_dem = True if H.has_key(DATUM) else False
+
 		if dest is None:
-			i = hdr.index("unw.rsc")
-			dest = hdr[:i] + "hdr"
+			if is_dem:
+				try:
+					i = hdr.index("dem.rsc") # assumes ROIPAC has filename.dem & filename.dem.rsc 
+					dest = hdr[:i] + "hdr"
+				except ValueError as v:
+					# DEM possibly not from ROIPAC
+					raise NotImplementedError("TODO: handle non ROIPAC filenames?")
+			else:
+				try:
+					i = hdr.index("unw.rsc")
+					dest = hdr[:i] + "hdr"
+				except ValueError as v:
+					raise NotImplementedError("TODO: handle ROIPAC filename errors")
 
 	cellsize = H[X_STEP]
 	if cellsize != abs(H[Y_STEP]):
@@ -119,12 +135,19 @@ def to_ehdr_header(hdr, dest=None):
 		f.write("cellsize %s\n" % H[X_STEP])
 		f.write("xllcorner %s\n" % H[X_FIRST])
 		f.write("yllcorner %s\n" % yllcorner)
-		f.write("nodata 0\n")
-		f.write("nbands 2\n")
+		
+		if not is_dem:
+			f.write("nodata 0\n")
+		
+		f.write("nbands %s\n" % (1 if is_dem else 2) )  # number of bands
 		f.write("byteorder lsb\n")
-		f.write("layout bil\n")
-		f.write("nbits 32\n")
-		f.write("pixeltype float\n")
+		
+		if not is_dem:
+			f.write("layout bil\n") # 1 band DEM doesn't interleave data
+		
+		# ROIPAC DEMs are 16 bit signed ints, phase layers are 32 bit floats
+		f.write("nbits %s\n" % (16 if is_dem else 32) )
+		f.write("pixeltype %s\n" % (PIXELTYPE_INT if is_dem else PIXELTYPE_FLOAT) )
 
 	return dest
 
