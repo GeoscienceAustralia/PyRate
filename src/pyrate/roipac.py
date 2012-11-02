@@ -116,11 +116,6 @@ def to_ehdr_header(hdr, dest=None):
 				except ValueError as v:
 					raise NotImplementedError("TODO: handle ROIPAC filename errors")
 
-	cellsize = H[X_STEP]
-	if cellsize != abs(H[Y_STEP]):
-		msg = "Unequal X and Y axis cell sizes: %s, %s" % (cellsize, H[Y_STEP])
-		raise RoipacException(msg)
-
 	# calc coords of lower left corner
 	yllcorner = H[Y_FIRST] + (H[FILE_LENGTH] * H[Y_STEP])
 	if yllcorner > 90 or yllcorner < -90:
@@ -132,18 +127,23 @@ def to_ehdr_header(hdr, dest=None):
 	with open(dest, "w") as f:
 		f.write("ncols %s\n" % H[WIDTH])
 		f.write("nrows %s\n" % H[FILE_LENGTH])
-		f.write("cellsize %s\n" % H[X_STEP])
+		
+		# handle cells with different dimensions (square & non-square)
+		if H[X_STEP] == abs(H[Y_STEP]):
+			f.write("cellsize %s\n" % H[X_STEP])
+		else:
+			f.write("xdim %s\n" % H[X_STEP])
+			f.write("ydim %s\n" % abs(H[Y_STEP]) ) # NB: GDAL reads all zeros if ydim is -ve 		
+
 		f.write("xllcorner %s\n" % H[X_FIRST])
 		f.write("yllcorner %s\n" % yllcorner)
 		
 		if not is_dem:
 			f.write("nodata 0\n")
+			f.write("layout bil\n") # 1 band DEM doesn't interleave data
 		
 		f.write("nbands %s\n" % (1 if is_dem else 2) )  # number of bands
 		f.write("byteorder lsb\n")
-		
-		if not is_dem:
-			f.write("layout bil\n") # 1 band DEM doesn't interleave data
 		
 		# ROIPAC DEMs are 16 bit signed ints, phase layers are 32 bit floats
 		f.write("nbits %s\n" % (16 if is_dem else 32) )
