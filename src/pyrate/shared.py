@@ -1,5 +1,5 @@
 '''
-Contains objects common to multiple parts of PyRate  
+Contains objects common to multiple parts of PyRate
 
 Created on 12/09/2012
 @author: bpd900
@@ -8,7 +8,8 @@ Created on 12/09/2012
 import os
 
 try:
-	from osgeo import gdal, gdalconst 
+	from osgeo import gdal
+	from gdalconst import GA_Update
 except:
 	import gdal, gdalconst
 
@@ -24,25 +25,20 @@ import roipac
 class Ifg(object):
 	"""Interferogram class, representing the difference between two acquisitions.
 	Ifg objects double as a container for related data."""
-	
+
 	def __init__(self, path, hdr_path=None):
 		if hdr_path:
-			# handle non default header (eg. for look files in other formats)
+			# handle non default header (eg. for look files with different naming)
 			self.data_path, self.hdr_path = path, hdr_path
 		else:
 			# default the header path
 			self.data_path, self.hdr_path = roipac.filename_pair(path)
-		
+
+		# dynamically include header items as class attrs
 		header = roipac.parse_header(self.hdr_path)
+		self.__dict__.update(header)
+
 		self.ehdr_path = None # path to EHdr format header
-
-		# dynamically include header items as class attributes
-		for key, value in header.iteritems():
-			if self.__dict__.has_key(key):
-				msg = "Attribute %s already exists for %s" % (key, path)
-				raise Exception(msg)
-			self.__dict__[key] = value
-
 		self.dataset = None # for GDAL dataset obj
 		self._amp_band = None
 		self._phase_band = None
@@ -65,15 +61,13 @@ class Ifg(object):
 		'''Opens a interferogram dataset for reading. Creates ESRI/EHdr format
 		header in the data dir, so GDAL has access to recognised header.'''
 		if self.ehdr_path is None:
-			self.ehdr_path = roipac.to_ehdr_header(self.hdr_path)			
-			if readonly:
-				self.dataset = gdal.Open(self.data_path)
-			else:
-				self.dataset = gdal.Open(self.data_path, gdalconst.GA_Update)
-			
+			self.ehdr_path = roipac.to_ehdr_header(self.hdr_path)
+			args = (self.data_path,) if readonly else (self.data_path, GA_Update)
+			self.dataset = gdal.Open(*args)
+
 			if self.dataset is None:
 				raise IfgException("Error opening %s" % self.data_path)
-			
+
 		else:
 			if self.dataset is not None:
 				msg = "open() already called for %s" % self
