@@ -140,13 +140,12 @@ def to_ehdr_header(hdr, dest=None):
 
 		f.write("xllcorner %s\n" % H[X_FIRST])
 		f.write("yllcorner %s\n" % yllcorner)
+		f.write("byteorder lsb\n")
 
 		if not is_dem:
 			f.write("nodata 0\n")
 			f.write("layout bil\n") # 1 band DEM doesn't interleave data
-
-		f.write("nbands %s\n" % (1 if is_dem else 2) )  # number of bands
-		f.write("byteorder lsb\n")
+			f.write("nbands 2\n")  # number of bands
 
 		# ROIPAC DEMs are 16 bit signed ints, phase layers are 32 bit floats
 		f.write("nbits %s\n" % (16 if is_dem else 32) )

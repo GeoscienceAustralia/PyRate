@@ -174,7 +174,7 @@ class ConversionTests(unittest.TestCase):
 
 
 	def test_to_ehdr_header_with_dem(self):
-		dem_hdr = "../../tests/dem/sydney_1sec_srtm.dem.rsc"
+		dem_hdr = "../../tests/dem/sydney_trimmed.dem.rsc"
 		act = roipac.to_ehdr_header(dem_hdr)
 		self.assertEqual(act, dem_hdr[:-7] + "hdr")
 
@@ -182,16 +182,16 @@ class ConversionTests(unittest.TestCase):
 			lines = [line.strip() for line in f.readlines()]
 			values = [line.split() for line in lines]
 
-		self.assertTrue(['ncols', '7200'] in values)
-		self.assertTrue(['nrows', '10800'] in values)
+		self.assertTrue(['ncols', '47'] in values)
+		self.assertTrue(['nrows', '72'] in values)
 
 		# TODO: test different forms of cellsize
-		self.assertTrue(['cellsize', '0.000277777777782'] in values)
+		self.assertTrue(['cellsize', '0.000833333'] in values)
 		#self.assertTrue(['xdim', '0.000277777777782'] in values)
 		#self.assertTrue(['ydim', '-0.000277777777782'] in values)
 
 		self.assertFalse(['nodata', '0'] in values)
-		self.assertTrue(['nbands', '1'] in values)
+		self.assertFalse(['nbands', '1'] in values)
 		self.assertTrue(['byteorder', 'lsb'] in values)
 		self.assertFalse(['layout', 'bil'] in values)
 		self.assertTrue(['nbits', '16'] in values)
