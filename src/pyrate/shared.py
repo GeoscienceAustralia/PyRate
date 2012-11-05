@@ -98,8 +98,70 @@ class Ifg(object):
 				raise IfgException("Ifg %s has not been opened" % self.data_path)
 
 
+class Raster(object):
+	"""Generic raster class for DEMs, initial models etc"""
+
+	def __init__(self, path, hdr_path=None):
+		if hdr_path:
+			# handle non default header (eg. for look files with different naming)
+			self.data_path, self.hdr_path = path, hdr_path
+		else:
+			# default the header path
+			self.data_path, self.hdr_path = roipac.filename_pair(path)
+
+		# dynamically include header items as class attrs
+		header = roipac.parse_header(self.hdr_path)
+		self.__dict__.update(header)
+
+		self.ehdr_path = None # path to EHdr format header
+		self.dataset = None # for GDAL dataset obj
+		self._band = None
+
+
+	def __str__(self):
+		return "Raster('%s')" % self.data_path
+
+
+	def __repr__(self):
+		return "Raster('%s', '%s')" % (self.data_path, self.hdr_path)
+
+
+	def open(self, readonly=True):
+		'''Opens generic raster dataset. Creates ESRI/EHdr format header in the data
+		dir, so GDAL has a recogniseable header.'''
+		if self.ehdr_path is None:
+			self.ehdr_path = roipac.to_ehdr_header(self.hdr_path)
+			args = (self.data_path,) if readonly else (self.data_path, GA_Update)
+			self.dataset = gdal.Open(*args)
+
+			if self.dataset is None:
+				raise RasterException("Error opening %s" % self.data_path)
+
+		else:
+			if self.dataset is not None:
+				msg = "open() already called for %s" % self
+				raise RasterException(msg)
+
+
+	@property
+	def band(self):
+		if self._band is not None:
+			return self._band
+		else:
+			if self.dataset is not None:
+				self._band = self.dataset.GetRasterBand(1)
+				return self._band
+			else:
+				raise RasterException("Ifg %s has not been opened" % self.data_path)
+
+
+
 class IfgException(Exception):
 	'''Generic exception class for interferogram errors'''
+	pass
+
+class RasterException(Exception):
+	'''Generic exception for raster errors'''
 	pass
 
 class PyRateException(Exception):
