@@ -14,12 +14,13 @@ from subprocess import check_call
 from scipy.stats.stats import nanmean
 from numpy import array, where, nan, isnan, mean, float32, zeros
 
-from shared import Ifg
+from shared import Ifg, Raster
 from roipac import filename_pair, write_roipac_header
 from config import OBS_DIR, IFG_CROP_OPT, IFG_LKSX, IFG_LKSY, IFG_FILE_LIST
-from config import IFG_XFIRST, IFG_XLAST, IFG_YFIRST, IFG_YLAST
+from config import IFG_XFIRST, IFG_XLAST, IFG_YFIRST, IFG_YLAST, DEM_FILE
 from ifgconstants import X_FIRST, Y_FIRST, X_LAST, Y_LAST, X_STEP, Y_STEP
 from ifgconstants import WIDTH, FILE_LENGTH, WAVELENGTH
+from ifgconstants import Z_OFFSET, Z_SCALE, PROJECTION, DATUM
 
 # Constants
 MINIMUM_CROP = 1
@@ -45,6 +46,11 @@ def prepare_ifgs(params, threshold=0.5, use_exceptions=False, verbose=False):
 
 	paths = [join(params[OBS_DIR], p) for p in filelist ]
 	ifgs = [Ifg(p) for p in paths]
+
+	# treat DEM as Ifg as core API is equivalent
+	if params.has_key(DEM_FILE):
+		ifgs.append(Raster(params[DEM_FILE]))
+
 	check_resolution(ifgs)
 	for i in ifgs:
 		i.open()
@@ -100,47 +106,73 @@ def prepare_ifgs(params, threshold=0.5, use_exceptions=False, verbose=False):
 	if params[IFG_LKSX] > 1 or params[IFG_LKSY] > 1:
 		resolution = [params[IFG_LKSX] * i.X_STEP, params[IFG_LKSY] * i.Y_STEP ]
 
-	# generate args for gdalwarp for each interferogram
+	# Generate gdalwarp args for each interferogram. Some trickery is required to
+	# interface with gdalwarp. For resampling, gdalwarp is called 2x, once to subset
+	# the source data for averaging, the second to generate the final dataset with
+	# correct extents/shape/cell count. Without resampling, gdalwarp is needed 1x.
 	for i in ifgs:
 		s = splitext(i.data_path)
-		looks_path = s[0] + "_%srlks.tif" % params[IFG_LKSY] # NB: hardcoded to .tif
+		if isinstance(i, Ifg):
+			ext = "tif"
+		elif isinstance(i, Raster):
+			if i.is_dem():
+				ext = "dem"
+			else:
+				raise NotImplementedError("TODO: additional raster types?")
+		else:
+			raise NotImplementedError("TODO: additional raster types?")
+
+		looks_path = s[0] + "_%srlks.%s" % (params[IFG_LKSY], ext)
 		cmd = ["gdalwarp", "-overwrite", "-srcnodata", "None", "-te"] + extents
 		if not verbose: cmd.append("-q")
 
-		# HACK: if resampling, cut original seg with gdalwarp & perform tile averaging
-		# resampling method (gdalwarp lacks Pirate averaging method)
+		# HACK: if resampling, cut segment with gdalwarp & manually do tile averages
+		# resampling (gdalwarp lacks Pirate averaging method)
 		data = None
 		if resolution:
 			tmp_path = mkstemp()[1]
 			check_call(cmd + [i.data_path, tmp_path])
-			ifg_tmp = Ifg(tmp_path, i.hdr_path)
-			ifg_tmp.open()
-			data = ifg_tmp.phase_band.ReadAsArray()
-			data = where(data == 0, nan, data) # flag incoherent cells as NaN
+
+			i_tmp = type(i)(tmp_path, i.hdr_path) # dynamically handle Ifgs & Rasters
+			i_tmp.open()
+
+			if isinstance(i, Ifg):
+				# TODO: resample amplitude band too?
+				data = i_tmp.phase_band.ReadAsArray()
+				data = where(data == 0, nan, data) # flag incoherent cells as NaNs
+			elif isinstance(i, Raster):
+				data = i_tmp.band.ReadAsArray()
+			else:
+				raise NotImplementedError("TODO: other raster types to handle?")
+
 			data = resample(data, params[IFG_LKSX], params[IFG_LKSY], threshold)
-			del ifg_tmp
+			del i_tmp
 			os.remove(tmp_path)
 
 			# args to change resolution for final outout
 			cmd += ["-tr"] + [str(r) for r in resolution]
 
+		# use GDAL to cut (and resample) the final output layers
 		cmd += [i.data_path, looks_path]
 		check_call(cmd)
 
-		# Add missing metadata to new interferograms
-		ifg = Ifg(looks_path, i.hdr_path)
-		ifg.open(readonly=False)
-		ifg.phase_band.SetNoDataValue(nan) # phase == 0 is incoherent
-
+		# Add missing/updated metadata to resampled interferograms/rasters
+		new_lyr = type(i)(looks_path, i.hdr_path) # dynamically handle Ifgs/Rasters
+		new_lyr.open(readonly=False)
 		new_hdr_path = filename_pair(looks_path)[1]
-		_create_new_roipac_header(i, ifg)
+		_create_new_roipac_header(i, new_lyr) # create header file of revised values
 
-		# data is only None if there is no resampling
-		if data is None:
-			data = ifg.phase_band.ReadAsArray()
-			data = where(data == 0, nan, data) # flag incoherent cells as NaN
+		# for non-DEMs, phase bands need extra metadata & conversions
+		if hasattr(new_lyr, "phase_band"):
+			new_lyr.phase_band.SetNoDataValue(nan)
 
-		ifg.phase_band.WriteArray(data)
+			if data is None:
+				# data not resampled, so data for conversion must be read from new dataset
+				data = new_lyr.phase_band.ReadAsArray()
+				data = where(data == 0, nan, data)
+
+			# tricky: write either resampled or the basic cropped data to new layer
+			new_lyr.phase_band.WriteArray(data)
 
 
 # TODO: refactor out to another module?
@@ -176,12 +208,17 @@ def _create_new_roipac_header(src_ifg, new_ifg, dest=None):
 
 	geotrans = new_ifg.dataset.GetGeoTransform()
 	newpars = { WIDTH: new_ifg.dataset.RasterXSize,
-		FILE_LENGTH: new_ifg.dataset.RasterYSize,
-		X_FIRST: geotrans[0],
-		X_STEP: geotrans[1],
-		Y_FIRST: geotrans[3],
-		Y_STEP: geotrans[5],
-		WAVELENGTH: src_ifg.WAVELENGTH }
+							FILE_LENGTH: new_ifg.dataset.RasterYSize,
+							X_FIRST: geotrans[0],
+							X_STEP: geotrans[1],
+							Y_FIRST: geotrans[3],
+							Y_STEP: geotrans[5] }
+
+	if isinstance(src_ifg, Ifg):
+		newpars[WAVELENGTH] = src_ifg.WAVELENGTH
+	elif isinstance(src_ifg, Raster):
+		for a in [Z_OFFSET, Z_SCALE, PROJECTION, DATUM]:
+			newpars[a] = getattr(src_ifg, a)
 
 	if dest is None:
 		dest = filename_pair(new_ifg.data_path)[1]
