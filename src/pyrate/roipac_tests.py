@@ -174,7 +174,7 @@ class ConversionTests(unittest.TestCase):
 
 
 	def test_to_ehdr_header_with_dem(self):
-		dem_hdr = "../../tests/dem/sydney_trimmed.dem.rsc"
+		dem_hdr = "../../tests/sydney_test/dem/sydney_trimmed.dem.rsc"
 		act = roipac.to_ehdr_header(dem_hdr)
 		self.assertEqual(act, dem_hdr[:-7] + "hdr")
 
