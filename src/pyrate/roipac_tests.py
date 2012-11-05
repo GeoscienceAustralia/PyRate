@@ -161,23 +161,35 @@ class ConversionTests(unittest.TestCase):
 			pass
 
 
+	def test_to_ehdr_header_with_missing_file(self):
+		# ensure giving the data file breaks to_ehdr_header()
+		src = "../../tests/sydney_test/obs/fake.unw.rsc"
+		self.assertRaises(IOError, roipac.to_ehdr_header, src)
+
+
+	def test_to_ehdr_header_with_dir(self):
+		# ensure giving the data file breaks to_ehdr_header()
+		src = "../../tests/sydney_test/obs"
+		self.assertRaises(IOError, roipac.to_ehdr_header, src)
+
+
 	def test_to_ehdr_header_with_dem(self):
 		dem_hdr = "../../tests/dem/sydney_1sec_srtm.dem.rsc"
 		act = roipac.to_ehdr_header(dem_hdr)
 		self.assertEqual(act, dem_hdr[:-7] + "hdr")
-		
+
 		with open(act) as f:
 			lines = [line.strip() for line in f.readlines()]
 			values = [line.split() for line in lines]
-		
+
 		self.assertTrue(['ncols', '7200'] in values)
 		self.assertTrue(['nrows', '10800'] in values)
-		
+
 		# TODO: test different forms of cellsize
 		self.assertTrue(['cellsize', '0.000277777777782'] in values)
 		#self.assertTrue(['xdim', '0.000277777777782'] in values)
 		#self.assertTrue(['ydim', '-0.000277777777782'] in values)
-		
+
 		self.assertFalse(['nodata', '0'] in values)
 		self.assertTrue(['nbands', '1'] in values)
 		self.assertTrue(['byteorder', 'lsb'] in values)
