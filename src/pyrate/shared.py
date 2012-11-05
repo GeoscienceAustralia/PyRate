@@ -16,10 +16,12 @@ except:
 gdal.UseExceptions()
 
 import roipac
+from ifgconstants import DATUM
 
 # TODO: add phase_data and amplitude_data properties?
 #     Problem: property links to FULL dataset, which may be slower than row by row access
 #         row by row access would be efficient, but needes wavelength converted layers
+
 
 
 class Ifg(object):
@@ -141,6 +143,12 @@ class Raster(object):
 			if self.dataset is not None:
 				msg = "open() already called for %s" % self
 				raise RasterException(msg)
+
+
+	def is_dem(self):
+		if hasattr(self, DATUM):
+			return True
+		return False
 
 
 	@property

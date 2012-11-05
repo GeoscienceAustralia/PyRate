@@ -95,6 +95,12 @@ class RasterTests(unittest.TestCase):
 			self.assertTrue(getattr(self.ras, a) is not None)
 
 
+	def test_is_dem(self):
+		self.assertTrue(self.ras.is_dem())
+		self.ras = Raster('../../tests/sydney_test/obs/geo_060619-061002.unw')
+		self.assertFalse(self.ras.is_dem())
+
+
 	def test_open(self):
 		self.assertTrue(self.ras.dataset is None)
 		self.ras.open()
