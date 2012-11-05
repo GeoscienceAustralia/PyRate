@@ -19,6 +19,7 @@ OBS_DIR = 'obsdir'
 OUT_DIR = 'outdir'
 NUM_SETS = 'nsets'
 SIM_DIR = 'simdir'
+DEM_FILE = 'demfile'
 AMPLITUDE_FLAG = 'ampflag'
 PERP_BASELINE_FLAG = 'basepflag'
 
@@ -38,6 +39,7 @@ IFG_YLAST = 'ifgylast'
 PARAM_CONVERSION = { OBS_DIR : (None, "obs"),
 					IFG_FILE_LIST : (None, "ifg.list"),
 					OUT_DIR : (None, "out"),
+					DEM_FILE : (str, None),
 					PERP_BASELINE_FLAG : (bool, True),
 					AMPLITUDE_FLAG : (bool, False),
 					NUM_SETS : (int, 1),
