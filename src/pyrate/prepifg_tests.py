@@ -1,6 +1,6 @@
 # Tests for prepifg.py
+# Ben Davies, ANUSF
 #
-
 
 import os
 import unittest
@@ -9,7 +9,8 @@ from os.path import exists, join
 
 from math import floor
 from scipy.stats.stats import nanmean
-from numpy import  isnan, nanmax, nanmin, ones, nan, mean, array, reshape
+from numpy import isnan, nanmax, nanmin, nansum
+from numpy import ones, nan, mean, array, reshape, sum as npsum
 from numpy.testing import assert_array_almost_equal, assert_array_equal
 
 try:
@@ -44,7 +45,6 @@ class OutputTests(unittest.TestCase):
 
 
 	def tearDown(self):
-		# TODO: clean out *.hdr files?
 		# clear temp output files after each run
 		for f in self.exp_files + self.exp_hdr_files:
 			if exists(f):
@@ -170,7 +170,7 @@ class OutputTests(unittest.TestCase):
 		params[IFG_LKSX] = scale
 		params[IFG_LKSY] = scale
 		params[DEM_FILE] = '../../tests/sydney_test/dem/sydney_trimmed.dem'
-		prepifg.prepare_ifgs(params, threshold=1.0) # all nans, ignore cell
+		prepifg.prepare_ifgs(params, threshold=1.0) # if all nans, ignore cell
 
 		# check file names have been updated
 		for f in self.exp_files:
@@ -192,12 +192,13 @@ class OutputTests(unittest.TestCase):
 			path = join(self.testdir, "obs/%s.tif" % n)
 			ds = gdal.Open(path)
 			src_data = ds.GetRasterBand(2).ReadAsArray()
-			exp_resample = multilooking(src_data, scale, scale)
+			exp_resample = multilooking(src_data, scale, scale, thresh=0)
 			self.assertEqual(exp_resample.shape, (7,5))
 			act = i.phase_band.ReadAsArray()
 			assert_array_almost_equal(exp_resample, act)
 
 		# verify DEM has been correctly processed
+		# ignore output values as resampling has already been tested for phase  
 		exp_dem_path = '../../tests/sydney_test/dem/sydney_trimmed_4rlks.dem'
 		self.assertTrue(exists(exp_dem_path))
 
@@ -207,11 +208,8 @@ class OutputTests(unittest.TestCase):
 		self.assertEqual(dem.dataset.RasterYSize, 28 / scale)
 		data = dem.band.ReadAsArray()
 		self.assertTrue(data.ptp() != 0)
-
-		# TODO: min/max tests
-		#self.assertAlmostEqual(data.min(), 193.0)
-		#self.assertAlmostEqual(data.max(), 371.0)
-
+		
+		# cleanup		
 		paths = [dem.data_path, dem.hdr_path, dem.ehdr_path]
 		del data, dem
 		for p in paths:
@@ -305,15 +303,36 @@ class OutputTests(unittest.TestCase):
 		raise NotImplementedError
 
 
-def multilooking(src, xscale, yscale):
-	"""Port of looks.m from MATLAB Pirate. Args src and dest are numpy arrays."""
+class PrepifgTests(unittest.TestCase):
+	'''Tests for local testing functions'''
+		
+	def test_multilooking_thresh(self):
+		data = ones((3,6))
+		data[0] = nan
+		data[1,2:5] = nan
+		expected = [ (6, [nan,nan]),
+								(5, [1, nan]),
+								(4, [1, 1]) ]
+		scale = 3
+		for thresh, exp in expected:
+			res = multilooking(data, scale, scale, thresh)
+			assert_array_equal(res, reshape(exp, res.shape))
 
+
+def multilooking(src, xscale, yscale, thresh=0):
+	"""Port of looks.m from MATLAB Pirate. Args src and dest are numpy arrays. Thresh
+	is minimum number of non-NaNs required for a valid resampling segment/tile."""
+	
+	thresh = int(thresh)
+	num_cells = xscale * yscale
+	if thresh > num_cells or thresh < 0:
+		msg = "Invalid threshold: %s (need 0 <= thr <= %s" % (thresh, num_cells) 
+		raise ValueError(msg)
+	
 	rows, cols = src.shape
 	rows_lowres = int(floor(rows / yscale))
 	cols_lowres = int(floor(cols / xscale))
 	dest = ones((rows_lowres, cols_lowres)) * nan
-
-	# TODO: threshold of valid pixels
 
 	size = xscale * yscale
 	for r in range(rows_lowres):
@@ -322,11 +341,12 @@ def multilooking(src, xscale, yscale):
 			ye = ys + yscale
 			xs = c * xscale
 			xe = xs + xscale
-
-			# nanmean only works on one axis
+			
 			patch = src[ys:ye, xs:xe]
-			reshaped = patch.reshape(size)
-			if not isnan(reshaped).all():
+			num_values = num_cells - npsum(isnan(patch))
+						
+			if num_values >= thresh and num_values > 0:
+				reshaped = patch.reshape(size) # NB: nanmean only works on one axis
 				dest[r,c] = nanmean(reshaped)
 
 	return dest
