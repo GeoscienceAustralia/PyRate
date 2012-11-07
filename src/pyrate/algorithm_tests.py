@@ -1,9 +1,9 @@
 
 import unittest
-from math import pi
+from math import pi, cos, sin, radians
 
 import numpy
-from numpy import nan
+from numpy import array, nan
 
 import algorithm
 
@@ -24,9 +24,20 @@ class AlgorithmTests(unittest.TestCase):
 	def test_nan_fraction(self):
 		data = numpy.ones((4,3))
 		data[1] = nan
-		exp = 3/ float(12)
+		exp = 3 / float(12)
 		act = algorithm.nan_fraction(data)
 		self.assertEqual(act, exp)
 
 
-
+	def test_unit_vector(self):
+		azimuth = radians(77.8)
+		incidence = radians(34.3)
+		vert = cos(incidence)
+		ns = sin(incidence) * sin(azimuth)
+		ew = sin(incidence) * cos(azimuth)
+		unitv = [ew, ns, vert]
+		
+		# TODO: assumes rad input for now
+		act = algorithm.unit_vector(array([incidence]), array([azimuth]))
+		for a,e in zip(list(act), unitv):
+			self.assertEqual(a,e)
