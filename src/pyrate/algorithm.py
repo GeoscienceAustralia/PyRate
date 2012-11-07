@@ -45,4 +45,4 @@ def unit_vector(incidence, azimuth):
 	vertical = cos(incidence)
 	north_south = sin(incidence) * sin(azimuth)
 	east_west = sin(incidence) * cos(azimuth)
-	return (east_west, north_south, vertical)	
+	return east_west, north_south, vertical	

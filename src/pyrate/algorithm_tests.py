@@ -3,7 +3,8 @@ import unittest
 from math import pi, cos, sin, radians
 
 import numpy
-from numpy import array, nan
+from numpy import array, nan, reshape, squeeze
+from numpy.testing import assert_array_almost_equal
 
 import algorithm
 
@@ -30,14 +31,20 @@ class AlgorithmTests(unittest.TestCase):
 
 
 	def test_unit_vector(self):
-		azimuth = radians(77.8)
-		incidence = radians(34.3)
-		vert = cos(incidence)
-		ns = sin(incidence) * sin(azimuth)
-		ew = sin(incidence) * cos(azimuth)
-		unitv = [ew, ns, vert]
+		incidence = [radians(x) for x in (34.3, 39.3, 29.3, 22.8) ]
+		azimuth = [radians(x) for x in (77.8, 77.9, 80.0, 80.3)  ]
 		
+		vert, ns, ew = [], [], []
+		for i, a in zip(incidence, azimuth):
+			vert.append(cos(i))
+			ns.append(sin(i) * sin(a))
+			ew.append(sin(i) * cos(a))
+		
+		sh = (2,2)
+		unitv = [array(ew), array(ns), array(vert)]
+		unitv = [a.reshape(sh) for a in unitv]
+				
 		# TODO: assumes rad input for now
-		act = algorithm.unit_vector(array([incidence]), array([azimuth]))
-		for a,e in zip(list(act), unitv):
-			self.assertEqual(a,e)
+		act = algorithm.unit_vector(reshape(incidence, sh), reshape(azimuth, sh))
+		for a,e in zip(act, unitv):
+			assert_array_almost_equal(squeeze(a), e)
