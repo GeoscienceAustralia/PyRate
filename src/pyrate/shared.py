@@ -6,6 +6,7 @@ Created on 12/09/2012
 '''
 
 import os
+import numpy
 
 try:
 	from osgeo import gdal
@@ -42,13 +43,14 @@ class Ifg(object):
 
 		self.ehdr_path = None # path to EHdr format header
 		self.dataset = None # for GDAL dataset obj
+		self._readonly = None
 		self._amp_band = None
 		self._phase_band = None
 
 		# TODO: what are these for?
 		self.max_variance = None
 		self.alpha = None
-		self.nodata_fraction = None
+		self._nan_fraction = None
 
 
 	def __str__(self):
@@ -75,9 +77,13 @@ class Ifg(object):
 				msg = "open() already called for %s" % self
 				raise IfgException(msg)
 
+		self._readonly = readonly
+		self.num_cells = self.dataset.RasterYSize * self.dataset.RasterXSize
+
 
 	@property
 	def amp_band(self):
+		'''Returns a GDAL Band object for the amplitude band'''
 		if self._amp_band is not None:
 			return self._amp_band
 		else:
@@ -90,6 +96,7 @@ class Ifg(object):
 
 	@property
 	def phase_band(self):
+		'''Returns a GDAL Band object for the phase band'''
 		if self._phase_band is not None:
 			return self._phase_band
 		else:
@@ -98,6 +105,17 @@ class Ifg(object):
 				return self._phase_band
 			else:
 				raise IfgException("Ifg %s has not been opened" % self.data_path)
+
+
+	@property
+	def nan_fraction(self):
+		'''Returns 0-1 proportion of NaN cells for the phase band'''
+
+		# TODO: cache nan_count for readonly datasets? Perf benefit vs temp changes to data?
+		data = self.phase_band.ReadAsArray()
+		nan_count = numpy.sum(numpy.isnan(data))
+		return nan_count / float(self.num_cells)
+
 
 
 class Raster(object):

@@ -4,6 +4,8 @@ Created on 12/09/2012
 '''
 
 import unittest, os
+from itertools import product
+from numpy import isnan
 
 from gdal import Dataset, UseExceptions
 UseExceptions()
@@ -51,6 +53,14 @@ class IfgTests(unittest.TestCase):
 		self.assertAlmostEqual(self.ifg.Y_LAST, -34.23)
 
 
+	def test_num_cells(self):
+		self.ifg.open()
+		data = self.ifg.amp_band.ReadAsArray()
+		ys, xs = data.shape
+		exp_ncells = ys * xs
+		self.assertEqual(exp_ncells, self.ifg.num_cells)
+
+
 	def test_amp_band(self):
 		try:
 			_ = self.ifg.amp_band
@@ -73,6 +83,27 @@ class IfgTests(unittest.TestCase):
 		self.ifg.open()
 		data = self.ifg.phase_band.ReadAsArray()
 		self.assertEqual(data.shape, (72,47) )
+
+
+	def test_nan_fraction(self):
+		try:
+			# NB: self.assertRaises doesn't work here
+			_ = self.ifg.nan_fraction()
+			self.fail("Shouldn't be able to call nan_craction() with unopened Ifg")
+		except IfgException as ex:
+			pass
+
+		self.ifg.open()
+		data = self.ifg.dataset.GetRasterBand(2).ReadAsArray()
+		ys, xs = data.shape
+
+		nans = 0
+		for y,x in product(xrange(ys), xrange(xs)):
+			if isnan(data[y,x]): nans += 1
+
+		num_cells = float(ys * xs)
+		nan_frac = nans / num_cells
+		self.assertEqual(nan_frac, self.ifg.nan_fraction)
 
 
 
