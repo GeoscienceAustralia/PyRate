@@ -21,7 +21,7 @@ except:
 gdal.UseExceptions()
 
 import prepifg
-from shared import Ifg, Raster
+from shared import Ifg, DEM
 from roipac import filename_pair
 from config import OBS_DIR, IFG_CROP_OPT, IFG_LKSX, IFG_LKSY, IFG_FILE_LIST
 from config import IFG_XFIRST, IFG_XLAST, IFG_YFIRST, IFG_YLAST, DEM_FILE
@@ -198,18 +198,18 @@ class OutputTests(unittest.TestCase):
 			assert_array_almost_equal(exp_resample, act)
 
 		# verify DEM has been correctly processed
-		# ignore output values as resampling has already been tested for phase  
+		# ignore output values as resampling has already been tested for phase
 		exp_dem_path = '../../tests/sydney_test/dem/sydney_trimmed_4rlks.dem'
 		self.assertTrue(exists(exp_dem_path))
 
-		dem = Raster(exp_dem_path)
+		dem = DEM(exp_dem_path)
 		dem.open()
 		self.assertEqual(dem.dataset.RasterXSize, 20 / scale)
 		self.assertEqual(dem.dataset.RasterYSize, 28 / scale)
-		data = dem.band.ReadAsArray()
+		data = dem.height_band.ReadAsArray()
 		self.assertTrue(data.ptp() != 0)
-		
-		# cleanup		
+
+		# cleanup
 		paths = [dem.data_path, dem.hdr_path, dem.ehdr_path]
 		del data, dem
 		for p in paths:
@@ -305,7 +305,7 @@ class OutputTests(unittest.TestCase):
 
 class PrepifgTests(unittest.TestCase):
 	'''Tests for local testing functions'''
-		
+
 	def test_multilooking_thresh(self):
 		data = ones((3,6))
 		data[0] = nan
@@ -322,13 +322,13 @@ class PrepifgTests(unittest.TestCase):
 def multilooking(src, xscale, yscale, thresh=0):
 	"""Port of looks.m from MATLAB Pirate. Args src and dest are numpy arrays. Thresh
 	is minimum number of non-NaNs required for a valid resampling segment/tile."""
-	
+
 	thresh = int(thresh)
 	num_cells = xscale * yscale
 	if thresh > num_cells or thresh < 0:
-		msg = "Invalid threshold: %s (need 0 <= thr <= %s" % (thresh, num_cells) 
+		msg = "Invalid threshold: %s (need 0 <= thr <= %s" % (thresh, num_cells)
 		raise ValueError(msg)
-	
+
 	rows, cols = src.shape
 	rows_lowres = int(floor(rows / yscale))
 	cols_lowres = int(floor(cols / xscale))
@@ -341,10 +341,10 @@ def multilooking(src, xscale, yscale, thresh=0):
 			ye = ys + yscale
 			xs = c * xscale
 			xe = xs + xscale
-			
+
 			patch = src[ys:ye, xs:xe]
 			num_values = num_cells - npsum(isnan(patch))
-						
+
 			if num_values >= thresh and num_values > 0:
 				reshaped = patch.reshape(size) # NB: nanmean only works on one axis
 				dest[r,c] = nanmean(reshaped)

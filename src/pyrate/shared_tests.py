@@ -11,7 +11,7 @@ from gdal import Dataset, UseExceptions
 UseExceptions()
 
 import shared
-from shared import Ifg, IfgException, Raster, RasterException
+from shared import Ifg, IfgException, DEM, RasterException
 from ifgconstants import Z_OFFSET, Z_SCALE, PROJECTION, DATUM
 
 
@@ -42,7 +42,7 @@ class IfgTests(unittest.TestCase):
 		self.assertTrue(isinstance(self.ifg.dataset, Dataset))
 
 		# ensure open cannot be called twice
-		self.failUnlessRaises(IfgException, self.ifg.open)
+		self.failUnlessRaises(RasterException, self.ifg.open)
 		os.remove(self.ifg.ehdr_path)
 
 
@@ -65,7 +65,7 @@ class IfgTests(unittest.TestCase):
 		try:
 			_ = self.ifg.amp_band
 			self.fail("Should not be able to access band without open dataset")
-		except IfgException, ex:
+		except RasterException as ex:
 			pass
 
 		self.ifg.open()
@@ -77,7 +77,7 @@ class IfgTests(unittest.TestCase):
 		try:
 			_ = self.ifg.phase_band
 			self.fail("Should not be able to access band without open dataset")
-		except IfgException, ex:
+		except RasterException, ex:
 			pass
 
 		self.ifg.open()
@@ -89,8 +89,8 @@ class IfgTests(unittest.TestCase):
 		try:
 			# NB: self.assertRaises doesn't work here
 			_ = self.ifg.nan_fraction()
-			self.fail("Shouldn't be able to call nan_craction() with unopened Ifg")
-		except IfgException as ex:
+			self.fail("Shouldn't be able to call nan_fraction() with unopened Ifg")
+		except RasterException as ex:
 			pass
 
 		self.ifg.open()
@@ -107,11 +107,11 @@ class IfgTests(unittest.TestCase):
 
 
 
-class RasterTests(unittest.TestCase):
+class DEMTests(unittest.TestCase):
 	'''Unit tests for the generic Raster class.'''
 
 	def setUp(self):
-		self.ras = Raster('../../tests/sydney_test/dem/sydney_trimmed.dem')
+		self.ras = DEM('../../tests/sydney_test/dem/sydney_trimmed.dem')
 
 
 	def test_create_raster(self):
@@ -127,9 +127,9 @@ class RasterTests(unittest.TestCase):
 
 
 	def test_is_dem(self):
-		self.assertTrue(self.ras.is_dem())
-		self.ras = Raster('../../tests/sydney_test/obs/geo_060619-061002.unw')
-		self.assertFalse(self.ras.is_dem())
+		self.assertTrue(hasattr(self.ras, DATUM))
+		self.ras = DEM('../../tests/sydney_test/obs/geo_060619-061002.unw')
+		self.assertFalse(hasattr(self.ras, DATUM))
 
 
 	def test_open(self):
@@ -145,13 +145,13 @@ class RasterTests(unittest.TestCase):
 
 	def test_band(self):
 		try:
-			_ = self.ras.band
+			_ = self.ras.height_band
 			self.fail("Should not be able to access band without open dataset")
 		except RasterException, ex:
 			pass
 
 		self.ras.open()
-		data = self.ras.band.ReadAsArray()
+		data = self.ras.height_band.ReadAsArray()
 		self.assertEqual(data.shape, (72,47) )
 
 
