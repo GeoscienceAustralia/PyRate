@@ -64,13 +64,13 @@ def parse_header(hdr_file):
 	# process dates from filename if rsc file doesn't have them (skip this for DEMs)
 	if not headers.has_key(DATUM):
 		if headers.has_key(DATE) is False or headers.has_key(DATE12) is False:
-			p = re.compile(r'[0-9]+-[0-9]+')
+			p = re.compile(r'\d{6}-\d{6}') # match 2 sets of 6 digits separated by '-'
 			m = p.search(hdr_file)
 
 			if m:
 				s = m.group()
 				min_date_len = 13 # assumes "nnnnnn-nnnnnn" format
-				if len(s) >= min_date_len:
+				if len(s) == min_date_len:
 					date12 = parse_date(s)
 					headers[DATE] = date12[0]
 					headers[DATE12] = date12
