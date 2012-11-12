@@ -33,12 +33,12 @@ def nan_fraction(data):
 	return nan_sum / ncells
 
 
-def los_conversion(phase_data, incidence, azimuth):
-	'''Converts phase from LOS to horizontal/vertical components. All args are 
+def los_conversion(phase_data, unit_vec_component):
+	'''Converts phase from LOS to horizontal/vertical components. Args are 
 	numpy arrays.'''
 	
-	vert = None
-	raise NotImplementedError
+	# NB: currently not tested as implementation is too simple 
+	return phase_data * unit_vec_component 
 	
 
 def unit_vector(incidence, azimuth):
