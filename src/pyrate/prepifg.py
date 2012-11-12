@@ -14,7 +14,7 @@ from subprocess import check_call
 from scipy.stats.stats import nanmean
 from numpy import array, where, nan, isnan, mean, float32, zeros
 
-from shared import Ifg, Raster
+from shared import Ifg, DEM
 from roipac import filename_pair, write_roipac_header
 from config import OBS_DIR, IFG_CROP_OPT, IFG_LKSX, IFG_LKSY, IFG_FILE_LIST
 from config import IFG_XFIRST, IFG_XLAST, IFG_YFIRST, IFG_YLAST, DEM_FILE
@@ -49,7 +49,7 @@ def prepare_ifgs(params, threshold=0.5, use_exceptions=False, verbose=False):
 
 	# treat DEM as Ifg as core API is equivalent
 	if params.has_key(DEM_FILE):
-		ifgs.append(Raster(params[DEM_FILE]))
+		ifgs.append(DEM(params[DEM_FILE]))
 
 	check_resolution(ifgs)
 	for i in ifgs:
@@ -114,11 +114,8 @@ def prepare_ifgs(params, threshold=0.5, use_exceptions=False, verbose=False):
 		s = splitext(i.data_path)
 		if isinstance(i, Ifg):
 			ext = "tif"
-		elif isinstance(i, Raster):
-			if i.is_dem():
-				ext = "dem"
-			else:
-				raise NotImplementedError("TODO: additional raster types?")
+		elif hasattr(i, DATUM):
+			ext = "dem"
 		else:
 			raise NotImplementedError("TODO: additional raster types?")
 
@@ -140,8 +137,8 @@ def prepare_ifgs(params, threshold=0.5, use_exceptions=False, verbose=False):
 				# TODO: resample amplitude band too?
 				data = i_tmp.phase_band.ReadAsArray()
 				data = where(data == 0, nan, data) # flag incoherent cells as NaNs
-			elif isinstance(i, Raster):
-				data = i_tmp.band.ReadAsArray()
+			elif isinstance(i, DEM):
+				data = i_tmp.height_band.ReadAsArray()
 			else:
 				raise NotImplementedError("TODO: other raster types to handle?")
 
@@ -216,7 +213,7 @@ def _create_new_roipac_header(src_ifg, new_ifg, dest=None):
 
 	if isinstance(src_ifg, Ifg):
 		newpars[WAVELENGTH] = src_ifg.WAVELENGTH
-	elif isinstance(src_ifg, Raster):
+	elif isinstance(src_ifg, DEM):
 		for a in [Z_OFFSET, Z_SCALE, PROJECTION, DATUM]:
 			newpars[a] = getattr(src_ifg, a)
 
