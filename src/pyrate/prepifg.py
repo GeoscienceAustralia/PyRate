@@ -16,6 +16,7 @@ from numpy import array, where, nan, isnan, mean, float32, zeros
 
 from shared import Ifg, DEM
 from roipac import filename_pair, write_roipac_header
+from config import parse_namelist
 from config import OBS_DIR, IFG_CROP_OPT, IFG_LKSX, IFG_LKSY, IFG_FILE_LIST
 from config import IFG_XFIRST, IFG_XLAST, IFG_YFIRST, IFG_YLAST, DEM_FILE
 from ifgconstants import X_FIRST, Y_FIRST, X_LAST, Y_LAST, X_STEP, Y_STEP
@@ -26,7 +27,8 @@ from ifgconstants import Z_OFFSET, Z_SCALE, PROJECTION, DATUM
 MINIMUM_CROP = 1
 MAXIMUM_CROP = 2
 CUSTOM_CROP = 3
-NO_CROP = 4
+CROP_OPTIONS = [MINIMUM_CROP, MAXIMUM_CROP, CUSTOM_CROP]
+
 GRID_TOL = 1e-6
 
 
@@ -39,12 +41,14 @@ def prepare_ifgs(params, threshold=0.5, use_exceptions=False, verbose=False):
 	threshhold=0 resamples to NaN if 1+ contributing cells are NaNs. At 0.25, it
 	resamples to NaN if 1/4 or more contributing cells are NaNs. At 1.0, segments
 	are resampled to NaN only if all contributing cells are NaNs."""
+	
+	# validate config file settings
+	crop_opt = params[IFG_CROP_OPT]
+	if not crop_opt in CROP_OPTIONS:
+		raise PreprocessingException("Unrecognised crop option: %s" % crop_opt)
 
 	check_looks(params)
-	with open(params[IFG_FILE_LIST]) as f:
-		filelist = f.readlines()
-
-	paths = [join(params[OBS_DIR], p) for p in filelist ]
+	paths = [join(params[OBS_DIR], p) for p in parse_namelist(params[IFG_FILE_LIST])]
 	ifgs = [Ifg(p) for p in paths]
 
 	# treat DEM as Ifg as core API is equivalent
@@ -56,27 +60,17 @@ def prepare_ifgs(params, threshold=0.5, use_exceptions=False, verbose=False):
 		i.open()
 
 	# calculate crop option for passing to gdalwarp
-	crop_opt = params[IFG_CROP_OPT]
 	if crop_opt == MINIMUM_CROP:
-		xmin = max([i.X_FIRST for i in ifgs])
-		ymax = min([i.Y_FIRST for i in ifgs])
-		xmax = min([i.X_LAST for i in ifgs])
-		ymin = max([i.Y_LAST for i in ifgs])
-
+		xmin, ymin, xmax, ymax = min_bounds(ifgs)
 	elif crop_opt == MAXIMUM_CROP:
-		xmin = min([i.X_FIRST for i in ifgs])
-		ymax = max([i.Y_FIRST for i in ifgs])
-		xmax = max([i.X_LAST for i in ifgs])
-		ymin = min([i.Y_LAST for i in ifgs])
+		xmin, ymin, xmax, ymax = max_bounds(ifgs)
 
 	elif crop_opt == CUSTOM_CROP:
-		xmin = params[IFG_XFIRST]
-		ymax = params[IFG_YFIRST]
-		xmax = params[IFG_XLAST]
-		ymin = params[IFG_YLAST]
+		xmin, xmax = params[IFG_XFIRST], params[IFG_XLAST]  
+		ymin, ymax = params[IFG_YLAST], params[IFG_YFIRST]
 
 		# check cropping coords line up with grid system within tolerance
-		# NB: only tests against the first Ifg
+		# NB: assumption is the first Ifg is correct, so only test against it 
 		i = ifgs[0]
 		for par, crop, step in zip([X_FIRST, X_LAST, Y_FIRST, Y_LAST],
 															[xmin, xmax, ymax, ymin],
@@ -93,12 +87,6 @@ def prepare_ifgs(params, threshold=0.5, use_exceptions=False, verbose=False):
 				if use_exceptions:
 					raise PreprocessingException(msg)
 				sys.stderr.write("WARN: %s\n" % msg)
-
-	elif crop_opt == NO_CROP:
-		raise NotImplementedError("Same as maximum for IFGs of same size")
-
-	else:
-		raise PreprocessingException("Unrecognised crop option: %s" % crop_opt)
 
 	# calculate args for gdalwarp reprojection
 	extents = [str(s) for s in (xmin, ymin, xmax, ymax) ]
@@ -242,6 +230,24 @@ def check_looks(params):
 	if not (xscale > 0 and yscale > 0):
 		msg = "Invalid looks parameter(s), x: %s, y: %s" % (xscale, yscale)
 		raise PreprocessingException(msg)
+
+
+def min_bounds(ifgs):
+	'''Returns bounds for overlapping area of the given interferograms.'''
+	xmin = max([i.X_FIRST for i in ifgs])
+	ymax = min([i.Y_FIRST for i in ifgs])
+	xmax = min([i.X_LAST for i in ifgs])
+	ymin = max([i.Y_LAST for i in ifgs])
+	return xmin, ymin, xmax, ymax
+
+
+def max_bounds(ifgs):
+	'''Returns bounds for the total area covered by the given interferograms.'''
+	xmin = min([i.X_FIRST for i in ifgs])
+	ymax = max([i.Y_FIRST for i in ifgs])
+	xmax = max([i.X_LAST for i in ifgs])
+	ymin = min([i.Y_LAST for i in ifgs])
+	return xmin, ymin, xmax, ymax
 
 
 class PreprocessingException(Exception):
