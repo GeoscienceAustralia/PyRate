@@ -68,25 +68,7 @@ def prepare_ifgs(params, threshold=0.5, use_exceptions=False, verbose=False):
 	elif crop_opt == CUSTOM_CROP:
 		xmin, xmax = params[IFG_XFIRST], params[IFG_XLAST]  
 		ymin, ymax = params[IFG_YLAST], params[IFG_YFIRST]
-
-		# check cropping coords line up with grid system within tolerance
-		# NB: assumption is the first Ifg is correct, so only test against it 
-		i = ifgs[0]
-		for par, crop, step in zip([X_FIRST, X_LAST, Y_FIRST, Y_LAST],
-															[xmin, xmax, ymax, ymin],
-															[i.X_STEP, i.X_STEP, i.Y_STEP, i.Y_STEP]):
-
-			# is diff of the given extent from grid a multiple of X|Y_STEP ?
-			param = getattr(i, par)
-			diff = abs(crop - param)
-			remainder = abs(modf(diff / step)[0])
-
-			# handle cases where division gives remainder near zero, or just < 1
-			if remainder > GRID_TOL and remainder < (1 - GRID_TOL):
-				msg = "%s crop extent not within %s of grid coordinate" % (par, GRID_TOL)
-				if use_exceptions:
-					raise PreprocessingException(msg)
-				sys.stderr.write("WARN: %s\n" % msg)
+		check_crop_coords(ifgs, xmin, xmax, ymin, ymax, use_exceptions)	
 
 	# calculate args for gdalwarp reprojection
 	extents = [str(s) for s in (xmin, ymin, xmax, ymax) ]
@@ -96,8 +78,9 @@ def prepare_ifgs(params, threshold=0.5, use_exceptions=False, verbose=False):
 
 	# Generate gdalwarp args for each interferogram. Some trickery is required to
 	# interface with gdalwarp. For resampling, gdalwarp is called 2x, once to subset
-	# the source data for averaging, the second to generate the final dataset with
-	# correct extents/shape/cell count. Without resampling, gdalwarp is needed 1x.
+	# the source data for Pirate's form of averaging/resampling, the second to
+	# generate the final dataset with correct extents/shape/cell count. Without
+	# resampling, gdalwarp is only needed to cut out the required segment.
 	for i in ifgs:
 		s = splitext(i.data_path)
 		if isinstance(i, Ifg):
@@ -130,7 +113,7 @@ def prepare_ifgs(params, threshold=0.5, use_exceptions=False, verbose=False):
 			else:
 				raise NotImplementedError("TODO: other raster types to handle?")
 
-			data = resample(data, params[IFG_LKSX], params[IFG_LKSY], threshold)
+			data = resample(data, params[IFG_LKSX], params[IFG_LKSY], threshold) # is saved to file below
 			del i_tmp
 			os.remove(tmp_path)
 
@@ -248,6 +231,27 @@ def max_bounds(ifgs):
 	xmax = max([i.X_LAST for i in ifgs])
 	ymin = min([i.Y_LAST for i in ifgs])
 	return xmin, ymin, xmax, ymax
+
+
+def check_crop_coords(ifgs, xmin, xmax, ymin, ymax, use_exceptions=False):
+	'''Ensures cropping coords line up with grid system within tolerance.'''
+	# NB: assumption is the first Ifg is correct, so only test against it 
+	i = ifgs[0]
+	for par, crop, step in zip([X_FIRST, X_LAST, Y_FIRST, Y_LAST],
+														[xmin, xmax, ymax, ymin],
+														[i.X_STEP, i.X_STEP, i.Y_STEP, i.Y_STEP]):
+
+		# is diff of the given extent from grid a multiple of X|Y_STEP ?
+		param = getattr(i, par)
+		diff = abs(crop - param)
+		remainder = abs(modf(diff / step)[0])
+
+		# handle cases where division gives remainder near zero, or just < 1
+		if remainder > GRID_TOL and remainder < (1 - GRID_TOL):
+			msg = "%s crop extent not within %s of grid coordinate" % (par, GRID_TOL)
+			if use_exceptions:
+				raise PreprocessingException(msg)
+			sys.stderr.write("WARN: %s\n" % msg)
 
 
 class PreprocessingException(Exception):
