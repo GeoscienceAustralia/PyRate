@@ -300,6 +300,9 @@ class OutputTests(unittest.TestCase):
 
 	def test_los_conversion(self):
 		# TODO: needs LOS matrix
+		# TODO: this needs to work from config and incidence files on disk
+		# TODO: los conversion has 4 options: 1: ignore, 2: vertical, 3: N/S, 4: E/W
+		# also have a 5th option of arbitrary azimuth angle (Pirate doesn't have this)
 		raise NotImplementedError
 
 
