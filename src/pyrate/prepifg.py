@@ -141,6 +141,7 @@ def prepare_ifgs(params, threshold=0.5, use_exceptions=False, verbose=False):
 
 			# tricky: write either resampled or the basic cropped data to new layer
 			new_lyr.phase_band.WriteArray(data)
+			new_lyr.nan_converted = True
 
 
 # TODO: refactor out to another module?
