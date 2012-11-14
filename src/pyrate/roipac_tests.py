@@ -1,11 +1,14 @@
 '''
 Created on 12/09/2012
 @author: Ben Davies, ANUSF
-		 ben.davies@anu.edu.au
+         ben.davies@anu.edu.au
 '''
 
 
-import os, unittest, datetime
+import os, sys
+from os.path import exists
+import unittest, datetime
+
 from numpy import amin, amax, zeros
 from numpy.testing import assert_array_equal
 
@@ -17,6 +20,12 @@ import ifgconstants as IFC
 
 
 class ConversionTests(unittest.TestCase):
+	'''Verifies conversion of ROIPAC files to EHdr format.'''
+	
+	def __init__(self, *args, **kwargs):
+		super(ConversionTests, self).__init__(*args, **kwargs)
+		if not exists("../../tests/headers"):
+			sys.exit("ERROR: Missing the 'headers' data for unittests\n")
 
 	SHORT_HEADER_PATH = "../../tests/sydney_test/obs/geo_060619-061002.unw.rsc"
 	FULL_HEADER_PATH  = "../../tests/headers/geo_060619-060828.unw.rsc"
