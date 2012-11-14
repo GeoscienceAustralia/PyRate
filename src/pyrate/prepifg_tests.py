@@ -2,7 +2,7 @@
 # Ben Davies, ANUSF
 #
 
-import os
+import os, sys
 import unittest
 from itertools import product
 from os.path import exists, join
@@ -30,6 +30,12 @@ from config import IFG_XFIRST, IFG_XLAST, IFG_YFIRST, IFG_YLAST, DEM_FILE
 
 class OutputTests(unittest.TestCase):
 	"""Tests aspects of the prepifg.py script, such as resampling, """
+	
+	def __init__(self, *args, **kwargs):
+		super(OutputTests, self).__init__(*args, **kwargs)
+		if not exists("../../tests/single"):
+			sys.exit("ERROR: Missing the 'single' dir for unittests\n")
+
 
 	def setUp(self):
 		self.xs = 0.000833333
