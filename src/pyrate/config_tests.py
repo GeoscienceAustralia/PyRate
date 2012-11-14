@@ -3,9 +3,9 @@ Created on 17/09/2012
 @author: bpd900
 '''
 
-import unittest, datetime
+import sys, datetime, unittest
 from glob import glob
-from os.path import join
+from os.path import join, exists
 from numpy.testing import assert_array_almost_equal
 
 import config
@@ -14,6 +14,11 @@ from ifgconstants import X_FIRST, Y_FIRST, WIDTH, FILE_LENGTH, X_STEP, Y_STEP
 
 
 class ConfigTests(unittest.TestCase):
+	
+	def __init__(self, *args, **kwargs):
+		super(ConfigTests, self).__init__(*args, **kwargs)
+		if not exists("../../tests/sydney_test/obs"):
+			sys.exit("ERROR: Missing the sydney_test data for unittests\n")
 
 	# TODO: are more conf parsing tests needed?
 
@@ -67,4 +72,3 @@ class ConfigTests(unittest.TestCase):
 
 if __name__ == "__main__":
 	unittest.main()
-
