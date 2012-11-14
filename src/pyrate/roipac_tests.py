@@ -127,6 +127,8 @@ class ConversionTests(unittest.TestCase):
 		# test default header filename
 		base_hdr = os.path.abspath("../../tests/single/geo_060619-061002.unw.rsc")
 		hdr = "/tmp/geo_060619-061002.unw.rsc"
+		if os.path.exists(hdr):
+			os.unlink(hdr)
 		os.symlink(base_hdr, hdr)
 		exp_hdr = "/tmp/geo_060619-061002.hdr"
 
