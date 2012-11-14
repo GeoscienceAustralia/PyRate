@@ -5,7 +5,7 @@ Created on 12/09/2012
 
 import unittest, os
 from itertools import product
-from numpy import isnan
+from numpy import isnan, where, nan
 
 from gdal import Dataset, UseExceptions
 UseExceptions()
@@ -87,23 +87,28 @@ class IfgTests(unittest.TestCase):
 
 	def test_nan_fraction(self):
 		try:
-			# NB: self.assertRaises doesn't work here
-			_ = self.ifg.nan_fraction()
+			# NB: self.assertRaises doesn't work here (as it is a property?)
+			_ = self.ifg.nan_fraction
 			self.fail("Shouldn't be able to call nan_fraction() with unopened Ifg")
 		except RasterException as ex:
 			pass
 
+		# NB: source data lacks 0 -> NaN conversion 
 		self.ifg.open()
 		data = self.ifg.dataset.GetRasterBand(2).ReadAsArray()
-		ys, xs = data.shape
-
+		data = where(data == 0, nan, data) # fake 0 -> nan for the count below
+		
+		# manually count # nan cells
 		nans = 0
+		ys, xs = data.shape
 		for y,x in product(xrange(ys), xrange(xs)):
 			if isnan(data[y,x]): nans += 1
+		del data
 
 		num_cells = float(ys * xs)
-		nan_frac = nans / num_cells
-		self.assertEqual(nan_frac, self.ifg.nan_fraction)
+		self.assertTrue(nans > 0)
+		self.assertTrue(nans <= num_cells)
+		self.assertEqual(nans / num_cells, self.ifg.nan_fraction) # nan_frac is only really counting 0s
 
 
 

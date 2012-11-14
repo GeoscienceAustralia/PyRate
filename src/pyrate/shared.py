@@ -102,6 +102,9 @@ class Ifg(RasterBase):
 		RasterBase.__init__(self, path, hdr_path)
 		self._amp_band = None
 		self._phase_band = None
+		
+		# creating code needs to set this flag after 0 -> NaN replacement
+		self.nan_converted = False
 
 		# TODO: what are these for?
 		self.max_variance = None
@@ -127,11 +130,16 @@ class Ifg(RasterBase):
 
 	@property
 	def nan_fraction(self):
-		'''Returns 0-1 proportion of NaN cells for the phase band'''
+		'''Returns 0-1 (float) proportion of NaN cells for the phase band'''
 
 		# TODO: cache nan_count for readonly datasets? Perf benefit vs temp changes to data?
 		data = self.phase_band.ReadAsArray()
 		nan_count = numpy.sum(numpy.isnan(data))
+		
+		# handle datasets with no 0 -> NaN replacement 
+		if self.nan_converted is False and nan_count == 0:
+			nan_count = numpy.sum(data == 0)
+
 		return nan_count / float(self.num_cells)
 
 
