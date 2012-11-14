@@ -34,7 +34,10 @@ class OutputTests(unittest.TestCase):
 	def __init__(self, *args, **kwargs):
 		super(OutputTests, self).__init__(*args, **kwargs)
 		if not exists("../../tests/single"):
-			sys.exit("ERROR: Missing the 'single' dir for unittests\n")
+			sys.exit("ERROR: Missing 'single' dir for unittests\n")
+		
+		if not exists("../../tests/prepifg/obs"):
+			sys.exit("ERROR: Missing 'prepifg' dir for unittests\n")
 
 
 	def setUp(self):
