@@ -1,5 +1,6 @@
 
-import unittest
+from os.path import join 
+import glob, unittest
 from math import pi, cos, sin, radians
 
 import numpy
@@ -7,6 +8,7 @@ from numpy import array, nan, reshape, squeeze
 from numpy.testing import assert_array_almost_equal
 
 import algorithm
+from shared import Ifg
 
 
 class AlgorithmTests(unittest.TestCase):
@@ -48,3 +50,19 @@ class AlgorithmTests(unittest.TestCase):
 		act = algorithm.unit_vector(reshape(incidence, sh), reshape(azimuth, sh))
 		for a,e in zip(act, unitv):
 			assert_array_almost_equal(squeeze(a), e)
+
+
+class MSTTests(unittest.TestCase):
+	
+	def setUp(self):
+		self.testdir = "../../tests/sydney_test/obs"
+		self.datafiles = glob.glob( join(self.testdir, "*.unw") )
+		
+	
+	def test_temp_mst(self):
+		ifgs = [Ifg(i) for i in self.datafiles]
+		res = algorithm.temp_mst(ifgs)
+		self.assertTrue(res is not None)
+		
+		raise NotImplementedError("Test results of MST")
+		
