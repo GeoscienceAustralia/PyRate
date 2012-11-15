@@ -37,8 +37,10 @@ class IfgTests(unittest.TestCase):
 
 	def test_open(self):
 		self.assertTrue(self.ifg.dataset is None)
+		self.assertTrue(self.ifg.is_open is False)
 		self.ifg.open()
 		self.assertTrue(self.ifg.dataset is not None)
+		self.assertTrue(self.ifg.is_open is True)
 		self.assertTrue(isinstance(self.ifg.dataset, Dataset))
 
 		# ensure open cannot be called twice
@@ -93,11 +95,11 @@ class IfgTests(unittest.TestCase):
 		except RasterException as ex:
 			pass
 
-		# NB: source data lacks 0 -> NaN conversion 
+		# NB: source data lacks 0 -> NaN conversion
 		self.ifg.open()
 		data = self.ifg.dataset.GetRasterBand(2).ReadAsArray()
 		data = where(data == 0, nan, data) # fake 0 -> nan for the count below
-		
+
 		# manually count # nan cells
 		nans = 0
 		ys, xs = data.shape

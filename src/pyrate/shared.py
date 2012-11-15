@@ -84,6 +84,11 @@ class RasterBase(object):
 		self.num_cells = self.dataset.RasterYSize * self.dataset.RasterXSize
 
 
+	@property
+	def is_open(self):
+		return self.dataset is not None
+
+
 	def _get_band(self, band):
 		'''Wrapper (with error checking) for GDAL's Band.GetRasterBand() method.'''
 		if self.dataset is not None:
