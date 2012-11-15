@@ -24,4 +24,3 @@ def main(cfgfile='pyrate.conf', verbose=True):
 	ifg_namelist = [os.path.join(params[OBS_DIR], p) for p in ifg_namelist]
 
 	ifgs = [Ifg(p) for p in ifg_namelist]
-	epochlist = config.get_epochs(ifgs)

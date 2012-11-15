@@ -102,7 +102,7 @@ class Ifg(RasterBase):
 		RasterBase.__init__(self, path, hdr_path)
 		self._amp_band = None
 		self._phase_band = None
-		
+
 		# creating code needs to set this flag after 0 -> NaN replacement
 		self.nan_converted = False
 
@@ -135,8 +135,8 @@ class Ifg(RasterBase):
 		# TODO: cache nan_count for readonly datasets? Perf benefit vs temp changes to data?
 		data = self.phase_band.ReadAsArray()
 		nan_count = numpy.sum(numpy.isnan(data))
-		
-		# handle datasets with no 0 -> NaN replacement 
+
+		# handle datasets with no 0 -> NaN replacement
 		if self.nan_converted is False and nan_count == 0:
 			nan_count = numpy.sum(data == 0)
 
@@ -173,3 +173,11 @@ class PyRateException(Exception):
 	'''Generic exception class for PyRate S/W errors'''
 	pass
 
+
+class EpochList(object):
+	'''TODO'''
+
+	def __init__(self, dates=None, repeat=None, spans=None):
+		self.dates = dates # list of unique dates from all the ifgs
+		self.repeat = repeat
+		self.spans = spans # time span from earliest ifg

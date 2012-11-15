@@ -6,9 +6,7 @@ Created on 17/09/2012
 '''
 
 import numpy
-from numpy import unique, reshape, histogram
 
-from shared import Ifg, IfgException, PyRateException
 from ifgconstants import X_FIRST, Y_FIRST, WIDTH, FILE_LENGTH, X_STEP, Y_STEP
 
 
@@ -82,26 +80,3 @@ def parse_namelist(nml):
 	"""Parses name list file into array of paths"""
 	with open(nml) as f:
 		return [ln.strip() for ln in f.readlines() if ln != ""]
-
-
-
-class EpochList(object):
-	'''TODO'''
-
-	def __init__(self, date=None, repeat=None, span=None):
-		self.date = date
-		self.repeat = repeat
-		self.span = span
-
-
-def get_epochs(ifgs):
-	masters = [i.MASTER for i in ifgs]
-	slaves = [i.SLAVE for i in ifgs]
-
-	combined = masters + slaves
-	dates, n = unique(combined, False, True)
-	repeat, _ = histogram(n, bins=len(set(n)))
-
-	# absolute span for each date from the zero/start point
-	span = [ (dates[i] - dates[0]).days / 365.25 for i in range(len(dates)) ]
-	return EpochList(dates, repeat, span)
