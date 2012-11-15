@@ -87,11 +87,31 @@ class MSTTests(unittest.TestCase):
 	def setUp(self):
 		self.testdir = "../../tests/sydney_test/obs"
 		self.datafiles = glob.glob( join(self.testdir, "*.unw") )
+		self.ifgs = [Ifg(i) for i in self.datafiles]
+		for i in self.ifgs:
+			i.open()
 
 
 	def test_temp_mst(self):
-		ifgs = [Ifg(i) for i in self.datafiles]
-		res = algorithm.temp_mst(ifgs)
+
+		res = algorithm.temp_mst(self.ifgs)
 		self.assertTrue(res is not None)
 
+		#import pickle
+		#dst = "/tmp/pickled_mst"
+		#f = open(dst, "wb")
+		#pickle.dump(res, f)
+		#f.close()
+
 		raise NotImplementedError("Test results of MST")
+
+
+	def test_threshold(self):
+		# TODO: test MOCK Ifg dataset crossing threshold of # of NaN cells
+		# TODO: create a MOCK Ifg object
+		raise NotImplementedError
+
+
+	def test_all_nan_pixel_stack(self):
+		# TODO: use MOCK Ifg to test a value stack with all NaN cells
+		raise NotImplementedError

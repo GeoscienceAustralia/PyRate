@@ -4,8 +4,10 @@ Author: Ben Davies
 '''
 
 from math import pi
+from itertools import product
 
 from numpy import nan, isnan, sum, sin, cos, radians, unique, histogram
+from numpy import array, ndarray
 from pygraph.classes.graph import graph
 from pygraph.algorithms.minmax import minimal_spanning_tree
 
@@ -68,21 +70,49 @@ def get_epochs(ifgs):
 def temp_mst(ifgs):
 	'''TODO'''
 
-	# TODO: top level loop to handle cell by cell MST
-	# TODO: run MST on each pixel
-
-	# TODO: cell by cell accesses? of do by rows/numpy arrays?
-	# TODO: class, tuple (or named tuple?) for each epoch with links to the different ifgs it can relate to
-	# TODO: what to do in the event of there being not enough edges to connect the epochs? (ie. there are too many NaN cells?)
-
-	epochs = get_epochs(ifgs)
+	# TODO: Test speed of cell by cell accesses?
+	# TODO: implement rows memory saving option/ row by row access
+	# TODO: implement minimum # edges/ifg threshold
+	# TODO: does default overall MST need to be implemented for the default value?
 
 	g = graph()
-	g.add_nodes(epochs.dates)
-	for i in ifgs:
-		i.open()
-		g.add_edge((i.MASTER, i.SLAVE), i.nan_fraction)
+	epochs = get_epochs(ifgs)
+	g.add_nodes(epochs.dates) # each acquisition is a node
 
-	# TODO: what happens with py-graph when a node isn't connected
+	# cache all possible edges
+	edges = [i.DATE12 for i in ifgs]
+	weights = [i.nan_fraction for i in ifgs]
+	data_stack = array([i.phase_band.ReadAsArray() for i in ifgs], dtype=object)
+	mst_result = ndarray(shape=(i.FILE_LENGTH, i.WIDTH), dtype=object)
 
-	return minimal_spanning_tree(g)
+	# create MSTs for each pixel in the ifg data stack
+	for y, x in product(xrange(i.FILE_LENGTH), xrange(i.WIDTH)):
+		values = data_stack[:,y,x] # drill down through all ifgs for a pixel
+		if (values == nan).all():
+			raise NotImplementedError("All cells are NaN at (y=%s, x=%s)" % (y,x))
+
+		# TODO: implement NaN threshold here
+		# TODO: handle case of too few edges to connect the epochs? (ie. too many NaN cells)
+
+		# dynamically adjust graph, removing edges where pixel is NaN
+		for value, edge, weight in zip(values, edges, weights):
+			if not isnan(value):
+				if not g.has_edge(edge):
+					g.add_edge(edge, wt=weight)
+			else:
+				if g.has_edge(edge):
+					g.del_edge(edge)
+
+		mst = minimal_spanning_tree(g)
+
+		# discard root node (saves some memory)
+		for k in mst.keys():
+			if mst[k] is None:
+				del mst[k]
+
+		mst_result[y,x] = mst
+
+	return mst_result
+
+
+
