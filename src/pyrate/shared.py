@@ -134,6 +134,21 @@ class Ifg(RasterBase):
 
 
 	@property
+	def phase_data(self):
+		'''Returns entire phase band as an array'''
+		return self.phase_band.ReadAsArray()
+
+
+	@property
+	def phase_rows(self):
+		'''TODO'''
+		# TODO: is a pre-created buffer more efficient?
+		for y in xrange(self.FILE_LENGTH):
+			row = self.phase_band.ReadAsArray(yoff=y, win_xsize=self.WIDTH, win_ysize=1)
+			yield row[0] # squeezes row from (1, WIDTH) to 1D array
+
+
+	@property
 	def nan_fraction(self):
 		'''Returns 0-1 (float) proportion of NaN cells for the phase band'''
 

@@ -6,8 +6,9 @@ Created on 12/09/2012
 import unittest, os
 from itertools import product
 from numpy import isnan, where, nan
+from numpy.testing import assert_array_equal
 
-from gdal import Dataset, UseExceptions
+from gdal import Open, Dataset, UseExceptions
 UseExceptions()
 
 import shared
@@ -15,7 +16,7 @@ from shared import Ifg, IfgException, DEM, RasterException
 from ifgconstants import Z_OFFSET, Z_SCALE, PROJECTION, DATUM
 
 
-
+# TODO: split into 2 test classes, unopened Ifg and opened.
 class IfgTests(unittest.TestCase):
 	'''Unit tests for the Ifg/interferogram class.'''
 
@@ -111,6 +112,20 @@ class IfgTests(unittest.TestCase):
 		self.assertTrue(nans > 0)
 		self.assertTrue(nans <= num_cells)
 		self.assertEqual(nans / num_cells, self.ifg.nan_fraction) # nan_frac is only really counting 0s
+
+
+	def test_phase_data_properties(self):
+		# Use raw GDAL to isolate raster reading from Ifg functionality
+		ds = Open(self.ifg.data_path)
+		data = ds.GetRasterBand(2).ReadAsArray()
+		del ds
+
+		self.ifg.open()
+
+		# test full array and row by row access
+		assert_array_equal(data, self.ifg.phase_data)
+		for y, row in enumerate(self.ifg.phase_rows):
+			assert_array_equal(data[y], row)
 
 
 
