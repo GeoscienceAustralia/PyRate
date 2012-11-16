@@ -67,7 +67,7 @@ def get_epochs(ifgs):
 	return EpochList(dates, repeat, span)
 
 
-def mst_matrix(ifgs):
+def mst_matrix(ifgs, epochs):
 	'''Returns array of minimum spanning trees for the Ifgs.'''
 
 	# TODO: implement rows memory saving option/ row by row access?
@@ -75,7 +75,6 @@ def mst_matrix(ifgs):
 	# TODO: does default overall MST need to be implemented for the default value?
 
 	g = graph()
-	epochs = get_epochs(ifgs)
 	g.add_nodes(epochs.dates) # each acquisition is a node
 
 	# cache all possible edges

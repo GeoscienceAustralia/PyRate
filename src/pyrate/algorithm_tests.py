@@ -4,7 +4,7 @@ import glob, unittest, datetime
 from math import pi, cos, sin, radians
 
 import numpy
-from numpy import array, nan, reshape, squeeze
+from numpy import array, nan, reshape, squeeze, ndarray, float32
 from numpy.testing import assert_array_almost_equal
 
 import algorithm
@@ -91,10 +91,11 @@ class MSTTests(unittest.TestCase):
 		for i in self.ifgs:
 			i.open()
 
+		self.epochs = algorithm.get_epochs(self.ifgs)
 
-	def test_temp_mst(self):
 
-		res = algorithm.mst_matrix(self.ifgs)
+	def test_mst_matrix(self):
+		res = algorithm.mst_matrix(self.ifgs, self.epochs)
 		self.assertFalse(res == None)
 
 		#import pickle
@@ -105,11 +106,49 @@ class MSTTests(unittest.TestCase):
 
 
 	def test_threshold(self):
-		# TODO: test MOCK Ifg dataset crossing threshold of # of NaN cells
-		# TODO: create a MOCK Ifg object
-		raise NotImplementedError
+		# test Ifgs where number of NaNs is under then at the threshold
+
+		threshold = 2
+		self.mock_ifgs = [MockIfg(i) for i in self.ifgs]
+
+		for m in self.mock_ifgs[:1]:
+			m.phase_data[:] = 0.5 # random value
+		for m in self.mock_ifgs[1:]:
+			m.phase_data[:] = nan
+
+		res = algorithm.mst_matrix(self.mock_ifgs, self.epochs)
+		exp = NotImplementedError
+		self.assertEqual(exp, res) # TODO: Test graph has the right branches?/is default?
+
+		self.mock_ifgs[1] = 0.4 # add random value to get over thresh
+		res = algorithm.mst_matrix(self.mock_ifgs, self.epochs)
+		exp = NotImplementedError
+		self.assertEqual(exp, res) # TODO: Test graph has the right branches?/is default?
 
 
 	def test_all_nan_pixel_stack(self):
-		# TODO: use MOCK Ifg to test a value stack with all NaN cells
-		raise NotImplementedError
+		self.mock_ifgs = [MockIfg(i) for i in self.ifgs]
+		for m in self.mock_ifgs:
+			m.phase_data[:] = nan
+
+		res = algorithm.mst_matrix(self.mock_ifgs, self.epochs)
+		exp = NotImplementedError
+
+		shape = (self.mock_ifgs[0].FILE_LENGTH, self.mock_ifgs[0].WIDTH)
+		self.assertTrue(res.shape == shape)
+		self.assertEqual(exp, res) # TODO: Test for default graph for the cell?
+
+
+
+class MockIfg(object):
+	'''Mock 1x1 Ifg for fine grain testing of values'''
+
+	def __init__(self, src_ifg):
+		self.MASTER = src_ifg.MASTER
+		self.SLAVE = src_ifg.SLAVE
+		self.DATE12 = src_ifg.DATE12
+
+		self.FILE_LENGTH = 1
+		self.WIDTH = 1
+		self.phase_data = ndarray((self.FILE_LENGTH, self.WIDTH), dtype=float32)
+		self.nan_fraction = src_ifg.nan_fraction # use existing overall nan fraction
