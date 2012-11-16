@@ -67,11 +67,10 @@ def get_epochs(ifgs):
 	return EpochList(dates, repeat, span)
 
 
-def temp_mst(ifgs):
-	'''TODO'''
+def mst_matrix(ifgs):
+	'''Returns array of minimum spanning trees for the Ifgs.'''
 
-	# TODO: Test speed of cell by cell accesses?
-	# TODO: implement rows memory saving option/ row by row access
+	# TODO: implement rows memory saving option/ row by row access?
 	# TODO: implement minimum # edges/ifg threshold
 	# TODO: does default overall MST need to be implemented for the default value?
 
@@ -82,12 +81,12 @@ def temp_mst(ifgs):
 	# cache all possible edges
 	edges = [i.DATE12 for i in ifgs]
 	weights = [i.nan_fraction for i in ifgs]
-	data_stack = array([i.phase_band.ReadAsArray() for i in ifgs], dtype=object)
+	data_stack = array([i.phase_data for i in ifgs], dtype=object)
 	mst_result = ndarray(shape=(i.FILE_LENGTH, i.WIDTH), dtype=object)
 
 	# create MSTs for each pixel in the ifg data stack
 	for y, x in product(xrange(i.FILE_LENGTH), xrange(i.WIDTH)):
-		values = data_stack[:,y,x] # drill down through all ifgs for a pixel
+		values = data_stack[:,y,x] # select stack of all ifg values for a pixel
 		if (values == nan).all():
 			raise NotImplementedError("All cells are NaN at (y=%s, x=%s)" % (y,x))
 
@@ -104,15 +103,11 @@ def temp_mst(ifgs):
 					g.del_edge(edge)
 
 		mst = minimal_spanning_tree(g)
+		mst_result[y,x] = mst
 
 		# discard root node (saves some memory)
 		for k in mst.keys():
 			if mst[k] is None:
 				del mst[k]
 
-		mst_result[y,x] = mst
-
 	return mst_result
-
-
-

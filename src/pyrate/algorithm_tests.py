@@ -94,16 +94,14 @@ class MSTTests(unittest.TestCase):
 
 	def test_temp_mst(self):
 
-		res = algorithm.temp_mst(self.ifgs)
-		self.assertTrue(res is not None)
+		res = algorithm.mst_matrix(self.ifgs)
+		self.assertFalse(res == None)
 
 		#import pickle
 		#dst = "/tmp/pickled_mst"
 		#f = open(dst, "wb")
 		#pickle.dump(res, f)
 		#f.close()
-
-		raise NotImplementedError("Test results of MST")
 
 
 	def test_threshold(self):
