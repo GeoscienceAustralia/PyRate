@@ -67,30 +67,44 @@ def get_epochs(ifgs):
 	return EpochList(dates, repeat, span)
 
 
+def _remove_root_node(mst):
+	"""Discard pygraph's root node from MST dict to conserve memory."""
+	for k in mst.keys():
+		if mst[k] is None:
+			del mst[k]
+
+
 def mst_matrix(ifgs, epochs):
 	'''Returns array of minimum spanning trees for the Ifgs.'''
 
 	# TODO: implement rows memory saving option/ row by row access?
-	# TODO: implement minimum # edges/ifg threshold
-	# TODO: does default overall MST need to be implemented for the default value?
 
-	g = graph()
-	g.add_nodes(epochs.dates) # each acquisition is a node
-
-	# cache all possible edges
+	# locally cache all edges/weights for on-the-fly graph modification
 	edges = [i.DATE12 for i in ifgs]
 	weights = [i.nan_fraction for i in ifgs]
+	
+	# make default MST to optimise result when no Ifg cells in a stack are nans
+	g = graph()
+	g.add_nodes(epochs.dates) # each acquisition is a node
+	for edge, weight in zip(edges, weights):
+		g.add_edge(edge, wt=weight)
+
+	default_mst = minimal_spanning_tree(g)
+	_remove_root_node(default_mst)
+
+	# prepare source and dest data arrays 
 	data_stack = array([i.phase_data for i in ifgs], dtype=object)
 	mst_result = ndarray(shape=(i.FILE_LENGTH, i.WIDTH), dtype=object)
-
+	
 	# create MSTs for each pixel in the ifg data stack
 	for y, x in product(xrange(i.FILE_LENGTH), xrange(i.WIDTH)):
 		values = data_stack[:,y,x] # select stack of all ifg values for a pixel
+		if nan not in values:
+			mst_result[y,x] = default_mst # optimisation: use precreated result
+			continue
+
 		if (values == nan).all():
 			raise NotImplementedError("All cells are NaN at (y=%s, x=%s)" % (y,x))
-
-		# TODO: implement NaN threshold here
-		# TODO: handle case of too few edges to connect the epochs? (ie. too many NaN cells)
 
 		# dynamically adjust graph, removing edges where pixel is NaN
 		for value, edge, weight in zip(values, edges, weights):
@@ -102,11 +116,7 @@ def mst_matrix(ifgs, epochs):
 					g.del_edge(edge)
 
 		mst = minimal_spanning_tree(g)
+		_remove_root_node(mst)
 		mst_result[y,x] = mst
-
-		# discard root node (saves some memory)
-		for k in mst.keys():
-			if mst[k] is None:
-				del mst[k]
 
 	return mst_result
