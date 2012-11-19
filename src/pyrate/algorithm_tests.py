@@ -106,6 +106,27 @@ class MSTTests(unittest.TestCase):
 			self.assertTrue(len(r) <= len(self.epochs.dates))
 
 
+	def test_partial_nan_pixel_stack(self):
+		# Ensure a limited # of cells gives in a smaller node tree
+		
+		num_coherent = 3
+		
+		def test_result():
+			res = algorithm.mst_matrix(self.mock_ifgs, self.epochs)
+			self.assertEqual(len(res[0,0]), num_coherent)
+
+		self.mock_ifgs = [MockIfg(i) for i in self.ifgs]
+		for m in self.mock_ifgs[num_coherent:]:
+			m.phase_data[:] = nan
+		test_result()
+		
+		# fill in more nans leaving only one ifg
+		for m in self.mock_ifgs[1:num_coherent]:
+			m.phase_data[:] = nan
+		num_coherent = 1
+		test_result()
+
+
 	def test_all_nan_pixel_stack(self):
 		self.mock_ifgs = [MockIfg(i) for i in self.ifgs]
 		for m in self.mock_ifgs:
