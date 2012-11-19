@@ -2,6 +2,7 @@
 from os.path import join
 import glob, unittest, datetime
 from math import pi, cos, sin, radians
+from itertools import product
 
 import numpy
 from numpy import array, nan, reshape, squeeze, ndarray, float32
@@ -95,48 +96,27 @@ class MSTTests(unittest.TestCase):
 
 
 	def test_mst_matrix(self):
+		# Verifies mst matrix function returns an array with of dicts in each cell
+		# assumes pygraph is correct from its unit tests 
 		res = algorithm.mst_matrix(self.ifgs, self.epochs)
-		self.assertFalse(res == None)
-
-		#import pickle
-		#dst = "/tmp/pickled_mst_protocol%s" % pickle.HIGHEST_PROTOCOL
-		#f = open(dst, "wb")
-		#pickle.dump(res, f, pickle.HIGHEST_PROTOCOL)
-		#f.close()
-
-
-	def test_threshold(self):
-		# test Ifgs where number of NaNs is under then at the threshold
-
-		threshold = 2
-		self.mock_ifgs = [MockIfg(i) for i in self.ifgs]
-
-		for m in self.mock_ifgs[:1]:
-			m.phase_data[:] = 0.5 # random value
-		for m in self.mock_ifgs[1:]:
-			m.phase_data[:] = nan
-
-		res = algorithm.mst_matrix(self.mock_ifgs, self.epochs)
-		exp = NotImplementedError
-		self.assertEqual(exp, res) # TODO: Test graph has the right branches?/is default?
-
-		self.mock_ifgs[1] = 0.4 # add random value to get over thresh
-		res = algorithm.mst_matrix(self.mock_ifgs, self.epochs)
-		exp = NotImplementedError
-		self.assertEqual(exp, res) # TODO: Test graph has the right branches?/is default?
+		ys, xs = res.shape
+		for y, x in product(xrange(ys), xrange(xs)):
+			r = res[y,x]
+			self.assertTrue(hasattr(r, "keys"))
+			self.assertTrue(len(r) <= len(self.epochs.dates))
 
 
 	def test_all_nan_pixel_stack(self):
 		self.mock_ifgs = [MockIfg(i) for i in self.ifgs]
 		for m in self.mock_ifgs:
-			m.phase_data[:] = nan
+			m.phase_data[:] = nan			
 
 		res = algorithm.mst_matrix(self.mock_ifgs, self.epochs)
-		exp = NotImplementedError
+		exp = [nan]
 
 		shape = (self.mock_ifgs[0].FILE_LENGTH, self.mock_ifgs[0].WIDTH)
 		self.assertTrue(res.shape == shape)
-		self.assertEqual(exp, res) # TODO: Test for default graph for the cell?
+		self.assertEqual(exp, res)
 
 
 

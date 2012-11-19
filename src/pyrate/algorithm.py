@@ -6,8 +6,8 @@ Author: Ben Davies
 from math import pi
 from itertools import product
 
-from numpy import nan, isnan, sum, sin, cos, radians, unique, histogram
-from numpy import array, ndarray
+from numpy import sin, cos, radians, unique, histogram
+from numpy import float32, nan, isnan, sum, array, ndarray
 from pygraph.classes.graph import graph
 from pygraph.algorithms.minmax import minimal_spanning_tree
 
@@ -92,21 +92,26 @@ def mst_matrix(ifgs, epochs):
 	default_mst = minimal_spanning_tree(g)
 	_remove_root_node(default_mst)
 
-	# prepare source and dest data arrays 
-	data_stack = array([i.phase_data for i in ifgs], dtype=object)
+	# prepare source and dest data arrays
+	# [i.phase_data for i in ifgs]
+	num_ifgs = len(ifgs)
+	data_stack = array([i.phase_data for i in ifgs], dtype=float32)
 	mst_result = ndarray(shape=(i.FILE_LENGTH, i.WIDTH), dtype=object)
 	
 	# create MSTs for each pixel in the ifg data stack
 	for y, x in product(xrange(i.FILE_LENGTH), xrange(i.WIDTH)):
 		values = data_stack[:,y,x] # select stack of all ifg values for a pixel
-		if nan not in values:
-			mst_result[y,x] = default_mst # optimisation: use precreated result
+		nc = sum(isnan(values))
+		
+		# optimisations: use precreated results for all nans/no nans
+		if nc == 0:
+			mst_result[y,x] = default_mst
+			continue
+		elif nc == num_ifgs:
+			mst_result[y,x] = nan
 			continue
 
-		if (values == nan).all():
-			raise NotImplementedError("All cells are NaN at (y=%s, x=%s)" % (y,x))
-
-		# dynamically adjust graph, removing edges where pixel is NaN
+		# otherwise dynamically adjust graph, skipping edges where pixels are NaN
 		for value, edge, weight in zip(values, edges, weights):
 			if not isnan(value):
 				if not g.has_edge(edge):
