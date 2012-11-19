@@ -19,6 +19,7 @@ from roipac import filename_pair, write_roipac_header
 from config import parse_namelist
 from config import OBS_DIR, IFG_CROP_OPT, IFG_LKSX, IFG_LKSY, IFG_FILE_LIST
 from config import IFG_XFIRST, IFG_XLAST, IFG_YFIRST, IFG_YLAST, DEM_FILE
+from config import PROJECTION_FLAG
 from ifgconstants import X_FIRST, Y_FIRST, X_LAST, Y_LAST, X_STEP, Y_STEP
 from ifgconstants import WIDTH, FILE_LENGTH, WAVELENGTH
 from ifgconstants import Z_OFFSET, Z_SCALE, PROJECTION, DATUM
@@ -41,7 +42,7 @@ def prepare_ifgs(params, threshold=0.5, use_exceptions=False, verbose=False):
 	threshhold=0 resamples to NaN if 1+ contributing cells are NaNs. At 0.25, it
 	resamples to NaN if 1/4 or more contributing cells are NaNs. At 1.0, segments
 	are resampled to NaN only if all contributing cells are NaNs."""
-	
+
 	# validate config file settings
 	crop_opt = params[IFG_CROP_OPT]
 	if not crop_opt in CROP_OPTIONS:
@@ -66,9 +67,9 @@ def prepare_ifgs(params, threshold=0.5, use_exceptions=False, verbose=False):
 		xmin, ymin, xmax, ymax = max_bounds(ifgs)
 
 	elif crop_opt == CUSTOM_CROP:
-		xmin, xmax = params[IFG_XFIRST], params[IFG_XLAST]  
+		xmin, xmax = params[IFG_XFIRST], params[IFG_XLAST]
 		ymin, ymax = params[IFG_YLAST], params[IFG_YFIRST]
-		check_crop_coords(ifgs, xmin, xmax, ymin, ymax, use_exceptions)	
+		check_crop_coords(ifgs, xmin, xmax, ymin, ymax, use_exceptions)
 
 	# calculate args for gdalwarp reprojection
 	extents = [str(s) for s in (xmin, ymin, xmax, ymax) ]
@@ -139,6 +140,9 @@ def prepare_ifgs(params, threshold=0.5, use_exceptions=False, verbose=False):
 				data = new_lyr.phase_band.ReadAsArray()
 				data = where(data == 0, nan, data)
 
+			if params.has_key(PROJECTION_FLAG):
+				reproject()
+
 			# tricky: write either resampled or the basic cropped data to new layer
 			new_lyr.phase_band.WriteArray(data)
 			new_lyr.nan_converted = True
@@ -169,6 +173,10 @@ def resample(data, xscale, yscale, threshold):
 			dest[y,x] = mean(non_nans)
 
 	return dest
+
+
+def reproject():
+	raise NotImplementedError("TODO: Reprojection LOS/Horiz/Vert")
 
 
 def _create_new_roipac_header(src_ifg, new_ifg, dest=None):
@@ -236,7 +244,7 @@ def max_bounds(ifgs):
 
 def check_crop_coords(ifgs, xmin, xmax, ymin, ymax, use_exceptions=False):
 	'''Ensures cropping coords line up with grid system within tolerance.'''
-	# NB: assumption is the first Ifg is correct, so only test against it 
+	# NB: assumption is the first Ifg is correct, so only test against it
 	i = ifgs[0]
 	for par, crop, step in zip([X_FIRST, X_LAST, Y_FIRST, Y_LAST],
 														[xmin, xmax, ymax, ymin],

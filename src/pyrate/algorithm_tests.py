@@ -99,9 +99,9 @@ class MSTTests(unittest.TestCase):
 		self.assertFalse(res == None)
 
 		#import pickle
-		#dst = "/tmp/pickled_mst"
+		#dst = "/tmp/pickled_mst_protocol%s" % pickle.HIGHEST_PROTOCOL
 		#f = open(dst, "wb")
-		#pickle.dump(res, f)
+		#pickle.dump(res, f, pickle.HIGHEST_PROTOCOL)
 		#f.close()
 
 

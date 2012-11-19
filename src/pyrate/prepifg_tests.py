@@ -25,17 +25,17 @@ from shared import Ifg, DEM
 from roipac import filename_pair
 from config import OBS_DIR, IFG_CROP_OPT, IFG_LKSX, IFG_LKSY, IFG_FILE_LIST
 from config import IFG_XFIRST, IFG_XLAST, IFG_YFIRST, IFG_YLAST, DEM_FILE
-
+from config import PROJECTION_FLAG
 
 
 class OutputTests(unittest.TestCase):
 	"""Tests aspects of the prepifg.py script, such as resampling, """
-	
+
 	def __init__(self, *args, **kwargs):
 		super(OutputTests, self).__init__(*args, **kwargs)
 		if not exists("../../tests/single"):
 			sys.exit("ERROR: Missing 'single' dir for unittests\n")
-		
+
 		if not exists("../../tests/prepifg/obs"):
 			sys.exit("ERROR: Missing 'prepifg' dir for unittests\n")
 
@@ -312,7 +312,17 @@ class OutputTests(unittest.TestCase):
 		# TODO: this needs to work from config and incidence files on disk
 		# TODO: los conversion has 4 options: 1: ignore, 2: vertical, 3: N/S, 4: E/W
 		# also have a 5th option of arbitrary azimuth angle (Pirate doesn't have this)
+		params = self._default_extents_param()
+		params[IFG_CROP_OPT] = prepifg.MINIMUM_CROP
+		params[PROJECTION_FLAG] = None
+		prepifg.prepare_ifgs(params, use_exceptions=True)
+
+
+	def test_phase_conversion(self):
+		# TODO: check output data is converted to mm from metres
+		# TODO: is convflag used or just defaulted?
 		raise NotImplementedError
+
 
 
 class PrepifgTests(unittest.TestCase):

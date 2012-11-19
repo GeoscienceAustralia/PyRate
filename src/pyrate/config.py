@@ -20,6 +20,7 @@ SIM_DIR = 'simdir'
 DEM_FILE = 'demfile'
 AMPLITUDE_FLAG = 'ampflag'
 PERP_BASELINE_FLAG = 'basepflag'
+PROJECTION_FLAG = 'prjflag'
 
 IFG_CROP_OPT = 'ifgcropopt' # 1: minimum, 2: maximum, 3: customize, 4: all ifms already same size
 IFG_LKSX = 'ifglksx'
@@ -48,6 +49,7 @@ PARAM_CONVERSION = { OBS_DIR : (None, "obs"),
 					IFG_XLAST : (float, None),
 					IFG_YFIRST : (float, None),
 					IFG_YLAST : (float, None),
+					PROJECTION_FLAG : (int, 3),
 				}
 
 
