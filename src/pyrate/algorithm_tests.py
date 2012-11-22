@@ -75,8 +75,8 @@ class ReferencePixelTests(unittest.TestCase):
 
 
 	def default_params(self):
-		return { REFNX : 50,
-							REFNY : 50,
+		return { REFNX : 5,
+							REFNY : 7,
 							REF_MIN_FRAC : 0.7,
 							REF_CHIP_SIZE : 3,  }
 
@@ -92,6 +92,12 @@ class ReferencePixelTests(unittest.TestCase):
 		for illegal in [0, -1, -15, 1, 2, self.ifgs[0].WIDTH+1, 4, 6, 10, 20]:
 			params[REF_CHIP_SIZE] = illegal
 			self.assertRaises(ValueError, algorithm.ref_pixel, params, self.ifgs)
+
+
+	def test_minimum_fraction_missing(self):
+		params = self.default_params()
+		del params[REF_MIN_FRAC]
+		self.assertRaises(ConfigException, algorithm.ref_pixel, params, self.ifgs)
 
 
 	def test_minimum_fraction_threshold(self):
@@ -123,7 +129,7 @@ class ReferencePixelTests(unittest.TestCase):
 			self.assertRaises(ValueError, algorithm.ref_pixel, params, self.ifgs)
 
 
-	# TODO: step of 1? can't be done in corner
+	# TODO: determine action for step of 1? can't be done in corner
 	def test_search_windows(self):
 		params = self.default_params()
 		for illegal in [-5, -1, 0, 46, 50, 100]: # 45 is max # cells a width 3 sliding window can iterate over
