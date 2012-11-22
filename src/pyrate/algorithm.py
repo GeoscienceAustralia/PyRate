@@ -103,7 +103,24 @@ def ref_pixel(params, ifgs):
 	if min_frac < 0.0 or min_frac > 1.0:
 		raise ValueError("Minimum fraction setting must be >= 0.0 and <= 1.0 ")
 
-	# TODO: ensure X|Y steps are valid eg. > 0 and < grid width/height
+	# sanity check X|Y steps
+	refnx = params.get(config.REFNX)
+	if refnx is None:
+		missing_option_error(config.REFNX)
+
+	max_width = (head.WIDTH - (chipsize-1))
+	if refnx < 1 or refnx > max_width:
+		raise ValueError("Invalid refnx setting, must be > 0 and < %s" % max_width)
+
+	refny = params.get(config.REFNY)
+	if refny is None:
+		missing_option_error(config.REFNY)
+
+	max_rows = (head.FILE_LENGTH - (chipsize-1))
+	if refny < 1 or refny > max_rows:
+		raise ValueError("Invalid refny setting, must be > 0 and < %s" % max_rows)
+
+
 	# TODO: test case: 5x5 view over a 5x5 ifg with 1 window/ref pix search
 	# TODO: search windows start and finish in adjacent corners (for X, Y axes)
 	# Use RADIUS as as terminology for half view size

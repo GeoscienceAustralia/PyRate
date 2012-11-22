@@ -55,13 +55,13 @@ class AlgorithmTests(unittest.TestCase):
 			assert_array_almost_equal(squeeze(a), e)
 
 
-class InitialModelTests(unittest.TestCase):
+#class InitialModelTests(unittest.TestCase):
 
-	def test_TODO(self):
+#	def test_initial_model(self):
 		# TODO: fake an RSC file with coords
 		# TODO: fake a ones(shape)  # could also make a ramp etc
 		# data is single band of DISPLACEMENT
-		raise NotImplementedError
+		#raise NotImplementedError
 
 
 
@@ -135,6 +135,29 @@ class ReferencePixelTests(unittest.TestCase):
 		for illegal in [-5, -1, self.ifgs[0].FILE_LENGTH+1]:
 			params[REFY] = illegal
 			self.assertRaises(ValueError, algorithm.ref_pixel, params, self.ifgs)
+
+
+	# TODO: step of 1? can't be done in corner
+	def test_search_windows(self):
+		params = self.default_params()
+		for illegal in [-5, -1, 0, 46, 50, 100]: # 45 is max # cells a width 3 sliding window can ierate over
+			params[REFNX] = illegal
+			self.assertRaises(ValueError, algorithm.ref_pixel, params, self.ifgs)
+
+		params[REFNX] = 3
+		for illegal in [-5, -1, 0, 71, 85, 100]: # 40 is max # cells a width 3 sliding window can ierate over
+			params[REFNX] = illegal
+			self.assertRaises(ValueError, algorithm.ref_pixel, params, self.ifgs)
+
+
+	def test_missing_search_windows(self):
+		params = self.default_params()
+		del params[REFNX]
+		self.assertRaises(ConfigException, algorithm.ref_pixel, params, self.ifgs)
+
+		params[REFNX] = 3 # reset
+		del params[REFNY]
+		self.assertRaises(ConfigException, algorithm.ref_pixel, params, self.ifgs)
 
 
 
