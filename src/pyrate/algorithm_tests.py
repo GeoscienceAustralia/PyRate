@@ -115,9 +115,26 @@ class ReferencePixelTests(unittest.TestCase):
 			self.assertRaises(ValueError, algorithm.ref_pixel, params, self.ifgs)
 
 
-	def test_predefined_coords(self):
-		# TODO: refx, refy are within the grid (if not 0)
-		raise NotImplementedError
+	def test_predefined_reference_pixel(self):
+		# return reference pixel coords if already set in config
+		exp_coord = 3, 7
+		Y, X = exp_coord
+		params = { REFX : X, REFY : Y }
+		act = algorithm.ref_pixel(params, self.ifgs)
+
+
+	def test_invalid_reference_pixel(self):
+		# ensure refx & refy are within the grid (if not 0)
+		params = self.default_params()
+
+		for illegal in [-5, -1, self.ifgs[0].WIDTH+1]:
+			params[REFX] = illegal
+			self.assertRaises(ValueError, algorithm.ref_pixel, params, self.ifgs)
+
+		params[REFX] = 5 # valid coord to ensure testing of REFY
+		for illegal in [-5, -1, self.ifgs[0].FILE_LENGTH+1]:
+			params[REFY] = illegal
+			self.assertRaises(ValueError, algorithm.ref_pixel, params, self.ifgs)
 
 
 

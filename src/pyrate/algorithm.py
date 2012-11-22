@@ -75,12 +75,23 @@ def ref_pixel(params, ifgs):
 		msg = "Missing '%s' in configuration options" % option
 		raise config.ConfigException(msg)
 
+	head = ifgs[0]
+	refx = params.get(config.REFX, 0)
+	refy = params.get(config.REFY, 0)
+
+	# sanity check any specified ref pixel settings
+	if refx != 0 or refy != 0:
+		if refx < 1 or refx > head.WIDTH - 1:
+			raise ValueError("Invalid reference pixel X coordinate: %s" % refx)
+		if refy < 1 or refy > head.FILE_LENGTH - 1:
+			raise ValueError("Invalid reference pixel Y coordinate: %s" % refy)
+		return (refy, refx)
+
 	# sanity check chipsize setting
 	chipsize = params.get(config.REF_CHIP_SIZE)
 	if chipsize is None:
 		missing_option_error(config.REF_CHIP_SIZE)
 
-	head = ifgs[0]
 	if chipsize < 3 or chipsize > head.WIDTH or (chipsize % 2 == 0):
 		raise ValueError("Chipsize setting must be >=3 and at least <= grid width")
 
