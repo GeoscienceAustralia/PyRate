@@ -11,6 +11,7 @@ from numpy import float32, nan, isnan, sum, array, ndarray
 from pygraph.classes.graph import graph
 from pygraph.algorithms.minmax import minimal_spanning_tree
 
+import config
 from shared import EpochList
 
 
@@ -67,6 +68,24 @@ def get_epochs(ifgs):
 	return EpochList(dates, repeat, span)
 
 
+def ref_pixel(params, ifgs):
+	'''Return (y,x) reference pixel coordinate given open Ifgs.'''
+
+	head = ifgs[0]
+
+	chipsize = params[config.REF_CHIP_SIZE]
+	if chipsize < 3 or chipsize > head.WIDTH or (chipsize % 2 == 0):
+		raise ValueError("Chipsize option must be >=3 and at least <= grid width")
+
+
+	# TODO: ensure X|Y steps are valid eg. > 0 and < grid width/height
+	# TODO: test case: 5x5 view over a 5x5 ifg with 1 window/ref pix search
+	# TODO: search windows start and finish in adjacent corners (for X, Y axes)
+	# Use RADIUS as as terminology for half view size
+
+	raise NotImplementedError
+
+
 def _remove_root_node(mst):
 	"""Discard pygraph's root node from MST dict to conserve memory."""
 	for k in mst.keys():
@@ -82,7 +101,7 @@ def mst_matrix(ifgs, epochs):
 	# locally cache all edges/weights for on-the-fly graph modification
 	edges = [i.DATE12 for i in ifgs]
 	weights = [i.nan_fraction for i in ifgs]
-	
+
 	# make default MST to optimise result when no Ifg cells in a stack are nans
 	g = graph()
 	g.add_nodes(epochs.dates) # each acquisition is a node
@@ -97,12 +116,12 @@ def mst_matrix(ifgs, epochs):
 	num_ifgs = len(ifgs)
 	data_stack = array([i.phase_data for i in ifgs], dtype=float32)
 	mst_result = ndarray(shape=(i.FILE_LENGTH, i.WIDTH), dtype=object)
-	
+
 	# create MSTs for each pixel in the ifg data stack
 	for y, x in product(xrange(i.FILE_LENGTH), xrange(i.WIDTH)):
 		values = data_stack[:,y,x] # select stack of all ifg values for a pixel
 		nc = sum(isnan(values))
-		
+
 		# optimisations: use precreated results for all nans/no nans
 		if nc == 0:
 			mst_result[y,x] = default_mst

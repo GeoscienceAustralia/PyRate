@@ -10,6 +10,7 @@ from numpy.testing import assert_array_almost_equal
 
 import algorithm
 from shared import Ifg
+from config import REFX, REFNX, REFY, REFNY, REF_CHIP_SIZE
 
 
 class AlgorithmTests(unittest.TestCase):
@@ -53,6 +54,60 @@ class AlgorithmTests(unittest.TestCase):
 			assert_array_almost_equal(squeeze(a), e)
 
 
+class InitialModelTests(unittest.TestCase):
+
+	def test_TODO(self):
+		# TODO: fake an RSC file with coords
+		# TODO: fake a ones(shape)  # could also make a ramp etc
+		# data is single band of DISPLACEMENT
+		raise NotImplementedError
+
+
+
+class ReferencePixelTests(unittest.TestCase):
+	'''TODO'''
+	# TODO: warnings vs exceptions?
+
+	def setUp(self):
+		self.testdir, self.ifgs = sydney_test_setup()
+
+
+#	def default_params(self):
+#		self.params = { REFNX : 50,
+#										REFNY : 50, }
+
+
+	def test_chipsize_valid(self):
+		params = {}
+		for illegal in [0, -1, -15, 1, 2, self.ifgs[0].WIDTH+1, 4, 6, 10, 20]:
+			params[REF_CHIP_SIZE] = illegal
+			self.assertRaises(ValueError, algorithm.ref_pixel, params, self.ifgs)
+
+
+	def test_ref_window_size(self):
+		params = { REFNX : None, REFNY : None }
+		illegal_values = [0, -1, -15]
+
+		for i in illegal_values:
+			params[REF_CHIP_SIZE] = i
+			self.assertRaises(ValueError, algorithm.ref_pixel, params, self.ifgs)
+
+		params[REFNX] = 21 # dummy but valid, ensure Y axis tests happen
+		for i in illegal_values:
+			params[REFNY] = i
+			self.assertRaises(ValueError, algorithm.ref_pixel, params, self.ifgs)
+
+
+	def test_threshold_valid(self):
+		# TODO: thr > 0.0 and < 1.0 ?
+		raise NotImplementedError
+
+
+	def test_predefined_coords(self):
+		# TODO: refx, refy are within the grid (if not 0)
+		raise NotImplementedError
+
+
 
 class EpochListTests(unittest.TestCase):
 
@@ -84,20 +139,16 @@ class EpochListTests(unittest.TestCase):
 
 
 class MSTTests(unittest.TestCase):
+	'''Basic verification of minimum spanning tree (MST) functionality.'''
 
 	def setUp(self):
-		self.testdir = "../../tests/sydney_test/obs"
-		self.datafiles = glob.glob( join(self.testdir, "*.unw") )
-		self.ifgs = [Ifg(i) for i in self.datafiles]
-		for i in self.ifgs:
-			i.open()
-
+		self.testdir, self.ifgs = sydney_test_setup()
 		self.epochs = algorithm.get_epochs(self.ifgs)
 
 
 	def test_mst_matrix(self):
 		# Verifies mst matrix function returns an array with of dicts in each cell
-		# assumes pygraph is correct from its unit tests 
+		# assumes pygraph is correct from its unit tests
 		res = algorithm.mst_matrix(self.ifgs, self.epochs)
 		ys, xs = res.shape
 		for y, x in product(xrange(ys), xrange(xs)):
@@ -108,9 +159,9 @@ class MSTTests(unittest.TestCase):
 
 	def test_partial_nan_pixel_stack(self):
 		# Ensure a limited # of cells gives in a smaller node tree
-		
+
 		num_coherent = 3
-		
+
 		def test_result():
 			res = algorithm.mst_matrix(self.mock_ifgs, self.epochs)
 			self.assertEqual(len(res[0,0]), num_coherent)
@@ -119,7 +170,7 @@ class MSTTests(unittest.TestCase):
 		for m in self.mock_ifgs[num_coherent:]:
 			m.phase_data[:] = nan
 		test_result()
-		
+
 		# fill in more nans leaving only one ifg
 		for m in self.mock_ifgs[1:num_coherent]:
 			m.phase_data[:] = nan
@@ -130,7 +181,7 @@ class MSTTests(unittest.TestCase):
 	def test_all_nan_pixel_stack(self):
 		self.mock_ifgs = [MockIfg(i) for i in self.ifgs]
 		for m in self.mock_ifgs:
-			m.phase_data[:] = nan			
+			m.phase_data[:] = nan
 
 		res = algorithm.mst_matrix(self.mock_ifgs, self.epochs)
 		exp = [nan]
@@ -138,6 +189,16 @@ class MSTTests(unittest.TestCase):
 		shape = (self.mock_ifgs[0].FILE_LENGTH, self.mock_ifgs[0].WIDTH)
 		self.assertTrue(res.shape == shape)
 		self.assertEqual(exp, res)
+
+
+def sydney_test_setup():
+	testdir = "../../tests/sydney_test/obs"
+	datafiles = glob.glob( join(testdir, "*.unw") )
+	ifgs = [Ifg(i) for i in datafiles]
+	for i in ifgs:
+		i.open()
+
+	return testdir, ifgs
 
 
 

@@ -31,6 +31,14 @@ IFG_XLAST = 'ifgxlast'
 IFG_YFIRST = 'ifgyfirst'
 IFG_YLAST = 'ifgylast'
 
+REFX = 'refx'
+REFY = 'refy'
+REFNX = "refnx"
+REFNY = "refny"
+REF_CHIP_SIZE = 'refchipsize'
+REF_MIN_FRAC = 'refminfrac'
+
+
 
 # Lookup to help convert args to correct type/defaults
 # format is    key : (conversion, default value)
@@ -50,6 +58,13 @@ PARAM_CONVERSION = { OBS_DIR : (None, "obs"),
 					IFG_YFIRST : (float, None),
 					IFG_YLAST : (float, None),
 					PROJECTION_FLAG : (int, 3),
+
+					REFX : (int, 0),
+					REFY : (int, 0),
+					REFNX : (int, None), # was 50 in original Pirate code
+					REFNY : (int, None), # was 50 in original Pirate code
+					REF_CHIP_SIZE : (int, None), # defaults to 21 in orig
+					REF_MIN_FRAC : (float, 0.8), # uses Pirate default
 				}
 
 
