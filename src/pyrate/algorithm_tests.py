@@ -10,7 +10,8 @@ from numpy.testing import assert_array_almost_equal
 
 import algorithm
 from shared import Ifg
-from config import REFX, REFNX, REFY, REFNY, REF_CHIP_SIZE
+from config import ConfigException
+from config import REFX, REFNX, REFY, REFNY, REF_CHIP_SIZE, REF_MIN_FRAC
 
 
 class AlgorithmTests(unittest.TestCase):
@@ -67,14 +68,23 @@ class InitialModelTests(unittest.TestCase):
 class ReferencePixelTests(unittest.TestCase):
 	'''TODO'''
 	# TODO: warnings vs exceptions?
+	# TODO: test missing items in params
 
 	def setUp(self):
 		self.testdir, self.ifgs = sydney_test_setup()
 
 
-#	def default_params(self):
-#		self.params = { REFNX : 50,
-#										REFNY : 50, }
+	def default_params(self):
+		return { REFNX : 50,
+							REFNY : 50,
+							REF_MIN_FRAC : 0.7,
+							REF_CHIP_SIZE : 3,  }
+
+
+	def test_missing_chipsize(self):
+		params = self.default_params()
+		del params[REF_CHIP_SIZE]
+		self.assertRaises(ConfigException, algorithm.ref_pixel, params, self.ifgs)
 
 
 	def test_chipsize_valid(self):
@@ -98,9 +108,11 @@ class ReferencePixelTests(unittest.TestCase):
 			self.assertRaises(ValueError, algorithm.ref_pixel, params, self.ifgs)
 
 
-	def test_threshold_valid(self):
-		# TODO: thr > 0.0 and < 1.0 ?
-		raise NotImplementedError
+	def test_minimum_fraction_threshold(self):
+		params = self.default_params()
+		for illegal in [-0.1, 1.1, 1.000001, -0.0000001]:
+			params[REF_MIN_FRAC] = illegal
+			self.assertRaises(ValueError, algorithm.ref_pixel, params, self.ifgs)
 
 
 	def test_predefined_coords(self):

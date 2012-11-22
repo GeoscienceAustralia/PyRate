@@ -71,12 +71,26 @@ def get_epochs(ifgs):
 def ref_pixel(params, ifgs):
 	'''Return (y,x) reference pixel coordinate given open Ifgs.'''
 
+	def missing_option_error(option):
+		msg = "Missing '%s' in configuration options" % option
+		raise config.ConfigException(msg)
+
+	# sanity check chipsize setting
+	chipsize = params.get(config.REF_CHIP_SIZE)
+	if chipsize is None:
+		missing_option_error(config.REF_CHIP_SIZE)
+
 	head = ifgs[0]
-
-	chipsize = params[config.REF_CHIP_SIZE]
 	if chipsize < 3 or chipsize > head.WIDTH or (chipsize % 2 == 0):
-		raise ValueError("Chipsize option must be >=3 and at least <= grid width")
+		raise ValueError("Chipsize setting must be >=3 and at least <= grid width")
 
+	# sanity check minimum fraction
+	min_frac = params.get(config.REF_MIN_FRAC)
+	if min_frac is None:
+		missing_option_error(config.REF_MIN_FRAC)
+
+	if min_frac < 0.0 or min_frac > 1.0:
+		raise ValueError("Minimum fraction setting must be >= 0.0 and <= 1.0 ")
 
 	# TODO: ensure X|Y steps are valid eg. > 0 and < grid width/height
 	# TODO: test case: 5x5 view over a 5x5 ifg with 1 window/ref pix search

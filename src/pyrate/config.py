@@ -97,3 +97,7 @@ def parse_namelist(nml):
 	"""Parses name list file into array of paths"""
 	with open(nml) as f:
 		return [ln.strip() for ln in f.readlines() if ln != ""]
+
+
+class ConfigException(Exception):
+	pass
