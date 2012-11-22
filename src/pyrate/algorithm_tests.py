@@ -94,20 +94,6 @@ class ReferencePixelTests(unittest.TestCase):
 			self.assertRaises(ValueError, algorithm.ref_pixel, params, self.ifgs)
 
 
-	def test_ref_window_size(self):
-		params = { REFNX : None, REFNY : None }
-		illegal_values = [0, -1, -15]
-
-		for i in illegal_values:
-			params[REF_CHIP_SIZE] = i
-			self.assertRaises(ValueError, algorithm.ref_pixel, params, self.ifgs)
-
-		params[REFNX] = 21 # dummy but valid, ensure Y axis tests happen
-		for i in illegal_values:
-			params[REFNY] = i
-			self.assertRaises(ValueError, algorithm.ref_pixel, params, self.ifgs)
-
-
 	def test_minimum_fraction_threshold(self):
 		params = self.default_params()
 		for illegal in [-0.1, 1.1, 1.000001, -0.0000001]:
@@ -140,12 +126,12 @@ class ReferencePixelTests(unittest.TestCase):
 	# TODO: step of 1? can't be done in corner
 	def test_search_windows(self):
 		params = self.default_params()
-		for illegal in [-5, -1, 0, 46, 50, 100]: # 45 is max # cells a width 3 sliding window can ierate over
+		for illegal in [-5, -1, 0, 46, 50, 100]: # 45 is max # cells a width 3 sliding window can iterate over
 			params[REFNX] = illegal
 			self.assertRaises(ValueError, algorithm.ref_pixel, params, self.ifgs)
 
 		params[REFNX] = 3
-		for illegal in [-5, -1, 0, 71, 85, 100]: # 40 is max # cells a width 3 sliding window can ierate over
+		for illegal in [-5, -1, 0, 71, 85, 100]: # 40 is max # cells a width 3 sliding window can iterate over
 			params[REFNX] = illegal
 			self.assertRaises(ValueError, algorithm.ref_pixel, params, self.ifgs)
 
