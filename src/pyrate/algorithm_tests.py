@@ -54,7 +54,7 @@ class AlgorithmTests(unittest.TestCase):
 		for a,e in zip(act, unitv):
 			assert_array_almost_equal(squeeze(a), e)
 
-
+# TODO: InitialModelTests
 #class InitialModelTests(unittest.TestCase):
 
 #	def test_initial_model(self):
@@ -64,25 +64,20 @@ class AlgorithmTests(unittest.TestCase):
 		#raise NotImplementedError
 
 
+def default_params():
+	return { REFNX : 5, REFNY : 7,
+					REF_MIN_FRAC : 0.7, REF_CHIP_SIZE : 3 }
 
-class ReferencePixelTests(unittest.TestCase):
-	'''TODO'''
-	# TODO: warnings vs exceptions?
-	# TODO: test case: 5x5 view over a 5x5 ifg with 1 window/ref pix search
+
+class ReferencePixelInputTests(unittest.TestCase):
+	'''Verifies error checking capabilities of the reference pixel function'''
 
 	def setUp(self):
 		self.testdir, self.ifgs = sydney_test_setup()
 
 
-	def default_params(self):
-		return { REFNX : 5,
-							REFNY : 7,
-							REF_MIN_FRAC : 0.7,
-							REF_CHIP_SIZE : 3,  }
-
-
 	def test_missing_chipsize(self):
-		params = self.default_params()
+		params = default_params()
 		del params[REF_CHIP_SIZE]
 		self.assertRaises(ConfigException, algorithm.ref_pixel, params, self.ifgs)
 
@@ -95,13 +90,13 @@ class ReferencePixelTests(unittest.TestCase):
 
 
 	def test_minimum_fraction_missing(self):
-		params = self.default_params()
+		params = default_params()
 		del params[REF_MIN_FRAC]
 		self.assertRaises(ConfigException, algorithm.ref_pixel, params, self.ifgs)
 
 
 	def test_minimum_fraction_threshold(self):
-		params = self.default_params()
+		params = default_params()
 		for illegal in [-0.1, 1.1, 1.000001, -0.0000001]:
 			params[REF_MIN_FRAC] = illegal
 			self.assertRaises(ValueError, algorithm.ref_pixel, params, self.ifgs)
@@ -117,7 +112,7 @@ class ReferencePixelTests(unittest.TestCase):
 
 	def test_invalid_reference_pixel(self):
 		# ensure refx & refy are within the grid (if not 0)
-		params = self.default_params()
+		params = default_params()
 
 		for illegal in [-5, -1, self.ifgs[0].WIDTH+1]:
 			params[REFX] = illegal
@@ -131,7 +126,7 @@ class ReferencePixelTests(unittest.TestCase):
 
 	# TODO: determine action for step of 1? can't be done in corner
 	def test_search_windows(self):
-		params = self.default_params()
+		params = default_params()
 		for illegal in [-5, -1, 0, 46, 50, 100]: # 45 is max # cells a width 3 sliding window can iterate over
 			params[REFNX] = illegal
 			self.assertRaises(ValueError, algorithm.ref_pixel, params, self.ifgs)
@@ -143,7 +138,7 @@ class ReferencePixelTests(unittest.TestCase):
 
 
 	def test_missing_search_windows(self):
-		params = self.default_params()
+		params = default_params()
 		del params[REFNX]
 		self.assertRaises(ConfigException, algorithm.ref_pixel, params, self.ifgs)
 
@@ -152,13 +147,23 @@ class ReferencePixelTests(unittest.TestCase):
 		self.assertRaises(ConfigException, algorithm.ref_pixel, params, self.ifgs)
 
 
+
+class ReferencePixelTests(unittest.TestCase):
+	'''Tests results of the reference pixel search'''
+
+	# TODO: test case: 5x5 view over a 5x5 ifg with 1 window/ref pix search
+	# TODO: search windows start and finish in adjacent corners (for X, Y axes)
+	# TODO: test result where one window is < thresh
+
+	def setUp(self):
+		self.testdir, self.ifgs = sydney_test_setup()
+
+
 	def test_ref_pixel(self):
-		params = self.default_params()
+		params = default_params()
 		refpx = algorithm.ref_pixel(params, self.ifgs)
 		self.assertTrue(refpx != (0,0))
 
-	# TODO: search windows start and finish in adjacent corners (for X, Y axes)
-	# TODO: where one window is < thresh
 
 
 class EpochListTests(unittest.TestCase):
