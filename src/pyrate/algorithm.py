@@ -6,8 +6,8 @@ Author: Ben Davies
 from math import pi
 from itertools import product
 
-from numpy import sin, cos, radians, unique, histogram
-from numpy import float32, nan, isnan, sum, array, ndarray
+from numpy import sin, cos, radians, unique, histogram, std, mean
+from numpy import float32, nan, isnan, sum as nsum, array, ndarray
 from pygraph.classes.graph import graph
 from pygraph.algorithms.minmax import minimal_spanning_tree
 
@@ -36,7 +36,7 @@ def nan_fraction(data):
 			ncells *= i
 
 	nan_mask = isnan(data)
-	nan_sum = sum(nan_mask)
+	nan_sum = nsum(nan_mask)
 	return nan_sum / ncells
 
 
@@ -120,12 +120,30 @@ def ref_pixel(params, ifgs):
 	if refny < 1 or refny > max_rows:
 		raise ValueError("Invalid refny setting, must be > 0 and < %s" % max_rows)
 
+	# begin calculations
+	radius = chipsize / 2
+	xstep = int(round(float(max_width) / refnx))
+	ystep = int(round(float(max_rows) / refny))
+	phase_stack = array([i.phase_data for i in ifgs]) # TODO: mem efficiencies?
+	ncells = chipsize * chipsize
+	thresh = min_frac * ncells
+	min_sd = float("inf") # dummy start value
 
-	# TODO: test case: 5x5 view over a 5x5 ifg with 1 window/ref pix search
-	# TODO: search windows start and finish in adjacent corners (for X, Y axes)
-	# Use RADIUS as as terminology for half view size
+	for y in xrange(radius, head.FILE_LENGTH, ystep):
+		for x in xrange(radius, head.WIDTH, xstep):
+			data = phase_stack[:, y-radius:y+radius+1, x-radius:x+radius+1]
+			valid = [nsum(~isnan(i)) > thresh for i in data]
 
-	raise NotImplementedError
+			if all(valid): # ignore stack if too many incoherent cells in one ifg
+				sd = [std( i[~isnan(i)] ) for i in data]
+				mean_sd = mean(sd)
+				if mean_sd < min_sd:
+					min_sd = mean_sd
+					refy, refx = y, x
+
+	if (refy, refx) == (0, 0):
+		raise ReferencePixelException("Could not find a reference pixel")
+	return refy, refx
 
 
 def _remove_root_node(mst):
@@ -186,3 +204,7 @@ def mst_matrix(ifgs, epochs):
 		mst_result[y,x] = mst
 
 	return mst_result
+
+
+class ReferencePixelException(Exception):
+	pass

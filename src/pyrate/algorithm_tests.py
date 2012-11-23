@@ -68,7 +68,7 @@ class AlgorithmTests(unittest.TestCase):
 class ReferencePixelTests(unittest.TestCase):
 	'''TODO'''
 	# TODO: warnings vs exceptions?
-	# TODO: test missing items in params
+	# TODO: test case: 5x5 view over a 5x5 ifg with 1 window/ref pix search
 
 	def setUp(self):
 		self.testdir, self.ifgs = sydney_test_setup()
@@ -151,6 +151,14 @@ class ReferencePixelTests(unittest.TestCase):
 		del params[REFNY]
 		self.assertRaises(ConfigException, algorithm.ref_pixel, params, self.ifgs)
 
+
+	def test_ref_pixel(self):
+		params = self.default_params()
+		refpx = algorithm.ref_pixel(params, self.ifgs)
+		self.assertTrue(refpx != (0,0))
+
+	# TODO: search windows start and finish in adjacent corners (for X, Y axes)
+	# TODO: where one window is < thresh
 
 
 class EpochListTests(unittest.TestCase):
