@@ -218,7 +218,7 @@ class MSTTests(unittest.TestCase):
 			res = algorithm.mst_matrix(self.mock_ifgs, self.epochs)
 			self.assertEqual(len(res[0,0]), num_coherent)
 
-		self.mock_ifgs = [MockIfg(i) for i in self.ifgs]
+		self.mock_ifgs = [MockIfg(i, 1, 1) for i in self.ifgs]
 		for m in self.mock_ifgs[num_coherent:]:
 			m.phase_data[:] = nan
 		test_result()
@@ -231,7 +231,7 @@ class MSTTests(unittest.TestCase):
 
 
 	def test_all_nan_pixel_stack(self):
-		self.mock_ifgs = [MockIfg(i) for i in self.ifgs]
+		self.mock_ifgs = [MockIfg(i, 1, 1) for i in self.ifgs]
 		for m in self.mock_ifgs:
 			m.phase_data[:] = nan
 
@@ -255,14 +255,14 @@ def sydney_test_setup():
 
 
 class MockIfg(object):
-	'''Mock 1x1 Ifg for fine grain testing of values'''
+	'''Mock Ifg for detailed testing'''
 
-	def __init__(self, src_ifg):
+	def __init__(self, src_ifg, xsize=None, ysize=None):
 		self.MASTER = src_ifg.MASTER
 		self.SLAVE = src_ifg.SLAVE
 		self.DATE12 = src_ifg.DATE12
 
-		self.FILE_LENGTH = 1
-		self.WIDTH = 1
+		self.FILE_LENGTH = ysize
+		self.WIDTH = xsize
 		self.phase_data = ndarray((self.FILE_LENGTH, self.WIDTH), dtype=float32)
 		self.nan_fraction = src_ifg.nan_fraction # use existing overall nan fraction
