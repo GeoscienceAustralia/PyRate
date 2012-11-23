@@ -5,7 +5,8 @@ from math import pi, cos, sin, radians
 from itertools import product
 
 import numpy
-from numpy import array, nan, reshape, squeeze, ndarray, float32
+from numpy import array, reshape, squeeze, ndarray
+from numpy import isnan, nan, float32, std, mean
 from numpy.testing import assert_array_almost_equal
 
 import algorithm
@@ -152,17 +153,76 @@ class ReferencePixelTests(unittest.TestCase):
 	'''Tests results of the reference pixel search'''
 
 	# TODO: test case: 5x5 view over a 5x5 ifg with 1 window/ref pix search
-	# TODO: search windows start and finish in adjacent corners (for X, Y axes)
 	# TODO: test result where one window is < thresh
 
 	def setUp(self):
 		self.testdir, self.ifgs = sydney_test_setup()
 
 
+	# TODO test_all_below_threshold_exception
+	#def test_all_below_threshold_exception(self):
+		# test no valid cells for all the stacks
+
+	def test_step(self):
+
+		# helper function to
+		def test_equal(actual, expected):
+			for a, e in zip(actual, expected):
+				self.assertEqual(a, e)
+
+		# start with simple corner only test
+		width = 47
+		radius = 2
+		refnx = 2
+		exp = [2, 44]
+		act = algorithm._step(width, refnx, radius)
+		test_equal(act, exp)
+
+		# test with 3 windows
+		refnx = 3
+		exp = [2, 23, 44]
+		act = algorithm._step(width, refnx, radius)
+		test_equal(act, exp)
+
+		# test 4 search windows
+		refnx = 4
+		exp = [2, 16, 30, 44]
+		act = algorithm._step(width, refnx, radius)
+		test_equal(act, exp)
+
+
+	# TODO: try this data but NaN out the first corner
 	def test_ref_pixel(self):
 		params = default_params()
-		refpx = algorithm.ref_pixel(params, self.ifgs)
-		self.assertTrue(refpx != (0,0))
+		params[REFNX] = 2 # just use the corners
+		params[REFNY] = 2
+		params[REF_CHIP_SIZE] = 5
+
+		exp_refpx = (2,2) # calculated manually from _expected_ref_pixel()
+		act_refpx = algorithm.ref_pixel(params, self.ifgs)
+		self.assertNotEqual(act_refpx, (0,0))
+		self.assertEqual(act_refpx, exp_refpx)
+
+
+def _expected_ref_pixel(ifgs, cs):
+	'''Helper function for finding reference pixel when refnx/y=2'''
+
+	# calculate expected data
+	data = [i.phase_data for i in ifgs] # len 17 list of ndarrays
+	ul = [ i[:cs,:cs] for i in data] # upper left corner stack
+	ur = [ i[:cs,-cs:] for i in data]
+	ll = [ i[-cs:,:cs] for i in data]
+	lr = [ i[-cs:,-cs:] for i in data]
+
+	ulm = mean([std(i) for i in ul]) # mean std of all the layers
+	urm = mean([std(i) for i in ur])
+	llm = mean([std(i) for i in ll])
+	lrm = mean([std(i) for i in lr])
+	assert isnan([ulm, urm, llm, lrm]).any() == False
+
+	# coords of the smallest mean is the result
+	mn = [ulm, urm, llm, lrm]
+	print mn, min(mn)
 
 
 

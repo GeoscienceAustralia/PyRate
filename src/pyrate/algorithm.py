@@ -120,21 +120,20 @@ def ref_pixel(params, ifgs):
 	if refny < 1 or refny > max_rows:
 		raise ValueError("Invalid refny setting, must be > 0 and < %s" % max_rows)
 
-	# begin calculations
+	# pre-calculate useful amounts
 	radius = chipsize / 2
-	xstep = int(round(float(max_width) / refnx))
-	ystep = int(round(float(max_rows) / refny))
 	phase_stack = array([i.phase_data for i in ifgs]) # TODO: mem efficiencies?
-	ncells = chipsize * chipsize
-	thresh = min_frac * ncells
+	thresh = min_frac * chipsize * chipsize
 	min_sd = float("inf") # dummy start value
 
-	for y in xrange(radius, head.FILE_LENGTH, ystep):
-		for x in xrange(radius, head.WIDTH, xstep):
+	# do window searches across dataset, central pixel of stack with smallest mean
+	# is the reference pixel
+	for y in _step(head.FILE_LENGTH, refny, radius):
+		for x in _step(head.WIDTH, refnx, radius):
 			data = phase_stack[:, y-radius:y+radius+1, x-radius:x+radius+1]
 			valid = [nsum(~isnan(i)) > thresh for i in data]
 
-			if all(valid): # ignore stack if too many incoherent cells in one ifg
+			if all(valid): # ignore stack if 1+ ifgs have too many incoherent cells
 				sd = [std( i[~isnan(i)] ) for i in data]
 				mean_sd = mean(sd)
 				if mean_sd < min_sd:
@@ -144,6 +143,19 @@ def ref_pixel(params, ifgs):
 	if (refy, refx) == (0, 0):
 		raise ReferencePixelException("Could not find a reference pixel")
 	return refy, refx
+
+
+def _step(dim, ref, radius):
+	'''Returns xrange obj of axis indicies for a search window. dim is the total
+	length of the grid dimension. ref is refn(x|y) setting. radius is # cells out
+	from the centre of the chip, or (chipsize / 2).'''
+
+	max_dim = dim - (2*radius) # max possible number for refn(x|y)
+	if ref == 2: # handle 2 search windows, method below doesn't cover the case
+		return [radius, dim-radius-1]
+
+	step = max_dim // (ref-1)
+	return xrange(radius, dim, step)
 
 
 def _remove_root_node(mst):
