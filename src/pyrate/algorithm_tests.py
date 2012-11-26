@@ -159,13 +159,24 @@ class ReferencePixelTests(unittest.TestCase):
 		self.testdir, self.ifgs = sydney_test_setup()
 
 
-	# TODO test_all_below_threshold_exception
-	#def test_all_below_threshold_exception(self):
-		# test no valid cells for all the stacks
+	def test_all_below_threshold_exception(self):
+		# test failure when no valid stacks in dataset
+		params = { REFNX : 2, REFNY : 2, REF_MIN_FRAC : 0.7, REF_CHIP_SIZE : 3 }
+
+		# rig mock data to be below threshold
+		self.mock_ifgs = [MockIfg(i, 6, 7) for i in self.ifgs]
+		for m in self.mock_ifgs:
+			m.phase_data[:1] = nan
+			m.phase_data[1:5] = 0.1
+			m.phase_data[5:] = nan
+
+		self.assertRaises(algorithm.ReferencePixelException, algorithm.ref_pixel, params, self.mock_ifgs)
+
 
 	def test_step(self):
+		# test different search windows to verify x/y step calculation
 
-		# helper function to
+		# convenience testing function
 		def test_equal(actual, expected):
 			for a, e in zip(actual, expected):
 				self.assertEqual(a, e)
