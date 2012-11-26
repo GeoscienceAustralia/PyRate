@@ -127,6 +127,13 @@ class IfgTests(unittest.TestCase):
 		for y, row in enumerate(self.ifg.phase_rows):
 			assert_array_equal(data[y], row)
 
+		# test the data is cached if changed
+		crd = (5,4)
+		orig = self.ifg.phase_data[crd]
+		self.ifg.phase_data[crd] *= 2
+		nv = self.ifg.phase_data[crd] # pull new value out again
+		self.assertEqual(nv, 2 * orig)
+
 
 
 class DEMTests(unittest.TestCase):
