@@ -24,22 +24,6 @@ def wavelength_to_mm(data, wavelength):
 	return data * MM_PER_METRE * (wavelength / (4 * pi))
 
 
-# TODO: remove this as there is an equivalent func in Ifg class
-def nan_fraction(data):
-	"""Calculates fraction of cells in data that are NaN"""
-
-	# calc number of cells by summing additional dimensions
-	shape = data.shape
-	ncells = float(shape[0])  # for float division
-	if len(shape) > 1:
-		for i in data.shape[1:]:
-			ncells *= i
-
-	nan_mask = isnan(data)
-	nan_sum = nsum(nan_mask)
-	return nan_sum / ncells
-
-
 def los_conversion(phase_data, unit_vec_component):
 	'''Converts phase from LOS to horizontal/vertical components. Args are
 	numpy arrays.'''

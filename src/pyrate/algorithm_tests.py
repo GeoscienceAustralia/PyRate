@@ -29,14 +29,6 @@ class AlgorithmTests(unittest.TestCase):
 		numpy.testing.assert_array_almost_equal(exp, act)
 
 
-	def test_nan_fraction(self):
-		data = numpy.ones((4,3))
-		data[1] = nan
-		exp = 3 / float(12)
-		act = algorithm.nan_fraction(data)
-		self.assertEqual(act, exp)
-
-
 	def test_unit_vector(self):
 		incidence = [radians(x) for x in (34.3, 39.3, 29.3, 22.8) ]
 		azimuth = [radians(x) for x in (77.8, 77.9, 80.0, 80.3)  ]
@@ -154,7 +146,6 @@ class ReferencePixelTests(unittest.TestCase):
 	'''Tests results of the reference pixel search'''
 
 	# TODO: test case: 5x5 view over a 5x5 ifg with 1 window/ref pix search
-	# TODO: test result where one window is < thresh
 
 	def setUp(self):
 		self.testdir, self.ifgs = sydney_test_setup()
@@ -203,7 +194,6 @@ class ReferencePixelTests(unittest.TestCase):
 		test_equal(act, exp)
 
 
-	# TODO: try this data but NaN out the first corner
 	def test_ref_pixel(self):
 		params = default_params()
 		params[REFNX] = 2 # just use the corners
