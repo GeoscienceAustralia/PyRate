@@ -215,6 +215,14 @@ class ReferencePixelTests(unittest.TestCase):
 		self.assertNotEqual(act_refpx, (0,0))
 		self.assertEqual(act_refpx, exp_refpx)
 
+		# Invalidate first stack and test result again
+		for i in self.ifgs:
+			i.phase_data[:3,:5] = nan
+
+		exp_refpx = (2,44) # calculated manually from _expected_ref_pixel()
+		act_refpx = algorithm.ref_pixel(params, self.ifgs)
+		self.assertEqual(act_refpx, exp_refpx)
+
 
 def _expected_ref_pixel(ifgs, cs):
 	'''Helper function for finding reference pixel when refnx/y=2'''
@@ -226,15 +234,15 @@ def _expected_ref_pixel(ifgs, cs):
 	ll = [ i[-cs:,:cs] for i in data]
 	lr = [ i[-cs:,-cs:] for i in data]
 
-	ulm = mean([std(i) for i in ul]) # mean std of all the layers
-	urm = mean([std(i) for i in ur])
-	llm = mean([std(i) for i in ll])
-	lrm = mean([std(i) for i in lr])
+	ulm = mean([std(i[~isnan(i)]) for i in ul]) # mean std of all the layers
+	urm = mean([std(i[~isnan(i)]) for i in ur])
+	llm = mean([std(i[~isnan(i)]) for i in ll])
+	lrm = mean([std(i[~isnan(i)]) for i in lr])
 	assert isnan([ulm, urm, llm, lrm]).any() == False
 
 	# coords of the smallest mean is the result
 	mn = [ulm, urm, llm, lrm]
-	print mn, min(mn)
+	print mn, min(mn), mn.index(min(mn))
 
 
 
