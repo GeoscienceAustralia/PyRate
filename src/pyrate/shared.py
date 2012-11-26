@@ -160,7 +160,7 @@ class Ifg(RasterBase):
 
 		# handle datasets with no 0 -> NaN replacement
 		if self.nan_converted is False and nan_count == 0:
-			nan_count = numpy.sum(data == 0)
+			nan_count = numpy.sum(self.phase_data == 0)
 
 		return nan_count / float(self.num_cells)
 
