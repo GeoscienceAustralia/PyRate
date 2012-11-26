@@ -10,6 +10,7 @@ from numpy import isnan, nan, float32, std, mean
 from numpy.testing import assert_array_almost_equal
 
 import algorithm
+from algorithm import RefPixelError
 from shared import Ifg
 from config import ConfigException
 from config import REFX, REFNX, REFY, REFNY, REF_CHIP_SIZE, REF_MIN_FRAC
@@ -170,7 +171,7 @@ class ReferencePixelTests(unittest.TestCase):
 			m.phase_data[1:5] = 0.1
 			m.phase_data[5:] = nan
 
-		self.assertRaises(algorithm.ReferencePixelException, algorithm.ref_pixel, params, self.mock_ifgs)
+		self.assertRaises(RefPixelError, algorithm.ref_pixel, params, self.mock_ifgs)
 
 
 	def test_step(self):

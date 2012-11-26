@@ -109,7 +109,7 @@ def ref_pixel(params, ifgs):
 					refy, refx = y, x
 
 	if (refy, refx) == (0, 0):
-		raise ReferencePixelException("Could not find a reference pixel")
+		raise RefPixelError("Could not find a reference pixel")
 	return refy, refx
 
 
@@ -227,5 +227,5 @@ def mst_matrix(ifgs, epochs):
 	return mst_result
 
 
-class ReferencePixelException(Exception):
+class RefPixelError(Exception):
 	pass
