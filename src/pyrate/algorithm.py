@@ -127,7 +127,7 @@ def check_ref_pixel_params(params, head):
 
 	max_width = (head.WIDTH - (chipsize-1))
 	if refnx < 1 or refnx > max_width:
-		raise ValueError("Invalid refnx setting, must be > 0 and < %s" % max_width)
+		raise ValueError("Invalid refnx setting, must be > 0 and <= %s" % max_width)
 
 	refny = params.get(config.REFNY)
 	if refny is None:
@@ -135,7 +135,7 @@ def check_ref_pixel_params(params, head):
 
 	max_rows = (head.FILE_LENGTH - (chipsize-1))
 	if refny < 1 or refny > max_rows:
-		raise ValueError("Invalid refny setting, must be > 0 and < %s" % max_rows)
+		raise ValueError("Invalid refny setting, must be > 0 and <= %s" % max_rows)
 
 
 def _step(dim, ref, radius):
