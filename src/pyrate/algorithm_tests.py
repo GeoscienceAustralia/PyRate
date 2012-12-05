@@ -148,8 +148,6 @@ class ReferencePixelInputTests(unittest.TestCase):
 class ReferencePixelTests(unittest.TestCase):
 	'''Tests results of the reference pixel search'''
 
-	# TODO: test case: 5x5 view over a 5x5 ifg with 1 window/ref pix search
-
 	def setUp(self):
 		self.testdir, self.ifgs = sydney_test_setup()
 
@@ -169,12 +167,21 @@ class ReferencePixelTests(unittest.TestCase):
 
 
 	def test_refnxy_1(self):
-		# test step of 1 for refnx|y gets the reference pixel for centre
+		# test step of 1 for refnx|y gets the reference pixel for axis centre
 		params = { REFNX : 1, REFNY : 1, REF_MIN_FRAC : 0.7, REF_CHIP_SIZE : 3 }
 
 		exp_refpx = (36,23)
 		act_refpx = algorithm.ref_pixel(params, self.ifgs)
 		self.assertEqual(exp_refpx, act_refpx)
+
+
+	def test_large_window(self):
+		# 5x5 view over a 5x5 ifg with 1 window/ref pix search
+		chps = 5
+		params = { REFNX : 1, REFNY : 1, REF_MIN_FRAC : 0.7, REF_CHIP_SIZE : chps }
+		self.mock_ifgs = [MockIfg(i, chps, chps) for i in self.ifgs]
+		act_refpx = algorithm.ref_pixel(params, self.mock_ifgs)
+		self.assertEqual((2,2), act_refpx)
 
 
 	def test_step(self):
