@@ -1,3 +1,7 @@
+'''
+Collection of algorithms used in PyRate.
+Author: Ben Davies, ANUSF
+'''
 
 from os.path import join
 import glob, unittest, datetime
@@ -43,7 +47,7 @@ class AlgorithmTests(unittest.TestCase):
 		unitv = [array(ew), array(ns), array(vert)]
 		unitv = [a.reshape(sh) for a in unitv]
 
-		# TODO: assumes rad input for now
+		# TODO: assumes radian input for now
 		act = algorithm.unit_vector(reshape(incidence, sh), reshape(azimuth, sh))
 		for a,e in zip(act, unitv):
 			assert_array_almost_equal(squeeze(a), e)
@@ -118,7 +122,6 @@ class ReferencePixelInputTests(unittest.TestCase):
 			self.assertRaises(ValueError, algorithm.ref_pixel, params, self.ifgs)
 
 
-	# TODO: determine action for step of 1? can't be done in corner
 	def test_search_windows(self):
 		params = default_params()
 		for illegal in [-5, -1, 0, 46, 50, 100]: # 45 is max # cells a width 3 sliding window can iterate over
@@ -163,6 +166,15 @@ class ReferencePixelTests(unittest.TestCase):
 			m.phase_data[5:] = nan
 
 		self.assertRaises(RefPixelError, algorithm.ref_pixel, params, self.mock_ifgs)
+
+
+	def test_refnxy_1(self):
+		# test step of 1 for refnx|y gets the reference pixel for centre
+		params = { REFNX : 1, REFNY : 1, REF_MIN_FRAC : 0.7, REF_CHIP_SIZE : 3 }
+
+		exp_refpx = (36,23)
+		act_refpx = algorithm.ref_pixel(params, self.ifgs)
+		self.assertEqual(exp_refpx, act_refpx)
 
 
 	def test_step(self):

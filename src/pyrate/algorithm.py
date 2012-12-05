@@ -1,6 +1,6 @@
 '''
-Created
-Author: Ben Davies
+Collection of algorithms for PyRate.
+Author: Ben Davies, ANUSF
 '''
 
 from math import pi
@@ -140,8 +140,12 @@ def check_ref_pixel_params(params, head):
 
 def _step(dim, ref, radius):
 	'''Returns xrange obj of axis indicies for a search window. dim is the total
-	length of the grid dimension. ref is refn(x|y) setting. radius is # cells out
-	from the centre of the chip, or (chipsize / 2).'''
+	length of the grid dimension. ref is the desired number of steps. radius is #
+	cells out from the centre of the chip, or (chipsize / 2).'''
+
+	if ref == 1:
+		# centre a single search step
+		return xrange(dim // 2, dim, dim) # fake step to ensure single xrange value
 
 	max_dim = dim - (2*radius) # max possible number for refn(x|y)
 	if ref == 2: # handle 2 search windows, method below doesn't cover the case
