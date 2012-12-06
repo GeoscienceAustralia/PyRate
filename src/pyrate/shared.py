@@ -155,7 +155,7 @@ class Ifg(RasterBase):
 	def nan_fraction(self):
 		'''Returns 0-1 (float) proportion of NaN cells for the phase band'''
 
-		# TODO: cache nan_count for readonly datasets? Perf benefit vs temp changes to data?
+		# don't cache nan_count as client code may modify phase data
 		nan_count = numpy.sum(numpy.isnan(self.phase_data))
 
 		# handle datasets with no 0 -> NaN replacement

@@ -16,7 +16,6 @@ from shared import Ifg, IfgException, DEM, RasterException
 from ifgconstants import Z_OFFSET, Z_SCALE, PROJECTION, DATUM
 
 
-# TODO: split into 2 test classes, unopened Ifg and opened.
 class IfgTests(unittest.TestCase):
 	'''Unit tests for the Ifg/interferogram class.'''
 
