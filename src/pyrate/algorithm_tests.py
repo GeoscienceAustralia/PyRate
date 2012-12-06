@@ -170,8 +170,14 @@ class ReferencePixelTests(unittest.TestCase):
 		# test step of 1 for refnx|y gets the reference pixel for axis centre
 		params = { REFNX : 1, REFNY : 1, REF_MIN_FRAC : 0.7, REF_CHIP_SIZE : 3 }
 
+		self.mock_ifgs = [MockIfg(i, 47, 72) for i in self.ifgs]
+		for m in self.mock_ifgs:
+			m.phase_data[:1] = 0.2
+			m.phase_data[1:5] = 0.1
+			m.phase_data[5:] = 0.3
+
 		exp_refpx = (36,23)
-		act_refpx = algorithm.ref_pixel(params, self.ifgs)
+		act_refpx = algorithm.ref_pixel(params, self.mock_ifgs)
 		self.assertEqual(exp_refpx, act_refpx)
 
 
