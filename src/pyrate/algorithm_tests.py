@@ -47,7 +47,7 @@ class AlgorithmTests(unittest.TestCase):
 		unitv = [array(ew), array(ns), array(vert)]
 		unitv = [a.reshape(sh) for a in unitv]
 
-		# TODO: assumes radian input for now
+		# NB: assumes radian inputs
 		act = algorithm.unit_vector(reshape(incidence, sh), reshape(azimuth, sh))
 		for a,e in zip(act, unitv):
 			assert_array_almost_equal(squeeze(a), e)
