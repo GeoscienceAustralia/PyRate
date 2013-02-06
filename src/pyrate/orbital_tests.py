@@ -7,9 +7,12 @@ Created on 31/3/13
 
 
 import unittest
-from numpy import zeros
-from numpy.testing import assert_array_almost_equal
+from glob import glob
+from numpy import array, reshape, zeros, float32
+from numpy.testing import assert_array_equal, assert_array_almost_equal
 
+from shared import Ifg
+from orbital import orbital_correction_np
 from orbital import independent_design_matrix, forward_calculation
 from algorithm_tests import MockIfg, sydney_test_setup
 
@@ -22,7 +25,7 @@ class OrbitalTests(unittest.TestCase):
 		xstep, ystep = 0.6, 0.7  # fake cell sizes
 
 		shape = (6,2)
-		designm = zeros(shape)
+		designm = zeros(shape) # design matrix
 		designm[0] = [0,0]
 		designm[1] = [0,xstep]
 		designm[2] = [ystep,0]
@@ -45,6 +48,31 @@ class OrbitalTests(unittest.TestCase):
 
 		design_mat = independent_design_matrix(m)
 		assert_array_almost_equal(design_mat, self.designm)
+
+
+	def test_ifg_to_vector(self):
+		# test numpy reshaping order
+		ifg = zeros((2,3), dtype=float32)
+		a = [24, 48, 1000]
+		b = [552, 42, 68]
+		ifg[0] = a
+		ifg[1] = b
+		res = reshape(ifg, (len(a+b)))
+		exp = array(a + b)
+		assert_array_equal(exp, res)
+
+
+	def test_orbital_correction_np(self):
+		paths = sorted(glob("../../tests/sydney_test/obs/geo*.unw"))[:5]
+		ifgs = [Ifg(p) for p in paths]
+		[i.open() for i in ifgs]
+		corrections = orbital_correction_np(ifgs, degree=1, method=1)
+		for i,c in zip(ifgs, corrections):
+			# are corrections same size as the original array?
+			ys, xs = c.shape
+			self.assertEqual(i.FILE_LENGTH, ys)
+			self.assertEqual(i.WIDTH, xs)
+			self.assertTrue(c.ptp() != 0)
 
 
 	def test_linear_model(self):
