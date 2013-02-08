@@ -43,6 +43,10 @@ def orbital_correction(ifgs, degree, method):
 	# TODO: save corrected layers to new file or use intermediate arrays?
 	# TODO: offsets
 
+	if degree not in [1,2]:
+		msg = "Invalid degree of %s for orbital correction" % degree
+		raise OrbitalCorrectionError(msg)
+
 	if method == NETWORK_METHOD:
 		raise NotImplementedError
 
@@ -58,7 +62,7 @@ def _get_correction(ifg, degree):
 
 	# vectorise data
 	vphase = reshape(ifg.phase_data, vsh) # contains NODATA
-	dm = independent_design_matrix(ifg)
+	dm = get_design_matrix(ifg)
 	assert len(vphase) == len(dm)
 
 	# filter NaNs out before getting model
@@ -73,7 +77,7 @@ def _get_correction(ifg, degree):
 	return correction
 
 
-def independent_design_matrix(ifg):
+def get_design_matrix(ifg):
 	'''Returns design matrix with 2 columns for linear model parameters'''
 
 	# init design matrix
@@ -89,3 +93,7 @@ def independent_design_matrix(ifg):
 
 	return data
 
+
+
+class OrbitalCorrectionError(Exception):
+	pass

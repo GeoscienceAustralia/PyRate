@@ -13,7 +13,7 @@ from numpy.testing import assert_array_equal, assert_array_almost_equal
 
 from shared import Ifg
 from orbital import orbital_correction
-from orbital import independent_design_matrix
+from orbital import get_design_matrix
 from algorithm_tests import MockIfg, sydney_test_setup
 
 
@@ -45,7 +45,7 @@ class OrbitalTests(unittest.TestCase):
 		m = MockIfg(ifgs[0], xs, ys)
 		m.X_STEP = self.xstep
 		m.Y_STEP = self.ystep
-		design_mat = independent_design_matrix(m)
+		design_mat = get_design_matrix(m)
 		assert_array_almost_equal(design_mat, self.designm)
 
 
