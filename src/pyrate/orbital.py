@@ -6,8 +6,11 @@ Created on 31/3/13
 '''
 
 from itertools import product
-from numpy import sum, reshape, zeros, float32
-from numpy.linalg import lstsq
+from numpy import sum, where, nan, isnan, reshape, zeros, float32
+from numpy.ma import masked_array
+
+#from numpy.linalg import lstsq
+from scipy.linalg import lstsq
 
 
 # Orbital correction
@@ -36,31 +39,38 @@ NETWORK_METHOD = 2
 
 
 def orbital_correction(ifgs, degree, method):
-	# TODO: get the orbital corrections
+
 	# TODO: save corrected layers to new file or use intermediate arrays?
-	raise NotImplementedError
-
-
-# TODO: hide this function?
-def orbital_correction_np(ifgs, degree, method):
-	'''Calculates orbital error and returns layers of the forward correction.'''
-
 	# TODO: offsets
 
 	if method == NETWORK_METHOD:
 		raise NotImplementedError
 
-	# grab head ifg to prepare some data
-	head = ifgs[0]
-	orig = (head.FILE_LENGTH, head.WIDTH)
+	return [_get_correction(i, degree) for i in ifgs]
 
-	sh = head.FILE_LENGTH * head.WIDTH # new shape for vectorised data
-	dm = independent_design_matrix(head)
 
-	# TODO: performance - add filtering for NODATA?
-	models = [lstsq(dm, reshape(i.phase_data, sh))[0] for i in ifgs]
-	corrections = [sum(dm * m, axis=1) for m in models] # d = ax + by
-	return [reshape(c, orig) for c in corrections]
+def _get_correction(ifg, degree):
+	'''Calculates and returns orbital correction array for an ifg'''
+
+	# precalculate matrix shapes
+	orig = ifg.phase_data.shape
+	vsh = orig[0] * orig[1] # full shape of vectorised form of data
+
+	# vectorise data
+	vphase = reshape(ifg.phase_data, vsh) # contains NODATA
+	dm = independent_design_matrix(ifg)
+	assert len(vphase) == len(dm)
+
+	# filter NaNs out before getting model
+	tmp = dm[~isnan(vphase)]
+	fd = vphase[~isnan(vphase)]
+	model, _, rank, _ = lstsq(tmp, fd)
+	# TODO: assert rank == EXP, "Got rank of %s" % rank
+
+	# calculate forward model & morph back to 2D
+	tmp = sum(dm * model, axis=1) # d = ax + by
+	correction = reshape(tmp, orig)
+	return correction
 
 
 def independent_design_matrix(ifg):
@@ -79,6 +89,3 @@ def independent_design_matrix(ifg):
 
 	return data
 
-
-def forward_calculation(design_mat, model):
-	raise NotImplementedError
