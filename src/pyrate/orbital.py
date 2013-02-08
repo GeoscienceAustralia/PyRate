@@ -94,6 +94,24 @@ def get_design_matrix(ifg):
 	return data
 
 
+def get_design_matrix_quadratic(ifg):
+	# init design matrix
+	shape = ((ifg.WIDTH * ifg.FILE_LENGTH), 5)
+	data = zeros(shape, dtype=float32)
+	idata = iter(data)
+
+	# apply positional parameter values, multiply pixel coordinate by cell size to
+	# get distance (a coord by itself doesn't tell us distance from origin)
+	yst, xst = ifg.Y_STEP, ifg.X_STEP
+	for y,x in product(xrange(ifg.FILE_LENGTH), xrange(ifg.WIDTH)):
+		row = idata.next()
+		y2 = y * yst
+		x2 = x * xst
+		row[:] = [x2**2, y2**2, x2*y2, x2, y2] # FIXME: change to (Y|X)SIZE, needs proj4
+
+	return data
+
+
 
 class OrbitalCorrectionError(Exception):
 	pass

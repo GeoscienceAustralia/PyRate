@@ -13,7 +13,7 @@ from numpy.testing import assert_array_equal, assert_array_almost_equal
 
 from shared import Ifg
 from orbital import orbital_correction
-from orbital import get_design_matrix
+from orbital import get_design_matrix, get_design_matrix_quadratic
 from algorithm_tests import MockIfg, sydney_test_setup
 
 
@@ -25,7 +25,7 @@ class OrbitalTests(unittest.TestCase):
 		xstep, ystep = 0.6, 0.7  # fake cell sizes
 
 		shape = (6,2)
-		designm = zeros(shape) # design matrix
+		designm = zeros(shape) # planar design matrix for 2x3 orig array
 		designm[0] = [0,0]
 		designm[1] = [0,xstep]
 		designm[2] = [ystep,0]
@@ -47,6 +47,30 @@ class OrbitalTests(unittest.TestCase):
 		m.Y_STEP = self.ystep
 		design_mat = get_design_matrix(m)
 		assert_array_almost_equal(design_mat, self.designm)
+
+
+	def test_design_matrix_quadratic(self):
+		dm = []
+		ys, xs = (3,5)
+		for y in xrange(ys):
+			for x in xrange(xs):
+				dm.append([(x * self.xstep)**2,
+									(y * self.ystep)**2,
+									(x * self.xstep) * (y * self.ystep),
+									x * self.xstep,
+									y * self.ystep])
+
+		exp_dm = array(dm, dtype=float32) # planar design matrix
+
+		# get design matrix from an ifg
+		ifg = Ifg("../../tests/sydney_test/obs/geo_060619-061002.unw")
+		ifg.open()
+		m = MockIfg(ifg, xs, ys)
+		m.X_STEP = self.xstep
+		m.Y_STEP = self.ystep
+
+		design_mat = get_design_matrix_quadratic(m)
+		assert_array_almost_equal(design_mat, exp_dm, decimal=3)
 
 
 	def test_ifg_to_vector(self):
