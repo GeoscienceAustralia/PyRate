@@ -37,13 +37,16 @@ from scipy.linalg import lstsq
 INDEPENDENT_METHOD = 1
 NETWORK_METHOD = 2
 
+PLANAR = 1
+QUADRATIC = 2
+
 
 def orbital_correction(ifgs, degree, method):
 
 	# TODO: save corrected layers to new file or use intermediate arrays?
 	# TODO: offsets
 
-	if degree not in [1,2]:
+	if degree not in [PLANAR, QUADRATIC]:
 		msg = "Invalid degree of %s for orbital correction" % degree
 		raise OrbitalCorrectionError(msg)
 
@@ -62,13 +65,25 @@ def _get_correction(ifg, degree):
 
 	# vectorise data
 	vphase = reshape(ifg.phase_data, vsh) # contains NODATA
-	dm = get_design_matrix(ifg)
+
+	# TODO: refactor DM into single func?
+	if degree == PLANAR:
+		dm = get_design_matrix(ifg)
+	else:
+		dm = get_design_matrix_quadratic(ifg)
 	assert len(vphase) == len(dm)
 
 	# filter NaNs out before getting model
 	tmp = dm[~isnan(vphase)]
 	fd = vphase[~isnan(vphase)]
 	model, _, rank, _ = lstsq(tmp, fd)
+
+	lm = len(model)
+	if degree == PLANAR:
+		assert lm == 2
+	else:
+		assert lm == 5
+
 	# TODO: assert rank == EXP, "Got rank of %s" % rank
 
 	# calculate forward model & morph back to 2D

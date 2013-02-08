@@ -90,22 +90,30 @@ class OrbitalTests(unittest.TestCase):
 
 
 	def test_orbital_correction(self):
+
+		def test_results():
+			for i,c in zip(ifgs, corrections):
+				# are corrections same size as the original array?
+				ys, xs = c.shape
+				self.assertEqual(i.FILE_LENGTH, ys)
+				self.assertEqual(i.WIDTH, xs)
+				self.assertFalse(isnan(i.phase_data).all())
+				self.assertFalse(isnan(c).all())
+				self.assertTrue(c.ptp() != 0)
+				# TODO: do the results need to be checked at all?
+
 		paths = sorted(glob("../../tests/sydney_test/obs/geo*.unw"))[:5]
 		ifgs = [Ifg(p) for p in paths]
 		[i.open() for i in ifgs]
 		ifgs[0].phase_data[1,1:3] = nan # add some NODATA
 
 		corrections = orbital_correction(ifgs, degree=1, method=1)
-		for i,c in zip(ifgs, corrections):
-			# are corrections same size as the original array?
-			ys, xs = c.shape
-			self.assertEqual(i.FILE_LENGTH, ys)
-			self.assertEqual(i.WIDTH, xs)
-			self.assertFalse(isnan(i.phase_data).all())
-			self.assertFalse(isnan(c).all())
-			self.assertTrue(c.ptp() != 0)
+		test_results()
 
-			# TODO: do the results need to be checked at all?
+		# test quadratic model
+		corrections = orbital_correction(ifgs, degree=2, method=1)
+		test_results()
+
 
 	# TODO
 	#def test_complete(self):
