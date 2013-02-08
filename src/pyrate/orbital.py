@@ -62,15 +62,9 @@ def _get_correction(ifg, degree):
 	# precalculate matrix shapes
 	orig = ifg.phase_data.shape
 	vsh = orig[0] * orig[1] # full shape of vectorised form of data
+	vphase = reshape(ifg.phase_data, vsh) # vectorised data, contains NODATA
 
-	# vectorise data
-	vphase = reshape(ifg.phase_data, vsh) # contains NODATA
-
-	# TODO: refactor DM into single func?
-	if degree == PLANAR:
-		dm = get_design_matrix(ifg)
-	else:
-		dm = get_design_matrix_quadratic(ifg)
+	dm = get_design_matrix(ifg, degree)
 	assert len(vphase) == len(dm)
 
 	# filter NaNs out before getting model
@@ -78,11 +72,8 @@ def _get_correction(ifg, degree):
 	fd = vphase[~isnan(vphase)]
 	model, _, rank, _ = lstsq(tmp, fd)
 
-	lm = len(model)
-	if degree == PLANAR:
-		assert lm == 2
-	else:
-		assert lm == 5
+	exp_len = 2 if degree == PLANAR else 5
+	assert len(model) == exp_len
 
 	# TODO: assert rank == EXP, "Got rank of %s" % rank
 
@@ -92,39 +83,38 @@ def _get_correction(ifg, degree):
 	return correction
 
 
-def get_design_matrix(ifg):
+def get_design_matrix(ifg, degree):
 	'''Returns design matrix with 2 columns for linear model parameters'''
 
+	nparams = 2 if degree == PLANAR else 5
+
 	# init design matrix
-	shape = ((ifg.WIDTH * ifg.FILE_LENGTH), 2)
+	shape = ((ifg.WIDTH * ifg.FILE_LENGTH), nparams)
 	data = zeros(shape, dtype=float32)
-	idata = iter(data)
+	rows = iter(data)
 
-	# apply positional parameter values, multiply pixel coordinate by cell size to
-	# get distance (a coord by itself doesn't tell us distance from origin)
-	for y,x in product(xrange(ifg.FILE_LENGTH), xrange(ifg.WIDTH)):
-		row = idata.next()
-		row[:] = [y * ifg.Y_STEP, x * ifg.X_STEP] # FIXME: change to (Y|X)SIZE, needs proj4
-
+	dmfun = _planar_dm if degree == PLANAR else _quadratic_dm
+	dmfun(ifg, rows)
 	return data
 
 
-def get_design_matrix_quadratic(ifg):
-	# init design matrix
-	shape = ((ifg.WIDTH * ifg.FILE_LENGTH), 5)
-	data = zeros(shape, dtype=float32)
-	idata = iter(data)
+def _planar_dm(ifg, rows):
+	# apply positional parameter values, multiply pixel coordinate by cell size to
+	# get distance (a coord by itself doesn't tell us distance from origin)
+	for y,x in product(xrange(ifg.FILE_LENGTH), xrange(ifg.WIDTH)):
+		row = rows.next()
+		row[:] = [y * ifg.Y_STEP, x * ifg.X_STEP] # FIXME: change to (Y|X)SIZE, needs proj4
 
+
+def _quadratic_dm(ifg, rows):
 	# apply positional parameter values, multiply pixel coordinate by cell size to
 	# get distance (a coord by itself doesn't tell us distance from origin)
 	yst, xst = ifg.Y_STEP, ifg.X_STEP
 	for y,x in product(xrange(ifg.FILE_LENGTH), xrange(ifg.WIDTH)):
-		row = idata.next()
+		row = rows.next()
 		y2 = y * yst
 		x2 = x * xst
 		row[:] = [x2**2, y2**2, x2*y2, x2, y2] # FIXME: change to (Y|X)SIZE, needs proj4
-
-	return data
 
 
 
