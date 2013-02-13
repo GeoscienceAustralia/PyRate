@@ -1,6 +1,7 @@
 '''
+Main workflow script for PyRate
 Created on 17/09/2012
-@author: bpd900
+@author: Ben Davies
 '''
 
 import os
