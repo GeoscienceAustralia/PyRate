@@ -105,6 +105,7 @@ class ReferencePixelInputTests(unittest.TestCase):
 		Y, X = exp_coord
 		params = { REFX : X, REFY : Y }
 		act = algorithm.ref_pixel(params, self.ifgs)
+		self.assertEqual(exp_coord, act)
 
 
 	def test_invalid_reference_pixel(self):
@@ -149,6 +150,7 @@ class ReferencePixelTests(unittest.TestCase):
 
 	def setUp(self):
 		self.testdir, self.ifgs = sydney_test_setup()
+		self.mock_ifgs = None
 
 
 	def test_all_below_threshold_exception(self):

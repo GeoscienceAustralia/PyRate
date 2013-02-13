@@ -4,10 +4,8 @@ Author: Ben Davies, ANUSF
 '''
 
 from math import pi
-from itertools import product
-
-from numpy import sin, cos, radians, unique, histogram, std, mean
-from numpy import float32, nan, isnan, sum as nsum, array, ndarray
+from numpy import sin, cos, unique, histogram, std, mean
+from numpy import isnan, sum as nsum, array
 
 import config
 from shared import EpochList
