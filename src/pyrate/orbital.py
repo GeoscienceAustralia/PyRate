@@ -71,11 +71,8 @@ def _get_correction(ifg, degree):
 	tmp = dm[~isnan(vphase)]
 	fd = vphase[~isnan(vphase)]
 	model, _, rank, _ = lstsq(tmp, fd)
-
 	exp_len = 2 if degree == PLANAR else 5
 	assert len(model) == exp_len
-
-	# TODO: assert rank == EXP, "Got rank of %s" % rank
 
 	# calculate forward model & morph back to 2D
 	tmp = sum(dm * model, axis=1) # d = ax + by
