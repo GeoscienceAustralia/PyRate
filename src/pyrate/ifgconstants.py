@@ -1,10 +1,10 @@
 '''
 Collection of constants for elements in ROI_PAC headers (*.rsc)
 Created on 14/09/2012
-@author: bpd900
+@author: Ben Davies
 '''
 
-
+# RSC header file constants
 WIDTH = "WIDTH"
 FILE_LENGTH = "FILE_LENGTH"
 XMIN = "XMIN"
