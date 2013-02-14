@@ -24,14 +24,14 @@ class OrbitalTests(unittest.TestCase):
 	def setUp(self):
 		xstep, ystep = 0.6, 0.7  # fake cell sizes
 
-		shape = (6,2)
+		shape = (6, 2)
 		designm = zeros(shape) # planar design matrix for 2x3 orig array
-		designm[0] = [0,0]
-		designm[1] = [0,xstep]
-		designm[2] = [ystep,0]
-		designm[3] = [ystep,xstep]
-		designm[4] = [2*ystep,0]
-		designm[5] = [2*ystep,xstep]
+		designm[0] = [0, 0]
+		designm[1] = [0, xstep]
+		designm[2] = [ystep, 0]
+		designm[3] = [ystep, xstep]
+		designm[4] = [2*ystep, 0]
+		designm[5] = [2*ystep, xstep]
 
 		self.designm = designm
 		self.xstep = xstep
@@ -39,7 +39,7 @@ class OrbitalTests(unittest.TestCase):
 
 
 	def test_design_matrix_planar(self):
-		testdir, ifgs = sydney_test_setup()
+		_, ifgs = sydney_test_setup()
 
 		xs, ys = 2, 3
 		m = MockIfg(ifgs[0], xs, ys)
@@ -51,7 +51,7 @@ class OrbitalTests(unittest.TestCase):
 
 	def test_design_matrix_quadratic(self):
 		dm = []
-		ys, xs = (3,5)
+		ys, xs = (3, 5)
 		for y in xrange(ys):
 			for x in xrange(xs):
 				dm.append([(x * self.xstep)**2,
@@ -75,7 +75,7 @@ class OrbitalTests(unittest.TestCase):
 
 	def test_ifg_to_vector(self):
 		# test numpy reshaping order
-		ifg = zeros((2,3), dtype=float32)
+		ifg = zeros((2, 3), dtype=float32)
 		a = [24, 48, 1000]
 		b = [552, 42, 68]
 		ifg[0] = a
@@ -92,7 +92,7 @@ class OrbitalTests(unittest.TestCase):
 	def test_orbital_correction(self):
 
 		def test_results():
-			for i,c in zip(ifgs, corrections):
+			for i, c in zip(ifgs, corrections):
 				# are corrections same size as the original array?
 				ys, xs = c.shape
 				self.assertEqual(i.FILE_LENGTH, ys)
@@ -104,8 +104,9 @@ class OrbitalTests(unittest.TestCase):
 
 		paths = sorted(glob("../../tests/sydney_test/obs/geo*.unw"))[:5]
 		ifgs = [Ifg(p) for p in paths]
-		[i.open() for i in ifgs]
-		ifgs[0].phase_data[1,1:3] = nan # add some NODATA
+		for i in ifgs:
+			i.open()
+		ifgs[0].phase_data[1, 1:3] = nan # add some NODATA
 
 		corrections = orbital_correction(ifgs, degree=1, method=1)
 		test_results()
