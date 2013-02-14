@@ -1,14 +1,23 @@
 '''
-Utilities to parse pyrate.conf and PyRate general config files
+Utilities to parse pyrate.conf config files. Includes numerous general PyRate
+constants relating to options in config files.
 
 Created on 17/09/2012
 @author: bpd900
 '''
 
+# TODO: add regex column to check if some values are within bounds? Potential
+# problem with the checking being done in the middle of the runs, as bad values
+# could cause crashes & destroying some of the results.
+
 import numpy
 
+from orbital import NETWORK_METHOD, QUADRATIC
 from ifgconstants import X_FIRST, Y_FIRST, WIDTH, FILE_LENGTH, X_STEP, Y_STEP
 
+
+# general constants
+NO_MULTILOOKING = 1
 
 # constants for lookups
 NUMBER_OF_SETS = 'nsets'
@@ -22,7 +31,7 @@ AMPLITUDE_FLAG = 'ampflag'
 PERP_BASELINE_FLAG = 'basepflag'
 PROJECTION_FLAG = 'prjflag'
 
-IFG_CROP_OPT = 'ifgcropopt' # 1: minimum, 2: maximum, 3: customize, 4: all ifms already same size
+IFG_CROP_OPT = 'ifgcropopt' # 1=min, 2=max, 3=custom, 4=all ifgs already same size
 IFG_LKSX = 'ifglksx'
 IFG_LKSY = 'ifglksy'
 
@@ -31,6 +40,7 @@ IFG_XLAST = 'ifgxlast'
 IFG_YFIRST = 'ifgyfirst'
 IFG_YLAST = 'ifgylast'
 
+# reference pixel parameters
 REFX = 'refx'
 REFY = 'refy'
 REFNX = "refnx"
@@ -38,6 +48,14 @@ REFNY = "refny"
 REF_CHIP_SIZE = 'refchipsize'
 REF_MIN_FRAC = 'refminfrac'
 
+# orbital error correction/parameters
+ORBITAL_FIT = 'orbfit' # numerical BOOL (1/0), do/don't do orbital correction
+ORBITAL_FIT_METHOD = 'orbfitmethod'  # BOOL (1/2) 1: ifg by ifg/independent, 2: epoch by epoch
+ORBITAL_FIT_DEGREE = 'orbfitdegrees' # BOOL (1/2) 1=planar, 2=quadratic
+ORBITAL_FIT_LOOKS_X = 'orbfitlksx' # int of 1+, X multi looking factor
+ORBITAL_FIT_LOOKS_Y = 'orbfitlksy' # int of 1+, Y multi looking factor
+# ORBITAL_FIT_orbrefest:     1 BOOLEAN (1/0) # remove reference phase
+# ORBITAL_FIT_ orbmaskflag:   1 BOOLEAN (1/0) # mask some patches for orbital correction
 
 
 # Lookup to help convert args to correct type/defaults
@@ -51,8 +69,8 @@ PARAM_CONVERSION = { OBS_DIR : (None, "obs"),
 					AMPLITUDE_FLAG : (bool, False),
 					NUM_SETS : (int, 1),
 					IFG_CROP_OPT : (int, None),
-					IFG_LKSX : (int, 0),
-					IFG_LKSY : (int, 0),
+					IFG_LKSX : (int, NO_MULTILOOKING),
+					IFG_LKSY : (int, NO_MULTILOOKING),
 					IFG_XFIRST : (float, None),
 					IFG_XLAST : (float, None),
 					IFG_YFIRST : (float, None),
@@ -65,6 +83,12 @@ PARAM_CONVERSION = { OBS_DIR : (None, "obs"),
 					REFNY : (int, None), # was 50 in original Pirate code
 					REF_CHIP_SIZE : (int, None), # defaults to 21 in orig
 					REF_MIN_FRAC : (float, 0.8), # uses Pirate default
+
+					ORBITAL_FIT : (bool, True),
+					ORBITAL_FIT_METHOD : (int, NETWORK_METHOD),
+					ORBITAL_FIT_DEGREE : (int, QUADRATIC),
+					ORBITAL_FIT_LOOKS_X : (int, NO_MULTILOOKING),
+					ORBITAL_FIT_LOOKS_Y : (int, NO_MULTILOOKING)
 				}
 
 
@@ -100,4 +124,5 @@ def parse_namelist(nml):
 
 
 class ConfigException(Exception):
+	'''Default exception class for configuration errors.'''
 	pass
