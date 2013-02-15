@@ -8,7 +8,7 @@ Created on 31/3/13
 
 import unittest
 from glob import glob
-from numpy import nan, isnan, array, reshape, zeros, float32
+from numpy import nan, isnan, array, reshape, ones, zeros, float32
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 
 from shared import Ifg
@@ -45,8 +45,18 @@ class OrbitalTests(unittest.TestCase):
 		m = MockIfg(ifgs[0], xs, ys)
 		m.X_STEP = self.xstep
 		m.Y_STEP = self.ystep
-		design_mat = get_design_matrix(m, 1)
+
+		# no offsets
+		design_mat = get_design_matrix(m, 1, offset=False)
 		assert_array_almost_equal(design_mat, self.designm)
+
+		# with offset
+		design_mat = get_design_matrix(m, 1, True)
+		nys, nxs = self.designm.shape
+		nxs += 1 # for offset col
+		exp = ones((nys,nxs), dtype=float32)
+		exp[:,:2] = self.designm
+		assert_array_almost_equal(design_mat, exp)
 
 
 	def test_design_matrix_quadratic(self):
@@ -69,7 +79,7 @@ class OrbitalTests(unittest.TestCase):
 		m.X_STEP = self.xstep
 		m.Y_STEP = self.ystep
 
-		design_mat = get_design_matrix(m, degree=2)
+		design_mat = get_design_matrix(m, degree=2, offset=False)
 		assert_array_almost_equal(design_mat, exp_dm, decimal=3)
 
 
@@ -105,11 +115,11 @@ class OrbitalTests(unittest.TestCase):
 		_, ifgs = sydney_test_setup()[:5]
 		ifgs[0].phase_data[1, 1:3] = nan # add some NODATA
 
-		corrections = orbital_correction(ifgs, degree=1, method=1)
+		corrections = orbital_correction(ifgs, degree=1, method=1, offset=False)
 		test_results()
 
 		# test quadratic model
-		corrections = orbital_correction(ifgs, degree=2, method=1)
+		corrections = orbital_correction(ifgs, degree=2, method=1, offset=False)
 		test_results()
 
 

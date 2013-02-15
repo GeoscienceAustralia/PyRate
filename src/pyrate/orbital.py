@@ -41,7 +41,8 @@ PLANAR = 1
 QUADRATIC = 2
 
 
-def orbital_correction(ifgs, degree, method):
+def orbital_correction(ifgs, degree, method, offset=True):
+	'''TODO'''
 
 	# TODO: save corrected layers to new file or use intermediate arrays?
 	# TODO: offsets
@@ -53,10 +54,10 @@ def orbital_correction(ifgs, degree, method):
 	if method == NETWORK_METHOD:
 		raise NotImplementedError
 
-	return [_get_correction(i, degree) for i in ifgs]
+	return [_get_correction(i, degree, offset) for i in ifgs]
 
 
-def _get_correction(ifg, degree):
+def _get_correction(ifg, degree, offset):
 	'''Calculates and returns orbital correction array for an ifg'''
 
 	# precalculate matrix shapes
@@ -64,7 +65,7 @@ def _get_correction(ifg, degree):
 	vsh = orig[0] * orig[1] # full shape of vectorised form of data
 	vphase = reshape(ifg.phase_data, vsh) # vectorised data, contains NODATA
 
-	dm = get_design_matrix(ifg, degree)
+	dm = get_design_matrix(ifg, degree, offset)
 	assert len(vphase) == len(dm)
 
 	# filter NaNs out before getting model
@@ -80,10 +81,12 @@ def _get_correction(ifg, degree):
 	return correction
 
 
-def get_design_matrix(ifg, degree):
+def get_design_matrix(ifg, degree, offset):
 	'''Returns design matrix with 2 columns for linear model parameters'''
 
 	nparams = 2 if degree == PLANAR else 5
+	if offset:
+		nparams += 1  # eg. y = mx + offset
 
 	# init design matrix
 	shape = ((ifg.WIDTH * ifg.FILE_LENGTH), nparams)
@@ -91,27 +94,45 @@ def get_design_matrix(ifg, degree):
 	rows = iter(data)
 
 	dmfun = _planar_dm if degree == PLANAR else _quadratic_dm
-	dmfun(ifg, rows)
+	dmfun(ifg, rows, offset)
 	return data
 
 
-def _planar_dm(ifg, rows):
+def _planar_dm(ifg, rows, offset):
 	# apply positional parameter values, multiply pixel coordinate by cell size to
 	# get distance (a coord by itself doesn't tell us distance from origin)
-	for y,x in product(xrange(ifg.FILE_LENGTH), xrange(ifg.WIDTH)):
-		row = rows.next()
-		row[:] = [y * ifg.Y_STEP, x * ifg.X_STEP] # FIXME: change to (Y|X)SIZE, needs proj4
+
+	# TODO: optimise with meshgrid calls?
+	# TODO: make more efficient by pre generating xranges and doing array ops?
+	# TODO: coordinates generator for Ifgs?
+
+	if offset:
+		for y,x in product(xrange(ifg.FILE_LENGTH), xrange(ifg.WIDTH)):
+			row = rows.next()
+			row[:] = [y * ifg.Y_STEP, x * ifg.X_STEP, 1] # FIXME: change to (Y|X)SIZE
+	else:
+		for y,x in product(xrange(ifg.FILE_LENGTH), xrange(ifg.WIDTH)):
+			row = rows.next()
+			row[:] = [y * ifg.Y_STEP, x * ifg.X_STEP] # FIXME: change to (Y|X)SIZE, needs proj4
 
 
-def _quadratic_dm(ifg, rows):
+def _quadratic_dm(ifg, rows, offset):
 	# apply positional parameter values, multiply pixel coordinate by cell size to
 	# get distance (a coord by itself doesn't tell us distance from origin)
 	yst, xst = ifg.Y_STEP, ifg.X_STEP
-	for y,x in product(xrange(ifg.FILE_LENGTH), xrange(ifg.WIDTH)):
-		row = rows.next()
-		y2 = y * yst
-		x2 = x * xst
-		row[:] = [x2**2, y2**2, x2*y2, x2, y2] # FIXME: change to (Y|X)SIZE, needs proj4
+
+	if offset:
+		for y,x in product(xrange(ifg.FILE_LENGTH), xrange(ifg.WIDTH)):
+			row = rows.next()
+			y2 = y * yst
+			x2 = x * xst
+			row[:] = [x2**2, y2**2, x2*y2, x2, y2, 1] # FIXME: change to (Y|X)SIZE
+	else:
+		for y,x in product(xrange(ifg.FILE_LENGTH), xrange(ifg.WIDTH)):
+			row = rows.next()
+			y2 = y * yst
+			x2 = x * xst
+			row[:] = [x2**2, y2**2, x2*y2, x2, y2] # FIXME: change to (Y|X)SIZE, needs proj4
 
 
 
