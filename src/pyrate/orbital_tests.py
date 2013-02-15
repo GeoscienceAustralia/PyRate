@@ -102,10 +102,7 @@ class OrbitalTests(unittest.TestCase):
 				self.assertTrue(c.ptp() != 0)
 				# TODO: do the results need to be checked at all?
 
-		paths = sorted(glob("../../tests/sydney_test/obs/geo*.unw"))[:5]
-		ifgs = [Ifg(p) for p in paths]
-		for i in ifgs:
-			i.open()
+		_, ifgs = sydney_test_setup()[:5]
 		ifgs[0].phase_data[1, 1:3] = nan # add some NODATA
 
 		corrections = orbital_correction(ifgs, degree=1, method=1)
@@ -116,10 +113,11 @@ class OrbitalTests(unittest.TestCase):
 		test_results()
 
 
-	# TODO
-	#def test_complete(self):
-		# create a data matrix D
-		# pass D & design mat to some other func, which returns a model
-		# do fwd modelling, subtract FM from D, test that result (this will need
-		# the linalg/least sqaures in scipy...)
-		#raise NotImplementedError
+class OrbitalCorrectionNetwork(unittest.TestCase):
+
+	def test_network_design_matrix(self):
+		# verify creation of sparse matrix comprised of smaller design matricies
+		raise NotImplementedError
+		#exp = None
+		#act = get_network_design_matrix(ifgs)
+		#assert_array_equal(exp, act)
