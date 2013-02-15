@@ -124,11 +124,16 @@ class OrbitalTests(unittest.TestCase):
 		_, ifgs = sydney_test_setup()[:5]
 		ifgs[0].phase_data[1, 1:3] = nan # add some NODATA
 
+		# test both models with no offsets
 		corrections = orbital_correction(ifgs, degree=1, method=1, offset=False)
 		test_results()
-
-		# test quadratic model
 		corrections = orbital_correction(ifgs, degree=2, method=1, offset=False)
+		test_results()
+
+		# test both with offsets
+		corrections = orbital_correction(ifgs, degree=1, method=1)
+		test_results()
+		corrections = orbital_correction(ifgs, degree=2, method=1)
 		test_results()
 
 

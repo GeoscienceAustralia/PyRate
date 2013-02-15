@@ -73,6 +73,8 @@ def _get_correction(ifg, degree, offset):
 	fd = vphase[~isnan(vphase)]
 	model, _, rank, _ = lstsq(tmp, fd)
 	exp_len = 2 if degree == PLANAR else 5
+	if offset:
+		exp_len += 1
 	assert len(model) == exp_len
 
 	# calculate forward model & morph back to 2D
