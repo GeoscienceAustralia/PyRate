@@ -79,8 +79,17 @@ class OrbitalTests(unittest.TestCase):
 		m.X_STEP = self.xstep
 		m.Y_STEP = self.ystep
 
+		# no offset
 		design_mat = get_design_matrix(m, degree=2, offset=False)
 		assert_array_almost_equal(design_mat, exp_dm, decimal=3)
+
+		# with offset
+		design_mat = get_design_matrix(m, degree=2, offset=True)
+		nys, nxs = exp_dm.shape
+		nxs += 1 # for offset col
+		exp2 = ones((nys,nxs), dtype=float32)
+		exp2[:,:5] = exp_dm
+		assert_array_almost_equal(design_mat, exp2, decimal=3)
 
 
 	def test_ifg_to_vector(self):
