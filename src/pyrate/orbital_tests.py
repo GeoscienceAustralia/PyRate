@@ -47,11 +47,11 @@ class OrbitalTests(unittest.TestCase):
 		m.Y_STEP = self.ystep
 
 		# no offsets
-		design_mat = get_design_matrix(m, 1, offset=False)
+		design_mat = get_design_matrix(m, PLANAR, False)
 		assert_array_almost_equal(design_mat, self.designm)
 
 		# with offset
-		design_mat = get_design_matrix(m, 1, True)
+		design_mat = get_design_matrix(m, PLANAR, True)
 		nys, nxs = self.designm.shape
 		nxs += 1 # for offset col
 		exp = ones((nys,nxs), dtype=float32)
@@ -80,11 +80,11 @@ class OrbitalTests(unittest.TestCase):
 		m.Y_STEP = self.ystep
 
 		# no offset
-		design_mat = get_design_matrix(m, degree=2, offset=False)
+		design_mat = get_design_matrix(m, QUADRATIC, False)
 		assert_array_almost_equal(design_mat, exp_dm, decimal=3)
 
 		# with offset
-		design_mat = get_design_matrix(m, degree=2, offset=True)
+		design_mat = get_design_matrix(m, QUADRATIC, True)
 		nys, nxs = exp_dm.shape
 		nxs += 1 # for offset col
 		exp2 = ones((nys,nxs), dtype=float32)
@@ -118,22 +118,22 @@ class OrbitalTests(unittest.TestCase):
 				self.assertEqual(i.WIDTH, xs)
 				self.assertFalse(isnan(i.phase_data).all())
 				self.assertFalse(isnan(c).all())
-				self.assertTrue(c.ptp() != 0)
+				self.assertTrue(c.ptp() != 0) # ensure range of values in grid
 				# TODO: do the results need to be checked at all?
 
 		_, ifgs = sydney_test_setup()[:5]
 		ifgs[0].phase_data[1, 1:3] = nan # add some NODATA
 
-		# test both models with no offsets TODO: magic numbers
-		corrections = orbital_correction(ifgs, degree=1, method=1, offset=False)
+		# test both models with no offsets
+		corrections = orbital_correction(ifgs, PLANAR, INDEPENDENT_METHOD, False)
 		test_results()
-		corrections = orbital_correction(ifgs, degree=2, method=1, offset=False)
+		corrections = orbital_correction(ifgs, QUADRATIC, INDEPENDENT_METHOD, False)
 		test_results()
 
 		# test both with offsets
-		corrections = orbital_correction(ifgs, degree=1, method=1)
+		corrections = orbital_correction(ifgs, PLANAR, INDEPENDENT_METHOD)
 		test_results()
-		corrections = orbital_correction(ifgs, degree=2, method=1)
+		corrections = orbital_correction(ifgs, QUADRATIC, INDEPENDENT_METHOD)
 		test_results()
 
 
