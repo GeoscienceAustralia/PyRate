@@ -12,6 +12,7 @@ from numpy import nan, isnan, array, reshape, ones, zeros, float32
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 
 from shared import Ifg
+from orbital import OrbitalCorrectionError
 from orbital import orbital_correction, get_design_matrix, get_network_design_matrix
 from orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, QUADRATIC
 from algorithm_tests import MockIfg, sydney_test_setup
@@ -142,12 +143,21 @@ class OrbitalCorrectionNetwork(unittest.TestCase):
 
 	# TODO: check DM/correction with NaN rows
 
-	# TODO
-	#def test_invalid_ifgs_arg(self):
-		# pass in list of ifgs of len=1 (what is the minimum required? 2 ifgs/3 epochs?)
+	def test_invalid_ifgs_arg(self):
+		args = (PLANAR, True) # some default args
+		self.assertRaises(OrbitalCorrectionError, get_network_design_matrix, [], *args)
+		self.assertRaises(OrbitalCorrectionError, get_network_design_matrix, [None], *args)
+		# TODO: what is the minimum required? 2 ifgs/3 epochs?)
 
-	#def test_invalid_degree_arg(self):
-		#pass
+	def test_invalid_degree_arg(self):
+		oex = OrbitalCorrectionError
+		ifgs = [None] * 5
+
+		for deg in range(-5,1):
+			self.assertRaises(oex, get_network_design_matrix, ifgs, deg, True)
+		for deg in range(3,6):
+			self.assertRaises(oex, get_network_design_matrix, [None], deg, True)
+
 
 	def test_network_design_matrix_planar(self):
 		# verify creation of sparse matrix comprised of smaller design matricies

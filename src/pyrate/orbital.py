@@ -8,8 +8,6 @@ Created on 31/3/13
 from itertools import product
 from numpy import sum, where, nan, isnan, reshape, zeros, float32
 from numpy.ma import masked_array
-
-#from numpy.linalg import lstsq
 from scipy.linalg import lstsq
 
 
@@ -33,7 +31,6 @@ from scipy.linalg import lstsq
 
 
 # constants
-
 INDEPENDENT_METHOD = 1
 NETWORK_METHOD = 2
 
@@ -101,8 +98,15 @@ def get_design_matrix(ifg, degree, offset):
 
 
 def get_network_design_matrix(ifgs, degree, offset):
+	'''TODO'''
+
+	if degree not in [PLANAR, QUADRATIC]:
+		raise OrbitalCorrectionError("Invalid degree argument")
 
 	num_ifgs = len(ifgs)
+	if num_ifgs < 2:
+		raise OrbitalCorrectionError("Invalid number of Ifgs")
+
 	num_epochs = num_ifgs + 1
 
 	# TODO: refactor to prevent duplication here
