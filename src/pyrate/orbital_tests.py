@@ -12,8 +12,8 @@ from numpy import nan, isnan, array, reshape, ones, zeros, float32
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 
 from shared import Ifg
-from orbital import orbital_correction
-from orbital import get_design_matrix
+from orbital import orbital_correction, get_design_matrix, get_network_design_matrix
+from orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, QUADRATIC
 from algorithm_tests import MockIfg, sydney_test_setup
 
 
@@ -124,7 +124,7 @@ class OrbitalTests(unittest.TestCase):
 		_, ifgs = sydney_test_setup()[:5]
 		ifgs[0].phase_data[1, 1:3] = nan # add some NODATA
 
-		# test both models with no offsets
+		# test both models with no offsets TODO: magic numbers
 		corrections = orbital_correction(ifgs, degree=1, method=1, offset=False)
 		test_results()
 		corrections = orbital_correction(ifgs, degree=2, method=1, offset=False)
@@ -138,10 +138,36 @@ class OrbitalTests(unittest.TestCase):
 
 
 class OrbitalCorrectionNetwork(unittest.TestCase):
+	'''TODO'''
 
-	def test_network_design_matrix(self):
+	# TODO: check DM/correction with NaN rows
+
+	# TODO
+	#def test_invalid_ifgs_arg(self):
+		# pass in list of ifgs of len=1 (what is the minimum required? 2 ifgs/3 epochs?)
+
+	#def test_invalid_degree_arg(self):
+		#pass
+
+	def test_network_design_matrix_planar(self):
 		# verify creation of sparse matrix comprised of smaller design matricies
-		raise NotImplementedError
-		#exp = None
-		#act = get_network_design_matrix(ifgs)
-		#assert_array_equal(exp, act)
+
+		NUM_IFGS = 6
+		_, ifgs = sydney_test_setup()
+		ifgs = ifgs[:NUM_IFGS]
+
+		# test planar option
+		NUM_PARAMS = 3
+		NUM_EPOCHS = 7 # number of ifgs + 1
+		head = ifgs[0]
+		exp_num_rows = head.FILE_LENGTH * head.WIDTH * NUM_IFGS
+		exp_num_cols = NUM_EPOCHS * NUM_PARAMS
+		exp_shape = (exp_num_rows, exp_num_cols)
+
+		exp_dm = zeros(exp_shape, dtype=float32) # FIXME
+		act_dm = get_network_design_matrix(ifgs, PLANAR, True)
+		assert_array_equal(exp_dm, act_dm)
+
+
+	# TODO:
+	#def test_network_design_matrix_quadratic(self):

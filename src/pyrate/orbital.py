@@ -100,6 +100,27 @@ def get_design_matrix(ifg, degree, offset):
 	return data
 
 
+def get_network_design_matrix(ifgs, degree, offset):
+
+	num_ifgs = len(ifgs)
+	num_epochs = num_ifgs + 1
+
+	# TODO: refactor to prevent duplication here
+	nparams = 2 if degree == PLANAR else 5
+	if offset:
+		nparams += 1  # eg. b/offset in (y = mx + b) is an extra param
+
+	# init design matrix
+	num_cells = ifgs[0].WIDTH * ifgs[0].FILE_LENGTH
+	shape = (num_cells * num_ifgs, nparams * num_epochs)
+	data = zeros(shape, dtype=float32)
+
+	# TODO: add in blocks
+	return data
+
+
+
+
 def _planar_dm(ifg, rows, offset):
 	# apply positional parameter values, multiply pixel coordinate by cell size to
 	# get distance (a coord by itself doesn't tell us distance from origin)
