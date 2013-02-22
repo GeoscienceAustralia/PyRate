@@ -8,6 +8,7 @@ Created on 31/3/13
 
 import unittest
 from glob import glob
+from os.path import join
 from numpy import nan, isnan, array, reshape, ones, zeros, float32
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 
@@ -141,6 +142,10 @@ class OrbitalTests(unittest.TestCase):
 class OrbitalCorrectionNetwork(unittest.TestCase):
 	'''TODO'''
 
+	def setUp(self):
+		base = "../../tests/sydney_test/obs"
+		self.ifgs = [Ifg(join(base, p)) for p in IFMS5.split()]
+
 	# TODO: check DM/correction with NaN rows
 
 	def test_invalid_ifgs_arg(self):
@@ -148,6 +153,7 @@ class OrbitalCorrectionNetwork(unittest.TestCase):
 		self.assertRaises(OrbitalCorrectionError, get_network_design_matrix, [], *args)
 		self.assertRaises(OrbitalCorrectionError, get_network_design_matrix, [None], *args)
 		# TODO: what is the minimum required? 2 ifgs/3 epochs?)
+
 
 	def test_invalid_degree_arg(self):
 		oex = OrbitalCorrectionError
@@ -159,25 +165,65 @@ class OrbitalCorrectionNetwork(unittest.TestCase):
 			self.assertRaises(oex, get_network_design_matrix, [None], deg, True)
 
 
-	def test_network_design_matrix_planar(self):
-		# verify creation of sparse matrix comprised of smaller design matricies
+	def test_design_matrix_planar_shape(self):
+		# verify shape of design matrix is correct
+		num_ifgs = len(self.ifgs)
+		num_epochs = num_ifgs + 1
+		num_params = 2 # without offsets 1st
 
-		NUM_IFGS = 6
-		_, ifgs = sydney_test_setup()
-		ifgs = ifgs[:NUM_IFGS]
-
-		# test planar option
-		NUM_PARAMS = 3
-		NUM_EPOCHS = 7 # number of ifgs + 1
-		head = ifgs[0]
-		exp_num_rows = head.FILE_LENGTH * head.WIDTH * NUM_IFGS
-		exp_num_cols = NUM_EPOCHS * NUM_PARAMS
+		# without offsets
+		head = self.ifgs[0]
+		exp_num_rows = head.FILE_LENGTH * head.WIDTH * num_ifgs
+		exp_num_cols = num_epochs * num_params
 		exp_shape = (exp_num_rows, exp_num_cols)
+		act_dm = get_network_design_matrix(self.ifgs, PLANAR, False)
+		self.assertEqual(exp_shape, act_dm.shape)
 
-		exp_dm = zeros(exp_shape, dtype=float32) # FIXME
-		act_dm = get_network_design_matrix(ifgs, PLANAR, True)
-		assert_array_equal(exp_dm, act_dm)
+		# with offsets
+		num_params += 1
+		exp_num_cols = num_epochs * num_params
+		exp_shape = (exp_num_rows, exp_num_cols)
+		act_dm = get_network_design_matrix(self.ifgs, PLANAR, True)
+		self.assertEqual(exp_shape, act_dm.shape)
+
+
+	def test_design_matrix_quadratic_shape(self):
+		raise NotImplementedError
+
+
+	def test_planar_matrix_content(self):
+		# verify creation of sparse matrix comprised of smaller design matricies
+		raise NotImplementedError
+
+		#head = self.ifgs[0]
+		#ysz = head.FILE_LENGTH
+		#xsz = head.WIDTH
+		#exp_num_rows = ysz * xsz * num_ifgs
+		#exp_num_cols = num_epochs * num_params
+		#exp_shape = (exp_num_rows, exp_num_cols)
+
+		#exp_dm = zeros(exp_shape, dtype=float32) # FIXME
+		#act_dm = get_network_design_matrix(ifgs, PLANAR, True)
+		#assert_array_equal(exp_dm, act_dm)
+
+		#for i, ifg in enumerate(ifgs):
+			#print ifg.data_path
+			#continue
+
+			#rst = i * ysz
+			#rend = rst + ysz
+
+			# FIXME: using faked row number
 
 
 	# TODO:
 	#def test_network_design_matrix_quadratic(self):
+
+
+# contents very small ifg list
+IFMS5 = """geo_060828-061211.unw
+geo_061106-061211.unw
+geo_061106-070115.unw
+geo_061106-070326.unw
+geo_070326-070917.unw
+"""
