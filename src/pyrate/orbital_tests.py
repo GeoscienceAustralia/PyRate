@@ -165,7 +165,7 @@ class OrbitalCorrectionNetwork(unittest.TestCase):
 			self.assertRaises(oex, get_network_design_matrix, [None], deg, True)
 
 
-	def test_design_matrix_planar_shape(self):
+	def test_design_matrix_shape(self):
 		# verify shape of design matrix is correct
 		num_ifgs = len(self.ifgs)
 		num_epochs = num_ifgs + 1
@@ -186,9 +186,19 @@ class OrbitalCorrectionNetwork(unittest.TestCase):
 		act_dm = get_network_design_matrix(self.ifgs, PLANAR, True)
 		self.assertEqual(exp_shape, act_dm.shape)
 
+		# quadratic method without offsets
+		num_params = 5 # without offsets
+		exp_num_cols = num_epochs * num_params
+		exp_shape = (exp_num_rows, exp_num_cols)
+		act_dm = get_network_design_matrix(self.ifgs, QUADRATIC, False)
+		self.assertEqual(exp_shape, act_dm.shape)
 
-	def test_design_matrix_quadratic_shape(self):
-		raise NotImplementedError
+		# with offsets
+		num_params += 1
+		exp_num_cols = num_epochs * num_params
+		exp_shape = (exp_num_rows, exp_num_cols)
+		act_dm = get_network_design_matrix(self.ifgs, QUADRATIC, True)
+		self.assertEqual(exp_shape, act_dm.shape)
 
 
 	def test_planar_matrix_content(self):
