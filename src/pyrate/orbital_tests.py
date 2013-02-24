@@ -203,34 +203,30 @@ class OrbitalCorrectionNetwork(unittest.TestCase):
 
 	def test_planar_matrix_content(self):
 		# verify creation of sparse matrix comprised of smaller design matricies
-		raise NotImplementedError
 
-		#head = self.ifgs[0]
-		#ysz = head.FILE_LENGTH
-		#xsz = head.WIDTH
-		#exp_num_rows = ysz * xsz * num_ifgs
-		#exp_num_cols = num_epochs * num_params
-		#exp_shape = (exp_num_rows, exp_num_cols)
+		# TODO: make indiv DMs (using independent DM method?) & compare against subsets of act_dm
+		# TODO: how many ifgs to test?
+		# TODO: figure out master and slave indices
+		# TODO: do the master/slave indices need to be sorted? Sorted = less ambiguity
+		# TODO: make master/slave dict from all ifgs (date:unique id)
 
-		#exp_dm = zeros(exp_shape, dtype=float32) # FIXME
-		#act_dm = get_network_design_matrix(ifgs, PLANAR, True)
-		#assert_array_equal(exp_dm, act_dm)
+		act_dm = get_network_design_matrix(self.ifgs, PLANAR, True)
 
-		#for i, ifg in enumerate(ifgs):
-			#print ifg.data_path
-			#continue
-
-			#rst = i * ysz
-			#rend = rst + ysz
-
-			# FIXME: using faked row number
+		for i, ifg in enumerate(self.ifgs):
+			exp_dm = None # TODO: create DM or make from refactored test function in this module?
+			rst = i * ifg.FILE_LENGTH
+			rend = rst + ifg.FILE_LENGTH
+			cst = None
+			cend = None
+			assert_array_equal(exp_dm, act_dm[rst:rend, cst:cend])
 
 
 	# TODO:
 	#def test_network_design_matrix_quadratic(self):
+		#pass
 
 
-# contents very small ifg list
+# small dummy ifg list to limit # of ifgs
 IFMS5 = """geo_060828-061211.unw
 geo_061106-061211.unw
 geo_061106-070115.unw
