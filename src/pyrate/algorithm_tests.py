@@ -56,7 +56,7 @@ class AlgorithmTests(unittest.TestCase):
 		d1 = date(2006, 8, 28)
 		d2 = date(2006, 10, 02)
 		d3 = date(2006, 11, 06)
-		exp = { d0: 1, d1: 2, d2: 3, d3: 4}
+		exp = { d0: 0, d1: 1, d2: 2, d3: 3}
 
 		# test unordered and with duplicates
 		self.assertEqual(exp, algorithm.master_slave_ids([d3, d0, d2, d1]))
