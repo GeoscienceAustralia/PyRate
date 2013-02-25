@@ -46,3 +46,9 @@ def get_epochs(ifgs):
 	# absolute span for each date from the zero/start point
 	span = [ (dates[i] - dates[0]).days / 365.25 for i in range(len(dates)) ]
 	return EpochList(dates, repeat, span)
+
+
+def master_slave_ids(dates):
+	'''Returns dict of 'date:unique ID' for each date in dates. IDs are sorted in
+	oldest to newest date order, starting at 1.'''
+	return dict([(date_, i+1) for i, date_ in enumerate(sorted(dates))])

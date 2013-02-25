@@ -4,6 +4,7 @@ Author: Ben Davies
 '''
 
 from os.path import join
+from datetime import date
 import glob, unittest, datetime
 from math import pi, cos, sin, radians
 
@@ -48,6 +49,17 @@ class AlgorithmTests(unittest.TestCase):
 		act = algorithm.unit_vector(reshape(incidence, sh), reshape(azimuth, sh))
 		for a, e in zip(act, unitv):
 			assert_array_almost_equal(squeeze(a), e)
+
+
+	def test_master_slave_ids(self):
+		d0 = date(2006, 6, 19)
+		d1 = date(2006, 8, 28)
+		d2 = date(2006, 10, 02)
+		d3 = date(2006, 11, 06)
+
+		exp = { d0: 1, d1: 2, d2: 3, d3: 4}
+		self.assertEqual(exp, algorithm.master_slave_ids([d3, d0, d2, d1]))
+
 
 # TODO: InitialModelTests
 #class InitialModelTests(unittest.TestCase):
