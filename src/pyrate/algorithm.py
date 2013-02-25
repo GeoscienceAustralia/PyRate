@@ -51,4 +51,5 @@ def get_epochs(ifgs):
 def master_slave_ids(dates):
 	'''Returns dict of 'date:unique ID' for each date in dates. IDs are sorted in
 	oldest to newest date order, starting at 1.'''
-	return dict([(date_, i+1) for i, date_ in enumerate(sorted(dates))])
+	dset = sorted(set(dates))
+	return dict([(date_, i+1) for i, date_ in enumerate(dset)])
