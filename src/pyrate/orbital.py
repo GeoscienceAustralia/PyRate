@@ -123,16 +123,14 @@ def get_network_design_matrix(ifgs, degree, offset):
 
 	# init design matrix
 	nrows, ncols = ifgs[0].FILE_LENGTH, ifgs[0].WIDTH
-	num_cells = nrows * ncols
-	shape = (num_cells * num_ifgs, nparams * num_epochs)
+	shape = (ifg.num_cells * num_ifgs, nparams * num_epochs)
 	data = zeros(shape, dtype=float32)
 
 	# paste in individual design matrices
 	for i, ifg in enumerate(ifgs):
 		tmp = get_design_matrix(ifg, degree, offset)
-
-		rs = i * num_cells
-		rf = rs + num_cells
+		rs = i * ifg.num_cells
+		rf = rs + ifg.num_cells
 
 		# generate column indices into data based on master position
 		mascs = ids[ifg.MASTER] * nparams

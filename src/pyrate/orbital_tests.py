@@ -211,9 +211,6 @@ class OrbitalCorrectionNetwork(unittest.TestCase):
 		for ifg in self.ifgs:
 			dates += list(ifg.DATE12)
 		date_ids = algorithm.master_slave_ids(dates)
-
-		# TODO: add num_cells() method to ifgs
-		ncells = self.ifgs[0].FILE_LENGTH * self.ifgs[0].WIDTH
 		ncoef = 2 # planar without offsets
 
 		for offset in [False, True]:
@@ -225,8 +222,8 @@ class OrbitalCorrectionNetwork(unittest.TestCase):
 				exp_dm = dmplanar(ifg, ifg.X_STEP, ifg.Y_STEP, offset)
 
 				# use slightly refactored version of Hua's code to test
-				ib1 = i * ncells # start row for subsetting the sparse matrix
-				ib2 = (i+1) * ncells # last row of subset of sparse matrix
+				ib1 = i * ifg.num_cells # start row for subsetting the sparse matrix
+				ib2 = (i+1) * ifg.num_cells # last row of subset of sparse matrix
 				jbm = date_ids[ifg.MASTER] * ncoef # starting row index for master
 				jbs = date_ids[ifg.SLAVE] * ncoef # row start for slave
 				assert_array_almost_equal(-exp_dm, act_dm[ib1:ib2, jbm:jbm+ncoef])
@@ -247,8 +244,6 @@ def dmplanar(ifg, xs, ys, offset=False):
 	out[:,0] = Y
 	out[:,1] = X
 	return out
-
-
 
 
 	# TODO:
