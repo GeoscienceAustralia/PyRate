@@ -51,7 +51,12 @@ class RasterBase(object):
 		self.ehdr_path = None # path to EHdr format header
 		self.dataset = None # for GDAL dataset obj
 		self._readonly = None
+
 		self.num_cells = None
+		try:
+			self.num_cells = self.FILE_LENGTH * self.WIDTH
+		except:
+			pass # wait till open() is called
 
 
 	def __str__(self):
@@ -81,7 +86,14 @@ class RasterBase(object):
 				raise RasterException(msg)
 
 		self._readonly = readonly
-		self.num_cells = self.dataset.RasterYSize * self.dataset.RasterXSize
+
+		if self.num_cells is None:
+			self.num_cells = self.dataset.RasterYSize * self.dataset.RasterXSize
+		else:
+			# TODO: handle size mismatches
+			pass
+			#if self.num_cells != self.dataset.RasterYSize * self.dataset.RasterXSize:
+			#	raise RasterException("GDAL Dataset size doesn't match header sizes")
 
 
 	@property

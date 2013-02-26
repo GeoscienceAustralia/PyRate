@@ -56,6 +56,9 @@ class IfgTests(unittest.TestCase):
 
 
 	def test_num_cells(self):
+		# test cell size from header elements
+		self.assertEqual(self.ifg.num_cells, 47 * 72)
+
 		self.ifg.open()
 		data = self.ifg.amp_band.ReadAsArray()
 		ys, xs = data.shape
