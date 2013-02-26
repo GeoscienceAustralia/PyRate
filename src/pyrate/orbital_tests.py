@@ -9,9 +9,10 @@ Created on 31/3/13
 import unittest
 from glob import glob
 from os.path import join
-from numpy import nan, isnan, array, reshape, ones, zeros, float32
+from numpy import nan, isnan, array, reshape, ones, zeros, float32, meshgrid
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 
+import algorithm
 from shared import Ifg
 from orbital import OrbitalCorrectionError
 from orbital import orbital_correction, get_design_matrix, get_network_design_matrix
@@ -111,6 +112,7 @@ class OrbitalTests(unittest.TestCase):
 
 
 	def test_orbital_correction(self):
+		# verify top level orbital correction function
 
 		def test_results():
 			for i, c in zip(ifgs, corrections):
@@ -123,7 +125,7 @@ class OrbitalTests(unittest.TestCase):
 				self.assertTrue(c.ptp() != 0) # ensure range of values in grid
 				# TODO: do the results need to be checked at all?
 
-		_, ifgs = sydney_test_setup()[:5]
+		_, ifgs = sydney_test_setup()[:5] # TODO: replace with faked ifglist?
 		ifgs[0].phase_data[1, 1:3] = nan # add some NODATA
 
 		# test both models with no offsets
@@ -203,22 +205,48 @@ class OrbitalCorrectionNetwork(unittest.TestCase):
 
 	def test_planar_matrix_content(self):
 		# verify creation of sparse matrix comprised of smaller design matricies
-
-		# TODO: make indiv DMs (using independent DM method?) & compare against subsets of act_dm
-		# TODO: how many ifgs to test?
-		# TODO: figure out master and slave indices
 		# TODO: do the master/slave indices need to be sorted? Sorted = less ambiguity
-		# TODO: make master/slave dict from all ifgs (date:unique id)
 
-		act_dm = get_network_design_matrix(self.ifgs, PLANAR, True)
+		dates = []
+		masters = [i.MASTER for i in self.ifgs]
+		slaves = [i.SLAVE for i in self.ifgs]
+		date_ids = algorithm.master_slave_ids(masters + slaves)
+
+		ncells = self.ifgs[0].FILE_LENGTH * self.ifgs[0].WIDTH
+		ncoef = 2 # planar without offsets
+
+		# TODO: test with/without offsets
+		act_dm = get_network_design_matrix(self.ifgs, PLANAR, False)
+		self.assertNotEqual(act_dm.ptp(), 0)
 
 		for i, ifg in enumerate(self.ifgs):
-			exp_dm = None # TODO: create DM or make from refactored test function in this module?
-			rst = i * ifg.FILE_LENGTH
-			rend = rst + ifg.FILE_LENGTH
-			cst = None
-			cend = None
-			assert_array_equal(exp_dm, act_dm[rst:rend, cst:cend])
+			exp_dm = dmplanar(ifg, ifg.X_STEP, ifg.Y_STEP, False)
+
+			# use slightly refactored version of Hua's code to test
+			ib1 = i * ncells # start row for subsetting the sparse matrix
+			ib2 = (i+1) * ncells # last row of subset of sparse matrix
+			jbm = date_ids[ifg.MASTER] * ncoef # starting row index for master
+			jbs = date_ids[ifg.SLAVE] * ncoef # row start for slave
+			assert_array_almost_equal(-exp_dm, act_dm[ib1:ib2, jbm:jbm+ncoef])
+			assert_array_almost_equal(exp_dm, act_dm[ib1:ib2, jbs:jbs+ncoef])
+
+
+# FIXME: add derived field to ifgs to convert X|Y_STEP degrees to metres
+def dmplanar(ifg, xs, ys, offset=False):
+	ncells = ifg.WIDTH * ifg.FILE_LENGTH
+	ncoef = 2
+	if offset is True:
+		ncoef += 1
+
+	out = ones((ncells, ncoef), dtype=float32)
+	X, Y = meshgrid(range(ifg.WIDTH), range(ifg.FILE_LENGTH))
+	X = X.reshape(ncells) * xs
+	Y = Y.reshape(ncells) * ys
+	out[:,0] = Y
+	out[:,1] = X
+	return out
+
+
 
 
 	# TODO:

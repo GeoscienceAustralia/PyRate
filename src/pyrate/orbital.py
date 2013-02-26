@@ -10,6 +10,8 @@ from numpy import sum, where, nan, isnan, reshape, zeros, float32
 from numpy.ma import masked_array
 from scipy.linalg import lstsq
 
+import algorithm
+
 
 # Orbital correction
 # 0) Config file stuff:
@@ -97,6 +99,7 @@ def get_design_matrix(ifg, degree, offset):
 	return data
 
 
+# TODO: can this be refactored under one get_design_matrix() func?
 def get_network_design_matrix(ifgs, degree, offset):
 	'''TODO'''
 
@@ -114,15 +117,34 @@ def get_network_design_matrix(ifgs, degree, offset):
 	if offset:
 		nparams += 1  # eg. b/offset in (y = mx + b) is an extra param
 
+	# sort out master and slave date IDs
+	dates = [ifg.MASTER for ifg in ifgs] + [ifg.SLAVE for ifg in ifgs]
+	ids = algorithm.master_slave_ids(dates)
+
 	# init design matrix
-	num_cells = ifgs[0].WIDTH * ifgs[0].FILE_LENGTH
+	nrows, ncols = ifgs[0].FILE_LENGTH, ifgs[0].WIDTH
+	num_cells = nrows * ncols
 	shape = (num_cells * num_ifgs, nparams * num_epochs)
 	data = zeros(shape, dtype=float32)
 
-	# TODO: add in blocks
+	# paste in individual design matrices
+	for i, ifg in enumerate(ifgs):
+		tmp = get_design_matrix(ifg, degree, offset)
+
+		rs = i * num_cells
+		rf = rs + num_cells
+
+		# generate column indices into data based on master position
+		mascs = ids[ifg.MASTER] * nparams
+		mascf = mascs + nparams
+		data[rs:rf, mascs:mascf] = -tmp
+
+		# then for slave
+		slvcs =	ids[ifg.SLAVE] * nparams
+		slvcf = slvcs + nparams
+		data[rs:rf, slvcs:slvcf] = tmp
+
 	return data
-
-
 
 
 def _planar_dm(ifg, rows, offset):
@@ -136,10 +158,14 @@ def _planar_dm(ifg, rows, offset):
 	if offset:
 		for y,x in product(xrange(ifg.FILE_LENGTH), xrange(ifg.WIDTH)):
 			row = rows.next()
+			# FIXME: what order should these coefficients be in???
+			# TODO: make faster with vstack?
 			row[:] = [y * ifg.Y_STEP, x * ifg.X_STEP, 1] # FIXME: change to (Y|X)SIZE
 	else:
 		for y,x in product(xrange(ifg.FILE_LENGTH), xrange(ifg.WIDTH)):
 			row = rows.next()
+			# FIXME: what order should these coefficients be in???
+			# TODO: make faster with vstack?
 			row[:] = [y * ifg.Y_STEP, x * ifg.X_STEP] # FIXME: change to (Y|X)SIZE, needs proj4
 
 
