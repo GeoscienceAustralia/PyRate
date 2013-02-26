@@ -208,27 +208,29 @@ class OrbitalCorrectionNetwork(unittest.TestCase):
 		# TODO: do the master/slave indices need to be sorted? Sorted = less ambiguity
 
 		dates = []
-		masters = [i.MASTER for i in self.ifgs]
-		slaves = [i.SLAVE for i in self.ifgs]
-		date_ids = algorithm.master_slave_ids(masters + slaves)
+		for ifg in self.ifgs:
+			dates += list(ifg.DATE12)
+		date_ids = algorithm.master_slave_ids(dates)
 
+		# TODO: add num_cells() method to ifgs
 		ncells = self.ifgs[0].FILE_LENGTH * self.ifgs[0].WIDTH
 		ncoef = 2 # planar without offsets
 
-		# TODO: test with/without offsets
-		act_dm = get_network_design_matrix(self.ifgs, PLANAR, False)
-		self.assertNotEqual(act_dm.ptp(), 0)
+		for offset in [False, True]:
+			if offset: ncoef += 1
+			act_dm = get_network_design_matrix(self.ifgs, PLANAR, offset)
+			self.assertNotEqual(act_dm.ptp(), 0)
 
-		for i, ifg in enumerate(self.ifgs):
-			exp_dm = dmplanar(ifg, ifg.X_STEP, ifg.Y_STEP, False)
+			for i, ifg in enumerate(self.ifgs):
+				exp_dm = dmplanar(ifg, ifg.X_STEP, ifg.Y_STEP, offset)
 
-			# use slightly refactored version of Hua's code to test
-			ib1 = i * ncells # start row for subsetting the sparse matrix
-			ib2 = (i+1) * ncells # last row of subset of sparse matrix
-			jbm = date_ids[ifg.MASTER] * ncoef # starting row index for master
-			jbs = date_ids[ifg.SLAVE] * ncoef # row start for slave
-			assert_array_almost_equal(-exp_dm, act_dm[ib1:ib2, jbm:jbm+ncoef])
-			assert_array_almost_equal(exp_dm, act_dm[ib1:ib2, jbs:jbs+ncoef])
+				# use slightly refactored version of Hua's code to test
+				ib1 = i * ncells # start row for subsetting the sparse matrix
+				ib2 = (i+1) * ncells # last row of subset of sparse matrix
+				jbm = date_ids[ifg.MASTER] * ncoef # starting row index for master
+				jbs = date_ids[ifg.SLAVE] * ncoef # row start for slave
+				assert_array_almost_equal(-exp_dm, act_dm[ib1:ib2, jbm:jbm+ncoef])
+				assert_array_almost_equal(exp_dm, act_dm[ib1:ib2, jbs:jbs+ncoef])
 
 
 # FIXME: add derived field to ifgs to convert X|Y_STEP degrees to metres
