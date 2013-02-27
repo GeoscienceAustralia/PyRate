@@ -155,22 +155,18 @@ def _planar_dm(ifg, rows, offset):
 
 	if offset:
 		for y,x in product(xrange(ifg.FILE_LENGTH), xrange(ifg.WIDTH)):
-			row = rows.next()
-			# FIXME: what order should these coefficients be in???
-			# TODO: make faster with vstack?
-			row[:] = [y * ifg.Y_STEP, x * ifg.X_STEP, 1] # FIXME: change to (Y|X)SIZE
+			row = rows.next() # TODO: make faster with vstack?
+			row[:] = [x * ifg.X_STEP, y * ifg.Y_STEP, 1] # FIXME: change to (Y|X)SIZE
 	else:
 		for y,x in product(xrange(ifg.FILE_LENGTH), xrange(ifg.WIDTH)):
-			row = rows.next()
-			# FIXME: what order should these coefficients be in???
-			# TODO: make faster with vstack?
-			row[:] = [y * ifg.Y_STEP, x * ifg.X_STEP] # FIXME: change to (Y|X)SIZE, needs proj4
+			row = rows.next() # TODO: make faster with vstack?
+			row[:] = [x * ifg.X_STEP, y * ifg.Y_STEP] # FIXME: change to (Y|X)SIZE, needs proj4
 
 
 def _quadratic_dm(ifg, rows, offset):
 	# apply positional parameter values, multiply pixel coordinate by cell size to
 	# get distance (a coord by itself doesn't tell us distance from origin)
-	yst, xst = ifg.Y_STEP, ifg.X_STEP
+	yst, xst = ifg.Y_STEP, ifg.X_STEP # FIXME: sizes
 
 	if offset:
 		for y,x in product(xrange(ifg.FILE_LENGTH), xrange(ifg.WIDTH)):

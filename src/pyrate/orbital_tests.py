@@ -96,26 +96,20 @@ class OrbitalCorrection(unittest.TestCase):
 		ifgs[0].phase_data[1, 1:3] = nan # add some NODATA
 
 		# test both models with no offsets
-		corrections = orbital_correction(ifgs, PLANAR, INDEPENDENT_METHOD, False)
-		test_results()
-		corrections = orbital_correction(ifgs, QUADRATIC, INDEPENDENT_METHOD, False)
-		test_results()
+		for m in [PLANAR, QUADRATIC]:
+			corrections = orbital_correction(ifgs, m, INDEPENDENT_METHOD, False)
+			test_results()
 
 		# test both with offsets
-		corrections = orbital_correction(ifgs, PLANAR, INDEPENDENT_METHOD)
-		test_results()
-		corrections = orbital_correction(ifgs, QUADRATIC, INDEPENDENT_METHOD)
-		test_results()
+		for m in [PLANAR, QUADRATIC]:
+			corrections = orbital_correction(ifgs, m, INDEPENDENT_METHOD)
+			test_results()
+
 
 
 class OrbitalCorrectionNetwork(unittest.TestCase):
-	'''TODO'''
-
-	def setUp(self):
-		base = "../../tests/sydney_test/obs"
-		self.ifgs = [Ifg(join(base, p)) for p in IFMS5.split()]
-
-	# TODO: check DM/correction with NaN rows
+	'''Tests for the networked correction method'''
+	# TODO: check correction with NaN rows
 
 	def test_invalid_ifgs_arg(self):
 		args = (PLANAR, True) # some default args
@@ -136,56 +130,56 @@ class OrbitalCorrectionNetwork(unittest.TestCase):
 
 	def test_design_matrix_shape(self):
 		# verify shape of design matrix is correct
-		num_ifgs = len(self.ifgs)
+		ifgs = sydney5ifgs()
+		num_ifgs = len(ifgs)
 		num_epochs = num_ifgs + 1
 		num_params = 2 # without offsets 1st
 
 		# without offsets
-		head = self.ifgs[0]
+		head = ifgs[0]
 		exp_num_rows = head.FILE_LENGTH * head.WIDTH * num_ifgs
 		exp_num_cols = num_epochs * num_params
 		exp_shape = (exp_num_rows, exp_num_cols)
-		act_dm = get_network_design_matrix(self.ifgs, PLANAR, False)
+		act_dm = get_network_design_matrix(ifgs, PLANAR, False)
 		self.assertEqual(exp_shape, act_dm.shape)
 
 		# with offsets
 		num_params += 1
 		exp_num_cols = num_epochs * num_params
-		exp_shape = (exp_num_rows, exp_num_cols)
-		act_dm = get_network_design_matrix(self.ifgs, PLANAR, True)
-		self.assertEqual(exp_shape, act_dm.shape)
+		act_dm = get_network_design_matrix(ifgs, PLANAR, True)
+		self.assertEqual((exp_num_rows, exp_num_cols), act_dm.shape)
 
 		# quadratic method without offsets
 		num_params = 5 # without offsets
 		exp_num_cols = num_epochs * num_params
-		exp_shape = (exp_num_rows, exp_num_cols)
-		act_dm = get_network_design_matrix(self.ifgs, QUADRATIC, False)
-		self.assertEqual(exp_shape, act_dm.shape)
+		act_dm = get_network_design_matrix(ifgs, QUADRATIC, False)
+		self.assertEqual((exp_num_rows, exp_num_cols), act_dm.shape)
 
 		# with offsets
 		num_params += 1
 		exp_num_cols = num_epochs * num_params
-		exp_shape = (exp_num_rows, exp_num_cols)
-		act_dm = get_network_design_matrix(self.ifgs, QUADRATIC, True)
-		self.assertEqual(exp_shape, act_dm.shape)
+		act_dm = get_network_design_matrix(ifgs, QUADRATIC, True)
+		self.assertEqual((exp_num_rows, exp_num_cols), act_dm.shape)
 
 
 	def test_planar_matrix_content(self):
 		# verify creation of sparse matrix comprised of smaller design matricies
 		# TODO: do master/slave indices need to be sorted? Sorted = less ambiguity
 
+		ifgs = sydney5ifgs()
+
 		dates = []
-		for ifg in self.ifgs:
+		for ifg in ifgs:
 			dates += list(ifg.DATE12)
 		date_ids = algorithm.master_slave_ids(dates)
 		ncoef = 2 # planar without offsets
 
 		for offset in [False, True]:
 			if offset: ncoef += 1
-			act_dm = get_network_design_matrix(self.ifgs, PLANAR, offset)
+			act_dm = get_network_design_matrix(ifgs, PLANAR, offset)
 			self.assertNotEqual(act_dm.ptp(), 0)
 
-			for i, ifg in enumerate(self.ifgs):
+			for i, ifg in enumerate(ifgs):
 				exp_dm = unittest_dm(ifg, ifg.X_STEP, ifg.Y_STEP, PLANAR, offset)
 
 				# use slightly refactored version of Hua's code to test
@@ -209,8 +203,8 @@ def unittest_dm(ifg, xs, ys, degree, offset=False):
 	Y = Y.reshape(ifg.num_cells) * ys
 
 	if degree == PLANAR:
-		out[:,0] = Y # FIXME: order of Y, X
-		out[:,1] = X
+		out[:,0] = X
+		out[:,1] = Y
 	elif degree == QUADRATIC:
 		out[:,0] = X**2
 		out[:,1] = Y**2
@@ -235,3 +229,7 @@ geo_061106-070115.unw
 geo_061106-070326.unw
 geo_070326-070917.unw
 """
+
+def sydney5ifgs():
+	base = "../../tests/sydney_test/obs"
+	return [Ifg(join(base, p)) for p in IFMS5.split()]
