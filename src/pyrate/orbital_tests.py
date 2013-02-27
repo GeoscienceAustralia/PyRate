@@ -73,7 +73,7 @@ class OrbitalCorrection(unittest.TestCase):
 		assert_array_equal(tmp, ifg)
 
 
-	def test_orbital_correction(self):
+	def test_independent_correction(self):
 		# verify top level orbital correction function
 
 		def test_results():
@@ -109,6 +109,7 @@ class OrbitalCorrection(unittest.TestCase):
 class NetworkDesignMatrixTests(unittest.TestCase):
 	'''Tests for the networked correction method'''
 	# TODO: check correction with NaN rows
+	# FIXME: check location of constant column - its at the end in HW's version
 
 	def test_invalid_ifgs_arg(self):
 		oex = OrbitalCorrectionError
@@ -172,6 +173,10 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 				jbs = date_ids[ifg.SLAVE] * ncoef # row start for slave
 				assert_array_almost_equal(-exp_dm, act_dm[ib1:ib2, jbm:jbm+ncoef])
 				assert_array_almost_equal(exp_dm, act_dm[ib1:ib2, jbs:jbs+ncoef])
+
+
+	def test_network_correction(self):
+		raise NotImplementedError
 
 
 # FIXME: add derived field to ifgs to convert X|Y_STEP degrees to metres

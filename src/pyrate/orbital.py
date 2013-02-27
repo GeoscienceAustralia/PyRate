@@ -51,6 +51,11 @@ def orbital_correction(ifgs, degree, method, offset=True):
 		raise OrbitalCorrectionError(msg)
 
 	if method == NETWORK_METHOD:
+		# TODO: MST implementation
+		# TODO: multilooking
+		# get DM / clear out the NaNs based on obs
+
+
 		raise NotImplementedError
 
 	return [_get_correction(i, degree, offset) for i in ifgs]
