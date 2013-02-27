@@ -17,7 +17,7 @@ from shared import Ifg
 from orbital import OrbitalCorrectionError
 from orbital import orbital_correction, get_design_matrix, get_network_design_matrix
 from orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, QUADRATIC
-from algorithm_tests import MockIfg, sydney_test_setup
+from algorithm_tests import MockIfg
 
 
 
@@ -88,7 +88,11 @@ class OrbitalCorrection(unittest.TestCase):
 				self.assertTrue(c.ptp() != 0) # ensure range of values in grid
 				# TODO: do the results need to be checked at all?
 
-		_, ifgs = sydney_test_setup()[:5] # TODO: replace with faked ifglist?
+		base = "../../tests/sydney_test/obs"
+		ifgs = [Ifg(join(base, p)) for p in IFMS5.split()]
+		for ifg in ifgs:
+			ifg.open()
+
 		ifgs[0].phase_data[1, 1:3] = nan # add some NODATA
 
 		# test both models with no offsets
