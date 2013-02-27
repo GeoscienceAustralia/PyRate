@@ -7,21 +7,20 @@ Created on 31/3/13
 
 
 import unittest
-from glob import glob
 from os.path import join
 from numpy import nan, isnan, array, reshape, ones, zeros, float32, meshgrid
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 
 import algorithm
 from shared import Ifg
-from orbital import OrbitalCorrectionError
-from orbital import orbital_correction, get_design_matrix, get_network_design_matrix
+from orbital import OrbitalCorrectionError, orbital_correction
+from orbital import get_design_matrix, get_network_design_matrix
 from orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, QUADRATIC
 from algorithm_tests import MockIfg
 
 
 
-class DesignMatrixTests(unittest.TestCase):
+class IndependentDesignMatrixTests(unittest.TestCase):
 	'''Tests for verifying various forms of design matricies'''
 
 	def setUp(self):
@@ -40,7 +39,7 @@ class DesignMatrixTests(unittest.TestCase):
 		# test with and without offsets option
 		exp = unittest_dm(m, self.xsize, self.ysize, PLANAR, True)
 		assert_array_almost_equal(exp, get_design_matrix(m, PLANAR, True))
-		assert_array_almost_equal(exp[:,:-1], get_design_matrix(m, PLANAR, False))
+		assert_array_almost_equal(exp[:, :-1], get_design_matrix(m, PLANAR, False))
 
 
 	def test_design_matrix_quadratic(self):
@@ -51,7 +50,7 @@ class DesignMatrixTests(unittest.TestCase):
 		# test with and without offsets option
 		exp_dm = unittest_dm(m, self.xsize, self.ysize, QUADRATIC, True)
 		design_mat = get_design_matrix(m, QUADRATIC, False) # no offset
-		assert_array_almost_equal(exp_dm[:,:-1], design_mat)
+		assert_array_almost_equal(exp_dm[:, :-1], design_mat)
 		assert_array_almost_equal(exp_dm, get_design_matrix(m, QUADRATIC, True))
 
 
@@ -107,14 +106,15 @@ class OrbitalCorrection(unittest.TestCase):
 
 
 
-class OrbitalCorrectionNetwork(unittest.TestCase):
+class NetworkDesignMatrixTests(unittest.TestCase):
 	'''Tests for the networked correction method'''
 	# TODO: check correction with NaN rows
 
 	def test_invalid_ifgs_arg(self):
+		oex = OrbitalCorrectionError
 		args = (PLANAR, True) # some default args
-		self.assertRaises(OrbitalCorrectionError, get_network_design_matrix, [], *args)
-		self.assertRaises(OrbitalCorrectionError, get_network_design_matrix, [None], *args)
+		for invalid in ([], [None]):
+			self.assertRaises(oex, get_network_design_matrix, invalid, *args)
 		# TODO: what is the minimum required? 2 ifgs/3 epochs?)
 
 
@@ -122,15 +122,15 @@ class OrbitalCorrectionNetwork(unittest.TestCase):
 		oex = OrbitalCorrectionError
 		ifgs = [None] * 5
 
-		for deg in range(-5,1):
+		for deg in range(-5, 1):
 			self.assertRaises(oex, get_network_design_matrix, ifgs, deg, True)
-		for deg in range(3,6):
+		for deg in range(3, 6):
 			self.assertRaises(oex, get_network_design_matrix, [None], deg, True)
 
 
 	def test_design_matrix_shape(self):
 		# verify shape of design matrix is correct
-		ifgs = sydney5ifgs()
+		ifgs = sydney5_ifgs()
 		num_ifgs = len(ifgs)
 		num_epochs = num_ifgs + 1
 		num_params = 2 # without offsets 1st
@@ -162,25 +162,22 @@ class OrbitalCorrectionNetwork(unittest.TestCase):
 		self.assertEqual((exp_num_rows, exp_num_cols), act_dm.shape)
 
 
-	def test_planar_matrix_content(self):
+	def test_network_design_matrix(self):
 		# verify creation of sparse matrix comprised of smaller design matricies
 		# TODO: do master/slave indices need to be sorted? Sorted = less ambiguity
+		ifgs = sydney5_ifgs()
+		date_ids = get_date_ids(ifgs)
 
-		ifgs = sydney5ifgs()
-
-		dates = []
-		for ifg in ifgs:
-			dates += list(ifg.DATE12)
-		date_ids = algorithm.master_slave_ids(dates)
-		ncoef = 2 # planar without offsets
-
-		for offset in [False, True]:
-			if offset: ncoef += 1
-			act_dm = get_network_design_matrix(ifgs, PLANAR, offset)
+		# try all combinations of methods with and without the offsets
+		for ncoef in [2, 3, 5, 6]:
+			offset = ncoef in (3, 6)
+			mth = PLANAR if ncoef < 5 else QUADRATIC
+			act_dm = get_network_design_matrix(ifgs, mth, offset)
 			self.assertNotEqual(act_dm.ptp(), 0)
 
 			for i, ifg in enumerate(ifgs):
-				exp_dm = unittest_dm(ifg, ifg.X_STEP, ifg.Y_STEP, PLANAR, offset)
+				# FIXME: sizes instead of steps
+				exp_dm = unittest_dm(ifg, ifg.X_STEP, ifg.Y_STEP, mth, offset)
 
 				# use slightly refactored version of Hua's code to test
 				ib1 = i * ifg.num_cells # start row for subsetting the sparse matrix
@@ -193,36 +190,32 @@ class OrbitalCorrectionNetwork(unittest.TestCase):
 
 # FIXME: add derived field to ifgs to convert X|Y_STEP degrees to metres
 def unittest_dm(ifg, xs, ys, degree, offset=False):
+	'''Convenience function to create design matrices'''
 	ncoef = 2 if degree == PLANAR else 5
 	if offset is True:
 		ncoef += 1
 
 	out = ones((ifg.num_cells, ncoef), dtype=float32)
-	X, Y = meshgrid(range(ifg.WIDTH), range(ifg.FILE_LENGTH))
-	X = X.reshape(ifg.num_cells) * xs
-	Y = Y.reshape(ifg.num_cells) * ys
+	x, y = meshgrid(range(ifg.WIDTH), range(ifg.FILE_LENGTH))
+	x = x.reshape(ifg.num_cells) * xs
+	y = y.reshape(ifg.num_cells) * ys
 
 	if degree == PLANAR:
-		out[:,0] = X
-		out[:,1] = Y
+		out[:, 0] = x
+		out[:, 1] = y
 	elif degree == QUADRATIC:
-		out[:,0] = X**2
-		out[:,1] = Y**2
-		out[:,2] = X * Y
-		out[:,3] = X
-		out[:,4] = Y
+		out[:, 0] = x**2
+		out[:, 1] = y**2
+		out[:, 2] = x * y
+		out[:, 3] = x
+		out[:, 4] = y
 	else:
 		raise Exception("Degree is invalid")
 
 	return out
 
 
-	# TODO:
-	#def test_network_design_matrix_quadratic(self):
-		#pass
-
-
-# small dummy ifg list to limit # of ifgs
+# small dummy ifg list to limit overall # of ifgs
 IFMS5 = """geo_060828-061211.unw
 geo_061106-061211.unw
 geo_061106-070115.unw
@@ -230,6 +223,14 @@ geo_061106-070326.unw
 geo_070326-070917.unw
 """
 
-def sydney5ifgs():
+def sydney5_ifgs():
+	'''Convenience func to return a subset of 5 linked Ifgs from the testdata'''
 	base = "../../tests/sydney_test/obs"
 	return [Ifg(join(base, p)) for p in IFMS5.split()]
+
+def get_date_ids(ifgs):
+	'''Returns master/slave date IDs from the given Ifgs'''
+	dates = []
+	for ifg in ifgs:
+		dates += list(ifg.DATE12)
+	return algorithm.master_slave_ids(dates)
