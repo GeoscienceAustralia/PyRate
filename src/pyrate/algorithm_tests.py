@@ -126,5 +126,6 @@ class MockIfg(object):
 
 		self.FILE_LENGTH = ysize
 		self.WIDTH = xsize
+		self.num_cells = ysize * xsize
 		self.phase_data = ndarray((self.FILE_LENGTH, self.WIDTH), dtype=float32)
 		self.nan_fraction = src_ifg.nan_fraction # use existing overall nan fraction

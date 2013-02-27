@@ -21,79 +21,42 @@ from algorithm_tests import MockIfg, sydney_test_setup
 
 
 
-class OrbitalTests(unittest.TestCase):
-	'''Test cases for the orbital correction component of PyRate.'''
+class DesignMatrixTests(unittest.TestCase):
+	'''Tests for verifying various forms of design matricies'''
 
 	def setUp(self):
-		xstep, ystep = 0.6, 0.7  # fake cell sizes
-
-		shape = (6, 2)
-		designm = zeros(shape) # planar design matrix for 2x3 orig array
-		designm[0] = [0, 0]
-		designm[1] = [0, xstep]
-		designm[2] = [ystep, 0]
-		designm[3] = [ystep, xstep]
-		designm[4] = [2*ystep, 0]
-		designm[5] = [2*ystep, xstep]
-
-		self.designm = designm
-		self.xstep = xstep
-		self.ystep = ystep
+		# fake cell sizes
+		self.xsize = 0.6
+		self.ysize = 0.7
+		self.ifg = Ifg("../../tests/sydney_test/obs/geo_060619-061002.unw")
+		self.ifg.open()
 
 
 	def test_design_matrix_planar(self):
-		_, ifgs = sydney_test_setup()
+		m = MockIfg(self.ifg, 2, 3)
+		m.X_STEP = self.xsize # FIXME: Ifg class needs to use custom X_SIZE
+		m.Y_STEP = self.ysize # FIXME: Y_SIZE
 
-		xs, ys = 2, 3
-		m = MockIfg(ifgs[0], xs, ys)
-		m.X_STEP = self.xstep
-		m.Y_STEP = self.ystep
-
-		# no offsets
-		design_mat = get_design_matrix(m, PLANAR, False)
-		assert_array_almost_equal(design_mat, self.designm)
-
-		# with offset
-		design_mat = get_design_matrix(m, PLANAR, True)
-		nys, nxs = self.designm.shape
-		nxs += 1 # for offset col
-		exp = ones((nys,nxs), dtype=float32)
-		exp[:,:2] = self.designm
-		assert_array_almost_equal(design_mat, exp)
+		# test with and without offsets option
+		exp = unittest_dm(m, self.xsize, self.ysize, PLANAR, True)
+		assert_array_almost_equal(exp, get_design_matrix(m, PLANAR, True))
+		assert_array_almost_equal(exp[:,:-1], get_design_matrix(m, PLANAR, False))
 
 
 	def test_design_matrix_quadratic(self):
-		dm = []
-		ys, xs = (3, 5)
-		for y in xrange(ys):
-			for x in xrange(xs):
-				dm.append([(x * self.xstep)**2,
-									(y * self.ystep)**2,
-									(x * self.xstep) * (y * self.ystep),
-									x * self.xstep,
-									y * self.ystep])
+		m = MockIfg(self.ifg, 3, 5)
+		m.X_STEP = self.xsize
+		m.Y_STEP = self.ysize
 
-		exp_dm = array(dm, dtype=float32) # planar design matrix
+		# test with and without offsets option
+		exp_dm = unittest_dm(m, self.xsize, self.ysize, QUADRATIC, True)
+		design_mat = get_design_matrix(m, QUADRATIC, False) # no offset
+		assert_array_almost_equal(exp_dm[:,:-1], design_mat)
+		assert_array_almost_equal(exp_dm, get_design_matrix(m, QUADRATIC, True))
 
-		# get design matrix from an ifg
-		ifg = Ifg("../../tests/sydney_test/obs/geo_060619-061002.unw")
-		ifg.open()
-		m = MockIfg(ifg, xs, ys)
-		m.X_STEP = self.xstep
-		m.Y_STEP = self.ystep
 
-		# no offset
-		design_mat = get_design_matrix(m, QUADRATIC, False)
-		assert_array_almost_equal(design_mat, exp_dm, decimal=3)
-
-		# with offset
-		design_mat = get_design_matrix(m, QUADRATIC, True)
-		nys, nxs = exp_dm.shape
-		nxs += 1 # for offset col
-		exp2 = ones((nys,nxs), dtype=float32)
-		exp2[:,:5] = exp_dm
-		assert_array_almost_equal(design_mat, exp2, decimal=3)
-
+class OrbitalCorrection(unittest.TestCase):
+	'''Test cases for the orbital correction component of PyRate.'''
 
 	def test_ifg_to_vector(self):
 		# test numpy reshaping order
@@ -242,14 +205,14 @@ def unittest_dm(ifg, xs, ys, degree, offset=False):
 	Y = Y.reshape(ifg.num_cells) * ys
 
 	if degree == PLANAR:
-		out[:,0] = Y
+		out[:,0] = Y # FIXME: order of Y, X
 		out[:,1] = X
 	elif degree == QUADRATIC:
-		out[:,0] = Y**2
-		out[:,1] = X**2
+		out[:,0] = X**2
+		out[:,1] = Y**2
 		out[:,2] = X * Y
-		out[:,3] = Y
-		out[:,4] = X
+		out[:,3] = X
+		out[:,4] = Y
 	else:
 		raise Exception("Degree is invalid")
 
