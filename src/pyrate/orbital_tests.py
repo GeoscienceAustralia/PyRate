@@ -205,7 +205,7 @@ class OrbitalCorrectionNetwork(unittest.TestCase):
 
 	def test_planar_matrix_content(self):
 		# verify creation of sparse matrix comprised of smaller design matricies
-		# TODO: do the master/slave indices need to be sorted? Sorted = less ambiguity
+		# TODO: do master/slave indices need to be sorted? Sorted = less ambiguity
 
 		dates = []
 		for ifg in self.ifgs:
@@ -219,7 +219,7 @@ class OrbitalCorrectionNetwork(unittest.TestCase):
 			self.assertNotEqual(act_dm.ptp(), 0)
 
 			for i, ifg in enumerate(self.ifgs):
-				exp_dm = dmplanar(ifg, ifg.X_STEP, ifg.Y_STEP, offset)
+				exp_dm = unittest_dm(ifg, ifg.X_STEP, ifg.Y_STEP, PLANAR, offset)
 
 				# use slightly refactored version of Hua's code to test
 				ib1 = i * ifg.num_cells # start row for subsetting the sparse matrix
@@ -231,18 +231,28 @@ class OrbitalCorrectionNetwork(unittest.TestCase):
 
 
 # FIXME: add derived field to ifgs to convert X|Y_STEP degrees to metres
-def dmplanar(ifg, xs, ys, offset=False):
-	ncells = ifg.WIDTH * ifg.FILE_LENGTH
-	ncoef = 2
+def unittest_dm(ifg, xs, ys, degree, offset=False):
+	ncoef = 2 if degree == PLANAR else 5
 	if offset is True:
 		ncoef += 1
 
-	out = ones((ncells, ncoef), dtype=float32)
+	out = ones((ifg.num_cells, ncoef), dtype=float32)
 	X, Y = meshgrid(range(ifg.WIDTH), range(ifg.FILE_LENGTH))
-	X = X.reshape(ncells) * xs
-	Y = Y.reshape(ncells) * ys
-	out[:,0] = Y
-	out[:,1] = X
+	X = X.reshape(ifg.num_cells) * xs
+	Y = Y.reshape(ifg.num_cells) * ys
+
+	if degree == PLANAR:
+		out[:,0] = Y
+		out[:,1] = X
+	elif degree == QUADRATIC:
+		out[:,0] = Y**2
+		out[:,1] = X**2
+		out[:,2] = X * Y
+		out[:,3] = Y
+		out[:,4] = X
+	else:
+		raise Exception("Degree is invalid")
+
 	return out
 
 
