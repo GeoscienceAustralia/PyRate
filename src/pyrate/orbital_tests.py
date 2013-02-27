@@ -120,12 +120,12 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 
 	def test_invalid_degree_arg(self):
 		oex = OrbitalCorrectionError
-		ifgs = [None] * 5
+		ifgs = sydney5_ifgs()
 
 		for deg in range(-5, 1):
 			self.assertRaises(oex, get_network_design_matrix, ifgs, deg, True)
 		for deg in range(3, 6):
-			self.assertRaises(oex, get_network_design_matrix, [None], deg, True)
+			self.assertRaises(oex, get_network_design_matrix, ifgs, deg, True)
 
 
 	def test_design_matrix_shape(self):
@@ -133,33 +133,19 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 		ifgs = sydney5_ifgs()
 		num_ifgs = len(ifgs)
 		num_epochs = num_ifgs + 1
-		num_params = 2 # without offsets 1st
-
-		# without offsets
-		head = ifgs[0]
-		exp_num_rows = head.FILE_LENGTH * head.WIDTH * num_ifgs
-		exp_num_cols = num_epochs * num_params
-		exp_shape = (exp_num_rows, exp_num_cols)
-		act_dm = get_network_design_matrix(ifgs, PLANAR, False)
-		self.assertEqual(exp_shape, act_dm.shape)
+		exp_num_rows = ifgs[0].num_cells * num_ifgs
 
 		# with offsets
-		num_params += 1
-		exp_num_cols = num_epochs * num_params
-		act_dm = get_network_design_matrix(ifgs, PLANAR, True)
-		self.assertEqual((exp_num_rows, exp_num_cols), act_dm.shape)
+		for num_params, offset in zip((2,3), (False, True)):
+			exp_num_cols = num_epochs * num_params
+			act_dm = get_network_design_matrix(ifgs, PLANAR, offset)
+			self.assertEqual((exp_num_rows, exp_num_cols), act_dm.shape)
 
-		# quadratic method without offsets
-		num_params = 5 # without offsets
-		exp_num_cols = num_epochs * num_params
-		act_dm = get_network_design_matrix(ifgs, QUADRATIC, False)
-		self.assertEqual((exp_num_rows, exp_num_cols), act_dm.shape)
-
-		# with offsets
-		num_params += 1
-		exp_num_cols = num_epochs * num_params
-		act_dm = get_network_design_matrix(ifgs, QUADRATIC, True)
-		self.assertEqual((exp_num_rows, exp_num_cols), act_dm.shape)
+		# quadratic method
+		for num_params, offset in zip((5,6), (False, True)):
+			exp_num_cols = num_epochs * num_params
+			act_dm = get_network_design_matrix(ifgs, QUADRATIC, offset)
+			self.assertEqual((exp_num_rows, exp_num_cols), act_dm.shape)
 
 
 	def test_network_design_matrix(self):
