@@ -133,7 +133,7 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 		# verify shape of design matrix is correct
 		ifgs = sydney5_ifgs()
 		num_ifgs = len(ifgs)
-		num_epochs = num_ifgs + 1
+		num_epochs = 6
 		exp_num_rows = ifgs[0].num_cells * num_ifgs
 
 		# with offsets

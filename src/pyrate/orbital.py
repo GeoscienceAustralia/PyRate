@@ -95,7 +95,7 @@ def get_design_matrix(ifg, degree, offset):
 		nparams += 1  # eg. y = mx + offset
 
 	# init design matrix
-	shape = ((ifg.WIDTH * ifg.FILE_LENGTH), nparams)
+	shape = (ifg.num_cells, nparams)
 	data = zeros(shape, dtype=float32)
 	rows = iter(data)
 
@@ -115,8 +115,6 @@ def get_network_design_matrix(ifgs, degree, offset):
 	if num_ifgs < 2:
 		raise OrbitalCorrectionError("Invalid number of Ifgs")
 
-	num_epochs = num_ifgs + 1
-
 	# TODO: refactor to prevent duplication here
 	nparams = 2 if degree == PLANAR else 5
 	if offset:
@@ -125,9 +123,9 @@ def get_network_design_matrix(ifgs, degree, offset):
 	# sort out master and slave date IDs
 	dates = [ifg.MASTER for ifg in ifgs] + [ifg.SLAVE for ifg in ifgs]
 	ids = algorithm.master_slave_ids(dates)
+	num_epochs = max(ids.values()) + 1 # convert from zero indexed ID
 
 	# init design matrix
-	nrows, ncols = ifgs[0].FILE_LENGTH, ifgs[0].WIDTH
 	shape = (ifg.num_cells * num_ifgs, nparams * num_epochs)
 	data = zeros(shape, dtype=float32)
 
