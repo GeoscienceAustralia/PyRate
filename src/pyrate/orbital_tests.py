@@ -8,8 +8,10 @@ Created on 31/3/13
 
 import unittest
 from os.path import join
-from numpy import nan, isnan, array, reshape, ones, zeros, float32, meshgrid
+from numpy import nan, isnan, array, reshape, where, float32
+from numpy import empty, ones, zeros, meshgrid
 from numpy.testing import assert_array_equal, assert_array_almost_equal
+from scipy.linalg import pinv
 
 import algorithm
 from shared import Ifg
@@ -175,8 +177,34 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 				assert_array_almost_equal(exp_dm, act_dm[ib1:ib2, jbs:jbs+ncoef])
 
 
-	def test_network_correction(self):
-		raise NotImplementedError
+	def test_network_correction_planar(self):
+		ifgs = sydney5_mock_ifgs()
+		for i in ifgs: i.open()
+
+		ERR = 3
+		ifgs[0].phase_data[0,0:ERR] = nan # add NODATA as rasters are complete
+
+		# reshape phase data to vectors
+		num_ifgs = len(ifgs)
+		data = empty(num_ifgs * ifgs[0].num_cells, dtype=float32)
+		for i, ifg in enumerate(ifgs):
+			st = i * ifg.num_cells
+			data[st:st + ifg.num_cells] = ifg.phase_data.reshape(ifg.num_cells)
+
+		dm = get_network_design_matrix(ifgs, PLANAR, offset=False)
+		dm = dm[~isnan(data)]
+		fd = data[~isnan(data)]
+		self.assertTrue(len(dm) == len(fd) == (num_ifgs * ifg.num_cells) - ERR)
+
+		# inversion
+		params = pinv(dm, 1e-6) * fd
+
+		# TODO: replace with a more general function call
+		from orbital import _get_net_correction
+		act = _get_net_correction(ifgs, PLANAR, False)
+		assert_array_almost_equal(act, params)
+
+		# TODO: fwd correction
 
 
 # FIXME: add derived field to ifgs to convert X|Y_STEP degrees to metres
@@ -218,6 +246,19 @@ def sydney5_ifgs():
 	'''Convenience func to return a subset of 5 linked Ifgs from the testdata'''
 	base = "../../tests/sydney_test/obs"
 	return [Ifg(join(base, p)) for p in IFMS5.split()]
+
+
+def sydney5_mock_ifgs(xs=3, ys=4):
+	'''Returns smaller mocked version of sydney Ifgs for testing'''
+	ifgs = sydney5_ifgs()
+	for i in ifgs: i.open()
+	mocks = [MockIfg(i, xs, ys) for i in ifgs]
+	for i,m in zip(ifgs, mocks):
+		m.phase_data = i.phase_data[:ys,:xs]
+		del m.nan_fraction
+
+	return mocks
+
 
 def get_date_ids(ifgs):
 	'''Returns master/slave date IDs from the given Ifgs'''

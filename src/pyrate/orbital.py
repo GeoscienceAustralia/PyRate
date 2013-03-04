@@ -6,9 +6,9 @@ Created on 31/3/13
 '''
 
 from itertools import product
-from numpy import sum, where, nan, isnan, reshape, zeros, float32
+from numpy import sum, where, nan, isnan, reshape, zeros, float32, vstack, squeeze
 from numpy.ma import masked_array
-from scipy.linalg import lstsq
+from scipy.linalg import lstsq, pinv
 
 import algorithm
 
@@ -51,24 +51,19 @@ def orbital_correction(ifgs, degree, method, offset=True):
 		raise OrbitalCorrectionError(msg)
 
 	if method == NETWORK_METHOD:
-		# TODO: MST implementation
-		# TODO: multilooking
-		# get DM / clear out the NaNs based on obs
+		return _get_net_correction(ifgs, degree, offset)
+
+	elif method == INDEPENDENT_METHOD:
+		return [_get_ind_correction(i, degree, offset) for i in ifgs]
+	else:
+		msg = "Unknown method '%s'" % method
+		raise OrbitalCorrectionError(msg)
 
 
-		raise NotImplementedError
-
-	return [_get_correction(i, degree, offset) for i in ifgs]
-
-
-def _get_correction(ifg, degree, offset):
+def _get_ind_correction(ifg, degree, offset):
 	'''Calculates and returns orbital correction array for an ifg'''
 
-	# precalculate matrix shapes
-	orig = ifg.phase_data.shape
-	vsh = orig[0] * orig[1] # full shape of vectorised form of data
-	vphase = reshape(ifg.phase_data, vsh) # vectorised data, contains NODATA
-
+	vphase = reshape(ifg.phase_data, ifg.num_cells) # vectorised, contains NODATA
 	dm = get_design_matrix(ifg, degree, offset)
 	assert len(vphase) == len(dm)
 
@@ -83,8 +78,26 @@ def _get_correction(ifg, degree, offset):
 
 	# calculate forward model & morph back to 2D
 	tmp = sum(dm * model, axis=1) # d = ax + by
-	correction = reshape(tmp, orig)
+	correction = reshape(tmp, ifg.phase_data.shape)
 	return correction
+
+
+def _get_net_correction(ifgs, degree, offset):
+	'''TODO'''
+	# TODO: MST implementation
+	# TODO: multilooking (do seperately/prior to this as a batch job?)
+
+	# get DM / clear out the NaNs based on obs
+	tmp = vstack([i.phase_data.reshape((i.num_cells, 1)) for i in ifgs])
+	vphase = squeeze(tmp)
+	dm = get_network_design_matrix(ifgs, degree, offset)
+	assert len(vphase) == len(dm)
+
+	# filter NaNs out before getting model
+	tmp = dm[~isnan(vphase)]
+	fd = vphase[~isnan(vphase)]
+	model = pinv(tmp, 1e-6) * fd
+	return model
 
 
 def get_design_matrix(ifg, degree, offset):
@@ -115,7 +128,7 @@ def get_network_design_matrix(ifgs, degree, offset):
 	if num_ifgs < 2:
 		raise OrbitalCorrectionError("Invalid number of Ifgs")
 
-	# TODO: refactor to prevent duplication here
+	# TODO: refactor to prevent duplication with get_design_matrix()?
 	nparams = 2 if degree == PLANAR else 5
 	if offset:
 		nparams += 1  # eg. b/offset in (y = mx + b) is an extra param
