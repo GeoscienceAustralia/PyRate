@@ -7,9 +7,10 @@ import unittest
 from numpy import nan
 from itertools import product
 
-from mst import mst_matrix
+from mst import mst_matrix, default_mst
 import algorithm
 from algorithm_tests import sydney_test_setup, MockIfg
+from orbital_tests import sydney5_mock_ifgs
 
 
 class MSTTests(unittest.TestCase):
@@ -29,6 +30,25 @@ class MSTTests(unittest.TestCase):
 			r = res[y,x]
 			self.assertTrue(hasattr(r, "keys"))
 			self.assertTrue(len(r) <= len(self.epochs.dates))
+
+
+	def test_default_mst(self):
+		ifgs = sydney5_mock_ifgs() # no nodes should be lost
+		dates = [i.DATE12 for i in ifgs]
+
+		res = default_mst(ifgs)
+		num_edges = len(res.keys())
+		self.assertEqual(num_edges, len(ifgs))
+
+		# test edges, note node order can be reversed
+		for edge in res.iteritems():
+			self.assertTrue(edge in dates or (edge[1],edge[0]) in dates)
+
+		# check all nodes exist in this default tree
+		mst_dates = set(res.keys() + res.values())
+		for i in ifgs:
+			for node in i.DATE12:
+				self.assertTrue(node in mst_dates)
 
 
 	def test_partial_nan_pixel_stack(self):

@@ -5,6 +5,7 @@ TODO
 from itertools import product
 from numpy import array, nan, isnan, float32, ndarray
 
+import algorithm
 from pygraph.classes.graph import graph
 from pygraph.algorithms.minmax import minimal_spanning_tree
 
@@ -15,6 +16,26 @@ def _remove_root_node(mst):
 	for k in mst.keys():
 		if mst[k] is None:
 			del mst[k]
+
+
+def default_mst(ifgs, noroot=True):
+	'''Returns the default MST dict for the given Ifgs. False for noroot prevents
+	the root node from being removed from the result.
+	'''
+	edges = [i.DATE12 for i in ifgs]
+	dates = [ifg.MASTER for ifg in ifgs] + [ifg.SLAVE for ifg in ifgs]
+	epochs = algorithm.master_slave_ids(dates).keys()
+	weights = [i.nan_fraction for i in ifgs]  # TODO: user specified attrs for weights?
+
+	g = graph()
+	g.add_nodes(epochs) # each acquisition is a node
+	for edge, weight in zip(edges, weights):
+		g.add_edge(edge, wt=weight)
+
+	mst = minimal_spanning_tree(g)
+	if noroot:
+		_remove_root_node(mst)
+	return mst
 
 
 def mst_matrix(ifgs, epochs):
