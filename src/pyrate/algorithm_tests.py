@@ -119,13 +119,22 @@ def sydney_test_setup():
 class MockIfg(object):
 	'''Mock Ifg for detailed testing'''
 
-	def __init__(self, src_ifg, xsize=None, ysize=None):
-		self.MASTER = src_ifg.MASTER
-		self.SLAVE = src_ifg.SLAVE
-		self.DATE12 = src_ifg.DATE12
+	def __init__(self, ifg, xsize=None, ysize=None):
+		'''Creates mock ifg based on another interferogram. Size args specify the
+		dimensions of the phase band (so the mock ifg can be resized differently to
+		the source interferogram for smaller test datasets).
+		'''
+		self.MASTER = ifg.MASTER
+		self.SLAVE = ifg.SLAVE
+		self.DATE12 = ifg.DATE12
 
 		self.FILE_LENGTH = ysize
 		self.WIDTH = xsize
+		self.X_STEP = ifg.X_STEP
+		self.Y_STEP = ifg.Y_STEP
 		self.num_cells = ysize * xsize
 		self.phase_data = ndarray((self.FILE_LENGTH, self.WIDTH), dtype=float32)
-		self.nan_fraction = src_ifg.nan_fraction # use existing overall nan fraction
+		self.nan_fraction = ifg.nan_fraction # use existing overall nan fraction
+
+	def open(self):
+		pass # can't open anything!
