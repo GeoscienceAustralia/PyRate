@@ -215,3 +215,10 @@ class EpochList(object):
 		self.dates = dates # list of unique dates from all the ifgs
 		self.repeat = repeat
 		self.spans = spans # time span from earliest ifg
+
+
+	def __str__(self):
+		return "EpochList: %s" % str(self.dates)
+
+	def __repr__(self):
+		return "EpochList: %s" % repr(self.dates)
