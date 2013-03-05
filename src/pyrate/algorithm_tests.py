@@ -71,15 +71,21 @@ class AlgorithmTests(TestCase):
 		i = algorithm.ifg_date_lookup(ifgs, date_pair)
 		self.assertEqual(ifgs[0], i)
 
+		# test with reversed date tuple, should reorder it according to age
+		date_pair = (date(2006, 12, 11), date(2006, 11, 6))
+		i = algorithm.ifg_date_lookup(ifgs, date_pair)
+		self.assertEqual(ifgs[1], i)
+
 
 	def test_ifg_date_lookup_failure(self):
 		# error when lookup cannot find an ifg given a date pair
-		# TODO: also if the date pair is reversed?
-		# TODO: Bad inputs for date_pair
+		ifgs = sydney5_mock_ifgs()
+		date_pair = (date(2006, 12, 11), date(2007, 3, 26))
+		self.assertRaises(ValueError, algorithm.ifg_date_lookup, ifgs, date_pair)
 
-		# date_pair = (11/12/XX -> 26/3/XX)
+	# TODO: test bad inputs for date_pair?
 
-		raise NotImplementedError
+
 
 # TODO: InitialModelTests
 #class InitialModelTests(unittest.TestCase):

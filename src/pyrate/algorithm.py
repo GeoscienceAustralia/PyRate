@@ -40,11 +40,17 @@ def ifg_date_lookup(ifgs, date_pair):
 	date_pair - a (datetime.date, datetime.date) tuple
 	'''
 	if len(date_pair) != 2:
-		raise Exception # TODO
+		raise IfgException("Need (datetime.date, datetime.date) master/slave pair")
+
+	# check master/slave dates are in order
+	if date_pair[0] > date_pair[1]:
+		date_pair = date_pair[1], date_pair[0]
 
 	for i in ifgs:
 		if date_pair == i.DATE12:
 			return i
+
+	raise ValueError("Cannot find Ifg with master/slave of %s" % str(date_pair))
 
 
 def get_epochs(ifgs):
