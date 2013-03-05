@@ -73,13 +73,13 @@ class MSTTests(unittest.TestCase):
 
 
 	def test_all_nan_pixel_stack(self):
-		self.mock_ifgs = [MockIfg(i, 1, 1) for i in self.ifgs]
-		for m in self.mock_ifgs:
+		mock_ifgs = [MockIfg(i, 1, 1) for i in self.ifgs]
+		for m in mock_ifgs:
 			m.phase_data[:] = nan
 
-		res = mst_matrix(self.mock_ifgs, self.epochs)
+		res = mst_matrix(mock_ifgs, self.epochs)
 		exp = [nan]
 
-		shape = (self.mock_ifgs[0].FILE_LENGTH, self.mock_ifgs[0].WIDTH)
+		shape = (mock_ifgs[0].FILE_LENGTH, mock_ifgs[0].WIDTH)
 		self.assertTrue(res.shape == shape)
 		self.assertEqual(exp, res)
