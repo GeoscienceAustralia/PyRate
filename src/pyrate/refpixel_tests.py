@@ -7,7 +7,7 @@ import unittest
 from numpy import nan, mean, std, isnan
 
 from refpixel import ref_pixel, RefPixelError, _step
-from algorithm_tests import sydney_test_setup, MockIfg
+from tests_common import sydney_test_setup, MockIfg
 
 from config import ConfigException
 from config import REFX, REFNX, REFY, REFNY, REF_CHIP_SIZE, REF_MIN_FRAC

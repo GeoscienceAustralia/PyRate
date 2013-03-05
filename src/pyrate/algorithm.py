@@ -34,6 +34,19 @@ def unit_vector(incidence, azimuth):
 	return east_west, north_south, vertical
 
 
+def ifg_date_lookup(ifgs, date_pair):
+	'''Returns an Ifg which has a master/slave dates given in 'date_pair'.
+	ifgs - list of Ifg objects to search in
+	date_pair - a (datetime.date, datetime.date) tuple
+	'''
+	if len(date_pair) != 2:
+		raise Exception # TODO
+
+	for i in ifgs:
+		if date_pair == i.DATE12:
+			return i
+
+
 def get_epochs(ifgs):
 	'''Returns an EpochList derived from all given interferograms.'''
 	masters = [i.MASTER for i in ifgs]

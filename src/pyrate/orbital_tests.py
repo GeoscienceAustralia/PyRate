@@ -8,17 +8,19 @@ Created on 31/3/13
 
 import unittest
 from os.path import join
-from numpy import nan, isnan, array, reshape, where, float32
+from numpy import nan, isnan, array, reshape, float32
 from numpy import empty, ones, zeros, meshgrid
 from numpy.testing import assert_array_equal, assert_array_almost_equal
-from scipy.linalg import pinv
+from numpy.testing import assert_allclose
+#from scipy.linalg import pinv
+import scipy
 
 import algorithm
 from shared import Ifg
 from orbital import OrbitalCorrectionError, orbital_correction
 from orbital import get_design_matrix, get_network_design_matrix
 from orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, QUADRATIC
-from algorithm_tests import MockIfg
+from tests_common import sydney5_ifgs, sydney5_mock_ifgs, MockIfg, IFMS5
 
 
 
@@ -191,18 +193,13 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 			st = i * ifg.num_cells
 			data[st:st + ifg.num_cells] = ifg.phase_data.reshape(ifg.num_cells)
 
-		dm = get_network_design_matrix(ifgs, PLANAR, offset=False)
-		dm = dm[~isnan(data)]
+		dm = get_network_design_matrix(ifgs, PLANAR, offset=False)[~isnan(data)]
 		fd = data[~isnan(data)]
 		self.assertTrue(len(dm) == len(fd) == (num_ifgs * ifg.num_cells) - ERR)
 
-		# inversion
-		params = pinv(dm, 1e-6) * fd
-
-		# TODO: replace with a more general function call
-		from orbital import _get_net_correction
-		act = _get_net_correction(ifgs, PLANAR, False)
-		assert_array_almost_equal(act, params)
+		params = scipy.linalg.pinv(dm, 1e-6) * fd
+		act = orbital_correction(ifgs, PLANAR, NETWORK_METHOD, False)  # TODO: replace with a more internal function call?
+		assert_allclose(act, params) # FIXME: not always equal!
 
 		# TODO: fwd correction
 
@@ -232,32 +229,6 @@ def unittest_dm(ifg, xs, ys, degree, offset=False):
 		raise Exception("Degree is invalid")
 
 	return out
-
-
-# small dummy ifg list to limit overall # of ifgs
-IFMS5 = """geo_060828-061211.unw
-geo_061106-061211.unw
-geo_061106-070115.unw
-geo_061106-070326.unw
-geo_070326-070917.unw
-"""
-
-def sydney5_ifgs():
-	'''Convenience func to return a subset of 5 linked Ifgs from the testdata'''
-	base = "../../tests/sydney_test/obs"
-	return [Ifg(join(base, p)) for p in IFMS5.split()]
-
-
-def sydney5_mock_ifgs(xs=3, ys=4):
-	'''Returns smaller mocked version of sydney Ifgs for testing'''
-	ifgs = sydney5_ifgs()
-	for i in ifgs: i.open()
-	mocks = [MockIfg(i, xs, ys) for i in ifgs]
-	for i,m in zip(ifgs, mocks):
-		m.phase_data = i.phase_data[:ys,:xs]
-		del m.nan_fraction
-
-	return mocks
 
 
 def get_date_ids(ifgs):

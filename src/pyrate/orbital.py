@@ -6,12 +6,11 @@ Created on 31/3/13
 '''
 
 from itertools import product
-from numpy import sum, where, nan, isnan, reshape, zeros, float32, vstack, squeeze
-from numpy.ma import masked_array
+from numpy import sum, isnan, reshape, zeros, float32, vstack, squeeze
 from scipy.linalg import lstsq, pinv
 
 import algorithm
-
+from mst import default_mst
 
 # Orbital correction
 # 0) Config file stuff:
@@ -51,9 +50,16 @@ def orbital_correction(ifgs, degree, method, offset=True):
 		raise OrbitalCorrectionError(msg)
 
 	if method == NETWORK_METHOD:
+		# Cut down to the smallest tree with all nodes
+		# TODO: do this as a filter step outside the main func? More MODULAR
+		#mst = default_mst(ifgs)
+		# TODO: reverse lookup to map edges -> ifgs
+
 		return _get_net_correction(ifgs, degree, offset)
 
 	elif method == INDEPENDENT_METHOD:
+		# FIXME: determine how to work this into the ifgs. Generate new Ifgs? Update
+		# the old ifgs and flag the corrections in metadata?
 		return [_get_ind_correction(i, degree, offset) for i in ifgs]
 	else:
 		msg = "Unknown method '%s'" % method
@@ -83,8 +89,11 @@ def _get_ind_correction(ifg, degree, offset):
 
 
 def _get_net_correction(ifgs, degree, offset):
-	'''TODO'''
-	# TODO: MST implementation
+	'''Returns the TODO
+	ifgs - assumed to be Ifgs from a prior MST step
+	degree - PLANAR or QUADRATIC
+	offset - True/False for including TODO
+	'''
 	# TODO: multilooking (do seperately/prior to this as a batch job?)
 
 	# get DM / clear out the NaNs based on obs
@@ -139,7 +148,7 @@ def get_network_design_matrix(ifgs, degree, offset):
 	num_epochs = max(ids.values()) + 1 # convert from zero indexed ID
 
 	# init design matrix
-	shape = (ifg.num_cells * num_ifgs, nparams * num_epochs)
+	shape = (ifgs[0].num_cells * num_ifgs, nparams * num_epochs)
 	data = zeros(shape, dtype=float32)
 
 	# paste in individual design matrices
