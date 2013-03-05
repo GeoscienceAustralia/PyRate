@@ -16,6 +16,7 @@ def _remove_root_node(mst):
 	for k in mst.keys():
 		if mst[k] is None:
 			del mst[k]
+	return mst
 
 
 def default_mst(ifgs, noroot=True):
@@ -53,8 +54,7 @@ def mst_matrix(ifgs, epochs):
 	for edge, weight in zip(edges, weights):
 		g.add_edge(edge, wt=weight)
 
-	default_mst = minimal_spanning_tree(g)
-	_remove_root_node(default_mst)
+	dmst = _remove_root_node(minimal_spanning_tree(g)) # default base MST
 
 	# prepare source and dest data arrays
 	# [i.phase_data for i in ifgs]
@@ -64,15 +64,15 @@ def mst_matrix(ifgs, epochs):
 
 	# create MSTs for each pixel in the ifg data stack
 	for y, x in product(xrange(i.FILE_LENGTH), xrange(i.WIDTH)):
-		values = data_stack[:,y,x] # select stack of all ifg values for a pixel
+		values = data_stack[:, y, x] # select stack of all ifg values for a pixel
 		nc = sum(isnan(values))
 
 		# optimisations: use precreated results for all nans/no nans
 		if nc == 0:
-			mst_result[y,x] = default_mst
+			mst_result[y, x] = dmst
 			continue
 		elif nc == num_ifgs:
-			mst_result[y,x] = nan
+			mst_result[y, x] = nan
 			continue
 
 		# otherwise dynamically adjust graph, skipping edges where pixels are NaN
@@ -84,8 +84,7 @@ def mst_matrix(ifgs, epochs):
 				if g.has_edge(edge):
 					g.del_edge(edge)
 
-		mst = minimal_spanning_tree(g)
-		_remove_root_node(mst)
-		mst_result[y,x] = mst
+		mst = _remove_root_node(minimal_spanning_tree(g))
+		mst_result[y, x] = mst
 
 	return mst_result

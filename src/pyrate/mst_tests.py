@@ -9,8 +9,7 @@ from itertools import product
 
 from mst import mst_matrix, default_mst
 import algorithm
-from algorithm_tests import sydney_test_setup, MockIfg
-from orbital_tests import sydney5_mock_ifgs
+from tests_common import MockIfg, sydney5_mock_ifgs, sydney_test_setup
 
 
 class MSTTests(unittest.TestCase):
