@@ -307,21 +307,21 @@ class OutputTests(unittest.TestCase):
 			assert_array_equal(res, reshape(exp, res.shape))
 
 
-	def test_los_conversion(self):
+	#def test_los_conversion(self):
 		# TODO: needs LOS matrix
 		# TODO: this needs to work from config and incidence files on disk
 		# TODO: los conversion has 4 options: 1: ignore, 2: vertical, 3: N/S, 4: E/W
 		# also have a 5th option of arbitrary azimuth angle (Pirate doesn't have this)
-		params = self._default_extents_param()
-		params[IFG_CROP_OPT] = prepifg.MINIMUM_CROP
-		params[PROJECTION_FLAG] = None
-		prepifg.prepare_ifgs(params, use_exceptions=True)
+	#	params = self._default_extents_param()
+	#	params[IFG_CROP_OPT] = prepifg.MINIMUM_CROP
+	#	params[PROJECTION_FLAG] = None
+	#	prepifg.prepare_ifgs(params, use_exceptions=True)
 
 
-	def test_phase_conversion(self):
+	#def test_phase_conversion(self):
 		# TODO: check output data is converted to mm from metres
 		# TODO: is convflag used or just defaulted?
-		raise NotImplementedError
+		#raise NotImplementedError
 
 
 
