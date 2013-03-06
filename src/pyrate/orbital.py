@@ -7,7 +7,8 @@ Created on 31/3/13
 
 from itertools import product
 from numpy import sum, isnan, reshape, zeros, float32, vstack, squeeze
-from scipy.linalg import lstsq, pinv
+from scipy.linalg import lstsq
+from numpy.linalg import pinv
 
 import algorithm
 from mst import default_mst
@@ -16,12 +17,14 @@ from mst import default_mst
 # 0) Config file stuff:
 #		Add the orbital params
 #		orbfit = 0: off, 1=do it
-#		orbfitmethod = 1 or 2 (see conf file)  (AKA independent and networked methods)
-#		orbrefest = orb_ref_est, 0=off, 1=on (IGNORE for the time being - something to do with removing the constant param 'c' from y = mx+c)
-#		orbmaskflag = IGNORE for now. Used to mask out some patches, eg. if there is an earthquake signal somewhere.
+#		orbfitmethod: 1 or 2 (see conf file) (AKA independent and networked methods)
+#		orbrefest = orb_ref_est, 0=off, 1=on (IGNORE for the time being - something
+#               to do with removing the constant param 'c' from y = mx+c)
+#		orbmaskflag = IGNORE for now. Used to mask out some patches, eg. if there is
+#                 an earthquake signal somewhere.
 #
 # 1) resample/multilook the data to have less pixels (for comp efficiency)
-# optional - vu can handle the larger arrays (new sys=?) so not mandatory (orbcorrect.m)
+# optional? VU can handle larger arrays (new sys=?)
 #
 # 2) design matrix (orbdesign.m)
 #
@@ -40,7 +43,12 @@ QUADRATIC = 2
 
 
 def orbital_correction(ifgs, degree, method, offset=True):
-	'''TODO'''
+	'''Top level method for correcting orbital error TODO
+	ifgs - list of Ifg objs to correct
+	degree - PLANAR or QUADRATIC
+	method - INDEPENDENT_METHOD or NETWORK_METHOD
+	offset = True/False TODO
+	'''
 
 	# TODO: save corrected layers to new file or use intermediate arrays?
 	# TODO: offsets
@@ -53,8 +61,12 @@ def orbital_correction(ifgs, degree, method, offset=True):
 		# Cut down to the smallest tree with all nodes
 		# TODO: do this as a filter step outside the main func? More MODULAR
 		#mst = default_mst(ifgs)
-		# TODO: reverse lookup to map edges -> ifgs
+		#from algorithm import ifg_date_lookup
+		#sub_ifgs = [ifg_date_lookup(ifgs, mas_slv) for mas_slv in mst.iteritems()]
+		#1/0
 
+		# TODO: reverse lookup to map edges -> ifgs
+		#return _get_net_correction(sub_ifgs, degree, offset)
 		return _get_net_correction(ifgs, degree, offset)
 
 	elif method == INDEPENDENT_METHOD:
@@ -128,7 +140,7 @@ def get_design_matrix(ifg, degree, offset):
 
 # TODO: can this be refactored under one get_design_matrix() func?
 def get_network_design_matrix(ifgs, degree, offset):
-	'''TODO'''
+	'''Returns a larger format design matrix for networked error correction.'''
 
 	if degree not in [PLANAR, QUADRATIC]:
 		raise OrbitalCorrectionError("Invalid degree argument")

@@ -8,12 +8,11 @@ Created on 31/3/13
 
 import unittest
 from os.path import join
+
+from numpy.linalg import pinv
 from numpy import nan, isnan, array, reshape, float32
 from numpy import empty, ones, zeros, meshgrid
 from numpy.testing import assert_array_equal, assert_array_almost_equal
-from numpy.testing import assert_allclose
-#from scipy.linalg import pinv
-import scipy
 
 import algorithm
 from shared import Ifg
@@ -141,13 +140,13 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 		exp_num_rows = ifgs[0].num_cells * num_ifgs
 
 		# with offsets
-		for num_params, offset in zip((2,3), (False, True)):
+		for num_params, offset in zip((2, 3), (False, True)):
 			exp_num_cols = num_epochs * num_params
 			act_dm = get_network_design_matrix(ifgs, PLANAR, offset)
 			self.assertEqual((exp_num_rows, exp_num_cols), act_dm.shape)
 
 		# quadratic method
-		for num_params, offset in zip((5,6), (False, True)):
+		for num_params, offset in zip((5, 6), (False, True)):
 			exp_num_cols = num_epochs * num_params
 			act_dm = get_network_design_matrix(ifgs, QUADRATIC, offset)
 			self.assertEqual((exp_num_rows, exp_num_cols), act_dm.shape)
@@ -181,10 +180,11 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 
 	def test_network_correction_planar(self):
 		ifgs = sydney5_mock_ifgs()
-		for i in ifgs: i.open()
+		for i in ifgs:
+			i.open()
 
 		ERR = 3
-		ifgs[0].phase_data[0,0:ERR] = nan # add NODATA as rasters are complete
+		ifgs[0].phase_data[0, 0:ERR] = nan # add NODATA as rasters are complete
 
 		# reshape phase data to vectors
 		num_ifgs = len(ifgs)
@@ -195,11 +195,11 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 
 		dm = get_network_design_matrix(ifgs, PLANAR, offset=False)[~isnan(data)]
 		fd = data[~isnan(data)]
-		self.assertTrue(len(dm) == len(fd) == (num_ifgs * ifg.num_cells) - ERR)
+		self.assertTrue(len(dm) == len(fd) == (num_ifgs * ifgs[0].num_cells) - ERR)
 
-		params = scipy.linalg.pinv(dm, 1e-6) * fd
+		params = pinv(dm, 1e-6) * fd
 		act = orbital_correction(ifgs, PLANAR, NETWORK_METHOD, False)  # TODO: replace with a more internal function call?
-		assert_allclose(act, params) # FIXME: not always equal!
+		assert_array_almost_equal(act, params)
 
 		# TODO: fwd correction
 
