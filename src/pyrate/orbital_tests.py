@@ -19,7 +19,7 @@ from shared import Ifg
 from orbital import OrbitalCorrectionError, orbital_correction
 from orbital import get_design_matrix, get_network_design_matrix
 from orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, QUADRATIC
-from tests_common import sydney5_ifgs, sydney5_mock_ifgs, MockIfg, IFMS5
+from tests_common import sydney5_ifgs, MockIfg, IFMS5
 
 
 
@@ -80,6 +80,7 @@ class OrbitalCorrection(unittest.TestCase):
 		# verify top level orbital correction function
 
 		def test_results():
+			'''Helper method for result verification'''
 			for i, c in zip(ifgs, corrections):
 				# are corrections same size as the original array?
 				ys, xs = c.shape
@@ -109,7 +110,7 @@ class OrbitalCorrection(unittest.TestCase):
 
 
 
-class NetworkDesignMatrixTests(unittest.TestCase):
+class NetworkDesignMatrixErrorTests(unittest.TestCase):
 	'''Tests for the networked correction method'''
 	# TODO: check correction with NaN rows
 	# FIXME: check location of constant column - its at the end in HW's version
@@ -132,40 +133,44 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 			self.assertRaises(oex, get_network_design_matrix, ifgs, deg, True)
 
 
+class NetworkDesignMatrixTests(unittest.TestCase):
+
+	def setUp(self):
+		self.ifgs = sydney5_ifgs()
+
+
 	def test_design_matrix_shape(self):
 		# verify shape of design matrix is correct
-		ifgs = sydney5_ifgs()
-		num_ifgs = len(ifgs)
+		num_ifgs = len(self.ifgs)
 		num_epochs = 6
-		exp_num_rows = ifgs[0].num_cells * num_ifgs
+		exp_num_rows = self.ifgs[0].num_cells * num_ifgs
 
 		# with offsets
 		for num_params, offset in zip((2, 3), (False, True)):
 			exp_num_cols = num_epochs * num_params
-			act_dm = get_network_design_matrix(ifgs, PLANAR, offset)
+			act_dm = get_network_design_matrix(self.ifgs, PLANAR, offset)
 			self.assertEqual((exp_num_rows, exp_num_cols), act_dm.shape)
 
 		# quadratic method
 		for num_params, offset in zip((5, 6), (False, True)):
 			exp_num_cols = num_epochs * num_params
-			act_dm = get_network_design_matrix(ifgs, QUADRATIC, offset)
+			act_dm = get_network_design_matrix(self.ifgs, QUADRATIC, offset)
 			self.assertEqual((exp_num_rows, exp_num_cols), act_dm.shape)
 
 
 	def test_network_design_matrix(self):
 		# verify creation of sparse matrix comprised of smaller design matricies
 		# TODO: do master/slave indices need to be sorted? Sorted = less ambiguity
-		ifgs = sydney5_ifgs()
-		date_ids = get_date_ids(ifgs)
+		date_ids = get_date_ids(self.ifgs)
 
 		# try all combinations of methods with and without the offsets
 		for ncoef in [2, 3, 5, 6]:
 			offset = ncoef in (3, 6)
 			mth = PLANAR if ncoef < 5 else QUADRATIC
-			act_dm = get_network_design_matrix(ifgs, mth, offset)
+			act_dm = get_network_design_matrix(self.ifgs, mth, offset)
 			self.assertNotEqual(act_dm.ptp(), 0)
 
-			for i, ifg in enumerate(ifgs):
+			for i, ifg in enumerate(self.ifgs):
 				# FIXME: sizes instead of steps
 				exp_dm = unittest_dm(ifg, ifg.X_STEP, ifg.Y_STEP, mth, offset)
 
@@ -178,30 +183,53 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 				assert_array_almost_equal(exp_dm, act_dm[ib1:ib2, jbs:jbs+ncoef])
 
 
-	def test_network_correction_planar(self):
-		ifgs = sydney5_mock_ifgs()
-		for i in ifgs:
+	def test_network_correct_planar(self):
+		'''Verifies planar form of network method of correction'''
+		for i in self.ifgs:
 			i.open()
 
-		ERR = 3
-		ifgs[0].phase_data[0, 0:ERR] = nan # add NODATA as rasters are complete
+		err = 3
+		self.ifgs[0].phase_data[0, 0:err] = nan # add NODATA as rasters are complete
 
 		# reshape phase data to vectors
-		num_ifgs = len(ifgs)
-		data = empty(num_ifgs * ifgs[0].num_cells, dtype=float32)
-		for i, ifg in enumerate(ifgs):
+		num_ifgs = len(self.ifgs)
+		data = empty(num_ifgs * self.ifgs[0].num_cells, dtype=float32)
+		for i, ifg in enumerate(self.ifgs):
 			st = i * ifg.num_cells
 			data[st:st + ifg.num_cells] = ifg.phase_data.reshape(ifg.num_cells)
 
-		dm = get_network_design_matrix(ifgs, PLANAR, offset=False)[~isnan(data)]
+		dm = get_network_design_matrix(self.ifgs, PLANAR, False)[~isnan(data)]
 		fd = data[~isnan(data)]
-		self.assertTrue(len(dm) == len(fd) == (num_ifgs * ifgs[0].num_cells) - ERR)
+		self.assertEqual(len(dm), len(fd))
+		self.assertEqual(len(dm), (num_ifgs * self.ifgs[0].num_cells) - err)
 
 		params = pinv(dm, 1e-6) * fd
-		act = orbital_correction(ifgs, PLANAR, NETWORK_METHOD, False)  # TODO: replace with a more internal function call?
+		act = orbital_correction(self.ifgs, PLANAR, NETWORK_METHOD, False)  # TODO: replace with a more internal function call?
 		assert_array_almost_equal(act, params)
-
 		# TODO: fwd correction
+		# FIXME: with offsets
+
+
+	def test_network_correct_quadratic(self):
+		'''Verifies quadratic form of network method of correction'''
+		for i in self.ifgs:
+			i.open()
+
+		self.ifgs[0].phase_data[3, 0:7] = nan # add NODATA as rasters are complete
+
+		# reshape phase data to vectors
+		data = empty(len(self.ifgs) * self.ifgs[0].num_cells, dtype=float32)
+		for i, ifg in enumerate(self.ifgs):
+			st = i * ifg.num_cells
+			data[st:st + ifg.num_cells] = ifg.phase_data.reshape(ifg.num_cells)
+
+		dm = get_network_design_matrix(self.ifgs, QUADRATIC, False)[~isnan(data)]
+		params = pinv(dm, 1e-6) * data[~isnan(data)]
+
+		act = orbital_correction(self.ifgs, QUADRATIC, NETWORK_METHOD, False)  # TODO: replace with a more internal function call?
+		assert_array_almost_equal(act, params)
+		# TODO: fwd correction
+		# FIXME: with offsets
 
 
 # FIXME: add derived field to ifgs to convert X|Y_STEP degrees to metres
