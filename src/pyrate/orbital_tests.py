@@ -265,3 +265,7 @@ def get_date_ids(ifgs):
 	for ifg in ifgs:
 		dates += list(ifg.DATE12)
 	return algorithm.master_slave_ids(dates)
+
+
+if __name__ == "__main__":
+	unittest.main()
