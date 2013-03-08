@@ -40,7 +40,9 @@ def default_mst(ifgs, noroot=True):
 
 
 def mst_matrix(ifgs, epochs):
-	'''Returns array of minimum spanning trees for the Ifgs.'''
+	'''Returns array of minimum spanning trees for the Ifgs.
+	TODO: explain pixel by pixel MST?
+	'''
 
 	# TODO: implement rows memory saving option/ row by row access?
 
