@@ -1,5 +1,5 @@
 '''
-TODO
+Module for calculating orbital correction for interferograms.
 
 Created on 31/3/13
 @author: Ben Davies
@@ -49,15 +49,14 @@ QUADRATIC = 2
 
 
 def orbital_correction(ifgs, degree, method, offset=True):
-	'''Top level method for correcting orbital error TODO
+	'''Top level method for correcting orbital error in the given Ifgs
 	ifgs - list of Ifg objs to correct
 	degree - PLANAR or QUADRATIC
 	method - INDEPENDENT_METHOD or NETWORK_METHOD
-	offset = True/False TODO
+	offset = True/False to include the constant/offset component
 	'''
 
 	# TODO: save corrected layers to new file or use intermediate arrays?
-	# TODO: offsets
 
 	if degree not in [PLANAR, QUADRATIC]:
 		msg = "Invalid degree of %s for orbital correction" % degree
