@@ -34,6 +34,12 @@ from mst import default_mst
 #		create 2D orbital correctionl layer from the model params
 
 
+# TODO: options for multilooking
+# 1) do the 2nd stage mlook at prepifg.py/generate up front, then delete in workflow after
+# 2) refactor prep_ifgs() call to take input filenames and params & generate mlooked versions from that
+#    this needs to be more generic to call at any point in the runtime.
+
+
 # constants
 INDEPENDENT_METHOD = 1
 NETWORK_METHOD = 2
@@ -55,7 +61,11 @@ def orbital_correction(ifgs, degree, method, offset=True):
 
 	if degree not in [PLANAR, QUADRATIC]:
 		msg = "Invalid degree of %s for orbital correction" % degree
-		raise OrbitalCorrectionError(msg)
+		raise OrbitalError(msg)
+
+	if method not in [INDEPENDENT_METHOD, NETWORK_METHOD]:
+		msg = "Unknown method '%s', need INDEPENDENT or NETWORK method" % method
+		raise OrbitalError(msg)
 
 	if method == NETWORK_METHOD:
 		# Cut down to the smallest tree with all nodes
@@ -72,10 +82,10 @@ def orbital_correction(ifgs, degree, method, offset=True):
 	elif method == INDEPENDENT_METHOD:
 		# FIXME: determine how to work this into the ifgs. Generate new Ifgs? Update
 		# the old ifgs and flag the corrections in metadata?
+		#
+		#for i in ifgs:
+		#	i.phase_data -= _get_ind_correction(i, degree, offset)
 		return [_get_ind_correction(i, degree, offset) for i in ifgs]
-	else:
-		msg = "Unknown method '%s'" % method
-		raise OrbitalCorrectionError(msg)
 
 
 def _get_ind_correction(ifg, degree, offset):
@@ -106,6 +116,9 @@ def _get_net_correction(ifgs, degree, offset):
 	degree - PLANAR or QUADRATIC
 	offset - True/False for including TODO
 	'''
+
+	# FIXME: correction needs to apply to *all* ifgs - can still get the correction
+	#        as there are model params for each epoch (+ ifgs relate to all those epochs).
 	# TODO: multilooking (do seperately/prior to this as a batch job?)
 
 	# get DM / clear out the NaNs based on obs
@@ -143,29 +156,31 @@ def get_network_design_matrix(ifgs, degree, offset):
 	'''Returns a larger format design matrix for networked error correction.'''
 
 	if degree not in [PLANAR, QUADRATIC]:
-		raise OrbitalCorrectionError("Invalid degree argument")
+		raise OrbitalError("Invalid degree argument")
 
 	num_ifgs = len(ifgs)
-	if num_ifgs < 2:
-		raise OrbitalCorrectionError("Invalid number of Ifgs")
+	if num_ifgs < 1:
+		# can feasibly do correction on a single Ifg/2 epochs
+		raise OrbitalError("Invalid number of Ifgs")
 
 	# TODO: refactor to prevent duplication with get_design_matrix()?
 	nparams = 2 if degree == PLANAR else 5
-	if offset:
-		nparams += 1  # eg. b/offset in (y = mx + b) is an extra param
 
 	# sort out master and slave date IDs
 	dates = [ifg.MASTER for ifg in ifgs] + [ifg.SLAVE for ifg in ifgs]
 	ids = algorithm.master_slave_ids(dates)
 	num_epochs = max(ids.values()) + 1 # convert from zero indexed ID
+	np = nparams * num_epochs
 
 	# init design matrix
-	shape = (ifgs[0].num_cells * num_ifgs, nparams * num_epochs)
+	shape = [ifgs[0].num_cells * num_ifgs, np]
+	if offset:
+		shape[1] += num_ifgs # add extra cols for offset component
 	data = zeros(shape, dtype=float32)
 
 	# paste in individual design matrices
 	for i, ifg in enumerate(ifgs):
-		tmp = get_design_matrix(ifg, degree, offset)
+		tmp = get_design_matrix(ifg, degree, False) # network method doesn't have extra col
 		rs = i * ifg.num_cells
 		rf = rs + ifg.num_cells
 
@@ -178,6 +193,9 @@ def get_network_design_matrix(ifgs, degree, offset):
 		slvcs =	ids[ifg.SLAVE] * nparams
 		slvcf = slvcs + nparams
 		data[rs:rf, slvcs:slvcf] = tmp
+
+		if offset:
+			data[rs:rf, np + i] = 1  # add offset cols
 
 	return data
 
@@ -205,6 +223,7 @@ def _quadratic_dm(ifg, rows, offset):
 	# get distance (a coord by itself doesn't tell us distance from origin)
 	yst, xst = ifg.Y_STEP, ifg.X_STEP # FIXME: sizes
 
+	# TODO: refactor, use ones +/- final col and paste these values over it
 	if offset:
 		for y,x in product(xrange(ifg.FILE_LENGTH), xrange(ifg.WIDTH)):
 			row = rows.next()
@@ -220,5 +239,6 @@ def _quadratic_dm(ifg, rows, offset):
 
 
 
-class OrbitalCorrectionError(Exception):
+class OrbitalError(Exception):
+	'''Generic class for errors in orbital correction'''
 	pass
