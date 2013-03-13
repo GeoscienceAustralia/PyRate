@@ -210,17 +210,17 @@ def _planar_dm(ifg, rows, offset):
 	if offset:
 		for y,x in product(xrange(ifg.FILE_LENGTH), xrange(ifg.WIDTH)):
 			row = rows.next() # TODO: make faster with vstack?
-			row[:] = [x * ifg.X_STEP, y * ifg.Y_STEP, 1] # FIXME: change to (Y|X)SIZE
+			row[:] = [x * ifg.X_SIZE, y * ifg.Y_SIZE, 1]
 	else:
 		for y,x in product(xrange(ifg.FILE_LENGTH), xrange(ifg.WIDTH)):
 			row = rows.next() # TODO: make faster with vstack?
-			row[:] = [x * ifg.X_STEP, y * ifg.Y_STEP] # FIXME: change to (Y|X)SIZE, needs proj4
+			row[:] = [x * ifg.X_SIZE, y * ifg.Y_SIZE]
 
 
 def _quadratic_dm(ifg, rows, offset):
 	# apply positional parameter values, multiply pixel coordinate by cell size to
 	# get distance (a coord by itself doesn't tell us distance from origin)
-	yst, xst = ifg.Y_STEP, ifg.X_STEP # FIXME: sizes
+	yst, xst = ifg.Y_SIZE, ifg.X_SIZE
 
 	# TODO: refactor, use ones +/- final col and paste these values over it
 	if offset:
@@ -228,13 +228,13 @@ def _quadratic_dm(ifg, rows, offset):
 			row = rows.next()
 			y2 = y * yst
 			x2 = x * xst
-			row[:] = [x2**2, y2**2, x2*y2, x2, y2, 1] # FIXME: change to (Y|X)SIZE
+			row[:] = [x2**2, y2**2, x2*y2, x2, y2, 1]
 	else:
 		for y,x in product(xrange(ifg.FILE_LENGTH), xrange(ifg.WIDTH)):
 			row = rows.next()
 			y2 = y * yst
 			x2 = x * xst
-			row[:] = [x2**2, y2**2, x2*y2, x2, y2] # FIXME: change to (Y|X)SIZE, needs proj4
+			row[:] = [x2**2, y2**2, x2*y2, x2, y2]
 
 
 

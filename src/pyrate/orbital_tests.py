@@ -43,8 +43,8 @@ class IndependentDesignMatrixTests(unittest.TestCase):
 
 	def test_design_matrix_planar(self):
 		m = MockIfg(self.ifg, 2, 3)
-		m.X_STEP = self.xs # FIXME: Ifg class needs to use custom X_SIZE
-		m.Y_STEP = self.ys # FIXME: Y_SIZE
+		m.X_SIZE = self.xs
+		m.Y_SIZE = self.ys
 
 		# test with and without offsets option
 		exp = unittest_dm(m, self.xs, self.ys, INDEPENDENT_METHOD, PLANAR, True)
@@ -54,8 +54,8 @@ class IndependentDesignMatrixTests(unittest.TestCase):
 
 	def test_design_matrix_quadratic(self):
 		m = MockIfg(self.ifg, 3, 5)
-		m.X_STEP = self.xs
-		m.Y_STEP = self.ys
+		m.X_SIZE = self.xs
+		m.Y_SIZE = self.ys
 
 		# use exp & subset of exp to test against both forms of DM
 		exp = unittest_dm(m, self.xs, self.ys, INDEPENDENT_METHOD, QUADRATIC, True)
@@ -101,6 +101,8 @@ class OrbitalCorrection(unittest.TestCase):
 
 		ifgs = sydney5_mock_ifgs()
 		for ifg in ifgs:
+			ifg.X_SIZE = 90.0
+			ifg.Y_SIZE = 89.5
 			ifg.open()
 
 		ifgs[0].phase_data[1, 1:3] = nan # add some NODATA
@@ -153,6 +155,10 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 		self.nc = self.ifgs[0].num_cells
 		self.nepochs = self.nifgs + 1 # assumes MST done
 		self.date_ids = get_date_ids(self.ifgs)
+
+		for ifg in self.ifgs:
+			ifg.X_SIZE = 90.0
+			ifg.Y_SIZE = 89.5
 
 
 	def test_network_design_matrix_planar(self):
@@ -280,8 +286,8 @@ def unittest_dm(ifg, xs, ys, method, degree, offset=False):
 
 	out = ones((ifg.num_cells, ncoef), dtype=float32)
 	x, y = meshgrid(range(ifg.WIDTH), range(ifg.FILE_LENGTH))
-	x = x.reshape(ifg.num_cells) * xs
-	y = y.reshape(ifg.num_cells) * ys
+	x = x.reshape(ifg.num_cells) * ifg.X_SIZE
+	y = y.reshape(ifg.num_cells) * ifg.Y_SIZE
 
 	if degree == PLANAR:
 		out[:, 0] = x
