@@ -2,32 +2,27 @@
 Contains objects common to multiple parts of PyRate
 
 Created on 12/09/2012
-@author: bpd900
+@author: Ben Davies
 '''
 
-import os
 import numpy
 
 try:
 	from osgeo import gdal
 	from gdalconst import GA_Update
-except:
-	import gdal, gdalconst
+except ImportError:
+	import gdal
 
 gdal.UseExceptions()
 
 import roipac
-from ifgconstants import DATUM
+from geodesy import cell_size
 
 
 # Constants
 AMPLITUDE_BAND = 1
 PHASE_BAND = 2
 
-# TODO: add phase_data and amplitude_data properties?
-#     Problem: property links to FULL dataset, which may be slower than row by row access
-#         row by row access would be efficient, but needes wavelength converted layers
-#         NB: can just by row regardless, through the numpy interface: for row in data: ...
 
 
 class RasterBase(object):
@@ -53,10 +48,7 @@ class RasterBase(object):
 		self._readonly = None
 
 		self.num_cells = None
-		try:
-			self.num_cells = self.FILE_LENGTH * self.WIDTH
-		except:
-			pass # wait till open() is called
+		self.num_cells = self.FILE_LENGTH * self.WIDTH
 
 
 	def __str__(self):
@@ -89,15 +81,15 @@ class RasterBase(object):
 
 		if self.num_cells is None:
 			self.num_cells = self.dataset.RasterYSize * self.dataset.RasterXSize
-		else:
-			# TODO: handle size mismatches
-			pass
-			#if self.num_cells != self.dataset.RasterYSize * self.dataset.RasterXSize:
-			#	raise RasterException("GDAL Dataset size doesn't match header sizes")
+
+		#else:
+		#	if self.num_cells != self.dataset.RasterYSize * self.dataset.RasterXSize:
+		#		raise RasterException("GDAL Dataset size doesn't match header sizes")
 
 
 	@property
 	def is_open(self):
+		'''Returns True if the underlying dataset has been opened by GDAL'''
 		return self.dataset is not None
 
 
@@ -121,12 +113,15 @@ class Ifg(RasterBase):
 		self._phase_band = None
 		self._phase_data = None
 
+		self.X_SIZE, self.Y_SIZE = cell_size(self.Y_FIRST, self.X_FIRST,
+		                                     self.X_STEP, self.Y_STEP)
+
 		# creating code needs to set this flag after 0 -> NaN replacement
 		self.nan_converted = False
 
 		# TODO: what are these for?
-		self.max_variance = None
-		self.alpha = None
+		#self.max_variance = None
+		#self.alpha = None
 		self._nan_fraction = None
 
 
@@ -156,11 +151,11 @@ class Ifg(RasterBase):
 
 	@property
 	def phase_rows(self):
-		'''TODO'''
+		'''Generator returning each row of the phase data'''
 		# TODO: is a pre-created buffer more efficient?
 		for y in xrange(self.FILE_LENGTH):
-			row = self.phase_band.ReadAsArray(yoff=y, win_xsize=self.WIDTH, win_ysize=1)
-			yield row[0] # squeezes row from (1, WIDTH) to 1D array
+			r = self.phase_band.ReadAsArray(yoff=y, win_xsize=self.WIDTH, win_ysize=1)
+			yield r[0] # squeezes row from (1, WIDTH) to 1D array
 
 
 	@property
@@ -189,6 +184,7 @@ class DEM(RasterBase):
 
 	@property
 	def height_band(self):
+		'''Returns the GDALBand for the elevation layer'''
 		if self._band is None:
 			self._band = self._get_band(1)
 		return self._band

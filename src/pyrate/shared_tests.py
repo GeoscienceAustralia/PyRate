@@ -11,8 +11,7 @@ from numpy.testing import assert_array_equal
 from gdal import Open, Dataset, UseExceptions
 UseExceptions()
 
-import shared
-from shared import Ifg, IfgException, DEM, RasterException
+from shared import Ifg, DEM, RasterException
 from ifgconstants import Z_OFFSET, Z_SCALE, PROJECTION, DATUM
 
 
@@ -70,7 +69,7 @@ class IfgTests(unittest.TestCase):
 		try:
 			_ = self.ifg.amp_band
 			self.fail("Should not be able to access band without open dataset")
-		except RasterException as ex:
+		except RasterException:
 			pass
 
 		self.ifg.open()
@@ -82,7 +81,7 @@ class IfgTests(unittest.TestCase):
 		try:
 			_ = self.ifg.phase_band
 			self.fail("Should not be able to access band without open dataset")
-		except RasterException, ex:
+		except RasterException:
 			pass
 
 		self.ifg.open()
@@ -95,7 +94,7 @@ class IfgTests(unittest.TestCase):
 			# NB: self.assertRaises doesn't work here (as it is a property?)
 			_ = self.ifg.nan_fraction
 			self.fail("Shouldn't be able to call nan_fraction() with unopened Ifg")
-		except RasterException as ex:
+		except RasterException:
 			pass
 
 		# NB: source data lacks 0 -> NaN conversion
@@ -113,7 +112,7 @@ class IfgTests(unittest.TestCase):
 		num_cells = float(ys * xs)
 		self.assertTrue(nans > 0)
 		self.assertTrue(nans <= num_cells)
-		self.assertEqual(nans / num_cells, self.ifg.nan_fraction) # nan_frac is only really counting 0s
+		self.assertEqual(nans / num_cells, self.ifg.nan_fraction)
 
 
 	def test_phase_data_properties(self):
@@ -135,6 +134,18 @@ class IfgTests(unittest.TestCase):
 		self.ifg.phase_data[crd] *= 2
 		nv = self.ifg.phase_data[crd] # pull new value out again
 		self.assertEqual(nv, 2 * orig)
+
+
+	def test_xy_size(self):
+		self.ifg.open()
+		self.assertFalse(self.ifg.X_SIZE is None)
+		self.assertFalse(self.ifg.Y_SIZE is None)
+
+		# test with tolerance from base 90m * 90m cell
+		self.assertTrue(self.ifg.Y_SIZE > 85.0) # 10% tol from 90m cell size
+		self.assertTrue(self.ifg.Y_SIZE < 95.0)
+		self.assertTrue(self.ifg.X_SIZE > 81.0, msg="Got %s" % self.ifg.X_SIZE)
+		self.assertTrue(self.ifg.X_SIZE < 99.0)
 
 
 
@@ -178,12 +189,12 @@ class DEMTests(unittest.TestCase):
 		try:
 			_ = self.ras.height_band
 			self.fail("Should not be able to access band without open dataset")
-		except RasterException, ex:
+		except RasterException:
 			pass
 
 		self.ras.open()
 		data = self.ras.height_band.ReadAsArray()
-		self.assertEqual(data.shape, (72,47) )
+		self.assertEqual(data.shape, (72, 47) )
 
 
 if __name__ == "__main__":
