@@ -113,7 +113,11 @@ class Ifg(RasterBase):
 		self._phase_band = None
 		self._phase_data = None
 
-		self.X_SIZE, self.Y_SIZE = cell_size(self.Y_FIRST, self.X_FIRST,
+		self.Y_CENTRE = self.Y_FIRST + (self.Y_STEP * (self.FILE_LENGTH / 2))
+		self.X_CENTRE = self.X_FIRST + (self.X_STEP * (self.WIDTH / 2))
+
+		# use cell size from centre of scene
+		self.X_SIZE, self.Y_SIZE = cell_size(self.Y_CENTRE, self.X_CENTRE,
 		                                     self.X_STEP, self.Y_STEP)
 
 		# creating code needs to set this flag after 0 -> NaN replacement

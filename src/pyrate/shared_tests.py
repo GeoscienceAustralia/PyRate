@@ -142,10 +142,19 @@ class IfgTests(unittest.TestCase):
 		self.assertFalse(self.ifg.Y_SIZE is None)
 
 		# test with tolerance from base 90m * 90m cell
-		self.assertTrue(self.ifg.Y_SIZE > 85.0) # 10% tol from 90m cell size
+		self.assertTrue(self.ifg.Y_SIZE > 85.0) # smaller tol from 90m cell size
 		self.assertTrue(self.ifg.Y_SIZE < 95.0)
 		self.assertTrue(self.ifg.X_SIZE > 81.0, msg="Got %s" % self.ifg.X_SIZE)
 		self.assertTrue(self.ifg.X_SIZE < 99.0)
+
+
+	def test_centre_xy(self):
+		ifg = self.ifg
+		ifg.open()
+		y_exp = ifg.Y_FIRST + ((ifg.FILE_LENGTH/2) * ifg.Y_STEP)
+		x_exp = ifg.X_FIRST + ((ifg.WIDTH/2) * ifg.X_STEP)
+		self.assertEqual(y_exp, self.ifg.Y_CENTRE)
+		self.assertEqual(x_exp, self.ifg.X_CENTRE)
 
 
 
