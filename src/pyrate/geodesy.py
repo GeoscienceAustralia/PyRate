@@ -39,4 +39,4 @@ def cell_size(lat, lon, x_step, y_step):
 
 	x0, y0 = pyproj.transform(p0, p1, lon, lat)
 	x1, y1 = pyproj.transform(p0, p1, lon + x_step, lat + y_step)
-	return (abs(e) for e in (x1 - x0, y1 - y0))
+	return tuple(abs(e) for e in (x1 - x0, y1 - y0))
