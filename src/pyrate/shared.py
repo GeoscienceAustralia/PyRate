@@ -47,7 +47,6 @@ class RasterBase(object):
 		self.dataset = None # for GDAL dataset obj
 		self._readonly = None
 
-		self.num_cells = None
 		self.num_cells = self.FILE_LENGTH * self.WIDTH
 
 
@@ -113,19 +112,21 @@ class Ifg(RasterBase):
 		self._phase_band = None
 		self._phase_data = None
 
-		self.Y_CENTRE = self.Y_FIRST + (self.Y_STEP * (self.FILE_LENGTH / 2))
-		self.X_CENTRE = self.X_FIRST + (self.X_STEP * (self.WIDTH / 2))
+		self.X_CENTRE = self.WIDTH / 2
+		self.Y_CENTRE = self.FILE_LENGTH / 2
+		self.LAT_CENTRE = self.Y_FIRST + (self.Y_STEP * self.Y_CENTRE)
+		self.LONG_CENTRE = self.X_FIRST + (self.X_STEP * self.X_CENTRE)
 
 		# use cell size from centre of scene
-		self.X_SIZE, self.Y_SIZE = cell_size(self.Y_CENTRE, self.X_CENTRE,
+		self.X_SIZE, self.Y_SIZE = cell_size(self.LAT_CENTRE, self.LONG_CENTRE,
 		                                     self.X_STEP, self.Y_STEP)
 
 		# creating code needs to set this flag after 0 -> NaN replacement
 		self.nan_converted = False
 
 		# TODO: what are these for?
-		#self.max_variance = None
-		#self.alpha = None
+		#self.max_variance = None # will be single floating point number
+		#self.alpha = None # will be single floating point number
 		self._nan_fraction = None
 
 

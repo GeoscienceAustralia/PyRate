@@ -141,20 +141,27 @@ class IfgTests(unittest.TestCase):
 		self.assertFalse(self.ifg.X_SIZE is None)
 		self.assertFalse(self.ifg.Y_SIZE is None)
 
-		# test with tolerance from base 90m * 90m cell
-		self.assertTrue(self.ifg.Y_SIZE > 85.0) # smaller tol from 90m cell size
-		self.assertTrue(self.ifg.Y_SIZE < 95.0)
-		self.assertTrue(self.ifg.X_SIZE > 81.0, msg="Got %s" % self.ifg.X_SIZE)
-		self.assertTrue(self.ifg.X_SIZE < 99.0)
+		# test with tolerance from base 90m cell
+		self.assertTrue(self.ifg.Y_SIZE > 88.0) # within 2% of cells over sydney?
+		self.assertTrue(self.ifg.Y_SIZE < 92.0)
+
+		syd_width = 76.9 # from nearby pirate coords
+		self.assertTrue(self.ifg.X_SIZE > 0.97 * syd_width) # ~3% tolerance
+		self.assertTrue(self.ifg.X_SIZE < 1.03 * syd_width)
 
 
-	def test_centre_xy(self):
+	def test_centre_latlong(self):
 		ifg = self.ifg
 		ifg.open()
-		y_exp = ifg.Y_FIRST + ((ifg.FILE_LENGTH/2) * ifg.Y_STEP)
-		x_exp = ifg.X_FIRST + ((ifg.WIDTH/2) * ifg.X_STEP)
-		self.assertEqual(y_exp, self.ifg.Y_CENTRE)
-		self.assertEqual(x_exp, self.ifg.X_CENTRE)
+		lat_exp = ifg.Y_FIRST + ((ifg.FILE_LENGTH/2) * ifg.Y_STEP)
+		long_exp = ifg.X_FIRST + ((ifg.WIDTH/2) * ifg.X_STEP)
+		self.assertEqual(lat_exp, self.ifg.LAT_CENTRE)
+		self.assertEqual(long_exp, self.ifg.LONG_CENTRE)
+
+
+	def test_centre_cell(self):
+		self.assertEqual(self.ifg.X_CENTRE, 23)
+		self.assertEqual(self.ifg.Y_CENTRE, 36)
 
 
 
