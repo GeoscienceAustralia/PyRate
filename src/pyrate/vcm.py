@@ -16,9 +16,8 @@
 
 
 from copy import copy
-from math import ceil
 from numpy import array, where, isnan, real, imag, sum, sqrt, meshgrid, reshape
-from numpy import zeros, vstack
+from numpy import zeros, vstack, ceil, mean
 from numpy.linalg import norm
 from scipy.fftpack import fft2, ifft2, fftshift
 from scipy.optimize import fmin
@@ -75,49 +74,44 @@ def cvd(ifg):
 
 	acgorig = copy(acg)
 	maxacg=max(acg[:len(r)])
-	maxr = ceil(max(r))
 
-	w = max([ifg.X_SIZE, ifg.Y_SIZE]) * 2  # bin width
-	print w
-
-	# pick the smallest axis to focus on a square around the centre point????
-	print 'ifg.X_CENTRE, ifg.Y_CENTRE=', ifg.X_CENTRE, ifg.Y_CENTRE
-	print 'ifg.X_SIZE, ifg.Y_SIZE', ifg.X_SIZE, ifg.Y_SIZE
+	# pick the smallest axis to focus on a circle around the centre point????
+	#print 'ifg.X_CENTRE, ifg.Y_CENTRE=', ifg.X_CENTRE, ifg.Y_CENTRE
+	#print 'ifg.X_SIZE, ifg.Y_SIZE', ifg.X_SIZE, ifg.Y_SIZE
 	if (ifg.X_CENTRE * ifg.X_SIZE) < (ifg.Y_CENTRE * ifg.Y_SIZE):
 		maxdist = ifg.X_CENTRE * ifg.X_SIZE
+		w = ifg.X_SIZE * 2  # bin width
 		print "maxdist from X axis"
 	else:
 		maxdist = ifg.Y_CENTRE * ifg.Y_SIZE
+		w = ifg.Y_SIZE * 2  # bin width
 		print "maxdist from Y axis"
 
-	print 'maxdist=', maxdist
+	#print 'maxdist=', maxdist
 
 
-
-	rsub = array([e for e in r if e < maxdist])
-
+	#rsub = array([e for e in r if e < maxdist]) # MG: prefers to use all the data
+	rsub = r
 	acg=acgorig;
-	# FIXME: acg(r >= maxdist)=[];
-	acg = [e for e in r if e < maxdist]
+	#acg = [e for e in r if e < maxdist]
 
+	rbin = ceil(rsub / w).astype(int)  # classify values of r according to bin number
 
-	print 'rsub',rsub
+	maxbin = max(rbin) + 1
+	cvdav = zeros( (2, maxbin) )
 
-	rbin = ceil(rsub / w)  # classify values of r according to bin number
-	print 'rbin', rbin
-
-
-	cvdav = zeros((max(rbin),2))
-	maxbin = max(rbin)-1;
+	print rbin
+	print 'maxbin',maxbin
 
 	for b in range(maxbin):
-		cvdav[b+1,1] = mean(acg(find(rbin == b)))
-		cvdav[b+1,0] = b * w
-	end
+		cvdav[1,b] = mean(acg[rbin == b])
+		cvdav[0,b] = b * w
+
+	print 'cvdav',cvdav
 
 	# calculate best fit function maxvar*exp(-alpha*r)
-	func = None # TODO matlab equiv of fminsearch
-	alpha = fmin(pendiffexp, [2 / (maxbin * w)], [], cvdav);
+	#alpha = fmin(pendiffexp, [2 / (maxbin * w)], [], cvdav)
+	alpha = fmin(pendiffexp, None, args=([2 / (maxbin * w)], cvdav)  )
 	maxvar = maxacg
 
 	return maxvar, alpha
