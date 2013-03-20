@@ -24,10 +24,10 @@ from tests_common import sydney5_mock_ifgs, MockIfg, IFMS5
 
 # TODO: test lstsq() here against Hua's manual method
 
-# ORDER of work
-# X_SIZE, Y_SIZE from proj4
-# high level functions
-# multilooking
+# ORDER of work:
+# fix up offsets options for QUAD DM tests
+# multilooking (do ML at start when multilooking the originals)
+# high level functions/workflow
 
 
 class IndependentDesignMatrixTests(unittest.TestCase):
@@ -211,8 +211,7 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 		np = ncoef * self.nepochs
 
 		for i, ifg in enumerate(ifgs):
-			# FIXME: sizes instead of steps
-			exp = unittest_dm(ifg, ifg.X_STEP, ifg.Y_STEP, NETWORK_METHOD, deg, offset)
+			exp = unittest_dm(ifg, ifg.X_SIZE, ifg.Y_SIZE, NETWORK_METHOD, deg, offset)
 			self.assertEqual(exp.shape, (ifg.num_cells, ncoef)) # subset DMs shouldn't have an offsets col
 
 			# use slightly refactored version of Hua's code to test
@@ -271,14 +270,16 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 		params = pinv(dm, 1e-6) * data[~isnan(data)]
 
 		act = orbital_correction(self.ifgs, QUADRATIC, NETWORK_METHOD, False)  # TODO: replace with a more internal function call?
-		assert_array_almost_equal(act, params, decimal=5) # TODO: fails occasionally on default decimal
+		assert_array_almost_equal(act, params, decimal=5) # TODO: fails occasionally on default decimal=6
 		# TODO: fwd correction
 		# FIXME: with offsets
 
 
-# FIXME: add derived field to ifgs to convert X|Y_STEP degrees to metres
 def unittest_dm(ifg, xs, ys, method, degree, offset=False):
-	'''Convenience function to create design matrices'''
+	'''Convenience function to create design matrices.
+	xs - X axis cell size
+	ys - Y axis cell size
+	'''
 	assert method in [INDEPENDENT_METHOD, NETWORK_METHOD]
 	ncoef = 2 if degree == PLANAR else 5
 	if offset is True and method == INDEPENDENT_METHOD:
