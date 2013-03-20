@@ -145,9 +145,7 @@ class ErrorTests(unittest.TestCase):
 class NetworkDesignMatrixTests(unittest.TestCase):
 	'''Contains tests verifying creation of sparse network design matrix.'''
 	# TODO: add nodata to several layers
-	# TODO: ensure other squares are 0s (or offsets)
 	# TODO: check correction with NaN rows
-	# FIXME: check location of constant column - its at the end in HW's version
 
 	def setUp(self):
 		self.ifgs = sydney5_mock_ifgs()
@@ -222,9 +220,17 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 			assert_array_almost_equal(-exp, dm[ib1:ib2, jbm:jbm+ncoef])
 			assert_array_almost_equal(exp, dm[ib1:ib2, jbs:jbs+ncoef])
 
+			# ensure rest of row is zero (in different segments)
+			assert_array_equal(0, dm[ib1:ib2, :jbm])
+			assert_array_equal(0, dm[ib1:ib2, jbm+ncoef:jbs])
+
 			# check offset cols
 			if offset is True:
-				self.assertTrue((dm[ib1:ib2, i+np] == 1).all())
+				self.assertTrue(bool((dm[ib1:ib2, i+np] == 1).all()))
+				assert_array_equal(0, dm[ib1:ib2, jbs+ncoef:i+np])
+				assert_array_equal(0, dm[ib1:ib2, i+np+1:])
+			else:
+				assert_array_equal(0, dm[ib1:ib2, jbs+ncoef:])
 
 
 	def test_network_correct_planar(self):
