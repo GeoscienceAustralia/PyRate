@@ -67,6 +67,10 @@ def orbital_correction(ifgs, degree, method, offset=True):
 		raise OrbitalError(msg)
 
 	if method == NETWORK_METHOD:
+		# FIXME: multilooking needs to go in here somewhere
+		# ie. pass in some ifg classes as another arg
+		# TODO: do we need to multilook all the ifgs, or just do the subset?
+
 		# Cut down to the smallest tree with all nodes
 		# TODO: do this as a filter step outside the main func? More MODULAR
 		#mst = default_mst(ifgs)

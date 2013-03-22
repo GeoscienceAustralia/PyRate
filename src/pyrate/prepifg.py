@@ -102,38 +102,45 @@ def _file_ext(raster):
 		raise NotImplementedError("TODO: additional raster types?")
 
 
+def _resample_ifg(ifg, cmd, x_looks, y_looks, thresh):
+	'''Convenience function to resample data from a given Ifg (more coarse).'''
+
+	# HACK: create tmp ifg, extract data array for manual resampling as gdalwarp
+	# lacks Pirate's averaging method
+	tmp_path = mkstemp()[1]
+	check_call(cmd + [ifg.data_path, tmp_path])
+	tmp = type(ifg)(tmp_path, ifg.hdr_path) # dynamically handle Ifgs & Rasters
+	tmp.open()
+
+	if isinstance(ifg, Ifg):
+		# TODO: resample amplitude band too?
+		data = tmp.phase_band.ReadAsArray()
+		data = where(data == 0, nan, data) # flag incoherent cells as NaNs
+	elif isinstance(ifg, DEM):
+		data = tmp.height_band.ReadAsArray()
+	else:
+		raise NotImplementedError("TODO: other raster types to handle?")
+
+	del tmp # manual close
+	os.remove(tmp_path)
+	return resample(data, x_looks, y_looks, thresh)
+
+
 def warp(ifg, x_looks, y_looks, extents, resolution, thresh, verbose):
-	'''TODO'''
+	'''TODO
+
+	resolution - TODO, acts as a flag for size resampling. None -> no sampling.
+	'''
 
 	# dynamically build command for call to gdalwarp
 	cmd = ["gdalwarp", "-overwrite", "-srcnodata", "None", "-te"] + extents
 	if not verbose: cmd.append("-q")
 
 	# HACK: if resampling, cut segment with gdalwarp & manually average tiles
-	# (gdalwarp lacks Pirate averaging method)
 	data = None
 	if resolution:
-		# create tmp ifg from gdalwarp call & grab data for manual resampling
-		tmp_path = mkstemp()[1]
-		check_call(cmd + [ifg.data_path, tmp_path])
-		tmp = type(ifg)(tmp_path, ifg.hdr_path) # dynamically handle Ifgs & Rasters
-		tmp.open()
-
-		if isinstance(ifg, Ifg):
-			# TODO: resample amplitude band too?
-			data = tmp.phase_band.ReadAsArray()
-			data = where(data == 0, nan, data) # flag incoherent cells as NaNs
-		elif isinstance(ifg, DEM):
-			data = tmp.height_band.ReadAsArray()
-		else:
-			raise NotImplementedError("TODO: other raster types to handle?")
-
-		data = resample(data, x_looks, y_looks, thresh) # is saved to file below
-		del tmp
-		os.remove(tmp_path)
-
-		# args to change resolution for final outout
-		cmd += ["-tr"] + [str(r) for r in resolution]
+		data = _resample_ifg(ifg, cmd, x_looks, y_looks, thresh)
+		cmd += ["-tr"] + [str(r) for r in resolution] # change res of final output
 
 	# use GDAL to cut (and resample) the final output layers
 	s = splitext(ifg.data_path)
@@ -142,18 +149,17 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, verbose):
 	cmd += [ifg.data_path, looks_path]
 	check_call(cmd)
 
-	# Add missing/updated metadata to resampled interferograms/rasters
-	new_lyr = type(ifg)(looks_path, ifg.hdr_path) # dynamically handle Ifgs/Rasters
+	# Add missing/updated metadata to resampled ifg/DEM
+	new_lyr = type(ifg)(looks_path, ifg.hdr_path)
 	new_lyr.open(readonly=False)
 	new_hdr_path = filename_pair(looks_path)[1]
-	_create_new_roipac_header(ifg, new_lyr) # create header file of revised values
+	_create_new_roipac_header(ifg, new_lyr)
 
 	# for non-DEMs, phase bands need extra metadata & conversions
 	if hasattr(new_lyr, "phase_band"):
 		new_lyr.phase_band.SetNoDataValue(nan)
 
-		if data is None:
-			# data not resampled, so data for conversion must be read from new dataset
+		if data is None: # data wasn't resampled, so flag incoherent cells
 			data = new_lyr.phase_band.ReadAsArray()
 			data = where(data == 0, nan, data)
 
@@ -166,7 +172,6 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, verbose):
 		new_lyr.nan_converted = True
 
 
-# TODO: refactor out to another module?
 def resample(data, xscale, yscale, threshold):
 	"""Resamples/averages 'data' to return an array from the averaging of blocks
 	of several tiles in 'data'. NB: Assumes incoherent cells are NaNs.
