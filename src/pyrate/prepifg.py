@@ -150,13 +150,19 @@ def prepare_ifgs(params, threshold=0.5, use_exceptions=False, verbose=False):
 
 # TODO: refactor out to another module?
 def resample(data, xscale, yscale, threshold):
-	"""Resamples/averages 'data' from tile size given by scaling factors. Assumes
-	incoherent cells have been converted to NaNs. threshold is the minimum allowable
-	proportion of NaN cells (range from 0-1), eg. 0.25 = 1/4 or more as NaNs results
-	in a NaN value for the output cell."""
+	"""Resamples/averages 'data' to return an array from the averaging of blocks
+	of several tiles in 'data'. NB: Assumes incoherent cells are NaNs.
 
+	data - source array to resample to different size
+	xscale - number of cells to average along X axis
+	yscale - number of Y axis cells to average
+	threshold - minimum allowable proportion of NaN cells (range from 0.0-1.0),
+	eg. 0.25 = 1/4 or more as NaNs results in a NaN value for the output cell.
+	"""
 	if threshold < 0 or threshold > 1:
 		raise ValueError("threshold must be >= 0 and <= 1")
+
+	# TODO: check scaling factors are ints
 
 	ysize, xsize = data.shape
 	xres, yres = (xsize / xscale), (ysize / yscale)
