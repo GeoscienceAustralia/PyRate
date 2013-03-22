@@ -35,17 +35,20 @@ GRID_TOL = 1e-6
 
 
 def prepare_ifgs(params, threshold=0.5, use_exceptions=False, verbose=False):
-	"""Produces multilooked/resampled data files for PyRate analysis. Params is a
-	dict of named values from pyrate config file. Threshhold controls resampling
-	to coarser grids, ranging from 0.0 -> 1.0. Threshold is the proportion at and
-	above which the proportion of NaNs in a segment is considered invalid. Setting
-	threshhold=0 resamples to NaN if 1+ contributing cells are NaNs. At 0.25, it
-	resamples to NaN if 1/4 or more contributing cells are NaNs. At 1.0, segments
-	are resampled to NaN only if all contributing cells are NaNs."""
-
+	"""Produces multilooked/resampled data files for PyRate analysis.
+	params - dict of named values from pyrate config file
+	threshhold - 0.0->1.0 controls NaN handling when resampling to coarser grids,
+	             value is proportion above which the number of NaNs in an area is
+	             considered invalid. threshhold=0 resamples to NaN if 1 or more
+	             contributing cells are NaNs. At 0.25, it resamples to NaN if 1/4
+	             or more contributing cells are NaNs. At 1.0, areas are resampled
+	             to NaN only if all area cells are NaNs.
+	use_exceptions - TODO: PROB REMOVE
+	verbose - controls level of gdalwarp output
+	"""
 	# validate config file settings
 	crop_opt = params[IFG_CROP_OPT]
-	if not crop_opt in CROP_OPTIONS:
+	if crop_opt not in CROP_OPTIONS:
 		raise PreprocessingException("Unrecognised crop option: %s" % crop_opt)
 
 	check_looks(params)
@@ -83,69 +86,84 @@ def prepare_ifgs(params, threshold=0.5, use_exceptions=False, verbose=False):
 	# generate the final dataset with correct extents/shape/cell count. Without
 	# resampling, gdalwarp is only needed to cut out the required segment.
 	for i in ifgs:
-		s = splitext(i.data_path)
-		if isinstance(i, Ifg):
-			ext = "tif"
-		elif hasattr(i, DATUM):
-			ext = "dem"
+		xl, yl = params[IFG_LKSX], params[IFG_LKSY]
+		warp(i, xl, yl, extents, resolution, threshold, verbose)
+
+		# FIXME: check if there are orbital corrections for resampling
+
+
+def _file_ext(raster):
+	'''Returns file ext string based on type of raster.'''
+	if isinstance(raster, Ifg):
+		return "tif"
+	elif hasattr(raster, DATUM):
+		return "dem"
+	else:
+		raise NotImplementedError("TODO: additional raster types?")
+
+
+def warp(ifg, x_looks, y_looks, extents, resolution, thresh, verbose):
+	'''TODO'''
+
+	# dynamically build command for call to gdalwarp
+	cmd = ["gdalwarp", "-overwrite", "-srcnodata", "None", "-te"] + extents
+	if not verbose: cmd.append("-q")
+
+	# HACK: if resampling, cut segment with gdalwarp & manually average tiles
+	# (gdalwarp lacks Pirate averaging method)
+	data = None
+	if resolution:
+		# create tmp ifg from gdalwarp call & grab data for manual resampling
+		tmp_path = mkstemp()[1]
+		check_call(cmd + [ifg.data_path, tmp_path])
+		tmp = type(ifg)(tmp_path, ifg.hdr_path) # dynamically handle Ifgs & Rasters
+		tmp.open()
+
+		if isinstance(ifg, Ifg):
+			# TODO: resample amplitude band too?
+			data = tmp.phase_band.ReadAsArray()
+			data = where(data == 0, nan, data) # flag incoherent cells as NaNs
+		elif isinstance(ifg, DEM):
+			data = tmp.height_band.ReadAsArray()
 		else:
-			raise NotImplementedError("TODO: additional raster types?")
+			raise NotImplementedError("TODO: other raster types to handle?")
 
-		looks_path = s[0] + "_%srlks.%s" % (params[IFG_LKSY], ext)
-		cmd = ["gdalwarp", "-overwrite", "-srcnodata", "None", "-te"] + extents
-		if not verbose: cmd.append("-q")
+		data = resample(data, x_looks, y_looks, thresh) # is saved to file below
+		del tmp
+		os.remove(tmp_path)
 
-		# HACK: if resampling, cut segment with gdalwarp & manually do tile averages
-		# resampling (gdalwarp lacks Pirate averaging method)
-		data = None
-		if resolution:
-			tmp_path = mkstemp()[1]
-			check_call(cmd + [i.data_path, tmp_path])
+		# args to change resolution for final outout
+		cmd += ["-tr"] + [str(r) for r in resolution]
 
-			i_tmp = type(i)(tmp_path, i.hdr_path) # dynamically handle Ifgs & Rasters
-			i_tmp.open()
+	# use GDAL to cut (and resample) the final output layers
+	s = splitext(ifg.data_path)
+	ext = _file_ext(ifg)
+	looks_path = s[0] + "_%srlks.%s" % (y_looks, ext)
+	cmd += [ifg.data_path, looks_path]
+	check_call(cmd)
 
-			if isinstance(i, Ifg):
-				# TODO: resample amplitude band too?
-				data = i_tmp.phase_band.ReadAsArray()
-				data = where(data == 0, nan, data) # flag incoherent cells as NaNs
-			elif isinstance(i, DEM):
-				data = i_tmp.height_band.ReadAsArray()
-			else:
-				raise NotImplementedError("TODO: other raster types to handle?")
+	# Add missing/updated metadata to resampled interferograms/rasters
+	new_lyr = type(ifg)(looks_path, ifg.hdr_path) # dynamically handle Ifgs/Rasters
+	new_lyr.open(readonly=False)
+	new_hdr_path = filename_pair(looks_path)[1]
+	_create_new_roipac_header(ifg, new_lyr) # create header file of revised values
 
-			data = resample(data, params[IFG_LKSX], params[IFG_LKSY], threshold) # is saved to file below
-			del i_tmp
-			os.remove(tmp_path)
+	# for non-DEMs, phase bands need extra metadata & conversions
+	if hasattr(new_lyr, "phase_band"):
+		new_lyr.phase_band.SetNoDataValue(nan)
 
-			# args to change resolution for final outout
-			cmd += ["-tr"] + [str(r) for r in resolution]
+		if data is None:
+			# data not resampled, so data for conversion must be read from new dataset
+			data = new_lyr.phase_band.ReadAsArray()
+			data = where(data == 0, nan, data)
 
-		# use GDAL to cut (and resample) the final output layers
-		cmd += [i.data_path, looks_path]
-		check_call(cmd)
+		# TODO: projection
+		#if params.has_key(PROJECTION_FLAG):
+		#	reproject()
 
-		# Add missing/updated metadata to resampled interferograms/rasters
-		new_lyr = type(i)(looks_path, i.hdr_path) # dynamically handle Ifgs/Rasters
-		new_lyr.open(readonly=False)
-		new_hdr_path = filename_pair(looks_path)[1]
-		_create_new_roipac_header(i, new_lyr) # create header file of revised values
-
-		# for non-DEMs, phase bands need extra metadata & conversions
-		if hasattr(new_lyr, "phase_band"):
-			new_lyr.phase_band.SetNoDataValue(nan)
-
-			if data is None:
-				# data not resampled, so data for conversion must be read from new dataset
-				data = new_lyr.phase_band.ReadAsArray()
-				data = where(data == 0, nan, data)
-
-			if params.has_key(PROJECTION_FLAG):
-				reproject()
-
-			# tricky: write either resampled or the basic cropped data to new layer
-			new_lyr.phase_band.WriteArray(data)
-			new_lyr.nan_converted = True
+		# tricky: write either resampled or the basic cropped data to new layer
+		new_lyr.phase_band.WriteArray(data)
+		new_lyr.nan_converted = True
 
 
 # TODO: refactor out to another module?
