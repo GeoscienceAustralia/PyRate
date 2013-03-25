@@ -34,7 +34,7 @@ GRID_TOL = 1e-6
 
 
 
-def prepare_ifgs(params, threshold=0.5, use_exceptions=False, verbose=False):
+def prepare_ifgs(params, thresh=0.5, use_exceptions=False, verbose=False):
 	"""Produces multilooked/resampled data files for PyRate analysis.
 	params - dict of named values from pyrate config file
 	threshhold - 0.0->1.0 controls NaN handling when resampling to coarser grids,
@@ -80,14 +80,14 @@ def prepare_ifgs(params, threshold=0.5, use_exceptions=False, verbose=False):
 	if params[IFG_LKSX] > 1 or params[IFG_LKSY] > 1:
 		resolution = [params[IFG_LKSX] * i.X_STEP, params[IFG_LKSY] * i.Y_STEP ]
 
-	# Generate gdalwarp args for each interferogram. Some trickery is required to
-	# interface with gdalwarp. For resampling, gdalwarp is called 2x, once to subset
+	# Generate gdalwarp args for each ifg, some hackery required to interface with
+	# cmd line interface. For resampling, gdalwarp is called 2x, once to subset
 	# the source data for Pirate's form of averaging/resampling, the second to
 	# generate the final dataset with correct extents/shape/cell count. Without
 	# resampling, gdalwarp is only needed to cut out the required segment.
 	for i in ifgs:
 		xl, yl = params[IFG_LKSX], params[IFG_LKSY]
-		warp(i, xl, yl, extents, resolution, threshold, verbose)
+		warp(i, xl, yl, extents, resolution, thresh, verbose)
 
 		# FIXME: check if there are orbital corrections for resampling
 
@@ -129,7 +129,9 @@ def _resample_ifg(ifg, cmd, x_looks, y_looks, thresh):
 def warp(ifg, x_looks, y_looks, extents, resolution, thresh, verbose):
 	'''TODO
 
-	resolution - TODO, acts as a flag for size resampling. None -> no sampling.
+	resolution - [xres, yres] or None. Sets resolution output Ifg metadata. Use
+	             None if raster size is not being changed.
+	thresh - see thresh in prepare_ifgs().
 	'''
 
 	# dynamically build command for call to gdalwarp
@@ -195,7 +197,8 @@ def resample(data, xscale, yscale, threshold):
 	# calc mean without nans (fractional threshold ignores tiles with excess NaNs)
 	for y,x in product(xrange(yres), xrange(xres)):
 		tile = data[y * yscale : (y+1) * yscale, x * xscale : (x+1) * xscale]
-		non_nans = [ tile[crd] for crd in product(xrange(yscale), xrange(xscale)) if not isnan(tile[crd])]
+		non_nans = [ tile[crd] for crd in product(xrange(yscale), xrange(xscale))
+		                  if not isnan(tile[crd])]
 		nan_fraction = (tile_cell_count - len(non_nans)) / float(tile_cell_count)
 
 		if nan_fraction < threshold or (nan_fraction == 0 and threshold == 0):

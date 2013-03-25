@@ -20,7 +20,8 @@ except:
 
 gdal.UseExceptions()
 
-import prepifg
+from prepifg import CUSTOM_CROP, MAXIMUM_CROP, MINIMUM_CROP
+from prepifg import prepare_ifgs, resample, PreprocessingException
 from shared import Ifg, DEM
 from roipac import filename_pair
 from config import OBS_DIR, IFG_CROP_OPT, IFG_LKSX, IFG_LKSY, IFG_FILE_LIST
@@ -63,7 +64,7 @@ class OutputTests(unittest.TestCase):
 	def _custom_extents_param(self):
 		"""Convenience function to create custom cropping extents params"""
 
-		params = {IFG_CROP_OPT: prepifg.CUSTOM_CROP, IFG_LKSX: 1, IFG_LKSY: 1}
+		params = {IFG_CROP_OPT: CUSTOM_CROP, IFG_LKSX: 1, IFG_LKSY: 1}
 		params[IFG_XFIRST] = 150.91 + (7 * self.xs)
 		params[IFG_YFIRST] = -34.17 + (16 * self.ys)
 		params[IFG_XLAST] = 150.91 + (27 * self.xs) # 20 cells across from X_FIRST
@@ -83,8 +84,8 @@ class OutputTests(unittest.TestCase):
 		"""Test ifgcropopt=2 gives datasets cropped to max extents bounding box."""
 
 		params = self._default_extents_param()
-		params[IFG_CROP_OPT] = prepifg.MAXIMUM_CROP
-		prepifg.prepare_ifgs(params)
+		params[IFG_CROP_OPT] = MAXIMUM_CROP
+		prepare_ifgs(params)
 		for f in self.exp_files:
 			self.assertTrue(exists(f), msg="Output files not created")
 
@@ -103,8 +104,8 @@ class OutputTests(unittest.TestCase):
 		"""Test ifgcropopt=1 crops datasets to min extents."""
 
 		params = self._default_extents_param()
-		params[IFG_CROP_OPT] = prepifg.MINIMUM_CROP
-		prepifg.prepare_ifgs(params)
+		params[IFG_CROP_OPT] = MINIMUM_CROP
+		prepare_ifgs(params)
 		ifg = Ifg(self.exp_files[0], self.hdr_files[0])
 		ifg.open()
 
@@ -119,7 +120,7 @@ class OutputTests(unittest.TestCase):
 
 	def test_custom_extents(self):
 		params = self._custom_extents_param()
-		prepifg.prepare_ifgs(params)
+		prepare_ifgs(params)
 		ifg = Ifg(self.exp_files[0], self.hdr_files[0])
 		ifg.open()
 		gt = ifg.dataset.GetGeoTransform()
@@ -132,20 +133,21 @@ class OutputTests(unittest.TestCase):
 	def test_custom_extents_misalignment(self):
 		"""Test misaligned cropping extents raise errors."""
 		for key in [IFG_XFIRST, IFG_YFIRST, IFG_XLAST, IFG_YLAST]:
-			params = self._custom_extents_param() # reset params to prevent old params causing failure
+			params = self._custom_extents_param() # reset params
 			backup = params[key]
 
 			# try different errors for each var
 			for error in [0.1, 0.001, 0.0001, 0.00001, 0.000001]:
 				params[key] = backup + error
-				self.assertRaises(prepifg.PreprocessingException, prepifg.prepare_ifgs, params, use_exceptions=True)
+				self.assertRaises(PreprocessingException, prepare_ifgs,
+				                  params, use_exceptions=True)
 
 
 	def test_nodata(self):
 		"""Verify NODATA values are copied correctly for both bands"""
 		params = self._default_extents_param()
-		params[IFG_CROP_OPT] = prepifg.MINIMUM_CROP
-		prepifg.prepare_ifgs(params)
+		params[IFG_CROP_OPT] = MINIMUM_CROP
+		prepare_ifgs(params)
 
 		for ex, hdr in zip(self.exp_files, self.hdr_files):
 			ifg = Ifg(ex, hdr)
@@ -157,8 +159,8 @@ class OutputTests(unittest.TestCase):
 	def test_nans(self):
 		"""Verify that NaNs replace 0 in the multilooked phase band"""
 		params = self._default_extents_param()
-		params[IFG_CROP_OPT] = prepifg.MINIMUM_CROP
-		prepifg.prepare_ifgs(params)
+		params[IFG_CROP_OPT] = MINIMUM_CROP
+		prepare_ifgs(params)
 
 		for ex, hdr in zip(self.exp_files, self.hdr_files):
 			ifg = Ifg(ex, hdr)
@@ -179,7 +181,7 @@ class OutputTests(unittest.TestCase):
 		params[IFG_LKSX] = scale
 		params[IFG_LKSY] = scale
 		params[DEM_FILE] = '../../tests/sydney_test/dem/sydney_trimmed.dem'
-		prepifg.prepare_ifgs(params, threshold=1.0) # if all nans, ignore cell
+		prepare_ifgs(params, thresh=1.0) # if all nans, ignore cell
 
 		# check file names have been updated
 		for f in self.exp_files:
@@ -228,9 +230,9 @@ class OutputTests(unittest.TestCase):
 	def test_mismatching_resolution_failure(self):
 		"""Ensure failure if supplied layers have different resolutions"""
 		params = self._default_extents_param()
-		params[IFG_CROP_OPT] = prepifg.MAXIMUM_CROP
+		params[IFG_CROP_OPT] = MAXIMUM_CROP
 		params[IFG_FILE_LIST] = join(self.testdir, 'obs/ifms_res')
-		self.assertRaises(prepifg.PreprocessingException, prepifg.prepare_ifgs, params)
+		self.assertRaises(PreprocessingException, prepare_ifgs, params)
 
 
 	def test_new_rsc_header(self):
@@ -239,7 +241,7 @@ class OutputTests(unittest.TestCase):
 		params = self._custom_extents_param()
 		params[IFG_LKSX] = scale
 		params[IFG_LKSY] = scale
-		prepifg.prepare_ifgs(params)
+		prepare_ifgs(params)
 
 		self.exp_files = [ s.replace('_1r', '_%sr' % scale) for s in self.exp_files]
 		self.exp_hdr_files = [s + ".rsc" for s in self.exp_files]
@@ -263,18 +265,18 @@ class OutputTests(unittest.TestCase):
 		values = [0, -1, -10, -100000.6, ""]
 		for v in values:
 			params[IFG_LKSX] = v
-			self.assertRaises(prepifg.PreprocessingException, prepifg.prepare_ifgs, params)
+			self.assertRaises(PreprocessingException, prepare_ifgs, params)
 
 		params[IFG_LKSX] = 1
 		for v in values:
 			params[IFG_LKSX] = v
-			self.assertRaises(prepifg.PreprocessingException, prepifg.prepare_ifgs, params)
+			self.assertRaises(PreprocessingException, prepare_ifgs, params)
 
 
 	def test_nan_threshold_inputs(self):
 		data = ones((1,1))
 		for thresh in [-10, -1, -0.5, 1.000001, 10]:
-			self.assertRaises(ValueError, prepifg.resample, data, 2, 2, thresh)
+			self.assertRaises(ValueError, resample, data, 2, 2, thresh)
 
 
 	def test_nan_threshold(self):
@@ -291,7 +293,7 @@ class OutputTests(unittest.TestCase):
 								(1.0, [1, 1, 1, 1, nan])  ]
 
 		for thresh, exp in expected:
-			res = prepifg.resample(data, xscale=2, yscale=2, threshold=thresh)
+			res = resample(data, xscale=2, yscale=2, threshold=thresh)
 			assert_array_equal(res, reshape(exp, res.shape))
 
 
@@ -303,7 +305,7 @@ class OutputTests(unittest.TestCase):
 
 		expected = [ (0.4, [nan,nan]), (0.5, [1, nan]), (0.7, [1, 1]) ]
 		for thresh, exp in expected:
-			res = prepifg.resample(data, xscale=3, yscale=3, threshold=thresh)
+			res = resample(data, xscale=3, yscale=3, threshold=thresh)
 			assert_array_equal(res, reshape(exp, res.shape))
 
 
@@ -313,9 +315,9 @@ class OutputTests(unittest.TestCase):
 		# TODO: los conversion has 4 options: 1: ignore, 2: vertical, 3: N/S, 4: E/W
 		# also have a 5th option of arbitrary azimuth angle (Pirate doesn't have this)
 	#	params = self._default_extents_param()
-	#	params[IFG_CROP_OPT] = prepifg.MINIMUM_CROP
+	#	params[IFG_CROP_OPT] = MINIMUM_CROP
 	#	params[PROJECTION_FLAG] = None
-	#	prepifg.prepare_ifgs(params, use_exceptions=True)
+	#	prepare_ifgs(params, use_exceptions=True)
 
 
 	#def test_phase_conversion(self):
