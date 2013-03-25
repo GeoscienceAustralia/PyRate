@@ -73,7 +73,7 @@ def cvd(ifg):
 	#print 'r',r
 
 	acgorig = copy(acg)
-	maxacg=max(acg[:len(r)])
+	maxvar=max(acg[:len(r)])
 
 	# pick the smallest axis to focus on a circle around the centre point????
 	#print 'ifg.X_CENTRE, ifg.Y_CENTRE=', ifg.X_CENTRE, ifg.Y_CENTRE
@@ -112,6 +112,5 @@ def cvd(ifg):
 	# calculate best fit function maxvar*exp(-alpha*r)
 	#alpha = fmin(pendiffexp, [2 / (maxbin * w)], [], cvdav)
 	alpha = fmin(pendiffexp, None, args=([2 / (maxbin * w)], cvdav)  )
-	maxvar = maxacg
-
+	
 	return maxvar, alpha
