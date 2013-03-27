@@ -5,11 +5,10 @@ Created on 14/03/2013
 @author: Ben Davies
 '''
 
-
 import unittest
-
 from numpy import array
 
+from shared import Ifg
 from vcm import cvd
 from tests_common import sydney5_mock_ifgs
 
@@ -19,16 +18,27 @@ class VCMTests(unittest.TestCase):
 	def test_basic(self):
 		ifgs = sydney5_mock_ifgs(5,9)
 
-		#print
-		#for i in ifgs:
-		#	print i.phase_data
-		#	print "/" * 35
+		for i in ifgs:
+			i.X_SIZE = 92.0
+			i.Y_SIZE = 95.0
+			i.X_CENTRE = (i.WIDTH / 2) # spectrally, the grid is not doubled in size
+			i.Y_CENTRE = (i.FILE_LENGTH / 2)
+
+		maxvar, alpha = cvd(ifgs[0])
+		self.assertTrue(maxvar is not None)
+		self.assertTrue(alpha is not None)
+		print "maxvar, alpha:", maxvar, alpha
 
 
-		ifgs[0].X_SIZE = 92.0
-		ifgs[0].Y_SIZE = 95.0
+	def test_larger(self):
+		# test with larger interferogram
+		ifg = Ifg("../../tests/sydney_test/obs/geo_060619-061002.unw")
+		ifg.open()
 
-		ifgs[0].X_CENTRE = (ifgs[0].WIDTH / 2) # spectrally, the grid is not doubled in size
-		ifgs[0].Y_CENTRE = (ifgs[0].FILE_LENGTH / 2)
+		if bool((ifg.phase_data == 0).all()) is True:
+			raise Exception("All zero - aaaieeee")
 
-		print cvd(ifgs[0])
+		maxvar, alpha = cvd(ifg)
+		self.assertTrue(maxvar is not None)
+		self.assertTrue(alpha is not None)
+		print "maxvar, alpha:", maxvar, alpha
