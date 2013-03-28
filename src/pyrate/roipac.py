@@ -111,13 +111,14 @@ def to_ehdr_header(hdr, dest=None):
 					# DEM possibly not from ROIPAC
 					raise NotImplementedError("TODO: handle non ROIPAC filenames?")
 			else:
-				try:
-					i = hdr.index("unw.rsc")
+				i = max(hdr.rfind("unw.rsc"), hdr.rfind("tif.rsc"))
+				if i > 0:
 					dest = hdr[:i] + "hdr"
-				except ValueError as v:
-					raise NotImplementedError("TODO: handle ROIPAC filename errors")
+				else:
+					msg = "Unrecognised filename: %s for creating GDAL compatible header"
+					raise RoipacException(msg % hdr)
 	else:
-		raise IOError("%s not a valid header file")
+		raise IOError("%s not a valid header file" % hdr)
 
 	# calc coords of lower left corner
 	yllcorner = H[Y_FIRST] + (H[FILE_LENGTH] * H[Y_STEP])

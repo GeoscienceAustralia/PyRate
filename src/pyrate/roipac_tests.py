@@ -16,12 +16,13 @@ from gdal import Open, UseExceptions
 UseExceptions()
 
 import roipac
+from roipac import RoipacException
 import ifgconstants as IFC
 
 
 class ConversionTests(unittest.TestCase):
 	'''Verifies conversion of ROIPAC files to EHdr format.'''
-	
+
 	def __init__(self, *args, **kwargs):
 		super(ConversionTests, self).__init__(*args, **kwargs)
 		if not exists("../../tests/headers"):
