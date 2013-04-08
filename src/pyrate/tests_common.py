@@ -60,6 +60,8 @@ class MockIfg(object):
 
 		self.FILE_LENGTH = ysize
 		self.WIDTH = xsize
+		self.X_SIZE = ifg.X_SIZE
+		self.Y_SIZE = ifg.Y_SIZE
 		self.X_STEP = ifg.X_STEP
 		self.Y_STEP = ifg.Y_STEP
 		self.num_cells = ysize * xsize
