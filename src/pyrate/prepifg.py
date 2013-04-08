@@ -128,10 +128,13 @@ def _resample_ifg(ifg, cmd, x_looks, y_looks, thresh):
 
 def warp(ifg, x_looks, y_looks, extents, resolution, thresh, verbose):
 	'''TODO
-
+	xlooks - integer factor to scale X axis by, 5 is 5x smaller, 1 is no change.
+	ylooks - as xlooks, but for Y axis
+	extents - TODO
 	resolution - [xres, yres] or None. Sets resolution output Ifg metadata. Use
 	             None if raster size is not being changed.
 	thresh - see thresh in prepare_ifgs().
+	verbose - True = print gdalwarp output to stdout
 	'''
 
 	# dynamically build command for call to gdalwarp
