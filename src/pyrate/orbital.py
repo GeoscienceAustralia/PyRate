@@ -11,24 +11,10 @@ from scipy.linalg import lstsq
 from numpy.linalg import pinv
 
 import algorithm
+from algorithm import ifg_date_lookup
 from mst import default_mst
 
-# Orbital correction
-# 0) Config file stuff:
-#		Add the orbital params
-#		orbfit = 0: off, 1=do it
-#		orbfitmethod: 1 or 2 (see conf file) (AKA independent and networked methods)
-#		orbrefest = orb_ref_est, 0=off, 1=on (IGNORE for the time being - something
-#               to do with removing the constant param 'c' from y = mx+c)
-#		orbmaskflag = IGNORE for now. Used to mask out some patches, eg. if there is
-#                 an earthquake signal somewhere.
-#
-# 1) resample/multilook the data to have less pixels (for comp efficiency)
-# optional? VU can handle larger arrays (new sys=?)
-#
-# 2) design matrix (orbdesign.m)
-#
-# 3) linear regression/inversion - get params (ala orbcorrect.m)
+# Orbital correction tasks
 #
 # 4) forward calculation (orbfwd.m)
 #		create 2D orbital correctionl layer from the model params
@@ -48,14 +34,17 @@ PLANAR = 1
 QUADRATIC = 2
 
 
+# TODO: do MST as a filter step outside the main func? More MODULAR?
+# FIXME: operate on files
+
 def orbital_correction(ifgs, degree, method, mlooked=None, offset=True):
 	'''Top level method for correcting orbital error in the given Ifgs
 	ifgs - list of Ifg objs to correct
 	degree - PLANAR or QUADRATIC
 	method - INDEPENDENT_METHOD or NETWORK_METHOD
+	mlooked - sequence of multilooked Ifgs
 	offset = True/False to include the constant/offset component
 	'''
-
 	# TODO: save corrected layers to new file or use intermediate arrays?
 
 	if degree not in [PLANAR, QUADRATIC]:
@@ -67,22 +56,13 @@ def orbital_correction(ifgs, degree, method, mlooked=None, offset=True):
 		raise OrbitalError(msg)
 
 	if method == NETWORK_METHOD:
+		sub_ifgs = _subset_ifgs(ifgs) # reduce to the smallest tree with all nodes
 		if mlooked:
 			_validate_mlooked(mlooked, ifgs)
-
-
-		# TODO: do we need to multilook all the ifgs, or just do the subset?
-
-		# Cut down to the smallest tree with all nodes
-		# TODO: do this as a filter step outside the main func? More MODULAR
-		#mst = default_mst(ifgs)
-		#from algorithm import ifg_date_lookup
-		#sub_ifgs = [ifg_date_lookup(ifgs, mas_slv) for mas_slv in mst.iteritems()]
-		#1/0
-
-		# TODO: reverse lookup to map edges -> ifgs
-		#return _get_net_correction(sub_ifgs, degree, offset)
-		return _get_net_correction(ifgs, degree, offset)
+			sub_mlooked = _subset_mlooked_ifgs(sub_ifgs, mlooked)
+			return _get_net_correction(sub_mlooked, degree, offset) # TODO: fwd corr
+		else:
+			return _get_net_correction(sub_ifgs, degree, offset) # TODO: fwd corr
 
 	elif method == INDEPENDENT_METHOD:
 		# FIXME: determine how to work this into the ifgs. Generate new Ifgs? Update
@@ -104,6 +84,26 @@ def _validate_mlooked(mlooked, ifgs):
 	if all(tmp) is False:
 		msg = "Mismatching types multilooked ifgs arg:\n%s" % mlooked
 		raise OrbitalError(msg)
+
+
+def _subset_ifgs(ifgs):
+	mst = default_mst(ifgs)
+	tmp = [ifg_date_lookup(ifgs, mas_slv) for mas_slv in mst.iteritems()]
+	dates = [i.DATE12 for i in ifgs] # retain order of ifgs
+	tmp = { i.DATE12 : i for i in tmp }
+	return [tmp[d] for d in dates]
+
+
+def _subset_mlooked_ifgs(ifgs, mlooked):
+	'''
+	Returns corresponding subset of multilooked ifgs from the subset 'ifgs' in the
+	same order. Assumes mlooked has more elements than 'ifgs'. Order is retained.
+	ifgs - subset of ifgs (eg. from main set of ifgs)
+	mlooked - sequence of multilooked ifgs to subset
+	'''
+	dates = [e.DATE12 for e in ifgs] # retain date order of orig
+	lk = {e.DATE12: e for e in ifgs}
+	return [lk[d] for d in dates]
 
 
 def _get_ind_correction(ifg, degree, offset):
