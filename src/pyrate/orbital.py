@@ -48,7 +48,7 @@ PLANAR = 1
 QUADRATIC = 2
 
 
-def orbital_correction(ifgs, degree, method, offset=True):
+def orbital_correction(ifgs, degree, method, mlooked=None, offset=True):
 	'''Top level method for correcting orbital error in the given Ifgs
 	ifgs - list of Ifg objs to correct
 	degree - PLANAR or QUADRATIC
@@ -67,8 +67,10 @@ def orbital_correction(ifgs, degree, method, offset=True):
 		raise OrbitalError(msg)
 
 	if method == NETWORK_METHOD:
-		# FIXME: multilooking needs to go in here somewhere
-		# ie. pass in some ifg classes as another arg
+		if mlooked:
+			_validate_mlooked(mlooked, ifgs)
+
+
 		# TODO: do we need to multilook all the ifgs, or just do the subset?
 
 		# Cut down to the smallest tree with all nodes
@@ -89,6 +91,19 @@ def orbital_correction(ifgs, degree, method, offset=True):
 		#for i in ifgs:
 		#	i.phase_data -= _get_ind_correction(i, degree, offset)
 		return [_get_ind_correction(i, degree, offset) for i in ifgs]
+
+
+def _validate_mlooked(mlooked, ifgs):
+	'''Basic sanity checking of the multilooked ifgs.'''
+
+	if len(mlooked) != len(ifgs):
+		msg = "Mismatching # ifgs and # multilooked ifgs"
+		raise OrbitalError(msg)
+
+	tmp = [hasattr(i, 'phase_data') for i in mlooked]
+	if all(tmp) is False:
+		msg = "Mismatching types multilooked ifgs arg:\n%s" % mlooked
+		raise OrbitalError(msg)
 
 
 def _get_ind_correction(ifg, degree, offset):

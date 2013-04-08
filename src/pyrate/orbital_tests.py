@@ -141,6 +141,19 @@ class ErrorTests(unittest.TestCase):
 			self.assertRaises(OrbitalError, orbital_correction, ifgs, PLANAR, m, True)
 
 
+	def test_multilooked_ifgs_arg(self):
+		# check a variety of bad args for network method multilooked ifgs
+		ifgs = sydney5_mock_ifgs()
+		args = [[None, None, None, None, None], ["X"] * 5]
+		for a in args:
+			args = (ifgs, PLANAR, NETWORK_METHOD, a)
+			self.assertRaises(OrbitalError, orbital_correction, *args)
+
+		# ensure failure if uneven ifgs lengths
+		args = (ifgs, PLANAR, NETWORK_METHOD, ifgs[:4])
+		self.assertRaises(OrbitalError, orbital_correction, *args)
+
+
 
 class NetworkDesignMatrixTests(unittest.TestCase):
 	'''Contains tests verifying creation of sparse network design matrix.'''
@@ -253,7 +266,7 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 		self.assertEqual(len(dm), (self.nifgs * self.nc) - err)
 
 		params = pinv(dm, 1e-6) * fd
-		act = orbital_correction(self.ifgs, PLANAR, NETWORK_METHOD, False)  # TODO: replace with a more internal function call?
+		act = orbital_correction(self.ifgs, PLANAR, NETWORK_METHOD, offset=False)  # TODO: replace with a more internal function call?
 		assert_array_almost_equal(act, params)
 		# TODO: fwd correction
 		# FIXME: with offsets
@@ -275,7 +288,7 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 		dm = get_network_design_matrix(self.ifgs, QUADRATIC, False)[~isnan(data)]
 		params = pinv(dm, 1e-6) * data[~isnan(data)]
 
-		act = orbital_correction(self.ifgs, QUADRATIC, NETWORK_METHOD, False)  # TODO: replace with a more internal function call?
+		act = orbital_correction(self.ifgs, QUADRATIC, NETWORK_METHOD, offset=False)  # TODO: replace with a more internal function call?
 		assert_array_almost_equal(act, params, decimal=5) # TODO: fails occasionally on default decimal=6
 		# TODO: fwd correction
 		# FIXME: with offsets
