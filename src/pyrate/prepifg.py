@@ -19,7 +19,7 @@ from roipac import filename_pair, write_roipac_header
 from config import parse_namelist
 from config import OBS_DIR, IFG_CROP_OPT, IFG_LKSX, IFG_LKSY, IFG_FILE_LIST
 from config import IFG_XFIRST, IFG_XLAST, IFG_YFIRST, IFG_YLAST, DEM_FILE
-from config import PROJECTION_FLAG
+from config import PROJECTION_FLAG, ORBITAL_FIT_LOOKS_X, ORBITAL_FIT_LOOKS_Y
 from ifgconstants import X_FIRST, Y_FIRST, X_LAST, Y_LAST, X_STEP, Y_STEP
 from ifgconstants import WIDTH, FILE_LENGTH, WAVELENGTH
 from ifgconstants import Z_OFFSET, Z_SCALE, PROJECTION, DATUM
@@ -85,11 +85,27 @@ def prepare_ifgs(params, thresh=0.5, use_exceptions=False, verbose=False):
 	# the source data for Pirate's form of averaging/resampling, the second to
 	# generate the final dataset with correct extents/shape/cell count. Without
 	# resampling, gdalwarp is only needed to cut out the required segment.
-	for i in ifgs:
-		xl, yl = params[IFG_LKSX], params[IFG_LKSY]
-		warp(i, xl, yl, extents, resolution, thresh, verbose)
 
-		# FIXME: check if there are orbital corrections for resampling
+	orb = _do_orbital_multilooking(params)
+	xl, yl = params[IFG_LKSX], params[IFG_LKSY]
+	for i in ifgs:
+		lyr = warp(i, xl, yl, extents, resolution, thresh, verbose)
+
+		# handle 2nd round resampling for orbital correction data
+		if(orb):
+			xl2, yl2 = params[ORBITAL_FIT_LOOKS_X], params[ORBITAL_FIT_LOOKS_Y]
+			xres = resolution[0] * xl2
+			yres = resolution[1] * yl2
+			warp(lyr, xl2, yl2, extents, [xres, yres], thresh, verbose)
+
+
+def _do_orbital_multilooking(params):
+	'''Returns True if params dict has keys/values for orbital multilooking'''
+	keys = [ORBITAL_FIT_LOOKS_X, ORBITAL_FIT_LOOKS_Y]
+	if all([params.has_key(k) for k in keys]):
+		if all([params[k] > 1 for k in keys]):
+			return True
+	return False
 
 
 def _file_ext(raster):
@@ -175,6 +191,8 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, verbose):
 		# tricky: write either resampled or the basic cropped data to new layer
 		new_lyr.phase_band.WriteArray(data)
 		new_lyr.nan_converted = True
+
+	return new_lyr
 
 
 def resample(data, xscale, yscale, threshold):

@@ -22,11 +22,12 @@ gdal.UseExceptions()
 
 from prepifg import CUSTOM_CROP, MAXIMUM_CROP, MINIMUM_CROP
 from prepifg import prepare_ifgs, resample, PreprocessingException
+from prepifg import _do_orbital_multilooking
 from shared import Ifg, DEM
 from roipac import filename_pair
 from config import OBS_DIR, IFG_CROP_OPT, IFG_LKSX, IFG_LKSY, IFG_FILE_LIST
 from config import IFG_XFIRST, IFG_XLAST, IFG_YFIRST, IFG_YLAST, DEM_FILE
-from config import PROJECTION_FLAG
+from config import PROJECTION_FLAG, ORBITAL_FIT_LOOKS_X, ORBITAL_FIT_LOOKS_Y
 
 
 class OutputTests(unittest.TestCase):
@@ -45,7 +46,7 @@ class OutputTests(unittest.TestCase):
 		self.xs = 0.000833333
 		self.ys = -self.xs
 
-		self.testdir = "../../tests/prepifg"
+		self.testdir = "../../tests/prepifg" # FIXME: add obs here
 		tmp = ["obs/geo_060619-061002.unw.rsc", "obs/geo_070326-070917.unw.rsc"]
 		self.hdr_files = [join(self.testdir, t) for t in tmp]
 
@@ -53,10 +54,13 @@ class OutputTests(unittest.TestCase):
 		self.exp_files = [join(self.testdir, t) for t in tmp]
 		self.exp_hdr_files = [s + ".rsc" for s in self.exp_files]
 
+		tmp = ["obs/geo_060619-061002.hdr", "obs/geo_070326-070917.hdr"]
+		self.ehdr_hdr = [join(self.testdir, p) for p in tmp]
+
 
 	def tearDown(self):
 		# clear temp output files after each run
-		for f in self.exp_files + self.exp_hdr_files:
+		for f in self.exp_files + self.exp_hdr_files + self.ehdr_hdr:
 			if exists(f):
 				os.remove(f)
 
@@ -227,6 +231,42 @@ class OutputTests(unittest.TestCase):
 			os.remove(p)
 
 
+	def test_orbital_mlook(self):
+		# verify 2nd stage multilooking of orbital correction datasets
+		scale = 4 # assumes square cells
+		params = self._custom_extents_param()
+		params[IFG_LKSX] = scale
+		params[IFG_LKSY] = scale
+
+		newscale = 2
+		params[ORBITAL_FIT_LOOKS_X] = newscale  # mlooked orbitals are half the size
+		params[ORBITAL_FIT_LOOKS_Y] = newscale
+		prepare_ifgs(params, thresh=1.0) # if all nans, ignore cell
+
+		# expected orbital multilooked files
+		self.exp_files = [ s.replace('_1r', '_%sr' % scale) for s in self.exp_files]
+		self.exp_hdr_files = [filename_pair(s)[1] for s in self.exp_files]
+
+		# paths to expected 2nd round mlooked files
+		tmp = ["obs/geo_060619-061002_4rlks_2rlks.tif", "obs/geo_070326-070917_4rlks_2rlks.tif"]
+		ml = [join(self.testdir, p) for p in tmp]
+		ml_ehdr = [s.replace(".tif", ".hdr") for s in ml] # EHdr format headers
+		tmp = ["obs/geo_060619-061002_4rlks_2rlks.tif.rsc", "obs/geo_070326-070917_4rlks_2rlks.tif.rsc"]
+		mlh = [join(self.testdir, p) for p in tmp]
+
+		# check newly mlooked files
+		for f,h in zip(ml, mlh):
+			i = Ifg(f, h)
+			i.open()
+			self.assertEqual(i.dataset.RasterXSize, 2) # 1/2 res of src, rounded down
+			self.assertEqual(i.dataset.RasterYSize, 3)
+			self.assertFalse(i.phase_data.ptp() == 0)
+			del i # manual close
+
+		for f in self.exp_files + self.exp_hdr_files + ml + mlh + ml_ehdr:
+			os.remove(f)
+
+
 	def test_mismatching_resolution_failure(self):
 		"""Ensure failure if supplied layers have different resolutions"""
 		params = self._default_extents_param()
@@ -307,6 +347,21 @@ class OutputTests(unittest.TestCase):
 		for thresh, exp in expected:
 			res = resample(data, xscale=3, yscale=3, threshold=thresh)
 			assert_array_equal(res, reshape(exp, res.shape))
+
+
+	def test_do_orbital_multilooking(self):
+		self.assertFalse(_do_orbital_multilooking({}))
+		self.assertFalse(_do_orbital_multilooking({ORBITAL_FIT_LOOKS_X: 1}))
+		self.assertFalse(_do_orbital_multilooking({ORBITAL_FIT_LOOKS_Y: 1}))
+
+		pd = {ORBITAL_FIT_LOOKS_X: 1, ORBITAL_FIT_LOOKS_Y: 1}
+		self.assertFalse(_do_orbital_multilooking(pd))
+
+		pd[ORBITAL_FIT_LOOKS_X] = 2
+		self.assertFalse(_do_orbital_multilooking(pd))
+		pd[ORBITAL_FIT_LOOKS_Y] = 2
+		pd[ORBITAL_FIT_LOOKS_X] = 1
+		self.assertFalse(_do_orbital_multilooking(pd))
 
 
 	#def test_los_conversion(self):
