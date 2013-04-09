@@ -38,7 +38,10 @@ QUADRATIC = 2
 # FIXME: operate on files
 
 def orbital_correction(ifgs, degree, method, mlooked=None, offset=True):
-	'''Top level method for correcting orbital error in the given Ifgs
+	'''
+	TODO: Top level method for correcting orbital error in the given Ifgs. It is
+	assumed the given ifgs have been reduced using MST for the network method.
+
 	ifgs - list of Ifg objs to correct
 	degree - PLANAR or QUADRATIC
 	method - INDEPENDENT_METHOD or NETWORK_METHOD
@@ -56,13 +59,11 @@ def orbital_correction(ifgs, degree, method, mlooked=None, offset=True):
 		raise OrbitalError(msg)
 
 	if method == NETWORK_METHOD:
-		sub_ifgs = _subset_ifgs(ifgs) # reduce to the smallest tree with all nodes
 		if mlooked:
 			_validate_mlooked(mlooked, ifgs)
-			sub_mlooked = _subset_mlooked_ifgs(sub_ifgs, mlooked)
 			return _get_net_correction(sub_mlooked, degree, offset) # TODO: fwd corr
 		else:
-			return _get_net_correction(sub_ifgs, degree, offset) # TODO: fwd corr
+			return _get_net_correction(ifgs, degree, offset) # TODO: fwd corr
 
 	elif method == INDEPENDENT_METHOD:
 		# FIXME: determine how to work this into the ifgs. Generate new Ifgs? Update
@@ -84,26 +85,6 @@ def _validate_mlooked(mlooked, ifgs):
 	if all(tmp) is False:
 		msg = "Mismatching types multilooked ifgs arg:\n%s" % mlooked
 		raise OrbitalError(msg)
-
-
-def _subset_ifgs(ifgs):
-	mst = default_mst(ifgs)
-	tmp = [ifg_date_lookup(ifgs, mas_slv) for mas_slv in mst.iteritems()]
-	dates = [i.DATE12 for i in ifgs] # retain order of ifgs
-	tmp = { i.DATE12 : i for i in tmp }
-	return [tmp[d] for d in dates]
-
-
-def _subset_mlooked_ifgs(ifgs, mlooked):
-	'''
-	Returns corresponding subset of multilooked ifgs from the subset 'ifgs' in the
-	same order. Assumes mlooked has more elements than 'ifgs'. Order is retained.
-	ifgs - subset of ifgs (eg. from main set of ifgs)
-	mlooked - sequence of multilooked ifgs to subset
-	'''
-	dates = [e.DATE12 for e in ifgs] # retain date order of orig
-	lk = {e.DATE12: e for e in ifgs}
-	return [lk[d] for d in dates]
 
 
 def _get_ind_correction(ifg, degree, offset):
@@ -129,7 +110,8 @@ def _get_ind_correction(ifg, degree, offset):
 
 
 def _get_net_correction(ifgs, degree, offset):
-	'''Returns the TODO
+	'''
+	Returns the TODO
 	ifgs - assumed to be Ifgs from a prior MST step
 	degree - PLANAR or QUADRATIC
 	offset - True/False for including TODO
