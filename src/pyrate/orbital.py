@@ -189,15 +189,11 @@ def get_network_design_matrix(ifgs, degree, offset):
 		rs = i * ifg.num_cells
 		rf = rs + ifg.num_cells
 
-		# generate column indices into data based on master position
-		mascs = ids[ifg.MASTER] * nparams
-		mascf = mascs + nparams
-		data[rs:rf, mascs:mascf] = -tmp
-
-		# then for slave
-		slvcs =	ids[ifg.SLAVE] * nparams
-		slvcf = slvcs + nparams
-		data[rs:rf, slvcs:slvcf] = tmp
+		# generate column indices into data for master and slave positions
+		mas = ids[ifg.MASTER] * nparams
+		data[rs:rf, mas:mas + nparams] = -tmp
+		slv =	ids[ifg.SLAVE] * nparams
+		data[rs:rf, slv:slv + nparams] = tmp
 
 		if offset:
 			data[rs:rf, np + i] = 1  # add offset cols
