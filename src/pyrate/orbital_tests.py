@@ -47,7 +47,7 @@ class IndependentDesignMatrixTests(unittest.TestCase):
 		m.Y_SIZE = self.ys
 
 		# test with and without offsets option
-		exp = unittest_dm(m, self.xs, self.ys, INDEPENDENT_METHOD, PLANAR, True)
+		exp = unittest_dm(m, INDEPENDENT_METHOD, PLANAR, True)
 		assert_array_almost_equal(exp, get_design_matrix(m, PLANAR, True))
 		assert_array_almost_equal(exp[:, :-1], get_design_matrix(m, PLANAR, False))
 
@@ -58,7 +58,7 @@ class IndependentDesignMatrixTests(unittest.TestCase):
 		m.Y_SIZE = self.ys
 
 		# use exp & subset of exp to test against both forms of DM
-		exp = unittest_dm(m, self.xs, self.ys, INDEPENDENT_METHOD, QUADRATIC, True)
+		exp = unittest_dm(m, INDEPENDENT_METHOD, QUADRATIC, True)
 		design_mat = get_design_matrix(m, QUADRATIC, False) # no offset
 		assert_array_almost_equal(exp[:, :-1], design_mat)
 		assert_array_almost_equal(exp, get_design_matrix(m, QUADRATIC, True))
@@ -222,7 +222,7 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 		np = ncoef * self.nepochs
 
 		for i, ifg in enumerate(ifgs):
-			exp = unittest_dm(ifg, ifg.X_SIZE, ifg.Y_SIZE, NETWORK_METHOD, deg, offset)
+			exp = unittest_dm(ifg, NETWORK_METHOD, deg, offset)
 			self.assertEqual(exp.shape, (ifg.num_cells, ncoef)) # subset DMs shouldn't have an offsets col
 
 			# use slightly refactored version of Hua's code to test
@@ -294,7 +294,7 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 		# FIXME: with offsets
 
 
-def unittest_dm(ifg, xs, ys, method, degree, offset=False):
+def unittest_dm(ifg, method, degree, offset=False):
 	'''Convenience function to create design matrices.
 	xs - X axis cell size
 	ys - Y axis cell size
