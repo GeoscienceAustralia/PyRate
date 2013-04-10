@@ -59,6 +59,8 @@ def orbital_correction(ifgs, degree, method, mlooked=None, offset=True):
 		raise OrbitalError(msg)
 
 	if method == NETWORK_METHOD:
+		# FIXME: net correction has to have some kind of handling for mlooked or not
+
 		if mlooked:
 			_validate_mlooked(mlooked, ifgs)
 			return _get_net_correction(sub_mlooked, degree, offset) # TODO: fwd corr
@@ -131,6 +133,9 @@ def _get_net_correction(ifgs, degree, offset):
 	tmp = dm[~isnan(vphase)]
 	fd = vphase[~isnan(vphase)]
 	model = pinv(tmp, 1e-6) * fd
+
+	# TODO forward correction
+
 	return model
 
 
