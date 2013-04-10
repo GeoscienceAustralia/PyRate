@@ -18,12 +18,14 @@ def wavelength_to_mm(data, wavelength):
 	return data * MM_PER_METRE * (wavelength / (4 * pi))
 
 
-def los_conversion(phase_data, unit_vec_component):
-	'''Converts phase from LOS to horizontal/vertical components. Args are
-	numpy arrays.'''
-
+def los_conversion(phase_data, unit_vec):
+	'''
+	Converts phase from LOS to horizontal/vertical components.
+	phase_data - TODO
+	unit_vec - TODO
+	'''
 	# NB: currently not tested as implementation is too simple
-	return phase_data * unit_vec_component
+	return phase_data * unit_vec
 
 
 def unit_vector(incidence, azimuth):
@@ -35,7 +37,8 @@ def unit_vector(incidence, azimuth):
 
 
 def ifg_date_lookup(ifgs, date_pair):
-	'''Returns an Ifg which has a master/slave dates given in 'date_pair'.
+	'''
+	Returns an Ifg which has a master/slave dates given in 'date_pair'.
 	ifgs - list of Ifg objects to search in
 	date_pair - a (datetime.date, datetime.date) tuple
 	'''
@@ -65,8 +68,9 @@ def get_epochs(ifgs):
 
 
 def master_slave_ids(dates):
-	'''Returns dict of 'date:unique ID' for each date in dates.
-	IDs are sorted in	oldest to newest date order, starting at 0.
+	'''
+	Returns dict of 'date:unique ID' for each date in 'dates'. IDs are ordered
+	from oldest to newest, starting at 0. Replaces ifglist.mas|slvnum in Pirate.
 	'''
 	dset = sorted(set(dates))
 	return dict([(date_, i) for i, date_ in enumerate(dset)])
