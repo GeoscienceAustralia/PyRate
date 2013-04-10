@@ -248,11 +248,9 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 
 	def test_network_correct_planar(self):
 		'''Verifies planar form of network method of correction'''
-		for i in self.ifgs:
-			i.open()
 
 		err = 3
-		self.ifgs[0].phase_data[0, 0:err] = nan # add NODATA as rasters are complete
+		self.ifgs[0].phase_data[0, 0:err] = nan # add NODATA so rasters are incomplete
 
 		# reshape phase data to vectors
 		data = empty(self.nifgs * self.nc, dtype=float32)
@@ -265,17 +263,26 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 		self.assertEqual(len(dm), len(fd))
 		self.assertEqual(len(dm), (self.nifgs * self.nc) - err)
 
+		ncoef = 2
 		params = pinv(dm, 1e-6) * fd
-		act = orbital_correction(self.ifgs, PLANAR, NETWORK_METHOD, offset=False)  # TODO: replace with a more internal function call?
-		assert_array_almost_equal(act, params)
-		# TODO: fwd correction
-		# FIXME: with offsets
+
+		# TODO: debug this fwd correction
+		for i, ifg in enumerate(self.ifgs):
+			sdm = unittest_dm(ifg, NETWORK_METHOD, PLANAR, offset=False)
+			jbm = self.date_ids[ifg.MASTER] * ncoef # starting row index for master
+			jbs = self.date_ids[ifg.SLAVE] * ncoef # row start for slave
+			res = params[jbs:jbs + ncoef] - params[jbm:jbm + ncoef]
+
+			x = sdm * res # fails: array sizes cannot be multiplied
+			raise NotImplementedError("TODO: compare corrected result against actual")
+
+		act = orbital_correction(self.ifgs, PLANAR, NETWORK_METHOD, offset=False)
+
+		# FIXME: expand test to include offsets
 
 
 	def test_network_correct_quadratic(self):
 		'''Verifies quadratic form of network method of correction'''
-		for i in self.ifgs:
-			i.open()
 
 		self.ifgs[0].phase_data[3, 0:7] = nan # add NODATA as rasters are complete
 
@@ -288,10 +295,14 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 		dm = get_network_design_matrix(self.ifgs, QUADRATIC, False)[~isnan(data)]
 		params = pinv(dm, 1e-6) * data[~isnan(data)]
 
-		act = orbital_correction(self.ifgs, QUADRATIC, NETWORK_METHOD, offset=False)  # TODO: replace with a more internal function call?
+		# TODO: add fwd correction calc & testing here
+
+		raise NotImplementedError("TODO: add forward correction implementation")
+
+		act = orbital_correction(self.ifgs, QUADRATIC, NETWORK_METHOD, offset=False)
 		assert_array_almost_equal(act, params, decimal=5) # TODO: fails occasionally on default decimal=6
-		# TODO: fwd correction
-		# FIXME: with offsets
+
+		# FIXME: expand test to include offsets
 
 
 def unittest_dm(ifg, method, degree, offset=False):
