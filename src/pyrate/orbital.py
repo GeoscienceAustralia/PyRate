@@ -85,7 +85,7 @@ def _validate_mlooked(mlooked, ifgs):
 
 	tmp = [hasattr(i, 'phase_data') for i in mlooked]
 	if all(tmp) is False:
-		msg = "Mismatching types multilooked ifgs arg:\n%s" % mlooked
+		msg = "Mismatching types in multilooked ifgs arg:\n%s" % mlooked
 		raise OrbitalError(msg)
 
 
