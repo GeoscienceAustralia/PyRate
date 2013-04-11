@@ -1,26 +1,18 @@
 # Variance/Covariance matrix
 
 # Notes:
-# hua has hardwired cvdcalc to only use method=1, we only need to worry about
+# Hua has hardwired cvdcalc to only use method=1, we only need to worry about
 # doing the calc spectrally.
-
-
-
-# Notes for Fri:
-# MG will check the weird bits of code
-#
-# Ben: check out:
-# optimise func for
-
-
 
 
 from copy import copy
 from numpy import array, where, isnan, real, imag, sum, sqrt, meshgrid, reshape
-from numpy import zeros, vstack, ceil, mean, exp
+from numpy import zeros, vstack, ceil, mean, exp, ones, diag, sqrt
 from numpy.linalg import norm
 from scipy.fftpack import fft2, ifft2, fftshift
 from scipy.optimize import fmin
+
+from algorithm import master_slave_ids
 
 
 def pendiffexp(alphamod, cvdav):
@@ -99,19 +91,45 @@ def cvd(ifg):
 	maxbin = max(rbin) + 1
 	cvdav = zeros( (2, maxbin) )
 
-	print rbin
-	print 'maxbin',maxbin
-
 	for b in range(maxbin):
 		cvdav[0,b] = b * w # distance instead of bin #
 		cvdav[1,b] = mean(acg[rbin == b]) # mean variance for that bin
-
-	print 'cvdav',cvdav
 
 	# calculate best fit function maxvar*exp(-alpha*r)
 	#alpha = fmin(pendiffexp, [2 / (maxbin * w)], [], cvdav)
 	alphaguess = 2 / (maxbin * w)
 	alpha = fmin(pendiffexp, x0=alphaguess, args=(cvdav,) )
 	print "1st guess, alpha", alphaguess, alpha
-	
-	return maxvar, alpha
+
+	assert len(alpha) == 1
+	return maxvar, alpha[0]
+
+
+def get_vcmt(ifgs, maxvar):
+	'''Returns the temporal variance/covariance matrix.'''
+
+	# c=0.5 for common master or slave; c=-0.5 if master of one matches slave of another
+	nifgs = len(ifgs)
+	vcm_pat = zeros((nifgs, nifgs))
+
+	dates = [ifg.MASTER for ifg in ifgs] + [ifg.SLAVE for ifg in ifgs]
+	ids = master_slave_ids(dates)
+
+	for i, ifg in enumerate(ifgs): # TODO: do we need -1?
+		mas1, slv1 = ids[ifg.MASTER], ids[ifg.SLAVE]
+
+		for j, ifg2 in enumerate(ifgs): # TODO: do we need +1?
+			mas2, slv2 = ids[ifg2.MASTER], ids[ifg2.SLAVE]
+			if mas1 == mas2 or slv1 == slv2:
+				vcm_pat[i,j] = 0.5
+
+			if mas1 == slv2 or slv1 == mas2:
+				vcm_pat[i,j] = -0.5
+
+			if mas1 == mas2 and slv1 == slv2:
+				vcm_pat[i,j] = 1.0 # handle testing ifg against itself
+
+	# make covariance matrix in time domain
+	std = sqrt(maxvar).reshape((nifgs,1))
+	vcm_t = std * std.transpose()
+	return vcm_t * vcm_pat
