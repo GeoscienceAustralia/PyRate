@@ -132,7 +132,7 @@ def _get_net_correction(ifgs, degree, offset):
 	model = pinv(tmp, 1e-6) * fd
 
 	# TODO forward correction
-
+	raise NotImplementedError("TODO: Fwd correction")
 	return model
 
 

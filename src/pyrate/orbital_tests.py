@@ -11,7 +11,7 @@ from os.path import join
 
 from numpy.linalg import pinv
 from numpy import nan, isnan, array, reshape, float32
-from numpy import empty, ones, zeros, meshgrid
+from numpy import empty, ones, zeros, meshgrid, dot
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 
 import algorithm
@@ -249,8 +249,9 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 	def test_network_correct_planar(self):
 		'''Verifies planar form of network method of correction'''
 
-		err = 3
-		self.ifgs[0].phase_data[0, 0:err] = nan # add NODATA so rasters are incomplete
+		# TODO: add NODATA so rasters are incomplete
+		err = 0
+		#self.ifgs[0].phase_data[0, 0:err] = nan
 
 		# reshape phase data to vectors
 		data = empty(self.nifgs * self.nc, dtype=float32)
@@ -259,24 +260,28 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 			data[st:st + self.nc] = ifg.phase_data.reshape(self.nc)
 
 		dm = get_network_design_matrix(self.ifgs, PLANAR, False)[~isnan(data)]
-		fd = data[~isnan(data)]
+		fd = data[~isnan(data)].reshape((self.nc * self.nifgs, 1))
+
 		self.assertEqual(len(dm), len(fd))
 		self.assertEqual(len(dm), (self.nifgs * self.nc) - err)
 
 		ncoef = 2
-		params = pinv(dm, 1e-6) * fd
+		params = dot(pinv(dm, 1e-6), fd)
+		self.assertEqual(params.shape[1], 1) # needs to be matrix multiplied/reduced
 
-		# TODO: debug this fwd correction
+		# now apply fwd correction
+		sdm = unittest_dm(ifg, NETWORK_METHOD, PLANAR, offset=False)
+		self.assertEqual(sdm.shape, (12,2))
+
+		corrections = []
 		for i, ifg in enumerate(self.ifgs):
-			sdm = unittest_dm(ifg, NETWORK_METHOD, PLANAR, offset=False)
 			jbm = self.date_ids[ifg.MASTER] * ncoef # starting row index for master
 			jbs = self.date_ids[ifg.SLAVE] * ncoef # row start for slave
-			res = params[jbs:jbs + ncoef] - params[jbm:jbm + ncoef]
-
-			x = sdm * res # fails: array sizes cannot be multiplied
-			raise NotImplementedError("TODO: compare corrected result against actual")
+			par = params[jbs:jbs + ncoef] - params[jbm:jbm + ncoef]
+			corrections.append(dot(sdm, par).reshape(ifg.phase_data.shape))
 
 		act = orbital_correction(self.ifgs, PLANAR, NETWORK_METHOD, offset=False)
+		assert_array_almost_equal(act, corrections)
 
 		# FIXME: expand test to include offsets
 
@@ -336,7 +341,7 @@ def unittest_dm(ifg, method, degree, offset=False):
 
 
 def get_date_ids(ifgs):
-	'''Returns master/slave date IDs from the given Ifgs'''
+	'''Returns unique master/slave date IDs from the given Ifgs'''
 	dates = []
 	for ifg in ifgs:
 		dates += list(ifg.DATE12)
