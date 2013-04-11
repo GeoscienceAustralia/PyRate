@@ -6,7 +6,7 @@ Created on 31/3/13
 '''
 
 from itertools import product
-from numpy import sum, isnan, reshape, zeros, float32, vstack, squeeze
+from numpy import dot, sum, isnan, reshape, zeros, float32, vstack, squeeze
 from scipy.linalg import lstsq
 from numpy.linalg import pinv
 
@@ -17,7 +17,9 @@ from mst import default_mst
 # Orbital correction tasks
 #
 # 4) forward calculation (orbfwd.m)
-#		create 2D orbital correctionl layer from the model params
+#		* create 2D orbital correction layer from the model params
+#		* add handling for mlooked ifgs/correcting the full size ones
+#		* correct ifgs in place + save
 
 
 # TODO: options for multilooking
@@ -100,14 +102,9 @@ def _get_ind_correction(ifg, degree, offset):
 	tmp = dm[~isnan(vphase)]
 	fd = vphase[~isnan(vphase)]
 	model, _, rank, _ = lstsq(tmp, fd)
-	exp_len = 2 if degree == PLANAR else 5
-	if offset:
-		exp_len += 1
-	assert len(model) == exp_len
 
 	# calculate forward model & morph back to 2D
-	tmp = sum(dm * model, axis=1) # d = ax + by
-	correction = reshape(tmp, ifg.phase_data.shape)
+	correction = reshape(dot(dm, model), ifg.phase_data.shape)
 	return correction
 
 
