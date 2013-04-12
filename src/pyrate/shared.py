@@ -164,11 +164,17 @@ class Ifg(RasterBase):
 
 
 	@property
+	def nan_count(self):
+		'''Returns number of NaN cells in the phase data'''
+		return numpy.sum(numpy.isnan(self.phase_data))
+
+
+	@property
 	def nan_fraction(self):
 		'''Returns 0-1 (float) proportion of NaN cells for the phase band'''
 
 		# don't cache nan_count as client code may modify phase data
-		nan_count = numpy.sum(numpy.isnan(self.phase_data))
+		nan_count = self.nan_count
 
 		# handle datasets with no 0 -> NaN replacement
 		if self.nan_converted is False and nan_count == 0:

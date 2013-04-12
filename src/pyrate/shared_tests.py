@@ -89,6 +89,17 @@ class IfgTests(unittest.TestCase):
 		self.assertEqual(data.shape, (72,47) )
 
 
+	def test_nan_count(self):
+		self.ifg.open()
+		num_nan = 0
+		for row in self.ifg.phase_data:
+			for v in row:
+				if isnan(v):
+					num_nan += 1
+
+		self.assertEqual(num_nan, self.ifg.nan_count)
+
+
 	def test_nan_fraction(self):
 		try:
 			# NB: self.assertRaises doesn't work here (as it is a property?)
