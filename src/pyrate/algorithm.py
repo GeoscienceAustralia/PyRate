@@ -67,7 +67,8 @@ def get_epochs(ifgs):
 	return EpochList(dates, repeat, span)
 
 
-def get_unique_epochs(ifgs):
+def get_all_epochs(ifgs):
+	'''Returns sequence of all master and slave dates in given ifgs.'''
 	return [ifg.MASTER for ifg in ifgs] + [ifg.SLAVE for ifg in ifgs]
 
 
