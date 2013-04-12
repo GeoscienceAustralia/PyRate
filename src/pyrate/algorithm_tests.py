@@ -64,6 +64,15 @@ class AlgorithmTests(TestCase):
 		self.assertEqual(exp, algorithm.master_slave_ids([d3, d0, d2, d1, d3, d0]))
 
 
+	def test_get_unique_epochs(self):
+		# test function to extract all dates from sequence of ifgs
+		ifgs = sydney5_mock_ifgs()
+		dates = [date(2006,  8, 28), date(2006, 11, 06), date(2006, 12, 11),
+							date(2007,  1, 15), date(2007,  3, 26), date(2007,  9, 17)]
+
+		self.assertEqual(sorted(dates), sorted(get_unique_epochs(ifgs)))
+
+
 	def test_ifg_date_lookup(self):
 		# check reverse lookup of ifg given a master and slave date tuple
 		ifgs = sydney5_mock_ifgs()

@@ -67,6 +67,10 @@ def get_epochs(ifgs):
 	return EpochList(dates, repeat, span)
 
 
+def get_unique_epochs(ifgs):
+	return [ifg.MASTER for ifg in ifgs] + [ifg.SLAVE for ifg in ifgs]
+
+
 def master_slave_ids(dates):
 	'''
 	Returns dict of 'date:unique ID' for each date in 'dates'. IDs are ordered
