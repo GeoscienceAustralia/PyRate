@@ -5,7 +5,7 @@ TODO
 from itertools import product
 from numpy import array, nan, isnan, float32, ndarray
 
-import algorithm
+from algorithm import get_all_epochs, master_slave_ids
 from pygraph.classes.graph import graph
 from pygraph.algorithms.minmax import minimal_spanning_tree
 
@@ -24,8 +24,7 @@ def default_mst(ifgs, noroot=True):
 	the root node from being removed from the result.
 	'''
 	edges = [i.DATE12 for i in ifgs]
-	dates = [ifg.MASTER for ifg in ifgs] + [ifg.SLAVE for ifg in ifgs]
-	epochs = algorithm.master_slave_ids(dates).keys()
+	epochs = master_slave_ids(get_all_epochs(ifgs)).keys()
 	weights = [i.nan_fraction for i in ifgs]  # TODO: user specified attrs for weights?
 
 	g = graph()
