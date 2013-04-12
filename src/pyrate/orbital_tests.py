@@ -249,27 +249,31 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 	def test_network_correct_planar(self):
 		'''Verifies planar form of network method of correction'''
 
-		# TODO: add NODATA so rasters are incomplete
-		err = 0
-		#self.ifgs[0].phase_data[0, 0:err] = nan
+		# add some nans to the data
+		self.ifgs[0].phase_data[0, :] = nan # 3 error cells
+		self.ifgs[1].phase_data[2, 1:3] = nan # 2 error cells
+		self.ifgs[2].phase_data[3, 2:3] = nan # 1 err
+		self.ifgs[3].phase_data[1, 2] = nan # 1 err
+		self.ifgs[4].phase_data[1, 1:3] = nan # 2 err
+		err = sum([i.nan_count for i in self.ifgs])
 
-		# reshape phase data to vectors
+		# reshape phase data of all ifgs to single vector
 		data = empty(self.nifgs * self.nc, dtype=float32)
 		for i, ifg in enumerate(self.ifgs):
 			st = i * self.nc
 			data[st:st + self.nc] = ifg.phase_data.reshape(self.nc)
 
+		# filter out NaN cells
 		dm = get_network_design_matrix(self.ifgs, PLANAR, False)[~isnan(data)]
-		fd = data[~isnan(data)].reshape((self.nc * self.nifgs, 1))
-
+		ns = ( (self.nc * self.nifgs) - err, 1)
+		fd = data[~isnan(data)].reshape(ns)
 		self.assertEqual(len(dm), len(fd))
-		self.assertEqual(len(dm), (self.nifgs * self.nc) - err)
 
 		ncoef = 2
 		params = dot(pinv(dm, 1e-6), fd)
 		self.assertEqual(params.shape[1], 1) # needs to be matrix multiplied/reduced
 
-		# now apply fwd correction
+		# calculate forward correction
 		sdm = unittest_dm(ifg, NETWORK_METHOD, PLANAR, offset=False)
 		self.assertEqual(sdm.shape, (12,2))
 
