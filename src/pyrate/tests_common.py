@@ -6,7 +6,7 @@ from os.path import join
 
 
 from shared import Ifg
-from numpy import ndarray, float32
+from numpy import ndarray, float32, isnan, sum as nsum
 
 
 # small dummy ifg list to limit overall # of ifgs
@@ -70,3 +70,7 @@ class MockIfg(object):
 
 	def open(self):
 		pass # can't open anything!
+
+	@property
+	def nan_count(self):
+		return nsum(isnan(self.phase_data))
