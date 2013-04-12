@@ -11,7 +11,7 @@ from scipy.linalg import lstsq
 from numpy.linalg import pinv
 
 import algorithm
-from algorithm import ifg_date_lookup
+from algorithm import ifg_date_lookup, master_slave_ids, get_all_epochs
 from mst import default_mst
 
 # Orbital correction tasks
@@ -91,6 +91,14 @@ def _validate_mlooked(mlooked, ifgs):
 		raise OrbitalError(msg)
 
 
+def get_num_params(degree, offset):
+	'''Returns number of model parameters'''
+	nparams = 2 if degree == PLANAR else 5
+	if offset:
+		nparams += 1  # eg. y = mx + offset
+	return nparams
+
+
 def _get_ind_correction(ifg, degree, offset):
 	'''Calculates and returns orbital correction array for an ifg'''
 
@@ -129,22 +137,30 @@ def _get_net_correction(ifgs, degree, offset):
 	# filter NaNs out before getting model
 	tmp = dm[~isnan(vphase)]
 	fd = vphase[~isnan(vphase)]
-	model = pinv(tmp, 1e-6) * fd
+	model = dot(pinv(tmp, 1e-6), fd)
+	ncoef = get_num_params(degree, offset)
+	coefs = [model[i:i+ncoef] for i in range(len(model))[::ncoef]]
+	ids = master_slave_ids(get_all_epochs(ifgs))
+
+	dm = get_design_matrix(ifgs[0], degree, offset)
+	shp = ifgs[0].FILE_LENGTH, ifgs[0].WIDTH   # TODO: add a shape thing to Ifg class
+
+	corrections = []
+	for i in ifgs:
+		par = coefs[ids[i.SLAVE]] - coefs[ids[i.MASTER]]
+		corrections.append(dot(dm, par))  # TODO: plus offset?
+
+	corrections = [e.reshape(shp) for e in corrections]
 
 	# TODO forward correction
-	raise NotImplementedError("TODO: Fwd correction")
-	return model
+	return corrections
 
 
 def get_design_matrix(ifg, degree, offset):
 	'''Returns design matrix with 2 columns for linear model parameters'''
 
-	nparams = 2 if degree == PLANAR else 5
-	if offset:
-		nparams += 1  # eg. y = mx + offset
-
 	# init design matrix
-	shape = (ifg.num_cells, nparams)
+	shape = (ifg.num_cells, get_num_params(degree, offset))
 	data = zeros(shape, dtype=float32)
 	rows = iter(data)
 
