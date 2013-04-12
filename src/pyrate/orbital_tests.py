@@ -109,7 +109,7 @@ class OrbitalCorrection(unittest.TestCase):
 
 		# test both models with no offsets
 		for m in [PLANAR, QUADRATIC]:
-			corrections = orbital_correction(ifgs, m, INDEPENDENT_METHOD, False)
+			corrections = orbital_correction(ifgs, m, INDEPENDENT_METHOD, None, False)
 			test_results()
 
 		# test both with offsets
@@ -138,7 +138,7 @@ class ErrorTests(unittest.TestCase):
 	def test_invalid_method(self):
 		ifgs = sydney5_mock_ifgs()
 		for m in [None, 5, -1, -3, 45.8]:
-			self.assertRaises(OrbitalError, orbital_correction, ifgs, PLANAR, m, True)
+			self.assertRaises(OrbitalError, orbital_correction, ifgs, PLANAR, m, None, True)
 
 
 	def test_multilooked_ifgs_arg(self):
@@ -284,7 +284,7 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 			par = params[jbs:jbs + ncoef] - params[jbm:jbm + ncoef]
 			corrections.append(dot(sdm, par).reshape(ifg.phase_data.shape))
 
-		act = orbital_correction(self.ifgs, PLANAR, NETWORK_METHOD, offset=False)
+		act = orbital_correction(self.ifgs, PLANAR, NETWORK_METHOD, None, False)
 		assert_array_almost_equal(act, corrections)
 
 		# FIXME: expand test to include offsets
@@ -308,7 +308,7 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 
 		raise NotImplementedError("TODO: add forward correction implementation")
 
-		act = orbital_correction(self.ifgs, QUADRATIC, NETWORK_METHOD, offset=False)
+		act = orbital_correction(self.ifgs, QUADRATIC, NETWORK_METHOD, None, False)
 		assert_array_almost_equal(act, params, decimal=5) # TODO: fails occasionally on default decimal=6
 
 		# FIXME: expand test to include offsets

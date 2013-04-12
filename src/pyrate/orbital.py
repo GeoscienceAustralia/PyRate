@@ -63,7 +63,7 @@ def orbital_correction(ifgs, degree, method, mlooked=None, offset=True):
 	if method == NETWORK_METHOD:
 		# FIXME: net correction has to have some kind of handling for mlooked or not
 
-		if mlooked:
+		if mlooked is not None:
 			_validate_mlooked(mlooked, ifgs)
 			return _get_net_correction(sub_mlooked, degree, offset) # TODO: fwd corr
 		else:
@@ -138,7 +138,13 @@ def _get_net_correction(ifgs, degree, offset):
 	tmp = dm[~isnan(vphase)]
 	fd = vphase[~isnan(vphase)]
 	model = dot(pinv(tmp, 1e-6), fd)
+
+
+	print 'degree, offset', degree, offset
 	ncoef = get_num_params(degree, offset)
+
+	print model, ncoef
+
 	coefs = [model[i:i+ncoef] for i in range(len(model))[::ncoef]]
 	ids = master_slave_ids(get_all_epochs(ifgs))
 
