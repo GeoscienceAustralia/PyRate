@@ -87,6 +87,12 @@ class RasterBase(object):
 
 
 	@property
+	def shape(self):
+		'''Returns tuple of (Y,X) shape of the raster (as per numpy shape)'''
+		return self.FILE_LENGTH, self.WIDTH
+
+
+	@property
 	def is_open(self):
 		'''Returns True if the underlying dataset has been opened by GDAL'''
 		return self.dataset is not None

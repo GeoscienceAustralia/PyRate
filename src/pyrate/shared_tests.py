@@ -65,6 +65,12 @@ class IfgTests(unittest.TestCase):
 		self.assertEqual(exp_ncells, self.ifg.num_cells)
 
 
+	def test_shape(self):
+		self.assertEqual(self.ifg.shape, (72, 47))
+		self.ifg.open()
+		self.assertEqual(self.ifg.shape, self.ifg.phase_data.shape)
+
+
 	def test_amp_band(self):
 		try:
 			_ = self.ifg.amp_band
