@@ -10,7 +10,6 @@ from numpy import dot, sum, isnan, reshape, zeros, float32, vstack, squeeze
 from scipy.linalg import lstsq
 from numpy.linalg import pinv
 
-import algorithm
 from algorithm import ifg_date_lookup, master_slave_ids, get_all_epochs
 from mst import default_mst
 
@@ -94,7 +93,7 @@ def _validate_mlooked(mlooked, ifgs):
 def get_num_params(degree, offset):
 	'''Returns number of model parameters'''
 	nparams = 2 if degree == PLANAR else 5
-	if offset:
+	if offset is True:
 		nparams += 1  # eg. y = mx + offset
 	return nparams
 
@@ -138,18 +137,12 @@ def _get_net_correction(ifgs, degree, offset):
 	tmp = dm[~isnan(vphase)]
 	fd = vphase[~isnan(vphase)]
 	model = dot(pinv(tmp, 1e-6), fd)
-
-
-	print 'degree, offset', degree, offset
 	ncoef = get_num_params(degree, offset)
-
-	print model, ncoef
-
 	coefs = [model[i:i+ncoef] for i in range(len(model))[::ncoef]]
 	ids = master_slave_ids(get_all_epochs(ifgs))
 
 	dm = get_design_matrix(ifgs[0], degree, offset)
-	shp = ifgs[0].FILE_LENGTH, ifgs[0].WIDTH   # TODO: add a shape thing to Ifg class
+	shp = ifgs[0].shape
 
 	corrections = []
 	for i in ifgs:
@@ -158,7 +151,7 @@ def _get_net_correction(ifgs, degree, offset):
 
 	corrections = [e.reshape(shp) for e in corrections]
 
-	# TODO forward correction
+	# TODO apply corrections to Ifgs
 	return corrections
 
 
@@ -187,35 +180,28 @@ def get_network_design_matrix(ifgs, degree, offset):
 		# can feasibly do correction on a single Ifg/2 epochs
 		raise OrbitalError("Invalid number of Ifgs")
 
-	# TODO: refactor to prevent duplication with get_design_matrix()?
-	nparams = 2 if degree == PLANAR else 5
-
-	# sort out master and slave date IDs
-	dates = [ifg.MASTER for ifg in ifgs] + [ifg.SLAVE for ifg in ifgs]
-	ids = algorithm.master_slave_ids(dates)
-	num_epochs = max(ids.values()) + 1 # convert from zero indexed ID
-	np = nparams * num_epochs
-
 	# init design matrix
-	shape = [ifgs[0].num_cells * num_ifgs, np]
-	if offset:
-		shape[1] += num_ifgs # add extra cols for offset component
+	num_epochs = num_ifgs + 1
+	nparams = get_num_params(degree, offset)
+	shape = [ifgs[0].num_cells * num_ifgs, nparams * num_epochs]
 	data = zeros(shape, dtype=float32)
 
-	# paste in individual design matrices
-	for i, ifg in enumerate(ifgs):
-		tmp = get_design_matrix(ifg, degree, False) # network method doesn't have extra col
-		rs = i * ifg.num_cells
-		rf = rs + ifg.num_cells
+	#  in individual design matrices
+	dates = [ifg.MASTER for ifg in ifgs] + [ifg.SLAVE for ifg in ifgs]
+	ids = master_slave_ids(dates)
+	ncoef = get_num_params(degree, False) # only base level of coefficients
+	offset_col = num_epochs * ncoef # base offset for the offset cols
 
-		# generate column indices into data for master and slave positions
-		mas = ids[ifg.MASTER] * nparams
-		data[rs:rf, mas:mas + nparams] = -tmp
-		slv =	ids[ifg.SLAVE] * nparams
-		data[rs:rf, slv:slv + nparams] = tmp
+	for i, ifg in enumerate(ifgs):
+		tmp = get_design_matrix(ifg, degree, False) # DMs within full DM don't have extra col
+		rs = i * ifg.num_cells # starting row
+		m = ids[ifg.MASTER] * ncoef  # start col for master
+		s = ids[ifg.SLAVE] * ncoef  # start col for slave
+		data[rs:rs + ifg.num_cells, m:m + ncoef] = -tmp
+		data[rs:rs + ifg.num_cells, s:s + ncoef] = tmp
 
 		if offset:
-			data[rs:rf, np + i] = 1  # add offset cols
+			data[rs:rs + ifg.num_cells, offset_col + i] = 1  # init offset cols
 
 	return data
 
