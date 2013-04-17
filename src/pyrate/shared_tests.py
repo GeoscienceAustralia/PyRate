@@ -3,7 +3,11 @@ Created on 12/09/2012
 @author: bpd900
 '''
 
-import unittest, os
+import os
+import shutil
+import unittest
+from stat import S_IRGRP, S_IWGRP, S_IWOTH, S_IROTH, S_IRUSR, S_IWUSR
+
 from itertools import product
 from numpy import isnan, where, nan
 from numpy.testing import assert_array_equal
@@ -45,6 +49,53 @@ class IfgTests(unittest.TestCase):
 		# ensure open cannot be called twice
 		self.failUnlessRaises(RasterException, self.ifg.open)
 		os.remove(self.ifg.ehdr_path)
+
+
+	def test_write(self):
+		base = "/tmp"  # FIXME: get rid of hardcoded path
+
+		# TODO: neater way to achieve this? check shutil copy
+		np = []
+		for src in [self.ifg.data_path, self.ifg.hdr_path]:
+			dest = os.path.join(base, os.path.basename(src))
+			np.append(dest)
+
+			# shutil.copy needs to copy writeable perm from src
+			os.chmod(src, S_IRGRP | S_IWGRP | S_IWOTH | S_IROTH | S_IRUSR | S_IWUSR)
+			shutil.copy(src, dest)
+			os.chmod(src, S_IRGRP | S_IROTH | S_IRUSR) # revert
+
+		i = Ifg(np[0])
+		i.open(False)
+		i.phase_data[0,0] = 9999.0
+		i.phase_data[0,1:] = nan
+		i.write_phase()
+		del i
+
+		for pth in np:
+			os.remove(pth)
+
+		raise NotImplementedError('DELETE the .hdr file')
+
+
+	def test_readonly_permission_failure(self):
+		# TODO: try to open a R/O file with GA_Update
+		raise NotImplementedError
+
+
+	def test_readonly(self):
+		# check readonly status is same before and after open() for readonly file
+		self.assertTrue(self.ifg.is_read_only)
+		self.ifg.open()
+		self.assertTrue(self.ifg.is_read_only)
+
+		# source data is readonly
+		self.assertRaises(IOError, self.ifg.write_phase)
+
+
+	def test_readonly_mode(self):
+		# test is readonly if option set in open()
+		raise NotImplementedError
 
 
 	def test_xylast(self):

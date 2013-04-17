@@ -5,6 +5,7 @@ Created on 12/09/2012
 @author: Ben Davies
 '''
 
+import os
 import numpy
 
 try:
@@ -45,8 +46,7 @@ class RasterBase(object):
 
 		self.ehdr_path = None # path to EHdr format header
 		self.dataset = None # for GDAL dataset obj
-		self._readonly = None
-
+		self._readonly = not os.access(path, os.R_OK | os.W_OK)
 		self.num_cells = self.FILE_LENGTH * self.WIDTH
 
 
@@ -98,8 +98,16 @@ class RasterBase(object):
 		return self.dataset is not None
 
 
+	@property
+	def is_read_only(self):
+		return self._readonly
+
+
 	def _get_band(self, band):
-		'''Wrapper (with error checking) for GDAL's Band.GetRasterBand() method.'''
+		'''
+		Wrapper (with error checking) for GDAL's Band.GetRasterBand() method.
+		band: number of band, starting at 1
+		'''
 		if self.dataset is not None:
 			return self.dataset.GetRasterBand(band)
 		else:
@@ -187,6 +195,15 @@ class Ifg(RasterBase):
 			nan_count = numpy.sum(self.phase_data == 0)
 
 		return nan_count / float(self.num_cells)
+
+
+	def write_phase(self):
+		'''Writes phase data to disk.'''
+
+		if self.is_read_only:
+			raise IOError("Cannot write to read only Ifg")
+
+		self._phase_band.WriteArray(self.phase_data)
 
 
 
