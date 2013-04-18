@@ -60,9 +60,17 @@ class RasterBase(object):
 		return "%s('%s', '%s')" % (name, self.data_path, self.hdr_path)
 
 
+	# TODO: consider opening as readable by default
 	def open(self, readonly=True):
 		'''Opens generic raster dataset. Creates ESRI/EHdr format header in the data
 		dir, creating a recogniseable header file for GDAL (as per ROIPAC doco).'''
+
+		if self._readonly is None:
+			raise NotImplementedError
+
+		if self._readonly is True and readonly is False:
+			raise IOError("Cannot open write protected file for writing")
+
 		if self.ehdr_path is None:
 			self.ehdr_path = roipac.to_ehdr_header(self.hdr_path)
 			args = (self.data_path,) if readonly else (self.data_path, GA_Update)

@@ -76,8 +76,8 @@ class IfgTests(unittest.TestCase):
 
 
 	def test_readonly_permission_failure(self):
-		# TODO: try to open a R/O file with GA_Update
-		raise NotImplementedError
+		# ensure failure if opening R/O permission file as writeable/GA_Update
+		self.assertRaises(IOError, self.ifg.open, False)
 
 
 	def test_readonly(self):
