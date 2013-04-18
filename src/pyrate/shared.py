@@ -60,16 +60,22 @@ class RasterBase(object):
 		return "%s('%s', '%s')" % (name, self.data_path, self.hdr_path)
 
 
-	# TODO: consider opening as readable by default
-	def open(self, readonly=True):
+	def open(self, readonly=None):
 		'''Opens generic raster dataset. Creates ESRI/EHdr format header in the data
 		dir, creating a recogniseable header file for GDAL (as per ROIPAC doco).'''
+
+		# default: open files as writeable, except if read only permissions are set
+		if readonly not in [True, False, None]:
+			raise ValueError("readonly must be True, False or None")
 
 		if self._readonly is None:
 			raise NotImplementedError
 
-		if self._readonly is True and readonly is False:
-			raise IOError("Cannot open write protected file for writing")
+		if self._readonly is True:
+			if readonly is False:
+				raise IOError("Cannot open write protected file for writing")
+			elif readonly is None:
+				readonly = True # default to readonly as permissions are R/O
 
 		if self.ehdr_path is None:
 			self.ehdr_path = roipac.to_ehdr_header(self.hdr_path)
@@ -83,8 +89,6 @@ class RasterBase(object):
 			if self.dataset is not None:
 				msg = "open() already called for %s" % self
 				raise RasterException(msg)
-
-		self._readonly = readonly
 
 		if self.num_cells is None:
 			self.num_cells = self.dataset.RasterYSize * self.dataset.RasterXSize

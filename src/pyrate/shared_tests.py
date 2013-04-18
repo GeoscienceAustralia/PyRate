@@ -43,13 +43,13 @@ class IfgTests(unittest.TestCase):
 	def test_open(self):
 		self.assertTrue(self.ifg.dataset is None)
 		self.assertTrue(self.ifg.is_open is False)
-		self.ifg.open()
+		self.ifg.open(readonly=True)
 		self.assertTrue(self.ifg.dataset is not None)
 		self.assertTrue(self.ifg.is_open is True)
 		self.assertTrue(isinstance(self.ifg.dataset, Dataset))
 
 		# ensure open cannot be called twice
-		self.failUnlessRaises(RasterException, self.ifg.open)
+		self.failUnlessRaises(RasterException, self.ifg.open, True)
 		os.remove(self.ifg.ehdr_path)
 
 
@@ -65,7 +65,7 @@ class IfgTests(unittest.TestCase):
 			os.chmod(s, S_IRGRP | S_IROTH | S_IRUSR) # revert
 
 		i = Ifg(dest[0])
-		i.open(False)
+		i.open()
 		i.phase_data[0,1:] = nan
 		i.write_phase()
 		dest.append(i.ehdr_path)
@@ -80,19 +80,12 @@ class IfgTests(unittest.TestCase):
 		self.assertRaises(IOError, self.ifg.open, False)
 
 
-	def test_readonly(self):
+	def test_write_fails_on_readonly(self):
 		# check readonly status is same before and after open() for readonly file
 		self.assertTrue(self.ifg.is_read_only)
-		self.ifg.open()
+		self.ifg.open(readonly=True)
 		self.assertTrue(self.ifg.is_read_only)
-
-		# source data is readonly
 		self.assertRaises(IOError, self.ifg.write_phase)
-
-
-	def test_readonly_mode(self):
-		# test is readonly if option set in open()
-		raise NotImplementedError
 
 
 	def test_xylast(self):
@@ -216,10 +209,9 @@ class IfgTests(unittest.TestCase):
 
 
 	def test_centre_latlong(self):
-		ifg = self.ifg
-		ifg.open()
-		lat_exp = ifg.Y_FIRST + ((ifg.FILE_LENGTH/2) * ifg.Y_STEP)
-		long_exp = ifg.X_FIRST + ((ifg.WIDTH/2) * ifg.X_STEP)
+		self.ifg.open()
+		lat_exp = self.ifg.Y_FIRST + ((self.ifg.FILE_LENGTH/2) * self.ifg.Y_STEP)
+		long_exp = self.ifg.X_FIRST + ((self.ifg.WIDTH/2) * self.ifg.X_STEP)
 		self.assertEqual(lat_exp, self.ifg.LAT_CENTRE)
 		self.assertEqual(long_exp, self.ifg.LONG_CENTRE)
 
