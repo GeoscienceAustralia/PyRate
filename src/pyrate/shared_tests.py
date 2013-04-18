@@ -1,4 +1,5 @@
 '''
+Unittests for shared PyRate objects.
 Created on 12/09/2012
 @author: bpd900
 '''
@@ -6,6 +7,7 @@ Created on 12/09/2012
 import os
 import shutil
 import unittest
+from os.path import join, basename
 from stat import S_IRGRP, S_IWGRP, S_IWOTH, S_IROTH, S_IRUSR, S_IWUSR
 
 from itertools import product
@@ -53,29 +55,24 @@ class IfgTests(unittest.TestCase):
 
 	def test_write(self):
 		base = "/tmp"  # FIXME: get rid of hardcoded path
+		src = [self.ifg.data_path, self.ifg.hdr_path]
+		dest = [join(base, basename(s)) for s in src]
 
-		# TODO: neater way to achieve this? check shutil copy
-		np = []
-		for src in [self.ifg.data_path, self.ifg.hdr_path]:
-			dest = os.path.join(base, os.path.basename(src))
-			np.append(dest)
+		for s,d in zip(src, dest):
+			# shutil.copy needs to copy writeable permission from src
+			os.chmod(s, S_IRGRP | S_IWGRP | S_IWOTH | S_IROTH | S_IRUSR | S_IWUSR)
+			shutil.copy(s, d)
+			os.chmod(s, S_IRGRP | S_IROTH | S_IRUSR) # revert
 
-			# shutil.copy needs to copy writeable perm from src
-			os.chmod(src, S_IRGRP | S_IWGRP | S_IWOTH | S_IROTH | S_IRUSR | S_IWUSR)
-			shutil.copy(src, dest)
-			os.chmod(src, S_IRGRP | S_IROTH | S_IRUSR) # revert
-
-		i = Ifg(np[0])
+		i = Ifg(dest[0])
 		i.open(False)
-		i.phase_data[0,0] = 9999.0
 		i.phase_data[0,1:] = nan
 		i.write_phase()
-		del i
+		dest.append(i.ehdr_path)
+		del i # delete i otherwise os.remove() fails for the ehdr file
 
-		for pth in np:
+		for pth in dest:
 			os.remove(pth)
-
-		raise NotImplementedError('DELETE the .hdr file')
 
 
 	def test_readonly_permission_failure(self):
