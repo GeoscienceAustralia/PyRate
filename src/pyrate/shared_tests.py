@@ -69,7 +69,12 @@ class IfgTests(unittest.TestCase):
 		i.phase_data[0,1:] = nan
 		i.write_phase()
 		dest.append(i.ehdr_path)
-		del i # delete i otherwise os.remove() fails for the ehdr file
+		del i
+
+		# reopen to ensure data/nans can be read back out
+		i = Ifg(dest[0])
+		i.open(readonly=True)
+		assert_array_equal(True, isnan(i.phase_data[0,1:]) )
 
 		for pth in dest:
 			os.remove(pth)

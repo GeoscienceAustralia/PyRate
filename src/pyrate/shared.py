@@ -180,6 +180,11 @@ class Ifg(RasterBase):
 		return self._phase_data
 
 
+	@phase_data.setter
+	def phase_data(self, data):
+		self._phase_data = data
+
+
 	@property
 	def phase_rows(self):
 		'''Generator returning each row of the phase data'''
