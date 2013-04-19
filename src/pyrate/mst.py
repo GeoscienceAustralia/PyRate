@@ -1,5 +1,8 @@
 '''
-TODO
+Minimum Spanning Tree functionality for PyRate.
+Contains fucntions to calculate MST from interferograms.
+
+Author: Ben Davies, ANUSF
 '''
 
 from itertools import product
@@ -20,8 +23,10 @@ def _remove_root_node(mst):
 
 
 def default_mst(ifgs, noroot=True):
-	'''Returns the default MST dict for the given Ifgs. False for noroot prevents
-	the root node from being removed from the result.
+	'''
+	Returns default MST dict for the given Ifgs. The MST is calculated using a
+	weighting based on the number of incoherent cells in the phase band.
+	noroot - True removes the PyGraph default root node from the result.
 	'''
 	edges = [i.DATE12 for i in ifgs]
 	epochs = master_slave_ids(get_all_epochs(ifgs)).keys()
@@ -39,10 +44,11 @@ def default_mst(ifgs, noroot=True):
 
 
 def mst_matrix(ifgs, epochs):
-	'''Returns array of minimum spanning trees for the Ifgs.
-	TODO: explain pixel by pixel MST?
+	'''Returns array of MST trees from a pixel-by-pixel MST. A MST is calculated
+	for each individuak pixel, ignoring NODATA values.
+	ifgs - sequence of Ifg objs
+	epochs = an EpochList object derived from the ifgs
 	'''
-
 	# TODO: implement rows memory saving option/ row by row access?
 
 	# locally cache all edges/weights for on-the-fly graph modification

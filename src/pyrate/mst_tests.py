@@ -1,10 +1,10 @@
 '''
-TODO
+Tests for Minimum Spanning Tree functionality in PyRate
 Author: Ben Davies, ANUSF
 '''
 
 import unittest
-from numpy import nan
+from numpy import array, nan, isnan, where, sum as nsum
 from itertools import product
 
 from mst import mst_matrix, default_mst
@@ -21,14 +21,31 @@ class MSTTests(unittest.TestCase):
 
 
 	def test_mst_matrix(self):
-		# Verifies mst matrix function returns an array with of dicts in each cell
-		# assumes pygraph is correct from its unit tests
+		# Verifies mst matrix function returns array with dict/trees in each cell
+
+		for i in self.ifgs[3:]:
+			i.phase_data[0,1] = 0 # add a large stack of nans to one cell
+
+		for i in self.ifgs:
+			i.convert_to_nans()
+
+		nepochs = len(self.epochs.dates)
 		res = mst_matrix(self.ifgs, self.epochs)
 		ys, xs = res.shape
 		for y, x in product(xrange(ys), xrange(xs)):
 			r = res[y,x]
-			self.assertTrue(hasattr(r, "keys"))
-			self.assertTrue(len(r) <= len(self.epochs.dates))
+			num_nodes = len(r)
+			self.assertTrue(num_nodes < len(self.epochs.dates))
+
+			stack = array([i.phase_data[y,x] for i in self.ifgs]) # 17 ifg stack
+			self.assertTrue(0 == nsum(stack == 0)) # all 0s should be converted
+			nc = nsum(isnan(stack))
+
+			if nc == 0:
+				self.assertTrue(num_nodes == (nepochs-1))
+			elif nc > 5:
+				# rough test: too many nans must reduce the total tree size
+				self.assertTrue(num_nodes <= (17-nc) )
 
 
 	def test_default_mst(self):
