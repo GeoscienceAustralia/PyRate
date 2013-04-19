@@ -6,7 +6,7 @@ Created on 12/09/2012
 '''
 
 import os
-import numpy
+from numpy import where, nan, isnan, sum as nsum
 
 try:
 	from osgeo import gdal
@@ -100,7 +100,7 @@ class RasterBase(object):
 
 	@property
 	def shape(self):
-		'''Returns tuple of (Y,X) shape of the raster (as per numpy shape)'''
+		'''Returns tuple of (Y,X) shape of the raster (as per numpy.shape)'''
 		return self.FILE_LENGTH, self.WIDTH
 
 
@@ -156,6 +156,15 @@ class Ifg(RasterBase):
 		self._nan_fraction = None
 
 
+	def convert_to_nans(self, val=0):
+		'''
+		Converts given values in phase data to NaNs
+		val - value to convert, default is 0
+		'''
+		self.phase_data = where(self.phase_data == val, nan, self.phase_data)
+		self.nan_converted = True
+
+
 	@property
 	def amp_band(self):
 		'''Returns a GDAL Band object for the amplitude band'''
@@ -197,7 +206,7 @@ class Ifg(RasterBase):
 	@property
 	def nan_count(self):
 		'''Returns number of NaN cells in the phase data'''
-		return numpy.sum(numpy.isnan(self.phase_data))
+		return nsum(isnan(self.phase_data))
 
 
 	@property
@@ -209,7 +218,7 @@ class Ifg(RasterBase):
 
 		# handle datasets with no 0 -> NaN replacement
 		if self.nan_converted is False and nan_count == 0:
-			nan_count = numpy.sum(self.phase_data == 0)
+			nan_count = nsum(self.phase_data == 0)
 
 		return nan_count / float(self.num_cells)
 

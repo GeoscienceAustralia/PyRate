@@ -93,6 +93,13 @@ class IfgTests(unittest.TestCase):
 		self.assertRaises(IOError, self.ifg.write_phase)
 
 
+	def test_convert_to_nans(self):
+		self.assertFalse(self.ifg.nan_converted)
+		self.ifg.open()
+		self.ifg.convert_to_nans(0)
+		self.assertTrue(self.ifg.nan_converted)
+
+
 	def test_xylast(self):
 		# ensure the X|Y_LAST header element has been created
 		self.ifg.open()
