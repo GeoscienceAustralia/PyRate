@@ -22,7 +22,6 @@ class MSTTests(unittest.TestCase):
 
 	def test_mst_matrix(self):
 		# Verifies mst matrix function returns array with dict/trees in each cell
-
 		for i in self.ifgs[3:]:
 			i.phase_data[0,1] = 0 # add a large stack of nans to one cell
 

@@ -1,6 +1,6 @@
 '''
 Minimum Spanning Tree functionality for PyRate.
-Contains fucntions to calculate MST from interferograms.
+Contains functions to calculate MST using interferograms.
 
 Author: Ben Davies, ANUSF
 '''
