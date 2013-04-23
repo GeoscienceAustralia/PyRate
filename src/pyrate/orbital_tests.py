@@ -67,7 +67,7 @@ class IndependentDesignMatrixTests(unittest.TestCase):
 class OrbitalCorrection(unittest.TestCase):
 	'''Test cases for the orbital correction component of PyRate.'''
 
-	def test_ifg_to_vector(self):
+	def test_ifg_to_vector_reshaping(self):
 		# test numpy reshaping order
 		ifg = zeros((2, 3), dtype=float32)
 		a = [24, 48, 1000]
@@ -157,8 +157,7 @@ class ErrorTests(unittest.TestCase):
 
 class NetworkDesignMatrixTests(unittest.TestCase):
 	'''Contains tests verifying creation of sparse network design matrix.'''
-	# TODO: add nodata to several layers
-	# TODO: check correction with NaN rows
+	# TODO: add nodata/nans to several layers for realism
 
 	def setUp(self):
 		self.ifgs = sydney5_mock_ifgs()
@@ -226,7 +225,7 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 			exp = unittest_dm(ifg, NETWORK_METHOD, deg, offset)
 			self.assertEqual(exp.shape, (ifg.num_cells, ncoef)) # subset DMs shouldn't have an offsets col
 
-			# use slightly refactored version of Hua's code to test
+			# NB: this code is Hua Wang's slightly modified for Py
 			ib1 = i * self.nc # start row for subsetting the sparse matrix
 			ib2 = (i+1) * self.nc # last row of subset of sparse matrix
 			jbm = self.date_ids[ifg.MASTER] * ncoef # starting col index for master
@@ -234,7 +233,7 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 			assert_array_almost_equal(-exp, dm[ib1:ib2, jbm:jbm+ncoef])
 			assert_array_almost_equal( exp, dm[ib1:ib2, jbs:jbs+ncoef])
 
-			# ensure rest of row is zero (in different segments)
+			# ensure rest of row is zero
 			assert_array_equal(0, dm[ib1:ib2, :jbm])
 			assert_array_equal(0, dm[ib1:ib2, jbm+ncoef:jbs])
 
@@ -288,7 +287,7 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 				corrections.append(dot(sdm, par).reshape(ifg.phase_data.shape))
 
 			act = orbital_correction(self.ifgs, PLANAR, NETWORK_METHOD, None, off)
-			assert_array_almost_equal(act, corrections, decimal=4) # TODO: fails intermittently on defaul decimal
+			assert_array_almost_equal(act, corrections, decimal=4) # TODO: fails intermittently on default decimal
 
 
 	def test_network_correct_quadratic(self):

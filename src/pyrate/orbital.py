@@ -35,9 +35,6 @@ PLANAR = 1
 QUADRATIC = 2
 
 
-# TODO: do MST as a filter step outside the main func? More MODULAR?
-# FIXME: operate on files
-
 def orbital_correction(ifgs, degree, method, mlooked=None, offset=True):
 	'''
 	TODO: Top level method for correcting orbital error in the given Ifgs. It is
@@ -60,7 +57,7 @@ def orbital_correction(ifgs, degree, method, mlooked=None, offset=True):
 		raise OrbitalError(msg)
 
 	if method == NETWORK_METHOD:
-		# FIXME: net correction has to have some kind of handling for mlooked or not
+		# FIXME: handle mlooked and straight Ifgs
 
 		if mlooked is not None:
 			_validate_mlooked(mlooked, ifgs)
@@ -69,8 +66,8 @@ def orbital_correction(ifgs, degree, method, mlooked=None, offset=True):
 			return _get_net_correction(ifgs, degree, offset) # TODO: fwd corr
 
 	elif method == INDEPENDENT_METHOD:
-		# FIXME: determine how to work this into the ifgs. Generate new Ifgs? Update
-		# the old ifgs and flag the corrections in metadata?
+		# FIXME: determine how to work this into the ifgs. Generate new Ifgs?
+		# Update passed in ifgs and flag the corrections in metadata?
 		#
 		#for i in ifgs:
 		#	i.phase_data -= _get_ind_correction(i, degree, offset)
@@ -125,7 +122,6 @@ def _get_net_correction(ifgs, degree, offset):
 
 	# FIXME: correction needs to apply to *all* ifgs - can still get the correction
 	#        as there are model params for each epoch (+ ifgs relate to all those epochs).
-	# TODO: multilooking (do seperately/prior to this as a batch job?)
 
 	# get DM / clear out the NaNs based on obs
 	tmp = vstack([i.phase_data.reshape((i.num_cells, 1)) for i in ifgs])
@@ -210,9 +206,7 @@ def _planar_dm(ifg, rows, offset):
 	# apply positional parameter values, multiply pixel coordinate by cell size to
 	# get distance (a coord by itself doesn't tell us distance from origin)
 
-	# TODO: optimise with meshgrid calls?
-	# TODO: make more efficient by pre generating xranges and doing array ops?
-	# TODO: coordinates generator for Ifgs?
+	# TODO: replace with faster meshgrid calls from unittest code
 
 	if offset:
 		for y,x in product(xrange(ifg.FILE_LENGTH), xrange(ifg.WIDTH)):
@@ -229,7 +223,8 @@ def _quadratic_dm(ifg, rows, offset):
 	# get distance (a coord by itself doesn't tell us distance from origin)
 	yst, xst = ifg.Y_SIZE, ifg.X_SIZE
 
-	# TODO: refactor, use ones +/- final col and paste these values over it
+	# TODO: replace with faster meshgrid calls from unittest code
+
 	if offset:
 		for y,x in product(xrange(ifg.FILE_LENGTH), xrange(ifg.WIDTH)):
 			row = rows.next()
