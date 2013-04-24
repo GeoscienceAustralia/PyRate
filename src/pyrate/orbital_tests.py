@@ -106,6 +106,8 @@ class SingleDesignMatrixTests(unittest.TestCase):
 class OrbitalCorrection(unittest.TestCase):
 	'''Test cases for the orbital correction component of PyRate.'''
 
+	# FIXME: review these tests
+
 	def test_ifg_to_vector_reshaping(self):
 		# test numpy reshaping order
 		ifg = zeros((2, 3), dtype=float32)
@@ -161,6 +163,8 @@ class OrbitalCorrection(unittest.TestCase):
 class ErrorTests(unittest.TestCase):
 	'''Tests for the networked correction method'''
 
+	# FIXME: review these tests
+
 	def test_invalid_ifgs_arg(self):
 		# min requirement is 1 ifg, can still subtract one epoch from the other
 		self.assertRaises(OrbitalError, get_network_design_matrix, [], PLANAR, True)
@@ -202,15 +206,16 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 		self.ifgs = sydney5_mock_ifgs()
 		self.nifgs = len(self.ifgs)
 		self.nc = self.ifgs[0].num_cells
-		self.nepochs = self.nifgs + 1 # assumes MST done
 		self.date_ids = get_date_ids(self.ifgs)
+		self.nepochs = len(self.date_ids)
+		assert self.nepochs == 6
 
 		for ifg in self.ifgs:
 			ifg.X_SIZE = 90.0
 			ifg.Y_SIZE = 89.5
 
 
-	def test_network_design_matrix_planar(self):
+	def test_planar_network_dm(self):
 		ncoef = 2
 		offset = False
 		act = get_network_design_matrix(self.ifgs, PLANAR, offset)
@@ -219,13 +224,15 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 		self.check_equality(ncoef, act, self.ifgs, offset)
 
 
-	def test_network_design_matrix_planar_offset(self):
+	def test_planar_network_dm_offset(self):
 		ncoef = 2 # NB: doesn't include offset col
 		offset = True
 		act = get_network_design_matrix(self.ifgs, PLANAR, offset)
+		self.assertEqual(act.shape[0], self.nc * self.nifgs)
+		self.assertEqual(act.shape[1], (self.nepochs * ncoef) + self.nifgs)
+
+		# TODO: check offsets cols thoroughly
 		self.assertTrue(act[-1, -1] == 1)
-		self.assertEqual(act.shape[0], self.ifgs[0].num_cells * self.nifgs)
-		self.assertEqual(act.shape[1], self.nepochs * (ncoef + 1))
 		self.assertNotEqual(act.ptp(), 0)
 		self.check_equality(ncoef, act, self.ifgs, offset)
 
@@ -243,9 +250,11 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 		ncoef = 5
 		offset = True
 		act = get_network_design_matrix(self.ifgs, QUADRATIC, offset)
-		self.assertTrue(act[-1, -1] == 1)
-		exp = (self.nc * self.nifgs, (ncoef + 1) * self.nepochs)
+		exp = (self.nc * self.nifgs, (self.nepochs * ncoef) + self.nifgs )
 		self.assertEqual(act.shape, exp)
+
+		# TODO: check offsets cols thoroughly
+		self.assertTrue(act[-1, -1] == 1)
 		self.assertNotEqual(act.ptp(), 0)
 		self.check_equality(ncoef, act, self.ifgs, offset)
 
