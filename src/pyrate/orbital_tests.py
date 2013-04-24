@@ -53,18 +53,18 @@ class SingleDesignMatrixTests(unittest.TestCase):
 
 
 	def test_create_planar_dm(self):
-		# verify basic planar DM without offsets
-		act = get_design_matrix(self.m, PLANAR, False)
+		offset = False
+		act = get_design_matrix(self.m, PLANAR, offset)
 		self.assertEqual(act.shape, (self.m.num_cells, 2))
-		exp = unittest_dm(self.m, INDEPENDENT_METHOD, PLANAR, False)
+		exp = unittest_dm(self.m, INDEPENDENT_METHOD, PLANAR, offset)
 		assert_array_equal(act, exp)
 
 
 	def test_create_planar_dm_offsets(self):
-		# verify planar DM with offsets
-		act = get_design_matrix(self.m, PLANAR, True)
-		self.assertEqual(act.shape, (self.m.num_cells, 3)) # TODO: refactor to test shape
-		exp = unittest_dm(self.m, INDEPENDENT_METHOD, PLANAR, True)
+		offset = True
+		act = get_design_matrix(self.m, PLANAR, offset)
+		self.assertEqual(act.shape, (self.m.num_cells, 3))
+		exp = unittest_dm(self.m, INDEPENDENT_METHOD, PLANAR, offset)
 		assert_array_almost_equal(act, exp)
 
 
@@ -72,13 +72,9 @@ class SingleDesignMatrixTests(unittest.TestCase):
 		# TODO: refactor this for meshgrid version of prod implementation
 		# networked method planar version should not have offsets col
 		exp = unittest_dm(self.m, NETWORK_METHOD, PLANAR, False)
-		self.assertEqual(len(exp), self.m.num_cells) # TODO: refactor to test shape
-		self.assertEqual(len(exp[0]), 2) # expecting 2 cols
-
+		self.assertEqual(exp.shape, (self.m.num_cells, 2))
 		exp2 = unittest_dm(self.m, NETWORK_METHOD, PLANAR, True)
-		self.assertEqual(len(exp2), self.m.num_cells) # TODO: refactor to test shape
-		self.assertEqual(len(exp2[0]), 2) # still 2, offsets cols included elsewhere
-
+		self.assertEqual(exp2.shape, (self.m.num_cells, 2)) # offset cols go elsewhere
 		assert_array_equal(exp, exp2)
 
 
