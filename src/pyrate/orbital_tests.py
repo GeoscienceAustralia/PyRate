@@ -22,6 +22,8 @@ from orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, QUADRATIC
 from tests_common import sydney5_mock_ifgs, MockIfg, IFMS5
 
 
+# FIXME: check the offset cols as 1s in network tests
+
 # TODO: test lstsq() here against Hua's manual method
 
 # ORDER of work:
@@ -30,38 +32,63 @@ from tests_common import sydney5_mock_ifgs, MockIfg, IFMS5
 # high level functions/workflow
 
 
-class IndependentDesignMatrixTests(unittest.TestCase):
-	'''Tests for verifying various forms of design matricies'''
+class SingleDesignMatrixTests(unittest.TestCase):
+	'''
+	Unittests verify correctness of basic planar & quadratic design matricies	or
+	DMs. This class serves two purposes, ensuring the independent method DMs are
+	produced correctly. Secondly, these indivdual DMs are subsets of the larger
+	DM 'grid' required for the networked orbital correction method.
+	'''
 
 	def setUp(self):
 		# fake cell sizes
-		self.xs = 0.6
-		self.ys = 0.7
+		self.xs = 0.75
+		self.ys = 0.8
 		self.ifg = Ifg("../../tests/sydney_test/obs/geo_060619-061002.unw")
 		self.ifg.open()
 
-
-	def test_design_matrix_planar(self):
-		m = MockIfg(self.ifg, 2, 3)
-		m.X_SIZE = self.xs
-		m.Y_SIZE = self.ys
-
-		# test with and without offsets option
-		exp = unittest_dm(m, INDEPENDENT_METHOD, PLANAR, True)
-		assert_array_almost_equal(exp, get_design_matrix(m, PLANAR, True))
-		assert_array_almost_equal(exp[:, :-1], get_design_matrix(m, PLANAR, False))
+		self.m = MockIfg(self.ifg, 3, 4)
+		self.m.X_SIZE = self.xs
+		self.m.Y_SIZE = self.ys
 
 
+	def test_create_planar_dm(self):
+		# verify basic planar DM without offsets
+		exp = unittest_dm(self.m, INDEPENDENT_METHOD, PLANAR, False)
+		self.assertEqual(len(exp), self.m.num_cells)
+		self.assertEqual(len(exp[0]), 2) # expecting 2 cols
+		assert_array_almost_equal(exp, get_design_matrix(self.m, PLANAR, False))
+
+
+	def test_create_planar_dm_offsets(self):
+		# verify planar DM with offsets
+		exp = unittest_dm(self.m, INDEPENDENT_METHOD, PLANAR, True)
+		self.assertEqual(len(exp), self.m.num_cells)
+		self.assertEqual(len(exp[0]), 3) # expecting x,y,offsets cols
+		assert_array_almost_equal(exp, get_design_matrix(self.m, PLANAR, True))
+
+
+	def test_create_planar_dm_network(self):
+		# networked method planar version should not have offsets col
+		exp = unittest_dm(self.m, NETWORK_METHOD, PLANAR, False)
+		self.assertEqual(len(exp), self.m.num_cells)
+		self.assertEqual(len(exp[0]), 2) # expecting 2 cols
+
+		exp2 = unittest_dm(self.m, NETWORK_METHOD, PLANAR, True)
+		self.assertEqual(len(exp2), self.m.num_cells)
+		self.assertEqual(len(exp2[0]), 2) # still 2, offsets cols included elsewhere
+
+		assert_array_equal(exp, exp2)
+
+
+	# FIXME: expand this as per tests for PLANAR
 	def test_design_matrix_quadratic(self):
-		m = MockIfg(self.ifg, 3, 5)
-		m.X_SIZE = self.xs
-		m.Y_SIZE = self.ys
-
 		# use exp & subset of exp to test against both forms of DM
-		exp = unittest_dm(m, INDEPENDENT_METHOD, QUADRATIC, True)
-		design_mat = get_design_matrix(m, QUADRATIC, False) # no offset
+		exp = unittest_dm(self.m, INDEPENDENT_METHOD, QUADRATIC, True)
+		design_mat = get_design_matrix(self.m, QUADRATIC, False) # no offset
 		assert_array_almost_equal(exp[:, :-1], design_mat)
-		assert_array_almost_equal(exp, get_design_matrix(m, QUADRATIC, True))
+		assert_array_almost_equal(exp, get_design_matrix(self.m, QUADRATIC, True))
+
 
 
 class OrbitalCorrection(unittest.TestCase):
@@ -184,6 +211,7 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 		ncoef = 2 # NB: doesn't include offset col
 		offset = True
 		act = get_network_design_matrix(self.ifgs, PLANAR, offset)
+		self.assertTrue(act[-1, -1] == 1)
 		self.assertEqual(act.shape[0], self.ifgs[0].num_cells * self.nifgs)
 		self.assertEqual(act.shape[1], self.nepochs * (ncoef + 1))
 		self.assertNotEqual(act.ptp(), 0)
@@ -203,6 +231,7 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 		ncoef = 5
 		offset = True
 		act = get_network_design_matrix(self.ifgs, QUADRATIC, offset)
+		self.assertTrue(act[-1, -1] == 1)
 		exp = (self.nc * self.nifgs, (ncoef + 1) * self.nepochs)
 		self.assertEqual(act.shape, exp)
 		self.assertNotEqual(act.ptp(), 0)
@@ -302,7 +331,9 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 			data[st:st + self.nc] = ifg.phase_data.reshape(self.nc)
 
 		dm = get_network_design_matrix(self.ifgs, QUADRATIC, False)[~isnan(data)]
-		params = pinv(dm, 1e-6) * data[~isnan(data)]
+
+		raise NotImplementedError("use dot() for matrix mult of pinv() results")
+		params = pinv(dm, 1e-6) * data[~isnan(data)] # FIXME: use dot() instead
 
 		# TODO: add fwd correction calc & testing here
 
@@ -315,11 +346,16 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 
 
 def unittest_dm(ifg, method, degree, offset=False):
-	'''Convenience function to create design matrices.
-	xs - X axis cell size
-	ys - Y axis cell size
+	'''Helper/test func to create design matrix segments. Includes handling for
+	making quadratic DM segments for use in network method.
+	ifg - source interferogram to model design matrix on
+	method - INDEPENDENT_METHOD or NETWORK_METHOD
+	degree - PLANAR or QUADRATIC
+	offset - True/False to include additional cols for offsets
 	'''
 	assert method in [INDEPENDENT_METHOD, NETWORK_METHOD]
+	assert degree in [PLANAR, QUADRATIC]
+
 	ncoef = 2 if degree == PLANAR else 5
 	if offset is True and method == INDEPENDENT_METHOD:
 		ncoef += 1
@@ -338,8 +374,6 @@ def unittest_dm(ifg, method, degree, offset=False):
 		out[:, 2] = x * y
 		out[:, 3] = x
 		out[:, 4] = y
-	else:
-		raise Exception("Degree is invalid")
 
 	return out
 

@@ -15,6 +15,9 @@ from mst import default_mst
 
 # Orbital correction tasks
 #
+# 3) FIXME: REDO/REFACTOR TESTING:
+#  Manually make small DMs with corect offsets cols etc and test against these!
+#
 # 4) forward calculation (orbfwd.m)
 #		* create 2D orbital correction layer from the model params
 #		* add handling for mlooked ifgs/correcting the full size ones
@@ -177,13 +180,13 @@ def get_network_design_matrix(ifgs, degree, offset):
 		raise OrbitalError("Invalid number of Ifgs")
 
 	# init design matrix
-	num_epochs = num_ifgs + 1
+	dates = [ifg.MASTER for ifg in ifgs] + [ifg.SLAVE for ifg in ifgs]
+	num_epochs = len(set(dates)) # TODO: test this
 	nparams = get_num_params(degree, offset)
-	shape = [ifgs[0].num_cells * num_ifgs, nparams * num_epochs]
+	shape = [ifgs[0].num_cells * num_ifgs, nparams * num_epochs] # FIXME: has 1 too many cols for OFFSETS for PLANAR AND QUADRATIC
 	data = zeros(shape, dtype=float32)
 
-	#  in individual design matrices
-	dates = [ifg.MASTER for ifg in ifgs] + [ifg.SLAVE for ifg in ifgs]
+	# individual design matrices
 	ids = master_slave_ids(dates)
 	ncoef = get_num_params(degree, False) # only base level of coefficients
 	offset_col = num_epochs * ncoef # base offset for the offset cols
