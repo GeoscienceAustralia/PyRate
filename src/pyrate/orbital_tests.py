@@ -7,11 +7,11 @@ Created on 31/3/13
 
 
 import unittest
-from os.path import join
+from itertools import product
 
 from numpy.linalg import pinv
 from numpy import nan, isnan, array, reshape, float32
-from numpy import empty, ones, zeros, meshgrid, dot
+from numpy import empty, zeros, dot
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 
 import algorithm
@@ -19,7 +19,7 @@ from shared import Ifg
 from orbital import OrbitalError, orbital_correction
 from orbital import get_design_matrix, get_network_design_matrix
 from orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, QUADRATIC
-from tests_common import sydney5_mock_ifgs, MockIfg, IFMS5
+from tests_common import sydney5_mock_ifgs, MockIfg
 
 
 # FIXME: check the offset cols as 1s in network tests
@@ -368,26 +368,33 @@ def unittest_dm(ifg, method, degree, offset=False):
 	assert method in [INDEPENDENT_METHOD, NETWORK_METHOD]
 	assert degree in [PLANAR, QUADRATIC]
 
-	ncoef = 2 if degree == PLANAR else 5
-	if offset is True and method == INDEPENDENT_METHOD:
-		ncoef += 1
+	NX = ncoef = 2 if degree == PLANAR else 5
+	if offset is True:
+		if method == INDEPENDENT_METHOD:
+			ncoef += 1
+		else:
+			offset = False # prevent offsets in DM sections for network method
 
-	out = ones((ifg.num_cells, ncoef), dtype=float32)
-	x, y = meshgrid(range(ifg.WIDTH), range(ifg.FILE_LENGTH))
-	x = x.reshape(ifg.num_cells) * ifg.X_SIZE
-	y = y.reshape(ifg.num_cells) * ifg.Y_SIZE
+	data = empty((ifg.num_cells, ncoef), dtype=float32)
+	rows = iter(data)
+	yr = xrange(ifg.FILE_LENGTH)
+	xr = xrange(ifg.WIDTH)
 
 	if degree == PLANAR:
-		out[:, 0] = x
-		out[:, 1] = y
-	elif degree == QUADRATIC:
-		out[:, 0] = x**2
-		out[:, 1] = y**2
-		out[:, 2] = x * y
-		out[:, 3] = x
-		out[:, 4] = y
+		for y,x in product(yr, xr):
+			row = rows.next()
+			row[:NX] = [x * ifg.X_SIZE, y * ifg.Y_SIZE]
+	else:
+		for y,x in product(yr, xr):
+			ys = y * ifg.Y_SIZE
+			xs = x * ifg.X_SIZE
+			row = rows.next()
+			row[:NX] = [xs**2, ys**2, xs*ys, xs, ys]
 
-	return out
+	if offset:
+		data[:, -1] = 1
+
+	return data
 
 
 def get_date_ids(ifgs):
