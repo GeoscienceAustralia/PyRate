@@ -6,7 +6,7 @@ Created on 31/3/13
 '''
 
 from itertools import product
-from numpy import dot, sum, isnan, reshape, zeros, float32, vstack, squeeze
+from numpy import dot, empty, isnan, reshape, zeros, float32, vstack, squeeze
 from scipy.linalg import lstsq
 from numpy.linalg import pinv
 
@@ -155,17 +155,42 @@ def _get_net_correction(ifgs, degree, offset):
 
 
 def get_design_matrix(ifg, degree, offset):
-	'''Returns design matrix with 2 columns for linear model parameters'''
+	'''
+	Returns design matrix with columns for model parameters.
+	ifg - interferogram to base the DM on
+	degree - PLANAR or QUADRATIC
+	offset - True to include offset cols, otherwise False.
+	'''
+	# apply positional parameter values, multiply pixel coordinate by cell size to
+	# get distance (a coord by itself doesn't tell us distance from origin)
+
+	# TODO: replace with faster meshgrid calls from unittest code
 
 	# init design matrix
 	shape = (ifg.num_cells, get_num_params(degree, offset))
-	data = zeros(shape, dtype=float32)
+	data = empty(shape, dtype=float32)
 	rows = iter(data)
 
-	dmfun = _planar_dm if degree == PLANAR else _quadratic_dm
-	dmfun(ifg, rows, offset)
-	return data
+	yr = xrange(ifg.FILE_LENGTH)
+	xr = xrange(ifg.WIDTH)
 
+	if degree == PLANAR:
+		n_planar_coef = 2
+		for y,x in product(yr, xr):
+			row = rows.next()
+			row[:n_planar_coef] = [x * ifg.X_SIZE, y * ifg.Y_SIZE]
+	else:
+		n_quad_coef = 5
+		for y,x in product(yr, xr):
+			ys = y * ifg.Y_SIZE
+			xs = x * ifg.X_SIZE
+			row = rows.next()
+			row[:n_quad_coef] = [xs**2, ys**2, xs*ys, xs, ys]
+
+	if offset:
+		data[:, -1] = 1
+
+	return data
 
 # TODO: can this be refactored under one get_design_matrix() func?
 def get_network_design_matrix(ifgs, degree, offset):
@@ -203,43 +228,6 @@ def get_network_design_matrix(ifgs, degree, offset):
 			data[rs:rs + ifg.num_cells, offset_col + i] = 1  # init offset cols
 
 	return data
-
-
-def _planar_dm(ifg, rows, offset):
-	# apply positional parameter values, multiply pixel coordinate by cell size to
-	# get distance (a coord by itself doesn't tell us distance from origin)
-
-	# TODO: replace with faster meshgrid calls from unittest code
-
-	if offset:
-		for y,x in product(xrange(ifg.FILE_LENGTH), xrange(ifg.WIDTH)):
-			row = rows.next() # TODO: make faster with vstack?
-			row[:] = [x * ifg.X_SIZE, y * ifg.Y_SIZE, 1]
-	else:
-		for y,x in product(xrange(ifg.FILE_LENGTH), xrange(ifg.WIDTH)):
-			row = rows.next() # TODO: make faster with vstack?
-			row[:] = [x * ifg.X_SIZE, y * ifg.Y_SIZE]
-
-
-def _quadratic_dm(ifg, rows, offset):
-	# apply positional parameter values, multiply pixel coordinate by cell size to
-	# get distance (a coord by itself doesn't tell us distance from origin)
-	yst, xst = ifg.Y_SIZE, ifg.X_SIZE
-
-	# TODO: replace with faster meshgrid calls from unittest code
-
-	if offset:
-		for y,x in product(xrange(ifg.FILE_LENGTH), xrange(ifg.WIDTH)):
-			row = rows.next()
-			y2 = y * yst
-			x2 = x * xst
-			row[:] = [x2**2, y2**2, x2*y2, x2, y2, 1]
-	else:
-		for y,x in product(xrange(ifg.FILE_LENGTH), xrange(ifg.WIDTH)):
-			row = rows.next()
-			y2 = y * yst
-			x2 = x * xst
-			row[:] = [x2**2, y2**2, x2*y2, x2, y2]
 
 
 
