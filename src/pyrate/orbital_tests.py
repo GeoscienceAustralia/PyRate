@@ -52,10 +52,11 @@ class SingleDesignMatrixTests(unittest.TestCase):
 		self.m.Y_SIZE = self.ys
 
 
+	# FIXME: test the actual results, not the ones from the test func!
 	def test_create_planar_dm(self):
 		# verify basic planar DM without offsets
 		exp = unittest_dm(self.m, INDEPENDENT_METHOD, PLANAR, False)
-		self.assertEqual(len(exp), self.m.num_cells)
+		self.assertEqual(len(exp), self.m.num_cells) # TODO: refactor to test shape
 		self.assertEqual(len(exp[0]), 2) # expecting 2 cols
 		assert_array_almost_equal(exp, get_design_matrix(self.m, PLANAR, False))
 
@@ -63,7 +64,7 @@ class SingleDesignMatrixTests(unittest.TestCase):
 	def test_create_planar_dm_offsets(self):
 		# verify planar DM with offsets
 		exp = unittest_dm(self.m, INDEPENDENT_METHOD, PLANAR, True)
-		self.assertEqual(len(exp), self.m.num_cells)
+		self.assertEqual(len(exp), self.m.num_cells) # TODO: refactor to test shape
 		self.assertEqual(len(exp[0]), 3) # expecting x,y,offsets cols
 		assert_array_almost_equal(exp, get_design_matrix(self.m, PLANAR, True))
 
@@ -71,23 +72,38 @@ class SingleDesignMatrixTests(unittest.TestCase):
 	def test_create_planar_dm_network(self):
 		# networked method planar version should not have offsets col
 		exp = unittest_dm(self.m, NETWORK_METHOD, PLANAR, False)
-		self.assertEqual(len(exp), self.m.num_cells)
+		self.assertEqual(len(exp), self.m.num_cells) # TODO: refactor to test shape
 		self.assertEqual(len(exp[0]), 2) # expecting 2 cols
 
 		exp2 = unittest_dm(self.m, NETWORK_METHOD, PLANAR, True)
-		self.assertEqual(len(exp2), self.m.num_cells)
+		self.assertEqual(len(exp2), self.m.num_cells) # TODO: refactor to test shape
 		self.assertEqual(len(exp2[0]), 2) # still 2, offsets cols included elsewhere
 
 		assert_array_equal(exp, exp2)
 
 
-	# FIXME: expand this as per tests for PLANAR
-	def test_design_matrix_quadratic(self):
-		# use exp & subset of exp to test against both forms of DM
-		exp = unittest_dm(self.m, INDEPENDENT_METHOD, QUADRATIC, True)
-		design_mat = get_design_matrix(self.m, QUADRATIC, False) # no offset
-		assert_array_almost_equal(exp[:, :-1], design_mat)
-		assert_array_almost_equal(exp, get_design_matrix(self.m, QUADRATIC, True))
+	# tests for quadratic mode
+
+	def test_create_quadratic_dm(self):
+		offset = False
+		act = get_design_matrix(self.m, QUADRATIC, offset)
+		self.assertEqual(act.shape, (self.m.num_cells, 5))
+		exp = unittest_dm(self.m, INDEPENDENT_METHOD, QUADRATIC, offset)
+		assert_array_equal(act, exp)
+
+
+	def test_create_quadratic_dm_offsets(self):
+		offset = True
+		act = get_design_matrix(self.m, QUADRATIC, offset)
+		self.assertEqual(act.shape, (self.m.num_cells, 6))
+		exp = unittest_dm(self.m, INDEPENDENT_METHOD, QUADRATIC, offset)
+		assert_array_equal(act, exp)
+
+
+	def test_create_quadratic_dm_network(self):
+		raise NotImplementedError
+		# TODO: compare actuals against the test DM
+		#assert_array_equal(act, exp)
 
 
 
