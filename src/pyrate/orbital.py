@@ -190,8 +190,13 @@ def get_design_matrix(ifg, degree, offset):
 
 
 def get_network_design_matrix(ifgs, degree, offset):
-	'''Returns a larger format design matrix for networked error correction.'''
-
+	'''
+	Returns a larger format design matrix for networked error correction. This is
+	a fullsize DM, including rows which relate to those of NaN cells.
+	ifgs - sequence of interferograms
+	degree - PLANAR or QUADRATIC mode
+	offset - True to include offset cols, otherwise False.
+	'''
 	if degree not in [PLANAR, QUADRATIC]:
 		raise OrbitalError("Invalid degree argument")
 
@@ -207,27 +212,25 @@ def get_network_design_matrix(ifgs, degree, offset):
 	if offset:
 		shape[1] += nifgs # add extra offset cols
 
-	data = zeros(shape, dtype=float32)
-
-	# TODO: clean up the code from here
+	ndm = zeros(shape, dtype=float32)
 
 	# individual design matrices
 	dates = [ifg.MASTER for ifg in ifgs] + [ifg.SLAVE for ifg in ifgs]
 	ids = master_slave_ids(dates)
 	offset_col = nepochs * ncoef # base offset for the offset cols
 
+	tmp = get_design_matrix(ifgs[0], degree, False)
 	for i, ifg in enumerate(ifgs):
-		tmp = get_design_matrix(ifg, degree, False) # DMs within full DM don't have extra col
 		rs = i * ifg.num_cells # starting row
 		m = ids[ifg.MASTER] * ncoef  # start col for master
 		s = ids[ifg.SLAVE] * ncoef  # start col for slave
-		data[rs:rs + ifg.num_cells, m:m + ncoef] = -tmp
-		data[rs:rs + ifg.num_cells, s:s + ncoef] = tmp
+		ndm[rs:rs + ifg.num_cells, m:m + ncoef] = -tmp
+		ndm[rs:rs + ifg.num_cells, s:s + ncoef] = tmp
 
 		if offset:
-			data[rs:rs + ifg.num_cells, offset_col + i] = 1  # init offset cols
+			ndm[rs:rs + ifg.num_cells, offset_col + i] = 1  # init offset cols
 
-	return data
+	return ndm
 
 
 
