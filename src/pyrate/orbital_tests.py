@@ -112,8 +112,6 @@ class SingleDesignMatrixTests(unittest.TestCase):
 class OrbitalCorrection(unittest.TestCase):
 	'''Test cases for the orbital correction component of PyRate.'''
 
-	# FIXME: review these tests
-
 	def test_ifg_to_vector_reshaping(self):
 		# test numpy reshaping order
 		ifg = zeros((2, 3), dtype=float32)
@@ -130,6 +128,7 @@ class OrbitalCorrection(unittest.TestCase):
 		assert_array_equal(tmp, ifg)
 
 
+	# FIXME: review this test:
 	def test_independent_correction(self):
 		# verify top level orbital correction function
 		# TODO: check correction with NaN rows
@@ -169,14 +168,13 @@ class OrbitalCorrection(unittest.TestCase):
 class ErrorTests(unittest.TestCase):
 	'''Tests for the networked correction method'''
 
-	# FIXME: review these tests
-
 	def test_invalid_ifgs_arg(self):
 		# min requirement is 1 ifg, can still subtract one epoch from the other
 		self.assertRaises(OrbitalError, get_network_design_matrix, [], PLANAR, True)
 
 
 	def test_invalid_degree_arg(self):
+		# test failure of a few different args for 'degree'
 		ifgs = sydney5_mock_ifgs()
 		for d in range(-5, 1):
 			self.assertRaises(OrbitalError, get_network_design_matrix, ifgs, d, True)
@@ -185,25 +183,26 @@ class ErrorTests(unittest.TestCase):
 
 
 	def test_invalid_method(self):
+		# test failure of a few different args for 'method'
 		ifgs = sydney5_mock_ifgs()
 		for m in [None, 5, -1, -3, 45.8]:
-			self.assertRaises(OrbitalError, orbital_correction, ifgs, PLANAR, m, None, True)
+			self.assertRaises(OrbitalError, orbital_correction, ifgs, PLANAR, m, None)
 
 
 	def test_multilooked_ifgs_arg(self):
-		# check a variety of bad args for network method multilooked ifgs
+		# check some bad args for network method with multilooked ifgs
 		ifgs = sydney5_mock_ifgs()
 		args = [[None, None, None, None, None], ["X"] * 5]
 		for a in args:
 			args = (ifgs, PLANAR, NETWORK_METHOD, a)
 			self.assertRaises(OrbitalError, orbital_correction, *args)
 
-		# ensure failure if uneven ifgs lengths
+		# ensure failure if # ifgs doesn't match # mlooked ifgs
 		args = (ifgs, PLANAR, NETWORK_METHOD, ifgs[:4])
 		self.assertRaises(OrbitalError, orbital_correction, *args)
 
 
-
+# FIXME: review these tests
 class NetworkDesignMatrixTests(unittest.TestCase):
 	'''Contains tests verifying creation of sparse network design matrix.'''
 	# TODO: add nodata/nans to several layers for realism
