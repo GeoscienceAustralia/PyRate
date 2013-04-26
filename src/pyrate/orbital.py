@@ -10,7 +10,7 @@ from numpy import dot, vstack, zeros, meshgrid
 from scipy.linalg import lstsq
 from numpy.linalg import pinv
 
-from algorithm import master_slave_ids, get_all_epochs
+from algorithm import master_slave_ids, get_all_epochs, get_epoch_count
 
 
 # Orbital correction tasks
@@ -90,7 +90,7 @@ def _validate_mlooked(mlooked, ifgs):
 		raise OrbitalError(msg)
 
 
-def get_num_params(degree, offset):
+def get_num_params(degree, offset=None):
 	'''Returns number of model parameters'''
 	nparams = 2 if degree == PLANAR else 5
 	if offset is True:
@@ -170,6 +170,9 @@ def get_design_matrix(ifg, degree, offset):
 	x = x.reshape(ifg.num_cells) * ifg.X_SIZE
 	y = y.reshape(ifg.num_cells) * ifg.Y_SIZE
 
+
+	# TODO: performance test this vs np.concatenate (n by 1 cols)
+
 	if degree == PLANAR:
 		data[:, 0] = x
 		data[:, 1] = y
@@ -186,29 +189,32 @@ def get_design_matrix(ifg, degree, offset):
 	return data
 
 
-# TODO: should this be refactored under one get_design_matrix() func?
 def get_network_design_matrix(ifgs, degree, offset):
 	'''Returns a larger format design matrix for networked error correction.'''
 
 	if degree not in [PLANAR, QUADRATIC]:
 		raise OrbitalError("Invalid degree argument")
 
-	num_ifgs = len(ifgs)
-	if num_ifgs < 1:
+	nifgs = len(ifgs)
+	if nifgs < 1:
 		# can feasibly do correction on a single Ifg/2 epochs
 		raise OrbitalError("Invalid number of Ifgs")
 
 	# init design matrix
-	dates = [ifg.MASTER for ifg in ifgs] + [ifg.SLAVE for ifg in ifgs]
-	num_epochs = len(set(dates)) # TODO: test this
-	nparams = get_num_params(degree, offset)
-	shape = [ifgs[0].num_cells * num_ifgs, nparams * num_epochs] # FIXME: has 1 too many cols for OFFSETS for PLANAR AND QUADRATIC
+	nepochs = get_epoch_count(ifgs)
+	ncoef = get_num_params(degree)
+	shape = [ifgs[0].num_cells * nifgs, ncoef * nepochs]
+	if offset:
+		shape[1] += nifgs # add extra offset cols
+
 	data = zeros(shape, dtype=float32)
 
+	# TODO: clean up the code from here
+
 	# individual design matrices
+	dates = [ifg.MASTER for ifg in ifgs] + [ifg.SLAVE for ifg in ifgs]
 	ids = master_slave_ids(dates)
-	ncoef = get_num_params(degree, False) # only base level of coefficients
-	offset_col = num_epochs * ncoef # base offset for the offset cols
+	offset_col = nepochs * ncoef # base offset for the offset cols
 
 	for i, ifg in enumerate(ifgs):
 		tmp = get_design_matrix(ifg, degree, False) # DMs within full DM don't have extra col

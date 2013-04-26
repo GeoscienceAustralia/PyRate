@@ -202,7 +202,7 @@ class ErrorTests(unittest.TestCase):
 		self.assertRaises(OrbitalError, orbital_correction, *args)
 
 
-# FIXME: review these tests
+
 class NetworkDesignMatrixTests(unittest.TestCase):
 	'''Contains tests verifying creation of sparse network design matrix.'''
 	# TODO: add nodata/nans to several layers for realism
@@ -236,13 +236,12 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 		self.assertEqual(act.shape[0], self.nc * self.nifgs)
 		self.assertEqual(act.shape[1], (self.nepochs * ncoef) + self.nifgs)
 
-		# TODO: check offsets cols thoroughly
-		self.assertTrue(act[-1, -1] == 1)
+		check_offsets_cols(act, self.ifgs)
 		self.assertNotEqual(act.ptp(), 0)
 		self.check_equality(ncoef, act, self.ifgs, offset)
 
 
-	def test_network_design_matrix_quad(self):
+	def test_quadratic_network_dm(self):
 		ncoef = 5
 		offset = False
 		act = get_network_design_matrix(self.ifgs, QUADRATIC, offset)
@@ -251,19 +250,19 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 		self.check_equality(ncoef, act, self.ifgs, offset)
 
 
-	def test_network_design_matrix_quad_offset(self):
+	def test_quadratic_network_dm_offset(self):
 		ncoef = 5
 		offset = True
 		act = get_network_design_matrix(self.ifgs, QUADRATIC, offset)
-		exp = (self.nc * self.nifgs, (self.nepochs * ncoef) + self.nifgs )
-		self.assertEqual(act.shape, exp)
+		self.assertEqual(act.shape[0], self.nc * self.nifgs)
+		self.assertEqual(act.shape[1], (self.nepochs * ncoef) + self.nifgs)
 
-		# TODO: check offsets cols thoroughly
-		self.assertTrue(act[-1, -1] == 1)
+		check_offsets_cols(act, self.ifgs)
 		self.assertNotEqual(act.ptp(), 0)
 		self.check_equality(ncoef, act, self.ifgs, offset)
 
 
+	# TODO: review functions from here
 	def check_equality(self, ncoef, dm, ifgs, offset):
 		'''
 		Internal test function to check subsets against network design matrix
@@ -409,6 +408,21 @@ def unittest_dm(ifg, method, degree, offset=False):
 		data[:, -1] = 1
 
 	return data
+
+
+def check_offsets_cols(dm, ifgs):
+	nifgs = len(ifgs)
+	subset = dm[:, -nifgs:]
+
+	s = 0
+	for i, col in zip(ifgs, subset.T): # rotate subsets so zip() get cols as rows
+		w = i.num_cells - i.nan_count
+		pre = col[:s]
+		assert (pre == 0).all() if len(pre) > 0 else True
+		assert (col[s:s + w] == 1).all()
+		post = col[s + w:]
+		assert (post == 0).all() if len(post) > 0 else True
+		s += w # update offset for next found
 
 
 def get_date_ids(ifgs):
