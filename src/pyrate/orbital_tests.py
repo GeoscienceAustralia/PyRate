@@ -11,7 +11,7 @@ from itertools import product
 
 from numpy.linalg import pinv
 from numpy import nan, isnan, array, reshape, float32
-from numpy import empty, zeros, dot
+from numpy import empty, zeros, dot, concatenate
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 
 import algorithm
@@ -294,38 +294,52 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 				assert_array_equal(0, dm[ib1:ib2, ip1 + 1:]) # cols after offset col
 
 
-	# TODO: review functions from here
-	def test_network_correct_planar(self):
-		'''Verifies planar form of network method of correction'''
 
-		# add some nans to the data
+class NetworkCorrectionTests(unittest.TestCase):
+	'''Tests to verify Ifg correction using network method'''
+
+	def setUp(self):
+		# fake some real ifg data by adding nans
+		self.ifgs = sydney5_mock_ifgs()
 		self.ifgs[0].phase_data[0, :] = nan # 3 error cells
 		self.ifgs[1].phase_data[2, 1:3] = nan # 2 error cells
 		self.ifgs[2].phase_data[3, 2:3] = nan # 1 err
 		self.ifgs[3].phase_data[1, 2] = nan # 1 err
 		self.ifgs[4].phase_data[1, 1:3] = nan # 2 err
-		err = sum([i.nan_count for i in self.ifgs])
+		self.err = sum([i.nan_count for i in self.ifgs])
 
-		# reshape phase data of all ifgs to single vector
-		data = empty(self.nifgs * self.nc, dtype=float32)
-		for i, ifg in enumerate(self.ifgs):
-			st = i * self.nc
-			data[st:st + self.nc] = ifg.phase_data.reshape(self.nc)
+		for ifg in self.ifgs:
+			ifg.X_SIZE = 90.0
+			ifg.Y_SIZE = 89.5
+
+		# precalc other useful vars
+		self.nifgs = len(self.ifgs)
+		self.nc = self.ifgs[0].num_cells
+		self.date_ids = get_date_ids(self.ifgs)
+		self.nepochs = len(self.date_ids)
+		assert self.nepochs == 6
+
+
+	# TODO: review functions from here
+	def test_network_correction_planar(self):
+		'''Verifies planar form of network method of correction'''
+
+		# reshape ifgs phase data to single observations vector
+		data = concatenate([i.phase_data.reshape(self.nc) for i in self.ifgs])
 
 		for off in [False, True]:
 			dm = get_network_design_matrix(self.ifgs, PLANAR, off)[~isnan(data)]
-			new_sh = ( (self.nc * self.nifgs) - err, 1)
-			fd = data[~isnan(data)].reshape(new_sh)
+			fd = data[~isnan(data)].reshape((dm.shape[0], 1))
 			self.assertEqual(len(dm), len(fd))
 
+			raise NotImplementedError("TODO: determine how many ncoefs this should be tested against")
+
 			ncoef = 3 if off else 2
-			nepochs = len(self.ifgs) + 1
 			params = dot(pinv(dm, 1e-6), fd)
-			self.assertEqual(params.shape, (nepochs * ncoef, 1) ) # needs to be matrix multiplied/reduced
+			self.assertEqual(params.shape, )  # TODO: was (self.nepochs * ncoef, 1)
 
 			# calculate forward correction
 			sdm = unittest_dm(ifg, NETWORK_METHOD, PLANAR) # base DM to multiply out to real data
-			raise NotImplementedError("TODO: determine how many ncoefs this should be tested for in offsets=TRUE")
 			self.assertEqual(sdm.shape, (12,ncoef))
 
 			corrections = []
@@ -339,30 +353,23 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 			assert_array_almost_equal(act, corrections, decimal=4) # TODO: fails intermittently on default decimal
 
 
-	def test_network_correct_quadratic(self):
+	def test_network_correction_quadratic(self):
 		'''Verifies quadratic form of network method of correction'''
 
-		self.ifgs[0].phase_data[3, 0:7] = nan # add NODATA as rasters are complete
-
 		# reshape phase data to vectors
-		data = empty(self.nifgs * self.nc, dtype=float32)
-		for i, ifg in enumerate(self.ifgs):
-			st = i * self.nc
-			data[st:st + self.nc] = ifg.phase_data.reshape(self.nc)
+		data = concatenate([i.phase_data.reshape(self.nc) for i in self.ifgs])
 
+		# FIXME: expand test to include offsets
 		dm = get_network_design_matrix(self.ifgs, QUADRATIC, False)[~isnan(data)]
+		fd = data[~isnan(data)].reshape((dm.shape[0], 1))
+		params = dot(pinv(dm, 1e-6), fd)
 
-		raise NotImplementedError("use dot() for matrix mult of pinv() results")
-		params = pinv(dm, 1e-6) * data[~isnan(data)] # FIXME: use dot() instead
-
-		# TODO: add fwd correction calc & testing here
-
+		raise NotImplementedError("TODO: determine how many ncoefs this should be tested against")
 		raise NotImplementedError("TODO: add forward correction implementation")
 
 		act = orbital_correction(self.ifgs, QUADRATIC, NETWORK_METHOD, None, False)
 		assert_array_almost_equal(act, params, decimal=5) # TODO: fails occasionally on default decimal=6
 
-		# FIXME: expand test to include offsets
 
 
 def unittest_dm(ifg, method, degree, offset=False):
