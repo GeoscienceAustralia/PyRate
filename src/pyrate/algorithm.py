@@ -72,6 +72,11 @@ def get_all_epochs(ifgs):
 	return [ifg.MASTER for ifg in ifgs] + [ifg.SLAVE for ifg in ifgs]
 
 
+def get_epoch_count(ifgs):
+	'''Returns count of unique epochs from sequence of ifgs'''
+	return len(set(get_all_epochs(ifgs)))
+
+
 def master_slave_ids(dates):
 	'''
 	Returns dict of 'date:unique ID' for each date in 'dates'. IDs are ordered

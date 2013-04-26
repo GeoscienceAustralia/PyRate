@@ -73,6 +73,10 @@ class AlgorithmTests(TestCase):
 		self.assertEqual(dates, sorted(set(algorithm.get_all_epochs(ifgs))))
 
 
+	def test_get_epoch_count(self):
+		self.assertEqual(6, algorithm.get_epoch_count(sydney5_mock_ifgs()))
+
+
 	def test_ifg_date_lookup(self):
 		# check reverse lookup of ifg given a master and slave date tuple
 		ifgs = sydney5_mock_ifgs()
