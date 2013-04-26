@@ -235,8 +235,6 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 		act = get_network_design_matrix(self.ifgs, PLANAR, offset)
 		self.assertEqual(act.shape[0], self.nc * self.nifgs)
 		self.assertEqual(act.shape[1], (self.nepochs * ncoef) + self.nifgs)
-
-		check_offsets_cols(act, self.ifgs)
 		self.assertNotEqual(act.ptp(), 0)
 		self.check_equality(ncoef, act, self.ifgs, offset)
 
@@ -256,13 +254,10 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 		act = get_network_design_matrix(self.ifgs, QUADRATIC, offset)
 		self.assertEqual(act.shape[0], self.nc * self.nifgs)
 		self.assertEqual(act.shape[1], (self.nepochs * ncoef) + self.nifgs)
-
-		check_offsets_cols(act, self.ifgs)
 		self.assertNotEqual(act.ptp(), 0)
 		self.check_equality(ncoef, act, self.ifgs, offset)
 
 
-	# TODO: review functions from here
 	def check_equality(self, ncoef, dm, ifgs, offset):
 		'''
 		Internal test function to check subsets against network design matrix
@@ -273,33 +268,33 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 		'''
 		self.assertTrue(ncoef in [2,5])
 		deg = PLANAR if ncoef < 5 else QUADRATIC
-		np = ncoef * self.nepochs # base offset for offset col testing
+		np = ncoef * self.nepochs # index of 1st offset col
 
 		for i, ifg in enumerate(ifgs):
 			exp = unittest_dm(ifg, NETWORK_METHOD, deg, offset)
-			self.assertEqual(exp.shape, (ifg.num_cells, ncoef)) # subset DMs shouldn't have an offsets col
+			self.assertEqual(exp.shape, (ifg.num_cells, ncoef))
 
-			# NB: this code is Hua Wang's slightly modified for Py
-			ib1 = i * self.nc # start row for subsetting the sparse matrix
-			ib2 = (i+1) * self.nc # last row of subset of sparse matrix
-			jbm = self.date_ids[ifg.MASTER] * ncoef # starting col index for master
-			jbs = self.date_ids[ifg.SLAVE] * ncoef # col start for slave
+			# NB: this is Hua Wang's MATLAB code slightly modified for Py
+			ib1, ib2 = [x * self.nc for x in (i, i+1)] # row start/end
+			jbm = ncoef * self.date_ids[ifg.MASTER] # starting col index for master
+			jbs = ncoef * self.date_ids[ifg.SLAVE] # col start for slave
 			assert_array_almost_equal(-exp, dm[ib1:ib2, jbm:jbm+ncoef])
 			assert_array_almost_equal( exp, dm[ib1:ib2, jbs:jbs+ncoef])
 
-			# ensure rest of row is zero
-			assert_array_equal(0, dm[ib1:ib2, :jbm])
-			assert_array_equal(0, dm[ib1:ib2, jbm+ncoef:jbs])
+			# ensure remaining rows/cols are zero for this ifg NOT inc offsets
+			assert_array_equal(0, dm[ib1:ib2, :jbm]) # all cols leading up to master
+			assert_array_equal(0, dm[ib1:ib2, jbm + ncoef:jbs]) # cols btwn mas/slv
+			assert_array_equal(0, dm[ib1:ib2, jbs + ncoef:np]) # to end of non offsets
 
-			# check offset cols
+			# check offset cols for 1s and 0s
 			if offset is True:
-				self.assertTrue(bool((dm[ib1:ib2, i+np] == 1).all()))
-				assert_array_equal(0, dm[ib1:ib2, jbs+ncoef:i+np])
-				assert_array_equal(0, dm[ib1:ib2, i+np+1:])
-			else:
-				assert_array_equal(0, dm[ib1:ib2, jbs+ncoef:])
+				ip1 = i + np # offset column index
+				assert_array_equal(1, dm[ib1:ib2, ip1])
+				assert_array_equal(0, dm[ib1:ib2, np:ip1]) # cols before offset col
+				assert_array_equal(0, dm[ib1:ib2, ip1 + 1:]) # cols after offset col
 
 
+	# TODO: review functions from here
 	def test_network_correct_planar(self):
 		'''Verifies planar form of network method of correction'''
 
@@ -408,21 +403,6 @@ def unittest_dm(ifg, method, degree, offset=False):
 		data[:, -1] = 1
 
 	return data
-
-
-def check_offsets_cols(dm, ifgs):
-	nifgs = len(ifgs)
-	subset = dm[:, -nifgs:]
-
-	s = 0
-	for i, col in zip(ifgs, subset.T): # rotate subsets so zip() get cols as rows
-		w = i.num_cells - i.nan_count
-		pre = col[:s]
-		assert (pre == 0).all() if len(pre) > 0 else True
-		assert (col[s:s + w] == 1).all()
-		post = col[s + w:]
-		assert (post == 0).all() if len(post) > 0 else True
-		s += w # update offset for next found
 
 
 def get_date_ids(ifgs):
