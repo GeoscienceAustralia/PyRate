@@ -68,16 +68,6 @@ class SingleDesignMatrixTests(unittest.TestCase):
 		assert_array_almost_equal(act, exp)
 
 
-	def test_create_planar_dm_network(self):
-		# TODO: refactor this for meshgrid version of prod implementation
-		# networked method planar version should not have offsets col
-		exp = unittest_dm(self.m, NETWORK_METHOD, PLANAR, False)
-		self.assertEqual(exp.shape, (self.m.num_cells, 2))
-		exp2 = unittest_dm(self.m, NETWORK_METHOD, PLANAR, True)
-		self.assertEqual(exp2.shape, (self.m.num_cells, 2)) # offset cols go elsewhere
-		assert_array_equal(exp, exp2)
-
-
 	# tests for quadratic mode
 
 	def test_create_quadratic_dm(self):
@@ -96,10 +86,26 @@ class SingleDesignMatrixTests(unittest.TestCase):
 		assert_array_equal(act, exp)
 
 
+	# tests for unittest_dm() assuming network method
+
+	def test_create_planar_dm_network(self):
+		# networked method planar version should not have offsets col
+		ncol_exp = 2
+		exp = unittest_dm(self.m, NETWORK_METHOD, PLANAR, False)
+		self.assertEqual(exp.shape, (self.m.num_cells, ncol_exp))
+		exp2 = unittest_dm(self.m, NETWORK_METHOD, PLANAR, True)
+		self.assertEqual(exp2.shape, (self.m.num_cells, ncol_exp))
+		assert_array_equal(exp, exp2)
+
+
 	def test_create_quadratic_dm_network(self):
-		raise NotImplementedError
-		# TODO: compare actuals against the test DM
-		#assert_array_equal(act, exp)
+		# quadratic version with networked method does not have offsets col
+		ncol_exp = 5
+		exp = unittest_dm(self.m, NETWORK_METHOD, QUADRATIC, False)
+		self.assertEqual(exp.shape, (self.m.num_cells, ncol_exp))
+		exp2 = unittest_dm(self.m, NETWORK_METHOD, QUADRATIC, True)
+		self.assertEqual(exp2.shape, (self.m.num_cells, ncol_exp))
+		assert_array_equal(exp, exp2)
 
 
 
