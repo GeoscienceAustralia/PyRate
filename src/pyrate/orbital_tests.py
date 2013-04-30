@@ -10,7 +10,7 @@ import unittest
 from itertools import product
 
 from numpy.linalg import pinv
-from numpy import nan, isnan, array, reshape, float32
+from numpy import abs, nan, isnan, array, reshape, float32
 from numpy import empty, zeros, dot, concatenate
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 
@@ -320,6 +320,33 @@ class NetworkCorrectionTests(unittest.TestCase):
 		assert self.nepochs == 6
 
 
+	def test_offset_inversion(self):
+		'''Ensure pinv(DM)*obs gives equal results given a constant change to fd'''
+
+		def get_orbital_params():
+			'''Helper func: returns pseudo-inverse of the DM'''
+			data = concatenate([i.phase_data.reshape(self.nc) for i in self.ifgs])
+			dm = get_network_design_matrix(self.ifgs, PLANAR, True)[~isnan(data)]
+			fd = data[~isnan(data)].reshape((dm.shape[0], 1))
+			return dot(pinv(dm, 1e-6), fd)
+
+		params0 = get_orbital_params()
+
+		# include a constant change to the observed values (fd)
+		for value in [5.2, -23.5, 0]:
+			for i in self.ifgs: # change ifgs in place
+				i.phase_data += value
+				self.assertTrue(isnan(i.phase_data).any())
+
+			params = get_orbital_params()
+			diff = params - params0
+			self.assertTrue( (diff[:-self.nifgs] < 1e6).all() )
+			assert_array_almost_equal(diff[-self.nifgs:], value, decimal=5)
+
+			# reset back to orig data
+			for i in self.ifgs:
+				i.phase_data -= value
+
 	# TODO: review functions from here
 	def test_network_correction_planar(self):
 		'''Verifies planar form of network method of correction'''
@@ -331,11 +358,11 @@ class NetworkCorrectionTests(unittest.TestCase):
 			dm = get_network_design_matrix(self.ifgs, PLANAR, off)[~isnan(data)]
 			fd = data[~isnan(data)].reshape((dm.shape[0], 1))
 			self.assertEqual(len(dm), len(fd))
+			params = dot(pinv(dm, 1e-6), fd)
 
 			raise NotImplementedError("TODO: determine how many ncoefs this should be tested against")
 
 			ncoef = 3 if off else 2
-			params = dot(pinv(dm, 1e-6), fd)
 			self.assertEqual(params.shape, )  # TODO: was (self.nepochs * ncoef, 1)
 
 			# calculate forward correction
