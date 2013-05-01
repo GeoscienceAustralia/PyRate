@@ -6,7 +6,7 @@ Created on 31/3/13
 '''
 
 from numpy import empty, isnan, reshape, float32, squeeze
-from numpy import dot, vstack, zeros, meshgrid
+from numpy import dot, vstack, zeros, median, meshgrid
 from scipy.linalg import lstsq
 from numpy.linalg import pinv
 
@@ -122,11 +122,7 @@ def _get_net_correction(ifgs, degree, offset):
 	degree - PLANAR or QUADRATIC
 	offset - True/False for including TODO
 	'''
-
-	# FIXME: correction needs to apply to *all* ifgs - can still get the correction
-	#        as there are model params for each epoch (+ ifgs relate to all those epochs).
-
-	# get DM / clear out the NaNs based on obs
+	# get DM & filter out NaNs
 	tmp = vstack([i.phase_data.reshape((i.num_cells, 1)) for i in ifgs])
 	vphase = squeeze(tmp)
 	dm = get_network_design_matrix(ifgs, degree, offset)
@@ -143,15 +139,16 @@ def _get_net_correction(ifgs, degree, offset):
 	# create DM to expand into surface from params
 	dm = get_design_matrix(ifgs[0], degree, offset=False)
 	mods = [dot(dm, coefs[ids[i.SLAVE]] - coefs[ids[i.MASTER]]) for i in ifgs]
-	shp = ifgs[0].shape
-	mods = [e.reshape(shp) for e in mods]
+	mods = [e.reshape(ifgs[0].shape) for e in mods]
+
+	# estimate offsets
+	if offset:
+		for i, m in zip(ifgs, mods):
+			tmp = i.phase_data - m
+			m += median(tmp[~isnan(tmp)])
 
 	# TODO apply corrections to Ifgs
 	return mods
-
-	# TODO: see lines 93-98 of orbcorrect.m for the estimation method
-	# place in a separate function
-	# nanmedia -> median(A[~isnan(A)])
 
 
 def get_design_matrix(ifg, degree, offset):

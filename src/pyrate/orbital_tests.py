@@ -10,8 +10,8 @@ import unittest
 from itertools import product
 
 from numpy.linalg import pinv
-from numpy import abs, nan, isnan, array, reshape, float32
-from numpy import empty, zeros, dot, concatenate
+from numpy import abs, nan, isnan, array, reshape, median
+from numpy import empty, zeros, dot, concatenate, float32
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 
 import algorithm
@@ -366,6 +366,13 @@ class NetworkCorrectionTests(unittest.TestCase):
 		return corrections
 
 
+	def _est_offset(self, mods):
+		'''TODO: Est offsets are reincorporated into the offsets in mods.'''
+		for i, c in zip(self.ifgs, mods):
+			tmp = [i for i in (i.phase_data - c).reshape(self.nc) if not isnan(i)]
+			c += median(tmp)
+
+
 	def test_network_correction_planar(self):
 		'''Verifies planar form of network method of correction'''
 
@@ -384,10 +391,11 @@ class NetworkCorrectionTests(unittest.TestCase):
 			sdm = unittest_dm(self.ifgs[0], NETWORK_METHOD, PLANAR)
 			ncoef = 2
 			self.assertEqual(sdm.shape, (self.nc, ncoef) )
-			corrections = self._get_corrections(sdm, params, ncoef)
+			mods = self._get_corrections(sdm, params, ncoef)
+			if off: self._est_offset(mods)
 
 			act = orbital_correction(self.ifgs, PLANAR, NETWORK_METHOD, None, off)
-			assert_array_almost_equal(act, corrections)
+			assert_array_almost_equal(act, mods)
 
 
 	def test_network_correction_quadratic(self):
@@ -409,6 +417,7 @@ class NetworkCorrectionTests(unittest.TestCase):
 			ncoef = 5
 			self.assertEqual(sdm.shape, (self.nc, ncoef) )
 			mods = self._get_corrections(sdm, params, ncoef)
+			if off:	self._est_offset(mods)
 
 			act = orbital_correction(self.ifgs, QUADRATIC, NETWORK_METHOD, None, off)
 			assert_array_almost_equal(act, mods, decimal=5) # default decimal fails
