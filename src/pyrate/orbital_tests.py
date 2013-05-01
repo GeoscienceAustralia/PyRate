@@ -348,6 +348,23 @@ class NetworkCorrectionTests(unittest.TestCase):
 				i.phase_data -= value
 
 
+	def _get_corrections(self, dm, params, ncoef):
+		'''
+		Convenience func returns model converted to data points.
+		dm - design matrix (do not filter/remove nan cells)
+		params - model parameters array from pinv() * dm
+		ncoef - number of model coefficients (2 planar, 5 quadratic)
+		'''
+		corrections = []
+		for i, ifg in enumerate(self.ifgs):
+			jbm = self.date_ids[ifg.MASTER] * ncoef # starting row index for master
+			jbs = self.date_ids[ifg.SLAVE] * ncoef # row start for slave
+			par = params[jbs:jbs + ncoef] - params[jbm:jbm + ncoef]
+			corrections.append(dot(dm, par).reshape(ifg.phase_data.shape))
+
+		return corrections
+
+
 	def test_network_correction_planar(self):
 		'''Verifies planar form of network method of correction'''
 
@@ -366,13 +383,7 @@ class NetworkCorrectionTests(unittest.TestCase):
 			sdm = unittest_dm(self.ifgs[0], NETWORK_METHOD, PLANAR)
 			ncoef = 2
 			self.assertEqual(sdm.shape, (self.nc, ncoef) )
-
-			corrections = []
-			for i, ifg in enumerate(self.ifgs):
-				jbm = self.date_ids[ifg.MASTER] * ncoef # starting row index for master
-				jbs = self.date_ids[ifg.SLAVE] * ncoef # row start for slave
-				par = params[jbs:jbs + ncoef] - params[jbm:jbm + ncoef]
-				corrections.append(dot(sdm, par).reshape(ifg.phase_data.shape))
+			corrections = self._get_corrections(sdm, params, ncoef)
 
 			act = orbital_correction(self.ifgs, PLANAR, NETWORK_METHOD, None, off)
 			assert_array_almost_equal(act, corrections)
@@ -384,16 +395,22 @@ class NetworkCorrectionTests(unittest.TestCase):
 		# reshape phase data to vectors
 		data = concatenate([i.phase_data.reshape(self.nc) for i in self.ifgs])
 
-		# FIXME: expand test to include offsets
-		dm = get_network_design_matrix(self.ifgs, QUADRATIC, False)[~isnan(data)]
-		fd = data[~isnan(data)].reshape((dm.shape[0], 1))
-		params = dot(pinv(dm, 1e-6), fd)
+		for off in [False, True]:
+			dm = get_network_design_matrix(self.ifgs, QUADRATIC, off)[~isnan(data)]
+			fd = data[~isnan(data)].reshape((dm.shape[0], 1))
+			params = dot(pinv(dm, 1e-6), fd)
 
-		raise NotImplementedError("TODO: determine how many ncoefs this should be tested against")
-		raise NotImplementedError("TODO: add forward correction implementation")
+			self.assertEqual(len(dm), len(fd))
+			self.assertEqual(params.shape, (dm.shape[1], 1) )
 
-		act = orbital_correction(self.ifgs, QUADRATIC, NETWORK_METHOD, None, False)
-		assert_array_almost_equal(act, params, decimal=5) # TODO: fails occasionally on default decimal=6
+			# calculate forward correction
+			sdm = unittest_dm(self.ifgs[0], NETWORK_METHOD, QUADRATIC)
+			ncoef = 5
+			self.assertEqual(sdm.shape, (self.nc, ncoef) )
+			mods = self._get_corrections(sdm, params, ncoef)
+
+			act = orbital_correction(self.ifgs, QUADRATIC, NETWORK_METHOD, None, off)
+			assert_array_almost_equal(act, mods, decimal=5) # default decimal fails
 
 
 
