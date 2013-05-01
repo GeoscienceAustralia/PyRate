@@ -74,3 +74,7 @@ class MockIfg(object):
 	@property
 	def nan_count(self):
 		return nsum(isnan(self.phase_data))
+
+	@property
+	def shape(self):
+		return (self.FILE_LENGTH, self.WIDTH)
