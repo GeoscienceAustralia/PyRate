@@ -313,6 +313,7 @@ class NetworkCorrectionTests(unittest.TestCase):
 			ifg.Y_SIZE = 89.5
 
 		# precalc other useful vars
+		self.tol = 1e-6
 		self.nifgs = len(self.ifgs)
 		self.nc = self.ifgs[0].num_cells
 		self.date_ids = get_date_ids(self.ifgs)
@@ -328,7 +329,7 @@ class NetworkCorrectionTests(unittest.TestCase):
 			data = concatenate([i.phase_data.reshape(self.nc) for i in self.ifgs])
 			dm = get_network_design_matrix(self.ifgs, PLANAR, True)[~isnan(data)]
 			fd = data[~isnan(data)].reshape((dm.shape[0], 1))
-			return dot(pinv(dm, 1e-6), fd)
+			return dot(pinv(dm, self.tol), fd)
 
 		params0 = get_orbital_params()
 
@@ -340,7 +341,7 @@ class NetworkCorrectionTests(unittest.TestCase):
 
 			params = get_orbital_params()
 			diff = params - params0
-			self.assertTrue( (diff[:-self.nifgs] < 1e6).all() )
+			self.assertTrue( (diff[:-self.nifgs] < self.tol).all() )
 			assert_array_almost_equal(diff[-self.nifgs:], value, decimal=5)
 
 			# reset back to orig data
@@ -374,7 +375,7 @@ class NetworkCorrectionTests(unittest.TestCase):
 		for off in [False, True]:
 			dm = get_network_design_matrix(self.ifgs, PLANAR, off)[~isnan(data)]
 			fd = data[~isnan(data)].reshape((dm.shape[0], 1))
-			params = dot(pinv(dm, 1e-6), fd)
+			params = dot(pinv(dm, self.tol), fd)
 
 			self.assertEqual(len(dm), len(fd))
 			self.assertEqual(params.shape, (dm.shape[1], 1) )
@@ -398,7 +399,7 @@ class NetworkCorrectionTests(unittest.TestCase):
 		for off in [False, True]:
 			dm = get_network_design_matrix(self.ifgs, QUADRATIC, off)[~isnan(data)]
 			fd = data[~isnan(data)].reshape((dm.shape[0], 1))
-			params = dot(pinv(dm, 1e-6), fd)
+			params = dot(pinv(dm, self.tol), fd)
 
 			self.assertEqual(len(dm), len(fd))
 			self.assertEqual(params.shape, (dm.shape[1], 1) )
