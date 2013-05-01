@@ -130,28 +130,28 @@ def _get_net_correction(ifgs, degree, offset):
 	tmp = vstack([i.phase_data.reshape((i.num_cells, 1)) for i in ifgs])
 	vphase = squeeze(tmp)
 	dm = get_network_design_matrix(ifgs, degree, offset)
-	assert len(vphase) == len(dm)
 
 	# filter NaNs out before getting model
 	tmp = dm[~isnan(vphase)]
 	fd = vphase[~isnan(vphase)]
 	model = dot(pinv(tmp, 1e-6), fd)
-	ncoef = get_num_params(degree, offset)
-	coefs = [model[i:i+ncoef] for i in range(len(model))[::ncoef]]
+
+	ncoef = get_num_params(degree)
 	ids = master_slave_ids(get_all_epochs(ifgs))
+	coefs = [model[i:i+ncoef] for i in range(0, len(set(ids)) * ncoef, ncoef)]
 
-	dm = get_design_matrix(ifgs[0], degree, offset)
+	# create DM to expand into surface from params
+	dm = get_design_matrix(ifgs[0], degree, offset=False)
+	mods = [dot(dm, coefs[ids[i.SLAVE]] - coefs[ids[i.MASTER]]) for i in ifgs]
 	shp = ifgs[0].shape
-
-	corrections = []
-	for i in ifgs:
-		par = coefs[ids[i.SLAVE]] - coefs[ids[i.MASTER]]
-		corrections.append(dot(dm, par))  # TODO: plus offset?
-
-	corrections = [e.reshape(shp) for e in corrections]
+	mods = [e.reshape(shp) for e in mods]
 
 	# TODO apply corrections to Ifgs
-	return corrections
+	return mods
+
+	# TODO: see lines 93-98 of orbcorrect.m for the estimation method
+	# place in a separate function
+	# nanmedia -> median(A[~isnan(A)])
 
 
 def get_design_matrix(ifg, degree, offset):
@@ -169,7 +169,6 @@ def get_design_matrix(ifg, degree, offset):
 	x, y = meshgrid(range(ifg.WIDTH), range(ifg.FILE_LENGTH))
 	x = x.reshape(ifg.num_cells) * ifg.X_SIZE
 	y = y.reshape(ifg.num_cells) * ifg.Y_SIZE
-
 
 	# TODO: performance test this vs np.concatenate (n by 1 cols)
 

@@ -347,7 +347,7 @@ class NetworkCorrectionTests(unittest.TestCase):
 			for i in self.ifgs:
 				i.phase_data -= value
 
-	# TODO: review functions from here
+
 	def test_network_correction_planar(self):
 		'''Verifies planar form of network method of correction'''
 
@@ -357,17 +357,15 @@ class NetworkCorrectionTests(unittest.TestCase):
 		for off in [False, True]:
 			dm = get_network_design_matrix(self.ifgs, PLANAR, off)[~isnan(data)]
 			fd = data[~isnan(data)].reshape((dm.shape[0], 1))
-			self.assertEqual(len(dm), len(fd))
 			params = dot(pinv(dm, 1e-6), fd)
 
-			raise NotImplementedError("TODO: determine how many ncoefs this should be tested against")
-
-			ncoef = 3 if off else 2
-			self.assertEqual(params.shape, )  # TODO: was (self.nepochs * ncoef, 1)
+			self.assertEqual(len(dm), len(fd))
+			self.assertEqual(params.shape, (dm.shape[1], 1) )
 
 			# calculate forward correction
-			sdm = unittest_dm(ifg, NETWORK_METHOD, PLANAR) # base DM to multiply out to real data
-			self.assertEqual(sdm.shape, (12,ncoef))
+			sdm = unittest_dm(self.ifgs[0], NETWORK_METHOD, PLANAR)
+			ncoef = 2
+			self.assertEqual(sdm.shape, (self.nc, ncoef) )
 
 			corrections = []
 			for i, ifg in enumerate(self.ifgs):
@@ -377,7 +375,7 @@ class NetworkCorrectionTests(unittest.TestCase):
 				corrections.append(dot(sdm, par).reshape(ifg.phase_data.shape))
 
 			act = orbital_correction(self.ifgs, PLANAR, NETWORK_METHOD, None, off)
-			assert_array_almost_equal(act, corrections, decimal=4) # TODO: fails intermittently on default decimal
+			assert_array_almost_equal(act, corrections)
 
 
 	def test_network_correction_quadratic(self):
