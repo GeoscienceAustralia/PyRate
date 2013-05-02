@@ -22,14 +22,7 @@ from orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, QUADRATIC
 from tests_common import sydney5_mock_ifgs, MockIfg
 
 
-# FIXME: check the offset cols as 1s in network tests
-
 # TODO: test lstsq() here against Hua's manual method
-
-# ORDER of work:
-# fix up offsets options for QUAD DM tests
-# multilooking (do ML at start when multilooking the originals)
-# high level functions/workflow
 
 
 class SingleDesignMatrixTests(unittest.TestCase):
@@ -41,7 +34,7 @@ class SingleDesignMatrixTests(unittest.TestCase):
 	'''
 
 	def setUp(self):
-		# fake cell sizes
+		# faked cell sizes
 		self.xs = 0.75
 		self.ys = 0.8
 		self.ifg = Ifg("../../tests/sydney_test/obs/geo_060619-061002.unw")
@@ -130,8 +123,7 @@ class OrbitalCorrection(unittest.TestCase):
 
 	# FIXME: review this test:
 	def test_independent_correction(self):
-		# verify top level orbital correction function
-		# TODO: check correction with NaN rows
+		'''Verify top level orbital_correction().'''
 
 		def test_results():
 			'''Helper method for result verification'''
@@ -146,6 +138,8 @@ class OrbitalCorrection(unittest.TestCase):
 				# TODO: do the results need to be checked at all?
 
 		ifgs = sydney5_mock_ifgs()
+		_add_nodata(ifgs)
+
 		for ifg in ifgs:
 			ifg.X_SIZE = 90.0
 			ifg.Y_SIZE = 89.5
@@ -205,10 +199,10 @@ class ErrorTests(unittest.TestCase):
 
 class NetworkDesignMatrixTests(unittest.TestCase):
 	'''Contains tests verifying creation of sparse network design matrix.'''
-	# TODO: add nodata/nans to several layers for realism
 
 	def setUp(self):
 		self.ifgs = sydney5_mock_ifgs()
+		_add_nodata(self.ifgs)
 		self.nifgs = len(self.ifgs)
 		self.nc = self.ifgs[0].num_cells
 		self.date_ids = get_date_ids(self.ifgs)
@@ -301,11 +295,7 @@ class NetworkCorrectionTests(unittest.TestCase):
 	def setUp(self):
 		# fake some real ifg data by adding nans
 		self.ifgs = sydney5_mock_ifgs()
-		self.ifgs[0].phase_data[0, :] = nan # 3 error cells
-		self.ifgs[1].phase_data[2, 1:3] = nan # 2 error cells
-		self.ifgs[2].phase_data[3, 2:3] = nan # 1 err
-		self.ifgs[3].phase_data[1, 2] = nan # 1 err
-		self.ifgs[4].phase_data[1, 1:3] = nan # 2 err
+		_add_nodata(self.ifgs)
 		self.err = sum([i.nan_count for i in self.ifgs])
 
 		for ifg in self.ifgs:
@@ -467,6 +457,15 @@ def get_date_ids(ifgs):
 	for ifg in ifgs:
 		dates += list(ifg.DATE12)
 	return algorithm.master_slave_ids(dates)
+
+
+def _add_nodata(ifgs):
+	'''Adds some NODATA/nan cells to the sydney mock ifgs'''
+	ifgs[0].phase_data[0, :] = nan # 3 error cells
+	ifgs[1].phase_data[2, 1:3] = nan # 2 error cells
+	ifgs[2].phase_data[3, 2:3] = nan # 1 err
+	ifgs[3].phase_data[1, 2] = nan # 1 err
+	ifgs[4].phase_data[1, 1:3] = nan # 2 err
 
 
 if __name__ == "__main__":

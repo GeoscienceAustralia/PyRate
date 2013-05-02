@@ -43,6 +43,8 @@ def orbital_correction(ifgs, degree, method, mlooked=None, offset=True):
 	offset = True/False to include the constant/offset component
 	'''
 	# TODO: save corrected layers to new file or use intermediate arrays?
+	# FIXME: determine how to work this into the ifgs. Generate new Ifgs?
+	# Update passed in ifgs and flag the corrections in metadata?
 
 	if degree not in [PLANAR, QUADRATIC]:
 		msg = "Invalid degree of %s for orbital correction" % degree
@@ -53,8 +55,6 @@ def orbital_correction(ifgs, degree, method, mlooked=None, offset=True):
 		raise OrbitalError(msg)
 
 	if method == NETWORK_METHOD:
-		# FIXME: handle mlooked and straight Ifgs
-
 		if mlooked is None:
 			return _get_net_correction(ifgs, degree, offset)
 		else:
@@ -62,9 +62,6 @@ def orbital_correction(ifgs, degree, method, mlooked=None, offset=True):
 			return _get_net_correction(ifgs, degree, offset, mlooked)
 
 	elif method == INDEPENDENT_METHOD:
-		# FIXME: determine how to work this into the ifgs. Generate new Ifgs?
-		# Update passed in ifgs and flag the corrections in metadata?
-		#
 		#for i in ifgs:
 		#	i.phase_data -= _get_ind_correction(i, degree, offset)
 		return [_get_ind_correction(i, degree, offset) for i in ifgs]
