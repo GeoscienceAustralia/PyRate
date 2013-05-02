@@ -349,7 +349,7 @@ class NetworkCorrectionTests(unittest.TestCase):
 				i.phase_data -= value
 
 
-	def _get_corrections(self, dm, params, ncoef):
+	def _get_corrections(self, ifgs, dm, params, ncoef):
 		'''
 		Convenience func returns model converted to data points.
 		dm - design matrix (do not filter/remove nan cells)
@@ -357,7 +357,7 @@ class NetworkCorrectionTests(unittest.TestCase):
 		ncoef - number of model coefficients (2 planar, 5 quadratic)
 		'''
 		corrections = []
-		for i, ifg in enumerate(self.ifgs):
+		for i, ifg in enumerate(ifgs):
 			jbm = self.date_ids[ifg.MASTER] * ncoef # starting row index for master
 			jbs = self.date_ids[ifg.SLAVE] * ncoef # row start for slave
 			par = params[jbs:jbs + ncoef] - params[jbm:jbm + ncoef]
@@ -366,10 +366,10 @@ class NetworkCorrectionTests(unittest.TestCase):
 		return corrections
 
 
-	def _est_offset(self, mods):
+	def _est_offset(self, ifgs, mods):
 		'''TODO: Est offsets are reincorporated into the offsets in mods.'''
-		for i, c in zip(self.ifgs, mods):
-			tmp = [i for i in (i.phase_data - c).reshape(self.nc) if not isnan(i)]
+		for i, c in zip(ifgs, mods):
+			tmp = [i for i in (i.phase_data - c).reshape(i.num_cells) if not isnan(i)]
 			c += median(tmp)
 
 
@@ -383,7 +383,6 @@ class NetworkCorrectionTests(unittest.TestCase):
 			dm = get_network_design_matrix(self.ifgs, PLANAR, off)[~isnan(data)]
 			fd = data[~isnan(data)].reshape((dm.shape[0], 1))
 			params = dot(pinv(dm, self.tol), fd)
-
 			self.assertEqual(len(dm), len(fd))
 			self.assertEqual(params.shape, (dm.shape[1], 1) )
 
@@ -391,11 +390,36 @@ class NetworkCorrectionTests(unittest.TestCase):
 			sdm = unittest_dm(self.ifgs[0], NETWORK_METHOD, PLANAR)
 			ncoef = 2
 			self.assertEqual(sdm.shape, (self.nc, ncoef) )
-			mods = self._get_corrections(sdm, params, ncoef)
-			if off: self._est_offset(mods)
+			mods = self._get_corrections(self.ifgs, sdm, params, ncoef)
+			if off: self._est_offset(self.ifgs, mods)
 
 			act = orbital_correction(self.ifgs, PLANAR, NETWORK_METHOD, None, off)
 			assert_array_almost_equal(act, mods)
+
+
+	def test_multilooked_network_correction(self):
+		# use default sydney mock data for multilooked
+		xs, ys = 6, 8
+		full = sydney5_mock_ifgs(xs, ys) # 2x as much data
+		mldata = concatenate([i.phase_data.reshape(self.nc) for i in self.ifgs])
+
+		for deg, off in product([PLANAR, QUADRATIC], [False, True]):
+			# calculate from dummy mlooked & scale up to full size
+			dm = get_network_design_matrix(self.ifgs, deg, off)[~isnan(mldata)]
+			fd = mldata[~isnan(mldata)].reshape((dm.shape[0], 1))
+			params = dot(pinv(dm, self.tol), fd)
+
+			sdm = unittest_dm(full[0], NETWORK_METHOD, deg)
+			ncoef = 2 if deg == PLANAR else 5
+			self.assertEqual(sdm.shape, (full[0].num_cells, ncoef) )
+			mods = self._get_corrections(full, sdm, params, ncoef)
+			if off: self._est_offset(full, mods)
+
+			act = orbital_correction(full, deg, NETWORK_METHOD, self.ifgs, off)
+			for i,m in zip(act, mods):
+				self.assertEqual(m.shape, (ys, xs))
+				self.assertEqual(i.shape, (ys, xs))
+				assert_array_almost_equal(i, m, decimal=5)
 
 
 	def test_network_correction_quadratic(self):
@@ -408,7 +432,6 @@ class NetworkCorrectionTests(unittest.TestCase):
 			dm = get_network_design_matrix(self.ifgs, QUADRATIC, off)[~isnan(data)]
 			fd = data[~isnan(data)].reshape((dm.shape[0], 1))
 			params = dot(pinv(dm, self.tol), fd)
-
 			self.assertEqual(len(dm), len(fd))
 			self.assertEqual(params.shape, (dm.shape[1], 1) )
 
@@ -416,8 +439,8 @@ class NetworkCorrectionTests(unittest.TestCase):
 			sdm = unittest_dm(self.ifgs[0], NETWORK_METHOD, QUADRATIC)
 			ncoef = 5
 			self.assertEqual(sdm.shape, (self.nc, ncoef) )
-			mods = self._get_corrections(sdm, params, ncoef)
-			if off:	self._est_offset(mods)
+			mods = self._get_corrections(self.ifgs, sdm, params, ncoef)
+			if off: self._est_offset(self.ifgs, mods)
 
 			act = orbital_correction(self.ifgs, QUADRATIC, NETWORK_METHOD, None, off)
 			assert_array_almost_equal(act, mods, decimal=5) # default decimal fails

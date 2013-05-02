@@ -15,15 +15,8 @@ from algorithm import master_slave_ids, get_all_epochs, get_epoch_count
 
 # Orbital correction tasks
 #
-# 3) FIXME: REDO/REFACTOR TESTING:
-#  Manually make small DMs with corect offsets cols etc and test against these!
+# TODO: correct ifgs in place + save
 #
-# 4) forward calculation (orbfwd.m)
-#		* create 2D orbital correction layer from the model params
-#		* add handling for mlooked ifgs/correcting the full size ones
-#		* correct ifgs in place + save
-
-
 # TODO: options for multilooking
 # 1) do the 2nd stage mlook at prepifg.py/generate up front, then delete in workflow after
 # 2) refactor prep_ifgs() call to take input filenames and params & generate mlooked versions from that
@@ -62,11 +55,11 @@ def orbital_correction(ifgs, degree, method, mlooked=None, offset=True):
 	if method == NETWORK_METHOD:
 		# FIXME: handle mlooked and straight Ifgs
 
-		if mlooked is not None:
-			_validate_mlooked(mlooked, ifgs)
-			return _get_net_correction(sub_mlooked, degree, offset) # TODO: fwd corr
+		if mlooked is None:
+			return _get_net_correction(ifgs, degree, offset)
 		else:
-			return _get_net_correction(ifgs, degree, offset) # TODO: fwd corr
+			_validate_mlooked(mlooked, ifgs)
+			return _get_net_correction(ifgs, degree, offset, mlooked)
 
 	elif method == INDEPENDENT_METHOD:
 		# FIXME: determine how to work this into the ifgs. Generate new Ifgs?
@@ -108,14 +101,14 @@ def _get_ind_correction(ifg, degree, offset):
 	# filter NaNs out before getting model
 	tmp = dm[~isnan(vphase)]
 	fd = vphase[~isnan(vphase)]
-	model, _, rank, _ = lstsq(tmp, fd)
+	model = lstsq(tmp, fd)[0] # first arg is the model params
 
 	# calculate forward model & morph back to 2D
 	correction = reshape(dot(dm, model), ifg.phase_data.shape)
 	return correction
 
 
-def _get_net_correction(ifgs, degree, offset):
+def _get_net_correction(ifgs, degree, offset, m_ifgs=None):
 	'''
 	Returns the TODO
 	ifgs - assumed to be Ifgs from a prior MST step
@@ -123,9 +116,10 @@ def _get_net_correction(ifgs, degree, offset):
 	offset - True/False for including TODO
 	'''
 	# get DM & filter out NaNs
-	tmp = vstack([i.phase_data.reshape((i.num_cells, 1)) for i in ifgs])
-	vphase = squeeze(tmp)
-	dm = get_network_design_matrix(ifgs, degree, offset)
+	src_ifgs = ifgs if m_ifgs is None else m_ifgs
+	vphase = vstack([i.phase_data.reshape((i.num_cells, 1)) for i in src_ifgs])
+	vphase = squeeze(vphase)
+	dm = get_network_design_matrix(src_ifgs, degree, offset)
 
 	# filter NaNs out before getting model
 	tmp = dm[~isnan(vphase)]
@@ -147,7 +141,7 @@ def _get_net_correction(ifgs, degree, offset):
 			tmp = i.phase_data - m
 			m += median(tmp[~isnan(tmp)])
 
-	# TODO apply corrections to Ifgs
+	# TODO: apply corrections to Ifgs
 	return mods
 
 
