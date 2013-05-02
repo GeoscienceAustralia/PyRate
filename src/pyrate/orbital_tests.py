@@ -373,28 +373,28 @@ class NetworkCorrectionTests(unittest.TestCase):
 			c += median(tmp)
 
 
-	def test_network_correction_planar(self):
+	def test_network_correction(self):
 		'''Verifies planar form of network method of correction'''
 
 		# reshape ifgs phase data to single observations vector
 		data = concatenate([i.phase_data.reshape(self.nc) for i in self.ifgs])
 
-		for off in [False, True]:
-			dm = get_network_design_matrix(self.ifgs, PLANAR, off)[~isnan(data)]
+		for deg, off in product([PLANAR, QUADRATIC], [False, True]):
+			dm = get_network_design_matrix(self.ifgs, deg, off)[~isnan(data)]
 			fd = data[~isnan(data)].reshape((dm.shape[0], 1))
 			params = dot(pinv(dm, self.tol), fd)
 			self.assertEqual(len(dm), len(fd))
 			self.assertEqual(params.shape, (dm.shape[1], 1) )
 
 			# calculate forward correction
-			sdm = unittest_dm(self.ifgs[0], NETWORK_METHOD, PLANAR)
-			ncoef = 2
+			sdm = unittest_dm(self.ifgs[0], NETWORK_METHOD, deg)
+			ncoef = 2 if deg == PLANAR else 5
 			self.assertEqual(sdm.shape, (self.nc, ncoef) )
 			mods = self._get_corrections(self.ifgs, sdm, params, ncoef)
 			if off: self._est_offset(self.ifgs, mods)
 
-			act = orbital_correction(self.ifgs, PLANAR, NETWORK_METHOD, None, off)
-			assert_array_almost_equal(act, mods)
+			act = orbital_correction(self.ifgs, deg, NETWORK_METHOD, None, off)
+			assert_array_almost_equal(act, mods, decimal=5)
 
 
 	def test_multilooked_network_correction(self):
@@ -417,33 +417,7 @@ class NetworkCorrectionTests(unittest.TestCase):
 
 			act = orbital_correction(full, deg, NETWORK_METHOD, self.ifgs, off)
 			for i,m in zip(act, mods):
-				self.assertEqual(m.shape, (ys, xs))
-				self.assertEqual(i.shape, (ys, xs))
 				assert_array_almost_equal(i, m, decimal=5)
-
-
-	def test_network_correction_quadratic(self):
-		'''Verifies quadratic form of network method of correction'''
-
-		# reshape phase data to vectors
-		data = concatenate([i.phase_data.reshape(self.nc) for i in self.ifgs])
-
-		for off in [False, True]:
-			dm = get_network_design_matrix(self.ifgs, QUADRATIC, off)[~isnan(data)]
-			fd = data[~isnan(data)].reshape((dm.shape[0], 1))
-			params = dot(pinv(dm, self.tol), fd)
-			self.assertEqual(len(dm), len(fd))
-			self.assertEqual(params.shape, (dm.shape[1], 1) )
-
-			# calculate forward correction
-			sdm = unittest_dm(self.ifgs[0], NETWORK_METHOD, QUADRATIC)
-			ncoef = 5
-			self.assertEqual(sdm.shape, (self.nc, ncoef) )
-			mods = self._get_corrections(self.ifgs, sdm, params, ncoef)
-			if off: self._est_offset(self.ifgs, mods)
-
-			act = orbital_correction(self.ifgs, QUADRATIC, NETWORK_METHOD, None, off)
-			assert_array_almost_equal(act, mods, decimal=5) # default decimal fails
 
 
 
