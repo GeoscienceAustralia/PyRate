@@ -56,10 +56,10 @@ def orbital_correction(ifgs, degree, method, mlooked=None, offset=True):
 
 	if method == NETWORK_METHOD:
 		if mlooked is None:
-			return _get_net_correction(ifgs, degree, offset)
+			return _network_correction(ifgs, degree, offset)
 		else:
 			_validate_mlooked(mlooked, ifgs)
-			return _get_net_correction(ifgs, degree, offset, mlooked)
+			return _network_correction(ifgs, degree, offset, mlooked)
 
 	elif method == INDEPENDENT_METHOD:
 		#for i in ifgs:
@@ -105,7 +105,7 @@ def _get_ind_correction(ifg, degree, offset):
 	return correction
 
 
-def _get_net_correction(ifgs, degree, offset, m_ifgs=None):
+def _network_correction(ifgs, degree, offset, m_ifgs=None):
 	'''
 	Returns the TODO
 	ifgs - assumed to be Ifgs from a prior MST step
