@@ -15,8 +15,6 @@ from algorithm import master_slave_ids, get_all_epochs, get_epoch_count
 
 # Orbital correction tasks
 #
-# TODO: correct ifgs in place + save
-#
 # TODO: options for multilooking
 # 1) do the 2nd stage mlook at prepifg.py/generate up front, then delete in workflow after
 # 2) refactor prep_ifgs() call to take input filenames and params & generate mlooked versions from that
@@ -35,6 +33,7 @@ def orbital_correction(ifgs, degree, method, mlooked=None, offset=True):
 	'''
 	TODO: Top level method for correcting orbital error in the given Ifgs. It is
 	assumed the given ifgs have been reduced using MST for the network method.
+	NB: this modifies the Ifgs in place.
 
 	ifgs - list of Ifg objs to correct
 	degree - PLANAR or QUADRATIC
@@ -42,9 +41,6 @@ def orbital_correction(ifgs, degree, method, mlooked=None, offset=True):
 	mlooked - sequence of multilooked Ifgs
 	offset = True/False to include the constant/offset component
 	'''
-	# TODO: save corrected layers to new file or use intermediate arrays?
-	# FIXME: determine how to work this into the ifgs. Generate new Ifgs?
-	# Update passed in ifgs and flag the corrections in metadata?
 
 	if degree not in [PLANAR, QUADRATIC]:
 		msg = "Invalid degree of %s for orbital correction" % degree
@@ -129,17 +125,17 @@ def _network_correction(ifgs, degree, offset, m_ifgs=None):
 
 	# create DM to expand into surface from params
 	dm = get_design_matrix(ifgs[0], degree, offset=False)
-	mods = [dot(dm, coefs[ids[i.SLAVE]] - coefs[ids[i.MASTER]]) for i in ifgs]
-	mods = [e.reshape(ifgs[0].shape) for e in mods]
 
-	# estimate offsets
-	if offset:
-		for i, m in zip(ifgs, mods):
-			tmp = i.phase_data - m
-			m += median(tmp[~isnan(tmp)])
+	for i in ifgs:
+		orb = dot(dm, coefs[ids[i.SLAVE]] - coefs[ids[i.MASTER]])
+		orb = orb.reshape(ifgs[0].shape)
 
-	# TODO: apply corrections to Ifgs
-	return mods
+		# estimate offsets
+		if offset:
+			tmp = i.phase_data - orb
+			i.phase_data -= (orb + median(tmp[~isnan(tmp)]))
+		else:
+			i.phase_data -= orb
 
 
 def get_design_matrix(ifg, degree, offset):
