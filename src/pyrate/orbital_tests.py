@@ -102,58 +102,56 @@ class SingleDesignMatrixTests(unittest.TestCase):
 
 
 
-class OrbitalCorrection(unittest.TestCase):
+class IndependentCorrectionTests(unittest.TestCase):
 	'''Test cases for the orbital correction component of PyRate.'''
 
-	def test_ifg_to_vector_reshaping(self):
-		# test numpy reshaping order
-		ifg = zeros((2, 3), dtype=float32)
-		a = [24, 48, 1000]
-		b = [552, 42, 68]
-		ifg[0] = a
-		ifg[1] = b
-		res = reshape(ifg, (len(a+b)))
-		exp = array(a + b)
-		assert_array_equal(exp, res)
+	def setUp(self):
+		self.ifgs = sydney5_mock_ifgs()
+		_add_nodata(self.ifgs)
 
-		# ensure order is maintained when converting back
-		tmp = reshape(res, ifg.shape)
-		assert_array_equal(tmp, ifg)
-
-
-	# FIXME: review this test - data to be written into ifgs
-	def test_independent_correction(self):
-		'''Verify top level orbital_correction().'''
-
-		def test_results():
-			'''Helper method for result verification'''
-			for i, c in zip(ifgs, corrections):
-				# are corrections same size as the original array?
-				ys, xs = c.shape
-				self.assertEqual(i.FILE_LENGTH, ys)
-				self.assertEqual(i.WIDTH, xs)
-				self.assertFalse(isnan(i.phase_data).all())
-				self.assertFalse(isnan(c).all())
-				self.assertTrue(c.ptp() != 0) # ensure range of values in grid
-				# TODO: do the results need to be checked at all? Hua's leastsq?
-
-		ifgs = sydney5_mock_ifgs()
-		_add_nodata(ifgs)
-
-		for ifg in ifgs:
+		for ifg in self.ifgs:
 			ifg.X_SIZE = 90.0
 			ifg.Y_SIZE = 89.5
 			ifg.open()
 
-		# test both models with no offsets
-		for m in [PLANAR, QUADRATIC]:
-			corrections = orbital_correction(ifgs, m, INDEPENDENT_METHOD, None, False)
-			test_results()
 
-		# test both with offsets
-		for m in [PLANAR, QUADRATIC]:
-			corrections = orbital_correction(ifgs, m, INDEPENDENT_METHOD)
-			test_results()
+	def check_correction(self, degree, method, offset):
+		orig = array([c.phase_data.copy() for c in self.ifgs])
+		orbital_correction(self.ifgs, degree, method, None, offset)
+		corrected = array([c.phase_data for c in self.ifgs])
+		self.assertFalse((orig == corrected).all())
+		self.check_results(self.ifgs, corrected)
+
+
+	def check_results(self, ifgs, corrections):
+		'''Helper method for result verification'''
+		for i, c in zip(ifgs, corrections):
+			ys, xs = c.shape
+			self.assertEqual(i.FILE_LENGTH, ys)
+			self.assertEqual(i.WIDTH, xs)
+
+			# ensure there is real data
+			self.assertFalse(isnan(i.phase_data).all())
+			self.assertFalse(isnan(c).all())
+			self.assertTrue(c.ptp() != 0) # ensure range of values in grid
+
+			# TODO: checked results against Hua's lstsq() method
+
+
+	def test_independent_correction_planar(self):
+		self.check_correction(PLANAR, INDEPENDENT_METHOD, False)
+
+
+	def test_independent_correction_planar_offsets(self):
+		self.check_correction(PLANAR, INDEPENDENT_METHOD, True)
+
+
+	def test_independent_correction_quadratic(self):
+		self.check_correction(QUADRATIC, INDEPENDENT_METHOD, False)
+
+
+	def test_independent_correction_quadratic_offsets(self):
+		self.check_correction(QUADRATIC, INDEPENDENT_METHOD, True)
 
 
 

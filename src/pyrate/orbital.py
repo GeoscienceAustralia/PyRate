@@ -31,14 +31,15 @@ QUADRATIC = 2
 
 def orbital_correction(ifgs, degree, method, mlooked=None, offset=True):
 	'''
-	TODO: Top level method for correcting orbital error in the given Ifgs. It is
-	assumed the given ifgs have been reduced using MST for the network method.
-	NB: this modifies the Ifgs in place.
+	Corrects orbital error in the given Ifgs. If using the network method to
+	determine the orbital error, this function assumes the ifgs have already been
+	reduced to a minimum set from an MST operation. NB: function modifies ifgs in
+	situ, use duplicate ifgs should the content need preservation.
 
-	ifgs - list of Ifg objs to correct
+	ifgs - sequence of Ifg objs to correct
 	degree - PLANAR or QUADRATIC
 	method - INDEPENDENT_METHOD or NETWORK_METHOD
-	mlooked - sequence of multilooked Ifgs
+	mlooked - multilooked ifgs (sequence must relate to ifgs in 'ifgs' arg)
 	offset = True/False to include the constant/offset component
 	'''
 
@@ -52,15 +53,14 @@ def orbital_correction(ifgs, degree, method, mlooked=None, offset=True):
 
 	if method == NETWORK_METHOD:
 		if mlooked is None:
-			return _network_correction(ifgs, degree, offset)
+			_network_correction(ifgs, degree, offset)
 		else:
 			_validate_mlooked(mlooked, ifgs)
-			return _network_correction(ifgs, degree, offset, mlooked)
+			_network_correction(ifgs, degree, offset, mlooked)
 
 	elif method == INDEPENDENT_METHOD:
-		#for i in ifgs:
-		#	i.phase_data -= _get_ind_correction(i, degree, offset)
-		return [_get_ind_correction(i, degree, offset) for i in ifgs]
+		for i in ifgs:
+			_independent_correction(i, degree, offset)
 
 
 def _validate_mlooked(mlooked, ifgs):
@@ -84,7 +84,7 @@ def get_num_params(degree, offset=None):
 	return nparams
 
 
-def _get_ind_correction(ifg, degree, offset):
+def _independent_correction(ifg, degree, offset):
 	'''Calculates and returns orbital correction array for an ifg'''
 
 	vphase = reshape(ifg.phase_data, ifg.num_cells) # vectorised, contains NODATA
@@ -98,7 +98,7 @@ def _get_ind_correction(ifg, degree, offset):
 
 	# calculate forward model & morph back to 2D
 	correction = reshape(dot(dm, model), ifg.phase_data.shape)
-	return correction
+	ifg.phase_data -= correction
 
 
 def _network_correction(ifgs, degree, offset, m_ifgs=None):
