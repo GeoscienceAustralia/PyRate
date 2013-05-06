@@ -383,9 +383,9 @@ class NetworkCorrectionTests(unittest.TestCase):
 				orb += ofst
 
 		# tricky: get expected result before correction (which modifies phase_data)
-		exp = [i.phase_data[:] - orb for i, orb in zip(self.ifgs, orbs)]
+		exp = [i.phase_data - orb for i, orb in zip(self.ifgs, orbs)]
 		orbital_correction(self.ifgs, deg, NETWORK_METHOD, None, off)
-		act = [i.phase_data[:] for i in self.ifgs]
+		act = [i.phase_data for i in self.ifgs]
 		assert_array_almost_equal(act, exp, decimal=5)
 
 
@@ -469,9 +469,9 @@ class NetworkCorrectionTests(unittest.TestCase):
 				orb += ofst
 
 		# tricky: get expected result before correction (which modifies phase_data)
-		exp = [i.phase_data[:] - orb for i, orb in zip(full, orbs)]
+		exp = [i.phase_data - orb for i, orb in zip(full, orbs)]
 		orbital_correction(full, deg, NETWORK_METHOD, self.ifgs, off)
-		act = [i.phase_data[:] for i in full]
+		act = [i.phase_data for i in full]
 		assert_array_almost_equal(act, exp, decimal=5)
 
 
