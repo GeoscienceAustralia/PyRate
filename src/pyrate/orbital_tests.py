@@ -145,8 +145,6 @@ class OrbitalCorrection(unittest.TestCase):
 			ifg.Y_SIZE = 89.5
 			ifg.open()
 
-		ifgs[0].phase_data[1, 1:3] = nan # add some NODATA
-
 		# test both models with no offsets
 		for m in [PLANAR, QUADRATIC]:
 			corrections = orbital_correction(ifgs, m, INDEPENDENT_METHOD, None, False)
