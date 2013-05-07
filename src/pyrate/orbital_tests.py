@@ -9,7 +9,7 @@ Created on 31/3/13
 import unittest
 from itertools import product
 
-from numpy.linalg import pinv
+from numpy.linalg import pinv, inv
 from numpy import abs, nan, isnan, array, reshape, median
 from numpy import empty, zeros, dot, concatenate, float32
 from numpy.testing import assert_array_equal, assert_array_almost_equal
@@ -115,12 +115,29 @@ class IndependentCorrectionTests(unittest.TestCase):
 			ifg.open()
 
 
+	def alt_calculation(self, ifg, deg, offset):
+		data = ifg.phase_data.reshape(ifg.num_cells)
+		dm = get_design_matrix(ifg, deg, offset)[~isnan(data)]
+		fd = data[~isnan(data)].reshape((dm.shape[0], 1))
+
+		dmt = dm.T
+		invNbb = inv(dot(dmt, dm))
+		params = dot(invNbb, dot(dmt, fd))
+
+		dm2 = get_design_matrix(ifg, deg, offset)
+		tmp = reshape(dot(dm2, params), ifg.phase_data.shape)
+		return ifg.phase_data - tmp
+
+
 	def check_correction(self, degree, method, offset):
 		orig = array([c.phase_data.copy() for c in self.ifgs])
+		exp = [self.alt_calculation(i, degree, offset) for i in self.ifgs]
 		orbital_correction(self.ifgs, degree, method, None, offset)
 		corrected = array([c.phase_data for c in self.ifgs])
+
 		self.assertFalse((orig == corrected).all())
 		self.check_results(self.ifgs, corrected)
+		assert_array_almost_equal(exp, corrected, decimal=3) # TODO: good enough tol?
 
 
 	def check_results(self, ifgs, corrections):
@@ -134,8 +151,6 @@ class IndependentCorrectionTests(unittest.TestCase):
 			self.assertFalse(isnan(i.phase_data).all())
 			self.assertFalse(isnan(c).all())
 			self.assertTrue(c.ptp() != 0) # ensure range of values in grid
-
-			# TODO: checked results against Hua's lstsq() method
 
 
 	def test_independent_correction_planar(self):
