@@ -368,6 +368,7 @@ class OutputTests(unittest.TestCase):
 	#def test_los_conversion(self):
 		# TODO: needs LOS matrix
 		# TODO: this needs to work from config and incidence files on disk
+		# TODO: is convflag (see 'ifgconv' setting) used or just defaulted?
 		# TODO: los conversion has 4 options: 1: ignore, 2: vertical, 3: N/S, 4: E/W
 		# also have a 5th option of arbitrary azimuth angle (Pirate doesn't have this)
 	#	params = self._default_extents_param()
@@ -377,8 +378,7 @@ class OutputTests(unittest.TestCase):
 
 
 	#def test_phase_conversion(self):
-		# TODO: check output data is converted to mm from metres
-		# TODO: is convflag used or just defaulted?
+		# TODO: check output data is converted to mm from radians (in prepifg??)
 		#raise NotImplementedError
 
 
@@ -400,8 +400,10 @@ class PrepifgTests(unittest.TestCase):
 
 
 def multilooking(src, xscale, yscale, thresh=0):
-	"""Port of looks.m from MATLAB Pirate. Args src and dest are numpy arrays. Thresh
-	is minimum number of non-NaNs required for a valid resampling segment/tile."""
+	"""
+	Port of looks.m from MATLAB Pirate. Args src and dest are numpy arrays. Thresh
+	is minimum number of non-NaNs required for a valid resampling segment/tile.
+	"""
 
 	thresh = int(thresh)
 	num_cells = xscale * yscale
@@ -433,7 +435,8 @@ def multilooking(src, xscale, yscale, thresh=0):
 
 
 def assert_geotransform_equal(files):
-	"""Asserts geotransforms for the given files are equivalent. Files can be paths
+	"""
+	Asserts geotransforms for the given files are equivalent. Files can be paths
 	to datasets, or GDAL dataset objects."""
 
 	assert len(files) > 1, "Need more than 1 file to compare"
