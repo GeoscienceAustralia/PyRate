@@ -35,7 +35,8 @@ GRID_TOL = 1e-6
 
 
 def prepare_ifgs(params, thresh=0.5, use_exceptions=False, verbose=False):
-	"""Produces multilooked/resampled data files for PyRate analysis.
+	"""
+	Produces multilooked/resampled data files for PyRate analysis.
 	params - dict of named values from pyrate config file
 	threshhold - 0.0->1.0 controls NaN handling when resampling to coarser grids,
 	             value is proportion above which the number of NaNs in an area is
@@ -43,7 +44,7 @@ def prepare_ifgs(params, thresh=0.5, use_exceptions=False, verbose=False):
 	             contributing cells are NaNs. At 0.25, it resamples to NaN if 1/4
 	             or more contributing cells are NaNs. At 1.0, areas are resampled
 	             to NaN only if all area cells are NaNs.
-	use_exceptions - TODO: PROB REMOVE
+	use_exceptions - True causes exceptions instead of warnings. Default=False
 	verbose - controls level of gdalwarp output
 	"""
 	# validate config file settings
@@ -115,7 +116,10 @@ def _file_ext(raster):
 	elif hasattr(raster, DATUM):
 		return "dem"
 	else:
-		raise NotImplementedError("TODO: additional raster types?")
+		# TODO: several possible file types to implement:
+		# LOS file:  has 2 bands: beam incidence angle & ground azimuth)
+		# Baseline file: perpendicular baselines (single band?)
+		raise NotImplementedError("Missing raster types for LOS and baseline")
 
 
 def _resample_ifg(ifg, cmd, x_looks, y_looks, thresh):
@@ -129,13 +133,14 @@ def _resample_ifg(ifg, cmd, x_looks, y_looks, thresh):
 	tmp.open()
 
 	if isinstance(ifg, Ifg):
-		# TODO: resample amplitude band too?
+		# TODO: add an option to retain amplitude band (resample this if reqd)
 		data = tmp.phase_band.ReadAsArray()
 		data = where(data == 0, nan, data) # flag incoherent cells as NaNs
 	elif isinstance(ifg, DEM):
 		data = tmp.height_band.ReadAsArray()
 	else:
-		raise NotImplementedError("TODO: other raster types to handle?")
+		# TODO: need to handle resampling of LOS and baseline files
+		raise NotImplementedError("Resampling for LOS & baseline not implemented.")
 
 	del tmp # manual close
 	os.remove(tmp_path)
@@ -143,10 +148,11 @@ def _resample_ifg(ifg, cmd, x_looks, y_looks, thresh):
 
 
 def warp(ifg, x_looks, y_looks, extents, resolution, thresh, verbose):
-	'''TODO
+	'''
+	Calls the GDALWarp utility to resample the given ifg. Returns a new Ifg obj.
 	xlooks - integer factor to scale X axis by, 5 is 5x smaller, 1 is no change.
 	ylooks - as xlooks, but for Y axis
-	extents - TODO
+	extents - georeferenced extents for new file: (xmin, ymin, xmax, ymax)
 	resolution - [xres, yres] or None. Sets resolution output Ifg metadata. Use
 	             None if raster size is not being changed.
 	thresh - see thresh in prepare_ifgs().
@@ -184,7 +190,7 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, verbose):
 			data = new_lyr.phase_band.ReadAsArray()
 			data = where(data == 0, nan, data)
 
-		# TODO: projection
+		# TODO: LOS conversion to vertical/horizontal (projection)
 		#if params.has_key(PROJECTION_FLAG):
 		#	reproject()
 
@@ -196,7 +202,8 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, verbose):
 
 
 def resample(data, xscale, yscale, threshold):
-	"""Resamples/averages 'data' to return an array from the averaging of blocks
+	"""
+	Resamples/averages 'data' to return an array from the averaging of blocks
 	of several tiles in 'data'. NB: Assumes incoherent cells are NaNs.
 
 	data - source array to resample to different size
@@ -208,7 +215,8 @@ def resample(data, xscale, yscale, threshold):
 	if threshold < 0 or threshold > 1:
 		raise ValueError("threshold must be >= 0 and <= 1")
 
-	# TODO: check scaling factors are ints
+	xscale = int(xscale)
+	yscale = int(yscale)
 
 	ysize, xsize = data.shape
 	xres, yres = (xsize / xscale), (ysize / yscale)
