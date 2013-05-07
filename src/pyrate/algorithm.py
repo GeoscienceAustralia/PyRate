@@ -20,9 +20,9 @@ def wavelength_to_mm(data, wavelength):
 
 def los_conversion(phase_data, unit_vec):
 	'''
-	Converts phase from LOS to horizontal/vertical components.
-	phase_data - TODO
-	unit_vec - TODO
+	Converts phase from line-of-sight (LOS) to horizontal/vertical components.
+	phase_data - phase band data array (eg. ifg.phase_data)
+	unit_vec - 3 component sequence, eg. [EW, NS, vertical]
 	'''
 	# NB: currently not tested as implementation is too simple
 	return phase_data * unit_vec
