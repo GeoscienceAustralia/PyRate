@@ -22,8 +22,6 @@ from orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, QUADRATIC
 from tests_common import sydney5_mock_ifgs, MockIfg
 
 
-# TODO: test lstsq() here against Hua's manual method
-
 
 class SingleDesignMatrixTests(unittest.TestCase):
 	'''
@@ -137,7 +135,7 @@ class IndependentCorrectionTests(unittest.TestCase):
 
 		self.assertFalse((orig == corrected).all())
 		self.check_results(self.ifgs, corrected)
-		assert_array_almost_equal(exp, corrected, decimal=3) # TODO: good enough tol?
+		assert_array_almost_equal(exp, corrected, decimal=3) # NB: assumed similar enough
 
 
 	def check_results(self, ifgs, corrections):
