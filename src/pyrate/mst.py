@@ -30,7 +30,7 @@ def default_mst(ifgs, noroot=True):
 	'''
 	edges = [i.DATE12 for i in ifgs]
 	epochs = master_slave_ids(get_all_epochs(ifgs)).keys()
-	weights = [i.nan_fraction for i in ifgs]  # TODO: user specified attrs for weights?
+	weights = [i.nan_fraction for i in ifgs]  # NB: other attrs for weights?
 
 	g = graph()
 	g.add_nodes(epochs) # each acquisition is a node
@@ -44,12 +44,13 @@ def default_mst(ifgs, noroot=True):
 
 
 def mst_matrix(ifgs, epochs):
-	'''Returns array of MST trees from a pixel-by-pixel MST. A MST is calculated
+	'''
+	Returns array of MST trees from a pixel-by-pixel MST. A MST is calculated
 	for each individuak pixel, ignoring NODATA values.
 	ifgs - sequence of Ifg objs
 	epochs = an EpochList object derived from the ifgs
 	'''
-	# TODO: implement rows memory saving option/ row by row access?
+	# NB: may need to implement memory saving row-by-row access
 
 	# locally cache all edges/weights for on-the-fly graph modification
 	edges = [i.DATE12 for i in ifgs]
