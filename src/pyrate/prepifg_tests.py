@@ -46,16 +46,17 @@ class OutputTests(unittest.TestCase):
 		self.xs = 0.000833333
 		self.ys = -self.xs
 
-		self.testdir = "../../tests/prepifg" # FIXME: add obs here
-		tmp = ["obs/geo_060619-061002.unw.rsc", "obs/geo_070326-070917.unw.rsc"]
-		self.hdr_files = [join(self.testdir, t) for t in tmp]
+		OBS = "obs"
+		self.testdir = "../../tests/prepifg"
+		tmp = ["geo_060619-061002.unw.rsc", "geo_070326-070917.unw.rsc"]
+		self.hdr_files = [join(self.testdir, OBS, t) for t in tmp]
 
-		tmp = ["obs/geo_060619-061002_1rlks.tif", "obs/geo_070326-070917_1rlks.tif"]
-		self.exp_files = [join(self.testdir, t) for t in tmp]
+		tmp = ["geo_060619-061002_1rlks.tif", "geo_070326-070917_1rlks.tif"]
+		self.exp_files = [join(self.testdir, OBS, t) for t in tmp]
 		self.exp_hdr_files = [s + ".rsc" for s in self.exp_files]
 
-		tmp = ["obs/geo_060619-061002.hdr", "obs/geo_070326-070917.hdr"]
-		self.ehdr_hdr = [join(self.testdir, p) for p in tmp]
+		tmp = ["geo_060619-061002.hdr", "geo_070326-070917.hdr"]
+		self.ehdr_hdr = [join(self.testdir, OBS, p) for p in tmp]
 
 
 	def tearDown(self):
