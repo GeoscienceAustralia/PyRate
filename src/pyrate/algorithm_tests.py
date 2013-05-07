@@ -22,7 +22,7 @@ class AlgorithmTests(TestCase):
 	'''Misc unittests for functions in the algorithm module.'''
 
 	def test_wavelength_conversion(self):
-		# ROIPAC is in metres, verify conversion to mm
+		# ROIPAC is in radians, verify conversion to mm
 		xs, ys = 5, 7
 		data = (numpy.arange(xs * ys) - 1.7) * 0.1 # fake a range of values
 		data = numpy.where(data == 0, numpy.nan, data)
@@ -33,16 +33,17 @@ class AlgorithmTests(TestCase):
 
 
 	def test_unit_vector(self):
-		incidence = [radians(x) for x in (34.3, 39.3, 29.3, 22.8)]
-		azimuth = [radians(x) for x in (77.8, 77.9, 80.0, 80.3)]
+		# last values here simulate a descending pass
+		incidence = [radians(x) for x in (34.3, 39.3, 29.3, 34.3)]
+		azimuth = [radians(x) for x in (77.8, 77.9, 80.0, 282.2)]
 
 		vert, ns, ew = [], [], []
 		for i, a in zip(incidence, azimuth):
 			vert.append(cos(i))
-			ns.append(sin(i) * sin(a))
-			ew.append(sin(i) * cos(a))
+			ns.append(sin(i) * cos(a))
+			ew.append(sin(i) * sin(a))
 
-		sh = (2, 2)
+		sh = 4
 		unitv = [array(ew), array(ns), array(vert)]
 		unitv = [a.reshape(sh) for a in unitv]
 
@@ -50,6 +51,17 @@ class AlgorithmTests(TestCase):
 		act = algorithm.unit_vector(reshape(incidence, sh), reshape(azimuth, sh))
 		for a, e in zip(act, unitv):
 			assert_array_almost_equal(squeeze(a), e)
+
+		# check unit vec components have correct signs
+		E, N, V = act
+		self.assertTrue((E[:-2]).all() > 0) # test E/W component of ascending is +ve
+		self.assertTrue(E[-1] < 0) # test E/W component of descending is -ve
+		self.assertTrue((N > 0).all()) # ensure all north values are positive
+
+		# check unit vec components have correct magnitudes
+		self.assertTrue((abs(V) > abs(E)).all())
+		self.assertTrue((abs(V) > abs(N)).all())
+		self.assertTrue((abs(E) > abs(N)).all())
 
 
 	def test_master_slave_ids(self):

@@ -14,7 +14,7 @@ MM_PER_METRE = 1000
 
 
 def wavelength_to_mm(data, wavelength):
-	"""Converts ROIPAC phase from metres to millimetres"""
+	"""Converts ROIPAC phase from radians to millimetres"""
 	return data * MM_PER_METRE * (wavelength / (4 * pi))
 
 
@@ -31,8 +31,8 @@ def los_conversion(phase_data, unit_vec):
 def unit_vector(incidence, azimuth):
 	'''Returns unit vector tuple (east_west, north_south, vertical).'''
 	vertical = cos(incidence)
-	north_south = sin(incidence) * sin(azimuth)
-	east_west = sin(incidence) * cos(azimuth)
+	north_south = sin(incidence) * cos(azimuth)
+	east_west = sin(incidence) * sin(azimuth)
 	return east_west, north_south, vertical
 
 
