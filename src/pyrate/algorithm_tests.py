@@ -89,26 +89,37 @@ class AlgorithmTests(TestCase):
 		self.assertEqual(6, algorithm.get_epoch_count(sydney5_mock_ifgs()))
 
 
+class DateLookupTests(TestCase):
+	'''Tests for the algorithm.ifg_date_lookup() function.'''
+
+	def setUp(self):
+		self.ifgs = sydney5_mock_ifgs()
+
 	def test_ifg_date_lookup(self):
 		# check reverse lookup of ifg given a master and slave date tuple
-		ifgs = sydney5_mock_ifgs()
 		date_pair = (date(2006, 8, 28), date(2006, 12, 11))
-		i = algorithm.ifg_date_lookup(ifgs, date_pair)
-		self.assertEqual(ifgs[0], i)
+		i = algorithm.ifg_date_lookup(self.ifgs, date_pair)
+		self.assertEqual(self.ifgs[0], i)
 
 		# test with reversed date tuple, should reorder it according to age
 		date_pair = (date(2006, 12, 11), date(2006, 11, 6))
-		i = algorithm.ifg_date_lookup(ifgs, date_pair)
-		self.assertEqual(ifgs[1], i)
+		i = algorithm.ifg_date_lookup(self.ifgs, date_pair)
+		self.assertEqual(self.ifgs[1], i)
 
 
 	def test_ifg_date_lookup_failure(self):
 		# error when lookup cannot find an ifg given a date pair
-		ifgs = sydney5_mock_ifgs()
-		date_pair = (date(2006, 12, 11), date(2007, 3, 26))
-		self.assertRaises(ValueError, algorithm.ifg_date_lookup, ifgs, date_pair)
+		dates = (date(2006, 12, 11), date(2007, 3, 26))
+		self.assertRaises(ValueError, algorithm.ifg_date_lookup, self.ifgs, dates)
 
-	# TODO: test bad inputs for date_pair?
+
+	def test_date_lookup_bad_inputs(self):
+		# test some bad inputs to date lookup
+		inputs = [ (None, None), (1, 10), (34.56, 345.93),
+								(date(2007, 3, 26), ""), (date(2007, 3, 26), None) ]
+
+		for d in inputs:
+			self.assertRaises(ValueError, algorithm.ifg_date_lookup, self.ifgs, d)
 
 
 
@@ -116,8 +127,8 @@ class AlgorithmTests(TestCase):
 #class InitialModelTests(unittest.TestCase):
 
 #	def test_initial_model(self):
-		# TODO: fake an RSC file with coords
-		# TODO: fake a ones(shape)  # could also make a ramp etc
+		# 1. fake an RSC file with coords
+		# 2. fake a ones(shape)  # could also make a ramp etc
 		# data is single band of DISPLACEMENT
 		#raise NotImplementedError
 
