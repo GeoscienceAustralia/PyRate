@@ -54,7 +54,7 @@ class IfgTests(unittest.TestCase):
 
 
 	def test_write(self):
-		base = "/tmp"  # FIXME: get rid of hardcoded path
+		base = "/tmp"
 		src = [self.ifg.data_path, self.ifg.hdr_path]
 		dest = [join(base, basename(s)) for s in src]
 
