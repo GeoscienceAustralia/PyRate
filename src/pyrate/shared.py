@@ -197,7 +197,6 @@ class Ifg(RasterBase):
 	@property
 	def phase_rows(self):
 		'''Generator returning each row of the phase data'''
-		# TODO: is a pre-created buffer more efficient?
 		for y in xrange(self.FILE_LENGTH):
 			r = self.phase_band.ReadAsArray(yoff=y, win_xsize=self.WIDTH, win_ysize=1)
 			yield r[0] # squeezes row from (1, WIDTH) to 1D array
