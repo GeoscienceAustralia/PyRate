@@ -103,11 +103,15 @@ def _independent_correction(ifg, degree, offset):
 
 def _network_correction(ifgs, degree, offset, m_ifgs=None):
 	'''
-	Returns the TODO
-	ifgs - assumed to be Ifgs from a prior MST step
+	Calculates orbital correction model, removing this from the ifgs.
+	NB: This does in-situ modification of phase_data in the ifgs.
+
+	ifgs - interferograms reduced to a minimum tree from prior MST calculations
 	degree - PLANAR or QUADRATIC
-	offset - True/False for including TODO
+	offset - True to calculate the model using offsets
+	m_ifgs - multilooked ifgs (sequence must be mlooked versions of 'ifgs' arg)
 	'''
+
 	# get DM & filter out NaNs
 	src_ifgs = ifgs if m_ifgs is None else m_ifgs
 	vphase = vstack([i.phase_data.reshape((i.num_cells, 1)) for i in src_ifgs])
