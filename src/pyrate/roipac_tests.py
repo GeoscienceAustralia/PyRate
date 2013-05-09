@@ -197,11 +197,8 @@ class ConversionTests(unittest.TestCase):
 		self.assertTrue(['ncols', '47'] in values)
 		self.assertTrue(['nrows', '72'] in values)
 
-		# TODO: test different forms of cellsize
+		# verify content has been converted
 		self.assertTrue(['cellsize', '0.000833333'] in values)
-		#self.assertTrue(['xdim', '0.000277777777782'] in values)
-		#self.assertTrue(['ydim', '-0.000277777777782'] in values)
-
 		self.assertFalse(['nodata', '0'] in values)
 		self.assertFalse(['nbands', '1'] in values)
 		self.assertTrue(['byteorder', 'lsb'] in values)
