@@ -1,9 +1,8 @@
-# Variance/Covariance matrix
-
-# Notes:
-# Hua has hardwired cvdcalc to only use method=1, we only need to worry about
-# doing the calc spectrally.
-
+'''
+Variance/Covariance matrix functionality for PyRate, ported from Hua Wang's
+MATLAB code for Pirate.
+Author: Ben Davies
+'''
 
 from copy import copy
 from numpy import array, where, isnan, real, imag, sum, sqrt, meshgrid, reshape
@@ -15,23 +14,31 @@ from scipy.optimize import fmin
 from algorithm import master_slave_ids
 
 
+# NB: Hua hardwired the original to only do the calculations spectrally
+
 def pendiffexp(alphamod, cvdav):
-	'''TODO exp covariance model
-	TODO: returns a float of magnitude of the residuals
-	alphamod - TODO
-	cvdav - 2 col array of radius, variance (can be plotted as X,Y line)'''
+	'''
+	Fits an exponential model to data
+	alphamod = exponential decay exponent
+	cvdav = function magnitude at 0 radius (2 col array of radius, variance)
+	'''
 	mx = cvdav[:,1].max()
 	return norm(cvdav[:,1] - (mx * exp(-alphamod * cvdav[:,0])))
 
 
 def unique_points(points):
-	'''Returns unique points from a list of coordinates.
+	'''
+	Returns unique points from a list of coordinates.
 	points - sequence of (y,x) or (x,y) tuples
 	'''
 	return vstack([array(u) for u in set(points) ] )
 
 
 def cvd(ifg):
+	'''
+	Calculate average covariance versus distance (autocorrelation)
+	ifg - interferogram obj
+	'''
 	phase = where(isnan(ifg.phase_data), 0, ifg.phase_data)
 
 	fft_phase = fft2(phase)
@@ -55,7 +62,7 @@ def cvd(ifg):
 	#print 'r', r
 	#print "/" * 40
 
-	#	TODO: the line below is a a method to remove duplicate cells
+	#	NB: the line below is a a method to remove duplicate cells
 	#r = r[:ceil(len(r)/2)] # BUG comment? only need 1st half of image (symmetry)
 	# NB: old one had '+nlines', reason unknown, MG says ignore it.
 
