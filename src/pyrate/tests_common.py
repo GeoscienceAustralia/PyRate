@@ -1,9 +1,10 @@
-# TODO class docs
-# Generic testing utils and mock objs
+'''
+Collection of generic testing utils and mock objs for PyRate
+Author: Ben Davies
+'''
 
 import glob
 from os.path import join
-
 
 from shared import Ifg
 from numpy import ndarray, float32, isnan, sum as nsum
