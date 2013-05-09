@@ -264,7 +264,7 @@ class PyRateException(Exception):
 
 
 class EpochList(object):
-	'''TODO'''
+	'''Metadata container for epoch related information.'''
 
 	def __init__(self, dates=None, repeat=None, spans=None):
 		self.dates = dates # list of unique dates from all the ifgs
