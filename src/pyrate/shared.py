@@ -231,6 +231,49 @@ class Ifg(RasterBase):
 		self._phase_band.WriteArray(self.phase_data)
 
 
+class Incidence(RasterBase):
+
+	def __init__(self, path, hdr_path=None):
+		'''Incidence obj constructor.'''
+		RasterBase.__init__(self, path, hdr_path)
+		self._incidence_band = None
+		self._azimuth_band = None
+		self._incidence_data = None
+		self._azimuth_data = None
+
+
+	@property
+	def incidence_band(self):
+		'''Returns the GDALBand for the incidence angle layer'''
+		if self._incidence_band is None:
+			self._incidence_band = self._get_band(1)
+		return self._incidence_band
+
+
+	@property
+	def incidence_data(self):
+		'''Returns the entire incidence band as an array'''
+		if self._incidence_data is None:
+			self._incidence_data = self.incidence_band.ReadAsArray()
+		return self._incidence_data
+
+
+	@property
+	def azimuth_band(self):
+		'''Returns the GDALBand for the azimuth layer'''
+		if self._azimuth_band is None:
+			self._azimuth_band = self._get_band(2)
+		return self._azimuth_band
+
+
+	@property
+	def azimuth_data(self):
+		'''Returns the entire incidence band as an array'''
+		if self._azimuth_data is None:
+			self._azimuth_data = self.azimuth_band.ReadAsArray()
+		return self._azimuth_data
+
+
 
 class DEM(RasterBase):
 	"""Generic raster class for ROIPAC single band DEM files"""

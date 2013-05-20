@@ -11,13 +11,13 @@ from os.path import join, basename
 from stat import S_IRGRP, S_IWGRP, S_IWOTH, S_IROTH, S_IRUSR, S_IWUSR
 
 from itertools import product
-from numpy import isnan, where, nan
+from numpy import array, isnan, where, nan
 from numpy.testing import assert_array_equal
 
 from gdal import Open, Dataset, UseExceptions
 UseExceptions()
 
-from shared import Ifg, DEM, RasterException
+from shared import Ifg, DEM, RasterException, Incidence
 from ifgconstants import Z_OFFSET, Z_SCALE, PROJECTION, DATUM
 
 
@@ -234,8 +234,45 @@ class IfgTests(unittest.TestCase):
 
 
 
+class IncidenceFileTests(unittest.TestCase):
+	'''Unit tests for the interface to Incidence files'''
+
+	def setUp(self):
+		self.inc = Incidence('../../tests/incidence/128x2.unw')
+		self.inc.open()
+
+
+	def test_incidence_data(self):
+		data = self.inc.incidence_data
+
+		# incidence should vary over the scene
+		diff = data.ptp()
+		self.assertTrue(diff > 0.5, "Got ptp() diff of %s" % diff)
+
+		# on ascending pass, values should increase from W->E across scene
+		for i in range(2):
+			d = data[i]
+			self.assertFalse((d == 0).any()) # ensure no NODATA
+			self.assertFalse((isnan(d)).any())
+
+			diff = array([d[i+1] - d[i] for i in range(len(d)-1)])
+			res = abs(diff[diff < 0])
+			self.assertTrue((res < 1e-4).all()) # TODO: check with MG if this is normal
+
+
+	def test_azimuth_data(self):
+		# ensure azimuth is fairly constant
+
+		az = self.inc.azimuth_data
+		self.assertFalse((az == 0).all())
+
+		az = az[az != 0] # filter NODATA cells
+		ptp = az.ptp()
+		self.assertTrue(ptp < 0.1, msg="min -> max diff is %s" % ptp) # azimuth should be relatively constant
+
+
 class DEMTests(unittest.TestCase):
-	'''Unit tests for the generic Raster class.'''
+	'''Unit tests for the generic DEM class.'''
 
 	def setUp(self):
 		self.ras = DEM('../../tests/sydney_test/dem/sydney_trimmed.dem')
@@ -271,6 +308,7 @@ class DEMTests(unittest.TestCase):
 
 
 	def test_band(self):
+		# test accessing bands with open and unopened datasets
 		try:
 			_ = self.ras.height_band
 			self.fail("Should not be able to access band without open dataset")
