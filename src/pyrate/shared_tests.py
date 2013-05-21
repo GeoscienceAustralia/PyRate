@@ -58,7 +58,7 @@ class IfgTests(unittest.TestCase):
 		src = [self.ifg.data_path, self.ifg.hdr_path]
 		dest = [join(base, basename(s)) for s in src]
 
-		for s,d in zip(src, dest):
+		for s, d in zip(src, dest):
 			# shutil.copy needs to copy writeable permission from src
 			os.chmod(s, S_IRGRP | S_IWGRP | S_IWOTH | S_IROTH | S_IRUSR | S_IWUSR)
 			shutil.copy(s, d)
@@ -133,7 +133,7 @@ class IfgTests(unittest.TestCase):
 
 		self.ifg.open()
 		data = self.ifg.amp_band.ReadAsArray()
-		self.assertEqual(data.shape, (72,47) )
+		self.assertEqual(data.shape, (72, 47) )
 
 
 	def test_phase_band(self):
@@ -145,7 +145,7 @@ class IfgTests(unittest.TestCase):
 
 		self.ifg.open()
 		data = self.ifg.phase_band.ReadAsArray()
-		self.assertEqual(data.shape, (72,47) )
+		self.assertEqual(data.shape, (72, 47) )
 
 
 	def test_nan_count(self):
@@ -175,8 +175,9 @@ class IfgTests(unittest.TestCase):
 		# manually count # nan cells
 		nans = 0
 		ys, xs = data.shape
-		for y,x in product(xrange(ys), xrange(xs)):
-			if isnan(data[y,x]): nans += 1
+		for y, x in product(xrange(ys), xrange(xs)):
+			if isnan(data[y, x]):
+				nans += 1
 		del data
 
 		num_cells = float(ys * xs)
@@ -222,8 +223,8 @@ class IfgTests(unittest.TestCase):
 
 	def test_centre_latlong(self):
 		self.ifg.open()
-		lat_exp = self.ifg.Y_FIRST + ((self.ifg.FILE_LENGTH/2) * self.ifg.Y_STEP)
-		long_exp = self.ifg.X_FIRST + ((self.ifg.WIDTH/2) * self.ifg.X_STEP)
+		lat_exp = self.ifg.Y_FIRST + ((self.ifg.FILE_LENGTH / 2) * self.ifg.Y_STEP)
+		long_exp = self.ifg.X_FIRST + ((self.ifg.WIDTH / 2) * self.ifg.X_STEP)
 		self.assertEqual(lat_exp, self.ifg.LAT_CENTRE)
 		self.assertEqual(long_exp, self.ifg.LONG_CENTRE)
 
@@ -243,13 +244,12 @@ class IncidenceFileTests(unittest.TestCase):
 
 
 	def test_incidence_data(self):
+		# check incidences rises while traversing the scene
 		data = self.inc.incidence_data
-
-		# incidence should vary over the scene
 		diff = data.ptp()
 		self.assertTrue(diff > 0.5, "Got ptp() diff of %s" % diff)
 
-		# on ascending pass, values should increase from W->E across scene
+		# ascending pass, values should increase from W->E across scene
 		for i in range(2):
 			d = data[i]
 			self.assertFalse((d == 0).any()) # ensure no NODATA
@@ -257,7 +257,7 @@ class IncidenceFileTests(unittest.TestCase):
 
 			diff = array([d[i+1] - d[i] for i in range(len(d)-1)])
 			res = abs(diff[diff < 0])
-			self.assertTrue((res < 1e-4).all()) # TODO: check with MG if this is normal
+			self.assertTrue((res < 1e-4).all()) # TODO: check if this is normal
 
 
 	def test_azimuth_data(self):
@@ -265,10 +265,11 @@ class IncidenceFileTests(unittest.TestCase):
 
 		az = self.inc.azimuth_data
 		self.assertFalse((az == 0).all())
-
 		az = az[az != 0] # filter NODATA cells
+
+		# azimuth should be relatively constant
 		ptp = az.ptp()
-		self.assertTrue(ptp < 0.1, msg="min -> max diff is %s" % ptp) # azimuth should be relatively constant
+		self.assertTrue(ptp < 0.1, msg="min -> max diff is %s" % ptp)
 
 
 class DEMTests(unittest.TestCase):
