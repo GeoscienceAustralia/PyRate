@@ -10,27 +10,40 @@ from math import pi, cos, sin, radians
 
 import numpy
 from numpy import array, reshape, squeeze
-from numpy.testing import assert_array_almost_equal, assert_allclose
+from numpy.testing import assert_array_almost_equal, assert_allclose, assert_array_equal
 
 import algorithm
 from shared import Ifg
 from tests_common import sydney5_mock_ifgs
 
 
-
-class AlgorithmTests(TestCase):
-	'''Misc unittests for functions in the algorithm module.'''
+class LeastSquaresTests(TestCase):
 
 	def test_least_squares_covariance(self):
-		raise NotImplementedError
+		b = array([[13, 7.2, 5.7]]).T
+		A = array([[1, 0.4, 0.3],[1,1,1]]).T
+		v = array([[1, 1, 1]]).T
+		r = algorithm.least_squares_covariance(A, b, v)
+		exp = [10.1628, 2.8744]
+		assert_array_almost_equal(r.T.squeeze(), exp, decimal=4)
+
 
 	def test_least_squares_covariance_overdetermined(self):
 		# must be overdetermined, ie. more observations than params
-		b = array([10, 4])
-		A = array([1, 0.4])
-		V = array([1, 1])
-		self.assertRaises(ValueError, algorithm.least_squares_covariance, A, b, V)
+		b = array([[10]]).T
+		A = array([[1]]).T
+		v = array([[1]]).T
+		self.assertRaises(ValueError, algorithm.least_squares_covariance, A, b, v)
 
+		# try non transposed style
+		b = array([[10]])
+		A = array([[1]])
+		v = array([[1]])
+		self.assertRaises(ValueError, algorithm.least_squares_covariance, A, b, v)
+
+
+class AlgorithmTests(TestCase):
+	'''Misc unittests for functions in the algorithm module.'''
 
 	def test_wavelength_conversion(self):
 		# ROIPAC is in radians, verify conversion to mm

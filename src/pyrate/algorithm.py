@@ -4,7 +4,9 @@ Author: Ben Davies, ANUSF
 '''
 
 from math import pi
-from numpy import sin, cos, unique, histogram
+from numpy import sin, cos, unique, histogram, diag, dot
+from scipy.linalg import qr, solve, lstsq
+
 
 from shared import EpochList, IfgException
 
@@ -13,59 +15,62 @@ from shared import EpochList, IfgException
 MM_PER_METRE = 1000
 
 
+def is_square(arr):
+	shape = arr.shape
+	if len(shape) != 2:
+		return False
+	if shape[0] == shape[1]:
+		return True
+	return False
 
-def least_squares_covariance(A,b,V):
-	"""TODO
-	known as lscov() in MATLAB)
 
+def least_squares_covariance(A,b,v):
+	"""Least squares solution in the presence of known covariance.
+
+	This function is known as lscov() in MATLAB.
 	A: design matrix
 	b: observations (vector of phase values)
-	v: covariances (weights)
+	v: covariances (weights) in vector form
 	"""
+	#	X = LSCOV(A,b,V) returns the vector X that minimizes
+	#	(A*X-b)'*inv(V)*(A*X-b) for the case in which length(b) > length(X).
+	#	This is the over-determined least squares problem with covariance V.
+	#	The solution is found without needing to invert V which is a square
+	#	symmetric matrix with dimensions equal to length(b).
+	#
+	#	The classical linear algebra solution to this problem is:
+	#
+	#	    x = inv(A'*inv(V)*A)*A'*inv(V)*b
+	#
+	#	Reference:
+	#	    G. Strang, "Introduction to Applied Mathematics",
+	#	    Wellesley-Cambridge, p. 398, 1986.
+	#	L. Shure 3-31-89
 
-
-	#%LSCOV	Least squares solution in the presence of known covariance.
-	#%	X = LSCOV(A,b,V) returns the vector X that minimizes
-	#%	(A*X-b)'*inv(V)*(A*X-b) for the case in which length(b) > length(X).
-	#%	This is the over-determined least squares problem with covariance V.
-	#%	The solution is found without needing to invert V which is a square
-	#%	symmetric matrix with dimensions equal to length(b).
-	#%
-	#%	The classical linear algebra solution to this problem is:
-	#%
-	#%	    x = inv(A'*inv(V)*A)*A'*inv(V)*b
-	#%
-	#%	See also SLASH, NNLS, QR.
-
-	#%	Reference:
-	#%	    G. Strang, "Introduction to Applied Mathematics",
-	#%	    Wellesley-Cambridge, p. 398, 1986.
-	#%	L. Shure 3-31-89
-	#%	Copyright (c) 1984-94 by The MathWorks, Inc.
+	# convert vectors to 2D singleton array
+	if len(A.shape) != 2:
+		raise ValueError('')
 
 	m, n = A.shape
 	if m <= n:
 		raise ValueError('Problem must be over-determined')
 
-	raise NotImplementedError
+	V = diag(1.0 / v.squeeze())
+	q, r = qr(A) # Orthogonal-triangular Decomposition
+	efg = dot(q.T, dot(V, q)) # TODO: round it??
+	g = efg[n:, n:] # modified to 0 indexing
+	cd = dot(q.T, b) # q.T * b
+	f = efg[:n, n:] # TODO: check +1/indexing
+	c = cd[:n] # modified to 0 indexing
+	d = cd[n:] # modified to 0 indexing
+	r = r[:n,:n] # modified to 0 indexing
 
-	#% Matlab's 'qr' function is an Orthogonal-triangular Decomposition. Scipy
-	#% has a qr funciton in the linalg package
-
-	#[q,r] = qr(A);
-	#efg = q'*V*q;
-	#e = efg(1:n,1:n);
-	#g = efg(n+1:m,n+1:m);
-	#cd = q'*b;
-	#f = efg(1:n,n+1:m);
-	#c = cd(1:n);
-	#d = cd(n+1:m);
-	#r = r(1:n,1:n);
-
-	#% The 'slash' command in matlab is a matrix division. a\b is roughly equal
-	#% to but more efficient than inv(a)*b
-
-	#x = r\(c-f*(g\d));
+	is_sq = is_square(g)
+	func = solve if is_sq else lstsq
+	tmp = func(g, d)
+	is_sq = is_square(r)
+	func = solve if is_sq else lstsq
+	return func(r, (c-f * tmp))
 
 
 def wavelength_to_mm(data, wavelength):
