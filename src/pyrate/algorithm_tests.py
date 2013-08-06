@@ -21,6 +21,17 @@ from tests_common import sydney5_mock_ifgs
 class AlgorithmTests(TestCase):
 	'''Misc unittests for functions in the algorithm module.'''
 
+	def test_least_squares_covariance(self):
+		raise NotImplementedError
+
+	def test_least_squares_covariance_overdetermined(self):
+		# must be overdetermined, ie. more observations than params
+		b = array([10, 4])
+		A = array([1, 0.4])
+		V = array([1, 1])
+		self.assertRaises(ValueError, algorithm.least_squares_covariance, A, b, V)
+
+
 	def test_wavelength_conversion(self):
 		# ROIPAC is in radians, verify conversion to mm
 		xs, ys = 5, 7

@@ -13,6 +13,61 @@ from shared import EpochList, IfgException
 MM_PER_METRE = 1000
 
 
+
+def least_squares_covariance(A,b,V):
+	"""TODO
+	known as lscov() in MATLAB)
+
+	A: design matrix
+	b: observations (vector of phase values)
+	v: covariances (weights)
+	"""
+
+
+	#%LSCOV	Least squares solution in the presence of known covariance.
+	#%	X = LSCOV(A,b,V) returns the vector X that minimizes
+	#%	(A*X-b)'*inv(V)*(A*X-b) for the case in which length(b) > length(X).
+	#%	This is the over-determined least squares problem with covariance V.
+	#%	The solution is found without needing to invert V which is a square
+	#%	symmetric matrix with dimensions equal to length(b).
+	#%
+	#%	The classical linear algebra solution to this problem is:
+	#%
+	#%	    x = inv(A'*inv(V)*A)*A'*inv(V)*b
+	#%
+	#%	See also SLASH, NNLS, QR.
+
+	#%	Reference:
+	#%	    G. Strang, "Introduction to Applied Mathematics",
+	#%	    Wellesley-Cambridge, p. 398, 1986.
+	#%	L. Shure 3-31-89
+	#%	Copyright (c) 1984-94 by The MathWorks, Inc.
+
+	m, n = A.shape
+	if m <= n:
+		raise ValueError('Problem must be over-determined')
+
+	raise NotImplementedError
+
+	#% Matlab's 'qr' function is an Orthogonal-triangular Decomposition. Scipy
+	#% has a qr funciton in the linalg package
+
+	#[q,r] = qr(A);
+	#efg = q'*V*q;
+	#e = efg(1:n,1:n);
+	#g = efg(n+1:m,n+1:m);
+	#cd = q'*b;
+	#f = efg(1:n,n+1:m);
+	#c = cd(1:n);
+	#d = cd(n+1:m);
+	#r = r(1:n,1:n);
+
+	#% The 'slash' command in matlab is a matrix division. a\b is roughly equal
+	#% to but more efficient than inv(a)*b
+
+	#x = r\(c-f*(g\d));
+
+
 def wavelength_to_mm(data, wavelength):
 	"""Converts ROIPAC phase from radians to millimetres"""
 	return data * MM_PER_METRE * (wavelength / (4 * pi))
