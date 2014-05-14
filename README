@@ -1,7 +1,36 @@
-Description:
+PyRate - a Rate Estimation tool for Python
+------------------------------------------
+
+This is a partial Python port of Pirate (Poly-Interferogram Rate And Time-Series Estimator), a MATLAB tool written by Hua Wang and others:
+See http://homepages.see.leeds.ac.uk/~earhw/software/pi-rate/
 
 
-Install Instructions:
+TODO: NCI/GA contact details
+----------------------------
 
 
-Other:
+
+TODO: description of what the software does
+-------------------------------------------
+
+
+Temporary installation instructions
+-----------------------------------
+
+* Clone the source code repository from NCI using Mercurial:
+hg clone ssh://raijin.nci.org.au//g/data/dg9/repo/PyRate
+
+It is probably worth installing virtualenv & virtualenvwrapper too
+
+Dependencies:
+* Two major dependencies are SciPy and GDAL. It may be easier to use your Linux package manager to install the system versions (unless virtualenv can install them).
+* python-graph (easy_install python-graph-core)
+* pyproj (pip install pyproj)
+* Nosetests (pip install nosetests)
+* Py.Test (pip install pytest)
+
+NB: Having 2 test tools can be handy for debugging.
+
+
+TODO: licensing information
+---------------------------
