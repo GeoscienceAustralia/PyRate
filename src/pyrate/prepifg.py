@@ -307,8 +307,8 @@ def check_crop_coords(ifgs, xmin, xmax, ymin, ymax, use_exceptions=False):
 	# NB: assumption is the first Ifg is correct, so only test against it
 	i = ifgs[0]
 	for par, crop, step in zip([X_FIRST, X_LAST, Y_FIRST, Y_LAST],
-														[xmin, xmax, ymax, ymin],
-														[i.X_STEP, i.X_STEP, i.Y_STEP, i.Y_STEP]):
+								[xmin, xmax, ymax, ymin],
+								[i.X_STEP, i.X_STEP, i.Y_STEP, i.Y_STEP]):
 
 		# is diff of the given extent from grid a multiple of X|Y_STEP ?
 		param = getattr(i, par)
