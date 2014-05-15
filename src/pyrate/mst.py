@@ -12,6 +12,8 @@ from algorithm import get_all_epochs, master_slave_ids
 from pygraph.classes.graph import graph
 from pygraph.algorithms.minmax import minimal_spanning_tree
 
+# TODO: may need to implement memory saving row-by-row access
+# TODO: document weighting by either Nan fraction OR variance
 
 
 def _remove_root_node(mst):
@@ -46,11 +48,10 @@ def default_mst(ifgs, noroot=True):
 def mst_matrix(ifgs, epochs):
 	'''
 	Returns array of MST trees from a pixel-by-pixel MST. A MST is calculated
-	for each individuak pixel, ignoring NODATA values.
+	for each individual pixel, ignoring NODATA values.
 	ifgs - sequence of Ifg objs
 	epochs = an EpochList object derived from the ifgs
 	'''
-	# NB: may need to implement memory saving row-by-row access
 
 	# locally cache all edges/weights for on-the-fly graph modification
 	edges = [i.DATE12 for i in ifgs]
@@ -65,7 +66,6 @@ def mst_matrix(ifgs, epochs):
 	dmst = _remove_root_node(minimal_spanning_tree(g)) # default base MST
 
 	# prepare source and dest data arrays
-	# [i.phase_data for i in ifgs]
 	num_ifgs = len(ifgs)
 	data_stack = array([i.phase_data for i in ifgs], dtype=float32)
 	mst_result = ndarray(shape=(i.FILE_LENGTH, i.WIDTH), dtype=object)
