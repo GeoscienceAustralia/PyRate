@@ -1,9 +1,12 @@
 '''
 Collection of geodesy/pyproj algorithms for PyRate.
+
 Author:  Ben Davies
 Created: 13/3/13
 '''
 
+# PyProj/PROJ4 replaces Pirate's llh2local.m code, see example at:
+# http://pyproj.googlecode.com/svn/trunk/docs/pyproj-module.html#transform
 
 from math import floor
 
