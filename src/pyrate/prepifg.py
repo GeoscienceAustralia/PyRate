@@ -75,20 +75,19 @@ def prepare_ifgs(params, thresh=0.5, use_exceptions=False, verbose=False):
 		ymin, ymax = params[IFG_YLAST], params[IFG_YFIRST]
 		check_crop_coords(ifgs, xmin, xmax, ymin, ymax, use_exceptions)
 
-	# calculate args for gdalwarp reprojection
-	extents = [str(s) for s in (xmin, ymin, xmax, ymax) ]
+	# Determine cmd line args for gdalwarp calls for each ifg (gdalwarp has no
+	# API. For resampling, gdalwarp is called 2x. 1st to subset the source data
+	# for Pirate style averaging/resampling, 2nd to generate the final dataset
+	# with correct extents/shape/cell count. Without resampling, gdalwarp is
+	# only needed to cut out the required segment.
 	resolution = None
 	if params[IFG_LKSX] > 1 or params[IFG_LKSY] > 1:
 		resolution = [params[IFG_LKSX] * i.X_STEP, params[IFG_LKSY] * i.Y_STEP ]
 
-	# Generate gdalwarp args for each ifg, some hackery required to interface with
-	# cmd line interface. For resampling, gdalwarp is called 2x, once to subset
-	# the source data for Pirate's form of averaging/resampling, the second to
-	# generate the final dataset with correct extents/shape/cell count. Without
-	# resampling, gdalwarp is only needed to cut out the required segment.
-
 	orb = _do_orbital_multilooking(params)
 	xl, yl = params[IFG_LKSX], params[IFG_LKSY]
+	extents = [str(s) for s in (xmin, ymin, xmax, ymax)]
+
 	for i in ifgs:
 		lyr = warp(i, xl, yl, extents, resolution, thresh, verbose)
 
