@@ -23,14 +23,15 @@ geo_061106-070326.unw
 geo_070326-070917.unw
 """
 
+# TODO: get rid of first returned arg?
 def sydney_test_setup():
 	'''Returns Ifg objs for the files in the sydney test dir'''
-	datafiles = glob.glob(join(SYD_TESTS_OBS, "*.unw") )
+	datafiles = glob.glob(join(SYD_TEST_OBS, "*.unw") )
 	ifgs = [Ifg(i) for i in datafiles]
 	for i in ifgs:
 		i.open()
 
-	return testdir, ifgs
+	return SYD_TEST_OBS, ifgs
 
 
 def sydney5_ifgs():
