@@ -7,4 +7,3 @@ syntax: glob
 syntax: regexp
 ^tmp$
 ^tests$
-^doc$
