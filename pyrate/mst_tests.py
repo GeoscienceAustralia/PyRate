@@ -21,7 +21,7 @@ class MSTTests(unittest.TestCase):
 
 
 	def test_mst_matrix(self):
-		# Verifies mst matrix function returns array with dict/trees in each cell
+		# Verifies mst matrix func returns array with dict/trees in each cell
 		for i in self.ifgs[3:]:
 			i.phase_data[0,1] = 0 # add a large stack of nans to one cell
 
@@ -72,16 +72,16 @@ class MSTTests(unittest.TestCase):
 		num_coherent = 3
 
 		def test_result():
-			res = mst_matrix(self.mock_ifgs, self.epochs)
+			res = mst_matrix(mock_ifgs, self.epochs)
 			self.assertEqual(len(res[0,0]), num_coherent)
 
-		self.mock_ifgs = [MockIfg(i, 1, 1) for i in self.ifgs]
-		for m in self.mock_ifgs[num_coherent:]:
+		mock_ifgs = [MockIfg(i, 1, 1) for i in self.ifgs]
+		for m in mock_ifgs[num_coherent:]:
 			m.phase_data[:] = nan
 		test_result()
 
 		# fill in more nans leaving only one ifg
-		for m in self.mock_ifgs[1:num_coherent]:
+		for m in mock_ifgs[1:num_coherent]:
 			m.phase_data[:] = nan
 		num_coherent = 1
 		test_result()
