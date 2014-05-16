@@ -10,6 +10,11 @@ from shared import Ifg
 from numpy import ndarray, float32, isnan, sum as nsum
 
 
+SYD_TEST_DIR = "../tests/sydney_test"
+SYD_TEST_OBS = join(SYD_TEST_DIR, 'obs')
+SYD_TEST_DEM = join(SYD_TEST_DIR, 'dem')
+
+
 # small dummy ifg list to limit overall # of ifgs
 IFMS5 = """geo_060828-061211.unw
 geo_061106-061211.unw
@@ -20,8 +25,7 @@ geo_070326-070917.unw
 
 def sydney_test_setup():
 	'''Returns Ifg objs for the files in the sydney test dir'''
-	testdir = "../../tests/sydney_test/obs"
-	datafiles = glob.glob( join(testdir, "*.unw") )
+	datafiles = glob.glob(join(SYD_TESTS_OBS, "*.unw") )
 	ifgs = [Ifg(i) for i in datafiles]
 	for i in ifgs:
 		i.open()
@@ -31,8 +35,7 @@ def sydney_test_setup():
 
 def sydney5_ifgs():
 	'''Convenience func to return a subset of 5 linked Ifgs from the testdata'''
-	base = "../../tests/sydney_test/obs"
-	return [Ifg(join(base, p)) for p in IFMS5.split()]
+	return [Ifg(join(SYD_TEST_OBS, p)) for p in IFMS5.split()]
 
 
 def sydney5_mock_ifgs(xs=3, ys=4):
