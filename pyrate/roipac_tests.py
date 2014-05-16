@@ -6,18 +6,20 @@ Created on 12/09/2012
 
 
 import os, sys
-from os.path import exists
+from os.path import abspath, exists, join
 import unittest, datetime
 
-from numpy import amin, amax, zeros
+from numpy import amin, zeros
 from numpy.testing import assert_array_equal
 
 from gdal import Open, UseExceptions
 UseExceptions()
 
 import roipac
-from roipac import RoipacException
 import ifgconstants as IFC
+
+from tests_common import SYD_TEST_DEM, SYD_TEST_OBS, SINGLE_TEST_DIR, HEADERS_TEST_DIR
+
 
 
 class ConversionTests(unittest.TestCase):
@@ -25,12 +27,12 @@ class ConversionTests(unittest.TestCase):
 
 	def __init__(self, *args, **kwargs):
 		super(ConversionTests, self).__init__(*args, **kwargs)
-		if not exists("../../tests/headers"):
+		if not exists(HEADERS_TEST_DIR):
 			sys.exit("ERROR: Missing the 'headers' data for unittests\n")
 
-	SHORT_HEADER_PATH = "../../tests/sydney_test/obs/geo_060619-061002.unw.rsc"
-	FULL_HEADER_PATH  = "../../tests/headers/geo_060619-060828.unw.rsc"
-	FULL_HEADER_PATH2 = "../../tests/single/geo_060619-061002.unw.rsc"
+	SHORT_HEADER_PATH = join(SYD_TEST_OBS, 'geo_060619-061002.unw.rsc')
+	FULL_HEADER_PATH  = join(HEADERS_TEST_DIR, "geo_060619-060828.unw.rsc")
+	FULL_HEADER_PATH2 = join(SINGLE_TEST_DIR, 'geo_060619-061002.unw.rsc')
 
 	def test_read_short_roipac_header(self):
 		hdrs = roipac.parse_header(self.SHORT_HEADER_PATH)
@@ -118,7 +120,7 @@ class ConversionTests(unittest.TestCase):
 
 	def test_roipac_to_ehdr_header(self):
 		dest = "/tmp/ehdr.hdr"
-		hdr = "../../tests/headers/geo_060619-060828.unw.rsc"
+		hdr = join(HEADERS_TEST_DIR, "geo_060619-060828.unw.rsc")
 		roipac.to_ehdr_header(hdr, dest)
 
 		with open(dest) as f:
@@ -135,10 +137,11 @@ class ConversionTests(unittest.TestCase):
 
 	def test_to_ehdr_header_defaults(self):
 		# test default header filename
-		base_hdr = os.path.abspath("../../tests/single/geo_060619-061002.unw.rsc")
+		base_hdr = abspath(join(SINGLE_TEST_DIR, "geo_060619-061002.unw.rsc"))
 		hdr = "/tmp/geo_060619-061002.unw.rsc"
 		if os.path.exists(hdr):
 			os.unlink(hdr)
+
 		os.symlink(base_hdr, hdr)
 		exp_hdr = "/tmp/geo_060619-061002.hdr"
 
@@ -147,7 +150,7 @@ class ConversionTests(unittest.TestCase):
 		self.assertTrue(os.path.exists(exp_hdr))
 
 		# add data to /tmp for GDAL test
-		base_data = os.path.abspath("../../tests/single/geo_060619-061002.unw")
+		base_data = abspath(join(SINGLE_TEST_DIR, "geo_060619-061002.unw"))
 		exp_data = "/tmp/geo_060619-061002.unw"
 		os.symlink(base_data, exp_data)
 
@@ -165,7 +168,7 @@ class ConversionTests(unittest.TestCase):
 
 	def test_to_ehdr_header_with_data(self):
 		# ensure giving the data file breaks to_ehdr_header()
-		src = "../../tests/sydney_test/obs/geo_060619-061002.unw"
+		src = join(SYD_TEST_OBS, "geo_060619-061002.unw")
 		try:
 			roipac.to_ehdr_header(src)
 			self.fail("Should not be able to accept .unw data file")
@@ -175,18 +178,17 @@ class ConversionTests(unittest.TestCase):
 
 	def test_to_ehdr_header_with_missing_file(self):
 		# ensure giving the data file breaks to_ehdr_header()
-		src = "../../tests/sydney_test/obs/fake.unw.rsc"
+		src = join(SYD_TEST_OBS, "fake.unw.rsc")
 		self.assertRaises(IOError, roipac.to_ehdr_header, src)
 
 
 	def test_to_ehdr_header_with_dir(self):
 		# ensure giving the data file breaks to_ehdr_header()
-		src = "../../tests/sydney_test/obs"
-		self.assertRaises(IOError, roipac.to_ehdr_header, src)
+		self.assertRaises(IOError, roipac.to_ehdr_header, SYD_TEST_OBS)
 
 
 	def test_to_ehdr_header_with_dem(self):
-		dem_hdr = "../../tests/sydney_test/dem/sydney_trimmed.dem.rsc"
+		dem_hdr = join(SYD_TEST_DEM, "sydney_trimmed.dem.rsc")
 		act = roipac.to_ehdr_header(dem_hdr)
 		self.assertEqual(act, dem_hdr[:-7] + "hdr")
 
@@ -210,8 +212,8 @@ class ConversionTests(unittest.TestCase):
 
 	def test_to_ehdr_header_gdal(self):
 		# test data files can be opened, new headers generated, data is readable
-		hdr = "../../tests/sydney_test/obs/geo_060619-061002.unw.rsc"
-		ehdr = "../../tests/sydney_test/obs/geo_060619-061002.hdr"
+		hdr = join(SYD_TEST_OBS, "geo_060619-061002.unw.rsc")
+		ehdr = join(SYD_TEST_OBS, "geo_060619-061002.hdr")
 		if os.path.exists(ehdr):
 			os.remove(ehdr) # can be left behind if the test fails
 
@@ -219,7 +221,7 @@ class ConversionTests(unittest.TestCase):
 		self.assertTrue(os.path.exists(ehdr))
 
 		# open with GDAL and ensure there is data
-		src = "../../tests/sydney_test/obs/geo_060619-061002.unw"
+		src = join(SYD_TEST_OBS, "geo_060619-061002.unw")
 		ds = Open(src)
 		self.assertTrue(ds is not None)
 
