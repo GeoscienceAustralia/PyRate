@@ -14,7 +14,7 @@ from numpy.testing import assert_array_almost_equal, assert_allclose, assert_arr
 
 import algorithm
 from shared import Ifg
-from tests_common import sydney5_mock_ifgs
+from tests_common import sydney5_mock_ifgs, SYD_TEST_OBS
 
 
 class LeastSquaresTests(TestCase):
@@ -176,10 +176,9 @@ class EpochListTests(TestCase):
 							0.8624, 0.9582, 1.0541, 1.1499, 1.2457]
 
 		# test against Hua's results
-		base = "../../tests/sydney_test/obs"
-		paths = join(base, "ifms_17")
+		paths = join(SYD_TEST_OBS, "ifms_17")
 		with open(paths) as f:
-			ifgs = [Ifg(join(base, path)) for path in f.readlines()]
+			ifgs = [Ifg(join(SYD_TEST_OBS, path)) for path in f.readlines()]
 			epochs = algorithm.get_epochs(ifgs)
 
 		self.assertTrue((exp_dates == epochs.dates).all())
