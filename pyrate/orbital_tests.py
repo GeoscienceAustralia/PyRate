@@ -7,11 +7,12 @@ Created on 31/3/13
 
 
 import unittest
+from os.path import join
 from itertools import product
 
 from numpy.linalg import pinv, inv
-from numpy import abs, nan, isnan, array, reshape, median
-from numpy import empty, zeros, dot, concatenate, float32
+from numpy import nan, isnan, array, reshape, median
+from numpy import empty, dot, concatenate, float32
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 
 import algorithm
@@ -19,13 +20,13 @@ from shared import Ifg
 from orbital import OrbitalError, orbital_correction
 from orbital import get_design_matrix, get_network_design_matrix
 from orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, QUADRATIC
-from tests_common import sydney5_mock_ifgs, MockIfg
+from tests_common import sydney5_mock_ifgs, MockIfg, SYD_TEST_OBS
 
 
 
 class SingleDesignMatrixTests(unittest.TestCase):
 	'''
-	Unittests verify correctness of basic planar & quadratic design matricies	or
+	Tests to verify correctness of basic planar & quadratic design matricies or
 	DMs. This class serves two purposes, ensuring the independent method DMs are
 	produced correctly. Secondly, these indivdual DMs are subsets of the larger
 	DM 'grid' required for the networked orbital correction method.
@@ -35,7 +36,7 @@ class SingleDesignMatrixTests(unittest.TestCase):
 		# faked cell sizes
 		self.xs = 0.75
 		self.ys = 0.8
-		self.ifg = Ifg("../../tests/sydney_test/obs/geo_060619-061002.unw")
+		self.ifg = Ifg(join(SYD_TEST_OBS, 'geo_060619-061002.unw'))
 		self.ifg.open()
 
 		self.m = MockIfg(self.ifg, 3, 4)
@@ -355,14 +356,11 @@ class NetworkCorrectionTests(unittest.TestCase):
 	def test_network_correction_planar(self):
 		self.network_correction(PLANAR, False)
 
-
 	def test_network_correction_planar_offset(self):
 		self.network_correction(PLANAR, True)
 
-
 	def test_network_correction_quadratic(self):
 		self.network_correction(QUADRATIC, False)
-
 
 	def test_network_correction_quadratic_offset(self):
 		self.network_correction(QUADRATIC, True)
