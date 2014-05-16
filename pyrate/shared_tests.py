@@ -19,13 +19,14 @@ UseExceptions()
 
 from shared import Ifg, DEM, RasterException, Incidence
 from ifgconstants import Z_OFFSET, Z_SCALE, PROJECTION, DATUM
+from pyrate.tests_common import SYD_TEST_OBS, INCID_TEST_DIR, SYD_TEST_DEM
 
 
 class IfgTests(unittest.TestCase):
 	'''Unit tests for the Ifg/interferogram class.'''
 
 	def setUp(self):
-		self.ifg = Ifg('../../tests/sydney_test/obs/geo_060619-061002.unw')
+		self.ifg = Ifg(join(SYD_TEST_OBS, 'geo_060619-061002.unw'))
 
 
 	def test_create_ifg(self):
@@ -239,7 +240,7 @@ class IncidenceFileTests(unittest.TestCase):
 	'''Unit tests for the interface to Incidence files'''
 
 	def setUp(self):
-		self.inc = Incidence('../../tests/incidence/128x2.unw')
+		self.inc = Incidence(join(INCID_TEST_DIR, '128x2.unw'))
 		self.inc.open()
 
 
@@ -276,7 +277,7 @@ class DEMTests(unittest.TestCase):
 	'''Unit tests for the generic DEM class.'''
 
 	def setUp(self):
-		self.ras = DEM('../../tests/sydney_test/dem/sydney_trimmed.dem')
+		self.ras = DEM(join(SYD_TEST_DEM, 'sydney_trimmed.dem'))
 
 
 	def test_create_raster(self):
@@ -293,7 +294,7 @@ class DEMTests(unittest.TestCase):
 
 	def test_is_dem(self):
 		self.assertTrue(hasattr(self.ras, DATUM))
-		self.ras = DEM('../../tests/sydney_test/obs/geo_060619-061002.unw')
+		self.ras = DEM(join(SYD_TEST_OBS, 'geo_060619-061002.unw'))
 		self.assertFalse(hasattr(self.ras, DATUM))
 
 
