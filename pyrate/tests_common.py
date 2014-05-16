@@ -18,6 +18,7 @@ PREP_TEST_DIR = '../tests/prepifg'
 PREP_TEST_OBS = join(PREP_TEST_DIR, 'obs')
 
 SINGLE_TEST_DIR = '../tests/single'
+HEADERS_TEST_DIR = '../tests/headers'
 
 
 # small dummy ifg list to limit overall # of ifgs
