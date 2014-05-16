@@ -4,21 +4,13 @@
 
 import os, sys
 import unittest
-from itertools import product
 from os.path import exists, join
 
 from math import floor
 from scipy.stats.stats import nanmean
-from numpy import isnan, nanmax, nanmin, nansum
-from numpy import ones, nan, mean, array, reshape, sum as npsum
+from numpy import isnan, nanmax, nanmin
+from numpy import ones, nan, reshape, sum as npsum
 from numpy.testing import assert_array_almost_equal, assert_array_equal
-
-try:
-	from osgeo import gdal
-except:
-	import gdal
-
-gdal.UseExceptions()
 
 from prepifg import CUSTOM_CROP, MAXIMUM_CROP, MINIMUM_CROP
 from prepifg import prepare_ifgs, resample, PreprocessingException
@@ -27,7 +19,14 @@ from shared import Ifg, DEM
 from roipac import filename_pair
 from config import OBS_DIR, IFG_CROP_OPT, IFG_LKSX, IFG_LKSY, IFG_FILE_LIST
 from config import IFG_XFIRST, IFG_XLAST, IFG_YFIRST, IFG_YLAST, DEM_FILE
-from config import PROJECTION_FLAG, ORBITAL_FIT_LOOKS_X, ORBITAL_FIT_LOOKS_Y
+from config import ORBITAL_FIT_LOOKS_X, ORBITAL_FIT_LOOKS_Y
+
+from tests_common import SINGLE_TEST_DIR, PREP_TEST_OBS
+from tests_common import SYD_TEST_DEM
+
+import gdal
+gdal.UseExceptions()
+
 
 
 class OutputTests(unittest.TestCase):
@@ -35,10 +34,10 @@ class OutputTests(unittest.TestCase):
 
 	def __init__(self, *args, **kwargs):
 		super(OutputTests, self).__init__(*args, **kwargs)
-		if not exists("../../tests/single"):
+		if not exists(SINGLE_TEST_DIR):
 			sys.exit("ERROR: Missing 'single' dir for unittests\n")
 
-		if not exists("../../tests/prepifg/obs"):
+		if not exists(PREP_TEST_OBS):
 			sys.exit("ERROR: Missing 'prepifg' dir for unittests\n")
 
 
@@ -46,17 +45,15 @@ class OutputTests(unittest.TestCase):
 		self.xs = 0.000833333
 		self.ys = -self.xs
 
-		OBS = "obs"
-		self.testdir = "../../tests/prepifg"
 		tmp = ["geo_060619-061002.unw.rsc", "geo_070326-070917.unw.rsc"]
-		self.hdr_files = [join(self.testdir, OBS, t) for t in tmp]
+		self.hdr_files = [join(PREP_TEST_OBS, t) for t in tmp]
 
 		tmp = ["geo_060619-061002_1rlks.tif", "geo_070326-070917_1rlks.tif"]
-		self.exp_files = [join(self.testdir, OBS, t) for t in tmp]
+		self.exp_files = [join(PREP_TEST_OBS, t) for t in tmp]
 		self.exp_hdr_files = [s + ".rsc" for s in self.exp_files]
 
 		tmp = ["geo_060619-061002.hdr", "geo_070326-070917.hdr"]
-		self.ehdr_hdr = [join(self.testdir, OBS, p) for p in tmp]
+		self.ehdr_hdr = [join(PREP_TEST_OBS, p) for p in tmp]
 
 
 	def tearDown(self):
@@ -74,15 +71,17 @@ class OutputTests(unittest.TestCase):
 		params[IFG_YFIRST] = -34.17 + (16 * self.ys)
 		params[IFG_XLAST] = 150.91 + (27 * self.xs) # 20 cells across from X_FIRST
 		params[IFG_YLAST] = -34.17 + (44 * self.ys) # 28 cells across from Y_FIRST
-		params[IFG_FILE_LIST] = join(self.testdir, 'obs/ifms')
-		params[OBS_DIR] = join(self.testdir,"obs/")
+		params[IFG_FILE_LIST] = join(PREP_TEST_OBS, 'ifms')
+		params[OBS_DIR] = PREP_TEST_OBS
 		return params
 
 
 	def _default_extents_param(self):
 		# create dummy params file (relative paths to prevent chdir calls)
-		return {IFG_LKSX: 1, IFG_LKSY: 1, IFG_FILE_LIST: join(self.testdir, 'obs/ifms'),
-						OBS_DIR: join(self.testdir,"obs/") }
+		return {IFG_LKSX: 1,
+				IFG_LKSY: 1,
+				IFG_FILE_LIST: join(PREP_TEST_OBS, 'ifms'),
+				OBS_DIR: PREP_TEST_OBS }
 
 
 	def test_default_max_extents(self):
@@ -185,7 +184,7 @@ class OutputTests(unittest.TestCase):
 		params = self._custom_extents_param()
 		params[IFG_LKSX] = scale
 		params[IFG_LKSY] = scale
-		params[DEM_FILE] = '../../tests/sydney_test/dem/sydney_trimmed.dem'
+		params[DEM_FILE] = join(SYD_TEST_DEM, 'sydney_trimmed.dem')
 		prepare_ifgs(params, thresh=1.0) # if all nans, ignore cell
 
 		# check file names have been updated
@@ -205,7 +204,7 @@ class OutputTests(unittest.TestCase):
 			self.assertEqual(i.dataset.RasterYSize, 28 / scale)
 
 			# verify resampling
-			path = join(self.testdir, "obs/%s.tif" % n)
+			path = join(PREP_TEST_OBS, "%s.tif" % n)
 			ds = gdal.Open(path)
 			src_data = ds.GetRasterBand(2).ReadAsArray()
 			exp_resample = multilooking(src_data, scale, scale, thresh=0)
@@ -215,7 +214,7 @@ class OutputTests(unittest.TestCase):
 
 		# verify DEM has been correctly processed
 		# ignore output values as resampling has already been tested for phase
-		exp_dem_path = '../../tests/sydney_test/dem/sydney_trimmed_4rlks.dem'
+		exp_dem_path = join(SYD_TEST_DEM, 'sydney_trimmed_4rlks.dem')
 		self.assertTrue(exists(exp_dem_path))
 
 		dem = DEM(exp_dem_path)
@@ -227,7 +226,6 @@ class OutputTests(unittest.TestCase):
 
 		# cleanup
 		paths = [dem.data_path, dem.hdr_path, dem.ehdr_path]
-		del data, dem
 		for p in paths:
 			os.remove(p)
 
@@ -249,11 +247,14 @@ class OutputTests(unittest.TestCase):
 		self.exp_hdr_files = [filename_pair(s)[1] for s in self.exp_files]
 
 		# paths to expected 2nd round mlooked files
-		tmp = ["obs/geo_060619-061002_4rlks_2rlks.tif", "obs/geo_070326-070917_4rlks_2rlks.tif"]
-		ml = [join(self.testdir, p) for p in tmp]
+		tmp = ["geo_060619-061002_4rlks_2rlks.tif",
+				"geo_070326-070917_4rlks_2rlks.tif"]
+		ml = [join(PREP_TEST_OBS, p) for p in tmp]
 		ml_ehdr = [s.replace(".tif", ".hdr") for s in ml] # EHdr format headers
-		tmp = ["obs/geo_060619-061002_4rlks_2rlks.tif.rsc", "obs/geo_070326-070917_4rlks_2rlks.tif.rsc"]
-		mlh = [join(self.testdir, p) for p in tmp]
+
+		tmp = ["geo_060619-061002_4rlks_2rlks.tif.rsc",
+				"geo_070326-070917_4rlks_2rlks.tif.rsc"]
+		mlh = [join(PREP_TEST_OBS, p) for p in tmp]
 
 		# check newly mlooked files
 		for f,h in zip(ml, mlh):
@@ -272,7 +273,7 @@ class OutputTests(unittest.TestCase):
 		"""Ensure failure if supplied layers have different resolutions"""
 		params = self._default_extents_param()
 		params[IFG_CROP_OPT] = MAXIMUM_CROP
-		params[IFG_FILE_LIST] = join(self.testdir, 'obs/ifms_res')
+		params[IFG_FILE_LIST] = join(PREP_TEST_OBS, 'ifms_res')
 		self.assertRaises(PreprocessingException, prepare_ifgs, params)
 
 
@@ -328,10 +329,10 @@ class OutputTests(unittest.TestCase):
 
 		# key: NaN threshold as a % of pixels, expected result
 		expected = [ (0.0, [1, nan, nan, nan, nan]),
-								(0.25, [1, nan, nan, nan, nan]),
-								(0.5, [1, 1, nan, nan, nan]),
-								(0.75, [1, 1, 1, nan, nan]),
-								(1.0, [1, 1, 1, 1, nan])  ]
+					(0.25, [1, nan, nan, nan, nan]),
+					(0.5, [1, 1, nan, nan, nan]),
+					(0.75, [1, 1, 1, nan, nan]),
+					(1.0, [1, 1, 1, 1, nan])  ]
 
 		for thresh, exp in expected:
 			res = resample(data, xscale=2, yscale=2, threshold=thresh)

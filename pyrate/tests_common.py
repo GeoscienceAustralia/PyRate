@@ -14,6 +14,11 @@ SYD_TEST_DIR = "../tests/sydney_test"
 SYD_TEST_OBS = join(SYD_TEST_DIR, 'obs')
 SYD_TEST_DEM = join(SYD_TEST_DIR, 'dem')
 
+PREP_TEST_DIR = '../tests/prepifg'
+PREP_TEST_OBS = join(PREP_TEST_DIR, 'obs')
+
+SINGLE_TEST_DIR = '../tests/single'
+
 
 # small dummy ifg list to limit overall # of ifgs
 IFMS5 = """geo_060828-061211.unw
