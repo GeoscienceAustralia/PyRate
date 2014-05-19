@@ -47,7 +47,8 @@ def parse_header(hdr_file):
 		lines = [e.split() for e in text.split("\n") if e != ""]
 		headers = dict(lines)
 	except ValueError:
-		raise RoipacException("Unable to parse header content:\n%s" % text)
+		msg = "Unable to parse header content:\n%s"
+		raise RoipacException(msg % text)
 
 	for k in headers.keys():
 		if k in INT_HEADERS:
@@ -59,9 +60,10 @@ def parse_header(hdr_file):
 		elif k in DATE_HEADERS:
 			headers[k] = parse_date(headers[k])
 		else:
-			raise RoipacException("Unrecognised header element %s: %s " % (k, headers[k]) )
+			msg = "Unrecognised header element %s: %s "
+			raise RoipacException(msg % (k, headers[k]) )
 
-	# process dates from filename if rsc file doesn't have them (skip this for DEMs)
+	# process dates from filename if rsc file doesn't have them (skip for DEMs)
 	if not headers.has_key(DATUM):
 		if headers.has_key(DATE) is False or headers.has_key(DATE12) is False:
 			p = re.compile(r'\d{6}-\d{6}') # match 2 sets of 6 digits separated by '-'
@@ -75,7 +77,8 @@ def parse_header(hdr_file):
 					headers[DATE] = date12[0]
 					headers[DATE12] = date12
 			else:
-				raise RoipacException("Filename does not include master/slave dates: %s" % hdr_file)
+				msg = "Filename does not include master/slave dates: %s"
+				raise RoipacException(msg % hdr_file)
 
 		# add master and slave alias headers
 		headers[MASTER] = headers[DATE]
@@ -94,9 +97,13 @@ def parse_header(hdr_file):
 
 
 def to_ehdr_header(hdr, dest=None):
-	"""Converts a ROI_PAC header to equivalent EHdr format, allowing GDAL to read
-	ROIPAC. 'hdr' is the .rsc header path. 'dest' is alternate path to save to. If
-	None, dest is defaulted to the 'base_file_name.hdr' """
+	"""
+	Converts ROI_PAC header files to equivalent ESRI BIL/GDAL EHdr format. This
+	allows GDAL to recognise and read ROIPAC datasets.
+	
+	hdr: path to the .rsc header file.
+	dest: path to save new header to, if None, defaults to 'base_file_name.hdr'
+	"""
 	if os.path.isfile(hdr) or os.path.islink(hdr):
 		H = parse_header(hdr)
 		is_dem = True if H.has_key(DATUM) else False
@@ -105,17 +112,19 @@ def to_ehdr_header(hdr, dest=None):
 			# determine default destination file
 			if is_dem:
 				try:
-					i = hdr.index("dem.rsc") # assumes ROIPAC has filename.dem & filename.dem.rsc
+					# assumes ROIPAC uses filename.dem & filename.dem.rsc
+					i = hdr.index("dem.rsc")
 					dest = hdr[:i] + "hdr"
-				except ValueError as v:
-					# DEM possibly not from ROIPAC
-					raise NotImplementedError("TODO: handle non ROIPAC filenames?")
+				except ValueError:
+					# DEM probably not from ROIPAC
+					msg = "Unrecognised file naming pattern for %s"
+					raise RoipacException(msg % hdr)
 			else:
 				i = max(hdr.rfind("unw.rsc"), hdr.rfind("tif.rsc"))
 				if i > 0:
 					dest = hdr[:i] + "hdr"
 				else:
-					msg = "Unrecognised filename: %s for creating GDAL compatible header"
+					msg = "Unrecognised file naming pattern for %s"
 					raise RoipacException(msg % hdr)
 	else:
 		raise IOError("%s not a valid header file" % hdr)
@@ -125,9 +134,9 @@ def to_ehdr_header(hdr, dest=None):
 	if yllcorner > 90 or yllcorner < -90:
 		raise RoipacException("Invalid Y latitude for yllcorner: %s" % yllcorner)
 
-	# create ESRI/EHdr format header, using ROIPAC defaults
-	# NB: ROIPAC uses 0 for phase NODATA, which isn't quite correct. Use zero for
-	# now, which allows GDAL to recognise NODATA cells
+	# create ESRI BIL format header, using ROIPAC defaults
+	# TODO: ROIPAC uses 0 for phase NODATA, which isn't quite correct. Use zero
+	# for now to allow GDAL to recognise NODATA cells
 	with open(dest, "w") as f:
 		f.write("ncols %s\n" % H[WIDTH])
 		f.write("nrows %s\n" % H[FILE_LENGTH])
@@ -137,7 +146,8 @@ def to_ehdr_header(hdr, dest=None):
 			f.write("cellsize %s\n" % H[X_STEP])
 		else:
 			f.write("xdim %s\n" % H[X_STEP])
-			f.write("ydim %s\n" % abs(H[Y_STEP]) ) # NB: GDAL reads all zeros if ydim is -ve
+			# GDAL reads zeros if ydim is negative
+			f.write("ydim %s\n" % abs(H[Y_STEP]) )
 
 		f.write("xllcorner %s\n" % H[X_FIRST])
 		f.write("yllcorner %s\n" % yllcorner)
