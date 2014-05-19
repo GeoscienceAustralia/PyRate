@@ -408,7 +408,7 @@ class NetworkCorrectionTests(unittest.TestCase):
 		ncoef - number of model coefficients (2 planar, 5 quadratic)
 		'''
 		corrections = []
-		for i, ifg in enumerate(ifgs):
+		for ifg in ifgs:
 			jbm = self.date_ids[ifg.MASTER] * ncoef # starting row index for master
 			jbs = self.date_ids[ifg.SLAVE] * ncoef # row start for slave
 			par = params[jbs:jbs + ncoef] - params[jbm:jbm + ncoef]
