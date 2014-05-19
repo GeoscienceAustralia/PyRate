@@ -5,8 +5,8 @@ Author: Ben Davies
 '''
 
 from copy import copy
-from numpy import array, where, isnan, real, imag, sum, sqrt, meshgrid, reshape
-from numpy import zeros, vstack, ceil, mean, exp, ones, diag, sqrt
+from numpy import array, where, isnan, real, imag, sum, sqrt, meshgrid
+from numpy import zeros, vstack, ceil, mean, exp, reshape
 from numpy.linalg import norm
 from scipy.fftpack import fft2, ifft2, fftshift
 from scipy.optimize import fmin
