@@ -34,14 +34,14 @@ def ref_pixel(params, ifgs):
 	thresh = params[config.REF_MIN_FRAC] * chipsize * chipsize
 	min_sd = float("inf") # dummy start value
 
-	# do window searches across dataset, central pixel of stack with smallest mean
-	# is the reference pixel
+	# do window searches across dataset, central pixel of stack with smallest
+	# mean is the reference pixel
 	for y in _step(head.FILE_LENGTH, refny, radius):
 		for x in _step(head.WIDTH, refnx, radius):
 			data = phase_stack[:, y-radius:y+radius+1, x-radius:x+radius+1]
 			valid = [nsum(~isnan(i)) > thresh for i in data]
 
-			if all(valid): # ignore stack if 1+ ifgs have too many incoherent cells
+			if all(valid): # ignore if 1+ ifgs have too many incoherent cells
 				sd = [std( i[~isnan(i)] ) for i in data]
 				mean_sd = mean(sd)
 				if mean_sd < min_sd:
@@ -67,7 +67,8 @@ def check_ref_pixel_params(params, head):
 		missing_option_error(config.REF_CHIP_SIZE)
 
 	if chipsize < 3 or chipsize > head.WIDTH or (chipsize % 2 == 0):
-		raise ValueError("Chipsize setting must be >=3 and at least <= grid width")
+		msg = "Chipsize setting must be >=3 and at least <= grid width"
+		raise ValueError(msg)
 
 	# sanity check minimum fraction
 	min_frac = params.get(config.REF_MIN_FRAC)
@@ -84,7 +85,8 @@ def check_ref_pixel_params(params, head):
 
 	max_width = (head.WIDTH - (chipsize-1))
 	if refnx < 1 or refnx > max_width:
-		raise ValueError("Invalid refnx setting, must be > 0 and <= %s" % max_width)
+		msg = "Invalid refnx setting, must be > 0 and <= %s"
+		raise ValueError(msg % max_width)
 
 	refny = params.get(config.REFNY)
 	if refny is None:
@@ -92,14 +94,18 @@ def check_ref_pixel_params(params, head):
 
 	max_rows = (head.FILE_LENGTH - (chipsize-1))
 	if refny < 1 or refny > max_rows:
-		raise ValueError("Invalid refny setting, must be > 0 and <= %s" % max_rows)
+		msg = "Invalid refny setting, must be > 0 and <= %s"
+		raise ValueError(msg % max_rows)
 
 
 def _step(dim, ref, radius):
-	'''Returns xrange obj of axis indicies for a search window. dim is the total
-	length of the grid dimension. ref is the desired number of steps. radius is #
-	cells out from the centre of the chip, or (chipsize / 2).'''
-
+	'''
+	Helper func: returns xrange obj of axis indicies for a search window.
+	
+	dim: total length of the grid dimension
+	ref: the desired number of steps
+	radius: the number of cells from the centre of the chip eg. (chipsize / 2)
+	'''
 	if ref == 1:
 		# centre a single search step
 		return xrange(dim // 2, dim, dim) # fake step to ensure single xrange value
