@@ -62,9 +62,10 @@ class MockIfg(object):
 	'''Mock Ifg for detailed testing'''
 
 	def __init__(self, ifg, xsize=None, ysize=None):
-		'''Creates mock ifg based on another interferogram. Size args specify the
-		dimensions of the phase band (so the mock ifg can be resized differently to
-		the source interferogram for smaller test datasets).
+		'''
+		Creates mock Ifg based on a given interferogram. Size args specify the
+		dimensions of the phase band (so the mock ifg can be resized differently
+		to the source interferogram for smaller test datasets).
 		'''
 		self.MASTER = ifg.MASTER
 		self.SLAVE = ifg.SLAVE
