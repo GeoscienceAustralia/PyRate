@@ -1,8 +1,12 @@
 '''
-Tool to convert rasters from ROIPAC to another data format
+Library/script to convert ROIPAC headers to ESRI's BIL format.
+
+GDAL cannot parse ROIPAC headers, preventing interoperability. This module
+translates ROIPAC headers into ESRI's BIL format, which is supported by GDAL. A
+command line interface are provided for testing purposes. 
 
 Created on 12/09/2012
-@author: Ben Davies, ANUSF
+@author: Ben Davies, NCI
          ben.davies@anu.edu.au
 '''
 
@@ -47,8 +51,8 @@ def parse_header(hdr_file):
 		lines = [e.split() for e in text.split("\n") if e != ""]
 		headers = dict(lines)
 	except ValueError:
-		msg = "Unable to parse header content:\n%s"
-		raise RoipacException(msg % text)
+		msg = "Unable to parse content of %s. Is it a ROIPAC header file?"
+		raise RoipacException(msg % hdr_file)
 
 	for k in headers.keys():
 		if k in INT_HEADERS:
@@ -175,3 +179,17 @@ def write_roipac_header(params, dest_path):
 
 class RoipacException(Exception):
 	pass
+
+
+if __name__ == '__main__':
+	import sys
+	usage = "Usage: rp2ehdr.py [ROIPAC unw.rsc files ...]\n" 
+	if len(sys.argv) < 2:
+		sys.stderr.write(usage)
+		sys.exit()
+
+	for path in sys.argv[1:]:
+		try:
+			to_ehdr_header(path)
+		except Exception as ex:
+			sys.exit(ex.message)
