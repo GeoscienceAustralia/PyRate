@@ -26,7 +26,7 @@ Dependencies:
 * Two major dependencies are SciPy and GDAL. It may be easier to use your Linux package manager to install the system versions (unless virtualenv can install them).
 * python-graph (easy_install python-graph-core)
 * pyproj (pip install pyproj)
-* Nosetests (pip install nosetests)
+* Nosetests (pip install nose)
 * Py.Test (pip install pytest)
 
 NB: Having 2 test tools can be handy for debugging.
