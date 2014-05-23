@@ -15,12 +15,12 @@ from numpy import nan, isnan, array, reshape, median
 from numpy import empty, dot, concatenate, float32
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 
-import algorithm
-from shared import Ifg
-from orbital import OrbitalError, orbital_correction
-from orbital import get_design_matrix, get_network_design_matrix
-from orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, QUADRATIC
-from tests_common import sydney5_mock_ifgs, MockIfg, SYD_TEST_OBS
+from pyrate import algorithm
+from pyrate.shared import Ifg
+from pyrate.orbital import OrbitalError, orbital_correction
+from pyrate.orbital import get_design_matrix, get_network_design_matrix
+from pyrate.orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, QUADRATIC
+from pyrate.tests.tests_common import sydney5_mock_ifgs, MockIfg, SYD_TEST_OBS
 
 
 

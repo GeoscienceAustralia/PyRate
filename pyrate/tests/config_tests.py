@@ -6,8 +6,8 @@ Created on 17/09/2012
 import sys, unittest
 from os.path import exists, join
 
-import config
-from tests_common import SYD_TEST_DIR, SYD_TEST_OBS
+from pyrate import config
+from pyrate.tests.tests_common import SYD_TEST_DIR, SYD_TEST_OBS
 
 
 class ConfigTests(unittest.TestCase):

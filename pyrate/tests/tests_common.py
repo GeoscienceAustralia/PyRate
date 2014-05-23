@@ -6,20 +6,21 @@ Author: Ben Davies
 import glob
 from os.path import join
 
-from shared import Ifg
+from pyrate.shared import Ifg
 from numpy import ndarray, float32, isnan, sum as nsum
 
 
-SYD_TEST_DIR = "../tests/sydney_test"
+BASE_TEST = "../../tests"
+SYD_TEST_DIR = join(BASE_TEST, "sydney_test")
 SYD_TEST_OBS = join(SYD_TEST_DIR, 'obs')
 SYD_TEST_DEM = join(SYD_TEST_DIR, 'dem')
 
-PREP_TEST_DIR = '../tests/prepifg'
+PREP_TEST_DIR = join(BASE_TEST, 'prepifg')
 PREP_TEST_OBS = join(PREP_TEST_DIR, 'obs')
 
-SINGLE_TEST_DIR = '../tests/single'
-HEADERS_TEST_DIR = '../tests/headers'
-INCID_TEST_DIR = '../tests/incidence'
+SINGLE_TEST_DIR = join(BASE_TEST, 'single')
+HEADERS_TEST_DIR = join(BASE_TEST, 'headers')
+INCID_TEST_DIR = join(BASE_TEST, 'incidence')
 
 
 # small dummy ifg list to limit overall # of ifgs

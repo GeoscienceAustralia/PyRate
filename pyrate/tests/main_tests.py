@@ -5,7 +5,7 @@ Created on 17/09/2012
 
 import os, unittest
 
-import main
+from pyrate import main
 
 
 

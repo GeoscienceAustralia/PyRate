@@ -15,10 +15,10 @@ from numpy.testing import assert_array_equal
 from gdal import Open, UseExceptions
 UseExceptions()
 
-import roipac
-import ifgconstants as IFC
+from pyrate import roipac
+from pyrate import ifgconstants as IFC
 
-from tests_common import SYD_TEST_DEM, SYD_TEST_OBS, SINGLE_TEST_DIR, HEADERS_TEST_DIR
+from pyrate.tests.tests_common import SYD_TEST_DEM, SYD_TEST_OBS, SINGLE_TEST_DIR, HEADERS_TEST_DIR
 
 
 

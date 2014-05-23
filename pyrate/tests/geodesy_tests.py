@@ -6,7 +6,7 @@ Created: 13/3/13
 
 import unittest
 
-from geodesy import cell_size, utm_zone
+from pyrate.geodesy import cell_size, utm_zone
 
 
 class GeodesyTests(unittest.TestCase):

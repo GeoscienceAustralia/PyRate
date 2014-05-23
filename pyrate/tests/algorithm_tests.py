@@ -12,8 +12,8 @@ import numpy
 from numpy import array, reshape, squeeze
 from numpy.testing import assert_array_almost_equal, assert_allclose, assert_array_equal
 
-import algorithm
-from shared import Ifg
+from pyrate import algorithm
+from pyrate.shared import Ifg
 from tests_common import sydney5_mock_ifgs, SYD_TEST_OBS
 
 

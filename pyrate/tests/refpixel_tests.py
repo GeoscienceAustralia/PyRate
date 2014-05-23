@@ -6,11 +6,11 @@ Author: Ben Davies
 import unittest
 from numpy import nan, mean, std, isnan
 
-from refpixel import ref_pixel, RefPixelError, _step
-from tests_common import sydney_test_setup, MockIfg
+from pyrate.refpixel import ref_pixel, RefPixelError, _step
+from pyrate.tests.tests_common import sydney_test_setup, MockIfg
 
-from config import ConfigException
-from config import REFX, REFNX, REFY, REFNY, REF_CHIP_SIZE, REF_MIN_FRAC
+from pyrate.config import ConfigException
+from pyrate.config import REFX, REFNX, REFY, REFNY, REF_CHIP_SIZE, REF_MIN_FRAC
 
 
 def default_params():

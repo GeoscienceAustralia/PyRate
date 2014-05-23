@@ -7,9 +7,9 @@ import unittest
 from numpy import array, nan, isnan, where, sum as nsum
 from itertools import product
 
-from mst import mst_matrix, default_mst
-import algorithm
-from tests_common import MockIfg, sydney5_mock_ifgs, sydney_test_setup
+from pyrate.mst import mst_matrix, default_mst
+from pyrate import algorithm
+from pyrate.tests.tests_common import MockIfg, sydney5_mock_ifgs, sydney_test_setup
 
 
 class MSTTests(unittest.TestCase):
