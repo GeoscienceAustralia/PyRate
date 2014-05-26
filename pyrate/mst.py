@@ -51,40 +51,40 @@ def _build_graph(nodes, edges, weights, noroot=True):
 	return g
 
 
+# TODO: custom weighting could included with an additional 'weights' arg if some
+# other weighting criterion is required later
 def mst_matrix(ifgs, epochs):
 	'''
-	Returns array of MST trees from a pixel-by-pixel MST. A MST is calculated
-	for each individual pixel, ignoring NODATA values.
+	Returns array of MST trees from a pixel-by-pixel MST. MSTs are calculated
+	for each individual pixel, ignoring NODATA/NaN values.
 	ifgs: sequence of Ifg objs
 	epochs: an EpochList object derived from the ifgs
-	'''
-
-	# locally cache all edges/weights for on-the-fly graph modification
+	'''	
 	# make default MST to optimise result when no Ifg cells in a stack are nans
 	edges = [i.DATE12 for i in ifgs]
 	weights = [i.nan_fraction for i in ifgs]
 	g = _build_graph(epochs.dates, edges, weights)
-	dflt_mst = _remove_root_node(minimal_spanning_tree(g)) # default base MST
+	dflt_mst = _remove_root_node(minimal_spanning_tree(g))
 
 	# prepare source and dest data arrays
-	num_ifgs = len(ifgs)
-	data_stack = array([i.phase_data for i in ifgs], dtype=float32)
+	data_stack = array([i.phase_data for i in ifgs], dtype=float32) # TODO: memory efficiencies possible with tiling
 	mst_result = ndarray(shape=i.phase_data.shape, dtype=object)
 
-	# create MSTs for each pixel in the ifg data stack
+	# now create MSTs for each pixel in the ifg data stack
 	for y, x in product(xrange(i.FILE_LENGTH), xrange(i.WIDTH)):
 		values = data_stack[:, y, x] # select stack of all ifg values for a pixel
-		nc = sum(isnan(values))
+		nancount = sum(isnan(values))
 
 		# optimisations: use precreated results for all nans/no nans
-		if nc == 0:
+		if nancount == 0:
 			mst_result[y, x] = dflt_mst
 			continue
-		elif nc == num_ifgs:
+		elif nancount == len(ifgs):
 			mst_result[y, x] = nan
 			continue
 
-		# otherwise dynamically adjust graph, skipping edges where pixels are NaN
+		# dynamically modify graph to reuse a single graph: this should avoid
+		# repeatedly creating new graph objs & reduce RAM use		
 		for value, edge, weight in zip(values, edges, weights):
 			if not isnan(value):
 				if not g.has_edge(edge):
