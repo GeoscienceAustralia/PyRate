@@ -150,7 +150,7 @@ class ReferencePixelTests(unittest.TestCase):
 		# test different search windows to verify x/y step calculation
 
 		# convenience testing function
-		def test_equal(actual, expected):
+		def assert_equal(actual, expected):
 			for a, e in zip(actual, expected):
 				self.assertEqual(a, e)
 
@@ -160,19 +160,19 @@ class ReferencePixelTests(unittest.TestCase):
 		refnx = 2
 		exp = [2, 44]
 		act = _step(width, refnx, radius)
-		test_equal(act, exp)
+		assert_equal(act, exp)
 
 		# test with 3 windows
 		refnx = 3
 		exp = [2, 23, 44]
 		act = _step(width, refnx, radius)
-		test_equal(act, exp)
+		assert_equal(act, exp)
 
 		# test 4 search windows
 		refnx = 4
 		exp = [2, 16, 30, 44]
 		act = _step(width, refnx, radius)
-		test_equal(act, exp)
+		assert_equal(act, exp)
 
 
 	def test_ref_pixel(self):
