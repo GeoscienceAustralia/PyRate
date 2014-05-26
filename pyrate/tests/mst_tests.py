@@ -4,7 +4,7 @@ Author: Ben Davies, ANUSF
 '''
 
 import unittest
-from numpy import array, nan, isnan, where, sum as nsum
+from numpy import empty, array, nan, isnan, sum as nsum
 from itertools import product
 
 from pyrate.mst import mst_matrix, default_mst
@@ -68,7 +68,6 @@ class MSTTests(unittest.TestCase):
 
 	def test_partial_nan_pixel_stack(self):
 		# Ensure a limited # of cells gives in a smaller node tree
-
 		num_coherent = 3
 
 		def test_result():
@@ -88,12 +87,14 @@ class MSTTests(unittest.TestCase):
 
 
 	def test_all_nan_pixel_stack(self):
+		# ensure full stack of NaNs in an MST pixel classifies to NaN 
 		mock_ifgs = [MockIfg(i, 1, 1) for i in self.ifgs]
 		for m in mock_ifgs:
 			m.phase_data[:] = nan
 
 		res = mst_matrix(mock_ifgs, self.epochs)
-		exp = [nan]
+		exp = empty((1,1), dtype=object) 
+		exp[:] = nan
 
 		shape = (mock_ifgs[0].FILE_LENGTH, mock_ifgs[0].WIDTH)
 		self.assertTrue(res.shape == shape)
