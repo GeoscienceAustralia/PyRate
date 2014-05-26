@@ -20,18 +20,19 @@ from tempfile import mkstemp
 from itertools import product
 from subprocess import check_call
 
-from numpy import array, where, nan, isnan, mean, float32, zeros
+from numpy import array, where, nan, isnan, nanmean, float32, zeros, sum as nsum
 
 from shared import Ifg, DEM
 from roipac import filename_pair, write_roipac_header
+
 from config import parse_namelist
 from config import OBS_DIR, IFG_CROP_OPT, IFG_LKSX, IFG_LKSY, IFG_FILE_LIST
 from config import IFG_XFIRST, IFG_XLAST, IFG_YFIRST, IFG_YLAST, DEM_FILE
 from config import ORBITAL_FIT_LOOKS_X, ORBITAL_FIT_LOOKS_Y
 
 from ifgconstants import X_FIRST, Y_FIRST, X_LAST, Y_LAST, X_STEP, Y_STEP
-from ifgconstants import WIDTH, FILE_LENGTH, WAVELENGTH
 from ifgconstants import Z_OFFSET, Z_SCALE, PROJECTION, DATUM
+from ifgconstants import WIDTH, FILE_LENGTH, WAVELENGTH
 
 # Constants
 MINIMUM_CROP = 1
@@ -208,18 +209,18 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, verbose):
 	return new_lyr
 
 
-def resample(data, xscale, yscale, threshold):
+def resample(data, xscale, yscale, thresh):
 	"""
 	Resamples/averages 'data' to return an array from the averaging of blocks
 	of several tiles in 'data'. NB: Assumes incoherent cells are NaNs.
 
-	data - source array to resample to different size
-	xscale - number of cells to average along X axis
-	yscale - number of Y axis cells to average
-	threshold - minimum allowable proportion of NaN cells (range from 0.0-1.0),
+	data: source array to resample to different size
+	xscale: number of cells to average along X axis
+	yscale: number of Y axis cells to average
+	thresh: minimum allowable proportion of NaN cells (range from 0.0-1.0),
 	eg. 0.25 = 1/4 or more as NaNs results in a NaN value for the output cell.
 	"""
-	if threshold < 0 or threshold > 1:
+	if thresh < 0 or thresh > 1:
 		raise ValueError("threshold must be >= 0 and <= 1")
 
 	xscale = int(xscale)
@@ -230,16 +231,13 @@ def resample(data, xscale, yscale, threshold):
 	dest = zeros((yres, xres), dtype=float32) * nan
 	tile_cell_count = xscale * yscale
 
-	# FIXME: replace with numpy funcs
 	# calc mean without nans (fractional threshold ignores tiles with excess NaNs)
 	for y,x in product(xrange(yres), xrange(xres)):
 		tile = data[y * yscale : (y+1) * yscale, x * xscale : (x+1) * xscale]
-		non_nans = [ tile[crd] for crd in product(xrange(yscale), xrange(xscale))
-		                  if not isnan(tile[crd])]
-		nan_fraction = (tile_cell_count - len(non_nans)) / float(tile_cell_count)
+		nan_fraction = nsum(isnan(tile)) / float(tile_cell_count)
 
-		if nan_fraction < threshold or (nan_fraction == 0 and threshold == 0):
-			dest[y,x] = mean(non_nans)
+		if nan_fraction < thresh or (nan_fraction == 0 and thresh == 0):
+			dest[y,x] = nanmean(tile)
 
 	return dest
 

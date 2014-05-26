@@ -1,6 +1,5 @@
 # Tests for prepifg.py
 # Ben Davies, ANUSF
-#
 
 import os, sys
 import unittest
@@ -335,7 +334,7 @@ class OutputTests(unittest.TestCase):
 					(1.0, [1, 1, 1, 1, nan])  ]
 
 		for thresh, exp in expected:
-			res = resample(data, xscale=2, yscale=2, threshold=thresh)
+			res = resample(data, xscale=2, yscale=2, thresh=thresh)
 			assert_array_equal(res, reshape(exp, res.shape))
 
 
@@ -347,7 +346,7 @@ class OutputTests(unittest.TestCase):
 
 		expected = [ (0.4, [nan,nan]), (0.5, [1, nan]), (0.7, [1, 1]) ]
 		for thresh, exp in expected:
-			res = resample(data, xscale=3, yscale=3, threshold=thresh)
+			res = resample(data, xscale=3, yscale=3, thresh=thresh)
 			assert_array_equal(res, reshape(exp, res.shape))
 
 
