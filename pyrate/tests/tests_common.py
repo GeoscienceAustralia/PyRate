@@ -3,6 +3,7 @@ Collection of generic testing utils and mock objs for PyRate
 Author: Ben Davies
 '''
 
+import os
 import glob
 from os.path import join
 
@@ -10,7 +11,7 @@ from pyrate.shared import Ifg
 from numpy import ndarray, float32, isnan, sum as nsum
 
 
-BASE_TEST = "../../tests"
+BASE_TEST = join(os.environ['PYTHONPATH'], "tests")
 SYD_TEST_DIR = join(BASE_TEST, "sydney_test")
 SYD_TEST_OBS = join(SYD_TEST_DIR, 'obs')
 SYD_TEST_DEM = join(SYD_TEST_DIR, 'dem')
