@@ -167,7 +167,7 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, verbose):
 	thresh: see thresh in prepare_ifgs().
 	verbose: True to print gdalwarp output to stdout
 	'''
-
+	# TODO: investigate gdalwarp averaging method to simplify this module
 	# dynamically build command for call to gdalwarp
 	cmd = ["gdalwarp", "-overwrite", "-srcnodata", "None", "-te"] + extents
 	if not verbose: cmd.append("-q")
