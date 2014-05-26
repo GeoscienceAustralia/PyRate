@@ -7,7 +7,7 @@ import unittest
 from numpy import nan, mean, std, isnan
 
 from pyrate.refpixel import ref_pixel, RefPixelError, _step
-from pyrate.tests.tests_common import sydney_test_setup, MockIfg
+from pyrate.tests.tests_common import sydney_data_setup, MockIfg
 
 from pyrate.config import ConfigException
 from pyrate.config import REFX, REFNX, REFY, REFNY, REF_CHIP_SIZE, REF_MIN_FRAC
@@ -22,7 +22,7 @@ class ReferencePixelInputTests(unittest.TestCase):
 	'''Verifies error checking capabilities of the reference pixel function'''
 
 	def setUp(self):
-		self.testdir, self.ifgs = sydney_test_setup()
+		self.testdir, self.ifgs = sydney_data_setup()
 
 
 	def test_missing_chipsize(self):
@@ -104,7 +104,7 @@ class ReferencePixelTests(unittest.TestCase):
 	'''Tests results of the reference pixel search'''
 
 	def setUp(self):
-		self.testdir, self.ifgs = sydney_test_setup()
+		self.testdir, self.ifgs = sydney_data_setup()
 		self.mock_ifgs = None
 
 

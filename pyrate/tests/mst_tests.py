@@ -9,14 +9,14 @@ from itertools import product
 
 from pyrate.mst import mst_matrix, default_mst
 from pyrate import algorithm
-from pyrate.tests.tests_common import MockIfg, sydney5_mock_ifgs, sydney_test_setup
+from pyrate.tests.tests_common import MockIfg, sydney5_mock_ifgs, sydney_data_setup
 
 
 class MSTTests(unittest.TestCase):
 	'''Basic verification of minimum spanning tree (MST) functionality.'''
 
 	def setUp(self):
-		self.testdir, self.ifgs = sydney_test_setup()
+		self.testdir, self.ifgs = sydney_data_setup()
 		self.epochs = algorithm.get_epochs(self.ifgs)
 
 

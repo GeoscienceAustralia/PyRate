@@ -33,7 +33,7 @@ geo_070326-070917.unw
 """
 
 # TODO: get rid of first returned arg?
-def sydney_test_setup():
+def sydney_data_setup():
 	'''Returns Ifg objs for the files in the sydney test dir'''
 	datafiles = glob.glob(join(SYD_TEST_OBS, "*.unw") )
 	ifgs = [Ifg(i) for i in datafiles]
