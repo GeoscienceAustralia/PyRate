@@ -1,7 +1,16 @@
 """
+Prepares input files and associated data for the PyRate work flow. 
+
+Input data often may need to cropping, scaling, and multilooking/downsampling to
+coarser grids before being processed. This module uses gdalwarp to handle  
+
 Created on 23/10/2012
 @author: Ben Davies
 """
+
+# TODO: check new average option for gdalwarp (GDAL 1.10.x +) 
+# TODO: Wavelength conversion 
+
 
 import os, sys
 from os.path import join, splitext
@@ -11,7 +20,6 @@ from tempfile import mkstemp
 from itertools import product
 from subprocess import check_call
 
-from scipy.stats.stats import nanmean
 from numpy import array, where, nan, isnan, mean, float32, zeros
 
 from shared import Ifg, DEM
@@ -19,7 +27,8 @@ from roipac import filename_pair, write_roipac_header
 from config import parse_namelist
 from config import OBS_DIR, IFG_CROP_OPT, IFG_LKSX, IFG_LKSY, IFG_FILE_LIST
 from config import IFG_XFIRST, IFG_XLAST, IFG_YFIRST, IFG_YLAST, DEM_FILE
-from config import PROJECTION_FLAG, ORBITAL_FIT_LOOKS_X, ORBITAL_FIT_LOOKS_Y
+from config import ORBITAL_FIT_LOOKS_X, ORBITAL_FIT_LOOKS_Y
+
 from ifgconstants import X_FIRST, Y_FIRST, X_LAST, Y_LAST, X_STEP, Y_STEP
 from ifgconstants import WIDTH, FILE_LENGTH, WAVELENGTH
 from ifgconstants import Z_OFFSET, Z_SCALE, PROJECTION, DATUM
@@ -37,14 +46,14 @@ GRID_TOL = 1e-6
 def prepare_ifgs(params, thresh=0.5, use_exceptions=False, verbose=False):
 	"""
 	Produces multilooked/resampled data files for PyRate analysis.
-	params - dict of named values from pyrate config file
-	threshhold - 0.0->1.0 controls NaN handling when resampling to coarser grids,
-	             value is proportion above which the number of NaNs in an area is
-	             considered invalid. threshhold=0 resamples to NaN if 1 or more
-	             contributing cells are NaNs. At 0.25, it resamples to NaN if 1/4
-	             or more contributing cells are NaNs. At 1.0, areas are resampled
-	             to NaN only if all area cells are NaNs.
-	use_exceptions - True causes exceptions instead of warnings. Default=False
+	params: dict of named values (from pyrate config file)
+	thresh: 0.0->1.0 controls NaN handling when resampling to coarser grids.
+	    Value is the proportion above which the number of NaNs in an area is
+	    considered invalid. thresh=0 resamples to NaN if 1 or more contributing
+	    cells are NaNs. At 0.25, it resamples to NaN if 1/4 or more contributing
+	    cells are NaNs. At 1.0, areas are resampled to NaN only if all
+	    contributing cells are NaNs.
+	use_exceptions: Use exceptions instead of warnings. Default=False
 	verbose - controls level of gdalwarp output
 	"""
 	# validate config file settings
@@ -56,7 +65,7 @@ def prepare_ifgs(params, thresh=0.5, use_exceptions=False, verbose=False):
 	paths = [join(params[OBS_DIR], p) for p in parse_namelist(params[IFG_FILE_LIST])]
 	ifgs = [Ifg(p) for p in paths]
 
-	# treat DEM as Ifg as core API is equivalent
+	# treat DEM as an Ifg as most of the API is shared
 	if params.has_key(DEM_FILE):
 		ifgs.append(DEM(params[DEM_FILE]))
 
@@ -148,7 +157,7 @@ def _resample_ifg(ifg, cmd, x_looks, y_looks, thresh):
 
 def warp(ifg, x_looks, y_looks, extents, resolution, thresh, verbose):
 	'''
-	Calls the GDALWarp utility to resample the given ifg. Returns a new Ifg obj.
+	Resamples 'ifg' and returns a new Ifg obj.
 	xlooks - integer factor to scale X axis by, 5 is 5x smaller, 1 is no change.
 	ylooks - as xlooks, but for Y axis
 	extents - georeferenced extents for new file: (xmin, ymin, xmax, ymax)
@@ -178,7 +187,6 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, verbose):
 	# Add missing/updated metadata to resampled ifg/DEM
 	new_lyr = type(ifg)(looks_path, ifg.hdr_path)
 	new_lyr.open(readonly=False)
-	new_hdr_path = filename_pair(looks_path)[1]
 	_create_new_roipac_header(ifg, new_lyr)
 
 	# for non-DEMs, phase bands need extra metadata & conversions
@@ -222,6 +230,7 @@ def resample(data, xscale, yscale, threshold):
 	dest = zeros((yres, xres), dtype=float32) * nan
 	tile_cell_count = xscale * yscale
 
+	# FIXME: replace with numpy funcs
 	# calc mean without nans (fractional threshold ignores tiles with excess NaNs)
 	for y,x in product(xrange(yres), xrange(xres)):
 		tile = data[y * yscale : (y+1) * yscale, x * xscale : (x+1) * xscale]
@@ -240,8 +249,8 @@ def reproject():
 
 
 def _create_new_roipac_header(src_ifg, new_ifg, dest=None):
-	"""Translates an existing ROIPAC Ifg header to new values following cropping
-	and resampling."""
+	"""Translate existing ROIPAC Ifg header to new values following cropping
+	and/or resampling."""
 
 	geotrans = new_ifg.dataset.GetGeoTransform()
 	newpars = { WIDTH: new_ifg.dataset.RasterXSize,
