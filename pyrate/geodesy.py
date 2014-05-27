@@ -1,12 +1,12 @@
 '''
 Collection of geodesy/pyproj algorithms for PyRate.
 
+This module depends on PyProj/PROJ4 to replace llh2local.m in MATLAB Pirate.
+
 Author:  Ben Davies
 Created: 13/3/13
 '''
 
-# PyProj/PROJ4 replaces Pirate's llh2local.m code, see example at:
-# http://pyproj.googlecode.com/svn/trunk/docs/pyproj-module.html#transform
 
 from math import floor
 
@@ -14,21 +14,23 @@ import pyproj
 
 
 def utm_zone(longitude):
-	'''Returns basic UTM zone for given longitude in degrees. Currently does NOT
+	'''
+	Returns basic UTM zone for given longitude in degrees. Currently does NOT
 	handle the sub-zoning around Scandanavian countries.
 	See http://www.dmap.co.uk/utmworld.htm
 	'''
 	if longitude == 180:
 		return 60.0
-	return floor((longitude + 180)/6.0) + 1
+	return floor((longitude + 180) / 6.0) + 1
 
 
 def cell_size(lat, lon, x_step, y_step):
-	'''Converts X|Y_STEP in degrees to X & Y cell length/width in metres.
-	lat - latitude in degrees
-	lon - longitude in degrees
-	x_step - horizontal step size in degrees
-	y_step - vertical step size in degrees
+	'''
+	Converts X|Y_STEP in degrees to X & Y cell length/width in metres.
+	lat: latitude in degrees
+	lon: longitude in degrees
+	x_step: horizontal step size in degrees
+	y_step: vertical step size in degrees
 	'''
 	if lat > 84.0 or lat < -80:
 		msg = "No UTM zone for polar region: > 84 degrees N or < 80 degrees S"
