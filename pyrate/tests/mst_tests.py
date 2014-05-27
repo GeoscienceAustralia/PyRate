@@ -9,7 +9,7 @@ from itertools import product
 
 from pyrate import algorithm
 from pyrate.mst import mst_matrix, default_mst
-from pyrate.tests.tests_common import MockIfg, sydney5_mock_ifgs, sydney_data_setup
+from pyrate.tests.common import MockIfg, sydney5_mock_ifgs, sydney_data_setup
 
 
 class MSTTests(unittest.TestCase):

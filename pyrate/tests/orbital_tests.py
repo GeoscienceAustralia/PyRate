@@ -20,7 +20,7 @@ from pyrate.shared import Ifg
 from pyrate.orbital import OrbitalError, orbital_correction
 from pyrate.orbital import get_design_matrix, get_network_design_matrix
 from pyrate.orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, QUADRATIC
-from pyrate.tests.tests_common import sydney5_mock_ifgs, MockIfg, SYD_TEST_OBS
+from common import sydney5_mock_ifgs, MockIfg, SYD_TEST_OBS
 
 
 

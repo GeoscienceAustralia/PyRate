@@ -14,14 +14,14 @@ from numpy.testing import assert_array_almost_equal, assert_array_equal
 from pyrate.prepifg import CUSTOM_CROP, MAXIMUM_CROP, MINIMUM_CROP
 from pyrate.prepifg import prepare_ifgs, resample, PreprocessingException
 from pyrate.prepifg import _do_orbital_multilooking
+
 from pyrate.shared import Ifg, DEM
 from pyrate.roipac import filename_pair
 from pyrate.config import OBS_DIR, IFG_CROP_OPT, IFG_LKSX, IFG_LKSY, IFG_FILE_LIST
 from pyrate.config import IFG_XFIRST, IFG_XLAST, IFG_YFIRST, IFG_YLAST, DEM_FILE
 from pyrate.config import ORBITAL_FIT_LOOKS_X, ORBITAL_FIT_LOOKS_Y
 
-from tests_common import SINGLE_TEST_DIR, PREP_TEST_OBS
-from tests_common import SYD_TEST_DEM
+from common import SINGLE_TEST_DIR, PREP_TEST_OBS, SYD_TEST_DEM
 
 import gdal
 gdal.UseExceptions()

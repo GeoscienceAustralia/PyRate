@@ -9,9 +9,8 @@ import unittest
 from numpy import array
 from numpy.testing import assert_array_almost_equal
 
-from pyrate.shared import Ifg
 from pyrate.vcm import cvd, get_vcmt
-from pyrate.tests.tests_common import sydney5_mock_ifgs, sydney5_ifgs
+from common import sydney5_mock_ifgs, sydney5_ifgs
 
 
 

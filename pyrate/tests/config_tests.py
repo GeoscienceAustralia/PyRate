@@ -7,7 +7,7 @@ import sys, unittest
 from os.path import exists, join
 
 from pyrate import config
-from pyrate.tests.tests_common import SYD_TEST_DIR, SYD_TEST_OBS
+from common import SYD_TEST_DIR, SYD_TEST_OBS
 
 
 class ConfigTests(unittest.TestCase):

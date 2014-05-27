@@ -18,7 +18,7 @@ UseExceptions()
 from pyrate import roipac
 from pyrate import ifgconstants as IFC
 
-from pyrate.tests.tests_common import SYD_TEST_DEM, SYD_TEST_OBS, SINGLE_TEST_DIR, HEADERS_TEST_DIR
+from common import SYD_TEST_DEM, SYD_TEST_OBS, SINGLE_TEST_DIR, HEADERS_TEST_DIR
 
 
 

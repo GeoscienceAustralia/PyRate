@@ -14,7 +14,7 @@ from numpy.testing import assert_array_almost_equal, assert_allclose
 
 from pyrate import algorithm
 from pyrate.shared import Ifg
-from tests_common import sydney5_mock_ifgs, SYD_TEST_OBS
+from common import sydney5_mock_ifgs, SYD_TEST_OBS
 
 
 class LeastSquaresTests(TestCase):

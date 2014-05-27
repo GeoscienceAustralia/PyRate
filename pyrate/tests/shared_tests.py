@@ -19,7 +19,7 @@ UseExceptions()
 
 from pyrate.shared import Ifg, DEM, RasterException, Incidence
 from pyrate.ifgconstants import Z_OFFSET, Z_SCALE, PROJECTION, DATUM
-from pyrate.tests.tests_common import SYD_TEST_OBS, INCID_TEST_DIR, SYD_TEST_DEM
+from common import SYD_TEST_OBS, INCID_TEST_DIR, SYD_TEST_DEM
 
 
 class IfgTests(unittest.TestCase):
