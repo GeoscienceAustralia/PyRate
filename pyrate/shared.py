@@ -40,7 +40,7 @@ class RasterBase(object):
 			# default the header path
 			self.data_path, self.hdr_path = roipac.filename_pair(path)
 
-		# dynamically include header items as class attrs
+		# dynamically include header items as instance attrs
 		header = roipac.parse_header(self.hdr_path)
 		self.__dict__.update(header)
 
@@ -153,7 +153,6 @@ class Ifg(RasterBase):
 		# TODO: what are these for?
 		#self.max_variance = None # will be single floating point number
 		#self.alpha = None # will be single floating point number
-		self._nan_fraction = None
 
 
 	def convert_to_nans(self, val=0):
