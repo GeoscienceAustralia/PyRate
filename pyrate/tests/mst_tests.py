@@ -7,8 +7,8 @@ import unittest
 from numpy import empty, array, nan, isnan, sum as nsum
 from itertools import product
 
-from pyrate.mst import mst_matrix, default_mst
 from pyrate import algorithm
+from pyrate.mst import mst_matrix, default_mst
 from pyrate.tests.tests_common import MockIfg, sydney5_mock_ifgs, sydney_data_setup
 
 
@@ -28,7 +28,6 @@ class MSTTests(unittest.TestCase):
 		for i in self.ifgs:
 			i.convert_to_nans()
 
-		nepochs = len(self.epochs.dates)
 		res = mst_matrix(self.ifgs, self.epochs)
 		ys, xs = res.shape
 		for y, x in product(xrange(ys), xrange(xs)):
@@ -41,7 +40,7 @@ class MSTTests(unittest.TestCase):
 			nc = nsum(isnan(stack))
 
 			if nc == 0:
-				self.assertTrue(num_nodes == (nepochs-1))
+				self.assertTrue(num_nodes == (len(self.epochs.dates) - 1))
 			elif nc > 5:
 				# rough test: too many nans must reduce the total tree size
 				self.assertTrue(num_nodes <= (17-nc) )
@@ -70,20 +69,20 @@ class MSTTests(unittest.TestCase):
 		# Ensure a limited # of cells gives in a smaller node tree
 		num_coherent = 3
 
-		def test_result():
+		def assert_equal():
 			res = mst_matrix(mock_ifgs, self.epochs)
 			self.assertEqual(len(res[0,0]), num_coherent)
 
 		mock_ifgs = [MockIfg(i, 1, 1) for i in self.ifgs]
 		for m in mock_ifgs[num_coherent:]:
 			m.phase_data[:] = nan
-		test_result()
+		assert_equal()
 
 		# fill in more nans leaving only one ifg
 		for m in mock_ifgs[1:num_coherent]:
 			m.phase_data[:] = nan
 		num_coherent = 1
-		test_result()
+		assert_equal()
 
 
 	def test_all_nan_pixel_stack(self):
