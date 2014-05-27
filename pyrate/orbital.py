@@ -31,16 +31,17 @@ QUADRATIC = 2
 
 def orbital_correction(ifgs, degree, method, mlooked=None, offset=True):
 	'''
-	Corrects orbital error in the given Ifgs. If using the network method to
-	determine the orbital error, this function assumes the ifgs have already been
-	reduced to a minimum set from an MST operation. NB: function modifies ifgs in
-	situ, use duplicate ifgs should the content need preservation.
+	Removes orbital error from given Ifgs.
+	
+	NB: the ifg data is modified in situ, rather than create intermediate files.
+	The network method assumes the given ifgs have already been reduced to a 
+	minimum set from an MST type operation.
 
-	ifgs - sequence of Ifg objs to correct
-	degree - PLANAR or QUADRATIC
-	method - INDEPENDENT_METHOD or NETWORK_METHOD
-	mlooked - multilooked ifgs (sequence must relate to ifgs in 'ifgs' arg)
-	offset = True/False to include the constant/offset component
+	ifgs: sequence of Ifg objs to correct
+	degree: PLANAR or QUADRATIC
+	method: INDEPENDENT_METHOD or NETWORK_METHOD
+	mlooked: sequence of multilooked ifgs (must correspond to 'ifgs' arg)
+	offset: True/False to include the constant/offset component
 	'''
 
 	if degree not in [PLANAR, QUADRATIC]:
@@ -61,6 +62,9 @@ def orbital_correction(ifgs, degree, method, mlooked=None, offset=True):
 	elif method == INDEPENDENT_METHOD:
 		for i in ifgs:
 			_independent_correction(i, degree, offset)
+	else:
+		msg = "Unrecognised orbital correction method: %s"
+		raise OrbitalError(msg % method)
 
 
 def _validate_mlooked(mlooked, ifgs):
