@@ -14,8 +14,7 @@ from pyrate.config import REFX, REFNX, REFY, REFNY, REF_CHIP_SIZE, REF_MIN_FRAC
 
 
 def default_params():
-	return { REFNX : 5, REFNY : 7,
-					REF_MIN_FRAC : 0.7, REF_CHIP_SIZE : 3 }
+	return { REFNX : 5, REFNY : 7, REF_MIN_FRAC : 0.7, REF_CHIP_SIZE : 3 }
 
 
 class ReferencePixelInputTests(unittest.TestCase):
@@ -53,23 +52,26 @@ class ReferencePixelInputTests(unittest.TestCase):
 
 	def test_predefined_reference_pixel(self):
 		# return reference pixel coords if already set in config
-		exp_coord = 3, 7
-		Y, X = exp_coord
-		params = { REFX : X, REFY : Y }
-		act = ref_pixel(params, self.ifgs)
-		self.assertEqual(exp_coord, act)
+		for exp_coord in [(3, 7), (0, 0)]:
+			Y, X = exp_coord
+			params = { REFX : X, REFY : Y }
+			act = ref_pixel(params, self.ifgs)
+			self.assertEqual(exp_coord, act)
 
 
 	def test_invalid_reference_pixel(self):
-		# ensure refx & refy are within the grid (if not 0)
+		# ensure refx & refy are within the grid (if not < 0)
 		params = default_params()
 
-		for illegal in [-5, -1, self.ifgs[0].WIDTH+1]:
+		base = self.ifgs[0].WIDTH
+		for illegal in [base + 1, base + 7]:
 			params[REFX] = illegal
 			self.assertRaises(ValueError, ref_pixel, params, self.ifgs)
 
 		params[REFX] = 5 # valid coord to ensure testing of REFY
-		for illegal in [-5, -1, self.ifgs[0].FILE_LENGTH+1]:
+		base = self.ifgs[0].FILE_LENGTH
+		
+		for illegal in [base + 1, base + 9]:
 			params[REFY] = illegal
 			self.assertRaises(ValueError, ref_pixel, params, self.ifgs)
 
@@ -106,6 +108,30 @@ class ReferencePixelTests(unittest.TestCase):
 	def setUp(self):
 		self.testdir, self.ifgs = sydney_data_setup()
 		self.mock_ifgs = None
+
+
+	def test_empty_refxy(self):
+		# no REFX|Y params in config should cause refpixel search to occur
+		params = default_params()
+		self.assertTrue(REFX not in params)
+		self.assertTrue(REFY not in params)
+		
+		refpx = ref_pixel(params, self.ifgs)
+		self.assertEqual(len(refpx), 2)
+		self.assertNotEqual(refpx, (0,0))
+		self.assertNotEqual(refpx, (-1,-1))
+
+
+	def test_subzero_refxy(self):
+		# subzero REFX|Y params in config should also result in refpixel search
+		params = default_params()
+		
+		for v in [-1, -12]:		
+			params[REFX] = params[REFY] = v
+			refpx = ref_pixel(params, self.ifgs)
+			self.assertEqual(len(refpx), 2)
+			self.assertNotEqual(refpx, (0,0))
+			self.assertNotEqual(refpx, (-1,-1))
 
 
 	def test_all_below_threshold_exception(self):

@@ -3,7 +3,7 @@ Utilities to parse pyrate.conf config files. Includes numerous general PyRate
 constants relating to options in config files.
 
 Created on 17/09/2012
-@author: bpd900
+@author: Ben Davies, NCI
 '''
 
 # TODO: add regex column to check if some values are within bounds? Potential
@@ -74,8 +74,8 @@ PARAM_CONVERSION = { OBS_DIR : (None, "obs"),
 					IFG_YLAST : (float, None),
 					PROJECTION_FLAG : (int, 3),
 
-					REFX : (int, 0),
-					REFY : (int, 0),
+					REFX : (int, -1),
+					REFY : (int, -1),
 					REFNX : (int, None), # was 50 in original Pirate code
 					REFNY : (int, None), # was 50 in original Pirate code
 					REF_CHIP_SIZE : (int, None), # defaults to 21 in orig

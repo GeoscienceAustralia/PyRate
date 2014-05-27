@@ -8,20 +8,39 @@ import config
 from numpy import array, isnan, std, mean, sum as nsum
 
 
+DO_REFPIX_SEARCH = -1 # TODO: better name for this flag
+
+
+
 def ref_pixel(params, ifgs):
-	'''Return (y,x) reference pixel coordinate given open Ifgs.'''
-
-	head = ifgs[0]
-	refx = params.get(config.REFX, 0)
-	refy = params.get(config.REFY, 0)
-
+	'''
+	Returns (y,x) reference pixel coordinate from given ifgs.
+	
+	If the config file REFX or REFY values are empty or subzero, the search for
+	the reference pixel is performed. If the REFX|Y values are within the bounds
+	of the raster, a search is not performed. REFX|Y values outside the upper
+	bounds cause an exception.
+	
+	params: dict of key/value pairs from config file
+	ifgs: sequence of interferograms
+	'''
+	if len(ifgs) < 1:
+		msg = 'Reference pixel search requires 2+ interferograms'
+		raise RefPixelError(msg)
+	
+	head = ifgs[0]	
+	refx = params.get(config.REFX, DO_REFPIX_SEARCH)
+	refy = params.get(config.REFY, DO_REFPIX_SEARCH)
+	
 	# sanity check any specified ref pixel settings
-	if refx != 0 or refy != 0:
-		if refx < 1 or refx > head.WIDTH - 1:
-			raise ValueError("Invalid reference pixel X coordinate: %s" % refx)
-		if refy < 1 or refy > head.FILE_LENGTH - 1:
-			raise ValueError("Invalid reference pixel Y coordinate: %s" % refy)
-		return (refy, refx)  # reuse preset ref pixel
+	# unlikely, but possible the refpixel can be (0,0) 
+	if refx > head.WIDTH - 1:
+		raise ValueError("Invalid reference pixel X coordinate: %s" % refx)
+	if refy > head.FILE_LENGTH - 1:
+		raise ValueError("Invalid reference pixel Y coordinate: %s" % refy)
+	
+	if refx >= 0 and refy >= 0:
+		return (refy, refx) # reuse preset ref pixel
 
 	check_ref_pixel_params(params, head)
 
@@ -48,7 +67,7 @@ def ref_pixel(params, ifgs):
 					min_sd = mean_sd
 					refy, refx = y, x
 
-	if (refy, refx) == (0, 0):
+	if (refy, refx) == (DO_REFPIX_SEARCH, DO_REFPIX_SEARCH):
 		raise RefPixelError("Could not find a reference pixel")
 	return refy, refx
 
