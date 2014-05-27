@@ -5,7 +5,7 @@ Created on 17/09/2012
 '''
 
 import os
-import roipac, config
+import config
 from shared import Ifg
 
 from config import IFG_FILE_LIST, OBS_DIR
