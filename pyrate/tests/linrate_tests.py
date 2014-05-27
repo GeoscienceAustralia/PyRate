@@ -6,7 +6,7 @@ Author: Ben Davies, ANUSF
 import unittest
 
 
-# TODO:
+# TODO: linear rate code
 # 1. replace MST key:value date:date pairs with lists of Ifgs?
 # 2.: MG: fake some data for a 1 pixel test of stack()
 #     figure out what partial inputs we need to do this as a simple test
@@ -20,11 +20,11 @@ import unittest
 
 
 
-class LinearRateTests(unittest.TestCase):
-
-	def test_stack_basic(self):
-		raise NotImplementedError
-
-
-	def test_args(self):
-		raise NotImplementedError("Need sanity tests for args to stack()")
+# class LinearRateTests(unittest.TestCase):
+# 
+# 	def test_stack_basic(self):
+# 		raise NotImplementedError
+# 
+# 
+# 	def test_args(self):
+# 		raise NotImplementedError("Need sanity tests for args to stack()")
