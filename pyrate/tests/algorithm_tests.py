@@ -10,7 +10,7 @@ from math import pi, cos, sin, radians
 
 import numpy
 from numpy import array, reshape, squeeze
-from numpy.testing import assert_array_almost_equal, assert_allclose, assert_array_equal
+from numpy.testing import assert_array_almost_equal, assert_allclose
 
 from pyrate import algorithm
 from pyrate.shared import Ifg
@@ -18,6 +18,7 @@ from tests_common import sydney5_mock_ifgs, SYD_TEST_OBS
 
 
 class LeastSquaresTests(TestCase):
+	'Unit tests for the PyRate least_squares_covariance() implementation'
 
 	def test_least_squares_covariance(self):
 		b = array([[13, 7.2, 5.7]]).T
@@ -100,18 +101,6 @@ class AlgorithmTests(TestCase):
 		self.assertEqual(exp, algorithm.master_slave_ids([d3, d0, d2, d1, d3, d0]))
 
 
-	def test_get_all_epochs(self):
-		# test function to extract all dates from sequence of ifgs
-		ifgs = sydney5_mock_ifgs()
-		dates = [date(2006,  8, 28), date(2006, 11, 06), date(2006, 12, 11),
-							date(2007,  1, 15), date(2007,  3, 26), date(2007,  9, 17)]
-
-		self.assertEqual(dates, sorted(set(algorithm.get_all_epochs(ifgs))))
-
-
-	def test_get_epoch_count(self):
-		self.assertEqual(6, algorithm.get_epoch_count(sydney5_mock_ifgs()))
-
 
 class DateLookupTests(TestCase):
 	'''Tests for the algorithm.ifg_date_lookup() function.'''
@@ -140,7 +129,7 @@ class DateLookupTests(TestCase):
 	def test_date_lookup_bad_inputs(self):
 		# test some bad inputs to date lookup
 		inputs = [ (None, None), (1, 10), (34.56, 345.93),
-								(date(2007, 3, 26), ""), (date(2007, 3, 26), None) ]
+					(date(2007, 3, 26), ""), (date(2007, 3, 26), None) ]
 
 		for d in inputs:
 			self.assertRaises(ValueError, algorithm.ifg_date_lookup, self.ifgs, d)
@@ -158,7 +147,7 @@ class DateLookupTests(TestCase):
 
 
 
-class EpochListTests(TestCase):
+class EpochsTests(TestCase):
 	'''Unittests for the EpochList class.'''
 
 	def test_get_epochs(self):
@@ -167,11 +156,11 @@ class EpochListTests(TestCase):
 			return date(*[int(s) for s in segs])
 
 		raw_date = ['20060619', '20060828', '20061002', '20061106', '20061211',
-							'20070115', '20070219', '20070326', '20070430', '20070604',
-							'20070709', '20070813', '20070917']
+					'20070115', '20070219', '20070326', '20070430', '20070604',
+					'20070709', '20070813', '20070917']
+		
 		exp_dates = [str2date(d) for d in raw_date]
 		exp_repeat = [1, 1, 3, 3, 4, 3, 3, 3, 3, 3, 3, 2, 2]
-
 		exp_spans = [0, 0.1916, 0.2875, 0.3833, 0.4791, 0.5749, 0.6708, 0.7666,
 							0.8624, 0.9582, 1.0541, 1.1499, 1.2457]
 
@@ -184,3 +173,16 @@ class EpochListTests(TestCase):
 		self.assertTrue((exp_dates == epochs.dates).all())
 		self.assertTrue((exp_repeat == epochs.repeat).all())
 		assert_array_almost_equal(exp_spans, epochs.spans, decimal=4)
+
+
+	def test_get_all_epochs(self):
+		# test function to extract all dates from sequence of ifgs
+		ifgs = sydney5_mock_ifgs()
+		dates = [date(2006,  8, 28), date(2006, 11, 06), date(2006, 12, 11),
+				date(2007,  1, 15), date(2007,  3, 26), date(2007,  9, 17)]
+
+		self.assertEqual(dates, sorted(set(algorithm.get_all_epochs(ifgs))))
+
+
+	def test_get_epoch_count(self):
+		self.assertEqual(6, algorithm.get_epoch_count(sydney5_mock_ifgs()))

@@ -7,7 +7,6 @@ from math import pi
 from numpy import sin, cos, unique, histogram, diag, dot
 from scipy.linalg import qr, solve, lstsq
 
-
 from shared import EpochList, IfgException
 
 
@@ -103,7 +102,8 @@ def ifg_date_lookup(ifgs, date_pair):
 	date_pair - a (datetime.date, datetime.date) tuple
 	'''
 	if len(date_pair) != 2:
-		raise IfgException("Need (datetime.date, datetime.date) master/slave pair")
+		msg = "Need (datetime.date, datetime.date) master/slave pair"
+		raise IfgException(msg)
 
 	# check master/slave dates are in order
 	try:
