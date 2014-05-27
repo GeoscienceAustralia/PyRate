@@ -10,10 +10,7 @@ Created on 17/09/2012
 # problem with the checking being done in the middle of the runs, as bad values
 # could cause crashes & destroying some of the results.
 
-import numpy
-
 from orbital import NETWORK_METHOD, QUADRATIC
-from ifgconstants import X_FIRST, Y_FIRST, WIDTH, FILE_LENGTH, X_STEP, Y_STEP
 
 
 # general constants

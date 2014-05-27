@@ -25,7 +25,7 @@ class ConfigTests(unittest.TestCase):
 		for k in params.keys():
 			self.assertTrue(k != "")
 			self.assertTrue(params[k] != "")
-			self.assertFalse(k.endswith(":")) # have we gotten rid of the colons?
+			self.assertFalse(k.endswith(":")) # are the colons removed?
 
 
 	def test_parse_namelist(self):
