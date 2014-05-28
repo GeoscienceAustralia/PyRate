@@ -19,7 +19,7 @@ from pyrate import algorithm
 from pyrate.shared import Ifg
 from pyrate.orbital import OrbitalError, orbital_correction
 from pyrate.orbital import get_design_matrix, get_network_design_matrix
-from pyrate.orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, QUADRATIC
+from pyrate.orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, QUADRATIC, PART_CUBIC
 from common import sydney5_mock_ifgs, MockIfg, SYD_TEST_OBS
 
 
@@ -77,6 +77,23 @@ class SingleDesignMatrixTests(unittest.TestCase):
 		exp = unittest_dm(self.m, INDEPENDENT_METHOD, QUADRATIC, offset)
 		assert_array_equal(act, exp)
 
+	# tests for partial cubic model
+
+	def test_create_partcubic_dm(self):
+		offset = False
+		act = get_design_matrix(self.m, PART_CUBIC, offset)
+		self.assertEqual(act.shape, (self.m.num_cells, 6))
+		exp = unittest_dm(self.m, INDEPENDENT_METHOD, PART_CUBIC, offset)
+		assert_array_equal(act, exp)
+
+
+	def test_create_partcubic_dm_offsets(self):
+		offset = True
+		act = get_design_matrix(self.m, PART_CUBIC, offset)
+		self.assertEqual(act.shape, (self.m.num_cells, 7))
+		exp = unittest_dm(self.m, INDEPENDENT_METHOD, PART_CUBIC, offset)
+		assert_array_equal(act, exp)
+
 
 	# tests for unittest_dm() assuming network method
 
@@ -99,6 +116,14 @@ class SingleDesignMatrixTests(unittest.TestCase):
 		self.assertEqual(exp2.shape, (self.m.num_cells, ncol_exp))
 		assert_array_equal(exp, exp2)
 
+	def test_create_partcubic_dm_network(self):
+		# partial cubic version with networked method does not have offsets col
+		ncol_exp = 6
+		exp = unittest_dm(self.m, NETWORK_METHOD, PART_CUBIC, False)
+		self.assertEqual(exp.shape, (self.m.num_cells, ncol_exp))
+		exp2 = unittest_dm(self.m, NETWORK_METHOD, PART_CUBIC, True)
+		self.assertEqual(exp2.shape, (self.m.num_cells, ncol_exp))
+		assert_array_equal(exp, exp2)
 
 
 class IndependentCorrectionTests(unittest.TestCase):
@@ -182,7 +207,7 @@ class ErrorTests(unittest.TestCase):
 		ifgs = sydney5_mock_ifgs()
 		for d in range(-5, 1):
 			self.assertRaises(OrbitalError, get_network_design_matrix, ifgs, d, True)
-		for d in range(3, 6):
+		for d in range(4, 7):
 			self.assertRaises(OrbitalError, get_network_design_matrix, ifgs, d, True)
 
 
@@ -496,9 +521,16 @@ def unittest_dm(ifg, method, degree, offset=False):
 	offset - True/False to include additional cols for offsets
 	'''
 	assert method in [INDEPENDENT_METHOD, NETWORK_METHOD]
-	assert degree in [PLANAR, QUADRATIC]
+	assert degree in [PLANAR, QUADRATIC, PART_CUBIC]
 
-	NX = ncoef = 2 if degree == PLANAR else 5
+	#NX = ncoef = 2 if degree == PLANAR else 5
+	if degree ==  PLANAR:
+		NX = ncoef = 2
+	elif degree == QUADRATIC:
+		NX = ncoef = 5
+	else:
+		NX = ncoef = 6
+
 	if offset is True:
 		if method == INDEPENDENT_METHOD:
 			ncoef += 1
@@ -514,12 +546,18 @@ def unittest_dm(ifg, method, degree, offset=False):
 		for y,x in product(yr, xr):
 			row = rows.next()
 			row[:NX] = [x * ifg.X_SIZE, y * ifg.Y_SIZE]
-	else:
+	elif degree ==  QUADRATIC:
 		for y,x in product(yr, xr):
 			ys = y * ifg.Y_SIZE
 			xs = x * ifg.X_SIZE
 			row = rows.next()
 			row[:NX] = [xs**2, ys**2, xs*ys, xs, ys]
+	else:
+		for y,x in product(yr, xr):
+			ys = y * ifg.Y_SIZE
+			xs = x * ifg.X_SIZE
+			row = rows.next()
+			row[:NX] = [xs*ys**2,xs**2, ys**2, xs*ys, xs, ys]
 
 	if offset:
 		data[:, -1] = 1

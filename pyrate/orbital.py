@@ -27,6 +27,7 @@ NETWORK_METHOD = 2
 
 PLANAR = 1
 QUADRATIC = 2
+PART_CUBIC = 3
 
 
 def orbital_correction(ifgs, degree, method, mlooked=None, offset=True):
@@ -38,13 +39,13 @@ def orbital_correction(ifgs, degree, method, mlooked=None, offset=True):
 	minimum set from an MST type operation.
 
 	ifgs: sequence of Ifg objs to correct
-	degree: PLANAR or QUADRATIC
+	degree: PLANAR, QUADRATIC or PART_CUBIC
 	method: INDEPENDENT_METHOD or NETWORK_METHOD
 	mlooked: sequence of multilooked ifgs (must correspond to 'ifgs' arg)
 	offset: True/False to include the constant/offset component
 	'''
 
-	if degree not in [PLANAR, QUADRATIC]:
+	if degree not in [PLANAR, QUADRATIC, PART_CUBIC]:
 		msg = "Invalid degree of %s for orbital correction" % degree
 		raise OrbitalError(msg)
 
@@ -82,7 +83,14 @@ def _validate_mlooked(mlooked, ifgs):
 
 def get_num_params(degree, offset=None):
 	'''Returns number of model parameters'''
-	nparams = 2 if degree == PLANAR else 5
+	#nparams = 2 if degree == PLANAR else 5
+        if degree == PLANAR:
+		nparams = 2
+	elif degree == QUADRATIC:
+		nparams = 5
+	else:
+		nparams = 6
+
 	if offset is True:
 		nparams += 1  # eg. y = mx + offset
 	return nparams
@@ -111,7 +119,7 @@ def _network_correction(ifgs, degree, offset, m_ifgs=None):
 	NB: This does in-situ modification of phase_data in the ifgs.
 
 	ifgs - interferograms reduced to a minimum tree from prior MST calculations
-	degree - PLANAR or QUADRATIC
+	degree - PLANAR, QUADRATIC or PART_CUBIC
 	offset - True to calculate the model using offsets
 	m_ifgs - multilooked ifgs (sequence must be mlooked versions of 'ifgs' arg)
 	'''
@@ -150,7 +158,7 @@ def get_design_matrix(ifg, degree, offset):
 	'''
 	Returns design matrix with columns for model parameters.
 	ifg - interferogram to base the DM on
-	degree - PLANAR or QUADRATIC
+	degree - PLANAR, QUADRATIC or PART_CUBIC
 	offset - True to include offset cols, otherwise False.
 	'''
 	# apply positional parameter values, multiply pixel coordinate by cell size to
@@ -173,7 +181,13 @@ def get_design_matrix(ifg, degree, offset):
 		data[:, 2] = x * y
 		data[:, 3] = x
 		data[:, 4] = y
-
+        elif degree == PART_CUBIC:
+                data[:, 0] = x * y**2
+                data[:, 1] = x**2
+		data[:, 2] = y**2
+		data[:, 3] = x * y
+		data[:, 4] = x
+		data[:, 5] = y
 	if offset is True:
 		data[:, -1] = 1
 
@@ -185,10 +199,10 @@ def get_network_design_matrix(ifgs, degree, offset):
 	Returns a larger format design matrix for networked error correction. This is
 	a fullsize DM, including rows which relate to those of NaN cells.
 	ifgs - sequence of interferograms
-	degree - PLANAR or QUADRATIC mode
+	degree - PLANAR, QUADRATIC or PART_CUBIC
 	offset - True to include offset cols, otherwise False.
 	'''
-	if degree not in [PLANAR, QUADRATIC]:
+	if degree not in [PLANAR, QUADRATIC, PART_CUBIC]:
 		raise OrbitalError("Invalid degree argument")
 
 	nifgs = len(ifgs)
