@@ -80,7 +80,7 @@ class MockIfg(object):
 		self.X_STEP = ifg.X_STEP
 		self.Y_STEP = ifg.Y_STEP
 		self.num_cells = ysize * xsize
-		self.phase_data = ndarray((self.FILE_LENGTH, self.WIDTH), dtype=float32)
+		self.phase_data = ifg.phase_data[:ysize, :xsize]
 		self.nan_fraction = ifg.nan_fraction # use existing overall nan fraction
 
 	def open(self):
