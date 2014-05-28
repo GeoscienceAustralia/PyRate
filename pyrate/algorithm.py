@@ -1,7 +1,11 @@
 '''
-Collection of algorithms for PyRate.
-Author: Ben Davies, ANUSF
+Random, unsorted collection of algorithms/utility functions for PyRate.
+
+Author: Ben Davies, NCI
 '''
+
+# TODO: later refactoring could move these to more relevant modules 
+
 
 from math import pi
 from numpy import sin, cos, unique, histogram, diag, dot
@@ -16,9 +20,7 @@ MM_PER_METRE = 1000
 
 def is_square(arr):
 	shape = arr.shape
-	if len(shape) != 2:
-		return False
-	if shape[0] == shape[1]:
+	if len(shape) == 2 and (shape[0] == shape[1]):
 		return True
 	return False
 

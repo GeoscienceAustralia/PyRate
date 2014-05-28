@@ -8,7 +8,7 @@ from datetime import date
 from unittest import TestCase
 from math import pi, cos, sin, radians
 
-import numpy
+import numpy as np
 from numpy import array, reshape, squeeze
 from numpy.testing import assert_array_almost_equal, assert_allclose
 
@@ -45,12 +45,20 @@ class LeastSquaresTests(TestCase):
 
 class AlgorithmTests(TestCase):
 	'''Misc unittests for functions in the algorithm module.'''
+	
+	def test_is_square(self):
+		self.assertTrue(algorithm.is_square(np.empty((2,2))))
+	
+	def test_is_not_square(self):
+		for shape in [(3,2), (2,3)]:			
+			self.assertFalse(algorithm.is_square(np.empty(shape)))
+	
 
 	def test_wavelength_conversion(self):
 		# ROIPAC is in radians, verify conversion to mm
 		xs, ys = 5, 7
-		data = (numpy.arange(xs * ys) - 1.7) * 0.1 # fake a range of values
-		data = numpy.where(data == 0, numpy.nan, data)
+		data = (np.arange(xs * ys) - 1.7) * 0.1 # fake a range of values
+		data = np.where(data == 0, np.nan, data)
 		wavelen = 0.0562356424
 		exp = (data * wavelen * 1000) / (4 * pi)
 		act = algorithm.wavelength_to_mm(data, wavelen)
@@ -89,18 +97,6 @@ class AlgorithmTests(TestCase):
 		self.assertTrue((abs(E) > abs(N)).all())
 
 
-	def test_master_slave_ids(self):
-		d0 = date(2006, 6, 19)
-		d1 = date(2006, 8, 28)
-		d2 = date(2006, 10, 02)
-		d3 = date(2006, 11, 06)
-		exp = { d0: 0, d1: 1, d2: 2, d3: 3}
-
-		# test unordered and with duplicates
-		self.assertEqual(exp, algorithm.master_slave_ids([d3, d0, d2, d1]))
-		self.assertEqual(exp, algorithm.master_slave_ids([d3, d0, d2, d1, d3, d0]))
-
-
 
 class DateLookupTests(TestCase):
 	'''Tests for the algorithm.ifg_date_lookup() function.'''
@@ -133,7 +129,6 @@ class DateLookupTests(TestCase):
 
 		for d in inputs:
 			self.assertRaises(ValueError, algorithm.ifg_date_lookup, self.ifgs, d)
-
 
 
 # TODO: InitialModelTests
@@ -186,3 +181,15 @@ class EpochsTests(TestCase):
 
 	def test_get_epoch_count(self):
 		self.assertEqual(6, algorithm.get_epoch_count(sydney5_mock_ifgs()))
+
+
+	def test_master_slave_ids(self):
+		d0 = date(2006, 6, 19)
+		d1 = date(2006, 8, 28)
+		d2 = date(2006, 10, 02)
+		d3 = date(2006, 11, 06)
+		exp = { d0: 0, d1: 1, d2: 2, d3: 3}
+
+		# test unordered and with duplicates
+		self.assertEqual(exp, algorithm.master_slave_ids([d3, d0, d2, d1]))
+		self.assertEqual(exp, algorithm.master_slave_ids([d3, d0, d2, d1, d3, d0]))
