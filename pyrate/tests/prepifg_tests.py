@@ -401,10 +401,11 @@ class PrepifgTests(unittest.TestCase):
 
 def multilooking(src, xscale, yscale, thresh=0):
 	"""
-	Port of looks.m from MATLAB Pirate. Args src and dest are numpy arrays. Thresh
-	is minimum number of non-NaNs required for a valid resampling segment/tile.
+	Port of looks.m from MATLAB Pirate.
+	
+	src: numpy array of phase data
+	thresh: min number of non-NaNs required for a valid tile resampling 
 	"""
-
 	thresh = int(thresh)
 	num_cells = xscale * yscale
 	if thresh > num_cells or thresh < 0:
@@ -428,7 +429,7 @@ def multilooking(src, xscale, yscale, thresh=0):
 			num_values = num_cells - npsum(isnan(patch))
 
 			if num_values >= thresh and num_values > 0:
-				reshaped = patch.reshape(size) # NB: nanmean only works on one axis
+				reshaped = patch.reshape(size) # NB: nanmean only works on 1 axis
 				dest[r,c] = nanmean(reshaped)
 
 	return dest
