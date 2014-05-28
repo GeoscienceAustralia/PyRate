@@ -1,6 +1,8 @@
 '''
+Tests for the pyrate configuration file parser.
+
 Created on 17/09/2012
-@author: bpd900
+@author: Ben Davies, NCI
 '''
 
 import sys, unittest
@@ -21,11 +23,20 @@ class ConfigTests(unittest.TestCase):
 
 	def test_read_param_file(self):
 		conf_file = join(SYD_TEST_DIR, 'pyrate.conf')
-		params = config.parse_conf_file(conf_file)  # (params_file)
+		params = config.parse_conf_file(conf_file)
 		for k in params.keys():
 			self.assertTrue(k != "")
 			self.assertTrue(params[k] != "")
 			self.assertFalse(k.endswith(":")) # are the colons removed?
+	
+	
+	def test_read_param_file_no_refpixel(self):
+		# ensure the parser can handle empty fields
+		conf_file = join(SYD_TEST_DIR, 'pyrate2.conf')
+		params = config.parse_conf_file(conf_file)
+		
+		self.assertTrue(params[config.REFX] == -1)
+		self.assertTrue(params[config.REFY] == -1)
 
 
 	def test_parse_namelist(self):

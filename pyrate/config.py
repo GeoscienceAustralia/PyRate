@@ -91,11 +91,17 @@ PARAM_CONVERSION = { OBS_DIR : (None, "obs"),
 
 def parse_conf_file(conf_file):
 	"""Returns a dict for the key:value pairs from the .conf file"""
+	
+	def is_valid(line):
+		return line != "" and line[0] not in "%#"
+	
 	with open(conf_file) as f:
 		txt = f.read().splitlines()
-		lines = [line.split() for line in txt if line != "" and line[0] not in "%#"]
-		lines = [(e[0].rstrip(":"), e[1]) for e in lines] # strip colons from keys
-		parameters = dict(lines)
+		lines = [line.split() for line in txt if is_valid(line)]
+		
+		# convert "field:   value" lines to [field, value]  
+		kvpair = [(e[0].rstrip(":"), e[1]) for e in lines if len(e) == 2]
+		parameters = dict(kvpair)
 		_parse_pars(parameters)
 		return parameters
 
