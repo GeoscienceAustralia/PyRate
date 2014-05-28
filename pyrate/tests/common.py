@@ -39,7 +39,7 @@ def sydney_data_setup():
 	for i in ifgs:
 		i.open()
 
-	return SYD_TEST_OBS, ifgs
+	return ifgs
 
 
 def sydney5_ifgs():

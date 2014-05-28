@@ -21,7 +21,7 @@ class ReferencePixelInputTests(unittest.TestCase):
 	'''Verifies error checking capabilities of the reference pixel function'''
 
 	def setUp(self):
-		self.testdir, self.ifgs = sydney_data_setup()
+		self.ifgs = sydney_data_setup()
 
 
 	def test_missing_chipsize(self):
@@ -106,7 +106,7 @@ class ReferencePixelTests(unittest.TestCase):
 	'''Tests results of the reference pixel search'''
 
 	def setUp(self):
-		self.testdir, self.ifgs = sydney_data_setup()
+		self.ifgs = sydney_data_setup()
 		self.mock_ifgs = None
 
 

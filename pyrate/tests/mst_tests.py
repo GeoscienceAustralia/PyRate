@@ -1,6 +1,6 @@
 '''
-Tests for Minimum Spanning Tree functionality in PyRate
-Author: Ben Davies, ANUSF
+Tests for Minimum Spanning Tree (MST) functionality in PyRate
+Author: Ben Davies, NCI
 '''
 
 import unittest
@@ -16,12 +16,12 @@ class MSTTests(unittest.TestCase):
 	'''Basic verification of minimum spanning tree (MST) functionality.'''
 
 	def setUp(self):
-		self.testdir, self.ifgs = sydney_data_setup()
+		self.ifgs = sydney_data_setup()
 		self.epochs = algorithm.get_epochs(self.ifgs)
 
 
 	def test_mst_matrix(self):
-		# Verifies mst matrix func returns array with dict/trees in each cell
+		# Verifies MST matrix func returns array with dict/trees in each cell
 		for i in self.ifgs[3:]:
 			i.phase_data[0,1] = 0 # add a large stack of nans to one cell
 
@@ -46,27 +46,8 @@ class MSTTests(unittest.TestCase):
 				self.assertTrue(num_nodes <= (17-nc) )
 
 
-	def test_default_mst(self):
-		ifgs = sydney5_mock_ifgs() # no nodes should be lost
-		dates = [i.DATE12 for i in ifgs]
-
-		res = default_mst(ifgs)
-		num_edges = len(res.keys())
-		self.assertEqual(num_edges, len(ifgs))
-
-		# test edges, note node order can be reversed
-		for edge in res.iteritems():
-			self.assertTrue(edge in dates or (edge[1],edge[0]) in dates)
-
-		# check all nodes exist in this default tree
-		mst_dates = set(res.keys() + res.values())
-		for i in ifgs:
-			for node in i.DATE12:
-				self.assertTrue(node in mst_dates)
-
-
 	def test_partial_nan_pixel_stack(self):
-		# Ensure a limited # of cells gives in a smaller node tree
+		# Ensure a limited # of coherent cells results in a smaller MST tree
 		num_coherent = 3
 
 		def assert_equal():
@@ -86,7 +67,7 @@ class MSTTests(unittest.TestCase):
 
 
 	def test_all_nan_pixel_stack(self):
-		# ensure full stack of NaNs in an MST pixel classifies to NaN 
+		# ensure full stack of NaNs in an MST pixel classifies to NaN
 		mock_ifgs = [MockIfg(i, 1, 1) for i in self.ifgs]
 		for m in mock_ifgs:
 			m.phase_data[:] = nan
@@ -98,3 +79,26 @@ class MSTTests(unittest.TestCase):
 		shape = (mock_ifgs[0].FILE_LENGTH, mock_ifgs[0].WIDTH)
 		self.assertTrue(res.shape == shape)
 		self.assertEqual(exp, res)
+
+
+
+class DefaultMSTTests(unittest.TestCase):
+
+	def test_default_mst(self):
+		# default MST from full set of Ifgs shouldn't drop any nodes
+		ifgs = sydney5_mock_ifgs()
+		dates = [i.DATE12 for i in ifgs]
+
+		res = default_mst(ifgs)
+		num_edges = len(res.keys())
+		self.assertEqual(num_edges, len(ifgs))
+
+		# test edges, note node order can be reversed
+		for edge in res.iteritems():
+			self.assertTrue(edge in dates or (edge[1],edge[0]) in dates)
+
+		# check all nodes exist in this default tree
+		mst_dates = set(res.keys() + res.values())
+		for i in ifgs:
+			for node in i.DATE12:
+				self.assertTrue(node in mst_dates)
