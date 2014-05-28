@@ -6,7 +6,7 @@ Author: Ben Davies, ANUSF
 '''
 
 from itertools import product
-from numpy import array, nan, isnan, float32, ndarray
+from numpy import array, nan, isnan, float32, empty
 
 from algorithm import get_all_epochs, master_slave_ids
 from pygraph.classes.graph import graph
@@ -67,8 +67,9 @@ def mst_matrix(ifgs, epochs):
 	dflt_mst = _remove_root_node(minimal_spanning_tree(g))
 
 	# prepare source and dest data arrays
-	data_stack = array([i.phase_data for i in ifgs], dtype=float32) # TODO: memory efficiencies possible with tiling
-	mst_result = ndarray(shape=i.phase_data.shape, dtype=object)
+	# TODO: memory efficiencies can be acheived here with tiling
+	data_stack = array([i.phase_data for i in ifgs], dtype=float32)
+	mst_result = empty(shape=i.phase_data.shape, dtype=object)
 
 	# now create MSTs for each pixel in the ifg data stack
 	for y, x in product(xrange(i.FILE_LENGTH), xrange(i.WIDTH)):

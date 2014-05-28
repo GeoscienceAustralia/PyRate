@@ -8,7 +8,7 @@ import glob
 from os.path import join
 
 from pyrate.shared import Ifg
-from numpy import ndarray, float32, isnan, sum as nsum
+from numpy import isnan, sum as nsum
 
 BASE_TEST = join(os.environ['PYRATEPATH'], "tests")
 SYD_TEST_DIR = join(BASE_TEST, "sydney_test")

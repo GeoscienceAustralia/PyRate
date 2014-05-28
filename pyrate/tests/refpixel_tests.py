@@ -225,7 +225,7 @@ def _expected_ref_pixel(ifgs, cs):
 	'''Helper function for finding reference pixel when refnx/y=2'''
 
 	# calculate expected data
-	data = [i.phase_data for i in ifgs] # len 17 list of ndarrays
+	data = [i.phase_data for i in ifgs] # len 17 list of arrays
 	ul = [ i[:cs,:cs] for i in data] # upper left corner stack
 	ur = [ i[:cs,-cs:] for i in data]
 	ll = [ i[-cs:,:cs] for i in data]
