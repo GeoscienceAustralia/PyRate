@@ -5,6 +5,8 @@ GDAL cannot parse ROIPAC headers, preventing interoperability. This module
 translates ROIPAC headers into ESRI's BIL format, which is supported by GDAL. A
 command line interface are provided for testing purposes. 
 
+TODO: explain the difference between long and short header files
+
 Created on 12/09/2012
 @author: Ben Davies, NCI
          ben.davies@anu.edu.au
@@ -19,8 +21,15 @@ from ifgconstants import X_FIRST, X_LAST, Y_FIRST, Y_LAST, WIDTH, MASTER, SLAVE
 
 # constants
 ROIPAC_HEADER_LEFT_JUSTIFY = 18
-PIXELTYPE_INT = "signedint"
-PIXELTYPE_FLOAT = "float"
+PIXELTYPE_INT = 'signedint'
+PIXELTYPE_FLOAT = 'float'
+PIXEL_TYPE = 'pixeltype'
+BYTE_ORDER = 'byteorder'
+Y_CORNER = 'yllcorner'
+NODATA = 'nodata'
+IS_DEM = 'is_dem'
+NBITS = 'nbits'
+
 
 
 def filename_pair(base):
@@ -100,21 +109,21 @@ def parse_header(hdr_file):
 	return headers
 
 
-def to_ehdr_header(hdr, dest=None):
+def translate_header(hdr, dest=None):
 	"""
 	Converts ROI_PAC header files to equivalent ESRI BIL/GDAL EHdr format. This
 	allows GDAL to recognise and read ROIPAC datasets.
 	
-	hdr: path to the .rsc header file.
+	hdr: path to .rsc header file.
 	dest: path to save new header to, if None, defaults to 'base_file_name.hdr'
 	"""
 	if os.path.isfile(hdr) or os.path.islink(hdr):
 		H = parse_header(hdr)
-		is_dem = True if H.has_key(DATUM) else False
+		H[IS_DEM] = H.has_key(DATUM)
 
 		if dest is None:
 			# determine default destination file
-			if is_dem:
+			if H[IS_DEM]:
 				try:
 					# assumes ROIPAC uses filename.dem & filename.dem.rsc
 					i = hdr.index("dem.rsc")
@@ -137,10 +146,25 @@ def to_ehdr_header(hdr, dest=None):
 	yllcorner = H[Y_FIRST] + (H[FILE_LENGTH] * H[Y_STEP])
 	if yllcorner > 90 or yllcorner < -90:
 		raise RoipacException("Invalid Y latitude for yllcorner: %s" % yllcorner)
+	
+	H[Y_CORNER]= yllcorner
+	H[NBITS] = 16 if H[IS_DEM] else 32
+	H[PIXEL_TYPE] = PIXELTYPE_INT if H[IS_DEM] else PIXELTYPE_FLOAT
+	H[BYTE_ORDER] = 'lsb'
+	H[NODATA] = 0
+
+	return write_bil_header(dest, H)
+
+
+def write_bil_header(dest, H):
+	'''TODO'''
 
 	# create ESRI BIL format header, using ROIPAC defaults
 	# TODO: ROIPAC uses 0 for phase NODATA, which isn't quite correct. Use zero
 	# for now to allow GDAL to recognise NODATA cells
+	
+	# TODO: could generalise with writing key: value, using manually ordered keys
+	
 	with open(dest, "w") as f:
 		f.write("ncols %s\n" % H[WIDTH])
 		f.write("nrows %s\n" % H[FILE_LENGTH])
@@ -154,17 +178,17 @@ def to_ehdr_header(hdr, dest=None):
 			f.write("ydim %s\n" % abs(H[Y_STEP]) )
 
 		f.write("xllcorner %s\n" % H[X_FIRST])
-		f.write("yllcorner %s\n" % yllcorner)
-		f.write("byteorder lsb\n")
+		f.write("yllcorner %s\n" % H[Y_CORNER])
+		f.write("byteorder %s\n" % H[BYTE_ORDER])
 
-		if not is_dem:
-			f.write("nodata 0\n")
+		if not H[IS_DEM]:
+			f.write("nodata %s\n" % H[NODATA])
 			f.write("layout bil\n") # 1 band DEM doesn't interleave data
 			f.write("nbands 2\n")  # number of bands
 
 		# ROIPAC DEMs are 16 bit signed ints, phase layers are 32 bit floats
-		f.write("nbits %s\n" % (16 if is_dem else 32) )
-		f.write("pixeltype %s\n" % (PIXELTYPE_INT if is_dem else PIXELTYPE_FLOAT) )
+		f.write("nbits %s\n" % H[NBITS])
+		f.write("pixeltype %s\n" % H[PIXEL_TYPE])
 
 	return dest
 
@@ -190,6 +214,6 @@ if __name__ == '__main__':
 
 	for path in sys.argv[1:]:
 		try:
-			to_ehdr_header(path)
+			translate_header(path)
 		except Exception as ex:
 			sys.exit(ex.message)

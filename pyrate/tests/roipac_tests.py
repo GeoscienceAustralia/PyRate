@@ -1,9 +1,10 @@
 '''
+Tests for the ROIPAC header translation module.
+
 Created on 12/09/2012
-@author: Ben Davies, ANUSF
+@author: Ben Davies, NCI
          ben.davies@anu.edu.au
 '''
-
 
 import os, sys
 from os.path import abspath, exists, join
@@ -12,16 +13,15 @@ import unittest, datetime
 from numpy import amin, zeros
 from numpy.testing import assert_array_equal
 
+from pyrate import roipac
+from pyrate import ifgconstants as IFC
+from common import SYD_TEST_DEM, SYD_TEST_OBS, SINGLE_TEST_DIR, HEADERS_TEST_DIR
+
 from gdal import Open, UseExceptions
 UseExceptions()
 
-from pyrate import roipac
-from pyrate import ifgconstants as IFC
 
-from common import SYD_TEST_DEM, SYD_TEST_OBS, SINGLE_TEST_DIR, HEADERS_TEST_DIR
-
-
-
+# TODO use class to check if data exists?
 class ConversionTests(unittest.TestCase):
 	'''Verifies conversion of ROIPAC files to EHdr format.'''
 
@@ -72,7 +72,7 @@ class ConversionTests(unittest.TestCase):
 
 		# check dates are parsed correctly
 		date0 = datetime.date(2006, 6, 19) # from  "DATE 060619" header
-		date12 = (date0, datetime.date(2006, 8, 28)) # from DATE12   060619-060828
+		date12 = (date0, datetime.date(2006, 8, 28)) # from DATE12 060619-060828
 		self.assertEqual(hdrs[IFC.DATE], date0)
 		self.assertEqual(hdrs[IFC.DATE12], date12)
 
@@ -87,7 +87,7 @@ class ConversionTests(unittest.TestCase):
 
 
 	def test_timespan(self):
-		"""Ensures the TIME_SPAN_YEAR element is present after parsing short header"""
+		"""Ensures TIME_SPAN_YEAR field is present after parsing short header"""
 		hdrs = roipac.parse_header(self.SHORT_HEADER_PATH)
 		self.assertTrue(hdrs.has_key(IFC.TIME_SPAN_YEAR))
 
@@ -118,10 +118,10 @@ class ConversionTests(unittest.TestCase):
 		self.assertEqual( (base, exp_hdr), result)
 
 
-	def test_roipac_to_ehdr_header(self):
+	def test_translate_header(self):
 		dest = "/tmp/ehdr.hdr"
 		hdr = join(HEADERS_TEST_DIR, "geo_060619-060828.unw.rsc")
-		roipac.to_ehdr_header(hdr, dest)
+		roipac.translate_header(hdr, dest)
 
 		with open(dest) as f:
 			text = f.read()
@@ -135,7 +135,7 @@ class ConversionTests(unittest.TestCase):
 		os.remove(dest)
 
 
-	def test_to_ehdr_header_defaults(self):
+	def test_translate_header_defaults(self):
 		# test default header filename
 		base_hdr = abspath(join(SINGLE_TEST_DIR, "geo_060619-061002.unw.rsc"))
 		hdr = "/tmp/geo_060619-061002.unw.rsc"
@@ -146,7 +146,7 @@ class ConversionTests(unittest.TestCase):
 		exp_hdr = "/tmp/geo_060619-061002.hdr"
 
 		if os.path.exists(exp_hdr): os.remove(exp_hdr)
-		roipac.to_ehdr_header(hdr)
+		roipac.translate_header(hdr)
 		self.assertTrue(os.path.exists(exp_hdr))
 
 		# add data to /tmp for GDAL test
@@ -170,7 +170,7 @@ class ConversionTests(unittest.TestCase):
 		# ensure giving the data file breaks to_ehdr_header()
 		src = join(SYD_TEST_OBS, "geo_060619-061002.unw")
 		try:
-			roipac.to_ehdr_header(src)
+			roipac.translate_header(src)
 			self.fail("Should not be able to accept .unw data file")
 		except:
 			pass
@@ -179,17 +179,17 @@ class ConversionTests(unittest.TestCase):
 	def test_to_ehdr_header_with_missing_file(self):
 		# ensure giving the data file breaks to_ehdr_header()
 		src = join(SYD_TEST_OBS, "fake.unw.rsc")
-		self.assertRaises(IOError, roipac.to_ehdr_header, src)
+		self.assertRaises(IOError, roipac.translate_header, src)
 
 
 	def test_to_ehdr_header_with_dir(self):
 		# ensure giving the data file breaks to_ehdr_header()
-		self.assertRaises(IOError, roipac.to_ehdr_header, SYD_TEST_OBS)
+		self.assertRaises(IOError, roipac.translate_header, SYD_TEST_OBS)
 
 
 	def test_to_ehdr_header_with_dem(self):
 		dem_hdr = join(SYD_TEST_DEM, "sydney_trimmed.dem.rsc")
-		act = roipac.to_ehdr_header(dem_hdr)
+		act = roipac.translate_header(dem_hdr)
 		self.assertEqual(act, dem_hdr[:-7] + "hdr")
 
 		with open(act) as f:
@@ -217,7 +217,7 @@ class ConversionTests(unittest.TestCase):
 		if os.path.exists(ehdr):
 			os.remove(ehdr) # can be left behind if the test fails
 
-		roipac.to_ehdr_header(hdr)
+		roipac.translate_header(hdr)
 		self.assertTrue(os.path.exists(ehdr))
 
 		# open with GDAL and ensure there is data

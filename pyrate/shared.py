@@ -77,8 +77,10 @@ class RasterBase(object):
 			elif readonly is None:
 				readonly = True # default to readonly as permissions are R/O
 
+		# TODO: refactor 'ehdr_path' to 'header_path' 
 		if self.ehdr_path is None:
-			self.ehdr_path = roipac.to_ehdr_header(self.hdr_path)
+			# FIXME: this will need to be reworked to handle ROIPAC and GAMMA formats
+			self.ehdr_path = roipac.translate_header(self.hdr_path)
 			args = (self.data_path,) if readonly else (self.data_path, GA_Update)
 			self.dataset = gdal.Open(*args)
 
