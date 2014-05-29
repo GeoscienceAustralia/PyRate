@@ -183,7 +183,7 @@ class RoipacException(Exception):
 
 if __name__ == '__main__':
 	import sys
-	usage = "Usage: rp2ehdr.py [ROIPAC unw.rsc files ...]\n" 
+	usage = "Usage: roipac.py [ROIPAC file] [... ROIPAC file]\n" 
 	if len(sys.argv) < 2:
 		sys.stderr.write(usage)
 		sys.exit()
