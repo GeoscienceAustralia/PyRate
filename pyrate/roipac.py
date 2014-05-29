@@ -1,11 +1,24 @@
 '''
 Library/script to convert ROIPAC headers to ESRI's BIL format.
 
-GDAL cannot parse ROIPAC headers, preventing interoperability. This module
-translates ROIPAC headers into ESRI's BIL format, which is supported by GDAL. A
-command line interface are provided for testing purposes. 
+GDAL lacks a driver to parse ROIPAC headers. This module translates ROIPAC
+headers into ESRI's BIL format, which is supported by GDAL. A basic command line
+interface is provided for testing purposes. 
 
-TODO: explain the difference between long and short header files
+The types of ROIPAC files/data used in PyRate are:
+* Interferograms: a .unw 32 bit float data file, with a .rsc resource/header.
+The binary data is assumed to contain 2 bands, amplitude and phase.
+
+* DEM: with a .unw 16 bit signed int binary data file, and a .rsc header
+There is only a single height band for the binary data.
+
+* TODO: describe incidence files, and any others.   
+
+
+There may be differences with the .rsc file content, with short and long forms.
+The short form has 7 fields, covering raster size, location and wavelength. The
+longer form can have up to 40 fields (see the test data for examples). PyRate
+attempts to handle both forms of header. 
 
 Created on 12/09/2012
 @author: Ben Davies, NCI
@@ -26,6 +39,7 @@ PIXELTYPE_FLOAT = 'float'
 PIXEL_TYPE = 'pixeltype'
 BYTE_ORDER = 'byteorder'
 Y_CORNER = 'yllcorner'
+NBANDS = 'nbands'
 NODATA = 'nodata'
 IS_DEM = 'is_dem'
 NBITS = 'nbits'
@@ -147,9 +161,13 @@ def translate_header(hdr, dest=None):
 	if yllcorner > 90 or yllcorner < -90:
 		raise RoipacException("Invalid Y latitude for yllcorner: %s" % yllcorner)
 	
-	H[Y_CORNER]= yllcorner
-	H[NBITS] = 16 if H[IS_DEM] else 32
+	H[Y_CORNER] = yllcorner 
+
 	H[PIXEL_TYPE] = PIXELTYPE_INT if H[IS_DEM] else PIXELTYPE_FLOAT
+	H[NBITS] = 16 if H[IS_DEM] else 32
+	if not H[IS_DEM]:
+		H[NBANDS] = 2
+		
 	H[BYTE_ORDER] = 'lsb'
 	H[NODATA] = 0
 
@@ -184,7 +202,7 @@ def write_bil_header(dest, H):
 		if not H[IS_DEM]:
 			f.write("nodata %s\n" % H[NODATA])
 			f.write("layout bil\n") # 1 band DEM doesn't interleave data
-			f.write("nbands 2\n")  # number of bands
+			f.write("nbands %s\n" % H[NBANDS])  # number of bands
 
 		# ROIPAC DEMs are 16 bit signed ints, phase layers are 32 bit floats
 		f.write("nbits %s\n" % H[NBITS])
