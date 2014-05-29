@@ -33,34 +33,15 @@ FULL_HEADER_PATH2 = join(SINGLE_TEST_DIR, 'geo_060619-061002.unw.rsc')
 
 
 
-class ConversionTests(unittest.TestCase):
-	'''Verifies conversion of ROIPAC files to EHdr format.'''
-
-	def test_read_short_roipac_header(self):
-		hdrs = roipac.parse_header(SHORT_HEADER_PATH)
-		self.assertTrue(hdrs is not None)
-		self.assertEqual(hdrs[IFC.WIDTH], 47)
-		self.assertEqual(hdrs[IFC.FILE_LENGTH], 72)
-		self.assertAlmostEqual(hdrs[IFC.X_FIRST], 150.910)
-
-
-	def test_read_roipac_header_file(self):
-		hdrs = roipac.parse_header(SHORT_HEADER_PATH)
-		self.assertEqual(hdrs[IFC.X_STEP], 0.000833333)
-		self.assertEqual(hdrs[IFC.Y_FIRST], -34.170000000)
-		self.assertEqual(hdrs[IFC.Y_STEP], -0.000833333)
-		self.assertEqual(hdrs[IFC.WAVELENGTH], 0.0562356424)
-
+class DateParsingTests(unittest.TestCase):
 
 	def test_parse_short_date_pre2000(self):
 		dstr = "980416"
 		self.assertEqual(datetime.date(1998, 4, 16), roipac.parse_date(dstr))
 
-
 	def test_parse_short_date_post2000(self):
 		dstr = "081006"
 		self.assertEqual(datetime.date(2008, 10, 6), roipac.parse_date(dstr))
-
 
 	def test_parse_date_range(self):
 		dstr = "980416-081006"
@@ -68,28 +49,30 @@ class ConversionTests(unittest.TestCase):
 		self.assertEqual(exp, roipac.parse_date(dstr))
 
 
-	def test_read_full_roipac_header(self):
-		"Tests full original header can be parsed correctly"
-		hdrs = roipac.parse_header(FULL_HEADER_PATH)
+class HeaderParsingTests(unittest.TestCase):
+	'''Verifies conversion of ROIPAC files to EHdr format.'''
+	
+	# low level convenience function tests
+	def test_filename_pair(self):
+		base = "project/run/geo_070709-080310.unw"
+		exp_hdr = "project/run/geo_070709-080310.unw.rsc"
+		result = roipac.filename_pair(base)
+		self.assertEqual((base, exp_hdr), result)
 
-		# check dates are parsed correctly
-		date0 = datetime.date(2006, 6, 19) # from  "DATE 060619" header
-		date12 = (date0, datetime.date(2006, 8, 28)) # from DATE12 060619-060828
-		self.assertEqual(hdrs[IFC.DATE], date0)
-		self.assertEqual(hdrs[IFC.DATE12], date12)
+	# short format header tests 
 
+	def test_parse_short_roipac_header(self):
+		hdrs = roipac.parse_header(SHORT_HEADER_PATH)
+		self.assertEqual(hdrs[IFC.WIDTH], 47)
+		self.assertEqual(hdrs[IFC.FILE_LENGTH], 72)
+		self.assertAlmostEqual(hdrs[IFC.X_FIRST], 150.910)
+		self.assertEqual(hdrs[IFC.X_STEP], 0.000833333)
+		self.assertEqual(hdrs[IFC.Y_FIRST], -34.170000000)
+		self.assertEqual(hdrs[IFC.Y_STEP], -0.000833333)
+		self.assertEqual(hdrs[IFC.WAVELENGTH], 0.0562356424)
 
-	def test_date_alias(self):
-		"""Test header has MASTER and SLAVE dates as keys"""
-		hdrs = roipac.parse_header(FULL_HEADER_PATH)
-		self.assertTrue(hdrs.has_key(IFC.MASTER))
-		self.assertTrue(hdrs.has_key(IFC.SLAVE))
-		self.assertEqual(hdrs[IFC.DATE], hdrs[IFC.MASTER])
-		self.assertEqual(hdrs[IFC.DATE12][-1], hdrs[IFC.SLAVE])
-
-
-	def test_timespan(self):
-		"""Ensures TIME_SPAN_YEAR field is present after parsing short header"""
+	def test_parse_short_header_has_timespan(self):
+		# Ensures TIME_SPAN_YEAR field is added during parsing
 		hdrs = roipac.parse_header(SHORT_HEADER_PATH)
 		self.assertTrue(hdrs.has_key(IFC.TIME_SPAN_YEAR))
 
@@ -100,25 +83,45 @@ class ConversionTests(unittest.TestCase):
 		self.assertEqual(diff, hdrs[IFC.TIME_SPAN_YEAR])
 
 
+	# long format header tests
+
+	def test_parse_full_roipac_header(self):
+		# Ensures "long style" original header can be parsed correctly
+		hdrs = roipac.parse_header(FULL_HEADER_PATH)
+		
+		# check some other headers
+		self.assertTrue(hdrs[IFC.XMIN] == hdrs[IFC.YMIN] == 0)
+		self.assertTrue(hdrs[IFC.XMAX] == 5450)
+		self.assertTrue(hdrs[IFC.YMAX] == 4365)
+
+		# check DATE/ DATE12 fields are parsed correctly
+		date0 = datetime.date(2006, 6, 19) # from  "DATE 060619" header
+		date12 = (date0, datetime.date(2006, 8, 28)) # from DATE12 060619-060828
+		self.assertEqual(hdrs[IFC.DATE], date0)
+		self.assertEqual(hdrs[IFC.DATE12], date12)
+
+	def test_read_full_roipac_header2(self):
+		# Tests header from cropped original dataset is parsed correctly
+		hdrs = roipac.parse_header(FULL_HEADER_PATH)
+		self.assertTrue(len(hdrs) is not None)
+
 	def test_xylast(self):
-		# Test the X_LAST and Y_LAST header elements are added
+		# Test the X_LAST and Y_LAST header elements are calculated
 		hdrs = roipac.parse_header(FULL_HEADER_PATH)
 		self.assertAlmostEqual(hdrs[IFC.X_LAST], 151.8519444445)
 		self.assertAlmostEqual(hdrs[IFC.Y_LAST], -34.625)
 
-
-	def test_read_full_roipac_header2(self):
-		"Tests header from cropped original dataset is parsed correctly"
+	def test_date_alias(self):
+		# Test header has MASTER and SLAVE dates as keys
 		hdrs = roipac.parse_header(FULL_HEADER_PATH)
-		self.assertTrue(hdrs is not None)
+		self.assertTrue(hdrs.has_key(IFC.MASTER))
+		self.assertTrue(hdrs.has_key(IFC.SLAVE))
+		self.assertEqual(hdrs[IFC.DATE], hdrs[IFC.MASTER])
+		self.assertEqual(hdrs[IFC.DATE12][-1], hdrs[IFC.SLAVE])
 
 
-	def test_filename_pair(self):
-		base = "project/run/geo_070709-080310.unw"
-		exp_hdr = "project/run/geo_070709-080310.unw.rsc"
-		result = roipac.filename_pair(base)
-		self.assertEqual((base, exp_hdr), result)
-
+class TranslationFunctionTests(unittest.TestCase):
+	'Tests translate_header() with data files and a DEM'
 
 	def test_translate_header(self):
 		dest = "/tmp/ehdr.hdr"
@@ -135,7 +138,6 @@ class ConversionTests(unittest.TestCase):
 			self.assertTrue(exp_yll in text, "Got " + exp_yll)
 
 		os.remove(dest)
-
 
 	def test_translate_header_defaults(self):
 		# test default header filename
@@ -167,9 +169,8 @@ class ConversionTests(unittest.TestCase):
 		os.remove(exp_hdr)
 		os.unlink(hdr)
 
-
-	def test_to_ehdr_header_with_data(self):
-		# ensure giving the data file breaks to_ehdr_header()
+	def test_translate_header_fail_wrong_input(self):
+		# ensure giving the data file breaks translate_header()
 		src = join(SYD_TEST_OBS, "geo_060619-061002.unw")
 		try:
 			roipac.translate_header(src)
@@ -177,19 +178,18 @@ class ConversionTests(unittest.TestCase):
 		except:
 			pass
 
-
-	def test_to_ehdr_header_with_missing_file(self):
-		# ensure giving the data file breaks to_ehdr_header()
+	def test_translate_header_fail_missing_input(self):
+		# ensure giving the data file breaks translate_header()
 		src = join(SYD_TEST_OBS, "fake.unw.rsc")
 		self.assertRaises(IOError, roipac.translate_header, src)
 
-
-	def test_to_ehdr_header_with_dir(self):
-		# ensure giving the data file breaks to_ehdr_header()
+	def test_translate_header_fail_with_dir_input(self):
+		# ensure giving the data file breaks translate_header()
 		self.assertRaises(IOError, roipac.translate_header, SYD_TEST_OBS)
 
 
-	def test_to_ehdr_header_with_dem(self):
+	def test_translate_header_with_dem(self):
+		# ensure the DEM header can be translated
 		dem_hdr = join(SYD_TEST_DEM, "sydney_trimmed.dem.rsc")
 		act = roipac.translate_header(dem_hdr)
 		self.assertEqual(act, dem_hdr[:-7] + "hdr")
@@ -211,9 +211,8 @@ class ConversionTests(unittest.TestCase):
 		self.assertTrue(['pixeltype', 'signedint'] in values)
 		os.remove(act)
 
-
-	def test_to_ehdr_header_gdal(self):
-		# test data files can be opened, new headers generated, data is readable
+	def test_gdal_interop(self):
+		# test GDAL can open and read data with new generated header
 		hdr = join(SYD_TEST_OBS, "geo_060619-061002.unw.rsc")
 		ehdr = join(SYD_TEST_OBS, "geo_060619-061002.hdr")
 		if os.path.exists(ehdr):
