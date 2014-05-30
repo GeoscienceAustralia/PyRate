@@ -83,9 +83,23 @@ def frequency_to_wavelength(freq):
 	return SPEED_OF_LIGHT_METRES_PER_SECOND / freq
 
 
-def combine_headers(path0, path1):
+def combine_headers(hdr0, hdr1):
 	# TODO: combine dicts from both epoch headers into single ifg header	
-	raise NotImplementedError
+	chdr = {}
+	
+	if hdr1['DATE'] == hdr0['DATE']:
+		raise GammaError("Can't combine headers for the same day")
+	elif hdr1['DATE'] < hdr0['DATE']:
+		raise GammaError("Wrong date order")
+		
+	chdr['TIME_SPAN_YEAR'] = (hdr1['DATE'] - hdr0['DATE']).days / 365.25
+	chdr['DATE'] = hdr0['DATE']
+	
+	if hdr0['WAVELENGTH_METRES'] != hdr1['WAVELENGTH_METRES']:
+		raise GammaError("Wavelengths don't match") 
+	
+	chdr['WAVELENGTH_METRES'] = hdr0['WAVELENGTH_METRES']  
+	return chdr
 
 
 
