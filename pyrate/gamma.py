@@ -13,7 +13,11 @@ Created on 29/05/2014
 
 # TODO: place metadata into GeoTIFF headers with key:values
 
+import struct
 import datetime
+
+import gdal, osr
+import numpy as np
 
 
 # constants
@@ -29,6 +33,40 @@ GAMMA_X_STEP = 'post_lon'
 
 SPEED_OF_LIGHT_METRES_PER_SECOND = 3e8
 
+
+def to_geotiff(hdr, data_path, dest, nodata):
+	'Converts GAMMA format data to GeoTIFF image with PyRate metadata'
+	ncols = hdr['NCOLS']
+	nrows = hdr['NROWS']
+	driver = gdal.GetDriverByName("GTiff") # TODO: hardcoded
+	ds = driver.Create(dest, ncols, nrows, 1, gdal.GDT_Float32)
+	
+	# write custom headers to interferograms
+	if hdr.has_key('WAVELENGTH_METRES'):
+		for k in hdr:
+			ds.SetMetadataItem(k, str(hdr[k]))
+	
+	# position and projection data	
+	gt = [hdr['LONG'], hdr['X_STEP'], 0, hdr['LAT'], 0, hdr['Y_STEP']]
+	ds.SetGeoTransform(gt)
+	
+	# TODO: is this sufficient to geolocate the raster?
+	srs = osr.SpatialReference()
+	srs.SetWellKnownGeogCS('WGS84')
+	ds.SetProjection( srs.ExportToWkt() )	
+	
+	# copy data from the binary file
+	band = ds.GetRasterBand(1)
+	band.SetNoDataValue(nodata)
+	fmtstr = '!' + ('f' * ncols) # data format is big endian float32s 
+	
+	with open(data_path, 'rb') as f:
+		for y in range(nrows):
+			data = struct.unpack(fmtstr, f.read(ncols * 4))
+			band.WriteArray(np.array(data).reshape(1, ncols), yoff=y)
+	
+	ds = None
+	
 
 def parse_header(path):
 	'Parses all GAMMA epoch/DEM header file fields into a dictionary'	
@@ -62,6 +100,7 @@ def parse_dem_header(path):
 	lookup = parse_header(path)
 	subset = {}
 	
+	# NB: many lookup fields have multiple elements, eg ['1000', 'Hz']
 	subset['NCOLS'] = int(lookup[GAMMA_WIDTH][0])
 	subset['NROWS'] = int(lookup[GAMMA_NROWS][0])
 	
@@ -74,8 +113,8 @@ def parse_dem_header(path):
 	
 	subset['LAT'] = float(lookup[GAMMA_CORNER_LAT][0])
 	subset['LONG'] = float(lookup[GAMMA_CORNER_LONG][0])
-	subset['Y_STEP'] = abs(float(lookup[GAMMA_Y_STEP][0]))
-	subset['X_STEP'] = abs(float(lookup[GAMMA_X_STEP][0]))
+	subset['Y_STEP'] = float(lookup[GAMMA_Y_STEP][0])
+	subset['X_STEP'] = float(lookup[GAMMA_X_STEP][0])
 	return subset
 
 

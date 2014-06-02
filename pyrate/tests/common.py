@@ -22,6 +22,9 @@ SINGLE_TEST_DIR = join(BASE_TEST, 'single')
 HEADERS_TEST_DIR = join(BASE_TEST, 'headers')
 INCID_TEST_DIR = join(BASE_TEST, 'incidence')
 
+GAMMA_TEST_DIR = join(BASE_TEST, "gamma")
+
+
 
 # small dummy ifg list to limit overall # of ifgs
 IFMS5 = """geo_060828-061211.unw

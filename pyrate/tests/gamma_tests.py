@@ -10,14 +10,52 @@ from os.path import join
 
 from datetime import date
 from pyrate import gamma
-from pyrate.tests.common import HEADERS_TEST_DIR
+from pyrate.tests.common import HEADERS_TEST_DIR, GAMMA_TEST_DIR
+
+from numpy.testing import assert_array_almost_equal
+
+import gdal
+gdal.UseExceptions()
 
 
 LIGHTSPEED = 3e8 # approx
 
 
-# TODO: test class for funcs dealing combining 2 headers
-# TODO: create a time_span_year item (needs 2 headers)
+
+# TODO: needs a chopped out segment of data (ie, 16x20 pixels)
+class GammaToGeoTiffTests(unittest.TestCase):
+	
+	def test_to_geotiff_dem(self):
+		# TODO: refactor with Ifg class later
+		hdr_path = join(GAMMA_TEST_DIR, 'dem16x20raw.dem.par')
+		hdr = gamma.parse_dem_header(hdr_path)
+		data_path = join(GAMMA_TEST_DIR, 'dem16x20raw.dem')
+		dest = "/tmp/tmpdem.tif"
+		
+		# TODO: refactor to take a header path (or autodetect header)
+		gamma.to_geotiff(hdr, data_path, dest, nodata=0)
+		ds = gdal.Open(dest)
+		band = ds.GetRasterBand(1)
+		data = band.ReadAsArray()
+		
+		exp_path = join(GAMMA_TEST_DIR, 'dem16x20_subset_from_gamma.tif')
+		exp_ds = gdal.Open(exp_path)
+		exp_band = exp_ds.GetRasterBand(1)
+		exp_data = exp_band.ReadAsArray() 
+
+		# compare data and metadata
+		assert_array_almost_equal(exp_data, data)
+		nodata = band.GetNoDataValue()
+		self.assertFalse(nodata is None)
+		self.assertEqual(exp_band.GetNoDataValue(), nodata)
+		
+		self.assertEqual(exp_ds.GetProjection(), ds.GetProjection())		
+		for exp, act in zip(exp_ds.GetGeoTransform(), ds.GetGeoTransform()):
+			self.assertAlmostEqual(exp, act, places=4)
+	
+	def test_to_geotiff_ifg(self):
+		raise NotImplementedError
+
 
 class GammaHeaderParsingTests(unittest.TestCase):
 	'TODO'
@@ -45,7 +83,7 @@ class GammaHeaderParsingTests(unittest.TestCase):
 		self.assertEqual(hdrs['LAT'], -33.3831945)
 		self.assertEqual(hdrs['LONG'], 150.3870833)
 		self.assertEqual(hdrs['X_STEP'], 6.9444445e-05)
-		self.assertEqual(hdrs['Y_STEP'], 6.9444445e-05)
+		self.assertEqual(hdrs['Y_STEP'], -6.9444445e-05)
 	
 
 # Test data for the epoch header combination
