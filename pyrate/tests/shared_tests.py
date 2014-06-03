@@ -4,6 +4,8 @@ Created on 12/09/2012
 @author: bpd900
 '''
 
+# FIXME: replace ROIPAC dependencies with PyRate GeoTIFF files
+
 import os
 import shutil
 import unittest
@@ -18,7 +20,7 @@ from gdal import Open, Dataset, UseExceptions
 UseExceptions()
 
 from pyrate.shared import Ifg, DEM, RasterException, Incidence
-from pyrate.ifgconstants import Z_OFFSET, Z_SCALE, PROJECTION, DATUM
+from pyrate.roipac import Z_OFFSET, Z_SCALE, PROJECTION, DATUM
 from common import SYD_TEST_OBS, INCID_TEST_DIR, SYD_TEST_DEM
 
 

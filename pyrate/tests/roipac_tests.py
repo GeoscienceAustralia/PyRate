@@ -14,7 +14,6 @@ from numpy import amin, zeros
 from numpy.testing import assert_array_equal
 
 from pyrate import roipac
-from pyrate import ifgconstants as IFC
 from common import SYD_TEST_DEM, SYD_TEST_OBS
 from common import SINGLE_TEST_DIR, HEADERS_TEST_DIR
 
@@ -63,24 +62,24 @@ class HeaderParsingTests(unittest.TestCase):
 
 	def test_parse_short_roipac_header(self):
 		hdrs = roipac.parse_header(SHORT_HEADER_PATH)
-		self.assertEqual(hdrs[IFC.WIDTH], 47)
-		self.assertEqual(hdrs[IFC.FILE_LENGTH], 72)
-		self.assertAlmostEqual(hdrs[IFC.X_FIRST], 150.910)
-		self.assertEqual(hdrs[IFC.X_STEP], 0.000833333)
-		self.assertEqual(hdrs[IFC.Y_FIRST], -34.170000000)
-		self.assertEqual(hdrs[IFC.Y_STEP], -0.000833333)
-		self.assertEqual(hdrs[IFC.WAVELENGTH], 0.0562356424)
+		self.assertEqual(hdrs[roipac.WIDTH], 47)
+		self.assertEqual(hdrs[roipac.FILE_LENGTH], 72)
+		self.assertAlmostEqual(hdrs[roipac.X_FIRST], 150.910)
+		self.assertEqual(hdrs[roipac.X_STEP], 0.000833333)
+		self.assertEqual(hdrs[roipac.Y_FIRST], -34.170000000)
+		self.assertEqual(hdrs[roipac.Y_STEP], -0.000833333)
+		self.assertEqual(hdrs[roipac.WAVELENGTH], 0.0562356424)
 
 	def test_parse_short_header_has_timespan(self):
 		# Ensures TIME_SPAN_YEAR field is added during parsing
 		hdrs = roipac.parse_header(SHORT_HEADER_PATH)
-		self.assertTrue(hdrs.has_key(IFC.TIME_SPAN_YEAR))
+		self.assertTrue(hdrs.has_key(roipac.TIME_SPAN_YEAR))
 
 		# check time span calc
 		master = datetime.date(2006, 06, 19)
 		slave = datetime.date(2006, 10, 02)
 		diff = (slave - master).days / 365.25
-		self.assertEqual(diff, hdrs[IFC.TIME_SPAN_YEAR])
+		self.assertEqual(diff, hdrs[roipac.TIME_SPAN_YEAR])
 
 
 	# long format header tests
@@ -90,15 +89,15 @@ class HeaderParsingTests(unittest.TestCase):
 		hdrs = roipac.parse_header(FULL_HEADER_PATH)
 		
 		# check some other headers
-		self.assertTrue(hdrs[IFC.XMIN] == hdrs[IFC.YMIN] == 0)
-		self.assertTrue(hdrs[IFC.XMAX] == 5450)
-		self.assertTrue(hdrs[IFC.YMAX] == 4365)
+		self.assertTrue(hdrs[roipac.XMIN] == hdrs[roipac.YMIN] == 0)
+		self.assertTrue(hdrs[roipac.XMAX] == 5450)
+		self.assertTrue(hdrs[roipac.YMAX] == 4365)
 
 		# check DATE/ DATE12 fields are parsed correctly
 		date0 = datetime.date(2006, 6, 19) # from  "DATE 060619" header
 		date12 = (date0, datetime.date(2006, 8, 28)) # from DATE12 060619-060828
-		self.assertEqual(hdrs[IFC.DATE], date0)
-		self.assertEqual(hdrs[IFC.DATE12], date12)
+		self.assertEqual(hdrs[roipac.DATE], date0)
+		self.assertEqual(hdrs[roipac.DATE12], date12)
 
 	def test_read_full_roipac_header2(self):
 		# Tests header from cropped original dataset is parsed correctly
@@ -108,16 +107,16 @@ class HeaderParsingTests(unittest.TestCase):
 	def test_xylast(self):
 		# Test the X_LAST and Y_LAST header elements are calculated
 		hdrs = roipac.parse_header(FULL_HEADER_PATH)
-		self.assertAlmostEqual(hdrs[IFC.X_LAST], 151.8519444445)
-		self.assertAlmostEqual(hdrs[IFC.Y_LAST], -34.625)
+		self.assertAlmostEqual(hdrs[roipac.X_LAST], 151.8519444445)
+		self.assertAlmostEqual(hdrs[roipac.Y_LAST], -34.625)
 
 	def test_date_alias(self):
 		# Test header has MASTER and SLAVE dates as keys
 		hdrs = roipac.parse_header(FULL_HEADER_PATH)
-		self.assertTrue(hdrs.has_key(IFC.MASTER))
-		self.assertTrue(hdrs.has_key(IFC.SLAVE))
-		self.assertEqual(hdrs[IFC.DATE], hdrs[IFC.MASTER])
-		self.assertEqual(hdrs[IFC.DATE12][-1], hdrs[IFC.SLAVE])
+		self.assertTrue(hdrs.has_key(roipac.MASTER))
+		self.assertTrue(hdrs.has_key(roipac.SLAVE))
+		self.assertEqual(hdrs[roipac.DATE], hdrs[roipac.MASTER])
+		self.assertEqual(hdrs[roipac.DATE12][-1], hdrs[roipac.SLAVE])
 
 
 class TranslationFunctionTests(unittest.TestCase):

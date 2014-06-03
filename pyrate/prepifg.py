@@ -30,9 +30,9 @@ from config import OBS_DIR, IFG_CROP_OPT, IFG_LKSX, IFG_LKSY, IFG_FILE_LIST
 from config import IFG_XFIRST, IFG_XLAST, IFG_YFIRST, IFG_YLAST, DEM_FILE
 from config import ORBITAL_FIT_LOOKS_X, ORBITAL_FIT_LOOKS_Y
 
-from ifgconstants import X_FIRST, Y_FIRST, X_LAST, Y_LAST, X_STEP, Y_STEP
-from ifgconstants import Z_OFFSET, Z_SCALE, PROJECTION, DATUM
-from ifgconstants import WIDTH, FILE_LENGTH, WAVELENGTH
+from roipac import X_FIRST, Y_FIRST, X_LAST, Y_LAST, X_STEP, Y_STEP
+from roipac import Z_OFFSET, Z_SCALE, PROJECTION, DATUM
+from roipac import WIDTH, FILE_LENGTH, WAVELENGTH
 
 # Constants
 MINIMUM_CROP = 1
