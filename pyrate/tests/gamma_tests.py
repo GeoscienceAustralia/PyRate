@@ -22,29 +22,62 @@ LIGHTSPEED = 3e8 # approx
 
 
 
-# TODO: needs a chopped out segment of data (ie, 16x20 pixels)
+# TODO: add date2
 class GammaToGeoTiffTests(unittest.TestCase):
-	
+
 	def test_to_geotiff_dem(self):
 		# TODO: refactor with Ifg class later
 		hdr_path = join(GAMMA_TEST_DIR, 'dem16x20raw.dem.par')
 		hdr = gamma.parse_dem_header(hdr_path)
 		data_path = join(GAMMA_TEST_DIR, 'dem16x20raw.dem')
 		dest = "/tmp/tmpdem.tif"
-		
+
 		# TODO: refactor to take a header path (or autodetect header)
 		gamma.to_geotiff(hdr, data_path, dest, nodata=0)
 		ds = gdal.Open(dest)
-		band = ds.GetRasterBand(1)
-		data = band.ReadAsArray()
-		
+
 		exp_path = join(GAMMA_TEST_DIR, 'dem16x20_subset_from_gamma.tif')
 		exp_ds = gdal.Open(exp_path)
-		exp_band = exp_ds.GetRasterBand(1)
-		exp_data = exp_band.ReadAsArray() 
 
-		# compare data and metadata
-		assert_array_almost_equal(exp_data, data)
+		# compare data and geographic headers
+		assert_array_almost_equal(exp_ds.ReadAsArray(), ds.ReadAsArray())
+		self.compare_rasters(ds, exp_ds)
+		md = ds.GetMetadata()
+		self.assertTrue(md['AREA_OR_POINT'] == 'Area')
+
+
+	def test_to_geotiff_ifg(self):
+		# tricker: needs both ifg headers, and DEM one for the extents 
+		filenames = ['r20090713_VV.slc.par', 'r20090817_VV.slc.par']
+		hdr_paths = [join(GAMMA_TEST_DIR, f) for f in filenames]
+		hdrs = [gamma.parse_epoch_header(p) for p in hdr_paths]
+		
+		dem_hdr_path = join(GAMMA_TEST_DIR, 'dem16x20raw.dem.par')
+		dem_hdr = gamma.parse_dem_header(dem_hdr_path)
+		combined = gamma.combine_headers(*hdrs, dem_hdr=dem_hdr)
+
+		dest = '/tmp/tmpifg.tif'
+		data_path = join(GAMMA_TEST_DIR, '16x20_20090713-20090817_VV_4rlks_utm.unw')
+		gamma.to_geotiff(combined, data_path, dest, nodata=0)		
+				
+		ds = gdal.Open(dest)
+		exp_path = join(GAMMA_TEST_DIR, '16x20_20090713-20090817_VV_4rlks_utm.tif')
+		exp_ds = gdal.Open(exp_path)
+		
+		# compare data and geographic headers
+		assert_array_almost_equal(exp_ds.ReadAsArray(), ds.ReadAsArray())
+		self.compare_rasters(ds, exp_ds)
+		md = ds.GetMetadata()
+		self.assertTrue(md['DATE'] == str(date(2009, 7, 13)))
+		self.assertTrue(md['TIME_SPAN_YEAR'] == str((18 + 17) / 365.25))
+		
+		self.assertAlmostEqual(float(md['WAVELENGTH_METRES']), 0.05627457792190739)
+
+
+	def compare_rasters(self, ds, exp_ds):
+		band = ds.GetRasterBand(1)
+		exp_band = exp_ds.GetRasterBand(1)		
+
 		nodata = band.GetNoDataValue()
 		self.assertFalse(nodata is None)
 		self.assertEqual(exp_band.GetNoDataValue(), nodata)
@@ -52,9 +85,6 @@ class GammaToGeoTiffTests(unittest.TestCase):
 		self.assertEqual(exp_ds.GetProjection(), ds.GetProjection())		
 		for exp, act in zip(exp_ds.GetGeoTransform(), ds.GetGeoTransform()):
 			self.assertAlmostEqual(exp, act, places=4)
-	
-	def test_to_geotiff_ifg(self):
-		raise NotImplementedError
 
 
 class GammaHeaderParsingTests(unittest.TestCase):
@@ -106,7 +136,10 @@ class HeaderCombinationTests(unittest.TestCase):
 		filenames = ['r20090713_VV.slc.par', 'r20090817_VV.slc.par']
 		paths = [join(HEADERS_TEST_DIR, p) for p in filenames]
 		hdr0, hdr1 = [gamma.parse_epoch_header(p) for p in paths]
-		chdr = gamma.combine_headers(hdr0, hdr1)
+		dem_hdr_path = join(GAMMA_TEST_DIR, 'dem16x20raw.dem.par')
+		dem_hdr = gamma.parse_dem_header(dem_hdr_path)
+
+		chdr = gamma.combine_headers(hdr0, hdr1, dem_hdr)
 		
 		exp_timespan = (18 + 17) / 365.25 
 		self.assertEqual(chdr['TIME_SPAN_YEAR'], exp_timespan)
@@ -119,10 +152,10 @@ class HeaderCombinationTests(unittest.TestCase):
 		self.assertEqual(chdr['WAVELENGTH_METRES'], exp_wavelen)
 	
 	def test_fail_mismatching_wavelength(self):
-		self.assertRaises(gamma.GammaError, gamma.combine_headers, H0, H1_FAULT)
+		self.assertRaises(gamma.GammaError, gamma.combine_headers, H0, H1_FAULT, None)
 	
 	def test_fail_same_date(self):
-		self.assertRaises(gamma.GammaError, gamma.combine_headers, H0, H0)
+		self.assertRaises(gamma.GammaError, gamma.combine_headers, H0, H0, None)
 		
 	def test_fail_bad_date_order(self):
-		self.assertRaises(gamma.GammaError, gamma.combine_headers, H1, H0)
+		self.assertRaises(gamma.GammaError, gamma.combine_headers, H1, H0, None)

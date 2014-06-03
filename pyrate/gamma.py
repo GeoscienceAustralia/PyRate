@@ -122,8 +122,9 @@ def frequency_to_wavelength(freq):
 	return SPEED_OF_LIGHT_METRES_PER_SECOND / freq
 
 
-def combine_headers(hdr0, hdr1):
-	# TODO: combine dicts from both epoch headers into single ifg header	
+def combine_headers(hdr0, hdr1, dem_hdr):
+	'Combine dicts from both epoch headers into single ifg header'
+	# TODO: error check dem_hdr is a dict	
 	chdr = {}
 	
 	if hdr1['DATE'] == hdr0['DATE']:
@@ -137,7 +138,8 @@ def combine_headers(hdr0, hdr1):
 	if hdr0['WAVELENGTH_METRES'] != hdr1['WAVELENGTH_METRES']:
 		raise GammaError("Wavelengths don't match") 
 	
-	chdr['WAVELENGTH_METRES'] = hdr0['WAVELENGTH_METRES']  
+	chdr['WAVELENGTH_METRES'] = hdr0['WAVELENGTH_METRES']
+	chdr.update(dem_hdr)
 	return chdr
 
 
