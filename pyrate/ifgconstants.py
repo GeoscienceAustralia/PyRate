@@ -4,7 +4,23 @@ Created on 14/09/2012
 @author: Ben Davies
 '''
 
-# RSC header file constants
+# lookup keys for the fields in PyRate's custom GeoTIFF files
+PYRATE_NCOLS = 'NCOLS'
+PYRATE_NROWS = 'NROWS'
+PYRATE_X_STEP = 'X_STEP'
+PYRATE_Y_STEP = 'Y_STEP'
+PYRATE_LAT = 'LAT'
+PYRATE_LONG = 'LONG'
+PYRATE_DATE = 'DATE'
+PYRATE_DATE2 = 'DATE2'
+#PYRATE_
+PYRATE_DATUM = 'DATUM'
+PYRATE_TIME_SPAN = 'TIME_SPAN_YEAR'
+PYRATE_WAVELENGTH_METRES = 'WAVELENGTH_METRES'
+
+
+
+# ROIPAC RSC header file constants
 WIDTH = "WIDTH"
 FILE_LENGTH = "FILE_LENGTH"
 XMIN = "XMIN"
