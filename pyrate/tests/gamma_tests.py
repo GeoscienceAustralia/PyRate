@@ -31,19 +31,16 @@ class GammaToGeoTiffTests(unittest.TestCase):
 		data_path = join(GAMMA_TEST_DIR, 'dem16x20raw.dem')
 		dest = "/tmp/tmpdem.tif"
 
-		# TODO: refactor to take a header path (or autodetect header)
 		gamma.to_geotiff(hdr, data_path, dest, nodata=0)
-		ds = gdal.Open(dest)
-
 		exp_path = join(GAMMA_TEST_DIR, 'dem16x20_subset_from_gamma.tif')
 		exp_ds = gdal.Open(exp_path)
+		ds = gdal.Open(dest)
 
 		# compare data and geographic headers
 		assert_array_almost_equal(exp_ds.ReadAsArray(), ds.ReadAsArray())
 		self.compare_rasters(ds, exp_ds)
 		md = ds.GetMetadata()
 		self.assertTrue(md['AREA_OR_POINT'] == 'Area')
-
 
 	def test_to_geotiff_ifg(self):
 		# tricker: needs both ifg headers, and DEM one for the extents 
@@ -81,7 +78,9 @@ class GammaToGeoTiffTests(unittest.TestCase):
 		self.assertFalse(nodata is None)
 		self.assertEqual(exp_band.GetNoDataValue(), nodata)
 		
-		self.assertEqual(exp_ds.GetProjection(), ds.GetProjection())		
+		pj = ds.GetProjection()
+		self.assertTrue('WGS 84' in pj)
+		self.assertEqual(exp_ds.GetProjection(), pj)		
 		for exp, act in zip(exp_ds.GetGeoTransform(), ds.GetGeoTransform()):
 			self.assertAlmostEqual(exp, act, places=4)
 

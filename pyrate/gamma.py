@@ -37,10 +37,12 @@ GAMMA_CORNER_LAT = 'corner_lat'
 GAMMA_CORNER_LONG = 'corner_lon'
 GAMMA_Y_STEP = 'post_lat'
 GAMMA_X_STEP = 'post_lon'
+GAMMA_DATUM = 'ellipsoid_name'
 
 SPEED_OF_LIGHT_METRES_PER_SECOND = 3e8
 
 
+# TODO: consider refactoring to take header paths (or autodetect header?)
 def to_geotiff(hdr, data_path, dest, nodata):
 	'Converts GAMMA format data to GeoTIFF image with PyRate metadata'
 	ncols = hdr['NCOLS']
@@ -59,8 +61,8 @@ def to_geotiff(hdr, data_path, dest, nodata):
 	
 	# TODO: is this sufficient to geolocate the raster?
 	srs = osr.SpatialReference()
-	srs.SetWellKnownGeogCS('WGS84')
-	ds.SetProjection( srs.ExportToWkt() )	
+	srs.SetWellKnownGeogCS(hdr['DATUM'])
+	ds.SetProjection(srs.ExportToWkt())
 	
 	# copy data from the binary file
 	band = ds.GetRasterBand(1)
@@ -71,7 +73,7 @@ def to_geotiff(hdr, data_path, dest, nodata):
 		for y in range(nrows):
 			data = struct.unpack(fmtstr, f.read(ncols * 4))
 			band.WriteArray(np.array(data).reshape(1, ncols), yoff=y)
-	
+
 	ds = None
 	
 
@@ -122,6 +124,7 @@ def parse_dem_header(path):
 	subset['LONG'] = float(lookup[GAMMA_CORNER_LONG][0])
 	subset['Y_STEP'] = float(lookup[GAMMA_Y_STEP][0])
 	subset['X_STEP'] = float(lookup[GAMMA_X_STEP][0])
+	subset['DATUM'] = "".join(lookup[GAMMA_DATUM])
 	return subset
 
 
