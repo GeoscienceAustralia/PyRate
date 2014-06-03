@@ -22,7 +22,6 @@ LIGHTSPEED = 3e8 # approx
 
 
 
-# TODO: add date2
 class GammaToGeoTiffTests(unittest.TestCase):
 
 	def test_to_geotiff_dem(self):
@@ -69,8 +68,8 @@ class GammaToGeoTiffTests(unittest.TestCase):
 		self.compare_rasters(ds, exp_ds)
 		md = ds.GetMetadata()
 		self.assertTrue(md['DATE'] == str(date(2009, 7, 13)))
-		self.assertTrue(md['TIME_SPAN_YEAR'] == str((18 + 17) / 365.25))
-		
+		self.assertTrue(md['DATE2'] == str(date(2009, 8, 17)))
+		self.assertTrue(md['TIME_SPAN_YEAR'] == str((18 + 17) / 365.25))		
 		self.assertAlmostEqual(float(md['WAVELENGTH_METRES']), 0.05627457792190739)
 
 
@@ -143,10 +142,11 @@ class HeaderCombinationTests(unittest.TestCase):
 		
 		exp_timespan = (18 + 17) / 365.25 
 		self.assertEqual(chdr['TIME_SPAN_YEAR'], exp_timespan)
-		
-		# TODO: what to do with second date? Ignore as per ROIPAC?
+
 		exp_date = date(2009, 7, 13)
 		self.assertEqual(chdr['DATE'], exp_date)
+		exp_date2 = date(2009, 8, 17)
+		self.assertEqual(chdr['DATE2'], exp_date2)
 		
 		exp_wavelen = LIGHTSPEED / 5.3310040e+09
 		self.assertEqual(chdr['WAVELENGTH_METRES'], exp_wavelen)

@@ -134,6 +134,7 @@ def combine_headers(hdr0, hdr1, dem_hdr):
 		
 	chdr['TIME_SPAN_YEAR'] = (hdr1['DATE'] - hdr0['DATE']).days / 365.25
 	chdr['DATE'] = hdr0['DATE']
+	chdr['DATE2'] = hdr1['DATE'] # add 2nd date as it may not be in file name
 	
 	if hdr0['WAVELENGTH_METRES'] != hdr1['WAVELENGTH_METRES']:
 		raise GammaError("Wavelengths don't match") 
