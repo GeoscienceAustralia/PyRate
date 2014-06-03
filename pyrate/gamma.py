@@ -45,7 +45,7 @@ def to_geotiff(hdr, data_path, dest, nodata):
 	'Converts GAMMA format data to GeoTIFF image with PyRate metadata'
 	ncols = hdr['NCOLS']
 	nrows = hdr['NROWS']
-	driver = gdal.GetDriverByName("GTiff") # TODO: hardcoded
+	driver = gdal.GetDriverByName("GTiff")
 	ds = driver.Create(dest, ncols, nrows, 1, gdal.GDT_Float32)
 	
 	# write custom headers to interferograms
@@ -131,9 +131,10 @@ def frequency_to_wavelength(freq):
 
 def combine_headers(hdr0, hdr1, dem_hdr):
 	'Combine dicts from both epoch headers into single ifg header'
-	# TODO: error check dem_hdr is a dict	
-	chdr = {}
+	if not all([isinstance(a, dict) for a in [hdr0, hdr1, dem_hdr]]):
+		raise GammaError('Header args need to be dicts')
 	
+	chdr = {}
 	if hdr1['DATE'] == hdr0['DATE']:
 		raise GammaError("Can't combine headers for the same day")
 	elif hdr1['DATE'] < hdr0['DATE']:

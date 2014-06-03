@@ -131,14 +131,16 @@ H1_FAULT = { 'DATE' : date(2009, 8, 17),
 
 class HeaderCombinationTests(unittest.TestCase):
 	
+	def setUp(self):
+		dem_hdr_path = join(GAMMA_TEST_DIR, 'dem16x20raw.dem.par')
+		self.dh = gamma.parse_dem_header(dem_hdr_path)
+	
 	def test_combine_headers(self):
 		filenames = ['r20090713_VV.slc.par', 'r20090817_VV.slc.par']
 		paths = [join(HEADERS_TEST_DIR, p) for p in filenames]
 		hdr0, hdr1 = [gamma.parse_epoch_header(p) for p in paths]
-		dem_hdr_path = join(GAMMA_TEST_DIR, 'dem16x20raw.dem.par')
-		dem_hdr = gamma.parse_dem_header(dem_hdr_path)
 
-		chdr = gamma.combine_headers(hdr0, hdr1, dem_hdr)
+		chdr = gamma.combine_headers(hdr0, hdr1, self.dh)
 		
 		exp_timespan = (18 + 17) / 365.25 
 		self.assertEqual(chdr['TIME_SPAN_YEAR'], exp_timespan)
@@ -150,12 +152,18 @@ class HeaderCombinationTests(unittest.TestCase):
 		
 		exp_wavelen = LIGHTSPEED / 5.3310040e+09
 		self.assertEqual(chdr['WAVELENGTH_METRES'], exp_wavelen)
-	
+
+	def test_fail_non_dict_header(self):
+		self.assertRaises(gamma.GammaError, gamma.combine_headers, H0, '', self.dh)
+		self.assertRaises(gamma.GammaError, gamma.combine_headers, '', H0, self.dh)
+		self.assertRaises(gamma.GammaError, gamma.combine_headers, H0, H1, None)
+		self.assertRaises(gamma.GammaError, gamma.combine_headers, H0, H1, '')
+
 	def test_fail_mismatching_wavelength(self):
-		self.assertRaises(gamma.GammaError, gamma.combine_headers, H0, H1_FAULT, None)
+		self.assertRaises(gamma.GammaError, gamma.combine_headers, H0, H1_FAULT, self.dh)
 	
 	def test_fail_same_date(self):
-		self.assertRaises(gamma.GammaError, gamma.combine_headers, H0, H0, None)
+		self.assertRaises(gamma.GammaError, gamma.combine_headers, H0, H0, self.dh)
 		
 	def test_fail_bad_date_order(self):
-		self.assertRaises(gamma.GammaError, gamma.combine_headers, H1, H0, None)
+		self.assertRaises(gamma.GammaError, gamma.combine_headers, H1, H0, self.dh)
