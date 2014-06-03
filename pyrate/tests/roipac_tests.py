@@ -1,5 +1,5 @@
 '''
-Tests for the ROIPAC header translation module.
+Tests for ROIPAC header translation module.
 
 Created on 12/09/2012
 @author: Ben Davies, NCI
@@ -14,7 +14,7 @@ from numpy import amin, zeros
 from numpy.testing import assert_array_equal
 
 from pyrate import roipac
-from common import SYD_TEST_DEM, SYD_TEST_OBS
+from common import SYD_TEST_DEM_HDR, SYD_TEST_OBS
 from common import SINGLE_TEST_DIR, HEADERS_TEST_DIR
 
 from gdal import Open, UseExceptions
@@ -189,9 +189,8 @@ class TranslationFunctionTests(unittest.TestCase):
 
 	def test_translate_header_with_dem(self):
 		# ensure the DEM header can be translated
-		dem_hdr = join(SYD_TEST_DEM, "sydney_trimmed.dem.rsc")
-		act = roipac.translate_header(dem_hdr)
-		self.assertEqual(act, dem_hdr[:-7] + "hdr")
+		act = roipac.translate_header(SYD_TEST_DEM_HDR)
+		self.assertEqual(act, SYD_TEST_DEM_HDR[:-7] + "hdr")
 
 		with open(act) as f:
 			lines = [line.strip() for line in f.readlines()]

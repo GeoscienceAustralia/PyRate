@@ -279,7 +279,7 @@ class DEMTests(unittest.TestCase):
 	'''Unit tests for the generic DEM class.'''
 
 	def setUp(self):
-		self.ras = DEM(join(SYD_TEST_DEM, 'sydney_trimmed.dem'))
+		self.ras = DEM(SYD_TEST_DEM)
 
 
 	def test_create_raster(self):

@@ -21,7 +21,7 @@ from pyrate.config import OBS_DIR, IFG_CROP_OPT, IFG_LKSX, IFG_LKSY, IFG_FILE_LI
 from pyrate.config import IFG_XFIRST, IFG_XLAST, IFG_YFIRST, IFG_YLAST, DEM_FILE
 from pyrate.config import ORBITAL_FIT_LOOKS_X, ORBITAL_FIT_LOOKS_Y
 
-from common import SINGLE_TEST_DIR, PREP_TEST_OBS, SYD_TEST_DEM
+from common import SINGLE_TEST_DIR, PREP_TEST_OBS, SYD_TEST_DEM, SYD_TEST_DEM_DIR
 
 import gdal
 gdal.UseExceptions()
@@ -183,7 +183,7 @@ class OutputTests(unittest.TestCase):
 		params = self._custom_extents_param()
 		params[IFG_LKSX] = scale
 		params[IFG_LKSY] = scale
-		params[DEM_FILE] = join(SYD_TEST_DEM, 'sydney_trimmed.dem')
+		params[DEM_FILE] = SYD_TEST_DEM
 		prepare_ifgs(params, thresh=1.0) # if all nans, ignore cell
 
 		# check file names have been updated
@@ -213,7 +213,7 @@ class OutputTests(unittest.TestCase):
 
 		# verify DEM has been correctly processed
 		# ignore output values as resampling has already been tested for phase
-		exp_dem_path = join(SYD_TEST_DEM, 'sydney_trimmed_4rlks.dem')
+		exp_dem_path = join(SYD_TEST_DEM_DIR, 'sydney_trimmed_4rlks.dem')
 		self.assertTrue(exists(exp_dem_path))
 
 		dem = DEM(exp_dem_path)

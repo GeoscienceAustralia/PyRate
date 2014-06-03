@@ -13,7 +13,10 @@ from numpy import isnan, sum as nsum
 BASE_TEST = join(os.environ['PYRATEPATH'], "tests")
 SYD_TEST_DIR = join(BASE_TEST, "sydney_test")
 SYD_TEST_OBS = join(SYD_TEST_DIR, 'obs')
-SYD_TEST_DEM = join(SYD_TEST_DIR, 'dem')
+
+SYD_TEST_DEM = join(SYD_TEST_DIR, 'dem/sydney_trimmed.dem')
+SYD_TEST_DEM_HDR = join(SYD_TEST_DIR, 'dem/sydney_trimmed.dem.rsc')
+SYD_TEST_DEM_DIR = join(SYD_TEST_DIR, 'dem')
 
 PREP_TEST_DIR = join(BASE_TEST, 'prepifg')
 PREP_TEST_OBS = join(PREP_TEST_DIR, 'obs')
