@@ -10,6 +10,7 @@ from os.path import join
 
 from datetime import date
 from pyrate import gamma
+import pyrate.ifgconstants as ifc
 from pyrate.tests.common import HEADERS_TEST_DIR, GAMMA_TEST_DIR
 
 from numpy.testing import assert_array_almost_equal
@@ -23,9 +24,9 @@ LIGHTSPEED = 3e8 # approx
 
 
 class GammaToGeoTiffTests(unittest.TestCase):
+	'Tests conversion of GAMMA rasters to custom PyRate GeoTIFF'
 
 	def test_to_geotiff_dem(self):
-		# TODO: refactor with Ifg class later
 		hdr_path = join(GAMMA_TEST_DIR, 'dem16x20raw.dem.par')
 		hdr = gamma.parse_dem_header(hdr_path)
 		data_path = join(GAMMA_TEST_DIR, 'dem16x20raw.dem')
@@ -64,11 +65,12 @@ class GammaToGeoTiffTests(unittest.TestCase):
 		assert_array_almost_equal(exp_ds.ReadAsArray(), ds.ReadAsArray())
 		self.compare_rasters(ds, exp_ds)
 		md = ds.GetMetadata()
-		self.assertTrue(md['DATE'] == str(date(2009, 7, 13)))
-		self.assertTrue(md['DATE2'] == str(date(2009, 8, 17)))
-		self.assertTrue(md['TIME_SPAN_YEAR'] == str((18 + 17) / 365.25))		
-		self.assertAlmostEqual(float(md['WAVELENGTH_METRES']), 0.05627457792190739)
-
+		self.assertTrue(md[ifc.PYRATE_DATE] == str(date(2009, 7, 13)))
+		self.assertTrue(md[ifc.PYRATE_DATE2] == str(date(2009, 8, 17)))
+		self.assertTrue(md[ifc.PYRATE_TIME_SPAN] == str((18 + 17) / 365.25))
+		
+		wavelen = float(md[ifc.PYRATE_WAVELENGTH_METRES])
+		self.assertAlmostEqual(wavelen, 0.05627457792190739)
 
 	def compare_rasters(self, ds, exp_ds):
 		band = ds.GetRasterBand(1)
@@ -86,7 +88,7 @@ class GammaToGeoTiffTests(unittest.TestCase):
 
 
 class GammaHeaderParsingTests(unittest.TestCase):
-	'TODO'
+	'Tests conversion of GAMMA headers to Py dicts'
 
 	def test_parse_gamma_epoch_header(self):
 		# minimal required headers are:
@@ -96,41 +98,43 @@ class GammaHeaderParsingTests(unittest.TestCase):
 		hdrs = gamma.parse_epoch_header(path)
 		
 		exp_date = date(2009, 7, 13)
-		self.assertEqual(hdrs['DATE'], exp_date)
+		self.assertEqual(hdrs[ifc.PYRATE_DATE], exp_date)
 		
 		exp_wavelen = LIGHTSPEED / 5.3310040e+09
-		self.assertEqual(hdrs['WAVELENGTH_METRES'], exp_wavelen)
+		self.assertEqual(hdrs[ifc.PYRATE_WAVELENGTH_METRES], exp_wavelen)
 
 
 	def test_parse_gamma_dem_header(self):
 		path = join(HEADERS_TEST_DIR, '20090713_VV_4rlks_utm_dem.par')
 		hdrs = gamma.parse_dem_header(path)
 		
-		self.assertEqual(hdrs['NCOLS'], 20316)
-		self.assertEqual(hdrs['NROWS'], 16872)
-		self.assertEqual(hdrs['LAT'], -33.3831945)
-		self.assertEqual(hdrs['LONG'], 150.3870833)
-		self.assertEqual(hdrs['X_STEP'], 6.9444445e-05)
-		self.assertEqual(hdrs['Y_STEP'], -6.9444445e-05)
+		self.assertEqual(hdrs[ifc.PYRATE_NCOLS], 20316)
+		self.assertEqual(hdrs[ifc.PYRATE_NROWS], 16872)
+		self.assertEqual(hdrs[ifc.PYRATE_LAT], -33.3831945)
+		self.assertEqual(hdrs[ifc.PYRATE_LONG], 150.3870833)
+		self.assertEqual(hdrs[ifc.PYRATE_X_STEP], 6.9444445e-05)
+		self.assertEqual(hdrs[ifc.PYRATE_Y_STEP], -6.9444445e-05)
 	
 
 # Test data for the epoch header combination
-H0 = { 'DATE' : date(2009, 7, 13),
-		'WAVELENGTH_METRES' : 1.8,
+H0 = { ifc.PYRATE_DATE : date(2009, 7, 13),
+		ifc.PYRATE_WAVELENGTH_METRES : 1.8,
 	}
 
-H1 = { 'DATE' : date(2009, 8, 17),
-		'WAVELENGTH_METRES' : 1.8,
+H1 = { ifc.PYRATE_DATE : date(2009, 8, 17),
+		ifc.PYRATE_WAVELENGTH_METRES : 1.8,
 	}
 
-H1_FAULT = { 'DATE' : date(2009, 8, 17),
-			'WAVELENGTH_METRES' : 2.4,
+H1_ERR = { ifc.PYRATE_DATE : date(2009, 8, 17),
+			ifc.PYRATE_WAVELENGTH_METRES : 2.4,
 	}
 
 
 class HeaderCombinationTests(unittest.TestCase):
+	'Tests GAMMA epoch and DEM headers can be combined into a single Py dict'
 	
 	def setUp(self):
+		self.err = gamma.GammaError
 		dem_hdr_path = join(GAMMA_TEST_DIR, 'dem16x20raw.dem.par')
 		self.dh = gamma.parse_dem_header(dem_hdr_path)
 	
@@ -142,27 +146,27 @@ class HeaderCombinationTests(unittest.TestCase):
 		chdr = gamma.combine_headers(hdr0, hdr1, self.dh)
 		
 		exp_timespan = (18 + 17) / 365.25 
-		self.assertEqual(chdr['TIME_SPAN_YEAR'], exp_timespan)
+		self.assertEqual(chdr[ifc.PYRATE_TIME_SPAN], exp_timespan)
 
 		exp_date = date(2009, 7, 13)
-		self.assertEqual(chdr['DATE'], exp_date)
+		self.assertEqual(chdr[ifc.PYRATE_DATE], exp_date)
 		exp_date2 = date(2009, 8, 17)
-		self.assertEqual(chdr['DATE2'], exp_date2)
+		self.assertEqual(chdr[ifc.PYRATE_DATE2], exp_date2)
 		
 		exp_wavelen = LIGHTSPEED / 5.3310040e+09
-		self.assertEqual(chdr['WAVELENGTH_METRES'], exp_wavelen)
+		self.assertEqual(chdr[ifc.PYRATE_WAVELENGTH_METRES], exp_wavelen)
 
 	def test_fail_non_dict_header(self):
-		self.assertRaises(gamma.GammaError, gamma.combine_headers, H0, '', self.dh)
-		self.assertRaises(gamma.GammaError, gamma.combine_headers, '', H0, self.dh)
-		self.assertRaises(gamma.GammaError, gamma.combine_headers, H0, H1, None)
-		self.assertRaises(gamma.GammaError, gamma.combine_headers, H0, H1, '')
+		self.assertRaises(self.err, gamma.combine_headers, H0, '', self.dh)
+		self.assertRaises(self.err, gamma.combine_headers, '', H0, self.dh)
+		self.assertRaises(self.err, gamma.combine_headers, H0, H1, None)
+		self.assertRaises(self.err, gamma.combine_headers, H0, H1, '')
 
 	def test_fail_mismatching_wavelength(self):
-		self.assertRaises(gamma.GammaError, gamma.combine_headers, H0, H1_FAULT, self.dh)
+		self.assertRaises(self.err, gamma.combine_headers, H0, H1_ERR, self.dh)
 	
 	def test_fail_same_date(self):
-		self.assertRaises(gamma.GammaError, gamma.combine_headers, H0, H0, self.dh)
+		self.assertRaises(self.err, gamma.combine_headers, H0, H0, self.dh)
 		
 	def test_fail_bad_date_order(self):
-		self.assertRaises(gamma.GammaError, gamma.combine_headers, H1, H0, self.dh)
+		self.assertRaises(self.err, gamma.combine_headers, H1, H0, self.dh)

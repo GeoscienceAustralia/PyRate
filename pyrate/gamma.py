@@ -22,6 +22,7 @@ Created on 29/05/2014
 
 import struct
 import datetime
+import ifgconstants as ifc 
 
 import gdal, osr
 import numpy as np
@@ -29,8 +30,6 @@ import numpy as np
 
 # constants
 GAMMA_DATE = 'date'
-GAMMA_FREQUENCY = 'radar_frequency'
-
 GAMMA_WIDTH = 'width'
 GAMMA_NROWS = 'nlines'
 GAMMA_CORNER_LAT = 'corner_lat'
@@ -38,6 +37,8 @@ GAMMA_CORNER_LONG = 'corner_lon'
 GAMMA_Y_STEP = 'post_lat'
 GAMMA_X_STEP = 'post_lon'
 GAMMA_DATUM = 'ellipsoid_name'
+GAMMA_FREQUENCY = 'radar_frequency'
+
 
 SPEED_OF_LIGHT_METRES_PER_SECOND = 3e8
 
@@ -45,23 +46,23 @@ SPEED_OF_LIGHT_METRES_PER_SECOND = 3e8
 # TODO: consider refactoring to take header paths (or autodetect header?)
 def to_geotiff(hdr, data_path, dest, nodata):
 	'Converts GAMMA format data to GeoTIFF image with PyRate metadata'
-	ncols = hdr['NCOLS']
-	nrows = hdr['NROWS']
+	ncols = hdr[ifc.PYRATE_NCOLS]
+	nrows = hdr[ifc.PYRATE_NROWS]
 	driver = gdal.GetDriverByName("GTiff")
 	ds = driver.Create(dest, ncols, nrows, 1, gdal.GDT_Float32)
 	
 	# write custom headers to interferograms
-	if hdr.has_key('WAVELENGTH_METRES'):
+	if hdr.has_key(ifc.PYRATE_WAVELENGTH_METRES):
 		for k in hdr:
 			ds.SetMetadataItem(k, str(hdr[k]))
 	
 	# position and projection data	
-	gt = [hdr['LONG'], hdr['X_STEP'], 0, hdr['LAT'], 0, hdr['Y_STEP']]
-	ds.SetGeoTransform(gt)
+	ds.SetGeoTransform([hdr[ifc.PYRATE_LONG], hdr[ifc.PYRATE_X_STEP], 0,
+						hdr[ifc.PYRATE_LAT], 0, hdr[ifc.PYRATE_Y_STEP]])
 	
 	# TODO: is this sufficient to geolocate the raster?
 	srs = osr.SpatialReference()
-	srs.SetWellKnownGeogCS(hdr['DATUM'])
+	srs.SetWellKnownGeogCS(hdr[ifc.PYRATE_DATUM])
 	ds.SetProjection(srs.ExportToWkt())
 	
 	# copy data from the binary file
@@ -92,15 +93,15 @@ def parse_epoch_header(path):
 		
 	subset = {}
 	year, month, day = [int(i) for i in lookup[GAMMA_DATE]]
-	subset['DATE'] = datetime.date(year, month, day)
+	subset[ifc.PYRATE_DATE] = datetime.date(year, month, day)
 
 	# handle conversion to wavelength	
-	tmp_freq, unit = lookup[GAMMA_FREQUENCY]
+	freq, unit = lookup[GAMMA_FREQUENCY]
 	if unit != "Hz":
 		msg = 'Unrecognised unit field for radar_frequency: %s'
 		raise GammaError(msg % unit)
 		
-	subset['WAVELENGTH_METRES'] = frequency_to_wavelength(float(tmp_freq))
+	subset[ifc.PYRATE_WAVELENGTH_METRES] = frequency_to_wavelength(float(freq))
 	return subset
 
 
@@ -110,8 +111,8 @@ def parse_dem_header(path):
 	subset = {}
 	
 	# NB: many lookup fields have multiple elements, eg ['1000', 'Hz']
-	subset['NCOLS'] = int(lookup[GAMMA_WIDTH][0])
-	subset['NROWS'] = int(lookup[GAMMA_NROWS][0])
+	subset[ifc.PYRATE_NCOLS] = int(lookup[GAMMA_WIDTH][0])
+	subset[ifc.PYRATE_NROWS] = int(lookup[GAMMA_NROWS][0])
 	
 	expected = ['decimal', 'degrees']
 	for k in [GAMMA_CORNER_LAT, GAMMA_CORNER_LONG, GAMMA_X_STEP, GAMMA_Y_STEP]:
@@ -120,11 +121,11 @@ def parse_dem_header(path):
 			msg = "Unrecognised units for GAMMA %s field\n. Got %s, expected %s"
 			raise GammaError(msg % (k, units, expected))	
 	
-	subset['LAT'] = float(lookup[GAMMA_CORNER_LAT][0])
-	subset['LONG'] = float(lookup[GAMMA_CORNER_LONG][0])
-	subset['Y_STEP'] = float(lookup[GAMMA_Y_STEP][0])
-	subset['X_STEP'] = float(lookup[GAMMA_X_STEP][0])
-	subset['DATUM'] = "".join(lookup[GAMMA_DATUM])
+	subset[ifc.PYRATE_LAT] = float(lookup[GAMMA_CORNER_LAT][0])
+	subset[ifc.PYRATE_LONG] = float(lookup[GAMMA_CORNER_LONG][0])
+	subset[ifc.PYRATE_Y_STEP] = float(lookup[GAMMA_Y_STEP][0])
+	subset[ifc.PYRATE_X_STEP] = float(lookup[GAMMA_X_STEP][0])
+	subset[ifc.PYRATE_DATUM] = "".join(lookup[GAMMA_DATUM])
 	return subset
 
 
@@ -138,20 +139,23 @@ def combine_headers(hdr0, hdr1, dem_hdr):
 		raise GammaError('Header args need to be dicts')
 	
 	chdr = {}
-	if hdr1['DATE'] == hdr0['DATE']:
+	date0, date1 = hdr0[ifc.PYRATE_DATE], hdr1[ifc.PYRATE_DATE] 
+	if date0 == date1:
 		raise GammaError("Can't combine headers for the same day")
-	elif hdr1['DATE'] < hdr0['DATE']:
+	elif date1 < date0:
 		raise GammaError("Wrong date order")
 		
-	chdr['TIME_SPAN_YEAR'] = (hdr1['DATE'] - hdr0['DATE']).days / 365.25
-	chdr['DATE'] = hdr0['DATE']
-	chdr['DATE2'] = hdr1['DATE'] # add 2nd date as it may not be in file name
+	chdr[ifc.PYRATE_TIME_SPAN] = (date1 - date0).days / 365.25
+	chdr[ifc.PYRATE_DATE] = date0
+	chdr[ifc.PYRATE_DATE2] = date1 # add 2nd date as it may not be in file name
 	
-	if hdr0['WAVELENGTH_METRES'] != hdr1['WAVELENGTH_METRES']:
+	wavelen = hdr0[ifc.PYRATE_WAVELENGTH_METRES] 
+	if wavelen == hdr1[ifc.PYRATE_WAVELENGTH_METRES]:
+		chdr[ifc.PYRATE_WAVELENGTH_METRES] = wavelen
+	else:
 		raise GammaError("Wavelengths don't match") 
 	
-	chdr['WAVELENGTH_METRES'] = hdr0['WAVELENGTH_METRES']
-	chdr.update(dem_hdr)
+	chdr.update(dem_hdr) # add geographic data
 	return chdr
 
 
