@@ -5,13 +5,20 @@ GAMMA headers need to be translated into a GDAL recognisable format for use in
 PyRate. This module translates GAMMA headers into into ESRI's BIL format,
 allowing GDAL to access the raster data
 
-TODO: explain format of GAMMA files (data, DEM, other??)
+The types of GAMMA files converted by PyRate are:
+* DEM: with a .unw float32 binary data file (MSB order), & '.par' header. There
+is only a single height band for the binary data.
+
+* Interferograms: have a .unw float32 bit binary data file (MSB order), with a
+single band for phase data. Two .par resource/header files, each containing
+details of the epochs used to create the interferogram. No geographic date is 
+sotred in these, so the DEM header is required for raster sizes/location etc.
+
+* TODO: describe incidence files (and any others?)
 
 Created on 29/05/2014
 @author: Ben Davies NCI
 '''
-
-# TODO: place metadata into GeoTIFF headers with key:values
 
 import struct
 import datetime
