@@ -13,9 +13,9 @@ from datetime import date
 from os.path import exists, join
 
 from pyrate import roipac
-from common import SYD_TEST_DEM_UNW, SYD_TEST_DEM_HDR, SYD_TEST_DEM_DIR, SYD_TEST_OBS
-from common import SINGLE_TEST_DIR, HEADERS_TEST_DIR, PREP_TEST_OBS, PREP_TEST_TIF
 import pyrate.ifgconstants as ifc
+from common import HEADERS_TEST_DIR, PREP_TEST_OBS, PREP_TEST_TIF
+from common import SYD_TEST_DEM_UNW, SYD_TEST_DEM_HDR, SYD_TEST_DEM_DIR, SYD_TEST_OBS
 
 from numpy.testing import assert_array_almost_equal
 
@@ -30,7 +30,6 @@ if not exists(HEADERS_TEST_DIR):
 # constants
 SHORT_HEADER_PATH = join(SYD_TEST_OBS, 'geo_060619-061002.unw.rsc')
 FULL_HEADER_PATH  = join(HEADERS_TEST_DIR, "geo_060619-060828.unw.rsc")
-FULL_HEADER_PATH2 = join(SINGLE_TEST_DIR, 'geo_060619-061002.unw.rsc')
 
 
 

@@ -23,7 +23,7 @@ from pyrate.config import OBS_DIR, IFG_CROP_OPT, IFG_LKSX, IFG_LKSY, IFG_FILE_LI
 from pyrate.config import IFG_XFIRST, IFG_XLAST, IFG_YFIRST, IFG_YLAST, DEM_FILE
 from pyrate.config import ORBITAL_FIT_LOOKS_X, ORBITAL_FIT_LOOKS_Y
 
-from common import SINGLE_TEST_DIR, PREP_TEST_TIF, SYD_TEST_DEM_DIR, SYD_TEST_DEM_TIF
+from common import PREP_TEST_TIF, SYD_TEST_DEM_DIR, SYD_TEST_DEM_TIF
 
 import gdal
 gdal.UseExceptions()
@@ -35,9 +35,6 @@ class OutputTests(unittest.TestCase):
 
 	def __init__(self, *args, **kwargs):
 		super(OutputTests, self).__init__(*args, **kwargs)
-		if not exists(SINGLE_TEST_DIR):
-			sys.exit("ERROR: Missing 'single' dir for unittests\n")
-
 		if not exists(PREP_TEST_TIF):
 			sys.exit("ERROR: Missing 'prepifg' dir for unittests\n")
 

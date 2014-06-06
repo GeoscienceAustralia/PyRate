@@ -24,7 +24,6 @@ PREP_TEST_DIR = join(BASE_TEST, 'prepifg')
 PREP_TEST_OBS = join(PREP_TEST_DIR, 'obs')
 PREP_TEST_TIF = join(PREP_TEST_DIR, 'tif')
 
-SINGLE_TEST_DIR = join(BASE_TEST, 'single')
 HEADERS_TEST_DIR = join(BASE_TEST, 'headers')
 INCID_TEST_DIR = join(BASE_TEST, 'incidence')
 
