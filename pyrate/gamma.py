@@ -43,6 +43,9 @@ GAMMA_FREQUENCY = 'radar_frequency'
 SPEED_OF_LIGHT_METRES_PER_SECOND = 3e8
 
 
+# TODO: add cmd line interface
+# TODO: check for mismatching X,Y cell resolution?
+# TODO: add a file size checker to ensure a .unw is passed in
 # TODO: consider refactoring to take header paths (or autodetect header?)
 def to_geotiff(hdr, data_path, dest, nodata):
 	'Converts GAMMA format data to GeoTIFF image with PyRate metadata'
@@ -51,6 +54,7 @@ def to_geotiff(hdr, data_path, dest, nodata):
 	driver = gdal.GetDriverByName("GTiff")
 	ds = driver.Create(dest, ncols, nrows, 1, gdal.GDT_Float32)
 	
+	# FIXME: limit the number of headers to prevent duplicate data
 	# write custom headers to interferograms
 	if hdr.has_key(ifc.PYRATE_WAVELENGTH_METRES):
 		for k in hdr:
@@ -157,7 +161,6 @@ def combine_headers(hdr0, hdr1, dem_hdr):
 	
 	chdr.update(dem_hdr) # add geographic data
 	return chdr
-
 
 
 class GammaError(Exception):
