@@ -22,6 +22,7 @@ SYD_TEST_DEM_TIF = join(SYD_TEST_DEM_DIR, 'sydney_trimmed.tif')
 
 PREP_TEST_DIR = join(BASE_TEST, 'prepifg')
 PREP_TEST_OBS = join(PREP_TEST_DIR, 'obs')
+PREP_TEST_TIF = join(PREP_TEST_DIR, 'tif')
 
 SINGLE_TEST_DIR = join(BASE_TEST, 'single')
 HEADERS_TEST_DIR = join(BASE_TEST, 'headers')

@@ -14,7 +14,7 @@ from os.path import exists, join
 
 from pyrate import roipac
 from common import SYD_TEST_DEM_UNW, SYD_TEST_DEM_HDR, SYD_TEST_DEM_DIR, SYD_TEST_OBS
-from common import SINGLE_TEST_DIR, HEADERS_TEST_DIR, PREP_TEST_OBS
+from common import SINGLE_TEST_DIR, HEADERS_TEST_DIR, PREP_TEST_OBS, PREP_TEST_TIF
 import pyrate.ifgconstants as ifc
 
 from numpy.testing import assert_array_almost_equal
@@ -70,7 +70,7 @@ class RoipacToGeoTiffTests(unittest.TestCase):
 		band = ds.GetRasterBand(1)
 		
 		# TODO: result is only a single band dataset, make exp tif 1 band?
-		exp_path = join(PREP_TEST_OBS, 'geo_060619-061002.tif')
+		exp_path = join(PREP_TEST_TIF, 'geo_060619-061002.tif')
 		exp_ds = gdal.Open(exp_path)
 		exp_band = exp_ds.GetRasterBand(1)
 		
@@ -95,7 +95,7 @@ class RoipacToGeoTiffTests(unittest.TestCase):
 		dest = '/tmp/tmp_roipac_ifg.tif'
 		
 		# use TIF, not UNW for data
-		data_path = join(PREP_TEST_OBS, 'geo_060619-061002.tif')
+		data_path = join(PREP_TEST_TIF, 'geo_060619-061002.tif')
 		self.assertRaises(roipac.RoipacException, roipac.to_geotiff,
 							hdrs, data_path, dest, nodata=0)
 

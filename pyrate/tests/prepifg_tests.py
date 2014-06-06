@@ -23,7 +23,7 @@ from pyrate.config import OBS_DIR, IFG_CROP_OPT, IFG_LKSX, IFG_LKSY, IFG_FILE_LI
 from pyrate.config import IFG_XFIRST, IFG_XLAST, IFG_YFIRST, IFG_YLAST, DEM_FILE
 from pyrate.config import ORBITAL_FIT_LOOKS_X, ORBITAL_FIT_LOOKS_Y
 
-from common import SINGLE_TEST_DIR, PREP_TEST_OBS, SYD_TEST_DEM_DIR, SYD_TEST_DEM_TIF
+from common import SINGLE_TEST_DIR, PREP_TEST_TIF, SYD_TEST_DEM_DIR, SYD_TEST_DEM_TIF
 
 import gdal
 gdal.UseExceptions()
@@ -38,7 +38,7 @@ class OutputTests(unittest.TestCase):
 		if not exists(SINGLE_TEST_DIR):
 			sys.exit("ERROR: Missing 'single' dir for unittests\n")
 
-		if not exists(PREP_TEST_OBS):
+		if not exists(PREP_TEST_TIF):
 			sys.exit("ERROR: Missing 'prepifg' dir for unittests\n")
 
 
@@ -46,7 +46,7 @@ class OutputTests(unittest.TestCase):
 		self.xs = 0.000833333
 		self.ys = -self.xs
 		paths = ["geo_060619-061002_1rlks.tif", "geo_070326-070917_1rlks.tif"]
-		self.exp_files = [join(PREP_TEST_OBS, p) for p in paths]
+		self.exp_files = [join(PREP_TEST_TIF, p) for p in paths]
 
 	def tearDown(self):
 		# clear temp output files after each run
@@ -62,8 +62,8 @@ class OutputTests(unittest.TestCase):
 		params[IFG_YFIRST] = -34.17 + (16 * self.ys)
 		params[IFG_XLAST] = 150.91 + (27 * self.xs) # 20 cells across from X_FIRST
 		params[IFG_YLAST] = -34.17 + (44 * self.ys) # 28 cells across from Y_FIRST
-		params[IFG_FILE_LIST] = join(PREP_TEST_OBS, 'ifms')
-		params[OBS_DIR] = PREP_TEST_OBS
+		params[IFG_FILE_LIST] = join(PREP_TEST_TIF, 'ifms')
+		params[OBS_DIR] = PREP_TEST_TIF
 		return params
 
 
@@ -71,8 +71,8 @@ class OutputTests(unittest.TestCase):
 		# create dummy params file (relative paths to prevent chdir calls)
 		return {IFG_LKSX: 1,
 				IFG_LKSY: 1,
-				IFG_FILE_LIST: join(PREP_TEST_OBS, 'ifms'),
-				OBS_DIR: PREP_TEST_OBS }
+				IFG_FILE_LIST: join(PREP_TEST_TIF, 'ifms'),
+				OBS_DIR: PREP_TEST_TIF }
 
 
 	def test_default_max_extents(self):
@@ -195,7 +195,7 @@ class OutputTests(unittest.TestCase):
 			self.assertEqual(i.dataset.RasterYSize, 28 / scale)
 
 			# verify resampling
-			path = join(PREP_TEST_OBS, "%s.tif" % n)
+			path = join(PREP_TEST_TIF, "%s.tif" % n)
 			ds = gdal.Open(path)
 			src_data = ds.GetRasterBand(2).ReadAsArray()
 			exp_resample = multilooking(src_data, scale, scale, thresh=0)
@@ -235,7 +235,7 @@ class OutputTests(unittest.TestCase):
 		# paths to expected 2nd round mlooked files
 		tmp = ["geo_060619-061002_4rlks_2rlks.tif",
 				"geo_070326-070917_4rlks_2rlks.tif"]
-		paths = [join(PREP_TEST_OBS, p) for p in tmp]
+		paths = [join(PREP_TEST_TIF, p) for p in tmp]
 		
 		# check newly mlooked files
 		for p in paths:
