@@ -11,7 +11,7 @@ from os.path import join
 from datetime import date
 from pyrate import gamma
 import pyrate.ifgconstants as ifc
-from pyrate.tests.common import HEADERS_TEST_DIR, GAMMA_TEST_DIR
+from pyrate.tests.common import GAMMA_TEST_DIR
 
 from numpy.testing import assert_array_almost_equal
 
@@ -94,7 +94,7 @@ class GammaHeaderParsingTests(unittest.TestCase):
 		# minimal required headers are:
 		# date:      2009  7 13
 		# radar_frequency:        5.3310040e+09   Hz
-		path = join(HEADERS_TEST_DIR, 'r20090713_VV.slc.par')
+		path = join(GAMMA_TEST_DIR, 'r20090713_VV.slc.par')
 		hdrs = gamma.parse_epoch_header(path)
 		
 		exp_date = date(2009, 7, 13)
@@ -105,11 +105,11 @@ class GammaHeaderParsingTests(unittest.TestCase):
 
 
 	def test_parse_gamma_dem_header(self):
-		path = join(HEADERS_TEST_DIR, '20090713_VV_4rlks_utm_dem.par')
+		path = join(GAMMA_TEST_DIR, 'dem16x20raw.dem.par')
 		hdrs = gamma.parse_dem_header(path)
 		
-		self.assertEqual(hdrs[ifc.PYRATE_NCOLS], 20316)
-		self.assertEqual(hdrs[ifc.PYRATE_NROWS], 16872)
+		self.assertEqual(hdrs[ifc.PYRATE_NCOLS], 16)
+		self.assertEqual(hdrs[ifc.PYRATE_NROWS], 20)
 		self.assertEqual(hdrs[ifc.PYRATE_LAT], -33.3831945)
 		self.assertEqual(hdrs[ifc.PYRATE_LONG], 150.3870833)
 		self.assertEqual(hdrs[ifc.PYRATE_X_STEP], 6.9444445e-05)
@@ -140,7 +140,7 @@ class HeaderCombinationTests(unittest.TestCase):
 	
 	def test_combine_headers(self):
 		filenames = ['r20090713_VV.slc.par', 'r20090817_VV.slc.par']
-		paths = [join(HEADERS_TEST_DIR, p) for p in filenames]
+		paths = [join(GAMMA_TEST_DIR, p) for p in filenames]
 		hdr0, hdr1 = [gamma.parse_epoch_header(p) for p in paths]
 
 		chdr = gamma.combine_headers(hdr0, hdr1, self.dh)
