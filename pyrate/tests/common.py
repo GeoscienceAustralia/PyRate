@@ -39,7 +39,6 @@ geo_061106-070326.tif
 geo_070326-070917.tif
 """
 
-# TODO: get rid of first returned arg?
 def sydney_data_setup():
 	'''Returns Ifg objs for the files in the sydney test dir'''
 	datafiles = glob.glob(join(SYD_TEST_TIF, "*.tif") )
