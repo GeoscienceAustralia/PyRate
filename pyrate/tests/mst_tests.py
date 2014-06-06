@@ -76,7 +76,7 @@ class MSTTests(unittest.TestCase):
 		exp = empty((1,1), dtype=object) 
 		exp[:] = nan
 
-		shape = (mock_ifgs[0].FILE_LENGTH, mock_ifgs[0].WIDTH)
+		shape = (mock_ifgs[0].nrows, mock_ifgs[0].ncols)
 		self.assertTrue(res.shape == shape)
 		self.assertEqual(exp, res)
 
@@ -87,7 +87,7 @@ class DefaultMSTTests(unittest.TestCase):
 	def test_default_mst(self):
 		# default MST from full set of Ifgs shouldn't drop any nodes
 		ifgs = sydney5_mock_ifgs()
-		dates = [i.DATE12 for i in ifgs]
+		dates = [(i.master, i.slave) for i in ifgs]
 
 		res = default_mst(ifgs)
 		num_edges = len(res.keys())
@@ -100,5 +100,5 @@ class DefaultMSTTests(unittest.TestCase):
 		# check all nodes exist in this default tree
 		mst_dates = set(res.keys() + res.values())
 		for i in ifgs:
-			for node in i.DATE12:
+			for node in (i.master, i.slave):
 				self.assertTrue(node in mst_dates)

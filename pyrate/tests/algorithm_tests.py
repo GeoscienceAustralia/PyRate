@@ -14,7 +14,8 @@ from numpy.testing import assert_array_almost_equal, assert_allclose
 
 from pyrate import algorithm
 from pyrate.shared import Ifg
-from common import sydney5_mock_ifgs, SYD_TEST_OBS
+from pyrate.config import parse_namelist
+from common import sydney5_mock_ifgs, SYD_TEST_TIF
 
 
 class LeastSquaresTests(TestCase):
@@ -141,7 +142,6 @@ class DateLookupTests(TestCase):
 		#raise NotImplementedError
 
 
-
 class EpochsTests(TestCase):
 	'''Unittests for the EpochList class.'''
 
@@ -160,10 +160,12 @@ class EpochsTests(TestCase):
 							0.8624, 0.9582, 1.0541, 1.1499, 1.2457]
 
 		# test against Hua's results
-		paths = join(SYD_TEST_OBS, "ifms_17")
-		with open(paths) as f:
-			ifgs = [Ifg(join(SYD_TEST_OBS, path)) for path in f.readlines()]
-			epochs = algorithm.get_epochs(ifgs)
+		ifms = join(SYD_TEST_TIF, "ifms_17")
+		ifgs = [Ifg(join(SYD_TEST_TIF, p)) for p in parse_namelist(ifms)]
+		for i in ifgs:
+			i.open()
+		
+		epochs = algorithm.get_epochs(ifgs)
 
 		self.assertTrue((exp_dates == epochs.dates).all())
 		self.assertTrue((exp_repeat == epochs.repeat).all())

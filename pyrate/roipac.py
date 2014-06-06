@@ -25,7 +25,15 @@ Created on 12/09/2012
          ben.davies@anu.edu.au
 '''
 
-import os, re, datetime
+import os, re
+import struct
+import datetime
+
+import ifgconstants as ifc
+import numpy as np
+import gdal, osr
+from ifgconstants import PYRATE_DATUM
+
 
 
 # ROIPAC RSC header file constants
@@ -44,9 +52,6 @@ Y_UNIT = "Y_UNIT"
 TIME_SPAN_YEAR = "TIME_SPAN_YEAR"
 
 # Old ROIPAC headers (may not be needed)
-RLOOKS = "RLOOKS"
-ALOOKS = "ALOOKS"
-COR_THRESHOLD = "COR_THRESHOLD"
 ORBIT_NUMBER = "ORBIT_NUMBER"
 VELOCITY = "VELOCITY"
 HEIGHT = "HEIGHT"
@@ -55,22 +60,6 @@ WAVELENGTH = "WAVELENGTH"
 DATE = "DATE"
 DATE12 = "DATE12"
 HEADING_DEG = "HEADING_DEG"
-RGE_REF1 = "RGE_REF1"
-LOOK_REF1 = "LOOK_REF1"
-LAT_REF1 = "LAT_REF1"
-LON_REF1 = "LON_REF1"
-RGE_REF2 = "RGE_REF2"
-LOOK_REF2 = "LOOK_REF2"
-LAT_REF2 = "LAT_REF2"
-LON_REF2 = "LON_REF2"
-RGE_REF3 = "RGE_REF3"
-LOOK_REF3 = "LOOK_REF3"
-LAT_REF3 = "LAT_REF3"
-LON_REF3 = "LON_REF3"
-RGE_REF4 = "RGE_REF4"
-LOOK_REF4 = "LOOK_REF4"
-LAT_REF4 = "LAT_REF4"
-LON_REF4 = "LON_REF4"
 
 # DEM specific
 Z_OFFSET = "Z_OFFSET"
@@ -86,37 +75,82 @@ Y_LAST = "Y_LAST"
 
 
 # store type for each of the header items
-INT_HEADERS = [WIDTH, FILE_LENGTH, XMIN, XMAX, YMIN, YMAX, RLOOKS, ALOOKS,
-							Z_OFFSET, Z_SCALE ]
+INT_HEADERS = [WIDTH, FILE_LENGTH, XMIN, XMAX, YMIN, YMAX, Z_OFFSET, Z_SCALE ]
 STR_HEADERS = [X_UNIT, Y_UNIT, ORBIT_NUMBER, DATUM, PROJECTION ]
-FLOAT_HEADERS = [X_FIRST, X_STEP, Y_FIRST, Y_STEP, TIME_SPAN_YEAR, COR_THRESHOLD,
-								VELOCITY, HEIGHT, EARTH_RADIUS, WAVELENGTH, HEADING_DEG,
-								RGE_REF1, RGE_REF2, RGE_REF3, RGE_REF4,
-								LOOK_REF1, LOOK_REF2, LOOK_REF3, LOOK_REF4,
-								LAT_REF1, LAT_REF2, LAT_REF3, LAT_REF4,
-								LON_REF1, LON_REF2, LON_REF3, LON_REF4]
+FLOAT_HEADERS = [X_FIRST, X_STEP, Y_FIRST, Y_STEP, TIME_SPAN_YEAR,
+				VELOCITY, HEIGHT, EARTH_RADIUS, WAVELENGTH, HEADING_DEG ]
 DATE_HEADERS = [DATE, DATE12]
 
-
-
-ROI_PAC_HEADER_FILE_EXT = "rsc"
 ROIPAC_HEADER_LEFT_JUSTIFY = 18
-PIXELTYPE_INT = 'signedint'
-PIXELTYPE_FLOAT = 'float'
-PIXEL_TYPE = 'pixeltype'
-BYTE_ORDER = 'byteorder'
-Y_CORNER = 'yllcorner'
-NBANDS = 'nbands'
-NODATA = 'nodata'
-IS_DEM = 'is_dem'
-NBITS = 'nbits'
+ROI_PAC_HEADER_FILE_EXT = "rsc"
 
 
+# TODO: check for mismatching X,Y cell resolution?
+def to_geotiff(hdr, data_path, dest, nodata):
+	'Converts GAMMA format data to GeoTIFF image with PyRate metadata'
+	is_ifg = ifc.PYRATE_WAVELENGTH_METRES in hdr
+	ncols = hdr[ifc.PYRATE_NCOLS]
+	nrows = hdr[ifc.PYRATE_NROWS]
+	_check_raw_data(is_ifg, data_path, ncols, nrows)
+	
+	driver = gdal.GetDriverByName("GTiff")
+	dtype = gdal.GDT_Float32 if is_ifg else gdal.GDT_Int16
+	ds = driver.Create(dest, ncols, nrows, 1, dtype)
+	
+	# write custom headers to interferograms
+	if is_ifg:
+		for k in [ifc.PYRATE_WAVELENGTH_METRES, ifc.PYRATE_TIME_SPAN,
+					ifc.PYRATE_DATE, ifc.PYRATE_DATE2]:
+			ds.SetMetadataItem(k, str(hdr[k]))
+	
+	# position and projection data	
+	ds.SetGeoTransform([hdr[ifc.PYRATE_LONG], hdr[ifc.PYRATE_X_STEP], 0,
+						hdr[ifc.PYRATE_LAT], 0, hdr[ifc.PYRATE_Y_STEP]])
+	
+	# TODO: is this sufficient to geolocate the raster?
+	srs = osr.SpatialReference()
+	res = srs.SetWellKnownGeogCS(hdr[ifc.PYRATE_DATUM])
+	if res:
+		msg = 'Unrecognised projection: %s' % hdr[ifc.PYRATE_DATUM]
+		raise RoipacException(msg)
+	
+	ds.SetProjection(srs.ExportToWkt())
+	
+	# copy data from the binary file
+	band = ds.GetRasterBand(1)
+	band.SetNoDataValue(nodata)
+		
+	if is_ifg:
+		fmtstr = '<' + ('f' * ncols) # ifgs are little endian float32s
+		bytes_per_col = 4
+	else:
+		fmtstr = '<' + ('h' * ncols) # DEM is little endian signed int16
+		bytes_per_col = 2 
+	
+	row_bytes = ncols * bytes_per_col
 
-def filename_pair(base):
-	"""Returns tuple of paths: (roi_pac data, roi_pac header file)"""
-	b = base.strip()
-	return (b, "%s.%s" % (b, ROI_PAC_HEADER_FILE_EXT))
+	with open(data_path, 'rb') as f:
+		for y in xrange(nrows):
+			if is_ifg:
+				f.seek(row_bytes, 1) # skip interleaved band 1
+
+			data = struct.unpack(fmtstr, f.read(row_bytes))
+			band.WriteArray(np.array(data).reshape(1, ncols), yoff=y)
+
+	ds = None
+
+
+def _check_raw_data(is_ifg, data_path, ncols, nrows):
+	base_size = ncols * nrows
+	if is_ifg:
+		size = 4 * base_size * 2 # 2 bands of 4 bytes each
+	else:
+		size = 2 * base_size # single 2 byte band
+	
+	act_size = os.stat(data_path).st_size 
+	if act_size != size:
+		msg = '%s should have size %s, not %s. Is the correct file being used?'
+		raise RoipacException(msg % (data_path, size, act_size))
 
 
 def parse_date(dstr):
@@ -140,6 +174,7 @@ def parse_header(hdr_file):
 	try:
 		lines = [e.split() for e in text.split("\n") if e != ""]
 		headers = dict(lines)
+		is_dem = DATUM in headers and 'Z_SCALE' in headers
 	except ValueError:
 		msg = "Unable to parse content of %s. Is it a ROIPAC header file?"
 		raise RoipacException(msg % hdr_file)
@@ -154,136 +189,51 @@ def parse_header(hdr_file):
 		elif k in DATE_HEADERS:
 			headers[k] = parse_date(headers[k])
 		else:
-			msg = "Unrecognised header element %s: %s "
-			raise RoipacException(msg % (k, headers[k]) )
+			pass # ignore other headers
 
-	# process dates from filename if rsc file doesn't have them (skip for DEMs)
-	if not headers.has_key(DATUM):
-		if headers.has_key(DATE) is False or headers.has_key(DATE12) is False:
-			p = re.compile(r'\d{6}-\d{6}') # match 2 sets of 6 digits separated by '-'
-			m = p.search(hdr_file)
+	# grab a subset for GeoTIFF conversion
+	subset = {}
+	subset[ifc.PYRATE_NCOLS] = headers[WIDTH]
+	subset[ifc.PYRATE_NROWS] = headers[FILE_LENGTH]
+	subset[ifc.PYRATE_LAT] = headers[Y_FIRST]
+	subset[ifc.PYRATE_LONG] = headers[X_FIRST]
+	subset[ifc.PYRATE_X_STEP] = headers[X_STEP]
+	subset[ifc.PYRATE_Y_STEP] = headers[Y_STEP]
 
-			if m:
-				s = m.group()
-				min_date_len = 13 # assumes "nnnnnn-nnnnnn" format
-				if len(s) == min_date_len:
-					date12 = parse_date(s)
-					headers[DATE] = date12[0]
-					headers[DATE12] = date12
-			else:
-				msg = "Filename does not include master/slave dates: %s"
-				raise RoipacException(msg % hdr_file)
-
-		# add master and slave alias headers
-		headers[MASTER] = headers[DATE]
-		headers[SLAVE] = headers[DATE12][-1]
-
-		# replace timespan as ROI_PAC is ~4 hours different to (slave - master)
-		headers[TIME_SPAN_YEAR] = (headers[SLAVE] - headers[MASTER]).days / 365.25
-
-	# add custom X|Y_LAST for convenience
-	if not headers.has_key(X_LAST):
-		headers[X_LAST] = headers[X_FIRST] + (headers[X_STEP] * (headers[WIDTH]))
-	if not headers.has_key(Y_LAST):
-		headers[Y_LAST] = headers[Y_FIRST] + (headers[Y_STEP] * (headers[FILE_LENGTH]))
-
-	return headers
-
-
-def translate_header(hdr, dest=None):
-	"""
-	Converts ROI_PAC header files to equivalent ESRI BIL/GDAL EHdr format. This
-	allows GDAL to recognise and read ROIPAC datasets.
-	
-	hdr: path to .rsc header file.
-	dest: path to save new header to, if None, defaults to 'base_file_name.hdr'
-	"""
-	if os.path.isfile(hdr) or os.path.islink(hdr):
-		H = parse_header(hdr)
-		H[IS_DEM] = H.has_key(DATUM)
-
-		if dest is None:
-			# determine default destination file
-			if H[IS_DEM]:
-				try:
-					# assumes ROIPAC uses filename.dem & filename.dem.rsc
-					i = hdr.index("dem.rsc")
-					dest = hdr[:i] + "hdr"
-				except ValueError:
-					# DEM probably not from ROIPAC
-					msg = "Unrecognised file naming pattern for %s"
-					raise RoipacException(msg % hdr)
-			else:
-				i = max(hdr.rfind("unw.rsc"), hdr.rfind("tif.rsc"))
-				if i > 0:
-					dest = hdr[:i] + "hdr"
-				else:
-					msg = "Unrecognised file naming pattern for %s"
-					raise RoipacException(msg % hdr)
+	if is_dem:
+		subset[ifc.PYRATE_DATUM] = headers[DATUM]
 	else:
-		raise IOError("%s not a valid header file" % hdr)
+		subset[ifc.PYRATE_WAVELENGTH_METRES] = headers[WAVELENGTH]
 
-	# calc coords of lower left corner
-	yllcorner = H[Y_FIRST] + (H[FILE_LENGTH] * H[Y_STEP])
-	if yllcorner > 90 or yllcorner < -90:
-		raise RoipacException("Invalid Y latitude for yllcorner: %s" % yllcorner)
-	
-	H[Y_CORNER] = yllcorner 
+		# grab master/slave dates from header, or the filename		
+		has_dates = True if DATE in headers and DATE12 in headers else False
+		dates = headers[DATE12] if has_dates else _parse_dates_from(hdr_file)
+		subset[ifc.PYRATE_DATE], subset[ifc.PYRATE_DATE2] = dates
 
-	H[PIXEL_TYPE] = PIXELTYPE_INT if H[IS_DEM] else PIXELTYPE_FLOAT
-	H[NBITS] = 16 if H[IS_DEM] else 32
-	if not H[IS_DEM]:
-		H[NBANDS] = 2
+		# replace timespan as ROIPAC is ~4 hours different to (slave - master)
+		timespan = (subset[ifc.PYRATE_DATE2] - subset[ifc.PYRATE_DATE]).days / 365.25
+		subset[ifc.PYRATE_TIME_SPAN] = timespan
 		
-	H[BYTE_ORDER] = 'lsb'
-	H[NODATA] = 0
+	# add custom X|Y_LAST for convenience
+	subset[X_LAST] = headers[X_FIRST] + (headers[X_STEP] * (headers[WIDTH]))
+	subset[Y_LAST] = headers[Y_FIRST] + (headers[Y_STEP] * (headers[FILE_LENGTH]))
 
-	return write_bil_header(dest, H)
+	return subset
 
 
-def write_bil_header(dest, H):
-	'''TODO'''
-
-	# create ESRI BIL format header, using ROIPAC defaults
-	# TODO: ROIPAC uses 0 for phase NODATA, which isn't quite correct. Use zero
-	# for now to allow GDAL to recognise NODATA cells
+def _parse_dates_from(filename):
+	# process dates from filename if rsc file doesn't have them (skip for DEMs)
+	p = re.compile(r'\d{6}-\d{6}') # match 2 sets of 6 digits separated by '-'
+	m = p.search(filename)
 	
-	# TODO: could generalise with writing key: value, using manually ordered keys
-	
-	with open(dest, "w") as f:
-		f.write("ncols %s\n" % H[WIDTH])
-		f.write("nrows %s\n" % H[FILE_LENGTH])
-
-		# handle cells with different dimensions (square & non-square)
-		if H[X_STEP] == abs(H[Y_STEP]):
-			f.write("cellsize %s\n" % H[X_STEP])
-		else:
-			f.write("xdim %s\n" % H[X_STEP])
-			# GDAL reads zeros if ydim is negative
-			f.write("ydim %s\n" % abs(H[Y_STEP]) )
-
-		f.write("xllcorner %s\n" % H[X_FIRST])
-		f.write("yllcorner %s\n" % H[Y_CORNER])
-		f.write("byteorder %s\n" % H[BYTE_ORDER])
-
-		if not H[IS_DEM]:
-			f.write("nodata %s\n" % H[NODATA])
-			f.write("layout bil\n") # 1 band DEM doesn't interleave data
-			f.write("nbands %s\n" % H[NBANDS])  # number of bands
-
-		# ROIPAC DEMs are 16 bit signed ints, phase layers are 32 bit floats
-		f.write("nbits %s\n" % H[NBITS])
-		f.write("pixeltype %s\n" % H[PIXEL_TYPE])
-
-	return dest
-
-
-def write_roipac_header(params, dest_path):
-	"""Writes ROIPAC format header given a dict of parameters"""
-	with open(dest_path, 'w') as dest:
-		for i in params.items():
-			line = i[0].ljust(ROIPAC_HEADER_LEFT_JUSTIFY) + str(i[1]) + "\n"
-			dest.write(line)
+	if m:
+		s = m.group()
+		min_date_len = 13 # assumes "nnnnnn-nnnnnn" format
+		if len(s) == min_date_len:
+			return parse_date(s)			
+	else:
+		msg = "Filename does not include master/slave dates: %s"
+		raise RoipacException(msg % filename)
 
 
 class RoipacException(Exception):
@@ -292,13 +242,43 @@ class RoipacException(Exception):
 
 if __name__ == '__main__':
 	import sys
-	usage = "Usage: roipac.py [ROIPAC file] [... ROIPAC file]\n" 
-	if len(sys.argv) < 2:
-		sys.stderr.write(usage)
-		sys.exit()
+	from optparse import OptionParser
+	
+	usage = "Usage: %prog [options] ROIPAC_FILE [ROIPAC_FILE...]" 
+	parser = OptionParser(usage=usage)
 
-	for path in sys.argv[1:]:
+	proj_help = 'GDAL well known projection (eg. "WGS84")'
+	parser.add_option('-p', '--projection', help=proj_help, type='str')
+	res_help = 'Resource/header file with projection data (usually DEM header)'
+	parser.add_option('-r', '--resource-header', help=res_help, metavar='FILE')
+	parser.add_option('-n', '--nodata', help='NODATA value', type='float', default=0.0)
+	options, args = parser.parse_args()
+
+	if len(args) == 0:
+		parser.error(usage)
+	
+	if options.projection:
+		proj = options.projection
+	elif options.resource_header:
+		hdr = parse_header(options.resource_header)
+		if PYRATE_DATUM not in hdr:
+			sys.exit('Error: header/resource file does not include DATUM')
+		proj = hdr[PYRATE_DATUM]
+	else:
+		parser.error('Need source for DATUM')
+
+	# translate files
+	for path in args:
 		try:
-			translate_header(path)
-		except Exception as ex:
-			sys.exit(ex.message)
+			hpath = "%s.%s" % (path, ROI_PAC_HEADER_FILE_EXT)
+			base = os.path.splitext(os.path.basename(path))[0]
+			dest = "%s.%s" % (base, 'tif') # TODO: make a constant 
+			hdr = parse_header(hpath)
+			if PYRATE_DATUM in hdr:
+				print 'TODO datum already in the header'
+			else:
+				hdr[PYRATE_DATUM] = proj
+			
+			to_geotiff(hdr, path, dest, options.nodata)
+		except Exception, ex:
+			sys.exit(ex.message)			

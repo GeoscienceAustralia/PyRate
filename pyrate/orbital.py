@@ -84,7 +84,7 @@ def _validate_mlooked(mlooked, ifgs):
 def get_num_params(degree, offset=None):
 	'''Returns number of model parameters'''
 	#nparams = 2 if degree == PLANAR else 5
-        if degree == PLANAR:
+	if degree == PLANAR:
 		nparams = 2
 	elif degree == QUADRATIC:
 		nparams = 5
@@ -143,7 +143,7 @@ def _network_correction(ifgs, degree, offset, m_ifgs=None):
 	dm = get_design_matrix(ifgs[0], degree, offset=False)
 
 	for i in ifgs:
-		orb = dot(dm, coefs[ids[i.SLAVE]] - coefs[ids[i.MASTER]])
+		orb = dot(dm, coefs[ids[i.slave]] - coefs[ids[i.master]])
 		orb = orb.reshape(ifgs[0].shape)
 
 		# estimate offsets
@@ -166,9 +166,9 @@ def get_design_matrix(ifg, degree, offset):
 
 	# init design matrix
 	data = empty((ifg.num_cells, get_num_params(degree, offset)), dtype=float32)
-	x, y = meshgrid(range(ifg.WIDTH), range(ifg.FILE_LENGTH))
-	x = x.reshape(ifg.num_cells) * ifg.X_SIZE
-	y = y.reshape(ifg.num_cells) * ifg.Y_SIZE
+	x, y = meshgrid(range(ifg.ncols), range(ifg.nrows))
+	x = x.reshape(ifg.num_cells) * ifg.x_size
+	y = y.reshape(ifg.num_cells) * ifg.y_size
 
 	# TODO: performance test this vs np.concatenate (n by 1 cols)
 
@@ -181,9 +181,9 @@ def get_design_matrix(ifg, degree, offset):
 		data[:, 2] = x * y
 		data[:, 3] = x
 		data[:, 4] = y
-        elif degree == PART_CUBIC:
-                data[:, 0] = x * y**2
-                data[:, 1] = x**2
+	elif degree == PART_CUBIC:
+		data[:, 0] = x * y**2
+		data[:, 1] = x**2
 		data[:, 2] = y**2
 		data[:, 3] = x * y
 		data[:, 4] = x
@@ -220,15 +220,15 @@ def get_network_design_matrix(ifgs, degree, offset):
 	ndm = zeros(shape, dtype=float32)
 
 	# individual design matrices
-	dates = [ifg.MASTER for ifg in ifgs] + [ifg.SLAVE for ifg in ifgs]
+	dates = [ifg.master for ifg in ifgs] + [ifg.slave for ifg in ifgs]
 	ids = master_slave_ids(dates)
 	offset_col = nepochs * ncoef # base offset for the offset cols
 
 	tmp = get_design_matrix(ifgs[0], degree, False)
 	for i, ifg in enumerate(ifgs):
 		rs = i * ifg.num_cells # starting row
-		m = ids[ifg.MASTER] * ncoef  # start col for master
-		s = ids[ifg.SLAVE] * ncoef  # start col for slave
+		m = ids[ifg.master] * ncoef  # start col for master
+		s = ids[ifg.slave] * ncoef  # start col for slave
 		ndm[rs:rs + ifg.num_cells, m:m + ncoef] = -tmp
 		ndm[rs:rs + ifg.num_cells, s:s + ncoef] = tmp
 

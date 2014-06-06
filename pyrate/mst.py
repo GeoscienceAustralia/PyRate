@@ -30,7 +30,7 @@ def default_mst(ifgs, noroot=True):
 	weighting based on the number of incoherent cells in the phase band.
 	noroot: True removes the PyGraph default root node from the result.
 	'''
-	edges = [i.DATE12 for i in ifgs]
+	edges = [(i.master, i.slave) for i in ifgs]
 	epochs = master_slave_ids(get_all_epochs(ifgs)).keys()
 	weights = [i.nan_fraction for i in ifgs]  # NB: other attrs for weights?
 
@@ -61,7 +61,7 @@ def mst_matrix(ifgs, epochs):
 	epochs: an EpochList object derived from the ifgs
 	'''	
 	# make default MST to optimise result when no Ifg cells in a stack are nans
-	edges = [i.DATE12 for i in ifgs]
+	edges = [(i.master, i.slave) for i in ifgs]
 	weights = [i.nan_fraction for i in ifgs]
 	g = _build_graph(epochs.dates, edges, weights)
 	dflt_mst = _remove_root_node(minimal_spanning_tree(g))
@@ -72,7 +72,7 @@ def mst_matrix(ifgs, epochs):
 	mst_result = empty(shape=i.phase_data.shape, dtype=object)
 
 	# now create MSTs for each pixel in the ifg data stack
-	for y, x in product(xrange(i.FILE_LENGTH), xrange(i.WIDTH)):
+	for y, x in product(xrange(i.nrows), xrange(i.ncols)):
 		values = data_stack[:, y, x] # select stack of all ifg values for a pixel
 		nancount = sum(isnan(values))
 

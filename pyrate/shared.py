@@ -6,7 +6,10 @@ Created on 12/09/2012
 '''
 
 import os
+from datetime import date
 from numpy import where, nan, isnan, sum as nsum
+
+import ifgconstants as ifc
 
 try:
 	from osgeo import gdal
@@ -16,39 +19,23 @@ except ImportError:
 
 gdal.UseExceptions()
 
-import roipac
 from geodesy import cell_size
 
 
 # Constants
-AMPLITUDE_BAND = 1
-PHASE_BAND = 2
+PHASE_BAND = 1
 
 
 
 class RasterBase(object):
-	'''Base class for ROIPAC format raster datasets.'''
+	'''Base class for PyRate GeoTIFF based raster datasets.'''
 
-	def __init__(self, path, hdr_path=None):
+	def __init__(self, path):
 		'''Handles common task of bundling various forms of ROIPAC header files with
 		a binary data layer.'''
-
-		if hdr_path:
-			# handle non default header (eg. for look files with different naming)
-			self.data_path, self.hdr_path = path, hdr_path
-		else:
-			# default the header path
-			self.data_path, self.hdr_path = roipac.filename_pair(path)
-
-		# dynamically include header items as instance attrs
-		header = roipac.parse_header(self.hdr_path)
-		self.__dict__.update(header)
-
-		self.ehdr_path = None # path to EHdr format header
+		self.data_path = path
 		self.dataset = None # for GDAL dataset obj
 		self._readonly = not os.access(path, os.R_OK | os.W_OK)
-		self.num_cells = self.FILE_LENGTH * self.WIDTH
-
 
 	def __str__(self):
 		name = self.__class__.__name__
@@ -61,8 +48,11 @@ class RasterBase(object):
 
 
 	def open(self, readonly=None):
-		'''Opens generic raster dataset. Creates ESRI/EHdr format header in the data
-		dir, creating a recogniseable header file for GDAL (as per ROIPAC doco).'''
+		'''Opens generic raster dataset.'''
+		
+		if self.dataset is not None:
+			msg = "open() already called for %s" % self
+			raise RasterException(msg)
 
 		# default: open files as writeable, except if read only permissions are set
 		if readonly not in [True, False, None]:
@@ -76,35 +66,66 @@ class RasterBase(object):
 				raise IOError("Cannot open write protected file for writing")
 			elif readonly is None:
 				readonly = True # default to readonly as permissions are R/O
+		
+		args = (self.data_path,) if readonly else (self.data_path, GA_Update)
+		self.dataset = gdal.Open(*args)
 
-		# TODO: refactor 'ehdr_path' to 'header_path' 
-		if self.ehdr_path is None:
-			# FIXME: this will need to be reworked to handle ROIPAC and GAMMA formats
-			self.ehdr_path = roipac.translate_header(self.hdr_path)
-			args = (self.data_path,) if readonly else (self.data_path, GA_Update)
-			self.dataset = gdal.Open(*args)
+		if self.dataset is None:
+			raise RasterException("Error opening %s" % self.data_path)
+		
+		# add some geographic data
+		self.x_centre = self.ncols / 2
+		self.y_centre = self.nrows / 2
+		self.lat_centre = self.y_first + (self.y_step * self.y_centre)
+		self.long_centre = self.x_first + (self.x_step * self.x_centre)
 
-			if self.dataset is None:
-				raise RasterException("Error opening %s" % self.data_path)
+		# use cell size from centre of scene
+		self.x_size, self.y_size = cell_size(self.lat_centre, self.long_centre,
+											self.x_step, self.y_step)
 
-		else:
-			if self.dataset is not None:
-				msg = "open() already called for %s" % self
-				raise RasterException(msg)
+	@property
+	def ncols(self):
+		return self.dataset.RasterXSize
+	
+	@property
+	def nrows(self):
+		return self.dataset.RasterYSize
 
-		if self.num_cells is None:
-			self.num_cells = self.dataset.RasterYSize * self.dataset.RasterXSize
+	@property
+	def x_step(self):
+		return float(self.dataset.GetGeoTransform()[1]) # TODO: use a constant
+	
+	@property
+	def y_step(self):
+		return float(self.dataset.GetGeoTransform()[5]) # TODO: use a constant
 
-		#else:
-		#	if self.num_cells != self.dataset.RasterYSize * self.dataset.RasterXSize:
-		#		raise RasterException("GDAL Dataset size doesn't match header sizes")
+	@property
+	def x_first(self):
+		return float(self.dataset.GetGeoTransform()[0]) # TODO: use a constant
 
+	@property
+	def x_last(self):
+		return self.x_first + (self.x_step * self.ncols)
+	
+	@property
+	def y_first(self):
+		return float(self.dataset.GetGeoTransform()[3]) # TODO: use a constant
+	
+	@property
+	def y_last(self):
+		return self.y_first + (self.y_step * self.nrows)
 
 	@property
 	def shape(self):
 		'''Returns tuple of (Y,X) shape of the raster (as per numpy.shape)'''
-		return self.FILE_LENGTH, self.WIDTH
+		return (self.dataset.RasterYSize, self.dataset.RasterXSize) 
 
+	@property
+	def num_cells(self):
+		if self.is_open:
+			return self.dataset.RasterXSize * self.dataset.RasterYSize
+		else:
+			raise RasterException('Dataset not open')
 
 	@property
 	def is_open(self):
@@ -133,21 +154,20 @@ class Ifg(RasterBase):
 	"""Interferogram class, representing the difference between two acquisitions.
 	Ifg objects double as a container for related data."""
 
-	def __init__(self, path, hdr_path=None):
+	def __init__(self, path):
 		'''Interferogram constructor, for 2 band ROIPAC Ifg raster datasets.'''
-		RasterBase.__init__(self, path, hdr_path)
-		self._amp_band = None
+		RasterBase.__init__(self, path)
 		self._phase_band = None
 		self._phase_data = None
+		self.master = None
+		self.slave = None
 
-		self.X_CENTRE = self.WIDTH / 2
-		self.Y_CENTRE = self.FILE_LENGTH / 2
-		self.LAT_CENTRE = self.Y_FIRST + (self.Y_STEP * self.Y_CENTRE)
-		self.LONG_CENTRE = self.X_FIRST + (self.X_STEP * self.X_CENTRE)
 
-		# use cell size from centre of scene
-		self.X_SIZE, self.Y_SIZE = cell_size(self.LAT_CENTRE, self.LONG_CENTRE,
-		                                     self.X_STEP, self.Y_STEP)
+	def open(self, readonly=None):
+		RasterBase.open(self, readonly)
+		self._init_dates()
+		
+		self.wavelength = self.dataset.GetMetadataItem(ifc.PYRATE_WAVELENGTH_METRES)
 
 		# creating code needs to set this flag after 0 -> NaN replacement
 		self.nan_converted = False
@@ -156,6 +176,20 @@ class Ifg(RasterBase):
 		#self.max_variance = None # will be single floating point number
 		#self.alpha = None # will be single floating point number
 
+	def _init_dates(self):
+		def _to_date(datestr):
+			year, month, day = [int(i) for i in datestr.split('-')]
+			return date(year, month, day)
+				
+		keys = [ifc.PYRATE_DATE, ifc.PYRATE_DATE2]
+		datestrs = [self.dataset.GetMetadataItem(k) for k in keys]
+		
+		if all(datestrs):
+			self.master, self.slave = [_to_date(s) for s in datestrs]
+		else:
+			msg = 'Missing master and/or slave date in %s' % self.data_path
+			raise IfgException(msg)
+				
 
 	def convert_to_nans(self, val=0):
 		'''
@@ -164,15 +198,6 @@ class Ifg(RasterBase):
 		'''
 		self.phase_data = where(self.phase_data == val, nan, self.phase_data)
 		self.nan_converted = True
-
-
-	@property
-	def amp_band(self):
-		'''Returns a GDAL Band object for the amplitude band'''
-		if self._amp_band is None:
-			self._amp_band = self._get_band(AMPLITUDE_BAND)
-		return self._amp_band
-
 
 	@property
 	def phase_band(self):
@@ -198,8 +223,8 @@ class Ifg(RasterBase):
 	@property
 	def phase_rows(self):
 		'''Generator returning each row of the phase data'''
-		for y in xrange(self.FILE_LENGTH):
-			r = self.phase_band.ReadAsArray(yoff=y, win_xsize=self.WIDTH, win_ysize=1)
+		for y in xrange(self.nrows):
+			r = self.phase_band.ReadAsArray(yoff=y, win_xsize=self.ncols, win_ysize=1)
 			yield r[0] # squeezes row from (1, WIDTH) to 1D array
 
 
@@ -234,9 +259,9 @@ class Ifg(RasterBase):
 
 class Incidence(RasterBase):
 
-	def __init__(self, path, hdr_path=None):
+	def __init__(self, path):
 		'''Incidence obj constructor.'''
-		RasterBase.__init__(self, path, hdr_path)
+		RasterBase.__init__(self, path)
 		self._incidence_band = None
 		self._azimuth_band = None
 		self._incidence_data = None
@@ -279,9 +304,9 @@ class Incidence(RasterBase):
 class DEM(RasterBase):
 	"""Generic raster class for ROIPAC single band DEM files"""
 
-	def __init__(self, path, hdr_path=None):
+	def __init__(self, path):
 		'''DEM constructor.'''
-		RasterBase.__init__(self, path, hdr_path)
+		RasterBase.__init__(self, path)
 		self._band = None
 
 

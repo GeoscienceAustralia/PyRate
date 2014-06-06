@@ -49,8 +49,8 @@ def cvd(ifg):
 	autocorr_grid = fftshift(real(autocorr_grid)) / nzc
 	acg = reshape(autocorr_grid, ifg.num_cells, 1)
 
-	xx,yy = meshgrid(range(ifg.WIDTH), range(ifg.FILE_LENGTH))
-	r = sqrt(((xx-ifg.X_CENTRE) * ifg.X_SIZE)**2 + ((yy-ifg.Y_CENTRE) * ifg.Y_SIZE)**2)  # radius from centre???
+	xx,yy = meshgrid(range(ifg.ncols), range(ifg.nrows))
+	r = sqrt(((xx-ifg.x_centre) * ifg.x_size)**2 + ((yy-ifg.y_centre) * ifg.y_size)**2)  # radius from centre???
 	r = reshape(r, ifg.num_cells) #, 1)
 
 	# ACG is on the Y axis, R is on the X axis
@@ -79,13 +79,13 @@ def cvd(ifg):
 	# pick the smallest axis to focus on a circle around the centre point????
 	#print 'ifg.X_CENTRE, ifg.Y_CENTRE=', ifg.X_CENTRE, ifg.Y_CENTRE
 	#print 'ifg.X_SIZE, ifg.Y_SIZE', ifg.X_SIZE, ifg.Y_SIZE
-	if (ifg.X_CENTRE * ifg.X_SIZE) < (ifg.Y_CENTRE * ifg.Y_SIZE):
-		maxdist = ifg.X_CENTRE * ifg.X_SIZE
-		w = ifg.X_SIZE * 2  # bin width
+	if (ifg.x_centre * ifg.x_size) < (ifg.y_centre * ifg.y_size):
+		maxdist = ifg.x_centre * ifg.x_size
+		w = ifg.x_size * 2  # bin width
 		#print "maxdist from X axis is", maxdist
 	else:
-		maxdist = ifg.Y_CENTRE * ifg.Y_SIZE
-		w = ifg.Y_SIZE * 2  # bin width
+		maxdist = ifg.y_centre * ifg.y_size
+		w = ifg.y_size * 2  # bin width
 		#print "maxdist from Y axis is", maxdist
 
 	#rsub = array([e for e in r if e < maxdist]) # MG: prefers to use all the data
@@ -119,14 +119,14 @@ def get_vcmt(ifgs, maxvar):
 	nifgs = len(ifgs)
 	vcm_pat = zeros((nifgs, nifgs))
 
-	dates = [ifg.MASTER for ifg in ifgs] + [ifg.SLAVE for ifg in ifgs]
+	dates = [ifg.master for ifg in ifgs] + [ifg.slave for ifg in ifgs]
 	ids = master_slave_ids(dates)
 
 	for i, ifg in enumerate(ifgs): # TODO: do we need -1?
-		mas1, slv1 = ids[ifg.MASTER], ids[ifg.SLAVE]
+		mas1, slv1 = ids[ifg.master], ids[ifg.slave]
 
 		for j, ifg2 in enumerate(ifgs): # TODO: do we need +1?
-			mas2, slv2 = ids[ifg2.MASTER], ids[ifg2.SLAVE]
+			mas2, slv2 = ids[ifg2.master], ids[ifg2.slave]
 			if mas1 == mas2 or slv1 == slv2:
 				vcm_pat[i,j] = 0.5
 

@@ -1,38 +1,35 @@
 """
 Prepares input files and associated data for the PyRate work flow. 
 
-Input data often may need to cropping, scaling, and multilooking/downsampling to
-coarser grids before being processed. This module uses gdalwarp to handle  
+Input rasters often may cropping, scaling, and multilooking/downsampling to
+coarser grids before being processed. This module uses gdalwarp to handle these
+operations.
+
+The rasters need to be in GeoTIFF format with PyRate specific metadata headers.  
 
 Created on 23/10/2012
-@author: Ben Davies
+@author: Ben Davies, NCI
 """
 
 # TODO: check new average option for gdalwarp (GDAL 1.10.x +) 
 # TODO: Wavelength conversion 
 
-
 import os, sys
-from os.path import join, splitext
 from math import modf
 from numbers import Number
 from tempfile import mkstemp
 from itertools import product
 from subprocess import check_call
+from os.path import join, splitext
 
 from numpy import array, where, nan, isnan, nanmean, float32, zeros, sum as nsum
 
 from shared import Ifg, DEM
-from roipac import filename_pair, write_roipac_header
-
 from config import parse_namelist
 from config import OBS_DIR, IFG_CROP_OPT, IFG_LKSX, IFG_LKSY, IFG_FILE_LIST
 from config import IFG_XFIRST, IFG_XLAST, IFG_YFIRST, IFG_YLAST, DEM_FILE
 from config import ORBITAL_FIT_LOOKS_X, ORBITAL_FIT_LOOKS_Y
 
-from roipac import X_FIRST, Y_FIRST, X_LAST, Y_LAST, X_STEP, Y_STEP
-from roipac import Z_OFFSET, Z_SCALE, PROJECTION, DATUM
-from roipac import WIDTH, FILE_LENGTH, WAVELENGTH
 
 # Constants
 MINIMUM_CROP = 1
@@ -70,9 +67,10 @@ def prepare_ifgs(params, thresh=0.5, use_exceptions=False, verbose=False):
 	if params.has_key(DEM_FILE):
 		ifgs.append(DEM(params[DEM_FILE]))
 
-	check_resolution(ifgs)
 	for i in ifgs:
 		i.open()
+	
+	check_resolution(ifgs)
 
 	# calculate crop option for passing to gdalwarp
 	if crop_opt == MINIMUM_CROP:
@@ -92,7 +90,7 @@ def prepare_ifgs(params, thresh=0.5, use_exceptions=False, verbose=False):
 	# only needed to cut out the required segment.
 	resolution = None
 	if params[IFG_LKSX] > 1 or params[IFG_LKSY] > 1:
-		resolution = [params[IFG_LKSX] * i.X_STEP, params[IFG_LKSY] * i.Y_STEP ]
+		resolution = [params[IFG_LKSX] * i.x_step, params[IFG_LKSY] * i.y_step ]
 
 	orb = _do_orbital_multilooking(params)
 	xl, yl = params[IFG_LKSX], params[IFG_LKSY]
@@ -122,7 +120,7 @@ def _file_ext(raster):
 	'''Returns file ext string based on type of raster.'''
 	if isinstance(raster, Ifg):
 		return "tif"
-	elif hasattr(raster, DATUM):
+	elif isinstance(raster, DEM):
 		return "dem"
 	else:
 		# TODO: several possible file types to implement:
@@ -138,7 +136,7 @@ def _resample_ifg(ifg, cmd, x_looks, y_looks, thresh):
 	# lacks Pirate's averaging method
 	tmp_path = mkstemp()[1]
 	check_call(cmd + [ifg.data_path, tmp_path])
-	tmp = type(ifg)(tmp_path, ifg.hdr_path) # dynamically handle Ifgs & Rasters
+	tmp = type(ifg)(tmp_path) # dynamically handle Ifgs & Rasters
 	tmp.open()
 
 	if isinstance(ifg, Ifg):
@@ -186,9 +184,9 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, verbose):
 	check_call(cmd)
 
 	# Add missing/updated metadata to resampled ifg/DEM
-	new_lyr = type(ifg)(looks_path, ifg.hdr_path)
+	new_lyr = type(ifg)(looks_path)
 	new_lyr.open(readonly=False)
-	_create_new_roipac_header(ifg, new_lyr)
+	#_create_new_roipac_header(ifg, new_lyr)
 
 	# for non-DEMs, phase bands need extra metadata & conversions
 	if hasattr(new_lyr, "phase_band"):
@@ -246,32 +244,9 @@ def reproject():
 	raise NotImplementedError("TODO: Reprojection LOS/Horiz/Vert")
 
 
-def _create_new_roipac_header(src_ifg, new_ifg, dest=None):
-	"""Translate existing ROIPAC Ifg header to new values following cropping
-	and/or resampling."""
-
-	geotrans = new_ifg.dataset.GetGeoTransform()
-	newpars = { WIDTH: new_ifg.dataset.RasterXSize,
-							FILE_LENGTH: new_ifg.dataset.RasterYSize,
-							X_FIRST: geotrans[0],
-							X_STEP: geotrans[1],
-							Y_FIRST: geotrans[3],
-							Y_STEP: geotrans[5] }
-
-	if isinstance(src_ifg, Ifg):
-		newpars[WAVELENGTH] = src_ifg.WAVELENGTH
-	elif isinstance(src_ifg, DEM):
-		for a in [Z_OFFSET, Z_SCALE, PROJECTION, DATUM]:
-			newpars[a] = getattr(src_ifg, a)
-
-	if dest is None:
-		dest = filename_pair(new_ifg.data_path)[1]
-	write_roipac_header(newpars, dest)
-
-
 def check_resolution(ifgs):
 	"""Verifies Ifg resolutions are equal for the given grids"""
-	for var in [X_STEP, Y_STEP]:
+	for var in ['x_step', 'y_step']:
 		values = array([getattr(i, var) for i in ifgs])
 		if not (values == values[0]).all():
 			msg = "Grid resolution does not match for %s" % var
@@ -293,19 +268,19 @@ def check_looks(params):
 
 def min_bounds(ifgs):
 	'''Returns bounds for overlapping area of the given interferograms.'''
-	xmin = max([i.X_FIRST for i in ifgs])
-	ymax = min([i.Y_FIRST for i in ifgs])
-	xmax = min([i.X_LAST for i in ifgs])
-	ymin = max([i.Y_LAST for i in ifgs])
+	xmin = max([i.x_first for i in ifgs])
+	ymax = min([i.y_first for i in ifgs])
+	xmax = min([i.x_last for i in ifgs])
+	ymin = max([i.y_last for i in ifgs])
 	return xmin, ymin, xmax, ymax
 
 
 def max_bounds(ifgs):
 	'''Returns bounds for the total area covered by the given interferograms.'''
-	xmin = min([i.X_FIRST for i in ifgs])
-	ymax = max([i.Y_FIRST for i in ifgs])
-	xmax = max([i.X_LAST for i in ifgs])
-	ymin = min([i.Y_LAST for i in ifgs])
+	xmin = min([i.x_first for i in ifgs])
+	ymax = max([i.y_first for i in ifgs])
+	xmax = max([i.x_last for i in ifgs])
+	ymin = min([i.y_last for i in ifgs])
 	return xmin, ymin, xmax, ymax
 
 
@@ -313,9 +288,9 @@ def check_crop_coords(ifgs, xmin, xmax, ymin, ymax, use_exceptions=False):
 	'''Ensures cropping coords line up with grid system within tolerance.'''
 	# NB: assumption is the first Ifg is correct, so only test against it
 	i = ifgs[0]
-	for par, crop, step in zip([X_FIRST, X_LAST, Y_FIRST, Y_LAST],
+	for par, crop, step in zip(['x_first', 'x_last', 'y_first', 'y_last'],
 								[xmin, xmax, ymax, ymin],
-								[i.X_STEP, i.X_STEP, i.Y_STEP, i.Y_STEP]):
+								[i.x_step, i.x_step, i.y_step, i.y_step]):
 
 		# is diff of the given extent from grid a multiple of X|Y_STEP ?
 		param = getattr(i, par)

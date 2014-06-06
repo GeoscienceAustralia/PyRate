@@ -115,7 +115,7 @@ def ifg_date_lookup(ifgs, date_pair):
 		raise ValueError("Bad date_pair arg to ifg_date_lookup()")
 
 	for i in ifgs:
-		if date_pair == i.DATE12:
+		if date_pair == (i.master, i.slave):
 			return i
 
 	raise ValueError("Cannot find Ifg with master/slave of %s" % str(date_pair))
@@ -123,7 +123,7 @@ def ifg_date_lookup(ifgs, date_pair):
 
 def get_epochs(ifgs):
 	'''Returns an EpochList derived from all given interferograms.'''
-	combined = [i.MASTER for i in ifgs] + [i.SLAVE for i in ifgs]
+	combined = [i.master for i in ifgs] + [i.slave for i in ifgs]
 	dates, n = unique(combined, False, True)
 	repeat, _ = histogram(n, bins=len(set(n)))
 
@@ -134,7 +134,7 @@ def get_epochs(ifgs):
 
 def get_all_epochs(ifgs):
 	'''Returns sequence of all master and slave dates in given ifgs.'''
-	return [ifg.MASTER for ifg in ifgs] + [ifg.SLAVE for ifg in ifgs]
+	return [ifg.master for ifg in ifgs] + [ifg.slave for ifg in ifgs]
 
 
 def get_epoch_count(ifgs):

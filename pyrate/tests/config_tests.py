@@ -9,14 +9,14 @@ import sys, unittest
 from os.path import exists, join
 
 from pyrate import config
-from common import SYD_TEST_DIR, SYD_TEST_OBS
+from common import SYD_TEST_DIR, SYD_TEST_TIF
 
 
 class ConfigTests(unittest.TestCase):
 
 	def __init__(self, *args, **kwargs):
 		super(ConfigTests, self).__init__(*args, **kwargs)
-		if not exists(SYD_TEST_OBS):
+		if not exists(SYD_TEST_TIF):
 			sys.exit("ERROR: Missing sydney_test data for unit tests\n")
 
 	# TODO: are more conf parsing tests needed?
@@ -40,12 +40,12 @@ class ConfigTests(unittest.TestCase):
 
 
 	def test_parse_namelist(self):
-		nl = join(SYD_TEST_OBS, 'ifms_17')
+		nl = join(SYD_TEST_TIF, 'ifms_17')
 		result = config.parse_namelist(nl)
 		self.assertEqual(len(result), 17)
-		files = ["geo_060619-061002.unw", "geo_060828-061211.unw",
-					"geo_061002-070430.unw", "geo_070115-070917.unw",
-					"geo_070219-070604.unw" ]
+		files = ["geo_060619-061002.tif", "geo_060828-061211.tif",
+					"geo_061002-070430.tif", "geo_070115-070917.tif",
+					"geo_070219-070604.tif" ]
 
 		for path in files:
 			self.assertTrue(path in result)

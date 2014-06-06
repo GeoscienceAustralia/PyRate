@@ -34,9 +34,9 @@ def ref_pixel(params, ifgs):
 	
 	# sanity check any specified ref pixel settings
 	# unlikely, but possible the refpixel can be (0,0) 
-	if refx > head.WIDTH - 1:
+	if refx > head.ncols - 1:
 		raise ValueError("Invalid reference pixel X coordinate: %s" % refx)
-	if refy > head.FILE_LENGTH - 1:
+	if refy > head.nrows - 1:
 		raise ValueError("Invalid reference pixel Y coordinate: %s" % refy)
 	
 	if refx >= 0 and refy >= 0:
@@ -55,8 +55,8 @@ def ref_pixel(params, ifgs):
 
 	# do window searches across dataset, central pixel of stack with smallest
 	# mean is the reference pixel
-	for y in _step(head.FILE_LENGTH, refny, radius):
-		for x in _step(head.WIDTH, refnx, radius):
+	for y in _step(head.nrows, refny, radius):
+		for x in _step(head.ncols, refnx, radius):
 			data = phase_stack[:, y-radius:y+radius+1, x-radius:x+radius+1]
 			valid = [nsum(~isnan(i)) > thresh for i in data]
 
@@ -85,7 +85,7 @@ def check_ref_pixel_params(params, head):
 	if chipsize is None:
 		missing_option_error(config.REF_CHIP_SIZE)
 
-	if chipsize < 3 or chipsize > head.WIDTH or (chipsize % 2 == 0):
+	if chipsize < 3 or chipsize > head.ncols or (chipsize % 2 == 0):
 		msg = "Chipsize setting must be >=3 and at least <= grid width"
 		raise ValueError(msg)
 
@@ -102,7 +102,7 @@ def check_ref_pixel_params(params, head):
 	if refnx is None:
 		missing_option_error(config.REFNX)
 
-	max_width = (head.WIDTH - (chipsize-1))
+	max_width = (head.ncols - (chipsize-1))
 	if refnx < 1 or refnx > max_width:
 		msg = "Invalid refnx setting, must be > 0 and <= %s"
 		raise ValueError(msg % max_width)
@@ -111,7 +111,7 @@ def check_ref_pixel_params(params, head):
 	if refny is None:
 		missing_option_error(config.REFNY)
 
-	max_rows = (head.FILE_LENGTH - (chipsize-1))
+	max_rows = (head.nrows - (chipsize-1))
 	if refny < 1 or refny > max_rows:
 		msg = "Invalid refny setting, must be > 0 and <= %s"
 		raise ValueError(msg % max_rows)

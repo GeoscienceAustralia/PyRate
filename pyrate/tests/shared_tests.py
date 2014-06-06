@@ -20,26 +20,25 @@ from gdal import Open, Dataset, UseExceptions
 UseExceptions()
 
 from pyrate.shared import Ifg, DEM, RasterException, Incidence
-from pyrate.roipac import Z_OFFSET, Z_SCALE, PROJECTION, DATUM
-from common import SYD_TEST_OBS, INCID_TEST_DIR, SYD_TEST_DEM
+from common import SYD_TEST_TIF, INCID_TEST_DIR, SYD_TEST_DEM_TIF
 
 
+# FIXME: refactor the ifg.open() calls
 class IfgTests(unittest.TestCase):
 	'''Unit tests for the Ifg/interferogram class.'''
 
 	def setUp(self):
-		self.ifg = Ifg(join(SYD_TEST_OBS, 'geo_060619-061002.unw'))
+		self.ifg = Ifg(join(SYD_TEST_TIF, 'geo_060619-061002.tif'))
 
 
 	def test_create_ifg(self):
-		self.assertTrue(os.path.exists(self.ifg.hdr_path)) # validate header path
+		self.assertTrue(os.path.exists(self.ifg.data_path)) # validate data path
 
 
 	def test_headers_as_attr(self):
-		attrs = ['WIDTH', 'FILE_LENGTH', 'X_FIRST', 'X_STEP',
-			'Y_FIRST', 'Y_STEP', 'WAVELENGTH', 'MASTER', 'SLAVE']
-
-		for a in attrs:
+		self.ifg.open()
+		for a in ['ncols', 'nrows', 'x_first', 'x_step',
+				'y_first', 'y_step', 'wavelength', 'master', 'slave']:
 			self.assertTrue(getattr(self.ifg, a) is not None)
 
 
@@ -53,34 +52,29 @@ class IfgTests(unittest.TestCase):
 
 		# ensure open cannot be called twice
 		self.failUnlessRaises(RasterException, self.ifg.open, True)
-		os.remove(self.ifg.ehdr_path)
 
 
 	def test_write(self):
 		base = "/tmp"
-		src = [self.ifg.data_path, self.ifg.hdr_path]
-		dest = [join(base, basename(s)) for s in src]
+		src = self.ifg.data_path
+		dest = join(base, basename(self.ifg.data_path))
 
-		for s, d in zip(src, dest):
-			# shutil.copy needs to copy writeable permission from src
-			os.chmod(s, S_IRGRP | S_IWGRP | S_IWOTH | S_IROTH | S_IRUSR | S_IWUSR)
-			shutil.copy(s, d)
-			os.chmod(s, S_IRGRP | S_IROTH | S_IRUSR) # revert
+		# shutil.copy needs to copy writeable permission from src
+		os.chmod(src, S_IRGRP | S_IWGRP | S_IWOTH | S_IROTH | S_IRUSR | S_IWUSR)
+		shutil.copy(src, dest)
+		os.chmod(src, S_IRGRP | S_IROTH | S_IRUSR) # revert
 
-		i = Ifg(dest[0])
+		i = Ifg(dest)
 		i.open()
 		i.phase_data[0,1:] = nan
 		i.write_phase()
-		dest.append(i.ehdr_path)
 		del i
 
 		# reopen to ensure data/nans can be read back out
-		i = Ifg(dest[0])
+		i = Ifg(dest)
 		i.open(readonly=True)
 		assert_array_equal(True, isnan(i.phase_data[0,1:]) )
-
-		for pth in dest:
-			os.remove(pth)
+		os.remove(dest)
 
 
 	def test_readonly_permission_failure(self):
@@ -97,7 +91,6 @@ class IfgTests(unittest.TestCase):
 
 
 	def test_convert_to_nans(self):
-		self.assertFalse(self.ifg.nan_converted)
 		self.ifg.open()
 		self.ifg.convert_to_nans(0)
 		self.assertTrue(self.ifg.nan_converted)
@@ -106,37 +99,34 @@ class IfgTests(unittest.TestCase):
 	def test_xylast(self):
 		# ensure the X|Y_LAST header element has been created
 		self.ifg.open()
-		self.assertAlmostEqual(self.ifg.X_LAST, 150.9491667)
-		self.assertAlmostEqual(self.ifg.Y_LAST, -34.23)
+		self.assertAlmostEqual(self.ifg.x_last, 150.9491667)
+		self.assertAlmostEqual(self.ifg.y_last, -34.23)
 
 
 	def test_num_cells(self):
 		# test cell size from header elements
-		self.assertEqual(self.ifg.num_cells, 47 * 72)
-
 		self.ifg.open()
-		data = self.ifg.amp_band.ReadAsArray()
+		data = self.ifg.phase_band.ReadAsArray()
 		ys, xs = data.shape
 		exp_ncells = ys * xs
 		self.assertEqual(exp_ncells, self.ifg.num_cells)
 
 
 	def test_shape(self):
-		self.assertEqual(self.ifg.shape, (72, 47))
 		self.ifg.open()
 		self.assertEqual(self.ifg.shape, self.ifg.phase_data.shape)
 
 
-	def test_amp_band(self):
-		try:
-			_ = self.ifg.amp_band
-			self.fail("Should not be able to access band without open dataset")
-		except RasterException:
-			pass
-
-		self.ifg.open()
-		data = self.ifg.amp_band.ReadAsArray()
-		self.assertEqual(data.shape, (72, 47) )
+# 	def test_amp_band(self):
+# 		try:
+# 			_ = self.ifg.amp_band
+# 			self.fail("Should not be able to access band without open dataset")
+# 		except RasterException:
+# 			pass
+# 
+# 		self.ifg.open()
+# 		data = self.ifg.amp_band.ReadAsArray()
+# 		self.assertEqual(data.shape, (72, 47) )
 
 
 	def test_phase_band(self):
@@ -172,7 +162,7 @@ class IfgTests(unittest.TestCase):
 
 		# NB: source data lacks 0 -> NaN conversion
 		self.ifg.open()
-		data = self.ifg.dataset.GetRasterBand(2).ReadAsArray()
+		data = self.ifg.dataset.GetRasterBand(1).ReadAsArray()
 		data = where(data == 0, nan, data) # fake 0 -> nan for the count below
 
 		# manually count # nan cells
@@ -192,7 +182,7 @@ class IfgTests(unittest.TestCase):
 	def test_phase_data_properties(self):
 		# Use raw GDAL to isolate raster reading from Ifg functionality
 		ds = Open(self.ifg.data_path)
-		data = ds.GetRasterBand(2).ReadAsArray()
+		data = ds.GetRasterBand(1).ReadAsArray()
 		del ds
 
 		self.ifg.open()
@@ -212,37 +202,39 @@ class IfgTests(unittest.TestCase):
 
 	def test_xy_size(self):
 		self.ifg.open()
-		self.assertFalse(self.ifg.X_SIZE is None)
-		self.assertFalse(self.ifg.Y_SIZE is None)
+		self.assertFalse(self.ifg.ncols is None)
+		self.assertFalse(self.ifg.nrows is None)
 
 		# test with tolerance from base 90m cell
-		self.assertTrue(self.ifg.Y_SIZE > 88.0) # within 2% of cells over sydney?
-		self.assertTrue(self.ifg.Y_SIZE < 92.0)
+		self.assertTrue(self.ifg.y_size > 88.0) # within 2% of cells over sydney?
+		self.assertTrue(self.ifg.y_size < 92.0, 'Got %s' % self.ifg.y_size)
 
 		syd_width = 76.9 # from nearby pirate coords
-		self.assertTrue(self.ifg.X_SIZE > 0.97 * syd_width) # ~3% tolerance
-		self.assertTrue(self.ifg.X_SIZE < 1.03 * syd_width)
+		self.assertTrue(self.ifg.x_size > 0.97 * syd_width) # ~3% tolerance
+		self.assertTrue(self.ifg.x_size < 1.03 * syd_width)
 
 
 	def test_centre_latlong(self):
 		self.ifg.open()
-		lat_exp = self.ifg.Y_FIRST + ((self.ifg.FILE_LENGTH / 2) * self.ifg.Y_STEP)
-		long_exp = self.ifg.X_FIRST + ((self.ifg.WIDTH / 2) * self.ifg.X_STEP)
-		self.assertEqual(lat_exp, self.ifg.LAT_CENTRE)
-		self.assertEqual(long_exp, self.ifg.LONG_CENTRE)
+		lat_exp = self.ifg.y_first + ((self.ifg.nrows / 2) * self.ifg.y_step)
+		long_exp = self.ifg.x_first + ((self.ifg.ncols / 2) * self.ifg.x_step)
+		self.assertEqual(lat_exp, self.ifg.lat_centre)
+		self.assertEqual(long_exp, self.ifg.long_centre)
 
 
 	def test_centre_cell(self):
-		self.assertEqual(self.ifg.X_CENTRE, 23)
-		self.assertEqual(self.ifg.Y_CENTRE, 36)
+		self.ifg.open()
+		self.assertEqual(self.ifg.x_centre, 23)
+		self.assertEqual(self.ifg.y_centre, 36)
 
 
 
 class IncidenceFileTests(unittest.TestCase):
 	'''Unit tests for the interface to Incidence files'''
-
+	
 	def setUp(self):
-		self.inc = Incidence(join(INCID_TEST_DIR, '128x2.unw'))
+		raise NotImplementedError
+		self.inc = Incidence(join(INCID_TEST_DIR, '128x2.tif'))
 		self.inc.open()
 
 
@@ -279,25 +271,25 @@ class DEMTests(unittest.TestCase):
 	'''Unit tests for the generic DEM class.'''
 
 	def setUp(self):
-		self.ras = DEM(SYD_TEST_DEM)
+		self.ras = DEM(SYD_TEST_DEM_TIF)
 
 
 	def test_create_raster(self):
-		self.assertTrue(os.path.exists(self.ras.hdr_path)) # validate header path
+		self.assertTrue(os.path.exists(self.ras.data_path)) # validate header path
 
 
 	def test_headers_as_attr(self):
-		attrs = ['WIDTH', 'FILE_LENGTH', 'X_FIRST', 'X_STEP',
-			'Y_FIRST', 'Y_STEP', Z_OFFSET, Z_SCALE, PROJECTION, DATUM]
-
+		self.ras.open()
+		attrs = ['ncols', 'nrows', 'x_first', 'x_step', 'y_first', 'y_step' ]
+		
+		# TODO: are 'projection' and 'datum' attrs needed?
 		for a in attrs:
 			self.assertTrue(getattr(self.ras, a) is not None)
 
 
 	def test_is_dem(self):
-		self.assertTrue(hasattr(self.ras, DATUM))
-		self.ras = DEM(join(SYD_TEST_OBS, 'geo_060619-061002.unw'))
-		self.assertFalse(hasattr(self.ras, DATUM))
+		self.ras = DEM(join(SYD_TEST_TIF, 'geo_060619-061002.tif'))
+		self.assertFalse(hasattr(self.ras, 'datum'))
 
 
 	def test_open(self):
@@ -308,7 +300,6 @@ class DEMTests(unittest.TestCase):
 
 		# ensure open cannot be called twice
 		self.failUnlessRaises(RasterException, self.ras.open)
-		os.remove(self.ras.ehdr_path)
 
 
 	def test_band(self):

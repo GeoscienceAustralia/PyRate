@@ -1,5 +1,8 @@
-# Tests for prepifg.py
-# Ben Davies, ANUSF
+'''
+Tests for prepifg.py: resampling, subsetting etc
+
+Ben Davies, ANUSF
+'''
 
 import os, sys
 import unittest
@@ -16,12 +19,11 @@ from pyrate.prepifg import prepare_ifgs, resample, PreprocessingException
 from pyrate.prepifg import _do_orbital_multilooking
 
 from pyrate.shared import Ifg, DEM
-from pyrate.roipac import filename_pair
 from pyrate.config import OBS_DIR, IFG_CROP_OPT, IFG_LKSX, IFG_LKSY, IFG_FILE_LIST
 from pyrate.config import IFG_XFIRST, IFG_XLAST, IFG_YFIRST, IFG_YLAST, DEM_FILE
 from pyrate.config import ORBITAL_FIT_LOOKS_X, ORBITAL_FIT_LOOKS_Y
 
-from common import SINGLE_TEST_DIR, PREP_TEST_OBS, SYD_TEST_DEM, SYD_TEST_DEM_DIR
+from common import SINGLE_TEST_DIR, PREP_TEST_OBS, SYD_TEST_DEM_DIR, SYD_TEST_DEM_TIF
 
 import gdal
 gdal.UseExceptions()
@@ -29,7 +31,7 @@ gdal.UseExceptions()
 
 
 class OutputTests(unittest.TestCase):
-	"""Tests aspects of the prepifg.py script, such as resampling, """
+	"""Tests aspects of the prepifg.py script, such as resampling."""
 
 	def __init__(self, *args, **kwargs):
 		super(OutputTests, self).__init__(*args, **kwargs)
@@ -43,28 +45,18 @@ class OutputTests(unittest.TestCase):
 	def setUp(self):
 		self.xs = 0.000833333
 		self.ys = -self.xs
-
-		tmp = ["geo_060619-061002.unw.rsc", "geo_070326-070917.unw.rsc"]
-		self.hdr_files = [join(PREP_TEST_OBS, t) for t in tmp]
-
-		tmp = ["geo_060619-061002_1rlks.tif", "geo_070326-070917_1rlks.tif"]
-		self.exp_files = [join(PREP_TEST_OBS, t) for t in tmp]
-		self.exp_hdr_files = [s + ".rsc" for s in self.exp_files]
-
-		tmp = ["geo_060619-061002.hdr", "geo_070326-070917.hdr"]
-		self.ehdr_hdr = [join(PREP_TEST_OBS, p) for p in tmp]
-
+		paths = ["geo_060619-061002_1rlks.tif", "geo_070326-070917_1rlks.tif"]
+		self.exp_files = [join(PREP_TEST_OBS, p) for p in paths]
 
 	def tearDown(self):
 		# clear temp output files after each run
-		for f in self.exp_files + self.exp_hdr_files + self.ehdr_hdr:
+		for f in self.exp_files:
 			if exists(f):
 				os.remove(f)
 
 
 	def _custom_extents_param(self):
 		"""Convenience function to create custom cropping extents params"""
-
 		params = {IFG_CROP_OPT: CUSTOM_CROP, IFG_LKSX: 1, IFG_LKSY: 1}
 		params[IFG_XFIRST] = 150.91 + (7 * self.xs)
 		params[IFG_YFIRST] = -34.17 + (16 * self.ys)
@@ -94,7 +86,7 @@ class OutputTests(unittest.TestCase):
 
 		# output files should have same extents
 		# NB: also verifies gdalwarop correctly copies geotransform across
-		ifg = Ifg(self.exp_files[0], self.hdr_files[0])
+		ifg = Ifg(self.exp_files[0])
 		ifg.open()
 		gt = ifg.dataset.GetGeoTransform()
 		exp_gt = (150.91, 0.000833333, 0, -34.17, 0, -0.000833333) # copied from gdalinfo output
@@ -109,7 +101,7 @@ class OutputTests(unittest.TestCase):
 		params = self._default_extents_param()
 		params[IFG_CROP_OPT] = MINIMUM_CROP
 		prepare_ifgs(params)
-		ifg = Ifg(self.exp_files[0], self.hdr_files[0])
+		ifg = Ifg(self.exp_files[0])
 		ifg.open()
 
 		# output files should have same extents
@@ -124,7 +116,7 @@ class OutputTests(unittest.TestCase):
 	def test_custom_extents(self):
 		params = self._custom_extents_param()
 		prepare_ifgs(params)
-		ifg = Ifg(self.exp_files[0], self.hdr_files[0])
+		ifg = Ifg(self.exp_files[0])
 		ifg.open()
 		gt = ifg.dataset.GetGeoTransform()
 		exp_gt = (params[IFG_XFIRST], self.xs, 0, params[IFG_YFIRST], 0, self.ys)
@@ -147,16 +139,16 @@ class OutputTests(unittest.TestCase):
 
 
 	def test_nodata(self):
-		"""Verify NODATA values are copied correctly for both bands"""
+		'Verify NODATA value is copied correctly (amplitude band not copied)'
 		params = self._default_extents_param()
 		params[IFG_CROP_OPT] = MINIMUM_CROP
 		prepare_ifgs(params)
 
-		for ex, hdr in zip(self.exp_files, self.hdr_files):
-			ifg = Ifg(ex, hdr)
+		for ex in self.exp_files:
+			ifg = Ifg(ex)
 			ifg.open()
 			# NB: amplitude band doesn't have a NODATA value
-			self.assertTrue(isnan(ifg.dataset.GetRasterBand(2).GetNoDataValue()))
+			self.assertTrue(isnan(ifg.dataset.GetRasterBand(1).GetNoDataValue()))
 
 
 	def test_nans(self):
@@ -165,8 +157,8 @@ class OutputTests(unittest.TestCase):
 		params[IFG_CROP_OPT] = MINIMUM_CROP
 		prepare_ifgs(params)
 
-		for ex, hdr in zip(self.exp_files, self.hdr_files):
-			ifg = Ifg(ex, hdr)
+		for ex in self.exp_files:
+			ifg = Ifg(ex)
 			ifg.open()
 
 			phase = ifg.phase_band.ReadAsArray()
@@ -183,20 +175,20 @@ class OutputTests(unittest.TestCase):
 		params = self._custom_extents_param()
 		params[IFG_LKSX] = scale
 		params[IFG_LKSY] = scale
-		params[DEM_FILE] = SYD_TEST_DEM
+		params[DEM_FILE] = SYD_TEST_DEM_TIF
 		prepare_ifgs(params, thresh=1.0) # if all nans, ignore cell
 
 		# check file names have been updated
 		for f in self.exp_files:
 			self.assertFalse(exists(f))
 
-		self.exp_files = [ s.replace('_1r', '_%sr' % scale) for s in self.exp_files]
-		self.exp_hdr_files = [filename_pair(s)[1] for s in self.exp_files]
+		self.exp_files = [s.replace('_1r', '_%sr' % scale) for s in self.exp_files]
+		
 		for f in self.exp_files:
 			self.assertTrue(exists(f))
 
 		# is resampled dataset the correct size?
-		ifgs = [Ifg(p, h) for p,h in zip(self.exp_files, self.hdr_files)]
+		ifgs = [Ifg(p) for p in self.exp_files]
 		for n,i in enumerate(ifgs):
 			i.open()
 			self.assertEqual(i.dataset.RasterXSize, 20 / scale)
@@ -222,11 +214,7 @@ class OutputTests(unittest.TestCase):
 		self.assertEqual(dem.dataset.RasterYSize, 28 / scale)
 		data = dem.height_band.ReadAsArray()
 		self.assertTrue(data.ptp() != 0)
-
-		# cleanup
-		paths = [dem.data_path, dem.hdr_path, dem.ehdr_path]
-		for p in paths:
-			os.remove(p)
+		os.remove(dem.data_path)
 
 
 	def test_orbital_mlook(self):
@@ -243,61 +231,23 @@ class OutputTests(unittest.TestCase):
 
 		# expected orbital multilooked files
 		self.exp_files = [ s.replace('_1r', '_%sr' % scale) for s in self.exp_files]
-		self.exp_hdr_files = [filename_pair(s)[1] for s in self.exp_files]
 
 		# paths to expected 2nd round mlooked files
 		tmp = ["geo_060619-061002_4rlks_2rlks.tif",
 				"geo_070326-070917_4rlks_2rlks.tif"]
-		ml = [join(PREP_TEST_OBS, p) for p in tmp]
-		ml_ehdr = [s.replace(".tif", ".hdr") for s in ml] # EHdr format headers
-
-		tmp = ["geo_060619-061002_4rlks_2rlks.tif.rsc",
-				"geo_070326-070917_4rlks_2rlks.tif.rsc"]
-		mlh = [join(PREP_TEST_OBS, p) for p in tmp]
-
+		paths = [join(PREP_TEST_OBS, p) for p in tmp]
+		
 		# check newly mlooked files
-		for f,h in zip(ml, mlh):
-			i = Ifg(f, h)
+		for p in paths:
+			i = Ifg(p)
 			i.open()
 			self.assertEqual(i.dataset.RasterXSize, 2) # 1/2 res of src, rounded down
 			self.assertEqual(i.dataset.RasterYSize, 3)
 			self.assertFalse(i.phase_data.ptp() == 0)
 			del i # manual close
 
-		for f in self.exp_files + self.exp_hdr_files + ml + mlh + ml_ehdr:
-			os.remove(f)
-
-
-	def test_mismatching_resolution_failure(self):
-		"""Ensure failure if supplied layers have different resolutions"""
-		params = self._default_extents_param()
-		params[IFG_CROP_OPT] = MAXIMUM_CROP
-		params[IFG_FILE_LIST] = join(PREP_TEST_OBS, 'ifms_res')
-		self.assertRaises(PreprocessingException, prepare_ifgs, params)
-
-
-	def test_new_rsc_header(self):
-		# Verify new ROIPAC header files are created when resampling
-		scale = 2 # assumes square cells
-		params = self._custom_extents_param()
-		params[IFG_LKSX] = scale
-		params[IFG_LKSY] = scale
-		prepare_ifgs(params)
-
-		self.exp_files = [ s.replace('_1r', '_%sr' % scale) for s in self.exp_files]
-		self.exp_hdr_files = [s + ".rsc" for s in self.exp_files]
-		ifgs = [Ifg(p) for p in self.exp_files]
-
-		for i in ifgs:
-			self.assertEqual(i.WIDTH, 20 / scale)
-			self.assertEqual(i.FILE_LENGTH, 28 / scale)
-			self.assertEqual(i.X_FIRST, params[IFG_XFIRST])
-			self.assertEqual(i.Y_FIRST, params[IFG_YFIRST])
-
-			orig_xres = 0.000833333
-			orig_yres = -0.000833333
-			self.assertEqual(i.X_STEP, scale * orig_xres)
-			self.assertEqual(i.Y_STEP, scale * orig_yres)
+		for p in self.exp_files + paths:
+			os.remove(p)
 
 
 	def test_invalid_looks(self):

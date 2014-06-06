@@ -32,7 +32,7 @@ class ReferencePixelInputTests(unittest.TestCase):
 
 	def test_chipsize_valid(self):
 		params = {}
-		for illegal in [0, -1, -15, 1, 2, self.ifgs[0].WIDTH+1, 4, 6, 10, 20]:
+		for illegal in [0, -1, -15, 1, 2, self.ifgs[0].ncols+1, 4, 6, 10, 20]:
 			params[REF_CHIP_SIZE] = illegal
 			self.assertRaises(ValueError, ref_pixel, params, self.ifgs)
 
@@ -63,13 +63,13 @@ class ReferencePixelInputTests(unittest.TestCase):
 		# ensure refx & refy are within the grid (if not < 0)
 		params = default_params()
 
-		base = self.ifgs[0].WIDTH
+		base = self.ifgs[0].ncols
 		for illegal in [base + 1, base + 7]:
 			params[REFX] = illegal
 			self.assertRaises(ValueError, ref_pixel, params, self.ifgs)
 
 		params[REFX] = 5 # valid coord to ensure testing of REFY
-		base = self.ifgs[0].FILE_LENGTH
+		base = self.ifgs[0].nrows
 		
 		for illegal in [base + 1, base + 9]:
 			params[REFY] = illegal

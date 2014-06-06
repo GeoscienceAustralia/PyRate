@@ -20,7 +20,7 @@ from pyrate.shared import Ifg
 from pyrate.orbital import OrbitalError, orbital_correction
 from pyrate.orbital import get_design_matrix, get_network_design_matrix
 from pyrate.orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, QUADRATIC, PART_CUBIC
-from common import sydney5_mock_ifgs, MockIfg, SYD_TEST_OBS
+from common import sydney5_mock_ifgs, MockIfg, SYD_TEST_TIF
 
 
 
@@ -36,12 +36,12 @@ class SingleDesignMatrixTests(unittest.TestCase):
 		# faked cell sizes
 		self.xs = 0.75
 		self.ys = 0.8
-		self.ifg = Ifg(join(SYD_TEST_OBS, 'geo_060619-061002.unw'))
+		self.ifg = Ifg(join(SYD_TEST_TIF, 'geo_060619-061002.tif'))
 		self.ifg.open()
 
 		self.m = MockIfg(self.ifg, 3, 4)
-		self.m.X_SIZE = self.xs
-		self.m.Y_SIZE = self.ys
+		self.m.x_size = self.xs
+		self.m.y_size = self.ys
 
 
 	def test_create_planar_dm(self):
@@ -134,8 +134,8 @@ class IndependentCorrectionTests(unittest.TestCase):
 		_add_nodata(self.ifgs)
 
 		for ifg in self.ifgs:
-			ifg.X_SIZE = 90.0
-			ifg.Y_SIZE = 89.5
+			ifg.x_size = 90.0
+			ifg.y_size = 89.5
 			ifg.open()
 
 
@@ -168,8 +168,8 @@ class IndependentCorrectionTests(unittest.TestCase):
 		'''Helper method for result verification'''
 		for i, c in zip(ifgs, corrections):
 			ys, xs = c.shape
-			self.assertEqual(i.FILE_LENGTH, ys)
-			self.assertEqual(i.WIDTH, xs)
+			self.assertEqual(i.nrows, ys)
+			self.assertEqual(i.ncols, xs)
 
 			# ensure there is real data
 			self.assertFalse(isnan(i.phase_data).all())
@@ -305,8 +305,8 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 
 			# NB: this is Hua Wang's MATLAB code slightly modified for Py
 			ib1, ib2 = [x * self.nc for x in (i, i+1)] # row start/end
-			jbm = ncoef * self.date_ids[ifg.MASTER] # starting col index for master
-			jbs = ncoef * self.date_ids[ifg.SLAVE] # col start for slave
+			jbm = ncoef * self.date_ids[ifg.master] # starting col index for master
+			jbs = ncoef * self.date_ids[ifg.slave] # col start for slave
 			assert_array_almost_equal(-exp, dm[ib1:ib2, jbm:jbm+ncoef])
 			assert_array_almost_equal( exp, dm[ib1:ib2, jbs:jbs+ncoef])
 
@@ -434,8 +434,8 @@ class NetworkCorrectionTests(unittest.TestCase):
 		'''
 		corrections = []
 		for ifg in ifgs:
-			jbm = self.date_ids[ifg.MASTER] * ncoef # starting row index for master
-			jbs = self.date_ids[ifg.SLAVE] * ncoef # row start for slave
+			jbm = self.date_ids[ifg.master] * ncoef # starting row index for master
+			jbs = self.date_ids[ifg.slave] * ncoef # row start for slave
 			par = params[jbs:jbs + ncoef] - params[jbm:jbm + ncoef]
 			corrections.append(dot(dm, par).reshape(ifg.phase_data.shape))
 		return corrections
@@ -539,23 +539,23 @@ def unittest_dm(ifg, method, degree, offset=False):
 
 	data = empty((ifg.num_cells, ncoef), dtype=float32)
 	rows = iter(data)
-	yr = xrange(ifg.FILE_LENGTH)
-	xr = xrange(ifg.WIDTH)
+	yr = xrange(ifg.nrows)
+	xr = xrange(ifg.ncols)
 
 	if degree == PLANAR:
 		for y,x in product(yr, xr):
 			row = rows.next()
-			row[:NX] = [x * ifg.X_SIZE, y * ifg.Y_SIZE]
+			row[:NX] = [x * ifg.x_size, y * ifg.y_size]
 	elif degree ==  QUADRATIC:
 		for y,x in product(yr, xr):
-			ys = y * ifg.Y_SIZE
-			xs = x * ifg.X_SIZE
+			ys = y * ifg.y_size
+			xs = x * ifg.x_size
 			row = rows.next()
 			row[:NX] = [xs**2, ys**2, xs*ys, xs, ys]
 	else:
 		for y,x in product(yr, xr):
-			ys = y * ifg.Y_SIZE
-			xs = x * ifg.X_SIZE
+			ys = y * ifg.y_size
+			xs = x * ifg.x_size
 			row = rows.next()
 			row[:NX] = [xs*ys**2,xs**2, ys**2, xs*ys, xs, ys]
 
@@ -569,7 +569,7 @@ def get_date_ids(ifgs):
 	'''Returns unique master/slave date IDs from the given Ifgs'''
 	dates = []
 	for ifg in ifgs:
-		dates += list(ifg.DATE12)
+		dates += [ifg.master, ifg.slave]
 	return algorithm.master_slave_ids(dates)
 
 
