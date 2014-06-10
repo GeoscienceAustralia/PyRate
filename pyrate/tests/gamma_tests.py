@@ -55,7 +55,7 @@ class GammaToGeoTiffTests(unittest.TestCase):
 
 		dest = '/tmp/tmp_gamma_ifg.tif'
 		data_path = join(GAMMA_TEST_DIR, '16x20_20090713-20090817_VV_4rlks_utm.unw')
-		gamma.to_geotiff(combined, data_path, dest, nodata=0)		
+		gamma.to_geotiff(combined, data_path, dest, nodata=0)
 				
 		ds = gdal.Open(dest)
 		exp_path = join(GAMMA_TEST_DIR, '16x20_20090713-20090817_VV_4rlks_utm.tif')
@@ -73,6 +73,22 @@ class GammaToGeoTiffTests(unittest.TestCase):
 		
 		wavelen = float(md[ifc.PYRATE_WAVELENGTH_METRES])
 		self.assertAlmostEqual(wavelen, 0.05627457792190739)
+
+	def test_to_geotiff_wrong_input_data(self):
+		# TODO: refactor to make this code store a common dict in mem 
+		filenames = ['r20090713_VV.slc.par', 'r20090817_VV.slc.par']
+		hdr_paths = [join(GAMMA_TEST_DIR, f) for f in filenames]
+		hdrs = [gamma.parse_epoch_header(p) for p in hdr_paths]
+		
+		dem_hdr_path = join(GAMMA_TEST_DIR, 'dem16x20raw.dem.par')
+		dem_hdr = gamma.parse_dem_header(dem_hdr_path)
+		combined = gamma.combine_headers(*hdrs, dem_hdr=dem_hdr)
+
+		# use TIF, not UNW for data
+		dest = '/tmp/tmp_gamma_ifg.tif'
+		data_path = join(GAMMA_TEST_DIR, '16x20_20090713-20090817_VV_4rlks_utm.tif')
+		self.assertRaises(gamma.GammaException, gamma.to_geotiff,
+							combined, data_path, dest, nodata=0)
 
 	def compare_rasters(self, ds, exp_ds):
 		band = ds.GetRasterBand(1)

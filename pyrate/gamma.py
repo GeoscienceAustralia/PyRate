@@ -20,6 +20,7 @@ Created on 29/05/2014
 @author: Ben Davies NCI
 '''
 
+import os
 import struct
 import datetime
 import ifgconstants as ifc 
@@ -45,12 +46,13 @@ SPEED_OF_LIGHT_METRES_PER_SECOND = 3e8
 
 # TODO: add cmd line interface
 # TODO: check for mismatching X,Y cell resolution?
-# TODO: add a file size checker to ensure a .unw is passed in
 def to_geotiff(hdr, data_path, dest, nodata):
 	'Converts GAMMA format data to GeoTIFF image with PyRate metadata'
 	is_ifg = hdr.has_key(ifc.PYRATE_WAVELENGTH_METRES)
 	ncols = hdr[ifc.PYRATE_NCOLS]
 	nrows = hdr[ifc.PYRATE_NROWS]
+	_check_raw_data(data_path, ncols, nrows)
+
 	driver = gdal.GetDriverByName("GTiff")
 	ds = driver.Create(dest, ncols, nrows, 1, gdal.GDT_Float32)
 	
@@ -83,7 +85,13 @@ def to_geotiff(hdr, data_path, dest, nodata):
 			band.WriteArray(np.array(data).reshape(1, ncols), yoff=y)
 
 	ds = None
-	
+
+def _check_raw_data(data_path, ncols, nrows):
+	size = ncols * nrows * 4 # DEM and Ifg data are 4 byte floats 
+	act_size = os.stat(data_path).st_size
+	if act_size != size:
+		msg = '%s should have size %s, not %s. Is the correct file being used?'
+		raise GammaException(msg % (data_path, size, act_size))
 
 def parse_header(path):
 	'Parses all GAMMA epoch/DEM header file fields into a dictionary'	
