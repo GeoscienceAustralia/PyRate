@@ -217,7 +217,7 @@ def parse_header(hdr_file):
 		subset[ifc.PYRATE_DATE], subset[ifc.PYRATE_DATE2] = dates
 
 		# replace timespan as ROIPAC is ~4 hours different to (slave - master)
-		timespan = (subset[ifc.PYRATE_DATE2] - subset[ifc.PYRATE_DATE]).days / 365.25
+		timespan = (subset[ifc.PYRATE_DATE2] - subset[ifc.PYRATE_DATE]).days / ifc.DAYS_PER_YEAR
 		subset[ifc.PYRATE_TIME_SPAN] = timespan
 		
 	# add custom X|Y_LAST for convenience

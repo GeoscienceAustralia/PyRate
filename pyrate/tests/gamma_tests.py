@@ -72,7 +72,7 @@ class GammaToGeoTiffTests(unittest.TestCase):
 		self.assertEqual(len(md), 5)
 		self.assertTrue(md[ifc.PYRATE_DATE] == str(date(2009, 7, 13)))
 		self.assertTrue(md[ifc.PYRATE_DATE2] == str(date(2009, 8, 17)))
-		self.assertTrue(md[ifc.PYRATE_TIME_SPAN] == str((18 + 17) / 365.25))
+		self.assertTrue(md[ifc.PYRATE_TIME_SPAN] == str(35 / ifc.DAYS_PER_YEAR))
 		
 		wavelen = float(md[ifc.PYRATE_WAVELENGTH_METRES])
 		self.assertAlmostEqual(wavelen, 0.05627457792190739)
@@ -172,7 +172,7 @@ class HeaderCombinationTests(unittest.TestCase):
 
 		chdr = gamma.combine_headers(hdr0, hdr1, self.dh)
 		
-		exp_timespan = (18 + 17) / 365.25 
+		exp_timespan = (18 + 17) / ifc.DAYS_PER_YEAR
 		self.assertEqual(chdr[ifc.PYRATE_TIME_SPAN], exp_timespan)
 
 		exp_date = date(2009, 7, 13)

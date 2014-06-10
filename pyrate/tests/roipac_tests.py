@@ -86,7 +86,7 @@ class RoipacToGeoTiffTests(unittest.TestCase):
 		diff = (date2 - date1).days
 		self.assertTrue(md[ifc.PYRATE_DATE] == str(date1))
 		self.assertTrue(md[ifc.PYRATE_DATE2] == str(date2))
-		self.assertTrue(md[ifc.PYRATE_TIME_SPAN] == str(diff / 365.25))
+		self.assertTrue(md[ifc.PYRATE_TIME_SPAN] == str(diff / ifc.DAYS_PER_YEAR))
 		
 		wavelen = float(md[ifc.PYRATE_WAVELENGTH_METRES])
 		self.assertAlmostEqual(wavelen, 0.0562356424)
@@ -167,7 +167,7 @@ class HeaderParsingTests(unittest.TestCase):
 		# check time span calc
 		master = date(2006, 06, 19)
 		slave = date(2006, 10, 02)
-		diff = (slave - master).days / 365.25
+		diff = (slave - master).days / ifc.DAYS_PER_YEAR
 		self.assertEqual(diff, hdrs[roipac.TIME_SPAN_YEAR])
 
 

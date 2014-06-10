@@ -43,7 +43,7 @@ GAMMA_FREQUENCY = 'radar_frequency'
 
 SPEED_OF_LIGHT_METRES_PER_SECOND = 3e8
 
-# TODO: add constant for 365.25
+
 # TODO: add cmd line interface
 # TODO: check for mismatching X,Y cell resolution?
 def to_geotiff(hdr, data_path, dest, nodata):
@@ -174,7 +174,7 @@ def combine_headers(hdr0, hdr1, dem_hdr):
 	elif date1 < date0:
 		raise GammaException("Wrong date order")
 		
-	chdr[ifc.PYRATE_TIME_SPAN] = (date1 - date0).days / 365.25
+	chdr[ifc.PYRATE_TIME_SPAN] = (date1 - date0).days / ifc.DAYS_PER_YEAR
 	chdr[ifc.PYRATE_DATE] = date0
 	chdr[ifc.PYRATE_DATE2] = date1 # add 2nd date as it may not be in file name
 	
