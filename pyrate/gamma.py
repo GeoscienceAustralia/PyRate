@@ -7,7 +7,7 @@ allowing GDAL to access the raster data
 
 The types of GAMMA files converted by PyRate are:
 * DEM: with a .unw float32 binary data file (MSB order), & '.par' header. There
-is only a single height band for the binary data.
+is only a single height band in the binary data.
 
 * Interferograms: have a .unw float32 bit binary data file (MSB order), with a
 single band for phase data. Two .par resource/header files, each containing
@@ -49,15 +49,16 @@ SPEED_OF_LIGHT_METRES_PER_SECOND = 3e8
 # TODO: consider refactoring to take header paths (or autodetect header?)
 def to_geotiff(hdr, data_path, dest, nodata):
 	'Converts GAMMA format data to GeoTIFF image with PyRate metadata'
+	is_ifg = hdr.has_key(ifc.PYRATE_WAVELENGTH_METRES)
 	ncols = hdr[ifc.PYRATE_NCOLS]
 	nrows = hdr[ifc.PYRATE_NROWS]
 	driver = gdal.GetDriverByName("GTiff")
 	ds = driver.Create(dest, ncols, nrows, 1, gdal.GDT_Float32)
 	
-	# FIXME: limit the number of headers to prevent duplicate data
 	# write custom headers to interferograms
-	if hdr.has_key(ifc.PYRATE_WAVELENGTH_METRES):
-		for k in hdr:
+	if is_ifg:
+		for k in (ifc.PYRATE_DATE, ifc.PYRATE_DATE2,
+				ifc.PYRATE_TIME_SPAN, ifc.PYRATE_WAVELENGTH_METRES):
 			ds.SetMetadataItem(k, str(hdr[k]))
 	
 	# position and projection data	

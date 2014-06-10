@@ -30,7 +30,7 @@ class GammaToGeoTiffTests(unittest.TestCase):
 		hdr_path = join(GAMMA_TEST_DIR, 'dem16x20raw.dem.par')
 		hdr = gamma.parse_dem_header(hdr_path)
 		data_path = join(GAMMA_TEST_DIR, 'dem16x20raw.dem')
-		dest = "/tmp/tmpdem.tif"
+		dest = "/tmp/tmp_gamma_dem.tif"
 
 		gamma.to_geotiff(hdr, data_path, dest, nodata=0)
 		exp_path = join(GAMMA_TEST_DIR, 'dem16x20_subset_from_gamma.tif')
@@ -53,7 +53,7 @@ class GammaToGeoTiffTests(unittest.TestCase):
 		dem_hdr = gamma.parse_dem_header(dem_hdr_path)
 		combined = gamma.combine_headers(*hdrs, dem_hdr=dem_hdr)
 
-		dest = '/tmp/tmpifg.tif'
+		dest = '/tmp/tmp_gamma_ifg.tif'
 		data_path = join(GAMMA_TEST_DIR, '16x20_20090713-20090817_VV_4rlks_utm.unw')
 		gamma.to_geotiff(combined, data_path, dest, nodata=0)		
 				
@@ -64,7 +64,9 @@ class GammaToGeoTiffTests(unittest.TestCase):
 		# compare data and geographic headers
 		assert_array_almost_equal(exp_ds.ReadAsArray(), ds.ReadAsArray())
 		self.compare_rasters(ds, exp_ds)
+
 		md = ds.GetMetadata()
+		self.assertEqual(len(md), 5)
 		self.assertTrue(md[ifc.PYRATE_DATE] == str(date(2009, 7, 13)))
 		self.assertTrue(md[ifc.PYRATE_DATE2] == str(date(2009, 8, 17)))
 		self.assertTrue(md[ifc.PYRATE_TIME_SPAN] == str((18 + 17) / 365.25))
