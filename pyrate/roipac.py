@@ -92,6 +92,7 @@ def to_geotiff(hdr, data_path, dest, nodata):
 	ncols = hdr[ifc.PYRATE_NCOLS]
 	nrows = hdr[ifc.PYRATE_NROWS]
 	_check_raw_data(is_ifg, data_path, ncols, nrows)
+	_check_step_mismatch(hdr)
 	
 	driver = gdal.GetDriverByName("GTiff")
 	dtype = gdal.GDT_Float32 if is_ifg else gdal.GDT_Int16
@@ -151,6 +152,12 @@ def _check_raw_data(is_ifg, data_path, ncols, nrows):
 		msg = '%s should have size %s, not %s. Is the correct file being used?'
 		raise RoipacException(msg % (data_path, size, act_size))
 
+def _check_step_mismatch(hdr):
+	xs, ys = [abs(i) for i in [hdr[ifc.PYRATE_X_STEP], hdr[ifc.PYRATE_Y_STEP]]] 
+	
+	if xs != ys:
+		msg = 'X and Y cell sizes do not match: %s & %s'
+		raise RoipacException(msg % (xs, ys)) 
 
 def parse_date(dstr):
 	"""Parses ROI_PAC 'yymmdd' or 'yymmdd-yymmdd' to date or date tuple"""

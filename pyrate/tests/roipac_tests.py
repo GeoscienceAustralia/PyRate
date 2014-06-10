@@ -106,7 +106,13 @@ class RoipacToGeoTiffTests(unittest.TestCase):
 		self.assertRaises(RoipacException, roipac.to_geotiff, hdrs, data_path, dest, 0)
 
 	def test_mismatching_cell_resolution(self):
-		raise NotImplementedError
+		hdrs = self.HDRS.copy()
+		hdrs[ifc.PYRATE_X_STEP] = 0.1 # fake a mismatch
+		hdrs[ifc.PYRATE_DATUM] = 'WGS84'
+		data_path = join(PREP_TEST_OBS, 'geo_060619-061002.unw')
+		dest = '/tmp/fake'
+		
+		self.assertRaises(RoipacException, roipac.to_geotiff, hdrs, data_path, dest, 0)
 
 	def compare_rasters(self, ds, exp_ds):
 		band = ds.GetRasterBand(1)
