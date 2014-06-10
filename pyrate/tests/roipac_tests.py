@@ -66,12 +66,11 @@ class RoipacToGeoTiffTests(unittest.TestCase):
 		dest = '/tmp/tmp_roipac_ifg.tif'
 		data_path = join(PREP_TEST_OBS, 'geo_060619-061002.unw')
 		roipac.to_geotiff(hdrs, data_path, dest, nodata=0)		
-				
+
 		ds = gdal.Open(dest)
 		band = ds.GetRasterBand(1)
 		self.assertEqual(ds.RasterCount, 1)
-		
-		# TODO: result is only a single band dataset, make exp tif 1 band?
+
 		exp_path = join(PREP_TEST_TIF, 'geo_060619-061002.tif')
 		exp_ds = gdal.Open(exp_path)
 		exp_band = exp_ds.GetRasterBand(1)

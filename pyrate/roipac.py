@@ -85,7 +85,6 @@ ROIPAC_HEADER_LEFT_JUSTIFY = 18
 ROI_PAC_HEADER_FILE_EXT = "rsc"
 
 
-# TODO: check for mismatching X,Y cell resolution?
 def to_geotiff(hdr, data_path, dest, nodata):
 	'Converts GAMMA format data to GeoTIFF image with PyRate metadata'
 	is_ifg = ifc.PYRATE_WAVELENGTH_METRES in hdr
