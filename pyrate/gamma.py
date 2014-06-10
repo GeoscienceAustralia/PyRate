@@ -21,9 +21,11 @@ Created on 29/05/2014
 '''
 
 import os
+import re
 import struct
 import datetime
 import ifgconstants as ifc 
+from glob import glob
 
 import gdal, osr
 import numpy as np
@@ -44,8 +46,7 @@ GAMMA_FREQUENCY = 'radar_frequency'
 SPEED_OF_LIGHT_METRES_PER_SECOND = 3e8
 
 
-# TODO: add cmd line interface
-# TODO: check for mismatching X,Y cell resolution?
+
 def to_geotiff(hdr, data_path, dest, nodata):
 	'Converts GAMMA format data to GeoTIFF image with PyRate metadata'
 	is_ifg = hdr.has_key(ifc.PYRATE_WAVELENGTH_METRES)
@@ -192,3 +193,40 @@ def combine_headers(hdr0, hdr1, dem_hdr):
 
 class GammaException(Exception):
 	pass
+
+
+if __name__ == '__main__':
+	import sys
+	from optparse import OptionParser
+	
+	usage = 'Usage: %prog [options] DEM-HEADER GAMMA_FILE [GAMMA_FILE...]' 
+	parser = OptionParser(usage=usage)
+	parser.add_option('-n', '--nodata', help='NODATA value', type='float', default=0.0)
+	options, args = parser.parse_args()
+
+	if len(args) < 2:
+		parser.error(usage)
+
+	dem_hdr = parse_dem_header(args[0])
+
+	for path in args[1:]:
+		dest = '%s.tif' % os.path.splitext(os.path.basename(path))[0]
+		
+		if os.path.exists(dest):
+			sys.exit('Error: %s already exists' % dest)
+		
+		try:
+			# find param files contaning filename dates
+			ptn = re.compile(r'\d{8}') # match 8 digits for the date
+			matches = ptn.findall(path)
+			
+			if len(matches) != 2:
+				sys.exit('Error: could not find dates in %s' % path)
+			
+			hpaths = [glob('*%s*.par' % m)[0] for m in matches]
+			
+			hdrs = [parse_epoch_header(hp) for hp in hpaths]
+			combined = combine_headers(hdrs[0], hdrs[1], dem_hdr)
+			to_geotiff(combined, path, dest, options.nodata)
+		except Exception, ex:
+			sys.exit('Error: %s' % ex.message)			
