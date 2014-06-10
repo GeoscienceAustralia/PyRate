@@ -12,7 +12,7 @@ The binary data is assumed to contain 2 bands, amplitude and phase.
 * DEM: with a .unw 16 bit signed int binary data file, and a .rsc header
 There is only a single height band for the binary data.
 
-* TODO: describe incidence files, and any others.   
+* TODO: implement & describe incidence files, and any others (for later version)   
 
 
 There may be differences with the .rsc file content, with short and long forms.

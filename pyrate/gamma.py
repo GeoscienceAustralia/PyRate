@@ -14,7 +14,7 @@ single band for phase data. Two .par resource/header files, each containing
 details of the epochs used to create the interferogram. No geographic date is 
 sotred in these, so the DEM header is required for raster sizes/location etc.
 
-* TODO: describe incidence files (and any others?)
+* TODO: describe incidence files (and any others (for later versions)
 
 Created on 29/05/2014
 @author: Ben Davies NCI
