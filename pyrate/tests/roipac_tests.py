@@ -57,8 +57,6 @@ class RoipacToGeoTiffTests(unittest.TestCase):
 		# tricker: needs ifg header, and DEM one for extents 
 		hdr_path = join(PREP_TEST_OBS, 'geo_060619-061002.unw.rsc')
 		hdrs = roipac.parse_header(hdr_path)
-		
-		# HACK: temp add datum in
 		hdrs[ifc.PYRATE_DATUM] = 'WGS84'
 
 		dest = '/tmp/tmp_roipac_ifg.tif'
@@ -170,7 +168,7 @@ class HeaderParsingTests(unittest.TestCase):
 		hdrs = roipac.parse_header(FULL_HEADER_PATH)
 
 		# check DATE/ DATE12 fields are parsed correctly
-		date0 = date(2006, 6, 19) # from  "DATE 060619" header
+		date0 = date(2006, 6, 19) # from "DATE 060619" header
 		date2 = date(2006, 8, 28) # from DATE12 060619-060828
 		self.assertEqual(hdrs[ifc.PYRATE_DATE], date0)
 		self.assertEqual(hdrs[ifc.PYRATE_DATE2], date2)
