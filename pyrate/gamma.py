@@ -43,7 +43,7 @@ GAMMA_FREQUENCY = 'radar_frequency'
 
 SPEED_OF_LIGHT_METRES_PER_SECOND = 3e8
 
-
+# TODO: add constant for 365.25
 # TODO: add cmd line interface
 # TODO: check for mismatching X,Y cell resolution?
 def to_geotiff(hdr, data_path, dest, nodata):
@@ -52,6 +52,7 @@ def to_geotiff(hdr, data_path, dest, nodata):
 	ncols = hdr[ifc.PYRATE_NCOLS]
 	nrows = hdr[ifc.PYRATE_NROWS]
 	_check_raw_data(data_path, ncols, nrows)
+	_check_step_mismatch(hdr)
 
 	driver = gdal.GetDriverByName("GTiff")
 	ds = driver.Create(dest, ncols, nrows, 1, gdal.GDT_Float32)
@@ -92,6 +93,13 @@ def _check_raw_data(data_path, ncols, nrows):
 	if act_size != size:
 		msg = '%s should have size %s, not %s. Is the correct file being used?'
 		raise GammaException(msg % (data_path, size, act_size))
+
+def _check_step_mismatch(hdr):
+	xs, ys = [abs(i) for i in [hdr[ifc.PYRATE_X_STEP], hdr[ifc.PYRATE_Y_STEP]]] 
+	
+	if xs != ys:
+		msg = 'X and Y cell sizes do not match: %s & %s'
+		raise GammaException(msg % (xs, ys)) 
 
 def parse_header(path):
 	'Parses all GAMMA epoch/DEM header file fields into a dictionary'	

@@ -84,6 +84,14 @@ class GammaToGeoTiffTests(unittest.TestCase):
 		self.assertRaises(gamma.GammaException, gamma.to_geotiff,
 							self.COMBINED, data_path, dest, nodata=0)
 
+	def test_mismatching_cell_resolution(self):
+		hdrs = self.DEM_HDR.copy()
+		hdrs[ifc.PYRATE_X_STEP] = 0.1 # fake a mismatch
+		data_path = join(GAMMA_TEST_DIR, '16x20_20090713-20090817_VV_4rlks_utm.unw')
+		dest = '/tmp/fake'
+		
+		self.assertRaises(gamma.GammaException, gamma.to_geotiff, hdrs, data_path, dest, 0)
+
 	def compare_rasters(self, ds, exp_ds):
 		band = ds.GetRasterBand(1)
 		exp_band = exp_ds.GetRasterBand(1)		
