@@ -87,6 +87,14 @@ class GammaToGeoTiffTests(unittest.TestCase):
 		self.assertEqual(exp_ds.GetProjection(), pj)		
 		for exp, act in zip(exp_ds.GetGeoTransform(), ds.GetGeoTransform()):
 			self.assertAlmostEqual(exp, act, places=4)
+			
+	def test_bad_projection(self):
+		hdr_path = join(GAMMA_TEST_DIR, 'dem16x20raw.dem.par')
+		hdr = gamma.parse_dem_header(hdr_path)
+		hdr[ifc.PYRATE_DATUM] = 'nonexistent projection'
+		data_path = join(GAMMA_TEST_DIR, 'dem16x20raw.dem')
+		dest = "/tmp/tmp_gamma_dem2.tif"
+		self.assertRaises(gamma.GammaError, gamma.to_geotiff, hdr, data_path, dest, nodata=0)
 
 
 class GammaHeaderParsingTests(unittest.TestCase):

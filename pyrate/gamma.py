@@ -64,10 +64,13 @@ def to_geotiff(hdr, data_path, dest, nodata):
 	# position and projection data	
 	ds.SetGeoTransform([hdr[ifc.PYRATE_LONG], hdr[ifc.PYRATE_X_STEP], 0,
 						hdr[ifc.PYRATE_LAT], 0, hdr[ifc.PYRATE_Y_STEP]])
-	
-	# TODO: is this sufficient to geolocate the raster?
+
 	srs = osr.SpatialReference()
-	srs.SetWellKnownGeogCS(hdr[ifc.PYRATE_DATUM])
+	res = srs.SetWellKnownGeogCS(hdr[ifc.PYRATE_DATUM])
+	if res:
+		msg = 'Unrecognised projection: %s' % hdr[ifc.PYRATE_DATUM]
+		raise GammaError(msg)
+
 	ds.SetProjection(srs.ExportToWkt())
 	
 	# copy data from the binary file

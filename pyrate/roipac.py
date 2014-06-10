@@ -107,7 +107,6 @@ def to_geotiff(hdr, data_path, dest, nodata):
 	ds.SetGeoTransform([hdr[ifc.PYRATE_LONG], hdr[ifc.PYRATE_X_STEP], 0,
 						hdr[ifc.PYRATE_LAT], 0, hdr[ifc.PYRATE_Y_STEP]])
 	
-	# TODO: is this sufficient to geolocate the raster?
 	srs = osr.SpatialReference()
 	res = srs.SetWellKnownGeogCS(hdr[ifc.PYRATE_DATUM])
 	if res:

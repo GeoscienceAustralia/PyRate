@@ -20,6 +20,7 @@ from common import SYD_TEST_DEM_UNW, SYD_TEST_DEM_HDR, SYD_TEST_DEM_DIR, SYD_TES
 from numpy.testing import assert_array_almost_equal
 
 import gdal
+from pyrate.roipac import RoipacException
 gdal.UseExceptions()
 
 
@@ -76,8 +77,8 @@ class RoipacToGeoTiffTests(unittest.TestCase):
 		# compare data and geographic headers
 		assert_array_almost_equal(exp_band.ReadAsArray(), band.ReadAsArray())
 		self.compare_rasters(ds, exp_ds)
+
 		md = ds.GetMetadata()
-		
 		date1 = date(2006, 6, 19)
 		date2 = date(2006, 10, 2)
 		diff = (date2 - date1).days
@@ -97,6 +98,14 @@ class RoipacToGeoTiffTests(unittest.TestCase):
 		data_path = join(PREP_TEST_TIF, 'geo_060619-061002.tif')
 		self.assertRaises(roipac.RoipacException, roipac.to_geotiff,
 							hdrs, data_path, dest, nodata=0)
+
+	def test_bad_projection(self):
+		hdr_path = join(PREP_TEST_OBS, 'geo_060619-061002.unw.rsc')
+		hdrs = roipac.parse_header(hdr_path)
+		hdrs[ifc.PYRATE_DATUM] = 'bad datum string'
+		dest = '/tmp/tmp_roipac_ifg2.tif'
+		data_path = join(PREP_TEST_OBS, 'geo_060619-061002.unw')
+		self.assertRaises(RoipacException, roipac.to_geotiff, hdrs, data_path, dest, 0)
 
 	def compare_rasters(self, ds, exp_ds):
 		band = ds.GetRasterBand(1)
