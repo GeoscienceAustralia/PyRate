@@ -149,7 +149,13 @@ def frequency_to_wavelength(freq):
 
 
 def combine_headers(hdr0, hdr1, dem_hdr):
-	'Combine dicts from both epoch headers into single ifg header'
+	'''
+	Combines both epoch header lookups into single ifg header/dict
+	
+	hdr0: header for the earliest/master ifg
+	hdr1: header for the latest/slave ifg
+	dem_hdr: dict of DEM header attributes
+	'''
 	if not all([isinstance(a, dict) for a in [hdr0, hdr1, dem_hdr]]):
 		raise GammaException('Header args need to be dicts')
 	
@@ -168,7 +174,9 @@ def combine_headers(hdr0, hdr1, dem_hdr):
 	if wavelen == hdr1[ifc.PYRATE_WAVELENGTH_METRES]:
 		chdr[ifc.PYRATE_WAVELENGTH_METRES] = wavelen
 	else:
-		raise GammaException("Wavelengths don't match") 
+		args = (chdr[ifc.PYRATE_DATE], chdr[ifc.PYRATE_DATE2])
+		msg = "Wavelength mismatch, check both header files for %s & %s"
+		raise GammaException(msg % args)
 	
 	chdr.update(dem_hdr) # add geographic data
 	return chdr
