@@ -270,14 +270,14 @@ if __name__ == '__main__':
 	for path in args:
 		try:
 			hpath = "%s.%s" % (path, ROI_PAC_HEADER_FILE_EXT)
-			base = os.path.splitext(os.path.basename(path))[0]
-			dest = "%s.%s" % (base, 'tif') # TODO: make a constant 
 			hdr = parse_header(hpath)
+
 			if PYRATE_DATUM in hdr:
-				print 'TODO datum already in the header'
+				raise RoipacException('Datum field already in the header')
 			else:
 				hdr[PYRATE_DATUM] = proj
 			
+			dest = "%s.tif" % os.path.splitext(os.path.basename(path))[0]
 			to_geotiff(hdr, path, dest, options.nodata)
 		except Exception, ex:
 			sys.exit(ex.message)			
