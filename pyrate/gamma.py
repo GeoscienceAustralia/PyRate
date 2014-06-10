@@ -46,7 +46,6 @@ SPEED_OF_LIGHT_METRES_PER_SECOND = 3e8
 # TODO: add cmd line interface
 # TODO: check for mismatching X,Y cell resolution?
 # TODO: add a file size checker to ensure a .unw is passed in
-# TODO: consider refactoring to take header paths (or autodetect header?)
 def to_geotiff(hdr, data_path, dest, nodata):
 	'Converts GAMMA format data to GeoTIFF image with PyRate metadata'
 	is_ifg = hdr.has_key(ifc.PYRATE_WAVELENGTH_METRES)
@@ -69,7 +68,7 @@ def to_geotiff(hdr, data_path, dest, nodata):
 	res = srs.SetWellKnownGeogCS(hdr[ifc.PYRATE_DATUM])
 	if res:
 		msg = 'Unrecognised projection: %s' % hdr[ifc.PYRATE_DATUM]
-		raise GammaError(msg)
+		raise GammaException(msg)
 
 	ds.SetProjection(srs.ExportToWkt())
 	
@@ -107,7 +106,7 @@ def parse_epoch_header(path):
 	freq, unit = lookup[GAMMA_FREQUENCY]
 	if unit != "Hz":
 		msg = 'Unrecognised unit field for radar_frequency: %s'
-		raise GammaError(msg % unit)
+		raise GammaException(msg % unit)
 		
 	subset[ifc.PYRATE_WAVELENGTH_METRES] = frequency_to_wavelength(float(freq))
 	return subset
@@ -127,7 +126,7 @@ def parse_dem_header(path):
 		units = lookup[GAMMA_CORNER_LAT][1:]
 		if  units != expected:
 			msg = "Unrecognised units for GAMMA %s field\n. Got %s, expected %s"
-			raise GammaError(msg % (k, units, expected))	
+			raise GammaException(msg % (k, units, expected))	
 	
 	subset[ifc.PYRATE_LAT] = float(lookup[GAMMA_CORNER_LAT][0])
 	subset[ifc.PYRATE_LONG] = float(lookup[GAMMA_CORNER_LONG][0])
@@ -144,14 +143,14 @@ def frequency_to_wavelength(freq):
 def combine_headers(hdr0, hdr1, dem_hdr):
 	'Combine dicts from both epoch headers into single ifg header'
 	if not all([isinstance(a, dict) for a in [hdr0, hdr1, dem_hdr]]):
-		raise GammaError('Header args need to be dicts')
+		raise GammaException('Header args need to be dicts')
 	
 	chdr = {}
 	date0, date1 = hdr0[ifc.PYRATE_DATE], hdr1[ifc.PYRATE_DATE] 
 	if date0 == date1:
-		raise GammaError("Can't combine headers for the same day")
+		raise GammaException("Can't combine headers for the same day")
 	elif date1 < date0:
-		raise GammaError("Wrong date order")
+		raise GammaException("Wrong date order")
 		
 	chdr[ifc.PYRATE_TIME_SPAN] = (date1 - date0).days / 365.25
 	chdr[ifc.PYRATE_DATE] = date0
@@ -161,11 +160,11 @@ def combine_headers(hdr0, hdr1, dem_hdr):
 	if wavelen == hdr1[ifc.PYRATE_WAVELENGTH_METRES]:
 		chdr[ifc.PYRATE_WAVELENGTH_METRES] = wavelen
 	else:
-		raise GammaError("Wavelengths don't match") 
+		raise GammaException("Wavelengths don't match") 
 	
 	chdr.update(dem_hdr) # add geographic data
 	return chdr
 
 
-class GammaError(Exception):
+class GammaException(Exception):
 	pass

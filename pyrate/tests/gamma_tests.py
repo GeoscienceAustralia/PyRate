@@ -94,7 +94,7 @@ class GammaToGeoTiffTests(unittest.TestCase):
 		hdr[ifc.PYRATE_DATUM] = 'nonexistent projection'
 		data_path = join(GAMMA_TEST_DIR, 'dem16x20raw.dem')
 		dest = "/tmp/tmp_gamma_dem2.tif"
-		self.assertRaises(gamma.GammaError, gamma.to_geotiff, hdr, data_path, dest, nodata=0)
+		self.assertRaises(gamma.GammaException, gamma.to_geotiff, hdr, data_path, dest, nodata=0)
 
 
 class GammaHeaderParsingTests(unittest.TestCase):
@@ -144,7 +144,7 @@ class HeaderCombinationTests(unittest.TestCase):
 	'Tests GAMMA epoch and DEM headers can be combined into a single Py dict'
 	
 	def setUp(self):
-		self.err = gamma.GammaError
+		self.err = gamma.GammaException
 		dem_hdr_path = join(GAMMA_TEST_DIR, 'dem16x20raw.dem.par')
 		self.dh = gamma.parse_dem_header(dem_hdr_path)
 	
