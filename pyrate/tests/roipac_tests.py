@@ -36,6 +36,11 @@ FULL_HEADER_PATH  = join(HEADERS_TEST_DIR, "geo_060619-060828.unw.rsc")
 
 class RoipacToGeoTiffTests(unittest.TestCase):
 	'Tests conversion of GAMMA rasters to custom PyRate GeoTIFF'
+	
+	@classmethod
+	def setUpClass(cls):
+		hdr_path = join(PREP_TEST_OBS, 'geo_060619-061002.unw.rsc')
+		cls.HDRS = roipac.parse_header(hdr_path)
 
 	def test_to_geotiff_dem(self):
 		hdr = roipac.parse_header(SYD_TEST_DEM_HDR)
@@ -55,8 +60,7 @@ class RoipacToGeoTiffTests(unittest.TestCase):
 
 	def test_to_geotiff_ifg(self):
 		# tricker: needs ifg header, and DEM one for extents 
-		hdr_path = join(PREP_TEST_OBS, 'geo_060619-061002.unw.rsc')
-		hdrs = roipac.parse_header(hdr_path)
+		hdrs = self.HDRS.copy()
 		hdrs[ifc.PYRATE_DATUM] = 'WGS84'
 
 		dest = '/tmp/tmp_roipac_ifg.tif'
@@ -64,8 +68,8 @@ class RoipacToGeoTiffTests(unittest.TestCase):
 		roipac.to_geotiff(hdrs, data_path, dest, nodata=0)		
 				
 		ds = gdal.Open(dest)
-		assert ds.RasterCount == 1
 		band = ds.GetRasterBand(1)
+		self.assertEqual(ds.RasterCount, 1)
 		
 		# TODO: result is only a single band dataset, make exp tif 1 band?
 		exp_path = join(PREP_TEST_TIF, 'geo_060619-061002.tif')
@@ -88,22 +92,21 @@ class RoipacToGeoTiffTests(unittest.TestCase):
 		self.assertAlmostEqual(wavelen, 0.0562356424)
 		
 	def test_to_geotiff_wrong_input_data(self):
-		hdr_path = join(PREP_TEST_OBS, 'geo_060619-061002.unw.rsc')
-		hdrs = roipac.parse_header(hdr_path)
+		# ensure failure if TIF/other file used instead of binary UNW data
 		dest = '/tmp/tmp_roipac_ifg.tif'
-		
-		# use TIF, not UNW for data
 		data_path = join(PREP_TEST_TIF, 'geo_060619-061002.tif')
 		self.assertRaises(roipac.RoipacException, roipac.to_geotiff,
-							hdrs, data_path, dest, nodata=0)
+							self.HDRS, data_path, dest, nodata=0)
 
 	def test_bad_projection(self):
-		hdr_path = join(PREP_TEST_OBS, 'geo_060619-061002.unw.rsc')
-		hdrs = roipac.parse_header(hdr_path)
+		hdrs = self.HDRS.copy()
 		hdrs[ifc.PYRATE_DATUM] = 'bad datum string'
 		dest = '/tmp/tmp_roipac_ifg2.tif'
 		data_path = join(PREP_TEST_OBS, 'geo_060619-061002.unw')
 		self.assertRaises(RoipacException, roipac.to_geotiff, hdrs, data_path, dest, 0)
+
+	def test_mismatching_cell_resolution(self):
+		raise NotImplementedError
 
 	def compare_rasters(self, ds, exp_ds):
 		band = ds.GetRasterBand(1)
