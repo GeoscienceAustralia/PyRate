@@ -196,15 +196,15 @@ class GammaException(Exception):
 	pass
 
 
-# TODO: move to a testable main() func
-# TODO: add a -d output dir option?
-if __name__ == '__main__':
+
+def main():
 	import sys
 	from optparse import OptionParser
 	
 	usage = 'Usage: %prog [options] DEM-HEADER GAMMA_FILE [GAMMA_FILE...]' 
 	parser = OptionParser(usage=usage)
 	parser.add_option('-n', '--nodata', help='NODATA value', type='float', default=0.0)
+	parser.add_option('-d', '--dest-dir', help='Write output to DIR', type='string')
 	options, args = parser.parse_args()
 
 	if len(args) < 2:
@@ -214,6 +214,9 @@ if __name__ == '__main__':
 
 	for path in args[1:]:
 		dest = '%s.tif' % os.path.splitext(os.path.basename(path))[0]
+		
+		if options.dest_dir:
+			dest = join(options.dest_dir, dest)
 		
 		if os.path.exists(dest):
 			sys.exit('Error: %s already exists' % dest)
@@ -235,3 +238,7 @@ if __name__ == '__main__':
 			to_geotiff(hdrs, path, dest, options.nodata)
 		except Exception, ex:
 			sys.exit('Error: %s' % ex.message)			
+
+
+if __name__ == '__main__':
+	main()

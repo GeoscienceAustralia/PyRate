@@ -5,10 +5,12 @@ Created on 29/05/2014
 @author: Ben Davies NCI
 '''
 
+import os
+import sys
 import unittest
 from os.path import join
-
 from datetime import date
+
 from pyrate import gamma
 import pyrate.ifgconstants as ifc
 from pyrate.tests.common import GAMMA_TEST_DIR
@@ -21,6 +23,24 @@ gdal.UseExceptions()
 
 LIGHTSPEED = 3e8 # approx
 
+
+class GammaCommandLineTests(unittest.TestCase):
+	
+	def test_cmd(self):
+		base = join(os.environ['PYRATEPATH'], 'tests', 'gamma')
+		hdr = join(base, 'dem16x20raw.dem.par')
+		data = join(base, 'dem16x20raw.dem')
+				
+		sys.argv = ['gamma.py', '-d', '/tmp', hdr, data]
+		exp_path = '/tmp/dem16x20raw.tif'
+		
+		try:
+			gamma.main()
+			self.assertTrue(os.path.exists(exp_path))
+		except Exception, ex:
+			self.fail(ex)
+		
+		os.remove(exp_path)
 
 
 class GammaToGeoTiffTests(unittest.TestCase):
