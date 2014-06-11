@@ -88,8 +88,11 @@ def get_num_params(degree, offset=None):
 		nparams = 2
 	elif degree == QUADRATIC:
 		nparams = 5
-	else:
+	elif degree == PART_CUBIC:
 		nparams = 6
+	else:
+		msg = "Invalid orbital model degree: %s" % degree
+		raise OrbitalError(msg)
 
 	if offset is True:
 		nparams += 1  # eg. y = mx + offset
@@ -167,6 +170,9 @@ def get_design_matrix(ifg, degree, offset):
 	# init design matrix
 	data = empty((ifg.num_cells, get_num_params(degree, offset)), dtype=float32)
 	x, y = meshgrid(range(ifg.ncols), range(ifg.nrows))
+	# TODO: subtract reference pixel coordinate from x and y
+	# TODO? divide x and y by 100km, this would increase the size of the estimated params. 
+	# test whether this improves robustness of numerical inversion
 	x = x.reshape(ifg.num_cells) * ifg.x_size
 	y = y.reshape(ifg.num_cells) * ifg.y_size
 
@@ -181,9 +187,9 @@ def get_design_matrix(ifg, degree, offset):
 		data[:, 2] = x * y
 		data[:, 3] = x
 		data[:, 4] = y
-	elif degree == PART_CUBIC:
-		data[:, 0] = x * y**2
-		data[:, 1] = x**2
+ 	elif degree == PART_CUBIC:
+ 		data[:, 0] = x * (y**2)
+ 		data[:, 1] = x**2
 		data[:, 2] = y**2
 		data[:, 3] = x * y
 		data[:, 4] = x
