@@ -67,32 +67,34 @@ class RoipacToGeoTiffTests(unittest.TestCase):
 		hdr_path = join(PREP_TEST_OBS, 'geo_060619-061002.unw.rsc')
 		cls.HDRS = roipac.parse_header(hdr_path)
 
+	def tearDown(self):
+		if os.path.exists(self.dest):
+			os.remove(self.dest)
+
 	def test_to_geotiff_dem(self):
 		hdr = roipac.parse_header(SYD_TEST_DEM_HDR)
-		dest = "/tmp/tmp_roipac_dem.tif"
+		self.dest = "/tmp/tmp_roipac_dem.tif"
 
-		roipac.to_geotiff(hdr, SYD_TEST_DEM_UNW, dest, nodata=0)
+		roipac.to_geotiff(hdr, SYD_TEST_DEM_UNW, self.dest, nodata=0)
 		exp_path = join(SYD_TEST_DEM_DIR, 'sydney_trimmed.tif')
 		exp_ds = gdal.Open(exp_path)
-		ds = gdal.Open(dest)
+		ds = gdal.Open(self.dest)
 
 		# compare data and geographic headers
 		assert_array_almost_equal(exp_ds.ReadAsArray(), ds.ReadAsArray())
 		self.compare_rasters(ds, exp_ds)
 		self.assertIsNotNone(ds.GetMetadata())
-		os.remove(dest)
-
 
 	def test_to_geotiff_ifg(self):
 		# tricker: needs ifg header, and DEM one for extents 
 		hdrs = self.HDRS.copy()
 		hdrs[ifc.PYRATE_DATUM] = 'WGS84'
 
-		dest = '/tmp/tmp_roipac_ifg.tif'
+		self.dest = '/tmp/tmp_roipac_ifg.tif'
 		data_path = join(PREP_TEST_OBS, 'geo_060619-061002.unw')
-		roipac.to_geotiff(hdrs, data_path, dest, nodata=0)
+		roipac.to_geotiff(hdrs, data_path, self.dest, nodata=0)
 
-		ds = gdal.Open(dest)
+		ds = gdal.Open(self.dest)
 		band = ds.GetRasterBand(1)
 		self.assertEqual(ds.RasterCount, 1)
 
@@ -117,26 +119,28 @@ class RoipacToGeoTiffTests(unittest.TestCase):
 
 	def test_to_geotiff_wrong_input_data(self):
 		# ensure failure if TIF/other file used instead of binary UNW data
-		dest = '/tmp/tmp_roipac_ifg.tif'
+		self.dest = '/tmp/tmp_roipac_ifg.tif'
 		data_path = join(PREP_TEST_TIF, 'geo_060619-061002.tif')
 		self.assertRaises(roipac.RoipacException, roipac.to_geotiff,
-							self.HDRS, data_path, dest, nodata=0)
+							self.HDRS, data_path, self.dest, nodata=0)
 
 	def test_bad_projection(self):
 		hdrs = self.HDRS.copy()
 		hdrs[ifc.PYRATE_DATUM] = 'bad datum string'
-		dest = '/tmp/tmp_roipac_ifg2.tif'
+		self.dest = '/tmp/tmp_roipac_ifg2.tif'
 		data_path = join(PREP_TEST_OBS, 'geo_060619-061002.unw')
-		self.assertRaises(RoipacException, roipac.to_geotiff, hdrs, data_path, dest, 0)
+		self.assertRaises(RoipacException, roipac.to_geotiff, hdrs,
+							data_path, self.dest, 0)
 
 	def test_mismatching_cell_resolution(self):
 		hdrs = self.HDRS.copy()
 		hdrs[ifc.PYRATE_X_STEP] = 0.1 # fake a mismatch
 		hdrs[ifc.PYRATE_DATUM] = 'WGS84'
 		data_path = join(PREP_TEST_OBS, 'geo_060619-061002.unw')
-		dest = '/tmp/fake'
+		self.dest = '/tmp/fake'
 
-		self.assertRaises(RoipacException, roipac.to_geotiff, hdrs, data_path, dest, 0)
+		self.assertRaises(RoipacException, roipac.to_geotiff, hdrs,
+							data_path, self.dest, 0)
 
 	def compare_rasters(self, ds, exp_ds):
 		band = ds.GetRasterBand(1)

@@ -65,16 +65,20 @@ class GammaToGeoTiffTests(unittest.TestCase):
 		cls.DEM_HDR = gamma.parse_dem_header(dem_hdr_path) 
 		cls.COMBINED = gamma.combine_headers(*hdrs, dem_hdr=cls.DEM_HDR)
 
+	def tearDown(self):
+		if os.path.exists(self.dest):
+			os.remove(self.dest)
+
 	def test_to_geotiff_dem(self):
 		hdr_path = join(GAMMA_TEST_DIR, 'dem16x20raw.dem.par')
 		hdr = gamma.parse_dem_header(hdr_path)
 		data_path = join(GAMMA_TEST_DIR, 'dem16x20raw.dem')
-		dest = "/tmp/tmp_gamma_dem.tif"
+		self.dest = "/tmp/tmp_gamma_dem.tif"
 
-		gamma.to_geotiff(hdr, data_path, dest, nodata=0)
+		gamma.to_geotiff(hdr, data_path, self.dest, nodata=0)
 		exp_path = join(GAMMA_TEST_DIR, 'dem16x20_subset_from_gamma.tif')
 		exp_ds = gdal.Open(exp_path)
-		ds = gdal.Open(dest)
+		ds = gdal.Open(self.dest)
 
 		# compare data and geographic headers
 		assert_array_almost_equal(exp_ds.ReadAsArray(), ds.ReadAsArray())
@@ -83,11 +87,11 @@ class GammaToGeoTiffTests(unittest.TestCase):
 		self.assertTrue(md['AREA_OR_POINT'] == 'Area')
 
 	def test_to_geotiff_ifg(self):
-		dest = '/tmp/tmp_gamma_ifg.tif'
+		self.dest = '/tmp/tmp_gamma_ifg.tif'
 		data_path = join(GAMMA_TEST_DIR, '16x20_20090713-20090817_VV_4rlks_utm.unw')
-		gamma.to_geotiff(self.COMBINED, data_path, dest, nodata=0)
+		gamma.to_geotiff(self.COMBINED, data_path, self.dest, nodata=0)
 
-		ds = gdal.Open(dest)
+		ds = gdal.Open(self.dest)
 		exp_path = join(GAMMA_TEST_DIR, '16x20_20090713-20090817_VV_4rlks_utm.tif')
 		exp_ds = gdal.Open(exp_path)
 
@@ -106,18 +110,19 @@ class GammaToGeoTiffTests(unittest.TestCase):
 
 	def test_to_geotiff_wrong_input_data(self):
 		# use TIF, not UNW for data
-		dest = '/tmp/tmp_gamma_ifg.tif'
+		self.dest = '/tmp/tmp_gamma_ifg.tif'
 		data_path = join(GAMMA_TEST_DIR, '16x20_20090713-20090817_VV_4rlks_utm.tif')
 		self.assertRaises(gamma.GammaException, gamma.to_geotiff,
-							self.COMBINED, data_path, dest, nodata=0)
+							self.COMBINED, data_path, self.dest, nodata=0)
 
 	def test_mismatching_cell_resolution(self):
 		hdrs = self.DEM_HDR.copy()
 		hdrs[ifc.PYRATE_X_STEP] = 0.1 # fake a mismatch
 		data_path = join(GAMMA_TEST_DIR, '16x20_20090713-20090817_VV_4rlks_utm.unw')
-		dest = '/tmp/fake'
+		self.dest = '/tmp/fake'
 
-		self.assertRaises(gamma.GammaException, gamma.to_geotiff, hdrs, data_path, dest, 0)
+		self.assertRaises(gamma.GammaException, gamma.to_geotiff, hdrs,
+							data_path, self.dest, 0)
 
 	def compare_rasters(self, ds, exp_ds):
 		band = ds.GetRasterBand(1)
@@ -137,8 +142,9 @@ class GammaToGeoTiffTests(unittest.TestCase):
 		hdr = self.DEM_HDR.copy() 
 		hdr[ifc.PYRATE_DATUM] = 'nonexistent projection'
 		data_path = join(GAMMA_TEST_DIR, 'dem16x20raw.dem')
-		dest = "/tmp/tmp_gamma_dem2.tif"
-		self.assertRaises(gamma.GammaException, gamma.to_geotiff, hdr, data_path, dest, nodata=0)
+		self.dest = "/tmp/tmp_gamma_dem2.tif"
+		self.assertRaises(gamma.GammaException, gamma.to_geotiff, hdr,
+							data_path, self.dest, nodata=0)
 
 
 class GammaHeaderParsingTests(unittest.TestCase):
