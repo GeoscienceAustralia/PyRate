@@ -26,6 +26,7 @@ import struct
 import datetime
 import ifgconstants as ifc 
 from glob import glob
+from os.path import join
 
 import gdal, osr
 import numpy as np
@@ -195,6 +196,8 @@ class GammaException(Exception):
 	pass
 
 
+# TODO: move to a testable main() func
+# TODO: add a -d output dir option?
 if __name__ == '__main__':
 	import sys
 	from optparse import OptionParser
@@ -219,14 +222,16 @@ if __name__ == '__main__':
 			# find param files contaning filename dates
 			ptn = re.compile(r'\d{8}') # match 8 digits for the date
 			matches = ptn.findall(path)
-			
-			if len(matches) != 2:
-				sys.exit('Error: could not find dates in %s' % path)
-			
-			hpaths = [glob('*%s*.par' % m)[0] for m in matches]
-			
-			hdrs = [parse_epoch_header(hp) for hp in hpaths]
-			combined = combine_headers(hdrs[0], hdrs[1], dem_hdr)
-			to_geotiff(combined, path, dest, options.nodata)
+	
+			if len(matches) == 2:
+				srch_dir = os.path.split(path)[0]
+				hpaths = [glob(join(srch_dir, '*%s*.par' % m))[0] for m in matches]
+				tmp = [parse_epoch_header(hp) for hp in hpaths]
+				hdrs = combine_headers(tmp[0], tmp[1], dem_hdr)
+			else:
+				# probably have DEM or incidence file
+				hdrs = dem_hdr
+	
+			to_geotiff(hdrs, path, dest, options.nodata)
 		except Exception, ex:
 			sys.exit('Error: %s' % ex.message)			
