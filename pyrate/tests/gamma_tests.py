@@ -26,12 +26,26 @@ LIGHTSPEED = 3e8 # approx
 
 class GammaCommandLineTests(unittest.TestCase):
 	
-	def test_cmd(self):
-		base = join(os.environ['PYRATEPATH'], 'tests', 'gamma')
-		hdr = join(base, 'dem16x20raw.dem.par')
-		data = join(base, 'dem16x20raw.dem')
-				
-		sys.argv = ['gamma.py', '-d', '/tmp', hdr, data]
+	def setUp(self):
+		self.base = join(os.environ['PYRATEPATH'], 'tests', 'gamma')
+		self.hdr = join(self.base, 'dem16x20raw.dem.par') 
+	
+	def test_cmd_ifg(self):
+		data = join(self.base, '16x20_20090713-20090817_VV_4rlks_utm.unw')
+		sys.argv = ['gamma.py', '-d', '/tmp', self.hdr, data]
+		exp_path = '/tmp/16x20_20090713-20090817_VV_4rlks_utm.tif'
+
+		try:
+			gamma.main()
+			self.assertTrue(os.path.exists(exp_path))
+		except Exception, ex:
+			self.fail(ex)
+
+		os.remove(exp_path)
+
+	def test_cmd_dem(self):
+		data = join(self.base, 'dem16x20raw.dem')
+		sys.argv = ['gamma.py', '-d', '/tmp', self.hdr, data]
 		exp_path = '/tmp/dem16x20raw.tif'
 		
 		try:
