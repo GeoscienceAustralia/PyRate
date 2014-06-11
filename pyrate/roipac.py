@@ -25,7 +25,9 @@ Created on 12/09/2012
          ben.davies@anu.edu.au
 '''
 
-import os, re
+import os
+import re
+import sys
 import struct
 import datetime
 
@@ -33,7 +35,6 @@ import ifgconstants as ifc
 import numpy as np
 import gdal, osr
 from ifgconstants import PYRATE_DATUM
-
 
 
 # ROIPAC RSC header file constants
@@ -92,40 +93,40 @@ def to_geotiff(hdr, data_path, dest, nodata):
 	nrows = hdr[ifc.PYRATE_NROWS]
 	_check_raw_data(is_ifg, data_path, ncols, nrows)
 	_check_step_mismatch(hdr)
-	
+
 	driver = gdal.GetDriverByName("GTiff")
 	dtype = gdal.GDT_Float32 if is_ifg else gdal.GDT_Int16
 	ds = driver.Create(dest, ncols, nrows, 1, dtype)
-	
+
 	# write custom headers to interferograms
 	if is_ifg:
 		for k in [ifc.PYRATE_WAVELENGTH_METRES, ifc.PYRATE_TIME_SPAN,
 					ifc.PYRATE_DATE, ifc.PYRATE_DATE2]:
 			ds.SetMetadataItem(k, str(hdr[k]))
-	
+
 	# position and projection data	
 	ds.SetGeoTransform([hdr[ifc.PYRATE_LONG], hdr[ifc.PYRATE_X_STEP], 0,
 						hdr[ifc.PYRATE_LAT], 0, hdr[ifc.PYRATE_Y_STEP]])
-	
+
 	srs = osr.SpatialReference()
 	res = srs.SetWellKnownGeogCS(hdr[ifc.PYRATE_DATUM])
 	if res:
 		msg = 'Unrecognised projection: %s' % hdr[ifc.PYRATE_DATUM]
 		raise RoipacException(msg)
-	
+
 	ds.SetProjection(srs.ExportToWkt())
-	
+
 	# copy data from the binary file
 	band = ds.GetRasterBand(1)
 	band.SetNoDataValue(nodata)
-		
+
 	if is_ifg:
 		fmtstr = '<' + ('f' * ncols) # ifgs are little endian float32s
 		bytes_per_col = 4
 	else:
 		fmtstr = '<' + ('h' * ncols) # DEM is little endian signed int16
 		bytes_per_col = 2 
-	
+
 	row_bytes = ncols * bytes_per_col
 
 	with open(data_path, 'rb') as f:
@@ -145,7 +146,7 @@ def _check_raw_data(is_ifg, data_path, ncols, nrows):
 		size = 4 * base_size * 2 # 2 bands of 4 bytes each
 	else:
 		size = 2 * base_size # single 2 byte band
-	
+
 	act_size = os.stat(data_path).st_size 
 	if act_size != size:
 		msg = '%s should have size %s, not %s. Is the correct file being used?'
@@ -153,7 +154,7 @@ def _check_raw_data(is_ifg, data_path, ncols, nrows):
 
 def _check_step_mismatch(hdr):
 	xs, ys = [abs(i) for i in [hdr[ifc.PYRATE_X_STEP], hdr[ifc.PYRATE_Y_STEP]]] 
-	
+
 	if xs != ys:
 		msg = 'X and Y cell sizes do not match: %s & %s'
 		raise RoipacException(msg % (xs, ys)) 
@@ -218,7 +219,7 @@ def parse_header(hdr_file):
 		# replace timespan as ROIPAC is ~4 hours different to (slave - master)
 		timespan = (subset[ifc.PYRATE_DATE2] - subset[ifc.PYRATE_DATE]).days / ifc.DAYS_PER_YEAR
 		subset[ifc.PYRATE_TIME_SPAN] = timespan
-		
+
 	# add custom X|Y_LAST for convenience
 	subset[X_LAST] = headers[X_FIRST] + (headers[X_STEP] * (headers[WIDTH]))
 	subset[Y_LAST] = headers[Y_FIRST] + (headers[Y_STEP] * (headers[FILE_LENGTH]))
@@ -230,12 +231,12 @@ def _parse_dates_from(filename):
 	# process dates from filename if rsc file doesn't have them (skip for DEMs)
 	p = re.compile(r'\d{6}-\d{6}') # match 2 sets of 6 digits separated by '-'
 	m = p.search(filename)
-	
+
 	if m:
 		s = m.group()
 		min_date_len = 13 # assumes "nnnnnn-nnnnnn" format
 		if len(s) == min_date_len:
-			return parse_date(s)			
+			return parse_date(s)
 	else:
 		msg = "Filename does not include master/slave dates: %s"
 		raise RoipacException(msg % filename)
@@ -245,10 +246,9 @@ class RoipacException(Exception):
 	pass
 
 
-if __name__ == '__main__':
-	import sys
+def main():
 	from optparse import OptionParser
-	
+
 	usage = "Usage: %prog [options] ROIPAC_FILE [ROIPAC_FILE...]" 
 	parser = OptionParser(usage=usage)
 
@@ -257,11 +257,12 @@ if __name__ == '__main__':
 	res_help = 'Resource/header file with projection data (usually DEM header)'
 	parser.add_option('-r', '--resource-header', help=res_help, metavar='FILE')
 	parser.add_option('-n', '--nodata', help='NODATA value', type='float', default=0.0)
+	parser.add_option('-d', '--dest-dir', help='Write output to DIR', type='string')
 	options, args = parser.parse_args()
 
 	if len(args) == 0:
 		parser.error(usage)
-	
+
 	if options.projection:
 		proj = options.projection
 	elif options.resource_header:
@@ -269,8 +270,6 @@ if __name__ == '__main__':
 		if PYRATE_DATUM not in hdr:
 			sys.exit('Error: header/resource file does not include DATUM')
 		proj = hdr[PYRATE_DATUM]
-	else:
-		parser.error('Need source for DATUM')
 
 	# translate files
 	for path in args:
@@ -278,12 +277,17 @@ if __name__ == '__main__':
 			hpath = "%s.%s" % (path, ROI_PAC_HEADER_FILE_EXT)
 			hdr = parse_header(hpath)
 
-			if PYRATE_DATUM in hdr:
-				raise RoipacException('Datum field already in the header')
-			else:
+			if PYRATE_DATUM not in hdr: # DEM already has DATUM 
 				hdr[PYRATE_DATUM] = proj
-			
+
 			dest = "%s.tif" % os.path.splitext(os.path.basename(path))[0]
+			if options.dest_dir:
+				dest = os.path.join(options.dest_dir, dest)
+
 			to_geotiff(hdr, path, dest, options.nodata)
 		except Exception, ex:
-			sys.exit(ex.message)			
+			sys.exit(ex.message)
+
+
+if __name__ == '__main__':
+	main()

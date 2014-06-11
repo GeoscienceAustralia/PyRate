@@ -34,9 +34,34 @@ FULL_HEADER_PATH  = join(HEADERS_TEST_DIR, "geo_060619-060828.unw.rsc")
 
 
 
+class RoipacCommandLine(unittest.TestCase):
+
+	def test_cmd_ifg(self):
+		base_paths = ['geo_070709-070813.unw', 'geo_060619-061002.unw']
+		data0, data1 = [join(SYD_TEST_OBS, i) for i in base_paths]
+		sys.argv = ['roipac.py', '-d', '/tmp', '-p', 'WGS84', data0, data1]
+
+		base_exp = ['geo_070709-070813.tif', 'geo_060619-061002.tif']
+		exp_paths = [join('/tmp', i) for i in base_exp]
+
+		roipac.main()
+		for p in exp_paths:
+			self.assertTrue(os.path.exists(p))
+			os.remove(p)
+
+
+	def test_cmd_dem(self):
+		sys.argv = ['roipac.py', '-d', '/tmp', SYD_TEST_DEM_UNW]
+		exp_path = '/tmp/sydney_trimmed.tif'
+
+		roipac.main()
+		self.assertTrue(os.path.exists(exp_path))
+		os.remove(exp_path)
+
+
 class RoipacToGeoTiffTests(unittest.TestCase):
 	'Tests conversion of GAMMA rasters to custom PyRate GeoTIFF'
-	
+
 	@classmethod
 	def setUpClass(cls):
 		hdr_path = join(PREP_TEST_OBS, 'geo_060619-061002.unw.rsc')
@@ -65,7 +90,7 @@ class RoipacToGeoTiffTests(unittest.TestCase):
 
 		dest = '/tmp/tmp_roipac_ifg.tif'
 		data_path = join(PREP_TEST_OBS, 'geo_060619-061002.unw')
-		roipac.to_geotiff(hdrs, data_path, dest, nodata=0)		
+		roipac.to_geotiff(hdrs, data_path, dest, nodata=0)
 
 		ds = gdal.Open(dest)
 		band = ds.GetRasterBand(1)
@@ -74,7 +99,7 @@ class RoipacToGeoTiffTests(unittest.TestCase):
 		exp_path = join(PREP_TEST_TIF, 'geo_060619-061002.tif')
 		exp_ds = gdal.Open(exp_path)
 		exp_band = exp_ds.GetRasterBand(1)
-		
+
 		# compare data and geographic headers
 		assert_array_almost_equal(exp_band.ReadAsArray(), band.ReadAsArray())
 		self.compare_rasters(ds, exp_ds)
@@ -86,10 +111,10 @@ class RoipacToGeoTiffTests(unittest.TestCase):
 		self.assertTrue(md[ifc.PYRATE_DATE] == str(date1))
 		self.assertTrue(md[ifc.PYRATE_DATE2] == str(date2))
 		self.assertTrue(md[ifc.PYRATE_TIME_SPAN] == str(diff / ifc.DAYS_PER_YEAR))
-		
+
 		wavelen = float(md[ifc.PYRATE_WAVELENGTH_METRES])
 		self.assertAlmostEqual(wavelen, 0.0562356424)
-		
+
 	def test_to_geotiff_wrong_input_data(self):
 		# ensure failure if TIF/other file used instead of binary UNW data
 		dest = '/tmp/tmp_roipac_ifg.tif'
@@ -110,7 +135,7 @@ class RoipacToGeoTiffTests(unittest.TestCase):
 		hdrs[ifc.PYRATE_DATUM] = 'WGS84'
 		data_path = join(PREP_TEST_OBS, 'geo_060619-061002.unw')
 		dest = '/tmp/fake'
-		
+
 		self.assertRaises(RoipacException, roipac.to_geotiff, hdrs, data_path, dest, 0)
 
 	def compare_rasters(self, ds, exp_ds):
@@ -120,10 +145,10 @@ class RoipacToGeoTiffTests(unittest.TestCase):
 		nodata = band.GetNoDataValue()
 		self.assertFalse(nodata is None)
 		self.assertEqual(exp_band.GetNoDataValue(), nodata)
-		
-		pj = ds.GetProjection()		
+
+		pj = ds.GetProjection()
 		self.assertTrue('WGS 84' in pj)
-		self.assertEqual(exp_ds.GetProjection(), pj)		
+		self.assertEqual(exp_ds.GetProjection(), pj)
 		for exp, act in zip(exp_ds.GetGeoTransform(), ds.GetGeoTransform()):
 			self.assertAlmostEqual(exp, act, places=4)
 
@@ -146,7 +171,7 @@ class DateParsingTests(unittest.TestCase):
 
 class HeaderParsingTests(unittest.TestCase):
 	'''Verifies ROIPAC headers are parsed correctly.'''
-	
+
 	# short format header tests 
 	def test_parse_short_roipac_header(self):
 		hdrs = roipac.parse_header(SHORT_HEADER_PATH)
