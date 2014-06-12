@@ -167,14 +167,13 @@ class Ifg(RasterBase):
 		self.master = None
 		self.slave = None
 
-
 	def open(self, readonly=None):
 		RasterBase.open(self, readonly)
 		self._init_dates()
 
-		# FIXME: add time span metadata
-
-		self.wavelength = self.dataset.GetMetadataItem(ifc.PYRATE_WAVELENGTH_METRES)
+		md = self.dataset.GetMetadata()
+		self.time_span = float(md[ifc.PYRATE_TIME_SPAN])
+		self.wavelength = float(md[ifc.PYRATE_WAVELENGTH_METRES])
 
 		# creating code needs to set this flag after 0 -> NaN replacement
 		self.nan_converted = False
@@ -188,8 +187,8 @@ class Ifg(RasterBase):
 			year, month, day = [int(i) for i in datestr.split('-')]
 			return date(year, month, day)
 
-		keys = [ifc.PYRATE_DATE, ifc.PYRATE_DATE2]
-		datestrs = [self.dataset.GetMetadataItem(k) for k in keys]
+		md = self.dataset.GetMetadata()
+		datestrs = [md[k] for k in [ifc.PYRATE_DATE, ifc.PYRATE_DATE2]]
 
 		if all(datestrs):
 			self.master, self.slave = [_to_date(s) for s in datestrs]
