@@ -1,10 +1,17 @@
 '''
-Unittests for linrate.py
+CUnittests for linrate.py
 Author: Ben Davies, ANUSF
 '''
 
 import unittest
 
+from pyrate.config import ConfigException
+from pyrate.config import LR_PTHRESH, LR_MAXSIG, LR_NSIG
+
+from pyrate.linrate import linear_rate
+
+from numpy import eye, array, ones
+from numpy.testing import assert_array_almost_equal
 
 # TODO: linear rate code
 # 1. replace MST key:value date:date pairs with lists of Ifgs?
@@ -28,3 +35,38 @@ import unittest
 # 
 # 	def test_args(self):
 # 		raise NotImplementedError("Need sanity tests for args to stack()")
+
+#def default_params():
+#    return { LR_PTHRESH : 10, LR_NSIG : 3, LR_MAXSIG : 2 }
+LR_PTHRESH = 3
+LR_NSIG = 3
+LR_MAXSIG = 2
+
+
+class LinearRateTests(unittest.TestCase):
+	'''Tests the weighted least squares algorithm for determinining the best fitting velocity'''
+
+	def setUp(self):
+		phase = [0.5, 3.5, 4, 2.5, 3.5, 1]
+		timespan = [0.1, 0.7, 0.8, 0.5, 0.7, 0.2]
+		self.ifgs = [SinglePixelIfg(s,p) for s,p in zip(timespan,phase)]
+
+	def test_linear_rate(self):
+		# Simple test with one pixel and equal weighting
+		exprate = array([[5.0]])
+		experr = array([[0.836242010007091]]) # from Matlab Pirate
+		expsamp = array([[5]])
+		vcm = eye(6,6)
+		mst = ones((6,1,1))
+		mst[4] = 0
+		rate, error, samples = linear_rate(self.ifgs, vcm, LR_PTHRESH, LR_NSIG, LR_MAXSIG, mst)
+		assert_array_almost_equal(rate,exprate)
+		assert_array_almost_equal(error,experr)
+		assert_array_almost_equal(samples,expsamp)
+
+
+class SinglePixelIfg(object):
+
+	def __init__(self,timespan,phase):
+		self.time_span = timespan
+		self.phase_data = array([[phase]])

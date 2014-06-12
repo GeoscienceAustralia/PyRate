@@ -54,6 +54,10 @@ ORBITAL_FIT_LOOKS_Y = 'orbfitlksy' # int of 1+, Y multi looking factor
 # ORBITAL_FIT_orbrefest:     1 BOOLEAN (1/0) # remove reference phase
 # ORBITAL_FIT_ orbmaskflag:   1 BOOLEAN (1/0) # mask some patches for orbital correction
 
+# Linear rate/stacking parameters
+LR_NSIG = 'nsig' # n-sigma ratio used to threshold 'model minus observation' residuals
+LR_PTHRESH = 'pthr'  # minimum number of coherent observations for a pixel
+LR_MAXSIG = 'maxsig' # maximum allowable standard error
 
 # Lookup to help convert args to correct type/defaults
 # format is    key : (conversion, default value)
@@ -85,7 +89,11 @@ PARAM_CONVERSION = { OBS_DIR : (None, "obs"),
 					ORBITAL_FIT_METHOD : (int, NETWORK_METHOD),
 					ORBITAL_FIT_DEGREE : (int, QUADRATIC),
 					ORBITAL_FIT_LOOKS_X : (int, NO_MULTILOOKING),
-					ORBITAL_FIT_LOOKS_Y : (int, NO_MULTILOOKING)
+					ORBITAL_FIT_LOOKS_Y : (int, NO_MULTILOOKING),
+					
+					LR_NSIG : (int, 3), # Pirate default
+					LR_PTHRESH : (int, 20), # should be based on nepochs since not every project may have 20 epochs
+					LR_MAXSIG : (int, 2), # Pirate default
 				}
 
 
