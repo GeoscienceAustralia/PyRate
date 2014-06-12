@@ -25,6 +25,11 @@ from geodesy import cell_size
 # Constants
 PHASE_BAND = 1
 
+# GDAL projection list
+GDAL_X_CELLSIZE = 1
+GDAL_Y_CELLSIZE = 5
+GDAL_X_FIRST = 0
+GDAL_Y_FIRST = 3
 
 
 class RasterBase(object):
@@ -49,7 +54,7 @@ class RasterBase(object):
 
 	def open(self, readonly=None):
 		'''Opens generic raster dataset.'''
-		
+
 		if self.dataset is not None:
 			msg = "open() already called for %s" % self
 			raise RasterException(msg)
@@ -66,13 +71,13 @@ class RasterBase(object):
 				raise IOError("Cannot open write protected file for writing")
 			elif readonly is None:
 				readonly = True # default to readonly as permissions are R/O
-		
+
 		args = (self.data_path,) if readonly else (self.data_path, GA_Update)
 		self.dataset = gdal.Open(*args)
 
 		if self.dataset is None:
 			raise RasterException("Error opening %s" % self.data_path)
-		
+
 		# add some geographic data
 		self.x_centre = self.ncols / 2
 		self.y_centre = self.nrows / 2
@@ -86,31 +91,31 @@ class RasterBase(object):
 	@property
 	def ncols(self):
 		return self.dataset.RasterXSize
-	
+
 	@property
 	def nrows(self):
 		return self.dataset.RasterYSize
 
 	@property
 	def x_step(self):
-		return float(self.dataset.GetGeoTransform()[1]) # TODO: use a constant
-	
+		return float(self.dataset.GetGeoTransform()[GDAL_X_CELLSIZE])
+
 	@property
 	def y_step(self):
-		return float(self.dataset.GetGeoTransform()[5]) # TODO: use a constant
+		return float(self.dataset.GetGeoTransform()[GDAL_Y_CELLSIZE])
 
 	@property
 	def x_first(self):
-		return float(self.dataset.GetGeoTransform()[0]) # TODO: use a constant
+		return float(self.dataset.GetGeoTransform()[GDAL_X_FIRST])
 
 	@property
 	def x_last(self):
 		return self.x_first + (self.x_step * self.ncols)
-	
+
 	@property
 	def y_first(self):
-		return float(self.dataset.GetGeoTransform()[3]) # TODO: use a constant
-	
+		return float(self.dataset.GetGeoTransform()[GDAL_Y_FIRST])
+
 	@property
 	def y_last(self):
 		return self.y_first + (self.y_step * self.nrows)
@@ -166,7 +171,9 @@ class Ifg(RasterBase):
 	def open(self, readonly=None):
 		RasterBase.open(self, readonly)
 		self._init_dates()
-		
+
+		# FIXME: add time span metadata
+
 		self.wavelength = self.dataset.GetMetadataItem(ifc.PYRATE_WAVELENGTH_METRES)
 
 		# creating code needs to set this flag after 0 -> NaN replacement
@@ -180,16 +187,16 @@ class Ifg(RasterBase):
 		def _to_date(datestr):
 			year, month, day = [int(i) for i in datestr.split('-')]
 			return date(year, month, day)
-				
+
 		keys = [ifc.PYRATE_DATE, ifc.PYRATE_DATE2]
 		datestrs = [self.dataset.GetMetadataItem(k) for k in keys]
-		
+
 		if all(datestrs):
 			self.master, self.slave = [_to_date(s) for s in datestrs]
 		else:
 			msg = 'Missing master and/or slave date in %s' % self.data_path
 			raise IfgException(msg)
-				
+
 
 	def convert_to_nans(self, val=0):
 		'''
