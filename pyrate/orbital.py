@@ -16,12 +16,32 @@ from algorithm import master_slave_ids, get_all_epochs, get_epoch_count
 # Orbital correction tasks
 #
 # TODO: options for multilooking
-# 1) do the 2nd stage mlook at prepifg.py/generate up front, then delete in workflow after
-# 2) refactor prep_ifgs() call to take input filenames and params & generate mlooked versions from that
+# 1) do the 2nd stage mlook at prepifg.py/generate up front, then delete in 
+#    workflow afterward
+# 2) refactor prep_ifgs() call to take input filenames and params & generate
+#    mlooked versions from that
 #    this needs to be more generic to call at any point in the runtime.
 
 
+# Design notes:
+# The orbital correction code is based on MATLAB Pirate, but includes several
+# enhancements. Pirate creates sparse arrays for the linear inversion, which
+# contain many empty cells. This is unnecessary for the independent method, and
+# temporarily wastes potentially a lot of memory.
+#
+# For the independent method, PyRate makes individual small design matrices and
+# corrects the Ifgs one by one. If required in the correction, the offsets
+# option adds an extra colum of ones to include in the inversion.
+#
+# Network method design matrices are mostly empty, and offsets are handled
+# differently. Individual design matrices (== independent method DMs) are
+# placed in the sparse network design matrix. Offsets are not included in the
+# smaller DMs to prevent unwanted cols being inserted. This is why some funcs
+# appear to ignore the offset parameter in the networked method. Network DM
+# offsets are cols of 1s in a diagonal line on the LHS of the sparse array.
+
 # constants
+# TODO: replace these with string names
 INDEPENDENT_METHOD = 1
 NETWORK_METHOD = 2
 
@@ -44,13 +64,8 @@ def orbital_correction(ifgs, degree, method, mlooked=None, offset=True):
 	mlooked: sequence of multilooked ifgs (must correspond to 'ifgs' arg)
 	offset: True/False to include the constant/offset component
 	'''
-
 	if degree not in [PLANAR, QUADRATIC, PART_CUBIC]:
 		msg = "Invalid degree of %s for orbital correction" % degree
-		raise OrbitalError(msg)
-
-	if method not in [INDEPENDENT_METHOD, NETWORK_METHOD]:
-		msg = "Unknown method '%s', need INDEPENDENT or NETWORK method" % method
 		raise OrbitalError(msg)
 
 	if method == NETWORK_METHOD:
@@ -64,7 +79,7 @@ def orbital_correction(ifgs, degree, method, mlooked=None, offset=True):
 		for i in ifgs:
 			_independent_correction(i, degree, offset)
 	else:
-		msg = "Unrecognised orbital correction method: %s"
+		msg = "Unknown method '%s', need INDEPENDENT or NETWORK method"
 		raise OrbitalError(msg % method)
 
 
@@ -83,7 +98,6 @@ def _validate_mlooked(mlooked, ifgs):
 
 def get_num_params(degree, offset=None):
 	'''Returns number of model parameters'''
-	#nparams = 2 if degree == PLANAR else 5
 	if degree == PLANAR:
 		nparams = 2
 	elif degree == QUADRATIC:
@@ -94,17 +108,23 @@ def get_num_params(degree, offset=None):
 		msg = "Invalid orbital model degree: %s" % degree
 		raise OrbitalError(msg)
 
+	# NB: independent method only, network method handles offsets separately 
 	if offset is True:
 		nparams += 1  # eg. y = mx + offset
 	return nparams
 
 
 def _independent_correction(ifg, degree, offset):
-	'''Calculates and returns orbital correction array for an ifg'''
+	'''
+	Calculates and removes orbital correction from an ifg.
 
-	vphase = reshape(ifg.phase_data, ifg.num_cells) # vectorised, contains NODATA
+	NB: Changes are made in place to the Ifg obj.
+	ifg: the ifg to remove remove the orbital error from
+	degree: type of model to use PLANAR, QUADRATIC etc
+	offset: 
+	'''
+	vphase = reshape(ifg.phase_data, ifg.num_cells) # vectorise, keeping NODATA
 	dm = get_design_matrix(ifg, degree, offset)
-	assert len(vphase) == len(dm)
 
 	# filter NaNs out before getting model
 	tmp = dm[~isnan(vphase)]
@@ -126,7 +146,6 @@ def _network_correction(ifgs, degree, offset, m_ifgs=None):
 	offset - True to calculate the model using offsets
 	m_ifgs - multilooked ifgs (sequence must be mlooked versions of 'ifgs' arg)
 	'''
-
 	# get DM & filter out NaNs
 	src_ifgs = ifgs if m_ifgs is None else m_ifgs
 	vphase = vstack([i.phase_data.reshape((i.num_cells, 1)) for i in src_ifgs])
@@ -159,7 +178,7 @@ def _network_correction(ifgs, degree, offset, m_ifgs=None):
 
 def get_design_matrix(ifg, degree, offset):
 	'''
-	Returns design matrix with columns for model parameters.
+	Returns simple design matrix with columns for model parameters.
 	ifg - interferogram to base the DM on
 	degree - PLANAR, QUADRATIC or PART_CUBIC
 	offset - True to include offset cols, otherwise False.
@@ -202,8 +221,9 @@ def get_design_matrix(ifg, degree, offset):
 
 def get_network_design_matrix(ifgs, degree, offset):
 	'''
-	Returns a larger format design matrix for networked error correction. This is
-	a fullsize DM, including rows which relate to those of NaN cells.
+	Returns larger format design matrix for networked error correction.
+
+	The network design matrix includes rows which relate to those of NaN cells.
 	ifgs - sequence of interferograms
 	degree - PLANAR, QUADRATIC or PART_CUBIC
 	offset - True to include offset cols, otherwise False.
@@ -214,23 +234,24 @@ def get_network_design_matrix(ifgs, degree, offset):
 	nifgs = len(ifgs)
 	if nifgs < 1:
 		# can feasibly do correction on a single Ifg/2 epochs
-		raise OrbitalError("Invalid number of Ifgs")
+		raise OrbitalError("Invalid number of Ifgs: %s" % nifgs)
 
-	# init design matrix
+	# init sparse network design matrix
 	nepochs = get_epoch_count(ifgs)
-	ncoef = get_num_params(degree)
+	ncoef = get_num_params(degree) # no offsets: they are made separately below
 	shape = [ifgs[0].num_cells * nifgs, ncoef * nepochs]
 	if offset:
-		shape[1] += nifgs # add extra offset cols
+		shape[1] += nifgs # add extra block for offset cols
 
 	ndm = zeros(shape, dtype=float32)
 
-	# individual design matrices
+	# calc location for individual design matrices
 	dates = [ifg.master for ifg in ifgs] + [ifg.slave for ifg in ifgs]
 	ids = master_slave_ids(dates)
 	offset_col = nepochs * ncoef # base offset for the offset cols
+	tmp = get_design_matrix(ifgs[0], degree, offset=False)
 
-	tmp = get_design_matrix(ifgs[0], degree, False)
+	# iteratively build up sparse matrix 
 	for i, ifg in enumerate(ifgs):
 		rs = i * ifg.num_cells # starting row
 		m = ids[ifg.master] * ncoef  # start col for master
@@ -238,6 +259,7 @@ def get_network_design_matrix(ifgs, degree, offset):
 		ndm[rs:rs + ifg.num_cells, m:m + ncoef] = -tmp
 		ndm[rs:rs + ifg.num_cells, s:s + ncoef] = tmp
 
+		# offsets are diagonal cols across the extra array block created above
 		if offset:
 			ndm[rs:rs + ifg.num_cells, offset_col + i] = 1  # init offset cols
 
