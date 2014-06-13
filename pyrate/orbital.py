@@ -187,9 +187,9 @@ def get_design_matrix(ifg, degree, offset):
 		data[:, 2] = x * y
 		data[:, 3] = x
 		data[:, 4] = y
- 	elif degree == PART_CUBIC:
- 		data[:, 0] = x * (y**2)
- 		data[:, 1] = x**2
+	elif degree == PART_CUBIC:
+		data[:, 0] = x * (y**2)
+		data[:, 1] = x**2
 		data[:, 2] = y**2
 		data[:, 3] = x * y
 		data[:, 4] = x
