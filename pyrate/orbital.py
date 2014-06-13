@@ -2,7 +2,7 @@
 Module for calculating orbital correction for interferograms.
 
 Created on 31/3/13
-@author: Ben Davies
+@author: Ben Davies, NCI
 '''
 
 from numpy import empty, isnan, reshape, float32, squeeze
@@ -41,19 +41,18 @@ from algorithm import master_slave_ids, get_all_epochs, get_epoch_count
 # offsets are cols of 1s in a diagonal line on the LHS of the sparse array.
 
 # constants
-# TODO: replace these with string names
-INDEPENDENT_METHOD = 1
-NETWORK_METHOD = 2
+INDEPENDENT_METHOD = 'INDEPENDENT_METHOD'
+NETWORK_METHOD = 'NETWORK_METHOD'
 
-PLANAR = 1
-QUADRATIC = 2
-PART_CUBIC = 3
+PLANAR = 'PLANAR'
+QUADRATIC = 'QUADRATIC'
+PART_CUBIC = 'PART_CUBIC'
 
 
 def orbital_correction(ifgs, degree, method, mlooked=None, offset=True):
 	'''
 	Removes orbital error from given Ifgs.
-	
+
 	NB: the ifg data is modified in situ, rather than create intermediate files.
 	The network method assumes the given ifgs have already been reduced to a 
 	minimum set from an MST type operation.
@@ -79,7 +78,7 @@ def orbital_correction(ifgs, degree, method, mlooked=None, offset=True):
 		for i in ifgs:
 			_independent_correction(i, degree, offset)
 	else:
-		msg = "Unknown method '%s', need INDEPENDENT or NETWORK method"
+		msg = "Unknown method: '%s', need INDEPENDENT or NETWORK method"
 		raise OrbitalError(msg % method)
 
 
@@ -183,6 +182,9 @@ def get_design_matrix(ifg, degree, offset):
 	degree - PLANAR, QUADRATIC or PART_CUBIC
 	offset - True to include offset cols, otherwise False.
 	'''
+	if degree not in [PLANAR, QUADRATIC, PART_CUBIC]:
+		raise OrbitalError("Invalid degree argument")
+
 	# apply positional parameter values, multiply pixel coordinate by cell size to
 	# get distance (a coord by itself doesn't tell us distance from origin)
 
@@ -264,7 +266,6 @@ def get_network_design_matrix(ifgs, degree, offset):
 			ndm[rs:rs + ifg.num_cells, offset_col + i] = 1  # init offset cols
 
 	return ndm
-
 
 
 class OrbitalError(Exception):
