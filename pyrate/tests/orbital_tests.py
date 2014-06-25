@@ -160,8 +160,11 @@ class IndependentCorrectionTests(unittest.TestCase):
 		corrected = array([c.phase_data for c in self.ifgs])
 
 		self.assertFalse((orig == corrected).all())
-		self.check_results(self.ifgs, corrected)
-		assert_array_almost_equal(exp, corrected, decimal=3) # NB: assumed similar enough
+		self.check_results(self.ifgs, orig)
+
+		# FIXME: is decimal=2 close enough?
+		for i, (e, a) in enumerate(zip(exp, corrected)):
+			assert_array_almost_equal(e, a, decimal=2)
 
 
 	def check_results(self, ifgs, corrections):
@@ -193,6 +196,12 @@ class IndependentCorrectionTests(unittest.TestCase):
 		self.check_correction(QUADRATIC, INDEPENDENT_METHOD, True)
 
 
+	def test_independent_correction_partcubic(self):
+		self.check_correction(PART_CUBIC, INDEPENDENT_METHOD, False)
+
+
+	def test_independent_correction_partcubic_offsets(self):
+		self.check_correction(PART_CUBIC, INDEPENDENT_METHOD, True)
 
 class ErrorTests(unittest.TestCase):
 	'''Tests for the networked correction method'''
@@ -511,25 +520,25 @@ class NetworkCorrectionTests(unittest.TestCase):
 		assert_array_almost_equal(act, exp, decimal=5)
 
 
-
-def unittest_dm(ifg, method, degree, offset=False):
+def unittest_dm(ifg, method, degree, offset=False, scale=100.0):
 	'''Helper/test func to create design matrix segments. Includes handling for
 	making quadratic DM segments for use in network method.
 	ifg - source interferogram to model design matrix on
 	method - INDEPENDENT_METHOD or NETWORK_METHOD
-	degree - PLANAR or QUADRATIC
+	degree - PLANAR, QUADRATIC or PART_CUBIC
 	offset - True/False to include additional cols for offsets
 	'''
 	assert method in [INDEPENDENT_METHOD, NETWORK_METHOD]
 	assert degree in [PLANAR, QUADRATIC, PART_CUBIC]
 
-	#NX = ncoef = 2 if degree == PLANAR else 5
 	if degree ==  PLANAR:
 		NX = ncoef = 2
 	elif degree == QUADRATIC:
 		NX = ncoef = 5
-	else:
+	elif degree == PART_CUBIC:
 		NX = ncoef = 6
+	else:
+		raise OrbitalError('Invalid degree')
 
 	if offset is True:
 		if method == INDEPENDENT_METHOD:
@@ -537,27 +546,30 @@ def unittest_dm(ifg, method, degree, offset=False):
 		else:
 			offset = False # prevent offsets in DM sections for network method
 
+	# NB: do NOT use meshgrid as it copies the production implementation
 	data = empty((ifg.num_cells, ncoef), dtype=float32)
 	rows = iter(data)
-	yr = xrange(ifg.nrows)
-	xr = xrange(ifg.ncols)
+	yr = xrange(1, ifg.nrows+1) # simulate meshgrid starting from 1
+	xr = xrange(1, ifg.ncols+1)
+
+	xsz, ysz = [i/scale for i in [ifg.x_size, ifg.y_size]]
 
 	if degree == PLANAR:
 		for y,x in product(yr, xr):
 			row = rows.next()
-			row[:NX] = [x * ifg.x_size, y * ifg.y_size]
+			row[:NX] = [x * xsz, y * ysz]
 	elif degree ==  QUADRATIC:
 		for y,x in product(yr, xr):
-			ys = y * ifg.y_size
-			xs = x * ifg.x_size
+			ys = y * ysz
+			xs = x * xsz
 			row = rows.next()
 			row[:NX] = [xs**2, ys**2, xs*ys, xs, ys]
 	else:
 		for y,x in product(yr, xr):
-			ys = y * ifg.y_size
-			xs = x * ifg.x_size
+			ys = y * ysz
+			xs = x * xsz
 			row = rows.next()
-			row[:NX] = [xs*ys**2,xs**2, ys**2, xs*ys, xs, ys]
+			row[:NX] = [xs*ys**2, xs**2, ys**2, xs*ys, xs, ys]
 
 	if offset:
 		data[:, -1] = 1

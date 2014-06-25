@@ -175,30 +175,36 @@ def _network_correction(ifgs, degree, offset, m_ifgs=None):
 			i.phase_data -= orb
 
 
-def get_design_matrix(ifg, degree, offset):
+# TODO: subtract reference pixel coordinate from x and y
+def get_design_matrix(ifg, degree, offset, scale=100.0):
 	'''
 	Returns simple design matrix with columns for model parameters.
-	ifg - interferogram to base the DM on
-	degree - PLANAR, QUADRATIC or PART_CUBIC
-	offset - True to include offset cols, otherwise False.
+	ifg: interferogram to base the DM on
+	degree: PLANAR, QUADRATIC or PART_CUBIC
+	offset: True to include offset cols, otherwise False.
+	scale: amount to divide cell size by for improving inversion robustness
 	'''
 	if degree not in [PLANAR, QUADRATIC, PART_CUBIC]:
 		raise OrbitalError("Invalid degree argument")
 
-	# apply positional parameter values, multiply pixel coordinate by cell size to
-	# get distance (a coord by itself doesn't tell us distance from origin)
+	xsize = ifg.x_size
+	ysize = ifg.y_size
 
-	# init design matrix
+	# scaling required with higher degree models to help with param estimation
+	if scale:
+		xsize /= scale
+		ysize /= scale
+
+	# mesh needs to start at 1, otherwise first cell resolves to 0 and ignored
+	xg, yg = [g+1 for g in meshgrid(range(ifg.ncols), range(ifg.nrows))]
+	x = xg.reshape(ifg.num_cells) * xsize
+	y = yg.reshape(ifg.num_cells) * ysize
+
+	# TODO: performance test this vs np.concatenate (n by 1 cols)??
 	data = empty((ifg.num_cells, get_num_params(degree, offset)), dtype=float32)
-	x, y = meshgrid(range(ifg.ncols), range(ifg.nrows))
-	# TODO: subtract reference pixel coordinate from x and y
-	# TODO? divide x and y by 100km, this would increase the size of the estimated params. 
-	# test whether this improves robustness of numerical inversion
-	x = x.reshape(ifg.num_cells) * ifg.x_size
-	y = y.reshape(ifg.num_cells) * ifg.y_size
 
-	# TODO: performance test this vs np.concatenate (n by 1 cols)
-
+	# apply positional parameter values, multiply pixel coordinate by cell size
+	# to get distance (a coord by itself doesn't tell us distance from origin)
 	if degree == PLANAR:
 		data[:, 0] = x
 		data[:, 1] = y
