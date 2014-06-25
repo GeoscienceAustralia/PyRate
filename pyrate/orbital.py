@@ -160,7 +160,8 @@ def _network_correction(ifgs, degree, offset, m_ifgs=None):
 	ids = master_slave_ids(get_all_epochs(ifgs))
 	coefs = [model[i:i+ncoef] for i in range(0, len(set(ids)) * ncoef, ncoef)]
 
-	# create DM to expand into surface from params
+	# create full res DM to expand determined coefficients into full res orbital
+	# correction (eg. expand coarser model to full size)
 	dm = get_design_matrix(ifgs[0], degree, offset=False)
 
 	for i in ifgs:

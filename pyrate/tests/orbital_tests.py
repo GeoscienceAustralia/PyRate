@@ -18,10 +18,14 @@ from numpy.testing import assert_array_equal, assert_array_almost_equal
 from pyrate import algorithm
 from pyrate.shared import Ifg
 from pyrate.orbital import OrbitalError, orbital_correction
-from pyrate.orbital import get_design_matrix, get_network_design_matrix
+from pyrate.orbital import get_design_matrix, get_network_design_matrix, get_num_params
 from pyrate.orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, QUADRATIC, PART_CUBIC
 from common import sydney5_mock_ifgs, MockIfg, SYD_TEST_TIF
 from scipy.linalg import lstsq
+
+DEG_LOOKUP = { 2 : PLANAR,
+				5 : QUADRATIC,
+				6 : PART_CUBIC, }
 
 
 class SingleDesignMatrixTests(unittest.TestCase):
@@ -299,6 +303,25 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 		self.check_equality(ncoef, act, self.ifgs, offset)
 
 
+	def test_partcubic_network_dm(self):
+		ncoef = 6
+		offset = False
+		act = get_network_design_matrix(self.ifgs, PART_CUBIC, offset)
+		self.assertEqual(act.shape, (self.ncells * self.nifgs, ncoef * self.nepochs))
+		self.assertNotEqual(act.ptp(), 0)
+		self.check_equality(ncoef, act, self.ifgs, offset)
+
+
+	def test_partcubic_network_dm_offset(self):
+		ncoef = 6
+		offset = True
+		act = get_network_design_matrix(self.ifgs, PART_CUBIC, offset)
+		self.assertEqual(act.shape[0], self.ncells * self.nifgs)
+		self.assertEqual(act.shape[1], (self.nepochs * ncoef) + self.nifgs)
+		self.assertNotEqual(act.ptp(), 0)
+		self.check_equality(ncoef, act, self.ifgs, offset)
+
+
 	def check_equality(self, ncoef, dm, ifgs, offset):
 		'''
 		Internal test function to check subsets against network design matrix
@@ -307,8 +330,7 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 		ifgs - sequence of Ifg objs
 		offset - boolean to include extra parameters for model offsets
 		'''
-		self.assertTrue(ncoef in [2,5])
-		deg = PLANAR if ncoef < 5 else QUADRATIC
+		deg = DEG_LOOKUP[ncoef]
 		np = ncoef * self.nepochs # index of 1st offset col
 
 		for i, ifg in enumerate(ifgs):
@@ -402,11 +424,17 @@ class NetworkCorrectionTests(unittest.TestCase):
 	def test_network_correction_quadratic_offset(self):
 		self.network_correction(QUADRATIC, True)
 
+	def test_network_correction_partcubic(self):
+		self.network_correction(PART_CUBIC, False)
+
+	def test_network_correction_partcubic_offset(self):
+		self.network_correction(PART_CUBIC, True)
+
 
 	def network_correction(self, deg, off):
 		'''
 		Compares results of orbital_correction() to alternate implementation.
-		deg - PLANAR or QUADRATIC
+		deg - PLANAR, QUADRATIC or PART_CUBIC
 		off - True/False to calculate correction with offsets
 		'''
 		data = concatenate([i.phase_data.reshape(self.ncells) for i in self.ifgs])
@@ -419,7 +447,7 @@ class NetworkCorrectionTests(unittest.TestCase):
 
 		# calculate forward correction
 		sdm = unittest_dm(self.ifgs[0], NETWORK_METHOD, deg)
-		ncoef = 2 if deg == PLANAR else 5
+		ncoef = get_num_params(deg, offset=False) # NB: ignore offsets for network method
 		self.assertEqual(sdm.shape, (self.ncells, ncoef) )
 		orbs = self._get_corrections(self.ifgs, sdm, params, ncoef)
 
