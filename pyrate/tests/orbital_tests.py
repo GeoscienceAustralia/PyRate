@@ -21,7 +21,7 @@ from pyrate.orbital import OrbitalError, orbital_correction
 from pyrate.orbital import get_design_matrix, get_network_design_matrix
 from pyrate.orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, QUADRATIC, PART_CUBIC
 from common import sydney5_mock_ifgs, MockIfg, SYD_TEST_TIF
-
+from scipy.linalg import lstsq
 
 
 class SingleDesignMatrixTests(unittest.TestCase):
@@ -140,6 +140,7 @@ class IndependentCorrectionTests(unittest.TestCase):
 
 
 	def alt_orbital_correction(self, ifg, deg, offset):
+		# almost 1:1 copy of MATLAB version
 		data = ifg.phase_data.reshape(ifg.num_cells)
 		dm = get_design_matrix(ifg, deg, offset)[~isnan(data)]
 		fd = data[~isnan(data)].reshape((dm.shape[0], 1))
@@ -147,6 +148,8 @@ class IndependentCorrectionTests(unittest.TestCase):
 		dmt = dm.T
 		invNbb = inv(dmt.dot(dm))
 		params = invNbb.dot(dmt.dot(fd))
+		alt_params = lstsq(dm, fd)[0]
+		assert_array_almost_equal(params, alt_params, decimal=2) # FIXME: precision
 
 		dm2 = get_design_matrix(ifg, deg, offset)
 		fwd_correction = reshape(dot(dm2, params), ifg.phase_data.shape)
@@ -160,7 +163,7 @@ class IndependentCorrectionTests(unittest.TestCase):
 		corrected = array([c.phase_data for c in self.ifgs])
 
 		self.assertFalse((orig == corrected).all())
-		self.check_results(self.ifgs, orig)
+		self.check_results(self.ifgs, orig) # test shape, data is non zero
 
 		# FIXME: is decimal=2 close enough?
 		for i, (e, a) in enumerate(zip(exp, corrected)):
