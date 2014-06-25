@@ -89,8 +89,7 @@ def _validate_mlooked(mlooked, ifgs):
 		msg = "Mismatching # ifgs and # multilooked ifgs"
 		raise OrbitalError(msg)
 
-	tmp = [hasattr(i, 'phase_data') for i in mlooked]
-	if all(tmp) is False:
+	if all([hasattr(i, 'phase_data') for i in mlooked]) is False:
 		msg = "Mismatching types in multilooked ifgs arg:\n%s" % mlooked
 		raise OrbitalError(msg)
 
@@ -126,9 +125,9 @@ def _independent_correction(ifg, degree, offset):
 	dm = get_design_matrix(ifg, degree, offset)
 
 	# filter NaNs out before getting model
-	tmp = dm[~isnan(vphase)]
-	fd = vphase[~isnan(vphase)]
-	model = lstsq(tmp, fd)[0] # first arg is the model params
+	clean_dm = dm[~isnan(vphase)]
+	data = vphase[~isnan(vphase)]
+	model = lstsq(clean_dm, data)[0] # first arg is the model params
 
 	# calculate forward model & morph back to 2D
 	correction = reshape(dot(dm, model), ifg.phase_data.shape)
@@ -152,9 +151,9 @@ def _network_correction(ifgs, degree, offset, m_ifgs=None):
 	dm = get_network_design_matrix(src_ifgs, degree, offset)
 
 	# filter NaNs out before getting model
-	tmp = dm[~isnan(vphase)]
-	fd = vphase[~isnan(vphase)]
-	model = dot(pinv(tmp, 1e-6), fd)
+	clean_dm = dm[~isnan(vphase)]
+	data = vphase[~isnan(vphase)]
+	model = dot(pinv(clean_dm, 1e-6), data)
 
 	ncoef = get_num_params(degree)
 	ids = master_slave_ids(get_all_epochs(ifgs))
@@ -168,6 +167,7 @@ def _network_correction(ifgs, degree, offset, m_ifgs=None):
 		orb = dm.dot(coefs[ids[i.slave]] - coefs[ids[i.master]])
 		orb = orb.reshape(ifgs[0].shape)
 
+		# FIXME: is the sign correct? 
 		# estimate offsets
 		if offset:
 			tmp = i.phase_data - orb
@@ -188,13 +188,9 @@ def get_design_matrix(ifg, degree, offset, scale=100.0):
 	if degree not in [PLANAR, QUADRATIC, PART_CUBIC]:
 		raise OrbitalError("Invalid degree argument")
 
-	xsize = ifg.x_size
-	ysize = ifg.y_size
-
 	# scaling required with higher degree models to help with param estimation
-	if scale:
-		xsize /= scale
-		ysize /= scale
+	xsize = ifg.x_size / scale if scale else ifg.x_size
+	ysize = ifg.y_size / scale if scale else ifg.y_size
 
 	# mesh needs to start at 1, otherwise first cell resolves to 0 and ignored
 	xg, yg = [g+1 for g in meshgrid(range(ifg.ncols), range(ifg.nrows))]
@@ -202,30 +198,30 @@ def get_design_matrix(ifg, degree, offset, scale=100.0):
 	y = yg.reshape(ifg.num_cells) * ysize
 
 	# TODO: performance test this vs np.concatenate (n by 1 cols)??
-	data = empty((ifg.num_cells, get_num_params(degree, offset)), dtype=float32)
+	dm = empty((ifg.num_cells, get_num_params(degree, offset)), dtype=float32)
 
 	# apply positional parameter values, multiply pixel coordinate by cell size
 	# to get distance (a coord by itself doesn't tell us distance from origin)
 	if degree == PLANAR:
-		data[:, 0] = x
-		data[:, 1] = y
+		dm[:, 0] = x
+		dm[:, 1] = y
 	elif degree == QUADRATIC:
-		data[:, 0] = x**2
-		data[:, 1] = y**2
-		data[:, 2] = x * y
-		data[:, 3] = x
-		data[:, 4] = y
+		dm[:, 0] = x**2
+		dm[:, 1] = y**2
+		dm[:, 2] = x * y
+		dm[:, 3] = x
+		dm[:, 4] = y
 	elif degree == PART_CUBIC:
-		data[:, 0] = x * (y**2)
-		data[:, 1] = x**2
-		data[:, 2] = y**2
-		data[:, 3] = x * y
-		data[:, 4] = x
-		data[:, 5] = y
+		dm[:, 0] = x * (y**2)
+		dm[:, 1] = x**2
+		dm[:, 2] = y**2
+		dm[:, 3] = x * y
+		dm[:, 4] = x
+		dm[:, 5] = y
 	if offset is True:
-		data[:, -1] = 1
+		dm[:, -1] = 1
 
-	return data
+	return dm
 
 
 def get_network_design_matrix(ifgs, degree, offset):
@@ -249,30 +245,31 @@ def get_network_design_matrix(ifgs, degree, offset):
 	nepochs = get_epoch_count(ifgs)
 	ncoef = get_num_params(degree) # no offsets: they are made separately below
 	shape = [ifgs[0].num_cells * nifgs, ncoef * nepochs]
+
 	if offset:
 		shape[1] += nifgs # add extra block for offset cols
 
-	ndm = zeros(shape, dtype=float32)
+	netdm = zeros(shape, dtype=float32)
 
 	# calc location for individual design matrices
 	dates = [ifg.master for ifg in ifgs] + [ifg.slave for ifg in ifgs]
 	ids = master_slave_ids(dates)
 	offset_col = nepochs * ncoef # base offset for the offset cols
-	tmp = get_design_matrix(ifgs[0], degree, offset=False)
+	tmpdm = get_design_matrix(ifgs[0], degree, offset=False)
 
 	# iteratively build up sparse matrix
 	for i, ifg in enumerate(ifgs):
 		rs = i * ifg.num_cells # starting row
 		m = ids[ifg.master] * ncoef  # start col for master
 		s = ids[ifg.slave] * ncoef  # start col for slave
-		ndm[rs:rs + ifg.num_cells, m:m + ncoef] = -tmp
-		ndm[rs:rs + ifg.num_cells, s:s + ncoef] = tmp
+		netdm[rs:rs + ifg.num_cells, m:m + ncoef] = -tmpdm
+		netdm[rs:rs + ifg.num_cells, s:s + ncoef] = tmpdm
 
 		# offsets are diagonal cols across the extra array block created above
 		if offset:
-			ndm[rs:rs + ifg.num_cells, offset_col + i] = 1  # init offset cols
+			netdm[rs:rs + ifg.num_cells, offset_col + i] = 1  # init offset cols
 
-	return ndm
+	return netdm
 
 
 class OrbitalError(Exception):

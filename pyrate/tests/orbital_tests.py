@@ -27,6 +27,10 @@ DEG_LOOKUP = { 2 : PLANAR,
 				5 : QUADRATIC,
 				6 : PART_CUBIC, }
 
+NUM_COEF_LOOKUP = { PLANAR : 2,
+					QUADRATIC : 5,
+					PART_CUBIC : 6, }
+
 
 class SingleDesignMatrixTests(unittest.TestCase):
 	'''
@@ -453,7 +457,7 @@ class NetworkCorrectionTests(unittest.TestCase):
 
 		# estimate orbital correction effects if using offsets
 		if off:
-			offsets = self._est_offset(self.ifgs, orbs)
+			offsets = self._estimate_offset(self.ifgs, orbs)
 			self.assertFalse(all([i == 0 for i in offsets]))
 			for orb, ofst in zip(orbs, offsets):
 				orb += ofst
@@ -481,7 +485,7 @@ class NetworkCorrectionTests(unittest.TestCase):
 		return corrections
 
 
-	def _est_offset(self, ifgs, mods):
+	def _estimate_offset(self, ifgs, mods):
 		'''
 		Returns estimated offsets
 		ifgs - interferograms for use in estimation
@@ -539,7 +543,7 @@ class NetworkCorrectionTests(unittest.TestCase):
 
 		# estimate orbital correction effects
 		if off:
-			offsets = self._est_offset(full, orbs)
+			offsets = self._estimate_offset(full, orbs)
 			self.assertFalse(all([i == 0 for i in offsets]))
 			for orb, ofst in zip(orbs, offsets):
 				orb += ofst
@@ -560,22 +564,12 @@ def unittest_dm(ifg, method, degree, offset=False, scale=100.0):
 	offset - True/False to include additional cols for offsets
 	'''
 	assert method in [INDEPENDENT_METHOD, NETWORK_METHOD]
-	assert degree in [PLANAR, QUADRATIC, PART_CUBIC]
 
-	if degree ==  PLANAR:
-		NX = ncoef = 2
-	elif degree == QUADRATIC:
-		NX = ncoef = 5
-	elif degree == PART_CUBIC:
-		NX = ncoef = 6
+	xlen = ncoef = NUM_COEF_LOOKUP[degree]
+	if offset and method == INDEPENDENT_METHOD:
+		ncoef += 1
 	else:
-		raise OrbitalError('Invalid degree')
-
-	if offset is True:
-		if method == INDEPENDENT_METHOD:
-			ncoef += 1
-		else:
-			offset = False # prevent offsets in DM sections for network method
+		offset = False # prevent offsets in DM sections for network method
 
 	# NB: do NOT use meshgrid as it copies the production implementation
 	data = empty((ifg.num_cells, ncoef), dtype=float32)
@@ -588,19 +582,19 @@ def unittest_dm(ifg, method, degree, offset=False, scale=100.0):
 	if degree == PLANAR:
 		for y,x in product(yr, xr):
 			row = rows.next()
-			row[:NX] = [x * xsz, y * ysz]
+			row[:xlen] = [x * xsz, y * ysz]
 	elif degree ==  QUADRATIC:
 		for y,x in product(yr, xr):
 			ys = y * ysz
 			xs = x * xsz
 			row = rows.next()
-			row[:NX] = [xs**2, ys**2, xs*ys, xs, ys]
+			row[:xlen] = [xs**2, ys**2, xs*ys, xs, ys]
 	else:
 		for y,x in product(yr, xr):
 			ys = y * ysz
 			xs = x * xsz
 			row = rows.next()
-			row[:NX] = [xs*ys**2, xs**2, ys**2, xs*ys, xs, ys]
+			row[:xlen] = [xs*ys**2, xs**2, ys**2, xs*ys, xs, ys]
 
 	if offset:
 		data[:, -1] = 1
