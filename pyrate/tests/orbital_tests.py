@@ -139,23 +139,23 @@ class IndependentCorrectionTests(unittest.TestCase):
 			ifg.open()
 
 
-	def alt_calculation(self, ifg, deg, offset):
+	def alt_orbital_correction(self, ifg, deg, offset):
 		data = ifg.phase_data.reshape(ifg.num_cells)
 		dm = get_design_matrix(ifg, deg, offset)[~isnan(data)]
 		fd = data[~isnan(data)].reshape((dm.shape[0], 1))
 
 		dmt = dm.T
-		invNbb = inv(dot(dmt, dm))
-		params = dot(invNbb, dot(dmt, fd))
+		invNbb = inv(dmt.dot(dm))
+		params = invNbb.dot(dmt.dot(fd))
 
 		dm2 = get_design_matrix(ifg, deg, offset)
-		tmp = reshape(dot(dm2, params), ifg.phase_data.shape)
-		return ifg.phase_data - tmp
+		fwd_correction = reshape(dot(dm2, params), ifg.phase_data.shape)
+		return ifg.phase_data - fwd_correction
 
 
 	def check_correction(self, degree, method, offset):
 		orig = array([c.phase_data.copy() for c in self.ifgs])
-		exp = [self.alt_calculation(i, degree, offset) for i in self.ifgs]
+		exp = [self.alt_orbital_correction(i, degree, offset) for i in self.ifgs]
 		orbital_correction(self.ifgs, degree, method, None, offset)
 		corrected = array([c.phase_data for c in self.ifgs])
 
@@ -239,7 +239,7 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 		self.ifgs = sydney5_mock_ifgs()
 		_add_nodata(self.ifgs)
 		self.nifgs = len(self.ifgs)
-		self.nc = self.ifgs[0].num_cells
+		self.ncells = self.ifgs[0].num_cells
 		self.date_ids = get_date_ids(self.ifgs)
 		self.nepochs = len(self.date_ids)
 		assert self.nepochs == 6
@@ -253,7 +253,7 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 		ncoef = 2
 		offset = False
 		act = get_network_design_matrix(self.ifgs, PLANAR, offset)
-		self.assertEqual(act.shape, (self.nc * self.nifgs, ncoef * self.nepochs))
+		self.assertEqual(act.shape, (self.ncells * self.nifgs, ncoef * self.nepochs))
 		self.assertNotEqual(act.ptp(), 0)
 		self.check_equality(ncoef, act, self.ifgs, offset)
 
@@ -262,7 +262,7 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 		ncoef = 2 # NB: doesn't include offset col
 		offset = True
 		act = get_network_design_matrix(self.ifgs, PLANAR, offset)
-		self.assertEqual(act.shape[0], self.nc * self.nifgs)
+		self.assertEqual(act.shape[0], self.ncells * self.nifgs)
 		self.assertEqual(act.shape[1], (self.nepochs * ncoef) + self.nifgs)
 		self.assertNotEqual(act.ptp(), 0)
 		self.check_equality(ncoef, act, self.ifgs, offset)
@@ -272,7 +272,7 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 		ncoef = 5
 		offset = False
 		act = get_network_design_matrix(self.ifgs, QUADRATIC, offset)
-		self.assertEqual(act.shape, (self.nc * self.nifgs, ncoef * self.nepochs))
+		self.assertEqual(act.shape, (self.ncells * self.nifgs, ncoef * self.nepochs))
 		self.assertNotEqual(act.ptp(), 0)
 		self.check_equality(ncoef, act, self.ifgs, offset)
 
@@ -281,7 +281,7 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 		ncoef = 5
 		offset = True
 		act = get_network_design_matrix(self.ifgs, QUADRATIC, offset)
-		self.assertEqual(act.shape[0], self.nc * self.nifgs)
+		self.assertEqual(act.shape[0], self.ncells * self.nifgs)
 		self.assertEqual(act.shape[1], (self.nepochs * ncoef) + self.nifgs)
 		self.assertNotEqual(act.ptp(), 0)
 		self.check_equality(ncoef, act, self.ifgs, offset)
@@ -304,7 +304,7 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 			self.assertEqual(exp.shape, (ifg.num_cells, ncoef))
 
 			# NB: this is Hua Wang's MATLAB code slightly modified for Py
-			ib1, ib2 = [x * self.nc for x in (i, i+1)] # row start/end
+			ib1, ib2 = [x * self.ncells for x in (i, i+1)] # row start/end
 			jbm = ncoef * self.date_ids[ifg.master] # starting col index for master
 			jbs = ncoef * self.date_ids[ifg.slave] # col start for slave
 			assert_array_almost_equal(-exp, dm[ib1:ib2, jbm:jbm+ncoef])
@@ -340,7 +340,7 @@ class NetworkCorrectionTests(unittest.TestCase):
 		# precalc other useful vars
 		self.tol = 1e-6
 		self.nifgs = len(self.ifgs)
-		self.nc = self.ifgs[0].num_cells
+		self.ncells = self.ifgs[0].num_cells
 		self.date_ids = get_date_ids(self.ifgs)
 		self.nepochs = len(self.date_ids)
 		assert self.nepochs == 6
@@ -351,7 +351,7 @@ class NetworkCorrectionTests(unittest.TestCase):
 
 		def get_orbital_params():
 			'''Helper func: returns pseudo-inverse of the DM'''
-			data = concatenate([i.phase_data.reshape(self.nc) for i in self.ifgs])
+			data = concatenate([i.phase_data.reshape(self.ncells) for i in self.ifgs])
 			dm = get_network_design_matrix(self.ifgs, PLANAR, True)[~isnan(data)]
 			fd = data[~isnan(data)].reshape((dm.shape[0], 1))
 			return dot(pinv(dm, self.tol), fd)
@@ -393,11 +393,11 @@ class NetworkCorrectionTests(unittest.TestCase):
 
 	def network_correction(self, deg, off):
 		'''
-		Compares results of orbital_correction() to alternate	implementation.
+		Compares results of orbital_correction() to alternate implementation.
 		deg - PLANAR or QUADRATIC
 		off - True/False to calculate correction with offsets
 		'''
-		data = concatenate([i.phase_data.reshape(self.nc) for i in self.ifgs])
+		data = concatenate([i.phase_data.reshape(self.ncells) for i in self.ifgs])
 
 		dm = get_network_design_matrix(self.ifgs, deg, off)[~isnan(data)]
 		fd = data[~isnan(data)].reshape((dm.shape[0], 1))
@@ -408,7 +408,7 @@ class NetworkCorrectionTests(unittest.TestCase):
 		# calculate forward correction
 		sdm = unittest_dm(self.ifgs[0], NETWORK_METHOD, deg)
 		ncoef = 2 if deg == PLANAR else 5
-		self.assertEqual(sdm.shape, (self.nc, ncoef) )
+		self.assertEqual(sdm.shape, (self.ncells, ncoef) )
 		orbs = self._get_corrections(self.ifgs, sdm, params, ncoef)
 
 		# estimate orbital correction effects if using offsets
@@ -484,7 +484,7 @@ class NetworkCorrectionTests(unittest.TestCase):
 		# treat default sydney mock data as multilooked
 		xs, ys = 6, 8
 		full = sydney5_mock_ifgs(xs, ys) # 2x as much data
-		mldata = concatenate([i.phase_data.reshape(self.nc) for i in self.ifgs])
+		mldata = concatenate([i.phase_data.reshape(self.ncells) for i in self.ifgs])
 
 		# calculate params from dummy mlooked
 		dm = get_network_design_matrix(self.ifgs, deg, off)[~isnan(mldata)]

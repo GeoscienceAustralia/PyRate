@@ -164,7 +164,7 @@ def _network_correction(ifgs, degree, offset, m_ifgs=None):
 	dm = get_design_matrix(ifgs[0], degree, offset=False)
 
 	for i in ifgs:
-		orb = dot(dm, coefs[ids[i.slave]] - coefs[ids[i.master]])
+		orb = dm.dot(coefs[ids[i.slave]] - coefs[ids[i.master]])
 		orb = orb.reshape(ifgs[0].shape)
 
 		# estimate offsets
@@ -253,7 +253,7 @@ def get_network_design_matrix(ifgs, degree, offset):
 	offset_col = nepochs * ncoef # base offset for the offset cols
 	tmp = get_design_matrix(ifgs[0], degree, offset=False)
 
-	# iteratively build up sparse matrix 
+	# iteratively build up sparse matrix
 	for i, ifg in enumerate(ifgs):
 		rs = i * ifg.num_cells # starting row
 		m = ids[ifg.master] * ncoef  # start col for master
