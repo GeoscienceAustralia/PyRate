@@ -390,7 +390,7 @@ class NetworkCorrectionTests(unittest.TestCase):
 		'Ensure pinv(DM)*obs gives equal results given constant change to fd'
 
 		def get_orbital_params():
-			'''Helper func: returns pseudo-inverse of the DM'''
+			'Returns pseudo-inverse of the DM'
 			data = concatenate([i.phase_data.reshape(self.ncells) for i in self.ifgs])
 			dm = get_network_design_matrix(self.ifgs, PLANAR, True)[~isnan(data)]
 			fd = data[~isnan(data)].reshape((dm.shape[0], 1))
@@ -419,50 +419,58 @@ class NetworkCorrectionTests(unittest.TestCase):
 	# setUp() renew the phase data between tests.
 
 	def test_network_correction_planar(self):
-		self.network_correction(PLANAR, False)
+		deg, offset = PLANAR, False
+		exp = self.network_correction(self.ifgs, deg, offset)
+		self.verify_corrections(self.ifgs, exp, deg, offset)
 
 	def test_network_correction_planar_offset(self):
-		self.network_correction(PLANAR, True)
+		deg, offset = PLANAR, True
+		exp = self.network_correction(self.ifgs, deg, offset)
+		self.verify_corrections(self.ifgs, exp, deg, offset)
 
 	def test_network_correction_quadratic(self):
-		self.network_correction(QUADRATIC, False)
+		deg, offset = QUADRATIC, False
+		exp = self.network_correction(self.ifgs, deg, offset)
+		self.verify_corrections(self.ifgs, exp, deg, offset)
 
 	def test_network_correction_quadratic_offset(self):
-		self.network_correction(QUADRATIC, True)
+		deg, offset = QUADRATIC, True
+		exp = self.network_correction(self.ifgs, deg, offset)
+		self.verify_corrections(self.ifgs, exp, deg, offset)
 
 	def test_network_correction_partcubic(self):
-		self.network_correction(PART_CUBIC, False)
+		deg, offset = PART_CUBIC, False
+		exp = self.network_correction(self.ifgs, deg, offset)
+		self.verify_corrections(self.ifgs, exp, deg, offset)
 
 	def test_network_correction_partcubic_offset(self):
-		self.network_correction(PART_CUBIC, True)
+		deg, offset = PART_CUBIC, True
+		exp = self.network_correction(self.ifgs, deg, offset)
+		self.verify_corrections(self.ifgs, exp, deg, offset)
 
-
-	def network_correction(self, deg, off):
+	# TODO move to standalone func
+	def network_correction(self, ifgs, deg, off):
 		'''
 		Compares results of orbital_correction() to alternate implementation.
 		deg - PLANAR, QUADRATIC or PART_CUBIC
 		off - True/False to calculate correction with offsets
 		'''
-		data = concatenate([i.phase_data.reshape(self.ncells) for i in self.ifgs])
+		data = concatenate([i.phase_data.reshape(self.ncells) for i in ifgs])
 
-		dm = get_network_design_matrix(self.ifgs, deg, off)[~isnan(data)]
+		dm = get_network_design_matrix(ifgs, deg, off)[~isnan(data)]
 		fd = data[~isnan(data)].reshape((dm.shape[0], 1))
 		params = dot(pinv(dm, self.nc_tol), fd)
 		self.assertEqual(len(dm), len(fd))
 		self.assertEqual(params.shape, (dm.shape[1], 1) )
 
 		# calculate forward correction
-		sdm = unittest_dm(self.ifgs[0], NETWORK_METHOD, deg)
+		sdm = unittest_dm(ifgs[0], NETWORK_METHOD, deg)
 		ncoef = get_num_params(deg, offset=False) # NB: ignore offsets for network method
 		self.assertEqual(sdm.shape, (self.ncells, ncoef) )
-		orbs = self._get_corrections(self.ifgs, sdm, params, ncoef, off)
+		orbs = self._get_corrections(ifgs, sdm, params, ncoef, off)
 
 		# tricky: get expected before orbital_correction() modifies ifg phase
-		exp = [i.phase_data - orb for i, orb in zip(self.ifgs, orbs)]
-		orbital_correction(self.ifgs, deg, NETWORK_METHOD, None, off)
-		act = [i.phase_data for i in self.ifgs]
-		assert_array_almost_equal(act, exp, decimal=5)
-
+		return [i.phase_data - orb for i, orb in zip(ifgs, orbs)]
 
 	def _get_corrections(self, ifgs, dm, params, ncoef, offsets):
 		'''
@@ -496,6 +504,12 @@ class NetworkCorrectionTests(unittest.TestCase):
 		'''
 		off = (ifg.phase_data - mod).reshape(ifg.num_cells)
 		return median(off[~isnan(off)])
+
+	def verify_corrections(self, ifgs, exp, deg, offset):
+		# checks orbital correction against unit test version
+		orbital_correction(ifgs, deg, NETWORK_METHOD, None, offset)
+		act = [i.phase_data for i in ifgs]
+		assert_array_almost_equal(act, exp, decimal=5)
 
 
 	# These 4 functions test multilooked data for orbital correction. The options
