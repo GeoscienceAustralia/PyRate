@@ -376,7 +376,7 @@ class NetworkCorrectionTests(unittest.TestCase):
 			ifg.Y_SIZE = 89.5
 
 		# precalc other useful vars
-		self.tol = 1e-6
+		self.tol = 1e-5
 		self.nifgs = len(self.ifgs)
 		self.ncells = self.ifgs[0].num_cells
 		self.date_ids = get_date_ids(self.ifgs)
@@ -385,7 +385,7 @@ class NetworkCorrectionTests(unittest.TestCase):
 
 
 	def test_offset_inversion(self):
-		'''Ensure pinv(DM)*obs gives equal results given a constant change to fd'''
+		'Ensure pinv(DM)*obs gives equal results given constant change to fd'
 
 		def get_orbital_params():
 			'''Helper func: returns pseudo-inverse of the DM'''
