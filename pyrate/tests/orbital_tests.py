@@ -361,6 +361,59 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 				assert_array_equal(0, dm[ib1:ib2, ip1 + 1:]) # cols after offset col
 
 
+# components for network correction testing
+def network_correction(ifgs, deg, off, tol=1e-6):
+	'''
+	Compares results of orbital_correction() to alternate implementation.
+	deg - PLANAR, QUADRATIC or PART_CUBIC
+	off - True/False to calculate correction with offsets
+	'''
+	ncells = ifgs[0].num_cells
+	data = concatenate([i.phase_data.reshape(ncells) for i in ifgs])
+
+	dm = get_network_design_matrix(ifgs, deg, off)[~isnan(data)]
+	fd = data[~isnan(data)].reshape((dm.shape[0], 1))
+	params = dot(pinv(dm, tol), fd)
+	assert len(dm) == len(fd)
+	assert params.shape == (dm.shape[1], 1)
+
+	# calculate forward correction
+	sdm = unittest_dm(ifgs[0], NETWORK_METHOD, deg)
+	ncoef = get_num_params(deg, offset=False) # NB: ignore offsets for network method
+	assert sdm.shape == (ncells, ncoef)
+	orbs = _get_corrections(ifgs, sdm, params, ncoef, off)
+
+	# tricky: get expected before orbital_correction() modifies ifg phase
+	return [i.phase_data - orb for i, orb in zip(ifgs, orbs)]
+
+def _get_corrections(ifgs, dm, params, ncoef, offsets):
+	'''
+	Convenience func returns model converted to data points.
+	dm: design matrix (do not filter/remove nan cells)
+	params: model parameters array from pinv() * dm
+	ncoef: number of model coefficients (2 planar, 5 quadratic)
+	offsets: True/False to calculate correction with offsets
+	'''
+	date_ids = get_date_ids(ifgs)
+
+	corrections = []
+	for ifg in ifgs:
+		jbm = date_ids[ifg.master] * ncoef # starting row index for master
+		jbs = date_ids[ifg.slave] * ncoef # row start for slave
+		par = params[jbs:jbs + ncoef] - params[jbm:jbm + ncoef]
+
+		# estimate orbital correction effects
+		# corresponds to "fullorb = B*parm + offset" in orbfwd.m
+		cor = dm.dot(par).reshape(ifg.phase_data.shape)
+
+		if offsets:
+			off = (ifg.phase_data - cor).reshape(ifg.num_cells)
+			cor += median(off[~isnan(off)])
+
+		corrections.append(cor)
+	return corrections
+
+
 
 class NetworkCorrectionTests(unittest.TestCase):
 	'''Tests to verify Ifg correction using network method'''
@@ -381,9 +434,7 @@ class NetworkCorrectionTests(unittest.TestCase):
 		self.nc_tol = 1e-6
 		self.nifgs = len(self.ifgs)
 		self.ncells = self.ifgs[0].num_cells
-		self.date_ids = get_date_ids(self.ifgs)
-		self.nepochs = len(self.date_ids)
-		assert self.nepochs == 6
+		self.nepochs = 6
 
 
 	def test_offset_inversion(self):
@@ -414,96 +465,40 @@ class NetworkCorrectionTests(unittest.TestCase):
 				i.phase_data -= value
 
 
-	# These 4 functions test full size data for orbital correction. The options
+	# These functions test full size data for orbital correction. The options
 	# are separated as the ifg.phase_data arrays are modified in place, allowing
-	# setUp() renew the phase data between tests.
+	# setUp() reset phase data between tests.
 
 	def test_network_correction_planar(self):
 		deg, offset = PLANAR, False
-		exp = self.network_correction(self.ifgs, deg, offset)
+		exp = network_correction(self.ifgs, deg, offset)
 		self.verify_corrections(self.ifgs, exp, deg, offset)
 
 	def test_network_correction_planar_offset(self):
 		deg, offset = PLANAR, True
-		exp = self.network_correction(self.ifgs, deg, offset)
+		exp = network_correction(self.ifgs, deg, offset)
 		self.verify_corrections(self.ifgs, exp, deg, offset)
 
 	def test_network_correction_quadratic(self):
 		deg, offset = QUADRATIC, False
-		exp = self.network_correction(self.ifgs, deg, offset)
+		exp = network_correction(self.ifgs, deg, offset)
 		self.verify_corrections(self.ifgs, exp, deg, offset)
 
 	def test_network_correction_quadratic_offset(self):
 		deg, offset = QUADRATIC, True
-		exp = self.network_correction(self.ifgs, deg, offset)
+		exp = network_correction(self.ifgs, deg, offset)
 		self.verify_corrections(self.ifgs, exp, deg, offset)
 
 	def test_network_correction_partcubic(self):
 		deg, offset = PART_CUBIC, False
-		exp = self.network_correction(self.ifgs, deg, offset)
+		exp = network_correction(self.ifgs, deg, offset)
 		self.verify_corrections(self.ifgs, exp, deg, offset)
 
 	def test_network_correction_partcubic_offset(self):
 		deg, offset = PART_CUBIC, True
-		exp = self.network_correction(self.ifgs, deg, offset)
+		exp = network_correction(self.ifgs, deg, offset)
 		self.verify_corrections(self.ifgs, exp, deg, offset)
 
-	# TODO move to standalone func
-	def network_correction(self, ifgs, deg, off):
-		'''
-		Compares results of orbital_correction() to alternate implementation.
-		deg - PLANAR, QUADRATIC or PART_CUBIC
-		off - True/False to calculate correction with offsets
-		'''
-		data = concatenate([i.phase_data.reshape(self.ncells) for i in ifgs])
-
-		dm = get_network_design_matrix(ifgs, deg, off)[~isnan(data)]
-		fd = data[~isnan(data)].reshape((dm.shape[0], 1))
-		params = dot(pinv(dm, self.nc_tol), fd)
-		self.assertEqual(len(dm), len(fd))
-		self.assertEqual(params.shape, (dm.shape[1], 1) )
-
-		# calculate forward correction
-		sdm = unittest_dm(ifgs[0], NETWORK_METHOD, deg)
-		ncoef = get_num_params(deg, offset=False) # NB: ignore offsets for network method
-		self.assertEqual(sdm.shape, (self.ncells, ncoef) )
-		orbs = self._get_corrections(ifgs, sdm, params, ncoef, off)
-
-		# tricky: get expected before orbital_correction() modifies ifg phase
-		return [i.phase_data - orb for i, orb in zip(ifgs, orbs)]
-
-	def _get_corrections(self, ifgs, dm, params, ncoef, offsets):
-		'''
-		Convenience func returns model converted to data points.
-		dm: design matrix (do not filter/remove nan cells)
-		params: model parameters array from pinv() * dm
-		ncoef: number of model coefficients (2 planar, 5 quadratic)
-		offsets: True/False to calculate correction with offsets
-		'''
-		corrections = []
-		for ifg in ifgs:
-			jbm = self.date_ids[ifg.master] * ncoef # starting row index for master
-			jbs = self.date_ids[ifg.slave] * ncoef # row start for slave
-			par = params[jbs:jbs + ncoef] - params[jbm:jbm + ncoef]
-
-			# estimate orbital correction effects
-			# corresponds to "fullorb = B*parm + offset" in orbfwd.m
-			cor = dm.dot(par).reshape(ifg.phase_data.shape)
-
-			if offsets:
-				cor += self._estimate_offset(ifg, cor)
-
-			corrections.append(cor)
-		return corrections
-
-	def _estimate_offset(self, ifg, mod):
-		'''
-		Returns estimated median offset
-		ifgs - interferograms for use in estimation
-		mods - basic orbital correction arrays (surfaces)
-		'''
-		off = (ifg.phase_data - mod).reshape(ifg.num_cells)
-		return median(off[~isnan(off)])
 
 	def verify_corrections(self, ifgs, exp, deg, offset):
 		# checks orbital correction against unit test version
@@ -552,7 +547,7 @@ class NetworkCorrectionTests(unittest.TestCase):
 		sdm = unittest_dm(full[0], NETWORK_METHOD, deg)
 		ncoef = 2 if deg == PLANAR else 5
 		self.assertEqual(sdm.shape, (full[0].num_cells, ncoef))
-		orbs = self._get_corrections(full, sdm, params, ncoef, off)
+		orbs = _get_corrections(full, sdm, params, ncoef, off)
 
 		# tricky: get expected result before correction (which modifies phase_data)
 		exp = [i.phase_data - orb for i, orb in zip(full, orbs)]
