@@ -214,6 +214,7 @@ class IndependentCorrectionTests(unittest.TestCase):
 	def test_independent_correction_partcubic_offsets(self):
 		self.check_correction(PART_CUBIC, INDEPENDENT_METHOD, True)
 
+
 class ErrorTests(unittest.TestCase):
 	'''Tests for the networked correction method'''
 
@@ -373,8 +374,7 @@ def network_correction(ifgs, deg, off, tol=1e-6):
 
 	dm = get_network_design_matrix(ifgs, deg, off)[~isnan(data)]
 	fd = data[~isnan(data)].reshape((dm.shape[0], 1))
-	params = dot(pinv(dm, tol), fd)
-	assert len(dm) == len(fd)
+	params = pinv(dm, tol).dot(fd)
 	assert params.shape == (dm.shape[1], 1)
 
 	# calculate forward correction
@@ -386,6 +386,7 @@ def network_correction(ifgs, deg, off, tol=1e-6):
 	# tricky: get expected before orbital_correction() modifies ifg phase
 	return [i.phase_data - orb for i, orb in zip(ifgs, orbs)]
 
+# TODO: refactor to singular
 def _get_corrections(ifgs, dm, params, ncoef, offsets):
 	'''
 	Convenience func returns model converted to data points.
@@ -416,25 +417,19 @@ def _get_corrections(ifgs, dm, params, ncoef, offsets):
 
 
 class NetworkCorrectionTests(unittest.TestCase):
-	'''Tests to verify Ifg correction using network method'''
+	'''Verifies orbital correction using network method and no multilooking'''
 
 	def setUp(self):
 		# fake some real ifg data by adding nans
 		self.ifgs = sydney5_mock_ifgs()
 		_add_nodata(self.ifgs)
-		self.err = sum([i.nan_count for i in self.ifgs])
 
+		# use different sizes to differentiate axes results
 		for ifg in self.ifgs:
-			# use different sizes to differentiate axes results
 			ifg.X_SIZE = 90.0
 			ifg.Y_SIZE = 89.5
 
-		# precalc other useful vars
-		self.tol = 1e-5
 		self.nc_tol = 1e-6
-		self.nifgs = len(self.ifgs)
-		self.ncells = self.ifgs[0].num_cells
-		self.nepochs = 6
 
 
 	def test_offset_inversion(self):
@@ -442,23 +437,26 @@ class NetworkCorrectionTests(unittest.TestCase):
 
 		def get_orbital_params():
 			'Returns pseudo-inverse of the DM'
-			data = concatenate([i.phase_data.reshape(self.ncells) for i in self.ifgs])
+			ncells = self.ifgs[0].num_cells
+			data = concatenate([i.phase_data.reshape(ncells) for i in self.ifgs])
 			dm = get_network_design_matrix(self.ifgs, PLANAR, True)[~isnan(data)]
 			fd = data[~isnan(data)].reshape((dm.shape[0], 1))
-			return dot(pinv(dm, self.tol), fd)
+			return dot(pinv(dm, self.nc_tol), fd)
 
+		tol = 1e-5
+		nifgs = len(self.ifgs)
 		params0 = get_orbital_params()
 
-		# include a constant change to the observed values (fd)
-		for value in [5.2, -23.5, 0]:
+		# apply constant change to the observed values (fd)
+		for value in [5.2, -23.5]:
 			for i in self.ifgs: # change ifgs in place
 				i.phase_data += value
 				self.assertTrue(isnan(i.phase_data).any())
 
 			params = get_orbital_params()
 			diff = params - params0
-			self.assertTrue( (diff[:-self.nifgs] < self.tol).all() )
-			assert_array_almost_equal(diff[-self.nifgs:], value, decimal=5)
+			self.assertTrue((diff[:-nifgs] < tol).all())
+			assert_array_almost_equal(diff[-nifgs:], value, decimal=5)
 
 			# reset back to orig data
 			for i in self.ifgs:
@@ -507,24 +505,66 @@ class NetworkCorrectionTests(unittest.TestCase):
 		assert_array_almost_equal(act, exp, decimal=5)
 
 
-	# These 4 functions test multilooked data for orbital correction. The options
+class NetworkCorrectionTestsMultilooking(unittest.TestCase):
+	'Verifies orbital correction with multilooking and network method'
+
+	def setUp(self):
+		# fake some real ifg data by adding nans
+		# TODO: make data multilooked by averaging?
+		self.ml_ifgs = sydney5_mock_ifgs()
+		self.ifgs = sydney5_mock_ifgs(xs=6, ys=8) # 2x data of default Syd mock
+
+		# use different sizes to differentiate axes results
+		for ifg in self.ifgs:
+			ifg.X_SIZE = 90.0
+			ifg.Y_SIZE = 89.5
+
+		# add common nodata to all ifgs
+		for i in self.ifgs + self.ml_ifgs:
+			i.phase_data[0,:] = nan
+
+		self.nc_tol = 1e-6
+
+	# These functions test multilooked data for orbital correction. The options
 	# are separated as the ifg.phase_data arrays are modified in place, allowing
-	# setUp() renew the phase data between tests.
+	# setUp() refresh phase data between tests.
 
 	def test_mlooked_network_correction_planar(self):
-		self.multilooked_network_correction(PLANAR, False)
-
+		deg, offset = PLANAR, False
+		exp = self.multilooked_network_correction(deg, offset)
+		self.verify_corrections(self.ifgs, exp, deg, offset)
 
 	def test_mlooked_network_correction_planar_offset(self):
-		self.multilooked_network_correction(PLANAR, True)
-
+		deg, offset = PLANAR, True
+		exp = self.multilooked_network_correction(deg, offset)
+		self.verify_corrections(self.ifgs, exp, deg, offset)
 
 	def test_mlooked_network_correction_quadratic(self):
-		self.multilooked_network_correction(QUADRATIC, False)
-
+		deg, offset = QUADRATIC, False
+		exp = self.multilooked_network_correction(deg, offset)
+		self.verify_corrections(self.ifgs, exp, deg, offset)
 
 	def test_mlooked_network_correction_quadratic_offset(self):
-		self.multilooked_network_correction(QUADRATIC, True)
+		deg, offset = QUADRATIC, True
+		exp = self.multilooked_network_correction(deg, offset)
+		self.verify_corrections(self.ifgs, exp, deg, offset)
+
+	def test_mlooked_network_correction_partcubic(self):
+		deg, offset = PART_CUBIC, False
+		exp = self.multilooked_network_correction(deg, offset)
+		self.verify_corrections(self.ifgs, exp, deg, offset)
+
+	def test_mlooked_network_correction_partcubic_offset(self):
+		deg, offset = PART_CUBIC, True
+		exp = self.multilooked_network_correction(deg, offset)
+		self.verify_corrections(self.ifgs, exp, deg, offset)
+
+	def verify_corrections(self, ifgs, exp, deg, offset):
+		# checks orbital correction against unit test version
+		orbital_correction(ifgs, deg, NETWORK_METHOD, self.ml_ifgs, offset)
+		act = [i.phase_data for i in ifgs]
+		assert_array_almost_equal(act, exp, decimal=5)
+
 
 	# TODO: refactor into network_correction() as they are very similar
 	def multilooked_network_correction(self, deg, off):
@@ -533,27 +573,22 @@ class NetworkCorrectionTests(unittest.TestCase):
 		deg - PLANAR or QUADRATIC
 		off - True/False to calculate correction with offsets
 		'''
-		# treat default sydney mock data as multilooked
-		xs, ys = 6, 8
-		full = sydney5_mock_ifgs(xs, ys) # 2x as much data
-		mldata = concatenate([i.phase_data.reshape(self.ncells) for i in self.ifgs])
+		ml_ncells = self.ml_ifgs[0].num_cells
+		ml_data = concatenate([i.phase_data.reshape(ml_ncells) for i in self.ml_ifgs])
 
-		# calculate params from dummy mlooked
-		dm = get_network_design_matrix(self.ifgs, deg, off)[~isnan(mldata)]
-		fd = mldata[~isnan(mldata)].reshape((dm.shape[0], 1))
-		params = dot(pinv(dm, self.nc_tol), fd)
+		# calculate params from faked multilooked data
+		dm = get_network_design_matrix(self.ml_ifgs, deg, off)[~isnan(ml_data)]
+		fd = ml_data[~isnan(ml_data)].reshape((dm.shape[0], 1))
+		params = pinv(dm, rcond=self.nc_tol).dot(fd)
 
 		# scale params to full size orbital error matrix
-		sdm = unittest_dm(full[0], NETWORK_METHOD, deg)
-		ncoef = 2 if deg == PLANAR else 5
-		self.assertEqual(sdm.shape, (full[0].num_cells, ncoef))
-		orbs = _get_corrections(full, sdm, params, ncoef, off)
+		sdm = unittest_dm(self.ifgs[0], NETWORK_METHOD, deg)
+		ncoef = get_num_params(deg, offset=False) # NB: ignore offsets for network method
+		self.assertEqual(sdm.shape, (self.ifgs[0].num_cells, ncoef))
+		orbs = _get_corrections(self.ifgs, sdm, params, ncoef, off)
 
 		# tricky: get expected result before correction (which modifies phase_data)
-		exp = [i.phase_data - orb for i, orb in zip(full, orbs)]
-		orbital_correction(full, deg, NETWORK_METHOD, self.ifgs, off)
-		act = [i.phase_data for i in full]
-		assert_array_almost_equal(act, exp, decimal=5)
+		return [i.phase_data - orb for i, orb in zip(self.ifgs, orbs)]
 
 
 def unittest_dm(ifg, method, degree, offset=False, scale=100.0):
