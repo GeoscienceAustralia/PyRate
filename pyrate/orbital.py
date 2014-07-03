@@ -167,13 +167,12 @@ def _network_correction(ifgs, degree, offset, m_ifgs=None):
 		orb = dm.dot(coefs[ids[i.slave]] - coefs[ids[i.master]])
 		orb = orb.reshape(ifgs[0].shape)
 
-		# FIXME: is the sign correct? 
-		# estimate offsets
+		# offset estimation 
 		if offset:
 			tmp = i.phase_data - orb
-			i.phase_data -= (orb + median(tmp[~isnan(tmp)]))
-		else:
-			i.phase_data -= orb
+			orb += median(tmp[~isnan(tmp)]) # bring all ifgs to same base level
+
+		i.phase_data -= orb # remove orbital error from the ifg
 
 
 # TODO: subtract reference pixel coordinate from x and y
