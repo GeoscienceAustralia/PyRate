@@ -17,7 +17,7 @@ sotred in these, so the DEM header is required for raster sizes/location etc.
 * TODO: describe incidence files (and any others (for later versions)
 
 Created on 29/05/2014
-@author: Ben Davies NCI
+@author: Ben Davies, NCI
 '''
 
 import os
@@ -58,30 +58,31 @@ def to_geotiff(hdr, data_path, dest, nodata):
 
 	driver = gdal.GetDriverByName("GTiff")
 	ds = driver.Create(dest, ncols, nrows, 1, gdal.GDT_Float32)
-	
+
 	# write custom headers to interferograms
 	if is_ifg:
 		for k in (ifc.PYRATE_DATE, ifc.PYRATE_DATE2,
 				ifc.PYRATE_TIME_SPAN, ifc.PYRATE_WAVELENGTH_METRES):
 			ds.SetMetadataItem(k, str(hdr[k]))
-	
-	# position and projection data	
+
+	# position and projection data
 	ds.SetGeoTransform([hdr[ifc.PYRATE_LONG], hdr[ifc.PYRATE_X_STEP], 0,
 						hdr[ifc.PYRATE_LAT], 0, hdr[ifc.PYRATE_Y_STEP]])
 
 	srs = osr.SpatialReference()
 	res = srs.SetWellKnownGeogCS(hdr[ifc.PYRATE_DATUM])
+
 	if res:
 		msg = 'Unrecognised projection: %s' % hdr[ifc.PYRATE_DATUM]
 		raise GammaException(msg)
 
 	ds.SetProjection(srs.ExportToWkt())
-	
+
 	# copy data from the binary file
 	band = ds.GetRasterBand(1)
 	band.SetNoDataValue(nodata)
-	fmtstr = '!' + ('f' * ncols) # data format is big endian float32s 
-	
+	fmtstr = '!' + ('f' * ncols) # data format is big endian float32s
+
 	with open(data_path, 'rb') as f:
 		for y in range(nrows):
 			data = struct.unpack(fmtstr, f.read(ncols * 4))
@@ -98,13 +99,13 @@ def _check_raw_data(data_path, ncols, nrows):
 
 def _check_step_mismatch(hdr):
 	xs, ys = [abs(i) for i in [hdr[ifc.PYRATE_X_STEP], hdr[ifc.PYRATE_Y_STEP]]] 
-	
+
 	if xs != ys:
 		msg = 'X and Y cell sizes do not match: %s & %s'
 		raise GammaException(msg % (xs, ys)) 
 
 def parse_header(path):
-	'Parses all GAMMA epoch/DEM header file fields into a dictionary'	
+	'Parses all GAMMA epoch/DEM header file fields into a dictionary'
 	with open(path) as f:
 		text = f.read().splitlines()
 		raw_segs = [line.split() for line in text if ':' in line]
@@ -115,7 +116,7 @@ def parse_header(path):
 def parse_epoch_header(path):
 	'Returns dict of the minimum required epoch metadata needed for PyRate'
 	lookup = parse_header(path)
-		
+
 	subset = {}
 	year, month, day = [int(i) for i in lookup[GAMMA_DATE]]
 	subset[ifc.PYRATE_DATE] = datetime.date(year, month, day)
@@ -125,7 +126,7 @@ def parse_epoch_header(path):
 	if unit != "Hz":
 		msg = 'Unrecognised unit field for radar_frequency: %s'
 		raise GammaException(msg % unit)
-		
+
 	subset[ifc.PYRATE_WAVELENGTH_METRES] = frequency_to_wavelength(float(freq))
 	return subset
 
@@ -134,18 +135,18 @@ def parse_dem_header(path):
 	'Returns dict of metadata for converting GAMMA to custom PyRate GeoTIFF'
 	lookup = parse_header(path)
 	subset = {}
-	
+
 	# NB: many lookup fields have multiple elements, eg ['1000', 'Hz']
 	subset[ifc.PYRATE_NCOLS] = int(lookup[GAMMA_WIDTH][0])
 	subset[ifc.PYRATE_NROWS] = int(lookup[GAMMA_NROWS][0])
-	
+
 	expected = ['decimal', 'degrees']
 	for k in [GAMMA_CORNER_LAT, GAMMA_CORNER_LONG, GAMMA_X_STEP, GAMMA_Y_STEP]:
 		units = lookup[GAMMA_CORNER_LAT][1:]
 		if  units != expected:
 			msg = "Unrecognised units for GAMMA %s field\n. Got %s, expected %s"
 			raise GammaException(msg % (k, units, expected))	
-	
+
 	subset[ifc.PYRATE_LAT] = float(lookup[GAMMA_CORNER_LAT][0])
 	subset[ifc.PYRATE_LONG] = float(lookup[GAMMA_CORNER_LONG][0])
 	subset[ifc.PYRATE_Y_STEP] = float(lookup[GAMMA_Y_STEP][0])
@@ -168,18 +169,18 @@ def combine_headers(hdr0, hdr1, dem_hdr):
 	'''
 	if not all([isinstance(a, dict) for a in [hdr0, hdr1, dem_hdr]]):
 		raise GammaException('Header args need to be dicts')
-	
+
 	chdr = {}
-	date0, date1 = hdr0[ifc.PYRATE_DATE], hdr1[ifc.PYRATE_DATE] 
+	date0, date1 = hdr0[ifc.PYRATE_DATE], hdr1[ifc.PYRATE_DATE]
 	if date0 == date1:
 		raise GammaException("Can't combine headers for the same day")
 	elif date1 < date0:
 		raise GammaException("Wrong date order")
-		
+
 	chdr[ifc.PYRATE_TIME_SPAN] = (date1 - date0).days / ifc.DAYS_PER_YEAR
 	chdr[ifc.PYRATE_DATE] = date0
 	chdr[ifc.PYRATE_DATE2] = date1 # add 2nd date as it may not be in file name
-	
+
 	wavelen = hdr0[ifc.PYRATE_WAVELENGTH_METRES] 
 	if wavelen == hdr1[ifc.PYRATE_WAVELENGTH_METRES]:
 		chdr[ifc.PYRATE_WAVELENGTH_METRES] = wavelen
@@ -187,7 +188,7 @@ def combine_headers(hdr0, hdr1, dem_hdr):
 		args = (chdr[ifc.PYRATE_DATE], chdr[ifc.PYRATE_DATE2])
 		msg = "Wavelength mismatch, check both header files for %s & %s"
 		raise GammaException(msg % args)
-	
+
 	chdr.update(dem_hdr) # add geographic data
 	return chdr
 
@@ -200,7 +201,7 @@ class GammaException(Exception):
 def main():
 	import sys
 	from optparse import OptionParser
-	
+
 	usage = 'Usage: %prog [options] DEM-HEADER GAMMA_FILE [GAMMA_FILE...]' 
 	parser = OptionParser(usage=usage)
 	parser.add_option('-n', '--nodata', help='NODATA value', type='float', default=0.0)
@@ -214,18 +215,18 @@ def main():
 
 	for path in args[1:]:
 		dest = '%s.tif' % os.path.splitext(os.path.basename(path))[0]
-		
+
 		if options.dest_dir:
 			dest = join(options.dest_dir, dest)
-		
+
 		if os.path.exists(dest):
 			sys.exit('Error: %s already exists' % dest)
-		
+
 		try:
 			# find param files contaning filename dates
 			ptn = re.compile(r'\d{8}') # match 8 digits for the date
 			matches = ptn.findall(path)
-	
+
 			if len(matches) == 2:
 				srch_dir = os.path.split(path)[0]
 				hpaths = [glob(join(srch_dir, '*%s*.par' % m))[0] for m in matches]
@@ -234,10 +235,10 @@ def main():
 			else:
 				# probably have DEM or incidence file
 				hdrs = dem_hdr
-	
+
 			to_geotiff(hdrs, path, dest, options.nodata)
 		except Exception, ex:
-			sys.exit('Error: %s' % ex.message)			
+			sys.exit('Error: %s' % ex.message)
 
 
 if __name__ == '__main__':
