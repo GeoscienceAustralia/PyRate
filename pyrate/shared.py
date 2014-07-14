@@ -8,7 +8,7 @@ Created on 12/09/2012
 import os
 from datetime import date
 from numpy import where, nan, isnan, sum as nsum
-
+from ifgconstants import DAYS_PER_YEAR
 import ifgconstants as ifc
 
 try:
@@ -172,7 +172,7 @@ class Ifg(RasterBase):
 		self._init_dates()
 
 		md = self.dataset.GetMetadata()
-		self.time_span = float(md[ifc.PYRATE_TIME_SPAN])
+# 		self.time_span = float(md[ifc.PYRATE_TIME_SPAN])
 		self.wavelength = float(md[ifc.PYRATE_WAVELENGTH_METRES])
 
 		# creating code needs to set this flag after 0 -> NaN replacement
@@ -192,6 +192,7 @@ class Ifg(RasterBase):
 
 		if all(datestrs):
 			self.master, self.slave = [_to_date(s) for s in datestrs]
+			self.time_span = (self.slave - self.master).days / DAYS_PER_YEAR
 		else:
 			msg = 'Missing master and/or slave date in %s' % self.data_path
 			raise IfgException(msg)
