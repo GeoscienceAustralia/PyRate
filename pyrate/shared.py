@@ -36,8 +36,6 @@ class RasterBase(object):
 	'''Base class for PyRate GeoTIFF based raster datasets.'''
 
 	def __init__(self, path):
-		'''Handles common task of bundling various forms of ROIPAC header files with
-		a binary data layer.'''
 		self.data_path = path
 		self.dataset = None # for GDAL dataset obj
 		self._readonly = not os.access(path, os.R_OK | os.W_OK)
@@ -59,7 +57,7 @@ class RasterBase(object):
 			msg = "open() already called for %s" % self
 			raise RasterException(msg)
 
-		# default: open files as writeable, except if read only permissions are set
+		# unless read only, by default open files as writeable
 		if readonly not in [True, False, None]:
 			raise ValueError("readonly must be True, False or None")
 

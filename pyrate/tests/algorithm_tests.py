@@ -46,14 +46,14 @@ class LeastSquaresTests(TestCase):
 
 class AlgorithmTests(TestCase):
 	'''Misc unittests for functions in the algorithm module.'''
-	
+
 	def test_is_square(self):
-		self.assertTrue(algorithm.is_square(np.empty((2,2))))
-	
+		self.assertTrue(algorithm.is_square(np.empty((2, 2))))
+
 	def test_is_not_square(self):
-		for shape in [(3,2), (2,3)]:			
+		for shape in [(3, 2), (2, 3)]:
 			self.assertFalse(algorithm.is_square(np.empty(shape)))
-	
+
 
 	def test_wavelength_conversion(self):
 		# ROIPAC is in radians, verify conversion to mm
@@ -153,7 +153,7 @@ class EpochsTests(TestCase):
 		raw_date = ['20060619', '20060828', '20061002', '20061106', '20061211',
 					'20070115', '20070219', '20070326', '20070430', '20070604',
 					'20070709', '20070813', '20070917']
-		
+
 		exp_dates = [str2date(d) for d in raw_date]
 		exp_repeat = [1, 1, 3, 3, 4, 3, 3, 3, 3, 3, 3, 2, 2]
 		exp_spans = [0, 0.1916, 0.2875, 0.3833, 0.4791, 0.5749, 0.6708, 0.7666,
@@ -164,7 +164,7 @@ class EpochsTests(TestCase):
 		ifgs = [Ifg(join(SYD_TEST_TIF, p)) for p in parse_namelist(ifms)]
 		for i in ifgs:
 			i.open()
-		
+
 		epochs = algorithm.get_epochs(ifgs)
 
 		self.assertTrue((exp_dates == epochs.dates).all())
