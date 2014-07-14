@@ -106,7 +106,7 @@ class IfgTests(unittest.TestCase):
 		self.assertEqual(self.ifg.y_centre, 36)
 
 	def test_time_span(self):
-		self.assertEqual(self.ifg.time_span, 0.287474332649)
+		self.assertAlmostEqual(self.ifg.time_span, 0.287474332649)
 
 	def test_wavelength(self):
 		self.assertEqual(self.ifg.wavelength, 0.0562356424)
