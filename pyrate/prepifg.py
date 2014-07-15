@@ -80,18 +80,15 @@ def prepare_ifgs(params, thresh=0.5, verbose=False):
 	# with correct extents/shape/cell count. Without resampling, gdalwarp is
 	# only needed to cut out the required segment.
 	xlooks, ylooks = params[IFG_LKSX], params[IFG_LKSY]
-	resolution = [xlooks * i.x_step, ylooks * i.y_step]
+
+	# NB: no resolution completes faster for non-multilooked layers in gdalwarp
+	res = None
+	if xlooks > 1 or ylooks > 1:
+		res = [xlooks * i.x_step, ylooks * i.y_step]
 
 	extents = get_extents(ifgs, params)
-	multi = []
-
-	for i in ifgs:
-		# TODO: comment on resolution calc/optimisation
-		res = None if resolution == [i.x_step, i.y_step] else resolution
-		ifgx = warp(i, xlooks, ylooks, extents, res, thresh, verbose)
-		multi.append(ifgx)
-
-	return multi
+	mlk = [warp(i, xlooks, ylooks, extents, res, thresh, verbose) for i in ifgs]
+	return mlk
 
 
 def get_extents(ifgs, params):
@@ -142,7 +139,7 @@ def _resample_ifg(ifg, cmd, x_looks, y_looks, thresh):
 		data = tmp.height_band.ReadAsArray()
 	else:
 		# TODO: need to handle resampling of LOS and baseline files
-		raise NotImplementedError("Resampling for LOS & baseline not implemented.")
+		raise NotImplementedError("Resampling LOS & baseline not implemented")
 
 	del tmp # manual close
 	os.remove(tmp_path)
@@ -162,7 +159,8 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, verbose):
 	'''
 	# dynamically build command for call to gdalwarp
 	cmd = ["gdalwarp", "-overwrite", "-srcnodata", "None", "-te"] + extents
-	if not verbose: cmd.append("-q")
+	if not verbose:
+		cmd.append("-q")
 
 	# HACK: if resampling, cut segment with gdalwarp & manually average tiles
 	data = None
