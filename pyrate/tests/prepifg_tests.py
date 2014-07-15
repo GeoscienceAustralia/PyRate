@@ -16,7 +16,7 @@ from numpy import ones, nan, reshape, sum as npsum
 from numpy.testing import assert_array_almost_equal, assert_array_equal
 
 from pyrate.prepifg import CUSTOM_CROP, MAXIMUM_CROP, MINIMUM_CROP, ALREADY_SAME_SIZE
-from pyrate.prepifg import prepare_ifgs, resample, PreprocessingException
+from pyrate.prepifg import prepare_ifgs, resample, PreprocessError
 
 from pyrate.shared import Ifg, DEM
 from pyrate.config import OBS_DIR, IFG_CROP_OPT, IFG_LKSX, IFG_LKSY
@@ -134,7 +134,7 @@ class OutputTests(unittest.TestCase):
 			# try different errors for each var
 			for error in [0.1, 0.001, 0.0001, 0.00001, 0.000001]:
 				params[key] = backup + error
-				self.assertRaises(PreprocessingException, prepare_ifgs,
+				self.assertRaises(PreprocessError, prepare_ifgs,
 									params, use_exceptions=True)
 
 	# TODO: check output files for same extents?
@@ -156,7 +156,7 @@ class OutputTests(unittest.TestCase):
 	def test_already_same_size_mismatch(self):
 		params = self._default_extents_param()
 		params[IFG_CROP_OPT] = ALREADY_SAME_SIZE
-		self.assertRaises(PreprocessingException, prepare_ifgs, params)
+		self.assertRaises(PreprocessError, prepare_ifgs, params)
 
 	# TODO: ensure multilooked files written to output dir
 	def test_same_size_multilooking(self):
@@ -259,12 +259,12 @@ class OutputTests(unittest.TestCase):
 		values = [0, -1, -10, -100000.6, ""]
 		for v in values:
 			params[IFG_LKSX] = v
-			self.assertRaises(PreprocessingException, prepare_ifgs, params)
+			self.assertRaises(PreprocessError, prepare_ifgs, params)
 
 		params[IFG_LKSX] = 1
 		for v in values:
 			params[IFG_LKSY] = v
-			self.assertRaises(PreprocessingException, prepare_ifgs, params)
+			self.assertRaises(PreprocessError, prepare_ifgs, params)
 
 
 	def test_nan_threshold_inputs(self):

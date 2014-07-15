@@ -60,7 +60,7 @@ def prepare_ifgs(params, thresh=0.5, use_exceptions=False, verbose=False):
 	crop_opt = params[IFG_CROP_OPT]
 	if crop_opt not in CROP_OPTIONS:
 		msg = "Unrecognised crop option: %s" % params[IFG_CROP_OPT]
-		raise PreprocessingException(msg)
+		raise PreprocessError(msg)
 
 	check_looks(params)
 	srcdir = params[OBS_DIR]
@@ -250,7 +250,7 @@ def check_resolution(ifgs):
 		values = array([getattr(i, var) for i in ifgs])
 		if not (values == values[0]).all():
 			msg = "Grid resolution does not match for %s" % var
-			raise PreprocessingException(msg)
+			raise PreprocessError(msg)
 
 
 def check_looks(params):
@@ -259,11 +259,11 @@ def check_looks(params):
 	yscale = params[IFG_LKSY]
 	if not (isinstance(xscale, Number) and isinstance(yscale, Number)):
 		msg = "Non-numeric looks parameter(s), x: %s, y: %s" % (xscale, yscale)
-		raise PreprocessingException(msg)
+		raise PreprocessError(msg)
 
 	if not (xscale > 0 and yscale > 0):
 		msg = "Invalid looks parameter(s), x: %s, y: %s" % (xscale, yscale)
-		raise PreprocessingException(msg)
+		raise PreprocessError(msg)
 
 
 def min_bounds(ifgs):
@@ -289,7 +289,7 @@ def get_same_bounds(ifgs):
 	equal = [t == tfs[0] for t in tfs[1:]]
 	if not all(equal):
 		msg = 'Ifgs do not have the same bounding box for crop option: %s'
-		raise PreprocessingException(msg % ALREADY_SAME_SIZE)
+		raise PreprocessError(msg % ALREADY_SAME_SIZE)
 
 	xmin, xmax = i.x_first, i.x_last
 	ymin, ymax = i.y_first, i.y_last
@@ -318,9 +318,9 @@ def check_crop_coords(ifgs, xmin, xmax, ymin, ymax, use_exceptions=False):
 		if remainder > GRID_TOL and remainder < (1 - GRID_TOL):
 			msg = "%s crop extent not within %s of grid coordinate" % (par, GRID_TOL)
 			if use_exceptions:
-				raise PreprocessingException(msg)
+				raise PreprocessError(msg)
 			sys.stderr.write("WARN: %s\n" % msg)
 
 
-class PreprocessingException(Exception):
+class PreprocessError(Exception):
 	pass
