@@ -2,7 +2,7 @@
 Contains objects common to multiple parts of PyRate
 
 Created on 12/09/2012
-@author: Ben Davies
+@author: Ben Davies, NCI
 '''
 
 import os
@@ -47,7 +47,7 @@ class RasterBase(object):
 
 	def __repr__(self):
 		name = self.__class__.__name__
-		return "%s('%s', '%s')" % (name, self.data_path, self.hdr_path)
+		return "%s('%s')" % (name, self.data_path)
 
 
 	def open(self, readonly=None):
