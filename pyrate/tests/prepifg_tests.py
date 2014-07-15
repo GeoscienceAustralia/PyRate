@@ -134,8 +134,7 @@ class OutputTests(unittest.TestCase):
 			# try different errors for each var
 			for error in [0.1, 0.001, 0.0001, 0.00001, 0.000001]:
 				params[key] = backup + error
-				self.assertRaises(PreprocessError, prepare_ifgs,
-									params, use_exceptions=True)
+				self.assertRaises(PreprocessError, prepare_ifgs, params)
 
 	# TODO: check output files for same extents?
 	# TODO: make prepifg dir readonly to test output to temp dir
@@ -311,7 +310,7 @@ class OutputTests(unittest.TestCase):
 	#	params = self._default_extents_param()
 	#	params[IFG_CROP_OPT] = MINIMUM_CROP
 	#	params[PROJECTION_FLAG] = None
-	#	prepare_ifgs(params, use_exceptions=True)
+	#	prepare_ifgs(params)
 
 
 	#def test_phase_conversion(self):

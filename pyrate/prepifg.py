@@ -41,9 +41,8 @@ GRID_TOL = 1e-6
 
 
 # FIXME: push files out to params OUT dir
-# TODO: remove the use_exceptions?
 # TODO: expand args instead of using params? (more args, but less dependencies)
-def prepare_ifgs(params, thresh=0.5, use_exceptions=False, verbose=False):
+def prepare_ifgs(params, thresh=0.5, verbose=False):
 	"""
 	Produces multilooked/resampled data files for PyRate analysis.
 	params: dict of named values (from pyrate config file)
@@ -53,7 +52,6 @@ def prepare_ifgs(params, thresh=0.5, use_exceptions=False, verbose=False):
 	    cells are NaNs. At 0.25, it resamples to NaN if 1/4 or more contributing
 	    cells are NaNs. At 1.0, areas are resampled to NaN only if all
 	    contributing cells are NaNs.
-	use_exceptions: Use exceptions instead of warnings. Default=False
 	verbose - controls level of gdalwarp output
 	"""
 	# validate config file settings
@@ -84,7 +82,7 @@ def prepare_ifgs(params, thresh=0.5, use_exceptions=False, verbose=False):
 	xlooks, ylooks = params[IFG_LKSX], params[IFG_LKSY]
 	resolution = [xlooks * i.x_step, ylooks * i.y_step]
 
-	extents = get_extents(ifgs, params, use_exceptions)
+	extents = get_extents(ifgs, params)
 	multi = []
 
 	for i in ifgs:
@@ -96,7 +94,7 @@ def prepare_ifgs(params, thresh=0.5, use_exceptions=False, verbose=False):
 	return multi
 
 # TODO: refactor with extents tuple
-def get_extents(ifgs, params, use_exceptions):
+def get_extents(ifgs, params):
 	'Returns extents/bounding box args for gdalwarp as strings'
 	crop_opt = params[IFG_CROP_OPT]
 	if crop_opt == MINIMUM_CROP:
@@ -113,7 +111,7 @@ def get_extents(ifgs, params, use_exceptions):
 	#assert xmin < xmax
 	#assert ymin < ymax
 
-	check_crop_coords(ifgs, xmin, xmax, ymin, ymax, use_exceptions)
+	check_crop_coords(ifgs, xmin, xmax, ymin, ymax)
 	return [str(s) for s in (xmin, ymin, xmax, ymax)]
 
 
@@ -301,7 +299,7 @@ def get_same_bounds(ifgs):
 	return xmin, ymin, xmax, ymax
 
 
-def check_crop_coords(ifgs, xmin, xmax, ymin, ymax, use_exceptions=False):
+def check_crop_coords(ifgs, xmin, xmax, ymin, ymax):
 	'''Ensures cropping coords line up with grid system within tolerance.'''
 	# NB: assumption is the first Ifg is correct, so only test against it
 	i = ifgs[0]
@@ -316,10 +314,8 @@ def check_crop_coords(ifgs, xmin, xmax, ymin, ymax, use_exceptions=False):
 
 		# handle cases where division gives remainder near zero, or just < 1
 		if remainder > GRID_TOL and remainder < (1 - GRID_TOL):
-			msg = "%s crop extent not within %s of grid coordinate" % (par, GRID_TOL)
-			if use_exceptions:
-				raise PreprocessError(msg)
-			sys.stderr.write("WARN: %s\n" % msg)
+			msg = "%s crop extent not within %s of grid coordinate"
+			raise PreprocessError(msg % (par, GRID_TOL))
 
 
 class PreprocessError(Exception):
