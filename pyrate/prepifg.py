@@ -80,15 +80,18 @@ def prepare_ifgs(params, thresh=0.5, verbose=False):
 	# with correct extents/shape/cell count. Without resampling, gdalwarp is
 	# only needed to cut out the required segment.
 	xlooks, ylooks = params[IFG_LKSX], params[IFG_LKSY]
+	do_multilook = xlooks > 1 or ylooks > 1
 
-	# NB: no resolution completes faster for non-multilooked layers in gdalwarp
+	# resolution=None completes faster for non-multilooked layers in gdalwarp
 	res = None
-	if xlooks > 1 or ylooks > 1:
+	if do_multilook:
 		res = [xlooks * i.x_step, ylooks * i.y_step]
 
-	extents = get_extents(ifgs, params)
-	mlk = [warp(i, xlooks, ylooks, extents, res, thresh, verbose) for i in ifgs]
-	return mlk
+	exts = get_extents(ifgs, params)
+	if not do_multilook and crop_opt == ALREADY_SAME_SIZE:
+		return None
+
+	return [warp(i, xlooks, ylooks, exts, res, thresh, verbose) for i in ifgs]
 
 
 def get_extents(ifgs, params):

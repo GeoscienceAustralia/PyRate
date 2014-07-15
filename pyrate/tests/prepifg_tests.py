@@ -181,12 +181,8 @@ class PrepifgOutputTests(unittest.TestCase):
 
 		exp_files = [s.replace('_1r', '_%sr' % scale) for s in self.exp_files]
 
-		for f in exp_files:
-			self.assertTrue(exists(f))
-
-		# is resampled dataset the correct size?
-		ifgs = [Ifg(p) for p in exp_files]
-		for n,i in enumerate(ifgs):
+		for n, ipath in enumerate(exp_files):
+			i = Ifg(ipath)
 			i.open()
 			self.assertEqual(i.dataset.RasterXSize, 20 / scale)
 			self.assertEqual(i.dataset.RasterYSize, 28 / scale)
@@ -198,6 +194,7 @@ class PrepifgOutputTests(unittest.TestCase):
 			exp_resample = multilooking(src_data, scale, scale, thresh=0)
 			self.assertEqual(exp_resample.shape, (7,5))
 			assert_array_almost_equal(exp_resample, i.phase_band.ReadAsArray())
+			os.remove(ipath)
 
 		# verify DEM has been correctly processed
 		# ignore output values as resampling has already been tested for phase
@@ -268,8 +265,6 @@ class SameSizeTests(unittest.TestCase):
 
 	def __init__(self, *args, **kwargs):
 		super(SameSizeTests, self).__init__(*args, **kwargs)
-
-	def setUp(self):
 		self.xs = 0.000833333
 		self.ys = -self.xs
 
@@ -281,13 +276,7 @@ class SameSizeTests(unittest.TestCase):
 		params = _default_extents_param()
 		params[IFG_FILE_LIST] = join(PREP_TEST_TIF, 'ifms2')
 		params[IFG_CROP_OPT] = ALREADY_SAME_SIZE
-
-		# FIXME: this doesn't work
-		d = tempfile.mkdtemp()
-		params[OUT_DIR] = d
-		prepare_ifgs(params)
-		self.assertEqual(os.listdir(d), [])
-		os.rmdir(d)
+		self.assertEqual(prepare_ifgs(params), None)
 
 	def test_already_same_size_mismatch(self):
 		params = _default_extents_param()
@@ -308,8 +297,10 @@ class SameSizeTests(unittest.TestCase):
 		for ifg in mlooked:
 			self.assertEqual(ifg.x_step, params[IFG_LKSX] * self.xs)
 			self.assertEqual(ifg.x_step, params[IFG_LKSY] * self.xs)
+			os.remove(ifg.data_path)
 
 
+#class LineOfSightTests(unittest.TestCase):
 	#def test_los_conversion(self):
 		# TODO: needs LOS matrix
 		# TODO: this needs to work from config and incidence files on disk
