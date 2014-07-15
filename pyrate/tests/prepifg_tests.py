@@ -168,10 +168,9 @@ class OutputTests(unittest.TestCase):
 		mlooked = prepare_ifgs(params)
 		self.assertEqual(len(mlooked), 2)
 
-		base_res = 0.000833333
 		for ifg in mlooked:
-			self.assertEqual(ifg.x_step, params[IFG_LKSX] * base_res)
-			self.assertEqual(ifg.x_step, params[IFG_LKSY] * base_res)
+			self.assertEqual(ifg.x_step, params[IFG_LKSX] * self.xs)
+			self.assertEqual(ifg.x_step, params[IFG_LKSY] * self.xs)
 
 
 	def test_nodata(self):
