@@ -28,19 +28,21 @@ from shared import Ifg, DEM
 from config import parse_namelist
 from config import OBS_DIR, IFG_CROP_OPT, IFG_LKSX, IFG_LKSY, IFG_FILE_LIST
 from config import IFG_XFIRST, IFG_XLAST, IFG_YFIRST, IFG_YLAST, DEM_FILE
-from config import ORBITAL_FIT_LOOKS_X, ORBITAL_FIT_LOOKS_Y
 
 
 # Constants
 MINIMUM_CROP = 1
 MAXIMUM_CROP = 2
 CUSTOM_CROP = 3
-CROP_OPTIONS = [MINIMUM_CROP, MAXIMUM_CROP, CUSTOM_CROP]
+ALREADY_SAME_SIZE = 4
+CROP_OPTIONS = [MINIMUM_CROP, MAXIMUM_CROP, CUSTOM_CROP, ALREADY_SAME_SIZE]
 
 GRID_TOL = 1e-6
 
 
-
+# FIXME: push files out to params OUT dir
+# TODO: remove the use_exceptions?
+# TODO: expand args instead of using params? (more args, but less dependencies)
 def prepare_ifgs(params, thresh=0.5, use_exceptions=False, verbose=False):
 	"""
 	Produces multilooked/resampled data files for PyRate analysis.
@@ -57,63 +59,62 @@ def prepare_ifgs(params, thresh=0.5, use_exceptions=False, verbose=False):
 	# validate config file settings
 	crop_opt = params[IFG_CROP_OPT]
 	if crop_opt not in CROP_OPTIONS:
-		raise PreprocessingException("Unrecognised crop option: %s" % crop_opt)
+		msg = "Unrecognised crop option: %s" % params[IFG_CROP_OPT]
+		raise PreprocessingException(msg)
 
 	check_looks(params)
-	paths = [join(params[OBS_DIR], p) for p in parse_namelist(params[IFG_FILE_LIST])]
+	srcdir = params[OBS_DIR]
+	paths = [join(srcdir, p) for p in parse_namelist(params[IFG_FILE_LIST])]
 	ifgs = [Ifg(p) for p in paths]
 
-	# treat DEM as an Ifg as most of the API is shared
-	if params.has_key(DEM_FILE):
+	# treat DEM as an Ifg as API is mostly shared
+	if DEM_FILE in params:
 		ifgs.append(DEM(params[DEM_FILE]))
 
 	for i in ifgs:
 		i.open()
-	
+
 	check_resolution(ifgs)
-
-	# calculate crop option for passing to gdalwarp
-	if crop_opt == MINIMUM_CROP:
-		xmin, ymin, xmax, ymax = min_bounds(ifgs)
-	elif crop_opt == MAXIMUM_CROP:
-		xmin, ymin, xmax, ymax = max_bounds(ifgs)
-
-	elif crop_opt == CUSTOM_CROP:
-		xmin, xmax = params[IFG_XFIRST], params[IFG_XLAST]
-		ymin, ymax = params[IFG_YLAST], params[IFG_YFIRST]
-		check_crop_coords(ifgs, xmin, xmax, ymin, ymax, use_exceptions)
 
 	# Determine cmd line args for gdalwarp calls for each ifg (gdalwarp has no
 	# API. For resampling, gdalwarp is called 2x. 1st to subset the source data
 	# for Pirate style averaging/resampling, 2nd to generate the final dataset
 	# with correct extents/shape/cell count. Without resampling, gdalwarp is
 	# only needed to cut out the required segment.
-	resolution = None
-	if params[IFG_LKSX] > 1 or params[IFG_LKSY] > 1:
-		resolution = [params[IFG_LKSX] * i.x_step, params[IFG_LKSY] * i.y_step ]
+	xlooks, ylooks = params[IFG_LKSX], params[IFG_LKSY]
+	resolution = [xlooks * i.x_step, ylooks * i.y_step]
 
-	orb = _do_orbital_multilooking(params)
-	xl, yl = params[IFG_LKSX], params[IFG_LKSY]
-	extents = [str(s) for s in (xmin, ymin, xmax, ymax)]
+	extents = get_extents(ifgs, params, use_exceptions)
+	multi = []
 
 	for i in ifgs:
-		lyr = warp(i, xl, yl, extents, resolution, thresh, verbose)
+		# TODO: comment on resolution calc/optimisation
+		res = None if resolution == [i.x_step, i.y_step] else resolution
+		ifgx = warp(i, xlooks, ylooks, extents, res, thresh, verbose)
+		multi.append(ifgx)
 
-		# handle 2nd round resampling for orbital correction data
-		if(orb):
-			xl2, yl2 = params[ORBITAL_FIT_LOOKS_X], params[ORBITAL_FIT_LOOKS_Y]
-			xres = resolution[0] * xl2
-			yres = resolution[1] * yl2
-			warp(lyr, xl2, yl2, extents, [xres, yres], thresh, verbose)
+	return multi
 
+# TODO: refactor with extents tuple
+def get_extents(ifgs, params, use_exceptions):
+	'Returns extents/bounding box args for gdalwarp as strings'
+	crop_opt = params[IFG_CROP_OPT]
+	if crop_opt == MINIMUM_CROP:
+		xmin, ymin, xmax, ymax = min_bounds(ifgs)
+	elif crop_opt == MAXIMUM_CROP:
+		xmin, ymin, xmax, ymax = max_bounds(ifgs)
+	elif crop_opt == CUSTOM_CROP:
+		xmin, xmax = params[IFG_XFIRST], params[IFG_XLAST]
+		ymin, ymax = params[IFG_YLAST], params[IFG_YFIRST]
+	else:
+		xmin, ymin, xmax, ymax = get_same_bounds(ifgs)
 
-def _do_orbital_multilooking(params):
-	'''Returns True if params dict has keys/values for orbital multilooking'''
-	keys = [ORBITAL_FIT_LOOKS_X, ORBITAL_FIT_LOOKS_Y]
-	if all([params.has_key(k) for k in keys]):
-		if all([params[k] > 1 for k in keys]):
-			return True
-	return False
+	# FIXME: add and test this? (or consider GDALwarp breakage enough?)
+	#assert xmin < xmax
+	#assert ymin < ymax
+
+	check_crop_coords(ifgs, xmin, xmax, ymin, ymax, use_exceptions)
+	return [str(s) for s in (xmin, ymin, xmax, ymax)]
 
 
 def _file_ext(raster):
@@ -280,6 +281,23 @@ def max_bounds(ifgs):
 	ymax = max([i.y_first for i in ifgs])
 	xmax = max([i.x_last for i in ifgs])
 	ymin = min([i.y_last for i in ifgs])
+	return xmin, ymin, xmax, ymax
+
+def get_same_bounds(ifgs):
+	'Check and return bounding box for ALREADY_SAME_SIZE option'
+	tfs = [i.dataset.GetGeoTransform() for i in ifgs]
+	equal = [t == tfs[0] for t in tfs[1:]]
+	if not all(equal):
+		msg = 'Ifgs do not have the same bounding box for crop option: %s'
+		raise PreprocessingException(msg % ALREADY_SAME_SIZE)
+
+	xmin, xmax = i.x_first, i.x_last
+	ymin, ymax = i.y_first, i.y_last
+
+	# swap y_first & y_last when using southern hemisphere -ve coords
+	if ymin > ymax:
+		ymin, ymax = ymax, ymin
+
 	return xmin, ymin, xmax, ymax
 
 

@@ -1,11 +1,12 @@
 '''
 Tests for prepifg.py: resampling, subsetting etc
 
-Ben Davies, ANUSF
+Ben Davies, NCI
 '''
 
 import os, sys
 import unittest
+import tempfile
 from os.path import exists, join
 
 from math import floor
@@ -14,14 +15,13 @@ from numpy import isnan, nanmax, nanmin
 from numpy import ones, nan, reshape, sum as npsum
 from numpy.testing import assert_array_almost_equal, assert_array_equal
 
-from pyrate.prepifg import CUSTOM_CROP, MAXIMUM_CROP, MINIMUM_CROP
+from pyrate.prepifg import CUSTOM_CROP, MAXIMUM_CROP, MINIMUM_CROP, ALREADY_SAME_SIZE
 from pyrate.prepifg import prepare_ifgs, resample, PreprocessingException
-from pyrate.prepifg import _do_orbital_multilooking
 
 from pyrate.shared import Ifg, DEM
-from pyrate.config import OBS_DIR, IFG_CROP_OPT, IFG_LKSX, IFG_LKSY, IFG_FILE_LIST
-from pyrate.config import IFG_XFIRST, IFG_XLAST, IFG_YFIRST, IFG_YLAST, DEM_FILE
-from pyrate.config import ORBITAL_FIT_LOOKS_X, ORBITAL_FIT_LOOKS_Y
+from pyrate.config import OBS_DIR, IFG_CROP_OPT, IFG_LKSX, IFG_LKSY
+from pyrate.config import IFG_XFIRST, IFG_XLAST, IFG_YFIRST, IFG_YLAST
+from pyrate.config import OUT_DIR, DEM_FILE, IFG_FILE_LIST
 
 from common import PREP_TEST_TIF, SYD_TEST_DEM_DIR, SYD_TEST_DEM_TIF
 
@@ -57,8 +57,8 @@ class OutputTests(unittest.TestCase):
 		params = {IFG_CROP_OPT: CUSTOM_CROP, IFG_LKSX: 1, IFG_LKSY: 1}
 		params[IFG_XFIRST] = 150.91 + (7 * self.xs)
 		params[IFG_YFIRST] = -34.17 + (16 * self.ys)
-		params[IFG_XLAST] = 150.91 + (27 * self.xs) # 20 cells across from X_FIRST
-		params[IFG_YLAST] = -34.17 + (44 * self.ys) # 28 cells across from Y_FIRST
+		params[IFG_XLAST] = 150.91 + (27 * self.xs) # 20 cells from X_FIRST
+		params[IFG_YLAST] = -34.17 + (44 * self.ys) # 28 cells from Y_FIRST
 		params[IFG_FILE_LIST] = join(PREP_TEST_TIF, 'ifms')
 		params[OBS_DIR] = PREP_TEST_TIF
 		return params
@@ -86,7 +86,9 @@ class OutputTests(unittest.TestCase):
 		ifg = Ifg(self.exp_files[0])
 		ifg.open()
 		gt = ifg.dataset.GetGeoTransform()
-		exp_gt = (150.91, 0.000833333, 0, -34.17, 0, -0.000833333) # copied from gdalinfo output
+
+		# copied from gdalinfo output
+		exp_gt = (150.91, 0.000833333, 0, -34.17, 0, -0.000833333)
 		for i,j in zip(gt, exp_gt):
 			self.assertAlmostEqual(i, j)
 		assert_geotransform_equal(self.exp_files)
@@ -103,8 +105,9 @@ class OutputTests(unittest.TestCase):
 
 		# output files should have same extents
 		# NB: also verifies gdalwarop correctly copies geotransform across
+		# NB: expected data copied from gdalinfo output
 		gt = ifg.dataset.GetGeoTransform()
-		exp_gt = (150.911666666, 0.000833333, 0, -34.172499999, 0, -0.000833333) # copied from gdalinfo output
+		exp_gt = (150.911666666, 0.000833333, 0, -34.172499999, 0, -0.000833333)
 		for i,j in zip(gt, exp_gt):
 			self.assertAlmostEqual(i, j)
 		assert_geotransform_equal(self.exp_files)
@@ -132,7 +135,44 @@ class OutputTests(unittest.TestCase):
 			for error in [0.1, 0.001, 0.0001, 0.00001, 0.000001]:
 				params[key] = backup + error
 				self.assertRaises(PreprocessingException, prepare_ifgs,
-				                  params, use_exceptions=True)
+									params, use_exceptions=True)
+
+	# TODO: check output files for same extents?
+	# TODO: make prepifg dir readonly to test output to temp dir
+	# TODO: move to class for testing same size option?
+
+	def test_already_same_size(self):
+		# should do nothing as layers are same size & no multilooking required
+		params = self._default_extents_param()
+		params[IFG_FILE_LIST] = join(PREP_TEST_TIF, 'ifms2')
+		params[IFG_CROP_OPT] = ALREADY_SAME_SIZE
+
+		d = tempfile.mkdtemp()
+		params[OUT_DIR] = d
+		prepare_ifgs(params)
+		self.assertEqual(os.listdir(d), [])
+		os.rmdir(d)
+
+	def test_already_same_size_mismatch(self):
+		params = self._default_extents_param()
+		params[IFG_CROP_OPT] = ALREADY_SAME_SIZE
+		self.assertRaises(PreprocessingException, prepare_ifgs, params)
+
+	# TODO: ensure multilooked files written to output dir
+	def test_same_size_multilooking(self):
+		params = self._default_extents_param()
+		params[IFG_FILE_LIST] = join(PREP_TEST_TIF, 'ifms2')
+		params[IFG_CROP_OPT] = ALREADY_SAME_SIZE
+		params[IFG_LKSX] = 2
+		params[IFG_LKSY] = 2
+
+		mlooked = prepare_ifgs(params)
+		self.assertEqual(len(mlooked), 2)
+
+		base_res = 0.000833333
+		for ifg in mlooked:
+			self.assertEqual(ifg.x_step, params[IFG_LKSX] * base_res)
+			self.assertEqual(ifg.x_step, params[IFG_LKSY] * base_res)
 
 
 	def test_nodata(self):
@@ -146,7 +186,6 @@ class OutputTests(unittest.TestCase):
 			ifg.open()
 			# NB: amplitude band doesn't have a NODATA value
 			self.assertTrue(isnan(ifg.dataset.GetRasterBand(1).GetNoDataValue()))
-
 
 	def test_nans(self):
 		"""Verify that NaNs replace 0 in the multilooked phase band"""
@@ -180,7 +219,7 @@ class OutputTests(unittest.TestCase):
 			self.assertFalse(exists(f))
 
 		self.exp_files = [s.replace('_1r', '_%sr' % scale) for s in self.exp_files]
-		
+
 		for f in self.exp_files:
 			self.assertTrue(exists(f))
 
@@ -214,39 +253,6 @@ class OutputTests(unittest.TestCase):
 		os.remove(dem.data_path)
 
 
-	def test_orbital_mlook(self):
-		# verify 2nd stage multilooking of orbital correction datasets
-		scale = 4 # assumes square cells
-		params = self._custom_extents_param()
-		params[IFG_LKSX] = scale
-		params[IFG_LKSY] = scale
-
-		newscale = 2
-		params[ORBITAL_FIT_LOOKS_X] = newscale  # mlooked orbitals are half the size
-		params[ORBITAL_FIT_LOOKS_Y] = newscale
-		prepare_ifgs(params, thresh=1.0) # if all nans, ignore cell
-
-		# expected orbital multilooked files
-		self.exp_files = [ s.replace('_1r', '_%sr' % scale) for s in self.exp_files]
-
-		# paths to expected 2nd round mlooked files
-		tmp = ["geo_060619-061002_4rlks_2rlks.tif",
-				"geo_070326-070917_4rlks_2rlks.tif"]
-		paths = [join(PREP_TEST_TIF, p) for p in tmp]
-		
-		# check newly mlooked files
-		for p in paths:
-			i = Ifg(p)
-			i.open()
-			self.assertEqual(i.dataset.RasterXSize, 2) # 1/2 res of src, rounded down
-			self.assertEqual(i.dataset.RasterYSize, 3)
-			self.assertFalse(i.phase_data.ptp() == 0)
-			del i # manual close
-
-		for p in self.exp_files + paths:
-			os.remove(p)
-
-
 	def test_invalid_looks(self):
 		"""Verify only numeric values can be given for multilooking"""
 		params = self._custom_extents_param()
@@ -257,7 +263,7 @@ class OutputTests(unittest.TestCase):
 
 		params[IFG_LKSX] = 1
 		for v in values:
-			params[IFG_LKSX] = v
+			params[IFG_LKSY] = v
 			self.assertRaises(PreprocessingException, prepare_ifgs, params)
 
 
@@ -296,22 +302,6 @@ class OutputTests(unittest.TestCase):
 			res = resample(data, xscale=3, yscale=3, thresh=thresh)
 			assert_array_equal(res, reshape(exp, res.shape))
 
-
-	def test_do_orbital_multilooking(self):
-		self.assertFalse(_do_orbital_multilooking({}))
-		self.assertFalse(_do_orbital_multilooking({ORBITAL_FIT_LOOKS_X: 1}))
-		self.assertFalse(_do_orbital_multilooking({ORBITAL_FIT_LOOKS_Y: 1}))
-
-		pd = {ORBITAL_FIT_LOOKS_X: 1, ORBITAL_FIT_LOOKS_Y: 1}
-		self.assertFalse(_do_orbital_multilooking(pd))
-
-		pd[ORBITAL_FIT_LOOKS_X] = 2
-		self.assertFalse(_do_orbital_multilooking(pd))
-		pd[ORBITAL_FIT_LOOKS_Y] = 2
-		pd[ORBITAL_FIT_LOOKS_X] = 1
-		self.assertFalse(_do_orbital_multilooking(pd))
-
-
 	#def test_los_conversion(self):
 		# TODO: needs LOS matrix
 		# TODO: this needs to work from config and incidence files on disk
@@ -349,9 +339,9 @@ class PrepifgTests(unittest.TestCase):
 def multilooking(src, xscale, yscale, thresh=0):
 	"""
 	Port of looks.m from MATLAB Pirate.
-	
+
 	src: numpy array of phase data
-	thresh: min number of non-NaNs required for a valid tile resampling 
+	thresh: min number of non-NaNs required for a valid tile resampling
 	"""
 	thresh = int(thresh)
 	num_cells = xscale * yscale
@@ -385,8 +375,8 @@ def multilooking(src, xscale, yscale, thresh=0):
 def assert_geotransform_equal(files):
 	"""
 	Asserts geotransforms for the given files are equivalent. Files can be paths
-	to datasets, or GDAL dataset objects."""
-
+	to datasets, or GDAL dataset objects.
+	"""
 	assert len(files) > 1, "Need more than 1 file to compare"
 	if not all( [hasattr(f, "GetGeoTransform") for f in files] ):
 		datasets = [gdal.Open(f) for f in files]
