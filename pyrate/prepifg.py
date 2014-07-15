@@ -14,7 +14,7 @@ Created on 23/10/2012
 # TODO: check new average option for gdalwarp (GDAL 1.10.x +) 
 # TODO: Wavelength conversion 
 
-import os, sys
+import os
 from math import modf
 from numbers import Number
 from tempfile import mkstemp
@@ -93,26 +93,22 @@ def prepare_ifgs(params, thresh=0.5, verbose=False):
 
 	return multi
 
-# TODO: refactor with extents tuple
+
 def get_extents(ifgs, params):
 	'Returns extents/bounding box args for gdalwarp as strings'
 	crop_opt = params[IFG_CROP_OPT]
 	if crop_opt == MINIMUM_CROP:
-		xmin, ymin, xmax, ymax = min_bounds(ifgs)
+		extents = min_bounds(ifgs)
 	elif crop_opt == MAXIMUM_CROP:
-		xmin, ymin, xmax, ymax = max_bounds(ifgs)
+		extents = max_bounds(ifgs)
 	elif crop_opt == CUSTOM_CROP:
-		xmin, xmax = params[IFG_XFIRST], params[IFG_XLAST]
-		ymin, ymax = params[IFG_YLAST], params[IFG_YFIRST]
+		keys = [IFG_XFIRST, IFG_YLAST, IFG_XLAST, IFG_YFIRST]
+		extents = [params[k] for k in keys]
 	else:
-		xmin, ymin, xmax, ymax = get_same_bounds(ifgs)
+		extents = get_same_bounds(ifgs)
 
-	# FIXME: add and test this? (or consider GDALwarp breakage enough?)
-	#assert xmin < xmax
-	#assert ymin < ymax
-
-	check_crop_coords(ifgs, xmin, xmax, ymin, ymax)
-	return [str(s) for s in (xmin, ymin, xmax, ymax)]
+	check_crop_coords(ifgs, *extents)
+	return [str(s) for s in extents]
 
 
 def _file_ext(raster):
@@ -299,7 +295,7 @@ def get_same_bounds(ifgs):
 	return xmin, ymin, xmax, ymax
 
 
-def check_crop_coords(ifgs, xmin, xmax, ymin, ymax):
+def check_crop_coords(ifgs, xmin, ymin, xmax, ymax):
 	'''Ensures cropping coords line up with grid system within tolerance.'''
 	# NB: assumption is the first Ifg is correct, so only test against it
 	i = ifgs[0]
