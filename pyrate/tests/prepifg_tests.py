@@ -28,16 +28,24 @@ from common import PREP_TEST_TIF, SYD_TEST_DEM_DIR, SYD_TEST_DEM_TIF
 import gdal
 gdal.UseExceptions()
 
+if not exists(PREP_TEST_TIF):
+	sys.exit("ERROR: Missing 'prepifg' dir for unittests\n")
 
 
-class OutputTests(unittest.TestCase):
+
+def _default_extents_param():
+	# create dummy params file (relative paths to prevent chdir calls)
+	return {IFG_LKSX: 1,
+			IFG_LKSY: 1,
+			IFG_FILE_LIST: join(PREP_TEST_TIF, 'ifms'),
+			OBS_DIR: PREP_TEST_TIF }
+
+
+class PrepifgOutputTests(unittest.TestCase):
 	"""Tests aspects of the prepifg.py script, such as resampling."""
 
 	def __init__(self, *args, **kwargs):
-		super(OutputTests, self).__init__(*args, **kwargs)
-		if not exists(PREP_TEST_TIF):
-			sys.exit("ERROR: Missing 'prepifg' dir for unittests\n")
-
+		super(PrepifgOutputTests, self).__init__(*args, **kwargs)
 
 	def setUp(self):
 		self.xs = 0.000833333
@@ -64,18 +72,10 @@ class OutputTests(unittest.TestCase):
 		return params
 
 
-	def _default_extents_param(self):
-		# create dummy params file (relative paths to prevent chdir calls)
-		return {IFG_LKSX: 1,
-				IFG_LKSY: 1,
-				IFG_FILE_LIST: join(PREP_TEST_TIF, 'ifms'),
-				OBS_DIR: PREP_TEST_TIF }
-
-
 	def test_default_max_extents(self):
 		"""Test ifgcropopt=2 gives datasets cropped to max extents bounding box."""
 
-		params = self._default_extents_param()
+		params = _default_extents_param()
 		params[IFG_CROP_OPT] = MAXIMUM_CROP
 		prepare_ifgs(params)
 		for f in self.exp_files:
@@ -96,15 +96,14 @@ class OutputTests(unittest.TestCase):
 
 	def test_min_extents(self):
 		"""Test ifgcropopt=1 crops datasets to min extents."""
-
-		params = self._default_extents_param()
+		params = _default_extents_param()
 		params[IFG_CROP_OPT] = MINIMUM_CROP
 		prepare_ifgs(params)
 		ifg = Ifg(self.exp_files[0])
 		ifg.open()
 
 		# output files should have same extents
-		# NB: also verifies gdalwarop correctly copies geotransform across
+		# NB: also verifies gdalwarp correctly copies geotransform across
 		# NB: expected data copied from gdalinfo output
 		gt = ifg.dataset.GetGeoTransform()
 		exp_gt = (150.911666666, 0.000833333, 0, -34.172499999, 0, -0.000833333)
@@ -136,46 +135,10 @@ class OutputTests(unittest.TestCase):
 				params[key] = backup + error
 				self.assertRaises(PreprocessError, prepare_ifgs, params)
 
-	# TODO: check output files for same extents?
-	# TODO: make prepifg dir readonly to test output to temp dir
-	# TODO: move to class for testing same size option?
-
-	def test_already_same_size(self):
-		# should do nothing as layers are same size & no multilooking required
-		params = self._default_extents_param()
-		params[IFG_FILE_LIST] = join(PREP_TEST_TIF, 'ifms2')
-		params[IFG_CROP_OPT] = ALREADY_SAME_SIZE
-
-		d = tempfile.mkdtemp()
-		params[OUT_DIR] = d
-		prepare_ifgs(params)
-		self.assertEqual(os.listdir(d), [])
-		os.rmdir(d)
-
-	def test_already_same_size_mismatch(self):
-		params = self._default_extents_param()
-		params[IFG_CROP_OPT] = ALREADY_SAME_SIZE
-		self.assertRaises(PreprocessError, prepare_ifgs, params)
-
-	# TODO: ensure multilooked files written to output dir
-	def test_same_size_multilooking(self):
-		params = self._default_extents_param()
-		params[IFG_FILE_LIST] = join(PREP_TEST_TIF, 'ifms2')
-		params[IFG_CROP_OPT] = ALREADY_SAME_SIZE
-		params[IFG_LKSX] = 2
-		params[IFG_LKSY] = 2
-
-		mlooked = prepare_ifgs(params)
-		self.assertEqual(len(mlooked), 2)
-
-		for ifg in mlooked:
-			self.assertEqual(ifg.x_step, params[IFG_LKSX] * self.xs)
-			self.assertEqual(ifg.x_step, params[IFG_LKSY] * self.xs)
-
 
 	def test_nodata(self):
 		'Verify NODATA value is copied correctly (amplitude band not copied)'
-		params = self._default_extents_param()
+		params = _default_extents_param()
 		params[IFG_CROP_OPT] = MINIMUM_CROP
 		prepare_ifgs(params)
 
@@ -187,7 +150,7 @@ class OutputTests(unittest.TestCase):
 
 	def test_nans(self):
 		"""Verify that NaNs replace 0 in the multilooked phase band"""
-		params = self._default_extents_param()
+		params = _default_extents_param()
 		params[IFG_CROP_OPT] = MINIMUM_CROP
 		prepare_ifgs(params)
 
@@ -216,13 +179,13 @@ class OutputTests(unittest.TestCase):
 		for f in self.exp_files:
 			self.assertFalse(exists(f))
 
-		self.exp_files = [s.replace('_1r', '_%sr' % scale) for s in self.exp_files]
+		exp_files = [s.replace('_1r', '_%sr' % scale) for s in self.exp_files]
 
-		for f in self.exp_files:
+		for f in exp_files:
 			self.assertTrue(exists(f))
 
 		# is resampled dataset the correct size?
-		ifgs = [Ifg(p) for p in self.exp_files]
+		ifgs = [Ifg(p) for p in exp_files]
 		for n,i in enumerate(ifgs):
 			i.open()
 			self.assertEqual(i.dataset.RasterXSize, 20 / scale)
@@ -234,8 +197,7 @@ class OutputTests(unittest.TestCase):
 			src_data = ds.GetRasterBand(2).ReadAsArray()
 			exp_resample = multilooking(src_data, scale, scale, thresh=0)
 			self.assertEqual(exp_resample.shape, (7,5))
-			act = i.phase_band.ReadAsArray()
-			assert_array_almost_equal(exp_resample, act)
+			assert_array_almost_equal(exp_resample, i.phase_band.ReadAsArray())
 
 		# verify DEM has been correctly processed
 		# ignore output values as resampling has already been tested for phase
@@ -300,13 +262,61 @@ class OutputTests(unittest.TestCase):
 			res = resample(data, xscale=3, yscale=3, thresh=thresh)
 			assert_array_equal(res, reshape(exp, res.shape))
 
+
+class SameSizeTests(unittest.TestCase):
+	"""Tests aspects of the prepifg.py script, such as resampling."""
+
+	def __init__(self, *args, **kwargs):
+		super(SameSizeTests, self).__init__(*args, **kwargs)
+
+	def setUp(self):
+		self.xs = 0.000833333
+		self.ys = -self.xs
+
+	# TODO: check output files for same extents?
+	# TODO: make prepifg dir readonly to test output to temp dir
+	# TODO: move to class for testing same size option?
+	def test_already_same_size(self):
+		# should do nothing as layers are same size & no multilooking required
+		params = _default_extents_param()
+		params[IFG_FILE_LIST] = join(PREP_TEST_TIF, 'ifms2')
+		params[IFG_CROP_OPT] = ALREADY_SAME_SIZE
+
+		# FIXME: this doesn't work
+		d = tempfile.mkdtemp()
+		params[OUT_DIR] = d
+		prepare_ifgs(params)
+		self.assertEqual(os.listdir(d), [])
+		os.rmdir(d)
+
+	def test_already_same_size_mismatch(self):
+		params = _default_extents_param()
+		params[IFG_CROP_OPT] = ALREADY_SAME_SIZE
+		self.assertRaises(PreprocessError, prepare_ifgs, params)
+
+	# TODO: ensure multilooked files written to output dir
+	def test_same_size_multilooking(self):
+		params = _default_extents_param()
+		params[IFG_FILE_LIST] = join(PREP_TEST_TIF, 'ifms2')
+		params[IFG_CROP_OPT] = ALREADY_SAME_SIZE
+		params[IFG_LKSX] = 2
+		params[IFG_LKSY] = 2
+
+		mlooked = prepare_ifgs(params)
+		self.assertEqual(len(mlooked), 2)
+
+		for ifg in mlooked:
+			self.assertEqual(ifg.x_step, params[IFG_LKSX] * self.xs)
+			self.assertEqual(ifg.x_step, params[IFG_LKSY] * self.xs)
+
+
 	#def test_los_conversion(self):
 		# TODO: needs LOS matrix
 		# TODO: this needs to work from config and incidence files on disk
 		# TODO: is convflag (see 'ifgconv' setting) used or just defaulted?
 		# TODO: los conversion has 4 options: 1: ignore, 2: vertical, 3: N/S, 4: E/W
 		# also have a 5th option of arbitrary azimuth angle (Pirate doesn't have this)
-	#	params = self._default_extents_param()
+	#	params = _default_extents_param()
 	#	params[IFG_CROP_OPT] = MINIMUM_CROP
 	#	params[PROJECTION_FLAG] = None
 	#	prepare_ifgs(params)
@@ -318,7 +328,7 @@ class OutputTests(unittest.TestCase):
 
 
 
-class PrepifgTests(unittest.TestCase):
+class LocalMultilookTests(unittest.TestCase):
 	'''Tests for local testing functions'''
 
 	def test_multilooking_thresh(self):
@@ -326,8 +336,8 @@ class PrepifgTests(unittest.TestCase):
 		data[0] = nan
 		data[1,2:5] = nan
 		expected = [ (6, [nan,nan]),
-								(5, [1, nan]),
-								(4, [1, 1]) ]
+					(5, [1, nan]),
+					(4, [1, 1]) ]
 		scale = 3
 		for thresh, exp in expected:
 			res = multilooking(data, scale, scale, thresh)
