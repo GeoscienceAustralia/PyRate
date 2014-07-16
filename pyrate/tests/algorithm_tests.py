@@ -62,7 +62,7 @@ class AlgorithmTests(TestCase):
 		data = np.where(data == 0, np.nan, data)
 		wavelen = 0.0562356424
 		exp = (data * wavelen * 1000) / (4 * pi)
-		act = algorithm.wavelength_to_mm(data, wavelen)
+		act = algorithm.wavelength_radians_to_mm(data, wavelen)
 		assert_allclose(exp, act)
 
 

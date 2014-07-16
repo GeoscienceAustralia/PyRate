@@ -7,7 +7,7 @@ Author: Ben Davies, NCI
 # TODO: later refactoring could move these to more relevant modules 
 
 
-from math import pi
+import math
 from numpy import sin, cos, unique, histogram, diag, dot
 from shared import EpochList, IfgException
 from ifgconstants import DAYS_PER_YEAR
@@ -74,9 +74,13 @@ def least_squares_covariance(A,b,v):
 	return func(r, (c-f * tmp))
 
 
-def wavelength_to_mm(data, wavelength):
-	"""Converts ROIPAC phase from radians to millimetres"""
-	return data * MM_PER_METRE * (wavelength / (4 * pi))
+def wavelength_radians_to_mm(data, wavelength):
+	'''
+	Translates phase from radians to millimetres
+	data: ifg phase data
+	wavelength: normally included with SAR instrument pass data
+	'''
+	return data * MM_PER_METRE * (wavelength / (4 * math.pi))
 
 
 def los_conversion(phase_data, unit_vec):
