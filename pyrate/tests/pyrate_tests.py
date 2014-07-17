@@ -7,21 +7,33 @@ Created on 17/09/2012
 
 import os
 from os.path import join
-import shutil
 
+import glob
+import shutil
 import unittest
-from pyrate import pyrate
+
+
+from pyrate import pyrate, shared, config
 
 
 # testing constants
 BASE_DIR = '/tmp/pyrate/workflow'
-BASE_TIF_DIR = join(BASE_DIR, 'tif')
+BASE_OUT_DIR = join(BASE_DIR, 'out')
+BASE_DEM_DIR = join(BASE_DIR, 'dem')
 BASE_CFG_FILE = join(BASE_DIR, 'pyrate_workflow_test.conf')
+BASE_DEM_FILE = join(BASE_DEM_DIR, 'sydney_trimmed.tif')
 
 TEST_CORE = join(os.environ['PYRATEPATH'], 'tests', 'sydney_test')
 
 CURRENT_DIR = os.getcwd()
 
+
+
+def get_ifgs():
+	paths = glob.glob(join(BASE_OUT_DIR, 'geo_*-*.tif'))
+	ifgs = [shared.Ifg(p) for p in paths]
+	assert len(ifgs) == 17, 'Got %s' % ifgs
+	return ifgs
 
 
 class PyRateTests(unittest.TestCase):
@@ -30,46 +42,64 @@ class PyRateTests(unittest.TestCase):
 
 	@classmethod
 	def setUpClass(cls):
-		# start each test fresh
+		# start each test clean
 		try:
 			shutil.rmtree(BASE_DIR)
 		except:
 			pass
 
 		try:
-			# assume outputs/working dir are part of same tree
-			# link the sydney data in
 			if not os.path.exists(BASE_DIR):
 				os.makedirs(BASE_DIR)
 
-			# link to config file and source data
-			if not os.path.exists(BASE_CFG_FILE):
-				with open(BASE_CFG_FILE, 'w') as f:
-					f.write(WORKFLOW_CONF)
-			else:
-				raise Exception('config file not cleaned up')
+			# copy source data (treat as prepifg already run)
+			if not os.path.exists(BASE_OUT_DIR):
+				os.makedirs(BASE_OUT_DIR)
 
-			if not os.path.exists(BASE_TIF_DIR):
-				orig_tif = join(TEST_CORE, 'tif')
-				os.symlink(orig_tif, BASE_TIF_DIR)
+				# TODO: possibly needs 1rlks filenames
+				for path in glob.glob(join(TEST_CORE, 'tif/*')):
+					dest = join(BASE_OUT_DIR, os.path.basename(path))
+					shutil.copy(path, dest)
+					os.chmod(dest, 0660)
+
+			if not os.path.exists(BASE_DEM_DIR):
+				os.makedirs(BASE_DEM_DIR)
+				orig_dem = join(TEST_CORE, 'dem', 'sydney_trimmed.tif')
+				os.symlink(orig_dem, BASE_DEM_FILE)
 
 			os.chdir(BASE_DIR)
-			pyrate.main(BASE_CFG_FILE, verbose=False)
+
+			ifgs = get_ifgs()
+			params = config._parse_conf_file(WORKFLOW_CONF)
+			pyrate.process_ifgs(ifgs, params)
 		except:
 			# revert working dir & avoid paths busting other tests
 			os.chdir(CURRENT_DIR)
 			raise
 
+	def setUp(self):
+		if not hasattr(self, 'ifgs'):
+			self.ifgs = get_ifgs()
+
+			for i in self.ifgs:
+				i.open()
+
 
 	def test_initial_setup(self):
 		self.assertTrue(os.path.exists(BASE_DIR))
-		self.assertTrue(os.path.exists(BASE_TIF_DIR))
-		self.assertTrue(os.path.exists(BASE_CFG_FILE))
+		self.assertTrue(os.path.exists(BASE_OUT_DIR))
 
-	#def test_wavelength_conversion(self):
+		for i in self.ifgs:
+			self.assertFalse(i.is_read_only)
+
+	def test_wavelength_conversion(self):
 		# ensure phase has been converted from metres to millimetres
 		# TODO: check for a metadata flag
-		#1/0
+		for i in self.ifgs:
+			key = 'PHASE_UNITS'
+			md = i.dataset.GetMetadata()
+			self.assertTrue(key in md, 'Missing key in %s' % i.data_path)
+			self.assertTrue(md[key], 'MILLIMETRES')
 
 
 if __name__ == "__main__":
