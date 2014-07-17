@@ -97,14 +97,14 @@ PARAM_CONVERSION = { OBS_DIR : (None, "obs"),
 				}
 
 def get_config_params(path):
+	'Returns a dict for the key:value pairs from the .conf file'
 	with open(path) as f:
 		txt = f.read().splitlines()
 
 	return _parse_conf_file(txt)
 
 def _parse_conf_file(content):
-	"""Returns a dict for the key:value pairs from the .conf file"""
-
+	'Parser for converting text content into a dict of parameters'
 	def is_valid(line):
 		return line != "" and line[0] not in "%#"
 
