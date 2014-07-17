@@ -90,28 +90,31 @@ PARAM_CONVERSION = { OBS_DIR : (None, "obs"),
 					ORBITAL_FIT_DEGREE : (int, QUADRATIC),
 					ORBITAL_FIT_LOOKS_X : (int, NO_MULTILOOKING),
 					ORBITAL_FIT_LOOKS_Y : (int, NO_MULTILOOKING),
-					
+
 					LR_NSIG : (int, 3), # Pirate default
 					LR_PTHRESH : (int, 20), # should be based on nepochs since not every project may have 20 epochs
 					LR_MAXSIG : (int, 2), # Pirate default
 				}
 
+def get_config_params(path):
+	with open(path) as f:
+		txt = f.read().splitlines()
 
-def parse_conf_file(conf_file):
+	return _parse_conf_file(txt)
+
+def _parse_conf_file(content):
 	"""Returns a dict for the key:value pairs from the .conf file"""
-	
+
 	def is_valid(line):
 		return line != "" and line[0] not in "%#"
-	
-	with open(conf_file) as f:
-		txt = f.read().splitlines()
-		lines = [line.split() for line in txt if is_valid(line)]
-		
-		# convert "field:   value" lines to [field, value]  
-		kvpair = [(e[0].rstrip(":"), e[1]) for e in lines if len(e) == 2]
-		parameters = dict(kvpair)
-		_parse_pars(parameters)
-		return parameters
+
+	lines = [line.split() for line in content if is_valid(line)]
+
+	# convert "field:   value" lines to [field, value]  
+	kvpair = [(e[0].rstrip(":"), e[1]) for e in lines if len(e) == 2]
+	parameters = dict(kvpair)
+	_parse_pars(parameters)
+	return parameters
 
 
 def _parse_pars(pars):

@@ -22,22 +22,20 @@ class ConfigTests(unittest.TestCase):
 	# TODO: are more conf parsing tests needed?
 
 	def test_read_param_file(self):
-		conf_file = join(SYD_TEST_DIR, 'pyrate.conf')
-		params = config.parse_conf_file(conf_file)
+		conf_path = join(SYD_TEST_DIR, 'pyrate.conf')
+		params = config.get_config_params(conf_path)
 		for k in params.keys():
 			self.assertTrue(k != "")
 			self.assertTrue(params[k] != "")
 			self.assertFalse(k.endswith(":")) # are the colons removed?
-	
-	
+
 	def test_read_param_file_no_refpixel(self):
 		# ensure the parser can handle empty fields
-		conf_file = join(SYD_TEST_DIR, 'pyrate2.conf')
-		params = config.parse_conf_file(conf_file)
-		
+		conf_path = join(SYD_TEST_DIR, 'pyrate2.conf')
+		params = config.get_config_params(conf_path)
+
 		self.assertTrue(params[config.REFX] == -1)
 		self.assertTrue(params[config.REFY] == -1)
-
 
 	def test_parse_namelist(self):
 		nl = join(SYD_TEST_TIF, 'ifms_17')
