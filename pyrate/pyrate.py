@@ -5,18 +5,19 @@ Created on 17/09/2012
 @author: Ben Davies, NCI
 '''
 
-import config
+import config as cf
 import logging
 import datetime
 
 from shared import Ifg
-import algorithm, mst, refpixel
+import algorithm, mst, refpixel, orbital
 
 
-# metadata constants
+# constants for metadata flags
 META_UNITS = 'PHASE_UNITS'
 MILLIMETRES = 'MILLIMETRES'
-
+META_ORBITAL = 'ORBITAL_ERROR'
+META_REMOVED = 'REMOVED'
 
 # TODO: add basic logging statements 
 def main(cfgfile='pyrate.conf', verbose=True):
@@ -24,7 +25,7 @@ def main(cfgfile='pyrate.conf', verbose=True):
 	raise NotImplementedError
 
 	# TODO: add parameter error checking to fail fast, before number crunching
-	#params = config.get_config_params(cfgfile)
+	params = cf.get_config_params(cfgfile)
 
 	# TODO: get list of mlooked/cropped ifgs
 	# NB: keep source files intact, should be run after prepifg code
@@ -44,8 +45,10 @@ def process_ifgs(ifgs, params):
 		i.open()
 		convert_wavelength(i)
 
-	# TODO: epochs = algorithm.get_epochs(ifgs)
-	# TODO: mst_grid = mst.mst_matrix(ifgs, epochs)
+	remove_orbital_error(ifgs, params)
+
+	epochs = algorithm.get_epochs(ifgs)
+	mst_grid = mst.mst_matrix(ifgs, epochs)
 	# TODO: refy, refx = refpixel.ref_pixel(params, ifgs)
 
 	# final close
@@ -68,7 +71,7 @@ def init_logging(level):
 
 def convert_wavelength(ifg):
 	if ifg.dataset.GetMetadataItem(META_UNITS) == MILLIMETRES:
-		msg = '%s: previous wavelength conversion detected'
+		msg = '%s: ignored as previous wavelength conversion detected'
 		logging.debug(msg % ifg.data_path)
 		return
 
@@ -76,6 +79,43 @@ def convert_wavelength(ifg):
 	ifg.dataset.SetMetadataItem(META_UNITS, MILLIMETRES)
 	msg = '%s: converted wavelength to millimetres'
 	logging.debug(msg % ifg.data_path)
+
+def remove_orbital_error(ifgs, params):
+	if not params[cf.ORBITAL_FIT]:
+		logging.debug('Orbital correction skipped')
+		return
+
+	# perform some general error/sanity checks
+	flags = [i.dataset.GetMetadataItem(META_ORBITAL) for i in ifgs]
+
+	if all(flags):
+		msg = 'Skipping orbital correction as all ifgs have error removed'
+		logging.debug(msg)
+		return
+	else:
+		check_orbital_ifgs(ifgs, flags)
+
+	orbital.orbital_correction(ifgs,
+ 							degree=params[cf.ORBITAL_FIT_DEGREE],
+ 							method=params[cf.ORBITAL_FIT_METHOD])
+	for i in ifgs:
+		i.dataset.SetMetadataItem(META_ORBITAL, META_REMOVED)
+
+def check_orbital_ifgs(ifgs, flags):
+	count = sum([f == META_REMOVED for f in flags])
+	if count < len(flags) and count > 0:
+		msg = 'Detected corrected and uncorrected orbital error in ifgs'
+		logging.debug(msg)
+
+		for i, flag in zip(ifgs, flags):
+			if flag:
+				msg = '%s: prior orbital error correction detected'
+			else:
+				msg = '%s: no orbital correction detected'
+			logging.debug(msg % i.data_path)
+
+		raise orbital.OrbitalError(msg)
+
 
 
 # function template

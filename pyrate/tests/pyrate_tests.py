@@ -84,6 +84,12 @@ class PyRateTests(unittest.TestCase):
 			for i in self.ifgs:
 				i.open()
 
+	def key_check(self, ifg, key, value):
+		'Helper to check for metadata flags'
+		md = ifg.dataset.GetMetadata()
+		self.assertTrue(key in md, 'Missing %s in %s' % (key, ifg.data_path))
+		self.assertTrue(md[key], value)
+
 
 	def test_basic_outputs(self):
 		self.assertTrue(os.path.exists(BASE_DIR))
@@ -100,16 +106,22 @@ class PyRateTests(unittest.TestCase):
 
 	def test_wavelength_conversion(self):
 		# ensure phase has been converted from metres to millimetres
-		# TODO: check for a metadata flag
-		for i in self.ifgs:
-			key = 'PHASE_UNITS'
-			md = i.dataset.GetMetadata()
-			self.assertTrue(key in md, 'Missing key in %s' % i.data_path)
-			self.assertTrue(md[key], 'MILLIMETRES')
+		key = 'PHASE_UNITS'
+		value = 'MILLIMETRES'
 
-	# TODO
-	#def test_mst_matrix(self):
-	#	raise NotImplementedError
+		for i in self.ifgs:
+			self.key_check(i, key, value)
+
+	def test_orbital_correction(self):
+		key = 'ORBITAL_ERROR'
+		value = 'REMOVED'
+
+		for i in self.ifgs:
+			self.key_check(i, key, value)
+
+	def test_mst_matrix(self):
+		# TODO: should matrix be written to disk?
+		raise NotImplementedError
 
 
 if __name__ == "__main__":
@@ -177,10 +189,10 @@ maxsig:        2
 # orbrefest: remove reference phase
 # orbmaskflag: mask some patches for orbital correction
 orbfit:        0
-orbfitmethod:  2
-orbfitdegrees: 2
-orbfitlksx:    2
-orbfitlksy:    2
+orbfitmethod:  1
+orbfitdegrees: 1
+orbfitlksx:    0
+orbfitlksy:    0
 #orbrefest:
 #orbmaskflag:
 
