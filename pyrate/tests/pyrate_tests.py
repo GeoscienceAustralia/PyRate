@@ -85,12 +85,18 @@ class PyRateTests(unittest.TestCase):
 				i.open()
 
 
-	def test_initial_setup(self):
+	def test_basic_outputs(self):
 		self.assertTrue(os.path.exists(BASE_DIR))
 		self.assertTrue(os.path.exists(BASE_OUT_DIR))
 
 		for i in self.ifgs:
 			self.assertFalse(i.is_read_only)
+
+		logpaths = glob.glob(join(BASE_DIR, '*.log'))
+		self.assertEqual(len(logpaths), 1)
+
+		st = os.stat(logpaths[0])
+		self.assertTrue(st.st_size > 0)
 
 	def test_wavelength_conversion(self):
 		# ensure phase has been converted from metres to millimetres
@@ -100,6 +106,10 @@ class PyRateTests(unittest.TestCase):
 			md = i.dataset.GetMetadata()
 			self.assertTrue(key in md, 'Missing key in %s' % i.data_path)
 			self.assertTrue(md[key], 'MILLIMETRES')
+
+	# TODO
+	#def test_mst_matrix(self):
+	#	raise NotImplementedError
 
 
 if __name__ == "__main__":
