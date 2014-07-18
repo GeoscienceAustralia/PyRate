@@ -12,7 +12,10 @@ is only a single height band in the binary data.
 * Interferograms: have a .unw float32 bit binary data file (MSB order), with a
 single band for phase data. Two .par resource/header files, each containing
 details of the epochs used to create the interferogram. No geographic date is 
-sotred in these, so the DEM header is required for raster sizes/location etc.
+stored in these, so the DEM header is required for raster sizes/location etc.
+
+The interferograms are geocoded/orthorectified to the DEM geometry, so all
+datasets will share the same pixel size and dimensions.
 
 * TODO: describe incidence files (and any others (for later versions)
 
