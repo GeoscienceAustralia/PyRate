@@ -10,7 +10,7 @@ Created on 17/09/2012
 # problem with the checking being done in the middle of the runs, as bad values
 # could cause crashes & destroying some of the results.
 
-from orbital import NETWORK_METHOD, QUADRATIC
+import orbital
 
 
 # general constants
@@ -59,6 +59,25 @@ LR_NSIG = 'nsig' # n-sigma ratio used to threshold 'model minus observation' res
 LR_PTHRESH = 'pthr'  # minimum number of coherent observations for a pixel
 LR_MAXSIG = 'maxsig' # maximum allowable standard error
 
+
+def degree_conv(deg):
+	'Convenience: convert numerical degree to human readable string'
+	degree = int(deg)
+	if degree == 1:
+		return orbital.PLANAR
+	if degree == 2:
+		return orbital.QUADRATIC
+	raise NotImplementedError
+
+def method_conv(meth):
+	'Convenience: convert numerical method to human readable string'
+	method = int(meth)
+	if method == 1:
+		return orbital.INDEPENDENT_METHOD
+	if method == 2:
+		return orbital.NETWORK_METHOD
+	raise NotImplementedError
+
 # Lookup to help convert args to correct type/defaults
 # format is    key : (conversion, default value)
 # None = no conversion
@@ -86,8 +105,8 @@ PARAM_CONVERSION = { OBS_DIR : (None, "obs"),
 					REF_MIN_FRAC : (float, 0.8), # uses Pirate default
 
 					ORBITAL_FIT : (bool, True),
-					ORBITAL_FIT_METHOD : (int, NETWORK_METHOD),
-					ORBITAL_FIT_DEGREE : (int, QUADRATIC),
+					ORBITAL_FIT_METHOD : (method_conv, orbital.NETWORK_METHOD),
+					ORBITAL_FIT_DEGREE : (degree_conv, orbital.QUADRATIC),
 					ORBITAL_FIT_LOOKS_X : (int, NO_MULTILOOKING),
 					ORBITAL_FIT_LOOKS_Y : (int, NO_MULTILOOKING),
 
@@ -99,7 +118,7 @@ PARAM_CONVERSION = { OBS_DIR : (None, "obs"),
 def get_config_params(path):
 	'Returns a dict for the key:value pairs from the .conf file'
 	with open(path) as f:
-		txt = f.read().splitlines()
+		txt = f.read()
 
 	return _parse_conf_file(txt)
 
@@ -108,13 +127,16 @@ def _parse_conf_file(content):
 	def is_valid(line):
 		return line != "" and line[0] not in "%#"
 
-	lines = [line.split() for line in content if is_valid(line)]
+	lines = [line.split() for line in content.split('\n') if is_valid(line)]
 
 	# convert "field:   value" lines to [field, value]  
 	kvpair = [(e[0].rstrip(":"), e[1]) for e in lines if len(e) == 2]
 	parameters = dict(kvpair)
-	_parse_pars(parameters)
-	return parameters
+
+	if not parameters:
+		raise ConfigException('Cannot parse any parameters from config file')
+
+	return _parse_pars(parameters)
 
 
 def _parse_pars(pars):
