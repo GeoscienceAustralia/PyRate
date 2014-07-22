@@ -95,6 +95,11 @@ def remove_orbital_error(ifgs, params):
 	else:
 		check_orbital_ifgs(ifgs, flags)
 
+	if params[cf.ORBITAL_FIT_LOOKS_X] > 1 or params[cf.ORBITAL_FIT_LOOKS_Y] > 1:
+		# resampling here to use all prior corrections to orig data
+		# TODO: avoid writing mlooked to disk by using mock ifgs/in mem arrays?
+		raise NotImplementedError('TODO: Orbital multilooking')
+
 	orbital.orbital_correction(ifgs,
  							degree=params[cf.ORBITAL_FIT_DEGREE],
  							method=params[cf.ORBITAL_FIT_METHOD])
