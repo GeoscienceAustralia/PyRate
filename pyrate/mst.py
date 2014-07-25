@@ -2,13 +2,13 @@
 Minimum Spanning Tree functionality for PyRate.
 Contains functions to calculate MST using interferograms.
 
-Author: Ben Davies, ANUSF
+Author: Ben Davies, NCI
 '''
 
 from itertools import product
 from numpy import array, nan, isnan, float32, empty
 
-from algorithm import get_all_epochs, master_slave_ids
+from algorithm import get_all_epochs, master_slave_ids, ifg_date_lookup
 from pygraph.classes.graph import graph
 from pygraph.algorithms.minmax import minimal_spanning_tree
 
@@ -36,9 +36,7 @@ def default_mst(ifgs, noroot=True):
 
 	g = _build_graph(epochs, edges, weights)
 	mst = minimal_spanning_tree(g)
-	if noroot:
-		_remove_root_node(mst)
-	return mst
+	return _remove_root_node(mst) if noroot else mst
 
 
 def _build_graph(nodes, edges, weights, noroot=True):
@@ -47,19 +45,53 @@ def _build_graph(nodes, edges, weights, noroot=True):
 	g.add_nodes(nodes)
 	for edge, weight in zip(edges, weights):
 		g.add_edge(edge, wt=weight)
-	
+
 	return g
 
+
+def mst_matrix_ifgs_only(ifgs, epochs):
+	'''
+	Filter: returns array of independent ifgs from the pixel by pixel MST.
+
+	The MSTs are stripped of connecting edge info, leaving just the ifgs.
+	ifgs: sequence of Ifg objs
+	epochs: an EpochList object derived from the ifgs
+	'''
+	result = empty(shape=ifgs[0].phase_data.shape, dtype=object)
+
+	for y, x, mst in mst_matrix(ifgs, epochs):
+		if hasattr(mst, 'iteritems'):
+			ifg_sub = [ifg_date_lookup(ifgs, d) for d in mst.iteritems()]
+			result[(y,x)] = tuple(ifg_sub)
+		else:
+			result[(y,x)] = mst # usually NaN
+
+	return result
+
+
+def mst_matrix_as_array(ifgs, epochs):
+	'''
+	Filter: returns array of pixel by pixel MSTs.
+
+	Each pixel contains an MST (with connecting edges etc)
+	ifgs: sequence of Ifg objs
+	epochs: an EpochList object derived from the ifgs
+	'''
+	mst_result = empty(shape=ifgs[0].phase_data.shape, dtype=object)
+
+	for y, x, mst in mst_matrix(ifgs, epochs):
+		mst_result[y, x] = mst
+
+	return mst_result
 
 # TODO: custom weighting could included with an additional 'weights' arg if some
 # other weighting criterion is required later
 def mst_matrix(ifgs, epochs):
 	'''
-	Returns array of MST trees from a pixel-by-pixel MST. MSTs are calculated
-	for each individual pixel, ignoring NODATA/NaN values.
+	Generates/emits MST trees on a pixel-by-pixel basis for the given ifgs.
 	ifgs: sequence of Ifg objs
 	epochs: an EpochList object derived from the ifgs
-	'''	
+	'''
 	# make default MST to optimise result when no Ifg cells in a stack are nans
 	edges = [(i.master, i.slave) for i in ifgs]
 	weights = [i.nan_fraction for i in ifgs]
@@ -67,25 +99,25 @@ def mst_matrix(ifgs, epochs):
 	dflt_mst = _remove_root_node(minimal_spanning_tree(g))
 
 	# prepare source and dest data arrays
-	# TODO: memory efficiencies can be acheived here with tiling
+	# TODO: memory efficiencies can be achieved here with tiling
 	data_stack = array([i.phase_data for i in ifgs], dtype=float32)
-	mst_result = empty(shape=i.phase_data.shape, dtype=object)
 
-	# now create MSTs for each pixel in the ifg data stack
+	# create MSTs for each pixel in the ifg data stack
+	nifgs = len(ifgs)
 	for y, x in product(xrange(i.nrows), xrange(i.ncols)):
-		values = data_stack[:, y, x] # select stack of all ifg values for a pixel
+		values = data_stack[:, y, x] # vertical stack of ifg values for a pixel
 		nancount = sum(isnan(values))
 
-		# optimisations: use precreated results for all nans/no nans
+		# optimisations: use pre-created results for all nans/no nans
 		if nancount == 0:
-			mst_result[y, x] = dflt_mst
+			yield y, x, dflt_mst
 			continue
-		elif nancount == len(ifgs):
-			mst_result[y, x] = nan
+		elif nancount == nifgs:
+			yield y, x, nan
 			continue
 
 		# dynamically modify graph to reuse a single graph: this should avoid
-		# repeatedly creating new graph objs & reduce RAM use		
+		# repeatedly creating new graph objs & reduce RAM use
 		for value, edge, weight in zip(values, edges, weights):
 			if not isnan(value):
 				if not g.has_edge(edge):
@@ -95,6 +127,4 @@ def mst_matrix(ifgs, epochs):
 					g.del_edge(edge)
 
 		mst = _remove_root_node(minimal_spanning_tree(g))
-		mst_result[y, x] = mst
-
-	return mst_result
+		yield y, x, mst
