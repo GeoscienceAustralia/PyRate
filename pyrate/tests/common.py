@@ -85,6 +85,9 @@ class MockIfg(object):
 		self.phase_data = ifg.phase_data[:ysize, :xsize]
 		self.nan_fraction = ifg.nan_fraction # use existing overall nan fraction
 
+	def __repr__(self, *args, **kwargs):
+		return 'MockIfg: %s -> %s' % (self.master, self.slave)
+
 	def open(self):
 		# TODO: could move some of the init code here to mimic Ifgs
 		pass # can't actually open anything!
