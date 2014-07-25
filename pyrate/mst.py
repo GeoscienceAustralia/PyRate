@@ -8,7 +8,8 @@ Author: Ben Davies, NCI
 from itertools import product
 from numpy import array, nan, isnan, float32, empty
 
-from algorithm import get_all_epochs, master_slave_ids, ifg_date_lookup
+from algorithm import get_all_epochs, master_slave_ids, ifg_date_lookup, get_epochs
+
 from pygraph.classes.graph import graph
 from pygraph.algorithms.minmax import minimal_spanning_tree
 
@@ -49,7 +50,7 @@ def _build_graph(nodes, edges, weights, noroot=True):
 	return g
 
 
-def mst_matrix_ifgs_only(ifgs, epochs):
+def mst_matrix_ifgs_only(ifgs):
 	'''
 	Filter: returns array of independent ifgs from the pixel by pixel MST.
 
@@ -59,7 +60,7 @@ def mst_matrix_ifgs_only(ifgs, epochs):
 	'''
 	result = empty(shape=ifgs[0].phase_data.shape, dtype=object)
 
-	for y, x, mst in mst_matrix(ifgs, epochs):
+	for y, x, mst in mst_matrix(ifgs):
 		if hasattr(mst, 'iteritems'):
 			ifg_sub = [ifg_date_lookup(ifgs, d) for d in mst.iteritems()]
 			result[(y,x)] = tuple(ifg_sub)
@@ -69,7 +70,7 @@ def mst_matrix_ifgs_only(ifgs, epochs):
 	return result
 
 
-def mst_matrix_as_array(ifgs, epochs):
+def mst_matrix_as_array(ifgs):
 	'''
 	Filter: returns array of pixel by pixel MSTs.
 
@@ -79,20 +80,21 @@ def mst_matrix_as_array(ifgs, epochs):
 	'''
 	mst_result = empty(shape=ifgs[0].phase_data.shape, dtype=object)
 
-	for y, x, mst in mst_matrix(ifgs, epochs):
+	for y, x, mst in mst_matrix(ifgs):
 		mst_result[y, x] = mst
 
 	return mst_result
 
 # TODO: custom weighting could included with an additional 'weights' arg if some
 # other weighting criterion is required later
-def mst_matrix(ifgs, epochs):
+def mst_matrix(ifgs):
 	'''
 	Generates/emits MST trees on a pixel-by-pixel basis for the given ifgs.
 	ifgs: sequence of Ifg objs
 	epochs: an EpochList object derived from the ifgs
 	'''
 	# make default MST to optimise result when no Ifg cells in a stack are nans
+	epochs = get_epochs(ifgs)
 	edges = [(i.master, i.slave) for i in ifgs]
 	weights = [i.nan_fraction for i in ifgs]
 	g = _build_graph(epochs.dates, edges, weights)

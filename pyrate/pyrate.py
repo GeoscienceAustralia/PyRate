@@ -47,8 +47,7 @@ def process_ifgs(ifgs, params):
 
 	remove_orbital_error(ifgs, params)
 
-	epochs = algorithm.get_epochs(ifgs)
-	mst_grid = mst.mst_matrix(ifgs, epochs)
+	mst_grid = mst.mst_matrix_ifgs_only(ifgs)
 	# TODO: refy, refx = refpixel.ref_pixel(params, ifgs)
 
 	# final close

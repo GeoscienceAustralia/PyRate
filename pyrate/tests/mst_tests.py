@@ -21,8 +21,6 @@ class MSTTests(unittest.TestCase):
 
 	def setUp(self):
 		self.ifgs = sydney_data_setup()
-		self.epochs = algorithm.get_epochs(self.ifgs)
-
 
 	def test_mst_matrix_as_array(self):
 		# Verifies MST matrix func returns array with dict/trees in each cell
@@ -32,18 +30,19 @@ class MSTTests(unittest.TestCase):
 		for i in self.ifgs:
 			i.convert_to_nans() # zeros to NaN/NODATA
 
-		res = mst.mst_matrix_as_array(self.ifgs, self.epochs)
+		epochs = algorithm.get_epochs(self.ifgs)
+		res = mst.mst_matrix_as_array(self.ifgs)
 		ys, xs = res.shape
 
 		for y, x in product(xrange(ys), xrange(xs)):
 			r = res[y,x]
 			num_nodes = len(r)
-			self.assertTrue(num_nodes < len(self.epochs.dates))
+			self.assertTrue(num_nodes < len(epochs.dates))
 
 			stack = array([i.phase_data[y,x] for i in self.ifgs]) # 17 ifg stack
 			self.assertTrue(0 == nsum(stack == 0)) # all 0s should be converted
 			nc = nsum(isnan(stack))
-			exp_count = len(self.epochs.dates) - 1
+			exp_count = len(epochs.dates) - 1
 
 			if nc == 0:
 				self.assertEqual(num_nodes, exp_count)
@@ -55,11 +54,9 @@ class MSTTests(unittest.TestCase):
 		# ensure only ifgs are returned, not individual MST graphs
 		ifgs = sydney5_mock_ifgs()
 		nifgs = len(ifgs)
-		epochs = algorithm.get_epochs(ifgs)
-
-		result = mst.mst_matrix_ifgs_only(ifgs, epochs)
-
 		ys, xs = ifgs[0].shape
+		result = mst.mst_matrix_ifgs_only(ifgs)
+
 		for coord in product(xrange(ys), xrange(xs)):
 			stack = (i.phase_data[coord] for i in self.ifgs)
 			nc = nsum([isnan(n) for n in stack])
@@ -74,7 +71,7 @@ class MSTTests(unittest.TestCase):
 		num_coherent = 3
 
 		def assert_equal():
-			res = mst.mst_matrix_as_array(mock_ifgs, self.epochs)
+			res = mst.mst_matrix_as_array(mock_ifgs)
 			self.assertEqual(len(res[0,0]), num_coherent)
 
 		mock_ifgs = [MockIfg(i, 1, 1) for i in self.ifgs]
@@ -95,7 +92,7 @@ class MSTTests(unittest.TestCase):
 		for m in mock_ifgs:
 			m.phase_data[:] = nan
 
-		res = mst.mst_matrix_as_array(mock_ifgs, self.epochs)
+		res = mst.mst_matrix_as_array(mock_ifgs)
 		exp = empty((1,1), dtype=object) 
 		exp[:] = nan
 
