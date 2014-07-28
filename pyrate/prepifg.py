@@ -12,7 +12,6 @@ Created on 23/10/2012
 """
 
 # TODO: check new average option for gdalwarp (GDAL 1.10.x +) 
-# TODO: Wavelength conversion 
 
 import os
 from math import modf
@@ -37,17 +36,15 @@ CROP_OPTIONS = [MINIMUM_CROP, MAXIMUM_CROP, CUSTOM_CROP, ALREADY_SAME_SIZE]
 GRID_TOL = 1e-6
 
 
-# FIXME: push files out to params OUT dir
-# TODO: expand args instead of using params? (more args, but less dependencies)
-# TODO: replace files with list of ifgs?
 # TODO: crop options 0 = no cropping? get rid of same size (but it is in explained file)
 def prepare_ifgs(ifgs, crop_opt, xlooks, ylooks, thresh=0.5,
 					user_exts=None, verbose=False):
 	"""
 	Produces multilooked/resampled data files for PyRate analysis.
-	crop_opt: TODO
-	xlooks: TODO
-	ylooks: TODO
+	ifgs: sequence of Ifg objs (DEM obj may be included for processing)
+	crop_opt: integer cropping type option (see config)
+	xlooks: multilooking factor for the X axis
+	ylooks: Y axis multilooking factor 
 
 	thresh: 0.0->1.0 controls NaN handling when resampling to coarser grids.
 	    Value is the proportion above which the number of NaNs in an area is
@@ -55,7 +52,7 @@ def prepare_ifgs(ifgs, crop_opt, xlooks, ylooks, thresh=0.5,
 	    cells are NaNs. At 0.25, it resamples to NaN if 1/4 or more contributing
 	    cells are NaNs. At 1.0, areas are resampled to NaN only if all
 	    contributing cells are NaNs.
-	user_exts: TODO
+	user_exts: FIXME: custom user extents in a namedtuple
 	verbose - controls level of gdalwarp output
 	"""
 	if crop_opt not in CROP_OPTIONS:
