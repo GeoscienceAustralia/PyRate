@@ -26,8 +26,7 @@ from numpy import array, where, nan, isnan, nanmean, float32, zeros, sum as nsum
 
 from shared import Ifg, DEM
 from config import parse_namelist
-from config import OBS_DIR, IFG_FILE_LIST
-from config import IFG_XFIRST, IFG_XLAST, IFG_YFIRST, IFG_YLAST, DEM_FILE
+from config import OBS_DIR, IFG_FILE_LIST, DEM_FILE
 
 
 # Constants
@@ -42,9 +41,16 @@ GRID_TOL = 1e-6
 
 # FIXME: push files out to params OUT dir
 # TODO: expand args instead of using params? (more args, but less dependencies)
-def prepare_ifgs(crop_opt, xlooks, ylooks, params, thresh=0.5, verbose=False):
+# TODO: replace files with list of ifgs?
+# TODO: crop options 0 = no cropping? get rid of same size (but it is in explained file)
+def prepare_ifgs(crop_opt, xlooks, ylooks, params, thresh=0.5,
+					custom_crop=None, verbose=False):
 	"""
 	Produces multilooked/resampled data files for PyRate analysis.
+	crop_opt: TODO
+	xlooks: TODO
+	ylooks: TODO
+
 	params: dict of named values (from pyrate config file)
 	thresh: 0.0->1.0 controls NaN handling when resampling to coarser grids.
 	    Value is the proportion above which the number of NaNs in an area is
@@ -52,11 +58,14 @@ def prepare_ifgs(crop_opt, xlooks, ylooks, params, thresh=0.5, verbose=False):
 	    cells are NaNs. At 0.25, it resamples to NaN if 1/4 or more contributing
 	    cells are NaNs. At 1.0, areas are resampled to NaN only if all
 	    contributing cells are NaNs.
+	custom_crop: TODO
 	verbose - controls level of gdalwarp output
 	"""
-	# validate config file settings
 	if crop_opt not in CROP_OPTIONS:
 		raise PreprocessError("Unrecognised crop option: %s" % crop_opt)
+
+	if crop_opt == CUSTOM_CROP and not custom_crop:
+		raise PreprocessError('No custom cropping extents specified')
 
 	check_looks(xlooks, ylooks)
 	srcdir = params[OBS_DIR]
@@ -86,29 +95,30 @@ def prepare_ifgs(crop_opt, xlooks, ylooks, params, thresh=0.5, verbose=False):
 	if do_multilook:
 		res = [xlooks * i.x_step, ylooks * i.y_step]
 
-	exts = get_extents(ifgs, crop_opt, params)
+	exts = get_extents(ifgs, crop_opt, custom_crop)
+
 	if not do_multilook and crop_opt == ALREADY_SAME_SIZE:
 		return None
 
 	return [warp(i, xlooks, ylooks, exts, res, thresh, verbose) for i in ifgs]
 
 
-def get_extents(ifgs, crop_opt, params):
+def get_extents(ifgs, crop_opt, custom_crop=None):
 	'Returns extents/bounding box args for gdalwarp as strings'
 	if crop_opt == MINIMUM_CROP:
 		extents = min_bounds(ifgs)
 	elif crop_opt == MAXIMUM_CROP:
 		extents = max_bounds(ifgs)
 	elif crop_opt == CUSTOM_CROP:
-		keys = [IFG_XFIRST, IFG_YLAST, IFG_XLAST, IFG_YFIRST]
-		extents = [params[k] for k in keys]
+		extents = (custom_crop.xfirst, custom_crop.ylast,
+					custom_crop.xlast, custom_crop.yfirst)
 	else:
 		extents = get_same_bounds(ifgs)
 
 	check_crop_coords(ifgs, *extents)
 	return [str(s) for s in extents]
 
-
+# TODO: push out to a shared module
 def _file_ext(raster):
 	'''Returns file ext string based on type of raster.'''
 	if isinstance(raster, Ifg):
