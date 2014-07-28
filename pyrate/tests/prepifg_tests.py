@@ -120,7 +120,7 @@ class PrepifgOutputTests(unittest.TestCase):
 		cext = self._custom_extents_tuple()
 		xlooks = ylooks = 1
 
-		prepare_ifgs(CUSTOM_CROP, xlooks, ylooks, params, custom_crop=cext)
+		prepare_ifgs(CUSTOM_CROP, xlooks, ylooks, params, user_exts=cext)
 
 		ifg = Ifg(self.exp_files[0])
 		ifg.open()
@@ -147,7 +147,7 @@ class PrepifgOutputTests(unittest.TestCase):
 				cext = CustomExts(*tmp_latlon)
 
 				self.assertRaises(PreprocessError, prepare_ifgs, CUSTOM_CROP,
-								xlooks, ylooks, params, custom_crop=cext)
+								xlooks, ylooks, params, user_exts=cext)
 
 	def test_nodata(self):
 		'Verify NODATA value is copied correctly (amplitude band not copied)'
@@ -189,7 +189,7 @@ class PrepifgOutputTests(unittest.TestCase):
 		ylooks = scale
 		params[DEM_FILE] = SYD_TEST_DEM_TIF
 		prepare_ifgs(CUSTOM_CROP, xlooks, ylooks, params,
-					thresh=1.0, custom_crop=cext) # if all nans, ignore cell
+					thresh=1.0, user_exts=cext) # if all nans, ignore cell
 
 		# check file names have been updated
 		for f in self.exp_files:

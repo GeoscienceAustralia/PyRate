@@ -44,7 +44,7 @@ GRID_TOL = 1e-6
 # TODO: replace files with list of ifgs?
 # TODO: crop options 0 = no cropping? get rid of same size (but it is in explained file)
 def prepare_ifgs(crop_opt, xlooks, ylooks, params, thresh=0.5,
-					custom_crop=None, verbose=False):
+					user_exts=None, verbose=False):
 	"""
 	Produces multilooked/resampled data files for PyRate analysis.
 	crop_opt: TODO
@@ -58,13 +58,13 @@ def prepare_ifgs(crop_opt, xlooks, ylooks, params, thresh=0.5,
 	    cells are NaNs. At 0.25, it resamples to NaN if 1/4 or more contributing
 	    cells are NaNs. At 1.0, areas are resampled to NaN only if all
 	    contributing cells are NaNs.
-	custom_crop: TODO
+	user_exts: TODO
 	verbose - controls level of gdalwarp output
 	"""
 	if crop_opt not in CROP_OPTIONS:
 		raise PreprocessError("Unrecognised crop option: %s" % crop_opt)
 
-	if crop_opt == CUSTOM_CROP and not custom_crop:
+	if crop_opt == CUSTOM_CROP and not user_exts:
 		raise PreprocessError('No custom cropping extents specified')
 
 	check_looks(xlooks, ylooks)
@@ -95,23 +95,23 @@ def prepare_ifgs(crop_opt, xlooks, ylooks, params, thresh=0.5,
 	if do_multilook:
 		res = [xlooks * i.x_step, ylooks * i.y_step]
 
-	exts = get_extents(ifgs, crop_opt, custom_crop)
-
+	# verify extents
+	exts = get_extents(ifgs, crop_opt, user_exts)
 	if not do_multilook and crop_opt == ALREADY_SAME_SIZE:
 		return None
 
 	return [warp(i, xlooks, ylooks, exts, res, thresh, verbose) for i in ifgs]
 
 
-def get_extents(ifgs, crop_opt, custom_crop=None):
+def get_extents(ifgs, crop_opt, user_exts=None):
 	'Returns extents/bounding box args for gdalwarp as strings'
 	if crop_opt == MINIMUM_CROP:
 		extents = min_bounds(ifgs)
 	elif crop_opt == MAXIMUM_CROP:
 		extents = max_bounds(ifgs)
 	elif crop_opt == CUSTOM_CROP:
-		extents = (custom_crop.xfirst, custom_crop.ylast,
-					custom_crop.xlast, custom_crop.yfirst)
+		extents = (user_exts.xfirst, user_exts.ylast,
+					user_exts.xlast, user_exts.yfirst)
 	else:
 		extents = get_same_bounds(ifgs)
 
