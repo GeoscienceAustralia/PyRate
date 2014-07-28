@@ -11,34 +11,35 @@ from numpy import array, isnan, std, mean, sum as nsum
 DO_REFPIX_SEARCH = -1 # TODO: better name for this flag
 
 
-
+# FIXME: replace params dependency with function args
+# TODO: move error checking to config step (for fail fast)
 def ref_pixel(params, ifgs):
 	'''
 	Returns (y,x) reference pixel coordinate from given ifgs.
-	
+
 	If the config file REFX or REFY values are empty or subzero, the search for
 	the reference pixel is performed. If the REFX|Y values are within the bounds
 	of the raster, a search is not performed. REFX|Y values outside the upper
 	bounds cause an exception.
-	
+
 	params: dict of key/value pairs from config file
 	ifgs: sequence of interferograms
 	'''
 	if len(ifgs) < 1:
 		msg = 'Reference pixel search requires 2+ interferograms'
 		raise RefPixelError(msg)
-	
-	head = ifgs[0]	
+
+	head = ifgs[0]
 	refx = params.get(config.REFX, DO_REFPIX_SEARCH)
 	refy = params.get(config.REFY, DO_REFPIX_SEARCH)
-	
+
 	# sanity check any specified ref pixel settings
 	# unlikely, but possible the refpixel can be (0,0) 
 	if refx > head.ncols - 1:
 		raise ValueError("Invalid reference pixel X coordinate: %s" % refx)
 	if refy > head.nrows - 1:
 		raise ValueError("Invalid reference pixel Y coordinate: %s" % refy)
-	
+
 	if refx >= 0 and refy >= 0:
 		return (refy, refx) # reuse preset ref pixel
 
