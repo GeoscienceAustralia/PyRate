@@ -19,11 +19,15 @@ from numbers import Number
 from tempfile import mkstemp
 from itertools import product
 from subprocess import check_call
+from collections import namedtuple
 from os.path import splitext
 
 from numpy import array, where, nan, isnan, nanmean, float32, zeros, sum as nsum
 
 from shared import Ifg, DEM
+
+
+CustomExts = namedtuple('CustExtents', ['xfirst', 'yfirst', 'xlast', 'ylast'])
 
 
 # Constants
@@ -44,15 +48,14 @@ def prepare_ifgs(ifgs, crop_opt, xlooks, ylooks, thresh=0.5,
 	ifgs: sequence of Ifg objs (DEM obj may be included for processing)
 	crop_opt: integer cropping type option (see config)
 	xlooks: multilooking factor for the X axis
-	ylooks: Y axis multilooking factor 
-
+	ylooks: Y axis multilooking factor
 	thresh: 0.0->1.0 controls NaN handling when resampling to coarser grids.
 	    Value is the proportion above which the number of NaNs in an area is
 	    considered invalid. thresh=0 resamples to NaN if 1 or more contributing
 	    cells are NaNs. At 0.25, it resamples to NaN if 1/4 or more contributing
 	    cells are NaNs. At 1.0, areas are resampled to NaN only if all
 	    contributing cells are NaNs.
-	user_exts: FIXME: custom user extents in a namedtuple
+	user_exts: CustomExts tuple with user sepcified lat long corners
 	verbose - controls level of gdalwarp output
 	"""
 	if crop_opt not in CROP_OPTIONS:

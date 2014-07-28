@@ -7,7 +7,6 @@ Ben Davies, NCI
 import os, sys
 import unittest
 from os.path import exists, join
-from collections import namedtuple
 
 from math import floor
 from scipy.stats.stats import nanmean
@@ -18,7 +17,7 @@ from numpy.testing import assert_array_almost_equal, assert_array_equal
 from pyrate.shared import Ifg, DEM
 from pyrate.config import parse_namelist
 from pyrate.prepifg import CUSTOM_CROP, MAXIMUM_CROP, MINIMUM_CROP, ALREADY_SAME_SIZE
-from pyrate.prepifg import prepare_ifgs, resample, PreprocessError
+from pyrate.prepifg import prepare_ifgs, resample, PreprocessError, CustomExts
 
 from common import PREP_TEST_TIF, SYD_TEST_DEM_DIR, SYD_TEST_DEM_TIF
 
@@ -27,9 +26,6 @@ gdal.UseExceptions()
 
 if not exists(PREP_TEST_TIF):
 	sys.exit("ERROR: Missing 'prepifg' dir for unittests\n")
-
-
-CustomExts = namedtuple('CustExtents', ['xfirst', 'yfirst', 'xlast', 'ylast'])
 
 
 # convenience funcs to get test ifgs
