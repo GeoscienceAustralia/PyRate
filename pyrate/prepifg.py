@@ -26,7 +26,7 @@ from numpy import array, where, nan, isnan, nanmean, float32, zeros, sum as nsum
 
 from shared import Ifg, DEM
 from config import parse_namelist
-from config import OBS_DIR, IFG_LKSX, IFG_LKSY, IFG_FILE_LIST
+from config import OBS_DIR, IFG_FILE_LIST
 from config import IFG_XFIRST, IFG_XLAST, IFG_YFIRST, IFG_YLAST, DEM_FILE
 
 
@@ -42,7 +42,7 @@ GRID_TOL = 1e-6
 
 # FIXME: push files out to params OUT dir
 # TODO: expand args instead of using params? (more args, but less dependencies)
-def prepare_ifgs(crop_opt, params, thresh=0.5, verbose=False):
+def prepare_ifgs(crop_opt, xlooks, ylooks, params, thresh=0.5, verbose=False):
 	"""
 	Produces multilooked/resampled data files for PyRate analysis.
 	params: dict of named values (from pyrate config file)
@@ -58,7 +58,7 @@ def prepare_ifgs(crop_opt, params, thresh=0.5, verbose=False):
 	if crop_opt not in CROP_OPTIONS:
 		raise PreprocessError("Unrecognised crop option: %s" % crop_opt)
 
-	check_looks(params)
+	check_looks(xlooks, ylooks)
 	srcdir = params[OBS_DIR]
 	paths = [join(srcdir, p) for p in parse_namelist(params[IFG_FILE_LIST])]
 	ifgs = [Ifg(p) for p in paths]
@@ -68,7 +68,8 @@ def prepare_ifgs(crop_opt, params, thresh=0.5, verbose=False):
 		ifgs.append(DEM(params[DEM_FILE]))
 
 	for i in ifgs:
-		i.open()
+		if not i.is_open:
+			i.open()
 
 	check_resolution(ifgs)
 
@@ -77,7 +78,7 @@ def prepare_ifgs(crop_opt, params, thresh=0.5, verbose=False):
 	# for Pirate style averaging/resampling, 2nd to generate the final dataset
 	# with correct extents/shape/cell count. Without resampling, gdalwarp is
 	# only needed to cut out the required segment.
-	xlooks, ylooks = params[IFG_LKSX], params[IFG_LKSY]
+
 	do_multilook = xlooks > 1 or ylooks > 1
 
 	# resolution=None completes faster for non-multilooked layers in gdalwarp
@@ -245,16 +246,15 @@ def check_resolution(ifgs):
 			raise PreprocessError(msg)
 
 
-def check_looks(params):
+def check_looks(xlooks, ylooks):
 	"""Verifies looks parameters are valid"""
-	xscale = params[IFG_LKSX]
-	yscale = params[IFG_LKSY]
-	if not (isinstance(xscale, Number) and isinstance(yscale, Number)):
-		msg = "Non-numeric looks parameter(s), x: %s, y: %s" % (xscale, yscale)
+	if not (isinstance(xlooks, Number) and isinstance(ylooks, Number)):
+		msg = "Non-numeric looks parameter(s), x: %s, y: %s" % (xlooks, ylooks)
 		raise PreprocessError(msg)
 
-	if not (xscale > 0 and yscale > 0):
-		msg = "Invalid looks parameter(s), x: %s, y: %s" % (xscale, yscale)
+	# TODO: handle looks of zero? (eg. ignore looks, as with looks=1)
+	if not (xlooks > 0 and ylooks > 0):
+		msg = "Invalid looks parameter(s), x: %s, y: %s" % (xlooks, ylooks)
 		raise PreprocessError(msg)
 
 
