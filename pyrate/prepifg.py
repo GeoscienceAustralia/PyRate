@@ -20,13 +20,11 @@ from numbers import Number
 from tempfile import mkstemp
 from itertools import product
 from subprocess import check_call
-from os.path import join, splitext
+from os.path import splitext
 
 from numpy import array, where, nan, isnan, nanmean, float32, zeros, sum as nsum
 
 from shared import Ifg, DEM
-from config import parse_namelist
-from config import OBS_DIR, IFG_FILE_LIST, DEM_FILE
 
 
 # Constants
@@ -43,7 +41,7 @@ GRID_TOL = 1e-6
 # TODO: expand args instead of using params? (more args, but less dependencies)
 # TODO: replace files with list of ifgs?
 # TODO: crop options 0 = no cropping? get rid of same size (but it is in explained file)
-def prepare_ifgs(crop_opt, xlooks, ylooks, params, thresh=0.5,
+def prepare_ifgs(ifgs, crop_opt, xlooks, ylooks, thresh=0.5,
 					user_exts=None, verbose=False):
 	"""
 	Produces multilooked/resampled data files for PyRate analysis.
@@ -51,7 +49,6 @@ def prepare_ifgs(crop_opt, xlooks, ylooks, params, thresh=0.5,
 	xlooks: TODO
 	ylooks: TODO
 
-	params: dict of named values (from pyrate config file)
 	thresh: 0.0->1.0 controls NaN handling when resampling to coarser grids.
 	    Value is the proportion above which the number of NaNs in an area is
 	    considered invalid. thresh=0 resamples to NaN if 1 or more contributing
@@ -68,13 +65,6 @@ def prepare_ifgs(crop_opt, xlooks, ylooks, params, thresh=0.5,
 		raise PreprocessError('No custom cropping extents specified')
 
 	check_looks(xlooks, ylooks)
-	srcdir = params[OBS_DIR]
-	paths = [join(srcdir, p) for p in parse_namelist(params[IFG_FILE_LIST])]
-	ifgs = [Ifg(p) for p in paths]
-
-	# treat DEM as an Ifg as API is mostly shared
-	if DEM_FILE in params:
-		ifgs.append(DEM(params[DEM_FILE]))
 
 	for i in ifgs:
 		if not i.is_open:
