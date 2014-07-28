@@ -26,7 +26,7 @@ from numpy import array, where, nan, isnan, nanmean, float32, zeros, sum as nsum
 
 from shared import Ifg, DEM
 from config import parse_namelist
-from config import OBS_DIR, IFG_CROP_OPT, IFG_LKSX, IFG_LKSY, IFG_FILE_LIST
+from config import OBS_DIR, IFG_LKSX, IFG_LKSY, IFG_FILE_LIST
 from config import IFG_XFIRST, IFG_XLAST, IFG_YFIRST, IFG_YLAST, DEM_FILE
 
 
@@ -42,7 +42,7 @@ GRID_TOL = 1e-6
 
 # FIXME: push files out to params OUT dir
 # TODO: expand args instead of using params? (more args, but less dependencies)
-def prepare_ifgs(params, thresh=0.5, verbose=False):
+def prepare_ifgs(crop_opt, params, thresh=0.5, verbose=False):
 	"""
 	Produces multilooked/resampled data files for PyRate analysis.
 	params: dict of named values (from pyrate config file)
@@ -55,10 +55,8 @@ def prepare_ifgs(params, thresh=0.5, verbose=False):
 	verbose - controls level of gdalwarp output
 	"""
 	# validate config file settings
-	crop_opt = params[IFG_CROP_OPT]
 	if crop_opt not in CROP_OPTIONS:
-		msg = "Unrecognised crop option: %s" % params[IFG_CROP_OPT]
-		raise PreprocessError(msg)
+		raise PreprocessError("Unrecognised crop option: %s" % crop_opt)
 
 	check_looks(params)
 	srcdir = params[OBS_DIR]
@@ -87,16 +85,15 @@ def prepare_ifgs(params, thresh=0.5, verbose=False):
 	if do_multilook:
 		res = [xlooks * i.x_step, ylooks * i.y_step]
 
-	exts = get_extents(ifgs, params)
+	exts = get_extents(ifgs, crop_opt, params)
 	if not do_multilook and crop_opt == ALREADY_SAME_SIZE:
 		return None
 
 	return [warp(i, xlooks, ylooks, exts, res, thresh, verbose) for i in ifgs]
 
 
-def get_extents(ifgs, params):
+def get_extents(ifgs, crop_opt, params):
 	'Returns extents/bounding box args for gdalwarp as strings'
-	crop_opt = params[IFG_CROP_OPT]
 	if crop_opt == MINIMUM_CROP:
 		extents = min_bounds(ifgs)
 	elif crop_opt == MAXIMUM_CROP:

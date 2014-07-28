@@ -6,7 +6,6 @@ Ben Davies, NCI
 
 import os, sys
 import unittest
-import tempfile
 from os.path import exists, join
 
 from math import floor
@@ -21,7 +20,7 @@ from pyrate.prepifg import prepare_ifgs, resample, PreprocessError
 from pyrate.shared import Ifg, DEM
 from pyrate.config import OBS_DIR, IFG_CROP_OPT, IFG_LKSX, IFG_LKSY
 from pyrate.config import IFG_XFIRST, IFG_XLAST, IFG_YFIRST, IFG_YLAST
-from pyrate.config import OUT_DIR, DEM_FILE, IFG_FILE_LIST
+from pyrate.config import DEM_FILE, IFG_FILE_LIST
 
 from common import PREP_TEST_TIF, SYD_TEST_DEM_DIR, SYD_TEST_DEM_TIF
 
@@ -76,8 +75,7 @@ class PrepifgOutputTests(unittest.TestCase):
 		"""Test ifgcropopt=2 gives datasets cropped to max extents bounding box."""
 
 		params = _default_extents_param()
-		params[IFG_CROP_OPT] = MAXIMUM_CROP
-		prepare_ifgs(params)
+		prepare_ifgs(MAXIMUM_CROP, params)
 		for f in self.exp_files:
 			self.assertTrue(exists(f), msg="Output files not created")
 
@@ -97,8 +95,7 @@ class PrepifgOutputTests(unittest.TestCase):
 	def test_min_extents(self):
 		"""Test ifgcropopt=1 crops datasets to min extents."""
 		params = _default_extents_param()
-		params[IFG_CROP_OPT] = MINIMUM_CROP
-		prepare_ifgs(params)
+		prepare_ifgs(MINIMUM_CROP, params)
 		ifg = Ifg(self.exp_files[0])
 		ifg.open()
 
@@ -114,7 +111,7 @@ class PrepifgOutputTests(unittest.TestCase):
 
 	def test_custom_extents(self):
 		params = self._custom_extents_param()
-		prepare_ifgs(params)
+		prepare_ifgs(CUSTOM_CROP, params)
 		ifg = Ifg(self.exp_files[0])
 		ifg.open()
 		gt = ifg.dataset.GetGeoTransform()
@@ -133,14 +130,13 @@ class PrepifgOutputTests(unittest.TestCase):
 			# try different errors for each var
 			for error in [0.1, 0.001, 0.0001, 0.00001, 0.000001]:
 				params[key] = backup + error
-				self.assertRaises(PreprocessError, prepare_ifgs, params)
+				self.assertRaises(PreprocessError, prepare_ifgs, CUSTOM_CROP, params)
 
 
 	def test_nodata(self):
 		'Verify NODATA value is copied correctly (amplitude band not copied)'
 		params = _default_extents_param()
-		params[IFG_CROP_OPT] = MINIMUM_CROP
-		prepare_ifgs(params)
+		prepare_ifgs(MINIMUM_CROP, params)
 
 		for ex in self.exp_files:
 			ifg = Ifg(ex)
@@ -151,8 +147,7 @@ class PrepifgOutputTests(unittest.TestCase):
 	def test_nans(self):
 		"""Verify that NaNs replace 0 in the multilooked phase band"""
 		params = _default_extents_param()
-		params[IFG_CROP_OPT] = MINIMUM_CROP
-		prepare_ifgs(params)
+		prepare_ifgs(MINIMUM_CROP, params)
 
 		for ex in self.exp_files:
 			ifg = Ifg(ex)
@@ -173,7 +168,7 @@ class PrepifgOutputTests(unittest.TestCase):
 		params[IFG_LKSX] = scale
 		params[IFG_LKSY] = scale
 		params[DEM_FILE] = SYD_TEST_DEM_TIF
-		prepare_ifgs(params, thresh=1.0) # if all nans, ignore cell
+		prepare_ifgs(CUSTOM_CROP, params, thresh=1.0) # if all nans, ignore cell
 
 		# check file names have been updated
 		for f in self.exp_files:
@@ -216,12 +211,12 @@ class PrepifgOutputTests(unittest.TestCase):
 		values = [0, -1, -10, -100000.6, ""]
 		for v in values:
 			params[IFG_LKSX] = v
-			self.assertRaises(PreprocessError, prepare_ifgs, params)
+			self.assertRaises(PreprocessError, prepare_ifgs, CUSTOM_CROP, params)
 
 		params[IFG_LKSX] = 1
 		for v in values:
 			params[IFG_LKSY] = v
-			self.assertRaises(PreprocessError, prepare_ifgs, params)
+			self.assertRaises(PreprocessError, prepare_ifgs, CUSTOM_CROP, params)
 
 
 	def test_nan_threshold_inputs(self):
@@ -275,23 +270,20 @@ class SameSizeTests(unittest.TestCase):
 		# should do nothing as layers are same size & no multilooking required
 		params = _default_extents_param()
 		params[IFG_FILE_LIST] = join(PREP_TEST_TIF, 'ifms2')
-		params[IFG_CROP_OPT] = ALREADY_SAME_SIZE
-		self.assertEqual(prepare_ifgs(params), None)
+		self.assertEqual(prepare_ifgs(ALREADY_SAME_SIZE, params), None)
 
 	def test_already_same_size_mismatch(self):
 		params = _default_extents_param()
-		params[IFG_CROP_OPT] = ALREADY_SAME_SIZE
-		self.assertRaises(PreprocessError, prepare_ifgs, params)
+		self.assertRaises(PreprocessError, prepare_ifgs, ALREADY_SAME_SIZE, params)
 
 	# TODO: ensure multilooked files written to output dir
 	def test_same_size_multilooking(self):
 		params = _default_extents_param()
 		params[IFG_FILE_LIST] = join(PREP_TEST_TIF, 'ifms2')
-		params[IFG_CROP_OPT] = ALREADY_SAME_SIZE
 		params[IFG_LKSX] = 2
 		params[IFG_LKSY] = 2
 
-		mlooked = prepare_ifgs(params)
+		mlooked = prepare_ifgs(ALREADY_SAME_SIZE, params)
 		self.assertEqual(len(mlooked), 2)
 
 		for ifg in mlooked:
