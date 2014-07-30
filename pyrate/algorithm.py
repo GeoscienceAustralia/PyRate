@@ -125,6 +125,30 @@ def ifg_date_lookup(ifgs, date_pair):
 	raise ValueError("Cannot find Ifg with master/slave of %s" % str(date_pair))
 
 
+def ifg_date_index_lookup(ifgs, date_pair):
+	'''
+	Returns an Ifg index which has a master/slave dates given in 'date_pair'.
+	ifgs - list of Ifg objects to search in
+	date_pair - a (datetime.date, datetime.date) tuple
+	'''
+	if len(date_pair) != 2:
+		msg = "Need (datetime.date, datetime.date) master/slave pair"
+		raise IfgException(msg)
+
+	# check master/slave dates are in order
+	try:
+		if date_pair[0] > date_pair[1]:
+			date_pair = date_pair[1], date_pair[0]
+	except:
+		raise ValueError("Bad date_pair arg to ifg_date_lookup()")
+
+	for i in range(len(ifgs)):
+		if date_pair == (ifgs[i].master, ifgs[i].slave):
+			return i
+
+	raise ValueError("Cannot find Ifg with master/slave of %s" % str(date_pair))
+
+
 def get_epochs(ifgs):
 	'''Returns an EpochList derived from all given interferograms.'''
 	combined = [i.master for i in ifgs] + [i.slave for i in ifgs]
