@@ -24,6 +24,7 @@ def time_series(ifgs, pthresh, mst=None):
 
     ifgs: sequence of interferograms
     pthresh: minimum number of coherent observations for a pixel
+    mst: [optional] array of ifg indexes from the pixel by pixel MST
     
     outputs
     tsincr: incremental deformation time series (NB: not velocity)
