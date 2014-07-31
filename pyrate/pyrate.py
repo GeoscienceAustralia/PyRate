@@ -5,12 +5,18 @@ Created on 17/09/2012
 @author: Ben Davies, NCI
 '''
 
-import config as cf
+import os
 import logging
 import datetime
 
+import config as cf
 from shared import Ifg
-import algorithm, mst, refpixel, orbital
+
+import mst
+import prepifg
+import algorithm
+import refpixel
+import orbital
 
 
 # constants for metadata flags
@@ -94,14 +100,25 @@ def remove_orbital_error(ifgs, params):
 	else:
 		check_orbital_ifgs(ifgs, flags)
 
+	mlooked = None
 	if params[cf.ORBITAL_FIT_LOOKS_X] > 1 or params[cf.ORBITAL_FIT_LOOKS_Y] > 1:
 		# resampling here to use all prior corrections to orig data
 		# TODO: avoid writing mlooked to disk by using mock ifgs/in mem arrays?
-		raise NotImplementedError('TODO: Orbital multilooking')
+		mlooked = prepifg.prepare_ifgs(ifgs,
+									crop_opt=prepifg.ALREADY_SAME_SIZE,
+									xlooks=params[cf.ORBITAL_FIT_LOOKS_X],
+									ylooks=params[cf.ORBITAL_FIT_LOOKS_Y])
 
 	orbital.orbital_correction(ifgs,
- 							degree=params[cf.ORBITAL_FIT_DEGREE],
- 							method=params[cf.ORBITAL_FIT_METHOD])
+							degree=params[cf.ORBITAL_FIT_DEGREE],
+							method=params[cf.ORBITAL_FIT_METHOD],
+							mlooked=mlooked)
+
+	# mlooked layers discarded as not used elsewhere
+	if mlooked:
+		for path in [m.data_path for m in mlooked]:
+			os.remove(path)
+
 	for i in ifgs:
 		i.dataset.SetMetadataItem(META_ORBITAL, META_REMOVED)
 
