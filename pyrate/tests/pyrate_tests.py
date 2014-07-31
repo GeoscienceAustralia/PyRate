@@ -28,6 +28,7 @@ TEST_CORE = join(os.environ['PYRATEPATH'], 'tests', 'sydney_test')
 CURRENT_DIR = os.getcwd()
 
 
+# FIXME: make new test module to run PyRate with complex options (will be slow)
 
 def get_ifgs():
 	paths = glob.glob(join(BASE_OUT_DIR, 'geo_*-*.tif'))
@@ -49,23 +50,18 @@ class PyRateTests(unittest.TestCase):
 			pass
 
 		try:
-			if not os.path.exists(BASE_DIR):
-				os.makedirs(BASE_DIR)
-
 			# copy source data (treat as prepifg already run)
-			if not os.path.exists(BASE_OUT_DIR):
-				os.makedirs(BASE_OUT_DIR)
+			os.makedirs(BASE_OUT_DIR)
 
-				# TODO: possibly needs 1rlks filenames
-				for path in glob.glob(join(TEST_CORE, 'tif/*')):
-					dest = join(BASE_OUT_DIR, os.path.basename(path))
-					shutil.copy(path, dest)
-					os.chmod(dest, 0660)
+			# TODO: possibly needs 1rlks filenames
+			for path in glob.glob(join(TEST_CORE, 'tif/*')):
+				dest = join(BASE_OUT_DIR, os.path.basename(path))
+				shutil.copy(path, dest)
+				os.chmod(dest, 0660)
 
-			if not os.path.exists(BASE_DEM_DIR):
-				os.makedirs(BASE_DEM_DIR)
-				orig_dem = join(TEST_CORE, 'dem', 'sydney_trimmed.tif')
-				os.symlink(orig_dem, BASE_DEM_FILE)
+			os.makedirs(BASE_DEM_DIR)
+			orig_dem = join(TEST_CORE, 'dem', 'sydney_trimmed.tif')
+			os.symlink(orig_dem, BASE_DEM_FILE)
 
 			os.chdir(BASE_DIR)
 
@@ -119,9 +115,9 @@ class PyRateTests(unittest.TestCase):
 		for i in self.ifgs:
 			self.key_check(i, key, value)
 
-	def test_mst_matrix(self):
-		# TODO: should matrix be written to disk?
-		raise NotImplementedError
+	#def test_mst_matrix(self):
+		# TODO: should matrix be written to disk to be read in?
+		#raise NotImplementedError
 
 
 if __name__ == "__main__":
