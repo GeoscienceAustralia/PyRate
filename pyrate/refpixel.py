@@ -4,16 +4,11 @@ Author: Ben Davies
 '''
 
 import config
-
 from numpy import array, isnan, std, mean, sum as nsum
 
 
-DO_REFPIX_SEARCH = -1 # TODO: better name for this flag
-
-
-# FIXME: replace params dependency with function args
 # TODO: move error checking to config step (for fail fast)
-def ref_pixel(params, ifgs):
+def ref_pixel(ifgs, refnx, refny, chipsize, min_frac):
 	'''
 	Returns (y,x) reference pixel coordinate from given ifgs.
 
@@ -29,33 +24,21 @@ def ref_pixel(params, ifgs):
 		msg = 'Reference pixel search requires 2+ interferograms'
 		raise RefPixelError(msg)
 
+	# sanity check inputs 
 	head = ifgs[0]
-	refx = params.get(config.REFX, DO_REFPIX_SEARCH)
-	refy = params.get(config.REFY, DO_REFPIX_SEARCH)
-
-	# sanity check any specified ref pixel settings
-	# unlikely, but possible the refpixel can be (0,0) 
-	if refx > head.ncols - 1:
-		raise ValueError("Invalid reference pixel X coordinate: %s" % refx)
-	if refy > head.nrows - 1:
-		raise ValueError("Invalid reference pixel Y coordinate: %s" % refy)
-
-	if refx >= 0 and refy >= 0:
-		return (refy, refx) # reuse preset ref pixel
-
-	check_ref_pixel_params(params, head)
+	validate_chipsize(chipsize, head)
+	validate_minimum_fraction(min_frac)
+	validate_search_win(refnx, refny, chipsize, head)
 
 	# pre-calculate useful amounts
-	refnx = params[config.REFNX]
-	refny = params[config.REFNY]
-	chipsize = params[config.REF_CHIP_SIZE]
 	radius = chipsize / 2
 	phase_stack = array([i.phase_data for i in ifgs]) # TODO: mem efficiencies?
-	thresh = params[config.REF_MIN_FRAC] * chipsize * chipsize
+	thresh = min_frac * chipsize * chipsize
 	min_sd = float("inf") # dummy start value
 
 	# do window searches across dataset, central pixel of stack with smallest
 	# mean is the reference pixel
+	refx = refy = None
 	for y in _step(head.nrows, refny, radius):
 		for x in _step(head.ncols, refnx, radius):
 			data = phase_stack[:, y-radius:y+radius+1, x-radius:x+radius+1]
@@ -68,49 +51,39 @@ def ref_pixel(params, ifgs):
 					min_sd = mean_sd
 					refy, refx = y, x
 
-	if (refy, refx) == (DO_REFPIX_SEARCH, DO_REFPIX_SEARCH):
-		raise RefPixelError("Could not find a reference pixel")
-	return refy, refx
+	if refy and refx:
+		return refy, refx
+
+	raise RefPixelError("Could not find a reference pixel")
 
 
-def check_ref_pixel_params(params, head):
-	'''Validates reference pixel search parameters. head is any Ifg.'''
-
-	def missing_option_error(option):
-		'''Internal convenience function for raising similar errors.'''
-		msg = "Missing '%s' in configuration options" % option
-		raise config.ConfigException(msg)
-
-	# sanity check chipsize setting
-	chipsize = params.get(config.REF_CHIP_SIZE)
+def validate_chipsize(chipsize, head):
 	if chipsize is None:
-		missing_option_error(config.REF_CHIP_SIZE)
+		raise config.ConfigException('Chipsize is None')
 
 	if chipsize < 3 or chipsize > head.ncols or (chipsize % 2 == 0):
 		msg = "Chipsize setting must be >=3 and at least <= grid width"
 		raise ValueError(msg)
 
-	# sanity check minimum fraction
-	min_frac = params.get(config.REF_MIN_FRAC)
+def validate_minimum_fraction(min_frac):
 	if min_frac is None:
-		missing_option_error(config.REF_MIN_FRAC)
+		raise config.ConfigException('Minimum fraction is None')
 
 	if min_frac < 0.0 or min_frac > 1.0:
 		raise ValueError("Minimum fraction setting must be >= 0.0 and <= 1.0 ")
 
+def validate_search_win(refnx, refny, chipsize, head):
 	# sanity check X|Y steps
-	refnx = params.get(config.REFNX)
 	if refnx is None:
-		missing_option_error(config.REFNX)
+		raise config.ConfigException('refnx is None')
 
 	max_width = (head.ncols - (chipsize-1))
 	if refnx < 1 or refnx > max_width:
 		msg = "Invalid refnx setting, must be > 0 and <= %s"
 		raise ValueError(msg % max_width)
 
-	refny = params.get(config.REFNY)
 	if refny is None:
-		missing_option_error(config.REFNY)
+		raise config.ConfigException('refny is None')
 
 	max_rows = (head.nrows - (chipsize-1))
 	if refny < 1 or refny > max_rows:
