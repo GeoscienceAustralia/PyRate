@@ -80,12 +80,16 @@ class PyRateTests(unittest.TestCase):
 			for i in self.ifgs:
 				i.open()
 
+	def get_logfile_path(self):
+		logpaths = glob.glob(join(BASE_DIR, '*.log'))
+		self.assertEqual(len(logpaths), 1)
+		return logpaths[0]
+
 	def key_check(self, ifg, key, value):
 		'Helper to check for metadata flags'
 		md = ifg.dataset.GetMetadata()
 		self.assertTrue(key in md, 'Missing %s in %s' % (key, ifg.data_path))
 		self.assertTrue(md[key], value)
-
 
 	def test_basic_outputs(self):
 		self.assertTrue(os.path.exists(BASE_DIR))
@@ -94,10 +98,8 @@ class PyRateTests(unittest.TestCase):
 		for i in self.ifgs:
 			self.assertFalse(i.is_read_only)
 
-		logpaths = glob.glob(join(BASE_DIR, '*.log'))
-		self.assertEqual(len(logpaths), 1)
-
-		st = os.stat(logpaths[0])
+		log_path = self.get_logfile_path()
+		st = os.stat(log_path)
 		self.assertTrue(st.st_size > 0)
 
 	def test_wavelength_conversion(self):
@@ -118,6 +120,14 @@ class PyRateTests(unittest.TestCase):
 	#def test_mst_matrix(self):
 		# TODO: should matrix be written to disk to be read in?
 		#raise NotImplementedError
+
+	def test_refpixel_found(self):
+		log_path = self.get_logfile_path()
+		for line in file(log_path):
+			if 'Reference pixel coordinate:' in line:
+				return
+
+		self.fail('No reference pixel found')
 
 
 if __name__ == "__main__":

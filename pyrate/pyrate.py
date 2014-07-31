@@ -54,7 +54,7 @@ def process_ifgs(ifgs, params):
 	remove_orbital_error(ifgs, params)
 
 	mst_grid = mst.mst_matrix_ifgs_only(ifgs)
-	# TODO: refy, refx = refpixel.ref_pixel(params, ifgs)
+	refpx, refpy = find_reference_pixel(ifgs, params)
 
 	# final close
 	while ifgs:
@@ -137,6 +137,32 @@ def check_orbital_ifgs(ifgs, flags):
 
 		raise orbital.OrbitalError(msg)
 
+
+def find_reference_pixel(ifgs, params):
+	# unlikely, but possible the refpixel can be (0,0)
+	# check if there is a pre-specified reference pixel coord
+	refx = params.get(params[cf.REFX])
+	if refx > ifgs[0].ncols - 1:
+		raise ValueError("Invalid reference pixel X coordinate: %s" % refx)
+
+	refy = params.get(params[cf.REFY])
+	if refy > ifgs[0].nrows - 1:
+		raise ValueError("Invalid reference pixel Y coordinate: %s" % refy)
+
+	if refx >= 0 and refy >= 0:
+		msg = 'Reusing config file reference pixel (%s, %s)'
+		logging.debug(msg % (refx, refy))
+		return (refy, refx) # reuse preset ref pixel
+
+	# FIXME: order these
+	refy, refx = refpixel.ref_pixel(ifgs,
+									params[cf.REFNX],
+									params[cf.REFNY],
+									params[cf.REF_CHIP_SIZE],
+									params[cf.REF_MIN_FRAC])
+
+	logging.debug('Reference pixel coordinate: (%s, %s)' % (refx, refy))
+	return refx, refy 
 
 
 # function template
