@@ -25,7 +25,7 @@ MILLIMETRES = 'MILLIMETRES'
 META_ORBITAL = 'ORBITAL_ERROR'
 META_REMOVED = 'REMOVED'
 
-# TODO: add basic logging statements 
+# TODO: add basic logging statements
 def main(cfgfile='pyrate.conf', verbose=True):
 	"""TODO: pirate workflow"""
 	raise NotImplementedError
@@ -35,7 +35,10 @@ def main(cfgfile='pyrate.conf', verbose=True):
 
 	# TODO: get list of mlooked/cropped ifgs
 	# NB: keep source files intact, should be run after prepifg code
-	#ifglist = config.parse_namelist(params[config.IFG_FILE_LIST])
+	ifglist = config.parse_namelist(params[config.IFG_FILE_LIST])
+
+	# TODO: determine if cropping is needed
+
 	#ifg_namelist = [os.path.join(params[config.OBS_DIR], p) for p in ifglist]
 	#ifgs = [Ifg(p) for p in ifg_namelist]
 
@@ -63,6 +66,18 @@ def process_ifgs(ifgs, params):
 		i = None # force close TODO: may need to implement close()
 
 	logging.debug('End PyRate processing\n')
+
+
+def warp_required(xlooks, ylooks, crop):
+	"""Returns True if params show rasters need to be cropped and/or resized."""
+	if xlooks > 1 or ylooks > 1:
+		return True
+
+	if crop == prepifg.ALREADY_SAME_SIZE:
+		return False
+
+	return True
+
 
 # TODO: write to alternate file if log exists
 def init_logging(level):
@@ -162,7 +177,7 @@ def find_reference_pixel(ifgs, params):
 									params[cf.REF_MIN_FRAC])
 
 	logging.debug('Reference pixel coordinate: (%s, %s)' % (refx, refy))
-	return refx, refy 
+	return refx, refy
 
 
 # function template
@@ -170,6 +185,6 @@ def find_reference_pixel(ifgs, params):
 # add check for pre-existing metadata flag / skip if required
 # perform calculation
 # optionally save modified data to disk if required
-# optionally save correction component to disk (more useful for debugging) 
+# optionally save correction component to disk (more useful for debugging)
 # set flag in dataset for correction
 # write to log file

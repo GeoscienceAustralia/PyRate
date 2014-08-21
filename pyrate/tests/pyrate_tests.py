@@ -13,7 +13,7 @@ import shutil
 import unittest
 
 
-from pyrate import pyrate, shared, config
+from pyrate import pyrate, shared, config, prepifg
 
 
 # testing constants
@@ -35,6 +35,16 @@ def get_ifgs():
 	ifgs = [shared.Ifg(p) for p in paths]
 	assert len(ifgs) == 17, 'Got %s' % ifgs
 	return ifgs
+
+
+def test_warp_required():
+	nocrop = prepifg.ALREADY_SAME_SIZE
+	assert pyrate.warp_required(xlooks=2, ylooks=1, crop=nocrop)
+	assert pyrate.warp_required(xlooks=1, ylooks=2, crop=nocrop)
+	assert not pyrate.warp_required(xlooks=1, ylooks=1, crop=nocrop)
+
+	for c in prepifg.CROP_OPTIONS[:-1]:
+		assert pyrate.warp_required(xlooks=1, ylooks=1, crop=c)
 
 
 class PyRateTests(unittest.TestCase):
@@ -177,7 +187,7 @@ ifglksy:      1
 # realdata: enter 0 for synthetic/monte-carlo data, 1 for a single set of real data.
 # nsets: number of sets of data (multiple sets required for Monte Carlo error estimates
 realdata:     1
-nsets:        1 
+nsets:        1
 
 #------------------------------------
 # stacking parameters
@@ -221,8 +231,8 @@ orbfitlksy:    0
 #vcmslksx/y: looks also used for slip rate estimation
 #vcmtmethod:    1
 #vcmsmethod:    2
-#vcmslksx:      5 
-#vcmslksy:      5 
+#vcmslksx:      5
+#vcmslksy:      5
 
 #------------------------------------
 # reference point options
