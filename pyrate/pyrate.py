@@ -28,19 +28,24 @@ META_REMOVED = 'REMOVED'
 # TODO: add basic logging statements
 def main(cfgfile='pyrate.conf', verbose=True):
 	"""TODO: pirate workflow"""
-	raise NotImplementedError
 
 	# TODO: add parameter error checking to fail fast, before number crunching
 	params = cf.get_config_params(cfgfile)
 
-	# TODO: get list of mlooked/cropped ifgs
+
 	# NB: keep source files intact, should be run after prepifg code
 	ifglist = config.parse_namelist(params[config.IFG_FILE_LIST])
 
-	# TODO: determine if cropping is needed
+	if warp_required(params[config.IFG_LKSX],
+						params[config.IFG_LKSY],
+						params[config.IFG_CROP_OPT]):
+		# TODO: get list of mlooked/cropped ifgs if they exist
+		raise NotImplementedError
+	else:
+		ifg_paths = [os.path.join(params[config.OBS_DIR], p) for p in ifglist]
+		ifgs = [Ifg(p) for p in ifg_paths]
 
-	#ifg_namelist = [os.path.join(params[config.OBS_DIR], p) for p in ifglist]
-	#ifgs = [Ifg(p) for p in ifg_namelist]
+	process_ifgs(ifgs, params)
 
 
 def process_ifgs(ifgs, params):
@@ -73,7 +78,7 @@ def warp_required(xlooks, ylooks, crop):
 	if xlooks > 1 or ylooks > 1:
 		return True
 
-	if crop == prepifg.ALREADY_SAME_SIZE:
+	if crop is None or crop == prepifg.ALREADY_SAME_SIZE:
 		return False
 
 	return True

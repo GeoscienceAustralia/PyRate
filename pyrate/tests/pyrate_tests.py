@@ -42,6 +42,7 @@ def test_warp_required():
 	assert pyrate.warp_required(xlooks=2, ylooks=1, crop=nocrop)
 	assert pyrate.warp_required(xlooks=1, ylooks=2, crop=nocrop)
 	assert not pyrate.warp_required(xlooks=1, ylooks=1, crop=nocrop)
+	assert not pyrate.warp_required(xlooks=1, ylooks=1, crop=None)
 
 	for c in prepifg.CROP_OPTIONS[:-1]:
 		assert pyrate.warp_required(xlooks=1, ylooks=1, crop=c)

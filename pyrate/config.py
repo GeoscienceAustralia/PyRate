@@ -88,7 +88,7 @@ PARAM_CONVERSION = { OBS_DIR : (None, "obs"),
 					PERP_BASELINE_FLAG : (bool, True),
 					AMPLITUDE_FLAG : (bool, False),
 					NUM_SETS : (int, 1),
-					IFG_CROP_OPT : (int, None),
+					IFG_CROP_OPT : (int, None), # TODO: default to ALREADY_SAME_SIZE?
 					IFG_LKSX : (int, NO_MULTILOOKING),
 					IFG_LKSY : (int, NO_MULTILOOKING),
 					IFG_XFIRST : (float, None),
@@ -129,7 +129,7 @@ def _parse_conf_file(content):
 
 	lines = [line.split() for line in content.split('\n') if is_valid(line)]
 
-	# convert "field:   value" lines to [field, value]  
+	# convert "field:   value" lines to [field, value]
 	kvpair = [(e[0].rstrip(":"), e[1]) for e in lines if len(e) == 2]
 	parameters = dict(kvpair)
 
