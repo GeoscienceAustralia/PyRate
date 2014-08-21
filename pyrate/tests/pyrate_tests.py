@@ -11,7 +11,7 @@ from os.path import join
 import glob
 import shutil
 import unittest
-
+import logging
 
 from pyrate import pyrate, shared, config, prepifg
 
@@ -78,6 +78,9 @@ class PyRateTests(unittest.TestCase):
 
 			ifgs = get_ifgs()
 			params = config._parse_conf_file(WORKFLOW_CONF)
+
+			# manually start logging as main() is being bypassed
+			pyrate.init_logging(logging.DEBUG)
 			pyrate.process_ifgs(ifgs, params)
 		except:
 			# revert working dir & avoid paths busting other tests

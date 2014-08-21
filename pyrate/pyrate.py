@@ -25,13 +25,9 @@ MILLIMETRES = 'MILLIMETRES'
 META_ORBITAL = 'ORBITAL_ERROR'
 META_REMOVED = 'REMOVED'
 
-# HACK: solve this more cleanly
-IS_LOGGING = False
 
-
-# TODO: add basic logging statements to main
 # TODO: does verbose need to be included? Simpler to dump everything into a log
-# TODO: need to add clean exception handling
+# TODO: add clean exception handling
 def main(cfgfile='pyrate.conf', verbose=True):
 	"""TODO: pirate workflow"""
 
@@ -76,12 +72,6 @@ def process_ifgs(ifgs, params):
 	ifgs: sequence of Ifg objs (unopened)
 	params: dict of run config params
 	'''
-	# logging for unittests focusing only on processing steps
-	global IS_LOGGING
-	if IS_LOGGING is False:
-		init_logging(logging.DEBUG)
-		IS_LOGGING = True
-
 	for i in ifgs:
 		i.open(readonly=False)
 		convert_wavelength(i)
@@ -91,7 +81,12 @@ def process_ifgs(ifgs, params):
 	mst_grid = mst.mst_matrix_ifgs_only(ifgs)
 	refpx, refpy = find_reference_pixel(ifgs, params)
 
-	# final close
+	# TODO: missing
+	# VCM
+	# Linear Rate
+	# Time series
+
+	# final cleanup
 	while ifgs:
 		i = ifgs.pop()
 		i.write_phase()
@@ -207,7 +202,6 @@ def find_reference_pixel(ifgs, params):
 		logging.debug(msg % (refx, refy))
 		return (refy, refx) # reuse preset ref pixel
 
-	# FIXME: order these
 	refy, refx = refpixel.ref_pixel(ifgs,
 									params[cf.REFNX],
 									params[cf.REFNY],
@@ -229,14 +223,12 @@ def find_reference_pixel(ifgs, params):
 
 
 if __name__ == "__main__":
-	if not IS_LOGGING:
-		init_logging(logging.DEBUG)
-		IS_LOGGING = True
-
 	from optparse import OptionParser
 	parser = OptionParser()
 	# TODO: add options as they arise
 	options, args = parser.parse_args()
+
+	init_logging(logging.DEBUG)
 
 	if args:
 		if len(args) != 1:
