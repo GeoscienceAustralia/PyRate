@@ -12,7 +12,7 @@ import ifgconstants as ifc
 
 try:
 	from osgeo import gdal
-	from gdalconst import GA_Update
+	from gdalconst import GA_Update, GA_ReadOnly
 except ImportError:
 	import gdal
 
@@ -39,6 +39,9 @@ class RasterBase(object):
 		self.dataset = None # for GDAL dataset obj
 		self._readonly = not os.access(path, os.R_OK | os.W_OK)
 
+		if self._readonly is None:
+			raise NotImplementedError # os.access() has failed?
+
 	def __str__(self):
 		name = self.__class__.__name__
 		return "%s('%s')" % (name, self.data_path)
@@ -60,17 +63,11 @@ class RasterBase(object):
 		if readonly not in [True, False, None]:
 			raise ValueError("readonly must be True, False or None")
 
-		if self._readonly is None:
-			raise NotImplementedError
+		if readonly is False and self._readonly is True:
+			raise IOError("Cannot open write protected file for writing")
 
-		if self._readonly is True:
-			if readonly is False:
-				raise IOError("Cannot open write protected file for writing")
-			elif readonly is None:
-				readonly = True # default to readonly as permissions are R/O
-
-		args = (self.data_path,) if readonly else (self.data_path, GA_Update)
-		self.dataset = gdal.Open(*args)
+		flag = GA_ReadOnly if self._readonly else GA_Update
+		self.dataset = gdal.Open(self.data_path, flag)
 
 		if self.dataset is None:
 			raise RasterException("Error opening %s" % self.data_path)
@@ -120,7 +117,7 @@ class RasterBase(object):
 	@property
 	def shape(self):
 		'''Returns tuple of (Y,X) shape of the raster (as per numpy.shape)'''
-		return (self.dataset.RasterYSize, self.dataset.RasterXSize) 
+		return (self.dataset.RasterYSize, self.dataset.RasterXSize)
 
 	@property
 	def num_cells(self):
@@ -165,6 +162,10 @@ class Ifg(RasterBase):
 		self.slave = None
 
 	def open(self, readonly=None):
+		"""
+		TODO
+		readonly: True/False, or None to open as underlying file setting
+		"""
 		RasterBase.open(self, readonly)
 		self._init_dates()
 
