@@ -25,24 +25,46 @@ MILLIMETRES = 'MILLIMETRES'
 META_ORBITAL = 'ORBITAL_ERROR'
 META_REMOVED = 'REMOVED'
 
-# TODO: add basic logging statements
+# HACK: solve this more cleanly
+IS_LOGGING = False
+
+
+# TODO: add basic logging statements to main
+# TODO: does verbose need to be included? Simpler to dump everything into a log
+# TODO: need to add clean exception handling
 def main(cfgfile='pyrate.conf', verbose=True):
 	"""TODO: pirate workflow"""
 
 	# TODO: add parameter error checking to fail fast, before number crunching
-	params = cf.get_config_params(cfgfile)
-
+	try:
+		params = cf.get_config_params(cfgfile)
+	except IOError as err:
+		msg = 'Config file error: %s "%s"' % (err.strerror, err.filename)
+		logging.debug(msg)
+		print msg
+		return err.errno
 
 	# NB: keep source files intact, should be run after prepifg code
-	ifglist = config.parse_namelist(params[config.IFG_FILE_LIST])
+	ifglist = cf.parse_namelist(params[cf.IFG_FILE_LIST])
 
-	if warp_required(params[config.IFG_LKSX],
-						params[config.IFG_LKSY],
-						params[config.IFG_CROP_OPT]):
-		# TODO: get list of mlooked/cropped ifgs if they exist
-		raise NotImplementedError
+	if warp_required(params[cf.IFG_LKSX],
+						params[cf.IFG_LKSY],
+						params[cf.IFG_CROP_OPT]):
+
+		# TODO check for mlooked files
+		mlooked_exists = None
+
+		if mlooked_exists:
+			logging.debug('Loading transformed interferograms...')
+			raise NotImplementedError
+		else:
+			# TODO: get list of mlooked/cropped ifgs if they exist
+			# otherwise warp raw ifgs, and return these as 'ifgs' (sans DEM)
+			logging.debug('Transforming interferograms...')
+			raise NotImplementedError
 	else:
-		ifg_paths = [os.path.join(params[config.OBS_DIR], p) for p in ifglist]
+		# TODO: edits the ifgs in place, not the 'out' ones
+		ifg_paths = [os.path.join(params[cf.OBS_DIR], p) for p in ifglist]
 		ifgs = [Ifg(p) for p in ifg_paths]
 
 	process_ifgs(ifgs, params)
@@ -54,9 +76,14 @@ def process_ifgs(ifgs, params):
 	ifgs: sequence of Ifg objs (unopened)
 	params: dict of run config params
 	'''
-	init_logging(logging.DEBUG)
+	# logging for unittests focusing only on processing steps
+	global IS_LOGGING
+	if IS_LOGGING is False:
+		init_logging(logging.DEBUG)
+		IS_LOGGING = True
+
 	for i in ifgs:
-		i.open()
+		i.open(readonly=False)
 		convert_wavelength(i)
 
 	remove_orbital_error(ifgs, params)
@@ -67,8 +94,9 @@ def process_ifgs(ifgs, params):
 	# final close
 	while ifgs:
 		i = ifgs.pop()
+		i.write_phase()
 		i.dataset.FlushCache()
-		i = None # force close TODO: may need to implement close()
+		i = None # force close    TODO: may need to implement close()
 
 	logging.debug('End PyRate processing\n')
 
@@ -105,16 +133,17 @@ def convert_wavelength(ifg):
 	msg = '%s: converted wavelength to millimetres'
 	logging.debug(msg % ifg.data_path)
 
+
 def remove_orbital_error(ifgs, params):
 	if not params[cf.ORBITAL_FIT]:
-		logging.debug('Orbital correction skipped')
+		logging.debug('Orbital correction not required.')
 		return
 
 	# perform some general error/sanity checks
 	flags = [i.dataset.GetMetadataItem(META_ORBITAL) for i in ifgs]
 
 	if all(flags):
-		msg = 'Skipping orbital correction as all ifgs have error removed'
+		msg = 'Skipped orbital correction, ifgs already corrected'
 		logging.debug(msg)
 		return
 	else:
@@ -137,15 +166,19 @@ def remove_orbital_error(ifgs, params):
 	# mlooked layers discarded as not used elsewhere
 	if mlooked:
 		for path in [m.data_path for m in mlooked]:
+			msg = '%s: deleted (multilooked orbital correction file)'
+			logging.debug(msg % path)
 			os.remove(path)
 
 	for i in ifgs:
 		i.dataset.SetMetadataItem(META_ORBITAL, META_REMOVED)
+		logging.debug('%s: orbital error removed' % i.data_path)
+
 
 def check_orbital_ifgs(ifgs, flags):
 	count = sum([f == META_REMOVED for f in flags])
 	if count < len(flags) and count > 0:
-		msg = 'Detected corrected and uncorrected orbital error in ifgs'
+		msg = 'Detected mix of corrected and uncorrected orbital error in ifgs'
 		logging.debug(msg)
 
 		for i, flag in zip(ifgs, flags):
@@ -185,7 +218,7 @@ def find_reference_pixel(ifgs, params):
 	return refx, refy
 
 
-# function template
+# general function template
 #
 # add check for pre-existing metadata flag / skip if required
 # perform calculation
@@ -193,3 +226,21 @@ def find_reference_pixel(ifgs, params):
 # optionally save correction component to disk (more useful for debugging)
 # set flag in dataset for correction
 # write to log file
+
+
+if __name__ == "__main__":
+	if not IS_LOGGING:
+		init_logging(logging.DEBUG)
+		IS_LOGGING = True
+
+	from optparse import OptionParser
+	parser = OptionParser()
+	# TODO: add options as they arise
+	options, args = parser.parse_args()
+
+	if args:
+		if len(args) != 1:
+			parser.error('Too many args')
+		main(cfgfile=args[0])
+	else:
+		main()
