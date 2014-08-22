@@ -30,10 +30,14 @@ CURRENT_DIR = os.getcwd()
 
 # FIXME: make new test module to run PyRate with complex options (will be slow)
 
-def get_ifgs():
+def get_ifgs(_open=True):
 	paths = glob.glob(join(BASE_OUT_DIR, 'geo_*-*.tif'))
 	ifgs = [shared.Ifg(p) for p in paths]
 	assert len(ifgs) == 17, 'Got %s' % ifgs
+
+	if _open:
+		for i in ifgs:
+			i.open(readonly=False)
 	return ifgs
 
 
@@ -73,7 +77,6 @@ class PyRateTests(unittest.TestCase):
 			os.makedirs(BASE_DEM_DIR)
 			orig_dem = join(TEST_CORE, 'dem', 'sydney_trimmed.tif')
 			os.symlink(orig_dem, BASE_DEM_FILE)
-
 			os.chdir(BASE_DIR)
 
 			ifgs = get_ifgs()
@@ -90,9 +93,6 @@ class PyRateTests(unittest.TestCase):
 	def setUp(self):
 		if not hasattr(self, 'ifgs'):
 			self.ifgs = get_ifgs()
-
-			for i in self.ifgs:
-				i.open()
 
 	def get_logfile_path(self):
 		logpaths = glob.glob(join(BASE_DIR, '*.log'))
