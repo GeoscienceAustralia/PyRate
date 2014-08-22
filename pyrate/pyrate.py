@@ -17,6 +17,7 @@ import prepifg
 import algorithm
 import refpixel
 import orbital
+import timeseries
 
 
 # constants for metadata flags
@@ -82,9 +83,13 @@ def process_ifgs(ifgs, params):
 	refpx, refpy = find_reference_pixel(ifgs, params)
 
 	# TODO: missing
-	# VCM
-	# Linear Rate
-	# Time series
+	# VCM: which part gets called? cvd?
+	# TODO: rate, error, samples = linear_rate(ifgs, vcm, pthr, nsig, maxsig, mst=None)
+
+	pthresh = params[cf.TIME_SERIES_PTHRESH]
+	calculate_time_series(ifgs, pthresh, mst=None) # TODO: check is correct MST
+
+	# TODO: outputs?
 
 	# final cleanup
 	while ifgs:
@@ -210,6 +215,21 @@ def find_reference_pixel(ifgs, params):
 
 	logging.debug('Reference pixel coordinate: (%s, %s)' % (refx, refy))
 	return refx, refy
+
+
+def calculate_time_series(ifgs, pthresh, mst):
+	logging.debug('Calculating time series')
+	res = timeseries.time_series(ifgs, pthresh, mst)
+
+	for r in res:
+		if len(r.shape) != 3:
+			logging.error('TODO: time series result shape is incorrect')
+			raise timeseries.TimeSeriesError
+
+	logging.debug('Time series calculated')
+
+	tsincr, tscum, tsvel = res
+	return tsincr, tscum, tsvel
 
 
 # general function template
