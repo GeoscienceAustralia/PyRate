@@ -227,9 +227,6 @@ def calculate_linear_rate(ifgs, params, vcm, mst=None):
 
 	# TODO: do these need to be checked?
 	res = linrate.linear_rate(ifgs, vcm, pthr, nsig, maxsig, mst)
-
-	print res
-
 	for r in res:
 		if r is None:
 			raise ValueError('TODO: bad value')
