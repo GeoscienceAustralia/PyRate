@@ -17,6 +17,7 @@ import prepifg
 import algorithm
 import refpixel
 import orbital
+import linrate
 import timeseries
 
 
@@ -82,9 +83,9 @@ def process_ifgs(ifgs, params):
 	mst_grid = mst.mst_matrix_ifgs_only(ifgs)
 	refpx, refpy = find_reference_pixel(ifgs, params)
 
-	# TODO: missing
-	# VCM: which part gets called? cvd?
-	# TODO: rate, error, samples = linear_rate(ifgs, vcm, pthr, nsig, maxsig, mst=None)
+	# TODO: VCM code. which part gets called? cvd?
+	vcm = None
+	calculate_linear_rate(ifgs, params, vcm, mst=None)
 
 	pthresh = params[cf.TIME_SERIES_PTHRESH]
 	calculate_time_series(ifgs, pthresh, mst=None) # TODO: check is correct MST
@@ -98,7 +99,7 @@ def process_ifgs(ifgs, params):
 		i.dataset.FlushCache()
 		i = None # force close    TODO: may need to implement close()
 
-	logging.debug('End PyRate processing\n')
+	logging.debug('PyRate run completed\n')
 
 
 def warp_required(xlooks, ylooks, crop):
@@ -215,6 +216,28 @@ def find_reference_pixel(ifgs, params):
 
 	logging.debug('Reference pixel coordinate: (%s, %s)' % (refx, refy))
 	return refx, refy
+
+
+def calculate_linear_rate(ifgs, params, vcm, mst=None):
+	logging.debug('Calculating linear rate')
+
+	pthr = params[cf.LR_PTHRESH]
+	nsig = params[cf.LR_NSIG]
+	maxsig = params[cf.LR_MAXSIG]
+
+	# TODO: do these need to be checked?
+	res = linrate.linear_rate(ifgs, vcm, pthr, nsig, maxsig, mst)
+
+	print res
+
+	for r in res:
+		if r is None:
+			raise ValueError('TODO: bad value')
+
+	rate, error, samples = res
+
+	logging.debug('Linear rate calculated')
+	return rate, error, samples
 
 
 def calculate_time_series(ifgs, pthresh, mst):
