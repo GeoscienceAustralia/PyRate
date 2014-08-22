@@ -18,6 +18,7 @@ from pyrate.shared import Ifg, DEM
 from pyrate.config import parse_namelist
 from pyrate.prepifg import CUSTOM_CROP, MAXIMUM_CROP, MINIMUM_CROP, ALREADY_SAME_SIZE
 from pyrate.prepifg import prepare_ifgs, resample, PreprocessError, CustomExts
+from pyrate.prepifg import mlooked_path
 
 from common import PREP_TEST_TIF, SYD_TEST_DEM_DIR, SYD_TEST_DEM_TIF
 
@@ -195,7 +196,7 @@ class PrepifgOutputTests(unittest.TestCase):
 
 		# verify DEM has been correctly processed
 		# ignore output values as resampling has already been tested for phase
-		exp_dem_path = join(SYD_TEST_DEM_DIR, 'sydney_trimmed_4rlks.dem')
+		exp_dem_path = join(SYD_TEST_DEM_DIR, 'sydney_trimmed_4rlks.tif')
 		self.assertTrue(exists(exp_dem_path))
 
 		dem = DEM(exp_dem_path)
@@ -287,6 +288,17 @@ class SameSizeTests(unittest.TestCase):
 			self.assertEqual(ifg.x_step, xlooks * self.xs)
 			self.assertEqual(ifg.x_step, ylooks * self.xs)
 			os.remove(ifg.data_path)
+
+
+def test_mlooked_path():
+	path = 'geo_060619-061002.tif'
+	assert mlooked_path(path, 2) == 'geo_060619-061002_2rlks.tif'
+
+	path = 'some/dir/geo_060619-061002.tif'
+	assert mlooked_path(path, 4) == 'some/dir/geo_060619-061002_4rlks.tif'
+
+	path = 'some/dir/geo_060619-061002_4rlks.tif'
+	assert mlooked_path(path, 4) == 'some/dir/geo_060619-061002_4rlks_4rlks.tif'
 
 
 #class LineOfSightTests(unittest.TestCase):

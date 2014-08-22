@@ -1,17 +1,17 @@
 """
-Prepares input files and associated data for the PyRate work flow. 
+Prepares input files and associated data for the PyRate work flow.
 
 Input rasters often may cropping, scaling, and multilooking/downsampling to
 coarser grids before being processed. This module uses gdalwarp to handle these
 operations.
 
-The rasters need to be in GeoTIFF format with PyRate specific metadata headers.  
+The rasters need to be in GeoTIFF format with PyRate specific metadata headers.
 
 Created on 23/10/2012
 @author: Ben Davies, NCI
 """
 
-# TODO: check new average option for gdalwarp (GDAL 1.10.x +) 
+# TODO: check new average option for gdalwarp (GDAL 1.10.x +)
 
 import os
 from math import modf
@@ -147,6 +147,12 @@ def _resample_ifg(ifg, cmd, x_looks, y_looks, thresh):
 	return resample(data, x_looks, y_looks, thresh)
 
 
+def mlooked_path(path, looks):
+	'''Adds suffix to path, for creating a new path for mlooked files.'''
+	base, ext = splitext(path)
+	return "%s_%srlks%s" % (base, looks, ext)
+
+# TODO: clean arg names
 def warp(ifg, x_looks, y_looks, extents, resolution, thresh, verbose):
 	'''
 	Resamples 'ifg' and returns a new Ifg obj.
@@ -158,6 +164,9 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, verbose):
 	thresh: see thresh in prepare_ifgs().
 	verbose: True to print gdalwarp output to stdout
 	'''
+	if x_looks != y_looks:
+		raise NotImplementedError('X and Y looks mismatch')
+
 	# dynamically build command for call to gdalwarp
 	cmd = ["gdalwarp", "-overwrite", "-srcnodata", "None", "-te"] + extents
 	if not verbose:
@@ -170,9 +179,7 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, verbose):
 		cmd += ["-tr"] + [str(r) for r in resolution] # change res of final output
 
 	# use GDAL to cut (and resample) the final output layers
-	s = splitext(ifg.data_path)
-	ext = _file_ext(ifg)
-	looks_path = s[0] + "_%srlks.%s" % (y_looks, ext)
+	looks_path = mlooked_path(ifg.data_path, y_looks)
 	cmd += [ifg.data_path, looks_path]
 	check_call(cmd)
 
@@ -190,6 +197,7 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, verbose):
 			data = where(data == 0, nan, data)
 
 		# TODO: LOS conversion to vertical/horizontal (projection)
+		# TODO: push out to workflow
 		#if params.has_key(PROJECTION_FLAG):
 		#	reproject()
 
