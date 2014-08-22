@@ -43,29 +43,50 @@ def main(cfgfile='pyrate.conf', verbose=True):
 		return err.errno
 
 	# NB: keep source files intact, should be run after prepifg code
+	obsdir = params[cf.OBS_DIR]
 	ifglist = cf.parse_namelist(params[cf.IFG_FILE_LIST])
 
-	if warp_required(params[cf.IFG_LKSX],
-						params[cf.IFG_LKSY],
-						params[cf.IFG_CROP_OPT]):
+	warp_params = [cf.IFG_LKSX, cf.IFG_LKSY, cf.IFG_CROP_OPT]
+	xlks, ylks, crop = [params[k] for k in warp_params]
 
-		# TODO check for mlooked files
-		mlooked_exists = None
+	if warp_required(xlks, ylks, crop):
+		raw_ifg_paths = [os.path.join(obsdir, p) for p in ifglist]
 
-		if mlooked_exists:
-			logging.debug('Loading transformed interferograms...')
+		if mlooked_files_exist(raw_ifg_paths, xlks):
+			# TODO: get list of mlooked/cropped ifgs
+			logging.debug('Reusing mlooked interferograms...')
 			raise NotImplementedError
 		else:
-			# TODO: get list of mlooked/cropped ifgs if they exist
-			# otherwise warp raw ifgs, and return these as 'ifgs' (sans DEM)
-			logging.debug('Transforming interferograms...')
-			raise NotImplementedError
+			ifgs = transform_ifgs(raw_ifg_paths, crop, xlks, ylks, params, verbose)
 	else:
 		# TODO: edits the ifgs in place, not the 'out' ones
-		ifg_paths = [os.path.join(params[cf.OBS_DIR], p) for p in ifglist]
+		ifg_paths = [os.path.join(obsdir, p) for p in ifglist]
 		ifgs = [Ifg(p) for p in ifg_paths]
 
+	for i in ifgs:
+		if not i.is_open:
+			i.open(readonly=False)
+
 	process_ifgs(ifgs, params)
+
+
+def mlooked_files_exist(ifg_paths, xlks):
+	exp_mlooked_paths = [prepifg.mlooked_path(p, xlks) for p in ifg_paths]
+	return all([os.path.exists(p) for p in exp_mlooked_paths])
+
+
+def transform_ifgs(ifg_paths, crop, xlks, ylks, params, verbose):
+	# warp raw ifgs, and return these as 'ifgs' (sans DEM)
+	# TODO: handle DEM
+	logging.debug('Transforming/multilooking interferograms...')
+	raw_ifgs = [Ifg(p) for p in ifg_paths]
+
+	# TODO: check for user extents in params
+	if crop == prepifg.CUSTOM_CROP:
+		raise NotImplementedError
+
+	return prepifg.prepare_ifgs(raw_ifgs, crop, xlks, ylks, thresh=0.5,
+								user_exts=None, verbose=verbose)
 
 
 def process_ifgs(ifgs, params):
@@ -75,7 +96,6 @@ def process_ifgs(ifgs, params):
 	params: dict of run config params
 	'''
 	for i in ifgs:
-		i.open(readonly=False)
 		convert_wavelength(i)
 
 	remove_orbital_error(ifgs, params)
