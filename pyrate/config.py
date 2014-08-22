@@ -59,6 +59,9 @@ LR_NSIG = 'nsig' # n-sigma ratio used to threshold 'model minus observation' res
 LR_PTHRESH = 'pthr'  # minimum number of coherent observations for a pixel
 LR_MAXSIG = 'maxsig' # maximum allowable standard error
 
+# time series parameters
+TIME_SERIES_PTHRESH = 'ts_pthr'
+
 
 def degree_conv(deg):
 	'Convenience: convert numerical degree to human readable string'
@@ -113,6 +116,8 @@ PARAM_CONVERSION = { OBS_DIR : (None, "obs"),
 					LR_NSIG : (int, 3), # Pirate default
 					LR_PTHRESH : (int, 20), # should be based on nepochs since not every project may have 20 epochs
 					LR_MAXSIG : (int, 2), # Pirate default
+
+					TIME_SERIES_PTHRESH : (int, None),
 				}
 
 def get_config_params(path):
