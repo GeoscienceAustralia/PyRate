@@ -12,9 +12,6 @@ import sys
 import logging
 import datetime
 
-import config as cf
-from shared import Ifg
-
 import mst
 import prepifg
 import algorithm
@@ -22,7 +19,8 @@ import refpixel
 import orbital
 import linrate
 import timeseries
-
+import config as cf
+from shared import Ifg
 
 # constants for metadata flags
 META_UNITS = 'PHASE_UNITS'
@@ -30,64 +28,23 @@ MILLIMETRES = 'MILLIMETRES'
 META_ORBITAL = 'ORBITAL_ERROR'
 META_REMOVED = 'REMOVED'
 
-# TODO: 3 main changes
-#   1) remove prepifg, handle as a step elsewhere
-#   2) refactor file handling to separate tested funcs
+# TODO: main changes remaining are:
 #   3) create output files + write to them
 
 
-# TODO: does verbose need to be included? Simpler to dump everything into a log
-# TODO: add clean exception handling
-# TODO: refactor to take params & ifgs (opened?) as args
-# TODO: cmd line parser methods should handle the warping etc
-# TODO: add parameter error checking: induce fail fast before number crunching
-def main(params, verbose=True):
+def process_ifgs(ifg_paths, params):
 	"""
 	TODO: pirate workflow
+
+	High level function to perform correction steps on supplied ifgs
+	ifgs: sequence of Ifg objs (unopened)
+	params: dict of run config params
 	"""
-
-	# NB: keep source files intact, should be run after prepifg code
-	obsdir = params[cf.OBS_DIR]
-	ifglist = cf.parse_namelist(params[cf.IFG_FILE_LIST])
-
-	warp_params = [cf.IFG_LKSX, cf.IFG_LKSY, cf.IFG_CROP_OPT]
-	xlks, ylks, crop = [params[k] for k in warp_params]
-
-	if warp_required(xlks, ylks, crop):
-		raw_ifg_paths = [os.path.join(obsdir, p) for p in ifglist]
-
-		if not mlooked_files_exist(raw_ifg_paths, xlks):
-			msg = 'Multilooked ifgs do not exist (check config settings)'
-			raise IOError(msg)
-
-		# TODO: get list of mlooked/cropped ifgs
-		logging.debug('Reusing mlooked interferograms...')
-		raise NotImplementedError
-
-	else:
-		# FIXME: edits the ifgs in place, not the 'out' ones
-		ifg_paths = [os.path.join(obsdir, p) for p in ifglist]
-		ifgs = [Ifg(p) for p in ifg_paths]
+	ifgs = [Ifg(p) for p in ifg_paths]
 
 	for i in ifgs:
 		if not i.is_open:
 			i.open(readonly=False)
-
-	process_ifgs(ifgs, params)
-
-
-def mlooked_files_exist(ifg_paths, xlks):
-	exp_mlooked_paths = [prepifg.mlooked_path(p, xlks) for p in ifg_paths]
-	return all([os.path.exists(p) for p in exp_mlooked_paths])
-
-
-def process_ifgs(ifgs, params):
-	'''
-	High level function to perform correction steps on supplied ifgs
-	ifgs: sequence of Ifg objs (unopened)
-	params: dict of run config params
-	'''
-	for i in ifgs:
 		convert_wavelength(i)
 
 	remove_orbital_error(ifgs, params)
@@ -112,27 +69,6 @@ def process_ifgs(ifgs, params):
 		i = None # force close    TODO: may need to implement close()
 
 	logging.debug('PyRate run completed\n')
-
-
-def warp_required(xlooks, ylooks, crop):
-	"""Returns True if params show rasters need to be cropped and/or resized."""
-	if xlooks > 1 or ylooks > 1:
-		return True
-
-	if crop is None or crop == prepifg.ALREADY_SAME_SIZE:
-		return False
-
-	return True
-
-
-# TODO: write to alternate file if log exists
-def init_logging(level):
-	t = datetime.datetime.now()
-	path = 'pyrate_%s_%02d_%02d.log' % (t.year, t.month, t.day)
-	fmt = '%(asctime)s %(message)s'
-	datefmt = '%d/%m/%Y %I:%M:%S %p'
-	logging.basicConfig(filename=path, format=fmt, datefmt=datefmt, level=level)
-	logging.debug('Log started')
 
 
 def convert_wavelength(ifg):
@@ -274,6 +210,58 @@ def calculate_time_series(ifgs, pthresh, mst):
 # write to log file
 
 
+def transform_params(params):
+	"""Returns subset of config parameters for cropping and multilooking."""
+	t_params = [cf.IFG_LKSX, cf.IFG_LKSY, cf.IFG_CROP_OPT]
+	xlooks, ylooks, crop = [params[k] for k in t_params]
+	return xlooks, ylooks, crop
+
+
+def warp_required(xlooks, ylooks, crop):
+	"""Returns True if params show rasters need to be cropped and/or resized."""
+	if xlooks > 1 or ylooks > 1:
+		return True
+
+	if crop is None or crop == prepifg.ALREADY_SAME_SIZE:
+		return False
+	return True
+
+
+def src_ifg_paths(obsdir, ifglist_path):
+	"""Returns sequence of paths to files in ifglist file."""
+	ifglist = cf.parse_namelist(ifglist_path)
+	return [os.path.join(obsdir, p) for p in ifglist]
+
+
+def working_ifg_paths(src_paths, xlooks, ylooks, cropping):
+	"""
+	Filter. Returns paths to ifgs to process (eg. checks for mlooked ifgs)
+	"""
+	if warp_required(xlooks, ylooks, cropping):
+		mlooked_paths = [prepifg.mlooked_path(p, xlooks) for p in src_paths]
+
+		if not all([os.path.exists(p) for p in mlooked_paths]):
+			msg = 'Multilooked ifgs do not exist (check config settings?)'
+			raise IOError(msg)
+
+		logging.debug('Using mlooked interferograms...')
+		return mlooked_paths
+	return src_paths  # mlooking not specified, work with base ifgs
+
+
+# TODO: write to alternate file if log exists
+def init_logging(level):
+	t = datetime.datetime.now()
+	path = 'pyrate_%s_%02d_%02d.log' % (t.year, t.month, t.day)
+	fmt = '%(asctime)s %(message)s'
+	datefmt = '%d/%m/%Y %I:%M:%S %p'
+	logging.basicConfig(filename=path, format=fmt, datefmt=datefmt, level=level)
+	logging.debug('Log started')
+
+
+# TODO: ensure clean exception handling
+# TODO: refactor to take params & ifgs (opened?) as args
+# TODO: add parameter error checking: induce fail fast before number crunching
 if __name__ == "__main__":
 	from optparse import OptionParser
 	parser = OptionParser()
@@ -283,11 +271,15 @@ if __name__ == "__main__":
 
 	try:
 		cfg_path = args[0] if args else 'pyrate.conf'
-		params = cf.get_config_params(cfg_path)
+		pars = cf.get_config_params(cfg_path)
 	except IOError as err:
 		msg = 'Config file error: %s "%s"' % (err.strerror, err.filename)
 		logging.debug(msg)
 		print(msg)
 		sys.exit(err.errno)
 
-	main(params)
+	# FIXME: make output ifgs here, or in process_ifgs() ?
+	xlks, ylks, crop = transform_params(pars)
+	base_ifg_paths = src_ifg_paths(pars[cf.OBS_DIR], pars[cf.IFG_FILE_LIST])
+	working_paths = working_ifg_paths(base_ifg_paths, xlks, ylks, crop)
+	process_ifgs(working_paths, pars)

@@ -10,8 +10,8 @@ from os.path import join
 
 import glob
 import shutil
-import unittest
 import logging
+import unittest
 
 from pyrate import pyrate, shared, config, prepifg
 
@@ -31,15 +31,10 @@ CURRENT_DIR = os.getcwd()
 # FIXME: make test module to run PyRate with complex options (will be slow)
 # TODO: test external ifglist as arg
 
-def get_ifgs(_open=True):
-	paths = glob.glob(join(BASE_OUT_DIR, 'geo_*-*.tif'))
-	ifgs = [shared.Ifg(p) for p in paths]
-	assert len(ifgs) == 17, 'Got %s' % ifgs
 
-	if _open:
-		for i in ifgs:
-			i.open(readonly=False)
-	return ifgs
+def test_transform_params():
+	params = {config.IFG_LKSX: 3, config.IFG_LKSY: 2, config.IFG_CROP_OPT: 1}
+	assert pyrate.transform_params(params) == (3, 2, 1)
 
 
 def test_warp_required():
@@ -53,20 +48,54 @@ def test_warp_required():
 		assert pyrate.warp_required(xlooks=1, ylooks=1, crop=c)
 
 
+def test_src_ifg_paths():
+	raise NotImplementedError('Need to read a ifglist file')
+	obsdir = None
+	ifglist_path = ''
+	paths = pyrate.src_ifg_paths(obsdir, ifglist_path)
+
+
+def test_working_ifg_paths():
+	# base file list shouldn't change if mlooking not required
+	src_paths = ['temp/ifg0.tif', 'temp/ifg1.tif']
+	assert pyrate.working_ifg_paths(src_paths, 1, 1, 4) == src_paths
+	assert pyrate.working_ifg_paths(src_paths, 0, 0, 4) == src_paths
+
+
+def test_working_ifg_paths_mlooked_exists_failure():
+	src_paths = ['temp/ifg0.tif', 'temp/ifg1.tif']
+	try:
+		_ = pyrate.working_ifg_paths(src_paths, 2, 2, 4)
+		raise Exception('Didn\'t fail with missing files')
+	except IOError:
+		return
+
+
+# FIXME: change to read output ifgs
+def get_ifgs(_open=True):
+	paths = glob.glob(join(BASE_OUT_DIR, 'geo_*-*.tif'))
+	ifgs = [shared.Ifg(p) for p in paths]
+	assert len(ifgs) == 17, 'Got %s' % ifgs
+
+	if _open:
+		for i in ifgs:
+			i.open(readonly=False)
+	return ifgs
+
+
 class PyRateTests(unittest.TestCase):
-	# initialise and run workflow from the class setup
-	# unit tests verify different steps have completed
+	# Initialise & run workflow from class setup, ignoring multilooking as it is
+	# a separate step. Unit tests verify different steps have completed
 
 	@classmethod
 	def setUpClass(cls):
-		# start each test clean
+		# start each full test run cleanly
 		shutil.rmtree(BASE_DIR, ignore_errors=True)
 
 		try:
 			# copy source data (treat as prepifg already run)
 			os.makedirs(BASE_OUT_DIR)
 
-			# TODO: possibly needs 1rlks filenames
 			for path in glob.glob(join(TEST_CORE, 'tif/*')):
 				dest = join(BASE_OUT_DIR, os.path.basename(path))
 				shutil.copy(path, dest)
@@ -77,18 +106,19 @@ class PyRateTests(unittest.TestCase):
 			os.symlink(orig_dem, BASE_DEM_FILE)
 			os.chdir(BASE_DIR)
 
-			ifgs = get_ifgs()
-			params = config._parse_conf_file(WORKFLOW_CONF)
-
 			# manually start logging as main() is being bypassed
 			pyrate.init_logging(logging.DEBUG)
-			pyrate.process_ifgs(ifgs, params)
+
+			params = config._parse_conf_file(WORKFLOW_CONF)
+			paths = glob.glob(join(BASE_OUT_DIR, 'geo_*-*.tif'))
+			pyrate.process_ifgs(paths, params)
 		except:
 			# revert working dir & avoid paths busting other tests
 			os.chdir(CURRENT_DIR)
 			raise
 
 	def setUp(self):
+		# performance: to save constantly opening ifgs
 		if not hasattr(self, 'ifgs'):
 			self.ifgs = get_ifgs()
 
