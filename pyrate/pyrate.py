@@ -1,9 +1,11 @@
-'''
+"""
 Main workflow script for PyRate
 
 Created on 17/09/2012
 @author: Ben Davies, NCI
-'''
+"""
+
+from __future__ import print_function
 
 import os
 import logging
@@ -39,7 +41,7 @@ def main(cfgfile='pyrate.conf', verbose=True):
 	except IOError as err:
 		msg = 'Config file error: %s "%s"' % (err.strerror, err.filename)
 		logging.debug(msg)
-		print msg
+		print(msg)
 		return err.errno
 
 	# NB: keep source files intact, should be run after prepifg code
