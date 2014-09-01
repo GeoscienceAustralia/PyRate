@@ -8,6 +8,7 @@ Created on 17/09/2012
 from __future__ import print_function
 
 import os
+import sys
 import logging
 import datetime
 
@@ -29,20 +30,21 @@ MILLIMETRES = 'MILLIMETRES'
 META_ORBITAL = 'ORBITAL_ERROR'
 META_REMOVED = 'REMOVED'
 
+# TODO: 3 main changes
+#   1) remove prepifg, handle as a step elsewhere
+#   2) refactor file handling to separate tested funcs
+#   3) create output files + write to them
+
 
 # TODO: does verbose need to be included? Simpler to dump everything into a log
 # TODO: add clean exception handling
-def main(cfgfile='pyrate.conf', verbose=True):
-	"""TODO: pirate workflow"""
-
-	# TODO: add parameter error checking to fail fast, before number crunching
-	try:
-		params = cf.get_config_params(cfgfile)
-	except IOError as err:
-		msg = 'Config file error: %s "%s"' % (err.strerror, err.filename)
-		logging.debug(msg)
-		print(msg)
-		return err.errno
+# TODO: refactor to take params & ifgs (opened?) as args
+# TODO: cmd line parser methods should handle the warping etc
+# TODO: add parameter error checking: induce fail fast before number crunching
+def main(params, verbose=True):
+	"""
+	TODO: pirate workflow
+	"""
 
 	# NB: keep source files intact, should be run after prepifg code
 	obsdir = params[cf.OBS_DIR]
@@ -54,14 +56,16 @@ def main(cfgfile='pyrate.conf', verbose=True):
 	if warp_required(xlks, ylks, crop):
 		raw_ifg_paths = [os.path.join(obsdir, p) for p in ifglist]
 
-		if mlooked_files_exist(raw_ifg_paths, xlks):
-			# TODO: get list of mlooked/cropped ifgs
-			logging.debug('Reusing mlooked interferograms...')
-			raise NotImplementedError
-		else:
-			ifgs = transform_ifgs(raw_ifg_paths, crop, xlks, ylks, params, verbose)
+		if not mlooked_files_exist(raw_ifg_paths, xlks):
+			msg = 'Multilooked ifgs do not exist (check config settings)'
+			raise IOError(msg)
+
+		# TODO: get list of mlooked/cropped ifgs
+		logging.debug('Reusing mlooked interferograms...')
+		raise NotImplementedError
+
 	else:
-		# TODO: edits the ifgs in place, not the 'out' ones
+		# FIXME: edits the ifgs in place, not the 'out' ones
 		ifg_paths = [os.path.join(obsdir, p) for p in ifglist]
 		ifgs = [Ifg(p) for p in ifg_paths]
 
@@ -75,20 +79,6 @@ def main(cfgfile='pyrate.conf', verbose=True):
 def mlooked_files_exist(ifg_paths, xlks):
 	exp_mlooked_paths = [prepifg.mlooked_path(p, xlks) for p in ifg_paths]
 	return all([os.path.exists(p) for p in exp_mlooked_paths])
-
-
-def transform_ifgs(ifg_paths, crop, xlks, ylks, params, verbose):
-	# warp raw ifgs, and return these as 'ifgs' (sans DEM)
-	# TODO: handle DEM
-	logging.debug('Transforming/multilooking interferograms...')
-	raw_ifgs = [Ifg(p) for p in ifg_paths]
-
-	# TODO: check for user extents in params
-	if crop == prepifg.CUSTOM_CROP:
-		raise NotImplementedError
-
-	return prepifg.prepare_ifgs(raw_ifgs, crop, xlks, ylks, thresh=0.5,
-								user_exts=None, verbose=verbose)
 
 
 def process_ifgs(ifgs, params):
@@ -106,11 +96,11 @@ def process_ifgs(ifgs, params):
 	refpx, refpy = find_reference_pixel(ifgs, params)
 
 	# TODO: VCM code. which part gets called? cvd?
-	vcm = None
-	calculate_linear_rate(ifgs, params, vcm, mst=None)
+	#vcm = None
+	#calculate_linear_rate(ifgs, params, vcm, mst=None)
 
 	pthresh = params[cf.TIME_SERIES_PTHRESH]
-	calculate_time_series(ifgs, pthresh, mst=None) # TODO: check is correct MST
+	#calculate_time_series(ifgs, pthresh, mst=None)  # TODO: check is correct MST
 
 	# TODO: outputs?
 
@@ -287,14 +277,17 @@ def calculate_time_series(ifgs, pthresh, mst):
 if __name__ == "__main__":
 	from optparse import OptionParser
 	parser = OptionParser()
-	# TODO: add options as they arise
 	options, args = parser.parse_args()
 
 	init_logging(logging.DEBUG)
 
-	if args:
-		if len(args) != 1:
-			parser.error('Too many args')
-		main(cfgfile=args[0])
-	else:
-		main()
+	try:
+		cfg_path = args[0] if args else 'pyrate.conf'
+		params = cf.get_config_params(cfg_path)
+	except IOError as err:
+		msg = 'Config file error: %s "%s"' % (err.strerror, err.filename)
+		logging.debug(msg)
+		print(msg)
+		sys.exit(err.errno)
+
+	main(params)
