@@ -28,7 +28,8 @@ TEST_CORE = join(os.environ['PYRATEPATH'], 'tests', 'sydney_test')
 CURRENT_DIR = os.getcwd()
 
 
-# FIXME: make new test module to run PyRate with complex options (will be slow)
+# FIXME: make test module to run PyRate with complex options (will be slow)
+# TODO: test external ifglist as arg
 
 def get_ifgs(_open=True):
 	paths = glob.glob(join(BASE_OUT_DIR, 'geo_*-*.tif'))
@@ -59,10 +60,7 @@ class PyRateTests(unittest.TestCase):
 	@classmethod
 	def setUpClass(cls):
 		# start each test clean
-		try:
-			shutil.rmtree(BASE_DIR)
-		except:
-			pass
+		shutil.rmtree(BASE_DIR, ignore_errors=True)
 
 		try:
 			# copy source data (treat as prepifg already run)
