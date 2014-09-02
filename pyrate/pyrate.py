@@ -262,11 +262,12 @@ def init_logging(level):
 	logging.debug('Log started')
 
 
+# TODO: expand CLI documentation
 # TODO: ensure clean exception handling
 # TODO: add parameter error checking: induce fail fast before number crunching
-if __name__ == "__main__":
+def main():
 	from optparse import OptionParser
-	parser = OptionParser()
+	parser = OptionParser(usage='%prog [config-file]\nRuns PyRate workflow.')
 	options, args = parser.parse_args()
 
 	init_logging(logging.DEBUG)
@@ -294,3 +295,6 @@ if __name__ == "__main__":
 		shutil.copy(wp, dp)
 
 	process_ifgs(dest_paths, pars)
+
+if __name__ == "__main__":
+	main()
