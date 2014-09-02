@@ -227,10 +227,11 @@ def warp_required(xlooks, ylooks, crop):
 	return True
 
 
-def src_ifg_paths(obsdir, ifglist_path):
-	"""Returns sequence of paths to files in ifglist file."""
+def src_ifg_paths(ifglist_path):
+	"""Returns sequence of paths to files in given ifglist file."""
+	basedir = os.path.dirname(ifglist_path)
 	ifglist = cf.parse_namelist(ifglist_path)
-	return [os.path.join(obsdir, p) for p in ifglist]
+	return [os.path.join(basedir, p) for p in ifglist]
 
 
 def working_ifg_paths(src_paths, xlooks, ylooks, cropping):
@@ -280,6 +281,6 @@ if __name__ == "__main__":
 
 	# FIXME: make output ifgs here, or in process_ifgs() ?
 	xlks, ylks, crop = transform_params(pars)
-	base_ifg_paths = src_ifg_paths(pars[cf.OBS_DIR], pars[cf.IFG_FILE_LIST])
+	base_ifg_paths = src_ifg_paths(pars[cf.IFG_FILE_LIST])
 	working_paths = working_ifg_paths(base_ifg_paths, xlks, ylks, crop)
 	process_ifgs(working_paths, pars)

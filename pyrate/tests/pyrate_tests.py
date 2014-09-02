@@ -1,9 +1,9 @@
-'''
-Tests end-to-end runs of the PyRate workflow module.
+"""
+Tests end-to-end runs and functions in PyRate workflow module.
 
 Created on 17/09/2012
 @author: Ben Davies, NCI
-'''
+"""
 
 import os
 from os.path import join
@@ -49,10 +49,11 @@ def test_warp_required():
 
 
 def test_src_ifg_paths():
-	raise NotImplementedError('Need to read a ifglist file')
-	obsdir = None
-	ifglist_path = ''
-	paths = pyrate.src_ifg_paths(obsdir, ifglist_path)
+	ifgdir = join(TEST_CORE, 'tif')
+	ifglist_path = join(ifgdir, 'ifms_17')
+	paths = pyrate.src_ifg_paths(ifglist_path)
+	assert paths[0] == join(ifgdir, 'geo_060619-061002.tif'), str(paths[0])
+	assert paths[-1] == join(ifgdir, 'geo_070709-070813.tif')
 
 
 def test_working_ifg_paths():
@@ -66,7 +67,7 @@ def test_working_ifg_paths_mlooked_exists_failure():
 	src_paths = ['temp/ifg0.tif', 'temp/ifg1.tif']
 	try:
 		_ = pyrate.working_ifg_paths(src_paths, 2, 2, 4)
-		raise Exception('Didn\'t fail with missing files')
+		raise Exception("Didn't fail with missing files")
 	except IOError:
 		return
 
