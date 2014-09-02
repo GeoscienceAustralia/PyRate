@@ -1,10 +1,11 @@
-'''
+"""
 Tests for prepifg.py: resampling, subsetting etc
 
 Ben Davies, NCI
-'''
+"""
 
-import os, sys
+import os
+import sys
 import unittest
 from os.path import exists, join
 
@@ -15,10 +16,11 @@ from numpy import ones, nan, reshape, sum as npsum
 from numpy.testing import assert_array_almost_equal, assert_array_equal
 
 from pyrate.shared import Ifg, DEM
+from pyrate import config as cfg
 from pyrate.config import parse_namelist
 from pyrate.prepifg import CUSTOM_CROP, MAXIMUM_CROP, MINIMUM_CROP, ALREADY_SAME_SIZE
 from pyrate.prepifg import prepare_ifgs, resample, PreprocessError, CustomExts
-from pyrate.prepifg import mlooked_path
+from pyrate.prepifg import mlooked_path, extents_from_params
 
 from common import PREP_TEST_TIF, SYD_TEST_DEM_DIR, SYD_TEST_DEM_TIF
 
@@ -34,9 +36,19 @@ def _diff_exts_ifgs():
 	paths = parse_namelist(join(PREP_TEST_TIF, 'ifms'))
 	return [Ifg(join(PREP_TEST_TIF, p)) for p in paths]
 
+
 def _same_exts_ifgs():
 	paths = parse_namelist(join(PREP_TEST_TIF, 'ifms2'))
 	return [Ifg(join(PREP_TEST_TIF, p)) for p in paths]
+
+
+def test_extents_from_params():
+	xf, yf = 1.0, 2.0
+	xl, yl = 5.0, 7.0
+	pars = {cfg.IFG_XFIRST: xf, cfg.IFG_XLAST: xl,
+			cfg.IFG_YFIRST: yf, cfg.IFG_YLAST: yl}
+
+	assert extents_from_params(pars) == CustomExts(xf, yf, xl, yl)
 
 
 class PrepifgOutputTests(unittest.TestCase):
@@ -58,10 +70,10 @@ class PrepifgOutputTests(unittest.TestCase):
 				os.remove(f)
 
 	def _custom_ext_latlons(self):
-		return [150.91 + (7 * self.xs), # xfirst
-				-34.17 + (16 * self.ys), # yfirst
-				150.91 + (27 * self.xs), # 20 cells from xfirst
-				-34.17 + (44 * self.ys)] # 28 cells from yfirst
+		return [150.91 + (7 * self.xs),  # xfirst
+				-34.17 + (16 * self.ys),  # yfirst
+				150.91 + (27 * self.xs),  # 20 cells from xfirst
+				-34.17 + (44 * self.ys)]  # 28 cells from yfirst
 
 	def _custom_extents_tuple(self):
 		return CustomExts(*self._custom_ext_latlons())
@@ -74,14 +86,14 @@ class PrepifgOutputTests(unittest.TestCase):
 			self.assertTrue(exists(f), msg="Output files not created")
 
 		# output files should have same extents
-		# NB: also verifies gdalwarop correctly copies geotransform across
+		# NB: also verifies gdalwarp correctly copies geotransform across
 		ifg = Ifg(self.exp_files[0])
 		ifg.open()
 		gt = ifg.dataset.GetGeoTransform()
 
 		# copied from gdalinfo output
 		exp_gt = (150.91, 0.000833333, 0, -34.17, 0, -0.000833333)
-		for i,j in zip(gt, exp_gt):
+		for i, j in zip(gt, exp_gt):
 			self.assertAlmostEqual(i, j)
 		assert_geotransform_equal(self.exp_files)
 
@@ -115,7 +127,7 @@ class PrepifgOutputTests(unittest.TestCase):
 		gt = ifg.dataset.GetGeoTransform()
 		exp_gt = (cext.xfirst, self.xs, 0, cext.yfirst, 0, self.ys)
 
-		for i,j in zip(gt, exp_gt):
+		for i, j in zip(gt, exp_gt):
 			self.assertAlmostEqual(i, j)
 
 		assert_geotransform_equal(self.exp_files)
@@ -157,16 +169,16 @@ class PrepifgOutputTests(unittest.TestCase):
 			ifg.open()
 
 			phase = ifg.phase_band.ReadAsArray()
-			self.assertFalse((phase == 0).any() )
-			self.assertTrue((isnan(phase)).any() )
+			self.assertFalse((phase == 0).any())
+			self.assertTrue((isnan(phase)).any())
 
-		self.assertAlmostEqual(nanmax(phase), 4.247, 3) # copied from gdalinfo
-		self.assertAlmostEqual(nanmin(phase), 0.009, 3) # copied from gdalinfo
+		self.assertAlmostEqual(nanmax(phase), 4.247, 3)  # copied from gdalinfo
+		self.assertAlmostEqual(nanmin(phase), 0.009, 3)  # copied from gdalinfo
 
 
 	def test_multilook(self):
 		"""Test resampling method using a scaling factor of 4"""
-		scale = 4 # assumes square cells
+		scale = 4  # assumes square cells
 		ifgs = _diff_exts_ifgs()
 		ifgs.append(DEM(SYD_TEST_DEM_TIF))
 		cext = self._custom_extents_tuple()
@@ -228,16 +240,16 @@ class PrepifgOutputTests(unittest.TestCase):
 
 	def test_nan_threshold(self):
 		# test threshold based on number of NaNs per averaging tile
-		data = ones((2,10))
-		data[0,3:] = nan
-		data[1,7:] = nan
+		data = ones((2, 10))
+		data[0, 3:] = nan
+		data[1, 7:] = nan
 
 		# key: NaN threshold as a % of pixels, expected result
-		expected = [ (0.0, [1, nan, nan, nan, nan]),
+		expected = [(0.0, [1, nan, nan, nan, nan]),
 					(0.25, [1, nan, nan, nan, nan]),
 					(0.5, [1, 1, nan, nan, nan]),
 					(0.75, [1, 1, 1, nan, nan]),
-					(1.0, [1, 1, 1, 1, nan])  ]
+					(1.0, [1, 1, 1, 1, nan])]
 
 		for thresh, exp in expected:
 			res = resample(data, xscale=2, yscale=2, thresh=thresh)
@@ -246,11 +258,11 @@ class PrepifgOutputTests(unittest.TestCase):
 
 	def test_nan_threshold_alt(self):
 		# test threshold on odd numbers
-		data = ones((3,6))
+		data = ones((3, 6))
 		data[0] = nan
-		data[1,2:5] = nan
+		data[1, 2:5] = nan
 
-		expected = [ (0.4, [nan,nan]), (0.5, [1, nan]), (0.7, [1, 1]) ]
+		expected = [(0.4, [nan, nan]), (0.5, [1, nan]), (0.7, [1, 1])]
 		for thresh, exp in expected:
 			res = resample(data, xscale=3, yscale=3, thresh=thresh)
 			assert_array_equal(res, reshape(exp, res.shape))
@@ -319,17 +331,16 @@ def test_mlooked_path():
 		#raise NotImplementedError
 
 
-
 class LocalMultilookTests(unittest.TestCase):
-	'''Tests for local testing functions'''
+	"""Tests for local testing functions"""
 
 	def test_multilooking_thresh(self):
-		data = ones((3,6))
+		data = ones((3, 6))
 		data[0] = nan
-		data[1,2:5] = nan
-		expected = [ (6, [nan,nan]),
+		data[1, 2:5] = nan
+		expected = [(6, [nan, nan]),
 					(5, [1, nan]),
-					(4, [1, 1]) ]
+					(4, [1, 1])]
 		scale = 3
 		for thresh, exp in expected:
 			res = multilooking(data, scale, scale, thresh)
@@ -366,8 +377,8 @@ def multilooking(src, xscale, yscale, thresh=0):
 			num_values = num_cells - npsum(isnan(patch))
 
 			if num_values >= thresh and num_values > 0:
-				reshaped = patch.reshape(size) # NB: nanmean only works on 1 axis
-				dest[r,c] = nanmean(reshaped)
+				reshaped = patch.reshape(size)  # nanmean() only works on 1 axis
+				dest[r, c] = nanmean(reshaped)
 
 	return dest
 

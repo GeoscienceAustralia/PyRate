@@ -14,6 +14,7 @@ Created on 23/10/2012
 # TODO: check new average option for gdalwarp (GDAL 1.10.x +)
 
 import os
+import sys
 from math import modf
 from numbers import Number
 from tempfile import mkstemp
@@ -24,6 +25,7 @@ from os.path import splitext
 
 from numpy import array, where, nan, isnan, nanmean, float32, zeros, sum as nsum
 
+import config as cfg
 from shared import Ifg, DEM
 
 
@@ -50,11 +52,11 @@ def prepare_ifgs(ifgs, crop_opt, xlooks, ylooks, thresh=0.5,
 	xlooks: multilooking factor for the X axis
 	ylooks: Y axis multilooking factor
 	thresh: 0.0->1.0 controls NaN handling when resampling to coarser grids.
-	    Value is the proportion above which the number of NaNs in an area is
-	    considered invalid. thresh=0 resamples to NaN if 1 or more contributing
-	    cells are NaNs. At 0.25, it resamples to NaN if 1/4 or more contributing
-	    cells are NaNs. At 1.0, areas are resampled to NaN only if all
-	    contributing cells are NaNs.
+		Value is the proportion above which the number of NaNs in an area is
+		considered invalid. thresh=0 resamples to NaN if 1 or more contributing
+		cells are NaNs. At 0.25, it resamples to NaN if 1/4 or more contributing
+		cells are NaNs. At 1.0, areas are resampled to NaN only if all
+		contributing cells are NaNs.
 	user_exts: CustomExts tuple with user sepcified lat long corners
 	verbose - controls level of gdalwarp output
 	"""
@@ -94,7 +96,7 @@ def prepare_ifgs(ifgs, crop_opt, xlooks, ylooks, thresh=0.5,
 
 
 def get_extents(ifgs, crop_opt, user_exts=None):
-	'Returns extents/bounding box args for gdalwarp as strings'
+	"""Returns extents/bounding box args for gdalwarp as strings"""
 	if crop_opt == MINIMUM_CROP:
 		extents = min_bounds(ifgs)
 	elif crop_opt == MAXIMUM_CROP:
@@ -108,9 +110,10 @@ def get_extents(ifgs, crop_opt, user_exts=None):
 	check_crop_coords(ifgs, *extents)
 	return [str(s) for s in extents]
 
+
 # TODO: push out to a shared module
 def _file_ext(raster):
-	'''Returns file ext string based on type of raster.'''
+	"""Returns file ext string based on type of raster."""
 	if isinstance(raster, Ifg):
 		return "tif"
 	elif isinstance(raster, DEM):
@@ -123,7 +126,7 @@ def _file_ext(raster):
 
 
 def _resample_ifg(ifg, cmd, x_looks, y_looks, thresh):
-	'''Convenience function to resample data from a given Ifg (more coarse).'''
+	"""Convenience function to resample data from a given Ifg (more coarse)."""
 
 	# HACK: create tmp ifg, extract data array for manual resampling as gdalwarp
 	# lacks Pirate's averaging method
@@ -142,19 +145,20 @@ def _resample_ifg(ifg, cmd, x_looks, y_looks, thresh):
 		# TODO: need to handle resampling of LOS and baseline files
 		raise NotImplementedError("Resampling LOS & baseline not implemented")
 
-	del tmp # manual close
+	del tmp  # manual close
 	os.remove(tmp_path)
 	return resample(data, x_looks, y_looks, thresh)
 
 
 def mlooked_path(path, looks):
-	'''Adds suffix to path, for creating a new path for mlooked files.'''
+	"""Adds suffix to path, for creating a new path for mlooked files."""
 	base, ext = splitext(path)
 	return "%s_%srlks%s" % (base, looks, ext)
 
+
 # TODO: clean arg names
 def warp(ifg, x_looks, y_looks, extents, resolution, thresh, verbose):
-	'''
+	"""
 	Resamples 'ifg' and returns a new Ifg obj.
 	xlooks: integer factor to scale X axis by, 5 is 5x smaller, 1 is no change.
 	ylooks: as xlooks, but for Y axis
@@ -163,7 +167,7 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, verbose):
 	            None if raster size is not being changed.
 	thresh: see thresh in prepare_ifgs().
 	verbose: True to print gdalwarp output to stdout
-	'''
+	"""
 	if x_looks != y_looks:
 		raise NotImplementedError('X and Y looks mismatch')
 
@@ -186,7 +190,6 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, verbose):
 	# Add missing/updated metadata to resampled ifg/DEM
 	new_lyr = type(ifg)(looks_path)
 	new_lyr.open(readonly=False)
-	#_create_new_roipac_header(ifg, new_lyr)
 
 	# for non-DEMs, phase bands need extra metadata & conversions
 	if hasattr(new_lyr, "phase_band"):
@@ -231,12 +234,12 @@ def resample(data, xscale, yscale, thresh):
 	tile_cell_count = xscale * yscale
 
 	# calc mean without nans (fractional threshold ignores tiles with excess NaNs)
-	for y,x in product(xrange(yres), xrange(xres)):
-		tile = data[y * yscale : (y+1) * yscale, x * xscale : (x+1) * xscale]
+	for y, x in product(xrange(yres), xrange(xres)):
+		tile = data[y * yscale: (y+1) * yscale, x * xscale: (x+1) * xscale]
 		nan_fraction = nsum(isnan(tile)) / float(tile_cell_count)
 
 		if nan_fraction < thresh or (nan_fraction == 0 and thresh == 0):
-			dest[y,x] = nanmean(tile)
+			dest[y, x] = nanmean(tile)
 
 	return dest
 
@@ -267,7 +270,7 @@ def check_looks(xlooks, ylooks):
 
 
 def min_bounds(ifgs):
-	'''Returns bounds for overlapping area of the given interferograms.'''
+	"""Returns bounds for overlapping area of the given interferograms."""
 	xmin = max([i.x_first for i in ifgs])
 	ymax = min([i.y_first for i in ifgs])
 	xmax = min([i.x_last for i in ifgs])
@@ -276,15 +279,16 @@ def min_bounds(ifgs):
 
 
 def max_bounds(ifgs):
-	'''Returns bounds for the total area covered by the given interferograms.'''
+	"""Returns bounds for the total area covered by the given interferograms."""
 	xmin = min([i.x_first for i in ifgs])
 	ymax = max([i.y_first for i in ifgs])
 	xmax = max([i.x_last for i in ifgs])
 	ymin = min([i.y_last for i in ifgs])
 	return xmin, ymin, xmax, ymax
 
+
 def get_same_bounds(ifgs):
-	'Check and return bounding box for ALREADY_SAME_SIZE option'
+	"""Check and return bounding box for ALREADY_SAME_SIZE option"""
 	tfs = [i.dataset.GetGeoTransform() for i in ifgs]
 	equal = [t == tfs[0] for t in tfs[1:]]
 	if not all(equal):
@@ -302,7 +306,7 @@ def get_same_bounds(ifgs):
 
 
 def check_crop_coords(ifgs, xmin, ymin, xmax, ymax):
-	'''Ensures cropping coords line up with grid system within tolerance.'''
+	"""Ensures cropping coords line up with grid system within tolerance."""
 	# NB: assumption is the first Ifg is correct, so only test against it
 	i = ifgs[0]
 	for par, crop, step in zip(['x_first', 'x_last', 'y_first', 'y_last'],
@@ -322,3 +326,43 @@ def check_crop_coords(ifgs, xmin, ymin, xmax, ymax):
 
 class PreprocessError(Exception):
 	pass
+
+
+def extents_from_params(params):
+	keys = (cfg.IFG_XFIRST, cfg.IFG_YFIRST, cfg.IFG_XLAST, cfg.IFG_YLAST)
+	return CustomExts(*[params[k] for k in keys])
+
+
+def main():
+	from optparse import OptionParser
+	parser = OptionParser(usage='%prog [config-file]')
+	parser.add_option('-t', '--thresh', type=float,
+						help='Nodata averaging threshold')
+	parser.add_option('-v', '--verbose', action='store_true', default=False,
+						help='Display more output')
+	options, args = parser.parse_args()
+
+	try:
+		cfg_path = args[0] if args else 'pyrate.conf'
+		pars = cfg.get_config_params(cfg_path)
+	except IOError as err:
+		errmsg = 'Config file error: %s "%s"'
+		print(errmsg % (err.strerror, err.filename))
+		sys.exit(err.errno)
+
+	ifglist = cfg.parse_namelist(pars[cfg.IFG_FILE_LIST])
+	ifg_paths = [os.path.join(pars[cfg.OBS_DIR], p) for p in ifglist]
+	ifgs = [Ifg(p) for p in ifg_paths]
+
+	crop = pars[cfg.IFG_CROP_OPT]
+	exts = extents_from_params(pars) if crop == CUSTOM_CROP else None
+
+	kwargs = { 'thresh': options.thresh if options.thresh else 0.5,
+				'user_exts': exts, 'verbose': options.verbose, }
+
+	prepare_ifgs(ifgs, crop_opt=crop, xlooks=pars[cfg.IFG_LKSX],
+				ylooks=pars[cfg.IFG_LKSY], **kwargs)
+
+
+if __name__ == '__main__':
+	main()
