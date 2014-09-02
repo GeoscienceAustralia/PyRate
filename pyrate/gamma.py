@@ -181,7 +181,7 @@ def combine_headers(hdr0, hdr1, dem_hdr):
 
 	chdr = {ifc.PYRATE_TIME_SPAN: (date1 - date0).days / ifc.DAYS_PER_YEAR,
 			ifc.PYRATE_DATE: date0,
-			ifc.PYRATE_DATE2: date1, } # add 2nd date, as may not be in filename
+			ifc.PYRATE_DATE2: date1, }  # add 2nd date, may not be in filename
 
 	wavelen = hdr0[ifc.PYRATE_WAVELENGTH_METRES] 
 	if wavelen == hdr1[ifc.PYRATE_WAVELENGTH_METRES]:
@@ -191,7 +191,7 @@ def combine_headers(hdr0, hdr1, dem_hdr):
 		msg = "Wavelength mismatch, check both header files for %s & %s"
 		raise GammaException(msg % args)
 
-	chdr.update(dem_hdr) # add geographic data
+	chdr.update(dem_hdr)  # add geographic data
 	return chdr
 
 
@@ -206,7 +206,7 @@ def main():
 	usage = 'Usage: %prog [options] DEM-HEADER GAMMA_FILE [GAMMA_FILE...]' 
 	parser = OptionParser(usage=usage)
 	parser.add_option('-n', '--nodata', help='NODATA value', type='float', default=0.0)
-	parser.add_option('-d', '--dest-dir', help='Write output to DIR', type='string')
+	parser.add_option('-d', '--dest-dir', help='Write to DIR', type='string')
 	options, args = parser.parse_args()
 
 	if len(args) < 2:
