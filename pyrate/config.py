@@ -1,10 +1,10 @@
-'''
+"""
 Utilities to parse pyrate.conf config files. Includes numerous general PyRate
 constants relating to options in config files.
 
 Created on 17/09/2012
 @author: Ben Davies, NCI
-'''
+"""
 
 # TODO: add regex column to check if some values are within bounds? Potential
 # problem with the checking being done in the middle of the runs, as bad values
@@ -64,7 +64,7 @@ TIME_SERIES_PTHRESH = 'ts_pthr'
 
 
 def degree_conv(deg):
-	'Convenience: convert numerical degree to human readable string'
+	"""Convenience: convert numerical degree to human readable string"""
 	degree = int(deg)
 	if degree == 1:
 		return orbital.PLANAR
@@ -72,8 +72,9 @@ def degree_conv(deg):
 		return orbital.QUADRATIC
 	raise NotImplementedError
 
+
 def method_conv(meth):
-	'Convenience: convert numerical method to human readable string'
+	"""Convenience: convert numerical method to human readable string"""
 	method = int(meth)
 	if method == 1:
 		return orbital.INDEPENDENT_METHOD
@@ -120,19 +121,21 @@ PARAM_CONVERSION = { OBS_DIR : (None, "obs"),
 					TIME_SERIES_PTHRESH : (int, None),
 				}
 
+
 def get_config_params(path):
-	'Returns a dict for the key:value pairs from the .conf file'
+	"""Returns a dict for the key:value pairs from the .conf file"""
 	with open(path) as f:
 		txt = f.read()
 
 	return _parse_conf_file(txt)
 
+
 def _parse_conf_file(content):
-	'Parser for converting text content into a dict of parameters'
+	"""Parser for converting text content into a dict of parameters"""
 	def is_valid(line):
 		return line != "" and line[0] not in "%#"
 
-	lines = [line.split() for line in content.split('\n') if is_valid(line)]
+	lines = [ln.split() for ln in content.split('\n') if is_valid(ln)]
 
 	# convert "field:   value" lines to [field, value]
 	kvpair = [(e[0].rstrip(":"), e[1]) for e in lines if len(e) == 2]
@@ -147,14 +150,13 @@ def _parse_conf_file(content):
 def _parse_pars(pars):
 	"""Parses and converts config file params from text"""
 	for k in PARAM_CONVERSION.keys():
-		if pars.has_key(k):
+		if k in pars:
 			conversion_func = PARAM_CONVERSION[k][0]
 			if conversion_func:
 				pars[k] = conversion_func(pars[k])
 		else:
 			# revert empty options to default value
 			pars[k] = PARAM_CONVERSION[k][1]
-
 	return pars
 
 
@@ -165,5 +167,5 @@ def parse_namelist(nml):
 
 
 class ConfigException(Exception):
-	'''Default exception class for configuration errors.'''
+	"""Default exception class for configuration errors."""
 	pass
