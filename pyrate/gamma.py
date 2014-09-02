@@ -27,11 +27,13 @@ import os
 import re
 import struct
 import datetime
-import ifgconstants as ifc 
 from glob import glob
 from os.path import join
 
-import gdal, osr
+import ifgconstants as ifc
+
+import osr
+import gdal
 import numpy as np
 
 
@@ -48,7 +50,6 @@ GAMMA_FREQUENCY = 'radar_frequency'
 
 
 SPEED_OF_LIGHT_METRES_PER_SECOND = 3e8
-
 
 
 def to_geotiff(hdr, data_path, dest, nodata):
@@ -84,7 +85,7 @@ def to_geotiff(hdr, data_path, dest, nodata):
 	# copy data from the binary file
 	band = ds.GetRasterBand(1)
 	band.SetNoDataValue(nodata)
-	fmtstr = '!' + ('f' * ncols) # data format is big endian float32s
+	fmtstr = '!' + ('f' * ncols)  # data format is big endian float32s
 
 	with open(data_path, 'rb') as f:
 		for y in range(nrows):
@@ -135,18 +136,17 @@ def parse_epoch_header(path):
 
 
 def parse_dem_header(path):
-	'Returns dict of metadata for converting GAMMA to custom PyRate GeoTIFF'
+	"""Returns dict of metadata for converting GAMMA to custom PyRate GeoTIFF"""
 	lookup = parse_header(path)
-	subset = {}
 
 	# NB: many lookup fields have multiple elements, eg ['1000', 'Hz']
-	subset[ifc.PYRATE_NCOLS] = int(lookup[GAMMA_WIDTH][0])
-	subset[ifc.PYRATE_NROWS] = int(lookup[GAMMA_NROWS][0])
+	subset = {ifc.PYRATE_NCOLS: int(lookup[GAMMA_WIDTH][0]),
+				ifc.PYRATE_NROWS: int(lookup[GAMMA_NROWS][0])}
 
 	expected = ['decimal', 'degrees']
 	for k in [GAMMA_CORNER_LAT, GAMMA_CORNER_LONG, GAMMA_X_STEP, GAMMA_Y_STEP]:
 		units = lookup[GAMMA_CORNER_LAT][1:]
-		if  units != expected:
+		if units != expected:
 			msg = "Unrecognised units for GAMMA %s field\n. Got %s, expected %s"
 			raise GammaException(msg % (k, units, expected))	
 
@@ -163,26 +163,25 @@ def frequency_to_wavelength(freq):
 
 
 def combine_headers(hdr0, hdr1, dem_hdr):
-	'''
+	"""
 	Combines both epoch header lookups into single ifg header/dict
-	
+
 	hdr0: header for the earliest/master ifg
 	hdr1: header for the latest/slave ifg
 	dem_hdr: dict of DEM header attributes
-	'''
+	"""
 	if not all([isinstance(a, dict) for a in [hdr0, hdr1, dem_hdr]]):
 		raise GammaException('Header args need to be dicts')
 
-	chdr = {}
 	date0, date1 = hdr0[ifc.PYRATE_DATE], hdr1[ifc.PYRATE_DATE]
 	if date0 == date1:
 		raise GammaException("Can't combine headers for the same day")
 	elif date1 < date0:
 		raise GammaException("Wrong date order")
 
-	chdr[ifc.PYRATE_TIME_SPAN] = (date1 - date0).days / ifc.DAYS_PER_YEAR
-	chdr[ifc.PYRATE_DATE] = date0
-	chdr[ifc.PYRATE_DATE2] = date1 # add 2nd date as it may not be in file name
+	chdr = {ifc.PYRATE_TIME_SPAN: (date1 - date0).days / ifc.DAYS_PER_YEAR,
+			ifc.PYRATE_DATE: date0,
+			ifc.PYRATE_DATE2: date1, } # add 2nd date, as may not be in filename
 
 	wavelen = hdr0[ifc.PYRATE_WAVELENGTH_METRES] 
 	if wavelen == hdr1[ifc.PYRATE_WAVELENGTH_METRES]:
@@ -198,7 +197,6 @@ def combine_headers(hdr0, hdr1, dem_hdr):
 
 class GammaException(Exception):
 	pass
-
 
 
 def main():
@@ -226,8 +224,8 @@ def main():
 			sys.exit('Error: %s already exists' % dest)
 
 		try:
-			# find param files contaning filename dates
-			ptn = re.compile(r'\d{8}') # match 8 digits for the date
+			# find param files containing filename dates
+			ptn = re.compile(r'\d{8}')  # match 8 digits for the date
 			matches = ptn.findall(path)
 
 			if len(matches) == 2:
