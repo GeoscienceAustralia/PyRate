@@ -48,10 +48,10 @@ def test_warp_required():
 		assert pyrate.warp_required(xlooks=1, ylooks=1, crop=c)
 
 
-def test_src_ifg_paths():
+def test_original_ifg_paths():
 	ifgdir = join(TEST_CORE, 'tif')
 	ifglist_path = join(ifgdir, 'ifms_17')
-	paths = pyrate.src_ifg_paths(ifglist_path)
+	paths = pyrate.original_ifg_paths(ifglist_path)
 	assert paths[0] == join(ifgdir, 'geo_060619-061002.tif'), str(paths[0])
 	assert paths[-1] == join(ifgdir, 'geo_070709-070813.tif')
 
@@ -70,6 +70,14 @@ def test_working_ifg_paths_mlooked_exists_failure():
 		raise Exception("Didn't fail with missing files")
 	except IOError:
 		return
+
+
+def test_dest_ifg_paths():
+	# given source ifgs to process, get paths of ifgs in out dir
+	src_paths = ['tif/ifg0.tif', 'tif/ifg1.tif']
+	dest_paths = pyrate.dest_ifg_paths(src_paths, outdir='out')
+	assert dest_paths == ['out/ifg0.tif', 'out/ifg1.tif']
+
 
 
 # FIXME: change to read output ifgs

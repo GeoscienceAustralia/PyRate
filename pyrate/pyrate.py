@@ -9,6 +9,7 @@ from __future__ import print_function
 
 import os
 import sys
+import shutil
 import logging
 import datetime
 
@@ -28,16 +29,11 @@ MILLIMETRES = 'MILLIMETRES'
 META_ORBITAL = 'ORBITAL_ERROR'
 META_REMOVED = 'REMOVED'
 
-# TODO: main changes remaining are:
-#   3) create output files + write to them
-
 
 def process_ifgs(ifg_paths, params):
 	"""
-	TODO: pirate workflow
-
-	High level function to perform correction steps on supplied ifgs
-	ifgs: sequence of Ifg objs (unopened)
+	Top level function to perform correction steps on given ifgs
+	ifgs: sequence of paths to interferograms (NB: changes are saved into ifgs)
 	params: dict of run config params
 	"""
 	ifgs = [Ifg(p) for p in ifg_paths]
@@ -227,7 +223,7 @@ def warp_required(xlooks, ylooks, crop):
 	return True
 
 
-def src_ifg_paths(ifglist_path):
+def original_ifg_paths(ifglist_path):
 	"""Returns sequence of paths to files in given ifglist file."""
 	basedir = os.path.dirname(ifglist_path)
 	ifglist = cf.parse_namelist(ifglist_path)
@@ -247,7 +243,13 @@ def working_ifg_paths(src_paths, xlooks, ylooks, cropping):
 
 		logging.debug('Using mlooked interferograms...')
 		return mlooked_paths
-	return src_paths  # mlooking not specified, work with base ifgs
+	return src_paths  # multi looking not specified, work with base ifgs
+
+
+def dest_ifg_paths(ifg_paths, outdir):
+	"""Returns paths to out/dest ifgs."""
+	bases = [os.path.basename(p) for p in ifg_paths]
+	return [os.path.join(outdir, p) for p in bases]
 
 
 # TODO: write to alternate file if log exists
@@ -261,7 +263,6 @@ def init_logging(level):
 
 
 # TODO: ensure clean exception handling
-# TODO: refactor to take params & ifgs (opened?) as args
 # TODO: add parameter error checking: induce fail fast before number crunching
 if __name__ == "__main__":
 	from optparse import OptionParser
@@ -274,13 +275,22 @@ if __name__ == "__main__":
 		cfg_path = args[0] if args else 'pyrate.conf'
 		pars = cf.get_config_params(cfg_path)
 	except IOError as err:
-		msg = 'Config file error: %s "%s"' % (err.strerror, err.filename)
-		logging.debug(msg)
-		print(msg)
+		emsg = 'Config file error: %s "%s"' % (err.strerror, err.filename)
+		logging.debug(emsg)
+		print(emsg)
 		sys.exit(err.errno)
 
 	# FIXME: make output ifgs here, or in process_ifgs() ?
 	xlks, ylks, crop = transform_params(pars)
-	base_ifg_paths = src_ifg_paths(pars[cf.IFG_FILE_LIST])
+	base_ifg_paths = original_ifg_paths(pars[cf.IFG_FILE_LIST])
 	working_paths = working_ifg_paths(base_ifg_paths, xlks, ylks, crop)
-	process_ifgs(working_paths, pars)
+	dest_paths = dest_ifg_paths(working_paths, pars[cf.OUT_DIR])
+
+	if not os.path.exists(pars[cf.OUT_DIR]):
+		os.makedirs(pars[cf.OUT_DIR])
+
+	# process copies of source data
+	for wp, dp in zip(working_paths, dest_paths):
+		shutil.copy(wp, dp)
+
+	process_ifgs(dest_paths, pars)
