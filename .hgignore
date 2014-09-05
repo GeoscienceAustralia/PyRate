@@ -7,3 +7,4 @@ syntax: glob
 syntax: regexp
 ^tmp$
 ^tests$
+^.idea
