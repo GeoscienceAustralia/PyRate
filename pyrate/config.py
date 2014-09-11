@@ -51,7 +51,7 @@ ORBITAL_FIT_METHOD = 'orbfitmethod'  # BOOL (1/2) 1: ifg by ifg/independent, 2: 
 ORBITAL_FIT_DEGREE = 'orbfitdegrees' # BOOL (1/2) 1=planar, 2=quadratic
 ORBITAL_FIT_LOOKS_X = 'orbfitlksx' # int of 1+, X multi looking factor
 ORBITAL_FIT_LOOKS_Y = 'orbfitlksy' # int of 1+, Y multi looking factor
-# ORBITAL_FIT_orbrefest:     1 BOOLEAN (1/0) # remove reference phase
+# ORBITAL_FIT_orbrefest:	 1 BOOLEAN (1/0) # remove reference phase
 # ORBITAL_FIT_ orbmaskflag:   1 BOOLEAN (1/0) # mask some patches for orbital correction
 
 # Linear rate/stacking parameters
@@ -61,6 +61,7 @@ LR_MAXSIG = 'maxsig' # maximum allowable standard error
 
 # time series parameters
 TIME_SERIES_PTHRESH = 'ts_pthr'
+TIME_SERIES_INTERP = 'ts_interp'
 
 
 def degree_conv(deg):
@@ -83,7 +84,7 @@ def method_conv(meth):
 	raise NotImplementedError
 
 # Lookup to help convert args to correct type/defaults
-# format is    key : (conversion, default value)
+# format is	key : (conversion, default value)
 # None = no conversion
 PARAM_CONVERSION = { OBS_DIR : (None, "obs"),
 					IFG_FILE_LIST : (None, "ifg.list"),
