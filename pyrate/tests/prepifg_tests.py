@@ -233,11 +233,13 @@ class PrepifgOutputTests(unittest.TestCase):
 								CUSTOM_CROP, xlooks=1, ylooks=v)
 
 
+class ThresholdTests(unittest.TestCase):
+	"""Tests for threshold of data -> NaN during resampling."""
+
 	def test_nan_threshold_inputs(self):
 		data = ones((1,1))
 		for thresh in [-10, -1, -0.5, 1.000001, 10]:
 			self.assertRaises(ValueError, resample, data, 2, 2, thresh)
-
 
 	def test_nan_threshold(self):
 		# test threshold based on number of NaNs per averaging tile
@@ -255,7 +257,6 @@ class PrepifgOutputTests(unittest.TestCase):
 		for thresh, exp in expected:
 			res = resample(data, xscale=2, yscale=2, thresh=thresh)
 			assert_array_equal(res, reshape(exp, res.shape))
-
 
 	def test_nan_threshold_alt(self):
 		# test threshold on odd numbers
