@@ -33,13 +33,14 @@ if not exists(PREP_TEST_TIF):
 
 # convenience funcs to get test ifgs
 def _diff_exts_ifgs():
+	"""Returns pair of test Ifgs with different extents"""
 	paths = parse_namelist(join(PREP_TEST_TIF, 'ifms'))
 	return [Ifg(join(PREP_TEST_TIF, p)) for p in paths]
 
 
-def _same_exts_ifgs():
-	paths = parse_namelist(join(PREP_TEST_TIF, 'ifms2'))
-	return [Ifg(join(PREP_TEST_TIF, p)) for p in paths]
+def same_exts_ifgs():
+	"""Return pair of Ifgs with same extents"""
+	return [Ifg(join(PREP_TEST_TIF, f)) for f in ('0.tif', '1.tif')]
 
 
 def test_extents_from_params():
@@ -79,7 +80,7 @@ class PrepifgOutputTests(unittest.TestCase):
 		return CustomExts(*self._custom_ext_latlons())
 
 	def test_default_max_extents(self):
-		'Test ifgcropopt=2 gives datasets cropped to max extents bounding box.'
+		"""Test ifgcropopt=2 crops datasets to max bounding box extents."""
 		xlooks = ylooks = 1
 		prepare_ifgs(_diff_exts_ifgs(), MAXIMUM_CROP, xlooks, ylooks)
 		for f in self.exp_files:
@@ -281,7 +282,7 @@ class SameSizeTests(unittest.TestCase):
 	# TODO: move to class for testing same size option?
 	def test_already_same_size(self):
 		# should do nothing as layers are same size & no multilooking required
-		res = prepare_ifgs(_same_exts_ifgs(), ALREADY_SAME_SIZE, 1, 1)
+		res = prepare_ifgs(same_exts_ifgs(), ALREADY_SAME_SIZE, 1, 1)
 		self.assertEqual(res, None)
 
 	def test_already_same_size_mismatch(self):
@@ -290,7 +291,7 @@ class SameSizeTests(unittest.TestCase):
 
 	# TODO: ensure multilooked files written to output dir
 	def test_same_size_multilooking(self):
-		ifgs = _same_exts_ifgs()
+		ifgs = same_exts_ifgs()
 		xlooks = ylooks = 2
 
 		mlooked = prepare_ifgs(ifgs, ALREADY_SAME_SIZE, xlooks, ylooks)
