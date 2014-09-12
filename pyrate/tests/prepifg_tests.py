@@ -15,9 +15,8 @@ from numpy import isnan, nanmax, nanmin
 from numpy import ones, nan, reshape, sum as npsum
 from numpy.testing import assert_array_almost_equal, assert_array_equal
 
-from pyrate.shared import Ifg, DEM
 from pyrate import config as cfg
-from pyrate.config import parse_namelist
+from pyrate.shared import Ifg, DEM
 from pyrate.prepifg import CUSTOM_CROP, MAXIMUM_CROP, MINIMUM_CROP, ALREADY_SAME_SIZE
 from pyrate.prepifg import prepare_ifgs, resample, PreprocessError, CustomExts
 from pyrate.prepifg import mlooked_path, extents_from_params
@@ -31,11 +30,11 @@ if not exists(PREP_TEST_TIF):
 	sys.exit("ERROR: Missing 'prepifg' dir for unittests\n")
 
 
-# convenience funcs to get test ifgs
-def _diff_exts_ifgs():
+# convenience ifg creation funcs
+def diff_exts_ifgs():
 	"""Returns pair of test Ifgs with different extents"""
-	paths = parse_namelist(join(PREP_TEST_TIF, 'ifms'))
-	return [Ifg(join(PREP_TEST_TIF, p)) for p in paths]
+	bases = ['geo_060619-061002.tif', 'geo_070326-070917.tif']
+	return [Ifg(join(PREP_TEST_TIF, p)) for p in bases]
 
 
 def same_exts_ifgs():
@@ -62,6 +61,8 @@ class PrepifgOutputTests(unittest.TestCase):
 		self.xs = 0.000833333
 		self.ys = -self.xs
 
+		# FIXME: dump output to tmp dir?
+		self.ifgs = diff_exts_ifgs()
 		paths = ["geo_060619-061002_1rlks.tif", "geo_070326-070917_1rlks.tif"]
 		self.exp_files = [join(PREP_TEST_TIF, p) for p in paths]
 
@@ -82,7 +83,7 @@ class PrepifgOutputTests(unittest.TestCase):
 	def test_default_max_extents(self):
 		"""Test ifgcropopt=2 crops datasets to max bounding box extents."""
 		xlooks = ylooks = 1
-		prepare_ifgs(_diff_exts_ifgs(), MAXIMUM_CROP, xlooks, ylooks)
+		prepare_ifgs(self.ifgs, MAXIMUM_CROP, xlooks, ylooks)
 		for f in self.exp_files:
 			self.assertTrue(exists(f), msg="Output files not created")
 
@@ -98,11 +99,10 @@ class PrepifgOutputTests(unittest.TestCase):
 			self.assertAlmostEqual(i, j)
 		assert_geotransform_equal(self.exp_files)
 
-
 	def test_min_extents(self):
 		"""Test ifgcropopt=1 crops datasets to min extents."""
 		xlooks = ylooks = 1
-		prepare_ifgs(_diff_exts_ifgs(), MINIMUM_CROP, xlooks, ylooks)
+		prepare_ifgs(self.ifgs, MINIMUM_CROP, xlooks, ylooks)
 		ifg = Ifg(self.exp_files[0])
 		ifg.open()
 
@@ -111,16 +111,14 @@ class PrepifgOutputTests(unittest.TestCase):
 		# NB: expected data copied from gdalinfo output
 		gt = ifg.dataset.GetGeoTransform()
 		exp_gt = (150.911666666, 0.000833333, 0, -34.172499999, 0, -0.000833333)
-		for i,j in zip(gt, exp_gt):
+		for i, j in zip(gt, exp_gt):
 			self.assertAlmostEqual(i, j)
 		assert_geotransform_equal(self.exp_files)
 
-
 	def test_custom_extents(self):
-		ifgs = _diff_exts_ifgs()
 		xlooks = ylooks = 1
 		cext = self._custom_extents_tuple()
-		prepare_ifgs(ifgs, CUSTOM_CROP, xlooks, ylooks, user_exts=cext)
+		prepare_ifgs(self.ifgs, CUSTOM_CROP, xlooks, ylooks, user_exts=cext)
 
 		ifg = Ifg(self.exp_files[0])
 		ifg.open()
@@ -133,12 +131,9 @@ class PrepifgOutputTests(unittest.TestCase):
 
 		assert_geotransform_equal(self.exp_files)
 
-
 	def test_custom_extents_misalignment(self):
 		"""Test misaligned cropping extents raise errors."""
-		ifgs = _diff_exts_ifgs()
 		xlooks = ylooks = 1
-
 		latlons = tuple(self._custom_ext_latlons())
 		for i, _ in enumerate(['xfirst', 'yfirst', 'xlast', 'ylast']):
 			for error in [0.1, 0.001, 0.0001, 0.00001, 0.000001]:
@@ -146,13 +141,13 @@ class PrepifgOutputTests(unittest.TestCase):
 				tmp_latlon[i] += error
 				cext = CustomExts(*tmp_latlon)
 
-				self.assertRaises(PreprocessError, prepare_ifgs, ifgs,
+				self.assertRaises(PreprocessError, prepare_ifgs, self.ifgs,
 								CUSTOM_CROP, xlooks, ylooks, user_exts=cext)
 
 	def test_nodata(self):
-		'Verify NODATA value is copied correctly (amplitude band not copied)'
+		"""Verify NODATA value copied correctly (amplitude band not copied)"""
 		xlooks = ylooks = 1
-		prepare_ifgs(_diff_exts_ifgs(), MINIMUM_CROP, xlooks, ylooks)
+		prepare_ifgs(self.ifgs, MINIMUM_CROP, xlooks, ylooks)
 
 		for ex in self.exp_files:
 			ifg = Ifg(ex)
@@ -161,9 +156,9 @@ class PrepifgOutputTests(unittest.TestCase):
 			self.assertTrue(isnan(ifg.dataset.GetRasterBand(1).GetNoDataValue()))
 
 	def test_nans(self):
-		"""Verify that NaNs replace 0 in the multilooked phase band"""
+		"""Verify NaNs replace 0 in the multilooked phase band"""
 		xlooks = ylooks = 1
-		prepare_ifgs(_diff_exts_ifgs(), MINIMUM_CROP, xlooks, ylooks)
+		prepare_ifgs(self.ifgs, MINIMUM_CROP, xlooks, ylooks)
 
 		for ex in self.exp_files:
 			ifg = Ifg(ex)
@@ -176,15 +171,13 @@ class PrepifgOutputTests(unittest.TestCase):
 		self.assertAlmostEqual(nanmax(phase), 4.247, 3)  # copied from gdalinfo
 		self.assertAlmostEqual(nanmin(phase), 0.009, 3)  # copied from gdalinfo
 
-
 	def test_multilook(self):
 		"""Test resampling method using a scaling factor of 4"""
 		scale = 4  # assumes square cells
-		ifgs = _diff_exts_ifgs()
-		ifgs.append(DEM(SYD_TEST_DEM_TIF))
+		self.ifgs.append(DEM(SYD_TEST_DEM_TIF))
 		cext = self._custom_extents_tuple()
 		xlooks = ylooks = scale
-		prepare_ifgs(ifgs, CUSTOM_CROP, xlooks, ylooks, thresh=1.0, user_exts=cext)
+		prepare_ifgs(self.ifgs, CUSTOM_CROP, xlooks, ylooks, thresh=1.0, user_exts=cext)
 
 		# check file names have been updated
 		for f in self.exp_files:
@@ -203,7 +196,7 @@ class PrepifgOutputTests(unittest.TestCase):
 			ds = gdal.Open(path)
 			src_data = ds.GetRasterBand(2).ReadAsArray()
 			exp_resample = multilooking(src_data, scale, scale, thresh=0)
-			self.assertEqual(exp_resample.shape, (7,5))
+			self.assertEqual(exp_resample.shape, (7, 5))
 			assert_array_almost_equal(exp_resample, i.phase_band.ReadAsArray())
 			os.remove(ipath)
 
@@ -220,16 +213,14 @@ class PrepifgOutputTests(unittest.TestCase):
 		self.assertTrue(data.ptp() != 0)
 		os.remove(dem.data_path)
 
-
 	def test_invalid_looks(self):
 		"""Verify only numeric values can be given for multilooking"""
-		ifgs = _diff_exts_ifgs()
 		values = [0, -1, -10, -100000.6, ""]
 		for v in values:
-			self.assertRaises(PreprocessError, prepare_ifgs, ifgs,
+			self.assertRaises(PreprocessError, prepare_ifgs, self.ifgs,
 								CUSTOM_CROP, xlooks=v, ylooks=1)
 
-			self.assertRaises(PreprocessError, prepare_ifgs, ifgs,
+			self.assertRaises(PreprocessError, prepare_ifgs, self.ifgs,
 								CUSTOM_CROP, xlooks=1, ylooks=v)
 
 
@@ -288,7 +279,7 @@ class SameSizeTests(unittest.TestCase):
 
 	def test_already_same_size_mismatch(self):
 		self.assertRaises(PreprocessError, prepare_ifgs,
-						_diff_exts_ifgs(), ALREADY_SAME_SIZE, 1, 1)
+						diff_exts_ifgs(), ALREADY_SAME_SIZE, 1, 1)
 
 	# TODO: ensure multilooked files written to output dir
 	def test_same_size_multilooking(self):
