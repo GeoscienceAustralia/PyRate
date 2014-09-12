@@ -133,7 +133,10 @@ class PyRateTests(unittest.TestCase):
 
 	def get_logfile_path(self):
 		logpaths = glob.glob(join(BASE_DIR, '*.log'))
-		self.assertEqual(len(logpaths), 1)
+
+		if len(logpaths) != 1:
+			msg = 'Log not generated. Use --nologcapture if running nosetests'
+			self.fail(msg)
 		return logpaths[0]
 
 	def key_check(self, ifg, key, value):
