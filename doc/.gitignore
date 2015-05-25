@@ -1,0 +1,4 @@
+make_nexis_doc.bat
+/build
+/source/*.rst
+!/source/index.rst
