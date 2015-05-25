@@ -3,14 +3,15 @@ Utilities to parse pyrate.conf config files. Includes numerous general PyRate
 constants relating to options in config files.
 
 Created on 17/09/2012
-@author: Ben Davies, NCI
+
+.. codeauthor:: Ben Davies
 """
 
 # TODO: add regex column to check if some values are within bounds? Potential
 # problem with the checking being done in the middle of the runs, as bad values
 # could cause crashes & destroying some of the results.
 
-import orbital
+import pyrate.orbital as orbital
 
 
 # general constants
@@ -65,108 +66,129 @@ TIME_SERIES_INTERP = 'ts_interp'
 
 
 def degree_conv(deg):
-	"""Convenience: convert numerical degree to human readable string"""
-	degree = int(deg)
-	if degree == 1:
-		return orbital.PLANAR
-	if degree == 2:
-		return orbital.QUADRATIC
-	raise NotImplementedError
+    """
+    Convenience: convert numerical degree to human readable string
+    """
+
+    degree = int(deg)
+    if degree == 1:
+        return orbital.PLANAR
+    if degree == 2:
+        return orbital.QUADRATIC
+    raise NotImplementedError
 
 
 def method_conv(meth):
-	"""Convenience: convert numerical method to human readable string"""
-	method = int(meth)
-	if method == 1:
-		return orbital.INDEPENDENT_METHOD
-	if method == 2:
-		return orbital.NETWORK_METHOD
-	raise NotImplementedError
+    """
+    Convenience: convert numerical method to human readable string
+    """
+
+    method = int(meth)
+    if method == 1:
+        return orbital.INDEPENDENT_METHOD
+    if method == 2:
+        return orbital.NETWORK_METHOD
+    raise NotImplementedError
+
 
 # Lookup to help convert args to correct type/defaults
 # format is	key : (conversion, default value)
 # None = no conversion
-PARAM_CONVERSION = { OBS_DIR : (None, "obs"),
-					IFG_FILE_LIST : (None, "ifg.list"),
-					OUT_DIR : (None, "out"),
-					DEM_FILE : (str, None),
-					PERP_BASELINE_FLAG : (bool, True),
-					AMPLITUDE_FLAG : (bool, False),
-					NUM_SETS : (int, 1),
-					IFG_CROP_OPT : (int, None), # TODO: default to ALREADY_SAME_SIZE?
-					IFG_LKSX : (int, NO_MULTILOOKING),
-					IFG_LKSY : (int, NO_MULTILOOKING),
-					IFG_XFIRST : (float, None),
-					IFG_XLAST : (float, None),
-					IFG_YFIRST : (float, None),
-					IFG_YLAST : (float, None),
-					PROJECTION_FLAG : (int, 3),
+PARAM_CONVERSION = {
+    OBS_DIR : (None, "obs"),
+    IFG_FILE_LIST : (None, "ifg.list"),
+    OUT_DIR : (None, "out"),
+    DEM_FILE : (str, None),
+    PERP_BASELINE_FLAG : (bool, True),
+    AMPLITUDE_FLAG : (bool, False),
+    NUM_SETS : (int, 1),
+    IFG_CROP_OPT : (int, None), # TODO: default to ALREADY_SAME_SIZE?
+    IFG_LKSX : (int, NO_MULTILOOKING),
+    IFG_LKSY : (int, NO_MULTILOOKING),
+    IFG_XFIRST : (float, None),
+    IFG_XLAST : (float, None),
+    IFG_YFIRST : (float, None),
+    IFG_YLAST : (float, None),
+    PROJECTION_FLAG : (int, 3),
 
-					REFX : (int, -1),
-					REFY : (int, -1),
-					REFNX : (int, None), # was 50 in original Pirate code
-					REFNY : (int, None), # was 50 in original Pirate code
-					REF_CHIP_SIZE : (int, None), # defaults to 21 in orig
-					REF_MIN_FRAC : (float, 0.8), # uses Pirate default
+    REFX : (int, -1),
+    REFY : (int, -1),
+    REFNX : (int, None), # was 50 in original Pirate code
+    REFNY : (int, None), # was 50 in original Pirate code
+    REF_CHIP_SIZE : (int, None), # defaults to 21 in orig
+    REF_MIN_FRAC : (float, 0.8), # uses Pirate default
 
-					ORBITAL_FIT : (bool, True),
-					ORBITAL_FIT_METHOD : (method_conv, orbital.NETWORK_METHOD),
-					ORBITAL_FIT_DEGREE : (degree_conv, orbital.QUADRATIC),
-					ORBITAL_FIT_LOOKS_X : (int, NO_MULTILOOKING),
-					ORBITAL_FIT_LOOKS_Y : (int, NO_MULTILOOKING),
+    ORBITAL_FIT : (bool, True),
+    ORBITAL_FIT_METHOD : (method_conv, orbital.NETWORK_METHOD),
+    ORBITAL_FIT_DEGREE : (degree_conv, orbital.QUADRATIC),
+    ORBITAL_FIT_LOOKS_X : (int, NO_MULTILOOKING),
+    ORBITAL_FIT_LOOKS_Y : (int, NO_MULTILOOKING),
 
-					LR_NSIG : (int, 3), # Pirate default
-					LR_PTHRESH : (int, 20), # should be based on nepochs since not every project may have 20 epochs
-					LR_MAXSIG : (int, 2), # Pirate default
+    LR_NSIG : (int, 3), # Pirate default
+    LR_PTHRESH : (int, 20), # should be based on nepochs since not every project may have 20 epochs
+    LR_MAXSIG : (int, 2), # Pirate default
 
-					TIME_SERIES_PTHRESH : (int, None),
-				}
+    TIME_SERIES_PTHRESH : (int, None)}
 
 
 def get_config_params(path):
-	"""Returns a dict for the key:value pairs from the .conf file"""
-	with open(path) as f:
-		txt = f.read()
+    """
+    Returns a dict for the key:value pairs from the .conf file
+    """
 
-	return _parse_conf_file(txt)
+    with open(path) as f:
+        txt = f.read()
+
+    return _parse_conf_file(txt)
 
 
 def _parse_conf_file(content):
-	"""Parser for converting text content into a dict of parameters"""
-	def is_valid(line):
-		return line != "" and line[0] not in "%#"
+    """
+    Parser for converting text content into a dict of parameters
+    """
 
-	lines = [ln.split() for ln in content.split('\n') if is_valid(ln)]
+    def is_valid(line):
+        return line != "" and line[0] not in "%#"
 
-	# convert "field:   value" lines to [field, value]
-	kvpair = [(e[0].rstrip(":"), e[1]) for e in lines if len(e) == 2]
-	parameters = dict(kvpair)
+    lines = [ln.split() for ln in content.split('\n') if is_valid(ln)]
 
-	if not parameters:
-		raise ConfigException('Cannot parse any parameters from config file')
+    # convert "field:   value" lines to [field, value]
+    kvpair = [(e[0].rstrip(":"), e[1]) for e in lines if len(e) == 2]
+    parameters = dict(kvpair)
 
-	return _parse_pars(parameters)
+    if not parameters:
+        raise ConfigException('Cannot parse any parameters from config file')
+
+    return _parse_pars(parameters)
 
 
 def _parse_pars(pars):
-	"""Parses and converts config file params from text"""
-	for k in PARAM_CONVERSION.keys():
-		if k in pars:
-			conversion_func = PARAM_CONVERSION[k][0]
-			if conversion_func:
-				pars[k] = conversion_func(pars[k])
-		else:
-			# revert empty options to default value
-			pars[k] = PARAM_CONVERSION[k][1]
-	return pars
+    """
+    Parses and converts config file params from text
+    """
+
+    for k in PARAM_CONVERSION.keys():
+        if k in pars:
+            conversion_func = PARAM_CONVERSION[k][0]
+            if conversion_func:
+                pars[k] = conversion_func(pars[k])
+        else:
+            # revert empty options to default value
+            pars[k] = PARAM_CONVERSION[k][1]
+    return pars
 
 
 def parse_namelist(nml):
-	"""Parses name list file into array of paths"""
-	with open(nml) as f:
-		return [ln.strip() for ln in f.readlines() if ln != ""]
+    """
+    Parses name list file into array of paths
+    """
+    with open(nml) as f:
+        return [ln.strip() for ln in f.readlines() if ln != ""]
 
 
 class ConfigException(Exception):
-	"""Default exception class for configuration errors."""
-	pass
+    """
+    Default exception class for configuration errors.
+    """
+
+    pass

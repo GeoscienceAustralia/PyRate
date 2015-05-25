@@ -2,7 +2,8 @@
 Module for calculating orbital correction for interferograms.
 
 Created on 31/3/13
-@author: Ben Davies, NCI
+
+.. codeauthor:: Ben Davies
 '''
 
 from numpy import empty, isnan, reshape, float32, squeeze
@@ -10,13 +11,13 @@ from numpy import dot, vstack, zeros, median, meshgrid
 from scipy.linalg import lstsq
 from numpy.linalg import pinv
 
-from algorithm import master_slave_ids, get_all_epochs, get_epoch_count
+from pyrate.algorithm import master_slave_ids, get_all_epochs, get_epoch_count
 
 
 # Orbital correction tasks
 #
 # TODO: options for multilooking
-# 1) do the 2nd stage mlook at prepifg.py/generate up front, then delete in 
+# 1) do the 2nd stage mlook at prepifg.py/generate up front, then delete in
 #    workflow afterward
 # 2) refactor prep_ifgs() call to take input filenames and params & generate
 #    mlooked versions from that
@@ -50,227 +51,241 @@ PART_CUBIC = 'PART_CUBIC'
 
 
 def orbital_correction(ifgs, degree, method, mlooked=None, offset=True):
-	'''
-	Removes orbital error from given Ifgs.
+    '''
+    Removes orbital error from given Ifgs.
 
-	NB: the ifg data is modified in situ, rather than create intermediate files.
-	The network method assumes the given ifgs have already been reduced to a 
-	minimum set from an MST type operation.
+    NB: the ifg data is modified in situ, rather than create intermediate files.
+    The network method assumes the given ifgs have already been reduced to a
+    minimum set from an MST type operation.
 
-	ifgs: sequence of Ifg objs to correct
-	degree: PLANAR, QUADRATIC or PART_CUBIC
-	method: INDEPENDENT_METHOD or NETWORK_METHOD
-	mlooked: sequence of multilooked ifgs (must correspond to 'ifgs' arg)
-	offset: True/False to include the constant/offset component
-	'''
-	if degree not in [PLANAR, QUADRATIC, PART_CUBIC]:
-		msg = "Invalid degree of %s for orbital correction" % degree
-		raise OrbitalError(msg)
+    :param ifgs: sequence of Ifg objs to correct
+    :param degree: PLANAR, QUADRATIC or PART_CUBIC
+    :param method: INDEPENDENT_METHOD or NETWORK_METHOD
+    :param mlooked: sequence of multilooked ifgs (must correspond to 'ifgs' arg)
+    :param bool offset: True/False to include the constant/offset component
+    '''
+    if degree not in [PLANAR, QUADRATIC, PART_CUBIC]:
+        msg = "Invalid degree of %s for orbital correction" % degree
+        raise OrbitalError(msg)
 
-	if method == NETWORK_METHOD:
-		if mlooked is None:
-			_network_correction(ifgs, degree, offset)
-		else:
-			_validate_mlooked(mlooked, ifgs)
-			_network_correction(ifgs, degree, offset, mlooked)
+    if method == NETWORK_METHOD:
+        if mlooked is None:
+            _network_correction(ifgs, degree, offset)
+        else:
+            _validate_mlooked(mlooked, ifgs)
+            _network_correction(ifgs, degree, offset, mlooked)
 
-	elif method == INDEPENDENT_METHOD:
-		for i in ifgs:
-			_independent_correction(i, degree, offset)
-	else:
-		msg = "Unknown method: '%s', need INDEPENDENT or NETWORK method"
-		raise OrbitalError(msg % method)
+    elif method == INDEPENDENT_METHOD:
+        for i in ifgs:
+            _independent_correction(i, degree, offset)
+    else:
+        msg = "Unknown method: '%s', need INDEPENDENT or NETWORK method"
+        raise OrbitalError(msg % method)
 
 
 def _validate_mlooked(mlooked, ifgs):
-	'''Basic sanity checking of the multilooked ifgs.'''
+    '''
+    Basic sanity checking of the multilooked ifgs.
+    '''
 
-	if len(mlooked) != len(ifgs):
-		msg = "Mismatching # ifgs and # multilooked ifgs"
-		raise OrbitalError(msg)
+    if len(mlooked) != len(ifgs):
+        msg = "Mismatching # ifgs and # multilooked ifgs"
+        raise OrbitalError(msg)
 
-	if not all([hasattr(i, 'phase_data') for i in mlooked]):
-		msg = "Mismatching types in multilooked ifgs arg:\n%s" % mlooked
-		raise OrbitalError(msg)
+    if not all([hasattr(i, 'phase_data') for i in mlooked]):
+        msg = "Mismatching types in multilooked ifgs arg:\n%s" % mlooked
+        raise OrbitalError(msg)
 
 
 def get_num_params(degree, offset=None):
-	'''Returns number of model parameters'''
-	if degree == PLANAR:
-		nparams = 2
-	elif degree == QUADRATIC:
-		nparams = 5
-	elif degree == PART_CUBIC:
-		nparams = 6
-	else:
-		msg = "Invalid orbital model degree: %s" % degree
-		raise OrbitalError(msg)
+    '''
+    Returns number of model parameters
+    '''
 
-	# NB: independent method only, network method handles offsets separately 
-	if offset is True:
-		nparams += 1  # eg. y = mx + offset
-	return nparams
+    if degree == PLANAR:
+        nparams = 2
+    elif degree == QUADRATIC:
+        nparams = 5
+    elif degree == PART_CUBIC:
+        nparams = 6
+    else:
+        msg = "Invalid orbital model degree: %s" % degree
+        raise OrbitalError(msg)
+
+    # NB: independent method only, network method handles offsets separately
+    if offset is True:
+        nparams += 1  # eg. y = mx + offset
+    return nparams
 
 
 def _independent_correction(ifg, degree, offset):
-	'''
-	Calculates and removes orbital correction from an ifg.
+    '''
+    Calculates and removes orbital correction from an ifg.
 
-	NB: Changes are made in place to the Ifg obj.
-	ifg: the ifg to remove remove the orbital error from
-	degree: type of model to use PLANAR, QUADRATIC etc
-	offset: 
-	'''
-	vphase = reshape(ifg.phase_data, ifg.num_cells) # vectorise, keeping NODATA
-	dm = get_design_matrix(ifg, degree, offset)
+    .. warn:: Changes are made in place to the Ifg obj.
 
-	# filter NaNs out before getting model
-	clean_dm = dm[~isnan(vphase)]
-	data = vphase[~isnan(vphase)]
-	model = lstsq(clean_dm, data)[0] # first arg is the model params
+    :param ifg: the ifg to remove remove the orbital error from
+    :param degree: type of model to use PLANAR, QUADRATIC etc
+    :param offset:
+    '''
 
-	# calculate forward model & morph back to 2D
-	correction = reshape(dot(dm, model), ifg.phase_data.shape)
-	ifg.phase_data -= correction
+    vphase = reshape(ifg.phase_data, ifg.num_cells) # vectorise, keeping NODATA
+    dm = get_design_matrix(ifg, degree, offset)
+
+    # filter NaNs out before getting model
+    clean_dm = dm[~isnan(vphase)]
+    data = vphase[~isnan(vphase)]
+    model = lstsq(clean_dm, data)[0] # first arg is the model params
+
+    # calculate forward model & morph back to 2D
+    correction = reshape(dot(dm, model), ifg.phase_data.shape)
+    ifg.phase_data -= correction
 
 
 def _network_correction(ifgs, degree, offset, m_ifgs=None):
-	'''
-	Calculates orbital correction model, removing this from the ifgs.
-	NB: This does in-situ modification of phase_data in the ifgs.
+    '''
+    Calculates orbital correction model, removing this from the ifgs.
+    .. warn:: This does in-situ modification of phase_data in the ifgs.
 
-	ifgs - interferograms reduced to a minimum tree from prior MST calculations
-	degree - PLANAR, QUADRATIC or PART_CUBIC
-	offset - True to calculate the model using offsets
-	m_ifgs - multilooked ifgs (sequence must be mlooked versions of 'ifgs' arg)
-	'''
-	# get DM & filter out NaNs
-	src_ifgs = ifgs if m_ifgs is None else m_ifgs
-	vphase = vstack([i.phase_data.reshape((i.num_cells, 1)) for i in src_ifgs])
-	vphase = squeeze(vphase)
-	dm = get_network_design_matrix(src_ifgs, degree, offset)
+    :param ifgs: interferograms reduced to a minimum tree from prior MST calculations
+    :param degree: PLANAR, QUADRATIC or PART_CUBIC
+    :param offset: True to calculate the model using offsets
+    :param m_ifgs: multilooked ifgs (sequence must be mlooked versions of 'ifgs' arg)
+    '''
 
-	# filter NaNs out before getting model
-	clean_dm = dm[~isnan(vphase)]
-	data = vphase[~isnan(vphase)]
-	model = dot(pinv(clean_dm, 1e-6), data)
+    # get DM & filter out NaNs
+    src_ifgs = ifgs if m_ifgs is None else m_ifgs
+    vphase = vstack([i.phase_data.reshape((i.num_cells, 1)) for i in src_ifgs])
+    vphase = squeeze(vphase)
+    dm = get_network_design_matrix(src_ifgs, degree, offset)
 
-	ncoef = get_num_params(degree)
-	ids = master_slave_ids(get_all_epochs(ifgs))
-	coefs = [model[i:i+ncoef] for i in range(0, len(set(ids)) * ncoef, ncoef)]
+    # filter NaNs out before getting model
+    clean_dm = dm[~isnan(vphase)]
+    data = vphase[~isnan(vphase)]
+    model = dot(pinv(clean_dm, 1e-6), data)
 
-	# create full res DM to expand determined coefficients into full res orbital
-	# correction (eg. expand coarser model to full size)
-	dm = get_design_matrix(ifgs[0], degree, offset=False)
+    ncoef = get_num_params(degree)
+    ids = master_slave_ids(get_all_epochs(ifgs))
+    coefs = [model[i:i+ncoef] for i in range(0, len(set(ids)) * ncoef, ncoef)]
 
-	for i in ifgs:
-		orb = dm.dot(coefs[ids[i.slave]] - coefs[ids[i.master]])
-		orb = orb.reshape(ifgs[0].shape)
+    # create full res DM to expand determined coefficients into full res orbital
+    # correction (eg. expand coarser model to full size)
+    dm = get_design_matrix(ifgs[0], degree, offset=False)
 
-		# offset estimation 
-		if offset:
-			tmp = i.phase_data - orb
-			orb += median(tmp[~isnan(tmp)]) # bring all ifgs to same base level
+    for i in ifgs:
+        orb = dm.dot(coefs[ids[i.slave]] - coefs[ids[i.master]])
+        orb = orb.reshape(ifgs[0].shape)
 
-		i.phase_data -= orb # remove orbital error from the ifg
+        # offset estimation
+        if offset:
+            tmp = i.phase_data - orb
+            orb += median(tmp[~isnan(tmp)]) # bring all ifgs to same base level
+
+        i.phase_data -= orb # remove orbital error from the ifg
 
 
 # TODO: subtract reference pixel coordinate from x and y
 def get_design_matrix(ifg, degree, offset, scale=100.0):
-	'''
-	Returns simple design matrix with columns for model parameters.
-	ifg: interferogram to base the DM on
-	degree: PLANAR, QUADRATIC or PART_CUBIC
-	offset: True to include offset cols, otherwise False.
-	scale: amount to divide cell size by for improving inversion robustness
-	'''
-	if degree not in [PLANAR, QUADRATIC, PART_CUBIC]:
-		raise OrbitalError("Invalid degree argument")
+    '''
+    Returns simple design matrix with columns for model parameters.
 
-	# scaling required with higher degree models to help with param estimation
-	xsize = ifg.x_size / scale if scale else ifg.x_size
-	ysize = ifg.y_size / scale if scale else ifg.y_size
+    :param ifg: interferogram to base the DM on
+    :param degree: PLANAR, QUADRATIC or PART_CUBIC
+    :param offset: True to include offset cols, otherwise False.
+    :param scale: amount to divide cell size by for improving inversion robustness
+    '''
 
-	# mesh needs to start at 1, otherwise first cell resolves to 0 and ignored
-	xg, yg = [g+1 for g in meshgrid(range(ifg.ncols), range(ifg.nrows))]
-	x = xg.reshape(ifg.num_cells) * xsize
-	y = yg.reshape(ifg.num_cells) * ysize
+    if degree not in [PLANAR, QUADRATIC, PART_CUBIC]:
+        raise OrbitalError("Invalid degree argument")
 
-	# TODO: performance test this vs np.concatenate (n by 1 cols)??
-	dm = empty((ifg.num_cells, get_num_params(degree, offset)), dtype=float32)
+    # scaling required with higher degree models to help with param estimation
+    xsize = ifg.x_size / scale if scale else ifg.x_size
+    ysize = ifg.y_size / scale if scale else ifg.y_size
 
-	# apply positional parameter values, multiply pixel coordinate by cell size
-	# to get distance (a coord by itself doesn't tell us distance from origin)
-	if degree == PLANAR:
-		dm[:, 0] = x
-		dm[:, 1] = y
-	elif degree == QUADRATIC:
-		dm[:, 0] = x**2
-		dm[:, 1] = y**2
-		dm[:, 2] = x * y
-		dm[:, 3] = x
-		dm[:, 4] = y
-	elif degree == PART_CUBIC:
-		dm[:, 0] = x * (y**2)
-		dm[:, 1] = x**2
-		dm[:, 2] = y**2
-		dm[:, 3] = x * y
-		dm[:, 4] = x
-		dm[:, 5] = y
-	if offset is True:
-		dm[:, -1] = 1
+    # mesh needs to start at 1, otherwise first cell resolves to 0 and ignored
+    xg, yg = [g+1 for g in meshgrid(range(ifg.ncols), range(ifg.nrows))]
+    x = xg.reshape(ifg.num_cells) * xsize
+    y = yg.reshape(ifg.num_cells) * ysize
 
-	return dm
+    # TODO: performance test this vs np.concatenate (n by 1 cols)??
+    dm = empty((ifg.num_cells, get_num_params(degree, offset)), dtype=float32)
+
+    # apply positional parameter values, multiply pixel coordinate by cell size
+    # to get distance (a coord by itself doesn't tell us distance from origin)
+    if degree == PLANAR:
+        dm[:, 0] = x
+        dm[:, 1] = y
+    elif degree == QUADRATIC:
+        dm[:, 0] = x**2
+        dm[:, 1] = y**2
+        dm[:, 2] = x * y
+        dm[:, 3] = x
+        dm[:, 4] = y
+    elif degree == PART_CUBIC:
+        dm[:, 0] = x * (y**2)
+        dm[:, 1] = x**2
+        dm[:, 2] = y**2
+        dm[:, 3] = x * y
+        dm[:, 4] = x
+        dm[:, 5] = y
+    if offset is True:
+        dm[:, -1] = 1
+
+    return dm
 
 
 def get_network_design_matrix(ifgs, degree, offset):
-	'''
-	Returns larger format design matrix for networked error correction.
+    '''
+    Returns larger format design matrix for networked error correction.
 
-	The network design matrix includes rows which relate to those of NaN cells.
-	ifgs - sequence of interferograms
-	degree - PLANAR, QUADRATIC or PART_CUBIC
-	offset - True to include offset cols, otherwise False.
-	'''
-	if degree not in [PLANAR, QUADRATIC, PART_CUBIC]:
-		raise OrbitalError("Invalid degree argument")
+    The network design matrix includes rows which relate to those of NaN cells.
+    :param ifgs: sequence of interferograms
+    :param degree: PLANAR, QUADRATIC or PART_CUBIC
+    :param offset: True to include offset cols, otherwise False.
+    '''
 
-	nifgs = len(ifgs)
-	if nifgs < 1:
-		# can feasibly do correction on a single Ifg/2 epochs
-		raise OrbitalError("Invalid number of Ifgs: %s" % nifgs)
+    if degree not in [PLANAR, QUADRATIC, PART_CUBIC]:
+        raise OrbitalError("Invalid degree argument")
 
-	# init sparse network design matrix
-	nepochs = get_epoch_count(ifgs)
-	ncoef = get_num_params(degree) # no offsets: they are made separately below
-	shape = [ifgs[0].num_cells * nifgs, ncoef * nepochs]
+    nifgs = len(ifgs)
+    if nifgs < 1:
+        # can feasibly do correction on a single Ifg/2 epochs
+        raise OrbitalError("Invalid number of Ifgs: %s" % nifgs)
 
-	if offset:
-		shape[1] += nifgs # add extra block for offset cols
+    # init sparse network design matrix
+    nepochs = get_epoch_count(ifgs)
+    ncoef = get_num_params(degree) # no offsets: they are made separately below
+    shape = [ifgs[0].num_cells * nifgs, ncoef * nepochs]
 
-	netdm = zeros(shape, dtype=float32)
+    if offset:
+        shape[1] += nifgs # add extra block for offset cols
 
-	# calc location for individual design matrices
-	dates = [ifg.master for ifg in ifgs] + [ifg.slave for ifg in ifgs]
-	ids = master_slave_ids(dates)
-	offset_col = nepochs * ncoef # base offset for the offset cols
-	tmpdm = get_design_matrix(ifgs[0], degree, offset=False)
+    netdm = zeros(shape, dtype=float32)
 
-	# iteratively build up sparse matrix
-	for i, ifg in enumerate(ifgs):
-		rs = i * ifg.num_cells # starting row
-		m = ids[ifg.master] * ncoef  # start col for master
-		s = ids[ifg.slave] * ncoef  # start col for slave
-		netdm[rs:rs + ifg.num_cells, m:m + ncoef] = -tmpdm
-		netdm[rs:rs + ifg.num_cells, s:s + ncoef] = tmpdm
+    # calc location for individual design matrices
+    dates = [ifg.master for ifg in ifgs] + [ifg.slave for ifg in ifgs]
+    ids = master_slave_ids(dates)
+    offset_col = nepochs * ncoef # base offset for the offset cols
+    tmpdm = get_design_matrix(ifgs[0], degree, offset=False)
 
-		# offsets are diagonal cols across the extra array block created above
-		if offset:
-			netdm[rs:rs + ifg.num_cells, offset_col + i] = 1  # init offset cols
+    # iteratively build up sparse matrix
+    for i, ifg in enumerate(ifgs):
+        rs = i * ifg.num_cells # starting row
+        m = ids[ifg.master] * ncoef  # start col for master
+        s = ids[ifg.slave] * ncoef  # start col for slave
+        netdm[rs:rs + ifg.num_cells, m:m + ncoef] = -tmpdm
+        netdm[rs:rs + ifg.num_cells, s:s + ncoef] = tmpdm
 
-	return netdm
+        # offsets are diagonal cols across the extra array block created above
+        if offset:
+            netdm[rs:rs + ifg.num_cells, offset_col + i] = 1  # init offset cols
+
+    return netdm
 
 
 class OrbitalError(Exception):
-	'''Generic class for errors in orbital correction'''
-	pass
+    '''
+    Generic class for errors in orbital correction.
+    '''
+
+    pass

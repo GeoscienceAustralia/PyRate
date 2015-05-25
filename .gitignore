@@ -1,0 +1,7 @@
+*.pyo
+*.pyc
+.project
+.pydevproject
+/tmp
+/tests
+/.idea

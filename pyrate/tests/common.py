@@ -1,12 +1,11 @@
 '''
-Collection of generic testing utils and mock objs for PyRate
-Author: Ben Davies
+Collection of generic testing utils and mock objs for PyRate.
+
+.. codeauthor:: Ben Davies
 '''
 
-import os
-import glob
+import os, glob
 from os.path import join
-
 from pyrate.shared import Ifg
 from numpy import isnan, sum as nsum
 
@@ -40,62 +39,62 @@ geo_070326-070917.tif
 """
 
 def sydney_data_setup():
-	'''Returns Ifg objs for the files in the sydney test dir'''
-	datafiles = glob.glob(join(SYD_TEST_TIF, "*.tif") )
-	ifgs = [Ifg(i) for i in datafiles]
-	for i in ifgs:
-		i.open()
+    '''Returns Ifg objs for the files in the sydney test dir'''
+    datafiles = glob.glob(join(SYD_TEST_TIF, "*.tif") )
+    ifgs = [Ifg(i) for i in datafiles]
+    for i in ifgs:
+        i.open()
 
-	return ifgs
+    return ifgs
 
 
 def sydney5_ifgs():
-	'''Convenience func to return a subset of 5 linked Ifgs from the testdata'''
-	return [Ifg(join(SYD_TEST_TIF, p)) for p in IFMS5.split()]
+    '''Convenience func to return a subset of 5 linked Ifgs from the testdata'''
+    return [Ifg(join(SYD_TEST_TIF, p)) for p in IFMS5.split()]
 
 
 def sydney5_mock_ifgs(xs=3, ys=4):
-	'''Returns smaller mocked version of sydney Ifgs for testing'''
-	ifgs = sydney5_ifgs()
-	for i in ifgs:
-		i.open()
+    '''Returns smaller mocked version of sydney Ifgs for testing'''
+    ifgs = sydney5_ifgs()
+    for i in ifgs:
+        i.open()
 
-	return [MockIfg(i, xs, ys) for i in ifgs]
+    return [MockIfg(i, xs, ys) for i in ifgs]
 
 
 class MockIfg(object):
-	'''Mock Ifg for detailed testing'''
+    '''Mock Ifg for detailed testing'''
 
-	def __init__(self, ifg, xsize=None, ysize=None):
-		'''
-		Creates mock Ifg based on a given interferogram. Size args specify the
-		dimensions of the phase band (so the mock ifg can be resized differently
-		to the source interferogram for smaller test datasets).
-		'''
-		self.master = ifg.master
-		self.slave = ifg.slave
+    def __init__(self, ifg, xsize=None, ysize=None):
+        '''
+        Creates mock Ifg based on a given interferogram. Size args specify the
+        dimensions of the phase band (so the mock ifg can be resized differently
+        to the source interferogram for smaller test datasets).
+        '''
+        self.master = ifg.master
+        self.slave = ifg.slave
 
-		self.nrows = ysize
-		self.ncols = xsize
-		self.x_size = ifg.x_size
-		self.y_size = ifg.y_size
-		self.x_step = ifg.x_step
-		self.y_step = ifg.y_step
-		self.num_cells = self.ncols * self.nrows
-		self.phase_data = ifg.phase_data[:ysize, :xsize]
-		self.nan_fraction = ifg.nan_fraction # use existing overall nan fraction
+        self.nrows = ysize
+        self.ncols = xsize
+        self.x_size = ifg.x_size
+        self.y_size = ifg.y_size
+        self.x_step = ifg.x_step
+        self.y_step = ifg.y_step
+        self.num_cells = self.ncols * self.nrows
+        self.phase_data = ifg.phase_data[:ysize, :xsize]
+        self.nan_fraction = ifg.nan_fraction # use existing overall nan fraction
 
-	def __repr__(self, *args, **kwargs):
-		return 'MockIfg: %s -> %s' % (self.master, self.slave)
+    def __repr__(self, *args, **kwargs):
+        return 'MockIfg: %s -> %s' % (self.master, self.slave)
 
-	def open(self):
-		# TODO: could move some of the init code here to mimic Ifgs
-		pass # can't actually open anything!
+    def open(self):
+        # TODO: could move some of the init code here to mimic Ifgs
+        pass # can't actually open anything!
 
-	@property
-	def nan_count(self):
-		return nsum(isnan(self.phase_data))
+    @property
+    def nan_count(self):
+        return nsum(isnan(self.phase_data))
 
-	@property
-	def shape(self):
-		return (self.nrows, self.ncols)
+    @property
+    def shape(self):
+        return (self.nrows, self.ncols)

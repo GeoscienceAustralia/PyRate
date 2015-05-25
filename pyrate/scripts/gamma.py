@@ -6,31 +6,28 @@ PyRate. This module translates GAMMA headers into into ESRI's BIL format,
 allowing GDAL to access the raster data
 
 The types of GAMMA files converted by PyRate are:
-* DEM: with a .unw float32 binary data file (MSB order), & '.par' header. There
-is only a single height band in the binary data.
 
-* Interferograms: have a .unw float32 bit binary data file (MSB order), with a
-single band for phase data. Two .par resource/header files, each containing
-details of the epochs used to create the interferogram. No geographic date is 
-stored in these, so the DEM header is required for raster sizes/location etc.
+- DEM: with a .unw float32 binary data file (MSB order), & '.par' header. There
+  is only a single height band in the binary data.
+
+- Interferograms: have a .unw float32 bit binary data file (MSB order), with a
+  single band for phase data. Two .par resource/header files, each containing
+  details of the epochs used to create the interferogram. No geographic date is
+  stored in these, so the DEM header is required for raster sizes/location etc.
 
 The interferograms are geocoded/orthorectified to the DEM geometry, so all
 datasets will share the same pixel size and dimensions.
 
-* TODO: describe incidence files (and any others (for later versions)
+.. todo:: describe incidence files (and any others (for later versions).
 
-Created on 29/05/2014
-@author: Ben Davies, NCI
+.. codeauthor:: Ben Davies, NCI
 '''
 
-import os
-import re
-import struct
-import datetime
+import os, re, struct, datetime
 from glob import glob
 from os.path import join
 
-import ifgconstants as ifc
+import pyrate.ifgconstants as ifc
 
 import osr
 import gdal
@@ -95,18 +92,18 @@ def to_geotiff(hdr, data_path, dest, nodata):
 	ds = None
 
 def _check_raw_data(data_path, ncols, nrows):
-	size = ncols * nrows * 4 # DEM and Ifg data are 4 byte floats 
+	size = ncols * nrows * 4 # DEM and Ifg data are 4 byte floats
 	act_size = os.stat(data_path).st_size
 	if act_size != size:
 		msg = '%s should have size %s, not %s. Is the correct file being used?'
 		raise GammaException(msg % (data_path, size, act_size))
 
 def _check_step_mismatch(hdr):
-	xs, ys = [abs(i) for i in [hdr[ifc.PYRATE_X_STEP], hdr[ifc.PYRATE_Y_STEP]]] 
+	xs, ys = [abs(i) for i in [hdr[ifc.PYRATE_X_STEP], hdr[ifc.PYRATE_Y_STEP]]]
 
 	if xs != ys:
 		msg = 'X and Y cell sizes do not match: %s & %s'
-		raise GammaException(msg % (xs, ys)) 
+		raise GammaException(msg % (xs, ys))
 
 def parse_header(path):
 	'Parses all GAMMA epoch/DEM header file fields into a dictionary'
@@ -125,7 +122,7 @@ def parse_epoch_header(path):
 	year, month, day = [int(i) for i in lookup[GAMMA_DATE]]
 	subset[ifc.PYRATE_DATE] = datetime.date(year, month, day)
 
-	# handle conversion to wavelength	
+	# handle conversion to wavelength
 	freq, unit = lookup[GAMMA_FREQUENCY]
 	if unit != "Hz":
 		msg = 'Unrecognised unit field for radar_frequency: %s'
@@ -148,7 +145,7 @@ def parse_dem_header(path):
 		units = lookup[GAMMA_CORNER_LAT][1:]
 		if units != expected:
 			msg = "Unrecognised units for GAMMA %s field\n. Got %s, expected %s"
-			raise GammaException(msg % (k, units, expected))	
+			raise GammaException(msg % (k, units, expected))
 
 	subset[ifc.PYRATE_LAT] = float(lookup[GAMMA_CORNER_LAT][0])
 	subset[ifc.PYRATE_LONG] = float(lookup[GAMMA_CORNER_LONG][0])
@@ -183,7 +180,7 @@ def combine_headers(hdr0, hdr1, dem_hdr):
 			ifc.PYRATE_DATE: date0,
 			ifc.PYRATE_DATE2: date1, }  # add 2nd date, may not be in filename
 
-	wavelen = hdr0[ifc.PYRATE_WAVELENGTH_METRES] 
+	wavelen = hdr0[ifc.PYRATE_WAVELENGTH_METRES]
 	if wavelen == hdr1[ifc.PYRATE_WAVELENGTH_METRES]:
 		chdr[ifc.PYRATE_WAVELENGTH_METRES] = wavelen
 	else:
@@ -203,7 +200,7 @@ def main():
 	import sys
 	from optparse import OptionParser
 
-	usage = 'Usage: %prog [options] DEM-HEADER GAMMA_FILE [GAMMA_FILE...]' 
+	usage = 'Usage: %prog [options] DEM-HEADER GAMMA_FILE [GAMMA_FILE...]'
 	parser = OptionParser(usage=usage)
 	parser.add_option('-n', '--nodata', help='NODATA value', type='float', default=0.0)
 	parser.add_option('-d', '--dest-dir', help='Write to DIR', type='string')

@@ -1,116 +1,121 @@
 '''
 Functions for finding the reference pixel in PyRate.
-Author: Ben Davies
+
+.. codeauthor:: Ben Davies
 '''
 
-import config
+import pyrate.config as config
 from numpy import array, isnan, std, mean, sum as nsum
 
 
 # TODO: move error checking to config step (for fail fast)
 def ref_pixel(ifgs, refnx, refny, chipsize, min_frac):
-	'''
-	Returns (y,x) reference pixel coordinate from given ifgs.
+    '''
+    Returns (y,x) reference pixel coordinate from given ifgs.
 
-	If the config file REFX or REFY values are empty or subzero, the search for
-	the reference pixel is performed. If the REFX|Y values are within the bounds
-	of the raster, a search is not performed. REFX|Y values outside the upper
-	bounds cause an exception.
+    If the config file REFX or REFY values are empty or subzero, the search for
+    the reference pixel is performed. If the REFX|Y values are within the bounds
+    of the raster, a search is not performed. REFX|Y values outside the upper
+    bounds cause an exception.
 
-	params: dict of key/value pairs from config file
-	ifgs: sequence of interferograms
-	'''
-	if len(ifgs) < 1:
-		msg = 'Reference pixel search requires 2+ interferograms'
-		raise RefPixelError(msg)
+    :param ifgs: sequence of interferograms.
+    '''
 
-	# sanity check inputs 
-	head = ifgs[0]
-	validate_chipsize(chipsize, head)
-	validate_minimum_fraction(min_frac)
-	validate_search_win(refnx, refny, chipsize, head)
+    if len(ifgs) < 1:
+        msg = 'Reference pixel search requires 2+ interferograms'
+        raise RefPixelError(msg)
 
-	# pre-calculate useful amounts
-	radius = chipsize / 2
-	phase_stack = array([i.phase_data for i in ifgs]) # TODO: mem efficiencies?
-	thresh = min_frac * chipsize * chipsize
-	min_sd = float("inf") # dummy start value
+    # sanity check inputs
+    head = ifgs[0]
+    validate_chipsize(chipsize, head)
+    validate_minimum_fraction(min_frac)
+    validate_search_win(refnx, refny, chipsize, head)
 
-	# do window searches across dataset, central pixel of stack with smallest
-	# mean is the reference pixel
-	refx = refy = None
-	for y in _step(head.nrows, refny, radius):
-		for x in _step(head.ncols, refnx, radius):
-			data = phase_stack[:, y-radius:y+radius+1, x-radius:x+radius+1]
-			valid = [nsum(~isnan(i)) > thresh for i in data]
+    # pre-calculate useful amounts
+    radius = chipsize / 2
+    phase_stack = array([i.phase_data for i in ifgs]) # TODO: mem efficiencies?
+    thresh = min_frac * chipsize * chipsize
+    min_sd = float("inf") # dummy start value
 
-			if all(valid): # ignore if 1+ ifgs have too many incoherent cells
-				sd = [std( i[~isnan(i)] ) for i in data]
-				mean_sd = mean(sd)
-				if mean_sd < min_sd:
-					min_sd = mean_sd
-					refy, refx = y, x
+    # do window searches across dataset, central pixel of stack with smallest
+    # mean is the reference pixel
+    refx = refy = None
+    for y in _step(head.nrows, refny, radius):
+        for x in _step(head.ncols, refnx, radius):
+            data = phase_stack[:, y-radius:y+radius+1, x-radius:x+radius+1]
+            valid = [nsum(~isnan(i)) > thresh for i in data]
 
-	if refy and refx:
-		return refy, refx
+            if all(valid): # ignore if 1+ ifgs have too many incoherent cells
+                sd = [std( i[~isnan(i)] ) for i in data]
+                mean_sd = mean(sd)
+                if mean_sd < min_sd:
+                    min_sd = mean_sd
+                    refy, refx = y, x
 
-	raise RefPixelError("Could not find a reference pixel")
+    if refy and refx:
+        return refy, refx
+
+    raise RefPixelError("Could not find a reference pixel")
 
 
 def validate_chipsize(chipsize, head):
-	if chipsize is None:
-		raise config.ConfigException('Chipsize is None')
+    if chipsize is None:
+        raise config.ConfigException('Chipsize is None')
 
-	if chipsize < 3 or chipsize > head.ncols or (chipsize % 2 == 0):
-		msg = "Chipsize setting must be >=3 and at least <= grid width"
-		raise ValueError(msg)
+    if chipsize < 3 or chipsize > head.ncols or (chipsize % 2 == 0):
+        msg = "Chipsize setting must be >=3 and at least <= grid width"
+        raise ValueError(msg)
 
 def validate_minimum_fraction(min_frac):
-	if min_frac is None:
-		raise config.ConfigException('Minimum fraction is None')
+    if min_frac is None:
+        raise config.ConfigException('Minimum fraction is None')
 
-	if min_frac < 0.0 or min_frac > 1.0:
-		raise ValueError("Minimum fraction setting must be >= 0.0 and <= 1.0 ")
+    if min_frac < 0.0 or min_frac > 1.0:
+        raise ValueError("Minimum fraction setting must be >= 0.0 and <= 1.0 ")
 
 def validate_search_win(refnx, refny, chipsize, head):
-	# sanity check X|Y steps
-	if refnx is None:
-		raise config.ConfigException('refnx is None')
+    # sanity check X|Y steps
+    if refnx is None:
+        raise config.ConfigException('refnx is None')
 
-	max_width = (head.ncols - (chipsize-1))
-	if refnx < 1 or refnx > max_width:
-		msg = "Invalid refnx setting, must be > 0 and <= %s"
-		raise ValueError(msg % max_width)
+    max_width = (head.ncols - (chipsize-1))
+    if refnx < 1 or refnx > max_width:
+        msg = "Invalid refnx setting, must be > 0 and <= %s"
+        raise ValueError(msg % max_width)
 
-	if refny is None:
-		raise config.ConfigException('refny is None')
+    if refny is None:
+        raise config.ConfigException('refny is None')
 
-	max_rows = (head.nrows - (chipsize-1))
-	if refny < 1 or refny > max_rows:
-		msg = "Invalid refny setting, must be > 0 and <= %s"
-		raise ValueError(msg % max_rows)
+    max_rows = (head.nrows - (chipsize-1))
+    if refny < 1 or refny > max_rows:
+        msg = "Invalid refny setting, must be > 0 and <= %s"
+        raise ValueError(msg % max_rows)
 
 
 def _step(dim, ref, radius):
-	'''
-	Helper func: returns xrange obj of axis indicies for a search window.
-	
-	dim: total length of the grid dimension
-	ref: the desired number of steps
-	radius: the number of cells from the centre of the chip eg. (chipsize / 2)
-	'''
-	if ref == 1:
-		# centre a single search step
-		return xrange(dim // 2, dim, dim) # fake step to ensure single xrange value
+    '''
+    Helper func: returns xrange obj of axis indicies for a search window.
 
-	max_dim = dim - (2*radius) # max possible number for refn(x|y)
-	if ref == 2: # handle 2 search windows, method below doesn't cover the case
-		return [radius, dim-radius-1]
+    :param dim: total length of the grid dimension.
+    :param ref: the desired number of steps.
+    :param radius: the number of cells from the centre of the chip eg. (chipsize / 2).
+    '''
 
-	step = max_dim // (ref-1)
-	return xrange(radius, dim, step)
+    if ref == 1:
+        # centre a single search step
+        return xrange(dim // 2, dim, dim) # fake step to ensure single xrange value
+
+    max_dim = dim - (2*radius) # max possible number for refn(x|y)
+    if ref == 2: # handle 2 search windows, method below doesn't cover the case
+        return [radius, dim-radius-1]
+
+    step = max_dim // (ref-1)
+    return xrange(radius, dim, step)
 
 
 class RefPixelError(Exception):
-	'''Generic exception for reference pixel errors'''
-	pass
+    '''
+    Generic exception for reference pixel errors.
+    '''
+
+    pass

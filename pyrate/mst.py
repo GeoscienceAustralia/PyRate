@@ -1,15 +1,16 @@
 '''
 Minimum Spanning Tree functionality for PyRate.
+
 Contains functions to calculate MST using interferograms.
 
-Author: Ben Davies, NCI
+.. codeauthor:: Ben Davies
 '''
 
 from itertools import product
 from numpy import array, nan, isnan, float32, empty
 
-from algorithm import get_all_epochs, master_slave_ids, ifg_date_lookup, get_epochs
-from algorithm import ifg_date_index_lookup
+from pyrate.algorithm import get_all_epochs, master_slave_ids, ifg_date_lookup, get_epochs
+from pyrate.algorithm import ifg_date_index_lookup
 
 from pygraph.classes.graph import graph
 from pygraph.algorithms.minmax import minimal_spanning_tree
@@ -19,7 +20,10 @@ from pygraph.algorithms.minmax import minimal_spanning_tree
 
 
 def _remove_root_node(mst):
-    """Discard pygraph's root node from MST dict to conserve memory."""
+    """
+    Discard pygraph's root node from MST dict to conserve memory.
+    """
+
     for k in mst.keys():
         if mst[k] is None:
             del mst[k]
@@ -30,8 +34,10 @@ def default_mst(ifgs, noroot=True):
     '''
     Returns default MST dict for the given Ifgs. The MST is calculated using a
     weighting based on the number of incoherent cells in the phase band.
-    noroot: True removes the PyGraph default root node from the result.
+
+    :param noroot: True removes the PyGraph default root node from the result.
     '''
+
     edges = [(i.master, i.slave) for i in ifgs]
     epochs = master_slave_ids(get_all_epochs(ifgs)).keys()
     weights = [i.nan_fraction for i in ifgs]  # NB: other attrs for weights?
@@ -42,7 +48,10 @@ def default_mst(ifgs, noroot=True):
 
 
 def _build_graph(nodes, edges, weights, noroot=True):
-    'Convenience graph builder function: returns a new graph obj'
+    """
+    Convenience graph builder function: returns a new graph obj.
+    """
+
     g = graph()
     g.add_nodes(nodes)
     for edge, weight in zip(edges, weights):
@@ -56,9 +65,11 @@ def mst_matrix_ifgs_only(ifgs):
     Filter: returns array of independent ifgs from the pixel by pixel MST.
 
     The MSTs are stripped of connecting edge info, leaving just the ifgs.
-    ifgs: sequence of Ifg objs
-    epochs: an EpochList object derived from the ifgs
+
+    :param ifgs: sequence of Ifg objs
+    :param epochs: an EpochList object derived from the ifgs
     '''
+
     result = empty(shape=ifgs[0].phase_data.shape, dtype=object)
 
     for y, x, mst in mst_matrix(ifgs):
@@ -75,9 +86,11 @@ def mst_matrix_ifg_indices(ifgs):
     Filter: returns array of independent ifg indices from the pixel by pixel MST.
 
     The MSTs are stripped of connecting edge info, leaving just the ifgs.
-    ifgs: sequence of Ifg objs
-    epochs: an EpochList object derived from the ifgs
+    ifgs: sequence of Ifg objs.
+
+    :param epochs: an EpochList object derived from the ifgs
     '''
+
     result = empty(shape=ifgs[0].phase_data.shape, dtype=object)
 
     for y, x, mst in mst_matrix(ifgs):
@@ -94,10 +107,12 @@ def mst_matrix_as_array(ifgs):
     '''
     Filter: returns array of pixel by pixel MSTs.
 
-    Each pixel contains an MST (with connecting edges etc)
-    ifgs: sequence of Ifg objs
-    epochs: an EpochList object derived from the ifgs
+    Each pixel contains an MST (with connecting edges etc).
+
+    :param ifgs: sequence of Ifg objs
+    :param epochs: an EpochList object derived from the ifgs
     '''
+
     mst_result = empty(shape=ifgs[0].phase_data.shape, dtype=object)
 
     for y, x, mst in mst_matrix(ifgs):
@@ -110,9 +125,10 @@ def mst_matrix_as_array(ifgs):
 def mst_matrix(ifgs):
     '''
     Generates/emits MST trees on a pixel-by-pixel basis for the given ifgs.
-    ifgs: sequence of Ifg objs
-    epochs: an EpochList object derived from the ifgs
+    :param ifgs: sequence of Ifg objs
+    :param epochs: an EpochList object derived from the ifgs
     '''
+
     # make default MST to optimise result when no Ifg cells in a stack are nans
     epochs = get_epochs(ifgs)
     edges = [(i.master, i.slave) for i in ifgs]

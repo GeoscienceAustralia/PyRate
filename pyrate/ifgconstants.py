@@ -1,7 +1,9 @@
 '''
-Collection of constants for elements in ROI_PAC headers (*.rsc)
+Collection of constants for elements in ROI_PAC headers (\*.rsc)
+
 Created on 14/09/2012
-@author: Ben Davies
+
+.. codeauthor:: Ben Davies
 '''
 
 # lookup keys for the fields in PyRate's custom GeoTIFF files
@@ -16,6 +18,5 @@ PYRATE_DATE2 = 'DATE2'
 PYRATE_DATUM = 'DATUM'
 PYRATE_TIME_SPAN = 'TIME_SPAN_YEAR'
 PYRATE_WAVELENGTH_METRES = 'WAVELENGTH_METRES'
-
 
 DAYS_PER_YEAR = 365.25 # span of year, not a calendar year
