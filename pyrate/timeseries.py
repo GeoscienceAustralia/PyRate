@@ -123,7 +123,7 @@ def time_series(ifgs, pthresh, mst=None):
                 tsincr[row_num, col_num, :] = tsvel_pix * span
 
 
-    if tsincr == None:
+    if tsincr is None:
         raise TimeSeriesError("Could not produce a time series")
 
     tsincr = where(tsincr == 0, nan, tsincr)
