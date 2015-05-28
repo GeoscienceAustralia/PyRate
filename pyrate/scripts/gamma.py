@@ -227,7 +227,7 @@ def main():
 
 			if len(matches) == 2:
 				srch_dir = os.path.split(path)[0]
-				hpaths = [glob(join(srch_dir, '*%s*.par' % m))[0] for m in matches]
+				hpaths = [glob(join(srch_dir, '*%s*slc.par' % m))[0] for m in matches]
 				tmp = [parse_epoch_header(hp) for hp in hpaths]
 				hdrs = combine_headers(tmp[0], tmp[1], dem_hdr)
 			else:
