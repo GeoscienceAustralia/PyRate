@@ -130,7 +130,6 @@ def ifg_date_lookup(ifgs, date_pair):
         raise ValueError("Bad date_pair arg to ifg_date_lookup()")
 
     for i in ifgs:
-        print (i.master, i.slave)
         if date_pair == (i.master, i.slave):
             return i
 

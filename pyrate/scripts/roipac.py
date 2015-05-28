@@ -177,6 +177,7 @@ def parse_header(hdr_file):
     try:
         lines = [e.split() for e in text.split("\n") if e != ""]
         headers = dict(lines)
+        # TODO This DEM test should be based on file name (dem or unw) rather than keyword in case DATUM keyword is missing
         is_dem = DATUM in headers and 'Z_SCALE' in headers
     except ValueError:
         msg = "Unable to parse content of %s. Is it a ROIPAC header file?"
@@ -259,13 +260,19 @@ def main():
     if len(args) == 0:
         parser.error(usage)
 
-    if options.projection:
-        proj = options.projection
-    elif options.resource_header:
+    if options.resource_header:
         hdr = parse_header(options.resource_header)
         if ifc.PYRATE_DATUM not in hdr:
-            sys.exit('Error: header/resource file does not include DATUM')
+            if options.projection:
+                proj = options.projection
+            else:
+                sys.exit('Error: header/resource file does not include DATUM and -p option not given')
         proj = hdr[ifc.PYRATE_DATUM]
+    else: 
+        if options.projection:
+            proj = options.projection
+        else:
+           sys.exit('Error: no header/resource file given and -p option not specified')
 
     # translate files
     for path in args:

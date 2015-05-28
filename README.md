@@ -56,22 +56,26 @@ Data formatting:
 The utility scripts gamma.py & roipac.py are provided to convert geocoded unwrapped interferograms in ROI_PAC or GAMMA format into a GeoTIFF format usable by PyRate.
 
 For command line options/help:
-python gamma.py -h
-python roipac.py -h
+python <full_path>/gamma.py -h
+python <full_path>/roipac.py -h
 
-A GAMMA translation needs a geographic DEM header file (*.dem.par) and SLC parameter files (*.slc.par) for both master and slave images to extract metadata required for the formatting. Therefore three header files are needed to format each geocoded unwrapped GAMMA interferogram <GAMMA_FILE>. Only the DEM header file is given on the command line - the SLC parameter files are located automatically in the same location as the interfergram file by date string pattern matching.
+A GAMMA translation needs a geographic DEM header file (\*.dem.par) and SLC parameter files (\*.slc.par) for both master and slave images to extract metadata required for the formatting. Therefore three header files are needed to format each geocoded unwrapped GAMMA interferogram <GAMMA_FILE>. Only the DEM header file is given on the command line - the SLC parameter files are located automatically in the same location as the interfergram file by date string pattern matching.
 
-python gamma.py [OPTIONS] <*.dem.par> <GAMMA_FILE>
+python <full_path>/gamma.py [OPTIONS] <\*.dem.par> <GAMMA_FILE>
 
 
-A ROI_PAC translation automatically looks for some header files, and may need a DEM header file for projection data.
+A ROI_PAC translation requires a header/resource file (.rsc extension) for the geocoded unwrapped ROI_PAC interferogram (in the same directory) and either the geographic projection (e.g. 'WGS84') specified as an option or a header/resource file for the geographic DEM containing the geographic projection in the parameter DATUM:
+
+python <full_path>/roipac.py -p WGS84 <ROIPAC_FILE>
+OR
+python <full_path>/roipac.py -r <\*.dem.rsc> <ROIPAC_FILE>
 
 
 Image transformations:
-This separate step does multi-looking (resampling), cropping, Line-of-sight and unit conversion)is handled with run_prepifg.py.
+This separate step of multi-looking (resampling) and cropping the images is handled with run_prepifg.py.
 
 For command line options/help:
-python run_prepifg.py -h
+python <full_path>/run_prepifg.py -h
 
 The run_prepifg.py script requires the PyRate runtime configuration file. If a config file is not provided as an arg, the script will look for 'pyrate.conf'.  
 
@@ -80,7 +84,7 @@ PyRate workflow:
 This is the core of the processing tools, handled with run_pyrate.py.
 
 For command line options/help:
-python run_pyrate.py -h
+python <full_path>/run_pyrate.py -h
 
 The run_pyrate.py script also requires the PyRate runtime configuration file. As with the previous step, if a config file is not provided as an arg, the script will look for 'pyrate.conf' by default.
 
