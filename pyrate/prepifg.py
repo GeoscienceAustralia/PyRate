@@ -15,6 +15,7 @@ Created on 23/10/2012
 # TODO: check new average option for gdalwarp (GDAL 1.10.x +)
 
 import os
+import osgeo.gdal as gdal
 from math import modf
 from numbers import Number
 from tempfile import mkstemp
@@ -132,7 +133,7 @@ def _file_ext(raster):
         raise NotImplementedError("Missing raster types for LOS and baseline")
 
 
-def _resample_ifg(ifg, cmd, x_looks, y_looks, thresh):
+def _resample_ifg(ifg, cmd, x_looks, y_looks, thresh, md=None):
     """
     Convenience function to resample data from a given Ifg (more coarse).
     """
@@ -141,6 +142,14 @@ def _resample_ifg(ifg, cmd, x_looks, y_looks, thresh):
     # lacks Pirate's averaging method
     tmp_path = mkstemp()[1]
     check_call(cmd + [ifg.data_path, tmp_path])
+
+    # now write the metadata from the input to the output
+    if md is not None:
+        new_lyr = gdal.Open(tmp_path)
+        for k, v in md.iteritems():
+            new_lyr.SetMetadataItem(k, v)
+        new_lyr = None
+
     tmp = type(ifg)(tmp_path) # dynamically handle Ifgs & Rasters
     tmp.open()
 
@@ -190,16 +199,33 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, verbose):
     if not verbose:
         cmd.append("-q")
 
+    # It appears that before vrions 1.10 gdal-warp did not copy meta-data
+    # ... so we need to. Get the keys from the input here
+    if sum((int(v)*i for v, i in zip(gdal.__version__.split('.')[:2], [10,1]))) < 20:
+        fl = ifg.data_path
+        dat = gdal.Open(fl)
+        md = {k:v for k, v in dat.GetMetadata().iteritems()}
+        dat = None
+    else:
+        md = None
+
     # HACK: if resampling, cut segment with gdalwarp & manually average tiles
     data = None
     if resolution:
-        data = _resample_ifg(ifg, cmd, x_looks, y_looks, thresh)
+        data = _resample_ifg(ifg, cmd, x_looks, y_looks, thresh, md)
         cmd += ["-tr"] + [str(r) for r in resolution] # change res of final output
 
     # use GDAL to cut (and resample) the final output layers
     looks_path = mlooked_path(ifg.data_path, y_looks)
     cmd += [ifg.data_path, looks_path]
     check_call(cmd)
+
+    # now write the metadata from the input to the output
+    if md is not None:
+        new_lyr = gdal.Open(looks_path)
+        for k, v in md.iteritems():
+            new_lyr.SetMetadataItem(k, v)
+        new_lyr = None
 
     # Add missing/updated metadata to resampled ifg/DEM
     new_lyr = type(ifg)(looks_path)
