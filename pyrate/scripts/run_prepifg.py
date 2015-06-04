@@ -11,9 +11,11 @@ from pyrate.prepifg import (
 
 def main():
     from optparse import OptionParser
-    parser = OptionParser(usage='%prog [config-file]')
+    parser = OptionParser(usage='%prog [OPTIONS] [config-file]')
     parser.add_option('-t', '--thresh', type=float,
                         help='Nodata averaging threshold')
+    parser.add_option('-i', '--ifglist', type=str,
+                        help='name of file containing list of interferograms')
     parser.add_option('-v', '--verbose', action='store_true', default=False,
                         help='Display more output')
     options, args = parser.parse_args()
@@ -26,8 +28,17 @@ def main():
         print(errmsg % (err.strerror, err.filename))
         sys.exit(err.errno)
 
-    ifglist = cfg.parse_namelist(pars[cfg.IFG_FILE_LIST])
-    ifg_paths = [os.path.join(pars[cfg.OBS_DIR], p) for p in ifglist]
+    ifgListFile = options.ifglist or pars.get(cfg.IFG_FILE_LIST)
+    if ifgListFile is None:
+        print 'Interferogram file name not provided'
+        sys.exit(err.errno)
+
+    ifglist = cfg.parse_namelist(ifgListFile)
+    obs_dir = pars.get(cfg.OBS_DIR) 
+    if obs_dir is not None:
+        ifg_paths = [os.path.join(obs_dir, p) for p in ifglist]
+    else:
+        ifg_paths = ifglist
     ifgs = [Ifg(p) for p in ifg_paths]
 
     crop = pars[cfg.IFG_CROP_OPT]
@@ -42,3 +53,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+

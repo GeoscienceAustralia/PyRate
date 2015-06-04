@@ -276,6 +276,7 @@ def init_logging(level):
 def main():
     from optparse import OptionParser
     parser = OptionParser(usage='%prog [config-file]\nRuns PyRate workflow.')
+    parser.add_option('-i', '--ifglist', type=str, help='name of file containing list of interferograms')
     options, args = parser.parse_args()
 
     init_logging(logging.DEBUG)
@@ -287,6 +288,11 @@ def main():
         emsg = 'Config file error: %s "%s"' % (err.strerror, err.filename)
         logging.debug(emsg)
         print(emsg)
+        sys.exit(err.errno)
+
+    ifgListFile = options.ifglist or pars.get(cf.IFG_FILE_LIST)
+    if ifgListFile is None:
+        print 'Interferogram list file name not provided'
         sys.exit(err.errno)
 
     # FIXME: make output ifgs here, or in process_ifgs() ?
