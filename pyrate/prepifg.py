@@ -241,7 +241,7 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, verbose):
 
         # TODO: LOS conversion to vertical/horizontal (projection)
         # TODO: push out to workflow
-        #if params.has_key(PROJECTION_FLAG):
+        #if params.has_key(REPROJECTION_FLAG):
         #    reproject()
 
         # tricky: write either resampled or the basic cropped data to new layer
