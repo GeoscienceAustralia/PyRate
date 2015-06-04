@@ -5,8 +5,6 @@ Created on 17/09/2012
 @author: Ben Davies, NCI
 """
 
-from __future__ import print_function
-
 import os,sys,shutil,logging,datetime
 
 import pyrate.mst as mst
@@ -287,7 +285,7 @@ def main():
     except IOError as err:
         emsg = 'Config file error: %s "%s"' % (err.strerror, err.filename)
         logging.debug(emsg)
-        print(emsg)
+        print emsg
         sys.exit(err.errno)
 
     ifgListFile = options.ifglist or pars.get(cf.IFG_FILE_LIST)
@@ -312,3 +310,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
