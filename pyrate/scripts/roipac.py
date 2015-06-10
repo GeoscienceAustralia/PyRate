@@ -177,8 +177,9 @@ def parse_header(hdr_file):
     try:
         lines = [e.split() for e in text.split("\n") if e != ""]
         headers = dict(lines)
-        # TODO This DEM test should be based on file name (dem or unw) rather than keyword in case DATUM keyword is missing
-        is_dem = DATUM in headers and 'Z_SCALE' in headers
+        is_dem = True if DATUM in headers or Z_SCALE in headers or PROJECTION in headers else False
+        if is_dem and DATUM not in headers:
+            sys.exit('Error: no DATUM parameter in DEM header/resource file')
     except ValueError:
         msg = "Unable to parse content of %s. Is it a ROIPAC header file?"
         raise RoipacException(msg % hdr_file)
@@ -251,8 +252,8 @@ def main():
 
     proj_help = 'GDAL well known projection (eg. "WGS84")'
     parser.add_option('-p', '--projection', help=proj_help, type='str')
-    res_help = 'Resource/header file with projection data (usually DEM header)'
-    parser.add_option('-r', '--resource-header', help=res_help, metavar='FILE')
+    res_help = ' DEM resource/header file with projection information'
+    parser.add_option('-r', '--dem-header', help=res_help, metavar='FILE')
     parser.add_option('-n', '--nodata', help='NODATA value', type='float', default=0.0)
     parser.add_option('-d', '--dest-dir', help='Write to DIR', type='string')
     options, args = parser.parse_args()
@@ -260,8 +261,8 @@ def main():
     if len(args) == 0:
         parser.error(usage)
 
-    if options.resource_header:
-        hdr = parse_header(options.resource_header)
+    if options.dem_header:
+        hdr = parse_header(options.dem_header)
         if ifc.PYRATE_DATUM not in hdr:
             if options.projection:
                 proj = options.projection

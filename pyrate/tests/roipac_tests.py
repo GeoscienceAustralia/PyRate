@@ -47,7 +47,7 @@ class RoipacCommandLine(unittest.TestCase):
 
 
     def test_cmd_dem(self):
-        sys.argv = ['roipac.py', '-d', '/tmp', SYD_TEST_DEM_UNW]
+        sys.argv = ['roipac.py', '-d', '/tmp', '-p', 'WGS84', SYD_TEST_DEM_UNW]
         exp_path = '/tmp/sydney_trimmed.tif'
 
         roipac.main()
