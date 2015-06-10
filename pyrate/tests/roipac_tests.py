@@ -14,8 +14,9 @@ from numpy.testing import assert_array_almost_equal
 import pyrate.ifgconstants as ifc
 from pyrate.tests.common import HEADERS_TEST_DIR, PREP_TEST_OBS, PREP_TEST_TIF
 from pyrate.tests.common import SYD_TEST_DEM_UNW, SYD_TEST_DEM_HDR, SYD_TEST_DEM_DIR, SYD_TEST_OBS
-from pyrate.scripts import roipac
-from pyrate.scripts.roipac import RoipacException
+from pyrate import roipac
+from pyrate.roipac import RoipacException
+from pyrate.scripts.roipac import main as roipacMain
 
 gdal.UseExceptions()
 
@@ -40,7 +41,7 @@ class RoipacCommandLine(unittest.TestCase):
         base_exp = ['geo_070709-070813.tif', 'geo_060619-061002.tif']
         exp_paths = [join('/tmp', i) for i in base_exp]
 
-        roipac.main()
+        roipacMain()
         for p in exp_paths:
             self.assertTrue(os.path.exists(p))
             os.remove(p)
@@ -50,7 +51,7 @@ class RoipacCommandLine(unittest.TestCase):
         sys.argv = ['roipac.py', '-d', '/tmp', '-p', 'WGS84', SYD_TEST_DEM_UNW]
         exp_path = '/tmp/sydney_trimmed.tif'
 
-        roipac.main()
+        roipacMain()
         self.assertTrue(os.path.exists(exp_path))
         os.remove(exp_path)
 

@@ -34,7 +34,7 @@ The documentation will be generated in *doc/build*. The main entry point is *ind
 
 ## Tests
 
-Tests use *unittest* and can be found in *pyrate/tests*. 
+Tests use [unittest](http://pythontesting.net/framework/unittest/unittest-introduction/) and can be found in *pyrate/tests*.
 
 To run the tests you need to get a copy of the test data from the NCI at */g/data1/dg9/PyRate_Project/data/*. There are several version of the data there found in date stamped zip files... you should probably use the most recent. The environment variable *PYRATEPATH* needs to point to the folder where you put the test data. 
 
@@ -43,8 +43,6 @@ To run the tests you need to get a copy of the test data from the NCI at */g/dat
 
 The runnable programs can be found in *pyrate/scripts*.
 
-PyRate and associated tools are intended to be run TODO.
-
 The steps are:
 
 1. Data formatting
@@ -52,41 +50,52 @@ The steps are:
 1. Image transformations
 1. PyRate workflow
 
-Data formatting:
-The utility scripts gamma.py & roipac.py are provided to convert geocoded unwrapped interferograms in ROI_PAC or GAMMA format into a GeoTIFF format usable by PyRate.
+
+### Data formatting:
+
+The utility scripts *gamma.py* & *roipac.py* are provided to convert geocoded unwrapped interferograms in ROI_PAC or GAMMA format into a GeoTIFF format usable by PyRate.
 
 For command line options/help:
-python <full_path>/gamma.py -h
-python <full_path>/roipac.py -h
+
+	python <full_path>/gamma.py -h
+
+or
+
+	python <full_path>/roipac.py -h
 
 A GAMMA translation needs a geographic DEM header file (\*.dem.par) and SLC parameter files (\*.slc.par) for both master and slave images to extract metadata required for the formatting. Therefore three header files are needed to format each geocoded unwrapped GAMMA interferogram <GAMMA_FILE>. Only the DEM header file is given on the command line - the SLC parameter files are located automatically in the same location as the interfergram file by date string pattern matching.
 
-python <full_path>/gamma.py [OPTIONS] <\*.dem.par> <GAMMA_FILE>
+	python <full_path>/gamma.py [OPTIONS] <*.dem.par> <GAMMA_FILE>
 
 
-A ROI_PAC translation requires a header/resource file (.rsc extension) for the geocoded unwrapped ROI_PAC interferogram (in the same directory) and either the geographic projection (e.g. 'WGS84') specified as an option or a header/resource file for the geographic DEM containing the geographic projection in the parameter DATUM:
+A ROI\_PAC translation requires a header/resource file (*.rsc* extension) for the geocoded unwrapped ROI_PAC interferogram (in the same directory) and either the geographic projection (e.g. 'WGS84') specified as an option or a header/resource file for the geographic DEM containing the geographic projection in the parameter DATUM:
 
-python <full_path>/roipac.py -p WGS84 <ROIPAC_FILE>
+	python <full_path>/roipac.py -p WGS84 <ROIPAC_FILE>
+
 OR
-python <full_path>/roipac.py -r <\*.dem.rsc> <ROIPAC_FILE>
 
+	python <full_path>/roipac.py -r <*.dem.rsc> <ROIPAC_FILE>
 
 Image transformations:
-This separate step of multi-looking (resampling) and cropping the images is handled with run_prepifg.py.
+This separate step of multi-looking (resampling) and cropping the images is handled with *run_prepifg.py*.
 
 For command line options/help:
-python <full_path>/run_prepifg.py -h
 
-The run_prepifg.py script requires the PyRate runtime configuration file. If a config file is not provided as an arg, the script will look for 'pyrate.conf'.  
+	python <full_path>/run_prepifg.py -h
+
+The *run_prepifg.py* script requires the PyRate runtime configuration file. If a config file is not provided as an arg, the script will look for 'pyrate.conf' in the current directory.  
 
 
 PyRate workflow:
 This is the core of the processing tools, handled with run_pyrate.py.
 
 For command line options/help:
-python <full_path>/run_pyrate.py -h
 
-The run_pyrate.py script also requires the PyRate runtime configuration file. As with the previous step, if a config file is not provided as an arg, the script will look for 'pyrate.conf' by default.
+
+	python <full_path>/run_pyrate.py -h
+
+
+The *run_pyrate.py* script also requires the PyRate runtime configuration file. As with the previous step, if a config file is not provided as an arg, the script will look for *pyrate.conf* by default.
 
 
 ## Todos

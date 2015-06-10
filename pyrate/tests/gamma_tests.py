@@ -11,7 +11,8 @@ from os.path import join
 from datetime import date
 from numpy.testing import assert_array_almost_equal
 
-from pyrate.scripts import gamma
+from pyrate.scripts.gamma import main as gammaMain
+from pyrate import gamma
 import pyrate.ifgconstants as ifc
 from pyrate.tests.common import GAMMA_TEST_DIR
 
@@ -42,7 +43,7 @@ class GammaCommandLineTests(unittest.TestCase):
         self.common_check()
 
     def common_check(self):
-        gamma.main()
+        gammaMain()
         self.assertTrue(os.path.exists(self.exp_path))
 
 
