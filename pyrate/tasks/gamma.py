@@ -37,9 +37,16 @@ class GammaHasRun(luigi.task.ExternalTask):
     '''
 
     fileName = luigi.Parameter()
+    masterHeader = luigi.Parameter(default=None)
+    slaveHeader = luigi.Parameter(default=None)
 
     def output(self):
-        return [luigi.LocalTarget(self.fileName)]
+        targets = [luigi.LocalTarget(self.fileName)]
+        if self.masterHeader:
+            targets.append(luigi.LocalTarget(self.masterHeader))
+        if self.slaveHeader:
+            targets.append(luigi.LocalTarget(self.slaveHeader))
+        return targets
 
 
 
@@ -60,7 +67,20 @@ class ConvertToGeotiff(luigi.Task):
         Ensures that the required input exists.
         '''
 
-        return [GammaHasRun(fileName = self.inputFile)]
+        ptn = re.compile(r'\d{8}')  # match 8 digits for the datea
+        dirName, fileName = os.path.split(self.inputFile)
+        matches = ptn.findall(fileName)
+
+        if len(matches) == 2:
+            self.headerPaths = [glob(join(dirName, '*%s*slc.par' % m))[0] for m in matches]
+            tasks = [GammaHasRun(
+                fileName = self.inputFile,
+                masterHeader = self.headerPaths[0],
+                slaveHeader = self.headerPaths[1])]
+        else:
+            tasks = [GammaHasRun(fileName = self.inputFile)]
+
+        return tasks
 
     def output(self):
         '''
@@ -80,17 +100,13 @@ class ConvertToGeotiff(luigi.Task):
         sio = StringIO(self.demHeaderPkl)
         demHeader = pickle.load(sio)
         # find param files containing filename dates
-        ptn = re.compile(r'\d{8}')  # match 8 digits for the datea
-        dirName, fileName = os.path.split(self.inputFile)
-        matches = ptn.findall(fileName)
 
-        if len(matches) == 2:
-            hpaths = [glob(join(dirName, '*%s*slc.par' % m))[0] for m in matches]
-            tmp = [parse_epoch_header(hp) for hp in hpaths]
-            hdrs = combine_headers(tmp[0], tmp[1], demHeader)
+        if hasattr(self, 'headerPaths'):
+            headers = [parse_epoch_header(hp) for hp in self.headerPaths]
+            combinedHeader = combine_headers(headers[0], headers[1], demHeader)
         else:
             # probably have DEM or incidence file
-            hdrs = demHeader
+            combinedHeader = demHeader
 
-        to_geotiff(hdrs, self.inputFile, self.outputFile, self.noDataValue)
+        to_geotiff(combinedHeader, self.inputFile, self.outputFile, self.noDataValue)
 
