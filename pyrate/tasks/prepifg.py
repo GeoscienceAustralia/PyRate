@@ -1,20 +1,13 @@
 import os, luigi, pickle
 import pyrate.config as config
 from pyrate.prepifg import (
-    CROP_OPTIONS,
-    CUSTOM_CROP,
     Ifg,
-    check_looks,
-    check_resolution,
-    get_extents,
     checkValidParameters,
     mlooked_path,
     prepare_ifg)
 from pyrate.tasks.converttogeotif import ConvertToGeotiff
 from pyrate.tasks.utils import (
-    pythonifyConfig,
     IfgListMixin,
-    DictParam,
     InputParam,
     RasterParam)
 from pyrate.scripts.run_pyrate import warp_required

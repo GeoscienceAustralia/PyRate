@@ -23,10 +23,9 @@ datasets will share the same pixel size and dimensions.
 .. codeauthor:: Ben Davies, NCI
 '''
 
-import os, re, pickle, luigi
+import os, re, luigi
 from glob import glob
 from os.path import join
-from StringIO import StringIO
 from pyrate import config
 from pyrate.gamma import *
 from pyrate.tasks.utils import IfgListMixin, InputParam

@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import os, sys, luigi
-from pyrate.shared import Ifg
-import pyrate.config as config
-from pyrate.prepifg import CUSTOM_CROP
+import sys, luigi
 from pyrate.tasks.utils import pythonifyConfig
 from pyrate.tasks.prepifg import PrepareInterferograms
 

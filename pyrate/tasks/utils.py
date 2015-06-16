@@ -94,4 +94,3 @@ def pythonifyConfig(configFile):
             for line in inputFile:
                 outputFile.write(line)
     return outputFilename
-

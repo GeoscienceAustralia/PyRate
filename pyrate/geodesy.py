@@ -10,7 +10,6 @@ Created: 13/3/13
 
 
 from math import floor
-
 import pyproj
 
 
