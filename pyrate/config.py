@@ -82,6 +82,8 @@ INPUT_IFG_PROJECTION = 'projection'
 ROIPAC_RESOURCE_HEADER = 'resourceHeader'
 #: FLOAT; The no data value in the interferogram files.
 NO_DATA_VALUE = 'noDataValue'
+#: FLOAT; No data averaging threshold for prepifg
+NO_DATA_AVERAGING_THRESHOLD = 'noDataAveragingThreshold'
 #: BOOL (1/0); Use amplitude images NOT CURRENTLY USED
 AMPLITUDE_FLAG = 'ampflag'
 #: BOOL (1/0); Use baseline information NOT CURRENTLY USED

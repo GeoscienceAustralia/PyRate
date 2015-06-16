@@ -43,9 +43,69 @@ CROP_OPTIONS = [MINIMUM_CROP, MAXIMUM_CROP, CUSTOM_CROP, ALREADY_SAME_SIZE]
 GRID_TOL = 1e-6
 
 
+def checkValidParameters(
+    cropOpt,
+    rasters,
+    xlooks,
+    ylooks,
+    userExts):
+
+    if cropOpt not in CROP_OPTIONS:
+        raise PreprocessError("Unrecognised crop option: %s" % cropOpt)
+
+    if cropOpt == CUSTOM_CROP and not userExts:
+        raise PreprocessError('No custom cropping extents specified')
+
+    for raster in rasters:
+        if not raster.is_open:
+            raster.open()
+
+    check_looks(xlooks, ylooks)
+    check_resolution(rasters)
+
+    return get_extents(rasters, cropOpt, userExts)
+
+
+def prepare_ifg(
+    raster,
+    xlooks,
+    ylooks,
+    exts,
+    thresh,
+    crop_opt,
+    verbose=True):
+    # Determine cmd line args for gdalwarp calls for each ifg (gdalwarp has no
+    # API. For resampling, gdalwarp is called 2x. 1st to subset the source data
+    # for Pirate style averaging/resampling, 2nd to generate the final dataset
+    # with correct extents/shape/cell count. Without resampling, gdalwarp is
+    # only needed to cut out the required segment.
+
+    do_multilook = xlooks > 1 or ylooks > 1
+
+    # resolution=None completes faster for non-multilooked layers in gdalwarp
+    res = None
+    if do_multilook:
+        res = [xlooks * raster.x_step, ylooks * raster.y_step]
+
+    if not do_multilook and crop_opt == ALREADY_SAME_SIZE:
+        return None
+
+    if not raster.is_open:
+        raster.open()
+
+    return warp(raster, xlooks, ylooks, exts, res, thresh, verbose)
+
+
+
 # TODO: crop options 0 = no cropping? get rid of same size (but it is in explained file)
-def prepare_ifgs(ifgs, crop_opt, xlooks, ylooks, thresh=0.5,
-                    user_exts=None, verbose=False):
+def prepare_ifgs(
+    rasters,
+    crop_opt,
+    xlooks,
+    ylooks,
+    thresh=0.5,
+    user_exts=None,
+    verbose=False):
     """
     Produces multilooked/resampled data files for PyRate analysis.
 
@@ -62,39 +122,9 @@ def prepare_ifgs(ifgs, crop_opt, xlooks, ylooks, thresh=0.5,
     :param user_exts: CustomExts tuple with user sepcified lat long corners
     :param verbose: Controls level of gdalwarp output
     """
-    if crop_opt not in CROP_OPTIONS:
-        raise PreprocessError("Unrecognised crop option: %s" % crop_opt)
+    exts = checkValidParameters(crop_opt, rasters, xlooks, ylooks, user_exts)
 
-    if crop_opt == CUSTOM_CROP and not user_exts:
-        raise PreprocessError('No custom cropping extents specified')
-
-    check_looks(xlooks, ylooks)
-
-    for i in ifgs:
-        if not i.is_open:
-            i.open()
-
-    check_resolution(ifgs)
-
-    # Determine cmd line args for gdalwarp calls for each ifg (gdalwarp has no
-    # API. For resampling, gdalwarp is called 2x. 1st to subset the source data
-    # for Pirate style averaging/resampling, 2nd to generate the final dataset
-    # with correct extents/shape/cell count. Without resampling, gdalwarp is
-    # only needed to cut out the required segment.
-
-    do_multilook = xlooks > 1 or ylooks > 1
-
-    # resolution=None completes faster for non-multilooked layers in gdalwarp
-    res = None
-    if do_multilook:
-        res = [xlooks * i.x_step, ylooks * i.y_step]
-
-    # verify extents
-    exts = get_extents(ifgs, crop_opt, user_exts)
-    if not do_multilook and crop_opt == ALREADY_SAME_SIZE:
-        return None
-
-    return [warp(i, xlooks, ylooks, exts, res, thresh, verbose) for i in ifgs]
+    return [prepare_ifg(i, xlooks, ylooks, exts, thresh, crop_opt, verbose) for i in rasters]
 
 
 def get_extents(ifgs, crop_opt, user_exts=None):
@@ -121,7 +151,6 @@ def _file_ext(raster):
     """
     Returns file ext string based on type of raster.
     """
-
     if isinstance(raster, Ifg):
         return "tif"
     elif isinstance(raster, DEM):

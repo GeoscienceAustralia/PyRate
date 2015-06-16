@@ -273,7 +273,7 @@ class SameSizeTests(unittest.TestCase):
     def test_already_same_size(self):
         # should do nothing as layers are same size & no multilooking required
         res = prepare_ifgs(same_exts_ifgs(), ALREADY_SAME_SIZE, 1, 1)
-        self.assertEqual(res, None)
+        self.assertFalse(any(res))
 
     def test_already_same_size_mismatch(self):
         self.assertRaises(PreprocessError, prepare_ifgs,
