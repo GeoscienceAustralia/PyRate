@@ -28,7 +28,9 @@ Created on 12/09/2012
 
 import os, luigi
 import pyrate.ifgconstants as ifc
+import pyrate.config as config
 from pyrate.roipac import *
+from pyrate.tasks.utils import InputParam, IfgListMixin
 
 
 
@@ -48,15 +50,32 @@ class RoipacHasRun(luigi.task.ExternalTask):
 
 
 
-class ConvertToGeotiff(luigi.Task):
+class ResourceHeaderExists(luigi.ExternalTask):
+    '''
+    Ensure that the resource header exists.
+    '''
+
+    resourceHeader = luigi.Parameter()
+
+    PRIORITY = 100
+
+    def priority(self):
+        return self.PRIORITY
+
+    def output(self):
+        return [luigi.LocalTarget(self.resourceHeader)]
+
+
+
+class ConvertFileToGeotiff(luigi.Task):
     '''
     Task responsible for converting a GAMMA file to GeoTif.
     '''
 
     inputFile = luigi.Parameter()
     projection = luigi.Parameter()
-    outputDir = luigi.Parameter(default=None, significant=False)
-    noDataValue = luigi.Parameter(significant=False)
+    outputDir = luigi.Parameter(config_path=InputParam(config.OBS_DIR), significant=False)
+    noDataValue = luigi.FloatParameter(config_path=InputParam(config.NO_DATA_VALUE), significant=False)
 
     def requires(self):
         '''
@@ -78,6 +97,15 @@ class ConvertToGeotiff(luigi.Task):
         if ifc.PYRATE_DATUM not in header:  # DEM already has DATUM
             header[ifc.PYRATE_DATUM] = self.projection
 
+        print
+        print
+        print
+        print
+        print 'writing to {}'.format(self.outputFile)
+        print
+        print
+        print
+        print
         to_geotiff(header, self.inputFile, self.outputFile, self.noDataValue)
 
     def output(self):
@@ -91,4 +119,62 @@ class ConvertToGeotiff(luigi.Task):
         if self.outputDir is not None:
             self.outputFile = os.path.join(self.outputDir, self.outputFile)
         return [luigi.file.LocalTarget(self.outputFile)]
+
+
+
+class _DoConvertToGeotiffRoipac(IfgListMixin, luigi.WrapperTask):
+    projection = luigi.Parameter(
+        default = None,
+        config_path = InputParam(config.INPUT_IFG_PROJECTION),
+        significant = False)
+
+    resourceHeader = luigi.Parameter(
+        default = None,
+        config_path = InputParam(config.ROIPAC_RESOURCE_HEADER),
+        significant = False)
+
+    def priority(self):
+        '''
+        The requires method of this Task *may* reqire the
+        existence of a header file... so that needs to be
+        cheked first... potentially.
+        '''
+
+        return ResourceHeaderExists.PRIORITY - 1
+
+    def requires(self):
+        if self.resourceHeader is not None:
+            header = parse_header(self.resourceHeader)
+            if ifc.PYRATE_DATUM not in header:
+                if self.projection is not None:
+                    projection = options.projection
+                else:
+                    raise Exception('Error: header/resource file does not include DATUM and -p option not given')
+            projection = header[ifc.PYRATE_DATUM]
+        else:
+            if self.projection:
+                projection = self.projection
+            else:
+               raise Exception('Error: no header/resource file given and -p option not specified')
+
+        ifgFiles = self.ifgList(tif=False)
+        tasks = [ConvertFileToGeotiff(
+            inputFile = path,
+            projection = self.projection) for path in ifgFiles]
+        return tasks
+
+
+
+class ConvertToGeotiff(luigi.WrapperTask):
+    resourceHeader = luigi.Parameter(
+        default = None,
+        config_path = InputParam(config.ROIPAC_RESOURCE_HEADER),
+        significant = False)
+
+    def requires(self):
+        tasks = [_DoConvertToGeotiffRoipac()]
+        if self.resourceHeader is not None:
+            tasks.append(ResourceHeaderExists(self.resourceHeader))
+
+        return tasks
 

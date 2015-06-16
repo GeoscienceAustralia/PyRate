@@ -27,7 +27,9 @@ import os, re, pickle, luigi
 from glob import glob
 from os.path import join
 from StringIO import StringIO
+from pyrate import config
 from pyrate.gamma import *
+from pyrate.tasks.utils import IfgListMixin, InputParam
 
 
 
@@ -50,15 +52,15 @@ class GammaHasRun(luigi.task.ExternalTask):
 
 
 
-class ConvertToGeotiff(luigi.Task):
+class ConvertFileToGeotiff(luigi.Task):
     '''
     Task responsible for converting a GAMMA file to GeoTif.
     '''
 
     inputFile = luigi.Parameter()
-    outputDir = luigi.Parameter(default=None, significant=False)
-    demHeaderPkl = luigi.Parameter(significant=False)
-    noDataValue = luigi.Parameter(significant=False)
+    demHeaderFile = luigi.Parameter(config_path=InputParam(config.DEM_HEADER_FILE))
+    outputDir = luigi.Parameter(significant=False, config_path=InputParam(config.OBS_DIR))
+    noDataValue = luigi.FloatParameter(significant=False, config_path=InputParam(config.NO_DATA_VALUE))
 
     def requires(self):
         '''
@@ -97,16 +99,20 @@ class ConvertToGeotiff(luigi.Task):
         Overload of :py:meth:`luigi.Task.run`.
         '''
 
-        sio = StringIO(self.demHeaderPkl)
-        demHeader = pickle.load(sio)
-        # find param files containing filename dates
+        demHeader = parse_dem_header(self.demHeaderFile)
 
+        # find param files containing filename dates
         if hasattr(self, 'headerPaths'):
             headers = [parse_epoch_header(hp) for hp in self.headerPaths]
             combinedHeader = combine_headers(headers[0], headers[1], demHeader)
         else:
             # probably have DEM or incidence file
             combinedHeader = demHeader
-
         to_geotiff(combinedHeader, self.inputFile, self.outputFile, self.noDataValue)
+
+
+
+class ConvertToGeotiff(IfgListMixin, luigi.WrapperTask):
+    def requires(self):
+        return [ConvertFileToGeotiff(inputFile=fn) for fn in self.ifgList(tif=False)]
 

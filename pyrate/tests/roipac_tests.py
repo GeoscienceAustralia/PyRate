@@ -12,11 +12,18 @@ from os.path import exists, join
 from numpy.testing import assert_array_almost_equal
 
 import pyrate.ifgconstants as ifc
+from pyrate import roipac
+from pyrate.config import (
+    INPUT_IFG_PROJECTION,
+    NO_DATA_VALUE,
+    OBS_DIR,
+    IFG_FILE_LIST,
+    PROCESSOR)
+from pyrate.roipac import RoipacException
+from pyrate.scripts.converttogtif import main as roipacMain
+from pyrate.tasks.utils import DUMMY_SECTION_NAME
 from pyrate.tests.common import HEADERS_TEST_DIR, PREP_TEST_OBS, PREP_TEST_TIF
 from pyrate.tests.common import SYD_TEST_DEM_UNW, SYD_TEST_DEM_HDR, SYD_TEST_DEM_DIR, SYD_TEST_OBS
-from pyrate import roipac
-from pyrate.roipac import RoipacException
-from pyrate.scripts.roipac import main as roipacMain
 
 gdal.UseExceptions()
 
@@ -32,28 +39,49 @@ FULL_HEADER_PATH  = join(HEADERS_TEST_DIR, "geo_060619-060828.unw.rsc")
 
 
 class RoipacCommandLine(unittest.TestCase):
+    def setUp(self):
+        self.confFile = '/tmp/roipac_test.cfg'
+        self.ifgListFile = '/tmp/roipac_ifg.list'
+
+    def tearDown(self):
+        def rmPaths(paths):
+            for path in paths:
+                try: os.remove(path)
+                except: pass
+
+        rmPaths(self.expPaths)
+        rmPaths([self.confFile, self.ifgListFile])
+
+    def makeInputFiles(self, data, projection):
+        with open(self.confFile, 'w') as conf:
+            conf.write('[{}]\n'.format(DUMMY_SECTION_NAME))
+            conf.write('{}: {}\n'.format(INPUT_IFG_PROJECTION, projection))
+            conf.write('{}: {}\n'.format(NO_DATA_VALUE, '0.0'))
+            conf.write('{}: {}\n'.format(OBS_DIR, '/tmp'))
+            conf.write('{}: {}\n'.format(IFG_FILE_LIST, self.ifgListFile))
+            conf.write('{}: {}\n'.format(PROCESSOR, '0'))
+        with open(self.ifgListFile, 'w') as ifgl:
+            ifgl.write('\n'.join(data))
 
     def test_cmd_ifg(self):
         base_paths = ['geo_070709-070813.unw', 'geo_060619-061002.unw']
-        data0, data1 = [join(SYD_TEST_OBS, i) for i in base_paths]
-        sys.argv = ['roipac.py', '-d', '/tmp', '-p', 'WGS84', data0, data1]
-
         base_exp = ['geo_070709-070813.tif', 'geo_060619-061002.tif']
-        exp_paths = [join('/tmp', i) for i in base_exp]
-
-        roipacMain()
-        for p in exp_paths:
-            self.assertTrue(os.path.exists(p))
-            os.remove(p)
-
+        self.dataPaths = [join(SYD_TEST_OBS, i) for i in base_paths]
+        self.expPaths = [join('/tmp', i) for i in base_exp]
+        self.common_check()
 
     def test_cmd_dem(self):
-        sys.argv = ['roipac.py', '-d', '/tmp', '-p', 'WGS84', SYD_TEST_DEM_UNW]
-        exp_path = '/tmp/sydney_trimmed.tif'
+        self.expPaths = ['/tmp/sydney_trimmed.tif']
+        self.dataPaths = [SYD_TEST_DEM_UNW]
+        self.common_check()
 
+    def common_check(self):
+        self.makeInputFiles(self.dataPaths, 'WGS84')
+        sys.argv = ['roipac.py', self.confFile]
         roipacMain()
-        self.assertTrue(os.path.exists(exp_path))
-        os.remove(exp_path)
+        for path in self.expPaths:
+            self.assertTrue(os.path.exists(path), '{} does not exist'.format(path))
+
 
 
 class RoipacToGeoTiffTests(unittest.TestCase):

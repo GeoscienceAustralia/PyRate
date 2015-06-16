@@ -1,5 +1,5 @@
 """
-Library/script to convert ROIPAC headers to ESRI's BIL format.
+Utilities for converting ROIPAC headers to ESRI's BIL format.
 
 GDAL lacks a driver to parse ROIPAC headers. This module translates ROIPAC
 headers into ESRI's BIL format, which is supported by GDAL. A basic command line

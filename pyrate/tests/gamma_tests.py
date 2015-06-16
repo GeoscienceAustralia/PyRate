@@ -11,9 +11,17 @@ from os.path import join
 from datetime import date
 from numpy.testing import assert_array_almost_equal
 
-from pyrate.scripts.gamma import main as gammaMain
+from pyrate.scripts.converttogtif import main as gammaMain
 from pyrate import gamma
+from pyrate.tasks.utils import DUMMY_SECTION_NAME
 import pyrate.ifgconstants as ifc
+from pyrate.config import (
+    DEM_HEADER_FILE,
+    NO_DATA_VALUE,
+    OBS_DIR,
+    IFG_FILE_LIST,
+    PROCESSOR)
+
 from pyrate.tests.common import GAMMA_TEST_DIR
 
 gdal.UseExceptions()
@@ -26,23 +34,41 @@ class GammaCommandLineTests(unittest.TestCase):
     def setUp(self):
         self.base = join(os.environ['PYRATEPATH'], 'tests', 'gamma')
         self.hdr = join(self.base, 'dem16x20raw.dem.par')
+        self.confFile = '/tmp/gamma_test.cfg'
+        self.ifgListFile = '/tmp/gamma_ifg.list'
 
     def tearDown(self):
-        os.remove(self.exp_path)
+        try: os.remove(self.exp_path)
+        except: pass
+        try: os.remove(self.confFile)
+        except: pass
+        try: os.remove(self.ifgListFile)
+        except: pass
+
+    def makeInputFiles(self, data):
+        with open(self.confFile, 'w') as conf:
+            conf.write('[{}]\n'.format(DUMMY_SECTION_NAME))
+            conf.write('{}: {}\n'.format(DEM_HEADER_FILE, self.hdr))
+            conf.write('{}: {}\n'.format(NO_DATA_VALUE, '0.0'))
+            conf.write('{}: {}\n'.format(OBS_DIR, '/tmp'))
+            conf.write('{}: {}\n'.format(IFG_FILE_LIST, self.ifgListFile))
+            conf.write('{}: {}\n'.format(PROCESSOR, '1'))
+        with open(self.ifgListFile, 'w') as ifgl:
+            ifgl.write(data)
 
     def test_cmd_ifg(self):
         data = join(self.base, '16x20_20090713-20090817_VV_4rlks_utm.unw')
-        sys.argv = ['gamma.py', '-d', '/tmp', self.hdr, data]
         self.exp_path = '/tmp/16x20_20090713-20090817_VV_4rlks_utm.tif'
-        self.common_check()
+        self.common_check(data)
 
     def test_cmd_dem(self):
         data = join(self.base, 'dem16x20raw.dem')
-        sys.argv = ['gamma.py', '-d', '/tmp', self.hdr, data]
         self.exp_path = '/tmp/dem16x20raw.tif'
-        self.common_check()
+        self.common_check(data)
 
-    def common_check(self):
+    def common_check(self, data):
+        self.makeInputFiles(data)
+        sys.argv = ['gamma.py', self.confFile]
         gammaMain()
         self.assertTrue(os.path.exists(self.exp_path))
 

@@ -16,7 +16,7 @@ An example PyRate configuration file is as follows::
     ifgxfirst:    152.0
     ifgxlast:     152.2
     ifgyfirst:    -4.2
-    ifgylast:     -4.3 
+    ifgylast:     -4.3
 
     orbfit:        0
     orbfitmethod:  1
@@ -58,7 +58,11 @@ NO_MULTILOOKING = 1
 NUMBER_OF_SETS = 'nsets'
 #: STR; Name of input interferogram file
 IFG_FILE_LIST = 'ifgfilelist'
-#: STR; Name of directory containing input interferograms
+#: STR; The name of the interferogram processor used (0==ROIPAC, 1==GAMMA)
+PROCESSOR = 'processor'
+#: STR; Name of directory containing input interferograms.
+#: In the case of Python PyRate, these the the tif files,
+#: Not the outputs from gamma or roipac.
 OBS_DIR = 'obsdir'
 #: STR; Name of directory for saving output products
 OUT_DIR = 'outdir'
@@ -66,9 +70,19 @@ OUT_DIR = 'outdir'
 NUM_SETS = 'nsets'
 #: STR; Directory containing simulated datasets NOT CURRENTLY USED
 SIM_DIR = 'simdir'
-#: STR; Name of Digital Elevation Model file
+#: STR; Name of Digital Elevation Model file used in constructing the interferograms
 DEM_FILE = 'demfile'
-#: BOOL (1/0); Use amplitude images NOT CURRENTLY USED 
+#: STR; Name of the header for the DEM
+DEM_HEADER_FILE = 'demHeaderFile'
+#: STR; The projection of the input interferograms. When *PROCESSOR* == 0, either
+#: this or *ROIPAC_RESOURCE_HEADER* must be provided.
+INPUT_IFG_PROJECTION = 'projection'
+#: STR; The resource header used for conferting ROIPAC interferograms. When *PROCESSOR* == 0, either
+#: this or *INPUT_IFG_PROJECTION* must be provided.
+ROIPAC_RESOURCE_HEADER = 'resourceHeader'
+#: FLOAT; The no data value in the interferogram files.
+NO_DATA_VALUE = 'noDataValue'
+#: BOOL (1/0); Use amplitude images NOT CURRENTLY USED
 AMPLITUDE_FLAG = 'ampflag'
 #: BOOL (1/0); Use baseline information NOT CURRENTLY USED
 PERP_BASELINE_FLAG = 'basepflag'
@@ -91,9 +105,9 @@ IFG_YFIRST = 'ifgyfirst'
 IFG_YLAST = 'ifgylast'
 
 # reference pixel parameters
-#: FLOAT; Coordinate in x of reference pixel OR -1 = perform reference pixel search 
+#: FLOAT; Coordinate in x of reference pixel OR -1 = perform reference pixel search
 REFX = 'refx'
-#: FLOAT; Coordinate in y of reference pixel OR -1 = perform reference pixel search 
+#: FLOAT; Coordinate in y of reference pixel OR -1 = perform reference pixel search
 REFY = 'refy'
 #: INT; Number of reference pixel grid search nodes in x dimension
 REFNX = "refnx"
@@ -106,14 +120,14 @@ REF_MIN_FRAC = 'refminfrac'
 
 # orbital error correction/parameters
 #: BOOL (1/0); Boolean flag controlling whether to apply orbital error correction
-ORBITAL_FIT = 'orbfit' 
+ORBITAL_FIT = 'orbfit'
 #: BOOL (1/2); Method for orbital error correction, 1: ifg by ifg/independent, 2: epoch by epoch/network
-ORBITAL_FIT_METHOD = 'orbfitmethod'  
+ORBITAL_FIT_METHOD = 'orbfitmethod'
 #: BOOL (1/2/3) Order of orbital error model, 1 = planar in x and y (2 parameter model, 2 = quadratic in x and y (5 parameter model), 3 = quadratic in x and cubic in y (part-cubic 6 parameter model)
-ORBITAL_FIT_DEGREE = 'orbfitdegrees' 
+ORBITAL_FIT_DEGREE = 'orbfitdegrees'
 #: INT; Multi look factor for orbital error calculation in x dimension
 ORBITAL_FIT_LOOKS_X = 'orbfitlksx'
-#: INT; Multi look factor for orbital error calculation in y dimension 
+#: INT; Multi look factor for orbital error calculation in y dimension
 ORBITAL_FIT_LOOKS_Y = 'orbfitlksy'
 # ORBITAL_FIT_orbrefest:	 1 BOOLEAN (1/0) # remove reference phase
 # ORBITAL_FIT_ orbmaskflag:   1 BOOLEAN (1/0) # mask some patches for orbital correction
