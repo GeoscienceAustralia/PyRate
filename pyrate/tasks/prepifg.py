@@ -2,7 +2,7 @@ import os, luigi, pickle
 import pyrate.config as config
 from pyrate.prepifg import (
     Ifg,
-    checkValidParameters,
+    getAnalysisExtent,
     mlooked_path,
     prepare_ifg)
 from pyrate.tasks.converttogeotif import ConvertToGeotiff
@@ -36,7 +36,7 @@ class GetAnalysisExtents(IfgListMixin, luigi.Task):
 
         ifgs = [Ifg(path) for path in self.ifgList()]
 
-        extents = checkValidParameters(
+        extents = getAnalysisExtent(
             self.crop_opt,
             ifgs,
             self.xlooks,

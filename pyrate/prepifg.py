@@ -43,7 +43,7 @@ CROP_OPTIONS = [MINIMUM_CROP, MAXIMUM_CROP, CUSTOM_CROP, ALREADY_SAME_SIZE]
 GRID_TOL = 1e-6
 
 
-def checkValidParameters(
+def getAnalysisExtent(
     cropOpt,
     rasters,
     xlooks,
@@ -122,7 +122,7 @@ def prepare_ifgs(
     :param user_exts: CustomExts tuple with user sepcified lat long corners
     :param verbose: Controls level of gdalwarp output
     """
-    exts = checkValidParameters(crop_opt, rasters, xlooks, ylooks, user_exts)
+    exts = getAnalysisExtent(crop_opt, rasters, xlooks, ylooks, user_exts)
 
     return [prepare_ifg(i, xlooks, ylooks, exts, thresh, crop_opt, verbose) for i in rasters]
 
