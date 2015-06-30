@@ -1,0 +1,238 @@
+html {
+    font-family: Arial;
+}
+
+html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+}
+
+body.wait *, body.wait {
+    cursor: progress !important;
+}
+
+#map {
+    position: fixed;
+    top: 0px;
+    right: 0px;
+    height: 100%;
+    width: 65%;/*75%;*/
+    margin: 0;
+    background-color: #fff;
+}
+
+#main-container { /*contains all content related to choosing data and showing chart. Note this does not have class 'container'*/
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    height: 100%;
+    width: 35%;
+    /*min-width: 400px;*/ /*causes the map to be overlapped by the control panel when the page is resized. Not sure how to avoid this.*/
+    font-size: x-small;
+}
+
+#main-container-toggle {
+    display:none;
+}
+
+#main-container div {
+    box-sizing: border-box;
+}
+
+#tab-nav-container { /*contains the navigation tabs*/
+    display: none;
+}
+
+#tab-container { /*contains the tabs themselves*/
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    height: 100%;
+    width: 100%;
+    background-color: white;
+}
+
+#data-chart-container {
+    display: block;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    height: 100%;
+    width: 100%;
+}
+
+#data-container { /*contains the selects and related for choosing data*/
+    display: block;
+}
+
+#chart-container, #weights-container {
+    height: 300px;
+}
+/*
+#chart-container {
+    display: inline-block;
+}
+*/
+#chart-panel {
+    display: inline-block;
+    font-size: small;
+    width: 80%;
+    height: 99% /*hack to deal with rotated ticks not leaving quite enough room */
+    /*vertical-align: top;*/
+    /*float: left;*/
+}
+
+#legend-panel {
+    display: inline-block;
+    width: 17%;
+    vertical-align: top;
+    float: right;
+}
+
+#weights-panel {
+    font-size: small;
+    width: 80%;
+    height: 99% /*hack to deal with rotated ticks not leaving quite enough room */
+}
+
+#saved-variable-panel {
+    min-height: 100px;
+    height: 100%;
+}
+
+#save-variable-button {
+    width: 100%;
+}
+
+#chart-panel .chart-button {
+    position: absolute;
+    cursor: pointer;
+}
+
+#chart-panel div.chart-button {
+    font-size: x-small;
+    color: black;
+    background-color: #eee;
+    padding: 2px;
+    border: 1px solid #444;
+    text-align: right;
+}
+
+#color-table {
+    position: absolute;
+    display: inline-block;
+    top: 50px;
+    left: 10px;
+    z-index: 10000;
+    left: 12px;
+    top: 70px;
+    font-size: x-small;
+    vertical-align: middle;
+    text-align: center;
+    /*border-style: solid;
+    border-color: black;
+    border-width: 1px;*/
+}
+
+#color-table div {
+    border-style: solid;
+    border-color: black;
+    border-width: 1px;
+}
+
+#color-table span {
+  display: inline-block;
+  vertical-align: middle;
+  line-height: 22px; /* <-- adjust this */
+}
+
+#color-table .color-entry {
+    height: 22px;
+    width: 85px;
+    vertical-align: middle;
+    border-style: none;
+}
+
+.inner-container {
+    width: 100%;
+    left: 0px;
+    padding: 4px;
+}
+
+.select-panel {
+    display: block;
+    width: 100%;
+    margin-bottom: 8px;
+}
+
+.button-panel {
+    display: block;
+    text-align: center;
+}
+
+.inner-button-panel {
+    display: inline-block;
+    padding: 4px;
+}
+
+.inner-button-panel button {
+    display: inline-block;
+}
+
+.param-text {
+    align: right;
+}
+
+.select-panel * {
+    display: block;
+    width: 100%;
+}
+
+.description-label {
+    margin-top: 5px;
+}
+
+.nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.nav li {
+    height: 100%;
+    display: inline;
+    border: none;
+    float: left;
+    padding: 0;
+    margin: 0;
+}
+
+.nav a {
+    display: block;
+    text-decoration: none;
+    color: black;
+    background-color: #ccc;
+    border: solid;
+    border-color: #ddd;
+    border-width: 1px 1px 0 1px;
+    margin-right: 5px;
+    text-align: center;
+    font-weight: bold;
+    min-width: 120px;
+}
+
+.nav a:hover {
+    color: dodgerblue;
+    background-color: #666;
+}
+
+.nav .selected {
+    color: white;
+    background-color: #666;
+}
+
+.nav a.selected:hover {
+    color: white;
+    background-color: #666;
+}

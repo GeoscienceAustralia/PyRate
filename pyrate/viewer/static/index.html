@@ -1,0 +1,179 @@
+<html>
+<head>
+    <script type="text/javascript" src="/static/js/ol.js"></script>
+    <script type="text/javascript" src="/static/js/jquery.min.js"></script>
+    <script tpye="text/javascript" src="/static/js/jquery.color.min.js"></script>
+    <script type="text/javascript" src="/static/js/flot/jquery.flot.js"></script>
+    <script type="text/javascript" src="/static/js/flot/jquery.flot.time.js"></script>
+    <script type="text/javascript" src="/static/js/flot/jquery.flot.tickrotator.js"></script>
+    <script type="text/javascript" src="/static/js/flot/jquery.flot.navigate.js"></script>
+    <script type="text/javascript" src="/static/js/pyrate.js"></script>
+    <link   type="text/css"       href="/static/css/ol.css"     rel="stylesheet"/>
+    <link   type="text/css"       href="/static/css/screen.css" rel="stylesheet"/>
+</head>
+<body>
+    <div id="map">
+        <div id="color-table" class="top-panel">
+            <div id="color-table-replaced"></div>
+        </div>
+    </div>
+    <div id="main-container">
+        <div id="tab-container">
+            <div id="data-chart-container" class="top-container">
+                <div id="data-container" class="inner-container">
+                    <div id="data-panel" class="top-panel">
+                        <div class="select-panel">
+                            <label  for="file-select">File</label>
+                            <select id="file-select"></select>
+                        </div>
+                    </div>
+                </div>
+                <div class="inner-container">
+                    <div class="top-panel">
+                        <input  id="discrete-cs-checkbox" type="checkbox">
+                        <label for="discrete-cs-checkbox" id="checkbox-label" class="description-label">Discrete color scheme</label>
+                    </div>
+                    <div class="top-panel">
+                        <input  id="draw-transect-checkbox" type="checkbox">
+                        <label for="draw-transect-checkbox" id="transect-label" class="description-label">Draw Transect</label>
+                    </div>
+                    <div class="top-panel">
+                        <label for="epsilon-textbox" id="epsilon-label" class="description-label">epsilon for kernel</label>
+                        <input id="epsilon-textbox" type="text" value="1.0" class="param-text">
+                    </div>
+                     <div class="top-panel">
+                        <label for="max-neighborhood-textbox" id="max-neighborhood-label" class="description-label">max neighbourhood for kernel</label>
+                        <input id="max-neighborhood-textbox" type="text" value="20" class="param-text">
+                    </div>
+                    <div class="top-panel">
+                        <div class = "button-panel">
+                            <div class = "inner-button-panel">
+                                <button id="shutdown-button">Shut Down</button>
+                                <button id="redraw-button">Redraw</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="chart-container" class="inner-container">
+                    <div id="chart-panel" class="top-panel"></div>
+                    <div id="legend-panel" class="top-panel"></div>
+                </div>
+                <div id="weights-container" class="inner-container">
+                    <div id="weights-panel" class="top-panel"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript">
+        // the missing value in rasters - filled in by template engine
+        // this is populated by jinga2 as are all things in double curly braces in this file.
+        var MISSING_VALUE = {{ missingValue }};
+
+        // the extent of the projection determined by images - filled in by the template engine.
+        var extent = {{ extent }};
+
+        // base url for requests - filled in by the template engine.
+        var PYRATE_BASE_URL = "{{ base_url }}";
+
+        // The name of the file to load in the initial view (i.e when the page is loaded).
+        var INITIAL_FILENAME = "{{ initialFilename }}";
+
+        // the plot
+        var dataPlotter = Plotter('#chart-panel', '#weights-panel', '#legend-panel');
+
+        // the projection to use for the map.
+        var projection = 'EPSG:4326';
+        // note that the following did not work (though I thought it would)
+        //var projection = new ol.proj.Projection({code:'EPSG:4326'});
+
+        // get the initial layer (frequency of missing) for the map. Note that
+        // currentLayer is a global defined in pyrate.js.
+        var setInitialImage = function(newLayer, result) { currentLayer = newLayer; }
+        getImageForFileName(INITIAL_FILENAME, setInitialImage, projection, null);
+
+        // the map
+        var map = new ol.Map({
+            target: 'map',
+            layers: [currentLayer],
+            view: new ol.View({
+            projection: projection,
+                center: ol.extent.getCenter(extent),
+                extent: extent,
+                zoom: 2
+            })
+        });
+
+        // zoom the map to the appropriate extent.
+        map.getView().fitExtent(extent, map.getSize());
+
+        // add control for showing the mouse position
+        map.addControl(new ol.control.MousePosition({
+            coordinateFormat: ol.coordinate.createStringXY(4)
+        }));
+
+        // wire up clicks on the map (for getting time series)
+        var timeSeriesGetter = function(evt) {
+            getTimeSeries(evt.coordinate, dataPlotter, "#epsilon-textbox");
+        }
+        map.on('singleclick', timeSeriesGetter);
+
+        // shut the server down and close the window
+        function shutdown() {
+            $.ajax({url:"/shutdown", type:"POST", async:false});
+            window.close();
+        }
+
+        // create the drawing layer.
+        var layerAndDrawer = createDrawingLayer(
+            map,
+            dataPlotter,
+            "#epsilon-textbox",
+            "#max-neighborhood-textbox"
+        );
+
+        // setup and populate the available file drop down list
+        var checkDiscrete = function() { return $('#discrete-cs-checkbox:checked').val() ? true : false; };
+        imageFetcher = setupFileSelect(
+            '#file-select',
+            makeRegionImageFetcher(map, checkDiscrete, layerAndDrawer.layer, '#color-table')
+        );
+
+        // function that is called when draw-transect-checkbox is selected/unselected.
+        var drawTransect = function() {
+            if($('#draw-transect-checkbox:checked').val()) {
+                map.un('singleclick', timeSeriesGetter);
+                map.addLayer(layerAndDrawer.layer);
+                map.getLayers().setAt(map.getLayers().getArray().length, layerAndDrawer.layer);
+                map.addInteraction(layerAndDrawer.drawer);
+                $('#redraw-button').bind('click', $.proxy(layerAndDrawer.update, layerAndDrawer));
+                $('#weights-container').show();
+            } else {
+                $('#weights-container').hide();
+                $('#redraw-button').unbind('click');
+                layerAndDrawer.layer.getSource().clear();
+                map.removeInteraction(layerAndDrawer.drawer);
+                map.removeLayer(layerAndDrawer.layer);
+                map.on('singleclick', timeSeriesGetter);
+            }
+        };
+
+        // wire up the draw transect check box. This will automatically
+        // refetch the image
+        $('#draw-transect-checkbox').click(drawTransect);
+
+        // wire up the shutdown button
+        $('#shutdown-button').click(shutdown);
+
+        // wire up the continuous/discrete color scheme checkbox. touching it
+        // will automatically
+        $('#discrete-cs-checkbox').click(imageFetcher);
+
+        // Show progress curser while waiting for requests.
+        $(document).ajaxStart(function() { $('body').addClass('wait'); });
+        $(document).ajaxStop(function() { $('body').removeClass('wait'); });
+
+        // redraw the plots when the window is resized
+        $(window).resize(function() { dataPlotter.reDraw(); });
+    </script>
+</body>
+</html>
