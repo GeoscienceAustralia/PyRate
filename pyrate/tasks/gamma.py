@@ -37,15 +37,15 @@ class GammaHasRun(luigi.task.ExternalTask):
     Phaux task used to ensure that the required outputs from GAMMA exist.
     '''
 
-    fileName = luigi.Parameter()
+    fileName     = luigi.Parameter()
     masterHeader = luigi.Parameter(default=None)
-    slaveHeader = luigi.Parameter(default=None)
+    slaveHeader  = luigi.Parameter(default=None)
 
     def output(self):
         targets = [luigi.LocalTarget(self.fileName)]
-        if self.masterHeader:
+        if self.masterHeader is not None:
             targets.append(luigi.LocalTarget(self.masterHeader))
-        if self.slaveHeader:
+        if self.slaveHeader is not None:
             targets.append(luigi.LocalTarget(self.slaveHeader))
         return targets
 
@@ -56,10 +56,10 @@ class ConvertFileToGeotiff(luigi.Task):
     Task responsible for converting a GAMMA file to GeoTif.
     '''
 
-    inputFile = luigi.Parameter()
-    demHeaderFile = luigi.Parameter(config_path=InputParam(config.DEM_HEADER_FILE))
-    outputDir = luigi.Parameter(significant=False, config_path=InputParam(config.OBS_DIR))
-    noDataValue = luigi.FloatParameter(significant=False, config_path=InputParam(config.NO_DATA_VALUE))
+    inputFile     = luigi.Parameter()
+    demHeaderFile = luigi.Parameter(     config_path=InputParam(config.DEM_HEADER_FILE))
+    outputDir     = luigi.Parameter(     config_path=InputParam(config.OBS_DIR))
+    noDataValue   = luigi.FloatParameter(config_path=InputParam(config.NO_DATA_VALUE))
 
     def requires(self):
         '''
@@ -88,9 +88,9 @@ class ConvertFileToGeotiff(luigi.Task):
         Overload of :py:meth:`luigi.Task.output`.
         '''
 
-        self.outputFile = '%s.tif' % os.path.splitext(os.path.basename(self.inputFile))[0]
-        if self.outputDir is not None:
-            self.outputFile = os.path.join(self.outputDir, self.outputFile)
+        self.outputFile = os.path.join(
+            self.outputDir,
+            '%s.tif' % os.path.splitext(os.path.basename(self.inputFile))[0])
         return [luigi.file.LocalTarget(self.outputFile)]
 
     def run(self):
@@ -114,4 +114,3 @@ class ConvertFileToGeotiff(luigi.Task):
 class ConvertToGeotiff(IfgListMixin, luigi.WrapperTask):
     def requires(self):
         return [ConvertFileToGeotiff(inputFile=fn) for fn in self.ifgList(tif=False)]
-

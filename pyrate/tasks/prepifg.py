@@ -17,13 +17,13 @@ from pyrate.scripts.run_pyrate import warp_required
 
 
 class GetAnalysisExtents(IfgListMixin, luigi.Task):
-    crop_opt  = luigi.IntParameter(config_path=InputParam(config.IFG_CROP_OPT))
+    crop_opt  = luigi.IntParameter(                config_path=InputParam(config.IFG_CROP_OPT))
     ifgxFirst = luigi.FloatParameter(default=None, config_path=InputParam(config.IFG_XFIRST))
     ifgyFirst = luigi.FloatParameter(default=None, config_path=InputParam(config.IFG_YFIRST))
     ifgxLast  = luigi.FloatParameter(default=None, config_path=InputParam(config.IFG_XLAST))
     ifgyLast  = luigi.FloatParameter(default=None, config_path=InputParam(config.IFG_YLAST))
-    xlooks    = luigi.IntParameter(  config_path=InputParam(config.IFG_LKSX))
-    ylooks    = luigi.IntParameter(  config_path=InputParam(config.IFG_LKSY))
+    xlooks    = luigi.IntParameter(                config_path=InputParam(config.IFG_LKSX))
+    ylooks    = luigi.IntParameter(                config_path=InputParam(config.IFG_LKSY))
 
     def requires(self):
         return [ConvertToGeotiff()]
@@ -69,12 +69,12 @@ class PrepareInterferogram(IfgListMixin, luigi.WrapperTask):
     :param verbose: Controls level of gdalwarp output
     """
 
-    ifg = RasterParam()
-    verbose   = luigi.BooleanParameter(default=True, significant=False)
+    ifg       = RasterParam()
     thresh    = luigi.FloatParameter(config_path=InputParam(config.NO_DATA_AVERAGING_THRESHOLD))
     crop_opt  = luigi.IntParameter(  config_path=InputParam(config.IFG_CROP_OPT))
     xlooks    = luigi.IntParameter(  config_path=InputParam(config.IFG_LKSX))
     ylooks    = luigi.IntParameter(  config_path=InputParam(config.IFG_LKSY))
+    verbose   = luigi.BooleanParameter(default=True, significant=False)
 
     def requires(self):
         return [GetAnalysisExtents()]
@@ -129,4 +129,3 @@ class PrepareInterferograms(IfgListMixin, luigi.WrapperTask):
 
     def complete(self):
         return self.extentsRemoved and super(PrepareInterferograms, self).complete()
-

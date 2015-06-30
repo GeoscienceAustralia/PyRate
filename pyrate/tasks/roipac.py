@@ -36,10 +36,10 @@ from pyrate.tasks.utils import InputParam, IfgListMixin
 
 class RoipacHasRun(luigi.task.ExternalTask):
     '''
-    Phaux task used to ensure that the required outputs from GAMMA exist.
+    Phaux task used to ensure that the required outputs from ROIPAC exist.
     '''
 
-    fileName = luigi.Parameter()
+    fileName   = luigi.Parameter()
     headerFile = luigi.Parameter()
 
     def output(self):
@@ -69,13 +69,13 @@ class ResourceHeaderExists(luigi.ExternalTask):
 
 class ConvertFileToGeotiff(luigi.Task):
     '''
-    Task responsible for converting a GAMMA file to GeoTif.
+    Task responsible for converting a ROIPAC file to GeoTif.
     '''
 
-    inputFile = luigi.Parameter()
-    projection = luigi.Parameter()
-    outputDir = luigi.Parameter(config_path=InputParam(config.OBS_DIR), significant=False)
-    noDataValue = luigi.FloatParameter(config_path=InputParam(config.NO_DATA_VALUE), significant=False)
+    inputFile   = luigi.Parameter()
+    projection  = luigi.Parameter()
+    outputDir   = luigi.Parameter(     config_path=InputParam(config.OBS_DIR))
+    noDataValue = luigi.FloatParameter(config_path=InputParam(config.NO_DATA_VALUE))
 
     def requires(self):
         '''
@@ -96,16 +96,6 @@ class ConvertFileToGeotiff(luigi.Task):
 
         if ifc.PYRATE_DATUM not in header:  # DEM already has DATUM
             header[ifc.PYRATE_DATUM] = self.projection
-
-        print
-        print
-        print
-        print
-        print 'writing to {}'.format(self.outputFile)
-        print
-        print
-        print
-        print
         to_geotiff(header, self.inputFile, self.outputFile, self.noDataValue)
 
     def output(self):
@@ -115,9 +105,9 @@ class ConvertFileToGeotiff(luigi.Task):
         .. todo:: This is the same as for gamma... refactor.
         '''
 
-        self.outputFile = '%s.tif' % os.path.splitext(os.path.basename(self.inputFile))[0]
-        if self.outputDir is not None:
-            self.outputFile = os.path.join(self.outputDir, self.outputFile)
+        self.outputFile = os.path.join(
+            self.outputDir,
+            '%s.tif' % os.path.splitext(os.path.basename(self.inputFile))[0])
         return [luigi.file.LocalTarget(self.outputFile)]
 
 
@@ -125,19 +115,16 @@ class ConvertFileToGeotiff(luigi.Task):
 class _DoConvertToGeotiffRoipac(IfgListMixin, luigi.WrapperTask):
     projection = luigi.Parameter(
         default = None,
-        config_path = InputParam(config.INPUT_IFG_PROJECTION),
-        significant = False)
+        config_path = InputParam(config.INPUT_IFG_PROJECTION))
 
     resourceHeader = luigi.Parameter(
         default = None,
-        config_path = InputParam(config.ROIPAC_RESOURCE_HEADER),
-        significant = False)
+        config_path = InputParam(config.ROIPAC_RESOURCE_HEADER))
 
     def priority(self):
         '''
-        The requires method of this Task *may* reqire the
-        existence of a header file... so that needs to be
-        cheked first... potentially.
+        The requires method of this Task *may* reqire the existence of a header
+        file... so that needs to be checked first.
         '''
 
         return ResourceHeaderExists.PRIORITY - 1
@@ -160,16 +147,22 @@ class _DoConvertToGeotiffRoipac(IfgListMixin, luigi.WrapperTask):
         ifgFiles = self.ifgList(tif=False)
         tasks = [ConvertFileToGeotiff(
             inputFile = path,
-            projection = self.projection) for path in ifgFiles]
+            projection = projection) for path in ifgFiles]
         return tasks
 
 
 
 class ConvertToGeotiff(luigi.WrapperTask):
+    '''
+    Convert ROIPAC files to geotifs.
+
+    This delegates the actual conversions tasks which operate on individual
+    files and is purely a convenience wrapper.
+    '''
+
     resourceHeader = luigi.Parameter(
         default = None,
-        config_path = InputParam(config.ROIPAC_RESOURCE_HEADER),
-        significant = False)
+        config_path = InputParam(config.ROIPAC_RESOURCE_HEADER))
 
     def requires(self):
         tasks = [_DoConvertToGeotiffRoipac()]
@@ -177,4 +170,3 @@ class ConvertToGeotiff(luigi.WrapperTask):
             tasks.append(ResourceHeaderExists(self.resourceHeader))
 
         return tasks
-

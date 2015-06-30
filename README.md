@@ -7,14 +7,18 @@ PyRate is a Python tool for estimating the rate (velocity) and time-series of su
 
 - [SciPy](www.scipy.org)
 - [GDAL](www.gdal.org)
-
-It may be easier to use your Linux package manager to install the system versions of the two packages above (unless virtualenv can install them).
-
-- [python-graph](https://pypi.python.org/pypi/python-graph) (easy_install python-graph-core)
-- [pyproj](https://pypi.python.org/pypi/pyproj) (pip install pyproj)
-- [nose](https://pypi.python.org/pypi/nose/) (pip install nose)
-- [pytest](https://pypi.python.org/pypi/pytest) (pip install pytest)
+- [python-graph](https://pypi.python.org/pypi/python-graph)
+- [pyproj](https://pypi.python.org/pypi/pyproj)
+- [nose](https://pypi.python.org/pypi/nose/)
+- [pytest](https://pypi.python.org/pypi/pytest)
 - [sphinx](http://sphinx-doc.org/) for building the docs.
+
+For the viewer you will also need
+
+- [Flask](http://flask.pocoo.org/)
+- [Pillow](https://pypi.python.org/pypi/Pillow)
+- [netCDF4](https://pypi.python.org/pypi/netCDF4)
+- and if your working on the NCI, you will have to install a web browser.
 
 
 ## Installation
@@ -97,6 +101,16 @@ For command line options/help:
 
 The *run_pyrate.py* script also requires the PyRate runtime configuration file. As with the previous step, if a config file is not provided as an arg, the script will look for *pyrate.conf* by default.
 
+
+### Running the viewer
+
+You run the viewer from *pyrate/viewer/web.py" and passing the directory containing the (geotif) files you want to look at as the first command line parameter. For example:
+
+	python pyrate/viewer/web.py /path/to/tifs
+
+The program looks for a file *test.ncdf* (specified by `pyrate.viewer.datamanager.IMAGE_STACK_FILE_NAME`) in */path/to/tifs* and if it cannot find it, it will create it from all the *.tif files in that directory. It will create (or overwrite) the file *na_frequency.png* at the same time.
+
+These two files will remain once the program exits and **WILL NOT BE AUTOMATICALLY RECREATED IF THE TIFF FILES CHANGE**. That is, one must manually remove *test.ncdf* to cause recreation of it.
 
 ## Todos
 

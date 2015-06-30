@@ -9,6 +9,13 @@ EXTENTS_FILE_NAME = 'region_extents.pkl'
 
 
 class InputParam(dict):
+    '''
+    Convenience class for specifying the parameter in a PyRate configuration
+    file, intended for use in specifying which value in a PyRate configuration
+    file should be used for a :py:class:`luigi.Parameter` (which is specified
+    by the parameter *conf_path* to its constructor.)
+    '''
+
     def __init__(self, name):
         self['section'] = DUMMY_SECTION_NAME
         self['name'] = name
@@ -16,14 +23,27 @@ class InputParam(dict):
 
 
 class IfgListMixin(object):
-    """
-    Mixin to aid access to commonly used 'complex' valuea.
-    """
+    '''
+    Mixin to aid access to commonly used computed values from the PyRate config
+    file.
+
+    .. todo:: This should perhaps be renamed to something like *ConfigMixin*
+        for clarity, as it is ued for accessing more than the list of
+        interferograms.
+    '''
 
     ifgListFile = luigi.Parameter(config_path=InputParam(config.IFG_FILE_LIST))
     obsDir = luigi.Parameter(config_path=InputParam(config.OBS_DIR))
 
     def ifgList(self, tif=True):
+        '''
+        Get the list of interferograms to process.
+
+        :param tif: Should the tif files be returned (*True*) or the raw
+            interferograms (*False*). The latter will probably only be required
+            before conversion to geotif files occurs.
+        '''
+
         fileNames = config.parse_namelist(self.ifgListFile)
 
         if tif:
@@ -42,11 +62,25 @@ class IfgListMixin(object):
 
 
 class DictParam(luigi.Parameter):
+    '''
+    Parameter for dictionaries.
+
+    The parameter is serialised to a string using :py:mod:`pickle`.
+    '''
+
     def parse(self, string):
+        '''
+        override of :py:meth:`luigi.Parameter.parse`.
+        '''
+
         sio = StringIO(string)
         return pickle.load(sio)
 
     def serialize(self, dct):
+        '''
+        override of :py:meth:`luigi.Parameter.serialize`.
+        '''
+
         sio = StringIO()
         pickle.dump(dct, sio)
         return sio.getvalue()
@@ -54,7 +88,15 @@ class DictParam(luigi.Parameter):
 
 
 class RasterParam(DictParam):
+    '''
+    Parameter representing a :py:class:`pyrate.shared.RasterBase` sub class.
+    '''
+
     def parse(self, string):
+        '''
+        override of :py:meth:`DictParam.parse`.
+        '''
+
         dct = super(RasterParam, self).parse(string)
         rasterType = dct['type']
         path = dct['path']
@@ -70,6 +112,10 @@ class RasterParam(DictParam):
                 'rasterBase must be an inscance DEM, Ifg or Incidence is valid')
 
     def serialize(self, rasterBase):
+        '''
+        override of :py:meth:`DictParam.serialize`.
+        '''
+
         path = rasterBase.data_path
 
         if isinstance(rasterBase, DEM):
@@ -87,7 +133,16 @@ class RasterParam(DictParam):
 
 
 def pythonifyConfig(configFile):
+    '''
+    Make a copy of a PyRate config file which can be used by Python.
+
+    Python and luigi config files *require* section headings. These are not
+    present in the PyRate config file, so we make a copy of a PyRate config
+    file and add a section heading to it so it can be parsed.
+    '''
+
     outputFilename = '{}.python'.format(configFile)
+
     with open(configFile, 'r') as inputFile:
         with open(outputFilename, 'w') as outputFile:
             outputFile.write('[{}]\n'.format(DUMMY_SECTION_NAME))

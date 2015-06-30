@@ -18,4 +18,3 @@ class ConvertToGeotiff(luigi.WrapperTask):
         else:
             raise luigi.parameter.ParameterException(
                 'invalid value for parameter {}'. format(config.PROCESSOR))
-
