@@ -42,8 +42,8 @@ from pyrate.algorithm import master_slave_ids, get_all_epochs, get_epoch_count
 # offsets are cols of 1s in a diagonal line on the LHS of the sparse array.
 
 # constants
-INDEPENDENT_METHOD = 'INDEPENDENT_METHOD'
-NETWORK_METHOD = 'NETWORK_METHOD'
+INDEPENDENT_METHOD = 1
+NETWORK_METHOD = 2
 
 PLANAR = 'PLANAR'
 QUADRATIC = 'QUADRATIC'
