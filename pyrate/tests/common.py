@@ -45,7 +45,6 @@ def sydney_data_setup():
     ifgs = [Ifg(i) for i in datafiles]
     
     for i in ifgs:
-        print i
         i.open()
 
     return ifgs
