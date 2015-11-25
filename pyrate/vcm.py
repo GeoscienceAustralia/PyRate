@@ -38,12 +38,13 @@ def unique_points(points):
     return vstack([array(u) for u in set(points) ] )
 
 
-def cvd(ifg):
+def cvd(ifg, calc_alpha=False):
     '''
     Calculate average covariance versus distance (autocorrelation) and its best fitting exponential function
 
     :param ifg: An interferogram.
     :type ifg: :py:class:`pyrate.shared.Ifg`.
+    :param calc_alpha: whether you calculate alpha.
     '''
     # distance division factor of 1000 converts to km and is needed to match Matlab code output
     distfact = 1000
@@ -96,25 +97,29 @@ def cvd(ifg):
     #acg = array([e for e in rorig if e <= maxdist])    
     r = rorig[rorig<maxdist]
     acg = acgorig[rorig<maxdist]
-       
-    # classify values of r according to bin number
-    rbin = ceil(r / w).astype(int)
-    maxbin = max(rbin) # consistent with Matlab code
     
-    cvdav = zeros( (2, maxbin) )
-
-    for b in range(maxbin):
-        cvdav[0,b] = b * w # distance instead of bin number
-        cvdav[1,b] = mean(acg[rbin == b]) # mean variance for that bin
-
-    # calculate best fit function maxvar*exp(-alpha*r)
-    alphaguess = 2 / (maxbin * w)
-    alpha = fmin(pendiffexp, x0=alphaguess, args=(cvdav,), disp=0 )
-    print "1st guess, alpha", alphaguess, alpha
-
-    assert len(alpha) == 1
+    if calc_alpha:
+        # classify values of r according to bin number
+        rbin = ceil(r / w).astype(int)
+        maxbin = max(rbin) # consistent with Matlab code
+        
+        cvdav = zeros( (2, maxbin) )
+    
+        for b in range(maxbin):
+            cvdav[0,b] = b * w # distance instead of bin number
+            cvdav[1,b] = mean(acg[rbin == b]) # mean variance for that bin
+    
+        # calculate best fit function maxvar*exp(-alpha*r)
+        alphaguess = 2 / (maxbin * w)
+        alpha = fmin(pendiffexp, x0=alphaguess, args=(cvdav,), disp=0 )
+        print "1st guess, alpha", alphaguess, alpha
+    
+        assert len(alpha) == 1
+    else:
+        alpha = [0]
     # maximum variance usually at the zero lag
     maxvar = max(acg[:len(r)])
+    
     return maxvar, alpha[0]
 
 
