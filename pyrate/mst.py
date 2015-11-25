@@ -8,6 +8,7 @@ Contains functions to calculate MST using interferograms.
 
 from itertools import product
 from numpy import array, nan, isnan, float32, empty
+import numpy as np
 
 from pyrate.algorithm import get_all_epochs, master_slave_ids, ifg_date_lookup, get_epochs
 from pyrate.algorithm import ifg_date_index_lookup
@@ -21,13 +22,12 @@ from pygraph.algorithms.minmax import minimal_spanning_tree
 
 def _remove_root_node(mst):
     """
-    Discard pygraph's root node from MST dict to conserve memory.
+    Discard pygraph's root nodes from MST dict to conserve memory.
+    Note multiple root nodes exist in MST dict.
     """
-
-    for k in mst:
+    for k in mst.keys():
         if mst[k] is None:
             del mst[k]
-            break
     return mst
 
 
@@ -138,10 +138,8 @@ def mst_matrix(ifgs):
     edges = [(i.master, i.slave) for i in ifgs]
     weights = [i.nan_fraction for i in ifgs]
     g = _build_graph(epochs.dates, edges, weights)
-
     # TODO: Investigate better algotithms for minimal spanning tree
     dflt_mst = _remove_root_node(minimal_spanning_tree(g))
-
     # prepare source and dest data arrays
     # TODO: memory efficiencies can be achieved here with tiling
     data_stack = array([i.phase_data for i in ifgs], dtype=float32)
