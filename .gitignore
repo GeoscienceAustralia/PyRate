@@ -6,3 +6,6 @@
 /tests
 /.idea
 .spyderworkspace
+python-graph/
+tests_bk
+sydney_test

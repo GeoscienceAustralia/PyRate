@@ -20,6 +20,7 @@ import os
 import subprocess
 import shlex
 
+
 def list_of_all_files(dir):
     all_files = []
     for root, dirs, files in os.walk(dir):
@@ -60,11 +61,9 @@ if __name__ == '__main__':
     dir_name_to_find_usage = "/home/sudipta/Dropbox/GA/PyRate/pyrate/"
     all_files = list_of_all_files(dir_name_to_delete_files_from)
 
-    used_files, deleted_files = clean_files_from_this_directory_to_that(
-        all_files, dir_name_to_find_usage)
+    used_files, _ = clean_files_from_this_directory_to_that(all_files, dir_name_to_find_usage)
     print "=="*50
-    need_these_files_back, _ = clean_files_from_this_directory_to_that(
-        all_files, dir_name_to_delete_files_from)
+    need_these_files_back, _ = clean_files_from_this_directory_to_that(all_files, dir_name_to_delete_files_from)
 
     used_files_filenames = map(lambda uf: os.path.split(uf)[-1], used_files)
     copied_files_filenames = map(lambda uf: os.path.split(uf)[-1], need_these_files_back)

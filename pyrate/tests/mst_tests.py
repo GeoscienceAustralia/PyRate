@@ -36,12 +36,12 @@ class MSTTests(unittest.TestCase):
         ys, xs = res.shape
 
         for y, x in product(xrange(ys), xrange(xs)):
-            r = res[y,x]
+            r = res[y, x]
             num_nodes = len(r)
             self.assertTrue(num_nodes < len(epochs.dates))
 
-            stack = array([i.phase_data[y,x] for i in self.ifgs]) # 17 ifg stack
-            self.assertTrue(0 == nsum(stack == 0)) # all 0s should be converted
+            stack = array([i.phase_data[y, x] for i in self.ifgs])  # 17 ifg stack
+            self.assertTrue(0 == nsum(stack == 0))  # all 0s should be converted
             nc = nsum(isnan(stack))
             exp_count = len(epochs.dates) - 1
 
@@ -65,7 +65,6 @@ class MSTTests(unittest.TestCase):
 
             # HACK: type testing here is a bit grubby
             self.assertTrue(all([isinstance(i, MockIfg) for i in ifgs]))
-
 
     def test_partial_nan_pixel_stack(self):
         # Ensure a limited # of coherent cells results in a smaller MST tree

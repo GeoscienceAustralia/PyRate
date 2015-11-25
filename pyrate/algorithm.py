@@ -117,13 +117,14 @@ def ifg_date_lookup(ifgs, date_pair):
     ifgs - list of Ifg objects to search in
     date_pair - a (datetime.date, datetime.date) tuple
     '''
-
     if len(date_pair) != 2:
         msg = "Need (datetime.date, datetime.date) master/slave pair"
         raise IfgException(msg)
 
     # check master/slave dates are in order
     try:
+        # TODO: Clarify: Is the comparison here for a different date? Then it should be written in a more pythonic way
+        # The if below is always true as long as the dates are different and not in order
         if date_pair[0] > date_pair[1]:
             date_pair = date_pair[1], date_pair[0]
     except:

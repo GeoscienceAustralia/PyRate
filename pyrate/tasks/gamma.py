@@ -56,10 +56,10 @@ class ConvertFileToGeotiff(luigi.Task):
     Task responsible for converting a GAMMA file to GeoTif.
     '''
 
-    inputFile     = luigi.Parameter()
-    demHeaderFile = luigi.Parameter(     config_path=InputParam(config.DEM_HEADER_FILE))
-    outputDir     = luigi.Parameter(     config_path=InputParam(config.OBS_DIR))
-    noDataValue   = luigi.FloatParameter(config_path=InputParam(config.NO_DATA_VALUE))
+    inputFile = luigi.Parameter()
+    demHeaderFile = luigi.Parameter(config_path=InputParam(config.DEM_HEADER_FILE))
+    outputDir = luigi.Parameter(config_path=InputParam(config.OBS_DIR))
+    noDataValue = luigi.FloatParameter(config_path=InputParam(config.NO_DATA_VALUE))
 
     def requires(self):
         '''

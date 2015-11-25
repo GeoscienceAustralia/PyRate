@@ -24,8 +24,8 @@ def pendiffexp(alphamod, cvdav):
     '''
 
     # maxvar usually at zero lag
-    mx = cvdav[1,0]
-    return norm(cvdav[1,:] - (mx * exp(-alphamod * cvdav[0,:])))
+    mx = cvdav[1, 0]
+    return norm(cvdav[1, :] - (mx * exp(-alphamod * cvdav[0, :])))
 
 
 def unique_points(points):
@@ -104,12 +104,12 @@ def cvd(ifg):
     cvdav = zeros( (2, maxbin) )
 
     for b in range(maxbin):
-        cvdav[0,b] = b * w # distance instead of bin number
-        cvdav[1,b] = mean(acg[rbin == b]) # mean variance for that bin
+        cvdav[0, b] = b * w  # distance instead of bin number
+        cvdav[1, b] = mean(acg[rbin == b])  # mean variance for that bin
 
     # calculate best fit function maxvar*exp(-alpha*r)
     alphaguess = 2 / (maxbin * w)
-    alpha = fmin(pendiffexp, x0=alphaguess, args=(cvdav,), disp=0 )
+    alpha = fmin(pendiffexp, x0=alphaguess, args=(cvdav,), disp=0)
     print "1st guess, alpha", alphaguess, alpha
 
     assert len(alpha) == 1

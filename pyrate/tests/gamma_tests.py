@@ -37,13 +37,14 @@ class GammaCommandLineTests(unittest.TestCase):
         self.confFile = '/tmp/gamma_test.cfg'
         self.ifgListFile = '/tmp/gamma_ifg.list'
 
-    def tearDown(self):
-        try: os.remove(self.exp_path)
-        except: pass
-        try: os.remove(self.confFile)
-        except: pass
-        try: os.remove(self.ifgListFile)
-        except: pass
+    # def tearDown(self):
+    #     print ('in teardown')
+    #     try: os.remove(self.exp_path)
+    #     except: pass
+    #     try: os.remove(self.confFile)
+    #     except: pass
+    #     try: os.remove(self.ifgListFile)
+    #     except: pass
 
     def makeInputFiles(self, data):
         with open(self.confFile, 'w') as conf:

@@ -37,9 +37,9 @@ def linear_rate(ifgs, vcm, pthr, nsig, maxsig, mst=None):
         mst = ones((nifgs, rows, cols))
 
     # preallocate NaN arrays
-    error = ones([rows,cols],dtype=float32) * nan
-    rate = ones([rows,cols],dtype=float32) * nan
-    samples = ones([rows,cols],dtype=float32) * nan
+    error = ones([rows, cols], dtype=float32) * nan
+    rate = ones([rows, cols], dtype=float32) * nan
+    samples = ones([rows, cols], dtype=float32) * nan
 
     # pixel-by-pixel calculation. nested loops to loop over the 2 image dimensions
     for i in xrange(rows):
@@ -49,27 +49,30 @@ def linear_rate(ifgs, vcm, pthr, nsig, maxsig, mst=None):
 
         for j in xrange(cols):
             # find the indices of independent ifgs for given pixel from MST
-            ind = nonzero(mst[:,i,j]==1)[0]
+            ind = nonzero(mst[:, i, j] == 1)[0]
+            print ind
 
             # iterative loop to calculate 'robust' velocity for pixel
+
             while len(ind) >= pthr:
+                print 'here in while'
 
                 # make vector of selected ifg observations
-                ifgv = obs[:,i,j][ind]
-                ifgv = ifgv.reshape(1,len(ifgv))
+                ifgv = obs[:, i, j][ind]
+                ifgv = ifgv.reshape(1, len(ifgv))
 
                 # form design matrix from appropriate ifg time spans
-                B = span[:,ind]
+                B = span[:, ind]
 
                 # Subset of full VCM matrix for selected observations
-                V = vcm[:,ind][ind,:] # Is this pulling out a subset of vcm based on mst?
+                V = vcm[:, ind][ind, :] # Is this pulling out a subset of vcm based on mst?
 
                 # Get the lower triangle cholesky decomposition. V must be positive definite (symmetrical and square)
-                T = cholesky(V,1)
+                T = cholesky(V, 1)
 
                 # Incorporate inverse of VCM into the design matrix and observations vector
-                A = solve(T,B.transpose())
-                b = solve(T,ifgv.transpose())
+                A = solve(T, B.transpose())
+                b = solve(T, ifgv.transpose())
 
                 # Factor the design matrix, incorporate covariances or weights into the
                 # system of equations, and transform the response vector.
@@ -77,12 +80,13 @@ def linear_rate(ifgs, vcm, pthr, nsig, maxsig, mst=None):
                 z = Q.conj().transpose().dot(b)
 
                 # Compute the Lstsq coefficient for the velocity
-                v = solve(R,z)
+                v = solve(R, z)
 
                 # Compute the model errors; added by Hua Wang, 12/12/2011
                 err1 = inv(V).dot(B.conj().transpose())
                 err2 = B.dot(err1)
                 err = sqrt(diag(inv(err2)))
+                print "xxxxxxxxxxxxxxxxxxxxxxxxxx===========>", err
 
                 # Compute the residuals (model minus observations)
                 r = (B * v) - ifgv
@@ -100,12 +104,15 @@ def linear_rate(ifgs, vcm, pthr, nsig, maxsig, mst=None):
                     ind = delete(ind, maxi)
                 else:
                     #if no save estimate, exit the while loop and go to next pixel
-                    rate[i,j] = v
-                    error[i,j] = err
-                    samples[i,j] = ifgv[0].shape[0]
+                    rate[i, j] = v
+                    error[i, j] = err
+                    samples[i, j] = ifgv[0].shape[0]
                     break
 
     # overwrite the data whose error is larger than the maximum sigma user threshold
+    import numpy as np
+    print "=================", np.max(error, axis=0)
+    print "==============", maxsig
     rate[error > maxsig] = nan
     error[error > maxsig] = nan
     samples[error > maxsig] = nan

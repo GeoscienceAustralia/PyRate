@@ -9,7 +9,6 @@ from pyrate.tasks.utils import pythonifyConfig
 from pyrate.tasks import ConvertToGeotiff
 
 
-
 def main():
     usage = 'Usage: gamma.py <config file>'
     if len(sys.argv) == 1 or sys.argv[1] == '-h' or sys.argv[1] == '--help':
@@ -18,7 +17,6 @@ def main():
     rawConfigFile = sys.argv[1]
     luigi.configuration.LuigiConfigParser.add_config_path(pythonifyConfig(rawConfigFile))
     luigi.build([ConvertToGeotiff()], local_scheduler=True)
-
 
 
 if __name__ == "__main__":

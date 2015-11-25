@@ -15,9 +15,8 @@ import pyrate.config as config
 from algorithm import master_slave_ids, get_epochs
 
 
-
 def time_series(ifgs, pthresh, mst=None):
-    '''
+    """
     Returns time series data from the given ifgs.
 
     :param ifgs: Sequence of interferograms.
@@ -36,7 +35,7 @@ def time_series(ifgs, pthresh, mst=None):
         - *nrows* is the number of rows in the ifgs,
         - *ncols* is the  number of columns in the ifgs, and
         - *nepochs* is the number of unique epochs (dates) covered by the ifgs.).
-    '''
+    """
 
     if len(ifgs) < 1:
         msg = 'Time series requires 2+ interferograms'
@@ -58,15 +57,15 @@ def time_series(ifgs, pthresh, mst=None):
     mast_slave_ids = master_slave_ids(epochlist.dates)
     imaster = [mast_slave_ids[ifg.master] for ifg in ifgs]
     islave = [mast_slave_ids[ifg.slave] for ifg in ifgs]
-    imaster  = min(imaster, islave)
+    imaster = min(imaster, islave)
     islave = max(imaster, islave)
     B0 = zeros((nifgs, nvelpar))
     for i in range(nifgs):
         B0[i, imaster[i]:islave[i]] = span[imaster[i]:islave[i]]
 
     # change the sign if slave is earlier than master
-    isign = where(imaster>islave)
-    B0[isign[0],:] = -B0[isign[0],:]
+    isign = where(imaster > islave)
+    B0[isign[0], :] = -B0[isign[0], :]
 
     tsincr = empty(shape=(nrows, ncols, nvelpar))
 
@@ -84,35 +83,33 @@ def time_series(ifgs, pthresh, mst=None):
     if mst is not None:
         for row_num in range(nrows):
             for col_num in range(ncols):
-    #           check pixel for non-redundant ifgs;
+                # check pixel for non-redundant ifgs;
                 mst_pixel = mst[row_num, col_num]
                 index_list = range(nifgs)
                 for index in mst_pixel:
                     index_list.remove(index)
                 nred_mtrx[index_list, row_num, col_num] = False
 
-
     for row_num in range(nrows):
-
         for col_num in range(ncols):
-#           check pixel for non-redundant ifgs;
+            # check pixel for non-redundant ifgs;
             sel = where(nred_mtrx[:, row_num, col_num])[0]
             m = len(sel)
 
-            if (m>=pthresh):
+            if m >= pthresh:
                 ifgv = ifg_data[sel, row_num, col_num]
                 B = B0[sel, :]
 #               remove rank deficient rows
-                rmrow = asarray([5,4])
+                rmrow = asarray([5, 4])
 
-                while len(rmrow)>0:
+                while len(rmrow) > 0:
                     q_var, r_var, e_var = qr(B, mode='economic', pivoting=True)
                     licols = e_var[matrix_rank(B):nvelpar]
-                    [rmrow, rmcol] = where(B[:, licols]!=0)
+                    [rmrow, rmcol] = where(B[:, licols] != 0)
                     B = delete(B, rmrow, axis=0)
                     ifgv = delete(ifgv, rmrow)
 
-                    if ifgv == []:
+                    if len(ifgv):
                         continue
 
                 velflag = sum(abs(B), 0)
@@ -121,7 +118,6 @@ def time_series(ifgs, pthresh, mst=None):
                 tsvel_pix[where(velflag!=0)[0]] = dot(pinv(B), ifgv)
                 tsvel[row_num, col_num, :] = tsvel_pix
                 tsincr[row_num, col_num, :] = tsvel_pix * span
-
 
     if tsincr is None:
         raise TimeSeriesError("Could not produce a time series")

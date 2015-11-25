@@ -29,6 +29,7 @@ def _remove_root_node(mst):
             del mst[k]
     return mst
 
+
 # TODO: this does not appear to be used anywhere
 def default_mst(ifgs, noroot=True):
     '''
@@ -73,13 +74,14 @@ def mst_matrix_ifgs_only(ifgs):
     result = empty(shape=ifgs[0].phase_data.shape, dtype=object)
 
     for y, x, mst in mst_matrix(ifgs):
+        # mst is a dictionary of dates
         if hasattr(mst, 'iteritems'):
             ifg_sub = [ifg_date_lookup(ifgs, d) for d in mst.iteritems()]
-            result[(y,x)] = tuple(ifg_sub)
+            result[(y, x)] = tuple(ifg_sub)
         else:
-            result[(y,x)] = mst # usually NaN
-
+            result[(y, x)] = mst  # usually NaN
     return result
+
 
 def mst_matrix_ifg_indices(ifgs):
     '''
@@ -96,9 +98,9 @@ def mst_matrix_ifg_indices(ifgs):
     for y, x, mst in mst_matrix(ifgs):
         if hasattr(mst, 'iteritems'):
             ifg_sub = [ifg_date_index_lookup(ifgs, d) for d in mst.iteritems()]
-            result[(y,x)] = tuple(ifg_sub)
+            result[(y, x)] = tuple(ifg_sub)
         else:
-            result[(y,x)] = mst # usually NaN
+            result[(y, x)] = mst  # usually NaN
 
     return result
 
@@ -119,6 +121,7 @@ def mst_matrix_as_array(ifgs):
         mst_result[y, x] = mst
 
     return mst_result
+
 
 # TODO: custom weighting could included with an additional 'weights' arg if some
 # other weighting criterion is required later

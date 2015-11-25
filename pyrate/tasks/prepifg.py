@@ -108,7 +108,6 @@ class PrepareInterferogram(IfgListMixin, luigi.WrapperTask):
             return super(PrepareInterferogram, self).complete()
 
 
-
 class PrepareInterferograms(IfgListMixin, luigi.WrapperTask):
     def __init__(self, *args, **kwargs):
         super(PrepareInterferograms, self).__init__(*args, **kwargs)

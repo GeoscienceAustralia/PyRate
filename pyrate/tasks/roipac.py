@@ -161,8 +161,8 @@ class ConvertToGeotiff(luigi.WrapperTask):
     '''
 
     resourceHeader = luigi.Parameter(
-        default = None,
-        config_path = InputParam(config.ROIPAC_RESOURCE_HEADER))
+        default=None,
+        config_path=InputParam(config.ROIPAC_RESOURCE_HEADER))
 
     def requires(self):
         tasks = [_DoConvertToGeotiffRoipac()]

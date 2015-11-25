@@ -43,11 +43,11 @@ def process_ifgs(ifg_paths, params):
     refpx, refpy = find_reference_pixel(ifgs, params)
 
     # TODO: VCM code. which part gets called? cvd?
-    #vcm = None
-    #calculate_linear_rate(ifgs, params, vcm, mst=None)
+    vcm = None
+    # calculate_linear_rate(ifgs, params, vcm, mst=None)
 
     pthresh = params[cf.TIME_SERIES_PTHRESH]
-    #calculate_time_series(ifgs, pthresh, mst=None)  # TODO: check is correct MST
+    calculate_time_series(ifgs, pthresh, mst=None)  # TODO: check is correct MST
 
     # TODO: outputs?
 
@@ -56,8 +56,7 @@ def process_ifgs(ifg_paths, params):
         i = ifgs.pop()
         i.write_phase()
         i.dataset.FlushCache()
-        i = None # force close    TODO: may need to implement close()
-
+        i = None  # force close    TODO: may need to implement close()
     logging.debug('PyRate run completed\n')
 
 
@@ -178,7 +177,6 @@ def calculate_linear_rate(ifgs, params, vcm, mst=None):
 def calculate_time_series(ifgs, pthresh, mst):
     logging.debug('Calculating time series')
     res = timeseries.time_series(ifgs, pthresh, mst)
-
     for r in res:
         if len(r.shape) != 3:
             logging.error('TODO: time series result shape is incorrect')
@@ -292,6 +290,7 @@ def main():
     if ifgListFile is None:
         print 'Interferogram list file name not provided'
         sys.exit(err.errno)
+        # TODO: Fix `err when I can
 
     # FIXME: make output ifgs here, or in process_ifgs() ?
     xlks, ylks, crop = transform_params(pars)
