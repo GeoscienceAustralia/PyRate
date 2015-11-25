@@ -24,9 +24,10 @@ def _remove_root_node(mst):
     Discard pygraph's root node from MST dict to conserve memory.
     """
 
-    for k in mst.keys():
+    for k in mst:
         if mst[k] is None:
             del mst[k]
+            break
     return mst
 
 
@@ -137,6 +138,8 @@ def mst_matrix(ifgs):
     edges = [(i.master, i.slave) for i in ifgs]
     weights = [i.nan_fraction for i in ifgs]
     g = _build_graph(epochs.dates, edges, weights)
+
+    # TODO: Investigate better algotithms for minimal spanning tree
     dflt_mst = _remove_root_node(minimal_spanning_tree(g))
 
     # prepare source and dest data arrays
