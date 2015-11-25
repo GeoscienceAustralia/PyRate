@@ -38,12 +38,13 @@ def unique_points(points):
     return vstack([array(u) for u in set(points) ] )
 
 
-def cvd(ifg):
+def cvd(ifg, calc_alpha=False):
     '''
     Calculate average covariance versus distance (autocorrelation) and its best fitting exponential function
 
     :param ifg: An interferogram.
     :type ifg: :py:class:`pyrate.shared.Ifg`.
+    :param calc_alpha: whether you calculate alpha.
     '''
     # distance division factor of 1000 converts to km and is needed to match Matlab code output
     distfact = 1000
@@ -55,18 +56,18 @@ def cvd(ifg):
     autocorr_grid = ifft2(pspec)
     nzc = sum(sum(phase != 0))
     autocorr_grid = fftshift(real(autocorr_grid)) / nzc
-        
+
     # pixel distances from pixel at zero lag (image centre).
     xx,yy = meshgrid(range(ifg.ncols), range(ifg.nrows))
     r = sqrt(((xx-ifg.x_centre) * ifg.x_size)**2 + ((yy-ifg.y_centre) * ifg.y_size)**2) / distfact
-  
+
     r = reshape(r, ifg.num_cells, 1)
-    acg = reshape(autocorr_grid, ifg.num_cells, 1)    
-  
+    acg = reshape(autocorr_grid, ifg.num_cells, 1)
+
     # Symmetry in image; keep only unique points
     tmp = unique_points(zip(acg, r))
     acg, r = tmp[:,0], tmp[:,1]
-    
+
     # Alternative method to remove duplicate cells from Matlab Pirate
     #r = r[:ceil(len(r)/2)+nlines] # Reason for '+nlines' term unknown
 
@@ -77,10 +78,10 @@ def cvd(ifg):
 
     acgorig = copy(acg)
     rorig = copy(r)
-    
+
     # bin width for collecting data
     w = max(ifg.x_size, ifg.y_size) * 2 / distfact
-    
+
     # pick the smallest axis to determine circle search radius
     #print 'ifg.X_CENTRE, ifg.Y_CENTRE=', ifg.x_centre, ifg.y_centre
     #print 'ifg.X_SIZE, ifg.Y_SIZE', ifg.x_size, ifg.y_size
@@ -90,31 +91,35 @@ def cvd(ifg):
     else:
         maxdist = ifg.y_centre * ifg.y_size/ distfact
         #print "maxdist from Y axis is", maxdist
-    
+
     # filter out data where the of lag distance is greater than maxdist
     #r = array([e for e in rorig if e <= maxdist]) # MG: prefers to use all the data
-    #acg = array([e for e in rorig if e <= maxdist])    
+    #acg = array([e for e in rorig if e <= maxdist])
     r = rorig[rorig<maxdist]
     acg = acgorig[rorig<maxdist]
-       
-    # classify values of r according to bin number
-    rbin = ceil(r / w).astype(int)
-    maxbin = max(rbin) # consistent with Matlab code
-    
-    cvdav = zeros( (2, maxbin) )
 
-    for b in range(maxbin):
-        cvdav[0, b] = b * w  # distance instead of bin number
-        cvdav[1, b] = mean(acg[rbin == b])  # mean variance for that bin
+    if calc_alpha:
+        # classify values of r according to bin number
+        rbin = ceil(r / w).astype(int)
+        maxbin = max(rbin) # consistent with Matlab code
 
-    # calculate best fit function maxvar*exp(-alpha*r)
-    alphaguess = 2 / (maxbin * w)
-    alpha = fmin(pendiffexp, x0=alphaguess, args=(cvdav,), disp=0)
-    print "1st guess, alpha", alphaguess, alpha
+        cvdav = zeros( (2, maxbin) )
 
-    assert len(alpha) == 1
+        for b in range(maxbin):
+            cvdav[0,b] = b * w # distance instead of bin number
+            cvdav[1,b] = mean(acg[rbin == b]) # mean variance for that bin
+
+        # calculate best fit function maxvar*exp(-alpha*r)
+        alphaguess = 2 / (maxbin * w)
+        alpha = fmin(pendiffexp, x0=alphaguess, args=(cvdav,), disp=0 )
+        print "1st guess, alpha", alphaguess, alpha
+
+        assert len(alpha) == 1
+    else:
+        alpha = [0]
     # maximum variance usually at the zero lag
     maxvar = max(acg[:len(r)])
+    
     return maxvar, alpha[0]
 
 

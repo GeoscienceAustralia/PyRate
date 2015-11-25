@@ -39,12 +39,13 @@ geo_070326-070917.tif
 """
 
 def sydney_data_setup():
-    '''Returns Ifg objs for the files in the sydney test dir'''
+    '''Returns Ifg objs for the files in the sydney test dir
+    input phase data is in radians; these ifgs are in radians - not converted to mm'''
     datafiles = glob.glob(join(SYD_TEST_TIF, "*.tif") )
     datafiles.sort()
     ifgs = [Ifg(i) for i in datafiles]
     
-    for i in ifgs:
+    for i in ifgs: 
         i.open()
 
     return ifgs
