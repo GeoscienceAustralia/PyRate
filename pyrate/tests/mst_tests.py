@@ -12,6 +12,7 @@ from pyrate import algorithm
 from pyrate.tests.common import MockIfg, sydney5_mock_ifgs, sydney_data_setup
 
 from numpy import empty, array, nan, isnan, sum as nsum
+import sys
 
 
 # TODO: refactor get_epochs() into MST code?
@@ -26,7 +27,7 @@ class MSTTests(unittest.TestCase):
     def test_mst_matrix_as_array(self):
         # Verifies MST matrix func returns array with dict/trees in each cell
         for i in self.ifgs[3:]:
-            i.phase_data[0,1] = 0 # partial stack of NODATA to one cell
+            i.phase_data[0, 1] = 0  # partial stack of NODATA to one cell
 
         for i in self.ifgs:
             i.convert_to_nans() # zeros to NaN/NODATA
@@ -85,7 +86,6 @@ class MSTTests(unittest.TestCase):
         num_coherent = 1
         assert_equal()
 
-
     def test_all_nan_pixel_stack(self):
         # ensure full stack of NaNs in an MST pixel classifies to NaN
         mock_ifgs = [MockIfg(i, 1, 1) for i in self.ifgs]
@@ -101,7 +101,6 @@ class MSTTests(unittest.TestCase):
         self.assertEqual(exp, res)
 
 
-
 class DefaultMSTTests(unittest.TestCase):
 
     def test_default_mst(self):
@@ -110,19 +109,19 @@ class DefaultMSTTests(unittest.TestCase):
         dates = [(i.master, i.slave) for i in ifgs]
 
         res = mst.default_mst(ifgs)
-        num_edges = len(res.keys())
+        num_edges = len(res)
         self.assertEqual(num_edges, len(ifgs))
 
         # test edges, note node order can be reversed
-        for edge in res.iteritems():
-            self.assertTrue(edge in dates or (edge[1],edge[0]) in dates)
+        for edge in res:
+            self.assertTrue(edge in dates or (edge[1], edge[0]) in dates)
 
         # check all nodes exist in this default tree
-        mst_dates = set(res.keys() + res.values())
+        mst_dates = set(res)
+        mst_dates = list(sum(mst_dates, ()))
         for i in ifgs:
             for node in (i.master, i.slave):
-                self.assertTrue(node in mst_dates)
-
+                self.assertIn(node, mst_dates)
 
 
 if __name__ == "__main__":
