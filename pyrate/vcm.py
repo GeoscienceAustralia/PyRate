@@ -35,7 +35,7 @@ def unique_points(points):
     :param points: Sequence of (y,x) or (x,y) tuples.
     '''
 
-    return vstack([array(u) for u in set(points) ] )
+    return vstack([array(u) for u in set(points)])
 
 
 def cvd(ifg, calc_alpha=False):
@@ -58,7 +58,7 @@ def cvd(ifg, calc_alpha=False):
     autocorr_grid = fftshift(real(autocorr_grid)) / nzc
 
     # pixel distances from pixel at zero lag (image centre).
-    xx,yy = meshgrid(range(ifg.ncols), range(ifg.nrows))
+    xx, yy = meshgrid(range(ifg.ncols), range(ifg.nrows))
     r = sqrt(((xx-ifg.x_centre) * ifg.x_size)**2 + ((yy-ifg.y_centre) * ifg.y_size)**2) / distfact
 
     r = reshape(r, ifg.num_cells, 1)
@@ -103,15 +103,15 @@ def cvd(ifg, calc_alpha=False):
         rbin = ceil(r / w).astype(int)
         maxbin = max(rbin) # consistent with Matlab code
 
-        cvdav = zeros( (2, maxbin) )
+        cvdav = zeros(shape=(2, maxbin))
 
         for b in range(maxbin):
-            cvdav[0,b] = b * w # distance instead of bin number
-            cvdav[1,b] = mean(acg[rbin == b]) # mean variance for that bin
+            cvdav[0, b] = b * w  # distance instead of bin number
+            cvdav[1, b] = mean(acg[rbin == b])  # mean variance for that bin
 
         # calculate best fit function maxvar*exp(-alpha*r)
         alphaguess = 2 / (maxbin * w)
-        alpha = fmin(pendiffexp, x0=alphaguess, args=(cvdav,), disp=0 )
+        alpha = fmin(pendiffexp, x0=alphaguess, args=(cvdav,), disp=0)
         print "1st guess, alpha", alphaguess, alpha
 
         assert len(alpha) == 1
@@ -141,15 +141,15 @@ def get_vcmt(ifgs, maxvar):
         for j, ifg2 in enumerate(ifgs):
             mas2, slv2 = ids[ifg2.master], ids[ifg2.slave]
             if mas1 == mas2 or slv1 == slv2:
-                vcm_pat[i,j] = 0.5
+                vcm_pat[i, j] = 0.5
 
             if mas1 == slv2 or slv1 == mas2:
-                vcm_pat[i,j] = -0.5
+                vcm_pat[i, j] = -0.5
 
             if mas1 == mas2 and slv1 == slv2:
-                vcm_pat[i,j] = 1.0 # handle testing ifg against itself
+                vcm_pat[i, j] = 1.0  # handle testing ifg against itself
 
     # make covariance matrix in time domain
-    std = sqrt(maxvar).reshape((nifgs,1))
+    std = sqrt(maxvar).reshape((nifgs, 1))
     vcm_t = std * std.transpose()
     return vcm_t * vcm_pat

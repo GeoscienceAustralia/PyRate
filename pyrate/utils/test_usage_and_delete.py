@@ -1,4 +1,3 @@
-__author__ = 'sudipta'
 """
 This script is used to delete files that are not used in any where in the package.
 
@@ -15,11 +14,10 @@ Usage:
 just change the names of 'dir_name_to_delete_files_from' and `dir_name_to_find_usage` to the desired dirs and run the
 script
 """
-
+__author__ = 'Sudipta Basak'
 import os
 import subprocess
 import shlex
-
 
 def list_of_all_files(dir):
     all_files = []

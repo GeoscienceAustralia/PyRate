@@ -110,9 +110,6 @@ def linear_rate(ifgs, vcm, pthr, nsig, maxsig, mst=None):
                     break
 
     # overwrite the data whose error is larger than the maximum sigma user threshold
-    import numpy as np
-    print "=================", np.max(error, axis=0)
-    print "==============", maxsig
     rate[error > maxsig] = nan
     error[error > maxsig] = nan
     samples[error > maxsig] = nan
