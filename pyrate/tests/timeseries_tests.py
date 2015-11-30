@@ -63,13 +63,13 @@ class TimeSeriesTests(unittest.TestCase):
         params=default_params()
         mstmat = mst.mst_matrix_ifg_indices(self.ifgs)
         tsincr, tscum, tsvel = time_series(self.ifgs,
-            pthresh = params[TIME_SERIES_PTHRESH],
-            mst = mstmat)
-        expected = asarray([-11.09124207, -2.24628582, -11.37726666, -7.98105646,
-        -8.95696049, -4.35343281, -10.64072681, -2.56493343,
-        -6.24070214, -7.64697381, -8.59650367, -9.55619863])
+                                pthresh=params[TIME_SERIES_PTHRESH], mst=mstmat)
+        expected = asarray([
+            -11.09124207, -2.24628582, -11.37726666, -7.98105646,
+            -8.95696049, -4.35343281, -10.64072681, -2.56493343,
+            -6.24070214, -7.64697381, -8.59650367, -9.55619863])
 
-        assert_array_almost_equal(tscum[10, 10, :],expected)
+        assert_array_almost_equal(tscum[10, 10, :], expected)
 
 
     def test_time_series_unit(self):
@@ -97,8 +97,6 @@ class TimeSeriesTests(unittest.TestCase):
             pthresh = params[TIME_SERIES_PTHRESH])
         expected = asarray([[[ 0.50,  3.0,  4.0,  5.5,  6.5]]])
         assert_array_almost_equal(tscum, expected)
-
-
 
 if __name__ == "__main__":
     unittest.main()
