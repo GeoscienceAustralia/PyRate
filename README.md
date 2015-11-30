@@ -7,7 +7,7 @@ PyRate is a Python tool for estimating the rate (velocity) and time-series of su
 
 - [SciPy](www.scipy.org)
 - [GDAL](www.gdal.org)
-- [python-graph](https://pypi.python.org/pypi/python-graph)
+- [NetworkX](https://pypi.python.org/pypi/networkx)
 - [pyproj](https://pypi.python.org/pypi/pyproj)
 - [nose](https://pypi.python.org/pypi/nose/)
 - [pytest](https://pypi.python.org/pypi/pytest)
