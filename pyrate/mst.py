@@ -9,7 +9,8 @@ Contains functions to calculate MST using interferograms.
 from itertools import product
 from numpy import array, nan, isnan, float32, empty
 
-from pyrate.algorithm import get_all_epochs, master_slave_ids, ifg_date_lookup, get_epochs
+from pyrate.algorithm import get_all_epochs, master_slave_ids
+from pyrate.algorithm import ifg_date_lookup, get_epochs
 from pyrate.algorithm import ifg_date_index_lookup
 
 import networkx as nx
@@ -27,19 +28,18 @@ def default_mst(ifgs):
     :param noroot: True removes the PyGraph default root node from the result.
     '''
 
-    epochs = master_slave_ids(get_all_epochs(ifgs)).keys()
-    edges_with_weights_for_networkx = [(i.master, i.slave, i.nan_fraction) for i in ifgs]
-    g_nx = _build_graph_networkx(epochs, edges_with_weights_for_networkx)
+    edges_with_weights_for_networkx = [(i.master, i.slave, i.nan_fraction)
+                                       for i in ifgs]
+    g_nx = _build_graph_networkx(edges_with_weights_for_networkx)
     mst = nx.minimum_spanning_tree(g_nx).edges()
     return mst
 
 
-def _build_graph_networkx(nodes, edges_with_weights):
+def _build_graph_networkx(edges_with_weights):
     """
     Convenience graph builder function: returns a new graph obj.
     """
     g = nx.Graph()
-    g.add_nodes_from(nodes)
     g.add_weighted_edges_from(edges_with_weights)
     return g
 
@@ -113,9 +113,9 @@ def mst_matrix_networkx(ifgs):
     """
 
     # make default MST to optimise result when no Ifg cells in a stack are nans
-    epochs = get_epochs(ifgs)
-    edges_with_weights_for_networkx = [(i.master, i.slave, i.nan_fraction) for i in ifgs]
-    g_nx = _build_graph_networkx(epochs.dates, edges_with_weights_for_networkx)
+    edges_with_weights_for_networkx = [(i.master, i.slave, i.nan_fraction)
+                                       for i in ifgs]
+    g_nx = _build_graph_networkx(edges_with_weights_for_networkx)
     T = nx.minimum_spanning_tree(g_nx)
     edges = T.edges()
 
