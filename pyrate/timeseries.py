@@ -1,10 +1,10 @@
-'''
+"""
 Functions for producing a time series in PyRate.
 InSAR time series inversion without smoothing
 Based on original Matlab code by Hua Wang. Matlab 'tsinvnosm' function.
 
 ..codeauthor:: Vanessa Newey
-'''
+"""
 
 from numpy import where, isnan, nan, diff, zeros, empty
 from numpy import float32, cumsum, dot, delete, asarray
@@ -77,23 +77,13 @@ def time_series(ifgs, pthresh, mst=None):
         ifgs[ifg_num].convert_to_nans(0)
         ifg_data[ifg_num] = ifgs[ifg_num].phase_data
 
-#   create a boolean matrix of non nan pixels
+    if mst is None:
+        mst = ~isnan(ifg_data)
 
-    nred_mtrx = ~isnan(ifg_data)
-    if mst is not None:
-        for row_num in range(nrows):
-            for col_num in range(ncols):
-                # check pixel for non-redundant ifgs;
-                mst_pixel = mst[row_num, col_num]
-                index_list = range(nifgs)
-                for index in mst_pixel:
-                    index_list.remove(index)
-                nred_mtrx[index_list, row_num, col_num] = False
-
-    for row_num in range(nrows):
-        for col_num in range(ncols):
+    for row_num in xrange(nrows):
+        for col_num in xrange(ncols):
             # check pixel for non-redundant ifgs;
-            sel = where(nred_mtrx[:, row_num, col_num])[0]
+            sel = where(mst[:, row_num, col_num])[0]
             m = len(sel)
 
             if m >= pthresh:
@@ -132,13 +122,13 @@ def time_series(ifgs, pthresh, mst=None):
 
 
 def plot_timeseries(tsincr, tscum, tsvel, output_dir):
-    '''
+    """
     Plot the results of the timeseries analysis.
 
     A very basic plotting function used in code development
 
     .. todo:: this should be moved and tidied up
-    '''
+    """
 
     nvelpar = len(tsincr[0, 0, :])
     for i in range(nvelpar):
@@ -175,9 +165,9 @@ def plot_timeseries(tsincr, tscum, tsvel, output_dir):
 
 
 def check_time_series_params(head, pthresh):
-    '''
+    """
     Validates time series parameter. head is any Ifg.
-    '''
+    """
 
     def missing_option_error(option):
         '''
@@ -197,8 +187,8 @@ def check_time_series_params(head, pthresh):
 
 
 class TimeSeriesError(Exception):
-    '''
+    """
     Generic exception for time series errors.
-    '''
+    """
 
     pass

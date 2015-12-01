@@ -44,7 +44,7 @@ def _build_graph_networkx(edges_with_weights):
     return g
 
 
-def mst_matrix_ifg_indices(ifgs):
+def mst_matrix_ifg_indices_as_boolean_array(ifgs):
     """
     Filter: returns array of independent ifgs from the pixel by pixel MST,
     like that used by the MATLAB version Pirate.
@@ -63,25 +63,25 @@ def mst_matrix_ifg_indices(ifgs):
         if isinstance(mst, list):
             ifg_sub = [ifg_date_index_lookup(ifgs, d) for d in mst]
             ifg_sub_bool = [True if i in ifg_sub else False
-                            for i in range(no_ifgs)]
+                            for i in range(no_ifgs)]  # boolean conversion
             result[:, y, x] = np.array(ifg_sub_bool)
         else:
-            result[:, y, x] = np.zeros(no_ifgs)
+            result[:, y, x] = np.zeros(no_ifgs, dtype=bool)
     return result
 
 
 def mst_matrix_as_matlab_array(ifgs):
-    '''
+    """
     Filter: returns a multi-dimensional array of pixel by pixel
     by ifg of zeros and ones. like that used by the MATLAB
     version Pirate.
     :param ifgs: sequence of Ifg objs
-    '''
+    """
     rows = ifgs[0].phase_data.shape[0]
     cols = ifgs[0].phase_data.shape[1]
     num_ifgs =len(ifgs)
     mst_result = empty(shape=(num_ifgs, rows, cols), dtype=object)
-    mst = mst_matrix_ifg_indices(ifgs)
+    mst = mst_matrix_ifg_indices_old(ifgs)
     for x in range(rows):
         for y in range(cols):
             for z in range(num_ifgs):
