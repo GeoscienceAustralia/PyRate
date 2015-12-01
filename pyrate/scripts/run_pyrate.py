@@ -295,9 +295,10 @@ def main():
 
     ifgListFile = options.ifglist or pars.get(cf.IFG_FILE_LIST)
     if ifgListFile is None:
-        print 'Interferogram list file name not provided'
-        sys.exit(err.errno)
-        # TODO: Fix `err when I can
+        emsg = 'Error {code}: Interferogram list file name not provided ' \
+               'or does not exist'.format(code=2)
+        logging.debug(emsg)
+        raise IOError(2, emsg)
 
     # FIXME: make output ifgs here, or in process_ifgs() ?
     xlks, ylks, crop = transform_params(pars)
