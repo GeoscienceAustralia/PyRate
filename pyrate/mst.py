@@ -102,6 +102,35 @@ def mst_matrix_as_array(ifgs):
         mst_result[y, x] = mst
     return mst_result
 
+def mst_matrix_as_matlab_array(ifgs):
+    '''
+    Filter: returns a multi-dimensional array of pixel by pixel 
+    by ifg of zeros and ones. like that used by the MATLAB 
+    version Pirate.
+
+    :param ifgs: sequence of Ifg objs
+    '''
+    rows = ifgs[0].phase_data.shape[0]
+    cols = ifgs[0].phase_data.shape[1]
+    num_ifgs =len(ifgs)
+    mst_result = empty(shape=(num_ifgs, rows, cols), dtype=object)
+#     print mst_result.shape
+#     print ifgs[0].phase_data.shape
+    mst = mst_matrix_ifg_indices(ifgs)
+#     print mst
+    for x in range(rows):
+        for y in range(cols):
+            for z in range(num_ifgs):
+#                 print (x,y,z)
+                if z in mst[:][x][y]:
+                    mst_result[z, x, y] = 1
+                else:
+                    mst_result[z, x, y] = 0
+            
+#     print mst_result
+    return mst_result
+
+
 
 # TODO: custom weighting could included with an additional 'weights' arg if some
 # other weighting criterion is required later
