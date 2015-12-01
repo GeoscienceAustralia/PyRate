@@ -5,11 +5,13 @@ CUnittests for linrate.py
 '''
 
 import unittest
-from numpy import eye, array, ones
+from numpy import eye, array, ones, where
 from numpy.testing import assert_array_almost_equal
 from pyrate.config import LR_PTHRESH, LR_MAXSIG, LR_NSIG
 from pyrate.linrate import linear_rate
-
+from pyrate import mst
+from pyrate.vcm import cvd, get_vcmt
+from pyrate.tests.common import sydney_data_setup
 
 # TODO: linear rate code
 # 1. replace MST key:value date:date pairs with lists of Ifgs?
@@ -70,7 +72,26 @@ class LinearRateTests(unittest.TestCase):
         assert_array_almost_equal(rate,exprate)
         assert_array_almost_equal(error,experr)
         assert_array_almost_equal(samples,expsamp)
+        
+    def test_linear_rate_full(self):
+        self.ifgs = sydney_data_setup()
+        for i in self.ifgs:
+            print i.phase_data.mean()
+        
+        maxvar = [cvd(i)[0] for i in self.ifgs]
+        mstmat = mst.mst_matrix_as_matlab_array(self.ifgs)
+        print "self.ifgs[0].phase_data", self.ifgs[0].phase_data
+        print self.ifgs[0]
+        print "mstmat[3,0,0]", mstmat
+        print "mstmat.shape", mstmat.shape
+        vcm = get_vcmt(self.ifgs, maxvar)
+        print "vcm", vcm
+        print "vcm.shape", vcm.shape
+        print "maxvar", maxvar
+        rate, error, samples = linear_rate(self.ifgs, vcm, LR_PTHRESH, LR_NSIG, LR_MAXSIG, mstmat) 
+        print rate
 
+        print rate.shape
 
 
 if __name__ == "__main__":
