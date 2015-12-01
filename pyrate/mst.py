@@ -9,8 +9,7 @@ Contains functions to calculate MST using interferograms.
 from itertools import product
 from numpy import array, nan, isnan, float32, empty
 
-from pyrate.algorithm import get_all_epochs, master_slave_ids
-from pyrate.algorithm import ifg_date_lookup, get_epochs
+from pyrate.algorithm import ifg_date_lookup
 from pyrate.algorithm import ifg_date_index_lookup
 
 import networkx as nx
@@ -21,12 +20,12 @@ import networkx as nx
 
 # TODO: this does not appear to be used anywhere
 def default_mst(ifgs):
-    '''
+    """
     Returns default MST dict for the given Ifgs. The MST is calculated using a
     weighting based on the number of incoherent cells in the phase band.
 
     :param noroot: True removes the PyGraph default root node from the result.
-    '''
+    """
 
     edges_with_weights_for_networkx = [(i.master, i.slave, i.nan_fraction)
                                        for i in ifgs]
@@ -45,21 +44,21 @@ def _build_graph_networkx(edges_with_weights):
 
 
 def mst_matrix_ifgs_only(ifgs):
-    '''
+    """
     Filter: returns array of independent ifgs from the pixel by pixel MST.
 
     The MSTs are stripped of connecting edge info, leaving just the ifgs.
 
     :param ifgs: sequence of Ifg objs
     :param epochs: an EpochList object derived from the ifgs
-    '''
+    """
 
     result = empty(shape=ifgs[0].phase_data.shape, dtype=object)
 
     for y, x, mst in mst_matrix_networkx(ifgs):
         # mst is a dictionary of dates
-        if hasattr(mst, 'iteritems'):
-            ifg_sub = [ifg_date_lookup(ifgs, d) for d in mst.iteritems()]
+        if isinstance(mst, list):
+            ifg_sub = [ifg_date_lookup(ifgs, d) for d in mst]
             result[(y, x)] = tuple(ifg_sub)
         else:
             result[(y, x)] = mst  # usually NaN
@@ -67,14 +66,14 @@ def mst_matrix_ifgs_only(ifgs):
 
 
 def mst_matrix_ifg_indices(ifgs):
-    '''
+    """
     Filter: returns array of independent ifg indices from the pixel by pixel MST.
 
     The MSTs are stripped of connecting edge info, leaving just the ifgs.
     ifgs: sequence of Ifg objs.
 
     :param epochs: an EpochList object derived from the ifgs
-    '''
+    """
 
     result = empty(shape=ifgs[0].phase_data.shape, dtype=object)
 
@@ -88,14 +87,14 @@ def mst_matrix_ifg_indices(ifgs):
 
 
 def mst_matrix_as_array(ifgs):
-    '''
+    """
     Filter: returns array of pixel by pixel MSTs.
 
     Each pixel contains an MST (with connecting edges etc).
 
     :param ifgs: sequence of Ifg objs
     :param epochs: an EpochList object derived from the ifgs
-    '''
+    """
 
     mst_result = empty(shape=ifgs[0].phase_data.shape, dtype=object)
 
