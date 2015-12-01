@@ -51,6 +51,14 @@ def process_ifgs(ifg_paths, params):
     pthresh = params[cf.TIME_SERIES_PTHRESH]
     calculate_time_series(ifgs, pthresh, mst=None)  # TODO: check is correct MST
 
+    # Calculate linear rate, copied from master
+    # rate, error, samples = calculate_linear_rate(
+    #                ifgs, params, vcm, mst=mst_grid)
+    # md[ifc.PYRATE_DATE]=epochlist.dates
+    # dest = os.path.join(params[cf.OUT_DIR],"linrate.tif" )
+    # timeseries.write_geotiff_output(md, rate, dest, nan)
+    # dest = os.path.join(params[cf.OUT_DIR],"linerror.tif" )
+
     # TODO: outputs?
 
     # final cleanup
