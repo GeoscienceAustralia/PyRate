@@ -45,9 +45,47 @@ def process_ifgs(ifg_paths, params):
     # TODO: VCM code. which part gets called? cvd?
     vcm = None
     # calculate_linear_rate(ifgs, params, vcm, mst=None)
-
+    
+    #   Calculate time series
     pthresh = params[cf.TIME_SERIES_PTHRESH]
-    calculate_time_series(ifgs, pthresh, mst=None)  # TODO: check is correct MST
+    tsincr, tscum, tsvel= calculate_time_series(ifgs, pthresh, mst=None)  # TODO: check is correct MST
+
+    md = ifgs[0].metadata
+#     print md
+    
+    epochlist = get_epochs(ifgs)
+    
+#     print epochlist.dates
+#     print len(tsincr[0,0,:])
+#     print len(epochlist.dates)
+    for i in range(len(tsincr[0,0,:])):
+        md[ifc.PYRATE_DATE]=epochlist.dates[i+1]
+        data = tsincr[:,:,i]
+        dest = os.path.join(params[cf.OUT_DIR],"tsincr_" + str(epochlist.dates[i+1]) + ".tif" )
+        timeseries.write_geotiff_output(md, data, dest, nan)
+         
+        data = tscum[:,:,i]
+        dest = os.path.join(params[cf.OUT_DIR],"tscuml_" + str(epochlist.dates[i+1]) + ".tif" )
+        timeseries.write_geotiff_output(md, data, dest, nan)
+         
+        data = tsvel[:,:,i]
+        dest = os.path.join(params[cf.OUT_DIR],"tsvel_" + str(epochlist.dates[i+1]) + ".tif" )
+        timeseries.write_geotiff_output(md, data, dest, nan)
+    
+#     Calculate linear rate
+#     maxvar = [cvd(i)[0] for i in ifgs]
+#     
+#     vcm = get_vcmt(ifgs, maxvar)
+#     print "vcm", vcm
+#     print "maxvar", maxvar
+#     vcm = None
+#     rate, error, samples = calculate_linear_rate(ifgs, params, vcm, mst=mst_grid)
+#     rate, error, samples = calculate_linear_rate(ifgs, params, vcm, mst=None)
+#     md[ifc.PYRATE_DATE]=epochlist.dates
+#     dest = os.path.join(params[cf.OUT_DIR],"linrate.tif" )
+#     timeseries.write_geotiff_output(md, rate, dest, nan)
+#     dest = os.path.join(params[cf.OUT_DIR],"linerror.tif" )
+#     print dest
 
     # TODO: outputs?
 
