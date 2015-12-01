@@ -40,7 +40,7 @@ def process_ifgs(ifg_paths, params):
 
     remove_orbital_error(ifgs, params)
 
-    mst_grid = mst.mst_matrix_ifg_indices(ifgs)
+    mst_grid = mst.mst_matrix_ifg_indices_as_boolean_array(ifgs)
     refpx, refpy = find_reference_pixel(ifgs, params)
 
     maxvar = [vcm_module.cvd(i)[0] for i in ifgs]
