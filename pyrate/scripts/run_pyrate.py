@@ -16,6 +16,7 @@ import pyrate.linrate as linrate
 import pyrate.timeseries as timeseries
 import pyrate.config as cf
 from pyrate.shared import Ifg
+from pyrate import vcm as vcm_module
 
 # constants for metadata flags
 META_UNITS = 'PHASE_UNITS'
@@ -39,12 +40,13 @@ def process_ifgs(ifg_paths, params):
 
     remove_orbital_error(ifgs, params)
 
-    mst_grid = mst.mst_matrix_ifgs_only(ifgs)
+    mst_grid = mst.mst_matrix_ifg_indices(ifgs)
     refpx, refpy = find_reference_pixel(ifgs, params)
 
-    # TODO: VCM code. which part gets called? cvd?
-    vcm = None
-    # calculate_linear_rate(ifgs, params, vcm, mst=None)
+    maxvar = [vcm_module.cvd(i)[0] for i in ifgs]
+    vcm = vcm_module.get_vcmt(ifgs, maxvar)
+
+    calculate_linear_rate(ifgs, params, vcm, mst=mst_grid)
 
     pthresh = params[cf.TIME_SERIES_PTHRESH]
     calculate_time_series(ifgs, pthresh, mst=None)  # TODO: check is correct MST
@@ -61,12 +63,17 @@ def process_ifgs(ifg_paths, params):
 
 
 def convert_wavelength(ifg):
+    """
+    :param ifg: ifg file
+    :return: convert wavelength from radians to mm
+    """
     if ifg.dataset.GetMetadataItem(META_UNITS) == MILLIMETRES:
         msg = '%s: ignored as previous wavelength conversion detected'
         logging.debug(msg % ifg.data_path)
         return
 
-    ifg.data = algorithm.wavelength_radians_to_mm(ifg.phase_data, ifg.wavelength)
+    ifg.data = algorithm.wavelength_radians_to_mm(ifg.phase_data,
+                                                  ifg.wavelength)
     ifg.dataset.SetMetadataItem(META_UNITS, MILLIMETRES)
     msg = '%s: converted wavelength to millimetres'
     logging.debug(msg % ifg.data_path)

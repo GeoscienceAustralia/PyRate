@@ -16,12 +16,13 @@ from pyrate.algorithm import master_slave_ids
 
 
 def pendiffexp(alphamod, cvdav):
-    '''
+    """
     Fits an exponential model to data.
 
     :param float alphamod: Exponential decay exponent.
-    :param array cvdav: Function magnitude at 0 radius (2 col array of radius, variance)
-    '''
+    :param array cvdav: Function magnitude at 0 radius (2 col array of radius,
+    variance)
+    """
 
     # maxvar usually at zero lag
     mx = cvdav[1, 0]
@@ -29,27 +30,29 @@ def pendiffexp(alphamod, cvdav):
 
 
 def unique_points(points):
-    '''
+    """
     Returns unique points from a list of coordinates.
 
     :param points: Sequence of (y,x) or (x,y) tuples.
-    '''
-
+    """
     return vstack([array(u) for u in set(points)])
 
 
 def cvd(ifg, calc_alpha=False):
-    '''
-    Calculate average covariance versus distance (autocorrelation) and its best fitting exponential function
+    """
+    Calculate average covariance versus distance (autocorrelation) and its best
+    fitting exponential function
 
     :param ifg: An interferogram.
     :type ifg: :py:class:`pyrate.shared.Ifg`.
     :param calc_alpha: whether you calculate alpha.
-    '''
-    # distance division factor of 1000 converts to km and is needed to match Matlab code output
+    """
+    # distance division factor of 1000 converts to km and is needed to match
+    # Matlab code output
     distfact = 1000
 
-    # calculate 2D auto-correlation of image using the spectral method (Wiener-Khinchin theorem)
+    # calculate 2D auto-correlation of image using the
+    # spectral method (Wiener-Khinchin theorem)
     phase = where(isnan(ifg.phase_data), 0, ifg.phase_data)
     fft_phase = fft2(phase)
     pspec = real(fft_phase)**2 + imag(fft_phase)**2
@@ -59,7 +62,8 @@ def cvd(ifg, calc_alpha=False):
 
     # pixel distances from pixel at zero lag (image centre).
     xx, yy = meshgrid(range(ifg.ncols), range(ifg.nrows))
-    r = sqrt(((xx-ifg.x_centre) * ifg.x_size)**2 + ((yy-ifg.y_centre) * ifg.y_size)**2) / distfact
+    r = sqrt(((xx-ifg.x_centre) * ifg.x_size)**2 +
+             ((yy-ifg.y_centre) * ifg.y_size)**2) / distfact
 
     r = reshape(r, ifg.num_cells, 1)
     acg = reshape(autocorr_grid, ifg.num_cells, 1)
@@ -95,8 +99,8 @@ def cvd(ifg, calc_alpha=False):
     # filter out data where the of lag distance is greater than maxdist
     #r = array([e for e in rorig if e <= maxdist]) # MG: prefers to use all the data
     #acg = array([e for e in rorig if e <= maxdist])
-    r = rorig[rorig<maxdist]
-    acg = acgorig[rorig<maxdist]
+    r = rorig[rorig < maxdist]
+    acg = acgorig[rorig < maxdist]
 
     if calc_alpha:
         # classify values of r according to bin number
@@ -115,12 +119,10 @@ def cvd(ifg, calc_alpha=False):
         print "1st guess, alpha", alphaguess, alpha
 
         assert len(alpha) == 1
+        # maximum variance usually at the zero lag: max(acg[:len(r)])
+        return max(acg[:len(r)]), alpha[0]
     else:
-        alpha = [0]
-    # maximum variance usually at the zero lag
-    maxvar = max(acg[:len(r)])
-    
-    return maxvar, alpha[0]
+        return max(acg[:len(r)]), 0
 
 
 def get_vcmt(ifgs, maxvar):
