@@ -50,12 +50,12 @@ def linear_rate(ifgs, vcm, pthr, nsig, maxsig, mst=None):
         for j in xrange(cols):
             # find the indices of independent ifgs for given pixel from MST
             ind = nonzero(mst[:, i, j] == 1)[0]
-            print ind
+#             print ind
 
             # iterative loop to calculate 'robust' velocity for pixel
 
             while len(ind) >= pthr:
-                print 'here in while'
+#                 print 'here in while'
 
                 # make vector of selected ifg observations
                 ifgv = obs[:, i, j][ind]
@@ -86,7 +86,7 @@ def linear_rate(ifgs, vcm, pthr, nsig, maxsig, mst=None):
                 err1 = inv(V).dot(B.conj().transpose())
                 err2 = B.dot(err1)
                 err = sqrt(diag(inv(err2)))
-                print "xxxxxxxxxxxxxxxxxxxxxxxxxx===========>", err
+#                 print "xxxxxxxxxxxxxxxxxxxxxxxxxx===========>", err
 
                 # Compute the residuals (model minus observations)
                 r = (B * v) - ifgv
