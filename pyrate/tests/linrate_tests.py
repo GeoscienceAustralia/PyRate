@@ -43,7 +43,6 @@ LR_NSIG = 3
 LR_MAXSIG = 2
 
 
-
 class SinglePixelIfg(object):
 
     def __init__(self,timespan,phase):
@@ -51,9 +50,9 @@ class SinglePixelIfg(object):
         self.phase_data = array([[phase]])
 
 
-
 class LinearRateTests(unittest.TestCase):
-    '''Tests the weighted least squares algorithm for determinining the best fitting velocity'''
+    """Tests the weighted least squares algorithm for determinining
+    the best fitting velocity"""
 
     def setUp(self):
         phase = [0.5, 3.5, 4, 2.5, 3.5, 1]
@@ -63,35 +62,41 @@ class LinearRateTests(unittest.TestCase):
     def test_linear_rate(self):
         # Simple test with one pixel and equal weighting
         exprate = array([[5.0]])
-        experr = array([[0.836242010007091]]) # from Matlab Pirate
+        experr = array([[0.836242010007091]])  # from Matlab Pirate
         expsamp = array([[5]])
-        vcm = eye(6,6)
-        mst = ones((6,1,1))
+        vcm = eye(6, 6)
+        mst = ones((6, 1, 1))
         mst[4] = 0
-        rate, error, samples = linear_rate(self.ifgs, vcm, LR_PTHRESH, LR_NSIG, LR_MAXSIG, mst)
-        assert_array_almost_equal(rate,exprate)
-        assert_array_almost_equal(error,experr)
-        assert_array_almost_equal(samples,expsamp)
+        rate, error, samples = linear_rate(self.ifgs, vcm, LR_PTHRESH,
+                                           LR_NSIG, LR_MAXSIG, mst)
+        assert_array_almost_equal(rate, exprate)
+        assert_array_almost_equal(error, experr)
+        assert_array_almost_equal(samples, expsamp)
         
     def test_linear_rate_full(self):
+        import numpy as np
         self.ifgs = sydney_data_setup()
-        for i in self.ifgs:
-            print i.phase_data.mean()
-        
-        maxvar = [cvd(i)[0] for i in self.ifgs]
-        mstmat = mst.mst_matrix_as_matlab_array(self.ifgs)
-        print "self.ifgs[0].phase_data", self.ifgs[0].phase_data
-        print self.ifgs[0]
-        print "mstmat[3,0,0]", mstmat
-        print "mstmat.shape", mstmat.shape
-        vcm = get_vcmt(self.ifgs, maxvar)
-        print "vcm", vcm
-        print "vcm.shape", vcm.shape
-        print "maxvar", maxvar
-        rate, error, samples = linear_rate(self.ifgs, vcm, LR_PTHRESH, LR_NSIG, LR_MAXSIG, mstmat) 
-        print rate
+        ifgs = self.ifgs
 
-        print rate.shape
+        for i in ifgs:
+            print np.nanmean(i.phase_data), i.phase_data.mean(), np.count_nonzero(~np.isnan(i.phase_data))
+
+        mstmat = mst.mst_matrix_ifg_indices_as_boolean_array(self.ifgs)
+        # print "self.ifgs[0].phase_data", self.ifgs[0].phase_data
+        # print self.ifgs[0]
+        # print "mstmat[3,0,0]", mstmat
+        # print "mstmat.shape", mstmat.shape
+
+        maxvar = [cvd(i)[0] for i in self.ifgs]
+        vcm = get_vcmt(self.ifgs, maxvar)
+        # print "vcm", vcm
+        # print "vcm.shape", vcm.shape
+        # print "maxvar", maxvar
+        rate, error, samples = linear_rate(self.ifgs, vcm, LR_PTHRESH,
+                                           LR_NSIG, LR_MAXSIG, mstmat)
+        # print rate
+        #
+        # print rate.shape
 
 
 if __name__ == "__main__":

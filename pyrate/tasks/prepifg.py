@@ -12,10 +12,6 @@ from pyrate.tasks.utils import (
     RasterParam)
 from pyrate.scripts.run_pyrate import warp_required
 
-
-
-
-
 class GetAnalysisExtents(IfgListMixin, luigi.Task):
     crop_opt  = luigi.IntParameter(                config_path=InputParam(config.IFG_CROP_OPT))
     ifgxFirst = luigi.FloatParameter(default=None, config_path=InputParam(config.IFG_XFIRST))
@@ -50,7 +46,6 @@ class GetAnalysisExtents(IfgListMixin, luigi.Task):
         return luigi.file.LocalTarget(self.extentsFileName)
 
 
-
 class PrepareInterferogram(IfgListMixin, luigi.WrapperTask):
     """
     Produces multilooked/resampled data files for PyRate analysis.
@@ -69,12 +64,12 @@ class PrepareInterferogram(IfgListMixin, luigi.WrapperTask):
     :param verbose: Controls level of gdalwarp output
     """
 
-    ifg       = RasterParam()
-    thresh    = luigi.FloatParameter(config_path=InputParam(config.NO_DATA_AVERAGING_THRESHOLD))
-    crop_opt  = luigi.IntParameter(  config_path=InputParam(config.IFG_CROP_OPT))
-    xlooks    = luigi.IntParameter(  config_path=InputParam(config.IFG_LKSX))
-    ylooks    = luigi.IntParameter(  config_path=InputParam(config.IFG_LKSY))
-    verbose   = luigi.BooleanParameter(default=True, significant=False)
+    ifg      = RasterParam()
+    thresh   = luigi.FloatParameter(config_path=InputParam(config.NO_DATA_AVERAGING_THRESHOLD))
+    crop_opt = luigi.IntParameter(  config_path=InputParam(config.IFG_CROP_OPT))
+    xlooks   = luigi.IntParameter(  config_path=InputParam(config.IFG_LKSX))
+    ylooks   = luigi.IntParameter(  config_path=InputParam(config.IFG_LKSY))
+    verbose  = luigi.BooleanParameter(default=True, significant=False)
 
     def requires(self):
         return [GetAnalysisExtents()]

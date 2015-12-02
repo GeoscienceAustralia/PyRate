@@ -177,6 +177,7 @@ def mst_matrix_networkx(ifgs):
     for y, x in product(xrange(i.nrows), xrange(i.ncols)):
         values = data_stack[:, y, x]  # vertical stack of ifg values for a pixel
         nan_count = sum(isnan(values))
+        print nan_count
 
         # optimisations: use pre-created results for all nans/no nans
         if nan_count == 0:
