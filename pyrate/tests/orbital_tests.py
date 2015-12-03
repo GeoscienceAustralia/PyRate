@@ -36,7 +36,7 @@ NUM_COEF_LOOKUP = {
 
 class SingleDesignMatrixTests(unittest.TestCase):
     '''
-    Tests to verify correctness of basic planar & quadratic design matricies or
+    Tests to verify correctness of basic planar & quadratic design matrices or
     DMs. This class serves two purposes, ensuring the independent method DMs are
     produced correctly. Secondly, these indivdual DMs are subsets of the larger
     DM 'grid' required for the networked orbital correction method.
@@ -53,6 +53,7 @@ class SingleDesignMatrixTests(unittest.TestCase):
         self.m.x_size = self.xs
         self.m.y_size = self.ys
 
+    # tests for planar model
 
     def test_create_planar_dm(self):
         offset = False
@@ -70,7 +71,7 @@ class SingleDesignMatrixTests(unittest.TestCase):
         assert_array_almost_equal(act, exp)
 
 
-    # tests for quadratic mode
+    # tests for quadratic model
 
     def test_create_quadratic_dm(self):
         offset = False
@@ -150,7 +151,7 @@ class IndependentCorrectionTests(unittest.TestCase):
 
 
     def alt_orbital_correction(self, ifg, deg, offset):
-        # almost 1:1 copy of MATLAB version
+        # almost an exact translation of MATLAB version
         data = ifg.phase_data.reshape(ifg.num_cells)
         dm = get_design_matrix(ifg, deg, offset)[~isnan(data)]
         fd = data[~isnan(data)].reshape((dm.shape[0], 1))
