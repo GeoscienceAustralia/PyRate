@@ -20,13 +20,14 @@ from pyrate.config import (
     NO_DATA_VALUE,
     OBS_DIR,
     IFG_FILE_LIST,
-    PROCESSOR)
+    PROCESSOR,
+    OUT_DIR)
 
 from pyrate.tests.common import GAMMA_TEST_DIR
 
 gdal.UseExceptions()
 
-LIGHTSPEED = 3e8 # approx
+LIGHTSPEED = 3e8  # approx
 
 
 class GammaCommandLineTests(unittest.TestCase):
@@ -38,13 +39,18 @@ class GammaCommandLineTests(unittest.TestCase):
         self.ifgListFile = '/tmp/gamma_ifg.list'
 
     # def tearDown(self):
-    #     print ('in teardown')
-    #     try: os.remove(self.exp_path)
-    #     except: pass
-    #     try: os.remove(self.confFile)
-    #     except: pass
-    #     try: os.remove(self.ifgListFile)
-    #     except: pass
+    #     try:
+    #         os.remove(self.exp_path)
+    #     except:
+    #         pass
+    #     try:
+    #         os.remove(self.confFile)
+    #     except:
+    #         pass
+    #     try:
+    #         os.remove(self.ifgListFile)
+    #     except:
+    #         pass
 
     def makeInputFiles(self, data):
         with open(self.confFile, 'w') as conf:
@@ -54,6 +60,7 @@ class GammaCommandLineTests(unittest.TestCase):
             conf.write('{}: {}\n'.format(OBS_DIR, '/tmp'))
             conf.write('{}: {}\n'.format(IFG_FILE_LIST, self.ifgListFile))
             conf.write('{}: {}\n'.format(PROCESSOR, '1'))
+            conf.write('{}: {}\n'.format(OUT_DIR, '/tmp'))
         with open(self.ifgListFile, 'w') as ifgl:
             ifgl.write(data)
 
@@ -259,7 +266,6 @@ class HeaderCombinationTests(unittest.TestCase):
 
     def test_fail_bad_date_order(self):
         self.assertRaises(self.err, gamma.combine_headers, H1, H0, self.dh)
-
 
 
 if __name__ == "__main__":

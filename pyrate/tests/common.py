@@ -50,6 +50,12 @@ def sydney_data_setup():
 
     return ifgs
 
+def sydney_data_setup_ifg_file_list():
+    '''Returns Ifg objs for the files in the sydney test dir
+    input phase data is in radians; these ifgs are in radians - not converted to mm'''
+    datafiles = glob.glob(join(SYD_TEST_TIF, "*.tif") )
+    return datafiles
+
 
 def sydney5_ifgs():
     '''Convenience func to return a subset of 5 linked Ifgs from the testdata'''
