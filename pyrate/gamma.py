@@ -106,7 +106,7 @@ def parse_epoch_header(path):
     year, month, day = [int(i) for i in lookup[GAMMA_DATE]]
     subset[ifc.PYRATE_DATE] = datetime.date(year, month, day)
 
-    # handle conversion to wavelength
+    # handle conversion of radar frequency to wavelength
     freq, unit = lookup[GAMMA_FREQUENCY]
     if unit != "Hz":
         msg = 'Unrecognised unit field for radar_frequency: %s'
@@ -142,6 +142,9 @@ def parse_dem_header(path):
 
 
 def frequency_to_wavelength(freq):
+    """
+    Convert radar frequency to wavelength
+    """
     return SPEED_OF_LIGHT_METRES_PER_SECOND / freq
 
 
