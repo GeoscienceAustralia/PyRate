@@ -26,13 +26,13 @@ META_ORBITAL = 'ORBITAL_ERROR'
 META_REMOVED = 'REMOVED'
 pars = None
 
+
 def process_ifgs(ifg_paths, params):
     """
     Top level function to perform correction steps on given ifgs
     ifgs: sequence of paths to interferograms (NB: changes are saved into ifgs)
     params: dict of run config params
     """
-    print ifg_paths
     ifgs = [Ifg(p) for p in ifg_paths]
 
     for i in ifgs:
@@ -40,7 +40,7 @@ def process_ifgs(ifg_paths, params):
             i.open(readonly=False)
         convert_wavelength(i)
 
-    remove_orbital_error(ifgs, params)
+    # remove_orbital_error(ifgs, params)
 
     mst_grid = mst.mst_matrix_ifg_indices_as_boolean_array(ifgs)
     refpx, refpy = find_reference_pixel(ifgs, params)
@@ -48,39 +48,39 @@ def process_ifgs(ifg_paths, params):
     maxvar = [vcm_module.cvd(i)[0] for i in ifgs]
     vcm = vcm_module.get_vcmt(ifgs, maxvar)
 
-    # rate, error, samples = calculate_linear_rate(ifgs, params, vcm, mst=mst_grid)
+    rate, error, samples = calculate_linear_rate(ifgs, params, vcm, mst=mst_grid)
 
-    #   Calculate time series
+    # Calculate time series
     pthresh = params[cf.TIME_SERIES_PTHRESH]
-    tsincr, tscum, tsvel = calculate_time_series(ifgs, pthresh, mst=None)  # TODO: check is correct MST
+    tsincr, tscum, tsvel = calculate_time_series(ifgs, pthresh, mst=mst_grid)  # TODO: check is correct MST
 
-    print ifg_paths[0]
-    p = os.path.join(pars[cf.SIM_DIR], ifg_paths[0])
-    print 'path exists?',  os.path.exists(p), os.path.isfile(p)
+    # print ifg_paths[0]
+    # p = os.path.join(pars[cf.SIM_DIR], ifg_paths[0])
+    # print 'path exists?',  os.path.exists(p), os.path.isfile(p)
+    #
+    # print 'p=', p, type(p)
+    # ds = gdal.Open(p)
+    # md = ds.GetMetadata()
+    # print md
+    #
+    # epochlist = algorithm.get_epochs(ifgs)
+    #
+    # print len(tsincr[0, 0, :])
+    # print len(epochlist.dates)
 
-    print 'p=', p, type(p)
-    ds = gdal.Open(p)
-    md = ds.GetMetadata()
-    print md
-
-    epochlist = algorithm.get_epochs(ifgs)
-
-    print len(tsincr[0, 0, :])
-    print len(epochlist.dates)
-
-    for i in range(len(tsincr[0, 0, :])):
-        md[ifc.PYRATE_DATE] = epochlist.dates[i+1]
-        data = tsincr[:, :, i]
-        dest = os.path.join(params[cf.OUT_DIR], "tsincr_" + str(epochlist.dates[i+1]) + ".tif")
-        timeseries.write_geotiff_output(md, data, dest, np.nan)
-
-        data = tscum[:, :, i]
-        dest = os.path.join(params[cf.OUT_DIR], "tscuml_" + str(epochlist.dates[i+1]) + ".tif")
-        timeseries.write_geotiff_output(md, data, dest, np.nan)
-
-        data = tsvel[:, :, i]
-        dest = os.path.join(params[cf.OUT_DIR], "tsvel_" + str(epochlist.dates[i+1]) + ".tif")
-        timeseries.write_geotiff_output(md, data, dest, np.nan)
+    # for i in range(len(tsincr[0, 0, :])):
+    #     md[ifc.PYRATE_DATE] = epochlist.dates[i+1]
+    #     data = tsincr[:, :, i]
+    #     dest = os.path.join(params[cf.OUT_DIR], "tsincr_" + str(epochlist.dates[i+1]) + ".tif")
+    #     timeseries.write_geotiff_output(md, data, dest, np.nan)
+    #
+    #     data = tscum[:, :, i]
+    #     dest = os.path.join(params[cf.OUT_DIR], "tscuml_" + str(epochlist.dates[i+1]) + ".tif")
+    #     timeseries.write_geotiff_output(md, data, dest, np.nan)
+    #
+    #     data = tsvel[:, :, i]
+    #     dest = os.path.join(params[cf.OUT_DIR], "tsvel_" + str(epochlist.dates[i+1]) + ".tif")
+    #     timeseries.write_geotiff_output(md, data, dest, np.nan)
 
     # Calculate linear rate, copied from master
     # rate, error, samples = calculate_linear_rate(
