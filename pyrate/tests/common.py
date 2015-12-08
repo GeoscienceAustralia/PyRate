@@ -38,10 +38,15 @@ geo_061106-070326.tif
 geo_070326-070917.tif
 """
 
-def sydney_data_setup():
+
+def sydney_data_setup(datafiles=None):
     '''Returns Ifg objs for the files in the sydney test dir
     input phase data is in radians; these ifgs are in radians - not converted to mm'''
-    datafiles = glob.glob(join(SYD_TEST_TIF, "*.tif") )
+    if datafiles:
+        for i, d in enumerate(datafiles):
+            datafiles[i] = os.path.join(SYD_TEST_TIF, d)
+    else:
+        datafiles = glob.glob(join(SYD_TEST_TIF, "*.tif") )
     datafiles.sort()
     ifgs = [Ifg(i) for i in datafiles]
     
@@ -54,6 +59,17 @@ def sydney_data_setup_ifg_file_list():
     '''Returns Ifg objs for the files in the sydney test dir
     input phase data is in radians; these ifgs are in radians - not converted to mm'''
     datafiles = glob.glob(join(SYD_TEST_TIF, "*.tif") )
+    return datafiles
+
+
+def sydney_data_setup_ifg_file_list(datafiles=None):
+    '''Returns Ifg objs for the files in the sydney test dir
+    input phase data is in radians; these ifgs are in radians - not converted to mm'''
+    if datafiles:
+        for i, d in enumerate(datafiles):
+            datafiles[i] = os.path.join(SYD_TEST_TIF, d)
+    else:
+        datafiles = glob.glob(join(SYD_TEST_TIF, "*.tif") )
     return datafiles
 
 
