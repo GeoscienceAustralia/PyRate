@@ -266,7 +266,7 @@ class Ifg(RasterBase):
         '''
         Returns number of NaN cells in the phase data.
         '''
-
+        self.convert_to_nans()
         return nsum(isnan(self.phase_data))
 
 

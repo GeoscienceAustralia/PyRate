@@ -31,7 +31,6 @@ from pyrate.gamma import *
 from pyrate.tasks.utils import IfgListMixin, InputParam
 
 
-
 class GammaHasRun(luigi.task.ExternalTask):
     '''
     Phaux task used to ensure that the required outputs from GAMMA exist.
@@ -50,7 +49,6 @@ class GammaHasRun(luigi.task.ExternalTask):
         return targets
 
 
-
 class ConvertFileToGeotiff(luigi.Task):
     '''
     Task responsible for converting a GAMMA file to GeoTif.
@@ -58,7 +56,7 @@ class ConvertFileToGeotiff(luigi.Task):
 
     inputFile = luigi.Parameter()
     demHeaderFile = luigi.Parameter(config_path=InputParam(config.DEM_HEADER_FILE))
-    outputDir = luigi.Parameter(config_path=InputParam(config.OBS_DIR))
+    outputDir = luigi.Parameter(config_path=InputParam(config.OUT_DIR))
     noDataValue = luigi.FloatParameter(config_path=InputParam(config.NO_DATA_VALUE))
 
     def requires(self):
@@ -97,7 +95,6 @@ class ConvertFileToGeotiff(luigi.Task):
         '''
         Overload of :py:meth:`luigi.Task.run`.
         '''
-
         demHeader = parse_dem_header(self.demHeaderFile)
 
         # find param files containing filename dates

@@ -13,6 +13,8 @@ from scipy.linalg import qr
 import matplotlib.pyplot as plt
 import pyrate.config as config
 from algorithm import master_slave_ids, get_epochs
+import gdal
+import pyrate.ifgconstants as ifc
 
 
 def time_series(ifgs, pthresh, mst=None):
@@ -184,6 +186,33 @@ def check_time_series_params(head, pthresh):
         raise ValueError("minimum number of coherent observations for a pixel" +
                           + " TIME_SERIES_PTHRESH setting must be >= 0.0 and <= 1000")
 
+
+def write_geotiff_output(md, data, dest, nodata):
+    '''
+    Writes data to a GeoTIFF file.
+    md is a dictionary containing these items:
+    ifc.PYRATE_PROJECTION, ifc.PYRATE_GEOTRANSFORM,
+    ifc.PYRATE_DATE
+    NB It should be moved to utils class
+    '''
+
+    driver = gdal.GetDriverByName("GTiff")
+
+    nrows =len(data[:, 0])
+    ncols = len(data[0, :])
+    print "ncols", ncols
+    print "nrows", nrows
+    ds = driver.Create(dest, ncols, nrows, 1, gdal.GDT_Float32)
+    print str(md[ifc.PYRATE_DATE])
+    print md
+    ds.SetProjection(md[ifc.PYRATE_PROJECTION])
+    ds.SetGeoTransform(md[ifc.PYRATE_GEOTRANSFORM])
+    ds.SetMetadataItem(ifc.PYRATE_DATE, str(md[ifc.PYRATE_DATE]))
+
+    # write data
+    band = ds.GetRasterBand(1)
+    band.SetNoDataValue(nodata)
+    band.WriteArray(data, 0, 0)
 
 
 class TimeSeriesError(Exception):
