@@ -165,7 +165,7 @@ def mst_matrix_networkx(ifgs):
     edges_with_weights_for_networkx = [(i.master, i.slave, i.nan_fraction)
                                        for i in ifgs]
     g_nx = _build_graph_networkx(edges_with_weights_for_networkx)
-    T = nx.minimum_spanning_tree(g_nx)
+    T = nx.minimum_spanning_tree(g_nx)  # step ifglist_mst in make_mstmat.m
     edges = T.edges()
 
     # TODO: memory efficiencies can be achieved here with tiling
