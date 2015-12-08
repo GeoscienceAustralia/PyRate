@@ -9,11 +9,13 @@ Contains functions to calculate MST using interferograms.
 from itertools import product
 from numpy import array, nan, isnan, float32, empty
 import numpy as np
+import networkx as nx
 
 from pyrate.algorithm import ifg_date_lookup
 from pyrate.algorithm import ifg_date_index_lookup
+from pyrate.matlab_mst_kruskal import matlab_mst
 
-import networkx as nx
+
 
 # TODO: may need to implement memory saving row-by-row access
 # TODO: document weighting by either Nan fraction OR variance
@@ -81,7 +83,7 @@ def mst_matrix_as_matlab_array(ifgs):
     cols = ifgs[0].phase_data.shape[1]
     num_ifgs =len(ifgs)
     mst_result = empty(shape=(num_ifgs, rows, cols), dtype=object)
-    mst = mst_matrix_ifg_indices_old(ifgs)
+    mst = mst_matrix_ifg_indices(ifgs)
     for x in range(rows):
         for y in range(cols):
             for z in range(num_ifgs):
@@ -316,11 +318,6 @@ def minimum_spanning_edges(G, weight='weight', data=True):
     subtrees = UnionFind()
     edges = sorted(G.edges(data=True), key=lambda t: t[2].get(weight, 1.0))
 
-    # edges = G.edges(data=True)
-    # [0, 2, 3, 1, 8, 7, 4, 14, 10, 9, 5, 15]
-    #ifg_sub = ifg_date_index_lookup(ifgs, d) for d in edges
-
-    #print ifg_sub
     for u, v, d in edges:
         if subtrees[u] != subtrees[v]:
             if data:
@@ -329,3 +326,4 @@ def minimum_spanning_edges(G, weight='weight', data=True):
             else:
                 yield (u, v)
             subtrees.union(u, v)
+

@@ -161,7 +161,6 @@ class RasterBase(object):
             raise RasterException("Raster %s has not been opened" % self.data_path)
 
 
-
 class Ifg(RasterBase):
     """
     Interferogram class, represents the difference between two acquisitions.
@@ -178,6 +177,7 @@ class Ifg(RasterBase):
         self._phase_data = None
         self.master = None
         self.slave = None
+        self.nan_converted = False
 
     def open(self, readonly=None):
         """
@@ -266,7 +266,8 @@ class Ifg(RasterBase):
         '''
         Returns number of NaN cells in the phase data.
         '''
-        self.convert_to_nans()
+        if not self.nan_converted:
+            self.convert_to_nans()
         return nsum(isnan(self.phase_data))
 
 

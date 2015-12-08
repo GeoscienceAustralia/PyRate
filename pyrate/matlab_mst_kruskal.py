@@ -15,14 +15,14 @@ class IfgList(object):
     2.
     """
 
-    def __init__(self):
-        self.nml = sydney_data_setup_ifg_file_list()
+    def __init__(self, datafiles=None):
+        self.nml = sydney_data_setup_ifg_file_list(datafiles)
         self.id = range(len(self.nml))
         self.base_T = None
         self.max_var = np.zeros_like(self.id)
         self.alpha = np.zeros_like(self.id)
         self.nan_frac = np.zeros_like(self.id)
-        self.ifg = sydney_data_setup()
+        self.ifgs = sydney_data_setup(datafiles)
         self.master_num = None
         self.slave_num = None
         self.n = None
@@ -34,17 +34,17 @@ class IfgList(object):
         self.n = n
 
     def update_nan_frac(self):
-        self.nan_frac = [i.nan_fraction for i in self.ifg]
+        self.nan_frac = [i.nan_fraction for i in self.ifgs]
 
 
-def get_nml(prefix_len=4):
+def get_nml(datafiles=None, prefix_len=4):
     """
     A reproduction of getnml.m, the matlab function in pi-rate.
     """
-    ifg_list_ = IfgList()
-    epoch_list_, n = get_epochs_and_n(ifg_list_.ifg)
+    ifg_list_ = IfgList(datafiles)
+    epoch_list_, n = get_epochs_and_n(ifg_list_.ifgs)
     ifg_list_.reshape_n(n)
-    # ifg_list_.update_nan_frac()
+    # ifg_list_.update_nan_frac()  # turn on for nan conversion
     return ifg_list_, epoch_list_
 
 
@@ -96,11 +96,29 @@ def matlab_mst_kruskal(ifg_list):
     return [i[0] for i in mst_list]
 
 
-def matlab_mst():
-    pass
+def matlab_mst(ifg_list, ifg_list_mst_id, p_thresh_hold=1):
+    """
+    This is an implementation of matlab/pirate make_mstmat.m.
+    """
+    data_stack = np.array([i.phase_data for i in ifg_list.ifgs],
+                          dtype=np.float32)
+    nan_ifg = np.isnan(data_stack)
+    mst_mat = np.zeros_like(nan_ifg, dtype=np.bool)
+    no_ifgs, rows, cols = nan_ifg.shape
 
+    for r in range(rows):
+        for c in range(cols):
+            nan_v = nan_ifg[ifg_list_mst_id, r, c]
+            # if there is nan value in the independent ifglist, redo mst search
+            if np.count_nonzero(nan_v) > 0:
+                print 'here'
+                raise
+            else:
+                mst_mat[ifg_list_mst_id, r, c] = 1
+    return mst_mat
 
 
 if __name__ == "__main__":
     ifg_list, epoch_list = get_nml()
-    matlab_mst_kruskal(ifg_list)
+    ifg_list_mst_id = matlab_mst_kruskal(ifg_list)
+    matlab_mst(ifg_list, ifg_list_mst_id)

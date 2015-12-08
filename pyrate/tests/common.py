@@ -15,6 +15,7 @@ SYD_TEST_OBS = join(SYD_TEST_DIR, 'obs')
 SYD_TEST_TIF = join(SYD_TEST_DIR, 'tif')
 
 SYD_TEST_DEM_DIR = join(SYD_TEST_DIR, 'dem')
+SYD_TEST_MATLAB_MST_DIR = join(SYD_TEST_DIR, 'mst_matlab')
 SYD_TEST_DEM_UNW = join(SYD_TEST_DEM_DIR, 'sydney_trimmed.dem')
 SYD_TEST_DEM_HDR = join(SYD_TEST_DEM_DIR, 'sydney_trimmed.dem.rsc')
 SYD_TEST_DEM_TIF = join(SYD_TEST_DEM_DIR, 'sydney_trimmed.tif')
@@ -54,12 +55,6 @@ def sydney_data_setup(datafiles=None):
         i.open()
 
     return ifgs
-
-def sydney_data_setup_ifg_file_list():
-    '''Returns Ifg objs for the files in the sydney test dir
-    input phase data is in radians; these ifgs are in radians - not converted to mm'''
-    datafiles = glob.glob(join(SYD_TEST_TIF, "*.tif") )
-    return datafiles
 
 
 def sydney_data_setup_ifg_file_list(datafiles=None):

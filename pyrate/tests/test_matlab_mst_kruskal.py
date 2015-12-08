@@ -2,17 +2,20 @@ __author__ = 'sudipta'
 
 import unittest
 import numpy as np
-from pyrate.algorithm import get_epochs
+import os
+
 from pyrate.tests.common import sydney_data_setup
 from pyrate.matlab_mst_kruskal import get_nml
 from pyrate.matlab_mst_kruskal import sort_list
 from pyrate.matlab_mst_kruskal import matlab_mst_kruskal
+from pyrate.matlab_mst_kruskal import matlab_mst
+from pyrate.tests.common import sydney_data_setup_ifg_file_list
 
 
 class IfgListTest(unittest.TestCase):
 
     def setUp(self):
-        self.ifgs = self.ifg = sydney_data_setup()
+        self.ifgs = sydney_data_setup()
         self.matlab_n = [1,  2,  3,  3,  4,  4,  4,  5, 5,  6,  6,  7,  7,  8,
                          9, 10, 11,  3,  5,  7,  9,  5,  6,  8, 11, 12, 8, 13,
                          9, 10, 13, 10, 11, 12]
@@ -21,8 +24,7 @@ class IfgListTest(unittest.TestCase):
         self.matlab_slvnum = [3, 5, 7, 9, 5, 6, 8, 11, 12,  8, 13, 9,
                               10, 13, 10, 11, 12]
 
-        ifgs = sydney_data_setup()
-        self.ifg_list, self.epoch_list = get_nml(ifgs)
+        self.ifg_list, self.epoch_list = get_nml()
 
     def test_matlab_n(self):
         # add 1 to ifg_list.n as matlab indices start from 1.
@@ -72,6 +74,103 @@ class MatlabMstKruskalTest(unittest.TestCase):
         ifg_list_mst = matlab_mst_kruskal(self.ifg_list)
         ifg_list_mst = [i + 1 for i in ifg_list_mst]  # add 1 to each index
         self.assertSequenceEqual(ifg_list_mst, self.ifg_list_mst_matlab)
+
+
+class MatlabMSTTests(unittest.TestCase):
+    """
+    Tests to ensure matlab and python mst outputs are the same.
+    """
+    def setUp(self):
+        self.ifgs = sydney_data_setup()
+        self.ifg_file_list = sydney_data_setup_ifg_file_list()
+        self.matlab_ifg_list = ['geo_060619-061002.tif',
+                                'geo_060828-061211.tif',
+                                'geo_061002-070219.tif',
+                                'geo_061002-070430.tif',
+                                'geo_061106-061211.tif',
+                                'geo_061106-070115.tif',
+                                'geo_061106-070326.tif',
+                                'geo_061211-070709.tif',
+                                'geo_061211-070813.tif',
+                                'geo_070115-070326.tif',
+                                'geo_070115-070917.tif',
+                                'geo_070219-070430.tif',
+                                'geo_070219-070604.tif',
+                                'geo_070326-070917.tif',
+                                'geo_070430-070604.tif',
+                                'geo_070604-070709.tif',
+                                'geo_070709-070813.tif']
+
+        self.matlab_mst_list = ['geo_060619-061002.tif',
+                                'geo_060828-061211.tif',
+                                'geo_061002-070219.tif',
+                                'geo_061002-070430.tif',
+                                'geo_061106-061211.tif',
+                                'geo_061106-070115.tif',
+                                'geo_061106-070326.tif',
+                                'geo_061211-070709.tif',
+                                'geo_061211-070813.tif',
+                                'geo_070115-070917.tif',
+                                'geo_070219-070604.tif',
+                                'geo_070604-070709.tif']
+
+        ifg_ordered_list = []
+        # make python list of tifs same as that of matlab
+        for i, f in enumerate(self.ifg_file_list):
+            ifg_ordered_list.append(self.matlab_ifg_list[i])
+            self.assertIn(os.path.split(f)[-1], self.matlab_ifg_list)
+
+        # reorder ifg_file_list as per the the matlab list
+        self.ifg_file_list = sydney_data_setup_ifg_file_list(ifg_ordered_list)
+
+        # make sure python and matlab tifs are the same
+        for i, f in enumerate(self.ifg_file_list):
+            self.assertEquals(os.path.split(f)[-1], self.matlab_ifg_list[i])
+
+        np.testing.assert_array_equal(self.ifg_file_list,
+                        sydney_data_setup_ifg_file_list(self.matlab_ifg_list))
+
+        # reorder ifgs as per the matlab list
+        self.ifgs = sydney_data_setup(datafiles=ifg_ordered_list)
+
+
+    def test_matlab_mst_kruskal(self):
+        """
+        test that the matlab and python mst algos outputs are the same
+        """
+        ifg_list, _ = get_nml(self.ifg_file_list)
+
+        ifg_list_mst_id = matlab_mst_kruskal(ifg_list)
+
+        self.assertEquals(len(self.matlab_mst_list),
+                          len(ifg_list_mst_id))
+
+        for i in ifg_list_mst_id:
+            self.assertIn(os.path.split(ifg_list.nml[i])[-1],
+                          self.matlab_mst_list)
+
+    def test_matlab_make_mstmat(self):
+        """
+        tests equality of boolean mst arrays of both python and matlab.
+        """
+        ifg_list, _ = get_nml(self.ifg_file_list)
+        ifg_list_mst_id = matlab_mst_kruskal(ifg_list)
+        mst_mat = matlab_mst(ifg_list, ifg_list_mst_id)
+
+        # path to csv folders from matlab output
+        from pyrate.tests.common import SYD_TEST_MATLAB_MST_DIR
+
+        onlyfiles = [f for f in os.listdir(SYD_TEST_MATLAB_MST_DIR)
+                if os.path.isfile(os.path.join(SYD_TEST_MATLAB_MST_DIR, f))]
+
+        for i, f in enumerate(onlyfiles):
+            mst_f = np.genfromtxt(os.path.join(SYD_TEST_MATLAB_MST_DIR, f),
+                                  delimiter=',')
+            for k, j in enumerate(self.ifg_file_list):
+                if f.split('matlab_')[-1].split('.')[0] == \
+                        os.path.split(j)[-1].split('.')[0]:
+                    np.testing.assert_array_equal(mst_f, mst_mat[k, :, :])
+
 
 if __name__ == '__main__':
     unittest.main()
