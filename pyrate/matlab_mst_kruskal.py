@@ -1,6 +1,7 @@
 __author__ = 'Sudipta Basak'
 __date_created__ = '7/12/15'
 import numpy as np
+import itertools
 
 from pyrate.tests.common import sydney_data_setup_ifg_file_list
 from pyrate.tests.common import sydney_data_setup
@@ -97,10 +98,11 @@ def matlab_mst_kruskal(ifg_list):
     return [i[0] for i in mst_list]
 
 
-def matlab_mst(ifg_list, ifg_list_mst_id, p_thresh_hold=1):
+def matlab_mst(ifg_list, p_thresh_hold=1):
     """
     This is an implementation of matlab/pirate make_mstmat.m.
     """
+    ifg_list_mst_id = matlab_mst_kruskal(ifg_list)
     data_stack = np.array([i.phase_data for i in ifg_list.ifgs],
                           dtype=np.float32)
     nan_ifg = np.isnan(data_stack)
@@ -120,9 +122,74 @@ def matlab_mst(ifg_list, ifg_list_mst_id, p_thresh_hold=1):
                     # calculate mst again
                     ifglist_mst_valid_id = matlab_mst_kruskal(ifg_list_valid)
                     mst_mat[ifglist_mst_valid_id, r, c] = 1
+                else:
+                    # TODO: This is not handled in matlab
+                    # We will get here if p_thresh_hold is >=2, and this will crash
+                    raise NotImplementedError('Unhandled mst combination')
             else:
                 mst_mat[ifg_list_mst_id, r, c] = 1
     return mst_mat
+
+
+def matlab_mst_generator_boolean_array(ifg_list, p_thresh_hold=1):
+
+    """
+    This is an implementation of matlab/pirate make_mstmat.m.
+    This we will be able to call from mst.py and the rest of the
+    python framework setup so far.
+
+    Please note that the generator version is more memory efficient.
+    If memory was not a concern we could have found the entire mst matrix in the
+    previous function and this would have been unnecessary.
+    """
+    ifg_list_mst_id = matlab_mst_kruskal(ifg_list)
+    data_stack = np.array([i.phase_data for i in ifg_list.ifgs],
+                          dtype=np.float32)
+    # nan_ifg = np.isnan(data_stack)  # doing nan conversion later saves memory
+    no_ifgs, rows, cols = data_stack.shape
+
+    for r, c in itertools.product(xrange(rows), xrange(cols)):
+        # nan_count of the vertical stack of ifg values for a pixel
+        mst_yield = np.zeros(no_ifgs, dtype=np.bool)
+        nan_count = np.sum(np.isnan(data_stack[ifg_list_mst_id, r, c]))
+        # if there is nan value in the independent ifglist, redo mst search
+        if nan_count == 0:
+            mst_yield[ifg_list_mst_id] = True
+            yield r, c, mst_yield
+            continue
+        else:
+            nan_v = np.isnan(data_stack[:, r, c])
+            nan_count = np.sum(nan_v)
+            if nan_count >= p_thresh_hold:
+                # get all valid ifgs from ifglist,
+                # and then select the ones that are not nan on this pixel
+                ifg_list_valid = get_sub_structure(ifg_list, nan_v)
+                # calculate mst again
+                ifglist_mst_valid_id = matlab_mst_kruskal(ifg_list_valid)
+                mst_yield[ifglist_mst_valid_id] = True
+                yield r, c, mst_yield
+                continue
+            else:
+                # TODO: This is not handled in matlab
+                # We will get here if p_thresh_hold is >=2, and this will crash
+                raise NotImplementedError('Unhandled mst combination')
+
+
+def matlab_mst_boolean_array(ifg_list):
+    """
+    This should have the same output as matlab_mst. Should be tested.
+    Please note that the generator version is more memory efficient.
+    If memory was not a concern we could have found the entire mst matrix in the
+    previous function and this would have been unnecessary.
+    :return:
+    """
+    no_ifgs = len(ifg_list.ifgs)
+    no_y, no_x = ifg_list.ifgs[0].phase_data.shape
+    result = np.empty(shape=(no_ifgs, no_y, no_x), dtype=np.bool)
+
+    for y, x, mst in matlab_mst_generator_boolean_array(ifg_list):
+        result[:, y, x] = mst
+    return result
 
 
 def get_sub_structure(ifg_list, nan_v):
@@ -141,5 +208,7 @@ def get_sub_structure(ifg_list, nan_v):
 
 if __name__ == "__main__":
     ifg_list, epoch_list = get_nml(nan_conversion=True)
-    ifg_list_mst_id = matlab_mst_kruskal(ifg_list)
-    matlab_mst(ifg_list, ifg_list_mst_id)
+    mst_mat1 = matlab_mst(ifg_list)
+    mst_mat2 = matlab_mst_boolean_array(ifg_list)
+
+    print np.array_equal(mst_mat1, mst_mat2)  # assert equality of both methods
