@@ -50,7 +50,7 @@ class CovarianceTests(unittest.TestCase):
             if bool((i.phase_data == 0).all()) is True:
                 raise Exception("All zero")
 
-            maxvar, alpha = cvd(i)
+            maxvar, alpha = cvd(i, calc_alpha=True)
             self.assertTrue(maxvar is not None)
             self.assertTrue(alpha is not None)
            
@@ -59,7 +59,8 @@ class CovarianceTests(unittest.TestCase):
 
         assert_array_almost_equal(actmaxvar, expmaxvar, decimal=3)
 
-        # This test fails for greater than 1 decimal place. Discrepancies observed in distance calculations.
+        # This test fails for greater than 1 decimal place.
+        # Discrepancies observed in distance calculations.
         assert_array_almost_equal(actalpha, expalpha, decimal=1)
 
 

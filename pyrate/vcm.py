@@ -53,7 +53,10 @@ def cvd(ifg, calc_alpha=False):
 
     # calculate 2D auto-correlation of image using the
     # spectral method (Wiener-Khinchin theorem)
-    phase = where(isnan(ifg.phase_data), 0, ifg.phase_data)
+    if ifg.nan_converted:  # saves heaps of time
+        phase = where(isnan(ifg.phase_data), 0, ifg.phase_data)
+    else:
+        phase = ifg.phase_data
     fft_phase = fft2(phase)
     pspec = real(fft_phase)**2 + imag(fft_phase)**2
     autocorr_grid = ifft2(pspec)
@@ -70,7 +73,7 @@ def cvd(ifg, calc_alpha=False):
 
     # Symmetry in image; keep only unique points
     tmp = unique_points(zip(acg, r))
-    acg, r = tmp[:,0], tmp[:,1]
+    acg, r = tmp[:, 0], tmp[:, 1]
 
     # Alternative method to remove duplicate cells from Matlab Pirate
     #r = r[:ceil(len(r)/2)+nlines] # Reason for '+nlines' term unknown
