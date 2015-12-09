@@ -113,24 +113,6 @@ def process_ifgs(ifg_paths_or_instance, params):
     logging.debug('PyRate run completed\n')
 
 
-def data_setup(datafiles=None):
-    '''Returns Ifg objs for the files in the sydney test dir
-    input phase data is in radians; these ifgs are in radians
-    - not converted to mm'''
-    if datafiles:
-        for i, d in enumerate(datafiles):
-            datafiles[i] = os.path.join(SYD_TEST_TIF, d)
-    else:
-        datafiles = glob.glob(join(SYD_TEST_TIF, "*.tif") )
-    datafiles.sort()
-    ifgs = [Ifg(i) for i in datafiles]
-
-    for i in ifgs:
-        i.open()
-
-    return ifgs
-
-
 def convert_wavelength(ifg):
     """
     :param ifg: ifg file
