@@ -91,6 +91,8 @@ PERP_BASELINE_FLAG = 'basepflag'
 #: BOOL (1/2/3); Re-project data from Line of sight, 1 = vertical, 2 = horizontal, 3 = no conversion
 REPROJECTION_FLAG = 'prjflag'
 
+NETWORKX_OR_MATLAB_FLAG = 'networkx_or_matlab'
+
 #: BOOL (1/2/3/4); Method for cropping interferograms, 1 = minimum overlapping area (intersection), 2 = maximum area (union), 3 = customised area, 4 = all ifgs already same size
 IFG_CROP_OPT = 'ifgcropopt'
 #: INT; Multi look factor for interferogram preparation in x dimension
