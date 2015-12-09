@@ -3,9 +3,9 @@
 .project
 .pydevproject
 /tmp
-/tests
+#/tests
 /.idea
 .spyderworkspace
 python-graph/
 tests_bk
-sydney_test
+#sydney_test
