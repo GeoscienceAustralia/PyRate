@@ -41,8 +41,15 @@ The documentation will be generated in *doc/build*. The main entry point is *ind
 
 Tests use [unittest](http://pythontesting.net/framework/unittest/unittest-introduction/) and can be found in *pyrate/tests*.
 
-To run the tests you need to get a copy of the test data from the NCI at */g/data1/dg9/PyRate_Project/data/*. There are several version of the data there found in date stamped zip files... you should probably use the most recent. The environment variable *PYRATEPATH* needs to point to the folder where you put the test data. 
+The environment variable *PYRATEPATH* needs to point to the folder where you put the test data. This is how I set up my environment variable:
 
+	export PYRATEPATH="/home/sudipta/GA/PyRate"
+	export PYTHONPATH=$PYRATEPATH/:$PYTHONPATH
+
+To run the tests, use the following command inside the `PyRate` directory:
+		
+	cd PyRate
+	nosetests --nologcapture
 
 ## Basic Usage Instructions
 
