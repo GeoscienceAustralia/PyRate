@@ -90,21 +90,21 @@ class LinearRateTests(unittest.TestCase):
         import os
         from os import listdir
         from os.path import isfile, join
-        mypath = "/home/sudipta/Dropbox/GA/PyRate/mastmat_csvs"
-        onlyfiles = [f for f in listdir(mypath) if isfile(join(mypath, f))]
-
-        # my_data = genfromtxt("/home/sudipta/Dropbox/GA/PyRate/mastmat_csvs/mastmat_geo_060619-061002.csv", delimiter=',')
-
-        # for i in range(len(ifgs)):
-        #     print np.array_equal(my_data, mstmat[i, :, :])
-
-        for i, f in enumerate(onlyfiles):
-            mst_f = genfromtxt(os.path.join(mypath, f), delimiter=',')
-            for k, j in enumerate(ifg_file_list):
-                # print f.split('mat_')[-1].split('.')[0], os.path.split(j)[-1].split('.')[0]
-                if f.split('mat_')[-1].split('.')[0] == os.path.split(j)[-1].split('.')[0]:
-                    # print f.split('mat_')[-1], os.path.split(j)[-1]
-                    print np.array_equal(mst_f, mstmat[k, :, :])
+        # mypath = "/home/sudipta/Dropbox/GA/PyRate/mastmat_csvs"
+        # onlyfiles = [f for f in listdir(mypath) if isfile(join(mypath, f))]
+        #
+        # # my_data = genfromtxt("/home/sudipta/Dropbox/GA/PyRate/mastmat_csvs/mastmat_geo_060619-061002.csv", delimiter=',')
+        #
+        # # for i in range(len(ifgs)):
+        # #     print np.array_equal(my_data, mstmat[i, :, :])
+        #
+        # for i, f in enumerate(onlyfiles):
+        #     mst_f = genfromtxt(os.path.join(mypath, f), delimiter=',')
+        #     for k, j in enumerate(ifg_file_list):
+        #         # print f.split('mat_')[-1].split('.')[0], os.path.split(j)[-1].split('.')[0]
+        #         if f.split('mat_')[-1].split('.')[0] == os.path.split(j)[-1].split('.')[0]:
+        #             # print f.split('mat_')[-1], os.path.split(j)[-1]
+        #             print np.array_equal(mst_f, mstmat[k, :, :])
 
 
         # print "self.ifgs[0].phase_data", self.ifgs[0].phase_data

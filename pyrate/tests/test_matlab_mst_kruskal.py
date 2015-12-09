@@ -10,11 +10,13 @@ from pyrate.matlab_mst_kruskal import sort_list
 from pyrate.matlab_mst_kruskal import matlab_mst_kruskal
 from pyrate.matlab_mst_kruskal import matlab_mst
 from pyrate.tests.common import sydney_data_setup_ifg_file_list
+from pyrate.matlab_mst_kruskal import IfgListMatlabTest as IfgList
 
 
 class IfgListTest(unittest.TestCase):
 
     def setUp(self):
+
         self.ifgs = sydney_data_setup()
         self.matlab_n = [1,  2,  3,  3,  4,  4,  4,  5, 5,  6,  6,  7,  7,  8,
                          9, 10, 11,  3,  5,  7,  9,  5,  6,  8, 11, 12, 8, 13,
@@ -24,7 +26,8 @@ class IfgListTest(unittest.TestCase):
         self.matlab_slvnum = [3, 5, 7, 9, 5, 6, 8, 11, 12,  8, 13, 9,
                               10, 13, 10, 11, 12]
 
-        self.ifg_list, self.epoch_list = get_nml()
+        ifg_instance = IfgList()
+        self.ifg_list, self.epoch_list = get_nml(ifg_instance)
 
     def test_matlab_n(self):
         # add 1 to ifg_list.n as matlab indices start from 1.
@@ -44,7 +47,8 @@ class IfgListTest(unittest.TestCase):
 class MatlabMstKruskalTest(unittest.TestCase):
 
     def setUp(self):
-        self.ifg_list, _ = get_nml()
+        ifg_instance = IfgList()
+        self.ifg_list, _ = get_nml(ifg_instance)
         self.sorted_list = sort_list(self.ifg_list)
         self.matlab_sorted_list_zero_nan_frac = [   (1, 1, 3, 0.0),
                                                     (2, 2, 5, 0.0),
@@ -138,7 +142,8 @@ class MatlabMSTTests(unittest.TestCase):
         """
         test that the matlab and python mst algos outputs are the same
         """
-        ifg_list, _ = get_nml(self.ifg_file_list)
+        ifg_instance = IfgList(datafiles=self.ifg_file_list)
+        ifg_list, _ = get_nml(ifg_instance)
 
         ifg_list_mst_id = matlab_mst_kruskal(ifg_list)
 
@@ -153,9 +158,9 @@ class MatlabMSTTests(unittest.TestCase):
         """
         tests equality of boolean mst arrays of both python and matlab.
         """
-        ifg_list, _ = get_nml(self.ifg_file_list)
-        ifg_list_mst_id = matlab_mst_kruskal(ifg_list)
-        mst_mat = matlab_mst(ifg_list, ifg_list_mst_id)
+        ifg_instance = IfgList(datafiles=self.ifg_file_list)
+        ifg_list, _ = get_nml(ifg_instance)
+        mst_mat = matlab_mst(ifg_list, p_thresh_hold=1)
 
         # path to csv folders from matlab output
         from pyrate.tests.common import SYD_TEST_MATLAB_MST_DIR

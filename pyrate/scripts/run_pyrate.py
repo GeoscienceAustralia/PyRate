@@ -6,6 +6,7 @@ Created on 17/09/2012
 """
 
 import os, sys, shutil, logging, datetime, gdal, numpy as np
+import glob
 
 import pyrate.mst as mst
 import pyrate.prepifg as prepifg
@@ -18,6 +19,8 @@ import pyrate.config as cf
 from pyrate.shared import Ifg
 from pyrate import vcm as vcm_module
 import pyrate.ifgconstants as ifc
+from pyrate import matlab_mst_kruskal as matlab_mst
+
 
 # constants for metadata flags
 META_UNITS = 'PHASE_UNITS'
@@ -27,23 +30,31 @@ META_REMOVED = 'REMOVED'
 pars = None
 
 
-def process_ifgs(ifg_paths, params):
+def process_ifgs(ifg_paths_or_instance, params):
     """
     Top level function to perform correction steps on given ifgs
     ifgs: sequence of paths to interferograms (NB: changes are saved into ifgs)
     params: dict of run config params
     """
-    ifgs = [Ifg(p) for p in ifg_paths]
+    # ifg_instance, nan_conversion=True
 
-    for i in ifgs:
-        if not i.is_open:
-            i.open(readonly=False)
-        convert_wavelength(i)
+    if isinstance(ifg_paths_or_instance, list):
+        ifgs = [Ifg(p) for p in ifg_paths_or_instance]
+        for i in ifgs:
+            if not i.is_open:
+                i.open(readonly=False)
+            convert_wavelength(i)
+        mst_grid = mst.mst_matrix_ifg_indices_as_boolean_array(ifgs)
+    else:
+        assert isinstance(ifg_paths_or_instance, matlab_mst.IfgListPyRate)
+        ifg_list, epoch_list = matlab_mst.get_nml(ifg_paths_or_instance,
+                                                  nan_conversion=False)
+        mst_grid = matlab_mst.matlab_mst_boolean_array(ifg_list)
+        ifgs = ifg_paths_or_instance.ifgs
 
     # remove_orbital_error(ifgs, params)
 
-    mst_grid = mst.mst_matrix_ifg_indices_as_boolean_array(ifgs)
-    refpx, refpy = find_reference_pixel(ifgs, params)
+    refpx, refpy = find_reference_pixel(ifgs, params)  # where are these used?
 
     maxvar = [vcm_module.cvd(i)[0] for i in ifgs]
     vcm = vcm_module.get_vcmt(ifgs, maxvar)
@@ -52,7 +63,8 @@ def process_ifgs(ifg_paths, params):
 
     # Calculate time series
     pthresh = params[cf.TIME_SERIES_PTHRESH]
-    tsincr, tscum, tsvel = calculate_time_series(ifgs, pthresh, mst=mst_grid)  # TODO: check is correct MST
+    tsincr, tscum, tsvel = calculate_time_series(ifgs, pthresh, mst=mst_grid)
+    # TODO: check is correct MST
 
     # print ifg_paths[0]
     # p = os.path.join(pars[cf.SIM_DIR], ifg_paths[0])
@@ -99,6 +111,24 @@ def process_ifgs(ifg_paths, params):
         i.dataset.FlushCache()
         i = None  # force close    TODO: may need to implement close()
     logging.debug('PyRate run completed\n')
+
+
+def data_setup(datafiles=None):
+    '''Returns Ifg objs for the files in the sydney test dir
+    input phase data is in radians; these ifgs are in radians
+    - not converted to mm'''
+    if datafiles:
+        for i, d in enumerate(datafiles):
+            datafiles[i] = os.path.join(SYD_TEST_TIF, d)
+    else:
+        datafiles = glob.glob(join(SYD_TEST_TIF, "*.tif") )
+    datafiles.sort()
+    ifgs = [Ifg(i) for i in datafiles]
+
+    for i in ifgs:
+        i.open()
+
+    return ifgs
 
 
 def convert_wavelength(ifg):
@@ -352,8 +382,14 @@ def main():
     # process copies of source data
     for wp, dp in zip(working_paths, dest_paths):
         shutil.copy(wp, dp)
+    ifg_instance = matlab_mst.IfgListPyRate(datafiles=dest_paths)
 
-    process_ifgs(dest_paths, pars)
+    if int(pars[cf.NETWORKX_OR_MATLAB_FLAG]):
+        print 'Running networkx mst'
+        process_ifgs(dest_paths, pars)
+    else:
+        print 'Running matlab mst'
+        process_ifgs(ifg_instance, pars)
 
 if __name__ == "__main__":
     main()

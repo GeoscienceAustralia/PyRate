@@ -321,7 +321,6 @@ def minimum_spanning_edges(G, weight='weight', data=True):
     for u, v, d in edges:
         if subtrees[u] != subtrees[v]:
             if data:
-                print u, v, d
                 yield (u, v, d)
             else:
                 yield (u, v)
