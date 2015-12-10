@@ -40,17 +40,21 @@ def process_ifgs(ifg_paths_or_instance, params):
 
     if isinstance(ifg_paths_or_instance, list):
         ifgs = [Ifg(p) for p in ifg_paths_or_instance]
+
         for i in ifgs:
             if not i.is_open:
                 i.open(readonly=False)
-            convert_wavelength(i)
+                i.convert_to_nans()  # nan conversion happens here in networkx
+            convert_wavelength(i)  # not used in vcm or linrate?
         mst_grid = mst.mst_matrix_ifg_indices_as_boolean_array(ifgs)
     else:
         assert isinstance(ifg_paths_or_instance, matlab_mst.IfgListPyRate)
-        ifg_list, epoch_list = matlab_mst.get_nml(ifg_paths_or_instance,
-                                                  nan_conversion=False)
-        mst_grid = matlab_mst.matlab_mst_boolean_array(ifg_list)
         ifgs = ifg_paths_or_instance.ifgs
+        for i in ifgs:
+            convert_wavelength(i)  # not used in vcm or linrate?
+        ifg_list, epoch_list = matlab_mst.get_nml(ifg_paths_or_instance,
+                                                  nan_conversion=True)
+        mst_grid = matlab_mst.matlab_mst_boolean_array(ifg_list)
 
     # remove_orbital_error(ifgs, params)
 
@@ -59,7 +63,8 @@ def process_ifgs(ifg_paths_or_instance, params):
     maxvar = [vcm_module.cvd(i)[0] for i in ifgs]
     vcm = vcm_module.get_vcmt(ifgs, maxvar)
 
-    rate, error, samples = calculate_linear_rate(ifgs, params, vcm, mst=mst_grid)
+    rate, error, samples = calculate_linear_rate(ifgs, params, vcm,
+                                                 mst=mst_grid)
 
     # Calculate time series
     pthresh = params[cf.TIME_SERIES_PTHRESH]
