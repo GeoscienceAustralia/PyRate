@@ -5,14 +5,12 @@ MATLAB code for Pirate.
 .. codeauthor:: Ben Davies, Matt Garthwaite
 '''
 
-from copy import copy
 from numpy import array, where, isnan, real, imag, sum, sqrt, meshgrid
 from numpy import zeros, vstack, ceil, mean, exp, reshape
 from numpy.linalg import norm
 import numpy as np
 from scipy.fftpack import fft2, ifft2, fftshift
 from scipy.optimize import fmin
-import math
 
 from pyrate.algorithm import master_slave_ids
 
@@ -84,7 +82,7 @@ def cvd(ifg, calc_alpha=False):
     # whereas keeping 1st half is just numpy indexing.
     # If it is not faster, why was this done differently here?
 
-    r = r[:math.ceil(ifg.num_cells/2.0) + ifg.nrows]
+    r = r[:ceil(ifg.num_cells/2.0) + ifg.nrows]
     acg = acg[:len(r)]
 
     # Alternative method to remove duplicate cells from Matlab Pirate
@@ -115,22 +113,25 @@ def cvd(ifg, calc_alpha=False):
     if calc_alpha:
         # classify values of r according to bin number
         rbin = ceil(r / w).astype(int)
-        maxbin = max(rbin) # consistent with Matlab code
+        maxbin = max(rbin)  # consistent with Matlab code
 
         cvdav = zeros(shape=(2, maxbin))
 
-        for b in range(maxbin):
-            cvdav[0, b] = b * w  # distance instead of bin number
-            cvdav[1, b] = mean(acg[rbin == b])  # mean variance for that bin
+        # the following stays in numpy land
+        # distance instead of bin number
+        cvdav[0, :] = np.multiply(range(maxbin), w)
+        # mean variance for the bins
+        cvdav[1, :] = map(lambda b: mean(acg[rbin == b]), range(maxbin))
 
         # calculate best fit function maxvar*exp(-alpha*r)
         alphaguess = 2 / (maxbin * w)
-        alpha = fmin(pendiffexp, x0=alphaguess, args=(cvdav,), disp=0)
+        alpha = fmin(pendiffexp, x0=alphaguess, args=(cvdav,), disp=0,
+                     xtol=1e-6, ftol=1e-6)
         print "1st guess, alpha", alphaguess, alpha
         # maximum variance usually at the zero lag: max(acg[:len(r)])
-        return max(acg), alpha[0]
+        return np.max(acg), alpha[0]
     else:
-        return max(acg), 0
+        return np.max(acg), 0
 
 
 def get_vcmt(ifgs, maxvar):
