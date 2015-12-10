@@ -198,12 +198,11 @@ def matlab_mst(ifg_list_, p_thresh_hold=1):
                 if no_ifgs - np.count_nonzero(nan_v) >= p_thresh_hold:
                     # get all valid ifgs from ifglist,
                     # and then select the ones that are not nan on this pixel
-                    ifg_list_valid = get_sub_structure(ifg_list_, nan_v,
+                    id, master, slave, nan_frac = get_sub_structure(ifg_list_, nan_v,
                                                        ifg_class_type)
                     # calculate mst again
-                    ifglist_mst_valid_id = matlab_mst_kruskal(ifg_list_valid.id,
-                            ifg_list_valid.master_num,
-                            ifg_list_valid.slave_num, ifg_list_valid.nan_frac)
+                    ifglist_mst_valid_id = matlab_mst_kruskal(id, master,
+                                                              slave, nan_frac)
                     mst_mat[ifglist_mst_valid_id, r, c] = 1
                 else:
                     # TODO: This is not handled in matlab
@@ -249,12 +248,11 @@ def matlab_mst_generator_boolean_array(ifg_instance, p_thresh_hold=1):
             if nan_count >= p_thresh_hold:
                 # get all valid ifgs from ifglist,
                 # and then select the ones that are not nan on this pixel
-                ifg_list_valid = get_sub_structure(ifg_instance, nan_v,
+                id, master, slave, nan_frac = get_sub_structure(ifg_instance, nan_v,
                                                    ifg_class_type)
                 # calculate mst again
-                ifglist_mst_valid_id = matlab_mst_kruskal(
-                    ifg_list_valid.id, ifg_list_valid.master_num,
-                    ifg_list_valid.slave_num, ifg_list_valid.nan_frac)
+                ifglist_mst_valid_id = matlab_mst_kruskal(id, master,
+                                                          slave, nan_frac)
                 mst_yield[ifglist_mst_valid_id] = True
                 yield r, c, mst_yield
             else:
@@ -306,37 +304,15 @@ def get_sub_structure(ifg_list, nan_v, class_type):
     :param nan_v: all ifg values at this location.
     :return:
     """
-    # TODO: Matlab does not pass through get_nml a second time.
-    # Check which is correct. I think running via get_nml here is safer
-    # This also makes it slow, which is probably why matlab does not
-    # implemnet it?
-    # TODO: have to skip get_nml here somehow
-    data_files_valid = [ifg_list.nml[a] for a in np.nonzero(~nan_v)[0]]
-    ifg_instance_valid = class_type(datafiles=data_files_valid)
-    ifg_list_valid, _ = get_nml(ifg_instance_valid,
-                                nan_conversion=True)
-    return ifg_list_valid
-
-
-def get_sub_structure_new(ifg_list, nan_v, class_type):
-    """
-    This is the getsucstruct.m in pi-rate/matlab.
-    :param ifg_list: original ifg_list class instance.
-    :param nan_v: all ifg values at this location.
-    :return:
-    """
-    # TODO: Matlab does not pass through get_nml a second time.
-    # Check which is correct. I think running via get_nml here is safer
-    # This also makes it slow, which is probably why matlab does not
-    # implemnet it?
-    # TODO: have to skip get_nml here somehow
-    data_files_valid = [ifg_list.nml[a] for a in np.nonzero(~nan_v)[0]]
     indices_chosen = np.nonzero(~nan_v)[0]
-    print get_all_attriblues_of_class(ifg_list)
-    ifg_instance_valid = class_type(datafiles=data_files_valid)
-    ifg_list_valid, _ = get_nml(ifg_instance_valid,
-                                nan_conversion=True)
-    return ifg_list_valid
+
+    # TODO: remove the list comprehensions
+    id = [ifg_list.id[i] for i in indices_chosen]
+    master_num = [ifg_list.master_num[i] for i in indices_chosen]
+    slave_num = [ifg_list.slave_num[i] for i in indices_chosen]
+    nan_frac = [ifg_list.nan_frac[i] for i in indices_chosen]
+
+    return id, master_num, slave_num, nan_frac
 
 if __name__ == "__main__":
     ifg_instance_main = IfgListMatlabTest()
