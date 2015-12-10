@@ -9,8 +9,10 @@ from copy import copy
 from numpy import array, where, isnan, real, imag, sum, sqrt, meshgrid
 from numpy import zeros, vstack, ceil, mean, exp, reshape
 from numpy.linalg import norm
+import numpy as np
 from scipy.fftpack import fft2, ifft2, fftshift
 from scipy.optimize import fmin
+import math
 
 from pyrate.algorithm import master_slave_ids
 
@@ -53,7 +55,7 @@ def cvd(ifg, calc_alpha=False):
 
     # calculate 2D auto-correlation of image using the
     # spectral method (Wiener-Khinchin theorem)
-    if ifg.nan_converted:  # saves heaps of time
+    if ifg.nan_converted:  # saves heaps of time with no-nan conversion
         phase = where(isnan(ifg.phase_data), 0, ifg.phase_data)
     else:
         phase = ifg.phase_data
@@ -65,15 +67,25 @@ def cvd(ifg, calc_alpha=False):
 
     # pixel distances from pixel at zero lag (image centre).
     xx, yy = meshgrid(range(ifg.ncols), range(ifg.nrows))
-    r = sqrt(((xx-ifg.x_centre) * ifg.x_size)**2 +
-             ((yy-ifg.y_centre) * ifg.y_size)**2) / distfact
 
-    r = reshape(r, ifg.num_cells, 1)
-    acg = reshape(autocorr_grid, ifg.num_cells, 1)
+    # r is distance from the center
+    # doing np.divide and np.sqrt will improve performance as it keeps
+    # calculations in the numpy land
+    r = np.divide(np.sqrt(((xx-ifg.x_centre) * ifg.x_size)**2 +
+             ((yy-ifg.y_centre) * ifg.y_size)**2), distfact)
+
+    r = reshape(r, ifg.num_cells)
+    acg = reshape(autocorr_grid, ifg.num_cells)
 
     # Symmetry in image; keep only unique points
-    tmp = unique_points(zip(acg, r))
-    acg, r = tmp[:, 0], tmp[:, 1]
+    # tmp = unique_points(zip(acg, r))
+    # Sudipta: Is this faster than keeping only the 1st half as in Matlab?
+    # Sudipta: Unlikely, as unique_point is a search/comparison,
+    # whereas keeping 1st half is just numpy indexing.
+    # If it is not faster, why was this done differently here?
+
+    r = r[:math.ceil(ifg.num_cells/2.0) + ifg.nrows]
+    acg = acg[:len(r)]
 
     # Alternative method to remove duplicate cells from Matlab Pirate
     #r = r[:ceil(len(r)/2)+nlines] # Reason for '+nlines' term unknown
@@ -81,10 +93,6 @@ def cvd(ifg, calc_alpha=False):
     # TODO: write a better way of getting rid of duplicate {r, acg} pairs - sets?
     # eg. array([x for x in set([(1,1), (2,2), (1,1)])])
     # the above shortens r by some number of cells
-    #print 'r',r
-
-    acgorig = copy(acg)
-    rorig = copy(r)
 
     # bin width for collecting data
     w = max(ifg.x_size, ifg.y_size) * 2 / distfact
@@ -94,16 +102,15 @@ def cvd(ifg, calc_alpha=False):
     #print 'ifg.X_SIZE, ifg.Y_SIZE', ifg.x_size, ifg.y_size
     if (ifg.x_centre * ifg.x_size) < (ifg.y_centre * ifg.y_size):
         maxdist = ifg.x_centre * ifg.x_size / distfact
-        #print "maxdist from X axis is", maxdist
     else:
         maxdist = ifg.y_centre * ifg.y_size/ distfact
-        #print "maxdist from Y axis is", maxdist
 
     # filter out data where the of lag distance is greater than maxdist
     #r = array([e for e in rorig if e <= maxdist]) # MG: prefers to use all the data
     #acg = array([e for e in rorig if e <= maxdist])
-    r = rorig[rorig < maxdist]
-    acg = acgorig[rorig < maxdist]
+    indices_to_keep = r < maxdist
+    r = r[indices_to_keep]
+    acg = acg[indices_to_keep]
 
     if calc_alpha:
         # classify values of r according to bin number
@@ -120,12 +127,10 @@ def cvd(ifg, calc_alpha=False):
         alphaguess = 2 / (maxbin * w)
         alpha = fmin(pendiffexp, x0=alphaguess, args=(cvdav,), disp=0)
         print "1st guess, alpha", alphaguess, alpha
-
-        assert len(alpha) == 1
         # maximum variance usually at the zero lag: max(acg[:len(r)])
-        return max(acg[:len(r)]), alpha[0]
+        return max(acg), alpha[0]
     else:
-        return max(acg[:len(r)]), 0
+        return max(acg), 0
 
 
 def get_vcmt(ifgs, maxvar):
