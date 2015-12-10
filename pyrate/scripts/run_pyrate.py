@@ -52,9 +52,9 @@ def process_ifgs(ifg_paths_or_instance, params):
         ifgs = ifg_paths_or_instance.ifgs
         for i in ifgs:
             convert_wavelength(i)  # not used in vcm or linrate?
-        ifg_list, epoch_list = matlab_mst.get_nml(ifg_paths_or_instance,
-                                                  nan_conversion=True)
-        mst_grid = matlab_mst.matlab_mst_boolean_array(ifg_list)
+        ifg_instance_updated, epoch_list = \
+            matlab_mst.get_nml(ifg_paths_or_instance, nan_conversion=True)
+        mst_grid = matlab_mst.matlab_mst_boolean_array(ifg_instance_updated)
 
     # remove_orbital_error(ifgs, params)
 

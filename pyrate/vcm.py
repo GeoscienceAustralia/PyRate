@@ -127,7 +127,7 @@ def cvd(ifg, calc_alpha=False):
         alphaguess = 2 / (maxbin * w)
         alpha = fmin(pendiffexp, x0=alphaguess, args=(cvdav,), disp=0,
                      xtol=1e-6, ftol=1e-6)
-        print "1st guess, alpha", alphaguess, alpha
+        print "1st guess alpha", alphaguess, 'converged alpha:', alpha
         # maximum variance usually at the zero lag: max(acg[:len(r)])
         return np.max(acg), alpha[0]
     else:

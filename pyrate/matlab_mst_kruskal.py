@@ -131,27 +131,28 @@ def get_nml(ifg_list_instance, nan_conversion=False, prefix_len=4):
     return ifg_list_instance, epoch_list_
 
 
-def sort_list(ifg_list_):
+def sort_list(id_l, master_l, slave_l, nan_frac_l):
     dtype = [('id', int), ('master', int), ('slave', int), ('nan_frac', float)]
     sort_list = map(lambda i, m, s, n: (i, m, s, n),
-                    ifg_list_.id, ifg_list_.master_num,
-                    ifg_list_.slave_num, ifg_list_.nan_frac)
+                    id_l, master_l, slave_l, nan_frac_l)
 
     sort_list = np.array(sort_list, dtype=dtype)
     return np.sort(sort_list, order=['nan_frac'])
 
 
-def matlab_mst_kruskal(ifg_list):
+def matlab_mst_kruskal(id_l, master_l, slave_l, nan_frac_l):
     """
     This is an implementation of the pi-rate mst_kruskal.m
-    :param ifg_list:
+    :param ifg_list_:
     :return:
     """
 
     dtype = [('id', int), ('master', int), ('slave', int), ('nan_frac', float)]
-    no_ifgs = len(ifg_list.master_num)
-    no_images = max(max(ifg_list.master_num), max(ifg_list.slave_num))
-    ifg_sorted = sort_list(ifg_list)
+    no_ifgs = len(master_l)
+    no_images = max(max(master_l), max(slave_l))
+    # print 'ifg_list', ifg_list_
+    ifg_sorted = sort_list(id_l, master_l, slave_l, nan_frac_l)
+    # print 'ifg_sorted', ifg_sorted
 
     # add one to ensure index number + 1
     connect = np.eye(no_images + 1)
@@ -176,13 +177,14 @@ def matlab_mst_kruskal(ifg_list):
     return [i[0] for i in mst_list]
 
 
-def matlab_mst(ifg_list, p_thresh_hold=1):
+def matlab_mst(ifg_list_, p_thresh_hold=1):
     """
     This is an implementation of matlab/pirate make_mstmat.m.
     """
-    ifg_class_type = str_to_class(ifg_list.__class__.__name__)
-    ifg_list_mst_id = matlab_mst_kruskal(ifg_list)
-    data_stack = ifg_list.data_stack
+    ifg_class_type = str_to_class(ifg_list_.__class__.__name__)
+    ifg_list_mst_id = matlab_mst_kruskal(ifg_list_.id,
+        ifg_list_.master_num, ifg_list_.slave_num, ifg_list_.nan_frac)
+    data_stack = ifg_list_.data_stack
     nan_ifg = np.isnan(data_stack)
     mst_mat = np.zeros_like(nan_ifg, dtype=np.bool)
     no_ifgs, rows, cols = nan_ifg.shape
@@ -196,10 +198,12 @@ def matlab_mst(ifg_list, p_thresh_hold=1):
                 if no_ifgs - np.count_nonzero(nan_v) >= p_thresh_hold:
                     # get all valid ifgs from ifglist,
                     # and then select the ones that are not nan on this pixel
-                    ifg_list_valid = get_sub_structure(ifg_list, nan_v,
+                    ifg_list_valid = get_sub_structure(ifg_list_, nan_v,
                                                        ifg_class_type)
                     # calculate mst again
-                    ifglist_mst_valid_id = matlab_mst_kruskal(ifg_list_valid)
+                    ifglist_mst_valid_id = matlab_mst_kruskal(ifg_list_valid.id,
+                            ifg_list_valid.master_num,
+                            ifg_list_valid.slave_num, ifg_list_valid.nan_frac)
                     mst_mat[ifglist_mst_valid_id, r, c] = 1
                 else:
                     # TODO: This is not handled in matlab
@@ -210,7 +214,7 @@ def matlab_mst(ifg_list, p_thresh_hold=1):
     return mst_mat
 
 
-def matlab_mst_generator_boolean_array(ifg_list, p_thresh_hold=1):
+def matlab_mst_generator_boolean_array(ifg_instance, p_thresh_hold=1):
 
     """
     This is an implementation of matlab/pirate make_mstmat.m.
@@ -221,9 +225,11 @@ def matlab_mst_generator_boolean_array(ifg_list, p_thresh_hold=1):
     If memory was not a concern we could have found the entire mst matrix in the
     previous function and this would have been unnecessary.
     """
-    ifg_class_type = str_to_class(ifg_list.__class__.__name__)
-    ifg_list_mst_id = matlab_mst_kruskal(ifg_list)
-    data_stack = ifg_list.data_stack
+    ifg_class_type = str_to_class(ifg_instance.__class__.__name__)
+    # (id_l, master_l, slave_l, nan_frac_l)
+    ifg_list_mst_id = matlab_mst_kruskal(ifg_instance.id,
+        ifg_instance.master_num, ifg_instance.slave_num, ifg_instance.nan_frac)
+    data_stack = ifg_instance.data_stack
     # np.array([i.phase_data for i in ifg_list.ifgs],
     #                   dtype=np.float32)
     # nan_ifg = np.isnan(data_stack)  # doing nan conversion later saves memory
@@ -243,10 +249,12 @@ def matlab_mst_generator_boolean_array(ifg_list, p_thresh_hold=1):
             if nan_count >= p_thresh_hold:
                 # get all valid ifgs from ifglist,
                 # and then select the ones that are not nan on this pixel
-                ifg_list_valid = get_sub_structure(ifg_list, nan_v,
+                ifg_list_valid = get_sub_structure(ifg_instance, nan_v,
                                                    ifg_class_type)
                 # calculate mst again
-                ifglist_mst_valid_id = matlab_mst_kruskal(ifg_list_valid)
+                ifglist_mst_valid_id = matlab_mst_kruskal(
+                    ifg_list_valid.id, ifg_list_valid.master_num,
+                    ifg_list_valid.slave_num, ifg_list_valid.nan_frac)
                 mst_yield[ifglist_mst_valid_id] = True
                 yield r, c, mst_yield
             else:
@@ -255,7 +263,7 @@ def matlab_mst_generator_boolean_array(ifg_list, p_thresh_hold=1):
                 raise NotImplementedError('Unhandled mst combination')
 
 
-def matlab_mst_boolean_array(ifg_list):
+def matlab_mst_boolean_array(ifg_list_instance, p_thresh_hold=1):
     """
     This should have the same output as matlab_mst. Should be tested.
     Please note that the generator version is more memory efficient.
@@ -263,11 +271,11 @@ def matlab_mst_boolean_array(ifg_list):
     previous function and this would have been unnecessary.
     :return:
     """
-    no_ifgs = len(ifg_list.ifgs)
-    no_y, no_x = ifg_list.ifgs[0].phase_data.shape
+    no_ifgs = len(ifg_list_instance.ifgs)
+    no_y, no_x = ifg_list_instance.ifgs[0].phase_data.shape
     result = np.empty(shape=(no_ifgs, no_y, no_x), dtype=np.bool)
 
-    for y, x, mst in matlab_mst_generator_boolean_array(ifg_list):
+    for y, x, mst in matlab_mst_generator_boolean_array(ifg_list_instance):
         result[:, y, x] = mst
     return result
 
@@ -278,6 +286,17 @@ def str_to_class(str):
     :return: class from string
     """
     return getattr(sys.modules[__name__], str)
+
+
+def get_all_class_attributes(this_class):
+    print dir(this_class)
+    return [attr for attr in dir(this_class)
+            if not callable(attr)
+            and not attr.startswith("_")]
+
+
+def get_all_attriblues_of_class(class_instance):
+    return vars(class_instance).keys()
 
 
 def get_sub_structure(ifg_list, nan_v, class_type):
@@ -298,10 +317,30 @@ def get_sub_structure(ifg_list, nan_v, class_type):
                                 nan_conversion=True)
     return ifg_list_valid
 
+
+def get_sub_structure_new(ifg_list, nan_v, class_type):
+    """
+    This is the getsucstruct.m in pi-rate/matlab.
+    :param ifg_list: original ifg_list class instance.
+    :param nan_v: all ifg values at this location.
+    :return:
+    """
+    # TODO: Matlab does not pass through get_nml a second time.
+    # Check which is correct. I think running via get_nml here is safer
+    # This also makes it slow, which is probably why matlab does not
+    # implemnet it?
+    # TODO: have to skip get_nml here somehow
+    data_files_valid = [ifg_list.nml[a] for a in np.nonzero(~nan_v)[0]]
+    indices_chosen = np.nonzero(~nan_v)[0]
+    print get_all_attriblues_of_class(ifg_list)
+    ifg_instance_valid = class_type(datafiles=data_files_valid)
+    ifg_list_valid, _ = get_nml(ifg_instance_valid,
+                                nan_conversion=True)
+    return ifg_list_valid
+
 if __name__ == "__main__":
-    ifg_instance = IfgListMatlabTest()
-    ifg_list, epoch_list = get_nml(ifg_instance, nan_conversion=True)
+    ifg_instance_main = IfgListMatlabTest()
+    ifg_list, epoch_list = get_nml(ifg_instance_main, nan_conversion=True)
     mst_mat1 = matlab_mst(ifg_list)
     mst_mat2 = matlab_mst_boolean_array(ifg_list)
-
     print np.array_equal(mst_mat1, mst_mat2)  # assert equality of both methods

@@ -8,7 +8,7 @@ from pyrate.tests.common import sydney_data_setup
 from pyrate.matlab_mst_kruskal import get_nml
 from pyrate.matlab_mst_kruskal import sort_list
 from pyrate.matlab_mst_kruskal import matlab_mst_kruskal
-from pyrate.matlab_mst_kruskal import matlab_mst
+from pyrate.matlab_mst_kruskal import matlab_mst, matlab_mst_boolean_array
 from pyrate.tests.common import sydney_data_setup_ifg_file_list
 from pyrate.matlab_mst_kruskal import IfgListMatlabTest as IfgList
 
@@ -49,7 +49,8 @@ class MatlabMstKruskalTest(unittest.TestCase):
     def setUp(self):
         ifg_instance = IfgList()
         self.ifg_list, _ = get_nml(ifg_instance)
-        self.sorted_list = sort_list(self.ifg_list)
+        self.sorted_list = sort_list(self.ifg_list.id, self.ifg_list.master_num,
+                                self.ifg_list.slave_num, self.ifg_list.nan_frac)
         self.matlab_sorted_list_zero_nan_frac = [   (1, 1, 3, 0.0),
                                                     (2, 2, 5, 0.0),
                                                     (3, 3, 7, 0.0),
@@ -75,7 +76,9 @@ class MatlabMstKruskalTest(unittest.TestCase):
             self.assertEquals((s[0]+1, s[1]+1, s[2]+1, s[3]), m)
 
     def test_mst_kruskal_matlab(self):
-        ifg_list_mst = matlab_mst_kruskal(self.ifg_list)
+        ifg_list_mst = matlab_mst_kruskal(self.ifg_list.id,
+                                self.ifg_list.master_num,
+                                self.ifg_list.slave_num, self.ifg_list.nan_frac)
         ifg_list_mst = [i + 1 for i in ifg_list_mst]  # add 1 to each index
         self.assertSequenceEqual(ifg_list_mst, self.ifg_list_mst_matlab)
 
@@ -144,7 +147,8 @@ class MatlabMSTTests(unittest.TestCase):
         ifg_instance = IfgList(datafiles=self.ifg_file_list)
         ifg_list, _ = get_nml(ifg_instance)
 
-        ifg_list_mst_id = matlab_mst_kruskal(ifg_list)
+        ifg_list_mst_id = matlab_mst_kruskal(ifg_list.id, ifg_list.master_num,
+                                ifg_list.slave_num, ifg_list.nan_frac)
 
         self.assertEquals(len(self.matlab_mst_list),
                           len(ifg_list_mst_id))
@@ -174,6 +178,38 @@ class MatlabMSTTests(unittest.TestCase):
                 if f.split('matlab_')[-1].split('.')[0] == \
                         os.path.split(j)[-1].split('.')[0]:
                     np.testing.assert_array_equal(mst_f, mst_mat[k, :, :])
+
+
+    def test_matlab_make_mstmat_boolean_array(self):
+        """
+        tests equality of boolean mst arrays of both python and matlab.
+        """
+        ifg_instance = IfgList(datafiles=self.ifg_file_list)
+        ifg_list, _ = get_nml(ifg_instance)
+        mst_mat = matlab_mst_boolean_array(ifg_list, p_thresh_hold=1)
+
+        # path to csv folders from matlab output
+        from pyrate.tests.common import SYD_TEST_MATLAB_MST_DIR
+
+        onlyfiles = [f for f in os.listdir(SYD_TEST_MATLAB_MST_DIR)
+                if os.path.isfile(os.path.join(SYD_TEST_MATLAB_MST_DIR, f))]
+
+        for i, f in enumerate(onlyfiles):
+            mst_f = np.genfromtxt(os.path.join(SYD_TEST_MATLAB_MST_DIR, f),
+                                  delimiter=',')
+            for k, j in enumerate(self.ifg_file_list):
+                if f.split('matlab_')[-1].split('.')[0] == \
+                        os.path.split(j)[-1].split('.')[0]:
+                    np.testing.assert_array_equal(mst_f, mst_mat[k, :, :])
+
+
+    def test_mas_mat_vs_mst_mat_generator(self):
+        ifg_instance = IfgList(datafiles=self.ifg_file_list)
+        ifg_list, _ = get_nml(ifg_instance, nan_conversion=True)
+        mst_mat1 = matlab_mst(ifg_list)
+        mst_mat2 = matlab_mst_boolean_array(ifg_list)
+
+        np.testing.assert_array_equal(mst_mat2, mst_mat1)
 
 
 if __name__ == '__main__':
