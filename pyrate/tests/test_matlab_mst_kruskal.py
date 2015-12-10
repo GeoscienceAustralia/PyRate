@@ -137,7 +137,6 @@ class MatlabMSTTests(unittest.TestCase):
         # reorder ifgs as per the matlab list
         self.ifgs = sydney_data_setup(datafiles=ifg_ordered_list)
 
-
     def test_matlab_mst_kruskal(self):
         """
         test that the matlab and python mst algos outputs are the same

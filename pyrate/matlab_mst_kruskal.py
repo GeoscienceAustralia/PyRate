@@ -43,10 +43,11 @@ class IfGMeta(object):
     def update_nan_frac(self):
         self.nan_frac = [i.nan_fraction for i in self.ifgs]
 
-    def convert_nans(self):
-        for i in self.ifgs:
-            if not i.nan_converted:
-                i.convert_to_nans()
+    def convert_nans(self, nan_conversion=False):
+        if nan_conversion:
+            for i in self.ifgs:
+                if not i.nan_converted:
+                    i.convert_to_nans()
 
     def make_data_stack(self):
         self.data_stack = np.array([i.phase_data for i in self.ifgs],
@@ -105,7 +106,8 @@ class IfgListMatlabTest(IfGMeta):
 
 def data_setup(datafiles):
     '''Returns Ifg objs for the files in the sydney test dir
-    input phase data is in radians; these ifgs are in radians - not converted to mm'''
+    input phase data is in radians;
+    these ifgs are in radians - not converted to mm'''
     datafiles.sort()
     ifgs = [Ifg(i) for i in datafiles]
 
@@ -124,7 +126,7 @@ def get_nml(ifg_list_instance, nan_conversion=False, prefix_len=4):
     ifg_list_instance.reshape_n(n)
     if nan_conversion:
         ifg_list_instance.update_nan_frac()  # turn on for nan conversion
-        ifg_list_instance.convert_nans()
+        ifg_list_instance.convert_nans(nan_conversion=nan_conversion)
     ifg_list_instance.make_data_stack()
     return ifg_list_instance, epoch_list_
 
@@ -135,9 +137,7 @@ def sort_list(ifg_list_):
                     ifg_list_.id, ifg_list_.master_num,
                     ifg_list_.slave_num, ifg_list_.nan_frac)
 
-    np.set_printoptions(precision=3, suppress=True)
     sort_list = np.array(sort_list, dtype=dtype)
-
     return np.sort(sort_list, order=['nan_frac'])
 
 
