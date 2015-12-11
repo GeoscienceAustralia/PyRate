@@ -10,6 +10,7 @@ import os
 from datetime import date
 from numpy import where, nan, isnan, sum as nsum
 import pyrate.ifgconstants as ifc
+import numpy as np
 
 try:
     from osgeo import gdal
@@ -125,7 +126,7 @@ class RasterBase(object):
         Returns tuple of (Y,X) shape of the raster (as per numpy.shape).
         '''
 
-        return (self.dataset.RasterYSize, self.dataset.RasterXSize)
+        return self.dataset.RasterYSize, self.dataset.RasterXSize
 
     @property
     def num_cells(self):
@@ -142,11 +143,9 @@ class RasterBase(object):
 
         return self.dataset is not None
 
-
     @property
     def is_read_only(self):
         return self._readonly
-
 
     def _get_band(self, band):
         '''
@@ -159,7 +158,6 @@ class RasterBase(object):
             return self.dataset.GetRasterBand(band)
         else:
             raise RasterException("Raster %s has not been opened" % self.data_path)
-
 
 
 class Ifg(RasterBase):
@@ -178,6 +176,7 @@ class Ifg(RasterBase):
         self._phase_data = None
         self.master = None
         self.slave = None
+        self.nan_converted = False
 
     def open(self, readonly=None):
         """
@@ -212,16 +211,14 @@ class Ifg(RasterBase):
             msg = 'Missing master and/or slave date in %s' % self.data_path
             raise IfgException(msg)
 
-
-    def convert_to_nans(self, val=0):
+    def convert_to_nans(self, val=0.0):
         '''
         Converts given values in phase data to NaNs
         :param val: value to convert, default is 0
         '''
-
-        self.phase_data = where(self.phase_data == val, nan, self.phase_data)
+        self.phase_data = where(np.isclose(self.phase_data, val, atol=1e-6),
+                                nan, self.phase_data)
         self.nan_converted = True
-
 
     @property
     def phase_band(self):
@@ -233,7 +230,6 @@ class Ifg(RasterBase):
             self._phase_band = self._get_band(PHASE_BAND)
         return self._phase_band
 
-
     @property
     def phase_data(self):
         '''
@@ -244,11 +240,9 @@ class Ifg(RasterBase):
             self._phase_data = self.phase_band.ReadAsArray()
         return self._phase_data
 
-
     @phase_data.setter
     def phase_data(self, data):
         self._phase_data = data
-
 
     @property
     def phase_rows(self):
@@ -266,7 +260,6 @@ class Ifg(RasterBase):
         '''
         Returns number of NaN cells in the phase data.
         '''
-
         return nsum(isnan(self.phase_data))
 
 
@@ -275,16 +268,13 @@ class Ifg(RasterBase):
         '''
         Returns 0-1 (float) proportion of NaN cells for the phase band.
         '''
-
         # don't cache nan_count as client code may modify phase data
         nan_count = self.nan_count
 
         # handle datasets with no 0 -> NaN replacement
         if self.nan_converted is False and nan_count == 0:
-            nan_count = nsum(self.phase_data == 0)
-
+            nan_count = nsum(np.isclose(self.phase_data, 0.0, atol=1e-6))
         return nan_count / float(self.num_cells)
-
 
     def write_phase(self):
         '''

@@ -176,6 +176,12 @@ def get_epochs(ifgs):
     return EpochList(dates, repeat, span)
 
 
+def get_epochs_and_n(ifgs):
+    combined = get_all_epochs(ifgs)
+    _, n = unique(combined, False, True)
+    return get_epochs(ifgs), n
+
+
 def get_all_epochs(ifgs):
     '''
     Returns sequence of all master and slave dates in given ifgs.

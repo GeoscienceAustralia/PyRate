@@ -5,7 +5,8 @@ Created on 17/09/2012
 @author: Ben Davies, NCI
 """
 
-import os,sys,shutil,logging,datetime
+import os, sys, shutil, logging, datetime, gdal, numpy as np
+import glob
 
 import pyrate.mst as mst
 import pyrate.prepifg as prepifg
@@ -17,39 +18,86 @@ import pyrate.timeseries as timeseries
 import pyrate.config as cf
 from pyrate.shared import Ifg
 from pyrate import vcm as vcm_module
+import pyrate.ifgconstants as ifc
+from pyrate import matlab_mst_kruskal as matlab_mst
+
 
 # constants for metadata flags
 META_UNITS = 'PHASE_UNITS'
 MILLIMETRES = 'MILLIMETRES'
 META_ORBITAL = 'ORBITAL_ERROR'
 META_REMOVED = 'REMOVED'
+pars = None
 
 
-def process_ifgs(ifg_paths, params):
+def process_ifgs(ifg_paths_or_instance, params):
     """
     Top level function to perform correction steps on given ifgs
     ifgs: sequence of paths to interferograms (NB: changes are saved into ifgs)
     params: dict of run config params
     """
-    ifgs = [Ifg(p) for p in ifg_paths]
+    # ifg_instance, nan_conversion=True
 
-    for i in ifgs:
-        if not i.is_open:
-            i.open(readonly=False)
-        convert_wavelength(i)
+    if isinstance(ifg_paths_or_instance, list):
+        ifgs = [Ifg(p) for p in ifg_paths_or_instance]
 
-    remove_orbital_error(ifgs, params)
+        for i in ifgs:
+            if not i.is_open:
+                i.open(readonly=False)
+                i.convert_to_nans()  # nan conversion happens here in networkx
+            convert_wavelength(i)  # not used in vcm or linrate?
+        mst_grid = mst.mst_matrix_ifg_indices_as_boolean_array(ifgs)
+    else:
+        assert isinstance(ifg_paths_or_instance, matlab_mst.IfgListPyRate)
+        ifgs = ifg_paths_or_instance.ifgs
+        for i in ifgs:
+            convert_wavelength(i)  # not used in vcm or linrate?
+        ifg_instance_updated, epoch_list = \
+            matlab_mst.get_nml(ifg_paths_or_instance, nan_conversion=True)
+        mst_grid = matlab_mst.matlab_mst_boolean_array(ifg_instance_updated)
 
-    mst_grid = mst.mst_matrix_ifg_indices_as_boolean_array(ifgs)
-    refpx, refpy = find_reference_pixel(ifgs, params)
+    # remove_orbital_error(ifgs, params)
+
+    refpx, refpy = find_reference_pixel(ifgs, params)  # where are these used?
 
     maxvar = [vcm_module.cvd(i)[0] for i in ifgs]
     vcm = vcm_module.get_vcmt(ifgs, maxvar)
 
-    calculate_linear_rate(ifgs, params, vcm, mst=mst_grid)
+    rate, error, samples = calculate_linear_rate(ifgs, params, vcm,
+                                                 mst=mst_grid)
 
+    # Calculate time series
     pthresh = params[cf.TIME_SERIES_PTHRESH]
-    calculate_time_series(ifgs, pthresh, mst=None)  # TODO: check is correct MST
+    tsincr, tscum, tsvel = calculate_time_series(ifgs, pthresh, mst=mst_grid)
+    # TODO: check is correct MST
+
+    # print ifg_paths[0]
+    # p = os.path.join(pars[cf.SIM_DIR], ifg_paths[0])
+    # print 'path exists?',  os.path.exists(p), os.path.isfile(p)
+    #
+    # print 'p=', p, type(p)
+    # ds = gdal.Open(p)
+    # md = ds.GetMetadata()
+    # print md
+    #
+    # epochlist = algorithm.get_epochs(ifgs)
+    #
+    # print len(tsincr[0, 0, :])
+    # print len(epochlist.dates)
+
+    # for i in range(len(tsincr[0, 0, :])):
+    #     md[ifc.PYRATE_DATE] = epochlist.dates[i+1]
+    #     data = tsincr[:, :, i]
+    #     dest = os.path.join(params[cf.OUT_DIR], "tsincr_" + str(epochlist.dates[i+1]) + ".tif")
+    #     timeseries.write_geotiff_output(md, data, dest, np.nan)
+    #
+    #     data = tscum[:, :, i]
+    #     dest = os.path.join(params[cf.OUT_DIR], "tscuml_" + str(epochlist.dates[i+1]) + ".tif")
+    #     timeseries.write_geotiff_output(md, data, dest, np.nan)
+    #
+    #     data = tsvel[:, :, i]
+    #     dest = os.path.join(params[cf.OUT_DIR], "tsvel_" + str(epochlist.dates[i+1]) + ".tif")
+    #     timeseries.write_geotiff_output(md, data, dest, np.nan)
 
     # Calculate linear rate, copied from master
     # rate, error, samples = calculate_linear_rate(
@@ -294,6 +342,7 @@ def main():
 
     try:
         cfg_path = args[0] if args else 'pyrate.conf'
+        global pars
         pars = cf.get_config_params(cfg_path)
     except IOError as err:
         emsg = 'Config file error: %s "%s"' % (err.strerror, err.filename)
@@ -320,8 +369,14 @@ def main():
     # process copies of source data
     for wp, dp in zip(working_paths, dest_paths):
         shutil.copy(wp, dp)
+    ifg_instance = matlab_mst.IfgListPyRate(datafiles=dest_paths)
 
-    process_ifgs(dest_paths, pars)
+    if int(pars[cf.NETWORKX_OR_MATLAB_FLAG]):
+        print 'Running networkx mst'
+        process_ifgs(dest_paths, pars)
+    else:
+        print 'Running matlab mst'
+        process_ifgs(ifg_instance, pars)
 
 if __name__ == "__main__":
     main()

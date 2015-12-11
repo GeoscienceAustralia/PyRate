@@ -7,6 +7,7 @@ Created on 12/09/2012
 '''
 
 import os
+import sys
 import shutil
 import unittest
 from os.path import join, basename, exists
@@ -64,8 +65,10 @@ class IfgTests(unittest.TestCase):
             for v in row:
                 if isnan(v):
                     num_nan += 1
-
-        self.assertEqual(num_nan, self.ifg.nan_count)
+        if self.ifg.nan_converted:
+            self.assertEqual(num_nan, self.ifg.nan_count)
+        else:
+            self.assertEqual(num_nan, 0)
 
     def test_phase_band(self):
         data = self.ifg.phase_band.ReadAsArray()

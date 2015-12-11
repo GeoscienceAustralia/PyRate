@@ -24,7 +24,6 @@ GAMMA_FREQUENCY = 'radar_frequency'
 SPEED_OF_LIGHT_METRES_PER_SECOND = 3e8
 
 
-
 def to_geotiff(hdr, data_path, dest, nodata):
     'Converts GAMMA format data to GeoTIFF image with PyRate metadata'
     is_ifg = hdr.has_key(ifc.PYRATE_WAVELENGTH_METRES)
@@ -68,7 +67,6 @@ def to_geotiff(hdr, data_path, dest, nodata):
     ds = None
 
 
-
 def _check_raw_data(data_path, ncols, nrows):
     size = ncols * nrows * 4 # DEM and Ifg data are 4 byte floats
     act_size = os.stat(data_path).st_size
@@ -86,7 +84,6 @@ def _check_step_mismatch(hdr):
         raise GammaException(msg % (xs, ys))
 
 
-
 def parse_header(path):
     'Parses all GAMMA epoch/DEM header file fields into a dictionary'
     with open(path) as f:
@@ -97,6 +94,14 @@ def parse_header(path):
     return dict( (i[0][:-1], i[1:]) for i in raw_segs)
 
 
+def parse_header_new(path):
+    'Parses all GAMMA epoch/DEM header file fields into a dictionary'
+    with open(path) as f:
+        text = f.read().splitlines()
+        raw_segs = [line.split() for line in text]
+
+    # convert the content into a giant dict of all key, values
+    return dict((i[0], i[1]) for i in raw_segs)
 
 def parse_epoch_header(path):
     'Returns dict of the minimum required epoch metadata needed for PyRate'
@@ -114,7 +119,6 @@ def parse_epoch_header(path):
 
     subset[ifc.PYRATE_WAVELENGTH_METRES] = frequency_to_wavelength(float(freq))
     return subset
-
 
 
 def parse_dem_header(path):

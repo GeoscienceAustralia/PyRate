@@ -11,12 +11,13 @@ from numpy import array
 from numpy.testing import assert_array_almost_equal
 
 from pyrate.vcm import cvd, get_vcmt
-from pyrate.tests.common import sydney5_mock_ifgs, sydney5_ifgs, sydney_data_setup
+from pyrate.tests.common import sydney5_mock_ifgs, sydney5_ifgs
+from pyrate.tests.common import sydney_data_setup
 
 
 class CovarianceTests(unittest.TestCase):
     def setUp(self):
-        self.ifgs=sydney_data_setup()
+        self.ifgs = sydney_data_setup()
 
     def test_covariance_basic(self):
         ifgs = sydney5_ifgs()
@@ -33,41 +34,43 @@ class CovarianceTests(unittest.TestCase):
             print "maxvar: %s, alpha: %s" % (maxvar, alpha)
             print "\n"
 
-
     def test_covariance_17ifgs(self):
-        # From Matlab Pirate after raw data import (no reference pixel correction and units in radians)
-        expmaxvar = [ 5.6149, 8.7710, 2.9373, 0.3114, 12.9931, 2.0459, 0.4236, 2.1243, 0.4745, 0.6725, 0.8333,
-            3.8232, 3.3052, 2.4925, 16.0159, 2.8025, 1.4345 ]
+        # From Matlab Pirate after raw data import
+        # (no reference pixel correction and units in radians)
+        exp_maxvar = [5.6149, 8.7710, 2.9373, 0.3114, 12.9931, 2.0459, 0.4236,
+                      2.1243, 0.4745, 0.6725, 0.8333, 3.8232, 3.3052, 2.4925,
+                      16.0159, 2.8025, 1.4345]
 
-        expalpha = [ 0.0356, 0.1601, 0.5128, 0.5736, 0.0691, 0.1337, 0.2333, 0.3202, 1.2338, 0.4273, 0.9024,
-            0.1280, 0.3585, 0.1599, 0.0110, 0.1287, 0.0676 ]
+        exp_alpha = [0.0356, 0.1601, 0.5128, 0.5736, 0.0691, 0.1337, 0.2333,
+                    0.3202, 1.2338, 0.4273, 0.9024, 0.1280, 0.3585, 0.1599,
+                    0.0110, 0.1287, 0.0676]
 
-        actmaxvar = []
-        actalpha = []
+        act_maxvar = []
+        act_alpha = []
 
         for i in self.ifgs:
 
             if bool((i.phase_data == 0).all()) is True:
                 raise Exception("All zero")
 
-            maxvar, alpha = cvd(i)
+            maxvar, alpha = cvd(i, calc_alpha=True)
             self.assertTrue(maxvar is not None)
             self.assertTrue(alpha is not None)
            
-            actmaxvar.append(maxvar)
-            actalpha.append(alpha)
+            act_maxvar.append(maxvar)
+            act_alpha.append(alpha)
 
-        assert_array_almost_equal(actmaxvar, expmaxvar, decimal=3)
+        assert_array_almost_equal(act_maxvar, exp_maxvar, decimal=3)
 
-        # This test fails for greater than 1 decimal place. Discrepancies observed in distance calculations.
-        assert_array_almost_equal(actalpha, expalpha, decimal=1)
+        # This test fails for greater than 1 decimal place.
+        # Discrepancies observed in distance calculations.
+        assert_array_almost_equal(act_alpha, exp_alpha, decimal=1)
 
 
 class VCMTests(unittest.TestCase):
 
     def setUp(self):
-        self.ifgs=sydney_data_setup()
-
+        self.ifgs = sydney_data_setup()
 
     def test_vcm_basic(self):
         ifgs = sydney5_mock_ifgs(5,9)
@@ -83,11 +86,10 @@ class VCMTests(unittest.TestCase):
         act = get_vcmt(ifgs, maxvar)
         assert_array_almost_equal(act, exp, decimal=3)
 
-
     def test_vcm_17ifgs(self):
         # TODO: maxvar should be calculated by vcm.cvd
-        maxvar = [ 2.879, 4.729, 22.891, 4.604, 3.290, 6.923, 2.519, 13.177, 7.548, 
-            6.190, 12.565, 9.822, 18.484, 7.776, 2.734, 6.411, 4.754]
+        maxvar = [2.879, 4.729, 22.891, 4.604, 3.290, 6.923, 2.519, 13.177,
+                7.548, 6.190, 12.565, 9.822, 18.484, 7.776, 2.734, 6.411, 4.754]
 
         # Output from Matlab Pirate make_vcmt.m
         exp = array([[2.879, 0.0, -4.059, -1.820, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ],
