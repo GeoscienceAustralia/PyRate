@@ -85,6 +85,8 @@ def prepare_ifg(
     # resolution=None completes faster for non-multilooked layers in gdalwarp
     res = None
     if do_multilook:
+        if not raster.is_open:
+            raster.open()
         res = [xlooks * raster.x_step, ylooks * raster.y_step]
 
     if not do_multilook and crop_opt == ALREADY_SAME_SIZE:
@@ -137,12 +139,14 @@ def get_extents(ifgs, crop_opt, user_exts=None):
     elif crop_opt == MAXIMUM_CROP:
         extents = max_bounds(ifgs)
     elif crop_opt == CUSTOM_CROP:
-        extents = (user_exts.xfirst, user_exts.ylast,
-                    user_exts.xlast, user_exts.yfirst)
+        extents = custom_bounds(ifgs,*user_exts)        
+        
     else:
         extents = get_same_bounds(ifgs)
-
+    
     check_crop_coords(ifgs, *extents)
+    
+    #raise NotImplementedError("BLAH")
     return [str(s) for s in extents]
 
 
@@ -213,7 +217,7 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, verbose):
 
     :param xlooks: integer factor to scale X axis by, 5 is 5x smaller, 1 is no change.
     :param ylooks: as xlooks, but for Y axis
-    :param extents: georeferenced extents for new file: (xmin, ymin, xmax, ymax)
+    :param extents: georeferenced extents for new file: (xfirst, yfirst, xlast, ylast)
     :param resolution: [xres, yres] or None. Sets resolution output Ifg metadata.
          Use *None* if raster size is not being changed.
     :param thresh: see thresh in prepare_ifgs().
@@ -338,9 +342,8 @@ def check_looks(xlooks, ylooks):
         msg = "Non-numeric looks parameter(s), x: %s, y: %s" % (xlooks, ylooks)
         raise PreprocessError(msg)
 
-    # TODO: handle looks of zero? (eg. ignore looks, as with looks=1)
     if not (xlooks > 0 and ylooks > 0):
-        msg = "Invalid looks parameter(s), x: %s, y: %s" % (xlooks, ylooks)
+        msg = "Invalid looks parameter(s), x: %s, y: %s. Looks must be an integer greater than zero" % (xlooks, ylooks)
         raise PreprocessError(msg)
 
 
@@ -388,7 +391,56 @@ def get_same_bounds(ifgs):
 
     return xmin, ymin, xmax, ymax
 
+def custom_bounds(ifgs, xw, ytop, xe, ybot):
+    """
+    Check and modify input custom crop bounds to line up with grid interval
+    """
+    msg = 'Cropped image bounds exceed original image bounds'
+    i = ifgs[0]
+            
+    if ytop < ybot:
+        raise PreprocessError('ERROR Custom crop bounds: ifgyfirst must be greater than ifgylast')
+        
+    if xe < xw:
+        raise PreprocessError('ERROR Custom crop bounds: ifgxfirst must be greater than ifgxlast')
+    
+    for par, crop, orig, step in zip(['x_first', 'x_last', 'y_first', 'y_last'],
+                                      [xw, xe, ytop, ybot],
+                                      [i.x_first, i.x_last, i.y_first, i.y_last],
+                                      [i.x_step, i.x_step, i.y_step, i.y_step]):
+        diff = crop - orig
+        nint = round(diff / step)
+                
+        if par == 'x_first':            
+            if diff < 0:
+                raise PreprocessError(msg)
+            xmin = orig + (nint * step)
+        
+        elif par == 'x_last':
+            if diff > 0:
+                raise PreprocessError(msg)
+            xmax = orig + (nint * step)
+        
+        elif par == 'y_first':
+            if diff > 0:
+                raise PreprocessError(msg)
+            y1 = orig + (nint * step)
+            
+        elif par == 'y_last':
+            if diff < 0:
+                raise PreprocessError(msg)
+            y2 = orig + (nint * step)
+            
+    if y2 > y1:
+        ymin = y1
+        ymax = y2
+    else:
+        ymin = y2
+        ymax = y1
+           
+    return (xmin, ymin, xmax, ymax)
 
+           
 def check_crop_coords(ifgs, xmin, ymin, xmax, ymax):
     """
     Ensures cropping coords line up with grid system within tolerance.
@@ -396,6 +448,7 @@ def check_crop_coords(ifgs, xmin, ymin, xmax, ymax):
 
     # NB: assumption is the first Ifg is correct, so only test against it
     i = ifgs[0]
+    
     for par, crop, step in zip(['x_first', 'x_last', 'y_first', 'y_last'],
                                 [xmin, xmax, ymax, ymin],
                                 [i.x_step, i.x_step, i.y_step, i.y_step]):
@@ -404,7 +457,11 @@ def check_crop_coords(ifgs, xmin, ymin, xmax, ymax):
         param = getattr(i, par)
         diff = abs(crop - param)
         remainder = abs(modf(diff / step)[0])
-
+        if par == 'x_first':
+            print "ORIG = ",param," CROP = ",crop
+            print "DIFF = ",diff
+            print "REM = ",remainder," GRID_TOL ",GRID_TOL
+            print modf(diff/step)
         # handle cases where division gives remainder near zero, or just < 1
         if remainder > GRID_TOL and remainder < (1 - GRID_TOL):
             msg = "%s crop extent not within %s of grid coordinate"

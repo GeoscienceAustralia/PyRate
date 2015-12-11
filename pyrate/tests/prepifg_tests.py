@@ -134,10 +134,12 @@ class PrepifgOutputTests(unittest.TestCase):
         xlooks = ylooks = 1
         latlons = tuple(self._custom_ext_latlons())
         for i, _ in enumerate(['xfirst', 'yfirst', 'xlast', 'ylast']):
-            for error in [0.1, 0.001, 0.0001, 0.00001, 0.000001]:
+            #error = step / pi * [1000 100]
+            for error in [0.265258, 0.026526]:
                 tmp_latlon = list(latlons)
                 tmp_latlon[i] += error
                 cext = CustomExts(*tmp_latlon)
+                print cext
 
                 self.assertRaises(PreprocessError, prepare_ifgs, self.ifgs,
                                 CUSTOM_CROP, xlooks, ylooks, user_exts=cext)

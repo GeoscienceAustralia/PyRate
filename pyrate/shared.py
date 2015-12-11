@@ -59,7 +59,7 @@ class RasterBase(object):
         '''
         Opens generic raster dataset.
         '''
-
+        
         if self.dataset is not None:
             msg = "open() already called for %s" % self
             raise RasterException(msg)
@@ -96,7 +96,7 @@ class RasterBase(object):
         return self.dataset.RasterYSize
 
     @property
-    def x_step(self):
+    def x_step(self):        
         return float(self.dataset.GetGeoTransform()[GDAL_X_CELLSIZE])
 
     @property
