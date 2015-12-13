@@ -36,6 +36,7 @@ def process_ifgs(ifg_paths_or_instance, params):
     ifgs: sequence of paths to interferograms (NB: changes are saved into ifgs)
     params: dict of run config params
     """
+    nan_conversion = params[cf.NAN_CONVERSION]
     # ifg_instance, nan_conversion=True
 
     if isinstance(ifg_paths_or_instance, list):
@@ -44,7 +45,8 @@ def process_ifgs(ifg_paths_or_instance, params):
         for i in ifgs:
             if not i.is_open:
                 i.open(readonly=False)
-                i.convert_to_nans()  # nan conversion happens here in networkx
+            if nan_conversion:  # nan conversion happens here in networkx mst
+                i.convert_to_nans()
             convert_wavelength(i)  # not used in vcm or linrate?
         mst_grid = mst.mst_matrix_ifg_indices_as_boolean_array(ifgs)
     else:
@@ -53,7 +55,8 @@ def process_ifgs(ifg_paths_or_instance, params):
         for i in ifgs:
             convert_wavelength(i)  # not used in vcm or linrate?
         ifg_instance_updated, epoch_list = \
-            matlab_mst.get_nml(ifg_paths_or_instance, nan_conversion=True)
+            matlab_mst.get_nml(ifg_paths_or_instance,
+                               nan_conversion=nan_conversion)
         mst_grid = matlab_mst.matlab_mst_boolean_array(ifg_instance_updated)
 
     # remove_orbital_error(ifgs, params)

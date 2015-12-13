@@ -93,6 +93,8 @@ REPROJECTION_FLAG = 'prjflag'
 
 NETWORKX_OR_MATLAB_FLAG = 'networkx_or_matlab'
 
+NAN_CONVERSION = 'nan_conversion'
+
 #: BOOL (1/2/3/4); Method for cropping interferograms, 1 = minimum overlapping area (intersection), 2 = maximum area (union), 3 = customised area, 4 = all ifgs already same size
 IFG_CROP_OPT = 'ifgcropopt'
 #: INT; Multi look factor for interferogram preparation in x dimension
