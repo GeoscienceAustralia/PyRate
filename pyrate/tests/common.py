@@ -16,6 +16,7 @@ SYD_TEST_TIF = join(SYD_TEST_DIR, 'tif')
 
 SYD_TEST_DEM_DIR = join(SYD_TEST_DIR, 'dem')
 SYD_TEST_MATLAB_MST_DIR = join(SYD_TEST_DIR, 'mst_matlab')
+SYD_TEST_MATLAB_PREPIFG_DIR = join(SYD_TEST_DIR, 'matlab_preifg_output')
 SYD_TEST_DEM_UNW = join(SYD_TEST_DEM_DIR, 'sydney_trimmed.dem')
 SYD_TEST_DEM_HDR = join(SYD_TEST_DEM_DIR, 'sydney_trimmed.dem.rsc')
 SYD_TEST_DEM_TIF = join(SYD_TEST_DEM_DIR, 'sydney_trimmed.tif')

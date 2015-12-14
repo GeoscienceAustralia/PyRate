@@ -8,6 +8,7 @@ import os, sys, unittest
 from os.path import exists, join
 
 from math import floor
+import numpy as np
 from scipy.stats.stats import nanmean
 from numpy import isnan, nanmax, nanmin
 from numpy import ones, nan, reshape, sum as npsum
@@ -393,6 +394,30 @@ def assert_geotransform_equal(files):
     for t in transforms[1:]:
         assert t == head, "Extents do not match!"
 
+
+class MatlabEqualityTest(unittest.TestCase):
+    """
+    Matlab to python prepifg equality test
+    """
+
+    def test_matlab_prepifg_equality_array(self):
+        """
+        Matlab to python prepifg equality test
+        """
+        # path to csv folders from matlab output
+        from pyrate.tests.common import SYD_TEST_MATLAB_PREPIFG_DIR
+        from pyrate.scripts.run_pyrate import convert_wavelength
+
+        onlyfiles = [f for f in os.listdir(SYD_TEST_MATLAB_PREPIFG_DIR)
+                if os.path.isfile(os.path.join(SYD_TEST_MATLAB_PREPIFG_DIR, f))]
+
+        # for i, f in enumerate(onlyfiles):
+        #     mst_f = np.genfromtxt(os.path.join(SYD_TEST_MATLAB_PREPIFG_DIR, f),
+        #                           delimiter=',')
+        #     for k, j in enumerate(self.ifg_file_list):
+        #         if f.split('matlab_')[-1].split('.')[0] == \
+        #                 os.path.split(j)[-1].split('.')[0]:
+        #             np.testing.assert_array_equal(mst_f, mst_mat[k, :, :])
 
 if __name__ == "__main__":
     unittest.main()
