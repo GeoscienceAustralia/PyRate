@@ -161,9 +161,10 @@ def _file_ext(raster):
         return "dem"
     else:
         # TODO: several possible file types to implement:
+        # Coherence file: single band    
         # LOS file:  has 2 bands: beam incidence angle & ground azimuth)
         # Baseline file: perpendicular baselines (single band?)
-        raise NotImplementedError("Missing raster types for LOS and baseline")
+        raise NotImplementedError("Missing raster types for LOS, Coherence and baseline")
 
 
 def _resample_ifg(ifg, cmd, x_looks, y_looks, thresh, md=None):
