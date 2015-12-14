@@ -299,13 +299,14 @@ def original_ifg_paths(ifglist_path):
 
 def working_ifg_paths(src_paths, xlooks, ylooks, cropping):
     """
-    Filter. Returns paths to ifgs to process (eg. checks for mlooked ifgs)
+    Filter. Returns paths to ifgs to process (eg. checks for mlooked tifs)
     """
     if warp_required(xlooks, ylooks, cropping):
-        mlooked_paths = [prepifg.mlooked_path(p, xlooks) for p in src_paths]
+        mlooked_unw = [prepifg.mlooked_path(p, xlooks) for p in src_paths]
+        mlooked_paths = [os.path.splitext(m)[0]+'.tif' for m in mlooked_unw]
 
         if not all([os.path.exists(p) for p in mlooked_paths]):
-            msg = 'Multilooked ifgs do not exist (check config settings?)'
+            msg = 'Multilooked ifgs do not exist (execute "run_prepifg.py" first)'
             raise IOError(msg)
 
         logging.debug('Using mlooked interferograms...')
