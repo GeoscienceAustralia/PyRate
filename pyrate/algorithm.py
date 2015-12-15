@@ -76,19 +76,6 @@ def least_squares_covariance(A,b,v):
     return func(r, (c-f * tmp))
 
 
-def wavelength_radians_to_mm(data, wavelength):
-    '''
-    Translates phase from radians to millimetres
-    data: ifg phase data
-    wavelength: normally included with SAR instrument pass data
-    '''
-
-    # '4' is 2*2, the 1st 2 is that the raw signal is 'there and back', to get
-    # the vector length between satellite and ground, half the signal is needed
-    # second 2*pi is because one wavelength is equal to 2 radians
-    return data * MM_PER_METRE * (wavelength / (4 * math.pi))
-
-
 def los_conversion(phase_data, unit_vec):
     '''
     Converts phase from line-of-sight (LOS) to horizontal/vertical components.
@@ -206,3 +193,16 @@ def master_slave_ids(dates):
 
     dset = sorted(set(dates))
     return dict([(date_, i) for i, date_ in enumerate(dset)])
+
+
+def wavelength_radians_to_mm(data, wavelength):
+    '''
+    Translates phase from radians to millimetres
+    data: ifg phase data
+    wavelength: normally included with SAR instrument pass data
+    '''
+
+    # '4' is 2*2, the 1st 2 is that the raw signal is 'there and back', to get
+    # the vector length between satellite and ground, half the signal is needed
+    # second 2*pi is because one wavelength is equal to 2 radians
+    return data * MM_PER_METRE * (wavelength / (4 * math.pi))

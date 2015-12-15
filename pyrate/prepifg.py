@@ -205,7 +205,6 @@ def mlooked_path(path, looks):
     """
     Adds suffix to path, for creating a new path for mlooked files.
     """
-
     base, ext = splitext(path)
     return "%s_%srlks%s" % (base, looks, ext)
 
@@ -225,7 +224,7 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, verbose):
     """
 
     if x_looks != y_looks:
-        raise NotImplementedError('X and Y looks mismatch')
+        raise ValueError('X and Y looks mismatch')
 
     # dynamically build command for call to gdalwarp
     cmd = ["gdalwarp", "-overwrite", "-srcnodata", "None", "-te"] + extents
@@ -268,7 +267,7 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, verbose):
     if hasattr(new_lyr, "phase_band"):
         new_lyr.phase_band.SetNoDataValue(nan)
 
-        if data is None: # data wasn't resampled, so flag incoherent cells
+        if data is None:  # data wasn't resampled, so flag incoherent cells
             data = new_lyr.phase_band.ReadAsArray()
             data = where(data == 0, nan, data)
 

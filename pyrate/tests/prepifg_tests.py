@@ -328,6 +328,9 @@ def test_mlooked_path():
 class LocalMultilookTests(unittest.TestCase):
     """Tests for local testing functions"""
 
+    def test_mlookup_paths(self):
+        test_mlooked_path()
+
     def test_multilooking_thresh(self):
         data = ones((3, 6))
         data[0] = nan
@@ -383,7 +386,7 @@ def assert_geotransform_equal(files):
     to datasets, or GDAL dataset objects.
     """
     assert len(files) > 1, "Need more than 1 file to compare"
-    if not all( [hasattr(f, "GetGeoTransform") for f in files] ):
+    if not all([hasattr(f, "GetGeoTransform") for f in files]):
         datasets = [gdal.Open(f) for f in files]
         assert all(datasets)
     else:
@@ -400,24 +403,54 @@ class MatlabEqualityTest(unittest.TestCase):
     Matlab to python prepifg equality test
     """
 
+    def setUp(self):
+        from pyrate.tests.common import sydney5_ifgs
+        self.ifgs = sydney5_ifgs()
+        self.ifgs_with_nan = prepare_ifgs(self.ifgs,
+                                          crop_opt=1, xlooks=1, ylooks=1)
+        for i in self.ifgs_with_nan:
+            if not i.mm_converted:
+                i.convert_to_mm()
+
     def test_matlab_prepifg_equality_array(self):
         """
         Matlab to python prepifg equality test
         """
         # path to csv folders from matlab output
         from pyrate.tests.common import SYD_TEST_MATLAB_PREPIFG_DIR
-        from pyrate.scripts.run_pyrate import convert_wavelength
 
         onlyfiles = [f for f in os.listdir(SYD_TEST_MATLAB_PREPIFG_DIR)
-                if os.path.isfile(os.path.join(SYD_TEST_MATLAB_PREPIFG_DIR, f))]
+                if os.path.isfile(os.path.join(SYD_TEST_MATLAB_PREPIFG_DIR, f))
+                and f.endswith('.csv') and f.__contains__('_rad_')]
 
-        # for i, f in enumerate(onlyfiles):
-        #     mst_f = np.genfromtxt(os.path.join(SYD_TEST_MATLAB_PREPIFG_DIR, f),
-        #                           delimiter=',')
-        #     for k, j in enumerate(self.ifg_file_list):
-        #         if f.split('matlab_')[-1].split('.')[0] == \
-        #                 os.path.split(j)[-1].split('.')[0]:
-        #             np.testing.assert_array_equal(mst_f, mst_mat[k, :, :])
+        for i, f in enumerate(onlyfiles):
+            ifg_data = np.genfromtxt(os.path.join(
+                SYD_TEST_MATLAB_PREPIFG_DIR, f), delimiter=',')
+            for k, j in enumerate(self.ifgs):
+                if f.split('mm_')[-1].split('.')[0] == \
+                        os.path.split(j.data_path)[-1].split('.')[0]:
+                    np.testing.assert_array_equal(ifg_data,
+                        self.ifgs_with_nan[k].phase_band.ReadAsArray())
+
+    def test_matlab_prepifg_and_convert_wavelength(self):
+        """
+        Matlab to python prepifg equality test
+        """
+        # path to csv folders from matlab output
+        from pyrate.tests.common import SYD_TEST_MATLAB_PREPIFG_DIR
+
+        onlyfiles = [f for f in os.listdir(SYD_TEST_MATLAB_PREPIFG_DIR)
+                if os.path.isfile(os.path.join(SYD_TEST_MATLAB_PREPIFG_DIR, f))
+                and f.endswith('.csv') and f.__contains__('_mm_')]
+
+        for i, f in enumerate(onlyfiles):
+            ifg_data = np.genfromtxt(os.path.join(
+                SYD_TEST_MATLAB_PREPIFG_DIR, f), delimiter=',')
+            for k, j in enumerate(self.ifgs):
+                if f.split('mm_')[-1].split('.')[0] == \
+                        os.path.split(j.data_path)[-1].split('.')[0]:
+                    np.testing.assert_array_almost_equal(ifg_data,
+                        self.ifgs_with_nan[k].data, decimal=2)
 
 if __name__ == "__main__":
     unittest.main()

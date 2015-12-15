@@ -11,6 +11,8 @@ from datetime import date
 from numpy import where, nan, isnan, sum as nsum
 import pyrate.ifgconstants as ifc
 import numpy as np
+import logging
+import algorithm
 
 try:
     from osgeo import gdal
@@ -25,6 +27,8 @@ from pyrate.geodesy import cell_size
 
 # Constants
 PHASE_BAND = 1
+META_UNITS = 'PHASE_UNITS'
+MILLIMETRES = 'MILLIMETRES'
 
 # GDAL projection list
 GDAL_X_CELLSIZE = 1
@@ -177,6 +181,8 @@ class Ifg(RasterBase):
         self.master = None
         self.slave = None
         self.nan_converted = False
+        self.mm_converted = False
+        self.data = None
 
     def open(self, readonly=None):
         """
@@ -239,6 +245,24 @@ class Ifg(RasterBase):
         if self._phase_data is None:
             self._phase_data = self.phase_band.ReadAsArray()
         return self._phase_data
+
+    def convert_to_mm(self):
+        """
+        :param ifg: ifg file
+        :return: convert wavelength from radians to mm
+        """
+        self.mm_converted = True
+        if self.dataset.GetMetadataItem(META_UNITS) == MILLIMETRES:
+            msg = '%s: ignored as previous wavelength conversion detected'
+            logging.debug(msg % self.data_path)
+            return
+
+        self.data = algorithm.wavelength_radians_to_mm(self.phase_data,
+                                                      self.wavelength)
+        self.dataset.SetMetadataItem(META_UNITS, MILLIMETRES)
+        msg = '%s: converted wavelength to millimetres'
+        logging.debug(msg % self.data_path)
+
 
     @phase_data.setter
     def phase_data(self, data):
