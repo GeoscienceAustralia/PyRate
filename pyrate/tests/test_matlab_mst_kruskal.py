@@ -162,7 +162,7 @@ class MatlabMSTTests(unittest.TestCase):
         """
         ifg_instance = IfgList(datafiles=self.ifg_file_list)
         ifg_list, _ = get_nml(ifg_instance)
-        mst_mat = matlab_mst(ifg_list, p_thresh_hold=1)
+        mst_mat = matlab_mst(ifg_list, p_threshold=1)
 
         # path to csv folders from matlab output
         from pyrate.tests.common import SYD_TEST_MATLAB_MST_DIR
@@ -185,7 +185,7 @@ class MatlabMSTTests(unittest.TestCase):
         """
         ifg_instance = IfgList(datafiles=self.ifg_file_list)
         ifg_list, _ = get_nml(ifg_instance)
-        mst_mat = matlab_mst_boolean_array(ifg_list, p_thresh_hold=1)
+        mst_mat = matlab_mst_boolean_array(ifg_list, p_threshold=1)
 
         # path to csv folders from matlab output
         from pyrate.tests.common import SYD_TEST_MATLAB_MST_DIR

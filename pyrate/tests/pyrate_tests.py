@@ -42,12 +42,46 @@ pscorflag:    0
 outdir:       out/
 
 #------------------------------------
-#initial model parameters
-#slip rate for the initial forward model in mm/yr
-#add more models following nmodels if nmodels>0
-#nmodels:        1
-#inisliprate_m1: 1
-#fmodelfile_m1:
+# input/output parameters
+# Directory for the unwrapped geocoded interferograms.
+obsdir:       tif/
+
+# File containing the list of unwrapped geocoded interferograms.
+ifgfilelist:  tif/ifms_17
+
+# InSAR processor ROIPAC = 0, GAMMA = 1
+processor:    0
+
+# The DEM used by the interferometric processing software
+demfile:      dem/sydney_trimmed.tif
+
+# the projection of the interferograms. This
+# is only required if the InSAR processor was
+# ROIPAC (specified by 'processor = 1').
+#projection
+
+# The resource header used for reading ROIPAC interferograms.
+resourceHeader: dem/sydney_trimmed.dem.rsc
+
+# The name of the DEM header file from GAMMA.
+# This is only required if the InSAR processor
+# was GAMMA (specified by 'processor = 1')
+demHeaderFile: dem/sydney_trimmed.dem.par
+
+# Where to write PyRate outputs
+outdir:       out/
+
+# No data averaging threshold for prepifg
+noDataAveragingThreshold: 0.5
+
+# The no data value in the interferograms
+noDataValue:  0.0
+
+# Run NetworkX version of MST (1) or matlab version (0)
+networkx_or_matlab:  0
+
+# Nan conversion flag
+nan_conversion: 1
 
 #------------------------------------
 #interferogram crop option
@@ -55,66 +89,13 @@ outdir:       out/
 #lksx,lksy: looks in east and north direction respectively
 #xfirst,yfirst: x,y of top-left corner
 #xlast,ylast: x,y of bottom-right corner
-#ifgconv:      1
 ifgcropopt:   4
 ifglksx:      1
 ifglksy:      1
-#ifgxfirst:
-#ifgxlast:
-#ifgyfirst:
-#ifgylast:
-
-#------------------------------------
-# simulation parameters
-# realdata: enter 0 for synthetic/monte-carlo data, 1 for a single set of real data.
-# nsets: number of sets of data (multiple sets required for Monte Carlo error estimates
-realdata:     1
-nsets:        1
-
-#------------------------------------
-# stacking parameters
-# pthr: minimum number of coherent ifgs for each pixel
-# nsig: n-sigma used as residuals threshold for ILSM stacking
-# maxsig: maximum residual used as threshold for the stacked interferogram
-nsig:          3
-pthr:          20
-maxsig:        2
-#------------------------------------
-# orbital errors fitting parameters
-# orbfitmethod = 1: interferogram by interferogram; orbfitmethod = 2: epoch by epoch
-# degrees: polynomial degrees for the orbital error fitting (1: planar; 2: quadratic)
-# orbfitlooksx/y: multi-look processing for orbital correction
-# orbrefest: remove reference phase
-# orbmaskflag: mask some patches for orbital correction
-orbfit:        0
-orbfitmethod:  1
-orbfitdegrees: 1
-orbfitlksx:    0
-orbfitlksy:    0
-#orbrefest:
-#orbmaskflag:
-
-#------------------------------------
-# atmospheric delay errors fitting parameters
-# atmfitmethod = 1: interferogram by interferogram; atmfitmethod = 2, epoch by epoch
-# atmfitlooksx/y: multi-look processing for atm correction
-# atmrefest: remove reference phase
-#atmfit:        0
-#atmfitmethod:  2
-#atmfitlksx:    1
-#atmfitlksy:    1
-#atmrefest:     1
-#atmmaskflag:   0
-
-#------------------------------------
-#vcm estimation parameters
-#vcmtmethod = 1: general method; 2: network estimation for vcm_t;
-#vcmsmethod = 1: general method; 2: sparse matrix for the first line; 3: sparse matrix for vcm_s;
-#vcmslksx/y: looks also used for slip rate estimation
-#vcmtmethod:    1
-#vcmsmethod:    2
-#vcmslksx:      5
-#vcmslksy:      5
+#ifgxfirst:    150.92
+#ifgxlast:     150.94
+#ifgyfirst:    -34.18
+#ifgylast:     -34.22 
 
 #------------------------------------
 # reference point options
@@ -124,16 +105,65 @@ orbfitlksy:    0
 # refminfrac: minimum fraction of coherence pixels
 refx:          -1
 refy:          -1
-#refx:
-#refy:
 refnx:         5
 refny:         5
 refchipsize:   5
 refminfrac:    0.8
 
 #------------------------------------
-#apsest: (1: APS estimation; 0: not)
-apsest:         0
+# orbital errors fitting parameters
+# orbfitmethod = 1: interferogram by interferogram; orbfitmethod = 2: epoch by epoch
+# degrees: polynomial degrees for the orbital error fitting (1: planar; 2: quadratic; 3: part-cubic)
+# orbfitlooksx/y: multi-look processing for orbital correction
+# orbrefest: remove reference phase
+# orbmaskflag: mask some patches for orbital correction
+orbfit:        0
+orbfitmethod:  1
+orbfitdegrees: 1
+orbfitlksx:    0
+orbfitlksy:    0
+#orbrefest:     1
+#orbmaskflag:   0
+
+#------------------------------------
+# atmospheric delay errors fitting parameters
+# atmfitmethod = 1: interferogram by interferogram; atmfitmethod = 2, epoch by epoch
+# atmfitlooksx/y: multi-look processing for atm correction
+# atmrefest: remove reference phase
+##atmfit:        0 NOT IMPLEMENTED
+##atmfitmethod:  2 NOT IMPLEMENTED
+##atmfitlksx:    1 NOT IMPLEMENTED
+##atmfitlksy:    1 NOT IMPLEMENTED
+##atmrefest:     1 NOT IMPLEMENTED
+##atmmaskflag:   0 NOT IMPLEMENTED
+
+#------------------------------------
+# Spatio-temporal APS filter parameters
+# apsest: (1: APS estimation; 0: not)
+##apsest:         0 NOT IMPLEMENTED
+# spatially correlated noise low-pass filter parameters
+# slpfmethod: filter method (1: butterworth; 2: gaussian)
+# slpfcutoff: cutoff d0 for both butterworth and gaussian filters in the same unit with pixel size
+# slpforder: order n for butterworth filter (default 1)
+##slpfmethod:     1 NOT IMPLEMENTED
+##slpfcutoff:     0 NOT IMPLEMENTED
+##slpforder:      1 NOT IMPLEMENTED
+# temporal high-pass filter parameters
+# thpfcutoff: cutoff t0 for gaussian filter in year;
+# thpfpthr: valid pixel threshold;
+##thpfmethod:   1 NOT IMPLEMENTED
+##thpfcutoff:   0.25 NOT IMPLEMENTED
+##thpfpthr:     1 NOT IMPLEMENTED
+
+#------------------------------------
+#vcm estimation parameters
+#vcmtmethod = 1: general method; 2: network estimation for vcm_t;
+#vcmsmethod = 1: general method; 2: sparse matrix for the first line; 3: sparse matrix for vcm_s;
+#vcmslksx/y: looks also used for slip rate estimation
+#vcmtmethod:    1
+##vcmsmethod:    2 NOT IMPLEMENTED
+##vcmslksx:      5 NOT IMPLEMENTED
+##vcmslksy:      5 NOT IMPLEMENTED
 
 #------------------------------------
 # time series parameters
@@ -146,66 +176,25 @@ apsest:         0
 # ts_pthr: pixel number threshold for time series inversion
 # ts_interp: interpolate across epoch gaps 0: no (default); 1: yes
 tscal:         1
-tsmethod:      1
-smorder:       2
-smfactor:     -0.25
-smf_min:      -3
-smf_max:      -1
-smf_int:     0.25
-lcurv_lksx:    4
-lcurv_lksy:    4
 ts_pthr:       10
 ts_interp:     1
+##tsmethod:      1 ONLY SVD METHOD IMPLEMENTED
+##smorder:       2 ONLY SVD METHOD IMPLEMENTED
+##smfactor:     -0.25 ONLY SVD METHOD IMPLEMENTED
+##smf_min:      -3 ONLY SVD METHOD IMPLEMENTED
+##smf_max:      -1 ONLY SVD METHOD IMPLEMENTED
+##smf_int:     0.25 ONLY SVD METHOD IMPLEMENTED
+##lcurv_lksx:    4 ONLY SVD METHOD IMPLEMENTED
+##lcurv_lksy:    4 ONLY SVD METHOD IMPLEMENTED
 
 #------------------------------------
-# spatially correlated noise low-pass filter parameters
-# slpfmethod: filter method (1: butterworth; 2: gaussian)
-# slpfcutoff: cutoff d0 for both butterworth and gaussian filters in the same unit with pixel size
-# slpforder: order n for butterworth filter (default 1)
-slpfmethod:     1
-slpfcutoff:     0
-slpforder:      1
-# temporal high-pass filter parameters
-# thpfcutoff: cutoff t0 for gaussian filter in year;
-# thpfpthr: valid pixel threshold;
-thpfmethod:   1
-thpfcutoff:   0.25
-thpfpthr:     1
-
-#profile parameters
-#provide either pixel numbers or lat / long coordinates. the other will be calculated
-#proffmt: 1) lat/long supplied (default) 2) pixel location supplied
-#prof=[16,417;316,48];  %unit (pixel number, left profile)
-#swath=15;              %unit (km)
-#step=1;                %unit (km)
-proffmt:      1
-#profx0:     165
-#profy0:    2920
-#profx1:     915
-#profy1:       1
-profx0:   89.60
-profy0:   26.84
-profx1:   93.12
-profy1:   40.55
-profswath:   100
-profstep:    10
-gmtfaultfile:
-#gmtfaultfile:
-
-#------------------------------------
-# profile parameters
-# swath/step: unit (km)
-#make_prof:                1
-#profswath:                5
-#profstep:                 1
-#gmtfaultfile:
-
-#------------------------------------
-# iterative algorithm parameters
-# tol: tolerance for the convergence
-# maxiter: maximam iterative number
-tol:          0.2
-maxiter:      10
+# stacking parameters
+# pthr: minimum number of coherent ifgs for each pixel
+# nsig: n-sigma used as residuals threshold for ILSM stacking
+# maxsig: maximum residual used as threshold for the stacked interferogram
+nsig:          3
+pthr:          20
+maxsig:        2
 '''
 
 

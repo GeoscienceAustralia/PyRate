@@ -148,18 +148,18 @@ def matlab_mst_kruskal(id_l, master_l, slave_l, nan_frac_l):
     """
 
     dtype = [('id', int), ('master', int), ('slave', int), ('nan_frac', float)]
-    no_ifgs = len(master_l)
-    no_images = max(max(master_l), max(slave_l))
+    num_ifgs = len(master_l)
+    num_images = max(max(master_l), max(slave_l))
     # print 'ifg_list', ifg_list_
     ifg_sorted = sort_list(id_l, master_l, slave_l, nan_frac_l)
     # print 'ifg_sorted', ifg_sorted
 
     # add one to ensure index number + 1
-    connect = np.eye(no_images + 1)
+    connect = np.eye(num_images + 1)
 
     mst_list = []
 
-    for i in range(no_ifgs):
+    for i in range(num_ifgs):
         master = ifg_sorted[i][1]
         slave = ifg_sorted[i][2]
         loc_master = np.where(connect[:, master] == 1)[0][0]
@@ -177,7 +177,7 @@ def matlab_mst_kruskal(id_l, master_l, slave_l, nan_frac_l):
     return [i[0] for i in mst_list]
 
 
-def matlab_mst(ifg_list_, p_thresh_hold=1):
+def matlab_mst(ifg_list_, p_threshold=1):
     """
     This is an implementation of matlab/pirate make_mstmat.m.
     """
@@ -187,7 +187,7 @@ def matlab_mst(ifg_list_, p_thresh_hold=1):
     data_stack = ifg_list_.data_stack
     nan_ifg = np.isnan(data_stack)
     mst_mat = np.zeros_like(nan_ifg, dtype=np.bool)
-    no_ifgs, rows, cols = nan_ifg.shape
+    num_ifgs, rows, cols = nan_ifg.shape
 
     for r in range(rows):
         for c in range(cols):
@@ -195,7 +195,7 @@ def matlab_mst(ifg_list_, p_thresh_hold=1):
             # if there is nan value in the independent ifglist, redo mst search
             if np.count_nonzero(nan_v) > 0:
                 nan_v = nan_ifg[:, r, c]
-                if no_ifgs - np.count_nonzero(nan_v) >= p_thresh_hold:
+                if num_ifgs - np.count_nonzero(nan_v) >= p_threshold:
                     # get all valid ifgs from ifglist,
                     # and then select the ones that are not nan on this pixel
                     id, master, slave, nan_frac = get_sub_structure(ifg_list_, nan_v,
@@ -206,14 +206,14 @@ def matlab_mst(ifg_list_, p_thresh_hold=1):
                     mst_mat[ifglist_mst_valid_id, r, c] = 1
                 else:
                     # TODO: This is not handled in matlab
-                    # We will get here if p_thresh_hold is >=2, and will crash
+                    # We will get here if p_threshold is >=2, and will crash
                     raise NotImplementedError('Unhandled mst combination')
             else:
                 mst_mat[ifg_list_mst_id, r, c] = 1
     return mst_mat
 
 
-def matlab_mst_generator_boolean_array(ifg_instance, p_thresh_hold=1):
+def matlab_mst_generator_boolean_array(ifg_instance, p_threshold=1):
 
     """
     This is an implementation of matlab/pirate make_mstmat.m.
@@ -232,11 +232,11 @@ def matlab_mst_generator_boolean_array(ifg_instance, p_thresh_hold=1):
     # np.array([i.phase_data for i in ifg_list.ifgs],
     #                   dtype=np.float32)
     # nan_ifg = np.isnan(data_stack)  # doing nan conversion later saves memory
-    no_ifgs, rows, cols = data_stack.shape
+    num_ifgs, rows, cols = data_stack.shape
 
     for r, c in itertools.product(xrange(rows), xrange(cols)):
         # nan_count of the vertical stack of ifg values for a pixel
-        mst_yield = np.zeros(no_ifgs, dtype=np.bool)
+        mst_yield = np.zeros(num_ifgs, dtype=np.bool)
         nan_count = np.sum(np.isnan(data_stack[ifg_list_mst_id, r, c]))
         # if there is nan value in the independent ifglist, redo mst search
         if nan_count == 0:
@@ -244,24 +244,25 @@ def matlab_mst_generator_boolean_array(ifg_instance, p_thresh_hold=1):
             yield r, c, mst_yield
         else:
             nan_v = np.isnan(data_stack[:, r, c])
-            nan_count = np.sum(nan_v)
-            if nan_count >= p_thresh_hold:
+            nan_count = np.sum(nan_v)            
+            if (num_ifgs - nan_count) >= p_threshold:
                 # get all valid ifgs from ifglist,
                 # and then select the ones that are not nan on this pixel
                 id, master, slave, nan_frac = get_sub_structure(ifg_instance, nan_v,
                                                    ifg_class_type)
                 # calculate mst again
-                ifglist_mst_valid_id = matlab_mst_kruskal(id, master,
-                                                          slave, nan_frac)
+                ifglist_mst_valid_id = matlab_mst_kruskal(id, master, slave, nan_frac)
                 mst_yield[ifglist_mst_valid_id] = True
                 yield r, c, mst_yield
             else:
-                # TODO: This is not handled in matlab
-                # We will get here if p_thresh_hold is >=2, and this will crash
-                raise NotImplementedError('Unhandled mst combination')
+                # TODO: This is not handled in matlab MG: yes it is, the mstmat is preallocated with zeros (i.e. falses)
+                # We will get here if p_threshold is >=2, and this will crash
+                #raise NotImplementedError('Unhandled mst combination')
+                mst_yield[ifglist_mst_valid_id] = False
+                yield r, c, mst_yield
 
 
-def matlab_mst_boolean_array(ifg_list_instance, p_thresh_hold=1):
+def matlab_mst_boolean_array(ifg_list_instance, p_threshold=1):
     """
     This should have the same output as matlab_mst. Should be tested.
     Please note that the generator version is more memory efficient.
@@ -269,11 +270,11 @@ def matlab_mst_boolean_array(ifg_list_instance, p_thresh_hold=1):
     previous function and this would have been unnecessary.
     :return:
     """
-    no_ifgs = len(ifg_list_instance.ifgs)
+    num_ifgs = len(ifg_list_instance.ifgs)
     no_y, no_x = ifg_list_instance.ifgs[0].phase_data.shape
-    result = np.empty(shape=(no_ifgs, no_y, no_x), dtype=np.bool)
+    result = np.empty(shape=(num_ifgs, no_y, no_x), dtype=np.bool)
 
-    for y, x, mst in matlab_mst_generator_boolean_array(ifg_list_instance):
+    for y, x, mst in matlab_mst_generator_boolean_array(ifg_list_instance, p_threshold):
         result[:, y, x] = mst
     return result
 
