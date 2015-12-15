@@ -412,6 +412,12 @@ class MatlabEqualityTest(unittest.TestCase):
             if not i.mm_converted:
                 i.convert_to_mm()
 
+    def tearDown(self):
+        from pyrate.prepifg import mlooked_path
+        for i in self.ifgs:
+            if os.path.exists(i.data_path):
+                os.remove(mlooked_path(i.data_path, looks=1))
+
     def test_matlab_prepifg_equality_array(self):
         """
         Matlab to python prepifg equality test

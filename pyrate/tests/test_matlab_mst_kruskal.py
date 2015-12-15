@@ -17,7 +17,6 @@ class IfgListTest(unittest.TestCase):
 
     def setUp(self):
 
-        self.ifgs = sydney_data_setup()
         self.matlab_n = [1,  2,  3,  3,  4,  4,  4,  5, 5,  6,  6,  7,  7,  8,
                          9, 10, 11,  3,  5,  7,  9,  5,  6,  8, 11, 12, 8, 13,
                          9, 10, 13, 10, 11, 12]
