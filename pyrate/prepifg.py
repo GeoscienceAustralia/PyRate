@@ -458,11 +458,7 @@ def check_crop_coords(ifgs, xmin, ymin, xmax, ymax):
         param = getattr(i, par)
         diff = abs(crop - param)
         remainder = abs(modf(diff / step)[0])
-        if par == 'x_first':
-            print "ORIG = ",param," CROP = ",crop
-            print "DIFF = ",diff
-            print "REM = ",remainder," GRID_TOL ",GRID_TOL
-            print modf(diff/step)
+ 
         # handle cases where division gives remainder near zero, or just < 1
         if remainder > GRID_TOL and remainder < (1 - GRID_TOL):
             msg = "%s crop extent not within %s of grid coordinate"

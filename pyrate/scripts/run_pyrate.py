@@ -58,20 +58,30 @@ def process_ifgs(ifg_paths_or_instance, params):
             matlab_mst.get_nml(ifg_paths_or_instance,
                                nan_conversion=nan_conversion)
         mst_grid = matlab_mst.matlab_mst_boolean_array(ifg_instance_updated)
-
-    # remove_orbital_error(ifgs, params)
-
+    
+    # Estimate reference pixel location
     refpx, refpy = find_reference_pixel(ifgs, params)  # where are these used?
-
+    
+    # Estimate and remove orbit errors    
+    if params[cf.ORBITAL_FIT] != 0:
+        remove_orbital_error(ifgs, params)
+        
+    #TODO: Remove reference phase here
+       
+    # Calculate interferogram noise
+    # TODO: assign maxvar to ifg metadata (and geotiff)?
     maxvar = [vcm_module.cvd(i)[0] for i in ifgs]
-    vcm = vcm_module.get_vcmt(ifgs, maxvar)
-
-    rate, error, samples = calculate_linear_rate(ifgs, params, vcm,
+    
+    # Calculate temporal variance-covariance matrix
+    vcmt = vcm_module.get_vcmt(ifgs, maxvar)
+    
+    # Calculate linear rate map
+    rate, error, samples = calculate_linear_rate(ifgs, params, vcmt,
                                                  mst=mst_grid)
 
     # Calculate time series
-    pthresh = params[cf.TIME_SERIES_PTHRESH]
-    tsincr, tscum, tsvel = calculate_time_series(ifgs, pthresh, mst=mst_grid)
+    if params[cf.TIME_SERIES_CAL] != 0:        
+        tsincr, tscum, tsvel = calculate_time_series(ifgs, params, mst=mst_grid)
     # TODO: check is correct MST
 
     # print ifg_paths[0]
@@ -104,7 +114,7 @@ def process_ifgs(ifg_paths_or_instance, params):
 
     # Calculate linear rate, copied from master
     # rate, error, samples = calculate_linear_rate(
-    #                ifgs, params, vcm, mst=mst_grid)
+    #                ifgs, params, vcmt, mst=mst_grid)
     # md[ifc.PYRATE_DATE]=epochlist.dates
     # dest = os.path.join(params[cf.OUT_DIR],"linrate.tif" )
     # timeseries.write_geotiff_output(md, rate, dest, nan)
@@ -142,6 +152,8 @@ def remove_orbital_error(ifgs, params):
     if not params[cf.ORBITAL_FIT]:
         logging.debug('Orbital correction not required.')
         return
+   
+    logging.debug('Calculating orbital correction')
 
     # perform some general error/sanity checks
     flags = [i.dataset.GetMetadataItem(META_ORBITAL) for i in ifgs]
@@ -198,30 +210,28 @@ def check_orbital_ifgs(ifgs, flags):
 def find_reference_pixel(ifgs, params):
     # unlikely, but possible the refpixel can be (0,0)
     # check if there is a pre-specified reference pixel coord
-    refx = params.get(params[cf.REFX])
+    refx = params[cf.REFX]    
     if refx > ifgs[0].ncols - 1:
         raise ValueError("Invalid reference pixel X coordinate: %s" % refx)
 
-    refy = params.get(params[cf.REFY])
+    refy = params[cf.REFY]
     if refy > ifgs[0].nrows - 1:
         raise ValueError("Invalid reference pixel Y coordinate: %s" % refy)
-
+        
     if refx >= 0 and refy >= 0:
         msg = 'Reusing config file reference pixel (%s, %s)'
         logging.debug(msg % (refx, refy))
         return (refy, refx) # reuse preset ref pixel
-
-    refy, refx = refpixel.ref_pixel(ifgs,
-                                    params[cf.REFNX],
-                                    params[cf.REFNY],
-                                    params[cf.REF_CHIP_SIZE],
-                                    params[cf.REF_MIN_FRAC])
+    else:    
+        logging.debug('Calculating reference pixel')        
+        refy, refx = refpixel.ref_pixel(ifgs, params[cf.REFNX], params[cf.REFNY],
+                              params[cf.REF_CHIP_SIZE], params[cf.REF_MIN_FRAC])
 
     logging.debug('Reference pixel coordinate: (%s, %s)' % (refx, refy))
     return refx, refy
 
 
-def calculate_linear_rate(ifgs, params, vcm, mst=None):
+def calculate_linear_rate(ifgs, params, vcmt, mst=None):
     logging.debug('Calculating linear rate')
 
     pthr = params[cf.LR_PTHRESH]
@@ -229,7 +239,7 @@ def calculate_linear_rate(ifgs, params, vcm, mst=None):
     maxsig = params[cf.LR_MAXSIG]
 
     # TODO: do these need to be checked?
-    res = linrate.linear_rate(ifgs, vcm, pthr, nsig, maxsig, mst)
+    res = linrate.linear_rate(ifgs, vcmt, pthr, nsig, maxsig, mst)
     for r in res:
         if r is None:
             raise ValueError('TODO: bad value')
@@ -240,9 +250,10 @@ def calculate_linear_rate(ifgs, params, vcm, mst=None):
     return rate, error, samples
 
 
-def calculate_time_series(ifgs, pthresh, mst):
+def calculate_time_series(ifgs, params, mst):
     logging.debug('Calculating time series')
-    res = timeseries.time_series(ifgs, pthresh, mst)
+    ts_pthr = params[cf.TIME_SERIES_PTHRESH]        
+    res = timeseries.time_series(ifgs, ts_pthr, mst)
     for r in res:
         if len(r.shape) != 3:
             logging.error('TODO: time series result shape is incorrect')
@@ -347,7 +358,8 @@ def main():
     try:
         cfg_path = args[0] if args else 'pyrate.conf'
         global pars
-        pars = cf.get_config_params(cfg_path)
+        pars = cf.get_config_params(cfg_path)        
+        
     except IOError as err:
         emsg = 'Config file error: %s "%s"' % (err.strerror, err.filename)
         logging.debug(emsg)

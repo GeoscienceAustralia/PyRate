@@ -55,21 +55,20 @@ import pyrate.orbital as orbital
 NO_MULTILOOKING = 1
 
 # constants for lookups
-NUMBER_OF_SETS = 'nsets'
-#: STR; Name of input interferogram file
+#: STR; Name of input interferogram list file
 IFG_FILE_LIST = 'ifgfilelist'
 #: STR; The name of the interferogram processor used (0==ROIPAC, 1==GAMMA)
 PROCESSOR = 'processor'
 #: STR; Name of directory containing input interferograms.
-#: In the case of Python PyRate, these the the tif files,
+#: In the case of Python PyRate, these are the tif files,
 #: Not the outputs from gamma or roipac.
 OBS_DIR = 'obsdir'
 #: STR; Name of directory for saving output products
 OUT_DIR = 'outdir'
 #: INT; Number of simulated datasets NOT CURRENTLY USED
-NUM_SETS = 'nsets'
+#NUM_SETS = 'nsets'
 #: STR; Directory containing simulated datasets NOT CURRENTLY USED
-SIM_DIR = 'simdir'
+#SIM_DIR = 'simdir'
 #: STR; Name of Digital Elevation Model file used in constructing the interferograms
 DEM_FILE = 'demfile'
 #: STR; Name of the header for the DEM
@@ -89,10 +88,10 @@ AMPLITUDE_FLAG = 'ampflag'
 #: BOOL (1/0); Use baseline information NOT CURRENTLY USED
 PERP_BASELINE_FLAG = 'basepflag'
 #: BOOL (1/2/3); Re-project data from Line of sight, 1 = vertical, 2 = horizontal, 3 = no conversion
-REPROJECTION_FLAG = 'prjflag'
-
+REPROJECTION = 'prjflag'
+#: BOOL (0/1); Select MST algorithm, 0 = Matlab-Pirate algorithm, 1 = NetworkX
 NETWORKX_OR_MATLAB_FLAG = 'networkx_or_matlab'
-
+#: TODO; what does this parameter do?
 NAN_CONVERSION = 'nan_conversion'
 
 #: BOOL (1/2/3/4); Method for cropping interferograms, 1 = minimum overlapping area (intersection), 2 = maximum area (union), 3 = customised area, 4 = all ifgs already same size
@@ -146,6 +145,8 @@ LR_PTHRESH = 'pthr'
 #: REAL; Maximum allowable standard error for pixels in linear rate inversion.
 LR_MAXSIG = 'maxsig'
 
+#: BOOL (1/0); Do Time series calculation
+TIME_SERIES_CAL = 'tscal'
 #: INT; Number of required input observations per pixel for time series inversion
 TIME_SERIES_PTHRESH = 'ts_pthr'
 #: BOOL (1/0); Time series parameter to interpolate across epoch gaps NOT CURRENTLY USED
@@ -164,7 +165,7 @@ def degree_conv(deg):
         return orbital.QUADRATIC
     if degree == 3:
         return orbital.PART_CUBIC
-    raise NotImplementedError
+    raise ValueError("Orbital fit polynomial degree option not recognised")
 
 
 def method_conv(meth):
@@ -177,16 +178,16 @@ def method_conv(meth):
         return orbital.INDEPENDENT_METHOD
     if method == 2:
         return orbital.NETWORK_METHOD
-    raise NotImplementedError
-
+    raise ValueError("Orbital fit method not recognised")
 
 # Lookup to help convert args to correct type/defaults
 # format is	key : (conversion, default value)
 # None = no conversion
 PARAM_CONVERSION = {
-    PERP_BASELINE_FLAG : (bool, True),
-    AMPLITUDE_FLAG : (bool, False),
-    NUM_SETS : (int, 1),
+    #PERP_BASELINE_FLAG : (bool, True),
+    #AMPLITUDE_FLAG : (bool, False),
+    #NUM_SETS : (int, 1),
+    REPROJECTION : (int, 3),
     IFG_CROP_OPT : (int, None), # TODO: default to ALREADY_SAME_SIZE?
     IFG_LKSX : (int, NO_MULTILOOKING),
     IFG_LKSY : (int, NO_MULTILOOKING),
@@ -194,16 +195,17 @@ PARAM_CONVERSION = {
     IFG_XLAST : (float, None),
     IFG_YFIRST : (float, None),
     IFG_YLAST : (float, None),
-    REPROJECTION_FLAG : (int, 3),
+    
 
     REFX : (int, -1),
     REFY : (int, -1),
-    REFNX : (int, None), # was 50 in original Pirate code
-    REFNY : (int, None), # was 50 in original Pirate code
-    REF_CHIP_SIZE : (int, None), # defaults to 21 in orig
+    REFNX : (int, 5), # was 50 in original Pirate code
+    REFNY : (int, 5), # was 50 in original Pirate code
+    REF_CHIP_SIZE : (int, 3), # defaults to 21 in orig
     REF_MIN_FRAC : (float, 0.8), # uses Pirate default
 
-    ORBITAL_FIT : (bool, True),
+    #ORBITAL_FIT : (bool, False),
+    ORBITAL_FIT : (int, 0),
     ORBITAL_FIT_METHOD : (method_conv, orbital.NETWORK_METHOD),
     ORBITAL_FIT_DEGREE : (degree_conv, orbital.QUADRATIC),
     ORBITAL_FIT_LOOKS_X : (int, NO_MULTILOOKING),
@@ -213,7 +215,10 @@ PARAM_CONVERSION = {
     LR_PTHRESH : (int, 20), # should be based on nepochs since not every project may have 20 epochs
     LR_MAXSIG : (int, 2), # Pirate default
 
-    TIME_SERIES_PTHRESH : (int, None)}
+    #TIME_SERIES_CAL : (bool, False),
+    TIME_SERIES_CAL : (int, 0),
+    TIME_SERIES_PTHRESH : (int, 20)}
+    #TIME_SERIES_INTERP : (bool, False)
 
 
 def get_config_params(path):
@@ -251,7 +256,6 @@ def _parse_pars(pars):
     """
     Parses and converts config file params from text
     """
-
     for k in PARAM_CONVERSION.keys():
         if k in pars:
             conversion_func = PARAM_CONVERSION[k][0]
