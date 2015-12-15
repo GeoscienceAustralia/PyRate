@@ -7,5 +7,5 @@
 /.idea
 .spyderworkspace
 python-graph/
-tests_bk
-#sydney_test
+tests_bk/
+sydney_test/

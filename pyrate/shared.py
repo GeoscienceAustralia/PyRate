@@ -7,12 +7,12 @@ Created on 12/09/2012
 '''
 
 import os
+import math
 from datetime import date
 from numpy import where, nan, isnan, sum as nsum
 import pyrate.ifgconstants as ifc
 import numpy as np
 import logging
-import algorithm
 
 try:
     from osgeo import gdal
@@ -24,11 +24,11 @@ gdal.UseExceptions()
 
 from pyrate.geodesy import cell_size
 
-
 # Constants
 PHASE_BAND = 1
 META_UNITS = 'PHASE_UNITS'
 MILLIMETRES = 'MILLIMETRES'
+MM_PER_METRE = 1000
 
 # GDAL projection list
 GDAL_X_CELLSIZE = 1
@@ -257,7 +257,7 @@ class Ifg(RasterBase):
             logging.debug(msg % self.data_path)
             return
 
-        self.data = algorithm.wavelength_radians_to_mm(self.phase_data,
+        self.data = wavelength_radians_to_mm(self.phase_data,
                                                       self.wavelength)
         self.dataset.SetMetadataItem(META_UNITS, MILLIMETRES)
         msg = '%s: converted wavelength to millimetres'
@@ -430,3 +430,16 @@ class EpochList(object):
 
     def __repr__(self):
         return "EpochList: %s" % repr(self.dates)
+
+
+def wavelength_radians_to_mm(data, wavelength):
+    '''
+    Translates phase from radians to millimetres
+    data: ifg phase data
+    wavelength: normally included with SAR instrument pass data
+    '''
+
+    # '4' is 2*2, the 1st 2 is that the raw signal is 'there and back', to get
+    # the vector length between satellite and ground, half the signal is needed
+    # second 2*pi is because one wavelength is equal to 2 radians
+    return data * MM_PER_METRE * (wavelength / (4 * math.pi))

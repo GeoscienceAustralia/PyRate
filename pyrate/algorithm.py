@@ -14,10 +14,6 @@ from ifgconstants import DAYS_PER_YEAR
 
 from scipy.linalg import qr, solve, lstsq
 
-# constants
-MM_PER_METRE = 1000
-
-
 def is_square(arr):
     shape = arr.shape
     if len(shape) == 2 and (shape[0] == shape[1]):
@@ -193,16 +189,3 @@ def master_slave_ids(dates):
 
     dset = sorted(set(dates))
     return dict([(date_, i) for i, date_ in enumerate(dset)])
-
-
-def wavelength_radians_to_mm(data, wavelength):
-    '''
-    Translates phase from radians to millimetres
-    data: ifg phase data
-    wavelength: normally included with SAR instrument pass data
-    '''
-
-    # '4' is 2*2, the 1st 2 is that the raw signal is 'there and back', to get
-    # the vector length between satellite and ground, half the signal is needed
-    # second 2*pi is because one wavelength is equal to 2 radians
-    return data * MM_PER_METRE * (wavelength / (4 * math.pi))

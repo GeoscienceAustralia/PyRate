@@ -18,7 +18,7 @@ import pyrate.algorithm as algorithm
 from pyrate.shared import Ifg
 from pyrate.config import parse_namelist
 from pyrate.tests.common import sydney5_mock_ifgs, SYD_TEST_TIF
-
+from pyrate import shared
 
 class LeastSquaresTests(TestCase):
     """
@@ -68,7 +68,7 @@ class AlgorithmTests(TestCase):
         data = np.where(data == 0, np.nan, data)
         wavelen = 0.0562356424
         exp = (data * wavelen * 1000) / (4 * pi)
-        act = algorithm.wavelength_radians_to_mm(data, wavelen)
+        act = shared.wavelength_radians_to_mm(data, wavelen)
         assert_allclose(exp, act)
 
 
