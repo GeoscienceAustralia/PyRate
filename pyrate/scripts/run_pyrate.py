@@ -47,13 +47,15 @@ def process_ifgs(ifg_paths_or_instance, params):
                 i.open(readonly=False)
             if nan_conversion:  # nan conversion happens here in networkx mst
                 i.convert_to_nans()
-            convert_wavelength(i)  # not used in vcm or linrate?
+            if not i.mm_converted:
+                i.convert_to_mm()  # not used in vcm or linrate?
         mst_grid = mst.mst_matrix_ifg_indices_as_boolean_array(ifgs)
     else:
         assert isinstance(ifg_paths_or_instance, matlab_mst.IfgListPyRate)
         ifgs = ifg_paths_or_instance.ifgs
         for i in ifgs:
-            convert_wavelength(i)  # not used in vcm or linrate?
+            if not i.mm_converted:
+                i.convert_to_mm()  # not used in vcm or linrate?
         ifg_instance_updated, epoch_list = \
             matlab_mst.get_nml(ifg_paths_or_instance,
                                nan_conversion=nan_conversion)
@@ -119,23 +121,6 @@ def process_ifgs(ifg_paths_or_instance, params):
         i.dataset.FlushCache()
         i = None  # force close    TODO: may need to implement close()
     logging.debug('PyRate run completed\n')
-
-
-def convert_wavelength(ifg):
-    """
-    :param ifg: ifg file
-    :return: convert wavelength from radians to mm
-    """
-    if ifg.dataset.GetMetadataItem(META_UNITS) == MILLIMETRES:
-        msg = '%s: ignored as previous wavelength conversion detected'
-        logging.debug(msg % ifg.data_path)
-        return
-
-    ifg.data = algorithm.wavelength_radians_to_mm(ifg.phase_data,
-                                                  ifg.wavelength)
-    ifg.dataset.SetMetadataItem(META_UNITS, MILLIMETRES)
-    msg = '%s: converted wavelength to millimetres'
-    logging.debug(msg % ifg.data_path)
 
 
 def remove_orbital_error(ifgs, params):
