@@ -436,10 +436,11 @@ class MatlabEqualityTest(unittest.TestCase):
             ifg_data = np.genfromtxt(os.path.join(
                 SYD_TEST_MATLAB_PREPIFG_DIR, f), delimiter=',')
             for k, j in enumerate(self.ifgs):
-                if f.split('mm_')[-1].split('.')[0] == \
+                if f.split('_rad_')[-1].split('.')[0] == \
                         os.path.split(j.data_path)[-1].split('.')[0]:
-                    np.testing.assert_array_equal(ifg_data,
-                        self.ifgs_with_nan[k].phase_band.ReadAsArray())
+                    np.testing.assert_array_almost_equal(ifg_data,
+                        self.ifgs_with_nan[k].phase_band.ReadAsArray(), decimal=2)
+
 
     def test_matlab_prepifg_and_convert_wavelength(self):
         """
@@ -456,7 +457,7 @@ class MatlabEqualityTest(unittest.TestCase):
             ifg_data = np.genfromtxt(os.path.join(
                 SYD_TEST_MATLAB_PREPIFG_DIR, f), delimiter=',')
             for k, j in enumerate(self.ifgs):
-                if f.split('mm_')[-1].split('.')[0] == \
+                if f.split('_mm_')[-1].split('.')[0] == \
                         os.path.split(j.data_path)[-1].split('.')[0]:
 
                     # all numbers equal
@@ -471,10 +472,6 @@ class MatlabEqualityTest(unittest.TestCase):
                     self.assertEqual(np.sum(np.isnan(ifg_data)),
                                 np.sum(np.isnan(self.ifgs_with_nan[k].data)))
 
-                    print np.sum(np.isnan(ifg_data)), \
-                        np.sum(np.isnan(self.ifgs_with_nan[k].data)), \
-                        np.nanmean(ifg_data), \
-                        np.nanmean(self.ifgs_with_nan[k].data)
 
 if __name__ == "__main__":
     unittest.main()
