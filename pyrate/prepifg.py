@@ -23,6 +23,7 @@ from itertools import product
 from subprocess import check_call
 from collections import namedtuple
 from os.path import splitext
+import numpy as np
 
 from numpy import array, where, nan, isnan, nanmean, float32, zeros, sum as nsum
 
@@ -142,9 +143,9 @@ def get_extents(ifgs, crop_opt, user_exts=None):
         extents = custom_bounds(ifgs, *user_exts)
     else:
         extents = get_same_bounds(ifgs)
-    
+
     check_crop_coords(ifgs, *extents)
-    
+
     #raise NotImplementedError("BLAH")
     return [str(s) for s in extents]
 
@@ -160,7 +161,7 @@ def _file_ext(raster):
         return "dem"
     else:
         # TODO: several possible file types to implement:
-        # Coherence file: single band    
+        # Coherence file: single band
         # LOS file:  has 2 bands: beam incidence angle & ground azimuth)
         # Baseline file: perpendicular baselines (single band?)
         raise NotImplementedError("Missing raster types for LOS, Coherence and baseline")
@@ -238,7 +239,6 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out, verbose):
         fl = ifg.data_path
         dat = gdal.Open(fl)
         md = {k:v for k, v in dat.GetMetadata().iteritems()}
-        dat = None
     else:
         md = None
 
@@ -258,7 +258,6 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out, verbose):
         new_lyr = gdal.Open(looks_path)
         for k, v in md.iteritems():
             new_lyr.SetMetadataItem(k, v)
-        new_lyr = None
 
     # Add missing/updated metadata to resampled ifg/DEM
     new_lyr = type(ifg)(looks_path)
@@ -270,7 +269,7 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out, verbose):
 
         if data is None:  # data wasn't resampled, so flag incoherent cells
             data = new_lyr.phase_band.ReadAsArray()
-            data = where(data == 0, nan, data)
+            data = where(np.isclose(data, 0.0, atol=1e-6), nan, data)
 
         # TODO: LOS conversion to vertical/horizontal (projection)
         # TODO: push out to workflow
@@ -391,56 +390,57 @@ def get_same_bounds(ifgs):
 
     return xmin, ymin, xmax, ymax
 
+
 def custom_bounds(ifgs, xw, ytop, xe, ybot):
     """
     Check and modify input custom crop bounds to line up with grid interval
     """
     msg = 'Cropped image bounds exceed original image bounds'
     i = ifgs[0]
-            
+
     if ytop < ybot:
         raise PreprocessError('ERROR Custom crop bounds: ifgyfirst must be greater than ifgylast')
-        
+
     if xe < xw:
         raise PreprocessError('ERROR Custom crop bounds: ifgxfirst must be greater than ifgxlast')
-    
+
     for par, crop, orig, step in zip(['x_first', 'x_last', 'y_first', 'y_last'],
                                       [xw, xe, ytop, ybot],
                                       [i.x_first, i.x_last, i.y_first, i.y_last],
                                       [i.x_step, i.x_step, i.y_step, i.y_step]):
         diff = crop - orig
         nint = round(diff / step)
-                
-        if par == 'x_first':            
+
+        if par == 'x_first':
             if diff < 0:
                 raise PreprocessError(msg)
             xmin = orig + (nint * step)
-        
+
         elif par == 'x_last':
             if diff > 0:
                 raise PreprocessError(msg)
             xmax = orig + (nint * step)
-        
+
         elif par == 'y_first':
             if diff > 0:
                 raise PreprocessError(msg)
             y1 = orig + (nint * step)
-            
+
         elif par == 'y_last':
             if diff < 0:
                 raise PreprocessError(msg)
             y2 = orig + (nint * step)
-            
+
     if y2 > y1:
         ymin = y1
         ymax = y2
     else:
         ymin = y2
         ymax = y1
-           
-    return (xmin, ymin, xmax, ymax)
 
-           
+    return xmin, ymin, xmax, ymax
+
+
 def check_crop_coords(ifgs, xmin, ymin, xmax, ymax):
     """
     Ensures cropping coords line up with grid system within tolerance.
@@ -448,7 +448,7 @@ def check_crop_coords(ifgs, xmin, ymin, xmax, ymax):
 
     # NB: assumption is the first Ifg is correct, so only test against it
     i = ifgs[0]
-    
+
     for par, crop, step in zip(['x_first', 'x_last', 'y_first', 'y_last'],
                                 [xmin, xmax, ymax, ymin],
                                 [i.x_step, i.x_step, i.y_step, i.y_step]):
@@ -457,7 +457,7 @@ def check_crop_coords(ifgs, xmin, ymin, xmax, ymax):
         param = getattr(i, par)
         diff = abs(crop - param)
         remainder = abs(modf(diff / step)[0])
- 
+
         # handle cases where division gives remainder near zero, or just < 1
         if remainder > GRID_TOL and remainder < (1 - GRID_TOL):
             msg = "%s crop extent not within %s of grid coordinate"
