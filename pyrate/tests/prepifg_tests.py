@@ -56,13 +56,40 @@ class PrepifgOutputTests(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(PrepifgOutputTests, self).__init__(*args, **kwargs)
 
+    @staticmethod
+    def assert_geotransform_equal(files):
+        """
+        Asserts geotransforms for the given files are equivalent. Files can be paths
+        to datasets, or GDAL dataset objects.
+        """
+        assert len(files) > 1, "Need more than 1 file to compare"
+        if not all([hasattr(f, "GetGeoTransform") for f in files]):
+            datasets = [gdal.Open(f) for f in files]
+            assert all(datasets)
+        else:
+            datasets = files
+
+        transforms = [ds.GetGeoTransform() for ds in datasets]
+        head = transforms[0]
+        print head
+        for t in transforms[1:]:
+            print t
+            assert t == head, "Extents do not match!"
+
     def setUp(self):
         self.xs = 0.000833333
         self.ys = -self.xs
 
         # FIXME: dump output to tmp dir?
         self.ifgs = diff_exts_ifgs()
-        paths = ["geo_060619-061002_1rlks.tif", "geo_070326-070917_1rlks.tif"]
+        paths = ["geo_060619-061002_1rlks_1cr.tif",
+                 "geo_060619-061002_1rlks_2cr.tif",
+                 "geo_060619-061002_1rlks_3cr.tif",
+                 "geo_060619-061002_4rlks_3cr.tif",
+                 "geo_070326-070917_1rlks_1cr.tif",
+                 "geo_070326-070917_1rlks_2cr.tif",
+                 "geo_070326-070917_1rlks_3cr.tif",
+                 "geo_070326-070917_4rlks_3cr.tif"]
         self.exp_files = [join(PREP_TEST_TIF, p) for p in paths]
 
     def tearDown(self):
@@ -83,12 +110,12 @@ class PrepifgOutputTests(unittest.TestCase):
         """Test ifgcropopt=2 crops datasets to max bounding box extents."""
         xlooks = ylooks = 1
         prepare_ifgs(self.ifgs, MAXIMUM_CROP, xlooks, ylooks)
-        for f in self.exp_files:
+        for f in [self.exp_files[1], self.exp_files[5]]:
             self.assertTrue(exists(f), msg="Output files not created")
 
         # output files should have same extents
         # NB: also verifies gdalwarp correctly copies geotransform across
-        ifg = Ifg(self.exp_files[0])
+        ifg = Ifg(self.exp_files[1])
         ifg.open()
         gt = ifg.dataset.GetGeoTransform()
 
@@ -96,7 +123,7 @@ class PrepifgOutputTests(unittest.TestCase):
         exp_gt = (150.91, 0.000833333, 0, -34.17, 0, -0.000833333)
         for i, j in zip(gt, exp_gt):
             self.assertAlmostEqual(i, j)
-        assert_geotransform_equal(self.exp_files)
+        self.assert_geotransform_equal([self.exp_files[1], self.exp_files[5]])
 
     def test_min_extents(self):
         """Test ifgcropopt=1 crops datasets to min extents."""
@@ -112,14 +139,14 @@ class PrepifgOutputTests(unittest.TestCase):
         exp_gt = (150.911666666, 0.000833333, 0, -34.172499999, 0, -0.000833333)
         for i, j in zip(gt, exp_gt):
             self.assertAlmostEqual(i, j)
-        assert_geotransform_equal(self.exp_files)
+        self.assert_geotransform_equal([self.exp_files[0], self.exp_files[4]])
 
     def test_custom_extents(self):
         xlooks = ylooks = 1
         cext = self._custom_extents_tuple()
         prepare_ifgs(self.ifgs, CUSTOM_CROP, xlooks, ylooks, user_exts=cext)
 
-        ifg = Ifg(self.exp_files[0])
+        ifg = Ifg(self.exp_files[2])
         ifg.open()
 
         gt = ifg.dataset.GetGeoTransform()
@@ -127,8 +154,8 @@ class PrepifgOutputTests(unittest.TestCase):
 
         for i, j in zip(gt, exp_gt):
             self.assertAlmostEqual(i, j)
+        self.assert_geotransform_equal([self.exp_files[2], self.exp_files[6]])
 
-        assert_geotransform_equal(self.exp_files)
 
     def test_custom_extents_misalignment(self):
         """Test misaligned cropping extents raise errors."""
@@ -150,7 +177,7 @@ class PrepifgOutputTests(unittest.TestCase):
         xlooks = ylooks = 1
         prepare_ifgs(self.ifgs, MINIMUM_CROP, xlooks, ylooks)
 
-        for ex in self.exp_files:
+        for ex in [self.exp_files[0], self.exp_files[4]]:
             ifg = Ifg(ex)
             ifg.open()
             # NB: amplitude band doesn't have a NODATA value
@@ -161,7 +188,7 @@ class PrepifgOutputTests(unittest.TestCase):
         xlooks = ylooks = 1
         prepare_ifgs(self.ifgs, MINIMUM_CROP, xlooks, ylooks)
 
-        for ex in self.exp_files:
+        for ex in [self.exp_files[0], self.exp_files[4]]:
             ifg = Ifg(ex)
             ifg.open()
 
@@ -178,15 +205,10 @@ class PrepifgOutputTests(unittest.TestCase):
         self.ifgs.append(DEM(SYD_TEST_DEM_TIF))
         cext = self._custom_extents_tuple()
         xlooks = ylooks = scale
-        prepare_ifgs(self.ifgs, CUSTOM_CROP, xlooks, ylooks, thresh=1.0, user_exts=cext)
+        prepare_ifgs(self.ifgs, CUSTOM_CROP, xlooks, ylooks,
+                     thresh=1.0, user_exts=cext)
 
-        # check file names have been updated
-        for f in self.exp_files:
-            self.assertFalse(exists(f))
-
-        exp_files = [s.replace('_1r', '_%sr' % scale) for s in self.exp_files]
-
-        for n, ipath in enumerate(exp_files):
+        for n, ipath in enumerate([self.exp_files[3], self.exp_files[7]]):
             i = Ifg(ipath)
             i.open()
             self.assertEqual(i.dataset.RasterXSize, 20 / scale)
@@ -199,11 +221,11 @@ class PrepifgOutputTests(unittest.TestCase):
             exp_resample = multilooking(src_data, scale, scale, thresh=0)
             self.assertEqual(exp_resample.shape, (7, 5))
             assert_array_almost_equal(exp_resample, i.phase_band.ReadAsArray())
-            os.remove(ipath)
+            # os.remove(ipath)
 
         # verify DEM has been correctly processed
         # ignore output values as resampling has already been tested for phase
-        exp_dem_path = join(SYD_TEST_DEM_DIR, 'sydney_trimmed_4rlks.tif')
+        exp_dem_path = join(SYD_TEST_DEM_DIR, 'sydney_trimmed_4rlks_3cr.tif')
         self.assertTrue(exists(exp_dem_path))
 
         dem = DEM(exp_dem_path)
@@ -212,7 +234,6 @@ class PrepifgOutputTests(unittest.TestCase):
         self.assertEqual(dem.dataset.RasterYSize, 28 / scale)
         data = dem.height_band.ReadAsArray()
         self.assertTrue(data.ptp() != 0)
-        os.remove(dem.data_path)
 
     def test_invalid_looks(self):
         """Verify only numeric values can be given for multilooking"""
@@ -293,18 +314,21 @@ class SameSizeTests(unittest.TestCase):
         for ifg in mlooked:
             self.assertEqual(ifg.x_step, xlooks * self.xs)
             self.assertEqual(ifg.x_step, ylooks * self.xs)
-            os.remove(ifg.data_path)
+            # os.remove(ifg.data_path)
 
 
 def test_mlooked_path():
     path = 'geo_060619-061002.tif'
-    assert mlooked_path(path, 2) == 'geo_060619-061002_2rlks.tif'
+    assert mlooked_path(path, looks=2, crop_out=4) == \
+           'geo_060619-061002_2rlks_4cr.tif'
 
     path = 'some/dir/geo_060619-061002.tif'
-    assert mlooked_path(path, 4) == 'some/dir/geo_060619-061002_4rlks.tif'
+    assert mlooked_path(path, looks=4, crop_out=2) == \
+           'some/dir/geo_060619-061002_4rlks_2cr.tif'
 
     path = 'some/dir/geo_060619-061002_4rlks.tif'
-    assert mlooked_path(path, 4) == 'some/dir/geo_060619-061002_4rlks_4rlks.tif'
+    assert mlooked_path(path, looks=4, crop_out=8) == \
+           'some/dir/geo_060619-061002_4rlks_4rlks_8cr.tif'
 
 
 #class LineOfSightTests(unittest.TestCase):
@@ -380,24 +404,6 @@ def multilooking(src, xscale, yscale, thresh=0):
     return dest
 
 
-def assert_geotransform_equal(files):
-    """
-    Asserts geotransforms for the given files are equivalent. Files can be paths
-    to datasets, or GDAL dataset objects.
-    """
-    assert len(files) > 1, "Need more than 1 file to compare"
-    if not all([hasattr(f, "GetGeoTransform") for f in files]):
-        datasets = [gdal.Open(f) for f in files]
-        assert all(datasets)
-    else:
-        datasets = files
-
-    transforms = [ds.GetGeoTransform() for ds in datasets]
-    head = transforms[0]
-    for t in transforms[1:]:
-        assert t == head, "Extents do not match!"
-
-
 class MatlabEqualityTest(unittest.TestCase):
     """
     Matlab to python prepifg equality test
@@ -416,7 +422,7 @@ class MatlabEqualityTest(unittest.TestCase):
         from pyrate.prepifg import mlooked_path
         for i in self.ifgs:
             if os.path.exists(i.data_path):
-                os.remove(mlooked_path(i.data_path, looks=1))
+                os.remove(mlooked_path(i.data_path, looks=1, crop_out=1))
 
     def test_matlab_prepifg_equality_array(self):
         """

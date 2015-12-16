@@ -95,7 +95,7 @@ def prepare_ifg(
     if not raster.is_open:
         raster.open()
 
-    return warp(raster, xlooks, ylooks, exts, res, thresh, verbose)
+    return warp(raster, xlooks, ylooks, exts, res, thresh, crop_opt, verbose)
 
 
 
@@ -139,8 +139,7 @@ def get_extents(ifgs, crop_opt, user_exts=None):
     elif crop_opt == MAXIMUM_CROP:
         extents = max_bounds(ifgs)
     elif crop_opt == CUSTOM_CROP:
-        extents = custom_bounds(ifgs,*user_exts)        
-        
+        extents = custom_bounds(ifgs, *user_exts)
     else:
         extents = get_same_bounds(ifgs)
     
@@ -202,16 +201,17 @@ def _resample_ifg(ifg, cmd, x_looks, y_looks, thresh, md=None):
     return resample(data, x_looks, y_looks, thresh)
 
 
-def mlooked_path(path, looks):
+def mlooked_path(path, looks, crop_out):
     """
     Adds suffix to path, for creating a new path for mlooked files.
     """
     base, ext = splitext(path)
-    return "%s_%srlks%s" % (base, looks, ext)
+    return "{base}_{looks}rlks_{crop_out}cr{ext}".format(
+        base=base, looks=looks, crop_out=crop_out, ext=ext)
 
 
 # TODO: clean arg names
-def warp(ifg, x_looks, y_looks, extents, resolution, thresh, verbose):
+def warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out, verbose):
     """
     Resamples 'ifg' and returns a new Ifg obj.
 
@@ -234,7 +234,7 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, verbose):
 
     # It appears that before vrions 1.10 gdal-warp did not copy meta-data
     # ... so we need to. Get the keys from the input here
-    if sum((int(v)*i for v, i in zip(gdal.__version__.split('.')[:2], [10,1]))) < 20:
+    if sum((int(v)*i for v, i in zip(gdal.__version__.split('.')[:2], [10, 1]))) < 20:
         fl = ifg.data_path
         dat = gdal.Open(fl)
         md = {k:v for k, v in dat.GetMetadata().iteritems()}
@@ -249,7 +249,7 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, verbose):
         cmd += ["-tr"] + [str(r) for r in resolution] # change res of final output
 
     # use GDAL to cut (and resample) the final output layers
-    looks_path = mlooked_path(ifg.data_path, y_looks)
+    looks_path = mlooked_path(ifg.data_path, y_looks, crop_out)
     cmd += [ifg.data_path, looks_path]
     check_call(cmd)
 

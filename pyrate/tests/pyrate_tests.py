@@ -245,7 +245,6 @@ def test_dest_ifg_paths():
     assert dest_paths == ['out/ifg0.tif', 'out/ifg1.tif']
 
 
-
 # FIXME: change to read output ifgs
 def get_ifgs(_open=True):
     paths = glob.glob(join(BASE_OUT_DIR, 'geo_*-*.tif'))
@@ -287,6 +286,7 @@ class PyRateTests(unittest.TestCase):
             params = config._parse_conf_file(WORKFLOW_CONF)
             paths = glob.glob(join(BASE_OUT_DIR, 'geo_*-*.tif'))
             run_pyrate.process_ifgs(paths, params)
+            # TODO: add matlab mst path tests
         except:
             # revert working dir & avoid paths busting other tests
             os.chdir(CURRENT_DIR)

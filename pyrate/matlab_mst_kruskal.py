@@ -198,8 +198,8 @@ def matlab_mst(ifg_list_, p_threshold=1):
                 if num_ifgs - np.count_nonzero(nan_v) >= p_threshold:
                     # get all valid ifgs from ifglist,
                     # and then select the ones that are not nan on this pixel
-                    id, master, slave, nan_frac = get_sub_structure(ifg_list_, nan_v,
-                                                       ifg_class_type)
+                    id, master, slave, nan_frac = get_sub_structure(
+                        ifg_list_, nan_v, ifg_class_type)
                     # calculate mst again
                     ifglist_mst_valid_id = matlab_mst_kruskal(id, master,
                                                               slave, nan_frac)
@@ -207,7 +207,8 @@ def matlab_mst(ifg_list_, p_threshold=1):
                 else:
                     # TODO: This is not handled in matlab
                     # We will get here if p_threshold is >=2, and will crash
-                    raise NotImplementedError('Unhandled mst combination')
+                    # raise NotImplementedError('Unhandled mst combination')
+                    pass
             else:
                 mst_mat[ifg_list_mst_id, r, c] = 1
     return mst_mat
@@ -248,17 +249,18 @@ def matlab_mst_generator_boolean_array(ifg_instance, p_threshold=1):
             if (num_ifgs - nan_count) >= p_threshold:
                 # get all valid ifgs from ifglist,
                 # and then select the ones that are not nan on this pixel
-                id, master, slave, nan_frac = get_sub_structure(ifg_instance, nan_v,
-                                                   ifg_class_type)
+                id, master, slave, nan_frac = get_sub_structure(
+                    ifg_instance, nan_v, ifg_class_type)
                 # calculate mst again
-                ifglist_mst_valid_id = matlab_mst_kruskal(id, master, slave, nan_frac)
+                ifglist_mst_valid_id = matlab_mst_kruskal(
+                    id, master, slave, nan_frac)
                 mst_yield[ifglist_mst_valid_id] = True
                 yield r, c, mst_yield
             else:
                 # TODO: This is not handled in matlab MG: yes it is, the mstmat is preallocated with zeros (i.e. falses)
                 # We will get here if p_threshold is >=2, and this will crash
                 #raise NotImplementedError('Unhandled mst combination')
-                mst_yield[ifglist_mst_valid_id] = False
+                # mst_yield[ifglist_mst_valid_id] = False  # redundant
                 yield r, c, mst_yield
 
 

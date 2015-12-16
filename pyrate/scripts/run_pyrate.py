@@ -5,12 +5,9 @@ Created on 17/09/2012
 @author: Ben Davies, NCI
 """
 
-import os, sys, shutil, logging, datetime, gdal, numpy as np
-import glob
-
+import os, sys, shutil, logging, datetime
 import pyrate.mst as mst
 import pyrate.prepifg as prepifg
-import pyrate.algorithm as algorithm
 import pyrate.refpixel as refpixel
 import pyrate.orbital as orbital
 import pyrate.linrate as linrate
@@ -18,7 +15,6 @@ import pyrate.timeseries as timeseries
 import pyrate.config as cf
 from pyrate.shared import Ifg
 from pyrate import vcm as vcm_module
-import pyrate.ifgconstants as ifc
 from pyrate import matlab_mst_kruskal as matlab_mst
 
 
@@ -84,7 +80,7 @@ def process_ifgs(ifg_paths_or_instance, params):
     # Calculate time series
     if params[cf.TIME_SERIES_CAL] != 0:        
         tsincr, tscum, tsvel = calculate_time_series(ifgs, params, mst=mst_grid)
-    # TODO: check is correct MST
+
 
     # print ifg_paths[0]
     # p = os.path.join(pars[cf.SIM_DIR], ifg_paths[0])
@@ -298,7 +294,8 @@ def working_ifg_paths(src_paths, xlooks, ylooks, cropping):
     Filter. Returns paths to ifgs to process (eg. checks for mlooked tifs)
     """
     if warp_required(xlooks, ylooks, cropping):
-        mlooked_unw = [prepifg.mlooked_path(p, xlooks) for p in src_paths]
+        mlooked_unw = [prepifg.mlooked_path(p, xlooks, crop_out=cropping)
+                       for p in src_paths]
         mlooked_paths = [os.path.splitext(m)[0]+'.tif' for m in mlooked_unw]
 
         if not all([os.path.exists(p) for p in mlooked_paths]):

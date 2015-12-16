@@ -65,7 +65,8 @@ class PrepareInterferogram(IfgListMixin, luigi.WrapperTask):
     """
 
     ifg      = RasterParam()
-    thresh   = luigi.FloatParameter(config_path=InputParam(config.NO_DATA_AVERAGING_THRESHOLD))
+    thresh   = luigi.FloatParameter(config_path=InputParam(
+        config.NO_DATA_AVERAGING_THRESHOLD))
     crop_opt = luigi.IntParameter(  config_path=InputParam(config.IFG_CROP_OPT))
     xlooks   = luigi.IntParameter(  config_path=InputParam(config.IFG_LKSX))
     ylooks   = luigi.IntParameter(  config_path=InputParam(config.IFG_LKSY))
@@ -89,7 +90,8 @@ class PrepareInterferogram(IfgListMixin, luigi.WrapperTask):
 
     def output(self):
         if warp_required(self.xlooks, self.ylooks, self.crop_opt):
-            return luigi.file.LocalTarget(mlooked_path(self.ifg.data_path, self.ylooks))
+            return luigi.file.LocalTarget(
+                mlooked_path(self.ifg.data_path, self.ylooks, self.crop_opt))
         else:
             return []
 
