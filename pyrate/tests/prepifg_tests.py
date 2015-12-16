@@ -71,9 +71,7 @@ class PrepifgOutputTests(unittest.TestCase):
 
         transforms = [ds.GetGeoTransform() for ds in datasets]
         head = transforms[0]
-        print head
         for t in transforms[1:]:
-            print t
             assert t == head, "Extents do not match!"
 
     def setUp(self):
@@ -167,7 +165,6 @@ class PrepifgOutputTests(unittest.TestCase):
                 tmp_latlon = list(latlons)
                 tmp_latlon[i] += error
                 cext = CustomExts(*tmp_latlon)
-                print cext
 
                 self.assertRaises(PreprocessError, prepare_ifgs, self.ifgs,
                                 CUSTOM_CROP, xlooks, ylooks, user_exts=cext)
@@ -474,6 +471,10 @@ class MatlabEqualityTest(unittest.TestCase):
                     self.assertEqual(np.sum(np.isnan(ifg_data)),
                                 np.sum(np.isnan(self.ifgs_with_nan[k].data)))
 
+                    print np.sum(np.isnan(ifg_data)), \
+                        np.sum(np.isnan(self.ifgs_with_nan[k].data)), \
+                        np.nanmean(ifg_data), \
+                        np.nanmean(self.ifgs_with_nan[k].data)
 
 if __name__ == "__main__":
     unittest.main()
