@@ -461,8 +461,15 @@ class MatlabEqualityTest(unittest.TestCase):
             for k, j in enumerate(self.ifgs):
                 if f.split('mm_')[-1].split('.')[0] == \
                         os.path.split(j.data_path)[-1].split('.')[0]:
+
+                    # all numbers equal
                     np.testing.assert_array_almost_equal(ifg_data,
                         self.ifgs_with_nan[k].data, decimal=2)
+
+                    # means must also be equal
+                    self.assertAlmostEqual(np.nanmean(ifg_data),
+                        np.nanmean(self.ifgs_with_nan[k].data), places=4)
+
 
 if __name__ == "__main__":
     unittest.main()
