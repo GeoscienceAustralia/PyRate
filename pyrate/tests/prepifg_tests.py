@@ -470,6 +470,10 @@ class MatlabEqualityTest(unittest.TestCase):
                     self.assertAlmostEqual(np.nanmean(ifg_data),
                         np.nanmean(self.ifgs_with_nan[k].data), places=4)
 
+                    # number of nans must equal
+                    self.assertEqual(np.sum(np.isnan(ifg_data)),
+                                np.sum(np.isnan(self.ifgs_with_nan[k].data)))
+
 
 if __name__ == "__main__":
     unittest.main()
