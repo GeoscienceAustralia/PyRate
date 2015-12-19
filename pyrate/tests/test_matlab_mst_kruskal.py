@@ -178,7 +178,6 @@ class MatlabMSTTests(unittest.TestCase):
                         os.path.split(j)[-1].split('.')[0]:
                     np.testing.assert_array_equal(mst_f, mst_mat[k, :, :])
 
-
     def test_matlab_make_mstmat_boolean_array(self):
         """
         tests equality of boolean mst arrays of both python and matlab.
@@ -200,7 +199,6 @@ class MatlabMSTTests(unittest.TestCase):
                 if f.split('matlab_')[-1].split('.')[0] == \
                         os.path.split(j)[-1].split('.')[0]:
                     np.testing.assert_array_equal(mst_f, mst_mat[k, :, :])
-
 
     def test_mas_mat_vs_mst_mat_generator(self):
         ifg_instance = IfgList(datafiles=self.ifg_file_list)

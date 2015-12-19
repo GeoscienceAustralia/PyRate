@@ -51,7 +51,7 @@ PART_CUBIC = 'PART_CUBIC'
 
 
 def orbital_correction(ifgs, degree, method, mlooked=None, offset=True):
-    '''
+    """
     Removes orbital error from given Ifgs.
 
     NB: the ifg data is modified in situ, rather than create intermediate files.
@@ -63,7 +63,7 @@ def orbital_correction(ifgs, degree, method, mlooked=None, offset=True):
     :param method: INDEPENDENT_METHOD or NETWORK_METHOD
     :param mlooked: sequence of multilooked ifgs (must correspond to 'ifgs' arg)
     :param bool offset: True/False to include the constant/offset component
-    '''
+    """
     if degree not in [PLANAR, QUADRATIC, PART_CUBIC]:
         msg = "Invalid degree of %s for orbital correction" % degree
         raise OrbitalError(msg)
@@ -143,7 +143,7 @@ def _independent_correction(ifg, degree, offset):
 
 
 def _network_correction(ifgs, degree, offset, m_ifgs=None):
-    '''
+    """
     Calculates orbital correction model, removing this from the ifgs.
     .. warn:: This does in-situ modification of phase_data in the ifgs.
 
@@ -151,7 +151,7 @@ def _network_correction(ifgs, degree, offset, m_ifgs=None):
     :param degree: PLANAR, QUADRATIC or PART_CUBIC
     :param offset: True to calculate the model using offsets
     :param m_ifgs: multilooked ifgs (sequence must be mlooked versions of 'ifgs' arg)
-    '''
+    """
 
     # get DM & filter out NaNs
     src_ifgs = ifgs if m_ifgs is None else m_ifgs
@@ -186,14 +186,14 @@ def _network_correction(ifgs, degree, offset, m_ifgs=None):
 
 # TODO: subtract reference pixel coordinate from x and y
 def get_design_matrix(ifg, degree, offset, scale=100.0):
-    '''
+    """
     Returns simple design matrix with columns for model parameters.
 
     :param ifg: interferogram to base the DM on
     :param degree: PLANAR, QUADRATIC or PART_CUBIC
     :param offset: True to include offset cols, otherwise False.
     :param scale: amount to divide cell size by for improving inversion robustness
-    '''
+    """
 
     if degree not in [PLANAR, QUADRATIC, PART_CUBIC]:
         raise OrbitalError("Invalid degree argument")
@@ -235,14 +235,14 @@ def get_design_matrix(ifg, degree, offset, scale=100.0):
 
 
 def get_network_design_matrix(ifgs, degree, offset):
-    '''
+    """
     Returns larger format design matrix for networked error correction.
 
     The network design matrix includes rows which relate to those of NaN cells.
     :param ifgs: sequence of interferograms
     :param degree: PLANAR, QUADRATIC or PART_CUBIC
     :param offset: True to include offset cols, otherwise False.
-    '''
+    """
 
     if degree not in [PLANAR, QUADRATIC, PART_CUBIC]:
         raise OrbitalError("Invalid degree argument")
@@ -284,8 +284,8 @@ def get_network_design_matrix(ifgs, degree, offset):
 
 
 class OrbitalError(Exception):
-    '''
+    """
     Generic class for errors in orbital correction.
-    '''
+    """
 
     pass

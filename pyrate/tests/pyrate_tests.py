@@ -117,7 +117,7 @@ refminfrac:    0.8
 # orbfitlooksx/y: multi-look processing for orbital correction
 # orbrefest: remove reference phase
 # orbmaskflag: mask some patches for orbital correction
-orbfit:        0
+orbfit:        1
 orbfitmethod:  1
 orbfitdegrees: 1
 orbfitlksx:    0

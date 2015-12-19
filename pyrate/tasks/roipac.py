@@ -41,14 +41,14 @@ class RoipacHasRun(luigi.task.ExternalTask):
 
     fileName   = luigi.Parameter()
     headerFile = luigi.Parameter()
-
+    print 'fileName', fileName
+    print 'headerFile', headerFile
     def output(self):
         targets = [
             luigi.LocalTarget(self.fileName),
             luigi.LocalTarget(self.headerFile)]
         return targets
-
-
+    
 
 class ResourceHeaderExists(luigi.ExternalTask):
     '''
@@ -66,50 +66,47 @@ class ResourceHeaderExists(luigi.ExternalTask):
         return [luigi.LocalTarget(self.resourceHeader)]
 
 
-
 class ConvertFileToGeotiff(luigi.Task):
-    '''
+    """
     Task responsible for converting a ROIPAC file to GeoTif.
-    '''
+    """
 
-    inputFile   = luigi.Parameter()
-    projection  = luigi.Parameter()
-    outputDir   = luigi.Parameter(     config_path=InputParam(config.OBS_DIR))
-    noDataValue = luigi.FloatParameter(config_path=InputParam(config.NO_DATA_VALUE))
+    inputFile = luigi.Parameter()
+    projection = luigi.Parameter()
+    outputDir = luigi.Parameter(config_path=InputParam(config.OBS_DIR))
+    no_data_value = luigi.FloatParameter(
+        config_path=InputParam(config.NO_DATA_VALUE))
 
     def requires(self):
-        '''
+        """
         Overload of :py:meth:`luigi.Task.requires`.
 
         Ensures that the required input exists.
-        '''
-
-        self.headerFile = "%s.%s" % (self.inputFile, ROI_PAC_HEADER_FILE_EXT)
+        """
+        self.header_file = "%s.%s" % (self.inputFile, ROI_PAC_HEADER_FILE_EXT)
         tasks = [RoipacHasRun(
-            fileName = self.inputFile,
-            headerFile = self.headerFile)]
+            fileName=self.inputFile,
+            headerFile=self.header_file)]
 
         return tasks
 
     def run(self):
-        header = parse_header(self.headerFile)
+        header = parse_header(self.header_file)
 
         if ifc.PYRATE_DATUM not in header:  # DEM already has DATUM
             header[ifc.PYRATE_DATUM] = self.projection
-        to_geotiff(header, self.inputFile, self.outputFile, self.noDataValue)
+        to_geotiff(header, self.inputFile, self.output_file, self.no_data_value)
 
     def output(self):
-        '''
+        """
         Overload of :py:meth:`luigi.Task.output`.
 
         .. todo:: This is the same as for gamma... refactor.
-        '''
-
-        self.outputFile = os.path.join(
+        """
+        self.output_file = os.path.join(
             self.outputDir,
             '%s.tif' % os.path.splitext(os.path.basename(self.inputFile))[0])
-        return [luigi.file.LocalTarget(self.outputFile)]
-
+        return [luigi.file.LocalTarget(self.output_file)]
 
 
 class _DoConvertToGeotiffRoipac(IfgListMixin, luigi.WrapperTask):
@@ -122,10 +119,10 @@ class _DoConvertToGeotiffRoipac(IfgListMixin, luigi.WrapperTask):
         config_path = InputParam(config.ROIPAC_RESOURCE_HEADER))
 
     def priority(self):
-        '''
+        """
         The requires method of this Task *may* reqire the existence of a header
         file... so that needs to be checked first.
-        '''
+        """
 
         return ResourceHeaderExists.PRIORITY - 1
 
@@ -153,12 +150,12 @@ class _DoConvertToGeotiffRoipac(IfgListMixin, luigi.WrapperTask):
 
 
 class ConvertToGeotiff(luigi.WrapperTask):
-    '''
+    """
     Convert ROIPAC files to geotifs.
 
     This delegates the actual conversions tasks which operate on individual
     files and is purely a convenience wrapper.
-    '''
+    """
 
     resourceHeader = luigi.Parameter(
         default=None,

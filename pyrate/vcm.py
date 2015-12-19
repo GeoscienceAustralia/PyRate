@@ -88,7 +88,6 @@ def cvd(ifg, calc_alpha=False):
     # Alternative method to remove duplicate cells from Matlab Pirate
     #r = r[:ceil(len(r)/2)+nlines] # Reason for '+nlines' term unknown
 
-    # TODO: write a better way of getting rid of duplicate {r, acg} pairs - sets?
     # eg. array([x for x in set([(1,1), (2,2), (1,1)])])
     # the above shortens r by some number of cells
 

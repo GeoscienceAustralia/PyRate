@@ -9,6 +9,8 @@ Created on 31/3/13
 import unittest
 from os.path import join
 from itertools import product
+import os
+import numpy as np
 
 from numpy.linalg import pinv, inv
 from numpy import nan, isnan, array, reshape, median
@@ -20,27 +22,28 @@ from pyrate.shared import Ifg
 from pyrate.orbital import OrbitalError, orbital_correction
 from pyrate.orbital import get_design_matrix, get_network_design_matrix, get_num_params
 from pyrate.orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, QUADRATIC, PART_CUBIC
-from common import sydney5_mock_ifgs, MockIfg, SYD_TEST_TIF
+from common import sydney5_mock_ifgs, MockIfg, SYD_TEST_TIF, sydney5_ifgs
 from scipy.linalg import lstsq
+from pyrate.tests.common import SYD_TEST_MATLAB_ORBITAL_DIR
 
 DEG_LOOKUP = {
-    2 : PLANAR,
-    5 : QUADRATIC,
-    6 : PART_CUBIC, }
+    2: PLANAR,
+    5: QUADRATIC,
+    6: PART_CUBIC}
 
 NUM_COEF_LOOKUP = {
-    PLANAR : 2,
-    QUADRATIC : 5,
-    PART_CUBIC : 6, }
+    PLANAR: 2,
+    QUADRATIC: 5,
+    PART_CUBIC: 6}
 
 
 class SingleDesignMatrixTests(unittest.TestCase):
-    '''
+    """
     Tests to verify correctness of basic planar & quadratic design matrices or
     DMs. This class serves two purposes, ensuring the independent method DMs are
     produced correctly. Secondly, these indivdual DMs are subsets of the larger
     DM 'grid' required for the networked orbital correction method.
-    '''
+    """
 
     def setUp(self):
         # faked cell sizes
@@ -62,7 +65,6 @@ class SingleDesignMatrixTests(unittest.TestCase):
         exp = unittest_dm(self.m, INDEPENDENT_METHOD, PLANAR, offset)
         assert_array_equal(act, exp)
 
-
     def test_create_planar_dm_offsets(self):
         offset = True
         act = get_design_matrix(self.m, PLANAR, offset)
@@ -79,7 +81,6 @@ class SingleDesignMatrixTests(unittest.TestCase):
         self.assertEqual(act.shape, (self.m.num_cells, 5))
         exp = unittest_dm(self.m, INDEPENDENT_METHOD, QUADRATIC, offset)
         assert_array_equal(act, exp)
-
 
     def test_create_quadratic_dm_offsets(self):
         offset = True
@@ -117,7 +118,6 @@ class SingleDesignMatrixTests(unittest.TestCase):
         self.assertEqual(exp2.shape, (self.m.num_cells, ncol_exp))
         assert_array_equal(exp, exp2)
 
-
     def test_create_quadratic_dm_network(self):
         # quadratic version with networked method does not have offsets col
         ncol_exp = 5
@@ -138,7 +138,7 @@ class SingleDesignMatrixTests(unittest.TestCase):
 
 
 class IndependentCorrectionTests(unittest.TestCase):
-    '''Test cases for the orbital correction component of PyRate.'''
+    """Test cases for the orbital correction component of PyRate."""
 
     def setUp(self):
         self.ifgs = sydney5_mock_ifgs()
@@ -166,7 +166,6 @@ class IndependentCorrectionTests(unittest.TestCase):
         fwd_correction = reshape(dot(dm2, params), ifg.phase_data.shape)
         return ifg.phase_data - fwd_correction
 
-
     def check_correction(self, degree, method, offset):
         orig = array([c.phase_data.copy() for c in self.ifgs])
         exp = [self.alt_orbital_correction(i, degree, offset) for i in self.ifgs]
@@ -180,9 +179,8 @@ class IndependentCorrectionTests(unittest.TestCase):
         for i, (e, a) in enumerate(zip(exp, corrected)):
             assert_array_almost_equal(e, a, decimal=2)
 
-
     def check_results(self, ifgs, corrections):
-        '''Helper method for result verification'''
+        """Helper method for result verification"""
         for i, c in zip(ifgs, corrections):
             ys, xs = c.shape
             self.assertEqual(i.nrows, ys)
@@ -192,7 +190,6 @@ class IndependentCorrectionTests(unittest.TestCase):
             self.assertFalse(isnan(i.phase_data).all())
             self.assertFalse(isnan(c).all())
             self.assertTrue(c.ptp() != 0) # ensure range of values in grid
-
 
     def test_independent_correction_planar(self):
         self.check_correction(PLANAR, INDEPENDENT_METHOD, False)
@@ -214,7 +211,7 @@ class IndependentCorrectionTests(unittest.TestCase):
 
 
 class ErrorTests(unittest.TestCase):
-    '''Tests for the networked correction method'''
+    """Tests for the networked correction method"""
 
     def test_invalid_ifgs_arg(self):
         # min requirement is 1 ifg, can still subtract one epoch from the other
@@ -252,7 +249,7 @@ class ErrorTests(unittest.TestCase):
 
 
 class NetworkDesignMatrixTests(unittest.TestCase):
-    '''Contains tests verifying creation of sparse network design matrix.'''
+    """Contains tests verifying creation of sparse network design matrix."""
 
     def setUp(self):
         self.ifgs = sydney5_mock_ifgs()
@@ -267,7 +264,6 @@ class NetworkDesignMatrixTests(unittest.TestCase):
             ifg.X_SIZE = 90.0
             ifg.Y_SIZE = 89.5
 
-
     def test_planar_network_dm(self):
         ncoef = 2
         offset = False
@@ -275,7 +271,6 @@ class NetworkDesignMatrixTests(unittest.TestCase):
         self.assertEqual(act.shape, (self.ncells * self.nifgs, ncoef * self.nepochs))
         self.assertNotEqual(act.ptp(), 0)
         self.check_equality(ncoef, act, self.ifgs, offset)
-
 
     def test_planar_network_dm_offset(self):
         ncoef = 2 # NB: doesn't include offset col
@@ -286,7 +281,6 @@ class NetworkDesignMatrixTests(unittest.TestCase):
         self.assertNotEqual(act.ptp(), 0)
         self.check_equality(ncoef, act, self.ifgs, offset)
 
-
     def test_quadratic_network_dm(self):
         ncoef = 5
         offset = False
@@ -294,7 +288,6 @@ class NetworkDesignMatrixTests(unittest.TestCase):
         self.assertEqual(act.shape, (self.ncells * self.nifgs, ncoef * self.nepochs))
         self.assertNotEqual(act.ptp(), 0)
         self.check_equality(ncoef, act, self.ifgs, offset)
-
 
     def test_quadratic_network_dm_offset(self):
         ncoef = 5
@@ -305,7 +298,6 @@ class NetworkDesignMatrixTests(unittest.TestCase):
         self.assertNotEqual(act.ptp(), 0)
         self.check_equality(ncoef, act, self.ifgs, offset)
 
-
     def test_partcubic_network_dm(self):
         ncoef = 6
         offset = False
@@ -313,7 +305,6 @@ class NetworkDesignMatrixTests(unittest.TestCase):
         self.assertEqual(act.shape, (self.ncells * self.nifgs, ncoef * self.nepochs))
         self.assertNotEqual(act.ptp(), 0)
         self.check_equality(ncoef, act, self.ifgs, offset)
-
 
     def test_partcubic_network_dm_offset(self):
         ncoef = 6
@@ -324,15 +315,14 @@ class NetworkDesignMatrixTests(unittest.TestCase):
         self.assertNotEqual(act.ptp(), 0)
         self.check_equality(ncoef, act, self.ifgs, offset)
 
-
     def check_equality(self, ncoef, dm, ifgs, offset):
-        '''
+        """
         Internal test function to check subsets against network design matrix
         ncoef - base number of coefficients, without extra col for offsets
         dm - network design matrix to check the results
         ifgs - sequence of Ifg objs
         offset - boolean to include extra parameters for model offsets
-        '''
+        """
         deg = DEG_LOOKUP[ncoef]
         np = ncoef * self.nepochs # index of 1st offset col
 
@@ -362,11 +352,11 @@ class NetworkDesignMatrixTests(unittest.TestCase):
 
 # components for network correction testing
 def network_correction(ifgs, deg, off, ml_ifgs=None, tol=1e-6):
-    '''
+    """
     Compares results of orbital_correction() to alternate implementation.
     deg - PLANAR, QUADRATIC or PART_CUBIC
     off - True/False to calculate correction with offsets
-    '''
+    """
     ncells = ifgs[0].num_cells
 
     if ml_ifgs:
@@ -392,13 +382,13 @@ def network_correction(ifgs, deg, off, ml_ifgs=None, tol=1e-6):
     return [i.phase_data - orb for i, orb in zip(ifgs, orbs)]
 
 def _expand_corrections(ifgs, dm, params, ncoef, offsets):
-    '''
+    """
     Convenience func returns model converted to data points.
     dm: design matrix (do not filter/remove nan cells)
     params: model parameters array from pinv() * dm
     ncoef: number of model coefficients (2 planar, 5 quadratic)
     offsets: True/False to calculate correction with offsets
-    '''
+    """
     # NB: cannot work on singular ifgs due to date ID id/indexing requirement
     date_ids = get_date_ids(ifgs)
 
@@ -422,7 +412,7 @@ def _expand_corrections(ifgs, dm, params, ncoef, offsets):
 
 
 class NetworkCorrectionTests(unittest.TestCase):
-    '''Verifies orbital correction using network method and no multilooking'''
+    """Verifies orbital correction using network method and no multilooking"""
 
     def setUp(self):
         # fake some real ifg data by adding nans
@@ -438,10 +428,12 @@ class NetworkCorrectionTests(unittest.TestCase):
 
 
     def test_offset_inversion(self):
-        'Ensure pinv(DM)*obs gives equal results given constant change to fd'
+        """
+        Ensure pinv(DM)*obs gives equal results given constant change to fd
+        """
 
         def get_orbital_params():
-            'Returns pseudo-inverse of the DM'
+            """Returns pseudo-inverse of the DM"""
             ncells = self.ifgs[0].num_cells
             data = concatenate([i.phase_data.reshape(ncells) for i in self.ifgs])
             dm = get_network_design_matrix(self.ifgs, PLANAR, True)[~isnan(data)]
@@ -627,12 +619,78 @@ def get_date_ids(ifgs):
 
 
 def _add_nodata(ifgs):
-    '''Adds some NODATA/nan cells to the sydney mock ifgs'''
+    """Adds some NODATA/nan cells to the sydney mock ifgs"""
     ifgs[0].phase_data[0, :] = nan # 3 error cells
     ifgs[1].phase_data[2, 1:3] = nan # 2 error cells
     ifgs[2].phase_data[3, 2:3] = nan # 1 err
     ifgs[3].phase_data[1, 2] = nan # 1 err
     ifgs[4].phase_data[1, 1:3] = nan # 2 err
+
+
+class MatlabComparisonTests(unittest.TestCase):
+    """
+    This is the matlab comparison test of orbital correction functionality.
+    Tests use the following config
+    orbfit:        1
+    orbfitmethod:  2
+    orbfitdegrees: 1
+    orbfitlksx:    2
+    orbfitlksy:    2
+
+    """
+    def setUp(self):
+        from pyrate import config as cf
+        from pyrate.tests.common import IFMS5
+        import shutil
+        IFMS5 = IFMS5.split()
+        self.params = cf.get_config_params(
+            os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orbital_error.conf'))
+        self.ifgs = sydney5_ifgs()
+        for c, i in enumerate(self.ifgs):
+            i.open()
+            if not i.nan_converted:
+                i.convert_to_nans()
+
+            if not i.mm_converted:
+                i.convert_to_mm()
+            new_data_path = os.path.join(os.environ['PYRATEPATH'],
+                                         self.params[cf.OUT_DIR], IFMS5[c])
+            shutil.copyfile(i.data_path, new_data_path)
+            i.data_path = new_data_path
+
+            i.write_modified_phase()
+
+
+    def test_orbital_correction_matlab_equality(self):
+        from pyrate.scripts import run_pyrate
+
+        run_pyrate.remove_orbital_error(self.ifgs, self.params)
+
+        onlyfiles = [f for f in os.listdir(SYD_TEST_MATLAB_ORBITAL_DIR)
+            if os.path.isfile(os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, f))
+            and f.endswith('.csv') and f.__contains__('_orb_')]
+
+        for i, f in enumerate(onlyfiles):
+            ifg_data = np.genfromtxt(os.path.join(
+                SYD_TEST_MATLAB_ORBITAL_DIR, f), delimiter=',')
+            for k, j in enumerate(self.ifgs):
+                if f.split('_orb_')[-1].split('.')[0] == \
+                        os.path.split(j.data_path)[-1].split('.')[0]:
+                    print ifg_data[0][0], j.phase_data[0][0]
+                    # print ifg_data
+                    # print j.data
+
+                    # # all numbers equal
+                    # np.testing.assert_array_almost_equal(ifg_data,
+                    #     self.ifgs_with_nan[k].data, decimal=2)
+                    #
+                    # # means must also be equal
+                    # self.assertAlmostEqual(np.nanmean(ifg_data),
+                    #     np.nanmean(self.ifgs_with_nan[k].data), places=4)
+                    #
+                    # # number of nans must equal
+                    # self.assertEqual(np.sum(np.isnan(ifg_data)),
+                    #             np.sum(np.isnan(self.ifgs_with_nan[k].data)))
 
 
 if __name__ == "__main__":

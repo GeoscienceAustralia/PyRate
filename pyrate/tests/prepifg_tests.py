@@ -411,9 +411,6 @@ class MatlabEqualityTest(unittest.TestCase):
         self.ifgs = sydney5_ifgs()
         self.ifgs_with_nan = prepare_ifgs(self.ifgs,
                                           crop_opt=1, xlooks=1, ylooks=1)
-        for i in self.ifgs_with_nan:
-            if not i.mm_converted:
-                i.convert_to_mm()
 
     def tearDown(self):
         from pyrate.prepifg import mlooked_path
@@ -439,14 +436,16 @@ class MatlabEqualityTest(unittest.TestCase):
                 if f.split('_rad_')[-1].split('.')[0] == \
                         os.path.split(j.data_path)[-1].split('.')[0]:
                     np.testing.assert_array_almost_equal(ifg_data,
-                        self.ifgs_with_nan[k].phase_band.ReadAsArray(), decimal=2)
-
+                        self.ifgs_with_nan[k].phase_data, decimal=2)
 
     def test_matlab_prepifg_and_convert_wavelength(self):
         """
         Matlab to python prepifg equality test
         """
         # path to csv folders from matlab output
+        for i in self.ifgs_with_nan:
+            if not i.mm_converted:
+                i.convert_to_mm()
         from pyrate.tests.common import SYD_TEST_MATLAB_PREPIFG_DIR
 
         onlyfiles = [f for f in os.listdir(SYD_TEST_MATLAB_PREPIFG_DIR)
@@ -462,15 +461,16 @@ class MatlabEqualityTest(unittest.TestCase):
 
                     # all numbers equal
                     np.testing.assert_array_almost_equal(ifg_data,
-                        self.ifgs_with_nan[k].data, decimal=2)
+                        self.ifgs_with_nan[k].phase_data, decimal=2)
 
                     # means must also be equal
                     self.assertAlmostEqual(np.nanmean(ifg_data),
-                        np.nanmean(self.ifgs_with_nan[k].data), places=4)
+                        np.nanmean(self.ifgs_with_nan[k].phase_data), places=4)
 
                     # number of nans must equal
                     self.assertEqual(np.sum(np.isnan(ifg_data)),
-                                np.sum(np.isnan(self.ifgs_with_nan[k].data)))
+                        np.sum(np.isnan(self.ifgs_with_nan[k].phase_data)))
+
 
 
 if __name__ == "__main__":

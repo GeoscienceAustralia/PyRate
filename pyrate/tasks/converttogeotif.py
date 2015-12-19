@@ -7,6 +7,7 @@ from pyrate.tasks.gamma import ConvertToGeotiff as ConvertToGeotiffGamma
 ROIPAC_PROCESSOR = 0
 GAMMA_PROCESSOR = 1
 
+
 class ConvertToGeotiff(luigi.WrapperTask):
     processor = luigi.IntParameter(config_path=InputParam(config.PROCESSOR))
 

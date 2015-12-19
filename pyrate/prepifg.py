@@ -252,7 +252,9 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out, verbose):
     looks_path = mlooked_path(ifg.data_path, y_looks, crop_out)
     cmd += [ifg.data_path, looks_path]
     check_call(cmd)
-
+    print "=======================XXXXXXXXXXXXXXXXXX====================="
+    print ifg.data_path
+    print looks_path
     # now write the metadata from the input to the output
     if md is not None:
         new_lyr = gdal.Open(looks_path)
@@ -399,15 +401,17 @@ def custom_bounds(ifgs, xw, ytop, xe, ybot):
     i = ifgs[0]
 
     if ytop < ybot:
-        raise PreprocessError('ERROR Custom crop bounds: ifgyfirst must be greater than ifgylast')
+        raise PreprocessError('ERROR Custom crop bounds: '
+                              'ifgyfirst must be greater than ifgylast')
 
     if xe < xw:
-        raise PreprocessError('ERROR Custom crop bounds: ifgxfirst must be greater than ifgxlast')
+        raise PreprocessError('ERROR Custom crop bounds: '
+                              'ifgxfirst must be greater than ifgxlast')
 
     for par, crop, orig, step in zip(['x_first', 'x_last', 'y_first', 'y_last'],
-                                      [xw, xe, ytop, ybot],
-                                      [i.x_first, i.x_last, i.y_first, i.y_last],
-                                      [i.x_step, i.x_step, i.y_step, i.y_step]):
+                                     [xw, xe, ytop, ybot],
+                                     [i.x_first, i.x_last, i.y_first, i.y_last],
+                                     [i.x_step, i.x_step, i.y_step, i.y_step]):
         diff = crop - orig
         nint = round(diff / step)
 
@@ -450,8 +454,8 @@ def check_crop_coords(ifgs, xmin, ymin, xmax, ymax):
     i = ifgs[0]
 
     for par, crop, step in zip(['x_first', 'x_last', 'y_first', 'y_last'],
-                                [xmin, xmax, ymax, ymin],
-                                [i.x_step, i.x_step, i.y_step, i.y_step]):
+                               [xmin, xmax, ymax, ymin],
+                               [i.x_step, i.x_step, i.y_step, i.y_step]):
 
         # is diff of the given extent from grid a multiple of X|Y_STEP ?
         param = getattr(i, par)
@@ -459,7 +463,7 @@ def check_crop_coords(ifgs, xmin, ymin, xmax, ymax):
         remainder = abs(modf(diff / step)[0])
 
         # handle cases where division gives remainder near zero, or just < 1
-        if remainder > GRID_TOL and remainder < (1 - GRID_TOL):
+        if (remainder > GRID_TOL) and (remainder < (1 - GRID_TOL)):
             msg = "%s crop extent not within %s of grid coordinate"
             raise PreprocessError(msg % (par, GRID_TOL))
 

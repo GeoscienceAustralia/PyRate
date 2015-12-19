@@ -1,10 +1,10 @@
-'''
+"""
 Contains objects common to multiple parts of PyRate
 
 Created on 12/09/2012
 
-.. codeauthor:: Ben Davies
-'''
+.. codeauthor:: Ben Davies, Sudipta Basak
+"""
 
 import os
 import math
@@ -16,7 +16,7 @@ import logging
 
 try:
     from osgeo import gdal
-    from gdalconst import GA_Update, GA_ReadOnly
+    from gdalconst import GA_Update, GA_ReadOnly, GF_Write
 except ImportError:
     import gdal
 
@@ -38,9 +38,9 @@ GDAL_Y_FIRST = 3
 
 
 class RasterBase(object):
-    '''
+    """
     Base class for PyRate GeoTIFF based raster datasets.
-    '''
+    """
 
     def __init__(self, path):
         self.data_path = path
@@ -54,17 +54,14 @@ class RasterBase(object):
         name = self.__class__.__name__
         return "%s('%s')" % (name, self.data_path)
 
-
     def __repr__(self):
         name = self.__class__.__name__
         return "%s('%s')" % (name, self.data_path)
 
-
     def open(self, readonly=None):
-        '''
+        """
         Opens generic raster dataset.
-        '''
-        
+        """
         if self.dataset is not None:
             msg = "open() already called for %s" % self
             raise RasterException(msg)
@@ -126,9 +123,9 @@ class RasterBase(object):
 
     @property
     def shape(self):
-        '''
+        """
         Returns tuple of (Y,X) shape of the raster (as per numpy.shape).
-        '''
+        """
 
         return self.dataset.RasterYSize, self.dataset.RasterXSize
 
@@ -141,9 +138,9 @@ class RasterBase(object):
 
     @property
     def is_open(self):
-        '''
+        """
         Returns True if the underlying dataset has been opened by GDAL.
-        '''
+        """
 
         return self.dataset is not None
 
@@ -152,16 +149,17 @@ class RasterBase(object):
         return self._readonly
 
     def _get_band(self, band):
-        '''
+        """
         Wrapper (with error checking) for GDAL's Band.GetRasterBand() method.
 
         :param band: number of band, starting at 1
-        '''
+        """
 
         if self.dataset is not None:
             return self.dataset.GetRasterBand(band)
         else:
-            raise RasterException("Raster %s has not been opened" % self.data_path)
+            raise RasterException("Raster %s has not been opened"
+                                  % self.data_path)
 
 
 class Ifg(RasterBase):
@@ -171,9 +169,9 @@ class Ifg(RasterBase):
     """
 
     def __init__(self, path):
-        '''
+        """
         Interferogram constructor, for 2 band ROIPAC Ifg raster datasets.
-        '''
+        """
 
         RasterBase.__init__(self, path)
         self._phase_band = None
@@ -218,19 +216,19 @@ class Ifg(RasterBase):
             raise IfgException(msg)
 
     def convert_to_nans(self, val=0.0):
-        '''
+        """
         Converts given values in phase data to NaNs
         :param val: value to convert, default is 0
-        '''
+        """
         self.phase_data = where(np.isclose(self.phase_data, val, atol=1e-6),
                                 nan, self.phase_data)
         self.nan_converted = True
 
     @property
     def phase_band(self):
-        '''
+        """
         Returns a GDAL Band object for the phase band.
-        '''
+        """
 
         if self._phase_band is None:
             self._phase_band = self._get_band(PHASE_BAND)
@@ -238,9 +236,9 @@ class Ifg(RasterBase):
 
     @property
     def phase_data(self):
-        '''
+        """
         Returns entire phase band as an array.
-        '''
+        """
 
         if self._phase_data is None:
             self._phase_data = self.phase_band.ReadAsArray()
@@ -254,15 +252,15 @@ class Ifg(RasterBase):
         self.mm_converted = True
         if self.dataset.GetMetadataItem(META_UNITS) == MILLIMETRES:
             msg = '%s: ignored as previous wavelength conversion detected'
+            print 'in shared', msg
             logging.debug(msg % self.data_path)
+            self.phase_data = self.phase_data
             return
 
-        self.data = wavelength_radians_to_mm(self.phase_data,
+        self.phase_data = wavelength_radians_to_mm(self.phase_data,
                                                       self.wavelength)
-        self.dataset.SetMetadataItem(META_UNITS, MILLIMETRES)
         msg = '%s: converted wavelength to millimetres'
         logging.debug(msg % self.data_path)
-
 
     @phase_data.setter
     def phase_data(self, data):
@@ -270,28 +268,28 @@ class Ifg(RasterBase):
 
     @property
     def phase_rows(self):
-        '''
+        """
         Generator returning each row of the phase data.
-        '''
+        """
 
         for y in xrange(self.nrows):
-            r = self.phase_band.ReadAsArray(yoff=y, win_xsize=self.ncols, win_ysize=1)
+            r = self.phase_band.ReadAsArray(yoff=y,
+                                            win_xsize=self.ncols, win_ysize=1)
             yield r[0] # squeezes row from (1, WIDTH) to 1D array
-
 
     @property
     def nan_count(self):
-        '''
+        """
         Returns number of NaN cells in the phase data.
-        '''
+        """
         return nsum(isnan(self.phase_data))
 
 
     @property
     def nan_fraction(self):
-        '''
+        """
         Returns 0-1 (float) proportion of NaN cells for the phase band.
-        '''
+        """
         # don't cache nan_count as client code may modify phase data
         nan_count = self.nan_count
 
@@ -300,23 +298,29 @@ class Ifg(RasterBase):
             nan_count = nsum(np.isclose(self.phase_data, 0.0, atol=1e-6))
         return nan_count / float(self.num_cells)
 
-    def write_phase(self):
-        '''
+    def write_modified_phase(self, new_data_path=None):
+        """
         Writes phase data to disk.
-        '''
+        For this to work, a copy of the original file
+        """
 
         if self.is_read_only:
             raise IOError("Cannot write to read only Ifg")
-
-        self._phase_band.WriteArray(self.phase_data)
+        if new_data_path is None:
+            self.dataset = gdal.Open(self.data_path, GA_Update)
+        else:
+            self.dataset = gdal.Open(new_data_path, GA_Update)
+        self._phase_band = None
+        self.phase_band.WriteArray(self.phase_data)
+        self.dataset.SetMetadataItem(META_UNITS, MILLIMETRES)
 
 
 class Incidence(RasterBase):
 
     def __init__(self, path):
-        '''
+        """
         Incidence obj constructor.
-        '''
+        """
 
         RasterBase.__init__(self, path)
         self._incidence_band = None
@@ -338,9 +342,9 @@ class Incidence(RasterBase):
 
     @property
     def incidence_data(self):
-        '''
+        """
         Returns the entire incidence band as an array.
-        '''
+        """
 
         if self._incidence_data is None:
             self._incidence_data = self.incidence_band.ReadAsArray()
@@ -349,9 +353,9 @@ class Incidence(RasterBase):
 
     @property
     def azimuth_band(self):
-        '''
+        """
         Returns the GDALBand for the azimuth layer.
-        '''
+        """
 
         if self._azimuth_band is None:
             self._azimuth_band = self._get_band(2)
@@ -360,9 +364,9 @@ class Incidence(RasterBase):
 
     @property
     def azimuth_data(self):
-        '''
+        """
         Returns the entire incidence band as an array.
-        '''
+        """
 
         if self._azimuth_data is None:
             self._azimuth_data = self.azimuth_band.ReadAsArray()
@@ -383,9 +387,9 @@ class DEM(RasterBase):
 
     @property
     def height_band(self):
-        '''
+        """
         Returns the GDALBand for the elevation layer.
-        '''
+        """
 
         if self._band is None:
             self._band = self._get_band(1)
@@ -394,31 +398,31 @@ class DEM(RasterBase):
 
 
 class IfgException(Exception):
-    '''
+    """
     Generic exception class for interferogram errors.
-    '''
+    """
 
     pass
 
 class RasterException(Exception):
-    '''
+    """
     Generic exception for raster errors.
-    '''
+    """
 
     pass
 
 class PyRateException(Exception):
-    '''
+    """
     Generic exception class for PyRate S/W errors.
-    '''
+    """
 
     pass
 
 
 class EpochList(object):
-    '''
+    """
     Metadata container for epoch related information.
-    '''
+    """
 
     def __init__(self, dates=None, repeat=None, spans=None):
         self.dates = dates # list of unique dates from all the ifgs
@@ -433,11 +437,11 @@ class EpochList(object):
 
 
 def wavelength_radians_to_mm(data, wavelength):
-    '''
+    """
     Translates phase from radians to millimetres
     data: ifg phase data
     wavelength: normally included with SAR instrument pass data
-    '''
+    """
 
     # '4' is 2*2, the 1st 2 is that the raw signal is 'there and back', to get
     # the vector length between satellite and ground, half the signal is needed

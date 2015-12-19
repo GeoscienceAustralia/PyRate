@@ -150,7 +150,7 @@ class IfgIOTests(unittest.TestCase):
         i = Ifg(dest)
         i.open()
         i.phase_data[0,1:] = nan
-        i.write_phase()
+        i.write_modified_phase()
         del i
 
         # reopen to ensure data/nans can be read back out
@@ -170,7 +170,7 @@ class IfgIOTests(unittest.TestCase):
         self.assertTrue(self.ifg.is_read_only)
         self.ifg.open(readonly=True)
         self.assertTrue(self.ifg.is_read_only)
-        self.assertRaises(IOError, self.ifg.write_phase)
+        self.assertRaises(IOError, self.ifg.write_modified_phase)
 
     def test_phase_band_unopened_ifg(self):
         try:

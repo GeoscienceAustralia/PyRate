@@ -45,6 +45,7 @@ def process_ifgs(ifg_paths_or_instance, params):
                 i.convert_to_nans()
             if not i.mm_converted:
                 i.convert_to_mm()  # not used in vcm or linrate?
+                i.write_modified_phase()
         mst_grid = mst.mst_matrix_ifg_indices_as_boolean_array(ifgs)
     else:
         assert isinstance(ifg_paths_or_instance, matlab_mst.IfgListPyRate)
@@ -52,20 +53,22 @@ def process_ifgs(ifg_paths_or_instance, params):
         for i in ifgs:
             if not i.mm_converted:
                 i.convert_to_mm()  # not used in vcm or linrate?
+                i.write_modified_phase()
         ifg_instance_updated, epoch_list = \
             matlab_mst.get_nml(ifg_paths_or_instance,
                                nan_conversion=nan_conversion)
         mst_grid = matlab_mst.matlab_mst_boolean_array(ifg_instance_updated)
-    
-    # Estimate reference pixel location
-    refpx, refpy = find_reference_pixel(ifgs, params)  # where are these used?
-    
-    # Estimate and remove orbit errors    
+
+    refpx, refpy = find_reference_pixel(ifgs, params)
+
+    # Estimate and remove orbit errors
     if params[cf.ORBITAL_FIT] != 0:
         remove_orbital_error(ifgs, params)
         
     #TODO: Remove reference phase here
-       
+    # Estimate reference pixel location
+
+
     # Calculate interferogram noise
     # TODO: assign maxvar to ifg metadata (and geotiff)?
     maxvar = [vcm_module.cvd(i)[0] for i in ifgs]
@@ -121,11 +124,11 @@ def process_ifgs(ifg_paths_or_instance, params):
     # TODO: outputs?
 
     # final cleanup
-    while ifgs:
-        i = ifgs.pop()
-        i.write_phase()
-        i.dataset.FlushCache()
-        i = None  # force close    TODO: may need to implement close()
+    # while ifgs:
+    #     i = ifgs.pop()
+    #     i.write_phase()
+    #     i.dataset.FlushCache()
+    #     i = None  # force close    TODO: may need to implement close()
     logging.debug('PyRate run completed\n')
 
 
