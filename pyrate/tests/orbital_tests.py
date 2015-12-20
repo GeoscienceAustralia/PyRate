@@ -217,7 +217,6 @@ class ErrorTests(unittest.TestCase):
         # min requirement is 1 ifg, can still subtract one epoch from the other
         self.assertRaises(OrbitalError, get_network_design_matrix, [], PLANAR, True)
 
-
     def test_invalid_degree_arg(self):
         # test failure of a few different args for 'degree'
         ifgs = sydney5_mock_ifgs()
@@ -226,13 +225,11 @@ class ErrorTests(unittest.TestCase):
         for d in range(4, 7):
             self.assertRaises(OrbitalError, get_network_design_matrix, ifgs, d, True)
 
-
     def test_invalid_method(self):
         # test failure of a few different args for 'method'
         ifgs = sydney5_mock_ifgs()
         for m in [None, 5, -1, -3, 45.8]:
             self.assertRaises(OrbitalError, orbital_correction, ifgs, PLANAR, m, None)
-
 
     def test_multilooked_ifgs_arg(self):
         # check some bad args for network method with multilooked ifgs

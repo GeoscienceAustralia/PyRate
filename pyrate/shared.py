@@ -259,6 +259,7 @@ class Ifg(RasterBase):
 
         self.phase_data = wavelength_radians_to_mm(self.phase_data,
                                                       self.wavelength)
+        self.dataset.SetMetadataItem(META_UNITS, MILLIMETRES)
         msg = '%s: converted wavelength to millimetres'
         logging.debug(msg % self.data_path)
 
@@ -314,7 +315,6 @@ class Ifg(RasterBase):
         self._phase_band = None
         """
         self.phase_band.WriteArray(self.phase_data)
-        self.dataset.SetMetadataItem(META_UNITS, MILLIMETRES)
 
 
 class Incidence(RasterBase):

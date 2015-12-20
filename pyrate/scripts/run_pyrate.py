@@ -369,7 +369,12 @@ def main():
 
     # process copies of source data
     for wp, dp in zip(working_paths, dest_paths):
-        shutil.copy(wp, dp)
+        try:
+            shutil.copy(wp, dp)
+        except:
+            os.chmod(dp, 0660)
+            shutil.copy(wp, dp)
+            os.chmod(dp, 0660)
 
     ifg_instance = matlab_mst.IfgListPyRate(datafiles=dest_paths)
 
