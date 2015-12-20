@@ -23,37 +23,59 @@ class InputParam(dict):
 
 
 class IfgListMixin(object):
-    '''
+    """
     Mixin to aid access to commonly used computed values from the PyRate config
     file.
 
     .. todo:: This should perhaps be renamed to something like *ConfigMixin*
         for clarity, as it is ued for accessing more than the list of
         interferograms.
-    '''
+    """
 
     ifgListFile = luigi.Parameter(config_path=InputParam(config.IFG_FILE_LIST))
     obsDir = luigi.Parameter(config_path=InputParam(config.OBS_DIR))
+    out_dir = luigi.Parameter(config_path=InputParam(config.OUT_DIR))
 
     def ifgList(self, tif=True):
-        '''
+        """
         Get the list of interferograms to process.
 
         :param tif: Should the tif files be returned (*True*) or the raw
             interferograms (*False*). The latter will probably only be required
             before conversion to geotif files occurs.
-        '''
+        """
 
-        fileNames = config.parse_namelist(self.ifgListFile)
+        file_names = config.parse_namelist(self.ifgListFile)
 
         if tif:
-            fileNames = ['%s.tif' % os.path.splitext(os.path.basename(fn))[0] for fn in fileNames]
+            file_names = ['%s.tif' % os.path.splitext(os.path.basename(fn))[0] for fn in file_names]
 
-        obsDir = self.obsDir
-        if obsDir:
-            fileNames = [os.path.join(obsDir, fn) for fn in fileNames]
+        obs_dir = self.obsDir
+        if obs_dir:
+            file_names = [os.path.join(obs_dir, fn) for fn in file_names]
 
-        return fileNames
+        return file_names
+
+    def ifgTiffList(self, tif=True):
+        """
+        Get the list of interferograms to process.
+
+        :param tif: Should the tif files be returned (*True*) or the raw
+            interferograms (*False*). The latter will probably only be required
+            before conversion to geotif files occurs.
+        """
+
+        file_names = config.parse_namelist(self.ifgListFile)
+
+        if tif:
+            file_names = ['%s.tif' % os.path.splitext(os.path.basename(fn))[0] for fn in file_names]
+
+        out_dir = self.out_dir
+        if out_dir:
+            file_names = [os.path.join(out_dir, fn) for fn in file_names]
+
+        return file_names
+
 
     @property
     def extentsFileName(self):

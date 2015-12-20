@@ -33,16 +33,13 @@ from pyrate.roipac import *
 from pyrate.tasks.utils import InputParam, IfgListMixin
 
 
-
 class RoipacHasRun(luigi.task.ExternalTask):
-    '''
+    """
     Phaux task used to ensure that the required outputs from ROIPAC exist.
-    '''
+    """
 
-    fileName   = luigi.Parameter()
+    fileName = luigi.Parameter()
     headerFile = luigi.Parameter()
-    print 'fileName', fileName
-    print 'headerFile', headerFile
     def output(self):
         targets = [
             luigi.LocalTarget(self.fileName),
@@ -51,9 +48,9 @@ class RoipacHasRun(luigi.task.ExternalTask):
     
 
 class ResourceHeaderExists(luigi.ExternalTask):
-    '''
+    """
     Ensure that the resource header exists.
-    '''
+    """
 
     resourceHeader = luigi.Parameter()
 
@@ -73,7 +70,7 @@ class ConvertFileToGeotiff(luigi.Task):
 
     inputFile = luigi.Parameter()
     projection = luigi.Parameter()
-    outputDir = luigi.Parameter(config_path=InputParam(config.OBS_DIR))
+    outputDir = luigi.Parameter(config_path=InputParam(config.OUT_DIR))
     no_data_value = luigi.FloatParameter(
         config_path=InputParam(config.NO_DATA_VALUE))
 
@@ -111,12 +108,12 @@ class ConvertFileToGeotiff(luigi.Task):
 
 class _DoConvertToGeotiffRoipac(IfgListMixin, luigi.WrapperTask):
     projection = luigi.Parameter(
-        default = None,
-        config_path = InputParam(config.INPUT_IFG_PROJECTION))
+        default=None,
+        config_path=InputParam(config.INPUT_IFG_PROJECTION))
 
     resourceHeader = luigi.Parameter(
-        default = None,
-        config_path = InputParam(config.ROIPAC_RESOURCE_HEADER))
+        default=None,
+        config_path=InputParam(config.ROIPAC_RESOURCE_HEADER))
 
     def priority(self):
         """
