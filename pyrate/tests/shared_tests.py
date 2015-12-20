@@ -124,7 +124,7 @@ class IfgTests(unittest.TestCase):
 class IfgIOTests(unittest.TestCase):
 
     def setUp(self):
-        self.ifg = Ifg(join(SYD_TEST_TIF, 'geo_060619-061002.tif'))
+        self.ifg = Ifg(join(SYD_TEST_TIF, 'geo_070709-070813.tif'))
 
     def test_open(self):
         self.assertTrue(self.ifg.dataset is None)
@@ -145,18 +145,18 @@ class IfgIOTests(unittest.TestCase):
         # shutil.copy needs to copy writeable permission from src
         os.chmod(src, S_IRGRP | S_IWGRP | S_IWOTH | S_IROTH | S_IRUSR | S_IWUSR)
         shutil.copy(src, dest)
-        os.chmod(src, S_IRGRP | S_IROTH | S_IRUSR) # revert
+        os.chmod(src, S_IRGRP | S_IROTH | S_IRUSR)  # revert
 
         i = Ifg(dest)
         i.open()
-        i.phase_data[0,1:] = nan
+        i.phase_data[0, 1:] = nan
         i.write_modified_phase()
         del i
 
         # reopen to ensure data/nans can be read back out
         i = Ifg(dest)
         i.open(readonly=True)
-        assert_array_equal(True, isnan(i.phase_data[0,1:]) )
+        assert_array_equal(True, isnan(i.phase_data[0, 1:]))
         os.remove(dest)
 
 

@@ -638,26 +638,41 @@ class MatlabComparisonTests(unittest.TestCase):
     orbfitlksy:    2
 
     """
-    def setUp(self):
+
+    @classmethod
+    def setUpClass(cls):
         from pyrate import config as cf
-        from pyrate.tests.common import IFMS5
+        from pyrate.tests.common import IFMS5, SYD_TEST_TIF, sydney_data_setup
         import shutil
+
+        BASE_DIR = os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orb_test')
+
+        # start each full test run cleanly
+        shutil.rmtree(BASE_DIR, ignore_errors=True)
+
         IFMS5 = IFMS5.split()
-        self.params = cf.get_config_params(
+
+        cls.params = cf.get_config_params(
             os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orbital_error.conf'))
-        self.ifgs = sydney5_ifgs()
-        for c, i in enumerate(self.ifgs):
-            i.open()
+
+        data_paths = [os.path.join(SYD_TEST_TIF, p) for p in IFMS5]
+        new_data_paths = [os.path.join(BASE_DIR, os.path.basename(d))
+                          for d in data_paths]
+
+        os.makedirs(BASE_DIR)
+        for d in data_paths:
+            shutil.copy(d, os.path.join(BASE_DIR, os.path.basename(d)))
+
+        cls.ifgs = sydney_data_setup(datafiles=new_data_paths)
+
+        for c, i in enumerate(cls.ifgs):
+            if not i.is_open:
+                i.open()
             if not i.nan_converted:
                 i.convert_to_nans()
 
             if not i.mm_converted:
                 i.convert_to_mm()
-            new_data_path = os.path.join(os.environ['PYRATEPATH'],
-                                         self.params[cf.OUT_DIR], IFMS5[c])
-            shutil.copyfile(i.data_path, new_data_path)
-            i.data_path = new_data_path
-
             i.write_modified_phase()
 
 

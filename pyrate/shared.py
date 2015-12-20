@@ -284,7 +284,6 @@ class Ifg(RasterBase):
         """
         return nsum(isnan(self.phase_data))
 
-
     @property
     def nan_fraction(self):
         """
@@ -298,7 +297,7 @@ class Ifg(RasterBase):
             nan_count = nsum(np.isclose(self.phase_data, 0.0, atol=1e-6))
         return nan_count / float(self.num_cells)
 
-    def write_modified_phase(self, new_data_path=None):
+    def write_modified_phase(self):
         """
         Writes phase data to disk.
         For this to work, a copy of the original file
@@ -306,11 +305,14 @@ class Ifg(RasterBase):
 
         if self.is_read_only:
             raise IOError("Cannot write to read only Ifg")
+        """
+        # keep this block
         if new_data_path is None:
             self.dataset = gdal.Open(self.data_path, GA_Update)
         else:
             self.dataset = gdal.Open(new_data_path, GA_Update)
         self._phase_band = None
+        """
         self.phase_band.WriteArray(self.phase_data)
         self.dataset.SetMetadataItem(META_UNITS, MILLIMETRES)
 

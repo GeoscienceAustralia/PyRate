@@ -121,5 +121,4 @@ def linear_rate(ifgs, vcm, pthr, nsig, maxsig, mst=None):
     rate[error > maxsig] = nan
     error[error > maxsig] = nan
     samples[error > maxsig] = nan
-
     return rate, error, samples

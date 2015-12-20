@@ -370,6 +370,7 @@ def main():
     # process copies of source data
     for wp, dp in zip(working_paths, dest_paths):
         shutil.copy(wp, dp)
+
     ifg_instance = matlab_mst.IfgListPyRate(datafiles=dest_paths)
 
     if int(pars[cf.NETWORKX_OR_MATLAB_FLAG]):
