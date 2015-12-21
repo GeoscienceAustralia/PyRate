@@ -252,7 +252,6 @@ class Ifg(RasterBase):
         self.mm_converted = True
         if self.dataset.GetMetadataItem(META_UNITS) == MILLIMETRES:
             msg = '%s: ignored as previous wavelength conversion detected'
-            print 'in shared', msg
             logging.debug(msg % self.data_path)
             self.phase_data = self.phase_data
             return

@@ -64,7 +64,7 @@ def process_ifgs(ifg_paths_or_instance, params):
     # Estimate and remove orbit errors
     if params[cf.ORBITAL_FIT] != 0:
         remove_orbital_error(ifgs, params)
-        
+
     #TODO: Remove reference phase here
     # Estimate reference pixel location
 
@@ -158,6 +158,8 @@ def remove_orbital_error(ifgs, params):
                                     xlooks=params[cf.ORBITAL_FIT_LOOKS_X],
                                     ylooks=params[cf.ORBITAL_FIT_LOOKS_Y])
 
+    print ifgs[0].phase_data
+    print params[cf.ORBITAL_FIT_DEGREE]
     orbital.orbital_correction(ifgs,
                             degree=params[cf.ORBITAL_FIT_DEGREE],
                             method=params[cf.ORBITAL_FIT_METHOD],
@@ -277,8 +279,9 @@ def warp_required(xlooks, ylooks, crop):
     if xlooks > 1 or ylooks > 1:
         return True
 
-    if crop is None or crop == prepifg.ALREADY_SAME_SIZE:
+    if crop is None:
         return False
+
     return True
 
 
@@ -361,20 +364,8 @@ def main():
     # FIXME: make output ifgs here, or in process_ifgs() ?
     xlks, ylks, crop = transform_params(pars)
     base_ifg_paths = original_ifg_paths(pars[cf.IFG_FILE_LIST])
-    working_paths = working_ifg_paths(base_ifg_paths, xlks, ylks, crop)
-    dest_paths = dest_ifg_paths(working_paths, pars[cf.OUT_DIR])
 
-    if not os.path.exists(pars[cf.OUT_DIR]):
-        os.makedirs(pars[cf.OUT_DIR])
-
-    # process copies of source data
-    for wp, dp in zip(working_paths, dest_paths):
-        try:
-            shutil.copy(wp, dp)
-        except:
-            os.chmod(dp, 0660)
-            shutil.copy(wp, dp)
-            os.chmod(dp, 0660)
+    dest_paths = get_dest_paths(base_ifg_paths, crop, pars, xlks)
 
     ifg_instance = matlab_mst.IfgListPyRate(datafiles=dest_paths)
 
@@ -384,6 +375,14 @@ def main():
     else:
         print 'Running matlab mst'
         process_ifgs(ifg_instance, pars)
+
+
+def get_dest_paths(base_ifg_paths, crop, pars, xlks):
+    dest_mlooked_ifgs = [prepifg.mlooked_path(os.path.basename(q).split('.')[0]
+                + '.tif', looks=xlks, crop_out=crop) for q in  base_ifg_paths]
+
+    return [os.path.join( os.environ['PYRATEPATH'], pars[cf.OUT_DIR], p)
+            for p in dest_mlooked_ifgs]
 
 if __name__ == "__main__":
     main()
