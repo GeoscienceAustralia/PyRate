@@ -24,6 +24,7 @@ from subprocess import check_call
 from collections import namedtuple
 from os.path import splitext
 import numpy as np
+import shutil
 
 from numpy import array, where, nan, isnan, nanmean, float32, zeros, sum as nsum
 
@@ -82,7 +83,6 @@ def prepare_ifg(
     # only needed to cut out the required segment.
 
     do_multilook = xlooks > 1 or ylooks > 1
-
     # resolution=None completes faster for non-multilooked layers in gdalwarp
     res = None
     if do_multilook:
@@ -91,6 +91,10 @@ def prepare_ifg(
         res = [xlooks * raster.x_step, ylooks * raster.y_step]
 
     if not do_multilook and crop_opt == ALREADY_SAME_SIZE:
+        renamed_path = \
+            mlooked_path(raster.data_path, looks=xlooks, crop_out=crop_opt)
+        # rename file with mlooked path
+        shutil.move(raster.data_path, renamed_path)
         return None
 
     if not raster.is_open:
@@ -224,7 +228,6 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out, verbose):
     :param thresh: see thresh in prepare_ifgs().
     :param verbose: True to print gdalwarp output to stdout
     """
-
     if x_looks != y_looks:
         raise ValueError('X and Y looks mismatch')
 
@@ -252,9 +255,6 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out, verbose):
     looks_path = mlooked_path(ifg.data_path, y_looks, crop_out)
     cmd += [ifg.data_path, looks_path]
     check_call(cmd)
-    print "=======================XXXXXXXXXXXXXXXXXX====================="
-    print ifg.data_path
-    print looks_path
     # now write the metadata from the input to the output
     if md is not None:
         new_lyr = gdal.Open(looks_path)
