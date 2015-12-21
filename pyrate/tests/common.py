@@ -42,6 +42,13 @@ geo_061106-070326.tif
 geo_070326-070917.tif
 """
 
+UNWS5 = """geo_060828-061211.unw
+geo_061106-061211.unw
+geo_061106-070115.unw
+geo_061106-070326.unw
+geo_070326-070917.unw
+"""
+
 
 def sydney_data_setup(datafiles=None):
     '''Returns Ifg objs for the files in the sydney test dir

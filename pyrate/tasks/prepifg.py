@@ -12,25 +12,30 @@ from pyrate.tasks.utils import (
     RasterParam)
 from pyrate.scripts.run_pyrate import warp_required
 
+
 class GetAnalysisExtents(IfgListMixin, luigi.Task):
-    crop_opt  = luigi.IntParameter(                config_path=InputParam(config.IFG_CROP_OPT))
-    ifgxFirst = luigi.FloatParameter(default=None, config_path=InputParam(config.IFG_XFIRST))
-    ifgyFirst = luigi.FloatParameter(default=None, config_path=InputParam(config.IFG_YFIRST))
-    ifgxLast  = luigi.FloatParameter(default=None, config_path=InputParam(config.IFG_XLAST))
-    ifgyLast  = luigi.FloatParameter(default=None, config_path=InputParam(config.IFG_YLAST))
-    xlooks    = luigi.IntParameter(                config_path=InputParam(config.IFG_LKSX))
-    ylooks    = luigi.IntParameter(                config_path=InputParam(config.IFG_LKSY))
+    crop_opt = luigi.IntParameter(config_path=InputParam(config.IFG_CROP_OPT))
+    ifgx_first = luigi.FloatParameter(default=None,
+                                     config_path=InputParam(config.IFG_XFIRST))
+    ifgy_first = luigi.FloatParameter(default=None,
+                                     config_path=InputParam(config.IFG_YFIRST))
+    ifgx_last = luigi.FloatParameter(default=None,
+                                    config_path=InputParam(config.IFG_XLAST))
+    ifgy_last = luigi.FloatParameter(default=None,
+                                    config_path=InputParam(config.IFG_YLAST))
+    xlooks = luigi.IntParameter(config_path=InputParam(config.IFG_LKSX))
+    ylooks = luigi.IntParameter(config_path=InputParam(config.IFG_LKSY))
 
     def requires(self):
         return [ConvertToGeotiff()]
 
     def run(self):
-        userExts = (self.ifgxFirst, self.ifgyFirst, self.ifgxLast, self.ifgyLast)
+        userExts = (self.ifgx_first, self.ifgy_first, self.ifgx_last, self.ifgy_last)
 
         if not all(userExts):
             userExts = None
 
-        ifgs = [Ifg(path) for path in self.ifgList()]
+        ifgs = [Ifg(path) for path in self.ifgTiffList()]
 
         extents = getAnalysisExtent(
             self.crop_opt,
@@ -64,13 +69,13 @@ class PrepareInterferogram(IfgListMixin, luigi.WrapperTask):
     :param verbose: Controls level of gdalwarp output
     """
 
-    ifg      = RasterParam()
-    thresh   = luigi.FloatParameter(config_path=InputParam(
+    ifg = RasterParam()
+    thresh = luigi.FloatParameter(config_path=InputParam(
         config.NO_DATA_AVERAGING_THRESHOLD))
-    crop_opt = luigi.IntParameter(  config_path=InputParam(config.IFG_CROP_OPT))
-    xlooks   = luigi.IntParameter(  config_path=InputParam(config.IFG_LKSX))
-    ylooks   = luigi.IntParameter(  config_path=InputParam(config.IFG_LKSY))
-    verbose  = luigi.BooleanParameter(default=True, significant=False)
+    crop_opt = luigi.IntParameter(config_path=InputParam(config.IFG_CROP_OPT))
+    xlooks = luigi.IntParameter(config_path=InputParam(config.IFG_LKSX))
+    ylooks = luigi.IntParameter(config_path=InputParam(config.IFG_LKSY))
+    verbose = luigi.BooleanParameter(default=True, significant=False)
 
     def requires(self):
         return [GetAnalysisExtents()]
@@ -78,7 +83,7 @@ class PrepareInterferogram(IfgListMixin, luigi.WrapperTask):
     def run(self):
         with open(self.extentsFileName, 'rb') as extFile:
             extents = pickle.load(extFile)
-
+        print 'self.ifg:', self.ifg
         prepare_ifg(
             self.ifg,
             self.xlooks,
@@ -89,6 +94,7 @@ class PrepareInterferogram(IfgListMixin, luigi.WrapperTask):
             self.verbose)
 
     def output(self):
+        print mlooked_path(self.ifg.data_path, self.ylooks, self.crop_opt)
         if warp_required(self.xlooks, self.ylooks, self.crop_opt):
             return luigi.file.LocalTarget(
                 mlooked_path(self.ifg.data_path, self.ylooks, self.crop_opt))
@@ -111,7 +117,7 @@ class PrepareInterferograms(IfgListMixin, luigi.WrapperTask):
         self.extentsRemoved = False
 
     def requires(self):
-        return [PrepareInterferogram(ifg=Ifg(path)) for path in self.ifgList()]
+        return [PrepareInterferogram(ifg=Ifg(path)) for path in self.ifgTiffList()]
 
     def run(self):
         try:
