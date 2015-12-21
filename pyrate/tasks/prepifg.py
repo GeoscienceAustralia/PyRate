@@ -36,7 +36,6 @@ class GetAnalysisExtents(IfgListMixin, luigi.Task):
             userExts = None
 
         ifgs = [Ifg(path) for path in self.ifgTiffList()]
-        print ifgs
 
         extents = getAnalysisExtent(
             self.crop_opt,
@@ -84,7 +83,7 @@ class PrepareInterferogram(IfgListMixin, luigi.WrapperTask):
     def run(self):
         with open(self.extentsFileName, 'rb') as extFile:
             extents = pickle.load(extFile)
-
+        print 'self.ifg:', self.ifg
         prepare_ifg(
             self.ifg,
             self.xlooks,
@@ -95,6 +94,7 @@ class PrepareInterferogram(IfgListMixin, luigi.WrapperTask):
             self.verbose)
 
     def output(self):
+        print mlooked_path(self.ifg.data_path, self.ylooks, self.crop_opt)
         if warp_required(self.xlooks, self.ylooks, self.crop_opt):
             return luigi.file.LocalTarget(
                 mlooked_path(self.ifg.data_path, self.ylooks, self.crop_opt))
@@ -117,7 +117,7 @@ class PrepareInterferograms(IfgListMixin, luigi.WrapperTask):
         self.extentsRemoved = False
 
     def requires(self):
-        return [PrepareInterferogram(ifg=Ifg(path)) for path in self.ifgList()]
+        return [PrepareInterferogram(ifg=Ifg(path)) for path in self.ifgTiffList()]
 
     def run(self):
         try:

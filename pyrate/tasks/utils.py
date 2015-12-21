@@ -76,49 +76,46 @@ class IfgListMixin(object):
 
         return file_names
 
-
     @property
     def extentsFileName(self):
-        return os.path.join(self.obsDir, EXTENTS_FILE_NAME)
+        return os.path.join(self.out_dir, EXTENTS_FILE_NAME)
 
 
 
 class DictParam(luigi.Parameter):
-    '''
+    """
     Parameter for dictionaries.
 
     The parameter is serialised to a string using :py:mod:`pickle`.
-    '''
+    """
 
     def parse(self, string):
-        '''
+        """
         override of :py:meth:`luigi.Parameter.parse`.
-        '''
+        """
 
         sio = StringIO(string)
         return pickle.load(sio)
 
     def serialize(self, dct):
-        '''
+        """
         override of :py:meth:`luigi.Parameter.serialize`.
-        '''
+        """
 
         sio = StringIO()
         pickle.dump(dct, sio)
         return sio.getvalue()
 
 
-
 class RasterParam(DictParam):
-    '''
+    """
     Parameter representing a :py:class:`pyrate.shared.RasterBase` sub class.
-    '''
+    """
 
     def parse(self, string):
-        '''
+        """
         override of :py:meth:`DictParam.parse`.
-        '''
-
+        """
         dct = super(RasterParam, self).parse(string)
         rasterType = dct['type']
         path = dct['path']
@@ -134,18 +131,18 @@ class RasterParam(DictParam):
                 'rasterBase must be an inscance DEM, Ifg or Incidence is valid')
 
     def serialize(self, rasterBase):
-        '''
+        """
         override of :py:meth:`DictParam.serialize`.
-        '''
+        """
 
         path = rasterBase.data_path
 
         if isinstance(rasterBase, DEM):
-            d = {'type':'DEM', 'path':path}
+            d = {'type': 'DEM', 'path': path}
         elif isinstance(rasterBase, Ifg):
-            d = {'type':'Ifg', 'path':path}
+            d = {'type': 'Ifg', 'path': path}
         elif isinstance(rasterBase, Incidence):
-            d = {'type':'Incidence', 'path':path}
+            d = {'type': 'Incidence', 'path': path}
         else:
             raise luigi.parameter.UnknownParameterException(
                 'rasterBase must be an inscance DEM, Ifg or Incidence is valid')
