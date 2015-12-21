@@ -93,8 +93,8 @@ def prepare_ifg(
     if not do_multilook and crop_opt == ALREADY_SAME_SIZE:
         renamed_path = \
             mlooked_path(raster.data_path, looks=xlooks, crop_out=crop_opt)
-        # rename file with mlooked path
-        shutil.move(raster.data_path, renamed_path)
+        # copy file with mlooked path
+        shutil.copy(raster.data_path, renamed_path)
         return None
 
     if not raster.is_open:
