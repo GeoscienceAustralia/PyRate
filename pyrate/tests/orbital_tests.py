@@ -641,6 +641,8 @@ class MatlabComparisonTests(unittest.TestCase):
         from pyrate import config as cf
         from pyrate.tests.common import IFMS5, SYD_TEST_TIF, sydney_data_setup
         import shutil
+        from pyrate.scripts import run_pyrate
+        from pyrate.tests.common import UNWS5
 
         BASE_DIR = os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orb_test')
 
@@ -672,6 +674,8 @@ class MatlabComparisonTests(unittest.TestCase):
                 i.convert_to_mm()
             i.write_modified_phase()
 
+        run_pyrate.remove_orbital_error(cls.ifgs, cls.params)
+
 
     def test_orbital_correction_matlab_equality(self):
         from pyrate.scripts import run_pyrate
@@ -686,15 +690,14 @@ class MatlabComparisonTests(unittest.TestCase):
             ifg_data = np.genfromtxt(os.path.join(
                 SYD_TEST_MATLAB_ORBITAL_DIR, f), delimiter=',')
             for k, j in enumerate(self.ifgs):
-                if f.split('_orb_')[-1].split('.')[0] == \
-                        os.path.split(j.data_path)[-1].split('.')[0]:
-                    print ifg_data[0][0], j.phase_data[0][0]
-                    # print ifg_data
-                    # print j.data
-
+                if os.path.basename(j.data_path).split('.')[0] == \
+                        os.path.basename(f).split('_orb_')[1].split('.')[0]:
+                    print os.path.basename(j.data_path), os.path.basename(f)
+                    factor = ifg_data[0][0]/j.phase_data[0][0]
+                    print ifg_data.shape, j.phase_data.shape
                     # # all numbers equal
-                    # np.testing.assert_array_almost_equal(ifg_data,
-                    #     self.ifgs_with_nan[k].data, decimal=2)
+                    np.testing.assert_array_almost_equal(ifg_data,
+                        j.phase_data*factor, decimal=2)
                     #
                     # # means must also be equal
                     # self.assertAlmostEqual(np.nanmean(ifg_data),
