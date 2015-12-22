@@ -3,7 +3,7 @@ Collection of tests for orbital correction.
 
 Created on 31/3/13
 
-.. codeauthor:: Ben Davies
+.. codeauthor:: Ben Davies, Sudipta Basak
 '''
 
 import unittest
@@ -733,7 +733,6 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
         from pyrate.tests.common import SYD_TEST_TIF, sydney_data_setup
         from pyrate.tests.common import sydney_data_setup_ifg_file_list
         import shutil
-        import copy
 
         BASE_DIR = os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orb_test_method2')
 
@@ -743,10 +742,8 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
         cls.params = cf.get_config_params(
             os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orbital_error.conf'))
 
-        cls.params_orbfit_method_2 = copy.copy(cls.params)
-
         # change to orbital error correction method 2
-        cls.params_orbfit_method_2[cf.ORBITAL_FIT_METHOD] = 2
+        cls.params[cf.ORBITAL_FIT_METHOD] = 2
 
         data_paths = [os.path.join(SYD_TEST_TIF, p) for p in
                       sydney_data_setup_ifg_file_list()]
@@ -772,12 +769,9 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
 
     def test_orbital_correction_matlab_equality_orbfit_method_2(self):
         from pyrate.scripts import run_pyrate
-        from pyrate import config as cf
-        print self.params[cf.ORBITAL_FIT_METHOD]
-        print self.params_orbfit_method_2[cf.ORBITAL_FIT_METHOD]
 
         run_pyrate.remove_orbital_error(self.ifgs,
-                                        self.params_orbfit_method_2)
+                                        self.params)
 
         onlyfiles = [f for f in os.listdir(SYD_TEST_MATLAB_ORBITAL_DIR)
             if os.path.isfile(os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, f))
