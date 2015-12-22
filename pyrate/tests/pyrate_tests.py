@@ -207,7 +207,7 @@ def test_warp_required():
     nocrop = prepifg.ALREADY_SAME_SIZE
     assert run_pyrate.warp_required(xlooks=2, ylooks=1, crop=nocrop)
     assert run_pyrate.warp_required(xlooks=1, ylooks=2, crop=nocrop)
-    assert not run_pyrate.warp_required(xlooks=1, ylooks=1, crop=nocrop)
+    assert run_pyrate.warp_required(xlooks=1, ylooks=1, crop=nocrop)
     assert not run_pyrate.warp_required(xlooks=1, ylooks=1, crop=None)
 
     for c in prepifg.CROP_OPTIONS[:-1]:
@@ -222,11 +222,14 @@ def test_original_ifg_paths():
     assert paths[-1] == join(ifgdir, 'geo_070709-070813.tif')
 
 
-def test_working_ifg_paths():
-    # base file list shouldn't change if mlooking not required
-    src_paths = ['temp/ifg0.tif', 'temp/ifg1.tif']
-    assert run_pyrate.working_ifg_paths(src_paths, 1, 1, 4) == src_paths
-    assert run_pyrate.working_ifg_paths(src_paths, 0, 0, 4) == src_paths
+# def test_working_ifg_paths():
+#     # working ifg paths is not used anymore
+#     # base file list changes to the correct mlooked file even though
+#     # CROPOUT is the same as the original tif
+#     src_paths = ['temp/ifg0.tif', 'temp/ifg1.tif']
+#
+#     assert run_pyrate.working_ifg_paths(src_paths, 1, 1, 4) == src_paths
+#     assert run_pyrate.working_ifg_paths(src_paths, 0, 0, 4) == src_paths
 
 
 def test_working_ifg_paths_mlooked_exists_failure():

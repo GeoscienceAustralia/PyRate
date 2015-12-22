@@ -149,7 +149,6 @@ class IndependentCorrectionTests(unittest.TestCase):
             ifg.y_size = 89.5
             ifg.open()
 
-
     def alt_orbital_correction(self, ifg, deg, offset):
         # almost an exact translation of MATLAB version
         data = ifg.phase_data.reshape(ifg.num_cells)
@@ -158,26 +157,37 @@ class IndependentCorrectionTests(unittest.TestCase):
 
         dmt = dm.T
         invNbb = inv(dmt.dot(dm))
-        params = invNbb.dot(dmt.dot(fd))
+        orbparams = invNbb.dot(dmt.dot(fd))
         alt_params = lstsq(dm, fd)[0]
-        assert_array_almost_equal(params, alt_params, decimal=2) # FIXME: precision
+        # FIXME: precision
+        assert_array_almost_equal(orbparams, alt_params, decimal=2)
 
         dm2 = get_design_matrix(ifg, deg, offset)
-        fwd_correction = reshape(dot(dm2, params), ifg.phase_data.shape)
+
+        if offset:
+            fullorb = np.reshape(np.dot(dm2[:, :-1], orbparams[:-1]),
+                             ifg.phase_data.shape)
+        else:
+            fullorb = np.reshape(np.dot(dm2, orbparams), ifg.phase_data.shape)
+
+        offset_removal = np.nanmedian(
+            np.reshape(ifg.phase_data - fullorb, (1, -1)))
+        fwd_correction = fullorb - offset_removal
+        # ifg.phase_data -= (fullorb - offset_removal)
         return ifg.phase_data - fwd_correction
 
-    def check_correction(self, degree, method, offset):
+    def check_correction(self, degree, method, offset, decimal=2):
         orig = array([c.phase_data.copy() for c in self.ifgs])
         exp = [self.alt_orbital_correction(i, degree, offset) for i in self.ifgs]
         orbital_correction(self.ifgs, degree, method, None, offset)
         corrected = array([c.phase_data for c in self.ifgs])
 
         self.assertFalse((orig == corrected).all())
-        self.check_results(self.ifgs, orig) # test shape, data is non zero
+        self.check_results(self.ifgs, orig)  # test shape, data is non zero
 
         # FIXME: is decimal=2 close enough?
         for i, (e, a) in enumerate(zip(exp, corrected)):
-            assert_array_almost_equal(e, a, decimal=2)
+            assert_array_almost_equal(e, a, decimal=decimal)
 
     def check_results(self, ifgs, corrections):
         """Helper method for result verification"""
@@ -189,7 +199,7 @@ class IndependentCorrectionTests(unittest.TestCase):
             # ensure there is real data
             self.assertFalse(isnan(i.phase_data).all())
             self.assertFalse(isnan(c).all())
-            self.assertTrue(c.ptp() != 0) # ensure range of values in grid
+            self.assertTrue(c.ptp() != 0)  # ensure range of values in grid
 
     def test_independent_correction_planar(self):
         self.check_correction(PLANAR, INDEPENDENT_METHOD, False)
@@ -207,7 +217,7 @@ class IndependentCorrectionTests(unittest.TestCase):
         self.check_correction(PART_CUBIC, INDEPENDENT_METHOD, False)
 
     def test_independent_correction_partcubic_offsets(self):
-        self.check_correction(PART_CUBIC, INDEPENDENT_METHOD, True)
+        self.check_correction(PART_CUBIC, INDEPENDENT_METHOD, True, decimal=1)
 
 
 class ErrorTests(unittest.TestCase):
@@ -242,7 +252,6 @@ class ErrorTests(unittest.TestCase):
         # ensure failure if # ifgs doesn't match # mlooked ifgs
         args = (ifgs, PLANAR, NETWORK_METHOD, ifgs[:4])
         self.assertRaises(OrbitalError, orbital_correction, *args)
-
 
 
 class NetworkDesignMatrixTests(unittest.TestCase):
@@ -378,6 +387,7 @@ def network_correction(ifgs, deg, off, ml_ifgs=None, tol=1e-6):
     # tricky: get expected result before orbital_correction() modifies ifg phase
     return [i.phase_data - orb for i, orb in zip(ifgs, orbs)]
 
+
 def _expand_corrections(ifgs, dm, params, ncoef, offsets):
     """
     Convenience func returns model converted to data points.
@@ -405,7 +415,6 @@ def _expand_corrections(ifgs, dm, params, ncoef, offsets):
 
         corrections.append(cor)
     return corrections
-
 
 
 class NetworkCorrectionTests(unittest.TestCase):
@@ -489,7 +498,6 @@ class NetworkCorrectionTests(unittest.TestCase):
         deg, offset = PART_CUBIC, True
         exp = network_correction(self.ifgs, deg, offset)
         self.verify_corrections(self.ifgs, exp, deg, offset)
-
 
     def verify_corrections(self, ifgs, exp, deg, offset):
         # checks orbital correction against unit test version
@@ -672,9 +680,7 @@ class MatlabComparisonTests(unittest.TestCase):
 
             if not i.mm_converted:
                 i.convert_to_mm()
-            i.write_modified_phase()
-
-        run_pyrate.remove_orbital_error(cls.ifgs, cls.params)
+                i.write_modified_phase()
 
     def test_orbital_correction_matlab_equality(self):
         from pyrate.scripts import run_pyrate
@@ -685,27 +691,27 @@ class MatlabComparisonTests(unittest.TestCase):
             if os.path.isfile(os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, f))
             and f.endswith('.csv') and f.__contains__('_orb_')]
 
+        count = 0
         for i, f in enumerate(onlyfiles):
             ifg_data = np.genfromtxt(os.path.join(
                 SYD_TEST_MATLAB_ORBITAL_DIR, f), delimiter=',')
             for k, j in enumerate(self.ifgs):
                 if os.path.basename(j.data_path).split('.')[0] == \
-                        os.path.basename(f).split('_orb_')[1].split('.')[0]:
-                    print os.path.basename(j.data_path), os.path.basename(f)
-                    factor = ifg_data[0][0]/j.phase_data[0][0]
-                    print ifg_data.shape, j.phase_data.shape
-                    # # all numbers equal
-                    # np.testing.assert_array_almost_equal(ifg_data,
-                    #     j.phase_data*factor, decimal=2)
-                    #
-                    # # means must also be equal
-                    # self.assertAlmostEqual(np.nanmean(ifg_data),
-                    #     np.nanmean(self.ifgs_with_nan[k].data), places=4)
-                    #
-                    # # number of nans must equal
-                    # self.assertEqual(np.sum(np.isnan(ifg_data)),
-                    #             np.sum(np.isnan(self.ifgs_with_nan[k].data)))
+                        os.path.basename(f).split('_orb_planar_1lks_method1_')[1].split('.')[0]:
+                    count += 1
+                    # all numbers equal
+                    np.testing.assert_array_almost_equal(ifg_data,
+                        j.phase_data, decimal=2)
 
+                    # means must also be equal
+                    self.assertAlmostEqual(np.nanmean(ifg_data),
+                        np.nanmean(j.phase_data), places=2)
+
+                    # number of nans must equal
+                    self.assertEqual(np.sum(np.isnan(ifg_data)),
+                                np.sum(np.isnan(j.phase_data)))
+
+        self.assertEqual(count, len(self.ifgs))  # ensures that we have looped
 
 if __name__ == "__main__":
     unittest.main()

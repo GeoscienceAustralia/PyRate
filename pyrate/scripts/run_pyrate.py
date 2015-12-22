@@ -158,8 +158,6 @@ def remove_orbital_error(ifgs, params):
                                     xlooks=params[cf.ORBITAL_FIT_LOOKS_X],
                                     ylooks=params[cf.ORBITAL_FIT_LOOKS_Y])
 
-    print ifgs[0].phase_data
-    print params[cf.ORBITAL_FIT_DEGREE]
     orbital.orbital_correction(ifgs,
                             degree=params[cf.ORBITAL_FIT_DEGREE],
                             method=params[cf.ORBITAL_FIT_METHOD],
@@ -332,6 +330,13 @@ def init_logging(level):
     logging.debug('Log started')
 
 
+def get_dest_paths(base_paths, crop, params, looks):
+    dest_mlooked_ifgs = [prepifg.mlooked_path(os.path.basename(q).split('.')[0]
+        + '.tif', looks=looks, crop_out=crop) for q in base_paths]
+
+    return [os.path.join(os.environ['PYRATEPATH'], params[cf.OUT_DIR], p)
+            for p in dest_mlooked_ifgs]
+
 # TODO: expand CLI documentation
 # TODO: ensure clean exception handling
 # TODO: add parameter error checking: induce fail fast before number crunching
@@ -375,14 +380,6 @@ def main():
     else:
         print 'Running matlab mst'
         process_ifgs(ifg_instance, pars)
-
-
-def get_dest_paths(base_ifg_paths, crop, pars, xlks):
-    dest_mlooked_ifgs = [prepifg.mlooked_path(os.path.basename(q).split('.')[0]
-                + '.tif', looks=xlks, crop_out=crop) for q in  base_ifg_paths]
-
-    return [os.path.join( os.environ['PYRATEPATH'], pars[cf.OUT_DIR], p)
-            for p in dest_mlooked_ifgs]
 
 if __name__ == "__main__":
     main()
