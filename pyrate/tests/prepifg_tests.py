@@ -349,9 +349,6 @@ def test_mlooked_path():
 class LocalMultilookTests(unittest.TestCase):
     """Tests for local testing functions"""
 
-    def test_mlookup_paths(self):
-        test_mlooked_path()
-
     def test_multilooking_thresh(self):
         data = ones((3, 6))
         data[0] = nan
@@ -470,7 +467,6 @@ class MatlabEqualityTest(unittest.TestCase):
                     # number of nans must equal
                     self.assertEqual(np.sum(np.isnan(ifg_data)),
                         np.sum(np.isnan(self.ifgs_with_nan[k].phase_data)))
-
 
 
 if __name__ == "__main__":

@@ -177,7 +177,7 @@ def remove_orbital_error(ifgs, params):
 
 def check_orbital_ifgs(ifgs, flags):
     count = sum([f == META_REMOVED for f in flags])
-    if count < len(flags) and count > 0:
+    if (count < len(flags)) and (count > 0):
         msg = 'Detected mix of corrected and uncorrected orbital error in ifgs'
         logging.debug(msg)
 

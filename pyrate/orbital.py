@@ -143,8 +143,7 @@ def _independent_correction(ifg, degree, offset):
                              ifg.phase_data.shape)
     else:
         fullorb = np.reshape(np.dot(dm, model), ifg.phase_data.shape)
-    offset_removal = np.nanmedian(
-            np.reshape(ifg.phase_data - fullorb, (1, -1)))
+    offset_removal = np.nanmedian( np.ravel(ifg.phase_data - fullorb))
     ifg.phase_data -= (fullorb - offset_removal)
 
 
@@ -158,7 +157,6 @@ def _network_correction(ifgs, degree, offset, m_ifgs=None):
     :param offset: True to calculate the model using offsets
     :param m_ifgs: multilooked ifgs (sequence must be mlooked versions of 'ifgs' arg)
     """
-
     # get DM & filter out NaNs
     src_ifgs = ifgs if m_ifgs is None else m_ifgs
     vphase = vstack([i.phase_data.reshape((i.num_cells, 1)) for i in src_ifgs])
@@ -184,11 +182,11 @@ def _network_correction(ifgs, degree, offset, m_ifgs=None):
 
         # offset estimation
         if offset:
-            tmp = i.phase_data - orb
-            orb += median(tmp[~isnan(tmp)]) # bring all ifgs to same base level
+            tmp = np.ravel(i.phase_data - orb)
+            # bring all ifgs to same base level
+            orb -= np.nanmedian(tmp)
 
-        i.phase_data -= orb # remove orbital error from the ifg
-
+        i.phase_data -= orb  # remove orbital error from the ifg
 
 # TODO: subtract reference pixel coordinate from x and y
 def get_design_matrix(ifg, degree, offset, scale=100.0):
@@ -260,7 +258,7 @@ def get_network_design_matrix(ifgs, degree, offset):
 
     # init sparse network design matrix
     nepochs = get_epoch_count(ifgs)
-    ncoef = get_num_params(degree) # no offsets: they are made separately below
+    ncoef = get_num_params(degree)  # no offsets: they are made separately below
     shape = [ifgs[0].num_cells * nifgs, ncoef * nepochs]
 
     if offset:
