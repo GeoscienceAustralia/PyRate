@@ -3,11 +3,12 @@ Module for calculating orbital correction for interferograms.
 
 Created on 31/3/13
 
-.. codeauthor:: Ben Davies
+.. codeauthor:: Ben Davies, Sudipta Basak
 '''
 
 from numpy import empty, isnan, reshape, float32, squeeze
 from numpy import dot, vstack, zeros, median, meshgrid
+import numpy as np
 from scipy.linalg import lstsq
 from numpy.linalg import pinv
 
@@ -119,27 +120,32 @@ def get_num_params(degree, offset=None):
 
 
 def _independent_correction(ifg, degree, offset):
-    '''
+    """
     Calculates and removes orbital correction from an ifg.
 
     .. warn:: Changes are made in place to the Ifg obj.
 
     :param ifg: the ifg to remove remove the orbital error from
     :param degree: type of model to use PLANAR, QUADRATIC etc
-    :param offset:
-    '''
-
-    vphase = reshape(ifg.phase_data, ifg.num_cells) # vectorise, keeping NODATA
+    :param offset: boolean
+    """
+    vphase = reshape(ifg.phase_data, ifg.num_cells)  # vectorise, keeping NODATA
     dm = get_design_matrix(ifg, degree, offset)
 
     # filter NaNs out before getting model
     clean_dm = dm[~isnan(vphase)]
     data = vphase[~isnan(vphase)]
-    model = lstsq(clean_dm, data)[0] # first arg is the model params
+    model = lstsq(clean_dm, data)[0]  # first arg is the model params
 
     # calculate forward model & morph back to 2D
-    correction = reshape(dot(dm, model), ifg.phase_data.shape)
-    ifg.phase_data -= correction
+    if offset:
+        fullorb = np.reshape(np.dot(dm[:, :-1], model[:-1]),
+                             ifg.phase_data.shape)
+    else:
+        fullorb = np.reshape(np.dot(dm, model), ifg.phase_data.shape)
+    offset_removal = np.nanmedian(
+            np.reshape(ifg.phase_data - fullorb, (1, -1)))
+    ifg.phase_data -= (fullorb - offset_removal)
 
 
 def _network_correction(ifgs, degree, offset, m_ifgs=None):
@@ -229,7 +235,7 @@ def get_design_matrix(ifg, degree, offset, scale=100.0):
         dm[:, 4] = x
         dm[:, 5] = y
     if offset is True:
-        dm[:, -1] = 1
+        dm[:, -1] = np.ones(ifg.num_cells)
 
     return dm
 
