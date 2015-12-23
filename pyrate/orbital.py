@@ -143,7 +143,7 @@ def _independent_correction(ifg, degree, offset):
                              ifg.phase_data.shape)
     else:
         fullorb = np.reshape(np.dot(dm, model), ifg.phase_data.shape)
-    offset_removal = np.nanmedian( np.ravel(ifg.phase_data - fullorb))
+    offset_removal = np.nanmedian(np.ravel(ifg.phase_data - fullorb))
     ifg.phase_data -= (fullorb - offset_removal)
 
 

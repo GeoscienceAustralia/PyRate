@@ -74,6 +74,11 @@ class RasterBase(object):
             raise IOError("Cannot open write protected file for writing")
 
         flag = GA_ReadOnly if self._readonly else GA_Update
+
+        if not os.path.exists(self.data_path):
+            raise IOError('The file {path} does not exist.'
+                    'Consider running prepifg'.format(path=self.data_path))
+
         self.dataset = gdal.Open(self.data_path, flag)
 
         if self.dataset is None:

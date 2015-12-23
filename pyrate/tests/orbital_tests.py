@@ -642,8 +642,6 @@ class MatlabComparisonTests(unittest.TestCase):
     orbfitlksy:    2
 
     """
-    # TODO: Write tests and implementation for ORBITMETHOD==2
-
     @classmethod
     def setUpClass(cls):
         from pyrate import config as cf
@@ -725,7 +723,7 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
     orbfitlksy:    2
 
     """
-    # TODO: Write tests and implementation for ORBITMETHOD==2
+    # TODO: Write tests and implementation for various looks and degrees
 
     @classmethod
     def setUpClass(cls):

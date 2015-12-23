@@ -3,6 +3,7 @@ Main workflow script for PyRate
 
 Created on 17/09/2012
 @author: Ben Davies, NCI
+@author: Sudipta Basak, GA
 """
 
 import os, sys, shutil, logging, datetime
@@ -44,7 +45,7 @@ def process_ifgs(ifg_paths_or_instance, params):
             if nan_conversion:  # nan conversion happens here in networkx mst
                 i.convert_to_nans()
             if not i.mm_converted:
-                i.convert_to_mm()  # not used in vcm or linrate?
+                i.convert_to_mm()
                 i.write_modified_phase()
         mst_grid = mst.mst_matrix_ifg_indices_as_boolean_array(ifgs)
     else:
@@ -52,7 +53,7 @@ def process_ifgs(ifg_paths_or_instance, params):
         ifgs = ifg_paths_or_instance.ifgs
         for i in ifgs:
             if not i.mm_converted:
-                i.convert_to_mm()  # not used in vcm or linrate?
+                i.convert_to_mm()
                 i.write_modified_phase()
         ifg_instance_updated, epoch_list = \
             matlab_mst.get_nml(ifg_paths_or_instance,
@@ -61,7 +62,7 @@ def process_ifgs(ifg_paths_or_instance, params):
 
     # Estimate reference pixel location
     refpx, refpy = find_reference_pixel(ifgs, params)
-    print refpx, refpy
+
     # Estimate and remove orbit errors
     if params[cf.ORBITAL_FIT] != 0:
         remove_orbital_error(ifgs, params)

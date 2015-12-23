@@ -51,7 +51,8 @@ class RefPhsEstimationMatlabTest(unittest.TestCase):
 
         base_ifg_paths = run_pyrate.original_ifg_paths(params[cf.IFG_FILE_LIST])
 
-        dest_paths = run_pyrate.get_dest_paths(base_ifg_paths, crop, params, xlks)
+        dest_paths = run_pyrate.get_dest_paths(base_ifg_paths, crop,
+                                               params, xlks)
 
         ifg_instance = matlab_mst.IfgListPyRate(datafiles=dest_paths)
 
