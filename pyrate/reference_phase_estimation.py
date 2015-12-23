@@ -19,7 +19,6 @@ def estimate_ref_phase(ifgs, params, refpx, refpy):
             ifg_phase_data_sum += i.phase_data
         comp = np.isnan(ifg_phase_data_sum)  # this is the same as in Matlab
         comp = np.ravel(comp, order='F')  # this is the same as in Matlab
-        print comp[:50]
         for n, i in enumerate(ifgs):
             ifgv = np.ravel(i.phase_data, order='F')
             ifgv[comp == 1] = np.nan
