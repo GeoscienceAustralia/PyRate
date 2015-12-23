@@ -9,8 +9,18 @@ from pyrate import config as cf
 
 
 def estimate_ref_phase(ifgs, params, refpx, refpy):
+    """
+    :param ifgs: list of interferrograms
+    :param params: parameters of the simulation
+    :param refpx: reference pixel found by ref pixel method
+    :param refpy: reference pixel found by ref pixel method
+    :returns:
+        :ref_phs: reference phase correction
+        :ifgs: reference phase data removed list of ifgs
+    """
     number_ifgs = len(ifgs)
     ref_phs = np.zeros(number_ifgs)
+    _validate_ifgs(ifgs)
 
     # set reference phase as the average of the whole image (recommended)
     if int(params[cf.REF_EST_METHOD]) == 1:
@@ -26,11 +36,22 @@ def estimate_ref_phase(ifgs, params, refpx, refpy):
             ref_phs[n] = np.nanmedian(ifgv)
             i.phase_data -= ref_phs[n]
     else:
-        raise NotImplementedError('This ref estimation method '
+        raise ReferencePhaseError('This ref estimation method '
                                   'has not been implemetned. Use refest=1')
 
     return ref_phs, ifgs
 
+
+def _validate_ifgs(ifgs):
+    if len(ifgs) < 2:
+        raise ReferencePhaseError('Need to provide at least 2 ifgs')
+
+
+class ReferencePhaseError(Exception):
+    """
+    Generic class for errors in reference phase estimation.
+    """
+    pass
 
 if __name__ == "__main__":
     import os
@@ -69,8 +90,6 @@ if __name__ == "__main__":
 
     if params[cf.ORBITAL_FIT] != 0:
         run_pyrate.remove_orbital_error(ifgs, params)
-
-
 
     ref_phs, ifgs = estimate_ref_phase(ifgs, params, refx, refy)
     print ref_phs
