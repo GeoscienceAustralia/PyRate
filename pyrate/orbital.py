@@ -188,6 +188,7 @@ def _network_correction(ifgs, degree, offset, m_ifgs=None):
 
         i.phase_data -= orb  # remove orbital error from the ifg
 
+
 # TODO: subtract reference pixel coordinate from x and y
 def get_design_matrix(ifg, degree, offset, scale=100.0):
     """

@@ -59,14 +59,15 @@ def process_ifgs(ifg_paths_or_instance, params):
                                nan_conversion=nan_conversion)
         mst_grid = matlab_mst.matlab_mst_boolean_array(ifg_instance_updated)
 
+    # Estimate reference pixel location
     refpx, refpy = find_reference_pixel(ifgs, params)
-
+    print refpx, refpy
     # Estimate and remove orbit errors
     if params[cf.ORBITAL_FIT] != 0:
         remove_orbital_error(ifgs, params)
 
     #TODO: Remove reference phase here
-    # Estimate reference pixel location
+
 
 
     # Calculate interferogram noise
@@ -202,14 +203,14 @@ def find_reference_pixel(ifgs, params):
     if refy > ifgs[0].nrows - 1:
         raise ValueError("Invalid reference pixel Y coordinate: %s" % refy)
         
-    if refx >= 0 and refy >= 0:
+    if refx == 0 or refy == 0:  # matlab equivalent
+        logging.debug('Calculating reference pixel')
+        refy, refx = refpixel.ref_pixel(ifgs, params[cf.REFNX],
+            params[cf.REFNY], params[cf.REF_CHIP_SIZE], params[cf.REF_MIN_FRAC])
+    else:
         msg = 'Reusing config file reference pixel (%s, %s)'
         logging.debug(msg % (refx, refy))
-        return (refy, refx) # reuse preset ref pixel
-    else:    
-        logging.debug('Calculating reference pixel')        
-        refy, refx = refpixel.ref_pixel(ifgs, params[cf.REFNX], params[cf.REFNY],
-                              params[cf.REF_CHIP_SIZE], params[cf.REF_MIN_FRAC])
+        # reuse preset ref pixel
 
     logging.debug('Reference pixel coordinate: (%s, %s)' % (refx, refy))
     return refx, refy

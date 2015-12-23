@@ -11,6 +11,7 @@ from os.path import join
 from pyrate import config
 from common import SYD_TEST_DIR, SYD_TEST_TIF
 
+
 class ConfigTest(unittest.TestCase):
     def test_read_param_file(self):
         conf_path = join(SYD_TEST_DIR, 'pyrate.conf')
@@ -18,7 +19,7 @@ class ConfigTest(unittest.TestCase):
         for k in params.keys():
             assert k and len(k) > 1
             assert params[k] != ''
-            assert not k.endswith(":") # are the colons removed?
+            assert not k.endswith(":")  # are the colons removed?
 
     def test_read_param_file_no_refpixel(self):
         # ensure the parser can handle empty fields

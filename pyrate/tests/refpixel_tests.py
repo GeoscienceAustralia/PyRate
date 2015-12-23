@@ -5,12 +5,16 @@ Collection of tests for validating PyRate's reference pixel code.
 '''
 
 import unittest
+import os
+import copy
 from numpy import nan, mean, std, isnan
 
 from common import sydney_data_setup, MockIfg
 from pyrate.refpixel import ref_pixel, RefPixelError, _step
 from pyrate.config import ConfigException
-
+from pyrate.scripts import run_pyrate
+from pyrate.tests.common import SYD_TEST_MATLAB_ORBITAL_DIR
+from pyrate import config as cf
 
 # default testing values
 REFNX = 5
@@ -91,7 +95,6 @@ class ReferencePixelTests(unittest.TestCase):
         args = (2, 2, 3, 0.7)
         self.assertRaises(RefPixelError, ref_pixel, mock_ifgs, *args)
 
-
     def test_refnxy_step_1(self):
         # test step of 1 for refnx|y gets the reference pixel for axis centre
         mock_ifgs = [MockIfg(i, 47, 72) for i in self.ifgs]
@@ -99,11 +102,9 @@ class ReferencePixelTests(unittest.TestCase):
             m.phase_data[:1] = 0.2
             m.phase_data[1:5] = 0.1
             m.phase_data[5:] = 0.3
-
-        exp_refpx = (36,23)
+        exp_refpx = (36, 23)
         res = ref_pixel(mock_ifgs, refnx=1, refny=1, chipsize=3, min_frac=0.7)
         self.assertEqual(exp_refpx, res)
-
 
     def test_large_window(self):
         # 5x5 view over a 5x5 ifg with 1 window/ref pix search
@@ -111,7 +112,6 @@ class ReferencePixelTests(unittest.TestCase):
         mockifgs = [MockIfg(i, chps, chps) for i in self.ifgs]
         res = ref_pixel(mockifgs, refnx=1, refny=1, chipsize=chps, min_frac=0.7)
         self.assertEqual((2,2), res)
-
 
     def test_step(self):
         # test different search windows to verify x/y step calculation
@@ -125,48 +125,47 @@ class ReferencePixelTests(unittest.TestCase):
         width = 47
         radius = 2
         refnx = 2
-        exp = [2, 44]
+        exp = [2, 25, 44]
         act = _step(width, refnx, radius)
         assert_equal(act, exp)
 
         # test with 3 windows
         refnx = 3
-        exp = [2, 23, 44]
+        exp = [2, 17, 32]
         act = _step(width, refnx, radius)
         assert_equal(act, exp)
 
         # test 4 search windows
         refnx = 4
-        exp = [2, 16, 30, 44]
+        exp = [2, 13, 24, 35]
         act = _step(width, refnx, radius)
         assert_equal(act, exp)
 
-
     def test_ref_pixel(self):
-        exp_refpx = (2,2) # calculated manually from _expected_ref_pixel()
+        exp_refpx = (2, 25)
         res = ref_pixel(self.ifgs, 2, 2, 5, 0.7)
         self.assertEqual(res, exp_refpx)
 
         # Invalidate first data stack, get new refpix coods & retest
         for i in self.ifgs:
-            i.phase_data[:3,:5] = nan
+            i.phase_data[:30, :50] = nan
 
-        exp_refpx = (2,44) # calculated manually from _expected_ref_pixel()
+        exp_refpx = (38, 2)
         res = ref_pixel(self.ifgs, 2, 2, 5, 0.7)
         self.assertEqual(res, exp_refpx)
 
 
 def _expected_ref_pixel(ifgs, cs):
-    '''Helper function for finding reference pixel when refnx/y=2'''
+    """Helper function for finding reference pixel when refnx/y=2"""
 
     # calculate expected data
-    data = [i.phase_data for i in ifgs] # len 17 list of arrays
-    ul = [ i[:cs,:cs] for i in data] # upper left corner stack
-    ur = [ i[:cs,-cs:] for i in data]
-    ll = [ i[-cs:,:cs] for i in data]
-    lr = [ i[-cs:,-cs:] for i in data]
+    data = [i.phase_data for i in ifgs]  # len 17 list of arrays
+    ul = [i[:cs, :cs] for i in data]  # upper left corner stack
+    ur = [i[:cs, -cs:] for i in data]
+    ll = [i[-cs:, :cs] for i in data]
+    lr = [i[-cs:, -cs:] for i in data]
 
-    ulm = mean([std(i[~isnan(i)]) for i in ul]) # mean std of all the layers
+    ulm = mean([std(i[~isnan(i)]) for i in ul])  # mean std of all the layers
     urm = mean([std(i[~isnan(i)]) for i in ur])
     llm = mean([std(i[~isnan(i)]) for i in ll])
     lrm = mean([std(i[~isnan(i)]) for i in lr])
@@ -175,6 +174,54 @@ def _expected_ref_pixel(ifgs, cs):
     # coords of the smallest mean is the result
     mn = [ulm, urm, llm, lrm]
     print mn, min(mn), mn.index(min(mn))
+
+
+class MatlabEqualityTest(unittest.TestCase):
+
+    def setUp(self):
+        self.ifgs = sydney_data_setup()
+        self.params = cf.get_config_params(
+            os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orbital_error.conf'))
+
+        self.params_alt_ref_frac = copy.copy(self.params)
+        self.params_alt_ref_frac[cf.REF_MIN_FRAC] = 0.5
+        self.params_all_2s = copy.copy(self.params)
+        self.params_all_2s[cf.REFNX] = 2
+        self.params_all_2s[cf.REFNY] = 2
+        self.params_chipsize_15 = copy.copy(self.params_all_2s)
+        self.params_chipsize_15[cf.REF_CHIP_SIZE] = 15
+
+
+    def test_sydney_test_data_ref_pixel(self):
+        refx, refy = run_pyrate.find_reference_pixel(self.ifgs, self.params)
+        self.assertEqual(refx, 38)
+        self.assertEqual(refy, 58)
+        self.assertAlmostEqual(0.8, self.params[cf.REF_MIN_FRAC])
+
+
+    def test_more_sydney_test_data_ref_pixel(self):
+
+        refx, refy = run_pyrate.find_reference_pixel(self.ifgs,
+                                                     self.params_alt_ref_frac)
+        self.assertEqual(refx, 38)
+        self.assertEqual(refy, 58)
+        self.assertAlmostEqual(0.5, self.params_alt_ref_frac[cf.REF_MIN_FRAC])
+
+    def test_sydney_test_data_ref_pixel_all_2(self):
+
+        refx, refy = run_pyrate.find_reference_pixel(self.ifgs,
+                                                     self.params_all_2s)
+        self.assertEqual(refx, 25)
+        self.assertEqual(refy, 2)
+        self.assertAlmostEqual(0.5, self.params_alt_ref_frac[cf.REF_MIN_FRAC])
+
+    def test_sydney_test_data_ref_chipsize_15(self):
+
+        refx, refy = run_pyrate.find_reference_pixel(self.ifgs,
+                                                     self.params_chipsize_15)
+        self.assertEqual(refx, 7)
+        self.assertEqual(refy, 7)
+        self.assertAlmostEqual(0.5, self.params_alt_ref_frac[cf.REF_MIN_FRAC])
 
 
 

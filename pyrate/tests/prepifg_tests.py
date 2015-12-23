@@ -90,6 +90,12 @@ class PrepifgOutputTests(unittest.TestCase):
                  "geo_070326-070917_4rlks_3cr.tif"]
         self.exp_files = [join(PREP_TEST_TIF, p) for p in paths]
 
+    def test_mlooked_paths(self):
+        test_mlooked_path()
+
+    def test_extents_from_params(self):
+        test_extents_from_params()
+
     def tearDown(self):
         for f in self.exp_files:
             if exists(f):

@@ -770,8 +770,7 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
     def test_orbital_correction_matlab_equality_orbfit_method_2(self):
         from pyrate.scripts import run_pyrate
 
-        run_pyrate.remove_orbital_error(self.ifgs,
-                                        self.params)
+        run_pyrate.remove_orbital_error(self.ifgs, self.params)
 
         onlyfiles = [f for f in os.listdir(SYD_TEST_MATLAB_ORBITAL_DIR)
             if os.path.isfile(os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, f))
