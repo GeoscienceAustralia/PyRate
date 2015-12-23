@@ -74,15 +74,15 @@ def _step(dim, ref, radius):
     :param radius: the number of cells from the centre of the chip eg. (chipsize / 2).
     '''
 
-    if ref == 1:
-        # centre a single search step
-        return xrange(dim // 2, dim, dim)  # fake step to ensure single xrange value
+    # if ref == 1:
+    #     # centre a single search step
+    #     return xrange(dim // 2, dim, dim)  # fake step to ensure single xrange value
 
     # if ref == 2: # handle 2 search windows, method below doesn't cover the case
     #     return [radius, dim-radius-1]
     # max_dim = dim - (2*radius)  # max possible number for refn(x|y)
     # step = max_dim // (ref-1)
-    step = dim // ref # same as in Matlab
+    step = dim // ref  # same as in Matlab
     return xrange(radius, dim-radius, step)
 
 
