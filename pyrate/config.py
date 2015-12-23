@@ -122,6 +122,8 @@ REFNY = "refny"
 REF_CHIP_SIZE = 'refchipsize'
 #: REAL; Minimum fraction of observations required in reference pixel search window for pixel to be a viable reference pixel
 REF_MIN_FRAC = 'refminfrac'
+# REFERENCE estimation method
+REF_EST_METHOD = 'refest'
 
 # orbital error correction/parameters
 #: BOOL (1/0); Boolean flag controlling whether to apply orbital error correction
