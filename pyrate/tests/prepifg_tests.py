@@ -1,7 +1,7 @@
 """
 Tests for prepifg.py: resampling, subsetting etc.
 
-.. codeauthor:: Ben Davies
+.. codeauthor:: Ben Davies, Sudipta Basak
 """
 
 import os, sys, unittest
@@ -159,7 +159,6 @@ class PrepifgOutputTests(unittest.TestCase):
         for i, j in zip(gt, exp_gt):
             self.assertAlmostEqual(i, j)
         self.assert_geotransform_equal([self.exp_files[2], self.exp_files[6]])
-
 
     def test_custom_extents_misalignment(self):
         """Test misaligned cropping extents raise errors."""
@@ -455,13 +454,14 @@ class MatlabEqualityTest(unittest.TestCase):
                 if os.path.isfile(os.path.join(SYD_TEST_MATLAB_PREPIFG_DIR, f))
                 and f.endswith('.csv') and f.__contains__('_mm_')]
 
+        count = 0
         for i, f in enumerate(onlyfiles):
             ifg_data = np.genfromtxt(os.path.join(
                 SYD_TEST_MATLAB_PREPIFG_DIR, f), delimiter=',')
             for k, j in enumerate(self.ifgs):
                 if f.split('_mm_')[-1].split('.')[0] == \
                         os.path.split(j.data_path)[-1].split('.')[0]:
-
+                    count += 1
                     # all numbers equal
                     np.testing.assert_array_almost_equal(ifg_data,
                         self.ifgs_with_nan[k].phase_data, decimal=2)
@@ -474,6 +474,8 @@ class MatlabEqualityTest(unittest.TestCase):
                     self.assertEqual(np.sum(np.isnan(ifg_data)),
                         np.sum(np.isnan(self.ifgs_with_nan[k].phase_data)))
 
+        # ensure we have the correct number of matches
+        self.assertEqual(count, len(self.ifgs))
 
 if __name__ == "__main__":
     unittest.main()
