@@ -35,7 +35,6 @@ def ref_pixel(ifgs, refnx, refny, chipsize, min_frac):
     # pre-calculate useful amounts
     half_patch_size = chipsize // 2
     chipsize = half_patch_size * 2 + 1
-    phase_stack = array([i.phase_data for i in ifgs])  # TODO: mem efficiencies?
     thresh = min_frac * chipsize * chipsize
     min_sd = np.finfo(np.float64).max
 
@@ -48,9 +47,9 @@ def ref_pixel(ifgs, refnx, refny, chipsize, min_frac):
 
     for y in _step(rows, refny, half_patch_size):
         for x in _step(cols, refnx, half_patch_size):
-            data = phase_stack[:, y-half_patch_size:y+half_patch_size+1,
-                   x-half_patch_size:x+half_patch_size+1]
-            valid = [nsum(~isnan(i)) > thresh for i in data]
+            data = [i.phase_data[y-half_patch_size:y+half_patch_size+1,
+                   x-half_patch_size:x+half_patch_size+1] for i in ifgs]
+            valid = [nsum(~isnan(d)) > thresh for d in data]
 
             if all(valid):  # ignore if 1+ ifgs have too many incoherent cells
                 sd = [std(i[~isnan(i)]) for i in data]
