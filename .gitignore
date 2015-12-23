@@ -8,4 +8,8 @@
 .spyderworkspace
 python-graph/
 tests_bk/
-sydney_test/
+doc
+etc
+out
+# sydney_test/
+tests/sydney_test/out/
