@@ -189,11 +189,18 @@ class MatlabEqualityTestInRunPyRateSequence(unittest.TestCase):
         # Calculate interferogram noise
         # TODO: assign maxvar to ifg metadata (and geotiff)?
         self.maxvar = [cvd(i)[0] for i in ifgs]
+        self.vcmt = get_vcmt(ifgs, self.maxvar)
 
-    def test_matlab_equality_sydney_test_files(self):
+    def test_matlab_maxvar_equality_sydney_test_files(self):
         np.testing.assert_array_almost_equal(self.maxvar, self.matlab_maxvar,
                                              decimal=4)
 
+    def test_matlab_vcmt_equality_sydney_test_files(self):
+        from pyrate.tests.common import SYD_TEST_DIR
+        MATLAB_VCM_DIR = os.path.join(SYD_TEST_DIR, 'matlab_vcm')
+        matlab_vcm = np.genfromtxt(os.path.join(MATLAB_VCM_DIR,
+                                   'matlab_vcmt.csv'), delimiter=',')
+        np.testing.assert_array_almost_equal(matlab_vcm, self.vcmt, decimal=3)
 
 
 if __name__ == "__main__":
