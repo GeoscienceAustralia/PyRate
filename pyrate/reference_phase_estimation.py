@@ -97,9 +97,12 @@ if __name__ == "__main__":
     ifg_instance = matlab_mst.IfgListPyRate(datafiles=dest_paths)
 
     ifgs = ifg_instance.ifgs
+    nan_conversion = int(params[cf.NAN_CONVERSION])
     for i in ifgs:
         i.convert_to_mm()
         i.write_modified_phase()
+        if nan_conversion and not i.nan_converted:  # nan conversion happens here in networkx mst
+            i.convert_to_nans()
 
     refx, refy = run_pyrate.find_reference_pixel(ifgs, params)
 

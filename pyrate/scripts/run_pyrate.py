@@ -67,7 +67,6 @@ def process_ifgs(ifg_paths_or_instance, params):
     if params[cf.ORBITAL_FIT] != 0:
         remove_orbital_error(ifgs, params)
 
-    #TODO: Remove reference phase here
     _, ifgs = rpe.estimate_ref_phase(ifgs, params, refpx, refpy)
 
     # Calculate interferogram noise

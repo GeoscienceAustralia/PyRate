@@ -28,6 +28,8 @@ class RefPhsEstimationMatlabTest(unittest.TestCase):
         params = cf.get_config_params(
                 os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orbital_error.conf'))
 
+        params[cf.REF_EST_METHOD] = 1
+
         call(["python", "pyrate/scripts/run_prepifg.py",
               os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orbital_error.conf')])
 
@@ -42,7 +44,7 @@ class RefPhsEstimationMatlabTest(unittest.TestCase):
 
         ifgs = ifg_instance.ifgs
 
-        for c, i in enumerate(ifgs):
+        for i in ifgs:
             if not i.is_open:
                 i.open()
             if not i.nan_converted:

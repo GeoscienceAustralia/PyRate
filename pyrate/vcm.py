@@ -2,7 +2,7 @@
 Variance/Covariance matrix functionality for PyRate, ported from Hua Wang's
 MATLAB code for Pirate.
 
-.. codeauthor:: Ben Davies, Matt Garthwaite
+.. codeauthor:: Ben Davies, Matt Garthwaite, Sudipta Basak
 '''
 
 from numpy import array, where, isnan, real, imag, sum, sqrt, meshgrid
@@ -130,7 +130,7 @@ def cvd(ifg, calc_alpha=False):
         # maximum variance usually at the zero lag: max(acg[:len(r)])
         return np.max(acg), alpha[0]
     else:
-        return np.max(acg), 0
+        return np.max(acg), None
 
 
 def get_vcmt(ifgs, maxvar):
@@ -163,3 +163,65 @@ def get_vcmt(ifgs, maxvar):
     std = sqrt(maxvar).reshape((nifgs, 1))
     vcm_t = std * std.transpose()
     return vcm_t * vcm_pat
+
+
+if __name__ == "__main__":
+    import os
+    import shutil
+    from subprocess import call
+
+    from pyrate.scripts import run_pyrate
+    from pyrate import matlab_mst_kruskal as matlab_mst
+    from pyrate.tests.common import SYD_TEST_MATLAB_ORBITAL_DIR, SYD_TEST_OUT
+    from pyrate import config as cf
+    from pyrate import reference_phase_estimation as rpe
+
+    # start each full test run cleanly
+    shutil.rmtree(SYD_TEST_OUT, ignore_errors=True)
+
+    os.makedirs(SYD_TEST_OUT)
+
+    params = cf.get_config_params(
+            os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orbital_error.conf'))
+    params[cf.REF_EST_METHOD] = 2
+    call(["python", "pyrate/scripts/run_prepifg.py",
+          os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orbital_error.conf')])
+
+    xlks, ylks, crop = run_pyrate.transform_params(params)
+
+    base_ifg_paths = run_pyrate.original_ifg_paths(params[cf.IFG_FILE_LIST])
+
+    dest_paths = run_pyrate.get_dest_paths(base_ifg_paths, crop, params, xlks)
+
+    ifg_instance = matlab_mst.IfgListPyRate(datafiles=dest_paths)
+
+    ifgs = ifg_instance.ifgs
+    nan_conversion = int(params[cf.NAN_CONVERSION])
+
+    for i in ifgs:
+        if not i.is_open:
+            i.open()
+        if not i.nan_converted:
+            i.convert_to_nans()
+
+        if not i.mm_converted:
+            i.convert_to_mm()
+            i.write_modified_phase()
+
+    if params[cf.ORBITAL_FIT] != 0:
+        run_pyrate.remove_orbital_error(ifgs, params)
+
+    refx, refy = run_pyrate.find_reference_pixel(ifgs, params)
+
+    if params[cf.ORBITAL_FIT] != 0:
+        run_pyrate.remove_orbital_error(ifgs, params)
+
+    _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
+
+    # Calculate interferogram noise
+    # TODO: assign maxvar to ifg metadata (and geotiff)?
+    maxvar = [cvd(i)[0] for i in ifgs]
+
+    for n, i in enumerate(ifgs):
+        print maxvar[n], os.path.basename(i.data_path)
+
