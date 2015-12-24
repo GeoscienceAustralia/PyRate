@@ -35,9 +35,24 @@ def estimate_ref_phase(ifgs, params, refpx, refpy):
             # reference phase
             ref_phs[n] = np.nanmedian(ifgv)
             i.phase_data -= ref_phs[n]
+
+    elif int(params[cf.REF_EST_METHOD]) == 2:
+        half_chip_size = int(np.floor(params[cf.REF_CHIP_SIZE]/2.0))
+        chipsize = 2 * half_chip_size + 1
+        thresh = chipsize*chipsize*params[cf.REF_MIN_FRAC]
+        for n, i in enumerate(ifgs):
+            patch = i.phase_data[
+                    refpy - half_chip_size: refpy + half_chip_size + 1,
+                    refpx - half_chip_size: refpx + half_chip_size + 1
+                    ]
+            patch = np.reshape(patch, newshape=(-1, 1), order='F')
+            if np.sum(~np.isnan(patch)) < thresh:
+                raise ReferencePhaseError('The reference pixel'
+                                          'is not in high coherent area!')
+            ref_phs[n] = np.nanmedian(patch)
+            i.phase_data -= ref_phs[n]
     else:
-        raise ReferencePhaseError('This ref estimation method '
-                                  'has not been implemetned. Use refest=1')
+        raise ReferencePhaseError('No such option. Use refest=1 or 2')
 
     return ref_phs, ifgs
 
@@ -93,5 +108,3 @@ if __name__ == "__main__":
 
     ref_phs, ifgs = estimate_ref_phase(ifgs, params, refx, refy)
     print ref_phs
-
-

@@ -17,7 +17,7 @@ import pyrate.config as cf
 from pyrate.shared import Ifg
 from pyrate import vcm as vcm_module
 from pyrate import matlab_mst_kruskal as matlab_mst
-
+from pyrate import reference_phase_estimation as rpe
 
 # constants for metadata flags
 META_UNITS = 'PHASE_UNITS'
@@ -68,8 +68,7 @@ def process_ifgs(ifg_paths_or_instance, params):
         remove_orbital_error(ifgs, params)
 
     #TODO: Remove reference phase here
-
-
+    _, ifgs = rpe.estimate_ref_phase(ifgs, params, refpx, refpy)
 
     # Calculate interferogram noise
     # TODO: assign maxvar to ifg metadata (and geotiff)?
