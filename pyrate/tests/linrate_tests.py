@@ -74,54 +74,7 @@ class LinearRateTests(unittest.TestCase):
         assert_array_almost_equal(samples, expsamp)
         
     def test_linear_rate_full(self):
-        import numpy as np
-        self.ifgs = sydney_data_setup()
-        ifgs = self.ifgs
-        ifg_file_list = sydney_data_setup_ifg_file_list()
-
-        for i in ifgs:
-            # i.phase_data.mean(),
-            print np.nanmean(i.phase_data), np.count_nonzero(~np.isnan(i.phase_data)), np.count_nonzero(np.isnan(i.phase_data))
-            # print np.nonzero(list(np.nonzero(i.phase_data)))
-
-        mstmat = mst.mst_matrix_ifg_indices_as_boolean_array(self.ifgs)
-
-        from numpy import genfromtxt
-        import os
-        from os import listdir
-        from os.path import isfile, join
-        # mypath = "/home/sudipta/Dropbox/GA/PyRate/mastmat_csvs"
-        # onlyfiles = [f for f in listdir(mypath) if isfile(join(mypath, f))]
-        #
-        # # my_data = genfromtxt("/home/sudipta/Dropbox/GA/PyRate/mastmat_csvs/mastmat_geo_060619-061002.csv", delimiter=',')
-        #
-        # # for i in range(len(ifgs)):
-        # #     print np.array_equal(my_data, mstmat[i, :, :])
-        #
-        # for i, f in enumerate(onlyfiles):
-        #     mst_f = genfromtxt(os.path.join(mypath, f), delimiter=',')
-        #     for k, j in enumerate(ifg_file_list):
-        #         # print f.split('mat_')[-1].split('.')[0], os.path.split(j)[-1].split('.')[0]
-        #         if f.split('mat_')[-1].split('.')[0] == os.path.split(j)[-1].split('.')[0]:
-        #             # print f.split('mat_')[-1], os.path.split(j)[-1]
-        #             print np.array_equal(mst_f, mstmat[k, :, :])
-
-
-        # print "self.ifgs[0].phase_data", self.ifgs[0].phase_data
-        # print self.ifgs[0]
-        # print "mstmat[3,0,0]", mstmat
-        # print "mstmat.shape", mstmat.shape
-
-        maxvar = [cvd(i)[0] for i in self.ifgs]
-        vcm = get_vcmt(self.ifgs, maxvar)
-        # print "vcm", vcm
-        # print "vcm.shape", vcm.shape
-        # print "maxvar", maxvar
-        rate, error, samples = linear_rate(self.ifgs, vcm, LR_PTHRESH,
-                                           LR_NSIG, LR_MAXSIG, mstmat)
-        # print rate
-        #
-        # print rate.shape
+        pass
 
 
 if __name__ == "__main__":

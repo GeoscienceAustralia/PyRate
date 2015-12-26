@@ -29,6 +29,7 @@ def pendiffexp(alphamod, cvdav):
     return norm(cvdav[1, :] - (mx * exp(-alphamod * cvdav[0, :])))
 
 
+# this is not used any more
 def unique_points(points):
     """
     Returns unique points from a list of coordinates.

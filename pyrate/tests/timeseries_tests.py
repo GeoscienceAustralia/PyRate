@@ -8,10 +8,23 @@ import unittest
 from numpy import nan, asarray, where
 from numpy.testing import assert_array_almost_equal
 from datetime import date, timedelta
+import numpy as np
+import os
+import shutil
+from subprocess import call
+
 from pyrate import mst
 from pyrate.tests.common import sydney_data_setup
 from pyrate.timeseries import time_series
 from pyrate.config import TIME_SERIES_PTHRESH
+from pyrate.scripts import run_pyrate
+from pyrate import matlab_mst_kruskal as matlab_mst
+from pyrate.tests.common import SYD_TEST_MATLAB_ORBITAL_DIR, SYD_TEST_OUT
+from pyrate.tests.common import SYD_TEST_DIR
+from pyrate import config as cf
+from pyrate import reference_phase_estimation as rpe
+from pyrate import vcm
+
 
 
 def default_params():
@@ -88,6 +101,95 @@ class TimeSeriesTests(unittest.TestCase):
             self.ifgs, pthresh=params[TIME_SERIES_PTHRESH])
         expected = asarray([[[0.50,  3.0,  4.0,  5.5,  6.5]]])
         assert_array_almost_equal(tscum, expected)
+
+
+class MatlabTimeSeriesEquality(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        SYD_TIME_SERIES_DIR = os.path.join(SYD_TEST_DIR, 'matlab_time_series')
+
+        # start each full test run cleanly
+        shutil.rmtree(SYD_TEST_OUT, ignore_errors=True)
+
+        os.makedirs(SYD_TEST_OUT)
+
+        params = cf.get_config_params(
+                os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orbital_error.conf'))
+        params[cf.REF_EST_METHOD] = 2
+        call(["python", "pyrate/scripts/run_prepifg.py",
+              os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orbital_error.conf')])
+
+        xlks, ylks, crop = run_pyrate.transform_params(params)
+
+        base_ifg_paths = run_pyrate.original_ifg_paths(params[cf.IFG_FILE_LIST])
+
+        dest_paths = run_pyrate.get_dest_paths(base_ifg_paths, crop, params, xlks)
+
+        ifg_instance = matlab_mst.IfgListPyRate(datafiles=dest_paths)
+
+        assert isinstance(ifg_instance, matlab_mst.IfgListPyRate)
+        ifgs = ifg_instance.ifgs
+        for i in ifgs:
+            if not i.mm_converted:
+                i.convert_to_mm()
+                i.write_modified_phase()
+        ifg_instance_updated, epoch_list = \
+            matlab_mst.get_nml(ifg_instance, nan_conversion=True)
+        mst_grid = matlab_mst.matlab_mst_boolean_array(ifg_instance_updated)
+
+        for i in ifgs:
+            if not i.is_open:
+                i.open()
+            if not i.nan_converted:
+                i.convert_to_nans()
+
+            if not i.mm_converted:
+                i.convert_to_mm()
+                i.write_modified_phase()
+
+        if params[cf.ORBITAL_FIT] != 0:
+            run_pyrate.remove_orbital_error(ifgs, params)
+
+        refx, refy = run_pyrate.find_reference_pixel(ifgs, params)
+
+        if params[cf.ORBITAL_FIT] != 0:
+            run_pyrate.remove_orbital_error(ifgs, params)
+
+        _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
+
+        # Calculate interferogram noise
+        # TODO: assign maxvar to ifg metadata (and geotiff)?
+        maxvar = [vcm.cvd(i)[0] for i in ifgs]
+
+        # Calculate temporal variance-covariance matrix
+        vcmt = vcm.get_vcmt(ifgs, maxvar)
+
+        # Calculate linear rate map
+        cls.rate, cls.error, cls.samples = run_pyrate.calculate_linear_rate(
+            ifgs, params, vcmt, mst=mst_grid)
+
+        tsincr_path = os.path.join(SYD_TIME_SERIES_DIR, 'ts_incr.csv')
+        cls.ts_incr = np.genfromtxt(tsincr_path, delimiter=',')
+        tserr_path = os.path.join(SYD_TIME_SERIES_DIR, 'ts_error.csv')
+        cls.ts_err = np.genfromtxt(tserr_path, delimiter=',')
+        tscum_path = os.path.join(SYD_TIME_SERIES_DIR, 'ts_cum.csv')
+        cls.ts_cum = np.genfromtxt(tscum_path, delimiter=',')
+
+        # Calculate time series
+        if params[cf.TIME_SERIES_CAL] != 0:
+            cls.tsincr, cls.tscum, cls.tsvel = run_pyrate.calculate_time_series(
+                ifgs, params, mst=mst_grid)
+
+    def test_time_series_equality(self):
+
+        self.assertEqual(self.tsincr.shape, self.tscum.shape)
+        self.assertEqual(self.tsvel.shape, self.tsincr.shape)
+        np.testing.assert_array_almost_equal(
+            self.ts_incr, np.reshape(self.tsincr, newshape=(1, -1), order='F')[0])
+        np.testing.assert_array_almost_equal(
+            self.ts_cum, np.reshape(self.tscum, newshape=(1, -1), order='F')[0])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -79,10 +79,12 @@ def process_ifgs(ifg_paths_or_instance, params):
     # Calculate linear rate map
     rate, error, samples = calculate_linear_rate(ifgs, params, vcmt,
                                                  mst=mst_grid)
+    print rate.shape, error.shape, samples.shape
 
     # Calculate time series
     if params[cf.TIME_SERIES_CAL] != 0:        
         tsincr, tscum, tsvel = calculate_time_series(ifgs, params, mst=mst_grid)
+        print tsincr.shape, tscum.shape, tsvel.shape
 
 
     # print ifg_paths[0]
@@ -336,6 +338,7 @@ def get_dest_paths(base_paths, crop, params, looks):
 
     return [os.path.join(os.environ['PYRATEPATH'], params[cf.OUT_DIR], p)
             for p in dest_mlooked_ifgs]
+
 
 # TODO: expand CLI documentation
 # TODO: ensure clean exception handling
