@@ -154,6 +154,9 @@ TIME_SERIES_PTHRESH = 'ts_pthr'
 #: BOOL (1/0); Time series parameter to interpolate across epoch gaps NOT CURRENTLY USED
 TIME_SERIES_INTERP = 'ts_interp'
 
+TIME_SERIES_SM_ORDER = 'smorder'
+TIME_SERIES_SM_FACTOR = 'smfactor'
+
 
 def degree_conv(deg):
     """
@@ -219,7 +222,10 @@ PARAM_CONVERSION = {
 
     #TIME_SERIES_CAL : (bool, False),
     TIME_SERIES_CAL : (int, 0),
-    TIME_SERIES_PTHRESH : (int, 20)}
+    TIME_SERIES_PTHRESH : (int, 20),
+    TIME_SERIES_SM_FACTOR: (float, None),
+    TIME_SERIES_SM_ORDER: (int, None)
+    }
     #TIME_SERIES_INTERP : (bool, False)
 
 
