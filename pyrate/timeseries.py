@@ -3,7 +3,7 @@ Functions for producing a time series in PyRate.
 InSAR time series inversion without smoothing
 Based on original Matlab code by Hua Wang. Matlab 'tsinvnosm' function.
 
-..codeauthor:: Vanessa Newey
+..codeauthor:: Vanessa Newey, Sudipta Basak
 """
 
 from numpy import where, isnan, nan, diff, zeros, empty
