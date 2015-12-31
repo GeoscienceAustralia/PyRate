@@ -274,7 +274,7 @@ def time_series(ifgs, pthresh, params, vcmt, mst=None):
                 wb = np.dot(w, B)
                 wl = np.dot(w, obsv)
                 # x=wb\wl
-                x = np.dot(np.linalg.pinv(wb), wl)
+                x = np.dot(np.linalg.pinv(wb, rcond=1e-8), wl)
 
                 # residuals and roughness
                 # not implemented
@@ -497,12 +497,12 @@ if __name__ == "__main__":
         # for i in range(len(mismatch[0])):
         #     print mismatch[0][i], mismatch[1][i], mismatch[2][i]
 
-        #TODO: Investigate why the whole matrices don't equal
+        #TODO: Investigate why the entire matrices don't equal
         # Current hypothesis is that the pseudo inverse computed are different
-        # in matlab and python as they
+        # in matlab and python as they are based of different convergence
+        # criteria.
         np.testing.assert_array_almost_equal(
             ts_incr[:11, :45, :], tsincr[:11, :45, :], decimal=4)
 
         np.testing.assert_array_almost_equal(
             ts_cum[:11, :45, :], tscum[:11, :45, :], decimal=4)
-

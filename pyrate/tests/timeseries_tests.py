@@ -67,19 +67,24 @@ class TimeSeriesTests(unittest.TestCase):
         cls.maxvar = [vcm.cvd(i)[0] for i in cls.ifgs]
         cls.vcmt = vcm.get_vcmt(cls.ifgs, cls.maxvar)
 
-    def test_time_series(self):
-        """
-        Checks that the code works the same as the pirate MatLab code
-        """
-        tsincr, tscum, tsvel = time_series(
-            self.ifgs, pthresh=self.params[TIME_SERIES_PTHRESH],
-            params=self.params, vcmt=self.vcmt, mst=self.mstmat)
-        expected = asarray([
-            -11.09124207, -2.24628582, -11.37726666, -7.98105646,
-            -8.95696049, -4.35343281, -10.64072681, -2.56493343,
-            -6.24070214, -7.64697381, -8.59650367, -9.55619863])
+    # def test_time_series(self):
+    # Sudipta:
+    # 1. This has been replaced due to change in the time_series code.
+    # 2. See MatlabTimeSeriesEquality for a more comprehensive test of the
+    # new function.
 
-        assert_array_almost_equal(tscum[10, 10, :], expected)
+    #     """
+    #     Checks that the code works the same as the pirate MatLab code
+    #     """
+    #     tsincr, tscum, tsvel = time_series(
+    #         self.ifgs, pthresh=self.params[TIME_SERIES_PTHRESH],
+    #         params=self.params, vcmt=self.vcmt, mst=self.mstmat)
+    #     expected = asarray([
+    #         -11.09124207, -2.24628582, -11.37726666, -7.98105646,
+    #         -8.95696049, -4.35343281, -10.64072681, -2.56493343,
+    #         -6.24070214, -7.64697381, -8.59650367, -9.55619863])
+    #
+    #     assert_array_almost_equal(tscum[10, 10, :], expected)
 
     def test_time_series_unit(self):
         """
@@ -108,6 +113,10 @@ class TimeSeriesTests(unittest.TestCase):
 
 
 class MatlabTimeSeriesEquality(unittest.TestCase):
+    """
+    Checks the python function to that of Matlab pirate ts.m and tsinvlap.m
+    functionality.
+    """
 
     @classmethod
     def setUpClass(cls):
@@ -193,9 +202,10 @@ class MatlabTimeSeriesEquality(unittest.TestCase):
                              newshape=self.tsincr.shape, order='F')
         ts_cum = np.reshape(self.ts_cum, newshape=self.tsincr.shape, order='F')
 
-        #TODO: Investigate why the whole matrices don't equal
-        # Current hypothesis is that when the pseudo inverse compit
-
+        #TODO: Investigate why the entire matrices don't equal
+        # Current hypothesis is that the pseudo inverse computed are different
+        # in matlab and python as they are based of different convergence
+        # criteria.
         np.testing.assert_array_almost_equal(
             ts_incr[:11, :45, :], self.tsincr[:11, :45, :], decimal=4)
 
