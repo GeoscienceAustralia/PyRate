@@ -1,4 +1,4 @@
-'''
+"""
 Pixel-by-pixel linear rate (velocity) estimation using iterative weighted
 least-squares method.
 
@@ -6,7 +6,7 @@ Based on original Matlab code by Hua Wang and Juliet Biggs, and Matlab 'lscov'
 function.
 
 .. codeauthor: Matt Garthwaite and Sudipta Basak, GA
-'''
+"""
 
 from scipy.linalg import solve, cholesky, qr, inv
 from numpy import nan, isnan, sqrt, diag, delete, ones, array, nonzero, float32
@@ -18,7 +18,7 @@ def is_pos_def(x):
 
 
 def linear_rate(ifgs, vcm, pthr, nsig, maxsig, mst=None):
-    '''
+    """
     Pixel-by-pixel linear rate (velocity) estimation using iterative weighted least-squares method.
 
     :param ifgs: Sequence of ifg objs from which to extract observations
@@ -27,7 +27,15 @@ def linear_rate(ifgs, vcm, pthr, nsig, maxsig, mst=None):
     :param nsig: n-sigma ratio used to threshold 'model minus observation' residuals
     :param maxsig: Threshold for maximum allowable standard error
     :param mst: Pixel-wise matrix describing the minimum spanning tree network
-    '''
+
+    :return:
+        python/matlab variable names
+        rate/ifg_stack: stacked interferogram (i.e., rate map)
+        error/std_stack: standard deviation of the stacked interferogram
+                  (i.e., error map)
+        samples/coh_sta: statistics of coherent pixels used for stacking
+        demerror:  dem errors in metres, no implemented in python
+    """
 
     rows, cols = ifgs[0].phase_data.shape
     nifgs = len(ifgs)
@@ -44,6 +52,7 @@ def linear_rate(ifgs, vcm, pthr, nsig, maxsig, mst=None):
 
     # preallocate NaN arrays
     # TODO: Q Sudipta: why nans? and not zeros? nans cause issues later on
+    # TODO: Investigate impact of this change from matlab
     error = np.zeros([rows, cols], dtype=float32)
     rate = np.zeros([rows, cols], dtype=float32)
     samples = np.zeros([rows, cols], dtype=float32)
@@ -51,10 +60,6 @@ def linear_rate(ifgs, vcm, pthr, nsig, maxsig, mst=None):
     # pixel-by-pixel calculation.
     # nested loops to loop over the 2 image dimensions
     for i in xrange(rows):
-        # This is for providing verbose progress status...
-        #if mod(i,50)==0:
-            #print("calculating linear rate for the '%d'/'%d' line" % i,rows)
-
         for j in xrange(cols):
             # find the indices of independent ifgs for given pixel from MST
             ind = mst[:, i, j].nonzero()[0]  # only True's in mst are chosen
@@ -117,10 +122,10 @@ def linear_rate(ifgs, vcm, pthr, nsig, maxsig, mst=None):
                     break
 
     # overwrite the data whose error is larger than the maximum sigma user threshold
-
     rate[error > maxsig] = nan
     error[error > maxsig] = nan
     samples[error > maxsig] = nan
+
     return rate, error, samples
 
 if __name__ == "__main__":
