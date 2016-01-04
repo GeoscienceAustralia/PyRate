@@ -1,7 +1,7 @@
 '''
 CUnittests for linrate.py
 
-.. codeauthor:: Ben Davies
+.. codeauthor:: Ben Davies, Sudipta Basak
 '''
 
 import unittest
@@ -57,7 +57,7 @@ class LinearRateTests(unittest.TestCase):
     def setUp(self):
         phase = [0.5, 3.5, 4, 2.5, 3.5, 1]
         timespan = [0.1, 0.7, 0.8, 0.5, 0.7, 0.2]
-        self.ifgs = [SinglePixelIfg(s,p) for s,p in zip(timespan,phase)]
+        self.ifgs = [SinglePixelIfg(s, p) for s, p in zip(timespan, phase)]
 
     def test_linear_rate(self):
         # Simple test with one pixel and equal weighting

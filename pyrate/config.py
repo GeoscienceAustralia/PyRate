@@ -68,7 +68,7 @@ OUT_DIR = 'outdir'
 #: INT; Number of simulated datasets NOT CURRENTLY USED
 #NUM_SETS = 'nsets'
 #: STR; Directory containing simulated datasets NOT CURRENTLY USED
-#SIM_DIR = 'simdir'
+SIM_DIR = 'simdir'
 #: STR; Name of Digital Elevation Model file used in constructing the interferograms
 DEM_FILE = 'demfile'
 #: STR; Name of the header for the DEM

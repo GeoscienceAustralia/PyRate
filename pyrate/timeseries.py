@@ -190,10 +190,11 @@ def time_series(ifgs, pthresh, params, vcmt, mst=None):
     # smf: Laplacian smoothing factor
     BLap0 *= SMFACTOR
 
-    tsincr = np.empty(shape=(nrows, ncols, nvelpar)) * np.nan
-    tsvel_matrix = np.empty(shape=(nrows, ncols, nvelpar)) * np.nan
+    tsincr = np.empty(shape=(nrows, ncols, nvelpar), dtype=np.float32) * np.nan
+    tsvel_matrix = np.empty(shape=(nrows, ncols, nvelpar),
+                            dtype=np.float32) * np.nan
 
-    ifg_data = zeros((nifgs, nrows, ncols), dtype=float32)
+    ifg_data = np.zeros((nifgs, nrows, ncols), dtype=float32)
     for ifg_num in range(nifgs):
         ifgs[ifg_num].convert_to_nans(0)
         ifg_data[ifg_num] = ifgs[ifg_num].phase_data
@@ -211,7 +212,7 @@ def time_series(ifgs, pthresh, params, vcmt, mst=None):
                 B = B0[sel, :]
 
                 # remove rank deficient rows
-                rmrow = asarray([5, 4])
+                rmrow = asarray([0])  # dummy
 
                 while len(rmrow) > 0:
                     q_var, r_var, e_var = qr(B, mode='economic', pivoting=True)

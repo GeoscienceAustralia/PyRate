@@ -52,9 +52,9 @@ def linear_rate(ifgs, vcm, pthr, nsig, maxsig, mst=None):
     # preallocate NaN arrays
     # TODO: Q Sudipta: why nans? and not zeros? nans cause issues later on
     # TODO: Investigate impact of this change from matlab
-    error = np.zeros([rows, cols], dtype=float32)
-    rate = np.zeros([rows, cols], dtype=float32)
-    samples = np.zeros([rows, cols], dtype=float32)
+    error = np.empty([rows, cols], dtype=float32) * np.nan
+    rate = np.empty([rows, cols], dtype=float32) * np.nan
+    samples = np.empty([rows, cols], dtype=float32) * np.nan
 
     # pixel-by-pixel calculation.
     # nested loops to loop over the 2 image dimensions
@@ -73,7 +73,6 @@ def linear_rate(ifgs, vcm, pthr, nsig, maxsig, mst=None):
                 B = span[:, ind]
 
                 # Subset of full VCM matrix for selected observations
-
                 V = vcm[ind, np.vstack(ind)]
 
                 # Get the lower triangle cholesky decomposition.
@@ -112,7 +111,7 @@ def linear_rate(ifgs, vcm, pthr, nsig, maxsig, mst=None):
                     # if yes, discard and re-do the calculation.
                     ind = delete(ind, maxi)
                 else:
-                    #if no save estimate, exit the while loop and go to next pixel
+                    # if no, save estimate, exit the while loop and go to next pixel
                     rate[i, j] = v
                     error[i, j] = err
                     samples[i, j] = ifgv.shape[0]

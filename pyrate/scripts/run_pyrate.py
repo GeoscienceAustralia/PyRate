@@ -7,6 +7,9 @@ Created on 17/09/2012
 """
 
 import os, sys, shutil, logging, datetime
+import gdal
+import numpy as np
+
 import pyrate.mst as mst
 import pyrate.prepifg as prepifg
 import pyrate.refpixel as refpixel
@@ -18,6 +21,8 @@ from pyrate.shared import Ifg
 from pyrate import vcm as vcm_module
 from pyrate import matlab_mst_kruskal as matlab_mst
 from pyrate import reference_phase_estimation as rpe
+from pyrate import algorithm
+from pyrate import ifgconstants as ifc
 
 # constants for metadata flags
 META_UNITS = 'PHASE_UNITS'
@@ -76,61 +81,49 @@ def process_ifgs(ifg_paths_or_instance, params):
     # Calculate temporal variance-covariance matrix
     vcmt = vcm_module.get_vcmt(ifgs, maxvar)
     
+    p = os.path.join(pars[cf.SIM_DIR], ifgs[0].data_path)
+    assert os.path.exists(p) == True
+
+    ds = gdal.Open(p)
+    md = ds.GetMetadata()  # get metadata for writing on output tifs
+    epochlist = algorithm.get_epochs(ifgs)
+
+    if params[cf.TIME_SERIES_CAL] != 0:
+
+        # Calculate time series
+        tsincr, tscum, tsvel = calculate_time_series(
+            ifgs, params, vcmt=vcmt, mst=mst_grid)
+
+        for i in range(len(tsincr[0, 0, :])):
+            md[ifc.PYRATE_DATE] = epochlist.dates[i+1]
+            data = tsincr[:, :, i]
+            dest = os.path.join(params[cf.OUT_DIR], "tsincr_" + str(epochlist.dates[i+1]) + ".tif")
+            timeseries.write_geotiff_output(md, data, dest, np.nan)
+
+            data = tscum[:, :, i]
+            dest = os.path.join(params[cf.OUT_DIR], "tscuml_" + str(epochlist.dates[i+1]) + ".tif")
+            timeseries.write_geotiff_output(md, data, dest, np.nan)
+
+            data = tsvel[:, :, i]
+            dest = os.path.join(params[cf.OUT_DIR], "tsvel_" + str(epochlist.dates[i+1]) + ".tif")
+            timeseries.write_geotiff_output(md, data, dest, np.nan)
+
     # Calculate linear rate map
-    rate, error, samples = calculate_linear_rate(ifgs, params, vcmt,
-                                                 mst=mst_grid)
-    print rate.shape, error.shape, samples.shape
+    rate, error, samples = calculate_linear_rate(
+                   ifgs, params, vcmt, mst=mst_grid)
+    md[ifc.PYRATE_DATE] = epochlist.dates
+    dest = os.path.join(params[cf.OUT_DIR], "linrate.tif")
+    timeseries.write_geotiff_output(md, rate, dest, np.nan)
+    dest = os.path.join(params[cf.OUT_DIR], "linerror.tif")
+    timeseries.write_geotiff_output(md, rate, dest, np.nan)
 
-    # Calculate time series
-    if params[cf.TIME_SERIES_CAL] != 0:        
-        tsincr, tscum, tsvel = calculate_time_series(ifgs, params, mst=mst_grid)
-        print tsincr.shape, tscum.shape, tsvel.shape
-
-
-    # print ifg_paths[0]
-    # p = os.path.join(pars[cf.SIM_DIR], ifg_paths[0])
-    # print 'path exists?',  os.path.exists(p), os.path.isfile(p)
-    #
-    # print 'p=', p, type(p)
-    # ds = gdal.Open(p)
-    # md = ds.GetMetadata()
-    # print md
-    #
-    # epochlist = algorithm.get_epochs(ifgs)
-    #
-    # print len(tsincr[0, 0, :])
-    # print len(epochlist.dates)
-
-    # for i in range(len(tsincr[0, 0, :])):
-    #     md[ifc.PYRATE_DATE] = epochlist.dates[i+1]
-    #     data = tsincr[:, :, i]
-    #     dest = os.path.join(params[cf.OUT_DIR], "tsincr_" + str(epochlist.dates[i+1]) + ".tif")
-    #     timeseries.write_geotiff_output(md, data, dest, np.nan)
-    #
-    #     data = tscum[:, :, i]
-    #     dest = os.path.join(params[cf.OUT_DIR], "tscuml_" + str(epochlist.dates[i+1]) + ".tif")
-    #     timeseries.write_geotiff_output(md, data, dest, np.nan)
-    #
-    #     data = tsvel[:, :, i]
-    #     dest = os.path.join(params[cf.OUT_DIR], "tsvel_" + str(epochlist.dates[i+1]) + ".tif")
-    #     timeseries.write_geotiff_output(md, data, dest, np.nan)
-
-    # Calculate linear rate, copied from master
-    # rate, error, samples = calculate_linear_rate(
-    #                ifgs, params, vcmt, mst=mst_grid)
-    # md[ifc.PYRATE_DATE]=epochlist.dates
-    # dest = os.path.join(params[cf.OUT_DIR],"linrate.tif" )
-    # timeseries.write_geotiff_output(md, rate, dest, nan)
-    # dest = os.path.join(params[cf.OUT_DIR],"linerror.tif" )
-
-    # TODO: outputs?
-
-    # final cleanup
+    # final cleanup, SB: Why do we need this?
     # while ifgs:
     #     i = ifgs.pop()
     #     i.write_phase()
     #     i.dataset.FlushCache()
     #     i = None  # force close    TODO: may need to implement close()
+
     logging.debug('PyRate run completed\n')
 
 
