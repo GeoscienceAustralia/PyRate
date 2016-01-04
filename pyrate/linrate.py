@@ -50,8 +50,6 @@ def linear_rate(ifgs, vcm, pthr, nsig, maxsig, mst=None):
         mst[isnan(obs)] = 0
 
     # preallocate NaN arrays
-    # TODO: Q Sudipta: why nans? and not zeros? nans cause issues later on
-    # TODO: Investigate impact of this change from matlab
     error = np.empty([rows, cols], dtype=float32) * np.nan
     rate = np.empty([rows, cols], dtype=float32) * np.nan
     samples = np.empty([rows, cols], dtype=float32) * np.nan

@@ -73,6 +73,9 @@ class LinearRateTests(unittest.TestCase):
         assert_array_almost_equal(error, experr)
         assert_array_almost_equal(samples, expsamp)
         
+
+class MatlabEqualityTest(unittest.TestCase):
+
     def test_linear_rate_full(self):
         pass
 
