@@ -65,6 +65,12 @@ def process_ifgs(ifg_paths_or_instance, params):
                                nan_conversion=nan_conversion)
         mst_grid = matlab_mst.matlab_mst_boolean_array(ifg_instance_updated)
 
+    # write mst output to a file
+    mst_mat_binary_file = os.path.join(params[cf.OUT_DIR], 'mst_mat')
+    print mst_mat_binary_file
+    np.save(file=mst_mat_binary_file, arr=mst_grid, allow_pickle=True)
+
+
     # Estimate reference pixel location
     refpx, refpy = find_reference_pixel(ifgs, params)
 
