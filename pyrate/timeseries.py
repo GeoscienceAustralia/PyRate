@@ -366,16 +366,12 @@ def write_geotiff_output(md, data, dest, nodata):
     '''
 
     driver = gdal.GetDriverByName("GTiff")
-
-    nrows =len(data[:, 0])
-    ncols = len(data[0, :])
-    print "ncols", ncols
-    print "nrows", nrows
+    nrows, ncols = data.shape
     ds = driver.Create(dest, ncols, nrows, 1, gdal.GDT_Float32)
-    print str(md[ifc.PYRATE_DATE])
-    print md
-    ds.SetProjection(md[ifc.PYRATE_PROJECTION])
-    ds.SetGeoTransform(md[ifc.PYRATE_GEOTRANSFORM])
+
+    # TODO: What are ifc.PYRATE_PROJECTION and ifc.PYRATE_GEOTRANSFORM?
+    # ds.SetProjection(md[ifc.PYRATE_PROJECTION])
+    # ds.SetGeoTransform(md[ifc.PYRATE_GEOTRANSFORM])
     ds.SetMetadataItem(ifc.PYRATE_DATE, str(md[ifc.PYRATE_DATE]))
 
     # write data
