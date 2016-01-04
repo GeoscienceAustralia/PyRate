@@ -162,7 +162,7 @@ def time_series(ifgs, pthresh, params, vcmt, mst=None):
     span = diff(epochlist.spans)
     nepoch = len(epochlist.dates)  # epoch number
     nvelpar = nepoch - 1  # velocity parameters number
-    nlap = nvelpar- SMORDER  # Laplacian observations number
+    nlap = nvelpar - SMORDER  # Laplacian observations number
 
     mast_slave_ids = master_slave_ids(epochlist.dates)
     imaster = [mast_slave_ids[ifg.master] for ifg in ifgs]
@@ -201,12 +201,12 @@ def time_series(ifgs, pthresh, params, vcmt, mst=None):
     if mst is None:
         mst = ~isnan(ifg_data)
 
-    for row_num in xrange(nrows):
-        for col_num in xrange(ncols):
+    for row in xrange(nrows):
+        for col in xrange(ncols):
             # check pixel for non-redundant ifgs;
-            sel = where(mst[:, row_num, col_num])[0]
+            sel = np.nonzero(mst[:, row, col])[0]  # trues in mst are chosen
             if len(sel) >= pthresh:
-                ifgv = ifg_data[sel, row_num, col_num]
+                ifgv = ifg_data[sel, row, col]
                 # make design matrix, B
                 B = B0[sel, :]
 
@@ -258,7 +258,7 @@ def time_series(ifgs, pthresh, params, vcmt, mst=None):
                 # new covariance matrix, adding the laplacian equations
                 nobs = m + nlap
                 vcm_tmp = np.eye(nobs)
-                vcm_tmp[0:m, 0:m] = vcmt[sel, np.vstack(sel)]
+                vcm_tmp[:m, :m] = vcmt[sel, np.vstack(sel)]
 
                 # solve the equation by least-squares
                 # calculate velocities
@@ -277,8 +277,8 @@ def time_series(ifgs, pthresh, params, vcmt, mst=None):
                 tsvel = np.empty(nvelpar)*np.nan
                 tsvel[~np.isclose(velflag, 0.0, atol=1e-8)] = x[:nvelleft]
 
-                tsvel_matrix[row_num, col_num, :] = tsvel
-                tsincr[row_num, col_num, :] = tsvel*span
+                tsvel_matrix[row, col, :] = tsvel
+                tsincr[row, col, :] = tsvel*span
 
     if tsincr is None:
         raise TimeSeriesError("Could not produce a time series")
