@@ -108,10 +108,6 @@ def time_series_old(ifgs, pthresh, mst=None):
                 tsvel_pix[where(velflag != 0)[0]] = dot(pinv(B), ifgv)
                 tsvel[row_num, col_num, :] = tsvel_pix
                 tsincr[row_num, col_num, :] = tsvel_pix * span
-                # print row_num, col_num
-                # print velflag
-                # print B
-                # print tsincr[row_num, col_num, :]
 
     if tsincr is None:
         raise TimeSeriesError("Could not produce a time series")
@@ -122,8 +118,7 @@ def time_series_old(ifgs, pthresh, mst=None):
     # convert zeros to nans
     tscum = where(tscum == 0, nan, tscum)
     tsvel = where(tsvel == 0, nan, tsvel)
-    print 'tsincr inside function', '-'*50
-    print tsincr
+
     return tsincr, tscum, tsvel
 
 
@@ -133,6 +128,8 @@ def time_series(ifgs, pthresh, params, vcmt, mst=None):
 
     :param ifgs: Sequence of interferograms.
     :param pthresh: minimum number of coherent observations for a pixel.
+    :param params: configuration parameters
+    :param vcmt: Derived positive definite temporal variance covariance matrix
     :param mst: [optional] array of ifg indexes from the pixel by pixel MST.
 
     :return: Tuple with the elements:
@@ -208,9 +205,7 @@ def time_series(ifgs, pthresh, params, vcmt, mst=None):
         for col_num in xrange(ncols):
             # check pixel for non-redundant ifgs;
             sel = where(mst[:, row_num, col_num])[0]
-            m = len(sel)
-
-            if m >= pthresh:
+            if len(sel) >= pthresh:
                 ifgv = ifg_data[sel, row_num, col_num]
                 # make design matrix, B
                 B = B0[sel, :]
