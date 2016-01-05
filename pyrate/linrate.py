@@ -118,7 +118,7 @@ def linear_rate(ifgs, vcm, pthr, nsig, maxsig, mst=None):
     # overwrite the data whose error is larger than the maximum sigma user threshold
     rate[error > maxsig] = nan
     error[error > maxsig] = nan
-    samples[error > maxsig] = nan
+    samples[error > maxsig] = nan  # TODO: This step is missing in matlab?
 
     return rate, error, samples
 
@@ -130,6 +130,7 @@ if __name__ == "__main__":
     from pyrate.scripts import run_pyrate
     from pyrate import matlab_mst_kruskal as matlab_mst
     from pyrate.tests.common import SYD_TEST_MATLAB_ORBITAL_DIR, SYD_TEST_OUT
+    from pyrate.tests.common import SYD_TEST_DIR
     from pyrate import config as cf
     from pyrate import reference_phase_estimation as rpe
     from pyrate import vcm
@@ -195,6 +196,8 @@ if __name__ == "__main__":
     rate, error, samples = run_pyrate.calculate_linear_rate(ifgs, params, vcmt,
                                                  mst=mst_grid)
 
-    print rate
-    print error
-    print samples
+    MATLAB_LINRATE_DIR = os.path.join(SYD_TEST_DIR, 'matlab_linrate')
+
+    rate_matlab = np.genfromtxt(os.path.join(MATLAB_LINRATE_DIR, 'stackmap.csv'), delimiter=',')
+
+    np.testing.assert_array_almost_equal(rate[:11, :45], rate_matlab[:11, :45], decimal=1)

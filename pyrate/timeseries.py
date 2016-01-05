@@ -475,11 +475,8 @@ if __name__ == "__main__":
     if params[cf.TIME_SERIES_CAL] != 0:
         tsincr, tscum, tsvel = run_pyrate.calculate_time_series(
             ifgs, params, vcmt, mst=mst_grid)
-        print 'here in calc time series'
-        print '-'*50
-        print np.sum(np.isnan(np.ravel(tsincr))), np.sum(np.isnan(ts_incr))
+
         nan_index = np.isnan(np.ravel(tsincr))
-        print ts_incr[nan_index]
         ts_incr = np.reshape(ts_incr, newshape=tsincr.shape, order='F')
         ts_cum = np.reshape(ts_cum, newshape=tsincr.shape, order='F')
 
