@@ -91,12 +91,6 @@ def linear_rate(ifgs, vcm, pthr, nsig, maxsig, mst=None):
 
                 # Compute the Lstsq coefficient for the velocity
                 v = solve(R, z)
-                # nobs, nvar = B.shape
-                # print ifgv.shape
-                # v = np.zeros(shape=(nvar, 1))
-                # print 'P \n', P
-                # v[P, 0:1] = vv
-                # print v
 
                 """end matlab lscov routine"""
 
@@ -120,7 +114,7 @@ def linear_rate(ifgs, vcm, pthr, nsig, maxsig, mst=None):
                     ind = delete(ind, wr.argmax())
                 else:
                     # if no, save estimate, exit the while loop and go to next pixel
-                    rate[i, j] = v[0]
+                    rate[i, j] = v
                     error[i, j] = err
                     samples[i, j] = ifgv.shape[0]
                     break
@@ -209,12 +203,18 @@ if __name__ == "__main__":
 
     MATLAB_LINRATE_DIR = os.path.join(SYD_TEST_DIR, 'matlab_linrate')
 
-    rate_matlab = np.genfromtxt(os.path.join(MATLAB_LINRATE_DIR, 'stackmap.csv'), delimiter=',')
+    rate_matlab = np.genfromtxt(
+        os.path.join(MATLAB_LINRATE_DIR, 'stackmap.csv'), delimiter=',')
 
-    np.testing.assert_array_almost_equal(rate[:11, :45], rate_matlab[:11, :45], decimal=4)
+    np.testing.assert_array_almost_equal(
+        rate[:11, :45], rate_matlab[:11, :45], decimal=4)
 
-    error_matlab = np.genfromtxt(os.path.join(MATLAB_LINRATE_DIR, 'errormap.csv'), delimiter=',')
-    np.testing.assert_array_almost_equal(error[:11, :45], error_matlab[:11, :45], decimal=4)
+    error_matlab = np.genfromtxt(
+        os.path.join(MATLAB_LINRATE_DIR, 'errormap.csv'), delimiter=',')
+    np.testing.assert_array_almost_equal(
+        error[:11, :45], error_matlab[:11, :45], decimal=4)
 
-    samples_matlab = np.genfromtxt(os.path.join(MATLAB_LINRATE_DIR, 'coh_sta.csv'), delimiter=',')
-    np.testing.assert_array_almost_equal(samples[:11, :45], samples_matlab[:11, :45], decimal=4)
+    samples_matlab = np.genfromtxt(
+        os.path.join(MATLAB_LINRATE_DIR, 'coh_sta.csv'), delimiter=',')
+    np.testing.assert_array_almost_equal(
+        samples[:11, :45], samples_matlab[:11, :45], decimal=4)

@@ -152,14 +152,27 @@ class MatlabEqualityTest(unittest.TestCase):
 
         MATLAB_LINRATE_DIR = os.path.join(SYD_TEST_DIR, 'matlab_linrate')
 
-        cls.rate_matlab = np.genfromtxt(os.path.join(MATLAB_LINRATE_DIR, 'stackmap.csv'), delimiter=',')
+        cls.rate_matlab = np.genfromtxt(
+            os.path.join(MATLAB_LINRATE_DIR, 'stackmap.csv'), delimiter=',')
+        cls.error_matlab = np.genfromtxt(
+            os.path.join(MATLAB_LINRATE_DIR, 'errormap.csv'), delimiter=',')
 
+        cls.samples_matlab = np.genfromtxt(
+            os.path.join(MATLAB_LINRATE_DIR, 'coh_sta.csv'), delimiter=',')
 
     def test_linear_rate_full(self):
         np.testing.assert_array_almost_equal(
-            self.rate[:11, :45], self.rate_matlab[:11, :45], decimal=1)
+            self.rate[:11, :45], self.rate_matlab[:11, :45], decimal=4)
 
+    def test_lin_rate_error(self):
+        np.testing.assert_array_almost_equal(
+            self.error[:11, :45], self.error_matlab[:11, :45], decimal=4)
 
+    def test_lin_rate_samples(self):
+        np.testing.assert_array_almost_equal(
+            self.samples[:11, :45], self.samples_matlab[:11, :45], decimal=4)
+
+    # TODO: investigae why the whole arrays don't equal
 
 if __name__ == "__main__":
     unittest.main()
