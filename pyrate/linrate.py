@@ -58,6 +58,7 @@ def linear_rate(ifgs, vcm, pthr, nsig, maxsig, mst=None):
     # nested loops to loop over the 2 image dimensions
     for i in xrange(rows):
         for j in xrange(cols):
+
             # find the indices of independent ifgs for given pixel from MST
             ind = np.nonzero(mst[:, i, j])[0]  # only True's in mst are chosen
 
@@ -71,11 +72,13 @@ def linear_rate(ifgs, vcm, pthr, nsig, maxsig, mst=None):
                 B = span[:, ind]
 
                 # Subset of full VCM matrix for selected observations
-                V = vcm[ind, np.vstack(ind)]
+                vcm_temp = vcm[ind, np.vstack(ind)]
 
+                """ start matlab lscov routine """
+                
                 # Get the lower triangle cholesky decomposition.
                 # V must be positive definite (symmetrical and square)
-                T = cholesky(V, 1)
+                T = cholesky(vcm_temp, 1)
 
                 # Incorporate inverse of VCM into the design matrix and observations vector
                 A = solve(T, B.transpose())
@@ -83,14 +86,22 @@ def linear_rate(ifgs, vcm, pthr, nsig, maxsig, mst=None):
 
                 # Factor the design matrix, incorporate covariances or weights into the
                 # system of equations, and transform the response vector.
-                Q, R, _ = qr(A, mode='economic', pivoting=True)
+                Q, R, P = qr(A, mode='economic', pivoting=True)
                 z = Q.conj().transpose().dot(b)
 
                 # Compute the Lstsq coefficient for the velocity
                 v = solve(R, z)
+                # nobs, nvar = B.shape
+                # print ifgv.shape
+                # v = np.zeros(shape=(nvar, 1))
+                # print 'P \n', P
+                # v[P, 0:1] = vv
+                # print v
+
+                """end matlab lscov routine"""
 
                 # Compute the model errors; added by Hua Wang, 12/12/2011
-                err1 = inv(V).dot(B.conj().transpose())
+                err1 = inv(vcm_temp).dot(B.conj().transpose())
                 err2 = B.dot(err1)
                 err = sqrt(diag(inv(err2)))
 
@@ -98,22 +109,22 @@ def linear_rate(ifgs, vcm, pthr, nsig, maxsig, mst=None):
                 r = (B * v) - ifgv
 
                 # determine the ratio of residuals and apriori variances (Danish method)
-                w = cholesky(inv(V))
-                wr = abs(w * r.transpose())
+                w = cholesky(inv(vcm_temp))
+                wr = abs(np.dot(w, r.transpose()))
 
                 # test if maximum ratio is greater than user threshold.
-                maxr = diag(wr).max()
-                maxi = nonzero(wr == maxr)[0][0]
+                max_val = wr.max()
 
-                if maxr > nsig:
+                if max_val > nsig:
                     # if yes, discard and re-do the calculation.
-                    ind = delete(ind, maxi)
+                    ind = delete(ind, wr.argmax())
                 else:
                     # if no, save estimate, exit the while loop and go to next pixel
-                    rate[i, j] = v
+                    rate[i, j] = v[0]
                     error[i, j] = err
                     samples[i, j] = ifgv.shape[0]
                     break
+
 
     # overwrite the data whose error is larger than the maximum sigma user threshold
     rate[error > maxsig] = nan
@@ -200,4 +211,10 @@ if __name__ == "__main__":
 
     rate_matlab = np.genfromtxt(os.path.join(MATLAB_LINRATE_DIR, 'stackmap.csv'), delimiter=',')
 
-    np.testing.assert_array_almost_equal(rate[:11, :45], rate_matlab[:11, :45], decimal=1)
+    np.testing.assert_array_almost_equal(rate[:11, :45], rate_matlab[:11, :45], decimal=4)
+
+    error_matlab = np.genfromtxt(os.path.join(MATLAB_LINRATE_DIR, 'errormap.csv'), delimiter=',')
+    np.testing.assert_array_almost_equal(error[:11, :45], error_matlab[:11, :45], decimal=4)
+
+    samples_matlab = np.genfromtxt(os.path.join(MATLAB_LINRATE_DIR, 'coh_sta.csv'), delimiter=',')
+    np.testing.assert_array_almost_equal(samples[:11, :45], samples_matlab[:11, :45], decimal=4)
