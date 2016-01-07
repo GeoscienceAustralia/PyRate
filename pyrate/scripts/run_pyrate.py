@@ -69,7 +69,6 @@ def process_ifgs(ifg_paths_or_instance, params):
     mst_mat_binary_file = os.path.join(params[cf.OUT_DIR], 'mst_mat')
     np.save(file=mst_mat_binary_file, arr=mst_grid, allow_pickle=True)
 
-
     # Estimate reference pixel location
     refpx, refpy = find_reference_pixel(ifgs, params)
 

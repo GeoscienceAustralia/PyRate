@@ -58,9 +58,9 @@ def linear_rate(ifgs, vcm, pthr, nsig, maxsig, mst=None):
     # pixel-by-pixel calculation.
     # nested loops to loop over the 2 image dimensions
     for i in xrange(rows):
+        res = parmap.map(linear_rate_by_pixel, range(cols), i, mst, nsig, obs, pthr, span, vcm)
         for j in xrange(cols):
-            res = linear_rate_by_pixel(error, i, j, mst, nsig, obs, pthr, rate, samples, span, vcm)
-            rate[i, j], error[i, j], samples[i, j] = res
+            rate[i, j], error[i, j], samples[i, j] = res[j][0], res[j][1], res[j][2]
 
     # overwrite the data whose error is larger than the maximum sigma user threshold
     rate[error > maxsig] = nan
@@ -70,7 +70,7 @@ def linear_rate(ifgs, vcm, pthr, nsig, maxsig, mst=None):
     return rate, error, samples
 
 
-def linear_rate_by_pixel(error, i, j, mst, nsig, obs, pthr, rate, samples, span, vcm):
+def linear_rate_by_pixel(j, i, mst, nsig, obs, pthr, span, vcm):
     # find the indices of independent ifgs for given pixel from MST
     ind = np.nonzero(mst[:, i, j])[0]  # only True's in mst are chosen
     # iterative loop to calculate 'robust' velocity for pixel
