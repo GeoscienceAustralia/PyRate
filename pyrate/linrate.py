@@ -13,7 +13,6 @@ from numpy import nan, isnan, sqrt, diag, delete, ones, array, nonzero, float32
 import numpy as np
 import parmap
 
-
 def is_pos_def(x):
     """
     Can be used to check if matrix x is +ve def.
@@ -37,6 +36,7 @@ def linear_rate(ifgs, vcm, pthr, nsig, maxsig, mst=None, parallel=True):
     :param nsig: n-sigma ratio used to threshold 'model minus observation' residuals
     :param maxsig: Threshold for maximum allowable standard error
     :param mst: Pixel-wise matrix describing the minimum spanning tree network
+    :param parallel: use multiprocessing or not.
 
     :return:
         python/matlab variable names
@@ -100,12 +100,15 @@ def linear_rate_by_rows(i, cols, mst, nsig, obs, pthr, span, vcm):
     :param vcm: temporal vcm matrix
     :return:
     """
-
-    res = []
-
+    res = np.empty(shape=(cols, 3), dtype=np.float32)
     for j in xrange(cols):
-        res.append(
-            linear_rate_by_pixel(j, i, mst, nsig, obs, pthr, span, vcm))
+        res[j, :] = linear_rate_by_pixel(j, i, mst, nsig, obs, pthr, span, vcm)
+
+    # res = map(lambda k:
+    #           linear_rate_by_pixel(k, i, mst, nsig, obs, pthr, span, vcm),
+    #           range(cols)
+    #           )
+
     return res
 
 
