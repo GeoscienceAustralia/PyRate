@@ -180,7 +180,6 @@ def time_series(ifgs, pthresh, params, vcmt, mst=None):
     B0[isign[0], :] = -B0[isign[0], :]
 
     #  Laplacian smoothing coefficient matrix
-
     BLap0 = np.zeros(shape=(nlap, nvelpar))
 
     for i in range(nlap):
@@ -192,7 +191,6 @@ def time_series(ifgs, pthresh, params, vcmt, mst=None):
     # smf: Laplacian smoothing factor
     BLap0 *= SMFACTOR
 
-    tsincr = np.empty(shape=(nrows, ncols, nvelpar), dtype=np.float32) * np.nan
     tsvel_matrix = np.empty(shape=(nrows, ncols, nvelpar),
                             dtype=np.float32) * np.nan
 
@@ -205,12 +203,13 @@ def time_series(ifgs, pthresh, params, vcmt, mst=None):
         mst = ~isnan(ifg_data)
 
     res = parmap.map(time_series_by_rows, range(nrows), B0, BLap0, SMORDER,
-                     ifg_data, mst, ncols, nvelpar, pthresh, span, vcmt)
+                     ifg_data, mst, ncols, nvelpar, pthresh, vcmt)
 
     for row in xrange(nrows):
-        tsvel_matrix[row, :, :] = res[row][0]
-        tsincr[row, :, :] = res[row][1]
+        tsvel_matrix[row] = res[row]
 
+    # do all the span multiplication as a numpy linalg operation, MUCH faster
+    tsincr = tsvel_matrix * span
 
     if tsincr is None:
         raise TimeSeriesError("Could not produce a time series")
@@ -225,20 +224,19 @@ def time_series(ifgs, pthresh, params, vcmt, mst=None):
 
 
 def time_series_by_rows(row, B0, BLap0, SMORDER, ifg_data, mst, ncols, nvelpar,
-                        pthresh, span, vcmt):
+                        pthresh, vcmt):
 
     tsvel = np.empty(shape=(ncols, nvelpar), dtype=np.float32) * np.nan
-    tsincr = np.empty(shape=(ncols, nvelpar), dtype=np.float32) * np.nan
     for col in range(ncols):
-        tsvel[col, :], tsincr[col, :] = time_series_by_pixel(
+        tsvel[col, :] = time_series_by_pixel(
             B0, BLap0, SMORDER, col, ifg_data, mst, nvelpar, pthresh,
-            row, vcmt, span)
+            row, vcmt)
 
-    return tsvel, tsincr
+    return tsvel
 
 
 def time_series_by_pixel(B0, BLap0, SMORDER, col, ifg_data, mst, nvelpar,
-                         pthresh, row, vcmt, span):
+                         pthresh, row, vcmt):
     # check pixel for non-redundant ifgs;
     sel = np.nonzero(mst[:, row, col])[0]  # trues in mst are chosen
     if len(sel) >= pthresh:
@@ -312,12 +310,9 @@ def time_series_by_pixel(B0, BLap0, SMORDER, col, ifg_data, mst, nvelpar,
 
         tsvel = np.empty(nvelpar, dtype=np.float32) * np.nan
         tsvel[~np.isclose(velflag, 0.0, atol=1e-8)] = x[:nvelleft]
-
-        # tsvel_matrix[row, col, :] = tsvel
-        # tsincr[row, col, :] = tsvel * span
-        return tsvel, tsvel * span
+        return tsvel
     else:
-        return np.empty(nvelpar) * np.nan, np.empty(nvelpar) * np.nan
+        return np.empty(nvelpar) * np.nan
 
 
 
