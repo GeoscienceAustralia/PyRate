@@ -27,7 +27,6 @@ from pyrate import reference_phase_estimation as rpe
 from pyrate import vcm
 
 
-
 def default_params():
     return {TIME_SERIES_PTHRESH: 10,
             TIME_SERIES_SM_ORDER: 2,

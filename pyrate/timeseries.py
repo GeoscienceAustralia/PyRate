@@ -20,6 +20,7 @@ import gdal
 import pyrate.ifgconstants as ifc
 from pyrate import config as cf
 
+
 def time_series_old(ifgs, pthresh, mst=None):
     """
     Returns time series data from the given ifgs.
@@ -124,7 +125,7 @@ def time_series_old(ifgs, pthresh, mst=None):
     return tsincr, tscum, tsvel
 
 
-def time_series(ifgs, pthresh, params, vcmt, mst=None):
+def time_series(ifgs, pthresh, params, vcmt, mst=None, parallel=False):
     """
     Returns time series data from the given ifgs.
 
@@ -195,18 +196,24 @@ def time_series(ifgs, pthresh, params, vcmt, mst=None):
                             dtype=np.float32) * np.nan
 
     ifg_data = np.zeros((nifgs, nrows, ncols), dtype=float32)
-    for ifg_num in range(nifgs):
+    for ifg_num in xrange(nifgs):
         ifgs[ifg_num].convert_to_nans(0)
         ifg_data[ifg_num] = ifgs[ifg_num].phase_data
 
     if mst is None:
         mst = ~isnan(ifg_data)
 
-    res = parmap.map(time_series_by_rows, range(nrows), B0, BLap0, SMORDER,
+    if parallel:
+        res = parmap.map(time_series_by_rows, range(nrows), B0, BLap0, SMORDER,
                      ifg_data, mst, ncols, nvelpar, pthresh, vcmt)
-
-    for row in xrange(nrows):
-        tsvel_matrix[row] = res[row]
+        for row in xrange(nrows):
+            tsvel_matrix[row] = res[row]
+    else:
+        for row in xrange(nrows):
+            for col in xrange(ncols):
+                tsvel_matrix[row, col] = time_series_by_pixel(
+                    B0, BLap0, SMORDER, col, ifg_data, mst, nvelpar,
+                         pthresh, row, vcmt)
 
     # do all the span multiplication as a numpy linalg operation, MUCH faster
     tsincr = tsvel_matrix * span
@@ -421,7 +428,6 @@ if __name__ == "__main__":
     from pyrate import matlab_mst_kruskal as matlab_mst
     from pyrate.tests.common import SYD_TEST_MATLAB_ORBITAL_DIR, SYD_TEST_OUT
     from pyrate.tests.common import SYD_TEST_DIR
-    from pyrate import config as cf
     from pyrate import reference_phase_estimation as rpe
     from pyrate import vcm
 
