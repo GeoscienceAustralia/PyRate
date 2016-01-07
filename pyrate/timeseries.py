@@ -203,14 +203,10 @@ def time_series(ifgs, pthresh, params, vcmt, mst=None):
         mst = ~isnan(ifg_data)
 
     for row in xrange(nrows):
-        # tsvel_col, tsincr_col = time_series_by_rows(B0, BLap0, SMORDER, ifg_data, mst, ncols, nvelpar,
-        #                     pthresh, row, span, tsincr, tsvel_matrix, vcmt)
-        # tsvel_matrix[row, :, :] = tsvel_col
-        # tsincr[row, :, :] = tsincr_col
-        for col in xrange(ncols):
-            tsvel_matrix[row, col, :], tsincr[row, col, :] = time_series_by_pixel(B0, BLap0, SMORDER, col, ifg_data, mst, nvelpar,
-                         pthresh, row, vcmt, span)
-            # tsincr[row, col, :] = tsvel * span
+        tsvel_row, tsincr_row = time_series_by_rows(B0, BLap0, SMORDER, ifg_data, mst, ncols, nvelpar,
+                            pthresh, row, span, vcmt)
+        tsvel_matrix[row, :, :] = tsvel_row
+        tsincr[row, :, :] = tsincr_row
 
     if tsincr is None:
         raise TimeSeriesError("Could not produce a time series")
@@ -225,16 +221,15 @@ def time_series(ifgs, pthresh, params, vcmt, mst=None):
 
 
 def time_series_by_rows(B0, BLap0, SMORDER, ifg_data, mst, ncols, nvelpar,
-                        pthresh, row, span, tsincr, tsvel_matrix, vcmt):
+                        pthresh, row, span, vcmt):
 
     tsvel = np.empty(shape=(ncols, nvelpar), dtype=np.float32) * np.nan
     tsincr = np.empty(shape=(ncols, nvelpar), dtype=np.float32) * np.nan
-    for col in xrange(ncols):
+    for col in range(ncols):
         tsvel[col, :], tsincr[col, :] = time_series_by_pixel(B0, BLap0, SMORDER, col, ifg_data, mst,
                                      nvelpar, pthresh, row, vcmt, span)
-        # tsvel_matrix[row, col, :] = tsvel
-        # tsincr[row, col, :] = tsvel * span
-        return tsvel, tsincr
+
+    return tsvel, tsincr
 
 
 def time_series_by_pixel(B0, BLap0, SMORDER, col, ifg_data, mst, nvelpar,
