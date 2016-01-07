@@ -60,10 +60,10 @@ def linear_rate(ifgs, vcm, pthr, nsig, maxsig, mst=None, parallel=True):
     if parallel:
         res = parmap.map(linear_rate_by_rows, range(rows), cols, mst, nsig, obs,
                      pthr, span, vcm)
-        for i in xrange(rows):
-            for j in xrange(cols):
-                rate[i, j], error[i, j], samples[i, j] = \
-                    res[i][j][0], res[i][j][1], res[i][j][2]
+        res = np.array(res)
+        rate = res[:, :, 0]
+        error = res[:, :, 1]
+        samples = res[:, :, 2]
     else:
         for i in xrange(rows):
             for j in xrange(cols):
