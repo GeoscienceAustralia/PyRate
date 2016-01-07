@@ -13,6 +13,7 @@ from numpy import nan, isnan, sqrt, diag, delete, ones, array, nonzero, float32
 import numpy as np
 import parmap
 
+
 def is_pos_def(x):
     """
     Can be used to check if matrix x is +ve def.
@@ -87,10 +88,10 @@ def linear_rate(ifgs, vcm, pthr, nsig, maxsig, mst=None, parallel=True):
     return rate, error, samples
 
 
-def linear_rate_by_rows(i, cols, mst, nsig, obs, pthr, span, vcm):
+def linear_rate_by_rows(row, cols, mst, nsig, obs, pthr, span, vcm):
     """
     helper function for parallel 'row' runs
-    :param i:
+    :param row:
     :param cols:
     :param mst:
     :param nsig:
@@ -101,25 +102,26 @@ def linear_rate_by_rows(i, cols, mst, nsig, obs, pthr, span, vcm):
     :return:
     """
     res = np.empty(shape=(cols, 3), dtype=np.float32)
-    for j in xrange(cols):
-        res[j, :] = linear_rate_by_pixel(j, i, mst, nsig, obs, pthr, span, vcm)
+    for col in xrange(cols):
+        res[col, :] = linear_rate_by_pixel(
+            col, row, mst, nsig, obs, pthr, span, vcm)
 
-    # res = map(lambda k:
-    #           linear_rate_by_pixel(k, i, mst, nsig, obs, pthr, span, vcm),
+    # res = map(lambda col:
+    #           linear_rate_by_pixel(col, row, mst, nsig, obs, pthr, span, vcm),
     #           range(cols)
     #           )
 
     return res
 
 
-def linear_rate_by_pixel(j, i, mst, nsig, obs, pthr, span, vcm):
+def linear_rate_by_pixel(col, row, mst, nsig, obs, pthr, span, vcm):
     # find the indices of independent ifgs for given pixel from MST
-    ind = np.nonzero(mst[:, i, j])[0]  # only True's in mst are chosen
+    ind = np.nonzero(mst[:, row, col])[0]  # only True's in mst are chosen
     # iterative loop to calculate 'robust' velocity for pixel
 
     while len(ind) >= pthr:
         # make vector of selected ifg observations
-        ifgv = obs[ind, i, j]
+        ifgv = obs[ind, row, col]
 
         # form design matrix from appropriate ifg time spans
         B = span[:, ind]
