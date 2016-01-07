@@ -18,7 +18,7 @@ def is_pos_def(x):
     return np.all(np.linalg.eigvals(x) > 1e-6)
 
 
-def linear_rate(ifgs, vcm, pthr, nsig, maxsig, mst=None):
+def linear_rate(ifgs, vcm, pthr, nsig, maxsig, mst=None, parallel=True):
     """
     Pixel-by-pixel linear rate (velocity) estimation using iterative weighted least-squares method.
 
@@ -57,13 +57,18 @@ def linear_rate(ifgs, vcm, pthr, nsig, maxsig, mst=None):
 
     # pixel-by-pixel calculation.
     # nested loops to loop over the 2 image dimensions
-    res = parmap.map(linear_rate_by_rows, range(rows), cols, mst, nsig, obs,
+    if parallel:
+        res = parmap.map(linear_rate_by_rows, range(rows), cols, mst, nsig, obs,
                      pthr, span, vcm)
-
-    for i in xrange(rows):
-        for j in xrange(cols):
-            rate[i, j], error[i, j], samples[i, j] = \
-                res[i][j][0], res[i][j][1], res[i][j][2]
+        for i in xrange(rows):
+            for j in xrange(cols):
+                rate[i, j], error[i, j], samples[i, j] = \
+                    res[i][j][0], res[i][j][1], res[i][j][2]
+    else:
+        for i in xrange(rows):
+            for j in xrange(cols):
+                rate[i, j], error[i, j], samples[i, j] = \
+                    linear_rate_by_pixel(j, i, mst, nsig, obs, pthr, span, vcm)
 
     # overwrite the data whose error is larger than the maximum sigma user threshold
     rate[error > maxsig] = nan
@@ -73,10 +78,30 @@ def linear_rate(ifgs, vcm, pthr, nsig, maxsig, mst=None):
     return rate, error, samples
 
 
-def linear_rate_by_rows(i, cols, mst, nsig, obs, pthr, span, vcm):
-    res = parmap.map(linear_rate_by_pixel, range(cols), i, mst, nsig, obs, pthr,
-                     span, vcm)
-    return res
+def linear_rate_by_rows(i, cols, mst, nsig, obs, pthr, span, vcm,
+                        col_parallel=False):
+    """
+    :param i:
+    :param cols:
+    :param mst:
+    :param nsig:
+    :param obs:
+    :param pthr:
+    :param span:
+    :param vcm:
+    :param col_parallel: whether col operations performed in parallel
+    :return:
+    """
+    if col_parallel:
+        res = parmap.map(linear_rate_by_pixel, range(cols), i, mst, nsig, obs,
+                         pthr, span, vcm)
+        return res
+    else:
+        res = []
+        for j in xrange(cols):
+            res.append(
+                linear_rate_by_pixel(j, i, mst, nsig, obs, pthr, span, vcm))
+        return res
 
 
 def linear_rate_by_pixel(j, i, mst, nsig, obs, pthr, span, vcm):
