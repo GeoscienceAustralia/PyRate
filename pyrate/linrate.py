@@ -78,30 +78,26 @@ def linear_rate(ifgs, vcm, pthr, nsig, maxsig, mst=None, parallel=True):
     return rate, error, samples
 
 
-def linear_rate_by_rows(i, cols, mst, nsig, obs, pthr, span, vcm,
-                        col_parallel=False):
+def linear_rate_by_rows(i, cols, mst, nsig, obs, pthr, span, vcm):
     """
+    helper function for parallel 'row' runs
     :param i:
     :param cols:
     :param mst:
     :param nsig:
     :param obs:
     :param pthr:
-    :param span:
-    :param vcm:
-    :param col_parallel: whether col operations performed in parallel
+    :param span: span calculated in linarate function
+    :param vcm: temporal vcm matrix
     :return:
     """
-    if col_parallel:
-        res = parmap.map(linear_rate_by_pixel, range(cols), i, mst, nsig, obs,
-                         pthr, span, vcm)
-        return res
-    else:
-        res = []
-        for j in xrange(cols):
-            res.append(
-                linear_rate_by_pixel(j, i, mst, nsig, obs, pthr, span, vcm))
-        return res
+
+    res = []
+
+    for j in xrange(cols):
+        res.append(
+            linear_rate_by_pixel(j, i, mst, nsig, obs, pthr, span, vcm))
+    return res
 
 
 def linear_rate_by_pixel(j, i, mst, nsig, obs, pthr, span, vcm):
