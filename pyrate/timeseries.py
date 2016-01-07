@@ -125,7 +125,7 @@ def time_series_old(ifgs, pthresh, mst=None):
     return tsincr, tscum, tsvel
 
 
-def time_series(ifgs, pthresh, params, vcmt, mst=None, parallel=False):
+def time_series(ifgs, pthresh, params, vcmt, mst=None, parallel=True):
     """
     Returns time series data from the given ifgs.
 
@@ -134,6 +134,7 @@ def time_series(ifgs, pthresh, params, vcmt, mst=None, parallel=False):
     :param params: configuration parameters
     :param vcmt: Derived positive definite temporal variance covariance matrix
     :param mst: [optional] array of ifg indexes from the pixel by pixel MST.
+    :param parallel: use multiprocessing or not.
 
     :return: Tuple with the elements:
 
