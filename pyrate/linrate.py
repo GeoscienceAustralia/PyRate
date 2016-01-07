@@ -15,7 +15,16 @@ import parmap
 
 
 def is_pos_def(x):
-    return np.all(np.linalg.eigvals(x) > 1e-6)
+    """
+    Can be used to check if matrix x is +ve def.
+    Works on the basis that all eigenvalues should be +ve
+    :param x:
+    :return:
+    """
+    if x.shape[0] == x.shape[1]:
+        return np.all(np.linalg.eigvals(x) > 1e-6)
+    else:
+        return False
 
 
 def linear_rate(ifgs, vcm, pthr, nsig, maxsig, mst=None, parallel=True):

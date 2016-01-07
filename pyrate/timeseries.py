@@ -203,83 +203,14 @@ def time_series(ifgs, pthresh, params, vcmt, mst=None):
         mst = ~isnan(ifg_data)
 
     for row in xrange(nrows):
+        # tsvel_col, tsincr_col = time_series_by_rows(B0, BLap0, SMORDER, ifg_data, mst, ncols, nvelpar,
+        #                     pthresh, row, span, tsincr, tsvel_matrix, vcmt)
+        # tsvel_matrix[row, :, :] = tsvel_col
+        # tsincr[row, :, :] = tsincr_col
         for col in xrange(ncols):
-            # check pixel for non-redundant ifgs;
-            sel = np.nonzero(mst[:, row, col])[0]  # trues in mst are chosen
-            if len(sel) >= pthresh:
-                ifgv = ifg_data[sel, row, col]
-                # make design matrix, B
-                B = B0[sel, :]
-
-                # remove rank deficient rows
-                rmrow = asarray([0])  # dummy
-
-                while len(rmrow) > 0:
-                    q_var, r_var, e_var = qr(B, mode='economic', pivoting=True)
-                    licols = e_var[matrix_rank(B):nvelpar]
-                    [rmrow, rmcol] = where(B[:, licols] != 0)
-                    B = delete(B, rmrow, axis=0)
-                    ifgv = delete(ifgv, rmrow)
-                    sel = delete(sel, rmrow)
-
-                    # if len(ifgv):
-                    #     continue
-                m = len(sel)
-
-                velflag = sum(abs(B), 0)
-                B = B[:, ~np.isclose(velflag, 0.0)]
-
-                # Laplacian smoothing design matrix
-                nvelleft = np.count_nonzero(velflag)
-                nlap = nvelleft - SMORDER
-
-                BLap = np.empty(shape=(nlap + 2, nvelleft))
-
-                # constrain for the first and the last incremental
-                BLap1 = -np.divide(np.ones(shape=nvelleft), nvelleft-1)
-                BLap1[0] = 1.0
-
-                BLapn = -np.divide(np.ones(shape=nvelleft), nvelleft-1)
-                BLapn[-1] = 1.0
-
-                BLap[0, :] = BLap1
-                BLap[1:nlap+1, :] = BLap0[0:nlap, 0:nvelleft]
-                BLap[-1, :] = BLapn
-
-                nlap += 2
-
-                # add laplacian design matrix
-                B = np.concatenate((B, BLap), axis=0)
-
-                # combine ifg and Laplacian smooth vector
-                vLap = np.zeros(nlap)
-                obsv = np.concatenate((ifgv, vLap), axis=0)
-
-                # make variance-covariance matrix
-                # new covariance matrix, adding the laplacian equations
-                nobs = m + nlap
-                vcm_tmp = np.eye(nobs)
-                vcm_tmp[:m, :m] = vcmt[sel, np.vstack(sel)]
-
-                # solve the equation by least-squares
-                # calculate velocities
-                # we get the lower triangle in numpy
-                # matlab gives upper triangle by default
-                w = np.linalg.cholesky(np.linalg.pinv(vcm_tmp)).T
-
-                wb = np.dot(w, B)
-                wl = np.dot(w, obsv)
-                # x=wb\wl
-                x = np.dot(np.linalg.pinv(wb, rcond=1e-8), wl)
-
-                # residuals and roughness
-                # not implemented
-
-                tsvel = np.empty(nvelpar)*np.nan
-                tsvel[~np.isclose(velflag, 0.0, atol=1e-8)] = x[:nvelleft]
-
-                tsvel_matrix[row, col, :] = tsvel
-                tsincr[row, col, :] = tsvel*span
+            tsvel_matrix[row, col, :], tsincr[row, col, :] = time_series_by_pixel(B0, BLap0, SMORDER, col, ifg_data, mst, nvelpar,
+                         pthresh, row, vcmt, span)
+            # tsincr[row, col, :] = tsvel * span
 
     if tsincr is None:
         raise TimeSeriesError("Could not produce a time series")
@@ -291,6 +222,103 @@ def time_series(ifgs, pthresh, params, vcmt, mst=None):
     tscum = where(tscum == 0, nan, tscum)
     tsvel_matrix = where(tsvel_matrix == 0, nan, tsvel_matrix)
     return tsincr, tscum, tsvel_matrix
+
+
+def time_series_by_rows(B0, BLap0, SMORDER, ifg_data, mst, ncols, nvelpar,
+                        pthresh, row, span, tsincr, tsvel_matrix, vcmt):
+
+    tsvel = np.empty(shape=(ncols, nvelpar), dtype=np.float32) * np.nan
+    tsincr = np.empty(shape=(ncols, nvelpar), dtype=np.float32) * np.nan
+    for col in xrange(ncols):
+        tsvel[col, :], tsincr[col, :] = time_series_by_pixel(B0, BLap0, SMORDER, col, ifg_data, mst,
+                                     nvelpar, pthresh, row, vcmt, span)
+        # tsvel_matrix[row, col, :] = tsvel
+        # tsincr[row, col, :] = tsvel * span
+        return tsvel, tsincr
+
+
+def time_series_by_pixel(B0, BLap0, SMORDER, col, ifg_data, mst, nvelpar,
+                         pthresh, row, vcmt, span):
+    # check pixel for non-redundant ifgs;
+    sel = np.nonzero(mst[:, row, col])[0]  # trues in mst are chosen
+    if len(sel) >= pthresh:
+        ifgv = ifg_data[sel, row, col]
+        # make design matrix, B
+        B = B0[sel, :]
+
+        # remove rank deficient rows
+        rmrow = asarray([0])  # dummy
+
+        while len(rmrow) > 0:
+            q_var, r_var, e_var = qr(B, mode='economic', pivoting=True)
+            licols = e_var[matrix_rank(B):nvelpar]
+            [rmrow, rmcol] = where(B[:, licols] != 0)
+            B = delete(B, rmrow, axis=0)
+            ifgv = delete(ifgv, rmrow)
+            sel = delete(sel, rmrow)
+
+            # if len(ifgv):
+            #     continue
+        m = len(sel)
+
+        velflag = sum(abs(B), 0)
+        B = B[:, ~np.isclose(velflag, 0.0)]
+
+        # Laplacian smoothing design matrix
+        nvelleft = np.count_nonzero(velflag)
+        nlap = nvelleft - SMORDER
+
+        BLap = np.empty(shape=(nlap + 2, nvelleft))
+
+        # constrain for the first and the last incremental
+        BLap1 = -np.divide(np.ones(shape=nvelleft), nvelleft - 1)
+        BLap1[0] = 1.0
+
+        BLapn = -np.divide(np.ones(shape=nvelleft), nvelleft - 1)
+        BLapn[-1] = 1.0
+
+        BLap[0, :] = BLap1
+        BLap[1:nlap + 1, :] = BLap0[0:nlap, 0:nvelleft]
+        BLap[-1, :] = BLapn
+
+        nlap += 2
+
+        # add laplacian design matrix
+        B = np.concatenate((B, BLap), axis=0)
+
+        # combine ifg and Laplacian smooth vector
+        vLap = np.zeros(nlap)
+        obsv = np.concatenate((ifgv, vLap), axis=0)
+
+        # make variance-covariance matrix
+        # new covariance matrix, adding the laplacian equations
+        nobs = m + nlap
+        vcm_tmp = np.eye(nobs)
+        vcm_tmp[:m, :m] = vcmt[sel, np.vstack(sel)]
+
+        # solve the equation by least-squares
+        # calculate velocities
+        # we get the lower triangle in numpy
+        # matlab gives upper triangle by default
+        w = np.linalg.cholesky(np.linalg.pinv(vcm_tmp)).T
+
+        wb = np.dot(w, B)
+        wl = np.dot(w, obsv)
+        # x=wb\wl
+        x = np.dot(np.linalg.pinv(wb, rcond=1e-8), wl)
+
+        # residuals and roughness
+        # not implemented
+
+        tsvel = np.empty(nvelpar, dtype=np.float32) * np.nan
+        tsvel[~np.isclose(velflag, 0.0, atol=1e-8)] = x[:nvelleft]
+
+        # tsvel_matrix[row, col, :] = tsvel
+        # tsincr[row, col, :] = tsvel * span
+        return tsvel, tsvel * span
+    else:
+        return np.empty(nvelpar) * np.nan, np.empty(nvelpar) * np.nan
+
 
 
 def plot_timeseries(tsincr, tscum, tsvel, output_dir):
