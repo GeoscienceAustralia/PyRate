@@ -11,6 +11,7 @@ function.
 from scipy.linalg import solve, cholesky, qr, inv
 from numpy import nan, isnan, sqrt, diag, delete, ones, array, nonzero, float32
 import numpy as np
+import parmap
 
 
 def is_pos_def(x):
@@ -52,73 +53,14 @@ def linear_rate(ifgs, vcm, pthr, nsig, maxsig, mst=None):
     # preallocate NaN arrays
     error = np.empty([rows, cols], dtype=float32) * np.nan
     rate = np.empty([rows, cols], dtype=float32) * np.nan
-    samples = np.empty([rows, cols], dtype=float32) * np.nan
+    samples = np.empty([rows, cols], dtype=np.int16) * np.nan
 
     # pixel-by-pixel calculation.
     # nested loops to loop over the 2 image dimensions
     for i in xrange(rows):
         for j in xrange(cols):
-
-            # find the indices of independent ifgs for given pixel from MST
-            ind = np.nonzero(mst[:, i, j])[0]  # only True's in mst are chosen
-
-            # iterative loop to calculate 'robust' velocity for pixel
-
-            while len(ind) >= pthr:
-                # make vector of selected ifg observations
-                ifgv = obs[ind, i, j]
-
-                # form design matrix from appropriate ifg time spans
-                B = span[:, ind]
-
-                # Subset of full VCM matrix for selected observations
-                vcm_temp = vcm[ind, np.vstack(ind)]
-
-                """ start matlab lscov routine """
-                
-                # Get the lower triangle cholesky decomposition.
-                # V must be positive definite (symmetrical and square)
-                T = cholesky(vcm_temp, 1)
-
-                # Incorporate inverse of VCM into the design matrix and observations vector
-                A = solve(T, B.transpose())
-                b = solve(T, ifgv.transpose())
-
-                # Factor the design matrix, incorporate covariances or weights into the
-                # system of equations, and transform the response vector.
-                Q, R, P = qr(A, mode='economic', pivoting=True)
-                z = Q.conj().transpose().dot(b)
-
-                # Compute the Lstsq coefficient for the velocity
-                v = solve(R, z)
-
-                """end matlab lscov routine"""
-
-                # Compute the model errors; added by Hua Wang, 12/12/2011
-                err1 = inv(vcm_temp).dot(B.conj().transpose())
-                err2 = B.dot(err1)
-                err = sqrt(diag(inv(err2)))
-
-                # Compute the residuals (model minus observations)
-                r = (B * v) - ifgv
-
-                # determine the ratio of residuals and apriori variances (Danish method)
-                w = cholesky(inv(vcm_temp))
-                wr = abs(np.dot(w, r.transpose()))
-
-                # test if maximum ratio is greater than user threshold.
-                max_val = wr.max()
-
-                if max_val > nsig:
-                    # if yes, discard and re-do the calculation.
-                    ind = delete(ind, wr.argmax())
-                else:
-                    # if no, save estimate, exit the while loop and go to next pixel
-                    rate[i, j] = v
-                    error[i, j] = err
-                    samples[i, j] = ifgv.shape[0]
-                    break
-
+            res = linear_rate_by_pixel(error, i, j, mst, nsig, obs, pthr, rate, samples, span, vcm)
+            rate[i, j], error[i, j], samples[i, j] = res
 
     # overwrite the data whose error is larger than the maximum sigma user threshold
     rate[error > maxsig] = nan
@@ -126,6 +68,66 @@ def linear_rate(ifgs, vcm, pthr, nsig, maxsig, mst=None):
     samples[error > maxsig] = nan  # TODO: This step is missing in matlab?
 
     return rate, error, samples
+
+
+def linear_rate_by_pixel(error, i, j, mst, nsig, obs, pthr, rate, samples, span, vcm):
+    # find the indices of independent ifgs for given pixel from MST
+    ind = np.nonzero(mst[:, i, j])[0]  # only True's in mst are chosen
+    # iterative loop to calculate 'robust' velocity for pixel
+
+    while len(ind) >= pthr:
+        # make vector of selected ifg observations
+        ifgv = obs[ind, i, j]
+
+        # form design matrix from appropriate ifg time spans
+        B = span[:, ind]
+
+        # Subset of full VCM matrix for selected observations
+        vcm_temp = vcm[ind, np.vstack(ind)]
+
+        """ start matlab lscov routine """
+
+        # Get the lower triangle cholesky decomposition.
+        # V must be positive definite (symmetrical and square)
+        T = cholesky(vcm_temp, 1)
+
+        # Incorporate inverse of VCM into the design matrix and observations vector
+        A = solve(T, B.transpose())
+        b = solve(T, ifgv.transpose())
+
+        # Factor the design matrix, incorporate covariances or weights into the
+        # system of equations, and transform the response vector.
+        Q, R, _ = qr(A, mode='economic', pivoting=True)
+        z = Q.conj().transpose().dot(b)
+
+        # Compute the Lstsq coefficient for the velocity
+        v = solve(R, z)
+
+        """end matlab lscov routine"""
+
+        # Compute the model errors; added by Hua Wang, 12/12/2011
+        err1 = inv(vcm_temp).dot(B.conj().transpose())
+        err2 = B.dot(err1)
+        err = sqrt(diag(inv(err2)))
+
+        # Compute the residuals (model minus observations)
+        r = (B * v) - ifgv
+
+        # determine the ratio of residuals and apriori variances (Danish method)
+        w = cholesky(inv(vcm_temp))
+        wr = abs(np.dot(w, r.transpose()))
+
+        # test if maximum ratio is greater than user threshold.
+        max_val = wr.max()
+        if max_val > nsig:
+            # if yes, discard and re-do the calculation.
+            ind = delete(ind, wr.argmax())
+        else:
+            # if no, save estimate, exit the while loop and go to next pixel
+            return v[0], err[0], ifgv.shape[0]
+    # dummy return for no change
+    return np.nan, np.nan, np.nan
+
 
 if __name__ == "__main__":
     import os
