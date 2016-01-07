@@ -194,7 +194,7 @@ def time_series(ifgs, pthresh, params, vcmt, mst=None, parallel=True):
     BLap0 *= SMFACTOR
 
     tsvel_matrix = np.empty(shape=(nrows, ncols, nvelpar),
-                            dtype=np.float32) * np.nan
+                            dtype=np.float32)
 
     ifg_data = np.zeros((nifgs, nrows, ncols), dtype=float32)
     for ifg_num in xrange(nifgs):
@@ -234,7 +234,7 @@ def time_series(ifgs, pthresh, params, vcmt, mst=None, parallel=True):
 def time_series_by_rows(row, B0, BLap0, SMORDER, ifg_data, mst, ncols, nvelpar,
                         pthresh, vcmt):
 
-    tsvel = np.empty(shape=(ncols, nvelpar), dtype=np.float32) * np.nan
+    tsvel = np.empty(shape=(ncols, nvelpar), dtype=np.float32)
     for col in range(ncols):
         tsvel[col, :] = time_series_by_pixel(
             B0, BLap0, SMORDER, col, ifg_data, mst, nvelpar, pthresh,

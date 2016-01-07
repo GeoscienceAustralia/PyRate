@@ -60,10 +60,10 @@ def linear_rate(ifgs, vcm, pthr, nsig, maxsig, mst=None, parallel=True):
     else:
         mst[isnan(obs)] = 0
 
-    # preallocate NaN arrays
-    error = np.empty([rows, cols], dtype=float32) * np.nan
-    rate = np.empty([rows, cols], dtype=float32) * np.nan
-    samples = np.empty([rows, cols], dtype=np.int16) * np.nan
+    # preallocate empty arrays. No need to preallocation NaNs with new code
+    error = np.empty([rows, cols], dtype=float32)
+    rate = np.empty([rows, cols], dtype=float32)
+    samples = np.empty([rows, cols], dtype=np.int16)
 
     # pixel-by-pixel calculation.
     # nested loops to loop over the 2 image dimensions
@@ -106,6 +106,7 @@ def linear_rate_by_rows(row, cols, mst, nsig, obs, pthr, span, vcm):
         res[col, :] = linear_rate_by_pixel(
             col, row, mst, nsig, obs, pthr, span, vcm)
 
+    # alternate implementation, check performance for larger images
     # res = map(lambda col:
     #           linear_rate_by_pixel(col, row, mst, nsig, obs, pthr, span, vcm),
     #           range(cols)
