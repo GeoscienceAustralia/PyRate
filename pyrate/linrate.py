@@ -57,10 +57,13 @@ def linear_rate(ifgs, vcm, pthr, nsig, maxsig, mst=None):
 
     # pixel-by-pixel calculation.
     # nested loops to loop over the 2 image dimensions
+    res = parmap.map(linear_rate_by_rows, range(rows), cols, mst, nsig, obs,
+                     pthr, span, vcm)
+
     for i in xrange(rows):
-        res = parmap.map(linear_rate_by_pixel, range(cols), i, mst, nsig, obs, pthr, span, vcm)
         for j in xrange(cols):
-            rate[i, j], error[i, j], samples[i, j] = res[j][0], res[j][1], res[j][2]
+            rate[i, j], error[i, j], samples[i, j] = \
+                res[i][j][0], res[i][j][1], res[i][j][2]
 
     # overwrite the data whose error is larger than the maximum sigma user threshold
     rate[error > maxsig] = nan
@@ -68,6 +71,12 @@ def linear_rate(ifgs, vcm, pthr, nsig, maxsig, mst=None):
     samples[error > maxsig] = nan  # TODO: This step is missing in matlab?
 
     return rate, error, samples
+
+
+def linear_rate_by_rows(i, cols, mst, nsig, obs, pthr, span, vcm):
+    res = parmap.map(linear_rate_by_pixel, range(cols), i, mst, nsig, obs, pthr,
+                     span, vcm)
+    return res
 
 
 def linear_rate_by_pixel(j, i, mst, nsig, obs, pthr, span, vcm):
