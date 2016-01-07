@@ -12,6 +12,8 @@ from numpy.linalg import matrix_rank, pinv
 from scipy.linalg import qr
 import numpy as np
 import matplotlib.pyplot as plt
+import parmap
+
 import pyrate.config as config
 from algorithm import master_slave_ids, get_epochs
 import gdal
@@ -202,11 +204,13 @@ def time_series(ifgs, pthresh, params, vcmt, mst=None):
     if mst is None:
         mst = ~isnan(ifg_data)
 
+    res = parmap.map(time_series_by_rows, range(nrows), B0, BLap0, SMORDER,
+                     ifg_data, mst, ncols, nvelpar, pthresh, span, vcmt)
+
     for row in xrange(nrows):
-        tsvel_row, tsincr_row = time_series_by_rows(B0, BLap0, SMORDER, ifg_data, mst, ncols, nvelpar,
-                            pthresh, row, span, vcmt)
-        tsvel_matrix[row, :, :] = tsvel_row
-        tsincr[row, :, :] = tsincr_row
+        tsvel_matrix[row, :, :] = res[row][0]
+        tsincr[row, :, :] = res[row][1]
+
 
     if tsincr is None:
         raise TimeSeriesError("Could not produce a time series")
@@ -220,14 +224,15 @@ def time_series(ifgs, pthresh, params, vcmt, mst=None):
     return tsincr, tscum, tsvel_matrix
 
 
-def time_series_by_rows(B0, BLap0, SMORDER, ifg_data, mst, ncols, nvelpar,
-                        pthresh, row, span, vcmt):
+def time_series_by_rows(row, B0, BLap0, SMORDER, ifg_data, mst, ncols, nvelpar,
+                        pthresh, span, vcmt):
 
     tsvel = np.empty(shape=(ncols, nvelpar), dtype=np.float32) * np.nan
     tsincr = np.empty(shape=(ncols, nvelpar), dtype=np.float32) * np.nan
     for col in range(ncols):
-        tsvel[col, :], tsincr[col, :] = time_series_by_pixel(B0, BLap0, SMORDER, col, ifg_data, mst,
-                                     nvelpar, pthresh, row, vcmt, span)
+        tsvel[col, :], tsincr[col, :] = time_series_by_pixel(
+            B0, BLap0, SMORDER, col, ifg_data, mst, nvelpar, pthresh,
+            row, vcmt, span)
 
     return tsvel, tsincr
 
