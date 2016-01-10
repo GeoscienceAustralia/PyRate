@@ -238,7 +238,6 @@ if __name__ == "__main__":
     _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
 
     # Calculate interferogram noise
-    # TODO: assign maxvar to ifg metadata (and geotiff)?
     maxvar = [vcm.cvd(i)[0] for i in ifgs]
 
     # Calculate temporal variance-covariance matrix
