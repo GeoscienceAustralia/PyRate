@@ -147,9 +147,13 @@ class MatlabEqualityTest(unittest.TestCase):
         vcmt = vcm.get_vcmt(ifgs, maxvar)
 
         # Calculate linear rate map
-        params[cf.PARALLEL] = True
+        params[cf.PARALLEL] = 1
         cls.rate, cls.error, cls.samples = run_pyrate.calculate_linear_rate(
             ifgs, params, vcmt, mst=mst_grid)
+
+        params[cf.PARALLEL] = 2
+        cls.rate_2, cls.error_2, cls.samples_2 = \
+            run_pyrate.calculate_linear_rate(ifgs, params, vcmt, mst=mst_grid)
 
         MATLAB_LINRATE_DIR = os.path.join(SYD_TEST_DIR, 'matlab_linrate')
 
@@ -161,7 +165,7 @@ class MatlabEqualityTest(unittest.TestCase):
         cls.samples_matlab = np.genfromtxt(
             os.path.join(MATLAB_LINRATE_DIR, 'coh_sta.csv'), delimiter=',')
 
-        params[cf.PARALLEL] = False
+        params[cf.PARALLEL] = 0
         # Calculate linear rate map
         cls.rate_s, cls.error_s, cls.samples_s = \
             run_pyrate.calculate_linear_rate(ifgs, params, vcmt, mst=mst_grid)
@@ -178,6 +182,17 @@ class MatlabEqualityTest(unittest.TestCase):
         np.testing.assert_array_almost_equal(
             self.samples[:11, :45], self.samples_matlab[:11, :45], decimal=4)
 
+    def test_linear_rate_full_parallel_pixel_level(self):
+        np.testing.assert_array_almost_equal(
+            self.rate_2[:11, :45], self.rate_matlab[:11, :45], decimal=4)
+
+    def test_lin_rate_error_parallel_pixel_level(self):
+        np.testing.assert_array_almost_equal(
+            self.error_2[:11, :45], self.error_matlab[:11, :45], decimal=4)
+
+    def test_lin_rate_samples_parallel_pixel_level(self):
+        np.testing.assert_array_almost_equal(
+            self.samples_2[:11, :45], self.samples_matlab[:11, :45], decimal=4)
 
     def test_linear_rate_full_serial(self):
         np.testing.assert_array_almost_equal(

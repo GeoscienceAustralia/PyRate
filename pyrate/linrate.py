@@ -29,7 +29,7 @@ def is_pos_def(x):
 
 
 def linear_rate(ifgs, vcm, pthr, nsig, maxsig,
-                mst=None, parallel=True, processes=8):
+                mst=None, parallel=1, processes=8):
     """
     Pixel-by-pixel linear rate (velocity) estimation using iterative weighted least-squares method.
 
@@ -70,13 +70,22 @@ def linear_rate(ifgs, vcm, pthr, nsig, maxsig,
 
     # pixel-by-pixel calculation.
     # nested loops to loop over the 2 image dimensions
-    if parallel:
+    if parallel == 1:
         res = parmap.map(linear_rate_by_rows, range(rows), cols, mst, nsig, obs,
                      pthr, span, vcm, processes=processes)
         res = np.array(res)
         rate = res[:, :, 0]
         error = res[:, :, 1]
         samples = res[:, :, 2]
+    elif parallel == 2:
+        res = parmap.starmap(linear_rate_by_pixel,
+                             itertools.product(range(rows), range(cols)),
+                    mst, nsig, obs, pthr, span, vcm, processes=processes)
+        res = np.array(res)
+
+        rate = res[:, 0].reshape(rows, cols)
+        error = res[:, 1].reshape(rows, cols)
+        samples = res[:, 2].reshape(rows, cols)
     else:
         for i in xrange(rows):
             for j in xrange(cols):
