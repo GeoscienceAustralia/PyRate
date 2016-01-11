@@ -18,6 +18,7 @@ from pyrate.tests.common import sydney_data_setup
 from pyrate.timeseries import time_series
 from pyrate.config import TIME_SERIES_PTHRESH, TIME_SERIES_SM_ORDER
 from pyrate.config import TIME_SERIES_SM_FACTOR
+from pyrate.config import PARALLEL, PROCESSES
 from pyrate.scripts import run_pyrate
 from pyrate import matlab_mst_kruskal as matlab_mst
 from pyrate.tests.common import SYD_TEST_MATLAB_ORBITAL_DIR, SYD_TEST_OUT
@@ -30,7 +31,9 @@ from pyrate import vcm
 def default_params():
     return {TIME_SERIES_PTHRESH: 10,
             TIME_SERIES_SM_ORDER: 2,
-            TIME_SERIES_SM_FACTOR: -0.25}
+            TIME_SERIES_SM_FACTOR: -0.25,
+            PARALLEL: 0,
+            PROCESSES: 1}
 
 
 class SinglePixelIfg(object):
@@ -177,6 +180,7 @@ class MatlabTimeSeriesEquality(unittest.TestCase):
         # Calculate temporal variance-covariance matrix
         vcmt = vcm.get_vcmt(ifgs, maxvar)
 
+        params[cf.PARALLEL] = 2
         # Calculate linear rate map
         cls.rate, cls.error, cls.samples = run_pyrate.calculate_linear_rate(
             ifgs, params, vcmt, mst=mst_grid)

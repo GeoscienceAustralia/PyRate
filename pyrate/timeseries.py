@@ -12,6 +12,7 @@ from numpy.linalg import matrix_rank, pinv
 from scipy.linalg import qr
 import numpy as np
 import matplotlib.pyplot as plt
+import itertools
 import parmap
 
 import pyrate.config as config
@@ -125,7 +126,7 @@ def time_series_old(ifgs, pthresh, mst=None):
     return tsincr, tscum, tsvel
 
 
-def time_series(ifgs, pthresh, params, vcmt, mst=None, parallel=True):
+def time_series(ifgs, pthresh, params, vcmt, mst=None):
     """
     Returns time series data from the given ifgs.
 
@@ -153,6 +154,10 @@ def time_series(ifgs, pthresh, params, vcmt, mst=None, parallel=True):
     if len(ifgs) < 1:
         msg = 'Time series requires 2+ interferograms'
         raise TimeSeriesError(msg)
+
+    # MULTIPROCESSING parameters
+    parallel = params[cf.PARALLEL]
+    processes = params[cf.PROCESSES]
 
     SMORDER = params[cf.TIME_SERIES_SM_ORDER]
     SMFACTOR = np.power(10, params[cf.TIME_SERIES_SM_FACTOR])
@@ -204,17 +209,15 @@ def time_series(ifgs, pthresh, params, vcmt, mst=None, parallel=True):
     if mst is None:
         mst = ~isnan(ifg_data)
 
-    if parallel:
-        res = parmap.map(time_series_by_rows, range(nrows), B0, BLap0, SMORDER,
+    if parallel == 1:
+        tsvel_matrix = parmap.map(time_series_by_rows, range(nrows), B0, BLap0, SMORDER,
                      ifg_data, mst, ncols, nvelpar, pthresh, vcmt)
-        for row in xrange(nrows):
-            tsvel_matrix[row] = res[row]
     else:
         for row in xrange(nrows):
             for col in xrange(ncols):
                 tsvel_matrix[row, col] = time_series_by_pixel(
-                    B0, BLap0, SMORDER, col, ifg_data, mst, nvelpar,
-                         pthresh, row, vcmt)
+                    row, col, B0, BLap0, SMORDER, ifg_data, mst, nvelpar,
+                    pthresh, vcmt)
 
     # do all the span multiplication as a numpy linalg operation, MUCH faster
     tsincr = tsvel_matrix * span
@@ -237,14 +240,14 @@ def time_series_by_rows(row, B0, BLap0, SMORDER, ifg_data, mst, ncols, nvelpar,
     tsvel = np.empty(shape=(ncols, nvelpar), dtype=np.float32)
     for col in range(ncols):
         tsvel[col, :] = time_series_by_pixel(
-            B0, BLap0, SMORDER, col, ifg_data, mst, nvelpar, pthresh,
-            row, vcmt)
+            row, col, B0, BLap0, SMORDER, ifg_data, mst, nvelpar,
+            pthresh, vcmt)
 
     return tsvel
 
 
-def time_series_by_pixel(B0, BLap0, SMORDER, col, ifg_data, mst, nvelpar,
-                         pthresh, row, vcmt):
+def time_series_by_pixel(row, col, B0, BLap0, SMORDER, ifg_data, mst, nvelpar,
+                         pthresh, vcmt):
     # check pixel for non-redundant ifgs;
     sel = np.nonzero(mst[:, row, col])[0]  # trues in mst are chosen
     if len(sel) >= pthresh:
