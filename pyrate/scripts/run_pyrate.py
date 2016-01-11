@@ -7,7 +7,7 @@ Created on 17/09/2012
 """
 
 import os, sys, shutil, logging, datetime
-import gdal
+from osgeo import gdal
 import numpy as np
 
 import pyrate.mst as mst
@@ -67,7 +67,7 @@ def process_ifgs(ifg_paths_or_instance, params):
 
     # write mst output to a file
     mst_mat_binary_file = os.path.join(params[cf.OUT_DIR], 'mst_mat')
-    np.save(file=mst_mat_binary_file, arr=mst_grid, allow_pickle=True)
+    np.save(file=mst_mat_binary_file, arr=mst_grid)
 
     # Estimate reference pixel location
     refpx, refpy = find_reference_pixel(ifgs, params)
@@ -85,7 +85,7 @@ def process_ifgs(ifg_paths_or_instance, params):
     # Calculate temporal variance-covariance matrix
     vcmt = vcm_module.get_vcmt(ifgs, maxvar)
     
-    p = os.path.join(pars[cf.SIM_DIR], ifgs[0].data_path)
+    p = os.path.join(params[cf.SIM_DIR], ifgs[0].data_path)
     assert os.path.exists(p) == True
 
     ds = gdal.Open(p)
@@ -292,7 +292,8 @@ def original_ifg_paths(ifglist_path):
     """
 
     basedir = os.path.dirname(ifglist_path)
-    ifglist = cf.parse_namelist(ifglist_path)
+    ifglist = cf.parse_namelist(os.path.join(os.environ['PYRATEPATH'],
+                                             ifglist_path))
     return [os.path.join(basedir, p) for p in ifglist]
 
 
