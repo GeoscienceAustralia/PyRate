@@ -157,6 +157,9 @@ TIME_SERIES_INTERP = 'ts_interp'
 TIME_SERIES_SM_ORDER = 'smorder'
 TIME_SERIES_SM_FACTOR = 'smfactor'
 
+# MULTIPROCESSING parameters
+PARALLEL = 'parallel'
+PROCESSES = 'processes'
 
 def degree_conv(deg):
     """
@@ -224,9 +227,14 @@ PARAM_CONVERSION = {
     TIME_SERIES_CAL : (int, 0),
     TIME_SERIES_PTHRESH : (int, 20),
     TIME_SERIES_SM_FACTOR: (float, None),
-    TIME_SERIES_SM_ORDER: (int, None)
+    TIME_SERIES_SM_ORDER: (int, None),
+
+    PARALLEL: (bool, True),
+    PROCESSES: (int, 8)
     }
     #TIME_SERIES_INTERP : (bool, False)
+
+
 
 
 def get_config_params(path):

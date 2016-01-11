@@ -27,7 +27,8 @@ def is_pos_def(x):
         return False
 
 
-def linear_rate(ifgs, vcm, pthr, nsig, maxsig, mst=None, parallel=True):
+def linear_rate(ifgs, vcm, pthr, nsig, maxsig,
+                mst=None, parallel=True, processes=8):
     """
     Pixel-by-pixel linear rate (velocity) estimation using iterative weighted least-squares method.
 
@@ -38,6 +39,7 @@ def linear_rate(ifgs, vcm, pthr, nsig, maxsig, mst=None, parallel=True):
     :param maxsig: Threshold for maximum allowable standard error
     :param mst: Pixel-wise matrix describing the minimum spanning tree network
     :param parallel: use multiprocessing or not.
+    :param processes: number of parallel processes to use
 
     :return:
         python/matlab variable names
@@ -69,7 +71,7 @@ def linear_rate(ifgs, vcm, pthr, nsig, maxsig, mst=None, parallel=True):
     # nested loops to loop over the 2 image dimensions
     if parallel:
         res = parmap.map(linear_rate_by_rows, range(rows), cols, mst, nsig, obs,
-                     pthr, span, vcm)
+                     pthr, span, vcm, processes=processes)
         res = np.array(res)
         rate = res[:, :, 0]
         error = res[:, :, 1]
@@ -104,7 +106,7 @@ def linear_rate_by_rows(row, cols, mst, nsig, obs, pthr, span, vcm):
     res = np.empty(shape=(cols, 3), dtype=np.float32)
     for col in xrange(cols):
         res[col, :] = linear_rate_by_pixel(
-            col, row, mst, nsig, obs, pthr, span, vcm)
+            row, col, mst, nsig, obs, pthr, span, vcm)
 
     # alternate implementation, check performance for larger images
     # res = map(lambda col:
@@ -115,7 +117,7 @@ def linear_rate_by_rows(row, cols, mst, nsig, obs, pthr, span, vcm):
     return res
 
 
-def linear_rate_by_pixel(col, row, mst, nsig, obs, pthr, span, vcm):
+def linear_rate_by_pixel(row, col, mst, nsig, obs, pthr, span, vcm):
     # find the indices of independent ifgs for given pixel from MST
     ind = np.nonzero(mst[:, row, col])[0]  # only True's in mst are chosen
     # iterative loop to calculate 'robust' velocity for pixel
