@@ -180,11 +180,6 @@ class MatlabTimeSeriesEquality(unittest.TestCase):
         # Calculate temporal variance-covariance matrix
         vcmt = vcm.get_vcmt(ifgs, maxvar)
 
-        params[cf.PARALLEL] = 2
-        # Calculate linear rate map
-        cls.rate, cls.error, cls.samples = run_pyrate.calculate_linear_rate(
-            ifgs, params, vcmt, mst=mst_grid)
-
         tsincr_path = os.path.join(SYD_TIME_SERIES_DIR, 'ts_incr.csv')
         cls.ts_incr = np.genfromtxt(tsincr_path, delimiter=',')
         tserr_path = os.path.join(SYD_TIME_SERIES_DIR, 'ts_error.csv')
@@ -192,10 +187,19 @@ class MatlabTimeSeriesEquality(unittest.TestCase):
         tscum_path = os.path.join(SYD_TIME_SERIES_DIR, 'ts_cum.csv')
         cls.ts_cum = np.genfromtxt(tscum_path, delimiter=',')
 
+        params[cf.PARALLEL] = 1
         # Calculate time series
         if params[cf.TIME_SERIES_CAL] != 0:
             cls.tsincr, cls.tscum, cls.tsvel = run_pyrate.calculate_time_series(
                 ifgs, params, vcmt, mst=mst_grid)
+
+        params[cf.PARALLEL] = 2
+        # Calculate time series
+        if params[cf.TIME_SERIES_CAL] != 0:
+            cls.tsincr_2, cls.tscum_2, cls.tsvel_2 = \
+                run_pyrate.calculate_time_series(
+                ifgs, params, vcmt, mst=mst_grid
+                )
 
     def test_time_series_equality(self):
 
@@ -214,6 +218,25 @@ class MatlabTimeSeriesEquality(unittest.TestCase):
 
         np.testing.assert_array_almost_equal(
             ts_cum[:11, :45, :], self.tscum[:11, :45, :], decimal=4)
+
+
+    def test_time_series_equality_parallel_by_the_pixel(self):
+
+        self.assertEqual(self.tsincr_2.shape, self.tscum_2.shape)
+        self.assertEqual(self.tsvel_2.shape, self.tsincr_2.shape)
+        ts_incr = np.reshape(self.ts_incr,
+                             newshape=self.tsincr.shape, order='F')
+        ts_cum = np.reshape(self.ts_cum, newshape=self.tsincr.shape, order='F')
+
+        #TODO: Investigate why the entire matrices don't equal
+        # Current hypothesis is that the pseudo inverse computed are different
+        # in matlab and python as they are based of different convergence
+        # criteria.
+        np.testing.assert_array_almost_equal(
+            ts_incr[:11, :45, :], self.tsincr_2[:11, :45, :], decimal=4)
+
+        np.testing.assert_array_almost_equal(
+            ts_cum[:11, :45, :], self.tscum_2[:11, :45, :], decimal=4)
 
 
 if __name__ == "__main__":

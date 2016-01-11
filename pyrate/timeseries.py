@@ -212,6 +212,13 @@ def time_series(ifgs, pthresh, params, vcmt, mst=None):
     if parallel == 1:
         tsvel_matrix = parmap.map(time_series_by_rows, range(nrows), B0, BLap0, SMORDER,
                      ifg_data, mst, ncols, nvelpar, pthresh, vcmt)
+    elif parallel == 2:
+        res = parmap.starmap(time_series_by_pixel,
+                             itertools.product(range(nrows), range(ncols)),
+                             B0, BLap0, SMORDER, ifg_data, mst, nvelpar,
+                             pthresh, vcmt)
+        res = np.array(res)
+        tsvel_matrix = np.reshape(res, newshape=(nrows, ncols, res.shape[1]))
     else:
         for row in xrange(nrows):
             for col in xrange(ncols):
