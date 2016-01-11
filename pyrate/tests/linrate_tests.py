@@ -147,6 +147,7 @@ class MatlabEqualityTest(unittest.TestCase):
         vcmt = vcm.get_vcmt(ifgs, maxvar)
 
         # Calculate linear rate map
+        params[cf.PARALLEL] = True
         cls.rate, cls.error, cls.samples = run_pyrate.calculate_linear_rate(
             ifgs, params, vcmt, mst=mst_grid)
 
@@ -160,17 +161,35 @@ class MatlabEqualityTest(unittest.TestCase):
         cls.samples_matlab = np.genfromtxt(
             os.path.join(MATLAB_LINRATE_DIR, 'coh_sta.csv'), delimiter=',')
 
-    def test_linear_rate_full(self):
+        params[cf.PARALLEL] = False
+        # Calculate linear rate map
+        cls.rate_s, cls.error_s, cls.samples_s = \
+            run_pyrate.calculate_linear_rate(ifgs, params, vcmt, mst=mst_grid)
+
+    def test_linear_rate_full_parallel(self):
         np.testing.assert_array_almost_equal(
             self.rate[:11, :45], self.rate_matlab[:11, :45], decimal=4)
 
-    def test_lin_rate_error(self):
+    def test_lin_rate_error_parallel(self):
         np.testing.assert_array_almost_equal(
             self.error[:11, :45], self.error_matlab[:11, :45], decimal=4)
 
-    def test_lin_rate_samples(self):
+    def test_lin_rate_samples_parallel(self):
         np.testing.assert_array_almost_equal(
             self.samples[:11, :45], self.samples_matlab[:11, :45], decimal=4)
+
+
+    def test_linear_rate_full_serial(self):
+        np.testing.assert_array_almost_equal(
+            self.rate_s[:11, :45], self.rate_matlab[:11, :45], decimal=4)
+
+    def test_lin_rate_error_serial(self):
+        np.testing.assert_array_almost_equal(
+            self.error_s[:11, :45], self.error_matlab[:11, :45], decimal=4)
+
+    def test_lin_rate_samples_serial(self):
+        np.testing.assert_array_almost_equal(
+            self.samples_s[:11, :45], self.samples_matlab[:11, :45], decimal=4)
 
     # TODO: investigae why the whole arrays don't equal
 

@@ -12,6 +12,7 @@ from scipy.linalg import solve, cholesky, qr, inv
 from numpy import nan, isnan, sqrt, diag, delete, ones, array, nonzero, float32
 import numpy as np
 import parmap
+import itertools
 
 
 def is_pos_def(x):
@@ -65,7 +66,7 @@ def linear_rate(ifgs, vcm, pthr, nsig, maxsig,
     # preallocate empty arrays. No need to preallocation NaNs with new code
     error = np.empty([rows, cols], dtype=float32)
     rate = np.empty([rows, cols], dtype=float32)
-    samples = np.empty([rows, cols], dtype=np.int16)
+    samples = np.empty([rows, cols], dtype=np.float32)
 
     # pixel-by-pixel calculation.
     # nested loops to loop over the 2 image dimensions
@@ -80,7 +81,7 @@ def linear_rate(ifgs, vcm, pthr, nsig, maxsig,
         for i in xrange(rows):
             for j in xrange(cols):
                 rate[i, j], error[i, j], samples[i, j] = \
-                    linear_rate_by_pixel(j, i, mst, nsig, obs, pthr, span, vcm)
+                    linear_rate_by_pixel(i, j, mst, nsig, obs, pthr, span, vcm)
 
     # overwrite the data whose error is larger than the maximum sigma user threshold
     rate[error > maxsig] = nan

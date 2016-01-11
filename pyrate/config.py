@@ -229,7 +229,7 @@ PARAM_CONVERSION = {
     TIME_SERIES_SM_FACTOR: (float, None),
     TIME_SERIES_SM_ORDER: (int, None),
 
-    PARALLEL: (bool, True),
+    PARALLEL: (int, None),
     PROCESSES: (int, 8)
     }
     #TIME_SERIES_INTERP : (bool, False)
