@@ -6,7 +6,8 @@ Created on 29/05/2014
 .. codeauthor:: Ben Davies
 '''
 
-import os, sys, unittest, gdal
+import os, sys, unittest
+from osgeo import gdal
 from os.path import join
 from datetime import date
 from numpy.testing import assert_array_almost_equal

@@ -12,7 +12,7 @@ import shutil
 from subprocess import call
 import numpy as np
 
-from pyrate.scripts import run_pyrate
+from pyrate.scripts import run_pyrate, run_prepifg
 from pyrate import matlab_mst_kruskal as matlab_mst
 from pyrate.tests.common import SYD_TEST_MATLAB_ORBITAL_DIR, SYD_TEST_OUT
 from pyrate.tests.common import SYD_TEST_DIR
@@ -98,8 +98,10 @@ class MatlabEqualityTest(unittest.TestCase):
         params = cf.get_config_params(
                 os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orbital_error.conf'))
         params[cf.REF_EST_METHOD] = 2
-        call(["python", "pyrate/scripts/run_prepifg.py",
-              os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orbital_error.conf')])
+
+        run_prepifg.main(
+            config_file=os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR,
+                                     'orbital_error.conf'))
 
         xlks, ylks, crop = run_pyrate.transform_params(params)
 

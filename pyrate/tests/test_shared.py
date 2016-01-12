@@ -17,7 +17,7 @@ from itertools import product
 from numpy import isnan, where, nan
 from numpy.testing import assert_array_equal
 
-from gdal import Open, Dataset, UseExceptions
+from osgeo.gdal import Open, Dataset, UseExceptions
 UseExceptions()
 
 from pyrate.shared import Ifg, DEM, RasterException

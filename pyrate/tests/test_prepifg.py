@@ -19,10 +19,11 @@ from pyrate.shared import Ifg, DEM
 from pyrate.prepifg import CUSTOM_CROP, MAXIMUM_CROP, MINIMUM_CROP, ALREADY_SAME_SIZE
 from pyrate.prepifg import prepare_ifgs, resample, PreprocessError, CustomExts
 from pyrate.prepifg import mlooked_path, extents_from_params
+from pyrate.tests.common import SYD_TEST_MATLAB_PREPIFG_DIR
+from pyrate.tests.common import PREP_TEST_TIF, SYD_TEST_DEM_DIR
+from pyrate.tests.common import SYD_TEST_DEM_TIF
 
-from common import PREP_TEST_TIF, SYD_TEST_DEM_DIR, SYD_TEST_DEM_TIF
-
-import gdal
+from osgeo import gdal
 gdal.UseExceptions()
 
 if not exists(PREP_TEST_TIF):
@@ -448,8 +449,6 @@ class MatlabEqualityTest(unittest.TestCase):
         for i in self.ifgs_with_nan:
             if not i.mm_converted:
                 i.convert_to_mm()
-        from pyrate.tests.common import SYD_TEST_MATLAB_PREPIFG_DIR
-
         onlyfiles = [f for f in os.listdir(SYD_TEST_MATLAB_PREPIFG_DIR)
                 if os.path.isfile(os.path.join(SYD_TEST_MATLAB_PREPIFG_DIR, f))
                 and f.endswith('.csv') and f.__contains__('_mm_')]

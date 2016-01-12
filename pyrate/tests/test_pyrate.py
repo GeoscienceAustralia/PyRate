@@ -96,7 +96,7 @@ ifglksy:      1
 #ifgxfirst:    150.92
 #ifgxlast:     150.94
 #ifgyfirst:    -34.18
-#ifgylast:     -34.22 
+#ifgylast:     -34.22
 
 #------------------------------------
 # reference point options

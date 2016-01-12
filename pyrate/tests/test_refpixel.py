@@ -238,7 +238,5 @@ class MatlabEqualityTest(unittest.TestCase):
         self.assertEqual(refy, 2)
 
 
-
-
 if __name__ == "__main__":
     unittest.main()
