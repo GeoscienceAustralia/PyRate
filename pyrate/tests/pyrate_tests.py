@@ -10,6 +10,7 @@ import os, glob, shutil, logging, unittest
 from os.path import join
 from pyrate import shared, config, prepifg
 from pyrate.scripts import run_pyrate
+from pyrate import config as cf
 
 # testing constants
 BASE_DIR = '/tmp/pyrate/workflow'
@@ -32,7 +33,7 @@ obsdir:       tif/
 ifgfilelist:  tif/ifms_17
 #atmdir:
 #atmfilelist:
-#simdir:
+simdir:
 demfile:      dem/sydney_trimmed.tif
 #eqfile:
 #eqdate:
@@ -109,6 +110,7 @@ refnx:         5
 refny:         5
 refchipsize:   5
 refminfrac:    0.8
+refest:        1
 
 #------------------------------------
 # orbital errors fitting parameters
@@ -178,6 +180,8 @@ orbfitlksy:    0
 tscal:         1
 ts_pthr:       10
 ts_interp:     1
+smfactor:     -0.25
+smorder:       2
 ##tsmethod:      1 ONLY SVD METHOD IMPLEMENTED
 ##smorder:       2 ONLY SVD METHOD IMPLEMENTED
 ##smfactor:     -0.25 ONLY SVD METHOD IMPLEMENTED
@@ -287,6 +291,7 @@ class PyRateTests(unittest.TestCase):
             run_pyrate.init_logging(logging.DEBUG)
 
             params = config._parse_conf_file(WORKFLOW_CONF)
+            params[cf.SIM_DIR] = os.environ['PYRATEPATH']
             paths = glob.glob(join(BASE_OUT_DIR, 'geo_*-*.tif'))
             run_pyrate.process_ifgs(paths, params)
             # TODO: add matlab mst path tests
