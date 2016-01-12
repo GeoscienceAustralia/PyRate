@@ -30,6 +30,7 @@ MILLIMETRES = 'MILLIMETRES'
 META_ORBITAL = 'ORBITAL_ERROR'
 META_REMOVED = 'REMOVED'
 pars = None
+PYRATEPATH = cf.PYRATEPATH
 
 
 def process_ifgs(ifg_paths_or_instance, params):
@@ -66,7 +67,8 @@ def process_ifgs(ifg_paths_or_instance, params):
         mst_grid = matlab_mst.matlab_mst_boolean_array(ifg_instance_updated)
 
     # write mst output to a file
-    mst_mat_binary_file = os.path.join(params[cf.OUT_DIR], 'mst_mat')
+    mst_mat_binary_file = os.path.join(
+        PYRATEPATH, params[cf.OUT_DIR], 'mst_mat')
     np.save(file=mst_mat_binary_file, arr=mst_grid)
 
     # Estimate reference pixel location
@@ -84,7 +86,7 @@ def process_ifgs(ifg_paths_or_instance, params):
     
     # Calculate temporal variance-covariance matrix
     vcmt = vcm_module.get_vcmt(ifgs, maxvar)
-    
+
     p = os.path.join(params[cf.SIM_DIR], ifgs[0].data_path)
     assert os.path.exists(p) == True
 
@@ -101,24 +103,30 @@ def process_ifgs(ifg_paths_or_instance, params):
         for i in range(len(tsincr[0, 0, :])):
             md[ifc.PYRATE_DATE] = epochlist.dates[i+1]
             data = tsincr[:, :, i]
-            dest = os.path.join(params[cf.OUT_DIR], "tsincr_" + str(epochlist.dates[i+1]) + ".tif")
+            dest = os.path.join(
+                PYRATEPATH, params[cf.OUT_DIR],
+                "tsincr_" + str(epochlist.dates[i+1]) + ".tif")
             timeseries.write_geotiff_output(md, data, dest, np.nan)
 
             data = tscum[:, :, i]
-            dest = os.path.join(params[cf.OUT_DIR], "tscuml_" + str(epochlist.dates[i+1]) + ".tif")
+            dest = os.path.join(
+                PYRATEPATH, params[cf.OUT_DIR],
+                "tscuml_" + str(epochlist.dates[i+1]) + ".tif")
             timeseries.write_geotiff_output(md, data, dest, np.nan)
 
             data = tsvel[:, :, i]
-            dest = os.path.join(params[cf.OUT_DIR], "tsvel_" + str(epochlist.dates[i+1]) + ".tif")
+            dest = os.path.join(
+                PYRATEPATH, params[cf.OUT_DIR],
+                "tsvel_" + str(epochlist.dates[i+1]) + ".tif")
             timeseries.write_geotiff_output(md, data, dest, np.nan)
 
     # Calculate linear rate map
     rate, error, samples = calculate_linear_rate(
                    ifgs, params, vcmt, mst=mst_grid)
     md[ifc.PYRATE_DATE] = epochlist.dates
-    dest = os.path.join(params[cf.OUT_DIR], "linrate.tif")
+    dest = os.path.join(PYRATEPATH, params[cf.OUT_DIR], "linrate.tif")
     timeseries.write_geotiff_output(md, rate, dest, np.nan)
-    dest = os.path.join(params[cf.OUT_DIR], "linerror.tif")
+    dest = os.path.join(PYRATEPATH, params[cf.OUT_DIR], "linerror.tif")
     timeseries.write_geotiff_output(md, rate, dest, np.nan)
 
     # final cleanup, SB: Why do we need this?
@@ -292,8 +300,7 @@ def original_ifg_paths(ifglist_path):
     """
 
     basedir = os.path.dirname(ifglist_path)
-    ifglist = cf.parse_namelist(os.path.join(os.environ['PYRATEPATH'],
-                                             ifglist_path))
+    ifglist = cf.parse_namelist(os.path.join(PYRATEPATH, ifglist_path))
     return [os.path.join(basedir, p) for p in ifglist]
 
 

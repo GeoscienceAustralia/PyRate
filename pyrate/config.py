@@ -47,9 +47,9 @@ Created on 17/09/2012
 # TODO: add regex column to check if some values are within bounds? Potential
 # problem with the checking being done in the middle of the runs, as bad values
 # could cause crashes & destroying some of the results.
-
+import os
 from pyrate import orbital
-
+PYRATEPATH = os.environ['PYRATEPATH']
 
 # general constants
 NO_MULTILOOKING = 1

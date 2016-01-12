@@ -140,8 +140,8 @@ class _DoConvertToGeotiffRoipac(IfgListMixin, luigi.WrapperTask):
 
         ifgFiles = self.ifgList(tif=False)
         tasks = [ConvertFileToGeotiff(
-            inputFile = path,
-            projection = projection) for path in ifgFiles]
+            inputFile=path,
+            projection=projection) for path in ifgFiles]
         return tasks
 
 

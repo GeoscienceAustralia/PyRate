@@ -26,7 +26,8 @@ Created on 12/09/2012
 .. codeauthor:: Ben Davies, NCI <ben.davies@anu.edu.au>
 """
 
-import os, re, struct, datetime, osr, gdal, sys
+import os, re, struct, datetime, sys
+from osgeo import osr, gdal
 import numpy as np
 import pyrate.ifgconstants as ifc
 

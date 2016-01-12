@@ -15,7 +15,6 @@ Created on 23/10/2012
 # TODO: check new average option for gdalwarp (GDAL 1.10.x +)
 
 import os
-import osgeo.gdal as gdal
 from math import modf
 from numbers import Number
 from tempfile import mkstemp
@@ -23,14 +22,14 @@ from itertools import product
 from subprocess import check_call
 from collections import namedtuple
 from os.path import splitext
-import numpy as np
 import shutil
 
+import numpy as np
 from numpy import array, where, nan, isnan, nanmean, float32, zeros, sum as nsum
 
+from osgeo import gdal
 import pyrate.config as cfg
 from pyrate.shared import Ifg, DEM
-
 
 CustomExts = namedtuple('CustExtents', ['xfirst', 'yfirst', 'xlast', 'ylast'])
 

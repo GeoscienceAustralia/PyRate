@@ -9,14 +9,15 @@ Created on 12/09/2012
 import os
 import math
 from datetime import date
-from numpy import where, nan, isnan, sum as nsum
-import pyrate.ifgconstants as ifc
-import numpy as np
 import logging
+from numpy import where, nan, isnan, sum as nsum
+import numpy as np
+
+import pyrate.ifgconstants as ifc
 
 try:
     from osgeo import gdal
-    from gdalconst import GA_Update, GA_ReadOnly, GF_Write
+    from osgeo.gdalconst import GA_Update, GA_ReadOnly, GF_Write
 except ImportError:
     import gdal
 
@@ -77,7 +78,7 @@ class RasterBase(object):
 
         if not os.path.exists(self.data_path):
             raise IOError('The file {path} does not exist.'
-                    'Consider running prepifg'.format(path=self.data_path))
+                    ' Consider running prepifg'.format(path=self.data_path))
 
         self.dataset = gdal.Open(self.data_path, flag)
 
