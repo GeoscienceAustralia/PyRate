@@ -115,10 +115,9 @@ class PyRateTests(unittest.TestCase):
 
             params = config.get_config_params(
                 os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orbital_error.conf'))
-            params[cf.SIM_DIR] = os.environ['PYRATEPATH']
+            params[cf.SIM_DIR] = cf.PYRATEPATH
             paths = glob.glob(join(BASE_OUT_DIR, 'geo_*-*.tif'))
             run_pyrate.process_ifgs(paths, params)
-            # TODO: add matlab mst path tests
             os.chdir(CURRENT_DIR)
         except:
             # revert working dir & avoid paths busting other tests
