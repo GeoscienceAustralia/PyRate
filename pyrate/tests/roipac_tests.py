@@ -6,7 +6,8 @@ Created on 12/09/2012
 .. codeauthor:: Ben Davies
 '''
 
-import os, sys, unittest, gdal
+import os, sys, unittest
+from osgeo import gdal
 from datetime import date
 from os.path import exists, join
 from numpy.testing import assert_array_almost_equal
@@ -76,7 +77,6 @@ class RoipacCommandLine(unittest.TestCase):
         self.common_check()
 
     def common_check(self):
-        print ('commong check')
         self.makeInputFiles(self.dataPaths, 'WGS84')
         sys.argv = ['roipac.py', self.confFile]
         roipacMain()
