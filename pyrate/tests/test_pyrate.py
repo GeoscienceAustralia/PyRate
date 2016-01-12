@@ -295,6 +295,7 @@ class PyRateTests(unittest.TestCase):
             paths = glob.glob(join(BASE_OUT_DIR, 'geo_*-*.tif'))
             run_pyrate.process_ifgs(paths, params)
             # TODO: add matlab mst path tests
+            os.chdir(CURRENT_DIR)
         except:
             # revert working dir & avoid paths busting other tests
             os.chdir(CURRENT_DIR)
