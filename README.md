@@ -6,14 +6,14 @@ PyRate is a Python tool for estimating the average rate (velocity) and increment
 ## Dependencies:
 
 - [SciPy](www.scipy.org)
-- [GDAL](www.gdal.org)
+- [GDAL](www.gdal.org) a compiled version is included in the codebase
 - [NetworkX](https://pypi.python.org/pypi/networkx)
 - [pyproj](https://pypi.python.org/pypi/pyproj)
 - [nose](https://pypi.python.org/pypi/nose/)
 - [pytest](https://pypi.python.org/pypi/pytest)
 - [sphinx](http://sphinx-doc.org/) for building the docs.
 - [luigi](https://pypi.python.org/pypi/luigi) for controlling batch jobs.
-- [parmap](https://pypi.python.org/pypi/parmap/1.2.0) a python multiprocessing module wrapper.
+- [parmap](https://pypi.python.org/pypi/parmap/1.2.0) a python multiprocessing wrapper, also included in the code
 
 For the viewer you will also need
 
