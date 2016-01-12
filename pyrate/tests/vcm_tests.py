@@ -3,7 +3,7 @@ Tests for PyRate's interferogram covariance calculation and Variance-Covariance 
 
 Created on 14/03/2013
 
-.. codeauthor:: Ben Davies, Matt Garthwaite
+.. codeauthor:: Ben Davies, Matt Garthwaite, Sudipta Basak
 '''
 
 import unittest
@@ -17,7 +17,7 @@ import numpy as np
 from pyrate.vcm import cvd, get_vcmt
 from pyrate.tests.common import sydney5_mock_ifgs, sydney5_ifgs
 from pyrate.tests.common import sydney_data_setup
-from pyrate.scripts import run_pyrate
+from pyrate.scripts import run_pyrate, run_prepifg
 from pyrate import matlab_mst_kruskal as matlab_mst
 from pyrate.tests.common import SYD_TEST_MATLAB_ORBITAL_DIR, SYD_TEST_OUT
 from pyrate import config as cf
@@ -154,16 +154,15 @@ class MatlabEqualityTestInRunPyRateSequence(unittest.TestCase):
         params = cf.get_config_params(
                 os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orbital_error.conf'))
         params[cf.REF_EST_METHOD] = 2
-        call(["python", "pyrate/scripts/run_prepifg.py",
-              os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orbital_error.conf')])
-
+        run_prepifg.main(
+            config_file=os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR,
+                                     'orbital_error.conf'))
         xlks, ylks, crop = run_pyrate.transform_params(params)
 
         base_ifg_paths = run_pyrate.original_ifg_paths(params[cf.IFG_FILE_LIST])
 
         dest_paths = run_pyrate.get_dest_paths(base_ifg_paths,
                                                crop, params, xlks)
-
         ifg_instance = matlab_mst.IfgListPyRate(datafiles=dest_paths)
 
         ifgs = ifg_instance.ifgs
