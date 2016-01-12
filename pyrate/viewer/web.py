@@ -3,12 +3,22 @@
 Script for viewing the inputs/outputs from pyrate. Uses
 """
 
-import os, sys, json, urllib, gc, datetime, types, math
-import osgeo.gdal as gdal
+import os
+import sys
+import json
+import urllib
+import gc
+import datetime
+import types
+import math
 import StringIO as io
+import webbrowser as wb
+
 import numpy as np
 import numpy.ma as ma
-import webbrowser as wb
+
+import osgeo as gdal
+
 try:
     import Image
 except:

@@ -4,7 +4,8 @@ Tools used in converting GAMMA headers to ESRI's BIL format.
 .. codeauthor:: Ben Davies, NCI
 '''
 
-import os, struct, datetime, osr, gdal
+import os, struct, datetime
+from osgeo import osr, gdal
 import numpy as np
 import pyrate.ifgconstants as ifc
 
