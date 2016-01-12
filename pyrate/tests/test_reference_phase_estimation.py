@@ -4,9 +4,7 @@ __date_created__ = '23/12/15'
 import unittest
 import os
 import shutil
-from subprocess import call
 import numpy as np
-import copy
 
 from pyrate import config as cf
 from pyrate.scripts import run_pyrate
@@ -14,6 +12,7 @@ from pyrate import matlab_mst_kruskal as matlab_mst
 from pyrate.tests.common import SYD_TEST_MATLAB_ORBITAL_DIR, SYD_TEST_OUT
 from pyrate.tests.common import SYD_TEST_DIR
 from pyrate.reference_phase_estimation import estimate_ref_phase
+from pyrate.scripts import run_prepifg
 
 
 class RefPhsEstimationMatlabTest(unittest.TestCase):
@@ -30,8 +29,10 @@ class RefPhsEstimationMatlabTest(unittest.TestCase):
 
         params[cf.REF_EST_METHOD] = 1
 
-        call(["python", "pyrate/scripts/run_prepifg.py",
-              os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orbital_error.conf')])
+        run_prepifg.main(
+            config_file=os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR,
+                                     'orbital_error.conf'))
+
 
         xlks, ylks, crop = run_pyrate.transform_params(params)
 
@@ -127,8 +128,9 @@ class RefPhsEstimationMatlabTestMethod2(unittest.TestCase):
                 os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orbital_error.conf'))
         params[cf.REF_EST_METHOD] = 2
 
-        call(["python", "pyrate/scripts/run_prepifg.py",
-              os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orbital_error.conf')])
+        run_prepifg.main(
+            config_file=os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR,
+                                     'orbital_error.conf'))
 
         xlks, ylks, crop = run_pyrate.transform_params(params)
 
@@ -193,7 +195,6 @@ class RefPhsEstimationMatlabTestMethod2(unittest.TestCase):
                 if f.split('_corrected_method2')[-1].split('.')[0] == \
                         os.path.split(j.data_path)[-1].split('_1rlks')[0]:
                     count += 1
-                    print os.path.split(j.data_path)[-1].split('_1rlks')[0]
                     # all numbers equal
                     np.testing.assert_array_almost_equal(ifg_data,
                         self.ifgs[k].phase_data, decimal=3)
@@ -206,7 +207,6 @@ class RefPhsEstimationMatlabTestMethod2(unittest.TestCase):
                     self.assertEqual(np.sum(np.isnan(ifg_data)),
                         np.sum(np.isnan(self.ifgs[k].phase_data)))
 
-                    print count
 
         # ensure we have the correct number of matches
         self.assertEqual(count, len(self.ifgs))
