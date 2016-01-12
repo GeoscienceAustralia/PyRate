@@ -3,6 +3,7 @@ __date_created__ = '23/12/15'
 
 import unittest
 import os
+import sys
 import shutil
 import numpy as np
 
@@ -128,9 +129,9 @@ class RefPhsEstimationMatlabTestMethod2(unittest.TestCase):
                 os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orbital_error.conf'))
         params[cf.REF_EST_METHOD] = 2
 
-        run_prepifg.main(
-            config_file=os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR,
-                                     'orbital_error.conf'))
+        sys.argv = ['run_prepifg.py', os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR,
+                                     'orbital_error.conf')]
+        run_prepifg.main()
 
         xlks, ylks, crop = run_pyrate.transform_params(params)
 

@@ -11,7 +11,7 @@ from numpy import array
 from numpy.testing import assert_array_almost_equal
 import os
 import shutil
-from subprocess import call
+import sys
 import numpy as np
 
 from pyrate.vcm import cvd, get_vcmt
@@ -154,9 +154,9 @@ class MatlabEqualityTestInRunPyRateSequence(unittest.TestCase):
         params = cf.get_config_params(
                 os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orbital_error.conf'))
         params[cf.REF_EST_METHOD] = 2
-        run_prepifg.main(
-            config_file=os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR,
-                                     'orbital_error.conf'))
+        sys.argv = ['run_prepifg.py', os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR,
+                                     'orbital_error.conf')]
+        run_prepifg.main()
         xlks, ylks, crop = run_pyrate.transform_params(params)
 
         base_ifg_paths = run_pyrate.original_ifg_paths(params[cf.IFG_FILE_LIST])

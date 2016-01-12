@@ -10,6 +10,7 @@ from numpy.testing import assert_array_almost_equal
 from datetime import date, timedelta
 import numpy as np
 import os
+import sys
 import shutil
 
 from pyrate import mst
@@ -129,9 +130,9 @@ class MatlabTimeSeriesEquality(unittest.TestCase):
         params = cf.get_config_params(
                 os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orbital_error.conf'))
         params[cf.REF_EST_METHOD] = 2
-        run_prepifg.main(
-            config_file=os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR,
-                                     'orbital_error.conf'))
+        sys.argv = ['run_prepifg.py', os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR,
+                                     'orbital_error.conf')]
+        run_prepifg.main()
 
         xlks, ylks, crop = run_pyrate.transform_params(params)
 

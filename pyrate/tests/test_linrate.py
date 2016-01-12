@@ -9,7 +9,7 @@ from numpy import eye, array, ones, where
 from numpy.testing import assert_array_almost_equal
 import os
 import shutil
-from subprocess import call
+import sys
 import numpy as np
 
 from pyrate.scripts import run_pyrate, run_prepifg
@@ -99,9 +99,9 @@ class MatlabEqualityTest(unittest.TestCase):
                 os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orbital_error.conf'))
         params[cf.REF_EST_METHOD] = 2
 
-        run_prepifg.main(
-            config_file=os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR,
-                                     'orbital_error.conf'))
+        sys.argv = ['run_prepifg.py', os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR,
+                                     'orbital_error.conf')]
+        run_prepifg.main()
 
         xlks, ylks, crop = run_pyrate.transform_params(params)
 

@@ -10,15 +10,12 @@ def main(config_file=None):
      use run_prepifg from within the module.
     :return:
     """
-    if config_file:
-        print config_file
-        rawConfigFile = config_file
-    else:
-        usage = 'Usage: python run_prepifg.py <config file>'
-        if len(sys.argv) == 1 or sys.argv[1] == '-h' or sys.argv[1] == '--help':
-            print usage
-            return
-        rawConfigFile = sys.argv[1]
+    usage = 'Usage: python run_prepifg.py <config file>'
+    if len(sys.argv) == 1 or sys.argv[1] == '-h' or sys.argv[1] == '--help':
+        print usage
+        return
+    rawConfigFile = sys.argv[1]
+
 
     luigi.configuration.LuigiConfigParser.add_config_path(
         pythonifyConfig(rawConfigFile))
