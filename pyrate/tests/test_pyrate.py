@@ -118,11 +118,15 @@ class PyRateTests(unittest.TestCase):
             params[cf.SIM_DIR] = cf.PYRATEPATH
             paths = glob.glob(join(BASE_OUT_DIR, 'geo_*-*.tif'))
             run_pyrate.process_ifgs(paths, params)
-            os.chdir(CURRENT_DIR)
         except:
             # revert working dir & avoid paths busting other tests
             os.chdir(CURRENT_DIR)
             raise
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(BASE_DIR, ignore_errors=True)
+        os.chdir(CURRENT_DIR)
 
     def setUp(self):
         # performance: to save constantly opening ifgs
