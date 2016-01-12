@@ -22,12 +22,42 @@ For the viewer you will also need
 - [netCDF4](https://pypi.python.org/pypi/netCDF4)
 - a web browser.
 
+## Virtualenv setup for `PyRate`
+It is recommended that you create a `virtualenv` to run the `tlda` code. 
 
-## Installation
+The `GDAL` package is included in the codebase as it proved difficult to be installed in a virtualenv.
 
-Currently this application does not require any installation. You need to add the directory containing the *pyrate* folder to the *PYTHONPATH* environment variable.
+These instructions are for `ubuntu 14.04` and is expected to work for most newer versions of `ubuntu`. The `virtualenv` and the requirements can be installed using the following steps.
 
+    sudo pip install virtualenv
+    sudo apt-get -y build-dep matplotlib  # then enter your root password
+    virtualenv -p python2.7 ~/pyrate_venv
+    source ~/pyrate_venv/bin/activate   
 
+Note, in the above, the first command `sudo apt-get -y build-dep matplotlib` installs all the build dependencies for `matplotlib`.
+
+## Clone the repo:
+
+Clone the repo:    
+
+    git clone https://github.com/GeoscienceAustralia/PyRate.git
+    
+This will prompt for your github username and password. Once you have entered them and you have access to this repo, `PyRate` will clone in your current directory. 
+
+Once inside the `virtualenv`, navigate to the `PyRate` code:
+    
+    cd PyRate # This is where the requirements.txt exists
+    pip install -r requirements.txt    
+
+## Setting up the 'PYRATEPATH' environment variable
+
+You need to add the directory containing the `pyrate` folder to the *PYTHONPATH* environment variable.
+
+The environment variable *PYRATEPATH* needs to point to the folder where you put the test data. This is how I set up my environment variable:
+
+	export PYRATEPATH="/home/sudipta/GA/PyRate"
+	export PYTHONPATH=$PYRATEPATH/:$PYTHONPATH
+	
 ## Documentation
 
 The [Sphinx](http://sphinx-doc.org/) documenation of the scripts can be found under the main documentation tree for the project, which is found in the top level folder *doc*. To build the documentation do
@@ -42,15 +72,15 @@ The documentation will be generated in *doc/build*. The main entry point is *ind
 
 Tests use [unittest](http://pythontesting.net/framework/unittest/unittest-introduction/) and can be found in *pyrate/tests*.
 
-The environment variable *PYRATEPATH* needs to point to the folder where you put the test data. This is how I set up my environment variable:
-
-	export PYRATEPATH="/home/sudipta/GA/PyRate"
-	export PYTHONPATH=$PYRATEPATH/:$PYTHONPATH
-
 To run the tests, use the following command inside the `PyRate` directory:
 		
 	cd PyRate
 	nosetests --nologcapture
+	
+Or you can use `unittest discover`:
+
+	cd PyRate
+	python -m unittest discover pyrate/
 
 ## Basic Usage Instructions
 
