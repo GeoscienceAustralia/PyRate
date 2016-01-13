@@ -23,7 +23,7 @@ For the viewer you will also need
 - a web browser.
 
 ## Virtualenv setup for `PyRate`
-(This is broken at the moment due to GDAL, please use anaconda instructions below)
+(This is broken at the moment due to GDAL. Please use anaconda instructions below)
 It is recommended that you create a `virtualenv` to run the `tlda` code. 
 
 These instructions are for `ubuntu 14.04` and is expected to work for most newer versions of `ubuntu`. The `virtualenv` and the requirements can be installed using the following steps.
