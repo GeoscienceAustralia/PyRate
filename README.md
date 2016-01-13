@@ -36,6 +36,40 @@ These instructions are for `ubuntu 14.04` and is expected to work for most newer
 
 Note, in the above, the first command `sudo apt-get -y build-dep matplotlib` installs all the build dependencies for `matplotlib`.
 
+## Anaconda setup for `PyRate`
+
+####  Install anaconda:
+
+On 64bit linux:
+    
+    bash Anaconda2-2.4.1-Linux-x86_64.sh
+
+This will install anaconda in the `~/anaconda2` directory.
+ 
+You will need to download and install the appropriate version for your OS. The following instructions are for ubuntu 14.04 and are exptect to work for most versions of ubuntu.
+
+#### Create the `pyrate` environment
+    
+    cd anaconda2
+    bin/conda create --name pyrate --file /path/to/PyRate/requirements_conda.txt
+
+#### Activate the `pyrate` environment
+
+    source bin/activate envs/pyrate
+    
+#### Install `luigi`
+    pip install luigi==1.3.0
+    
+The last step is necessary because conda does not find `luigi`.
+
+### Deactivate
+
+    source deactivate
+
+#### Back to main anaconda if you need to:
+    
+    source activate /home/user/anaconda2
+    
 ## Clone the repo:
 
 Clone the repo:    
