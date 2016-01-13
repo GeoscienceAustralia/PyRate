@@ -25,8 +25,6 @@ For the viewer you will also need
 ## Virtualenv setup for `PyRate`
 It is recommended that you create a `virtualenv` to run the `tlda` code. 
 
-The `GDAL` package is included in the codebase as it proved difficult to be installed in a virtualenv.
-
 These instructions are for `ubuntu 14.04` and is expected to work for most newer versions of `ubuntu`. The `virtualenv` and the requirements can be installed using the following steps.
 
     sudo pip install virtualenv
