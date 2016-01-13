@@ -73,9 +73,10 @@ You will need to download and install the appropriate version for your OS. The f
 #### Install `luigi`
     pip install luigi==1.3.0
     
-The last step is necessary because conda does not find `luigi`.
+The last step is necessary because conda does not contain `luigi`.
 
 ### Deactivate
+Once you are done using `PyRate` you could deactivate from the conda env using: 
 
     source deactivate
 
