@@ -57,7 +57,7 @@ On 64bit linux:
     
     bash Anaconda2-2.4.1-Linux-x86_64.sh
 
-This will install anaconda in the `~/anaconda2` directory.
+Please accept all defaults. This will install anaconda in the `~/anaconda2` directory.
  
 You will need to download and install the appropriate version for your OS. The following instructions are for ubuntu 14.04 and are exptect to work for most versions of ubuntu.
 

@@ -10,6 +10,6 @@ matplotlib==1.4.3
 netCDF4==1.1.9
 Flask==0.10.1
 Pillow==2.8.2
-GDAL==1.11.2
+# GDAL==1.11.2
 # SB added
 pyproj==1.9.4
