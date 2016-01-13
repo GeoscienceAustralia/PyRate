@@ -56,7 +56,8 @@ You want to do:
     >>>     for y in listy:
     >>>         listz1.append(myfunction(x, y, param1, param2))
 In parallel:
-    >>> listz2 = parmap.starmap(myfunction, zip(listx,listy), param1, param2)
+    >>> import itertools
+    >>> listz2 = parmap.starmap(myfunction, itertools.product(listx,listy), param1, param2)
 Check both results:
     >>> assert listz1 == listz2
 

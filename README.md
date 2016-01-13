@@ -22,8 +22,17 @@ For the viewer you will also need
 - [netCDF4](https://pypi.python.org/pypi/netCDF4)
 - a web browser.
 
+## Clone the repo:
+
+Clone the repo:    
+
+    git clone https://github.com/GeoscienceAustralia/PyRate.git
+    
+This will prompt for your github username and password. Once you have entered them and you have access to this repo, `PyRate` will clone in your current directory. 
+
 ## Virtualenv setup for `PyRate`
 (This is broken at the moment due to GDAL. Please use anaconda instructions below)
+
 It is recommended that you create a `virtualenv` to run the `tlda` code. 
 
 These instructions are for `ubuntu 14.04` and is expected to work for most newer versions of `ubuntu`. The `virtualenv` and the requirements can be installed using the following steps.
@@ -34,6 +43,11 @@ These instructions are for `ubuntu 14.04` and is expected to work for most newer
     source ~/pyrate_venv/bin/activate   
 
 Note, in the above, the first command `sudo apt-get -y build-dep matplotlib` installs all the build dependencies for `matplotlib`.
+
+Once inside the `virtualenv`, navigate to the `PyRate` code:
+    
+    cd PyRate # This is where the requirements.txt exists
+    pip install -r requirements.txt
 
 ## Anaconda setup for `PyRate`
 
@@ -69,19 +83,6 @@ The last step is necessary because conda does not find `luigi`.
     
     source activate /home/user/anaconda2
     
-## Clone the repo:
-
-Clone the repo:    
-
-    git clone https://github.com/GeoscienceAustralia/PyRate.git
-    
-This will prompt for your github username and password. Once you have entered them and you have access to this repo, `PyRate` will clone in your current directory. 
-
-Once inside the `virtualenv`, navigate to the `PyRate` code:
-    
-    cd PyRate # This is where the requirements.txt exists
-    pip install -r requirements.txt    
-
 ## Setting up the 'PYRATEPATH' environment variable
 
 You need to add the directory containing the `pyrate` folder to the *PYTHONPATH* environment variable.
