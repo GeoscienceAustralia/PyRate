@@ -11,6 +11,8 @@ from osgeo import gdal
 from datetime import date
 from os.path import exists, join
 from numpy.testing import assert_array_almost_equal
+import uuid
+import shutil
 
 import pyrate.ifgconstants as ifc
 from pyrate import roipac
@@ -27,6 +29,7 @@ from pyrate.tasks.utils import DUMMY_SECTION_NAME
 from pyrate.tests.common import HEADERS_TEST_DIR, PREP_TEST_OBS, PREP_TEST_TIF
 from pyrate.tests.common import SYD_TEST_DEM_UNW, SYD_TEST_DEM_HDR
 from pyrate.tests.common import SYD_TEST_DEM_DIR, SYD_TEST_OBS
+from pyrate.tests import common
 
 gdal.UseExceptions()
 
@@ -43,8 +46,11 @@ FULL_HEADER_PATH  = join(HEADERS_TEST_DIR, "geo_060619-060828.unw.rsc")
 
 class RoipacCommandLine(unittest.TestCase):
     def setUp(self):
-        self.confFile = '/tmp/roipac_test.cfg'
-        self.ifgListFile = '/tmp/roipac_ifg.list'
+        random_text = uuid.uuid4().hex
+        self.confFile = '/tmp/{}/roipac_test.cfg'.format(random_text)
+        self.ifgListFile = '/tmp/{}/roipac_ifg.list'.format(random_text)
+        self.base_dir = os.path.dirname(self.confFile)
+        common.mkdir_p(self.base_dir)
 
     def tearDown(self):
         def rmPaths(paths):
@@ -53,15 +59,15 @@ class RoipacCommandLine(unittest.TestCase):
                 except: pass
 
         rmPaths(self.expPaths)
-        rmPaths([self.confFile, self.ifgListFile])
+        shutil.rmtree(self.base_dir)
 
     def makeInputFiles(self, data, projection):
         with open(self.confFile, 'w') as conf:
             conf.write('[{}]\n'.format(DUMMY_SECTION_NAME))
             conf.write('{}: {}\n'.format(INPUT_IFG_PROJECTION, projection))
             conf.write('{}: {}\n'.format(NO_DATA_VALUE, '0.0'))
-            conf.write('{}: {}\n'.format(OBS_DIR, '/tmp'))
-            conf.write('{}: {}\n'.format(OUT_DIR, '/tmp'))
+            conf.write('{}: {}\n'.format(OBS_DIR, self.base_dir))
+            conf.write('{}: {}\n'.format(OUT_DIR, self.base_dir))
             conf.write('{}: {}\n'.format(IFG_FILE_LIST, self.ifgListFile))
             conf.write('{}: {}\n'.format(PROCESSOR, '0'))
         with open(self.ifgListFile, 'w') as ifgl:
@@ -71,11 +77,11 @@ class RoipacCommandLine(unittest.TestCase):
         base_paths = ['geo_070709-070813.unw', 'geo_060619-061002.unw']
         base_exp = ['geo_070709-070813.tif', 'geo_060619-061002.tif']
         self.dataPaths = [join(SYD_TEST_OBS, i) for i in base_paths]
-        self.expPaths = [join('/tmp', i) for i in base_exp]
+        self.expPaths = [join(self.base_dir, i) for i in base_exp]
         self.common_check()
 
     def test_cmd_dem(self):
-        self.expPaths = ['/tmp/sydney_trimmed.tif']
+        self.expPaths = [os.path.join(self.base_dir, 'sydney_trimmed.tif')]
         self.dataPaths = [SYD_TEST_DEM_UNW]
         self.common_check()
 
