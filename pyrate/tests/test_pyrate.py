@@ -11,9 +11,10 @@ from os.path import join
 from pyrate import shared, config, prepifg
 from pyrate.scripts import run_pyrate
 from pyrate import config as cf
+import uuid
 
 # testing constants
-BASE_DIR = '/tmp/pyrate/workflow'
+BASE_DIR = os.path.join('/tmp/pyrate/workflow', uuid.uuid4().hex)
 BASE_OUT_DIR = join(BASE_DIR, 'out')
 BASE_DEM_DIR = join(BASE_DIR, 'dem')
 BASE_CFG_FILE = join(BASE_DIR, 'pyrate_workflow_test.conf')
@@ -172,10 +173,6 @@ class PyRateTests(unittest.TestCase):
 
         for i in self.ifgs:
             self.key_check(i, key, value)
-
-    #def test_mst_matrix(self):
-        # TODO: should matrix be written to disk to be read in?
-        #raise NotImplementedError
 
     def test_refpixel_found(self):
         log_path = self.get_logfile_path()
