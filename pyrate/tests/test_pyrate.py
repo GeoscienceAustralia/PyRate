@@ -14,7 +14,7 @@ from pyrate import config as cf
 import uuid
 
 # testing constants
-BASE_DIR = os.path.join('/tmp/pyrate/workflow', uuid.uuid4().hex)
+BASE_DIR = os.path.join('/tmp/pyrate', uuid.uuid4().hex)
 BASE_OUT_DIR = join(BASE_DIR, 'out')
 BASE_DEM_DIR = join(BASE_DIR, 'dem')
 BASE_CFG_FILE = join(BASE_DIR, 'pyrate_workflow_test.conf')
@@ -94,8 +94,6 @@ class PyRateTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         from pyrate.tests.common import SYD_TEST_MATLAB_ORBITAL_DIR
-        # start each full test run cleanly
-        shutil.rmtree(BASE_DIR, ignore_errors=True)
 
         try:
             # copy source data (treat as prepifg already run)
@@ -117,6 +115,7 @@ class PyRateTests(unittest.TestCase):
             params = config.get_config_params(
                 os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orbital_error.conf'))
             params[cf.SIM_DIR] = cf.PYRATEPATH
+            params[cf.OUT_DIR] = BASE_DIR
             paths = glob.glob(join(BASE_OUT_DIR, 'geo_*-*.tif'))
             run_pyrate.process_ifgs(paths, params)
         except:
