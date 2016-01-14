@@ -14,7 +14,7 @@ from pyrate import config as cf
 import uuid
 
 # testing constants
-BASE_DIR = os.path.join('/tmp/pyrate', uuid.uuid4().hex)
+BASE_DIR = os.path.join('/tmp', uuid.uuid4().hex)
 BASE_OUT_DIR = join(BASE_DIR, 'out')
 BASE_DEM_DIR = join(BASE_DIR, 'dem')
 BASE_CFG_FILE = join(BASE_DIR, 'pyrate_workflow_test.conf')
