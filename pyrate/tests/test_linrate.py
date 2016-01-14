@@ -94,7 +94,7 @@ class MatlabEqualityTest(unittest.TestCase):
                 os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orbital_error.conf'))
 
         # start each full test run cleanly
-        shutil.rmtree(params[cf.OUT_DIR])
+        shutil.rmtree(params[cf.OUT_DIR], ignore_errors=True)
         os.makedirs(params[cf.OUT_DIR])
 
         params[cf.REF_EST_METHOD] = 2
