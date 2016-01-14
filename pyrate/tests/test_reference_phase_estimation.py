@@ -6,6 +6,7 @@ import os
 import sys
 import shutil
 import numpy as np
+import uuid
 
 from pyrate import config as cf
 from pyrate.scripts import run_pyrate
@@ -14,6 +15,7 @@ from pyrate.tests.common import SYD_TEST_MATLAB_ORBITAL_DIR, SYD_TEST_OUT
 from pyrate.tests.common import SYD_TEST_DIR
 from pyrate.reference_phase_estimation import estimate_ref_phase
 from pyrate.scripts import run_prepifg
+from pyrate.tests import common
 
 
 class RefPhsEstimationMatlabTest(unittest.TestCase):
@@ -24,16 +26,16 @@ class RefPhsEstimationMatlabTest(unittest.TestCase):
         params = cf.get_config_params(
                 os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orbital_error.conf'))
 
-        # start each full test run cleanly
-        shutil.rmtree(params[cf.OUT_DIR], ignore_errors=True)
-        os.makedirs(params[cf.OUT_DIR])
-
-        params[cf.REF_EST_METHOD] = 1
+        cls.temp_out_dir = os.path.join(params[cf.OUT_DIR], uuid.uuid4().hex)
+        common.mkdir_p(cls.temp_out_dir)
 
         sys.argv = ['run_prepifg.py', os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR,
                                      'orbital_error.conf')]
         run_prepifg.main()
+        common.move_files(params[cf.OUT_DIR], cls.temp_out_dir)
 
+        params[cf.OUT_DIR] = cls.temp_out_dir
+        params[cf.REF_EST_METHOD] = 1
 
         xlks, ylks, crop = run_pyrate.transform_params(params)
 
@@ -80,6 +82,10 @@ class RefPhsEstimationMatlabTest(unittest.TestCase):
                                 -13.5371961593628,
                                 -12.7864856719971]
 
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(cls.temp_out_dir)
+
     def test_estimate_reference_phase(self):
         np.testing.assert_array_almost_equal(self.matlab_ref_phs, self.ref_phs,
                                              decimal=4)
@@ -124,15 +130,17 @@ class RefPhsEstimationMatlabTestMethod2(unittest.TestCase):
         params = cf.get_config_params(
                 os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orbital_error.conf'))
 
-        # start each full test run cleanly
-        shutil.rmtree(params[cf.OUT_DIR], ignore_errors=True)
-        os.makedirs(params[cf.OUT_DIR])
-
-        params[cf.REF_EST_METHOD] = 2
+        cls.temp_out_dir = os.path.join(params[cf.OUT_DIR], uuid.uuid4().hex)
+        common.mkdir_p(cls.temp_out_dir)
 
         sys.argv = ['run_prepifg.py', os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR,
                                      'orbital_error.conf')]
         run_prepifg.main()
+        common.move_files(params[cf.OUT_DIR], cls.temp_out_dir)
+
+        params[cf.OUT_DIR] = cls.temp_out_dir
+        params[cf.REF_EST_METHOD] = 2
+
 
         xlks, ylks, crop = run_pyrate.transform_params(params)
 
@@ -179,6 +187,10 @@ class RefPhsEstimationMatlabTestMethod2(unittest.TestCase):
                                 -34.9590339660645,
                                 -14.3167810440063,
                                 -11.9066228866577]
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(cls.temp_out_dir)
 
     def test_ifgs_after_reference_phase_estimation(self):
         MATLAB_REF_PHASE_DIR = os.path.join(SYD_TEST_DIR,

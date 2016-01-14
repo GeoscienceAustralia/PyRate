@@ -13,6 +13,7 @@ import os
 import shutil
 import sys
 import numpy as np
+import uuid
 
 from pyrate.vcm import cvd, get_vcmt
 from pyrate.tests.common import sydney5_mock_ifgs, sydney5_ifgs
@@ -22,6 +23,7 @@ from pyrate import matlab_mst_kruskal as matlab_mst
 from pyrate.tests.common import SYD_TEST_MATLAB_ORBITAL_DIR, SYD_TEST_OUT
 from pyrate import config as cf
 from pyrate import reference_phase_estimation as rpe
+from pyrate.tests import common
 
 
 class CovarianceTests(unittest.TestCase):
@@ -149,15 +151,17 @@ class MatlabEqualityTestInRunPyRateSequence(unittest.TestCase):
         params = cf.get_config_params(
                 os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orbital_error.conf'))
 
+        cls.temp_out_dir = os.path.join(params[cf.OUT_DIR], uuid.uuid4().hex)
+        common.mkdir_p(cls.temp_out_dir)
 
-        # start each full test run cleanly
-        shutil.rmtree(params[cf.OUT_DIR], ignore_errors=True)
-        os.makedirs(params[cf.OUT_DIR])
-
-        params[cf.REF_EST_METHOD] = 2
         sys.argv = ['run_prepifg.py', os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR,
                                      'orbital_error.conf')]
         run_prepifg.main()
+        common.move_files(params[cf.OUT_DIR], cls.temp_out_dir)
+
+        params[cf.OUT_DIR] = cls.temp_out_dir
+
+        params[cf.REF_EST_METHOD] = 2
         xlks, ylks, crop = run_pyrate.transform_params(params)
 
         base_ifg_paths = run_pyrate.original_ifg_paths(params[cf.IFG_FILE_LIST])
@@ -192,6 +196,10 @@ class MatlabEqualityTestInRunPyRateSequence(unittest.TestCase):
         # TODO: assign maxvar to ifg metadata (and geotiff)?
         cls.maxvar = [cvd(i)[0] for i in ifgs]
         cls.vcmt = get_vcmt(ifgs, cls.maxvar)
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(cls.temp_out_dir)
 
     def test_matlab_maxvar_equality_sydney_test_files(self):
         np.testing.assert_array_almost_equal(self.maxvar, self.matlab_maxvar,

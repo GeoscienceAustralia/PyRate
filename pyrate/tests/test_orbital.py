@@ -13,7 +13,7 @@ import os
 import numpy as np
 
 from numpy.linalg import pinv, inv
-from numpy import nan, isnan, array, reshape, median
+from numpy import nan, isnan, array
 from numpy import empty, dot, concatenate, float32
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 
@@ -25,6 +25,12 @@ from pyrate.orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, QUADRATIC
 from common import sydney5_mock_ifgs, MockIfg, SYD_TEST_TIF, sydney5_ifgs
 from scipy.linalg import lstsq
 from pyrate.tests.common import SYD_TEST_MATLAB_ORBITAL_DIR
+from pyrate import config as cf
+from pyrate.tests.common import SYD_TEST_TIF, sydney_data_setup
+from pyrate.tests.common import sydney_data_setup_ifg_file_list
+import shutil
+from pyrate.tests import  common
+
 
 DEG_LOOKUP = {
     2: PLANAR,
@@ -644,16 +650,12 @@ class MatlabComparisonTests(unittest.TestCase):
     """
     @classmethod
     def setUpClass(cls):
-        from pyrate import config as cf
-        from pyrate.tests.common import IFMS5, SYD_TEST_TIF, sydney_data_setup
-        import shutil
-
         BASE_DIR = os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orb_test')
 
         # start each full test run cleanly
         shutil.rmtree(BASE_DIR, ignore_errors=True)
 
-        IFMS5 = IFMS5.split()
+        IFMS5 = common.IFMS5.split()
 
         cls.params = cf.get_config_params(
             os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orbital_error.conf'))
@@ -727,11 +729,6 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        from pyrate import config as cf
-        from pyrate.tests.common import SYD_TEST_TIF, sydney_data_setup
-        from pyrate.tests.common import sydney_data_setup_ifg_file_list
-        import shutil
-
         BASE_DIR = os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orb_test_method2')
 
         # start each full test run cleanly

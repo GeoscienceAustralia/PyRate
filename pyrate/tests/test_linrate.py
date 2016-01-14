@@ -11,6 +11,7 @@ import os
 import shutil
 import sys
 import numpy as np
+import uuid
 
 from pyrate.scripts import run_pyrate, run_prepifg
 from pyrate import matlab_mst_kruskal as matlab_mst
@@ -21,9 +22,7 @@ from pyrate import reference_phase_estimation as rpe
 from pyrate import vcm
 from pyrate.config import LR_PTHRESH, LR_MAXSIG, LR_NSIG
 from pyrate.linrate import linear_rate
-from pyrate import mst
-from pyrate.vcm import cvd, get_vcmt
-from pyrate.tests.common import sydney_data_setup, sydney_data_setup_ifg_file_list
+from pyrate.tests import common
 
 # TODO: linear rate code
 # 1. replace MST key:value date:date pairs with lists of Ifgs?
@@ -93,15 +92,17 @@ class MatlabEqualityTest(unittest.TestCase):
         params = cf.get_config_params(
                 os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orbital_error.conf'))
 
-        # start each full test run cleanly
-        shutil.rmtree(params[cf.OUT_DIR], ignore_errors=True)
-        os.makedirs(params[cf.OUT_DIR])
-
-        params[cf.REF_EST_METHOD] = 2
+        cls.temp_out_dir = os.path.join(params[cf.OUT_DIR], uuid.uuid4().hex)
+        common.mkdir_p(cls.temp_out_dir)
 
         sys.argv = ['run_prepifg.py', os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR,
                                      'orbital_error.conf')]
         run_prepifg.main()
+        common.move_files(params[cf.OUT_DIR], cls.temp_out_dir)
+
+        params[cf.OUT_DIR] = cls.temp_out_dir
+
+        params[cf.REF_EST_METHOD] = 2
 
         xlks, ylks, crop = run_pyrate.transform_params(params)
 
@@ -171,6 +172,10 @@ class MatlabEqualityTest(unittest.TestCase):
         # Calculate linear rate map
         cls.rate_s, cls.error_s, cls.samples_s = \
             run_pyrate.calculate_linear_rate(ifgs, params, vcmt, mst=mst_grid)
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(cls.temp_out_dir)
 
     def test_linear_rate_full_parallel(self):
         np.testing.assert_array_almost_equal(

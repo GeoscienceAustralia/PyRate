@@ -12,6 +12,7 @@ import numpy as np
 import os
 import sys
 import shutil
+import uuid
 
 from pyrate import mst
 from pyrate.tests.common import sydney_data_setup
@@ -26,6 +27,7 @@ from pyrate.tests.common import SYD_TEST_DIR
 from pyrate import config as cf
 from pyrate import reference_phase_estimation as rpe
 from pyrate import vcm
+from pyrate.tests import common
 
 
 def default_params():
@@ -125,14 +127,16 @@ class MatlabTimeSeriesEquality(unittest.TestCase):
         params = cf.get_config_params(
                 os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orbital_error.conf'))
 
-        # start each full test run cleanly
-        shutil.rmtree(params[cf.OUT_DIR], ignore_errors=True)
-        os.makedirs(params[cf.OUT_DIR])
+        cls.temp_out_dir = os.path.join(params[cf.OUT_DIR], uuid.uuid4().hex)
+        common.mkdir_p(cls.temp_out_dir)
 
-        params[cf.REF_EST_METHOD] = 2
         sys.argv = ['run_prepifg.py', os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR,
                                      'orbital_error.conf')]
         run_prepifg.main()
+        common.move_files(params[cf.OUT_DIR], cls.temp_out_dir)
+
+        params[cf.OUT_DIR] = cls.temp_out_dir
+        params[cf.REF_EST_METHOD] = 2
 
         xlks, ylks, crop = run_pyrate.transform_params(params)
 
@@ -201,6 +205,10 @@ class MatlabTimeSeriesEquality(unittest.TestCase):
                 run_pyrate.calculate_time_series(
                 ifgs, params, vcmt, mst=mst_grid
                 )
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(cls.temp_out_dir)
 
     def test_time_series_equality(self):
 

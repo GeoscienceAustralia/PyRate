@@ -4,7 +4,9 @@ Collection of generic testing utils and mock objs for PyRate.
 .. codeauthor:: Ben Davies
 '''
 
+import errno
 import os, glob
+import shutil
 from os.path import join
 from pyrate.shared import Ifg
 from numpy import isnan, sum as nsum
@@ -129,3 +131,18 @@ class MockIfg(object):
     @property
     def shape(self):
         return (self.nrows, self.ncols)
+
+
+def mkdir_p(path):
+    try:
+        os.makedirs(path)
+    except OSError as exc:  # Python >2.5
+        if exc.errno == errno.EEXIST and os.path.isdir(path):
+            pass
+        else:
+            raise
+
+
+def move_files(source_dir, dest_dir, file_type='*.tif'):
+    for filename in glob.glob(os.path.join(source_dir, file_type)):
+        shutil.move(filename, dest_dir)
