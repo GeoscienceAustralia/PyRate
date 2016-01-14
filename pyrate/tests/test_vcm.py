@@ -146,13 +146,14 @@ class MatlabEqualityTestInRunPyRateSequence(unittest.TestCase):
                                 5.62802362442017]
 
 
-        # start each full test run cleanly
-        shutil.rmtree(SYD_TEST_OUT, ignore_errors=True)
-
-        os.makedirs(SYD_TEST_OUT)
-
         params = cf.get_config_params(
                 os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orbital_error.conf'))
+
+
+        # start each full test run cleanly
+        shutil.rmtree(params[cf.OUT_DIR])
+        os.makedirs(params[cf.OUT_DIR])
+
         params[cf.REF_EST_METHOD] = 2
         sys.argv = ['run_prepifg.py', os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR,
                                      'orbital_error.conf')]
