@@ -210,9 +210,9 @@ def time_series(ifgs, pthresh, params, vcmt, mst=None):
         mst = ~isnan(ifg_data)
 
     if parallel == 1:
-        tsvel_matrix = parmap.map(time_series_by_rows, range(nrows), B0, BLap0, SMORDER,
-                     ifg_data, mst, ncols, nvelpar, pthresh, vcmt,
-                                  processes=processes)
+        tsvel_matrix = parmap.map(time_series_by_rows, range(nrows), B0, BLap0,
+                                  SMORDER, ifg_data, mst, ncols, nvelpar,
+                                  pthresh, vcmt, processes=processes)
     elif parallel == 2:
         res = parmap.starmap(time_series_by_pixel,
                              itertools.product(range(nrows), range(ncols)),
@@ -227,18 +227,20 @@ def time_series(ifgs, pthresh, params, vcmt, mst=None):
                     row, col, B0, BLap0, SMORDER, ifg_data, mst, nvelpar,
                     pthresh, vcmt)
 
-    # do all the span multiplication as a numpy linalg operation, MUCH faster
-    tsincr = tsvel_matrix * span
+    # SB: do the span multiplication as a numpy linalg operation, MUCH faster
+    # not even this is necessary here, perform late for performance
+    # tsincr = tsvel_matrix * span
 
-    if tsincr is None:
-        raise TimeSeriesError("Could not produce a time series")
-
-    tscum = cumsum(tsincr, 2)
 
     # convert zeros to nans
-    tsincr = where(tsincr == 0, nan, tsincr)
-    tscum = where(tscum == 0, nan, tscum)
+    # SB: perform this after tsvel_matrix has been nan converted,
+    # saves the step of comparing a large matrix (tsincr) to zero.
+
     tsvel_matrix = where(tsvel_matrix == 0, nan, tsvel_matrix)
+    tsincr = tsvel_matrix * span
+    tscum = cumsum(tsincr, 2)
+    tscum = where(tscum == 0, nan, tscum)
+
     return tsincr, tscum, tsvel_matrix
 
 
