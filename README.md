@@ -92,6 +92,11 @@ The environment variable *PYRATEPATH* needs to point to the folder where you put
 	export PYRATEPATH="/home/sudipta/GA/PyRate"
 	export PYTHONPATH=$PYRATEPATH/:$PYTHONPATH
 
+
+## `rhe-compute1` anaconda instructions
+
+For anaconda installation and `virtualenv` instruction, [see this guide] (rhe_compute.md).   
+  
 	
 ## Documentation
 
