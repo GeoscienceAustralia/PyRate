@@ -63,12 +63,11 @@ You will need to download and install the appropriate version for your OS. The f
 
 #### Create the `pyrate` environment
     
-    cd anaconda2
-    bin/conda create --name pyrate --file /path/to/PyRate/requirements_conda.txt
+    ~/anaconda2/bin/conda create --name pyrate --file /path/to/PyRate/requirements_conda.txt
 
 #### Activate the `pyrate` environment
 
-    source bin/activate envs/pyrate
+    source ~/anaconda2/bin/activate pyrate
     
 #### Install `luigi`
     pip install luigi==1.3.0
@@ -92,6 +91,7 @@ The environment variable *PYRATEPATH* needs to point to the folder where you put
 
 	export PYRATEPATH="/home/sudipta/GA/PyRate"
 	export PYTHONPATH=$PYRATEPATH/:$PYTHONPATH
+
 	
 ## Documentation
 
