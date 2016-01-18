@@ -19,6 +19,9 @@ from pyrate.tests import common
 
 
 class RefPhsEstimationMatlabTestMethod1(unittest.TestCase):
+    """
+    Reference phase estimation method 1 is tested vs matlab output
+    """
 
     @classmethod
     def setUpClass(cls):
@@ -123,6 +126,9 @@ class RefPhsEstimationMatlabTestMethod1(unittest.TestCase):
 
 
 class RefPhsEstimationMatlabTestMethod2(unittest.TestCase):
+    """
+    Reference phase estimation method 2 is tested vs matlab output
+    """
 
     @classmethod
     def setUpClass(cls):
