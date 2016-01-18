@@ -186,11 +186,14 @@ class MatlabTimeSeriesEquality(unittest.TestCase):
 
         SYD_TIME_SERIES_DIR = os.path.join(SYD_TEST_DIR, 'matlab_time_series')
         tsincr_path = os.path.join(SYD_TIME_SERIES_DIR, 'ts_incr.csv')
-        cls.ts_incr = np.genfromtxt(tsincr_path, delimiter=',')
-        tserr_path = os.path.join(SYD_TIME_SERIES_DIR, 'ts_error.csv')
-        cls.ts_err = np.genfromtxt(tserr_path, delimiter=',')
+        ts_incr = np.genfromtxt(tsincr_path, delimiter=',')
+
+        # the matlab tsvel return is a bit pointless and not tested here
+        # tserror is not returned
+        # tserr_path = os.path.join(SYD_TIME_SERIES_DIR, 'ts_error.csv')
+        # ts_err = np.genfromtxt(tserr_path, delimiter=',')
         tscum_path = os.path.join(SYD_TIME_SERIES_DIR, 'ts_cum.csv')
-        cls.ts_cum = np.genfromtxt(tscum_path, delimiter=',')
+        ts_cum = np.genfromtxt(tscum_path, delimiter=',')
 
         params[cf.PARALLEL] = 1
         # Calculate time series
@@ -206,46 +209,55 @@ class MatlabTimeSeriesEquality(unittest.TestCase):
                 ifgs, params, vcmt, mst=mst_grid
                 )
 
+        params[cf.PARALLEL] = 0
+        # Calculate time series serailly by the pixel
+        if params[cf.TIME_SERIES_CAL] != 0:
+            cls.tsincr_0, cls.tscum_0, cls.tsvel_0 = \
+                run_pyrate.calculate_time_series(
+                ifgs, params, vcmt, mst=mst_grid
+                )
+        cls.mst_grid = mst_grid
+
+        cls.ts_incr = np.reshape(ts_incr, newshape=cls.tsincr.shape, order='F')
+        cls.ts_cum = np.reshape(ts_cum, newshape=cls.tscum.shape, order='F')
+
+
     @classmethod
     def tearDownClass(cls):
         shutil.rmtree(cls.temp_out_dir)
 
-    def test_time_series_equality(self):
+    def test_time_series_equality_parallel_by_rows(self):
 
         self.assertEqual(self.tsincr.shape, self.tscum.shape)
         self.assertEqual(self.tsvel.shape, self.tsincr.shape)
-        ts_incr = np.reshape(self.ts_incr,
-                             newshape=self.tsincr.shape, order='F')
-        ts_cum = np.reshape(self.ts_cum, newshape=self.tsincr.shape, order='F')
-
-        #TODO: Investigate why the entire matrices don't equal
-        # Current hypothesis is that the pseudo inverse computed are different
-        # in matlab and python as they are based of different convergence
-        # criteria.
-        np.testing.assert_array_almost_equal(
-            ts_incr[:11, :45, :], self.tsincr[:11, :45, :], decimal=4)
 
         np.testing.assert_array_almost_equal(
-            ts_cum[:11, :45, :], self.tscum[:11, :45, :], decimal=4)
+            self.ts_incr, self.tsincr, decimal=3)
 
+        np.testing.assert_array_almost_equal(
+            self.ts_cum, self.tscum, decimal=3)
 
     def test_time_series_equality_parallel_by_the_pixel(self):
 
         self.assertEqual(self.tsincr_2.shape, self.tscum_2.shape)
         self.assertEqual(self.tsvel_2.shape, self.tsincr_2.shape)
-        ts_incr = np.reshape(self.ts_incr,
-                             newshape=self.tsincr.shape, order='F')
-        ts_cum = np.reshape(self.ts_cum, newshape=self.tsincr.shape, order='F')
-
-        #TODO: Investigate why the entire matrices don't equal
-        # Current hypothesis is that the pseudo inverse computed are different
-        # in matlab and python as they are based of different convergence
-        # criteria.
-        np.testing.assert_array_almost_equal(
-            ts_incr[:11, :45, :], self.tsincr_2[:11, :45, :], decimal=4)
 
         np.testing.assert_array_almost_equal(
-            ts_cum[:11, :45, :], self.tscum_2[:11, :45, :], decimal=4)
+            self.ts_incr, self.tsincr_2, decimal=3)
+
+        np.testing.assert_array_almost_equal(
+            self.ts_cum, self.tscum_2, decimal=3)
+
+    def test_time_series_equality_serial_by_the_pixel(self):
+
+        self.assertEqual(self.tsincr_0.shape, self.tscum_0.shape)
+        self.assertEqual(self.tsvel_0.shape, self.tsincr_0.shape)
+
+        np.testing.assert_array_almost_equal(
+            self.ts_incr, self.tsincr_0, decimal=3)
+
+        np.testing.assert_array_almost_equal(
+            self.ts_cum, self.tscum_0, decimal=3)
 
 
 if __name__ == "__main__":

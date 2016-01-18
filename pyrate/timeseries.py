@@ -22,110 +22,6 @@ import pyrate.ifgconstants as ifc
 from pyrate import config as cf
 
 
-def time_series_old(ifgs, pthresh, mst=None):
-    """
-    Returns time series data from the given ifgs.
-
-    :param ifgs: Sequence of interferograms.
-    :param pthresh: minimum number of coherent observations for a pixel.
-    :param mst: [optional] array of ifg indexes from the pixel by pixel MST.
-
-    :return: Tuple with the elements:
-
-        - incremental deformation time series (NB: not velocity),
-        - cumulative deformation time series, and
-        - velocity
-
-        these outputs are multi-dimensional arrays of size(nrows, ncols, nepochs-1),
-        where:
-
-        - *nrows* is the number of rows in the ifgs,
-        - *ncols* is the  number of columns in the ifgs, and
-        - *nepochs* is the number of unique epochs (dates) covered by the ifgs.).
-    """
-
-    if len(ifgs) < 1:
-        msg = 'Time series requires 2+ interferograms'
-        raise TimeSeriesError(msg)
-
-    head = ifgs[0]
-    check_time_series_params(head, pthresh)
-    epochlist = get_epochs(ifgs)
-
-    nrows = ifgs[0].nrows
-    ncols = ifgs[0].ncols
-    nifgs = len(ifgs)
-    span = diff(epochlist.spans)
-    nepoch = len(epochlist.dates)
-    nvelpar = nepoch - 1
-
-    mast_slave_ids = master_slave_ids(epochlist.dates)
-    imaster = [mast_slave_ids[ifg.master] for ifg in ifgs]
-    islave = [mast_slave_ids[ifg.slave] for ifg in ifgs]
-    imaster = min(imaster, islave)
-    islave = max(imaster, islave)
-    B0 = zeros((nifgs, nvelpar))
-    for i in range(nifgs):
-        B0[i, imaster[i]:islave[i]] = span[imaster[i]:islave[i]]
-
-    # change the sign if slave is earlier than master
-    isign = where(imaster > islave)
-    B0[isign[0], :] = -B0[isign[0], :]
-
-    tsincr = empty(shape=(nrows, ncols, nvelpar))
-    tsvel = empty(shape=(nrows, ncols, nvelpar))
-
-    tsincr[:] = nan
-    ifg_data = zeros((nifgs, nrows, ncols), dtype=float32)
-    for ifg_num in range(nifgs):
-        ifgs[ifg_num].convert_to_nans(0)
-        ifg_data[ifg_num] = ifgs[ifg_num].phase_data
-
-    if mst is None:
-        mst = ~isnan(ifg_data)
-
-    for row_num in xrange(nrows):
-        for col_num in xrange(ncols):
-            # check pixel for non-redundant ifgs;
-            sel = where(mst[:, row_num, col_num])[0]
-            m = len(sel)
-
-            if m >= pthresh:
-                ifgv = ifg_data[sel, row_num, col_num]
-                B = B0[sel, :]
-                # remove rank deficient rows
-                rmrow = asarray([5, 4])
-
-                while len(rmrow) > 0:
-                    q_var, r_var, e_var = qr(B, mode='economic', pivoting=True)
-                    licols = e_var[matrix_rank(B):nvelpar]
-                    [rmrow, rmcol] = where(B[:, licols] != 0)
-                    B = delete(B, rmrow, axis=0)
-                    ifgv = delete(ifgv, rmrow)
-
-                    if len(ifgv):
-                        continue
-
-                velflag = sum(abs(B), 0)
-                B = B[:, where(velflag != 0)[0]]
-                tsvel_pix = zeros(nvelpar, dtype=float32)
-                tsvel_pix[where(velflag != 0)[0]] = dot(pinv(B), ifgv)
-                tsvel[row_num, col_num, :] = tsvel_pix
-                tsincr[row_num, col_num, :] = tsvel_pix * span
-
-    if tsincr is None:
-        raise TimeSeriesError("Could not produce a time series")
-
-    tsincr = where(tsincr == 0, nan, tsincr)
-    tscum = cumsum(tsincr, 2)
-
-    # convert zeros to nans
-    tscum = where(tscum == 0, nan, tscum)
-    tsvel = where(tsvel == 0, nan, tsvel)
-
-    return tsincr, tscum, tsvel
-
-
 def time_series(ifgs, pthresh, params, vcmt, mst=None):
     """
     Returns time series data from the given ifgs.
@@ -203,7 +99,7 @@ def time_series(ifgs, pthresh, params, vcmt, mst=None):
 
     ifg_data = np.zeros((nifgs, nrows, ncols), dtype=float32)
     for ifg_num in xrange(nifgs):
-        ifgs[ifg_num].convert_to_nans(0)
+        # ifgs[ifg_num].convert_to_nans(0)
         ifg_data[ifg_num] = ifgs[ifg_num].phase_data
 
     if mst is None:
@@ -256,6 +152,16 @@ def time_series_by_rows(row, B0, BLap0, SMORDER, ifg_data, mst, ncols, nvelpar,
     return tsvel
 
 
+def remove_rank_def_rows(B, nvelpar, ifgv, sel):
+    q_var, r_var, e_var = qr(B, mode='economic', pivoting=True)
+    licols = e_var[matrix_rank(B):nvelpar]
+    [rmrow, rmcol] = where(B[:, licols] != 0)
+    B = delete(B, rmrow, axis=0)
+    ifgv = delete(ifgv, rmrow)
+    sel = delete(sel, rmrow)
+    return B, ifgv, sel, rmrow
+
+
 def time_series_by_pixel(row, col, B0, BLap0, SMORDER, ifg_data, mst, nvelpar,
                          pthresh, vcmt):
     # check pixel for non-redundant ifgs;
@@ -269,15 +175,8 @@ def time_series_by_pixel(row, col, B0, BLap0, SMORDER, ifg_data, mst, nvelpar,
         rmrow = asarray([0])  # dummy
 
         while len(rmrow) > 0:
-            q_var, r_var, e_var = qr(B, mode='economic', pivoting=True)
-            licols = e_var[matrix_rank(B):nvelpar]
-            [rmrow, rmcol] = where(B[:, licols] != 0)
-            B = delete(B, rmrow, axis=0)
-            ifgv = delete(ifgv, rmrow)
-            sel = delete(sel, rmrow)
+            B, ifgv, sel, rmrow = remove_rank_def_rows(B, nvelpar, ifgv, sel)
 
-            # if len(ifgv):
-            #     continue
         m = len(sel)
 
         velflag = sum(abs(B), 0)
@@ -331,10 +230,11 @@ def time_series_by_pixel(row, col, B0, BLap0, SMORDER, ifg_data, mst, nvelpar,
 
         tsvel = np.empty(nvelpar, dtype=np.float32) * np.nan
         tsvel[~np.isclose(velflag, 0.0, atol=1e-8)] = x[:nvelleft]
+
+        # TODO: should we implement tserror like in matlab?
         return tsvel
     else:
         return np.empty(nvelpar) * np.nan
-
 
 
 def plot_timeseries(tsincr, tscum, tsvel, output_dir):
@@ -502,10 +402,6 @@ if __name__ == "__main__":
     # Calculate temporal variance-covariance matrix
     vcmt = vcm.get_vcmt(ifgs, maxvar)
 
-    # Calculate linear rate map
-    rate, error, samples = run_pyrate.calculate_linear_rate(ifgs, params, vcmt,
-                                                 mst=mst_grid)
-
     tsincr_path = os.path.join(SYD_TIME_SERIES_DIR, 'ts_incr.csv')
     ts_incr = np.genfromtxt(tsincr_path, delimiter=',')
     tserr_path = os.path.join(SYD_TIME_SERIES_DIR, 'ts_error.csv')
@@ -522,18 +418,8 @@ if __name__ == "__main__":
         ts_incr = np.reshape(ts_incr, newshape=tsincr.shape, order='F')
         ts_cum = np.reshape(ts_cum, newshape=tsincr.shape, order='F')
 
-        # mismatch = np.nonzero(~np.isclose(tsincr, ts_incr, atol=1e-3))
-        # print mismatch
-
-        # for i in range(len(mismatch[0])):
-        #     print mismatch[0][i], mismatch[1][i], mismatch[2][i]
-
-        #TODO: Investigate why the entire matrices don't equal
-        # Current hypothesis is that the pseudo inverse computed are different
-        # in matlab and python as they are based of different convergence
-        # criteria.
         np.testing.assert_array_almost_equal(
-            ts_incr[:11, :45, :], tsincr[:11, :45, :], decimal=4)
+            ts_incr, tsincr, decimal=4)
 
         np.testing.assert_array_almost_equal(
-            ts_cum[:11, :45, :], tscum[:11, :45, :], decimal=4)
+            ts_cum, tscum, decimal=4)
