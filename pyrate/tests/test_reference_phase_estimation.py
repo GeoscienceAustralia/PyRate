@@ -18,7 +18,7 @@ from pyrate.scripts import run_prepifg
 from pyrate.tests import common
 
 
-class RefPhsEstimationMatlabTest(unittest.TestCase):
+class RefPhsEstimationMatlabTestMethod1(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
