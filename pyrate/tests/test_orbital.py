@@ -637,7 +637,7 @@ def _add_nodata(ifgs):
     ifgs[4].phase_data[1, 1:3] = nan # 2 err
 
 
-class MatlabComparisonTests(unittest.TestCase):
+class MatlabComparisonTestsOrbfitMethod1(unittest.TestCase):
     """
     This is the matlab comparison test of orbital correction functionality.
     Tests use the following config
@@ -648,29 +648,30 @@ class MatlabComparisonTests(unittest.TestCase):
     orbfitlksy:    2
 
     """
-    @classmethod
-    def setUpClass(cls):
-        BASE_DIR = os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orb_test')
+
+    def setUp(self):
+        self.BASE_DIR = os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orb_test')
 
         # start each full test run cleanly
-        shutil.rmtree(BASE_DIR, ignore_errors=True)
+        shutil.rmtree(self.BASE_DIR, ignore_errors=True)
 
-        IFMS5 = common.IFMS5.split()
-
-        cls.params = cf.get_config_params(
+        self.params = cf.get_config_params(
             os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orbital_error.conf'))
 
-        data_paths = [os.path.join(SYD_TEST_TIF, p) for p in IFMS5]
-        new_data_paths = [os.path.join(BASE_DIR, os.path.basename(d))
+        # change to orbital error correction method 1
+        self.params[cf.ORBITAL_FIT_METHOD] = 1
+
+        data_paths = [os.path.join(SYD_TEST_TIF, p) for p in common.IFMS16]
+        new_data_paths = [os.path.join(self.BASE_DIR, os.path.basename(d))
                           for d in data_paths]
 
-        os.makedirs(BASE_DIR)
+        os.makedirs(self.BASE_DIR)
         for d in data_paths:
-            shutil.copy(d, os.path.join(BASE_DIR, os.path.basename(d)))
+            shutil.copy(d, os.path.join(self.BASE_DIR, os.path.basename(d)))
 
-        cls.ifgs = sydney_data_setup(datafiles=new_data_paths)
+        self.ifgs = sydney_data_setup(datafiles=new_data_paths)
 
-        for c, i in enumerate(cls.ifgs):
+        for c, i in enumerate(self.ifgs):
             if not i.is_open:
                 i.open()
             if not i.nan_converted:
@@ -678,7 +679,14 @@ class MatlabComparisonTests(unittest.TestCase):
 
             if not i.mm_converted:
                 i.convert_to_mm()
-                i.write_modified_phase()
+                try:
+                    i.write_modified_phase()
+                except:
+                    os.chmod(i.data_path, 0664)
+                    i.write_modified_phase()
+
+    def tearDown(self):
+        shutil.rmtree(self.BASE_DIR)
 
     def test_orbital_correction_matlab_equality(self):
         from pyrate.scripts import run_pyrate
@@ -728,11 +736,11 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
     # TODO: Write tests and implementation for various looks and degrees
 
     @classmethod
-    def setUpClass(cls):
-        BASE_DIR = os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orb_test_method2')
+    def setUp(cls):
+        cls.BASE_DIR = os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orb_test_method2')
 
         # start each full test run cleanly
-        shutil.rmtree(BASE_DIR, ignore_errors=True)
+        shutil.rmtree(cls.BASE_DIR, ignore_errors=True)
 
         cls.params = cf.get_config_params(
             os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orbital_error.conf'))
@@ -742,11 +750,11 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
 
         data_paths = [os.path.join(SYD_TEST_TIF, p) for p in
                       sydney_data_setup_ifg_file_list()]
-        new_data_paths = [os.path.join(BASE_DIR, os.path.basename(d))
+        new_data_paths = [os.path.join(cls.BASE_DIR, os.path.basename(d))
                           for d in data_paths]
-        os.makedirs(BASE_DIR)
+        os.makedirs(cls.BASE_DIR)
         for d in data_paths:
-            d_copy = os.path.join(BASE_DIR, os.path.basename(d))
+            d_copy = os.path.join(cls.BASE_DIR, os.path.basename(d))
             shutil.copy(d, d_copy)
             os.chmod(d_copy, 0660)
 
@@ -761,6 +769,9 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
             if not i.mm_converted:
                 i.convert_to_mm()
                 i.write_modified_phase()
+
+    def tearDown(self):
+        shutil.rmtree(self.BASE_DIR)
 
     def test_orbital_correction_matlab_equality_orbfit_method_2(self):
         from pyrate.scripts import run_pyrate

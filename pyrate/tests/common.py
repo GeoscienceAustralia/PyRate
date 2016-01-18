@@ -52,6 +52,23 @@ geo_061106-070326.unw
 geo_070326-070917.unw
 """
 
+IFMS16 = ['geo_060619-061002.tif',
+        'geo_060828-061211.tif',
+        'geo_061002-070219.tif',
+        'geo_061002-070430.tif',
+        'geo_061106-061211.tif',
+        'geo_061106-070115.tif',
+        'geo_061106-070326.tif',
+        'geo_061211-070709.tif',
+        'geo_061211-070813.tif',
+        'geo_070115-070326.tif',
+        'geo_070115-070917.tif',
+        'geo_070219-070430.tif',
+        'geo_070219-070604.tif',
+        'geo_070326-070917.tif',
+        'geo_070430-070604.tif',
+        'geo_070604-070709.tif']
+
 
 def sydney_data_setup(datafiles=None):
     '''Returns Ifg objs for the files in the sydney test dir
