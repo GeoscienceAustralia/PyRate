@@ -14,8 +14,8 @@ Please accept all defaults. This will install anaconda in the `~/anaconda2` dire
  
 ## Set up proxys for pip:
  
-    export all_proxy=http://proxy.agso.gov.au:8080
-    export all_proxy=https://proxy.agso.gov.au:8080
+    export http_proxy=http://proxy.agso.gov.au:8080
+    export https_proxy=http://proxy.agso.gov.au:8080
  
 
 ## Clone the repo:
