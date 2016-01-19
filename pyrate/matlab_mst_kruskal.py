@@ -284,6 +284,19 @@ def matlab_mst_boolean_array(ifg_list_instance, p_threshold=1):
     return result
 
 
+def matlab_mst_kruskal_from_ifgs(ifgs):
+    dest_paths = [i.data_path for i in ifgs]
+    ifg_instance = IfgListPyRate(datafiles=dest_paths)
+    ifg_instance_updated, epoch_list = \
+        get_nml(ifg_instance, nan_conversion=True)
+
+    ifg_list_mst_id = matlab_mst_kruskal(
+        ifg_instance_updated.id, ifg_instance_updated.master_num,
+        ifg_instance_updated.slave_num, ifg_instance_updated.nan_frac)
+
+    return [ifgs[i] for i in ifg_list_mst_id]
+
+
 def str_to_class(str):
     """
     :param str: a string
