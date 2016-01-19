@@ -143,7 +143,10 @@ def sort_list(id_l, master_l, slave_l, nan_frac_l):
 def matlab_mst_kruskal(id_l, master_l, slave_l, nan_frac_l):
     """
     This is an implementation of the pi-rate mst_kruskal.m
-    :param ifg_list_:
+    :param id_l: list of ifg file ids
+    :param master_l: list of ifg master dates
+    :param slave_l: list of ifg slave dates
+    :param nan_frac_l: list of ifg nan fractions
     :return:
     """
 
@@ -217,6 +220,9 @@ def matlab_mst(ifg_list_, p_threshold=1):
 def matlab_mst_generator_boolean_array(ifg_instance, p_threshold=1):
 
     """
+    :param ifg_instance: IfgListPyRate instance
+    :param p_threshold: minimum number of non-nan values at any pixel for selection
+
     This is an implementation of matlab/pirate make_mstmat.m.
     This we will be able to call from mst.py and the rest of the
     python framework setup so far.
@@ -257,15 +263,14 @@ def matlab_mst_generator_boolean_array(ifg_instance, p_threshold=1):
                 mst_yield[ifglist_mst_valid_id] = True
                 yield r, c, mst_yield
             else:
-                # TODO: This is not handled in matlab MG: yes it is, the mstmat is preallocated with zeros (i.e. falses)
-                # We will get here if p_threshold is >=2, and this will crash
-                #raise NotImplementedError('Unhandled mst combination')
-                # mst_yield[ifglist_mst_valid_id] = False  # redundant
                 yield r, c, mst_yield
 
 
 def matlab_mst_boolean_array(ifg_list_instance, p_threshold=1):
     """
+    :param ifg_instance: IfgListPyRate instance
+    :param p_threshold: minimum number of non-nan values at any pixel for selection
+
     This should have the same output as matlab_mst. Should be tested.
     Please note that the generator version is more memory efficient.
     If memory was not a concern we could have found the entire mst matrix in the
@@ -276,7 +281,8 @@ def matlab_mst_boolean_array(ifg_list_instance, p_threshold=1):
     no_y, no_x = ifg_list_instance.ifgs[0].phase_data.shape
     result = np.empty(shape=(num_ifgs, no_y, no_x), dtype=np.bool)
 
-    for y, x, mst in matlab_mst_generator_boolean_array(ifg_list_instance, p_threshold):
+    for y, x, mst in matlab_mst_generator_boolean_array(ifg_list_instance,
+                                                        p_threshold):
         result[:, y, x] = mst
     return result
 
