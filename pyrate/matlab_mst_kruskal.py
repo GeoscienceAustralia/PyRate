@@ -184,7 +184,6 @@ def matlab_mst(ifg_list_, p_threshold=1):
     """
     This is an implementation of matlab/pirate make_mstmat.m.
     """
-    ifg_class_type = str_to_class(ifg_list_.__class__.__name__)
     ifg_list_mst_id = matlab_mst_kruskal(ifg_list_.id,
         ifg_list_.master_num, ifg_list_.slave_num, ifg_list_.nan_frac)
     data_stack = ifg_list_.data_stack
@@ -202,7 +201,7 @@ def matlab_mst(ifg_list_, p_threshold=1):
                     # get all valid ifgs from ifglist,
                     # and then select the ones that are not nan on this pixel
                     id, master, slave, nan_frac = get_sub_structure(
-                        ifg_list_, nan_v, ifg_class_type)
+                        ifg_list_, nan_v)
                     # calculate mst again
                     ifglist_mst_valid_id = matlab_mst_kruskal(id, master,
                                                               slave, nan_frac)
@@ -231,8 +230,6 @@ def matlab_mst_generator_boolean_array(ifg_instance, p_threshold=1):
     If memory was not a concern we could have found the entire mst matrix in the
     previous function and this would have been unnecessary.
     """
-    ifg_class_type = str_to_class(ifg_instance.__class__.__name__)
-    # (id_l, master_l, slave_l, nan_frac_l)
     ifg_list_mst_id = matlab_mst_kruskal(ifg_instance.id,
         ifg_instance.master_num, ifg_instance.slave_num, ifg_instance.nan_frac)
     data_stack = ifg_instance.data_stack
@@ -256,7 +253,7 @@ def matlab_mst_generator_boolean_array(ifg_instance, p_threshold=1):
                 # get all valid ifgs from ifglist,
                 # and then select the ones that are not nan on this pixel
                 id, master, slave, nan_frac = get_sub_structure(
-                    ifg_instance, nan_v, ifg_class_type)
+                    ifg_instance, nan_v)
                 # calculate mst again
                 ifglist_mst_valid_id = matlab_mst_kruskal(
                     id, master, slave, nan_frac)
@@ -306,7 +303,7 @@ def get_all_attriblues_of_class(class_instance):
     return vars(class_instance).keys()
 
 
-def get_sub_structure(ifg_list, nan_v, class_type):
+def get_sub_structure(ifg_list, nan_v):
     """
     This is the getsucstruct.m in pi-rate/matlab.
     :param ifg_list: original ifg_list class instance.
