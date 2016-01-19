@@ -734,8 +734,6 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
     orbfitlksy:    2
 
     """
-    # TODO: Write tests and implementation for various looks and degrees
-
     def setUp(self):
         self.BASE_DIR = os.path.join('/tmp', uuid.uuid4().hex)
 
@@ -792,7 +790,6 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
                             '_method2_')[1].split('.')[0]:
                     count += 1
                     # all numbers equal
-                    # TODO: Should investigate why only upto decimal=0 works
                     np.testing.assert_array_almost_equal(matlab_phase_data,
                         j.phase_data, decimal=3)
 
@@ -803,6 +800,7 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
         # ensure that we have expected number of matches
         self.assertEqual(count, len(self.ifgs))
 
+# TODO: Write tests for various looks and degree combinations
 
 if __name__ == "__main__":
     unittest.main()
