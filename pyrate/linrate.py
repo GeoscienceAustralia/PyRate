@@ -48,7 +48,7 @@ def linear_rate(ifgs, vcm, pthr, nsig, maxsig,
         error/std_stack: standard deviation of the stacked interferogram
                   (i.e., error map)
         samples/coh_sta: statistics of coherent pixels used for stacking
-        demerror:  dem errors in metres, no implemented in python
+        demerror:  dem errors in metres, not implemented in python
     """
 
     rows, cols = ifgs[0].phase_data.shape
@@ -95,7 +95,7 @@ def linear_rate(ifgs, vcm, pthr, nsig, maxsig,
     # overwrite the data whose error is larger than the maximum sigma user threshold
     rate[error > maxsig] = nan
     error[error > maxsig] = nan
-    samples[error > maxsig] = nan  # TODO: This step is missing in matlab?
+    # samples[error > maxsig] = nan  # TODO: This step is missing in matlab?
 
     return rate, error, samples
 
@@ -183,7 +183,7 @@ def linear_rate_by_pixel(row, col, mst, nsig, obs, pthr, span, vcm):
             # if no, save estimate, exit the while loop and go to next pixel
             return v[0], err[0], ifgv.shape[0]
     # dummy return for no change
-    return np.nan, np.nan, np.nan
+    return np.nan, np.nan, len(ind)
 
 
 if __name__ == "__main__":
