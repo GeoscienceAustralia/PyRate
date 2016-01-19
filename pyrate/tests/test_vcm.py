@@ -193,7 +193,6 @@ class MatlabEqualityTestInRunPyRateSequence(unittest.TestCase):
         _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
 
         # Calculate interferogram noise
-        # TODO: assign maxvar to ifg metadata (and geotiff)?
         cls.maxvar = [cvd(i)[0] for i in ifgs]
         cls.vcmt = get_vcmt(ifgs, cls.maxvar)
 
