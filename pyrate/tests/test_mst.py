@@ -6,18 +6,12 @@ Tests for Minimum Spanning Tree (MST) functionality in PyRate.
 
 import unittest
 from itertools import product
-import numpy as np
 from numpy import empty, array, nan, isnan, sum as nsum
-import os
 
 from pyrate import mst
 from pyrate import algorithm
 from pyrate.tests.common import MockIfg, sydney5_mock_ifgs, sydney_data_setup
-from pyrate.tests.common import sydney_data_setup_ifg_file_list
 
-
-# TODO: refactor get_epochs() into MST code?
-# limits errors to one area, are the pochs needed elsewhere??
 
 class MSTTests(unittest.TestCase):
     '''Basic verification of minimum spanning tree (MST) functionality.'''
