@@ -784,7 +784,7 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
 
         count = 0
         for i, f in enumerate(onlyfiles):
-            ifg_data = np.genfromtxt(os.path.join(
+            matlab_phase_data = np.genfromtxt(os.path.join(
                 SYD_TEST_MATLAB_ORBITAL_DIR, f), delimiter=',')
             for k, j in enumerate(self.ifgs):
                 if os.path.basename(j.data_path).split('.')[0] == \
@@ -793,11 +793,11 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
                     count += 1
                     # all numbers equal
                     # TODO: Should investigate why only upto decimal=0 works
-                    np.testing.assert_array_almost_equal(ifg_data,
-                        j.phase_data, decimal=2)
+                    np.testing.assert_array_almost_equal(matlab_phase_data,
+                        j.phase_data, decimal=3)
 
                     # number of nans must equal
-                    self.assertEqual(np.sum(np.isnan(ifg_data)),
+                    self.assertEqual(np.sum(np.isnan(matlab_phase_data)),
                                 np.sum(np.isnan(j.phase_data)))
 
         # ensure that we have expected number of matches
