@@ -13,6 +13,7 @@ from scipy.linalg import lstsq
 from numpy.linalg import pinv
 
 from pyrate.algorithm import master_slave_ids, get_all_epochs, get_epoch_count
+import pyrate.matlab_mst_kruskal as matlab_mst
 
 
 # Orbital correction tasks
@@ -159,18 +160,25 @@ def _network_correction(ifgs, degree, offset, m_ifgs=None):
     """
     # get DM & filter out NaNs
     src_ifgs = ifgs if m_ifgs is None else m_ifgs
+    try:
+        src_ifgs = matlab_mst.matlab_mst_kruskal_from_ifgs(src_ifgs)
+    except:
+        pass
+
     vphase = vstack([i.phase_data.reshape((i.num_cells, 1)) for i in src_ifgs])
     vphase = squeeze(vphase)
-    dm = get_network_design_matrix(src_ifgs, degree, offset)
+
+    B = get_network_design_matrix(src_ifgs, degree, offset)
 
     # filter NaNs out before getting model
-    clean_dm = dm[~isnan(vphase)]
-    data = vphase[~isnan(vphase)]
-    model = dot(pinv(clean_dm, 1e-6), data)
+    B = B[~isnan(vphase)]
+    obsv = vphase[~isnan(vphase)]
+    orbparams = dot(pinv(B, 1e-6), obsv)
 
     ncoef = get_num_params(degree)
     ids = master_slave_ids(get_all_epochs(ifgs))
-    coefs = [model[i:i+ncoef] for i in range(0, len(set(ids)) * ncoef, ncoef)]
+    coefs = [orbparams[i:i+ncoef] for i in
+             range(0, len(set(ids)) * ncoef, ncoef)]
 
     # create full res DM to expand determined coefficients into full res orbital
     # correction (eg. expand coarser model to full size)
