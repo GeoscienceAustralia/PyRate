@@ -118,6 +118,9 @@ class PyRateTests(unittest.TestCase):
             params[cf.OUT_DIR] = BASE_DIR
             paths = glob.glob(join(BASE_OUT_DIR, 'geo_*-*.tif'))
             run_pyrate.process_ifgs(paths, params)
+
+            if not hasattr(cls, 'ifgs'):
+                cls.ifgs = get_ifgs()
         except:
             # revert working dir & avoid paths busting other tests
             os.chdir(CURRENT_DIR)
@@ -127,11 +130,6 @@ class PyRateTests(unittest.TestCase):
     def tearDownClass(cls):
         shutil.rmtree(BASE_DIR, ignore_errors=True)
         os.chdir(CURRENT_DIR)
-
-    def setUp(self):
-        # performance: to save constantly opening ifgs
-        if not hasattr(self, 'ifgs'):
-            self.ifgs = get_ifgs()
 
     def get_logfile_path(self):
         logpaths = glob.glob(join(BASE_DIR, '*.log'))
