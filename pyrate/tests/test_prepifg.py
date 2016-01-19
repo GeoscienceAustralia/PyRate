@@ -6,6 +6,7 @@ Tests for prepifg.py: resampling, subsetting etc.
 
 import os, sys, unittest
 from os.path import exists, join
+import shutil
 
 from math import floor
 import numpy as np
@@ -34,7 +35,10 @@ if not exists(PREP_TEST_TIF):
 def diff_exts_ifgs():
     """Returns pair of test Ifgs with different extents"""
     bases = ['geo_060619-061002.tif', 'geo_070326-070917.tif']
-    return [Ifg(join(PREP_TEST_TIF, p)) for p in bases]
+    for p in bases:
+        shutil.copy(src=os.path.join(PREP_TEST_TIF, p),
+                    dst=os.path.join('/tmp', p))
+    return [Ifg(join('/tmp', p)) for p in bases]
 
 
 def same_exts_ifgs():
@@ -78,8 +82,6 @@ class PrepifgOutputTests(unittest.TestCase):
     def setUp(self):
         self.xs = 0.000833333
         self.ys = -self.xs
-
-        # FIXME: dump output to tmp dir?
         self.ifgs = diff_exts_ifgs()
         paths = ["geo_060619-061002_1rlks_1cr.tif",
                  "geo_060619-061002_1rlks_2cr.tif",
@@ -89,7 +91,7 @@ class PrepifgOutputTests(unittest.TestCase):
                  "geo_070326-070917_1rlks_2cr.tif",
                  "geo_070326-070917_1rlks_3cr.tif",
                  "geo_070326-070917_4rlks_3cr.tif"]
-        self.exp_files = [join(PREP_TEST_TIF, p) for p in paths]
+        self.exp_files = [join('/tmp', p) for p in paths]
 
     def test_mlooked_paths(self):
         test_mlooked_path()
