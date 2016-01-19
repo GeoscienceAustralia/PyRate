@@ -122,10 +122,18 @@ class PrepareInterferograms(IfgListMixin, luigi.WrapperTask):
             if os.path.exists(self.extentsFileName):
                 os.remove(self.extentsFileName)
         except:
-            # TODO: should emit a warning here
-            pass
+            raise PrepifgException(
+                'Extents file was not found in the desired '
+                'location: {}'.format(self.extentsFileName),
+                'Make sure your paths are setup correctly in config file')
 
         self.extentsRemoved = True
 
     def complete(self):
         return self.extentsRemoved and super(PrepareInterferograms, self).complete()
+
+
+class PrepifgException(Exception):
+
+    pass
+
