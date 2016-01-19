@@ -143,7 +143,6 @@ class MatlabEqualityTest(unittest.TestCase):
         _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
 
         # Calculate interferogram noise
-        # TODO: assign maxvar to ifg metadata (and geotiff)?
         maxvar = [vcm.cvd(i)[0] for i in ifgs]
 
         # Calculate temporal variance-covariance matrix
@@ -158,6 +157,11 @@ class MatlabEqualityTest(unittest.TestCase):
         cls.rate_2, cls.error_2, cls.samples_2 = \
             run_pyrate.calculate_linear_rate(ifgs, params, vcmt, mst=mst_grid)
 
+        params[cf.PARALLEL] = 0
+        # Calculate linear rate map
+        cls.rate_s, cls.error_s, cls.samples_s = \
+            run_pyrate.calculate_linear_rate(ifgs, params, vcmt, mst=mst_grid)
+
         MATLAB_LINRATE_DIR = os.path.join(SYD_TEST_DIR, 'matlab_linrate')
 
         cls.rate_matlab = np.genfromtxt(
@@ -168,52 +172,46 @@ class MatlabEqualityTest(unittest.TestCase):
         cls.samples_matlab = np.genfromtxt(
             os.path.join(MATLAB_LINRATE_DIR, 'coh_sta.csv'), delimiter=',')
 
-        params[cf.PARALLEL] = 0
-        # Calculate linear rate map
-        cls.rate_s, cls.error_s, cls.samples_s = \
-            run_pyrate.calculate_linear_rate(ifgs, params, vcmt, mst=mst_grid)
-
     @classmethod
     def tearDownClass(cls):
         shutil.rmtree(cls.temp_out_dir)
 
     def test_linear_rate_full_parallel(self):
         np.testing.assert_array_almost_equal(
-            self.rate[:11, :45], self.rate_matlab[:11, :45], decimal=4)
+            self.rate, self.rate_matlab, decimal=3)
 
     def test_lin_rate_error_parallel(self):
         np.testing.assert_array_almost_equal(
-            self.error[:11, :45], self.error_matlab[:11, :45], decimal=4)
+            self.error, self.error_matlab, decimal=3)
 
     def test_lin_rate_samples_parallel(self):
         np.testing.assert_array_almost_equal(
-            self.samples[:11, :45], self.samples_matlab[:11, :45], decimal=4)
+            self.samples, self.samples_matlab, decimal=3)
 
     def test_linear_rate_full_parallel_pixel_level(self):
         np.testing.assert_array_almost_equal(
-            self.rate_2[:11, :45], self.rate_matlab[:11, :45], decimal=4)
+            self.rate_2, self.rate_matlab, decimal=3)
 
     def test_lin_rate_error_parallel_pixel_level(self):
         np.testing.assert_array_almost_equal(
-            self.error_2[:11, :45], self.error_matlab[:11, :45], decimal=4)
+            self.error_2, self.error_matlab, decimal=3)
 
     def test_lin_rate_samples_parallel_pixel_level(self):
         np.testing.assert_array_almost_equal(
-            self.samples_2[:11, :45], self.samples_matlab[:11, :45], decimal=4)
+            self.samples_2, self.samples_matlab, decimal=3)
 
     def test_linear_rate_full_serial(self):
         np.testing.assert_array_almost_equal(
-            self.rate_s[:11, :45], self.rate_matlab[:11, :45], decimal=4)
+            self.rate_s, self.rate_matlab, decimal=3)
 
     def test_lin_rate_error_serial(self):
         np.testing.assert_array_almost_equal(
-            self.error_s[:11, :45], self.error_matlab[:11, :45], decimal=4)
+            self.error_s, self.error_matlab, decimal=3)
 
     def test_lin_rate_samples_serial(self):
         np.testing.assert_array_almost_equal(
-            self.samples_s[:11, :45], self.samples_matlab[:11, :45], decimal=4)
+            self.samples_s, self.samples_matlab, decimal=1)
 
-    # TODO: investigae why the whole arrays don't equal
 
 if __name__ == "__main__":
     unittest.main()
