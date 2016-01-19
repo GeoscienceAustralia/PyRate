@@ -131,6 +131,7 @@ def linear_rate_by_pixel(row, col, mst, nsig, obs, pthr, span, vcm):
     # find the indices of independent ifgs for given pixel from MST
     ind = np.nonzero(mst[:, row, col])[0]  # only True's in mst are chosen
     # iterative loop to calculate 'robust' velocity for pixel
+    default_no_samples = len(ind)
 
     while len(ind) >= pthr:
         # make vector of selected ifg observations
@@ -183,7 +184,7 @@ def linear_rate_by_pixel(row, col, mst, nsig, obs, pthr, span, vcm):
             # if no, save estimate, exit the while loop and go to next pixel
             return v[0], err[0], ifgv.shape[0]
     # dummy return for no change
-    return np.nan, np.nan, len(ind)
+    return np.nan, np.nan, default_no_samples
 
 
 if __name__ == "__main__":
