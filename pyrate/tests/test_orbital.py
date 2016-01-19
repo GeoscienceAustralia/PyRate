@@ -11,6 +11,7 @@ from os.path import join
 from itertools import product
 import os
 import numpy as np
+import uuid
 
 from numpy.linalg import pinv, inv
 from numpy import nan, isnan, array
@@ -650,7 +651,7 @@ class MatlabComparisonTestsOrbfitMethod1(unittest.TestCase):
     """
 
     def setUp(self):
-        self.BASE_DIR = os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orb_test')
+        self.BASE_DIR = os.path.join('/tmp', uuid.uuid4().hex)
 
         # start each full test run cleanly
         shutil.rmtree(self.BASE_DIR, ignore_errors=True)
@@ -735,32 +736,31 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
     """
     # TODO: Write tests and implementation for various looks and degrees
 
-    @classmethod
-    def setUp(cls):
-        cls.BASE_DIR = os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orb_test_method2')
+    def setUp(self):
+        self.BASE_DIR = os.path.join('/tmp', uuid.uuid4().hex)
 
         # start each full test run cleanly
-        shutil.rmtree(cls.BASE_DIR, ignore_errors=True)
+        shutil.rmtree(self.BASE_DIR, ignore_errors=True)
 
-        cls.params = cf.get_config_params(
+        self.params = cf.get_config_params(
             os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orbital_error.conf'))
 
         # change to orbital error correction method 2
-        cls.params[cf.ORBITAL_FIT_METHOD] = 2
+        self.params[cf.ORBITAL_FIT_METHOD] = 2
 
         data_paths = [os.path.join(SYD_TEST_TIF, p) for p in
                       sydney_data_setup_ifg_file_list()]
-        new_data_paths = [os.path.join(cls.BASE_DIR, os.path.basename(d))
+        new_data_paths = [os.path.join(self.BASE_DIR, os.path.basename(d))
                           for d in data_paths]
-        os.makedirs(cls.BASE_DIR)
+        os.makedirs(self.BASE_DIR)
         for d in data_paths:
-            d_copy = os.path.join(cls.BASE_DIR, os.path.basename(d))
+            d_copy = os.path.join(self.BASE_DIR, os.path.basename(d))
             shutil.copy(d, d_copy)
             os.chmod(d_copy, 0660)
 
-        cls.ifgs = sydney_data_setup(datafiles=new_data_paths)
+        self.ifgs = sydney_data_setup(datafiles=new_data_paths)
 
-        for c, i in enumerate(cls.ifgs):
+        for c, i in enumerate(self.ifgs):
             if not i.is_open:
                 i.open()
             if not i.nan_converted:
@@ -792,10 +792,9 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
                             '_method2_')[1].split('.')[0]:
                     count += 1
                     # all numbers equal
-                    # is decimal ==0 enough?
                     # TODO: Should investigate why only upto decimal=0 works
                     np.testing.assert_array_almost_equal(ifg_data,
-                        j.phase_data, decimal=0)
+                        j.phase_data, decimal=2)
 
                     # number of nans must equal
                     self.assertEqual(np.sum(np.isnan(ifg_data)),
