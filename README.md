@@ -32,7 +32,7 @@ This will prompt for your github username and password. Once you have entered th
 
 ## Virtualenv setup for `PyRate`
 
-It is recommended that you create a `virtualenv` to run the `tlda` code. 
+It is recommended that you create a `virtualenv` to run the `PyRate` code. 
 
 These instructions are for `ubuntu 14.04` and is expected to work for most newer versions of `ubuntu`. The `virtualenv` and the requirements can be installed using the following steps.
 
@@ -50,7 +50,7 @@ Once inside the `virtualenv`, navigate to the `PyRate` code:
     pip install -r requirements.txt
     pip install GDAL==$(gdal-config --version) --global-option=build_ext --global-option="-I/usr/include/gdal"    
 
-Then proceed to test `PyRate`.
+Then proceed to test `PyRate`. The above assumes that your system gdal is installed in the default `/usr/include/gdal` directory, otherwise you have to provide `gdal` path to pip to be able to install `gdal`.
 
 ## Anaconda setup for `PyRate`
 
@@ -77,14 +77,15 @@ You will need to download and install the appropriate version for your OS. The f
     
 The last step is necessary because conda does not contain `luigi`.
 
-### Deactivate
+#### Back to main anaconda if you need to:
+    
+    source activate /home/user/anaconda2
+    
+#### Deactivate
 Once you are done using `PyRate` you could deactivate from the conda env using: 
 
     source deactivate
 
-#### Back to main anaconda if you need to:
-    
-    source activate /home/user/anaconda2
     
 ## Setting up the 'PYRATEPATH' environment variable
 
