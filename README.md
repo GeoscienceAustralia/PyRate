@@ -31,16 +31,16 @@ Clone the repo:
 This will prompt for your github username and password. Once you have entered them and you have access to this repo, `PyRate` will clone in your current directory. 
 
 ## Virtualenv setup for `PyRate`
-(This is broken at the moment due to GDAL. Please use anaconda instructions below)
 
 It is recommended that you create a `virtualenv` to run the `tlda` code. 
 
 These instructions are for `ubuntu 14.04` and is expected to work for most newer versions of `ubuntu`. The `virtualenv` and the requirements can be installed using the following steps.
 
-    sudo pip install virtualenv
-    sudo apt-get -y build-dep matplotlib  # then enter your root password
+    sudo pip install virtualenv # then enter your root password
+    sudo apt-get -y --force-yes build-dep matplotlib
+    sudo apt-get install -y --force-yes gdal-bin  # if you don't already have gdal
     virtualenv -p python2.7 ~/pyrate_venv
-    source ~/pyrate_venv/bin/activate   
+    source ~/pyrate_venv/bin/activate
 
 Note, in the above, the first command `sudo apt-get -y build-dep matplotlib` installs all the build dependencies for `matplotlib`.
 
@@ -48,6 +48,9 @@ Once inside the `virtualenv`, navigate to the `PyRate` code:
     
     cd PyRate # This is where the requirements.txt exists
     pip install -r requirements.txt
+    pip install GDAL==$(gdal-config --version) --global-option=build_ext --global-option="-I/usr/include/gdal"    
+
+Then proceed to test `PyRate`.
 
 ## Anaconda setup for `PyRate`
 
