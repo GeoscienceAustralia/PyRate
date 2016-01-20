@@ -207,9 +207,6 @@ def matlab_mst(ifg_list_, p_threshold=1):
                                                               slave, nan_frac)
                     mst_mat[ifglist_mst_valid_id, r, c] = 1
                 else:
-                    # TODO: This is not handled in matlab
-                    # We will get here if p_threshold is >=2, and will crash
-                    # raise NotImplementedError('Unhandled mst combination')
                     pass
             else:
                 mst_mat[ifg_list_mst_id, r, c] = 1
@@ -262,7 +259,7 @@ def matlab_mst_generator_boolean_array(ifg_instance, p_threshold=1):
             else:
                 yield r, c, mst_yield
 
-
+# TODO: performance test matlab_mst_boolean_array vs matlab_mst for large ifgs
 def matlab_mst_boolean_array(ifg_list_instance, p_threshold=1):
     """
     :param ifg_instance: IfgListPyRate instance
