@@ -1,11 +1,11 @@
 '''
 Functions for finding the reference pixel in PyRate.
 
-.. codeauthor:: Ben Davies
+.. codeauthor:: Ben Davies, Sudipta Basak
 '''
 
 import pyrate.config as config
-from numpy import array, isnan, std, mean, sum as nsum
+from numpy import isnan, std, mean, sum as nsum
 import numpy as np
 
 

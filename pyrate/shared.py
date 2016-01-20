@@ -12,6 +12,8 @@ from datetime import date
 import logging
 from numpy import where, nan, isnan, sum as nsum
 import numpy as np
+import random
+import string
 
 import pyrate.ifgconstants as ifc
 
@@ -454,3 +456,9 @@ def wavelength_radians_to_mm(data, wavelength):
     # the vector length between satellite and ground, half the signal is needed
     # second 2*pi is because one wavelength is equal to 2 radians
     return data * MM_PER_METRE * (wavelength / (4 * math.pi))
+
+
+def generate_random_string(N=10):
+    return ''.join(random.SystemRandom().choice(
+        string.ascii_letters + string.digits)
+                   for _ in range(N))

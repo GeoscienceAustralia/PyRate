@@ -331,10 +331,9 @@ def dest_ifg_paths(ifg_paths, outdir):
     return [os.path.join(outdir, p) for p in bases]
 
 
-# TODO: write to alternate file if log exists
 def init_logging(level):
     t = datetime.datetime.now()
-    path = 'pyrate_%s_%02d_%02d.log' % (t.year, t.month, t.day)
+    path = 'pyrate_%s.log'% t.isoformat()
     fmt = '%(asctime)s %(message)s'
     datefmt = '%d/%m/%Y %I:%M:%S %p'
     logging.basicConfig(filename=path, format=fmt, datefmt=datefmt, level=level)
@@ -378,7 +377,6 @@ def main():
         logging.debug(emsg)
         raise IOError(2, emsg)
 
-    # FIXME: make output ifgs here, or in process_ifgs() ?
     xlks, ylks, crop = transform_params(pars)
     base_ifg_paths = original_ifg_paths(pars[cf.IFG_FILE_LIST])
 
