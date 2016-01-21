@@ -99,7 +99,6 @@ def time_series(ifgs, pthresh, params, vcmt, mst=None):
 
     ifg_data = np.zeros((nifgs, nrows, ncols), dtype=float32)
     for ifg_num in xrange(nifgs):
-        # ifgs[ifg_num].convert_to_nans(0)
         ifg_data[ifg_num] = ifgs[ifg_num].phase_data
 
     if mst is None:
