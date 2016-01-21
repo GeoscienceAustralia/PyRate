@@ -103,7 +103,6 @@ class ReferencePixelTests(unittest.TestCase):
             m.phase_data[1:5] = 0.1
             m.phase_data[5:] = 0.3
         exp_refpx = (1, 1)
-        # exp_refpx = (36, 23)  # TODO: Clarify with Matt G
         res = ref_pixel(mock_ifgs, refnx=1, refny=1, chipsize=3, min_frac=0.7)
         self.assertEqual(exp_refpx, res)
 
