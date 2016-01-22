@@ -127,10 +127,7 @@ class _DoConvertToGeotiffRoipac(IfgListMixin, luigi.WrapperTask):
         if self.resourceHeader is not None:
             header = parse_header(self.resourceHeader)
             if ifc.PYRATE_DATUM not in header:
-                if self.projection is not None:
-                    projection = options.projection
-                else:
-                    raise Exception('Error: header/resource file does not include DATUM and -p option not given')
+                raise Exception('Error: header/resource file does not include DATUM and -p option not given')
             projection = header[ifc.PYRATE_DATUM]
         else:
             if self.projection:
