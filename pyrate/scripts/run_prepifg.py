@@ -57,7 +57,8 @@ def main():
             prepifg.prepare_ifgs(
                 ifgs, crop_opt=crop, xlooks=xlooks, ylooks=ylooks)
         else:
-            raise NotImplementedError("with gamma prepifg (PROCESOR=1), "
+            # TODO: implement gamma lon-luigi prepifg
+            raise NotImplementedError("with gamma prepifg (PROCESSOR=1), "
                                       "use_luigi=1 must be used")
 
 
