@@ -82,7 +82,7 @@ ROI_PAC_HEADER_FILE_EXT = "rsc"
 
 
 def to_geotiff(header, data_path, dest, nodata):
-    """Converts GAMMA format data to GeoTIFF image with PyRate metadata"""
+    """Converts ROIPAC format data to GeoTIFF image with PyRate metadata"""
     is_ifg = ifc.PYRATE_WAVELENGTH_METRES in header
     ncols = header[ifc.PYRATE_NCOLS]
     nrows = header[ifc.PYRATE_NROWS]

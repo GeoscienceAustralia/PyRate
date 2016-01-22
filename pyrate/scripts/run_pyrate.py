@@ -352,35 +352,7 @@ def get_dest_paths(base_paths, crop, params, looks):
 # TODO: ensure clean exception handling
 # TODO: add parameter error checking: induce fail fast before number crunching
 def main():
-    from optparse import OptionParser
-    parser = OptionParser(usage='%prog [config-file]\nRuns PyRate workflow.')
-    parser.add_option('-i', '--ifglist', type=str, help='name of file containing list of interferograms')
-    options, args = parser.parse_args()
-
-    init_logging(logging.DEBUG)
-
-    try:
-        cfg_path = args[0] if args else 'pyrate.conf'
-        global pars
-        pars = cf.get_config_params(cfg_path)        
-        
-    except IOError as err:
-        emsg = 'Config file error: %s "%s"' % (err.strerror, err.filename)
-        logging.debug(emsg)
-        print emsg
-        sys.exit(err.errno)
-
-    ifgListFile = options.ifglist or pars.get(cf.IFG_FILE_LIST)
-    if ifgListFile is None:
-        emsg = 'Error {code}: Interferogram list file name not provided ' \
-               'or does not exist'.format(code=2)
-        logging.debug(emsg)
-        raise IOError(2, emsg)
-
-    xlks, ylks, crop = transform_params(pars)
-    base_ifg_paths = original_ifg_paths(pars[cf.IFG_FILE_LIST])
-
-    dest_paths = get_dest_paths(base_ifg_paths, crop, pars, xlks)
+    base_ifg_paths, dest_paths, pars = get_ifg_paths()
 
     ifg_instance = matlab_mst.IfgListPyRate(datafiles=dest_paths)
 
@@ -390,6 +362,36 @@ def main():
     else:
         print 'Running matlab mst'
         process_ifgs(ifg_instance, pars)
+
+
+def get_ifg_paths():
+    from optparse import OptionParser
+    parser = OptionParser(usage='%prog [config-file]\nRuns PyRate workflow.')
+    parser.add_option('-i', '--ifglist', type=str,
+                      help='name of file containing list of interferograms')
+    options, args = parser.parse_args()
+    init_logging(logging.DEBUG)
+    try:
+        cfg_path = args[0] if args else 'pyrate.conf'
+        global pars
+        pars = cf.get_config_params(cfg_path)
+
+    except IOError as err:
+        emsg = 'Config file error: %s "%s"' % (err.strerror, err.filename)
+        logging.debug(emsg)
+        print emsg
+        sys.exit(err.errno)
+    ifgListFile = options.ifglist or pars.get(cf.IFG_FILE_LIST)
+    if ifgListFile is None:
+        emsg = 'Error {code}: Interferogram list file name not provided ' \
+               'or does not exist'.format(code=2)
+        logging.debug(emsg)
+        raise IOError(2, emsg)
+    xlks, ylks, crop = transform_params(pars)
+    base_ifg_paths = original_ifg_paths(pars[cf.IFG_FILE_LIST])
+    dest_paths = get_dest_paths(base_ifg_paths, crop, pars, xlks)
+    return base_ifg_paths, dest_paths, pars
+
 
 if __name__ == "__main__":
     main()

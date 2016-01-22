@@ -235,6 +235,8 @@ PARAM_CONVERSION = {
     PARALLEL: (int, None),
     PROCESSES: (int, 8),
 
+    PROCESSOR: (int, None),
+
     LUIGI: (int, 0)
     }
     #TIME_SERIES_INTERP : (bool, False)
