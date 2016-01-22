@@ -161,6 +161,9 @@ TIME_SERIES_SM_FACTOR = 'smfactor'
 PARALLEL = 'parallel'
 PROCESSES = 'processes'
 
+# Luigi parameter
+LUIGI = 'use_luigi'
+
 def degree_conv(deg):
     """
     Convenience: convert numerical degree to human readable string
@@ -203,7 +206,7 @@ PARAM_CONVERSION = {
     IFG_XLAST : (float, None),
     IFG_YFIRST : (float, None),
     IFG_YLAST : (float, None),
-    
+    NO_DATA_VALUE: (float, 0.0),
 
     REFX : (int, -1),
     REFY : (int, -1),
@@ -230,7 +233,9 @@ PARAM_CONVERSION = {
     TIME_SERIES_SM_ORDER: (int, None),
 
     PARALLEL: (int, None),
-    PROCESSES: (int, 8)
+    PROCESSES: (int, 8),
+
+    LUIGI: (int, 0)
     }
     #TIME_SERIES_INTERP : (bool, False)
 
