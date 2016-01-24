@@ -36,6 +36,8 @@ It is recommended that you create a `virtualenv` to run the `PyRate` code.
 
 These instructions are for `ubuntu 14.04` and is expected to work for most newer versions of `ubuntu`. The `virtualenv` and the requirements can be installed using the following steps.
 
+    sudo apt-get install python-pip
+    sudo pip install -U pip  # bings the latest pip
     sudo pip install virtualenv # then enter your root password
     sudo apt-get -y --force-yes build-dep matplotlib
     sudo apt-get install -y --force-yes gdal-bin  # if you don't already have gdal
@@ -64,19 +66,17 @@ Please accept all defaults. This will install anaconda in the `~/anaconda2` dire
  
 You will need to download and install the appropriate version for your OS. The following instructions are for ubuntu 14.04 and are exptect to work for most versions of ubuntu.
 
-#### Create the `pyrate` environment
-    
-    ~/anaconda2/bin/conda create --name pyrate --file /path/to/PyRate/requirements_conda.txt
+#### Activate `anaconda` and install `conda-env`
 
-#### Activate the `pyrate` environment
+    source ~/anaconda2/bin/activate anaconda2/
+    conda install -c conda conda-env        
 
-    source ~/anaconda2/bin/activate pyrate
-    
-#### Install `luigi`
-    pip install luigi==1.3.0
-    
-The last step is necessary because conda does not contain `luigi`.
+The `conda-env` package enables `yml` based installation.
 
+## Create the `pyrate` environment
+    
+    conda env create -f /path/to/PyRate/environment.yml
+    
 #### Back to main anaconda if you need to:
     
     source activate /home/user/anaconda2

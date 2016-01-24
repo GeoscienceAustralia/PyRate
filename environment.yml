@@ -1,0 +1,17 @@
+name: pyrate_yml
+channels:
+  - javascript
+dependencies:
+  - python=2.7
+  - numpy=1.9.2
+  - scipy=0.15.1
+  - Cython=0.22.1
+  - nose=1.3.7
+  - networkx=1.9.1
+  - matplotlib=1.4.3
+  - Flask=0.10.1
+  - Pillow=2.8.2
+  - GDAL=1.11.2
+  - pyproj=1.9.4
+  - pip:
+    - luigi==1.3.0

@@ -46,21 +46,22 @@ For conda installer to work you need to create a `~/.condarc` file with the foll
         http: http://proxy.agso.gov.au:8080
         https: http://proxy.agso.gov.au:8080
         
-        
+
+#### Activate `anaconda` and install `conda-env`
+
+    source ~/anaconda2/bin/activate anaconda2/
+    conda install -c conda conda-env        
+
+The `conda-env` package enables `yml` based installation.
 
 ## Create the `pyrate` environment
     
-    ~/anaconda2/bin/conda create --name venv_pyrate --file /path/to/PyRate/requirements_conda.txt
+    conda env create -f /path/to/PyRate/environment.yml
 
 ## Activate the `pyrate` environment
 
     source ~/anaconda2/bin/activate venv_pyrate
     
-## Install `luigi`
-    pip install luigi==1.3.0
-    
-The last step is necessary because conda does not contain `luigi`.
-
 ## Run `PyRate` tests
 
 To run the tests, use the following command inside the `PyRate` directory:
