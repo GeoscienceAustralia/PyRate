@@ -1,4 +1,4 @@
-name: pyrate_yml
+name: pyrate
 channels:
   - javascript
 dependencies:

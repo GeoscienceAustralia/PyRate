@@ -60,7 +60,7 @@ The `conda-env` package enables `yml` based installation.
 
 ## Activate the `pyrate` environment
 
-    source ~/anaconda2/bin/activate venv_pyrate
+    source ~/anaconda2/bin/activate pyrate
     
 ## Run `PyRate` tests
 

@@ -71,11 +71,22 @@ You will need to download and install the appropriate version for your OS. The f
     source ~/anaconda2/bin/activate anaconda2/
     conda install -c conda conda-env        
 
-The `conda-env` package enables `yml` based installation.
+The `conda-env` package enables `yml` based `virtualenv` installation.
 
-## Create the `pyrate` environment
+#### Create the `pyrate` environment
     
     conda env create -f /path/to/PyRate/environment.yml
+    
+#### Activate the `pyrate` environment
+
+    source ~/anaconda2/bin/activate pyrate
+    
+#### Run `PyRate` tests
+
+To run the tests, use the following command inside the `PyRate` directory:
+		
+	cd PyRate
+	nosetests --nologcapture    
     
 #### Back to main anaconda if you need to:
     
