@@ -1,6 +1,5 @@
-name: pyrate
-channels:
-  - javascript
+name: pyrate3
+
 dependencies:
   - python=2.7
   - numpy=1.9.2
