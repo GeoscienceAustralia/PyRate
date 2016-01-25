@@ -210,7 +210,7 @@ class MatlabEqualityTest(unittest.TestCase):
 
     def test_lin_rate_samples_serial(self):
         np.testing.assert_array_almost_equal(
-            self.samples_s, self.samples_matlab, decimal=1)
+            self.samples_s, self.samples_matlab, decimal=3)
 
 
 if __name__ == "__main__":
