@@ -406,14 +406,14 @@ def multilooking(src, xscale, yscale, thresh=0):
     return dest
 
 
-class MatlabEqualityTest(unittest.TestCase):
+class MatlabEqualityTestRoipacSydneyTestData(unittest.TestCase):
     """
-    Matlab to python prepifg equality test
+    Matlab to python roipac prepifg equality test for sydney test data
     """
 
     def setUp(self):
-        from pyrate.tests.common import sydney5_ifgs
-        self.ifgs = sydney5_ifgs()
+        from pyrate.tests.common import sydney_data_setup
+        self.ifgs = sydney_data_setup()
         self.ifgs_with_nan = prepare_ifgs(self.ifgs,
                                           crop_opt=1, xlooks=1, ylooks=1)
 
