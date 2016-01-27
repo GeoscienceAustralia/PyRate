@@ -13,6 +13,7 @@ from os.path import exists, join
 from numpy.testing import assert_array_almost_equal
 import uuid
 import shutil
+import numpy as np
 
 import pyrate.ifgconstants as ifc
 from pyrate import roipac
@@ -274,21 +275,25 @@ class HeaderParsingTests(unittest.TestCase):
 
 
 class TestRoipacLuigiEquality(unittest.TestCase):
-    def setUp(self):
-        random_text = uuid.uuid4().hex
-        self.confFile = '/tmp/{}/roipac_test.conf'.format(random_text)
-        self.ifgListFile = '/tmp/{}/roipac_ifg.list'.format(random_text)
-        self.base_dir = os.path.dirname(self.confFile)
-        common.mkdir_p(self.base_dir)
 
-    def tearDown(self):
-        def rmPaths(paths):
-            for path in paths:
-                try: os.remove(path)
-                except: pass
+    @classmethod
+    def setUpClass(cls):
+        luigi_dir = uuid.uuid4().hex
+        non_luigi_dir = uuid.uuid4().hex
+        cls.luigi_confFile = '/tmp/{}/roipac_test.conf'.format(luigi_dir)
+        cls.luigi_ifgListFile = '/tmp/{}/roipac_ifg.list'.format(luigi_dir)
+        cls.non_luigi_confFile = '/tmp/{}/roipac_test.conf'.format(non_luigi_dir)
+        cls.non_luigi_ifgListFile = '/tmp/{}/roipac_ifg.list'.format(non_luigi_dir)
 
-        rmPaths(self.expPaths)
-        shutil.rmtree(self.base_dir)
+        cls.luigi_base_dir = os.path.dirname(cls.luigi_confFile)
+        cls.non_luigi_base_dir = os.path.dirname(cls.non_luigi_confFile)
+        common.mkdir_p(cls.luigi_base_dir)
+        common.mkdir_p(cls.non_luigi_base_dir)
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(cls.luigi_base_dir)
+        shutil.rmtree(cls.non_luigi_base_dir)
 
     def makeInputFiles(self, data, projection):
         with open(self.confFile, 'w') as conf:
@@ -312,17 +317,23 @@ class TestRoipacLuigiEquality(unittest.TestCase):
     def test_cmd_ifg_luigi_files_created(self):
         self.dataPaths = sydney_data_setup_unw_file_list()
         base_exp = sydney_data_setup_ifg_file_list()
-        self.expPaths = [join(self.base_dir, os.path.basename(i))
+        self.expPaths = [join(self.luigi_base_dir, os.path.basename(i))
                          for i in base_exp]
         self.luigi = '1'
+        self.confFile = self.luigi_confFile
+        self.ifgListFile = self.luigi_ifgListFile
+        self.base_dir = self.luigi_base_dir
         self.common_check()
 
     def test_cmd_ifg_no_luigi_files_created(self):
         self.dataPaths = sydney_data_setup_unw_file_list()
         base_exp = sydney_data_setup_ifg_file_list()
-        self.expPaths = [join(self.base_dir, os.path.basename(i))
+        self.expPaths = [join(self.non_luigi_base_dir, os.path.basename(i))
                          for i in base_exp]
         self.luigi = '0'
+        self.confFile = self.non_luigi_confFile
+        self.ifgListFile = self.non_luigi_ifgListFile
+        self.base_dir = self.non_luigi_base_dir
         self.common_check()
 
     def common_check(self):
@@ -332,6 +343,17 @@ class TestRoipacLuigiEquality(unittest.TestCase):
         for path in self.expPaths:
             self.assertTrue(os.path.exists(path),
                             '{} does not exist'.format(path))
+
+    def test_equality_of_luigi_and_no_luigi(self):
+        from pyrate.tests.common import sydney_data_setup
+        import glob
+        all_luigi_ifgs = sydney_data_setup(
+            glob.glob(os.path.join(self.luigi_base_dir, "*.tif")))
+        all_non_luigi_ifgs = sydney_data_setup(
+            glob.glob(os.path.join(self.non_luigi_base_dir, "*.tif")))
+
+        for i, j in zip(all_luigi_ifgs, all_non_luigi_ifgs):
+            np.testing.assert_array_equal(i.phase_data, j.phase_data)
 
 
 if __name__ == "__main__":
