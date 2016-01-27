@@ -22,7 +22,14 @@ from pyrate.config import (
     OBS_DIR,
     OUT_DIR,
     IFG_FILE_LIST,
-    PROCESSOR)
+    PROCESSOR,
+    ROIPAC_RESOURCE_HEADER,
+    LUIGI,
+    IFG_CROP_OPT,
+    IFG_LKSX,
+    IFG_LKSY,
+    NO_DATA_AVERAGING_THRESHOLD
+    )
 from pyrate.roipac import RoipacException
 from pyrate.scripts.converttogtif import main as roipacMain
 from pyrate.tasks.utils import DUMMY_SECTION_NAME
@@ -30,6 +37,12 @@ from pyrate.tests.common import HEADERS_TEST_DIR, PREP_TEST_OBS, PREP_TEST_TIF
 from pyrate.tests.common import SYD_TEST_DEM_UNW, SYD_TEST_DEM_HDR
 from pyrate.tests.common import SYD_TEST_DEM_DIR, SYD_TEST_OBS
 from pyrate.tests import common
+from pyrate import shared
+from pyrate.scripts import run_pyrate, run_prepifg
+from pyrate import config as cf
+from pyrate.tests.common import sydney_data_setup_unw_file_list
+from pyrate.tests.common import sydney_data_setup_ifg_file_list
+
 
 gdal.UseExceptions()
 
@@ -40,8 +53,7 @@ if not exists(HEADERS_TEST_DIR):
 
 # constants
 SHORT_HEADER_PATH = join(SYD_TEST_OBS, 'geo_060619-061002.unw.rsc')
-FULL_HEADER_PATH  = join(HEADERS_TEST_DIR, "geo_060619-060828.unw.rsc")
-
+FULL_HEADER_PATH = join(HEADERS_TEST_DIR, "geo_060619-060828.unw.rsc")
 
 
 class RoipacCommandLine(unittest.TestCase):
@@ -52,14 +64,14 @@ class RoipacCommandLine(unittest.TestCase):
         self.base_dir = os.path.dirname(self.confFile)
         common.mkdir_p(self.base_dir)
 
-    def tearDown(self):
-        def rmPaths(paths):
-            for path in paths:
-                try: os.remove(path)
-                except: pass
-
-        rmPaths(self.expPaths)
-        shutil.rmtree(self.base_dir)
+    # def tearDown(self):
+    #     def rmPaths(paths):
+    #         for path in paths:
+    #             try: os.remove(path)
+    #             except: pass
+    #
+    #     rmPaths(self.expPaths)
+    #     shutil.rmtree(self.base_dir)
 
     def makeInputFiles(self, data, projection):
         with open(self.confFile, 'w') as conf:
@@ -260,6 +272,66 @@ class HeaderParsingTests(unittest.TestCase):
         self.assertAlmostEqual(hdrs[roipac.X_LAST], 151.8519444445)
         self.assertAlmostEqual(hdrs[roipac.Y_LAST], -34.625)
 
+
+class TestRoipacLuigiEquality(unittest.TestCase):
+    def setUp(self):
+        random_text = uuid.uuid4().hex
+        self.confFile = '/tmp/{}/roipac_test.conf'.format(random_text)
+        self.ifgListFile = '/tmp/{}/roipac_ifg.list'.format(random_text)
+        self.base_dir = os.path.dirname(self.confFile)
+        common.mkdir_p(self.base_dir)
+
+    def tearDown(self):
+        def rmPaths(paths):
+            for path in paths:
+                try: os.remove(path)
+                except: pass
+
+        rmPaths(self.expPaths)
+        shutil.rmtree(self.base_dir)
+
+    def makeInputFiles(self, data, projection):
+        with open(self.confFile, 'w') as conf:
+            conf.write('[{}]\n'.format(DUMMY_SECTION_NAME))
+            conf.write('{}: {}\n'.format(INPUT_IFG_PROJECTION, projection))
+            conf.write('{}: {}\n'.format(NO_DATA_VALUE, '0.0'))
+            conf.write('{}: {}\n'.format(OBS_DIR, self.base_dir))
+            conf.write('{}: {}\n'.format(OUT_DIR, self.base_dir))
+            conf.write('{}: {}\n'.format(IFG_FILE_LIST, self.ifgListFile))
+            conf.write('{}: {}\n'.format(PROCESSOR, '0'))
+            conf.write('{}: {}\n'.format(LUIGI, self.luigi))
+            conf.write('{}: {}\n'.format(ROIPAC_RESOURCE_HEADER,
+                                         SYD_TEST_DEM_HDR))
+            conf.write('{}: {}\n'.format(IFG_LKSX, '1'))
+            conf.write('{}: {}\n'.format(IFG_LKSY, '1'))
+            conf.write('{}: {}\n'.format(IFG_CROP_OPT, '1'))
+            conf.write('{}: {}\n'.format(NO_DATA_AVERAGING_THRESHOLD, '0.5'))
+        with open(self.ifgListFile, 'w') as ifgl:
+            ifgl.write('\n'.join(data))
+
+    def test_cmd_ifg_luigi_files_created(self):
+        self.dataPaths = sydney_data_setup_unw_file_list()
+        base_exp = sydney_data_setup_ifg_file_list()
+        self.expPaths = [join(self.base_dir, os.path.basename(i))
+                         for i in base_exp]
+        self.luigi = '1'
+        self.common_check()
+
+    def test_cmd_ifg_no_luigi_files_created(self):
+        self.dataPaths = sydney_data_setup_unw_file_list()
+        base_exp = sydney_data_setup_ifg_file_list()
+        self.expPaths = [join(self.base_dir, os.path.basename(i))
+                         for i in base_exp]
+        self.luigi = '0'
+        self.common_check()
+
+    def common_check(self):
+        self.makeInputFiles(self.dataPaths, 'WGS84')
+        sys.argv = ['run_prepifg.py', self.confFile]
+        run_prepifg.main()
+        for path in self.expPaths:
+            self.assertTrue(os.path.exists(path),
+                            '{} does not exist'.format(path))
 
 
 if __name__ == "__main__":
