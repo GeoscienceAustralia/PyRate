@@ -88,7 +88,7 @@ def sydney_data_setup(datafiles=None):
 
 
 def sydney_data_setup_ifg_file_list(datafiles=None):
-    '''Returns Ifg objs for the files in the sydney test dir
+    '''Returns the file list of all the .tif files after prepifg conversion
     input phase data is in radians; these ifgs are in radians - not converted to mm'''
     if datafiles:
         for i, d in enumerate(datafiles):
@@ -96,6 +96,12 @@ def sydney_data_setup_ifg_file_list(datafiles=None):
     else:
         datafiles = glob.glob(join(SYD_TEST_TIF, "*.tif"))
     return datafiles
+
+
+def sydney_data_setup_unw_file_list():
+    '''Returns unw file list before prepifg operation
+    input phase data is in radians; these ifgs are in radians - not converted to mm'''
+    return glob.glob(join(SYD_TEST_OBS, "*.unw"))
 
 
 def sydney5_ifgs():
