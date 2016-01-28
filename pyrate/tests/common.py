@@ -1,8 +1,8 @@
-'''
+"""
 Collection of generic testing utils and mock objs for PyRate.
 
-.. codeauthor:: Ben Davies
-'''
+.. codeauthor:: Ben Davies, Sudipta Basak
+"""
 
 import errno
 import os, glob
@@ -71,13 +71,13 @@ IFMS16 = ['geo_060619-061002.tif',
 
 
 def sydney_data_setup(datafiles=None):
-    '''Returns Ifg objs for the files in the sydney test dir
-    input phase data is in radians; these ifgs are in radians - not converted to mm'''
+    """Returns Ifg objs for the files in the sydney test dir
+    input phase data is in radians; these ifgs are in radians - not converted to mm"""
     if datafiles:
         for i, d in enumerate(datafiles):
             datafiles[i] = os.path.join(SYD_TEST_TIF, d)
     else:
-        datafiles = glob.glob(join(SYD_TEST_TIF, "*.tif") )
+        datafiles = glob.glob(join(SYD_TEST_TIF, "*.tif"))
     datafiles.sort()
     ifgs = [Ifg(i) for i in datafiles]
     
@@ -88,8 +88,8 @@ def sydney_data_setup(datafiles=None):
 
 
 def sydney_data_setup_ifg_file_list(datafiles=None):
-    '''Returns the file list of all the .tif files after prepifg conversion
-    input phase data is in radians; these ifgs are in radians - not converted to mm'''
+    """Returns the file list of all the .tif files after prepifg conversion
+    input phase data is in radians; these ifgs are in radians - not converted to mm"""
     if datafiles:
         for i, d in enumerate(datafiles):
             datafiles[i] = os.path.join(SYD_TEST_TIF, d)
@@ -99,13 +99,13 @@ def sydney_data_setup_ifg_file_list(datafiles=None):
 
 
 def sydney_data_setup_unw_file_list():
-    '''Returns unw file list before prepifg operation
-    input phase data is in radians; these ifgs are in radians - not converted to mm'''
+    """Returns unw file list before prepifg operation
+    input phase data is in radians; these ifgs are in radians - not converted to mm"""
     return glob.glob(join(SYD_TEST_OBS, "*.unw"))
 
 
 def sydney5_ifgs():
-    '''Convenience func to return a subset of 5 linked Ifgs from the testdata'''
+    """Convenience func to return a subset of 5 linked Ifgs from the testdata"""
     return [Ifg(join(SYD_TEST_TIF, p)) for p in IFMS5.split()]
 
 
@@ -119,14 +119,14 @@ def sydney5_mock_ifgs(xs=3, ys=4):
 
 
 class MockIfg(object):
-    '''Mock Ifg for detailed testing'''
+    """Mock Ifg for detailed testing"""
 
     def __init__(self, ifg, xsize=None, ysize=None):
-        '''
+        """
         Creates mock Ifg based on a given interferogram. Size args specify the
         dimensions of the phase band (so the mock ifg can be resized differently
         to the source interferogram for smaller test datasets).
-        '''
+        """
         self.master = ifg.master
         self.slave = ifg.slave
 
