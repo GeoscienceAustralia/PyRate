@@ -206,10 +206,6 @@ class Ifg(RasterBase):
         # creating code needs to set this flag after 0 -> NaN replacement
         self.nan_converted = False
 
-        # TODO: what are these for?
-        #self.max_variance = None # will be single floating point number
-        #self.alpha = None # will be single floating point number
-
     def _init_dates(self):
         def _to_date(datestr):
             year, month, day = [int(i) for i in datestr.split('-')]
