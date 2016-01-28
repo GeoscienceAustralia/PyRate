@@ -2,6 +2,8 @@
 import sys
 import luigi
 import os
+import re
+import glob
 from pyrate.tasks.utils import pythonifyConfig
 from pyrate.tasks.prepifg import PrepareInterferograms
 from pyrate import prepifg
@@ -61,20 +63,32 @@ def main():
         else:
             print 'running gamma prepifg'
             header_files = [os.path.join(
-                params[cf.OBS_DIR],
-                os.path.basename(q).split('-')[0] + '_slc.par')
+                q.split('-')[0] + '_slc.par')
                             for q in base_ifg_paths]
 
             hdr_paths = [os.path.join(cf.PYRATEPATH, f) for f in header_files]
             hdrs = [gamma.parse_epoch_header(p) for p in hdr_paths]
             dem_hdr_path = params[cf.DEM_HEADER_FILE]
             DEM_HDR = gamma.parse_dem_header(dem_hdr_path)
-            COMBINED = gamma.combine_headers(hdrs[0], hdrs[1], dem_hdr=DEM_HDR)
 
+            # location of geo_tif's
             dest_base_ifgs = [os.path.join(
                 params[cf.OUT_DIR], os.path.basename(q).split('.')[0] + '.tif')
                           for q in base_ifg_paths]
+
+            ptn = re.compile(r'\d{8}')  # match 8 digits for the dates
+
             for b, d in zip(base_ifg_paths, dest_base_ifgs):
+                dir_name, file_name = os.path.split(b)
+                matches = ptn.findall(file_name)
+                if len(matches) != 2:
+                    raise
+
+                headerPaths = [glob.glob(os.path.join(
+                    dir_name, '*%s*slc.par' % m))[0] for m in matches]
+                hdrs = [gamma.parse_epoch_header(p) for p in headerPaths]
+
+                COMBINED = gamma.combine_headers(hdrs[0], hdrs[1], dem_hdr=DEM_HDR)
                 gamma.to_geotiff(COMBINED, b, d,
                                  nodata=params[cf.NO_DATA_VALUE])
 
