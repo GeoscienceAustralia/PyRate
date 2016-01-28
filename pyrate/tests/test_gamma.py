@@ -13,6 +13,8 @@ from datetime import date
 from numpy.testing import assert_array_almost_equal
 import uuid
 import shutil
+import numpy as np
+import glob
 
 from pyrate.scripts.converttogtif import main as gammaMain
 from pyrate import gamma
@@ -24,10 +26,18 @@ from pyrate.config import (
     OBS_DIR,
     IFG_FILE_LIST,
     PROCESSOR,
-    OUT_DIR)
+    OUT_DIR,
+    LUIGI,
+    IFG_LKSX,
+    IFG_LKSY,
+    IFG_CROP_OPT,
+    NO_DATA_AVERAGING_THRESHOLD)
 
 from pyrate.tests.common import GAMMA_TEST_DIR
-from pyrate.tests import  common
+from pyrate.tests import common
+from pyrate.tests.common import SYD_TEST_DIR
+from pyrate import config as cf
+from pyrate.scripts import run_pyrate, run_prepifg
 
 gdal.UseExceptions()
 
@@ -230,7 +240,6 @@ class HeaderCombinationTests(unittest.TestCase):
         dem_hdr_path = join(GAMMA_TEST_DIR, 'dem16x20raw.dem.par')
         self.dh = gamma.parse_dem_header(dem_hdr_path)
 
-
     def test_combine_headers(self):
         filenames = ['r20090713_VV.slc.par', 'r20090817_VV.slc.par']
         paths = [join(GAMMA_TEST_DIR, p) for p in filenames]
@@ -267,6 +276,80 @@ class HeaderCombinationTests(unittest.TestCase):
 
     def test_fail_bad_date_order(self):
         self.assertRaises(self.err, gamma.combine_headers, H1, H0, self.dh)
+
+
+class TestGammaLuigiEquality(unittest.TestCase):
+
+    SYDNEY_GAMMA_TEST = os.path.join(SYD_TEST_DIR, 'gamma_sydney_test')
+    @classmethod
+    def setUpClass(cls):
+
+        luigi_dir = uuid.uuid4().hex
+        non_luigi_dir = uuid.uuid4().hex
+        cls.luigi_confFile = '/tmp/{}/gamma_test.conf'.format(luigi_dir)
+        cls.luigi_ifgListFile = '/tmp/{}/gamma_ifg.list'.format(luigi_dir)
+        cls.non_luigi_confFile = '/tmp/{}/gamma_test.conf'.format(non_luigi_dir)
+        cls.non_luigi_ifgListFile = \
+            '/tmp/{}/gamma_ifg.list'.format(non_luigi_dir)
+
+        cls.luigi_base_dir = os.path.dirname(cls.luigi_confFile)
+        cls.non_luigi_base_dir = os.path.dirname(cls.non_luigi_confFile)
+        common.mkdir_p(cls.luigi_base_dir)
+        common.mkdir_p(cls.non_luigi_base_dir)
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(cls.luigi_base_dir)
+        shutil.rmtree(cls.non_luigi_base_dir)
+
+    def make_input_files(self, data):
+        with open(self.conf_file, 'w') as conf:
+            conf.write('[{}]\n'.format(DUMMY_SECTION_NAME))
+            # conf.write('{}: {}\n'.format(INPUT_IFG_PROJECTION, projection))
+            conf.write('{}: {}\n'.format(NO_DATA_VALUE, '0.0'))
+            conf.write('{}: {}\n'.format(OBS_DIR, self.SYDNEY_GAMMA_TEST))
+            conf.write('{}: {}\n'.format(OUT_DIR, self.base_dir))
+            conf.write('{}: {}\n'.format(IFG_FILE_LIST, self.ifgListFile))
+            conf.write('{}: {}\n'.format(PROCESSOR, '1'))
+            conf.write('{}: {}\n'.format(LUIGI, self.LUIGI))
+            conf.write('{}: {}\n'.format(
+                DEM_HEADER_FILE, os.path.join(
+                    self.SYDNEY_GAMMA_TEST, '20060619_utm_dem.par')))
+            conf.write('{}: {}\n'.format(IFG_LKSX, '1'))
+            conf.write('{}: {}\n'.format(IFG_LKSY, '1'))
+            conf.write('{}: {}\n'.format(IFG_CROP_OPT, '1'))
+            conf.write('{}: {}\n'.format(NO_DATA_AVERAGING_THRESHOLD, '0.5'))
+        with open(self.ifgListFile, 'w') as ifgl:
+            ifgl.write('\n'.join(data))
+
+    def test_cmd_ifg_luigi_files_created(self):
+
+        self.LUIGI = '1'  # luigi or no luigi
+        self.conf_file = self.luigi_confFile
+        self.base_dir = self.luigi_base_dir
+        self.ifgListFile = self.luigi_ifgListFile
+        self.common_check(self.luigi_confFile)
+
+    def common_check(self, conf_file):
+        data_paths = glob.glob(
+            os.path.join(self.SYDNEY_GAMMA_TEST, "*_utm.unw"))
+
+        self.make_input_files(data_paths)
+        sys.argv = ['run_pyrate.py', conf_file]
+
+        base_ifg_paths, dest_paths, params = run_pyrate.get_ifg_paths()
+        dest_base_ifgs = [os.path.join(
+            params[cf.OUT_DIR], os.path.basename(q).split('.')[0] + '.tif')
+            for q in base_ifg_paths]
+        sys.argv = ['run_prepifg.py', conf_file]
+        run_prepifg.main()
+
+        print dest_base_ifgs
+        for p, q in zip(dest_base_ifgs, dest_paths):
+            self.assertTrue(os.path.exists(p),
+                            '{} does not exist'.format(p))
+            self.assertTrue(os.path.exists(q),
+                            '{} does not exist'.format(q))
 
 
 if __name__ == "__main__":
