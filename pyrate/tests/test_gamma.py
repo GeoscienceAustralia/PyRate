@@ -36,6 +36,7 @@ from pyrate.config import (
 from pyrate.tests.common import GAMMA_TEST_DIR
 from pyrate.tests import common
 from pyrate.tests.common import SYD_TEST_DIR
+from pyrate.tests.common import sydney_data_setup
 from pyrate import config as cf
 from pyrate.scripts import run_pyrate, run_prepifg
 
@@ -305,9 +306,8 @@ class TestGammaLuigiEquality(unittest.TestCase):
     def make_input_files(self, data):
         with open(self.conf_file, 'w') as conf:
             conf.write('[{}]\n'.format(DUMMY_SECTION_NAME))
-            # conf.write('{}: {}\n'.format(INPUT_IFG_PROJECTION, projection))
             conf.write('{}: {}\n'.format(NO_DATA_VALUE, '0.0'))
-            conf.write('{}: {}\n'.format(OBS_DIR, self.SYDNEY_GAMMA_TEST))
+            conf.write('{}: {}\n'.format(OBS_DIR, self.base_dir))
             conf.write('{}: {}\n'.format(OUT_DIR, self.base_dir))
             conf.write('{}: {}\n'.format(IFG_FILE_LIST, self.ifgListFile))
             conf.write('{}: {}\n'.format(PROCESSOR, '1'))
@@ -330,6 +330,13 @@ class TestGammaLuigiEquality(unittest.TestCase):
         self.ifgListFile = self.luigi_ifgListFile
         self.common_check(self.luigi_confFile)
 
+    def test_cmd_ifg_no_luigi_files_created(self):
+        self.LUIGI = '0'  # luigi or no luigi
+        self.conf_file = self.non_luigi_confFile
+        self.base_dir = self.non_luigi_base_dir
+        self.ifgListFile = self.non_luigi_ifgListFile
+        self.common_check(self.non_luigi_confFile)
+
     def common_check(self, conf_file):
         data_paths = glob.glob(
             os.path.join(self.SYDNEY_GAMMA_TEST, "*_utm.unw"))
@@ -344,13 +351,39 @@ class TestGammaLuigiEquality(unittest.TestCase):
         sys.argv = ['run_prepifg.py', conf_file]
         run_prepifg.main()
 
-        print dest_base_ifgs
         for p, q in zip(dest_base_ifgs, dest_paths):
             self.assertTrue(os.path.exists(p),
                             '{} does not exist'.format(p))
             self.assertTrue(os.path.exists(q),
                             '{} does not exist'.format(q))
 
+    def test_equality_of_luigi_and_no_luigi_phase_data(self):
+
+        all_luigi_ifgs = sydney_data_setup(
+            glob.glob(os.path.join(self.luigi_base_dir, "*.tif")))
+        all_non_luigi_ifgs = sydney_data_setup(
+            glob.glob(os.path.join(self.non_luigi_base_dir, "*.tif")))
+
+        self.assertEquals(len(all_luigi_ifgs), len(all_non_luigi_ifgs))
+        c = 0
+        for c, (i, j) in enumerate(zip(all_luigi_ifgs, all_non_luigi_ifgs)):
+            np.testing.assert_array_equal(i.phase_data, j.phase_data)
+        self.assertEquals(c + 1, len(all_luigi_ifgs))
+
+    def test_eqality_of_meta_data(self):
+        all_luigi_ifgs = sydney_data_setup(
+            glob.glob(os.path.join(self.luigi_base_dir, "*.tif")))
+        all_non_luigi_ifgs = sydney_data_setup(
+            glob.glob(os.path.join(self.non_luigi_base_dir, "*.tif")))
+
+        c = 0
+        for c, (i, j) in enumerate(zip(all_luigi_ifgs, all_non_luigi_ifgs)):
+            mdi = i.meta_data
+            mdj = j.meta_data
+            for k in mdi:  # all key vaues equal
+                self.assertEquals(mdj[k], mdi[k])
+
+        self.assertEquals(c + 1, len(all_luigi_ifgs))
 
 if __name__ == "__main__":
     unittest.main()

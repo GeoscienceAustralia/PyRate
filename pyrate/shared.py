@@ -189,6 +189,7 @@ class Ifg(RasterBase):
         self.nan_converted = False
         self.mm_converted = False
         self.data = None
+        self.meta_data = None
 
     def open(self, readonly=None):
         """
@@ -200,6 +201,7 @@ class Ifg(RasterBase):
 
         md = self.dataset.GetMetadata()
         self.wavelength = float(md[ifc.PYRATE_WAVELENGTH_METRES])
+        self.meta_data = md
 
         # creating code needs to set this flag after 0 -> NaN replacement
         self.nan_converted = False
