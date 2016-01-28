@@ -1,7 +1,7 @@
 '''
 Tools used in converting GAMMA headers to ESRI's BIL format.
 
-.. codeauthor:: Ben Davies, NCI
+.. codeauthor:: Ben Davies, NCI, Sudipta Basak, GA
 '''
 
 import os, struct, datetime
@@ -26,7 +26,7 @@ SPEED_OF_LIGHT_METRES_PER_SECOND = 3e8
 
 
 def to_geotiff(hdr, data_path, dest, nodata):
-    'Converts GAMMA format data to GeoTIFF image with PyRate metadata'
+    """Converts GAMMA format data to GeoTIFF image with PyRate metadata"""
     is_ifg = hdr.has_key(ifc.PYRATE_WAVELENGTH_METRES)
     ncols = hdr[ifc.PYRATE_NCOLS]
     nrows = hdr[ifc.PYRATE_NROWS]
@@ -65,8 +65,6 @@ def to_geotiff(hdr, data_path, dest, nodata):
             data = struct.unpack(fmtstr, f.read(ncols * 4))
             band.WriteArray(np.array(data).reshape(1, ncols), yoff=y)
 
-    ds = None
-
 
 def _check_raw_data(data_path, ncols, nrows):
     size = ncols * nrows * 4 # DEM and Ifg data are 4 byte floats
@@ -74,7 +72,6 @@ def _check_raw_data(data_path, ncols, nrows):
     if act_size != size:
         msg = '%s should have size %s, not %s. Is the correct file being used?'
         raise GammaException(msg % (data_path, size, act_size))
-
 
 
 def _check_step_mismatch(hdr):
@@ -86,17 +83,17 @@ def _check_step_mismatch(hdr):
 
 
 def parse_header(path):
-    'Parses all GAMMA epoch/DEM header file fields into a dictionary'
+    """Parses all GAMMA epoch/DEM header file fields into a dictionary"""
     with open(path) as f:
         text = f.read().splitlines()
         raw_segs = [line.split() for line in text if ':' in line]
 
     # convert the content into a giant dict of all key, values
-    return dict( (i[0][:-1], i[1:]) for i in raw_segs)
+    return dict((i[0][:-1], i[1:]) for i in raw_segs)
 
 
 def parse_header_new(path):
-    'Parses all GAMMA epoch/DEM header file fields into a dictionary'
+    """Parses all GAMMA epoch/DEM header file fields into a dictionary"""
     with open(path) as f:
         text = f.read().splitlines()
         raw_segs = [line.split() for line in text]
@@ -104,8 +101,9 @@ def parse_header_new(path):
     # convert the content into a giant dict of all key, values
     return dict((i[0], i[1]) for i in raw_segs)
 
+
 def parse_epoch_header(path):
-    'Returns dict of the minimum required epoch metadata needed for PyRate'
+    """Returns dict of the minimum required epoch metadata needed for PyRate"""
     lookup = parse_header(path)
 
     subset = {}
@@ -145,13 +143,11 @@ def parse_dem_header(path):
     return subset
 
 
-
 def frequency_to_wavelength(freq):
     """
     Convert radar frequency to wavelength
     """
     return SPEED_OF_LIGHT_METRES_PER_SECOND / freq
-
 
 
 def combine_headers(hdr0, hdr1, dem_hdr):
@@ -185,7 +181,6 @@ def combine_headers(hdr0, hdr1, dem_hdr):
 
     chdr.update(dem_hdr)  # add geographic data
     return chdr
-
 
 
 class GammaException(Exception):
