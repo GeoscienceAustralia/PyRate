@@ -355,7 +355,7 @@ class TestRoipacLuigiEquality(unittest.TestCase):
         for c, (i, j) in enumerate(zip(all_luigi_ifgs, all_non_luigi_ifgs)):
             np.testing.assert_array_equal(i.phase_data, j.phase_data)
 
-        self.assertEquals(c, len(all_luigi_ifgs))
+        self.assertEquals(c+1, len(all_luigi_ifgs))
 
 
 if __name__ == "__main__":
