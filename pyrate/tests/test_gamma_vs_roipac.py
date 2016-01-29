@@ -84,9 +84,9 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
         self.conf_file = self.gamma_conffile
         self.base_dir = self.gamma_base_dir
         self.ifgListFile = self.gamma_ifgListFile
-        self.common_check_gamma(self.gamma_conffile)
+        self.check_gamma(self.gamma_conffile)
 
-    def common_check_gamma(self, conf_file):
+    def check_gamma(self, conf_file):
         data_paths = glob.glob(
             os.path.join(self.SYDNEY_GAMMA_TEST, "*_utm.unw"))
 
@@ -106,7 +106,7 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
             self.assertTrue(os.path.exists(q),
                             '{} does not exist'.format(q))
 
-    def make_roipac_Input_files(self, data, projection):
+    def make_roipac_input_files(self, data, projection):
         with open(self.confFile, 'w') as conf:
             conf.write('[{}]\n'.format(DUMMY_SECTION_NAME))
             conf.write('{}: {}\n'.format(INPUT_IFG_PROJECTION, projection))
@@ -134,10 +134,10 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
         self.confFile = self.roipac_conffile
         self.ifgListFile = self.roipac_ifgListFile
         self.base_dir = self.roipac_base_dir
-        self.common_check_roipac()
+        self.check_roipac()
 
-    def common_check_roipac(self):
-        self.make_roipac_Input_files(self.dataPaths, 'WGS84')
+    def check_roipac(self):
+        self.make_roipac_input_files(self.dataPaths, 'WGS84')
         sys.argv = ['run_prepifg.py', self.confFile]
         run_prepifg.main()
         for path in self.expPaths:
