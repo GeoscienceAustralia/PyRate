@@ -1,4 +1,4 @@
-name: pyrate3
+name: pyrate
 
 dependencies:
   - python=2.7
