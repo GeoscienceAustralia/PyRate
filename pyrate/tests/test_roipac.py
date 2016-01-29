@@ -351,9 +351,11 @@ class TestRoipacLuigiEquality(unittest.TestCase):
             glob.glob(os.path.join(self.luigi_base_dir, "*.tif")))
         all_non_luigi_ifgs = sydney_data_setup(
             glob.glob(os.path.join(self.non_luigi_base_dir, "*.tif")))
-
-        for i, j in zip(all_luigi_ifgs, all_non_luigi_ifgs):
+        c = 0
+        for c, (i, j) in enumerate(zip(all_luigi_ifgs, all_non_luigi_ifgs)):
             np.testing.assert_array_equal(i.phase_data, j.phase_data)
+
+        self.assertEquals(c, len(all_luigi_ifgs))
 
 
 if __name__ == "__main__":
