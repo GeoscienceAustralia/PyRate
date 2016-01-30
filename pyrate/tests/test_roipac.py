@@ -1,10 +1,10 @@
-'''
+"""
 Tests for ROIPAC header translation module.
 
 Created on 12/09/2012
 
-.. codeauthor:: Ben Davies
-'''
+.. codeauthor:: Ben Davies, Sudipta Basak
+"""
 
 import os, sys, unittest
 from osgeo import gdal
@@ -14,6 +14,7 @@ from numpy.testing import assert_array_almost_equal
 import uuid
 import shutil
 import numpy as np
+import glob
 
 import pyrate.ifgconstants as ifc
 from pyrate import roipac
@@ -38,12 +39,10 @@ from pyrate.tests.common import HEADERS_TEST_DIR, PREP_TEST_OBS, PREP_TEST_TIF
 from pyrate.tests.common import SYD_TEST_DEM_UNW, SYD_TEST_DEM_HDR
 from pyrate.tests.common import SYD_TEST_DEM_DIR, SYD_TEST_OBS
 from pyrate.tests import common
-from pyrate import shared
-from pyrate.scripts import run_pyrate, run_prepifg
-from pyrate import config as cf
+from pyrate.scripts import run_prepifg
 from pyrate.tests.common import sydney_data_setup_unw_file_list
 from pyrate.tests.common import sydney_data_setup_ifg_file_list
-
+from pyrate.tests.common import sydney_data_setup
 
 gdal.UseExceptions()
 
@@ -65,14 +64,14 @@ class RoipacCommandLine(unittest.TestCase):
         self.base_dir = os.path.dirname(self.confFile)
         common.mkdir_p(self.base_dir)
 
-    # def tearDown(self):
-    #     def rmPaths(paths):
-    #         for path in paths:
-    #             try: os.remove(path)
-    #             except: pass
-    #
-    #     rmPaths(self.expPaths)
-    #     shutil.rmtree(self.base_dir)
+    def tearDown(self):
+        def rmPaths(paths):
+            for path in paths:
+                try: os.remove(path)
+                except: pass
+
+        rmPaths(self.expPaths)
+        shutil.rmtree(self.base_dir)
 
     def makeInputFiles(self, data, projection):
         with open(self.confFile, 'w') as conf:
@@ -106,8 +105,9 @@ class RoipacCommandLine(unittest.TestCase):
             self.assertTrue(os.path.exists(path),
                             '{} does not exist'.format(path))
 
+
 class RoipacToGeoTiffTests(unittest.TestCase):
-    'Tests conversion of GAMMA rasters to custom PyRate GeoTIFF'
+    """Tests conversion of GAMMA rasters to custom PyRate GeoTIFF"""
 
     @classmethod
     def setUpClass(cls):
@@ -226,7 +226,7 @@ class DateParsingTests(unittest.TestCase):
 
 
 class HeaderParsingTests(unittest.TestCase):
-    '''Verifies ROIPAC headers are parsed correctly.'''
+    """Verifies ROIPAC headers are parsed correctly."""
 
     # short format header tests
     def test_parse_short_roipac_header(self):
@@ -249,7 +249,6 @@ class HeaderParsingTests(unittest.TestCase):
         slave = date(2006, 10, 02)
         diff = (slave - master).days / ifc.DAYS_PER_YEAR
         self.assertEqual(diff, hdrs[roipac.TIME_SPAN_YEAR])
-
 
     # long format header tests
     def test_parse_full_roipac_header(self):
@@ -345,8 +344,6 @@ class TestRoipacLuigiEquality(unittest.TestCase):
                             '{} does not exist'.format(path))
 
     def test_equality_of_luigi_and_no_luigi(self):
-        from pyrate.tests.common import sydney_data_setup
-        import glob
         all_luigi_ifgs = sydney_data_setup(
             glob.glob(os.path.join(self.luigi_base_dir, "*.tif")))
         all_non_luigi_ifgs = sydney_data_setup(
