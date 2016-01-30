@@ -1,4 +1,4 @@
-'''
+"""
 Luigi tasks to convert GAMMA headers to ESRI's BIL format.
 
 GAMMA headers need to be translated into a GDAL recognisable format for use in
@@ -21,7 +21,7 @@ datasets will share the same pixel size and dimensions.
 .. todo:: describe incidence files (and any others (for later versions).
 
 .. codeauthor:: Ben Davies, NCI
-'''
+"""
 
 import os, re, luigi
 from glob import glob
@@ -30,11 +30,12 @@ from pyrate import config
 from pyrate.gamma import *
 from pyrate.tasks.utils import IfgListMixin, InputParam
 
+PTN = re.compile(r'\d{8}')  # match 8 digits for the dates
 
 class GammaHasRun(luigi.task.ExternalTask):
-    '''
+    """
     Phaux task used to ensure that the required outputs from GAMMA exist.
-    '''
+    """
 
     fileName     = luigi.Parameter()
     masterHeader = luigi.Parameter(default=None)
@@ -49,42 +50,52 @@ class GammaHasRun(luigi.task.ExternalTask):
         return targets
 
 
+def get_header_paths(input_file):
+    """
+    function that matches input file names with header file names
+    :param input_file: input gamma .unw file
+    :return: corresponding header files that matches, or empty list if no match
+    found
+    """
+    dirName, fileName = os.path.split(input_file)
+    matches = PTN.findall(fileName)
+    return [glob(join(dirName, '*%s*slc.par' % m))[0] for m in matches]
+
+
 class ConvertFileToGeotiff(luigi.Task):
-    '''
+    """
     Task responsible for converting a GAMMA file to GeoTif.
-    '''
+    """
 
     inputFile = luigi.Parameter()
-    demHeaderFile = luigi.Parameter(config_path=InputParam(config.DEM_HEADER_FILE))
+    demHeaderFile = luigi.Parameter(
+        config_path=InputParam(config.DEM_HEADER_FILE))
     outputDir = luigi.Parameter(config_path=InputParam(config.OUT_DIR))
-    noDataValue = luigi.FloatParameter(config_path=InputParam(config.NO_DATA_VALUE))
+    noDataValue = luigi.FloatParameter(
+        config_path=InputParam(config.NO_DATA_VALUE))
 
     def requires(self):
-        '''
+        """
         Overload of :py:meth:`luigi.Task.requires`.
 
         Ensures that the required input exists.
-        '''
+        """
+        self.headerPaths = get_header_paths(self.inputFile)
 
-        ptn = re.compile(r'\d{8}')  # match 8 digits for the datea
-        dirName, fileName = os.path.split(self.inputFile)
-        matches = ptn.findall(fileName)
-
-        if len(matches) == 2:
-            self.headerPaths = [glob(join(dirName, '*%s*slc.par' % m))[0] for m in matches]
+        if len(self.headerPaths) == 2:
             tasks = [GammaHasRun(
-                fileName = self.inputFile,
-                masterHeader = self.headerPaths[0],
-                slaveHeader = self.headerPaths[1])]
+                fileName=self.inputFile,
+                masterHeader=self.headerPaths[0],
+                slaveHeader=self.headerPaths[1])]
         else:
-            tasks = [GammaHasRun(fileName = self.inputFile)]
+            tasks = [GammaHasRun(fileName=self.inputFile)]
 
         return tasks
 
     def output(self):
-        '''
+        """
         Overload of :py:meth:`luigi.Task.output`.
-        '''
+        """
 
         self.outputFile = os.path.join(
             self.outputDir,
@@ -92,22 +103,23 @@ class ConvertFileToGeotiff(luigi.Task):
         return [luigi.file.LocalTarget(self.outputFile)]
 
     def run(self):
-        '''
+        """
         Overload of :py:meth:`luigi.Task.run`.
-        '''
+        """
         demHeader = parse_dem_header(self.demHeaderFile)
 
         # find param files containing filename dates
-        if hasattr(self, 'headerPaths'):
+        if len(self.headerPaths) == 2:
             headers = [parse_epoch_header(hp) for hp in self.headerPaths]
             combinedHeader = combine_headers(headers[0], headers[1], demHeader)
         else:
             # probably have DEM or incidence file
             combinedHeader = demHeader
-        to_geotiff(combinedHeader, self.inputFile, self.outputFile, self.noDataValue)
-
+        to_geotiff(combinedHeader, self.inputFile,
+                   self.outputFile, self.noDataValue)
 
 
 class ConvertToGeotiff(IfgListMixin, luigi.WrapperTask):
     def requires(self):
-        return [ConvertFileToGeotiff(inputFile=fn) for fn in self.ifgList(tif=False)]
+        return [ConvertFileToGeotiff(inputFile=fn)
+                for fn in self.ifgList(tif=False)]

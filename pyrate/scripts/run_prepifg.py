@@ -12,6 +12,7 @@ from pyrate.shared import Ifg
 from pyrate.scripts import run_pyrate
 from pyrate import roipac
 from pyrate import gamma
+from pyrate.tasks import gamma as gamma_task
 import pyrate.ifgconstants as ifc
 
 ROI_PAC_HEADER_FILE_EXT = 'rsc'
@@ -76,17 +77,13 @@ def main():
                 params[cf.OUT_DIR], os.path.basename(q).split('.')[0] + '.tif')
                           for q in base_ifg_paths]
 
-            ptn = re.compile(r'\d{8}')  # match 8 digits for the dates
-
             for b, d in zip(base_ifg_paths, dest_base_ifgs):
-                dir_name, file_name = os.path.split(b)
-                matches = ptn.findall(file_name)
-                if len(matches) != 2:
-                    raise
 
-                headerPaths = [glob.glob(os.path.join(
-                    dir_name, '*%s*slc.par' % m))[0] for m in matches]
-                hdrs = [gamma.parse_epoch_header(p) for p in headerPaths]
+                header_paths = gamma_task.get_header_paths(b)
+
+                if len(header_paths) != 2:
+                    raise
+                hdrs = [gamma.parse_epoch_header(p) for p in header_paths]
 
                 COMBINED = gamma.combine_headers(hdrs[0], hdrs[1], dem_hdr=DEM_HDR)
                 gamma.to_geotiff(COMBINED, b, d,
