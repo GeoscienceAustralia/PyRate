@@ -357,10 +357,14 @@ def main():
     ifg_instance = matlab_mst.IfgListPyRate(datafiles=dest_paths)
 
     if int(pars[cf.NETWORKX_OR_MATLAB_FLAG]):
-        print 'Running networkx mst'
+        msg = 'Running networkx mst'
+        print msg
+        logging.debug(msg)
         process_ifgs(dest_paths, pars)
     else:
-        print 'Running matlab mst'
+        msg = 'Running matlab mst'
+        print msg
+        logging.debug(msg)
         process_ifgs(ifg_instance, pars)
 
 

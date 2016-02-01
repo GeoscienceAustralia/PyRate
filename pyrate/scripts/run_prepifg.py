@@ -14,6 +14,7 @@ from pyrate import roipac
 from pyrate import gamma
 from pyrate.tasks import gamma as gamma_task
 import pyrate.ifgconstants as ifc
+import logging
 
 ROI_PAC_HEADER_FILE_EXT = 'rsc'
 
@@ -27,6 +28,7 @@ def main():
     base_ifg_paths, dest_paths, params = run_pyrate.get_ifg_paths()
     LUIGI = params[cf.LUIGI]  # luigi or no luigi
     PROCESSOR = params[cf.PROCESSOR]  # roipac or gamma
+    run_pyrate.init_logging(logging.DEBUG)
 
     usage = 'Usage: python run_prepifg.py <config file>'
     if len(sys.argv) == 1 or sys.argv[1] == '-h' or sys.argv[1] == '--help':
@@ -34,16 +36,22 @@ def main():
         return
     raw_config_file = sys.argv[1]
     if LUIGI:
-        print "running luigi prepifg"
+        msg = "running luigi prepifg"
+        print msg
+        logging.debug(msg)
         luigi.configuration.LuigiConfigParser.add_config_path(
             pythonifyConfig(raw_config_file))
         luigi.build([PrepareInterferograms()], local_scheduler=True)
     else:
-        print "running serial prepifg"
+        msg = "running serial prepifg"
+        print msg
+        logging.debug(msg)
         xlooks, ylooks, crop = run_pyrate.transform_params(params)
 
         if PROCESSOR == 0:
-            print 'running roipac prepifg'
+            msg = "running roipac prepifg"
+            print msg
+            logging.debug(msg)
             dem_file = os.path.join(params[cf.ROIPAC_RESOURCE_HEADER])
             projection = roipac.parse_header(dem_file)[ifc.PYRATE_DATUM]
             dest_base_ifgs = [os.path.join(
@@ -62,7 +70,9 @@ def main():
             prepifg.prepare_ifgs(
                 ifgs, crop_opt=crop, xlooks=xlooks, ylooks=ylooks)
         else:
-            print 'running gamma prepifg'
+            msg = "running gamma prepifg"
+            print msg
+            logging.debug(msg)
             dem_hdr_path = params[cf.DEM_HEADER_FILE]
             DEM_HDR = gamma.parse_dem_header(dem_hdr_path)
 
