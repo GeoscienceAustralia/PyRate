@@ -24,6 +24,11 @@ An example PyRate configuration file is as follows::
     orbfitlksx:    5
     orbfitlksy:    5
 
+    vcmtmethod:    1
+    vcmsmethod:    2
+    vcmslksx:      5
+    vcmslksy:      5
+
     refx:          12
     refy:          38
     refnx:         5
@@ -32,16 +37,33 @@ An example PyRate configuration file is as follows::
     refminfrac:    0.8
 
     tscal:         1
+    tsmethod:      1
+    smorder:       2
+    smfactor:     -0.25
+    smf_min:      -3
+    smf_max:      -1
+    smf_int:     0.25
+    lcurv_lksx:    4
+    lcurv_lksy:    4
     ts_pthr:       10
     ts_interp:     1
 
-    nsig:          3
-    pthr:          20
-    maxsig:        2
+    nsig:           3
+    pthr:           20
+    maxsig:         2
 
-Created on 17/09/2012
+    use_luigi:          0
+    nan_conversion:     1
+    networkx_or_matlab: 0
 
-.. codeauthor:: Ben Davies
+    parallel:           0
+    processes:          8
+
+    noDataAveragingThreshold: 0.5
+    processor:    0
+    noDataValue:  0.0
+
+.. codeauthor:: Ben Davies, Sudipta Basak
 """
 
 # TODO: add regex column to check if some values are within bounds? Potential
@@ -208,19 +230,19 @@ PARAM_CONVERSION = {
     IFG_YLAST : (float, None),
     NO_DATA_VALUE: (float, 0.0),
 
-    REFX : (int, -1),
-    REFY : (int, -1),
-    REFNX : (int, 5), # was 50 in original Pirate code
-    REFNY : (int, 5), # was 50 in original Pirate code
-    REF_CHIP_SIZE : (int, 3), # defaults to 21 in orig
-    REF_MIN_FRAC : (float, 0.8), # uses Pirate default
+    REFX: (int, -1),
+    REFY: (int, -1),
+    REFNX: (int, 5),  # was 50 in original Pirate code
+    REFNY: (int, 5),  # was 50 in original Pirate code
+    REF_CHIP_SIZE: (int, 3),  # defaults to 21 in orig
+    REF_MIN_FRAC: (float, 0.8),  # uses Pirate default
 
     #ORBITAL_FIT : (bool, False),
-    ORBITAL_FIT : (int, 0),
-    ORBITAL_FIT_METHOD : (method_conv, orbital.NETWORK_METHOD),
-    ORBITAL_FIT_DEGREE : (degree_conv, orbital.QUADRATIC),
-    ORBITAL_FIT_LOOKS_X : (int, NO_MULTILOOKING),
-    ORBITAL_FIT_LOOKS_Y : (int, NO_MULTILOOKING),
+    ORBITAL_FIT: (int, 0),
+    ORBITAL_FIT_METHOD: (method_conv, orbital.NETWORK_METHOD),
+    ORBITAL_FIT_DEGREE: (degree_conv, orbital.QUADRATIC),
+    ORBITAL_FIT_LOOKS_X: (int, NO_MULTILOOKING),
+    ORBITAL_FIT_LOOKS_Y: (int, NO_MULTILOOKING),
 
     LR_NSIG : (int, 3), # Pirate default
     LR_PTHRESH : (int, 20), # should be based on nepochs since not every project may have 20 epochs
