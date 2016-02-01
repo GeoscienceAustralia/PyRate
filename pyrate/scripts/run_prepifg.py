@@ -63,12 +63,6 @@ def main():
                 ifgs, crop_opt=crop, xlooks=xlooks, ylooks=ylooks)
         else:
             print 'running gamma prepifg'
-            header_files = [os.path.join(
-                q.split('-')[0] + '_slc.par')
-                            for q in base_ifg_paths]
-
-            hdr_paths = [os.path.join(cf.PYRATEPATH, f) for f in header_files]
-            hdrs = [gamma.parse_epoch_header(p) for p in hdr_paths]
             dem_hdr_path = params[cf.DEM_HEADER_FILE]
             DEM_HDR = gamma.parse_dem_header(dem_hdr_path)
 
