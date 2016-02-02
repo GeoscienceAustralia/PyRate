@@ -2,7 +2,7 @@ Here is how I set up my anaconda virtualenv on rhe-compute.
  
 ## Download the conda installer
 
-For `rhe-compute` [download this version] (https://repo.continuum.io/archive/Anaconda3-2.4.1-Linux-x86_64.sh). 
+For `rhe-compute` [download this version] (https://repo.continuum.io/archive/Anaconda2-2.4.1-Linux-x86_64.sh). 
 
 ## Install anaconda:
 
