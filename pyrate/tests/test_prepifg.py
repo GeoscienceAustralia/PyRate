@@ -23,6 +23,7 @@ from pyrate.prepifg import mlooked_path, extents_from_params
 from pyrate.tests.common import SYD_TEST_MATLAB_PREPIFG_DIR
 from pyrate.tests.common import PREP_TEST_TIF, SYD_TEST_DEM_DIR
 from pyrate.tests.common import SYD_TEST_DEM_TIF
+from pyrate.shared import generate_random_string
 
 from osgeo import gdal
 gdal.UseExceptions()
@@ -35,10 +36,13 @@ if not exists(PREP_TEST_TIF):
 def diff_exts_ifgs():
     """Returns pair of test Ifgs with different extents"""
     bases = ['geo_060619-061002.tif', 'geo_070326-070917.tif']
+    random_string = generate_random_string()
+    random_dir = os.path.join('/tmp', random_string)
+    os.makedirs(random_dir)
     for p in bases:
         shutil.copy(src=os.path.join(PREP_TEST_TIF, p),
-                    dst=os.path.join('/tmp', p))
-    return [Ifg(join('/tmp', p)) for p in bases]
+                    dst=os.path.join(random_dir, p))
+    return [Ifg(join(random_dir, p)) for p in bases], random_dir
 
 
 def same_exts_ifgs():
@@ -82,7 +86,7 @@ class PrepifgOutputTests(unittest.TestCase):
     def setUp(self):
         self.xs = 0.000833333
         self.ys = -self.xs
-        self.ifgs = diff_exts_ifgs()
+        self.ifgs, random_dir = diff_exts_ifgs()
         paths = ["geo_060619-061002_1rlks_1cr.tif",
                  "geo_060619-061002_1rlks_2cr.tif",
                  "geo_060619-061002_1rlks_3cr.tif",
@@ -91,7 +95,7 @@ class PrepifgOutputTests(unittest.TestCase):
                  "geo_070326-070917_1rlks_2cr.tif",
                  "geo_070326-070917_1rlks_3cr.tif",
                  "geo_070326-070917_4rlks_3cr.tif"]
-        self.exp_files = [join('/tmp', p) for p in paths]
+        self.exp_files = [join(random_dir, p) for p in paths]
 
     def test_mlooked_paths(self):
         test_mlooked_path()
@@ -305,8 +309,9 @@ class SameSizeTests(unittest.TestCase):
         self.assertFalse(any(res))
 
     def test_already_same_size_mismatch(self):
+        ifgs, _ = diff_exts_ifgs()
         self.assertRaises(PreprocessError, prepare_ifgs,
-                        diff_exts_ifgs(), ALREADY_SAME_SIZE, 1, 1)
+                        ifgs, ALREADY_SAME_SIZE, 1, 1)
 
     # TODO: ensure multilooked files written to output dir
     def test_same_size_multilooking(self):

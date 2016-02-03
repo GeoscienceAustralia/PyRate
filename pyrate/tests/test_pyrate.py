@@ -3,7 +3,7 @@ Tests end-to-end runs and functions in PyRate workflow module.
 
 Created on 17/09/2012
 
-.. codeauthor:: Ben Davies
+.. codeauthor:: Ben Davies, Sudipta Basak
 """
 
 import os, glob, shutil, logging, unittest
