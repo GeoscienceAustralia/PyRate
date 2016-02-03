@@ -86,7 +86,7 @@ class PrepifgOutputTests(unittest.TestCase):
     def setUp(self):
         self.xs = 0.000833333
         self.ys = -self.xs
-        self.ifgs, random_dir = diff_exts_ifgs()
+        self.ifgs, self.random_dir = diff_exts_ifgs()
         paths = ["geo_060619-061002_1rlks_1cr.tif",
                  "geo_060619-061002_1rlks_2cr.tif",
                  "geo_060619-061002_1rlks_3cr.tif",
@@ -95,7 +95,7 @@ class PrepifgOutputTests(unittest.TestCase):
                  "geo_070326-070917_1rlks_2cr.tif",
                  "geo_070326-070917_1rlks_3cr.tif",
                  "geo_070326-070917_4rlks_3cr.tif"]
-        self.exp_files = [join(random_dir, p) for p in paths]
+        self.exp_files = [join(self.random_dir, p) for p in paths]
 
     def test_mlooked_paths(self):
         test_mlooked_path()
@@ -107,6 +107,7 @@ class PrepifgOutputTests(unittest.TestCase):
         for f in self.exp_files:
             if exists(f):
                 os.remove(f)
+        shutil.rmtree(self.random_dir)
 
     def _custom_ext_latlons(self):
         return [150.91 + (7 * self.xs),  # xfirst
@@ -309,9 +310,10 @@ class SameSizeTests(unittest.TestCase):
         self.assertFalse(any(res))
 
     def test_already_same_size_mismatch(self):
-        ifgs, _ = diff_exts_ifgs()
+        ifgs, random_dir = diff_exts_ifgs()
         self.assertRaises(PreprocessError, prepare_ifgs,
                         ifgs, ALREADY_SAME_SIZE, 1, 1)
+        shutil.rmtree(random_dir)
 
     # TODO: ensure multilooked files written to output dir
     def test_same_size_multilooking(self):
