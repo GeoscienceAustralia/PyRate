@@ -19,13 +19,17 @@ import logging
 ROI_PAC_HEADER_FILE_EXT = 'rsc'
 
 
-def main():
+def main(params=None):
     """
     :param config_file: config file to use. This provides a convenient way to
      use run_prepifg from within the module.
     :return:
     """
-    base_ifg_paths, dest_paths, params = run_pyrate.get_ifg_paths()
+    if params:
+        base_ifg_paths, dest_paths, _ = run_pyrate.get_ifg_paths()
+    else:
+        base_ifg_paths, dest_paths, params = run_pyrate.get_ifg_paths()
+
     LUIGI = params[cf.LUIGI]  # luigi or no luigi
     PROCESSOR = params[cf.PROCESSOR]  # roipac or gamma
     run_pyrate.init_logging(logging.DEBUG)
