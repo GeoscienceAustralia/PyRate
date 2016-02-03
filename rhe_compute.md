@@ -49,7 +49,7 @@ For conda installer to work you need to create a `~/.condarc` file with the foll
 
 #### Activate `anaconda` and install `conda-env`
 
-    source ~/anaconda2/bin/activate anaconda2/
+    source ~/anaconda2/bin/activate ~/anaconda2/
     conda install -c conda conda-env        
 
 The `conda-env` package enables `yml` based installation.
