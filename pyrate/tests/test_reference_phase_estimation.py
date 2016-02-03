@@ -34,8 +34,8 @@ class RefPhsEstimationMatlabTestMethod1(unittest.TestCase):
 
         sys.argv = ['run_prepifg.py', os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR,
                                      'orbital_error.conf')]
-        run_prepifg.main()
-        common.move_files(params[cf.OUT_DIR], cls.temp_out_dir)
+        params[cf.OUT_DIR] = cls.temp_out_dir
+        run_prepifg.main(params)
 
         params[cf.OUT_DIR] = cls.temp_out_dir
         params[cf.REF_EST_METHOD] = 1
@@ -141,8 +141,9 @@ class RefPhsEstimationMatlabTestMethod2(unittest.TestCase):
 
         sys.argv = ['run_prepifg.py', os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR,
                                      'orbital_error.conf')]
-        run_prepifg.main()
-        common.move_files(params[cf.OUT_DIR], cls.temp_out_dir)
+        params[cf.OUT_DIR] = cls.temp_out_dir
+
+        run_prepifg.main(params)
 
         params[cf.OUT_DIR] = cls.temp_out_dir
         params[cf.REF_EST_METHOD] = 2
