@@ -74,6 +74,8 @@ def process_ifgs(ifg_paths_or_instance, params):
     # Estimate reference pixel location
     refpx, refpy = find_reference_pixel(ifgs, params)
 
+    # remove APS delay here
+
     # Estimate and remove orbit errors
     if params[cf.ORBITAL_FIT] != 0:
         remove_orbital_error(ifgs, params)
@@ -333,7 +335,7 @@ def dest_ifg_paths(ifg_paths, outdir):
 
 def init_logging(level):
     t = datetime.datetime.now()
-    path = 'pyrate_%s.log'% t.isoformat()
+    path = 'pyrate_%s.log' % t.isoformat()
     fmt = '%(asctime)s %(message)s'
     datefmt = '%d/%m/%Y %I:%M:%S %p'
     logging.basicConfig(filename=path, format=fmt, datefmt=datefmt, level=level)
@@ -352,7 +354,7 @@ def get_dest_paths(base_paths, crop, params, looks):
 # TODO: ensure clean exception handling
 # TODO: add parameter error checking: induce fail fast before number crunching
 def main():
-    base_ifg_paths, dest_paths, pars = get_ifg_paths()
+    base_unw_paths, dest_paths, pars = get_ifg_paths()
 
     ifg_instance = matlab_mst.IfgListPyRate(datafiles=dest_paths)
 
@@ -392,11 +394,11 @@ def get_ifg_paths():
         logging.debug(emsg)
         raise IOError(2, emsg)
     xlks, ylks, crop = transform_params(pars)
-    base_ifg_paths = original_ifg_paths(pars[cf.IFG_FILE_LIST])
-    dest_paths = get_dest_paths(base_ifg_paths, crop, pars, xlks)
-    return base_ifg_paths, dest_paths, pars
+    base_unw_paths = original_ifg_paths(pars[cf.IFG_FILE_LIST])
+    dest_paths = get_dest_paths(base_unw_paths, crop, pars, xlks)
+
+    return base_unw_paths, dest_paths, pars
 
 
 if __name__ == "__main__":
     main()
-
