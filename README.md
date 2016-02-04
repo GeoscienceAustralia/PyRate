@@ -178,16 +178,27 @@ The *run_prepifg.py* script requires the PyRate runtime configuration file. If a
 
 ### PyRate workflow:
 
+#### run_prepifg.py
+ 
+To convert the unwrapped interferrograms, use the `run_prepifg` module. Once `PYRATEPATH` has been setup, and you are in the `pyrate` `virtualenv`, you can use `pyrate.conf` to process `roipac`/`gamma` format interferrograms into `.tif` files for time series and linear rate analyssis using `run_pyrate`. So the first step is to run `run_prepifg` is the following:
+    
+    cd PyRate
+	python <full_path>/run_prepifg.py -h (for command line options/help)
+    python <full_path>/run_prepifg.py pyrate.conf (like python pyrate/scripts/run_prepifg.py pyrate.conf, you will need to update the data paths in the config file)
+     
+Two examples of the config files are provided in `pirate.conf` and `pyrate_gamma.conf`, showing respectively the `roipac` and `gamma` prepifg configuration. Both config files can be used with `run_pyrate.py`.  
+ 
+#### run_pyrate.py
+
 This is the core of the processing tools, handled with run_pyrate.py.
 
 For command line options/help:
-
-
-	python <full_path>/run_pyrate.py -h
-
-
-The *run_pyrate.py* script also requires the PyRate runtime configuration file. As with the previous step, if a config file is not provided as an arg, the script will look for *pyrate.conf* by default.
-
+    
+    cd PyRate
+	python <full_path>/run_pyrate.py -h  (for command line help) 
+	python <full_path>/run_pyrate.py (this will use the default pyrate.conf from the PyRate folder, you will need to update the data paths in the config file)
+	python pyrate/scripts/run_pyrate.py (uses default pyrate.conf from current folder)
+	python pyrate/scripts/run_pyrate.py my_config.conf (uses my_config.conf)
 
 ### Running the viewer
 
