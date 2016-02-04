@@ -165,20 +165,10 @@ A GAMMA translation requires a geographic DEM header file (\*.dem.par) and SLC p
 A ROI\_PAC translation requires a header/resource file (*.rsc* extension) for the geocoded unwrapped ROI_PAC interferogram (in the same directory) and either the geographic projection (e.g. 'WGS84') specified as an option or a header/resource file for the geographic DEM containing the geographic projection in the parameter DATUM:
 
 
-### Image transformations:
-
-This separate step of multi-looking (resampling) and cropping the images is handled with *run_prepifg.py*.
-
-For command line options/help:
-
-	python <full_path>/run_prepifg.py -h
-
-The *run_prepifg.py* script requires the PyRate runtime configuration file. If a config file is not provided as an arg, the script will look for 'pyrate.conf' in the current directory.  
-
-
 ### PyRate workflow:
 
-#### run_prepifg.py
+#### Image transformations: run_prepifg.py
+This separate step of multi-looking (resampling) and cropping the images is handled with *run_prepifg.py*.
  
 To convert the unwrapped interferrograms, use the `run_prepifg` module. Once `PYRATEPATH` has been setup, and you are in the `pyrate` `virtualenv`, you can use `pyrate.conf` to process `roipac`/`gamma` format interferrograms into `.tif` files for time series and linear rate analyssis using `run_pyrate`. So the first step is to run `run_prepifg` is the following:
     
@@ -188,14 +178,14 @@ To convert the unwrapped interferrograms, use the `run_prepifg` module. Once `PY
      
 Two examples of the config files are provided in `pirate.conf` and `pyrate_gamma.conf`, showing respectively the `roipac` and `gamma` prepifg configuration. Both config files can be used with `run_pyrate.py`.  
  
-#### run_pyrate.py
+#### Time series analysis: run_pyrate.py
 
 This is the core of the processing tools, handled with run_pyrate.py.
 
-For command line options/help:
+This is how one can use `run_pyrate.py`:
     
     cd PyRate
-	python <full_path>/run_pyrate.py -h  (for command line help) 
+	python <full_path>/run_pyrate.py -h  (for command line options/help) 
 	python <full_path>/run_pyrate.py (this will use the default pyrate.conf from the PyRate folder, you will need to update the data paths in the config file)
 	python pyrate/scripts/run_pyrate.py (uses default pyrate.conf from current folder)
 	python pyrate/scripts/run_pyrate.py my_config.conf (uses my_config.conf)
