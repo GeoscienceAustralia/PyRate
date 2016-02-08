@@ -36,12 +36,15 @@ if __name__ == "__main__":
             # download weather files at 12 noon?
             pa.ecmwf_download(add_these, '12', 'ECMWF')
 
+        """ using rdr coordinates to remove APS """
         aps1 = pa.PyAPS_rdr(
             os.path.join(ECMWF_DIR, ECMWF_PRE + add_these[0] + ECMWF_EXT),
-            SYD_TEST_DEM_UNW, grib='ECMWF', verb=True, demfmt='HGT', demtype=np.int16)
+            SYD_TEST_DEM_UNW, grib='ECMWF', verb=True,
+            demfmt='HGT', demtype=np.int16)
         aps2 = pa.PyAPS_rdr(
             os.path.join(ECMWF_DIR, ECMWF_PRE + add_these[1] + ECMWF_EXT),
-            SYD_TEST_DEM_UNW, grib='ECMWF', verb=True, demfmt='HGT', demtype=np.int16)
+            SYD_TEST_DEM_UNW, grib='ECMWF', verb=True,
+            demfmt='HGT', demtype=np.int16)
 
         phs1 = np.zeros((aps1.ny, aps1.nx))
         phs2 = np.zeros((aps2.ny, aps2.nx))
@@ -61,6 +64,26 @@ if __name__ == "__main__":
         #   lat=os.path.join(PYAPS_EXAMPLES, 'lat.flt'),
         #   lon=os.path.join(PYAPS_EXAMPLES, 'lon.flt'))
         # LLphs = phs2-phs1
+
+        """ using geo coordinates to remove APS """
+        aps1 = pa.PyAPS_geo(
+            os.path.join(ECMWF_DIR, ECMWF_PRE + add_these[0] + ECMWF_EXT),
+            SYD_TEST_DEM_UNW, grib='ECMWF', verb=True,
+            demfmt='HGT', demtype=np.int16)
+        aps2 = pa.PyAPS_geo(
+            os.path.join(ECMWF_DIR, ECMWF_PRE + add_these[1] + ECMWF_EXT),
+            SYD_TEST_DEM_UNW, grib='ECMWF', verb=True,
+            demfmt='HGT', demtype=np.int16)
+
+        phs1 = np.zeros((aps1.ny, aps1.nx))
+        phs2 = np.zeros((aps2.ny, aps2.nx))
+
+        print 'Without Lat Lon files'
+        # using random incidence angle
+        aps1.getdelay(phs1, inc=23.0)  # MG `to describe how to find incidence
+        aps2.getdelay(phs2, inc=23.0)
+        aps_delay = phs2-phs1  # delay in meters as we don't provide wavelength
+        print aps_delay
 
 
 
