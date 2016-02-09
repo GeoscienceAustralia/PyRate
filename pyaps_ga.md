@@ -9,12 +9,12 @@ This is where the `.grb` will be saved by the `pyaps`.
 
 ### Clone/copy the `pyaps`
 
-For now ask me for a copy. I will update this when we have an internal GA `pyaps` repo.
+Clone the [pyaps package from this Geoscience Austalia github repo](https://github.com/GeoscienceAustralia/PyAPS.git) inside the `PyRate` folder. 
 
 
 ### Follow these instructions from 'GIAnT_doc.pdf' so you can download the .grb files
 
-ERA-Interim Re-Analysis products are downloaded from the ECMWF repository in Europe 3 . We use the variables Temperature, Geopotential Height and Relative Humidity (default) at each Pressure Levels. If you are working on a machine with a non-US IP address, you should use this option. You need to register on the ECMWF website and provide your password in the file GIAnT/pyaps/model.cfg (a template is provided). Follow these steps to set up your access
+```ERA-Interim Re-Analysis products are downloaded from the ECMWF repository in Europe 3 . We use the variables Temperature, Geopotential Height and Relative Humidity (default) at each Pressure Levels. If you are working on a machine with a non-US IP address, you should use this option. You need to register on the ECMWF website and provide your password in the file GIAnT/pyaps/model.cfg (a template is provided). Follow these steps to set up your access```
 
     1. Agree to terms and conditions
     To get your personalized access key from ECMWF, by read and
@@ -34,7 +34,7 @@ ERA-Interim Re-Analysis products are downloaded from the ECMWF repository in Eur
     - Humidity and Temperature as a function of pressure level. Each file
     (global for single time eopch) is about 28MB in size.
 
-
+SB: Copy the `pyaps/model.cfg.template` as `model.cfg` and fill in with your credentials.    
 
 ### Run the `remove_aps_delay.py` from the 'PyRate' directory
 
