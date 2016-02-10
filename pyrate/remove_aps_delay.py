@@ -1,7 +1,7 @@
 __author__ = 'Sudipta Basak'
 __date_created__ = '4/02/16'
 
-import pyaps as pa
+import PyAPS as pa
 import numpy as np
 import sys
 import os
@@ -84,8 +84,3 @@ if __name__ == "__main__":
         aps2.getdelay(phs2, inc=23.0)
         aps_delay = phs2-phs1  # delay in meters as we don't provide wavelength
         print aps_delay
-
-
-
-
-

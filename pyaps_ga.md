@@ -7,9 +7,9 @@
 
 This is where the `.grb` will be saved by the `pyaps`.
 
-### Clone/copy the `pyaps`
+### Clone the `pyaps` in `PyRate`
 
-Clone the [pyaps package from this Geoscience Austalia github repo](https://github.com/GeoscienceAustralia/PyAPS.git) inside the `PyRate` folder. 
+Clone the [pyaps package from this Geoscience Austalia github repo](https://github.com/GeoscienceAustralia/PyAPS.git) inside the `PyRate` folder.
 
 
 ### Follow these instructions from 'GIAnT_doc.pdf' so you can download the .grb files
@@ -39,4 +39,4 @@ SB: Copy the `pyaps/model.cfg.template` as `model.cfg` and fill in with your cre
 ### Run the `remove_aps_delay.py` from the 'PyRate' directory
 
     cd PyRate
-    python remove_aps_delay.py
+    python pyrate/remove_aps_delay.py
