@@ -32,7 +32,7 @@ if __name__ == "__main__":
         second_grb = os.path.join(ECMWF_DIR, ECMWF_PRE + add_these[1] + ECMWF_EXT)
 
         # download .grb file if does not exist
-        if not (os.path.exists(first_grb) or os.path.exists(second_grb)):
+        if not (os.path.exists(first_grb) and os.path.exists(second_grb)):
             # download weather files at 12 noon?
             pa.ecmwf_download(add_these, '12', 'ECMWF')
 
