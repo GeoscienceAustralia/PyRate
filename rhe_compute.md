@@ -61,6 +61,22 @@ The `conda-env` package enables `yml` based installation.
 ## Activate the `pyrate` environment
 
     source ~/anaconda2/bin/activate pyrate
+
+## Support for `pygrib`, a package used by `PyAPS`
+
+It seems that `pygrib` does not install properly in `redhat` systems, `rhe-compute1` being one of them. The way around is the following:
+
+    cp ~/anaconda2/envs/pyrate/lib/libpng16.so.16 ~/anaconda2/envs/pyrate/lib/libpng16.so.16.bk
+    conda install libpng=1.2.50
+    mv ~/anaconda2/envs/pyrate/lib/libpng16.so.16.bk ~/anaconda2/envs/pyrate/lib/libpng16.so.16  
+
+Explanation of the previous three steps:
+    
+1. The first copy command makes a temporary copy of the `.so`. This file is used by `matplotlib`, so we need to keep it. 
+
+2. Then the second command  installs a much older version of `libpng`. This is used by `pygrib` on redhat systems. 
+
+3. The third command just copies the `.so` back so that `matplotlib` can find it. 
     
 ## Run `PyRate` tests
 
@@ -82,3 +98,5 @@ Once you are done using `PyRate` you could deactivate from the conda env using:
 ## Back to main anaconda if you need to:
     
     source activate /home/user/anaconda2
+
+  
