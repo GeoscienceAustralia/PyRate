@@ -64,7 +64,7 @@ The `conda-env` package enables `yml` based installation.
 
 ## Support for `pygrib`, a package used by `PyAPS`
 
-It seems that `pygrib` does not install properly in `redhat` systems, `rhe-compute1` being one of them. The way around is the following:
+`pygrib` does not install properly in `redhat` systems, `rhe-compute1` being one of them. The way around is the following:
 
     cp ~/anaconda2/envs/pyrate/lib/libpng16.so.16 ~/anaconda2/envs/pyrate/lib/libpng16.so.16.bk
     conda install libpng=1.2.50
@@ -76,7 +76,7 @@ Explanation of the previous three steps:
 
 2. Then the second command  installs a much older version of `libpng`. This is used by `pygrib` on redhat systems. 
 
-3. The third command just copies the `.so` back so that `matplotlib` can find it. 
+3. The third command just replaces `.so` back so that `matplotlib` can find it. 
     
 ## Run `PyRate` tests
 
