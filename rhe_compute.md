@@ -38,7 +38,7 @@ The environment variable `PYRATEPATH` needs to point to the folder where you put
 	export PYTHONPATH=$PYRATEPATH/:$PYTHONPATH
     
  
-# Set up `~/.condarc` with proxy pass information:
+## Set up `~/.condarc` with proxy pass information:
  
 For conda installer to work you need to create a `~/.condarc` file with the following proxy-pass information:
  
@@ -47,7 +47,7 @@ For conda installer to work you need to create a `~/.condarc` file with the foll
         https: http://proxy.agso.gov.au:8080
         
 
-#### Activate `anaconda` and install `conda-env`
+## Activate `anaconda` and install `conda-env`
 
     source ~/anaconda2/bin/activate ~/anaconda2/
     conda install -c conda conda-env        
@@ -76,7 +76,7 @@ Explanation of the previous three steps:
 
 2. Then the second command  installs a much older version of `libpng`. This is used by `pygrib` on redhat systems. 
 
-3. The third command just replaces `.so` back so that `matplotlib` can find it. 
+3. The third command just replaces the `.so` back so that `matplotlib` can find it. 
     
 ## Run `PyRate` tests
 
