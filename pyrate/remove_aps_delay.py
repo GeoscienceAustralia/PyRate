@@ -13,7 +13,7 @@ PTN = re.compile(r'\d{6}')
 PYRATEPATH = os.environ['PYRATEPATH']
 ECMWF_DIR = os.path.join(PYRATEPATH, 'ECMWF')
 ECMWF_PRE = 'ERA-Int_'
-ECMWF_EXT = '_12.grb'
+ECMWF_EXT = '_12.grib'
 
 
 if __name__ == "__main__":
@@ -33,7 +33,7 @@ if __name__ == "__main__":
 
         # download .grb file if does not exist
         if not (os.path.exists(first_grb) and os.path.exists(second_grb)):
-            # download weather files at 12 noon?
+            # download weather files at 12:00 UTC (other options 00:00, 06:00, 18:00)
             pa.ecmwf_download(add_these, '12', 'ECMWF')
 
         """ using rdr coordinates to remove APS """
