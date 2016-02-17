@@ -89,7 +89,7 @@ def process_ifgs(ifg_paths_or_instance, params):
     # Calculate temporal variance-covariance matrix
     vcmt = vcm_module.get_vcmt(ifgs, maxvar)
 
-    p = os.path.join(params[cf.SIM_DIR], ifgs[0].data_path)
+    p = os.path.join(params[cf.OUT_DIR], ifgs[0].data_path)
     assert os.path.exists(p) == True
 
     ds = gdal.Open(p)
