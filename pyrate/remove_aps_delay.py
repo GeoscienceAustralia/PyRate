@@ -8,6 +8,7 @@ import os
 from pyrate.scripts import run_pyrate
 from pyrate.tests.common import sydney_data_setup
 from pyrate.tests.common import SYD_TEST_DEM_UNW
+from pyrate.scripts import run_prepifg
 import re
 PTN = re.compile(r'\d{6}')
 PYRATEPATH = os.environ['PYRATEPATH']
@@ -17,6 +18,9 @@ ECMWF_EXT = '_12.grb'
 
 
 if __name__ == "__main__":
+    sys.argv = ['run_pyrate.py', 'pyrate.conf']
+    run_prepifg.main()
+
     sys.argv = ['run_pyrate.py', 'pyrate.conf']
     base_ifg_paths, dest_paths, params = run_pyrate.get_ifg_paths()
     ifgs = sydney_data_setup(datafiles=dest_paths)
