@@ -1,4 +1,4 @@
-Here is how I set up my anaconda virtualenv on rhe-compute.
+Instructions for setting up up an anaconda virtualenv on the linux server 'rhe-compute1' at GA.
  
 ## Download the conda installer
 
@@ -10,17 +10,17 @@ On 64bit linux:
     
     bash Anaconda2-2.4.1-Linux-x86_64.sh
 
-Please accept all defaults. This will install anaconda in the `~/anaconda2` directory.
+Accept all default options. This will install anaconda in the `~/anaconda2` directory.
  
 ## Set up proxys for pip:
  
-    export http_proxy=http://proxy.agso.gov.au:8080
-    export https_proxy=http://proxy.agso.gov.au:8080
+    export http_proxy=http://proxy.ga.gov.au:8080
+    export https_proxy=http://proxy.ga.gov.au:8080
  
 
 ## Clone the repo:
 
-The rest of the instructions assume that you cloned `PyRate` in your home directory. 
+The rest of the instructions assume that you cloned the `PyRate` Git repository in your home directory. 
 
 Clone the repo:    
 
@@ -43,8 +43,8 @@ The environment variable `PYRATEPATH` needs to point to the folder where you put
 For conda installer to work you need to create a `~/.condarc` file with the following proxy-pass information:
  
     proxy_servers:
-        http: http://proxy.agso.gov.au:8080
-        https: http://proxy.agso.gov.au:8080
+        http: http://proxy.ga.gov.au:8080
+        https: http://proxy.ga.gov.au:8080
         
 
 ## Activate `anaconda` and install `conda-env`
@@ -53,6 +53,8 @@ For conda installer to work you need to create a `~/.condarc` file with the foll
     conda install -c conda conda-env        
 
 The `conda-env` package enables `yml` based installation.
+
+Note that using the `source activate` command only works cleanly when using the bash shell
 
 ## Create the `pyrate` environment
     

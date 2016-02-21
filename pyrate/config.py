@@ -175,8 +175,9 @@ TIME_SERIES_CAL = 'tscal'
 TIME_SERIES_PTHRESH = 'ts_pthr'
 #: BOOL (1/0); Time series parameter to interpolate across epoch gaps NOT CURRENTLY USED
 TIME_SERIES_INTERP = 'ts_interp'
-
+#: INT (1/2); Order of Laplacian smoothing operator, first or second order NOT CURRENTLY USED
 TIME_SERIES_SM_ORDER = 'smorder'
+#: REAL; Laplacian smoothing factor (0: calculate & plot L-curve; others: using the specific smoothing factor 10**smfactor) NOT CURRENTLY USED 
 TIME_SERIES_SM_FACTOR = 'smfactor'
 
 # MULTIPROCESSING parameters
