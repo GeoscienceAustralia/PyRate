@@ -1,6 +1,7 @@
 import os, pickle, luigi
 from StringIO import StringIO
 from pyrate import config
+from pyrate.config import OBS_DIR, IFG_FILE_LIST, DEM_FILE, DEM_HEADER_FILE, OUT_DIR, ROIPAC_RESOURCE_HEADER
 from pyrate.shared import Ifg, DEM, Incidence
 
 DUMMY_SECTION_NAME = 'pyrate'
@@ -166,5 +167,9 @@ def pythonifyConfig(configFile):
         with open(outputFilename, 'w') as outputFile:
             outputFile.write('[{}]\n'.format(DUMMY_SECTION_NAME))
             for line in inputFile:
+                if any(x in line for x in [OBS_DIR, IFG_FILE_LIST, DEM_FILE, DEM_HEADER_FILE, OUT_DIR, ROIPAC_RESOURCE_HEADER]):
+                    pos = line.find('~')
+                    if pos != -1:
+                        line = line[:pos] + os.environ['HOME'] + line[(pos+1):]    # create expanded line
                 outputFile.write(line)
     return outputFilename

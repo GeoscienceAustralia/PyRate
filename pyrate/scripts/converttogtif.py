@@ -14,7 +14,7 @@ def main():
     if len(sys.argv) == 1 or sys.argv[1] == '-h' or sys.argv[1] == '--help':
         print usage
         return
-    rawConfigFile = sys.argv[1]
+    rawConfigFile = sys.argv[1]     # this does '~' expansion automatically
     luigi.configuration.LuigiConfigParser.add_config_path(pythonifyConfig(rawConfigFile))
     luigi.build([ConvertToGeotiff()], local_scheduler=True)
 
