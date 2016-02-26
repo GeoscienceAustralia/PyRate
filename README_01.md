@@ -72,7 +72,7 @@ Anaconda is a Python distribution which easily installs and manages Python modul
 To run the tests, use the following command inside the `~/PyRate` directory:
 
     cd ~/PyRate
-    nosetests --nologcapture    
+    nosetests --nologcapture --exe
 
 #### In the advent of "ERROR: Failure: ImportError (libcom_err.so.3: cannot open shared object file: No such file or directory)"...
 You haven't got a required shared library installed.
