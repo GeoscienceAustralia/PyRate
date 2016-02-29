@@ -66,6 +66,9 @@ SERVER_PORT = sys.argv[2] if len(sys.argv) > 2 else 5000
 #: The URL for the server.
 CLIENT_URL = 'http://{}:{}'.format(SERVER_HOST, SERVER_PORT)
 
+#: The projection used for the browser
+BROWSER_PROJECTION = PYRATE_DATA_PROJECTION
+
 #: The directory we are 'running against'.
 WORKING_DIR = sys.argv[1]
 
@@ -272,7 +275,8 @@ def index():
         base_url = CLIENT_URL,
         extent = DATASET_GEO_DIMENSIONS,
         missingValue = MISSING_VALUE,
-        initialFilename = NA_FREQENCY_IMAGE_NAME)
+        initialFilename = NA_FREQENCY_IMAGE_NAME,
+        projection = BROWSER_PROJECTION)
 
 
 
@@ -356,6 +360,7 @@ def getRegionImage(fileName):
         'url':'data:image/png;base64,{}'.format(urllib.quote(buf.getvalue().encode("base64"))), #'/static/result.png'
         'imageExtent':DATASET_GEO_DIMENSIONS,#[0, 0, nx, ny],
         'imageSize':[nx, ny],
+        'projection': PYRATE_DATA_PROJECTION,
         'colorTable':colorTable}
     buf.close()
 

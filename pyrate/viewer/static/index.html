@@ -82,9 +82,9 @@
         var dataPlotter = Plotter('#chart-panel', '#weights-panel', '#legend-panel');
 
         // the projection to use for the map.
-        var projection = 'EPSG:4326';
+        var projection = "{{ projection }}";
         // note that the following did not work (though I thought it would)
-        //var projection = new ol.proj.Projection({code:'EPSG:4326'});
+        //var projection = new ol.proj.Projection({code:projection});
 
         // get the initial layer (frequency of missing) for the map. Note that
         // currentLayer is a global defined in pyrate.js.

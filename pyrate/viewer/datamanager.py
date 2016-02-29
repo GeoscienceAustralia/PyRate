@@ -239,7 +239,31 @@ def makePube(rootDir, workingDir, ext):
     """
     Build the netcdf 'image stack' with name *outFile* for all files in
     *rootDir* with file extension *ext*. The dataset has as many time slices
-    as there are files found and the shape of the data is
+    as there are files.
+
+    .. note:: The projection of maps returned from the API is set to
+       :py:data:`PYRATE_DATA_PROJECTION`. If the raster data from which the
+       pube is built does not return a GeoTransform (see
+       :py:meth:`gdal.Dataset.GetGeoTransform`) which is compatible with this
+       projection, then funny things will happen when one clicks on the map,
+       draws transects or otherwise. Note that the default projection returned
+       by :py:meth:`gdal.Dataset.GetGeoTransform` is probably not compatible.
+
+    .. todo:: At present, the projection of the map in the browser is set to be
+       the same as that of the data (see :py:data:`pyrate.viewer.web.BROWSER_PROJECTION`),
+       so there is no need to transform locations being sent through the API.
+       If one had a map that was in a different projection, this would cease
+       to work. Reprojection could be done either on the browser or in Python.
+       If done in Python, the appropriate place is probably
+       :py:func:`pyrate.viewer.web.pixelScaler`, which would need to be provided
+       with the projection for the map in the browser.
+
+       The main reason I have provided this functionality (which is quite trivial
+       for points) is that if one is serving to a map with a different projection
+       to that of pyrate data, the images returned by the API would also need
+       reprojection. The place to do this is not so clear cut as the functions
+       :py:func:`generateImage` and :py:func:`pyrate.viewer.web.getImageData`
+       need to do the same thing, so ideally some refactoring should be done.
     """
 
     outFile = os.path.join(workingDir, IMAGE_STACK_FILE_NAME)
