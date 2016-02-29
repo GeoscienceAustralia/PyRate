@@ -17,7 +17,7 @@ import webbrowser as wb
 import numpy as np
 import numpy.ma as ma
 
-import osgeo as gdal
+from osgeo import gdal
 
 try:
     import Image

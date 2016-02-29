@@ -1,4 +1,5 @@
-import os, datetime, numpy, gdal
+import os, datetime, numpy
+from osgeo import gdal
 import numpy as np
 import numpy.ma as ma
 import netCDF4 as nc
