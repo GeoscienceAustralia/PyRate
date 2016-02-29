@@ -521,7 +521,7 @@ if __name__ == "__main__":
     # make the stack if it does not already exist. This must be done before the
     # definition of :py:data:`DATASET_GEO_DIMENSIONS`.
     if not os.path.exists(TIME_SERIES_FILE):
-        makePube(WORKING_DIR, TIME_SERIES_FILE, 'tif')
+        makePube(WORKING_DIR, WORKING_DIR, 'tif')
 
     DATASET_GEO_DIMENSIONS, DATASET_PIXEL_DIMENSIONS = getDimensions(TIME_SERIES_FILE)
 
