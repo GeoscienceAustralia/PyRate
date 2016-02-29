@@ -275,7 +275,7 @@ def makePube(rootDir, workingDir, ext):
     if not nTiles:
         raise Exception('no tiles found')
 
-    # get the
+    # get the details on the shape of the dataset
     inputProt = gdal.Open(tiles[0].path)
     nx = inputProt.RasterXSize
     ny = inputProt.RasterYSize

@@ -187,8 +187,6 @@ def extractSubsetForSmoothing(data, row, col, epsilon, kernel, maxNeighborhood):
         max(row-at, 0),        # ymin
         min(row+at, shape[0])] # ymax
 
-    return slice(max(row-at, 0), min(row+at, shape[0])), slice(max(col-at, 0), min(col+at, shape[1]))
-
 
 
 def smoother(xs, ys, zin, epsilon, kernel, maxNeighborhood):
@@ -268,9 +266,10 @@ def index():
     Get the index page for the viewer.
     """
 
-    template = env.get_template('index.html')
     if DATASET_GEO_DIMENSIONS is None:
         return 'Could not get dataset dimensions'
+
+    template = env.get_template('index.html')
     return template.render(
         base_url = CLIENT_URL,
         extent = DATASET_GEO_DIMENSIONS,
