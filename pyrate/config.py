@@ -69,7 +69,7 @@ An example PyRate configuration file is as follows::
 # TODO: add regex column to check if some values are within bounds? Potential
 # problem with the checking being done in the middle of the runs, as bad values
 # could cause crashes & destroying some of the results.
-import os
+import os, time
 from pyrate import orbital
 PYRATEPATH = os.environ['PYRATEPATH']
 
@@ -272,8 +272,14 @@ def get_config_params(path):
     Returns a dict for the key:value pairs from the .conf file
     """
 
-    with open(path) as f:
-        txt = f.read()
+    txt = ''
+    with open(path, 'r') as inputFile:
+        for line in inputFile:
+            if any(x in line for x in [OBS_DIR, IFG_FILE_LIST, DEM_FILE, DEM_HEADER_FILE, OUT_DIR, ROIPAC_RESOURCE_HEADER]):
+                pos = line.find('~')
+                if pos != -1:
+                    line = line[:pos] + os.environ['HOME'] + line[(pos+1):]    # create expanded line
+            txt += line
 
     return _parse_conf_file(txt)
 
