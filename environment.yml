@@ -1,21 +1,79 @@
 name: pyrate
-channels:
-  - nmoraitakis
-  - mutirri
 dependencies:
-  - python=2.7
-  - numpy=1.9.0
-  - scipy=0.16.0
-  - Cython=0.22.1
-  - nose=1.3.7
-  - networkx=1.9.1
-  - matplotlib=1.4.3
-  - Flask=0.10.1
-  - Pillow=2.8.2
-  - GDAL=1.11.2
-  - pyproj=1.9.4
-  - pygrib=2.0.0
-  - pyhdf=0.8.3
-  - pip:
-    - luigi==1.3.0
-    - parmap==1.2.3
+- cairo=1.12.18=6
+- curl=7.45.0=0
+- cython=0.23.4=py27_0
+- decorator=4.0.9=py27_0
+- flask=0.10.1=py27_1
+- fontconfig=2.11.1=5
+- freetype=2.5.5=0
+- gdal=1.11.2=np19py27_3
+- grib_api=1.14.0=py27_2
+- hdf4=4.2.11=0
+- hdf5=1.8.15.1=4
+- ipython=4.1.1=py27_0
+- ipython_genutils=0.1.0=py27_0
+- itsdangerous=0.24=py27_0
+- jasper=1.900.1=5
+- jbig=2.1=0
+- jinja2=2.8=py27_0
+- jpeg=8d=0
+- libgdal=1.11.2=2
+- libgfortran=1.0=0
+- libnetcdf=4.3.3.1=3
+- libpng=1.6.17=0
+- libtiff=4.0.6=1
+- libxml2=2.9.2=0
+- markupsafe=0.23=py27_0
+- matplotlib=1.4.3=np19py27_2
+- mkl=11.3.1=0
+- networkx=1.9.1=py27_0
+- nose=1.3.7=py27_0
+- numpy=1.10.4=py27_0
+- openblas=0.2.14=3
+- openssl=1.0.2g=0
+- pandas=0.17.1=np110py27_0
+- path.py=8.1.2=py27_1
+- pexpect=3.3=py27_0
+- pickleshare=0.5=py27_0
+- pillow=2.8.2=py27_0
+- pip=8.0.3=py27_0
+- pixman=0.32.6=0
+- proj.4=4.9.1=0
+- py2cairo=1.10.0=py27_2
+- pygrib=2.0.0=py27_3
+- pyhdf=0.8.3=np19py27_0
+- pyparsing=2.0.3=py27_0
+- pyproj=1.9.4=py27_1
+- pyqt=4.11.4=py27_1
+- python=2.7.11=0
+- python-dateutil=2.4.2=py27_0
+- pytz=2015.7=py27_0
+- qt=4.8.7=1
+- readline=6.2=2
+- scipy=0.17.0=np110py27_1
+- setuptools=20.1.1=py27_0
+- simplegeneric=0.8.1=py27_0
+- sip=4.16.9=py27_0
+- six=1.10.0=py27_0
+- sqlite=3.9.2=0
+- szip=2.1=1
+- tk=8.5.18=0
+- traitlets=4.1.0=py27_0
+- werkzeug=0.11.4=py27_0
+- wheel=0.29.0=py27_0
+- xz=5.0.5=1
+- zlib=1.2.8=0
+- pip:
+  - backports-abc==0.4
+  - backports.ssl-match-hostname==3.5.0.1
+  - cached-property==1.3.0
+  - certifi==2015.11.20.1
+  - docutils==0.12
+  - ipython-genutils==0.1.0
+  - lockfile==0.12.2
+  - luigi==1.3.0
+  - parmap==1.2.3
+  - python-daemon==2.1.1
+  - singledispatch==3.4.0.3
+  - tornado==4.3
