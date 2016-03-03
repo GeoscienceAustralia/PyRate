@@ -57,7 +57,8 @@ These instructions are for `ubuntu 14.04` and is expected to work for most newer
     sudo pip install -U pip  # bings the latest pip
     sudo pip install virtualenv # then enter your root password
     sudo apt-get -y --force-yes build-dep matplotlib
-    sudo apt-get install -y --force-yes gdal-bin  # if you don't already have gdal
+    sudo add-apt-repository ppa:ubuntugis/ubuntugis-unstable && sudo apt-get update
+    sudo apt-get install -y --force-yes gdal-bin python-gdal libgdal-doc libgdal-dev
     virtualenv -p python2.7 ~/pyrate_venv
     source ~/pyrate_venv/bin/activate
 
