@@ -182,7 +182,6 @@ class EpochsTests(TestCase):
         self.assertTrue((exp_repeat == epochs.repeat).all())
         assert_array_almost_equal(exp_spans, epochs.spans, decimal=4)
 
-
     def test_get_all_epochs(self):
         # test function to extract all dates from sequence of ifgs
         ifgs = sydney5_mock_ifgs()
@@ -191,10 +190,8 @@ class EpochsTests(TestCase):
 
         self.assertEqual(dates, sorted(set(algorithm.get_all_epochs(ifgs))))
 
-
     def test_get_epoch_count(self):
         self.assertEqual(6, algorithm.get_epoch_count(sydney5_mock_ifgs()))
-
 
     def test_master_slave_ids(self):
         d0 = date(2006, 6, 19)
@@ -206,8 +203,6 @@ class EpochsTests(TestCase):
         # test unordered and with duplicates
         self.assertEqual(exp, algorithm.master_slave_ids([d3, d0, d2, d1]))
         self.assertEqual(exp, algorithm.master_slave_ids([d3, d0, d2, d1, d3, d0]))
-
-
 
 if __name__ == "__main__":
     unittest.main()

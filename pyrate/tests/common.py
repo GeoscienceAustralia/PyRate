@@ -8,9 +8,11 @@ import errno
 import os, glob
 import shutil
 from os.path import join
-from pyrate.shared import Ifg
 from numpy import isnan, sum as nsum
+import tempfile
+from pyrate.shared import Ifg
 
+TEMPDIR = tempfile.gettempdir()
 BASE_TEST = join(os.environ['PYRATEPATH'], "tests")
 SYD_TEST_DIR = join(BASE_TEST, "sydney_test")
 SYD_TEST_OBS = join(SYD_TEST_DIR, 'obs')

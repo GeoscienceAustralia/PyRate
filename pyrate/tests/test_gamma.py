@@ -35,7 +35,7 @@ from pyrate.config import (
 
 from pyrate.tests.common import GAMMA_TEST_DIR
 from pyrate.tests import common
-from pyrate.tests.common import SYD_TEST_DIR
+from pyrate.tests.common import SYD_TEST_DIR, TEMPDIR
 from pyrate.tests.common import sydney_data_setup
 from pyrate import config as cf
 from pyrate.scripts import run_pyrate, run_prepifg
@@ -51,8 +51,13 @@ class GammaCommandLineTests(unittest.TestCase):
         self.base = join(os.environ['PYRATEPATH'], 'tests', 'gamma')
         self.hdr = join(self.base, 'dem16x20raw.dem.par')
         temp_text = uuid.uuid4().hex
-        self.confFile = '/tmp/{}/gamma_test.cfg'.format(temp_text)
-        self.ifgListFile = '/tmp/{}/gamma_ifg.list'.format(temp_text)
+        self.confFile = os.path.join(
+            TEMPDIR,
+            '{}/gamma_test.cfg'.format(temp_text)
+        )
+        self.ifgListFile = os.path.join(
+            TEMPDIR,
+            '{}/gamma_ifg.list'.format(temp_text))
         self.base_dir = os.path.dirname(self.confFile)
         common.mkdir_p(self.base_dir)
 
@@ -116,7 +121,7 @@ class GammaToGeoTiffTests(unittest.TestCase):
         hdr_path = join(GAMMA_TEST_DIR, 'dem16x20raw.dem.par')
         hdr = gamma.parse_dem_header(hdr_path)
         data_path = join(GAMMA_TEST_DIR, 'dem16x20raw.dem')
-        self.dest = "/tmp/tmp_gamma_dem.tif"
+        self.dest = os.path.join(TEMPDIR, "tmp_gamma_dem.tif")
 
         gamma.to_geotiff(hdr, data_path, self.dest, nodata=0)
         exp_path = join(GAMMA_TEST_DIR, 'dem16x20_subset_from_gamma.tif')
@@ -130,7 +135,7 @@ class GammaToGeoTiffTests(unittest.TestCase):
         self.assertTrue(md['AREA_OR_POINT'] == 'Area')
 
     def test_to_geotiff_ifg(self):
-        self.dest = '/tmp/tmp_gamma_ifg.tif'
+        self.dest = os.path.join(TEMPDIR, 'tmp_gamma_ifg.tif')
         data_path = join(GAMMA_TEST_DIR, '16x20_20090713-20090817_VV_4rlks_utm.unw')
         gamma.to_geotiff(self.COMBINED, data_path, self.dest, nodata=0)
 
@@ -153,8 +158,9 @@ class GammaToGeoTiffTests(unittest.TestCase):
 
     def test_to_geotiff_wrong_input_data(self):
         # use TIF, not UNW for data
-        self.dest = '/tmp/tmp_gamma_ifg.tif'
-        data_path = join(GAMMA_TEST_DIR, '16x20_20090713-20090817_VV_4rlks_utm.tif')
+        self.dest = os.path.join(TEMPDIR, 'tmp_gamma_ifg.tif')
+        data_path = join(GAMMA_TEST_DIR,
+                         '16x20_20090713-20090817_VV_4rlks_utm.tif')
         self.assertRaises(gamma.GammaException, gamma.to_geotiff,
                             self.COMBINED, data_path, self.dest, nodata=0)
 
@@ -162,7 +168,7 @@ class GammaToGeoTiffTests(unittest.TestCase):
         hdrs = self.DEM_HDR.copy()
         hdrs[ifc.PYRATE_X_STEP] = 0.1 # fake a mismatch
         data_path = join(GAMMA_TEST_DIR, '16x20_20090713-20090817_VV_4rlks_utm.unw')
-        self.dest = '/tmp/fake'
+        self.dest = os.path.join(TEMPDIR, 'fake')
 
         self.assertRaises(gamma.GammaException, gamma.to_geotiff, hdrs,
                             data_path, self.dest, 0)
@@ -185,7 +191,7 @@ class GammaToGeoTiffTests(unittest.TestCase):
         hdr = self.DEM_HDR.copy()
         hdr[ifc.PYRATE_DATUM] = 'nonexistent projection'
         data_path = join(GAMMA_TEST_DIR, 'dem16x20raw.dem')
-        self.dest = "/tmp/tmp_gamma_dem2.tif"
+        self.dest = os.path.join(TEMPDIR, 'tmp_gamma_dem2.tif')
         self.assertRaises(gamma.GammaException, gamma.to_geotiff, hdr,
                             data_path, self.dest, nodata=0)
 
@@ -287,11 +293,22 @@ class TestGammaLuigiEquality(unittest.TestCase):
 
         luigi_dir = uuid.uuid4().hex
         non_luigi_dir = uuid.uuid4().hex
-        cls.luigi_confFile = '/tmp/{}/gamma_test.conf'.format(luigi_dir)
-        cls.luigi_ifgListFile = '/tmp/{}/gamma_ifg.list'.format(luigi_dir)
-        cls.non_luigi_confFile = '/tmp/{}/gamma_test.conf'.format(non_luigi_dir)
-        cls.non_luigi_ifgListFile = \
-            '/tmp/{}/gamma_ifg.list'.format(non_luigi_dir)
+        cls.luigi_confFile = os.path.join(
+            TEMPDIR,
+            '{}/gamma_test.conf'.format(luigi_dir)
+        )
+        cls.luigi_ifgListFile = os.path.join(
+            TEMPDIR,
+            '{}/gamma_ifg.list'.format(luigi_dir)
+        )
+        cls.non_luigi_confFile = os.path.join(
+            TEMPDIR,
+            '{}/gamma_test.conf'.format(non_luigi_dir)
+        )
+        cls.non_luigi_ifgListFile = os.path.join(
+            TEMPDIR,
+            '{}/gamma_ifg.list'.format(non_luigi_dir)
+        )
 
         cls.luigi_base_dir = os.path.dirname(cls.luigi_confFile)
         cls.non_luigi_base_dir = os.path.dirname(cls.non_luigi_confFile)
