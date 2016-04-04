@@ -152,6 +152,13 @@ class RasterBase(object):
 
         return self.dataset is not None
 
+    def close(self):
+        """
+        Returns True if the underlying dataset has been opened by GDAL.
+        """
+        if self.dataset:
+            self.dataset = None
+
     @property
     def is_read_only(self):
         return self._readonly
