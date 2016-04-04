@@ -335,7 +335,7 @@ def dest_ifg_paths(ifg_paths, outdir):
 
 def init_logging(level):
     t = datetime.datetime.now()
-    path = 'pyrate_%s.log' % t.isoformat()
+    path = 'pyrate_%s.log' % t.isoformat().replace(':', '_')
     fmt = '%(asctime)s %(message)s'
     datefmt = '%d/%m/%Y %I:%M:%S %p'
     logging.basicConfig(filename=path, format=fmt, datefmt=datefmt, level=level)
