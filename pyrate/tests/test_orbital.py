@@ -25,7 +25,7 @@ from pyrate.orbital import get_design_matrix, get_network_design_matrix, get_num
 from pyrate.orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, QUADRATIC, PART_CUBIC
 from common import sydney5_mock_ifgs, MockIfg, SYD_TEST_TIF, sydney5_ifgs
 from scipy.linalg import lstsq
-from pyrate.tests.common import SYD_TEST_MATLAB_ORBITAL_DIR
+from pyrate.tests.common import SYD_TEST_MATLAB_ORBITAL_DIR, TEMPDIR
 from pyrate import config as cf
 from pyrate.tests.common import SYD_TEST_TIF, sydney_data_setup
 from pyrate.tests.common import sydney_data_setup_ifg_file_list
@@ -651,7 +651,7 @@ class MatlabComparisonTestsOrbfitMethod1(unittest.TestCase):
     """
 
     def setUp(self):
-        self.BASE_DIR = os.path.join('/tmp', uuid.uuid4().hex)
+        self.BASE_DIR = os.path.join(TEMPDIR, uuid.uuid4().hex)
 
         # start each full test run cleanly
         shutil.rmtree(self.BASE_DIR, ignore_errors=True)
@@ -735,7 +735,7 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
 
     """
     def setUp(self):
-        self.BASE_DIR = os.path.join('/tmp', uuid.uuid4().hex)
+        self.BASE_DIR = os.path.join(TEMPDIR, uuid.uuid4().hex)
 
         # start each full test run cleanly
         shutil.rmtree(self.BASE_DIR, ignore_errors=True)

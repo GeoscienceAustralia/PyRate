@@ -8,13 +8,16 @@ Created on 17/09/2012
 
 import os, glob, shutil, logging, unittest
 from os.path import join
+import uuid
+
+from pyrate.tests.common import TEMPDIR
 from pyrate import shared, config, prepifg
 from pyrate.scripts import run_pyrate
 from pyrate import config as cf
-import uuid
+
 
 # testing constants
-BASE_DIR = os.path.join('/tmp', uuid.uuid4().hex)
+BASE_DIR = os.path.join(TEMPDIR, uuid.uuid4().hex)
 BASE_OUT_DIR = join(BASE_DIR, 'out')
 BASE_DEM_DIR = join(BASE_DIR, 'dem')
 BASE_CFG_FILE = join(BASE_DIR, 'pyrate_workflow_test.conf')

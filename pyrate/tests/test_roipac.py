@@ -37,7 +37,7 @@ from pyrate.scripts.converttogtif import main as roipacMain
 from pyrate.tasks.utils import DUMMY_SECTION_NAME
 from pyrate.tests.common import HEADERS_TEST_DIR, PREP_TEST_OBS, PREP_TEST_TIF
 from pyrate.tests.common import SYD_TEST_DEM_UNW, SYD_TEST_DEM_HDR
-from pyrate.tests.common import SYD_TEST_DEM_DIR, SYD_TEST_OBS
+from pyrate.tests.common import SYD_TEST_DEM_DIR, SYD_TEST_OBS, TEMPDIR
 from pyrate.tests import common
 from pyrate.scripts import run_prepifg
 from pyrate.tests.common import sydney_data_setup_unw_file_list
@@ -59,8 +59,10 @@ FULL_HEADER_PATH = join(HEADERS_TEST_DIR, "geo_060619-060828.unw.rsc")
 class RoipacCommandLine(unittest.TestCase):
     def setUp(self):
         random_text = uuid.uuid4().hex
-        self.confFile = '/tmp/{}/roipac_test.cfg'.format(random_text)
-        self.ifgListFile = '/tmp/{}/roipac_ifg.list'.format(random_text)
+        self.confFile = os.path.join(TEMPDIR,
+                                     '{}/roipac_test.cfg'.format(random_text))
+        self.ifgListFile = os.path.join(
+            TEMPDIR, '{}/roipac_ifg.list'.format(random_text))
         self.base_dir = os.path.dirname(self.confFile)
         common.mkdir_p(self.base_dir)
 
@@ -120,7 +122,7 @@ class RoipacToGeoTiffTests(unittest.TestCase):
 
     def test_to_geotiff_dem(self):
         hdr = roipac.parse_header(SYD_TEST_DEM_HDR)
-        self.dest = "/tmp/tmp_roipac_dem.tif"
+        self.dest = os.path.join(TEMPDIR, "tmp_roipac_dem.tif")
 
         roipac.to_geotiff(hdr, SYD_TEST_DEM_UNW, self.dest, nodata=0)
         exp_path = join(SYD_TEST_DEM_DIR, 'sydney_trimmed.tif')
@@ -137,7 +139,7 @@ class RoipacToGeoTiffTests(unittest.TestCase):
         hdrs = self.HDRS.copy()
         hdrs[ifc.PYRATE_DATUM] = 'WGS84'
 
-        self.dest = '/tmp/tmp_roipac_ifg.tif'
+        self.dest = os.path.join('tmp_roipac_ifg.tif')
         data_path = join(PREP_TEST_OBS, 'geo_060619-061002.unw')
         roipac.to_geotiff(hdrs, data_path, self.dest, nodata=0)
 
@@ -166,7 +168,7 @@ class RoipacToGeoTiffTests(unittest.TestCase):
 
     def test_to_geotiff_wrong_input_data(self):
         # ensure failure if TIF/other file used instead of binary UNW data
-        self.dest = '/tmp/tmp_roipac_ifg.tif'
+        self.dest = os.path.join(TEMPDIR, 'tmp_roipac_ifg.tif')
         data_path = join(PREP_TEST_TIF, 'geo_060619-061002.tif')
         self.assertRaises(
             roipac.RoipacException,
@@ -179,7 +181,7 @@ class RoipacToGeoTiffTests(unittest.TestCase):
     def test_bad_projection(self):
         hdrs = self.HDRS.copy()
         hdrs[ifc.PYRATE_DATUM] = 'bad datum string'
-        self.dest = '/tmp/tmp_roipac_ifg2.tif'
+        self.dest = os.path.join(TEMPDIR, 'tmp_roipac_ifg2.tif')
         data_path = join(PREP_TEST_OBS, 'geo_060619-061002.unw')
         self.assertRaises(RoipacException, roipac.to_geotiff, hdrs,
                             data_path, self.dest, 0)
@@ -189,7 +191,7 @@ class RoipacToGeoTiffTests(unittest.TestCase):
         hdrs[ifc.PYRATE_X_STEP] = 0.1 # fake a mismatch
         hdrs[ifc.PYRATE_DATUM] = 'WGS84'
         data_path = join(PREP_TEST_OBS, 'geo_060619-061002.unw')
-        self.dest = '/tmp/fake'
+        self.dest = os.path.join(TEMPDIR, 'fake')
 
         self.assertRaises(RoipacException, roipac.to_geotiff, hdrs,
                             data_path, self.dest, 0)
@@ -279,10 +281,14 @@ class TestRoipacLuigiEquality(unittest.TestCase):
     def setUpClass(cls):
         luigi_dir = uuid.uuid4().hex
         non_luigi_dir = uuid.uuid4().hex
-        cls.luigi_confFile = '/tmp/{}/roipac_test.conf'.format(luigi_dir)
-        cls.luigi_ifgListFile = '/tmp/{}/roipac_ifg.list'.format(luigi_dir)
-        cls.non_luigi_confFile = '/tmp/{}/roipac_test.conf'.format(non_luigi_dir)
-        cls.non_luigi_ifgListFile = '/tmp/{}/roipac_ifg.list'.format(non_luigi_dir)
+        cls.luigi_confFile = os.path.join(
+            TEMPDIR, '{}/roipac_test.conf'.format(luigi_dir))
+        cls.luigi_ifgListFile = os.path.join(
+            TEMPDIR, '{}/roipac_ifg.list'.format(luigi_dir))
+        cls.non_luigi_confFile = os.path.join(
+            TEMPDIR, '{}/roipac_test.conf'.format(non_luigi_dir))
+        cls.non_luigi_ifgListFile = os.path.join(
+            TEMPDIR, '{}/roipac_ifg.list'.format(non_luigi_dir))
 
         cls.luigi_base_dir = os.path.dirname(cls.luigi_confFile)
         cls.non_luigi_base_dir = os.path.dirname(cls.non_luigi_confFile)
