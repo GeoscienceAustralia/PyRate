@@ -15,6 +15,21 @@ from pyrate import shared, config, prepifg
 from pyrate.scripts import run_pyrate
 from pyrate import config as cf
 
+# taken from http://stackoverflow.com/questions/6260149/os-symlink-support-in-windows
+if os.name == "nt":
+    def symlink_ms(source, link_name):
+        import ctypes
+        csl = ctypes.windll.kernel32.CreateSymbolicLinkW
+        csl.argtypes = (ctypes.c_wchar_p, ctypes.c_wchar_p, ctypes.c_uint32)
+        csl.restype = ctypes.c_ubyte
+        flags = 1 if os.path.isdir(source) else 0
+        try:
+            if csl(link_name, source.replace('/', '\\'), flags) == 0:
+                raise ctypes.WinError()
+        except:
+            pass
+    os.symlink = symlink_ms
+
 
 # testing constants
 BASE_DIR = os.path.join(TEMPDIR, uuid.uuid4().hex)
