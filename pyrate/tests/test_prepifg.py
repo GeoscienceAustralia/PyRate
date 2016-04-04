@@ -427,7 +427,7 @@ class MatlabEqualityTestRoipacSydneyTestData(unittest.TestCase):
     def tearDown(self):
         from pyrate.prepifg import mlooked_path
         for i in self.ifgs:
-            if os.path.exists(i.data_path):
+            if os.path.exists(mlooked_path(i.data_path, looks=1, crop_out=1)):
                 os.remove(mlooked_path(i.data_path, looks=1, crop_out=1))
 
     def test_matlab_prepifg_equality_array(self):
