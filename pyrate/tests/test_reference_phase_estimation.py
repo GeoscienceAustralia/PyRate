@@ -194,6 +194,8 @@ class RefPhsEstimationMatlabTestMethod2(unittest.TestCase):
                                 -34.9590339660645,
                                 -14.3167810440063,
                                 -11.9066228866577]
+        for i in ifgs:
+            i.close()
 
     @classmethod
     def tearDownClass(cls):
