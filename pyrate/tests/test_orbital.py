@@ -568,7 +568,7 @@ class NetworkCorrectionTestsMultilooking(unittest.TestCase):
         # checks orbital correction against unit test version
         orbital_correction(ifgs, deg, NETWORK_METHOD, self.ml_ifgs, offset)
         act = [i.phase_data for i in ifgs]
-        assert_array_almost_equal(act, exp, decimal=5)
+        assert_array_almost_equal(act, exp, decimal=4)
 
 
 def unittest_dm(ifg, method, degree, offset=False, scale=100.0):
