@@ -687,6 +687,8 @@ class MatlabComparisonTestsOrbfitMethod1(unittest.TestCase):
                     i.write_modified_phase()
 
     def tearDown(self):
+        for i in self.ifgs:
+            i.close()
         shutil.rmtree(self.BASE_DIR)
 
     def test_orbital_correction_matlab_equality(self):
@@ -769,6 +771,8 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
                 i.write_modified_phase()
 
     def tearDown(self):
+        for i in self.ifgs:
+            i.close()
         shutil.rmtree(self.BASE_DIR)
 
     def test_orbital_correction_matlab_equality_orbfit_method_2(self):
