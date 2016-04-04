@@ -67,6 +67,10 @@ class RefPhsEstimationMatlabTestMethod1(unittest.TestCase):
         refx, refy = run_pyrate.find_reference_pixel(ifgs, params)
         cls.ref_phs, cls.ifgs = estimate_ref_phase(ifgs, params, refx, refy)
 
+        # manually close for windows compatibility
+        for i in ifgs:
+            i.close()
+
         cls.matlab_ref_phs = [-18.2191658020020,
                                 27.7119445800781,
                                 -18.4944229125977,
