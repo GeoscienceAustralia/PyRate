@@ -317,8 +317,15 @@ class TestGammaLuigiEquality(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        shutil.rmtree(cls.luigi_base_dir)
-        shutil.rmtree(cls.non_luigi_base_dir)
+        try:
+            shutil.rmtree(cls.luigi_base_dir)
+        except OSError:
+            print('Failed to remove temp directory: %s' % cls.luigi_base_dir)
+
+        try:
+            shutil.rmtree(cls.non_luigi_base_dir)
+        except OSError:
+            print('Failed to remove temp directory: %s' % cls.non_luigi_base_dir)
 
     def make_input_files(self, data):
         with open(self.conf_file, 'w') as conf:
