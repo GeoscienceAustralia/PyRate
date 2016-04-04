@@ -154,7 +154,9 @@ class RasterBase(object):
 
     def close(self):
         """
-        Returns True if the underlying dataset has been opened by GDAL.
+        Explicitly closes file opened by gdal.Open()
+        This is required in windows, otherwise opened files can not be removed,
+        because windows locks opened files.
         """
         if self.dataset:
             self.dataset = None
