@@ -21,7 +21,7 @@ from osgeo.gdal import Open, Dataset, UseExceptions
 UseExceptions()
 
 from pyrate.shared import Ifg, DEM, RasterException
-from common import SYD_TEST_TIF, SYD_TEST_DEM_TIF
+from common import SYD_TEST_TIF, SYD_TEST_DEM_TIF, TEMPDIR
 
 
 if not exists(SYD_TEST_TIF):
@@ -138,7 +138,7 @@ class IfgIOTests(unittest.TestCase):
         self.failUnlessRaises(RasterException, self.ifg.open, True)
 
     def test_write(self):
-        base = "/tmp"
+        base = TEMPDIR
         src = self.ifg.data_path
         dest = join(base, basename(self.ifg.data_path))
 
