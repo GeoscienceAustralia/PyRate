@@ -157,6 +157,7 @@ class IfgIOTests(unittest.TestCase):
         i = Ifg(dest)
         i.open(readonly=True)
         assert_array_equal(True, isnan(i.phase_data[0, 1:]))
+        i.close()
         os.remove(dest)
 
 
