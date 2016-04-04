@@ -8,7 +8,7 @@ import glob
 import numpy as np
 import sys
 
-from pyrate.tests.common import SYD_TEST_DIR
+from pyrate.tests.common import SYD_TEST_DIR, TEMPDIR
 from pyrate.tests import common
 from pyrate.scripts import run_prepifg, run_pyrate
 from pyrate.tests.common import sydney_data_setup
@@ -41,15 +41,18 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         gamma_dir= uuid.uuid4().hex
-        cls.gamma_conffile = '/tmp/{}/gamma_test.conf'.format(gamma_dir)
-        cls.gamma_ifgListFile = \
-            '/tmp/{}/gamma_ifg.list'.format(gamma_dir)
+        cls.gamma_conffile = os.path.join(TEMPDIR,
+            '{}/gamma_test.conf'.format(gamma_dir))
+        cls.gamma_ifgListFile = os.path.join(TEMPDIR,
+            '{}/gamma_ifg.list'.format(gamma_dir))
         cls.gamma_base_dir = os.path.dirname(cls.gamma_conffile)
         common.mkdir_p(cls.gamma_base_dir)
 
         roipac_dir = uuid.uuid4().hex
-        cls.roipac_conffile = '/tmp/{}/roipac_test.conf'.format(roipac_dir)
-        cls.roipac_ifgListFile = '/tmp/{}/roipac_ifg.list'.format(roipac_dir)
+        cls.roipac_conffile = os.path.join(
+            TEMPDIR, '{}/roipac_test.conf'.format(roipac_dir))
+        cls.roipac_ifgListFile = os.path.join(
+            TEMPDIR, '{}/roipac_ifg.list'.format(roipac_dir))
 
         cls.roipac_base_dir = os.path.dirname(cls.roipac_conffile)
 
