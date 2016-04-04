@@ -17,7 +17,8 @@ from numpy.testing import assert_array_almost_equal, assert_array_equal
 
 from pyrate import config as cfg
 from pyrate.shared import Ifg, DEM
-from pyrate.prepifg import CUSTOM_CROP, MAXIMUM_CROP, MINIMUM_CROP, ALREADY_SAME_SIZE
+from pyrate.prepifg import CUSTOM_CROP, MAXIMUM_CROP, MINIMUM_CROP, \
+    ALREADY_SAME_SIZE
 from pyrate.prepifg import prepare_ifgs, resample, PreprocessError, CustomExts
 from pyrate.prepifg import mlooked_path, extents_from_params
 from pyrate.tests.common import SYD_TEST_MATLAB_PREPIFG_DIR
@@ -26,6 +27,7 @@ from pyrate.tests.common import SYD_TEST_DEM_TIF, TEMPDIR
 from pyrate.shared import generate_random_string
 
 from osgeo import gdal
+
 gdal.UseExceptions()
 
 if not exists(PREP_TEST_TIF):
@@ -107,6 +109,8 @@ class PrepifgOutputTests(unittest.TestCase):
         for f in self.exp_files:
             if exists(f):
                 os.remove(f)
+        for i in self.ifgs:
+            i.close()
         shutil.rmtree(self.random_dir)
 
     def _custom_ext_latlons(self):
@@ -137,6 +141,10 @@ class PrepifgOutputTests(unittest.TestCase):
             self.assertAlmostEqual(i, j)
         self.assert_geotransform_equal([self.exp_files[1], self.exp_files[5]])
 
+        ifg.close()
+        for i in self.ifgs:
+            i.close()
+
     def test_min_extents(self):
         """Test ifgcropopt=1 crops datasets to min extents."""
         xlooks = ylooks = 1
@@ -153,6 +161,10 @@ class PrepifgOutputTests(unittest.TestCase):
             self.assertAlmostEqual(i, j)
         self.assert_geotransform_equal([self.exp_files[0], self.exp_files[4]])
 
+        ifg.close()
+        for i in self.ifgs:
+            i.close()
+
     def test_custom_extents(self):
         xlooks = ylooks = 1
         cext = self._custom_extents_tuple()
@@ -168,19 +180,28 @@ class PrepifgOutputTests(unittest.TestCase):
             self.assertAlmostEqual(i, j)
         self.assert_geotransform_equal([self.exp_files[2], self.exp_files[6]])
 
+        # close ifgs
+        ifg.close()
+        for i in self.ifgs:
+            i.close()
+
+
     def test_custom_extents_misalignment(self):
         """Test misaligned cropping extents raise errors."""
         xlooks = ylooks = 1
         latlons = tuple(self._custom_ext_latlons())
         for i, _ in enumerate(['xfirst', 'yfirst', 'xlast', 'ylast']):
-            #error = step / pi * [1000 100]
+            # error = step / pi * [1000 100]
             for error in [0.265258, 0.026526]:
                 tmp_latlon = list(latlons)
                 tmp_latlon[i] += error
                 cext = CustomExts(*tmp_latlon)
 
                 self.assertRaises(PreprocessError, prepare_ifgs, self.ifgs,
-                                CUSTOM_CROP, xlooks, ylooks, user_exts=cext)
+                                  CUSTOM_CROP, xlooks, ylooks, user_exts=cext)
+        # close ifgs
+        for i in self.ifgs:
+            i.close()
 
     def test_nodata(self):
         """Verify NODATA value copied correctly (amplitude band not copied)"""
@@ -191,7 +212,11 @@ class PrepifgOutputTests(unittest.TestCase):
             ifg = Ifg(ex)
             ifg.open()
             # NB: amplitude band doesn't have a NODATA value
-            self.assertTrue(isnan(ifg.dataset.GetRasterBand(1).GetNoDataValue()))
+            self.assertTrue(
+                isnan(ifg.dataset.GetRasterBand(1).GetNoDataValue()))
+            ifg.close()
+        for i in self.ifgs:
+            i.close()
 
     def test_nans(self):
         """Verify NaNs replace 0 in the multilooked phase band"""
@@ -205,9 +230,12 @@ class PrepifgOutputTests(unittest.TestCase):
             phase = ifg.phase_band.ReadAsArray()
             self.assertFalse((phase == 0).any())
             self.assertTrue((isnan(phase)).any())
+            ifg.close()
 
         self.assertAlmostEqual(nanmax(phase), 4.247, 3)  # copied from gdalinfo
         self.assertAlmostEqual(nanmin(phase), 0.009, 3)  # copied from gdalinfo
+        for i in self.ifgs:
+            i.close()
 
     def test_multilook(self):
         """Test resampling method using a scaling factor of 4"""
@@ -231,7 +259,9 @@ class PrepifgOutputTests(unittest.TestCase):
             exp_resample = multilooking(src_data, scale, scale, thresh=0)
             self.assertEqual(exp_resample.shape, (7, 5))
             assert_array_almost_equal(exp_resample, i.phase_band.ReadAsArray())
-            # os.remove(ipath)
+            ds = None
+            i.close()
+            os.remove(ipath)
 
         # verify DEM has been correctly processed
         # ignore output values as resampling has already been tested for phase
@@ -245,22 +275,27 @@ class PrepifgOutputTests(unittest.TestCase):
         data = dem.height_band.ReadAsArray()
         self.assertTrue(data.ptp() != 0)
 
+        # close ifgs
+        dem.close()
+        for i in self.ifgs:
+            i.close()
+
     def test_invalid_looks(self):
         """Verify only numeric values can be given for multilooking"""
         values = [0, -1, -10, -100000.6, ""]
         for v in values:
             self.assertRaises(PreprocessError, prepare_ifgs, self.ifgs,
-                                CUSTOM_CROP, xlooks=v, ylooks=1)
+                              CUSTOM_CROP, xlooks=v, ylooks=1)
 
             self.assertRaises(PreprocessError, prepare_ifgs, self.ifgs,
-                                CUSTOM_CROP, xlooks=1, ylooks=v)
+                              CUSTOM_CROP, xlooks=1, ylooks=v)
 
 
 class ThresholdTests(unittest.TestCase):
     """Tests for threshold of data -> NaN during resampling."""
 
     def test_nan_threshold_inputs(self):
-        data = ones((1,1))
+        data = ones((1, 1))
         for thresh in [-10, -1, -0.5, 1.000001, 10]:
             self.assertRaises(ValueError, resample, data, 2, 2, thresh)
 
@@ -312,7 +347,9 @@ class SameSizeTests(unittest.TestCase):
     def test_already_same_size_mismatch(self):
         ifgs, random_dir = diff_exts_ifgs()
         self.assertRaises(PreprocessError, prepare_ifgs,
-                        ifgs, ALREADY_SAME_SIZE, 1, 1)
+                          ifgs, ALREADY_SAME_SIZE, 1, 1)
+        for i in ifgs:
+            i.close()
         shutil.rmtree(random_dir)
 
     # TODO: ensure multilooked files written to output dir
@@ -343,22 +380,22 @@ def test_mlooked_path():
            'some/dir/geo_060619-061002_4rlks_4rlks_8cr.tif'
 
 
-#class LineOfSightTests(unittest.TestCase):
-    #def test_los_conversion(self):
-        # TODO: needs LOS matrix
-        # TODO: this needs to work from config and incidence files on disk
-        # TODO: is convflag (see 'ifgconv' setting) used or just defaulted?
-        # TODO: los conversion has 4 options: 1: ignore, 2: vertical, 3: N/S, 4: E/W
-        # also have a 5th option of arbitrary azimuth angle (Pirate doesn't have this)
-    #    params = _default_extents_param()
-    #    params[IFG_CROP_OPT] = MINIMUM_CROP
-    #    params[PROJECTION_FLAG] = None
-    #    prepare_ifgs(params)
+# class LineOfSightTests(unittest.TestCase):
+# def test_los_conversion(self):
+# TODO: needs LOS matrix
+# TODO: this needs to work from config and incidence files on disk
+# TODO: is convflag (see 'ifgconv' setting) used or just defaulted?
+# TODO: los conversion has 4 options: 1: ignore, 2: vertical, 3: N/S, 4: E/W
+# also have a 5th option of arbitrary azimuth angle (Pirate doesn't have this)
+#    params = _default_extents_param()
+#    params[IFG_CROP_OPT] = MINIMUM_CROP
+#    params[PROJECTION_FLAG] = None
+#    prepare_ifgs(params)
 
 
-    #def test_phase_conversion(self):
-        # TODO: check output data is converted to mm from radians (in prepifg??)
-        #raise NotImplementedError
+# def test_phase_conversion(self):
+# TODO: check output data is converted to mm from radians (in prepifg??)
+# raise NotImplementedError
 
 
 class LocalMultilookTests(unittest.TestCase):
@@ -425,10 +462,10 @@ class MatlabEqualityTestRoipacSydneyTestData(unittest.TestCase):
                                           crop_opt=1, xlooks=1, ylooks=1)
 
     def tearDown(self):
-        from pyrate.prepifg import mlooked_path
-        for i in self.ifgs:
-            if os.path.exists(mlooked_path(i.data_path, looks=1, crop_out=1)):
-                os.remove(mlooked_path(i.data_path, looks=1, crop_out=1))
+        for i in self.ifgs_with_nan:
+            if os.path.exists(i.data_path):
+                i.close()
+                os.remove(i.data_path)
 
     def test_matlab_prepifg_equality_array(self):
         """
@@ -438,8 +475,9 @@ class MatlabEqualityTestRoipacSydneyTestData(unittest.TestCase):
         from pyrate.tests.common import SYD_TEST_MATLAB_PREPIFG_DIR
 
         onlyfiles = [f for f in os.listdir(SYD_TEST_MATLAB_PREPIFG_DIR)
-                if os.path.isfile(os.path.join(SYD_TEST_MATLAB_PREPIFG_DIR, f))
-                and f.endswith('.csv') and f.__contains__('_rad_')]
+                     if os.path.isfile(
+                os.path.join(SYD_TEST_MATLAB_PREPIFG_DIR, f))
+                     and f.endswith('.csv') and f.__contains__('_rad_')]
 
         for i, f in enumerate(onlyfiles):
             ifg_data = np.genfromtxt(os.path.join(
@@ -448,7 +486,9 @@ class MatlabEqualityTestRoipacSydneyTestData(unittest.TestCase):
                 if f.split('_rad_')[-1].split('.')[0] == \
                         os.path.split(j.data_path)[-1].split('.')[0]:
                     np.testing.assert_array_almost_equal(ifg_data,
-                        self.ifgs_with_nan[k].phase_data, decimal=2)
+                                                         self.ifgs_with_nan[
+                                                             k].phase_data,
+                                                         decimal=2)
 
     def test_matlab_prepifg_and_convert_wavelength(self):
         """
@@ -459,8 +499,9 @@ class MatlabEqualityTestRoipacSydneyTestData(unittest.TestCase):
             if not i.mm_converted:
                 i.convert_to_mm()
         onlyfiles = [f for f in os.listdir(SYD_TEST_MATLAB_PREPIFG_DIR)
-                if os.path.isfile(os.path.join(SYD_TEST_MATLAB_PREPIFG_DIR, f))
-                and f.endswith('.csv') and f.__contains__('_mm_')]
+                     if os.path.isfile(
+                os.path.join(SYD_TEST_MATLAB_PREPIFG_DIR, f))
+                     and f.endswith('.csv') and f.__contains__('_mm_')]
 
         count = 0
         for i, f in enumerate(onlyfiles):
@@ -472,18 +513,24 @@ class MatlabEqualityTestRoipacSydneyTestData(unittest.TestCase):
                     count += 1
                     # all numbers equal
                     np.testing.assert_array_almost_equal(ifg_data,
-                        self.ifgs_with_nan[k].phase_data, decimal=2)
+                                                         self.ifgs_with_nan[
+                                                             k].phase_data,
+                                                         decimal=2)
 
                     # means must also be equal
                     self.assertAlmostEqual(np.nanmean(ifg_data),
-                        np.nanmean(self.ifgs_with_nan[k].phase_data), places=4)
+                                           np.nanmean(self.ifgs_with_nan[
+                                                          k].phase_data),
+                                           places=4)
 
                     # number of nans must equal
                     self.assertEqual(np.sum(np.isnan(ifg_data)),
-                        np.sum(np.isnan(self.ifgs_with_nan[k].phase_data)))
+                                     np.sum(np.isnan(
+                                         self.ifgs_with_nan[k].phase_data)))
 
         # ensure we have the correct number of matches
         self.assertEqual(count, len(self.ifgs))
+
 
 if __name__ == "__main__":
     unittest.main()
