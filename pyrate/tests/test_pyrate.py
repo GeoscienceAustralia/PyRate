@@ -111,7 +111,7 @@ class PyRateTests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        from pyrate.tests.common import SYD_TEST_MATLAB_ORBITAL_DIR
+        from pyrate.tests.common import SYD_TEST_DIR
 
         try:
             # copy source data (treat as prepifg already run)
@@ -131,7 +131,7 @@ class PyRateTests(unittest.TestCase):
             run_pyrate.init_logging(logging.DEBUG)
 
             params = config.get_config_params(
-                os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orbital_error.conf'))
+                os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf'))
             params[cf.SIM_DIR] = cf.PYRATEPATH
             params[cf.OUT_DIR] = BASE_DIR
             paths = glob.glob(join(BASE_OUT_DIR, 'geo_*-*.tif'))

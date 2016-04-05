@@ -90,13 +90,13 @@ class MatlabEqualityTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         params = cf.get_config_params(
-                os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orbital_error.conf'))
+                os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf'))
 
         cls.temp_out_dir = os.path.join(params[cf.OUT_DIR], uuid.uuid4().hex)
         common.mkdir_p(cls.temp_out_dir)
 
-        sys.argv = ['run_prepifg.py', os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR,
-                                     'orbital_error.conf')]
+        sys.argv = ['run_prepifg.py', os.path.join(SYD_TEST_DIR,
+                                     'pyrate_system_test.conf')]
         params[cf.OUT_DIR] = cls.temp_out_dir
         run_prepifg.main(params)
 

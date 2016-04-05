@@ -352,10 +352,10 @@ if __name__ == "__main__":
     os.makedirs(SYD_TEST_OUT)
 
     params = cf.get_config_params(
-            os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orbital_error.conf'))
+            os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'pyrate_system_test.conf'))
     params[cf.REF_EST_METHOD] = 2
     call(["python", "pyrate/scripts/run_prepifg.py",
-          os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orbital_error.conf')])
+          os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'pyrate_system_test.conf')])
 
     xlks, ylks, crop = run_pyrate.transform_params(params)
 

@@ -26,6 +26,7 @@ from pyrate.orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, QUADRATIC
 from common import sydney5_mock_ifgs, MockIfg, SYD_TEST_TIF, sydney5_ifgs
 from scipy.linalg import lstsq
 from pyrate.tests.common import SYD_TEST_MATLAB_ORBITAL_DIR, TEMPDIR
+from pyrate.tests.common import SYD_TEST_DIR
 from pyrate import config as cf
 from pyrate.tests.common import SYD_TEST_TIF, sydney_data_setup
 from pyrate.tests.common import sydney_data_setup_ifg_file_list
@@ -657,7 +658,7 @@ class MatlabComparisonTestsOrbfitMethod1(unittest.TestCase):
         shutil.rmtree(self.BASE_DIR, ignore_errors=True)
 
         self.params = cf.get_config_params(
-            os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orbital_error.conf'))
+            os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf'))
 
         # change to orbital error correction method 1
         self.params[cf.ORBITAL_FIT_METHOD] = 1
@@ -743,7 +744,7 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
         shutil.rmtree(self.BASE_DIR, ignore_errors=True)
 
         self.params = cf.get_config_params(
-            os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orbital_error.conf'))
+            os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf'))
 
         # change to orbital error correction method 2
         self.params[cf.ORBITAL_FIT_METHOD] = 2

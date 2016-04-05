@@ -13,7 +13,7 @@ from common import sydney_data_setup, MockIfg
 from pyrate.refpixel import ref_pixel, RefPixelError, _step
 from pyrate.config import ConfigException
 from pyrate.scripts import run_pyrate
-from pyrate.tests.common import SYD_TEST_MATLAB_ORBITAL_DIR
+from pyrate.tests.common import SYD_TEST_DIR
 from pyrate import config as cf
 
 # default testing values
@@ -181,7 +181,7 @@ class MatlabEqualityTest(unittest.TestCase):
     def setUp(self):
         self.ifgs = sydney_data_setup()
         self.params = cf.get_config_params(
-            os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'orbital_error.conf'))
+            os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf'))
 
         self.params_alt_ref_frac = copy.copy(self.params)
         self.params_alt_ref_frac[cf.REF_MIN_FRAC] = 0.5
