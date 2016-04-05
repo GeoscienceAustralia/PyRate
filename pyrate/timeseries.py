@@ -22,7 +22,7 @@ import pyrate.ifgconstants as ifc
 from pyrate import config as cf
 
 
-def time_series(ifgs, pthresh, params, vcmt, mst=None):
+def time_series(ifgs, params, vcmt, mst=None):
     """
     Returns time series data from the given ifgs.
 
@@ -54,9 +54,11 @@ def time_series(ifgs, pthresh, params, vcmt, mst=None):
     # MULTIPROCESSING parameters
     parallel = params[cf.PARALLEL]
     processes = params[cf.PROCESSES]
-
+    TSMETHOD = params[cf.TIME_SERIES_METHOD]
+    INTERP = params[cf.TIME_SERIES_INTERP]
     SMORDER = params[cf.TIME_SERIES_SM_ORDER]
     SMFACTOR = np.power(10, params[cf.TIME_SERIES_SM_FACTOR])
+    pthresh = params[cf.TIME_SERIES_PTHRESH]
     head = ifgs[0]
     check_time_series_params(head, pthresh)
     epochlist = get_epochs(ifgs)
@@ -82,18 +84,6 @@ def time_series(ifgs, pthresh, params, vcmt, mst=None):
     isign = where(imaster > islave)
     B0[isign[0], :] = -B0[isign[0], :]
 
-    #  Laplacian smoothing coefficient matrix
-    BLap0 = np.zeros(shape=(nlap, nvelpar))
-
-    for i in range(nlap):
-      if SMORDER == 1:
-        BLap0[i, i:i+2] = [-1, 1]
-      else:
-        BLap0[i, i:i+3] = [1, -2, 1]
-
-    # smf: Laplacian smoothing factor
-    BLap0 *= SMFACTOR
-
     tsvel_matrix = np.empty(shape=(nrows, ncols, nvelpar),
                             dtype=np.float32)
 
@@ -105,22 +95,24 @@ def time_series(ifgs, pthresh, params, vcmt, mst=None):
         mst = ~isnan(ifg_data)
 
     if parallel == 1:
-        tsvel_matrix = parmap.map(time_series_by_rows, range(nrows), B0, BLap0,
+        tsvel_matrix = parmap.map(time_series_by_rows, range(nrows), B0, SMFACTOR,
                                   SMORDER, ifg_data, mst, ncols, nvelpar,
-                                  pthresh, vcmt, processes=processes)
+                                  pthresh, vcmt, TSMETHOD, INTERP,
+                                  processes=processes)
     elif parallel == 2:
         res = parmap.starmap(time_series_by_pixel,
                              itertools.product(range(nrows), range(ncols)),
-                             B0, BLap0, SMORDER, ifg_data, mst, nvelpar,
-                             pthresh, vcmt, processes=processes)
+                             B0, SMFACTOR, SMORDER, ifg_data, mst, nvelpar,
+                             pthresh, vcmt, TSMETHOD, INTERP,
+                             processes=processes)
         res = np.array(res)
         tsvel_matrix = np.reshape(res, newshape=(nrows, ncols, res.shape[1]))
     else:
         for row in xrange(nrows):
             for col in xrange(ncols):
                 tsvel_matrix[row, col] = time_series_by_pixel(
-                    row, col, B0, BLap0, SMORDER, ifg_data, mst, nvelpar,
-                    pthresh, vcmt)
+                    row, col, B0, SMFACTOR, SMORDER, ifg_data, mst, nvelpar,
+                    pthresh, vcmt, TSMETHOD, INTERP)
 
     # SB: do the span multiplication as a numpy linalg operation, MUCH faster
     # not even this is necessary here, perform late for performance
@@ -139,14 +131,13 @@ def time_series(ifgs, pthresh, params, vcmt, mst=None):
     return tsincr, tscum, tsvel_matrix
 
 
-def time_series_by_rows(row, B0, BLap0, SMORDER, ifg_data, mst, ncols, nvelpar,
-                        pthresh, vcmt):
-
+def time_series_by_rows(row, B0, SMFACTOR, SMORDER, ifg_data, mst, ncols, nvelpar,
+                        pthresh, vcmt, TSMETHOD, INTERP):
     tsvel = np.empty(shape=(ncols, nvelpar), dtype=np.float32)
     for col in range(ncols):
         tsvel[col, :] = time_series_by_pixel(
-            row, col, B0, BLap0, SMORDER, ifg_data, mst, nvelpar,
-            pthresh, vcmt)
+            row, col, B0, SMFACTOR, SMORDER, ifg_data, mst, nvelpar,
+            pthresh, vcmt, TSMETHOD, INTERP)
 
     return tsvel
 
@@ -161,79 +152,129 @@ def remove_rank_def_rows(B, nvelpar, ifgv, sel):
     return B, ifgv, sel, rmrow
 
 
-def time_series_by_pixel(row, col, B0, BLap0, SMORDER, ifg_data, mst, nvelpar,
-                         pthresh, vcmt):
+def time_series_by_pixel(row, col, B0, SMFACTOR, SMORDER, ifg_data, mst, nvelpar,
+                         pthresh, vcmt, method, interp):
     # check pixel for non-redundant ifgs;
     sel = np.nonzero(mst[:, row, col])[0]  # trues in mst are chosen
     if len(sel) >= pthresh:
         ifgv = ifg_data[sel, row, col]
         # make design matrix, B
         B = B0[sel, :]
+        if interp == 0:
+            # remove rank deficient rows
+            rmrow = asarray([0])  # dummy
 
-        # remove rank deficient rows
-        rmrow = asarray([0])  # dummy
+            while len(rmrow) > 0:
+                B, ifgv, sel, rmrow = remove_rank_def_rows(B, nvelpar, ifgv, sel)
 
-        while len(rmrow) > 0:
-            B, ifgv, sel, rmrow = remove_rank_def_rows(B, nvelpar, ifgv, sel)
-
-        m = len(sel)
-
-        velflag = sum(abs(B), 0)
-        B = B[:, ~np.isclose(velflag, 0.0)]
-
-        # Laplacian smoothing design matrix
-        nvelleft = np.count_nonzero(velflag)
-        nlap = nvelleft - SMORDER
-
-        BLap = np.empty(shape=(nlap + 2, nvelleft))
-
-        # constrain for the first and the last incremental
-        BLap1 = -np.divide(np.ones(shape=nvelleft), nvelleft - 1)
-        BLap1[0] = 1.0
-
-        BLapn = -np.divide(np.ones(shape=nvelleft), nvelleft - 1)
-        BLapn[-1] = 1.0
-
-        BLap[0, :] = BLap1
-        BLap[1:nlap + 1, :] = BLap0[0:nlap, 0:nvelleft]
-        BLap[-1, :] = BLapn
-
-        nlap += 2
-
-        # add laplacian design matrix
-        B = np.concatenate((B, BLap), axis=0)
-
-        # combine ifg and Laplacian smooth vector
-        vLap = np.zeros(nlap)
-        obsv = np.concatenate((ifgv, vLap), axis=0)
-
-        # make variance-covariance matrix
-        # new covariance matrix, adding the laplacian equations
-        nobs = m + nlap
-        vcm_tmp = np.eye(nobs)
-        vcm_tmp[:m, :m] = vcmt[sel, np.vstack(sel)]
-
-        # solve the equation by least-squares
-        # calculate velocities
-        # we get the lower triangle in numpy
-        # matlab gives upper triangle by default
-        w = np.linalg.cholesky(np.linalg.pinv(vcm_tmp)).T
-
-        wb = np.dot(w, B)
-        wl = np.dot(w, obsv)
-        # x=wb\wl
-        x = np.dot(np.linalg.pinv(wb, rcond=1e-8), wl)
-
-        # residuals and roughness
-        # not implemented
-
-        tsvel = np.empty(nvelpar, dtype=np.float32) * np.nan
-        tsvel[~np.isclose(velflag, 0.0, atol=1e-8)] = x[:nvelleft]
-
-        # TODO: should we implement tserror like in matlab?
+            # Some epochs have been deleted; get valid epoch indices
+            velflag = sum(abs(B), 0)
+            # remove corresponding columns in design matrix
+            B = B[:, ~np.isclose(velflag, 0.0)]
+        else:
+            velflag = np.ones(nvelpar)
+        if method == 1:
+            # Use Laplacian smoothing method
+            tsvel = solve_ts_lap(nvelpar, velflag, ifgv, B,
+                                 SMORDER, SMFACTOR, sel, vcmt)
+        elif method == 2:
+            # Use SVD method
+            tsvel = solve_ts_svd(nvelpar, velflag, ifgv, B)
+        else:
+            raise ValueError("Unrecognised time series method")
         return tsvel
     else:
         return np.empty(nvelpar) * np.nan
+
+
+def solve_ts_svd(nvelpar, velflag, ifgv, B):
+    """
+    Solve the linear least squares system using the SVD method.
+    Similar to the SBAS method implemented by Berardino et al. 2002
+    """
+    # pre-allocate the velocity matrix
+    tsvel = np.empty(nvelpar, dtype=np.float32) * np.nan
+    # solve least squares equation using Moore-Penrose pseudoinverse
+    tsvel[velflag != 0] = dot(pinv(B), ifgv)
+    return tsvel
+
+
+def solve_ts_lap(nvelpar, velflag, ifgv, B, SMORDER, SMFACTOR, sel, vcmt):
+    """
+    Solve the linear least squares system using the Finite Difference
+    method using a Laplacian Smoothing operator.
+    Similar to the method implemented by Schmidt and Burgmann 2003
+    """
+    # SMORDER = params[cf.TIME_SERIES_SM_ORDER] # Laplacian smoothing order
+    # SMFACTOR = 10**(params[cf.TIME_SERIES_SM_FACTOR]) # Laplacian smoothing factor
+
+    nlap = nvelpar - SMORDER  # Laplacian observations number
+
+    #  Laplacian smoothing coefficient matrix
+    BLap0 = np.zeros(shape=(nlap, nvelpar))
+
+    for i in range(nlap):
+      if SMORDER == 1:
+        BLap0[i, i:i+2] = [-1, 1]
+      else:
+        BLap0[i, i:i+3] = [1, -2, 1]
+
+    # smf: Laplacian smoothing factor
+    BLap0 *= SMFACTOR
+
+    # Laplacian smoothing design matrix
+    nvelleft = np.count_nonzero(velflag)
+    nlap = nvelleft - SMORDER
+
+    BLap = np.empty(shape=(nlap + 2, nvelleft))
+
+    # constrain for the first and the last incremental
+    BLap1 = -np.divide(np.ones(shape=nvelleft), nvelleft - 1)
+    BLap1[0] = 1.0
+
+    BLapn = -np.divide(np.ones(shape=nvelleft), nvelleft - 1)
+    BLapn[-1] = 1.0
+
+    BLap[0, :] = BLap1
+    BLap[1:nlap + 1, :] = BLap0[0:nlap, 0:nvelleft]
+    BLap[-1, :] = BLapn
+
+    nlap += 2
+
+    # add laplacian design matrix
+    B = np.concatenate((B, BLap), axis=0)
+
+    # combine ifg and Laplacian smooth vector
+    vLap = np.zeros(nlap)
+    obsv = np.concatenate((ifgv, vLap), axis=0)
+
+    # make variance-covariance matrix
+    # new covariance matrix, adding the laplacian equations
+    m = len(sel)
+    nobs = m + nlap
+    vcm_tmp = np.eye(nobs)
+    vcm_tmp[:m, :m] = vcmt[sel, np.vstack(sel)]
+
+    # solve the equation by least-squares
+    # calculate velocities
+    # we get the lower triangle in numpy
+    # matlab gives upper triangle by default
+    w = np.linalg.cholesky(np.linalg.pinv(vcm_tmp)).T
+
+    wb = np.dot(w, B)
+    wl = np.dot(w, obsv)
+    # x=wb\wl
+    x = np.dot(np.linalg.pinv(wb, rcond=1e-8), wl)
+
+    # residuals and roughness
+    # not implemented
+
+    # TODO: implement residuals and roughness calculations
+    tsvel = np.empty(nvelpar, dtype=np.float32) * np.nan
+    tsvel[~np.isclose(velflag, 0.0, atol=1e-8)] = x[:nvelleft]
+
+    # TODO: implement uncertainty estimates (tserror) like in matlab code
+    return tsvel
 
 
 def plot_timeseries(tsincr, tscum, tsvel, output_dir):

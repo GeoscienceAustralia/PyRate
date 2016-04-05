@@ -18,7 +18,8 @@ from pyrate import mst
 from pyrate.tests.common import sydney_data_setup
 from pyrate.timeseries import time_series
 from pyrate.config import TIME_SERIES_PTHRESH, TIME_SERIES_SM_ORDER
-from pyrate.config import TIME_SERIES_SM_FACTOR
+from pyrate.config import TIME_SERIES_SM_FACTOR, TIME_SERIES_METHOD
+from pyrate.config import TIME_SERIES_INTERP, TIME_SERIES_PTHRESH
 from pyrate.config import PARALLEL, PROCESSES
 from pyrate.scripts import run_pyrate, run_prepifg
 from pyrate import matlab_mst_kruskal as matlab_mst
@@ -31,9 +32,11 @@ from pyrate.tests import common
 
 
 def default_params():
-    return {TIME_SERIES_PTHRESH: 10,
+    return {TIME_SERIES_METHOD: 1,
+            TIME_SERIES_PTHRESH: 0,
             TIME_SERIES_SM_ORDER: 2,
             TIME_SERIES_SM_FACTOR: -0.25,
+            TIME_SERIES_INTERP: 1,
             PARALLEL: 0,
             PROCESSES: 1}
 
@@ -110,8 +113,7 @@ class TimeSeriesTests(unittest.TestCase):
         self.ifgs = [SinglePixelIfg(m, s, p, n) for m, s, p, n in
             zip(master, slave, phase, nan_fraction)]
         tsincr, tscum, tsvel = time_series(
-            self.ifgs, pthresh=0,
-            params=self.params, vcmt=self.vcmt, mst=None)
+            self.ifgs, params=self.params, vcmt=self.vcmt, mst=None)
         expected = asarray([[[0.50,  3.0,  4.0,  5.5,  6.5]]])
         assert_array_almost_equal(tscum, expected, decimal=2)
 
@@ -216,10 +218,8 @@ class MatlabTimeSeriesEquality(unittest.TestCase):
                 ifgs, params, vcmt, mst=mst_grid
                 )
         cls.mst_grid = mst_grid
-
-        cls.ts_incr = np.reshape(ts_incr, newshape=cls.tsincr.shape, order='F')
-        cls.ts_cum = np.reshape(ts_cum, newshape=cls.tscum.shape, order='F')
-
+        cls.ts_incr = np.reshape(ts_incr, newshape=cls.tsincr_0.shape, order='F')
+        cls.ts_cum = np.reshape(ts_cum, newshape=cls.tscum_0.shape, order='F')
 
     @classmethod
     def tearDownClass(cls):

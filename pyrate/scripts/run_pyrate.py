@@ -249,8 +249,7 @@ def calculate_linear_rate(ifgs, params, vcmt, mst=None):
 
 def calculate_time_series(ifgs, params, vcmt, mst):
     logging.debug('Calculating time series')
-    ts_pthr = params[cf.TIME_SERIES_PTHRESH]        
-    res = timeseries.time_series(ifgs, ts_pthr, params, vcmt, mst)
+    res = timeseries.time_series(ifgs, params, vcmt, mst)
     for r in res:
         if len(r.shape) != 3:
             logging.error('TODO: time series result shape is incorrect')
