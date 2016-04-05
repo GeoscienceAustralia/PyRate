@@ -171,6 +171,8 @@ LR_MAXSIG = 'maxsig'
 
 #: BOOL (1/0); Do Time series calculation
 TIME_SERIES_CAL = 'tscal'
+#: INT (1/2); Method for time series inversion (1: SVD; 2: Laplacian Smoothing)
+TIME_SERIES_METHOD = 'tsmethod'
 #: INT; Number of required input observations per pixel for time series inversion
 TIME_SERIES_PTHRESH = 'ts_pthr'
 #: BOOL (1/0); Time series parameter to interpolate across epoch gaps NOT CURRENTLY USED
