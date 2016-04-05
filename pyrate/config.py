@@ -171,7 +171,7 @@ LR_MAXSIG = 'maxsig'
 
 #: BOOL (1/0); Do Time series calculation
 TIME_SERIES_CAL = 'tscal'
-#: INT (1/2); Method for time series inversion (1: SVD; 2: Laplacian Smoothing)
+#: INT (1/2); Method for time series inversion (1: Laplacian Smoothing; 2: SVD)
 TIME_SERIES_METHOD = 'tsmethod'
 #: INT; Number of required input observations per pixel for time series inversion
 TIME_SERIES_PTHRESH = 'ts_pthr'
@@ -256,6 +256,7 @@ PARAM_CONVERSION = {
     TIME_SERIES_PTHRESH : (int, 20),
     TIME_SERIES_SM_FACTOR: (float, None),
     TIME_SERIES_SM_ORDER: (int, None),
+    TIME_SERIES_METHOD: (int, 1),
 
     PARALLEL: (int, None),
     PROCESSES: (int, 8),
