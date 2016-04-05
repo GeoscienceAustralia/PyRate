@@ -20,7 +20,7 @@ SYD_TEST_OUT = join(SYD_TEST_DIR, 'out')
 SYD_TEST_TIF = join(SYD_TEST_DIR, 'tif')
 
 SYD_TEST_DEM_DIR = join(SYD_TEST_DIR, 'dem')
-SYD_TEST_MATLAB_MST_DIR = join(SYD_TEST_DIR, 'mst_matlab')
+SYD_TEST_MATLAB_MST_DIR = join(SYD_TEST_DIR, 'matlab_mst')
 SYD_TEST_MATLAB_PREPIFG_DIR = join(SYD_TEST_DIR, 'matlab_preifg_output')
 SYD_TEST_MATLAB_ORBITAL_DIR = join(SYD_TEST_DIR,
                                    'matlab_orbital_error_correction')
