@@ -442,11 +442,11 @@ if __name__ == "__main__":
     # Calculate temporal variance-covariance matrix
     vcmt = vcm.get_vcmt(ifgs, maxvar)
 
-    tsincr_path = os.path.join(SYD_TIME_SERIES_DIR, 'ts_incr.csv')
+    tsincr_path = os.path.join(SYD_TIME_SERIES_DIR, 'ts_incr_interp0_method1.csv')
     ts_incr = np.genfromtxt(tsincr_path, delimiter=',')
-    tserr_path = os.path.join(SYD_TIME_SERIES_DIR, 'ts_error.csv')
+    tserr_path = os.path.join(SYD_TIME_SERIES_DIR, 'ts_error_interp0_method1.csv')
     ts_err = np.genfromtxt(tserr_path, delimiter=',')
-    tscum_path = os.path.join(SYD_TIME_SERIES_DIR, 'ts_cum.csv')
+    tscum_path = os.path.join(SYD_TIME_SERIES_DIR, 'ts_cum_interp0_method1.csv')
     ts_cum = np.genfromtxt(tscum_path, delimiter=',')
     np.set_printoptions(precision=4)
     # Calculate time series

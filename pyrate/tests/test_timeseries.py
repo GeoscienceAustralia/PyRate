@@ -186,14 +186,16 @@ class MatlabTimeSeriesEquality(unittest.TestCase):
         vcmt = vcm.get_vcmt(ifgs, maxvar)
 
         SYD_TIME_SERIES_DIR = os.path.join(SYD_TEST_DIR, 'matlab_time_series')
-        tsincr_path = os.path.join(SYD_TIME_SERIES_DIR, 'ts_incr.csv')
+        tsincr_path = os.path.join(SYD_TIME_SERIES_DIR,
+                                   'ts_incr_interp0_method1.csv')
         ts_incr = np.genfromtxt(tsincr_path, delimiter=',')
 
         # the matlab tsvel return is a bit pointless and not tested here
         # tserror is not returned
-        # tserr_path = os.path.join(SYD_TIME_SERIES_DIR, 'ts_error.csv')
+        # tserr_path = os.path.join(SYD_TIME_SERIES_DIR, 'ts_error_interp0_method1.csv')
         # ts_err = np.genfromtxt(tserr_path, delimiter=',')
-        tscum_path = os.path.join(SYD_TIME_SERIES_DIR, 'ts_cum.csv')
+        tscum_path = os.path.join(SYD_TIME_SERIES_DIR,
+                                  'ts_cum_interp0_method1.csv')
         ts_cum = np.genfromtxt(tscum_path, delimiter=',')
 
         params[cf.PARALLEL] = 1
@@ -258,6 +260,149 @@ class MatlabTimeSeriesEquality(unittest.TestCase):
         np.testing.assert_array_almost_equal(
             self.ts_cum, self.tscum_0, decimal=3)
 
+
+class MatlabTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
+    """
+    Checks the python function to that of Matlab pirate ts.m and tsinvlap.m
+    functionality.
+    """
+    # TODO: Investigate why this method does not match matlab
+    @classmethod
+    def setUpClass(cls):
+        params = cf.get_config_params(
+                os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf'))
+
+        cls.temp_out_dir = os.path.join(params[cf.OUT_DIR], uuid.uuid4().hex)
+        common.mkdir_p(cls.temp_out_dir)
+
+        sys.argv = ['run_prepifg.py', os.path.join(SYD_TEST_DIR,
+                                     'pyrate_system_test.conf')]
+        params[cf.OUT_DIR] = cls.temp_out_dir
+        run_prepifg.main(params)
+
+        params[cf.REF_EST_METHOD] = 2
+
+        xlks, ylks, crop = run_pyrate.transform_params(params)
+
+        base_ifg_paths = run_pyrate.original_ifg_paths(params[cf.IFG_FILE_LIST])
+
+        dest_paths = run_pyrate.get_dest_paths(base_ifg_paths, crop,
+                                               params, xlks)
+
+        ifg_instance = matlab_mst.IfgListPyRate(datafiles=dest_paths)
+
+        assert isinstance(ifg_instance, matlab_mst.IfgListPyRate)
+        ifgs = ifg_instance.ifgs
+        for i in ifgs:
+            if not i.mm_converted:
+                i.convert_to_mm()
+                i.write_modified_phase()
+        ifg_instance_updated, epoch_list = \
+            matlab_mst.get_nml(ifg_instance, nan_conversion=True)
+        mst_grid = matlab_mst.matlab_mst_boolean_array(ifg_instance_updated)
+
+        for i in ifgs:
+            if not i.is_open:
+                i.open()
+            if not i.nan_converted:
+                i.convert_to_nans()
+
+            if not i.mm_converted:
+                i.convert_to_mm()
+                i.write_modified_phase()
+
+        if params[cf.ORBITAL_FIT] != 0:
+            run_pyrate.remove_orbital_error(ifgs, params)
+
+        refx, refy = run_pyrate.find_reference_pixel(ifgs, params)
+
+        if params[cf.ORBITAL_FIT] != 0:
+            run_pyrate.remove_orbital_error(ifgs, params)
+
+        _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
+
+        # Calculate interferogram noise
+        # TODO: assign maxvar to ifg metadata (and geotiff)?
+        maxvar = [vcm.cvd(i)[0] for i in ifgs]
+
+        # Calculate temporal variance-covariance matrix
+        vcmt = vcm.get_vcmt(ifgs, maxvar)
+
+        SYD_TIME_SERIES_DIR = os.path.join(SYD_TEST_DIR, 'matlab_time_series')
+        tsincr_path = os.path.join(SYD_TIME_SERIES_DIR,
+                                   'ts_incr_interp0_method2.csv')
+        ts_incr = np.genfromtxt(tsincr_path, delimiter=',')
+
+        # the matlab tsvel return is a bit pointless and not tested here
+        # tserror is not returned
+        # tserr_path = os.path.join(SYD_TIME_SERIES_DIR, 'ts_error_interp0_method1.csv')
+        # ts_err = np.genfromtxt(tserr_path, delimiter=',')
+        tscum_path = os.path.join(SYD_TIME_SERIES_DIR,
+                                  'ts_cum_interp0_method2.csv')
+        ts_cum = np.genfromtxt(tscum_path, delimiter=',')
+
+        params[cf.TIME_SERIES_METHOD] = 2
+        params[cf.PARALLEL] = 1
+        # Calculate time series
+        if params[cf.TIME_SERIES_CAL] != 0:
+            cls.tsincr, cls.tscum, cls.tsvel = run_pyrate.calculate_time_series(
+                ifgs, params, vcmt, mst=mst_grid)
+
+        params[cf.PARALLEL] = 2
+        # Calculate time series
+        if params[cf.TIME_SERIES_CAL] != 0:
+            cls.tsincr_2, cls.tscum_2, cls.tsvel_2 = \
+                run_pyrate.calculate_time_series(
+                ifgs, params, vcmt, mst=mst_grid
+                )
+
+        params[cf.PARALLEL] = 0
+        # Calculate time series serailly by the pixel
+        if params[cf.TIME_SERIES_CAL] != 0:
+            cls.tsincr_0, cls.tscum_0, cls.tsvel_0 = \
+                run_pyrate.calculate_time_series(
+                ifgs, params, vcmt, mst=mst_grid
+                )
+        cls.mst_grid = mst_grid
+        cls.ts_incr = np.reshape(ts_incr, newshape=cls.tsincr_0.shape, order='F')
+        cls.ts_cum = np.reshape(ts_cum, newshape=cls.tscum_0.shape, order='F')
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(cls.temp_out_dir)
+
+    def test_time_series_equality_parallel_by_rows(self):
+
+        self.assertEqual(self.tsincr.shape, self.tscum.shape)
+        self.assertEqual(self.tsvel.shape, self.tsincr.shape)
+
+        np.testing.assert_array_almost_equal(
+            self.ts_incr, self.tsincr, decimal=1)
+
+        np.testing.assert_array_almost_equal(
+            self.ts_cum, self.tscum, decimal=1)
+
+    def test_time_series_equality_parallel_by_the_pixel(self):
+
+        self.assertEqual(self.tsincr_2.shape, self.tscum_2.shape)
+        self.assertEqual(self.tsvel_2.shape, self.tsincr_2.shape)
+
+        np.testing.assert_array_almost_equal(
+            self.ts_incr, self.tsincr_2, decimal=1)
+
+        np.testing.assert_array_almost_equal(
+            self.ts_cum, self.tscum_2, decimal=1)
+
+    def test_time_series_equality_serial_by_the_pixel(self):
+
+        self.assertEqual(self.tsincr_0.shape, self.tscum_0.shape)
+        self.assertEqual(self.tsvel_0.shape, self.tsincr_0.shape)
+
+        np.testing.assert_array_almost_equal(
+            self.ts_incr, self.tsincr_0, decimal=1)
+
+        np.testing.assert_array_almost_equal(
+            self.ts_cum, self.tscum_0, decimal=1)
 
 if __name__ == "__main__":
     unittest.main()
