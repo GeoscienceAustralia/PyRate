@@ -147,7 +147,7 @@ def sort_list(id_l, master_l, slave_l, nan_frac_l):
     return np.sort(sort_list, order=['nan_frac'])
 
 
-def matlab_mst_kruskal(id_l, master_l, slave_l, nan_frac_l, connect_flag=True):
+def matlab_mst_kruskal(id_l, master_l, slave_l, nan_frac_l, connect_flag=False):
     """
     This is an implementation of the pi-rate mst_kruskal.m
     :param id_l: list of ifg file ids
