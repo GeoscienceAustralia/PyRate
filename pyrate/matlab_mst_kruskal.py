@@ -1,3 +1,6 @@
+__author__ = 'Sudipta Basak'
+__date_created__ = '7/12/15'
+
 """
 This is the python implementation of the make_mstmat.m very closely
 resembling the matlab.
@@ -13,12 +16,17 @@ from pyrate.tests.common import sydney_data_setup
 from pyrate.algorithm import get_epochs_and_n
 from pyrate.shared import Ifg
 
-__author__ = 'Sudipta Basak'
-__date_created__ = '7/12/15'
-
+DTYPE = [('id', int), ('master', int), ('slave', int), ('nan_frac', float)]
 
 class IfGMeta(object):
     __metaclass__ = ABCMeta
+    ifgs = None
+    id = None
+    data_stack = None
+    master_num = None
+    slave_num = None
+    n = None
+    nan_frac = None
 
     @abstractmethod
     def get_nml_list(self):
@@ -132,15 +140,14 @@ def get_nml(ifg_list_instance, nan_conversion=False, prefix_len=4):
 
 
 def sort_list(id_l, master_l, slave_l, nan_frac_l):
-    dtype = [('id', int), ('master', int), ('slave', int), ('nan_frac', float)]
     sort_list = map(lambda i, m, s, n: (i, m, s, n),
                     id_l, master_l, slave_l, nan_frac_l)
 
-    sort_list = np.array(sort_list, dtype=dtype)
+    sort_list = np.array(sort_list, dtype=DTYPE)
     return np.sort(sort_list, order=['nan_frac'])
 
 
-def matlab_mst_kruskal(id_l, master_l, slave_l, nan_frac_l):
+def matlab_mst_kruskal(id_l, master_l, slave_l, nan_frac_l, connect_flag=False):
     """
     This is an implementation of the pi-rate mst_kruskal.m
     :param id_l: list of ifg file ids
@@ -150,7 +157,6 @@ def matlab_mst_kruskal(id_l, master_l, slave_l, nan_frac_l):
     :return:
     """
 
-    dtype = [('id', int), ('master', int), ('slave', int), ('nan_frac', float)]
     num_ifgs = len(master_l)
     num_images = max(max(master_l), max(slave_l))
     # print 'ifg_list', ifg_list_
@@ -158,7 +164,7 @@ def matlab_mst_kruskal(id_l, master_l, slave_l, nan_frac_l):
     # print 'ifg_sorted', ifg_sorted
 
     # add one to ensure index number + 1
-    connect = np.eye(num_images + 1)
+    connect = np.eye(num_images + 1, dtype=np.bool)
 
     mst_list = []
 
@@ -174,7 +180,7 @@ def matlab_mst_kruskal(id_l, master_l, slave_l, nan_frac_l):
                                      connect[loc_slave, :]
             connect = np.delete(connect, loc_slave, axis=0)
 
-    mst_list = np.array(mst_list, dtype=dtype)
+    mst_list = np.array(mst_list, dtype=DTYPE)
     mst_list = np.sort(mst_list, order=['id'])
 
     return [i[0] for i in mst_list]
