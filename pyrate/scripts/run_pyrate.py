@@ -66,6 +66,9 @@ def process_ifgs(ifg_paths_or_instance, params):
                                nan_conversion=nan_conversion)
         mst_grid = matlab_mst.matlab_mst_boolean_array(ifg_instance_updated)
 
+        # Insert INTERP into the params for timeseries calculation
+        params = insert_time_series_interpolation(ifg_instance_updated, params)
+
     # write mst output to a file
     mst_mat_binary_file = os.path.join(
         PYRATEPATH, params[cf.OUT_DIR], 'mst_mat')
@@ -139,6 +142,17 @@ def process_ifgs(ifg_paths_or_instance, params):
     #     i = None  # force close    TODO: may need to implement close()
 
     logging.debug('PyRate run completed\n')
+
+
+def insert_time_series_interpolation(ifg_instance_updated, params):
+    _, _, ntrees = matlab_mst.matlab_mst_kruskal(ifg_instance_updated.id,
+                                                 ifg_instance_updated.master_num,
+                                                 ifg_instance_updated.slave_num,
+                                                 ifg_instance_updated.nan_frac,
+                                                 ntrees=True)
+    # if ntrees=1, no interpolation; otherwise interpolate
+    params[cf.TIME_SERIES_INTERP] = ntrees - 1
+    return params
 
 
 def remove_orbital_error(ifgs, params):

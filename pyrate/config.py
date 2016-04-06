@@ -75,6 +75,7 @@ PYRATEPATH = os.environ['PYRATEPATH']
 
 # general constants
 NO_MULTILOOKING = 1
+TIME_SERIES_INTERP = None
 
 # constants for lookups
 #: STR; Name of input interferogram list file
@@ -175,8 +176,6 @@ TIME_SERIES_CAL = 'tscal'
 TIME_SERIES_METHOD = 'tsmethod'
 #: INT; Number of required input observations per pixel for time series inversion
 TIME_SERIES_PTHRESH = 'ts_pthr'
-#: BOOL (1/0); Time series parameter to interpolate across epoch gaps NOT CURRENTLY USED
-TIME_SERIES_INTERP = 'ts_interp'
 #: INT (1/2); Order of Laplacian smoothing operator, first or second order NOT CURRENTLY USED
 TIME_SERIES_SM_ORDER = 'smorder'
 #: REAL; Laplacian smoothing factor (0: calculate & plot L-curve; others: using the specific smoothing factor 10**smfactor) NOT CURRENTLY USED 
@@ -252,12 +251,11 @@ PARAM_CONVERSION = {
     LR_MAXSIG : (int, 2), # Pirate default
 
     #TIME_SERIES_CAL : (bool, False),
-    TIME_SERIES_CAL : (int, 0),
-    TIME_SERIES_PTHRESH : (int, 20),
+    TIME_SERIES_CAL: (int, 0),
+    TIME_SERIES_PTHRESH: (int, 20),
     TIME_SERIES_SM_FACTOR: (float, None),
     TIME_SERIES_SM_ORDER: (int, None),
     TIME_SERIES_METHOD: (int, 1),
-    TIME_SERIES_INTERP: (int, 0),
 
     PARALLEL: (int, None),
     PROCESSES: (int, 8),
@@ -267,8 +265,6 @@ PARAM_CONVERSION = {
     LUIGI: (int, 0)
     }
     #TIME_SERIES_INTERP : (bool, False)
-
-
 
 
 def get_config_params(path):

@@ -156,6 +156,9 @@ class MatlabTimeSeriesEquality(unittest.TestCase):
         ifg_instance_updated, epoch_list = \
             matlab_mst.get_nml(ifg_instance, nan_conversion=True)
         mst_grid = matlab_mst.matlab_mst_boolean_array(ifg_instance_updated)
+        params = run_pyrate.insert_time_series_interpolation(
+            ifg_instance_updated, params)
+
 
         for i in ifgs:
             if not i.is_open:
@@ -299,6 +302,8 @@ class MatlabTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
         ifg_instance_updated, epoch_list = \
             matlab_mst.get_nml(ifg_instance, nan_conversion=True)
         mst_grid = matlab_mst.matlab_mst_boolean_array(ifg_instance_updated)
+        params = run_pyrate.insert_time_series_interpolation(
+            ifg_instance_updated, params)
 
         for i in ifgs:
             if not i.is_open:

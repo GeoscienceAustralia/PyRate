@@ -147,7 +147,7 @@ def sort_list(id_l, master_l, slave_l, nan_frac_l):
     return np.sort(sort_list, order=['nan_frac'])
 
 
-def matlab_mst_kruskal(id_l, master_l, slave_l, nan_frac_l, connect_flag=False):
+def matlab_mst_kruskal(id_l, master_l, slave_l, nan_frac_l, ntrees=False):
     """
     This is an implementation of the pi-rate mst_kruskal.m
     :param id_l: list of ifg file ids
@@ -184,7 +184,7 @@ def matlab_mst_kruskal(id_l, master_l, slave_l, nan_frac_l, connect_flag=False):
     mst_list = np.sort(mst_list, order=['id'])
 
     # count isolated trees
-    if connect_flag:
+    if ntrees:
         return calculate_connect_and_ntrees(connect, mst_list)
     else:
         return [i[0] for i in mst_list]
