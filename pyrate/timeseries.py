@@ -95,9 +95,9 @@ def time_series(ifgs, params, vcmt, mst=None):
         mst = ~isnan(ifg_data)
 
     if parallel == 1:
-        tsvel_matrix = parmap.map(time_series_by_rows, range(nrows), B0, SMFACTOR,
-                                  SMORDER, ifg_data, mst, ncols, nvelpar,
-                                  pthresh, vcmt, TSMETHOD, INTERP,
+        tsvel_matrix = parmap.map(time_series_by_rows, range(nrows), B0,
+                                  SMFACTOR, SMORDER, ifg_data, mst, ncols,
+                                  nvelpar, pthresh, vcmt, TSMETHOD, INTERP,
                                   processes=processes)
     elif parallel == 2:
         res = parmap.starmap(time_series_by_pixel,
@@ -118,7 +118,6 @@ def time_series(ifgs, params, vcmt, mst=None):
     # not even this is necessary here, perform late for performance
     # tsincr = tsvel_matrix * span
 
-
     # convert zeros to nans
     # SB: perform this after tsvel_matrix has been nan converted,
     # saves the step of comparing a large matrix (tsincr) to zero.
@@ -126,13 +125,13 @@ def time_series(ifgs, params, vcmt, mst=None):
     tsvel_matrix = where(tsvel_matrix == 0, nan, tsvel_matrix)
     tsincr = tsvel_matrix * span
     tscum = cumsum(tsincr, 2)
-    tscum = where(tscum == 0, nan, tscum)
+    # tscum = where(tscum == 0, nan, tscum) # SB: not performed in matlab
 
     return tsincr, tscum, tsvel_matrix
 
 
-def time_series_by_rows(row, B0, SMFACTOR, SMORDER, ifg_data, mst, ncols, nvelpar,
-                        pthresh, vcmt, TSMETHOD, INTERP):
+def time_series_by_rows(row, B0, SMFACTOR, SMORDER, ifg_data, mst, ncols,
+                        nvelpar, pthresh, vcmt, TSMETHOD, INTERP):
     tsvel = np.empty(shape=(ncols, nvelpar), dtype=np.float32)
     for col in range(ncols):
         tsvel[col, :] = time_series_by_pixel(
@@ -152,8 +151,8 @@ def remove_rank_def_rows(B, nvelpar, ifgv, sel):
     return B, ifgv, sel, rmrow
 
 
-def time_series_by_pixel(row, col, B0, SMFACTOR, SMORDER, ifg_data, mst, nvelpar,
-                         pthresh, vcmt, method, interp):
+def time_series_by_pixel(row, col, B0, SMFACTOR, SMORDER, ifg_data, mst,
+                         nvelpar, pthresh, vcmt, method, interp):
     # check pixel for non-redundant ifgs;
     sel = np.nonzero(mst[:, row, col])[0]  # trues in mst are chosen
     if len(sel) >= pthresh:
@@ -165,7 +164,8 @@ def time_series_by_pixel(row, col, B0, SMFACTOR, SMORDER, ifg_data, mst, nvelpar
             rmrow = asarray([0])  # dummy
 
             while len(rmrow) > 0:
-                B, ifgv, sel, rmrow = remove_rank_def_rows(B, nvelpar, ifgv, sel)
+                B, ifgv, sel, rmrow = remove_rank_def_rows(
+                    B, nvelpar, ifgv, sel)
 
             # Some epochs have been deleted; get valid epoch indices
             velflag = sum(abs(B), 0)
@@ -380,7 +380,7 @@ if __name__ == "__main__":
 
     from pyrate.scripts import run_pyrate
     from pyrate import matlab_mst_kruskal as matlab_mst
-    from pyrate.tests.common import SYD_TEST_MATLAB_ORBITAL_DIR, SYD_TEST_OUT
+    from pyrate.tests.common import SYD_TEST_OUT
     from pyrate.tests.common import SYD_TEST_DIR
     from pyrate import reference_phase_estimation as rpe
     from pyrate import vcm
@@ -393,10 +393,10 @@ if __name__ == "__main__":
     os.makedirs(SYD_TEST_OUT)
 
     params = cf.get_config_params(
-            os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'pyrate_system_test.conf'))
+            os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf'))
     params[cf.REF_EST_METHOD] = 2
     call(["python", "pyrate/scripts/run_prepifg.py",
-          os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'pyrate_system_test.conf')])
+          os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf')])
 
     xlks, ylks, crop = run_pyrate.transform_params(params)
 
@@ -436,30 +436,32 @@ if __name__ == "__main__":
 
     _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
 
-    # Calculate interferogram noise
+    # Calculate interferrogram noise
     maxvar = [vcm.cvd(i)[0] for i in ifgs]
 
     # Calculate temporal variance-covariance matrix
     vcmt = vcm.get_vcmt(ifgs, maxvar)
 
-    tsincr_path = os.path.join(SYD_TIME_SERIES_DIR, 'ts_incr_interp0_method1.csv')
+    tsincr_path = os.path.join(SYD_TIME_SERIES_DIR, 'ts_incr_interp0_method2.csv')
     ts_incr = np.genfromtxt(tsincr_path, delimiter=',')
-    tserr_path = os.path.join(SYD_TIME_SERIES_DIR, 'ts_error_interp0_method1.csv')
-    ts_err = np.genfromtxt(tserr_path, delimiter=',')
-    tscum_path = os.path.join(SYD_TIME_SERIES_DIR, 'ts_cum_interp0_method1.csv')
+    tscum_path = os.path.join(SYD_TIME_SERIES_DIR, 'ts_cum_interp0_method2.csv')
     ts_cum = np.genfromtxt(tscum_path, delimiter=',')
     np.set_printoptions(precision=4)
+
+    # change to tsmethod 2
+
+    params[cf.TIME_SERIES_METHOD] = 2
     # Calculate time series
-    if params[cf.TIME_SERIES_CAL] != 0:
-        tsincr, tscum, tsvel = run_pyrate.calculate_time_series(
-            ifgs, params, vcmt, mst=mst_grid)
 
-        nan_index = np.isnan(np.ravel(tsincr))
-        ts_incr = np.reshape(ts_incr, newshape=tsincr.shape, order='F')
-        ts_cum = np.reshape(ts_cum, newshape=tsincr.shape, order='F')
+    tsincr, tscum, tsvel = run_pyrate.calculate_time_series(
+        ifgs, params, vcmt, mst=mst_grid)
 
-        np.testing.assert_array_almost_equal(
-            ts_incr, tsincr, decimal=4)
+    nan_index = np.isnan(np.ravel(tsincr))
+    ts_incr = np.reshape(ts_incr, newshape=tsincr.shape, order='F')
+    ts_cum = np.reshape(ts_cum, newshape=tsincr.shape, order='F')
 
-        np.testing.assert_array_almost_equal(
-            ts_cum, tscum, decimal=4)
+    np.testing.assert_array_almost_equal(
+        ts_incr, tsincr, decimal=4)
+
+    np.testing.assert_array_almost_equal(
+        ts_cum, tscum, decimal=4)

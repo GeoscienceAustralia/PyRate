@@ -23,7 +23,6 @@ from pyrate.config import TIME_SERIES_INTERP, TIME_SERIES_PTHRESH
 from pyrate.config import PARALLEL, PROCESSES
 from pyrate.scripts import run_pyrate, run_prepifg
 from pyrate import matlab_mst_kruskal as matlab_mst
-from pyrate.tests.common import SYD_TEST_DIR, SYD_TEST_OUT
 from pyrate.tests.common import SYD_TEST_DIR
 from pyrate import config as cf
 from pyrate import reference_phase_estimation as rpe
@@ -188,7 +187,7 @@ class MatlabTimeSeriesEquality(unittest.TestCase):
         SYD_TIME_SERIES_DIR = os.path.join(SYD_TEST_DIR, 'matlab_time_series')
         tsincr_path = os.path.join(SYD_TIME_SERIES_DIR,
                                    'ts_incr_interp0_method1.csv')
-        ts_incr = np.genfromtxt(tsincr_path, delimiter=',')
+        ts_incr = np.genfromtxt(tsincr_path)
 
         # the matlab tsvel return is a bit pointless and not tested here
         # tserror is not returned
@@ -196,7 +195,7 @@ class MatlabTimeSeriesEquality(unittest.TestCase):
         # ts_err = np.genfromtxt(tserr_path, delimiter=',')
         tscum_path = os.path.join(SYD_TIME_SERIES_DIR,
                                   'ts_cum_interp0_method1.csv')
-        ts_cum = np.genfromtxt(tscum_path, delimiter=',')
+        ts_cum = np.genfromtxt(tscum_path)
 
         params[cf.PARALLEL] = 1
         # Calculate time series
@@ -322,7 +321,6 @@ class MatlabTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
         _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
 
         # Calculate interferogram noise
-        # TODO: assign maxvar to ifg metadata (and geotiff)?
         maxvar = [vcm.cvd(i)[0] for i in ifgs]
 
         # Calculate temporal variance-covariance matrix
@@ -331,7 +329,7 @@ class MatlabTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
         SYD_TIME_SERIES_DIR = os.path.join(SYD_TEST_DIR, 'matlab_time_series')
         tsincr_path = os.path.join(SYD_TIME_SERIES_DIR,
                                    'ts_incr_interp0_method2.csv')
-        ts_incr = np.genfromtxt(tsincr_path, delimiter=',')
+        ts_incr = np.genfromtxt(tsincr_path)
 
         # the matlab tsvel return is a bit pointless and not tested here
         # tserror is not returned
@@ -339,19 +337,20 @@ class MatlabTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
         # ts_err = np.genfromtxt(tserr_path, delimiter=',')
         tscum_path = os.path.join(SYD_TIME_SERIES_DIR,
                                   'ts_cum_interp0_method2.csv')
-        ts_cum = np.genfromtxt(tscum_path, delimiter=',')
+        ts_cum = np.genfromtxt(tscum_path)
 
         params[cf.TIME_SERIES_METHOD] = 2
         params[cf.PARALLEL] = 1
         # Calculate time series
         if params[cf.TIME_SERIES_CAL] != 0:
-            cls.tsincr, cls.tscum, cls.tsvel = run_pyrate.calculate_time_series(
+            cls.tsincr, cls.tscum, _ = run_pyrate.calculate_time_series(
                 ifgs, params, vcmt, mst=mst_grid)
 
         params[cf.PARALLEL] = 2
+
         # Calculate time series
         if params[cf.TIME_SERIES_CAL] != 0:
-            cls.tsincr_2, cls.tscum_2, cls.tsvel_2 = \
+            cls.tsincr_2, cls.tscum_2, _ = \
                 run_pyrate.calculate_time_series(
                 ifgs, params, vcmt, mst=mst_grid
                 )
@@ -359,7 +358,7 @@ class MatlabTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
         params[cf.PARALLEL] = 0
         # Calculate time series serailly by the pixel
         if params[cf.TIME_SERIES_CAL] != 0:
-            cls.tsincr_0, cls.tscum_0, cls.tsvel_0 = \
+            cls.tsincr_0, cls.tscum_0, _ = \
                 run_pyrate.calculate_time_series(
                 ifgs, params, vcmt, mst=mst_grid
                 )
@@ -374,7 +373,6 @@ class MatlabTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
     def test_time_series_equality_parallel_by_rows(self):
 
         self.assertEqual(self.tsincr.shape, self.tscum.shape)
-        self.assertEqual(self.tsvel.shape, self.tsincr.shape)
 
         np.testing.assert_array_almost_equal(
             self.ts_incr, self.tsincr, decimal=1)
@@ -385,7 +383,6 @@ class MatlabTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
     def test_time_series_equality_parallel_by_the_pixel(self):
 
         self.assertEqual(self.tsincr_2.shape, self.tscum_2.shape)
-        self.assertEqual(self.tsvel_2.shape, self.tsincr_2.shape)
 
         np.testing.assert_array_almost_equal(
             self.ts_incr, self.tsincr_2, decimal=1)
@@ -396,13 +393,14 @@ class MatlabTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
     def test_time_series_equality_serial_by_the_pixel(self):
 
         self.assertEqual(self.tsincr_0.shape, self.tscum_0.shape)
-        self.assertEqual(self.tsvel_0.shape, self.tsincr_0.shape)
 
         np.testing.assert_array_almost_equal(
-            self.ts_incr, self.tsincr_0, decimal=1)
+            self.ts_incr, self.tsincr_0, decimal=3)
 
         np.testing.assert_array_almost_equal(
-            self.ts_cum, self.tscum_0, decimal=1)
+            self.ts_cum, self.tscum_0, decimal=3)
+
+
 
 if __name__ == "__main__":
     unittest.main()
