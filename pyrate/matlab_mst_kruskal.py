@@ -184,14 +184,17 @@ def matlab_mst_kruskal(id_l, master_l, slave_l, nan_frac_l, connect_flag=False):
     mst_list = np.sort(mst_list, order=['id'])
 
     # count isolated trees
-    # TODO: test connect_flag block below
     if connect_flag:
-        cnt = np.where(np.sum(connect, axis=1) == 1)
-        connect = np.delete(connect, cnt, axis=0)
-        # return mst, connect, ntrees
-        return [i[0] for i in mst_list], connect, connect.shape[0]
+        return calculate_connect_and_ntrees(connect, mst_list)
     else:
         return [i[0] for i in mst_list]
+
+
+def calculate_connect_and_ntrees(connect, mst_list):
+    cnt = np.where(np.sum(connect, axis=1) == 1)
+    connect = np.delete(connect, cnt, axis=0)
+    # return mst, connect, ntrees
+    return [i[0] for i in mst_list], connect, connect.shape[0]
 
 
 def matlab_mst(ifg_list_, p_threshold=1):
