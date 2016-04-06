@@ -11,7 +11,7 @@ from pyrate.matlab_mst_kruskal import matlab_mst_kruskal
 from pyrate.matlab_mst_kruskal import matlab_mst, matlab_mst_boolean_array
 from pyrate.tests.common import sydney_data_setup_ifg_file_list
 from pyrate.matlab_mst_kruskal import IfgListMatlabTest as IfgList
-
+from pyrate.matlab_mst_kruskal import calculate_connect_and_ntrees
 
 class IfgListTest(unittest.TestCase):
 
@@ -80,6 +80,33 @@ class MatlabMstKruskalTest(unittest.TestCase):
                                 self.ifg_list.slave_num, self.ifg_list.nan_frac)
         ifg_list_mst = [i + 1 for i in ifg_list_mst]  # add 1 to each index
         self.assertSequenceEqual(ifg_list_mst, self.ifg_list_mst_matlab)
+
+
+class MSTKruskalCalcConnectAndNTrees(unittest.TestCase):
+    def test_calculate_connect_and_ntrees(self):
+        connect_start = np.ones(shape=(10, 10), dtype=bool)
+        connect_start[1, :-1] = False
+        _, connect, ntrees = calculate_connect_and_ntrees(connect_start, [])
+        self.assertEqual(ntrees, 9)
+        np.testing.assert_array_equal(connect,
+                                      np.ones(shape=(9, 10), dtype=bool))
+        connect_start[2:5, :-1] = False
+
+        _, connect, ntrees = calculate_connect_and_ntrees(connect_start, [])
+        self.assertEqual(ntrees, 6)
+        np.testing.assert_array_equal(connect,
+                                      np.ones(shape=(6, 10), dtype=bool))
+
+    def test_calculate_connect_and_ntrees_raise_1(self):
+        connect_start = np.eye(10, dtype=bool)
+        connect_start[1, :] = False
+        with self.assertRaises(ValueError):
+            calculate_connect_and_ntrees(connect_start, [])
+
+    def test_calculate_connect_and_ntrees_raise_2(self):
+        connect_start = np.eye(10, dtype=bool)
+        with self.assertRaises(ValueError):
+            calculate_connect_and_ntrees(connect_start, [])
 
 
 class MatlabMSTTests(unittest.TestCase):

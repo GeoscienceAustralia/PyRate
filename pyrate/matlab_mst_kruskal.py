@@ -147,7 +147,7 @@ def sort_list(id_l, master_l, slave_l, nan_frac_l):
     return np.sort(sort_list, order=['nan_frac'])
 
 
-def matlab_mst_kruskal(id_l, master_l, slave_l, nan_frac_l, connect_flag=False):
+def matlab_mst_kruskal(id_l, master_l, slave_l, nan_frac_l, connect_flag=True):
     """
     This is an implementation of the pi-rate mst_kruskal.m
     :param id_l: list of ifg file ids
@@ -191,10 +191,16 @@ def matlab_mst_kruskal(id_l, master_l, slave_l, nan_frac_l, connect_flag=False):
 
 
 def calculate_connect_and_ntrees(connect, mst_list):
+    zero_count = np.where(np.sum(connect, axis=1) == 0)[0]
+    if zero_count.shape[0]:
+        raise ValueError('Input connect matrix not compatible')
     cnt = np.where(np.sum(connect, axis=1) == 1)
     connect = np.delete(connect, cnt, axis=0)
+    ntrees = connect.shape[0]
+    if not ntrees:
+        raise ValueError('No tree found. Check connect matrix')
     # return mst, connect, ntrees
-    return [i[0] for i in mst_list], connect, connect.shape[0]
+    return [i[0] for i in mst_list], connect, ntrees
 
 
 def matlab_mst(ifg_list_, p_threshold=1):
