@@ -15,14 +15,11 @@ from pyrate.algorithm import ifg_date_lookup
 from pyrate.algorithm import ifg_date_index_lookup
 from pyrate.matlab_mst_kruskal import matlab_mst
 
-
-
 # TODO: may need to implement memory saving row-by-row access
 # TODO: document weighting by either Nan fraction OR variance
 
 
-# TODO: this does not appear to be used anywhere
-def default_mst(ifgs):
+def is_mst_tree(ifgs):
     """
     Returns default MST dict for the given Ifgs. The MST is calculated using a
     weighting based on the number of incoherent cells in the phase band.
@@ -33,8 +30,8 @@ def default_mst(ifgs):
     edges_with_weights_for_networkx = [(i.master, i.slave, i.nan_fraction)
                                        for i in ifgs]
     g_nx = _build_graph_networkx(edges_with_weights_for_networkx)
-    mst = nx.minimum_spanning_tree(g_nx).edges()
-    return mst
+    mst = nx.minimum_spanning_tree(g_nx)
+    return mst.edges(), nx.is_tree(mst)
 
 
 def _build_graph_networkx(edges_with_weights):
@@ -46,7 +43,7 @@ def _build_graph_networkx(edges_with_weights):
     return g
 
 
-def mst_matrix_ifg_indices_as_boolean_array(ifgs):
+def mst_boolean_array(ifgs):
     """
     Filter: returns array of independent ifgs from the pixel by pixel MST,
     like that used by the MATLAB version Pirate.

@@ -53,7 +53,12 @@ def process_ifgs(ifg_paths_or_instance, params):
             if not i.mm_converted:
                 i.convert_to_mm()
                 i.write_modified_phase()
-        mst_grid = mst.mst_matrix_ifg_indices_as_boolean_array(ifgs)
+        mst_grid = mst.mst_boolean_array(ifgs)
+        # check if mst is not a tree, then do interpolate
+        if mst.is_mst_tree(ifgs)[1]:
+            params[cf.TIME_SERIES_INTERP] = 0
+        else:
+            params[cf.TIME_SERIES_INTERP] = 1
     else:
         assert isinstance(ifg_paths_or_instance, matlab_mst.IfgListPyRate)
         ifgs = ifg_paths_or_instance.ifgs
@@ -371,7 +376,7 @@ def main():
 
     ifg_instance = matlab_mst.IfgListPyRate(datafiles=dest_paths)
 
-    if int(pars[cf.NETWORKX_OR_MATLAB_FLAG]):
+    if pars[cf.NETWORKX_OR_MATLAB_FLAG]:
         msg = 'Running networkx mst'
         print msg
         logging.debug(msg)

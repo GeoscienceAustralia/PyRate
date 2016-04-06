@@ -103,7 +103,7 @@ class DefaultMSTTests(unittest.TestCase):
         ifgs = sydney5_mock_ifgs()
         dates = [(i.master, i.slave) for i in ifgs]
 
-        res = mst.default_mst(ifgs)
+        res, _ = mst.is_mst_tree(ifgs)
         num_edges = len(res)
         self.assertEqual(num_edges, len(ifgs))
 

@@ -18,6 +18,7 @@ from pyrate.shared import Ifg
 
 DTYPE = [('id', int), ('master', int), ('slave', int), ('nan_frac', float)]
 
+
 class IfGMeta(object):
     __metaclass__ = ABCMeta
     ifgs = None
@@ -159,9 +160,7 @@ def matlab_mst_kruskal(id_l, master_l, slave_l, nan_frac_l, ntrees=False):
 
     num_ifgs = len(master_l)
     num_images = max(max(master_l), max(slave_l))
-    # print 'ifg_list', ifg_list_
     ifg_sorted = sort_list(id_l, master_l, slave_l, nan_frac_l)
-    # print 'ifg_sorted', ifg_sorted
 
     # add one to ensure index number + 1
     connect = np.eye(num_images + 1, dtype=np.bool)

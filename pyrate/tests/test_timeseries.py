@@ -69,7 +69,7 @@ class TimeSeriesTests(unittest.TestCase):
     def setUpClass(cls):
         cls.ifgs = sydney_data_setup()
         cls.params = default_params()
-        cls.mstmat = mst.mst_matrix_ifg_indices_as_boolean_array(cls.ifgs)
+        cls.mstmat = mst.mst_boolean_array(cls.ifgs)
         cls.maxvar = [vcm.cvd(i)[0] for i in cls.ifgs]
         cls.vcmt = vcm.get_vcmt(cls.ifgs, cls.maxvar)
 

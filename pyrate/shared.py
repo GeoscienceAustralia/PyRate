@@ -199,6 +199,7 @@ class Ifg(RasterBase):
         self.mm_converted = False
         self.data = None
         self.meta_data = None
+        self.wavelength = None
 
     def open(self, readonly=None):
         """
