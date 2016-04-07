@@ -119,6 +119,21 @@ class DefaultMSTTests(unittest.TestCase):
                 self.assertIn(node, mst_dates)
 
 
+class NetworkxMSTTreeCheck(unittest.TestCase):
+    def setUp(self):
+        from pyrate.tests import common
+        self.ifgs = common.sydney_data_setup()
+
+    def test_assert_is_not_tree(self):
+        from pyrate import mst
+        non_overlapping = [1, 2, 5, 6, 12, 13, 14, 15, 16, 17]
+        ifgs_non_overlapping = [ifg for i, ifg in enumerate(self.ifgs)
+                                if i in non_overlapping]
+        self.assertFalse(mst.is_mst_tree(ifgs_non_overlapping)[1])
+
+    def test_sydney_data_tree(self):
+        self.assertTrue(mst.is_mst_tree(self.ifgs)[1])
+
 
 if __name__ == "__main__":
     unittest.main()
