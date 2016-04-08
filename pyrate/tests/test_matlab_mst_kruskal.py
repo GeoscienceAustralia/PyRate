@@ -112,25 +112,58 @@ class MSTKruskalCalcConnectAndNTrees(unittest.TestCase):
 
 class MSTKruskalConnectAndTresSydneyData(unittest.TestCase):
 
-    def setUp(self):
-        ifg_instance = IfgList(sydney_data_setup_ifg_file_list())
-        self.ifg_list, _ = get_nml(ifg_instance)
-
     def test_calculate_connect_and_ntrees_sydney_data(self):
-        from pyrate.tests import common
-        ifgs = common.sydney_data_setup()
-
+        ifg_instance = IfgList(sydney_data_setup_ifg_file_list())
+        ifg_list, _ = get_nml(ifg_instance)
         mst, connected, ntrees = matlab_mst_kruskal(
-            id_l=self.ifg_list.id,
-            master_l=self.ifg_list.master_num,
-            slave_l=self.ifg_list.slave_num,
-            nan_frac_l=self.ifg_list.nan_frac,
+            id_l=ifg_list.id,
+            master_l=ifg_list.master_num,
+            slave_l=ifg_list.slave_num,
+            nan_frac_l=ifg_list.nan_frac,
             ntrees=True
             )
 
         self.assertTrue(connected[0].all())
         self.assertEqual(ntrees, 1)
         self.assertEqual(len(connected[0]), len(mst) + 1)
+
+    def test_assert_is_not_tree(self):
+        non_overlapping = [1, 2, 5, 6, 12, 13, 14, 15, 16, 17]
+        sydney_files = sydney_data_setup_ifg_file_list()
+        datafiles = [f for i, f in enumerate(sydney_files)
+                     if i+1 in non_overlapping]
+        non_overlapping_ifg_isntance = IfgList(datafiles)
+        ifg_list, _ = get_nml(non_overlapping_ifg_isntance)
+
+        mst, connected, ntrees = matlab_mst_kruskal(
+            id_l=ifg_list.id,
+            master_l=ifg_list.master_num,
+            slave_l=ifg_list.slave_num,
+            nan_frac_l=ifg_list.nan_frac,
+            ntrees=True
+            )
+        self.assertEqual(connected.shape[0], 3)
+        self.assertEqual(ntrees, 3)
+
+    def test_assert_is_tree(self):
+        overlapping = [1, 2, 3, 4, 6, 7, 10, 11, 16, 17]
+        sydney_files = sydney_data_setup_ifg_file_list()
+        datafiles = [f for i, f in enumerate(sydney_files)
+                     if i+1 in overlapping]
+
+        overlapping_ifg_isntance = IfgList(datafiles)
+
+        ifg_list, _ = get_nml(overlapping_ifg_isntance)
+
+        _, connected, ntrees = matlab_mst_kruskal(
+            id_l=ifg_list.id,
+            master_l=ifg_list.master_num,
+            slave_l=ifg_list.slave_num,
+            nan_frac_l=ifg_list.nan_frac,
+            ntrees=True
+            )
+        self.assertEqual(ntrees, 1)
+        self.assertEqual(connected.shape[0], 1)
 
 
 class MatlabMSTTests(unittest.TestCase):
