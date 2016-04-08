@@ -268,7 +268,6 @@ class MatlabTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
     Checks the python function to that of Matlab pirate ts.m and tsinvlap.m
     functionality.
     """
-    # TODO: Investigate why this method does not match matlab
     @classmethod
     def setUpClass(cls):
         params = cf.get_config_params(
