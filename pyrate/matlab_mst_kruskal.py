@@ -64,6 +64,11 @@ class IfGMeta(object):
 
 
 class IfgListPyRate(IfGMeta):
+    """
+    copy of matlab ifglist in getnml.m.
+    Please note that we don't need BaseT unless we are using variance in ifg
+    data as cost.
+    """
 
     def __init__(self, datafiles):
         self.datafiles = datafiles
@@ -85,34 +90,6 @@ class IfgListPyRate(IfGMeta):
         return self.datafiles
 
 
-class IfgListMatlabTest(IfGMeta):
-    """
-    copy of matlab ifglist in getnml.m.
-    1. Please note that we don't need BaseT unless we are using variance in ifg
-    data as cost.
-    2.
-    """
-
-    def __init__(self, datafiles=None):
-        self.datafiles = datafiles
-        self.nml = self.get_nml_list()
-        self.ifgs = self.get_ifgs_list()
-        self.id = range(len(self.nml))
-        self.base_T = None
-        self.max_var = np.zeros_like(self.id)
-        self.alpha = np.zeros_like(self.id)
-        self.nan_frac = np.zeros_like(self.id)
-        self.master_num = None
-        self.slave_num = None
-        self.n = None
-
-    def get_ifgs_list(self):
-        return sydney_data_setup(self.datafiles)
-
-    def get_nml_list(self):
-        return sydney_data_setup_ifg_file_list(self.datafiles)
-
-
 def data_setup(datafiles):
     '''Returns Ifg objs for the files in the sydney test dir
     input phase data is in radians;
@@ -131,21 +108,21 @@ def get_nml(ifg_list_instance, nan_conversion=False, prefix_len=4):
     A reproduction of getnml.m, the matlab function in pi-rate.
     Note: the matlab version tested does not have nan's.
     """
-    epoch_list_, n = get_epochs_and_n(ifg_list_instance.ifgs)
+    _epoch_list, n = get_epochs_and_n(ifg_list_instance.ifgs)
     ifg_list_instance.reshape_n(n)
     if nan_conversion:
         ifg_list_instance.update_nan_frac()  # turn on for nan conversion
         ifg_list_instance.convert_nans(nan_conversion=nan_conversion)
     ifg_list_instance.make_data_stack()
-    return ifg_list_instance, epoch_list_
+    return ifg_list_instance, _epoch_list
 
 
 def sort_list(id_l, master_l, slave_l, nan_frac_l):
-    sort_list = map(lambda i, m, s, n: (i, m, s, n),
+    sorted_list = map(lambda i, m, s, n: (i, m, s, n),
                     id_l, master_l, slave_l, nan_frac_l)
 
-    sort_list = np.array(sort_list, dtype=DTYPE)
-    return np.sort(sort_list, order=['nan_frac'])
+    sorted_list = np.array(sorted_list, dtype=DTYPE)
+    return np.sort(sorted_list, order=['nan_frac'])
 
 
 def matlab_mst_kruskal(id_l, master_l, slave_l, nan_frac_l, ntrees=False):

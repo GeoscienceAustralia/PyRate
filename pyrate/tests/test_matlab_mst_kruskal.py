@@ -10,8 +10,9 @@ from pyrate.matlab_mst_kruskal import sort_list
 from pyrate.matlab_mst_kruskal import matlab_mst_kruskal
 from pyrate.matlab_mst_kruskal import matlab_mst, matlab_mst_boolean_array
 from pyrate.tests.common import sydney_data_setup_ifg_file_list
-from pyrate.matlab_mst_kruskal import IfgListMatlabTest as IfgList
+from pyrate.matlab_mst_kruskal import IfgListPyRate as IfgList
 from pyrate.matlab_mst_kruskal import calculate_connect_and_ntrees
+
 
 class IfgListTest(unittest.TestCase):
 
@@ -25,7 +26,7 @@ class IfgListTest(unittest.TestCase):
         self.matlab_slvnum = [3, 5, 7, 9, 5, 6, 8, 11, 12,  8, 13, 9,
                               10, 13, 10, 11, 12]
 
-        ifg_instance = IfgList()
+        ifg_instance = IfgList(sydney_data_setup_ifg_file_list())
         self.ifg_list, self.epoch_list = get_nml(ifg_instance)
 
     def test_matlab_n(self):
@@ -46,7 +47,7 @@ class IfgListTest(unittest.TestCase):
 class MatlabMstKruskalTest(unittest.TestCase):
 
     def setUp(self):
-        ifg_instance = IfgList()
+        ifg_instance = IfgList(sydney_data_setup_ifg_file_list())
         self.ifg_list, _ = get_nml(ifg_instance)
         self.sorted_list = sort_list(self.ifg_list.id, self.ifg_list.master_num,
                                 self.ifg_list.slave_num, self.ifg_list.nan_frac)
@@ -107,6 +108,29 @@ class MSTKruskalCalcConnectAndNTrees(unittest.TestCase):
         connect_start = np.eye(10, dtype=bool)
         with self.assertRaises(ValueError):
             calculate_connect_and_ntrees(connect_start, [])
+
+
+class MSTKruskalConnectAndTresSydneyData(unittest.TestCase):
+
+    def setUp(self):
+        ifg_instance = IfgList(sydney_data_setup_ifg_file_list())
+        self.ifg_list, _ = get_nml(ifg_instance)
+
+    def test_calculate_connect_and_ntrees_sydney_data(self):
+        from pyrate.tests import common
+        ifgs = common.sydney_data_setup()
+
+        mst, connected, ntrees = matlab_mst_kruskal(
+            id_l=self.ifg_list.id,
+            master_l=self.ifg_list.master_num,
+            slave_l=self.ifg_list.slave_num,
+            nan_frac_l=self.ifg_list.nan_frac,
+            ntrees=True
+            )
+
+        self.assertTrue(connected[0].all())
+        self.assertEqual(ntrees, 1)
+        self.assertEqual(len(connected[0]), len(mst) + 1)
 
 
 class MatlabMSTTests(unittest.TestCase):
