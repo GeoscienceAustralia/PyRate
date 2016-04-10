@@ -118,8 +118,8 @@ def get_nml(ifg_list_instance, nan_conversion=False, prefix_len=4):
 
 
 def sort_list(id_l, master_l, slave_l, nan_frac_l):
-    sorted_list = map(lambda i, m, s, n: (i, m, s, n),
-                    id_l, master_l, slave_l, nan_frac_l)
+    sorted_list = [(i, m, s, n) for i, m, s, n in
+                   zip(id_l, master_l, slave_l, nan_frac_l)]
 
     sorted_list = np.array(sorted_list, dtype=DTYPE)
     return np.sort(sorted_list, order=['nan_frac'])
