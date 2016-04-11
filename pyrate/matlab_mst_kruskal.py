@@ -117,6 +117,7 @@ def get_nml(ifg_list_instance, nan_conversion=False, prefix_len=4):
     return ifg_list_instance, _epoch_list
 
 
+# SB: this is not used anywhere now
 def sort_list(id_l, master_l, slave_l, nan_frac_l):
     sorted_list = [(i, m, s, n) for i, m, s, n in
                    zip(id_l, master_l, slave_l, nan_frac_l)]
@@ -133,8 +134,6 @@ def matlab_mst_kruskal(edges, ntrees=False):
     """
 
     num_ifgs = len(edges)
-    # id_l = [e[0] for e in edges]
-    # nan_frac_l = [e[3] for e in edges]
     master_l = [e[1] for e in edges]
     slave_l = [e[2] for e in edges]
 
