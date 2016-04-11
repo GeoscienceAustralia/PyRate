@@ -160,23 +160,6 @@ class MatlabMSTTests(unittest.TestCase):
     def setUp(self):
         self.ifgs = sydney_data_setup()
         self.ifg_file_list = sydney_data_setup_ifg_file_list()
-        self.matlab_ifg_list = ['geo_060619-061002.tif',
-                                'geo_060828-061211.tif',
-                                'geo_061002-070219.tif',
-                                'geo_061002-070430.tif',
-                                'geo_061106-061211.tif',
-                                'geo_061106-070115.tif',
-                                'geo_061106-070326.tif',
-                                'geo_061211-070709.tif',
-                                'geo_061211-070813.tif',
-                                'geo_070115-070326.tif',
-                                'geo_070115-070917.tif',
-                                'geo_070219-070430.tif',
-                                'geo_070219-070604.tif',
-                                'geo_070326-070917.tif',
-                                'geo_070430-070604.tif',
-                                'geo_070604-070709.tif',
-                                'geo_070709-070813.tif']
 
         self.matlab_mst_list = ['geo_060619-061002.tif',
                                 'geo_060828-061211.tif',
@@ -191,24 +174,8 @@ class MatlabMSTTests(unittest.TestCase):
                                 'geo_070219-070604.tif',
                                 'geo_070604-070709.tif']
 
-        ifg_ordered_list = []
-        # make python list of tifs same as that of matlab
-        for i, f in enumerate(self.ifg_file_list):
-            ifg_ordered_list.append(self.matlab_ifg_list[i])
-            self.assertIn(os.path.split(f)[-1], self.matlab_ifg_list)
-
-        # reorder ifg_file_list as per the the matlab list
-        self.ifg_file_list = sydney_data_setup_ifg_file_list(ifg_ordered_list)
-
-        # make sure python and matlab tifs are the same
-        for i, f in enumerate(self.ifg_file_list):
-            self.assertEquals(os.path.split(f)[-1], self.matlab_ifg_list[i])
-
-        np.testing.assert_array_equal(self.ifg_file_list,
-                        sydney_data_setup_ifg_file_list(self.matlab_ifg_list))
-
         # reorder ifgs as per the matlab list
-        self.ifgs = sydney_data_setup(datafiles=ifg_ordered_list)
+        self.ifgs = sydney_data_setup()
 
     def test_matlab_mst_kruskal(self):
         """
