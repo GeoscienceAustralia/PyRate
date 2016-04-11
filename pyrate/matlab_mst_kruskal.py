@@ -141,7 +141,6 @@ def matlab_mst_kruskal(edges, ntrees=False):
     num_images = max(max(master_l), max(slave_l))
 
     # sort edges based on nan_frac
-    # ifg_sorted = sort_list(id_l, master_l, slave_l, nan_frac_l)
     ifg_sorted = sorted(edges, key=lambda t: t[3])
 
     # add one to ensure index number + 1
