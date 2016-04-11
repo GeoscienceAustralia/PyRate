@@ -125,19 +125,24 @@ def sort_list(id_l, master_l, slave_l, nan_frac_l):
     return np.sort(sorted_list, order=['nan_frac'])
 
 
-def matlab_mst_kruskal(id_l, master_l, slave_l, nan_frac_l, ntrees=False):
+def matlab_mst_kruskal(edges, ntrees=False):
     """
     This is an implementation of the pi-rate mst_kruskal.m
-    :param id_l: list of ifg file ids
-    :param master_l: list of ifg master dates
-    :param slave_l: list of ifg slave dates
-    :param nan_frac_l: list of ifg nan fractions
+    :param edges: list of edges, list of tuples (id, master, slave, nan_frac)
     :return:
     """
 
-    num_ifgs = len(master_l)
+    num_ifgs = len(edges)
+    # id_l = [e[0] for e in edges]
+    # nan_frac_l = [e[3] for e in edges]
+    master_l = [e[1] for e in edges]
+    slave_l = [e[2] for e in edges]
+
     num_images = max(max(master_l), max(slave_l))
-    ifg_sorted = sort_list(id_l, master_l, slave_l, nan_frac_l)
+
+    # sort edges based on nan_frac
+    # ifg_sorted = sort_list(id_l, master_l, slave_l, nan_frac_l)
+    ifg_sorted = sorted(edges, key=lambda t: t[3])
 
     # add one to ensure index number + 1
     connect = np.eye(num_images + 1, dtype=np.bool)
@@ -179,13 +184,15 @@ def calculate_connect_and_ntrees(connect, mst_list):
     return [i[0] for i in mst_list], connect, ntrees
 
 
-def matlab_mst(ifg_list_, p_threshold=1):
+def matlab_mst(ifg_object, p_threshold=1):
     """
     This is an implementation of matlab/pirate make_mstmat.m.
     """
-    ifg_list_mst_id = matlab_mst_kruskal(ifg_list_.id,
-        ifg_list_.master_num, ifg_list_.slave_num, ifg_list_.nan_frac)
-    data_stack = ifg_list_.data_stack
+    edges = get_sub_structure(ifg_object,
+                              np.zeros(len(ifg_object.id), dtype=bool))
+
+    ifg_list_mst_id = matlab_mst_kruskal(edges)
+    data_stack = ifg_object.data_stack
     nan_ifg = np.isnan(data_stack)
     mst_mat = np.zeros_like(nan_ifg, dtype=np.bool)
     num_ifgs, rows, cols = nan_ifg.shape
@@ -199,11 +206,9 @@ def matlab_mst(ifg_list_, p_threshold=1):
                 if num_ifgs - np.count_nonzero(nan_v) >= p_threshold:
                     # get all valid ifgs from ifglist,
                     # and then select the ones that are not nan on this pixel
-                    id, master, slave, nan_frac = get_sub_structure(
-                        ifg_list_, nan_v)
+                    edges = get_sub_structure(ifg_object, nan_v)
                     # calculate mst again
-                    ifglist_mst_valid_id = matlab_mst_kruskal(id, master,
-                                                              slave, nan_frac)
+                    ifglist_mst_valid_id = matlab_mst_kruskal(edges)
                     mst_mat[ifglist_mst_valid_id, r, c] = 1
                 else:
                     pass
@@ -226,8 +231,10 @@ def matlab_mst_generator_boolean_array(ifg_instance, p_threshold=1):
     If memory was not a concern we could have found the entire mst matrix in the
     previous function and this would have been unnecessary.
     """
-    ifg_list_mst_id = matlab_mst_kruskal(ifg_instance.id,
-        ifg_instance.master_num, ifg_instance.slave_num, ifg_instance.nan_frac)
+    edges = get_sub_structure(ifg_instance,
+                              np.zeros(len(ifg_instance.id), dtype=bool))
+
+    ifg_list_mst_id = matlab_mst_kruskal(edges)
     data_stack = ifg_instance.data_stack
     # np.array([i.phase_data for i in ifg_list.ifgs],
     #                   dtype=np.float32)
@@ -244,19 +251,19 @@ def matlab_mst_generator_boolean_array(ifg_instance, p_threshold=1):
             yield r, c, mst_yield
         else:
             nan_v = np.isnan(data_stack[:, r, c])
-            nan_count = np.sum(nan_v)            
+            nan_count = np.sum(nan_v)
             if (num_ifgs - nan_count) >= p_threshold:
                 # get all valid ifgs from ifglist,
                 # and then select the ones that are not nan on this pixel
-                id, master, slave, nan_frac = get_sub_structure(
+                new_edges = get_sub_structure(
                     ifg_instance, nan_v)
                 # calculate mst again
-                ifglist_mst_valid_id = matlab_mst_kruskal(
-                    id, master, slave, nan_frac)
+                ifglist_mst_valid_id = matlab_mst_kruskal(new_edges)
                 mst_yield[ifglist_mst_valid_id] = True
                 yield r, c, mst_yield
             else:
                 yield r, c, mst_yield
+
 
 # TODO: performance test matlab_mst_boolean_array vs matlab_mst for large ifgs
 def matlab_mst_boolean_array(ifg_list_instance, p_threshold=1):
@@ -285,10 +292,9 @@ def matlab_mst_kruskal_from_ifgs(ifgs):
     ifg_instance = IfgListPyRate(datafiles=dest_paths)
     ifg_instance_updated, epoch_list = \
         get_nml(ifg_instance, nan_conversion=True)
-
-    ifg_list_mst_id = matlab_mst_kruskal(
-        ifg_instance_updated.id, ifg_instance_updated.master_num,
-        ifg_instance_updated.slave_num, ifg_instance_updated.nan_frac)
+    edges = get_sub_structure(ifg_instance,
+                              np.zeros(len(ifg_instance.id), dtype=bool))
+    ifg_list_mst_id = matlab_mst_kruskal(edges)
 
     return [ifgs[i] for i in ifg_list_mst_id]
 
@@ -321,17 +327,16 @@ def get_sub_structure(ifg_list, nan_v):
     """
     indices_chosen = np.nonzero(~nan_v)[0]
 
-    # TODO: remove the list comprehensions
-    id = [ifg_list.id[i] for i in indices_chosen]
-    master_num = [ifg_list.master_num[i] for i in indices_chosen]
-    slave_num = [ifg_list.slave_num[i] for i in indices_chosen]
-    nan_frac = [ifg_list.nan_frac[i] for i in indices_chosen]
-
-    return id, master_num, slave_num, nan_frac
+    return [(ifg_list.id[i],
+             ifg_list.master_num[i],
+             ifg_list.slave_num[i],
+             ifg_list.nan_frac[i])
+            for i in indices_chosen]
 
 if __name__ == "__main__":
-    ifg_instance_main = IfgListMatlabTest()
-    ifg_list, epoch_list = get_nml(ifg_instance_main, nan_conversion=True)
-    mst_mat1 = matlab_mst(ifg_list)
-    mst_mat2 = matlab_mst_boolean_array(ifg_list)
+    from pyrate.tests import common
+    ifg_instance_main = IfgListPyRate(common.sydney_data_setup_ifg_file_list())
+    _ifg_list, _epoch_list = get_nml(ifg_instance_main, nan_conversion=True)
+    mst_mat1 = matlab_mst(_ifg_list)
+    mst_mat2 = matlab_mst_boolean_array(_ifg_list)
     print np.array_equal(mst_mat1, mst_mat2)  # assert equality of both methods

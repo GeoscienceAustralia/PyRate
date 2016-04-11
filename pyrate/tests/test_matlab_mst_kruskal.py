@@ -6,7 +6,7 @@ import os
 
 from pyrate.tests.common import sydney_data_setup
 from pyrate.matlab_mst_kruskal import get_nml
-from pyrate.matlab_mst_kruskal import sort_list
+from pyrate.matlab_mst_kruskal import sort_list, get_sub_structure
 from pyrate.matlab_mst_kruskal import matlab_mst_kruskal
 from pyrate.matlab_mst_kruskal import matlab_mst, matlab_mst_boolean_array
 from pyrate.tests.common import sydney_data_setup_ifg_file_list
@@ -76,9 +76,9 @@ class MatlabMstKruskalTest(unittest.TestCase):
             self.assertEquals((s[0]+1, s[1]+1, s[2]+1, s[3]), m)
 
     def test_mst_kruskal_matlab(self):
-        ifg_list_mst = matlab_mst_kruskal(self.ifg_list.id,
-                                self.ifg_list.master_num,
-                                self.ifg_list.slave_num, self.ifg_list.nan_frac)
+        edges = get_sub_structure(self.ifg_list,
+                                  np.zeros(len(self.ifg_list.id), dtype=bool))
+        ifg_list_mst = matlab_mst_kruskal(edges)
         ifg_list_mst = [i + 1 for i in ifg_list_mst]  # add 1 to each index
         self.assertSequenceEqual(ifg_list_mst, self.ifg_list_mst_matlab)
 
@@ -115,11 +115,8 @@ class MSTKruskalConnectAndTresSydneyData(unittest.TestCase):
     def test_calculate_connect_and_ntrees_sydney_data(self):
         ifg_instance = IfgList(sydney_data_setup_ifg_file_list())
         ifg_list, _ = get_nml(ifg_instance)
-        mst, connected, ntrees = matlab_mst_kruskal(
-            id_l=ifg_list.id,
-            master_l=ifg_list.master_num,
-            slave_l=ifg_list.slave_num,
-            nan_frac_l=ifg_list.nan_frac,
+        edges = get_sub_structure(ifg_list, np.zeros(len(ifg_list.id), dtype=bool))
+        mst, connected, ntrees = matlab_mst_kruskal(edges,
             ntrees=True
             )
 
@@ -134,12 +131,9 @@ class MSTKruskalConnectAndTresSydneyData(unittest.TestCase):
                      if i+1 in non_overlapping]
         non_overlapping_ifg_isntance = IfgList(datafiles)
         ifg_list, _ = get_nml(non_overlapping_ifg_isntance)
-
+        edges = get_sub_structure(ifg_list, np.zeros(len(ifg_list.id), dtype=bool))
         mst, connected, ntrees = matlab_mst_kruskal(
-            id_l=ifg_list.id,
-            master_l=ifg_list.master_num,
-            slave_l=ifg_list.slave_num,
-            nan_frac_l=ifg_list.nan_frac,
+            edges,
             ntrees=True
             )
         self.assertEqual(connected.shape[0], 3)
@@ -154,12 +148,9 @@ class MSTKruskalConnectAndTresSydneyData(unittest.TestCase):
         overlapping_ifg_isntance = IfgList(datafiles)
 
         ifg_list, _ = get_nml(overlapping_ifg_isntance)
-
+        edges = get_sub_structure(ifg_list, np.zeros(len(ifg_list.id), dtype=bool))
         _, connected, ntrees = matlab_mst_kruskal(
-            id_l=ifg_list.id,
-            master_l=ifg_list.master_num,
-            slave_l=ifg_list.slave_num,
-            nan_frac_l=ifg_list.nan_frac,
+            edges,
             ntrees=True
             )
         self.assertEqual(ntrees, 1)
@@ -229,9 +220,9 @@ class MatlabMSTTests(unittest.TestCase):
         """
         ifg_instance = IfgList(datafiles=self.ifg_file_list)
         ifg_list, _ = get_nml(ifg_instance)
-
-        ifg_list_mst_id = matlab_mst_kruskal(ifg_list.id, ifg_list.master_num,
-                                ifg_list.slave_num, ifg_list.nan_frac)
+        edges = get_sub_structure(ifg_list,
+                                  np.zeros(len(ifg_list.id), dtype=bool))
+        ifg_list_mst_id = matlab_mst_kruskal(edges)
 
         self.assertEquals(len(self.matlab_mst_list),
                           len(ifg_list_mst_id))
