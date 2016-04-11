@@ -158,7 +158,7 @@ class RasterBase(object):
         This is required in windows, otherwise opened files can not be removed,
         because windows locks opened files.
         """
-        if self.dataset:
+        if self.is_open:
             self.dataset = None
 
     @property

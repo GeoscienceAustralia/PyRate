@@ -295,8 +295,7 @@ class TestMSTBooleanArray(unittest.TestCase):
 
         # close ifgs for windows
         for i in self.sydney_ifgs:
-            if i.is_open:
-                i.close()
+            i.close()
 
 if __name__ == '__main__':
     unittest.main()
