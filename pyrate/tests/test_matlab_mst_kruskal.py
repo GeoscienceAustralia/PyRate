@@ -131,7 +131,8 @@ class MSTKruskalConnectAndTresSydneyData(unittest.TestCase):
                      if i+1 in non_overlapping]
         non_overlapping_ifg_isntance = IfgList(datafiles)
         ifg_list, _ = get_nml(non_overlapping_ifg_isntance)
-        edges = get_sub_structure(ifg_list, np.zeros(len(ifg_list.id), dtype=bool))
+        edges = get_sub_structure(ifg_list,
+                                  np.zeros(len(ifg_list.id), dtype=bool))
         mst, connected, ntrees = matlab_mst_kruskal(
             edges,
             ntrees=True
@@ -148,7 +149,8 @@ class MSTKruskalConnectAndTresSydneyData(unittest.TestCase):
         overlapping_ifg_isntance = IfgList(datafiles)
 
         ifg_list, _ = get_nml(overlapping_ifg_isntance)
-        edges = get_sub_structure(ifg_list, np.zeros(len(ifg_list.id), dtype=bool))
+        edges = get_sub_structure(ifg_list,
+                                  np.zeros(len(ifg_list.id), dtype=bool))
         _, connected, ntrees = matlab_mst_kruskal(
             edges,
             ntrees=True

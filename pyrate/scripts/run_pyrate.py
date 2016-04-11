@@ -150,11 +150,11 @@ def process_ifgs(ifg_paths_or_instance, params):
 
 
 def insert_time_series_interpolation(ifg_instance_updated, params):
-    _, _, ntrees = matlab_mst.matlab_mst_kruskal(ifg_instance_updated.id,
-                                                 ifg_instance_updated.master_num,
-                                                 ifg_instance_updated.slave_num,
-                                                 ifg_instance_updated.nan_frac,
-                                                 ntrees=True)
+
+    edges = matlab_mst.get_sub_structure(ifg_instance_updated,
+                                  np.zeros(len(ifg_instance_updated.id), dtype=bool))
+
+    _, _, ntrees = matlab_mst.matlab_mst_kruskal(edges, ntrees=True)
     # if ntrees=1, no interpolation; otherwise interpolate
     params[cf.TIME_SERIES_INTERP] = ntrees - 1
     return params
