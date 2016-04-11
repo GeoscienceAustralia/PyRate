@@ -13,7 +13,6 @@ import networkx as nx
 
 from pyrate.algorithm import ifg_date_lookup
 from pyrate.algorithm import ifg_date_index_lookup
-from pyrate.matlab_mst_kruskal import matlab_mst
 
 # TODO: may need to implement memory saving row-by-row access
 # TODO: document weighting by either Nan fraction OR variance
