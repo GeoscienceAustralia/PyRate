@@ -263,7 +263,8 @@ PARAM_CONVERSION = {
     PROCESSOR: (int, None),
     NETWORKX_OR_MATLAB_FLAG: (int, 0),
 
-    LUIGI: (int, 0)
+    LUIGI: (int, 0),
+    NAN_CONVERSION: (int, 0)
     }
     #TIME_SERIES_INTERP : (bool, False)
 

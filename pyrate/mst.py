@@ -59,7 +59,7 @@ def mst_boolean_array(ifgs):
     result = empty(shape=(no_ifgs, no_y, no_x), dtype=np.bool)
 
     for y, x, mst in mst_matrix_networkx(ifgs):
-        # mst is a dictionary of dates
+        # mst is a list of datetime.date tuples
         if isinstance(mst, list):
             ifg_sub = [ifg_date_index_lookup(ifgs, d) for d in mst]
             ifg_sub_bool = [True if i in ifg_sub else False

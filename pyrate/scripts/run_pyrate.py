@@ -39,7 +39,7 @@ def process_ifgs(ifg_paths_or_instance, params):
     ifgs: sequence of paths to interferograms (NB: changes are saved into ifgs)
     params: dict of run config params
     """
-    nan_conversion = int(params[cf.NAN_CONVERSION])
+    nan_conversion = params[cf.NAN_CONVERSION]
     # ifg_instance, nan_conversion=True
 
     if isinstance(ifg_paths_or_instance, list):

@@ -70,8 +70,11 @@ class IfgListPyRate(IfGMeta):
     data as cost.
     """
 
-    def __init__(self, datafiles):
-        self.datafiles = datafiles
+    def __init__(self, datafiles=None):
+        if not datafiles:
+            self.datafiles = sydney_data_setup_ifg_file_list()
+        else:
+            self.datafiles = datafiles
         self.nml = self.get_nml_list()
         self.ifgs = self.get_ifgs_list()
         self.id = range(len(self.nml))
@@ -99,7 +102,6 @@ def data_setup(datafiles):
 
     for i in ifgs:
         i.open()
-
     return ifgs
 
 

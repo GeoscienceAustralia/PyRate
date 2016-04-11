@@ -3,7 +3,11 @@ __author__ = 'sudipta'
 import unittest
 import numpy as np
 import os
+import tempfile
+import shutil, glob
+import numpy as np
 
+from pyrate.tests import common
 from pyrate.tests.common import sydney_data_setup
 from pyrate.matlab_mst_kruskal import get_nml
 from pyrate.matlab_mst_kruskal import sort_list, get_sub_structure
@@ -12,7 +16,8 @@ from pyrate.matlab_mst_kruskal import matlab_mst, matlab_mst_boolean_array
 from pyrate.tests.common import sydney_data_setup_ifg_file_list
 from pyrate.matlab_mst_kruskal import IfgListPyRate as IfgList
 from pyrate.matlab_mst_kruskal import calculate_connect_and_ntrees
-
+from pyrate import mst
+from pyrate.shared import generate_random_string
 
 class IfgListTest(unittest.TestCase):
 
@@ -246,6 +251,52 @@ class MatlabMSTTests(unittest.TestCase):
 
         np.testing.assert_array_equal(mst_mat2, mst_mat1)
 
+
+class TestMSTBooleanArray(unittest.TestCase):
+
+    def setUp(self):
+        self.ifg_dir = os.path.join(tempfile.gettempdir(),
+                                    generate_random_string())
+        sydney_files = sydney_data_setup_ifg_file_list()
+        common.mkdir_p(self.ifg_dir)
+        for sf in sydney_files:
+            dest = os.path.join(self.ifg_dir, os.path.basename(sf))
+            shutil.copy(sf, dest)
+            os.chmod(dest, 0660)
+        self.sydney_files = glob.glob(os.path.join(self.ifg_dir, "*.tif"))
+        self.sydney_ifgs = sydney_data_setup(self.sydney_files)
+
+    def tearDown(self):
+        shutil.rmtree(self.ifg_dir)
+
+    def test_mst_boolean_array(self):
+        nan_conversion = 1
+        for i in self.sydney_ifgs:
+            if not i.is_open:
+                i.open(readonly=False)
+            if nan_conversion:  # nan conversion happens here in networkx mst
+                i.convert_to_nans()
+            if not i.mm_converted:
+                i.convert_to_mm()
+                i.write_modified_phase()
+        mst_nx = mst.mst_boolean_array(self.sydney_ifgs)
+
+        sydney_ifg_instance = IfgList(datafiles=self.sydney_files)
+        ifgs = sydney_ifg_instance.ifgs
+        for i in ifgs:
+            if not i.mm_converted:
+                i.convert_to_mm()
+                i.write_modified_phase()
+        ifg_instance_updated, epoch_list = \
+            get_nml(sydney_ifg_instance, nan_conversion=nan_conversion)
+
+        mst_matlab = matlab_mst_boolean_array(ifg_instance_updated)
+        np.testing.assert_array_equal(mst_matlab, mst_nx)
+
+        # close ifgs for windows
+        for i in self.sydney_ifgs:
+            if i.is_open:
+                i.close()
 
 if __name__ == '__main__':
     unittest.main()
