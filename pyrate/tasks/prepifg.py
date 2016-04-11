@@ -91,6 +91,8 @@ class PrepareInterferogram(IfgListMixin, luigi.WrapperTask):
             self.thresh,
             self.crop_opt,
             self.verbose)
+        if self.ifg.is_open:
+            self.ifg.close()
 
     def output(self):
         if warp_required(self.xlooks, self.ylooks, self.crop_opt):

@@ -201,7 +201,6 @@ def _resample_ifg(ifg, cmd, x_looks, y_looks, thresh, md=None):
         raise NotImplementedError("Resampling LOS & baseline not implemented")
 
     del tmp  # manual close
-    os.remove(tmp_path)
     return resample(data, x_looks, y_looks, thresh)
 
 
