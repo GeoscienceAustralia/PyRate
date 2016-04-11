@@ -97,6 +97,7 @@ def sydney_data_setup_ifg_file_list(datafiles=None):
             datafiles[i] = os.path.join(SYD_TEST_TIF, d)
     else:
         datafiles = glob.glob(join(SYD_TEST_TIF, "*.tif"))
+    datafiles.sort()
     return datafiles
 
 

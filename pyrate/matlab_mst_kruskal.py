@@ -335,6 +335,6 @@ if __name__ == "__main__":
     from pyrate.tests import common
     ifg_instance_main = IfgListPyRate(common.sydney_data_setup_ifg_file_list())
     _ifg_list, _epoch_list = get_nml(ifg_instance_main, nan_conversion=True)
-    mst_mat1 = matlab_mst(_ifg_list)
+    # mst_mat1 = matlab_mst(_ifg_list)
     mst_mat2 = matlab_mst_boolean_array(_ifg_list)
-    print np.array_equal(mst_mat1, mst_mat2)  # assert equality of both methods
+    # print np.array_equal(mst_mat1, mst_mat2)  # assert equality of both methods

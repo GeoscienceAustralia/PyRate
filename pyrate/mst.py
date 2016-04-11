@@ -30,7 +30,9 @@ def is_mst_tree(ifgs):
                                        for i in ifgs]
     g_nx = _build_graph_networkx(edges_with_weights_for_networkx)
     mst = nx.minimum_spanning_tree(g_nx)
-    return mst.edges(), nx.is_tree(mst)
+
+    # mst_edges, is tree?, number of trees
+    return mst.edges(), nx.is_tree(mst), nx.number_connected_components(mst)
 
 
 def _build_graph_networkx(edges_with_weights):

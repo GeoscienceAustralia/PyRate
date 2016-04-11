@@ -133,12 +133,9 @@ class MSTKruskalConnectAndTresSydneyData(unittest.TestCase):
         ifg_list, _ = get_nml(non_overlapping_ifg_isntance)
         edges = get_sub_structure(ifg_list,
                                   np.zeros(len(ifg_list.id), dtype=bool))
-        mst, connected, ntrees = matlab_mst_kruskal(
-            edges,
-            ntrees=True
-            )
-        self.assertEqual(connected.shape[0], 3)
-        self.assertEqual(ntrees, 3)
+        mst, connected, ntrees = matlab_mst_kruskal(edges, ntrees=True)
+        self.assertEqual(connected.shape[0], 4)
+        self.assertEqual(ntrees, 4)
 
     def test_assert_is_tree(self):
         overlapping = [1, 2, 3, 4, 6, 7, 10, 11, 16, 17]
@@ -151,12 +148,9 @@ class MSTKruskalConnectAndTresSydneyData(unittest.TestCase):
         ifg_list, _ = get_nml(overlapping_ifg_isntance)
         edges = get_sub_structure(ifg_list,
                                   np.zeros(len(ifg_list.id), dtype=bool))
-        _, connected, ntrees = matlab_mst_kruskal(
-            edges,
-            ntrees=True
-            )
-        self.assertEqual(ntrees, 1)
-        self.assertEqual(connected.shape[0], 1)
+        _, connected, ntrees = matlab_mst_kruskal(edges, ntrees=True)
+        self.assertEqual(ntrees, 4)
+        self.assertEqual(connected.shape[0], 4)
 
 
 class MatlabMSTTests(unittest.TestCase):
