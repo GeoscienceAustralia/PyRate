@@ -96,6 +96,10 @@ SIM_DIR = 'simdir'
 DEM_FILE = 'demfile'
 #: STR; Name of the header for the DEM
 DEM_HEADER_FILE = 'demHeaderFile'
+
+# location of gamma slc files
+SLC_DIR = 'slcFileDir'
+
 #: STR; The projection of the input interferograms. When *PROCESSOR* == 0, either
 #: this or *ROIPAC_RESOURCE_HEADER* must be provided.
 INPUT_IFG_PROJECTION = 'projection'

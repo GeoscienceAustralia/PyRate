@@ -50,14 +50,18 @@ class GammaHasRun(luigi.task.ExternalTask):
         return targets
 
 
-def get_header_paths(input_file):
+def get_header_paths(input_file, slc_dir=None):
     """
     function that matches input file names with header file names
     :param input_file: input gamma .unw file
     :return: corresponding header files that matches, or empty list if no match
     found
     """
-    dirName, fileName = os.path.split(input_file)
+    if slc_dir:
+        dirName = slc_dir
+        _, fileName = os.path.split(input_file)
+    else:  # header file must exist in the same dir as that of .unw
+        dirName, fileName = os.path.split(input_file)
     matches = PTN.findall(fileName)
     return [glob(join(dirName, '*%s*slc.par' % m))[0] for m in matches]
 
@@ -73,6 +77,7 @@ class ConvertFileToGeotiff(luigi.Task):
     outputDir = luigi.Parameter(config_path=InputParam(config.OUT_DIR))
     noDataValue = luigi.FloatParameter(
         config_path=InputParam(config.NO_DATA_VALUE))
+    slc_dir = luigi.Parameter(config_path=InputParam(config.SLC_DIR))
 
     def requires(self):
         """
@@ -80,7 +85,7 @@ class ConvertFileToGeotiff(luigi.Task):
 
         Ensures that the required input exists.
         """
-        self.headerPaths = get_header_paths(self.inputFile)
+        self.headerPaths = get_header_paths(self.inputFile, self.slc_dir)
 
         if len(self.headerPaths) == 2:
             tasks = [GammaHasRun(

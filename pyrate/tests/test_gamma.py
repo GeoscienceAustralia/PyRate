@@ -27,6 +27,7 @@ from pyrate.config import (
     IFG_FILE_LIST,
     PROCESSOR,
     OUT_DIR,
+    SLC_DIR,
     LUIGI,
     IFG_LKSX,
     IFG_LKSY,
@@ -77,6 +78,7 @@ class GammaCommandLineTests(unittest.TestCase):
             conf.write('{}: {}\n'.format(IFG_FILE_LIST, self.ifgListFile))
             conf.write('{}: {}\n'.format(PROCESSOR, '1'))
             conf.write('{}: {}\n'.format(OUT_DIR, self.base_dir))
+            conf.write('{}: {}\n'.format(SLC_DIR, ''))
         with open(self.ifgListFile, 'w') as ifgl:
             ifgl.write(data)
 
@@ -288,6 +290,7 @@ class HeaderCombinationTests(unittest.TestCase):
 class TestGammaLuigiEquality(unittest.TestCase):
 
     SYDNEY_GAMMA_TEST = os.path.join(SYD_TEST_DIR, 'gamma_sydney_test')
+
     @classmethod
     def setUpClass(cls):
 
@@ -343,6 +346,7 @@ class TestGammaLuigiEquality(unittest.TestCase):
             conf.write('{}: {}\n'.format(IFG_LKSY, '1'))
             conf.write('{}: {}\n'.format(IFG_CROP_OPT, '1'))
             conf.write('{}: {}\n'.format(NO_DATA_AVERAGING_THRESHOLD, '0.5'))
+            conf.write('{}: {}\n'.format(SLC_DIR, ''))
         with open(self.ifgListFile, 'w') as ifgl:
             ifgl.write('\n'.join(data))
 

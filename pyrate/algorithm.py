@@ -155,7 +155,8 @@ def get_epochs(ifgs):
     repeat, _ = histogram(n, bins=len(set(n)))
 
     # absolute span for each date from the zero/start point
-    span = [ (dates[i] - dates[0]).days / DAYS_PER_YEAR for i in range(len(dates))]
+    span = [(dates[i] - dates[0]).days / DAYS_PER_YEAR
+            for i in range(len(dates))]
     return EpochList(dates, repeat, span)
 
 

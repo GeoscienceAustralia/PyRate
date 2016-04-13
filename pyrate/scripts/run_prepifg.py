@@ -79,6 +79,10 @@ def main(params=None):
             logging.debug(msg)
             dem_hdr_path = params[cf.DEM_HEADER_FILE]
             DEM_HDR = gamma.parse_dem_header(dem_hdr_path)
+            try:
+                SLC_DIR = params[cf.SLC_DIR]
+            except:
+                SLC_DIR = None
 
             # location of geo_tif's
             dest_base_ifgs = [os.path.join(
@@ -86,13 +90,10 @@ def main(params=None):
                           for q in base_ifg_paths]
 
             for b, d in zip(base_ifg_paths, dest_base_ifgs):
-
-                header_paths = gamma_task.get_header_paths(b)
-
+                header_paths = gamma_task.get_header_paths(b, slc_dir=SLC_DIR)
                 if len(header_paths) != 2:
                     raise
                 hdrs = [gamma.parse_epoch_header(p) for p in header_paths]
-
                 COMBINED = gamma.combine_headers(hdrs[0], hdrs[1], dem_hdr=DEM_HDR)
                 gamma.to_geotiff(COMBINED, b, d,
                                  nodata=params[cf.NO_DATA_VALUE])
