@@ -330,8 +330,8 @@ def parse_namelist(nml):
     """
     Parses name list file into array of paths
     """
-    with open(nml) as f:
-        return [ln.strip() for ln in f.readlines() if ln != ""]
+    with open(nml) as f_in:
+        return filter(None, (line.rstrip() for line in f_in))
 
 
 class ConfigException(Exception):
