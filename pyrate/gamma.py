@@ -171,7 +171,7 @@ def combine_headers(hdr0, hdr1, dem_hdr):
             ifc.PYRATE_DATE2: date1, }  # add 2nd date, may not be in filename
 
     wavelen = hdr0[ifc.PYRATE_WAVELENGTH_METRES]
-    if wavelen == hdr1[ifc.PYRATE_WAVELENGTH_METRES]:
+    if np.isclose(wavelen, hdr1[ifc.PYRATE_WAVELENGTH_METRES], atol=1e-6):
         chdr[ifc.PYRATE_WAVELENGTH_METRES] = wavelen
     else:
         args = (chdr[ifc.PYRATE_DATE], chdr[ifc.PYRATE_DATE2])
