@@ -105,9 +105,8 @@ def parse_header_new(path):
 def parse_epoch_header(path):
     """Returns dict of the minimum required epoch metadata needed for PyRate"""
     lookup = parse_header(path)
-
     subset = {}
-    year, month, day = [int(i) for i in lookup[GAMMA_DATE]]
+    year, month, day = [int(i) for i in lookup[GAMMA_DATE][:3]]
     subset[ifc.PYRATE_DATE] = datetime.date(year, month, day)
 
     # handle conversion of radar frequency to wavelength
