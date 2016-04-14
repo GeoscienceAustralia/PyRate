@@ -197,7 +197,6 @@ class Ifg(RasterBase):
         self.slave = None
         self.nan_converted = False
         self.mm_converted = False
-        self.data = None
         self.meta_data = None
         self.wavelength = None
 
