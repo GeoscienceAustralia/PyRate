@@ -75,7 +75,9 @@ PYRATEPATH = os.environ['PYRATEPATH']
 
 # general constants
 NO_MULTILOOKING = 1
-TIME_SERIES_INTERP = None
+
+# is assiged by run_pyrate appropriately, should not be specified in conf file
+TIME_SERIES_INTERP = 'tsinterp'
 
 # constants for lookups
 #: STR; Name of input interferogram list file

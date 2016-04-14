@@ -74,6 +74,8 @@ def process_ifgs(ifg_paths_or_instance, params):
         # Insert INTERP into the params for timeseries calculation
         params = insert_time_series_interpolation(ifg_instance_updated, params)
 
+    assert params[cf.TIME_SERIES_INTERP] is not None
+
     # write mst output to a file
     mst_mat_binary_file = os.path.join(
         PYRATEPATH, params[cf.OUT_DIR], 'mst_mat')
