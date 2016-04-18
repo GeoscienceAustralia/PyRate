@@ -90,7 +90,7 @@ def test_dest_ifg_paths():
     # given source ifgs to process, get paths of ifgs in out dir
     src_paths = ['tif/ifg0.tif', 'tif/ifg1.tif']
     dest_paths = run_pyrate.dest_ifg_paths(src_paths, outdir='out')
-    assert dest_paths == ['out/ifg0.tif', 'out/ifg1.tif']
+    assert dest_paths == [os.path.join('out', i) for i in ['ifg0.tif', 'ifg1.tif']]
 
 
 # FIXME: change to read output ifgs
