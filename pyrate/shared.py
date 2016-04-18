@@ -14,6 +14,9 @@ from numpy import where, nan, isnan, sum as nsum
 import numpy as np
 import random
 import string
+from functools import wraps
+import time
+import logging
 
 import pyrate.ifgconstants as ifc
 
@@ -469,3 +472,24 @@ def generate_random_string(N=10):
     return ''.join(random.SystemRandom().choice(
         string.ascii_letters + string.digits)
                    for _ in range(N))
+
+
+def timer(f):
+    """
+    A simple timing decorator for the entire process.
+
+    """
+    @wraps(f)
+    def wrap(*args, **kwargs):
+        t1 = time.time()
+        res = f(*args, **kwargs)
+
+        tottime = time.time() - t1
+        msg = "%02d:%02d:%02d " % \
+              reduce(lambda ll, b: divmod(ll[0], b) + ll[1:],
+                     [(tottime,), 60, 60])
+
+        logging.info("Time for {0}: {1}".format(f.func_name, msg))
+        return res
+
+    return wrap
