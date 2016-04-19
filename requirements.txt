@@ -13,4 +13,5 @@ Pillow==2.8.2
 # GDAL==1.11.2  # pip does not recognise the system variables I want to pass
 # SB added
 pyproj==1.9.4
-parmap==1.2.3
+parmap
+glob2
