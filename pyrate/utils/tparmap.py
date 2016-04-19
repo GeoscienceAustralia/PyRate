@@ -143,9 +143,6 @@ def map(function, iterable, *args, **kwargs):
     # Map:
     if parallel:
         try:
-            print('here')
-            print( izip(repeat(function), iterable,
-                                   repeat(list(args))))
             output = pool.map(_func_star_single,
                               izip(repeat(function), iterable,
                                    repeat(list(args))),
