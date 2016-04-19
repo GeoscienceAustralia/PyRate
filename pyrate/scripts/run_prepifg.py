@@ -15,6 +15,7 @@ from pyrate import gamma
 from pyrate.tasks import gamma as gamma_task
 import pyrate.ifgconstants as ifc
 import logging
+import parmap
 
 ROI_PAC_HEADER_FILE_EXT = 'rsc'
 
@@ -96,19 +97,31 @@ def gamma_prepifg(base_ifg_paths, params):
         params[cf.OUT_DIR], os.path.basename(q).split('.')[0] + '.tif')
                       for q in base_ifg_paths]
 
-    for b, d in zip(base_ifg_paths, dest_base_ifgs):
-        header_paths = gamma_task.get_header_paths(b, slc_dir=SLC_DIR)
-        if len(header_paths) != 2:
-            raise
-        hdrs = [gamma.parse_epoch_header(p) for p in header_paths]
-        COMBINED = gamma.combine_headers(hdrs[0], hdrs[1], dem_hdr=DEM_HDR)
-        gamma.to_geotiff(COMBINED, b, d,
-                         nodata=params[cf.NO_DATA_VALUE])
+    parallel = params[cf.PARALLEL]
+    if parallel:
+        print 'running gamma in parallel'
+        bd_list = [(b, d) for b, d, in zip(base_ifg_paths, dest_base_ifgs)]
+        parmap.map(gamma_multiprocessing, bd_list, DEM_HDR, SLC_DIR, params)
+        sys.exit()
+    else:
+        for b, d in zip(base_ifg_paths, dest_base_ifgs):
+            gamma_multiprocessing((b, d), DEM_HDR, SLC_DIR, params)
 
     ifgs = [Ifg(p) for p in dest_base_ifgs]
 
     prepifg.prepare_ifgs(
         ifgs, crop_opt=crop, xlooks=xlooks, ylooks=ylooks)
+
+
+def gamma_multiprocessing(b_d, DEM_HDR, SLC_DIR, params):
+    b, d = b_d
+    header_paths = gamma_task.get_header_paths(b, slc_dir=SLC_DIR)
+    if len(header_paths) != 2:
+        raise
+    hdrs = [gamma.parse_epoch_header(p) for p in header_paths]
+    COMBINED = gamma.combine_headers(hdrs[0], hdrs[1], dem_hdr=DEM_HDR)
+    gamma.to_geotiff(COMBINED, b, d,
+                     nodata=params[cf.NO_DATA_VALUE])
 
 
 if __name__ == '__main__':
