@@ -24,7 +24,7 @@ datasets will share the same pixel size and dimensions.
 """
 
 import os, re, luigi
-from glob import glob
+import glob2
 from os.path import join
 from pyrate import config
 from pyrate.gamma import *
@@ -63,7 +63,7 @@ def get_header_paths(input_file, slc_dir=None):
     else:  # header file must exist in the same dir as that of .unw
         dirName, fileName = os.path.split(input_file)
     matches = PTN.findall(fileName)
-    return [glob(join(dirName, '*%s*slc.par' % m))[0] for m in matches]
+    return [glob2.glob(join(dirName, '*%s*slc.par' % m))[0] for m in matches]
 
 
 class ConvertFileToGeotiff(luigi.Task):
