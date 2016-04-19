@@ -15,6 +15,8 @@ import uuid
 import shutil
 import numpy as np
 import glob
+import tempfile
+import numpy as np
 
 from pyrate.scripts.converttogtif import main as gammaMain
 from pyrate import gamma
@@ -412,6 +414,49 @@ class TestGammaLuigiEquality(unittest.TestCase):
                 self.assertEquals(mdj[k], mdi[k])
 
         self.assertEquals(c + 1, len(all_luigi_ifgs))
+
+
+class TestGammaParallelVsSerial(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        SYDNEY_GAMMA_TEST = os.path.join(SYD_TEST_DIR, 'gamma_sydney_test')
+        CONF_FILE = os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf')
+
+        cls.serial_dir = os.path.join(tempfile.gettempdir(), uuid.uuid4().hex)
+        cls.parallel_dir = os.path.join(tempfile.gettempdir(), uuid.uuid4().hex)
+        unw_paths = glob.glob(
+            os.path.join(SYDNEY_GAMMA_TEST, "*_utm.unw"))
+
+        sys.argv = ['run_pyrate.py', CONF_FILE]
+        # read in the params
+        _, _, params = run_pyrate.get_ifg_paths()
+        params[cf.OUT_DIR] = cls.serial_dir
+        params[cf.PARALLEL] = False
+
+        common.mkdir_p(cls.serial_dir)
+        run_prepifg.gamma_prepifg(unw_paths, params)
+
+        params[cf.OUT_DIR] = cls.parallel_dir
+        params[cf.PARALLEL] = True
+        common.mkdir_p(cls.parallel_dir)
+        run_prepifg.gamma_prepifg(unw_paths, params)
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(cls.parallel_dir)
+        shutil.rmtree(cls.serial_dir)
+
+    def test_equality(self):
+        serial_ifgs = sydney_data_setup(
+            datafiles=glob.glob(os.path.join(self.serial_dir, "*_1cr.tif")))
+
+        parallel_ifgs = sydney_data_setup(
+            datafiles=glob.glob(os.path.join(self.parallel_dir, "*_1cr.tif")))
+
+        for s, p in zip(serial_ifgs, parallel_ifgs):
+            np.testing.assert_array_almost_equal(s.phase_data, p.phase_data)
+
 
 if __name__ == "__main__":
     unittest.main()

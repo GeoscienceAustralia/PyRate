@@ -102,7 +102,6 @@ def gamma_prepifg(base_ifg_paths, params):
         print 'running gamma in parallel'
         bd_list = [(b, d) for b, d, in zip(base_ifg_paths, dest_base_ifgs)]
         parmap.map(gamma_multiprocessing, bd_list, DEM_HDR, SLC_DIR, params)
-        sys.exit()
     else:
         for b, d in zip(base_ifg_paths, dest_base_ifgs):
             gamma_multiprocessing((b, d), DEM_HDR, SLC_DIR, params)
