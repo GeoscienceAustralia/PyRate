@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 import sys
-import luigi
 import os
-import re
-import glob
+import logging
+
+import luigi
+import parmap
+
 from pyrate.tasks.utils import pythonifyConfig
 from pyrate.tasks.prepifg import PrepareInterferograms
 from pyrate import prepifg
@@ -14,8 +16,7 @@ from pyrate import roipac
 from pyrate import gamma
 from pyrate.tasks import gamma as gamma_task
 import pyrate.ifgconstants as ifc
-import logging
-import parmap
+from pyrate.utils import tparmap
 
 ROI_PAC_HEADER_FILE_EXT = 'rsc'
 
@@ -109,8 +110,15 @@ def gamma_prepifg(base_ifg_paths, params):
 
     ifgs = [Ifg(p) for p in dest_base_ifgs]
 
-    prepifg.prepare_ifgs(
-        ifgs, crop_opt=crop, xlooks=xlooks, ylooks=ylooks)
+    exts = prepifg.getAnalysisExtent(crop, ifgs, xlooks, ylooks, userExts=None)
+    thresh = 0.5
+    verbose = False
+    if parallel:  # using threadpool due to pickling issue
+        tparmap.map(prepifg.prepare_ifg, ifgs,
+               xlooks, ylooks, exts, thresh, crop, verbose)
+    else:
+        [prepifg.prepare_ifg(i,
+               xlooks, ylooks, exts, thresh, crop, verbose) for i in ifgs]
 
 
 def gamma_multiprocessing(b_d, DEM_HDR, SLC_DIR, params):
@@ -122,7 +130,6 @@ def gamma_multiprocessing(b_d, DEM_HDR, SLC_DIR, params):
     COMBINED = gamma.combine_headers(hdrs[0], hdrs[1], dem_hdr=DEM_HDR)
     gamma.to_geotiff(COMBINED, b, d,
                      nodata=params[cf.NO_DATA_VALUE])
-
 
 if __name__ == '__main__':
     main()
