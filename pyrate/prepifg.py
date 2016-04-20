@@ -177,7 +177,7 @@ def _resample_ifg(ifg, cmd, x_looks, y_looks, thresh, md=None):
 
     # HACK: create tmp ifg, extract data array for manual resampling as gdalwarp
     # lacks Pirate's averaging method
-    tmp_path = mkstemp()[1]
+    fp, tmp_path = mkstemp()
     check_call(cmd + [ifg.data_path, tmp_path])
 
     # now write the metadata from the input to the output
@@ -201,6 +201,7 @@ def _resample_ifg(ifg, cmd, x_looks, y_looks, thresh, md=None):
         raise NotImplementedError("Resampling LOS & baseline not implemented")
 
     tmp.close()  # manual close
+    os.close(fp)
     os.remove(tmp_path)
     return resample(data, x_looks, y_looks, thresh)
 
