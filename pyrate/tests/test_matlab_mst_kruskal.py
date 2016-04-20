@@ -1,13 +1,11 @@
 __author__ = 'sudipta'
 
 import unittest
-import numpy as np
 import os
 import tempfile
 import shutil, glob
 import numpy as np
 
-from pyrate.tests import common
 from pyrate.tests.common import sydney_data_setup
 from pyrate.matlab_mst_kruskal import get_nml
 from pyrate.matlab_mst_kruskal import sort_list, get_sub_structure
@@ -17,7 +15,6 @@ from pyrate.tests.common import sydney_data_setup_ifg_file_list
 from pyrate.matlab_mst_kruskal import IfgListPyRate as IfgList
 from pyrate.matlab_mst_kruskal import calculate_connect_and_ntrees
 from pyrate import mst
-from pyrate.shared import generate_random_string
 
 class IfgListTest(unittest.TestCase):
 
@@ -284,10 +281,8 @@ class MatlabMSTTests(unittest.TestCase):
 class TestMSTBooleanArray(unittest.TestCase):
 
     def setUp(self):
-        self.ifg_dir = os.path.join(tempfile.gettempdir(),
-                                    generate_random_string())
+        self.ifg_dir = tempfile.mkdtemp()
         sydney_files = sydney_data_setup_ifg_file_list()
-        common.mkdir_p(self.ifg_dir)
         for sf in sydney_files:
             dest = os.path.join(self.ifg_dir, os.path.basename(sf))
             shutil.copy(sf, dest)
