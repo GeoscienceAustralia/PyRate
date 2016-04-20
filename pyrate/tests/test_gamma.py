@@ -11,7 +11,6 @@ from osgeo import gdal
 from os.path import join
 from datetime import date
 from numpy.testing import assert_array_almost_equal
-import uuid
 import shutil
 import numpy as np
 import glob
@@ -53,7 +52,7 @@ class GammaCommandLineTests(unittest.TestCase):
     def setUp(self):
         self.base = join(os.environ['PYRATEPATH'], 'tests', 'gamma')
         self.hdr = join(self.base, 'dem16x20raw.dem.par')
-        temp_text = uuid.uuid4().hex
+        temp_text = tempfile.mktemp()
         self.confFile = os.path.join(
             TEMPDIR,
             '{}/gamma_test.cfg'.format(temp_text)
@@ -296,8 +295,8 @@ class TestGammaLuigiEquality(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
 
-        luigi_dir = uuid.uuid4().hex
-        non_luigi_dir = uuid.uuid4().hex
+        luigi_dir = tempfile.mktemp()
+        non_luigi_dir = tempfile.mkdtemp()
         cls.luigi_confFile = os.path.join(
             TEMPDIR,
             '{}/gamma_test.conf'.format(luigi_dir)
@@ -423,8 +422,8 @@ class TestGammaParallelVsSerial(unittest.TestCase):
         SYDNEY_GAMMA_TEST = os.path.join(SYD_TEST_DIR, 'gamma_sydney_test')
         CONF_FILE = os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf')
 
-        cls.serial_dir = os.path.join(tempfile.gettempdir(), uuid.uuid4().hex)
-        cls.parallel_dir = os.path.join(tempfile.gettempdir(), uuid.uuid4().hex)
+        cls.serial_dir = tempfile.mkdtemp()
+        cls.parallel_dir = tempfile.mkdtemp()
         unw_paths = glob.glob(
             os.path.join(SYDNEY_GAMMA_TEST, "*_utm.unw"))
 
