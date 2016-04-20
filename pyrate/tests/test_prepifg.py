@@ -7,7 +7,8 @@ Tests for prepifg.py: resampling, subsetting etc.
 import os, sys, unittest
 from os.path import exists, join
 import shutil
-
+from osgeo import gdal
+import tempfile
 from math import floor
 import numpy as np
 from scipy.stats.stats import nanmean
@@ -24,9 +25,8 @@ from pyrate.prepifg import mlooked_path, extents_from_params
 from pyrate.tests.common import SYD_TEST_MATLAB_PREPIFG_DIR
 from pyrate.tests.common import PREP_TEST_TIF, SYD_TEST_DEM_DIR
 from pyrate.tests.common import SYD_TEST_DEM_TIF, TEMPDIR
-from pyrate.shared import generate_random_string
 
-from osgeo import gdal
+
 
 gdal.UseExceptions()
 
@@ -38,9 +38,7 @@ if not exists(PREP_TEST_TIF):
 def diff_exts_ifgs():
     """Returns pair of test Ifgs with different extents"""
     bases = ['geo_060619-061002.tif', 'geo_070326-070917.tif']
-    random_string = generate_random_string()
-    random_dir = os.path.join(TEMPDIR, random_string)
-    os.makedirs(random_dir)
+    random_dir = tempfile.mkdtemp()
     for p in bases:
         shutil.copy(src=os.path.join(PREP_TEST_TIF, p),
                     dst=os.path.join(random_dir, p))
