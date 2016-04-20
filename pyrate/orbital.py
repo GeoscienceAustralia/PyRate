@@ -144,7 +144,12 @@ def _independent_correction(ifg, degree, offset):
                              ifg.phase_data.shape)
     else:
         fullorb = np.reshape(np.dot(dm, model), ifg.phase_data.shape)
-    offset_removal = np.nanmedian(np.ravel(ifg.phase_data - fullorb))
+    # numpy 1.8.0 compatibility due to NCI
+    # replace with:
+    # offset_removal = np.nanmedian(np.ravel(ifg.phase_data - fullorb))
+    x = np.ravel(ifg.phase_data - fullorb)
+    offset_removal = np.median(x[~np.isnan(x)])
+
     ifg.phase_data -= (fullorb - offset_removal)
 
 
@@ -192,7 +197,9 @@ def _network_correction(ifgs, degree, offset, m_ifgs=None):
         if offset:
             tmp = np.ravel(i.phase_data - orb)
             # bring all ifgs to same base level
-            orb -= np.nanmedian(tmp)
+            # numpy 1.8.0 compatibility due to NCI
+            # replace with: orb -= np.nanmedian(tmp)
+            orb -= np.median(tmp[~np.isnan(tmp)])
 
         i.phase_data -= orb  # remove orbital error from the ifg
 

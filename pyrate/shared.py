@@ -334,6 +334,34 @@ class Ifg(RasterBase):
         self.phase_band.WriteArray(self.phase_data)
 
 
+class IfgPart(Ifg):
+    """
+    slice of Ifg data object
+    """
+
+    def __init__(self, path, r_start, r_end):
+        """
+        :param path: original ifg path
+        :param r_start: starting tow of the original ifg
+        :param r_end: ending row of the original ifg
+        :return:
+        """
+        super(IfgPart, self).__init__(path)
+        self.r_start = r_start
+        self.r_end = r_end
+        self._phase_data = None
+
+    @property
+    def nrows(self):
+        return self.r_end - self.r_start
+
+    @property
+    def phase_data(self):
+        if self._phase_data is None:
+            return Ifg(self.data_path).phase_data[self.r_start:self.r_end, :]
+
+
+
 class Incidence(RasterBase):
 
     def __init__(self, path):
