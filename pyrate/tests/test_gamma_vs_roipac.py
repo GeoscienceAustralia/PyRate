@@ -3,7 +3,7 @@ __author__ = 'sudipta'
 import unittest
 import os
 import shutil
-import uuid
+import tempfile
 import glob
 import numpy as np
 import sys
@@ -40,23 +40,16 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        gamma_dir= uuid.uuid4().hex
-        cls.gamma_conffile = os.path.join(TEMPDIR,
-            '{}/gamma_test.conf'.format(gamma_dir))
-        cls.gamma_ifgListFile = os.path.join(TEMPDIR,
-            '{}/gamma_ifg.list'.format(gamma_dir))
-        cls.gamma_base_dir = os.path.dirname(cls.gamma_conffile)
-        common.mkdir_p(cls.gamma_base_dir)
+        cls.gamma_base_dir = tempfile.mkdtemp()
+        cls.gamma_conffile = os.path.join(cls.gamma_base_dir, 'gamma_test.conf')
+        cls.gamma_ifgListFile = os.path.join(cls.gamma_base_dir,
+                                             'gamma_ifg.list')
 
-        roipac_dir = uuid.uuid4().hex
-        cls.roipac_conffile = os.path.join(
-            TEMPDIR, '{}/roipac_test.conf'.format(roipac_dir))
-        cls.roipac_ifgListFile = os.path.join(
-            TEMPDIR, '{}/roipac_ifg.list'.format(roipac_dir))
-
-        cls.roipac_base_dir = os.path.dirname(cls.roipac_conffile)
-
-        common.mkdir_p(cls.roipac_base_dir)
+        cls.roipac_base_dir = tempfile.mkdtemp()
+        cls.roipac_conffile = os.path.join(cls.roipac_base_dir,
+                                           'roipac_test.conf')
+        cls.roipac_ifgListFile = os.path.join(cls.roipac_base_dir,
+                                              'roipac_ifg.list')
 
     @classmethod
     def tearDownClass(cls):
