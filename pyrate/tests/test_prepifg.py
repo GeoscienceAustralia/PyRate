@@ -279,6 +279,7 @@ class PrepifgOutputTests(unittest.TestCase):
         dem.close()
         for i in self.ifgs:
             i.close()
+        os.remove(exp_dem_path)
 
     def test_invalid_looks(self):
         """Verify only numeric values can be given for multilooking"""
