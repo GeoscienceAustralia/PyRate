@@ -111,7 +111,7 @@ def gamma_prepifg(base_ifg_paths, params):
     ifgs = [Ifg(p) for p in dest_base_ifgs]
 
     exts = prepifg.getAnalysisExtent(crop, ifgs, xlooks, ylooks, userExts=None)
-    thresh = 0.5
+    thresh = params[cf.NO_DATA_AVERAGING_THRESHOLD]
     verbose = False
     if parallel:  # using threadpool due to pickling issue
         tparmap.map(prepifg.prepare_ifg, ifgs,

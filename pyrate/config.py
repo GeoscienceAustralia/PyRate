@@ -270,7 +270,8 @@ PARAM_CONVERSION = {
     NETWORKX_OR_MATLAB_FLAG: (int, 0),
 
     LUIGI: (int, 0),
-    NAN_CONVERSION: (int, 0)
+    NAN_CONVERSION: (int, 0),
+    NO_DATA_AVERAGING_THRESHOLD: (float, 0.0)
     }
     #TIME_SERIES_INTERP : (bool, False)
 
