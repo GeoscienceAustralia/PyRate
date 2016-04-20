@@ -11,8 +11,7 @@ from os.path import join
 from itertools import product
 import os
 import numpy as np
-import uuid
-
+import tempfile
 from numpy.linalg import pinv, inv
 from numpy import nan, isnan, array
 from numpy import empty, dot, concatenate, float32
@@ -652,7 +651,7 @@ class MatlabComparisonTestsOrbfitMethod1(unittest.TestCase):
     """
 
     def setUp(self):
-        self.BASE_DIR = os.path.join(TEMPDIR, uuid.uuid4().hex)
+        self.BASE_DIR = tempfile.mkdtemp()
 
         # start each full test run cleanly
         shutil.rmtree(self.BASE_DIR, ignore_errors=True)
@@ -738,7 +737,7 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
 
     """
     def setUp(self):
-        self.BASE_DIR = os.path.join(TEMPDIR, uuid.uuid4().hex)
+        self.BASE_DIR = tempfile.mkdtemp()
 
         # start each full test run cleanly
         shutil.rmtree(self.BASE_DIR, ignore_errors=True)
