@@ -11,7 +11,7 @@ from osgeo import gdal
 from datetime import date
 from os.path import exists, join
 from numpy.testing import assert_array_almost_equal
-import uuid
+import tempfile
 import shutil
 import numpy as np
 import glob
@@ -58,7 +58,7 @@ FULL_HEADER_PATH = join(HEADERS_TEST_DIR, "geo_060619-060828.unw.rsc")
 
 class RoipacCommandLine(unittest.TestCase):
     def setUp(self):
-        random_text = uuid.uuid4().hex
+        random_text = tempfile.mktemp()
         self.confFile = os.path.join(TEMPDIR,
                                      '{}/roipac_test.cfg'.format(random_text))
         self.ifgListFile = os.path.join(
@@ -279,21 +279,20 @@ class TestRoipacLuigiEquality(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        luigi_dir = uuid.uuid4().hex
-        non_luigi_dir = uuid.uuid4().hex
-        cls.luigi_confFile = os.path.join(
-            TEMPDIR, '{}/roipac_test.conf'.format(luigi_dir))
-        cls.luigi_ifgListFile = os.path.join(
-            TEMPDIR, '{}/roipac_ifg.list'.format(luigi_dir))
-        cls.non_luigi_confFile = os.path.join(
-            TEMPDIR, '{}/roipac_test.conf'.format(non_luigi_dir))
-        cls.non_luigi_ifgListFile = os.path.join(
-            TEMPDIR, '{}/roipac_ifg.list'.format(non_luigi_dir))
-
-        cls.luigi_base_dir = os.path.dirname(cls.luigi_confFile)
-        cls.non_luigi_base_dir = os.path.dirname(cls.non_luigi_confFile)
-        common.mkdir_p(cls.luigi_base_dir)
-        common.mkdir_p(cls.non_luigi_base_dir)
+        cls.luigi_base_dir = tempfile.mkdtemp()
+        fp, cls.luigi_conf_file = \
+            tempfile.mkstemp(suffix='roipac_test.conf', dir=cls.luigi_base_dir)
+        os.close(fp)
+        fp, cls.luigi_ifgListFile = tempfile.mkstemp(suffix='roipac_ifg.list',
+                                                 dir=cls.luigi_base_dir)
+        os.close(fp)
+        cls.non_luigi_base_dir = tempfile.mkdtemp()
+        fp, cls.non_luigi_confFile = tempfile.mkstemp(suffix='roipac_test.conf',
+                                                  dir=cls.non_luigi_base_dir)
+        os.close(fp)
+        fp, cls.non_luigi_ifgListFile = tempfile.mkstemp(suffix='roipac_ifg.list',
+                                                     dir=cls.non_luigi_base_dir)
+        os.close(fp)
 
     @classmethod
     def tearDownClass(cls):
@@ -325,7 +324,7 @@ class TestRoipacLuigiEquality(unittest.TestCase):
         self.expPaths = [join(self.luigi_base_dir, os.path.basename(i))
                          for i in base_exp]
         self.luigi = '1'
-        self.confFile = self.luigi_confFile
+        self.confFile = self.luigi_conf_file
         self.ifgListFile = self.luigi_ifgListFile
         self.base_dir = self.luigi_base_dir
         self.common_check()

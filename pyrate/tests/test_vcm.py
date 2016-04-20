@@ -13,7 +13,7 @@ import os
 import shutil
 import sys
 import numpy as np
-import uuid
+import tempfile
 
 from pyrate.vcm import cvd, get_vcmt
 from pyrate.tests.common import sydney5_mock_ifgs, sydney5_ifgs
@@ -151,8 +151,7 @@ class MatlabEqualityTestInRunPyRateSequence(unittest.TestCase):
         params = cf.get_config_params(
                 os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf'))
 
-        cls.temp_out_dir = os.path.join(params[cf.OUT_DIR], uuid.uuid4().hex)
-        common.mkdir_p(cls.temp_out_dir)
+        cls.temp_out_dir = tempfile.mkdtemp()
 
         sys.argv = ['run_prepifg.py', os.path.join(SYD_TEST_DIR,
                                      'pyrate_system_test.conf')]

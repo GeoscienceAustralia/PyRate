@@ -6,7 +6,7 @@ import os
 import sys
 import shutil
 import numpy as np
-import uuid
+import tempfile
 
 from pyrate import config as cf
 from pyrate.scripts import run_pyrate
@@ -29,9 +29,7 @@ class RefPhsEstimationMatlabTestMethod1(unittest.TestCase):
         params = cf.get_config_params(
                 os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf'))
 
-        cls.temp_out_dir = os.path.join(params[cf.OUT_DIR], uuid.uuid4().hex)
-        common.mkdir_p(cls.temp_out_dir)
-
+        cls.temp_out_dir = tempfile.mkdtemp()
         sys.argv = ['run_prepifg.py', os.path.join(SYD_TEST_DIR,
                                      'pyrate_system_test.conf')]
         params[cf.OUT_DIR] = cls.temp_out_dir
@@ -140,8 +138,7 @@ class RefPhsEstimationMatlabTestMethod2(unittest.TestCase):
         params = cf.get_config_params(
                 os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf'))
 
-        cls.temp_out_dir = os.path.join(params[cf.OUT_DIR], uuid.uuid4().hex)
-        common.mkdir_p(cls.temp_out_dir)
+        cls.temp_out_dir = tempfile.mkdtemp()
 
         sys.argv = ['run_prepifg.py', os.path.join(SYD_TEST_DIR,
                                      'pyrate_system_test.conf')]
