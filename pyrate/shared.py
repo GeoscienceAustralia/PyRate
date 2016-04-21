@@ -33,7 +33,7 @@ from pyrate.geodesy import cell_size
 
 # Constants
 PHASE_BAND = 1
-META_UNITS = 'PHASE_UNITS'
+RADIANS = 'RADIANS'
 MILLIMETRES = 'MILLIMETRES'
 MM_PER_METRE = 1000
 
@@ -269,17 +269,22 @@ class Ifg(RasterBase):
         :return: convert wavelength from radians to mm
         """
         self.mm_converted = True
-        if self.dataset.GetMetadataItem(META_UNITS) == MILLIMETRES:
-            msg = '%s: ignored as previous wavelength conversion detected'
+        if self.dataset.GetMetadataItem(ifc.PYRATE_PHASE_UNITS) == MILLIMETRES:
+            msg = '%s: ignored as previous phase unit conversion already applied'
             logging.debug(msg % self.data_path)
             self.phase_data = self.phase_data
             return
-
-        self.phase_data = wavelength_radians_to_mm(self.phase_data,
+        #elif self.dataset.GetMetadataItem(ifc.PYRATE_PHASE_UNITS) == RADIANS:
+        self.phase_data = convert_radians_to_mm(self.phase_data,
                                                       self.wavelength)
-        self.dataset.SetMetadataItem(META_UNITS, MILLIMETRES)
-        msg = '%s: converted wavelength to millimetres'
+        self.dataset.SetMetadataItem(ifc.PYRATE_PHASE_UNITS, MILLIMETRES)
+        msg = '%s: converted phase units to millimetres'
         logging.debug(msg % self.data_path)
+        # TODO: implement test for when units neither mm or radians
+        #else:
+        #    msg = 'Phase units are not millimetres or radians'
+        #    raise IfgException(msg)
+
 
     @phase_data.setter
     def phase_data(self, data):
@@ -484,16 +489,12 @@ class EpochList(object):
         return "EpochList: %s" % repr(self.dates)
 
 
-def wavelength_radians_to_mm(data, wavelength):
+def convert_radians_to_mm(data, wavelength):
     """
     Translates phase from radians to millimetres
-    data: ifg phase data
-    wavelength: normally included with SAR instrument pass data
+    data: interferogram phase data
+    wavelength: radar wavelength; normally included with SAR instrument metadata
     """
-
-    # '4' is 2*2, the 1st 2 is that the raw signal is 'there and back', to get
-    # the vector length between satellite and ground, half the signal is needed
-    # second 2*pi is because one wavelength is equal to 2 radians
     return data * MM_PER_METRE * (wavelength / (4 * math.pi))
 
 

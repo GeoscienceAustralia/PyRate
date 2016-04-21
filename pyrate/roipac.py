@@ -68,7 +68,7 @@ MASTER = "MASTER"
 SLAVE = "SLAVE"
 X_LAST = "X_LAST"
 Y_LAST = "Y_LAST"
-
+RADIANS = "RADIANS"
 
 # store type for each of the header items
 INT_HEADERS = [WIDTH, FILE_LENGTH, XMIN, XMAX, YMIN, YMAX, Z_OFFSET, Z_SCALE]
@@ -96,7 +96,7 @@ def to_geotiff(header, data_path, dest, nodata):
     # write custom headers to interferograms
     if is_ifg:
         for k in [ifc.PYRATE_WAVELENGTH_METRES, ifc.PYRATE_TIME_SPAN,
-                    ifc.PYRATE_DATE, ifc.PYRATE_DATE2]:
+                    ifc.PYRATE_DATE, ifc.PYRATE_DATE2, ifc.PYRATE_PHASE_UNITS]:
             ds.SetMetadataItem(k, str(header[k]))
 
     # position and projection data
@@ -218,6 +218,9 @@ def parse_header(hdr_file):
         # replace time span as ROIPAC is ~4 hours different to (slave - master)
         timespan = (subset[ifc.PYRATE_DATE2] - subset[ifc.PYRATE_DATE]).days / ifc.DAYS_PER_YEAR
         subset[ifc.PYRATE_TIME_SPAN] = timespan
+
+        # Add phase units of interferogram
+        subset[ifc.PYRATE_PHASE_UNITS] = RADIANS
 
     # add custom X|Y_LAST for convenience
     subset[X_LAST] = headers[X_FIRST] + (headers[X_STEP] * (headers[WIDTH]))
