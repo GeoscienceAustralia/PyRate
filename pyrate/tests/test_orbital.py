@@ -31,6 +31,7 @@ from pyrate.tests.common import SYD_TEST_TIF, sydney_data_setup
 from pyrate.tests.common import sydney_data_setup_ifg_file_list
 import shutil
 from pyrate.tests import common
+from pyrate.shared import nanmedian
 
 
 DEG_LOOKUP = {
@@ -177,11 +178,8 @@ class IndependentCorrectionTests(unittest.TestCase):
         else:
             fullorb = np.reshape(np.dot(dm2, orbparams), ifg.phase_data.shape)
 
-        # numpy 1.8.0 compatibility due to NCI
-        # replace with: offset_removal = np.nanmedian(
-        # np.reshape(ifg.phase_data - fullorb, (1, -1)))
-        x = np.reshape(ifg.phase_data - fullorb, (1, -1))
-        offset_removal = np.median(x[~np.isnan(x)])
+        offset_removal = nanmedian(
+            np.reshape(ifg.phase_data - fullorb, (1, -1)))
         fwd_correction = fullorb - offset_removal
         # ifg.phase_data -= (fullorb - offset_removal)
         return ifg.phase_data - fwd_correction
@@ -422,9 +420,7 @@ def _expand_corrections(ifgs, dm, params, ncoef, offsets):
         if offsets:
             off = np.ravel(ifg.phase_data - cor)
             # bring all ifgs to same base level
-            # numpy 1.8.0 compatibility due to NCI
-            # replace with: cor -= np.nanmedian(off)
-            cor -= np.median(off[~np.isnan(off)])
+            cor -= nanmedian(off)
 
         corrections.append(cor)
     return corrections

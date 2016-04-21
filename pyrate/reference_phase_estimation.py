@@ -6,7 +6,7 @@ __date_created__ = '22/12/15'
 
 import numpy as np
 from pyrate import config as cf
-
+from pyrate.shared import nanmedian
 
 def estimate_ref_phase(ifgs, params, refpx, refpy):
     """
@@ -33,9 +33,7 @@ def estimate_ref_phase(ifgs, params, refpx, refpy):
             ifgv = np.ravel(i.phase_data, order='F')
             ifgv[comp == 1] = np.nan
             # reference phase
-            # numpy version 1.8.0 compatibility
-            # ref_phs[n] = np.nanmedian(ifgv)
-            ref_phs[n] = np.median(ifgv[~np.isnan(ifgv)])
+            ref_phs[n] = nanmedian(ifgv)
             i.phase_data -= ref_phs[n]
 
     elif int(params[cf.REF_EST_METHOD]) == 2:
@@ -51,9 +49,7 @@ def estimate_ref_phase(ifgs, params, refpx, refpy):
             if np.sum(~np.isnan(patch)) < thresh:
                 raise ReferencePhaseError('The reference pixel'
                                           'is not in high coherent area!')
-            # numpy version 1.8.0 compatibility
-            # ref_phs[n] = np.nanmedian(patch)
-            ref_phs[n] = np.median(patch[~np.isnan(patch)])
+            ref_phs[n] = nanmedian(patch)
             i.phase_data -= ref_phs[n]
     else:
         raise ReferencePhaseError('No such option. Use refest=1 or 2')

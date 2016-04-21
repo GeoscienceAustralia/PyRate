@@ -17,6 +17,7 @@ import string
 from functools import wraps
 import time
 import logging
+import pkg_resources
 
 import pyrate.ifgconstants as ifc
 
@@ -521,3 +522,19 @@ def timer(f):
         return res
 
     return wrap
+
+
+def nanmedian(x):
+    """
+    :param x:
+    :return:
+    """
+    version = [int(i) for i in
+               pkg_resources.get_distribution("numpy").version.split('.')]
+    if version[0] == 1 and version[1] > 9:
+        return np.nanmedian(x)
+    else:
+        return np.median(x[~np.isnan(x)])
+
+if __name__ == '__main__':
+    print nanmedian([1, 2, nan, 2, nan, 4])

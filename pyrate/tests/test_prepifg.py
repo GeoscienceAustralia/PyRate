@@ -24,9 +24,7 @@ from pyrate.prepifg import prepare_ifgs, resample, PreprocessError, CustomExts
 from pyrate.prepifg import mlooked_path, extents_from_params
 from pyrate.tests.common import SYD_TEST_MATLAB_PREPIFG_DIR
 from pyrate.tests.common import PREP_TEST_TIF, SYD_TEST_DEM_DIR
-from pyrate.tests.common import SYD_TEST_DEM_TIF, TEMPDIR
-
-
+from pyrate.tests.common import SYD_TEST_DEM_TIF
 
 gdal.UseExceptions()
 

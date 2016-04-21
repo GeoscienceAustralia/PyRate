@@ -12,7 +12,6 @@ from os.path import join
 from datetime import date
 from numpy.testing import assert_array_almost_equal
 import shutil
-import numpy as np
 import glob
 import tempfile
 import numpy as np
@@ -53,13 +52,10 @@ class GammaCommandLineTests(unittest.TestCase):
         self.base = join(os.environ['PYRATEPATH'], 'tests', 'gamma')
         self.hdr = join(self.base, 'dem16x20raw.dem.par')
         temp_text = tempfile.mktemp()
-        self.confFile = os.path.join(
-            TEMPDIR,
-            '{}/gamma_test.cfg'.format(temp_text)
-        )
+        self.confFile = os.path.join(TEMPDIR,
+                                     '{}/gamma_test.cfg'.format(temp_text))
         self.ifgListFile = os.path.join(
-            TEMPDIR,
-            '{}/gamma_ifg.list'.format(temp_text))
+            TEMPDIR, '{}/gamma_ifg.list'.format(temp_text))
         self.base_dir = os.path.dirname(self.confFile)
         common.mkdir_p(self.base_dir)
 
