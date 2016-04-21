@@ -21,8 +21,10 @@ GAMMA_Y_STEP = 'post_lat'
 GAMMA_X_STEP = 'post_lon'
 GAMMA_DATUM = 'ellipsoid_name'
 GAMMA_FREQUENCY = 'radar_frequency'
+RADIANS = 'RADIANS'
 
 SPEED_OF_LIGHT_METRES_PER_SECOND = 3e8
+
 
 
 def to_geotiff(hdr, data_path, dest, nodata):
@@ -38,7 +40,7 @@ def to_geotiff(hdr, data_path, dest, nodata):
 
     # write custom headers to interferograms
     if is_ifg:
-        for k in (ifc.PYRATE_DATE, ifc.PYRATE_DATE2,
+        for k in (ifc.PYRATE_DATE, ifc.PYRATE_DATE2, ifc.PYRATE_PHASE_UNITS,
                 ifc.PYRATE_TIME_SPAN, ifc.PYRATE_WAVELENGTH_METRES):
             ds.SetMetadataItem(k, str(hdr[k]))
 
@@ -168,7 +170,8 @@ def combine_headers(hdr0, hdr1, dem_hdr):
 
     chdr = {ifc.PYRATE_TIME_SPAN: (date1 - date0).days / ifc.DAYS_PER_YEAR,
             ifc.PYRATE_DATE: date0,
-            ifc.PYRATE_DATE2: date1, }  # add 2nd date, may not be in filename
+            ifc.PYRATE_DATE2: date1,
+            ifc.PYRATE_PHASE_UNITS: RADIANS, }
 
     wavelen = hdr0[ifc.PYRATE_WAVELENGTH_METRES]
     if np.isclose(wavelen, hdr1[ifc.PYRATE_WAVELENGTH_METRES], atol=1e-6):

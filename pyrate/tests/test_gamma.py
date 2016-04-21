@@ -147,7 +147,7 @@ class GammaToGeoTiffTests(unittest.TestCase):
         self.compare_rasters(ds, exp_ds)
 
         md = ds.GetMetadata()
-        self.assertEqual(len(md), 5)
+        self.assertEqual(len(md), 6)
         self.assertTrue(md[ifc.PYRATE_DATE] == str(date(2009, 7, 13)))
         self.assertTrue(md[ifc.PYRATE_DATE2] == str(date(2009, 8, 17)))
         self.assertTrue(md[ifc.PYRATE_TIME_SPAN] == str(35 / ifc.DAYS_PER_YEAR))
