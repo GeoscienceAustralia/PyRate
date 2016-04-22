@@ -18,6 +18,7 @@ import glob
 
 import pyrate.ifgconstants as ifc
 from pyrate import roipac
+from pyrate.shared import write_geotiff
 from pyrate.config import (
     INPUT_IFG_PROJECTION,
     NO_DATA_VALUE,
@@ -33,6 +34,7 @@ from pyrate.config import (
     NO_DATA_AVERAGING_THRESHOLD
     )
 from pyrate.roipac import RoipacException
+from pyrate.shared import GeotiffException
 from pyrate.scripts.converttogtif import main as roipacMain
 from pyrate.tasks.utils import DUMMY_SECTION_NAME
 from pyrate.tests.common import HEADERS_TEST_DIR, PREP_TEST_OBS, PREP_TEST_TIF
@@ -121,10 +123,10 @@ class RoipacToGeoTiffTests(unittest.TestCase):
             os.remove(self.dest)
 
     def test_to_geotiff_dem(self):
-        hdr = roipac.parse_header(SYD_TEST_DEM_HDR)
+        hdr = roipac.parse_header(SYD_TEST_DEM_HDR)        
         self.dest = os.path.join(TEMPDIR, "tmp_roipac_dem.tif")
 
-        roipac.to_geotiff(hdr, SYD_TEST_DEM_UNW, self.dest, nodata=0)
+        write_geotiff(hdr, SYD_TEST_DEM_UNW, self.dest, nodata=0)
         exp_path = join(SYD_TEST_DEM_DIR, 'sydney_trimmed.tif')
         exp_ds = gdal.Open(exp_path)
         ds = gdal.Open(self.dest)
@@ -141,7 +143,7 @@ class RoipacToGeoTiffTests(unittest.TestCase):
 
         self.dest = os.path.join('tmp_roipac_ifg.tif')
         data_path = join(PREP_TEST_OBS, 'geo_060619-061002.unw')
-        roipac.to_geotiff(hdrs, data_path, self.dest, nodata=0)
+        write_geotiff(hdrs, data_path, self.dest, nodata=0)
 
         ds = gdal.Open(self.dest)
         band = ds.GetRasterBand(1)
@@ -172,7 +174,7 @@ class RoipacToGeoTiffTests(unittest.TestCase):
         data_path = join(PREP_TEST_TIF, 'geo_060619-061002.tif')
         self.assertRaises(
             roipac.RoipacException,
-            roipac.to_geotiff,
+            write_geotiff,
             self.HDRS,
             data_path,
             self.dest,
@@ -183,7 +185,7 @@ class RoipacToGeoTiffTests(unittest.TestCase):
         hdrs[ifc.PYRATE_DATUM] = 'bad datum string'
         self.dest = os.path.join(TEMPDIR, 'tmp_roipac_ifg2.tif')
         data_path = join(PREP_TEST_OBS, 'geo_060619-061002.unw')
-        self.assertRaises(RoipacException, roipac.to_geotiff, hdrs,
+        self.assertRaises(GeotiffException, write_geotiff, hdrs,
                             data_path, self.dest, 0)
 
     def test_mismatching_cell_resolution(self):
@@ -193,7 +195,7 @@ class RoipacToGeoTiffTests(unittest.TestCase):
         data_path = join(PREP_TEST_OBS, 'geo_060619-061002.unw')
         self.dest = os.path.join(TEMPDIR, 'fake')
 
-        self.assertRaises(RoipacException, roipac.to_geotiff, hdrs,
+        self.assertRaises(RoipacException, write_geotiff, hdrs,
                             data_path, self.dest, 0)
 
     def compare_rasters(self, ds, exp_ds):

@@ -1,11 +1,10 @@
 '''
-Tools used in converting GAMMA headers to ESRI's BIL format.
+Tools used for reading GAMMA headers.
 
 .. codeauthor:: Ben Davies, NCI, Sudipta Basak, GA
 '''
 
-import os, struct, datetime
-from osgeo import osr, gdal
+import os, datetime
 import numpy as np
 import pyrate.ifgconstants as ifc
 
@@ -22,50 +21,10 @@ GAMMA_X_STEP = 'post_lon'
 GAMMA_DATUM = 'ellipsoid_name'
 GAMMA_FREQUENCY = 'radar_frequency'
 RADIANS = 'RADIANS'
+GAMMA = 'GAMMA'
 
 SPEED_OF_LIGHT_METRES_PER_SECOND = 3e8
 
-
-
-def to_geotiff(hdr, data_path, dest, nodata):
-    """Converts GAMMA format data to GeoTIFF image with PyRate metadata"""
-    is_ifg = hdr.has_key(ifc.PYRATE_WAVELENGTH_METRES)
-    ncols = hdr[ifc.PYRATE_NCOLS]
-    nrows = hdr[ifc.PYRATE_NROWS]
-    _check_raw_data(data_path, ncols, nrows)
-    _check_step_mismatch(hdr)
-
-    driver = gdal.GetDriverByName("GTiff")
-    ds = driver.Create(dest, ncols, nrows, 1, gdal.GDT_Float32)
-
-    # write custom headers to interferograms
-    if is_ifg:
-        for k in (ifc.PYRATE_DATE, ifc.PYRATE_DATE2, ifc.PYRATE_PHASE_UNITS,
-                ifc.PYRATE_TIME_SPAN, ifc.PYRATE_WAVELENGTH_METRES):
-            ds.SetMetadataItem(k, str(hdr[k]))
-
-    # position and projection data
-    ds.SetGeoTransform([hdr[ifc.PYRATE_LONG], hdr[ifc.PYRATE_X_STEP], 0,
-                        hdr[ifc.PYRATE_LAT], 0, hdr[ifc.PYRATE_Y_STEP]])
-
-    srs = osr.SpatialReference()
-    res = srs.SetWellKnownGeogCS(hdr[ifc.PYRATE_DATUM])
-
-    if res:
-        msg = 'Unrecognised projection: %s' % hdr[ifc.PYRATE_DATUM]
-        raise GammaException(msg)
-
-    ds.SetProjection(srs.ExportToWkt())
-
-    # copy data from the binary file
-    band = ds.GetRasterBand(1)
-    band.SetNoDataValue(nodata)
-    fmtstr = '!' + ('f' * ncols)  # data format is big endian float32s
-
-    with open(data_path, 'rb') as f:
-        for y in range(nrows):
-            data = struct.unpack(fmtstr, f.read(ncols * 4))
-            band.WriteArray(np.array(data).reshape(1, ncols), yoff=y)
 
 
 def _check_raw_data(data_path, ncols, nrows):
@@ -141,6 +100,7 @@ def parse_dem_header(path):
     subset[ifc.PYRATE_Y_STEP] = float(lookup[GAMMA_Y_STEP][0])
     subset[ifc.PYRATE_X_STEP] = float(lookup[GAMMA_X_STEP][0])
     subset[ifc.PYRATE_DATUM] = "".join(lookup[GAMMA_DATUM])
+    subset[ifc.PYRATE_INSAR_PROCESSOR] = GAMMA
     return subset
 
 
@@ -171,7 +131,8 @@ def combine_headers(hdr0, hdr1, dem_hdr):
     chdr = {ifc.PYRATE_TIME_SPAN: (date1 - date0).days / ifc.DAYS_PER_YEAR,
             ifc.PYRATE_DATE: date0,
             ifc.PYRATE_DATE2: date1,
-            ifc.PYRATE_PHASE_UNITS: RADIANS, }
+            ifc.PYRATE_PHASE_UNITS: RADIANS  } 
+#            ifc.PYRATE_INSAR_PROCESSOR: GAMMA  }
 
     wavelen = hdr0[ifc.PYRATE_WAVELENGTH_METRES]
     if np.isclose(wavelen, hdr1[ifc.PYRATE_WAVELENGTH_METRES], atol=1e-6):

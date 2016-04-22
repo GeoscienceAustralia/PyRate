@@ -26,8 +26,7 @@ Created on 12/09/2012
 .. codeauthor:: Ben Davies, NCI <ben.davies@anu.edu.au>
 """
 
-import os, re, struct, datetime, sys
-from osgeo import osr, gdal
+import os, re, datetime, sys
 import numpy as np
 import pyrate.ifgconstants as ifc
 
@@ -69,6 +68,7 @@ SLAVE = "SLAVE"
 X_LAST = "X_LAST"
 Y_LAST = "Y_LAST"
 RADIANS = "RADIANS"
+ROIPAC = "ROIPAC"
 
 # store type for each of the header items
 INT_HEADERS = [WIDTH, FILE_LENGTH, XMIN, XMAX, YMIN, YMAX, Z_OFFSET, Z_SCALE]
@@ -80,60 +80,6 @@ DATE_HEADERS = [DATE, DATE12]
 ROIPAC_HEADER_LEFT_JUSTIFY = 18
 ROI_PAC_HEADER_FILE_EXT = "rsc"
 
-
-def to_geotiff(header, data_path, dest, nodata):
-    """Converts ROIPAC format data to GeoTIFF image with PyRate metadata"""
-    is_ifg = ifc.PYRATE_WAVELENGTH_METRES in header
-    ncols = header[ifc.PYRATE_NCOLS]
-    nrows = header[ifc.PYRATE_NROWS]
-    _check_raw_data(is_ifg, data_path, ncols, nrows)
-    _check_step_mismatch(header)
-
-    driver = gdal.GetDriverByName("GTiff")
-    dtype = gdal.GDT_Float32 if is_ifg else gdal.GDT_Int16
-    ds = driver.Create(dest, ncols, nrows, 1, dtype)
-
-    # write custom headers to interferograms
-    if is_ifg:
-        for k in [ifc.PYRATE_WAVELENGTH_METRES, ifc.PYRATE_TIME_SPAN,
-                    ifc.PYRATE_DATE, ifc.PYRATE_DATE2, ifc.PYRATE_PHASE_UNITS]:
-            ds.SetMetadataItem(k, str(header[k]))
-
-    # position and projection data
-    ds.SetGeoTransform([header[ifc.PYRATE_LONG], header[ifc.PYRATE_X_STEP], 0,
-                        header[ifc.PYRATE_LAT], 0, header[ifc.PYRATE_Y_STEP]])
-
-    srs = osr.SpatialReference()
-    res = srs.SetWellKnownGeogCS(header[ifc.PYRATE_DATUM])
-    if res:
-        msg = 'Unrecognised projection: %s' % header[ifc.PYRATE_DATUM]
-        raise RoipacException(msg)
-
-    ds.SetProjection(srs.ExportToWkt())
-
-    # copy data from the binary file
-    band = ds.GetRasterBand(1)
-    band.SetNoDataValue(nodata)
-
-    if is_ifg:
-        fmtstr = '<' + ('f' * ncols)  # ifgs are little endian float32s
-        bytes_per_col = 4
-    else:
-        fmtstr = '<' + ('h' * ncols)  # DEM is little endian signed int16
-        bytes_per_col = 2
-
-    row_bytes = ncols * bytes_per_col
-
-    with open(data_path, 'rb') as f:
-        for y in xrange(nrows):
-            if is_ifg:
-                f.seek(row_bytes, 1)  # skip interleaved band 1
-
-            data = struct.unpack(fmtstr, f.read(row_bytes))
-            band.WriteArray(np.array(data).reshape(1, ncols), yoff=y)
-
-    ds = None  # manual close
-    del ds
 
 
 def _check_raw_data(is_ifg, data_path, ncols, nrows):
@@ -221,6 +167,9 @@ def parse_header(hdr_file):
 
         # Add phase units of interferogram
         subset[ifc.PYRATE_PHASE_UNITS] = RADIANS
+
+    # Add InSAR processor flag
+    subset[ifc.PYRATE_INSAR_PROCESSOR] = ROIPAC
 
     # add custom X|Y_LAST for convenience
     subset[X_LAST] = headers[X_FIRST] + (headers[X_STEP] * (headers[WIDTH]))

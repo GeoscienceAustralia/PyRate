@@ -3,10 +3,10 @@ Contains objects common to multiple parts of PyRate
 
 Created on 12/09/2012
 
-.. codeauthor:: Ben Davies, Sudipta Basak
+.. codeauthor:: Ben Davies, Sudipta Basak, Matt Garthwaite
 """
 
-import os
+import os, struct
 import math
 from datetime import date
 import logging
@@ -18,11 +18,12 @@ from functools import wraps
 import time
 import logging
 import pkg_resources
+from pyrate import roipac, gamma
 
 import pyrate.ifgconstants as ifc
 
 try:
-    from osgeo import gdal
+    from osgeo import osr, gdal
     from osgeo.gdalconst import GA_Update, GA_ReadOnly, GF_Write
 except ImportError:
     import gdal
@@ -36,6 +37,8 @@ PHASE_BAND = 1
 RADIANS = 'RADIANS'
 MILLIMETRES = 'MILLIMETRES'
 MM_PER_METRE = 1000
+GAMMA = 'GAMMA'
+ROIPAC = 'ROIPAC'
 
 # GDAL projection list
 GDAL_X_CELLSIZE = 1
@@ -536,6 +539,87 @@ def nanmedian(x):
         return np.nanmedian(x)
     else:
         return np.median(x[~np.isnan(x)])
+
+
+def write_geotiff(header, data_path, dest, nodata):
+    """
+    Writes image data to GeoTIFF image with PyRate metadata
+    """
+    is_ifg = ifc.PYRATE_WAVELENGTH_METRES in header
+    ifg_proc = header[ifc.PYRATE_INSAR_PROCESSOR]
+    ncols = header[ifc.PYRATE_NCOLS]
+    nrows = header[ifc.PYRATE_NROWS]
+
+    # need to have gamma/roipac functionality here?
+    if ifg_proc == ROIPAC:
+        roipac._check_raw_data(is_ifg, data_path, ncols, nrows)
+        roipac._check_step_mismatch(header)
+    else: #GAMMA
+        gamma._check_raw_data(data_path, ncols, nrows)
+        gamma._check_step_mismatch(header)
+
+    driver = gdal.GetDriverByName("GTiff")
+    dtype = gdal.GDT_Float32 if is_ifg else gdal.GDT_Int16
+    ds = driver.Create(dest, ncols, nrows, 1, dtype)
+
+    # write pyrate parameters to headers
+    if is_ifg:
+        for k in [ifc.PYRATE_WAVELENGTH_METRES, ifc.PYRATE_TIME_SPAN, ifc.PYRATE_INSAR_PROCESSOR,
+                    ifc.PYRATE_DATE, ifc.PYRATE_DATE2, ifc.PYRATE_PHASE_UNITS]:
+            ds.SetMetadataItem(k, str(header[k]))
+
+    # position and projection data
+    ds.SetGeoTransform([header[ifc.PYRATE_LONG], header[ifc.PYRATE_X_STEP], 0,
+                        header[ifc.PYRATE_LAT], 0, header[ifc.PYRATE_Y_STEP]])
+
+    srs = osr.SpatialReference()
+    res = srs.SetWellKnownGeogCS(header[ifc.PYRATE_DATUM])
+
+    if res:
+        msg = 'Unrecognised projection: %s' % header[ifc.PYRATE_DATUM]
+        raise GeotiffException(msg)
+
+    ds.SetProjection(srs.ExportToWkt())
+
+    # copy data from the binary file
+    band = ds.GetRasterBand(1)
+    band.SetNoDataValue(nodata)
+
+    if ifg_proc == GAMMA:
+        fmtstr = '!' + ('f' * ncols)  # data format is big endian float32s
+        bytes_per_col = 4
+    elif ifg_proc == ROIPAC:
+        if is_ifg:
+            fmtstr = '<' + ('f' * ncols)  # roipac ifgs are little endian float32s
+            bytes_per_col = 4
+        else:
+            fmtstr = '<' + ('h' * ncols)  # roipac DEM is little endian signed int16
+            bytes_per_col = 2
+    else:
+        msg = 'Unrecognised InSAR Processor: %s' % ifg_proc
+        raise GeotiffException(msg)
+
+    row_bytes = ncols * bytes_per_col
+
+    with open(data_path, 'rb') as f:
+        for y in range(nrows):
+            if ifg_proc == ROIPAC:
+                if is_ifg:
+                    f.seek(row_bytes, 1)  # skip interleaved band 1
+
+            data = struct.unpack(fmtstr, f.read(row_bytes))
+            #else: # GAMMA
+            #    data = struct.unpack(fmtstr, f.read(ncols * 4))
+
+            band.WriteArray(np.array(data).reshape(1, ncols), yoff=y)
+
+    # Needed? Only in ROIPAC code
+    #ds = None  # manual close
+    #del ds
+
+
+class GeotiffException(Exception):
+    pass
 
 if __name__ == '__main__':
     print nanmedian([1, 2, nan, 2, nan, 4])
