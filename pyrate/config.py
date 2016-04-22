@@ -341,6 +341,32 @@ class ConfigException(Exception):
     """
     Default exception class for configuration errors.
     """
-
     pass
 
+
+def write_config_file(params, output_conf_file):
+    """
+    takes a param object and write the config file. Reverse of get_conf_params
+    :param params: params dictionary
+
+    """
+    with open(output_conf_file, 'w') as f:
+        for k, v in params.iteritems():
+            if k == ORBITAL_FIT_DEGREE:
+                v = reverse_degree_conv(k, v)
+            f.write(''.join([k, ':\t', str(v), '\n']))
+
+
+def reverse_degree_conv(k, v):
+    """
+    Convenience: convert numerical degree to human readable string
+    """
+    if v == orbital.PLANAR:
+        return 1
+    if v == orbital.QUADRATIC:
+        return 2
+    if v == orbital.PART_CUBIC:
+        return 3
+    else:
+        raise ValueError(
+            "Orbital fit polynomial degree option not recognised")
