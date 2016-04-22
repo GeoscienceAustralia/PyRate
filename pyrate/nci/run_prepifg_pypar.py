@@ -8,6 +8,9 @@ from pyrate.nci.parallel import Parallel
 from pyrate.scripts import run_pyrate
 from pyrate import config as cf
 from pyrate.scripts import run_prepifg
+from pyrate import gamma
+from pyrate.shared import Ifg
+from pyrate import prepifg
 
 # Constants
 MASTER_PROCESS = 0
@@ -28,7 +31,7 @@ def main():
         num_processors = parallel.size
         print "Master process found {} worker processors".format(num_processors)
 
-    # Read config file
+    # Read config file, dest_paths are final mlooked/sampled and cropped tifs
     base_ifg_paths, dest_paths, params = run_pyrate.get_ifg_paths()
 
     # logfile
@@ -73,7 +76,34 @@ def main():
           'sites out of {num_files}'.format(mpi_id=MPI_myID,
                                             processes=len(process_base_paths),
                                             num_files=num_files)
-    run_prepifg.gamma_prepifg(process_base_paths, params)
+
+    msg = "running gamma prepifg"
+    print msg
+    xlooks, ylooks, crop = run_pyrate.transform_params(params)
+    dem_hdr_path = params[cf.DEM_HEADER_FILE]
+    DEM_HDR = gamma.parse_dem_header(dem_hdr_path)
+    try:
+        SLC_DIR = params[cf.SLC_DIR]
+    except:
+        SLC_DIR = None
+
+    # location of geo_tif's
+    dest_base_ifgs = [os.path.join(
+        params[cf.OUT_DIR], os.path.basename(q).split('.')[0] + '.tif')
+                      for q in base_ifg_paths]
+
+    [run_prepifg.gamma_multiprocessing(b, params) for b in process_base_paths]
+    parallel.barrier()
+    ifgs = [Ifg(p) for p in dest_base_ifgs]
+    xlooks, ylooks, crop = run_pyrate.transform_params(params)
+    exts = prepifg.getAnalysisExtent(crop, ifgs, xlooks, ylooks, userExts=None)
+    thresh = params[cf.NO_DATA_AVERAGING_THRESHOLD]
+    verbose = False
+
+    process_ifgs = [itemgetter(p)(ifgs)
+                          for p in process_subset_indices]
+    [prepifg.prepare_ifg(i, xlooks, ylooks, exts, thresh,
+                         crop, verbose) for i in process_ifgs]
     parallel.finalize()
 
 

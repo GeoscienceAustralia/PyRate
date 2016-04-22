@@ -132,10 +132,5 @@ def gamma_multiprocessing(b, params):
     gamma.to_geotiff(COMBINED, b, d,
                      nodata=params[cf.NO_DATA_VALUE])
 
-
-def gamma_pypar_helper(base_unws, params):
-    for b in base_unws:
-        gamma_multiprocessing(b, params)
-
 if __name__ == '__main__':
     main()
