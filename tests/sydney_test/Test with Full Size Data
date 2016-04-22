@@ -1,3 +1,4 @@
 #Testing the run_prepifg.py with new dataset both in Pycharm and rhe_compute.
 #For Pycharm the datset (one interferogram) was processed locally.
 #For both test cases the option for Parallel=1 was selected.
+#For one image as a test in Pycharm(Windows), it took 25 minutes to complete the task with run_prepifg.py program. 
