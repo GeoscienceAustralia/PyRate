@@ -16,7 +16,9 @@ from pyrate import prepifg
 MASTER_PROCESS = 0
 
 ###============================================================================
-#    Usage:  blah
+#    Usage:  Reads in the gamma config file and produces thr tifs from gamma
+#    processed unwrapped interferrograms (ifgs).
+#    mpirun -np 4 python pyrate/nci/run_prepifg_pypar.py gamma_config_file.conf
 #===============================================================================
 
 
@@ -25,10 +27,9 @@ def main():
     # Setting up parallelisation
     parallel = Parallel(True)
     MPI_myID = parallel.rank
-
+    num_processors = parallel.size
     ### Master Process ###
     if MPI_myID == MASTER_PROCESS:
-        num_processors = parallel.size
         print "Master process found {} worker processors".format(num_processors)
 
     # Read config file, dest_paths are final mlooked/sampled and cropped tifs
@@ -92,7 +93,10 @@ def main():
         params[cf.OUT_DIR], os.path.basename(q).split('.')[0] + '.tif')
                       for q in base_ifg_paths]
 
+    # calculate geo_tifs using mpi
     [run_prepifg.gamma_multiprocessing(b, params) for b in process_base_paths]
+
+    # need to come back to the main thread as all ifgs are needed for exts calc
     parallel.barrier()
     ifgs = [Ifg(p) for p in dest_base_ifgs]
     xlooks, ylooks, crop = run_pyrate.transform_params(params)
@@ -100,6 +104,7 @@ def main():
     thresh = params[cf.NO_DATA_AVERAGING_THRESHOLD]
     verbose = False
 
+    # go mpi again for prep_ifg
     process_ifgs = [itemgetter(p)(ifgs)
                           for p in process_subset_indices]
     [prepifg.prepare_ifg(i, xlooks, ylooks, exts, thresh,

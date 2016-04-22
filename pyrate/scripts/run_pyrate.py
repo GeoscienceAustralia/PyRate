@@ -407,8 +407,8 @@ def get_ifg_paths():
         logging.debug(emsg)
         print emsg
         sys.exit(err.errno)
-    ifgListFile = options.ifglist or pars.get(cf.IFG_FILE_LIST)
-    if ifgListFile is None:
+    ifg_file_list = options.ifglist or pars.get(cf.IFG_FILE_LIST)
+    if ifg_file_list is None:
         emsg = 'Error {code}: Interferogram list file name not provided ' \
                'or does not exist'.format(code=2)
         logging.debug(emsg)
