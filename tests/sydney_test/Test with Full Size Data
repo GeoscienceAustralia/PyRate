@@ -2,3 +2,4 @@
 #For Pycharm the datset (one interferogram) was processed locally.
 #For both test cases the option for Parallel=1 was selected.
 #For one image as a test in Pycharm(Windows), it took 25 minutes to complete the task with run_prepifg.py program. 
+#Test on rhe_compute repeated again with "parallel = 0" and "Luigi = 1". The progress is faster than "parallel= 1 or 2 " but still low in spead. . 
