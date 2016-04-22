@@ -28,9 +28,9 @@ def main(params=None):
     :return:
     """
     if params:
-        base_ifg_paths, dest_paths, _ = run_pyrate.get_ifg_paths()
+        base_ifg_paths, _, _ = run_pyrate.get_ifg_paths()
     else:
-        base_ifg_paths, dest_paths, params = run_pyrate.get_ifg_paths()
+        base_ifg_paths, _, params = run_pyrate.get_ifg_paths()
 
     LUIGI = params[cf.LUIGI]  # luigi or no luigi
     PROCESSOR = params[cf.PROCESSOR]  # roipac or gamma
@@ -85,14 +85,6 @@ def gamma_prepifg(base_ifg_paths, params):
     msg = "running gamma prepifg"
     print msg
     logging.info(msg)
-    xlooks, ylooks, crop = run_pyrate.transform_params(params)
-    dem_hdr_path = params[cf.DEM_HEADER_FILE]
-    DEM_HDR = gamma.parse_dem_header(dem_hdr_path)
-    try:
-        SLC_DIR = params[cf.SLC_DIR]
-    except:
-        SLC_DIR = None
-
     # location of geo_tif's
     dest_base_ifgs = [os.path.join(
         params[cf.OUT_DIR], os.path.basename(q).split('.')[0] + '.tif')
@@ -103,14 +95,13 @@ def gamma_prepifg(base_ifg_paths, params):
         print 'running gamma in parallel with {} ' \
               'processes'.format(params[cf.PROCESSES])
         parmap.map(gamma_multiprocessing, base_ifg_paths,
-                   DEM_HDR, SLC_DIR, params,
-                   processes=params[cf.PROCESSES])
+                   params, processes=params[cf.PROCESSES])
     else:
         for b in base_ifg_paths:
-            gamma_multiprocessing(b, DEM_HDR, SLC_DIR, params)
+            gamma_multiprocessing(b, params)
 
     ifgs = [Ifg(p) for p in dest_base_ifgs]
-
+    xlooks, ylooks, crop = run_pyrate.transform_params(params)
     exts = prepifg.getAnalysisExtent(crop, ifgs, xlooks, ylooks, userExts=None)
     thresh = params[cf.NO_DATA_AVERAGING_THRESHOLD]
     verbose = False
@@ -123,7 +114,14 @@ def gamma_prepifg(base_ifg_paths, params):
                xlooks, ylooks, exts, thresh, crop, verbose) for i in ifgs]
 
 
-def gamma_multiprocessing(b, DEM_HDR, SLC_DIR, params):
+def gamma_multiprocessing(b, params):
+    dem_hdr_path = params[cf.DEM_HEADER_FILE]
+    DEM_HDR = gamma.parse_dem_header(dem_hdr_path)
+    try:
+        SLC_DIR = params[cf.SLC_DIR]
+    except:
+        SLC_DIR = None
+
     d = os.path.join(
         params[cf.OUT_DIR], os.path.basename(b).split('.')[0] + '.tif')
     header_paths = gamma_task.get_header_paths(b, slc_dir=SLC_DIR)
@@ -133,6 +131,11 @@ def gamma_multiprocessing(b, DEM_HDR, SLC_DIR, params):
     COMBINED = gamma.combine_headers(hdrs[0], hdrs[1], dem_hdr=DEM_HDR)
     gamma.to_geotiff(COMBINED, b, d,
                      nodata=params[cf.NO_DATA_VALUE])
+
+
+def gamma_pypar_helper(base_unws, params):
+    for b in base_unws:
+        gamma_multiprocessing(b, params)
 
 if __name__ == '__main__':
     main()
