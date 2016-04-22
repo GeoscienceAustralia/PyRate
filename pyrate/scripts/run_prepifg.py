@@ -100,13 +100,14 @@ def gamma_prepifg(base_ifg_paths, params):
 
     parallel = params[cf.PARALLEL]
     if parallel:
-        print 'running gamma in parallel'
-        bd_list = [(b, d) for b, d, in zip(base_ifg_paths, dest_base_ifgs)]
-        parmap.map(gamma_multiprocessing, bd_list, DEM_HDR, SLC_DIR, params,
+        print 'running gamma in parallel with {} ' \
+              'processes'.format(params[cf.PROCESSES])
+        parmap.map(gamma_multiprocessing, base_ifg_paths,
+                   DEM_HDR, SLC_DIR, params,
                    processes=params[cf.PROCESSES])
     else:
-        for b, d in zip(base_ifg_paths, dest_base_ifgs):
-            gamma_multiprocessing((b, d), DEM_HDR, SLC_DIR, params)
+        for b in base_ifg_paths:
+            gamma_multiprocessing(b, DEM_HDR, SLC_DIR, params)
 
     ifgs = [Ifg(p) for p in dest_base_ifgs]
 
@@ -115,14 +116,16 @@ def gamma_prepifg(base_ifg_paths, params):
     verbose = False
     if parallel:  # using threadpool due to pickling issue
         tparmap.map(prepifg.prepare_ifg, ifgs,
-               xlooks, ylooks, exts, thresh, crop, verbose)
+                    xlooks, ylooks, exts, thresh, crop, verbose,
+                    processes=params[cf.PROCESSES])
     else:
         [prepifg.prepare_ifg(i,
                xlooks, ylooks, exts, thresh, crop, verbose) for i in ifgs]
 
 
-def gamma_multiprocessing(b_d, DEM_HDR, SLC_DIR, params):
-    b, d = b_d
+def gamma_multiprocessing(b, DEM_HDR, SLC_DIR, params):
+    d = os.path.join(
+        params[cf.OUT_DIR], os.path.basename(b).split('.')[0] + '.tif')
     header_paths = gamma_task.get_header_paths(b, slc_dir=SLC_DIR)
     if len(header_paths) != 2:
         raise
