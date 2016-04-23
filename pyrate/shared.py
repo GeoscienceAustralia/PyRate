@@ -3,10 +3,10 @@ Contains objects common to multiple parts of PyRate
 
 Created on 12/09/2012
 
-.. codeauthor:: Ben Davies, Sudipta Basak
+.. codeauthor:: Ben Davies, Sudipta Basak, Matt Garthwaite
 """
 
-import os
+import os, struct
 import math
 from datetime import date
 import logging
@@ -18,11 +18,12 @@ from functools import wraps
 import time
 import logging
 import pkg_resources
+from pyrate import roipac, gamma
 
 import pyrate.ifgconstants as ifc
 
 try:
-    from osgeo import gdal
+    from osgeo import osr, gdal
     from osgeo.gdalconst import GA_Update, GA_ReadOnly, GF_Write
 except ImportError:
     import gdal
@@ -33,9 +34,11 @@ from pyrate.geodesy import cell_size
 
 # Constants
 PHASE_BAND = 1
-META_UNITS = 'PHASE_UNITS'
+RADIANS = 'RADIANS'
 MILLIMETRES = 'MILLIMETRES'
 MM_PER_METRE = 1000
+GAMMA = 'GAMMA'
+ROIPAC = 'ROIPAC'
 
 # GDAL projection list
 GDAL_X_CELLSIZE = 1
@@ -269,17 +272,22 @@ class Ifg(RasterBase):
         :return: convert wavelength from radians to mm
         """
         self.mm_converted = True
-        if self.dataset.GetMetadataItem(META_UNITS) == MILLIMETRES:
-            msg = '%s: ignored as previous wavelength conversion detected'
+        if self.dataset.GetMetadataItem(ifc.PYRATE_PHASE_UNITS) == MILLIMETRES:
+            msg = '%s: ignored as previous phase unit conversion already applied'
             logging.debug(msg % self.data_path)
             self.phase_data = self.phase_data
             return
-
-        self.phase_data = wavelength_radians_to_mm(self.phase_data,
+        #elif self.dataset.GetMetadataItem(ifc.PYRATE_PHASE_UNITS) == RADIANS:
+        self.phase_data = convert_radians_to_mm(self.phase_data,
                                                       self.wavelength)
-        self.dataset.SetMetadataItem(META_UNITS, MILLIMETRES)
-        msg = '%s: converted wavelength to millimetres'
+        self.dataset.SetMetadataItem(ifc.PYRATE_PHASE_UNITS, MILLIMETRES)
+        msg = '%s: converted phase units to millimetres'
         logging.debug(msg % self.data_path)
+        # TODO: implement test for when units neither mm or radians
+        #else:
+        #    msg = 'Phase units are not millimetres or radians'
+        #    raise IfgException(msg)
+
 
     @phase_data.setter
     def phase_data(self, data):
@@ -484,16 +492,12 @@ class EpochList(object):
         return "EpochList: %s" % repr(self.dates)
 
 
-def wavelength_radians_to_mm(data, wavelength):
+def convert_radians_to_mm(data, wavelength):
     """
     Translates phase from radians to millimetres
-    data: ifg phase data
-    wavelength: normally included with SAR instrument pass data
+    data: interferogram phase data
+    wavelength: radar wavelength; normally included with SAR instrument metadata
     """
-
-    # '4' is 2*2, the 1st 2 is that the raw signal is 'there and back', to get
-    # the vector length between satellite and ground, half the signal is needed
-    # second 2*pi is because one wavelength is equal to 2 radians
     return data * MM_PER_METRE * (wavelength / (4 * math.pi))
 
 
@@ -535,6 +539,87 @@ def nanmedian(x):
         return np.nanmedian(x)
     else:
         return np.median(x[~np.isnan(x)])
+
+
+def write_geotiff(header, data_path, dest, nodata):
+    """
+    Writes image data to GeoTIFF image with PyRate metadata
+    """
+    is_ifg = ifc.PYRATE_WAVELENGTH_METRES in header
+    ifg_proc = header[ifc.PYRATE_INSAR_PROCESSOR]
+    ncols = header[ifc.PYRATE_NCOLS]
+    nrows = header[ifc.PYRATE_NROWS]
+
+    # need to have gamma/roipac functionality here?
+    if ifg_proc == ROIPAC:
+        roipac._check_raw_data(is_ifg, data_path, ncols, nrows)
+        roipac._check_step_mismatch(header)
+    else: #GAMMA
+        gamma._check_raw_data(data_path, ncols, nrows)
+        gamma._check_step_mismatch(header)
+
+    driver = gdal.GetDriverByName("GTiff")
+    dtype = gdal.GDT_Float32 if is_ifg else gdal.GDT_Int16
+    ds = driver.Create(dest, ncols, nrows, 1, dtype)
+
+    # write pyrate parameters to headers
+    if is_ifg:
+        for k in [ifc.PYRATE_WAVELENGTH_METRES, ifc.PYRATE_TIME_SPAN, ifc.PYRATE_INSAR_PROCESSOR,
+                    ifc.PYRATE_DATE, ifc.PYRATE_DATE2, ifc.PYRATE_PHASE_UNITS]:
+            ds.SetMetadataItem(k, str(header[k]))
+
+    # position and projection data
+    ds.SetGeoTransform([header[ifc.PYRATE_LONG], header[ifc.PYRATE_X_STEP], 0,
+                        header[ifc.PYRATE_LAT], 0, header[ifc.PYRATE_Y_STEP]])
+
+    srs = osr.SpatialReference()
+    res = srs.SetWellKnownGeogCS(header[ifc.PYRATE_DATUM])
+
+    if res:
+        msg = 'Unrecognised projection: %s' % header[ifc.PYRATE_DATUM]
+        raise GeotiffException(msg)
+
+    ds.SetProjection(srs.ExportToWkt())
+
+    # copy data from the binary file
+    band = ds.GetRasterBand(1)
+    band.SetNoDataValue(nodata)
+
+    if ifg_proc == GAMMA:
+        fmtstr = '!' + ('f' * ncols)  # data format is big endian float32s
+        bytes_per_col = 4
+    elif ifg_proc == ROIPAC:
+        if is_ifg:
+            fmtstr = '<' + ('f' * ncols)  # roipac ifgs are little endian float32s
+            bytes_per_col = 4
+        else:
+            fmtstr = '<' + ('h' * ncols)  # roipac DEM is little endian signed int16
+            bytes_per_col = 2
+    else:
+        msg = 'Unrecognised InSAR Processor: %s' % ifg_proc
+        raise GeotiffException(msg)
+
+    row_bytes = ncols * bytes_per_col
+
+    with open(data_path, 'rb') as f:
+        for y in range(nrows):
+            if ifg_proc == ROIPAC:
+                if is_ifg:
+                    f.seek(row_bytes, 1)  # skip interleaved band 1
+
+            data = struct.unpack(fmtstr, f.read(row_bytes))
+            #else: # GAMMA
+            #    data = struct.unpack(fmtstr, f.read(ncols * 4))
+
+            band.WriteArray(np.array(data).reshape(1, ncols), yoff=y)
+
+    # Needed? Only in ROIPAC code
+    #ds = None  # manual close
+    #del ds
+
+
+class GeotiffException(Exception):
+    pass
 
 if __name__ == '__main__':
     print nanmedian([1, 2, nan, 2, nan, 4])

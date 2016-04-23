@@ -153,7 +153,7 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
         self.assertEquals(c+1, len(all_roipac_ifgs))
         self.assertEquals(c+1, len(all_gamma_ifgs))
 
-    def test_eqality_of_meta_data(self):
+    def test_equality_of_meta_data(self):
         all_gamma_ifgs = sydney_data_setup(
             glob.glob(os.path.join(self.gamma_base_dir, "*.tif")))
         all_roipac_ifgs = sydney_data_setup(
@@ -166,6 +166,8 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
                 if is_number(mdi[k]):
                     self.assertAlmostEqual(
                         float(mdj[k]), float(mdi[k]), places=6)
+                elif mdi[k] == 'ROIPAC' or 'GAMMA':
+                    pass # INSAR_PROCESSOR can not be equal
                 else:
                     self.assertEquals(mdj[k], mdi[k])
 

@@ -487,7 +487,7 @@ class MatlabEqualityTestRoipacSydneyTestData(unittest.TestCase):
                                                              k].phase_data,
                                                          decimal=2)
 
-    def test_matlab_prepifg_and_convert_wavelength(self):
+    def test_matlab_prepifg_and_convert_phase(self):
         """
         Matlab to python prepifg equality test
         """

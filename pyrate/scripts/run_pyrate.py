@@ -25,10 +25,7 @@ from pyrate import algorithm
 from pyrate import ifgconstants as ifc
 
 # constants for metadata flags
-META_UNITS = 'PHASE_UNITS'
-MILLIMETRES = 'MILLIMETRES'
-META_ORBITAL = 'ORBITAL_ERROR'
-META_REMOVED = 'REMOVED'
+ORB_REMOVED = 'REMOVED'
 pars = None
 PYRATEPATH = cf.PYRATEPATH
 
@@ -170,7 +167,7 @@ def remove_orbital_error(ifgs, params):
     logging.debug('Calculating orbital correction')
 
     # perform some general error/sanity checks
-    flags = [i.dataset.GetMetadataItem(META_ORBITAL) for i in ifgs]
+    flags = [i.dataset.GetMetadataItem(ifc.PYRATE_ORBITAL_ERROR) for i in ifgs]
 
     if all(flags):
         msg = 'Skipped orbital correction, ifgs already corrected'
@@ -201,12 +198,12 @@ def remove_orbital_error(ifgs, params):
             os.remove(path)
 
     for i in ifgs:
-        i.dataset.SetMetadataItem(META_ORBITAL, META_REMOVED)
+        i.dataset.SetMetadataItem(ifc.PYRATE_ORBITAL_ERROR, ORB_REMOVED)
         logging.debug('%s: orbital error removed' % i.data_path)
 
 
 def check_orbital_ifgs(ifgs, flags):
-    count = sum([f == META_REMOVED for f in flags])
+    count = sum([f == ORB_REMOVED for f in flags])
     if (count < len(flags)) and (count > 0):
         msg = 'Detected mix of corrected and uncorrected orbital error in ifgs'
         logging.debug(msg)

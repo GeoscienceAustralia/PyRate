@@ -173,8 +173,8 @@ class PyRateTests(unittest.TestCase):
         st = os.stat(log_path)
         self.assertTrue(st.st_size > 0)
 
-    def test_wavelength_conversion(self):
-        # ensure phase has been converted from metres to millimetres
+    def test_phase_conversion(self):
+        # ensure phase has been converted to millimetres
         key = 'PHASE_UNITS'
         value = 'MILLIMETRES'
 

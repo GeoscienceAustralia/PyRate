@@ -28,6 +28,7 @@ import glob2
 from os.path import join
 from pyrate import config
 from pyrate.gamma import *
+from pyrate.shared import write_geotiff
 from pyrate.tasks.utils import IfgListMixin, InputParam
 
 PTN = re.compile(r'\d{8}')  # match 8 digits for the dates
@@ -120,7 +121,7 @@ class ConvertFileToGeotiff(luigi.Task):
         else:
             # probably have DEM or incidence file
             combinedHeader = demHeader
-        to_geotiff(combinedHeader, self.inputFile,
+        write_geotiff(combinedHeader, self.inputFile,
                    self.outputFile, self.noDataValue)
 
 
