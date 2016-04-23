@@ -15,9 +15,10 @@ from pyrate.shared import Ifg
 TEMPDIR = tempfile.gettempdir()
 BASE_TEST = join(os.environ['PYRATEPATH'], "tests")
 SYD_TEST_DIR = join(BASE_TEST, "sydney_test")
-SYD_TEST_OBS = join(SYD_TEST_DIR, 'obs')
+SYD_TEST_OBS = join(SYD_TEST_DIR, 'obs')  # roipac processed unws
 SYD_TEST_OUT = join(SYD_TEST_DIR, 'out')
 SYD_TEST_TIF = join(SYD_TEST_DIR, 'tif')
+SYD_TEST_GAMMA = join(SYD_TEST_DIR, 'gamma_sydney_test')  # gamma processed unws
 
 SYD_TEST_DEM_DIR = join(SYD_TEST_DIR, 'dem')
 SYD_TEST_MATLAB_MST_DIR = join(SYD_TEST_DIR, 'matlab_mst')
@@ -36,8 +37,6 @@ HEADERS_TEST_DIR = join(BASE_TEST, 'headers')
 INCID_TEST_DIR = join(BASE_TEST, 'incidence')
 
 GAMMA_TEST_DIR = join(BASE_TEST, "gamma")
-
-
 
 # small dummy ifg list to limit overall # of ifgs
 IFMS5 = """geo_060828-061211.tif
@@ -101,10 +100,16 @@ def sydney_data_setup_ifg_file_list(datafiles=None):
     return datafiles
 
 
-def sydney_data_setup_unw_file_list():
+def sydney_data_roipac_unws():
     """Returns unw file list before prepifg operation
     input phase data is in radians; these ifgs are in radians - not converted to mm"""
     return glob.glob(join(SYD_TEST_OBS, "*.unw"))
+
+
+def sydney_data_setup_gamma_unws():
+    """Returns unw file list before prepifg operation
+    input phase data is in radians; these ifgs are in radians - not converted to mm"""
+    return glob.glob(join(SYD_TEST_GAMMA, "*.unw"))
 
 
 def sydney5_ifgs():

@@ -27,25 +27,23 @@ def main(params=None):
      use run_prepifg from within the module.
     :return:
     """
+    usage = 'Usage: python run_prepifg.py <config file>'
     if params:
         base_ifg_paths = glob.glob(os.path.join(params[cf.OBS_DIR], '*.unw'))
+        LUIGI = params[cf.LUIGI]  # luigi or no luigi
+        if LUIGI:
+            raise cf.ConfigException('params can not be provided with luigi')
     else:  # if params not provided read from config file
+        if (not params) and ((len(sys.argv) == 1)
+                or (sys.argv[1] == '-h' or sys.argv[1] == '--help')):
+            print usage
+            return
         base_ifg_paths, _, params = run_pyrate.get_ifg_paths()
+        raw_config_file = sys.argv[1]
 
     LUIGI = params[cf.LUIGI]  # luigi or no luigi
     PROCESSOR = params[cf.PROCESSOR]  # roipac or gamma
     run_pyrate.init_logging(logging.DEBUG)
-
-    usage = 'Usage: python run_prepifg.py <config file>'
-    if (not params) and ((len(sys.argv) == 1)
-            or (sys.argv[1] == '-h' or sys.argv[1] == '--help')):
-        print usage
-        return
-
-    if not params:  # if params not provided read config file
-        raw_config_file = sys.argv[1]
-        if LUIGI:
-            raise cf.ConfigException('params can not be provided with luigi')
 
     if LUIGI:
         msg = "running luigi prepifg"

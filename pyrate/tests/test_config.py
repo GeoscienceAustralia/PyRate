@@ -8,8 +8,10 @@ Created on 17/09/2012
 
 import unittest
 from os.path import join
+import os
+import tempfile
 from pyrate import config
-from common import SYD_TEST_DIR, SYD_TEST_TIF
+from common import SYD_TEST_DIR, SYD_TEST_TIF, SYD_TEST_GAMMA
 
 
 class ConfigTest(unittest.TestCase):
@@ -39,6 +41,16 @@ class ConfigTest(unittest.TestCase):
 
         for path in files:
             assert path in result
+
+
+class ConfigWriteTest(unittest.TestCase):
+
+    def test_write_config_file(self):
+        conf_path = join(SYD_TEST_GAMMA, 'pyrate_gamma.conf')
+        params = config.get_config_params(conf_path)
+        temp_config = tempfile.mktemp(suffix='.conf')
+        config.write_config_file(params, temp_config)
+        self.assertTrue(os.path.exists(temp_config))
 
 if __name__ == "__main__":
     unittest.main()

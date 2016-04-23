@@ -40,7 +40,7 @@ from pyrate.tests.common import SYD_TEST_DEM_UNW, SYD_TEST_DEM_HDR
 from pyrate.tests.common import SYD_TEST_DEM_DIR, SYD_TEST_OBS, TEMPDIR
 from pyrate.tests import common
 from pyrate.scripts import run_prepifg
-from pyrate.tests.common import sydney_data_setup_unw_file_list
+from pyrate.tests.common import sydney_data_roipac_unws
 from pyrate.tests.common import sydney_data_setup_ifg_file_list
 from pyrate.tests.common import sydney_data_setup
 
@@ -319,7 +319,7 @@ class TestRoipacLuigiEquality(unittest.TestCase):
             ifgl.write('\n'.join(data))
 
     def test_cmd_ifg_luigi_files_created(self):
-        self.dataPaths = sydney_data_setup_unw_file_list()
+        self.dataPaths = sydney_data_roipac_unws()
         base_exp = sydney_data_setup_ifg_file_list()
         self.expPaths = [join(self.luigi_base_dir, os.path.basename(i))
                          for i in base_exp]
@@ -330,7 +330,7 @@ class TestRoipacLuigiEquality(unittest.TestCase):
         self.common_check()
 
     def test_cmd_ifg_no_luigi_files_created(self):
-        self.dataPaths = sydney_data_setup_unw_file_list()
+        self.dataPaths = sydney_data_roipac_unws()
         base_exp = sydney_data_setup_ifg_file_list()
         self.expPaths = [join(self.non_luigi_base_dir, os.path.basename(i))
                          for i in base_exp]

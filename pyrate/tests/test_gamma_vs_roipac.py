@@ -122,7 +122,7 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
             ifgl.write('\n'.join(data))
 
     def test_cmd_ifg_no_roipac_files_created_roipac(self):
-        self.dataPaths = common.sydney_data_setup_unw_file_list()
+        self.dataPaths = common.sydney_data_roipac_unws()
         base_exp = common.sydney_data_setup_ifg_file_list()
         self.expPaths = [os.path.join(self.roipac_base_dir, os.path.basename(i))
                          for i in base_exp]
