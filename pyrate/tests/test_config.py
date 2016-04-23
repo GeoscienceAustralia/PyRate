@@ -37,7 +37,7 @@ class ConfigTest(unittest.TestCase):
         assert len(result) == 17
         files = ["geo_060619-061002.tif", "geo_060828-061211.tif",
                     "geo_061002-070430.tif", "geo_070115-070917.tif",
-                    "geo_070219-070604.tif" ]
+                    "geo_070219-070604.tif"]
 
         for path in files:
             assert path in result
@@ -51,6 +51,16 @@ class ConfigWriteTest(unittest.TestCase):
         temp_config = tempfile.mktemp(suffix='.conf')
         config.write_config_file(params, temp_config)
         self.assertTrue(os.path.exists(temp_config))
+        os.remove(temp_config)
+
+    def test_new_config_file_and_original_match(self):
+        conf_path = join(SYD_TEST_GAMMA, 'pyrate_gamma.conf')
+        params = config.get_config_params(conf_path)
+        temp_config = tempfile.mktemp(suffix='.conf')
+        config.write_config_file(params, temp_config)
+        new_params = config.get_config_params(temp_config)
+        self.assertDictEqual(params, new_params)
+
 
 if __name__ == "__main__":
     unittest.main()
