@@ -80,13 +80,6 @@ def main():
 
     msg = "running gamma prepifg"
     print msg
-    xlooks, ylooks, crop = run_pyrate.transform_params(params)
-    dem_hdr_path = params[cf.DEM_HEADER_FILE]
-    DEM_HDR = gamma.parse_dem_header(dem_hdr_path)
-    try:
-        SLC_DIR = params[cf.SLC_DIR]
-    except:
-        SLC_DIR = None
 
     # location of geo_tif's
     dest_base_ifgs = [os.path.join(
