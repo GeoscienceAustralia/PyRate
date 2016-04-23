@@ -49,6 +49,8 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(len(mpi_tifs), len(serial_tifs))
         for m, s in zip(mpi_tifs, serial_tifs):
             self.assertEqual(os.path.basename(m), os.path.basename(s))
+        # 17 geotifs, and 17 mlooked tifs
+        self.assertEqual(len(mpi_tifs), 34)
 
     def test_mpi_log_file_created(self):
         self.assertTrue(os.path.exists(
