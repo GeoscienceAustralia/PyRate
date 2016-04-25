@@ -83,7 +83,7 @@ def cvd(ifg, calc_alpha=False):
     # whereas keeping 1st half is just numpy indexing.
     # If it is not faster, why was this done differently here?
 
-    r = r[:ceil(ifg.num_cells/2.0) + ifg.nrows]
+    r = r[:int(ceil(ifg.num_cells/2.0)) + ifg.nrows]
     acg = acg[:len(r)]
 
     # Alternative method to remove duplicate cells from Matlab Pirate
