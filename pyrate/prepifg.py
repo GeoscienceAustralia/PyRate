@@ -131,6 +131,7 @@ def prepare_ifgs(
     :param user_exts: CustomExts tuple with user sepcified lat long corners
     :param verbose: Controls level of gdalwarp output
     """
+    # TODO: make dems work in prep_ifgs again
     rasters = [Ifg(r) for r in rasters_data_paths]
     exts = getAnalysisExtent(crop_opt, rasters, xlooks, ylooks, user_exts)
 
