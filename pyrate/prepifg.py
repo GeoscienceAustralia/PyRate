@@ -68,13 +68,14 @@ def getAnalysisExtent(
 
 
 def prepare_ifg(
-    raster,
+    raster_path,
     xlooks,
     ylooks,
     exts,
     thresh,
     crop_opt,
-    verbose=True):
+    verbose=True,
+    ret_ifg=True):
     # Determine cmd line args for gdalwarp calls for each ifg (gdalwarp has no
     # API. For resampling, gdalwarp is called 2x. 1st to subset the source data
     # for Pirate style averaging/resampling, 2nd to generate the final dataset
@@ -84,6 +85,7 @@ def prepare_ifg(
     do_multilook = xlooks > 1 or ylooks > 1
     # resolution=None completes faster for non-multilooked layers in gdalwarp
     res = None
+    raster = Ifg(raster_path)
     if do_multilook:
         if not raster.is_open:
             raster.open()
@@ -99,13 +101,14 @@ def prepare_ifg(
     if not raster.is_open:
         raster.open()
 
-    return warp(raster, xlooks, ylooks, exts, res, thresh, crop_opt, verbose)
+    return warp(raster, xlooks, ylooks, exts, res, thresh,
+                crop_opt, verbose, ret_ifg)
 
 
 
 # TODO: crop options 0 = no cropping? get rid of same size (but it is in explained file)
 def prepare_ifgs(
-    rasters,
+    rasters_data_paths,
     crop_opt,
     xlooks,
     ylooks,
@@ -128,9 +131,11 @@ def prepare_ifgs(
     :param user_exts: CustomExts tuple with user sepcified lat long corners
     :param verbose: Controls level of gdalwarp output
     """
+    rasters = [Ifg(r) for r in rasters_data_paths]
     exts = getAnalysisExtent(crop_opt, rasters, xlooks, ylooks, user_exts)
 
-    return [prepare_ifg(i, xlooks, ylooks, exts, thresh, crop_opt, verbose) for i in rasters]
+    return [prepare_ifg(d, xlooks, ylooks, exts, thresh, crop_opt, verbose)
+            for d in rasters_data_paths]
 
 
 def get_extents(ifgs, crop_opt, user_exts=None):
@@ -216,7 +221,8 @@ def mlooked_path(path, looks, crop_out):
 
 
 # TODO: clean arg names
-def warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out, verbose):
+def warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out, verbose,
+         ret_ifg=True):
     """
     Resamples 'ifg' and returns a new Ifg obj.
 
@@ -282,7 +288,10 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out, verbose):
         new_lyr.phase_band.WriteArray(data)
         new_lyr.nan_converted = True
 
-    return new_lyr
+    if ret_ifg:
+        return new_lyr
+    else:
+        return
 
 
 def resample(data, xscale, yscale, thresh):

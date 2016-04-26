@@ -81,9 +81,8 @@ def roipac_prepifg(base_ifg_paths, params):
         if ifc.PYRATE_DATUM not in header:
             header[ifc.PYRATE_DATUM] = projection
         write_geotiff(header, b, d, nodata=params[cf.NO_DATA_VALUE])
-    ifgs = [Ifg(p) for p in dest_base_ifgs]
     prepifg.prepare_ifgs(
-        ifgs, crop_opt=crop, xlooks=xlooks, ylooks=ylooks)
+        dest_base_ifgs, crop_opt=crop, xlooks=xlooks, ylooks=ylooks)
 
 
 def gamma_prepifg(base_ifg_paths, params):
@@ -99,6 +98,8 @@ def gamma_prepifg(base_ifg_paths, params):
     if parallel:
         print 'running gamma in parallel with {} ' \
               'processes'.format(params[cf.PROCESSES])
+        import multiprocessing
+        print 'found', multiprocessing.cpu_count(), 'CPUs'
         parmap.map(gamma_multiprocessing, base_ifg_paths,
                    params, processes=params[cf.PROCESSES])
     else:
@@ -109,13 +110,13 @@ def gamma_prepifg(base_ifg_paths, params):
     exts = prepifg.getAnalysisExtent(crop, ifgs, xlooks, ylooks, userExts=None)
     thresh = params[cf.NO_DATA_AVERAGING_THRESHOLD]
     verbose = False
-    if parallel:  # using threadpool due to pickling issue
-        tparmap.map(prepifg.prepare_ifg, ifgs,
-                    xlooks, ylooks, exts, thresh, crop, verbose,
-                    processes=params[cf.PROCESSES])
+    if parallel:
+        parmap.map(prepifg.prepare_ifg, dest_base_ifgs,
+                   xlooks, ylooks, exts, thresh, crop, verbose, False,
+                   processes=params[cf.PROCESSES])
     else:
-        [prepifg.prepare_ifg(i,
-               xlooks, ylooks, exts, thresh, crop, verbose) for i in ifgs]
+        [prepifg.prepare_ifg(i, xlooks, ylooks, exts,
+                             thresh, crop, verbose, False) for i in dest_base_ifgs]
 
 
 def gamma_multiprocessing(b, params):
