@@ -84,7 +84,7 @@ class PrepareInterferogram(IfgListMixin, luigi.WrapperTask):
         with open(self.extentsFileName, 'rb') as extFile:
             extents = pickle.load(extFile)
         prepare_ifg(
-            self.ifg,
+            self.ifg.data_path,
             self.xlooks,
             self.ylooks,
             extents,

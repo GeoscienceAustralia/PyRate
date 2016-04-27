@@ -100,7 +100,7 @@ def main():
     # go mpi again for prep_ifg
     process_ifgs = [itemgetter(p)(ifgs)
                           for p in process_subset_indices]
-    [prepifg.prepare_ifg(i, xlooks, ylooks, exts, thresh,
+    [prepifg.prepare_ifg(i.data_path, xlooks, ylooks, exts, thresh,
                          crop, verbose) for i in process_ifgs]
     parallel.finalize()
 

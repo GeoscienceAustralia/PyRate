@@ -26,23 +26,19 @@ import numpy as np
 from pyrate.shared import Ifg, DEM
 
 
-
 def main(input_file, color_file, output_file):
     cmd = "gdaldem color-relief " + input_file \
           + ' ' + color_file + ' ' + output_file
     subprocess.check_call(cmd, shell=True)
 
 
-def gen_color_file(input_file, dem=False):
+def gen_color_file(input_file):
     fp, temp_file = tempfile.mkstemp(suffix='.txt')
-    if DEM:
-        dem = DEM(input_file)
-        dem.open()
-        phase_data = dem.height_band.ReadAsArray()
-    else:
-        ifg = Ifg(input_file)
-        ifg.open()
-        phase_data = ifg.phase_data
+
+    dem = DEM(input_file)
+    dem.open()
+    phase_data = dem.height_band.ReadAsArray()
+
     max_ph = np.nanmax(phase_data)
     min_ph = np.nanmin(phase_data)
     range_ph = max_ph-min_ph
@@ -63,7 +59,7 @@ if __name__ == '__main__':
     output_file = sys.argv[3]
     if color_file == 'auto':
         print '\nauto generating color file'
-        color_file = gen_color_file(input_file, dem=False)
+        color_file = gen_color_file(input_file)
     with open(color_file, 'r') as f:
         print '\ncolor file contents'
         print '='*50
