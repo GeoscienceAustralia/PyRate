@@ -136,7 +136,7 @@ def process_ifgs(ifg_paths_or_instance, params):
     dest = os.path.join(PYRATEPATH, params[cf.OUT_DIR], "linrate.tif")
     timeseries.write_geotiff_output(md, rate, dest, np.nan)
     dest = os.path.join(PYRATEPATH, params[cf.OUT_DIR], "linerror.tif")
-    timeseries.write_geotiff_output(md, rate, dest, np.nan)
+    timeseries.write_geotiff_output(md, error, dest, np.nan)
 
     # final cleanup, SB: Why do we need this?
     # while ifgs:
@@ -155,7 +155,11 @@ def insert_time_series_interpolation(ifg_instance_updated, params):
 
     _, _, ntrees = matlab_mst.matlab_mst_kruskal(edges, ntrees=True)
     # if ntrees=1, no interpolation; otherwise interpolate
-    params[cf.TIME_SERIES_INTERP] = ntrees - 1
+    if ntrees > 1:
+        params[cf.TIME_SERIES_INTERP] = 1
+    else:
+        params[cf.TIME_SERIES_INTERP] = 0
+
     return params
 
 
