@@ -5,6 +5,6 @@
 #Test on rhe_compute repeated again with "parallel = 0" and "Luigi = 1". The progress is faster than "parallel= 1 or 2 " but still low in spead. . 
 
 
-#update:
+#update(28.04.2016):
 #The functionality of python multiprocessing with large ifgs was checked. For four interferograms, the procedure took less than 20 minutes. 
 #Parallel processing works properly with 4 processes and 4 CPUs. The test was successful in Pycharm (windows).
