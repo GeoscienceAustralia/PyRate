@@ -1,14 +1,13 @@
 """
-Functions for producing a time series in PyRate.
-InSAR time series inversion without smoothing
-Based on original Matlab code by Hua Wang. Matlab 'tsinvnosm' function.
+Functions for doing an InSAR time series inversion in PyRate.
+Based on the Matlab Pirate 'tsinvnosm.m' and 'tsinvlap.m' functions.
 
-..codeauthor:: Vanessa Newey, Sudipta Basak
+..codeauthor:: Vanessa Newey, Sudipta Basak, Matt Garthwaite
 """
 
 from numpy import where, isnan, nan, diff, zeros, empty
 from numpy import float32, cumsum, dot, delete, asarray
-from numpy.linalg import matrix_rank, pinv
+from numpy.linalg import matrix_rank, pinv, cholesky
 from scipy.linalg import qr
 import numpy as np
 import matplotlib.pyplot as plt
@@ -24,20 +23,19 @@ from pyrate import config as cf
 
 def time_series(ifgs, params, vcmt, mst=None):
     """
-    Returns time series data from the given ifgs.
+    Returns time series data from the given interferograms.
 
-    :param ifgs: Sequence of interferograms.
-    :param pthresh: minimum number of coherent observations for a pixel.
+    :param ifgs: Network of interferograms.
     :param params: configuration parameters
     :param vcmt: Derived positive definite temporal variance covariance matrix
-    :param mst: [optional] array of ifg indexes from the pixel by pixel MST.
-    :param parallel: use multiprocessing or not.
+    :param mst: [optional] array of ifg indexes from the MST-matrix.
+    :param parallel: use parallel processing or not.
 
     :return: Tuple with the elements:
 
-        - incremental deformation time series (NB: not velocity),
-        - cumulative deformation time series, and
-        - velocity
+        - incremental displacement time series,
+        - cumulative displacement time series, and
+        - velocity for the epoch interval
 
         these outputs are multi-dimensional arrays of size(nrows, ncols, nepochs-1),
         where:
@@ -51,16 +49,19 @@ def time_series(ifgs, params, vcmt, mst=None):
         msg = 'Time series requires 2+ interferograms'
         raise TimeSeriesError(msg)
 
-    # MULTIPROCESSING parameters
+    # Parallel Processing parameters
     parallel = params[cf.PARALLEL]
     processes = params[cf.PROCESSES]
+    # Time Series parameters
     TSMETHOD = params[cf.TIME_SERIES_METHOD]
     INTERP = params[cf.TIME_SERIES_INTERP]
+    #INTERP = 1 
     SMORDER = params[cf.TIME_SERIES_SM_ORDER]
     SMFACTOR = np.power(10, params[cf.TIME_SERIES_SM_FACTOR])
-    pthresh = params[cf.TIME_SERIES_PTHRESH]
+    PTHRESH = params[cf.TIME_SERIES_PTHRESH]
+
     head = ifgs[0]
-    check_time_series_params(head, pthresh)
+    check_time_series_params(head, PTHRESH)
     epochlist = get_epochs(ifgs)
 
     nrows = ifgs[0].nrows
@@ -97,13 +98,13 @@ def time_series(ifgs, params, vcmt, mst=None):
     if parallel == 1:
         tsvel_matrix = parmap.map(time_series_by_rows, range(nrows), B0,
                                   SMFACTOR, SMORDER, ifg_data, mst, ncols,
-                                  nvelpar, pthresh, vcmt, TSMETHOD, INTERP,
+                                  nvelpar, PTHRESH, vcmt, TSMETHOD, INTERP,
                                   processes=processes)
     elif parallel == 2:
         res = parmap.starmap(time_series_by_pixel,
                              itertools.product(range(nrows), range(ncols)),
                              B0, SMFACTOR, SMORDER, ifg_data, mst, nvelpar,
-                             pthresh, vcmt, TSMETHOD, INTERP,
+                             PTHRESH, vcmt, TSMETHOD, INTERP,
                              processes=processes)
         res = np.array(res)
         tsvel_matrix = np.reshape(res, newshape=(nrows, ncols, res.shape[1]))
@@ -112,31 +113,28 @@ def time_series(ifgs, params, vcmt, mst=None):
             for col in xrange(ncols):
                 tsvel_matrix[row, col] = time_series_by_pixel(
                     row, col, B0, SMFACTOR, SMORDER, ifg_data, mst, nvelpar,
-                    pthresh, vcmt, TSMETHOD, INTERP)
-
-    # SB: do the span multiplication as a numpy linalg operation, MUCH faster
-    # not even this is necessary here, perform late for performance
-    # tsincr = tsvel_matrix * span
-
-    # convert zeros to nans
-    # SB: perform this after tsvel_matrix has been nan converted,
-    # saves the step of comparing a large matrix (tsincr) to zero.
+                    PTHRESH, vcmt, TSMETHOD, INTERP)
 
     tsvel_matrix = where(tsvel_matrix == 0, nan, tsvel_matrix)
+    # SB: do the span multiplication as a numpy linalg operation, MUCH faster
+    # not even this is necessary here, perform late for performance        
     tsincr = tsvel_matrix * span
     tscum = cumsum(tsincr, 2)
-    # tscum = where(tscum == 0, nan, tscum) # SB: not performed in matlab
+    # SB: convert zeros to nans not performed in matlab
+    # SB: perform this after tsvel_matrix has been nan converted,
+    # saves the step of comparing a large matrix (tsincr) to zero.
+    # tscum = where(tscum == 0, nan, tscum) 
 
     return tsincr, tscum, tsvel_matrix
 
 
 def time_series_by_rows(row, B0, SMFACTOR, SMORDER, ifg_data, mst, ncols,
-                        nvelpar, pthresh, vcmt, TSMETHOD, INTERP):
+                        nvelpar, PTHRESH, vcmt, TSMETHOD, INTERP):
     tsvel = np.empty(shape=(ncols, nvelpar), dtype=np.float32)
     for col in range(ncols):
         tsvel[col, :] = time_series_by_pixel(
             row, col, B0, SMFACTOR, SMORDER, ifg_data, mst, nvelpar,
-            pthresh, vcmt, TSMETHOD, INTERP)
+            PTHRESH, vcmt, TSMETHOD, INTERP)
 
     return tsvel
 
@@ -152,10 +150,10 @@ def remove_rank_def_rows(B, nvelpar, ifgv, sel):
 
 
 def time_series_by_pixel(row, col, B0, SMFACTOR, SMORDER, ifg_data, mst,
-                         nvelpar, pthresh, vcmt, method, interp):
-    # check pixel for non-redundant ifgs;
+                         nvelpar, PTHRESH, vcmt, method, interp):
+    # check pixel for non-redundant ifgs
     sel = np.nonzero(mst[:, row, col])[0]  # trues in mst are chosen
-    if len(sel) >= pthresh:
+    if len(sel) >= PTHRESH:
         ifgv = ifg_data[sel, row, col]
         # make design matrix, B
         B = B0[sel, :]
@@ -205,43 +203,38 @@ def solve_ts_lap(nvelpar, velflag, ifgv, B, SMORDER, SMFACTOR, sel, vcmt):
     method using a Laplacian Smoothing operator.
     Similar to the method implemented by Schmidt and Burgmann 2003
     """
-    # SMORDER = params[cf.TIME_SERIES_SM_ORDER] # Laplacian smoothing order
-    # SMFACTOR = 10**(params[cf.TIME_SERIES_SM_FACTOR]) # Laplacian smoothing factor
-
-    nlap = nvelpar - SMORDER  # Laplacian observations number
-
+    # Laplacian observations number
+    nlap = nvelpar - SMORDER  
     #  Laplacian smoothing coefficient matrix
     BLap0 = np.zeros(shape=(nlap, nvelpar))
 
     for i in range(nlap):
-      if SMORDER == 1:
-        BLap0[i, i:i+2] = [-1, 1]
-      else:
-        BLap0[i, i:i+3] = [1, -2, 1]
+        if SMORDER == 1:
+            BLap0[i, i:i+2] = [-1, 1]
+        else:
+            BLap0[i, i:i+3] = [1, -2, 1]
 
-    # smf: Laplacian smoothing factor
+    # Scale the coefficients by Laplacian smoothing factor
     BLap0 *= SMFACTOR
 
     # Laplacian smoothing design matrix
     nvelleft = np.count_nonzero(velflag)
     nlap = nvelleft - SMORDER
 
-    BLap = np.empty(shape=(nlap + 2, nvelleft))
-
     # constrain for the first and the last incremental
     BLap1 = -np.divide(np.ones(shape=nvelleft), nvelleft - 1)
     BLap1[0] = 1.0
-
     BLapn = -np.divide(np.ones(shape=nvelleft), nvelleft - 1)
     BLapn[-1] = 1.0
 
+    BLap = np.empty(shape=(nlap + 2, nvelleft))
     BLap[0, :] = BLap1
     BLap[1:nlap + 1, :] = BLap0[0:nlap, 0:nvelleft]
     BLap[-1, :] = BLapn
 
     nlap += 2
 
-    # add laplacian design matrix
+    # add laplacian design matrix to existing design matrix
     B = np.concatenate((B, BLap), axis=0)
 
     # combine ifg and Laplacian smooth vector
@@ -257,17 +250,11 @@ def solve_ts_lap(nvelpar, velflag, ifgv, B, SMORDER, SMFACTOR, sel, vcmt):
 
     # solve the equation by least-squares
     # calculate velocities
-    # we get the lower triangle in numpy
-    # matlab gives upper triangle by default
-    w = np.linalg.cholesky(np.linalg.pinv(vcm_tmp)).T
-
-    wb = np.dot(w, B)
-    wl = np.dot(w, obsv)
-    # x=wb\wl
-    x = np.dot(np.linalg.pinv(wb, rcond=1e-8), wl)
-
-    # residuals and roughness
-    # not implemented
+    # we get the lower triangle in numpy, matlab gives upper triangle
+    w = cholesky(pinv(vcm_tmp)).T
+    wb = dot(w, B)
+    wl = dot(w, obsv)
+    x = dot(pinv(wb, rcond=1e-8), wl)
 
     # TODO: implement residuals and roughness calculations
     tsvel = np.empty(nvelpar, dtype=np.float32) * np.nan
@@ -320,7 +307,7 @@ def plot_timeseries(tsincr, tscum, tsvel, output_dir):
         fig = None
 
 
-def check_time_series_params(head, pthresh):
+def check_time_series_params(head, PTHRESH):
     """
     Validates time series parameter. head is any Ifg.
     """
@@ -332,37 +319,14 @@ def check_time_series_params(head, pthresh):
         msg = "Missing '%s' in configuration options" % option
         raise config.ConfigException(msg)
 
-    if pthresh is None:
+    if PTHRESH is None:
         missing_option_error(config.TIME_SERIES_PTHRESH)
 
-    if pthresh < 0.0 or pthresh > 1000:
+    if PTHRESH < 0.0 or PTHRESH > 1000:
         raise ValueError(
             "minimum number of coherent observations for a pixel"
             " TIME_SERIES_PTHRESH setting must be >= 0.0 and <= 1000")
 
-
-def write_geotiff_output(md, data, dest, nodata):
-    '''
-    Writes data to a GeoTIFF file.
-    md is a dictionary containing these items:
-    ifc.PYRATE_PROJECTION, ifc.PYRATE_GEOTRANSFORM,
-    ifc.PYRATE_DATE
-    NB It should be moved to utils class
-    '''
-
-    driver = gdal.GetDriverByName("GTiff")
-    nrows, ncols = data.shape
-    ds = driver.Create(dest, ncols, nrows, 1, gdal.GDT_Float32)
-
-    # TODO: What are ifc.PYRATE_PROJECTION and ifc.PYRATE_GEOTRANSFORM?
-    # ds.SetProjection(md[ifc.PYRATE_PROJECTION])
-    # ds.SetGeoTransform(md[ifc.PYRATE_GEOTRANSFORM])
-    ds.SetMetadataItem(ifc.PYRATE_DATE, str(md[ifc.PYRATE_DATE]))
-
-    # write data
-    band = ds.GetRasterBand(1)
-    band.SetNoDataValue(nodata)
-    band.WriteArray(data, 0, 0)
 
 
 class TimeSeriesError(Exception):

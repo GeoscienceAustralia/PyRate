@@ -17,12 +17,13 @@ import pyrate.orbital as orbital
 import pyrate.linrate as linrate
 import pyrate.timeseries as timeseries
 import pyrate.config as cf
-from pyrate.shared import Ifg
+from pyrate.shared import Ifg, write_output_geotiff
 from pyrate import vcm as vcm_module
 from pyrate import matlab_mst_kruskal as matlab_mst
 from pyrate import reference_phase_estimation as rpe
 from pyrate import algorithm
 from pyrate import ifgconstants as ifc
+
 
 # constants for metadata flags
 ORB_REMOVED = 'REMOVED'
@@ -101,6 +102,8 @@ def process_ifgs(ifg_paths_or_instance, params):
 
     ds = gdal.Open(p)
     md = ds.GetMetadata()  # get metadata for writing on output tifs
+    gt = ds.GetGeoTransform() # get geographical bounds of data
+    wkt = ds.GetProjection() # get projection of data
     epochlist = algorithm.get_epochs(ifgs)
 
     if params[cf.TIME_SERIES_CAL] != 0:
@@ -115,28 +118,28 @@ def process_ifgs(ifg_paths_or_instance, params):
             dest = os.path.join(
                 PYRATEPATH, params[cf.OUT_DIR],
                 "tsincr_" + str(epochlist.dates[i+1]) + ".tif")
-            timeseries.write_geotiff_output(md, data, dest, np.nan)
+            write_output_geotiff(md, gt, wkt, data, dest, np.nan)
 
             data = tscum[:, :, i]
             dest = os.path.join(
                 PYRATEPATH, params[cf.OUT_DIR],
                 "tscuml_" + str(epochlist.dates[i+1]) + ".tif")
-            timeseries.write_geotiff_output(md, data, dest, np.nan)
+            write_output_geotiff(md, gt, wkt, data, dest, np.nan)
 
             data = tsvel[:, :, i]
             dest = os.path.join(
                 PYRATEPATH, params[cf.OUT_DIR],
                 "tsvel_" + str(epochlist.dates[i+1]) + ".tif")
-            timeseries.write_geotiff_output(md, data, dest, np.nan)
+            write_output_geotiff(md, gt, wkt, data, dest, np.nan)
 
     # Calculate linear rate map
     rate, error, samples = calculate_linear_rate(
                    ifgs, params, vcmt, mst=mst_grid)
     md[ifc.PYRATE_DATE] = epochlist.dates
     dest = os.path.join(PYRATEPATH, params[cf.OUT_DIR], "linrate.tif")
-    timeseries.write_geotiff_output(md, rate, dest, np.nan)
+    write_output_geotiff(md, gt, wkt, rate, dest, np.nan)
     dest = os.path.join(PYRATEPATH, params[cf.OUT_DIR], "linerror.tif")
-    timeseries.write_geotiff_output(md, rate, dest, np.nan)
+    write_output_geotiff(md, gt, wkt, error, dest, np.nan)
 
     # final cleanup, SB: Why do we need this?
     # while ifgs:
@@ -155,7 +158,11 @@ def insert_time_series_interpolation(ifg_instance_updated, params):
 
     _, _, ntrees = matlab_mst.matlab_mst_kruskal(edges, ntrees=True)
     # if ntrees=1, no interpolation; otherwise interpolate
-    params[cf.TIME_SERIES_INTERP] = ntrees - 1
+    if ntrees > 1:
+        params[cf.TIME_SERIES_INTERP] = 1
+    else:
+        params[cf.TIME_SERIES_INTERP] = 0
+
     return params
 
 
@@ -245,15 +252,12 @@ def find_reference_pixel(ifgs, params):
 def calculate_linear_rate(ifgs, params, vcmt, mst=None):
     logging.debug('Calculating linear rate')
 
-    pthr = params[cf.LR_PTHRESH]
-    nsig = params[cf.LR_NSIG]
-    maxsig = params[cf.LR_MAXSIG]
     # MULTIPROCESSING parameters
     parallel = params[cf.PARALLEL]
     processes = params[cf.PROCESSES]
 
     # TODO: do these need to be checked?
-    res = linrate.linear_rate(ifgs, vcmt, pthr, nsig, maxsig, mst,
+    res = linrate.linear_rate(ifgs, params, vcmt, mst,
                               parallel=parallel, processes=processes)
     for r in res:
         if r is None:
