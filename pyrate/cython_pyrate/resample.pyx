@@ -32,9 +32,10 @@ def resample(cnp.ndarray[cnp.float32_t, ndim=2] data, int xscale, int yscale, do
     # calc mean without nans (fractional threshold ignores tiles with excess NaNs)
     for y in range(yres):
         for x in range(xres):
-            ys = y * yscale
-            xs = x * xscale
-            tile = data[ys: ys + yscale, xs: xs + xscale]
+            ys = <unsigned int> (y * yscale)
+            xs = <unsigned int> (x * xscale)
+            tile = data[ys: <unsigned int> (ys + yscale),
+                   xs: <unsigned int> (xs + xscale)]
             nan_fraction = np.sum(np.isnan(tile)) / tile_cell_count
             if greater(thresh, nan_fraction) or (nan_fraction == 0 and thresh_bool):
                 dest[y, x] = np.nanmean(tile)
