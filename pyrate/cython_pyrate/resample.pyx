@@ -18,7 +18,7 @@ def resample(cnp.ndarray[cnp.float32_t, ndim=2] data, int xscale, int yscale, do
     :param thresh: minimum allowable proportion of NaN cells (range from 0.0-1.0),
         eg. 0.25 = 1/4 or more as NaNs results in a NaN value for the output cell.
     """
-    cdef unsigned int x, y, ys, xs
+    cdef unsigned int x, y, ys, xs, thresh_bool
     cdef unsigned int ysize = data.shape[0], xsize = data.shape[1]
     cdef int tile_cell_count, xres, yres
     cdef cnp.float32_t nan_fraction
