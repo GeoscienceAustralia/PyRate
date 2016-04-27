@@ -17,12 +17,13 @@ import pyrate.orbital as orbital
 import pyrate.linrate as linrate
 import pyrate.timeseries as timeseries
 import pyrate.config as cf
-from pyrate.shared import Ifg
+from pyrate.shared import Ifg, write_output_geotiff
 from pyrate import vcm as vcm_module
 from pyrate import matlab_mst_kruskal as matlab_mst
 from pyrate import reference_phase_estimation as rpe
 from pyrate import algorithm
 from pyrate import ifgconstants as ifc
+
 
 # constants for metadata flags
 ORB_REMOVED = 'REMOVED'
@@ -117,28 +118,28 @@ def process_ifgs(ifg_paths_or_instance, params):
             dest = os.path.join(
                 PYRATEPATH, params[cf.OUT_DIR],
                 "tsincr_" + str(epochlist.dates[i+1]) + ".tif")
-            timeseries.write_geotiff_output(md, gt, wkt, data, dest, np.nan)
+            write_output_geotiff(md, gt, wkt, data, dest, np.nan)
 
             data = tscum[:, :, i]
             dest = os.path.join(
                 PYRATEPATH, params[cf.OUT_DIR],
                 "tscuml_" + str(epochlist.dates[i+1]) + ".tif")
-            timeseries.write_geotiff_output(md, gt, wkt, data, dest, np.nan)
+            write_output_geotiff(md, gt, wkt, data, dest, np.nan)
 
             data = tsvel[:, :, i]
             dest = os.path.join(
                 PYRATEPATH, params[cf.OUT_DIR],
                 "tsvel_" + str(epochlist.dates[i+1]) + ".tif")
-            timeseries.write_geotiff_output(md, gt, wkt, data, dest, np.nan)
+            write_output_geotiff(md, gt, wkt, data, dest, np.nan)
 
     # Calculate linear rate map
     rate, error, samples = calculate_linear_rate(
                    ifgs, params, vcmt, mst=mst_grid)
     md[ifc.PYRATE_DATE] = epochlist.dates
     dest = os.path.join(PYRATEPATH, params[cf.OUT_DIR], "linrate.tif")
-    timeseries.write_geotiff_output(md, gt, wkt, rate, dest, np.nan)
+    write_output_geotiff(md, gt, wkt, rate, dest, np.nan)
     dest = os.path.join(PYRATEPATH, params[cf.OUT_DIR], "linerror.tif")
-    timeseries.write_geotiff_output(md, gt, wkt, error, dest, np.nan)
+    write_output_geotiff(md, gt, wkt, error, dest, np.nan)
 
     # final cleanup, SB: Why do we need this?
     # while ifgs:

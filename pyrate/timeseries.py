@@ -328,29 +328,6 @@ def check_time_series_params(head, PTHRESH):
             " TIME_SERIES_PTHRESH setting must be >= 0.0 and <= 1000")
 
 
-def write_geotiff_output(md, gt, wkt, data, dest, nodata):
-    '''
-    Writes data to a GeoTIFF file.
-    md is a dictionary containing PyRate metadata
-    gt is the GDAL geotransform for the data
-    wkt is the GDAL projection information for the data
-    NB It should be moved to utils class
-    '''
-
-    driver = gdal.GetDriverByName("GTiff")
-    nrows, ncols = data.shape
-    ds = driver.Create(dest, ncols, nrows, 1, gdal.GDT_Float32)
-
-    # set spatial reference for geotiff
-    ds.SetGeoTransform(gt)
-    ds.SetProjection(wkt)
-    ds.SetMetadataItem(ifc.PYRATE_DATE, str(md[ifc.PYRATE_DATE]))
-
-    # write data to geotiff
-    band = ds.GetRasterBand(1)
-    band.SetNoDataValue(nodata)
-    band.WriteArray(data, 0, 0)
-
 
 class TimeSeriesError(Exception):
     """

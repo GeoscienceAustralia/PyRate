@@ -618,6 +618,29 @@ def write_geotiff(header, data_path, dest, nodata):
     #del ds
 
 
+def write_output_geotiff(md, gt, wkt, data, dest, nodata):
+    """
+    Writes PyRate output data to a GeoTIFF file.
+    md is a dictionary containing PyRate metadata
+    gt is the GDAL geotransform for the data
+    wkt is the GDAL projection information for the data
+    """
+
+    driver = gdal.GetDriverByName("GTiff")
+    nrows, ncols = data.shape
+    ds = driver.Create(dest, ncols, nrows, 1, gdal.GDT_Float32)
+
+    # set spatial reference for geotiff
+    ds.SetGeoTransform(gt)
+    ds.SetProjection(wkt)
+    ds.SetMetadataItem(ifc.PYRATE_DATE, str(md[ifc.PYRATE_DATE]))
+
+    # write data to geotiff
+    band = ds.GetRasterBand(1)
+    band.SetNoDataValue(nodata)
+    band.WriteArray(data, 0, 0)
+
+
 class GeotiffException(Exception):
     pass
 
