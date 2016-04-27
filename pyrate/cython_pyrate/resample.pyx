@@ -7,6 +7,7 @@ cdef greater(float x, float y):
     return x > y
 
 @cython.boundscheck(False)
+@cython.cdivision(True)
 def resample(cnp.ndarray[cnp.float32_t, ndim=2] data, int xscale, int yscale, double thresh):
     """
     Resamples/averages 'data' to return an array from the averaging of blocks
