@@ -2,10 +2,9 @@
 Pixel-by-pixel linear rate (velocity) estimation using iterative weighted
 least-squares method.
 
-Based on original Matlab code by Hua Wang and Juliet Biggs, and Matlab 'lscov'
-function.
+Based on the Matlab Pirate 'stack.m' and Matlab 'lscov.m' functions.
 
-.. codeauthor: Matt Garthwaite and Sudipta Basak, GA
+.. codeauthor: Matt Garthwaite, Sudipta Basak
 """
 
 from scipy.linalg import solve, cholesky, qr, inv
@@ -13,6 +12,7 @@ from numpy import nan, isnan, sqrt, diag, delete, ones, array, nonzero, float32
 import numpy as np
 import parmap
 import itertools
+from pyrate import config as cf
 
 
 def is_pos_def(x):
@@ -28,16 +28,13 @@ def is_pos_def(x):
         return False
 
 
-def linear_rate(ifgs, vcm, pthr, nsig, maxsig,
-                mst=None, parallel=1, processes=8):
+def linear_rate(ifgs, params, vcmt, mst=None, parallel=1, processes=8):
     """
     Pixel-by-pixel linear rate (velocity) estimation using iterative weighted least-squares method.
 
     :param ifgs: Sequence of ifg objs from which to extract observations
-    :param vcm: Derived positive definite temporal variance covariance matrix
-    :param pthr: Pixel threshold; minimum number of coherent observations for a pixel
-    :param nsig: n-sigma ratio used to threshold 'model minus observation' residuals
-    :param maxsig: Threshold for maximum allowable standard error
+    :param params: configuration parameters
+    :param vcmt: Derived positive definite temporal variance covariance matrix  
     :param mst: Pixel-wise matrix describing the minimum spanning tree network
     :param parallel: use multiprocessing or not.
     :param processes: number of parallel processes to use
@@ -50,6 +47,11 @@ def linear_rate(ifgs, vcm, pthr, nsig, maxsig,
         samples/coh_sta: statistics of coherent pixels used for stacking
         demerror:  dem errors in metres, not implemented in python
     """
+
+    # linrate parameters from config file
+    NSIG = params[cf.LR_NSIG] # n-sigma ratio used to threshold 'model minus observation' residuals
+    MAXSIG = params[cf.LR_MAXSIG] # Threshold for maximum allowable standard error
+    PTHRESH = params[cf.LR_PTHRESH] # Pixel threshold; minimum number of coherent observations for a pixel
 
     rows, cols = ifgs[0].phase_data.shape
 
@@ -71,8 +73,8 @@ def linear_rate(ifgs, vcm, pthr, nsig, maxsig,
     # pixel-by-pixel calculation.
     # nested loops to loop over the 2 image dimensions
     if parallel == 1:
-        res = parmap.map(linear_rate_by_rows, range(rows), cols, mst, nsig, obs,
-                     pthr, span, vcm, processes=processes)
+        res = parmap.map(linear_rate_by_rows, range(rows), cols, mst, NSIG, obs,
+                     PTHRESH, span, vcmt, processes=processes)
         res = np.array(res)
         rate = res[:, :, 0]
         error = res[:, :, 1]
@@ -80,7 +82,7 @@ def linear_rate(ifgs, vcm, pthr, nsig, maxsig,
     elif parallel == 2:
         res = parmap.starmap(linear_rate_by_pixel,
                              itertools.product(range(rows), range(cols)),
-                    mst, nsig, obs, pthr, span, vcm, processes=processes)
+                    mst, NSIG, obs, PTHRESH, span, vcmt, processes=processes)
         res = np.array(res)
 
         rate = res[:, 0].reshape(rows, cols)
@@ -90,50 +92,50 @@ def linear_rate(ifgs, vcm, pthr, nsig, maxsig,
         for i in xrange(rows):
             for j in xrange(cols):
                 rate[i, j], error[i, j], samples[i, j] = \
-                    linear_rate_by_pixel(i, j, mst, nsig, obs, pthr, span, vcm)
+                    linear_rate_by_pixel(i, j, mst, NSIG, obs, PTHRESH, span, vcmt)
 
     # overwrite the data whose error is larger than the maximum sigma user threshold
-    rate[error > maxsig] = nan
-    error[error > maxsig] = nan
-    # samples[error > maxsig] = nan  # TODO: This step is missing in matlab?
+    rate[error > MAXSIG] = nan
+    error[error > MAXSIG] = nan
+    # samples[error > MAXSIG] = nan  # TODO: This step is missing in matlab?
 
     return rate, error, samples
 
 
-def linear_rate_by_rows(row, cols, mst, nsig, obs, pthr, span, vcm):
+def linear_rate_by_rows(row, cols, mst, NSIG, obs, PTHRESH, span, vcmt):
     """
     helper function for parallel 'row' runs
     :param row:
     :param cols:
     :param mst:
-    :param nsig:
+    :param NSIG:
     :param obs:
-    :param pthr:
+    :param PTHRESH:
     :param span: span calculated in linarate function
-    :param vcm: temporal vcm matrix
+    :param vcmt: temporal vcm matrix
     :return:
     """
     res = np.empty(shape=(cols, 3), dtype=np.float32)
     for col in xrange(cols):
         res[col, :] = linear_rate_by_pixel(
-            row, col, mst, nsig, obs, pthr, span, vcm)
+            row, col, mst, NSIG, obs, PTHRESH, span, vcmt)
 
     # alternate implementation, check performance for larger images
     # res = map(lambda col:
-    #           linear_rate_by_pixel(col, row, mst, nsig, obs, pthr, span, vcm),
+    #           linear_rate_by_pixel(col, row, mst, NSIG, obs, PTHRESH, span, vcmt),
     #           range(cols)
     #           )
 
     return res
 
 
-def linear_rate_by_pixel(row, col, mst, nsig, obs, pthr, span, vcm):
+def linear_rate_by_pixel(row, col, mst, NSIG, obs, PTHRESH, span, vcmt):
     # find the indices of independent ifgs for given pixel from MST
     ind = np.nonzero(mst[:, row, col])[0]  # only True's in mst are chosen
     # iterative loop to calculate 'robust' velocity for pixel
     default_no_samples = len(ind)
 
-    while len(ind) >= pthr:
+    while len(ind) >= PTHRESH:
         # make vector of selected ifg observations
         ifgv = obs[ind, row, col]
 
@@ -141,9 +143,9 @@ def linear_rate_by_pixel(row, col, mst, nsig, obs, pthr, span, vcm):
         B = span[:, ind]
 
         # Subset of full VCM matrix for selected observations
-        vcm_temp = vcm[ind, np.vstack(ind)]
+        vcm_temp = vcmt[ind, np.vstack(ind)]
 
-        """ start matlab lscov routine """
+        ###start matlab lscov routine
 
         # Get the lower triangle cholesky decomposition.
         # V must be positive definite (symmetrical and square)
@@ -161,9 +163,9 @@ def linear_rate_by_pixel(row, col, mst, nsig, obs, pthr, span, vcm):
         # Compute the Lstsq coefficient for the velocity
         v = solve(R, z)
 
-        """end matlab lscov routine"""
+        ###end matlab lscov routine
 
-        # Compute the model errors; added by Hua Wang, 12/12/2011
+        # Compute the model errors
         err1 = inv(vcm_temp).dot(B.conj().transpose())
         err2 = B.dot(err1)
         err = sqrt(diag(inv(err2)))
@@ -171,13 +173,13 @@ def linear_rate_by_pixel(row, col, mst, nsig, obs, pthr, span, vcm):
         # Compute the residuals (model minus observations)
         r = (B * v) - ifgv
 
-        # determine the ratio of residuals and apriori variances (Danish method)
+        # determine the ratio of residuals and apriori variances
         w = cholesky(inv(vcm_temp))
         wr = abs(np.dot(w, r.transpose()))
 
         # test if maximum ratio is greater than user threshold.
         max_val = wr.max()
-        if max_val > nsig:
+        if max_val > NSIG:
             # if yes, discard and re-do the calculation.
             ind = delete(ind, wr.argmax())
         else:

@@ -245,15 +245,12 @@ def find_reference_pixel(ifgs, params):
 def calculate_linear_rate(ifgs, params, vcmt, mst=None):
     logging.debug('Calculating linear rate')
 
-    pthr = params[cf.LR_PTHRESH]
-    nsig = params[cf.LR_NSIG]
-    maxsig = params[cf.LR_MAXSIG]
     # MULTIPROCESSING parameters
     parallel = params[cf.PARALLEL]
     processes = params[cf.PROCESSES]
 
     # TODO: do these need to be checked?
-    res = linrate.linear_rate(ifgs, vcmt, pthr, nsig, maxsig, mst,
+    res = linrate.linear_rate(ifgs, params, vcmt, mst,
                               parallel=parallel, processes=processes)
     for r in res:
         if r is None:

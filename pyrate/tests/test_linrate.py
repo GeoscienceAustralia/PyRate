@@ -47,11 +47,8 @@ from pyrate.tests import common
 #     def test_args(self):
 #         raise NotImplementedError("Need sanity tests for args to stack()")
 
-#def default_params():
-#    return { LR_PTHRESH : 10, LR_NSIG : 3, LR_MAXSIG : 2 }
-LR_PTHRESH = 3
-LR_NSIG = 3
-LR_MAXSIG = 2
+def default_params():
+    return { 'pthr' : 3, 'nsig' : 3, 'maxsig' : 2 }
 
 
 class SinglePixelIfg(object):
@@ -75,11 +72,11 @@ class LinearRateTests(unittest.TestCase):
         exprate = array([[5.0]])
         experr = array([[0.836242010007091]])  # from Matlab Pirate
         expsamp = array([[5]])
-        vcm = eye(6, 6)
+        vcmt = eye(6, 6)
         mst = ones((6, 1, 1))
         mst[4] = 0
-        rate, error, samples = linear_rate(self.ifgs, vcm, LR_PTHRESH,
-                                           LR_NSIG, LR_MAXSIG, mst)
+        params = default_params()
+        rate, error, samples = linear_rate(self.ifgs, params, vcmt, mst)
         assert_array_almost_equal(rate, exprate)
         assert_array_almost_equal(error, experr)
         assert_array_almost_equal(samples, expsamp)
