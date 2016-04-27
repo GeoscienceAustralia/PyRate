@@ -3,3 +3,8 @@
 #For both test cases the option for Parallel=1 was selected.
 #For one image as a test in Pycharm(Windows), it took 25 minutes to complete the task with run_prepifg.py program. 
 #Test on rhe_compute repeated again with "parallel = 0" and "Luigi = 1". The progress is faster than "parallel= 1 or 2 " but still low in spead. . 
+
+
+#update:
+#The functionality of python multiprocessing with large ifgs was checked. For four interferograms, the procedure took less than 20 minutes. 
+#Parallel processing works properly with 4 processes and 4 CPUs. The test was successful in Pycharm (windows).
