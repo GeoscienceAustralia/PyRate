@@ -328,12 +328,12 @@ def check_time_series_params(head, PTHRESH):
             " TIME_SERIES_PTHRESH setting must be >= 0.0 and <= 1000")
 
 
-def write_geotiff_output(md, data, dest, nodata):
+def write_geotiff_output(md, gt, wkt, data, dest, nodata):
     '''
     Writes data to a GeoTIFF file.
-    md is a dictionary containing these items:
-    ifc.PYRATE_PROJECTION, ifc.PYRATE_GEOTRANSFORM,
-    ifc.PYRATE_DATE
+    md is a dictionary containing PyRate metadata
+    gt is the GDAL geotransform for the data
+    wkt is the GDAL projection information for the data
     NB It should be moved to utils class
     '''
 
@@ -341,23 +341,12 @@ def write_geotiff_output(md, data, dest, nodata):
     nrows, ncols = data.shape
     ds = driver.Create(dest, ncols, nrows, 1, gdal.GDT_Float32)
 
-    # TODO: What are ifc.PYRATE_PROJECTION and ifc.PYRATE_GEOTRANSFORM?
-    ## ds.SetProjection(md[ifc.PYRATE_PROJECTION])
-    ## ds.SetGeoTransform(md[ifc.PYRATE_GEOTRANSFORM])
-    #ds.SetGeoTransform([md[ifc.PYRATE_LONG], md[ifc.PYRATE_X_STEP], 0,
-    #                    md[ifc.PYRATE_LAT], 0, md[ifc.PYRATE_Y_STEP]])
-
-    #srs = osr.SpatialReference()
-    #res = srs.SetWellKnownGeogCS(hdr[ifc.PYRATE_DATUM])
-
-    #if res:
-    #    msg = 'Unrecognised projection: %s' % hdr[ifc.PYRATE_DATUM]
-    #    raise TimeSeriesError(msg)
-
-    #ds.SetProjection(srs.ExportToWkt())
+    # set spatial reference for geotiff
+    ds.SetGeoTransform(gt)
+    ds.SetProjection(wkt)
     ds.SetMetadataItem(ifc.PYRATE_DATE, str(md[ifc.PYRATE_DATE]))
 
-    # write data
+    # write data to geotiff
     band = ds.GetRasterBand(1)
     band.SetNoDataValue(nodata)
     band.WriteArray(data, 0, 0)

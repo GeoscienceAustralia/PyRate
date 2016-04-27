@@ -101,6 +101,8 @@ def process_ifgs(ifg_paths_or_instance, params):
 
     ds = gdal.Open(p)
     md = ds.GetMetadata()  # get metadata for writing on output tifs
+    gt = ds.GetGeoTransform() # get geographical bounds of data
+    wkt = ds.GetProjection() # get projection of data
     epochlist = algorithm.get_epochs(ifgs)
 
     if params[cf.TIME_SERIES_CAL] != 0:
@@ -115,28 +117,28 @@ def process_ifgs(ifg_paths_or_instance, params):
             dest = os.path.join(
                 PYRATEPATH, params[cf.OUT_DIR],
                 "tsincr_" + str(epochlist.dates[i+1]) + ".tif")
-            timeseries.write_geotiff_output(md, data, dest, np.nan)
+            timeseries.write_geotiff_output(md, gt, wkt, data, dest, np.nan)
 
             data = tscum[:, :, i]
             dest = os.path.join(
                 PYRATEPATH, params[cf.OUT_DIR],
                 "tscuml_" + str(epochlist.dates[i+1]) + ".tif")
-            timeseries.write_geotiff_output(md, data, dest, np.nan)
+            timeseries.write_geotiff_output(md, gt, wkt, data, dest, np.nan)
 
             data = tsvel[:, :, i]
             dest = os.path.join(
                 PYRATEPATH, params[cf.OUT_DIR],
                 "tsvel_" + str(epochlist.dates[i+1]) + ".tif")
-            timeseries.write_geotiff_output(md, data, dest, np.nan)
+            timeseries.write_geotiff_output(md, gt, wkt, data, dest, np.nan)
 
     # Calculate linear rate map
     rate, error, samples = calculate_linear_rate(
                    ifgs, params, vcmt, mst=mst_grid)
     md[ifc.PYRATE_DATE] = epochlist.dates
     dest = os.path.join(PYRATEPATH, params[cf.OUT_DIR], "linrate.tif")
-    timeseries.write_geotiff_output(md, rate, dest, np.nan)
+    timeseries.write_geotiff_output(md, gt, wkt, rate, dest, np.nan)
     dest = os.path.join(PYRATEPATH, params[cf.OUT_DIR], "linerror.tif")
-    timeseries.write_geotiff_output(md, error, dest, np.nan)
+    timeseries.write_geotiff_output(md, gt, wkt, error, dest, np.nan)
 
     # final cleanup, SB: Why do we need this?
     # while ifgs:
