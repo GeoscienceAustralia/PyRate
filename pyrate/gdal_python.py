@@ -7,7 +7,21 @@ import os
 import numpy as np
 
 
-def clip_raster(rast, extents, gt=None, nodata=-9999):
+def world_to_pixel(geo_transform, x, y):
+    '''
+    Uses a gdal geomatrix (gdal.GetGeoTransform()) to calculate
+    the pixel location of a geospatial coordinate; from:
+    http://pcjericks.github.io/py-gdalogr-cookbook/raster_layers.html#clip-a-geotiff-with-shapefile
+    '''
+    ulX = geo_transform[0]
+    ulY = geo_transform[3]
+    res = geo_transform[1]
+    pixel = int(np.round((x - ulX) / res))
+    line = int(np.round((ulY - y) / res))
+    return pixel, line
+
+
+def crop_raster(rast, extents, gt=None, nodata=-9999):
     '''
     Clips a raster (given as either a gdal.Dataset or as a numpy.array
     instance) to a polygon layer provided by a Shapefile (or other vector
@@ -33,26 +47,10 @@ def clip_raster(rast, extents, gt=None, nodata=-9999):
         a.shape = i.im.size[1], i.im.size[0]
         return a
 
-    def world_to_pixel(geo_matrix, x, y):
-        '''
-        Uses a gdal geomatrix (gdal.GetGeoTransform()) to calculate
-        the pixel location of a geospatial coordinate; from:
-        http://pcjericks.github.io/py-gdalogr-cookbook/raster_layers.html#clip-a-geotiff-with-shapefile
-        '''
-        ulX = geo_matrix[0]
-        ulY = geo_matrix[3]
-        xDist = geo_matrix[1]
-        print 'pixel, line'
-        print (x - ulX) / xDist, (ulY - y) / xDist
-        pixel = int(np.round((x - ulX) / xDist))
-        line = int(np.round((ulY - y) / xDist))
-        return pixel, line
-
     # Can accept either a gdal.Dataset or numpy.array instance
     if not isinstance(rast, np.ndarray):
         if not gt:
             gt = rast.GetGeoTransform()
-        print gt, '<=====gt'
         rast = rast.ReadAsArray()
     else:
         if not gt:
@@ -61,10 +59,8 @@ def clip_raster(rast, extents, gt=None, nodata=-9999):
     # Convert the layer extent to image pixel coordinates
     minX, minY, maxX, maxY = extents
     ulX, ulY = world_to_pixel(gt, minX, maxY)
-
     lrX, lrY = world_to_pixel(gt, maxX, minY)
 
-    print ulX, ulY, lrX, lrY
     # Calculate the pixel size of the new image
     pxWidth = int(lrX - ulX)
     pxHeight = int(lrY - ulY)
@@ -110,7 +106,7 @@ def clip_raster(rast, extents, gt=None, nodata=-9999):
         # We slice out the piece of our clip features that are "off the map"
         mask = np.ndarray((premask.shape[-2] - abs(iY), premask.shape[-1]), premask.dtype)
         mask[:] = premask[abs(iY):, :]
-        mask.resize(premask.shape) # Then fill in from the bottom
+        mask.resize(premask.shape)  # Then fill in from the bottom
 
         # Most importantly, push the clipped piece down
         gt2[3] = maxY - (maxY - gt[3])
@@ -136,7 +132,36 @@ def clip_raster(rast, extents, gt=None, nodata=-9999):
 
         clip = gdalnumeric.choose(mask, (clip, nodata))
 
-    return clip, ulX, ulY, gt2
+    return clip, gt2
+
+
+def resample_image(input_tif, extents, new_res, output_file):
+    # Source
+    src = gdal.Open(input_tif, gdalconst.GA_ReadOnly)
+    src_proj = src.GetProjection()
+    gt2 = crop_raster(src, extents)[1]
+
+    # We want a section of source that matches this:
+    resampled_proj = src_proj
+    resampled_geotrans = gt2[:1] + [new_res[0]] + gt2[2:-1] + [new_res[1]]
+    minX, minY, maxX, maxY = extents
+    ulX, ulY = world_to_pixel(resampled_geotrans, minX, maxY)
+    lrX, lrY = world_to_pixel(resampled_geotrans, maxX, minY)
+
+    # Calculate the pixel size of the new image
+    px_width = int(lrX - ulX)
+    px_height = int(lrY - ulY)
+
+    # Output / destination
+    dst = gdal.GetDriverByName('GTiff').Create(
+        output_file, px_width, px_height, 1, gdalconst.GDT_Float32)
+    dst.SetGeoTransform(resampled_geotrans)
+    dst.SetProjection(resampled_proj)
+
+    # Do the work
+    gdal.ReprojectImage(src, dst, src_proj, resampled_proj,
+                        gdalconst.GRA_NearestNeighbour)
+    return dst
 
 
 if __name__ == '__main__':
@@ -146,7 +171,25 @@ if __name__ == '__main__':
     clipped_ref = gdal.Open('/tmp/test.tif').ReadAsArray()
 
     rast = gdal.Open('out/20070709-20070813_utm.tif')
-    clipped = clip_raster(rast, (150.91, -34.229999976, 150.949166651, -34.17))[0]
+    extents = (150.91, -34.229999976, 150.949166651, -34.17)
+    clipped = crop_raster(rast, extents)[0]
     np.testing.assert_array_almost_equal(clipped_ref, clipped)
 
+    # 2nd gdalwarp call
+    subprocess.check_call(['gdalwarp', '-overwrite', '-srcnodata', 'None', '-te', '150.91', '-34.229999976', '150.949166651', '-34.17', '-q', '-tr', '0.001666666', '-0.001666666', 'out/20060619-20061002_utm.tif', '/tmp/test2.tif'])
+    resampled_ds = gdal.Open('/tmp/test2.tif')
+    resampled_ref = resampled_ds.ReadAsArray()
 
+
+    rast = gdal.Open('out/20060619-20061002_utm.tif')
+    gt = rast.GetGeoTransform()
+    new_res = (0.001666666, -0.001666666)
+    # adfGeoTransform[0] /* top left x */
+    # adfGeoTransform[1] /* w-e pixel resolution */
+    # adfGeoTransform[2] /* 0 */
+    # adfGeoTransform[3] /* top left y */
+    # adfGeoTransform[4] /* 0 */
+    # adfGeoTransform[5] /* n-s pixel resolution (negative value) */
+    resampled = resample_image('out/20060619-20061002_utm.tif', extents, new_res, '/tmp/resampled.tif')
+    resampled = resampled.ReadAsArray()
+    np.testing.assert_array_almost_equal(resampled_ref, resampled)
