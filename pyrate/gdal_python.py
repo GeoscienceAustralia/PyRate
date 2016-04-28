@@ -144,15 +144,24 @@ def resample(input_tif, extents, new_res, output_file):
     # Source
     src = gdal.Open(input_tif, gdalconst.GA_ReadOnly)
     src_proj = src.GetProjection()
-    gt2 = crop(src, extents)[1]
+
+    # get the image extents
+    minX, minY, maxX, maxY = extents
+    gt = src.GetGeoTransform()  # gt is tuple of 6 numbers
+
+    # Create a new geotransform for the image
+    gt2 = list(gt)
+    gt2[0] = minX
+    gt2[3] = maxY
 
     # We want a section of source that matches this:
     resampled_proj = src_proj
-    if new_res:
+    if new_res[0]:  # if new_res is not None, it can't be zero either
         resampled_geotrans = gt2[:1] + [new_res[0]] + gt2[2:-1] + [new_res[1]]
     else:
         resampled_geotrans = gt2
-    minX, minY, maxX, maxY = extents
+
+    # modified image extents
     ulX, ulY = world_to_pixel(resampled_geotrans, minX, maxY)
     lrX, lrY = world_to_pixel(resampled_geotrans, maxX, minY)
 

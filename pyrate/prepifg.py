@@ -84,7 +84,7 @@ def prepare_ifg(
 
     do_multilook = xlooks > 1 or ylooks > 1
     # resolution=None completes faster for non-multilooked layers in gdalwarp
-    resolution = None
+    resolution = [None, None]
     raster = Ifg(raster_path)
     if do_multilook:
         if not raster.is_open:
