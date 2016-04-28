@@ -176,16 +176,13 @@ def _resample_ifg(ifg, extents, x_looks, y_looks, thresh, md=None):
     """
     Convenience function to resample data from a given Ifg (more coarse).
     """
-    rast = gdal.Open(ifg.data_path)
-
-    data = gdalwarp.crop(rast, extents)[0]
+    data = gdalwarp.crop(ifg.data_path, extents)[0]
     data = where(data == 0, nan, data)  # flag incoherent cells as NaNs
 
     # hack for Ifg data with more than one band
     if len(data.shape) > 2:
         data = data[PHASE_BAND]
 
-    rast = None  # manually close raster
     return resample(data, x_looks, y_looks, thresh)
 
 
@@ -223,15 +220,15 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out,
 
     # HACK: if resampling, cut segment & manually average tiles
     data = None
-    if resolution:
+    if resolution[0]:
         data = _resample_ifg(ifg, extents, x_looks, y_looks, thresh, md)
 
     # cut (and resample) the final output layers
     looks_path = mlooked_path(ifg.data_path, y_looks, crop_out)
     gdalwarp.resample(input_tif=ifg.data_path,
-                            extents=extents,
-                            new_res=resolution,
-                            output_file=looks_path)
+                      extents=extents,
+                      new_res=resolution,
+                      output_file=looks_path)
     # now write the metadata from the input to the output
     new_lyr = gdal.Open(looks_path)
     for k, v in md.iteritems():

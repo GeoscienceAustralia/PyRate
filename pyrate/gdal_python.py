@@ -21,7 +21,7 @@ def world_to_pixel(geo_transform, x, y):
     return pixel, line
 
 
-def crop(raster, extents, gt=None, nodata=np.nan):
+def crop(input_file, extents, gt=None, nodata=np.nan):
     '''
     Clips a raster (given as either a gdal.Dataset or as a numpy.array
     instance) to a polygon layer provided by a Shapefile (or other vector
@@ -47,6 +47,7 @@ def crop(raster, extents, gt=None, nodata=np.nan):
         a.shape = i.im.size[1], i.im.size[0]
         return a
 
+    raster = gdal.Open(input_file)
     # Can accept either a gdal.Dataset or numpy.array instance
     if not isinstance(raster, np.ndarray):
         if not gt:
@@ -136,7 +137,7 @@ def crop(raster, extents, gt=None, nodata=np.nan):
         mask.resize(*rshp, refcheck=False)
 
         clip = gdalnumeric.choose(mask, (clip, nodata))
-
+    raster = None  # manual close
     return clip, gt2
 
 
