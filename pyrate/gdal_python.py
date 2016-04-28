@@ -99,21 +99,25 @@ def crop_raster(raster, extents, gt=None, nodata=np.nan):
     rasterize.polygon(pixels, 0)  # Fill with zeroes
 
     # If the clipping features extend out-of-bounds and ABOVE the raster...
-    if gt[3] < maxY:
-        # The clip features were "pushed down" to match the bounds of the
-        #   raster; this step "pulls" them back up
-        premask = image_to_array(raster_poly)
-        # We slice out the piece of our clip features that are "off the map"
-        mask = np.ndarray((premask.shape[-2] - abs(iY),
-                           premask.shape[-1]), premask.dtype)
-        mask[:] = premask[abs(iY):, :]
-        mask.resize(premask.shape)  # Then fill in from the bottom
-
-        # Most importantly, push the clipped piece down
-        gt2[3] = maxY - (maxY - gt[3])
-
-    else:
-        mask = image_to_array(raster_poly)
+    # SB: we don't implement clipping for out-of-bounds and ABOVE the raster
+    # We might need this down the line when we have looked at `maximum crop` in
+    # detail
+    # if gt[3] < maxY:
+    #     # The clip features were "pushed down" to match the bounds of the
+    #     #   raster; this step "pulls" them back up
+    #     premask = image_to_array(raster_poly)
+    #     # We slice out the piece of our clip features that are "off the map"
+    #     mask = np.ndarray((premask.shape[-2] - abs(iY),
+    #                        premask.shape[-1]), premask.dtype)
+    #     mask[:] = premask[abs(iY):, :]
+    #     mask.resize(premask.shape)  # Then fill in from the bottom
+    #
+    #     # Most importantly, push the clipped piece down
+    #     gt2[3] = maxY - (maxY - gt[3])
+    #
+    # else:
+    #     mask = image_to_array(raster_poly)
+    mask = image_to_array(raster_poly)
 
     # Clip the image using the mask
     try:
@@ -144,7 +148,10 @@ def resample_image(input_tif, extents, new_res, output_file):
 
     # We want a section of source that matches this:
     resampled_proj = src_proj
-    resampled_geotrans = gt2[:1] + [new_res[0]] + gt2[2:-1] + [new_res[1]]
+    if new_res:
+        resampled_geotrans = gt2[:1] + [new_res[0]] + gt2[2:-1] + [new_res[1]]
+    else:
+        resampled_geotrans = gt2
     minX, minY, maxX, maxY = extents
     ulX, ulY = world_to_pixel(resampled_geotrans, minX, maxY)
     lrX, lrY = world_to_pixel(resampled_geotrans, maxX, minY)
