@@ -60,15 +60,13 @@ class TestResample(unittest.TestCase):
             resampled_ds = gdal.Open(temp_tif)
             resampled_ref = resampled_ds.ReadAsArray()
 
-            rast = gdal.Open(s.data_path)
             resampled_temp_tif = tempfile.mktemp(suffix='.tif',
                                                  prefix='resampled_')
             resampled = gdalwarp.resample(s.data_path, extents, res,
                                           resampled_temp_tif)
             np.testing.assert_array_almost_equal(resampled_ref, resampled)
-            rast = None  # manual close
             os.remove(temp_tif)
-            os.remove(resampled_temp_tif)  # al proves file was written
+            os.remove(resampled_temp_tif)  # also proves file was written
 
     def test_none_resolution_output(self):
         sydney_test_ifgs = common.sydney_data_setup()
