@@ -21,7 +21,7 @@ def world_to_pixel(geo_transform, x, y):
     return pixel, line
 
 
-def crop_raster(rast, extents, gt=None, nodata=-9999):
+def crop_raster(raster, extents, gt=None, nodata=np.nan):
     '''
     Clips a raster (given as either a gdal.Dataset or as a numpy.array
     instance) to a polygon layer provided by a Shapefile (or other vector
@@ -48,10 +48,10 @@ def crop_raster(rast, extents, gt=None, nodata=-9999):
         return a
 
     # Can accept either a gdal.Dataset or numpy.array instance
-    if not isinstance(rast, np.ndarray):
+    if not isinstance(raster, np.ndarray):
         if not gt:
-            gt = rast.GetGeoTransform()
-        rast = rast.ReadAsArray()
+            gt = raster.GetGeoTransform()
+        raster = raster.ReadAsArray()
     else:
         if not gt:
             raise
@@ -73,10 +73,10 @@ def crop_raster(rast, extents, gt=None, nodata=-9999):
 
     # Multi-band image?
     try:
-        clip = rast[:, ulY:lrY, ulX:lrX]
+        clip = raster[:, ulY:lrY, ulX:lrX]
 
     except IndexError:
-        clip = rast[ulY:lrY, ulX:lrX]
+        clip = raster[ulY:lrY, ulX:lrX]
 
     # Create a new geomatrix for the image
     gt2 = list(gt)
@@ -104,7 +104,8 @@ def crop_raster(rast, extents, gt=None, nodata=-9999):
         #   raster; this step "pulls" them back up
         premask = image_to_array(raster_poly)
         # We slice out the piece of our clip features that are "off the map"
-        mask = np.ndarray((premask.shape[-2] - abs(iY), premask.shape[-1]), premask.dtype)
+        mask = np.ndarray((premask.shape[-2] - abs(iY),
+                           premask.shape[-1]), premask.dtype)
         mask[:] = premask[abs(iY):, :]
         mask.resize(premask.shape)  # Then fill in from the bottom
 

@@ -614,8 +614,8 @@ def write_geotiff(header, data_path, dest, nodata):
             band.WriteArray(np.array(data).reshape(1, ncols), yoff=y)
 
     # Needed? Only in ROIPAC code
-    #ds = None  # manual close
-    #del ds
+    ds = None  # manual close
+    del ds
 
 
 def write_output_geotiff(md, gt, wkt, data, dest, nodata):
