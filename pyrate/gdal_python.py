@@ -161,7 +161,7 @@ def resample_image(input_tif, extents, new_res, output_file):
     # Do the work
     gdal.ReprojectImage(src, dst, src_proj, resampled_proj,
                         gdalconst.GRA_NearestNeighbour)
-    return dst
+    return dst.ReadAsArray()
 
 
 if __name__ == '__main__':
@@ -182,7 +182,6 @@ if __name__ == '__main__':
 
 
     rast = gdal.Open('out/20060619-20061002_utm.tif')
-    gt = rast.GetGeoTransform()
     new_res = (0.001666666, -0.001666666)
     # adfGeoTransform[0] /* top left x */
     # adfGeoTransform[1] /* w-e pixel resolution */
@@ -191,5 +190,4 @@ if __name__ == '__main__':
     # adfGeoTransform[4] /* 0 */
     # adfGeoTransform[5] /* n-s pixel resolution (negative value) */
     resampled = resample_image('out/20060619-20061002_utm.tif', extents, new_res, '/tmp/resampled.tif')
-    resampled = resampled.ReadAsArray()
     np.testing.assert_array_almost_equal(resampled_ref, resampled)
