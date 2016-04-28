@@ -75,7 +75,6 @@ def prepare_ifg(
     exts,
     thresh,
     crop_opt,
-    verbose=True,
     ret_ifg=True):
     # Determine cmd line args for gdalwarp calls for each ifg (gdalwarp has no
     # API. For resampling, gdalwarp is called 2x. 1st to subset the source data
@@ -103,7 +102,7 @@ def prepare_ifg(
         raster.open()
 
     return warp(raster, xlooks, ylooks, exts, resolution, thresh,
-                crop_opt, verbose, ret_ifg)
+                crop_opt, ret_ifg)
 
 
 # TODO: crop options 0 = no cropping? get rid of same size (but it is in explained file)
@@ -113,8 +112,7 @@ def prepare_ifgs(
     xlooks,
     ylooks,
     thresh=0.5,
-    user_exts=None,
-    verbose=False):
+    user_exts=None):
     """
     Produces multilooked/resampled data files for PyRate analysis.
 
@@ -135,7 +133,7 @@ def prepare_ifgs(
     rasters = [Ifg(r) for r in rasters_data_paths]
     exts = getAnalysisExtent(crop_opt, rasters, xlooks, ylooks, user_exts)
 
-    return [prepare_ifg(d, xlooks, ylooks, exts, thresh, crop_opt, verbose)
+    return [prepare_ifg(d, xlooks, ylooks, exts, thresh, crop_opt)
             for d in rasters_data_paths]
 
 
@@ -154,8 +152,6 @@ def get_extents(ifgs, crop_opt, user_exts=None):
         extents = get_same_bounds(ifgs)
 
     check_crop_coords(ifgs, *extents)
-
-    #raise NotImplementedError("BLAH")
     return extents
 
 
@@ -203,7 +199,7 @@ def mlooked_path(path, looks, crop_out):
 
 
 # TODO: clean arg names
-def warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out, verbose,
+def warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out,
          ret_ifg=True):
     """
     Resamples 'ifg' and returns a new Ifg obj.
@@ -220,35 +216,33 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out, verbose,
         raise ValueError('X and Y looks mismatch')
 
     # dynamically build command for call to gdalwarp
-    cmd = ["gdalwarp", "-overwrite", "-srcnodata", "None", "-te"] + \
-          [str(e) for e in extents]
-    if not verbose:
-        cmd.append("-q")
+    # cmd = ["gdalwarp", "-overwrite", "-srcnodata", "None", "-te"] + \
+    #       [str(e) for e in extents]
+    # if not verbose:
+    #     cmd.append("-q")
 
-    # It appears that before vrions 1.10 gdal-warp did not copy meta-data
-    # ... so we need to. Get the keys from the input here
-    if sum((int(v)*i for v, i in zip(gdal.__version__.split('.')[:2], [10, 1]))) < 20:
-        fl = ifg.data_path
-        dat = gdal.Open(fl)
-        md = {k:v for k, v in dat.GetMetadata().iteritems()}
-    else:
-        md = None
+    # Get meta-data from the input here
+    fl = ifg.data_path
+    dat = gdal.Open(fl)
+    md = {k: v for k, v in dat.GetMetadata().iteritems()}
+    dat = None
 
-    # HACK: if resampling, cut segment with gdalwarp & manually average tiles
+
+    # HACK: if resampling, cut segment & manually average tiles
     data = None
     if resolution:
         data = _resample_ifg(ifg, extents, x_looks, y_looks, thresh, md)
-        cmd += ["-tr"] + [str(r) for r in resolution] # change res of final output
 
-    # use GDAL to cut (and resample) the final output layers
+    # cut (and resample) the final output layers
     looks_path = mlooked_path(ifg.data_path, y_looks, crop_out)
-    cmd += [ifg.data_path, looks_path]
-    check_call(cmd)
+    gdalwarp.resample_image(input_tif=ifg.data_path,
+                            extents=extents,
+                            new_res=resolution,
+                            output_file=looks_path)
     # now write the metadata from the input to the output
-    if md is not None:
-        new_lyr = gdal.Open(looks_path)
-        for k, v in md.iteritems():
-            new_lyr.SetMetadataItem(k, v)
+    new_lyr = gdal.Open(looks_path)
+    for k, v in md.iteritems():
+        new_lyr.SetMetadataItem(k, v)
 
     # Add missing/updated metadata to resampled ifg/DEM
     new_lyr = type(ifg)(looks_path)

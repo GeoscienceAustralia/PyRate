@@ -109,14 +109,13 @@ def gamma_prepifg(base_ifg_paths, params):
     xlooks, ylooks, crop = run_pyrate.transform_params(params)
     exts = prepifg.getAnalysisExtent(crop, ifgs, xlooks, ylooks, userExts=None)
     thresh = params[cf.NO_DATA_AVERAGING_THRESHOLD]
-    verbose = False
     if parallel:
         parmap.map(prepifg.prepare_ifg, dest_base_ifgs,
-                   xlooks, ylooks, exts, thresh, crop, verbose, False,
+                   xlooks, ylooks, exts, thresh, crop, False,
                    processes=params[cf.PROCESSES])
     else:
         [prepifg.prepare_ifg(i, xlooks, ylooks, exts,
-                             thresh, crop, verbose, False) for i in dest_base_ifgs]
+                             thresh, crop, False) for i in dest_base_ifgs]
 
 
 def gamma_multiprocessing(b, params):
