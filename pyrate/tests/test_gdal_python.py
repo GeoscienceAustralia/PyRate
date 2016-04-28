@@ -68,8 +68,7 @@ class TestResample(unittest.TestCase):
             np.testing.assert_array_almost_equal(resampled_ref, resampled)
             rast = None  # manual close
             os.remove(temp_tif)
-            if os.path.exists(resampled_temp_tif):
-                os.remove(resampled_temp_tif)
+            os.remove(resampled_temp_tif)  # al proves file was written
 
     def test_none_resolution_output(self):
         sydney_test_ifgs = common.sydney_data_setup()
@@ -80,18 +79,16 @@ class TestResample(unittest.TestCase):
         self.check_same_resampled_output(extents, extents_str, [None, None],
                                          sydney_test_ifgs)
 
-
     def test_output_file_written(self):
         sydney_test_ifgs = common.sydney_data_setup()
         extents = [150.91, -34.229999976, 150.949166651, -34.17]
-        extents_str = [str(e) for e in extents]
         resolutions = [0.001666666, .001, 0.002, 0.0025, .01]
         for res in resolutions:
-            res = [res, -res]
             for s in sydney_test_ifgs:
                 resampled_temp_tif = tempfile.mktemp(suffix='.tif',
                                                     prefix='resampled_')
-                gdalwarp.resample(s.data_path, extents, res, resampled_temp_tif)
+                gdalwarp.resample(s.data_path, extents, [res, -res],
+                                                         resampled_temp_tif)
                 self.assertTrue(os.path.exists(resampled_temp_tif))
                 os.remove(resampled_temp_tif)
 
