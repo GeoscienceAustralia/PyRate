@@ -32,17 +32,20 @@ class TestCrop(unittest.TestCase):
 
 
 class TestResample(unittest.TestCase):
-    def test_sydney_data_cropping(self):
+
+    def test_sydney_data_resampling(self):
         sydney_test_ifgs = common.sydney_data_setup()
         # minX, minY, maxX, maxY = extents
         extents = [150.91, -34.229999976, 150.949166651, -34.17]
         extents_str = [str(e) for e in extents]
-        new_res = [0.001666666, -0.001666666]
-        new_res_str = [str(r) for r in new_res]
+        resolutions = [0.001666666, .001, 0.002, 0.0025, .01]
 
-        cmd = ['gdalwarp', '-overwrite', '-srcnodata', 'None', '-q', '-te'] \
-              + extents_str + ['-tr'] + new_res_str
-        for res in [new_res, 2* new_res]:
+        for res in resolutions:
+            res = [res, -res]
+            cmd = ['gdalwarp', '-overwrite', '-srcnodata', 'None', '-q', '-te'] \
+              + extents_str + ['-tr']
+            new_res_str = [str(r) for r in res]
+            cmd += new_res_str
             for s in sydney_test_ifgs:
                 temp_tif = tempfile.mktemp(suffix='.tif')
                 t_cmd = cmd + [s.data_path,  temp_tif]
