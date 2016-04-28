@@ -25,7 +25,7 @@ class TestCrop(unittest.TestCase):
             subprocess.check_call(t_cmd)
             clipped_ref = gdal.Open(temp_tif).ReadAsArray()
             rast = gdal.Open(s.data_path)
-            clipped = gdalwarp.crop_raster(rast, extents)[0]
+            clipped = gdalwarp.crop(rast, extents)[0]
             np.testing.assert_array_almost_equal(clipped_ref, clipped)
             rast = None  # manual close
             os.remove(temp_tif)
@@ -42,8 +42,8 @@ class TestResample(unittest.TestCase):
 
         for res in resolutions:
             res = [res, -res]
-            cmd = ['gdalwarp', '-overwrite', '-srcnodata', 'None', '-q', '-te'] \
-              + extents_str + ['-tr']
+            cmd = ['gdalwarp', '-overwrite', '-srcnodata', 'None', '-q', '-te']\
+                  + extents_str + ['-tr']
             new_res_str = [str(r) for r in res]
             cmd += new_res_str
             for s in sydney_test_ifgs:
@@ -56,7 +56,7 @@ class TestResample(unittest.TestCase):
                 rast = gdal.Open(s.data_path)
                 reampled_temp_tif = tempfile.mktemp(suffix='.tif',
                                                     prefix='resampled_')
-                resampled = gdalwarp.resample_image(s.data_path, extents, res,
+                resampled = gdalwarp.resample(s.data_path, extents, res,
                                                     reampled_temp_tif)
                 np.testing.assert_array_almost_equal(resampled_ref, resampled)
                 rast = None  # manual close

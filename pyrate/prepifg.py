@@ -178,7 +178,7 @@ def _resample_ifg(ifg, extents, x_looks, y_looks, thresh, md=None):
     """
     rast = gdal.Open(ifg.data_path)
 
-    data = gdalwarp.crop_raster(rast, extents)[0]
+    data = gdalwarp.crop(rast, extents)[0]
     data = where(data == 0, nan, data)  # flag incoherent cells as NaNs
 
     # hack for Ifg data with more than one band
@@ -215,18 +215,11 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out,
     if x_looks != y_looks:
         raise ValueError('X and Y looks mismatch')
 
-    # dynamically build command for call to gdalwarp
-    # cmd = ["gdalwarp", "-overwrite", "-srcnodata", "None", "-te"] + \
-    #       [str(e) for e in extents]
-    # if not verbose:
-    #     cmd.append("-q")
-
     # Get meta-data from the input here
     fl = ifg.data_path
     dat = gdal.Open(fl)
     md = {k: v for k, v in dat.GetMetadata().iteritems()}
     dat = None
-
 
     # HACK: if resampling, cut segment & manually average tiles
     data = None
@@ -235,7 +228,7 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out,
 
     # cut (and resample) the final output layers
     looks_path = mlooked_path(ifg.data_path, y_looks, crop_out)
-    gdalwarp.resample_image(input_tif=ifg.data_path,
+    gdalwarp.resample(input_tif=ifg.data_path,
                             extents=extents,
                             new_res=resolution,
                             output_file=looks_path)

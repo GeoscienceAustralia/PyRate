@@ -21,7 +21,7 @@ def world_to_pixel(geo_transform, x, y):
     return pixel, line
 
 
-def crop_raster(raster, extents, gt=None, nodata=np.nan):
+def crop(raster, extents, gt=None, nodata=np.nan):
     '''
     Clips a raster (given as either a gdal.Dataset or as a numpy.array
     instance) to a polygon layer provided by a Shapefile (or other vector
@@ -140,11 +140,11 @@ def crop_raster(raster, extents, gt=None, nodata=np.nan):
     return clip, gt2
 
 
-def resample_image(input_tif, extents, new_res, output_file):
+def resample(input_tif, extents, new_res, output_file):
     # Source
     src = gdal.Open(input_tif, gdalconst.GA_ReadOnly)
     src_proj = src.GetProjection()
-    gt2 = crop_raster(src, extents)[1]
+    gt2 = crop(src, extents)[1]
 
     # We want a section of source that matches this:
     resampled_proj = src_proj
@@ -180,7 +180,7 @@ if __name__ == '__main__':
 
     rast = gdal.Open('out/20070709-20070813_utm.tif')
     extents = (150.91, -34.229999976, 150.949166651, -34.17)
-    clipped = crop_raster(rast, extents)[0]
+    clipped = crop(rast, extents)[0]
     np.testing.assert_array_almost_equal(clipped_ref, clipped)
 
     # 2nd gdalwarp call
@@ -197,5 +197,5 @@ if __name__ == '__main__':
     # adfGeoTransform[3] /* top left y */
     # adfGeoTransform[4] /* 0 */
     # adfGeoTransform[5] /* n-s pixel resolution (negative value) */
-    resampled = resample_image('out/20060619-20061002_utm.tif', extents, new_res, '/tmp/resampled.tif')
+    resampled = resample('out/20060619-20061002_utm.tif', extents, new_res, '/tmp/resampled.tif')
     np.testing.assert_array_almost_equal(resampled_ref, resampled)
