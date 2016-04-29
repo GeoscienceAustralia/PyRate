@@ -206,10 +206,7 @@ def crop_and_resample(input_tif, extents, new_res, output_file):
     # TODO: may need to implement nan_frac filtering prepifg.resample style
     gdal.ReprojectImage(src, dst, src_proj, resampled_proj,
                         gdalconst.GRA_Average)
-    data = dst.ReadAsArray()
-    # nan conversion
-    data = np.where(np.isclose(data, 0.0, atol=1e-6), np.nan, data)
-    return data
+    return dst.ReadAsArray()
 
 
 if __name__ == '__main__':
