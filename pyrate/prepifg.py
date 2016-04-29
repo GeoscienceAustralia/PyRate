@@ -222,24 +222,19 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out,
                                       new_res=resolution,
                                       output_file=looks_path)
 
-    # Add missing/updated metadata to resampled ifg/DEM
-    new_lyr = type(ifg)(looks_path)
-    new_lyr.open(readonly=False)
-
-    # for non-DEMs, phase bands need extra metadata & conversions
-    if hasattr(new_lyr, "phase_band"):
-        new_lyr.phase_band.SetNoDataValue(nan)
-        data = where(np.isclose(data, 0.0, atol=1e-6), nan, data)
-        # TODO: LOS conversion to vertical/horizontal (projection)
-        # TODO: push out to workflow
-        #if params.has_key(REPROJECTION_FLAG):
-        #    reproject()
-
-        # write either resampled or the basic cropped data to new layer
-        new_lyr.phase_band.WriteArray(data)
-        new_lyr.nan_converted = True
-
     if ret_ifg:
+        # Add missing/updated metadata to resampled ifg/DEM
+        new_lyr = type(ifg)(looks_path)
+        new_lyr.open(readonly=True)
+        # for non-DEMs, phase bands need extra metadata & conversions
+        if hasattr(new_lyr, "phase_band"):
+            # TODO: LOS conversion to vertical/horizontal (projection)
+            # TODO: push out to workflow
+            #if params.has_key(REPROJECTION_FLAG):
+            #    reproject()
+            # write either resampled or the basic cropped data to new layer
+            new_lyr.nan_converted = True
+
         return new_lyr
     else:
         return
