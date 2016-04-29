@@ -95,12 +95,11 @@ def main():
     xlooks, ylooks, crop = run_pyrate.transform_params(params)
     exts = prepifg.getAnalysisExtent(crop, ifgs, xlooks, ylooks, userExts=None)
     thresh = params[cf.NO_DATA_AVERAGING_THRESHOLD]
-
+    del ifgs  # to save memory
     # go mpi again for prep_ifg
-    process_ifgs = [itemgetter(p)(ifgs)
-                          for p in process_subset_indices]
-    [prepifg.prepare_ifg(i.data_path, xlooks, ylooks, exts, thresh,
-                         crop) for i in process_ifgs]
+    for p in process_subset_indices:
+        data_path = itemgetter(p)(dest_base_ifgs)
+        prepifg.prepare_ifg(data_path, xlooks, ylooks, exts, thresh, crop)
     parallel.finalize()
 
 

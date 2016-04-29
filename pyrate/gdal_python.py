@@ -188,7 +188,7 @@ def crop_rasample_setup(extents, input_tif, new_res, output_file):
     return dst, resampled_proj, src, src_proj
 
 
-def crop_and_resample(input_tif, extents, new_res, output_file):
+def crop_and_resample(input_tif, extents, new_res, output_file, thresh):
     """
     :param input_tif: input interferrogram path
     :param extents: extents list or tuple (minX, minY, maxX, maxY)
@@ -204,8 +204,9 @@ def crop_and_resample(input_tif, extents, new_res, output_file):
     band.SetNoDataValue(np.nan)
     # Do the work
     # TODO: may need to implement nan_frac filtering prepifg.resample style
+    gdal.SetCacheMax(2**15)
     gdal.ReprojectImage(src, dst, src_proj, resampled_proj,
-                        gdalconst.GRA_Average)
+                        gdalconst.GRA_Average, 2**10)
     return dst.ReadAsArray()
 
 
