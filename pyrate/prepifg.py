@@ -177,7 +177,9 @@ def _resample_ifg(ifg, extents, x_looks, y_looks, thresh, md=None):
     Convenience function to resample data from a given Ifg (more coarse).
     """
     data = gdalwarp.crop(ifg.data_path, extents)[0]
-    data = where(data == 0, nan, data)  # flag incoherent cells as NaNs
+
+    # flag incoherent cells as NaNs
+    data = where(np.isclose(data, 0.0, atol=1e-6), nan, data)
 
     # hack for Ifg data with more than one band
     if len(data.shape) > 2:
@@ -212,27 +214,16 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out,
     if x_looks != y_looks:
         raise ValueError('X and Y looks mismatch')
 
-    # Get meta-data from the input here
-    fl = ifg.data_path
-    dat = gdal.Open(fl)
-    md = {k: v for k, v in dat.GetMetadata().iteritems()}
-    dat = None
-
-    # HACK: if resampling, cut segment & manually average tiles
-    data = None
-    if resolution[0]:
-        data = _resample_ifg(ifg, extents, x_looks, y_looks, thresh, md)
-
     # cut (and resample) the final output layers
+    data = _resample_ifg(ifg, extents, x_looks, y_looks, thresh)
+
     looks_path = mlooked_path(ifg.data_path, y_looks, crop_out)
     gdalwarp.resample(input_tif=ifg.data_path,
-                      extents=extents,
-                      new_res=resolution,
-                      output_file=looks_path)
-    # now write the metadata from the input to the output
-    new_lyr = gdal.Open(looks_path)
-    for k, v in md.iteritems():
-        new_lyr.SetMetadataItem(k, v)
+                              extents=extents,
+                              new_res=resolution,
+                              output_file=looks_path)
+
+
 
     # Add missing/updated metadata to resampled ifg/DEM
     new_lyr = type(ifg)(looks_path)
@@ -241,17 +232,13 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out,
     # for non-DEMs, phase bands need extra metadata & conversions
     if hasattr(new_lyr, "phase_band"):
         new_lyr.phase_band.SetNoDataValue(nan)
-
-        if data is None:  # data wasn't resampled, so flag incoherent cells
-            data = new_lyr.phase_band.ReadAsArray()
-            data = where(np.isclose(data, 0.0, atol=1e-6), nan, data)
-
+        data = where(np.isclose(data, 0.0, atol=1e-6), nan, data)
         # TODO: LOS conversion to vertical/horizontal (projection)
         # TODO: push out to workflow
         #if params.has_key(REPROJECTION_FLAG):
         #    reproject()
 
-        # tricky: write either resampled or the basic cropped data to new layer
+        # write either resampled or the basic cropped data to new layer
         new_lyr.phase_band.WriteArray(data)
         new_lyr.nan_converted = True
 

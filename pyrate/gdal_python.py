@@ -145,6 +145,7 @@ def resample(input_tif, extents, new_res, output_file):
     # Source
     src = gdal.Open(input_tif, gdalconst.GA_ReadOnly)
     src_proj = src.GetProjection()
+    md = src.GetMetadata()
 
     # get the image extents
     minX, minY, maxX, maxY = extents
@@ -175,6 +176,8 @@ def resample(input_tif, extents, new_res, output_file):
         output_file, px_width, px_height, 1, gdalconst.GDT_Float32)
     dst.SetGeoTransform(resampled_geotrans)
     dst.SetProjection(resampled_proj)
+    for k, v in md.iteritems():
+        dst.SetMetadataItem(k, v)
 
     # Do the work
     gdal.ReprojectImage(src, dst, src_proj, resampled_proj,
