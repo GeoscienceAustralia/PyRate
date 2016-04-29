@@ -27,9 +27,10 @@ import shutil
 import numpy as np
 from numpy import array, where, nan, isnan, nanmean, float32, zeros, sum as nsum
 
-from osgeo import gdal
+from osgeo import gdal, osr, gdalconst
 import pyrate.config as cfg
-from pyrate.shared import Ifg, DEM
+from pyrate.shared import Ifg, DEM, PHASE_BAND
+from pyrate import gdal_python as gdalwarp
 
 CustomExts = namedtuple('CustExtents', ['xfirst', 'yfirst', 'xlast', 'ylast'])
 
@@ -74,7 +75,6 @@ def prepare_ifg(
     exts,
     thresh,
     crop_opt,
-    verbose=True,
     ret_ifg=True):
     # Determine cmd line args for gdalwarp calls for each ifg (gdalwarp has no
     # API. For resampling, gdalwarp is called 2x. 1st to subset the source data
@@ -84,12 +84,12 @@ def prepare_ifg(
 
     do_multilook = xlooks > 1 or ylooks > 1
     # resolution=None completes faster for non-multilooked layers in gdalwarp
-    res = None
+    resolution = [None, None]
     raster = Ifg(raster_path)
     if do_multilook:
         if not raster.is_open:
             raster.open()
-        res = [xlooks * raster.x_step, ylooks * raster.y_step]
+        resolution = [xlooks * raster.x_step, ylooks * raster.y_step]
 
     if not do_multilook and crop_opt == ALREADY_SAME_SIZE:
         renamed_path = \
@@ -101,9 +101,8 @@ def prepare_ifg(
     if not raster.is_open:
         raster.open()
 
-    return warp(raster, xlooks, ylooks, exts, res, thresh,
-                crop_opt, verbose, ret_ifg)
-
+    return warp(raster, xlooks, ylooks, exts, resolution, thresh,
+                crop_opt, ret_ifg)
 
 
 # TODO: crop options 0 = no cropping? get rid of same size (but it is in explained file)
@@ -113,8 +112,7 @@ def prepare_ifgs(
     xlooks,
     ylooks,
     thresh=0.5,
-    user_exts=None,
-    verbose=False):
+    user_exts=None):
     """
     Produces multilooked/resampled data files for PyRate analysis.
 
@@ -135,7 +133,7 @@ def prepare_ifgs(
     rasters = [Ifg(r) for r in rasters_data_paths]
     exts = getAnalysisExtent(crop_opt, rasters, xlooks, ylooks, user_exts)
 
-    return [prepare_ifg(d, xlooks, ylooks, exts, thresh, crop_opt, verbose)
+    return [prepare_ifg(d, xlooks, ylooks, exts, thresh, crop_opt)
             for d in rasters_data_paths]
 
 
@@ -154,9 +152,7 @@ def get_extents(ifgs, crop_opt, user_exts=None):
         extents = get_same_bounds(ifgs)
 
     check_crop_coords(ifgs, *extents)
-
-    #raise NotImplementedError("BLAH")
-    return [str(s) for s in extents]
+    return extents
 
 
 # TODO: push out to a shared module
@@ -176,39 +172,19 @@ def _file_ext(raster):
         raise NotImplementedError("Missing raster types for LOS, Coherence and baseline")
 
 
-def _resample_ifg(ifg, cmd, x_looks, y_looks, thresh, md=None):
+def _resample_ifg(ifg, extents, x_looks, y_looks, thresh, md=None):
     """
     Convenience function to resample data from a given Ifg (more coarse).
     """
+    data = gdalwarp.crop(ifg.data_path, extents)[0]
 
-    # HACK: create tmp ifg, extract data array for manual resampling as gdalwarp
-    # lacks Pirate's averaging method
-    fp, tmp_path = mkstemp()
-    check_call(cmd + [ifg.data_path, tmp_path])
+    # flag incoherent cells as NaNs
+    data = where(np.isclose(data, 0.0, atol=1e-6), nan, data)
 
-    # now write the metadata from the input to the output
-    if md is not None:
-        new_lyr = gdal.Open(tmp_path)
-        for k, v in md.iteritems():
-            new_lyr.SetMetadataItem(k, v)
-        new_lyr = None
+    # hack for Ifg data with more than one band
+    if len(data.shape) > 2:
+        data = data[PHASE_BAND]
 
-    tmp = type(ifg)(tmp_path) # dynamically handle Ifgs & Rasters
-    tmp.open()
-
-    if isinstance(ifg, Ifg):
-        # TODO: add an option to retain amplitude band (resample this if reqd)
-        data = tmp.phase_band.ReadAsArray()
-        data = where(data == 0, nan, data) # flag incoherent cells as NaNs
-    elif isinstance(ifg, DEM):
-        data = tmp.height_band.ReadAsArray()
-    else:
-        # TODO: need to handle resampling of LOS and baseline files
-        raise NotImplementedError("Resampling LOS & baseline not implemented")
-
-    tmp.close()  # manual close
-    os.close(fp)
-    os.remove(tmp_path)
     return resample(data, x_looks, y_looks, thresh)
 
 
@@ -222,7 +198,7 @@ def mlooked_path(path, looks, crop_out):
 
 
 # TODO: clean arg names
-def warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out, verbose,
+def warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out,
          ret_ifg=True):
     """
     Resamples 'ifg' and returns a new Ifg obj.
@@ -238,58 +214,27 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out, verbose,
     if x_looks != y_looks:
         raise ValueError('X and Y looks mismatch')
 
-    # dynamically build command for call to gdalwarp
-    cmd = ["gdalwarp", "-overwrite", "-srcnodata", "None", "-te"] + extents
-    if not verbose:
-        cmd.append("-q")
-
-    # It appears that before vrions 1.10 gdal-warp did not copy meta-data
-    # ... so we need to. Get the keys from the input here
-    if sum((int(v)*i for v, i in zip(gdal.__version__.split('.')[:2], [10, 1]))) < 20:
-        fl = ifg.data_path
-        dat = gdal.Open(fl)
-        md = {k:v for k, v in dat.GetMetadata().iteritems()}
-    else:
-        md = None
-
-    # HACK: if resampling, cut segment with gdalwarp & manually average tiles
-    data = None
-    if resolution:
-        data = _resample_ifg(ifg, cmd, x_looks, y_looks, thresh, md)
-        cmd += ["-tr"] + [str(r) for r in resolution] # change res of final output
-
-    # use GDAL to cut (and resample) the final output layers
+    # cut, average, resample the final output layers
     looks_path = mlooked_path(ifg.data_path, y_looks, crop_out)
-    cmd += [ifg.data_path, looks_path]
-    check_call(cmd)
-    # now write the metadata from the input to the output
-    if md is not None:
-        new_lyr = gdal.Open(looks_path)
-        for k, v in md.iteritems():
-            new_lyr.SetMetadataItem(k, v)
 
-    # Add missing/updated metadata to resampled ifg/DEM
-    new_lyr = type(ifg)(looks_path)
-    new_lyr.open(readonly=False)
-
-    # for non-DEMs, phase bands need extra metadata & conversions
-    if hasattr(new_lyr, "phase_band"):
-        new_lyr.phase_band.SetNoDataValue(nan)
-
-        if data is None:  # data wasn't resampled, so flag incoherent cells
-            data = new_lyr.phase_band.ReadAsArray()
-            data = where(np.isclose(data, 0.0, atol=1e-6), nan, data)
-
-        # TODO: LOS conversion to vertical/horizontal (projection)
-        # TODO: push out to workflow
-        #if params.has_key(REPROJECTION_FLAG):
-        #    reproject()
-
-        # tricky: write either resampled or the basic cropped data to new layer
-        new_lyr.phase_band.WriteArray(data)
-        new_lyr.nan_converted = True
+    data = gdalwarp.crop_and_resample(input_tif=ifg.data_path,
+                                      extents=extents,
+                                      new_res=resolution,
+                                      output_file=looks_path)
 
     if ret_ifg:
+        # Add missing/updated metadata to resampled ifg/DEM
+        new_lyr = type(ifg)(looks_path)
+        new_lyr.open(readonly=True)
+        # for non-DEMs, phase bands need extra metadata & conversions
+        if hasattr(new_lyr, "phase_band"):
+            # TODO: LOS conversion to vertical/horizontal (projection)
+            # TODO: push out to workflow
+            #if params.has_key(REPROJECTION_FLAG):
+            #    reproject()
+            # write either resampled or the basic cropped data to new layer
+            new_lyr.nan_converted = True
+
         return new_lyr
     else:
         return
@@ -297,6 +242,8 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out, verbose,
 
 def resample(data, xscale, yscale, thresh):
     """
+    # TODO: make more efficient
+    This is the slowest step in prepifg
     Resamples/averages 'data' to return an array from the averaging of blocks
     of several tiles in 'data'. NB: Assumes incoherent cells are NaNs.
 
@@ -311,7 +258,6 @@ def resample(data, xscale, yscale, thresh):
 
     xscale = int(xscale)
     yscale = int(yscale)
-
     ysize, xsize = data.shape
     xres, yres = (xsize / xscale), (ysize / yscale)
     dest = zeros((yres, xres), dtype=float32) * nan

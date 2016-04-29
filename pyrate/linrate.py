@@ -95,9 +95,11 @@ def linear_rate(ifgs, params, vcmt, mst=None, parallel=1, processes=8):
                     linear_rate_by_pixel(i, j, mst, NSIG, obs, PTHRESH, span, vcmt)
 
     # overwrite the data whose error is larger than the maximum sigma user threshold
-    rate[error > MAXSIG] = nan
-    error[error > MAXSIG] = nan
-    # samples[error > MAXSIG] = nan  # TODO: This step is missing in matlab?
+    mask = ~isnan(error)
+    mask[mask] &= error[mask] > MAXSIG
+    rate[mask] = nan
+    error[mask] = nan
+    # samples[mask] = nan  # TODO: Confirm this step is missing in matlab?
 
     return rate, error, samples
 

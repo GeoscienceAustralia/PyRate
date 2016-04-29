@@ -79,7 +79,8 @@ class PrepifgOutputTests(unittest.TestCase):
         transforms = [ds.GetGeoTransform() for ds in datasets]
         head = transforms[0]
         for t in transforms[1:]:
-            assert t == head, "Extents do not match!"
+            assert_array_almost_equal(t, head, decimal=6,
+                                      err_msg="Extents do not match!")
 
     def setUp(self):
         self.xs = 0.000833333
@@ -136,6 +137,7 @@ class PrepifgOutputTests(unittest.TestCase):
         exp_gt = (150.91, 0.000833333, 0, -34.17, 0, -0.000833333)
         for i, j in zip(gt, exp_gt):
             self.assertAlmostEqual(i, j)
+
         self.assert_geotransform_equal([self.exp_files[1], self.exp_files[5]])
 
         ifg.close()
@@ -237,6 +239,7 @@ class PrepifgOutputTests(unittest.TestCase):
     def test_multilook(self):
         """Test resampling method using a scaling factor of 4"""
         scale = 4  # assumes square cells
+        # TODO: put the DEM back in
         # self.ifgs.append(DEM(SYD_TEST_DEM_TIF))
         # self.ifg_paths = [i.data_path for i in self.ifgs]
         cext = self._custom_extents_tuple()
@@ -359,14 +362,13 @@ class SameSizeTests(unittest.TestCase):
         ifgs = same_exts_ifgs()
         ifg_data_paths = [d.data_path for d in ifgs]
         xlooks = ylooks = 2
-
         mlooked = prepare_ifgs(ifg_data_paths,
                                ALREADY_SAME_SIZE, xlooks, ylooks)
         self.assertEqual(len(mlooked), 2)
 
         for ifg in mlooked:
-            self.assertEqual(ifg.x_step, xlooks * self.xs)
-            self.assertEqual(ifg.x_step, ylooks * self.xs)
+            self.assertAlmostEqual(ifg.x_step, xlooks * self.xs)
+            self.assertAlmostEqual(ifg.x_step, ylooks * self.xs)
             # os.remove(ifg.data_path)
 
 
