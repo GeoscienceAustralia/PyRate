@@ -214,16 +214,13 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out,
     if x_looks != y_looks:
         raise ValueError('X and Y looks mismatch')
 
-    # cut (and resample) the final output layers
-    data = _resample_ifg(ifg, extents, x_looks, y_looks, thresh)
-
+    # cut, average, resample the final output layers
     looks_path = mlooked_path(ifg.data_path, y_looks, crop_out)
-    gdalwarp.resample(input_tif=ifg.data_path,
-                              extents=extents,
-                              new_res=resolution,
-                              output_file=looks_path)
 
-
+    data = gdalwarp.crop_and_resample(input_tif=ifg.data_path,
+                                      extents=extents,
+                                      new_res=resolution,
+                                      output_file=looks_path)
 
     # Add missing/updated metadata to resampled ifg/DEM
     new_lyr = type(ifg)(looks_path)

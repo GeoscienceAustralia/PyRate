@@ -142,20 +142,28 @@ def crop(input_file, extents, gt=None, nodata=np.nan):
 
 
 def resample(input_tif, extents, new_res, output_file):
+    dst, resampled_proj, src, src_proj = crop_rasample_setup(extents,
+                                                             input_tif,
+                                                             new_res,
+                                                             output_file)
+    # Do the work
+    gdal.ReprojectImage(src, dst, src_proj, resampled_proj,
+                        gdalconst.GRA_NearestNeighbour)
+    return dst.ReadAsArray()
+
+
+def crop_rasample_setup(extents, input_tif, new_res, output_file):
     # Source
     src = gdal.Open(input_tif, gdalconst.GA_ReadOnly)
     src_proj = src.GetProjection()
     md = src.GetMetadata()
-
     # get the image extents
     minX, minY, maxX, maxY = extents
     gt = src.GetGeoTransform()  # gt is tuple of 6 numbers
-
     # Create a new geotransform for the image
     gt2 = list(gt)
     gt2[0] = minX
     gt2[3] = maxY
-
     # We want a section of source that matches this:
     resampled_proj = src_proj
     if new_res[0]:  # if new_res is not None, it can't be zero either
@@ -166,11 +174,9 @@ def resample(input_tif, extents, new_res, output_file):
     # modified image extents
     ulX, ulY = world_to_pixel(resampled_geotrans, minX, maxY)
     lrX, lrY = world_to_pixel(resampled_geotrans, maxX, minY)
-
     # Calculate the pixel size of the new image
     px_width = int(lrX - ulX)
     px_height = int(lrY - ulY)
-
     # Output / destination
     dst = gdal.GetDriverByName('GTiff').Create(
         output_file, px_width, px_height, 1, gdalconst.GDT_Float32)
@@ -179,10 +185,31 @@ def resample(input_tif, extents, new_res, output_file):
     for k, v in md.iteritems():
         dst.SetMetadataItem(k, v)
 
+    return dst, resampled_proj, src, src_proj
+
+
+def crop_and_resample(input_tif, extents, new_res, output_file):
+    """
+    :param input_tif: input interferrogram path
+    :param extents: extents list or tuple (minX, minY, maxX, maxY)
+    :param new_res: new resolution to be sampled on
+    :param output_file: output resampled interferrogram
+    :return: data: resampled, nan-converted phase band
+    """
+    dst, resampled_proj, src, src_proj = crop_rasample_setup(extents, input_tif,
+                                                             new_res,
+                                                             output_file)
+
+    band = dst.GetRasterBand(1)
+    band.SetNoDataValue(np.nan)
     # Do the work
+    # TODO: may need to implement nan_frac filtering prepifg.resample style
     gdal.ReprojectImage(src, dst, src_proj, resampled_proj,
-                        gdalconst.GRA_NearestNeighbour)
-    return dst.ReadAsArray()
+                        gdalconst.GRA_Average)
+    data = dst.ReadAsArray()
+    # nan conversion
+    data = np.where(np.isclose(data, 0.0, atol=1e-6), np.nan, data)
+    return data
 
 
 if __name__ == '__main__':
