@@ -46,11 +46,11 @@ GRID_TOL = 1e-6
 
 
 def getAnalysisExtent(
-    cropOpt,
-    rasters,
-    xlooks,
-    ylooks,
-    userExts):
+        cropOpt,
+        rasters,
+        xlooks,
+        ylooks,
+        userExts):
 
     if cropOpt not in CROP_OPTIONS:
         raise PreprocessError("Unrecognised crop option: %s" % cropOpt)
@@ -69,13 +69,12 @@ def getAnalysisExtent(
 
 
 def prepare_ifg(
-    raster_path,
-    xlooks,
-    ylooks,
-    exts,
-    thresh,
-    crop_opt,
-    ret_ifg=True):
+        raster_path,
+        xlooks,
+        ylooks,
+        exts,
+        thresh,
+        crop_opt):
     # Determine cmd line args for gdalwarp calls for each ifg (gdalwarp has no
     # API. For resampling, gdalwarp is called 2x. 1st to subset the source data
     # for Pirate style averaging/resampling, 2nd to generate the final dataset
@@ -102,17 +101,17 @@ def prepare_ifg(
         raster.open()
 
     return warp(raster, xlooks, ylooks, exts, resolution, thresh,
-                crop_opt, ret_ifg)
+                crop_opt)
 
 
 # TODO: crop options 0 = no cropping? get rid of same size (but it is in explained file)
 def prepare_ifgs(
-    rasters_data_paths,
-    crop_opt,
-    xlooks,
-    ylooks,
-    thresh=0.5,
-    user_exts=None):
+        rasters_data_paths,
+        crop_opt,
+        xlooks,
+        ylooks,
+        thresh=0.5,
+        user_exts=None):
     """
     Produces multilooked/resampled data files for PyRate analysis.
 
@@ -198,8 +197,7 @@ def mlooked_path(path, looks, crop_out):
 
 
 # TODO: clean arg names
-def warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out,
-         ret_ifg=True):
+def warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out):
     """
     Resamples 'ifg' and returns a new Ifg obj.
 
@@ -217,27 +215,21 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out,
     # cut, average, resample the final output layers
     looks_path = mlooked_path(ifg.data_path, y_looks, crop_out)
 
-    data = gdalwarp.crop_and_resample(input_tif=ifg.data_path,
-                                      extents=extents,
-                                      new_res=resolution,
-                                      output_file=looks_path)
+    gdalwarp.crop_and_resample(input_tif=ifg.data_path,
+                               extents=extents,
+                               new_res=resolution,
+                               output_file=looks_path)
 
-    if ret_ifg:
-        # Add missing/updated metadata to resampled ifg/DEM
-        new_lyr = type(ifg)(looks_path)
-        new_lyr.open(readonly=True)
-        # for non-DEMs, phase bands need extra metadata & conversions
-        if hasattr(new_lyr, "phase_band"):
-            # TODO: LOS conversion to vertical/horizontal (projection)
-            # TODO: push out to workflow
-            #if params.has_key(REPROJECTION_FLAG):
-            #    reproject()
-            # write either resampled or the basic cropped data to new layer
-            new_lyr.nan_converted = True
+    #     # Add missing/updated metadata to resampled ifg/DEM
+    #     new_lyr = type(ifg)(looks_path)
+    #     new_lyr.open(readonly=True)
+    #     # for non-DEMs, phase bands need extra metadata & conversions
+    #     if hasattr(new_lyr, "phase_band"):
+    #         # TODO: LOS conversion to vertical/horizontal (projection)
+    #         # TODO: push out to workflow
+    #         #if params.has_key(REPROJECTION_FLAG):
+    #         #    reproject()
 
-        return new_lyr
-    else:
-        return
 
 
 def resample(data, xscale, yscale, thresh):

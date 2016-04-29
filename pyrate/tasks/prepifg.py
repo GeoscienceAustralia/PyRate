@@ -75,7 +75,7 @@ class PrepareInterferogram(IfgListMixin, luigi.WrapperTask):
     crop_opt = luigi.IntParameter(config_path=InputParam(config.IFG_CROP_OPT))
     xlooks = luigi.IntParameter(config_path=InputParam(config.IFG_LKSX))
     ylooks = luigi.IntParameter(config_path=InputParam(config.IFG_LKSY))
-    verbose = luigi.BooleanParameter(default=True, significant=False)
+    # verbose = luigi.BooleanParameter(default=True, significant=False)
 
     def requires(self):
         return [GetAnalysisExtents()]
@@ -89,8 +89,8 @@ class PrepareInterferogram(IfgListMixin, luigi.WrapperTask):
             self.ylooks,
             extents,
             self.thresh,
-            self.crop_opt,
-            self.verbose)
+            self.crop_opt
+            )
         self.ifg.close()
 
     def output(self):

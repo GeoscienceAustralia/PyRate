@@ -362,8 +362,13 @@ class SameSizeTests(unittest.TestCase):
         ifgs = same_exts_ifgs()
         ifg_data_paths = [d.data_path for d in ifgs]
         xlooks = ylooks = 2
-        mlooked = prepare_ifgs(ifg_data_paths,
-                               ALREADY_SAME_SIZE, xlooks, ylooks)
+        prepare_ifgs(ifg_data_paths, ALREADY_SAME_SIZE, xlooks, ylooks)
+
+        looks_paths = [mlooked_path(d, looks=xlooks, crop_out=ALREADY_SAME_SIZE)
+                       for d in ifg_data_paths]
+        mlooked = [Ifg(i) for i in looks_paths]
+        for m in mlooked:
+            m.open()
         self.assertEqual(len(mlooked), 2)
 
         for ifg in mlooked:
@@ -465,8 +470,12 @@ class MatlabEqualityTestRoipacSydneyTestData(unittest.TestCase):
         from pyrate.tests.common import sydney_data_setup
         self.ifgs = sydney_data_setup()
         self.ifg_paths = [i.data_path for i in self.ifgs]
-        self.ifgs_with_nan = prepare_ifgs(self.ifg_paths,
-                                          crop_opt=1, xlooks=1, ylooks=1)
+        prepare_ifgs(self.ifg_paths, crop_opt=1, xlooks=1, ylooks=1)
+        looks_paths = [mlooked_path(d, looks=1, crop_out=1)
+                       for d in self.ifg_paths]
+        self.ifgs_with_nan = [Ifg(i) for i in looks_paths]
+        for o in self.ifgs_with_nan:
+            o.open()
 
     def tearDown(self):
         for i in self.ifgs_with_nan:

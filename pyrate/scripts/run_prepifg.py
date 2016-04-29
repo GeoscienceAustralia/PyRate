@@ -111,11 +111,11 @@ def gamma_prepifg(base_ifg_paths, params):
     thresh = params[cf.NO_DATA_AVERAGING_THRESHOLD]
     if parallel:
         parmap.map(prepifg.prepare_ifg, dest_base_ifgs,
-                   xlooks, ylooks, exts, thresh, crop, False,
+                   xlooks, ylooks, exts, thresh, crop,
                    processes=params[cf.PROCESSES])
     else:
         [prepifg.prepare_ifg(i, xlooks, ylooks, exts,
-                             thresh, crop, False) for i in dest_base_ifgs]
+                             thresh, crop) for i in dest_base_ifgs]
 
 
 def gamma_multiprocessing(b, params):
