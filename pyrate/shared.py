@@ -565,7 +565,7 @@ def write_geotiff(header, data_path, dest, nodata):
     # write pyrate parameters to headers
     if is_ifg:
         for k in [ifc.PYRATE_WAVELENGTH_METRES, ifc.PYRATE_TIME_SPAN, ifc.PYRATE_INSAR_PROCESSOR,
-                    ifc.PYRATE_DATE, ifc.PYRATE_DATE2, ifc.PYRATE_PHASE_UNITS]:
+                    ifc.PYRATE_DATE, ifc.PYRATE_DATE2, ifc.PYRATE_PHASE_UNITS, ifc.PR_OUT_TYPE]:
             ds.SetMetadataItem(k, str(header[k]))
 
     # position and projection data
