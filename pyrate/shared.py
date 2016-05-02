@@ -322,6 +322,7 @@ class Ifg(RasterBase):
 
         # handle datasets with no 0 -> NaN replacement
         if self.nan_converted is False and nan_count == 0:
+            self.convert_to_nans()
             nan_count = nsum(np.isclose(self.phase_data, 0.0, atol=1e-6))
         return nan_count / float(self.num_cells)
 
