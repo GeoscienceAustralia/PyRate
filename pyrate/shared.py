@@ -5,6 +5,7 @@ Created on 12/09/2012
 
 .. codeauthor:: Ben Davies, Sudipta Basak, Matt Garthwaite
 """
+import errno
 
 import os, struct
 import math
@@ -565,7 +566,7 @@ def write_geotiff(header, data_path, dest, nodata):
     # write pyrate parameters to headers
     if is_ifg:
         for k in [ifc.PYRATE_WAVELENGTH_METRES, ifc.PYRATE_TIME_SPAN, ifc.PYRATE_INSAR_PROCESSOR,
-                    ifc.PYRATE_DATE, ifc.PYRATE_DATE2, ifc.PYRATE_PHASE_UNITS]:
+                    ifc.PYRATE_DATE, ifc.PYRATE_DATE2, ifc.PYRATE_PHASE_UNITS, ifc.PR_OUT_TYPE]:
             ds.SetMetadataItem(k, str(header[k]))
 
     # position and projection data
@@ -646,3 +647,13 @@ class GeotiffException(Exception):
 
 if __name__ == '__main__':
     print nanmedian([1, 2, nan, 2, nan, 4])
+
+
+def mkdir_p(path):
+    try:
+        os.makedirs(path)
+    except OSError as exc:  # Python >2.5
+        if exc.errno == errno.EEXIST and os.path.isdir(path):
+            pass
+        else:
+            raise

@@ -14,7 +14,7 @@ from pyrate.shared import Ifg
 from pyrate.scripts import run_pyrate
 from pyrate import roipac
 from pyrate import gamma
-from pyrate.shared import write_geotiff
+from pyrate.shared import write_geotiff, mkdir_p
 from pyrate.tasks import gamma as gamma_task
 import pyrate.ifgconstants as ifc
 from pyrate.utils import tparmap
@@ -80,6 +80,7 @@ def roipac_prepifg(base_ifg_paths, params):
         # DEM already has DATUM, so get it from dem if not in header
         if ifc.PYRATE_DATUM not in header:
             header[ifc.PYRATE_DATUM] = projection
+        header[ifc.PR_OUT_TYPE] = 'ifg'   # to indicate that this is an ifg
         write_geotiff(header, b, d, nodata=params[cf.NO_DATA_VALUE])
     prepifg.prepare_ifgs(
         dest_base_ifgs, crop_opt=crop, xlooks=xlooks, ylooks=ylooks)
@@ -126,13 +127,16 @@ def gamma_multiprocessing(b, params):
     except:
         SLC_DIR = None
 
+    mkdir_p(params[cf.OUT_DIR])
     d = os.path.join(
         params[cf.OUT_DIR], os.path.basename(b).split('.')[0] + '.tif')
+
     header_paths = gamma_task.get_header_paths(b, slc_dir=SLC_DIR)
     if len(header_paths) != 2:
         raise
     hdrs = [gamma.parse_epoch_header(p) for p in header_paths]
     COMBINED = gamma.combine_headers(hdrs[0], hdrs[1], dem_hdr=DEM_HDR)
+    COMBINED[ifc.PR_OUT_TYPE] = 'ifg'   # to indicate that this is an ifg
     write_geotiff(COMBINED, b, d, nodata=params[cf.NO_DATA_VALUE])
 
 if __name__ == '__main__':
