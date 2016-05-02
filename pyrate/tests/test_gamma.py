@@ -18,6 +18,7 @@ import numpy as np
 
 from pyrate.scripts.converttogtif import main as gammaMain
 from pyrate import gamma
+from pyrate import shared
 from pyrate.tasks.utils import DUMMY_SECTION_NAME
 import pyrate.ifgconstants as ifc
 from pyrate.config import (
@@ -58,7 +59,7 @@ class GammaCommandLineTests(unittest.TestCase):
         self.ifgListFile = os.path.join(
             TEMPDIR, '{}/gamma_ifg.list'.format(temp_text))
         self.base_dir = os.path.dirname(self.confFile)
-        common.mkdir_p(self.base_dir)
+        shared.mkdir_p(self.base_dir)
 
     def tearDown(self):
         try:
@@ -313,8 +314,8 @@ class TestGammaLuigiEquality(unittest.TestCase):
 
         cls.luigi_base_dir = os.path.dirname(cls.luigi_confFile)
         cls.non_luigi_base_dir = os.path.dirname(cls.non_luigi_confFile)
-        common.mkdir_p(cls.luigi_base_dir)
-        common.mkdir_p(cls.non_luigi_base_dir)
+        shared.mkdir_p(cls.luigi_base_dir)
+        shared.mkdir_p(cls.non_luigi_base_dir)
 
     @classmethod
     def tearDownClass(cls):
@@ -430,12 +431,12 @@ class TestGammaParallelVsSerial(unittest.TestCase):
         params[cf.OUT_DIR] = cls.serial_dir
         params[cf.PARALLEL] = False
 
-        common.mkdir_p(cls.serial_dir)
+        shared.mkdir_p(cls.serial_dir)
         run_prepifg.gamma_prepifg(unw_paths, params)
 
         params[cf.OUT_DIR] = cls.parallel_dir
         params[cf.PARALLEL] = True
-        common.mkdir_p(cls.parallel_dir)
+        shared.mkdir_p(cls.parallel_dir)
         run_prepifg.gamma_prepifg(unw_paths, params)
 
     @classmethod

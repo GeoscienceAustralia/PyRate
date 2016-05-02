@@ -106,7 +106,7 @@ def prepare_ifg(
 
 # TODO: crop options 0 = no cropping? get rid of same size (but it is in explained file)
 def prepare_ifgs(
-        rasters_data_paths,
+        raster_data_paths,
         crop_opt,
         xlooks,
         ylooks,
@@ -115,7 +115,8 @@ def prepare_ifgs(
     """
     Produces multilooked/resampled data files for PyRate analysis.
 
-    :param ifgs: sequence of Ifg objs (DEM obj may be included for processing)
+    :param raster_data_paths: sequence of Ifg data paths
+            (Currently DEMs are not supported)
     :param crop_opt: integer cropping type option (see config)
     :param xlooks: multilooking factor for the X axis
     :param ylooks: Y axis multilooking factor
@@ -129,11 +130,11 @@ def prepare_ifgs(
     :param verbose: Controls level of gdalwarp output
     """
     # TODO: make dems work in prep_ifgs again
-    rasters = [Ifg(r) for r in rasters_data_paths]
+    rasters = [Ifg(r) for r in raster_data_paths]
     exts = getAnalysisExtent(crop_opt, rasters, xlooks, ylooks, user_exts)
 
     return [prepare_ifg(d, xlooks, ylooks, exts, thresh, crop_opt)
-            for d in rasters_data_paths]
+            for d in raster_data_paths]
 
 
 def get_extents(ifgs, crop_opt, user_exts=None):
@@ -186,9 +187,9 @@ def _resample_ifg(ifg, cmd, x_looks, y_looks, thresh, md=None):
         new_lyr = gdal.Open(tmp_path)
         for k, v in md.iteritems():
             new_lyr.SetMetadataItem(k, v)
-        new_lyr = None
+        new_lyr = None  # manually close
 
-    tmp = type(ifg)(tmp_path) # dynamically handle Ifgs & Rasters
+    tmp = type(ifg)(tmp_path)  # dynamically handle Ifgs & Rasters
     tmp.open()
 
     if isinstance(ifg, Ifg):
@@ -248,7 +249,6 @@ def warp_old(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out, verbo
 
     # HACK: if resampling, cut segment with gdalwarp & manually average tiles
     data = None
-
     if resolution[0]:
         data = _resample_ifg(ifg, cmd, x_looks, y_looks, thresh, md)
         cmd += ["-tr"] + [str(r) for r in resolution] # change res of final output
@@ -272,7 +272,7 @@ def warp_old(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out, verbo
     if hasattr(new_lyr, "phase_band"):
         if data is None:  # data wasn't resampled, so flag incoherent cells
             data = new_lyr.phase_band.ReadAsArray()
-            data = where(np.isclose(data, 0.0, atol=1e-6), nan, data)
+            data = np.where(np.isclose(data, 0.0, atol=1e-6), np.nan, data)
 
         # TODO: LOS conversion to vertical/horizontal (projection)
         # TODO: push out to workflow

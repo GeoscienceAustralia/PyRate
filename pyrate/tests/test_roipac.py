@@ -36,6 +36,7 @@ from pyrate.config import (
 from pyrate.roipac import RoipacException
 from pyrate.shared import GeotiffException
 from pyrate.scripts.converttogtif import main as roipacMain
+from pyrate import shared
 from pyrate.tasks.utils import DUMMY_SECTION_NAME
 from pyrate.tests.common import HEADERS_TEST_DIR, PREP_TEST_OBS, PREP_TEST_TIF
 from pyrate.tests.common import SYD_TEST_DEM_UNW, SYD_TEST_DEM_HDR
@@ -66,7 +67,7 @@ class RoipacCommandLine(unittest.TestCase):
         self.ifgListFile = os.path.join(
             TEMPDIR, '{}/roipac_ifg.list'.format(random_text))
         self.base_dir = os.path.dirname(self.confFile)
-        common.mkdir_p(self.base_dir)
+        shared.mkdir_p(self.base_dir)
 
     def tearDown(self):
         def rmPaths(paths):
