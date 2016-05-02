@@ -14,7 +14,7 @@ from pyrate.shared import Ifg
 from pyrate.scripts import run_pyrate
 from pyrate import roipac
 from pyrate import gamma
-from pyrate.shared import write_geotiff
+from pyrate.shared import write_geotiff, mkdir_p
 from pyrate.tasks import gamma as gamma_task
 import pyrate.ifgconstants as ifc
 from pyrate.utils import tparmap
@@ -127,8 +127,10 @@ def gamma_multiprocessing(b, params):
     except:
         SLC_DIR = None
 
+    mkdir_p(params[cf.OUT_DIR])
     d = os.path.join(
         params[cf.OUT_DIR], os.path.basename(b).split('.')[0] + '.tif')
+
     header_paths = gamma_task.get_header_paths(b, slc_dir=SLC_DIR)
     if len(header_paths) != 2:
         raise

@@ -10,11 +10,13 @@ PyRate has been developed by [Geoscience Australia](http://www.ga.gov.au) and th
 - Ben Davies
 - Matt Garthwaite
 - Simon Knapp
+- Negin Moghaddam
 - Vanessa Newey
+- Garrick Paskos
 
 ## Contact:
 
-Questions or comments about the PyRate software can be directed to [insar@ga.gov.au](mailto:insar@ga.gov.au).
+Questions or feedback about the PyRate software can be directed to [insar@ga.gov.au](mailto:insar@ga.gov.au).
 
 ## Licencing:
 

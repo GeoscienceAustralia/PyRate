@@ -30,12 +30,14 @@ ORB_REMOVED = 'REMOVED'
 pars = None
 PYRATEPATH = cf.PYRATEPATH
 
+# print screen output
+VERBOSE = True
 
 def process_ifgs(ifg_paths_or_instance, params):
     """
-    Top level function to perform correction steps on given ifgs
+    Top level function to perform PyRate correction steps on given ifgs
     ifgs: sequence of paths to interferograms (NB: changes are saved into ifgs)
-    params: dict of run config params
+    params: dictionary of configuration parameters
     """
     nan_conversion = params[cf.NAN_CONVERSION]
     # ifg_instance, nan_conversion=True
@@ -51,6 +53,7 @@ def process_ifgs(ifg_paths_or_instance, params):
             if not i.mm_converted:
                 i.convert_to_mm()
                 i.write_modified_phase()
+        write_msg('Calculating minimum spanning tree matrix using NetworkX method')
         mst_grid = mst.mst_boolean_array(ifgs)
         # check if mst is not a tree, then do interpolate
         if mst.is_mst_tree(ifgs)[1]:
@@ -67,6 +70,7 @@ def process_ifgs(ifg_paths_or_instance, params):
         ifg_instance_updated, epoch_list = \
             matlab_mst.get_nml(ifg_paths_or_instance,
                                nan_conversion=nan_conversion)
+        write_msg('Calculating minimum spanning tree matrix using Matlab-algorithm method')
         mst_grid = matlab_mst.matlab_mst_boolean_array(ifg_instance_updated)
 
         # Insert INTERP into the params for timeseries calculation
@@ -86,16 +90,23 @@ def process_ifgs(ifg_paths_or_instance, params):
 
     # Estimate and remove orbit errors
     if params[cf.ORBITAL_FIT] != 0:
+        write_msg('Calculating orbital error correction')
         remove_orbital_error(ifgs, params)
 
+    write_msg('Estimating and removing phase at reference pixel')
     _, ifgs = rpe.estimate_ref_phase(ifgs, params, refpx, refpy)
 
-    # Calculate interferogram noise
     # TODO: assign maxvar to ifg metadata (and geotiff)?
+    write_msg('Calculating maximum variance in interferograms')
     maxvar = [vcm_module.cvd(i)[0] for i in ifgs]
     
-    # Calculate temporal variance-covariance matrix
+    write_msg('Constructing temporal variance-covariance matrix')
     vcmt = vcm_module.get_vcmt(ifgs, maxvar)
+
+    # write vcm output to a file
+    vcmt_mat_binary_file = os.path.join(
+        PYRATEPATH, params[cf.OUT_DIR], 'vcmt_mat')
+    np.save(file=vcmt_mat_binary_file, arr=vcmt)
 
     p = os.path.join(params[cf.OUT_DIR], ifgs[0].data_path)
     assert os.path.exists(p) == True
@@ -148,7 +159,7 @@ def process_ifgs(ifg_paths_or_instance, params):
     #     i.dataset.FlushCache()
     #     i = None  # force close    TODO: may need to implement close()
 
-    logging.debug('PyRate run completed\n')
+    write_msg('PyRate workflow completed')
 
 
 def insert_time_series_interpolation(ifg_instance_updated, params):
@@ -168,17 +179,14 @@ def insert_time_series_interpolation(ifg_instance_updated, params):
 
 def remove_orbital_error(ifgs, params):
     if not params[cf.ORBITAL_FIT]:
-        logging.debug('Orbital correction not required.')
+        write_msg('Orbital correction not required')
         return
    
-    logging.debug('Calculating orbital correction')
-
     # perform some general error/sanity checks
     flags = [i.dataset.GetMetadataItem(ifc.PYRATE_ORBITAL_ERROR) for i in ifgs]
 
     if all(flags):
-        msg = 'Skipped orbital correction, ifgs already corrected'
-        logging.debug(msg)
+        write_msg('Skipped orbital correction, ifgs already corrected')
         return
     else:
         check_orbital_ifgs(ifgs, flags)
@@ -212,8 +220,7 @@ def remove_orbital_error(ifgs, params):
 def check_orbital_ifgs(ifgs, flags):
     count = sum([f == ORB_REMOVED for f in flags])
     if (count < len(flags)) and (count > 0):
-        msg = 'Detected mix of corrected and uncorrected orbital error in ifgs'
-        logging.debug(msg)
+        logging.debug('Detected mix of corrected and uncorrected orbital error in ifgs')
 
         for i, flag in zip(ifgs, flags):
             if flag:
@@ -237,20 +244,18 @@ def find_reference_pixel(ifgs, params):
         raise ValueError("Invalid reference pixel Y coordinate: %s" % refy)
         
     if refx == 0 or refy == 0:  # matlab equivalent
-        logging.debug('Calculating reference pixel')
+        write_msg('Finding reference pixel')
         refy, refx = refpixel.ref_pixel(ifgs, params[cf.REFNX],
             params[cf.REFNY], params[cf.REF_CHIP_SIZE], params[cf.REF_MIN_FRAC])
+        write_msg('Reference pixel coordinate: (%s, %s)' % (refx, refy))
     else:
-        msg = 'Reusing config file reference pixel (%s, %s)'
-        logging.debug(msg % (refx, refy))
-        # reuse preset ref pixel
-
-    logging.debug('Reference pixel coordinate: (%s, %s)' % (refx, refy))
+        write_msg('Reusing config file reference pixel (%s, %s)' % (refx, refy))
+    
     return refx, refy
 
 
 def calculate_linear_rate(ifgs, params, vcmt, mst=None):
-    logging.debug('Calculating linear rate')
+    write_msg('Calculating linear rate')
 
     # MULTIPROCESSING parameters
     parallel = params[cf.PARALLEL]
@@ -270,7 +275,7 @@ def calculate_linear_rate(ifgs, params, vcmt, mst=None):
 
 
 def calculate_time_series(ifgs, params, vcmt, mst):
-    logging.debug('Calculating time series')
+    write_msg('Calculating time series')
     res = timeseries.time_series(ifgs, params, vcmt, mst)
     for r in res:
         if len(r.shape) != 3:
@@ -278,7 +283,6 @@ def calculate_time_series(ifgs, params, vcmt, mst):
             raise timeseries.TimeSeriesError
 
     logging.debug('Time series calculated')
-
     tsincr, tscum, tsvel = res
     return tsincr, tscum, tsvel
 
@@ -380,14 +384,10 @@ def main():
     ifg_instance = matlab_mst.IfgListPyRate(datafiles=dest_paths)
 
     if pars[cf.NETWORKX_OR_MATLAB_FLAG]:
-        msg = 'Running networkx mst'
-        print msg
-        logging.debug(msg)
+        # Using networkx mst
         process_ifgs(dest_paths, pars)
     else:
-        msg = 'Running matlab mst'
-        print msg
-        logging.debug(msg)
+        # Using matlab mst
         process_ifgs(ifg_instance, pars)
 
 
@@ -406,7 +406,6 @@ def get_ifg_paths():
     except IOError as err:
         emsg = 'Config file error: %s "%s"' % (err.strerror, err.filename)
         logging.debug(emsg)
-        print emsg
         sys.exit(err.errno)
     ifg_file_list = options.ifglist or pars.get(cf.IFG_FILE_LIST)
     if ifg_file_list is None:
@@ -419,6 +418,14 @@ def get_ifg_paths():
     dest_paths = get_dest_paths(base_unw_paths, crop, pars, xlks)
 
     return base_unw_paths, dest_paths, pars
+
+
+def write_msg(msg):
+    """
+    write message to log file and screen output
+    """
+    logging.debug(msg)
+    if VERBOSE: print msg
 
 
 if __name__ == "__main__":
