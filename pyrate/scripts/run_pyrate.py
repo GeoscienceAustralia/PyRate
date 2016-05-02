@@ -101,11 +101,6 @@ def process_ifgs(ifg_paths_or_instance, params):
     assert os.path.exists(p) == True
 
     ds = gdal.Open(p)
-
-    print ds.GetDriver()
-    #print dir(ds)
-    while True: pass
-
     md = ds.GetMetadata()  # get metadata for writing on output tifs
     gt = ds.GetGeoTransform() # get geographical bounds of data
     wkt = ds.GetProjection() # get projection of data
