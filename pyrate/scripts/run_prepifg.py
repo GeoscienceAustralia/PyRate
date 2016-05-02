@@ -80,6 +80,7 @@ def roipac_prepifg(base_ifg_paths, params):
         # DEM already has DATUM, so get it from dem if not in header
         if ifc.PYRATE_DATUM not in header:
             header[ifc.PYRATE_DATUM] = projection
+        header[ifc.PR_OUT_TYPE] = 'ifg'   # to indicate that this is an ifg
         write_geotiff(header, b, d, nodata=params[cf.NO_DATA_VALUE])
     prepifg.prepare_ifgs(
         dest_base_ifgs, crop_opt=crop, xlooks=xlooks, ylooks=ylooks)
@@ -135,6 +136,7 @@ def gamma_multiprocessing(b, params):
         raise
     hdrs = [gamma.parse_epoch_header(p) for p in header_paths]
     COMBINED = gamma.combine_headers(hdrs[0], hdrs[1], dem_hdr=DEM_HDR)
+    COMBINED[ifc.PR_OUT_TYPE] = 'ifg'   # to indicate that this is an ifg
     write_geotiff(COMBINED, b, d, nodata=params[cf.NO_DATA_VALUE])
 
 if __name__ == '__main__':
