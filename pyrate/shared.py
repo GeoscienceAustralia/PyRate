@@ -207,6 +207,7 @@ class Ifg(RasterBase):
         self.mm_converted = False
         self.meta_data = None
         self.wavelength = None
+        self._nodata = None
 
     def open(self, readonly=None):
         """
@@ -238,12 +239,18 @@ class Ifg(RasterBase):
             msg = 'Missing master and/or slave date in %s' % self.data_path
             raise IfgException(msg)
 
-    def convert_to_nans(self, val=0.0):
+    def convert_to_nans(self):
         """
         Converts given values in phase data to NaNs
         :param val: value to convert, default is 0
         """
-        self.phase_data = where(np.isclose(self.phase_data, val, atol=1e-6),
+        if self._nodata is None:
+            msg = 'nodata needs to be set for nan conversion.' \
+                  'Use ifg.nondata = NoDataValue to set nodata'
+            raise IfgException(msg)
+
+        self.phase_data = where(np.isclose(self.phase_data,
+                                           self._nodata, atol=1e-6),
                                 nan, self.phase_data)
         self.nan_converted = True
 
@@ -256,6 +263,17 @@ class Ifg(RasterBase):
         if self._phase_band is None:
             self._phase_band = self._get_band(PHASE_BAND)
         return self._phase_band
+
+    @property
+    def nodata(self):
+        """
+        Returns a GDAL Band object for the phase band.
+        """
+        return self._nodata
+
+    @nodata.setter
+    def nodata(self, val):
+        self._nodata = val
 
     @property
     def phase_data(self):
@@ -317,13 +335,18 @@ class Ifg(RasterBase):
         """
         Returns 0-1 (float) proportion of NaN cells for the phase band.
         """
+        if self._nodata is None:
+            msg = 'nodata needs to be set for nan fraction calc.' \
+                  'Use ifg.nondata = NoDataValue to set nodata'
+            raise IfgException(msg)
         # don't cache nan_count as client code may modify phase data
         nan_count = self.nan_count
 
         # handle datasets with no 0 -> NaN replacement
         if self.nan_converted is False and nan_count == 0:
             self.convert_to_nans()
-            nan_count = nsum(np.isclose(self.phase_data, 0.0, atol=1e-6))
+            nan_count = nsum(np.isclose(self.phase_data,
+                                        self.nodata, atol=1e-6))
         return nan_count / float(self.num_cells)
 
     def write_modified_phase(self):

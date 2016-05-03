@@ -220,6 +220,8 @@ def crop_and_resample_average(input_tif, extents, new_res, output_file, thresh):
         '', src.RasterXSize, src.RasterYSize, 2, gdalconst.GDT_Float32)
 
     src_data = src.ReadAsArray()
+    if len(src_data.shape) > 2:  # works with multiband ifgs
+        src_data = src_data[0, :, :]  # just take band 1, and discard band 2
     band1 = tmp_ds.GetRasterBand(1)
     band1.WriteArray(src_data)
     band1.SetNoDataValue(0.0)  # equivalent to nan conversion
