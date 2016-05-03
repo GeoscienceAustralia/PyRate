@@ -179,7 +179,7 @@ def _resample_ifg(ifg, cmd, x_looks, y_looks, thresh, md=None):
 
     # HACK: create tmp ifg, extract data array for manual resampling as gdalwarp
     # lacks Pirate's averaging method
-    fp, tmp_path = mkstemp()
+    fp, tmp_path = mkstemp(suffix='.tif')
     check_call(cmd + [ifg.data_path, tmp_path])
 
     # now write the metadata from the input to the output
@@ -267,7 +267,6 @@ def warp_old(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out, verbo
     # Add missing/updated metadata to resampled ifg/DEM
     new_lyr = type(ifg)(looks_path)
     new_lyr.open(readonly=False)
-
     # for non-DEMs, phase bands need extra metadata & conversions
     if hasattr(new_lyr, "phase_band"):
         if data is None:  # data wasn't resampled, so flag incoherent cells
@@ -285,7 +284,7 @@ def warp_old(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out, verbo
         new_lyr.nan_converted = True
 
     if ret_ifg:
-        return new_lyr
+        return looks_path
     else:
         return
 

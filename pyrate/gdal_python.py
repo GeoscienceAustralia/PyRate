@@ -155,7 +155,7 @@ def resample_nearest_neighbour(input_tif, extents, new_res, output_file):
 
 
 def crop_rasample_setup(extents, input_tif, new_res, output_file,
-                        driver_type='GTiff'):
+                        driver_type='GTiff', out_bands=2):
     # Source
     src_ds = gdal.Open(input_tif, gdalconst.GA_ReadOnly)
     src_proj = src_ds.GetProjection()
@@ -185,13 +185,31 @@ def crop_rasample_setup(extents, input_tif, new_res, output_file,
 
     # Output / destination
     dst = gdal.GetDriverByName(driver_type).Create(
-        output_file, px_width, px_height, 2, gdalconst.GDT_Float32)
+        output_file, px_width, px_height, out_bands, gdalconst.GDT_Float32)
     dst.SetGeoTransform(resampled_geotrans)
     dst.SetProjection(resampled_proj)
     for k, v in md.iteritems():
         dst.SetMetadataItem(k, v)
 
     return dst, resampled_proj, src_ds, src_proj
+
+
+# def new_crop_and_resample_average(input_tif, extents, new_res, output_file,
+#                                   thresh):
+#     dst_ds, resampled_proj, src_ds, src_proj = crop_rasample_setup(
+#         extents, input_tif, new_res, output_file, out_bands=1)
+#     print 'before'
+#     print src_ds.ReadAsArray()
+#     src_ds.GetRasterBand(1).SetNoDataValue(0.0)
+#     #src_ds.GetRasterBand(1).Fill(np.nan)
+#     print 'after'
+#     print src_ds.GetRasterBand(1).ReadAsArray()
+#
+#     dst_ds.GetRasterBand(1).SetNoDataValue(0)
+#     dst_ds.GetRasterBand(1).Fill(np.nan)
+#
+#     gdal.ReprojectImage(src_ds, dst_ds, '', '', gdal.GRA_Average)
+#     return dst_ds.ReadAsArray()
 
 
 def crop_and_resample_average(input_tif, extents, new_res, output_file, thresh):
