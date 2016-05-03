@@ -185,6 +185,8 @@ class EpochsTests(TestCase):
     def test_get_all_epochs(self):
         # test function to extract all dates from sequence of ifgs
         ifgs = sydney5_mock_ifgs()
+        for i in ifgs:
+            i.nodata_value = 0
         dates = [date(2006,  8, 28), date(2006, 11, 06), date(2006, 12, 11),
                 date(2007,  1, 15), date(2007,  3, 26), date(2007,  9, 17)]
 

@@ -47,6 +47,7 @@ def process_ifgs(ifg_paths_or_instance, params):
             if not i.is_open:
                 i.open(readonly=False)
             if nan_conversion:  # nan conversion happens here in networkx mst
+                i.nodata_value = params[cf.NO_DATA_VALUE]
                 i.convert_to_nans()
             if not i.mm_converted:
                 i.convert_to_mm()
@@ -62,10 +63,12 @@ def process_ifgs(ifg_paths_or_instance, params):
         ifgs = ifg_paths_or_instance.ifgs
         for i in ifgs:
             if not i.mm_converted:
+                i.nodata_value = params[cf.NO_DATA_VALUE]
                 i.convert_to_mm()
                 i.write_modified_phase()
         ifg_instance_updated, epoch_list = \
             matlab_mst.get_nml(ifg_paths_or_instance,
+                               nodata_value=params[cf.NO_DATA_VALUE],
                                nan_conversion=nan_conversion)
         mst_grid = matlab_mst.matlab_mst_boolean_array(ifg_instance_updated)
 

@@ -153,7 +153,8 @@ class MatlabTimeSeriesEquality(unittest.TestCase):
                 i.convert_to_mm()
                 i.write_modified_phase()
         ifg_instance_updated, epoch_list = \
-            matlab_mst.get_nml(ifg_instance, nan_conversion=True)
+            matlab_mst.get_nml(ifg_instance, nodata_value=0,
+                               nan_conversion=True)
         mst_grid = matlab_mst.matlab_mst_boolean_array(ifg_instance_updated)
         params = run_pyrate.insert_time_series_interpolation(
             ifg_instance_updated, params)
@@ -297,7 +298,8 @@ class MatlabTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
                 i.convert_to_mm()
                 i.write_modified_phase()
         ifg_instance_updated, epoch_list = \
-            matlab_mst.get_nml(ifg_instance, nan_conversion=True)
+            matlab_mst.get_nml(ifg_instance, nodata_value=0,
+                               nan_conversion=True)
         mst_grid = matlab_mst.matlab_mst_boolean_array(ifg_instance_updated)
         params = run_pyrate.insert_time_series_interpolation(
             ifg_instance_updated, params)

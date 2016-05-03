@@ -34,6 +34,7 @@ class IfgTests(unittest.TestCase):
     def setUp(self):
         self.ifg = Ifg(join(SYD_TEST_TIF, 'geo_060619-061002.tif'))
         self.ifg.open()
+        self.ifg.nodata_value = 0
 
     def test_headers_as_attr(self):
         for a in ['ncols', 'nrows', 'x_first', 'x_step',
@@ -41,7 +42,7 @@ class IfgTests(unittest.TestCase):
             self.assertTrue(getattr(self.ifg, a) is not None)
 
     def test_convert_to_nans(self):
-        self.ifg.convert_to_nans(0)
+        self.ifg.convert_to_nans()
         self.assertTrue(self.ifg.nan_converted)
 
     def test_xylast(self):

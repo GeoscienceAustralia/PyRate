@@ -55,7 +55,7 @@ class RasterBase(object):
 
     def __init__(self, path):
         self.data_path = path
-        self.dataset = None # for GDAL dataset obj
+        self.dataset = None  # for GDAL dataset obj
         self._readonly = not os.access(path, os.R_OK | os.W_OK)
 
         if self._readonly is None:
@@ -207,7 +207,7 @@ class Ifg(RasterBase):
         self.mm_converted = False
         self.meta_data = None
         self.wavelength = None
-        self._nodata = None
+        self._nodata_value = None
 
     def open(self, readonly=None):
         """
@@ -244,13 +244,13 @@ class Ifg(RasterBase):
         Converts given values in phase data to NaNs
         :param val: value to convert, default is 0
         """
-        if self._nodata is None:
-            msg = 'nodata needs to be set for nan conversion.' \
-                  'Use ifg.nondata = NoDataValue to set nodata'
-            raise IfgException(msg)
+        if (self._nodata_value is None) or (self.dataset is None):
+            msg = 'nodata value needs to be set for nan conversion.' \
+                  'Use ifg.nodata_value = NoDataValue to set nodata_value'
+            raise RasterException(msg)
 
         self.phase_data = where(np.isclose(self.phase_data,
-                                           self._nodata, atol=1e-6),
+                                           self._nodata_value, atol=1e-6),
                                 nan, self.phase_data)
         self.nan_converted = True
 
@@ -265,15 +265,15 @@ class Ifg(RasterBase):
         return self._phase_band
 
     @property
-    def nodata(self):
+    def nodata_value(self):
         """
         Returns a GDAL Band object for the phase band.
         """
-        return self._nodata
+        return self._nodata_value
 
-    @nodata.setter
-    def nodata(self, val):
-        self._nodata = val
+    @nodata_value.setter
+    def nodata_value(self, val):
+        self._nodata_value = val
 
     @property
     def phase_data(self):
@@ -335,18 +335,16 @@ class Ifg(RasterBase):
         """
         Returns 0-1 (float) proportion of NaN cells for the phase band.
         """
-        if self._nodata is None:
-            msg = 'nodata needs to be set for nan fraction calc.' \
+        if (self._nodata_value is None) or (self.dataset is None):
+            msg = 'nodata_value needs to be set for nan fraction calc.' \
                   'Use ifg.nondata = NoDataValue to set nodata'
-            raise IfgException(msg)
+            raise RasterException(msg)
         # don't cache nan_count as client code may modify phase data
         nan_count = self.nan_count
-
         # handle datasets with no 0 -> NaN replacement
-        if self.nan_converted is False and nan_count == 0:
-            self.convert_to_nans()
+        if not self.nan_converted and (nan_count == 0):
             nan_count = nsum(np.isclose(self.phase_data,
-                                        self.nodata, atol=1e-6))
+                                        self._nodata_value, atol=1e-6))
         return nan_count / float(self.num_cells)
 
     def write_modified_phase(self):
@@ -589,8 +587,9 @@ def write_geotiff(header, data_path, dest, nodata):
 
     # write pyrate parameters to headers
     if is_ifg:
-        for k in [ifc.PYRATE_WAVELENGTH_METRES, ifc.PYRATE_TIME_SPAN, ifc.PYRATE_INSAR_PROCESSOR,
-                    ifc.PYRATE_DATE, ifc.PYRATE_DATE2, ifc.PYRATE_PHASE_UNITS, ifc.PR_OUT_TYPE]:
+        for k in [ifc.PYRATE_WAVELENGTH_METRES, ifc.PYRATE_TIME_SPAN,
+                  ifc.PYRATE_INSAR_PROCESSOR,
+                  ifc.PYRATE_DATE, ifc.PYRATE_DATE2, ifc.PYRATE_PHASE_UNITS]:
             ds.SetMetadataItem(k, str(header[k]))
 
     # position and projection data
@@ -654,7 +653,6 @@ def write_output_geotiff(md, gt, wkt, data, dest, nodata):
     driver = gdal.GetDriverByName("GTiff")
     nrows, ncols = data.shape
     ds = driver.Create(dest, ncols, nrows, 1, gdal.GDT_Float32)
-
     # set spatial reference for geotiff
     ds.SetGeoTransform(gt)
     ds.SetProjection(wkt)

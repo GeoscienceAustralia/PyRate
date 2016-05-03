@@ -49,7 +49,9 @@ class IfGMeta(object):
         self.slave_num = n_reshaped[1, :]
         self.n = n
 
-    def update_nan_frac(self):
+    def update_nan_frac(self, nodata):
+        for i in self.ifgs:
+            i.nodata_value = nodata
         self.nan_frac = [i.nan_fraction for i in self.ifgs]
 
     def convert_nans(self, nan_conversion=False):
@@ -105,7 +107,8 @@ def data_setup(datafiles):
     return ifgs
 
 
-def get_nml(ifg_list_instance, nan_conversion=False, prefix_len=4):
+def get_nml(ifg_list_instance, nodata_value,
+            nan_conversion=False, prefix_len=4):
     """
     A reproduction of getnml.m, the matlab function in pi-rate.
     Note: the matlab version tested does not have nan's.
@@ -113,7 +116,7 @@ def get_nml(ifg_list_instance, nan_conversion=False, prefix_len=4):
     _epoch_list, n = get_epochs_and_n(ifg_list_instance.ifgs)
     ifg_list_instance.reshape_n(n)
     if nan_conversion:
-        ifg_list_instance.update_nan_frac()  # turn on for nan conversion
+        ifg_list_instance.update_nan_frac(nodata_value)  # turn on for nan conversion
         ifg_list_instance.convert_nans(nan_conversion=nan_conversion)
     ifg_list_instance.make_data_stack()
     return ifg_list_instance, _epoch_list

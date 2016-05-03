@@ -84,6 +84,7 @@ def sydney_data_setup(datafiles=None):
     
     for i in ifgs: 
         i.open()
+        i.nodata_value = 0
 
     return ifgs
 
@@ -122,6 +123,7 @@ def sydney5_mock_ifgs(xs=3, ys=4):
     ifgs = sydney5_ifgs()
     for i in ifgs:
         i.open()
+        i.nodata_value = 0
 
     return [MockIfg(i, xs, ys) for i in ifgs]
 

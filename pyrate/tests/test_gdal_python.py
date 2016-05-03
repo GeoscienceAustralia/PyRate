@@ -441,7 +441,8 @@ class TestMEMVsGTiff(unittest.TestCase):
         np.testing.assert_array_equal(band2, np.array([[1., 0., 0.5],
                                                        [0.25, 0., 0.75],
                                                        [0., 0., 0.]]))
-        os.remove(temp_tif)
+        if os.path.exists(temp_tif):
+            os.remove(temp_tif)
 
     def test_mem(self):
         self.check('MEM')

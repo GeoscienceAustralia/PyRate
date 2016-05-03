@@ -59,6 +59,7 @@ class SingleDesignMatrixTests(unittest.TestCase):
         self.ys = 0.8
         self.ifg = Ifg(join(SYD_TEST_TIF, 'geo_060619-061002.tif'))
         self.ifg.open()
+        self.ifg.nodata_value = 0
 
         self.m = MockIfg(self.ifg, 3, 4)
         self.m.x_size = self.xs
