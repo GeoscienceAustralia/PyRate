@@ -211,7 +211,7 @@ def crop_and_resample_average(input_tif, extents, new_res, output_file, thresh):
 
     # destination data band
     band = dst.GetRasterBand(1)
-    band.SetNoDataValue(0.0)
+    band.SetNoDataValue(np.nan)
     # band.Fill(np.nan)
 
     # dst.AddBand(GDT_Byte)
