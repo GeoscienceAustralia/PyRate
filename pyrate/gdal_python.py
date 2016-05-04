@@ -205,6 +205,9 @@ def get_width_and_height(maxX, maxY, minX, minY, resampled_geotrans):
 
 def crop_and_resample_average(
         input_tif, extents, new_res, output_file, thresh, match_pirate=True):
+    print 'inside cro and resample'
+    print input_tif
+    print output_file
     dst_ds, resampled_proj, src_ds, src_proj = crop_rasample_setup(
         extents, input_tif, new_res, output_file,
         out_bands=2, dst_driver_type='MEM')
@@ -225,9 +228,9 @@ def crop_and_resample_average(
     src_ds_mem.GetRasterBand(2).WriteArray(nan_matrix)
     src_ds_mem.GetRasterBand(2).SetNoDataValue(-100000)
     src_gt = src_ds.GetGeoTransform()
+
     src_ds_mem.SetGeoTransform(src_gt)
     gdal.ReprojectImage(src_ds_mem, dst_ds, '', '', gdal.GRA_Average)
-
     # dst_ds band2 average is our nan_fraction matrix
     nan_frac = dst_ds.GetRasterBand(2).ReadAsArray()
     resampled_average = dst_ds.GetRasterBand(1).ReadAsArray()
@@ -237,7 +240,7 @@ def crop_and_resample_average(
     driver = gdal.GetDriverByName('GTiff')
 
     # required to match matlab output
-    if match_pirate:
+    if match_pirate and new_res[0]:
         xlooks = ylooks = int(new_res[0]/src_gt[1])
         xres, yres = get_matlab_resampled_data_size(xlooks, ylooks, data)
         nrows, ncols = resampled_average.shape
@@ -262,6 +265,10 @@ def crop_and_resample_average(
                       1, gdalconst.GDT_Float32)
     out_ds.GetRasterBand(1).SetNoDataValue(np.nan)
     out_ds.GetRasterBand(1).WriteArray(resampled_average)
+    out_ds.SetGeoTransform(dst_ds.GetGeoTransform())
+    # copy metadata
+    for k, v in dst_ds.GetMetadata().iteritems():
+        out_ds.SetMetadataItem(k, v)
 
     return resampled_average
 
