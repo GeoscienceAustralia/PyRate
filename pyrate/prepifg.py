@@ -307,11 +307,11 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out):
     # cut, average, resample the final output layers
     looks_path = mlooked_path(ifg.data_path, y_looks, crop_out)
 
-    gdalwarp.crop_and_resample_average(input_tif=ifg.data_path,
-                               extents=extents,
-                               new_res=resolution,
-                               output_file=looks_path,
-                               thresh=thresh)
+    gdalwarp.crop_resample_average(input_tif=ifg.data_path,
+                                   extents=extents,
+                                   new_res=resolution,
+                                   output_file=looks_path,
+                                   thresh=thresh)
 
     #     # Add missing/updated metadata to resampled ifg/DEM
     #     new_lyr = type(ifg)(looks_path)

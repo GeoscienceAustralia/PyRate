@@ -396,7 +396,7 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
             self.manipulation(data, self.temp_tif, self.md)
 
             # only band 1 is resapled in warp_old
-            averaged_and_resampled = gdalwarp.crop_and_resample_average(
+            averaged_and_resampled = gdalwarp.crop_resample_average(
                 self.temp_tif, extents, [res, -res], self.out_tif, thresh)
             ifg = Ifg(self.temp_tif)
             # only band 1 is resampled in warp_old
@@ -437,7 +437,7 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
             thresh = 0.5
             x_looks = y_looks = 6
             res = orig_res*x_looks
-            averaged_and_resapled = gdalwarp.crop_and_resample_average(
+            averaged_and_resapled = gdalwarp.crop_resample_average(
                 ifg.data_path, extents, new_res=[res, -res],
                 output_file=self.temp_tif, thresh=thresh, match_pirate=False)
 
@@ -462,7 +462,6 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
             np.testing.assert_array_almost_equal(data_from_file[:yres, :xres],
                                                  new_from_file[:yres, :xres])
 
-
     def test_gdal_python_vs_old_prepifg(self):
 
         for ifg in self.ifgs:
@@ -472,11 +471,9 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
             thresh = 0.5
             x_looks = y_looks = 6
             res = orig_res*x_looks
-            new = gdalwarp.crop_and_resample_average(ifg.data_path,
-                                                   extents,
-                                                   new_res=[res, -res],
-                                                   output_file=self.temp_tif,
-                                                   thresh=thresh)
+            averaged_and_resampled = gdalwarp.crop_resample_average(
+                ifg.data_path, extents, new_res=[res, -res],
+                output_file=self.temp_tif, thresh=thresh)
 
             # only band 1 is resampled in warp_old
             data, self.old_prepifg_path = prepifg.warp_old(
@@ -486,8 +483,9 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
 
             # old_prepifg warp resample method loses one row at the bottom if
             # nrows % 2 == 1
-            new = new[:yres, :xres]
-            np.testing.assert_array_almost_equal(data, new, decimal=4)
+            averaged_and_resampled = averaged_and_resampled[:yres, :xres]
+            np.testing.assert_array_almost_equal(data, averaged_and_resampled,
+                                                 decimal=4)
 
             # make sure they are the same after they are opened again
             data_from_file = gdal.Open(self.old_prepifg_path).ReadAsArray()

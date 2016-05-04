@@ -203,11 +203,8 @@ def get_width_and_height(maxX, maxY, minX, minY, resampled_geotrans):
     return px_height, px_width  # this is the same as `gdalwarp`
 
 
-def crop_and_resample_average(
+def crop_resample_average(
         input_tif, extents, new_res, output_file, thresh, match_pirate=True):
-    print 'inside cro and resample'
-    print input_tif
-    print output_file
     dst_ds, resampled_proj, src_ds, src_proj = crop_rasample_setup(
         extents, input_tif, new_res, output_file,
         out_bands=2, dst_driver_type='MEM')
