@@ -179,7 +179,7 @@ def _resample_ifg(ifg, cmd, x_looks, y_looks, thresh, md=None):
 
     # HACK: create tmp ifg, extract data array for manual resampling as gdalwarp
     # lacks Pirate's averaging method
-    fp, tmp_path = mkstemp()
+    fp, tmp_path = mkstemp(suffix='.tif')
     check_call(cmd + [ifg.data_path, tmp_path])
 
     # now write the metadata from the input to the output
@@ -267,7 +267,6 @@ def warp_old(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out, verbo
     # Add missing/updated metadata to resampled ifg/DEM
     new_lyr = type(ifg)(looks_path)
     new_lyr.open(readonly=False)
-
     # for non-DEMs, phase bands need extra metadata & conversions
     if hasattr(new_lyr, "phase_band"):
         if data is None:  # data wasn't resampled, so flag incoherent cells
@@ -285,7 +284,7 @@ def warp_old(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out, verbo
         new_lyr.nan_converted = True
 
     if ret_ifg:
-        return new_lyr
+        return data, looks_path
     else:
         return
 
@@ -308,11 +307,11 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out):
     # cut, average, resample the final output layers
     looks_path = mlooked_path(ifg.data_path, y_looks, crop_out)
 
-    gdalwarp.crop_and_resample_average(input_tif=ifg.data_path,
-                               extents=extents,
-                               new_res=resolution,
-                               output_file=looks_path,
-                               thresh=thresh)
+    gdalwarp.crop_resample_average(input_tif=ifg.data_path,
+                                   extents=extents,
+                                   new_res=resolution,
+                                   output_file=looks_path,
+                                   thresh=thresh)
 
     #     # Add missing/updated metadata to resampled ifg/DEM
     #     new_lyr = type(ifg)(looks_path)
@@ -350,13 +349,12 @@ def resample(data, xscale, yscale, thresh):
     tile_cell_count = xscale * yscale
 
     # calc mean without nans (fractional threshold ignores tiles with excess NaNs)
-    for y, x in product(xrange(yres), xrange(xres)):
-        tile = data[y * yscale: (y+1) * yscale, x * xscale: (x+1) * xscale]
-        nan_fraction = nsum(isnan(tile)) / float(tile_cell_count)
-
-        if nan_fraction < thresh or (nan_fraction == 0 and thresh == 0):
-            dest[y, x] = nanmean(tile)
-
+    for x in xrange(xres):
+        for y in xrange(yres):
+            tile = data[y * yscale: (y+1) * yscale, x * xscale: (x+1) * xscale]
+            nan_fraction = nsum(isnan(tile)) / float(tile_cell_count)
+            if nan_fraction < thresh or (nan_fraction == 0 and thresh == 0):
+                dest[y, x] = nanmean(tile)
     return dest
 
 

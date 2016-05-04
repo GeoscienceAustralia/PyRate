@@ -176,6 +176,7 @@ class MatlabEqualityTestInRunPyRateSequence(unittest.TestCase):
             if not i.is_open:
                 i.open()
             if not i.nan_converted:
+                i.nodata_value = 0
                 i.convert_to_nans()
 
             if not i.mm_converted:

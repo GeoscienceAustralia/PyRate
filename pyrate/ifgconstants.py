@@ -23,5 +23,3 @@ PYRATE_ORBITAL_ERROR = 'ORBITAL_ERROR'
 PYRATE_INSAR_PROCESSOR = 'INSAR_PROCESSOR'
 
 DAYS_PER_YEAR = 365.25 # span of year, not a calendar year
-
-PR_OUT_TYPE = 'PR_OUT_TYPE'     # pyrate output type 0 = ifg, 1 = ts_incr, 2 = ts_cum, 3 = ts_vel, 4 = ratemap

@@ -113,7 +113,9 @@ class MatlabEqualityTest(unittest.TestCase):
                 i.convert_to_mm()
                 i.write_modified_phase()
         ifg_instance_updated, epoch_list = \
-            matlab_mst.get_nml(ifg_instance, nan_conversion=True)
+            matlab_mst.get_nml(ifg_instance,
+                               nodata_value=params[cf.NO_DATA_VALUE],
+                               nan_conversion=True)
         mst_grid = matlab_mst.matlab_mst_boolean_array(ifg_instance_updated)
 
         for i in ifgs:

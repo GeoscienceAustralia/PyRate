@@ -29,7 +29,7 @@ class IfgListTest(unittest.TestCase):
                               10, 13, 10, 11, 12]
 
         ifg_instance = IfgList(sydney_data_setup_ifg_file_list())
-        self.ifg_list, self.epoch_list = get_nml(ifg_instance)
+        self.ifg_list, self.epoch_list = get_nml(ifg_instance, nodata_value=0)
 
     def test_matlab_n(self):
         # add 1 to ifg_list.n as matlab indices start from 1.
@@ -50,7 +50,7 @@ class MatlabMstKruskalTest(unittest.TestCase):
 
     def setUp(self):
         ifg_instance = IfgList(sydney_data_setup_ifg_file_list())
-        self.ifg_list, _ = get_nml(ifg_instance)
+        self.ifg_list, _ = get_nml(ifg_instance, nodata_value=0)
         self.sorted_list = sort_list(self.ifg_list.id, self.ifg_list.master_num,
                                 self.ifg_list.slave_num, self.ifg_list.nan_frac)
         self.matlab_sorted_list_zero_nan_frac = [   (1, 1, 3, 0.0),
@@ -116,7 +116,7 @@ class MSTKruskalConnectAndTresSydneyData(unittest.TestCase):
 
     def test_calculate_connect_and_ntrees_sydney_data(self):
         ifg_instance = IfgList(sydney_data_setup_ifg_file_list())
-        ifg_list, _ = get_nml(ifg_instance)
+        ifg_list, _ = get_nml(ifg_instance, nodata_value=0)
         edges = get_sub_structure(ifg_list, np.zeros(len(ifg_list.id), dtype=bool))
         mst, connected, ntrees = matlab_mst_kruskal(edges,
             ntrees=True
@@ -132,7 +132,7 @@ class MSTKruskalConnectAndTresSydneyData(unittest.TestCase):
         datafiles = [f for i, f in enumerate(sydney_files)
                      if i+1 in non_overlapping]
         non_overlapping_ifg_isntance = IfgList(datafiles)
-        ifg_list, _ = get_nml(non_overlapping_ifg_isntance)
+        ifg_list, _ = get_nml(non_overlapping_ifg_isntance, nodata_value=0)
         edges = get_sub_structure(ifg_list,
                                   np.zeros(len(ifg_list.id), dtype=bool))
         mst, connected, ntrees = matlab_mst_kruskal(edges, ntrees=True)
@@ -147,7 +147,7 @@ class MSTKruskalConnectAndTresSydneyData(unittest.TestCase):
 
         overlapping_ifg_isntance = IfgList(datafiles)
 
-        ifg_list, _ = get_nml(overlapping_ifg_isntance)
+        ifg_list, _ = get_nml(overlapping_ifg_isntance, nodata_value=0)
         edges = get_sub_structure(ifg_list,
                                   np.zeros(len(ifg_list.id), dtype=bool))
         _, connected, ntrees = matlab_mst_kruskal(edges, ntrees=True)
@@ -161,7 +161,7 @@ class MSTKruskalConnectAndTresSydneyData(unittest.TestCase):
         datafiles = [f for i, f in enumerate(sydney_files)
                      if i+1 in overlapping]
         overlapping_ifg_isntance = IfgList(datafiles)
-        ifg_list, _ = get_nml(overlapping_ifg_isntance)
+        ifg_list, _ = get_nml(overlapping_ifg_isntance, nodata_value=0)
         edges = get_sub_structure(ifg_list,
                                   np.zeros(len(ifg_list.id), dtype=bool))
         mst, connected, ntrees = matlab_mst_kruskal(edges, ntrees=True)
@@ -176,7 +176,7 @@ class MSTKruskalConnectAndTresSydneyData(unittest.TestCase):
 
         non_overlapping_ifg_isntance = IfgList(datafiles)
 
-        ifg_list, _ = get_nml(non_overlapping_ifg_isntance)
+        ifg_list, _ = get_nml(non_overlapping_ifg_isntance, nodata_value=0)
         edges = get_sub_structure(ifg_list,
                                   np.zeros(len(ifg_list.id), dtype=bool))
         _, connected, ntrees = matlab_mst_kruskal(edges, ntrees=True)
@@ -213,7 +213,7 @@ class MatlabMSTTests(unittest.TestCase):
         test that the matlab and python mst algos outputs are the same
         """
         ifg_instance = IfgList(datafiles=self.ifg_file_list)
-        ifg_list, _ = get_nml(ifg_instance)
+        ifg_list, _ = get_nml(ifg_instance, nodata_value=0)
         edges = get_sub_structure(ifg_list,
                                   np.zeros(len(ifg_list.id), dtype=bool))
         ifg_list_mst_id = matlab_mst_kruskal(edges)
@@ -230,7 +230,7 @@ class MatlabMSTTests(unittest.TestCase):
         tests equality of boolean mst arrays of both python and matlab.
         """
         ifg_instance = IfgList(datafiles=self.ifg_file_list)
-        ifg_list, _ = get_nml(ifg_instance)
+        ifg_list, _ = get_nml(ifg_instance, nodata_value=0)
         mst_mat = matlab_mst(ifg_list, p_threshold=1)
 
         # path to csv folders from matlab output
@@ -252,7 +252,7 @@ class MatlabMSTTests(unittest.TestCase):
         tests equality of boolean mst arrays of both python and matlab.
         """
         ifg_instance = IfgList(datafiles=self.ifg_file_list)
-        ifg_list, _ = get_nml(ifg_instance)
+        ifg_list, _ = get_nml(ifg_instance, nodata_value=0)
         mst_mat = matlab_mst_boolean_array(ifg_list, p_threshold=1)
 
         # path to csv folders from matlab output
@@ -271,7 +271,7 @@ class MatlabMSTTests(unittest.TestCase):
 
     def test_mas_mat_vs_mst_mat_generator(self):
         ifg_instance = IfgList(datafiles=self.ifg_file_list)
-        ifg_list, _ = get_nml(ifg_instance, nan_conversion=True)
+        ifg_list, _ = get_nml(ifg_instance, nodata_value=0, nan_conversion=True)
         mst_mat1 = matlab_mst(ifg_list)
         mst_mat2 = matlab_mst_boolean_array(ifg_list)
 
@@ -299,6 +299,7 @@ class TestMSTBooleanArray(unittest.TestCase):
             if not i.is_open:
                 i.open(readonly=False)
             if nan_conversion:  # nan conversion happens here in networkx mst
+                i.nodata_value = 0
                 i.convert_to_nans()
             if not i.mm_converted:
                 i.convert_to_mm()
@@ -312,7 +313,8 @@ class TestMSTBooleanArray(unittest.TestCase):
                 i.convert_to_mm()
                 i.write_modified_phase()
         ifg_instance_updated, epoch_list = \
-            get_nml(sydney_ifg_instance, nan_conversion=nan_conversion)
+            get_nml(sydney_ifg_instance, nodata_value=0,
+                    nan_conversion=nan_conversion)
 
         mst_matlab = matlab_mst_boolean_array(ifg_instance_updated)
         np.testing.assert_array_equal(mst_matlab, mst_nx)

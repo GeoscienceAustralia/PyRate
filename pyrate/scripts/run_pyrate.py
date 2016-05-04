@@ -49,6 +49,7 @@ def process_ifgs(ifg_paths_or_instance, params):
             if not i.is_open:
                 i.open(readonly=False)
             if nan_conversion:  # nan conversion happens here in networkx mst
+                i.nodata_value = params[cf.NO_DATA_VALUE]
                 i.convert_to_nans()
             if not i.mm_converted:
                 i.convert_to_mm()
@@ -65,10 +66,12 @@ def process_ifgs(ifg_paths_or_instance, params):
         ifgs = ifg_paths_or_instance.ifgs
         for i in ifgs:
             if not i.mm_converted:
+                i.nodata_value = params[cf.NO_DATA_VALUE]
                 i.convert_to_mm()
                 i.write_modified_phase()
         ifg_instance_updated, epoch_list = \
             matlab_mst.get_nml(ifg_paths_or_instance,
+                               nodata_value=params[cf.NO_DATA_VALUE],
                                nan_conversion=nan_conversion)
         write_msg('Calculating minimum spanning tree matrix using Matlab-algorithm method')
         mst_grid = matlab_mst.matlab_mst_boolean_array(ifg_instance_updated)
@@ -195,15 +198,24 @@ def remove_orbital_error(ifgs, params):
     if params[cf.ORBITAL_FIT_LOOKS_X] > 1 or params[cf.ORBITAL_FIT_LOOKS_Y] > 1:
         # resampling here to use all prior corrections to orig data
         # TODO: avoid writing mlooked to disk by using mock ifgs/in mem arrays?
-        mlooked = prepifg.prepare_ifgs(ifgs,
-                                    crop_opt=prepifg.ALREADY_SAME_SIZE,
-                                    xlooks=params[cf.ORBITAL_FIT_LOOKS_X],
-                                    ylooks=params[cf.ORBITAL_FIT_LOOKS_Y])
+        prepifg.prepare_ifgs([i.data_path for i in ifgs],
+                             crop_opt=prepifg.ALREADY_SAME_SIZE,
+                             xlooks=params[cf.ORBITAL_FIT_LOOKS_X],
+                             ylooks=params[cf.ORBITAL_FIT_LOOKS_Y])
+
+        mlooked_paths = [prepifg.mlooked_path(
+            path, params[cf.ORBITAL_FIT_LOOKS_X], prepifg.ALREADY_SAME_SIZE)
+                   for path in [i.data_path for i in ifgs]]
+        mlooked = [Ifg(m) for m in mlooked_paths]
+        for m in mlooked:
+            m.open(readonly=False)
+            m.phase_band.SetNoDataValue(np.nan)
+            m.nan_converted = True
 
     orbital.orbital_correction(ifgs,
-                            degree=params[cf.ORBITAL_FIT_DEGREE],
-                            method=params[cf.ORBITAL_FIT_METHOD],
-                            mlooked=mlooked)
+                               degree=params[cf.ORBITAL_FIT_DEGREE],
+                               method=params[cf.ORBITAL_FIT_METHOD],
+                               mlooked=mlooked)
 
     # mlooked layers discarded as not used elsewhere
     if mlooked:

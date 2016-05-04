@@ -59,6 +59,7 @@ class SingleDesignMatrixTests(unittest.TestCase):
         self.ys = 0.8
         self.ifg = Ifg(join(SYD_TEST_TIF, 'geo_060619-061002.tif'))
         self.ifg.open()
+        self.ifg.nodata_value = 0
 
         self.m = MockIfg(self.ifg, 3, 4)
         self.m.x_size = self.xs
@@ -662,6 +663,8 @@ class MatlabComparisonTestsOrbfitMethod1(unittest.TestCase):
 
         # change to orbital error correction method 1
         self.params[cf.ORBITAL_FIT_METHOD] = 1
+        self.params[cf.ORBITAL_FIT_LOOKS_X] = 2
+        self.params[cf.ORBITAL_FIT_LOOKS_Y] = 2
 
         data_paths = [os.path.join(SYD_TEST_TIF, p) for p in common.IFMS16]
         new_data_paths = [os.path.join(self.BASE_DIR, os.path.basename(d))
@@ -748,6 +751,8 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
 
         # change to orbital error correction method 2
         self.params[cf.ORBITAL_FIT_METHOD] = 2
+        self.params[cf.ORBITAL_FIT_LOOKS_X] = 2
+        self.params[cf.ORBITAL_FIT_LOOKS_Y] = 2
 
         data_paths = [os.path.join(SYD_TEST_TIF, p) for p in
                       sydney_data_setup_ifg_file_list()]

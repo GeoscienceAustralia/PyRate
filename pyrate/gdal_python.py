@@ -1,10 +1,9 @@
-"""
-Adapted from http://karthur.org/2015/clipping-rasters-in-python.html
-"""
 from osgeo import gdal, gdalnumeric, gdalconst
 from PIL import Image, ImageDraw
 import os
 import numpy as np
+gdal.SetCacheMax(2**15)
+GDAL_WARP_MEMORY_LIMIT = 2**10
 
 
 def world_to_pixel(geo_transform, x, y):
@@ -23,6 +22,9 @@ def world_to_pixel(geo_transform, x, y):
 
 def crop(input_file, extents, gt=None, nodata=np.nan):
     '''
+
+    Adapted from http://karthur.org/2015/clipping-rasters-in-python.html
+
     Clips a raster (given as either a gdal.Dataset or as a numpy.array
     instance) to a polygon layer provided by a Shapefile (or other vector
     layer). If a numpy.array is given, a "GeoTransform" must be provided
@@ -141,25 +143,30 @@ def crop(input_file, extents, gt=None, nodata=np.nan):
     return clip, gt2
 
 
-def resample(input_tif, extents, new_res, output_file):
+def resample_nearest_neighbour(input_tif, extents, new_res, output_file):
     dst, resampled_proj, src, src_proj = crop_rasample_setup(extents,
-                                                             input_tif,
-                                                             new_res,
-                                                             output_file)
+                                                                input_tif,
+                                                                new_res,
+                                                                output_file)
     # Do the work
-    gdal.ReprojectImage(src, dst, src_proj, resampled_proj,
+    gdal.ReprojectImage(src, dst, '', resampled_proj,
                         gdalconst.GRA_NearestNeighbour)
     return dst.ReadAsArray()
 
 
-def crop_rasample_setup(extents, input_tif, new_res, output_file):
+def crop_rasample_setup(extents, input_tif, new_res, output_file,
+                        dst_driver_type='GTiff', out_bands=2):
     # Source
-    src = gdal.Open(input_tif, gdalconst.GA_ReadOnly)
-    src_proj = src.GetProjection()
-    md = src.GetMetadata()
+    src_ds = gdal.Open(input_tif, gdalconst.GA_ReadOnly)
+    src_proj = src_ds.GetProjection()
+
+    # source metadata to be copied into the output
+    md = src_ds.GetMetadata()
+
     # get the image extents
     minX, minY, maxX, maxY = extents
-    gt = src.GetGeoTransform()  # gt is tuple of 6 numbers
+    gt = src_ds.GetGeoTransform()  # gt is tuple of 6 numbers
+
     # Create a new geotransform for the image
     gt2 = list(gt)
     gt2[0] = minX
@@ -171,69 +178,101 @@ def crop_rasample_setup(extents, input_tif, new_res, output_file):
     else:
         resampled_geotrans = gt2
 
+    px_height, px_width = get_width_and_height(maxX, maxY, minX, minY,
+                                               resampled_geotrans)
+
+    # Output / destination
+    dst = gdal.GetDriverByName(dst_driver_type).Create(
+        output_file, px_width, px_height, out_bands, gdalconst.GDT_Float32)
+    dst.SetGeoTransform(resampled_geotrans)
+    dst.SetProjection(resampled_proj)
+
+    for k, v in md.iteritems():
+        dst.SetMetadataItem(k, v)
+
+    return dst, resampled_proj, src_ds, src_proj
+
+
+def get_width_and_height(maxX, maxY, minX, minY, resampled_geotrans):
     # modified image extents
     ulX, ulY = world_to_pixel(resampled_geotrans, minX, maxY)
     lrX, lrY = world_to_pixel(resampled_geotrans, maxX, minY)
     # Calculate the pixel size of the new image
     px_width = int(lrX - ulX)
     px_height = int(lrY - ulY)
-    # Output / destination
-    dst = gdal.GetDriverByName('GTiff').Create(
-        output_file, px_width, px_height, 1, gdalconst.GDT_Float32)
-    dst.SetGeoTransform(resampled_geotrans)
-    dst.SetProjection(resampled_proj)
-    for k, v in md.iteritems():
-        dst.SetMetadataItem(k, v)
-
-    return dst, resampled_proj, src, src_proj
+    return px_height, px_width  # this is the same as `gdalwarp`
 
 
-def crop_and_resample(input_tif, extents, new_res, output_file, thresh):
-    """
-    :param input_tif: input interferrogram path
-    :param extents: extents list or tuple (minX, minY, maxX, maxY)
-    :param new_res: new resolution to be sampled on
-    :param output_file: output resampled interferrogram
-    :return: data: resampled, nan-converted phase band
-    """
-    dst, resampled_proj, src, src_proj = crop_rasample_setup(extents, input_tif,
-                                                             new_res,
-                                                             output_file)
+def crop_resample_average(
+        input_tif, extents, new_res, output_file, thresh, match_pirate=True):
+    dst_ds, resampled_proj, src_ds, src_proj = crop_rasample_setup(
+        extents, input_tif, new_res, output_file,
+        out_bands=2, dst_driver_type='MEM')
 
-    band = dst.GetRasterBand(1)
-    band.SetNoDataValue(np.nan)
-    # Do the work
-    # TODO: may need to implement nan_frac filtering prepifg.resample style
-    gdal.SetCacheMax(2**15)
-    gdal.ReprojectImage(src, dst, src_proj, resampled_proj,
-                        gdalconst.GRA_Average, 2**10)
-    return dst.ReadAsArray()
+    src_ds = gdal.Open(input_tif)
+    data = src_ds.GetRasterBand(1).ReadAsArray()
+
+    mem_driver = gdal.GetDriverByName('MEM')
+    src_ds_mem = mem_driver.Create('',
+                                   src_ds.RasterXSize, src_ds.RasterYSize,
+                                   2, gdalconst.GDT_Float32)
+
+    src_ds_mem.GetRasterBand(1).WriteArray(data)
+    src_ds_mem.GetRasterBand(1).SetNoDataValue(0)
+
+    # if data==0, then 1, else 0
+    nan_matrix = np.isclose(data, 0, atol=1e-6)
+    src_ds_mem.GetRasterBand(2).WriteArray(nan_matrix)
+    src_ds_mem.GetRasterBand(2).SetNoDataValue(-100000)
+    src_gt = src_ds.GetGeoTransform()
+
+    src_ds_mem.SetGeoTransform(src_gt)
+    gdal.ReprojectImage(src_ds_mem, dst_ds, '', '', gdal.GRA_Average)
+    # dst_ds band2 average is our nan_fraction matrix
+    nan_frac = dst_ds.GetRasterBand(2).ReadAsArray()
+    resampled_average = dst_ds.GetRasterBand(1).ReadAsArray()
+    resampled_average[nan_frac >= thresh] = np.nan
+
+    # write out to output geotif file
+    driver = gdal.GetDriverByName('GTiff')
+
+    # required to match matlab output
+    if match_pirate and new_res[0]:
+        xlooks = ylooks = int(new_res[0]/src_gt[1])
+        xres, yres = get_matlab_resampled_data_size(xlooks, ylooks, data)
+        nrows, ncols = resampled_average.shape
+
+        # pirate does nearest neighbor resampling for the last
+        # [yres:nrows, xres:ncols] cells without nan_conversion
+
+        # turn off nan-conversion
+        src_ds_mem.GetRasterBand(1).SetNoDataValue(-1e6)
+
+        # nearest neighbor resapling
+        gdal.ReprojectImage(src_ds_mem, dst_ds, '', '', gdal.GRA_NearestNeighbour)
+        resampled_nearest_neighbor = dst_ds.GetRasterBand(1).ReadAsArray()
+
+        # only take the [yres:nrows, xres:ncols] slice
+        if nrows > yres or ncols > xres:
+            resampled_average[yres-nrows:, xres-ncols:] = \
+                resampled_nearest_neighbor[yres-nrows:, xres-ncols:]
+
+    # write final pi/pyrate GTiff
+    out_ds = driver.Create(output_file, dst_ds.RasterXSize, dst_ds.RasterYSize,
+                      1, gdalconst.GDT_Float32)
+    out_ds.GetRasterBand(1).SetNoDataValue(np.nan)
+    out_ds.GetRasterBand(1).WriteArray(resampled_average)
+    out_ds.SetGeoTransform(dst_ds.GetGeoTransform())
+    # copy metadata
+    for k, v in dst_ds.GetMetadata().iteritems():
+        out_ds.SetMetadataItem(k, v)
+
+    return resampled_average
 
 
-if __name__ == '__main__':
-
-    import subprocess
-    subprocess.check_call(['gdalwarp', '-overwrite', '-srcnodata', 'None', '-te', '150.91', '-34.229999976', '150.949166651', '-34.17', '-q', 'out/20070709-20070813_utm.tif', '/tmp/test.tif'])
-    clipped_ref = gdal.Open('/tmp/test.tif').ReadAsArray()
-
-    rast = gdal.Open('out/20070709-20070813_utm.tif')
-    extents = (150.91, -34.229999976, 150.949166651, -34.17)
-    clipped = crop(rast, extents)[0]
-    np.testing.assert_array_almost_equal(clipped_ref, clipped)
-
-    # 2nd gdalwarp call
-    subprocess.check_call(['gdalwarp', '-overwrite', '-srcnodata', 'None', '-te', '150.91', '-34.229999976', '150.949166651', '-34.17', '-q', '-tr', '0.001666666', '-0.001666666', 'out/20060619-20061002_utm.tif', '/tmp/test2.tif'])
-    resampled_ds = gdal.Open('/tmp/test2.tif')
-    resampled_ref = resampled_ds.ReadAsArray()
-
-
-    rast = gdal.Open('out/20060619-20061002_utm.tif')
-    new_res = (0.001666666, -0.001666666)
-    # adfGeoTransform[0] /* top left x */
-    # adfGeoTransform[1] /* w-e pixel resolution */
-    # adfGeoTransform[2] /* 0 */
-    # adfGeoTransform[3] /* top left y */
-    # adfGeoTransform[4] /* 0 */
-    # adfGeoTransform[5] /* n-s pixel resolution (negative value) */
-    resampled = resample('out/20060619-20061002_utm.tif', extents, new_res, '/tmp/resampled.tif')
-    np.testing.assert_array_almost_equal(resampled_ref, resampled)
+def get_matlab_resampled_data_size(xscale, yscale, data):
+    xscale = int(xscale)
+    yscale = int(yscale)
+    ysize, xsize = data.shape
+    xres, yres = (xsize / xscale), (ysize / yscale)
+    return xres, yres
