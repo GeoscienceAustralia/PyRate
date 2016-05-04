@@ -10,6 +10,7 @@ from pyrate.tests.common import sydney_data_setup
 from pyrate.matlab_mst_kruskal import get_nml
 from pyrate.matlab_mst_kruskal import sort_list, get_sub_structure
 from pyrate.matlab_mst_kruskal import matlab_mst_kruskal
+from pyrate.matlab_mst_kruskal import matlab_mst_kruskal_from_ifgs
 from pyrate.matlab_mst_kruskal import matlab_mst, matlab_mst_boolean_array
 from pyrate.tests.common import sydney_data_setup_ifg_file_list
 from pyrate.matlab_mst_kruskal import IfgListPyRate as IfgList
@@ -322,6 +323,25 @@ class TestMSTBooleanArray(unittest.TestCase):
         # close ifgs for windows
         for i in self.sydney_ifgs:
             i.close()
+
+
+class MSTKruskalFromIfgsTest(unittest.TestCase):
+
+    def test_matlab_mst_kruskal_from_ifgs(self):
+        ifgs = sydney_data_setup()
+        mst_ifgs = matlab_mst_kruskal_from_ifgs(ifgs)
+
+        self.assertEqual(len(mst_ifgs), 12)
+
+        # make sure doing another mst does not change the mst_ifgs
+        datafiles = [i.data_path for i in mst_ifgs]
+        overlapping_ifg_isntance = IfgList(datafiles)
+        ifg_list, _ = get_nml(overlapping_ifg_isntance, nodata_value=0)
+        edges = get_sub_structure(ifg_list,
+                                  np.zeros(len(ifg_list.id), dtype=bool))
+        mst, connected, ntrees = matlab_mst_kruskal(edges, ntrees=True)
+        self.assertEqual(connected.shape[0], 1)
+        self.assertEqual(len(mst), len(mst_ifgs))
 
 if __name__ == '__main__':
     unittest.main()

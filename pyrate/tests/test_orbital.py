@@ -736,8 +736,8 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
     orbfit:        1
     orbfitmethod:  2
     orbfitdegrees: 1
-    orbfitlksx:    2
-    orbfitlksy:    2
+    orbfitlksx:    2 (?)
+    orbfitlksy:    2 (?)
 
     """
     def setUp(self):
@@ -751,8 +751,8 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
 
         # change to orbital error correction method 2
         self.params[cf.ORBITAL_FIT_METHOD] = 2
-        self.params[cf.ORBITAL_FIT_LOOKS_X] = 2
-        self.params[cf.ORBITAL_FIT_LOOKS_Y] = 2
+        self.params[cf.ORBITAL_FIT_LOOKS_X] = 1
+        self.params[cf.ORBITAL_FIT_LOOKS_Y] = 1
 
         data_paths = [os.path.join(SYD_TEST_TIF, p) for p in
                       sydney_data_setup_ifg_file_list()]

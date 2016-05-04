@@ -112,11 +112,13 @@ def get_nml(ifg_list_instance, nodata_value,
     """
     A reproduction of getnml.m, the matlab function in pi-rate.
     Note: the matlab version tested does not have nan's.
+    replaces the ifg_list_instance in place
     """
     _epoch_list, n = get_epochs_and_n(ifg_list_instance.ifgs)
     ifg_list_instance.reshape_n(n)
     if nan_conversion:
-        ifg_list_instance.update_nan_frac(nodata_value)  # turn on for nan conversion
+        ifg_list_instance.update_nan_frac(nodata_value)
+        # turn on for nan conversion
         ifg_list_instance.convert_nans(nan_conversion=nan_conversion)
     ifg_list_instance.make_data_stack()
     return ifg_list_instance, _epoch_list
@@ -293,12 +295,10 @@ def matlab_mst_boolean_array(ifg_list_instance, p_threshold=1):
 def matlab_mst_kruskal_from_ifgs(ifgs):
     dest_paths = [i.data_path for i in ifgs]
     ifg_instance = IfgListPyRate(datafiles=dest_paths)
-    ifg_instance_updated, epoch_list = \
-        get_nml(ifg_instance, nan_conversion=True)
+    get_nml(ifg_instance, nodata_value=0, nan_conversion=True)
     edges = get_sub_structure(ifg_instance,
                               np.zeros(len(ifg_instance.id), dtype=bool))
     ifg_list_mst_id = matlab_mst_kruskal(edges)
-
     return [ifgs[i] for i in ifg_list_mst_id]
 
 
