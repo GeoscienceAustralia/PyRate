@@ -428,14 +428,50 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
         src_ds.FlushCache()
         return dst_ds, src_ds
 
+    def test_gdal_python_vs_old_prepifg_no_match_pirate(self):
+
+        for ifg in self.ifgs:
+            extents = [150.91, -34.229999976, 150.949166651, -34.17]
+            extents_str = [str(e) for e in extents]
+            orig_res = 0.000833333
+            thresh = 0.5
+            x_looks = y_looks = 6
+            res = orig_res*x_looks
+            averaged_and_resapled = gdalwarp.crop_and_resample_average(
+                ifg.data_path, extents, new_res=[res, -res],
+                output_file=self.temp_tif, thresh=thresh, match_pirate=False)
+
+            # only band 1 is resampled in warp_old
+            data, self.old_prepifg_path = prepifg.warp_old(
+                ifg, x_looks, y_looks, extents_str, [res, -res],
+                thresh=thresh, crop_out=4, verbose=False)
+            yres, xres = data.shape
+
+            # old_prepifg warp resample method loses one row at the bottom if
+            # nrows % 2 == 1
+            averaged_and_resapled = averaged_and_resapled[:yres, :xres]
+            nrows, ncols = averaged_and_resapled.shape
+            np.testing.assert_array_almost_equal(
+                data, averaged_and_resapled, decimal=4)
+
+            # make sure they are the same after they are opened again
+            # Last [yres:nrows, xres:ncols] won't match due to pirate
+            # dropping last few rows/colums depending on resolution/looks
+            data_from_file = gdal.Open(self.old_prepifg_path).ReadAsArray()
+            new_from_file = gdal.Open(self.temp_tif).ReadAsArray()
+            np.testing.assert_array_almost_equal(data_from_file[:yres, :xres],
+                                                 new_from_file[:yres, :xres])
+
+
     def test_gdal_python_vs_old_prepifg(self):
 
         for ifg in self.ifgs:
             extents = [150.91, -34.229999976, 150.949166651, -34.17]
             extents_str = [str(e) for e in extents]
-            res = 0.001666666
+            orig_res = 0.000833333
             thresh = 0.5
-            x_looks = y_looks = 2
+            x_looks = y_looks = 6
+            res = orig_res*x_looks
             new = gdalwarp.crop_and_resample_average(ifg.data_path,
                                                    extents,
                                                    new_res=[res, -res],
@@ -446,20 +482,18 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
             data, self.old_prepifg_path = prepifg.warp_old(
                 ifg, x_looks, y_looks, extents_str, [res, -res],
                 thresh=thresh, crop_out=4, verbose=False)
-
-            rows, cols = data.shape
+            yres, xres = data.shape
 
             # old_prepifg warp resample method loses one row at the bottom if
             # nrows % 2 == 1
-            new = new[:rows, :cols]
+            new = new[:yres, :xres]
             np.testing.assert_array_almost_equal(data, new, decimal=4)
 
             # make sure they are the same after they are opened again
             data_from_file = gdal.Open(self.old_prepifg_path).ReadAsArray()
             new_from_file = gdal.Open(self.temp_tif).ReadAsArray()
-            np.testing.assert_array_almost_equal(data_from_file[:rows, :cols],
-                                                 new_from_file[:rows, :cols])
-
+            np.testing.assert_array_almost_equal(data_from_file,
+                                                 new_from_file)
 
 
 class TestMEMVsGTiff(unittest.TestCase):

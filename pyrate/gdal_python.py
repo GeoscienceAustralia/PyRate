@@ -149,7 +149,7 @@ def resample_nearest_neighbour(input_tif, extents, new_res, output_file):
                                                                 new_res,
                                                                 output_file)
     # Do the work
-    gdal.ReprojectImage(src, dst, src_proj, resampled_proj,
+    gdal.ReprojectImage(src, dst, '', resampled_proj,
                         gdalconst.GRA_NearestNeighbour)
     return dst.ReadAsArray()
 
@@ -204,7 +204,7 @@ def get_width_and_height(maxX, maxY, minX, minY, resampled_geotrans):
 
 
 def crop_and_resample_average(
-        input_tif, extents, new_res, output_file, thresh):
+        input_tif, extents, new_res, output_file, thresh, match_pirate=True):
     dst_ds, resampled_proj, src_ds, src_proj = crop_rasample_setup(
         extents, input_tif, new_res, output_file,
         out_bands=2, dst_driver_type='MEM')
@@ -224,8 +224,8 @@ def crop_and_resample_average(
     nan_matrix = np.isclose(data, 0, atol=1e-6)
     src_ds_mem.GetRasterBand(2).WriteArray(nan_matrix)
     src_ds_mem.GetRasterBand(2).SetNoDataValue(-100000)
-    src_ds_mem.SetGeoTransform(src_ds.GetGeoTransform())
-
+    src_gt = src_ds.GetGeoTransform()
+    src_ds_mem.SetGeoTransform(src_gt)
     gdal.ReprojectImage(src_ds_mem, dst_ds, '', '', gdal.GRA_Average)
 
     # dst_ds band2 average is our nan_fraction matrix
@@ -233,69 +233,42 @@ def crop_and_resample_average(
     resampled_average = dst_ds.GetRasterBand(1).ReadAsArray()
     resampled_average[nan_frac >= thresh] = np.nan
 
+    # write out to output geotif file
     driver = gdal.GetDriverByName('GTiff')
+
+    # required to match matlab output
+    if match_pirate:
+        xlooks = ylooks = int(new_res[0]/src_gt[1])
+        xres, yres = get_matlab_resampled_data_size(xlooks, ylooks, data)
+        nrows, ncols = resampled_average.shape
+
+        # pirate does nearest neighbor resampling for the last
+        # [yres:nrows, xres:ncols] cells without nan_conversion
+
+        # turn off nan-conversion
+        src_ds_mem.GetRasterBand(1).SetNoDataValue(-1e6)
+
+        # nearest neighbor resapling
+        gdal.ReprojectImage(src_ds_mem, dst_ds, '', '', gdal.GRA_NearestNeighbour)
+        resampled_nearest_neighbor = dst_ds.GetRasterBand(1).ReadAsArray()
+
+        # only take the [yres:nrows, xres:ncols] slice
+        if nrows > yres or ncols > xres:
+            resampled_average[yres-nrows:, xres-ncols:] = \
+                resampled_nearest_neighbor[yres-nrows:, xres-ncols:]
+
+    # write final pi/pyrate GTiff
     out_ds = driver.Create(output_file, dst_ds.RasterXSize, dst_ds.RasterYSize,
                       1, gdalconst.GDT_Float32)
-
+    out_ds.GetRasterBand(1).SetNoDataValue(np.nan)
     out_ds.GetRasterBand(1).WriteArray(resampled_average)
+
     return resampled_average
 
-if __name__ == '__main__':
 
-    # import subprocess
-    # subprocess.check_call(['gdalwarp', '-overwrite', '-srcnodata', 'None', '-te', '150.91', '-34.229999976', '150.949166651', '-34.17', '-q', 'out/20070709-20070813_utm.tif', '/tmp/test.tif'])
-    # clipped_ref = gdal.Open('/tmp/test.tif').ReadAsArray()
-    #
-    # rast = gdal.Open('out/20070709-20070813_utm.tif')
-    # extents = (150.91, -34.229999976, 150.949166651, -34.17)
-    # clipped = crop(rast, extents)[0]
-    # np.testing.assert_array_almost_equal(clipped_ref, clipped)
-    #
-    # # 2nd gdalwarp call
-    # subprocess.check_call(['gdalwarp', '-overwrite', '-srcnodata', 'None', '-te', '150.91', '-34.229999976', '150.949166651', '-34.17', '-q', '-tr', '0.001666666', '-0.001666666', 'out/20060619-20061002_utm.tif', '/tmp/test2.tif'])
-    # resampled_ds = gdal.Open('/tmp/test2.tif')
-    # resampled_ref = resampled_ds.ReadAsArray()
-    #
-    #
-    # rast = gdal.Open('out/20060619-20061002_utm.tif')
-    # new_res = (0.001666666, -0.001666666)
-    # # adfGeoTransform[0] /* top left x */
-    # # adfGeoTransform[1] /* w-e pixel resolution */
-    # # adfGeoTransform[2] /* 0 */
-    # # adfGeoTransform[3] /* top left y */
-    # # adfGeoTransform[4] /* 0 */
-    # # adfGeoTransform[5] /* n-s pixel resolution (negative value) */
-    # resampled = resample_nearest_neighbour('out/20060619-20061002_utm.tif', extents, new_res, '/tmp/resampled.tif')
-    # np.testing.assert_array_almost_equal(resampled_ref, resampled)
-    from pyrate.tests import common
-    from pyrate import prepifg
-    import tempfile
-    sydney_test_ifgs = common.sydney_data_setup()
-    # minX, minY, maxX, maxY = extents
-    extents = [150.91, -34.229999976, 150.949166651, -34.17]
-    extents_str = [str(e) for e in extents]
-    x_looks = 2
-    resolutions = [0.001666666, .001]
-    for res in resolutions:
-        print res
-        for s in sydney_test_ifgs:
-            print s.data_path
-            # Old prepifg crop + resample + averaging
-            # manual old prepifg style average with nearest neighbour
-            averaged_data = prepifg.warp_old(
-                s, x_looks, x_looks, extents_str, [res, -res], thresh=0.5,
-                crop_out=4, verbose=False, ret_ifg=True).phase_data
-            looks_path = prepifg.mlooked_path(s.data_path, x_looks,
-                                              crop_out=4)
-            os.remove(looks_path)
-            resampled_temp_tif = tempfile.mktemp(suffix='.tif',
-                                                prefix='resampled_')
-            cropped_and_averaged = crop_and_resample_average(
-                s.data_path, extents, [res, -res],
-                resampled_temp_tif, thresh=0.5)
-            print 'nan count', np.sum(np.isnan(averaged_data)), \
-                np.sum(np.isnan(cropped_and_averaged))
-            print os.path.exists(resampled_temp_tif), 'path exists?'
-            # np.testing.assert_array_almost_equal(averaged_data,
-            #                                      cropped_and_averaged)
-            #os.remove(resampled_temp_tif)
+def get_matlab_resampled_data_size(xscale, yscale, data):
+    xscale = int(xscale)
+    yscale = int(yscale)
+    ysize, xsize = data.shape
+    xres, yres = (xsize / xscale), (ysize / yscale)
+    return xres, yres

@@ -349,13 +349,12 @@ def resample(data, xscale, yscale, thresh):
     tile_cell_count = xscale * yscale
 
     # calc mean without nans (fractional threshold ignores tiles with excess NaNs)
-    for y, x in product(xrange(yres), xrange(xres)):
-        tile = data[y * yscale: (y+1) * yscale, x * xscale: (x+1) * xscale]
-        nan_fraction = nsum(isnan(tile)) / float(tile_cell_count)
-
-        if nan_fraction < thresh or (nan_fraction == 0 and thresh == 0):
-            dest[y, x] = nanmean(tile)
-
+    for x in xrange(xres):
+        for y in xrange(yres):
+            tile = data[y * yscale: (y+1) * yscale, x * xscale: (x+1) * xscale]
+            nan_fraction = nsum(isnan(tile)) / float(tile_cell_count)
+            if nan_fraction < thresh or (nan_fraction == 0 and thresh == 0):
+                dest[y, x] = nanmean(tile)
     return dest
 
 
