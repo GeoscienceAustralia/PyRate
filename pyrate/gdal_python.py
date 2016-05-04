@@ -159,6 +159,8 @@ def crop_rasample_setup(extents, input_tif, new_res, output_file,
     # Source
     src_ds = gdal.Open(input_tif, gdalconst.GA_ReadOnly)
     src_proj = src_ds.GetProjection()
+
+    # source metadata to be copied into the output
     md = src_ds.GetMetadata()
 
     # get the image extents
@@ -188,106 +190,43 @@ def crop_rasample_setup(extents, input_tif, new_res, output_file,
         output_file, px_width, px_height, out_bands, gdalconst.GDT_Float32)
     dst.SetGeoTransform(resampled_geotrans)
     dst.SetProjection(resampled_proj)
+
     for k, v in md.iteritems():
         dst.SetMetadataItem(k, v)
 
     return dst, resampled_proj, src_ds, src_proj
 
 
-# def new_crop_and_resample_average(input_tif, extents, new_res, output_file,
-#                                   thresh):
-#     dst_ds, resampled_proj, src_ds, src_proj = crop_rasample_setup(
-#         extents, input_tif, new_res, output_file, out_bands=1)
-#     print 'before'
-#     print src_ds.ReadAsArray()
-#     src_ds.GetRasterBand(1).SetNoDataValue(0.0)
-#     #src_ds.GetRasterBand(1).Fill(np.nan)
-#     print 'after'
-#     print src_ds.GetRasterBand(1).ReadAsArray()
-#
-#     dst_ds.GetRasterBand(1).SetNoDataValue(0)
-#     dst_ds.GetRasterBand(1).Fill(np.nan)
-#
-#     gdal.ReprojectImage(src_ds, dst_ds, '', '', gdal.GRA_Average)
-#     return dst_ds.ReadAsArray()
+def crop_and_resample_average(
+        input_tif, extents, new_res, output_file, thresh):
+    dst_ds, resampled_proj, src_ds, src_proj = crop_rasample_setup(
+        extents, input_tif, new_res, output_file, out_bands=2)
 
+    src_ds = gdal.Open(input_tif)
+    data = src_ds.GetRasterBand(1).ReadAsArray()
 
-def crop_and_resample_average(input_tif, extents, new_res, output_file, thresh):
-    """
-    :param input_tif: input interferrogram path
-    :param extents: extents list or tuple (minX, minY, maxX, maxY)
-    :param new_res: new resolution to be sampled on
-    :param output_file: output resampled interferrogram
-    :return: data: resampled, nan-converted phase band
-    """
-    if thresh < 0 or thresh > 1:
-        raise ValueError("threshold must be > 0 and < 1")
+    mem_driver = gdal.GetDriverByName('MEM')
+    src_ds_mem = mem_driver.Create('',
+                                   src_ds.RasterXSize, src_ds.RasterYSize,
+                                   2, gdalconst.GDT_Float32)
 
-    dst, resampled_proj, src, src_proj = crop_rasample_setup(
-        extents, input_tif, new_res, output_file)
-    # src.GetRasterBand(1).SetNoDataValue(0.0)
+    src_ds_mem.GetRasterBand(1).WriteArray(data)
+    src_ds_mem.GetRasterBand(1).SetNoDataValue(0)
 
-    # destination data band
-    band = dst.GetRasterBand(1)
-    band.SetNoDataValue(np.nan)
-    # band.Fill(np.nan)
+    # if data==0, then 1, else 0
+    nan_matrix = np.isclose(data, 0, atol=1e-6)
+    src_ds_mem.GetRasterBand(2).WriteArray(nan_matrix)
+    src_ds_mem.GetRasterBand(2).SetNoDataValue(-100000)
+    src_ds_mem.SetGeoTransform(src_ds.GetGeoTransform())
 
-    # dst.AddBand(GDT_Byte)
+    gdal.ReprojectImage(src_ds_mem, dst_ds, '', '', gdal.GRA_Average)
 
-    tmp_ds = gdal.GetDriverByName('MEM').Create(
-        '', src.RasterXSize, src.RasterYSize, 2, gdalconst.GDT_Float32)
+    # dst_ds band2 average is our nan_fraction matrix
+    nan_frac = dst_ds.GetRasterBand(2).ReadAsArray()
+    avg = dst_ds.GetRasterBand(1).ReadAsArray()
+    avg[nan_frac >= thresh] = np.nan
 
-    src_data = src.ReadAsArray()
-    if len(src_data.shape) > 2:  # works with multiband ifgs
-        src_data = src_data[0, :, :]  # just take band 1, and discard band 2
-    band1 = tmp_ds.GetRasterBand(1)
-    band1.WriteArray(src_data)
-    band1.SetNoDataValue(0.0)  # equivalent to nan conversion
-
-    band2 = tmp_ds.GetRasterBand(2)
-    band2.WriteArray(np.isclose(src_data, 0, atol=1e-6))  # zero or 1
-    tmp_ds.SetGeoTransform(src.GetGeoTransform())
-
-    # Do the work
-    # TODO: may need to implement nan_frac filtering prepifg.resample style
-    gdal.ReprojectImage(tmp_ds, dst, src_proj, resampled_proj,
-                        gdalconst.GRA_Average, GDAL_WARP_MEMORY_LIMIT)
-
-    gdal_resampled = dst.GetRasterBand(1).ReadAsArray()
-    print np.sum(np.isnan(gdal_resampled))
-    gdal_resampled = np.where(np.isclose(gdal_resampled, 0,
-                                         atol=1e-6), np.nan, gdal_resampled)
-    print np.sum(np.isnan(gdal_resampled))
-    nan_fraction = dst.GetRasterBand(2).ReadAsArray()
-    # print gdal_resampled.shape, 'output'
-    # print gdal_resampled[0, :, :], 'gdal_resampled'
-    print np.sum(~np.isclose(nan_fraction, 0, atol=1e-6)), 'nan_fraction'
-
-    mask = ~np.isclose(nan_fraction, 0, atol=1e-6)
-
-    # print mask.shape, gdal_resampled.shape
-    mask[mask] &= nan_fraction[mask] > thresh
-    # gdal_resampled[0, :, :][gdal_resampled[1, :, :] > thresh] = np.nan
-    # mask[mask] &= error[mask] > MAXSIG
-    # rate[mask] = nan
-    # error[mask] = nan
-    gdal_resampled[mask] = np.nan
-
-    #
-    # # nan_fraction < thresh or (nan_fraction == 0 and thresh == 0)
-    # pyrate_resampled  = gdal_resampled < thresh
-    #
-    # px_width, px_height = gdal_resampled.shape
-    # dst_nan_frac = gdal.GetDriverByName('MEM').Create(
-    #         '', px_width, px_height, 1, gdalconst.GDT_Byte)
-    # band_nan_frac = dst_nan_frac.GetRasterBand(1)
-    # dst_nan_frac.WriteArray(band_nan_frac.ReadAsArray() > )
-    #
-    # # gdal.ReprojectImage(src, dst, src_proj, resampled_proj,
-    # #                     gdalconst.GRA_Average, GDAL_WARP_MEMORY_LIMIT)
-    # print src.ReadAsArray().shape, dst.ReadAsArray().shape
-    return gdal_resampled
-
+    return avg
 
 if __name__ == '__main__':
 

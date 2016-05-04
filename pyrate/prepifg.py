@@ -284,7 +284,7 @@ def warp_old(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out, verbo
         new_lyr.nan_converted = True
 
     if ret_ifg:
-        return looks_path
+        return data, looks_path
     else:
         return
 
