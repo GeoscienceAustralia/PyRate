@@ -155,7 +155,7 @@ def resample_nearest_neighbour(input_tif, extents, new_res, output_file):
 
 
 def crop_rasample_setup(extents, input_tif, new_res, output_file,
-                        driver_type='GTiff', out_bands=2):
+                        dst_driver_type='GTiff', out_bands=2):
     # Source
     src_ds = gdal.Open(input_tif, gdalconst.GA_ReadOnly)
     src_proj = src_ds.GetProjection()
@@ -178,15 +178,11 @@ def crop_rasample_setup(extents, input_tif, new_res, output_file,
     else:
         resampled_geotrans = gt2
 
-    # modified image extents
-    ulX, ulY = world_to_pixel(resampled_geotrans, minX, maxY)
-    lrX, lrY = world_to_pixel(resampled_geotrans, maxX, minY)
-    # Calculate the pixel size of the new image
-    px_width = int(lrX - ulX)
-    px_height = int(lrY - ulY)
+    px_height, px_width = get_width_and_height(maxX, maxY, minX, minY,
+                                               resampled_geotrans)
 
     # Output / destination
-    dst = gdal.GetDriverByName(driver_type).Create(
+    dst = gdal.GetDriverByName(dst_driver_type).Create(
         output_file, px_width, px_height, out_bands, gdalconst.GDT_Float32)
     dst.SetGeoTransform(resampled_geotrans)
     dst.SetProjection(resampled_proj)
@@ -197,10 +193,21 @@ def crop_rasample_setup(extents, input_tif, new_res, output_file,
     return dst, resampled_proj, src_ds, src_proj
 
 
+def get_width_and_height(maxX, maxY, minX, minY, resampled_geotrans):
+    # modified image extents
+    ulX, ulY = world_to_pixel(resampled_geotrans, minX, maxY)
+    lrX, lrY = world_to_pixel(resampled_geotrans, maxX, minY)
+    # Calculate the pixel size of the new image
+    px_width = int(lrX - ulX)
+    px_height = int(lrY - ulY)
+    return px_height, px_width  # this is the same as `gdalwarp`
+
+
 def crop_and_resample_average(
         input_tif, extents, new_res, output_file, thresh):
     dst_ds, resampled_proj, src_ds, src_proj = crop_rasample_setup(
-        extents, input_tif, new_res, output_file, out_bands=2)
+        extents, input_tif, new_res, output_file,
+        out_bands=2, dst_driver_type='MEM')
 
     src_ds = gdal.Open(input_tif)
     data = src_ds.GetRasterBand(1).ReadAsArray()
@@ -223,10 +230,15 @@ def crop_and_resample_average(
 
     # dst_ds band2 average is our nan_fraction matrix
     nan_frac = dst_ds.GetRasterBand(2).ReadAsArray()
-    avg = dst_ds.GetRasterBand(1).ReadAsArray()
-    avg[nan_frac >= thresh] = np.nan
+    resampled_average = dst_ds.GetRasterBand(1).ReadAsArray()
+    resampled_average[nan_frac >= thresh] = np.nan
 
-    return avg
+    driver = gdal.GetDriverByName('GTiff')
+    out_ds = driver.Create(output_file, dst_ds.RasterXSize, dst_ds.RasterYSize,
+                      1, gdalconst.GDT_Float32)
+
+    out_ds.GetRasterBand(1).WriteArray(resampled_average)
+    return resampled_average
 
 if __name__ == '__main__':
 

@@ -442,7 +442,7 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
                                                    output_file=self.temp_tif,
                                                    thresh=thresh)
 
-            # # only band 1 is resampled in warp_old
+            # only band 1 is resampled in warp_old
             data, self.old_prepifg_path = prepifg.warp_old(
                 ifg, x_looks, y_looks, extents_str, [res, -res],
                 thresh=thresh, crop_out=4, verbose=False)
@@ -455,6 +455,10 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
             np.testing.assert_array_almost_equal(data, new, decimal=4)
 
             # make sure they are the same after they are opened again
+            data_from_file = gdal.Open(self.old_prepifg_path).ReadAsArray()
+            new_from_file = gdal.Open(self.temp_tif).ReadAsArray()
+            np.testing.assert_array_almost_equal(data_from_file[:rows, :cols],
+                                                 new_from_file[:rows, :cols])
 
 
 
