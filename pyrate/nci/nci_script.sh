@@ -1,6 +1,6 @@
 #!/bin/bash
 #PBS -P dg9
-#PBS -q express
+#PBS -q normal
 #PBS -l walltime=00:10:00,mem=128GB,ncpus=64,jobfs=64GB
 #PBS -l wd
 module rm intel-fc intel-cc
@@ -13,9 +13,9 @@ module load gdal/1.11.1-python
 module load pypar/30May-2.7.6-1.8
 export PYRATEPATH=/g/data/dg9/sudipta/PyRate
 PYTHONPATH=$PYRATEPATH:$PYTHONPATH
-PYTHONPATH=/g/data/dg9/sudipta/PyRate:/g/data/dg9/sudipta/site-packages:$PYTHONPATH
+PYTHONPATH=/g/data/dg9/sudipta/site-packages:$PYTHONPATH
 export PYTHONPATH
-mpirun -np 128 python /g/data/dg9/sudipta/PyRate/pyrate/nci/run_prepifg_pypar.py /g/data/dg9/sudipta/PyRate/pyrate_surat.conf
+mpirun -np 64 python /g/data/dg9/sudipta/PyRate/pyrate/nci/run_prepifg_pypar.py /g/data/dg9/sudipta/PyRate/pyrate_surat.conf
 
 
 

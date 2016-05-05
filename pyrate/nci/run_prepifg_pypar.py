@@ -16,7 +16,7 @@ from pyrate import prepifg
 MASTER_PROCESS = 0
 
 ###============================================================================
-#    Usage:  Reads in the gamma config file and produces thr tifs from gamma
+#    Usage:  Reads in the gamma config file and produces the tifs from gamma
 #    processed unwrapped interferrograms (ifgs).
 #    mpirun -np 4 python pyrate/nci/run_prepifg_pypar.py gamma_config_file.conf
 #===============================================================================
