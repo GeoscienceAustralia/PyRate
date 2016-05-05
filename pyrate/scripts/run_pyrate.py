@@ -33,58 +33,14 @@ PYRATEPATH = cf.PYRATEPATH
 # print screen output
 VERBOSE = True
 
+
 def process_ifgs(ifg_paths_or_instance, params):
     """
     Top level function to perform PyRate correction steps on given ifgs
     ifgs: sequence of paths to interferograms (NB: changes are saved into ifgs)
     params: dictionary of configuration parameters
     """
-    nan_conversion = params[cf.NAN_CONVERSION]
-    # ifg_instance, nan_conversion=True
-
-    if isinstance(ifg_paths_or_instance, list):
-        ifgs = [Ifg(p) for p in ifg_paths_or_instance]
-
-        for i in ifgs:
-            if not i.is_open:
-                i.open(readonly=False)
-            if nan_conversion:  # nan conversion happens here in networkx mst
-                i.nodata_value = params[cf.NO_DATA_VALUE]
-                i.convert_to_nans()
-            if not i.mm_converted:
-                i.convert_to_mm()
-                i.write_modified_phase()
-        write_msg('Calculating minimum spanning tree matrix using NetworkX method')
-        mst_grid = mst.mst_boolean_array(ifgs)
-        # check if mst is not a tree, then do interpolate
-        if mst.is_mst_tree(ifgs)[1]:
-            params[cf.TIME_SERIES_INTERP] = 0
-        else:
-            params[cf.TIME_SERIES_INTERP] = 1
-    else:
-        assert isinstance(ifg_paths_or_instance, matlab_mst.IfgListPyRate)
-        ifgs = ifg_paths_or_instance.ifgs
-        for i in ifgs:
-            if not i.mm_converted:
-                i.nodata_value = params[cf.NO_DATA_VALUE]
-                i.convert_to_mm()
-                i.write_modified_phase()
-        ifg_instance_updated, epoch_list = \
-            matlab_mst.get_nml(ifg_paths_or_instance,
-                               nodata_value=params[cf.NO_DATA_VALUE],
-                               nan_conversion=nan_conversion)
-        write_msg('Calculating minimum spanning tree matrix using Matlab-algorithm method')
-        mst_grid = matlab_mst.matlab_mst_boolean_array(ifg_instance_updated)
-
-        # Insert INTERP into the params for timeseries calculation
-        params = insert_time_series_interpolation(ifg_instance_updated, params)
-
-    assert params[cf.TIME_SERIES_INTERP] is not None
-
-    # write mst output to a file
-    mst_mat_binary_file = os.path.join(
-        PYRATEPATH, params[cf.OUT_DIR], 'mst_mat')
-    np.save(file=mst_mat_binary_file, arr=mst_grid)
+    ifgs, mst_grid, params = mst_calculation(ifg_paths_or_instance, params)
 
     # Estimate reference pixel location
     refpx, refpy = find_reference_pixel(ifgs, params)
@@ -116,36 +72,13 @@ def process_ifgs(ifg_paths_or_instance, params):
 
     ds = gdal.Open(p)
     md = ds.GetMetadata()  # get metadata for writing on output tifs
-    gt = ds.GetGeoTransform() # get geographical bounds of data
-    wkt = ds.GetProjection() # get projection of data
+    gt = ds.GetGeoTransform()  # get geographical bounds of data
+    wkt = ds.GetProjection()  # get projection of data
     epochlist = algorithm.get_epochs(ifgs)
 
     if params[cf.TIME_SERIES_CAL] != 0:
-
-        # Calculate time series
-        tsincr, tscum, tsvel = calculate_time_series(
-            ifgs, params, vcmt=vcmt, mst=mst_grid)
-
-        for i in range(len(tsincr[0, 0, :])):
-            md[ifc.PYRATE_DATE] = epochlist.dates[i+1]
-            data = tsincr[:, :, i]
-            dest = os.path.join(
-                PYRATEPATH, params[cf.OUT_DIR],
-                "tsincr_" + str(epochlist.dates[i+1]) + ".tif")
-            write_output_geotiff(md, gt, wkt, data, dest, np.nan)
-
-            data = tscum[:, :, i]
-            dest = os.path.join(
-                PYRATEPATH, params[cf.OUT_DIR],
-                "tscuml_" + str(epochlist.dates[i+1]) + ".tif")
-            write_output_geotiff(md, gt, wkt, data, dest, np.nan)
-
-            data = tsvel[:, :, i]
-            dest = os.path.join(
-                PYRATEPATH, params[cf.OUT_DIR],
-                "tsvel_" + str(epochlist.dates[i+1]) + ".tif")
-            write_output_geotiff(md, gt, wkt, data, dest, np.nan)
-
+        compute_time_series(epochlist, gt, ifgs, md, mst_grid, params, vcmt,
+                            wkt)
     # Calculate linear rate map
     rate, error, samples = calculate_linear_rate(
                    ifgs, params, vcmt, mst=mst_grid)
@@ -155,14 +88,84 @@ def process_ifgs(ifg_paths_or_instance, params):
     dest = os.path.join(PYRATEPATH, params[cf.OUT_DIR], "linerror.tif")
     write_output_geotiff(md, gt, wkt, error, dest, np.nan)
 
-    # final cleanup, SB: Why do we need this?
-    # while ifgs:
-    #     i = ifgs.pop()
-    #     i.write_phase()
-    #     i.dataset.FlushCache()
-    #     i = None  # force close    TODO: may need to implement close()
-
     write_msg('PyRate workflow completed')
+
+
+def mst_calculation(ifg_paths_or_instance, params):
+    nan_conversion = params[cf.NAN_CONVERSION]
+    if isinstance(ifg_paths_or_instance, list):
+        ifgs = [Ifg(p) for p in ifg_paths_or_instance]
+
+        for i in ifgs:
+            if not i.is_open:
+                i.open(readonly=False)
+            if nan_conversion:  # nan conversion happens here in networkx mst
+                i.nodata_value = params[cf.NO_DATA_VALUE]
+                i.convert_to_nans()
+            if not i.mm_converted:
+                i.convert_to_mm()
+                i.write_modified_phase()
+        write_msg(
+            'Calculating minimum spanning tree matrix using NetworkX method')
+        mst_grid = mst.mst_boolean_array(ifgs)
+        # check if mst is not a tree, then do interpolate
+        if mst.is_mst_tree(ifgs)[1]:
+            params[cf.TIME_SERIES_INTERP] = 0
+        else:
+            params[cf.TIME_SERIES_INTERP] = 1
+    else:
+        assert isinstance(ifg_paths_or_instance, matlab_mst.IfgListPyRate)
+        ifgs = ifg_paths_or_instance.ifgs
+        for i in ifgs:
+            if not i.mm_converted:
+                i.nodata_value = params[cf.NO_DATA_VALUE]
+                i.convert_to_mm()
+                i.write_modified_phase()
+        ifg_instance_updated, epoch_list = \
+            matlab_mst.get_nml(ifg_paths_or_instance,
+                               nodata_value=params[cf.NO_DATA_VALUE],
+                               nan_conversion=nan_conversion)
+        write_msg(
+            'Calculating minimum spanning tree matrix using Matlab-algorithm method')
+        mst_grid = matlab_mst.matlab_mst_boolean_array(ifg_instance_updated)
+
+        # Insert INTERP into the params for timeseries calculation
+        params = insert_time_series_interpolation(ifg_instance_updated, params)
+
+    # make sure by now we have the time series interpolation parameter
+    assert params[cf.TIME_SERIES_INTERP] is not None
+
+    # write mst output to a file
+    mst_mat_binary_file = os.path.join(
+        PYRATEPATH, params[cf.OUT_DIR], 'mst_mat')
+    np.save(file=mst_mat_binary_file, arr=mst_grid)
+
+    return ifgs, mst_grid, params
+
+
+def compute_time_series(epochlist, gt, ifgs, md, mst_grid, params, vcmt, wkt):
+    # Calculate time series
+    tsincr, tscum, tsvel = calculate_time_series(
+        ifgs, params, vcmt=vcmt, mst=mst_grid)
+    for i in range(len(tsincr[0, 0, :])):
+        md[ifc.PYRATE_DATE] = epochlist.dates[i + 1]
+        data = tsincr[:, :, i]
+        dest = os.path.join(
+            PYRATEPATH, params[cf.OUT_DIR],
+            "tsincr_" + str(epochlist.dates[i + 1]) + ".tif")
+        write_output_geotiff(md, gt, wkt, data, dest, np.nan)
+
+        data = tscum[:, :, i]
+        dest = os.path.join(
+            PYRATEPATH, params[cf.OUT_DIR],
+            "tscuml_" + str(epochlist.dates[i + 1]) + ".tif")
+        write_output_geotiff(md, gt, wkt, data, dest, np.nan)
+
+        data = tsvel[:, :, i]
+        dest = os.path.join(
+            PYRATEPATH, params[cf.OUT_DIR],
+            "tsvel_" + str(epochlist.dates[i + 1]) + ".tif")
+        write_output_geotiff(md, gt, wkt, data, dest, np.nan)
 
 
 def insert_time_series_interpolation(ifg_instance_updated, params):
@@ -437,7 +440,8 @@ def write_msg(msg):
     write message to log file and screen output
     """
     logging.debug(msg)
-    if VERBOSE: print msg
+    if VERBOSE:
+        print msg
 
 
 if __name__ == "__main__":
