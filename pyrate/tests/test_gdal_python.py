@@ -396,7 +396,7 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
             self.manipulation(data, self.temp_tif, self.md)
 
             # only band 1 is resapled in warp_old
-            averaged_and_resampled = gdalwarp.crop_resample_average(
+            averaged_and_resampled, _ = gdalwarp.crop_resample_average(
                 self.temp_tif, extents, [res, -res], self.out_tif, thresh)
             ifg = Ifg(self.temp_tif)
             # only band 1 is resampled in warp_old
@@ -437,7 +437,7 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
             thresh = 0.5
             x_looks = y_looks = 6
             res = orig_res*x_looks
-            averaged_and_resapled = gdalwarp.crop_resample_average(
+            averaged_and_resapled, out_ds = gdalwarp.crop_resample_average(
                 ifg.data_path, extents, new_res=[res, -res],
                 output_file=self.temp_tif, thresh=thresh, match_pirate=False)
 
@@ -458,9 +458,10 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
             # Last [yres:nrows, xres:ncols] won't match due to pirate
             # dropping last few rows/colums depending on resolution/looks
             data_from_file = gdal.Open(self.old_prepifg_path).ReadAsArray()
-            new_from_file = gdal.Open(self.temp_tif).ReadAsArray()
+            new_from_file = out_ds.ReadAsArray()
             np.testing.assert_array_almost_equal(data_from_file[:yres, :xres],
                                                  new_from_file[:yres, :xres])
+            out_ds = None  # manual close
 
     def test_gdal_python_vs_old_prepifg(self):
 
@@ -471,7 +472,7 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
             thresh = 0.5
             x_looks = y_looks = 6
             res = orig_res*x_looks
-            averaged_and_resampled = gdalwarp.crop_resample_average(
+            averaged_and_resampled, out_ds = gdalwarp.crop_resample_average(
                 ifg.data_path, extents, new_res=[res, -res],
                 output_file=self.temp_tif, thresh=thresh)
 
@@ -489,9 +490,10 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
 
             # make sure they are the same after they are opened again
             data_from_file = gdal.Open(self.old_prepifg_path).ReadAsArray()
-            new_from_file = gdal.Open(self.temp_tif).ReadAsArray()
+            new_from_file = out_ds.ReadAsArray()
             np.testing.assert_array_almost_equal(data_from_file,
                                                  new_from_file)
+            out_ds = None  # manual close
 
 
 class TestMEMVsGTiff(unittest.TestCase):

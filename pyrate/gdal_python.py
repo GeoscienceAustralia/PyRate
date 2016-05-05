@@ -204,7 +204,9 @@ def get_width_and_height(maxX, maxY, minX, minY, resampled_geotrans):
 
 
 def crop_resample_average(
-        input_tif, extents, new_res, output_file, thresh, match_pirate=True):
+        input_tif, extents, new_res, output_file, thresh,
+        out_driver_type='GTiff',
+        match_pirate=True):
     dst_ds, resampled_proj, src_ds, src_proj = crop_rasample_setup(
         extents, input_tif, new_res, output_file,
         out_bands=2, dst_driver_type='MEM')
@@ -234,7 +236,7 @@ def crop_resample_average(
     resampled_average[nan_frac >= thresh] = np.nan
 
     # write out to output geotif file
-    driver = gdal.GetDriverByName('GTiff')
+    driver = gdal.GetDriverByName(out_driver_type)
 
     # required to match matlab output
     if match_pirate and new_res[0]:
@@ -267,7 +269,7 @@ def crop_resample_average(
     for k, v in dst_ds.GetMetadata().iteritems():
         out_ds.SetMetadataItem(k, v)
 
-    return resampled_average
+    return resampled_average, out_ds
 
 
 def get_matlab_resampled_data_size(xscale, yscale, data):
