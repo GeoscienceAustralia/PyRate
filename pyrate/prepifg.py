@@ -43,7 +43,7 @@ ALREADY_SAME_SIZE = 4
 CROP_OPTIONS = [MINIMUM_CROP, MAXIMUM_CROP, CUSTOM_CROP, ALREADY_SAME_SIZE]
 
 GRID_TOL = 1e-6
-
+PARALLEL = cfg.PARALLEL
 
 def getAnalysisExtent(
         cropOpt,
@@ -307,12 +307,6 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out):
     # cut, average, resample the final output layers
     looks_path = mlooked_path(ifg.data_path, y_looks, crop_out)
 
-    gdalwarp.crop_resample_average(input_tif=ifg.data_path,
-                                   extents=extents,
-                                   new_res=resolution,
-                                   output_file=looks_path,
-                                   thresh=thresh)
-
     #     # Add missing/updated metadata to resampled ifg/DEM
     #     new_lyr = type(ifg)(looks_path)
     #     new_lyr.open(readonly=True)
@@ -323,6 +317,13 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out):
     #         #if params.has_key(REPROJECTION_FLAG):
     #         #    reproject()
 
+    out_ds = gdalwarp.crop_resample_average(input_tif=ifg.data_path,
+                                            extents=extents,
+                                            new_res=resolution,
+                                            output_file=looks_path,
+                                            thresh=thresh)[1]
+    if not PARALLEL:
+        return out_ds
 
 
 def resample(data, xscale, yscale, thresh):
