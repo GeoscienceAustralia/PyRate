@@ -109,7 +109,7 @@ def mst_calculation(ifg_paths_or_instance, params):
             'Calculating minimum spanning tree matrix using NetworkX method')
         mst_grid = mst.mst_boolean_array(ifgs)
         # check if mst is not a tree, then do interpolate
-        if mst.is_mst_tree(ifgs)[1]:
+        if mst.mst_from_ifgs(ifgs)[1]:
             params[cf.TIME_SERIES_INTERP] = 0
         else:
             params[cf.TIME_SERIES_INTERP] = 1
@@ -199,33 +199,31 @@ def remove_orbital_error(ifgs, params):
 
     mlooked = None
     if params[cf.ORBITAL_FIT_LOOKS_X] > 1 or params[cf.ORBITAL_FIT_LOOKS_Y] > 1:
-        # resampling here to use all prior corrections to orig data
-        # TODO: avoid writing mlooked to disk by using mock ifgs/in mem arrays?
-        prepifg.prepare_ifgs([i.data_path for i in ifgs],
-                             crop_opt=prepifg.ALREADY_SAME_SIZE,
-                             xlooks=params[cf.ORBITAL_FIT_LOOKS_X],
-                             ylooks=params[cf.ORBITAL_FIT_LOOKS_Y])
-
-        mlooked_paths = [prepifg.mlooked_path(
-            path, params[cf.ORBITAL_FIT_LOOKS_X], prepifg.ALREADY_SAME_SIZE)
-                   for path in [i.data_path for i in ifgs]]
-        mlooked = [Ifg(m) for m in mlooked_paths]
-        for m in mlooked:
-            m.open(readonly=False)
-            m.phase_band.SetNoDataValue(np.nan)
-            m.nan_converted = True
+        print 'should not be here'
+        # # resampling here to use all prior corrections to orig data
+        # mlooked_phase_data = prepifg.prepare_ifgs([i.data_path for i in ifgs],
+        #                      crop_opt=prepifg.ALREADY_SAME_SIZE,
+        #                      xlooks=params[cf.ORBITAL_FIT_LOOKS_X],
+        #                      ylooks=params[cf.ORBITAL_FIT_LOOKS_Y],
+        #                      write_to_disc=False)
+        #
+        # mlooked = [Ifg(m) for m in mlooked_phase_data]
+        # for m, i in zip(mlooked, ifgs):
+        #     m.master = i.master
+        #     m.slave = i.slave
+        #     m.nan_fraction = i.nan_fraction
+        #     m.nodata_value = params[cf.NO_DATA_VALUE]
+        #     m.phase_band.SetNoDataValue(np.nan)
+        #     m.nan_converted = True
+        #     m.num_cells = i.num_cells
+        #     m.x_size = m.ncols
+        #     m.y_size = m.nrows
+        #     print m.nrows, m.ncols
 
     orbital.orbital_correction(ifgs,
                                degree=params[cf.ORBITAL_FIT_DEGREE],
                                method=params[cf.ORBITAL_FIT_METHOD],
                                mlooked=mlooked)
-
-    # mlooked layers discarded as not used elsewhere
-    if mlooked:
-        for path in [m.data_path for m in mlooked]:
-            msg = '%s: deleted (multilooked orbital correction file)'
-            logging.debug(msg % path)
-            os.remove(path)
 
     for i in ifgs:
         i.dataset.SetMetadataItem(ifc.PYRATE_ORBITAL_ERROR, ORB_REMOVED)

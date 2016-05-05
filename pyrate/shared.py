@@ -54,12 +54,16 @@ class RasterBase(object):
     """
 
     def __init__(self, path):
-        self.data_path = path
-        self.dataset = None  # for GDAL dataset obj
-        self._readonly = not os.access(path, os.R_OK | os.W_OK)
+        if not isinstance(path, gdal.Dataset):
+            self.data_path = path
+            self.dataset = None  # for GDAL dataset obj
+            self._readonly = not os.access(path, os.R_OK | os.W_OK)
 
-        if self._readonly is None:
-            raise NotImplementedError # os.access() has failed?
+            if self._readonly is None:
+                raise NotImplementedError  # os.access() has failed?
+        else:
+            # we don't need data_path in this case
+            self.dataset = path  # path will be Dataset in this case
 
     def __str__(self):
         name = self.__class__.__name__

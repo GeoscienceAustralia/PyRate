@@ -43,7 +43,6 @@ ALREADY_SAME_SIZE = 4
 CROP_OPTIONS = [MINIMUM_CROP, MAXIMUM_CROP, CUSTOM_CROP, ALREADY_SAME_SIZE]
 
 GRID_TOL = 1e-6
-PARALLEL = cfg.PARALLEL
 
 def getAnalysisExtent(
         cropOpt,
@@ -330,8 +329,8 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out,
                                             output_file=looks_path,
                                             thresh=thresh,
                                             out_driver_type=driver_type)[1]
-    if not PARALLEL:
-        return out_ds
+    if not write_to_disc:
+        return out_ds  # this is used in orbfit correction when looks!=1
 
 
 def resample(data, xscale, yscale, thresh):

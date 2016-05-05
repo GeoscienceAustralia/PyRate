@@ -18,21 +18,22 @@ from pyrate.algorithm import ifg_date_index_lookup
 # TODO: document weighting by either Nan fraction OR variance
 
 
-def is_mst_tree(ifgs):
+def mst_from_ifgs(ifgs):
     """
     Returns default MST dict for the given Ifgs. The MST is calculated using a
     weighting based on the number of incoherent cells in the phase band.
 
-    :param noroot: True removes the PyGraph default root node from the result.
     """
 
     edges_with_weights_for_networkx = [(i.master, i.slave, i.nan_fraction)
                                        for i in ifgs]
     g_nx = _build_graph_networkx(edges_with_weights_for_networkx)
     mst = nx.minimum_spanning_tree(g_nx)
-
     # mst_edges, is tree?, number of trees
-    return mst.edges(), nx.is_tree(mst), nx.number_connected_components(mst)
+    edges = mst.edges()
+    ifg_sub = [ifg_date_index_lookup(ifgs, d) for d in edges]
+    mst_ifgs = [i for k, i in enumerate(ifgs) if k in ifg_sub]
+    return mst.edges(), nx.is_tree(mst), nx.number_connected_components(mst), mst_ifgs
 
 
 def _build_graph_networkx(edges_with_weights):
