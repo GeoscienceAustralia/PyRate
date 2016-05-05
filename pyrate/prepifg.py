@@ -74,7 +74,8 @@ def prepare_ifg(
         ylooks,
         exts,
         thresh,
-        crop_opt):
+        crop_opt,
+        write_to_disc=True):
     # Determine cmd line args for gdalwarp calls for each ifg (gdalwarp has no
     # API. For resampling, gdalwarp is called 2x. 1st to subset the source data
     # for Pirate style averaging/resampling, 2nd to generate the final dataset
@@ -101,7 +102,7 @@ def prepare_ifg(
         raster.open()
 
     return warp(raster, xlooks, ylooks, exts, resolution, thresh,
-                crop_opt)
+                crop_opt, write_to_disc)
 
 
 # TODO: crop options 0 = no cropping? get rid of same size (but it is in explained file)
@@ -111,7 +112,8 @@ def prepare_ifgs(
         xlooks,
         ylooks,
         thresh=0.5,
-        user_exts=None):
+        user_exts=None,
+        write_to_disc=True):
     """
     Produces multilooked/resampled data files for PyRate analysis.
 
@@ -133,7 +135,7 @@ def prepare_ifgs(
     rasters = [Ifg(r) for r in raster_data_paths]
     exts = getAnalysisExtent(crop_opt, rasters, xlooks, ylooks, user_exts)
 
-    return [prepare_ifg(d, xlooks, ylooks, exts, thresh, crop_opt)
+    return [prepare_ifg(d, xlooks, ylooks, exts, thresh, crop_opt, write_to_disc)
             for d in raster_data_paths]
 
 
@@ -289,7 +291,8 @@ def warp_old(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out, verbo
         return
 
 
-def warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out):
+def warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out,
+         write_to_disc=True):
     """
     Resamples 'ifg' and returns a new Ifg obj.
 
@@ -316,12 +319,17 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out):
     #         # TODO: push out to workflow
     #         #if params.has_key(REPROJECTION_FLAG):
     #         #    reproject()
+    if not write_to_disc:
+        driver_type = 'MEM'
+    else:
+        driver_type = 'GTiff'
 
     out_ds = gdalwarp.crop_resample_average(input_tif=ifg.data_path,
                                             extents=extents,
                                             new_res=resolution,
                                             output_file=looks_path,
-                                            thresh=thresh)[1]
+                                            thresh=thresh,
+                                            out_driver_type=driver_type)[1]
     if not PARALLEL:
         return out_ds
 
