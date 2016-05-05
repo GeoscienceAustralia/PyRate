@@ -139,7 +139,7 @@ class MockIfg(object):
         """
         self.master = ifg.master
         self.slave = ifg.slave
-
+        self.data_path = ifg.data_path
         self.nrows = ysize
         self.ncols = xsize
         self.x_size = ifg.x_size

@@ -507,7 +507,8 @@ class NetworkCorrectionTests(unittest.TestCase):
         exp = network_correction(self.ifgs, deg, offset)
         self.verify_corrections(self.ifgs, exp, deg, offset)
 
-    def verify_corrections(self, ifgs, exp, deg, offset):
+    @staticmethod
+    def verify_corrections(ifgs, exp, deg, offset):
         # checks orbital correction against unit test version
         orbital_correction(ifgs, deg, NETWORK_METHOD, None, offset)
         act = [i.phase_data for i in ifgs]

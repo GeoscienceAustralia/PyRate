@@ -161,10 +161,7 @@ def _network_correction(ifgs, degree, offset, m_ifgs=None):
     """
     # get DM & filter out NaNs
     src_ifgs = ifgs if m_ifgs is None else m_ifgs
-    try:
-        src_ifgs = matlab_mst.matlab_mst_kruskal_from_ifgs(src_ifgs)
-    except:
-        pass
+    src_ifgs = matlab_mst.matlab_mst_kruskal_from_ifgs(src_ifgs)
 
     vphase = vstack([i.phase_data.reshape((i.num_cells, 1)) for i in src_ifgs])
     vphase = squeeze(vphase)
