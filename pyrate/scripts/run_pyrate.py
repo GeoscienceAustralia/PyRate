@@ -49,7 +49,6 @@ def process_ifgs(ifg_paths_or_instance, params):
 
     # Estimate and remove orbit errors
     if params[cf.ORBITAL_FIT] != 0:
-        write_msg('Calculating orbital error correction')
         remove_orbital_error(ifgs, params)
 
     write_msg('Estimating and removing phase at reference pixel')
@@ -58,7 +57,7 @@ def process_ifgs(ifg_paths_or_instance, params):
     # TODO: assign maxvar to ifg metadata (and geotiff)?
     write_msg('Calculating maximum variance in interferograms')
     maxvar = [vcm_module.cvd(i)[0] for i in ifgs]
-    
+
     write_msg('Constructing temporal variance-covariance matrix')
     vcmt = vcm_module.get_vcmt(ifgs, maxvar)
 
@@ -184,10 +183,12 @@ def insert_time_series_interpolation(ifg_instance_updated, params):
 
 
 def remove_orbital_error(ifgs, params):
+    write_msg('Calculating orbital error correction')
+
     if not params[cf.ORBITAL_FIT]:
         write_msg('Orbital correction not required')
         return
-   
+
     # perform some general error/sanity checks
     flags = [i.dataset.GetMetadataItem(ifc.PYRATE_ORBITAL_ERROR) for i in ifgs]
 
@@ -239,14 +240,14 @@ def check_orbital_ifgs(ifgs, flags):
 def find_reference_pixel(ifgs, params):
     # unlikely, but possible the refpixel can be (0,0)
     # check if there is a pre-specified reference pixel coord
-    refx = params[cf.REFX]    
+    refx = params[cf.REFX]
     if refx > ifgs[0].ncols - 1:
         raise ValueError("Invalid reference pixel X coordinate: %s" % refx)
 
     refy = params[cf.REFY]
     if refy > ifgs[0].nrows - 1:
         raise ValueError("Invalid reference pixel Y coordinate: %s" % refy)
-        
+
     if refx == 0 or refy == 0:  # matlab equivalent
         write_msg('Finding reference pixel')
         refy, refx = refpixel.ref_pixel(ifgs, params[cf.REFNX],
@@ -254,7 +255,7 @@ def find_reference_pixel(ifgs, params):
         write_msg('Reference pixel coordinate: (%s, %s)' % (refx, refy))
     else:
         write_msg('Reusing config file reference pixel (%s, %s)' % (refx, refy))
-    
+
     return refx, refy
 
 

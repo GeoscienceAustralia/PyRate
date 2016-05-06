@@ -4,6 +4,7 @@ import os
 import numpy as np
 gdal.SetCacheMax(2**15)
 GDAL_WARP_MEMORY_LIMIT = 2**10
+LOW_FLOAT32 = np.finfo(np.float32).min*1e-10
 
 
 def world_to_pixel(geo_transform, x, y):
@@ -211,6 +212,12 @@ def crop_resample_average(
         extents, input_tif, new_res, output_file,
         out_bands=2, dst_driver_type='MEM')
 
+    if match_pirate and new_res[0]:
+        # make a temporary copy of the dst_ds for pirate style prepifg
+        temp_dst_ds = gdal.GetDriverByName('MEM').CreateCopy('', dst_ds)
+    else:
+        temp_dst_ds = None
+
     src_ds = gdal.Open(input_tif)
     data = src_ds.GetRasterBand(1).ReadAsArray()
 
@@ -229,6 +236,7 @@ def crop_resample_average(
     src_gt = src_ds.GetGeoTransform()
 
     src_ds_mem.SetGeoTransform(src_gt)
+
     gdal.ReprojectImage(src_ds_mem, dst_ds, '', '', gdal.GRA_Average)
     # dst_ds band2 average is our nan_fraction matrix
     nan_frac = dst_ds.GetRasterBand(2).ReadAsArray()
@@ -239,7 +247,7 @@ def crop_resample_average(
     driver = gdal.GetDriverByName(out_driver_type)
 
     # required to match matlab output
-    if match_pirate and new_res[0]:
+    if temp_dst_ds:
         xlooks = ylooks = int(new_res[0]/src_gt[1])
         xres, yres = get_matlab_resampled_data_size(xlooks, ylooks, data)
         nrows, ncols = resampled_average.shape
@@ -248,11 +256,10 @@ def crop_resample_average(
         # [yres:nrows, xres:ncols] cells without nan_conversion
 
         # turn off nan-conversion
-        src_ds_mem.GetRasterBand(1).SetNoDataValue(-1e6)
-
+        src_ds_mem.GetRasterBand(1).SetNoDataValue(LOW_FLOAT32)
         # nearest neighbor resapling
-        gdal.ReprojectImage(src_ds_mem, dst_ds, '', '', gdal.GRA_NearestNeighbour)
-        resampled_nearest_neighbor = dst_ds.GetRasterBand(1).ReadAsArray()
+        gdal.ReprojectImage(src_ds_mem, temp_dst_ds, '', '', gdal.GRA_NearestNeighbour)
+        resampled_nearest_neighbor = temp_dst_ds.GetRasterBand(1).ReadAsArray()
 
         # only take the [yres:nrows, xres:ncols] slice
         if nrows > yres or ncols > xres:

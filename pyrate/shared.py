@@ -121,7 +121,7 @@ class RasterBase(object):
         return self.dataset.RasterYSize
 
     @property
-    def x_step(self):        
+    def x_step(self):
         return float(self.dataset.GetGeoTransform()[GDAL_X_CELLSIZE])
 
     @property

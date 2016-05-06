@@ -33,7 +33,8 @@ def mst_from_ifgs(ifgs):
     edges = mst.edges()
     ifg_sub = [ifg_date_index_lookup(ifgs, d) for d in edges]
     mst_ifgs = [i for k, i in enumerate(ifgs) if k in ifg_sub]
-    return mst.edges(), nx.is_tree(mst), nx.number_connected_components(mst), mst_ifgs
+    return mst.edges(), nx.is_tree(mst), \
+           nx.number_connected_components(mst), mst_ifgs
 
 
 def _build_graph_networkx(edges_with_weights):
