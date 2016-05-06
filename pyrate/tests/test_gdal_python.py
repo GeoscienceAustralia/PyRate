@@ -532,39 +532,6 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
             self.assertFalse(os.path.exists(self.temp_tif))
             out_ds = None  # manual close
 
-    def test_no_out_file_when_driver_type_is_mem(self):
-        for ifg in self.ifgs:
-            extents = [150.91, -34.229999976, 150.949166651, -34.17]
-            extents_str = [str(e) for e in extents]
-            orig_res = 0.000833333
-            thresh = 0.5
-            x_looks = y_looks = 6
-            res = orig_res*x_looks
-            averaged_and_resampled, out_ds = gdalwarp.crop_resample_average(
-                ifg.data_path, extents, new_res=[res, -res],
-                output_file=self.temp_tif, thresh=thresh,
-                out_driver_type='MEM')
-
-            # only band 1 is resampled in warp_old
-            data, self.old_prepifg_path = prepifg.warp_old(
-                ifg, x_looks, y_looks, extents_str, [res, -res],
-                thresh=thresh, crop_out=4, verbose=False)
-            yres, xres = data.shape
-
-            # old_prepifg warp resample method loses one row at the bottom if
-            # nrows % 2 == 1
-            averaged_and_resampled = averaged_and_resampled[:yres, :xres]
-            np.testing.assert_array_almost_equal(data, averaged_and_resampled,
-                                                 decimal=4)
-
-            # make sure they are the same after they are opened again
-            data_from_file = gdal.Open(self.old_prepifg_path).ReadAsArray()
-            new_from_file = out_ds.ReadAsArray()
-            np.testing.assert_array_almost_equal(data_from_file,
-                                                 new_from_file)
-            self.assertFalse(os.path.exists(self.temp_tif))
-            out_ds = None  # manual close
-
 
 class TestMEMVsGTiff(unittest.TestCase):
 
