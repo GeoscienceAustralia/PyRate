@@ -208,6 +208,7 @@ def remove_orbital_error(ifgs, params):
                              ylooks=params[cf.ORBITAL_FIT_LOOKS_Y],
                              write_to_disc=False)
         mlooked = [Ifg(m) for m in mlooked_phase_data]
+
         for m, i in zip(mlooked, ifgs):
             m.initialize()
             m.nodata_value = params[cf.NO_DATA_VALUE]
