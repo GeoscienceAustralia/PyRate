@@ -656,9 +656,6 @@ class MatlabComparisonTestsOrbfitMethod1(unittest.TestCase):
     def setUp(self):
         self.BASE_DIR = tempfile.mkdtemp()
 
-        # start each full test run cleanly
-        shutil.rmtree(self.BASE_DIR, ignore_errors=True)
-
         self.params = cf.get_config_params(
             os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf'))
 
@@ -671,7 +668,6 @@ class MatlabComparisonTestsOrbfitMethod1(unittest.TestCase):
         new_data_paths = [os.path.join(self.BASE_DIR, os.path.basename(d))
                           for d in data_paths]
 
-        os.makedirs(self.BASE_DIR)
         for d in data_paths:
             shutil.copy(d, os.path.join(self.BASE_DIR, os.path.basename(d)))
 
