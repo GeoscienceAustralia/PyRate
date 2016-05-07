@@ -220,15 +220,14 @@ class Ifg(RasterBase):
         """
         :param bool readonly: True/False, or None to open as underlying file setting
         """
+        RasterBase.open(self, readonly)
+        self.initialize()
 
-        if not isinstance(self.dataset, gdal.Dataset):
-            RasterBase.open(self, readonly)
+    def initialize(self):
         self._init_dates()
-
         md = self.dataset.GetMetadata()
         self.wavelength = float(md[ifc.PYRATE_WAVELENGTH_METRES])
         self.meta_data = md
-
         # creating code needs to set this flag after 0 -> NaN replacement
         self.nan_converted = False
 

@@ -103,7 +103,7 @@ class DefaultMSTTests(unittest.TestCase):
         ifgs = sydney5_mock_ifgs()
         dates = [(i.master, i.slave) for i in ifgs]
 
-        res, _, _ = mst.is_mst_tree(ifgs)
+        res = mst.mst_from_ifgs(ifgs)[0]
         num_edges = len(res)
         self.assertEqual(num_edges, len(ifgs))
 
@@ -127,19 +127,19 @@ class NetworkxMSTTreeCheck(unittest.TestCase):
         non_overlapping = [1, 2, 5, 6, 12, 13, 14, 15, 16, 17]
         ifgs_non_overlapping = [ifg for i, ifg in enumerate(self.ifgs)
                                 if i+1 in non_overlapping]
-        edges, is_tree, ntrees = mst.is_mst_tree(ifgs_non_overlapping)
+        edges, is_tree, ntrees, _ = mst.mst_from_ifgs(ifgs_non_overlapping)
         self.assertFalse(is_tree)
         self.assertEqual(4, ntrees)
 
     def test_sydney_data_tree(self):
-        self.assertTrue(mst.is_mst_tree(self.ifgs)[1])
+        self.assertTrue(mst.mst_from_ifgs(self.ifgs)[1])
 
     def test_assert_is_tree(self):
         overlapping = [1, 2, 3, 4, 6, 7, 10, 11, 16, 17]
 
         ifgs_overlapping = [ifg for i, ifg in enumerate(self.ifgs)
                                 if (i+1 in overlapping)]
-        edges, is_tree, ntrees = mst.is_mst_tree(ifgs_overlapping)
+        edges, is_tree, ntrees, _ = mst.mst_from_ifgs(ifgs_overlapping)
         self.assertFalse(is_tree)
         self.assertEqual(4, ntrees)
 
@@ -148,7 +148,7 @@ class NetworkxMSTTreeCheck(unittest.TestCase):
 
         ifgs_overlapping = [ifg for i, ifg in enumerate(self.ifgs)
                                 if (i+1 in overlapping)]
-        edges, is_tree, ntrees = mst.is_mst_tree(ifgs_overlapping)
+        edges, is_tree, ntrees, _ = mst.mst_from_ifgs(ifgs_overlapping)
         self.assertFalse(is_tree)
         self.assertEqual(2, ntrees)
 
@@ -156,7 +156,7 @@ class NetworkxMSTTreeCheck(unittest.TestCase):
         non_overlapping = [2, 5, 6, 12, 13, 15]
         ifgs_non_overlapping = [ifg for i, ifg in enumerate(self.ifgs)
                                 if i+1 in non_overlapping]
-        edges, is_tree, ntrees = mst.is_mst_tree(ifgs_non_overlapping)
+        edges, is_tree, ntrees, _ = mst.mst_from_ifgs(ifgs_non_overlapping)
         self.assertFalse(is_tree)
         self.assertEqual(2, ntrees)
 

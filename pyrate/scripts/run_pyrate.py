@@ -198,27 +198,18 @@ def remove_orbital_error(ifgs, params):
         check_orbital_ifgs(ifgs, flags)
 
     mlooked = None
-    if params[cf.ORBITAL_FIT_LOOKS_X] > 1 or params[cf.ORBITAL_FIT_LOOKS_Y] > 1:
-        print 'should not be here'
-        # # resampling here to use all prior corrections to orig data
-        # mlooked_phase_data = prepifg.prepare_ifgs([i.data_path for i in ifgs],
-        #                      crop_opt=prepifg.ALREADY_SAME_SIZE,
-        #                      xlooks=params[cf.ORBITAL_FIT_LOOKS_X],
-        #                      ylooks=params[cf.ORBITAL_FIT_LOOKS_Y],
-        #                      write_to_disc=False)
-        #
-        # mlooked = [Ifg(m) for m in mlooked_phase_data]
-        # for m, i in zip(mlooked, ifgs):
-        #     m.master = i.master
-        #     m.slave = i.slave
-        #     m.nan_fraction = i.nan_fraction
-        #     m.nodata_value = params[cf.NO_DATA_VALUE]
-        #     m.phase_band.SetNoDataValue(np.nan)
-        #     m.nan_converted = True
-        #     m.num_cells = i.num_cells
-        #     m.x_size = m.ncols
-        #     m.y_size = m.nrows
-        #     print m.nrows, m.ncols
+    if (params[cf.ORBITAL_FIT_LOOKS_X] > 1 or params[cf.ORBITAL_FIT_LOOKS_Y] > 1)\
+            and (params[cf.ORBITAL_FIT_METHOD] != 1):
+        # resampling here to use all prior corrections to orig data
+        mlooked_phase_data = prepifg.prepare_ifgs([i.data_path for i in ifgs],
+                             crop_opt=prepifg.ALREADY_SAME_SIZE,
+                             xlooks=params[cf.ORBITAL_FIT_LOOKS_X],
+                             ylooks=params[cf.ORBITAL_FIT_LOOKS_Y],
+                             write_to_disc=False)
+        mlooked = [Ifg(m) for m in mlooked_phase_data]
+        for m, i in zip(mlooked, ifgs):
+            m.initialize()
+            m.nodata_value = params[cf.NO_DATA_VALUE]
 
     orbital.orbital_correction(ifgs,
                                degree=params[cf.ORBITAL_FIT_DEGREE],

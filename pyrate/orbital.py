@@ -13,7 +13,7 @@ from scipy.linalg import lstsq
 from numpy.linalg import pinv
 
 from pyrate.algorithm import master_slave_ids, get_all_epochs, get_epoch_count
-import pyrate.matlab_mst_kruskal as matlab_mst
+from pyrate import mst
 from pyrate.shared import nanmedian
 
 
@@ -161,7 +161,7 @@ def _network_correction(ifgs, degree, offset, m_ifgs=None):
     """
     # get DM & filter out NaNs
     src_ifgs = ifgs if m_ifgs is None else m_ifgs
-    src_ifgs = matlab_mst.matlab_mst_kruskal_from_ifgs(src_ifgs)
+    src_ifgs = mst.mst_from_ifgs(src_ifgs)[3]  # use networkx mst
 
     vphase = vstack([i.phase_data.reshape((i.num_cells, 1)) for i in src_ifgs])
     vphase = squeeze(vphase)

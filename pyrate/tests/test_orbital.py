@@ -32,7 +32,7 @@ from pyrate.tests.common import sydney_data_setup_ifg_file_list
 import shutil
 from pyrate.tests import common
 from pyrate.shared import nanmedian
-
+from pyrate.scripts import run_pyrate
 
 DEG_LOOKUP = {
     2: PLANAR,
@@ -737,15 +737,12 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
     orbfit:        1
     orbfitmethod:  2
     orbfitdegrees: 1
-    orbfitlksx:    2 (?)
-    orbfitlksy:    2 (?)
+    orbfitlksx:    1
+    orbfitlksy:    1
 
     """
     def setUp(self):
         self.BASE_DIR = tempfile.mkdtemp()
-
-        # start each full test run cleanly
-        shutil.rmtree(self.BASE_DIR, ignore_errors=True)
 
         self.params = cf.get_config_params(
             os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf'))
@@ -759,7 +756,6 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
                       sydney_data_setup_ifg_file_list()]
         new_data_paths = [os.path.join(self.BASE_DIR, os.path.basename(d))
                           for d in data_paths]
-        os.makedirs(self.BASE_DIR)
         for d in data_paths:
             d_copy = os.path.join(self.BASE_DIR, os.path.basename(d))
             shutil.copy(d, d_copy)
@@ -783,8 +779,6 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
         shutil.rmtree(self.BASE_DIR)
 
     def test_orbital_correction_matlab_equality_orbfit_method_2(self):
-        from pyrate.scripts import run_pyrate
-
         run_pyrate.remove_orbital_error(self.ifgs, self.params)
 
         onlyfiles = [f for f in os.listdir(SYD_TEST_MATLAB_ORBITAL_DIR)
@@ -807,6 +801,41 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
                     # number of nans must equal
                     self.assertEqual(np.sum(np.isnan(matlab_phase_data)),
                                 np.sum(np.isnan(j.phase_data)))
+
+        # ensure that we have expected number of matches
+        self.assertEqual(count, len(self.ifgs))
+
+    def test_orbital_error_method2_dummy(self):
+        """
+        does not test anything except that the method is working
+        """
+        # change to orbital error correction method 2
+        self.params[cf.ORBITAL_FIT_METHOD] = 2
+        self.params[cf.ORBITAL_FIT_LOOKS_X] = 2
+        self.params[cf.ORBITAL_FIT_LOOKS_Y] = 2
+
+        run_pyrate.remove_orbital_error(self.ifgs, self.params)
+
+        onlyfiles = [f for f in os.listdir(SYD_TEST_MATLAB_ORBITAL_DIR)
+            if os.path.isfile(os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, f))
+            and f.endswith('.csv') and f.__contains__('_method2_')]
+
+        count = 0
+        for i, f in enumerate(onlyfiles):
+            matlab_phase_data = np.genfromtxt(os.path.join(
+                SYD_TEST_MATLAB_ORBITAL_DIR, f), delimiter=',')
+            for k, j in enumerate(self.ifgs):
+                if os.path.basename(j.data_path).split('.')[0] == \
+                        os.path.basename(f).split(
+                            '_method2_')[1].split('.')[0]:
+                    count += 1
+                    # # all numbers equal
+                    # np.testing.assert_array_almost_equal(matlab_phase_data,
+                    #     j.phase_data, decimal=3)
+                    #
+                    # # number of nans must equal
+                    # self.assertEqual(np.sum(np.isnan(matlab_phase_data)),
+                    #             np.sum(np.isnan(j.phase_data)))
 
         # ensure that we have expected number of matches
         self.assertEqual(count, len(self.ifgs))
