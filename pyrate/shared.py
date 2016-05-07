@@ -54,16 +54,17 @@ class RasterBase(object):
     """
 
     def __init__(self, path):
-        if not isinstance(path, gdal.Dataset):
+        if isinstance(path, gdal.Dataset):
+            self.dataset = path  # path will be Dataset in this case
+            self.data_path = self.dataset  # data_path dummy
+            self.add_geographic_data()
+        else:
             self.data_path = path
             self.dataset = None  # for GDAL dataset obj
             self._readonly = not os.access(path, os.R_OK | os.W_OK)
 
             if self._readonly is None:
                 raise NotImplementedError  # os.access() has failed?
-        else:
-            # we don't need data_path in this case
-            self.dataset = path  # path will be Dataset in this case
 
     def __str__(self):
         name = self.__class__.__name__
@@ -99,15 +100,17 @@ class RasterBase(object):
         if self.dataset is None:
             raise RasterException("Error opening %s" % self.data_path)
 
+        self.add_geographic_data()
+
+    def add_geographic_data(self):
         # add some geographic data
         self.x_centre = self.ncols / 2
         self.y_centre = self.nrows / 2
         self.lat_centre = self.y_first + (self.y_step * self.y_centre)
         self.long_centre = self.x_first + (self.x_step * self.x_centre)
-
         # use cell size from centre of scene
         self.x_size, self.y_size = cell_size(self.lat_centre, self.long_centre,
-                                            self.x_step, self.y_step)
+                                             self.x_step, self.y_step)
 
     @property
     def ncols(self):
@@ -218,7 +221,8 @@ class Ifg(RasterBase):
         :param bool readonly: True/False, or None to open as underlying file setting
         """
 
-        RasterBase.open(self, readonly)
+        if not isinstance(self.dataset, gdal.Dataset):
+            RasterBase.open(self, readonly)
         self._init_dates()
 
         md = self.dataset.GetMetadata()
