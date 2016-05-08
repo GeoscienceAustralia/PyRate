@@ -22,6 +22,7 @@ UseExceptions()
 
 from pyrate.shared import Ifg, DEM, RasterException
 from common import SYD_TEST_TIF, SYD_TEST_DEM_TIF, TEMPDIR
+from pyrate import prepifg
 
 
 if not exists(SYD_TEST_TIF):
@@ -137,6 +138,20 @@ class IfgIOTests(unittest.TestCase):
 
         # ensure open cannot be called twice
         self.failUnlessRaises(RasterException, self.ifg.open, True)
+
+    def test_open_ifg_from_dataset(self):
+        """
+        Test showing open() can not be used for Ifg created with
+        gdal.Dataset object as Dataset has already been read in
+        """
+        paths = [self.ifg.data_path]
+        mlooked_phase_data = prepifg.prepare_ifgs(paths,
+                             crop_opt=prepifg.ALREADY_SAME_SIZE,
+                             xlooks=2,
+                             ylooks=2,
+                             write_to_disc=False)
+        mlooked = [Ifg(m) for m in mlooked_phase_data]
+        self.assertRaises(RasterException, mlooked[0].open)
 
     def test_write(self):
         base = TEMPDIR
