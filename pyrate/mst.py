@@ -10,6 +10,7 @@ from itertools import product
 from numpy import array, nan, isnan, float32, empty
 import numpy as np
 import networkx as nx
+import parmap
 
 from pyrate.algorithm import ifg_date_lookup
 from pyrate.algorithm import ifg_date_index_lookup
@@ -54,22 +55,32 @@ def mst_parallel(ifgs, params):
         r_starts.append(r)
         r_ends.append(r_end)
 
+    # need to break up the ifg class as multiprocessing does not allow pickling
+    # TODO: may be do a namedtuple here
+    ifg_data = [(i.phase_data, i.master, i.slave, i.nan_fraction, i.ncols)
+                  for i in ifgs]
     if params[cf.PARALLEL]:
-        pass
+        t_mst = parmap.map(mst_multiprocessing,
+                        range(len(r_ends)),
+                        (ifg_data, r_starts, r_ends))
+        for k, (r, r_end) in enumerate(zip(r_starts, r_ends)):
+            result[:, r:r_end, :] = t_mst[k]
     else:
-        for i, (r, r_end) in enumerate(zip(r_starts, r_ends)):
-            result[:, r:r_end, :] = mst_multiprocessing(ifgs, r, r_end)
+        for k, (r, r_end) in enumerate(zip(r_starts, r_ends)):
+            result[:, r:r_end, :] = mst_multiprocessing(
+                k, (ifg_data, r_starts, r_ends))
 
     return result
 
 
+def mst_multiprocessing(k, (ifg_data, r_starts, r_ends)):
+    ifg_parts = [IfgPart(ifg_data[i][0], ifg_data[i][1], ifg_data[i][2],
+                         ifg_data[i][3], ifg_data[i][4],
+                         r_start=r_starts[k], r_end=r_ends[k])
+                 for i in range(len(ifg_data))]
 
-def mst_multiprocessing(ifgs, r_start, r_end):
-    ifg_parts = [IfgPart(i.phase_data, i.master, i.slave, i.nan_fraction, i.ncols,
-                         r_start=r_start, r_end=r_end) for i in ifgs]
     t_mst = mst_boolean_array(ifg_parts)
     return t_mst
-
 
 
 def _build_graph_networkx(edges_with_weights):
