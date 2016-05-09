@@ -178,7 +178,7 @@ class IfgPartTest(unittest.TestCase):
         r_start = 0
         r_end = 10
         for i in self.ifgs:
-            ifg_part = IfgPart(i.phase_data, i.master, i.slave, i.nan_fraction, i.ncols,
+            ifg_part = IfgPart(i.data_path,
                                r_start=r_start, r_end=r_end,
                                c_start=0, c_end=i.ncols)
             self.assertEqual(ifg_part.phase_data.shape,
@@ -188,15 +188,15 @@ class IfgPartTest(unittest.TestCase):
 
     def test_mst_multiprocessing_serial(self):
         self.params[cf.PARALLEL] = False
-        mst_parallel(self.ifgs, self.params)
         original_mst = mst.mst_boolean_array(self.ifgs)
+        mst_parallel(self.ifgs, self.params)
         parallel_mst = mst.mst_parallel(self.ifgs, params=self.params)
         np.testing.assert_array_equal(original_mst, parallel_mst)
 
     def test_mst_multiprocessing(self):
         self.params[cf.PARALLEL] = True
-        mst_parallel(self.ifgs, self.params)
         original_mst = mst.mst_boolean_array(self.ifgs)
+        mst_parallel(self.ifgs, self.params)
         parallel_mst = mst.mst_parallel(self.ifgs, params=self.params)
         np.testing.assert_array_equal(original_mst, parallel_mst)
 

@@ -44,6 +44,9 @@ def mst_parallel(ifgs, params):
     ncpus = params[cf.PROCESSES]
     no_ifgs = len(ifgs)
     no_y, no_x = ifgs[0].phase_data.shape
+
+    for i in ifgs:
+        i.close()
     result = empty(shape=(no_ifgs, no_y, no_x), dtype=np.bool)
     r_step = no_y/ncpus
     r_starts = []
@@ -57,27 +60,29 @@ def mst_parallel(ifgs, params):
 
     # need to break up the ifg class as multiprocessing does not allow pickling
     # TODO: may be do a namedtuple here
-    ifg_data = [(i.phase_data, i.master, i.slave, i.nan_fraction, i.ncols)
-                  for i in ifgs]
+    # TODO: don't read in all the phase data at once
+    # use data paths and locally read in each core/process,
+    # gdal read is very fast
+    ifg_paths = [i.data_path for i in ifgs]
+
     if params[cf.PARALLEL]:
         t_mst = parmap.map(mst_multiprocessing,
                         range(len(r_ends)),
-                        (ifg_data, r_starts, r_ends))
+                        (ifg_paths, r_starts, r_ends, no_x))
         for k, (r, r_end) in enumerate(zip(r_starts, r_ends)):
             result[:, r:r_end, :] = t_mst[k]
     else:
         for k, (r, r_end) in enumerate(zip(r_starts, r_ends)):
             result[:, r:r_end, :] = mst_multiprocessing(
-                k, (ifg_data, r_starts, r_ends))
+                k, (ifg_paths, r_starts, r_ends, no_x))
 
     return result
 
 
-def mst_multiprocessing(k, (ifg_data, r_starts, r_ends)):
-    ifg_parts = [IfgPart(ifg_data[i][0], ifg_data[i][1], ifg_data[i][2],
-                         ifg_data[i][3], ifg_data[i][4],
+def mst_multiprocessing(k, (ifg_data, r_starts, r_ends, ncols)):
+    ifg_parts = [IfgPart(ifg_data[i],
                          r_start=r_starts[k], r_end=r_ends[k],
-                         c_start=0, c_end=ifg_data[i][4])
+                         c_start=0, c_end=ncols)
                  for i in range(len(ifg_data))]
 
     t_mst = mst_boolean_array(ifg_parts)

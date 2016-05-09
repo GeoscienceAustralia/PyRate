@@ -378,8 +378,7 @@ class IfgPart(object):
     slice of Ifg data object
     """
 
-    def __init__(self, phase_data, master, slave, nan_fraction, ncols,
-                 r_start, r_end, c_start, c_end):
+    def __init__(self, data_path, r_start, r_end, c_start, c_end):
 
         """
         :param ifg: original ifg
@@ -387,13 +386,17 @@ class IfgPart(object):
         :param r_end: ending row of the original ifg
         :return:
         """
-        self._phase_data = phase_data
+        self.data_path = data_path
+        ifg = Ifg(data_path)
+        ifg.open()
+        ifg.nodata_value = 0
+        self._phase_data = ifg.phase_data
         self.r_start = r_start
         self.r_end = r_end
         self._phase_data_part = None
-        self.nan_fraction = nan_fraction
-        self.master = master
-        self.slave = slave
+        self.nan_fraction = ifg.nan_fraction
+        self.master = ifg.master
+        self.slave = ifg.slave
         self.c_start = c_start
         self.c_end = c_end
 
