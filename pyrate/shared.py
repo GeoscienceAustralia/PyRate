@@ -373,31 +373,50 @@ class Ifg(RasterBase):
         self.phase_band.WriteArray(self.phase_data)
 
 
-class IfgPart(Ifg):
+class IfgPart(object):
     """
     slice of Ifg data object
     """
 
-    def __init__(self, path, r_start, r_end):
+    def __init__(self, data_path, r_start, r_end, c_start, c_end):
+
         """
-        :param path: original ifg path
+        :param ifg: original ifg
         :param r_start: starting tow of the original ifg
         :param r_end: ending row of the original ifg
         :return:
         """
-        super(IfgPart, self).__init__(path)
+        self.data_path = data_path
+        ifg = Ifg(data_path)
+        ifg.open()
+        ifg.nodata_value = 0
+        self._phase_data = ifg.phase_data
         self.r_start = r_start
         self.r_end = r_end
-        self._phase_data = None
+        self._phase_data_part = None
+        self.nan_fraction = ifg.nan_fraction
+        self.master = ifg.master
+        self.slave = ifg.slave
+        self.c_start = c_start
+        self.c_end = c_end
 
     @property
     def nrows(self):
         return self.r_end - self.r_start
 
     @property
+    def ncols(self):
+        return self.c_end - self.c_start
+
+    @property
     def phase_data(self):
-        if self._phase_data is None:
-            return Ifg(self.data_path).phase_data[self.r_start:self.r_end, :]
+        if self._phase_data_part is None:
+            return self._phase_data[self.r_start:self.r_end,
+                   self.c_start:self.c_end]
+
+    # @phase_data.setter
+    # def phase_data(self, phase_data):
+    #     self._phase_data_part = phase_data
 
 
 

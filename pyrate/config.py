@@ -70,7 +70,7 @@ An example PyRate configuration file is as follows::
 # problem with the checking being done in the middle of the runs, as bad values
 # could cause crashes & destroying some of the results.
 import os, time
-from pyrate import orbital
+
 PYRATEPATH = os.environ['PYRATEPATH']
 
 # general constants
@@ -194,6 +194,15 @@ PROCESSES = 'processes'
 # Luigi parameter
 LUIGI = 'use_luigi'
 
+# ORBITAL ERROR correction constants
+INDEPENDENT_METHOD = 1
+NETWORK_METHOD = 2
+
+PLANAR = 'PLANAR'
+QUADRATIC = 'QUADRATIC'
+PART_CUBIC = 'PART_CUBIC'
+
+
 def degree_conv(deg):
     """
     Convenience: convert numerical degree to human readable string
@@ -201,11 +210,11 @@ def degree_conv(deg):
 
     degree = int(deg)
     if degree == 1:
-        return orbital.PLANAR
+        return PLANAR
     if degree == 2:
-        return orbital.QUADRATIC
+        return QUADRATIC
     if degree == 3:
-        return orbital.PART_CUBIC
+        return PART_CUBIC
     raise ValueError("Orbital fit polynomial degree option not recognised")
 
 
@@ -216,9 +225,9 @@ def method_conv(meth):
 
     method = int(meth)
     if method == 1:
-        return orbital.INDEPENDENT_METHOD
+        return INDEPENDENT_METHOD
     if method == 2:
-        return orbital.NETWORK_METHOD
+        return NETWORK_METHOD
     raise ValueError("Orbital fit method not recognised")
 
 # Lookup to help convert args to correct type/defaults
@@ -247,8 +256,8 @@ PARAM_CONVERSION = {
 
     #ORBITAL_FIT : (bool, False),
     ORBITAL_FIT: (int, 0),
-    ORBITAL_FIT_METHOD: (method_conv, orbital.NETWORK_METHOD),
-    ORBITAL_FIT_DEGREE: (degree_conv, orbital.QUADRATIC),
+    ORBITAL_FIT_METHOD: (method_conv, NETWORK_METHOD),
+    ORBITAL_FIT_DEGREE: (degree_conv, QUADRATIC),
     ORBITAL_FIT_LOOKS_X: (int, NO_MULTILOOKING),
     ORBITAL_FIT_LOOKS_Y: (int, NO_MULTILOOKING),
 
@@ -361,11 +370,11 @@ def reverse_degree_conv(k, v):
     """
     Convenience: convert numerical degree to human readable string
     """
-    if v == orbital.PLANAR:
+    if v == PLANAR:
         return 1
-    if v == orbital.QUADRATIC:
+    if v == QUADRATIC:
         return 2
-    if v == orbital.PART_CUBIC:
+    if v == PART_CUBIC:
         return 3
     else:
         raise ValueError(

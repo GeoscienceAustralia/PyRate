@@ -15,6 +15,7 @@ from numpy.linalg import pinv
 from pyrate.algorithm import master_slave_ids, get_all_epochs, get_epoch_count
 from pyrate import mst
 from pyrate.shared import nanmedian
+from pyrate import config as cf
 
 
 # Orbital correction tasks
@@ -44,14 +45,13 @@ from pyrate.shared import nanmedian
 # appear to ignore the offset parameter in the networked method. Network DM
 # offsets are cols of 1s in a diagonal line on the LHS of the sparse array.
 
-# constants
-INDEPENDENT_METHOD = 1
-NETWORK_METHOD = 2
+# ORBITAL ERROR correction constants
+INDEPENDENT_METHOD = cf.INDEPENDENT_METHOD
+NETWORK_METHOD = cf.NETWORK_METHOD
 
-PLANAR = 'PLANAR'
-QUADRATIC = 'QUADRATIC'
-PART_CUBIC = 'PART_CUBIC'
-
+PLANAR = cf.PLANAR
+QUADRATIC = cf.QUADRATIC
+PART_CUBIC = cf.PART_CUBIC
 
 def orbital_correction(ifgs, degree, method, mlooked=None, offset=True):
     """

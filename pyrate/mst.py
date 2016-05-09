@@ -10,9 +10,13 @@ from itertools import product
 from numpy import array, nan, isnan, float32, empty
 import numpy as np
 import networkx as nx
+import parmap
+from itertools import product
 
 from pyrate.algorithm import ifg_date_lookup
 from pyrate.algorithm import ifg_date_index_lookup
+from pyrate import config as cf
+from pyrate.shared import IfgPart
 
 # TODO: may need to implement memory saving row-by-row access
 # TODO: document weighting by either Nan fraction OR variance
@@ -35,6 +39,74 @@ def mst_from_ifgs(ifgs):
     mst_ifgs = [i for k, i in enumerate(ifgs) if k in ifg_sub]
     return mst.edges(), nx.is_tree(mst), \
            nx.number_connected_components(mst), mst_ifgs
+
+
+def mst_parallel(ifgs, params):
+    ncpus = params[cf.PROCESSES]
+    no_ifgs = len(ifgs)
+    no_y, no_x = ifgs[0].phase_data.shape
+
+    # either ncols or nrows need to be supplied
+    # TODO: a better way to determine ncols
+    ncols = min(4, no_x)
+    max_cols_per_tile = no_x/ncols
+
+    for i in ifgs:
+        i.close()
+    result = empty(shape=(no_ifgs, no_y, no_x), dtype=np.bool)
+    r_step = (no_y/ncpus) * ncols
+    r_starts = []
+    r_ends = []
+    for r in xrange(0, no_y, r_step):
+        r_end = r + r_step
+        if r + r_step > no_y:
+            r_end = no_y
+        r_starts.append(r)
+        r_ends.append(r_end)
+    c_starts = []
+    c_ends = []
+    for c in xrange(0, no_x, max_cols_per_tile):
+        c_end = c+max_cols_per_tile
+        if c_end > no_x:
+            c_end = no_x
+        c_starts.append(c)
+        c_ends.append(c_end)
+
+    # need to break up the ifg class as multiprocessing does not allow pickling
+    # don't read in all the phase data at once
+    # use data paths and locally read in each core/process,
+    # gdal read is very fast
+    ifg_paths = [i.data_path for i in ifgs]
+
+    top_left = list(product(r_starts, c_starts))
+    bottom_right = list(product(r_ends, c_ends))
+
+    if params[cf.PARALLEL]:
+        t_msts = parmap.starmap(mst_multiprocessing,
+                                zip(top_left, bottom_right), ifg_paths)
+        for k, (top_l, bottom_r) \
+                in enumerate(zip(top_left, bottom_right)):
+            result[:, top_l[0]:bottom_r[0], top_l[1]: bottom_r[1]] = t_msts[k]
+    else:
+        for k, (top_l, bottom_r) \
+                in enumerate(zip(top_left, bottom_right)):
+            result[:, top_l[0]:bottom_r[0], top_l[1]: bottom_r[1]] = \
+                mst_multiprocessing(top_l, bottom_r, ifg_paths)
+
+    return result
+
+
+def mst_multiprocessing(top_left, bottom_right, ifg_paths):
+    r_start, c_start = top_left
+    r_end, c_end = bottom_right
+    ifg_parts = [IfgPart(ifg_paths[i],
+                         r_start=r_start, r_end=r_end,
+                         c_start=c_start, c_end=c_end
+                         )
+                 for i in range(len(ifg_paths))]
+
+    t_mst = mst_boolean_array(ifg_parts)
+    return t_mst
 
 
 def _build_graph_networkx(edges_with_weights):
