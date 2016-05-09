@@ -5,12 +5,18 @@ Tests for Minimum Spanning Tree (MST) functionality in PyRate.
 '''
 
 import unittest
+import os
 from itertools import product
 from numpy import empty, array, nan, isnan, sum as nsum
+import numpy as np
 
 from pyrate import mst
 from pyrate import algorithm
 from pyrate.tests.common import MockIfg, sydney5_mock_ifgs, sydney_data_setup
+from pyrate.shared import Ifg, IfgPart
+from pyrate.mst import mst_parallel
+from pyrate import config as cf
+from pyrate.tests import common
 
 
 class MSTTests(unittest.TestCase):
@@ -159,6 +165,35 @@ class NetworkxMSTTreeCheck(unittest.TestCase):
         edges, is_tree, ntrees, _ = mst.mst_from_ifgs(ifgs_non_overlapping)
         self.assertFalse(is_tree)
         self.assertEqual(2, ntrees)
+
+
+class IfgPartTest(unittest.TestCase):
+
+    def setUp(self):
+        self.ifgs = sydney_data_setup()
+        self.params = cf.get_config_params(
+            os.path.join(common.SYD_TEST_DIR, 'pyrate_system_test.conf'))
+
+
+    def test_ifg_part_shape_and_slice(self):
+        r_start = 0
+        r_end = 10
+        for i in self.ifgs:
+            ifg_part = IfgPart(i.phase_data, i.master, i.slave, i.nan_fraction, i.ncols,
+                               r_start=r_start, r_end=r_end)
+            self.assertEqual(ifg_part.phase_data.shape,
+                             (r_end-r_start, i.phase_data.shape[1]))
+            np.testing.assert_array_equal(ifg_part.phase_data,
+                                          i.phase_data[r_start:r_end, :])
+
+    def test_mst_serial(self):
+        # self.params[cf.PARALLEL] = False
+        # mst_parallel(self.ifgs, self.params)
+        self.params[cf.PARALLEL] = False
+        mst_parallel(self.ifgs, self.params)
+        original_mst = mst.mst_boolean_array(self.ifgs)
+        parallel_mst = mst.mst_parallel(self.ifgs, params=self.params)
+        np.testing.assert_array_equal(original_mst, parallel_mst)
 
 
 if __name__ == "__main__":

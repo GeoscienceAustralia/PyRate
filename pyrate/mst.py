@@ -13,6 +13,8 @@ import networkx as nx
 
 from pyrate.algorithm import ifg_date_lookup
 from pyrate.algorithm import ifg_date_index_lookup
+from pyrate import config as cf
+from pyrate.shared import IfgPart
 
 # TODO: may need to implement memory saving row-by-row access
 # TODO: document weighting by either Nan fraction OR variance
@@ -35,6 +37,39 @@ def mst_from_ifgs(ifgs):
     mst_ifgs = [i for k, i in enumerate(ifgs) if k in ifg_sub]
     return mst.edges(), nx.is_tree(mst), \
            nx.number_connected_components(mst), mst_ifgs
+
+
+def mst_parallel(ifgs, params):
+    ncpus = params[cf.PROCESSES]
+    no_ifgs = len(ifgs)
+    no_y, no_x = ifgs[0].phase_data.shape
+    result = empty(shape=(no_ifgs, no_y, no_x), dtype=np.bool)
+    r_step = no_y/ncpus
+    r_starts = []
+    r_ends = []
+    for r in xrange(0, no_y, r_step):
+        r_end = r + r_step
+        if r + r_step > no_y:
+            r_end = no_y
+        r_starts.append(r)
+        r_ends.append(r_end)
+
+    if params[cf.PARALLEL]:
+        pass
+    else:
+        for i, (r, r_end) in enumerate(zip(r_starts, r_ends)):
+            result[:, r:r_end, :] = mst_multiprocessing(ifgs, r, r_end)
+
+    return result
+
+
+
+def mst_multiprocessing(ifgs, r_start, r_end):
+    ifg_parts = [IfgPart(i.phase_data, i.master, i.slave, i.nan_fraction, i.ncols,
+                         r_start=r_start, r_end=r_end) for i in ifgs]
+    t_mst = mst_boolean_array(ifg_parts)
+    return t_mst
+
 
 
 def _build_graph_networkx(edges_with_weights):
