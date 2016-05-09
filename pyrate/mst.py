@@ -42,6 +42,7 @@ def mst_from_ifgs(ifgs):
 
 
 def mst_parallel(ifgs, params):
+    print 'Calculating mst using tiles'
     ncpus = params[cf.PROCESSES]
     no_ifgs = len(ifgs)
     no_y, no_x = ifgs[0].phase_data.shape
@@ -51,8 +52,9 @@ def mst_parallel(ifgs, params):
     ncols = min(4, no_x)
     max_cols_per_tile = no_x/ncols
 
-    for i in ifgs:
-        i.close()
+    # do we need to close here?
+    # for i in ifgs:
+    #     i.close()
     result = empty(shape=(no_ifgs, no_y, no_x), dtype=np.bool)
     r_step = (no_y/ncpus) * ncols
     r_starts = []
@@ -80,14 +82,18 @@ def mst_parallel(ifgs, params):
 
     top_left = list(product(r_starts, c_starts))
     bottom_right = list(product(r_ends, c_ends))
+    no_tiles = len(r_starts)*len(c_starts)
 
     if params[cf.PARALLEL]:
+        print 'Calculating mst using {} tiles in serial using {} ' \
+              'processes'.format(no_tiles, ncpus)
         t_msts = parmap.starmap(mst_multiprocessing,
                                 zip(top_left, bottom_right), ifg_paths)
         for k, (top_l, bottom_r) \
                 in enumerate(zip(top_left, bottom_right)):
             result[:, top_l[0]:bottom_r[0], top_l[1]: bottom_r[1]] = t_msts[k]
     else:
+        print 'Calculating mst using {} tiles in serial'.format(no_tiles)
         for k, (top_l, bottom_r) \
                 in enumerate(zip(top_left, bottom_right)):
             result[:, top_l[0]:bottom_r[0], top_l[1]: bottom_r[1]] = \
