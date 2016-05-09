@@ -93,8 +93,8 @@ def test_dest_ifg_paths():
 
 
 # FIXME: change to read output ifgs
-def get_ifgs(_open=True):
-    paths = glob.glob(join(BASE_OUT_DIR, 'geo_*-*.tif'))
+def get_ifgs(_open=True, out_dir=BASE_OUT_DIR):
+    paths = glob.glob(join(out_dir, 'geo_*-*.tif'))
     ifgs = [shared.Ifg(p) for p in paths]
     assert len(ifgs) == 17, 'Got %s' % ifgs
 
@@ -113,18 +113,18 @@ class PyRateTests(unittest.TestCase):
         from pyrate.tests.common import SYD_TEST_DIR
 
         try:
-            # copy source data (treat as prepifg already run)
-            os.makedirs(BASE_OUT_DIR)
+            cls.out_dir = tempfile.mkdtemp()
 
+            # copy source data (treat as prepifg already run)
             for path in glob.glob(join(TEST_CORE, 'tif/*')):
-                dest = join(BASE_OUT_DIR, os.path.basename(path))
+                dest = join(cls.out_dir, os.path.basename(path))
                 shutil.copy(path, dest)
                 os.chmod(dest, 0660)
 
             os.makedirs(BASE_DEM_DIR)
             orig_dem = join(TEST_CORE, 'dem', 'sydney_trimmed.tif')
             os.symlink(orig_dem, BASE_DEM_FILE)
-            os.chdir(BASE_DIR)
+            os.chdir(cls.out_dir)
 
             # manually start logging as main() is being bypassed
             run_pyrate.init_logging(logging.DEBUG)
@@ -132,12 +132,13 @@ class PyRateTests(unittest.TestCase):
             params = config.get_config_params(
                 os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf'))
             params[cf.SIM_DIR] = cf.PYRATEPATH
-            params[cf.OUT_DIR] = BASE_DIR
-            paths = glob.glob(join(BASE_OUT_DIR, 'geo_*-*.tif'))
+            params[cf.OUT_DIR] = cls.out_dir
+            paths = glob.glob(join(cls.out_dir, 'geo_*-*.tif'))
+            params[cf.PARALLEL] = False
             run_pyrate.process_ifgs(paths, params)
 
             if not hasattr(cls, 'ifgs'):
-                cls.ifgs = get_ifgs()
+                cls.ifgs = get_ifgs(out_dir=cls.out_dir)
         except:
             # revert working dir & avoid paths busting other tests
             os.chdir(CURRENT_DIR)
@@ -145,7 +146,7 @@ class PyRateTests(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        shutil.rmtree(BASE_DIR, ignore_errors=True)
+        shutil.rmtree(cls.out_dir, ignore_errors=True)
         os.chdir(CURRENT_DIR)
 
     def get_logfile_path(self):
@@ -164,7 +165,7 @@ class PyRateTests(unittest.TestCase):
 
     def test_basic_outputs(self):
         self.assertTrue(os.path.exists(BASE_DIR))
-        self.assertTrue(os.path.exists(BASE_OUT_DIR))
+        self.assertTrue(os.path.exists(self.out_dir))
 
         for i in self.ifgs:
             self.assertFalse(i.is_read_only)
@@ -195,7 +196,6 @@ class PyRateTests(unittest.TestCase):
                 return
 
         self.fail('No reference pixel found')
-
 
 if __name__ == "__main__":
     unittest.main()
