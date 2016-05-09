@@ -11,6 +11,7 @@ from numpy import array, nan, isnan, float32, empty
 import numpy as np
 import networkx as nx
 import parmap
+from itertools import product
 
 from pyrate.algorithm import ifg_date_lookup
 from pyrate.algorithm import ifg_date_index_lookup
@@ -45,10 +46,15 @@ def mst_parallel(ifgs, params):
     no_ifgs = len(ifgs)
     no_y, no_x = ifgs[0].phase_data.shape
 
+    # either ncols or nrows need to be supplied
+    # TODO: a better way to determine ncols
+    ncols = min(4, no_x)
+    max_cols_per_tile = no_x/ncols
+
     for i in ifgs:
         i.close()
     result = empty(shape=(no_ifgs, no_y, no_x), dtype=np.bool)
-    r_step = no_y/ncpus
+    r_step = (no_y/ncpus) * ncols
     r_starts = []
     r_ends = []
     for r in xrange(0, no_y, r_step):
@@ -57,33 +63,47 @@ def mst_parallel(ifgs, params):
             r_end = no_y
         r_starts.append(r)
         r_ends.append(r_end)
+    c_starts = []
+    c_ends = []
+    for c in xrange(0, no_x, max_cols_per_tile):
+        c_end = c+max_cols_per_tile
+        if c_end > no_x:
+            c_end = no_x
+        c_starts.append(c)
+        c_ends.append(c_end)
 
     # need to break up the ifg class as multiprocessing does not allow pickling
-    # TODO: may be do a namedtuple here
-    # TODO: don't read in all the phase data at once
+    # don't read in all the phase data at once
     # use data paths and locally read in each core/process,
     # gdal read is very fast
     ifg_paths = [i.data_path for i in ifgs]
 
+    top_left = list(product(r_starts, c_starts))
+    bottom_right = list(product(r_ends, c_ends))
+
     if params[cf.PARALLEL]:
-        t_mst = parmap.map(mst_multiprocessing,
-                        range(len(r_ends)),
-                        (ifg_paths, r_starts, r_ends, no_x))
-        for k, (r, r_end) in enumerate(zip(r_starts, r_ends)):
-            result[:, r:r_end, :] = t_mst[k]
+        t_msts = parmap.starmap(mst_multiprocessing,
+                                zip(top_left, bottom_right), ifg_paths)
+        for k, (top_l, bottom_r) \
+                in enumerate(zip(top_left, bottom_right)):
+            result[:, top_l[0]:bottom_r[0], top_l[1]: bottom_r[1]] = t_msts[k]
     else:
-        for k, (r, r_end) in enumerate(zip(r_starts, r_ends)):
-            result[:, r:r_end, :] = mst_multiprocessing(
-                k, (ifg_paths, r_starts, r_ends, no_x))
+        for k, (top_l, bottom_r) \
+                in enumerate(zip(top_left, bottom_right)):
+            result[:, top_l[0]:bottom_r[0], top_l[1]: bottom_r[1]] = \
+                mst_multiprocessing(top_l, bottom_r, ifg_paths)
 
     return result
 
 
-def mst_multiprocessing(k, (ifg_data, r_starts, r_ends, ncols)):
-    ifg_parts = [IfgPart(ifg_data[i],
-                         r_start=r_starts[k], r_end=r_ends[k],
-                         c_start=0, c_end=ncols)
-                 for i in range(len(ifg_data))]
+def mst_multiprocessing(top_left, bottom_right, ifg_paths):
+    r_start, c_start = top_left
+    r_end, c_end = bottom_right
+    ifg_parts = [IfgPart(ifg_paths[i],
+                         r_start=r_start, r_end=r_end,
+                         c_start=c_start, c_end=c_end
+                         )
+                 for i in range(len(ifg_paths))]
 
     t_mst = mst_boolean_array(ifg_parts)
     return t_mst

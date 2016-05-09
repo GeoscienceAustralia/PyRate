@@ -411,7 +411,8 @@ class IfgPart(object):
     @property
     def phase_data(self):
         if self._phase_data_part is None:
-            return self._phase_data[self.r_start:self.r_end, :]
+            return self._phase_data[self.r_start:self.r_end,
+                   self.c_start:self.c_end]
 
     # @phase_data.setter
     # def phase_data(self, phase_data):
