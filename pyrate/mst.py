@@ -76,7 +76,8 @@ def mst_parallel(ifgs, params):
 def mst_multiprocessing(k, (ifg_data, r_starts, r_ends)):
     ifg_parts = [IfgPart(ifg_data[i][0], ifg_data[i][1], ifg_data[i][2],
                          ifg_data[i][3], ifg_data[i][4],
-                         r_start=r_starts[k], r_end=r_ends[k])
+                         r_start=r_starts[k], r_end=r_ends[k],
+                         c_start=0, c_end=ifg_data[i][4])
                  for i in range(len(ifg_data))]
 
     t_mst = mst_boolean_array(ifg_parts)

@@ -174,13 +174,13 @@ class IfgPartTest(unittest.TestCase):
         self.params = cf.get_config_params(
             os.path.join(common.SYD_TEST_DIR, 'pyrate_system_test.conf'))
 
-
     def test_ifg_part_shape_and_slice(self):
         r_start = 0
         r_end = 10
         for i in self.ifgs:
             ifg_part = IfgPart(i.phase_data, i.master, i.slave, i.nan_fraction, i.ncols,
-                               r_start=r_start, r_end=r_end)
+                               r_start=r_start, r_end=r_end,
+                               c_start=0, c_end=i.ncols)
             self.assertEqual(ifg_part.phase_data.shape,
                              (r_end-r_start, i.phase_data.shape[1]))
             np.testing.assert_array_equal(ifg_part.phase_data,

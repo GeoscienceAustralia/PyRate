@@ -379,8 +379,8 @@ class IfgPart(object):
     """
 
     def __init__(self, phase_data, master, slave, nan_fraction, ncols,
-                 r_start, r_end):
-        # nan_fraction, master, slave, ncols,
+                 r_start, r_end, c_start, c_end):
+
         """
         :param ifg: original ifg
         :param r_start: starting tow of the original ifg
@@ -394,12 +394,16 @@ class IfgPart(object):
         self.nan_fraction = nan_fraction
         self.master = master
         self.slave = slave
-        self.ncols = ncols
-
+        self.c_start = c_start
+        self.c_end = c_end
 
     @property
     def nrows(self):
         return self.r_end - self.r_start
+
+    @property
+    def ncols(self):
+        return self.c_end - self.c_start
 
     @property
     def phase_data(self):
