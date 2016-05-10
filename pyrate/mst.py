@@ -45,41 +45,14 @@ def mst_parallel(ifgs, params):
     ncpus = params[cf.PROCESSES]
     no_ifgs = len(ifgs)
     no_y, no_x = ifgs[0].phase_data.shape
-
-    # either ncols or nrows need to be supplied
-    # TODO: a better way to determine ncols
-    ncols = min(10, no_x)
-    max_cols_per_tile = no_x/ncols
-    c_starts = []
-    c_ends = []
-    for c in xrange(0, no_x, max_cols_per_tile):
-        c_end = c + max_cols_per_tile
-        if c_end > no_x:
-            c_end = no_x
-        c_starts.append(c)
-        c_ends.append(c_end)
-
-    result = empty(shape=(no_ifgs, no_y, no_x), dtype=np.bool)
-    r_step = int(np.ceil(no_y/float(ncpus))) * len(c_starts)/5
-    r_starts = []
-    r_ends = []
-
-    for r in xrange(0, no_y, r_step):
-        r_end = r + r_step
-        if r + r_step > no_y:
-            r_end = no_y
-        r_starts.append(r)
-        r_ends.append(r_end)
-
+    top_left, bottom_right, no_tiles = \
+        setup_tiles(ifgs, params)
     # need to break up the ifg class as multiprocessing does not allow pickling
     # don't read in all the phase data at once
     # use data paths and locally read in each core/process,
     # gdal read is very fast
     ifg_paths = [i.data_path for i in ifgs]
-
-    top_left = list(product(r_starts, c_starts))
-    bottom_right = list(product(r_ends, c_ends))
-    no_tiles = len(r_starts)*len(c_starts)
+    result = empty(shape=(no_ifgs, no_y, no_x), dtype=np.bool)
 
     if params[cf.PARALLEL]:
         print 'Calculating mst using {} tiles in parallel using {} ' \
@@ -97,6 +70,38 @@ def mst_parallel(ifgs, params):
                 mst_multiprocessing(top_l, bottom_r, ifg_paths)
 
     return result
+
+
+def setup_tiles(ifgs, params, processes=None):
+    ncpus = processes if processes else params[cf.PROCESSES]
+    no_y, no_x = ifgs[0].phase_data.shape
+    # either ncols or nrows need to be supplied
+    # TODO: a better way to determine ncols
+    ncols = min(10, no_x)
+    max_cols_per_tile = no_x / ncols
+    c_starts = []
+    c_ends = []
+    for c in xrange(0, no_x, max_cols_per_tile):
+        c_end = c + max_cols_per_tile
+        if c_end > no_x:
+            c_end = no_x
+        c_starts.append(c)
+        c_ends.append(c_end)
+    r_step = int(np.ceil(no_y / float(ncpus))) * len(c_starts) / 5
+    r_starts = []
+    r_ends = []
+    for r in xrange(0, no_y, r_step):
+        r_end = r + r_step
+        if r + r_step > no_y:
+            r_end = no_y
+        r_starts.append(r)
+        r_ends.append(r_end)
+
+    top_left = list(product(r_starts, c_starts))
+    bottom_right = list(product(r_ends, c_ends))
+    no_tiles = len(r_starts)*len(c_starts)
+
+    return top_left, bottom_right, no_tiles
 
 
 def mst_multiprocessing(top_left, bottom_right, ifg_paths):
