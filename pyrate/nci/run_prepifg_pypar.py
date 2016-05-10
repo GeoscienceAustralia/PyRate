@@ -67,7 +67,6 @@ def main():
         output_log_file.close()
 
     num_files = len(dest_paths)
-    parallel.calc_lo_hi(num_files)
     process_subset_indices = parallel.calc_indices(num_files)
 
     process_base_paths = [itemgetter(p)(base_ifg_paths)
