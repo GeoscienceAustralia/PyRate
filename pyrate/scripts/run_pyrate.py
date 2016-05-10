@@ -91,19 +91,8 @@ def process_ifgs(ifg_paths_or_instance, params):
 
 
 def mst_calculation(ifg_paths_or_instance, params):
-    nan_conversion = params[cf.NAN_CONVERSION]
     if isinstance(ifg_paths_or_instance, list):
-        ifgs = [Ifg(p) for p in ifg_paths_or_instance]
-
-        for i in ifgs:
-            if not i.is_open:
-                i.open(readonly=False)
-            if nan_conversion:  # nan conversion happens here in networkx mst
-                i.nodata_value = params[cf.NO_DATA_VALUE]
-                i.convert_to_nans()
-            if not i.mm_converted:
-                i.convert_to_mm()
-                i.write_modified_phase()
+        ifgs = prepare_ifgs_for_networkx_mst(ifg_paths_or_instance, params)
         write_msg(
             'Calculating minimum spanning tree matrix using NetworkX method')
 
@@ -114,6 +103,7 @@ def mst_calculation(ifg_paths_or_instance, params):
         else:
             params[cf.TIME_SERIES_INTERP] = 1
     else:
+        nan_conversion = params[cf.NAN_CONVERSION]
         assert isinstance(ifg_paths_or_instance, matlab_mst.IfgListPyRate)
         ifgs = ifg_paths_or_instance.ifgs
         for i in ifgs:
@@ -141,6 +131,21 @@ def mst_calculation(ifg_paths_or_instance, params):
     np.save(file=mst_mat_binary_file, arr=mst_grid)
 
     return ifgs, mst_grid, params
+
+
+def prepare_ifgs_for_networkx_mst(ifg_paths_or_instance, params):
+    nan_conversion = params[cf.NAN_CONVERSION]
+    ifgs = [Ifg(p) for p in ifg_paths_or_instance]
+    for i in ifgs:
+        if not i.is_open:
+            i.open(readonly=False)
+        if nan_conversion:  # nan conversion happens here in networkx mst
+            i.nodata_value = params[cf.NO_DATA_VALUE]
+            i.convert_to_nans()
+        if not i.mm_converted:
+            i.convert_to_mm()
+            i.write_modified_phase()
+    return ifgs
 
 
 def compute_time_series(epochlist, gt, ifgs, md, mst_grid, params, vcmt, wkt):
@@ -388,13 +393,10 @@ def get_dest_paths(base_paths, crop, params, looks):
 def main():
     base_unw_paths, dest_paths, pars = get_ifg_paths()
 
-    ifg_instance = matlab_mst.IfgListPyRate(datafiles=dest_paths)
-
-    if pars[cf.NETWORKX_OR_MATLAB_FLAG]:
-        # Using networkx mst
+    if pars[cf.NETWORKX_OR_MATLAB_FLAG]:  # Using networkx mst
         process_ifgs(dest_paths, pars)
-    else:
-        # Using matlab mst
+    else:  # Using matlab mst
+        ifg_instance = matlab_mst.IfgListPyRate(datafiles=dest_paths)
         process_ifgs(ifg_instance, pars)
 
 
