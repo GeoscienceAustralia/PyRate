@@ -10,7 +10,7 @@ from numpy import array, nan, isnan, float32, empty
 import numpy as np
 import networkx as nx
 import parmap
-from itertools import product
+from itertools import product, izip, repeat
 
 from pyrate.algorithm import ifg_date_lookup
 from pyrate.algorithm import ifg_date_index_lookup
@@ -70,6 +70,18 @@ def mst_parallel(ifgs, params):
             result[:, top_l[0]:bottom_r[0], top_l[1]: bottom_r[1]] = \
                 mst_multiprocessing(top_l, bottom_r, ifg_paths)
 
+    return result
+
+
+def mst_multiprocessing_map(process_top_lefts, process_bottom_rights,
+                            paths, shape, no_ifgs):
+    # can't specify np.bool, does not work with PyPar
+    # TODO: investigate other pypar send/receive options
+    result = np.zeros(shape=(no_ifgs, shape[0], shape[1]))
+    for top_l, bottom_r \
+                in zip(process_top_lefts, process_bottom_rights):
+        result[:, top_l[0]:bottom_r[0], top_l[1]: bottom_r[1]] = \
+            mst_multiprocessing(top_l, bottom_r, paths)
     return result
 
 
