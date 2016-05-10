@@ -106,7 +106,8 @@ def mst_calculation(ifg_paths_or_instance, params):
                 i.write_modified_phase()
         write_msg(
             'Calculating minimum spanning tree matrix using NetworkX method')
-        mst_grid = mst.mst_boolean_array(ifgs)
+
+        mst_grid = mst.mst_parallel(ifgs, params)
         # check if mst is not a tree, then do interpolate
         if mst.mst_from_ifgs(ifgs)[1]:
             params[cf.TIME_SERIES_INTERP] = 0

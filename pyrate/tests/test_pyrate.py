@@ -30,13 +30,6 @@ if os.name == "nt":
     os.symlink = symlink_ms
 
 
-# testing constants
-BASE_DIR = tempfile.mkdtemp()
-BASE_OUT_DIR = join(BASE_DIR, 'out')
-BASE_DEM_DIR = join(BASE_DIR, 'dem')
-BASE_CFG_FILE = join(BASE_DIR, 'pyrate_workflow_test.conf')
-BASE_DEM_FILE = join(BASE_DEM_DIR, 'sydney_trimmed.tif')
-
 TEST_CORE = join(os.environ['PYRATEPATH'], 'tests', 'sydney_test')
 
 CURRENT_DIR = os.getcwd()
@@ -93,7 +86,7 @@ def test_dest_ifg_paths():
 
 
 # FIXME: change to read output ifgs
-def get_ifgs(_open=True, out_dir=BASE_OUT_DIR):
+def get_ifgs(out_dir, _open=True):
     paths = glob.glob(join(out_dir, 'geo_*-*.tif'))
     ifgs = [shared.Ifg(p) for p in paths]
     assert len(ifgs) == 17, 'Got %s' % ifgs
@@ -110,21 +103,27 @@ class PyRateTests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+
+        # testing constants2
+        cls.BASE_DIR = tempfile.mkdtemp()
+        cls.BASE_OUT_DIR = join(cls.BASE_DIR, 'out')
+        cls.BASE_DEM_DIR = join(cls.BASE_DIR, 'dem')
+        cls.BASE_CFG_FILE = join(cls.BASE_DIR, 'pyrate_workflow_test.conf')
+        cls.BASE_DEM_FILE = join(cls.BASE_DEM_DIR, 'sydney_trimmed.tif')
         from pyrate.tests.common import SYD_TEST_DIR
 
         try:
-            cls.out_dir = tempfile.mkdtemp()
-
             # copy source data (treat as prepifg already run)
+            os.makedirs(cls.BASE_OUT_DIR)
             for path in glob.glob(join(TEST_CORE, 'tif/*')):
-                dest = join(cls.out_dir, os.path.basename(path))
+                dest = join(cls.BASE_OUT_DIR, os.path.basename(path))
                 shutil.copy(path, dest)
                 os.chmod(dest, 0660)
 
-            os.makedirs(BASE_DEM_DIR)
+            os.makedirs(cls.BASE_DEM_DIR)
             orig_dem = join(TEST_CORE, 'dem', 'sydney_trimmed.tif')
-            os.symlink(orig_dem, BASE_DEM_FILE)
-            os.chdir(cls.out_dir)
+            os.symlink(orig_dem, cls.BASE_DEM_FILE)
+            os.chdir(cls.BASE_DIR)
 
             # manually start logging as main() is being bypassed
             run_pyrate.init_logging(logging.DEBUG)
@@ -132,13 +131,13 @@ class PyRateTests(unittest.TestCase):
             params = config.get_config_params(
                 os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf'))
             params[cf.SIM_DIR] = cf.PYRATEPATH
-            params[cf.OUT_DIR] = cls.out_dir
-            paths = glob.glob(join(cls.out_dir, 'geo_*-*.tif'))
+            params[cf.OUT_DIR] = cls.BASE_OUT_DIR
+            paths = glob.glob(join(cls.BASE_OUT_DIR, 'geo_*-*.tif'))
             params[cf.PARALLEL] = False
             run_pyrate.process_ifgs(paths, params)
 
             if not hasattr(cls, 'ifgs'):
-                cls.ifgs = get_ifgs(out_dir=cls.out_dir)
+                cls.ifgs = get_ifgs(out_dir=cls.BASE_OUT_DIR)
         except:
             # revert working dir & avoid paths busting other tests
             os.chdir(CURRENT_DIR)
@@ -146,12 +145,11 @@ class PyRateTests(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        shutil.rmtree(cls.out_dir, ignore_errors=True)
+        shutil.rmtree(cls.BASE_DIR, ignore_errors=True)
         os.chdir(CURRENT_DIR)
 
     def get_logfile_path(self):
-        logpaths = glob.glob(join(BASE_DIR, '*.log'))
-
+        logpaths = glob.glob(join(self.BASE_DIR, '*.log'))
         if len(logpaths) != 1:
             msg = 'Log not generated. Use --nologcapture if running nosetests'
             self.fail(msg)
@@ -164,8 +162,7 @@ class PyRateTests(unittest.TestCase):
         self.assertTrue(md[key], value)
 
     def test_basic_outputs(self):
-        self.assertTrue(os.path.exists(BASE_DIR))
-        self.assertTrue(os.path.exists(self.out_dir))
+        self.assertTrue(os.path.exists(self.BASE_OUT_DIR))
 
         for i in self.ifgs:
             self.assertFalse(i.is_read_only)

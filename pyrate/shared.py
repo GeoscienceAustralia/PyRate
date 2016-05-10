@@ -388,15 +388,16 @@ class IfgPart(object):
         """
         self.data_path = data_path
         ifg = Ifg(data_path)
-        ifg.open()
+        ifg.open(readonly=True)
         ifg.nodata_value = 0
         self._phase_data = ifg.phase_data
-        self.r_start = r_start
-        self.r_end = r_end
-        self._phase_data_part = None
         self.nan_fraction = ifg.nan_fraction
         self.master = ifg.master
         self.slave = ifg.slave
+        ifg.close()
+        self.r_start = r_start
+        self.r_end = r_end
+        self._phase_data_part = None
         self.c_start = c_start
         self.c_end = c_end
 
@@ -413,11 +414,6 @@ class IfgPart(object):
         if self._phase_data_part is None:
             return self._phase_data[self.r_start:self.r_end,
                    self.c_start:self.c_end]
-
-    # @phase_data.setter
-    # def phase_data(self, phase_data):
-    #     self._phase_data_part = phase_data
-
 
 
 class Incidence(RasterBase):
