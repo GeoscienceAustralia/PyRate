@@ -85,14 +85,14 @@ def roipac_prepifg(base_ifg_paths, params):
         dest_base_ifgs, crop_opt=crop, xlooks=xlooks, ylooks=ylooks)
 
 
-def gamma_prepifg(base_ifg_paths, params):
+def gamma_prepifg(base_unw_paths, params):
     msg = "running gamma prepifg"
     print msg
     logging.info(msg)
     # location of geo_tif's
     dest_base_ifgs = [os.path.join(
         params[cf.OUT_DIR], os.path.basename(q).split('.')[0] + '.tif')
-                      for q in base_ifg_paths]
+                      for q in base_unw_paths]
 
     parallel = params[cf.PARALLEL]
     if parallel:
@@ -100,10 +100,10 @@ def gamma_prepifg(base_ifg_paths, params):
               'processes'.format(params[cf.PROCESSES])
         import multiprocessing
         print 'found', multiprocessing.cpu_count(), 'CPUs'
-        parmap.map(gamma_multiprocessing, base_ifg_paths,
+        parmap.map(gamma_multiprocessing, base_unw_paths,
                    params, processes=params[cf.PROCESSES])
     else:
-        for b in base_ifg_paths:
+        for b in base_unw_paths:
             gamma_multiprocessing(b, params)
     ifgs = [Ifg(p) for p in dest_base_ifgs]
     xlooks, ylooks, crop = run_pyrate.transform_params(params)
