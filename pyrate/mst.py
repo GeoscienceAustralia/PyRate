@@ -45,8 +45,8 @@ def mst_parallel(ifgs, params):
     ncpus = params[cf.PROCESSES]
     no_ifgs = len(ifgs)
     no_y, no_x = ifgs[0].phase_data.shape
-    top_left, bottom_right, no_tiles = \
-        setup_tiles(ifgs, params)
+    top_left, bottom_right, no_tiles = setup_tiles(ifgs[0].shape,
+                                                   processes=ncpus)
     # need to break up the ifg class as multiprocessing does not allow pickling
     # don't read in all the phase data at once
     # use data paths and locally read in each core/process,
@@ -58,7 +58,8 @@ def mst_parallel(ifgs, params):
         print 'Calculating mst using {} tiles in parallel using {} ' \
               'processes'.format(no_tiles, ncpus)
         t_msts = parmap.starmap(mst_multiprocessing,
-                                zip(top_left, bottom_right), ifg_paths)
+                                zip(top_left, bottom_right), ifg_paths,
+                                processes=ncpus)
         for k, (top_l, bottom_r) \
                 in enumerate(zip(top_left, bottom_right)):
             result[:, top_l[0]:bottom_r[0], top_l[1]: bottom_r[1]] = t_msts[k]
@@ -72,9 +73,7 @@ def mst_parallel(ifgs, params):
     return result
 
 
-def setup_tiles(ifgs, params, processes=None):
-    ncpus = processes if processes else params[cf.PROCESSES]
-    no_y, no_x = ifgs[0].phase_data.shape
+def setup_tiles((no_y, no_x), processes):
     # either ncols or nrows need to be supplied
     # TODO: a better way to determine ncols
     ncols = min(10, no_x)
@@ -87,7 +86,8 @@ def setup_tiles(ifgs, params, processes=None):
             c_end = no_x
         c_starts.append(c)
         c_ends.append(c_end)
-    r_step = int(np.ceil(no_y / float(ncpus))) * len(c_starts) / 5
+    r_step = int(np.ceil(no_y / float(processes))) * len(c_starts) / 5
+    r_step = min(r_step, no_y)
     r_starts = []
     r_ends = []
     for r in xrange(0, no_y, r_step):
@@ -97,11 +97,11 @@ def setup_tiles(ifgs, params, processes=None):
         r_starts.append(r)
         r_ends.append(r_end)
 
-    top_left = list(product(r_starts, c_starts))
-    bottom_right = list(product(r_ends, c_ends))
+    top_lefts = list(product(r_starts, c_starts))
+    bottom_rights = list(product(r_ends, c_ends))
     no_tiles = len(r_starts)*len(c_starts)
 
-    return top_left, bottom_right, no_tiles
+    return top_lefts, bottom_rights, no_tiles
 
 
 def mst_multiprocessing(top_left, bottom_right, ifg_paths):
