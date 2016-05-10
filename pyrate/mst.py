@@ -6,7 +6,6 @@ Contains functions to calculate MST using interferograms.
 .. codeauthors:: Ben Davies, Sudipta Basak
 """
 
-from itertools import product
 from numpy import array, nan, isnan, float32, empty
 import numpy as np
 import networkx as nx
@@ -49,30 +48,28 @@ def mst_parallel(ifgs, params):
 
     # either ncols or nrows need to be supplied
     # TODO: a better way to determine ncols
-    ncols = min(4, no_x)
+    ncols = min(10, no_x)
     max_cols_per_tile = no_x/ncols
+    c_starts = []
+    c_ends = []
+    for c in xrange(0, no_x, max_cols_per_tile):
+        c_end = c + max_cols_per_tile
+        if c_end > no_x:
+            c_end = no_x
+        c_starts.append(c)
+        c_ends.append(c_end)
 
-    # do we need to close here?
-    # for i in ifgs:
-    #     i.close()
     result = empty(shape=(no_ifgs, no_y, no_x), dtype=np.bool)
-    r_step = (no_y/ncpus) * ncols
+    r_step = int(np.ceil(no_y/float(ncpus))) * len(c_starts)/5
     r_starts = []
     r_ends = []
+
     for r in xrange(0, no_y, r_step):
         r_end = r + r_step
         if r + r_step > no_y:
             r_end = no_y
         r_starts.append(r)
         r_ends.append(r_end)
-    c_starts = []
-    c_ends = []
-    for c in xrange(0, no_x, max_cols_per_tile):
-        c_end = c+max_cols_per_tile
-        if c_end > no_x:
-            c_end = no_x
-        c_starts.append(c)
-        c_ends.append(c_end)
 
     # need to break up the ifg class as multiprocessing does not allow pickling
     # don't read in all the phase data at once
@@ -85,7 +82,7 @@ def mst_parallel(ifgs, params):
     no_tiles = len(r_starts)*len(c_starts)
 
     if params[cf.PARALLEL]:
-        print 'Calculating mst using {} tiles in serial using {} ' \
+        print 'Calculating mst using {} tiles in parallel using {} ' \
               'processes'.format(no_tiles, ncpus)
         t_msts = parmap.starmap(mst_multiprocessing,
                                 zip(top_left, bottom_right), ifg_paths)
