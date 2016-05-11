@@ -45,8 +45,10 @@ def ref_pixel(ifgs, refnx, refny, chipsize, min_frac):
 
     rows, cols = ifgs[0].shape
 
+    xsteps = _step(cols, refnx, half_patch_size)  # stops multiple _step call
+
     for y in _step(rows, refny, half_patch_size):
-        for x in _step(cols, refnx, half_patch_size):
+        for x in xsteps:
             data = [i.phase_data[y-half_patch_size:y+half_patch_size+1,
                    x-half_patch_size:x+half_patch_size+1] for i in ifgs]
             valid = [nsum(~isnan(d)) > thresh for d in data]
@@ -82,6 +84,8 @@ def _step(dim, ref, radius):
     # max_dim = dim - (2*radius)  # max possible number for refn(x|y)
     # step = max_dim // (ref-1)
     step = dim // ref  # same as in Matlab
+    print 'inside _step'
+    print range(radius, dim-radius, step)
     return xrange(radius, dim-radius, step)
 
 
