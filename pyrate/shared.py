@@ -389,6 +389,27 @@ class IfgPart(object):
         """
         self.data_path = data_path
         ifg = Ifg(data_path)
+        read = False
+        attempts = 0
+        while (not read) and (attempts < 10):
+            try:
+                attempts += 1
+                read = self.read_required(ifg)
+            except RuntimeError:
+                print '\nneed to read again'
+                time.sleep(0.1)
+
+        if not read:
+            raise RasterException('Could not read {ifg}\n after 10 attemps.\n'
+                                  'Rerun prepifg and then use run_pyrate again.'
+                                  .format(ifg=data_path))
+        self.r_start = r_start
+        self.r_end = r_end
+        self._phase_data_part = None
+        self.c_start = c_start
+        self.c_end = c_end
+
+    def read_required(self, ifg):
         ifg.open(readonly=True)
         ifg.nodata_value = 0
         self._phase_data = ifg.phase_data
@@ -396,11 +417,7 @@ class IfgPart(object):
         self.master = ifg.master
         self.slave = ifg.slave
         ifg.close()
-        self.r_start = r_start
-        self.r_end = r_end
-        self._phase_data_part = None
-        self.c_start = c_start
-        self.c_end = c_end
+        return True
 
     @property
     def nrows(self):
