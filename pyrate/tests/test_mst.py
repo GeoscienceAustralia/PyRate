@@ -207,26 +207,18 @@ class IfgPartTest(unittest.TestCase):
 
 class MPITest(unittest.TestCase):
 
-    def setUp(self):
-        from pyrate.nci.parallel import Parallel
-
-        # Setting up parallelisation
-        # parallel = Parallel(True)
-        # MPI_myID = parallel.rank
-        # MASTER_PROCESS = 0
-        # num_processors = 4
-
-        # setup temp test dir
-        self.tif_dir = tempfile.mkdtemp()
-        self.test_conf = common.SYDNEY_TEST_CONF
+    @classmethod
+    def setUpClass(cls):
+        cls.tif_dir = tempfile.mkdtemp()
+        cls.test_conf = common.SYDNEY_TEST_CONF
 
         # copy the u
-        params = cf.get_config_params(self.test_conf)
+        params = cf.get_config_params(cls.test_conf)
         params[cf.OBS_DIR] = common.SYD_TEST_GAMMA
         params[cf.PROCESSOR] = 1  # gamma
         params[cf.IFG_FILE_LIST] = os.path.join(
             common.SYD_TEST_GAMMA, 'ifms_17')
-        params[cf.OUT_DIR] = self.tif_dir
+        params[cf.OUT_DIR] = cls.tif_dir
         params[cf.PARALLEL] = 1
 
         xlks, ylks, crop = run_pyrate.transform_params(params)
@@ -239,20 +231,24 @@ class MPITest(unittest.TestCase):
             base_unw_paths, crop, params, xlks)
 
         run_prepifg.gamma_prepifg(base_unw_paths, params)
-        self.ifgs = common.sydney_data_setup(datafiles=dest_paths)
+        cls.ifgs = common.sydney_data_setup(datafiles=dest_paths)
 
         from pyrate.nci import run_pyrate_pypar as rate_mpi
-        self.log_file = os.path.join(self.tif_dir, 'mst_mpi.log')
+        cls.log_file = os.path.join(cls.tif_dir, 'mst_mpi.log')
         # Calc mst using MPI
-        self.conf_file = tempfile.mktemp(suffix='.conf', dir=self.tif_dir)
-        cf.write_config_file(params, self.conf_file)
-        str = 'mpirun -np 2 python pyrate/nci/run_pyrate_pypar.py ' + self.conf_file
+        cls.conf_file = tempfile.mktemp(suffix='.conf', dir=cls.tif_dir)
+        cf.write_config_file(params, cls.conf_file)
+        str = 'mpirun -np 2 python pyrate/nci/run_pyrate_pypar.py ' + cls.conf_file
         cmd = str.split()
 
         subprocess.check_call(cmd)
 
         mst_mat_binary_file = os.path.join(params[cf.OUT_DIR], 'mst_mat.npy')
-        self.mst = np.load(mst_mat_binary_file)
+        cls.mst = np.load(mst_mat_binary_file)
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(cls.tif_dir)
 
     def test_mpi_mst_sigmle_processor(self):
         mlooked_ifgs = glob.glob(os.path.join(self.tif_dir, '*cr.tif'))
