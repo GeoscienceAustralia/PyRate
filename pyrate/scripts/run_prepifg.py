@@ -90,6 +90,7 @@ def roipac_prepifg(base_ifg_paths, params):
         # DEM already has DATUM, so get it from dem if not in header
         if ifc.PYRATE_DATUM not in header:
             header[ifc.PYRATE_DATUM] = projection
+        header['PR_TYPE'] = 'ifg_1'   # non-cropped, non-multilooked ifg
         write_geotiff(header, b, d, nodata=params[cf.NO_DATA_VALUE])
     prepifg.prepare_ifgs(
         dest_base_ifgs, crop_opt=crop, xlooks=xlooks, ylooks=ylooks)
@@ -126,7 +127,8 @@ def gamma_prepifg(base_unw_paths, params):
     else:
         [prepifg.prepare_ifg(i, xlooks, ylooks, exts,
                              thresh, crop) for i in dest_base_ifgs]
-
+    '''
+    # do not know if need this. Matt says doesn't make sense for ifgs to have sequence information
     # easier just to set sequence information here
     # open all generated ifgs and set sequence metadata
     # assuming all files have finished being written to (i.e. all above tasks are complete)
@@ -144,6 +146,7 @@ def gamma_prepifg(base_unw_paths, params):
         # -----------------------------------------------
         g_ds2 = gdal.Open(mled)
         g_ds2.SetMetadataItem('PR_SEQ_POS', str(it))
+    '''
 
 def gamma_multiprocessing(b, params):
     dem_hdr_path = params[cf.DEM_HEADER_FILE]
