@@ -6,16 +6,16 @@ Contains functions to calculate MST using interferograms.
 .. codeauthors:: Ben Davies, Sudipta Basak
 """
 
+from itertools import product
 from numpy import array, nan, isnan, float32, empty
 import numpy as np
 import networkx as nx
 import parmap
-from itertools import product, izip, repeat
 
 from pyrate.algorithm import ifg_date_lookup
 from pyrate.algorithm import ifg_date_index_lookup
 from pyrate import config as cf
-from pyrate.shared import IfgPart
+from pyrate.shared import IfgPart, setup_tiles
 
 # TODO: may need to implement memory saving row-by-row access
 # TODO: document weighting by either Nan fraction OR variance
@@ -83,37 +83,6 @@ def mst_multiprocessing_map(process_top_lefts, process_bottom_rights,
         result[:, top_l[0]:bottom_r[0], top_l[1]: bottom_r[1]] = \
             mst_multiprocessing(top_l, bottom_r, paths)
     return result
-
-
-def setup_tiles((no_y, no_x), processes):
-    # either ncols or nrows need to be supplied
-    # TODO: a better way to determine ncols
-    ncols = min(10, no_x)
-    max_cols_per_tile = no_x / ncols
-    c_starts = []
-    c_ends = []
-    for c in xrange(0, no_x, max_cols_per_tile):
-        c_end = c + max_cols_per_tile
-        if c_end > no_x:
-            c_end = no_x
-        c_starts.append(c)
-        c_ends.append(c_end)
-    r_step = int(np.ceil(no_y / float(processes))) * len(c_starts) / 5
-    r_step = min(r_step, no_y)
-    r_starts = []
-    r_ends = []
-    for r in xrange(0, no_y, r_step):
-        r_end = r + r_step
-        if r + r_step > no_y:
-            r_end = no_y
-        r_starts.append(r)
-        r_ends.append(r_end)
-
-    top_lefts = list(product(r_starts, c_starts))
-    bottom_rights = list(product(r_ends, c_ends))
-    no_tiles = len(r_starts)*len(c_starts)
-
-    return top_lefts, bottom_rights, no_tiles
 
 
 def mst_multiprocessing(top_left, bottom_right, ifg_paths):

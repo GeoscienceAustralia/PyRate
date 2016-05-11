@@ -6,6 +6,7 @@ Created on 12/09/2012
 .. codeauthor:: Ben Davies, Sudipta Basak, Matt Garthwaite
 """
 import errno
+from itertools import product
 
 import os, struct
 import math
@@ -701,3 +702,41 @@ def mkdir_p(path):
             pass
         else:
             raise
+
+
+def setup_tiles(shape, processes):
+    """
+    :param shape: tuple of shape
+    :param processes: processes that are going to to analyze the tiles
+    :return: top left, bottom right coordinates, no of tiles
+    """
+
+    # either ncols or nrows need to be supplied
+    # TODO: a better way to determine ncols
+    no_y, no_x = shape
+    ncols = min(10, no_x)
+    max_cols_per_tile = no_x / ncols
+    c_starts = []
+    c_ends = []
+    for c in xrange(0, no_x, max_cols_per_tile):
+        c_end = c + max_cols_per_tile
+        if c_end > no_x:
+            c_end = no_x
+        c_starts.append(c)
+        c_ends.append(c_end)
+    r_step = int(np.ceil(no_y / float(processes))) * len(c_starts) / 5
+    r_step = min(r_step, no_y)
+    r_starts = []
+    r_ends = []
+    for r in xrange(0, no_y, r_step):
+        r_end = r + r_step
+        if r + r_step > no_y:
+            r_end = no_y
+        r_starts.append(r)
+        r_ends.append(r_end)
+
+    top_lefts = list(product(r_starts, c_starts))
+    bottom_rights = list(product(r_ends, c_ends))
+    no_tiles = len(r_starts)*len(c_starts)
+
+    return top_lefts, bottom_rights, no_tiles

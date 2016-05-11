@@ -1,3 +1,5 @@
+import pyrate.shared
+
 __author__ = 'sudipta'
 import sys
 import os
@@ -84,7 +86,7 @@ def mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs, mpi_log_filename,
                  num_processors, parallel, params):
     ifgs = run_pyrate.prepare_ifgs_for_networkx_mst(cropped_and_sampled_tifs,
                                                     params)
-    top_lefts, bottom_rights, no_tiles = mst.setup_tiles(
+    top_lefts, bottom_rights, no_tiles = pyrate.shared.setup_tiles(
         ifgs[0].shape, processes=num_processors)
     # parallel.calc_indices(no_tiles)
     process_indices = parallel.calc_indices(no_tiles)

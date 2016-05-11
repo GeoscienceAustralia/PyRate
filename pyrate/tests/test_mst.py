@@ -212,7 +212,7 @@ class MPITest(unittest.TestCase):
         cls.tif_dir = tempfile.mkdtemp()
         cls.test_conf = common.SYDNEY_TEST_CONF
 
-        # copy the u
+        # change the required params
         params = cf.get_config_params(cls.test_conf)
         params[cf.OBS_DIR] = common.SYD_TEST_GAMMA
         params[cf.PROCESSOR] = 1  # gamma
@@ -233,7 +233,6 @@ class MPITest(unittest.TestCase):
         run_prepifg.gamma_prepifg(base_unw_paths, params)
         cls.ifgs = common.sydney_data_setup(datafiles=dest_paths)
 
-        from pyrate.nci import run_pyrate_pypar as rate_mpi
         cls.log_file = os.path.join(cls.tif_dir, 'mst_mpi.log')
         # Calc mst using MPI
         cls.conf_file = tempfile.mktemp(suffix='.conf', dir=cls.tif_dir)
