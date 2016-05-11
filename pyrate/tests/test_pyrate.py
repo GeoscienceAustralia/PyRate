@@ -9,10 +9,10 @@ Created on 17/09/2012
 import os, glob, shutil, logging, unittest
 from os.path import join
 import tempfile
-from pyrate.tests.common import TEMPDIR
 from pyrate import shared, config, prepifg
-from pyrate.scripts import run_pyrate
+from pyrate.scripts import run_pyrate, run_prepifg
 from pyrate import config as cf
+from pyrate.tests import common
 
 # taken from http://stackoverflow.com/questions/6260149/os-symlink-support-in-windows
 if os.name == "nt":
@@ -193,6 +193,61 @@ class PyRateTests(unittest.TestCase):
                 return
 
         self.fail('No reference pixel found')
+
+
+class MSTParallelPyRateTests(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.tif_dir = tempfile.mkdtemp()
+        cls.test_conf = common.SYDNEY_TEST_CONF
+
+        # change the required params
+        params = cf.get_config_params(cls.test_conf)
+        params[cf.OBS_DIR] = common.SYD_TEST_GAMMA
+        params[cf.PROCESSOR] = 1  # gamma
+        params[cf.IFG_FILE_LIST] = os.path.join(
+            common.SYD_TEST_GAMMA, 'ifms_17')
+        params[cf.OUT_DIR] = cls.tif_dir
+        params[cf.PARALLEL] = 1
+
+        xlks, ylks, crop = run_pyrate.transform_params(params)
+
+        # base_unw_paths need to be geotiffed and multilooked by run_prepifg
+        base_unw_paths = run_pyrate.original_ifg_paths(params[cf.IFG_FILE_LIST])
+
+        # dest_paths are tifs that have been geotif converted and multilooked
+        cls.dest_paths = run_pyrate.get_dest_paths(
+            base_unw_paths, crop, params, xlks)
+
+        run_prepifg.gamma_prepifg(base_unw_paths, params)
+
+        run_pyrate.process_ifgs(cls.dest_paths, params)
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(cls.tif_dir, ignore_errors=True)
+
+    def test_orbital_correction(self):
+        key = 'ORBITAL_ERROR'
+        value = 'REMOVED'
+
+        for i in common.sydney_data_setup(datafiles=self.dest_paths):
+            self.key_check(i, key, value)
+
+    def key_check(self, ifg, key, value):
+        'Helper to check for metadata flags'
+        md = ifg.dataset.GetMetadata()
+        self.assertTrue(key in md, 'Missing %s in %s' % (key, ifg.data_path))
+        self.assertTrue(md[key], value)
+
+    def test_phase_conversion(self):
+        # ensure phase has been converted to millimetres
+        key = 'PHASE_UNITS'
+        value = 'MILLIMETRES'
+
+        for i in common.sydney_data_setup(datafiles=self.dest_paths):
+            self.key_check(i, key, value)
 
 if __name__ == "__main__":
     unittest.main()

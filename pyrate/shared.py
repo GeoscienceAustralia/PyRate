@@ -395,17 +395,17 @@ class IfgPart(object):
             ifg = Ifg(ifg_or_path)
         read = False
         attempts = 0
-        while (not read) and (attempts < 10):
+        while (not read) and (attempts < 3):
             try:
                 attempts += 1
                 read = self.read_required(ifg)
             except RuntimeError as e:
                 print e
                 print '\nneed to read {ifg} again'.format(ifg=ifg)
-                time.sleep(0.1)
+                time.sleep(0.5)
 
         if not read:
-            raise RasterException('Could not read {ifg}\n after 10 attemps.\n'
+            raise RasterException('Could not read {ifg}\n after 3 attemps.\n'
                                   'Rerun prepifg and then use run_pyrate again.'
                                   .format(ifg=ifg_or_path))
         self.r_start = r_start
