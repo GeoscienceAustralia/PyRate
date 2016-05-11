@@ -276,6 +276,7 @@ def crop_resample_average(
     for k, v in dst_ds.GetMetadata().iteritems():
         out_ds.SetMetadataItem(k, v)
 
+    out_ds.SetMetadataItem('PR_TYPE', 'ifg_2')
     return resampled_average, out_ds
 
 

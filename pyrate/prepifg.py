@@ -95,6 +95,10 @@ def prepare_ifg(
             mlooked_path(raster.data_path, looks=xlooks, crop_out=crop_opt)
         # copy file with mlooked path
         shutil.copy(raster.data_path, renamed_path)
+        print 'GOT HERE!~!~!'
+        # set metadata to indicated has been cropped and multilooked
+        g_ds = gdal.Open(renamed_path)
+        g_ds.SetMetadataItem('PR_TYPE', 'ifg_2')    # TODO: pretty sure this creates aux.xml files, is there a way to disable this? not a big deal, just creates more files
         return None
 
     if not raster.is_open:

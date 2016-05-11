@@ -83,8 +83,13 @@ def process_ifgs(ifg_paths_or_instance, params):
                    ifgs, params, vcmt, mst=mst_grid)
     md[ifc.PYRATE_DATE] = epochlist.dates
     dest = os.path.join(PYRATEPATH, params[cf.OUT_DIR], "linrate.tif")
+    # remove metadata added to md in compute_time_series that doesn't make sense for the following tiffs
+    if 'PR_SEQ_POS' in md:
+        del md['PR_SEQ_POS']
+    md['PR_TYPE'] = 'linrate'
     write_output_geotiff(md, gt, wkt, rate, dest, np.nan)
     dest = os.path.join(PYRATEPATH, params[cf.OUT_DIR], "linerror.tif")
+    md['PR_TYPE'] = 'linerror'
     write_output_geotiff(md, gt, wkt, error, dest, np.nan)
 
     write_msg('PyRate workflow completed')
@@ -154,22 +159,26 @@ def compute_time_series(epochlist, gt, ifgs, md, mst_grid, params, vcmt, wkt):
         ifgs, params, vcmt=vcmt, mst=mst_grid)
     for i in range(len(tsincr[0, 0, :])):
         md[ifc.PYRATE_DATE] = epochlist.dates[i + 1]
+        md['PR_SEQ_POS'] = i    # sequence position
         data = tsincr[:, :, i]
         dest = os.path.join(
             PYRATEPATH, params[cf.OUT_DIR],
             "tsincr_" + str(epochlist.dates[i + 1]) + ".tif")
+        md['PR_TYPE'] = 'tsincr'
         write_output_geotiff(md, gt, wkt, data, dest, np.nan)
 
         data = tscum[:, :, i]
         dest = os.path.join(
             PYRATEPATH, params[cf.OUT_DIR],
             "tscuml_" + str(epochlist.dates[i + 1]) + ".tif")
+        md['PR_TYPE'] = 'tscuml'
         write_output_geotiff(md, gt, wkt, data, dest, np.nan)
 
         data = tsvel[:, :, i]
         dest = os.path.join(
             PYRATEPATH, params[cf.OUT_DIR],
             "tsvel_" + str(epochlist.dates[i + 1]) + ".tif")
+        md['PR_TYPE'] = 'tsvel'
         write_output_geotiff(md, gt, wkt, data, dest, np.nan)
 
 

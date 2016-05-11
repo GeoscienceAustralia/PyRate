@@ -619,6 +619,9 @@ def write_geotiff(header, data_path, dest, nodata):
     ds.SetGeoTransform([header[ifc.PYRATE_LONG], header[ifc.PYRATE_X_STEP], 0,
                         header[ifc.PYRATE_LAT], 0, header[ifc.PYRATE_Y_STEP]])
 
+    # ifg type data
+    ds.SetMetadataItem('PR_TYPE', str(header['PR_TYPE']))
+
     srs = osr.SpatialReference()
     res = srs.SetWellKnownGeogCS(header[ifc.PYRATE_DATUM])
 
@@ -680,6 +683,11 @@ def write_output_geotiff(md, gt, wkt, data, dest, nodata):
     ds.SetGeoTransform(gt)
     ds.SetProjection(wkt)
     ds.SetMetadataItem(ifc.PYRATE_DATE, str(md[ifc.PYRATE_DATE]))
+
+    # set other metadata
+    ds.SetMetadataItem('PR_TYPE', str(md['PR_TYPE']))
+    if 'PR_SEQ_POS' in md:
+        ds.SetMetadataItem('PR_SEQ_POS', str(md['PR_SEQ_POS']))
 
     # write data to geotiff
     band = ds.GetRasterBand(1)

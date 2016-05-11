@@ -18,6 +18,9 @@ from pyrate.shared import write_geotiff, mkdir_p
 from pyrate.tasks import gamma as gamma_task
 import pyrate.ifgconstants as ifc
 from pyrate.utils import tparmap
+from operator import itemgetter
+from osgeo import gdal
+from pyrate.prepifg import mlooked_path
 
 ROI_PAC_HEADER_FILE_EXT = 'rsc'
 
@@ -40,6 +43,13 @@ def main(params=None):
             print usage
             return
         base_ifg_paths, _, params = run_pyrate.get_ifg_paths()
+        '''
+        TODO: looks like base_igf_paths are ordered according to ifg list
+        Sarah says this probably won't be a problem because they only removedata from ifg list to get pyrate to work
+        (i.e. things won't be reordered and the original gamma generated list is ordered)
+        this may not affect the important pyrate stuff anyway, but might affect gen_thumbs.py
+        going to assume base_ifg_paths is ordered correcly
+        '''
         raw_config_file = sys.argv[1]
 
     LUIGI = params[cf.LUIGI]  # luigi or no luigi
@@ -117,6 +127,23 @@ def gamma_prepifg(base_unw_paths, params):
         [prepifg.prepare_ifg(i, xlooks, ylooks, exts,
                              thresh, crop) for i in dest_base_ifgs]
 
+    # easier just to set sequence information here
+    # open all generated ifgs and set sequence metadata
+    # assuming all files have finished being written to (i.e. all above tasks are complete)
+    # create shallow copy just incase
+    dest_base_ifgs_scp = list(dest_base_ifgs)
+    mlooked_paths = [mlooked_path(dest_base_ifg, xlooks, crop) for dest_base_ifg in dest_base_ifgs_scp]
+    order_fn_parts = [(os.path.split(dest_base_ifg)[1]).split('_')[0] for dest_base_ifg in dest_base_ifgs]
+    zps = zip(order_fn_parts, dest_base_ifgs, mlooked_paths)
+    zps_sorted = sorted(zps, key=itemgetter(0))
+    for it, zp in enumerate(zps_sorted):
+        _, dest_base_ifg, mled = zp
+        # -----------------------------------------------
+        g_ds1 = gdal.Open(dest_base_ifg)
+        g_ds1.SetMetadataItem('PR_SEQ_POS', str(it))
+        # -----------------------------------------------
+        g_ds2 = gdal.Open(mled)
+        g_ds2.SetMetadataItem('PR_SEQ_POS', str(it))
 
 def gamma_multiprocessing(b, params):
     dem_hdr_path = params[cf.DEM_HEADER_FILE]
@@ -135,6 +162,12 @@ def gamma_multiprocessing(b, params):
         raise
     hdrs = [gamma.parse_epoch_header(p) for p in header_paths]
     COMBINED = gamma.combine_headers(hdrs[0], hdrs[1], dem_hdr=DEM_HDR)
+    '''
+    print type(COMBINED)
+    print COMBINED
+    while True: pass
+    '''
+    COMBINED['PR_TYPE'] = 'ifg_1'   # non-cropped, non-multilooked ifg
     write_geotiff(COMBINED, b, d, nodata=params[cf.NO_DATA_VALUE])
 
 if __name__ == '__main__':
