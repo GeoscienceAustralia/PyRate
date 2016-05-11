@@ -399,8 +399,9 @@ class IfgPart(object):
             try:
                 attempts += 1
                 read = self.read_required(ifg)
-            except RuntimeError:
-                print '\nneed to read again'
+            except RuntimeError as e:
+                print e
+                print '\nneed to read {ifg} again'.format(ifg=ifg)
                 time.sleep(0.1)
 
         if not read:
