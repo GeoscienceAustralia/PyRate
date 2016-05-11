@@ -81,7 +81,6 @@ def main(params=None):
     parallel.finalize()
 
 
-
 def mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs, mpi_log_filename,
                  num_processors, parallel, params):
     ifgs = run_pyrate.prepare_ifgs_for_networkx_mst(cropped_and_sampled_tifs,
@@ -100,7 +99,7 @@ def mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs, mpi_log_filename,
                                             num_files=no_tiles)
     result_process = mst.mst_multiprocessing_map(
         process_top_lefts, process_bottom_rights,
-        cropped_and_sampled_tifs, ifgs[0].shape, no_ifgs=len(ifgs)
+        ifgs, ifgs[0].shape, no_ifgs=len(ifgs)
     )
     parallel.barrier()
     # send the result arrays

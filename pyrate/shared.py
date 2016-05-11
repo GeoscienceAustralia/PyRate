@@ -379,7 +379,7 @@ class IfgPart(object):
     slice of Ifg data object
     """
 
-    def __init__(self, data_path, r_start, r_end, c_start, c_end):
+    def __init__(self, ifg_or_path, r_start, r_end, c_start, c_end):
 
         """
         :param ifg: original ifg
@@ -387,8 +387,12 @@ class IfgPart(object):
         :param r_end: ending row of the original ifg
         :return:
         """
-        self.data_path = data_path
-        ifg = Ifg(data_path)
+        # check if Ifg was sent.
+        if isinstance(ifg_or_path, Ifg):  # Can be used with MPI
+            ifg = ifg_or_path
+        else:
+            self.data_path = ifg_or_path
+            ifg = Ifg(ifg_or_path)
         read = False
         attempts = 0
         while (not read) and (attempts < 10):
@@ -402,7 +406,7 @@ class IfgPart(object):
         if not read:
             raise RasterException('Could not read {ifg}\n after 10 attemps.\n'
                                   'Rerun prepifg and then use run_pyrate again.'
-                                  .format(ifg=data_path))
+                                  .format(ifg=ifg_or_path))
         self.r_start = r_start
         self.r_end = r_end
         self._phase_data_part = None
@@ -410,7 +414,8 @@ class IfgPart(object):
         self.c_end = c_end
 
     def read_required(self, ifg):
-        ifg.open(readonly=True)
+        if not ifg.is_open:
+            ifg.open(readonly=True)
         ifg.nodata_value = 0
         self._phase_data = ifg.phase_data
         self.nan_fraction = ifg.nan_fraction
