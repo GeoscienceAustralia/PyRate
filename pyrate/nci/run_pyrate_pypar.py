@@ -15,7 +15,6 @@ from pyrate.shared import Ifg
 from pyrate import prepifg
 from pyrate import mst
 
-
 # Constants
 MASTER_PROCESS = 0
 
@@ -69,13 +68,16 @@ def main(params=None):
 
     # Calc mst using MPI
     if MPI_myID == MASTER_PROCESS:
-        mst = mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs, mpi_log_filename,
+        mst_grid = mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs, mpi_log_filename,
                  num_processors, parallel, params)
+        # write mst output to a file
+        mst_mat_binary_file = os.path.join(params[cf.OUT_DIR], 'mst_mat')
+        np.save(file=mst_mat_binary_file, arr=mst_grid)
     else:
         mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs, mpi_log_filename,
                  num_processors, parallel, params)
-
     parallel.finalize()
+
 
 
 def mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs, mpi_log_filename,
@@ -104,7 +106,6 @@ def mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs, mpi_log_filename,
         parallel.send(result_process, destination=MASTER_PROCESS, tag=MPI_myID)
         print "sent result from process", MPI_myID
 
-    # parallel.barrier()
     if MPI_myID == MASTER_PROCESS:
         result = result_process
         # combine the mst from the other processes

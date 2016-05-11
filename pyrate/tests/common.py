@@ -28,6 +28,7 @@ SYD_TEST_MATLAB_ORBITAL_DIR = join(SYD_TEST_DIR,
 SYD_TEST_DEM_UNW = join(SYD_TEST_DEM_DIR, 'sydney_trimmed.dem')
 SYD_TEST_DEM_HDR = join(SYD_TEST_DEM_DIR, 'sydney_trimmed.dem.rsc')
 SYD_TEST_DEM_TIF = join(SYD_TEST_DEM_DIR, 'sydney_trimmed.tif')
+SYDNEY_TEST_CONF = join(SYD_TEST_DIR, 'pyrate_system_test.conf')
 
 PREP_TEST_DIR = join(BASE_TEST, 'prepifg')
 PREP_TEST_OBS = join(PREP_TEST_DIR, 'obs')

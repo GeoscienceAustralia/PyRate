@@ -423,7 +423,11 @@ def get_ifg_paths():
         logging.debug(emsg)
         raise IOError(2, emsg)
     xlks, ylks, crop = transform_params(pars)
+
+    # base_unw_paths need to be geotiffed and multilooked by run_prepifg
     base_unw_paths = original_ifg_paths(pars[cf.IFG_FILE_LIST])
+
+    # dest_paths are tifs that have been geotif converted and multilooked
     dest_paths = get_dest_paths(base_unw_paths, crop, pars, xlks)
 
     return base_unw_paths, dest_paths, pars

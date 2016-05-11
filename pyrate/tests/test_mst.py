@@ -9,6 +9,11 @@ import os
 from itertools import product
 from numpy import empty, array, nan, isnan, sum as nsum
 import numpy as np
+import tempfile
+import shutil
+import sys
+import glob
+import subprocess
 
 from pyrate import mst
 from pyrate import algorithm
@@ -17,6 +22,7 @@ from pyrate.shared import Ifg, IfgPart
 from pyrate.mst import mst_parallel
 from pyrate import config as cf
 from pyrate.tests import common
+from pyrate.scripts import run_pyrate, run_prepifg
 
 
 class MSTTests(unittest.TestCase):
@@ -198,6 +204,65 @@ class IfgPartTest(unittest.TestCase):
         parallel_mst = mst.mst_parallel(self.ifgs, params=self.params)
         np.testing.assert_array_equal(original_mst, parallel_mst)
 
+
+class MPITest(unittest.TestCase):
+
+    def setUp(self):
+        from pyrate.nci.parallel import Parallel
+
+        # Setting up parallelisation
+        # parallel = Parallel(True)
+        # MPI_myID = parallel.rank
+        # MASTER_PROCESS = 0
+        # num_processors = 4
+
+        # setup temp test dir
+        self.tif_dir = tempfile.mkdtemp()
+        self.test_conf = common.SYDNEY_TEST_CONF
+
+        # copy the u
+        params = cf.get_config_params(self.test_conf)
+        params[cf.OBS_DIR] = common.SYD_TEST_GAMMA
+        params[cf.PROCESSOR] = 1  # gamma
+        params[cf.IFG_FILE_LIST] = os.path.join(
+            common.SYD_TEST_GAMMA, 'ifms_17')
+        params[cf.OUT_DIR] = self.tif_dir
+        params[cf.PARALLEL] = 1
+
+        xlks, ylks, crop = run_pyrate.transform_params(params)
+
+        # base_unw_paths need to be geotiffed and multilooked by run_prepifg
+        base_unw_paths = run_pyrate.original_ifg_paths(params[cf.IFG_FILE_LIST])
+
+        # dest_paths are tifs that have been geotif converted and multilooked
+        dest_paths = run_pyrate.get_dest_paths(
+            base_unw_paths, crop, params, xlks)
+
+        run_prepifg.gamma_prepifg(base_unw_paths, params)
+        self.ifgs = common.sydney_data_setup(datafiles=dest_paths)
+
+        from pyrate.nci import run_pyrate_pypar as rate_mpi
+        self.log_file = os.path.join(self.tif_dir, 'mst_mpi.log')
+        # Calc mst using MPI
+        self.conf_file = tempfile.mktemp(suffix='.conf', dir=self.tif_dir)
+        cf.write_config_file(params, self.conf_file)
+        str = 'mpirun -np 2 python pyrate/nci/run_pyrate_pypar.py ' + self.conf_file
+        cmd = str.split()
+
+        subprocess.check_call(cmd)
+
+        mst_mat_binary_file = os.path.join(params[cf.OUT_DIR], 'mst_mat.npy')
+        self.mst = np.load(mst_mat_binary_file)
+
+    def test_mpi_mst_sigmle_processor(self):
+        mlooked_ifgs = glob.glob(os.path.join(self.tif_dir, '*cr.tif'))
+        self.assertEqual(len(mlooked_ifgs), 17)
+        original_mst = mst.mst_boolean_array(self.ifgs)
+        np.testing.assert_array_equal(original_mst, self.mst)
+
+    def test_mst_log_written(self):
+        log_file = glob.glob(os.path.join(self.tif_dir, '*.log'))[0]
+        self.assertTrue(os.path.exists(log_file))
 
 if __name__ == "__main__":
     unittest.main()
