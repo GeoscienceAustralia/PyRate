@@ -16,11 +16,13 @@ from pyrate.tests.common import sydney_data_setup
 from pyrate.tests.common import SYD_TEST_DEM_UNW
 from pyrate.scripts import run_prepifg
 from pyrate import config as cf
+from pyrate import ifgconstants as ifc
 
 PYRATEPATH = os.environ['PYRATEPATH']
 ECMWF_DIR = os.path.join(PYRATEPATH, 'ECMWF')
 ECMWF_PRE = 'ERA-Int_'
 ECMWF_EXT = '_12.grib'
+APS_STATUS = 'REMOVED'
 
 
 def remove_aps_delay(ifgs, params):
@@ -34,7 +36,7 @@ def remove_aps_delay(ifgs, params):
         else:  # roipac
             PTN = re.compile(r'\d{8}')
             add_these = ['20' + i for i in
-                         PTN.findall(os.path.basename(i.data_path))]
+                         PTN.findall(os.path.basename(ifg.data_path))]
 
         list_of_dates_for_grb_download += add_these
         first_grb = os.path.join(ECMWF_DIR,
@@ -61,8 +63,7 @@ def remove_aps_delay(ifgs, params):
         aps_delay = geo_correction(add_these)
         ifg.phase_data -= aps_delay  # remove delay
         ifg.write_modified_phase()
-
-        # TODO: negin to add metadata
+        ifg.dataset.SetMetadataItem(ifc.PYRATE_APS_ERROR, APS_STATUS)
 
 
 def rdr_correction(add_these):
