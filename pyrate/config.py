@@ -154,6 +154,9 @@ REF_MIN_FRAC = 'refminfrac'
 # REFERENCE estimation method
 REF_EST_METHOD = 'refest'
 
+#atmospheric error correction parameter
+APS_CORRECTION = 'aps_corrected'
+
 # orbital error correction/parameters
 #: BOOL (1/0); Boolean flag controlling whether to apply orbital error correction
 ORBITAL_FIT = 'orbfit'
