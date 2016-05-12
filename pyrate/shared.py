@@ -422,7 +422,6 @@ class IfgPart(object):
         self.nan_fraction = ifg.nan_fraction
         self.master = ifg.master
         self.slave = ifg.slave
-        ifg.close()
         return True
 
     @property
