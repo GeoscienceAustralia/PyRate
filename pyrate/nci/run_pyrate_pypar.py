@@ -16,6 +16,8 @@ from pyrate import gamma
 from pyrate.shared import Ifg
 from pyrate import prepifg
 from pyrate import mst
+from pyrate import refpixel
+from itertools import product
 
 # Constants
 MASTER_PROCESS = 0
@@ -69,17 +71,61 @@ def main(params=None):
     parallel.barrier()
 
     # Calc mst using MPI
+    mst_mat_binary_file = os.path.join(params[cf.OUT_DIR], 'mst_mat.npy')
     if MPI_myID == MASTER_PROCESS:
-        mst_grid = mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs, mpi_log_filename,
+        mst_grid, ifgs = mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs, mpi_log_filename,
                  num_processors, parallel, params)
         # write mst output to a file
-        mst_mat_binary_file = os.path.join(params[cf.OUT_DIR], 'mst_mat')
         np.save(file=mst_mat_binary_file, arr=mst_grid)
     else:
-        mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs, mpi_log_filename,
+        _, ifgs = mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs, mpi_log_filename,
                  num_processors, parallel, params)
+
+    parallel.barrier()
+
+    mst_grid = np.load(file=mst_mat_binary_file)
+
+    # Calc ref_pixel using MPI
+    ref_pixel_file = os.path.join(params[cf.OUT_DIR], 'ref_pixel.npy')
+    if MPI_myID == MASTER_PROCESS:
+        refx, refy = ref_pixel_calc_mpi(MPI_myID, ifgs,
+                                        num_processors, parallel, params)
+        np.save(file=ref_pixel_file, arr=[refx, refy])
+    else:
+        ref_pixel_calc_mpi(MPI_myID, ifgs, num_processors, parallel, params)
+
+    parallel.barrier()
+    refx, refy = np.load(ref_pixel_file)
+
     parallel.finalize()
 
+
+def ref_pixel_calc_mpi(MPI_myID, ifgs, num_processors, parallel, params):
+    half_patch_size, _, thresh, grid = refpixel.ref_pixel_setup(ifgs, params)
+    no_steps = len(grid)
+    process_indices = parallel.calc_indices(no_steps)
+    process_grid = [itemgetter(p)(grid) for p in process_indices]
+    print 'Processor {mpi_id} has {processes} ' \
+          'tiles out of {num_files}'.format(mpi_id=MPI_myID,
+                                            processes=len(process_indices),
+                                            num_files=no_steps)
+    mean_sds = refpixel.ref_pixel_mpi(process_grid,
+                                      half_patch_size, ifgs, thresh)
+    if MPI_myID == MASTER_PROCESS:
+        all_indices = parallel.calc_all_indices(no_steps)
+        mean_sds_final = np.empty(shape=no_steps)
+        mean_sds_final[all_indices[0]] = mean_sds
+        for i in range(1, num_processors):
+            process_mean_sds = parallel.receive(source=i, tag=-1,
+                                                return_status=False)
+            mean_sds_final[all_indices[i]] = process_mean_sds
+
+        refx, refy = refpixel.filter_means(mean_sds_final, grid)
+        print 'finished calculating ref pixel'
+        return refx, refy
+    else:
+        parallel.send(mean_sds, destination=MASTER_PROCESS, tag=MPI_myID)
+        print 'sent ref pixel requirements to master'
 
 
 def mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs, mpi_log_filename,
@@ -100,13 +146,9 @@ def mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs, mpi_log_filename,
                                             num_files=no_tiles)
     result_process = mst.mst_multiprocessing_map(
         process_top_lefts, process_bottom_rights,
-        cropped_and_sampled_tifs, ifgs[0].shape, no_ifgs=len(ifgs)
+        ifgs, ifgs[0].shape, no_ifgs=len(ifgs)
     )
     parallel.barrier()
-    # send the result arrays
-    if MPI_myID != MASTER_PROCESS:
-        parallel.send(result_process, destination=MASTER_PROCESS, tag=MPI_myID)
-        print "sent result from process", MPI_myID
 
     if MPI_myID == MASTER_PROCESS:
         result = result_process
@@ -119,7 +161,12 @@ def mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs, mpi_log_filename,
         output_log_file = open(mpi_log_filename, "a")
         output_log_file.write("\n\n Mst caclulation finished\n")
         output_log_file.close()
-        return result
+        return result, ifgs
+    else:
+        # send the result arrays
+        parallel.send(result_process, destination=MASTER_PROCESS, tag=MPI_myID)
+        print "sent result from process", MPI_myID
+        return result_process, ifgs
 
 
 def clean_up_old_files():

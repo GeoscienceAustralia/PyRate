@@ -74,25 +74,24 @@ def mst_parallel(ifgs, params):
 
 
 def mst_multiprocessing_map(process_top_lefts, process_bottom_rights,
-                            paths, shape, no_ifgs):
+                            paths_or_ifgs, shape, no_ifgs):
     # can't specify np.bool, does not work with PyPar
     # TODO: investigate other pypar send/receive options
     result = np.zeros(shape=(no_ifgs, shape[0], shape[1]))
     for top_l, bottom_r \
                 in zip(process_top_lefts, process_bottom_rights):
         result[:, top_l[0]:bottom_r[0], top_l[1]: bottom_r[1]] = \
-            mst_multiprocessing(top_l, bottom_r, paths)
+            mst_multiprocessing(top_l, bottom_r, paths_or_ifgs)
     return result
 
 
-def mst_multiprocessing(top_left, bottom_right, ifg_paths):
+def mst_multiprocessing(top_left, bottom_right, ifgs_or_paths):
     r_start, c_start = top_left
     r_end, c_end = bottom_right
-    ifg_parts = [IfgPart(ifg_paths[i],
+    ifg_parts = [IfgPart(ifgs_or_paths[i],
                          r_start=r_start, r_end=r_end,
                          c_start=c_start, c_end=c_end
-                         )
-                 for i in range(len(ifg_paths))]
+                         ) for i in range(len(ifgs_or_paths))]
 
     t_mst = mst_boolean_array(ifg_parts)
     return t_mst
