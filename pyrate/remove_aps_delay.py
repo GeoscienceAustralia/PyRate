@@ -10,12 +10,13 @@ import PyAPS as pa
 import numpy as np
 import sys
 import os
+import re
 from pyrate.scripts import run_pyrate
 from pyrate.tests.common import sydney_data_setup
 from pyrate.tests.common import SYD_TEST_DEM_UNW
 from pyrate.scripts import run_prepifg
-import re
-PTN = re.compile(r'\d{6}')
+from pyrate import config as cf
+
 PYRATEPATH = os.environ['PYRATEPATH']
 ECMWF_DIR = os.path.join(PYRATEPATH, 'ECMWF')
 ECMWF_PRE = 'ERA-Int_'
@@ -24,11 +25,17 @@ ECMWF_EXT = '_12.grib'
 
 def remove_aps_delay(ifgs, params):
     list_of_dates_for_grb_download = []
-    for i in ifgs:  # demo for only one ifg
+    for ifg in ifgs:  # demo for only one ifg
         # adding 20 to dates here, so dates before 2000 won't work
         # TODO: fix pre 2000 dates
-        add_these = ['20' + i for i in
-                     PTN.findall(os.path.basename(i.data_path))]
+        if params[cf.PROCESSOR] == 1:  # gamma
+            PTN = re.compile(r'\d{8}')
+            add_these = [i for i in PTN.findall(os.path.basename(ifg.data_path))]
+        else:  # roipac
+            PTN = re.compile(r'\d{8}')
+            add_these = ['20' + i for i in
+                         PTN.findall(os.path.basename(i.data_path))]
+
         list_of_dates_for_grb_download += add_these
         first_grb = os.path.join(ECMWF_DIR,
                                  ECMWF_PRE + add_these[0] + ECMWF_EXT)
@@ -52,8 +59,10 @@ def remove_aps_delay(ifgs, params):
         # LLphs = phs2-phs1
 
         aps_delay = geo_correction(add_these)
-        i.phase_data -= aps_delay  # remove delay
-        i.write_modified_phase()
+        ifg.phase_data -= aps_delay  # remove delay
+        ifg.write_modified_phase()
+
+        # TODO: negin to add metadata
 
 
 def rdr_correction(add_these):
