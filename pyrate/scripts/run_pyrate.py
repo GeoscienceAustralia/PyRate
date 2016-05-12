@@ -257,9 +257,7 @@ def find_reference_pixel(ifgs, params):
 
     if refx == 0 or refy == 0:  # matlab equivalent
         write_msg('Finding reference pixel')
-        refy, refx = refpixel.ref_pixel(ifgs, params[cf.REFNX],
-            params[cf.REFNY], params[cf.REF_CHIP_SIZE], params[cf.REF_MIN_FRAC],
-                                        params[cf.PARALLEL])
+        refy, refx = refpixel.ref_pixel(ifgs, params)
         write_msg('Reference pixel coordinate: (%s, %s)' % (refx, refy))
     else:
         write_msg('Reusing config file reference pixel (%s, %s)' % (refx, refy))
