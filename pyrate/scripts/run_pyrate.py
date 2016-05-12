@@ -29,6 +29,10 @@ ORB_REMOVED = 'REMOVED'
 pars = None
 PYRATEPATH = cf.PYRATEPATH
 
+#constants for metadata flags(CHECK THIS WITH SUDIPTA)
+#ATM_REMOVED = 'REMOVED'
+#pars = None
+#PYRATEPATH = cf.PYRATEPATH
 
 def process_ifgs(ifg_paths_or_instance, params):
     """
