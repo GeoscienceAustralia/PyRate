@@ -54,6 +54,10 @@ def process_ifgs(ifg_paths_or_instance, params):
     write_msg('Estimating and removing phase at reference pixel')
     _, ifgs = rpe.estimate_ref_phase(ifgs, params, refpx, refpy)
 
+    # # save the mm converted data to disc
+    # for i in ifgs:
+    #     i.write_modified_phase()
+
     # TODO: assign maxvar to ifg metadata (and geotiff)?
     write_msg('Calculating maximum variance in interferograms')
     maxvar = [vcm_module.cvd(i)[0] for i in ifgs]
@@ -110,7 +114,6 @@ def mst_calculation(ifg_paths_or_instance, params):
             if not i.mm_converted:
                 i.nodata_value = params[cf.NO_DATA_VALUE]
                 i.convert_to_mm()
-                i.write_modified_phase()
         ifg_instance_updated, epoch_list = \
             matlab_mst.get_nml(ifg_paths_or_instance,
                                nodata_value=params[cf.NO_DATA_VALUE],
@@ -144,7 +147,6 @@ def prepare_ifgs_for_networkx_mst(ifg_paths_or_instance, params):
             i.convert_to_nans()
         if not i.mm_converted:
             i.convert_to_mm()
-            i.write_modified_phase()
     return ifgs
 
 
