@@ -11,8 +11,6 @@ import parmap
 import pyrate.config as cf
 from pyrate.shared import Ifg
 
-MPI = 'mpi'
-MULTIPROCESS = 'multiprocess'
 
 # TODO: move error checking to config step (for fail fast)
 def ref_pixel(ifgs, params):
@@ -26,37 +24,9 @@ def ref_pixel(ifgs, params):
 
     :param ifgs: sequence of interferograms.
     """
-    refnx, refny, chipsize, min_frac = params[cf.REFNX], params[cf.REFNY], \
-                                       params[cf.REF_CHIP_SIZE], \
-                                       params[cf.REF_MIN_FRAC],
-    parallel = params[cf.PARALLEL]
-    MPI_OR_MULTIPROCESS = params[cf.MPI_OR_MULTIPROCESS]
-    if len(ifgs) < 1:
-        msg = 'Reference pixel search requires 2+ interferograms'
-        raise RefPixelError(msg)
-
-    # sanity check inputs
-    head = ifgs[0]
-    validate_chipsize(chipsize, head)
-    validate_minimum_fraction(min_frac)
-    validate_search_win(refnx, refny, chipsize, head)
-
-    # pre-calculate useful amounts
-    half_patch_size = chipsize // 2
-    chipsize = half_patch_size * 2 + 1
-    thresh = min_frac * chipsize * chipsize
-    min_sd = np.finfo(np.float64).max
-
-    # do window searches across dataset, central pixel of stack with smallest
-    # mean is the reference pixel
-    refx = None
-    refy = None
-
-    rows, cols = ifgs[0].shape
-
-    ysteps = _step(rows, refny, half_patch_size)
-    xsteps = _step(cols, refnx, half_patch_size)
-    print MULTIPROCESS, MPI_OR_MULTIPROCESS
+    half_patch_size, min_sd, parallel, \
+    thresh, xsteps, ysteps = ref_pixel_setup(ifgs, params)
+    refx, refy = None, None
 
     def inner(mean_sds, min_sd, refx, refy, xsteps, ysteps):
         for m, (y, x) in zip(mean_sds, product(ysteps, xsteps)):
@@ -65,18 +35,12 @@ def ref_pixel(ifgs, params):
                 refy, refx = y, x
         return refx, refy
 
-    if parallel and MPI_OR_MULTIPROCESS == MULTIPROCESS:
+    if parallel:
         phase_data = [i.phase_data for i in ifgs]
         mean_sds = parmap.starmap(ref_pixel_multi, product(ysteps, xsteps),
                                   half_patch_size, phase_data, thresh)
 
         refx, refy = inner(mean_sds, min_sd, refx, refy, xsteps, ysteps)
-    elif parallel and MPI_OR_MULTIPROCESS == MPI:
-        raise NotImplementedError()
-        # mean_sds = parmap.starmap(ref_pixel_multi, product(ysteps, xsteps),
-        #                           half_patch_size, ifgs, thresh)
-        #
-        # refx, refy = inner(mean_sds, min_sd, refx, refy, xsteps, ysteps)
     else:
         phase_data = [i.phase_data for i in ifgs]
         mean_sds = []
@@ -89,6 +53,33 @@ def ref_pixel(ifgs, params):
         return refy, refx
 
     raise RefPixelError("Could not find a reference pixel")
+
+
+def ref_pixel_setup(ifgs, params):
+    refnx, refny, chipsize, min_frac = params[cf.REFNX], params[cf.REFNY], \
+                                       params[cf.REF_CHIP_SIZE], \
+                                       params[cf.REF_MIN_FRAC],
+    parallel = params[cf.PARALLEL]
+    if len(ifgs) < 1:
+        msg = 'Reference pixel search requires 2+ interferograms'
+        raise RefPixelError(msg)
+
+    # sanity check inputs
+    head = ifgs[0]
+    validate_chipsize(chipsize, head)
+    validate_minimum_fraction(min_frac)
+    validate_search_win(refnx, refny, chipsize, head)
+    # pre-calculate useful amounts
+    half_patch_size = chipsize // 2
+    chipsize = half_patch_size * 2 + 1
+    thresh = min_frac * chipsize * chipsize
+    min_sd = np.finfo(np.float64).max
+    # do window searches across dataset, central pixel of stack with smallest
+    # mean is the reference pixel
+    rows, cols = ifgs[0].shape
+    ysteps = step(rows, refny, half_patch_size)
+    xsteps = step(cols, refnx, half_patch_size)
+    return half_patch_size, min_sd, parallel, thresh, xsteps, ysteps
 
 
 def ref_pixel_multi(y, x, half_patch_size, phase_data_or_ifg, thresh):
@@ -111,7 +102,7 @@ def ref_pixel_multi(y, x, half_patch_size, phase_data_or_ifg, thresh):
         return None
 
 
-def _step(dim, ref, radius):
+def step(dim, ref, radius):
     '''
     Helper func: returns xrange obj of axis indicies for a search window.
 
