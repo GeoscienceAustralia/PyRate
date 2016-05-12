@@ -4,13 +4,18 @@ Functions for finding the reference pixel in PyRate.
 .. codeauthor:: Ben Davies, Sudipta Basak
 '''
 
-import pyrate.config as config
 from numpy import isnan, std, mean, sum as nsum
 import numpy as np
 from itertools import product
+import parmap
+import pyrate.config as cf
+from pyrate.shared import Ifg
+
+MPI = 'mpi'
+MULTIPROCESS = 'multiprocess'
 
 # TODO: move error checking to config step (for fail fast)
-def ref_pixel(ifgs, refnx, refny, chipsize, min_frac):
+def ref_pixel(ifgs, params):
     """
     Returns (y,x) reference pixel coordinate from given ifgs.
 
@@ -21,7 +26,11 @@ def ref_pixel(ifgs, refnx, refny, chipsize, min_frac):
 
     :param ifgs: sequence of interferograms.
     """
-
+    refnx, refny, chipsize, min_frac = params[cf.REFNX], params[cf.REFNY], \
+                                       params[cf.REF_CHIP_SIZE], \
+                                       params[cf.REF_MIN_FRAC],
+    parallel = params[cf.PARALLEL]
+    MPI_OR_MULTIPROCESS = params[cf.MPI_OR_MULTIPROCESS]
     if len(ifgs) < 1:
         msg = 'Reference pixel search requires 2+ interferograms'
         raise RefPixelError(msg)
@@ -46,13 +55,35 @@ def ref_pixel(ifgs, refnx, refny, chipsize, min_frac):
     rows, cols = ifgs[0].shape
 
     ysteps = _step(rows, refny, half_patch_size)
-    xsteps = _step(cols, refnx, half_patch_size)  # stops multiple _step call
+    xsteps = _step(cols, refnx, half_patch_size)
+    print MULTIPROCESS, MPI_OR_MULTIPROCESS
 
-    for y, x in product(ysteps, xsteps):
-        mean_sd = ref_pixel_multi(half_patch_size, ifgs, thresh, x, y)
-        if mean_sd and mean_sd < min_sd:
-            min_sd = mean_sd
-            refy, refx = y, x
+    def inner(mean_sds, min_sd, refx, refy, xsteps, ysteps):
+        for m, (y, x) in zip(mean_sds, product(ysteps, xsteps)):
+            if m and m < min_sd:
+                min_sd = m
+                refy, refx = y, x
+        return refx, refy
+
+    if parallel and MPI_OR_MULTIPROCESS == MULTIPROCESS:
+        phase_data = [i.phase_data for i in ifgs]
+        mean_sds = parmap.starmap(ref_pixel_multi, product(ysteps, xsteps),
+                                  half_patch_size, phase_data, thresh)
+
+        refx, refy = inner(mean_sds, min_sd, refx, refy, xsteps, ysteps)
+    elif parallel and MPI_OR_MULTIPROCESS == MPI:
+        raise NotImplementedError()
+        # mean_sds = parmap.starmap(ref_pixel_multi, product(ysteps, xsteps),
+        #                           half_patch_size, ifgs, thresh)
+        #
+        # refx, refy = inner(mean_sds, min_sd, refx, refy, xsteps, ysteps)
+    else:
+        phase_data = [i.phase_data for i in ifgs]
+        mean_sds = []
+        for y, x in product(ysteps, xsteps):
+            mean_sds.append(ref_pixel_multi(
+                y, x, half_patch_size, phase_data, thresh))
+        refx, refy = inner(mean_sds, min_sd, refx, refy, xsteps, ysteps)
 
     if refy and refx:
         return refy, refx
@@ -60,16 +91,24 @@ def ref_pixel(ifgs, refnx, refny, chipsize, min_frac):
     raise RefPixelError("Could not find a reference pixel")
 
 
-def ref_pixel_multi(half_patch_size, ifgs, thresh, x, y):
-    data = [i.phase_data[y - half_patch_size:y + half_patch_size + 1,
-            x - half_patch_size:x + half_patch_size + 1] for i in ifgs]
+def ref_pixel_multi(y, x, half_patch_size, phase_data_or_ifg, thresh):
+
+    if isinstance(phase_data_or_ifg, Ifg):  # phase_data_or_ifg is list of ifgs
+        # this consumes a lot less memory
+        # one ifg.phase_data in memory at any time
+        data = [p.phase_data[y - half_patch_size:y + half_patch_size + 1,
+                x - half_patch_size:x + half_patch_size + 1]
+                for p in phase_data_or_ifg]
+    else:  # phase_data_or_ifg is phase_data list
+        data = [p[y - half_patch_size:y + half_patch_size + 1,
+                x - half_patch_size:x + half_patch_size + 1]
+                for p in phase_data_or_ifg]
     valid = [nsum(~isnan(d)) > thresh for d in data]
     if all(valid):  # ignore if 1+ ifgs have too many incoherent cells
         sd = [std(i[~isnan(i)]) for i in data]
         return mean(sd)
     else:
         return None
-
 
 
 def _step(dim, ref, radius):
@@ -90,14 +129,12 @@ def _step(dim, ref, radius):
     # max_dim = dim - (2*radius)  # max possible number for refn(x|y)
     # step = max_dim // (ref-1)
     step = dim // ref  # same as in Matlab
-    print 'inside _step'
-    print range(radius, dim-radius, step)
     return xrange(radius, dim-radius, step)
 
 
 def validate_chipsize(chipsize, head):
     if chipsize is None:
-        raise config.ConfigException('Chipsize is None')
+        raise cf.ConfigException('Chipsize is None')
 
     if chipsize < 3 or chipsize > head.ncols or (chipsize % 2 == 0):
         msg = "Chipsize setting must be >=3 and at least <= grid width"
@@ -106,7 +143,7 @@ def validate_chipsize(chipsize, head):
 
 def validate_minimum_fraction(min_frac):
     if min_frac is None:
-        raise config.ConfigException('Minimum fraction is None')
+        raise cf.ConfigException('Minimum fraction is None')
 
     if min_frac < 0.0 or min_frac > 1.0:
         raise ValueError("Minimum fraction setting must be >= 0.0 and <= 1.0 ")
@@ -115,7 +152,7 @@ def validate_minimum_fraction(min_frac):
 def validate_search_win(refnx, refny, chipsize, head):
     # sanity check X|Y steps
     if refnx is None:
-        raise config.ConfigException('refnx is None')
+        raise cf.ConfigException('refnx is None')
 
     max_width = (head.ncols - (chipsize-1))
     if refnx < 1 or refnx > max_width:
@@ -123,7 +160,7 @@ def validate_search_win(refnx, refny, chipsize, head):
         raise ValueError(msg % max_width)
 
     if refny is None:
-        raise config.ConfigException('refny is None')
+        raise cf.ConfigException('refny is None')
 
     max_rows = (head.nrows - (chipsize-1))
     if refny < 1 or refny > max_rows:
