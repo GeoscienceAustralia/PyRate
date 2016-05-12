@@ -7,8 +7,15 @@ Collection of tests for validating PyRate's reference pixel code.
 import unittest
 import os
 import copy
+import glob
+import shutil
+import subprocess
 from numpy import nan, mean, std, isnan
+import numpy as np
+import tempfile
 
+from pyrate.tests import common
+from pyrate.scripts import run_prepifg
 from common import sydney_data_setup, MockIfg
 from pyrate.refpixel import ref_pixel, RefPixelError, step
 from pyrate.config import ConfigException
@@ -329,6 +336,69 @@ class MatlabEqualityTestMultiprocessParallel(unittest.TestCase):
         self.assertEqual(refx, 2)
         self.assertEqual(refy, 2)
 
+
+class MPITest(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.tif_dir = tempfile.mkdtemp()
+        cls.test_conf = common.SYDNEY_TEST_CONF
+            # os.path.join(cf.PYRATEPATH, 'pyrate_gamma.conf')
+
+        # change the required params
+        cls.params = cf.get_config_params(cls.test_conf)
+        cls.params[cf.OBS_DIR] = common.SYD_TEST_GAMMA
+        cls.params[cf.PROCESSOR] = 1  # gamma
+        cls.params[cf.IFG_FILE_LIST] = os.path.join(
+            common.SYD_TEST_GAMMA, 'ifms_17')
+        cls.params[cf.OUT_DIR] = cls.tif_dir
+        cls.params[cf.PARALLEL] = 1
+        cls.params[cf.REF_EST_METHOD] = 1
+        # base_unw_paths need to be geotiffed and multilooked by run_prepifg
+        cls.base_unw_paths = run_pyrate.original_ifg_paths(
+            cls.params[cf.IFG_FILE_LIST])
+
+
+    @classmethod
+    def process(cls, base_unw_paths):
+        xlks, ylks, crop = run_pyrate.transform_params(cls.params)
+
+        # dest_paths are tifs that have been geotif converted and multilooked
+        dest_paths = run_pyrate.get_dest_paths(
+            cls.base_unw_paths, crop, cls.params, xlks)
+        run_prepifg.gamma_prepifg(base_unw_paths, cls.params)
+        cls.ifgs = common.sydney_data_setup(datafiles=dest_paths)
+        cls.log_file = os.path.join(cls.tif_dir, 'ref_pixel_mpi.log')
+        # Calc mst using MPI
+        cls.conf_file = tempfile.mktemp(suffix='.conf', dir=cls.tif_dir)
+        cf.write_config_file(cls.params, cls.conf_file)
+        str = 'mpirun -np 2 python pyrate/nci/run_pyrate_pypar.py ' + cls.conf_file
+        cmd = str.split()
+        subprocess.check_call(cmd)
+        ref_pixel_file = os.path.join(cls.params[cf.OUT_DIR], 'ref_pixel.npy')
+        cls.ref_pixel = np.load(ref_pixel_file)
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(cls.tif_dir)
+
+    def test_mpi_mst_sigmle_processor(self):
+
+        for looks in [1, 2, 3, 4]:
+            self.params[cf.IFG_LKSX] = looks
+            self.params[cf.IFG_LKSY] = looks
+            self.process(self.base_unw_paths)
+            mlooked_ifgs = glob.glob(os.path.join(
+                self.tif_dir, '*_{looks}rlks_*cr.tif'.format(looks=looks)))
+            self.assertEqual(len(mlooked_ifgs), 17)
+            original_ref_pixel = run_pyrate.find_reference_pixel(self.ifgs,
+                                                                 self.params)
+            np.testing.assert_array_equal(original_ref_pixel, self.ref_pixel)
+
+    def test_mst_log_written(self):
+        self.process(self.base_unw_paths)
+        log_file = glob.glob(os.path.join(self.tif_dir, '*.log'))[0]
+        self.assertTrue(os.path.exists(log_file))
 
 if __name__ == "__main__":
     unittest.main()
