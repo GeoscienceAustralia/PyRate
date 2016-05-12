@@ -190,7 +190,6 @@ TIME_SERIES_SM_FACTOR = 'smfactor'
 # MULTIPROCESSING parameters
 PARALLEL = 'parallel'
 PROCESSES = 'processes'
-MPI_OR_MULTIPROCESS = 'mpi_or_multiprocess'
 
 # Luigi parameter
 LUIGI = 'use_luigi'
@@ -296,8 +295,7 @@ def get_config_params(path):
         for line in inputFile:
             if any(x in line for x in [OBS_DIR, IFG_FILE_LIST, DEM_FILE,
                                        DEM_HEADER_FILE, OUT_DIR,
-                                       ROIPAC_RESOURCE_HEADER,
-                                       MPI_OR_MULTIPROCESS]):
+                                       ROIPAC_RESOURCE_HEADER]):
                 pos = line.find('~')
                 if pos != -1:
                     line = line[:pos] + os.environ['HOME'] + line[(pos+1):]    # create expanded line
