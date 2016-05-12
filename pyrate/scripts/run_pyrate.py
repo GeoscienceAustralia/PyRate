@@ -82,7 +82,17 @@ def process_ifgs(ifg_paths_or_instance, params):
     refpx, refpy = find_reference_pixel(ifgs, params)
 
     # remove APS delay here
-
+    
+    if params[cf.APS_CORRECTION] != 0:
+        for i in ifgs:
+            i.remove_aps_delay(SYD_TEST_DEM_UNW,time_of_day='18')
+            i.write_modified_phase()
+            print i.phase_data[:10, :10]
+    # Add a message to metadata
+        for i in ifgs:
+            i.dataset.SetMetadataItem(META_ATM, META_REMOVED)
+        logging.debug('%s:atmospheric error removed' % i.data_path)
+        
     # Estimate and remove orbit errors
     if params[cf.ORBITAL_FIT] != 0:
         remove_orbital_error(ifgs, params)
