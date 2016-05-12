@@ -8,9 +8,10 @@ import pyrate.config as config
 from numpy import isnan, std, mean, sum as nsum
 import numpy as np
 from itertools import product
+import parmap
 
 # TODO: move error checking to config step (for fail fast)
-def ref_pixel(ifgs, refnx, refny, chipsize, min_frac):
+def ref_pixel(ifgs, refnx, refny, chipsize, min_frac, parallel):
     """
     Returns (y,x) reference pixel coordinate from given ifgs.
 
@@ -46,13 +47,22 @@ def ref_pixel(ifgs, refnx, refny, chipsize, min_frac):
     rows, cols = ifgs[0].shape
 
     ysteps = _step(rows, refny, half_patch_size)
-    xsteps = _step(cols, refnx, half_patch_size)  # stops multiple _step call
+    xsteps = _step(cols, refnx, half_patch_size)
+    phase_data = [i.phase_data for i in ifgs]
+    if parallel:
+        mean_sds = parmap.starmap(ref_pixel_multi, product(ysteps, xsteps),
+                                  half_patch_size, phase_data, thresh)
 
-    for y, x in product(ysteps, xsteps):
-        mean_sd = ref_pixel_multi(half_patch_size, ifgs, thresh, x, y)
-        if mean_sd and mean_sd < min_sd:
-            min_sd = mean_sd
-            refy, refx = y, x
+        for m, (y, x) in zip(mean_sds, product(ysteps, xsteps)):
+            if m and m < min_sd:
+                min_sd = m
+                refy, refx = y, x
+    else:
+        for y, x in product(ysteps, xsteps):
+            mean_sd = ref_pixel_multi(y, x, half_patch_size, phase_data, thresh)
+            if mean_sd and mean_sd < min_sd:
+                min_sd = mean_sd
+                refy, refx = y, x
 
     if refy and refx:
         return refy, refx
@@ -60,9 +70,10 @@ def ref_pixel(ifgs, refnx, refny, chipsize, min_frac):
     raise RefPixelError("Could not find a reference pixel")
 
 
-def ref_pixel_multi(half_patch_size, ifgs, thresh, x, y):
-    data = [i.phase_data[y - half_patch_size:y + half_patch_size + 1,
-            x - half_patch_size:x + half_patch_size + 1] for i in ifgs]
+def ref_pixel_multi(y, x, half_patch_size, phase_data, thresh):
+    data = [p[y - half_patch_size:y + half_patch_size + 1,
+            x - half_patch_size:x + half_patch_size + 1]
+            for p in phase_data]
     valid = [nsum(~isnan(d)) > thresh for d in data]
     if all(valid):  # ignore if 1+ ifgs have too many incoherent cells
         sd = [std(i[~isnan(i)]) for i in data]
