@@ -155,7 +155,7 @@ REF_MIN_FRAC = 'refminfrac'
 REF_EST_METHOD = 'refest'
 
 #atmospheric error correction parameter
-APS_CORRECTION = 'aps_corrected'
+APS_CORRECTION = 'atmfit'
 
 # orbital error correction/parameters
 #: BOOL (1/0); Boolean flag controlling whether to apply orbital error correction
@@ -274,7 +274,8 @@ PARAM_CONVERSION = {
 
     LUIGI: (int, 0),
     NAN_CONVERSION: (int, 0),
-    NO_DATA_AVERAGING_THRESHOLD: (float, 0.0)
+    NO_DATA_AVERAGING_THRESHOLD: (float, 0.0),
+    APS_CORRECTION: (int, 0)
     }
     #TIME_SERIES_INTERP : (bool, False)
 
