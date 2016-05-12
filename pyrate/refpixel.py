@@ -24,35 +24,37 @@ def ref_pixel(ifgs, params):
 
     :param ifgs: sequence of interferograms.
     """
-    half_patch_size, min_sd, parallel, \
-    thresh, xsteps, ysteps = ref_pixel_setup(ifgs, params)
-    refx, refy = None, None
-
-    def inner(mean_sds, min_sd, refx, refy, xsteps, ysteps):
-        for m, (y, x) in zip(mean_sds, product(ysteps, xsteps)):
-            if m and m < min_sd:
-                min_sd = m
-                refy, refx = y, x
-        return refx, refy
+    half_patch_size, parallel, \
+        thresh, grid = ref_pixel_setup(ifgs, params)
 
     if parallel:
         phase_data = [i.phase_data for i in ifgs]
-        mean_sds = parmap.starmap(ref_pixel_multi, product(ysteps, xsteps),
+        mean_sds = parmap.starmap(ref_pixel_multi, grid,
                                   half_patch_size, phase_data, thresh)
 
-        refx, refy = inner(mean_sds, min_sd, refx, refy, xsteps, ysteps)
+        refx, refy = filter_means(mean_sds, grid)
     else:
         phase_data = [i.phase_data for i in ifgs]
         mean_sds = []
-        for y, x in product(ysteps, xsteps):
+        for y, x in grid:
             mean_sds.append(ref_pixel_multi(
                 y, x, half_patch_size, phase_data, thresh))
-        refx, refy = inner(mean_sds, min_sd, refx, refy, xsteps, ysteps)
+        refx, refy = filter_means(mean_sds, grid)
 
     if refy and refx:
         return refy, refx
 
     raise RefPixelError("Could not find a reference pixel")
+
+
+def filter_means(mean_sds, grid):
+    min_sd = np.finfo(np.float64).max
+    refx, refy = None, None
+    for m, (y, x) in zip(mean_sds, grid):
+        if m and m < min_sd:
+            min_sd = m
+            refy, refx = y, x
+    return refx, refy
 
 
 def ref_pixel_setup(ifgs, params):
@@ -73,27 +75,32 @@ def ref_pixel_setup(ifgs, params):
     half_patch_size = chipsize // 2
     chipsize = half_patch_size * 2 + 1
     thresh = min_frac * chipsize * chipsize
-    min_sd = np.finfo(np.float64).max
     # do window searches across dataset, central pixel of stack with smallest
     # mean is the reference pixel
     rows, cols = ifgs[0].shape
     ysteps = step(rows, refny, half_patch_size)
     xsteps = step(cols, refnx, half_patch_size)
-    return half_patch_size, min_sd, parallel, thresh, xsteps, ysteps
+    return half_patch_size, parallel, thresh, list(product(ysteps, xsteps))
 
 
-def ref_pixel_multi(y, x, half_patch_size, phase_data_or_ifg, thresh):
+def ref_pixel_mpi(process_grid, half_patch_size, ifgs, thresh):
+    mean_sds = []
+    for y, x in process_grid:
+        mean_sds.append(ref_pixel_multi(y, x, half_patch_size, ifgs, thresh))
+    return mean_sds
 
-    if isinstance(phase_data_or_ifg, Ifg):  # phase_data_or_ifg is list of ifgs
+
+def ref_pixel_multi(y, x, half_patch_size, phase_data_or_ifgs, thresh):
+    if isinstance(phase_data_or_ifgs[0], Ifg):  # phase_data_or_ifg is list of ifgs
         # this consumes a lot less memory
         # one ifg.phase_data in memory at any time
         data = [p.phase_data[y - half_patch_size:y + half_patch_size + 1,
                 x - half_patch_size:x + half_patch_size + 1]
-                for p in phase_data_or_ifg]
+                for p in phase_data_or_ifgs]
     else:  # phase_data_or_ifg is phase_data list
         data = [p[y - half_patch_size:y + half_patch_size + 1,
                 x - half_patch_size:x + half_patch_size + 1]
-                for p in phase_data_or_ifg]
+                for p in phase_data_or_ifgs]
     valid = [nsum(~isnan(d)) > thresh for d in data]
     if all(valid):  # ignore if 1+ ifgs have too many incoherent cells
         sd = [std(i[~isnan(i)]) for i in data]
