@@ -7,7 +7,7 @@ Functions for finding the reference pixel in PyRate.
 import pyrate.config as config
 from numpy import isnan, std, mean, sum as nsum
 import numpy as np
-
+from itertools import product
 
 # TODO: move error checking to config step (for fail fast)
 def ref_pixel(ifgs, refnx, refny, chipsize, min_frac):
@@ -45,25 +45,31 @@ def ref_pixel(ifgs, refnx, refny, chipsize, min_frac):
 
     rows, cols = ifgs[0].shape
 
+    ysteps = _step(rows, refny, half_patch_size)
     xsteps = _step(cols, refnx, half_patch_size)  # stops multiple _step call
 
-    for y in _step(rows, refny, half_patch_size):
-        for x in xsteps:
-            data = [i.phase_data[y-half_patch_size:y+half_patch_size+1,
-                   x-half_patch_size:x+half_patch_size+1] for i in ifgs]
-            valid = [nsum(~isnan(d)) > thresh for d in data]
-
-            if all(valid):  # ignore if 1+ ifgs have too many incoherent cells
-                sd = [std(i[~isnan(i)]) for i in data]
-                mean_sd = mean(sd)
-                if mean_sd < min_sd:
-                    min_sd = mean_sd
-                    refy, refx = y, x
+    for y, x in product(ysteps, xsteps):
+        mean_sd = ref_pixel_multi(half_patch_size, ifgs, thresh, x, y)
+        if mean_sd and mean_sd < min_sd:
+            min_sd = mean_sd
+            refy, refx = y, x
 
     if refy and refx:
         return refy, refx
 
     raise RefPixelError("Could not find a reference pixel")
+
+
+def ref_pixel_multi(half_patch_size, ifgs, thresh, x, y):
+    data = [i.phase_data[y - half_patch_size:y + half_patch_size + 1,
+            x - half_patch_size:x + half_patch_size + 1] for i in ifgs]
+    valid = [nsum(~isnan(d)) > thresh for d in data]
+    if all(valid):  # ignore if 1+ ifgs have too many incoherent cells
+        sd = [std(i[~isnan(i)]) for i in data]
+        return mean(sd)
+    else:
+        return None
+
 
 
 def _step(dim, ref, radius):
