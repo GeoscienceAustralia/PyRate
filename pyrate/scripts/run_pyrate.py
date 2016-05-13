@@ -225,6 +225,7 @@ def remove_orbital_error(ifgs, params):
                              crop_opt=prepifg.ALREADY_SAME_SIZE,
                              xlooks=params[cf.ORBITAL_FIT_LOOKS_X],
                              ylooks=params[cf.ORBITAL_FIT_LOOKS_Y],
+                             thresh=params[cf.NO_DATA_AVERAGING_THRESHOLD],
                              write_to_disc=False)
         mlooked = [Ifg(m) for m in mlooked_phase_data]
 
