@@ -219,6 +219,8 @@ def remove_orbital_error(ifgs, params):
     if (params[cf.ORBITAL_FIT_LOOKS_X] > 1 or params[cf.ORBITAL_FIT_LOOKS_Y] > 1)\
             and (params[cf.ORBITAL_FIT_METHOD] != 1):
         # resampling here to use all prior corrections to orig data
+        # can't do multiprocessing without writing to disc, but can do MPI
+        # due to swig pickling issue. So multiprocesing is not implemented
         mlooked_phase_data = prepifg.prepare_ifgs([i.data_path for i in ifgs],
                              crop_opt=prepifg.ALREADY_SAME_SIZE,
                              xlooks=params[cf.ORBITAL_FIT_LOOKS_X],
