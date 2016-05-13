@@ -240,7 +240,6 @@ def remove_orbital_error(ifgs, params):
     # write data to disc after orbital error correction
     for i in ifgs:
         i.dataset.SetMetadataItem(ifc.PYRATE_ORBITAL_ERROR, ORB_REMOVED)
-        i.write_modified_phase()
         logging.debug('%s: orbital error removed' % i.data_path)
 
 

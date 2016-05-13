@@ -17,7 +17,8 @@ from pyrate.shared import Ifg
 from pyrate import prepifg
 from pyrate import mst
 from pyrate import refpixel
-from itertools import product
+from pyrate import orbital
+from pyrate import ifgconstants as ifc
 
 # Constants
 MASTER_PROCESS = 0
@@ -95,9 +96,74 @@ def main(params=None):
         ref_pixel_calc_mpi(MPI_myID, ifgs, num_processors, parallel, params)
 
     parallel.barrier()
+    # refpixel read in each process
     refx, refy = np.load(ref_pixel_file)
 
+    # every proces writing ifgs - BAD, TODO: Remove this step
+    # required as all processes need orbital corrected ifgs
+    run_pyrate.remove_orbital_error(ifgs, params)
+    # orb_fit_calc_mpi(MPI_myID, ifgs, num_processors, parallel, params)
+
     parallel.finalize()
+
+
+def orb_fit_calc_mpi(MPI_myID, ifgs, num_processors, parallel, params):
+    print 'calculating orbfit in parallel'
+    # exts calculation is very fast not mpi-ed
+    exts = prepifg.getAnalysisExtent(
+        cropOpt=prepifg.ALREADY_SAME_SIZE,
+        rasters=ifgs,
+        xlooks=params[cf.ORBITAL_FIT_LOOKS_X],
+        ylooks=params[cf.ORBITAL_FIT_LOOKS_Y],
+        userExts=None)
+    thresh = params[cf.NO_DATA_AVERAGING_THRESHOLD]
+    data_paths = [i.data_path for i in ifgs]
+    no_ifgs = len(ifgs)
+    process_indices = parallel.calc_indices(no_ifgs)
+    process_data_paths = [itemgetter(p)(data_paths) for p in process_indices]
+    process_mlooked_dataset = [prepifg.prepare_ifg(
+        d,
+        params[cf.ORBITAL_FIT_LOOKS_X],
+        params[cf.ORBITAL_FIT_LOOKS_Y],
+        exts,
+        thresh,
+        prepifg.ALREADY_SAME_SIZE,
+        False) for d in process_data_paths]
+    if MPI_myID == MASTER_PROCESS:
+        all_indices = parallel.calc_all_indices(no_ifgs)
+        mlooked_dataset = list(np.empty(shape=no_ifgs))
+        # process_indices and all_indices[0] will be same for master process
+        for i, p in enumerate(process_indices):
+            mlooked_dataset[p] = process_mlooked_dataset[i]
+
+        # this loop does not work due to swig import pickling issue
+        for i in range(1, num_processors):
+            process_mlooked_dataset = parallel.receive(source=i, tag=-1,
+                                                       return_status=False)
+            for i, p in enumerate(all_indices[i]):
+                mlooked_dataset[p] = process_mlooked_dataset[i]
+
+        mlooked = [Ifg(m) for m in mlooked_dataset]
+
+        for m, i in zip(mlooked, ifgs):
+            m.initialize()
+            m.nodata_value = params[cf.NO_DATA_VALUE]
+
+        # difficult to enable MPI on orbfit method 2
+        # so just do orbfit method 1 for now
+        # TODO: MPI orbfit method 2
+        orbital.orbital_correction(ifgs,
+                                   params,
+                                   mlooked=mlooked)
+        # write data to disc after orbital error correction
+        for i in ifgs:
+            i.dataset.SetMetadataItem(ifc.PYRATE_ORBITAL_ERROR,
+                                      run_pyrate.ORB_REMOVED)
+            i.write_modified_phase()
+    else:
+        parallel.send(process_mlooked_dataset, destination=MASTER_PROCESS,
+                      tag=MPI_myID)
+        print 'sent mlooked phase data'
 
 
 def ref_pixel_calc_mpi(MPI_myID, ifgs, num_processors, parallel, params):

@@ -71,7 +71,7 @@ def orbital_correction(ifgs, params, mlooked=None, offset=True):
     """
     degree = params[cf.ORBITAL_FIT_DEGREE]
     method = params[cf.ORBITAL_FIT_METHOD]
-    parallel = params[cf.PARALLEL]
+    parallel = params[cf.PARALLEL]  # not implemented
 
     if degree not in [PLANAR, QUADRATIC, PART_CUBIC]:
         msg = "Invalid degree of %s for orbital correction" % degree
@@ -86,10 +86,12 @@ def orbital_correction(ifgs, params, mlooked=None, offset=True):
 
     elif method == INDEPENDENT_METHOD:
         if parallel:
-            print 'orbfit method 1 in parallel'
+            # not running in parallel
             # raises swig object pickle error
-            parmap.map(_independent_correction, ifgs, degree, offset,
-                       processes=params[cf.PROCESSES])
+            # parmap.map(_independent_correction, ifgs, degree, offset,
+            #            processes=params[cf.PROCESSES])
+            for i in ifgs:
+                _independent_correction(i, degree, offset)
         else:
             for i in ifgs:
                 _independent_correction(i, degree, offset)

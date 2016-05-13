@@ -343,7 +343,6 @@ class MPITest(unittest.TestCase):
     def setUpClass(cls):
         cls.tif_dir = tempfile.mkdtemp()
         cls.test_conf = common.SYDNEY_TEST_CONF
-            # os.path.join(cf.PYRATEPATH, 'pyrate_gamma.conf')
 
         # change the required params
         cls.params = cf.get_config_params(cls.test_conf)
@@ -357,7 +356,6 @@ class MPITest(unittest.TestCase):
         # base_unw_paths need to be geotiffed and multilooked by run_prepifg
         cls.base_unw_paths = run_pyrate.original_ifg_paths(
             cls.params[cf.IFG_FILE_LIST])
-
 
     @classmethod
     def process(cls, base_unw_paths):
