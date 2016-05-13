@@ -11,6 +11,7 @@ from numpy import dot, vstack, zeros, median, meshgrid
 import numpy as np
 from scipy.linalg import lstsq
 from numpy.linalg import pinv
+import parmap
 
 from pyrate.algorithm import master_slave_ids, get_all_epochs, get_epoch_count
 from pyrate import mst
@@ -53,7 +54,8 @@ PLANAR = cf.PLANAR
 QUADRATIC = cf.QUADRATIC
 PART_CUBIC = cf.PART_CUBIC
 
-def orbital_correction(ifgs, degree, method, mlooked=None, offset=True):
+
+def orbital_correction(ifgs, params, mlooked=None, offset=True):
     """
     Removes orbital error from given Ifgs.
 
@@ -67,6 +69,10 @@ def orbital_correction(ifgs, degree, method, mlooked=None, offset=True):
     :param mlooked: sequence of multilooked ifgs (must correspond to 'ifgs' arg)
     :param bool offset: True/False to include the constant/offset component
     """
+    degree = params[cf.ORBITAL_FIT_DEGREE]
+    method = params[cf.ORBITAL_FIT_METHOD]
+    parallel = params[cf.PARALLEL]
+
     if degree not in [PLANAR, QUADRATIC, PART_CUBIC]:
         msg = "Invalid degree of %s for orbital correction" % degree
         raise OrbitalError(msg)
@@ -79,8 +85,14 @@ def orbital_correction(ifgs, degree, method, mlooked=None, offset=True):
             _network_correction(ifgs, degree, offset, mlooked)
 
     elif method == INDEPENDENT_METHOD:
-        for i in ifgs:
-            _independent_correction(i, degree, offset)
+        if parallel:
+            print 'orbfit method 1 in parallel'
+            # raises swig object pickle error
+            parmap.map(_independent_correction, ifgs, degree, offset,
+                       processes=params[cf.PROCESSES])
+        else:
+            for i in ifgs:
+                _independent_correction(i, degree, offset)
     else:
         msg = "Unknown method: '%s', need INDEPENDENT or NETWORK method"
         raise OrbitalError(msg % method)

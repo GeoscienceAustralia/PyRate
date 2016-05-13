@@ -67,7 +67,7 @@ def process_ifgs(ifg_paths_or_instance, params):
 
     # write vcm output to a file
     vcmt_mat_binary_file = os.path.join(
-        PYRATEPATH, params[cf.OUT_DIR], 'vcmt_mat')
+        PYRATEPATH, params[cf.OUT_DIR], 'vcmt_mat.npy')
     np.save(file=vcmt_mat_binary_file, arr=vcmt)
 
     p = os.path.join(params[cf.OUT_DIR], ifgs[0].data_path)
@@ -234,8 +234,7 @@ def remove_orbital_error(ifgs, params):
             m.nodata_value = params[cf.NO_DATA_VALUE]
 
     orbital.orbital_correction(ifgs,
-                               degree=params[cf.ORBITAL_FIT_DEGREE],
-                               method=params[cf.ORBITAL_FIT_METHOD],
+                               params,
                                mlooked=mlooked)
 
     # write data to disc after orbital error correction

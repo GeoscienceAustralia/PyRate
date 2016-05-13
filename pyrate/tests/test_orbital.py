@@ -188,7 +188,11 @@ class IndependentCorrectionTests(unittest.TestCase):
     def check_correction(self, degree, method, offset, decimal=2):
         orig = array([c.phase_data.copy() for c in self.ifgs])
         exp = [self.alt_orbital_correction(i, degree, offset) for i in self.ifgs]
-        orbital_correction(self.ifgs, degree, method, None, offset)
+        params = dict()
+        params[cf.ORBITAL_FIT_METHOD] = method
+        params[cf.ORBITAL_FIT_DEGREE] = degree
+        params[cf.PARALLEL] = False
+        orbital_correction(self.ifgs, params, None, offset)
         corrected = array([c.phase_data for c in self.ifgs])
 
         self.assertFalse((orig == corrected).all())
@@ -247,19 +251,27 @@ class ErrorTests(unittest.TestCase):
     def test_invalid_method(self):
         # test failure of a few different args for 'method'
         ifgs = sydney5_mock_ifgs()
+        params = dict()
+        params[cf.ORBITAL_FIT_DEGREE] = PLANAR
+        params[cf.PARALLEL] = False
         for m in [None, 5, -1, -3, 45.8]:
-            self.assertRaises(OrbitalError, orbital_correction, ifgs, PLANAR, m, None)
+            params[cf.ORBITAL_FIT_METHOD] = m
+            self.assertRaises(OrbitalError, orbital_correction, ifgs, params, None)
 
     def test_multilooked_ifgs_arg(self):
         # check some bad args for network method with multilooked ifgs
         ifgs = sydney5_mock_ifgs()
         args = [[None, None, None, None, None], ["X"] * 5]
+        params = dict()
+        params[cf.ORBITAL_FIT_METHOD] = NETWORK_METHOD
+        params[cf.PARALLEL] = False
+        params[cf.ORBITAL_FIT_DEGREE] = PLANAR
         for a in args:
-            args = (ifgs, PLANAR, NETWORK_METHOD, a)
+            args = (ifgs, params, a)
             self.assertRaises(OrbitalError, orbital_correction, *args)
 
         # ensure failure if # ifgs doesn't match # mlooked ifgs
-        args = (ifgs, PLANAR, NETWORK_METHOD, ifgs[:4])
+        args = (ifgs, params, ifgs[:4])
         self.assertRaises(OrbitalError, orbital_correction, *args)
 
 
@@ -510,7 +522,11 @@ class NetworkCorrectionTests(unittest.TestCase):
     @staticmethod
     def verify_corrections(ifgs, exp, deg, offset):
         # checks orbital correction against unit test version
-        orbital_correction(ifgs, deg, NETWORK_METHOD, None, offset)
+        params = dict()
+        params[cf.ORBITAL_FIT_METHOD] = NETWORK_METHOD
+        params[cf.ORBITAL_FIT_DEGREE] = deg
+        params[cf.PARALLEL] = False
+        orbital_correction(ifgs, params, None, offset)
         act = [i.phase_data for i in ifgs]
         assert_array_almost_equal(act, exp, decimal=5)
 
@@ -569,7 +585,11 @@ class NetworkCorrectionTestsMultilooking(unittest.TestCase):
 
     def verify_corrections(self, ifgs, exp, deg, offset):
         # checks orbital correction against unit test version
-        orbital_correction(ifgs, deg, NETWORK_METHOD, self.ml_ifgs, offset)
+        params = dict()
+        params[cf.ORBITAL_FIT_METHOD] = NETWORK_METHOD
+        params[cf.ORBITAL_FIT_DEGREE] = deg
+        params[cf.PARALLEL] = False
+        orbital_correction(ifgs, params, self.ml_ifgs, offset)
         act = [i.phase_data for i in ifgs]
         assert_array_almost_equal(act, exp, decimal=4)
 
@@ -663,6 +683,7 @@ class MatlabComparisonTestsOrbfitMethod1(unittest.TestCase):
         self.params[cf.ORBITAL_FIT_METHOD] = 1
         self.params[cf.ORBITAL_FIT_LOOKS_X] = 2
         self.params[cf.ORBITAL_FIT_LOOKS_Y] = 2
+        self.params[cf.PARALLEL] = False
 
         data_paths = [os.path.join(SYD_TEST_TIF, p) for p in common.IFMS16]
         new_data_paths = [os.path.join(self.BASE_DIR, os.path.basename(d))
