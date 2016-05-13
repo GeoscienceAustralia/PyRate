@@ -23,6 +23,7 @@ from pyrate import matlab_mst_kruskal as matlab_mst
 from pyrate import reference_phase_estimation as rpe
 from pyrate import algorithm
 from pyrate import ifgconstants as ifc
+import pickle
 
 
 # constants for metadata flags
@@ -33,6 +34,7 @@ PYRATEPATH = cf.PYRATEPATH
 # print screen output
 VERBOSE = True
 
+grk_dict = {}
 
 def process_ifgs(ifg_paths_or_instance, params):
     """
@@ -79,12 +81,20 @@ def process_ifgs(ifg_paths_or_instance, params):
     wkt = ds.GetProjection()  # get projection of data
     epochlist = algorithm.get_epochs(ifgs)
 
+    global grk_dict
+    grk_dict = {}
     if params[cf.TIME_SERIES_CAL] != 0:
         compute_time_series(epochlist, gt, ifgs, md, mst_grid, params, vcmt,
                             wkt)
     # Calculate linear rate map
     rate, error, samples = calculate_linear_rate(
                    ifgs, params, vcmt, mst=mst_grid)
+    grk_dict['rate'] = rate
+    # pickle grk_dict so can be read in by cmp_out.py
+    grk_fp = open(os.path.join(PYRATEPATH, params[cf.OUT_DIR], 'out_py.pkl'), 'w')
+    pickle.dump(grk_dict, grk_fp)
+    grk_fp.close()
+
     md[ifc.PYRATE_DATE] = epochlist.dates
     dest = os.path.join(PYRATEPATH, params[cf.OUT_DIR], "linrate.tif")
     # remove metadata added to md in compute_time_series that doesn't make sense for the following tiffs
@@ -151,9 +161,13 @@ def prepare_ifgs_for_networkx_mst(ifg_paths_or_instance, params):
 
 def compute_time_series(epochlist, gt, ifgs, md, mst_grid, params, vcmt, wkt):
     # Calculate time series
+    global grk_dict     # store calculated data into here...
     tsincr, tscum, tsvel = calculate_time_series(
         ifgs, params, vcmt=vcmt, mst=mst_grid)
 
+    grk_dict['tsincr'] = tsincr
+    grk_dict['tscum'] = tscum
+    grk_dict['tsvel'] = tsvel
     # TODO: write tests for these functions
     write_timeseries_geotiff(epochlist, gt, md, params, tsincr, wkt,
                              pr_type='tsincr')

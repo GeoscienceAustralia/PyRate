@@ -63,7 +63,7 @@ else:
         both = True
 
 # make it so it walks from this and runs anything in the walk
-root_d = sys.argv[1:][0]    # root directory. will walk from here
+root_d = args[0]    # root directory. will walk from here
 if not os.path.isdir(root_d):
     print 'argument not a valid directory'
     sys.exit(0)
@@ -80,7 +80,7 @@ mcc_exec_pth = '/nas/gemd/insar/pr_testing/mcc/v1/pirate'
 mcc_env = deepcopy(os.environ)
 mcc_env['LD_LIBRARY_PATH'] = "/nas/gemd/insar/pr_testing/MATLAB_Runtime/v85/runtime/glnxa64:/nas/gemd/insar/pr_testing/MATLAB_Runtime/v85/bin/glnxa64:/nas/gemd/insar/pr_testing/MATLAB_Runtime/v85/sys/os/glnxa64"
 
-PR, ML = 0, 1
+FRST_PASS, SCND_PASS = 0, 1
 
 def spawner(spawn_type, prog):
     global spawner_fin, procs  # modify these so global
@@ -91,16 +91,23 @@ def spawner(spawn_type, prog):
 
         for file in files:
             #print file[-4:]
-            if (file[-5:] == '.pcfg' and spawn_type == PR and (p_only or both)) or (file[-5:] == '.mcfg' and spawn_type == ML and (m_only or both)):     # TODO: make this check better
+            if (file[-5:] == '.pcfg' and (p_only or both) and spawn_type == FRST_PASS):
                 # we want to run this config file. but only if there is space in the queue to do so
                 while len(procs) >= N_PROCS:
                     time.sleep(1)   # TODO: wat set this to
                 # since this is the only spawner, queue won't be refilled
-
-                if spawn_type == PR:
-                    procs.append(subprocess.Popen(['python', join(PYRATEPATH,'pyrate','scripts', prog), join(path,file)]))
-                else:   # run compiled matlab
-                    pass    # for now
+                procs.append(subprocess.Popen(['python', join(PYRATEPATH,'pyrate','scripts', 'run_prepifg.py'), join(path,file)]))
+            if (file[-5:] == '.pcfg' and (p_only or both) and spawn_type == SCND_PASS):
+                # we want to run this config file. but only if there is space in the queue to do so
+                while len(procs) >= N_PROCS:
+                    time.sleep(1)   # TODO: wat set this to
+                # since this is the only spawner, queue won't be refilled
+                procs.append(subprocess.Popen(['python', join(PYRATEPATH,'pyrate','scripts', 'run_pyrate.py'), join(path,file)]))
+            if (file[-5:] == '.mcfg' and (m_only or both) and spawn_type == SCND_PASS):
+                # we want to run this config file. but only if there is space in the queue to do so
+                while len(procs) >= N_PROCS:
+                    time.sleep(1)   # TODO: wat set this to
+                procs.append(subprocess.Popen([mcc_exec_pth, join(path,file)], env=mcc_env))
     spawner_fin = True
 
 def oversee():
@@ -117,19 +124,18 @@ def oversee():
         elif spawner_fin:
             break
 
+if p_only or both:
+    spawner_fin = False
+    thr_oversee = threading.Thread(target=oversee)
+    thr_spawner = threading.Thread(target=spawner, kwargs={'spawn_type': FRST_PASS, 'prog': 'run_prepifg.py'})
+    thr_oversee.start()
+    thr_spawner.start()
+    thr_oversee.join()
+    thr_spawner.join()
+
 spawner_fin = False
 thr_oversee = threading.Thread(target=oversee)
-thr_spawner = threading.Thread(target=spawner, kwargs={'spawn_type': PR, 'prog': 'run_prepifg.py'})
-thr_oversee.start()
-thr_spawner.start()
-thr_oversee.join()
-thr_spawner.join()
-
-# ML prepifg here
-
-spawner_fin = False
-thr_oversee = threading.Thread(target=oversee)
-thr_spawner = threading.Thread(target=spawner, kwargs={'spawn_type': PR, 'prog': 'run_pyrate.py'})
+thr_spawner = threading.Thread(target=spawner, kwargs={'spawn_type': SCND_PASS, 'prog': 'run_pyrate.py'})
 thr_oversee.start()
 thr_spawner.start()
 thr_oversee.join()
