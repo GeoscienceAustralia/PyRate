@@ -54,7 +54,7 @@ def process_ifgs(ifg_paths_or_instance, params):
     write_msg('Estimating and removing phase at reference pixel')
     _, ifgs = rpe.estimate_ref_phase(ifgs, params, refpx, refpy)
 
-    # # save the mm converted data to disc
+    # # save the mm converted data to disc ?
     # for i in ifgs:
     #     i.write_modified_phase()
 
@@ -238,8 +238,10 @@ def remove_orbital_error(ifgs, params):
                                method=params[cf.ORBITAL_FIT_METHOD],
                                mlooked=mlooked)
 
+    # write data to disc after orbital error correction
     for i in ifgs:
         i.dataset.SetMetadataItem(ifc.PYRATE_ORBITAL_ERROR, ORB_REMOVED)
+        i.write_modified_phase()
         logging.debug('%s: orbital error removed' % i.data_path)
 
 
