@@ -21,92 +21,59 @@ from decimal import Decimal
 # ARRAY CHECKING FUNCTIONS...
 # these could really be made into just 1 function
 # =================================================================
-def chk_3darrs(a1, a2):
+def chk_out_mats(m1, m2):
+    # checks pirate/pyrate (m1/m2) output arrays
+    # will determine if 2d or 3d... can only deal with either of those two
     # returns an error string that you just plonk into the error file
+    relative_tolerance=0.1      # todo: have this as function and program argument
+
     er_str = ''
-
-    if a1.shape != a2.shape:
+    if m1.shape != m2.shape:
         return ' '*12+'* ARRAY SHAPES DO NOT MATCH. DOES NOT MAKE SENSE TO CHECK FURTHER.\n'
+    '''
+    print len(m1.shape)
+    while True: pass
+    '''
+    fun_mode = len(m1.shape)              # function mode. 2d or 3d matrices. don't bother checking otherwise. assume can't happen
+    if fun_mode == 2:
+        n_r, n_c = m1.shape
+        n_e = 1
+    else:   # gauranteed to be 3. else is faster than testing for 3
+        n_r, n_c, n_e = m1.shape        # number of rows, cols, epochs
 
-    # otherwise test individual elements
-    #relative_tolerance=1e-10
-    relative_tolerance=0.1
-    n_r, n_c, n_e = a1.shape        # number of rows, cols, epochs (a2 and py should be equal now)
-    it_r, it_c, it_e = (0,0,0)      # iterators. not practice, but whatever
+    it_r, it_c, it_e = (0,0,0)      # iterators. not pythonic, but whatever
     while it_e < n_e:
         it_r = 0
         while it_r < n_r:
             it_c = 0
             while it_c < n_c:
-                it = (it_r, it_c, it_e)     # this can be used to index ndarray
-                if (not np.isnan(a1[it])) and (not np.isnan(a2[it])):  # both floats
+                if fun_mode == 2:
+                    it = (it_r, it_c)
+                else:
+                    it = (it_r, it_c, it_e)     # this can be used to index ndarray
+                if (not np.isnan(m1[it])) and (not np.isnan(m2[it])):  # both floats
                     # Duncan's way of checking if floats are equal...
-                    if abs(a1[it].item() - a2[it].item()) > relative_tolerance:
+                    if abs(m1[it].item() - m2[it].item()) > relative_tolerance:
                         # not within tolerance...
-                        er_str += ' '*12+'* do not match to tolerance @ '+str(it)+'\n'
-                        er_str += ' '*16+'* a1 = '+str(Decimal(a1[it].item()))+'\n'
-                        er_str += ' '*16+'* a2 = '+str(Decimal(a2[it].item()))+'\n'
+                        er_str += ' '*16+'* do not match to tolerance @ '+str(it)+'\n'
+                        er_str += ' '*20+'* m1 = '+str(Decimal(m1[it].item()))+'\n'
+                        er_str += ' '*20+'* m2 = '+str(Decimal(m2[it].item()))+'\n'
                     '''
                     # my original ideas about checking if floats are equal...
                     # check if match to a certain number of decimal places
-                    if truncate(a1[it].item(),1) != truncate(a2[it].item(),1):
+                    if truncate(m1[it].item(),1) != truncate(m2[it].item(),1):
                         er_str += ' '*8+'* do not match to precision @ '+str(it)+'\n'
-                        er_str += ' '*12+'* a1 = '+str(Decimal(a1[it].item()))+'\n'
-                        er_str += ' '*12+'* a2 = '+str(Decimal(a2[it].item()))+'\n'
+                        er_str += ' '*12+'* m1 = '+str(Decimal(m1[it].item()))+'\n'
+                        er_str += ' '*12+'* m2 = '+str(Decimal(m2[it].item()))+'\n'
                     '''
-                else:   # atleast one of py[it], a2[it] is NaN
-                    if (not np.isnan(a1[it])) and (np.isnan(a2[it])):
-                        er_str += ' '*12+'* a1 should be NaN (but is not)'+'\n'
-                    if (np.isnan(a1[it])) and (not np.isnan(a2[it])):
-                        er_str += ' '*12+'* a1 should not be NaN (but is)'+'\n'
+                else:   # atleast one of py[it], m2[it] is NaN
+                    if (not np.isnan(m1[it])) and (np.isnan(m2[it])):
+                        er_str += ' '*16+'* m1 should be NaN (but is not)'+'\n'
+                    if (np.isnan(m1[it])) and (not np.isnan(m2[it])):
+                        er_str += ' '*16+'* m1 should not be NaN (but is)'+'\n'
                 it_c += 1
             it_r += 1
         it_e += 1
-    return er_str
-# =============================================================================
-# =============================================================================
-def chk_2darrs(a1, a2):
-    # returns an error string that you just plonk into the error file
-    er_str = ''
-
-    if a1.shape != a2.shape:
-        return ' '*12+'* ARRAY SHAPES DO NOT MATCH. DOES NOT MAKE SENSE TO CHECK FURTHER.\n'
-
-    # otherwise test individual elements
-    #relative_tolerance=1e-10
-    relative_tolerance=0.1
-    n_r, n_c = a1.shape        # number of rows, cols, epochs (a2 and py should be equal now)
-    it_r, it_c = (0,0)      # iterators. not practice, but whatever
-    while it_r < n_r:
-        it_c = 0
-        while it_c < n_c:
-            it = (it_r, it_c)     # this can be used to index ndarray
-            if (np.isnan(a1[it])) and (np.isnan(a2[it])):
-                print 'GOT NAN MATCH'
-            if (not np.isnan(a1[it])) and (not np.isnan(a2[it])):  # both floats
-                # Duncan's way of checking if floats are equal...
-                if abs(a1[it].item() - a2[it].item()) > relative_tolerance:
-                    # not within tolerance...
-                    er_str += ' '*12+'* do not match to tolerance @ '+str(it)+'\n'
-                    er_str += ' '*16+'* PyRate = '+str(Decimal(a1[it].item()))+'\n'
-                    er_str += ' '*16+'* Matlab = '+str(Decimal(a2[it].item()))+'\n'
-                '''
-                # my original ideas about checking if floats are equal...
-                # check if match to a certain number of decimal places
-                if truncate(a1[it].item(),1) != truncate(a2[it].item(),1):
-                    er_str += ' '*8+'* do not match to precision @ '+str(it)+'\n'
-                    er_str += ' '*12+'* a1 = '+str(Decimal(a1[it].item()))+'\n'
-                    er_str += ' '*12+'* a2 = '+str(Decimal(a2[it].item()))+'\n'
-                '''
-            else:   # atleast one of py[it], a2[it] is NaN
-                if (not np.isnan(a1[it])) and (np.isnan(a2[it])):
-                    er_str += ' '*12+'* PyRate should be NaN (but is not) @ '+str(it)+'\n'
-                if (np.isnan(a1[it])) and (not np.isnan(a2[it])):
-                    er_str += ' '*12+'* PyRate should not be NaN (but is) @ '+str(it)+'\n'
-                    er_str += ' '*16+'* PyRate = '+str(Decimal(a1[it].item()))+'\n'
-                    er_str += ' '*16+'* Matlab = '+str(Decimal(a2[it].item()))+'\n'
-            it_c += 1
-        it_r += 1
     return er_str
 # =================================================================
 # =================================================================
@@ -165,10 +132,6 @@ in_dat = ''
 write_tst = False
 write_dat = False
 
-class GFile(file):
-    def __init__(self, file):
-        file.__init__()
-
 for path, dirs, files in os.walk(root_direct):
     rest, cont_fld = os.path.split(path)    # containing folder
     if cont_fld.isdigit():                  # if the containing folder is a number folder ==> will have stuff to compare...
@@ -189,7 +152,7 @@ for path, dirs, files in os.walk(root_direct):
         if in_tst != tst_fld:
             in_tst = tst_fld
             write_tst = True
-        if in_dat != dat_fld:
+        if in_dat != dat_fld or write_tst:
             in_dat = dat_fld
             write_dat = True
 
@@ -204,12 +167,12 @@ for path, dirs, files in os.walk(root_direct):
         py = out_py['tsincr']   # data is double
         mt = out_mt['tsincr']   # data is single
         py = py[:py.shape[0]-1,:,:]     # remove last row... have to check this happens for all inputs
-        ers.append(('tsincr', chk_3darrs(a1=py, a2=mt)))
+        ers.append(('tsincr', chk_out_mats(m1=py, m2=mt)))
 
         py = out_py['rate']   # data is double
         mt = out_mt['stackmap']   # data is single
         py = py[:py.shape[0]-1,:]     # remove last row... have to check this happens for all inputs
-        ers.append(('rate/stackmap', chk_2darrs(a1=py, a2=mt)))
+        ers.append(('rate/stackmap', chk_out_mats(m1=py, m2=mt)))
 
         # check if actually have an error to write
         if ['', ''] != [er[1] for er in ers]:
@@ -222,7 +185,7 @@ for path, dirs, files in os.walk(root_direct):
             # write errors
             for er in ers:
                 if er[1] != '':
-                    out_fp.write(' '*10+'* '+er[0]+'\n')
+                    out_fp.write(' '*12+'* '+er[0]+'\n')
                     out_fp.write(er[1])     # <-- pass an indent level parameter
 
 #out_fp.write('test!!!!')
