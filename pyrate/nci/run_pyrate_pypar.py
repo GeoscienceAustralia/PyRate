@@ -19,6 +19,7 @@ from pyrate import mst
 from pyrate import refpixel
 from pyrate import orbital
 from pyrate import ifgconstants as ifc
+from pyrate import vcm as vcm_module
 
 # Constants
 MASTER_PROCESS = 0
@@ -104,7 +105,34 @@ def main(params=None):
     run_pyrate.remove_orbital_error(ifgs, params)
     # orb_fit_calc_mpi(MPI_myID, ifgs, num_processors, parallel, params)
 
+    maxvar = maxvar_mpi(MPI_myID, ifgs, num_processors, parallel, params)
+
+    parallel.barrier()
+    vcmt = vcm_module.get_vcmt(ifgs, maxvar)
+
     parallel.finalize()
+
+
+def maxvar_mpi(MPI_myID, ifgs, num_processors, parallel, params):
+    no_ifgs = len(ifgs)
+    process_indices = parallel.calc_indices(no_ifgs)
+    process_ifgs = [itemgetter(p)(ifgs) for p in process_indices]
+    process_maxvar = [vcm_module.cvd(i)[0] for i in process_ifgs]
+    maxvar_file = os.path.join(params[cf.OUT_DIR], 'maxvar.npy')
+    if MPI_myID == MASTER_PROCESS:
+        all_indices = parallel.calc_all_indices(no_ifgs)
+        maxvar = np.empty(len(ifgs))
+        maxvar[process_indices] = process_maxvar
+
+        for i in range(1, num_processors):
+            process_maxvar = parallel.receive(source=i, tag=-1,
+                                              return_status=False)
+            maxvar[all_indices[i]] = process_maxvar
+        np.save(file=maxvar_file, arr=maxvar)
+    else:
+        parallel.send(process_maxvar, destination=MASTER_PROCESS, tag=MPI_myID)
+    maxvar = np.load(maxvar_file)
+    return maxvar
 
 
 def orb_fit_calc_mpi(MPI_myID, ifgs, num_processors, parallel, params):

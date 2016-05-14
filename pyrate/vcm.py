@@ -54,10 +54,10 @@ def cvd(ifg, calc_alpha=False):
 
     # calculate 2D auto-correlation of image using the
     # spectral method (Wiener-Khinchin theorem)
-    if ifg.nan_converted:  # saves heaps of time with no-nan conversion
-        phase = where(isnan(ifg.phase_data), 0, ifg.phase_data)
-    else:
+    if ifg.nan_converted:
         phase = ifg.phase_data
+    else:
+        phase = where(isnan(ifg.phase_data), 0, ifg.phase_data)
     fft_phase = fft2(phase)
     pspec = real(fft_phase)**2 + imag(fft_phase)**2
     autocorr_grid = ifft2(pspec)
