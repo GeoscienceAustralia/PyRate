@@ -253,6 +253,7 @@ PARAM_CONVERSION = {
     REFNY: (int, 5),  # was 50 in original Pirate code
     REF_CHIP_SIZE: (int, 3),  # defaults to 21 in orig
     REF_MIN_FRAC: (float, 0.8),  # uses Pirate default
+    REF_EST_METHOD: (int, 1),  # ref phase estimation method
 
     #ORBITAL_FIT : (bool, False),
     ORBITAL_FIT: (int, 0),

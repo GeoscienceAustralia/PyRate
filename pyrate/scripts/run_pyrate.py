@@ -124,7 +124,8 @@ def mst_calculation(ifg_paths_or_instance, params):
                                nodata_value=params[cf.NO_DATA_VALUE],
                                nan_conversion=nan_conversion)
         write_msg(
-            'Calculating minimum spanning tree matrix using Matlab-algorithm method')
+            'Calculating minimum spanning tree matrix '
+            'using Matlab-algorithm method')
         mst_grid = matlab_mst.matlab_mst_boolean_array(ifg_instance_updated)
 
         # Insert INTERP into the params for timeseries calculation
@@ -246,7 +247,8 @@ def remove_orbital_error(ifgs, params):
 def check_orbital_ifgs(ifgs, flags):
     count = sum([f == ORB_REMOVED for f in flags])
     if (count < len(flags)) and (count > 0):
-        logging.debug('Detected mix of corrected and uncorrected orbital error in ifgs')
+        logging.debug('Detected mix of corrected and uncorrected '
+                      'orbital error in ifgs')
 
         for i, flag in zip(ifgs, flags):
             if flag:

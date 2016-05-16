@@ -7,6 +7,9 @@ import sys
 import shutil
 import numpy as np
 import tempfile
+import subprocess
+import glob
+from itertools import product
 
 from pyrate import config as cf
 from pyrate.scripts import run_pyrate
@@ -16,6 +19,7 @@ from pyrate.tests.common import SYD_TEST_DIR
 from pyrate.reference_phase_estimation import estimate_ref_phase
 from pyrate.scripts import run_prepifg
 from pyrate.tests import common
+from pyrate import reference_phase_estimation as rpe
 
 
 class RefPhsEstimationMatlabTestMethod1Serial(unittest.TestCase):
@@ -469,6 +473,88 @@ class RefPhsEstimationMatlabTestMethod2Parallel(unittest.TestCase):
     def test_estimate_reference_phase_method2(self):
         np.testing.assert_array_almost_equal(self.matlab_ref_phs,
                                              self.ref_phs_mthod2, decimal=3)
+
+
+class RefPhaseEstimationMPITest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.tif_dir = tempfile.mkdtemp()
+        cls.test_conf = common.SYDNEY_TEST_CONF
+
+        # change the required params
+        cls.params = cf.get_config_params(cls.test_conf)
+        cls.params[cf.OBS_DIR] = common.SYD_TEST_GAMMA
+        cls.params[cf.PROCESSOR] = 1  # gamma
+        cls.params[cf.IFG_FILE_LIST] = os.path.join(
+            common.SYD_TEST_GAMMA, 'ifms_17')
+        cls.params[cf.OUT_DIR] = cls.tif_dir
+        cls.params[cf.PARALLEL] = 0
+        cls.params[cf.REF_EST_METHOD] = 1
+        # base_unw_paths need to be geotiffed and multilooked by run_prepifg
+        cls.base_unw_paths = run_pyrate.original_ifg_paths(
+            cls.params[cf.IFG_FILE_LIST])
+
+    @classmethod
+    def process(cls, base_unw_paths):
+        xlks, ylks, crop = run_pyrate.transform_params(cls.params)
+
+        # dest_paths are tifs that have been geotif converted and multilooked
+        dest_paths = run_pyrate.get_dest_paths(
+            cls.base_unw_paths, crop, cls.params, xlks)
+        run_prepifg.gamma_prepifg(base_unw_paths, cls.params)
+        cls.ifgs = common.sydney_data_setup(datafiles=dest_paths)
+        cls.log_file = os.path.join(cls.tif_dir, 'maxvar_mpi.log')
+        # Calc mst using MPI
+        cls.conf_file = tempfile.mktemp(suffix='.conf', dir=cls.tif_dir)
+        cf.write_config_file(cls.params, cls.conf_file)
+
+        assert os.path.exists(cls.conf_file)
+        str = 'mpirun -np 2 python pyrate/nci/run_pyrate_pypar.py ' + \
+              cls.conf_file
+        cmd = str.split()
+        subprocess.check_call(cmd)
+        ref_phs_file = os.path.join(cls.params[cf.OUT_DIR], 'ref_phs.npy')
+        cls.ref_phs = np.load(ref_phs_file)
+
+    def calc_non_mpi_ref_phs(self):
+        for i in self.ifgs:
+            if not i.is_open:
+                i.open()
+            if not i.nan_converted:
+                i.nodata_value = 0
+                i.convert_to_nans()
+
+            if not i.mm_converted:
+                i.convert_to_mm()
+
+        if self.params[cf.ORBITAL_FIT] != 0:
+            run_pyrate.remove_orbital_error(self.ifgs, self.params)
+
+        refx, refy = run_pyrate.find_reference_pixel(self.ifgs, self.params)
+        return rpe.estimate_ref_phase(self.ifgs, self.params, refx, refy)
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(cls.tif_dir)
+
+    def test_mpi_mst_single_processor(self):
+        # TODO: Why MPI test does not match for looks=2 and ref_phase_method=2
+        for looks, ref_method in product([1, 3, 4], [1, 2]):
+            self.params[cf.IFG_LKSX] = looks
+            self.params[cf.IFG_LKSY] = looks
+            self.params[cf.REF_EST_METHOD] = ref_method
+            self.process(self.base_unw_paths)
+            mlooked_ifgs = glob.glob(os.path.join(
+                self.tif_dir, '*_{looks}rlks_*cr.tif'.format(looks=looks)))
+            self.assertEqual(len(mlooked_ifgs), 17)
+            original_ref_phs = self.calc_non_mpi_ref_phs()[0]
+            np.testing.assert_array_almost_equal(original_ref_phs, self.ref_phs,
+                                                 decimal=2)
+
+    def test_maxvar_log_written(self):
+        self.process(self.base_unw_paths)
+        log_file = glob.glob(os.path.join(self.tif_dir, '*.log'))[0]
+        self.assertTrue(os.path.exists(log_file))
 
 
 if __name__ == '__main__':

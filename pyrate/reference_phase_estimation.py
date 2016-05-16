@@ -23,10 +23,10 @@ def estimate_ref_phase(ifgs, params, refpx, refpy):
     _validate_ifgs(ifgs)
 
     # set reference phase as the average of the whole image (recommended)
-    if int(params[cf.REF_EST_METHOD]) == 1:
+    if params[cf.REF_EST_METHOD] == 1:
         ref_phs = est_ref_phase_method1(ifgs, params)
 
-    elif int(params[cf.REF_EST_METHOD]) == 2:
+    elif params[cf.REF_EST_METHOD] == 2:
         ref_phs = est_ref_phase_method2(ifgs, params, refpx, refpy)
     else:
         raise ReferencePhaseError('No such option. Use refest=1 or 2')
