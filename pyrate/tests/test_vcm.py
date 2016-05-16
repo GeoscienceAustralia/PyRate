@@ -286,8 +286,7 @@ class MaxVarMPITest(unittest.TestCase):
         shutil.rmtree(cls.tif_dir)
 
     def test_mpi_mst_sigmle_processor(self):
-
-        for looks in [1]:
+        for looks in range(1, 6):
             self.params[cf.IFG_LKSX] = looks
             self.params[cf.IFG_LKSY] = looks
             self.process(self.base_unw_paths)
@@ -298,7 +297,7 @@ class MaxVarMPITest(unittest.TestCase):
             np.testing.assert_array_almost_equal(original_maxvar, self.maxvar,
                                                  decimal=2)
 
-    def test_mst_log_written(self):
+    def test_maxvar_log_written(self):
         self.process(self.base_unw_paths)
         log_file = glob.glob(os.path.join(self.tif_dir, '*.log'))[0]
         self.assertTrue(os.path.exists(log_file))
