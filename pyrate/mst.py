@@ -77,7 +77,8 @@ def mst_multiprocessing_map(process_top_lefts, process_bottom_rights,
                             paths_or_ifgs, shape, no_ifgs):
     # can't specify np.bool, does not work with PyPar
     # TODO: investigate other pypar send/receive options
-    result = np.zeros(shape=(no_ifgs, shape[0], shape[1]))
+    # should be able to change int to bool, may be use mpi4py?
+    result = np.zeros(shape=(no_ifgs, shape[0], shape[1]), dtype=int)
     for top_l, bottom_r \
                 in zip(process_top_lefts, process_bottom_rights):
         result[:, top_l[0]:bottom_r[0], top_l[1]: bottom_r[1]] = \
