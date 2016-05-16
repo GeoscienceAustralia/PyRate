@@ -19,7 +19,8 @@ from pyrate import mst
 from pyrate import refpixel
 from pyrate import orbital
 from pyrate import ifgconstants as ifc
-
+from pyrate import vcm as vcm_module
+from pyrate import reference_phase_estimation as rpe
 # Constants
 MASTER_PROCESS = 0
 
@@ -89,22 +90,109 @@ def main(params=None):
     # Calc ref_pixel using MPI
     ref_pixel_file = os.path.join(params[cf.OUT_DIR], 'ref_pixel.npy')
     if MPI_myID == MASTER_PROCESS:
-        refx, refy = ref_pixel_calc_mpi(MPI_myID, ifgs,
+        refpx, refpy = ref_pixel_calc_mpi(MPI_myID, ifgs,
                                         num_processors, parallel, params)
-        np.save(file=ref_pixel_file, arr=[refx, refy])
+        np.save(file=ref_pixel_file, arr=[refpx, refpy])
     else:
         ref_pixel_calc_mpi(MPI_myID, ifgs, num_processors, parallel, params)
 
     parallel.barrier()
     # refpixel read in each process
-    refx, refy = np.load(ref_pixel_file)
+    refpx, refpy = np.load(ref_pixel_file)
 
     # every proces writing ifgs - BAD, TODO: Remove this step
     # required as all processes need orbital corrected ifgs
     run_pyrate.remove_orbital_error(ifgs, params)
     # orb_fit_calc_mpi(MPI_myID, ifgs, num_processors, parallel, params)
 
+    # estimate reference phase
+    ref_phase_estimation_mpi(MPI_myID, ifgs, num_processors, parallel, params,
+                             refpx, refpy)
+
+    # all processes need access to maxvar
+    maxvar = maxvar_mpi(MPI_myID, ifgs, num_processors, parallel, params)
+    # get vcmt is very fast and not mpi'ed at the moment
+    # TODO: revisit this if performance is low in NCI
+    vcmt = vcm_module.get_vcmt(ifgs, maxvar)  # all processes
+
     parallel.finalize()
+
+
+def ref_phase_estimation_mpi(MPI_myID, ifgs, num_processors, parallel, params,
+                             refpx, refpy):
+    no_ifgs = len(ifgs)
+    process_indices = parallel.calc_indices(no_ifgs)
+    process_ifgs = [itemgetter(p)(ifgs) for p in process_indices]
+    process_phase_data = [i.phase_data for i in process_ifgs]
+    process_ref_phs = np.zeros(len(process_ifgs))
+    if params[cf.REF_EST_METHOD] == 1:
+        ifg_phase_data_sum = np.zeros(ifgs[0].shape, dtype=np.float64)
+        # TODO: revisit as this will likely hit memory limit in NCI
+        for ifg in ifgs:
+            ifg_phase_data_sum += ifg.phase_data
+
+        comp = np.isnan(ifg_phase_data_sum)  # this is the same as in Matlab
+        comp = np.ravel(comp, order='F')  # this is the same as in Matlab
+        for n, ifg in enumerate(process_ifgs):
+            process_ref_phs[n] = \
+                rpe.est_ref_phase_method1_multi(process_phase_data[n], comp)
+
+    elif params[cf.REF_EST_METHOD] == 2:
+        half_chip_size = int(np.floor(params[cf.REF_CHIP_SIZE] / 2.0))
+        chipsize = 2 * half_chip_size + 1
+        thresh = chipsize * chipsize * params[cf.REF_MIN_FRAC]
+        for n, ifg in enumerate(process_ifgs):
+            process_ref_phs[n] = \
+                rpe.est_ref_phase_method2_multi(process_phase_data[n],
+                                                half_chip_size,
+                                                refpx, refpy, thresh)
+
+    else:
+        raise
+    ref_phs_file = os.path.join(params[cf.OUT_DIR], 'ref_phs.npy')
+    if MPI_myID == MASTER_PROCESS:
+        all_indices = parallel.calc_all_indices(no_ifgs)
+        ref_phs = np.zeros(len(ifgs))
+        ref_phs[process_indices] = process_ref_phs
+
+        for i in range(1, num_processors):
+            process_ref_phs = \
+                parallel.receive(source=i, tag=-1,
+                                 return_status=False)
+            ref_phs[all_indices[i]] = process_ref_phs
+        np.save(file=ref_phs_file, arr=ref_phs)
+    else:
+        parallel.send(process_ref_phs, destination=MASTER_PROCESS,
+                      tag=MPI_myID)
+    parallel.barrier()
+    ref_phs = np.load(ref_phs_file)
+    for n, ifg in enumerate(ifgs):
+        ifg.phase_data -= ref_phs[n]
+
+
+def maxvar_mpi(MPI_myID, ifgs, num_processors, parallel, params):
+    no_ifgs = len(ifgs)
+    process_indices = parallel.calc_indices(no_ifgs)
+    process_ifgs = [itemgetter(p)(ifgs) for p in process_indices]
+    process_maxvar = [vcm_module.cvd(i)[0] for i in process_ifgs]
+    maxvar_file = os.path.join(params[cf.OUT_DIR], 'maxvar.npy')
+    if MPI_myID == MASTER_PROCESS:
+        all_indices = parallel.calc_all_indices(no_ifgs)
+        maxvar = np.empty(len(ifgs))
+        maxvar[process_indices] = process_maxvar
+
+        for i in range(1, num_processors):
+            process_maxvar = parallel.receive(source=i, tag=-1,
+                                              return_status=False)
+            maxvar[all_indices[i]] = process_maxvar
+        np.save(file=maxvar_file, arr=maxvar)
+        original_maxvar = [vcm_module.cvd(i)[0] for i in ifgs]
+        np.testing.assert_array_equal(original_maxvar, maxvar)
+    else:
+        parallel.send(process_maxvar, destination=MASTER_PROCESS, tag=MPI_myID)
+    parallel.barrier()
+    maxvar = np.load(maxvar_file)
+    return maxvar
 
 
 def orb_fit_calc_mpi(MPI_myID, ifgs, num_processors, parallel, params):
@@ -191,7 +279,7 @@ def ref_pixel_calc_mpi(MPI_myID, ifgs, num_processors, parallel, params):
         return refx, refy
     else:
         parallel.send(mean_sds, destination=MASTER_PROCESS, tag=MPI_myID)
-        print 'sent ref pixel requirements to master'
+        print 'sent ref pixel to master'
 
 
 def mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs, mpi_log_filename,

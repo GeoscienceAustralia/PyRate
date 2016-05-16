@@ -7,6 +7,8 @@ __date_created__ = '22/12/15'
 import numpy as np
 from pyrate import config as cf
 from pyrate.shared import nanmedian
+import parmap
+
 
 def estimate_ref_phase(ifgs, params, refpx, refpy):
     """
@@ -18,43 +20,83 @@ def estimate_ref_phase(ifgs, params, refpx, refpy):
         :ref_phs: reference phase correction
         :ifgs: reference phase data removed list of ifgs
     """
-    number_ifgs = len(ifgs)
-    ref_phs = np.zeros(number_ifgs)
     _validate_ifgs(ifgs)
 
     # set reference phase as the average of the whole image (recommended)
-    if int(params[cf.REF_EST_METHOD]) == 1:
-        ifg_phase_data_sum = np.zeros(ifgs[0].shape, dtype=np.float64)
-        for i in ifgs:
-            ifg_phase_data_sum += i.phase_data
-        comp = np.isnan(ifg_phase_data_sum)  # this is the same as in Matlab
-        comp = np.ravel(comp, order='F')  # this is the same as in Matlab
-        for n, i in enumerate(ifgs):
-            ifgv = np.ravel(i.phase_data, order='F')
-            ifgv[comp == 1] = np.nan
-            # reference phase
-            ref_phs[n] = nanmedian(ifgv)
-            i.phase_data -= ref_phs[n]
+    if params[cf.REF_EST_METHOD] == 1:
+        ref_phs = est_ref_phase_method1(ifgs, params)
 
-    elif int(params[cf.REF_EST_METHOD]) == 2:
-        half_chip_size = int(np.floor(params[cf.REF_CHIP_SIZE]/2.0))
-        chipsize = 2 * half_chip_size + 1
-        thresh = chipsize*chipsize*params[cf.REF_MIN_FRAC]
-        for n, i in enumerate(ifgs):
-            patch = i.phase_data[
-                    refpy - half_chip_size: refpy + half_chip_size + 1,
-                    refpx - half_chip_size: refpx + half_chip_size + 1
-                    ]
-            patch = np.reshape(patch, newshape=(-1, 1), order='F')
-            if np.sum(~np.isnan(patch)) < thresh:
-                raise ReferencePhaseError('The reference pixel'
-                                          'is not in high coherent area!')
-            ref_phs[n] = nanmedian(patch)
-            i.phase_data -= ref_phs[n]
+    elif params[cf.REF_EST_METHOD] == 2:
+        ref_phs = est_ref_phase_method2(ifgs, params, refpx, refpy)
     else:
         raise ReferencePhaseError('No such option. Use refest=1 or 2')
 
     return ref_phs, ifgs
+
+
+def est_ref_phase_method2(ifgs, params, refpx, refpy):
+    half_chip_size = int(np.floor(params[cf.REF_CHIP_SIZE] / 2.0))
+    chipsize = 2 * half_chip_size + 1
+    thresh = chipsize * chipsize * params[cf.REF_MIN_FRAC]
+    phase_data = [i.phase_data for i in ifgs]
+    if params[cf.PARALLEL]:
+        ref_phs = parmap.map(est_ref_phase_method2_multi, phase_data,
+                                 half_chip_size, refpx, refpy, thresh)
+        for n, ifg in enumerate(ifgs):
+            ifg.phase_data -= ref_phs[n]
+    else:
+        ref_phs = np.zeros(len(ifgs))
+        for n, ifg in enumerate(ifgs):
+            ref_phs[n] = \
+                est_ref_phase_method2_multi(phase_data[n], half_chip_size,
+                                            refpx, refpy, thresh)
+            ifg.phase_data -= ref_phs[n]
+    return ref_phs
+
+
+def est_ref_phase_method2_multi(phase_data, half_chip_size,
+                                refpx, refpy, thresh):
+    patch = phase_data[
+            refpy - half_chip_size: refpy + half_chip_size + 1,
+            refpx - half_chip_size: refpx + half_chip_size + 1
+            ]
+    patch = np.reshape(patch, newshape=(-1, 1), order='F')
+    if np.sum(~np.isnan(patch)) < thresh:
+        raise ReferencePhaseError('The reference pixel'
+                                  'is not in high coherent area!')
+    ref_ph = nanmedian(patch)
+    return ref_ph
+
+
+def est_ref_phase_method1(ifgs, params):
+    ifg_phase_data_sum = np.zeros(ifgs[0].shape, dtype=np.float64)
+    # TODO: revisit as this will likely hit memory limit in NCI
+    phase_data = [i.phase_data for i in ifgs]
+    for ifg in ifgs:
+        ifg_phase_data_sum += ifg.phase_data
+
+    comp = np.isnan(ifg_phase_data_sum)  # this is the same as in Matlab
+    comp = np.ravel(comp, order='F')  # this is the same as in Matlab
+    if params[cf.PARALLEL]:
+        print "ref phase calculation using multiprocessing"
+        ref_phs = parmap.map(est_ref_phase_method1_multi, phase_data, comp)
+        for n, ifg in enumerate(ifgs):
+            ifg.phase_data -= ref_phs[n]
+    else:
+        print "ref phase calculation in serial"
+        ref_phs = np.zeros(len(ifgs))
+        for n, ifg in enumerate(ifgs):
+            ref_phs[n] = est_ref_phase_method1_multi(ifg.phase_data, comp)
+            ifg.phase_data -= ref_phs[n]
+    return ref_phs
+
+
+def est_ref_phase_method1_multi(phase_data, comp):
+    ifgv = np.ravel(phase_data, order='F')
+    ifgv[comp == 1] = np.nan
+    # reference phase
+    ref_ph = nanmedian(ifgv)
+    return ref_ph
 
 
 def _validate_ifgs(ifgs):
