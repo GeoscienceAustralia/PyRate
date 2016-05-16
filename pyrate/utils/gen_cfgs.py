@@ -1,5 +1,13 @@
+'''
+* template file for generating config files
+* will produce a folder of the same name as this script in the same directory (so rename the script)
+* it is necessary that each matlab cfg has its own data (it is copied from PR_TESTING_DATA into the ...matlab/data/ folder for each cfg
+'''
+
 import sys
 import os
+import shutil
+
 if not ('PR_TESTING_DATA' in os.environ):
     print 'need to set your PR_TESTING_DATA environment variable'
     sys.exit(0)
@@ -207,7 +215,22 @@ def rec_loop(cnfg_headers, n_v_s, loop=0):
             outdir_str[PR] = 'outdir: '+this_d+os.path.sep+'python'+os.path.sep+'\n'
             outdir_str[ML] = 'outdir: '+this_d+os.path.sep+'matlab'+os.path.sep+'\n'
 
-            cnfg_strs = [None, None]
+            # copy matlab data... create data folder in matlab (above) and put in obs and dem
+            from_cp_direct = join(os.environ['PR_TESTING_DATA'], fld)
+            ml_data_direct = join(this_d, 'matlab', 'data')     # matlab data directory
+            ml_data_direct_obs = join(ml_data_direct, 'obs')
+            ml_data_direct_dem = join(ml_data_direct, 'dem')
+            # -----------actual copying------------
+            shutil.copytree(join(from_cp_direct, 'obs'), ml_data_direct_obs)
+            shutil.copytree(join(from_cp_direct, 'dem'), ml_data_direct_dem)
+            # set ifglist, obsdir, demdir
+            per_rec_ml_str =  '########## copied files directs ##########\n'
+            per_rec_ml_str += 'obsdir: '+ml_data_direct_obs+os.path.sep+'\n'
+            per_rec_ml_str += 'demdir: '+ml_data_direct_dem+os.path.sep+'\n'
+            per_rec_ml_str += 'ifgfilelist: '+os.path.split(ifgfilelist)[1]+'\n'
+            per_rec_ml_str += '##########################################\n'
+
+            cnfg_strs = [None, None]    # these where store combined strings that eventually get written out
 
             cnfg_strs[PR] = header_str[PR]+outdir_str[PR]+cnfg_str[PR]
 
@@ -223,7 +246,7 @@ def rec_loop(cnfg_headers, n_v_s, loop=0):
             cnfg_strs[ML] += 'profdir: prof'+os.path.sep+'\n'
             cnfg_strs[ML] += '##########################################\n'
             # add the important parts onto the "need to work" shit above
-            cnfg_strs[ML] += header_str[ML]+outdir_str[ML]+cnfg_str[ML]
+            cnfg_strs[ML] += header_str[ML]+per_rec_ml_str+outdir_str[ML]+cnfg_str[ML]
 
             # finished. write the two config files with diff extensions
             cnfg_file_PR = open(this_d + os.path.sep + z_str + '.pcfg', 'w')
@@ -299,23 +322,28 @@ for fld in dat_flds:
         
     counter = 0     # what cfg file out of all cfg files
     
-    headers_n_v = [None, None]
+    headers_n_v = [None, None]      # for pyrate and matlab
     headers_n_v[PR] = deepcopy(header_n_v)     # pyrate version shouldn't have to change
     temp = []
     for n_v in header_n_v:
         if n_v[NAME] == 'ifgfilelist':
-            n_v[VALUE] = os.path.split(n_v[VALUE])[1]
+            #n_v[VALUE] = os.path.split(n_v[VALUE])[1]   # just want the relative part
+            # this needs to be updated on a cfg directory basis
+            continue
         if n_v[NAME] == 'demfile':
             n_v[VALUE] = os.path.split(n_v[VALUE])[1]
         if n_v[NAME] == 'demHeaderFile':
             n_v[NAME] = 'parfile'
             n_v[VALUE] = os.path.split(n_v[VALUE])[1]
+        # obsdir and demdir (commented out after this loop) need to be copied in rec_loop and set there. so pass here.
+        if n_v[NAME] == 'obsdir':
+            continue    # we don't want this
         if n_v[NAME] == 'resourceHeader':
             continue    # we don't want this
         if n_v[NAME] == 'processor':
-            continue
+            continue    # we don't want this
         temp.append(n_v)
-    temp.append(['demdir', dem_dir+os.path.sep])       # stupid matlab requires dem_dir
+    #temp.append(['demdir', dem_dir+os.path.sep])       # stupid matlab requires dem_dir
     headers_n_v[ML] = temp
 
     # TODO: might need to add slashes onto end of directories...
