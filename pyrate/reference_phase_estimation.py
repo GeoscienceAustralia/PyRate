@@ -7,6 +7,8 @@ __date_created__ = '22/12/15'
 import numpy as np
 from pyrate import config as cf
 from pyrate.shared import nanmedian
+import parmap
+
 
 def estimate_ref_phase(ifgs, params, refpx, refpy):
     """
@@ -24,17 +26,7 @@ def estimate_ref_phase(ifgs, params, refpx, refpy):
 
     # set reference phase as the average of the whole image (recommended)
     if int(params[cf.REF_EST_METHOD]) == 1:
-        ifg_phase_data_sum = np.zeros(ifgs[0].shape, dtype=np.float64)
-        for i in ifgs:
-            ifg_phase_data_sum += i.phase_data
-        comp = np.isnan(ifg_phase_data_sum)  # this is the same as in Matlab
-        comp = np.ravel(comp, order='F')  # this is the same as in Matlab
-        for n, i in enumerate(ifgs):
-            ifgv = np.ravel(i.phase_data, order='F')
-            ifgv[comp == 1] = np.nan
-            # reference phase
-            ref_phs[n] = nanmedian(ifgv)
-            i.phase_data -= ref_phs[n]
+        ref_phs = est_ref_phase_method1(ifgs, params)
 
     elif int(params[cf.REF_EST_METHOD]) == 2:
         half_chip_size = int(np.floor(params[cf.REF_CHIP_SIZE]/2.0))
@@ -55,6 +47,43 @@ def estimate_ref_phase(ifgs, params, refpx, refpy):
         raise ReferencePhaseError('No such option. Use refest=1 or 2')
 
     return ref_phs, ifgs
+
+
+def est_ref_phase_method1(ifgs, params):
+    ifg_phase_data_sum = np.zeros(ifgs[0].shape, dtype=np.float64)
+    phase_data = [i.phase_data for i in ifgs]
+    for ifg in ifgs:
+        ifg_phase_data_sum += ifg.phase_data
+
+    if params[cf.PARALLEL]:
+        print "ref phase calculation using multiprocessing"
+        ref_phs = np.zeros(len(ifgs))
+        ref_phs_ret = parmap.map(est_ref_phase_method1_multi,
+                                 phase_data,
+                                 ifg_phase_data_sum)
+        for n, ifg in enumerate(ifgs):
+            ref_phs[n] = ref_phs_ret[n][0]
+            ifg.phase_data = ref_phs_ret[n][1]
+    else:
+        print "ref phase calculation in serial"
+        ref_phs = np.zeros(len(ifgs))
+        for n, ifg in enumerate(ifgs):
+            ref_phs[n], ifg.phase_data = \
+                est_ref_phase_method1_multi(ifg.phase_data,
+                                            ifg_phase_data_sum)
+    return ref_phs
+
+
+def est_ref_phase_method1_multi(phase_data, ifg_phase_data_sum):
+    comp = np.isnan(ifg_phase_data_sum)  # this is the same as in Matlab
+    comp = np.ravel(comp, order='F')  # this is the same as in Matlab
+
+    ifgv = np.ravel(phase_data, order='F')
+    ifgv[comp == 1] = np.nan
+    # reference phase
+    ref_ph = nanmedian(ifgv)
+    phase_data -= ref_ph
+    return ref_ph, phase_data
 
 
 def _validate_ifgs(ifgs):

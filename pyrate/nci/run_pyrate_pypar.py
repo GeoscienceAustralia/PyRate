@@ -106,11 +106,15 @@ def main(params=None):
     # orb_fit_calc_mpi(MPI_myID, ifgs, num_processors, parallel, params)
 
     # estimate reference phase
+
     _, ifgs = rpe.estimate_ref_phase(ifgs, params, refpx, refpy)
 
+    # all processes need access to maxvar
     maxvar = maxvar_mpi(MPI_myID, ifgs, num_processors, parallel, params)
-    # print maxvar
-    vcmt = vcm_module.get_vcmt(ifgs, maxvar)
+    # get vcmt is very fast and not mpi'ed at the moment
+    # TODO: revisit this if performance is low in NCI
+    vcmt = vcm_module.get_vcmt(ifgs, maxvar)  # all processes
+
     parallel.finalize()
 
 
