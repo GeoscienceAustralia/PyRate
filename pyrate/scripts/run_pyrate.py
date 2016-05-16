@@ -160,28 +160,27 @@ def compute_time_series(epochlist, gt, ifgs, md, mst_grid, params, vcmt, wkt):
     # Calculate time series
     tsincr, tscum, tsvel = calculate_time_series(
         ifgs, params, vcmt=vcmt, mst=mst_grid)
+
+    # TODO: write tests for these functions
+    write_timeseries_geotiff(epochlist, gt, md, params, tsincr, wkt,
+                             pr_type='tsincr')
+    write_timeseries_geotiff(epochlist, gt, md, params, tscum, wkt,
+                             pr_type='tscuml')
+    write_timeseries_geotiff(epochlist, gt, md, params, tsvel, wkt,
+                             pr_type='tsvel')
+
+
+def write_timeseries_geotiff(epochlist, gt, md, params, tsincr, wkt, pr_type):
+    PRTYPE = 'PR_TYPE'
     for i in range(len(tsincr[0, 0, :])):
         md[ifc.PYRATE_DATE] = epochlist.dates[i + 1]
-        md['PR_SEQ_POS'] = i    # sequence position
+        md['PR_SEQ_POS'] = i  # sequence position
+
         data = tsincr[:, :, i]
         dest = os.path.join(
             PYRATEPATH, params[cf.OUT_DIR],
-            "tsincr_" + str(epochlist.dates[i + 1]) + ".tif")
-        md['PR_TYPE'] = 'tsincr'
-        write_output_geotiff(md, gt, wkt, data, dest, np.nan)
-
-        data = tscum[:, :, i]
-        dest = os.path.join(
-            PYRATEPATH, params[cf.OUT_DIR],
-            "tscuml_" + str(epochlist.dates[i + 1]) + ".tif")
-        md['PR_TYPE'] = 'tscuml'
-        write_output_geotiff(md, gt, wkt, data, dest, np.nan)
-
-        data = tsvel[:, :, i]
-        dest = os.path.join(
-            PYRATEPATH, params[cf.OUT_DIR],
-            "tsvel_" + str(epochlist.dates[i + 1]) + ".tif")
-        md['PR_TYPE'] = 'tsvel'
+            pr_type + "_" + str(epochlist.dates[i + 1]) + ".tif")
+        md[PRTYPE] = pr_type
         write_output_geotiff(md, gt, wkt, data, dest, np.nan)
 
 
