@@ -274,6 +274,7 @@ class MaxVarMPITest(unittest.TestCase):
             run_pyrate.remove_orbital_error(self.ifgs, self.params)
 
         refx, refy = run_pyrate.find_reference_pixel(self.ifgs, self.params)
+        _, ifgs = rpe.estimate_ref_phase(self.ifgs, self.params, refx, refy)
 
         if self.params[cf.ORBITAL_FIT] != 0:
             run_pyrate.remove_orbital_error(self.ifgs, self.params)

@@ -106,7 +106,7 @@ def main(params=None):
     # orb_fit_calc_mpi(MPI_myID, ifgs, num_processors, parallel, params)
 
     # estimate reference phase
-    # _, ifgs = rpe.estimate_ref_phase(ifgs, params, refpx, refpy)
+    _, ifgs = rpe.estimate_ref_phase(ifgs, params, refpx, refpy)
 
     maxvar = maxvar_mpi(MPI_myID, ifgs, num_processors, parallel, params)
     # print maxvar
