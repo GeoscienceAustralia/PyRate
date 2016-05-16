@@ -14,6 +14,8 @@ import shutil
 import sys
 import numpy as np
 import tempfile
+import subprocess
+import glob
 
 from pyrate.vcm import cvd, get_vcmt
 from pyrate.tests.common import sydney5_mock_ifgs, sydney5_ifgs
@@ -195,6 +197,8 @@ class MatlabEqualityTestInRunPyRateSequence(unittest.TestCase):
 
         # Calculate interferogram noise
         cls.maxvar = [cvd(i)[0] for i in ifgs]
+        print 'matlab test'
+        print cls.maxvar
         cls.vcmt = get_vcmt(ifgs, cls.maxvar)
 
     @classmethod
@@ -212,6 +216,91 @@ class MatlabEqualityTestInRunPyRateSequence(unittest.TestCase):
                                    'matlab_vcmt.csv'), delimiter=',')
         np.testing.assert_array_almost_equal(matlab_vcm, self.vcmt, decimal=3)
 
+
+class MaxVarMPITest(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.tif_dir = tempfile.mkdtemp()
+        cls.test_conf = common.SYDNEY_TEST_CONF
+
+        # change the required params
+        cls.params = cf.get_config_params(cls.test_conf)
+        cls.params[cf.OBS_DIR] = common.SYD_TEST_GAMMA
+        cls.params[cf.PROCESSOR] = 1  # gamma
+        cls.params[cf.IFG_FILE_LIST] = os.path.join(
+            common.SYD_TEST_GAMMA, 'ifms_17')
+        cls.params[cf.OUT_DIR] = cls.tif_dir
+        cls.params[cf.PARALLEL] = 0
+        cls.params[cf.REF_EST_METHOD] = 1
+        # base_unw_paths need to be geotiffed and multilooked by run_prepifg
+        cls.base_unw_paths = run_pyrate.original_ifg_paths(
+            cls.params[cf.IFG_FILE_LIST])
+
+    @classmethod
+    def process(cls, base_unw_paths):
+        xlks, ylks, crop = run_pyrate.transform_params(cls.params)
+
+        # dest_paths are tifs that have been geotif converted and multilooked
+        dest_paths = run_pyrate.get_dest_paths(
+            cls.base_unw_paths, crop, cls.params, xlks)
+        run_prepifg.gamma_prepifg(base_unw_paths, cls.params)
+        cls.ifgs = common.sydney_data_setup(datafiles=dest_paths)
+        cls.log_file = os.path.join(cls.tif_dir, 'maxvar_mpi.log')
+        # Calc mst using MPI
+        cls.conf_file = tempfile.mktemp(suffix='.conf', dir=cls.tif_dir)
+        cf.write_config_file(cls.params, cls.conf_file)
+
+        assert os.path.exists(cls.conf_file)
+        str = 'mpirun -np 2 python pyrate/nci/run_pyrate_pypar.py ' + \
+              cls.conf_file
+        cmd = str.split()
+        subprocess.check_call(cmd)
+        maxvar_file = os.path.join(cls.params[cf.OUT_DIR], 'maxvar.npy')
+        cls.maxvar = np.load(maxvar_file)
+
+    def calc_non_mpi_maxvar(self):
+        for i in self.ifgs:
+            if not i.is_open:
+                i.open()
+            if not i.nan_converted:
+                i.nodata_value = 0
+                i.convert_to_nans()
+
+            if not i.mm_converted:
+                i.convert_to_mm()
+
+        if self.params[cf.ORBITAL_FIT] != 0:
+            run_pyrate.remove_orbital_error(self.ifgs, self.params)
+
+        refx, refy = run_pyrate.find_reference_pixel(self.ifgs, self.params)
+
+        if self.params[cf.ORBITAL_FIT] != 0:
+            run_pyrate.remove_orbital_error(self.ifgs, self.params)
+
+        return [cvd(i)[0] for i in self.ifgs]
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(cls.tif_dir)
+
+    def test_mpi_mst_sigmle_processor(self):
+
+        for looks in [1]:
+            self.params[cf.IFG_LKSX] = looks
+            self.params[cf.IFG_LKSY] = looks
+            self.process(self.base_unw_paths)
+            mlooked_ifgs = glob.glob(os.path.join(
+                self.tif_dir, '*_{looks}rlks_*cr.tif'.format(looks=looks)))
+            self.assertEqual(len(mlooked_ifgs), 17)
+            original_maxvar = self.calc_non_mpi_maxvar()
+            np.testing.assert_array_almost_equal(original_maxvar, self.maxvar,
+                                                 decimal=2)
+
+    def test_mst_log_written(self):
+        self.process(self.base_unw_paths)
+        log_file = glob.glob(os.path.join(self.tif_dir, '*.log'))[0]
+        self.assertTrue(os.path.exists(log_file))
 
 if __name__ == "__main__":
     unittest.main()

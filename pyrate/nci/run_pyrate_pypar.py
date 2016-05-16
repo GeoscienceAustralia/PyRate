@@ -20,7 +20,7 @@ from pyrate import refpixel
 from pyrate import orbital
 from pyrate import ifgconstants as ifc
 from pyrate import vcm as vcm_module
-
+from pyrate import reference_phase_estimation as rpe
 # Constants
 MASTER_PROCESS = 0
 
@@ -90,26 +90,27 @@ def main(params=None):
     # Calc ref_pixel using MPI
     ref_pixel_file = os.path.join(params[cf.OUT_DIR], 'ref_pixel.npy')
     if MPI_myID == MASTER_PROCESS:
-        refx, refy = ref_pixel_calc_mpi(MPI_myID, ifgs,
+        refpx, refpy = ref_pixel_calc_mpi(MPI_myID, ifgs,
                                         num_processors, parallel, params)
-        np.save(file=ref_pixel_file, arr=[refx, refy])
+        np.save(file=ref_pixel_file, arr=[refpx, refpy])
     else:
         ref_pixel_calc_mpi(MPI_myID, ifgs, num_processors, parallel, params)
 
     parallel.barrier()
     # refpixel read in each process
-    refx, refy = np.load(ref_pixel_file)
+    refpx, refpy = np.load(ref_pixel_file)
 
     # every proces writing ifgs - BAD, TODO: Remove this step
     # required as all processes need orbital corrected ifgs
     run_pyrate.remove_orbital_error(ifgs, params)
     # orb_fit_calc_mpi(MPI_myID, ifgs, num_processors, parallel, params)
 
+    # estimate reference phase
+    # _, ifgs = rpe.estimate_ref_phase(ifgs, params, refpx, refpy)
+
     maxvar = maxvar_mpi(MPI_myID, ifgs, num_processors, parallel, params)
-
-    parallel.barrier()
+    # print maxvar
     vcmt = vcm_module.get_vcmt(ifgs, maxvar)
-
     parallel.finalize()
 
 
@@ -129,8 +130,11 @@ def maxvar_mpi(MPI_myID, ifgs, num_processors, parallel, params):
                                               return_status=False)
             maxvar[all_indices[i]] = process_maxvar
         np.save(file=maxvar_file, arr=maxvar)
+        original_maxvar = [vcm_module.cvd(i)[0] for i in ifgs]
+        np.testing.assert_array_equal(original_maxvar, maxvar)
     else:
         parallel.send(process_maxvar, destination=MASTER_PROCESS, tag=MPI_myID)
+    parallel.barrier()
     maxvar = np.load(maxvar_file)
     return maxvar
 
