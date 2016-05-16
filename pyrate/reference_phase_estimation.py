@@ -78,12 +78,14 @@ def est_ref_phase_method1(ifgs, params):
     for ifg in ifgs:
         ifg_phase_data_sum += ifg.phase_data
 
+    comp = np.isnan(ifg_phase_data_sum)  # this is the same as in Matlab
+    comp = np.ravel(comp, order='F')  # this is the same as in Matlab
     if params[cf.PARALLEL]:
         print "ref phase calculation using multiprocessing"
         ref_phs = np.zeros(len(ifgs))
         ref_phs_ret = parmap.map(est_ref_phase_method1_multi,
                                  phase_data,
-                                 ifg_phase_data_sum)
+                                 comp)
         for n, ifg in enumerate(ifgs):
             ref_phs[n] = ref_phs_ret[n][0]
             ifg.phase_data = ref_phs_ret[n][1]
@@ -93,14 +95,11 @@ def est_ref_phase_method1(ifgs, params):
         for n, ifg in enumerate(ifgs):
             ref_phs[n], ifg.phase_data = \
                 est_ref_phase_method1_multi(ifg.phase_data,
-                                            ifg_phase_data_sum)
+                                            comp)
     return ref_phs
 
 
-def est_ref_phase_method1_multi(phase_data, ifg_phase_data_sum):
-    comp = np.isnan(ifg_phase_data_sum)  # this is the same as in Matlab
-    comp = np.ravel(comp, order='F')  # this is the same as in Matlab
-
+def est_ref_phase_method1_multi(phase_data, comp):
     ifgv = np.ravel(phase_data, order='F')
     ifgv[comp == 1] = np.nan
     # reference phase
