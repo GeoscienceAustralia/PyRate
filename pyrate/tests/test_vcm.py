@@ -285,7 +285,7 @@ class MaxVarMPITest(unittest.TestCase):
     def tearDownClass(cls):
         shutil.rmtree(cls.tif_dir)
 
-    def test_mpi_mst_sigmle_processor(self):
+    def test_mpi_mst_single_processor(self):
         for looks in range(1, 6):
             self.params[cf.IFG_LKSX] = looks
             self.params[cf.IFG_LKSY] = looks
