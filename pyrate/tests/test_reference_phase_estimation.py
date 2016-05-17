@@ -495,28 +495,40 @@ class RefPhaseEstimationMPITest(unittest.TestCase):
             cls.params[cf.IFG_FILE_LIST])
 
     @classmethod
-    def process(cls, base_unw_paths):
+    def process(cls):
         xlks, ylks, crop = run_pyrate.transform_params(cls.params)
 
         # dest_paths are tifs that have been geotif converted and multilooked
         dest_paths = run_pyrate.get_dest_paths(
             cls.base_unw_paths, crop, cls.params, xlks)
-        run_prepifg.gamma_prepifg(base_unw_paths, cls.params)
+
+        # create the dest_paths files
+        run_prepifg.gamma_prepifg(cls.base_unw_paths, cls.params)
+
+        # now create test ifgs
         cls.ifgs = common.sydney_data_setup(datafiles=dest_paths)
+
+        # give the log file any name
         cls.log_file = os.path.join(cls.tif_dir, 'maxvar_mpi.log')
-        # Calc mst using MPI
+
+        # create the conf file in out_dir
         cls.conf_file = tempfile.mktemp(suffix='.conf', dir=cls.tif_dir)
         cf.write_config_file(cls.params, cls.conf_file)
 
+        # conf file crated?
         assert os.path.exists(cls.conf_file)
+
+        # Calc mst using MPI
         str = 'mpirun -np 2 python pyrate/nci/run_pyrate_pypar.py ' + \
               cls.conf_file
         cmd = str.split()
         subprocess.check_call(cmd)
+
+        # load the ref_phs file for testing
         ref_phs_file = os.path.join(cls.params[cf.OUT_DIR], 'ref_phs.npy')
         cls.ref_phs = np.load(ref_phs_file)
 
-    def calc_non_mpi_ref_phs(self):
+    def calc_non_mpi_time_series(self):
         for i in self.ifgs:
             if not i.is_open:
                 i.open()
@@ -543,16 +555,16 @@ class RefPhaseEstimationMPITest(unittest.TestCase):
             self.params[cf.IFG_LKSX] = looks
             self.params[cf.IFG_LKSY] = looks
             self.params[cf.REF_EST_METHOD] = ref_method
-            self.process(self.base_unw_paths)
+            self.process()
             mlooked_ifgs = glob.glob(os.path.join(
                 self.tif_dir, '*_{looks}rlks_*cr.tif'.format(looks=looks)))
             self.assertEqual(len(mlooked_ifgs), 17)
-            original_ref_phs = self.calc_non_mpi_ref_phs()[0]
+            original_ref_phs = self.calc_non_mpi_time_series()[0]
             np.testing.assert_array_almost_equal(original_ref_phs, self.ref_phs,
                                                  decimal=2)
 
     def test_maxvar_log_written(self):
-        self.process(self.base_unw_paths)
+        self.process()
         log_file = glob.glob(os.path.join(self.tif_dir, '*.log'))[0]
         self.assertTrue(os.path.exists(log_file))
 
