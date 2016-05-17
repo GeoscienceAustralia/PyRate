@@ -497,8 +497,6 @@ class MPITests(unittest.TestCase):
 
         vcmt = vcm_module.get_vcmt(ifgs, maxvar)
 
-        _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
-
         self.tsincr, self.tscum, self.tsvel = run_pyrate.calculate_time_series(
                 ifgs, self.params, vcmt, mst=mst_grid)
         shutil.rmtree(temp_dir)
