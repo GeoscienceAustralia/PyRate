@@ -106,12 +106,8 @@ def mst_calculation(ifg_paths_or_instance, params):
             'Calculating minimum spanning tree matrix using NetworkX method')
 
         mst_grid = mst.mst_parallel(ifgs, params)
-        # check if mst is not a tree, then do interpolate
-        if mst.mst_from_ifgs(ifgs)[1]:
-            params[cf.TIME_SERIES_INTERP] = 0
-        else:
-            params[cf.TIME_SERIES_INTERP] = 1
     else:
+        # the matlab side has not been worked for a while, may need updating
         nan_conversion = params[cf.NAN_CONVERSION]
         assert isinstance(ifg_paths_or_instance, matlab_mst.IfgListPyRate)
         ifgs = ifg_paths_or_instance.ifgs
@@ -130,9 +126,6 @@ def mst_calculation(ifg_paths_or_instance, params):
 
         # Insert INTERP into the params for timeseries calculation
         params = insert_time_series_interpolation(ifg_instance_updated, params)
-
-    # make sure by now we have the time series interpolation parameter
-    assert params[cf.TIME_SERIES_INTERP] is not None
 
     # write mst output to a file
     mst_mat_binary_file = os.path.join(
