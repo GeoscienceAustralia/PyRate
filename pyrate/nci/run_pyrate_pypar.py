@@ -7,6 +7,7 @@ import datetime
 from operator import itemgetter
 import glob
 import numpy as np
+from numpy import isnan, nan
 
 from pyrate.nci.parallel import Parallel
 from pyrate.scripts import run_pyrate
@@ -22,6 +23,8 @@ from pyrate import ifgconstants as ifc
 from pyrate import vcm as vcm_module
 from pyrate import reference_phase_estimation as rpe
 from pyrate import timeseries
+from pyrate import linrate
+
 # Constants
 MASTER_PROCESS = 0
 
@@ -43,7 +46,6 @@ def main(params=None):
             run_pyrate.get_dest_paths(base_unw_paths, crop, params, xlks)
     else:
         _, cropped_and_sampled_tifs, params = run_pyrate.get_ifg_paths()
-
 
     output_dir = params[cf.OUT_DIR]
     mpi_log_filename = os.path.join(output_dir, "mpi_run_pyrate.log")
@@ -118,14 +120,61 @@ def main(params=None):
     # offers easy parallisation if required
     vcmt = vcm_module.get_vcmt(ifgs, maxvar)  # all processes
 
+    vcmt_file = os.path.join(params[cf.OUT_DIR], 'vcmt.npy')
+    if MPI_myID == MASTER_PROCESS:
+        np.save(file=vcmt_file, arr=vcmt)
+
     parallel.barrier()
 
+    # # time series mpi computation
     time_series_mpi(MPI_myID, ifgs, mst_grid, num_processors, parallel, params,
                     vcmt)
 
-    parallel.barrier()
+    parallel.barrier()  # may not need this
+
+    # linrate mpi computation
+    linrate_mpi(MPI_myID, ifgs, mst_grid, num_processors, parallel, params,
+                vcmt)
 
     parallel.finalize()
+
+
+def linrate_mpi(MPI_myID, ifgs, mst_grid, num_processors, parallel, params,
+                vcmt):
+    MAXSIG, NSIG, PTHRESH, ncols, error, mst, obs, _, processes, rate, \
+        nrows, samples, span = linrate.linrate_setup(ifgs, mst_grid, params)
+    rows = range(nrows)
+    process_indices = parallel.calc_indices(nrows)
+    process_rows = [itemgetter(p)(rows) for p in process_indices]
+    process_res = np.empty(shape=(len(process_rows), ncols, 3))
+    for n, row in enumerate(process_rows):
+        process_res[n, :, :] = linrate.linear_rate_by_rows(
+            row, ncols, mst, NSIG, obs, PTHRESH, span, vcmt)
+    rate_file = os.path.join(params[cf.OUT_DIR], 'rate.npy')
+    error_file = os.path.join(params[cf.OUT_DIR], 'error.npy')
+    samples_file = os.path.join(params[cf.OUT_DIR], 'samples.npy')
+    if MPI_myID == MASTER_PROCESS:
+        all_indices = parallel.calc_all_indices(nrows)
+        # rate, error, samples have already been zero initialized in setup
+        rate[all_indices[MASTER_PROCESS]] = process_res[:, :, 0]
+        error[all_indices[MASTER_PROCESS]] = process_res[:, :, 1]
+        samples[all_indices[MASTER_PROCESS]] = process_res[:, :, 2]
+        for i in range(1, num_processors):
+            process_res = parallel.receive(source=i, tag=-1,
+                                           return_status=False)
+            rate[all_indices[i]] = process_res[:, :, 0]
+            error[all_indices[i]] = process_res[:, :, 1]
+            samples[all_indices[i]] = process_res[:, :, 2]
+        mask = ~isnan(error)
+        mask[mask] &= error[mask] > MAXSIG
+        rate[mask] = nan
+        error[mask] = nan
+        np.save(file=rate_file, arr=rate)
+        np.save(file=error_file, arr=error)
+        np.save(file=samples_file, arr=samples)
+    else:
+        parallel.send(process_res, destination=MASTER_PROCESS,
+                      tag=MPI_myID)
 
 
 def time_series_mpi(MPI_myID, ifgs, mst_grid, num_processors, parallel, params,
@@ -229,7 +278,7 @@ def maxvar_mpi(MPI_myID, ifgs, num_processors, parallel, params):
     if MPI_myID == MASTER_PROCESS:
         all_indices = parallel.calc_all_indices(no_ifgs)
         maxvar = np.empty(len(ifgs))
-        maxvar[process_indices] = process_maxvar
+        maxvar[all_indices[MASTER_PROCESS]] = process_maxvar
 
         for i in range(1, num_processors):
             process_maxvar = parallel.receive(source=i, tag=-1,
