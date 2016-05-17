@@ -780,9 +780,9 @@ def copytree(src, dst, symlinks=False, ignore=None):
     """
     copy contents of src dir into dst dir
     stolen from: http://stackoverflow.com/questions/1868714/how-do-i-copy-an-entire-directory-of-files-into-an-existing-directory-using-pyth?lq=1
-    :param src:
-    :param dst:
-    :param symlinks:
+    :param src: source dir to copy from
+    :param dst: dst dir to copy to, created if does not exist
+    :param symlinks: bool, whether to copy symlink or not
     :param ignore:
     :return:
     """

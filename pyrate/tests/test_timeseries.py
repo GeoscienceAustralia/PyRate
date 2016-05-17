@@ -473,6 +473,9 @@ class MPITests(unittest.TestCase):
         # copy sydney_tif files in temp_dir
         shared.copytree(src=common.SYD_TEST_TIF, dst=temp_dir)
         input_ifgs = glob.glob(os.path.join(temp_dir, '*.tif'))
+
+        # sort to make tests deterministic
+        input_ifgs.sort()
         xlooks, ylooks, crop = run_pyrate.transform_params(self.params)
 
         prepifg.prepare_ifgs(input_ifgs,
@@ -484,20 +487,18 @@ class MPITests(unittest.TestCase):
                             write_to_disc=True)
         mlooked_paths = [prepifg.mlooked_path(input_ifg, xlooks, crop)
                          for input_ifg in input_ifgs]
-        ifgs, mst_grid, params = run_pyrate.mst_calculation(mlooked_paths,
+        ifgs, mst_grid = run_pyrate.mst_calculation(mlooked_paths,
                                                             self.params)
         refx, refy = run_pyrate.find_reference_pixel(ifgs, self.params)
 
         if self.params[cf.ORBITAL_FIT] != 0:
             run_pyrate.remove_orbital_error(ifgs, self.params)
 
-        _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
+        _, ifgs = rpe.estimate_ref_phase(ifgs, self.params, refx, refy)
 
         maxvar = [vcm_module.cvd(i)[0] for i in ifgs]
 
         vcmt = vcm_module.get_vcmt(ifgs, maxvar)
-
-        _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
 
         self.tsincr, self.tscum, self.tsvel = run_pyrate.calculate_time_series(
                 ifgs, self.params, vcmt, mst=mst_grid)
@@ -528,7 +529,7 @@ class MPITests(unittest.TestCase):
                                                  self.tscum_mpi,
                                                  decimal=4)
 
-    def test_maxvar_log_written(self):
+    def test_timeseries_log_written(self):
         self.process()
         log_file = glob.glob(os.path.join(self.tif_dir, '*.log'))[0]
         self.assertTrue(os.path.exists(log_file))
