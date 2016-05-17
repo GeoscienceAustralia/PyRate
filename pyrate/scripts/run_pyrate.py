@@ -40,7 +40,7 @@ def process_ifgs(ifg_paths_or_instance, params):
     ifgs: sequence of paths to interferograms (NB: changes are saved into ifgs)
     params: dictionary of configuration parameters
     """
-    ifgs, mst_grid, params = mst_calculation(ifg_paths_or_instance, params)
+    ifgs, mst_grid = mst_calculation(ifg_paths_or_instance, params)
 
     # Estimate reference pixel location
     refpx, refpy = find_reference_pixel(ifgs, params)
@@ -125,14 +125,14 @@ def mst_calculation(ifg_paths_or_instance, params):
         mst_grid = matlab_mst.matlab_mst_boolean_array(ifg_instance_updated)
 
         # Insert INTERP into the params for timeseries calculation
-        params = insert_time_series_interpolation(ifg_instance_updated, params)
+        # params = insert_time_series_interpolation(ifg_instance_updated, params)
 
     # write mst output to a file
     mst_mat_binary_file = os.path.join(
         PYRATEPATH, params[cf.OUT_DIR], 'mst_mat')
     np.save(file=mst_mat_binary_file, arr=mst_grid)
 
-    return ifgs, mst_grid, params
+    return ifgs, mst_grid
 
 
 def prepare_ifgs_for_networkx_mst(ifg_paths_or_instance, params):

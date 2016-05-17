@@ -54,15 +54,16 @@ def linear_rate(ifgs, params, vcmt, mst=None):
     # nested loops to loop over the 2 image dimensions
     if parallel == 1:
         res = parmap.map(linear_rate_by_rows, range(rows), cols, mst, NSIG, obs,
-                     PTHRESH, span, vcmt, processes=processes)
+                         PTHRESH, span, vcmt, processes=processes)
         res = np.array(res)
         rate = res[:, :, 0]
         error = res[:, :, 1]
         samples = res[:, :, 2]
     elif parallel == 2:
         res = parmap.starmap(linear_rate_by_pixel,
-                             itertools.product(range(rows), range(cols)),
-                    mst, NSIG, obs, PTHRESH, span, vcmt, processes=processes)
+                             itertools.product(range(rows), range(cols)), mst,
+                             NSIG, obs, PTHRESH, span, vcmt,
+                             processes=processes)
         res = np.array(res)
 
         rate = res[:, 0].reshape(rows, cols)
@@ -72,7 +73,8 @@ def linear_rate(ifgs, params, vcmt, mst=None):
         for i in xrange(rows):
             for j in xrange(cols):
                 rate[i, j], error[i, j], samples[i, j] = \
-                    linear_rate_by_pixel(i, j, mst, NSIG, obs, PTHRESH, span, vcmt)
+                    linear_rate_by_pixel(i, j, mst, NSIG, obs,
+                                         PTHRESH, span, vcmt)
 
     # overwrite the data whose error is larger than the
     # maximum sigma user threshold
@@ -90,12 +92,9 @@ def linrate_setup(ifgs, mst, params):
     parallel = params[cf.PARALLEL]
     processes = params[cf.PROCESSES]
     # linrate parameters from config file
-    NSIG = params[
-        cf.LR_NSIG]  # n-sigma ratio used to threshold 'model minus observation' residuals
-    MAXSIG = params[
-        cf.LR_MAXSIG]  # Threshold for maximum allowable standard error
-    PTHRESH = params[
-        cf.LR_PTHRESH]  # Pixel threshold; minimum number of coherent observations for a pixel
+    NSIG = params[cf.LR_NSIG]  # n-sigma ratio used to threshold 'model minus observation' residuals
+    MAXSIG = params[cf.LR_MAXSIG]  # Threshold for maximum allowable standard error
+    PTHRESH = params[cf.LR_PTHRESH]  # Pixel threshold; minimum number of coherent observations for a pixel
     rows, cols = ifgs[0].phase_data.shape
     # make 3D block of observations
     obs = array([np.where(isnan(x.phase_data), 0, x.phase_data) for x in ifgs])
@@ -110,7 +109,8 @@ def linrate_setup(ifgs, mst, params):
     error = np.empty([rows, cols], dtype=float32)
     rate = np.empty([rows, cols], dtype=float32)
     samples = np.empty([rows, cols], dtype=np.float32)
-    return MAXSIG, NSIG, PTHRESH, cols, error, mst, obs, parallel, processes, rate, rows, samples, span
+    return MAXSIG, NSIG, PTHRESH, cols, error, mst, obs, parallel, processes, \
+           rate, rows, samples, span
 
 
 def linear_rate_by_rows(row, cols, mst, NSIG, obs, PTHRESH, span, vcmt):

@@ -484,14 +484,14 @@ class MPITests(unittest.TestCase):
                             write_to_disc=True)
         mlooked_paths = [prepifg.mlooked_path(input_ifg, xlooks, crop)
                          for input_ifg in input_ifgs]
-        ifgs, mst_grid, params = run_pyrate.mst_calculation(mlooked_paths,
+        ifgs, mst_grid = run_pyrate.mst_calculation(mlooked_paths,
                                                             self.params)
         refx, refy = run_pyrate.find_reference_pixel(ifgs, self.params)
 
         if self.params[cf.ORBITAL_FIT] != 0:
             run_pyrate.remove_orbital_error(ifgs, self.params)
 
-        _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
+        _, ifgs = rpe.estimate_ref_phase(ifgs, self.params, refx, refy)
 
         maxvar = [vcm_module.cvd(i)[0] for i in ifgs]
 
