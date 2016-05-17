@@ -1,67 +1,63 @@
 '''
-* template file for generating config files
-* will produce a folder of the same name as this script in the same directory (so rename the script)
-* it is necessary that each matlab cfg has its own data (it is copied from PR_TESTING_DATA into the ...matlab/data/ folder for each cfg
+rewritten cfg file generator script
+-----------------------------------
+* PR_TESTING_DATA environment variable to be set
+    * data will be copied over to cfg folders (runs faster if each process has its own data)
+* notation:
+    * <>_d = directory
+    * <>_fn = filename (that is not a directory (i.e. a regular file))
+    * <>_<>_r = relative (i.e. not full path)
+* todo: VALUE should really by VALUES
 '''
 
+# imports ------------------------
 import sys
 import os
 import shutil
-
-if not ('PR_TESTING_DATA' in os.environ):
-    print 'need to set your PR_TESTING_DATA environment variable'
-    sys.exit(0)
-'''
-# may not want this. used pwd because will have the file and then the directory
-if not ('PR_TESTING_OUT_DIR' in os.environ):
-    print 'need to set your PR_TESTING_DATA environment variable'
-    sys.exit(0)
-'''
-# know where the data and out directory is. can proceed
-
 from numpy import arange
 from subprocess import call
 from copy import deepcopy
+from os.path import join
+# --------------------------------
 
-from os.path import join        # better than above method
+# SELECT WHAT DATA YOU WANT TO TEST ===================================================================
+# =====================================================================================================
+# check environment variable is set
+if not ('PR_TESTING_DATA' in os.environ):
+    print 'you need to set your PR_TESTING_DATA environment variable'
+    sys.exit(0)
+dat_root_d = os.environ['PR_TESTING_DATA']     # check at start of script that this exists
+dat_drs = ['syd_g']                            # manually select specific folders
 
-PR, ML = 0, 1                   # to indicate PyRate or Matlab
-NAME, VALUE, STATE = 0, 1, 2    # used in recursive function to generate cfg files
-
-# PARAM SWEEPS ============================================
-# =========================================================
+# PARAM SWEEPS (YOU MODIFY THESE TO WHAT YOU WANT =====================================================
+# =====================================================================================================
 base = [
     ['networkx_or_matlab', [0]],
     ['luigi', [0]],
 
     ['atmfit', [0]],     # Matt says don't use this
-                         # normally would have to specify atmfitmethod, atmfitlksx,y afterward
+                         # normally would have to specify atmfitmethod, atmfitlksx... afterward
 
-    ['basepflag', [0]],  # PYTHON = NOT CURRENTLY USED, matlab is being used
-    ['unwflag', [0]],    # closure check and mask unwrapping errors flag added on 17/09/2012 (MATLAB ONLY. 1 DEFAULT)
-                         # not implemented in python. turn it off.
+    ['basepflag', [0]],  # needed for Matlab to work, Python will ignore it
+    ['unwflag', [0]],    # not used in Python. leave as 0
     ['prjflag', [3]],    # Re-project data from Line of sight, 1 = vertical, 2 = horizontal, 3 = no conversion
                          # 3 or run into problems. try others later
 
-    #['noDataAveragingThreshold', arange(0, 1.0, 0.50).tolist()],
     ['noDataAveragingThreshold', [0.5]],    # Sudipta says this is for network... doesn't look like it's even used
 
-    ['noDataValue', [0.0]],     # confusing... seems like no value...
-    ['nan_conversion', [1]],    # if you have a noDataValue convert it to NaN?
+    ['noDataValue', [0.0]],     # depends on data. convert these values to NaNs
+    ['nan_conversion', [1]],    # if you have a noDataValue convert it to NaN
 
-    ['ifglksx', [1]],       # don't rescale...
-    ['ifglksy', [1]],
+    ['ifglks', [(1, 1)]],       # tuples for x and y looks
 
     # stacking/velocity parameters
-    ['nsig', [2]],      # matlab default 2
+    ['nsig', [2]],      # Matlab default 2
     ['pthr', [12]],     # dependant on ifgsize
-    ['maxsig', [2]],    # <-- matlab default 2
+    ['maxsig', [2]],    # Matlab default 2
 
-    # Matt says vcm isn't being used, but would be base sweep if was
-    # needed for windows version
-    ['vcmtmethod', [1]],    # pyrate uses general method1... keep it @ this
-    ['vcmsmethod', [1]],    # is calculated by not even used, only one that has looks, defaults to 10 looks
-    ['vcmslksx', [10]],      # what to set for matlab
+    ['vcmtmethod', [1]],    # Python uses general method 1... keep it at this
+    ['vcmsmethod', [1]],    # is calculated but not even used, only one that has looks, defaults to 10 looks
+    ['vcmslksx', [10]],     # what to set for matlab
     ['vcmslksy', [10]],
 ]
 
@@ -89,45 +85,40 @@ orb_b = [
     ],
     #[
     #    ['orbfit', [1]],
-    #    ['orbfitmethod', [1,2]],
+    #    ['orbfitmethod', [1, 2]],
     #    ['orbfitdegrees', [1]],    # default 1
-    #    ['orbfitlksx', [5]],       # will probably depend on data
-    #    ['orbfitlksy', [5]],
+    #    ['orbfitlks', [(5, 5)]],       # will probably depend on data
     #],
 ]
 
-# Todo, how to pick manual reference point
-# does some data have a optimized, predetermined reference point
 ref_b = [
     [
-        ['refest', [2]],    # 1 is stupid
+        ['refest', [2]],            # 1 is stupid
         ['refx', [0]],
         ['refy', [0]],
-        ['refnx', [10]],        # x/10
-        ['refny', [10]],        # y/10
-        ['refchipsize', [5]],   # ?
+        ['refnx', [10]],            # x/10
+        ['refny', [10]],            # y/10
+        ['refchipsize', [5]],       # ?
         ['refminfrac', [0.8]],      # default for matlab
     ],
 ]
 
 ts_b = [
     #[
-    #    ['tscal', [0]],        # will never test this
+    #    ['tscal', [0]],        # will never test this (will always want to create time series)
     #],
     [   # laplcian smoothing
         ['tscal', [1]],
         ['tsmethod', [1]],
 
-        ['smorder', [1]],     # pyrate config.py says this and below "NOT CURRENTLY USED"
-        ['smfactor', [1]],      # MATLAB = smfactor: smoothing factor(0: calculate & plot L-curve; others: smoothing factor (10^(smf))
-                                # PYRATE = Laplacian smoothing factor (0: calculate & plot L-curve; others: using the specific smoothing factor 10**smfactor) NOT CURRENTLY USED
-                                # 0 smfactor screws up matlab if tspar.smf==0
-                                #                               tspar.smf_min = getpar('smf_min:',parmat,'n');
-        ['ts_pthr', [12]],      # based on ifg size
+        ['smorder', [1]],       # pyrate config.py says this and smfactor "NOT CURRENTLY USED"
+        ['smfactor', [1]],
 
-        ['ts_interp', [0]],     # MATLAB LAPLACIAN only. default 0. Matt says keep this @ 0
+        ['ts_pthr', [12]],      # based on ifg size (12 is for sydney data)
 
-        ['stepest', [0]],       # matlab only, default 0
+        ['ts_interp', [0]],     # Matlab laplacian only. default 0. Matt says keep this at 0
+
+        ['stepest', [0]],       # Matlab only, default 0
     ],
     [
         # SVD (note pyrate required smorder & smfactor parameters (to run), even though they won't be used ==> dummy param
@@ -137,11 +128,14 @@ ts_b = [
         ['smorder', [0]],
         ['smfactor', [0]],
 
-        ['ts_pthr', [12]],      # based on ifg size
+        ['ts_pthr', [12]],      # based on ifg size (12 is for sydney data)
 
         ['stepest', [0]],       # matlab only, default 0
     ],
 ]
+
+ML, PY = 0, 1                   # to indicate Matlab or Python
+NAME, VALUE, STATE = 0, 1, 2    # used in recursive function to generate cfg files
 
 # combine branches to create work
 work = []
@@ -151,7 +145,7 @@ for i1 in crop_b:
             for i4 in ts_b:
                 work.append(deepcopy(base + i1 + i2 + i3 + i4))
 
-# set state to 0 while we here...
+# set state to 0
 for b_comb in work:     # b_com = branch combination, which is what it is
     [n_v.append(0) for n_v in b_comb]
 
@@ -163,200 +157,177 @@ for b_comb in work:
         n_perms_per_b *= len(n_v_s[1])
     n_perms += n_perms_per_b
 
-print n_perms
+print 'generating '+str(n_perms)+' configuration files...'
 n_zs = len(str(n_perms))
 
 # FUNCTIONS ===============================================
 # =========================================================
-def rec_loop(cnfg_headers, n_v_s, loop=0):
-    """
-
-    :param cnfg_headers: list containing header strings for unix then windows (i.e. just 2 elements)
-    :param n_v_s: [param name string, [values that name takes], what value we are up to in the recursive loop]
-    :param loop:
-    :return: nothing
-    """
+def rec_loop(n_v_s, loop=0):
     if loop != 0:
         if n_v_s[loop][STATE] == len(n_v_s[loop][VALUE]):
             n_v_s[loop][STATE] = 0
     if loop < (len(n_v_s)-1):
         while n_v_s[loop][STATE] < len(n_v_s[loop][VALUE]):
-            rec_loop(cnfg_headers, n_v_s, loop+1)
+            rec_loop(n_v_s, loop+1)
             n_v_s[loop][STATE] += 1
     if loop == (len(n_v_s)-1):
         while (n_v_s[loop][STATE] < len(n_v_s[loop][VALUE])):
-            global counter, out_d, n_zs     # out_d and n_zs aren't modified, so technically can leave out here. these are set below, not above.
+            global counter
 
             z_str = str(counter).zfill(n_zs)
 
-            this_d = join(out_d, z_str)
+            # some helper references
+            num_d = join(script_d, dat_dr, z_str)      # the number directory
+            ml_d = join(num_d, 'matlab')
+            py_d = join(num_d, 'python')
 
             # check if the following directories exist. if not create them
-            directs = []
-            directs.append(this_d)
-            directs.append(join(this_d, 'python'))
-            directs.append(join(this_d, 'matlab'))
-            directs.append(join(this_d, 'matlab', 'logs'))
-            for direct in directs:
-                if not os.path.exists(direct):
-                    os.mkdir(direct)
+            ds = []
+            ds.append(join(script_d, dat_dr))    # create folder with name of actual test data (used for lumping together tests on data)
+            ds.append(num_d)
+            ds.append(ml_d)
+            ds.append(py_d)
+            ds.append(join(ml_d, 'logs'))
+            for d in ds:
+                if not os.path.exists(d):
+                    os.mkdir(d)
 
-            cnfg_str = ['', '']
-            for item in n_v_s:
-                cnfg_str[PR] += item[NAME] + ': ' + str(item[VALUE][item[STATE]]) + '\n'
-                cnfg_str[ML] += item[NAME] + ': ' + str(item[VALUE][item[STATE]]) + '\n'
+            # copy the data over for python and matlab (each cfg gets its own data files)
+            ml_dat_d = join(ml_d, 'data')      # todo: require this above. make reference
+            py_dat_d = join(py_d, 'data')
+            shutil.copytree(dat_d, ml_dat_d)    # docs say don't need to create the directory beforehand
+            shutil.copytree(dat_d, py_dat_d)
 
-            header_str = ['', '']
-            for i, opsys in enumerate(cnfg_headers):
-                for n_v in opsys:
-                    header_str[i] += n_v[NAME] + ': ' + n_v[VALUE] + '\n'
+            # some helper references...
+            ml_obs_d = join(ml_dat_d, 'obs')
+            py_obs_d = join(py_dat_d, 'obs')
+            ml_dem_d = join(ml_dat_d, 'dem')
+            py_dem_d = join(py_dat_d, 'dem')
 
-            outdir_str = [None, None]
-            outdir_str[PR] = 'outdir: '+this_d+os.path.sep+'python'+os.path.sep+'\n'
-            outdir_str[ML] = 'outdir: '+this_d+os.path.sep+'matlab'+os.path.sep+'\n'
+            cfg = []   # 2 x n list for storing n configuration strings for ml and py configuration files
 
-            # copy matlab data... create data folder in matlab (above) and put in obs and dem
-            from_cp_direct = join(os.environ['PR_TESTING_DATA'], fld)
-            ml_data_direct = join(this_d, 'matlab', 'data')     # matlab data directory
-            ml_data_direct_obs = join(ml_data_direct, 'obs')
-            ml_data_direct_dem = join(ml_data_direct, 'dem')
-            # -----------actual copying------------
-            shutil.copytree(join(from_cp_direct, 'obs'), ml_data_direct_obs)
-            shutil.copytree(join(from_cp_direct, 'dem'), ml_data_direct_dem)
-            # set ifglist, obsdir, demdir
-            per_rec_ml_str =  '########## copied files directs ##########\n'
-            per_rec_ml_str += 'obsdir: '+ml_data_direct_obs+os.path.sep+'\n'
-            per_rec_ml_str += 'demdir: '+ml_data_direct_dem+os.path.sep+'\n'
-            per_rec_ml_str += 'ifgfilelist: '+os.path.split(ifgfilelist)[1]+'\n'
-            per_rec_ml_str += '##########################################\n'
+            # set obsdir, demdir, ifgfilelist appropriately (header 1)
+            h1 = ['', '']
+            h1[ML] += '### FILE DIRECTORIES ###\n'
+            h1[ML] += 'obsdir: '+ml_obs_d+os.path.sep+'\n'
+            h1[ML] += 'demdir: '+ml_dem_d+os.path.sep+'\n'
+            h1[ML] += 'outdir: '+ml_d+os.path.sep+'\n'
+            # -----------------------------------------------------------------------------------------
+            h1[PY] += '### FILE DIRECTORIES ###\n'
+            h1[PY] += 'obsdir: '+py_obs_d+os.path.sep+'\n'
+            h1[PY] += 'demdir: '+py_dem_d+os.path.sep+'\n'
+            h1[PY] += 'outdir: '+py_d+os.path.sep+'\n'
+            cfg.append(h1)
 
-            cnfg_strs = [None, None]    # these where store combined strings that eventually get written out
+            h2 = ['', '']
+            h2[ML] += '### OTHER ###\n'
+            h2[ML] += 'ifgfilelist: '+ifgfilelist_fr+'\n'                   # Matlab expects relative path (to obs directory)
+            h2[ML] += 'processor: 1\n'
+            h2[ML] += 'demfile: '+demfile_fr+'\n'
+            h2[ML] += 'parfile: '+parfile_fr+'\n'
+            # -----------------------------------------------------------------------------------------
+            h2[PY] = '### OTHER ###\n'
+            h2[PY] += 'ifgfilelist: '+join(py_obs_d, ifgfilelist_fr)+'\n'   # Python wants absolute path
+            h2[PY] += 'processor: 1\n'
+            h2[PY] += 'demfile: '+join(py_dem_d, demfile_fr)+'\n'
+            h2[PY] += 'demHeaderFile: '+join(py_dem_d, parfile_fr)+'\n'     # different name for Python
+            cfg.append(h2)
 
-            cnfg_strs[PR] = header_str[PR]+outdir_str[PR]+cnfg_str[PR]
-
-            cnfg_strs[ML] =  '############# needed to work #############\n'
-            cnfg_strs[ML] += 'gmtfaultfile: xxxx.gmt\n'
-            #cnfg_strs[WIN] += 'atmfit: 0\n'
-            cnfg_strs[ML] += 'ifgname_prefix_len: 0\n'
-            cnfg_strs[ML] += 'ifgname_date_format: 8\n'
-            cnfg_strs[ML] += 'auxdir: logs'+os.path.sep+'\n'
+            h3 = ['', '']
+            h3[ML] += '### NEEDED FOR MATLAB TO WORK ###'
+            h3[ML] += 'wavelength: '+wl+'\n'
+            h3[ML] += 'gmtfaultfile: xxxx.gmt\n'
+            h3[ML] += 'ifgname_prefix_len: 0\n'
+            h3[ML] += 'ifgname_date_format: 8\n'
+            h3[ML] += 'auxdir: logs'+os.path.sep+'\n'
             # below stuff isn't used but is needed (doesn't matter if directory is created or not)
-            cnfg_strs[ML] += 'ratedir: ratemap'+os.path.sep+'\n'
-            cnfg_strs[ML] += 'tsdir: timeseries'+os.path.sep+'\n'
-            cnfg_strs[ML] += 'profdir: prof'+os.path.sep+'\n'
-            cnfg_strs[ML] += '##########################################\n'
-            # add the important parts onto the "need to work" shit above
-            cnfg_strs[ML] += header_str[ML]+per_rec_ml_str+outdir_str[ML]+cnfg_str[ML]
+            h3[ML] += 'ratedir: ratemap'+os.path.sep+'\n'
+            h3[ML] += 'tsdir: timeseries'+os.path.sep+'\n'
+            h3[ML] += 'profdir: prof'+os.path.sep+'\n'
+            # -----------------------------------------------------------------------------------------
+            # this header isn't relevant for Python. leave as ''
+            cfg.append(h3)
 
-            # finished. write the two config files with diff extensions
-            cnfg_file_PR = open(this_d + os.path.sep + z_str + '.pcfg', 'w')
-            cnfg_file_PR.write(cnfg_strs[PR])
-            cnfg_file_ML = open(this_d + os.path.sep + z_str + '.mcfg', 'w')
-            cnfg_file_ML.write(cnfg_strs[ML])
+            # stringify the parameters that are recursed in this function
+            body = ['', '']
+            for item in n_v_s:
+                # check if name is ifglks or orbfitlks and set appropriately
+                if item[NAME] == 'ifglks':
+                    body[ML] += 'ifglksx: '+str(item[VALUE][item[STATE]][0])+'\n'
+                    body[ML] += 'ifglksy: '+str(item[VALUE][item[STATE]][1])+'\n'
+                elif item[NAME] == 'orbfitlks':
+                    body[ML] += 'orbfitlksx: '+str(item[VALUE][item[STATE]][0])+'\n'
+                    body[ML] += 'orbfitlksy: '+str(item[VALUE][item[STATE]][1])+'\n'
+                # other data doesn't need processing
+                else:
+                    body[ML] += item[NAME]+': '+str(item[VALUE][item[STATE]])+'\n'
+                    body[PY] += item[NAME]+': '+str(item[VALUE][item[STATE]])+'\n'
+            cfg.append(body)
+
+            # finished. write the two cfg files with diff extensions\
+            mt_cfg_fp = open(join(num_d, z_str)+'.mcfg', 'w')
+            py_cfg_fp = open(join(num_d, z_str)+'.pcfg', 'w')
+            for block in cfg:
+                mt_cfg_fp.write(block[ML])
+                py_cfg_fp.write(block[PY])
+            mt_cfg_fp.close()
+            py_cfg_fp.close()
 
             counter += 1
-            n_v_s[loop][STATE] += 1 # <-- this must be @ the bottom of while
+            n_v_s[loop][STATE] += 1 # this must be at bottom of while loop
 
-# SETUP FOLDERS
-# -------------
-
-dat_d = os.environ['PR_TESTING_DATA']   # directory where ifg data stored. see file docstring for required structure
-#dat_flds = os.listdir(dat_d)           # <-- want to use everything in here
-dat_flds = ['syd_g']                    # manually select specific folders
-
+# [END OF] FUNCTIONS ======================================
+# =========================================================
 # create a folder of the same name as this script in the same directory as the script
-test_d, script_fn = os.path.split(os.path.realpath(__file__))    # will give the directory script is in
-script_d = join(test_d, script_fn[:-3])
+test_d, script_fr = os.path.split(os.path.realpath(__file__))    # will give the directory script is in
+script_d = join(test_d, script_fr[:-3])
 if not os.path.exists(script_d):
         os.mkdir(script_d)
 
-for fld in dat_flds:
-    # cnfg file info to do with directories and stuff that won't get sweeped in rec_loop function
-    # list of [name, value]
-    # these work automatically for the Python version. a object will be created for the Matlab cnfg file
-    header_n_v = []
+for dat_dr in dat_drs:
+    # start by iterating through each data folder...
+    # set references that can be used in rec_loop
+    # name of ifgfilelist (has to be in obs_d (convention))
+    dat_d = join(dat_root_d, dat_dr)
+    obs_d = join(dat_d, 'obs')
+    dem_d = join(dat_d, 'dem')
 
-    fld_abs = join(dat_d, fld)      #cp_app(dat_d, fld)
-    obsdir =  join(fld_abs, 'obs')
-    header_n_v.append(['obsdir', obsdir+os.path.sep])   # seperator on end to indicated directory (also might be required for matlab)
-
-    for file_name in os.listdir(obsdir):
-        if file_name[:4] == 'ifms':
-            ifgfilelist = join(obsdir, file_name)       #cp_app(obsdir, file_name)
+    for fr in os.listdir(obs_d):
+        if fr[:4] == 'ifms':        # convention. ifg file list has to begin with 'ifms'. e.g. ifms_17
+            ifgfilelist_fr = fr     # set here because i may use 'fr' again
             break
-    header_n_v.append(['ifgfilelist', ifgfilelist])     # this has to be changed to relative path for Matlab
-
-    dem_dir = join(fld_abs, 'dem')                      #cp_app(fld_abs, 'dem')
-    for file_name in os.listdir(dem_dir):
-        if file_name[-4:] == '.dem':
-            demfile = join(dem_dir, file_name)          #cp_app(dem_dir, file_name)
-            break
-    header_n_v.append(['demfile', demfile])             # relative for Matlab
-
-    # figure out if roipac or gamma pre-processing by file extensions
-    # TEST FILES WILL ONLY BE GAMMA FOR NOW
-    for file_name in os.listdir(obsdir):
-        if file_name[-4:] == '.rsc':
-            processor = '0'   # is ROIPAC
-            break
-        if file_name[-4:] == '.par':
-            processor = '1'   # is gamma
-            break
-    header_n_v.append(['processor', processor])
-
-    if processor == '1':
-        demHeaderFile = deepcopy(demfile)
-        demHeaderFile += '.par'
-        resourceHeader = ''
     else:
-        demHeaderFile = ''
-        resourceHeader = deepcopy(demfile)
-        resourceHeader += '.rsc'
-    header_n_v.append(['demHeaderFile', demHeaderFile])
-    header_n_v.append(['resourceHeader', resourceHeader])
+        print 'ifg file list could not be found. must be in "obs" directory and must begin with "ifms" (e.g. ifms_17)'
+        sys.exit(0)
 
-    # make folder for this specific test data...
-    out_d = join(script_d, fld)
-    if not os.path.exists(out_d):
-        os.mkdir(out_d)
-        
-    counter = 0     # what cfg file out of all cfg files
-    
-    headers_n_v = [None, None]      # for pyrate and matlab
-    headers_n_v[PR] = deepcopy(header_n_v)     # pyrate version shouldn't have to change
-    temp = []
-    for n_v in header_n_v:
-        if n_v[NAME] == 'ifgfilelist':
-            #n_v[VALUE] = os.path.split(n_v[VALUE])[1]   # just want the relative part
-            # this needs to be updated on a cfg directory basis
-            continue
-        if n_v[NAME] == 'demfile':
-            n_v[VALUE] = os.path.split(n_v[VALUE])[1]
-        if n_v[NAME] == 'demHeaderFile':
-            n_v[NAME] = 'parfile'
-            n_v[VALUE] = os.path.split(n_v[VALUE])[1]
-        # obsdir and demdir (commented out after this loop) need to be copied in rec_loop and set there. so pass here.
-        if n_v[NAME] == 'obsdir':
-            continue    # we don't want this
-        if n_v[NAME] == 'resourceHeader':
-            continue    # we don't want this
-        if n_v[NAME] == 'processor':
-            continue    # we don't want this
-        temp.append(n_v)
-    #temp.append(['demdir', dem_dir+os.path.sep])       # stupid matlab requires dem_dir
-    headers_n_v[ML] = temp
+    # get the relative demfile name
+    for fr in os.listdir(dem_d):
+        if fr[-4:] == '.dem':       # convention
+            demfile_fr = fr         # set here because i may use 'fr' again
+            break
+    else:
+        print '<demfile error message>'
+        sys.exit(0)
 
-    # TODO: might need to add slashes onto end of directories...
+    # get the relative parfile name
+    for fr in os.listdir(dem_d):
+        if fr[-4:] == '.par':       # convention
+            parfile_fr = fr         # set here because i may use 'fr' again
+            break
+    else:
+        print '<parfile error message>'
+        sys.exit(0)
 
-    # add wavelength for WIN and MCC
-    # ensure there is a file that specifies wavelength for each data folder... (needed for matlab)
-    wl_f = open(join(fld_abs, 'wavelength.txt'), 'r')
-    wl = wl_f.readline()
-    wl_f.close()
-    headers_n_v[ML].append(['wavelength', wl])
+    # get wavelength from special file
+    # todo: read from par file
+    wl_fp = open(join(dat_d, 'wavelength.txt'), 'r')
+    wl = wl_fp.readline()
+    wl_fp.close()
 
+    counter = 0
     for b_comb in work:
-        rec_loop(cnfg_headers=headers_n_v, n_v_s=b_comb)
+        rec_loop(n_v_s=b_comb)
         # set state back to 0 for next folder
         for n_v_s in b_comb:
             n_v_s[STATE] = 0
+
