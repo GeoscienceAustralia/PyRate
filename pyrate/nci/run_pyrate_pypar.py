@@ -21,6 +21,7 @@ from pyrate import orbital
 from pyrate import ifgconstants as ifc
 from pyrate import vcm as vcm_module
 from pyrate import reference_phase_estimation as rpe
+from pyrate import timeseries
 # Constants
 MASTER_PROCESS = 0
 
@@ -113,9 +114,58 @@ def main(params=None):
     maxvar = maxvar_mpi(MPI_myID, ifgs, num_processors, parallel, params)
     # get vcmt is very fast and not mpi'ed at the moment
     # TODO: revisit this if performance is low in NCI
+    # vcmt extremely fast already and no need to parallize
+    # offers easy parallisation if required
     vcmt = vcm_module.get_vcmt(ifgs, maxvar)  # all processes
 
+    parallel.barrier()
+
+    time_series_mpi(MPI_myID, ifgs, mst_grid, num_processors, parallel, params,
+                    vcmt)
+
+    parallel.barrier()
+
     parallel.finalize()
+
+
+def time_series_mpi(MPI_myID, ifgs, mst_grid, num_processors, parallel, params,
+                    vcmt):
+    B0, INTERP, PTHRESH, SMFACTOR, SMORDER, TSMETHOD, ifg_data, mst, \
+    ncols, nrows, nvelpar, _, processes, span, tsvel_matrix = \
+        timeseries.time_series_setup(ifgs=ifgs, mst=mst_grid, params=params)
+    # mpi by the rows
+    # still problem is ifg_data which contains data for all ifgs
+    # TODO: must stop sending all phase_data to each mpi process
+    rows = range(nrows)
+    process_indices = parallel.calc_indices(nrows)
+    process_rows = [itemgetter(p)(rows) for p in process_indices]
+    process_tsvel_matrix = []
+    for row in process_rows:
+        process_tsvel_matrix.append(timeseries.time_series_by_rows(
+            row, B0, SMFACTOR, SMORDER, ifg_data, mst, ncols,
+            nvelpar, PTHRESH, vcmt, TSMETHOD, INTERP))
+    tsvel_file = os.path.join(params[cf.OUT_DIR], 'tsvel.npy')
+    tsincr_file = os.path.join(params[cf.OUT_DIR], 'tsincr.npy')
+    tscum_file = os.path.join(params[cf.OUT_DIR], 'tscum.npy')
+    if MPI_myID == MASTER_PROCESS:
+        all_indices = parallel.calc_all_indices(nrows)
+        tsvel_matrix = np.empty(shape=(nrows, ncols, nvelpar), dtype=np.float32)
+        tsvel_matrix[all_indices[MASTER_PROCESS]] = process_tsvel_matrix
+
+        # putting it together
+        for i in range(1, num_processors):
+            process_tsvel_matrix = parallel.receive(source=i, tag=-1,
+                                                    return_status=False)
+            tsvel_matrix[all_indices[i]] = process_tsvel_matrix
+        tsvel_matrix = np.where(tsvel_matrix == 0, np.nan, tsvel_matrix)
+        tsincr = tsvel_matrix * span
+        tscum = np.cumsum(tsincr, 2)
+        np.save(file=tsvel_file, arr=tsvel_matrix)
+        np.save(file=tscum_file, arr=tscum)
+        np.save(file=tsincr_file, arr=tsincr)
+    else:
+        parallel.send(process_tsvel_matrix, destination=MASTER_PROCESS,
+                      tag=MPI_myID)
 
 
 def ref_phase_estimation_mpi(MPI_myID, ifgs, num_processors, parallel, params,
@@ -268,7 +318,7 @@ def ref_pixel_calc_mpi(MPI_myID, ifgs, num_processors, parallel, params):
     if MPI_myID == MASTER_PROCESS:
         all_indices = parallel.calc_all_indices(no_steps)
         mean_sds_final = np.empty(shape=no_steps)
-        mean_sds_final[all_indices[0]] = mean_sds
+        mean_sds_final[all_indices[MASTER_PROCESS]] = mean_sds
         for i in range(1, num_processors):
             process_mean_sds = parallel.receive(source=i, tag=-1,
                                                 return_status=False)
