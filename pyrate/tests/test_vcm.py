@@ -26,6 +26,7 @@ from pyrate.tests.common import SYD_TEST_DIR, SYD_TEST_OUT
 from pyrate import config as cf
 from pyrate import reference_phase_estimation as rpe
 from pyrate.tests import common
+from pyrate import vcm as vcm_module
 
 
 class CovarianceTests(unittest.TestCase):
@@ -217,7 +218,7 @@ class MatlabEqualityTestInRunPyRateSequence(unittest.TestCase):
         np.testing.assert_array_almost_equal(matlab_vcm, self.vcmt, decimal=3)
 
 
-class MaxVarMPITest(unittest.TestCase):
+class MaxVarVcmtMPITest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -258,6 +259,8 @@ class MaxVarMPITest(unittest.TestCase):
         subprocess.check_call(cmd)
         maxvar_file = os.path.join(cls.params[cf.OUT_DIR], 'maxvar.npy')
         cls.maxvar = np.load(maxvar_file)
+        vcmt_file = os.path.join(cls.params[cf.OUT_DIR], 'vcmt.npy')
+        cls.vcmt = np.load(vcmt_file)
 
     def calc_non_mpi_maxvar(self):
         for i in self.ifgs:
@@ -278,8 +281,9 @@ class MaxVarMPITest(unittest.TestCase):
 
         if self.params[cf.ORBITAL_FIT] != 0:
             run_pyrate.remove_orbital_error(self.ifgs, self.params)
-
-        return [cvd(i)[0] for i in self.ifgs]
+        maxvar = [cvd(i)[0] for i in self.ifgs]
+        vcmt = vcm_module.get_vcmt(ifgs, maxvar)
+        return maxvar, vcmt
 
     @classmethod
     def tearDownClass(cls):
@@ -293,8 +297,10 @@ class MaxVarMPITest(unittest.TestCase):
             mlooked_ifgs = glob.glob(os.path.join(
                 self.tif_dir, '*_{looks}rlks_*cr.tif'.format(looks=looks)))
             self.assertEqual(len(mlooked_ifgs), 17)
-            original_maxvar = self.calc_non_mpi_maxvar()
+            original_maxvar, original_vcmt = self.calc_non_mpi_maxvar()
             np.testing.assert_array_almost_equal(original_maxvar, self.maxvar,
+                                                 decimal=2)
+            np.testing.assert_array_almost_equal(original_vcmt, self.vcmt,
                                                  decimal=2)
 
     def test_maxvar_log_written(self):
