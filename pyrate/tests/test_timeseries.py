@@ -473,6 +473,9 @@ class MPITests(unittest.TestCase):
         # copy sydney_tif files in temp_dir
         shared.copytree(src=common.SYD_TEST_TIF, dst=temp_dir)
         input_ifgs = glob.glob(os.path.join(temp_dir, '*.tif'))
+
+        # sort to make tests deterministic
+        input_ifgs.sort()
         xlooks, ylooks, crop = run_pyrate.transform_params(self.params)
 
         prepifg.prepare_ifgs(input_ifgs,
@@ -526,7 +529,7 @@ class MPITests(unittest.TestCase):
                                                  self.tscum_mpi,
                                                  decimal=4)
 
-    def test_maxvar_log_written(self):
+    def test_timeseries_log_written(self):
         self.process()
         log_file = glob.glob(os.path.join(self.tif_dir, '*.log'))[0]
         self.assertTrue(os.path.exists(log_file))
