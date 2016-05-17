@@ -194,6 +194,9 @@ PROCESSES = 'processes'
 # Luigi parameter
 LUIGI = 'use_luigi'
 
+# pickle output or not
+PICKLE = 'pickle'
+
 # ORBITAL ERROR correction constants
 INDEPENDENT_METHOD = 1
 NETWORK_METHOD = 2

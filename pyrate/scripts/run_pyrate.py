@@ -82,7 +82,6 @@ def process_ifgs(ifg_paths_or_instance, params):
     epochlist = algorithm.get_epochs(ifgs)
 
     global grk_dict
-    grk_dict = {}
     if params[cf.TIME_SERIES_CAL] != 0:
         compute_time_series(epochlist, gt, ifgs, md, mst_grid, params, vcmt,
                             wkt)
@@ -90,10 +89,12 @@ def process_ifgs(ifg_paths_or_instance, params):
     rate, error, samples = calculate_linear_rate(
                    ifgs, params, vcmt, mst=mst_grid)
     grk_dict['rate'] = rate
-    # pickle grk_dict so can be read in by cmp_out.py
-    grk_fp = open(os.path.join(PYRATEPATH, params[cf.OUT_DIR], 'out_py.pkl'), 'w')
-    pickle.dump(grk_dict, grk_fp)
-    grk_fp.close()
+    if cf.PICKLE in params:
+        if int(params[cf.PICKLE]) == 1:
+            # pickle grk_dict so can be read in by cmp_out.py
+            grk_fp = open(os.path.join(PYRATEPATH, params[cf.OUT_DIR], 'out_py.pkl'), 'w')
+            pickle.dump(grk_dict, grk_fp)
+            grk_fp.close()
 
     md[ifc.PYRATE_DATE] = epochlist.dates
     dest = os.path.join(PYRATEPATH, params[cf.OUT_DIR], "linrate.tif")
