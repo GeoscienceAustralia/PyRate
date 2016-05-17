@@ -12,6 +12,9 @@ import shutil
 import sys
 import numpy as np
 import tempfile
+import subprocess
+import glob
+from itertools import product
 
 from pyrate.scripts import run_pyrate, run_prepifg
 from pyrate import matlab_mst_kruskal as matlab_mst
@@ -23,6 +26,9 @@ from pyrate import vcm
 from pyrate.config import LR_PTHRESH, LR_MAXSIG, LR_NSIG
 from pyrate.linrate import linear_rate
 from pyrate.tests import common
+from pyrate import vcm as vcm_module
+from pyrate import prepifg
+from pyrate import shared
 
 # TODO: linear rate code
 # 1. replace MST key:value date:date pairs with lists of Ifgs?
@@ -207,6 +213,137 @@ class MatlabEqualityTest(unittest.TestCase):
     def test_lin_rate_samples_serial(self):
         np.testing.assert_array_almost_equal(
             self.samples_s, self.samples_matlab, decimal=3)
+
+
+class MPITests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.tif_dir = tempfile.mkdtemp()
+        cls.test_conf = common.SYDNEY_TEST_CONF
+
+        # change the required params
+        cls.params = cf.get_config_params(cls.test_conf)
+        cls.params[cf.OBS_DIR] = common.SYD_TEST_GAMMA
+        cls.params[cf.PROCESSOR] = 1  # gamma
+        cls.params[cf.IFG_FILE_LIST] = os.path.join(
+            common.SYD_TEST_GAMMA, 'ifms_17')
+        cls.params[cf.OUT_DIR] = cls.tif_dir
+        cls.params[cf.PARALLEL] = 0
+        cls.params[cf.REF_EST_METHOD] = 1
+        # base_unw_paths need to be geotiffed and multilooked by run_prepifg
+        cls.base_unw_paths = run_pyrate.original_ifg_paths(
+            cls.params[cf.IFG_FILE_LIST])
+
+    @classmethod
+    def process(cls):
+        xlks, ylks, crop = run_pyrate.transform_params(cls.params)
+
+        # dest_paths are tifs that have been geotif converted and multilooked
+        dest_paths = run_pyrate.get_dest_paths(
+            cls.base_unw_paths, crop, cls.params, xlks)
+
+        # create the dest_paths files
+        run_prepifg.gamma_prepifg(cls.base_unw_paths, cls.params)
+
+        # now create test ifgs
+        cls.ifgs = common.sydney_data_setup(datafiles=dest_paths)
+
+        # give the log file any name
+        cls.log_file = os.path.join(cls.tif_dir, 'linrate_mpi.log')
+
+        # create the conf file in out_dir
+        cls.conf_file = tempfile.mktemp(suffix='.conf', dir=cls.tif_dir)
+        cf.write_config_file(cls.params, cls.conf_file)
+
+        # conf file crated?
+        assert os.path.exists(cls.conf_file)
+
+        # Calc time series using MPI
+        str = 'mpirun -np 2 python pyrate/nci/run_pyrate_pypar.py ' + \
+              cls.conf_file
+        cmd = str.split()
+        subprocess.check_call(cmd)
+
+        maxvar_file = os.path.join(cls.params[cf.OUT_DIR], 'maxvar.npy')
+        cls.maxvar_mpi = np.load(maxvar_file)
+
+        rate_file = os.path.join(cls.params[cf.OUT_DIR], 'rate.npy')
+        cls.rate_mpi = np.load(rate_file)
+        error_file = os.path.join(cls.params[cf.OUT_DIR], 'error.npy')
+        cls.error_mpi = np.load(error_file)
+        samples_file = os.path.join(cls.params[cf.OUT_DIR], 'samples.npy')
+        cls.samples_mpi = np.load(samples_file)
+
+    def calc_non_mpi_time_series(self):
+        temp_dir = tempfile.mkdtemp()
+        # copy sydney_tif files in temp_dir
+        shared.copytree(src=common.SYD_TEST_TIF, dst=temp_dir)
+        input_ifgs = glob.glob(os.path.join(temp_dir, '*.tif'))
+
+        # sort to make tests deterministic
+        input_ifgs.sort()
+
+        xlooks, ylooks, crop = run_pyrate.transform_params(self.params)
+
+        prepifg.prepare_ifgs(input_ifgs,
+                            crop,
+                            xlooks,
+                            ylooks,
+                            thresh=0.5,
+                            user_exts=None,
+                            write_to_disc=True)
+        mlooked_paths = [prepifg.mlooked_path(input_ifg, xlooks, crop)
+                         for input_ifg in input_ifgs]
+        ifgs, mst_grid = run_pyrate.mst_calculation(mlooked_paths,
+                                                            self.params)
+        refx, refy = run_pyrate.find_reference_pixel(ifgs, self.params)
+
+        if self.params[cf.ORBITAL_FIT] != 0:
+            run_pyrate.remove_orbital_error(ifgs, self.params)
+
+        _, ifgs = rpe.estimate_ref_phase(ifgs, self.params, refx, refy)
+
+        maxvar = [vcm_module.cvd(i)[0] for i in ifgs]
+
+        vcmt = vcm_module.get_vcmt(ifgs, maxvar)
+
+        self.rate, self.error, self.samples = run_pyrate.calculate_linear_rate(
+                   ifgs, self.params, vcmt, mst=mst_grid)
+
+        np.testing.assert_array_almost_equal(maxvar, self.maxvar_mpi, decimal=4)
+        shutil.rmtree(temp_dir)
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(cls.tif_dir)
+
+    def test_mpi_mst_single_processor(self):
+        # TODO: Why MPI test fails for looks > 2
+        for looks, ref_method in product([1, 2], [1, 2]):
+            print looks, ref_method
+            self.params[cf.IFG_LKSX] = looks
+            self.params[cf.IFG_LKSY] = looks
+            self.params[cf.REF_EST_METHOD] = ref_method
+            self.process()
+            mlooked_ifgs = glob.glob(os.path.join(
+                self.tif_dir, '*_{looks}rlks_*cr.tif'.format(looks=looks)))
+            self.assertEqual(len(mlooked_ifgs), 17)
+            self.calc_non_mpi_time_series()
+            np.testing.assert_array_almost_equal(self.rate,
+                                                 self.rate_mpi,
+                                                 decimal=4)
+
+            np.testing.assert_array_almost_equal(self.error,
+                                                 self.error_mpi,
+                                                 decimal=4)
+            np.testing.assert_array_almost_equal(self.samples,
+                                                 self.samples_mpi,
+                                                 decimal=4)
+
+    def test_linrate_log_written(self):
+        self.process()
+        log_file = glob.glob(os.path.join(self.tif_dir, '*.log'))[0]
+        self.assertTrue(os.path.exists(log_file))
 
 
 if __name__ == "__main__":
