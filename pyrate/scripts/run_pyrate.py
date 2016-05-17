@@ -276,13 +276,8 @@ def find_reference_pixel(ifgs, params):
 def calculate_linear_rate(ifgs, params, vcmt, mst=None):
     write_msg('Calculating linear rate')
 
-    # MULTIPROCESSING parameters
-    parallel = params[cf.PARALLEL]
-    processes = params[cf.PROCESSES]
-
     # TODO: do these need to be checked?
-    res = linrate.linear_rate(ifgs, params, vcmt, mst,
-                              parallel=parallel, processes=processes)
+    res = linrate.linear_rate(ifgs, params, vcmt, mst)
     for r in res:
         if r is None:
             raise ValueError('TODO: bad value')

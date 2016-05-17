@@ -48,7 +48,7 @@ from pyrate.tests import common
 #         raise NotImplementedError("Need sanity tests for args to stack()")
 
 def default_params():
-    return { 'pthr' : 3, 'nsig' : 3, 'maxsig' : 2 }
+    return {'pthr': 3, 'nsig': 3, 'maxsig': 2, 'parallel': 1, 'processes': 8}
 
 
 class SinglePixelIfg(object):
