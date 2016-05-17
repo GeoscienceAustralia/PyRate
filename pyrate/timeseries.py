@@ -18,6 +18,64 @@ import pyrate.config as config
 from algorithm import master_slave_ids, get_epochs
 import pyrate.ifgconstants as ifc
 from pyrate import config as cf
+from pyrate import mst as mst_module
+
+
+def time_series_setup(ifgs, mst, params):
+    if len(ifgs) < 1:
+        msg = 'Time series requires 2+ interferograms'
+        raise TimeSeriesError(msg)
+
+    # check if mst is not a tree, then do interpolate
+    if mst_module.mst_from_ifgs(ifgs)[1]:
+        params[cf.TIME_SERIES_INTERP] = 0
+    else:
+        params[cf.TIME_SERIES_INTERP] = 1
+
+    # make sure by now we have the time series interpolation parameter
+    assert params[cf.TIME_SERIES_INTERP] is not None
+
+    # Parallel Processing parameters
+    parallel = params[cf.PARALLEL]
+    processes = params[cf.PROCESSES]
+    # Time Series parameters
+    TSMETHOD = params[cf.TIME_SERIES_METHOD]
+    INTERP = params[cf.TIME_SERIES_INTERP]
+    # INTERP = 1
+    SMORDER = params[cf.TIME_SERIES_SM_ORDER]
+    SMFACTOR = np.power(10, params[cf.TIME_SERIES_SM_FACTOR])
+    PTHRESH = params[cf.TIME_SERIES_PTHRESH]
+    head = ifgs[0]
+    check_time_series_params(head, PTHRESH)
+    epochlist = get_epochs(ifgs)
+    nrows = ifgs[0].nrows
+    ncols = ifgs[0].ncols
+    nifgs = len(ifgs)
+    span = diff(epochlist.spans)
+    nepoch = len(epochlist.dates)  # epoch number
+    nvelpar = nepoch - 1  # velocity parameters number
+    nlap = nvelpar - SMORDER  # Laplacian observations number
+    mast_slave_ids = master_slave_ids(epochlist.dates)
+    imaster = [mast_slave_ids[ifg.master] for ifg in ifgs]
+    islave = [mast_slave_ids[ifg.slave] for ifg in ifgs]
+    imaster = min(imaster, islave)
+    islave = max(imaster, islave)
+    B0 = zeros((nifgs, nvelpar))
+    for i in range(nifgs):
+        B0[i, imaster[i]:islave[i]] = span[imaster[i]:islave[i]]
+
+    # change the sign if slave is earlier than master
+    isign = where(imaster > islave)
+    B0[isign[0], :] = -B0[isign[0], :]
+    tsvel_matrix = np.empty(shape=(nrows, ncols, nvelpar),
+                            dtype=np.float32)
+    ifg_data = np.zeros((nifgs, nrows, ncols), dtype=float32)
+    for ifg_num in xrange(nifgs):
+        ifg_data[ifg_num] = ifgs[ifg_num].phase_data
+    if mst is None:
+        mst = ~isnan(ifg_data)
+    return B0, INTERP, PTHRESH, SMFACTOR, SMORDER, TSMETHOD, ifg_data, mst, \
+           ncols, nrows, nvelpar, parallel, processes, span, tsvel_matrix
 
 
 def time_series(ifgs, params, vcmt, mst=None):
@@ -44,55 +102,9 @@ def time_series(ifgs, params, vcmt, mst=None):
         - *nepochs* is the number of unique epochs (dates) covered by the ifgs.).
     """
 
-    if len(ifgs) < 1:
-        msg = 'Time series requires 2+ interferograms'
-        raise TimeSeriesError(msg)
-
-    # Parallel Processing parameters
-    parallel = params[cf.PARALLEL]
-    processes = params[cf.PROCESSES]
-    # Time Series parameters
-    TSMETHOD = params[cf.TIME_SERIES_METHOD]
-    INTERP = params[cf.TIME_SERIES_INTERP]
-    #INTERP = 1 
-    SMORDER = params[cf.TIME_SERIES_SM_ORDER]
-    SMFACTOR = np.power(10, params[cf.TIME_SERIES_SM_FACTOR])
-    PTHRESH = params[cf.TIME_SERIES_PTHRESH]
-
-    head = ifgs[0]
-    check_time_series_params(head, PTHRESH)
-    epochlist = get_epochs(ifgs)
-
-    nrows = ifgs[0].nrows
-    ncols = ifgs[0].ncols
-    nifgs = len(ifgs)
-    span = diff(epochlist.spans)
-    nepoch = len(epochlist.dates)  # epoch number
-    nvelpar = nepoch - 1  # velocity parameters number
-    nlap = nvelpar - SMORDER  # Laplacian observations number
-
-    mast_slave_ids = master_slave_ids(epochlist.dates)
-    imaster = [mast_slave_ids[ifg.master] for ifg in ifgs]
-    islave = [mast_slave_ids[ifg.slave] for ifg in ifgs]
-    imaster = min(imaster, islave)
-    islave = max(imaster, islave)
-    B0 = zeros((nifgs, nvelpar))
-    for i in range(nifgs):
-        B0[i, imaster[i]:islave[i]] = span[imaster[i]:islave[i]]
-
-    # change the sign if slave is earlier than master
-    isign = where(imaster > islave)
-    B0[isign[0], :] = -B0[isign[0], :]
-
-    tsvel_matrix = np.empty(shape=(nrows, ncols, nvelpar),
-                            dtype=np.float32)
-
-    ifg_data = np.zeros((nifgs, nrows, ncols), dtype=float32)
-    for ifg_num in xrange(nifgs):
-        ifg_data[ifg_num] = ifgs[ifg_num].phase_data
-
-    if mst is None:
-        mst = ~isnan(ifg_data)
+    B0, INTERP, PTHRESH, SMFACTOR, SMORDER, TSMETHOD, ifg_data, mst, \
+    ncols, nrows, nvelpar, parallel, processes, span, tsvel_matrix = \
+        time_series_setup(ifgs, mst, params)
 
     if parallel == 1:
         tsvel_matrix = parmap.map(time_series_by_rows, range(nrows), B0,
