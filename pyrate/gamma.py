@@ -131,8 +131,8 @@ def combine_headers(hdr0, hdr1, dem_hdr):
     chdr = {ifc.PYRATE_TIME_SPAN: (date1 - date0).days / ifc.DAYS_PER_YEAR,
             ifc.PYRATE_DATE: date0,
             ifc.PYRATE_DATE2: date1,
-            ifc.PYRATE_PHASE_UNITS: RADIANS  } 
-#            ifc.PYRATE_INSAR_PROCESSOR: GAMMA  }
+            ifc.PYRATE_PHASE_UNITS: RADIANS,
+            ifc.PYRATE_INSAR_PROCESSOR: GAMMA}
 
     wavelen = hdr0[ifc.PYRATE_WAVELENGTH_METRES]
     if np.isclose(wavelen, hdr1[ifc.PYRATE_WAVELENGTH_METRES], atol=1e-6):

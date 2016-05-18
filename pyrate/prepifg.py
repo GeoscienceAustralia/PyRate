@@ -31,6 +31,7 @@ from osgeo import gdal, osr, gdalconst
 import pyrate.config as cfg
 from pyrate.shared import Ifg, DEM, PHASE_BAND
 from pyrate import gdal_python as gdalwarp
+from pyrate import ifgconstants as ifc
 
 CustomExts = namedtuple('CustExtents', ['xfirst', 'yfirst', 'xlast', 'ylast'])
 
@@ -106,7 +107,7 @@ def prepare_ifg(
 def dummy_warp(renamed_path):
     ifg = dem_or_ifg(renamed_path)
     ifg.open()
-    ifg.dataset.SetMetadataItem('PR_TYPE', 'ifg_2')
+    ifg.dataset.SetMetadataItem(ifc.PROCESS_STEP, gdalwarp.MULTILOOKED)
     ifg.close()
 
 

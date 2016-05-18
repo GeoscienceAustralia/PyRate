@@ -23,6 +23,7 @@ import pkg_resources
 import shutil
 import stat
 from pyrate import roipac, gamma
+from pyrate import ifgconstants as ifc
 
 import pyrate.ifgconstants as ifc
 
@@ -642,11 +643,6 @@ def write_geotiff(header, data_path, dest, nodata):
     # position and projection data
     ds.SetGeoTransform([header[ifc.PYRATE_LONG], header[ifc.PYRATE_X_STEP], 0,
                         header[ifc.PYRATE_LAT], 0, header[ifc.PYRATE_Y_STEP]])
-
-    # ifg type data
-    # if it is in the metadata... otherwise get unit test errors
-    if 'PR_TYPE' in header:
-        ds.SetMetadataItem('PR_TYPE', str(header['PR_TYPE']))
 
     srs = osr.SpatialReference()
     res = srs.SetWellKnownGeogCS(header[ifc.PYRATE_DATUM])

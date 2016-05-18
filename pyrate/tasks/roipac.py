@@ -93,7 +93,8 @@ class ConvertFileToGeotiff(luigi.Task):
 
         if ifc.PYRATE_DATUM not in header:  # DEM already has DATUM
             header[ifc.PYRATE_DATUM] = self.projection
-        write_geotiff(header, self.inputFile, self.output_file, self.no_data_value)
+        write_geotiff(header, self.inputFile, self.output_file,
+                      self.no_data_value)
 
     def output(self):
         """

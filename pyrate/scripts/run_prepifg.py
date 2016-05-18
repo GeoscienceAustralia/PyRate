@@ -10,19 +10,15 @@ from pyrate.tasks.utils import pythonifyConfig
 from pyrate.tasks.prepifg import PrepareInterferograms
 from pyrate import prepifg
 from pyrate import config as cf
-from pyrate.shared import Ifg
 from pyrate.scripts import run_pyrate
 from pyrate import roipac
 from pyrate import gamma
 from pyrate.shared import write_geotiff, mkdir_p
 from pyrate.tasks import gamma as gamma_task
 import pyrate.ifgconstants as ifc
-from pyrate.utils import tparmap
-from operator import itemgetter
-from osgeo import gdal
-from pyrate.prepifg import mlooked_path
 
 ROI_PAC_HEADER_FILE_EXT = 'rsc'
+GEOTIFF = 'GEOTIFF'
 
 
 def main(params=None):
@@ -91,7 +87,7 @@ def roipac_prepifg(base_ifg_paths, params):
         # DEM already has DATUM, so get it from dem if not in header
         if ifc.PYRATE_DATUM not in header:
             header[ifc.PYRATE_DATUM] = projection
-        header['PR_TYPE'] = 'ifg_1'   # non-cropped, non-multilooked ifg
+        header[ifc.PROCESS_STEP] = GEOTIFF  # non-cropped, non-multilooked geotiff
         write_geotiff(header, b, d, nodata=params[cf.NO_DATA_VALUE])
     prepifg.prepare_ifgs(
         dest_base_ifgs, crop_opt=crop, xlooks=xlooks, ylooks=ylooks)
@@ -160,7 +156,8 @@ def gamma_multiprocessing(b, params):
     if len(header_paths) == 2:
         hdrs = [gamma.parse_epoch_header(p) for p in header_paths]
         COMBINED = gamma.combine_headers(hdrs[0], hdrs[1], dem_hdr=DEM_HDR)
-        COMBINED['PR_TYPE'] = 'ifg_1'   # non-cropped, non-multilooked ifg
+        # non-cropped, non-multilooked geotif
+        COMBINED[ifc.PROCESS_STEP] = GEOTIFF
     else:  # it's a dem or incidence
         COMBINED = DEM_HDR
 
