@@ -158,16 +158,13 @@ def gamma_multiprocessing(b, params):
         params[cf.OUT_DIR], os.path.basename(b).split('.')[0] + '.tif')
 
     header_paths = gamma_task.get_header_paths(b, slc_dir=SLC_DIR)
-    if len(header_paths) != 2:
-        raise
-    hdrs = [gamma.parse_epoch_header(p) for p in header_paths]
-    COMBINED = gamma.combine_headers(hdrs[0], hdrs[1], dem_hdr=DEM_HDR)
-    '''
-    print type(COMBINED)
-    print COMBINED
-    while True: pass
-    '''
-    COMBINED['PR_TYPE'] = 'ifg_1'   # non-cropped, non-multilooked ifg
+    if len(header_paths) == 2:
+        hdrs = [gamma.parse_epoch_header(p) for p in header_paths]
+        COMBINED = gamma.combine_headers(hdrs[0], hdrs[1], dem_hdr=DEM_HDR)
+        COMBINED['PR_TYPE'] = 'ifg_1'   # non-cropped, non-multilooked ifg
+    else:  # it's a dem or incidence
+        COMBINED = DEM_HDR
+
     write_geotiff(COMBINED, b, d, nodata=params[cf.NO_DATA_VALUE])
 
 if __name__ == '__main__':
