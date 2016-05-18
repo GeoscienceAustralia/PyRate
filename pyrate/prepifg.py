@@ -85,27 +85,30 @@ def prepare_ifg(
     # resolution=None completes faster for non-multilooked layers in gdalwarp
     resolution = [None, None]
     raster = Ifg(raster_path)
+    if not raster.is_open:
+        raster.open()
     if do_multilook:
-        if not raster.is_open:
-            raster.open()
         resolution = [xlooks * raster.x_step, ylooks * raster.y_step]
 
     if not do_multilook and crop_opt == ALREADY_SAME_SIZE:
+        print 'should print'
         renamed_path = \
             mlooked_path(raster.data_path, looks=xlooks, crop_out=crop_opt)
-        # copy file with mlooked path
         shutil.copy(raster.data_path, renamed_path)
         # set metadata to indicated has been cropped and multilooked
-        g_ds = gdal.Open(renamed_path)
-        # TODO: pretty sure this creates aux.xml files, is there a way to disable this? not a big deal, just creates more files
-        g_ds.SetMetadataItem('PR_TYPE', 'ifg_2')
+        # copy file with mlooked path
+        dummy_warp(renamed_path)
         return None
-
-    if not raster.is_open:
-        raster.open()
 
     return warp(raster, xlooks, ylooks, exts, resolution, thresh,
                 crop_opt, write_to_disc)
+
+
+def dummy_warp(renamed_path):
+    ifg = Ifg(renamed_path)
+    ifg.open()
+    ifg.dataset.SetMetadataItem('PR_TYPE', 'ifg_2')
+    ifg.close()
 
 
 # TODO: crop options 0 = no cropping? get rid of same size (but it is in explained file)
