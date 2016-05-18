@@ -1,8 +1,0 @@
-# GAMMA SLC par file created  from ROI_PAC rsc files MCG 28/01/2016
-width: 47
-nlines: 72
-corner_lat: -34.170000000 decimal degrees
-corner_lon: 150.910000000 decimal degrees
-post_lat: -0.000833333 decimal degrees
-post_lon: 0.000833333 decimal degrees
-ellipsoid_name: WGS 84
