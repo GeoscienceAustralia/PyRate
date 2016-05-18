@@ -31,7 +31,8 @@ from pyrate.config import (
     IFG_CROP_OPT,
     IFG_LKSX,
     IFG_LKSY,
-    NO_DATA_AVERAGING_THRESHOLD
+    NO_DATA_AVERAGING_THRESHOLD,
+    DEM_FILE
     )
 from pyrate.roipac import RoipacException
 from pyrate.shared import GeotiffException
@@ -318,6 +319,7 @@ class TestRoipacLuigiEquality(unittest.TestCase):
             conf.write('{}: {}\n'.format(IFG_LKSY, '1'))
             conf.write('{}: {}\n'.format(IFG_CROP_OPT, '1'))
             conf.write('{}: {}\n'.format(NO_DATA_AVERAGING_THRESHOLD, '0.5'))
+            conf.write('{}: {}\n'.format(DEM_FILE, SYD_TEST_DEM_UNW))
         with open(self.ifgListFile, 'w') as ifgl:
             ifgl.write('\n'.join(data))
 
@@ -353,9 +355,9 @@ class TestRoipacLuigiEquality(unittest.TestCase):
 
     def test_equality_of_luigi_and_no_luigi(self):
         all_luigi_ifgs = sydney_data_setup(
-            glob.glob(os.path.join(self.luigi_base_dir, "*.tif")))
+            glob.glob(os.path.join(self.luigi_base_dir, "geo*.tif")))
         all_non_luigi_ifgs = sydney_data_setup(
-            glob.glob(os.path.join(self.non_luigi_base_dir, "*.tif")))
+            glob.glob(os.path.join(self.non_luigi_base_dir, "geo*.tif")))
         c = 0
         for c, (i, j) in enumerate(zip(all_luigi_ifgs, all_non_luigi_ifgs)):
             np.testing.assert_array_equal(i.phase_data, j.phase_data)
