@@ -151,11 +151,7 @@ def gamma_prepifg(base_unw_paths, params):
 def gamma_multiprocessing(b, params):
     dem_hdr_path = params[cf.DEM_HEADER_FILE]
     DEM_HDR = gamma.parse_dem_header(dem_hdr_path)
-    try:
-        SLC_DIR = params[cf.SLC_DIR]
-    except:
-        SLC_DIR = None
-
+    SLC_DIR = params[cf.SLC_DIR]
     mkdir_p(params[cf.OUT_DIR])
     d = os.path.join(
         params[cf.OUT_DIR], os.path.basename(b).split('.')[0] + '.tif')
