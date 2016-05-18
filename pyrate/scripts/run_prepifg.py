@@ -110,8 +110,6 @@ def gamma_prepifg(base_unw_paths, params):
     if parallel:
         print 'running gamma in parallel with {} ' \
               'processes'.format(params[cf.PROCESSES])
-        import multiprocessing
-        print 'found', multiprocessing.cpu_count(), 'CPUs'
         parmap.map(gamma_multiprocessing, base_unw_paths,
                    params, processes=params[cf.PROCESSES])
     else:

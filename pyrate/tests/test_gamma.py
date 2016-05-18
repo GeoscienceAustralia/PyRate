@@ -15,6 +15,7 @@ import shutil
 import glob
 import tempfile
 import numpy as np
+import re
 
 from pyrate.scripts.converttogtif import main as gammaMain
 from pyrate import gamma
@@ -387,12 +388,11 @@ class TestGammaLuigiEquality(unittest.TestCase):
                             '{} does not exist'.format(q))
 
     def test_equality_of_luigi_and_no_luigi_phase_data(self):
+        all_luigi_ifgs, all_non_luigi_ifgs = self.shared_setup()
 
-        all_luigi_ifgs = sydney_data_setup(
-            glob.glob(os.path.join(self.luigi_base_dir, "geo*.tif")))
-        all_non_luigi_ifgs = sydney_data_setup(
-            glob.glob(os.path.join(self.non_luigi_base_dir, "geo*.tif")))
-
+        self.assertEqual(len(all_luigi_ifgs),
+                         len(glob.glob(os.path.join(
+                             self.luigi_base_dir, "*.tif"))))
         self.assertEquals(len(all_luigi_ifgs), len(all_non_luigi_ifgs))
         c = 0
         for c, (i, j) in enumerate(zip(all_luigi_ifgs, all_non_luigi_ifgs)):
@@ -400,19 +400,30 @@ class TestGammaLuigiEquality(unittest.TestCase):
         self.assertEquals(c + 1, len(all_luigi_ifgs))
 
     def test_equality_of_meta_data(self):
-        all_luigi_ifgs = sydney_data_setup(
-            glob.glob(os.path.join(self.luigi_base_dir, "geo**.tif")))
-        all_non_luigi_ifgs = sydney_data_setup(
-            glob.glob(os.path.join(self.non_luigi_base_dir, "geo**.tif")))
-
+        all_luigi_ifgs, all_non_luigi_ifgs = self.shared_setup()
         c = 0
         for c, (i, j) in enumerate(zip(all_luigi_ifgs, all_non_luigi_ifgs)):
+            self.assertEqual(os.path.dirname(i.data_path), self.luigi_base_dir)
             mdi = i.meta_data
             mdj = j.meta_data
             for k in mdi:  # all key values equal
                 self.assertEquals(mdj[k], mdi[k])
 
         self.assertEquals(c + 1, len(all_luigi_ifgs))
+
+    def shared_setup(self):
+        self.test_cmd_ifg_no_luigi_files_created()
+        self.test_cmd_ifg_luigi_files_created()
+        all_luigi_ifgs = sydney_data_setup(
+            glob.glob(os.path.join(self.luigi_base_dir, "*.tif")))
+        all_non_luigi_files = []
+        gamma_PTN = re.compile(r'\d{8}')
+        for i in glob.glob(os.path.join(self.non_luigi_base_dir,
+                                        "*.tif")):
+            if len(gamma_PTN.findall(i)) == 2:
+                all_non_luigi_files.append(i)
+        all_non_luigi_ifgs = sydney_data_setup(all_non_luigi_files)
+        return all_luigi_ifgs, all_non_luigi_ifgs
 
 
 class TestGammaParallelVsSerial(unittest.TestCase):

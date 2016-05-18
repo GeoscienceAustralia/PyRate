@@ -354,10 +354,20 @@ class TestRoipacLuigiEquality(unittest.TestCase):
                             '{} does not exist'.format(path))
 
     def test_equality_of_luigi_and_no_luigi(self):
+        # necessary if this test is run by itself
+        self.test_cmd_ifg_luigi_files_created()
+        self.test_cmd_ifg_no_luigi_files_created()
+
+        non_luigi_files = glob.glob(os.path.join(
+            self.non_luigi_base_dir, "geo*.tif"))
+
         all_luigi_ifgs = sydney_data_setup(
             glob.glob(os.path.join(self.luigi_base_dir, "geo*.tif")))
         all_non_luigi_ifgs = sydney_data_setup(
             glob.glob(os.path.join(self.non_luigi_base_dir, "geo*.tif")))
+
+        self.assertEqual(len(all_non_luigi_ifgs), len(all_luigi_ifgs))
+        self.assertEqual(len(non_luigi_files), len(all_luigi_ifgs))
         c = 0
         for c, (i, j) in enumerate(zip(all_luigi_ifgs, all_non_luigi_ifgs)):
             np.testing.assert_array_equal(i.phase_data, j.phase_data)
