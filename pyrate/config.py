@@ -299,7 +299,8 @@ def get_config_params(path):
         for line in inputFile:
             if any(x in line for x in [OBS_DIR, IFG_FILE_LIST, DEM_FILE,
                                        DEM_HEADER_FILE, OUT_DIR,
-                                       ROIPAC_RESOURCE_HEADER]):
+                                       ROIPAC_RESOURCE_HEADER,
+                                       SLC_DIR]):
                 pos = line.find('~')
                 if pos != -1:
                     line = line[:pos] + os.environ['HOME'] + line[(pos+1):]    # create expanded line
@@ -319,7 +320,8 @@ def _parse_conf_file(content):
     lines = [ln.split() for ln in content.split('\n') if is_valid(ln)]
 
     # convert "field:   value" lines to [field, value]
-    kvpair = [(e[0].rstrip(":"), e[1]) for e in lines if len(e) == 2]
+    kvpair = [(e[0].rstrip(":"), e[1]) for e in lines if len(e) == 2] \
+        + [(e[0].rstrip(":"), None) for e in lines if len(e) == 1]
     parameters = dict(kvpair)
 
     if not parameters:
