@@ -30,10 +30,17 @@ def main(params=None):
     :param config_file: config file to use. This provides a convenient way to
      use run_prepifg from within the module.
     :return:
+    TODO: looks like base_igf_paths are ordered according to ifg list
+    Sarah says this probably won't be a problem because they only removedata
+    from ifg list to get pyrate to work (i.e. things won't be reordered and
+    the original gamma generated list is ordered) this may not affect the
+    important pyrate stuff anyway, but might affect gen_thumbs.py
+    going to assume base_ifg_paths is ordered correcly
     """
     usage = 'Usage: python run_prepifg.py <config file>'
     if params:
         base_ifg_paths = glob.glob(os.path.join(params[cf.OBS_DIR], '*.unw'))
+        base_ifg_paths.append(params[cf.DEM_FILE])
         LUIGI = params[cf.LUIGI]  # luigi or no luigi
         if LUIGI:
             raise cf.ConfigException('params can not be provided with luigi')
@@ -43,13 +50,7 @@ def main(params=None):
             print usage
             return
         base_ifg_paths, _, params = run_pyrate.get_ifg_paths()
-        '''
-        TODO: looks like base_igf_paths are ordered according to ifg list
-        Sarah says this probably won't be a problem because they only removedata from ifg list to get pyrate to work
-        (i.e. things won't be reordered and the original gamma generated list is ordered)
-        this may not affect the important pyrate stuff anyway, but might affect gen_thumbs.py
-        going to assume base_ifg_paths is ordered correcly
-        '''
+        base_ifg_paths.append(params[cf.DEM_FILE])
         raw_config_file = sys.argv[1]
 
     LUIGI = params[cf.LUIGI]  # luigi or no luigi

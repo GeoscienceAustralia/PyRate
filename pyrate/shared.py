@@ -624,7 +624,7 @@ def write_geotiff(header, data_path, dest, nodata):
     if ifg_proc == ROIPAC:
         roipac._check_raw_data(is_ifg, data_path, ncols, nrows)
         roipac._check_step_mismatch(header)
-    else: #GAMMA
+    else:  #GAMMA
         gamma._check_raw_data(data_path, ncols, nrows)
         gamma._check_step_mismatch(header)
 
