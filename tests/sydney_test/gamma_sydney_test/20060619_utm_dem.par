@@ -8,7 +8,7 @@ width:                47
 nlines:               72
 corner_lat:    -34.1700000  decimal degrees
 corner_lon:     150.9100000  decimal degrees
-post_lat:   -8.33333e-04  decimal degrees
+post_lat:   -8.333338e-04  decimal degrees
 post_lon:    8.333338e-04  decimal degrees
 
 ellipsoid_name: WGS 84
