@@ -6,6 +6,7 @@ import os
 import shutil
 import glob
 import subprocess
+import re
 from pyrate.tests import common
 from pyrate.scripts import run_prepifg
 from pyrate import config as cf
@@ -44,8 +45,19 @@ class MyTestCase(unittest.TestCase):
 
         # run serial gamma
         run_prepifg.main(self.params)
-        mpi_tifs = glob.glob(os.path.join(self.gamma_pypar_dir, '*.tif'))
-        serial_tifs = glob.glob(os.path.join(self.gamma_serial_dir, '*.tif'))
+        gamma_PTN = re.compile(r'\d{8}')
+        mpi_tifs = []
+        for i in glob.glob(os.path.join(self.gamma_pypar_dir,
+                                        "*.tif")):
+            if len(gamma_PTN.findall(i)) == 2:
+                mpi_tifs.append(i)
+
+        serial_tifs = []
+        for i in glob.glob(os.path.join(self.gamma_serial_dir,
+                                        "*.tif")):
+            if len(gamma_PTN.findall(i)) == 2:
+                serial_tifs.append(i)
+
         self.assertEqual(len(mpi_tifs), len(serial_tifs))
         for m, s in zip(mpi_tifs, serial_tifs):
             self.assertEqual(os.path.basename(m), os.path.basename(s))

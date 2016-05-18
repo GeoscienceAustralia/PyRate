@@ -30,10 +30,17 @@ def main(params=None):
     :param config_file: config file to use. This provides a convenient way to
      use run_prepifg from within the module.
     :return:
+    TODO: looks like base_igf_paths are ordered according to ifg list
+    Sarah says this probably won't be a problem because they only removedata
+    from ifg list to get pyrate to work (i.e. things won't be reordered and
+    the original gamma generated list is ordered) this may not affect the
+    important pyrate stuff anyway, but might affect gen_thumbs.py
+    going to assume base_ifg_paths is ordered correcly
     """
     usage = 'Usage: python run_prepifg.py <config file>'
     if params:
         base_ifg_paths = glob.glob(os.path.join(params[cf.OBS_DIR], '*.unw'))
+        base_ifg_paths.append(params[cf.DEM_FILE])
         LUIGI = params[cf.LUIGI]  # luigi or no luigi
         if LUIGI:
             raise cf.ConfigException('params can not be provided with luigi')
@@ -43,13 +50,7 @@ def main(params=None):
             print usage
             return
         base_ifg_paths, _, params = run_pyrate.get_ifg_paths()
-        '''
-        TODO: looks like base_igf_paths are ordered according to ifg list
-        Sarah says this probably won't be a problem because they only removedata from ifg list to get pyrate to work
-        (i.e. things won't be reordered and the original gamma generated list is ordered)
-        this may not affect the important pyrate stuff anyway, but might affect gen_thumbs.py
-        going to assume base_ifg_paths is ordered correcly
-        '''
+        base_ifg_paths.append(params[cf.DEM_FILE])
         raw_config_file = sys.argv[1]
 
     LUIGI = params[cf.LUIGI]  # luigi or no luigi
@@ -116,7 +117,7 @@ def gamma_prepifg(base_unw_paths, params):
     else:
         for b in base_unw_paths:
             gamma_multiprocessing(b, params)
-    ifgs = [Ifg(p) for p in dest_base_ifgs]
+    ifgs = [prepifg.dem_or_ifg(p) for p in dest_base_ifgs]
     xlooks, ylooks, crop = run_pyrate.transform_params(params)
     exts = prepifg.getAnalysisExtent(crop, ifgs, xlooks, ylooks, userExts=None)
     thresh = params[cf.NO_DATA_AVERAGING_THRESHOLD]
@@ -148,6 +149,7 @@ def gamma_prepifg(base_unw_paths, params):
         g_ds2.SetMetadataItem('PR_SEQ_POS', str(it))
     '''
 
+
 def gamma_multiprocessing(b, params):
     dem_hdr_path = params[cf.DEM_HEADER_FILE]
     DEM_HDR = gamma.parse_dem_header(dem_hdr_path)
@@ -157,16 +159,13 @@ def gamma_multiprocessing(b, params):
         params[cf.OUT_DIR], os.path.basename(b).split('.')[0] + '.tif')
 
     header_paths = gamma_task.get_header_paths(b, slc_dir=SLC_DIR)
-    if len(header_paths) != 2:
-        raise
-    hdrs = [gamma.parse_epoch_header(p) for p in header_paths]
-    COMBINED = gamma.combine_headers(hdrs[0], hdrs[1], dem_hdr=DEM_HDR)
-    '''
-    print type(COMBINED)
-    print COMBINED
-    while True: pass
-    '''
-    COMBINED['PR_TYPE'] = 'ifg_1'   # non-cropped, non-multilooked ifg
+    if len(header_paths) == 2:
+        hdrs = [gamma.parse_epoch_header(p) for p in header_paths]
+        COMBINED = gamma.combine_headers(hdrs[0], hdrs[1], dem_hdr=DEM_HDR)
+        COMBINED['PR_TYPE'] = 'ifg_1'   # non-cropped, non-multilooked ifg
+    else:  # it's a dem or incidence
+        COMBINED = DEM_HDR
+
     write_geotiff(COMBINED, b, d, nodata=params[cf.NO_DATA_VALUE])
 
 if __name__ == '__main__':

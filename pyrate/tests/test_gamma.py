@@ -33,7 +33,8 @@ from pyrate.config import (
     IFG_LKSX,
     IFG_LKSY,
     IFG_CROP_OPT,
-    NO_DATA_AVERAGING_THRESHOLD)
+    NO_DATA_AVERAGING_THRESHOLD,
+    DEM_FILE)
 
 from pyrate.tests.common import GAMMA_TEST_DIR
 from pyrate.tests import common
@@ -346,6 +347,7 @@ class TestGammaLuigiEquality(unittest.TestCase):
             conf.write('{}: {}\n'.format(IFG_CROP_OPT, '1'))
             conf.write('{}: {}\n'.format(NO_DATA_AVERAGING_THRESHOLD, '0.5'))
             conf.write('{}: {}\n'.format(SLC_DIR, ''))
+            conf.write('{}: {}\n'.format(DEM_FILE, common.SYD_TEST_DEM_GAMMA))
         with open(self.ifgListFile, 'w') as ifgl:
             ifgl.write('\n'.join(data))
 
@@ -387,9 +389,9 @@ class TestGammaLuigiEquality(unittest.TestCase):
     def test_equality_of_luigi_and_no_luigi_phase_data(self):
 
         all_luigi_ifgs = sydney_data_setup(
-            glob.glob(os.path.join(self.luigi_base_dir, "*.tif")))
+            glob.glob(os.path.join(self.luigi_base_dir, "geo*.tif")))
         all_non_luigi_ifgs = sydney_data_setup(
-            glob.glob(os.path.join(self.non_luigi_base_dir, "*.tif")))
+            glob.glob(os.path.join(self.non_luigi_base_dir, "geo*.tif")))
 
         self.assertEquals(len(all_luigi_ifgs), len(all_non_luigi_ifgs))
         c = 0
@@ -399,9 +401,9 @@ class TestGammaLuigiEquality(unittest.TestCase):
 
     def test_equality_of_meta_data(self):
         all_luigi_ifgs = sydney_data_setup(
-            glob.glob(os.path.join(self.luigi_base_dir, "*.tif")))
+            glob.glob(os.path.join(self.luigi_base_dir, "geo**.tif")))
         all_non_luigi_ifgs = sydney_data_setup(
-            glob.glob(os.path.join(self.non_luigi_base_dir, "*.tif")))
+            glob.glob(os.path.join(self.non_luigi_base_dir, "geo**.tif")))
 
         c = 0
         for c, (i, j) in enumerate(zip(all_luigi_ifgs, all_non_luigi_ifgs)):

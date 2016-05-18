@@ -240,8 +240,8 @@ class PrepifgOutputTests(unittest.TestCase):
         """Test resampling method using a scaling factor of 4"""
         scale = 4  # assumes square cells
         # TODO: put the DEM back in
-        # self.ifgs.append(DEM(SYD_TEST_DEM_TIF))
-        # self.ifg_paths = [i.data_path for i in self.ifgs]
+        self.ifgs.append(DEM(SYD_TEST_DEM_TIF))
+        self.ifg_paths = [i.data_path for i in self.ifgs]
         cext = self._custom_extents_tuple()
         xlooks = ylooks = scale
         prepare_ifgs(self.ifg_paths, CUSTOM_CROP, xlooks, ylooks,
@@ -266,21 +266,21 @@ class PrepifgOutputTests(unittest.TestCase):
 
         # verify DEM has been correctly processed
         # ignore output values as resampling has already been tested for phase
-        # exp_dem_path = join(SYD_TEST_DEM_DIR, 'sydney_trimmed_4rlks_3cr.tif')
-        # self.assertTrue(exists(exp_dem_path))
+        exp_dem_path = join(SYD_TEST_DEM_DIR, 'sydney_trimmed_4rlks_3cr.tif')
+        self.assertTrue(exists(exp_dem_path))
 
-        # dem = DEM(exp_dem_path)
-        # dem.open()
-        # self.assertEqual(dem.dataset.RasterXSize, 20 / scale)
-        # self.assertEqual(dem.dataset.RasterYSize, 28 / scale)
-        # data = dem.height_band.ReadAsArray()
-        # self.assertTrue(data.ptp() != 0)
+        dem = DEM(exp_dem_path)
+        dem.open()
+        self.assertEqual(dem.dataset.RasterXSize, 20 / scale)
+        self.assertEqual(dem.dataset.RasterYSize, 28 / scale)
+        data = dem.height_band.ReadAsArray()
+        self.assertTrue(data.ptp() != 0)
 
         # close ifgs
-        # dem.close()
+        dem.close()
         for i in self.ifgs:
             i.close()
-        # os.remove(exp_dem_path)
+        os.remove(exp_dem_path)
 
     def test_invalid_looks(self):
         """Verify only numeric values can be given for multilooking"""

@@ -84,28 +84,30 @@ def prepare_ifg(
     do_multilook = xlooks > 1 or ylooks > 1
     # resolution=None completes faster for non-multilooked layers in gdalwarp
     resolution = [None, None]
-    raster = Ifg(raster_path)
+    raster = dem_or_ifg(raster_path)
+    if not raster.is_open:
+        raster.open()
     if do_multilook:
-        if not raster.is_open:
-            raster.open()
         resolution = [xlooks * raster.x_step, ylooks * raster.y_step]
 
     if not do_multilook and crop_opt == ALREADY_SAME_SIZE:
         renamed_path = \
             mlooked_path(raster.data_path, looks=xlooks, crop_out=crop_opt)
-        # copy file with mlooked path
         shutil.copy(raster.data_path, renamed_path)
         # set metadata to indicated has been cropped and multilooked
-        g_ds = gdal.Open(renamed_path)
-        # TODO: pretty sure this creates aux.xml files, is there a way to disable this? not a big deal, just creates more files
-        g_ds.SetMetadataItem('PR_TYPE', 'ifg_2')
+        # copy file with mlooked path
+        dummy_warp(renamed_path)
         return None
-
-    if not raster.is_open:
-        raster.open()
 
     return warp(raster, xlooks, ylooks, exts, resolution, thresh,
                 crop_opt, write_to_disc)
+
+
+def dummy_warp(renamed_path):
+    ifg = Ifg(renamed_path)
+    ifg.open()
+    ifg.dataset.SetMetadataItem('PR_TYPE', 'ifg_2')
+    ifg.close()
 
 
 # TODO: crop options 0 = no cropping? get rid of same size (but it is in explained file)
@@ -134,12 +136,22 @@ def prepare_ifgs(
     :param user_exts: CustomExts tuple with user sepcified lat long corners
     :param verbose: Controls level of gdalwarp output
     """
-    # TODO: make dems work in prep_ifgs again
-    rasters = [Ifg(r) for r in raster_data_paths]
+    # use metadata check to check whether it's a dem or ifg
+    rasters = [dem_or_ifg(r) for r in raster_data_paths]
     exts = getAnalysisExtent(crop_opt, rasters, xlooks, ylooks, user_exts)
 
     return [prepare_ifg(d, xlooks, ylooks, exts, thresh, crop_opt, write_to_disc)
             for d in raster_data_paths]
+
+
+def dem_or_ifg(data_path):
+    ds = gdal.Open(data_path)
+    md = ds.GetMetadata()
+    if 'DATE' in md:  # ifg
+        return Ifg(data_path)
+    else:
+        return DEM(data_path)
+
 
 
 def get_extents(ifgs, crop_opt, user_exts=None):
