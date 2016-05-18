@@ -29,6 +29,7 @@ from pyrate.config import (
     NO_DATA_AVERAGING_THRESHOLD,
     INPUT_IFG_PROJECTION,
     ROIPAC_RESOURCE_HEADER,
+    SLC_DIR
     )
 
 DUMMY_SECTION_NAME = 'pyrate'
@@ -72,6 +73,7 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
             conf.write('{}: {}\n'.format(IFG_LKSY, '1'))
             conf.write('{}: {}\n'.format(IFG_CROP_OPT, '1'))
             conf.write('{}: {}\n'.format(NO_DATA_AVERAGING_THRESHOLD, '0.5'))
+            conf.write('{}: {}\n'.format(SLC_DIR, ''))
         with open(self.ifgListFile, 'w') as ifgl:
             ifgl.write('\n'.join(data))
 
