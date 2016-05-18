@@ -104,7 +104,7 @@ def prepare_ifg(
 
 
 def dummy_warp(renamed_path):
-    ifg = Ifg(renamed_path)
+    ifg = dem_or_ifg(renamed_path)
     ifg.open()
     ifg.dataset.SetMetadataItem('PR_TYPE', 'ifg_2')
     ifg.close()
