@@ -117,7 +117,7 @@ def gamma_prepifg(base_unw_paths, params):
     else:
         for b in base_unw_paths:
             gamma_multiprocessing(b, params)
-    ifgs = [Ifg(p) for p in dest_base_ifgs]
+    ifgs = [prepifg.dem_or_ifg(p) for p in dest_base_ifgs]
     xlooks, ylooks, crop = run_pyrate.transform_params(params)
     exts = prepifg.getAnalysisExtent(crop, ifgs, xlooks, ylooks, userExts=None)
     thresh = params[cf.NO_DATA_AVERAGING_THRESHOLD]

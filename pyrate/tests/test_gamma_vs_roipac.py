@@ -7,6 +7,7 @@ import tempfile
 import glob
 import numpy as np
 import sys
+import re
 
 from pyrate.tests.common import SYD_TEST_DIR, TEMPDIR
 from pyrate.tests import common
@@ -29,7 +30,8 @@ from pyrate.config import (
     NO_DATA_AVERAGING_THRESHOLD,
     INPUT_IFG_PROJECTION,
     ROIPAC_RESOURCE_HEADER,
-    SLC_DIR
+    SLC_DIR,
+    DEM_FILE
     )
 
 DUMMY_SECTION_NAME = 'pyrate'
@@ -74,6 +76,7 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
             conf.write('{}: {}\n'.format(IFG_CROP_OPT, '1'))
             conf.write('{}: {}\n'.format(NO_DATA_AVERAGING_THRESHOLD, '0.5'))
             conf.write('{}: {}\n'.format(SLC_DIR, ''))
+            conf.write('{}: {}\n'.format(DEM_FILE, common.SYD_TEST_DEM_GAMMA))
         with open(self.ifgListFile, 'w') as ifgl:
             ifgl.write('\n'.join(data))
 
@@ -120,6 +123,7 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
             conf.write('{}: {}\n'.format(IFG_LKSY, '1'))
             conf.write('{}: {}\n'.format(IFG_CROP_OPT, '1'))
             conf.write('{}: {}\n'.format(NO_DATA_AVERAGING_THRESHOLD, '0.5'))
+            conf.write('{}: {}\n'.format(DEM_FILE, common.SYD_TEST_DEM_ROIPAC))
         with open(self.ifgListFile, 'w') as ifgl:
             ifgl.write('\n'.join(data))
 
@@ -143,12 +147,15 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
                             '{} does not exist'.format(path))
 
     def test_equality_of_luigi_and_no_luigi_phase_data(self):
-
-        all_gamma_ifgs = sydney_data_setup(
-            glob.glob(os.path.join(self.gamma_base_dir, "*.tif")))
+        gamma_PTN = re.compile(r'\d{8}')
+        gamma_files = []
+        for i in glob.glob(os.path.join(self.gamma_base_dir,
+                                        "*.tif")):
+            if len(gamma_PTN.findall(i)) == 2:
+                gamma_files.append(i)
+        all_gamma_ifgs = sydney_data_setup(gamma_files)
         all_roipac_ifgs = sydney_data_setup(
-            glob.glob(os.path.join(self.roipac_base_dir, "*.tif")))
-
+            glob.glob(os.path.join(self.roipac_base_dir, "geo*.tif")))
         c = 0
         for c, (r, g) in enumerate(zip(all_roipac_ifgs, all_gamma_ifgs)):
             np.testing.assert_array_equal(r.phase_data, g.phase_data)
@@ -156,10 +163,15 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
         self.assertEquals(c+1, len(all_gamma_ifgs))
 
     def test_equality_of_meta_data(self):
-        all_gamma_ifgs = sydney_data_setup(
-            glob.glob(os.path.join(self.gamma_base_dir, "*.tif")))
+        gamma_PTN = re.compile(r'\d{8}')
+        gamma_files = []
+        for i in glob.glob(os.path.join(self.gamma_base_dir,
+                                        "*.tif")):
+            if len(gamma_PTN.findall(i)) == 2:
+                gamma_files.append(i)
+        all_gamma_ifgs = sydney_data_setup(gamma_files)
         all_roipac_ifgs = sydney_data_setup(
-            glob.glob(os.path.join(self.roipac_base_dir, "*.tif")))
+            glob.glob(os.path.join(self.roipac_base_dir, "geo*.tif")))
         c = 0
         for c, (i, j) in enumerate(zip(all_gamma_ifgs, all_roipac_ifgs)):
             mdi = i.meta_data

@@ -40,7 +40,7 @@ from pyrate.scripts.converttogtif import main as roipacMain
 from pyrate import shared
 from pyrate.tasks.utils import DUMMY_SECTION_NAME
 from pyrate.tests.common import HEADERS_TEST_DIR, PREP_TEST_OBS, PREP_TEST_TIF
-from pyrate.tests.common import SYD_TEST_DEM_UNW, SYD_TEST_DEM_HDR
+from pyrate.tests.common import SYD_TEST_DEM_ROIPAC, SYD_TEST_DEM_HDR
 from pyrate.tests.common import SYD_TEST_DEM_DIR, SYD_TEST_OBS, TEMPDIR
 from pyrate.tests import common
 from pyrate.scripts import run_prepifg
@@ -100,7 +100,7 @@ class RoipacCommandLine(unittest.TestCase):
 
     def test_cmd_dem(self):
         self.expPaths = [os.path.join(self.base_dir, 'sydney_trimmed.tif')]
-        self.dataPaths = [SYD_TEST_DEM_UNW]
+        self.dataPaths = [SYD_TEST_DEM_ROIPAC]
         self.common_check()
 
     def common_check(self):
@@ -128,7 +128,7 @@ class RoipacToGeoTiffTests(unittest.TestCase):
         hdr = roipac.parse_header(SYD_TEST_DEM_HDR)        
         self.dest = os.path.join(TEMPDIR, "tmp_roipac_dem.tif")
 
-        write_geotiff(hdr, SYD_TEST_DEM_UNW, self.dest, nodata=0)
+        write_geotiff(hdr, SYD_TEST_DEM_ROIPAC, self.dest, nodata=0)
         exp_path = join(SYD_TEST_DEM_DIR, 'sydney_trimmed.tif')
         exp_ds = gdal.Open(exp_path)
         ds = gdal.Open(self.dest)
@@ -319,7 +319,7 @@ class TestRoipacLuigiEquality(unittest.TestCase):
             conf.write('{}: {}\n'.format(IFG_LKSY, '1'))
             conf.write('{}: {}\n'.format(IFG_CROP_OPT, '1'))
             conf.write('{}: {}\n'.format(NO_DATA_AVERAGING_THRESHOLD, '0.5'))
-            conf.write('{}: {}\n'.format(DEM_FILE, SYD_TEST_DEM_UNW))
+            conf.write('{}: {}\n'.format(DEM_FILE, SYD_TEST_DEM_ROIPAC))
         with open(self.ifgListFile, 'w') as ifgl:
             ifgl.write('\n'.join(data))
 

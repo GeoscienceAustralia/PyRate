@@ -13,7 +13,7 @@ import os
 import re
 from pyrate.scripts import run_pyrate
 from pyrate.tests.common import sydney_data_setup
-from pyrate.tests.common import SYD_TEST_DEM_UNW
+from pyrate.tests.common import SYD_TEST_DEM_ROIPAC
 from pyrate.scripts import run_prepifg
 from pyrate import config as cf
 from pyrate import ifgconstants as ifc
@@ -72,11 +72,11 @@ def rdr_correction(add_these):
     """ using rdr coordinates to remove APS """
     aps1 = pa.PyAPS_rdr(
         os.path.join(ECMWF_DIR, ECMWF_PRE + add_these[0] + ECMWF_EXT),
-        SYD_TEST_DEM_UNW, grib='ECMWF', verb=True,
+        SYD_TEST_DEM_ROIPAC, grib='ECMWF', verb=True,
         demfmt='HGT', demtype=np.int16)
     aps2 = pa.PyAPS_rdr(
         os.path.join(ECMWF_DIR, ECMWF_PRE + add_these[1] + ECMWF_EXT),
-        SYD_TEST_DEM_UNW, grib='ECMWF', verb=True,
+        SYD_TEST_DEM_ROIPAC, grib='ECMWF', verb=True,
         demfmt='HGT', demtype=np.int16)
     phs1 = np.zeros((aps1.ny, aps1.nx))
     phs2 = np.zeros((aps2.ny, aps2.nx))
@@ -92,11 +92,11 @@ def geo_correction(add_these):
     """ using geo coordinates to remove APS """
     aps1 = pa.PyAPS_geo(
         os.path.join(ECMWF_DIR, ECMWF_PRE + add_these[0] + ECMWF_EXT),
-        SYD_TEST_DEM_UNW, grib='ECMWF', verb=True,
+        SYD_TEST_DEM_ROIPAC, grib='ECMWF', verb=True,
         demfmt='HGT', demtype=np.int16)
     aps2 = pa.PyAPS_geo(
         os.path.join(ECMWF_DIR, ECMWF_PRE + add_these[1] + ECMWF_EXT),
-        SYD_TEST_DEM_UNW, grib='ECMWF', verb=True,
+        SYD_TEST_DEM_ROIPAC, grib='ECMWF', verb=True,
         demfmt='HGT', demtype=np.int16)
     phs1 = np.zeros((aps1.ny, aps1.nx))
     phs2 = np.zeros((aps2.ny, aps2.nx))
