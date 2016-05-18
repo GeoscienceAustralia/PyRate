@@ -121,6 +121,7 @@ class ConvertFileToGeotiff(luigi.Task):
         else:
             # probably have DEM or incidence file
             combinedHeader = demHeader
+        combinedHeader[ifc.PROCESS_STEP] = ifc.GEOTIFF
         write_geotiff(combinedHeader, self.inputFile,
                    self.outputFile, self.noDataValue)
 
