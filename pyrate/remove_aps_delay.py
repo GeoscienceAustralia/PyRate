@@ -28,15 +28,17 @@ APS_STATUS = 'REMOVED'
 def remove_aps_delay(ifgs, params):
     list_of_dates_for_grb_download = []
     for ifg in ifgs:  # demo for only one ifg
-        # adding 20 to dates here, so dates before 2000 won't work
-        # TODO: fix pre 2000 dates
         if params[cf.PROCESSOR] == 1:  # gamma
             PTN = re.compile(r'\d{8}')
             add_these = [i for i in PTN.findall(os.path.basename(ifg.data_path))]
-        else:  # roipac
+        elif params[cf.PROCESSOR] == 1:  # roipac
+            # adding 20 to dates here, so dates before 2000 won't work
+            # TODO: fix pre 2000 dates
             PTN = re.compile(r'\d{8}')
             add_these = ['20' + i for i in
                          PTN.findall(os.path.basename(ifg.data_path))]
+        else:
+            raise AttributeError('processor needs to be gamma(1) or roipac(0)')
 
         list_of_dates_for_grb_download += add_these
         first_grb = os.path.join(ECMWF_DIR,
