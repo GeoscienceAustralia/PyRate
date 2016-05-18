@@ -467,6 +467,24 @@ class TestGammaParallelVsSerial(unittest.TestCase):
         for s, p in zip(serial_ifgs, parallel_ifgs):
             np.testing.assert_array_almost_equal(s.phase_data, p.phase_data)
 
+    def test_meta_data_exist(self):
+        from pyrate import gdal_python as gdalwarp
+        serial_ifgs = sydney_data_setup(
+            datafiles=glob.glob(os.path.join(self.serial_dir, "*_1cr.tif")))
+
+        parallel_ifgs = sydney_data_setup(
+            datafiles=glob.glob(os.path.join(self.parallel_dir, "*_1cr.tif")))
+        for s, p in zip(serial_ifgs, parallel_ifgs):
+
+            # all metadata equal
+            self.assertDictEqual(s.meta_data, p.meta_data)
+
+            # test that PROCESS_STEP exists in metadata
+            self.assertIn(ifc.PROCESS_STEP, s.meta_data.keys())
+
+            # test that PROCESS_STEP is MULTILOOKED
+            self.assertEqual(s.meta_data[ifc.PROCESS_STEP],
+                             gdalwarp.MULTILOOKED)
 
 if __name__ == "__main__":
     unittest.main()
