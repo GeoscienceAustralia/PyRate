@@ -112,18 +112,9 @@ class ConvertFileToGeotiff(luigi.Task):
         """
         Overload of :py:meth:`luigi.Task.run`.
         """
-        demHeader = parse_dem_header(self.demHeaderFile)
-
-        # find param files containing filename dates
-        if len(self.headerPaths) == 2:
-            headers = [parse_epoch_header(hp) for hp in self.headerPaths]
-            combinedHeader = combine_headers(headers[0], headers[1], demHeader)
-        else:
-            # probably have DEM or incidence file
-            combinedHeader = demHeader
-        combinedHeader[ifc.PROCESS_STEP] = ifc.GEOTIFF
+        combinedHeader = manage_headers(self.demHeaderFile, self.headerPaths)
         write_geotiff(combinedHeader, self.inputFile,
-                   self.outputFile, self.noDataValue)
+                      self.outputFile, self.noDataValue)
 
 
 class ConvertToGeotiff(IfgListMixin, luigi.WrapperTask):

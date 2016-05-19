@@ -141,9 +141,25 @@ def combine_headers(hdr0, hdr1, dem_hdr):
         args = (chdr[ifc.PYRATE_DATE], chdr[ifc.PYRATE_DATE2])
         msg = "Wavelength mismatch, check both header files for %s & %s"
         raise GammaException(msg % args)
+    # non-cropped, non-multilooked geotif process step information added
+    chdr[ifc.PROCESS_STEP] = ifc.GEOTIFF
 
     chdr.update(dem_hdr)  # add geographic data
     return chdr
+
+
+def manage_headers(demHeaderFile, headerPaths):
+    demHeader = parse_dem_header(demHeaderFile)
+    # find param files containing filename dates
+    if len(headerPaths) == 2:
+        headers = [parse_epoch_header(hp) for hp in headerPaths]
+        combinedHeader = combine_headers(headers[0], headers[1], demHeader)
+    else:
+        # probably have DEM or incidence file
+        combinedHeader = demHeader
+        combinedHeader[ifc.PROCESS_STEP] = ifc.GEOTIFF
+
+    return combinedHeader
 
 
 class GammaException(Exception):
