@@ -1,7 +1,8 @@
 from osgeo import gdal, gdalnumeric, gdalconst
 from PIL import Image, ImageDraw
-import os
 import numpy as np
+from pyrate import ifgconstants as ifc
+
 gdal.SetCacheMax(2**15)
 GDAL_WARP_MEMORY_LIMIT = 2**10
 LOW_FLOAT32 = np.finfo(np.float32).min*1e-10
@@ -274,9 +275,11 @@ def crop_resample_average(
     out_ds.SetGeoTransform(dst_ds.GetGeoTransform())
     # copy metadata
     for k, v in dst_ds.GetMetadata().iteritems():
-        out_ds.SetMetadataItem(k, v)
+        if k == ifc.PROCESS_STEP:
+            out_ds.SetMetadataItem(ifc.PROCESS_STEP, ifc.MULTILOOKED)
+        else:
+            out_ds.SetMetadataItem(k, v)
 
-    out_ds.SetMetadataItem('PR_TYPE', 'ifg_2')
     return resampled_average, out_ds
 
 

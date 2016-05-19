@@ -142,6 +142,7 @@ class RoipacToGeoTiffTests(unittest.TestCase):
         # tricker: needs ifg header, and DEM one for extents
         hdrs = self.HDRS.copy()
         hdrs[ifc.PYRATE_DATUM] = 'WGS84'
+        hdrs[ifc.PROCESS_STEP] = ifc.GEOTIFF
 
         self.dest = os.path.join('tmp_roipac_ifg.tif')
         data_path = join(PREP_TEST_OBS, 'geo_060619-061002.unw')
@@ -185,6 +186,7 @@ class RoipacToGeoTiffTests(unittest.TestCase):
     def test_bad_projection(self):
         hdrs = self.HDRS.copy()
         hdrs[ifc.PYRATE_DATUM] = 'bad datum string'
+        hdrs[ifc.PROCESS_STEP] = ifc.GEOTIFF
         self.dest = os.path.join(TEMPDIR, 'tmp_roipac_ifg2.tif')
         data_path = join(PREP_TEST_OBS, 'geo_060619-061002.unw')
         self.assertRaises(GeotiffException, write_geotiff, hdrs,

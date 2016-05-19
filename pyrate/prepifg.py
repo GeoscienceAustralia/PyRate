@@ -18,7 +18,6 @@ import os
 from math import modf
 from numbers import Number
 from tempfile import mkstemp
-from itertools import product
 from subprocess import check_call
 from collections import namedtuple
 from os.path import splitext
@@ -27,10 +26,11 @@ import shutil
 import numpy as np
 from numpy import array, where, nan, isnan, nanmean, float32, zeros, sum as nsum
 
-from osgeo import gdal, osr, gdalconst
+from osgeo import gdal
 import pyrate.config as cfg
-from pyrate.shared import Ifg, DEM, PHASE_BAND
+from pyrate.shared import Ifg, DEM
 from pyrate import gdal_python as gdalwarp
+from pyrate import ifgconstants as ifc
 
 CustomExts = namedtuple('CustExtents', ['xfirst', 'yfirst', 'xlast', 'ylast'])
 
@@ -106,7 +106,7 @@ def prepare_ifg(
 def dummy_warp(renamed_path):
     ifg = dem_or_ifg(renamed_path)
     ifg.open()
-    ifg.dataset.SetMetadataItem('PR_TYPE', 'ifg_2')
+    ifg.dataset.SetMetadataItem(ifc.PROCESS_STEP, ifc.MULTILOOKED)
     ifg.close()
 
 

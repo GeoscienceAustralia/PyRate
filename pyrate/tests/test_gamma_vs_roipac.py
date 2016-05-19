@@ -14,6 +14,7 @@ from pyrate.tests import common
 from pyrate.scripts import run_prepifg, run_pyrate
 from pyrate.tests.common import sydney_data_setup
 from pyrate import config as cf
+from pyrate import ifgconstants as ifc
 
 
 from pyrate.config import (
@@ -184,6 +185,20 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
                     pass # INSAR_PROCESSOR can not be equal
                 else:
                     self.assertEquals(mdj[k], mdi[k])
+            if i.data_path.__contains__(
+                    '_{looks}rlks_{crop}cr'.format(looks=1, crop=1)):
+                # these are multilooked tifs
+                # test that PROCESS_STEP is MULTILOOKED
+                self.assertEqual(mdi[ifc.PROCESS_STEP],
+                                 ifc.MULTILOOKED)
+                self.assertEqual(mdj[ifc.PROCESS_STEP],
+                                 ifc.MULTILOOKED)
+            else:
+                # others tifs are just geotiffs
+                self.assertEqual(mdi[ifc.PROCESS_STEP],
+                                 ifc.GEOTIFF)
+                self.assertEqual(mdj[ifc.PROCESS_STEP],
+                                 ifc.GEOTIFF)
 
         self.assertEquals(c + 1, len(all_gamma_ifgs))
 

@@ -10,17 +10,12 @@ from pyrate.tasks.utils import pythonifyConfig
 from pyrate.tasks.prepifg import PrepareInterferograms
 from pyrate import prepifg
 from pyrate import config as cf
-from pyrate.shared import Ifg
 from pyrate.scripts import run_pyrate
 from pyrate import roipac
 from pyrate import gamma
 from pyrate.shared import write_geotiff, mkdir_p
 from pyrate.tasks import gamma as gamma_task
 import pyrate.ifgconstants as ifc
-from pyrate.utils import tparmap
-from operator import itemgetter
-from osgeo import gdal
-from pyrate.prepifg import mlooked_path
 
 ROI_PAC_HEADER_FILE_EXT = 'rsc'
 
@@ -86,12 +81,7 @@ def roipac_prepifg(base_ifg_paths, params):
                       for q in base_ifg_paths]
     for b, d in zip(base_ifg_paths, dest_base_ifgs):
         header_file = "%s.%s" % (b, ROI_PAC_HEADER_FILE_EXT)
-        header = roipac.parse_header(header_file)
-
-        # DEM already has DATUM, so get it from dem if not in header
-        if ifc.PYRATE_DATUM not in header:
-            header[ifc.PYRATE_DATUM] = projection
-        header['PR_TYPE'] = 'ifg_1'   # non-cropped, non-multilooked ifg
+        header = roipac.manage_header(header_file, projection)
         write_geotiff(header, b, d, nodata=params[cf.NO_DATA_VALUE])
     prepifg.prepare_ifgs(
         dest_base_ifgs, crop_opt=crop, xlooks=xlooks, ylooks=ylooks)
@@ -150,21 +140,14 @@ def gamma_prepifg(base_unw_paths, params):
 
 def gamma_multiprocessing(b, params):
     dem_hdr_path = params[cf.DEM_HEADER_FILE]
-    DEM_HDR = gamma.parse_dem_header(dem_hdr_path)
     SLC_DIR = params[cf.SLC_DIR]
     mkdir_p(params[cf.OUT_DIR])
     d = os.path.join(
         params[cf.OUT_DIR], os.path.basename(b).split('.')[0] + '.tif')
 
     header_paths = gamma_task.get_header_paths(b, slc_dir=SLC_DIR)
-    if len(header_paths) == 2:
-        hdrs = [gamma.parse_epoch_header(p) for p in header_paths]
-        COMBINED = gamma.combine_headers(hdrs[0], hdrs[1], dem_hdr=DEM_HDR)
-        COMBINED['PR_TYPE'] = 'ifg_1'   # non-cropped, non-multilooked ifg
-    else:  # it's a dem or incidence
-        COMBINED = DEM_HDR
-
-    write_geotiff(COMBINED, b, d, nodata=params[cf.NO_DATA_VALUE])
+    combined_headers = gamma.manage_headers(dem_hdr_path, header_paths)
+    write_geotiff(combined_headers, b, d, nodata=params[cf.NO_DATA_VALUE])
 
 if __name__ == '__main__':
     main()
