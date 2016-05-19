@@ -193,6 +193,20 @@ def _parse_dates_from(filename):
         raise RoipacException(msg % filename)
 
 
+def manage_header(header_file, projection):
+    """
+    :param header_file:
+    :param projection: project form dem header
+    ....projection = roipac.parse_header(dem_file)[ifc.PYRATE_DATUM]
+    :return:
+    """
+    header = parse_header(header_file)
+    if ifc.PYRATE_DATUM not in header:  # DEM already has DATUM
+        header[ifc.PYRATE_DATUM] = projection
+    header[ifc.PROCESS_STEP] = ifc.GEOTIFF  # non-cropped, non-multilooked geotiff
+    return header
+
+
 class RoipacException(Exception):
     pass
 

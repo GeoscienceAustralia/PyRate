@@ -81,12 +81,7 @@ def roipac_prepifg(base_ifg_paths, params):
                       for q in base_ifg_paths]
     for b, d in zip(base_ifg_paths, dest_base_ifgs):
         header_file = "%s.%s" % (b, ROI_PAC_HEADER_FILE_EXT)
-        header = roipac.parse_header(header_file)
-
-        # DEM already has DATUM, so get it from dem if not in header
-        if ifc.PYRATE_DATUM not in header:
-            header[ifc.PYRATE_DATUM] = projection
-        header[ifc.PROCESS_STEP] = ifc.GEOTIFF  # non-cropped, non-multilooked geotiff
+        header = roipac.manage_header(header_file, projection)
         write_geotiff(header, b, d, nodata=params[cf.NO_DATA_VALUE])
     prepifg.prepare_ifgs(
         dest_base_ifgs, crop_opt=crop, xlooks=xlooks, ylooks=ylooks)
