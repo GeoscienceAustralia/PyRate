@@ -96,7 +96,7 @@ def process_ifgs(ifg_paths_or_instance, params):
             pickle.dump(grk_dict, grk_fp)
             grk_fp.close()
 
-    md[ifc.PYRATE_DATE] = epochlist.dates
+    md[ifc.MASTER_DATE] = epochlist.dates
     dest = os.path.join(PYRATEPATH, params[cf.OUT_DIR], "linrate.tif")
     # remove metadata added to md in compute_time_series that doesn't make sense for the following tiffs
     if 'PR_SEQ_POS' in md:
@@ -181,7 +181,7 @@ def compute_time_series(epochlist, gt, ifgs, md, mst_grid, params, vcmt, wkt):
 def write_timeseries_geotiff(epochlist, gt, md, params, tsincr, wkt, pr_type):
     PRTYPE = 'PR_TYPE'
     for i in range(len(tsincr[0, 0, :])):
-        md[ifc.PYRATE_DATE] = epochlist.dates[i + 1]
+        md[ifc.MASTER_DATE] = epochlist.dates[i + 1]
         md['PR_SEQ_POS'] = i  # sequence position
 
         data = tsincr[:, :, i]
