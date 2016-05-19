@@ -273,6 +273,7 @@ def crop_resample_average(
     out_ds.GetRasterBand(1).SetNoDataValue(np.nan)
     out_ds.GetRasterBand(1).WriteArray(resampled_average)
     out_ds.SetGeoTransform(dst_ds.GetGeoTransform())
+    out_ds.SetProjection(src_ds.GetProjection())
     # copy metadata
     for k, v in dst_ds.GetMetadata().iteritems():
         if k == ifc.PROCESS_STEP:
