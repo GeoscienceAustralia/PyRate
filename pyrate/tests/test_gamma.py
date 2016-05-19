@@ -151,7 +151,7 @@ class GammaToGeoTiffTests(unittest.TestCase):
         self.compare_rasters(ds, exp_ds)
 
         md = ds.GetMetadata()
-        self.assertEqual(len(md), 7)
+        self.assertEqual(len(md), 8)
         self.assertTrue(md[ifc.PYRATE_DATE] == str(date(2009, 7, 13)))
         self.assertTrue(md[ifc.PYRATE_DATE2] == str(date(2009, 8, 17)))
         self.assertTrue(md[ifc.PYRATE_TIME_SPAN] == str(35 / ifc.DAYS_PER_YEAR))
@@ -404,10 +404,20 @@ class TestGammaLuigiEquality(unittest.TestCase):
         c = 0
         for c, (i, j) in enumerate(zip(all_luigi_ifgs, all_non_luigi_ifgs)):
             self.assertEqual(os.path.dirname(i.data_path), self.luigi_base_dir)
-            mdi = i.meta_data
-            mdj = j.meta_data
-            for k in mdi:  # all key values equal
-                self.assertEquals(mdj[k], mdi[k])
+            # check meta data equal
+            self.assertDictEqual(i.meta_data, j.meta_data)
+            # test that PROCESS_STEP exists in metadata
+            self.assertIn(ifc.PROCESS_STEP, i.meta_data.keys())
+            if i.data_path.__contains__(
+                    '_{looks}rlks_{crop}cr'.format(looks=1, crop=1)):
+                # these are multilooked tifs
+                # test that PROCESS_STEP is MULTILOOKED
+                self.assertEqual(i.meta_data[ifc.PROCESS_STEP],
+                                 ifc.MULTILOOKED)
+            else:
+                # others tifs are just geotiffs
+                self.assertEqual(i.meta_data[ifc.PROCESS_STEP],
+                                 ifc.GEOTIFF)
 
         self.assertEquals(c + 1, len(all_luigi_ifgs))
 
@@ -468,7 +478,6 @@ class TestGammaParallelVsSerial(unittest.TestCase):
             np.testing.assert_array_almost_equal(s.phase_data, p.phase_data)
 
     def test_meta_data_exist(self):
-        from pyrate import gdal_python as gdalwarp
         serial_ifgs = sydney_data_setup(
             datafiles=glob.glob(os.path.join(self.serial_dir, "*_1cr.tif")))
 
@@ -483,8 +492,7 @@ class TestGammaParallelVsSerial(unittest.TestCase):
             self.assertIn(ifc.PROCESS_STEP, s.meta_data.keys())
 
             # test that PROCESS_STEP is MULTILOOKED
-            self.assertEqual(s.meta_data[ifc.PROCESS_STEP],
-                             gdalwarp.MULTILOOKED)
+            self.assertEqual(s.meta_data[ifc.PROCESS_STEP], ifc.MULTILOOKED)
 
 if __name__ == "__main__":
     unittest.main()

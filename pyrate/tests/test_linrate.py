@@ -320,7 +320,6 @@ class MPITests(unittest.TestCase):
     def test_mpi_mst_single_processor(self):
         # TODO: Why MPI test fails for looks > 2
         for looks, ref_method in product([1, 2], [1, 2]):
-            print looks, ref_method
             self.params[cf.IFG_LKSX] = looks
             self.params[cf.IFG_LKSY] = looks
             self.params[cf.REF_EST_METHOD] = ref_method
