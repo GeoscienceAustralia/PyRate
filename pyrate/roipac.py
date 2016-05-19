@@ -159,10 +159,10 @@ def parse_header(hdr_file):
         # grab master/slave dates from header, or the filename
         has_dates = True if DATE in headers and DATE12 in headers else False
         dates = headers[DATE12] if has_dates else _parse_dates_from(hdr_file)
-        subset[ifc.PYRATE_DATE], subset[ifc.PYRATE_DATE2] = dates
+        subset[ifc.MASTER_DATE], subset[ifc.SLAVE_DATE] = dates
 
         # replace time span as ROIPAC is ~4 hours different to (slave - master)
-        timespan = (subset[ifc.PYRATE_DATE2] - subset[ifc.PYRATE_DATE]).days / ifc.DAYS_PER_YEAR
+        timespan = (subset[ifc.SLAVE_DATE] - subset[ifc.MASTER_DATE]).days / ifc.DAYS_PER_YEAR
         subset[ifc.PYRATE_TIME_SPAN] = timespan
 
         # Add phase units of interferogram

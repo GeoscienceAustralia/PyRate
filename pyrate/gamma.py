@@ -68,7 +68,7 @@ def parse_epoch_header(path):
     lookup = parse_header(path)
     subset = {}
     year, month, day = [int(i) for i in lookup[GAMMA_DATE][:3]]
-    subset[ifc.PYRATE_DATE] = datetime.date(year, month, day)
+    subset[ifc.MASTER_DATE] = datetime.date(year, month, day)
 
     # handle conversion of radar frequency to wavelength
     freq, unit = lookup[GAMMA_FREQUENCY]
@@ -122,15 +122,15 @@ def combine_headers(hdr0, hdr1, dem_hdr):
     if not all([isinstance(a, dict) for a in [hdr0, hdr1, dem_hdr]]):
         raise GammaException('Header args need to be dicts')
 
-    date0, date1 = hdr0[ifc.PYRATE_DATE], hdr1[ifc.PYRATE_DATE]
+    date0, date1 = hdr0[ifc.MASTER_DATE], hdr1[ifc.MASTER_DATE]
     if date0 == date1:
         raise GammaException("Can't combine headers for the same day")
     elif date1 < date0:
         raise GammaException("Wrong date order")
 
     chdr = {ifc.PYRATE_TIME_SPAN: (date1 - date0).days / ifc.DAYS_PER_YEAR,
-            ifc.PYRATE_DATE: date0,
-            ifc.PYRATE_DATE2: date1,
+            ifc.MASTER_DATE: date0,
+            ifc.SLAVE_DATE: date1,
             ifc.PYRATE_PHASE_UNITS: RADIANS,
             ifc.PYRATE_INSAR_PROCESSOR: GAMMA}
 
@@ -138,7 +138,7 @@ def combine_headers(hdr0, hdr1, dem_hdr):
     if np.isclose(wavelen, hdr1[ifc.PYRATE_WAVELENGTH_METRES], atol=1e-6):
         chdr[ifc.PYRATE_WAVELENGTH_METRES] = wavelen
     else:
-        args = (chdr[ifc.PYRATE_DATE], chdr[ifc.PYRATE_DATE2])
+        args = (chdr[ifc.MASTER_DATE], chdr[ifc.SLAVE_DATE])
         msg = "Wavelength mismatch, check both header files for %s & %s"
         raise GammaException(msg % args)
     # non-cropped, non-multilooked geotif process step information added

@@ -152,8 +152,8 @@ class GammaToGeoTiffTests(unittest.TestCase):
 
         md = ds.GetMetadata()
         self.assertEqual(len(md), 8)
-        self.assertTrue(md[ifc.PYRATE_DATE] == str(date(2009, 7, 13)))
-        self.assertTrue(md[ifc.PYRATE_DATE2] == str(date(2009, 8, 17)))
+        self.assertTrue(md[ifc.MASTER_DATE] == str(date(2009, 7, 13)))
+        self.assertTrue(md[ifc.SLAVE_DATE] == str(date(2009, 8, 17)))
         self.assertTrue(md[ifc.PYRATE_TIME_SPAN] == str(35 / ifc.DAYS_PER_YEAR))
 
         wavelen = float(md[ifc.PYRATE_WAVELENGTH_METRES])
@@ -210,7 +210,7 @@ class GammaHeaderParsingTests(unittest.TestCase):
         hdrs = gamma.parse_epoch_header(path)
 
         exp_date = date(2009, 7, 13)
-        self.assertEqual(hdrs[ifc.PYRATE_DATE], exp_date)
+        self.assertEqual(hdrs[ifc.MASTER_DATE], exp_date)
 
         exp_wavelen = LIGHTSPEED / 5.3310040e+09
         self.assertEqual(hdrs[ifc.PYRATE_WAVELENGTH_METRES], exp_wavelen)
@@ -229,15 +229,15 @@ class GammaHeaderParsingTests(unittest.TestCase):
 
 
 # Test data for the epoch header combination
-H0 = { ifc.PYRATE_DATE : date(2009, 7, 13),
+H0 = { ifc.MASTER_DATE : date(2009, 7, 13),
         ifc.PYRATE_WAVELENGTH_METRES : 1.8,
     }
 
-H1 = { ifc.PYRATE_DATE : date(2009, 8, 17),
+H1 = { ifc.MASTER_DATE : date(2009, 8, 17),
         ifc.PYRATE_WAVELENGTH_METRES : 1.8,
     }
 
-H1_ERR = { ifc.PYRATE_DATE : date(2009, 8, 17),
+H1_ERR = { ifc.MASTER_DATE : date(2009, 8, 17),
             ifc.PYRATE_WAVELENGTH_METRES : 2.4,
     }
 
@@ -261,9 +261,9 @@ class HeaderCombinationTests(unittest.TestCase):
         self.assertEqual(chdr[ifc.PYRATE_TIME_SPAN], exp_timespan)
 
         exp_date = date(2009, 7, 13)
-        self.assertEqual(chdr[ifc.PYRATE_DATE], exp_date)
+        self.assertEqual(chdr[ifc.MASTER_DATE], exp_date)
         exp_date2 = date(2009, 8, 17)
-        self.assertEqual(chdr[ifc.PYRATE_DATE2], exp_date2)
+        self.assertEqual(chdr[ifc.SLAVE_DATE], exp_date2)
 
         exp_wavelen = LIGHTSPEED / 5.3310040e+09
         self.assertEqual(chdr[ifc.PYRATE_WAVELENGTH_METRES], exp_wavelen)

@@ -241,7 +241,7 @@ class Ifg(RasterBase):
             return date(year, month, day)
 
         md = self.dataset.GetMetadata()
-        datestrs = [md[k] for k in [ifc.PYRATE_DATE, ifc.PYRATE_DATE2]]
+        datestrs = [md[k] for k in [ifc.MASTER_DATE, ifc.SLAVE_DATE]]
 
         if all(datestrs):
             self.master, self.slave = [_to_date(s) for s in datestrs]
@@ -637,7 +637,7 @@ def write_geotiff(header, data_path, dest, nodata):
     if is_ifg:
         for k in [ifc.PYRATE_WAVELENGTH_METRES, ifc.PYRATE_TIME_SPAN,
                   ifc.PYRATE_INSAR_PROCESSOR,
-                  ifc.PYRATE_DATE, ifc.PYRATE_DATE2, ifc.PYRATE_PHASE_UNITS,
+                  ifc.MASTER_DATE, ifc.SLAVE_DATE, ifc.PYRATE_PHASE_UNITS,
                   ifc.PROCESS_STEP]:
             ds.SetMetadataItem(k, str(header[k]))
 
@@ -705,7 +705,7 @@ def write_output_geotiff(md, gt, wkt, data, dest, nodata):
     # set spatial reference for geotiff
     ds.SetGeoTransform(gt)
     ds.SetProjection(wkt)
-    ds.SetMetadataItem(ifc.PYRATE_DATE, str(md[ifc.PYRATE_DATE]))
+    ds.SetMetadataItem(ifc.MASTER_DATE, str(md[ifc.MASTER_DATE]))
 
     # set other metadata
     ds.SetMetadataItem('PR_TYPE', str(md['PR_TYPE']))
