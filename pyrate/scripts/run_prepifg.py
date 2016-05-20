@@ -156,6 +156,8 @@ def gamma_multiprocessing(b, params):
     d = os.path.join(
         params[cf.OUT_DIR], os.path.basename(b).split('.')[0] + '.tif')
 
+    print b
+    #print SLC_DIR
     header_paths = gamma_task.get_header_paths(b, slc_dir=SLC_DIR)
     if len(header_paths) == 2:
         hdrs = [gamma.parse_epoch_header(p) for p in header_paths]
