@@ -25,6 +25,7 @@ import stat
 from pyrate import roipac, gamma
 
 import pyrate.ifgconstants as ifc
+import PyAPS as pa
 
 try:
     from osgeo import osr, gdal
@@ -339,6 +340,31 @@ class Ifg(RasterBase):
         Returns number of NaN cells in the phase data.
         """
         return nsum(isnan(self.phase_data))
+
+    def remove_aps_delay(self,SYD_TEST_DEM_UNW, time_of_day):
+        #for i in ifgs[:1]:
+        list_of_dates_for_grb_download = []
+        add_these = ['20' +i for i in PTN.findall(os.path.basename(self.data_path))]
+        list_of_dates_for_grb_download += add_these
+        first_grb = os.path.join(ECMWF_DIR, ECMWF_PRE + add_these[0] + '_' + time_of_day + ECMWF_EXT)
+        second_grb = os.path.join(ECMWF_DIR, ECMWF_PRE + add_these[1] + '_' + time_of_day + ECMWF_EXT)
+        #download .grb file if does not extist
+        if not (os.path.exists(first_grb) and os.path.exists(second_grb)):
+            #download weather files at 18.00 UTC (other options 00:00, 06:00, 18:00)
+            pa.ecmwf_download(add_these, time_of_day, 'ECMWF')
+        #for i in add_these:
+        aps1 = pa.PYAPS_geo(first_grb,SYD_TEST_DEM_UNW, grib='ECMWF', verb=True, demfmt='HGT', demtype=np.int16)
+        aps2 = pa.PYAPS_geo(second_grb,SYD_TEST_DEM_UNW, grib='ECMWF', verb=True, demfmt='HGT', demtype=np.int16 )
+        phs1= np.zeros((aps1.ny, aps1.nx))
+        phs2= np.zeros((aps2.ny, aps2.nx))
+        print 'Without Lat Lon files'
+        #using random incidence angle
+        aps1.getdelay(phs1, inc=23.0) #MG to describe how to find incidence angle
+        aps2.getdelay(phs2, inc=23.0)
+        aps_delay = phs2 - phs1 # delay in meters as we dont provide wavelength
+        if not self.mm_converted:
+            self.convert_to_mm()
+        return self.phase_data - aps_delay*1000
 
     @property
     def nan_fraction(self):
