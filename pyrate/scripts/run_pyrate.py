@@ -23,6 +23,7 @@ from pyrate import matlab_mst_kruskal as matlab_mst
 from pyrate import reference_phase_estimation as rpe
 from pyrate import algorithm
 from pyrate import ifgconstants as ifc
+from pyrate import remove_aps_delay as aps
 import pickle
 
 
@@ -48,6 +49,8 @@ def process_ifgs(ifg_paths_or_instance, params):
     refpx, refpy = find_reference_pixel(ifgs, params)
 
     # remove APS delay here
+    if params[cf.APS_CORRECTION] != 0:
+        aps.remove_aps_delay(ifgs, params)
 
     # Estimate and remove orbit errors
     if params[cf.ORBITAL_FIT] != 0:
