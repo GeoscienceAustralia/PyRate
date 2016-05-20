@@ -120,6 +120,32 @@ class PrepifgOutputTests(unittest.TestCase):
     def _custom_extents_tuple(self):
         return CustomExts(*self._custom_ext_latlons())
 
+
+    def assert_projection_equal(self, files):
+        """
+        Asserts preojections for the given files are equivalent.
+        Files can be paths to datasets, or GDAL dataset objects.
+        """
+        assert len(files) > 1, "Need more than 1 file to compare"
+        if not all([hasattr(f, "GetGeoTransform") for f in files]):
+            datasets = [gdal.Open(f) for f in files]
+            assert all(datasets)
+        else:
+            datasets = files
+
+        projections = [ds.GetProjection() for ds in datasets]
+        head = projections[0]
+        for t in projections[1:]:
+            self.assertEqual(t, head)
+
+
+    def test_multilooked_projection_same_as_geotiff(self):
+        xlooks = ylooks = 1
+        prepare_ifgs(self.ifg_paths, MAXIMUM_CROP, xlooks, ylooks)
+        mlooked_paths = [mlooked_path(f, crop_out=MAXIMUM_CROP, looks=xlooks)
+                         for f in self.ifg_paths]
+        self.assert_projection_equal(self.ifg_paths + mlooked_paths)
+
     def test_default_max_extents(self):
         """Test ifgcropopt=2 crops datasets to max bounding box extents."""
         xlooks = ylooks = 1
@@ -239,7 +265,6 @@ class PrepifgOutputTests(unittest.TestCase):
     def test_multilook(self):
         """Test resampling method using a scaling factor of 4"""
         scale = 4  # assumes square cells
-        # TODO: put the DEM back in
         self.ifgs.append(DEM(SYD_TEST_DEM_TIF))
         self.ifg_paths = [i.data_path for i in self.ifgs]
         cext = self._custom_extents_tuple()
