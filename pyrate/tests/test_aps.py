@@ -6,6 +6,7 @@ import unittest
 import tempfile
 import os
 import shutil
+import gdal
 from pyrate import remove_aps_delay as aps
 from pyrate.tests import common
 from pyrate import config as cf
@@ -64,6 +65,15 @@ class MetaDataTest(unittest.TestCase):
             md = i.meta_data
             self.assertIn(ifc.PYRATE_APS_ERROR, md.keys())
             self.assertIn(aps.APS_STATUS, md.values())
+
+    def test_meta_data_was_written(self):
+        for i in self.ifgs:
+            i.close()  # until file is closed metadata is not written
+            md = i.meta_data
+            ds = gdal.Open(i.data_path)
+            md_w = ds.GetMetadata()
+            self.assertDictEqual(md, md_w)
+            ds = None
 
     def test_dems_present(self):
         # geotiffed dem
