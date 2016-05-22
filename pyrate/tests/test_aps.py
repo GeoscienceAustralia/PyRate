@@ -1,7 +1,4 @@
-from pyrate.tasks.roipac import _DoConvertToGeotiffRoipac
-
 __author__ = 'sudipta'
-
 import unittest
 import tempfile
 import os
