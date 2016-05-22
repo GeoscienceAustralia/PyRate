@@ -27,7 +27,9 @@ ECMWF_EXT = '_12.grib'
 APS_STATUS = 'REMOVED'
 GEOTIFF = 'GEOTIFF'
 
+
 def remove_aps_delay(ifgs, params):
+
     list_of_dates_for_grb_download = []
 
     incidence_angle = None
@@ -73,7 +75,11 @@ def remove_aps_delay(ifgs, params):
 
         aps_delay = geo_correction(date_pair, params, incidence_angle)
         ifg.phase_data -= aps_delay  # remove delay
+        # add it to the meta_data dict
+        ifg.meta_data[ifc.PYRATE_APS_ERROR] = APS_STATUS
+        # write meta_data to file
         ifg.dataset.SetMetadataItem(ifc.PYRATE_APS_ERROR, APS_STATUS)
+
         ifg.write_modified_phase()
 
 
@@ -92,7 +98,7 @@ def rdr_correction(date_pair):
     # phs2 = np.zeros((aps2.ny, aps2.nx))
     # print 'Without Lat Lon files'
     # # using random incidence angle
-    # aps1.getdelay(phs1, inc=23.0)  # TODO: MG to describe how to find incidence
+    # aps1.getdelay(phs1, inc=23.0)
     # aps2.getdelay(phs2, inc=23.0)
     # aps_delay = phs2 - phs1  # delay in meters as we don't provide wavelength
     # return aps_delay
@@ -107,7 +113,6 @@ def geo_correction(date_pair, params, incidence_angle):
     mlooked_dem = prepifg.mlooked_path(geotif_dem,
                                        looks=params[cf.IFG_LKSX],
                                        crop_out=params[cf.IFG_CROP_OPT])
-
     # make sure mlooked dem exist
     if not os.path.exists(mlooked_dem):
         raise prepifg.PreprocessError('mlooked dem was not found.'
