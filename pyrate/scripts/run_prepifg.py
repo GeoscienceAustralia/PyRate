@@ -47,11 +47,12 @@ def main(params=None):
             print usage
             return
         base_ifg_paths, _, params = run_pyrate.get_ifg_paths()
-        base_ifg_paths.append(params[cf.DEM_FILE])
         LUIGI = params[cf.LUIGI]  # luigi or no luigi
         PROCESSOR = params[cf.PROCESSOR]  # roipac or gamma
-        if params[cf.APS_LV_THETA] and PROCESSOR == GAMMA:
-            base_ifg_paths.append(params[cf.APS_LV_THETA])
+        base_ifg_paths.append(params[cf.DEM_FILE])
+        if PROCESSOR == GAMMA:
+            if params[cf.APS_LV_THETA]:
+                base_ifg_paths.append(params[cf.APS_LV_THETA])
         raw_config_file = sys.argv[1]
 
     PROCESSOR = params[cf.PROCESSOR]  # roipac or gamma

@@ -32,7 +32,8 @@ from pyrate.config import (
     INPUT_IFG_PROJECTION,
     ROIPAC_RESOURCE_HEADER,
     SLC_DIR,
-    DEM_FILE
+    DEM_FILE,
+    APS_LV_THETA
     )
 
 DUMMY_SECTION_NAME = 'pyrate'
@@ -78,6 +79,8 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
             conf.write('{}: {}\n'.format(NO_DATA_AVERAGING_THRESHOLD, '0.5'))
             conf.write('{}: {}\n'.format(SLC_DIR, ''))
             conf.write('{}: {}\n'.format(DEM_FILE, common.SYD_TEST_DEM_GAMMA))
+            conf.write('{}: {}\n'.format(APS_LV_THETA,
+                                         common.SYD_TEST_INCIDENCE))
         with open(self.ifgListFile, 'w') as ifgl:
             ifgl.write('\n'.join(data))
 
