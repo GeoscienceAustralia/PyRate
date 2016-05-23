@@ -9,6 +9,7 @@ import errno
 from itertools import product
 
 import os, struct
+from array import array
 import math
 from datetime import date
 import logging
@@ -24,8 +25,6 @@ import shutil
 import stat
 from pyrate import roipac, gamma
 from pyrate import ifgconstants as ifc
-
-import pyrate.ifgconstants as ifc
 
 try:
     from osgeo import osr, gdal
@@ -617,6 +616,7 @@ def write_geotiff(header, data_path, dest, nodata):
     Writes image data to GeoTIFF image with PyRate metadata
     """
     is_ifg = ifc.PYRATE_WAVELENGTH_METRES in header
+    is_incidence = 'FILE_TYPE' in header
     ifg_proc = header[ifc.PYRATE_INSAR_PROCESSOR]
     ncols = header[ifc.PYRATE_NCOLS]
     nrows = header[ifc.PYRATE_NROWS]
@@ -630,7 +630,7 @@ def write_geotiff(header, data_path, dest, nodata):
         gamma._check_step_mismatch(header)
 
     driver = gdal.GetDriverByName("GTiff")
-    dtype = gdal.GDT_Float32 if is_ifg else gdal.GDT_Int16
+    dtype = gdal.GDT_Float32 if (is_ifg or is_incidence) else gdal.GDT_Int16
     ds = driver.Create(dest, ncols, nrows, 1, dtype)
 
     # write pyrate parameters to headers
@@ -689,6 +689,32 @@ def write_geotiff(header, data_path, dest, nodata):
     # Needed? Only in ROIPAC code
     ds = None  # manual close
     del ds
+
+
+def write_unw_from_data_or_geotiff(geotif_or_data, dest_unw, ifg_proc):
+    """
+    :param geotif_or_data: data or geotif to covert into unw
+    :param dest_unw: destination unw file
+    :param ifg_proc: processor type, GAMMA=1, ROIPAC=0
+    :return:
+    """
+    if ifg_proc != 1:
+        raise NotImplementedError('only support gamma processor for now')
+    if isinstance(geotif_or_data, str):
+        assert os.path.exists(geotif_or_data), 'make sure geotif exists'
+        ds = gdal.Open(geotif_or_data)
+        data = ds.ReadAsArray()
+        ds = None
+    else:
+        data = geotif_or_data
+
+    nrows, ncols = data.shape
+    fmtstr = '!' + ('f' * ncols)  # data format is big endian float32s
+
+    with open(dest_unw, 'wb') as f:
+        for y in range(nrows):
+            col_data = struct.pack(fmtstr, *data[y, :])
+            f.write(col_data)
 
 
 def write_output_geotiff(md, gt, wkt, data, dest, nodata):

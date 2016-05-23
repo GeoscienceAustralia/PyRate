@@ -64,7 +64,12 @@ def get_header_paths(input_file, slc_dir=None):
     else:  # header file must exist in the same dir as that of .unw
         dirName, fileName = os.path.split(input_file)
     matches = PTN.findall(fileName)
-    return [glob2.glob(join(dirName, '**/*%s*slc.par' % m))[0] for m in matches]
+    return file_name_matches(dirName, matches)
+
+
+def file_name_matches(dir, dates):
+    return [glob2.glob(join(dir, '**/*%s*slc.par' % m))[0] for m in dates]
+
 
 
 class ConvertFileToGeotiff(luigi.Task):

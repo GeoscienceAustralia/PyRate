@@ -18,7 +18,9 @@ from pyrate.tasks import gamma as gamma_task
 import pyrate.ifgconstants as ifc
 
 ROI_PAC_HEADER_FILE_EXT = 'rsc'
-
+GAMMA = 1
+ROIPAC = 0
+LV_THETA = 'lv_theta'  # PYAPS incidence file extension
 
 def main(params=None):
     """
@@ -46,9 +48,12 @@ def main(params=None):
             return
         base_ifg_paths, _, params = run_pyrate.get_ifg_paths()
         base_ifg_paths.append(params[cf.DEM_FILE])
+        LUIGI = params[cf.LUIGI]  # luigi or no luigi
+        PROCESSOR = params[cf.PROCESSOR]  # roipac or gamma
+        if params[cf.APS_LV_THETA] and PROCESSOR == GAMMA:
+            base_ifg_paths.append(params[cf.APS_LV_THETA])
         raw_config_file = sys.argv[1]
 
-    LUIGI = params[cf.LUIGI]  # luigi or no luigi
     PROCESSOR = params[cf.PROCESSOR]  # roipac or gamma
     run_pyrate.init_logging(logging.DEBUG)
 
@@ -63,10 +68,13 @@ def main(params=None):
         msg = "running serial prepifg"
         print msg
         logging.info(msg)
-        if PROCESSOR == 0:
+        if PROCESSOR == ROIPAC:
             roipac_prepifg(base_ifg_paths, params)
-        else:
+        elif PROCESSOR == GAMMA:
             gamma_prepifg(base_ifg_paths, params)
+        else:
+            raise prepifg.PreprocessError('Processor must be Roipac(0) or '
+                                          'Gamma(1)')
 
 
 def roipac_prepifg(base_ifg_paths, params):
@@ -91,20 +99,18 @@ def gamma_prepifg(base_unw_paths, params):
     msg = "running gamma prepifg"
     print msg
     logging.info(msg)
-    # location of geo_tif's
-    dest_base_ifgs = [os.path.join(
-        params[cf.OUT_DIR], os.path.basename(q).split('.')[0] + '.tif')
-                      for q in base_unw_paths]
-
     parallel = params[cf.PARALLEL]
+
+    # dest_base_ifgs: location of geo_tif's
     if parallel:
         print 'running gamma in parallel with {} ' \
               'processes'.format(params[cf.PROCESSES])
-        parmap.map(gamma_multiprocessing, base_unw_paths,
-                   params, processes=params[cf.PROCESSES])
+        dest_base_ifgs = parmap.map(gamma_multiprocessing, base_unw_paths,
+                                    params, processes=params[cf.PROCESSES])
     else:
+        dest_base_ifgs = []
         for b in base_unw_paths:
-            gamma_multiprocessing(b, params)
+            dest_base_ifgs.append(gamma_multiprocessing(b, params))
     ifgs = [prepifg.dem_or_ifg(p) for p in dest_base_ifgs]
     xlooks, ylooks, crop = run_pyrate.transform_params(params)
     exts = prepifg.getAnalysisExtent(crop, ifgs, xlooks, ylooks, userExts=None)
@@ -142,12 +148,21 @@ def gamma_multiprocessing(b, params):
     dem_hdr_path = params[cf.DEM_HEADER_FILE]
     SLC_DIR = params[cf.SLC_DIR]
     mkdir_p(params[cf.OUT_DIR])
-    d = os.path.join(
-        params[cf.OUT_DIR], os.path.basename(b).split('.')[0] + '.tif')
-
     header_paths = gamma_task.get_header_paths(b, slc_dir=SLC_DIR)
     combined_headers = gamma.manage_headers(dem_hdr_path, header_paths)
+
+    f, e = os.path.basename(b).split('.')
+    if e != LV_THETA:
+        d = os.path.join(
+            params[cf.OUT_DIR], f + '.tif')
+    else:
+        d = os.path.join(
+            params[cf.OUT_DIR], f + '_' + e + '.tif')
+        # TODO: implement incidence class here
+        combined_headers['FILE_TYPE'] = 'Incidence'
+
     write_geotiff(combined_headers, b, d, nodata=params[cf.NO_DATA_VALUE])
+    return d
 
 if __name__ == '__main__':
     main()

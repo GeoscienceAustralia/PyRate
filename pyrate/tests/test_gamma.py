@@ -215,6 +215,9 @@ class GammaHeaderParsingTests(unittest.TestCase):
         exp_wavelen = LIGHTSPEED / 5.3310040e+09
         self.assertEqual(hdrs[ifc.PYRATE_WAVELENGTH_METRES], exp_wavelen)
 
+        incidence_angle = 22.9671
+        self.assertEqual(hdrs[ifc.INCIDENCE_ANGLE], incidence_angle)
+
 
     def test_parse_gamma_dem_header(self):
         path = join(GAMMA_TEST_DIR, 'dem16x20raw.dem.par')

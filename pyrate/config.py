@@ -155,7 +155,9 @@ REF_MIN_FRAC = 'refminfrac'
 REF_EST_METHOD = 'refest'
 
 #atmospheric error correction parameter
-APS_CORRECTION = 'atmfit'
+APS_CORRECTION = 'apscorrect'
+APS_METHOD = 'apsmethod'
+APS_LV_THETA = 'aps_lv_theta'
 
 # orbital error correction/parameters
 #: BOOL (1/0); Boolean flag controlling whether to apply orbital error correction
@@ -288,7 +290,8 @@ PARAM_CONVERSION = {
     LUIGI: (int, 0),
     NAN_CONVERSION: (int, 0),
     NO_DATA_AVERAGING_THRESHOLD: (float, 0.0),
-    APS_CORRECTION: (int, 0)
+    APS_CORRECTION: (int, 0),
+    APS_METHOD: (int, 1)
     }
     #TIME_SERIES_INTERP : (bool, False)
 
@@ -304,7 +307,8 @@ def get_config_params(path):
             if any(x in line for x in [OBS_DIR, IFG_FILE_LIST, DEM_FILE,
                                        DEM_HEADER_FILE, OUT_DIR,
                                        ROIPAC_RESOURCE_HEADER,
-                                       SLC_DIR]):
+                                       SLC_DIR,
+                                       APS_LV_THETA]):
                 pos = line.find('~')
                 if pos != -1:
                     line = line[:pos] + os.environ['HOME'] + line[(pos+1):]    # create expanded line

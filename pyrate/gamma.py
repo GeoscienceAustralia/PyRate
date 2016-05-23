@@ -20,6 +20,7 @@ GAMMA_Y_STEP = 'post_lat'
 GAMMA_X_STEP = 'post_lon'
 GAMMA_DATUM = 'ellipsoid_name'
 GAMMA_FREQUENCY = 'radar_frequency'
+GAMMA_INCIDENCE = 'incidence_angle'
 RADIANS = 'RADIANS'
 GAMMA = 'GAMMA'
 
@@ -76,7 +77,13 @@ def parse_epoch_header(path):
         msg = 'Unrecognised unit field for radar_frequency: %s'
         raise GammaException(msg % unit)
 
+    incidence, unit = lookup[GAMMA_INCIDENCE]
+    if unit != "degrees":
+        msg = 'Unrecognised unit field for incidence_angle: %s'
+        raise GammaException(msg % unit)
     subset[ifc.PYRATE_WAVELENGTH_METRES] = frequency_to_wavelength(float(freq))
+    subset[ifc.INCIDENCE_ANGLE] = float(incidence)
+
     return subset
 
 
