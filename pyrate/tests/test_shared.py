@@ -12,18 +12,24 @@ import shutil
 import unittest
 from os.path import join, basename, exists
 from stat import S_IRGRP, S_IWGRP, S_IWOTH, S_IROTH, S_IRUSR, S_IWUSR
-
+import tempfile
 from itertools import product
 from numpy import isnan, where, nan
+import numpy as np
 from numpy.testing import assert_array_equal
 
 from osgeo.gdal import Open, Dataset, UseExceptions
-UseExceptions()
+from osgeo import gdal, gdalconst
+from array import array
 
 from pyrate.shared import Ifg, DEM, RasterException
 from common import SYD_TEST_TIF, SYD_TEST_DEM_TIF, TEMPDIR
 from pyrate import prepifg
-
+from pyrate import shared
+from pyrate.tests import common
+from pyrate import config as cf
+from pyrate.scripts import run_pyrate, run_prepifg
+UseExceptions()
 
 if not exists(SYD_TEST_TIF):
     sys.exit("ERROR: Missing sydney_test data for unit tests\n")
@@ -309,7 +315,129 @@ class DEMTests(unittest.TestCase):
 
         self.ras.open()
         data = self.ras.height_band.ReadAsArray()
-        self.assertEqual(data.shape, (72, 47) )
+        self.assertEqual(data.shape, (72, 47))
+
+
+class WriteUnwTest(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.tif_dir = tempfile.mkdtemp()
+        cls.test_conf = common.SYDNEY_TEST_CONF
+
+        # change the required params
+        cls.params = cf.get_config_params(cls.test_conf)
+        cls.params[cf.OBS_DIR] = common.SYD_TEST_GAMMA
+        cls.params[cf.PROCESSOR] = 1  # gamma
+        file_list = cf.parse_namelist(os.path.join(common.SYD_TEST_GAMMA,
+                                                   'ifms_17'))
+        fd, cls.params[cf.IFG_FILE_LIST] = tempfile.mkstemp(suffix='.conf',
+                                                            dir=cls.tif_dir)
+        os.close(fd)
+        # write a short filelist with only 3 gamma unws
+        with open(cls.params[cf.IFG_FILE_LIST], 'w') as fp:
+            for f in file_list[:3]:
+                fp.write(os.path.join(common.SYD_TEST_GAMMA, f) + '\n')
+        cls.params[cf.OUT_DIR] = cls.tif_dir
+        cls.params[cf.PARALLEL] = 0
+        cls.params[cf.REF_EST_METHOD] = 1
+        cls.params[cf.DEM_FILE] = common.SYD_TEST_DEM_GAMMA
+        # base_unw_paths need to be geotiffed and multilooked by run_prepifg
+        cls.base_unw_paths = run_pyrate.original_ifg_paths(
+            cls.params[cf.IFG_FILE_LIST])
+        cls.base_unw_paths.append(common.SYD_TEST_DEM_GAMMA)
+
+        xlks, ylks, crop = run_pyrate.transform_params(cls.params)
+
+        # dest_paths are tifs that have been geotif converted and multilooked
+        run_prepifg.gamma_prepifg(cls.base_unw_paths, cls.params)
+        cls.base_unw_paths.pop()  # removed dem as we don't want it in ifgs list
+
+        dest_paths = run_pyrate.get_dest_paths(
+            cls.base_unw_paths, crop, cls.params, xlks)
+        cls.ifgs = common.sydney_data_setup(datafiles=dest_paths)
+
+    @classmethod
+    def tearDownClass(cls):
+        for i in cls.ifgs:
+            i.close()
+        shutil.rmtree(cls.tif_dir)
+
+    def test_unw_contains_same_data(self):
+        arr = np.array(np.random.rand(10))
+        temp_unw = tempfile.mktemp(suffix='.unw')
+        shared.write_unw_from_data_or_geotiff(arr, temp_unw,
+                                              ifg_proc=1)
+        input_file = open(temp_unw, 'r')
+        float_array = array('f')
+        float_array.fromstring(input_file.read())
+        np.testing.assert_array_almost_equal(float_array, arr)
+        os.remove(temp_unw)
+
+    def test_equality_of_unw_with_geotiff(self):
+        geotiffs = [os.path.join(
+            self.params[cf.OUT_DIR], os.path.basename(b).split('.')[0] + '.tif')
+            for b in self.base_unw_paths]
+
+        # create .unws from geotiffs and make sure they read the same
+        for g in geotiffs:
+            dest_unw = os.path.join(self.params[cf.OUT_DIR],
+                         os.path.splitext(g)[0] + '.unw')
+            shared.write_unw_from_data_or_geotiff(
+                geotif_or_data=g, dest_unw= dest_unw, ifg_proc=1)
+            ds = gdal.Open(g, gdalconst.GA_ReadOnly)
+            data = ds.ReadAsArray()
+            input_file = open(dest_unw, 'r')
+            float_array = array('f')
+            float_array.fromstring(input_file.read())
+            np.testing.assert_array_equal(float_array, data.reshape(data.size))
+
+            ds = None
+
+    def test_unws_created_are_same_as_original(self):
+        geotiffs = [os.path.join(
+            self.params[cf.OUT_DIR], os.path.basename(b).split('.')[0] + '.tif')
+                    for b in self.base_unw_paths]
+
+        new_base_unw_paths = []
+        # create .unws from geotiffs and make sure they read the same
+        for g in geotiffs:
+            dest_unw = os.path.join(self.params[cf.OUT_DIR],
+                                    os.path.splitext(g)[0] + '.unw')
+            shared.write_unw_from_data_or_geotiff(
+                geotif_or_data=g, dest_unw=dest_unw, ifg_proc=1)
+
+            # unws created
+            assert os.path.exists(dest_unw)
+            new_base_unw_paths.append(dest_unw)
+
+        # make sure we can recovert the unws to gettiffs
+        run_prepifg.gamma_prepifg(new_base_unw_paths, self.params)
+
+        new_geotiffs = [os.path.join(
+            self.params[cf.OUT_DIR], os.path.basename(b).split('.')[0] + '.tif')
+                            for b in new_base_unw_paths]
+
+        # assert data equal
+        for g, u in zip(geotiffs, new_geotiffs):
+            g_ds = gdal.Open(g)
+            u_gs = gdal.Open(u)
+            np.testing.assert_array_almost_equal(u_gs.ReadAsArray(),
+                                                 g_ds.ReadAsArray())
+            u_gs = None
+            g_ds = None
+
+    def test_roipac_raises(self):
+        geotiffs = [os.path.join(
+            self.params[cf.OUT_DIR], os.path.basename(b).split('.')[0] + '.tif')
+                    for b in self.base_unw_paths]
+
+        for g in geotiffs[:1]:
+            dest_unw = os.path.join(self.params[cf.OUT_DIR],
+                                    os.path.splitext(g)[0] + '.unw')
+            with self.assertRaises(NotImplementedError):
+                shared.write_unw_from_data_or_geotiff(
+                    geotif_or_data=g, dest_unw=dest_unw, ifg_proc=0)
 
 
 if __name__ == "__main__":
