@@ -9,6 +9,7 @@ import errno
 from itertools import product
 
 import os, struct
+from array import array
 import math
 from datetime import date
 import logging
@@ -24,8 +25,6 @@ import shutil
 import stat
 from pyrate import roipac, gamma
 from pyrate import ifgconstants as ifc
-
-import pyrate.ifgconstants as ifc
 
 try:
     from osgeo import osr, gdal
@@ -689,6 +688,30 @@ def write_geotiff(header, data_path, dest, nodata):
     # Needed? Only in ROIPAC code
     ds = None  # manual close
     del ds
+
+
+def write_unw_from_data_or_geotiff(geotif_or_data, dest_unw, ifg_proc):
+    """
+    :param geotif_or_data: data or geotif to covert into unw
+    :param dest_unw: destination unw file
+    :param ifg_proc: processor type, GAMMA=1, ROIPAC=0
+    :return:
+    """
+    if ifg_proc != 1:
+        raise NotImplementedError('only support gamma processor for now')
+    if isinstance(geotif_or_data, str):
+        assert os.path.exists(geotif_or_data), 'make sure geotif exists'
+        ds = gdal.Open(geotif_or_data)
+        data = ds.ReadAsArray()
+        data = data.reshape(data.size)
+        ds = None
+    else:
+        data = geotif_or_data.reshape(geotif_or_data.size)
+
+    output_file = open(dest_unw, 'wb')
+    float_array = array('f', data)
+    float_array.tofile(output_file)
+    output_file.close()
 
 
 def write_output_geotiff(md, gt, wkt, data, dest, nodata):
