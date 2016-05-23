@@ -12,6 +12,7 @@ import sys
 import os
 import re
 import glob2
+from osgeo import gdalconst, gdal
 # from pyrate.tests.common import sydney_data_setup
 from pyrate.tests.common import SYD_TEST_DEM_ROIPAC
 from pyrate import config as cf
@@ -140,7 +141,19 @@ def geo_correction(date_pair, params, incidence_angle):
         aps1.getdelay(phs1, inc=incidence_angle)
         aps2.getdelay(phs2, inc=incidence_angle)
     elif params[cf.APS_METHOD] == 2:
-        pass
+        f, e = os.path.basename(params[cf.APS_LV_THETA]).split('.')
+        lv_theta_multilooked = os.path.join(
+            params[cf.OUT_DIR], f + '_' + e + '_{looks}rlks_{crop}cr.tif'.format(looks=params[cf.IFG_LKSX],
+                                               crop=params[cf.IFG_CROP_OPT]))
+
+        assert os.path.exists(lv_theta_multilooked), \
+            'lv theta file cropped and multilooked file not found. ' \
+            'Use apsmethod=1, Or run prepifg with gamma processor'
+        ds = gdal.Open(lv_theta_multilooked, gdalconst.GA_ReadOnly)
+        incidence_map = ds.ReadAsArray()
+        ds = None  # close file
+        aps1.getdelay(phs1, inc=incidence_map)
+        aps2.getdelay(phs2, inc=incidence_map)
     else:
         raise
     aps_delay = phs2 - phs1  # delay in meters as we don't provide wavelength
