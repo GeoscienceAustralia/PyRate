@@ -51,7 +51,6 @@ def main(params=None):
         LUIGI = params[cf.LUIGI]  # luigi or no luigi
         PROCESSOR = params[cf.PROCESSOR]  # roipac or gamma
         if params[cf.APS_LV_THETA] and PROCESSOR == GAMMA:
-            print 'adding lv theta'
             base_ifg_paths.append(params[cf.APS_LV_THETA])
         raw_config_file = sys.argv[1]
 
@@ -149,6 +148,9 @@ def gamma_multiprocessing(b, params):
     dem_hdr_path = params[cf.DEM_HEADER_FILE]
     SLC_DIR = params[cf.SLC_DIR]
     mkdir_p(params[cf.OUT_DIR])
+    header_paths = gamma_task.get_header_paths(b, slc_dir=SLC_DIR)
+    combined_headers = gamma.manage_headers(dem_hdr_path, header_paths)
+
     f, e = os.path.basename(b).split('.')
     if e != LV_THETA:
         d = os.path.join(
@@ -156,9 +158,9 @@ def gamma_multiprocessing(b, params):
     else:
         d = os.path.join(
             params[cf.OUT_DIR], f + '_' + e + '.tif')
+        # TODO: implement incidence class here
+        combined_headers['FILE_TYPE'] = 'Incidence'
 
-    header_paths = gamma_task.get_header_paths(b, slc_dir=SLC_DIR)
-    combined_headers = gamma.manage_headers(dem_hdr_path, header_paths)
     write_geotiff(combined_headers, b, d, nodata=params[cf.NO_DATA_VALUE])
     return d
 

@@ -616,6 +616,7 @@ def write_geotiff(header, data_path, dest, nodata):
     Writes image data to GeoTIFF image with PyRate metadata
     """
     is_ifg = ifc.PYRATE_WAVELENGTH_METRES in header
+    is_incidence = 'FILE_TYPE' in header
     ifg_proc = header[ifc.PYRATE_INSAR_PROCESSOR]
     ncols = header[ifc.PYRATE_NCOLS]
     nrows = header[ifc.PYRATE_NROWS]
@@ -629,7 +630,7 @@ def write_geotiff(header, data_path, dest, nodata):
         gamma._check_step_mismatch(header)
 
     driver = gdal.GetDriverByName("GTiff")
-    dtype = gdal.GDT_Float32 if is_ifg else gdal.GDT_Int16
+    dtype = gdal.GDT_Float32 if (is_ifg or is_incidence) else gdal.GDT_Int16
     ds = driver.Create(dest, ncols, nrows, 1, dtype)
 
     # write pyrate parameters to headers
@@ -703,15 +704,17 @@ def write_unw_from_data_or_geotiff(geotif_or_data, dest_unw, ifg_proc):
         assert os.path.exists(geotif_or_data), 'make sure geotif exists'
         ds = gdal.Open(geotif_or_data)
         data = ds.ReadAsArray()
-        data = data.reshape(data.size)
         ds = None
     else:
-        data = geotif_or_data.reshape(geotif_or_data.size)
+        data = geotif_or_data
 
-    output_file = open(dest_unw, 'wb')
-    float_array = array('f', data)
-    float_array.tofile(output_file)
-    output_file.close()
+    nrows, ncols = data.shape
+    fmtstr = '!' + ('f' * ncols)  # data format is big endian float32s
+
+    with open(dest_unw, 'wb') as f:
+        for y in range(nrows):
+            col_data = struct.pack(fmtstr, *data[y, :])
+            f.write(col_data)
 
 
 def write_output_geotiff(md, gt, wkt, data, dest, nodata):
