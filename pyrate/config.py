@@ -336,7 +336,7 @@ def _parse_conf_file(content):
     # define APS_INCIDENCE_EXT for gamma prepifg
     if parameters[APS_INCIDENCE_MAP]:
         parameters[APS_INCIDENCE_EXT] = \
-            os.path.splitext(parameters[APS_INCIDENCE_MAP])[1]
+            os.path.basename(parameters[APS_INCIDENCE_MAP]).split('.')[-1]
     else:
         parameters[APS_INCIDENCE_EXT] = None
     if not parameters:
