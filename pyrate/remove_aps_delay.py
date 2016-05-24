@@ -32,21 +32,24 @@ def remove_aps_delay(ifgs, params):
     list_of_dates_for_grb_download = []
 
     incidence_angle = None
-
+    print params[cf.PROCESSOR]
     for ifg in ifgs:  # demo for only one ifg
         if params[cf.PROCESSOR] == 1:  # gamma
+            print 'sould be here'
             PTN = re.compile(r'\d{8}')
+            print ifg.data_path
             date_pair = [i for i in PTN.findall(os.path.basename(ifg.data_path))]
-        elif params[cf.PROCESSOR] == 1:  # roipac
+        elif params[cf.PROCESSOR] == 0:  # roipac
             # adding 20 to dates here, so dates before 2000 won't work
             # TODO: fix pre 2000 dates
-            PTN = re.compile(r'\d{8}')
+            PTN = re.compile(r'\d{6}')
             date_pair = ['20' + i for i in
                          PTN.findall(os.path.basename(ifg.data_path))]
         else:
             raise AttributeError('processor needs to be gamma(1) or roipac(0)')
 
         list_of_dates_for_grb_download += date_pair
+        print date_pair
         first_grb = os.path.join(ECMWF_DIR,
                                  ECMWF_PRE + date_pair[0] + ECMWF_EXT)
         second_grb = os.path.join(ECMWF_DIR,
@@ -147,7 +150,7 @@ def geo_correction(date_pair, params, incidence_angle):
                                                crop=params[cf.IFG_CROP_OPT]))
 
         assert os.path.exists(lv_theta_multilooked), \
-            'lv theta file cropped and multilooked file not found. ' \
+            'cropped and multilooked incidence map file not found. ' \
             'Use apsmethod=1, Or run prepifg with gamma processor'
         ds = gdal.Open(lv_theta_multilooked, gdalconst.GA_ReadOnly)
         incidence_map = ds.ReadAsArray()
