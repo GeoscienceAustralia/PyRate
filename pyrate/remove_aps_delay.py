@@ -27,8 +27,8 @@ APS_STATUS = 'REMOVED'
 GEOTIFF = 'GEOTIFF'
 ECMWF = 'ECMWF'
 
-def remove_aps_delay(ifgs, params):
 
+def remove_aps_delay(ifgs, params):
     list_of_dates_for_grb_download = []
 
     incidence_angle = None
@@ -141,7 +141,9 @@ def geo_correction(date_pair, params, incidence_angle):
     elif params[cf.APS_METHOD] == 2:
         f, e = os.path.basename(params[cf.APS_INCIDENCE_MAP]).split('.')
         lv_theta_multilooked = os.path.join(
-            params[cf.OUT_DIR], f + '_' + e + '_{looks}rlks_{crop}cr.tif'.format(looks=params[cf.IFG_LKSX],
+            params[cf.OUT_DIR],
+            f + '_' + e +
+            '_{looks}rlks_{crop}cr.tif'.format(looks=params[cf.IFG_LKSX],
                                                crop=params[cf.IFG_CROP_OPT]))
 
         assert os.path.exists(lv_theta_multilooked), \

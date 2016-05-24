@@ -158,6 +158,7 @@ REF_EST_METHOD = 'refest'
 APS_CORRECTION = 'apscorrect'
 APS_METHOD = 'apsmethod'
 APS_INCIDENCE_MAP = 'incidencemap'
+APS_INCIDENCE_EXT = 'APS_INCIDENCE_EXT'
 
 # orbital error correction/parameters
 #: BOOL (1/0); Boolean flag controlling whether to apply orbital error correction
@@ -332,6 +333,12 @@ def _parse_conf_file(content):
         + [(e[0].rstrip(":"), None) for e in lines if len(e) == 1]
     parameters = dict(kvpair)
 
+    # define APS_INCIDENCE_EXT for gamma prepifg
+    if parameters[APS_INCIDENCE_MAP]:
+        parameters[APS_INCIDENCE_EXT] = \
+            os.path.splitext(parameters[APS_INCIDENCE_MAP])[1]
+    else:
+        parameters[APS_INCIDENCE_EXT] = None
     if not parameters:
         raise ConfigException('Cannot parse any parameters from config file')
 
