@@ -9,7 +9,7 @@ Created on 29/05/2014
 import os, sys, unittest
 from osgeo import gdal
 from os.path import join
-from datetime import date
+from datetime import date, time
 from numpy.testing import assert_array_almost_equal
 import shutil
 import glob
@@ -152,10 +152,12 @@ class GammaToGeoTiffTests(unittest.TestCase):
         self.compare_rasters(ds, exp_ds)
 
         md = ds.GetMetadata()
-        self.assertEqual(len(md), 8)
+        self.assertEqual(len(md), 10)
         self.assertTrue(md[ifc.MASTER_DATE] == str(date(2009, 7, 13)))
         self.assertTrue(md[ifc.SLAVE_DATE] == str(date(2009, 8, 17)))
         self.assertTrue(md[ifc.PYRATE_TIME_SPAN] == str(35 / ifc.DAYS_PER_YEAR))
+        self.assertTrue(md[ifc.MASTER_TIME]) == str(12)
+        self.assertTrue(md[ifc.SLAVE_TIME]) == str(time(12))
 
         wavelen = float(md[ifc.PYRATE_WAVELENGTH_METRES])
         self.assertAlmostEqual(wavelen, 0.05627457792190739)
@@ -234,14 +236,17 @@ class GammaHeaderParsingTests(unittest.TestCase):
 
 # Test data for the epoch header combination
 H0 = { ifc.MASTER_DATE : date(2009, 7, 13),
+        ifc.MASTER_TIME : time(12),
         ifc.PYRATE_WAVELENGTH_METRES : 1.8,
     }
 
 H1 = { ifc.MASTER_DATE : date(2009, 8, 17),
+        ifc.MASTER_TIME : time(12, 10, 10),
         ifc.PYRATE_WAVELENGTH_METRES : 1.8,
     }
 
 H1_ERR = { ifc.MASTER_DATE : date(2009, 8, 17),
+            ifc.MASTER_TIME : time(12),
             ifc.PYRATE_WAVELENGTH_METRES : 2.4,
     }
 
@@ -282,7 +287,6 @@ class HeaderCombinationTests(unittest.TestCase):
 
     def test_fail_mismatching_wavelength(self):
         self.assertRaises(self.err, gamma.combine_headers, H0, H1_ERR, self.dh)
-
 
     def test_fail_same_date(self):
         self.assertRaises(self.err, gamma.combine_headers, H0, H0, self.dh)
@@ -415,17 +419,21 @@ class TestGammaLuigiEquality(unittest.TestCase):
             self.assertDictEqual(i.meta_data, j.meta_data)
             # test that PROCESS_STEP exists in metadata
             self.assertIn(ifc.PROCESS_STEP, i.meta_data.keys())
+            md = i.meta_data
+            for k in [ifc.SLAVE_TIME, ifc.MASTER_TIME, ifc.MASTER_DATE,
+                      ifc.SLAVE_DATE, ifc.PYRATE_WAVELENGTH_METRES,
+                      ifc.PYRATE_TIME_SPAN, ifc.PYRATE_INSAR_PROCESSOR]:
+                self.assertIn(k, md)
             if i.data_path.__contains__(
                     '_{looks}rlks_{crop}cr'.format(looks=1, crop=1)):
                 # these are multilooked tifs
                 # test that PROCESS_STEP is MULTILOOKED
-                self.assertEqual(i.meta_data[ifc.PROCESS_STEP],
+                self.assertEqual(md[ifc.PROCESS_STEP],
                                  ifc.MULTILOOKED)
             else:
                 # others tifs are just geotiffs
-                self.assertEqual(i.meta_data[ifc.PROCESS_STEP],
+                self.assertEqual(md[ifc.PROCESS_STEP],
                                  ifc.GEOTIFF)
-
         self.assertEquals(c + 1, len(all_luigi_ifgs))
 
     def shared_setup(self):
