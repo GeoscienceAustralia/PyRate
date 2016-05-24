@@ -36,7 +36,7 @@ from pyrate.config import (
     IFG_CROP_OPT,
     NO_DATA_AVERAGING_THRESHOLD,
     DEM_FILE,
-    APS_LV_THETA)
+    APS_INCIDENCE_MAP)
 
 from pyrate.tests.common import GAMMA_TEST_DIR
 from pyrate.tests import common
@@ -353,7 +353,7 @@ class TestGammaLuigiEquality(unittest.TestCase):
             conf.write('{}: {}\n'.format(NO_DATA_AVERAGING_THRESHOLD, '0.5'))
             conf.write('{}: {}\n'.format(SLC_DIR, ''))
             conf.write('{}: {}\n'.format(DEM_FILE, common.SYD_TEST_DEM_GAMMA))
-            conf.write('{}: {}\n'.format(APS_LV_THETA,
+            conf.write('{}: {}\n'.format(APS_INCIDENCE_MAP,
                                          common.SYD_TEST_INCIDENCE))
 
         with open(self.ifgListFile, 'w') as ifgl:

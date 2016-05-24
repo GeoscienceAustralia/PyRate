@@ -157,7 +157,7 @@ REF_EST_METHOD = 'refest'
 #atmospheric error correction parameter
 APS_CORRECTION = 'apscorrect'
 APS_METHOD = 'apsmethod'
-APS_LV_THETA = 'aps_lv_theta'
+APS_INCIDENCE_MAP = 'incidencemap'
 
 # orbital error correction/parameters
 #: BOOL (1/0); Boolean flag controlling whether to apply orbital error correction
@@ -308,7 +308,7 @@ def get_config_params(path):
                                        DEM_HEADER_FILE, OUT_DIR,
                                        ROIPAC_RESOURCE_HEADER,
                                        SLC_DIR,
-                                       APS_LV_THETA]):
+                                       APS_INCIDENCE_MAP]):
                 pos = line.find('~')
                 if pos != -1:
                     line = line[:pos] + os.environ['HOME'] + line[(pos+1):]    # create expanded line

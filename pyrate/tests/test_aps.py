@@ -112,7 +112,7 @@ class TestMethod1VsMethod2(unittest.TestCase):
         cls.params[cf.PARALLEL] = 0
         cls.params[cf.REF_EST_METHOD] = 1
         cls.params[cf.DEM_FILE] = common.SYD_TEST_DEM_GAMMA
-        cls.params[cf.APS_LV_THETA] = common.SYD_TEST_INCIDENCE
+        cls.params[cf.APS_INCIDENCE_MAP] = common.SYD_TEST_INCIDENCE
         # base_unw_paths need to be geotiffed and multilooked by run_prepifg
         base_unw_paths = run_pyrate.original_ifg_paths(
             cls.params[cf.IFG_FILE_LIST])

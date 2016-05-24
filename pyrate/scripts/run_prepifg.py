@@ -51,8 +51,8 @@ def main(params=None):
         PROCESSOR = params[cf.PROCESSOR]  # roipac or gamma
         base_ifg_paths.append(params[cf.DEM_FILE])
         if PROCESSOR == GAMMA:
-            if params[cf.APS_LV_THETA]:
-                base_ifg_paths.append(params[cf.APS_LV_THETA])
+            if params[cf.APS_INCIDENCE_MAP]:
+                base_ifg_paths.append(params[cf.APS_INCIDENCE_MAP])
         raw_config_file = sys.argv[1]
 
     PROCESSOR = params[cf.PROCESSOR]  # roipac or gamma

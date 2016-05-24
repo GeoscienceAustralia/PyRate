@@ -13,8 +13,6 @@ import os
 import re
 import glob2
 from osgeo import gdalconst, gdal
-# from pyrate.tests.common import sydney_data_setup
-from pyrate.tests.common import SYD_TEST_DEM_ROIPAC
 from pyrate import config as cf
 from pyrate import ifgconstants as ifc
 from pyrate import prepifg
@@ -27,7 +25,7 @@ ECMWF_PRE = 'ERA-Int_'
 ECMWF_EXT = '_12.grib'
 APS_STATUS = 'REMOVED'
 GEOTIFF = 'GEOTIFF'
-
+ECMWF = 'ECMWF'
 
 def remove_aps_delay(ifgs, params):
 
@@ -127,11 +125,11 @@ def geo_correction(date_pair, params, incidence_angle):
 
     aps1 = pa.PyAPS_geo(
         os.path.join(ECMWF_DIR, ECMWF_PRE + date_pair[0] + ECMWF_EXT),
-        mlooked_dem, grib='ECMWF', verb=True,
+        mlooked_dem, grib=ECMWF, verb=True,
         demfmt=GEOTIFF, demtype=np.float32, dem_header=(lon, lat, nx, ny))
     aps2 = pa.PyAPS_geo(
         os.path.join(ECMWF_DIR, ECMWF_PRE + date_pair[1] + ECMWF_EXT),
-        mlooked_dem, grib='ECMWF', verb=True,
+        mlooked_dem, grib=ECMWF, verb=True,
         demfmt=GEOTIFF, demtype=np.float32, dem_header=(lon, lat, nx, ny))
     phs1 = np.zeros((aps1.ny, aps1.nx))
     phs2 = np.zeros((aps2.ny, aps2.nx))
@@ -141,7 +139,7 @@ def geo_correction(date_pair, params, incidence_angle):
         aps1.getdelay(phs1, inc=incidence_angle)
         aps2.getdelay(phs2, inc=incidence_angle)
     elif params[cf.APS_METHOD] == 2:
-        f, e = os.path.basename(params[cf.APS_LV_THETA]).split('.')
+        f, e = os.path.basename(params[cf.APS_INCIDENCE_MAP]).split('.')
         lv_theta_multilooked = os.path.join(
             params[cf.OUT_DIR], f + '_' + e + '_{looks}rlks_{crop}cr.tif'.format(looks=params[cf.IFG_LKSX],
                                                crop=params[cf.IFG_CROP_OPT]))
@@ -179,8 +177,8 @@ def return_pyaps_lat_lon(dem_header):
     lon[0] = dem_header[ifc.PYRATE_LONG]
     if lon[0] < 0:
         lon[0] += 360.0
-    dx = np.float(dem_header['X_STEP'])
-    dy = np.float(dem_header['Y_STEP'])
+    dx = np.float(dem_header[ifc.PYRATE_X_STEP])
+    dy = np.float(dem_header[ifc.PYRATE_Y_STEP])
     lat[0] = lat[1] + dy * ny
     lon[1] = lon[0] + dx * nx
     return lat, lon, nx, ny
