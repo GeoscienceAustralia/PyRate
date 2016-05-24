@@ -108,7 +108,6 @@ class PyRateTests(unittest.TestCase):
         cls.BASE_DIR = tempfile.mkdtemp()
         cls.BASE_OUT_DIR = join(cls.BASE_DIR, 'out')
         cls.BASE_DEM_DIR = join(cls.BASE_DIR, 'dem')
-        cls.BASE_CFG_FILE = join(cls.BASE_DIR, 'pyrate_workflow_test.conf')
         cls.BASE_DEM_FILE = join(cls.BASE_DEM_DIR, 'sydney_trimmed.tif')
         from pyrate.tests.common import SYD_TEST_DIR
 
@@ -132,6 +131,8 @@ class PyRateTests(unittest.TestCase):
                 os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf'))
             params[cf.SIM_DIR] = cf.PYRATEPATH
             params[cf.OUT_DIR] = cls.BASE_OUT_DIR
+            params[cf.PROCESSOR] = 0  # roipac
+            params[cf.APS_CORRECTION] = 0
             paths = glob.glob(join(cls.BASE_OUT_DIR, 'geo_*-*.tif'))
             params[cf.PARALLEL] = False
             run_pyrate.process_ifgs(paths, params)
@@ -210,6 +211,7 @@ class MSTParallelPyRateTests(unittest.TestCase):
             common.SYD_TEST_GAMMA, 'ifms_17')
         params[cf.OUT_DIR] = cls.tif_dir
         params[cf.PARALLEL] = 1
+        params[cf.APS_CORRECTION] = False
 
         xlks, ylks, crop = run_pyrate.transform_params(params)
 

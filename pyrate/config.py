@@ -157,7 +157,8 @@ REF_EST_METHOD = 'refest'
 #atmospheric error correction parameter
 APS_CORRECTION = 'apscorrect'
 APS_METHOD = 'apsmethod'
-APS_LV_THETA = 'aps_lv_theta'
+APS_INCIDENCE_MAP = 'incidencemap'
+APS_INCIDENCE_EXT = 'APS_INCIDENCE_EXT'
 
 # orbital error correction/parameters
 #: BOOL (1/0); Boolean flag controlling whether to apply orbital error correction
@@ -308,7 +309,7 @@ def get_config_params(path):
                                        DEM_HEADER_FILE, OUT_DIR,
                                        ROIPAC_RESOURCE_HEADER,
                                        SLC_DIR,
-                                       APS_LV_THETA]):
+                                       APS_INCIDENCE_MAP]):
                 pos = line.find('~')
                 if pos != -1:
                     line = line[:pos] + os.environ['HOME'] + line[(pos+1):]    # create expanded line
@@ -332,6 +333,12 @@ def _parse_conf_file(content):
         + [(e[0].rstrip(":"), None) for e in lines if len(e) == 1]
     parameters = dict(kvpair)
 
+    # define APS_INCIDENCE_EXT for gamma prepifg
+    if parameters[APS_INCIDENCE_MAP]:
+        parameters[APS_INCIDENCE_EXT] = \
+            os.path.basename(parameters[APS_INCIDENCE_MAP]).split('.')[-1]
+    else:
+        parameters[APS_INCIDENCE_EXT] = None
     if not parameters:
         raise ConfigException('Cannot parse any parameters from config file')
 

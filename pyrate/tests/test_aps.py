@@ -36,15 +36,18 @@ class MetaDataTest(unittest.TestCase):
         cls.params[cf.PARALLEL] = 0
         cls.params[cf.REF_EST_METHOD] = 1
         cls.params[cf.DEM_FILE] = common.SYD_TEST_DEM_GAMMA
+        cls.params[cf.APS_INCIDENCE_MAP] = common.SYD_TEST_INCIDENCE
         # base_unw_paths need to be geotiffed and multilooked by run_prepifg
         base_unw_paths = run_pyrate.original_ifg_paths(
             cls.params[cf.IFG_FILE_LIST])
         base_unw_paths.append(common.SYD_TEST_DEM_GAMMA)
+        base_unw_paths.append(common.SYD_TEST_INCIDENCE)
 
         xlks, ylks, crop = run_pyrate.transform_params(cls.params)
 
         # dest_paths are tifs that have been geotif converted and multilooked
         run_prepifg.gamma_prepifg(base_unw_paths, cls.params)
+        base_unw_paths.pop()  # removed incidence as we don't want it in ifgs list
         base_unw_paths.pop()  # removed dem as we don't want it in ifgs list
 
         dest_paths = run_pyrate.get_dest_paths(
@@ -112,7 +115,7 @@ class TestMethod1VsMethod2(unittest.TestCase):
         cls.params[cf.PARALLEL] = 0
         cls.params[cf.REF_EST_METHOD] = 1
         cls.params[cf.DEM_FILE] = common.SYD_TEST_DEM_GAMMA
-        cls.params[cf.APS_LV_THETA] = common.SYD_TEST_INCIDENCE
+        cls.params[cf.APS_INCIDENCE_MAP] = common.SYD_TEST_INCIDENCE
         # base_unw_paths need to be geotiffed and multilooked by run_prepifg
         base_unw_paths = run_pyrate.original_ifg_paths(
             cls.params[cf.IFG_FILE_LIST])

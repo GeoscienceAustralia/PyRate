@@ -2,7 +2,7 @@ Gamma Interferometric SAR Processor (ISP) - Image Parameter File
 
 title:     ASA_IM__0CNPDE20090713_231928_000000162080_00402_38532_3575.N1
 sensor:    IS2
-date:      2009  7 13
+date:      2009  7 13 8 28 59.6906
 start_time:             83968.033110   s
 center_time:            83975.849243   s
 end_time:               83983.665375   s

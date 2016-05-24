@@ -20,7 +20,6 @@ import pyrate.ifgconstants as ifc
 ROI_PAC_HEADER_FILE_EXT = 'rsc'
 GAMMA = 1
 ROIPAC = 0
-LV_THETA = 'lv_theta'  # PYAPS incidence file extension
 
 def main(params=None):
     """
@@ -51,8 +50,8 @@ def main(params=None):
         PROCESSOR = params[cf.PROCESSOR]  # roipac or gamma
         base_ifg_paths.append(params[cf.DEM_FILE])
         if PROCESSOR == GAMMA:
-            if params[cf.APS_LV_THETA]:
-                base_ifg_paths.append(params[cf.APS_LV_THETA])
+            if params[cf.APS_INCIDENCE_MAP]:
+                base_ifg_paths.append(params[cf.APS_INCIDENCE_MAP])
         raw_config_file = sys.argv[1]
 
     PROCESSOR = params[cf.PROCESSOR]  # roipac or gamma
@@ -153,7 +152,7 @@ def gamma_multiprocessing(b, params):
     combined_headers = gamma.manage_headers(dem_hdr_path, header_paths)
 
     f, e = os.path.basename(b).split('.')
-    if e != LV_THETA:
+    if e != params[cf.APS_INCIDENCE_EXT]:
         d = os.path.join(
             params[cf.OUT_DIR], f + '.tif')
     else:

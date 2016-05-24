@@ -366,7 +366,7 @@ class WriteUnwTest(unittest.TestCase):
         shutil.rmtree(cls.tif_dir)
 
     def test_unw_contains_same_data_as_numpy_array(self):
-
+        from datetime import time
         temp_unw = tempfile.mktemp(suffix='.unw')
         temp_tif = tempfile.mktemp(suffix='.tif')
 
@@ -384,6 +384,7 @@ class WriteUnwTest(unittest.TestCase):
         header[ifc.SLAVE_DATE] = 0
         header[ifc.PYRATE_PHASE_UNITS] = 'degrees'
         header[ifc.PROCESS_STEP] = ifc.GEOTIFF
+        header[ifc.SLAVE_TIME] = time(10)
 
         # now create aritrary data
         data = np.random.rand(dem_header[ifc.PYRATE_NROWS],
