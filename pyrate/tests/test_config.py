@@ -64,33 +64,32 @@ class ConfigWriteTest(unittest.TestCase):
 
 
 class ConfigAPSParametersTest(unittest.TestCase):
+    def setUp(self):
+        self.conf_path = common.SYDNEY_TEST_CONF
+        self.params = config.get_config_params(self.conf_path)
 
     def test_incidence_and_elevation_keys_exist(self):
-        conf_path = common.SYDNEY_TEST_CONF
-        params = config.get_config_params(conf_path)
-        self.assertIn(config.APS_INCIDENCE_MAP, params.keys())
-        self.assertIn(config.APS_ELEVATION_MAP, params.keys())
+        self.assertIn(config.APS_INCIDENCE_MAP, self.params.keys())
+        self.assertIn(config.APS_ELEVATION_MAP, self.params.keys())
 
     def test_elevation_ext_should_not_exist(self):
-        conf_path = common.SYDNEY_TEST_CONF
-        params = config.get_config_params(conf_path)
-        self.assertNotIn(config.APS_ELEVATION_EXT, params.keys())
-        self.assertIn(config.APS_ELEVATION_MAP, params.keys())
-        self.assertIn(config.APS_ELEVATION_MAP, params.keys())
-        self.assertIsNone(params[config.APS_ELEVATION_MAP])
+        self.assertNotIn(config.APS_ELEVATION_EXT, self.params.keys())
+        self.assertIn(config.APS_ELEVATION_MAP, self.params.keys())
+        self.assertIn(config.APS_ELEVATION_MAP, self.params.keys())
+        self.assertIsNone(self.params[config.APS_ELEVATION_MAP])
 
     def test_impedance_ext_should_exist(self):
-        conf_path = common.SYDNEY_TEST_CONF
-        params = config.get_config_params(conf_path)
-        self.assertIn(config.APS_INCIDENCE_EXT, params.keys())
+        self.assertIn(config.APS_INCIDENCE_EXT, self.params.keys())
 
     def test_elevation_ext_exist(self):
-        conf_path = common.SYDNEY_TEST_CONF
-        params = config.get_config_params(conf_path)
-        self.assertIn(config.APS_INCIDENCE_EXT, params.keys())
-        self.assertNotIn(config.APS_ELEVATION_EXT, params.keys())
-        self.assertIn(config.APS_ELEVATION_MAP, params.keys())
+        self.assertIn(config.APS_INCIDENCE_EXT, self.params.keys())
+        self.assertNotIn(config.APS_ELEVATION_EXT, self.params.keys())
+        self.assertIn(config.APS_ELEVATION_MAP, self.params.keys())
 
+    def test_elevation_and_incidence_both_cant_have_values(self):
+        self.assertIsNotNone(self.params[config.APS_INCIDENCE_MAP])
+        self.assertIsNotNone(self.params[config.APS_INCIDENCE_EXT])
+        self.assertIsNone(self.params[config.APS_ELEVATION_MAP])
 
 if __name__ == "__main__":
     unittest.main()
