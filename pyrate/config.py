@@ -295,6 +295,7 @@ def handle_pyaps_parameters(parameters):
         parameters[APS_INCIDENCE_EXT] = \
             os.path.basename(parameters[APS_INCIDENCE_MAP]).split('.')[-1]
         parameters[APS_ELEVATION_MAP] = None
+        parameters[APS_ELEVATION_EXT] = None
         return parameters
     else:
         parameters[APS_INCIDENCE_EXT] = None

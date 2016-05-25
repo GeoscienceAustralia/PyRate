@@ -13,6 +13,23 @@ import tempfile
 from pyrate import config
 from common import SYD_TEST_DIR, SYD_TEST_TIF, SYD_TEST_GAMMA
 from pyrate.tests import common
+from pyrate.tasks.utils import DUMMY_SECTION_NAME
+from pyrate.config import (
+    DEM_HEADER_FILE,
+    NO_DATA_VALUE,
+    OBS_DIR,
+    IFG_FILE_LIST,
+    PROCESSOR,
+    OUT_DIR,
+    SLC_DIR,
+    LUIGI,
+    IFG_LKSX,
+    IFG_LKSY,
+    IFG_CROP_OPT,
+    NO_DATA_AVERAGING_THRESHOLD,
+    DEM_FILE,
+    APS_INCIDENCE_MAP,
+    APS_ELEVATION_MAP)
 
 
 class ConfigTest(unittest.TestCase):
@@ -73,7 +90,7 @@ class ConfigAPSParametersTest(unittest.TestCase):
         self.assertIn(config.APS_ELEVATION_MAP, self.params.keys())
 
     def test_elevation_ext_should_not_exist(self):
-        self.assertNotIn(config.APS_ELEVATION_EXT, self.params.keys())
+        self.assertIn(config.APS_ELEVATION_EXT, self.params.keys())
         self.assertIn(config.APS_ELEVATION_MAP, self.params.keys())
         self.assertIn(config.APS_ELEVATION_MAP, self.params.keys())
         self.assertIsNone(self.params[config.APS_ELEVATION_MAP])
@@ -81,15 +98,76 @@ class ConfigAPSParametersTest(unittest.TestCase):
     def test_impedance_ext_should_exist(self):
         self.assertIn(config.APS_INCIDENCE_EXT, self.params.keys())
 
-    def test_elevation_ext_exist(self):
+    def test_elevation_ext_keys_exist(self):
         self.assertIn(config.APS_INCIDENCE_EXT, self.params.keys())
-        self.assertNotIn(config.APS_ELEVATION_EXT, self.params.keys())
+        self.assertIn(config.APS_ELEVATION_EXT, self.params.keys())
         self.assertIn(config.APS_ELEVATION_MAP, self.params.keys())
 
     def test_elevation_and_incidence_both_cant_have_values(self):
         self.assertIsNotNone(self.params[config.APS_INCIDENCE_MAP])
         self.assertIsNotNone(self.params[config.APS_INCIDENCE_EXT])
         self.assertIsNone(self.params[config.APS_ELEVATION_MAP])
+
+
+class TestOneIncidenceOrElevationMap(unittest.TestCase):
+
+    def setUp(self):
+        self.base_dir = tempfile.mkdtemp()
+        self.conf_file = tempfile.mktemp(suffix='.conf', dir=self.base_dir)
+        self.ifgListFile = os.path.join(common.SYD_TEST_GAMMA, 'ifms_17')
+
+    def make_input_files(self, inc='', ele=''):
+        with open(self.conf_file, 'w') as conf:
+            conf.write('[{}]\n'.format(DUMMY_SECTION_NAME))
+            conf.write('{}: {}\n'.format(NO_DATA_VALUE, '0.0'))
+            conf.write('{}: {}\n'.format(OBS_DIR, self.base_dir))
+            conf.write('{}: {}\n'.format(OUT_DIR, self.base_dir))
+            conf.write('{}: {}\n'.format(IFG_FILE_LIST, self.ifgListFile))
+            conf.write('{}: {}\n'.format(PROCESSOR, '1'))
+            conf.write('{}: {}\n'.format(LUIGI, '0'))
+            conf.write('{}: {}\n'.format(
+                DEM_HEADER_FILE, os.path.join(
+                    common.SYD_TEST_GAMMA, '20060619_utm_dem.par')))
+            conf.write('{}: {}\n'.format(IFG_LKSX, '1'))
+            conf.write('{}: {}\n'.format(IFG_LKSY, '1'))
+            conf.write('{}: {}\n'.format(IFG_CROP_OPT, '1'))
+            conf.write('{}: {}\n'.format(NO_DATA_AVERAGING_THRESHOLD, '0.5'))
+            conf.write('{}: {}\n'.format(SLC_DIR, ''))
+            conf.write('{}: {}\n'.format(DEM_FILE, common.SYD_TEST_DEM_GAMMA))
+            conf.write('{}: {}\n'.format(APS_INCIDENCE_MAP, inc))
+            conf.write('{}: {}\n'.format(APS_ELEVATION_MAP, ele))
+
+    def test_inc_vs_ele_maps_inc_provided(self):
+        self.make_input_files(inc=common.SYD_TEST_INCIDENCE)
+        assert os.path.exists(self.conf_file)
+        params = config.get_config_params(self.conf_file)
+        # incidence variables
+        self.assertIn(config.APS_INCIDENCE_MAP, params.keys())
+        self.assertIn(config.APS_INCIDENCE_EXT, params.keys())
+        self.assertIsNotNone(params[config.APS_INCIDENCE_MAP])
+        self.assertIsNotNone(params[config.APS_INCIDENCE_EXT])
+
+        # elevation variables
+        self.assertIn(config.APS_ELEVATION_MAP, params.keys())
+        self.assertIsNone(params[config.APS_ELEVATION_MAP])
+        self.assertIn(config.APS_ELEVATION_EXT, params.keys())
+        self.assertIn(config.APS_ELEVATION_MAP, params.keys())
+
+    def test_inc_vs_ele_maps_ele_provided(self):
+        self.make_input_files(ele=common.SYD_TEST_ELEVATION)
+        assert os.path.exists(self.conf_file)
+        params = config.get_config_params(self.conf_file)
+        # incidence variables
+        self.assertIn(config.APS_INCIDENCE_MAP, params.keys())
+        self.assertIn(config.APS_INCIDENCE_EXT, params.keys())
+        self.assertIsNone(params[config.APS_INCIDENCE_MAP])
+        self.assertIsNone(params[config.APS_INCIDENCE_EXT])
+
+        # elevation variables
+        self.assertIn(config.APS_ELEVATION_MAP, params.keys())
+        self.assertIsNotNone(params[config.APS_ELEVATION_MAP])
+        self.assertIn(config.APS_ELEVATION_EXT, params.keys())
+        self.assertIn(config.APS_ELEVATION_MAP, params.keys())
 
 if __name__ == "__main__":
     unittest.main()
