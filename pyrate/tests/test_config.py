@@ -9,6 +9,7 @@ Created on 17/09/2012
 import unittest
 from os.path import join
 import os
+import shutil
 import tempfile
 from pyrate import config
 from common import SYD_TEST_DIR, SYD_TEST_TIF, SYD_TEST_GAMMA
@@ -81,6 +82,7 @@ class ConfigWriteTest(unittest.TestCase):
         new_params = config.get_config_params(temp_config)
         self.maxDiff = None
         self.assertDictEqual(params, new_params)
+        os.remove(temp_config)
 
 
 class ConfigAPSParametersTest(unittest.TestCase):
@@ -120,7 +122,7 @@ class TestOneIncidenceOrElevationMap(unittest.TestCase):
         self.ifgListFile = os.path.join(common.SYD_TEST_GAMMA, 'ifms_17')
 
     def tearDown(self):
-        os.remove(self.conf_file)
+        shutil.rmtree(self.base_dir)
 
     def make_input_files(self, inc='', ele=''):
         with open(self.conf_file, 'w') as conf:
