@@ -193,4 +193,7 @@ def return_pyaps_lat_lon(dem_header):
 
 
 class APSException(Exception):
+    """
+    generic exception class for APS correction
+    """
     pass

@@ -27,7 +27,7 @@ SYD_TEST_MATLAB_ORBITAL_DIR = join(SYD_TEST_DIR,
                                    'matlab_orbital_error_correction')
 SYD_TEST_DEM_ROIPAC = join(SYD_TEST_DEM_DIR, 'sydney_trimmed.dem')
 SYD_TEST_DEM_GAMMA = join(SYD_TEST_GAMMA, '20060619_utm.dem')
-SYD_TEST_INCIDENCE = join(SYD_TEST_GAMMA, '20060619_utm.lv_theta')
+SYD_TEST_INCIDENCE = join(SYD_TEST_GAMMA, '20060619_utm.inc')
 SYD_TEST_DEM_HDR_GAMMA = join(SYD_TEST_GAMMA, '20060619_utm_dem.par')
 SYD_TEST_DEM_HDR = join(SYD_TEST_DEM_DIR, 'sydney_trimmed.dem.rsc')
 SYD_TEST_DEM_TIF = join(SYD_TEST_DEM_DIR, 'sydney_trimmed.tif')
