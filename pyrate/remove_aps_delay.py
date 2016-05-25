@@ -33,12 +33,9 @@ def remove_aps_delay(ifgs, params):
 
     incidence_angle = None
     incidence_map = None
-    print params[cf.PROCESSOR]
     for ifg in ifgs:  # demo for only one ifg
         if params[cf.PROCESSOR] == 1:  # gamma
-            print 'sould be here'
             PTN = re.compile(r'\d{8}')
-            print ifg.data_path
             date_pair = [i for i in PTN.findall(os.path.basename(ifg.data_path))]
         elif params[cf.PROCESSOR] == 0:  # roipac
             # adding 20 to dates here, so dates before 2000 won't work
@@ -50,7 +47,7 @@ def remove_aps_delay(ifgs, params):
             raise AttributeError('processor needs to be gamma(1) or roipac(0)')
 
         list_of_dates_for_grb_download += date_pair
-        print date_pair
+
         first_grb = os.path.join(ECMWF_DIR,
                                  ECMWF_PRE + date_pair[0] + ECMWF_EXT)
         second_grb = os.path.join(ECMWF_DIR,
@@ -72,6 +69,37 @@ def remove_aps_delay(ifgs, params):
         #   lon=os.path.join(PYAPS_EXAMPLES, 'lon.flt'))
         # LLphs = phs2-phs1
 
+        def get_incidence_map():
+            """
+            :param incidence_map:
+            :param params:
+            :param inc_or_ele: 1 when incidence map, 0 when elevation map
+            :return:
+            """
+            if params[cf.APS_ELEVATION_MAP] is not None:
+                f, e = os.path.basename(params[cf.APS_ELEVATION_MAP]).split(
+                    '.')
+            else:
+                f, e = os.path.basename(params[cf.APS_INCIDENCE_MAP]).split(
+                    '.')
+            multilooked = os.path.join(
+                params[cf.OUT_DIR],
+                f + '_' + e +
+                '_{looks}rlks_{crop}cr.tif'.format(
+                    looks=params[cf.IFG_LKSX],
+                    crop=params[
+                        cf.IFG_CROP_OPT]))
+            assert os.path.exists(multilooked), \
+                'cropped and multilooked incidence map file not found. ' \
+                'Use apsmethod=1, Or run prepifg with gamma processor'
+            ds = gdal.Open(multilooked, gdalconst.GA_ReadOnly)
+            if params[cf.APS_INCIDENCE_MAP] is not None:
+                incidence_map = ds.ReadAsArray()
+            else:
+                incidence_map = 90 - ds.ReadAsArray()
+            ds = None  # close file
+            return incidence_map
+
         if params[cf.APS_METHOD] == 1:
             # no need to calculate incidence angle for all ifgs, they are the same
             if incidence_angle is None:
@@ -80,20 +108,11 @@ def remove_aps_delay(ifgs, params):
         elif params[cf.APS_METHOD] == 2:
             # no need to calculate incidence map for all ifgs, they are the same
             if incidence_map is None:
-                f, e = os.path.basename(params[cf.APS_INCIDENCE_MAP]).split('.')
-                lv_theta_multilooked = os.path.join(
-                    params[cf.OUT_DIR],
-                    f + '_' + e +
-                    '_{looks}rlks_{crop}cr.tif'.format(looks=params[cf.IFG_LKSX],
-                                                       crop=params[
-                                                           cf.IFG_CROP_OPT]))
-
-                assert os.path.exists(lv_theta_multilooked), \
-                    'cropped and multilooked incidence map file not found. ' \
-                    'Use apsmethod=1, Or run prepifg with gamma processor'
-                ds = gdal.Open(lv_theta_multilooked, gdalconst.GA_ReadOnly)
-                incidence_map = ds.ReadAsArray()
-                ds = None  # close file
+                if params[cf.APS_INCIDENCE_MAP] is not None:
+                    incidence_map = get_incidence_map()
+                else:  # elevation map was provided
+                    assert params[cf.APS_ELEVATION_MAP] is not None
+                    incidence_map = get_incidence_map()
             aps_delay = geo_correction(date_pair, params, incidence_map)
         else:
             raise APSException('APS method must be 1 or 2')
