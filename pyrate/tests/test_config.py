@@ -12,6 +12,7 @@ import os
 import tempfile
 from pyrate import config
 from common import SYD_TEST_DIR, SYD_TEST_TIF, SYD_TEST_GAMMA
+from pyrate.tests import common
 
 
 class ConfigTest(unittest.TestCase):
@@ -60,6 +61,35 @@ class ConfigWriteTest(unittest.TestCase):
         config.write_config_file(params, temp_config)
         new_params = config.get_config_params(temp_config)
         self.assertDictEqual(params, new_params)
+
+
+class ConfigAPSParametersTest(unittest.TestCase):
+
+    def test_incidence_and_elevation_keys_exist(self):
+        conf_path = common.SYDNEY_TEST_CONF
+        params = config.get_config_params(conf_path)
+        self.assertIn(config.APS_INCIDENCE_MAP, params.keys())
+        self.assertIn(config.APS_ELEVATION_MAP, params.keys())
+
+    def test_elevation_ext_should_not_exist(self):
+        conf_path = common.SYDNEY_TEST_CONF
+        params = config.get_config_params(conf_path)
+        self.assertNotIn(config.APS_ELEVATION_EXT, params.keys())
+        self.assertIn(config.APS_ELEVATION_MAP, params.keys())
+        self.assertIn(config.APS_ELEVATION_MAP, params.keys())
+        self.assertIsNone(params[config.APS_ELEVATION_MAP])
+
+    def test_impedance_ext_should_exist(self):
+        conf_path = common.SYDNEY_TEST_CONF
+        params = config.get_config_params(conf_path)
+        self.assertIn(config.APS_INCIDENCE_EXT, params.keys())
+
+    def test_elevation_ext_exist(self):
+        conf_path = common.SYDNEY_TEST_CONF
+        params = config.get_config_params(conf_path)
+        self.assertIn(config.APS_INCIDENCE_EXT, params.keys())
+        self.assertNotIn(config.APS_ELEVATION_EXT, params.keys())
+        self.assertIn(config.APS_ELEVATION_MAP, params.keys())
 
 
 if __name__ == "__main__":
