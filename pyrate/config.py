@@ -2,75 +2,16 @@
 Utilities to parse PyRate configuration files. Includes numerous general PyRate
 constants relating to options in configuration files.
 
-An example PyRate configuration file is as follows::
+Examples of PyRate configuration files are provided in pyrate.conf and
+pyrate_gamma.conf
 
-    obsdir:       obs/
-    ifgfilelist:  obs/ifms.list
-    demfile:      dem/sydney_trimmed.tif
-    basepflag:    0
-    outdir:       out/
-
-    ifgcropopt:   4
-    ifglksx:      1
-    ifglksy:      1
-    ifgxfirst:    152.0
-    ifgxlast:     152.2
-    ifgyfirst:    -4.2
-    ifgylast:     -4.3
-
-    orbfit:        0
-    orbfitmethod:  1
-    orbfitdegrees: 1
-    orbfitlksx:    5
-    orbfitlksy:    5
-
-    vcmtmethod:    1
-    vcmsmethod:    2
-    vcmslksx:      5
-    vcmslksy:      5
-
-    refx:          12
-    refy:          38
-    refnx:         5
-    refny:         5
-    refchipsize:   5
-    refminfrac:    0.8
-
-    tscal:         1
-    tsmethod:      1
-    smorder:       2
-    smfactor:     -0.25
-    smf_min:      -3
-    smf_max:      -1
-    smf_int:     0.25
-    lcurv_lksx:    4
-    lcurv_lksy:    4
-    ts_pthr:       10
-    ts_interp:     1
-
-    nsig:           3
-    pthr:           20
-    maxsig:         2
-
-    use_luigi:          0
-    nan_conversion:     1
-    networkx_or_matlab: 0
-
-    parallel:           0
-    processes:          8
-
-    noDataAveragingThreshold: 0.5
-    processor:    0
-    noDataValue:  0.0
-
-.. codeauthor:: Ben Davies, Sudipta Basak
 """
 
 # TODO: add regex column to check if some values are within bounds? Potential
 # problem with the checking being done in the middle of the runs, as bad values
 # could cause crashes & destroying some of the results.
 import os, time
-
+import warnings
 PYRATEPATH = os.environ['PYRATEPATH']
 
 # general constants
@@ -159,6 +100,8 @@ APS_CORRECTION = 'apscorrect'
 APS_METHOD = 'apsmethod'
 APS_INCIDENCE_MAP = 'incidencemap'
 APS_INCIDENCE_EXT = 'APS_INCIDENCE_EXT'
+APS_ELEVATION_MAP = 'elevationmap'
+APS_ELEVATION_EXT = 'APS_ELEVATION_EXT'
 
 # orbital error correction/parameters
 #: BOOL (1/0); Boolean flag controlling whether to apply orbital error correction
@@ -297,6 +240,16 @@ PARAM_CONVERSION = {
     #TIME_SERIES_INTERP : (bool, False)
 
 
+PATHS = [OBS_DIR, IFG_FILE_LIST, DEM_FILE,
+        DEM_HEADER_FILE, OUT_DIR,
+        ROIPAC_RESOURCE_HEADER,
+        SLC_DIR,
+        APS_INCIDENCE_MAP,
+        APS_ELEVATION_MAP]
+
+INT_KEYS = [APS_CORRECTION, APS_METHOD]
+
+
 def get_config_params(path):
     """
     Returns a dict for the key:value pairs from the .conf file
@@ -305,11 +258,7 @@ def get_config_params(path):
     txt = ''
     with open(path, 'r') as inputFile:
         for line in inputFile:
-            if any(x in line for x in [OBS_DIR, IFG_FILE_LIST, DEM_FILE,
-                                       DEM_HEADER_FILE, OUT_DIR,
-                                       ROIPAC_RESOURCE_HEADER,
-                                       SLC_DIR,
-                                       APS_INCIDENCE_MAP]):
+            if any(x in line for x in PATHS):
                 pos = line.find('~')
                 if pos != -1:
                     line = line[:pos] + os.environ['HOME'] + line[(pos+1):]    # create expanded line
@@ -332,17 +281,55 @@ def _parse_conf_file(content):
     kvpair = [(e[0].rstrip(":"), e[1]) for e in lines if len(e) == 2] \
         + [(e[0].rstrip(":"), None) for e in lines if len(e) == 1]
     parameters = dict(kvpair)
+    for p in PATHS:
+        if p not in parameters:
+            parameters[p] = None
 
-    # define APS_INCIDENCE_EXT for gamma prepifg
-    if parameters[APS_INCIDENCE_MAP]:
-        parameters[APS_INCIDENCE_EXT] = \
-            os.path.basename(parameters[APS_INCIDENCE_MAP]).split('.')[-1]
-    else:
-        parameters[APS_INCIDENCE_EXT] = None
+    for p in INT_KEYS:
+        if p not in parameters:
+            parameters[p] = '0'  # insert dummies
+
+    parameters = handle_pyaps_parameters(parameters)
+
     if not parameters:
         raise ConfigException('Cannot parse any parameters from config file')
 
     return _parse_pars(parameters)
+
+
+def handle_pyaps_parameters(parameters):
+    # define APS_INCIDENCE_EXT for gamma prepifg
+    if ((parameters[APS_INCIDENCE_MAP] is not None) and
+            (parameters[APS_ELEVATION_MAP] is not None)):
+        warnings.warn('Both incidence and elevation map supplied. '
+                      'Using the incidence map and ignoring elevation map')
+
+    if (int(parameters[APS_CORRECTION]) and
+            (int(parameters[APS_METHOD]) == 2) and
+            ((parameters[APS_INCIDENCE_MAP] is None) and
+                (parameters[APS_ELEVATION_MAP] is None))):
+        raise ConfigException('When doing APS correction using method 2,'
+                              'the incidence/elevation map method,'
+                              'one of incidence or elevation map must be '
+                              'provided')
+
+    if parameters[APS_INCIDENCE_MAP] is not None:
+        parameters[APS_INCIDENCE_EXT] = \
+            os.path.basename(parameters[APS_INCIDENCE_MAP]).split('.')[-1]
+        parameters[APS_ELEVATION_MAP] = None
+        parameters[APS_ELEVATION_EXT] = None
+        return parameters
+    else:
+        parameters[APS_INCIDENCE_EXT] = None
+
+    # define APS_ELEVATON_EXT for gamma prepifg
+    if parameters[APS_ELEVATION_MAP] is not None:
+        parameters[APS_ELEVATION_EXT] = \
+            os.path.basename(parameters[APS_ELEVATION_MAP]).split('.')[-1]
+    else:
+        parameters[APS_ELEVATION_EXT] = None
+
+    return parameters
 
 
 def _parse_pars(pars):
@@ -386,7 +373,10 @@ def write_config_file(params, output_conf_file):
         for k, v in params.iteritems():
             if k == ORBITAL_FIT_DEGREE:
                 v = reverse_degree_conv(k, v)
-            f.write(''.join([k, ':\t', str(v), '\n']))
+            if v is not None:
+                f.write(''.join([k, ':\t', str(v), '\n']))
+            else:
+                f.write(''.join([k, ':\t', '', '\n']))
 
 
 def reverse_degree_conv(k, v):
