@@ -21,6 +21,7 @@ ROI_PAC_HEADER_FILE_EXT = 'rsc'
 GAMMA = 1
 ROIPAC = 0
 
+
 def main(params=None):
     """
     :param config_file: config file to use. This provides a convenient way to
@@ -34,12 +35,23 @@ def main(params=None):
     going to assume base_ifg_paths is ordered correcly
     """
     usage = 'Usage: python run_prepifg.py <config file>'
+
+    def _convert_dem_inc_ele(params):
+        PROCESSOR = params[cf.PROCESSOR]  # roipac or gamma
+        base_ifg_paths.append(params[cf.DEM_FILE])
+        if PROCESSOR == GAMMA:
+            if params[cf.APS_INCIDENCE_MAP]:
+                base_ifg_paths.append(params[cf.APS_INCIDENCE_MAP])
+            if params[cf.APS_ELEVATION_MAP]:
+                base_ifg_paths.append(params[cf.APS_ELEVATION_MAP])
+        return base_ifg_paths
+
     if params:
         base_ifg_paths = glob.glob(os.path.join(params[cf.OBS_DIR], '*.unw'))
-        base_ifg_paths.append(params[cf.DEM_FILE])
         LUIGI = params[cf.LUIGI]  # luigi or no luigi
         if LUIGI:
             raise cf.ConfigException('params can not be provided with luigi')
+        _convert_dem_inc_ele(params)
     else:  # if params not provided read from config file
         if (not params) and ((len(sys.argv) == 1)
                 or (sys.argv[1] == '-h' or sys.argv[1] == '--help')):
@@ -47,12 +59,8 @@ def main(params=None):
             return
         base_ifg_paths, _, params = run_pyrate.get_ifg_paths()
         LUIGI = params[cf.LUIGI]  # luigi or no luigi
-        PROCESSOR = params[cf.PROCESSOR]  # roipac or gamma
-        base_ifg_paths.append(params[cf.DEM_FILE])
-        if PROCESSOR == GAMMA:
-            if params[cf.APS_INCIDENCE_MAP]:
-                base_ifg_paths.append(params[cf.APS_INCIDENCE_MAP])
         raw_config_file = sys.argv[1]
+        base_ifg_paths = _convert_dem_inc_ele(params)
 
     PROCESSOR = params[cf.PROCESSOR]  # roipac or gamma
     run_pyrate.init_logging(logging.DEBUG)
@@ -122,26 +130,6 @@ def gamma_prepifg(base_unw_paths, params):
     else:
         [prepifg.prepare_ifg(i, xlooks, ylooks, exts,
                              thresh, crop) for i in dest_base_ifgs]
-    '''
-    # do not know if need this. Matt says doesn't make sense for ifgs to have sequence information
-    # easier just to set sequence information here
-    # open all generated ifgs and set sequence metadata
-    # assuming all files have finished being written to (i.e. all above tasks are complete)
-    # create shallow copy just incase
-    dest_base_ifgs_scp = list(dest_base_ifgs)
-    mlooked_paths = [mlooked_path(dest_base_ifg, xlooks, crop) for dest_base_ifg in dest_base_ifgs_scp]
-    order_fn_parts = [(os.path.split(dest_base_ifg)[1]).split('_')[0] for dest_base_ifg in dest_base_ifgs]
-    zps = zip(order_fn_parts, dest_base_ifgs, mlooked_paths)
-    zps_sorted = sorted(zps, key=itemgetter(0))
-    for it, zp in enumerate(zps_sorted):
-        _, dest_base_ifg, mled = zp
-        # -----------------------------------------------
-        g_ds1 = gdal.Open(dest_base_ifg)
-        g_ds1.SetMetadataItem('PR_SEQ_POS', str(it))
-        # -----------------------------------------------
-        g_ds2 = gdal.Open(mled)
-        g_ds2.SetMetadataItem('PR_SEQ_POS', str(it))
-    '''
 
 
 def gamma_multiprocessing(b, params):
@@ -152,7 +140,7 @@ def gamma_multiprocessing(b, params):
     combined_headers = gamma.manage_headers(dem_hdr_path, header_paths)
 
     f, e = os.path.basename(b).split('.')
-    if e != params[cf.APS_INCIDENCE_EXT]:
+    if e != (params[cf.APS_INCIDENCE_EXT] or params[cf.APS_ELEVATION_EXT]):
         d = os.path.join(
             params[cf.OUT_DIR], f + '.tif')
     else:
