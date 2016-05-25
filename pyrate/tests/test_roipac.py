@@ -33,7 +33,8 @@ from pyrate.config import (
     IFG_LKSY,
     NO_DATA_AVERAGING_THRESHOLD,
     DEM_FILE,
-    APS_INCIDENCE_MAP
+    APS_INCIDENCE_MAP,
+    APS_ELEVATION_MAP
     )
 from pyrate.roipac import RoipacException
 from pyrate.shared import GeotiffException
@@ -324,6 +325,7 @@ class TestRoipacLuigiEquality(unittest.TestCase):
             conf.write('{}: {}\n'.format(NO_DATA_AVERAGING_THRESHOLD, '0.5'))
             conf.write('{}: {}\n'.format(DEM_FILE, SYD_TEST_DEM_ROIPAC))
             conf.write('{}: {}\n'.format(APS_INCIDENCE_MAP, ''))
+            conf.write('{}: {}\n'.format(APS_ELEVATION_MAP, ''))
         with open(self.ifgListFile, 'w') as ifgl:
             ifgl.write('\n'.join(data))
 
