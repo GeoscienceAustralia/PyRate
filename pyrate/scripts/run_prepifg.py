@@ -24,8 +24,7 @@ ROIPAC = 0
 
 def main(params=None):
     """
-    :param config_file: config file to use. This provides a convenient way to
-     use run_prepifg from within the module.
+    :param params: parameters dictionary read in from the config file
     :return:
     TODO: looks like base_igf_paths are ordered according to ifg list
     Sarah says this probably won't be a problem because they only removedata
@@ -36,7 +35,7 @@ def main(params=None):
     """
     usage = 'Usage: python run_prepifg.py <config file>'
 
-    def _convert_dem_inc_ele(params):
+    def _convert_dem_inc_ele(params, base_ifg_paths):
         PROCESSOR = params[cf.PROCESSOR]  # roipac or gamma
         base_ifg_paths.append(params[cf.DEM_FILE])
         if PROCESSOR == GAMMA:
@@ -47,11 +46,11 @@ def main(params=None):
         return base_ifg_paths
 
     if params:
-        base_ifg_paths = glob.glob(os.path.join(params[cf.OBS_DIR], '*.unw'))
+        base_ifg_paths = run_pyrate.original_ifg_paths(params[cf.IFG_FILE_LIST])
         LUIGI = params[cf.LUIGI]  # luigi or no luigi
         if LUIGI:
             raise cf.ConfigException('params can not be provided with luigi')
-        _convert_dem_inc_ele(params)
+        base_ifg_paths = _convert_dem_inc_ele(params, base_ifg_paths)
     else:  # if params not provided read from config file
         if (not params) and ((len(sys.argv) == 1)
                 or (sys.argv[1] == '-h' or sys.argv[1] == '--help')):
@@ -60,7 +59,7 @@ def main(params=None):
         base_ifg_paths, _, params = run_pyrate.get_ifg_paths()
         LUIGI = params[cf.LUIGI]  # luigi or no luigi
         raw_config_file = sys.argv[1]
-        base_ifg_paths = _convert_dem_inc_ele(params)
+        base_ifg_paths = _convert_dem_inc_ele(params, base_ifg_paths)
 
     PROCESSOR = params[cf.PROCESSOR]  # roipac or gamma
     run_pyrate.init_logging(logging.DEBUG)
