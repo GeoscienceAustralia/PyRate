@@ -22,7 +22,7 @@ from pyrate import gamma
 PYRATEPATH = os.environ['PYRATEPATH']
 ECMWF_DIR = os.path.join(PYRATEPATH, 'ECMWF')
 ECMWF_PRE = 'ERA-Int_'
-ECMWF_EXT = '_12.grib'
+ECMWF_EXT = '_12.grib'  # TODO: build dynamically with closest available grib
 APS_STATUS = 'REMOVED'
 GEOTIFF = 'GEOTIFF'
 ECMWF = 'ECMWF'
