@@ -49,17 +49,17 @@ def process_ifgs(ifg_paths_or_instance, params):
 
     # remove APS delay here
 
-    if params[cf.APS_CORRECTION] != 100:
-        for i in ifgs:
-            #print i.phase_data[:10, :10]
-            i.remove_aps_delay(SYD_TEST_DEM_UNW, time_of_day='18')
-            i.write_modified_phase()
-            print i.phase_data[:10,:10]
+    #if params[cf.APS_CORRECTION] != 100:
+       # for i in ifgs:
+      #      #print i.phase_data[:10, :10]
+        #   i.remove_aps_delay(SYD_TEST_DEM_UNW, time_of_day='18')
+         #  i.write_modified_phase()
+          # print i.phase_data[:10,:10]
 
     # Add the message to metadata
-        for i in ifgs:
-            i.dataset.SetMetadataItem(META_ATM,META_REMOVED)
-        logging.debug('%s: atmospheric error removed' % i.data_path)
+       # for i in ifgs:
+        #    i.dataset.SetMetadataItem(META_ATM,META_REMOVED)
+        #logging.debug('%s: atmospheric error removed' % i.data_path)
     # Estimate and remove orbit errors
     if params[cf.ORBITAL_FIT] != 0:
         remove_orbital_error(ifgs, params)

@@ -14,7 +14,7 @@ import numpy as np
 import matplotlib.pyplot as pp
 from matplotlib import figure
 
-import pyrate.ifgconstants as ifc
+#import pyrate.ifgconstants as ifc
 
 if len(sys.argv[1:]) != 1:
     print 'USAGE: python inspect_output.py <prepifg or pyrate output file>'
@@ -28,11 +28,13 @@ except IOError:     # assuming this is the exception gdal raises (documentation 
     print 'gdal probably could not open the file'
     sys.exit(0)
 
+'''
 md = ds.GetMetadata()
 if not (ifc.PR_OUT_TYPE in md.keys()):
     print 'file is not a pyrate output file'
     sys.exit(0)
-
+'''
+    
 try:
     tif = Image.open(fp=sys.argv[1])
 except IOError as msg:
