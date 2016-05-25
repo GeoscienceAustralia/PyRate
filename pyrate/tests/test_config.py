@@ -29,7 +29,9 @@ from pyrate.config import (
     NO_DATA_AVERAGING_THRESHOLD,
     DEM_FILE,
     APS_INCIDENCE_MAP,
-    APS_ELEVATION_MAP)
+    APS_ELEVATION_MAP,
+    APS_METHOD,
+    APS_CORRECTION)
 
 
 class ConfigTest(unittest.TestCase):
@@ -77,6 +79,7 @@ class ConfigWriteTest(unittest.TestCase):
         temp_config = tempfile.mktemp(suffix='.conf')
         config.write_config_file(params, temp_config)
         new_params = config.get_config_params(temp_config)
+        self.maxDiff = None
         self.assertDictEqual(params, new_params)
 
 
@@ -116,6 +119,9 @@ class TestOneIncidenceOrElevationMap(unittest.TestCase):
         self.conf_file = tempfile.mktemp(suffix='.conf', dir=self.base_dir)
         self.ifgListFile = os.path.join(common.SYD_TEST_GAMMA, 'ifms_17')
 
+    def tearDown(self):
+        os.remove(self.conf_file)
+
     def make_input_files(self, inc='', ele=''):
         with open(self.conf_file, 'w') as conf:
             conf.write('[{}]\n'.format(DUMMY_SECTION_NAME))
@@ -136,6 +142,8 @@ class TestOneIncidenceOrElevationMap(unittest.TestCase):
             conf.write('{}: {}\n'.format(DEM_FILE, common.SYD_TEST_DEM_GAMMA))
             conf.write('{}: {}\n'.format(APS_INCIDENCE_MAP, inc))
             conf.write('{}: {}\n'.format(APS_ELEVATION_MAP, ele))
+            conf.write('{}: {}\n'.format(APS_CORRECTION, '1'))
+            conf.write('{}: {}\n'.format(APS_METHOD, '2'))
 
     def test_inc_vs_ele_maps_inc_provided(self):
         self.make_input_files(inc=common.SYD_TEST_INCIDENCE)
@@ -168,6 +176,13 @@ class TestOneIncidenceOrElevationMap(unittest.TestCase):
         self.assertIsNotNone(params[config.APS_ELEVATION_MAP])
         self.assertIn(config.APS_ELEVATION_EXT, params.keys())
         self.assertIn(config.APS_ELEVATION_MAP, params.keys())
+
+    def test_inc_vs_ele_maps_none_provided(self):
+        self.make_input_files()
+        assert os.path.exists(self.conf_file)
+        self.assertRaises(config.ConfigException,
+                          config.get_config_params, self.conf_file)
+
 
 if __name__ == "__main__":
     unittest.main()
