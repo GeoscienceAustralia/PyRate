@@ -16,6 +16,8 @@ from numpy import isnan, nanmax, nanmin
 from numpy import ones, nan, reshape, sum as npsum
 from numpy.testing import assert_array_almost_equal, assert_array_equal
 
+import glob
+from pyrate.scripts import run_prepifg
 from pyrate import config as cfg
 from pyrate.shared import Ifg, DEM
 from pyrate.prepifg import CUSTOM_CROP, MAXIMUM_CROP, MINIMUM_CROP, \
@@ -25,6 +27,26 @@ from pyrate.prepifg import mlooked_path, extents_from_params
 from pyrate.tests.common import SYD_TEST_MATLAB_PREPIFG_DIR
 from pyrate.tests.common import PREP_TEST_TIF, SYD_TEST_DEM_DIR
 from pyrate.tests.common import SYD_TEST_DEM_TIF
+from pyrate.tasks.utils import DUMMY_SECTION_NAME
+from pyrate.config import (
+    DEM_HEADER_FILE,
+    NO_DATA_VALUE,
+    OBS_DIR,
+    IFG_FILE_LIST,
+    PROCESSOR,
+    OUT_DIR,
+    SLC_DIR,
+    LUIGI,
+    IFG_LKSX,
+    IFG_LKSY,
+    IFG_CROP_OPT,
+    NO_DATA_AVERAGING_THRESHOLD,
+    DEM_FILE,
+    APS_INCIDENCE_MAP,
+    APS_ELEVATION_MAP,
+    APS_METHOD,
+    APS_CORRECTION)
+from pyrate.tests import common
 
 gdal.UseExceptions()
 
@@ -571,6 +593,74 @@ class MatlabEqualityTestRoipacSydneyTestData(unittest.TestCase):
 
         # ensure we have the correct number of matches
         self.assertEqual(count, len(self.ifgs))
+
+
+class TestOneIncidenceOrElevationMap(unittest.TestCase):
+
+    def setUp(self):
+        self.base_dir = tempfile.mkdtemp()
+        self.conf_file = tempfile.mktemp(suffix='.conf', dir=self.base_dir)
+        self.ifgListFile = os.path.join(common.SYD_TEST_GAMMA, 'ifms_17')
+
+    def tearDown(self):
+        shutil.rmtree(self.base_dir)
+
+    def make_input_files(self, inc='', ele=''):
+        with open(self.conf_file, 'w') as conf:
+            conf.write('[{}]\n'.format(DUMMY_SECTION_NAME))
+            conf.write('{}: {}\n'.format(NO_DATA_VALUE, '0.0'))
+            conf.write('{}: {}\n'.format(OBS_DIR, common.SYD_TEST_GAMMA))
+            conf.write('{}: {}\n'.format(OUT_DIR, self.base_dir))
+            conf.write('{}: {}\n'.format(IFG_FILE_LIST, self.ifgListFile))
+            conf.write('{}: {}\n'.format(PROCESSOR, '1'))
+            conf.write('{}: {}\n'.format(LUIGI, '0'))
+            conf.write('{}: {}\n'.format(
+                DEM_HEADER_FILE, os.path.join(
+                    common.SYD_TEST_GAMMA, '20060619_utm_dem.par')))
+            conf.write('{}: {}\n'.format(IFG_LKSX, '1'))
+            conf.write('{}: {}\n'.format(IFG_LKSY, '1'))
+            conf.write('{}: {}\n'.format(IFG_CROP_OPT, '1'))
+            conf.write('{}: {}\n'.format(NO_DATA_AVERAGING_THRESHOLD, '0.5'))
+            conf.write('{}: {}\n'.format(SLC_DIR, ''))
+            conf.write('{}: {}\n'.format(DEM_FILE, common.SYD_TEST_DEM_GAMMA))
+            conf.write('{}: {}\n'.format(APS_INCIDENCE_MAP, inc))
+            conf.write('{}: {}\n'.format(APS_ELEVATION_MAP, ele))
+            conf.write('{}: {}\n'.format(APS_CORRECTION, '1'))
+            conf.write('{}: {}\n'.format(APS_METHOD, '2'))
+
+    def test_only_inc_file_created(self):
+        inc_ext = 'inc'
+        ele_ext = 'lv_theta'
+        self.make_input_files(inc=common.SYD_TEST_INCIDENCE)
+        self.common_check(inc_ext, ele_ext)
+
+    def test_only_ele_file_created(self):
+        inc_ext = 'inc'
+        ele_ext = 'lv_theta'
+        self.make_input_files(ele=common.SYD_TEST_ELEVATION)
+        self.common_check(ele_ext, inc_ext)
+
+    def common_check(self, ele, inc):
+        os.path.exists(self.conf_file)
+        params = cfg.get_config_params(self.conf_file)
+        sys.argv[1] = [self.conf_file]
+        run_prepifg.main(params)
+        # test geotiffs created
+        geotifs = glob.glob(os.path.join(self.base_dir, '*_utm.tif'))
+        self.assertEqual(18, len(geotifs))  # 17 geotiffs and one dem tif
+        # elevation/incidence file
+        ele = glob.glob(os.path.join(self.base_dir,
+                                     '*utm_{ele}.tif'.format(ele=ele)))[0]
+        self.assertTrue(os.path.exists(ele))
+        # mlooked tifs
+        mlooked_tifs = [f for f in
+                        glob.glob(os.path.join(self.base_dir, '*.tif'))
+                        if "cr" in f and "rlks" in f]
+        # 19 including 17 ifgs, 1 dem and one incidence
+        self.assertEqual(19, len(mlooked_tifs))
+        inc = glob.glob(os.path.join(self.base_dir,
+                                     '*utm_{inc}.tif'.format(inc=inc)))
+        self.assertEqual(0, len(inc))
 
 
 if __name__ == "__main__":
