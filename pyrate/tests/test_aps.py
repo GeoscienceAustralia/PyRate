@@ -5,6 +5,9 @@ import os
 import shutil
 import gdal
 import numpy as np
+import copy
+import glob
+import re
 from pyrate import remove_aps_delay as aps
 from pyrate.tests import common
 from pyrate import config as cf
@@ -165,6 +168,84 @@ class TestMethod1VsMethod2(unittest.TestCase):
         for i, j in zip(self.ifgs, self.ifgs_method2):
             np.testing.assert_array_almost_equal(i.phase_data, j.phase_data,
                                                  decimal=4)
+
+
+class TestAPSIncidenceVsElevation(unittest.TestCase):
+    """
+    This class tests APS method when incidence map is provided vs elevation map
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.tif_dir_inc = tempfile.mkdtemp()
+        cls.tif_dir_ele = tempfile.mkdtemp()
+        cls.test_conf = common.SYDNEY_TEST_CONF
+
+        # change the required params
+        cls.params_inc = cf.get_config_params(cls.test_conf)
+        cls.params_inc[cf.OBS_DIR] = common.SYD_TEST_GAMMA
+        cls.params_inc[cf.PROCESSOR] = 1  # gamma
+        file_list = cf.parse_namelist(os.path.join(common.SYD_TEST_GAMMA,
+                                                   'ifms_17'))
+        # config file
+        cls.params_inc[cf.IFG_FILE_LIST] = tempfile.mktemp(
+            suffix='.conf', dir=cls.tif_dir_inc)
+
+        # write a short filelist with only 3 gamma unws
+        with open(cls.params_inc[cf.IFG_FILE_LIST], 'w') as fp:
+            for f in file_list[:2]:
+                fp.write(os.path.join(common.SYD_TEST_GAMMA, f) + '\n')
+
+        cls.params_inc[cf.OUT_DIR] = cls.tif_dir_inc
+        cls.params_inc[cf.PARALLEL] = 0
+        cls.params_inc[cf.REF_EST_METHOD] = 1
+        cls.params_inc[cf.APS_METHOD] = 2
+        cls.params_inc[cf.DEM_FILE] = common.SYD_TEST_DEM_GAMMA
+        cls.params_inc[cf.APS_INCIDENCE_MAP] = common.SYD_TEST_INCIDENCE
+        run_prepifg.main(cls.params_inc)
+
+        # now create the config for the elevation_map case
+        cls.params_ele = copy.copy(cls.params_inc)
+        cls.params_ele[cf.OUT_DIR] = cls.tif_dir_ele
+        cls.params_ele[cf.APS_METHOD] = 2
+        cls.params_ele[cf.APS_INCIDENCE_MAP] = None
+        cls.params_ele[cf.APS_INCIDENCE_EXT] = None
+        cls.params_ele[cf.APS_ELEVATION_MAP] = common.SYD_TEST_ELEVATION
+        cls.params_ele[cf.APS_ELEVATION_EXT] = 'lv_theta'
+        run_prepifg.main(cls.params_ele)
+
+        ptn = re.compile(r'\d{8}')
+        dest_paths_inc = [f for f in
+                          glob.glob(os.path.join(cls.tif_dir_inc, '*.tif'))
+                          if ("cr" in f) and ("rlks" in f) and
+                          (len(re.findall(ptn, os.path.basename(f))) == 2)]
+        cls.ifgs_inc = common.sydney_data_setup(datafiles=dest_paths_inc)
+
+        dest_paths_ele = [f for f in
+                          glob.glob(os.path.join(cls.tif_dir_ele, '*.tif'))
+                          if "cr" in f and "rlks" in f and
+                          (len(re.findall(ptn, os.path.basename(f))) == 2)]
+
+        cls.ifgs_ele = common.sydney_data_setup(datafiles=dest_paths_ele)
+
+
+    @classmethod
+    def tearDownClass(cls):
+        for i in cls.ifgs_ele:
+            i.close()
+        for i in cls.ifgs_inc:
+            i.close()
+
+        shutil.rmtree(cls.tif_dir_inc)
+        shutil.rmtree(cls.tif_dir_ele)
+
+    def test_method1_method2_equal_with_uniform_incidence_map(self):
+        aps.remove_aps_delay(self.ifgs_inc, self.params_inc)
+        aps.remove_aps_delay(self.ifgs_ele, self.params_ele)
+        for i, j in zip(self.ifgs_inc, self.ifgs_ele):
+            np.testing.assert_array_almost_equal(i.phase_data, j.phase_data,
+                                                 decimal=4)
+
 
 if __name__ == '__main__':
     unittest.main()
