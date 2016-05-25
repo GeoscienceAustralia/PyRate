@@ -32,6 +32,7 @@ def remove_aps_delay(ifgs, params):
     list_of_dates_for_grb_download = []
 
     incidence_angle = None
+    incidence_map = None
     print params[cf.PROCESSOR]
     for ifg in ifgs:  # demo for only one ifg
         if params[cf.PROCESSOR] == 1:  # gamma
@@ -71,11 +72,33 @@ def remove_aps_delay(ifgs, params):
         #   lon=os.path.join(PYAPS_EXAMPLES, 'lon.flt'))
         # LLphs = phs2-phs1
 
-        # no need to calculate incidence angle for all ifgs, they are the same
-        if incidence_angle is None:
-            incidence_angle = get_incidence_angle(date_pair, params)
+        if params[cf.APS_METHOD] == 1:
+            # no need to calculate incidence angle for all ifgs, they are the same
+            if incidence_angle is None:
+                incidence_angle = get_incidence_angle(date_pair, params)
+            aps_delay = geo_correction(date_pair, params, incidence_angle)
+        elif params[cf.APS_METHOD] == 2:
+            # no need to calculate incidence map for all ifgs, they are the same
+            if incidence_map is None:
+                f, e = os.path.basename(params[cf.APS_INCIDENCE_MAP]).split('.')
+                lv_theta_multilooked = os.path.join(
+                    params[cf.OUT_DIR],
+                    f + '_' + e +
+                    '_{looks}rlks_{crop}cr.tif'.format(looks=params[cf.IFG_LKSX],
+                                                       crop=params[
+                                                           cf.IFG_CROP_OPT]))
 
-        aps_delay = geo_correction(date_pair, params, incidence_angle)
+                assert os.path.exists(lv_theta_multilooked), \
+                    'cropped and multilooked incidence map file not found. ' \
+                    'Use apsmethod=1, Or run prepifg with gamma processor'
+                ds = gdal.Open(lv_theta_multilooked, gdalconst.GA_ReadOnly)
+                incidence_map = ds.ReadAsArray()
+                ds = None  # close file
+            aps_delay = geo_correction(date_pair, params, incidence_map)
+        else:
+            raise APSException('APS method must be 1 or 2')
+
+
         ifg.phase_data -= aps_delay  # remove delay
         # add it to the meta_data dict
         ifg.meta_data[ifc.PYRATE_APS_ERROR] = APS_STATUS
@@ -106,7 +129,7 @@ def rdr_correction(date_pair):
     # return aps_delay
 
 
-def geo_correction(date_pair, params, incidence_angle):
+def geo_correction(date_pair, params, incidence_angle_or_map):
 
     dem_file = params[cf.DEM_FILE]
     geotif_dem = os.path.join(
@@ -137,28 +160,8 @@ def geo_correction(date_pair, params, incidence_angle):
     phs1 = np.zeros((aps1.ny, aps1.nx))
     phs2 = np.zeros((aps2.ny, aps2.nx))
     print 'Without Lat Lon files'
-    # using random incidence angle
-    if params[cf.APS_METHOD] == 1:
-        aps1.getdelay(phs1, inc=incidence_angle)
-        aps2.getdelay(phs2, inc=incidence_angle)
-    elif params[cf.APS_METHOD] == 2:
-        f, e = os.path.basename(params[cf.APS_INCIDENCE_MAP]).split('.')
-        lv_theta_multilooked = os.path.join(
-            params[cf.OUT_DIR],
-            f + '_' + e +
-            '_{looks}rlks_{crop}cr.tif'.format(looks=params[cf.IFG_LKSX],
-                                               crop=params[cf.IFG_CROP_OPT]))
-
-        assert os.path.exists(lv_theta_multilooked), \
-            'cropped and multilooked incidence map file not found. ' \
-            'Use apsmethod=1, Or run prepifg with gamma processor'
-        ds = gdal.Open(lv_theta_multilooked, gdalconst.GA_ReadOnly)
-        incidence_map = ds.ReadAsArray()
-        ds = None  # close file
-        aps1.getdelay(phs1, inc=incidence_map)
-        aps2.getdelay(phs2, inc=incidence_map)
-    else:
-        raise
+    aps1.getdelay(phs1, inc=incidence_angle_or_map)
+    aps2.getdelay(phs2, inc=incidence_angle_or_map)
     aps_delay = phs2 - phs1  # delay in meters as we don't provide wavelength
     return aps_delay
 
@@ -188,3 +191,6 @@ def return_pyaps_lat_lon(dem_header):
     lon[1] = lon[0] + dx * nx
     return lat, lon, nx, ny
 
+
+class APSException(Exception):
+    pass
