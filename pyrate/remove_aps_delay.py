@@ -29,10 +29,48 @@ ECMWF = 'ECMWF'
 
 
 def remove_aps_delay(ifgs, params):
-    list_of_dates_for_grb_download = []
+    def get_incidence_map2():
+        if params[cf.APS_INCIDENCE_MAP] is not None:
+            incidence_map = get_incidence_map()
+        else:  # elevation map was provided
+            assert params[cf.APS_ELEVATION_MAP] is not None
+            incidence_map = get_incidence_map()
+        return incidence_map
+
+    def get_incidence_map():
+        """
+        :param incidence_map:
+        :param params:
+        :param inc_or_ele: 1 when incidence map, 0 when elevation map
+        :return:
+        """
+        if params[cf.APS_ELEVATION_MAP] is not None:
+            f, e = os.path.basename(params[cf.APS_ELEVATION_MAP]).split(
+                '.')
+        else:
+            f, e = os.path.basename(params[cf.APS_INCIDENCE_MAP]).split(
+                '.')
+        multilooked = os.path.join(
+            params[cf.OUT_DIR],
+            f + '_' + e +
+            '_{looks}rlks_{crop}cr.tif'.format(
+                looks=params[cf.IFG_LKSX],
+                crop=params[
+                    cf.IFG_CROP_OPT]))
+        assert os.path.exists(multilooked), \
+            'cropped and multilooked incidence map file not found. ' \
+            'Use apsmethod=1, Or run prepifg with gamma processor'
+        ds = gdal.Open(multilooked, gdalconst.GA_ReadOnly)
+        if params[cf.APS_INCIDENCE_MAP] is not None:
+            incidence_map = ds.ReadAsArray()
+        else:
+            incidence_map = 90 - ds.ReadAsArray()
+        ds = None  # close file
+        return incidence_map
 
     incidence_angle = None
-    incidence_map = None
+    incidence_map = get_incidence_map2()
+    list_of_dates_for_grb_download = []
     for ifg in ifgs:  # demo for only one ifg
         if params[cf.PROCESSOR] == 1:  # gamma
             PTN = re.compile(r'\d{8}')
@@ -69,37 +107,6 @@ def remove_aps_delay(ifgs, params):
         #   lon=os.path.join(PYAPS_EXAMPLES, 'lon.flt'))
         # LLphs = phs2-phs1
 
-        def get_incidence_map():
-            """
-            :param incidence_map:
-            :param params:
-            :param inc_or_ele: 1 when incidence map, 0 when elevation map
-            :return:
-            """
-            if params[cf.APS_ELEVATION_MAP] is not None:
-                f, e = os.path.basename(params[cf.APS_ELEVATION_MAP]).split(
-                    '.')
-            else:
-                f, e = os.path.basename(params[cf.APS_INCIDENCE_MAP]).split(
-                    '.')
-            multilooked = os.path.join(
-                params[cf.OUT_DIR],
-                f + '_' + e +
-                '_{looks}rlks_{crop}cr.tif'.format(
-                    looks=params[cf.IFG_LKSX],
-                    crop=params[
-                        cf.IFG_CROP_OPT]))
-            assert os.path.exists(multilooked), \
-                'cropped and multilooked incidence map file not found. ' \
-                'Use apsmethod=1, Or run prepifg with gamma processor'
-            ds = gdal.Open(multilooked, gdalconst.GA_ReadOnly)
-            if params[cf.APS_INCIDENCE_MAP] is not None:
-                incidence_map = ds.ReadAsArray()
-            else:
-                incidence_map = 90 - ds.ReadAsArray()
-            ds = None  # close file
-            return incidence_map
-
         if params[cf.APS_METHOD] == 1:
             # no need to calculate incidence angle for all ifgs, they are the same
             if incidence_angle is None:
@@ -107,12 +114,6 @@ def remove_aps_delay(ifgs, params):
             aps_delay = geo_correction(date_pair, params, incidence_angle)
         elif params[cf.APS_METHOD] == 2:
             # no need to calculate incidence map for all ifgs, they are the same
-            if incidence_map is None:
-                if params[cf.APS_INCIDENCE_MAP] is not None:
-                    incidence_map = get_incidence_map()
-                else:  # elevation map was provided
-                    assert params[cf.APS_ELEVATION_MAP] is not None
-                    incidence_map = get_incidence_map()
             aps_delay = geo_correction(date_pair, params, incidence_map)
         else:
             raise APSException('APS method must be 1 or 2')
@@ -150,21 +151,7 @@ def rdr_correction(date_pair):
 
 def geo_correction(date_pair, params, incidence_angle_or_map):
 
-    dem_file = params[cf.DEM_FILE]
-    geotif_dem = os.path.join(
-        params[cf.OUT_DIR], os.path.basename(dem_file).split('.')[0] + '.tif')
-
-    mlooked_dem = prepifg.mlooked_path(geotif_dem,
-                                       looks=params[cf.IFG_LKSX],
-                                       crop_out=params[cf.IFG_CROP_OPT])
-    # make sure mlooked dem exist
-    if not os.path.exists(mlooked_dem):
-        raise prepifg.PreprocessError('mlooked dem was not found.'
-                                      'Please run prepifg.')
-
-    dem_header = gamma.parse_dem_header(params[cf.DEM_HEADER_FILE])
-    lat, lon, nx, ny = return_pyaps_lat_lon(dem_header)
-
+    lat, lon, nx, ny, dem, mlooked_dem = read_dem(params)
 
     """ using geo coordinates to remove APS """
 
@@ -179,10 +166,30 @@ def geo_correction(date_pair, params, incidence_angle_or_map):
     phs1 = np.zeros((aps1.ny, aps1.nx))
     phs2 = np.zeros((aps2.ny, aps2.nx))
     print 'Without Lat Lon files'
-    aps1.getdelay(phs1, inc=incidence_angle_or_map)
-    aps2.getdelay(phs2, inc=incidence_angle_or_map)
+    aps1.getdelay_pyrate(phs1, dem, inc=incidence_angle_or_map)
+    aps2.getdelay_pyrate(phs2, dem, inc=incidence_angle_or_map)
     aps_delay = phs2 - phs1  # delay in meters as we don't provide wavelength
     return aps_delay
+
+
+def read_dem(params):
+    dem_file = params[cf.DEM_FILE]
+    geotif_dem = os.path.join(
+        params[cf.OUT_DIR], os.path.basename(dem_file).split('.')[0] + '.tif')
+    mlooked_dem = prepifg.mlooked_path(geotif_dem,
+                                       looks=params[cf.IFG_LKSX],
+                                       crop_out=params[cf.IFG_CROP_OPT])
+    # make sure mlooked dem exist
+    if not os.path.exists(mlooked_dem):
+        raise prepifg.PreprocessError('mlooked dem was not found.'
+                                      'Please run prepifg.')
+    dem_header = gamma.parse_dem_header(params[cf.DEM_HEADER_FILE])
+    lat, lon, nx, ny = return_pyaps_lat_lon(dem_header)
+
+    ds = gdal.Open(mlooked_dem, gdalconst.GA_ReadOnly)
+    dem = ds.ReadAsArray()
+    ds = None
+    return lat, lon, nx, ny, dem, mlooked_dem
 
 
 def get_incidence_angle(date_pair, params):
