@@ -12,12 +12,12 @@ import sys
 import os
 import re
 import glob2
+import parmap
 from osgeo import gdalconst, gdal
 from pyrate import config as cf
 from pyrate import ifgconstants as ifc
 from pyrate import prepifg
 from pyrate import gamma
-
 
 PYRATEPATH = os.environ['PYRATEPATH']
 ECMWF_DIR = os.path.join(PYRATEPATH, 'ECMWF')
@@ -67,63 +67,77 @@ def remove_aps_delay(ifgs, params):
     incidence_angle = None
     incidence_map = get_incidence_map()
     list_of_dates_for_grb_download = []
-    for ifg in ifgs:  # demo for only one ifg
-        if params[cf.PROCESSOR] == 1:  # gamma
-            PTN = re.compile(r'\d{8}')
-            date_pair = [i for i in PTN.findall(os.path.basename(ifg.data_path))]
-        elif params[cf.PROCESSOR] == 0:  # roipac
-            # adding 20 to dates here, so dates before 2000 won't work
-            # TODO: fix pre 2000 dates
-            PTN = re.compile(r'\d{6}')
-            date_pair = ['20' + i for i in
-                         PTN.findall(os.path.basename(ifg.data_path))]
-        else:
-            raise AttributeError('processor needs to be gamma(1) or roipac(0)')
 
-        list_of_dates_for_grb_download += date_pair
+    parallel = params[cf.PARALLEL]
+    data_paths = [i.data_path for i in ifgs]
 
-        first_grb = os.path.join(ECMWF_DIR,
-                                 ECMWF_PRE + date_pair[0] + ECMWF_EXT)
-        second_grb = os.path.join(ECMWF_DIR,
-                                  ECMWF_PRE + date_pair[1] + ECMWF_EXT)
+    if parallel:
+        aps_delay = parmap.map(parallel_aps, data_paths, dem, dem_header,
+                               incidence_angle,
+                               incidence_map, list_of_dates_for_grb_download,
+                               mlooked_dem, params)
+    else:
+        aps_delay = []
+        for d in data_paths:  # demo for only one ifg
+            aps_delay.append(parallel_aps(d, dem, dem_header, incidence_angle,
+                                     incidence_map, list_of_dates_for_grb_download,
+                                     mlooked_dem, params))
 
-        # download .grb file if does not exist
-        if not (os.path.exists(first_grb) and os.path.exists(second_grb)):
-            # download weather files at 12:00 UTC (other options 00:00, 06:00, 18:00)
-            pa.ecmwf_download(date_pair, '12', 'ECMWF')
-
-        # rdr_correction(date_pair)
-
-        # TODO: lat lon correction when lat and lon files are available
-        # aps1.getgeodelay(phs1, inc=23.0, wvl=0.056,
-        #   lat=os.path.join(PYAPS_EXAMPLES, 'lat.flt'),
-        #   lon=os.path.join(PYAPS_EXAMPLES, 'lon.flt'))
-        # aps2.getgeodelay(phs2, inc=23.0, wvl=0.056,
-        #   lat=os.path.join(PYAPS_EXAMPLES, 'lat.flt'),
-        #   lon=os.path.join(PYAPS_EXAMPLES, 'lon.flt'))
-        # LLphs = phs2-phs1
-        # print dem_header, mlooked_dem
-        if params[cf.APS_METHOD] == 1:
-            # no need to calculate incidence angle for all ifgs, they are the same
-            if incidence_angle is None:
-                incidence_angle = get_incidence_angle(date_pair, params)
-            aps_delay = geo_correction(date_pair, mlooked_dem, dem_header, dem,
-                                       incidence_angle)
-        elif params[cf.APS_METHOD] == 2:
-            # no need to calculate incidence map for all ifgs, they are the same
-            aps_delay = geo_correction(date_pair, mlooked_dem, dem_header, dem,
-                                       incidence_map)
-        else:
-            raise APSException('APS method must be 1 or 2')
-
-
-        ifg.phase_data -= aps_delay  # remove delay
+    for i, ifg in enumerate(ifgs):
+        ifg.phase_data -= aps_delay[i]  # remove delay
         # add it to the meta_data dict
         ifg.meta_data[ifc.PYRATE_APS_ERROR] = APS_STATUS
         # write meta_data to file
         ifg.dataset.SetMetadataItem(ifc.PYRATE_APS_ERROR, APS_STATUS)
-
         ifg.write_modified_phase()
+
+
+def parallel_aps(data_path, dem, dem_header, incidence_angle, incidence_map,
+                 list_of_dates_for_grb_download, mlooked_dem, params):
+    if params[cf.PROCESSOR] == 1:  # gamma
+        PTN = re.compile(r'\d{8}')
+        date_pair = [i for i in PTN.findall(os.path.basename(data_path))]
+    elif params[cf.PROCESSOR] == 0:  # roipac
+        # adding 20 to dates here, so dates before 2000 won't work
+        # TODO: fix pre 2000 dates
+        PTN = re.compile(r'\d{6}')
+        date_pair = ['20' + i for i in
+                     PTN.findall(os.path.basename(data_path))]
+    else:
+        raise AttributeError('processor needs to be gamma(1) or roipac(0)')
+    list_of_dates_for_grb_download += date_pair
+    first_grb = os.path.join(ECMWF_DIR,
+                             ECMWF_PRE + date_pair[0] + ECMWF_EXT)
+    second_grb = os.path.join(ECMWF_DIR,
+                              ECMWF_PRE + date_pair[1] + ECMWF_EXT)
+    # download .grb file if does not exist
+    if not (os.path.exists(first_grb) and os.path.exists(second_grb)):
+        # download weather files at 12:00 UTC (other options 00:00, 06:00, 18:00)
+        pa.ecmwf_download(date_pair, '12', 'ECMWF')
+
+    # rdr_correction(date_pair)
+    # TODO: lat lon correction when lat and lon files are available
+    # aps1.getgeodelay(phs1, inc=23.0, wvl=0.056,
+    #   lat=os.path.join(PYAPS_EXAMPLES, 'lat.flt'),
+    #   lon=os.path.join(PYAPS_EXAMPLES, 'lon.flt'))
+    # aps2.getgeodelay(phs2, inc=23.0, wvl=0.056,
+    #   lat=os.path.join(PYAPS_EXAMPLES, 'lat.flt'),
+    #   lon=os.path.join(PYAPS_EXAMPLES, 'lon.flt'))
+    # LLphs = phs2-phs1
+    # print dem_header, mlooked_dem
+    if params[cf.APS_METHOD] == 1:
+        # no need to calculate incidence angle for all ifgs, they are the same
+        if incidence_angle is None:
+            incidence_angle = get_incidence_angle(date_pair, params)
+        aps_delay = geo_correction(date_pair, mlooked_dem, dem_header, dem,
+                                   incidence_angle)
+    elif params[cf.APS_METHOD] == 2:
+        # no need to calculate incidence map for all ifgs, they are the same
+        aps_delay = geo_correction(date_pair, mlooked_dem, dem_header, dem,
+                                   incidence_map)
+    else:
+        raise APSException('APS method must be 1 or 2')
+    return aps_delay
 
 
 def rdr_correction(date_pair):
