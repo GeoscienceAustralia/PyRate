@@ -68,6 +68,9 @@ def remove_aps_delay(ifgs, params):
         ds = None  # close file
         return incidence_map
 
+    lat, lon, nx, ny, dem, mlooked_dem = read_dem(params)
+    dem_header = (lon, lat, nx, ny)
+
     incidence_angle = None
     incidence_map = get_incidence_map2()
     list_of_dates_for_grb_download = []
@@ -106,15 +109,17 @@ def remove_aps_delay(ifgs, params):
         #   lat=os.path.join(PYAPS_EXAMPLES, 'lat.flt'),
         #   lon=os.path.join(PYAPS_EXAMPLES, 'lon.flt'))
         # LLphs = phs2-phs1
-
+        # print dem_header, mlooked_dem
         if params[cf.APS_METHOD] == 1:
             # no need to calculate incidence angle for all ifgs, they are the same
             if incidence_angle is None:
                 incidence_angle = get_incidence_angle(date_pair, params)
-            aps_delay = geo_correction(date_pair, params, incidence_angle)
+            aps_delay = geo_correction(date_pair, mlooked_dem, dem_header, dem,
+                                       incidence_angle)
         elif params[cf.APS_METHOD] == 2:
             # no need to calculate incidence map for all ifgs, they are the same
-            aps_delay = geo_correction(date_pair, params, incidence_map)
+            aps_delay = geo_correction(date_pair, mlooked_dem, dem_header, dem,
+                                       incidence_map)
         else:
             raise APSException('APS method must be 1 or 2')
 
@@ -149,20 +154,19 @@ def rdr_correction(date_pair):
     # return aps_delay
 
 
-def geo_correction(date_pair, params, incidence_angle_or_map):
-
-    lat, lon, nx, ny, dem, mlooked_dem = read_dem(params)
+def geo_correction(date_pair, mlooked_dem, dem_header, dem,
+                   incidence_angle_or_map):
 
     """ using geo coordinates to remove APS """
 
     aps1 = pa.PyAPS_geo(
         os.path.join(ECMWF_DIR, ECMWF_PRE + date_pair[0] + ECMWF_EXT),
         mlooked_dem, grib=ECMWF, verb=True,
-        demfmt=GEOTIFF, demtype=np.float32, dem_header=(lon, lat, nx, ny))
+        demfmt=GEOTIFF, demtype=np.float32, dem_header=dem_header)
     aps2 = pa.PyAPS_geo(
         os.path.join(ECMWF_DIR, ECMWF_PRE + date_pair[1] + ECMWF_EXT),
         mlooked_dem, grib=ECMWF, verb=True,
-        demfmt=GEOTIFF, demtype=np.float32, dem_header=(lon, lat, nx, ny))
+        demfmt=GEOTIFF, demtype=np.float32, dem_header=dem_header)
     phs1 = np.zeros((aps1.ny, aps1.nx))
     phs2 = np.zeros((aps2.ny, aps2.nx))
     print 'Without Lat Lon files'
