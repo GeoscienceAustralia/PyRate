@@ -118,6 +118,109 @@ class TestMethod1VsMethod2AndMetaData(unittest.TestCase):
                                                  decimal=4)
 
 
+class TestOriginalVsEfficientAps(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.tif_dir = tempfile.mkdtemp()
+        cls.tif_dir_original = tempfile.mkdtemp()
+        cls.test_conf = common.SYDNEY_TEST_CONF
+
+        # change the required params
+        cls.params = cf.get_config_params(cls.test_conf)
+        cls.params[cf.OBS_DIR] = common.SYD_TEST_GAMMA
+        cls.params[cf.PROCESSOR] = 1  # gamma
+        file_list = cf.parse_namelist(os.path.join(common.SYD_TEST_GAMMA,
+                                                   'ifms_17'))
+        cls.params[cf.IFG_FILE_LIST] = tempfile.mktemp(suffix='.conf',
+                                                       dir=cls.tif_dir)
+        # write a short filelist with only 3 gamma unws
+        with open(cls.params[cf.IFG_FILE_LIST], 'w') as fp:
+            for f in file_list[:2]:
+                fp.write(os.path.join(common.SYD_TEST_GAMMA, f) + '\n')
+        cls.params[cf.OUT_DIR] = cls.tif_dir
+        cls.params[cf.PARALLEL] = 0
+        cls.params[cf.REF_EST_METHOD] = 2
+        cls.params[cf.DEM_FILE] = common.SYD_TEST_DEM_GAMMA
+        cls.params[cf.APS_INCIDENCE_MAP] = common.SYD_TEST_INCIDENCE
+        # base_unw_paths need to be geotiffed and multilooked by run_prepifg
+        base_unw_paths = run_pyrate.original_ifg_paths(
+            cls.params[cf.IFG_FILE_LIST])
+        # add dem
+        base_unw_paths.append(common.SYD_TEST_DEM_GAMMA)
+        # add incidence
+        base_unw_paths.append(common.SYD_TEST_INCIDENCE)
+
+        xlks, ylks, crop = run_pyrate.transform_params(cls.params)
+
+        import copy
+        cls.params_original = copy.copy(cls.params)
+        cls.params_original[cf.OUT_DIR] = cls.tif_dir_original
+        cls.params_original[cf.APS_METHOD] = 2
+
+        # dest_paths are tifs that have been geotif converted and multilooked
+        run_prepifg.gamma_prepifg(base_unw_paths, cls.params)
+        run_prepifg.gamma_prepifg(base_unw_paths, cls.params_original)
+
+        # removed incidence as we don't want it in ifgs list
+        base_unw_paths.pop()
+        # removed dem as we don't want it in ifgs list
+        base_unw_paths.pop()
+
+        dest_paths = run_pyrate.get_dest_paths(
+            base_unw_paths, crop, cls.params, xlks)
+        cls.ifgs = common.sydney_data_setup(datafiles=dest_paths)
+
+        dest_paths_orig = run_pyrate.get_dest_paths(
+            base_unw_paths, crop, cls.params_original, xlks)
+        cls.ifgs_orig = common.sydney_data_setup(datafiles=dest_paths_orig)
+        aps.remove_aps_delay(cls.ifgs, cls.params)
+        aps.remove_aps_delay_original(cls.ifgs_orig, cls.params_original)
+
+    @classmethod
+    def tearDownClass(cls):
+        for i in cls.ifgs:
+            i.close()
+        for i in cls.ifgs_orig:
+            i.close()
+
+        shutil.rmtree(cls.tif_dir)
+        shutil.rmtree(cls.tif_dir_original)
+
+    def test_metadata_was_copied(self):
+        for i in self.ifgs:
+            md = i.meta_data
+            self.assertIn(ifc.PYRATE_APS_ERROR, md.keys())
+            self.assertIn(aps.APS_STATUS, md.values())
+
+    def test_meta_data_was_written(self):
+        for i in self.ifgs:
+            i.close()  # until file is closed metadata is not written
+            md = i.meta_data
+            ds = gdal.Open(i.data_path)
+            md_w = ds.GetMetadata()
+            self.assertDictEqual(md, md_w)
+            ds = None
+
+    def test_dem_tifs_present(self):
+        # geotiffed dem
+        os.path.exists(os.path.join(self.params[cf.OUT_DIR],
+                       os.path.splitext(common.SYD_TEST_DEM_GAMMA)[0]
+                                    + '.tif'))
+
+        # multilooked dem
+        os.path.exists(os.path.join(self.params[cf.OUT_DIR],
+                       os.path.splitext(common.SYD_TEST_DEM_GAMMA)[0]
+                        + '_{looks}rlks_{crop}cr.tif'.format(
+                           looks=self.params[cf.IFG_LKSX],
+                           crop=self.params[cf.IFG_CROP_OPT])))
+
+    def test_method1_method2_equal_with_uniform_incidence_map(self):
+        for i, j in zip(self.ifgs, self.ifgs_orig):
+            np.testing.assert_array_almost_equal(i.phase_data, j.phase_data,
+                                                 decimal=4)
+
+
 class TestAPSIncidenceVsElevation(unittest.TestCase):
     """
     This class tests APS method when incidence map is provided vs elevation map
@@ -186,13 +289,12 @@ class TestAPSIncidenceVsElevation(unittest.TestCase):
         shutil.rmtree(cls.tif_dir_inc)
         shutil.rmtree(cls.tif_dir_ele)
 
-    def test_method1_method2_equal_with_uniform_incidence_map(self):
+    def test_inc_vs_ele_equal_with_uniform_incidence_map(self):
         aps.remove_aps_delay(self.ifgs_inc, self.params_inc)
         aps.remove_aps_delay(self.ifgs_ele, self.params_ele)
         for i, j in zip(self.ifgs_inc, self.ifgs_ele):
             np.testing.assert_array_almost_equal(i.phase_data, j.phase_data,
                                                  decimal=4)
-
 
 if __name__ == '__main__':
     unittest.main()
