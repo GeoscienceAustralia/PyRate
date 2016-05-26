@@ -155,12 +155,10 @@ def geo_correction(date_pair, mlooked_dem, dem_header, dem,
     # TODO: remove mlooked_dem dependece on PyAPS_Geo class
     aps1 = pa.PyAPSPyRateGeo(
         os.path.join(ECMWF_DIR, ECMWF_PRE + date_pair[0] + ECMWF_EXT),
-        grib=ECMWF, verb=True,
-        dem_header=dem_header)
+        dem_header=dem_header, dem=dem, grib=ECMWF, verb=True)
     aps2 = pa.PyAPSPyRateGeo(
         os.path.join(ECMWF_DIR, ECMWF_PRE + date_pair[1] + ECMWF_EXT),
-        grib=ECMWF, verb=True,
-        dem_header=dem_header)
+        dem_header=dem_header, dem=dem, grib=ECMWF, verb=True)
     phs1 = np.zeros((aps1.ny, aps1.nx))
     phs2 = np.zeros((aps2.ny, aps2.nx))
     print 'Without Lat Lon files'
