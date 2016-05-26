@@ -29,13 +29,6 @@ ECMWF = 'ECMWF'
 
 
 def remove_aps_delay(ifgs, params):
-    def get_incidence_map2():
-        if params[cf.APS_INCIDENCE_MAP] is not None:
-            incidence_map = get_incidence_map()
-        else:  # elevation map was provided
-            assert params[cf.APS_ELEVATION_MAP] is not None
-            incidence_map = get_incidence_map()
-        return incidence_map
 
     def get_incidence_map():
         """
@@ -72,7 +65,7 @@ def remove_aps_delay(ifgs, params):
     dem_header = (lon, lat, nx, ny)
 
     incidence_angle = None
-    incidence_map = get_incidence_map2()
+    incidence_map = get_incidence_map()
     list_of_dates_for_grb_download = []
     for ifg in ifgs:  # demo for only one ifg
         if params[cf.PROCESSOR] == 1:  # gamma
