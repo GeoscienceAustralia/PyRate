@@ -48,7 +48,7 @@ class TestMethod1VsMethod2AndMetaData(unittest.TestCase):
         # add incidence
         base_unw_paths.append(common.SYD_TEST_INCIDENCE)
 
-        xlks, ylks, crop = run_pyrate.transform2_params(cls.params)
+        xlks, ylks, crop = run_pyrate.transform_params(cls.params)
 
         import copy
         cls.params_method2 = copy.copy(cls.params)

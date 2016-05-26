@@ -128,12 +128,10 @@ def parallel_aps(data_path, dem, dem_header, incidence_angle, incidence_map,
         # no need to calculate incidence angle for all ifgs, they are the same
         if incidence_angle is None:
             incidence_angle = get_incidence_angle(date_pair, params)
-        aps_delay = geo_correction(date_pair, mlooked_dem, dem_header, dem,
-                                   incidence_angle)
+        aps_delay = geo_correction(date_pair, dem_header, dem, incidence_angle)
     elif params[cf.APS_METHOD] == 2:
         # no need to calculate incidence map for all ifgs, they are the same
-        aps_delay = geo_correction(date_pair, mlooked_dem, dem_header, dem,
-                                   incidence_map)
+        aps_delay = geo_correction(date_pair, dem_header, dem, incidence_map)
     else:
         raise APSException('APS method must be 1 or 2')
     return aps_delay
@@ -160,12 +158,10 @@ def rdr_correction(date_pair):
     # return aps_delay
 
 
-def geo_correction(date_pair, mlooked_dem, dem_header, dem,
-                   incidence_angle_or_map):
+def geo_correction(date_pair, dem_header, dem, incidence_angle_or_map):
 
     """ using geo coordinates to remove APS """
 
-    # TODO: remove mlooked_dem dependece on PyAPS_Geo class
     aps1 = pa.PyAPSPyRateGeo(
         os.path.join(ECMWF_DIR, ECMWF_PRE + date_pair[0] + ECMWF_EXT),
         dem_header=dem_header, dem=dem, grib=ECMWF, verb=True)
