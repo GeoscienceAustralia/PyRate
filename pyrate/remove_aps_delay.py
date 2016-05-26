@@ -26,7 +26,8 @@ ECMWF_EXT = '_12.grib'  # TODO: build dynamically with closest available grib
 APS_STATUS = 'REMOVED'
 GEOTIFF = 'GEOTIFF'
 ECMWF = 'ECMWF'
-
+GAMMA_PTN = re.compile(r'\d{8}')
+ROIPAC_PTN = re.compile(r'\d{6}')
 
 def remove_aps_delay(ifgs, params):
 
@@ -95,14 +96,12 @@ def remove_aps_delay(ifgs, params):
 def parallel_aps(data_path, dem, dem_header, incidence_angle, incidence_map,
                  list_of_dates_for_grb_download, mlooked_dem, params):
     if params[cf.PROCESSOR] == 1:  # gamma
-        PTN = re.compile(r'\d{8}')
-        date_pair = [i for i in PTN.findall(os.path.basename(data_path))]
+        date_pair = [i for i in GAMMA_PTN.findall(os.path.basename(data_path))]
     elif params[cf.PROCESSOR] == 0:  # roipac
         # adding 20 to dates here, so dates before 2000 won't work
         # TODO: fix pre 2000 dates
-        PTN = re.compile(r'\d{6}')
         date_pair = ['20' + i for i in
-                     PTN.findall(os.path.basename(data_path))]
+                     ROIPAC_PTN.findall(os.path.basename(data_path))]
     else:
         raise AttributeError('processor needs to be gamma(1) or roipac(0)')
     list_of_dates_for_grb_download += date_pair

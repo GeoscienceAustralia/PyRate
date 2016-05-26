@@ -36,7 +36,7 @@ class TestMethod1VsMethod2AndMetaData(unittest.TestCase):
             for f in file_list[:2]:
                 fp.write(os.path.join(common.SYD_TEST_GAMMA, f) + '\n')
         cls.params[cf.OUT_DIR] = cls.tif_dir
-        cls.params[cf.PARALLEL] = 0
+        cls.params[cf.PARALLEL] = True
         cls.params[cf.REF_EST_METHOD] = 1
         cls.params[cf.DEM_FILE] = common.SYD_TEST_DEM_GAMMA
         cls.params[cf.APS_INCIDENCE_MAP] = common.SYD_TEST_INCIDENCE
@@ -48,7 +48,7 @@ class TestMethod1VsMethod2AndMetaData(unittest.TestCase):
         # add incidence
         base_unw_paths.append(common.SYD_TEST_INCIDENCE)
 
-        xlks, ylks, crop = run_pyrate.transform_params(cls.params)
+        xlks, ylks, crop = run_pyrate.transform2_params(cls.params)
 
         import copy
         cls.params_method2 = copy.copy(cls.params)
@@ -139,7 +139,7 @@ class TestOriginalVsEfficientAps(unittest.TestCase):
             for f in file_list[:2]:
                 fp.write(os.path.join(common.SYD_TEST_GAMMA, f) + '\n')
         cls.params[cf.OUT_DIR] = cls.tif_dir
-        cls.params[cf.PARALLEL] = 0
+        cls.params[cf.PARALLEL] = True
         cls.params[cf.REF_EST_METHOD] = 2
         cls.params[cf.DEM_FILE] = common.SYD_TEST_DEM_GAMMA
         cls.params[cf.APS_INCIDENCE_MAP] = common.SYD_TEST_INCIDENCE
@@ -230,6 +230,7 @@ class TestAPSIncidenceVsElevation(unittest.TestCase):
     def setUpClass(cls):
         cls.tif_dir_inc = tempfile.mkdtemp()
         cls.tif_dir_ele = tempfile.mkdtemp()
+        cls.tif_dir_ele_par = tempfile.mkdtemp()
         cls.test_conf = common.SYDNEY_TEST_CONF
 
         # change the required params
@@ -279,20 +280,42 @@ class TestAPSIncidenceVsElevation(unittest.TestCase):
 
         cls.ifgs_ele = common.sydney_data_setup(datafiles=dest_paths_ele)
 
+        # now create the config for the elevation map parallel case
+        cls.params_ele_par = copy.copy(cls.params_ele)
+        cls.params_ele_par[cf.OUT_DIR] = cls.tif_dir_ele_par
+        cls.params_ele_par[cf.PARALLEL] = True
+        run_prepifg.main(cls.params_ele_par)
+        dest_paths_ele_par = [f for f in
+                          glob.glob(os.path.join(cls.tif_dir_ele_par, '*.tif'))
+                          if "cr" in f and "rlks" in f and
+                          (len(re.findall(ptn, os.path.basename(f))) == 2)]
+
+        cls.ifgs_ele_par = common.sydney_data_setup(datafiles=dest_paths_ele_par)
+
+        aps.remove_aps_delay(cls.ifgs_inc, cls.params_inc)
+        aps.remove_aps_delay(cls.ifgs_ele, cls.params_ele)
+        aps.remove_aps_delay(cls.ifgs_ele_par, cls.params_ele_par)
+
     @classmethod
     def tearDownClass(cls):
         for i in cls.ifgs_ele:
+            i.close()
+        for i in cls.ifgs_ele_par:
             i.close()
         for i in cls.ifgs_inc:
             i.close()
 
         shutil.rmtree(cls.tif_dir_inc)
         shutil.rmtree(cls.tif_dir_ele)
+        shutil.rmtree(cls.tif_dir_ele_par)
 
     def test_inc_vs_ele_equal_with_uniform_incidence_map(self):
-        aps.remove_aps_delay(self.ifgs_inc, self.params_inc)
-        aps.remove_aps_delay(self.ifgs_ele, self.params_ele)
         for i, j in zip(self.ifgs_inc, self.ifgs_ele):
+            np.testing.assert_array_almost_equal(i.phase_data, j.phase_data,
+                                                 decimal=4)
+
+    def test_inc_serial_vs_parallel(self):
+        for i, j in zip(self.ifgs_ele_par, self.ifgs_ele):
             np.testing.assert_array_almost_equal(i.phase_data, j.phase_data,
                                                  decimal=4)
 
