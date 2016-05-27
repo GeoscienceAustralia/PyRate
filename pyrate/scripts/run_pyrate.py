@@ -39,7 +39,7 @@ VERBOSE = True
 def process_ifgs(ifg_paths_or_instance, params):
     """
     Top level function to perform PyRate correction steps on given ifgs
-    ifgs: sequence of paths to interferograms (NB: changes are saved into ifgs)
+    ifgs: sequence of paths to interferrograms (NB: changes are saved into ifgs)
     params: dictionary of configuration parameters
     """
     ifgs, mst_grid = mst_calculation(ifg_paths_or_instance, params)
@@ -48,8 +48,7 @@ def process_ifgs(ifg_paths_or_instance, params):
     refpx, refpy = find_reference_pixel(ifgs, params)
 
     # remove APS delay here
-    if params[cf.APS_CORRECTION] != 0:
-        aps.remove_aps_delay(ifgs, params)
+    treat_aps_delay(ifgs, params)
 
     # Estimate and remove orbit errors
     if params[cf.ORBITAL_FIT] != 0:
@@ -102,6 +101,41 @@ def process_ifgs(ifg_paths_or_instance, params):
     write_output_geotiff(md, gt, wkt, error, dest, np.nan)
 
     write_msg('PyRate workflow completed')
+
+
+def treat_aps_delay(ifgs, params):
+    write_msg('Removing APS delay')
+
+    if not params[cf.APS_CORRECTION]:
+        write_msg('APS delay removal not required')
+        return
+
+    # perform some general error/sanity checks
+    flags = [i.dataset.GetMetadataItem(ifc.PYRATE_APS_ERROR) for i in ifgs]
+
+    if all(flags):
+        write_msg('Skipped APS delay removal, ifgs are already aps corrected')
+        return
+    else:
+        check_aps_ifgs(ifgs, flags)
+
+    aps.remove_aps_delay(ifgs, params)
+
+
+def check_aps_ifgs(ifgs, flags):
+
+    count = sum([f == aps.APS_STATUS for f in flags])
+    if (count < len(flags)) and (count > 0):
+        logging.debug('Detected mix of corrected and uncorrected '
+                      'APS delay in ifgs')
+
+        for i, flag in zip(ifgs, flags):
+            if flag:
+                msg = '%s: prior APS delay correction detected'
+            else:
+                msg = '%s: no APS delay correction detected'
+            logging.debug(msg % i.data_path)
+        raise aps.APSException('Mixed APS removal status in ifg list')
 
 
 def mst_calculation(ifg_paths_or_instance, params):
