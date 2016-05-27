@@ -86,14 +86,17 @@ class TestMethod1VsMethod2AndMetaData(unittest.TestCase):
 
     def test_metadata_was_copied(self):
         for i in self.ifgs:
+            i.open()
             md = i.meta_data
+            i.close()
             self.assertIn(ifc.PYRATE_APS_ERROR, md.keys())
             self.assertIn(aps.APS_STATUS, md.values())
 
     def test_meta_data_was_written(self):
         for i in self.ifgs:
-            i.close()  # until file is closed metadata is not written
+            i.open()
             md = i.meta_data
+            i.close()
             ds = gdal.Open(i.data_path)
             md_w = ds.GetMetadata()
             self.assertDictEqual(md, md_w)
@@ -189,18 +192,22 @@ class TestOriginalVsEfficientAps(unittest.TestCase):
 
     def test_metadata_was_copied(self):
         for i in self.ifgs:
+            i.open()
             md = i.meta_data
+            i.close()
             self.assertIn(ifc.PYRATE_APS_ERROR, md.keys())
             self.assertIn(aps.APS_STATUS, md.values())
 
     def test_meta_data_was_written(self):
         for i in self.ifgs:
-            i.close()  # until file is closed metadata is not written
+            i.open()
+            i.close()
             md = i.meta_data
             ds = gdal.Open(i.data_path)
             md_w = ds.GetMetadata()
             self.assertDictEqual(md, md_w)
             ds = None
+
 
     def test_dem_tifs_present(self):
         # geotiffed dem
@@ -221,7 +228,7 @@ class TestOriginalVsEfficientAps(unittest.TestCase):
                                                  decimal=4)
 
 
-class TestAPSIncidenceVsElevation(unittest.TestCase):
+class TestAPSIncidenceVsElevationVsParallel(unittest.TestCase):
     """
     This class tests APS method when incidence map is provided vs elevation map
     """
