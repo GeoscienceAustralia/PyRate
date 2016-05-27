@@ -47,8 +47,12 @@ def process_ifgs(ifg_paths_or_instance, params):
     # Estimate reference pixel location
     refpx, refpy = find_reference_pixel(ifgs, params)
 
-    # remove APS delay here
-    treat_aps_delay(ifgs, params)
+    # remove APS delay here, and write aps delay removed ifgs disc
+    if aps_delay_required(ifgs, params):
+        aps.remove_aps_delay(ifgs, params)
+
+    # read in aps delay corrected ifgs
+    ifgs = pre_prepare_ifgs(ifg_paths_or_instance, params)
 
     # Estimate and remove orbit errors
     if params[cf.ORBITAL_FIT] != 0:
@@ -103,23 +107,23 @@ def process_ifgs(ifg_paths_or_instance, params):
     write_msg('PyRate workflow completed')
 
 
-def treat_aps_delay(ifgs, params):
+def aps_delay_required(ifgs, params):
     write_msg('Removing APS delay')
 
     if not params[cf.APS_CORRECTION]:
         write_msg('APS delay removal not required')
-        return
+        return False
 
     # perform some general error/sanity checks
     flags = [i.dataset.GetMetadataItem(ifc.PYRATE_APS_ERROR) for i in ifgs]
 
     if all(flags):
         write_msg('Skipped APS delay removal, ifgs are already aps corrected')
-        return
+        return False
     else:
         check_aps_ifgs(ifgs, flags)
 
-    aps.remove_aps_delay(ifgs, params)
+    return True
 
 
 def check_aps_ifgs(ifgs, flags):
@@ -140,7 +144,7 @@ def check_aps_ifgs(ifgs, flags):
 
 def mst_calculation(ifg_paths_or_instance, params):
     if isinstance(ifg_paths_or_instance, list):
-        ifgs = prepare_ifgs_for_networkx_mst(ifg_paths_or_instance, params)
+        ifgs = pre_prepare_ifgs(ifg_paths_or_instance, params)
         write_msg(
             'Calculating minimum spanning tree matrix using NetworkX method')
 
@@ -174,7 +178,7 @@ def mst_calculation(ifg_paths_or_instance, params):
     return ifgs, mst_grid
 
 
-def prepare_ifgs_for_networkx_mst(ifg_paths_or_instance, params):
+def pre_prepare_ifgs(ifg_paths_or_instance, params):
     nan_conversion = params[cf.NAN_CONVERSION]
     ifgs = [Ifg(p) for p in ifg_paths_or_instance]
     for i in ifgs:
