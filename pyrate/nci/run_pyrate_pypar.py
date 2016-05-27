@@ -24,6 +24,7 @@ from pyrate import vcm as vcm_module
 from pyrate import reference_phase_estimation as rpe
 from pyrate import timeseries
 from pyrate import linrate
+from pyrate import remove_aps_delay as aps
 
 # Constants
 MASTER_PROCESS = 0
@@ -56,7 +57,8 @@ def main(params=None):
         config_filepath = sys.argv[1]
         configfile = open(config_filepath)
         output_log_file.write("Starting Simulation at: "
-                + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+                              + datetime.datetime.now().strftime(
+            "%Y-%m-%d %H:%M:%S"))
         output_log_file.write("Master process found " +
                               str(num_processors) +
                               " worker processors.\n")
@@ -77,14 +79,21 @@ def main(params=None):
 
     # Calc mst using MPI
     mst_mat_binary_file = os.path.join(params[cf.OUT_DIR], 'mst_mat.npy')
-    if MPI_myID == MASTER_PROCESS:
-        mst_grid, ifgs = mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs, mpi_log_filename,
-                 num_processors, parallel, params)
-        # write mst output to a file
-        np.save(file=mst_mat_binary_file, arr=mst_grid)
+    if not os.path.exists(mst_mat_binary_file):
+        run_pyrate.write_msg('Calculation mst')
+        if MPI_myID == MASTER_PROCESS:
+            mst_grid, ifgs = mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs,
+                                          mpi_log_filename,
+                                          num_processors, parallel, params)
+            # write mst output to a file
+            np.save(file=mst_mat_binary_file, arr=mst_grid)
+        else:
+            _, ifgs = mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs,
+                                   mpi_log_filename,
+                                   num_processors, parallel, params)
     else:
-        _, ifgs = mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs, mpi_log_filename,
-                 num_processors, parallel, params)
+        print 'Using previous mst calculation'
+        ifgs = run_pyrate.pre_prepare_ifgs(cropped_and_sampled_tifs, params)
 
     parallel.barrier()
 
@@ -94,7 +103,7 @@ def main(params=None):
     ref_pixel_file = os.path.join(params[cf.OUT_DIR], 'ref_pixel.npy')
     if MPI_myID == MASTER_PROCESS:
         refpx, refpy = ref_pixel_calc_mpi(MPI_myID, ifgs,
-                                        num_processors, parallel, params)
+                                          num_processors, parallel, params)
         np.save(file=ref_pixel_file, arr=[refpx, refpy])
     else:
         ref_pixel_calc_mpi(MPI_myID, ifgs, num_processors, parallel, params)
@@ -102,6 +111,17 @@ def main(params=None):
     parallel.barrier()
     # refpixel read in each process
     refpx, refpy = np.load(ref_pixel_file)
+
+    # remove APS delay here
+    if run_pyrate.aps_delay_required(ifgs, params):
+        no_ifgs = len(ifgs)
+        process_indices = parallel.calc_indices(no_ifgs)
+        process_ifgs = [itemgetter(p)(ifgs) for p in process_indices]
+        aps.remove_aps_delay(process_ifgs, params)
+
+    parallel.barrier()
+
+    ifgs = run_pyrate.pre_prepare_ifgs(cropped_and_sampled_tifs, params)
 
     # every proces writing ifgs - BAD, TODO: Remove this step
     # required as all processes need orbital corrected ifgs
@@ -141,8 +161,9 @@ def main(params=None):
 
 def linrate_mpi(MPI_myID, ifgs, mst_grid, num_processors, parallel, params,
                 vcmt):
+    run_pyrate.write_msg('Calculating linear rate')
     MAXSIG, NSIG, PTHRESH, ncols, error, mst, obs, _, processes, rate, \
-        nrows, samples, span = linrate.linrate_setup(ifgs, mst_grid, params)
+    nrows, samples, span = linrate.linrate_setup(ifgs, mst_grid, params)
     rows = range(nrows)
     process_indices = parallel.calc_indices(nrows)
     process_rows = [itemgetter(p)(rows) for p in process_indices]
@@ -179,6 +200,7 @@ def linrate_mpi(MPI_myID, ifgs, mst_grid, num_processors, parallel, params,
 
 def time_series_mpi(MPI_myID, ifgs, mst_grid, num_processors, parallel, params,
                     vcmt):
+    run_pyrate.write_msg('Calculating time series')
     B0, INTERP, PTHRESH, SMFACTOR, SMORDER, TSMETHOD, ifg_data, mst, \
     ncols, nrows, nvelpar, _, processes, span, tsvel_matrix = \
         timeseries.time_series_setup(ifgs=ifgs, mst=mst_grid, params=params)
@@ -219,6 +241,7 @@ def time_series_mpi(MPI_myID, ifgs, mst_grid, num_processors, parallel, params,
 
 def ref_phase_estimation_mpi(MPI_myID, ifgs, num_processors, parallel, params,
                              refpx, refpy):
+    run_pyrate.write_msg('Finding reference pixel')
     no_ifgs = len(ifgs)
     process_indices = parallel.calc_indices(no_ifgs)
     process_ifgs = [itemgetter(p)(ifgs) for p in process_indices]
@@ -383,8 +406,10 @@ def ref_pixel_calc_mpi(MPI_myID, ifgs, num_processors, parallel, params):
 
 def mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs, mpi_log_filename,
                  num_processors, parallel, params):
-    ifgs = run_pyrate.prepare_ifgs_for_networkx_mst(cropped_and_sampled_tifs,
-                                                    params)
+    run_pyrate.write_msg('Calculating minimum spanning tree matrix '
+                         'using NetworkX method')
+    ifgs = run_pyrate.pre_prepare_ifgs(cropped_and_sampled_tifs,
+                                       params)
     top_lefts, bottom_rights, no_tiles = pyrate.shared.setup_tiles(
         ifgs[0].shape, processes=num_processors)
     # parallel.calc_indices(no_tiles)
@@ -418,7 +443,7 @@ def mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs, mpi_log_filename,
     else:
         # send the result arrays
         parallel.send(result_process, destination=MASTER_PROCESS, tag=MPI_myID)
-        print "sent result from process", MPI_myID
+        print "sent mst result from process", MPI_myID
         return result_process, ifgs
 
 
