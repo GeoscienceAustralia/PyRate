@@ -29,15 +29,10 @@ ECMWF = 'ECMWF'
 GAMMA_PTN = re.compile(r'\d{8}')
 ROIPAC_PTN = re.compile(r'\d{6}')
 
+
 def remove_aps_delay(ifgs, params):
 
     def get_incidence_map():
-        """
-        :param incidence_map:
-        :param params:
-        :param inc_or_ele: 1 when incidence map, 0 when elevation map
-        :return:
-        """
         if params[cf.APS_ELEVATION_MAP] is not None:
             f, e = os.path.basename(params[cf.APS_ELEVATION_MAP]).split(
                 '.')
@@ -86,11 +81,10 @@ def remove_aps_delay(ifgs, params):
 
     for i, ifg in enumerate(ifgs):
         ifg.phase_data -= aps_delay[i]  # remove delay
-        # add it to the meta_data dict
-        ifg.meta_data[ifc.PYRATE_APS_ERROR] = APS_STATUS
         # write meta_data to file
         ifg.dataset.SetMetadataItem(ifc.PYRATE_APS_ERROR, APS_STATUS)
         ifg.write_modified_phase()
+        ifg.close()  # close ifg files, required for gdal dataset to close files
 
 
 def parallel_aps(data_path, dem, dem_header, incidence_angle, incidence_map,
