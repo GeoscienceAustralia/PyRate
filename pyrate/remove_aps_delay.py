@@ -81,10 +81,14 @@ def remove_aps_delay(ifgs, params):
 
     for i, ifg in enumerate(ifgs):
         ifg.phase_data -= aps_delay[i]  # remove delay
+        # add to ifg.meta_data
+        ifg.meta_data[ifc.PYRATE_APS_ERROR] = APS_STATUS
         # write meta_data to file
         ifg.dataset.SetMetadataItem(ifc.PYRATE_APS_ERROR, APS_STATUS)
         ifg.write_modified_phase()
-        ifg.close()  # close ifg files, required for gdal dataset to close files
+        # ifg.close()  # close ifg files, required for gdal dataset to close files
+
+    return ifgs
 
 
 def parallel_aps(data_path, dem, dem_header, incidence_angle, incidence_map,

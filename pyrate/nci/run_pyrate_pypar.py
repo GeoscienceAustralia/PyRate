@@ -1,6 +1,3 @@
-import pyrate.shared
-
-__author__ = 'sudipta'
 import sys
 import os
 import datetime
@@ -25,6 +22,9 @@ from pyrate import reference_phase_estimation as rpe
 from pyrate import timeseries
 from pyrate import linrate
 from pyrate import remove_aps_delay as aps
+from pyrate import shared
+import gdal
+__author__ = 'sudipta'
 
 # Constants
 MASTER_PROCESS = 0
@@ -82,18 +82,19 @@ def main(params=None):
     if not os.path.exists(mst_mat_binary_file):
         run_pyrate.write_msg('Calculation mst')
         if MPI_myID == MASTER_PROCESS:
-            mst_grid, ifgs = mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs,
+            mst_grid, _ = mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs,
                                           mpi_log_filename,
                                           num_processors, parallel, params)
             # write mst output to a file
             np.save(file=mst_mat_binary_file, arr=mst_grid)
         else:
-            _, ifgs = mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs,
+            mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs,
                                    mpi_log_filename,
                                    num_processors, parallel, params)
     else:
         print 'Using previous mst calculation'
-        ifgs = run_pyrate.pre_prepare_ifgs(cropped_and_sampled_tifs, params)
+
+    ifgs = run_pyrate.pre_prepare_ifgs(cropped_and_sampled_tifs, params)
 
     parallel.barrier()
 
@@ -101,6 +102,7 @@ def main(params=None):
 
     # Calc ref_pixel using MPI
     ref_pixel_file = os.path.join(params[cf.OUT_DIR], 'ref_pixel.npy')
+
     if MPI_myID == MASTER_PROCESS:
         refpx, refpy = ref_pixel_calc_mpi(MPI_myID, ifgs,
                                           num_processors, parallel, params)
@@ -112,6 +114,8 @@ def main(params=None):
     # refpixel read in each process
     refpx, refpy = np.load(ref_pixel_file)
 
+    parallel.barrier()
+
     # remove APS delay here
     if run_pyrate.aps_delay_required(ifgs, params):
         no_ifgs = len(ifgs)
@@ -119,16 +123,26 @@ def main(params=None):
         process_ifgs = [itemgetter(p)(ifgs) for p in process_indices]
         aps.remove_aps_delay(process_ifgs, params)
 
+    # close all ifgs in all processes
+    for i in ifgs:
+        i.close()
+
     parallel.barrier()
 
-    ifgs = run_pyrate.pre_prepare_ifgs(cropped_and_sampled_tifs, params)
+    for i in ifgs:
+        i.open()
+        # ds = gdal.Open(i.data_path, gdal.GA_ReadOnly)
+        # print i.meta_data
+        # i.phase_data = ds.ReadAsArray()
+        # ds = None
 
+    parallel.barrier()
     # every proces writing ifgs - BAD, TODO: Remove this step
     # required as all processes need orbital corrected ifgs
     run_pyrate.remove_orbital_error(ifgs, params)
     # orb_fit_calc_mpi(MPI_myID, ifgs, num_processors, parallel, params)
 
-    # estimate reference phase
+    # estimate and remove reference phase, ifgs are modifed in place
     ref_phase_estimation_mpi(MPI_myID, ifgs, num_processors, parallel, params,
                              refpx, refpy)
 
@@ -241,7 +255,7 @@ def time_series_mpi(MPI_myID, ifgs, mst_grid, num_processors, parallel, params,
 
 def ref_phase_estimation_mpi(MPI_myID, ifgs, num_processors, parallel, params,
                              refpx, refpy):
-    run_pyrate.write_msg('Finding reference pixel')
+    run_pyrate.write_msg('Finding and removing reference phase')
     no_ifgs = len(ifgs)
     process_indices = parallel.calc_indices(no_ifgs)
     process_ifgs = [itemgetter(p)(ifgs) for p in process_indices]
@@ -284,6 +298,7 @@ def ref_phase_estimation_mpi(MPI_myID, ifgs, num_processors, parallel, params,
             ref_phs[all_indices[i]] = process_ref_phs
         np.save(file=ref_phs_file, arr=ref_phs)
     else:
+        # send reference phase data to master process
         parallel.send(process_ref_phs, destination=MASTER_PROCESS,
                       tag=MPI_myID)
     parallel.barrier()
@@ -308,8 +323,6 @@ def maxvar_mpi(MPI_myID, ifgs, num_processors, parallel, params):
                                               return_status=False)
             maxvar[all_indices[i]] = process_maxvar
         np.save(file=maxvar_file, arr=maxvar)
-        original_maxvar = [vcm_module.cvd(i)[0] for i in ifgs]
-        np.testing.assert_array_equal(original_maxvar, maxvar)
     else:
         parallel.send(process_maxvar, destination=MASTER_PROCESS, tag=MPI_myID)
     parallel.barrier()
@@ -410,7 +423,7 @@ def mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs, mpi_log_filename,
                          'using NetworkX method')
     ifgs = run_pyrate.pre_prepare_ifgs(cropped_and_sampled_tifs,
                                        params)
-    top_lefts, bottom_rights, no_tiles = pyrate.shared.setup_tiles(
+    top_lefts, bottom_rights, no_tiles = shared.setup_tiles(
         ifgs[0].shape, processes=num_processors)
     # parallel.calc_indices(no_tiles)
     process_indices = parallel.calc_indices(no_tiles)

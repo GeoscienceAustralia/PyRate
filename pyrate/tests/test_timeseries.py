@@ -425,6 +425,7 @@ class MPITests(unittest.TestCase):
             common.SYD_TEST_GAMMA, 'ifms_17')
         cls.params[cf.OUT_DIR] = cls.tif_dir
         cls.params[cf.PARALLEL] = 0
+        cls.params[cf.APS_CORRECTION] = 0
         cls.params[cf.REF_EST_METHOD] = 1
         # base_unw_paths need to be geotiffed and multilooked by run_prepifg
         cls.base_unw_paths = run_pyrate.original_ifg_paths(

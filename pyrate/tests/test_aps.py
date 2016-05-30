@@ -86,7 +86,6 @@ class TestMethod1VsMethod2AndMetaData(unittest.TestCase):
 
     def test_metadata_was_copied(self):
         for i in self.ifgs:
-            i.open()
             md = i.meta_data
             i.close()
             self.assertIn(ifc.PYRATE_APS_ERROR, md.keys())
@@ -94,7 +93,6 @@ class TestMethod1VsMethod2AndMetaData(unittest.TestCase):
 
     def test_meta_data_was_written(self):
         for i in self.ifgs:
-            i.open()
             md = i.meta_data
             i.close()
             ds = gdal.Open(i.data_path)
@@ -191,7 +189,6 @@ class TestOriginalVsEfficientAps(unittest.TestCase):
 
     def test_metadata_was_copied(self):
         for i in self.ifgs:
-            i.open()
             md = i.meta_data
             i.close()
             self.assertIn(ifc.PYRATE_APS_ERROR, md.keys())
@@ -199,7 +196,6 @@ class TestOriginalVsEfficientAps(unittest.TestCase):
 
     def test_meta_data_was_written(self):
         for i in self.ifgs:
-            i.open()
             i.close()
             md = i.meta_data
             ds = gdal.Open(i.data_path)
@@ -342,10 +338,10 @@ class MPITests(unittest.TestCase):
         cls.params[cf.IFG_FILE_LIST] = tempfile.mktemp(dir=cls.tif_dir_serial)
         # write a short filelist with only 3 gamma unws
         with open(cls.params[cf.IFG_FILE_LIST], 'w') as fp:
-            for f in file_list[:2]:
+            for f in file_list[:4]:
                 fp.write(os.path.join(common.SYD_TEST_GAMMA, f) + '\n')
         cls.params[cf.OUT_DIR] = cls.tif_dir_serial
-        cls.params[cf.PARALLEL] = 1
+        cls.params[cf.PARALLEL] = 0
         cls.params[cf.REF_EST_METHOD] = 2
         cls.params[cf.DEM_FILE] = common.SYD_TEST_DEM_GAMMA
         cls.params[cf.APS_INCIDENCE_MAP] = common.SYD_TEST_INCIDENCE
@@ -396,8 +392,10 @@ class MPITests(unittest.TestCase):
         shutil.rmtree(cls.tif_dir_mpi)
 
     def test_metadata_was_copied(self):
-        for i in self.ifgs_mpi:
+        for j, i in zip(self.ifgs_serial, self.ifgs_mpi):
             md = i.meta_data
+            md_s = j.meta_data
+            self.assertIn(ifc.PYRATE_APS_ERROR, md_s.keys())
             self.assertIn(ifc.PYRATE_APS_ERROR, md.keys())
             self.assertIn(aps.APS_STATUS, md.values())
 
@@ -407,6 +405,7 @@ class MPITests(unittest.TestCase):
             ds = gdal.Open(i.data_path)
             md_w = ds.GetMetadata()
             self.assertDictEqual(md, md_w)
+            self.assertIn(ifc.PYRATE_APS_ERROR, md_w.keys())
             ds = None
 
     def test_dem_tifs_present(self):

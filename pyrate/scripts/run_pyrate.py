@@ -49,21 +49,20 @@ def process_ifgs(ifg_paths_or_instance, params):
 
     # remove APS delay here, and write aps delay removed ifgs disc
     if aps_delay_required(ifgs, params):
-        aps.remove_aps_delay(ifgs, params)
+        ifgs = aps.remove_aps_delay(ifgs, params)
 
-    # read in aps delay corrected ifgs
-    ifgs = pre_prepare_ifgs(ifg_paths_or_instance, params)
+        # now create the dataset, meta_data, wavelength, nan_converted
+        for i in ifgs:
+            i.close()
+            i.open()
+        #     i.nan_converted = True
 
     # Estimate and remove orbit errors
     if params[cf.ORBITAL_FIT] != 0:
         remove_orbital_error(ifgs, params)
 
     write_msg('Estimating and removing phase at reference pixel')
-    _, ifgs = rpe.estimate_ref_phase(ifgs, params, refpx, refpy)
-
-    # # save the mm converted data to disc ?
-    # for i in ifgs:
-    #     i.write_modified_phase()
+    rpe.estimate_ref_phase(ifgs, params, refpx, refpy)
 
     # TODO: assign maxvar to ifg metadata (and geotiff)?
     write_msg('Calculating maximum variance in interferograms')
@@ -127,7 +126,7 @@ def aps_delay_required(ifgs, params):
 
 
 def check_aps_ifgs(ifgs, flags):
-
+    print flags
     count = sum([f == aps.APS_STATUS for f in flags])
     if (count < len(flags)) and (count > 0):
         logging.debug('Detected mix of corrected and uncorrected '
@@ -178,9 +177,9 @@ def mst_calculation(ifg_paths_or_instance, params):
     return ifgs, mst_grid
 
 
-def pre_prepare_ifgs(ifg_paths_or_instance, params):
+def pre_prepare_ifgs(ifg_paths, params):
     nan_conversion = params[cf.NAN_CONVERSION]
-    ifgs = [Ifg(p) for p in ifg_paths_or_instance]
+    ifgs = [Ifg(p) for p in ifg_paths]
     for i in ifgs:
         if not i.is_open:
             i.open(readonly=False)
@@ -237,10 +236,18 @@ def insert_time_series_interpolation(ifg_instance_updated, params):
 
 def remove_orbital_error(ifgs, params):
     write_msg('Calculating orbital error correction')
+    print 'inside remove_orbital_error'
 
+    for i in ifgs:
+        print i.meta_data[ifc.PYRATE_APS_ERROR]
     if not params[cf.ORBITAL_FIT]:
         write_msg('Orbital correction not required')
         return
+
+    # make sure aps correction flags are consistent
+    if params[cf.APS_CORRECTION]:
+        flags = [i.dataset.GetMetadataItem(ifc.PYRATE_APS_ERROR) for i in ifgs]
+        check_aps_ifgs(ifgs, flags)
 
     # perform some general error/sanity checks
     flags = [i.dataset.GetMetadataItem(ifc.PYRATE_ORBITAL_ERROR) for i in ifgs]
@@ -276,6 +283,7 @@ def remove_orbital_error(ifgs, params):
     # write data to disc after orbital error correction
     for i in ifgs:
         i.dataset.SetMetadataItem(ifc.PYRATE_ORBITAL_ERROR, ORB_REMOVED)
+        # i.write_modified_phase()
         logging.debug('%s: orbital error removed' % i.data_path)
 
 
