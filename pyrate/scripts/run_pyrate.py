@@ -1,9 +1,5 @@
 """
 Main workflow script for PyRate
-
-Created on 17/09/2012
-@author: Ben Davies, NCI
-@author: Sudipta Basak, GA
 """
 
 import os, sys, shutil, logging, datetime
@@ -29,7 +25,6 @@ import pickle
 
 # constants for metadata flags
 ORB_REMOVED = 'REMOVED'
-pars = None
 PYRATEPATH = cf.PYRATEPATH
 
 # print screen output
@@ -44,8 +39,12 @@ def process_ifgs(ifg_paths_or_instance, params):
     """
     ifgs, mst_grid = mst_calculation(ifg_paths_or_instance, params)
 
+    for i in ifgs:
+        print i.data_path
+        print i.phase_data[:2, :2]
     # Estimate reference pixel location
     refpx, refpy = find_reference_pixel(ifgs, params)
+
 
     # remove APS delay here, and write aps delay removed ifgs disc
     if aps_delay_required(ifgs, params):
@@ -54,8 +53,15 @@ def process_ifgs(ifg_paths_or_instance, params):
         # now create the dataset, meta_data, wavelength, nan_converted
         for i in ifgs:
             i.close()
-            i.open()
-        #     i.nan_converted = True
+            i.open()  # This is enough since mm/nan_conversion has happened
+            # print i.data_path
+            # print i.phase_data[:10, :2]
+            # print 'i.dataset.GetNoDataValue()', i.dataset.GetRasterBand(1).GetNoDataValue()
+
+    # make sure aps correction flags are consistent
+    if params[cf.APS_CORRECTION]:
+        flags = [i.dataset.GetMetadataItem(ifc.PYRATE_APS_ERROR) for i in ifgs]
+        check_aps_ifgs(ifgs, flags)
 
     # Estimate and remove orbit errors
     if params[cf.ORBITAL_FIT] != 0:
@@ -126,7 +132,6 @@ def aps_delay_required(ifgs, params):
 
 
 def check_aps_ifgs(ifgs, flags):
-    print flags
     count = sum([f == aps.APS_STATUS for f in flags])
     if (count < len(flags)) and (count > 0):
         logging.debug('Detected mix of corrected and uncorrected '
@@ -181,13 +186,18 @@ def pre_prepare_ifgs(ifg_paths, params):
     nan_conversion = params[cf.NAN_CONVERSION]
     ifgs = [Ifg(p) for p in ifg_paths]
     for i in ifgs:
+
         if not i.is_open:
             i.open(readonly=False)
         if nan_conversion:  # nan conversion happens here in networkx mst
             i.nodata_value = params[cf.NO_DATA_VALUE]
             i.convert_to_nans()
         if not i.mm_converted:
+            print 'CONVERTED TO MM'
+            print i.phase_data[:2, :2]
             i.convert_to_mm()
+            print 'asfter'
+            print i.phase_data[:2, :2]
     return ifgs
 
 
@@ -236,18 +246,10 @@ def insert_time_series_interpolation(ifg_instance_updated, params):
 
 def remove_orbital_error(ifgs, params):
     write_msg('Calculating orbital error correction')
-    print 'inside remove_orbital_error'
 
-    for i in ifgs:
-        print i.meta_data[ifc.PYRATE_APS_ERROR]
     if not params[cf.ORBITAL_FIT]:
         write_msg('Orbital correction not required')
         return
-
-    # make sure aps correction flags are consistent
-    if params[cf.APS_CORRECTION]:
-        flags = [i.dataset.GetMetadataItem(ifc.PYRATE_APS_ERROR) for i in ifgs]
-        check_aps_ifgs(ifgs, flags)
 
     # perform some general error/sanity checks
     flags = [i.dataset.GetMetadataItem(ifc.PYRATE_ORBITAL_ERROR) for i in ifgs]
@@ -283,7 +285,6 @@ def remove_orbital_error(ifgs, params):
     # write data to disc after orbital error correction
     for i in ifgs:
         i.dataset.SetMetadataItem(ifc.PYRATE_ORBITAL_ERROR, ORB_REMOVED)
-        # i.write_modified_phase()
         logging.debug('%s: orbital error removed' % i.data_path)
 
 

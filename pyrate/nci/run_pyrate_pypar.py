@@ -82,19 +82,19 @@ def main(params=None):
     if not os.path.exists(mst_mat_binary_file):
         run_pyrate.write_msg('Calculation mst')
         if MPI_myID == MASTER_PROCESS:
-            mst_grid, _ = mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs,
+            mst_grid, ifgs = mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs,
                                           mpi_log_filename,
                                           num_processors, parallel, params)
             # write mst output to a file
             np.save(file=mst_mat_binary_file, arr=mst_grid)
         else:
-            mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs,
+            _, ifgs = mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs,
                                    mpi_log_filename,
                                    num_processors, parallel, params)
+        print 'finished mst computation'
     else:
         print 'Using previous mst calculation'
-
-    ifgs = run_pyrate.pre_prepare_ifgs(cropped_and_sampled_tifs, params)
+        ifgs = run_pyrate.pre_prepare_ifgs(cropped_and_sampled_tifs, params)
 
     parallel.barrier()
 
@@ -120,17 +120,16 @@ def main(params=None):
     if run_pyrate.aps_delay_required(ifgs, params):
         no_ifgs = len(ifgs)
         process_indices = parallel.calc_indices(no_ifgs)
-        process_ifgs = [itemgetter(p)(ifgs) for p in process_indices]
-        aps.remove_aps_delay(process_ifgs, params)
-
-    # close all ifgs in all processes
-    for i in ifgs:
-        i.close()
+        # process_ifgs = [itemgetter(p)(ifgs) for p in process_indices]
+        aps.remove_aps_delay(ifgs, params, process_indices)
 
     parallel.barrier()
 
     for i in ifgs:
+        i.close()
         i.open()
+        # print i.data_path
+        # print i.phase_data[:10, :2]
         # ds = gdal.Open(i.data_path, gdal.GA_ReadOnly)
         # print i.meta_data
         # i.phase_data = ds.ReadAsArray()

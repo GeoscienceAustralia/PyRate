@@ -330,6 +330,14 @@ class MPITests(unittest.TestCase):
                 self.tif_dir, '*_{looks}rlks_*cr.tif'.format(looks=looks)))
             self.assertEqual(len(mlooked_ifgs), 17)
             self.calc_non_mpi_time_series()
+            nrows, ncols = self.rate_mpi.shape
+            for r in nrows:
+                print r
+                print self.rate[r, :]
+                print self.rate_mpi[r, :]
+                np.testing.assert_array_almost_equal(self.rate[r, :],
+                                                     self.rate_mpi[r, :])
+
             np.testing.assert_array_almost_equal(self.rate,
                                                  self.rate_mpi,
                                                  decimal=4)

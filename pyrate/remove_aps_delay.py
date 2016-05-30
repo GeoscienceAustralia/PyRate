@@ -18,6 +18,7 @@ from pyrate import config as cf
 from pyrate import ifgconstants as ifc
 from pyrate import prepifg
 from pyrate import gamma
+from operator import itemgetter
 
 PYRATEPATH = os.environ['PYRATEPATH']
 ECMWF_DIR = os.path.join(PYRATEPATH, 'ECMWF')
@@ -30,7 +31,7 @@ GAMMA_PTN = re.compile(r'\d{8}')
 ROIPAC_PTN = re.compile(r'\d{6}')
 
 
-def remove_aps_delay(ifgs, params):
+def remove_aps_delay(input_ifgs, params, process_indices=None):
 
     def get_incidence_map():
         if params[cf.APS_ELEVATION_MAP] is not None:
@@ -56,6 +57,13 @@ def remove_aps_delay(ifgs, params):
             incidence_map = 90 - ds.ReadAsArray()
         ds = None  # close file
         return incidence_map
+
+    if process_indices is not None:
+        ifgs = [itemgetter(p)(input_ifgs) for p in process_indices]
+        [ifg.close() for i, ifg in enumerate(input_ifgs)
+         if i not in process_indices]
+    else:
+        ifgs = input_ifgs
 
     lat, lon, nx, ny, dem, mlooked_dem = read_dem(params)
     dem_header = (lon, lat, nx, ny)
@@ -86,7 +94,7 @@ def remove_aps_delay(ifgs, params):
         # write meta_data to file
         ifg.dataset.SetMetadataItem(ifc.PYRATE_APS_ERROR, APS_STATUS)
         ifg.write_modified_phase()
-        # ifg.close()  # close ifg files, required for gdal dataset to close files
+        ifg.close()  # close ifg files, required for gdal dataset to close files
 
     return ifgs
 
