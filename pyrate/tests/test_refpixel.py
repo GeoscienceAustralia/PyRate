@@ -376,6 +376,8 @@ class MPITest(unittest.TestCase):
         subprocess.check_call(cmd)
         ref_pixel_file = os.path.join(cls.params[cf.OUT_DIR], 'ref_pixel.npy')
         cls.ref_pixel = np.load(ref_pixel_file)
+        mst_file = os.path.join(cls.params[cf.OUT_DIR], 'mst_mat.npy')
+        os.remove(mst_file)
 
     @classmethod
     def tearDownClass(cls):
