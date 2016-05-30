@@ -643,7 +643,7 @@ class TestOneIncidenceOrElevationMap(unittest.TestCase):
     def common_check(self, ele, inc):
         os.path.exists(self.conf_file)
         params = cfg.get_config_params(self.conf_file)
-        sys.argv[1] = [self.conf_file]
+        sys.argv = ['dummy', self.conf_file]
         run_prepifg.main(params)
         # test geotiffs created
         geotifs = glob.glob(os.path.join(self.base_dir, '*_utm.tif'))
