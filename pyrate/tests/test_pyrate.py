@@ -251,5 +251,43 @@ class MSTParallelPyRateTests(unittest.TestCase):
         for i in common.sydney_data_setup(datafiles=self.dest_paths):
             self.key_check(i, key, value)
 
+
+class TestPrePrepareIfgs(unittest.TestCase):
+
+    def test_sydney_data_prep(self):
+        from pyrate.shared import Ifg
+        import numpy as np
+        tmp_dir = tempfile.mkdtemp()
+        shared.copytree(common.SYD_TEST_TIF, tmp_dir)
+        tifs = glob.glob(os.path.join(tmp_dir, "*.tif"))
+        for t in tifs:
+            os.chmod(t, 0644)
+        sydney_ifgs = common.sydney_data_setup(datafiles=tifs)
+        params = config.get_config_params(common.SYDNEY_TEST_CONF)
+
+        ifg_paths = [i.data_path for i in sydney_ifgs]
+
+        ifg_ret = run_pyrate.pre_prepare_ifgs(ifg_paths, params=params)
+
+        nan_conversion = params[cf.NAN_CONVERSION]
+
+        ifgs = [Ifg(p) for p in ifg_paths]
+
+        for i in ifgs:
+            if not i.is_open:
+                i.open(readonly=False)
+            if nan_conversion:  # nan conversion happens here in networkx mst
+                i.nodata_value = params[cf.NO_DATA_VALUE]
+                i.convert_to_nans()
+            if not i.mm_converted:
+                i.convert_to_mm()
+
+        for i, j in zip(ifgs, ifg_ret):
+            np.testing.assert_array_almost_equal(i.phase_data, j.phase_data)
+            self.assertFalse((i.phase_data == 0).any())
+            # if there was any 0 still present
+            i.phase_data[4, 2] = 0
+            self.assertTrue((i.phase_data == 0).any())
+
 if __name__ == "__main__":
     unittest.main()

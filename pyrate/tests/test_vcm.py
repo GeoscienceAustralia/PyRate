@@ -198,8 +198,6 @@ class MatlabEqualityTestInRunPyRateSequence(unittest.TestCase):
 
         # Calculate interferogram noise
         cls.maxvar = [cvd(i)[0] for i in ifgs]
-        print 'matlab test'
-        print cls.maxvar
         cls.vcmt = get_vcmt(ifgs, cls.maxvar)
 
     @classmethod
@@ -218,7 +216,7 @@ class MatlabEqualityTestInRunPyRateSequence(unittest.TestCase):
         np.testing.assert_array_almost_equal(matlab_vcm, self.vcmt, decimal=3)
 
 
-class MaxVarVcmtMPITest(unittest.TestCase):
+class MPITests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -233,6 +231,7 @@ class MaxVarVcmtMPITest(unittest.TestCase):
             common.SYD_TEST_GAMMA, 'ifms_17')
         cls.params[cf.OUT_DIR] = cls.tif_dir
         cls.params[cf.PARALLEL] = 0
+        cls.params[cf.APS_CORRECTION] = 0
         cls.params[cf.REF_EST_METHOD] = 1
         # base_unw_paths need to be geotiffed and multilooked by run_prepifg
         cls.base_unw_paths = run_pyrate.original_ifg_paths(
@@ -245,6 +244,7 @@ class MaxVarVcmtMPITest(unittest.TestCase):
         # dest_paths are tifs that have been geotif converted and multilooked
         dest_paths = run_pyrate.get_dest_paths(
             cls.base_unw_paths, crop, cls.params, xlks)
+
         run_prepifg.gamma_prepifg(base_unw_paths, cls.params)
         cls.ifgs = common.sydney_data_setup(datafiles=dest_paths)
         cls.log_file = os.path.join(cls.tif_dir, 'maxvar_mpi.log')
@@ -261,6 +261,8 @@ class MaxVarVcmtMPITest(unittest.TestCase):
         cls.maxvar = np.load(maxvar_file)
         vcmt_file = os.path.join(cls.params[cf.OUT_DIR], 'vcmt.npy')
         cls.vcmt = np.load(vcmt_file)
+        mst_file = os.path.join(cls.params[cf.OUT_DIR], 'mst_mat.npy')
+        os.remove(mst_file)
 
     def calc_non_mpi_maxvar(self):
         for i in self.ifgs:
@@ -277,12 +279,10 @@ class MaxVarVcmtMPITest(unittest.TestCase):
             run_pyrate.remove_orbital_error(self.ifgs, self.params)
 
         refx, refy = run_pyrate.find_reference_pixel(self.ifgs, self.params)
-        _, ifgs = rpe.estimate_ref_phase(self.ifgs, self.params, refx, refy)
+        rpe.estimate_ref_phase(self.ifgs, self.params, refx, refy)
 
-        if self.params[cf.ORBITAL_FIT] != 0:
-            run_pyrate.remove_orbital_error(self.ifgs, self.params)
         maxvar = [cvd(i)[0] for i in self.ifgs]
-        vcmt = vcm_module.get_vcmt(ifgs, maxvar)
+        vcmt = vcm_module.get_vcmt(self.ifgs, maxvar)
         return maxvar, vcmt
 
     @classmethod

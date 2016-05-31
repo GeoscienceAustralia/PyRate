@@ -205,7 +205,7 @@ class IfgPartTest(unittest.TestCase):
         np.testing.assert_array_equal(original_mst, parallel_mst)
 
 
-class MPITest(unittest.TestCase):
+class MPITests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -220,6 +220,7 @@ class MPITest(unittest.TestCase):
             common.SYD_TEST_GAMMA, 'ifms_17')
         params[cf.OUT_DIR] = cls.tif_dir
         params[cf.PARALLEL] = 1
+        params[cf.APS_CORRECTION] = 0
 
         xlks, ylks, crop = run_pyrate.transform_params(params)
 

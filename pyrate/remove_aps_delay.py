@@ -12,12 +12,13 @@ import sys
 import os
 import re
 import glob2
+import parmap
 from osgeo import gdalconst, gdal
 from pyrate import config as cf
 from pyrate import ifgconstants as ifc
 from pyrate import prepifg
 from pyrate import gamma
-
+from operator import itemgetter
 
 PYRATEPATH = os.environ['PYRATEPATH']
 ECMWF_DIR = os.path.join(PYRATEPATH, 'ECMWF')
@@ -26,9 +27,163 @@ ECMWF_EXT = '_12.grib'  # TODO: build dynamically with closest available grib
 APS_STATUS = 'REMOVED'
 GEOTIFF = 'GEOTIFF'
 ECMWF = 'ECMWF'
+GAMMA_PTN = re.compile(r'\d{8}')
+ROIPAC_PTN = re.compile(r'\d{6}')
 
 
-def remove_aps_delay(ifgs, params):
+def remove_aps_delay(input_ifgs, params, process_indices=None):
+
+    def get_incidence_map():
+        if params[cf.APS_ELEVATION_MAP] is not None:
+            f, e = os.path.basename(params[cf.APS_ELEVATION_MAP]).split(
+                '.')
+        else:
+            f, e = os.path.basename(params[cf.APS_INCIDENCE_MAP]).split(
+                '.')
+        multilooked = os.path.join(
+            params[cf.OUT_DIR],
+            f + '_' + e +
+            '_{looks}rlks_{crop}cr.tif'.format(
+                looks=params[cf.IFG_LKSX],
+                crop=params[
+                    cf.IFG_CROP_OPT]))
+        assert os.path.exists(multilooked), \
+            'cropped and multilooked incidence map file not found. ' \
+            'Use apsmethod=1, Or run prepifg with gamma processor'
+        ds = gdal.Open(multilooked, gdalconst.GA_ReadOnly)
+        if params[cf.APS_INCIDENCE_MAP] is not None:
+            incidence_map = ds.ReadAsArray()
+        else:
+            incidence_map = 90 - ds.ReadAsArray()
+        ds = None  # close file
+        return incidence_map
+
+    if process_indices is not None:
+        ifgs = [itemgetter(p)(input_ifgs) for p in process_indices]
+        [ifg.close() for i, ifg in enumerate(input_ifgs)
+         if i not in process_indices]
+    else:
+        ifgs = input_ifgs
+
+    lat, lon, nx, ny, dem, mlooked_dem = read_dem(params)
+    dem_header = (lon, lat, nx, ny)
+
+    incidence_angle = None
+    incidence_map = get_incidence_map()
+    list_of_dates_for_grb_download = []
+
+    parallel = params[cf.PARALLEL]
+    data_paths = [i.data_path for i in ifgs]
+
+    if parallel:
+        aps_delay = parmap.map(parallel_aps, data_paths, dem, dem_header,
+                               incidence_angle,
+                               incidence_map, list_of_dates_for_grb_download,
+                               mlooked_dem, params)
+    else:
+        aps_delay = []
+        for d in data_paths:  # demo for only one ifg
+            aps_delay.append(parallel_aps(d, dem, dem_header, incidence_angle,
+                                     incidence_map, list_of_dates_for_grb_download,
+                                     mlooked_dem, params))
+
+    for i, ifg in enumerate(ifgs):
+        ifg.phase_data -= aps_delay[i]  # remove delay
+        # add to ifg.meta_data
+        ifg.meta_data[ifc.PYRATE_APS_ERROR] = APS_STATUS
+        # write meta_data to file
+        ifg.dataset.SetMetadataItem(ifc.PYRATE_APS_ERROR, APS_STATUS)
+        ifg.write_modified_phase()
+        # ifg.close()  # close ifg files, required for gdal dataset to close files
+
+    return ifgs
+
+
+def parallel_aps(data_path, dem, dem_header, incidence_angle, incidence_map,
+                 list_of_dates_for_grb_download, mlooked_dem, params):
+    if params[cf.PROCESSOR] == 1:  # gamma
+        date_pair = [i for i in GAMMA_PTN.findall(os.path.basename(data_path))]
+    elif params[cf.PROCESSOR] == 0:  # roipac
+        # adding 20 to dates here, so dates before 2000 won't work
+        # TODO: fix pre 2000 dates
+        date_pair = ['20' + i for i in
+                     ROIPAC_PTN.findall(os.path.basename(data_path))]
+    else:
+        raise AttributeError('processor needs to be gamma(1) or roipac(0)')
+    list_of_dates_for_grb_download += date_pair
+    first_grb = os.path.join(ECMWF_DIR,
+                             ECMWF_PRE + date_pair[0] + ECMWF_EXT)
+    second_grb = os.path.join(ECMWF_DIR,
+                              ECMWF_PRE + date_pair[1] + ECMWF_EXT)
+    # download .grb file if does not exist
+    if not (os.path.exists(first_grb) and os.path.exists(second_grb)):
+        # download weather files at 12:00 UTC (other options 00:00, 06:00, 18:00)
+        pa.ecmwf_download(date_pair, '12', 'ECMWF')
+
+    # rdr_correction(date_pair)
+    # TODO: lat lon correction when lat and lon files are available
+    # aps1.getgeodelay(phs1, inc=23.0, wvl=0.056,
+    #   lat=os.path.join(PYAPS_EXAMPLES, 'lat.flt'),
+    #   lon=os.path.join(PYAPS_EXAMPLES, 'lon.flt'))
+    # aps2.getgeodelay(phs2, inc=23.0, wvl=0.056,
+    #   lat=os.path.join(PYAPS_EXAMPLES, 'lat.flt'),
+    #   lon=os.path.join(PYAPS_EXAMPLES, 'lon.flt'))
+    # LLphs = phs2-phs1
+    # print dem_header, mlooked_dem
+    if params[cf.APS_METHOD] == 1:
+        # no need to calculate incidence angle for all ifgs, they are the same
+        if incidence_angle is None:
+            incidence_angle = get_incidence_angle(date_pair, params)
+        aps_delay = geo_correction(date_pair, dem_header, dem, incidence_angle)
+    elif params[cf.APS_METHOD] == 2:
+        # no need to calculate incidence map for all ifgs, they are the same
+        aps_delay = geo_correction(date_pair, dem_header, dem, incidence_map)
+    else:
+        raise APSException('APS method must be 1 or 2')
+    return aps_delay
+
+
+def rdr_correction(date_pair):
+    """ using rdr coordinates to remove APS """
+    raise NotImplementedError("This has not been implemented yet for PyRate")
+    # aps1 = pa.PyAPS_rdr(
+    #     os.path.join(ECMWF_DIR, ECMWF_PRE + date_pair[0] + ECMWF_EXT),
+    #     SYD_TEST_DEM_ROIPAC, grib='ECMWF', verb=True,
+    #     demfmt='HGT', demtype=np.int16)
+    # aps2 = pa.PyAPS_rdr(
+    #     os.path.join(ECMWF_DIR, ECMWF_PRE + date_pair[1] + ECMWF_EXT),
+    #     SYD_TEST_DEM_ROIPAC, grib='ECMWF', verb=True,
+    #     demfmt='HGT', demtype=np.int16)
+    # phs1 = np.zeros((aps1.ny, aps1.nx))
+    # phs2 = np.zeros((aps2.ny, aps2.nx))
+    # print 'Without Lat Lon files'
+    # # using random incidence angle
+    # aps1.getdelay(phs1, inc=23.0)
+    # aps2.getdelay(phs2, inc=23.0)
+    # aps_delay = phs2 - phs1  # delay in meters as we don't provide wavelength
+    # return aps_delay
+
+
+def geo_correction(date_pair, dem_header, dem, incidence_angle_or_map):
+
+    """ using geo coordinates to remove APS """
+
+    aps1 = pa.PyAPSPyRateGeo(
+        os.path.join(ECMWF_DIR, ECMWF_PRE + date_pair[0] + ECMWF_EXT),
+        dem_header=dem_header, dem=dem, grib=ECMWF, verb=True)
+    aps2 = pa.PyAPSPyRateGeo(
+        os.path.join(ECMWF_DIR, ECMWF_PRE + date_pair[1] + ECMWF_EXT),
+        dem_header=dem_header, dem=dem, grib=ECMWF, verb=True)
+    phs1 = np.zeros((aps1.ny, aps1.nx))
+    phs2 = np.zeros((aps2.ny, aps2.nx))
+    print 'Without Lat Lon files'
+    aps1.getdelay_pyrate(phs1, dem, inc=incidence_angle_or_map)
+    aps2.getdelay_pyrate(phs2, dem, inc=incidence_angle_or_map)
+    aps_delay = phs2 - phs1  # delay in meters as we don't provide wavelength
+    return aps_delay
+
+
+def remove_aps_delay_original(ifgs, params):
     list_of_dates_for_grb_download = []
 
     incidence_angle = None
@@ -57,17 +212,6 @@ def remove_aps_delay(ifgs, params):
         if not (os.path.exists(first_grb) and os.path.exists(second_grb)):
             # download weather files at 12:00 UTC (other options 00:00, 06:00, 18:00)
             pa.ecmwf_download(date_pair, '12', 'ECMWF')
-
-        # rdr_correction(date_pair)
-
-        # TODO: lat lon correction when lat and lon files are available
-        # aps1.getgeodelay(phs1, inc=23.0, wvl=0.056,
-        #   lat=os.path.join(PYAPS_EXAMPLES, 'lat.flt'),
-        #   lon=os.path.join(PYAPS_EXAMPLES, 'lon.flt'))
-        # aps2.getgeodelay(phs2, inc=23.0, wvl=0.056,
-        #   lat=os.path.join(PYAPS_EXAMPLES, 'lat.flt'),
-        #   lon=os.path.join(PYAPS_EXAMPLES, 'lon.flt'))
-        # LLphs = phs2-phs1
 
         def get_incidence_map():
             """
@@ -113,7 +257,8 @@ def remove_aps_delay(ifgs, params):
                 else:  # elevation map was provided
                     assert params[cf.APS_ELEVATION_MAP] is not None
                     incidence_map = get_incidence_map()
-            aps_delay = geo_correction(date_pair, params, incidence_map)
+            aps_delay = geo_correction_original(date_pair, params,
+                                                incidence_map)
         else:
             raise APSException('APS method must be 1 or 2')
 
@@ -127,28 +272,7 @@ def remove_aps_delay(ifgs, params):
         ifg.write_modified_phase()
 
 
-def rdr_correction(date_pair):
-    """ using rdr coordinates to remove APS """
-    raise NotImplementedError("This has not been implemented yet for PyRate")
-    # aps1 = pa.PyAPS_rdr(
-    #     os.path.join(ECMWF_DIR, ECMWF_PRE + date_pair[0] + ECMWF_EXT),
-    #     SYD_TEST_DEM_ROIPAC, grib='ECMWF', verb=True,
-    #     demfmt='HGT', demtype=np.int16)
-    # aps2 = pa.PyAPS_rdr(
-    #     os.path.join(ECMWF_DIR, ECMWF_PRE + date_pair[1] + ECMWF_EXT),
-    #     SYD_TEST_DEM_ROIPAC, grib='ECMWF', verb=True,
-    #     demfmt='HGT', demtype=np.int16)
-    # phs1 = np.zeros((aps1.ny, aps1.nx))
-    # phs2 = np.zeros((aps2.ny, aps2.nx))
-    # print 'Without Lat Lon files'
-    # # using random incidence angle
-    # aps1.getdelay(phs1, inc=23.0)
-    # aps2.getdelay(phs2, inc=23.0)
-    # aps_delay = phs2 - phs1  # delay in meters as we don't provide wavelength
-    # return aps_delay
-
-
-def geo_correction(date_pair, params, incidence_angle_or_map):
+def geo_correction_original(date_pair, params, incidence_angle_or_map):
 
     dem_file = params[cf.DEM_FILE]
     geotif_dem = os.path.join(
@@ -183,6 +307,26 @@ def geo_correction(date_pair, params, incidence_angle_or_map):
     aps2.getdelay(phs2, inc=incidence_angle_or_map)
     aps_delay = phs2 - phs1  # delay in meters as we don't provide wavelength
     return aps_delay
+
+
+def read_dem(params):
+    dem_file = params[cf.DEM_FILE]
+    geotif_dem = os.path.join(
+        params[cf.OUT_DIR], os.path.basename(dem_file).split('.')[0] + '.tif')
+    mlooked_dem = prepifg.mlooked_path(geotif_dem,
+                                       looks=params[cf.IFG_LKSX],
+                                       crop_out=params[cf.IFG_CROP_OPT])
+    # make sure mlooked dem exist
+    if not os.path.exists(mlooked_dem):
+        raise prepifg.PreprocessError('mlooked dem was not found.'
+                                      'Please run prepifg.')
+    dem_header = gamma.parse_dem_header(params[cf.DEM_HEADER_FILE])
+    lat, lon, nx, ny = return_pyaps_lat_lon(dem_header)
+
+    ds = gdal.Open(mlooked_dem, gdalconst.GA_ReadOnly)
+    dem = ds.ReadAsArray()
+    ds = None
+    return lat, lon, nx, ny, dem, mlooked_dem
 
 
 def get_incidence_angle(date_pair, params):

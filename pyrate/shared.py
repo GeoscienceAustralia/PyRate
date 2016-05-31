@@ -306,16 +306,15 @@ class Ifg(RasterBase):
             logging.debug(msg % self.data_path)
             self.phase_data = self.phase_data
             return
-        #elif self.dataset.GetMetadataItem(ifc.PYRATE_PHASE_UNITS) == RADIANS:
-        self.phase_data = convert_radians_to_mm(self.phase_data,
-                                                      self.wavelength)
-        self.dataset.SetMetadataItem(ifc.PYRATE_PHASE_UNITS, MILLIMETRES)
-        msg = '%s: converted phase units to millimetres'
-        logging.debug(msg % self.data_path)
-        # TODO: implement test for when units neither mm or radians
-        #else:
-        #    msg = 'Phase units are not millimetres or radians'
-        #    raise IfgException(msg)
+        elif self.dataset.GetMetadataItem(ifc.PYRATE_PHASE_UNITS) == RADIANS:
+            self.phase_data = convert_radians_to_mm(self.phase_data,
+                                                          self.wavelength)
+            self.dataset.SetMetadataItem(ifc.PYRATE_PHASE_UNITS, MILLIMETRES)
+            msg = '%s: converted phase units to millimetres'
+            logging.debug(msg % self.data_path)
+        else:
+           msg = 'Phase units are not millimetres or radians'
+           raise IfgException(msg)
 
 
     @phase_data.setter

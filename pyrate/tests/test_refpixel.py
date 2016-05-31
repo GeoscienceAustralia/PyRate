@@ -353,6 +353,7 @@ class MPITest(unittest.TestCase):
         cls.params[cf.OUT_DIR] = cls.tif_dir
         cls.params[cf.PARALLEL] = 1
         cls.params[cf.REF_EST_METHOD] = 1
+        cls.params[cf.APS_CORRECTION] = 0
         # base_unw_paths need to be geotiffed and multilooked by run_prepifg
         cls.base_unw_paths = run_pyrate.original_ifg_paths(
             cls.params[cf.IFG_FILE_LIST])
@@ -375,6 +376,8 @@ class MPITest(unittest.TestCase):
         subprocess.check_call(cmd)
         ref_pixel_file = os.path.join(cls.params[cf.OUT_DIR], 'ref_pixel.npy')
         cls.ref_pixel = np.load(ref_pixel_file)
+        mst_file = os.path.join(cls.params[cf.OUT_DIR], 'mst_mat.npy')
+        os.remove(mst_file)
 
     @classmethod
     def tearDownClass(cls):

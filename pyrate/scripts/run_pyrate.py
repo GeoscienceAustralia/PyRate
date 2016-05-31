@@ -1,9 +1,5 @@
 """
 Main workflow script for PyRate
-
-Created on 17/09/2012
-@author: Ben Davies, NCI
-@author: Sudipta Basak, GA
 """
 
 import os, sys, shutil, logging, datetime
@@ -29,7 +25,6 @@ import pickle
 
 # constants for metadata flags
 ORB_REMOVED = 'REMOVED'
-pars = None
 PYRATEPATH = cf.PYRATEPATH
 
 # print screen output
@@ -39,7 +34,7 @@ VERBOSE = True
 def process_ifgs(ifg_paths_or_instance, params):
     """
     Top level function to perform PyRate correction steps on given ifgs
-    ifgs: sequence of paths to interferograms (NB: changes are saved into ifgs)
+    ifgs: sequence of paths to interferrograms (NB: changes are saved into ifgs)
     params: dictionary of configuration parameters
     """
     ifgs, mst_grid = mst_calculation(ifg_paths_or_instance, params)
@@ -47,20 +42,22 @@ def process_ifgs(ifg_paths_or_instance, params):
     # Estimate reference pixel location
     refpx, refpy = find_reference_pixel(ifgs, params)
 
-    # remove APS delay here
-    if params[cf.APS_CORRECTION] != 0:
-        aps.remove_aps_delay(ifgs, params)
+    # remove APS delay here, and write aps delay removed ifgs disc
+    if aps_delay_required(ifgs, params):
+        ifgs = aps.remove_aps_delay(ifgs, params)
+        print 'Finished APS delay correction'
+
+    # make sure aps correction flags are consistent
+    if params[cf.APS_CORRECTION]:
+        flags = [i.dataset.GetMetadataItem(ifc.PYRATE_APS_ERROR) for i in ifgs]
+        check_aps_ifgs(ifgs, flags)
 
     # Estimate and remove orbit errors
     if params[cf.ORBITAL_FIT] != 0:
         remove_orbital_error(ifgs, params)
 
     write_msg('Estimating and removing phase at reference pixel')
-    _, ifgs = rpe.estimate_ref_phase(ifgs, params, refpx, refpy)
-
-    # # save the mm converted data to disc ?
-    # for i in ifgs:
-    #     i.write_modified_phase()
+    rpe.estimate_ref_phase(ifgs, params, refpx, refpy)
 
     # TODO: assign maxvar to ifg metadata (and geotiff)?
     write_msg('Calculating maximum variance in interferograms')
@@ -104,9 +101,43 @@ def process_ifgs(ifg_paths_or_instance, params):
     write_msg('PyRate workflow completed')
 
 
+def aps_delay_required(ifgs, params):
+    write_msg('Removing APS delay')
+
+    if not params[cf.APS_CORRECTION]:
+        write_msg('APS delay removal not required')
+        return False
+
+    # perform some general error/sanity checks
+    flags = [i.dataset.GetMetadataItem(ifc.PYRATE_APS_ERROR) for i in ifgs]
+
+    if all(flags):
+        write_msg('Skipped APS delay removal, ifgs are already aps corrected')
+        return False
+    else:
+        check_aps_ifgs(ifgs, flags)
+
+    return True
+
+
+def check_aps_ifgs(ifgs, flags):
+    count = sum([f == aps.APS_STATUS for f in flags])
+    if (count < len(flags)) and (count > 0):
+        logging.debug('Detected mix of corrected and uncorrected '
+                      'APS delay in ifgs')
+
+        for i, flag in zip(ifgs, flags):
+            if flag:
+                msg = '%s: prior APS delay correction detected'
+            else:
+                msg = '%s: no APS delay correction detected'
+            logging.debug(msg % i.data_path)
+        raise aps.APSException('Mixed APS removal status in ifg list')
+
+
 def mst_calculation(ifg_paths_or_instance, params):
     if isinstance(ifg_paths_or_instance, list):
-        ifgs = prepare_ifgs_for_networkx_mst(ifg_paths_or_instance, params)
+        ifgs = pre_prepare_ifgs(ifg_paths_or_instance, params)
         write_msg(
             'Calculating minimum spanning tree matrix using NetworkX method')
 
@@ -140,9 +171,9 @@ def mst_calculation(ifg_paths_or_instance, params):
     return ifgs, mst_grid
 
 
-def prepare_ifgs_for_networkx_mst(ifg_paths_or_instance, params):
+def pre_prepare_ifgs(ifg_paths, params):
     nan_conversion = params[cf.NAN_CONVERSION]
-    ifgs = [Ifg(p) for p in ifg_paths_or_instance]
+    ifgs = [Ifg(p) for p in ifg_paths]
     for i in ifgs:
         if not i.is_open:
             i.open(readonly=False)
