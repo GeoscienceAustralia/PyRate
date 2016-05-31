@@ -4,7 +4,8 @@ from pyrate.prepifg import (
     Ifg,
     getAnalysisExtent,
     mlooked_path,
-    prepare_ifg)
+    prepare_ifg,
+    PreprocessError)
 from pyrate.tasks.converttogeotif import ConvertToGeotiff
 from pyrate.tasks.utils import (
     IfgListMixin,
@@ -34,8 +35,7 @@ class GetAnalysisExtents(IfgListMixin, luigi.Task):
 
         if not all(userExts):
             if self.crop_opt == 3:
-                raise PrepifgException('all 4 extents must be provided with '
-                                       'crop_opt 3')
+                raise PreprocessError('No custom cropping extents specified')
             userExts = None
 
         ifgs = [Ifg(path) for path in self.ifgTiffList()]
