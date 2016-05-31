@@ -160,7 +160,6 @@ class PrepifgOutputTests(unittest.TestCase):
         for t in projections[1:]:
             self.assertEqual(t, head)
 
-
     def test_multilooked_projection_same_as_geotiff(self):
         xlooks = ylooks = 1
         prepare_ifgs(self.ifg_paths, MAXIMUM_CROP, xlooks, ylooks)
@@ -232,6 +231,21 @@ class PrepifgOutputTests(unittest.TestCase):
         for i in self.ifgs:
             i.close()
 
+    def test_exception_without_all_4_crop_parameters(self):
+        """Test misaligned cropping extents raise errors."""
+        xlooks = ylooks = 1
+        # empty string and none raises exceptio
+        for i in [None, '']:
+            cext = (150.92, -34.18, 150.94, i)
+            self.assertRaises(PreprocessError, prepare_ifgs, self.ifg_paths,
+                                  CUSTOM_CROP, xlooks, ylooks, user_exts=cext)
+        # three parameters provided
+        self.assertRaises(PreprocessError, prepare_ifgs, self.ifg_paths,
+                          CUSTOM_CROP, xlooks, ylooks,
+                          user_exts=(150.92, -34.18, 150.94))
+        # close ifgs
+        for i in self.ifgs:
+            i.close()
 
     def test_custom_extents_misalignment(self):
         """Test misaligned cropping extents raise errors."""
