@@ -39,24 +39,13 @@ def process_ifgs(ifg_paths_or_instance, params):
     """
     ifgs, mst_grid = mst_calculation(ifg_paths_or_instance, params)
 
-    for i in ifgs:
-        print i.data_path
-        print i.phase_data[:2, :2]
     # Estimate reference pixel location
     refpx, refpy = find_reference_pixel(ifgs, params)
-
 
     # remove APS delay here, and write aps delay removed ifgs disc
     if aps_delay_required(ifgs, params):
         ifgs = aps.remove_aps_delay(ifgs, params)
-
-        # now create the dataset, meta_data, wavelength, nan_converted
-        for i in ifgs:
-            i.close()
-            i.open()  # This is enough since mm/nan_conversion has happened
-            # print i.data_path
-            # print i.phase_data[:10, :2]
-            # print 'i.dataset.GetNoDataValue()', i.dataset.GetRasterBand(1).GetNoDataValue()
+        print 'Finished APS delay correction'
 
     # make sure aps correction flags are consistent
     if params[cf.APS_CORRECTION]:
@@ -186,18 +175,13 @@ def pre_prepare_ifgs(ifg_paths, params):
     nan_conversion = params[cf.NAN_CONVERSION]
     ifgs = [Ifg(p) for p in ifg_paths]
     for i in ifgs:
-
         if not i.is_open:
             i.open(readonly=False)
         if nan_conversion:  # nan conversion happens here in networkx mst
             i.nodata_value = params[cf.NO_DATA_VALUE]
             i.convert_to_nans()
         if not i.mm_converted:
-            print 'CONVERTED TO MM'
-            print i.phase_data[:2, :2]
             i.convert_to_mm()
-            print 'asfter'
-            print i.phase_data[:2, :2]
     return ifgs
 
 
