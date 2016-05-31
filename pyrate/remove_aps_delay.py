@@ -94,7 +94,7 @@ def remove_aps_delay(input_ifgs, params, process_indices=None):
         # write meta_data to file
         ifg.dataset.SetMetadataItem(ifc.PYRATE_APS_ERROR, APS_STATUS)
         ifg.write_modified_phase()
-        ifg.close()  # close ifg files, required for gdal dataset to close files
+        # ifg.close()  # close ifg files, required for gdal dataset to close files
 
     return ifgs
 

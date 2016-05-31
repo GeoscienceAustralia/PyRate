@@ -79,22 +79,18 @@ def main(params=None):
 
     # Calc mst using MPI
     mst_mat_binary_file = os.path.join(params[cf.OUT_DIR], 'mst_mat.npy')
-    if not os.path.exists(mst_mat_binary_file):
-        run_pyrate.write_msg('Calculation mst')
-        if MPI_myID == MASTER_PROCESS:
-            mst_grid, ifgs = mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs,
-                                          mpi_log_filename,
-                                          num_processors, parallel, params)
-            # write mst output to a file
-            np.save(file=mst_mat_binary_file, arr=mst_grid)
-        else:
-            _, ifgs = mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs,
-                                   mpi_log_filename,
-                                   num_processors, parallel, params)
-        print 'finished mst computation'
+    run_pyrate.write_msg('Calculating mst')
+    if MPI_myID == MASTER_PROCESS:
+        _, ifgs = mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs,
+                               mpi_log_filename,
+                               num_processors, parallel, params,
+                               mst_mat_binary_file)
     else:
-        print 'Using previous mst calculation'
-        ifgs = run_pyrate.pre_prepare_ifgs(cropped_and_sampled_tifs, params)
+        _, ifgs = mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs,
+                               mpi_log_filename,
+                               num_processors, parallel, params,
+                               mst_mat_binary_file)
+    print 'finished mst computation'
 
     parallel.barrier()
 
@@ -121,19 +117,9 @@ def main(params=None):
         no_ifgs = len(ifgs)
         process_indices = parallel.calc_indices(no_ifgs)
         # process_ifgs = [itemgetter(p)(ifgs) for p in process_indices]
-        aps.remove_aps_delay(ifgs, params, process_indices)
+        ifgs = aps.remove_aps_delay(ifgs, params, process_indices)
 
     parallel.barrier()
-
-    for i in ifgs:
-        i.close()
-        i.open()
-        # print i.data_path
-        # print i.phase_data[:10, :2]
-        # ds = gdal.Open(i.data_path, gdal.GA_ReadOnly)
-        # print i.meta_data
-        # i.phase_data = ds.ReadAsArray()
-        # ds = None
 
     parallel.barrier()
     # every proces writing ifgs - BAD, TODO: Remove this step
@@ -417,7 +403,8 @@ def ref_pixel_calc_mpi(MPI_myID, ifgs, num_processors, parallel, params):
 
 
 def mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs, mpi_log_filename,
-                 num_processors, parallel, params):
+                 num_processors, parallel, params,
+                 mst_file):
     run_pyrate.write_msg('Calculating minimum spanning tree matrix '
                          'using NetworkX method')
     ifgs = run_pyrate.pre_prepare_ifgs(cropped_and_sampled_tifs,
@@ -451,6 +438,8 @@ def mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs, mpi_log_filename,
         output_log_file = open(mpi_log_filename, "a")
         output_log_file.write("\n\n Mst caclulation finished\n")
         output_log_file.close()
+        # write mst output to a file
+        np.save(file=mst_file, arr=result)
         return result, ifgs
     else:
         # send the result arrays
