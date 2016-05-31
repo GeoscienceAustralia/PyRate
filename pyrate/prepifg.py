@@ -44,6 +44,14 @@ CROP_OPTIONS = [MINIMUM_CROP, MAXIMUM_CROP, CUSTOM_CROP, ALREADY_SAME_SIZE]
 
 GRID_TOL = 1e-6
 
+
+def is_number(s):
+    try:
+        float(s)
+        return True
+    except:
+        return False
+
 def getAnalysisExtent(
         cropOpt,
         rasters,
@@ -54,8 +62,14 @@ def getAnalysisExtent(
     if cropOpt not in CROP_OPTIONS:
         raise PreprocessError("Unrecognised crop option: %s" % cropOpt)
 
-    if cropOpt == CUSTOM_CROP and not userExts:
-        raise PreprocessError('No custom cropping extents specified')
+    if cropOpt == CUSTOM_CROP:
+        if not userExts:
+            raise PreprocessError('No custom cropping extents specified')
+        elif len(userExts) != 4: # check for required numbers
+            raise PreprocessError('Custom extents must have all 4 values')
+        elif len(userExts) == 4:  # check for non floats
+            if not all([is_number(z) for z in userExts]):
+                raise PreprocessError('Custom extents must be 4 numbers')
 
     for raster in rasters:
         if not raster.is_open:
