@@ -338,7 +338,7 @@ class MPITests(unittest.TestCase):
         cls.params[cf.IFG_FILE_LIST] = tempfile.mktemp(dir=cls.tif_dir_serial)
         # write a short filelist with only 3 gamma unws
         with open(cls.params[cf.IFG_FILE_LIST], 'w') as fp:
-            for f in file_list[:4]:
+            for f in file_list[:2]:
                 fp.write(os.path.join(common.SYD_TEST_GAMMA, f) + '\n')
         cls.params[cf.OUT_DIR] = cls.tif_dir_serial
         cls.params[cf.PARALLEL] = 0
@@ -421,7 +421,7 @@ class MPITests(unittest.TestCase):
                            looks=self.params_mpi[cf.IFG_LKSX],
                            crop=self.params_mpi[cf.IFG_CROP_OPT])))
 
-    def test_method1_method2_equal_with_uniform_incidence_map(self):
+    def test_serial_vs_mpi_equal(self):
         for i, j in zip(self.ifgs_serial, self.ifgs_mpi):
             np.testing.assert_array_almost_equal(i.phase_data, j.phase_data,
                                                  decimal=4)
