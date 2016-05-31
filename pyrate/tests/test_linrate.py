@@ -321,7 +321,6 @@ class MPITests(unittest.TestCase):
     def test_mpi_mst_single_processor(self):
         # TODO: Why MPI test fails for looks > 2
         for looks, ref_method in product([1, 2], [1, 2]):
-            print 'looks, ref_method', looks, ref_method
             self.params[cf.IFG_LKSX] = looks
             self.params[cf.IFG_LKSY] = looks
             self.params[cf.REF_EST_METHOD] = ref_method
@@ -330,14 +329,6 @@ class MPITests(unittest.TestCase):
                 self.tif_dir, '*_{looks}rlks_*cr.tif'.format(looks=looks)))
             self.assertEqual(len(mlooked_ifgs), 17)
             self.calc_non_mpi_time_series()
-            nrows, ncols = self.rate_mpi.shape
-            for r in nrows:
-                print r
-                print self.rate[r, :]
-                print self.rate_mpi[r, :]
-                np.testing.assert_array_almost_equal(self.rate[r, :],
-                                                     self.rate_mpi[r, :])
-
             np.testing.assert_array_almost_equal(self.rate,
                                                  self.rate_mpi,
                                                  decimal=4)
