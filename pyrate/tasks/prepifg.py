@@ -33,6 +33,9 @@ class GetAnalysisExtents(IfgListMixin, luigi.Task):
         userExts = (self.ifgx_first, self.ifgy_first, self.ifgx_last, self.ifgy_last)
 
         if not all(userExts):
+            if self.crop_opt == 3:
+                raise PrepifgException('all 4 extents must be provided with '
+                                       'crop_opt 3')
             userExts = None
 
         ifgs = [Ifg(path) for path in self.ifgTiffList()]
