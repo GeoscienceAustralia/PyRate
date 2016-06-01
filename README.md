@@ -72,7 +72,9 @@ Once inside the `virtualenv`, navigate to the `PyRate` code:
     pip install -r requirements.txt
     pip install GDAL==$(gdal-config --version) --global-option=build_ext --global-option="-I/usr/include/gdal"    
 
-Then proceed to test `PyRate`. The above assumes that your system gdal is installed in the default `/usr/include/gdal` directory, otherwise you have to provide `gdal` path to pip to be able to install `gdal`.
+Then proceed to test `PyRate`. The above assumes that your system gdal header files can be found in the default `/usr/include/gdal` directory, otherwise you have to provide `gdal` path to pip to be able to install `gdal`.
+
+`pip install GDAL==$(gdal-config --version) --global-option=build_ext --global-option="-I/usr/include/gdal"` command works for most versions of gdal, except `version 1.11.3` which unfortunately is still the default version of gdal in ubuntu 16.04 (i.e., `sudo apt-get install gdal-bin` in ubuntu 16.04 install `version 1.11.3`). This is becasue pip does not have bindings for this version. To get around this you will need to download and [install gdal from source](http://download.osgeo.org/gdal/) and then use the same commands.
 
 ## Anaconda setup for `PyRate`
 
