@@ -20,7 +20,7 @@ def crop_using_gdalwarp(input_file, output_file, extents):
 
 if __name__ == '__main__':
     parser = OptionParser(usage='%prog -i input_file -o output_file'
-                                '-e extents\n'
+                                ' -e extents\n'
                                 'Crop a larger interferrogram into '
                                 'smaller ones')
     parser.add_option('-i', '--input', type=str, dest='input_file',
@@ -33,7 +33,7 @@ if __name__ == '__main__':
                       help='extents to be used for the cropped file.\n'
                            'needs to be a list of 4 floats with spaces\n'
                            'example: '
-                           'extents = 150.91 -34.229999976 150.949166651 -34.17]')
+                           "-e '150.91 -34.229999976 150.949166651 -34.17'")
 
     options, args = parser.parse_args()
 
@@ -51,8 +51,8 @@ if __name__ == '__main__':
     if len(extents) != 4:
         raise AttributeError('extents to be used for the cropped file.\n'
                              'needs to be a list or tuples of 4 floats\n'
-                             'example:'
-                             'extents = [150.91, -34.229999976, 150.949166651, -34.17]')
+                             "example:"
+                             "--extents '150.91 -34.229999976 150.949166651 -34.17'")
 
     crop_using_gdalwarp(input_file=options.input_file,
                         output_file=options.output_file,
