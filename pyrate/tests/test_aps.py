@@ -322,7 +322,7 @@ class TestAPSIncidenceVsElevationVsParallel(unittest.TestCase):
 
 
 class MPITests(unittest.TestCase):
-
+    # TODO: add tests for looks > 1
     @classmethod
     def setUpClass(cls):
         cls.tif_dir_serial = tempfile.mkdtemp()

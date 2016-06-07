@@ -16,13 +16,3 @@ PYTHONPATH=$PYRATEPATH:$PYTHONPATH
 PYTHONPATH=/g/data/dg9/sudipta/site-packages:$PYTHONPATH
 export PYTHONPATH
 mpirun -np 64 python /g/data/dg9/sudipta/PyRate/pyrate/nci/run_prepifg_pypar.py /g/data/dg9/sudipta/PyRate/pyrate_surat.conf
-
-
-
-
-
-
-
-
-
-

@@ -69,7 +69,14 @@ def remove_aps_delay(input_ifgs, params, process_indices=None):
     dem_header = (lon, lat, nx, ny)
 
     incidence_angle = None
-    incidence_map = get_incidence_map()
+
+    if params[cf.APS_METHOD] == 1:
+        incidence_map = np.ones_like(dem)  # dummy
+    elif params[cf.APS_METHOD] == 2:
+        incidence_map = get_incidence_map()
+    else:
+        raise APSException('PyAPS method must be 1 or 2')
+
     list_of_dates_for_grb_download = []
 
     parallel = params[cf.PARALLEL]
