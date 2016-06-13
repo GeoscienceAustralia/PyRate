@@ -415,6 +415,7 @@ def init_logging(level):
     datefmt = '%d/%m/%Y %I:%M:%S %p'
     logging.basicConfig(filename=path, format=fmt, datefmt=datefmt, level=level)
     logging.debug('Log started')
+    return path
 
 
 def get_dest_paths(base_paths, crop, params, looks):
@@ -444,7 +445,7 @@ def get_ifg_paths():
     parser.add_option('-i', '--ifglist', type=str,
                       help='name of file containing list of interferograms')
     options, args = parser.parse_args()
-    init_logging(logging.DEBUG)
+    log_file_name = init_logging(logging.DEBUG)
     try:
         cfg_path = args[0] if args else 'pyrate.conf'
         global pars
@@ -455,6 +456,11 @@ def get_ifg_paths():
         logging.debug(emsg)
         sys.exit(err.errno)
     ifg_file_list = options.ifglist or pars.get(cf.IFG_FILE_LIST)
+    pars[cf.IFG_FILE_LIST] = ifg_file_list
+
+    # log config file
+    log_config_file(cfg_path, log_file_name)
+
     if ifg_file_list is None:
         emsg = 'Error {code}: Interferogram list file name not provided ' \
                'or does not exist'.format(code=2)
@@ -469,6 +475,17 @@ def get_ifg_paths():
     dest_paths = get_dest_paths(base_unw_paths, crop, pars, xlks)
 
     return base_unw_paths, dest_paths, pars
+
+
+def log_config_file(configfile, log_filename):
+    output_log_file = open(log_filename, "a")
+    output_log_file.write("\nConfig Settings: start\n")
+    lines = open(configfile).read()
+    for line in lines:
+        output_log_file.write(line)
+    output_log_file.write("\nConfig Settings: end\n\n")
+    output_log_file.write("\n===============================================\n")
+
 
 
 def write_msg(msg):
