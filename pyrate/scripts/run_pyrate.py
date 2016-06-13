@@ -463,7 +463,7 @@ def get_ifg_paths():
     xlks, ylks, crop = transform_params(pars)
 
     # base_unw_paths need to be geotiffed and multilooked by run_prepifg
-    base_unw_paths = original_ifg_paths(pars[cf.IFG_FILE_LIST])
+    base_unw_paths = original_ifg_paths(ifg_file_list)
 
     # dest_paths are tifs that have been geotif converted and multilooked
     dest_paths = get_dest_paths(base_unw_paths, crop, pars, xlks)
