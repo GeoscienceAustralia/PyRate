@@ -7,7 +7,7 @@ Contains functions to calculate MST using interferograms.
 """
 
 from itertools import product
-from numpy import array, nan, isnan, float32, empty
+from numpy import array, nan, isnan, float32, empty, sum as nsum
 import numpy as np
 import networkx as nx
 import parmap
@@ -239,7 +239,7 @@ def mst_matrix_networkx(ifgs):
 
     for y, x in product(xrange(i.nrows), xrange(i.ncols)):
         values = data_stack[:, y, x]  # vertical stack of ifg values for a pixel
-        nan_count = sum(isnan(values))
+        nan_count = nsum(isnan(values))
 
         # optimisations: use pre-created results for all nans/no nans
         if nan_count == 0:
