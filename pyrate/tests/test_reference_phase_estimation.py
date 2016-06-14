@@ -489,7 +489,7 @@ class MPITests(unittest.TestCase):
         cls.params[cf.PROCESSOR] = 1  # gamma
         cls.params[cf.IFG_FILE_LIST] = os.path.join(
             common.SYD_TEST_GAMMA, 'ifms_17')
-        cls.params[cf.OUT_DIR] = cls.tif_dir
+        # cls.params[cf.OUT_DIR] = cls.tif_dir
         cls.params[cf.PARALLEL] = 0
         cls.params[cf.APS_CORRECTION] = 0
         cls.params[cf.REF_EST_METHOD] = 1
@@ -499,18 +499,18 @@ class MPITests(unittest.TestCase):
 
     @classmethod
     def process(cls):
+        cls.params[cf.OUT_DIR] = cls.tif_dir
         xlks, ylks, crop = run_pyrate.transform_params(cls.params)
 
         # dest_paths are tifs that have been geotif converted and multilooked
-        dest_paths = run_pyrate.get_dest_paths(
+        cls.dest_paths = run_pyrate.get_dest_paths(
             cls.base_unw_paths, crop, cls.params, xlks)
 
         # create the dest_paths files
         run_prepifg.gamma_prepifg(cls.base_unw_paths, cls.params)
 
         # now create test ifgs
-        cls.ifgs = common.sydney_data_setup(datafiles=dest_paths)
-
+        cls.ifgs = common.sydney_data_setup(datafiles=cls.dest_paths)
         # give the log file any name
         cls.log_file = os.path.join(cls.tif_dir, 'ref_phs_mpi.log')
 
@@ -532,21 +532,29 @@ class MPITests(unittest.TestCase):
         cls.ref_phs = np.load(ref_phs_file)
 
     def calc_non_mpi_time_series(self):
-        for i in self.ifgs:
-            if not i.is_open:
-                i.open()
-            if not i.nan_converted:
-                i.nodata_value = 0
-                i.convert_to_nans()
+        tmp_dir = tempfile.mkdtemp()
+        self.params[cf.OUT_DIR] = tmp_dir
+        xlks, ylks, crop = run_pyrate.transform_params(self.params)
 
-            if not i.mm_converted:
-                i.convert_to_mm()
+        # dest_paths are tifs that have been geotif converted and multilooked
+        dest_paths = run_pyrate.get_dest_paths(
+            self.base_unw_paths, crop, self.params, xlks)
+        # create the dest_paths files
+        run_prepifg.gamma_prepifg(self.base_unw_paths, self.params)
 
+        # now create test ifgs
+        self.ifgs = common.sydney_data_setup(datafiles=dest_paths)
+
+        ifg_paths = [i.data_path for i in self.ifgs]
+        self.ifgs = run_pyrate.pre_prepare_ifgs(ifg_paths=ifg_paths,
+                                                params=self.params)
         if self.params[cf.ORBITAL_FIT] != 0:
             run_pyrate.remove_orbital_error(self.ifgs, self.params)
 
         refx, refy = run_pyrate.find_reference_pixel(self.ifgs, self.params)
+        shutil.rmtree(tmp_dir)
         return rpe.estimate_ref_phase(self.ifgs, self.params, refx, refy)[0]
+
 
     @classmethod
     def tearDownClass(cls):
