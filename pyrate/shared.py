@@ -310,6 +310,7 @@ class Ifg(RasterBase):
             self.phase_data = convert_radians_to_mm(self.phase_data,
                                                           self.wavelength)
             self.dataset.SetMetadataItem(ifc.PYRATE_PHASE_UNITS, MILLIMETRES)
+            self.write_modified_phase()
             msg = '%s: converted phase units to millimetres'
             logging.debug(msg % self.data_path)
         else:
