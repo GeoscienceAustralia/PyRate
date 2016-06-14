@@ -20,6 +20,8 @@ from pyrate.reference_phase_estimation import estimate_ref_phase
 from pyrate.scripts import run_prepifg
 from pyrate.tests import common
 from pyrate import reference_phase_estimation as rpe
+from pyrate import remove_aps_delay as aps
+from pyrate import ifgconstants as ifc
 
 
 class RefPhsEstimationMatlabTestMethod1Serial(unittest.TestCase):
@@ -475,7 +477,7 @@ class RefPhsEstimationMatlabTestMethod2Parallel(unittest.TestCase):
                                              self.ref_phs_mthod2, decimal=3)
 
 
-class RefPhaseEstimationMPITest(unittest.TestCase):
+class MPITests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.tif_dir = tempfile.mkdtemp()
@@ -510,7 +512,7 @@ class RefPhaseEstimationMPITest(unittest.TestCase):
         cls.ifgs = common.sydney_data_setup(datafiles=dest_paths)
 
         # give the log file any name
-        cls.log_file = os.path.join(cls.tif_dir, 'maxvar_mpi.log')
+        cls.log_file = os.path.join(cls.tif_dir, 'ref_phs_mpi.log')
 
         # create the conf file in out_dir
         cls.conf_file = tempfile.mktemp(suffix='.conf', dir=cls.tif_dir)
@@ -544,7 +546,7 @@ class RefPhaseEstimationMPITest(unittest.TestCase):
             run_pyrate.remove_orbital_error(self.ifgs, self.params)
 
         refx, refy = run_pyrate.find_reference_pixel(self.ifgs, self.params)
-        return rpe.estimate_ref_phase(self.ifgs, self.params, refx, refy)
+        return rpe.estimate_ref_phase(self.ifgs, self.params, refx, refy)[0]
 
     @classmethod
     def tearDownClass(cls):
@@ -553,6 +555,7 @@ class RefPhaseEstimationMPITest(unittest.TestCase):
     def test_mpi_mst_single_processor(self):
         # TODO: Why MPI test does not match for looks=2 and ref_phase_method=2
         for looks, ref_method in product([1, 3, 4], [1, 2]):
+            print (looks, ref_method, '==='*10)
             self.params[cf.IFG_LKSX] = looks
             self.params[cf.IFG_LKSY] = looks
             self.params[cf.REF_EST_METHOD] = ref_method
@@ -560,9 +563,9 @@ class RefPhaseEstimationMPITest(unittest.TestCase):
             mlooked_ifgs = glob.glob(os.path.join(
                 self.tif_dir, '*_{looks}rlks_*cr.tif'.format(looks=looks)))
             self.assertEqual(len(mlooked_ifgs), 17)
-            original_ref_phs = self.calc_non_mpi_time_series()[0]
+            original_ref_phs = self.calc_non_mpi_time_series()
             np.testing.assert_array_almost_equal(original_ref_phs, self.ref_phs,
-                                                 decimal=2)
+                                                 decimal=3)
 
     def test_maxvar_log_written(self):
         self.process()

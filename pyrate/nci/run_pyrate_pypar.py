@@ -76,6 +76,8 @@ def main(params=None):
 
     parallel.barrier()
 
+    # TODO: investigate why moving the next line after mst calc causes issues
+    ifgs = run_pyrate.pre_prepare_ifgs(cropped_and_sampled_tifs, params)
     # Calc mst using MPI
     mst_mat_binary_file = os.path.join(params[cf.OUT_DIR], 'mst_mat.npy')
     write_msg('Calculating mst')
@@ -90,12 +92,9 @@ def main(params=None):
                                parallel, params,
                                mst_mat_binary_file)
     write_msg('Calculating mst')
-
     parallel.barrier()
 
     mst_grid = np.load(file=mst_mat_binary_file)
-
-    ifgs = run_pyrate.pre_prepare_ifgs(cropped_and_sampled_tifs, params)
 
     # Calc ref_pixel using MPI
     ref_pixel_file = os.path.join(params[cf.OUT_DIR], 'ref_pixel.npy')
@@ -110,7 +109,7 @@ def main(params=None):
     parallel.barrier()
     # refpixel read in each process
     refpx, refpy = np.load(ref_pixel_file)
-
+    print 'found reference pixel', refpx, refpy
     parallel.barrier()
 
     # remove APS delay here
@@ -270,7 +269,7 @@ def ref_phase_estimation_mpi(MPI_myID, ifgs, num_processors, parallel, params,
                                                 refpx, refpy, thresh)
 
     else:
-        raise
+        raise cf.ConfigException('Ref phase estimation method must be 1 or 2')
     ref_phs_file = os.path.join(params[cf.OUT_DIR], 'ref_phs.npy')
     if MPI_myID == MASTER_PROCESS:
         all_indices = parallel.calc_all_indices(no_ifgs)
