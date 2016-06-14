@@ -389,11 +389,20 @@ class IfgPart(object):
         :return:
         """
         # check if Ifg was sent.
-        if isinstance(ifg_or_path, Ifg):  # Can be used with MPI
+        if isinstance(ifg_or_path, Ifg):
             ifg = ifg_or_path
         else:
-            self.data_path = ifg_or_path
+            self.data_path = ifg_or_path  # should be used with MPI
             ifg = Ifg(ifg_or_path)
+
+        self.r_start = r_start
+        self.r_end = r_end
+        self.phase_data = None
+        self.c_start = c_start
+        self.c_end = c_end
+        self.nan_fraction = None
+        self.master = None
+        self.slave = None
         read = False
         attempts = 0
         while (not read) and (attempts < 3):
@@ -409,17 +418,13 @@ class IfgPart(object):
             raise RasterException('Could not read {ifg}\n after 3 attemps.\n'
                                   'Rerun prepifg and then use run_pyrate again.'
                                   .format(ifg=ifg_or_path))
-        self.r_start = r_start
-        self.r_end = r_end
-        self._phase_data_part = None
-        self.c_start = c_start
-        self.c_end = c_end
 
     def read_required(self, ifg):
         if not ifg.is_open:
             ifg.open(readonly=True)
         ifg.nodata_value = 0
-        self._phase_data = ifg.phase_data
+        self.phase_data = ifg.phase_data[self.r_start:self.r_end,
+                                         self.c_start:self.c_end]
         self.nan_fraction = ifg.nan_fraction
         self.master = ifg.master
         self.slave = ifg.slave
@@ -432,12 +437,6 @@ class IfgPart(object):
     @property
     def ncols(self):
         return self.c_end - self.c_start
-
-    @property
-    def phase_data(self):
-        if self._phase_data_part is None:
-            return self._phase_data[self.r_start:self.r_end,
-                   self.c_start:self.c_end]
 
 
 class Incidence(RasterBase):
