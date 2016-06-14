@@ -531,7 +531,7 @@ class MPITests(unittest.TestCase):
         ref_phs_file = os.path.join(cls.params[cf.OUT_DIR], 'ref_phs.npy')
         cls.ref_phs = np.load(ref_phs_file)
 
-    def calc_non_mpi_time_series(self):
+    def calc_non_mpi_ref_phase(self):
         tmp_dir = tempfile.mkdtemp()
         self.params[cf.OUT_DIR] = tmp_dir
         xlks, ylks, crop = run_pyrate.transform_params(self.params)
@@ -548,10 +548,11 @@ class MPITests(unittest.TestCase):
         ifg_paths = [i.data_path for i in self.ifgs]
         self.ifgs = run_pyrate.pre_prepare_ifgs(ifg_paths=ifg_paths,
                                                 params=self.params)
+        refx, refy = run_pyrate.find_reference_pixel(self.ifgs, self.params)
+
         if self.params[cf.ORBITAL_FIT] != 0:
             run_pyrate.remove_orbital_error(self.ifgs, self.params)
 
-        refx, refy = run_pyrate.find_reference_pixel(self.ifgs, self.params)
         shutil.rmtree(tmp_dir)
         return rpe.estimate_ref_phase(self.ifgs, self.params, refx, refy)[0]
 
@@ -560,10 +561,8 @@ class MPITests(unittest.TestCase):
     def tearDownClass(cls):
         shutil.rmtree(cls.tif_dir)
 
-    def test_mpi_mst_single_processor(self):
-        # TODO: Why MPI test does not match for looks=2 and ref_phase_method=2
-        for looks, ref_method in product([1, 3, 4], [1, 2]):
-            print (looks, ref_method, '==='*10)
+    def test_mpi_ref_phase(self):
+        for looks, ref_method in product([1, 2, 3, 4], [1, 2]):
             self.params[cf.IFG_LKSX] = looks
             self.params[cf.IFG_LKSY] = looks
             self.params[cf.REF_EST_METHOD] = ref_method
@@ -571,7 +570,7 @@ class MPITests(unittest.TestCase):
             mlooked_ifgs = glob.glob(os.path.join(
                 self.tif_dir, '*_{looks}rlks_*cr.tif'.format(looks=looks)))
             self.assertEqual(len(mlooked_ifgs), 17)
-            original_ref_phs = self.calc_non_mpi_time_series()
+            original_ref_phs = self.calc_non_mpi_ref_phase()
             np.testing.assert_array_almost_equal(original_ref_phs, self.ref_phs,
                                                  decimal=3)
 

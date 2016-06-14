@@ -76,8 +76,6 @@ def main(params=None):
 
     parallel.barrier()
 
-    # TODO: investigate why moving the next line after mst calc causes issues
-    ifgs = run_pyrate.pre_prepare_ifgs(cropped_and_sampled_tifs, params)
     # Calc mst using MPI
     mst_mat_binary_file = os.path.join(params[cf.OUT_DIR], 'mst_mat.npy')
     write_msg('Calculating mst')
@@ -93,7 +91,7 @@ def main(params=None):
                                mst_mat_binary_file)
     write_msg('Calculating mst')
     parallel.barrier()
-
+    ifgs = run_pyrate.pre_prepare_ifgs(cropped_and_sampled_tifs, params)
     mst_grid = np.load(file=mst_mat_binary_file)
 
     # Calc ref_pixel using MPI
