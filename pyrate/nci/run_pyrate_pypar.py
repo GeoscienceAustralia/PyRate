@@ -80,20 +80,22 @@ def main(params=None):
     mst_mat_binary_file = os.path.join(params[cf.OUT_DIR], 'mst_mat.npy')
     write_msg('Calculating mst')
     if MPI_myID == MASTER_PROCESS:
-        _, ifgs = mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs,
+        mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs,
                                mpi_log_filename,
-                               num_processors, parallel, params,
+                               parallel, params,
                                mst_mat_binary_file)
     else:
-        _, ifgs = mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs,
+        mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs,
                                mpi_log_filename,
-                               num_processors, parallel, params,
+                               parallel, params,
                                mst_mat_binary_file)
     write_msg('Calculating mst')
 
     parallel.barrier()
 
     mst_grid = np.load(file=mst_mat_binary_file)
+
+    ifgs = run_pyrate.pre_prepare_ifgs(cropped_and_sampled_tifs, params)
 
     # Calc ref_pixel using MPI
     ref_pixel_file = os.path.join(params[cf.OUT_DIR], 'ref_pixel.npy')
@@ -402,15 +404,30 @@ def ref_pixel_calc_mpi(MPI_myID, ifgs, num_processors, parallel, params):
 
 
 def mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs, mpi_log_filename,
-                 num_processors, parallel, params,
-                 mst_file):
+                 parallel, params, mst_file):
+    """
+    MPI function that control each process during MPI run
+    :param MPI_myID:
+    :param cropped_and_sampled_tifs: paths of cropped amd resampled geotiffs
+    :param mpi_log_filename:
+    :param num_processors:
+    :param parallel: MPI Parallel class instance
+    :param params: config params dictionary
+    :param mst_file: mst file (2d numpy array) save to disc
+    :return:
+    """
     write_msg('Calculating minimum spanning tree matrix '
                          'using NetworkX method')
-    ifgs = run_pyrate.pre_prepare_ifgs(cropped_and_sampled_tifs,
-                                       params)
+    num_processors = parallel.size
+
+    # due to limited memory can not copy whole ifgs phase data in each process
+    # need ifgpart class
+    # read the first tif to get shape
+    ifg = run_pyrate.pre_prepare_ifgs([cropped_and_sampled_tifs[0]],
+                                       params)[0]
     top_lefts, bottom_rights, no_tiles = shared.setup_tiles(
-        ifgs[0].shape, processes=num_processors)
-    # parallel.calc_indices(no_tiles)
+        ifg.shape, processes=num_processors)
+
     process_indices = parallel.calc_indices(no_tiles)
     process_top_lefts = [itemgetter(p)(top_lefts)
                          for p in process_indices]
@@ -422,7 +439,7 @@ def mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs, mpi_log_filename,
                                             num_files=no_tiles)
     result_process = mst.mst_multiprocessing_map(
         process_top_lefts, process_bottom_rights,
-        ifgs, ifgs[0].shape, no_ifgs=len(ifgs)
+        cropped_and_sampled_tifs, ifg.shape
     )
     parallel.barrier()
 
@@ -439,12 +456,12 @@ def mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs, mpi_log_filename,
         output_log_file.close()
         # write mst output to a file
         np.save(file=mst_file, arr=result)
-        return result, ifgs
+        return result
     else:
         # send the result arrays
         parallel.send(result_process, destination=MASTER_PROCESS, tag=MPI_myID)
         print "sent mst result from process", MPI_myID
-        return result_process, ifgs
+        return result_process
 
 
 def clean_up_old_files():
