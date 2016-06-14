@@ -239,6 +239,7 @@ class MPITests(unittest.TestCase):
 
     @classmethod
     def process(cls, base_unw_paths):
+        cls.params[cf.OUT_DIR] = cls.tif_dir
         xlks, ylks, crop = run_pyrate.transform_params(cls.params)
 
         # dest_paths are tifs that have been geotif converted and multilooked
@@ -265,24 +266,32 @@ class MPITests(unittest.TestCase):
         os.remove(mst_file)
 
     def calc_non_mpi_maxvar(self):
-        for i in self.ifgs:
-            if not i.is_open:
-                i.open()
-            if not i.nan_converted:
-                i.nodata_value = 0
-                i.convert_to_nans()
+        tmp_dir = tempfile.mkdtemp()
+        self.params[cf.OUT_DIR] = tmp_dir
+        xlks, ylks, crop = run_pyrate.transform_params(self.params)
 
-            if not i.mm_converted:
-                i.convert_to_mm()
+        # dest_paths are tifs that have been geotif converted and multilooked
+        dest_paths = run_pyrate.get_dest_paths(
+            self.base_unw_paths, crop, self.params, xlks)
+        # create the dest_paths files
+        run_prepifg.gamma_prepifg(self.base_unw_paths, self.params)
+
+        # now create test ifgs
+        self.ifgs = common.sydney_data_setup(datafiles=dest_paths)
+
+        ifg_paths = [i.data_path for i in self.ifgs]
+        self.ifgs = run_pyrate.pre_prepare_ifgs(ifg_paths=ifg_paths,
+                                                params=self.params)
+        refx, refy = run_pyrate.find_reference_pixel(self.ifgs, self.params)
 
         if self.params[cf.ORBITAL_FIT] != 0:
             run_pyrate.remove_orbital_error(self.ifgs, self.params)
 
-        refx, refy = run_pyrate.find_reference_pixel(self.ifgs, self.params)
         rpe.estimate_ref_phase(self.ifgs, self.params, refx, refy)
 
         maxvar = [cvd(i)[0] for i in self.ifgs]
         vcmt = vcm_module.get_vcmt(self.ifgs, maxvar)
+        shutil.rmtree(tmp_dir)
         return maxvar, vcmt
 
     @classmethod
