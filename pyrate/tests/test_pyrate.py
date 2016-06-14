@@ -9,10 +9,13 @@ Created on 17/09/2012
 import os, glob, shutil, logging, unittest
 from os.path import join
 import tempfile
+import numpy as np
 from pyrate import shared, config, prepifg
 from pyrate.scripts import run_pyrate, run_prepifg
 from pyrate import config as cf
 from pyrate.tests import common
+from pyrate.shared import Ifg
+
 
 # taken from http://stackoverflow.com/questions/6260149/os-symlink-support-in-windows
 if os.name == "nt":
@@ -255,8 +258,6 @@ class MSTParallelPyRateTests(unittest.TestCase):
 class TestPrePrepareIfgs(unittest.TestCase):
 
     def test_sydney_data_prep(self):
-        from pyrate.shared import Ifg
-        import numpy as np
         tmp_dir = tempfile.mkdtemp()
         shared.copytree(common.SYD_TEST_TIF, tmp_dir)
         tifs = glob.glob(os.path.join(tmp_dir, "*.tif"))
@@ -268,6 +269,8 @@ class TestPrePrepareIfgs(unittest.TestCase):
         ifg_paths = [i.data_path for i in sydney_ifgs]
 
         ifg_ret = run_pyrate.pre_prepare_ifgs(ifg_paths, params=params)
+        for i in ifg_ret:
+            i.close()
 
         nan_conversion = params[cf.NAN_CONVERSION]
 
