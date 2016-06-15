@@ -227,10 +227,10 @@ class ParallelPyRateTests(unittest.TestCase):
 
         run_prepifg.gamma_prepifg(base_unw_paths, params)
 
-        cls.mst_p_2 = run_pyrate.mst_calculation(cls.dest_paths, params)
-
-        cls.mst_p, cls.refpixel_p, cls.maxvar_p, cls.vcmt_p, cls.rate_p = \
+        cls.mst_p, cls.refpixel_p, cls.maxvar_p, cls.vcmt_p, cls.rate_p, \
+            cls.error_p, cls.samples_p = \
             run_pyrate.process_ifgs(cls.dest_paths, params)
+        cls.mst_p_2 = run_pyrate.mst_calculation(cls.dest_paths, params)
 
         # now create the non parallel version
         cls.tif_dir_s = tempfile.mkdtemp()
@@ -239,7 +239,8 @@ class ParallelPyRateTests(unittest.TestCase):
         cls.dest_paths_s = run_pyrate.get_dest_paths(
             base_unw_paths, crop, params, xlks)
         run_prepifg.gamma_prepifg(base_unw_paths, params)
-        cls.mst, cls.refpixel, cls.maxvar, cls.vcmt, cls.rate = \
+        cls.mst, cls.refpixel, cls.maxvar, cls.vcmt, cls.rate, \
+        cls.error, cls.samples = \
             run_pyrate.process_ifgs(cls.dest_paths_s, params)
 
     @classmethod
@@ -290,6 +291,8 @@ class ParallelPyRateTests(unittest.TestCase):
 
     def test_linear_rate_equal(self):
         np.testing.assert_array_almost_equal(self.rate, self.rate_p)
+        np.testing.assert_array_almost_equal(self.error, self.error_p)
+        np.testing.assert_array_almost_equal(self.samples, self.samples_p)
 
 
 class TestPrePrepareIfgs(unittest.TestCase):
