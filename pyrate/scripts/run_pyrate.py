@@ -20,7 +20,6 @@ from pyrate import reference_phase_estimation as rpe
 from pyrate import algorithm
 from pyrate import ifgconstants as ifc
 from pyrate import remove_aps_delay as aps
-import pickle
 
 
 # constants for metadata flags
@@ -53,8 +52,7 @@ def process_ifgs(ifg_paths_or_instance, params):
         check_aps_ifgs(ifgs, flags)
 
     # Estimate and remove orbit errors
-    if params[cf.ORBITAL_FIT] != 0:
-        remove_orbital_error(ifgs, params)
+    remove_orbital_error(ifgs, params)
 
     write_msg('Estimating and removing phase at reference pixel')
     rpe.estimate_ref_phase(ifgs, params, refpx, refpy)
@@ -98,7 +96,12 @@ def process_ifgs(ifg_paths_or_instance, params):
     md['PR_TYPE'] = 'linerror'
     write_output_geotiff(md, gt, wkt, error, dest, np.nan)
 
+    # close all open ifgs
+    for i in ifgs:
+        i.close()
+
     write_msg('PyRate workflow completed')
+    return mst_grid, (refpx, refpy), maxvar, vcmt, rate
 
 
 def aps_delay_required(ifgs, params):
