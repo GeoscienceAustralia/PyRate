@@ -406,6 +406,9 @@ class IfgPart(object):
         self.slave = None
         read = False
         attempts = 0
+        # TODO: The repeated read attempts should be avoided
+        # This is done if a process has to release the file lock before another
+        # can read that file
         while (not read) and (attempts < 3):
             try:
                 attempts += 1
@@ -429,6 +432,7 @@ class IfgPart(object):
         self.nan_fraction = ifg.nan_fraction
         self.master = ifg.master
         self.slave = ifg.slave
+        ifg.close()  # close base ifg
         return True
 
     @property

@@ -199,7 +199,7 @@ class PyRateTests(unittest.TestCase):
         self.fail('No reference pixel found')
 
 
-class MSTParallelPyRateTests(unittest.TestCase):
+class ParallelPyRateTests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
