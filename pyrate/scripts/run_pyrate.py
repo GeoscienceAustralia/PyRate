@@ -67,6 +67,8 @@ def process_ifgs(ifg_paths_or_instance, params):
     # TODO: assign maxvar to ifg metadata (and geotiff)?
     write_msg('Calculating maximum variance in interferograms')
     maxvar = [vcm_module.cvd(i)[0] for i in ifgs]
+    maxvar_file = os.path.join(params[cf.OUT_DIR], 'maxvar.npy')
+    np.save(file=maxvar_file, arr=maxvar)
 
     write_msg('Constructing temporal variance-covariance matrix')
     vcmt = vcm_module.get_vcmt(ifgs, maxvar)
