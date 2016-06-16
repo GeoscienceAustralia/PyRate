@@ -7,7 +7,7 @@ Contains functions to calculate MST using interferograms.
 """
 
 from itertools import product
-from numpy import array, nan, isnan, float32, empty
+from numpy import array, nan, isnan, float32, empty, sum as nsum
 import numpy as np
 import networkx as nx
 import parmap
@@ -16,6 +16,7 @@ from pyrate.algorithm import ifg_date_lookup
 from pyrate.algorithm import ifg_date_index_lookup
 from pyrate import config as cf
 from pyrate.shared import IfgPart, setup_tiles
+np.seterr(invalid='ignore')  # stops RuntimeWarning in nan conversion
 
 # TODO: may need to implement memory saving row-by-row access
 # TODO: document weighting by either Nan fraction OR variance
@@ -74,10 +75,11 @@ def mst_parallel(ifgs, params):
 
 
 def mst_multiprocessing_map(process_top_lefts, process_bottom_rights,
-                            paths_or_ifgs, shape, no_ifgs):
+                            paths_or_ifgs, shape):
     # can't specify np.bool, does not work with PyPar
     # TODO: investigate other pypar send/receive options
     # should be able to change int to bool, may be use mpi4py?
+    no_ifgs = len(paths_or_ifgs)
     result = np.zeros(shape=(no_ifgs, shape[0], shape[1]), dtype=int)
     for top_l, bottom_r \
                 in zip(process_top_lefts, process_bottom_rights):
@@ -238,7 +240,7 @@ def mst_matrix_networkx(ifgs):
 
     for y, x in product(xrange(i.nrows), xrange(i.ncols)):
         values = data_stack[:, y, x]  # vertical stack of ifg values for a pixel
-        nan_count = sum(isnan(values))
+        nan_count = nsum(isnan(values))
 
         # optimisations: use pre-created results for all nans/no nans
         if nan_count == 0:

@@ -239,6 +239,7 @@ class MPITests(unittest.TestCase):
 
     @classmethod
     def process(cls, base_unw_paths):
+        cls.params[cf.OUT_DIR] = cls.tif_dir
         xlks, ylks, crop = run_pyrate.transform_params(cls.params)
 
         # dest_paths are tifs that have been geotif converted and multilooked
@@ -264,40 +265,39 @@ class MPITests(unittest.TestCase):
         mst_file = os.path.join(cls.params[cf.OUT_DIR], 'mst_mat.npy')
         os.remove(mst_file)
 
-    def calc_non_mpi_maxvar(self):
-        for i in self.ifgs:
-            if not i.is_open:
-                i.open()
-            if not i.nan_converted:
-                i.nodata_value = 0
-                i.convert_to_nans()
+    @classmethod
+    def calc_non_mpi_maxvar_vcmt(cls):
+        cls.tmp_dir = tempfile.mkdtemp()
+        cls.params[cf.OUT_DIR] = cls.tmp_dir
+        xlks, ylks, crop = run_pyrate.transform_params(cls.params)
 
-            if not i.mm_converted:
-                i.convert_to_mm()
+        # dest_paths are tifs that have been geotif converted and multilooked
+        dest_paths = run_pyrate.get_dest_paths(
+            cls.base_unw_paths, crop, cls.params, xlks)
+        # create the dest_paths files
+        run_prepifg.gamma_prepifg(cls.base_unw_paths, cls.params)
 
-        if self.params[cf.ORBITAL_FIT] != 0:
-            run_pyrate.remove_orbital_error(self.ifgs, self.params)
-
-        refx, refy = run_pyrate.find_reference_pixel(self.ifgs, self.params)
-        rpe.estimate_ref_phase(self.ifgs, self.params, refx, refy)
-
-        maxvar = [cvd(i)[0] for i in self.ifgs]
-        vcmt = vcm_module.get_vcmt(self.ifgs, maxvar)
-        return maxvar, vcmt
+        run_pyrate.process_ifgs(dest_paths, cls.params)
+        # load the ref_phs file for testing
+        maxvar_file = os.path.join(cls.params[cf.OUT_DIR], 'maxvar.npy')
+        vcmt_file = os.path.join(cls.params[cf.OUT_DIR], 'vcmt_mat.npy')
+        return np.load(maxvar_file), np.load(vcmt_file)
 
     @classmethod
     def tearDownClass(cls):
-        shutil.rmtree(cls.tif_dir)
+        shutil.rmtree(cls.tif_dir, ignore_errors=True)
+        shutil.rmtree(cls.tmp_dir, ignore_errors=True)
 
     def test_mpi_mst_single_processor(self):
         for looks in range(1, 6):
+            print '\n======Testing reference phase looks:', looks
             self.params[cf.IFG_LKSX] = looks
             self.params[cf.IFG_LKSY] = looks
             self.process(self.base_unw_paths)
             mlooked_ifgs = glob.glob(os.path.join(
                 self.tif_dir, '*_{looks}rlks_*cr.tif'.format(looks=looks)))
             self.assertEqual(len(mlooked_ifgs), 17)
-            original_maxvar, original_vcmt = self.calc_non_mpi_maxvar()
+            original_maxvar, original_vcmt = self.calc_non_mpi_maxvar_vcmt()
             np.testing.assert_array_almost_equal(original_maxvar, self.maxvar,
                                                  decimal=2)
             np.testing.assert_array_almost_equal(original_vcmt, self.vcmt,

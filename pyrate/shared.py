@@ -98,7 +98,18 @@ class RasterBase(object):
 
         flag = GA_ReadOnly if self._readonly else GA_Update
 
-        self.dataset = gdal.Open(self.data_path, flag)
+        # The while loop helps in situations when a geotiff is read by multiple
+        # processes. If one process has the file open, then delaying read from
+        # another process improves stability of the MPI processs
+        attempts = 0
+        while (self.dataset is None) and (attempts < 3):
+            try:
+                attempts += 1
+                self.dataset = gdal.Open(self.data_path, flag)
+            except RuntimeError as e:
+                print e
+                print '\nneed to read {ifg} again'.format(ifg=self.data_path)
+                time.sleep(0.5)
 
         if self.dataset is None:
             raise RasterException("Error opening %s" % self.data_path)
@@ -310,6 +321,10 @@ class Ifg(RasterBase):
             self.phase_data = convert_radians_to_mm(self.phase_data,
                                                           self.wavelength)
             self.dataset.SetMetadataItem(ifc.PYRATE_PHASE_UNITS, MILLIMETRES)
+            # self.write_modified_phase()
+            # otherwise NaN's don't write to bytecode properly
+            # and numpy complains
+            # self.dataset.FlushCache()
             msg = '%s: converted phase units to millimetres'
             logging.debug(msg % self.data_path)
         else:
@@ -373,6 +388,7 @@ class Ifg(RasterBase):
         self._phase_band = None
         """
         self.phase_band.WriteArray(self.phase_data)
+        self.dataset.FlushCache()
 
 
 class IfgPart(object):
@@ -389,13 +405,25 @@ class IfgPart(object):
         :return:
         """
         # check if Ifg was sent.
-        if isinstance(ifg_or_path, Ifg):  # Can be used with MPI
+        if isinstance(ifg_or_path, Ifg):
             ifg = ifg_or_path
         else:
-            self.data_path = ifg_or_path
+            self.data_path = ifg_or_path  # should be used with MPI
             ifg = Ifg(ifg_or_path)
+
+        self.r_start = r_start
+        self.r_end = r_end
+        self.phase_data = None
+        self.c_start = c_start
+        self.c_end = c_end
+        self.nan_fraction = None
+        self.master = None
+        self.slave = None
         read = False
         attempts = 0
+        # TODO: The repeated read attempts should be avoided
+        # This is done if a process has to release the file lock before another
+        # can read that file
         while (not read) and (attempts < 3):
             try:
                 attempts += 1
@@ -409,20 +437,17 @@ class IfgPart(object):
             raise RasterException('Could not read {ifg}\n after 3 attemps.\n'
                                   'Rerun prepifg and then use run_pyrate again.'
                                   .format(ifg=ifg_or_path))
-        self.r_start = r_start
-        self.r_end = r_end
-        self._phase_data_part = None
-        self.c_start = c_start
-        self.c_end = c_end
 
     def read_required(self, ifg):
         if not ifg.is_open:
             ifg.open(readonly=True)
         ifg.nodata_value = 0
-        self._phase_data = ifg.phase_data
+        self.phase_data = ifg.phase_data[self.r_start:self.r_end,
+                                         self.c_start:self.c_end]
         self.nan_fraction = ifg.nan_fraction
         self.master = ifg.master
         self.slave = ifg.slave
+        ifg.close()  # close base ifg
         return True
 
     @property
@@ -432,12 +457,6 @@ class IfgPart(object):
     @property
     def ncols(self):
         return self.c_end - self.c_start
-
-    @property
-    def phase_data(self):
-        if self._phase_data_part is None:
-            return self._phase_data[self.r_start:self.r_end,
-                   self.c_start:self.c_end]
 
 
 class Incidence(RasterBase):

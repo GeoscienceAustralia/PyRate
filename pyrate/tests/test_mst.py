@@ -245,6 +245,7 @@ class MPITests(unittest.TestCase):
 
         mst_mat_binary_file = os.path.join(params[cf.OUT_DIR], 'mst_mat.npy')
         cls.mst = np.load(mst_mat_binary_file)
+        cls.params = params
 
     @classmethod
     def tearDownClass(cls):
@@ -254,7 +255,12 @@ class MPITests(unittest.TestCase):
         mlooked_ifgs = glob.glob(os.path.join(self.tif_dir, '*cr.tif'))
         self.assertEqual(len(mlooked_ifgs), 17)
         original_mst = mst.mst_boolean_array(self.ifgs)
+        original_mst_2 = mst.mst_parallel(self.ifgs, self.params)
+        self.params[cf.PARALLEL] = 0
+        original_mst_3 = mst.mst_parallel(self.ifgs, self.params)
         np.testing.assert_array_equal(original_mst, self.mst)
+        np.testing.assert_array_equal(original_mst_2, self.mst)
+        np.testing.assert_array_equal(original_mst_3, self.mst)
 
     def test_mst_log_written(self):
         log_file = glob.glob(os.path.join(self.tif_dir, '*.log'))[0]

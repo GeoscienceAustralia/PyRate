@@ -337,7 +337,7 @@ class MatlabEqualityTestMultiprocessParallel(unittest.TestCase):
         self.assertEqual(refy, 2)
 
 
-class MPITest(unittest.TestCase):
+class MPITests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -360,13 +360,14 @@ class MPITest(unittest.TestCase):
 
     @classmethod
     def process(cls, base_unw_paths):
+        cls.params[cf.OUT_DIR] = cls.tif_dir
         xlks, ylks, crop = run_pyrate.transform_params(cls.params)
 
         # dest_paths are tifs that have been geotif converted and multilooked
         dest_paths = run_pyrate.get_dest_paths(
             cls.base_unw_paths, crop, cls.params, xlks)
         run_prepifg.gamma_prepifg(base_unw_paths, cls.params)
-        cls.ifgs = common.sydney_data_setup(datafiles=dest_paths)
+        # cls.ifgs = common.sydney_data_setup(datafiles=dest_paths)
         cls.log_file = os.path.join(cls.tif_dir, 'ref_pixel_mpi.log')
         # Calc mst using MPI
         cls.conf_file = tempfile.mktemp(suffix='.conf', dir=cls.tif_dir)
@@ -378,25 +379,47 @@ class MPITest(unittest.TestCase):
         cls.ref_pixel = np.load(ref_pixel_file)
         mst_file = os.path.join(cls.params[cf.OUT_DIR], 'mst_mat.npy')
         os.remove(mst_file)
+        os.remove(ref_pixel_file)
 
     @classmethod
     def tearDownClass(cls):
         shutil.rmtree(cls.tif_dir)
 
-    def test_mpi_mst_sigmle_processor(self):
+    def calc_non_mpi_ref_pixel(self):
+        tmp_dir = tempfile.mkdtemp()
+        self.params[cf.OUT_DIR] = tmp_dir
+        xlks, ylks, crop = run_pyrate.transform_params(self.params)
 
+        # dest_paths are tifs that have been geotif converted and multilooked
+        dest_paths = run_pyrate.get_dest_paths(
+            self.base_unw_paths, crop, self.params, xlks)
+        # create the dest_paths files
+        run_prepifg.gamma_prepifg(self.base_unw_paths, self.params)
+
+        mst_grid, ref_pix, maxvar, vcmt, rate, error, samples = \
+            run_pyrate.process_ifgs(dest_paths, self.params)
+
+        shutil.rmtree(tmp_dir)
+        return ref_pix
+
+    def test_mpi_ref_pixel(self):
+        """
+        tests reference pixel calculation MPI vs python multiprocess
+        """
         for looks in [1, 2, 3, 4]:
+            print 'Checking refpixel for looks: ', looks
             self.params[cf.IFG_LKSX] = looks
             self.params[cf.IFG_LKSY] = looks
             self.process(self.base_unw_paths)
             mlooked_ifgs = glob.glob(os.path.join(
                 self.tif_dir, '*_{looks}rlks_*cr.tif'.format(looks=looks)))
             self.assertEqual(len(mlooked_ifgs), 17)
-            original_ref_pixel = run_pyrate.find_reference_pixel(self.ifgs,
-                                                                 self.params)
+            print '\n\nCalculate original ref pixel'
+            original_ref_pixel = self.calc_non_mpi_ref_pixel()
             np.testing.assert_array_equal(original_ref_pixel, self.ref_pixel)
 
     def test_mst_log_written(self):
+        """test log was created"""
         self.process(self.base_unw_paths)
         log_file = glob.glob(os.path.join(self.tif_dir, '*.log'))[0]
         self.assertTrue(os.path.exists(log_file))
