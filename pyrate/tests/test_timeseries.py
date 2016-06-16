@@ -433,6 +433,7 @@ class MPITests(unittest.TestCase):
 
     @classmethod
     def process(cls):
+        cls.params[cf.OUT_DIR] = cls.tif_dir
         xlks, ylks, crop = run_pyrate.transform_params(cls.params)
 
         # dest_paths are tifs that have been geotif converted and multilooked
@@ -470,32 +471,30 @@ class MPITests(unittest.TestCase):
         cls.tsincr_mpi = np.load(tsincr_file)
 
     def calc_non_mpi_time_series(self):
-        temp_dir = tempfile.mkdtemp()
-        # copy sydney_tif files in temp_dir
-        shared.copytree(src=common.SYD_TEST_TIF, dst=temp_dir)
-        input_ifgs = glob.glob(os.path.join(temp_dir, '*.tif'))
-
-        # sort to make tests deterministic
-        input_ifgs.sort()
+        # now create the non parallel version
+        self.tif_dir_s = tempfile.mkdtemp()
+        self.params[cf.OUT_DIR] = self.tif_dir_s
         xlooks, ylooks, crop = run_pyrate.transform_params(self.params)
+        dest_paths_s = run_pyrate.get_dest_paths(
+            self.base_unw_paths, crop, self.params, xlooks)
+        run_prepifg.gamma_prepifg(self.base_unw_paths, self.params)
 
-        prepifg.prepare_ifgs(input_ifgs,
-                            crop,
-                            xlooks,
-                            ylooks,
-                            thresh=0.5,
-                            user_exts=None,
-                            write_to_disc=True)
-        mlooked_paths = [prepifg.mlooked_path(input_ifg, xlooks, crop)
-                         for input_ifg in input_ifgs]
-        ifgs, mst_grid = run_pyrate.mst_calculation(mlooked_paths,
-                                                            self.params)
-        refx, refy = run_pyrate.find_reference_pixel(ifgs, self.params)
+        ifgs = run_pyrate.pre_prepare_ifgs(dest_paths_s, self.params)
+        for i in ifgs:
+            i.close()
 
-        if self.params[cf.ORBITAL_FIT] != 0:
-            run_pyrate.remove_orbital_error(ifgs, self.params)
+        mst_grid = run_pyrate.mst_calculation(dest_paths_s, self.params)
 
-        _, ifgs = rpe.estimate_ref_phase(ifgs, self.params, refx, refy)
+        # reading ifgs again, this is consistent with nci submission script
+        ifgs = run_pyrate.pre_prepare_ifgs(dest_paths_s, self.params)
+
+        # Estimate reference pixel location
+        refpx, refpy = run_pyrate.find_reference_pixel(ifgs, self.params)
+
+        # Estimate and remove orbit errors
+        run_pyrate.remove_orbital_error(ifgs, self.params)
+
+        rpe.estimate_ref_phase(ifgs, self.params, refpx, refpy)
 
         maxvar = [vcm_module.cvd(i)[0] for i in ifgs]
 
@@ -503,14 +502,16 @@ class MPITests(unittest.TestCase):
 
         self.tsincr, self.tscum, self.tsvel = run_pyrate.calculate_time_series(
                 ifgs, self.params, vcmt, mst=mst_grid)
-        shutil.rmtree(temp_dir)
+        shutil.rmtree(self.tif_dir_s)
 
     @classmethod
     def tearDownClass(cls):
         shutil.rmtree(cls.tif_dir)
 
-    def test_mpi_mst_single_processor(self):
+    def test_mpi_time_series(self):
         for looks, ref_method in product(range(1, 5), [1, 2]):
+            print '=======Testing timeseries for looks:', looks, \
+                'ref_method: ', ref_method
             self.params[cf.IFG_LKSX] = looks
             self.params[cf.IFG_LKSY] = looks
             self.params[cf.REF_EST_METHOD] = ref_method

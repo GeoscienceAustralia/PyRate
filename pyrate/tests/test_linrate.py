@@ -295,8 +295,14 @@ class MPITests(unittest.TestCase):
                             write_to_disc=True)
         mlooked_paths = [prepifg.mlooked_path(input_ifg, xlooks, crop)
                          for input_ifg in input_ifgs]
-        ifgs, mst_grid = run_pyrate.mst_calculation(mlooked_paths,
-                                                            self.params)
+
+        ifgs = run_pyrate.pre_prepare_ifgs(mlooked_paths, self.params)
+        for i in ifgs:
+            i.close()
+
+        mst_grid = run_pyrate.mst_calculation(mlooked_paths, self.params)
+        ifgs = run_pyrate.pre_prepare_ifgs(mlooked_paths, self.params)
+
         refx, refy = run_pyrate.find_reference_pixel(ifgs, self.params)
 
         if self.params[cf.ORBITAL_FIT] != 0:
@@ -320,6 +326,8 @@ class MPITests(unittest.TestCase):
 
     def test_mpi_mst_single_processor(self):
         for looks, ref_method in product(range(1, 5), [1, 2]):
+            print '=======Testing linear rate for looks:', looks, \
+                'ref_method: ', ref_method
             self.params[cf.IFG_LKSX] = looks
             self.params[cf.IFG_LKSY] = looks
             self.params[cf.REF_EST_METHOD] = ref_method

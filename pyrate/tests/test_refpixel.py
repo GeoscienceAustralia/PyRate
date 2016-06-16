@@ -407,6 +407,7 @@ class MPITests(unittest.TestCase):
         tests reference pixel calculation MPI vs python multiprocess
         """
         for looks in [1, 2, 3, 4]:
+            print 'Checking refpixel for looks: ', looks
             self.params[cf.IFG_LKSX] = looks
             self.params[cf.IFG_LKSY] = looks
             self.process(self.base_unw_paths)
