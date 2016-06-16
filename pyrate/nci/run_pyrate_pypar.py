@@ -50,6 +50,10 @@ def main(params=None):
     output_dir = params[cf.OUT_DIR]
     mpi_log_filename = os.path.join(output_dir, "mpi_run_pyrate.log")
 
+    # TODO: investigate why removing the next line causes issues
+    ifgs = run_pyrate.pre_prepare_ifgs(cropped_and_sampled_tifs, params)
+    for i in ifgs:
+        i.close()
     ### Master Process ###
     if MPI_myID == MASTER_PROCESS:
         output_log_file = open(mpi_log_filename, "w")

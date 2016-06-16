@@ -531,38 +531,32 @@ class MPITests(unittest.TestCase):
         ref_phs_file = os.path.join(cls.params[cf.OUT_DIR], 'ref_phs.npy')
         cls.ref_phs = np.load(ref_phs_file)
 
-    def calc_non_mpi_ref_phase(self):
-        tmp_dir = tempfile.mkdtemp()
-        self.params[cf.OUT_DIR] = tmp_dir
-        xlks, ylks, crop = run_pyrate.transform_params(self.params)
+    @classmethod
+    def calc_non_mpi_ref_phase(cls):
+        cls.tmp_dir = tempfile.mkdtemp()
+        cls.params[cf.OUT_DIR] = cls.tmp_dir
+        xlks, ylks, crop = run_pyrate.transform_params(cls.params)
 
         # dest_paths are tifs that have been geotif converted and multilooked
         dest_paths = run_pyrate.get_dest_paths(
-            self.base_unw_paths, crop, self.params, xlks)
+            cls.base_unw_paths, crop, cls.params, xlks)
         # create the dest_paths files
-        run_prepifg.gamma_prepifg(self.base_unw_paths, self.params)
+        run_prepifg.gamma_prepifg(cls.base_unw_paths, cls.params)
 
-        # now create test ifgs
-        self.ifgs = common.sydney_data_setup(datafiles=dest_paths)
-
-        ifg_paths = [i.data_path for i in self.ifgs]
-        self.ifgs = run_pyrate.pre_prepare_ifgs(ifg_paths=ifg_paths,
-                                                params=self.params)
-        refx, refy = run_pyrate.find_reference_pixel(self.ifgs, self.params)
-
-        if self.params[cf.ORBITAL_FIT] != 0:
-            run_pyrate.remove_orbital_error(self.ifgs, self.params)
-
-        shutil.rmtree(tmp_dir)
-        return rpe.estimate_ref_phase(self.ifgs, self.params, refx, refy)[0]
-
+        run_pyrate.process_ifgs(dest_paths, cls.params)
+        # load the ref_phs file for testing
+        ref_phs_file = os.path.join(cls.params[cf.OUT_DIR], 'ref_phs.npy')
+        return np.load(ref_phs_file)
 
     @classmethod
     def tearDownClass(cls):
         shutil.rmtree(cls.tif_dir)
+        shutil.rmtree(cls.tmp_dir)
 
     def test_mpi_ref_phase(self):
         for looks, ref_method in product([1, 2, 3, 4], [1, 2]):
+            print 'Testing reference phase looks:', \
+                looks, 'ref_method:', ref_method
             self.params[cf.IFG_LKSX] = looks
             self.params[cf.IFG_LKSY] = looks
             self.params[cf.REF_EST_METHOD] = ref_method
@@ -574,8 +568,7 @@ class MPITests(unittest.TestCase):
             np.testing.assert_array_almost_equal(original_ref_phs, self.ref_phs,
                                                  decimal=3)
 
-    def test_maxvar_log_written(self):
-        self.process()
+        '''test log generated'''
         log_file = glob.glob(os.path.join(self.tif_dir, '*.log'))[0]
         self.assertTrue(os.path.exists(log_file))
 
