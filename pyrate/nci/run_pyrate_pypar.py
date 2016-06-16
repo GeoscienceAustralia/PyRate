@@ -50,10 +50,6 @@ def main(params=None):
     output_dir = params[cf.OUT_DIR]
     mpi_log_filename = os.path.join(output_dir, "mpi_run_pyrate.log")
 
-    # TODO: investigate why removing the next line causes issues
-    ifgs = run_pyrate.pre_prepare_ifgs(cropped_and_sampled_tifs, params)
-    for i in ifgs:
-        i.close()
     ### Master Process ###
     if MPI_myID == MASTER_PROCESS:
         output_log_file = open(mpi_log_filename, "w")
@@ -95,6 +91,11 @@ def main(params=None):
                                mst_mat_binary_file)
     write_msg('Calculating mst')
     parallel.barrier()
+    # TODO: investigate why removing the next line causes issues
+    ifgs = run_pyrate.pre_prepare_ifgs(cropped_and_sampled_tifs, params)
+    for i in ifgs:
+        i.close()
+
     ifgs = run_pyrate.pre_prepare_ifgs(cropped_and_sampled_tifs, params)
     mst_grid = np.load(file=mst_mat_binary_file)
 
