@@ -297,26 +297,35 @@ class ParallelPyRateTests(unittest.TestCase):
 
 class TestPrePrepareIfgs(unittest.TestCase):
 
-    def test_sydney_data_prep(self):
-        tmp_dir = tempfile.mkdtemp()
-        shared.copytree(common.SYD_TEST_TIF, tmp_dir)
-        tifs = glob.glob(os.path.join(tmp_dir, "*.tif"))
+    @classmethod
+    def setUpClass(cls):
+        params = config.get_config_params(common.SYDNEY_TEST_CONF)
+        cls.tmp_dir = tempfile.mkdtemp()
+        shared.copytree(common.SYD_TEST_TIF, cls.tmp_dir)
+        tifs = glob.glob(os.path.join(cls.tmp_dir, "*.tif"))
         for t in tifs:
             os.chmod(t, 0644)
         sydney_ifgs = common.sydney_data_setup(datafiles=tifs)
-        params = config.get_config_params(common.SYDNEY_TEST_CONF)
-
         ifg_paths = [i.data_path for i in sydney_ifgs]
 
-        ifg_ret = run_pyrate.pre_prepare_ifgs(ifg_paths, params=params)
-        for i in ifg_ret:
+        cls.ifg_ret = run_pyrate.pre_prepare_ifgs(ifg_paths, params=params)
+        for i in cls.ifg_ret:
             i.close()
 
         nan_conversion = params[cf.NAN_CONVERSION]
 
-        ifgs = [Ifg(p) for p in ifg_paths]
+        # prepare a second set
+        cls.tmp_dir2 = tempfile.mkdtemp()
+        shared.copytree(common.SYD_TEST_TIF, cls.tmp_dir2)
+        tifs = glob.glob(os.path.join(cls.tmp_dir2, "*.tif"))
+        for t in tifs:
+            os.chmod(t, 0644)
+        sydney_ifgs = common.sydney_data_setup(datafiles=tifs)
+        ifg_paths = [i.data_path for i in sydney_ifgs]
 
-        for i in ifgs:
+        cls.ifgs = [Ifg(p) for p in ifg_paths]
+
+        for i in cls.ifgs:
             if not i.is_open:
                 i.open(readonly=False)
             if nan_conversion:  # nan conversion happens here in networkx mst
@@ -324,13 +333,25 @@ class TestPrePrepareIfgs(unittest.TestCase):
                 i.convert_to_nans()
             if not i.mm_converted:
                 i.convert_to_mm()
+            i.close()
 
-        for i, j in zip(ifgs, ifg_ret):
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(cls.tmp_dir2)
+        shutil.rmtree(cls.tmp_dir)
+
+    def test_sydney_data_prep_phase_equality(self):
+        for i, j in zip(self.ifgs, self.ifg_ret):
             np.testing.assert_array_almost_equal(i.phase_data, j.phase_data)
             self.assertFalse((i.phase_data == 0).any())
             # if there was any 0 still present
             i.phase_data[4, 2] = 0
             self.assertTrue((i.phase_data == 0).any())
+
+    def test_sydney_data_prep_metadata_equality(self):
+        for i, j in zip(self.ifgs, self.ifg_ret):
+            self.assertDictEqual(i.meta_data, j.meta_data)
+
 
 if __name__ == "__main__":
     unittest.main()
