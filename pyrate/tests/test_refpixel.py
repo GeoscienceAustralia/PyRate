@@ -379,6 +379,7 @@ class MPITests(unittest.TestCase):
         cls.ref_pixel = np.load(ref_pixel_file)
         mst_file = os.path.join(cls.params[cf.OUT_DIR], 'mst_mat.npy')
         os.remove(mst_file)
+        os.remove(ref_pixel_file)
 
     @classmethod
     def tearDownClass(cls):
@@ -395,19 +396,16 @@ class MPITests(unittest.TestCase):
         # create the dest_paths files
         run_prepifg.gamma_prepifg(self.base_unw_paths, self.params)
 
-        # now create test ifgs
-        self.ifgs = common.sydney_data_setup(datafiles=dest_paths)
+        mst_grid, ref_pix, maxvar, vcmt, rate, error, samples = \
+            run_pyrate.process_ifgs(dest_paths, self.params)
 
-        ifg_paths = [i.data_path for i in self.ifgs]
-        self.ifgs = run_pyrate.pre_prepare_ifgs(ifg_paths=ifg_paths,
-                                                params=self.params)
-
-        refx, refy = run_pyrate.find_reference_pixel(self.ifgs, self.params)
         shutil.rmtree(tmp_dir)
-        return refx, refy
+        return ref_pix
 
-    def test_mpi_mst_single_processor(self):
-
+    def test_mpi_ref_pixel(self):
+        """
+        tests reference pixel calculation MPI vs python multiprocess
+        """
         for looks in [1, 2, 3, 4]:
             self.params[cf.IFG_LKSX] = looks
             self.params[cf.IFG_LKSY] = looks
@@ -415,11 +413,12 @@ class MPITests(unittest.TestCase):
             mlooked_ifgs = glob.glob(os.path.join(
                 self.tif_dir, '*_{looks}rlks_*cr.tif'.format(looks=looks)))
             self.assertEqual(len(mlooked_ifgs), 17)
+            print '\n\nCalculate original ref pixel'
             original_ref_pixel = self.calc_non_mpi_ref_pixel()
-
             np.testing.assert_array_equal(original_ref_pixel, self.ref_pixel)
 
     def test_mst_log_written(self):
+        """test log was created"""
         self.process(self.base_unw_paths)
         log_file = glob.glob(os.path.join(self.tif_dir, '*.log'))[0]
         self.assertTrue(os.path.exists(log_file))

@@ -310,7 +310,10 @@ class Ifg(RasterBase):
             self.phase_data = convert_radians_to_mm(self.phase_data,
                                                           self.wavelength)
             self.dataset.SetMetadataItem(ifc.PYRATE_PHASE_UNITS, MILLIMETRES)
-            self.write_modified_phase()
+            # self.write_modified_phase()
+            # otherwise NaN's don't write to bytecode properly
+            # and numpy complains
+            # self.dataset.FlushCache()
             msg = '%s: converted phase units to millimetres'
             logging.debug(msg % self.data_path)
         else:
@@ -374,6 +377,7 @@ class Ifg(RasterBase):
         self._phase_band = None
         """
         self.phase_band.WriteArray(self.phase_data)
+        self.dataset.FlushCache()
 
 
 class IfgPart(object):

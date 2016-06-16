@@ -96,7 +96,6 @@ def main(params=None):
 
     # Calc ref_pixel using MPI
     ref_pixel_file = os.path.join(params[cf.OUT_DIR], 'ref_pixel.npy')
-
     if MPI_myID == MASTER_PROCESS:
         refpx, refpy = ref_pixel_calc_mpi(MPI_myID, ifgs,
                                           num_processors, parallel, params)
@@ -107,7 +106,7 @@ def main(params=None):
     parallel.barrier()
     # refpixel read in each process
     refpx, refpy = np.load(ref_pixel_file)
-    print 'found reference pixel', refpx, refpy
+    print 'Found reference pixel', refpx, refpy
     parallel.barrier()
 
     # remove APS delay here

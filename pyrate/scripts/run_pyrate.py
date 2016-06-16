@@ -36,7 +36,10 @@ def process_ifgs(ifg_paths_or_instance, params):
     ifgs: sequence of paths to interferrograms (NB: changes are saved into ifgs)
     params: dictionary of configuration parameters
     """
-    ifgs, mst_grid = mst_calculation(ifg_paths_or_instance, params)
+    mst_grid = mst_calculation(ifg_paths_or_instance, params)
+
+    # reading ifgs again, this is consistent with nci submission script
+    ifgs = pre_prepare_ifgs(ifg_paths_or_instance, params)
 
     # Estimate reference pixel location
     refpx, refpy = find_reference_pixel(ifgs, params)
@@ -55,7 +58,11 @@ def process_ifgs(ifg_paths_or_instance, params):
     remove_orbital_error(ifgs, params)
 
     write_msg('Estimating and removing phase at reference pixel')
-    rpe.estimate_ref_phase(ifgs, params, refpx, refpy)
+    ref_phs, ifgs = rpe.estimate_ref_phase(ifgs, params, refpx, refpy)
+
+    # save reference phase
+    ref_phs_file = os.path.join(params[cf.OUT_DIR], 'ref_phs.npy')
+    np.save(file=ref_phs_file, arr=ref_phs)
 
     # TODO: assign maxvar to ifg metadata (and geotiff)?
     write_msg('Calculating maximum variance in interferograms')
@@ -87,7 +94,8 @@ def process_ifgs(ifg_paths_or_instance, params):
 
     md[ifc.MASTER_DATE] = epochlist.dates
     dest = os.path.join(PYRATEPATH, params[cf.OUT_DIR], "linrate.tif")
-    # remove metadata added to md in compute_time_series that doesn't make sense for the following tiffs
+    # remove metadata added to md in compute_time_series that doesn't
+    # make sense for the following tiffs
     if 'PR_SEQ_POS' in md:
         del md['PR_SEQ_POS']
     md['PR_TYPE'] = 'linrate'
@@ -101,7 +109,7 @@ def process_ifgs(ifg_paths_or_instance, params):
         i.close()
 
     write_msg('PyRate workflow completed')
-    return mst_grid, (refpx, refpy), maxvar, vcmt, rate
+    return mst_grid, (refpx, refpy), maxvar, vcmt, rate, error, samples
 
 
 def aps_delay_required(ifgs, params):
@@ -171,7 +179,9 @@ def mst_calculation(ifg_paths_or_instance, params):
         PYRATEPATH, params[cf.OUT_DIR], 'mst_mat')
     np.save(file=mst_mat_binary_file, arr=mst_grid)
 
-    return ifgs, mst_grid
+    for i in ifgs:
+        i.close()
+    return mst_grid
 
 
 def pre_prepare_ifgs(ifg_paths, params):
@@ -200,6 +210,7 @@ def compute_time_series(epochlist, gt, ifgs, md, mst_grid, params, vcmt, wkt):
                              pr_type='tscuml')
     write_timeseries_geotiff(epochlist, gt, md, params, tsvel, wkt,
                              pr_type='tsvel')
+    return tsincr, tscum, tsvel
 
 
 def write_timeseries_geotiff(epochlist, gt, md, params, tsincr, wkt, pr_type):
@@ -488,7 +499,6 @@ def log_config_file(configfile, log_filename):
         output_log_file.write(line)
     output_log_file.write("\nConfig Settings: end\n\n")
     output_log_file.write("\n===============================================\n")
-
 
 
 def write_msg(msg):
