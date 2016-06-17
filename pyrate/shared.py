@@ -319,8 +319,8 @@ class Ifg(RasterBase):
             return
         elif self.dataset.GetMetadataItem(ifc.PYRATE_PHASE_UNITS) == RADIANS:
             self.phase_data = convert_radians_to_mm(self.phase_data,
-                                                          self.wavelength)
-            self.dataset.SetMetadataItem(ifc.PYRATE_PHASE_UNITS, MILLIMETRES)
+                                                    self.wavelength)
+            self.meta_data[ifc.PYRATE_PHASE_UNITS] = MILLIMETRES
             # self.write_modified_phase()
             # otherwise NaN's don't write to bytecode properly
             # and numpy complains
@@ -388,6 +388,7 @@ class Ifg(RasterBase):
         self._phase_band = None
         """
         self.phase_band.WriteArray(self.phase_data)
+        self.dataset.SetMetadata(self.meta_data)
         self.dataset.FlushCache()
 
 

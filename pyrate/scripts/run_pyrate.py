@@ -21,9 +21,6 @@ from pyrate import algorithm
 from pyrate import ifgconstants as ifc
 from pyrate import remove_aps_delay as aps
 
-
-# constants for metadata flags
-ORB_REMOVED = 'REMOVED'
 PYRATEPATH = cf.PYRATEPATH
 
 # print screen output
@@ -51,8 +48,7 @@ def process_ifgs(ifg_paths_or_instance, params):
 
     # make sure aps correction flags are consistent
     if params[cf.APS_CORRECTION]:
-        flags = [i.dataset.GetMetadataItem(ifc.PYRATE_APS_ERROR) for i in ifgs]
-        check_aps_ifgs(ifgs, flags)
+        check_aps_ifgs(ifgs)
 
     # Estimate and remove orbit errors
     remove_orbital_error(ifgs, params)
@@ -128,12 +124,13 @@ def aps_delay_required(ifgs, params):
         write_msg('Skipped APS delay removal, ifgs are already aps corrected')
         return False
     else:
-        check_aps_ifgs(ifgs, flags)
+        check_aps_ifgs(ifgs)
 
     return True
 
 
-def check_aps_ifgs(ifgs, flags):
+def check_aps_ifgs(ifgs):
+    flags = [i.dataset.GetMetadataItem(ifc.PYRATE_APS_ERROR) for i in ifgs]
     count = sum([f == aps.APS_STATUS for f in flags])
     if (count < len(flags)) and (count > 0):
         logging.debug('Detected mix of corrected and uncorrected '
@@ -284,12 +281,12 @@ def remove_orbital_error(ifgs, params):
 
     # write data to disc after orbital error correction
     for i in ifgs:
-        i.dataset.SetMetadataItem(ifc.PYRATE_ORBITAL_ERROR, ORB_REMOVED)
+        i.dataset.SetMetadataItem(ifc.PYRATE_ORBITAL_ERROR, ifc.ORB_REMOVED)
         logging.debug('%s: orbital error removed' % i.data_path)
 
 
 def check_orbital_ifgs(ifgs, flags):
-    count = sum([f == ORB_REMOVED for f in flags])
+    count = sum([f == ifc.ORB_REMOVED for f in flags])
     if (count < len(flags)) and (count > 0):
         logging.debug('Detected mix of corrected and uncorrected '
                       'orbital error in ifgs')
