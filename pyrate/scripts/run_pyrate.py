@@ -124,7 +124,7 @@ def aps_delay_required(ifgs, params):
         write_msg('Skipped APS delay removal, ifgs are already aps corrected')
         return False
     else:
-        check_aps_ifgs(ifgs, flags)
+        check_aps_ifgs(ifgs)
 
     return True
 
