@@ -91,10 +91,6 @@ def main(params=None):
                                mst_mat_binary_file)
     write_msg('Calculating mst')
     parallel.barrier()
-    # TODO: investigate why removing the next line causes issues
-    ifgs = run_pyrate.pre_prepare_ifgs(cropped_and_sampled_tifs, params)
-    for i in ifgs:
-        i.close()
 
     ifgs = run_pyrate.pre_prepare_ifgs(cropped_and_sampled_tifs, params)
     mst_grid = np.load(file=mst_mat_binary_file)
