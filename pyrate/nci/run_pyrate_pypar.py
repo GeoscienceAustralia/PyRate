@@ -364,7 +364,7 @@ def orb_fit_calc_mpi(MPI_myID, ifgs, num_processors, parallel, params):
         # write data to disc after orbital error correction
         for i in ifgs:
             i.dataset.SetMetadataItem(ifc.PYRATE_ORBITAL_ERROR,
-                                      run_pyrate.ORB_REMOVED)
+                                      ifc.ORB_REMOVED)
             i.write_modified_phase()
     else:
         parallel.send(process_mlooked_dataset, destination=MASTER_PROCESS,
@@ -373,7 +373,7 @@ def orb_fit_calc_mpi(MPI_myID, ifgs, num_processors, parallel, params):
 
 
 def ref_pixel_calc_mpi(MPI_myID, ifgs, num_processors, parallel, params):
-    half_patch_size, _, thresh, grid = refpixel.ref_pixel_setup(ifgs, params)
+    half_patch_size, thresh, grid = refpixel.ref_pixel_setup(ifgs, params)
     no_steps = len(grid)
     process_indices = parallel.calc_indices(no_steps)
     process_grid = [itemgetter(p)(grid) for p in process_indices]
