@@ -5,6 +5,7 @@ Collection of tests for validating PyRate's time series analysis code.
 """
 
 import unittest
+
 from numpy import nan, asarray, where
 from numpy.testing import assert_array_almost_equal
 from datetime import date, timedelta
@@ -33,7 +34,6 @@ from pyrate import vcm
 from pyrate.tests import common
 from pyrate import vcm as vcm_module
 from pyrate import shared
-from pyrate import prepifg
 
 
 def default_params():
@@ -479,14 +479,14 @@ class MPITests(unittest.TestCase):
             self.base_unw_paths, crop, self.params, xlooks)
         run_prepifg.gamma_prepifg(self.base_unw_paths, self.params)
 
-        ifgs = run_pyrate.pre_prepare_ifgs(dest_paths_s, self.params)
+        ifgs = shared.pre_prepare_ifgs(dest_paths_s, self.params)
         for i in ifgs:
             i.close()
 
         mst_grid = run_pyrate.mst_calculation(dest_paths_s, self.params)
 
         # reading ifgs again, this is consistent with nci submission script
-        ifgs = run_pyrate.pre_prepare_ifgs(dest_paths_s, self.params)
+        ifgs = shared.pre_prepare_ifgs(dest_paths_s, self.params)
 
         # Estimate reference pixel location
         refpx, refpy = run_pyrate.find_reference_pixel(ifgs, self.params)

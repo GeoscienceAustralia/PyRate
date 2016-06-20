@@ -4,6 +4,7 @@ import datetime
 from operator import itemgetter
 import glob
 import numpy as np
+from pyrate import shared
 from numpy import isnan, nan
 
 from pyrate.nci.parallel import Parallel
@@ -92,23 +93,25 @@ def main(params=None):
     write_msg('Calculating mst')
     parallel.barrier()
 
-    ifgs = run_pyrate.pre_prepare_ifgs(cropped_and_sampled_tifs, params)
     mst_grid = np.load(file=mst_mat_binary_file)
 
     # Calc ref_pixel using MPI
     ref_pixel_file = os.path.join(params[cf.OUT_DIR], 'ref_pixel.npy')
     if MPI_myID == MASTER_PROCESS:
-        refpx, refpy = ref_pixel_calc_mpi(MPI_myID, ifgs,
+        refpx, refpy = ref_pixel_calc_mpi(MPI_myID, cropped_and_sampled_tifs,
                                           num_processors, parallel, params)
         np.save(file=ref_pixel_file, arr=[refpx, refpy])
     else:
-        ref_pixel_calc_mpi(MPI_myID, ifgs, num_processors, parallel, params)
+        ref_pixel_calc_mpi(MPI_myID, cropped_and_sampled_tifs,
+                           num_processors, parallel, params)
 
     parallel.barrier()
     # refpixel read in each process
     refpx, refpy = np.load(ref_pixel_file)
     print 'Found reference pixel', refpx, refpy
     parallel.barrier()
+
+    ifgs = shared.pre_prepare_ifgs(cropped_and_sampled_tifs, params)
 
     # remove APS delay here
     if run_pyrate.aps_delay_required(ifgs, params):
@@ -364,7 +367,7 @@ def orb_fit_calc_mpi(MPI_myID, ifgs, num_processors, parallel, params):
         # write data to disc after orbital error correction
         for i in ifgs:
             i.dataset.SetMetadataItem(ifc.PYRATE_ORBITAL_ERROR,
-                                      run_pyrate.ORB_REMOVED)
+                                      ifc.ORB_REMOVED)
             i.write_modified_phase()
     else:
         parallel.send(process_mlooked_dataset, destination=MASTER_PROCESS,
@@ -372,8 +375,8 @@ def orb_fit_calc_mpi(MPI_myID, ifgs, num_processors, parallel, params):
         print 'sent mlooked phase data'
 
 
-def ref_pixel_calc_mpi(MPI_myID, ifgs, num_processors, parallel, params):
-    half_patch_size, _, thresh, grid = refpixel.ref_pixel_setup(ifgs, params)
+def ref_pixel_calc_mpi(MPI_myID, ifg_paths, num_processors, parallel, params):
+    half_patch_size, thresh, grid = refpixel.ref_pixel_setup(ifg_paths, params)
     no_steps = len(grid)
     process_indices = parallel.calc_indices(no_steps)
     process_grid = [itemgetter(p)(grid) for p in process_indices]
@@ -382,7 +385,7 @@ def ref_pixel_calc_mpi(MPI_myID, ifgs, num_processors, parallel, params):
                                             processes=len(process_indices),
                                             num_files=no_steps)
     mean_sds = refpixel.ref_pixel_mpi(process_grid,
-                                      half_patch_size, ifgs, thresh)
+                                      half_patch_size, ifg_paths, thresh, params)
     if MPI_myID == MASTER_PROCESS:
         all_indices = parallel.calc_all_indices(no_steps)
         mean_sds_final = np.empty(shape=no_steps)
@@ -420,8 +423,8 @@ def mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs, mpi_log_filename,
     # due to limited memory can not copy whole ifgs phase data in each process
     # need ifgpart class
     # read the first tif to get shape
-    ifg = run_pyrate.pre_prepare_ifgs([cropped_and_sampled_tifs[0]],
-                                       params)[0]
+    ifg = shared.pre_prepare_ifgs([cropped_and_sampled_tifs[0]],
+                                         params)[0]
     top_lefts, bottom_rights, no_tiles = shared.setup_tiles(
         ifg.shape, processes=num_processors)
 

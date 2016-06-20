@@ -9,7 +9,7 @@ import numpy as np
 from itertools import product
 import parmap
 import pyrate.config as cf
-from pyrate.shared import Ifg
+from pyrate.shared import Ifg, IfgPart, pre_prepare_ifgs
 
 
 # TODO: move error checking to config step (for fail fast)
@@ -24,13 +24,12 @@ def ref_pixel(ifgs, params):
 
     :param ifgs: sequence of interferograms.
     """
-    half_patch_size, parallel, \
-        thresh, grid = ref_pixel_setup(ifgs, params)
-
+    half_patch_size, thresh, grid = ref_pixel_setup(ifgs, params)
+    parallel = params[cf.PARALLEL]
     if parallel:
         phase_data = [i.phase_data for i in ifgs]
         mean_sds = parmap.starmap(ref_pixel_multi, grid,
-                                  half_patch_size, phase_data, thresh)
+                                  half_patch_size, phase_data, thresh, params)
 
         refx, refy = filter_means(mean_sds, grid)
     else:
@@ -38,7 +37,7 @@ def ref_pixel(ifgs, params):
         mean_sds = []
         for y, x in grid:
             mean_sds.append(ref_pixel_multi(
-                y, x, half_patch_size, phase_data, thresh))
+                y, x, half_patch_size, phase_data, thresh, params))
         refx, refy = filter_means(mean_sds, grid)
 
     if refy and refx:
@@ -57,17 +56,23 @@ def filter_means(mean_sds, grid):
     return refx, refy
 
 
-def ref_pixel_setup(ifgs, params):
-    refnx, refny, chipsize, min_frac = params[cf.REFNX], params[cf.REFNY], \
+def ref_pixel_setup(ifgs_or_paths, params):
+    refnx, refny, chipsize, min_frac = params[cf.REFNX], \
+                                       params[cf.REFNY], \
                                        params[cf.REF_CHIP_SIZE], \
                                        params[cf.REF_MIN_FRAC],
-    parallel = params[cf.PARALLEL]
-    if len(ifgs) < 1:
+    if len(ifgs_or_paths) < 1:
         msg = 'Reference pixel search requires 2+ interferograms'
         raise RefPixelError(msg)
 
+    if isinstance(ifgs_or_paths[0], basestring):
+        ifg = Ifg(ifgs_or_paths[0])
+        ifg.open(readonly=True)
+    else:
+        ifg = ifgs_or_paths[0]
+
     # sanity check inputs
-    head = ifgs[0]
+    head = ifg
     validate_chipsize(chipsize, head)
     validate_minimum_fraction(min_frac)
     validate_search_win(refnx, refny, chipsize, head)
@@ -77,30 +82,38 @@ def ref_pixel_setup(ifgs, params):
     thresh = min_frac * chipsize * chipsize
     # do window searches across dataset, central pixel of stack with smallest
     # mean is the reference pixel
-    rows, cols = ifgs[0].shape
+    rows, cols = ifg.shape
     ysteps = step(rows, refny, half_patch_size)
     xsteps = step(cols, refnx, half_patch_size)
-    return half_patch_size, parallel, thresh, list(product(ysteps, xsteps))
+    return half_patch_size, thresh, list(product(ysteps, xsteps))
 
 
-def ref_pixel_mpi(process_grid, half_patch_size, ifgs, thresh):
+def ref_pixel_mpi(process_grid, half_patch_size, ifgs, thresh, params):
     mean_sds = []
     for y, x in process_grid:
-        mean_sds.append(ref_pixel_multi(y, x, half_patch_size, ifgs, thresh))
+        mean_sds.append(ref_pixel_multi(y, x, half_patch_size, ifgs, thresh,
+                                        params))
     return mean_sds
 
 
-def ref_pixel_multi(y, x, half_patch_size, phase_data_or_ifgs, thresh):
-    if isinstance(phase_data_or_ifgs[0], Ifg):  # phase_data_or_ifg is list of ifgs
+def ref_pixel_multi(y, x, half_patch_size, phase_data_or_ifg_paths,
+                    thresh, params):
+    if isinstance(phase_data_or_ifg_paths[0], basestring):  # phase_data_or_ifg is list of ifgs
         # this consumes a lot less memory
         # one ifg.phase_data in memory at any time
-        data = [p.phase_data[y - half_patch_size:y + half_patch_size + 1,
-                x - half_patch_size:x + half_patch_size + 1]
-                for p in phase_data_or_ifgs]
+        data = []
+        for p in phase_data_or_ifg_paths:
+            ifg = Ifg(p)
+            ifg.open(readonly=True)
+            ifg.nodata_value = params[cf.NO_DATA_VALUE]
+            ifg.convert_to_nans()
+            ifg.convert_to_mm()
+            data.append(ifg.phase_data[y - half_patch_size:y + half_patch_size + 1,
+                    x - half_patch_size:x + half_patch_size + 1])
     else:  # phase_data_or_ifg is phase_data list
         data = [p[y - half_patch_size:y + half_patch_size + 1,
                 x - half_patch_size:x + half_patch_size + 1]
-                for p in phase_data_or_ifgs]
+                for p in phase_data_or_ifg_paths]
     valid = [nsum(~isnan(d)) > thresh for d in data]
     if all(valid):  # ignore if 1+ ifgs have too many incoherent cells
         sd = [std(i[~isnan(i)]) for i in data]

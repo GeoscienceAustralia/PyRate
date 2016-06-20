@@ -23,7 +23,7 @@ import logging
 import pkg_resources
 import shutil
 import stat
-from pyrate import roipac, gamma
+from pyrate import roipac, gamma, config as cf
 from pyrate import ifgconstants as ifc
 
 try:
@@ -856,3 +856,16 @@ def copytree(src, dst, symlinks=False, ignore=None):
         else:
             shutil.copy2(s, d)
 
+
+def pre_prepare_ifgs(ifg_paths, params):
+    nan_conversion = params[cf.NAN_CONVERSION]
+    ifgs = [Ifg(p) for p in ifg_paths]
+    for i in ifgs:
+        if not i.is_open:
+            i.open(readonly=False)
+        if nan_conversion:  # nan conversion happens here in networkx mst
+            i.nodata_value = params[cf.NO_DATA_VALUE]
+            i.convert_to_nans()
+        if not i.mm_converted:
+            i.convert_to_mm()
+    return ifgs

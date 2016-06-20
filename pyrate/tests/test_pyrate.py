@@ -308,7 +308,7 @@ class TestPrePrepareIfgs(unittest.TestCase):
         sydney_ifgs = common.sydney_data_setup(datafiles=tifs)
         ifg_paths = [i.data_path for i in sydney_ifgs]
 
-        cls.ifg_ret = run_pyrate.pre_prepare_ifgs(ifg_paths, params=params)
+        cls.ifg_ret = shared.pre_prepare_ifgs(ifg_paths, params=params)
         for i in cls.ifg_ret:
             i.close()
 

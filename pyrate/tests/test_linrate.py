@@ -5,6 +5,7 @@ CUnittests for linrate.py
 '''
 
 import unittest
+
 from numpy import eye, array, ones, where
 from numpy.testing import assert_array_almost_equal
 import os
@@ -296,12 +297,12 @@ class MPITests(unittest.TestCase):
         mlooked_paths = [prepifg.mlooked_path(input_ifg, xlooks, crop)
                          for input_ifg in input_ifgs]
 
-        ifgs = run_pyrate.pre_prepare_ifgs(mlooked_paths, self.params)
+        ifgs = shared.pre_prepare_ifgs(mlooked_paths, self.params)
         for i in ifgs:
             i.close()
 
         mst_grid = run_pyrate.mst_calculation(mlooked_paths, self.params)
-        ifgs = run_pyrate.pre_prepare_ifgs(mlooked_paths, self.params)
+        ifgs = shared.pre_prepare_ifgs(mlooked_paths, self.params)
 
         refx, refy = run_pyrate.find_reference_pixel(ifgs, self.params)
 
