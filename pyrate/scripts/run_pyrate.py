@@ -2,24 +2,27 @@
 Main workflow script for PyRate
 """
 
-import os, sys, shutil, logging, datetime
-from osgeo import gdal
+import datetime
+import logging
+import os
+import sys
 import numpy as np
 
+import pyrate.config as cf
+import pyrate.linrate as linrate
 import pyrate.mst as mst
+import pyrate.orbital as orbital
 import pyrate.prepifg as prepifg
 import pyrate.refpixel as refpixel
-import pyrate.orbital as orbital
-import pyrate.linrate as linrate
 import pyrate.timeseries as timeseries
-import pyrate.config as cf
-from pyrate.shared import Ifg, write_output_geotiff
-from pyrate import vcm as vcm_module
-from pyrate import matlab_mst_kruskal as matlab_mst
-from pyrate import reference_phase_estimation as rpe
+from osgeo import gdal
 from pyrate import algorithm
 from pyrate import ifgconstants as ifc
+from pyrate import matlab_mst_kruskal as matlab_mst
+from pyrate import reference_phase_estimation as rpe
 from pyrate import remove_aps_delay as aps
+from pyrate import vcm as vcm_module
+from pyrate.shared import Ifg, write_output_geotiff, pre_prepare_ifgs
 
 PYRATEPATH = cf.PYRATEPATH
 
@@ -181,20 +184,6 @@ def mst_calculation(ifg_paths_or_instance, params):
     for i in ifgs:
         i.close()
     return mst_grid
-
-
-def pre_prepare_ifgs(ifg_paths, params):
-    nan_conversion = params[cf.NAN_CONVERSION]
-    ifgs = [Ifg(p) for p in ifg_paths]
-    for i in ifgs:
-        if not i.is_open:
-            i.open(readonly=False)
-        if nan_conversion:  # nan conversion happens here in networkx mst
-            i.nodata_value = params[cf.NO_DATA_VALUE]
-            i.convert_to_nans()
-        if not i.mm_converted:
-            i.convert_to_mm()
-    return ifgs
 
 
 def compute_time_series(epochlist, gt, ifgs, md, mst_grid, params, vcmt, wkt):
