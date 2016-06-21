@@ -52,6 +52,7 @@ def is_number(s):
     except:
         return False
 
+
 def getAnalysisExtent(
         cropOpt,
         rasters,
@@ -110,8 +111,8 @@ def prepare_ifg(
         shutil.copy(raster.data_path, renamed_path)
         # set metadata to indicated has been cropped and multilooked
         # copy file with mlooked path
-        dummy_warp(renamed_path)
-        return None
+        dataset, data = dummy_warp(renamed_path)
+        return data, None   # match number of elements in warp return
 
     return warp(raster, xlooks, ylooks, exts, resolution, thresh,
                 crop_opt, write_to_disc)
@@ -121,7 +122,9 @@ def dummy_warp(renamed_path):
     ifg = dem_or_ifg(renamed_path)
     ifg.open()
     ifg.dataset.SetMetadataItem(ifc.PROCESS_STEP, ifc.MULTILOOKED)
-    ifg.close()
+    data = ifg.dataset.ReadAsArray()
+    # ifg.close()
+    return ifg.dataset, data
 
 
 # TODO: crop options 0 = no cropping? get rid of same size (but it is in explained file)
@@ -353,14 +356,15 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out,
     else:
         driver_type = 'GTiff'
 
-    out_ds = gdalwarp.crop_resample_average(input_tif=ifg.data_path,
-                                            extents=extents,
-                                            new_res=resolution,
-                                            output_file=looks_path,
-                                            thresh=thresh,
-                                            out_driver_type=driver_type)[1]
+    resampled_data, out_ds = gdalwarp.crop_resample_average(
+        input_tif=ifg.data_path,
+        extents=extents,
+        new_res=resolution,
+        output_file=looks_path,
+        thresh=thresh,
+        out_driver_type=driver_type)
     if not write_to_disc:
-        return out_ds  # this is used in orbfit correction when looks!=1
+        return resampled_data, out_ds  # this is used in orbfit correction when looks!=1
 
 
 def resample(data, xscale, yscale, thresh):
