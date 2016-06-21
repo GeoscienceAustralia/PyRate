@@ -112,7 +112,7 @@ def prepare_ifg(
         # set metadata to indicated has been cropped and multilooked
         # copy file with mlooked path
         dataset, data = dummy_warp(renamed_path)
-        return data, None   # match number of elements in warp return
+        return data, dataset
 
     return warp(raster, xlooks, ylooks, exts, resolution, thresh,
                 crop_opt, write_to_disc)
@@ -123,7 +123,6 @@ def dummy_warp(renamed_path):
     ifg.open()
     ifg.dataset.SetMetadataItem(ifc.PROCESS_STEP, ifc.MULTILOOKED)
     data = ifg.dataset.ReadAsArray()
-    # ifg.close()
     return ifg.dataset, data
 
 

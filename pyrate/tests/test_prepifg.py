@@ -408,7 +408,7 @@ class SameSizeTests(unittest.TestCase):
         ifg_data_paths = [d.data_path for d in ifgs]
         res_tup = prepare_ifgs(ifg_data_paths, ALREADY_SAME_SIZE, 1, 1)
         res = [r[1] for r in res_tup]
-        self.assertFalse(any(res))
+        self.assertTrue(all(res))
 
     def test_already_same_size_mismatch(self):
         ifgs, random_dir = diff_exts_ifgs()
