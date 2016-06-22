@@ -25,6 +25,7 @@ import shutil
 import stat
 from pyrate import roipac, gamma, config as cf
 from pyrate import ifgconstants as ifc
+from pyrate.scripts.run_pyrate import VERBOSE
 
 try:
     from osgeo import osr, gdal
@@ -881,3 +882,12 @@ def prepare_ifgs_without_phase(ifg_paths, params):
         if not i.is_open:
             i.open(readonly=False)
     return ifgs
+
+
+def write_msg(msg):
+    """
+    write message to log file and screen output
+    """
+    logging.debug(msg)
+    if VERBOSE:
+        print msg

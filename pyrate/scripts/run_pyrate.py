@@ -22,7 +22,7 @@ from pyrate import matlab_mst_kruskal as matlab_mst
 from pyrate import reference_phase_estimation as rpe
 from pyrate import remove_aps_delay as aps
 from pyrate import vcm as vcm_module
-from pyrate.shared import Ifg, write_output_geotiff, pre_prepare_ifgs
+from pyrate.shared import Ifg, write_output_geotiff, pre_prepare_ifgs, write_msg
 
 PYRATEPATH = cf.PYRATEPATH
 
@@ -506,15 +506,6 @@ def log_config_file(configfile, log_filename):
         output_log_file.write(line)
     output_log_file.write("\nConfig Settings: end\n\n")
     output_log_file.write("\n===============================================\n")
-
-
-def write_msg(msg):
-    """
-    write message to log file and screen output
-    """
-    logging.debug(msg)
-    if VERBOSE:
-        print msg
 
 
 if __name__ == "__main__":
