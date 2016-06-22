@@ -111,8 +111,7 @@ def prepare_ifg(
         shutil.copy(raster.data_path, renamed_path)
         # set metadata to indicated has been cropped and multilooked
         # copy file with mlooked path
-        dataset, data = dummy_warp(renamed_path)
-        return data, dataset
+        return dummy_warp(renamed_path)
 
     return warp(raster, xlooks, ylooks, exts, resolution, thresh,
                 crop_opt, write_to_disc)
@@ -123,7 +122,7 @@ def dummy_warp(renamed_path):
     ifg.open()
     ifg.dataset.SetMetadataItem(ifc.PROCESS_STEP, ifc.MULTILOOKED)
     data = ifg.dataset.ReadAsArray()
-    return ifg.dataset, data
+    return data, ifg.dataset
 
 
 # TODO: crop options 0 = no cropping? get rid of same size (but it is in explained file)

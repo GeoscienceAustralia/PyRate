@@ -275,8 +275,8 @@ def remove_orbital_error(ifgs, params):
                              xlooks=params[cf.ORBITAL_FIT_LOOKS_X],
                              ylooks=params[cf.ORBITAL_FIT_LOOKS_Y],
                              thresh=params[cf.NO_DATA_AVERAGING_THRESHOLD],
-                             write_to_disc=False)[0]
-        mlooked = [Ifg(m) for m in mlooked_dataset]
+                             write_to_disc=False)
+        mlooked = [Ifg(m[1]) for m in mlooked_dataset]
 
         for m in mlooked:
             m.initialize()
