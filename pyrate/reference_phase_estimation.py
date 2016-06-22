@@ -5,10 +5,11 @@ __author__ = 'Sudipta Basak'
 __date_created__ = '22/12/15'
 
 import numpy as np
-from pyrate import config as cf
-from pyrate.shared import nanmedian
 import parmap
-
+from pyrate import config as cf
+from pyrate.shared import nanmedian, write_msg
+from pyrate import ifgconstants as ifc
+import logging
 
 def estimate_ref_phase(ifgs, params, refpx, refpy):
     """
@@ -31,6 +32,9 @@ def estimate_ref_phase(ifgs, params, refpx, refpy):
     else:
         raise ReferencePhaseError('No such option. Use refest=1 or 2')
 
+    for i in ifgs:
+        i.meta_data[ifc.REF_PHASE] = ifc.REF_PHASE_REMOVED
+        i.write_modified_phase()
     return ref_phs, ifgs
 
 
@@ -102,6 +106,28 @@ def est_ref_phase_method1_multi(phase_data, comp):
 def _validate_ifgs(ifgs):
     if len(ifgs) < 2:
         raise ReferencePhaseError('Need to provide at least 2 ifgs')
+    flags = [i.dataset.GetMetadataItem(ifc.REF_PHASE) for i in ifgs]
+    if all(flags):
+        write_msg('Ifgs already reference phase corrected')
+        return
+    else:
+        check_ref_phase_ifgs(ifgs, flags)
+
+
+def check_ref_phase_ifgs(ifgs, flags):
+    count = sum([f == ifc.REF_PHASE_REMOVED for f in flags])
+    if (count < len(flags)) and (count > 0):
+        logging.debug('Detected mix of corrected and uncorrected '
+                      'reference phases in ifgs')
+
+        for i, flag in zip(ifgs, flags):
+            if flag:
+                msg = '%s: prior reference phase correction detected'
+            else:
+                msg = '%s: no reference phase correction detected'
+            logging.debug(msg % i.data_path)
+
+        raise ReferencePhaseError(msg)
 
 
 class ReferencePhaseError(Exception):
