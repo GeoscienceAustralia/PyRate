@@ -14,7 +14,7 @@ from numpy.linalg import pinv
 import parmap
 
 from pyrate.algorithm import master_slave_ids, get_all_epochs, get_epoch_count
-from pyrate import mst
+from pyrate import mst, shared
 from pyrate.shared import nanmedian
 from pyrate import config as cf
 
@@ -91,9 +91,11 @@ def orbital_correction(ifgs, params, mlooked=None, offset=True):
             # parmap.map(_independent_correction, ifgs, degree, offset,
             #            processes=params[cf.PROCESSES])
             for i in ifgs:
+                shared.nan_and_mm_convert(i, params)
                 _independent_correction(i, degree, offset)
         else:
             for i in ifgs:
+                shared.nan_and_mm_convert(i, params)
                 _independent_correction(i, degree, offset)
     else:
         msg = "Unknown method: '%s', need INDEPENDENT or NETWORK method"
