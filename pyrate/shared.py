@@ -388,7 +388,7 @@ class Ifg(RasterBase):
         self._phase_band = None
         """
         self.phase_band.WriteArray(self.phase_data)
-        self.dataset.SetMetadata(self.meta_data)
+        # self.dataset.SetMetadata(self.meta_data)
         self.dataset.FlushCache()
 
 
