@@ -321,6 +321,9 @@ def maxvar_mpi(MPI_myID, ifgs, num_processors, parallel, params):
 
 def orb_fit_calc_mpi(MPI_myID, ifg_paths, num_processors, parallel, params):
     print 'calculating orbfit using MPI id:', MPI_myID
+    if params[cf.ORBITAL_FIT_METHOD] != 1:
+        raise cf.ConfigException('For now orbfit method must be 1')
+
     ifgs = shared.prepare_ifgs_without_phase(ifg_paths, params)
     no_ifgs = len(ifgs)
     process_indices = parallel.calc_indices(no_ifgs)
