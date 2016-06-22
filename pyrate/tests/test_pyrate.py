@@ -200,6 +200,9 @@ class PyRateTests(unittest.TestCase):
 
 
 class ParallelPyRateTests(unittest.TestCase):
+    """
+    parallel vs serial pyrate tests verifying results from all steps equal
+    """
 
     @classmethod
     def setUpClass(cls):

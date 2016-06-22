@@ -388,7 +388,8 @@ class Ifg(RasterBase):
         self._phase_band = None
         """
         self.phase_band.WriteArray(self.phase_data)
-        self.dataset.SetMetadata(self.meta_data)
+        for k, v in self.meta_data.items():
+            self.dataset.SetMetadataItem(k, v)
         self.dataset.FlushCache()
 
 
@@ -516,7 +517,6 @@ class Incidence(RasterBase):
         if self._azimuth_data is None:
             self._azimuth_data = self.azimuth_band.ReadAsArray()
         return self._azimuth_data
-
 
 
 class DEM(RasterBase):
@@ -858,14 +858,26 @@ def copytree(src, dst, symlinks=False, ignore=None):
 
 
 def pre_prepare_ifgs(ifg_paths, params):
-    nan_conversion = params[cf.NAN_CONVERSION]
     ifgs = [Ifg(p) for p in ifg_paths]
     for i in ifgs:
         if not i.is_open:
             i.open(readonly=False)
-        if nan_conversion:  # nan conversion happens here in networkx mst
-            i.nodata_value = params[cf.NO_DATA_VALUE]
-            i.convert_to_nans()
-        if not i.mm_converted:
-            i.convert_to_mm()
+        nan_and_mm_convert(i, params)
+    return ifgs
+
+
+def nan_and_mm_convert(ifg, params):
+    nan_conversion = params[cf.NAN_CONVERSION]
+    if nan_conversion:  # nan conversion happens here in networkx mst
+        ifg.nodata_value = params[cf.NO_DATA_VALUE]
+        ifg.convert_to_nans()
+    if not ifg.mm_converted:
+        ifg.convert_to_mm()
+
+
+def prepare_ifgs_without_phase(ifg_paths, params):
+    ifgs = [Ifg(p) for p in ifg_paths]
+    for i in ifgs:
+        if not i.is_open:
+            i.open(readonly=False)
     return ifgs

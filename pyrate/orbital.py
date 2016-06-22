@@ -14,7 +14,7 @@ from numpy.linalg import pinv
 import parmap
 
 from pyrate.algorithm import master_slave_ids, get_all_epochs, get_epoch_count
-from pyrate import mst
+from pyrate import mst, shared
 from pyrate.shared import nanmedian
 from pyrate import config as cf
 
@@ -91,10 +91,10 @@ def orbital_correction(ifgs, params, mlooked=None, offset=True):
             # parmap.map(_independent_correction, ifgs, degree, offset,
             #            processes=params[cf.PROCESSES])
             for i in ifgs:
-                _independent_correction(i, degree, offset)
+                _independent_correction(i, degree, offset, params)
         else:
             for i in ifgs:
-                _independent_correction(i, degree, offset)
+                _independent_correction(i, degree, offset, params)
     else:
         msg = "Unknown method: '%s', need INDEPENDENT or NETWORK method"
         raise OrbitalError(msg % method)
@@ -135,7 +135,7 @@ def get_num_params(degree, offset=None):
     return nparams
 
 
-def _independent_correction(ifg, degree, offset):
+def _independent_correction(ifg, degree, offset, params):
     """
     Calculates and removes orbital correction from an ifg.
 
@@ -144,7 +144,9 @@ def _independent_correction(ifg, degree, offset):
     :param ifg: the ifg to remove remove the orbital error from
     :param degree: type of model to use PLANAR, QUADRATIC etc
     :param offset: boolean
+    :param params: parameter dictionary
     """
+    shared.nan_and_mm_convert(ifg, params)
     vphase = reshape(ifg.phase_data, ifg.num_cells)  # vectorise, keeping NODATA
     dm = get_design_matrix(ifg, degree, offset)
 

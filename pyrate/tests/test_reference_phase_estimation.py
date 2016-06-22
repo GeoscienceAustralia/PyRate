@@ -14,14 +14,10 @@ from itertools import product
 from pyrate import config as cf
 from pyrate.scripts import run_pyrate
 from pyrate import matlab_mst_kruskal as matlab_mst
-from pyrate.tests.common import SYD_TEST_DIR, SYD_TEST_OUT
 from pyrate.tests.common import SYD_TEST_DIR
 from pyrate.reference_phase_estimation import estimate_ref_phase
 from pyrate.scripts import run_prepifg
 from pyrate.tests import common
-from pyrate import reference_phase_estimation as rpe
-from pyrate import remove_aps_delay as aps
-from pyrate import ifgconstants as ifc
 
 
 class RefPhsEstimationMatlabTestMethod1Serial(unittest.TestCase):
@@ -554,12 +550,16 @@ class MPITests(unittest.TestCase):
         shutil.rmtree(cls.tmp_dir)
 
     def test_mpi_ref_phase(self):
-        for looks, ref_method in product([1, 2, 3, 4], [1, 2]):
-            print 'Testing reference phase looks:', \
-                looks, 'ref_method:', ref_method
+        for looks, ref_method, orbfit_method in product([1, 2, 3, 4], [1, 2], [1]):
+            print 'Testing reference phase looks: {looks}, ' \
+                  'ref_method: {ref_method}, ' \
+                  'orbfit method: {orbfit}\n'.format(looks=looks,
+                                                   ref_method=ref_method,
+                                                   orbfit=orbfit_method)
             self.params[cf.IFG_LKSX] = looks
             self.params[cf.IFG_LKSY] = looks
             self.params[cf.REF_EST_METHOD] = ref_method
+            self.params[cf.ORBITAL_FIT_METHOD] = orbfit_method
             self.process()
             mlooked_ifgs = glob.glob(os.path.join(
                 self.tif_dir, '*_{looks}rlks_*cr.tif'.format(looks=looks)))

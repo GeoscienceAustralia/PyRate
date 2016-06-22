@@ -56,6 +56,11 @@ def process_ifgs(ifg_paths_or_instance, params):
     # Estimate and remove orbit errors
     remove_orbital_error(ifgs, params)
 
+    for i in ifgs:
+        i.close()
+
+    ifgs = pre_prepare_ifgs(ifg_paths_or_instance, params)
+
     write_msg('Estimating and removing phase at reference pixel')
     ref_phs, ifgs = rpe.estimate_ref_phase(ifgs, params, refpx, refpy)
 
@@ -102,8 +107,11 @@ def process_ifgs(ifg_paths_or_instance, params):
     md['PR_TYPE'] = 'linrate'
     write_output_geotiff(md, gt, wkt, rate, dest, np.nan)
     dest = os.path.join(PYRATEPATH, params[cf.OUT_DIR], "linerror.tif")
+
     md['PR_TYPE'] = 'linerror'
     write_output_geotiff(md, gt, wkt, error, dest, np.nan)
+
+    write_linrate_numpy_files(error, params, rate, samples)
 
     # close all open ifgs
     for i in ifgs:
@@ -111,6 +119,15 @@ def process_ifgs(ifg_paths_or_instance, params):
 
     write_msg('PyRate workflow completed')
     return mst_grid, (refpx, refpy), maxvar, vcmt, rate, error, samples
+
+
+def write_linrate_numpy_files(error, params, rate, samples):
+    rate_file = os.path.join(params[cf.OUT_DIR], 'rate.npy')
+    error_file = os.path.join(params[cf.OUT_DIR], 'error.npy')
+    samples_file = os.path.join(params[cf.OUT_DIR], 'samples.npy')
+    np.save(file=rate_file, arr=rate)
+    np.save(file=error_file, arr=error)
+    np.save(file=samples_file, arr=samples)
 
 
 def aps_delay_required(ifgs, params):
@@ -247,20 +264,21 @@ def remove_orbital_error(ifgs, params):
         check_orbital_ifgs(ifgs, flags)
 
     mlooked = None
-    if (params[cf.ORBITAL_FIT_LOOKS_X] > 1 or params[cf.ORBITAL_FIT_LOOKS_Y] > 1)\
-            and (params[cf.ORBITAL_FIT_METHOD] != 1):
+
+    if (params[cf.ORBITAL_FIT_LOOKS_X] > 1 or
+                params[cf.ORBITAL_FIT_LOOKS_Y] > 1):
         # resampling here to use all prior corrections to orig data
         # can't do multiprocessing without writing to disc, but can do MPI
         # due to swig pickling issue. So multiprocesing is not implemented
-        mlooked_phase_data = prepifg.prepare_ifgs([i.data_path for i in ifgs],
+        mlooked_dataset = prepifg.prepare_ifgs([i.data_path for i in ifgs],
                              crop_opt=prepifg.ALREADY_SAME_SIZE,
                              xlooks=params[cf.ORBITAL_FIT_LOOKS_X],
                              ylooks=params[cf.ORBITAL_FIT_LOOKS_Y],
                              thresh=params[cf.NO_DATA_AVERAGING_THRESHOLD],
                              write_to_disc=False)
-        mlooked = [Ifg(m) for m in mlooked_phase_data]
+        mlooked = [Ifg(m[1]) for m in mlooked_dataset]
 
-        for m, i in zip(mlooked, ifgs):
+        for m in mlooked:
             m.initialize()
             m.nodata_value = params[cf.NO_DATA_VALUE]
 
@@ -271,6 +289,7 @@ def remove_orbital_error(ifgs, params):
     # write data to disc after orbital error correction
     for i in ifgs:
         i.dataset.SetMetadataItem(ifc.PYRATE_ORBITAL_ERROR, ifc.ORB_REMOVED)
+        i.write_modified_phase()
         logging.debug('%s: orbital error removed' % i.data_path)
 
 

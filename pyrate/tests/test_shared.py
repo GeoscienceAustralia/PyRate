@@ -158,7 +158,7 @@ class IfgIOTests(unittest.TestCase):
                              xlooks=2,
                              ylooks=2,
                              write_to_disc=False)
-        mlooked = [Ifg(m) for m in mlooked_phase_data]
+        mlooked = [Ifg(m[1]) for m in mlooked_phase_data]
         self.assertRaises(RasterException, mlooked[0].open)
 
     def test_write(self):
