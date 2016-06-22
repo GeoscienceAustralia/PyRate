@@ -228,16 +228,17 @@ class MPITests(unittest.TestCase):
         cls.params[cf.PROCESSOR] = 1  # gamma
         cls.params[cf.IFG_FILE_LIST] = os.path.join(
             common.SYD_TEST_GAMMA, 'ifms_17')
-        cls.params[cf.OUT_DIR] = cls.tif_dir
         cls.params[cf.PARALLEL] = 0
         cls.params[cf.REF_EST_METHOD] = 1
         cls.params[cf.APS_CORRECTION] = 0
+        cls.params[cf.ORBITAL_FIT_METHOD] = 1
         # base_unw_paths need to be geotiffed and multilooked by run_prepifg
         cls.base_unw_paths = run_pyrate.original_ifg_paths(
             cls.params[cf.IFG_FILE_LIST])
 
     @classmethod
     def process(cls):
+        cls.params[cf.OUT_DIR] = cls.tif_dir
         xlks, ylks, crop = run_pyrate.transform_params(cls.params)
 
         # dest_paths are tifs that have been geotif converted and multilooked
@@ -266,9 +267,6 @@ class MPITests(unittest.TestCase):
         cmd = str.split()
         subprocess.check_call(cmd)
 
-        maxvar_file = os.path.join(cls.params[cf.OUT_DIR], 'maxvar.npy')
-        cls.maxvar_mpi = np.load(maxvar_file)
-
         rate_file = os.path.join(cls.params[cf.OUT_DIR], 'rate.npy')
         cls.rate_mpi = np.load(rate_file)
         error_file = os.path.join(cls.params[cf.OUT_DIR], 'error.npy')
@@ -279,46 +277,18 @@ class MPITests(unittest.TestCase):
     def calc_non_mpi_time_series(self):
         temp_dir = tempfile.mkdtemp()
         # copy sydney_tif files in temp_dir
-        shared.copytree(src=common.SYD_TEST_TIF, dst=temp_dir)
-        input_ifgs = glob.glob(os.path.join(temp_dir, '*.tif'))
+        self.params[cf.OUT_DIR] = temp_dir
+        xlks, ylks, crop = run_pyrate.transform_params(self.params)
 
-        # sort to make tests deterministic
-        input_ifgs.sort()
+        # dest_paths are tifs that have been geotif converted and multilooked
+        dest_paths = run_pyrate.get_dest_paths(
+            self.base_unw_paths, crop, self.params, xlks)
+        # create the dest_paths files
+        run_prepifg.gamma_prepifg(self.base_unw_paths, self.params)
 
-        xlooks, ylooks, crop = run_pyrate.transform_params(self.params)
+        _, _, _, _, self.rate, self.error, self.samples = \
+            run_pyrate.process_ifgs(dest_paths, self.params)
 
-        prepifg.prepare_ifgs(input_ifgs,
-                            crop,
-                            xlooks,
-                            ylooks,
-                            thresh=0.5,
-                            user_exts=None,
-                            write_to_disc=True)
-        mlooked_paths = [prepifg.mlooked_path(input_ifg, xlooks, crop)
-                         for input_ifg in input_ifgs]
-
-        ifgs = shared.pre_prepare_ifgs(mlooked_paths, self.params)
-        for i in ifgs:
-            i.close()
-
-        mst_grid = run_pyrate.mst_calculation(mlooked_paths, self.params)
-        ifgs = shared.pre_prepare_ifgs(mlooked_paths, self.params)
-
-        refx, refy = run_pyrate.find_reference_pixel(ifgs, self.params)
-
-        if self.params[cf.ORBITAL_FIT] != 0:
-            run_pyrate.remove_orbital_error(ifgs, self.params)
-
-        _, ifgs = rpe.estimate_ref_phase(ifgs, self.params, refx, refy)
-
-        maxvar = [vcm_module.cvd(i)[0] for i in ifgs]
-
-        vcmt = vcm_module.get_vcmt(ifgs, maxvar)
-
-        self.rate, self.error, self.samples = run_pyrate.calculate_linear_rate(
-                   ifgs, self.params, vcmt, mst=mst_grid)
-
-        np.testing.assert_array_almost_equal(maxvar, self.maxvar_mpi, decimal=3)
         shutil.rmtree(temp_dir)
 
     @classmethod
@@ -326,12 +296,14 @@ class MPITests(unittest.TestCase):
         shutil.rmtree(cls.tif_dir)
 
     def test_mpi_mst_single_processor(self):
-        for looks, ref_method in product(range(1, 5), [1, 2]):
+        for looks, ref_method, orbfitmethod in product(range(1, 5), [1, 2],
+                                                       [1]):
             print '=======Testing linear rate for looks:', looks, \
                 'ref_method: ', ref_method
             self.params[cf.IFG_LKSX] = looks
             self.params[cf.IFG_LKSY] = looks
             self.params[cf.REF_EST_METHOD] = ref_method
+            self.params[cf.ORBITAL_FIT_METHOD] = orbfitmethod
             self.process()
             mlooked_ifgs = glob.glob(os.path.join(
                 self.tif_dir, '*_{looks}rlks_*cr.tif'.format(looks=looks)))
