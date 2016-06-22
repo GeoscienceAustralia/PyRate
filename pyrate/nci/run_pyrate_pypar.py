@@ -111,17 +111,17 @@ def main(params=None):
     print 'Found reference pixel', refpx, refpy
     parallel.barrier()
 
-    ifgs = shared.pre_prepare_ifgs(cropped_and_sampled_tifs, params)
-
     # remove APS delay here
-    if run_pyrate.aps_delay_required(ifgs, params):
-        no_ifgs = len(ifgs)
-        process_indices = parallel.calc_indices(no_ifgs)
-        # process_ifgs = [itemgetter(p)(ifgs) for p in process_indices]
-        ifgs = aps.remove_aps_delay(ifgs, params, process_indices)
+    if params[cf.APS_CORRECTION]:
+        ifgs = shared.pre_prepare_ifgs(cropped_and_sampled_tifs, params)
+        if run_pyrate.aps_delay_required(ifgs, params):
+            no_ifgs = len(ifgs)
+            process_indices = parallel.calc_indices(no_ifgs)
+            # process_ifgs = [itemgetter(p)(ifgs) for p in process_indices]
+            ifgs = aps.remove_aps_delay(ifgs, params, process_indices)
 
-    for i in ifgs:
-        i.close()
+        for i in ifgs:
+            i.close()
 
     parallel.barrier()
     # required as all processes need orbital corrected ifgs
@@ -129,14 +129,17 @@ def main(params=None):
                      num_processors, parallel, params)
     parallel.barrier()
 
-    ifgs = shared.pre_prepare_ifgs(cropped_and_sampled_tifs, params)
-
     # estimate and remove reference phase, ifgs are modifed in place
-    ref_phase_estimation_mpi(MPI_myID, ifgs, num_processors, parallel, params,
+    ref_phase_estimation_mpi(MPI_myID, cropped_and_sampled_tifs,
+                             num_processors, parallel, params,
                              refpx, refpy)
+    parallel.barrier()
 
     # all processes need access to maxvar
-    maxvar = maxvar_mpi(MPI_myID, ifgs, num_processors, parallel, params)
+    ifgs = shared.pre_prepare_ifgs(cropped_and_sampled_tifs, params)
+
+    maxvar = maxvar_mpi(MPI_myID, ifgs,
+                        num_processors, parallel, params)
     # get vcmt is very fast and not mpi'ed at the moment
     # TODO: revisit this if performance is low in NCI
     # vcmt extremely fast already and no need to parallize
@@ -242,9 +245,10 @@ def time_series_mpi(MPI_myID, ifgs, mst_grid, num_processors, parallel, params,
                       tag=MPI_myID)
 
 
-def ref_phase_estimation_mpi(MPI_myID, ifgs, num_processors, parallel, params,
+def ref_phase_estimation_mpi(MPI_myID, ifg_paths, num_processors, parallel, params,
                              refpx, refpy):
     write_msg('Finding and removing reference phase')
+    ifgs = shared.prepare_ifgs_without_phase(ifg_paths, params)
     no_ifgs = len(ifgs)
     process_indices = parallel.calc_indices(no_ifgs)
     process_ifgs = [itemgetter(p)(ifgs) for p in process_indices]
