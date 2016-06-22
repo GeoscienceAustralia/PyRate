@@ -320,30 +320,23 @@ def maxvar_mpi(MPI_myID, ifgs, num_processors, parallel, params):
 
 
 def orb_fit_calc_mpi(MPI_myID, ifg_paths, num_processors, parallel, params):
-    print 'calculating orbfit in parallel'
+    print 'calculating orbfit using MPI id:', MPI_myID
     ifgs = shared.prepare_ifgs_without_phase(ifg_paths, params)
-    exts = prepifg.getAnalysisExtent(
-        cropOpt=params[cf.IFG_CROP_OPT],
-        rasters=ifgs,
-        xlooks=params[cf.ORBITAL_FIT_LOOKS_X],
-        ylooks=params[cf.ORBITAL_FIT_LOOKS_Y],
-        userExts=None)
+    no_ifgs = len(ifgs)
+    process_indices = parallel.calc_indices(no_ifgs)
+    process_ifgs = [itemgetter(p)(ifgs) for p in process_indices]
 
-    if MPI_myID == MASTER_PROCESS:
-        mlooked = None
-        # difficult to enable MPI on orbfit method 2
-        # so just do orbfit method 1 for now
-        # TODO: MPI orbfit method 2
-        orbital.orbital_correction(ifgs,
-                                   params,
-                                   mlooked=mlooked)
-        # set orbfit tags after orbital error correction
-        for i in ifgs:
-            i.write_modified_phase()
-            # implement mpi logging
-        return ifgs
-    else:
-        pass
+    mlooked = None
+    # difficult to enable MPI on orbfit method 2
+    # so just do orbfit method 1 for now
+    # TODO: MPI orbfit method 2
+    orbital.orbital_correction(process_ifgs,
+                               params,
+                               mlooked=mlooked)
+    # set orbfit tags after orbital error correction
+    for i in process_ifgs:
+        i.write_modified_phase()
+        # implement mpi logging
 
 def ref_pixel_calc_mpi(MPI_myID, ifg_paths, num_processors, parallel, params):
     half_patch_size, thresh, grid = refpixel.ref_pixel_setup(ifg_paths, params)
