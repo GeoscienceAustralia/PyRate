@@ -192,6 +192,10 @@ class IndependentCorrectionTests(unittest.TestCase):
         params[cf.ORBITAL_FIT_METHOD] = method
         params[cf.ORBITAL_FIT_DEGREE] = degree
         params[cf.PARALLEL] = False
+        params[cf.NO_DATA_VALUE] = 0
+        params[cf.NAN_CONVERSION] = False
+        for i in self.ifgs:
+            i.mm_converted = True
         orbital_correction(self.ifgs, params, None, offset)
         corrected = array([c.phase_data for c in self.ifgs])
 
