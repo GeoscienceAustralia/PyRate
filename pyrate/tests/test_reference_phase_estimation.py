@@ -15,9 +15,40 @@ from pyrate import config as cf
 from pyrate.scripts import run_pyrate
 from pyrate import matlab_mst_kruskal as matlab_mst
 from pyrate.tests.common import SYD_TEST_DIR
-from pyrate.reference_phase_estimation import estimate_ref_phase
+from pyrate.reference_phase_estimation import (estimate_ref_phase,
+                                               ReferencePhaseError)
 from pyrate.scripts import run_prepifg
 from pyrate.tests import common
+from pyrate import ifgconstants as ifc
+from pyrate import shared
+
+
+class RefPhsTests(unittest.TestCase):
+    """Basic reference phase estimation tests"""
+    def test_need_at_least_two_ifgs(self):
+        sydney_ifgs = common.sydney_data_setup()
+        params = dict()
+        params[cf.REF_EST_METHOD] = 1
+        refpx, refpy = 38, 58
+        self.assertRaises(ReferencePhaseError,
+            estimate_ref_phase, sydney_ifgs[:1], params, refpx, refpy)
+
+    def test_metadata(self):
+        tmp_dir = tempfile.mkdtemp()
+        shared.copytree(common.SYD_TEST_TIF, tmp_dir)
+        sydney_tifs = glob.glob(os.path.join(tmp_dir, "*.tif"))
+        for s in sydney_tifs:
+            os.chmod(s, 0644)
+        sydney_ifgs = common.sydney_data_setup(tmp_dir, is_dir=True)
+        params = dict()
+        params[cf.REF_EST_METHOD] = 1
+        params[cf.PARALLEL] = False
+        refpx, refpy = 38, 58
+        estimate_ref_phase(sydney_ifgs, params, refpx, refpy)
+        for s in sydney_ifgs:
+            self.assertEqual(s.dataset.GetMetadataItem(ifc.REF_PHASE),
+                             ifc.REF_PHASE_REMOVED)
+
 
 
 class RefPhsEstimationMatlabTestMethod1Serial(unittest.TestCase):

@@ -25,7 +25,9 @@ import shutil
 import stat
 from pyrate import roipac, gamma, config as cf
 from pyrate import ifgconstants as ifc
-from pyrate.scripts.run_pyrate import VERBOSE
+# print screen output
+VERBOSE = True
+
 
 try:
     from osgeo import osr, gdal

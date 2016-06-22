@@ -76,14 +76,17 @@ IFMS16 = ['geo_060619-061002.tif',
         'geo_070604-070709.tif']
 
 
-def sydney_data_setup(datafiles=None):
+def sydney_data_setup(datafiles=None, is_dir=False):
     """Returns Ifg objs for the files in the sydney test dir
     input phase data is in radians; these ifgs are in radians - not converted to mm"""
-    if datafiles:
-        for i, d in enumerate(datafiles):
-            datafiles[i] = os.path.join(SYD_TEST_TIF, d)
+    if is_dir:
+        datafiles = glob.glob(join(datafiles, "*.tif"))
     else:
-        datafiles = glob.glob(join(SYD_TEST_TIF, "*.tif"))
+        if datafiles:
+            for i, d in enumerate(datafiles):
+                datafiles[i] = os.path.join(SYD_TEST_TIF, d)
+        else:
+            datafiles = glob.glob(join(SYD_TEST_TIF, "*.tif"))
     datafiles.sort()
     ifgs = [Ifg(i) for i in datafiles]
     
