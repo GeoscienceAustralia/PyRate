@@ -23,8 +23,8 @@ from pyrate.tests.common import sydney_data_setup
 from pyrate.timeseries import time_series
 from pyrate.config import TIME_SERIES_PTHRESH, TIME_SERIES_SM_ORDER
 from pyrate.config import TIME_SERIES_SM_FACTOR, TIME_SERIES_METHOD
-from pyrate.config import TIME_SERIES_INTERP, TIME_SERIES_PTHRESH
-from pyrate.config import PARALLEL, PROCESSES
+from pyrate.config import TIME_SERIES_INTERP, TIME_SERIES_PTHRESH, NAN_CONVERSION
+from pyrate.config import PARALLEL, PROCESSES, NO_DATA_VALUE
 from pyrate.scripts import run_pyrate, run_prepifg
 from pyrate import matlab_mst_kruskal as matlab_mst
 from pyrate.tests.common import SYD_TEST_DIR
@@ -43,7 +43,9 @@ def default_params():
             TIME_SERIES_SM_FACTOR: -0.25,
             TIME_SERIES_INTERP: 1,
             PARALLEL: 0,
-            PROCESSES: 1}
+            PROCESSES: 1,
+            NAN_CONVERSION: 1,
+            NO_DATA_VALUE: 0}
 
 
 class SinglePixelIfg(object):
@@ -76,7 +78,7 @@ class TimeSeriesTests(unittest.TestCase):
         cls.ifgs = sydney_data_setup()
         cls.params = default_params()
         cls.mstmat = mst.mst_boolean_array(cls.ifgs)
-        cls.maxvar = [vcm.cvd(i)[0] for i in cls.ifgs]
+        cls.maxvar = [vcm.cvd(i, cls.params)[0] for i in cls.ifgs]
         cls.vcmt = vcm.get_vcmt(cls.ifgs, cls.maxvar)
 
     # def test_time_series(self):
@@ -188,7 +190,7 @@ class MatlabTimeSeriesEquality(unittest.TestCase):
 
         # Calculate interferogram noise
         # TODO: assign maxvar to ifg metadata (and geotiff)?
-        maxvar = [vcm.cvd(i)[0] for i in ifgs]
+        maxvar = [vcm.cvd(i, params)[0] for i in ifgs]
 
         # Calculate temporal variance-covariance matrix
         vcmt = vcm.get_vcmt(ifgs, maxvar)
@@ -331,7 +333,7 @@ class MatlabTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
         _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
 
         # Calculate interferogram noise
-        maxvar = [vcm.cvd(i)[0] for i in ifgs]
+        maxvar = [vcm.cvd(i, params)[0] for i in ifgs]
 
         # Calculate temporal variance-covariance matrix
         vcmt = vcm.get_vcmt(ifgs, maxvar)

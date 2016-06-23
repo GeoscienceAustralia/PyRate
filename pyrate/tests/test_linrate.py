@@ -146,7 +146,7 @@ class MatlabEqualityTest(unittest.TestCase):
         _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
 
         # Calculate interferogram noise
-        maxvar = [vcm.cvd(i)[0] for i in ifgs]
+        maxvar = [vcm.cvd(i, params)[0] for i in ifgs]
 
         # Calculate temporal variance-covariance matrix
         vcmt = vcm.get_vcmt(ifgs, maxvar)

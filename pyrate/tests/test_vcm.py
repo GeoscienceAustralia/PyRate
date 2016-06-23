@@ -33,6 +33,12 @@ from pyrate import vcm as vcm_module
 class CovarianceTests(unittest.TestCase):
     def setUp(self):
         self.ifgs = sydney_data_setup()
+        for i in self.ifgs:
+            i.mm_converted = True
+        params = dict()
+        params[cf.NO_DATA_VALUE] = 0
+        params[cf.NAN_CONVERSION] = True
+        self.params = params
 
     def test_covariance_basic(self):
         ifgs = sydney5_ifgs()
@@ -43,7 +49,7 @@ class CovarianceTests(unittest.TestCase):
             if bool((i.phase_data == 0).all()) is True:
                 raise Exception("All zero")
 
-            maxvar, alpha = cvd(i, calc_alpha=True)
+            maxvar, alpha = cvd(i, self.params, calc_alpha=True)
             self.assertTrue(maxvar is not None)
             self.assertTrue(alpha is not None)
             print "maxvar: %s, alpha: %s" % (maxvar, alpha)
@@ -62,13 +68,12 @@ class CovarianceTests(unittest.TestCase):
 
         act_maxvar = []
         act_alpha = []
-
         for i in self.ifgs:
 
             if bool((i.phase_data == 0).all()) is True:
                 raise Exception("All zero")
 
-            maxvar, alpha = cvd(i, calc_alpha=True)
+            maxvar, alpha = cvd(i, self.params, calc_alpha=True)
             self.assertTrue(maxvar is not None)
             self.assertTrue(alpha is not None)
            
@@ -198,7 +203,7 @@ class MatlabEqualityTestInRunPyRateSequence(unittest.TestCase):
         _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
 
         # Calculate interferogram noise
-        cls.maxvar = [cvd(i)[0] for i in ifgs]
+        cls.maxvar = [cvd(i, params)[0] for i in ifgs]
         cls.vcmt = get_vcmt(ifgs, cls.maxvar)
 
     @classmethod
