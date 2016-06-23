@@ -122,7 +122,6 @@ class MatlabEqualityTest(unittest.TestCase):
 
         _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
 
-        # Calculate interferogram noise
         maxvar = [vcm_module.cvd(i, params)[0] for i in ifgs]
         vcmt = vcm_module.get_vcmt(ifgs, maxvar)
 

@@ -134,12 +134,12 @@ class MatlabTimeSeriesEquality(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         params = cf.get_config_params(
-                os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf'))
+            os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf'))
 
         cls.temp_out_dir = tempfile.mkdtemp()
 
         sys.argv = ['run_prepifg.py', os.path.join(SYD_TEST_DIR,
-                                     'pyrate_system_test.conf')]
+                                                   'pyrate_system_test.conf')]
         params[cf.OUT_DIR] = cls.temp_out_dir
         run_prepifg.main(params)
 
@@ -149,52 +149,33 @@ class MatlabTimeSeriesEquality(unittest.TestCase):
 
         base_ifg_paths = run_pyrate.original_ifg_paths(params[cf.IFG_FILE_LIST])
 
-        dest_paths = run_pyrate.get_dest_paths(base_ifg_paths, crop,
-                                               params, xlks)
-
-        ifg_instance = matlab_mst.IfgListPyRate(datafiles=dest_paths)
-
-        assert isinstance(ifg_instance, matlab_mst.IfgListPyRate)
-        ifgs = ifg_instance.ifgs
-        for i in ifgs:
-            if not i.mm_converted:
-                i.convert_to_mm()
-                i.write_modified_phase()
-        ifg_instance_updated, epoch_list = \
-            matlab_mst.get_nml(ifg_instance, nodata_value=0,
-                               nan_conversion=True)
-        mst_grid = matlab_mst.matlab_mst_boolean_array(ifg_instance_updated)
-        params = run_pyrate.insert_time_series_interpolation(
-            ifg_instance_updated, params)
-
-
-        for i in ifgs:
-            if not i.is_open:
-                i.open()
-            if not i.nan_converted:
-                i.convert_to_nans()
-
-            if not i.mm_converted:
-                i.convert_to_mm()
-                i.write_modified_phase()
-
-        if params[cf.ORBITAL_FIT] != 0:
-            run_pyrate.remove_orbital_error(ifgs, params)
-
+        dest_paths = run_pyrate.get_dest_paths(base_ifg_paths, crop, params,
+                                               xlks)
+        # start run_pyrate copy
+        ifgs = shared.pre_prepare_ifgs(dest_paths, params)
+        mst_grid = run_pyrate.mst_calculation(dest_paths, params)
         refx, refy = run_pyrate.find_reference_pixel(ifgs, params)
-
-        if params[cf.ORBITAL_FIT] != 0:
-            run_pyrate.remove_orbital_error(ifgs, params)
-
+        run_pyrate.remove_orbital_error(ifgs, params)
         _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
 
-        # Calculate interferogram noise
-        # TODO: assign maxvar to ifg metadata (and geotiff)?
-        maxvar = [vcm.cvd(i, params)[0] for i in ifgs]
+        maxvar = [vcm_module.cvd(i, params)[0] for i in ifgs]
+        vcmt = vcm_module.get_vcmt(ifgs, maxvar)
 
-        # Calculate temporal variance-covariance matrix
-        vcmt = vcm.get_vcmt(ifgs, maxvar)
+        params[cf.TIME_SERIES_METHOD] = 1
+        params[cf.PARALLEL] = 0
+        # Calculate time series
+        cls.tsincr_0, cls.tscum_0, _ = run_pyrate.calculate_time_series(
+            ifgs, params, vcmt, mst=mst_grid)
 
+        params[cf.PARALLEL] = 1
+        cls.tsincr_1, cls.tscum_1, cls.tsvel_1 = run_pyrate.calculate_time_series(
+            ifgs, params, vcmt, mst=mst_grid)
+
+        params[cf.PARALLEL] = 2
+        cls.tsincr_2, cls.tscum_2, cls.tsvel_2 = run_pyrate.calculate_time_series(
+            ifgs, params, vcmt, mst=mst_grid)
+
+        # load the matlab data
         SYD_TIME_SERIES_DIR = os.path.join(SYD_TEST_DIR, 'matlab_time_series')
         tsincr_path = os.path.join(SYD_TIME_SERIES_DIR,
                                    'ts_incr_interp0_method1.csv')
@@ -207,29 +188,6 @@ class MatlabTimeSeriesEquality(unittest.TestCase):
         tscum_path = os.path.join(SYD_TIME_SERIES_DIR,
                                   'ts_cum_interp0_method1.csv')
         ts_cum = np.genfromtxt(tscum_path)
-
-        params[cf.PARALLEL] = 1
-        # Calculate time series
-        if params[cf.TIME_SERIES_CAL] != 0:
-            cls.tsincr, cls.tscum, cls.tsvel = run_pyrate.calculate_time_series(
-                ifgs, params, vcmt, mst=mst_grid)
-
-        params[cf.PARALLEL] = 2
-        # Calculate time series
-        if params[cf.TIME_SERIES_CAL] != 0:
-            cls.tsincr_2, cls.tscum_2, cls.tsvel_2 = \
-                run_pyrate.calculate_time_series(
-                ifgs, params, vcmt, mst=mst_grid
-                )
-
-        params[cf.PARALLEL] = 0
-        # Calculate time series serailly by the pixel
-        if params[cf.TIME_SERIES_CAL] != 0:
-            cls.tsincr_0, cls.tscum_0, cls.tsvel_0 = \
-                run_pyrate.calculate_time_series(
-                ifgs, params, vcmt, mst=mst_grid
-                )
-        cls.mst_grid = mst_grid
         cls.ts_incr = np.reshape(ts_incr, newshape=cls.tsincr_0.shape, order='F')
         cls.ts_cum = np.reshape(ts_cum, newshape=cls.tscum_0.shape, order='F')
 
@@ -239,14 +197,14 @@ class MatlabTimeSeriesEquality(unittest.TestCase):
 
     def test_time_series_equality_parallel_by_rows(self):
 
-        self.assertEqual(self.tsincr.shape, self.tscum.shape)
-        self.assertEqual(self.tsvel.shape, self.tsincr.shape)
+        self.assertEqual(self.tsincr_1.shape, self.tscum_1.shape)
+        self.assertEqual(self.tsvel_1.shape, self.tsincr_1.shape)
 
         np.testing.assert_array_almost_equal(
-            self.ts_incr, self.tsincr, decimal=3)
+            self.ts_incr, self.tsincr_1, decimal=3)
 
         np.testing.assert_array_almost_equal(
-            self.ts_cum, self.tscum, decimal=3)
+            self.ts_cum, self.tscum_1, decimal=3)
 
     def test_time_series_equality_parallel_by_the_pixel(self):
 
@@ -262,7 +220,6 @@ class MatlabTimeSeriesEquality(unittest.TestCase):
     def test_time_series_equality_serial_by_the_pixel(self):
 
         self.assertEqual(self.tsincr_0.shape, self.tscum_0.shape)
-        self.assertEqual(self.tsvel_0.shape, self.tsincr_0.shape)
 
         np.testing.assert_array_almost_equal(
             self.ts_incr, self.tsincr_0, decimal=3)
@@ -294,36 +251,11 @@ class MatlabTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
 
         base_ifg_paths = run_pyrate.original_ifg_paths(params[cf.IFG_FILE_LIST])
 
-        dest_paths = run_pyrate.get_dest_paths(base_ifg_paths, crop,
-                                               params, xlks)
-
-        ifg_instance = matlab_mst.IfgListPyRate(datafiles=dest_paths)
-
-        assert isinstance(ifg_instance, matlab_mst.IfgListPyRate)
-        ifgs = ifg_instance.ifgs
-        for i in ifgs:
-            if not i.mm_converted:
-                i.convert_to_mm()
-                i.write_modified_phase()
-        ifg_instance_updated, epoch_list = \
-            matlab_mst.get_nml(ifg_instance, nodata_value=0,
-                               nan_conversion=True)
-        mst_grid = matlab_mst.matlab_mst_boolean_array(ifg_instance_updated)
-        params = run_pyrate.insert_time_series_interpolation(
-            ifg_instance_updated, params)
-
-        for i in ifgs:
-            if not i.is_open:
-                i.open()
-            if not i.nan_converted:
-                i.convert_to_nans()
-
-            if not i.mm_converted:
-                i.convert_to_mm()
-                i.write_modified_phase()
-
-        if params[cf.ORBITAL_FIT] != 0:
-            run_pyrate.remove_orbital_error(ifgs, params)
+        dest_paths = run_pyrate.get_dest_paths(base_ifg_paths, crop, params,
+                                               xlks)
+        # start run_pyrate copy
+        ifgs = shared.pre_prepare_ifgs(dest_paths, params)
+        mst_grid = run_pyrate.mst_calculation(dest_paths, params)
 
         refx, refy = run_pyrate.find_reference_pixel(ifgs, params)
 
@@ -333,11 +265,31 @@ class MatlabTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
         _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
 
         # Calculate interferogram noise
-        maxvar = [vcm.cvd(i, params)[0] for i in ifgs]
+        maxvar = [vcm_module.cvd(i, params)[0] for i in ifgs]
+        vcmt = vcm_module.get_vcmt(ifgs, maxvar)
 
-        # Calculate temporal variance-covariance matrix
-        vcmt = vcm.get_vcmt(ifgs, maxvar)
+        params[cf.TIME_SERIES_METHOD] = 2
+        params[cf.PARALLEL] = 1
+        # Calculate time series
+        cls.tsincr, cls.tscum, _ = run_pyrate.calculate_time_series(
+            ifgs, params, vcmt, mst=mst_grid)
 
+        params[cf.PARALLEL] = 2
+
+        # Calculate time series
+        cls.tsincr_2, cls.tscum_2, _ = \
+            run_pyrate.calculate_time_series(
+            ifgs, params, vcmt, mst=mst_grid
+            )
+
+        params[cf.PARALLEL] = 0
+        # Calculate time series serailly by the pixel
+        cls.tsincr_0, cls.tscum_0, _ = \
+            run_pyrate.calculate_time_series(
+            ifgs, params, vcmt, mst=mst_grid
+            )
+
+        # copy matlab data
         SYD_TIME_SERIES_DIR = os.path.join(SYD_TEST_DIR, 'matlab_time_series')
         tsincr_path = os.path.join(SYD_TIME_SERIES_DIR,
                                    'ts_incr_interp0_method2.csv')
@@ -351,30 +303,6 @@ class MatlabTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
                                   'ts_cum_interp0_method2.csv')
         ts_cum = np.genfromtxt(tscum_path)
 
-        params[cf.TIME_SERIES_METHOD] = 2
-        params[cf.PARALLEL] = 1
-        # Calculate time series
-        if params[cf.TIME_SERIES_CAL] != 0:
-            cls.tsincr, cls.tscum, _ = run_pyrate.calculate_time_series(
-                ifgs, params, vcmt, mst=mst_grid)
-
-        params[cf.PARALLEL] = 2
-
-        # Calculate time series
-        if params[cf.TIME_SERIES_CAL] != 0:
-            cls.tsincr_2, cls.tscum_2, _ = \
-                run_pyrate.calculate_time_series(
-                ifgs, params, vcmt, mst=mst_grid
-                )
-
-        params[cf.PARALLEL] = 0
-        # Calculate time series serailly by the pixel
-        if params[cf.TIME_SERIES_CAL] != 0:
-            cls.tsincr_0, cls.tscum_0, _ = \
-                run_pyrate.calculate_time_series(
-                ifgs, params, vcmt, mst=mst_grid
-                )
-        cls.mst_grid = mst_grid
         cls.ts_incr = np.reshape(ts_incr, newshape=cls.tsincr_0.shape, order='F')
         cls.ts_cum = np.reshape(ts_cum, newshape=cls.tscum_0.shape, order='F')
 
