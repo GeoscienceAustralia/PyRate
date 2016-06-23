@@ -28,6 +28,7 @@ from pyrate import config as cf
 from pyrate import reference_phase_estimation as rpe
 from pyrate.tests import common
 from pyrate import vcm as vcm_module
+from pyrate import shared
 
 
 class CovarianceTests(unittest.TestCase):
@@ -134,7 +135,7 @@ class VCMTests(unittest.TestCase):
         assert_array_almost_equal(act, exp, decimal=3)
 
 
-class MatlabEqualityTestInRunPyRateSequence(unittest.TestCase):
+class MatlabEqualityTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -177,23 +178,9 @@ class MatlabEqualityTestInRunPyRateSequence(unittest.TestCase):
 
         dest_paths = run_pyrate.get_dest_paths(base_ifg_paths,
                                                crop, params, xlks)
-        ifg_instance = matlab_mst.IfgListPyRate(datafiles=dest_paths)
-
-        ifgs = ifg_instance.ifgs
-
-        for i in ifgs:
-            if not i.is_open:
-                i.open()
-            if not i.nan_converted:
-                i.nodata_value = 0
-                i.convert_to_nans()
-
-            if not i.mm_converted:
-                i.convert_to_mm()
-                i.write_modified_phase()
-
-        if params[cf.ORBITAL_FIT] != 0:
-            run_pyrate.remove_orbital_error(ifgs, params)
+        # start run_pyrate copy
+        ifgs = shared.pre_prepare_ifgs(dest_paths, params)
+        mst_grid = run_pyrate.mst_calculation(dest_paths, params)
 
         refx, refy = run_pyrate.find_reference_pixel(ifgs, params)
 
