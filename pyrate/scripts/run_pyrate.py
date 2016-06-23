@@ -36,10 +36,9 @@ def process_ifgs(ifg_paths_or_instance, params):
     ifgs: sequence of paths to interferrograms (NB: changes are saved into ifgs)
     params: dictionary of configuration parameters
     """
-    mst_grid = mst_calculation(ifg_paths_or_instance, params)
-
-    # reading ifgs again, this is consistent with nci submission script
     ifgs = pre_prepare_ifgs(ifg_paths_or_instance, params)
+
+    mst_grid = mst_calculation(ifg_paths_or_instance, params)
 
     # Estimate reference pixel location
     refpx, refpy = find_reference_pixel(ifgs, params)
@@ -55,11 +54,6 @@ def process_ifgs(ifg_paths_or_instance, params):
 
     # Estimate and remove orbit errors
     remove_orbital_error(ifgs, params)
-
-    for i in ifgs:
-        i.close()
-
-    ifgs = pre_prepare_ifgs(ifg_paths_or_instance, params)
 
     write_msg('Estimating and removing phase at reference pixel')
     ref_phs, ifgs = rpe.estimate_ref_phase(ifgs, params, refpx, refpy)

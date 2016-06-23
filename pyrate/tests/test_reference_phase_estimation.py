@@ -127,11 +127,8 @@ class RefPhsEstimationMatlabTestMethod1Serial(unittest.TestCase):
                                                params, xlks)
 
         # start run_pyrate copy
-        mst_grid = run_pyrate.mst_calculation(dest_paths, params)
-
-        # reading ifgs again, this is consistent with nci submission script
         ifgs = shared.pre_prepare_ifgs(dest_paths, params)
-
+        mst_grid = run_pyrate.mst_calculation(dest_paths, params)
         # Estimate reference pixel location
         refx, refy = run_pyrate.find_reference_pixel(ifgs, params)
 
@@ -219,11 +216,8 @@ class RefPhsEstimationMatlabTestMethod1Parallel(unittest.TestCase):
                                                params, xlks)
 
         # start run_pyrate copy
-        mst_grid = run_pyrate.mst_calculation(dest_paths, params)
-
-        # reading ifgs again, this is consistent with nci submission script
         ifgs = shared.pre_prepare_ifgs(dest_paths, params)
-
+        mst_grid = run_pyrate.mst_calculation(dest_paths, params)
         # Estimate reference pixel location
         refx, refy = run_pyrate.find_reference_pixel(ifgs, params)
 
@@ -315,11 +309,8 @@ class RefPhsEstimationMatlabTestMethod2Serial(unittest.TestCase):
                                                params, xlks)
 
         # start run_pyrate copy
-        mst_grid = run_pyrate.mst_calculation(dest_paths, params)
-
-        # reading ifgs again, this is consistent with nci submission script
         ifgs = shared.pre_prepare_ifgs(dest_paths, params)
-
+        mst_grid = run_pyrate.mst_calculation(dest_paths, params)
         # Estimate reference pixel location
         refx, refy = run_pyrate.find_reference_pixel(ifgs, params)
 
@@ -412,11 +403,8 @@ class RefPhsEstimationMatlabTestMethod2Parallel(unittest.TestCase):
                                                params, xlks)
 
         # start run_pyrate copy
-        mst_grid = run_pyrate.mst_calculation(dest_paths, params)
-
-        # reading ifgs again, this is consistent with nci submission script
         ifgs = shared.pre_prepare_ifgs(dest_paths, params)
-
+        mst_grid = run_pyrate.mst_calculation(dest_paths, params)
         # Estimate reference pixel location
         refx, refy = run_pyrate.find_reference_pixel(ifgs, params)
 
