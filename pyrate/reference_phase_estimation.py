@@ -5,9 +5,11 @@ __author__ = 'Sudipta Basak'
 __date_created__ = '22/12/15'
 
 import numpy as np
-from pyrate import config as cf
-from pyrate.shared import nanmedian
 import parmap
+from pyrate import config as cf
+from pyrate.shared import nanmedian, write_msg
+from pyrate import ifgconstants as ifc
+import logging
 
 
 def estimate_ref_phase(ifgs, params, refpx, refpy):
@@ -31,6 +33,9 @@ def estimate_ref_phase(ifgs, params, refpx, refpy):
     else:
         raise ReferencePhaseError('No such option. Use refest=1 or 2')
 
+    for i in ifgs:
+        i.meta_data[ifc.REF_PHASE] = ifc.REF_PHASE_REMOVED
+        i.write_modified_phase()
     return ref_phs, ifgs
 
 
@@ -102,6 +107,28 @@ def est_ref_phase_method1_multi(phase_data, comp):
 def _validate_ifgs(ifgs):
     if len(ifgs) < 2:
         raise ReferencePhaseError('Need to provide at least 2 ifgs')
+    flags = [i.dataset.GetMetadataItem(ifc.REF_PHASE) for i in ifgs]
+    if all(flags):
+        write_msg('Ifgs already reference phase corrected')
+        return
+    else:
+        check_ref_phase_ifgs(ifgs, flags)
+
+
+def check_ref_phase_ifgs(ifgs, flags):
+    count = sum([f == ifc.REF_PHASE_REMOVED for f in flags])
+    if (count < len(flags)) and (count > 0):
+        logging.debug('Detected mix of corrected and uncorrected '
+                      'reference phases in ifgs')
+
+        for i, flag in zip(ifgs, flags):
+            if flag:
+                msg = '%s: prior reference phase correction detected'
+            else:
+                msg = '%s: no reference phase correction detected'
+            logging.debug(msg % i.data_path)
+
+        raise ReferencePhaseError(msg)
 
 
 class ReferencePhaseError(Exception):
@@ -109,47 +136,3 @@ class ReferencePhaseError(Exception):
     Generic class for errors in reference phase estimation.
     """
     pass
-
-if __name__ == "__main__":
-    import os
-    import shutil
-    from subprocess import call
-
-    from pyrate.scripts import run_pyrate
-    from pyrate import matlab_mst_kruskal as matlab_mst
-    from pyrate.tests.common import SYD_TEST_MATLAB_ORBITAL_DIR, SYD_TEST_OUT
-
-    # start each full test run cleanly
-    shutil.rmtree(SYD_TEST_OUT, ignore_errors=True)
-
-    os.makedirs(SYD_TEST_OUT)
-
-    params = cf.get_config_params(
-            os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'pyrate_system_test.conf'))
-
-    call(["python", "pyrate/scripts/run_prepifg.py",
-          os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, 'pyrate_system_test.conf')])
-
-    xlks, ylks, crop = run_pyrate.transform_params(params)
-
-    base_ifg_paths = run_pyrate.original_ifg_paths(params[cf.IFG_FILE_LIST])
-
-    dest_paths = run_pyrate.get_dest_paths(base_ifg_paths, crop, params, xlks)
-
-    ifg_instance = matlab_mst.IfgListPyRate(datafiles=dest_paths)
-
-    ifgs = ifg_instance.ifgs
-    nan_conversion = int(params[cf.NAN_CONVERSION])
-    for i in ifgs:
-        i.convert_to_mm()
-        i.write_modified_phase()
-        if nan_conversion and not i.nan_converted:  # nan conversion happens here in networkx mst
-            i.convert_to_nans()
-
-    refx, refy = run_pyrate.find_reference_pixel(ifgs, params)
-
-    if params[cf.ORBITAL_FIT] != 0:
-        run_pyrate.remove_orbital_error(ifgs, params)
-
-    ref_phs, ifgs = estimate_ref_phase(ifgs, params, refx, refy)
-    print ref_phs

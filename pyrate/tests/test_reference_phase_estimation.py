@@ -15,9 +15,51 @@ from pyrate import config as cf
 from pyrate.scripts import run_pyrate
 from pyrate import matlab_mst_kruskal as matlab_mst
 from pyrate.tests.common import SYD_TEST_DIR
-from pyrate.reference_phase_estimation import estimate_ref_phase
+from pyrate.reference_phase_estimation import (estimate_ref_phase,
+                                               ReferencePhaseError)
 from pyrate.scripts import run_prepifg
 from pyrate.tests import common
+from pyrate import ifgconstants as ifc
+from pyrate import shared
+
+
+class RefPhsTests(unittest.TestCase):
+    """Basic reference phase estimation tests"""
+
+    def setUp(self):
+        self.tmp_dir = tempfile.mkdtemp()
+        self.params = dict()
+        self.params[cf.REF_EST_METHOD] = 1
+        self.params[cf.PARALLEL] = False
+        self.refpx, self.refpy = 38, 58
+        shared.copytree(common.SYD_TEST_TIF, self.tmp_dir)
+        sydney_tifs = glob.glob(os.path.join(self.tmp_dir, "*.tif"))
+        for s in sydney_tifs:
+            os.chmod(s, 0644)
+        self.ifgs = common.sydney_data_setup(self.tmp_dir, is_dir=True)
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp_dir)
+
+    def test_need_at_least_two_ifgs(self):
+        self.assertRaises(ReferencePhaseError, estimate_ref_phase,
+                          self.ifgs[:1], self.params, self.refpx, self.refpy)
+
+    def test_metadata(self):
+        estimate_ref_phase(self.ifgs, self.params, self.refpx, self.refpy)
+        for s in self.ifgs:
+            self.assertEqual(s.dataset.GetMetadataItem(ifc.REF_PHASE),
+                             ifc.REF_PHASE_REMOVED)
+
+    def test_mixed_metadata_raises(self):
+        # correct reference phase for some of the ifgs
+        estimate_ref_phase(self.ifgs[:5], self.params, self.refpx, self.refpy)
+
+        # now it should raise exception if we wnat to correct
+        # refernece phase again on all of them
+        self.assertRaises(ReferencePhaseError, estimate_ref_phase,
+                          self.ifgs, self.params, self.refpx, self.refpy)
+
 
 
 class RefPhsEstimationMatlabTestMethod1Serial(unittest.TestCase):

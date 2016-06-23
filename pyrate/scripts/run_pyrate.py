@@ -22,7 +22,7 @@ from pyrate import matlab_mst_kruskal as matlab_mst
 from pyrate import reference_phase_estimation as rpe
 from pyrate import remove_aps_delay as aps
 from pyrate import vcm as vcm_module
-from pyrate.shared import Ifg, write_output_geotiff, pre_prepare_ifgs
+from pyrate.shared import Ifg, write_output_geotiff, pre_prepare_ifgs, write_msg
 
 PYRATEPATH = cf.PYRATEPATH
 
@@ -207,6 +207,13 @@ def compute_time_series(epochlist, gt, ifgs, md, mst_grid, params, vcmt, wkt):
     # Calculate time series
     tsincr, tscum, tsvel = calculate_time_series(
         ifgs, params, vcmt=vcmt, mst=mst_grid)
+
+    tsvel_file = os.path.join(params[cf.OUT_DIR], 'tsvel.npy')
+    tsincr_file = os.path.join(params[cf.OUT_DIR], 'tsincr.npy')
+    tscum_file = os.path.join(params[cf.OUT_DIR], 'tscum.npy')
+    np.save(file=tsincr_file, arr=tsincr)
+    np.save(file=tscum_file, arr=tscum)
+    np.save(file=tsvel_file, arr=tsvel)
 
     # TODO: write tests for these functions
     write_timeseries_geotiff(epochlist, gt, md, params, tsincr, wkt,
@@ -506,15 +513,6 @@ def log_config_file(configfile, log_filename):
         output_log_file.write(line)
     output_log_file.write("\nConfig Settings: end\n\n")
     output_log_file.write("\n===============================================\n")
-
-
-def write_msg(msg):
-    """
-    write message to log file and screen output
-    """
-    logging.debug(msg)
-    if VERBOSE:
-        print msg
 
 
 if __name__ == "__main__":
