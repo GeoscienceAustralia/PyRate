@@ -10,7 +10,7 @@ from numpy import isnan, nan
 from pyrate.nci.parallel import Parallel
 from pyrate.scripts import run_pyrate
 from pyrate import config as cf
-from pyrate.shared import Ifg
+from pyrate.shared import Ifg, write_msg
 from pyrate import prepifg
 from pyrate import mst
 from pyrate import refpixel
@@ -252,8 +252,8 @@ def ref_phase_estimation_mpi(MPI_myID, ifg_paths, num_processors, parallel, para
     no_ifgs = len(ifgs)
     process_indices = parallel.calc_indices(no_ifgs)
     process_ifgs = [itemgetter(p)(ifgs) for p in process_indices]
-    process_phase_data = [i.phase_data for i in process_ifgs]
     process_ref_phs = np.zeros(len(process_ifgs))
+
     if params[cf.REF_EST_METHOD] == 1:
         ifg_phase_data_sum = np.zeros(ifgs[0].shape, dtype=np.float64)
         # TODO: revisit as this will likely hit memory limit in NCI
@@ -263,18 +263,28 @@ def ref_phase_estimation_mpi(MPI_myID, ifg_paths, num_processors, parallel, para
         comp = np.isnan(ifg_phase_data_sum)  # this is the same as in Matlab
         comp = np.ravel(comp, order='F')  # this is the same as in Matlab
         for n, ifg in enumerate(process_ifgs):
-            process_ref_phs[n] = \
-                rpe.est_ref_phase_method1_multi(process_phase_data[n], comp)
+            ref_phs = \
+                rpe.est_ref_phase_method1_multi(ifg.phase_data, comp)
+            ifg.phase_data -= ref_phs
+            ifg.meta_data[ifc.REF_PHASE] = ifc.REF_PHASE_REMOVED
+            ifg.write_modified_phase()
+            process_ref_phs[n] = ref_phs
+            ifg.close()
 
     elif params[cf.REF_EST_METHOD] == 2:
         half_chip_size = int(np.floor(params[cf.REF_CHIP_SIZE] / 2.0))
         chipsize = 2 * half_chip_size + 1
         thresh = chipsize * chipsize * params[cf.REF_MIN_FRAC]
         for n, ifg in enumerate(process_ifgs):
-            process_ref_phs[n] = \
-                rpe.est_ref_phase_method2_multi(process_phase_data[n],
+            ref_phs = \
+                rpe.est_ref_phase_method2_multi(ifg.phase_data,
                                                 half_chip_size,
                                                 refpx, refpy, thresh)
+            ifg.phase_data -= ref_phs
+            ifg.meta_data[ifc.REF_PHASE] = ifc.REF_PHASE_REMOVED
+            ifg.write_modified_phase()
+            process_ref_phs[n] = ref_phs
+            ifg.close()
 
     else:
         raise cf.ConfigException('Ref phase estimation method must be 1 or 2')
@@ -295,9 +305,6 @@ def ref_phase_estimation_mpi(MPI_myID, ifg_paths, num_processors, parallel, para
         parallel.send(process_ref_phs, destination=MASTER_PROCESS,
                       tag=MPI_myID)
     parallel.barrier()
-    ref_phs = np.load(ref_phs_file)
-    for n, ifg in enumerate(ifgs):
-        ifg.phase_data -= ref_phs[n]
 
 
 def maxvar_mpi(MPI_myID, ifgs, num_processors, parallel, params):
