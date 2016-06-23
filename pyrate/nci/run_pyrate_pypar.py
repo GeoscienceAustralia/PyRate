@@ -136,14 +136,13 @@ def main(params=None):
     parallel.barrier()
 
     # all processes need access to maxvar
-    ifgs = shared.pre_prepare_ifgs(cropped_and_sampled_tifs, params)
-
-    maxvar = maxvar_mpi(MPI_myID, ifgs,
+    maxvar = maxvar_mpi(MPI_myID, cropped_and_sampled_tifs,
                         num_processors, parallel, params)
     # get vcmt is very fast and not mpi'ed at the moment
     # TODO: revisit this if performance is low in NCI
     # vcmt extremely fast already and no need to parallize
     # offers easy parallisation if required
+    ifgs = shared.pre_prepare_ifgs(cropped_and_sampled_tifs, params)
     vcmt = vcm_module.get_vcmt(ifgs, maxvar)  # all processes
 
     vcmt_file = os.path.join(params[cf.OUT_DIR], 'vcmt.npy')
@@ -263,7 +262,7 @@ def ref_phase_estimation_mpi(MPI_myID, ifg_paths, num_processors, parallel, para
         comp = np.isnan(ifg_phase_data_sum)  # this is the same as in Matlab
         comp = np.ravel(comp, order='F')  # this is the same as in Matlab
         for n, ifg in enumerate(process_ifgs):
-            shared.nan_and_mm_convert(ifg, params)
+            # shared.nan_and_mm_convert(ifg, params)
             ref_phs = rpe.est_ref_phase_method1_multi(ifg.phase_data, comp)
             ifg.phase_data -= ref_phs
             ifg.meta_data[ifc.REF_PHASE] = ifc.REF_PHASE_REMOVED
@@ -276,7 +275,7 @@ def ref_phase_estimation_mpi(MPI_myID, ifg_paths, num_processors, parallel, para
         chipsize = 2 * half_chip_size + 1
         thresh = chipsize * chipsize * params[cf.REF_MIN_FRAC]
         for n, ifg in enumerate(process_ifgs):
-            shared.nan_and_mm_convert(ifg, params)
+            # shared.nan_and_mm_convert(ifg, params)
             ref_phs = rpe.est_ref_phase_method2_multi(ifg.phase_data,
                                                       half_chip_size,
                                                       refpx, refpy, thresh)
@@ -304,14 +303,14 @@ def ref_phase_estimation_mpi(MPI_myID, ifg_paths, num_processors, parallel, para
         # send reference phase data to master process
         parallel.send(process_ref_phs, destination=MASTER_PROCESS,
                       tag=MPI_myID)
-    parallel.barrier()
 
 
-def maxvar_mpi(MPI_myID, ifgs, num_processors, parallel, params):
+def maxvar_mpi(MPI_myID, ifg_paths, num_processors, parallel, params):
+    ifgs = shared.prepare_ifgs_without_phase(ifg_paths, params)
     no_ifgs = len(ifgs)
     process_indices = parallel.calc_indices(no_ifgs)
     process_ifgs = [itemgetter(p)(ifgs) for p in process_indices]
-    process_maxvar = [vcm_module.cvd(i)[0] for i in process_ifgs]
+    process_maxvar = [vcm_module.cvd(i, params)[0] for i in process_ifgs]
     maxvar_file = os.path.join(params[cf.OUT_DIR], 'maxvar.npy')
     if MPI_myID == MASTER_PROCESS:
         all_indices = parallel.calc_all_indices(no_ifgs)
