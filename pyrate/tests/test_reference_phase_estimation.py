@@ -13,7 +13,6 @@ from itertools import product
 
 from pyrate import config as cf
 from pyrate.scripts import run_pyrate
-from pyrate import matlab_mst_kruskal as matlab_mst
 from pyrate.tests.common import SYD_TEST_DIR
 from pyrate.reference_phase_estimation import (estimate_ref_phase,
                                                ReferencePhaseError)
@@ -21,6 +20,43 @@ from pyrate.scripts import run_prepifg
 from pyrate.tests import common
 from pyrate import ifgconstants as ifc
 from pyrate import shared
+
+matlab_ref_phs_method1 = [-18.2191658020020,
+                      27.7119445800781,
+                      -18.4944229125977,
+                      -2.92210483551025,
+                      31.1168708801270,
+                      21.2123012542725,
+                      9.01810073852539,
+                      6.08130645751953,
+                      -3.79313516616821,
+                      -11.3826837539673,
+                      -7.28352737426758,
+                      17.6365375518799,
+                      -12.8673439025879,
+                      5.46325922012329,
+                      -35.4149475097656,
+                      -13.5371961593628,
+                      -12.7864856719971]
+
+
+matlab_ref_phs_method2 = [-21.4459648132324,
+                          27.1714553833008,
+                          -20.8264484405518,
+                          -3.47468209266663,
+                          30.4519863128662,
+                          22.3201427459717,
+                          9.58487224578857,
+                          4.81979084014893,
+                          -3.89160847663879,
+                          -12.0131330490112,
+                          -8.64702987670898,
+                          19.2060871124268,
+                          -9.92049789428711,
+                          4.38952684402466,
+                          -34.9590339660645,
+                          -14.3167810440063,
+                          -11.9066228866577]
 
 
 class RefPhsTests(unittest.TestCase):
@@ -90,55 +126,37 @@ class RefPhsEstimationMatlabTestMethod1Serial(unittest.TestCase):
         dest_paths = run_pyrate.get_dest_paths(base_ifg_paths, crop,
                                                params, xlks)
 
-        ifg_instance = matlab_mst.IfgListPyRate(datafiles=dest_paths)
+        # start run_pyrate copy
+        mst_grid = run_pyrate.mst_calculation(dest_paths, params)
 
-        ifgs = ifg_instance.ifgs
+        # reading ifgs again, this is consistent with nci submission script
+        ifgs = shared.pre_prepare_ifgs(dest_paths, params)
+
+        # Estimate reference pixel location
+        refx, refy = run_pyrate.find_reference_pixel(ifgs, params)
+
+        # Estimate and remove orbit errors
+        run_pyrate.remove_orbital_error(ifgs, params)
 
         for i in ifgs:
-            if not i.is_open:
-                i.open()
-            if not i.nan_converted:
-                i.nodata_value = 0
-                i.convert_to_nans()
+            i.close()
 
-            if not i.mm_converted:
-                i.convert_to_mm()
-                i.write_modified_phase()
+        ifgs = shared.pre_prepare_ifgs(dest_paths, params)
 
-        if params[cf.ORBITAL_FIT] != 0:
-            run_pyrate.remove_orbital_error(ifgs, params)
-
-        refx, refy = run_pyrate.find_reference_pixel(ifgs, params)
         cls.ref_phs, cls.ifgs = estimate_ref_phase(ifgs, params, refx, refy)
+
+        # end run_pyrate copy
 
         # manually close for windows compatibility
         for i in ifgs:
             i.close()
-
-        cls.matlab_ref_phs = [-18.2191658020020,
-                                27.7119445800781,
-                                -18.4944229125977,
-                                -2.92210483551025,
-                                31.1168708801270,
-                                21.2123012542725,
-                                9.01810073852539,
-                                6.08130645751953,
-                                -3.79313516616821,
-                                -11.3826837539673,
-                                -7.28352737426758,
-                                17.6365375518799,
-                                -12.8673439025879,
-                                5.46325922012329,
-                                -35.4149475097656,
-                                -13.5371961593628,
-                                -12.7864856719971]
 
     @classmethod
     def tearDownClass(cls):
         shutil.rmtree(cls.temp_out_dir)
 
     def test_estimate_reference_phase(self):
-        np.testing.assert_array_almost_equal(self.matlab_ref_phs, self.ref_phs,
+        np.testing.assert_array_almost_equal(matlab_ref_phs_method1, self.ref_phs,
                                              decimal=4)
 
     def test_ifgs_after_reference_phase_estimation(self):
@@ -173,12 +191,10 @@ class RefPhsEstimationMatlabTestMethod1Serial(unittest.TestCase):
         self.assertEqual(count, len(self.ifgs))
 
 
-
 class RefPhsEstimationMatlabTestMethod1Parallel(unittest.TestCase):
     """
     Reference phase estimation method 1 is tested vs matlab output
     """
-    # TODO: Improve the parallel tests to remove duplication from serial tests
     @classmethod
     def setUpClass(cls):
 
@@ -202,55 +218,37 @@ class RefPhsEstimationMatlabTestMethod1Parallel(unittest.TestCase):
         dest_paths = run_pyrate.get_dest_paths(base_ifg_paths, crop,
                                                params, xlks)
 
-        ifg_instance = matlab_mst.IfgListPyRate(datafiles=dest_paths)
+        # start run_pyrate copy
+        mst_grid = run_pyrate.mst_calculation(dest_paths, params)
 
-        ifgs = ifg_instance.ifgs
+        # reading ifgs again, this is consistent with nci submission script
+        ifgs = shared.pre_prepare_ifgs(dest_paths, params)
+
+        # Estimate reference pixel location
+        refx, refy = run_pyrate.find_reference_pixel(ifgs, params)
+
+        # Estimate and remove orbit errors
+        run_pyrate.remove_orbital_error(ifgs, params)
 
         for i in ifgs:
-            if not i.is_open:
-                i.open()
-            if not i.nan_converted:
-                i.nodata_value = 0
-                i.convert_to_nans()
+            i.close()
 
-            if not i.mm_converted:
-                i.convert_to_mm()
-                i.write_modified_phase()
+        ifgs = shared.pre_prepare_ifgs(dest_paths, params)
 
-        if params[cf.ORBITAL_FIT] != 0:
-            run_pyrate.remove_orbital_error(ifgs, params)
-
-        refx, refy = run_pyrate.find_reference_pixel(ifgs, params)
         cls.ref_phs, cls.ifgs = estimate_ref_phase(ifgs, params, refx, refy)
+
+        # end run_pyrate copy
 
         # manually close for windows compatibility
         for i in ifgs:
             i.close()
-
-        cls.matlab_ref_phs = [-18.2191658020020,
-                                27.7119445800781,
-                                -18.4944229125977,
-                                -2.92210483551025,
-                                31.1168708801270,
-                                21.2123012542725,
-                                9.01810073852539,
-                                6.08130645751953,
-                                -3.79313516616821,
-                                -11.3826837539673,
-                                -7.28352737426758,
-                                17.6365375518799,
-                                -12.8673439025879,
-                                5.46325922012329,
-                                -35.4149475097656,
-                                -13.5371961593628,
-                                -12.7864856719971]
 
     @classmethod
     def tearDownClass(cls):
         shutil.rmtree(cls.temp_out_dir)
 
     def test_estimate_reference_phase(self):
-        np.testing.assert_array_almost_equal(self.matlab_ref_phs, self.ref_phs,
+        np.testing.assert_array_almost_equal(matlab_ref_phs_method1, self.ref_phs,
                                              decimal=4)
 
     def test_ifgs_after_reference_phase_estimation(self):
@@ -316,45 +314,27 @@ class RefPhsEstimationMatlabTestMethod2Serial(unittest.TestCase):
         dest_paths = run_pyrate.get_dest_paths(base_ifg_paths, crop,
                                                params, xlks)
 
-        ifg_instance = matlab_mst.IfgListPyRate(datafiles=dest_paths)
+        # start run_pyrate copy
+        mst_grid = run_pyrate.mst_calculation(dest_paths, params)
 
-        ifgs = ifg_instance.ifgs
+        # reading ifgs again, this is consistent with nci submission script
+        ifgs = shared.pre_prepare_ifgs(dest_paths, params)
 
-        for c, i in enumerate(ifgs):
-            if not i.is_open:
-                i.open()
-            if not i.nan_converted:
-                i.nodata_value = 0
-                i.convert_to_nans()
-
-            if not i.mm_converted:
-                i.convert_to_mm()
-                i.write_modified_phase()
-
-        if params[cf.ORBITAL_FIT] != 0:
-            run_pyrate.remove_orbital_error(ifgs, params)
-
+        # Estimate reference pixel location
         refx, refy = run_pyrate.find_reference_pixel(ifgs, params)
-        cls.ref_phs_mthod2, cls.ifgs = \
-            estimate_ref_phase(ifgs, params, refx, refy)
 
-        cls.matlab_ref_phs = [-21.4459648132324,
-                                27.1714553833008,
-                                -20.8264484405518,
-                                -3.47468209266663,
-                                30.4519863128662,
-                                22.3201427459717,
-                                9.58487224578857,
-                                4.81979084014893,
-                                -3.89160847663879,
-                                -12.0131330490112,
-                                -8.64702987670898,
-                                19.2060871124268,
-                                -9.92049789428711,
-                                4.38952684402466,
-                                -34.9590339660645,
-                                -14.3167810440063,
-                                -11.9066228866577]
+        # Estimate and remove orbit errors
+        run_pyrate.remove_orbital_error(ifgs, params)
+
+        for i in ifgs:
+            i.close()
+
+        ifgs = shared.pre_prepare_ifgs(dest_paths, params)
+
+        cls.ref_phs, cls.ifgs = estimate_ref_phase(ifgs, params, refx, refy)
+
+        # end run_pyrate copy
+
         for i in ifgs:
             i.close()
 
@@ -396,8 +376,8 @@ class RefPhsEstimationMatlabTestMethod2Serial(unittest.TestCase):
         self.assertEqual(count, len(self.ifgs))
 
     def test_estimate_reference_phase_method2(self):
-        np.testing.assert_array_almost_equal(self.matlab_ref_phs,
-                                             self.ref_phs_mthod2, decimal=3)
+        np.testing.assert_array_almost_equal(matlab_ref_phs_method2,
+                                             self.ref_phs, decimal=3)
 
 
 class RefPhsEstimationMatlabTestMethod2Parallel(unittest.TestCase):
@@ -431,45 +411,26 @@ class RefPhsEstimationMatlabTestMethod2Parallel(unittest.TestCase):
         dest_paths = run_pyrate.get_dest_paths(base_ifg_paths, crop,
                                                params, xlks)
 
-        ifg_instance = matlab_mst.IfgListPyRate(datafiles=dest_paths)
+        # start run_pyrate copy
+        mst_grid = run_pyrate.mst_calculation(dest_paths, params)
 
-        ifgs = ifg_instance.ifgs
+        # reading ifgs again, this is consistent with nci submission script
+        ifgs = shared.pre_prepare_ifgs(dest_paths, params)
 
-        for c, i in enumerate(ifgs):
-            if not i.is_open:
-                i.open()
-            if not i.nan_converted:
-                i.nodata_value = 0
-                i.convert_to_nans()
-
-            if not i.mm_converted:
-                i.convert_to_mm()
-                i.write_modified_phase()
-
-        if params[cf.ORBITAL_FIT] != 0:
-            run_pyrate.remove_orbital_error(ifgs, params)
-
+        # Estimate reference pixel location
         refx, refy = run_pyrate.find_reference_pixel(ifgs, params)
-        cls.ref_phs_mthod2, cls.ifgs = \
-            estimate_ref_phase(ifgs, params, refx, refy)
 
-        cls.matlab_ref_phs = [-21.4459648132324,
-                                27.1714553833008,
-                                -20.8264484405518,
-                                -3.47468209266663,
-                                30.4519863128662,
-                                22.3201427459717,
-                                9.58487224578857,
-                                4.81979084014893,
-                                -3.89160847663879,
-                                -12.0131330490112,
-                                -8.64702987670898,
-                                19.2060871124268,
-                                -9.92049789428711,
-                                4.38952684402466,
-                                -34.9590339660645,
-                                -14.3167810440063,
-                                -11.9066228866577]
+        # Estimate and remove orbit errors
+        run_pyrate.remove_orbital_error(ifgs, params)
+
+        for i in ifgs:
+            i.close()
+
+        ifgs = shared.pre_prepare_ifgs(dest_paths, params)
+
+        cls.ref_phs, cls.ifgs = estimate_ref_phase(ifgs, params, refx, refy)
+        # end run_pyrate copy
+
         for i in ifgs:
             i.close()
 
@@ -511,8 +472,8 @@ class RefPhsEstimationMatlabTestMethod2Parallel(unittest.TestCase):
         self.assertEqual(count, len(self.ifgs))
 
     def test_estimate_reference_phase_method2(self):
-        np.testing.assert_array_almost_equal(self.matlab_ref_phs,
-                                             self.ref_phs_mthod2, decimal=3)
+        np.testing.assert_array_almost_equal(matlab_ref_phs_method2,
+                                             self.ref_phs, decimal=3)
 
 
 class MPITests(unittest.TestCase):
