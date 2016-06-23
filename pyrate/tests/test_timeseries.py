@@ -474,34 +474,26 @@ class MPITests(unittest.TestCase):
         # now create the non parallel version
         self.tif_dir_s = tempfile.mkdtemp()
         self.params[cf.OUT_DIR] = self.tif_dir_s
-        xlooks, ylooks, crop = run_pyrate.transform_params(self.params)
-        dest_paths_s = run_pyrate.get_dest_paths(
-            self.base_unw_paths, crop, self.params, xlooks)
+        temp_dir = tempfile.mkdtemp()
+        # copy sydney_tif files in temp_dir
+        self.params[cf.OUT_DIR] = temp_dir
+        xlks, ylks, crop = run_pyrate.transform_params(self.params)
+
+        # dest_paths are tifs that have been geotif converted and multilooked
+        dest_paths = run_pyrate.get_dest_paths(
+            self.base_unw_paths, crop, self.params, xlks)
+        # create the dest_paths files
         run_prepifg.gamma_prepifg(self.base_unw_paths, self.params)
 
-        ifgs = shared.pre_prepare_ifgs(dest_paths_s, self.params)
-        for i in ifgs:
-            i.close()
+        run_pyrate.process_ifgs(dest_paths, self.params)
+        tsvel_file = os.path.join(self.params[cf.OUT_DIR], 'tsvel.npy')
+        tsincr_file = os.path.join(self.params[cf.OUT_DIR], 'tsincr.npy')
+        tscum_file = os.path.join(self.params[cf.OUT_DIR], 'tscum.npy')
+        self.tsvel = np.load(tsvel_file)
+        self.tsincr = np.load(tsincr_file)
+        self.tscum = np.load(tscum_file)
 
-        mst_grid = run_pyrate.mst_calculation(dest_paths_s, self.params)
-
-        # reading ifgs again, this is consistent with nci submission script
-        ifgs = shared.pre_prepare_ifgs(dest_paths_s, self.params)
-
-        # Estimate reference pixel location
-        refpx, refpy = run_pyrate.find_reference_pixel(ifgs, self.params)
-
-        # Estimate and remove orbit errors
-        run_pyrate.remove_orbital_error(ifgs, self.params)
-
-        rpe.estimate_ref_phase(ifgs, self.params, refpx, refpy)
-
-        maxvar = [vcm_module.cvd(i)[0] for i in ifgs]
-
-        vcmt = vcm_module.get_vcmt(ifgs, maxvar)
-
-        self.tsincr, self.tscum, self.tsvel = run_pyrate.calculate_time_series(
-                ifgs, self.params, vcmt, mst=mst_grid)
+        shutil.rmtree(temp_dir)
         shutil.rmtree(self.tif_dir_s)
 
     @classmethod
