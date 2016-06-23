@@ -208,6 +208,13 @@ def compute_time_series(epochlist, gt, ifgs, md, mst_grid, params, vcmt, wkt):
     tsincr, tscum, tsvel = calculate_time_series(
         ifgs, params, vcmt=vcmt, mst=mst_grid)
 
+    tsvel_file = os.path.join(params[cf.OUT_DIR], 'tsvel.npy')
+    tsincr_file = os.path.join(params[cf.OUT_DIR], 'tsincr.npy')
+    tscum_file = os.path.join(params[cf.OUT_DIR], 'tscum.npy')
+    np.save(file=tsincr_file, arr=tsincr)
+    np.save(file=tscum_file, arr=tscum)
+    np.save(file=tsvel_file, arr=tsvel)
+
     # TODO: write tests for these functions
     write_timeseries_geotiff(epochlist, gt, md, params, tsincr, wkt,
                              pr_type='tsincr')
