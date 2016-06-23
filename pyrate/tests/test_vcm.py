@@ -16,6 +16,7 @@ import numpy as np
 import tempfile
 import subprocess
 import glob
+from itertools import product
 
 from pyrate.vcm import cvd, get_vcmt
 from pyrate.tests.common import sydney5_mock_ifgs, sydney5_ifgs
@@ -289,10 +290,13 @@ class MPITests(unittest.TestCase):
         shutil.rmtree(cls.tmp_dir, ignore_errors=True)
 
     def test_mpi_mst_single_processor(self):
-        for looks in range(1, 6):
-            print '\n======Testing reference phase looks:', looks
+        for looks, ref_phase_method in product(range(1, 6), [1, 2]):
+            print '\nTesting reference phase looks: {looks} and ' \
+                  'ref_phase_method: {ref_phase}'.format(looks=looks,
+                                                  ref_phase=ref_phase_method)
             self.params[cf.IFG_LKSX] = looks
             self.params[cf.IFG_LKSY] = looks
+            self.params[cf.REF_EST_METHOD] = ref_phase_method
             self.process(self.base_unw_paths)
             mlooked_ifgs = glob.glob(os.path.join(
                 self.tif_dir, '*_{looks}rlks_*cr.tif'.format(looks=looks)))

@@ -263,8 +263,8 @@ def ref_phase_estimation_mpi(MPI_myID, ifg_paths, num_processors, parallel, para
         comp = np.isnan(ifg_phase_data_sum)  # this is the same as in Matlab
         comp = np.ravel(comp, order='F')  # this is the same as in Matlab
         for n, ifg in enumerate(process_ifgs):
-            ref_phs = \
-                rpe.est_ref_phase_method1_multi(ifg.phase_data, comp)
+            shared.nan_and_mm_convert(ifg, params)
+            ref_phs = rpe.est_ref_phase_method1_multi(ifg.phase_data, comp)
             ifg.phase_data -= ref_phs
             ifg.meta_data[ifc.REF_PHASE] = ifc.REF_PHASE_REMOVED
             ifg.write_modified_phase()
@@ -276,10 +276,10 @@ def ref_phase_estimation_mpi(MPI_myID, ifg_paths, num_processors, parallel, para
         chipsize = 2 * half_chip_size + 1
         thresh = chipsize * chipsize * params[cf.REF_MIN_FRAC]
         for n, ifg in enumerate(process_ifgs):
-            ref_phs = \
-                rpe.est_ref_phase_method2_multi(ifg.phase_data,
-                                                half_chip_size,
-                                                refpx, refpy, thresh)
+            shared.nan_and_mm_convert(ifg, params)
+            ref_phs = rpe.est_ref_phase_method2_multi(ifg.phase_data,
+                                                      half_chip_size,
+                                                      refpx, refpy, thresh)
             ifg.phase_data -= ref_phs
             ifg.meta_data[ifc.REF_PHASE] = ifc.REF_PHASE_REMOVED
             ifg.write_modified_phase()
