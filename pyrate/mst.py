@@ -89,6 +89,16 @@ def mst_multiprocessing_map(process_top_lefts, process_bottom_rights,
 
 
 def mst_multiprocessing(top_left, bottom_right, ifgs_or_paths):
+    """
+    The memory requirement during mpi mst computation is determined by the
+    number of ifgs times size of IfgPart. Note that we need all ifg header
+    information (like masters/slave dates) for mst computation.
+    To manage memory we need smaller tiles (IfgPart) as number of ifgs go up.
+    :param top_left: top left coordinates of the tile
+    :param bottom_right: bottom right coordinates of the tile
+    :param ifgs_or_paths: all ifg paths of the problem. List of strings.
+    :return:
+    """
     r_start, c_start = top_left
     r_end, c_end = bottom_right
     ifg_parts = [IfgPart(ifgs_or_paths[i],
