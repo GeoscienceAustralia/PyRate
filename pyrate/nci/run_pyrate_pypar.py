@@ -139,32 +139,33 @@ def main(params=None):
     maxvar, vcmt = maxvar_vcm_mpi(MPI_myID, dest_tifs,
                             num_processors, parallel, params)
 
-    ifgs = shared.pre_prepare_ifgs(dest_tifs, params)
-
     vcmt_file = os.path.join(params[cf.OUT_DIR], 'vcmt.npy')
     if MPI_myID == MASTER_PROCESS:
         np.save(file=vcmt_file, arr=vcmt)
 
     parallel.barrier()
 
-    # # time series mpi computation
-    time_series_mpi(MPI_myID, ifgs, mst_grid, num_processors, parallel, params,
-                    vcmt)
+    # linrate mpi computation
+    linrate_mpi(MPI_myID, dest_tifs, mst_grid, num_processors, parallel,
+                params, vcmt)
 
     parallel.barrier()  # may not need this
+    ifgs = shared.pre_prepare_ifgs(dest_tifs, params)
 
-    # linrate mpi computation
-    linrate_mpi(MPI_myID, ifgs, mst_grid, num_processors, parallel, params,
-                vcmt)
+    # time series mpi computation
+    if params[cf.TIME_SERIES_CAL]:
+        time_series_mpi(MPI_myID, ifgs, mst_grid, num_processors, parallel,
+                        params, vcmt)
 
     parallel.finalize()
 
 
-def linrate_mpi(MPI_myID, ifgs, mst_grid, num_processors, parallel, params,
+def linrate_mpi(MPI_myID, ifg_paths, mst_grid, num_processors, parallel, params,
                 vcmt):
     write_msg('Calculating linear rate')
+    ifgs = shared.prepare_ifgs_without_phase(ifg_paths, params)
     MAXSIG, NSIG, PTHRESH, ncols, error, mst, obs, _, processes, rate, \
-    nrows, samples, span = linrate.linrate_setup(ifgs, mst_grid, params)
+        nrows, samples, span = linrate.linrate_setup(ifgs, mst_grid, params)
     rows = range(nrows)
     process_indices = parallel.calc_indices(nrows)
     process_rows = [itemgetter(p)(rows) for p in process_indices]
@@ -195,8 +196,7 @@ def linrate_mpi(MPI_myID, ifgs, mst_grid, num_processors, parallel, params,
         np.save(file=error_file, arr=error)
         np.save(file=samples_file, arr=samples)
     else:
-        parallel.send(process_res, destination=MASTER_PROCESS,
-                      tag=MPI_myID)
+        parallel.send(process_res, destination=MASTER_PROCESS, tag=MPI_myID)
 
 
 def time_series_mpi(MPI_myID, ifgs, mst_grid, num_processors, parallel, params,
