@@ -36,10 +36,9 @@ def process_ifgs(ifg_paths_or_instance, params):
     ifgs: sequence of paths to interferrograms (NB: changes are saved into ifgs)
     params: dictionary of configuration parameters
     """
-    mst_grid = mst_calculation(ifg_paths_or_instance, params)
-
-    # reading ifgs again, this is consistent with nci submission script
     ifgs = pre_prepare_ifgs(ifg_paths_or_instance, params)
+
+    mst_grid = mst_calculation(ifg_paths_or_instance, params)
 
     # Estimate reference pixel location
     refpx, refpy = find_reference_pixel(ifgs, params)
@@ -56,11 +55,6 @@ def process_ifgs(ifg_paths_or_instance, params):
     # Estimate and remove orbit errors
     remove_orbital_error(ifgs, params)
 
-    for i in ifgs:
-        i.close()
-
-    ifgs = pre_prepare_ifgs(ifg_paths_or_instance, params)
-
     write_msg('Estimating and removing phase at reference pixel')
     ref_phs, ifgs = rpe.estimate_ref_phase(ifgs, params, refpx, refpy)
 
@@ -70,7 +64,7 @@ def process_ifgs(ifg_paths_or_instance, params):
 
     # TODO: assign maxvar to ifg metadata (and geotiff)?
     write_msg('Calculating maximum variance in interferograms')
-    maxvar = [vcm_module.cvd(i)[0] for i in ifgs]
+    maxvar = [vcm_module.cvd(i, params)[0] for i in ifgs]
     maxvar_file = os.path.join(params[cf.OUT_DIR], 'maxvar.npy')
     np.save(file=maxvar_file, arr=maxvar)
 
@@ -83,7 +77,7 @@ def process_ifgs(ifg_paths_or_instance, params):
     np.save(file=vcmt_mat_binary_file, arr=vcmt)
 
     p = os.path.join(params[cf.OUT_DIR], ifgs[0].data_path)
-    assert os.path.exists(p) == True
+    assert os.path.exists(p)
 
     ds = gdal.Open(p)
     md = ds.GetMetadata()  # get metadata for writing on output tifs

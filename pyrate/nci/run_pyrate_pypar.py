@@ -39,14 +39,14 @@ def main(params=None):
     if MPI_myID == MASTER_PROCESS:
         print "Master process found {} worker processors".format(num_processors)
 
-    # Read config file, cropped_and_sampled_tifs are input files to run_pyrate
+    # Read config file, dest_tifs are input files to run_pyrate
     if params:
         xlks, ylks, crop = run_pyrate.transform_params(params)
         base_unw_paths = run_pyrate.original_ifg_paths(params[cf.IFG_FILE_LIST])
-        cropped_and_sampled_tifs = \
+        dest_tifs = \
             run_pyrate.get_dest_paths(base_unw_paths, crop, params, xlks)
     else:
-        _, cropped_and_sampled_tifs, params = run_pyrate.get_ifg_paths()
+        _, dest_tifs, params = run_pyrate.get_ifg_paths()
 
     output_dir = params[cf.OUT_DIR]
     mpi_log_filename = os.path.join(output_dir, "mpi_run_pyrate.log")
@@ -70,7 +70,7 @@ def main(params=None):
         output_log_file.write("\nConfig Settings: end\n")
 
         output_log_file.write("\n Input files for run_pyrate are:\n")
-        for b in cropped_and_sampled_tifs:
+        for b in dest_tifs:
             output_log_file.write(b + "\n")
 
         output_log_file.close()
@@ -81,12 +81,12 @@ def main(params=None):
     mst_mat_binary_file = os.path.join(params[cf.OUT_DIR], 'mst_mat.npy')
     write_msg('Calculating mst')
     if MPI_myID == MASTER_PROCESS:
-        mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs,
+        mpi_mst_calc(MPI_myID, dest_tifs,
                                mpi_log_filename,
                                parallel, params,
                                mst_mat_binary_file)
     else:
-        mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs,
+        mpi_mst_calc(MPI_myID, dest_tifs,
                                mpi_log_filename,
                                parallel, params,
                                mst_mat_binary_file)
@@ -98,11 +98,11 @@ def main(params=None):
     # Calc ref_pixel using MPI
     ref_pixel_file = os.path.join(params[cf.OUT_DIR], 'ref_pixel.npy')
     if MPI_myID == MASTER_PROCESS:
-        refpx, refpy = ref_pixel_calc_mpi(MPI_myID, cropped_and_sampled_tifs,
+        refpx, refpy = ref_pixel_calc_mpi(MPI_myID, dest_tifs,
                                           num_processors, parallel, params)
         np.save(file=ref_pixel_file, arr=[refpx, refpy])
     else:
-        ref_pixel_calc_mpi(MPI_myID, cropped_and_sampled_tifs,
+        ref_pixel_calc_mpi(MPI_myID, dest_tifs,
                            num_processors, parallel, params)
 
     parallel.barrier()
@@ -113,7 +113,7 @@ def main(params=None):
 
     # remove APS delay here
     if params[cf.APS_CORRECTION]:
-        ifgs = shared.pre_prepare_ifgs(cropped_and_sampled_tifs, params)
+        ifgs = shared.pre_prepare_ifgs(dest_tifs, params)
         if run_pyrate.aps_delay_required(ifgs, params):
             no_ifgs = len(ifgs)
             process_indices = parallel.calc_indices(no_ifgs)
@@ -125,26 +125,21 @@ def main(params=None):
 
     parallel.barrier()
     # required as all processes need orbital corrected ifgs
-    orb_fit_calc_mpi(MPI_myID, cropped_and_sampled_tifs,
+    orb_fit_calc_mpi(MPI_myID, dest_tifs,
                      num_processors, parallel, params)
     parallel.barrier()
 
     # estimate and remove reference phase, ifgs are modifed in place
-    ref_phase_estimation_mpi(MPI_myID, cropped_and_sampled_tifs,
+    ref_phase_estimation_mpi(MPI_myID, dest_tifs,
                              num_processors, parallel, params,
                              refpx, refpy)
     parallel.barrier()
 
-    # all processes need access to maxvar
-    ifgs = shared.pre_prepare_ifgs(cropped_and_sampled_tifs, params)
+    # all processes need access to maxvar, and vcmt
+    maxvar, vcmt = maxvar_vcm_mpi(MPI_myID, dest_tifs,
+                            num_processors, parallel, params)
 
-    maxvar = maxvar_mpi(MPI_myID, ifgs,
-                        num_processors, parallel, params)
-    # get vcmt is very fast and not mpi'ed at the moment
-    # TODO: revisit this if performance is low in NCI
-    # vcmt extremely fast already and no need to parallize
-    # offers easy parallisation if required
-    vcmt = vcm_module.get_vcmt(ifgs, maxvar)  # all processes
+    ifgs = shared.pre_prepare_ifgs(dest_tifs, params)
 
     vcmt_file = os.path.join(params[cf.OUT_DIR], 'vcmt.npy')
     if MPI_myID == MASTER_PROCESS:
@@ -263,7 +258,7 @@ def ref_phase_estimation_mpi(MPI_myID, ifg_paths, num_processors, parallel, para
         comp = np.isnan(ifg_phase_data_sum)  # this is the same as in Matlab
         comp = np.ravel(comp, order='F')  # this is the same as in Matlab
         for n, ifg in enumerate(process_ifgs):
-            shared.nan_and_mm_convert(ifg, params)
+            # shared.nan_and_mm_convert(ifg, params)
             ref_phs = rpe.est_ref_phase_method1_multi(ifg.phase_data, comp)
             ifg.phase_data -= ref_phs
             ifg.meta_data[ifc.REF_PHASE] = ifc.REF_PHASE_REMOVED
@@ -276,7 +271,7 @@ def ref_phase_estimation_mpi(MPI_myID, ifg_paths, num_processors, parallel, para
         chipsize = 2 * half_chip_size + 1
         thresh = chipsize * chipsize * params[cf.REF_MIN_FRAC]
         for n, ifg in enumerate(process_ifgs):
-            shared.nan_and_mm_convert(ifg, params)
+            # shared.nan_and_mm_convert(ifg, params)
             ref_phs = rpe.est_ref_phase_method2_multi(ifg.phase_data,
                                                       half_chip_size,
                                                       refpx, refpy, thresh)
@@ -304,14 +299,14 @@ def ref_phase_estimation_mpi(MPI_myID, ifg_paths, num_processors, parallel, para
         # send reference phase data to master process
         parallel.send(process_ref_phs, destination=MASTER_PROCESS,
                       tag=MPI_myID)
-    parallel.barrier()
 
 
-def maxvar_mpi(MPI_myID, ifgs, num_processors, parallel, params):
+def maxvar_vcm_mpi(MPI_myID, ifg_paths, num_processors, parallel, params):
+    ifgs = shared.prepare_ifgs_without_phase(ifg_paths, params)
     no_ifgs = len(ifgs)
     process_indices = parallel.calc_indices(no_ifgs)
     process_ifgs = [itemgetter(p)(ifgs) for p in process_indices]
-    process_maxvar = [vcm_module.cvd(i)[0] for i in process_ifgs]
+    process_maxvar = [vcm_module.cvd(i, params)[0] for i in process_ifgs]
     maxvar_file = os.path.join(params[cf.OUT_DIR], 'maxvar.npy')
     if MPI_myID == MASTER_PROCESS:
         all_indices = parallel.calc_all_indices(no_ifgs)
@@ -327,7 +322,9 @@ def maxvar_mpi(MPI_myID, ifgs, num_processors, parallel, params):
         parallel.send(process_maxvar, destination=MASTER_PROCESS, tag=MPI_myID)
     parallel.barrier()
     maxvar = np.load(maxvar_file)
-    return maxvar
+    vcmt = vcm_module.get_vcmt(ifgs, maxvar)
+
+    return maxvar, vcmt
 
 
 def orb_fit_calc_mpi(MPI_myID, ifg_paths, num_processors, parallel, params):
@@ -351,6 +348,7 @@ def orb_fit_calc_mpi(MPI_myID, ifg_paths, num_processors, parallel, params):
     for i in process_ifgs:
         i.write_modified_phase()
         # implement mpi logging
+
 
 def ref_pixel_calc_mpi(MPI_myID, ifg_paths, num_processors, parallel, params):
     half_patch_size, thresh, grid = refpixel.ref_pixel_setup(ifg_paths, params)

@@ -13,7 +13,7 @@ from array import array
 import math
 from datetime import date
 import logging
-from numpy import where, nan, isnan, sum as nsum
+from numpy import where, nan, isnan, sum as nsum, isclose
 import numpy as np
 import random
 import string
@@ -272,11 +272,20 @@ class Ifg(RasterBase):
             msg = 'nodata value needs to be set for nan conversion.' \
                   'Use ifg.nodata_value = NoDataValue to set nodata_value'
             raise RasterException(msg)
-
-        self.phase_data = where(np.isclose(self.phase_data,
-                                           self._nodata_value, atol=1e-6),
-                                nan, self.phase_data)
-        self.nan_converted = True
+        if ((self.dataset.GetMetadataItem(ifc.NAN_STATUS) == ifc.NAN_CONVERTED)
+            or self.nan_converted):
+            self.phase_data = self.phase_data
+            self.nan_converted = True
+            msg = '%s: ignored as previous nan conversion detected'
+            # logging.debug(msg % self.data_path)  # should log?
+            return
+        else:
+            self.phase_data = where(
+                isclose(self.phase_data, self._nodata_value, atol=1e-6),
+                nan,
+                self.phase_data)
+            self.meta_data[ifc.NAN_STATUS] = ifc.NAN_CONVERTED
+            self.nan_converted = True
 
     @property
     def phase_band(self):
@@ -870,6 +879,11 @@ def pre_prepare_ifgs(ifg_paths, params):
 
 
 def nan_and_mm_convert(ifg, params):
+    """
+    :param ifg: Ifg class instance
+    :param params:
+    :return:
+    """
     nan_conversion = params[cf.NAN_CONVERSION]
     if nan_conversion:  # nan conversion happens here in networkx mst
         ifg.nodata_value = params[cf.NO_DATA_VALUE]

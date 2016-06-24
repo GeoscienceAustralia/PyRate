@@ -111,32 +111,9 @@ class MatlabEqualityTest(unittest.TestCase):
 
         dest_paths = run_pyrate.get_dest_paths(base_ifg_paths, crop, params, xlks)
 
-        ifg_instance = matlab_mst.IfgListPyRate(datafiles=dest_paths)
-
-        assert isinstance(ifg_instance, matlab_mst.IfgListPyRate)
-        ifgs = ifg_instance.ifgs
-        for i in ifgs:
-            if not i.mm_converted:
-                i.convert_to_mm()
-                i.write_modified_phase()
-        ifg_instance_updated, epoch_list = \
-            matlab_mst.get_nml(ifg_instance,
-                               nodata_value=params[cf.NO_DATA_VALUE],
-                               nan_conversion=True)
-        mst_grid = matlab_mst.matlab_mst_boolean_array(ifg_instance_updated)
-
-        for i in ifgs:
-            if not i.is_open:
-                i.open()
-            if not i.nan_converted:
-                i.convert_to_nans()
-
-            if not i.mm_converted:
-                i.convert_to_mm()
-                i.write_modified_phase()
-
-        if params[cf.ORBITAL_FIT] != 0:
-            run_pyrate.remove_orbital_error(ifgs, params)
+        # start run_pyrate copy
+        ifgs = shared.pre_prepare_ifgs(dest_paths, params)
+        mst_grid = run_pyrate.mst_calculation(dest_paths, params)
 
         refx, refy = run_pyrate.find_reference_pixel(ifgs, params)
 
@@ -145,11 +122,8 @@ class MatlabEqualityTest(unittest.TestCase):
 
         _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
 
-        # Calculate interferogram noise
-        maxvar = [vcm.cvd(i)[0] for i in ifgs]
-
-        # Calculate temporal variance-covariance matrix
-        vcmt = vcm.get_vcmt(ifgs, maxvar)
+        maxvar = [vcm_module.cvd(i, params)[0] for i in ifgs]
+        vcmt = vcm_module.get_vcmt(ifgs, maxvar)
 
         # Calculate linear rate map
         params[cf.PARALLEL] = 1

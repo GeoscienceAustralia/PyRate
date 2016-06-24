@@ -28,11 +28,18 @@ from pyrate import config as cf
 from pyrate import reference_phase_estimation as rpe
 from pyrate.tests import common
 from pyrate import vcm as vcm_module
+from pyrate import shared
 
 
 class CovarianceTests(unittest.TestCase):
     def setUp(self):
         self.ifgs = sydney_data_setup()
+        for i in self.ifgs:
+            i.mm_converted = True
+        params = dict()
+        params[cf.NO_DATA_VALUE] = 0
+        params[cf.NAN_CONVERSION] = True
+        self.params = params
 
     def test_covariance_basic(self):
         ifgs = sydney5_ifgs()
@@ -43,7 +50,7 @@ class CovarianceTests(unittest.TestCase):
             if bool((i.phase_data == 0).all()) is True:
                 raise Exception("All zero")
 
-            maxvar, alpha = cvd(i, calc_alpha=True)
+            maxvar, alpha = cvd(i, self.params, calc_alpha=True)
             self.assertTrue(maxvar is not None)
             self.assertTrue(alpha is not None)
             print "maxvar: %s, alpha: %s" % (maxvar, alpha)
@@ -62,13 +69,12 @@ class CovarianceTests(unittest.TestCase):
 
         act_maxvar = []
         act_alpha = []
-
         for i in self.ifgs:
 
             if bool((i.phase_data == 0).all()) is True:
                 raise Exception("All zero")
 
-            maxvar, alpha = cvd(i, calc_alpha=True)
+            maxvar, alpha = cvd(i, self.params, calc_alpha=True)
             self.assertTrue(maxvar is not None)
             self.assertTrue(alpha is not None)
            
@@ -129,7 +135,7 @@ class VCMTests(unittest.TestCase):
         assert_array_almost_equal(act, exp, decimal=3)
 
 
-class MatlabEqualityTestInRunPyRateSequence(unittest.TestCase):
+class MatlabEqualityTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -172,23 +178,9 @@ class MatlabEqualityTestInRunPyRateSequence(unittest.TestCase):
 
         dest_paths = run_pyrate.get_dest_paths(base_ifg_paths,
                                                crop, params, xlks)
-        ifg_instance = matlab_mst.IfgListPyRate(datafiles=dest_paths)
-
-        ifgs = ifg_instance.ifgs
-
-        for i in ifgs:
-            if not i.is_open:
-                i.open()
-            if not i.nan_converted:
-                i.nodata_value = 0
-                i.convert_to_nans()
-
-            if not i.mm_converted:
-                i.convert_to_mm()
-                i.write_modified_phase()
-
-        if params[cf.ORBITAL_FIT] != 0:
-            run_pyrate.remove_orbital_error(ifgs, params)
+        # start run_pyrate copy
+        ifgs = shared.pre_prepare_ifgs(dest_paths, params)
+        mst_grid = run_pyrate.mst_calculation(dest_paths, params)
 
         refx, refy = run_pyrate.find_reference_pixel(ifgs, params)
 
@@ -198,7 +190,7 @@ class MatlabEqualityTestInRunPyRateSequence(unittest.TestCase):
         _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
 
         # Calculate interferogram noise
-        cls.maxvar = [cvd(i)[0] for i in ifgs]
+        cls.maxvar = [cvd(i, params)[0] for i in ifgs]
         cls.vcmt = get_vcmt(ifgs, cls.maxvar)
 
     @classmethod
