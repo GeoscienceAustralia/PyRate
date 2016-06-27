@@ -131,12 +131,6 @@ def linear_rate_by_rows(row, cols, mst, NSIG, obs, PTHRESH, span, vcmt):
         res[col, :] = linear_rate_by_pixel(
             row, col, mst, NSIG, obs, PTHRESH, span, vcmt)
 
-    # alternate implementation, check performance for larger images
-    # res = map(lambda col:
-    #           linear_rate_by_pixel(col, row, mst, NSIG, obs, PTHRESH, span, vcmt),
-    #           range(cols)
-    #           )
-
     return res
 
 

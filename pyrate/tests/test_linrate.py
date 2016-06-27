@@ -294,8 +294,6 @@ class MPITests(unittest.TestCase):
                                                  self.samples_mpi,
                                                  decimal=4)
 
-    def test_linrate_log_written(self):
-        self.process()
         log_file = glob.glob(os.path.join(self.tif_dir, '*.log'))[0]
         self.assertTrue(os.path.exists(log_file))
 

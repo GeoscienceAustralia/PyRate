@@ -433,6 +433,7 @@ class IfgPart(object):
         self.nan_fraction = None
         self.master = None
         self.slave = None
+        self.time_span = None
         read = False
         attempts = 0
         # TODO: The repeated read attempts should be avoided
@@ -461,6 +462,7 @@ class IfgPart(object):
         self.nan_fraction = ifg.nan_fraction
         self.master = ifg.master
         self.slave = ifg.slave
+        self.time_span = ifg.time_span
         ifg.close()  # close base ifg
         return True
 
