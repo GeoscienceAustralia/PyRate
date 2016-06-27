@@ -126,8 +126,7 @@ def main(params=None):
     parallel.barrier()
 
     # all processes need access to maxvar, and vcmt
-    maxvar, vcmt = maxvar_vcm_mpi(MPI_myID, dest_tifs,
-                            num_processors, parallel, params)
+    maxvar, vcmt = maxvar_vcm_mpi(MPI_myID, dest_tifs, parallel, params)
 
     vcmt_file = os.path.join(params[cf.OUT_DIR], 'vcmt.npy')
     if MPI_myID == MASTER_PROCESS:
@@ -148,8 +147,7 @@ def main(params=None):
 
     # time series mpi computation
     if params[cf.TIME_SERIES_CAL]:
-        time_series_mpi(MPI_myID, ifgs, mst_grid, num_processors, parallel,
-                        params, vcmt)
+        time_series_mpi(MPI_myID, ifgs, mst_grid, parallel, params, vcmt)
 
     parallel.finalize()
 
@@ -218,8 +216,9 @@ def linrate_mpi(MPI_myID, ifg_paths, mst_grid, parallel, params, vcmt):
         parallel.send(process_res, destination=MASTER_PROCESS, tag=MPI_myID)
 
 
-def time_series_mpi(MPI_myID, ifgs, mst_grid, num_processors, parallel, params,
-                    vcmt):
+def time_series_mpi(MPI_myID, ifgs, mst_grid, parallel, params, vcmt):
+
+    num_processors = parallel.size
     write_msg('Calculating time series')
     B0, INTERP, PTHRESH, SMFACTOR, SMORDER, TSMETHOD, ifg_data, mst, \
     ncols, nrows, nvelpar, _, processes, span, tsvel_matrix = \
@@ -320,7 +319,8 @@ def ref_phase_estimation_mpi(MPI_myID, ifg_paths, num_processors, parallel, para
                       tag=MPI_myID)
 
 
-def maxvar_vcm_mpi(MPI_myID, ifg_paths, num_processors, parallel, params):
+def maxvar_vcm_mpi(MPI_myID, ifg_paths, parallel, params):
+    num_processors = parallel.size
     ifgs = shared.prepare_ifgs_without_phase(ifg_paths, params)
     no_ifgs = len(ifgs)
     process_indices = parallel.calc_indices(no_ifgs)
