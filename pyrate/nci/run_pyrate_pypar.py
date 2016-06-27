@@ -78,19 +78,11 @@ def main(params=None):
     parallel.barrier()
 
     # Calc mst using MPI
-    mst_mat_binary_file = os.path.join(params[cf.OUT_DIR], 'mst_mat.npy')
-    write_msg('Calculating mst')
     if MPI_myID == MASTER_PROCESS:
-        mpi_mst_calc(MPI_myID, dest_tifs,
-                               mpi_log_filename,
-                               parallel, params,
-                               mst_mat_binary_file)
+        mpi_mst_calc(MPI_myID, dest_tifs, mpi_log_filename, parallel, params)
     else:
-        mpi_mst_calc(MPI_myID, dest_tifs,
-                               mpi_log_filename,
-                               parallel, params,
-                               mst_mat_binary_file)
-    write_msg('Calculating mst')
+        mpi_mst_calc(MPI_myID, dest_tifs, mpi_log_filename, parallel, params)
+
     parallel.barrier()
 
     # Calc ref_pixel using MPI
@@ -144,7 +136,10 @@ def main(params=None):
     parallel.barrier()
 
     # TODO: avoid reading in whole mst_grid in all processes
-    mst_grid = np.load(file=mst_mat_binary_file)
+    # may be ok since mst is a boolean array
+    mst_file = os.path.join(params[cf.OUT_DIR], 'mst_mat.npy')
+    mst_grid = np.load(file=mst_file)
+
     # linrate mpi computation
     linrate_mpi(MPI_myID, dest_tifs, mst_grid, parallel, params, vcmt)
 
@@ -179,6 +174,7 @@ def linrate_mpi(MPI_myID, ifg_paths, mst_grid, parallel, params, vcmt):
     rows = ifg.nrows
     cols = ifg.ncols
     rate = np.zeros([rows, cols], dtype=np.float32)
+    # may not need error and samples? save memory?
     error = np.zeros([rows, cols], dtype=np.float32)
     samples = np.zeros([rows, cols], dtype=np.float32)
 
@@ -402,7 +398,7 @@ def ref_pixel_calc_mpi(MPI_myID, ifg_paths, num_processors, parallel, params):
 
 
 def mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs, mpi_log_filename,
-                 parallel, params, mst_file):
+                 parallel, params):
     """
     MPI function that control each process during MPI run
     :param MPI_myID:
@@ -414,6 +410,8 @@ def mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs, mpi_log_filename,
     :param mst_file: mst file (2d numpy array) save to disc
     :return:
     """
+    write_msg('Calculating mst')
+
     write_msg('Calculating minimum spanning tree matrix '
                          'using NetworkX method')
     num_processors = parallel.size
@@ -439,6 +437,7 @@ def mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs, mpi_log_filename,
     parallel.barrier()
 
     if MPI_myID == MASTER_PROCESS:
+        mst_file = os.path.join(params[cf.OUT_DIR], 'mst_mat.npy')
         result = result_process
         # combine the mst from the other processes
         for i in range(1, num_processors):

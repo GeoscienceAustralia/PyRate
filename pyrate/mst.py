@@ -80,7 +80,7 @@ def mst_multiprocessing_map(process_top_lefts, process_bottom_rights,
     # TODO: investigate other pypar send/receive options
     # should be able to change int to bool, may be use mpi4py?
     no_ifgs = len(paths_or_ifgs)
-    result = np.zeros(shape=(no_ifgs, shape[0], shape[1]), dtype=int)
+    result = np.zeros(shape=(no_ifgs, shape[0], shape[1]), dtype=bool)
     for top_l, bottom_r \
                 in zip(process_top_lefts, process_bottom_rights):
         result[:, top_l[0]:bottom_r[0], top_l[1]: bottom_r[1]] = \
