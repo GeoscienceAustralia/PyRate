@@ -93,8 +93,6 @@ def main(params=None):
     write_msg('Calculating mst')
     parallel.barrier()
 
-    mst_grid = np.load(file=mst_mat_binary_file)
-
     # Calc ref_pixel using MPI
     ref_pixel_file = os.path.join(params[cf.OUT_DIR], 'ref_pixel.npy')
     if MPI_myID == MASTER_PROCESS:
@@ -145,9 +143,10 @@ def main(params=None):
 
     parallel.barrier()
 
+    # TODO: avoid reading in whole mst_grid in all processes
+    mst_grid = np.load(file=mst_mat_binary_file)
     # linrate mpi computation
-    linrate_mpi(MPI_myID, dest_tifs, mst_grid, num_processors, parallel,
-                params, vcmt)
+    linrate_mpi(MPI_myID, dest_tifs, mst_grid, parallel, params, vcmt)
 
     parallel.barrier()  # may not need this
     ifgs = shared.pre_prepare_ifgs(dest_tifs, params)
@@ -160,38 +159,62 @@ def main(params=None):
     parallel.finalize()
 
 
-def linrate_mpi(MPI_myID, ifg_paths, mst_grid, num_processors, parallel, params,
-                vcmt):
+def linrate_mpi(MPI_myID, ifg_paths, mst_grid, parallel, params, vcmt):
     write_msg('Calculating linear rate')
-    ifgs = shared.prepare_ifgs_without_phase(ifg_paths, params)
-    MAXSIG, NSIG, PTHRESH, ncols, error, mst, obs, _, processes, rate, \
-        nrows, samples, span = linrate.linrate_setup(ifgs, mst_grid, params)
-    rows = range(nrows)
-    process_indices = parallel.calc_indices(nrows)
-    process_rows = [itemgetter(p)(rows) for p in process_indices]
-    process_res = np.empty(shape=(len(process_rows), ncols, 3))
-    for n, row in enumerate(process_rows):
-        process_res[n, :, :] = linrate.linear_rate_by_rows(
-            row, ncols, mst, NSIG, obs, PTHRESH, span, vcmt)
-    rate_file = os.path.join(params[cf.OUT_DIR], 'rate.npy')
-    error_file = os.path.join(params[cf.OUT_DIR], 'error.npy')
-    samples_file = os.path.join(params[cf.OUT_DIR], 'samples.npy')
+    num_processors = parallel.size
+    # due to limited memory can not copy whole ifgs phase data in each process
+    # read the first tif to get shape
+    ifg = shared.pre_prepare_ifgs([ifg_paths[0]], params)[0]
+
+    # calculate process tiles
+    top_lefts, bottom_rights, no_tiles = shared.setup_tiles(
+        ifg.shape, processes=num_processors)
+    process_indices = parallel.calc_indices(no_tiles)
+    process_top_lefts = [itemgetter(p)(top_lefts)
+                         for p in process_indices]
+    process_bottom_rights = [itemgetter(p)(bottom_rights)
+                             for p in process_indices]
+
+    # initialize empty arrays
+    rows = ifg.nrows
+    cols = ifg.ncols
+    rate = np.zeros([rows, cols], dtype=np.float32)
+    error = np.zeros([rows, cols], dtype=np.float32)
+    samples = np.zeros([rows, cols], dtype=np.float32)
+
+    for top_left, bottom_right in zip(process_top_lefts, process_bottom_rights):
+        r_start, c_start = top_left
+        r_end, c_end = bottom_right
+        ifg_parts = [shared.IfgPart(ifg_paths[i],
+                                    r_start=r_start, r_end=r_end,
+                                    c_start=c_start, c_end=c_end
+                                    ) for i in range(len(ifg_paths))]
+
+        mst_grid_ifg_parts = mst_grid[:, r_start: r_end, c_start: c_end]
+        res = linrate.linear_rate(ifg_parts, params, vcmt, mst_grid_ifg_parts)
+
+        for r in res:
+            if r is None:
+                raise ValueError('TODO: bad value')
+        rate[r_start:r_end, c_start:c_end] = res[0]
+        error[r_start:r_end, c_start:c_end] = res[1]
+        samples[r_start:r_end, c_start:c_end] = res[2]
+
+    process_res = (rate, error, samples)
+
     if MPI_myID == MASTER_PROCESS:
-        all_indices = parallel.calc_all_indices(nrows)
-        # rate, error, samples have already been zero initialized in setup
-        rate[all_indices[MASTER_PROCESS]] = process_res[:, :, 0]
-        error[all_indices[MASTER_PROCESS]] = process_res[:, :, 1]
-        samples[all_indices[MASTER_PROCESS]] = process_res[:, :, 2]
         for i in range(1, num_processors):
             process_res = parallel.receive(source=i, tag=-1,
                                            return_status=False)
-            rate[all_indices[i]] = process_res[:, :, 0]
-            error[all_indices[i]] = process_res[:, :, 1]
-            samples[all_indices[i]] = process_res[:, :, 2]
-        mask = ~isnan(error)
-        mask[mask] &= error[mask] > MAXSIG
-        rate[mask] = nan
-        error[mask] = nan
+            rate += process_res[0]
+            error += process_res[1]
+            samples += process_res[2]
+
+        # declare file names
+        rate_file = os.path.join(params[cf.OUT_DIR], 'rate.npy')
+        error_file = os.path.join(params[cf.OUT_DIR], 'error.npy')
+        samples_file = os.path.join(params[cf.OUT_DIR], 'samples.npy')
+
         np.save(file=rate_file, arr=rate)
         np.save(file=error_file, arr=error)
         np.save(file=samples_file, arr=samples)
@@ -394,12 +417,9 @@ def mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs, mpi_log_filename,
     write_msg('Calculating minimum spanning tree matrix '
                          'using NetworkX method')
     num_processors = parallel.size
-
     # due to limited memory can not copy whole ifgs phase data in each process
-    # need ifgpart class
     # read the first tif to get shape
-    ifg = shared.pre_prepare_ifgs([cropped_and_sampled_tifs[0]],
-                                         params)[0]
+    ifg = shared.pre_prepare_ifgs([cropped_and_sampled_tifs[0]], params)[0]
     top_lefts, bottom_rights, no_tiles = shared.setup_tiles(
         ifg.shape, processes=num_processors)
 
