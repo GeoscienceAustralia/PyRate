@@ -78,14 +78,15 @@ def main(params=None):
 
     parallel.barrier()
 
-
-
-
+    ifg_shape, process_tiles = get_process_tiles(dest_tifs, num_processors,
+                                                 parallel, params)
     # Calc mst using MPI
     if MPI_myID == MASTER_PROCESS:
-        mpi_mst_calc(MPI_myID, dest_tifs, mpi_log_filename, parallel, params)
+        mpi_mst_calc(MPI_myID, dest_tifs, mpi_log_filename, parallel, params,
+                     process_tiles, ifg_shape)
     else:
-        mpi_mst_calc(MPI_myID, dest_tifs, mpi_log_filename, parallel, params)
+        mpi_mst_calc(MPI_myID, dest_tifs, mpi_log_filename, parallel, params,
+                     process_tiles, ifg_shape)
 
     parallel.barrier()
 
@@ -143,31 +144,23 @@ def main(params=None):
     mst_grid = np.load(file=mst_file)
 
     # linrate mpi computation
-    linrate_mpi(MPI_myID, dest_tifs, mst_grid, parallel, params, vcmt)
+    linrate_mpi(MPI_myID, dest_tifs, mst_grid, parallel, params, vcmt,
+                process_tiles, ifg_shape)
 
     # time series mpi computation
     if params[cf.TIME_SERIES_CAL]:
-        time_series_mpi(MPI_myID, dest_tifs, mst_grid, parallel, params, vcmt)
+        time_series_mpi(MPI_myID, dest_tifs, mst_grid, parallel, params, vcmt,
+                        process_tiles, ifg_shape)
 
     parallel.finalize()
 
 
-def linrate_mpi(MPI_myID, ifg_paths, mst_grid, parallel, params, vcmt):
+def linrate_mpi(MPI_myID, ifg_paths, mst_grid, parallel, params, vcmt,
+                process_tiles, ifg_shape):
     write_msg('Calculating linear rate')
     num_processors = parallel.size
-    # due to limited memory can not copy whole ifgs phase data in each process
-    # read the first tif to get shape
-    ifg = shared.pre_prepare_ifgs([ifg_paths[0]], params)[0]
-
-    # calculate process tiles
-    tiles = shared.setup_tiles(ifg.shape, processes=num_processors)
-    no_tiles = len(tiles)
-    process_indices = parallel.calc_indices(no_tiles)
-    process_tiles = [itemgetter(p)(tiles) for p in process_indices]
-
     # initialize empty arrays
-    rows = ifg.nrows
-    cols = ifg.ncols
+    rows, cols = ifg_shape
     rate = np.zeros([rows, cols], dtype=np.float32)
     # may not need error and samples? save memory?
     error = np.zeros([rows, cols], dtype=np.float32)
@@ -209,20 +202,11 @@ def linrate_mpi(MPI_myID, ifg_paths, mst_grid, parallel, params, vcmt):
         parallel.send(process_res, destination=MASTER_PROCESS, tag=MPI_myID)
 
 
-def time_series_mpi(MPI_myID, ifg_paths, mst_grid, parallel, params, vcmt):
+def time_series_mpi(MPI_myID, ifg_paths, mst_grid, parallel, params, vcmt,
+                    process_tiles, ifg_shape):
     write_msg('Calculating time series')
 
     num_processors = parallel.size
-
-    # due to limited memory can not copy whole ifgs phase data in each process
-    # read the first tif to get shape
-    ifg = shared.pre_prepare_ifgs([ifg_paths[0]], params)[0]
-
-    # calculate process tiles
-    tiles = shared.setup_tiles(ifg.shape, processes=num_processors)
-    no_tiles = len(tiles)
-    process_indices = parallel.calc_indices(no_tiles)
-    process_tiles = [itemgetter(p)(tiles) for p in process_indices]
 
     ifgs = shared.prepare_ifgs_without_phase(ifg_paths, params)
     epochlist = get_epochs(ifgs)
@@ -230,11 +214,11 @@ def time_series_mpi(MPI_myID, ifg_paths, mst_grid, parallel, params, vcmt):
     nvelpar = nepoch - 1  # velocity parameters number
 
     # depending on nvelpar, this will not fit in memory
-    # e.g. nvelpar=100, nrows=10000, ncols=10000, 32bit floats need 80GB memory
+    # e.g. nvelpar=100, nrows=10000, ncols=10000, 32bit floats need 40GB memory
     # 32 * 100 * 10000 * 10000 / 8 bytes = 4e10 bytes = 40 GB
-    tsvel = np.zeros(shape=ifg.shape + (nvelpar, ), dtype=np.float32)
-    tsincr = np.zeros(shape=ifg.shape + (nvelpar, ), dtype=np.float32)
-    tscum = np.zeros(shape=ifg.shape + (nvelpar, ), dtype=np.float32)
+    tsvel = np.zeros(shape=ifg_shape + (nvelpar, ), dtype=np.float32)
+    tsincr = np.zeros(shape=ifg_shape + (nvelpar, ), dtype=np.float32)
+    tscum = np.zeros(shape=ifg_shape + (nvelpar, ), dtype=np.float32)
 
     for t in process_tiles:
         r_start, c_start = t.top_left
@@ -411,7 +395,7 @@ def ref_pixel_calc_mpi(MPI_myID, ifg_paths, num_processors, parallel, params):
 
 
 def mpi_mst_calc(MPI_myID, dest_tifs, mpi_log_filename,
-                 parallel, params):
+                 parallel, params, process_tiles, ifg_shape):
     """
     MPI function that control each process during MPI run
     :param MPI_myID:
@@ -430,15 +414,8 @@ def mpi_mst_calc(MPI_myID, dest_tifs, mpi_log_filename,
     num_processors = parallel.size
     # due to limited memory can not copy whole ifgs phase data in each process
     # read the first tif to get shape
-    ifg = shared.pre_prepare_ifgs([dest_tifs[0]], params)[0]
-    tiles = shared.setup_tiles(ifg.shape, processes=num_processors)
-    no_tiles = len(tiles)
-
-    process_indices = parallel.calc_indices(no_tiles)
-    process_tiles = [itemgetter(p)(tiles) for p in process_indices]
     result_process = mst.mst_multiprocessing_map(process_tiles,
-                                                 dest_tifs,
-                                                 ifg.shape)
+                                                 dest_tifs, ifg_shape)
     parallel.barrier()
 
     if MPI_myID == MASTER_PROCESS:
@@ -461,6 +438,15 @@ def mpi_mst_calc(MPI_myID, dest_tifs, mpi_log_filename,
         parallel.send(result_process, destination=MASTER_PROCESS, tag=MPI_myID)
         print "sent mst result from process", MPI_myID
         return result_process
+
+
+def get_process_tiles(dest_tifs, num_processors, parallel, params):
+    ifg = shared.pre_prepare_ifgs([dest_tifs[0]], params)[0]
+    tiles = shared.setup_tiles(ifg.shape, processes=num_processors)
+    no_tiles = len(tiles)
+    process_indices = parallel.calc_indices(no_tiles)
+    process_tiles = [itemgetter(p)(tiles) for p in process_indices]
+    return ifg.shape, process_tiles
 
 
 def clean_up_old_files():
