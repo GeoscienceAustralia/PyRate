@@ -834,11 +834,7 @@ def setup_tiles(shape, n_ifgs=17, nrows=10, ncols=10):
     top_lefts = list(product(r_starts, c_starts))
     bottom_rights = list(product(r_ends, c_ends))
 
-    tiles = []
-    for t, b in zip(top_lefts, bottom_rights):
-        tiles.append(Tile(t, b))
-
-    return tiles
+    return [Tile(t, b) for t, b in zip(top_lefts, bottom_rights)]
 
 
 class Tile:
