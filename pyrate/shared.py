@@ -798,10 +798,11 @@ def mkdir_p(path):
             raise
 
 
-def setup_tiles(shape, nrows=10, ncols=10):
+def setup_tiles(shape, n_ifgs=17, nrows=10, ncols=10):
     """
     :param shape: tuple of shape
     :param processes: processes that are going to to analyze the tiles
+    :param n_ifgs: number of ifgs
     :param nrows: number of rows of tiles
     :param ncols: number of columns of tiles
     :return: list of Tile class instances
@@ -821,9 +822,13 @@ def setup_tiles(shape, nrows=10, ncols=10):
             c_end = no_x
         c_starts.append(c)
         c_ends.append(c_end)
-    # r_step = int(np.ceil(no_y / float(processes))) * len(c_starts) / 5
+
     r_step = int(np.ceil(no_y)/nrows)
-    r_step = min(r_step, no_y)
+    # assume that arrays of 32bit floats can be max 500MB
+    # determine max array size, 4 bytes per 32 bits
+    r_step_500 = 500*1e6//(4*n_ifgs*max_cols_per_tile)
+    r_step = min(r_step, no_y, r_step_500)
+
     r_starts = []
     r_ends = []
     for r in xrange(0, no_y, r_step):

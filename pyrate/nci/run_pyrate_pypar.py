@@ -443,7 +443,8 @@ def mpi_mst_calc(MPI_myID, dest_tifs, mpi_log_filename,
 
 def get_process_tiles(dest_tifs, parallel, params):
     ifg = shared.pre_prepare_ifgs([dest_tifs[0]], params)[0]
-    tiles = shared.setup_tiles(ifg.shape, nrows=10, ncols=10)
+    tiles = shared.setup_tiles(ifg.shape,
+                               n_ifgs=len(dest_tifs), nrows=10, ncols=10)
     no_tiles = len(tiles)
     process_indices = parallel.calc_indices(no_tiles)
     process_tiles = [itemgetter(p)(tiles) for p in process_indices]
