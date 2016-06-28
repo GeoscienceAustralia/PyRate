@@ -78,6 +78,9 @@ def main(params=None):
 
     parallel.barrier()
 
+
+
+
     # Calc mst using MPI
     if MPI_myID == MASTER_PROCESS:
         mpi_mst_calc(MPI_myID, dest_tifs, mpi_log_filename, parallel, params)
@@ -433,13 +436,9 @@ def mpi_mst_calc(MPI_myID, dest_tifs, mpi_log_filename,
 
     process_indices = parallel.calc_indices(no_tiles)
     process_tiles = [itemgetter(p)(tiles) for p in process_indices]
-    # process_bottom_rights = [itemgetter(p)(bottom_rights)
-    #                          for p in process_indices]
-    # print 'Processor {mpi_id} has {processes} ' \
-    #       'tiles out of {num_files}'.format(mpi_id=MPI_myID,
-    #                                         processes=len(process_indices),
-    #                                         num_files=no_tiles)
-    result_process = mst.mst_multiprocessing_map(tiles, dest_tifs, ifg.shape)
+    result_process = mst.mst_multiprocessing_map(process_tiles,
+                                                 dest_tifs,
+                                                 ifg.shape)
     parallel.barrier()
 
     if MPI_myID == MASTER_PROCESS:
