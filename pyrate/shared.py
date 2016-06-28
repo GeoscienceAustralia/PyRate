@@ -415,7 +415,7 @@ class IfgPart(object):
         """
         :param ifg: original ifg
         :param r_start: starting tow of the original ifg
-        :param r_end: ending row of the original ifg
+        :param r_end: ending (row + 1) of the original ifg
         :return:
         """
         # check if Ifg was sent.
@@ -807,36 +807,29 @@ def setup_tiles(shape, n_ifgs=17, nrows=10, ncols=10):
     :param ncols: number of columns of tiles
     :return: list of Tile class instances
     """
+    if len(shape) != 2:
+        raise ValueError('shape must be a length 2 tuple')
 
-    # either ncols or nrows need to be supplied
-    # TODO: a better way to determine ncols
     no_y, no_x = shape
-    ncols = min(ncols, no_x)
-    max_cols_per_tile = no_x / ncols
-    c_starts = []
-    c_ends = []
 
-    for c in xrange(0, no_x, max_cols_per_tile):
-        c_end = c + max_cols_per_tile
-        if c_end > no_x:
-            c_end = no_x
-        c_starts.append(c)
-        c_ends.append(c_end)
+    if ncols > no_x or nrows > no_y:
+        raise ValueError('nrows/cols must be greater than number of y/x-pixels')
+
+    cols = np.array_split(range(no_x), ncols)
+    c_starts = [c[0] for c in cols]
+    c_ends = [c[-1] + 1 for c in cols]
+    max_cols_per_tile = max([len(c) for c in cols])
 
     r_step = int(np.ceil(no_y)/nrows)
-    # assume that arrays of 32bit floats can be max 500MB
+    # assume that arrays of 32bit floats can be max ~500MB
     # determine max array size, 4 bytes per 32 bits
     r_step_500 = 500*1e6//(4*n_ifgs*max_cols_per_tile)
-    r_step = min(r_step, no_y, r_step_500)
+    r_step = min(r_step, r_step_500)
+    nrows = no_y//r_step
 
-    r_starts = []
-    r_ends = []
-    for r in xrange(0, no_y, r_step):
-        r_end = r + r_step
-        if r + r_step > no_y:
-            r_end = no_y
-        r_starts.append(r)
-        r_ends.append(r_end)
+    rows = np.array_split(range(no_y), nrows)
+    r_starts = [c[0] for c in rows]
+    r_ends = [c[-1] + 1 for c in rows]
 
     top_lefts = list(product(r_starts, c_starts))
     bottom_rights = list(product(r_ends, c_ends))
