@@ -410,7 +410,7 @@ class IfgPart(object):
     slice of Ifg data object
     """
 
-    def __init__(self, ifg_or_path, r_start, r_end, c_start, c_end):
+    def __init__(self, ifg_or_path, tile):
 
         """
         :param ifg: original ifg
@@ -425,11 +425,12 @@ class IfgPart(object):
             self.data_path = ifg_or_path  # should be used with MPI
             ifg = Ifg(ifg_or_path)
 
-        self.r_start = r_start
-        self.r_end = r_end
+        self.tile = tile
+        self.r_start = self.tile.top_left_x
+        self.r_end = self.tile.bottom_right_x
         self.phase_data = None
-        self.c_start = c_start
-        self.c_end = c_end
+        self.c_start = self.tile.top_left_y
+        self.c_end = self.tile.bottom_right_y
         self.nan_fraction = None
         self.master = None
         self.slave = None
