@@ -142,9 +142,6 @@ def main(params=None):
     # linrate mpi computation
     linrate_mpi(MPI_myID, dest_tifs, mst_grid, parallel, params, vcmt)
 
-    parallel.barrier()  # may not need this
-    ifgs = shared.pre_prepare_ifgs(dest_tifs, params)
-
     # time series mpi computation
     if params[cf.TIME_SERIES_CAL]:
         time_series_mpi(MPI_myID, dest_tifs, mst_grid, parallel, params, vcmt)
@@ -160,13 +157,10 @@ def linrate_mpi(MPI_myID, ifg_paths, mst_grid, parallel, params, vcmt):
     ifg = shared.pre_prepare_ifgs([ifg_paths[0]], params)[0]
 
     # calculate process tiles
-    top_lefts, bottom_rights, no_tiles = shared.setup_tiles(
-        ifg.shape, processes=num_processors)
+    tiles = shared.setup_tiles(ifg.shape, processes=num_processors)
+    no_tiles = len(tiles)
     process_indices = parallel.calc_indices(no_tiles)
-    process_top_lefts = [itemgetter(p)(top_lefts)
-                         for p in process_indices]
-    process_bottom_rights = [itemgetter(p)(bottom_rights)
-                             for p in process_indices]
+    process_tiles = [itemgetter(p)(tiles) for p in process_indices]
 
     # initialize empty arrays
     rows = ifg.nrows
@@ -176,9 +170,9 @@ def linrate_mpi(MPI_myID, ifg_paths, mst_grid, parallel, params, vcmt):
     error = np.zeros([rows, cols], dtype=np.float32)
     samples = np.zeros([rows, cols], dtype=np.float32)
 
-    for top_left, bottom_right in zip(process_top_lefts, process_bottom_rights):
-        r_start, c_start = top_left
-        r_end, c_end = bottom_right
+    for t in process_tiles:
+        r_start, c_start = t.top_left
+        r_end, c_end = t.bottom_right
         ifg_parts = [shared.IfgPart(ifg_paths[i],
                                     r_start=r_start, r_end=r_end,
                                     c_start=c_start, c_end=c_end
@@ -226,12 +220,10 @@ def time_series_mpi(MPI_myID, ifg_paths, mst_grid, parallel, params, vcmt):
     ifg = shared.pre_prepare_ifgs([ifg_paths[0]], params)[0]
 
     # calculate process tiles
-    top_lefts, bottom_rights, no_tiles = shared.setup_tiles(
-        ifg.shape, processes=num_processors)
+    tiles = shared.setup_tiles(ifg.shape, processes=num_processors)
+    no_tiles = len(tiles)
     process_indices = parallel.calc_indices(no_tiles)
-    process_top_lefts = [itemgetter(p)(top_lefts) for p in process_indices]
-    process_bottom_rights = [itemgetter(p)(bottom_rights)
-                             for p in process_indices]
+    process_tiles = [itemgetter(p)(tiles) for p in process_indices]
 
     ifgs = shared.prepare_ifgs_without_phase(ifg_paths, params)
     epochlist = get_epochs(ifgs)
@@ -245,9 +237,9 @@ def time_series_mpi(MPI_myID, ifg_paths, mst_grid, parallel, params, vcmt):
     tsincr = np.zeros(shape=ifg.shape + (nvelpar, ), dtype=np.float32)
     tscum = np.zeros(shape=ifg.shape + (nvelpar, ), dtype=np.float32)
 
-    for top_left, bottom_right in zip(process_top_lefts, process_bottom_rights):
-        r_start, c_start = top_left
-        r_end, c_end = bottom_right
+    for t in process_tiles:
+        r_start, c_start = t.top_left
+        r_end, c_end = t.bottom_right
         ifg_parts = [shared.IfgPart(ifg_paths[i],
                                     r_start=r_start, r_end=r_end,
                                     c_start=c_start, c_end=c_end
@@ -422,12 +414,12 @@ def ref_pixel_calc_mpi(MPI_myID, ifg_paths, num_processors, parallel, params):
         print 'sent ref pixel to master'
 
 
-def mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs, mpi_log_filename,
+def mpi_mst_calc(MPI_myID, dest_tifs, mpi_log_filename,
                  parallel, params):
     """
     MPI function that control each process during MPI run
     :param MPI_myID:
-    :param cropped_and_sampled_tifs: paths of cropped amd resampled geotiffs
+    :param dest_tifs: paths of cropped amd resampled geotiffs
     :param mpi_log_filename:
     :param num_processors:
     :param parallel: MPI Parallel class instance
@@ -442,23 +434,19 @@ def mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs, mpi_log_filename,
     num_processors = parallel.size
     # due to limited memory can not copy whole ifgs phase data in each process
     # read the first tif to get shape
-    ifg = shared.pre_prepare_ifgs([cropped_and_sampled_tifs[0]], params)[0]
-    top_lefts, bottom_rights, no_tiles = shared.setup_tiles(
-        ifg.shape, processes=num_processors)
+    ifg = shared.pre_prepare_ifgs([dest_tifs[0]], params)[0]
+    tiles = shared.setup_tiles(ifg.shape, processes=num_processors)
+    no_tiles = len(tiles)
 
     process_indices = parallel.calc_indices(no_tiles)
-    process_top_lefts = [itemgetter(p)(top_lefts)
-                         for p in process_indices]
-    process_bottom_rights = [itemgetter(p)(bottom_rights)
-                             for p in process_indices]
-    print 'Processor {mpi_id} has {processes} ' \
-          'tiles out of {num_files}'.format(mpi_id=MPI_myID,
-                                            processes=len(process_indices),
-                                            num_files=no_tiles)
-    result_process = mst.mst_multiprocessing_map(
-        process_top_lefts, process_bottom_rights,
-        cropped_and_sampled_tifs, ifg.shape
-    )
+    process_tiles = [itemgetter(p)(tiles) for p in process_indices]
+    # process_bottom_rights = [itemgetter(p)(bottom_rights)
+    #                          for p in process_indices]
+    # print 'Processor {mpi_id} has {processes} ' \
+    #       'tiles out of {num_files}'.format(mpi_id=MPI_myID,
+    #                                         processes=len(process_indices),
+    #                                         num_files=no_tiles)
+    result_process = mst.mst_multiprocessing_map(tiles, dest_tifs, ifg.shape)
     parallel.barrier()
 
     if MPI_myID == MASTER_PROCESS:
