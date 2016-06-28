@@ -830,9 +830,23 @@ def setup_tiles(shape, processes):
 
     top_lefts = list(product(r_starts, c_starts))
     bottom_rights = list(product(r_ends, c_ends))
-    no_tiles = len(r_starts)*len(c_starts)
 
-    return top_lefts, bottom_rights, no_tiles
+    tiles = []
+    for t, b in zip(top_lefts, bottom_rights):
+        tiles.append(Tile(t, b))
+
+    return tiles
+
+
+class Tile:
+    def __init__(self, top_left, bottom_right):
+        self.top_left = top_left
+        self.bottom_right = bottom_right
+        self.top_left_x, self.top_left_y = top_left
+        self.bottom_right_x, self.bottom_right_y = bottom_right
+
+    def __str__(self):
+        return "Convenience Time class containing tile co-ordinates"
 
 
 def copytree(src, dst, symlinks=False, ignore=None):
