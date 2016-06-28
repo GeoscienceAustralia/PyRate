@@ -94,13 +94,7 @@ def mst_multiprocessing(tile, ifgs_or_paths):
     :param ifgs_or_paths: all ifg paths of the problem. List of strings.
     :return:
     """
-    r_start, c_start = tile.top_left
-    r_end, c_end = tile.bottom_right
-    ifg_parts = [IfgPart(ifgs_or_paths[i],
-                         r_start=r_start, r_end=r_end,
-                         c_start=c_start, c_end=c_end
-                         ) for i in range(len(ifgs_or_paths))]
-
+    ifg_parts = [IfgPart(p, tile) for p in ifgs_or_paths]
     t_mst = mst_boolean_array(ifg_parts)
     return t_mst
 
