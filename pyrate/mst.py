@@ -42,11 +42,17 @@ def mst_from_ifgs(ifgs):
 
 
 def mst_parallel(ifgs, params):
+    """
+    wrapper function for calculating ifgs in non mpi runs
+    :param ifgs:
+    :param params:
+    :return:
+    """
     print 'Calculating mst using tiles'
     ncpus = params[cf.PROCESSES]
     no_ifgs = len(ifgs)
     no_y, no_x = ifgs[0].phase_data.shape
-    tiles = setup_tiles(ifgs[0].shape, processes=ncpus)
+    tiles = setup_tiles(ifgs[0].shape)
     no_tiles = len(tiles)
     # need to break up the ifg class as multiprocessing does not allow pickling
     # don't read in all the phase data at once
@@ -59,7 +65,7 @@ def mst_parallel(ifgs, params):
         print 'Calculating mst using {} tiles in parallel using {} ' \
               'processes'.format(no_tiles, ncpus)
         t_msts = parmap.map(mst_multiprocessing, tiles, ifg_paths,
-                                processes=ncpus)
+                            processes=ncpus)
         for k, tile in enumerate(tiles):
             result[:, tile.top_left_x:tile.bottom_right_x,
                     tile.top_left_y: tile.bottom_right_y] = t_msts[k]

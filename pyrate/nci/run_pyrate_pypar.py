@@ -78,8 +78,8 @@ def main(params=None):
 
     parallel.barrier()
 
-    ifg_shape, process_tiles = get_process_tiles(dest_tifs, num_processors,
-                                                 parallel, params)
+    # calculate process information
+    ifg_shape, process_tiles = get_process_tiles(dest_tifs, parallel, params)
     # Calc mst using MPI
     if MPI_myID == MASTER_PROCESS:
         mpi_mst_calc(MPI_myID, dest_tifs, mpi_log_filename, parallel, params,
@@ -88,6 +88,7 @@ def main(params=None):
         mpi_mst_calc(MPI_myID, dest_tifs, mpi_log_filename, parallel, params,
                      process_tiles, ifg_shape)
 
+    print 'Processor {} has {} tiles'.format(MPI_myID, len(process_tiles))
     parallel.barrier()
 
     # Calc ref_pixel using MPI
@@ -440,9 +441,9 @@ def mpi_mst_calc(MPI_myID, dest_tifs, mpi_log_filename,
         return result_process
 
 
-def get_process_tiles(dest_tifs, num_processors, parallel, params):
+def get_process_tiles(dest_tifs, parallel, params):
     ifg = shared.pre_prepare_ifgs([dest_tifs[0]], params)[0]
-    tiles = shared.setup_tiles(ifg.shape, processes=num_processors)
+    tiles = shared.setup_tiles(ifg.shape, nrows=10, ncols=10)
     no_tiles = len(tiles)
     process_indices = parallel.calc_indices(no_tiles)
     process_tiles = [itemgetter(p)(tiles) for p in process_indices]
