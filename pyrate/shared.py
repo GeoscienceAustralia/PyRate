@@ -837,7 +837,7 @@ def setup_tiles(shape, n_ifgs=17, nrows=10, ncols=10):
     return [Tile(t, b) for t, b in zip(top_lefts, bottom_rights)]
 
 
-def create_tiles(shape, n_ifgs=17, nrows=10, ncols=10):
+def create_tiles(shape, n_ifgs=17, nrows=2, ncols=2):
     """
     shape must be a 2-tuple, i.e., 2d_array.shape.
     The returned list contains nrowsXncols Tiles with each tile preserving the
