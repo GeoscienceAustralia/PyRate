@@ -30,7 +30,13 @@ __author__ = 'sudipta'
 MASTER_PROCESS = 0
 
 
-def main(params=None):
+def main(params, config_file=sys.argv[1]):
+
+    # setup paths
+    xlks, ylks, crop = run_pyrate.transform_params(params)
+    base_unw_paths = run_pyrate.original_ifg_paths(params[cf.IFG_FILE_LIST])
+    dest_tifs = run_pyrate.get_dest_paths(base_unw_paths, crop, params, xlks)
+
     # Setting up parallelisation
     parallel = Parallel(True)
     MPI_myID = parallel.rank
@@ -39,23 +45,13 @@ def main(params=None):
     if MPI_myID == MASTER_PROCESS:
         print "Master process found {} worker processors".format(num_processors)
 
-    # Read config file, dest_tifs are input files to run_pyrate
-    if params:
-        xlks, ylks, crop = run_pyrate.transform_params(params)
-        base_unw_paths = run_pyrate.original_ifg_paths(params[cf.IFG_FILE_LIST])
-        dest_tifs = \
-            run_pyrate.get_dest_paths(base_unw_paths, crop, params, xlks)
-    else:
-        _, dest_tifs, params = run_pyrate.get_ifg_paths()
-
     output_dir = params[cf.OUT_DIR]
     mpi_log_filename = os.path.join(output_dir, "mpi_run_pyrate.log")
 
     ### Master Process ###
     if MPI_myID == MASTER_PROCESS:
         output_log_file = open(mpi_log_filename, "w")
-        config_filepath = sys.argv[1]
-        configfile = open(config_filepath)
+        configfile = open(config_file)
         output_log_file.write("Starting Simulation at: "
                               + datetime.datetime.now().strftime(
             "%Y-%m-%d %H:%M:%S"))
@@ -445,4 +441,6 @@ def clean_up_old_files():
 
 
 if __name__ == '__main__':
-    main()
+    # Read config file, dest_tifs are input files to run_pyrate
+    params = run_pyrate.get_ifg_paths()[2]
+    main(params)
