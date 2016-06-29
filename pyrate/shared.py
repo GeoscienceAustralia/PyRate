@@ -839,9 +839,9 @@ def setup_tiles(shape, n_ifgs=17, nrows=10, ncols=10):
 
 def create_tiles(shape, n_ifgs=17, nrows=10, ncols=10):
     """
-    shape must be a 2-tuple, i.e., 2d_array.shape,
-    the returned list contains nrowsXncols numpy arrays
-    with each array preserving the "physical" layout of arr.
+    shape must be a 2-tuple, i.e., 2d_array.shape.
+    The returned list contains nrowsXncols Tiles with each tile preserving the
+    "physical" layout of original arr.
 
     The number of rows can be changed (increased) such that  the resulting tiles
     with float32's do not exceed 500MB in memory.
@@ -875,8 +875,6 @@ def create_tiles(shape, n_ifgs=17, nrows=10, ncols=10):
     r_step = min(r_step, r_step_500)
     nrows = no_y // r_step
     row_arr = np.array_split(range(no_y), nrows)
-    # return [arr[r[0]: r[-1]+1, c[0]: c[-1]+1]
-    #                  for r, c in product(row_arr, col_arr)]
     return [Tile((r[0], c[0]), (r[-1]+1, c[-1]+1))
                 for r, c in product(row_arr, col_arr)]
 
@@ -966,3 +964,14 @@ def write_msg(msg):
     logging.debug(msg)
     if VERBOSE:
         print msg
+
+
+def get_tmpdir():
+    if 'PBS_JOBFS' in os.environ:  # NCI tmp dir in each node
+        TMPDIR = os.environ['PBS_JOBFS']
+    elif 'TMPDIR' in os.environ:  # NCI tmp dir in each node??
+        TMPDIR = os.environ['TMPDIR']
+    else:  # fall back option or when running on PC locally
+        import tempfile
+        TMPDIR = tempfile.gettempdir()
+    return TMPDIR
