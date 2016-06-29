@@ -403,12 +403,14 @@ class MPITests(unittest.TestCase):
             tsincr_file_n = os.path.join(TMPDIR, 'tsincr_{}.npy'.format(i))
             cls.tsincr_mpi[t.top_left_y:t.bottom_right_y,
                 t.top_left_x: t.bottom_right_x, :] = np.load(tsincr_file_n)
-            os.remove(tsincr_file_n)
 
             tscum_file_n = os.path.join(TMPDIR, 'tscum_{}.npy'.format(i))
             cls.tscum_mpi[t.top_left_y:t.bottom_right_y,
                 t.top_left_x: t.bottom_right_x, :] = np.load(tscum_file_n)
-            os.remove(tscum_file_n)
+
+        # remove all temp numpy files after test
+        for f in glob.glob(os.path.join(TMPDIR, '*.npy')):
+            os.remove(f)
 
     def calc_non_mpi_time_series(self):
         temp_dir = tempfile.mkdtemp()
@@ -430,6 +432,7 @@ class MPITests(unittest.TestCase):
         self.tsvel = np.load(tsvel_file)
         self.tsincr = np.load(tsincr_file)
         self.tscum = np.load(tscum_file)
+
         shutil.rmtree(temp_dir)
 
     @classmethod
@@ -448,9 +451,6 @@ class MPITests(unittest.TestCase):
                 self.tif_dir, '*_{looks}rlks_*cr.tif'.format(looks=looks)))
             self.assertEqual(len(mlooked_ifgs), 17)
             self.calc_non_mpi_time_series()
-            # np.testing.assert_array_almost_equal(self.tsvel,
-            #                                      self.tsvel_mpi,
-            #                                      decimal=4)
             np.testing.assert_array_almost_equal(self.tsincr,
                                                  self.tsincr_mpi,
                                                  decimal=4)
@@ -460,9 +460,6 @@ class MPITests(unittest.TestCase):
 
         log_file = glob.glob(os.path.join(self.tif_dir, '*.log'))[0]
         self.assertTrue(os.path.exists(log_file))
-
-    def test_tsincr_tifs(self):
-        pass
 
 
 if __name__ == "__main__":

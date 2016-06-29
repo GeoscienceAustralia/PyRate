@@ -251,7 +251,10 @@ class MPITests(unittest.TestCase):
             mst_file_n = os.path.join(TMPDIR, 'mst_mat_{}.npy'.format(i))
             cls.mst[:, t.top_left_y:t.bottom_right_y,
                 t.top_left_x: t.bottom_right_x] = np.load(mst_file_n)
-            os.remove(mst_file_n)
+
+        # remove all temporary numpy files saved during test
+        for f in glob.glob(os.path.join(TMPDIR, '*.npy')):
+            os.remove(f)
         cls.params = params
 
     @classmethod
