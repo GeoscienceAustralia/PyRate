@@ -18,12 +18,10 @@ import subprocess
 from pyrate import mst
 from pyrate import algorithm
 from pyrate.tests.common import MockIfg, sydney5_mock_ifgs, sydney_data_setup
-from pyrate.shared import Ifg, IfgPart, Tile, get_tmpdir, create_tiles
-from pyrate.mst import mst_parallel
+from pyrate.shared import IfgPart, Tile, get_tmpdir, create_tiles
 from pyrate import config as cf
 from pyrate.tests import common
 from pyrate.scripts import run_pyrate, run_prepifg
-from pyrate.nci import run_pyrate_pypar, parallel as pypar
 
 
 class MSTTests(unittest.TestCase):

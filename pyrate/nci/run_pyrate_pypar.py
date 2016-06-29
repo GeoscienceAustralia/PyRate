@@ -166,8 +166,7 @@ def linrate_mpi(MPI_myID, ifg_paths, parallel, params, vcmt,
         r_start, c_start = t.top_left
         r_end, c_end = t.bottom_right
         ifg_parts = [shared.IfgPart(p, t) for p in ifg_paths]
-        mst_file_process_n = os.path.join(
-            TMPDIR, 'mst_mat_{}.npy'.format(i))
+        mst_file_process_n = os.path.join(TMPDIR, 'mst_mat_{}.npy'.format(i))
         mst_grid_ifg_parts = np.load(mst_file_process_n)
         # mst_grid_ifg_parts = mst_grid[:, r_start: r_end, c_start: c_end]
         res = linrate.linear_rate(ifg_parts, params, vcmt, mst_grid_ifg_parts)
@@ -223,8 +222,7 @@ def time_series_mpi(MPI_myID, ifg_paths, parallel, params, vcmt,
         r_start, c_start = t.top_left
         r_end, c_end = t.bottom_right
         ifg_parts = [shared.IfgPart(p, t) for p in ifg_paths]
-        mst_file_process_n = os.path.join(
-            TMPDIR, 'mst_mat_{}.npy'.format(i))
+        mst_file_process_n = os.path.join(TMPDIR, 'mst_mat_{}.npy'.format(i))
         mst_grid_ifg_parts = np.load(mst_file_process_n)
         # mst_grid_ifg_parts = mst_grid[:, r_start: r_end, c_start: c_end]
         res = timeseries.time_series(ifg_parts, params,
