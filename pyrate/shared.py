@@ -839,11 +839,22 @@ def setup_tiles(shape, n_ifgs=17, nrows=10, ncols=10):
 
 def create_tiles(shape, n_ifgs=17, nrows=10, ncols=10):
     """
-    If arr is a 2D array, the returned list contains nrowsXncols numpy arrays
+    shape must be a 2-tuple, i.e., 2d_array.shape,
+    the returned list contains nrowsXncols numpy arrays
     with each array preserving the "physical" layout of arr.
+
+    The number of rows can be changed (increased) such that  the resulting tiles
+    with float32's do not exceed 500MB in memory.
 
     When the array shape (rows, cols) are not divisible by (nrows, ncols) then
     some of the array dimensions can change according to numpy.array_split.
+
+    :param shape: tuple of shape
+    :param processes: processes that are going to to analyze the tiles
+    :param n_ifgs: number of ifgs
+    :param nrows: number of rows of tiles
+    :param ncols: number of columns of tiles
+    :return: list of Tile class instances
     """
 
     if len(shape) != 2:
