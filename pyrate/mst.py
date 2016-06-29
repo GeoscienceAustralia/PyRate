@@ -84,8 +84,8 @@ def mst_multiprocessing_map(tiles, paths_or_ifgs, shape):
     result = np.zeros(shape=(no_ifgs, shape[0], shape[1]), dtype=bool)
     for t in tiles:
         result[:, t.top_left_x:t.bottom_right_x,
-            t.top_left_y: t.bottom_right_y] = \
-                mst_multiprocessing(t, paths_or_ifgs)
+               t.top_left_y: t.bottom_right_y] = \
+            mst_multiprocessing(t, paths_or_ifgs)
     return result
 
 
@@ -95,8 +95,7 @@ def mst_multiprocessing(tile, ifgs_or_paths):
     number of ifgs times size of IfgPart. Note that we need all ifg header
     information (like masters/slave dates) for mst computation.
     To manage memory we need smaller tiles (IfgPart) as number of ifgs go up.
-    :param top_left: top left coordinates of the tile
-    :param bottom_right: bottom right coordinates of the tile
+    :param tile: Tile class instance
     :param ifgs_or_paths: all ifg paths of the problem. List of strings.
     :return:
     """

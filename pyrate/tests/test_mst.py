@@ -18,8 +18,7 @@ import subprocess
 from pyrate import mst
 from pyrate import algorithm
 from pyrate.tests.common import MockIfg, sydney5_mock_ifgs, sydney_data_setup
-from pyrate.shared import Ifg, IfgPart, Tile
-from pyrate.mst import mst_parallel
+from pyrate.shared import IfgPart, Tile, get_tmpdir, create_tiles
 from pyrate import config as cf
 from pyrate.tests import common
 from pyrate.scripts import run_pyrate, run_prepifg
@@ -237,13 +236,22 @@ class MPITests(unittest.TestCase):
         # Calc mst using MPI
         cls.conf_file = tempfile.mktemp(suffix='.conf', dir=cls.tif_dir)
         cf.write_config_file(params, cls.conf_file)
-        str = 'mpirun -np 2 python pyrate/nci/run_pyrate_pypar.py ' + cls.conf_file
-        cmd = str.split()
 
+        str = 'mpirun -np 2 python pyrate/nci/run_pyrate_pypar.py ' \
+              + cls.conf_file
+        cmd = str.split()
         subprocess.check_call(cmd)
 
-        mst_mat_binary_file = os.path.join(params[cf.OUT_DIR], 'mst_mat.npy')
-        cls.mst = np.load(mst_mat_binary_file)
+        tiles = create_tiles(cls.ifgs[0].shape, n_ifgs=17, nrows=3, ncols=4)
+        TMPDIR = get_tmpdir()
+
+        cls.mst = np.empty(shape=((len(cls.ifgs), ) + cls.ifgs[0].shape),
+                           dtype=np.bool)
+        for i, t in enumerate(tiles):
+            mst_file_n = os.path.join(TMPDIR, 'mst_mat_{}.npy'.format(i))
+            cls.mst[:, t.top_left_x:t.bottom_right_x,
+                t.top_left_y: t.bottom_right_y] = np.load(mst_file_n)
+            os.remove(mst_file_n)
         cls.params = params
 
     @classmethod

@@ -1,29 +1,28 @@
-import sys
-import os
 import datetime
-from operator import itemgetter
 import glob
-import numpy as np
-from pyrate import shared
-from numpy import isnan, nan
+import os
+import sys
+from operator import itemgetter
 
-from pyrate.nci.parallel import Parallel
-from pyrate.scripts import run_pyrate
+import numpy as np
 from pyrate import config as cf
-from pyrate.shared import Ifg, write_msg
-from pyrate import prepifg
-from pyrate import mst
-from pyrate import refpixel
-from pyrate import orbital
 from pyrate import ifgconstants as ifc
-from pyrate import vcm as vcm_module
-from pyrate import reference_phase_estimation as rpe
-from pyrate import timeseries
 from pyrate import linrate
+from pyrate import mst
+from pyrate import orbital
+from pyrate import reference_phase_estimation as rpe
+from pyrate import refpixel
 from pyrate import remove_aps_delay as aps
 from pyrate import shared
-from pyrate.scripts.run_pyrate import write_msg
+from pyrate import timeseries
+from pyrate import vcm as vcm_module
 from pyrate.algorithm import get_epochs
+from pyrate.nci.parallel import Parallel
+from pyrate.scripts import run_pyrate
+from pyrate.scripts.run_pyrate import write_msg
+from pyrate.shared import get_tmpdir
+
+TMPDIR = get_tmpdir()
 
 __author__ = 'sudipta'
 
@@ -31,7 +30,13 @@ __author__ = 'sudipta'
 MASTER_PROCESS = 0
 
 
-def main(params=None):
+def main(params, config_file=sys.argv[1]):
+
+    # setup paths
+    xlks, ylks, crop = run_pyrate.transform_params(params)
+    base_unw_paths = run_pyrate.original_ifg_paths(params[cf.IFG_FILE_LIST])
+    dest_tifs = run_pyrate.get_dest_paths(base_unw_paths, crop, params, xlks)
+
     # Setting up parallelisation
     parallel = Parallel(True)
     MPI_myID = parallel.rank
@@ -40,23 +45,13 @@ def main(params=None):
     if MPI_myID == MASTER_PROCESS:
         print "Master process found {} worker processors".format(num_processors)
 
-    # Read config file, dest_tifs are input files to run_pyrate
-    if params:
-        xlks, ylks, crop = run_pyrate.transform_params(params)
-        base_unw_paths = run_pyrate.original_ifg_paths(params[cf.IFG_FILE_LIST])
-        dest_tifs = \
-            run_pyrate.get_dest_paths(base_unw_paths, crop, params, xlks)
-    else:
-        _, dest_tifs, params = run_pyrate.get_ifg_paths()
-
     output_dir = params[cf.OUT_DIR]
     mpi_log_filename = os.path.join(output_dir, "mpi_run_pyrate.log")
 
     ### Master Process ###
     if MPI_myID == MASTER_PROCESS:
         output_log_file = open(mpi_log_filename, "w")
-        config_filepath = sys.argv[1]
-        configfile = open(config_filepath)
+        configfile = open(config_file)
         output_log_file.write("Starting Simulation at: "
                               + datetime.datetime.now().strftime(
             "%Y-%m-%d %H:%M:%S"))
@@ -79,16 +74,21 @@ def main(params=None):
     parallel.barrier()
 
     # calculate process information
-    ifg_shape, process_tiles = get_process_tiles(dest_tifs, parallel, params)
-    # Calc mst using MPI
-    if MPI_myID == MASTER_PROCESS:
-        mpi_mst_calc(MPI_myID, dest_tifs, mpi_log_filename, parallel, params,
-                     process_tiles, ifg_shape)
-    else:
-        mpi_mst_calc(MPI_myID, dest_tifs, mpi_log_filename, parallel, params,
-                     process_tiles, ifg_shape)
+    ifg_shape, process_tiles, process_indices = \
+        get_process_tiles(dest_tifs, parallel, params)
 
     print 'Processor {} has {} tiles'.format(MPI_myID, len(process_tiles))
+    # Calc mst using MPI
+    if MPI_myID == MASTER_PROCESS:
+        mpi_mst_calc(dest_tifs, process_tiles, process_indices)
+    else:
+        mpi_mst_calc(dest_tifs, process_tiles, process_indices)
+
+    if MPI_myID == MASTER_PROCESS:
+        output_log_file = open(mpi_log_filename, "a")
+        output_log_file.write("\n\n Mst caclulation finished\n")
+        output_log_file.close()
+
     parallel.barrier()
 
     # Calc ref_pixel using MPI
@@ -139,25 +139,20 @@ def main(params=None):
 
     parallel.barrier()
 
-    # TODO: avoid reading in whole mst_grid in all processes
-    # may be ok since mst is a boolean array
-    mst_file = os.path.join(params[cf.OUT_DIR], 'mst_mat.npy')
-    mst_grid = np.load(file=mst_file)
-
     # linrate mpi computation
-    linrate_mpi(MPI_myID, dest_tifs, mst_grid, parallel, params, vcmt,
-                process_tiles, ifg_shape)
+    linrate_mpi(MPI_myID, dest_tifs, parallel, params, vcmt,
+                process_tiles, process_indices, ifg_shape)
 
     # time series mpi computation
     if params[cf.TIME_SERIES_CAL]:
-        time_series_mpi(MPI_myID, dest_tifs, mst_grid, parallel, params, vcmt,
-                        process_tiles, ifg_shape)
+        time_series_mpi(MPI_myID, dest_tifs, parallel, params, vcmt,
+                        process_tiles, process_indices, ifg_shape)
 
     parallel.finalize()
 
 
-def linrate_mpi(MPI_myID, ifg_paths, mst_grid, parallel, params, vcmt,
-                process_tiles, ifg_shape):
+def linrate_mpi(MPI_myID, ifg_paths, parallel, params, vcmt,
+                process_tiles, process_indices, ifg_shape):
     write_msg('Calculating linear rate')
     num_processors = parallel.size
     # initialize empty arrays
@@ -167,11 +162,13 @@ def linrate_mpi(MPI_myID, ifg_paths, mst_grid, parallel, params, vcmt,
     error = np.zeros([rows, cols], dtype=np.float32)
     samples = np.zeros([rows, cols], dtype=np.float32)
 
-    for t in process_tiles:
+    for i, t in zip(process_indices, process_tiles):
         r_start, c_start = t.top_left
         r_end, c_end = t.bottom_right
         ifg_parts = [shared.IfgPart(p, t) for p in ifg_paths]
-        mst_grid_ifg_parts = mst_grid[:, r_start: r_end, c_start: c_end]
+        mst_file_process_n = os.path.join(TMPDIR, 'mst_mat_{}.npy'.format(i))
+        mst_grid_ifg_parts = np.load(mst_file_process_n)
+        # mst_grid_ifg_parts = mst_grid[:, r_start: r_end, c_start: c_end]
         res = linrate.linear_rate(ifg_parts, params, vcmt, mst_grid_ifg_parts)
 
         for r in res:
@@ -203,8 +200,8 @@ def linrate_mpi(MPI_myID, ifg_paths, mst_grid, parallel, params, vcmt,
         parallel.send(process_res, destination=MASTER_PROCESS, tag=MPI_myID)
 
 
-def time_series_mpi(MPI_myID, ifg_paths, mst_grid, parallel, params, vcmt,
-                    process_tiles, ifg_shape):
+def time_series_mpi(MPI_myID, ifg_paths, parallel, params, vcmt,
+                    process_tiles, process_indices, ifg_shape):
     write_msg('Calculating time series')
 
     num_processors = parallel.size
@@ -221,12 +218,13 @@ def time_series_mpi(MPI_myID, ifg_paths, mst_grid, parallel, params, vcmt,
     tsincr = np.zeros(shape=ifg_shape + (nvelpar, ), dtype=np.float32)
     tscum = np.zeros(shape=ifg_shape + (nvelpar, ), dtype=np.float32)
 
-    for t in process_tiles:
+    for i, t in zip(process_indices, process_tiles):
         r_start, c_start = t.top_left
         r_end, c_end = t.bottom_right
         ifg_parts = [shared.IfgPart(p, t) for p in ifg_paths]
-
-        mst_grid_ifg_parts = mst_grid[:, r_start: r_end, c_start: c_end]
+        mst_file_process_n = os.path.join(TMPDIR, 'mst_mat_{}.npy'.format(i))
+        mst_grid_ifg_parts = np.load(mst_file_process_n)
+        # mst_grid_ifg_parts = mst_grid[:, r_start: r_end, c_start: c_end]
         res = timeseries.time_series(ifg_parts, params,
                                      vcmt, mst_grid_ifg_parts)
         tsincr[r_start:r_end, c_start:c_end, :] = res[0]
@@ -395,8 +393,7 @@ def ref_pixel_calc_mpi(MPI_myID, ifg_paths, num_processors, parallel, params):
         print 'sent ref pixel to master'
 
 
-def mpi_mst_calc(MPI_myID, dest_tifs, mpi_log_filename,
-                 parallel, params, process_tiles, ifg_shape):
+def mpi_mst_calc(dest_tifs, process_tiles, process_indices):
     """
     MPI function that control each process during MPI run
     :param MPI_myID:
@@ -412,43 +409,26 @@ def mpi_mst_calc(MPI_myID, dest_tifs, mpi_log_filename,
 
     write_msg('Calculating minimum spanning tree matrix '
                          'using NetworkX method')
-    num_processors = parallel.size
-    # due to limited memory can not copy whole ifgs phase data in each process
-    # read the first tif to get shape
-    result_process = mst.mst_multiprocessing_map(process_tiles,
-                                                 dest_tifs, ifg_shape)
-    parallel.barrier()
 
-    if MPI_myID == MASTER_PROCESS:
-        mst_file = os.path.join(params[cf.OUT_DIR], 'mst_mat.npy')
-        result = result_process
-        # combine the mst from the other processes
-        for i in range(1, num_processors):
-            result_remote_processes = \
-                parallel.receive(source=i, tag=-1, return_status=False)
-            result += result_remote_processes
+    def save_mst_tile(tile, i):
+        mst_tile = mst.mst_multiprocessing(tile, dest_tifs)
+        # locally save the mst_mat
+        mst_file_process_n = os.path.join(
+            TMPDIR, 'mst_mat_{}.npy'.format(i))
+        np.save(file=mst_file_process_n, arr=mst_tile)
 
-        output_log_file = open(mpi_log_filename, "a")
-        output_log_file.write("\n\n Mst caclulation finished\n")
-        output_log_file.close()
-        # write mst output to a file
-        np.save(file=mst_file, arr=result)
-        return result
-    else:
-        # send the result arrays
-        parallel.send(result_process, destination=MASTER_PROCESS, tag=MPI_myID)
-        print "sent mst result from process", MPI_myID
-        return result_process
+    for t, p_ind in zip(process_tiles, process_indices):
+        save_mst_tile(t, p_ind)
 
 
 def get_process_tiles(dest_tifs, parallel, params):
     ifg = shared.pre_prepare_ifgs([dest_tifs[0]], params)[0]
     tiles = shared.create_tiles(ifg.shape,
-                                n_ifgs=len(dest_tifs), nrows=10, ncols=10)
+                                n_ifgs=len(dest_tifs), nrows=3, ncols=4)
     no_tiles = len(tiles)
     process_indices = parallel.calc_indices(no_tiles)
     process_tiles = [itemgetter(p)(tiles) for p in process_indices]
-    return ifg.shape, process_tiles
+    return ifg.shape, process_tiles, process_indices
 
 
 def clean_up_old_files():
@@ -459,4 +439,6 @@ def clean_up_old_files():
 
 
 if __name__ == '__main__':
-    main()
+    # Read config file, dest_tifs are input files to run_pyrate
+    params = run_pyrate.get_ifg_paths()[2]
+    main(params)

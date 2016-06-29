@@ -255,8 +255,6 @@ class MPITests(unittest.TestCase):
         cls.maxvar = np.load(maxvar_file)
         vcmt_file = os.path.join(cls.params[cf.OUT_DIR], 'vcmt.npy')
         cls.vcmt = np.load(vcmt_file)
-        mst_file = os.path.join(cls.params[cf.OUT_DIR], 'mst_mat.npy')
-        os.remove(mst_file)
 
     @classmethod
     def calc_non_mpi_maxvar_vcmt(cls):
