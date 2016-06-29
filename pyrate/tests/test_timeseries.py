@@ -401,13 +401,13 @@ class MPITests(unittest.TestCase):
 
         for i, t in enumerate(tiles):
             tsincr_file_n = os.path.join(TMPDIR, 'tsincr_{}.npy'.format(i))
-            cls.tsincr_mpi[t.top_left_x:t.bottom_right_x,
-                t.top_left_y: t.bottom_right_y, :] = np.load(tsincr_file_n)
+            cls.tsincr_mpi[t.top_left_y:t.bottom_right_y,
+                t.top_left_x: t.bottom_right_x, :] = np.load(tsincr_file_n)
             os.remove(tsincr_file_n)
 
             tscum_file_n = os.path.join(TMPDIR, 'tscum_{}.npy'.format(i))
-            cls.tscum_mpi[t.top_left_x:t.bottom_right_x,
-                t.top_left_y: t.bottom_right_y, :] = np.load(tscum_file_n)
+            cls.tscum_mpi[t.top_left_y:t.bottom_right_y,
+                t.top_left_x: t.bottom_right_x, :] = np.load(tscum_file_n)
             os.remove(tscum_file_n)
 
     def calc_non_mpi_time_series(self):
@@ -460,6 +460,9 @@ class MPITests(unittest.TestCase):
 
         log_file = glob.glob(os.path.join(self.tif_dir, '*.log'))[0]
         self.assertTrue(os.path.exists(log_file))
+
+    def test_tsincr_tifs(self):
+        pass
 
 
 if __name__ == "__main__":

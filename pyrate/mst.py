@@ -67,13 +67,13 @@ def mst_parallel(ifgs, params):
         t_msts = parmap.map(mst_multiprocessing, tiles, ifg_paths,
                             processes=ncpus)
         for k, tile in enumerate(tiles):
-            result[:, tile.top_left_x:tile.bottom_right_x,
-                    tile.top_left_y: tile.bottom_right_y] = t_msts[k]
+            result[:, tile.top_left_y:tile.bottom_right_y,
+                    tile.top_left_x: tile.bottom_right_x] = t_msts[k]
     else:
         print 'Calculating mst using {} tiles in serial'.format(no_tiles)
         for k, tile in enumerate(tiles):
-            result[:, tile.top_left_x:tile.bottom_right_x,
-                    tile.top_left_y: tile.bottom_right_y] = \
+            result[:, tile.top_left_y:tile.bottom_right_y,
+                    tile.top_left_x: tile.bottom_right_x] = \
                 mst_multiprocessing(tile, ifg_paths)
 
     return result
