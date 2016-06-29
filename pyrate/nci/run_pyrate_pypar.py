@@ -25,6 +25,14 @@ from pyrate import shared
 from pyrate.scripts.run_pyrate import write_msg
 from pyrate.algorithm import get_epochs
 
+if os.environ['PBS_JOBFS']:  # NCI tmp dir in each node
+    TMPDIR = os.environ['PBS_JOBFS']
+elif os.environ['TMPDIR']:  # NCI tmp dir in each node??
+    TMPDIR = os.environ['TMPDIR']
+else:  # fall back option or when running on PC locally
+    import tempfile
+    TMPDIR = tempfile.gettempdir()
+
 __author__ = 'sudipta'
 
 # Constants
@@ -412,33 +420,23 @@ def mpi_mst_calc(MPI_myID, dest_tifs, mpi_log_filename,
 
     write_msg('Calculating minimum spanning tree matrix '
                          'using NetworkX method')
-    num_processors = parallel.size
-    # due to limited memory can not copy whole ifgs phase data in each process
-    # read the first tif to get shape
-    result_process = mst.mst_multiprocessing_map(process_tiles,
-                                                 dest_tifs, ifg_shape)
+
+    def save_mst_tile(tile, i):
+        mst_tile = mst.mst_multiprocessing(tile, dest_tifs)
+        # locally save the mst_mat
+        mst_file_process_n = os.path.join(
+            TMPDIR, 'mst_mat_{}_{}.npy'.format(MPI_myID, i))
+        np.save(file=mst_file_process_n, arr=mst_tile)
+
+    for n, t in enumerate(process_tiles):
+        save_mst_tile(t, n)
+
     parallel.barrier()
 
     if MPI_myID == MASTER_PROCESS:
-        mst_file = os.path.join(params[cf.OUT_DIR], 'mst_mat.npy')
-        result = result_process
-        # combine the mst from the other processes
-        for i in range(1, num_processors):
-            result_remote_processes = \
-                parallel.receive(source=i, tag=-1, return_status=False)
-            result += result_remote_processes
-
         output_log_file = open(mpi_log_filename, "a")
         output_log_file.write("\n\n Mst caclulation finished\n")
         output_log_file.close()
-        # write mst output to a file
-        np.save(file=mst_file, arr=result)
-        return result
-    else:
-        # send the result arrays
-        parallel.send(result_process, destination=MASTER_PROCESS, tag=MPI_myID)
-        print "sent mst result from process", MPI_myID
-        return result_process
 
 
 def get_process_tiles(dest_tifs, parallel, params):
