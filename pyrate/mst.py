@@ -15,7 +15,7 @@ import parmap
 from pyrate.algorithm import ifg_date_lookup
 from pyrate.algorithm import ifg_date_index_lookup
 from pyrate import config as cf
-from pyrate.shared import IfgPart, setup_tiles
+from pyrate.shared import IfgPart, create_tiles
 np.seterr(invalid='ignore')  # stops RuntimeWarning in nan conversion
 
 # TODO: may need to implement memory saving row-by-row access
@@ -42,12 +42,18 @@ def mst_from_ifgs(ifgs):
 
 
 def mst_parallel(ifgs, params):
+    """
+    wrapper function for calculating ifgs in non mpi runs
+    :param ifgs:
+    :param params:
+    :return:
+    """
     print 'Calculating mst using tiles'
     ncpus = params[cf.PROCESSES]
     no_ifgs = len(ifgs)
     no_y, no_x = ifgs[0].phase_data.shape
-    top_left, bottom_right, no_tiles = setup_tiles(ifgs[0].shape,
-                                                   processes=ncpus)
+    tiles = create_tiles(ifgs[0].shape, n_ifgs=no_ifgs)
+    no_tiles = len(tiles)
     # need to break up the ifg class as multiprocessing does not allow pickling
     # don't read in all the phase data at once
     # use data paths and locally read in each core/process,
@@ -58,37 +64,32 @@ def mst_parallel(ifgs, params):
     if params[cf.PARALLEL]:
         print 'Calculating mst using {} tiles in parallel using {} ' \
               'processes'.format(no_tiles, ncpus)
-        t_msts = parmap.starmap(mst_multiprocessing,
-                                zip(top_left, bottom_right), ifg_paths,
-                                processes=ncpus)
-        for k, (top_l, bottom_r) \
-                in enumerate(zip(top_left, bottom_right)):
-            result[:, top_l[0]:bottom_r[0], top_l[1]: bottom_r[1]] = t_msts[k]
+        t_msts = parmap.map(mst_multiprocessing, tiles, ifg_paths,
+                            processes=ncpus)
+        for k, tile in enumerate(tiles):
+            result[:, tile.top_left_x:tile.bottom_right_x,
+                    tile.top_left_y: tile.bottom_right_y] = t_msts[k]
     else:
         print 'Calculating mst using {} tiles in serial'.format(no_tiles)
-        for k, (top_l, bottom_r) \
-                in enumerate(zip(top_left, bottom_right)):
-            result[:, top_l[0]:bottom_r[0], top_l[1]: bottom_r[1]] = \
-                mst_multiprocessing(top_l, bottom_r, ifg_paths)
+        for k, tile in enumerate(tiles):
+            result[:, tile.top_left_x:tile.bottom_right_x,
+                    tile.top_left_y: tile.bottom_right_y] = \
+                mst_multiprocessing(tile, ifg_paths)
 
     return result
 
 
-def mst_multiprocessing_map(process_top_lefts, process_bottom_rights,
-                            paths_or_ifgs, shape):
-    # can't specify np.bool, does not work with PyPar
-    # TODO: investigate other pypar send/receive options
-    # should be able to change int to bool, may be use mpi4py?
+def mst_multiprocessing_map(tiles, paths_or_ifgs, shape):
     no_ifgs = len(paths_or_ifgs)
-    result = np.zeros(shape=(no_ifgs, shape[0], shape[1]), dtype=int)
-    for top_l, bottom_r \
-                in zip(process_top_lefts, process_bottom_rights):
-        result[:, top_l[0]:bottom_r[0], top_l[1]: bottom_r[1]] = \
-            mst_multiprocessing(top_l, bottom_r, paths_or_ifgs)
+    result = np.zeros(shape=(no_ifgs, shape[0], shape[1]), dtype=bool)
+    for t in tiles:
+        result[:, t.top_left_x:t.bottom_right_x,
+            t.top_left_y: t.bottom_right_y] = \
+                mst_multiprocessing(t, paths_or_ifgs)
     return result
 
 
-def mst_multiprocessing(top_left, bottom_right, ifgs_or_paths):
+def mst_multiprocessing(tile, ifgs_or_paths):
     """
     The memory requirement during mpi mst computation is determined by the
     number of ifgs times size of IfgPart. Note that we need all ifg header
@@ -99,13 +100,7 @@ def mst_multiprocessing(top_left, bottom_right, ifgs_or_paths):
     :param ifgs_or_paths: all ifg paths of the problem. List of strings.
     :return:
     """
-    r_start, c_start = top_left
-    r_end, c_end = bottom_right
-    ifg_parts = [IfgPart(ifgs_or_paths[i],
-                         r_start=r_start, r_end=r_end,
-                         c_start=c_start, c_end=c_end
-                         ) for i in range(len(ifgs_or_paths))]
-
+    ifg_parts = [IfgPart(p, tile) for p in ifgs_or_paths]
     t_mst = mst_boolean_array(ifg_parts)
     return t_mst
 

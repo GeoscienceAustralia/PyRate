@@ -18,7 +18,7 @@ import subprocess
 from pyrate import mst
 from pyrate import algorithm
 from pyrate.tests.common import MockIfg, sydney5_mock_ifgs, sydney_data_setup
-from pyrate.shared import Ifg, IfgPart
+from pyrate.shared import Ifg, IfgPart, Tile
 from pyrate.mst import mst_parallel
 from pyrate import config as cf
 from pyrate.tests import common
@@ -184,9 +184,8 @@ class IfgPartTest(unittest.TestCase):
         r_start = 0
         r_end = 10
         for i in self.ifgs:
-            ifg_part = IfgPart(i.data_path,
-                               r_start=r_start, r_end=r_end,
-                               c_start=0, c_end=i.ncols)
+            tile = Tile(top_left=(r_start, 0), bottom_right=(r_end, i.ncols))
+            ifg_part = IfgPart(i.data_path, tile)
             self.assertEqual(ifg_part.phase_data.shape,
                              (r_end-r_start, i.phase_data.shape[1]))
             np.testing.assert_array_equal(ifg_part.phase_data,

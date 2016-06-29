@@ -23,6 +23,7 @@ from pyrate import linrate
 from pyrate import remove_aps_delay as aps
 from pyrate import shared
 from pyrate.scripts.run_pyrate import write_msg
+from pyrate.algorithm import get_epochs
 
 __author__ = 'sudipta'
 
@@ -77,20 +78,17 @@ def main(params=None):
 
     parallel.barrier()
 
+    # calculate process information
+    ifg_shape, process_tiles = get_process_tiles(dest_tifs, parallel, params)
     # Calc mst using MPI
-    mst_mat_binary_file = os.path.join(params[cf.OUT_DIR], 'mst_mat.npy')
-    write_msg('Calculating mst')
     if MPI_myID == MASTER_PROCESS:
-        mpi_mst_calc(MPI_myID, dest_tifs,
-                               mpi_log_filename,
-                               parallel, params,
-                               mst_mat_binary_file)
+        mpi_mst_calc(MPI_myID, dest_tifs, mpi_log_filename, parallel, params,
+                     process_tiles, ifg_shape)
     else:
-        mpi_mst_calc(MPI_myID, dest_tifs,
-                               mpi_log_filename,
-                               parallel, params,
-                               mst_mat_binary_file)
-    write_msg('Calculating mst')
+        mpi_mst_calc(MPI_myID, dest_tifs, mpi_log_filename, parallel, params,
+                     process_tiles, ifg_shape)
+
+    print 'Processor {} has {} tiles'.format(MPI_myID, len(process_tiles))
     parallel.barrier()
 
     # Calc ref_pixel using MPI
@@ -127,15 +125,13 @@ def main(params=None):
                      num_processors, parallel, params)
     parallel.barrier()
 
-    # estimate and remove reference phase, ifgs are modifed in place
-    ref_phase_estimation_mpi(MPI_myID, dest_tifs,
-                             num_processors, parallel, params,
-                             refpx, refpy)
+    # estimate and remove reference phase
+    ref_phase_estimation_mpi(MPI_myID, dest_tifs, parallel,
+                             params, refpx, refpy)
     parallel.barrier()
 
     # all processes need access to maxvar, and vcmt
-    maxvar, vcmt = maxvar_vcm_mpi(MPI_myID, dest_tifs,
-                            num_processors, parallel, params)
+    maxvar, vcmt = maxvar_vcm_mpi(MPI_myID, dest_tifs, parallel, params)
 
     vcmt_file = os.path.join(params[cf.OUT_DIR], 'vcmt.npy')
     if MPI_myID == MASTER_PROCESS:
@@ -144,52 +140,37 @@ def main(params=None):
     parallel.barrier()
 
     # TODO: avoid reading in whole mst_grid in all processes
-    mst_grid = np.load(file=mst_mat_binary_file)
-    # linrate mpi computation
-    linrate_mpi(MPI_myID, dest_tifs, mst_grid, parallel, params, vcmt)
+    # may be ok since mst is a boolean array
+    mst_file = os.path.join(params[cf.OUT_DIR], 'mst_mat.npy')
+    mst_grid = np.load(file=mst_file)
 
-    parallel.barrier()  # may not need this
-    ifgs = shared.pre_prepare_ifgs(dest_tifs, params)
+    # linrate mpi computation
+    linrate_mpi(MPI_myID, dest_tifs, mst_grid, parallel, params, vcmt,
+                process_tiles, ifg_shape)
 
     # time series mpi computation
     if params[cf.TIME_SERIES_CAL]:
-        time_series_mpi(MPI_myID, ifgs, mst_grid, num_processors, parallel,
-                        params, vcmt)
+        time_series_mpi(MPI_myID, dest_tifs, mst_grid, parallel, params, vcmt,
+                        process_tiles, ifg_shape)
 
     parallel.finalize()
 
 
-def linrate_mpi(MPI_myID, ifg_paths, mst_grid, parallel, params, vcmt):
+def linrate_mpi(MPI_myID, ifg_paths, mst_grid, parallel, params, vcmt,
+                process_tiles, ifg_shape):
     write_msg('Calculating linear rate')
     num_processors = parallel.size
-    # due to limited memory can not copy whole ifgs phase data in each process
-    # read the first tif to get shape
-    ifg = shared.pre_prepare_ifgs([ifg_paths[0]], params)[0]
-
-    # calculate process tiles
-    top_lefts, bottom_rights, no_tiles = shared.setup_tiles(
-        ifg.shape, processes=num_processors)
-    process_indices = parallel.calc_indices(no_tiles)
-    process_top_lefts = [itemgetter(p)(top_lefts)
-                         for p in process_indices]
-    process_bottom_rights = [itemgetter(p)(bottom_rights)
-                             for p in process_indices]
-
     # initialize empty arrays
-    rows = ifg.nrows
-    cols = ifg.ncols
+    rows, cols = ifg_shape
     rate = np.zeros([rows, cols], dtype=np.float32)
+    # may not need error and samples? save memory?
     error = np.zeros([rows, cols], dtype=np.float32)
     samples = np.zeros([rows, cols], dtype=np.float32)
 
-    for top_left, bottom_right in zip(process_top_lefts, process_bottom_rights):
-        r_start, c_start = top_left
-        r_end, c_end = bottom_right
-        ifg_parts = [shared.IfgPart(ifg_paths[i],
-                                    r_start=r_start, r_end=r_end,
-                                    c_start=c_start, c_end=c_end
-                                    ) for i in range(len(ifg_paths))]
-
+    for t in process_tiles:
+        r_start, c_start = t.top_left
+        r_end, c_end = t.bottom_right
+        ifg_parts = [shared.IfgPart(p, t) for p in ifg_paths]
         mst_grid_ifg_parts = mst_grid[:, r_start: r_end, c_start: c_end]
         res = linrate.linear_rate(ifg_parts, params, vcmt, mst_grid_ifg_parts)
 
@@ -222,50 +203,61 @@ def linrate_mpi(MPI_myID, ifg_paths, mst_grid, parallel, params, vcmt):
         parallel.send(process_res, destination=MASTER_PROCESS, tag=MPI_myID)
 
 
-def time_series_mpi(MPI_myID, ifgs, mst_grid, num_processors, parallel, params,
-                    vcmt):
+def time_series_mpi(MPI_myID, ifg_paths, mst_grid, parallel, params, vcmt,
+                    process_tiles, ifg_shape):
     write_msg('Calculating time series')
-    B0, INTERP, PTHRESH, SMFACTOR, SMORDER, TSMETHOD, ifg_data, mst, \
-    ncols, nrows, nvelpar, _, processes, span, tsvel_matrix = \
-        timeseries.time_series_setup(ifgs=ifgs, mst=mst_grid, params=params)
-    # mpi by the rows
-    # still problem is ifg_data which contains data for all ifgs
-    # TODO: must stop sending all phase_data to each mpi process
-    rows = range(nrows)
-    process_indices = parallel.calc_indices(nrows)
-    process_rows = [itemgetter(p)(rows) for p in process_indices]
-    process_tsvel_matrix = []
-    for row in process_rows:
-        process_tsvel_matrix.append(timeseries.time_series_by_rows(
-            row, B0, SMFACTOR, SMORDER, ifg_data, mst, ncols,
-            nvelpar, PTHRESH, vcmt, TSMETHOD, INTERP))
-    tsvel_file = os.path.join(params[cf.OUT_DIR], 'tsvel.npy')
-    tsincr_file = os.path.join(params[cf.OUT_DIR], 'tsincr.npy')
-    tscum_file = os.path.join(params[cf.OUT_DIR], 'tscum.npy')
+
+    num_processors = parallel.size
+
+    ifgs = shared.prepare_ifgs_without_phase(ifg_paths, params)
+    epochlist = get_epochs(ifgs)
+    nepoch = len(epochlist.dates)  # epoch number
+    nvelpar = nepoch - 1  # velocity parameters number
+
+    # depending on nvelpar, this will not fit in memory
+    # e.g. nvelpar=100, nrows=10000, ncols=10000, 32bit floats need 40GB memory
+    # 32 * 100 * 10000 * 10000 / 8 bytes = 4e10 bytes = 40 GB
+    tsvel = np.zeros(shape=ifg_shape + (nvelpar, ), dtype=np.float32)
+    tsincr = np.zeros(shape=ifg_shape + (nvelpar, ), dtype=np.float32)
+    tscum = np.zeros(shape=ifg_shape + (nvelpar, ), dtype=np.float32)
+
+    for t in process_tiles:
+        r_start, c_start = t.top_left
+        r_end, c_end = t.bottom_right
+        ifg_parts = [shared.IfgPart(p, t) for p in ifg_paths]
+
+        mst_grid_ifg_parts = mst_grid[:, r_start: r_end, c_start: c_end]
+        res = timeseries.time_series(ifg_parts, params,
+                                     vcmt, mst_grid_ifg_parts)
+        tsincr[r_start:r_end, c_start:c_end, :] = res[0]
+        tscum[r_start:r_end, c_start:c_end, :] = res[1]
+        tsvel[r_start:r_end, c_start:c_end, :] = res[2]
+
+    process_res = (tsincr, tscum, tsvel)
+
     if MPI_myID == MASTER_PROCESS:
-        all_indices = parallel.calc_all_indices(nrows)
-        tsvel_matrix = np.empty(shape=(nrows, ncols, nvelpar), dtype=np.float32)
-        tsvel_matrix[all_indices[MASTER_PROCESS]] = process_tsvel_matrix
 
         # putting it together
         for i in range(1, num_processors):
-            process_tsvel_matrix = parallel.receive(source=i, tag=-1,
-                                                    return_status=False)
-            tsvel_matrix[all_indices[i]] = process_tsvel_matrix
-        tsvel_matrix = np.where(tsvel_matrix == 0, np.nan, tsvel_matrix)
-        tsincr = tsvel_matrix * span
-        tscum = np.cumsum(tsincr, 2)
-        np.save(file=tsvel_file, arr=tsvel_matrix)
+            process_res = parallel.receive(source=i, tag=-1, return_status=False)
+            tsincr += process_res[0]
+            tscum += process_res[1]
+            tsvel += process_res[2]
+        tsvel_file = os.path.join(params[cf.OUT_DIR], 'tsvel.npy')
+        tsincr_file = os.path.join(params[cf.OUT_DIR], 'tsincr.npy')
+        tscum_file = os.path.join(params[cf.OUT_DIR], 'tscum.npy')
         np.save(file=tscum_file, arr=tscum)
         np.save(file=tsincr_file, arr=tsincr)
+        np.save(file=tsvel_file, arr=tsvel)
     else:
-        parallel.send(process_tsvel_matrix, destination=MASTER_PROCESS,
+        parallel.send(process_res, destination=MASTER_PROCESS,
                       tag=MPI_myID)
 
 
-def ref_phase_estimation_mpi(MPI_myID, ifg_paths, num_processors, parallel, params,
+def ref_phase_estimation_mpi(MPI_myID, ifg_paths, parallel, params,
                              refpx, refpy):
     write_msg('Finding and removing reference phase')
+    num_processors = parallel.size
     ifgs = shared.prepare_ifgs_without_phase(ifg_paths, params)
     no_ifgs = len(ifgs)
     process_indices = parallel.calc_indices(no_ifgs)
@@ -303,10 +295,11 @@ def ref_phase_estimation_mpi(MPI_myID, ifg_paths, num_processors, parallel, para
             ifg.write_modified_phase()
             process_ref_phs[n] = ref_phs
             ifg.close()
-
     else:
         raise cf.ConfigException('Ref phase estimation method must be 1 or 2')
+
     ref_phs_file = os.path.join(params[cf.OUT_DIR], 'ref_phs.npy')
+
     if MPI_myID == MASTER_PROCESS:
         all_indices = parallel.calc_all_indices(no_ifgs)
         ref_phs = np.zeros(len(ifgs))
@@ -324,7 +317,8 @@ def ref_phase_estimation_mpi(MPI_myID, ifg_paths, num_processors, parallel, para
                       tag=MPI_myID)
 
 
-def maxvar_vcm_mpi(MPI_myID, ifg_paths, num_processors, parallel, params):
+def maxvar_vcm_mpi(MPI_myID, ifg_paths, parallel, params):
+    num_processors = parallel.size
     ifgs = shared.prepare_ifgs_without_phase(ifg_paths, params)
     no_ifgs = len(ifgs)
     process_indices = parallel.calc_indices(no_ifgs)
@@ -401,12 +395,12 @@ def ref_pixel_calc_mpi(MPI_myID, ifg_paths, num_processors, parallel, params):
         print 'sent ref pixel to master'
 
 
-def mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs, mpi_log_filename,
-                 parallel, params, mst_file):
+def mpi_mst_calc(MPI_myID, dest_tifs, mpi_log_filename,
+                 parallel, params, process_tiles, ifg_shape):
     """
     MPI function that control each process during MPI run
     :param MPI_myID:
-    :param cropped_and_sampled_tifs: paths of cropped amd resampled geotiffs
+    :param dest_tifs: paths of cropped amd resampled geotiffs
     :param mpi_log_filename:
     :param num_processors:
     :param parallel: MPI Parallel class instance
@@ -414,31 +408,19 @@ def mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs, mpi_log_filename,
     :param mst_file: mst file (2d numpy array) save to disc
     :return:
     """
+    write_msg('Calculating mst')
+
     write_msg('Calculating minimum spanning tree matrix '
                          'using NetworkX method')
     num_processors = parallel.size
     # due to limited memory can not copy whole ifgs phase data in each process
     # read the first tif to get shape
-    ifg = shared.pre_prepare_ifgs([cropped_and_sampled_tifs[0]], params)[0]
-    top_lefts, bottom_rights, no_tiles = shared.setup_tiles(
-        ifg.shape, processes=num_processors)
-
-    process_indices = parallel.calc_indices(no_tiles)
-    process_top_lefts = [itemgetter(p)(top_lefts)
-                         for p in process_indices]
-    process_bottom_rights = [itemgetter(p)(bottom_rights)
-                             for p in process_indices]
-    print 'Processor {mpi_id} has {processes} ' \
-          'tiles out of {num_files}'.format(mpi_id=MPI_myID,
-                                            processes=len(process_indices),
-                                            num_files=no_tiles)
-    result_process = mst.mst_multiprocessing_map(
-        process_top_lefts, process_bottom_rights,
-        cropped_and_sampled_tifs, ifg.shape
-    )
+    result_process = mst.mst_multiprocessing_map(process_tiles,
+                                                 dest_tifs, ifg_shape)
     parallel.barrier()
 
     if MPI_myID == MASTER_PROCESS:
+        mst_file = os.path.join(params[cf.OUT_DIR], 'mst_mat.npy')
         result = result_process
         # combine the mst from the other processes
         for i in range(1, num_processors):
@@ -457,6 +439,16 @@ def mpi_mst_calc(MPI_myID, cropped_and_sampled_tifs, mpi_log_filename,
         parallel.send(result_process, destination=MASTER_PROCESS, tag=MPI_myID)
         print "sent mst result from process", MPI_myID
         return result_process
+
+
+def get_process_tiles(dest_tifs, parallel, params):
+    ifg = shared.pre_prepare_ifgs([dest_tifs[0]], params)[0]
+    tiles = shared.create_tiles(ifg.shape,
+                                n_ifgs=len(dest_tifs), nrows=10, ncols=10)
+    no_tiles = len(tiles)
+    process_indices = parallel.calc_indices(no_tiles)
+    process_tiles = [itemgetter(p)(tiles) for p in process_indices]
+    return ifg.shape, process_tiles
 
 
 def clean_up_old_files():

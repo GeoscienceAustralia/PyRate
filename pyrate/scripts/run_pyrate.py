@@ -79,6 +79,7 @@ def process_ifgs(ifg_paths_or_instance, params):
     p = os.path.join(params[cf.OUT_DIR], ifgs[0].data_path)
     assert os.path.exists(p)
 
+    # TODO: Clean up writing time series data
     ds = gdal.Open(p)
     md = ds.GetMetadata()  # get metadata for writing on output tifs
     gt = ds.GetGeoTransform()  # get geographical bounds of data
@@ -220,8 +221,9 @@ def compute_time_series(epochlist, gt, ifgs, md, mst_grid, params, vcmt, wkt):
 
 
 def write_timeseries_geotiff(epochlist, gt, md, params, tsincr, wkt, pr_type):
+    # TODO: move PRTYPE to ifgconstants
     PRTYPE = 'PR_TYPE'
-    for i in range(len(tsincr[0, 0, :])):
+    for i in range(tsincr.shape[2]):
         md[ifc.MASTER_DATE] = epochlist.dates[i + 1]
         md['PR_SEQ_POS'] = i  # sequence position
 

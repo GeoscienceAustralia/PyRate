@@ -410,12 +410,12 @@ class IfgPart(object):
     slice of Ifg data object
     """
 
-    def __init__(self, ifg_or_path, r_start, r_end, c_start, c_end):
+    def __init__(self, ifg_or_path, tile):
 
         """
         :param ifg: original ifg
         :param r_start: starting tow of the original ifg
-        :param r_end: ending row of the original ifg
+        :param r_end: ending (row + 1) of the original ifg
         :return:
         """
         # check if Ifg was sent.
@@ -425,11 +425,12 @@ class IfgPart(object):
             self.data_path = ifg_or_path  # should be used with MPI
             ifg = Ifg(ifg_or_path)
 
-        self.r_start = r_start
-        self.r_end = r_end
+        self.tile = tile
+        self.r_start = self.tile.top_left_x
+        self.r_end = self.tile.bottom_right_x
         self.phase_data = None
-        self.c_start = c_start
-        self.c_end = c_end
+        self.c_start = self.tile.top_left_y
+        self.c_end = self.tile.bottom_right_y
         self.nan_fraction = None
         self.master = None
         self.slave = None
@@ -797,42 +798,98 @@ def mkdir_p(path):
             raise
 
 
-def setup_tiles(shape, processes):
+def setup_tiles(shape, n_ifgs=17, nrows=10, ncols=10):
     """
     :param shape: tuple of shape
     :param processes: processes that are going to to analyze the tiles
-    :return: top left, bottom right coordinates, no of tiles
+    :param n_ifgs: number of ifgs
+    :param nrows: number of rows of tiles
+    :param ncols: number of columns of tiles
+    :return: list of Tile class instances
     """
+    if len(shape) != 2:
+        raise ValueError('shape must be a length 2 tuple')
 
-    # either ncols or nrows need to be supplied
-    # TODO: a better way to determine ncols
     no_y, no_x = shape
-    ncols = min(10, no_x)
-    max_cols_per_tile = no_x / ncols
-    c_starts = []
-    c_ends = []
-    for c in xrange(0, no_x, max_cols_per_tile):
-        c_end = c + max_cols_per_tile
-        if c_end > no_x:
-            c_end = no_x
-        c_starts.append(c)
-        c_ends.append(c_end)
-    r_step = int(np.ceil(no_y / float(processes))) * len(c_starts) / 5
-    r_step = min(r_step, no_y)
-    r_starts = []
-    r_ends = []
-    for r in xrange(0, no_y, r_step):
-        r_end = r + r_step
-        if r + r_step > no_y:
-            r_end = no_y
-        r_starts.append(r)
-        r_ends.append(r_end)
+
+    if ncols > no_x or nrows > no_y:
+        raise ValueError('nrows/cols must be greater than number of y/x-pixels')
+
+    cols = np.array_split(range(no_x), ncols)
+    c_starts = [c[0] for c in cols]
+    c_ends = [c[-1] + 1 for c in cols]
+    max_cols_per_tile = max([len(c) for c in cols])
+
+    r_step = int(np.ceil(no_y)/nrows)
+    # assume that arrays of 32bit floats can be max ~500MB
+    # determine max array size, 4 bytes per 32 bits
+    r_step_500 = 500*1e6//(4*n_ifgs*max_cols_per_tile)
+    r_step = min(r_step, r_step_500)
+    nrows = no_y//r_step
+
+    rows = np.array_split(range(no_y), nrows)
+    r_starts = [c[0] for c in rows]
+    r_ends = [c[-1] + 1 for c in rows]
 
     top_lefts = list(product(r_starts, c_starts))
     bottom_rights = list(product(r_ends, c_ends))
-    no_tiles = len(r_starts)*len(c_starts)
 
-    return top_lefts, bottom_rights, no_tiles
+    return [Tile(t, b) for t, b in zip(top_lefts, bottom_rights)]
+
+
+def create_tiles(shape, n_ifgs=17, nrows=10, ncols=10):
+    """
+    shape must be a 2-tuple, i.e., 2d_array.shape,
+    the returned list contains nrowsXncols numpy arrays
+    with each array preserving the "physical" layout of arr.
+
+    The number of rows can be changed (increased) such that  the resulting tiles
+    with float32's do not exceed 500MB in memory.
+
+    When the array shape (rows, cols) are not divisible by (nrows, ncols) then
+    some of the array dimensions can change according to numpy.array_split.
+
+    :param shape: tuple of shape
+    :param processes: processes that are going to to analyze the tiles
+    :param n_ifgs: number of ifgs
+    :param nrows: number of rows of tiles
+    :param ncols: number of columns of tiles
+    :return: list of Tile class instances
+    """
+
+    if len(shape) != 2:
+        raise ValueError('shape must be a length 2 tuple')
+
+    no_y, no_x = shape
+
+    if ncols > no_x or nrows > no_y:
+        raise ValueError('nrows/cols must be greater than number of y/x-pixels')
+
+    col_arr = np.array_split(range(no_x), ncols)
+    max_cols_per_tile = max([len(c) for c in col_arr])
+
+    r_step = int(np.ceil(no_y) / nrows)
+    # assume that arrays of 32bit floats can be max ~500MB
+    # determine max array size, 4 bytes per 32 bits
+    r_step_500 = 500 * 1e6 // (4 * n_ifgs * max_cols_per_tile)
+    r_step = min(r_step, r_step_500)
+    nrows = no_y // r_step
+    row_arr = np.array_split(range(no_y), nrows)
+    # return [arr[r[0]: r[-1]+1, c[0]: c[-1]+1]
+    #                  for r, c in product(row_arr, col_arr)]
+    return [Tile((r[0], c[0]), (r[-1]+1, c[-1]+1))
+                for r, c in product(row_arr, col_arr)]
+
+
+class Tile:
+    def __init__(self, top_left, bottom_right):
+        self.top_left = top_left
+        self.bottom_right = bottom_right
+        self.top_left_x, self.top_left_y = top_left
+        self.bottom_right_x, self.bottom_right_y = bottom_right
+
+    def __str__(self):
+        return "Convenience Time class containing tile co-ordinates"
 
 
 def copytree(src, dst, symlinks=False, ignore=None):
