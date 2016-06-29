@@ -174,9 +174,6 @@ def mst_calculation(ifg_paths_or_instance, params):
 
 def compute_time_series(ifgs, mst_grid, params, vcmt):
 
-    # setup metadata for writing into result files
-    epochlist, gt, md, wkt = setup_metadata(ifgs, params)
-
     # Calculate time series
     tsincr, tscum, tsvel = calculate_time_series(
         ifgs, params, vcmt=vcmt, mst=mst_grid)
@@ -189,12 +186,9 @@ def compute_time_series(ifgs, mst_grid, params, vcmt):
     np.save(file=tsvel_file, arr=tsvel)
 
     # TODO: write tests for these functions
-    write_timeseries_geotiff(epochlist, gt, md, params, tsincr, wkt,
-                             pr_type='tsincr')
-    write_timeseries_geotiff(epochlist, gt, md, params, tscum, wkt,
-                             pr_type='tscuml')
-    write_timeseries_geotiff(epochlist, gt, md, params, tsvel, wkt,
-                             pr_type='tsvel')
+    write_timeseries_geotiff(ifgs, params, tsincr, pr_type='tsincr')
+    write_timeseries_geotiff(ifgs, params, tscum, pr_type='tscuml')
+    write_timeseries_geotiff(ifgs, params, tsvel, pr_type='tsvel')
     return tsincr, tscum, tsvel
 
 
@@ -208,7 +202,9 @@ def setup_metadata(ifgs, params):
     return epochlist, gt, md, wkt
 
 
-def write_timeseries_geotiff(epochlist, gt, md, params, tsincr, wkt, pr_type):
+def write_timeseries_geotiff(ifgs, params, tsincr, pr_type):
+    # setup metadata for writing into result files
+    epochlist, gt, md, wkt = setup_metadata(ifgs, params)
     for i in range(tsincr.shape[2]):
         md[ifc.MASTER_DATE] = epochlist.dates[i + 1]
         md['PR_SEQ_POS'] = i  # sequence position
