@@ -76,37 +76,11 @@ def process_ifgs(ifg_paths_or_instance, params):
         PYRATEPATH, params[cf.OUT_DIR], 'vcmt_mat.npy')
     np.save(file=vcmt_mat_binary_file, arr=vcmt)
 
-    p = os.path.join(params[cf.OUT_DIR], ifgs[0].data_path)
-    assert os.path.exists(p)
-
-    # TODO: Clean up writing time series data
-    ds = gdal.Open(p)
-    md = ds.GetMetadata()  # get metadata for writing on output tifs
-    gt = ds.GetGeoTransform()  # get geographical bounds of data
-    wkt = ds.GetProjection()  # get projection of data
-    epochlist = algorithm.get_epochs(ifgs)
-
     if params[cf.TIME_SERIES_CAL] != 0:
-        compute_time_series(epochlist, gt, ifgs, md, mst_grid, params, vcmt,
-                            wkt)
+        compute_time_series(ifgs, mst_grid, params, vcmt)
+
     # Calculate linear rate map
-    rate, error, samples = calculate_linear_rate(
-                   ifgs, params, vcmt, mst=mst_grid)
-
-    md[ifc.MASTER_DATE] = epochlist.dates
-    dest = os.path.join(PYRATEPATH, params[cf.OUT_DIR], "linrate.tif")
-    # remove metadata added to md in compute_time_series that doesn't
-    # make sense for the following tiffs
-    if 'PR_SEQ_POS' in md:
-        del md['PR_SEQ_POS']
-    md['PR_TYPE'] = 'linrate'
-    write_output_geotiff(md, gt, wkt, rate, dest, np.nan)
-    dest = os.path.join(PYRATEPATH, params[cf.OUT_DIR], "linerror.tif")
-
-    md['PR_TYPE'] = 'linerror'
-    write_output_geotiff(md, gt, wkt, error, dest, np.nan)
-
-    write_linrate_numpy_files(error, params, rate, samples)
+    rate, error, samples = calculate_linear_rate(ifgs, params, vcmt, mst_grid)
 
     # close all open ifgs
     for i in ifgs:
@@ -198,7 +172,11 @@ def mst_calculation(ifg_paths_or_instance, params):
     return mst_grid
 
 
-def compute_time_series(epochlist, gt, ifgs, md, mst_grid, params, vcmt, wkt):
+def compute_time_series(ifgs, mst_grid, params, vcmt):
+
+    # setup metadata for writing into result files
+    epochlist, gt, md, wkt = setup_metadata(ifgs, params)
+
     # Calculate time series
     tsincr, tscum, tsvel = calculate_time_series(
         ifgs, params, vcmt=vcmt, mst=mst_grid)
@@ -220,9 +198,17 @@ def compute_time_series(epochlist, gt, ifgs, md, mst_grid, params, vcmt, wkt):
     return tsincr, tscum, tsvel
 
 
+def setup_metadata(ifgs, params):
+    p = os.path.join(params[cf.OUT_DIR], ifgs[0].data_path)
+    ds = gdal.Open(p)
+    md = ds.GetMetadata()  # get metadata for writing on output tifs
+    gt = ds.GetGeoTransform()  # get geographical bounds of data
+    wkt = ds.GetProjection()  # get projection of data
+    epochlist = algorithm.get_epochs(ifgs)
+    return epochlist, gt, md, wkt
+
+
 def write_timeseries_geotiff(epochlist, gt, md, params, tsincr, wkt, pr_type):
-    # TODO: move PRTYPE to ifgconstants
-    PRTYPE = 'PR_TYPE'
     for i in range(tsincr.shape[2]):
         md[ifc.MASTER_DATE] = epochlist.dates[i + 1]
         md['PR_SEQ_POS'] = i  # sequence position
@@ -231,7 +217,7 @@ def write_timeseries_geotiff(epochlist, gt, md, params, tsincr, wkt, pr_type):
         dest = os.path.join(
             PYRATEPATH, params[cf.OUT_DIR],
             pr_type + "_" + str(epochlist.dates[i + 1]) + ".tif")
-        md[PRTYPE] = pr_type
+        md[ifc.PRTYPE] = pr_type
         write_output_geotiff(md, gt, wkt, data, dest, np.nan)
 
 
@@ -343,6 +329,19 @@ def calculate_linear_rate(ifgs, params, vcmt, mst=None):
             raise ValueError('TODO: bad value')
 
     rate, error, samples = res
+
+    epochlist, gt, md, wkt = setup_metadata(ifgs, params)
+
+    # TODO: write tests for these functions
+    dest = os.path.join(PYRATEPATH, params[cf.OUT_DIR], "linrate.tif")
+    md[ifc.MASTER_DATE] = epochlist.dates
+    md[ifc.PRTYPE] = 'linrate'
+    write_output_geotiff(md, gt, wkt, error, dest, np.nan)
+
+    dest = os.path.join(PYRATEPATH, params[cf.OUT_DIR], "linerror.tif")
+    md[ifc.PRTYPE] = 'linerror'
+    write_output_geotiff(md, gt, wkt, error, dest, np.nan)
+    write_linrate_numpy_files(error, params, rate, samples)
 
     logging.debug('Linear rate calculated')
     return rate, error, samples
