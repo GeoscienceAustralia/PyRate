@@ -1,15 +1,9 @@
-'''
-Functions for finding the reference pixel in PyRate.
-
-.. codeauthor:: Ben Davies, Sudipta Basak
-'''
-
 from numpy import isnan, std, mean, sum as nsum
 import numpy as np
 from itertools import product
 import parmap
 import pyrate.config as cf
-from pyrate.shared import Ifg, IfgPart, pre_prepare_ifgs
+from pyrate.shared import Ifg
 
 
 # TODO: move error checking to config step (for fail fast)

@@ -15,7 +15,7 @@ import parmap
 from pyrate.algorithm import ifg_date_lookup
 from pyrate.algorithm import ifg_date_index_lookup
 from pyrate import config as cf
-from pyrate.shared import IfgPart, setup_tiles
+from pyrate.shared import IfgPart, create_tiles
 np.seterr(invalid='ignore')  # stops RuntimeWarning in nan conversion
 
 # TODO: may need to implement memory saving row-by-row access
@@ -52,7 +52,7 @@ def mst_parallel(ifgs, params):
     ncpus = params[cf.PROCESSES]
     no_ifgs = len(ifgs)
     no_y, no_x = ifgs[0].phase_data.shape
-    tiles = setup_tiles(ifgs[0].shape, n_ifgs=no_ifgs)
+    tiles = create_tiles(ifgs[0].shape, n_ifgs=no_ifgs)
     no_tiles = len(tiles)
     # need to break up the ifg class as multiprocessing does not allow pickling
     # don't read in all the phase data at once

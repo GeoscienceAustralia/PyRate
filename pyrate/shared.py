@@ -837,6 +837,39 @@ def setup_tiles(shape, n_ifgs=17, nrows=10, ncols=10):
     return [Tile(t, b) for t, b in zip(top_lefts, bottom_rights)]
 
 
+def create_tiles(shape, n_ifgs=17, nrows=10, ncols=10):
+    """
+    If arr is a 2D array, the returned list contains nrowsXncols numpy arrays
+    with each array preserving the "physical" layout of arr.
+
+    When the array shape (rows, cols) are not divisible by (nrows, ncols) then
+    some of the array dimensions can change according to numpy.array_split.
+    """
+
+    if len(shape) != 2:
+        raise ValueError('shape must be a length 2 tuple')
+
+    no_y, no_x = shape
+
+    if ncols > no_x or nrows > no_y:
+        raise ValueError('nrows/cols must be greater than number of y/x-pixels')
+
+    col_arr = np.array_split(range(no_x), ncols)
+    max_cols_per_tile = max([len(c) for c in col_arr])
+
+    r_step = int(np.ceil(no_y) / nrows)
+    # assume that arrays of 32bit floats can be max ~500MB
+    # determine max array size, 4 bytes per 32 bits
+    r_step_500 = 500 * 1e6 // (4 * n_ifgs * max_cols_per_tile)
+    r_step = min(r_step, r_step_500)
+    nrows = no_y // r_step
+    row_arr = np.array_split(range(no_y), nrows)
+    # return [arr[r[0]: r[-1]+1, c[0]: c[-1]+1]
+    #                  for r, c in product(row_arr, col_arr)]
+    return [Tile((r[0], c[0]), (r[-1]+1, c[-1]+1))
+                for r, c in product(row_arr, col_arr)]
+
+
 class Tile:
     def __init__(self, top_left, bottom_right):
         self.top_left = top_left
