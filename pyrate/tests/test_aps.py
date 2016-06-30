@@ -343,6 +343,8 @@ class MPITests(unittest.TestCase):
         cls.params[cf.OUT_DIR] = cls.tif_dir_serial
         cls.params[cf.PARALLEL] = 0
         cls.params[cf.REF_EST_METHOD] = 2
+        cls.params[cf.IFG_LKSX] = 1
+        cls.params[cf.IFG_LKSY] = 1
         cls.params[cf.DEM_FILE] = common.SYD_TEST_DEM_GAMMA
         cls.params[cf.APS_INCIDENCE_MAP] = common.SYD_TEST_INCIDENCE
         # base_unw_paths need to be geotiffed and multilooked by run_prepifg

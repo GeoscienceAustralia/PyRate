@@ -112,9 +112,9 @@ def main(params, config_file=sys.argv[1]):
         ifgs = shared.pre_prepare_ifgs(dest_tifs, params)
         if run_pyrate.aps_delay_required(ifgs, params):
             no_ifgs = len(ifgs)
-            process_indices = parallel.calc_indices(no_ifgs)
+            process_indices_aps = parallel.calc_indices(no_ifgs)
             # process_ifgs = [itemgetter(p)(ifgs) for p in process_indices]
-            ifgs = aps.remove_aps_delay(ifgs, params, process_indices)
+            ifgs = aps.remove_aps_delay(ifgs, params, process_indices_aps)
 
         for i in ifgs:
             i.close()
