@@ -17,6 +17,7 @@ import tempfile
 import subprocess
 import glob
 from itertools import product
+from osgeo import gdal
 
 from pyrate import mst
 from pyrate.tests.common import sydney_data_setup
@@ -408,8 +409,10 @@ class MPITests(unittest.TestCase):
             cls.tscum_mpi[t.top_left_y:t.bottom_right_y,
                 t.top_left_x: t.bottom_right_x, :] = np.load(tscum_file_n)
 
-        cls.ts_tifs_mpi = glob.glob(os.path.join(cls.params[cf.OUT_DIR],
-                                                 'tsincr*.tif'))
+        cls.tsincr_tifs_mpi = glob.glob(os.path.join(cls.params[cf.OUT_DIR],
+                                                     'tsincr*.tif'))
+        cls.tscum_tifs_mpi = glob.glob(os.path.join(cls.params[cf.OUT_DIR],
+                                                    'tscum*.tif'))
 
         # remove all temp numpy files after test
         for f in glob.glob(os.path.join(TMPDIR, '*.npy')):
@@ -436,8 +439,10 @@ class MPITests(unittest.TestCase):
         self.tsincr = np.load(tsincr_file)
         self.tscum = np.load(tscum_file)
 
-        self.ts_tifs = glob.glob(os.path.join(self.params[cf.OUT_DIR],
-                                              'tsincr*.tif'))
+        self.tsincr_tifs = glob.glob(os.path.join(self.params[cf.OUT_DIR],
+                                                  'tsincr*.tif'))
+        self.tscum_tifs = glob.glob(os.path.join(self.params[cf.OUT_DIR],
+                                                 'tscum*.tif'))
 
 
     @classmethod
@@ -445,7 +450,6 @@ class MPITests(unittest.TestCase):
         shutil.rmtree(cls.tif_dir)
 
     def test_mpi_time_series(self):
-        from osgeo import gdal
         for looks, ref_method in product(range(1, 5), [1, 2]):
             print '=======Testing timeseries for looks:', looks, \
                 'ref_method: ', ref_method
@@ -464,7 +468,13 @@ class MPITests(unittest.TestCase):
                                                  self.tscum_mpi,
                                                  decimal=4)
 
-            for f, g in zip(self.ts_tifs, self.ts_tifs_mpi):
+            for f, g in zip(self.tsincr_tifs, self.tsincr_tifs_mpi):
+                fs = gdal.Open(f, gdal.GA_ReadOnly)
+                gs = gdal.Open(f, gdal.GA_ReadOnly)
+                np.testing.assert_array_almost_equal(fs.ReadAsArray(),
+                                                     gs.ReadAsArray())
+
+            for f, g in zip(self.tscum_tifs, self.tscum_tifs_mpi):
                 fs = gdal.Open(f, gdal.GA_ReadOnly)
                 gs = gdal.Open(f, gdal.GA_ReadOnly)
                 np.testing.assert_array_almost_equal(fs.ReadAsArray(),
