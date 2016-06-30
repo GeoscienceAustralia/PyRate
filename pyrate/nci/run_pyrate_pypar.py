@@ -74,7 +74,7 @@ def main(params, config_file=sys.argv[1]):
     parallel.barrier()
 
     # calculate process information
-    ifg_shape, process_tiles, process_indices = \
+    ifg_shape, process_tiles, process_indices, tiles = \
         get_process_tiles(dest_tifs, parallel, params)
 
     print 'Processor {} has {} tiles'.format(MPI_myID, len(process_tiles))
@@ -145,10 +145,55 @@ def main(params, config_file=sys.argv[1]):
 
     # time series mpi computation
     if params[cf.TIME_SERIES_CAL]:
-        time_series_mpi(MPI_myID, dest_tifs, parallel, params, vcmt,
-                        process_tiles, process_indices, ifg_shape)
+        time_series_mpi(dest_tifs, params, vcmt, process_tiles, process_indices)
+        parallel.barrier()
+        write_time_series_geotiff_mpi(dest_tifs, params, tiles, parallel, MPI_myID)
 
     parallel.finalize()
+
+
+def write_time_series_geotiff_mpi(dest_tifs, params, tiles, parallel, MPI_id):
+    ifgs = shared.prepare_ifgs_without_phase(dest_tifs, params)
+    epochlist, gt, md, wkt = run_pyrate.setup_metadata(ifgs, params)
+
+    # load the first tsincr file to determine the number of time series tifs
+    tsincr_file = os.path.join(TMPDIR, 'tsincr_0.npy')
+    tsincr = np.load(file=tsincr_file)
+
+    no_ts_tifs = tsincr.shape[2]
+    process_tifs = parallel.calc_indices(no_ts_tifs)
+
+    # depending on nvelpar, this will not fit in memory
+    # e.g. nvelpar=100, nrows=10000, ncols=10000, 32bit floats need 40GB memory
+    # 32 * 100 * 10000 * 10000 / 8 bytes = 4e10 bytes = 40 GB
+    # the double for loop is helps us over come the memory limit
+    print 'process {} will write {} ts tifs of total {}'.format(
+        MPI_id, len(process_tifs), no_ts_tifs)
+
+    for i in process_tifs:
+        tsincr_g = np.empty(shape=ifgs[0].shape, dtype=np.float32)
+        tscum_g = np.empty(shape=ifgs[0].shape, dtype=np.float32)
+        for n, t in enumerate(tiles):
+            tsincr_file = os.path.join(TMPDIR, 'tsincr_{}.npy'.format(n))
+            tscum_file = os.path.join(TMPDIR, 'tscum_{}.npy'.format(n))
+            tsincr = np.load(file=tsincr_file)
+            tscum = np.load(file=tscum_file)
+
+            md[ifc.MASTER_DATE] = epochlist.dates[i + 1]
+            md['PR_SEQ_POS'] = i  # sequence position
+            tsincr_g[t.top_left_y:t.bottom_right_y,
+                     t.top_left_x:t.bottom_right_x] = tsincr[:, :, i]
+            dest = os.path.join(params[cf.OUT_DIR],
+                'tsincr' + "_" + str(epochlist.dates[i + 1]) + ".tif")
+            md[ifc.PRTYPE] = 'tsincr'
+            shared.write_output_geotiff(md, gt, wkt, tsincr_g, dest, np.nan)
+
+            tscum_g[t.top_left_y:t.bottom_right_y,
+                t.top_left_x:t.bottom_right_x] = tscum[:, :, i]
+            dest = os.path.join(params[cf.OUT_DIR],
+                'tscuml' + "_" + str(epochlist.dates[i + 1]) + ".tif")
+            md[ifc.PRTYPE] = 'tscuml'
+            shared.write_output_geotiff(md, gt, wkt, tscum_g, dest, np.nan)
 
 
 def linrate_mpi(MPI_myID, ifg_paths, parallel, params, vcmt,
@@ -168,7 +213,6 @@ def linrate_mpi(MPI_myID, ifg_paths, parallel, params, vcmt,
         ifg_parts = [shared.IfgPart(p, t) for p in ifg_paths]
         mst_file_process_n = os.path.join(TMPDIR, 'mst_mat_{}.npy'.format(i))
         mst_grid_ifg_parts = np.load(mst_file_process_n)
-        # mst_grid_ifg_parts = mst_grid[:, r_start: r_end, c_start: c_end]
         res = linrate.linear_rate(ifg_parts, params, vcmt, mst_grid_ifg_parts)
 
         for r in res:
@@ -200,56 +244,19 @@ def linrate_mpi(MPI_myID, ifg_paths, parallel, params, vcmt,
         parallel.send(process_res, destination=MASTER_PROCESS, tag=MPI_myID)
 
 
-def time_series_mpi(MPI_myID, ifg_paths, parallel, params, vcmt,
-                    process_tiles, process_indices, ifg_shape):
-    write_msg('Calculating time series')
-
-    num_processors = parallel.size
-
-    ifgs = shared.prepare_ifgs_without_phase(ifg_paths, params)
-    epochlist = get_epochs(ifgs)
-    nepoch = len(epochlist.dates)  # epoch number
-    nvelpar = nepoch - 1  # velocity parameters number
-
-    # depending on nvelpar, this will not fit in memory
-    # e.g. nvelpar=100, nrows=10000, ncols=10000, 32bit floats need 40GB memory
-    # 32 * 100 * 10000 * 10000 / 8 bytes = 4e10 bytes = 40 GB
-    tsvel = np.zeros(shape=ifg_shape + (nvelpar, ), dtype=np.float32)
-    tsincr = np.zeros(shape=ifg_shape + (nvelpar, ), dtype=np.float32)
-    tscum = np.zeros(shape=ifg_shape + (nvelpar, ), dtype=np.float32)
+def time_series_mpi(ifg_paths, params, vcmt, process_tiles, process_indices):
+    write_msg('Calculating time series')  # this should be logged
 
     for i, t in zip(process_indices, process_tiles):
-        r_start, c_start = t.top_left
-        r_end, c_end = t.bottom_right
         ifg_parts = [shared.IfgPart(p, t) for p in ifg_paths]
         mst_file_process_n = os.path.join(TMPDIR, 'mst_mat_{}.npy'.format(i))
-        mst_grid_ifg_parts = np.load(mst_file_process_n)
-        # mst_grid_ifg_parts = mst_grid[:, r_start: r_end, c_start: c_end]
-        res = timeseries.time_series(ifg_parts, params,
-                                     vcmt, mst_grid_ifg_parts)
-        tsincr[r_start:r_end, c_start:c_end, :] = res[0]
-        tscum[r_start:r_end, c_start:c_end, :] = res[1]
-        tsvel[r_start:r_end, c_start:c_end, :] = res[2]
-
-    process_res = (tsincr, tscum, tsvel)
-
-    if MPI_myID == MASTER_PROCESS:
-
-        # putting it together
-        for i in range(1, num_processors):
-            process_res = parallel.receive(source=i, tag=-1, return_status=False)
-            tsincr += process_res[0]
-            tscum += process_res[1]
-            tsvel += process_res[2]
-        tsvel_file = os.path.join(params[cf.OUT_DIR], 'tsvel.npy')
-        tsincr_file = os.path.join(params[cf.OUT_DIR], 'tsincr.npy')
-        tscum_file = os.path.join(params[cf.OUT_DIR], 'tscum.npy')
-        np.save(file=tscum_file, arr=tscum)
+        mst_tile = np.load(mst_file_process_n)
+        res = timeseries.time_series(ifg_parts, params, vcmt, mst_tile)
+        tsincr, tscum, tsvel = res
+        tsincr_file = os.path.join(TMPDIR, 'tsincr_{}.npy'.format(i))
+        tscum_file = os.path.join(TMPDIR, 'tscum_{}.npy'.format(i))
         np.save(file=tsincr_file, arr=tsincr)
-        np.save(file=tsvel_file, arr=tsvel)
-    else:
-        parallel.send(process_res, destination=MASTER_PROCESS,
-                      tag=MPI_myID)
+        np.save(file=tscum_file, arr=tscum)
 
 
 def ref_phase_estimation_mpi(MPI_myID, ifg_paths, parallel, params,
@@ -428,7 +435,7 @@ def get_process_tiles(dest_tifs, parallel, params):
     no_tiles = len(tiles)
     process_indices = parallel.calc_indices(no_tiles)
     process_tiles = [itemgetter(p)(tiles) for p in process_indices]
-    return ifg.shape, process_tiles, process_indices
+    return ifg.shape, process_tiles, process_indices, tiles
 
 
 def clean_up_old_files():
@@ -439,6 +446,6 @@ def clean_up_old_files():
 
 
 if __name__ == '__main__':
-    # Read config file, dest_tifs are input files to run_pyrate
+    # read in the config file, and params for the simulation
     params = run_pyrate.get_ifg_paths()[2]
     main(params)

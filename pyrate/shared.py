@@ -426,11 +426,11 @@ class IfgPart(object):
             ifg = Ifg(ifg_or_path)
 
         self.tile = tile
-        self.r_start = self.tile.top_left_x
-        self.r_end = self.tile.bottom_right_x
+        self.r_start = self.tile.top_left_y
+        self.r_end = self.tile.bottom_right_y
         self.phase_data = None
-        self.c_start = self.tile.top_left_y
-        self.c_end = self.tile.bottom_right_y
+        self.c_start = self.tile.top_left_x
+        self.c_end = self.tile.bottom_right_x
         self.nan_fraction = None
         self.master = None
         self.slave = None
@@ -883,8 +883,8 @@ class Tile:
     def __init__(self, top_left, bottom_right):
         self.top_left = top_left
         self.bottom_right = bottom_right
-        self.top_left_x, self.top_left_y = top_left
-        self.bottom_right_x, self.bottom_right_y = bottom_right
+        self.top_left_y, self.top_left_x = top_left
+        self.bottom_right_y, self.bottom_right_x = bottom_right
 
     def __str__(self):
         return "Convenience Time class containing tile co-ordinates"
