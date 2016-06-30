@@ -191,9 +191,9 @@ def write_time_series_geotiff_mpi(dest_tifs, params, tiles, parallel, MPI_id):
             tscum_g[t.top_left_y:t.bottom_right_y,
                 t.top_left_x:t.bottom_right_x] = tscum[:, :, i]
             dest = os.path.join(params[cf.OUT_DIR],
-                'tscum' + "_" + str(epochlist.dates[i + 1]) + ".tif")
-            md[ifc.PRTYPE] = 'tscum'
-            shared.write_output_geotiff(md, gt, wkt, tsincr_g, dest, np.nan)
+                'tscuml' + "_" + str(epochlist.dates[i + 1]) + ".tif")
+            md[ifc.PRTYPE] = 'tscuml'
+            shared.write_output_geotiff(md, gt, wkt, tscum_g, dest, np.nan)
 
 
 def linrate_mpi(MPI_myID, ifg_paths, parallel, params, vcmt,

@@ -414,6 +414,9 @@ class MPITests(unittest.TestCase):
         cls.tscum_tifs_mpi = glob.glob(os.path.join(cls.params[cf.OUT_DIR],
                                                     'tscum*.tif'))
 
+        cls.tscum_tifs_mpi.sort()
+        cls.tsincr_tifs_mpi.sort()
+
         # remove all temp numpy files after test
         for f in glob.glob(os.path.join(TMPDIR, '*.npy')):
             os.remove(f)
@@ -443,7 +446,8 @@ class MPITests(unittest.TestCase):
                                                   'tsincr*.tif'))
         self.tscum_tifs = glob.glob(os.path.join(self.params[cf.OUT_DIR],
                                                  'tscum*.tif'))
-
+        self.tsincr_tifs.sort()
+        self.tscum_tifs.sort()
 
     @classmethod
     def tearDownClass(cls):
@@ -467,18 +471,23 @@ class MPITests(unittest.TestCase):
             np.testing.assert_array_almost_equal(self.tscum,
                                                  self.tscum_mpi,
                                                  decimal=4)
-
+            # test the tsincr tifs from serial vs mpi from tiles
             for f, g in zip(self.tsincr_tifs, self.tsincr_tifs_mpi):
                 fs = gdal.Open(f, gdal.GA_ReadOnly)
-                gs = gdal.Open(f, gdal.GA_ReadOnly)
+                gs = gdal.Open(g, gdal.GA_ReadOnly)
+                self.assertDictEqual(fs.GetMetadata(), gs.GetMetadata())
                 np.testing.assert_array_almost_equal(fs.ReadAsArray(),
-                                                     gs.ReadAsArray())
+                                                     gs.ReadAsArray(),
+                                                     decimal=4)
 
+            # test the tscum from serial vs mpi from tiles
             for f, g in zip(self.tscum_tifs, self.tscum_tifs_mpi):
                 fs = gdal.Open(f, gdal.GA_ReadOnly)
-                gs = gdal.Open(f, gdal.GA_ReadOnly)
+                gs = gdal.Open(g, gdal.GA_ReadOnly)
+                self.assertDictEqual(fs.GetMetadata(), gs.GetMetadata())
                 np.testing.assert_array_almost_equal(fs.ReadAsArray(),
-                                                     gs.ReadAsArray())
+                                                     gs.ReadAsArray(),
+                                                     decimal=4)
             shutil.rmtree(self.temp_dir)
 
         log_file = glob.glob(os.path.join(self.tif_dir, '*.log'))[0]
