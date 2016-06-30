@@ -178,17 +178,17 @@ def compute_time_series(ifgs, mst_grid, params, vcmt):
     tsincr, tscum, tsvel = calculate_time_series(
         ifgs, params, vcmt=vcmt, mst=mst_grid)
 
-    tsvel_file = os.path.join(params[cf.OUT_DIR], 'tsvel.npy')
+    # tsvel_file = os.path.join(params[cf.OUT_DIR], 'tsvel.npy')
     tsincr_file = os.path.join(params[cf.OUT_DIR], 'tsincr.npy')
     tscum_file = os.path.join(params[cf.OUT_DIR], 'tscum.npy')
     np.save(file=tsincr_file, arr=tsincr)
     np.save(file=tscum_file, arr=tscum)
-    np.save(file=tsvel_file, arr=tsvel)
+    # np.save(file=tsvel_file, arr=tsvel)
 
     # TODO: write tests for these functions
     write_timeseries_geotiff(ifgs, params, tsincr, pr_type='tsincr')
     write_timeseries_geotiff(ifgs, params, tscum, pr_type='tscuml')
-    write_timeseries_geotiff(ifgs, params, tsvel, pr_type='tsvel')
+    # write_timeseries_geotiff(ifgs, params, tsvel, pr_type='tsvel')
     return tsincr, tscum, tsvel
 
 

@@ -435,10 +435,10 @@ class MPITests(unittest.TestCase):
 
         run_pyrate.process_ifgs(dest_paths, self.params)
 
-        tsvel_file = os.path.join(self.params[cf.OUT_DIR], 'tsvel.npy')
+        # tsvel_file = os.path.join(self.params[cf.OUT_DIR], 'tsvel.npy')
         tsincr_file = os.path.join(self.params[cf.OUT_DIR], 'tsincr.npy')
         tscum_file = os.path.join(self.params[cf.OUT_DIR], 'tscum.npy')
-        self.tsvel = np.load(tsvel_file)
+        # self.tsvel = np.load(tsvel_file)
         self.tsincr = np.load(tsincr_file)
         self.tscum = np.load(tscum_file)
 
