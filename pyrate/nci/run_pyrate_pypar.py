@@ -172,11 +172,12 @@ def write_time_series_geotiff_mpi(dest_tifs, params, tiles, parallel, MPI_id):
 
     for i in process_tifs:
         tsincr_g = np.empty(shape=ifgs[0].shape, dtype=np.float32)
+        tscum_g = np.empty(shape=ifgs[0].shape, dtype=np.float32)
         for n, t in enumerate(tiles):
             tsincr_file = os.path.join(TMPDIR, 'tsincr_{}.npy'.format(n))
-            # tscum_file = os.path.join(TMPDIR, 'tscum_{}.npy'.format(n))
+            tscum_file = os.path.join(TMPDIR, 'tscum_{}.npy'.format(n))
             tsincr = np.load(file=tsincr_file)
-            # tscum = np.load(file=tscum_file)
+            tscum = np.load(file=tscum_file)
 
             md[ifc.MASTER_DATE] = epochlist.dates[i + 1]
             md['PR_SEQ_POS'] = i  # sequence position
@@ -185,6 +186,13 @@ def write_time_series_geotiff_mpi(dest_tifs, params, tiles, parallel, MPI_id):
             dest = os.path.join(params[cf.OUT_DIR],
                 'tsincr' + "_" + str(epochlist.dates[i + 1]) + ".tif")
             md[ifc.PRTYPE] = 'tsincr'
+            shared.write_output_geotiff(md, gt, wkt, tsincr_g, dest, np.nan)
+
+            tscum_g[t.top_left_y:t.bottom_right_y,
+                t.top_left_x:t.bottom_right_x] = tscum[:, :, i]
+            dest = os.path.join(params[cf.OUT_DIR],
+                'tscum' + "_" + str(epochlist.dates[i + 1]) + ".tif")
+            md[ifc.PRTYPE] = 'tscum'
             shared.write_output_geotiff(md, gt, wkt, tsincr_g, dest, np.nan)
 
 
