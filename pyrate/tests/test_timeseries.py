@@ -33,7 +33,7 @@ from pyrate import vcm
 from pyrate.tests import common
 from pyrate import vcm as vcm_module
 from pyrate import shared
-
+from pyrate.shared import Ifg
 
 def default_params():
     return {TIME_SERIES_METHOD: 1,
@@ -408,14 +408,17 @@ class MPITests(unittest.TestCase):
             cls.tscum_mpi[t.top_left_y:t.bottom_right_y,
                 t.top_left_x: t.bottom_right_x, :] = np.load(tscum_file_n)
 
+        cls.ts_tifs_mpi = glob.glob(os.path.join(cls.params[cf.OUT_DIR],
+                                                 'tsincr*.tif'))
+
         # remove all temp numpy files after test
         for f in glob.glob(os.path.join(TMPDIR, '*.npy')):
             os.remove(f)
 
     def calc_non_mpi_time_series(self):
-        temp_dir = tempfile.mkdtemp()
+        self.temp_dir = tempfile.mkdtemp()
         # copy sydney_tif files in temp_dir
-        self.params[cf.OUT_DIR] = temp_dir
+        self.params[cf.OUT_DIR] = self.temp_dir
         xlks, ylks, crop = run_pyrate.transform_params(self.params)
 
         # dest_paths are tifs that have been geotif converted and multilooked
@@ -433,13 +436,16 @@ class MPITests(unittest.TestCase):
         self.tsincr = np.load(tsincr_file)
         self.tscum = np.load(tscum_file)
 
-        shutil.rmtree(temp_dir)
+        self.ts_tifs = glob.glob(os.path.join(self.params[cf.OUT_DIR],
+                                              'tsincr*.tif'))
+
 
     @classmethod
     def tearDownClass(cls):
         shutil.rmtree(cls.tif_dir)
 
     def test_mpi_time_series(self):
+        from osgeo import gdal
         for looks, ref_method in product(range(1, 5), [1, 2]):
             print '=======Testing timeseries for looks:', looks, \
                 'ref_method: ', ref_method
@@ -457,6 +463,13 @@ class MPITests(unittest.TestCase):
             np.testing.assert_array_almost_equal(self.tscum,
                                                  self.tscum_mpi,
                                                  decimal=4)
+
+            for f, g in zip(self.ts_tifs, self.ts_tifs_mpi):
+                fs = gdal.Open(f, gdal.GA_ReadOnly)
+                gs = gdal.Open(f, gdal.GA_ReadOnly)
+                np.testing.assert_array_almost_equal(fs.ReadAsArray(),
+                                                     gs.ReadAsArray())
+            shutil.rmtree(self.temp_dir)
 
         log_file = glob.glob(os.path.join(self.tif_dir, '*.log'))[0]
         self.assertTrue(os.path.exists(log_file))
