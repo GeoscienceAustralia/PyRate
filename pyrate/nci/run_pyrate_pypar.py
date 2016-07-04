@@ -39,17 +39,17 @@ def main(params, config_file=sys.argv[1]):
 
     # Setting up parallelisation
     parallel = Parallel(True)
-    MPI_myID = parallel.rank
+    rank = parallel.rank
     num_processors = parallel.size
     ### Master Process ###
-    if MPI_myID == MASTER_PROCESS:
+    if rank == MASTER_PROCESS:
         print "Master process found {} worker processors".format(num_processors)
 
     output_dir = params[cf.OUT_DIR]
     mpi_log_filename = os.path.join(output_dir, "mpi_run_pyrate.log")
 
     ### Master Process ###
-    if MPI_myID == MASTER_PROCESS:
+    if rank == MASTER_PROCESS:
         output_log_file = open(mpi_log_filename, "w")
         configfile = open(config_file)
         output_log_file.write("Starting Simulation at: "
@@ -77,14 +77,14 @@ def main(params, config_file=sys.argv[1]):
     ifg_shape, process_tiles, process_indices, tiles = \
         get_process_tiles(dest_tifs, parallel, params)
 
-    print 'Processor {} has {} tiles'.format(MPI_myID, len(process_tiles))
+    print 'Processor {} has {} tiles'.format(rank, len(process_tiles))
     # Calc mst using MPI
-    if MPI_myID == MASTER_PROCESS:
+    if rank == MASTER_PROCESS:
         mpi_mst_calc(dest_tifs, process_tiles, process_indices)
     else:
         mpi_mst_calc(dest_tifs, process_tiles, process_indices)
 
-    if MPI_myID == MASTER_PROCESS:
+    if rank == MASTER_PROCESS:
         output_log_file = open(mpi_log_filename, "a")
         output_log_file.write("\n\n Mst caclulation finished\n")
         output_log_file.close()
@@ -93,12 +93,12 @@ def main(params, config_file=sys.argv[1]):
 
     # Calc ref_pixel using MPI
     ref_pixel_file = os.path.join(params[cf.OUT_DIR], 'ref_pixel.npy')
-    if MPI_myID == MASTER_PROCESS:
-        refpx, refpy = ref_pixel_calc_mpi(MPI_myID, dest_tifs,
+    if rank == MASTER_PROCESS:
+        refpx, refpy = ref_pixel_calc_mpi(rank, dest_tifs,
                                           num_processors, parallel, params)
         np.save(file=ref_pixel_file, arr=[refpx, refpy])
     else:
-        ref_pixel_calc_mpi(MPI_myID, dest_tifs,
+        ref_pixel_calc_mpi(rank, dest_tifs,
                            num_processors, parallel, params)
 
     parallel.barrier()
@@ -121,33 +121,33 @@ def main(params, config_file=sys.argv[1]):
 
     parallel.barrier()
     # required as all processes need orbital corrected ifgs
-    orb_fit_calc_mpi(MPI_myID, dest_tifs,
+    orb_fit_calc_mpi(rank, dest_tifs,
                      num_processors, parallel, params)
     parallel.barrier()
 
     # estimate and remove reference phase
-    ref_phase_estimation_mpi(MPI_myID, dest_tifs, parallel,
+    ref_phase_estimation_mpi(rank, dest_tifs, parallel,
                              params, refpx, refpy)
     parallel.barrier()
 
     # all processes need access to maxvar, and vcmt
-    maxvar, vcmt = maxvar_vcm_mpi(MPI_myID, dest_tifs, parallel, params)
+    maxvar, vcmt = maxvar_vcm_mpi(rank, dest_tifs, parallel, params)
 
     vcmt_file = os.path.join(params[cf.OUT_DIR], 'vcmt.npy')
-    if MPI_myID == MASTER_PROCESS:
+    if rank == MASTER_PROCESS:
         np.save(file=vcmt_file, arr=vcmt)
 
     parallel.barrier()
 
     # linrate mpi computation
-    linrate_mpi(MPI_myID, dest_tifs, parallel, params, vcmt,
+    linrate_mpi(rank, dest_tifs, parallel, params, vcmt,
                 process_tiles, process_indices, ifg_shape)
 
     # time series mpi computation
     if params[cf.TIME_SERIES_CAL]:
         time_series_mpi(dest_tifs, params, vcmt, process_tiles, process_indices)
         parallel.barrier()
-        write_time_series_geotiff_mpi(dest_tifs, params, tiles, parallel, MPI_myID)
+        write_time_series_geotiff_mpi(dest_tifs, params, tiles, parallel, rank)
 
     parallel.finalize()
 
@@ -211,9 +211,9 @@ def linrate_mpi(MPI_myID, ifg_paths, parallel, params, vcmt,
         r_start, c_start = t.top_left
         r_end, c_end = t.bottom_right
         ifg_parts = [shared.IfgPart(p, t) for p in ifg_paths]
-        mst_file_process_n = os.path.join(TMPDIR, 'mst_mat_{}.npy'.format(i))
-        mst_grid_ifg_parts = np.load(mst_file_process_n)
-        res = linrate.linear_rate(ifg_parts, params, vcmt, mst_grid_ifg_parts)
+        mst_n = os.path.join(TMPDIR, 'mst_mat_{}.npy'.format(i))
+        mst_grid_n = np.load(mst_n)
+        res = linrate.linear_rate(ifg_parts, params, vcmt, mst_grid_n)
 
         for r in res:
             if r is None:
