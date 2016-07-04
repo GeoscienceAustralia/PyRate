@@ -54,7 +54,7 @@ def main(params, config_file=sys.argv[1]):
         configfile = open(config_file)
         output_log_file.write("Starting Simulation at: "
                               + datetime.datetime.now().strftime(
-            "%Y-%m-%d %H:%M:%S"))
+                                                "%Y-%m-%d %H:%M:%S"))
         output_log_file.write("Master process found " +
                               str(num_processors) +
                               " worker processors.\n")
@@ -240,6 +240,10 @@ def linrate_mpi(MPI_myID, ifg_paths, parallel, params, vcmt,
         np.save(file=rate_file, arr=rate)
         np.save(file=error_file, arr=error)
         np.save(file=samples_file, arr=samples)
+
+        # write linrate tiffs
+        ifgs = shared.prepare_ifgs_without_phase(ifg_paths, params)
+        run_pyrate.write_linrate_tifs(ifgs, params, (rate, error, samples))
     else:
         parallel.send(process_res, destination=MASTER_PROCESS, tag=MPI_myID)
 

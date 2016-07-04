@@ -294,8 +294,17 @@ class MPITests(unittest.TestCase):
                                                  self.samples_mpi,
                                                  decimal=4)
 
+        # test logfile was created
         log_file = glob.glob(os.path.join(self.tif_dir, '*.log'))[0]
         self.assertTrue(os.path.exists(log_file))
+
+        # test linerror.tif and linrate.tif was created
+        rate_file = glob.glob(os.path.join(self.tif_dir, 'linrate.tif'))[0]
+        self.assertTrue(os.path.exists(rate_file))
+
+        error_file = glob.glob(os.path.join(self.tif_dir, 'linerror.tif'))[0]
+        self.assertTrue(os.path.exists(error_file))
+
 
 
 if __name__ == "__main__":
