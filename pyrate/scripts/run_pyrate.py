@@ -326,21 +326,24 @@ def calculate_linear_rate(ifgs, params, vcmt, mst=None):
 
     rate, error, samples = res
 
-    epochlist, gt, md, wkt = setup_metadata(ifgs, params)
+    write_linrate_tifs(ifgs, params, res)
 
+    logging.debug('Linear rate calculated')
+    return rate, error, samples
+
+
+def write_linrate_tifs(ifgs, params, res):
+    rate, error, samples = res
+    epochlist, gt, md, wkt = setup_metadata(ifgs, params)
     # TODO: write tests for these functions
     dest = os.path.join(PYRATEPATH, params[cf.OUT_DIR], "linrate.tif")
     md[ifc.MASTER_DATE] = epochlist.dates
     md[ifc.PRTYPE] = 'linrate'
     write_output_geotiff(md, gt, wkt, error, dest, np.nan)
-
     dest = os.path.join(PYRATEPATH, params[cf.OUT_DIR], "linerror.tif")
     md[ifc.PRTYPE] = 'linerror'
     write_output_geotiff(md, gt, wkt, error, dest, np.nan)
     write_linrate_numpy_files(error, params, rate, samples)
-
-    logging.debug('Linear rate calculated')
-    return rate, error, samples
 
 
 def calculate_time_series(ifgs, params, vcmt, mst):
