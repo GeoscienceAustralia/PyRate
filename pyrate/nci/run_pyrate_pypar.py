@@ -21,6 +21,8 @@ from pyrate.nci.parallel import Parallel
 from pyrate.scripts import run_pyrate
 from pyrate.scripts.run_pyrate import write_msg
 from pyrate.shared import get_tmpdir
+from collections import OrderedDict, namedtuple
+import cPickle as cp
 
 TMPDIR = get_tmpdir()
 
@@ -28,6 +30,9 @@ __author__ = 'sudipta'
 
 # Constants
 MASTER_PROCESS = 0
+data_path = 'DATAPATH'
+
+PrereadIfg = namedtuple('PrereadIfg', 'path nan_fraction master slave time_span')
 
 
 def main(params, config_file=sys.argv[1]):
@@ -42,8 +47,29 @@ def main(params, config_file=sys.argv[1]):
     rank = parallel.rank
     num_processors = parallel.size
     ### Master Process ###
+
     if rank == MASTER_PROCESS:
         print "Master process found {} worker processors".format(num_processors)
+        preread_ifgs = OrderedDict()
+        for i, d in enumerate(dest_tifs):
+            ifg = shared.Ifg(d)
+            ifg.open()
+            ifg.nodata_value = 0
+            np.save(file=os.path.join(params[cf.OUT_DIR],
+                                      'phase_data_{}'.format(i)),
+                    arr=ifg.phase_data)
+            nan_fraction = ifg.nan_fraction
+            master = ifg.master
+            slave = ifg.slave
+            time_span = ifg.time_span
+
+            preread_ifgs[i] = {PrereadIfg(path=d,
+                                          nan_fraction=nan_fraction,
+                                          master=master,
+                                          slave=slave,
+                                          time_span=time_span)}
+        cp.dump(preread_ifgs, open('preread_ifgs.pk', 'w'))
+
 
     output_dir = params[cf.OUT_DIR]
     mpi_log_filename = os.path.join(output_dir, "mpi_run_pyrate.log")
@@ -143,6 +169,7 @@ def main(params, config_file=sys.argv[1]):
     linrate_mpi(rank, dest_tifs, parallel, params, vcmt,
                 process_tiles, process_indices, ifg_shape)
 
+    parallel.barrier()
     # time series mpi computation
     if params[cf.TIME_SERIES_CAL]:
         time_series_mpi(dest_tifs, params, vcmt, process_tiles, process_indices)
@@ -199,17 +226,7 @@ def write_time_series_geotiff_mpi(dest_tifs, params, tiles, parallel, MPI_id):
 def linrate_mpi(MPI_myID, ifg_paths, parallel, params, vcmt,
                 process_tiles, process_indices, ifg_shape):
     write_msg('Calculating linear rate')
-    num_processors = parallel.size
-    # initialize empty arrays
-    rows, cols = ifg_shape
-    rate = np.zeros([rows, cols], dtype=np.float32)
-    # may not need error and samples? save memory?
-    error = np.zeros([rows, cols], dtype=np.float32)
-    samples = np.zeros([rows, cols], dtype=np.float32)
-
     for i, t in zip(process_indices, process_tiles):
-        r_start, c_start = t.top_left
-        r_end, c_end = t.bottom_right
         ifg_parts = [shared.IfgPart(p, t) for p in ifg_paths]
         mst_n = os.path.join(TMPDIR, 'mst_mat_{}.npy'.format(i))
         mst_grid_n = np.load(mst_n)
@@ -218,34 +235,10 @@ def linrate_mpi(MPI_myID, ifg_paths, parallel, params, vcmt,
         for r in res:
             if r is None:
                 raise ValueError('TODO: bad value')
-        rate[r_start:r_end, c_start:c_end] = res[0]
-        error[r_start:r_end, c_start:c_end] = res[1]
-        samples[r_start:r_end, c_start:c_end] = res[2]
 
-    process_res = (rate, error, samples)
+        res_file = os.path.join(params[cf.OUT_DIR], 'res_{}.npy'.format(i))
 
-    if MPI_myID == MASTER_PROCESS:
-        for i in range(1, num_processors):
-            process_res = parallel.receive(source=i, tag=-1,
-                                           return_status=False)
-            rate += process_res[0]
-            error += process_res[1]
-            samples += process_res[2]
-
-        # declare file names
-        rate_file = os.path.join(params[cf.OUT_DIR], 'rate.npy')
-        error_file = os.path.join(params[cf.OUT_DIR], 'error.npy')
-        samples_file = os.path.join(params[cf.OUT_DIR], 'samples.npy')
-
-        np.save(file=rate_file, arr=rate)
-        np.save(file=error_file, arr=error)
-        np.save(file=samples_file, arr=samples)
-
-        # write linrate tiffs
-        ifgs = shared.prepare_ifgs_without_phase(ifg_paths, params)
-        run_pyrate.write_linrate_tifs(ifgs, params, (rate, error, samples))
-    else:
-        parallel.send(process_res, destination=MASTER_PROCESS, tag=MPI_myID)
+        np.save(file=res_file, arr=res)
 
 
 def time_series_mpi(ifg_paths, params, vcmt, process_tiles, process_indices):
