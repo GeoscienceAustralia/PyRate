@@ -176,12 +176,12 @@ def main(params, config_file=sys.argv[1]):
 
     # linrate mpi computation
     linrate_mpi(rank, dest_tifs, parallel, params, vcmt,
-                process_tiles, process_indices, ifg_shape)
+                process_tiles, process_indices, ifg_shape, preread_ifgs)
 
     parallel.barrier()
     # time series mpi computation
     if params[cf.TIME_SERIES_CAL]:
-        time_series_mpi(dest_tifs, params, vcmt, process_tiles, process_indices)
+        time_series_mpi(dest_tifs, params, vcmt, process_tiles, process_indices, preread_ifgs)
         parallel.barrier()
         write_time_series_geotiff_mpi(dest_tifs, params, tiles, parallel, rank)
 
@@ -233,10 +233,10 @@ def write_time_series_geotiff_mpi(dest_tifs, params, tiles, parallel, MPI_id):
 
 
 def linrate_mpi(MPI_myID, ifg_paths, parallel, params, vcmt,
-                process_tiles, process_indices, ifg_shape):
+                process_tiles, process_indices, ifg_shape, preread_ifgs):
     write_msg('Calculating linear rate')
     for i, t in zip(process_indices, process_tiles):
-        ifg_parts = [shared.IfgPart(p, t) for p in ifg_paths]
+        ifg_parts = [shared.IfgPart(p, t, preread_ifgs) for p in ifg_paths]
         mst_n = os.path.join(TMPDIR, 'mst_mat_{}.npy'.format(i))
         mst_grid_n = np.load(mst_n)
         res = linrate.linear_rate(ifg_parts, params, vcmt, mst_grid_n)
@@ -250,11 +250,11 @@ def linrate_mpi(MPI_myID, ifg_paths, parallel, params, vcmt,
         np.save(file=res_file, arr=res)
 
 
-def time_series_mpi(ifg_paths, params, vcmt, process_tiles, process_indices):
+def time_series_mpi(ifg_paths, params, vcmt, process_tiles, process_indices, preread_ifgs):
     write_msg('Calculating time series')  # this should be logged
 
     for i, t in zip(process_indices, process_tiles):
-        ifg_parts = [shared.IfgPart(p, t) for p in ifg_paths]
+        ifg_parts = [shared.IfgPart(p, t, preread_ifgs) for p in ifg_paths]
         mst_file_process_n = os.path.join(TMPDIR, 'mst_mat_{}.npy'.format(i))
         mst_tile = np.load(mst_file_process_n)
         res = timeseries.time_series(ifg_parts, params, vcmt, mst_tile)
