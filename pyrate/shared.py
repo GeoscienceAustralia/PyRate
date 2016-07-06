@@ -432,10 +432,9 @@ class IfgPart(object):
         self.master = ifg.master
         self.slave = ifg.slave
         self.time_span = ifg.time_span
-        phase_file = 'phase_data_{}.npy'.format(os.path.basename(ifg_or_path).split('.')[0])
-        phase_data = np.load(os.path.join(outdir, phase_file))
-        self.phase_data = phase_data[self.r_start:self.r_end,
-                          self.c_start:self.c_end]
+        phase_file = 'phase_data_{}_{}.npy'.format(
+            os.path.basename(ifg_or_path).split('.')[0], tile.index)
+        self.phase_data = np.load(os.path.join(outdir, phase_file))
 
     @property
     def nrows(self):
@@ -845,12 +844,13 @@ def create_tiles(shape, n_ifgs=17, nrows=2, ncols=2):
     r_step = min(r_step, r_step_500)
     nrows = no_y // r_step
     row_arr = np.array_split(range(no_y), nrows)
-    return [Tile((r[0], c[0]), (r[-1]+1, c[-1]+1))
-                for r, c in product(row_arr, col_arr)]
+    return [Tile(i, (r[0], c[0]), (r[-1]+1, c[-1]+1))
+                for i, (r, c) in enumerate(product(row_arr, col_arr))]
 
 
 class Tile:
-    def __init__(self, top_left, bottom_right):
+    def __init__(self, index, top_left, bottom_right):
+        self.index = index
         self.top_left = top_left
         self.bottom_right = bottom_right
         self.top_left_y, self.top_left_x = top_left
