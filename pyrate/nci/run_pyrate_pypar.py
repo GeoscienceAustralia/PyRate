@@ -46,7 +46,11 @@ def main(params, config_file=sys.argv[1]):
     parallel = Parallel(True)
     rank = parallel.rank
     num_processors = parallel.size
-    ### Master Process ###
+
+    # calculate process information
+    ifg_shape, process_tiles, process_indices, tiles = \
+        get_process_tiles(dest_tifs, parallel, params)
+
     output_dir = params[cf.OUT_DIR]
     if rank == MASTER_PROCESS:
         print "Master process found {} worker processors".format(num_processors)
@@ -55,10 +59,15 @@ def main(params, config_file=sys.argv[1]):
             ifg = shared.Ifg(d)
             ifg.open()
             ifg.nodata_value = 0
-            phase_file = 'phase_data_{}.npy'.format(
-                os.path.basename(d).split('.')[0])
-            np.save(file=os.path.join(output_dir, phase_file),
-                    arr=ifg.phase_data)
+            phase_data = ifg.phase_data
+            for t in tiles:
+                p_data = phase_data[t.top_left_y:t.bottom_right_y,
+                          t.top_left_x:t.bottom_right_x]
+                phase_file = 'phase_data_{}_{}.npy'.format(
+                    os.path.basename(d).split('.')[0], t.index)
+
+                np.save(file=os.path.join(output_dir, phase_file),
+                        arr=p_data)
             nan_fraction = ifg.nan_fraction
             master = ifg.master
             slave = ifg.slave
@@ -102,9 +111,6 @@ def main(params, config_file=sys.argv[1]):
 
     parallel.barrier()
 
-    # calculate process information
-    ifg_shape, process_tiles, process_indices, tiles = \
-        get_process_tiles(dest_tifs, parallel, params)
 
     print 'Processor {} has {} tiles'.format(rank, len(process_tiles))
     # Calc mst using MPI
