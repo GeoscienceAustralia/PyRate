@@ -54,19 +54,18 @@ def ref_pixel_setup(ifgs_or_paths, params):
     refnx, refny, chipsize, min_frac = params[cf.REFNX], \
                                        params[cf.REFNY], \
                                        params[cf.REF_CHIP_SIZE], \
-                                       params[cf.REF_MIN_FRAC],
+                                       params[cf.REF_MIN_FRAC]
     if len(ifgs_or_paths) < 1:
         msg = 'Reference pixel search requires 2+ interferograms'
         raise RefPixelError(msg)
 
     if isinstance(ifgs_or_paths[0], basestring):
-        ifg = Ifg(ifgs_or_paths[0])
-        ifg.open(readonly=True)
+        head = Ifg(ifgs_or_paths[0])
+        head.open(readonly=True)
     else:
-        ifg = ifgs_or_paths[0]
+        head = ifgs_or_paths[0]
 
     # sanity check inputs
-    head = ifg
     validate_chipsize(chipsize, head)
     validate_minimum_fraction(min_frac)
     validate_search_win(refnx, refny, chipsize, head)
@@ -76,7 +75,7 @@ def ref_pixel_setup(ifgs_or_paths, params):
     thresh = min_frac * chipsize * chipsize
     # do window searches across dataset, central pixel of stack with smallest
     # mean is the reference pixel
-    rows, cols = ifg.shape
+    rows, cols = head.shape
     ysteps = step(rows, refny, half_patch_size)
     xsteps = step(cols, refnx, half_patch_size)
     return half_patch_size, thresh, list(product(ysteps, xsteps))
