@@ -119,11 +119,6 @@ def main(params, config_file=sys.argv[1]):
     else:
         mpi_mst_calc(dest_tifs, process_tiles, process_indices, preread_ifgs)
 
-    if rank == MASTER_PROCESS:
-        output_log_file = open(mpi_log_filename, "a")
-        output_log_file.write("\n\n Mst caclulation finished\n")
-        output_log_file.close()
-
     parallel.barrier()
 
     # Calc ref_pixel using MPI
@@ -244,13 +239,20 @@ def linrate_mpi(MPI_myID, ifg_paths, parallel, params, vcmt,
         for r in res:
             if r is None:
                 raise ValueError('TODO: bad value')
+        rate, error, samples = res
+        # declare file names
+        rate_file = os.path.join(params[cf.OUT_DIR], 'rate_{}.npy'.format(i))
+        error_file = os.path.join(params[cf.OUT_DIR], 'error_{}.npy'.format(i))
+        samples_file = os.path.join(params[cf.OUT_DIR],
+                                    'samples_{}.npy'.format(i))
 
-        res_file = os.path.join(params[cf.OUT_DIR], 'res_{}.npy'.format(i))
+        np.save(file=rate_file, arr=rate)
+        np.save(file=error_file, arr=rate)
+        np.save(file=samples_file, arr=samples)
 
-        np.save(file=res_file, arr=res)
 
-
-def time_series_mpi(ifg_paths, params, vcmt, process_tiles, process_indices, preread_ifgs):
+def time_series_mpi(ifg_paths, params, vcmt, process_tiles, process_indices,
+                    preread_ifgs):
     write_msg('Calculating time series')  # this should be logged
 
     for i, t in zip(process_indices, process_tiles):
