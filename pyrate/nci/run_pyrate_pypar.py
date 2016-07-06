@@ -47,31 +47,34 @@ def main(params, config_file=sys.argv[1]):
     rank = parallel.rank
     num_processors = parallel.size
     ### Master Process ###
-
+    output_dir = params[cf.OUT_DIR]
     if rank == MASTER_PROCESS:
         print "Master process found {} worker processors".format(num_processors)
-        preread_ifgs = OrderedDict()
+        preread_ifgs = {}
         for i, d in enumerate(dest_tifs):
             ifg = shared.Ifg(d)
             ifg.open()
             ifg.nodata_value = 0
-            np.save(file=os.path.join(params[cf.OUT_DIR],
-                                      'phase_data_{}'.format(i)),
+            phase_file = 'phase_data_{}.npy'.format(
+                os.path.basename(d).split('.')[0])
+            np.save(file=os.path.join(output_dir, phase_file),
                     arr=ifg.phase_data)
             nan_fraction = ifg.nan_fraction
             master = ifg.master
             slave = ifg.slave
             time_span = ifg.time_span
 
-            preread_ifgs[i] = {PrereadIfg(path=d,
+            preread_ifgs[d] = {PrereadIfg(path=d,
                                           nan_fraction=nan_fraction,
                                           master=master,
                                           slave=slave,
                                           time_span=time_span)}
-        cp.dump(preread_ifgs, open('preread_ifgs.pk', 'w'))
+        cp.dump(preread_ifgs,
+                open(os.path.join(output_dir, 'preread_ifgs.pk'), 'w'))
 
+    parallel.barrier()
+    preread_ifgs = os.path.join(output_dir, 'preread_ifgs.pk')
 
-    output_dir = params[cf.OUT_DIR]
     mpi_log_filename = os.path.join(output_dir, "mpi_run_pyrate.log")
 
     ### Master Process ###
@@ -106,9 +109,9 @@ def main(params, config_file=sys.argv[1]):
     print 'Processor {} has {} tiles'.format(rank, len(process_tiles))
     # Calc mst using MPI
     if rank == MASTER_PROCESS:
-        mpi_mst_calc(dest_tifs, process_tiles, process_indices)
+        mpi_mst_calc(dest_tifs, process_tiles, process_indices, preread_ifgs)
     else:
-        mpi_mst_calc(dest_tifs, process_tiles, process_indices)
+        mpi_mst_calc(dest_tifs, process_tiles, process_indices, preread_ifgs)
 
     if rank == MASTER_PROCESS:
         output_log_file = open(mpi_log_filename, "a")
@@ -397,7 +400,7 @@ def ref_pixel_calc_mpi(MPI_myID, ifg_paths, num_processors, parallel, params):
         print 'sent ref pixel to master'
 
 
-def mpi_mst_calc(dest_tifs, process_tiles, process_indices):
+def mpi_mst_calc(dest_tifs, process_tiles, process_indices, preread_ifgs):
     """
     MPI function that control each process during MPI run
     :param MPI_myID:
@@ -414,15 +417,15 @@ def mpi_mst_calc(dest_tifs, process_tiles, process_indices):
     write_msg('Calculating minimum spanning tree matrix '
                          'using NetworkX method')
 
-    def save_mst_tile(tile, i):
-        mst_tile = mst.mst_multiprocessing(tile, dest_tifs)
+    def save_mst_tile(tile, i, preread_ifgs):
+        mst_tile = mst.mst_multiprocessing(tile, dest_tifs, preread_ifgs)
         # locally save the mst_mat
         mst_file_process_n = os.path.join(
             TMPDIR, 'mst_mat_{}.npy'.format(i))
         np.save(file=mst_file_process_n, arr=mst_tile)
 
     for t, p_ind in zip(process_tiles, process_indices):
-        save_mst_tile(t, p_ind)
+        save_mst_tile(t, p_ind, preread_ifgs)
 
 
 def get_process_tiles(dest_tifs, parallel, params):

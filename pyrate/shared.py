@@ -7,7 +7,7 @@ Created on 12/09/2012
 """
 import errno
 from itertools import product
-
+import cPickle as cp
 import os, struct
 from array import array
 import math
@@ -410,7 +410,7 @@ class IfgPart(object):
     slice of Ifg data object
     """
 
-    def __init__(self, ifg_or_path, tile):
+    def __init__(self, ifg_or_path, tile, ifg_dict=None):
 
         """
         :param ifg: original ifg
@@ -418,24 +418,41 @@ class IfgPart(object):
         :param r_end: ending (row + 1) of the original ifg
         :return:
         """
-        # check if Ifg was sent.
-        if isinstance(ifg_or_path, Ifg):
-            ifg = ifg_or_path
-        else:
-            self.data_path = ifg_or_path  # should be used with MPI
-            ifg = Ifg(ifg_or_path)
-
         self.tile = tile
         self.r_start = self.tile.top_left_y
         self.r_end = self.tile.bottom_right_y
-        self.phase_data = None
         self.c_start = self.tile.top_left_x
         self.c_end = self.tile.bottom_right_x
-        self.nan_fraction = None
-        self.master = None
-        self.slave = None
-        self.time_span = None
-        read = False
+
+        if ifg_dict:
+            outdir = os.path.dirname(ifg_dict)
+            preread_ifgs = cp.load(
+                open(os.path.join(outdir, 'preread_ifgs.pk'), 'r'))
+            ifg = preread_ifgs[ifg_or_path].pop()
+            self.nan_fraction = ifg.nan_fraction
+            self.master = ifg.master
+            self.slave = ifg.slave
+            self.time_span = ifg.time_span
+            phase_file = 'phase_data_{}.npy'.format(os.path.basename(ifg_or_path).split('.')[0])
+            phase_data = np.load(os.path.join(outdir, phase_file))
+            self.phase_data = phase_data[self.r_start:self.r_end,
+                              self.c_start:self.c_end]
+
+            read = True
+        else:
+            # check if Ifg was sent.
+            if isinstance(ifg_or_path, Ifg):
+                ifg = ifg_or_path
+            else:
+                self.data_path = ifg_or_path  # should be used with MPI
+                ifg = Ifg(ifg_or_path)
+            read = False
+            self.phase_data = None
+            self.nan_fraction = None
+            self.master = None
+            self.slave = None
+            self.time_span = None
+
         attempts = 0
         # TODO: The repeated read attempts should be avoided
         # This is done if a process has to release the file lock before another
@@ -464,6 +481,7 @@ class IfgPart(object):
         self.master = ifg.master
         self.slave = ifg.slave
         self.time_span = ifg.time_span
+        ifg.phase_data = None
         ifg.close()  # close base ifg
         return True
 
@@ -869,9 +887,9 @@ def create_tiles(shape, n_ifgs=17, nrows=2, ncols=2):
     max_cols_per_tile = max([len(c) for c in col_arr])
 
     r_step = int(np.ceil(no_y) / nrows)
-    # assume that arrays of 32bit floats can be max ~500MB
+    # assume that arrays of 32bit floats can be max ~100MB
     # determine max array size, 4 bytes per 32 bits
-    r_step_500 = 500 * 1e6 // (4 * n_ifgs * max_cols_per_tile)
+    r_step_500 = 100 * 1e6 // (4 * n_ifgs * max_cols_per_tile)
     r_step = min(r_step, r_step_500)
     nrows = no_y // r_step
     row_arr = np.array_split(range(no_y), nrows)
@@ -967,9 +985,7 @@ def write_msg(msg):
 
 
 def get_tmpdir():
-    if 'PBS_JOBFS' in os.environ:  # NCI tmp dir in each node
-        TMPDIR = os.environ['PBS_JOBFS']
-    elif 'TMPDIR' in os.environ:  # NCI tmp dir in each node??
+    if 'TMPDIR' in os.environ:  # NCI tmp dir in each node??
         TMPDIR = os.environ['TMPDIR']
     else:  # fall back option or when running on PC locally
         import tempfile
