@@ -21,7 +21,7 @@ from pyrate.nci.parallel import Parallel
 from pyrate.scripts import run_pyrate
 from pyrate.scripts.run_pyrate import write_msg
 from pyrate.shared import get_tmpdir
-from collections import OrderedDict, namedtuple
+from collections import namedtuple
 import cPickle as cp
 
 TMPDIR = get_tmpdir()
@@ -111,7 +111,6 @@ def main(params, config_file=sys.argv[1]):
 
     parallel.barrier()
 
-
     print 'Processor {} has {} tiles'.format(rank, len(process_tiles))
     # Calc mst using MPI
     if rank == MASTER_PROCESS:
@@ -143,7 +142,6 @@ def main(params, config_file=sys.argv[1]):
         if run_pyrate.aps_delay_required(ifgs, params):
             no_ifgs = len(ifgs)
             process_indices_aps = parallel.calc_indices(no_ifgs)
-            # process_ifgs = [itemgetter(p)(ifgs) for p in process_indices]
             ifgs = aps.remove_aps_delay(ifgs, params, process_indices_aps)
 
         for i in ifgs:
@@ -382,6 +380,8 @@ def orb_fit_calc_mpi(MPI_myID, ifg_paths, num_processors, parallel, params):
 
 def ref_pixel_calc_mpi(MPI_myID, ifg_paths, num_processors, parallel, params):
     half_patch_size, thresh, grid = refpixel.ref_pixel_setup(ifg_paths, params)
+
+    save_ref_pixel_blocks(grid, half_patch_size, ifg_paths, parallel, params)
     no_steps = len(grid)
     process_indices = parallel.calc_indices(no_steps)
     process_grid = [itemgetter(p)(grid) for p in process_indices]
@@ -389,8 +389,8 @@ def ref_pixel_calc_mpi(MPI_myID, ifg_paths, num_processors, parallel, params):
           'tiles out of {num_files}'.format(mpi_id=MPI_myID,
                                             processes=len(process_indices),
                                             num_files=no_steps)
-    mean_sds = refpixel.ref_pixel_mpi(process_grid,
-                                      half_patch_size, ifg_paths, thresh, params)
+    mean_sds = refpixel.ref_pixel_mpi(process_grid, half_patch_size,
+                                      ifg_paths, thresh, params)
     if MPI_myID == MASTER_PROCESS:
         all_indices = parallel.calc_all_indices(no_steps)
         mean_sds_final = np.empty(shape=no_steps)
@@ -406,6 +406,29 @@ def ref_pixel_calc_mpi(MPI_myID, ifg_paths, num_processors, parallel, params):
     else:
         parallel.send(mean_sds, destination=MASTER_PROCESS, tag=MPI_myID)
         print 'sent ref pixel to master'
+
+
+def save_ref_pixel_blocks(grid, half_patch_size, ifg_paths, parallel, params):
+    no_ifgs = len(ifg_paths)
+    process_path_indices = parallel.calc_indices(no_ifgs)
+    process_ifg_paths = [itemgetter(p)(ifg_paths) for p in process_path_indices]
+    outdir = params[cf.OUT_DIR]
+    for p in process_ifg_paths:
+        for y, x in grid:
+            ifg = shared.Ifg(p)
+            ifg.open(readonly=True)
+            ifg.nodata_value = params[cf.NO_DATA_VALUE]
+            ifg.convert_to_nans()
+            ifg.convert_to_mm()
+            data = ifg.phase_data[y - half_patch_size:y + half_patch_size + 1,
+                   x - half_patch_size:x + half_patch_size + 1]
+
+            data_file = os.path.join(outdir,
+                                     'ref_phase_data_{b}_{y}_{x}.npy'.format(
+                                         b=os.path.basename(p).split('.')[0],
+                                         y=y, x=x)
+                                     )
+            np.save(file=data_file, arr=data)
 
 
 def mpi_mst_calc(dest_tifs, process_tiles, process_indices, preread_ifgs):

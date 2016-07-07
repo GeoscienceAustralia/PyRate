@@ -1,4 +1,5 @@
 from numpy import isnan, std, mean, sum as nsum
+import os
 import numpy as np
 from itertools import product
 import parmap
@@ -51,6 +52,10 @@ def filter_means(mean_sds, grid):
 
 
 def ref_pixel_setup(ifgs_or_paths, params):
+    """
+    sets up the grid for reference pixel computation
+    Also saves numpy files for later use during ref pixel computation
+    """
     refnx, refny, chipsize, min_frac = params[cf.REFNX], \
                                        params[cf.REFNY], \
                                        params[cf.REF_CHIP_SIZE], \
@@ -96,13 +101,12 @@ def ref_pixel_multi(y, x, half_patch_size, phase_data_or_ifg_paths,
         # one ifg.phase_data in memory at any time
         data = []
         for p in phase_data_or_ifg_paths:
-            ifg = Ifg(p)
-            ifg.open(readonly=True)
-            ifg.nodata_value = params[cf.NO_DATA_VALUE]
-            ifg.convert_to_nans()
-            ifg.convert_to_mm()
-            data.append(ifg.phase_data[y - half_patch_size:y + half_patch_size + 1,
-                    x - half_patch_size:x + half_patch_size + 1])
+            data_file = os.path.join(params[cf.OUT_DIR],
+                                     'ref_phase_data_{b}_{y}_{x}.npy'.format(
+                                         b=os.path.basename(p).split('.')[0],
+                                         y=y, x=x)
+                                     )
+            data.append(np.load(file=data_file))
     else:  # phase_data_or_ifg is phase_data list
         data = [p[y - half_patch_size:y + half_patch_size + 1,
                 x - half_patch_size:x + half_patch_size + 1]
