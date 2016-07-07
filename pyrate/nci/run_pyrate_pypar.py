@@ -3,6 +3,7 @@ import glob
 import os
 import sys
 from operator import itemgetter
+import psutil
 
 import numpy as np
 from pyrate import config as cf
@@ -55,13 +56,13 @@ def main(params, config_file=sys.argv[1]):
     if rank == MASTER_PROCESS:
         print "Master process found {} worker processors".format(num_processors)
         preread_ifgs = {}
-        phase_sum = 0
+        # phase_sum = 0
         for i, d in enumerate(dest_tifs):
             ifg = shared.Ifg(d)
             ifg.open()
             ifg.nodata_value = 0
             phase_data = ifg.phase_data
-            phase_sum += phase_data
+            # phase_sum += phase_data
             for t in tiles:
                 p_data = phase_data[t.top_left_y:t.bottom_right_y,
                           t.top_left_x:t.bottom_right_x]
@@ -82,8 +83,8 @@ def main(params, config_file=sys.argv[1]):
                                           time_span=time_span)}
         cp.dump(preread_ifgs,
                 open(os.path.join(output_dir, 'preread_ifgs.pk'), 'w'))
-        np.save(file=os.path.join(output_dir, 'phase_sum.npy'), arr=phase_sum)
-        del phase_sum
+        # np.save(file=os.path.join(output_dir, 'phase_sum.npy'), arr=phase_sum)
+        # del phase_sum
 
     parallel.barrier()
     preread_ifgs = os.path.join(output_dir, 'preread_ifgs.pk')
@@ -157,6 +158,15 @@ def main(params, config_file=sys.argv[1]):
                      num_processors, parallel, params)
     parallel.barrier()
 
+    if rank == MASTER_PROCESS:
+        phase_sum = 0
+        for d in dest_tifs:
+            ifg = shared.Ifg(d)
+            ifg.open()
+            ifg.nodata_value = params[cf.NO_DATA_VALUE]
+            phase_sum += ifg.phase_data
+        np.save(file=os.path.join(output_dir, 'phase_sum.npy'), arr=phase_sum)
+    parallel.barrier()
     # estimate and remove reference phase
     ref_phase_estimation_mpi(rank, dest_tifs, parallel,
                              params, refpx, refpy)
@@ -280,12 +290,25 @@ def ref_phase_estimation_mpi(MPI_myID, ifg_paths, parallel, params,
     process_ref_phs = np.zeros(len(process_ifgs))
 
     if params[cf.REF_EST_METHOD] == 1:
+        # ifg_phase_data_sum = np.zeros(ifgs[0].shape, dtype=np.float32)
+        # TODO: revisit as this will likely hit memory limit in NCI
+        # for ifg in ifgs:
+        #     ifg_phase_data_sum += ifg.phase_data
         ifg_phase_data_sum = np.load(file=os.path.join(params[cf.OUT_DIR],
                                                        'phase_sum.npy'))
         comp = np.isnan(ifg_phase_data_sum)  # this is the same as in Matlab
         comp = np.ravel(comp, order='F')  # this is the same as in Matlab
+        process = psutil.Process(os.getpid())
+
         for n, ifg in enumerate(process_ifgs):
-            ref_phase_method1_dummy(comp, ifg, n, process_ref_phs)
+            print process.memory_info()
+            # shared.nan_and_mm_convert(ifg, params)
+            ref_phs = rpe.est_ref_phase_method1_multi(ifg.phase_data, comp)
+            ifg.phase_data -= ref_phs
+            ifg.meta_data[ifc.REF_PHASE] = ifc.REF_PHASE_REMOVED
+            ifg.write_modified_phase()
+            process_ref_phs[n] = ref_phs
+            ifg.close()
 
     elif params[cf.REF_EST_METHOD] == 2:
         half_chip_size = int(np.floor(params[cf.REF_CHIP_SIZE] / 2.0))
@@ -321,16 +344,6 @@ def ref_phase_estimation_mpi(MPI_myID, ifg_paths, parallel, params,
         # send reference phase data to master process
         parallel.send(process_ref_phs, destination=MASTER_PROCESS,
                       tag=MPI_myID)
-
-
-def ref_phase_method1_dummy(comp, ifg, n, process_ref_phs):
-    # shared.nan_and_mm_convert(ifg, params)
-    ref_phs = rpe.est_ref_phase_method1_multi(ifg.phase_data, comp)
-    ifg.phase_data -= ref_phs
-    ifg.meta_data[ifc.REF_PHASE] = ifc.REF_PHASE_REMOVED
-    ifg.write_modified_phase()
-    process_ref_phs[n] = ref_phs
-    ifg.close()
 
 
 def maxvar_vcm_mpi(MPI_myID, ifg_paths, parallel, params):

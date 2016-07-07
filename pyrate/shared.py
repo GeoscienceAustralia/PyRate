@@ -213,7 +213,7 @@ class RasterBase(object):
 
 class Ifg(RasterBase):
     """
-    Interferogram class, represents the difference between two acquisitions.
+    Interferrogram class, represents the difference between two acquisitions.
     Ifg objects double as a container for related data.
     """
 
