@@ -280,21 +280,12 @@ def ref_phase_estimation_mpi(MPI_myID, ifg_paths, parallel, params,
     process_ref_phs = np.zeros(len(process_ifgs))
 
     if params[cf.REF_EST_METHOD] == 1:
-        # TODO: revisit as this will likely hit memory limit in NCI
-        # for ifg in ifgs:
-        #     ifg_phase_data_sum += ifg.phase_data
         ifg_phase_data_sum = np.load(file=os.path.join(params[cf.OUT_DIR],
                                                        'phase_sum.npy'))
         comp = np.isnan(ifg_phase_data_sum)  # this is the same as in Matlab
         comp = np.ravel(comp, order='F')  # this is the same as in Matlab
         for n, ifg in enumerate(process_ifgs):
-            # shared.nan_and_mm_convert(ifg, params)
-            ref_phs = rpe.est_ref_phase_method1_multi(ifg.phase_data, comp)
-            ifg.phase_data -= ref_phs
-            ifg.meta_data[ifc.REF_PHASE] = ifc.REF_PHASE_REMOVED
-            ifg.write_modified_phase()
-            process_ref_phs[n] = ref_phs
-            ifg.close()
+            ref_phase_method1_dummy(comp, ifg, n, process_ref_phs)
 
     elif params[cf.REF_EST_METHOD] == 2:
         half_chip_size = int(np.floor(params[cf.REF_CHIP_SIZE] / 2.0))
@@ -330,6 +321,16 @@ def ref_phase_estimation_mpi(MPI_myID, ifg_paths, parallel, params,
         # send reference phase data to master process
         parallel.send(process_ref_phs, destination=MASTER_PROCESS,
                       tag=MPI_myID)
+
+
+def ref_phase_method1_dummy(comp, ifg, n, process_ref_phs):
+    # shared.nan_and_mm_convert(ifg, params)
+    ref_phs = rpe.est_ref_phase_method1_multi(ifg.phase_data, comp)
+    ifg.phase_data -= ref_phs
+    ifg.meta_data[ifc.REF_PHASE] = ifc.REF_PHASE_REMOVED
+    ifg.write_modified_phase()
+    process_ref_phs[n] = ref_phs
+    ifg.close()
 
 
 def maxvar_vcm_mpi(MPI_myID, ifg_paths, parallel, params):
