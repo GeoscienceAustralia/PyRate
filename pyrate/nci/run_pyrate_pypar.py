@@ -55,11 +55,13 @@ def main(params, config_file=sys.argv[1]):
     if rank == MASTER_PROCESS:
         print "Master process found {} worker processors".format(num_processors)
         preread_ifgs = {}
+        phase_sum = 0
         for i, d in enumerate(dest_tifs):
             ifg = shared.Ifg(d)
             ifg.open()
             ifg.nodata_value = 0
             phase_data = ifg.phase_data
+            phase_sum += phase_data
             for t in tiles:
                 p_data = phase_data[t.top_left_y:t.bottom_right_y,
                           t.top_left_x:t.bottom_right_x]
@@ -80,6 +82,8 @@ def main(params, config_file=sys.argv[1]):
                                           time_span=time_span)}
         cp.dump(preread_ifgs,
                 open(os.path.join(output_dir, 'preread_ifgs.pk'), 'w'))
+        np.save(file=os.path.join(output_dir, 'phase_sum.npy'), arr=phase_sum)
+        del phase_sum
 
     parallel.barrier()
     preread_ifgs = os.path.join(output_dir, 'preread_ifgs.pk')
@@ -276,11 +280,11 @@ def ref_phase_estimation_mpi(MPI_myID, ifg_paths, parallel, params,
     process_ref_phs = np.zeros(len(process_ifgs))
 
     if params[cf.REF_EST_METHOD] == 1:
-        ifg_phase_data_sum = np.zeros(ifgs[0].shape, dtype=np.float64)
         # TODO: revisit as this will likely hit memory limit in NCI
-        for ifg in ifgs:
-            ifg_phase_data_sum += ifg.phase_data
-
+        # for ifg in ifgs:
+        #     ifg_phase_data_sum += ifg.phase_data
+        ifg_phase_data_sum = np.load(file=os.path.join(params[cf.OUT_DIR],
+                                                       'phase_sum.npy'))
         comp = np.isnan(ifg_phase_data_sum)  # this is the same as in Matlab
         comp = np.ravel(comp, order='F')  # this is the same as in Matlab
         for n, ifg in enumerate(process_ifgs):
