@@ -423,18 +423,60 @@ class IfgPart(object):
         self.r_end = self.tile.bottom_right_y
         self.c_start = self.tile.top_left_x
         self.c_end = self.tile.bottom_right_x
+        # TODO: fix this if cond
+        if ifg_dict:
+            outdir = os.path.dirname(ifg_dict)
+            preread_ifgs = cp.load(
+                open(os.path.join(outdir, 'preread_ifgs.pk'), 'r'))
+            ifg = preread_ifgs[ifg_or_path].pop()
+            self.nan_fraction = ifg.nan_fraction
+            self.master = ifg.master
+            self.slave = ifg.slave
+            self.time_span = ifg.time_span
+            phase_file = 'phase_data_{}_{}.npy'.format(
+                os.path.basename(ifg_or_path).split('.')[0], tile.index)
+            self.phase_data = np.load(os.path.join(outdir, phase_file))
+            read = True
+        else:
+            # check if Ifg was sent.
+            if isinstance(ifg_or_path, Ifg):
+                ifg = ifg_or_path
+            else:
+                self.data_path = ifg_or_path  # should be used with MPI
+                ifg = Ifg(ifg_or_path)
+            read = False
+            self.phase_data = None
+            self.nan_fraction = None
+            self.master = None
+            self.slave = None
+            self.time_span = None
 
-        outdir = os.path.dirname(ifg_dict)
-        preread_ifgs = cp.load(
-            open(os.path.join(outdir, 'preread_ifgs.pk'), 'r'))
-        ifg = preread_ifgs[ifg_or_path].pop()
+        attempts = 0
+        # TODO: The repeated read attempts should be avoided
+        # This is done if a process has to release the file lock before another
+        # can read that file
+        while (not read) and (attempts < 3):
+            try:
+                attempts += 1
+                read = self.read_required(ifg)
+            except RuntimeError as e:
+                print e
+                print '\nneed to read {ifg} again'.format(ifg=ifg)
+                time.sleep(0.5)
+
+    def read_required(self, ifg):
+        if not ifg.is_open:
+            ifg.open(readonly=True)
+        ifg.nodata_value = 0
+        self.phase_data = ifg.phase_data[self.r_start:self.r_end,
+                                         self.c_start:self.c_end]
         self.nan_fraction = ifg.nan_fraction
         self.master = ifg.master
         self.slave = ifg.slave
         self.time_span = ifg.time_span
-        phase_file = 'phase_data_{}_{}.npy'.format(
-            os.path.basename(ifg_or_path).split('.')[0], tile.index)
-        self.phase_data = np.load(os.path.join(outdir, phase_file))
+        ifg.phase_data = None
+        ifg.close()  # close base ifg
+        return True
 
     @property
     def nrows(self):
