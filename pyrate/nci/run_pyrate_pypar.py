@@ -382,6 +382,7 @@ def ref_pixel_calc_mpi(MPI_myID, ifg_paths, num_processors, parallel, params):
     half_patch_size, thresh, grid = refpixel.ref_pixel_setup(ifg_paths, params)
 
     save_ref_pixel_blocks(grid, half_patch_size, ifg_paths, parallel, params)
+    parallel.barrier()
     no_steps = len(grid)
     process_indices = parallel.calc_indices(no_steps)
     process_grid = [itemgetter(p)(grid) for p in process_indices]
