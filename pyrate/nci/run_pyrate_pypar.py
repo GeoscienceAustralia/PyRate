@@ -4,7 +4,6 @@ import os
 import sys
 from operator import itemgetter
 import psutil
-import gc
 
 import numpy as np
 from pyrate import config as cf
@@ -24,6 +23,8 @@ from pyrate.scripts.run_pyrate import write_msg
 from pyrate.shared import get_tmpdir
 from collections import namedtuple
 import cPickle as cp
+from osgeo import gdal
+gdal.SetCacheMax(2**15)
 
 TMPDIR = get_tmpdir()
 
@@ -316,8 +317,6 @@ def ref_phase_estimation_mpi(MPI_myID, ifg_paths, parallel, params,
             ifg.write_modified_phase()
             process_ref_phs[n] = ref_phs
             ifg.close()
-            del ifg
-            gc.collect()
 
     elif params[cf.REF_EST_METHOD] == 2:
         half_chip_size = int(np.floor(params[cf.REF_CHIP_SIZE] / 2.0))
