@@ -4,6 +4,7 @@ import os
 import sys
 from operator import itemgetter
 import psutil
+import gc
 
 import numpy as np
 from pyrate import config as cf
@@ -75,7 +76,6 @@ def main(params, config_file=sys.argv[1]):
 
     mpi_log_filename = os.path.join(output_dir, "mpi_run_pyrate.log")
 
-    ### Master Process ###
     if rank == MASTER_PROCESS:
         output_log_file = open(mpi_log_filename, "w")
         configfile = open(config_file)
@@ -142,6 +142,7 @@ def main(params, config_file=sys.argv[1]):
                      num_processors, parallel, params)
     parallel.barrier()
 
+    # save phase data and phase_sum used in the reference phase estimation
     if rank == MASTER_PROCESS:
         phase_sum = 0
         for d in dest_tifs:
@@ -149,8 +150,8 @@ def main(params, config_file=sys.argv[1]):
             ifg.open()
             ifg.nodata_value = params[cf.NO_DATA_VALUE]
             phase_sum += ifg.phase_data
-            ifg.save_numpy_phase(numpy_file=os.path.join(
-                output_dir, os.path.basename(d).split('.')[0] + '.npy'))
+            # ifg.save_numpy_phase(numpy_file=os.path.join(
+            #     output_dir, os.path.basename(d).split('.')[0] + '.npy'))
             ifg.close()
         np.save(file=os.path.join(output_dir, 'phase_sum.npy'), arr=phase_sum)
     parallel.barrier()
@@ -315,6 +316,8 @@ def ref_phase_estimation_mpi(MPI_myID, ifg_paths, parallel, params,
             ifg.write_modified_phase()
             process_ref_phs[n] = ref_phs
             ifg.close()
+            del ifg
+            gc.collect()
 
     elif params[cf.REF_EST_METHOD] == 2:
         half_chip_size = int(np.floor(params[cf.REF_CHIP_SIZE] / 2.0))

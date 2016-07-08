@@ -489,7 +489,6 @@ class MPITests(unittest.TestCase):
                 np.testing.assert_array_almost_equal(fs.ReadAsArray(),
                                                      gs.ReadAsArray(),
                                                      decimal=4)
-            shutil.rmtree(self.temp_dir)
 
         log_file = glob.glob(os.path.join(self.tif_dir, '*.log'))[0]
         self.assertTrue(os.path.exists(log_file))
