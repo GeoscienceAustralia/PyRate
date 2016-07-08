@@ -346,7 +346,7 @@ class MPITests(unittest.TestCase):
     def setUpClass(cls):
         cls.tif_dir = tempfile.mkdtemp()
         cls.test_conf = common.SYDNEY_TEST_CONF
-
+        cls.temp_dir = tempfile.mkdtemp()
         # change the required params
         cls.params = cf.get_config_params(cls.test_conf)
         cls.params[cf.OBS_DIR] = common.SYD_TEST_GAMMA
@@ -422,7 +422,7 @@ class MPITests(unittest.TestCase):
             os.remove(f)
 
     def calc_non_mpi_time_series(self):
-        self.temp_dir = tempfile.mkdtemp()
+
         # copy sydney_tif files in temp_dir
         self.params[cf.OUT_DIR] = self.temp_dir
         xlks, ylks, crop = run_pyrate.transform_params(self.params)
@@ -452,6 +452,7 @@ class MPITests(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         shutil.rmtree(cls.tif_dir)
+        shutil.rmtree(cls.temp_dir)
 
     def test_mpi_time_series(self):
         for looks, ref_method in product(range(1, 5), [1, 2]):
