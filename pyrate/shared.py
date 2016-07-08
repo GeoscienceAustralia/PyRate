@@ -404,6 +404,9 @@ class Ifg(RasterBase):
             self.dataset.SetMetadataItem(k, v)
         self.dataset.FlushCache()
 
+    def save_numpy_phase(self, numpy_file):
+        np.save(file=numpy_file, arr=self.phase_data)
+
 
 class IfgPart(object):
     """

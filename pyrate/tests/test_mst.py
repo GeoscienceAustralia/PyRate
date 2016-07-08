@@ -183,7 +183,7 @@ class IfgPartTest(unittest.TestCase):
         r_start = 0
         r_end = 10
         for i in self.ifgs:
-            tile = Tile(top_left=(r_start, 0), bottom_right=(r_end, i.ncols))
+            tile = Tile(0, top_left=(r_start, 0), bottom_right=(r_end, i.ncols))
             ifg_part = IfgPart(i.data_path, tile)
             self.assertEqual(ifg_part.phase_data.shape,
                              (r_end-r_start, i.phase_data.shape[1]))

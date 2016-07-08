@@ -17,7 +17,6 @@ from pyrate import remove_aps_delay as aps
 from pyrate import shared
 from pyrate import timeseries
 from pyrate import vcm as vcm_module
-from pyrate.algorithm import get_epochs
 from pyrate.nci.parallel import Parallel
 from pyrate.scripts import run_pyrate
 from pyrate.scripts.run_pyrate import write_msg
@@ -56,13 +55,11 @@ def main(params, config_file=sys.argv[1]):
     if rank == MASTER_PROCESS:
         print "Master process found {} worker processors".format(num_processors)
         preread_ifgs = {}
-        # phase_sum = 0
         for i, d in enumerate(dest_tifs):
             ifg = shared.Ifg(d)
             ifg.open()
             ifg.nodata_value = 0
             phase_data = ifg.phase_data
-            # phase_sum += phase_data
             for t in tiles:
                 p_data = phase_data[t.top_left_y:t.bottom_right_y,
                           t.top_left_x:t.bottom_right_x]
@@ -83,8 +80,6 @@ def main(params, config_file=sys.argv[1]):
                                           time_span=time_span)}
         cp.dump(preread_ifgs,
                 open(os.path.join(output_dir, 'preread_ifgs.pk'), 'w'))
-        # np.save(file=os.path.join(output_dir, 'phase_sum.npy'), arr=phase_sum)
-        # del phase_sum
 
     parallel.barrier()
     preread_ifgs = os.path.join(output_dir, 'preread_ifgs.pk')
@@ -165,6 +160,9 @@ def main(params, config_file=sys.argv[1]):
             ifg.open()
             ifg.nodata_value = params[cf.NO_DATA_VALUE]
             phase_sum += ifg.phase_data
+            ifg.save_numpy_phase(numpy_file=os.path.join(
+                output_dir, os.path.basename(d).split('.')[0] + '.npy'))
+            ifg.close()
         np.save(file=os.path.join(output_dir, 'phase_sum.npy'), arr=phase_sum)
     parallel.barrier()
     # estimate and remove reference phase
@@ -184,11 +182,13 @@ def main(params, config_file=sys.argv[1]):
     # linrate mpi computation
     linrate_mpi(rank, dest_tifs, parallel, params, vcmt,
                 process_tiles, process_indices, ifg_shape, preread_ifgs)
+    # TODO: write linrate aggregation function from linrate tiles
 
     parallel.barrier()
     # time series mpi computation
     if params[cf.TIME_SERIES_CAL]:
-        time_series_mpi(dest_tifs, params, vcmt, process_tiles, process_indices, preread_ifgs)
+        time_series_mpi(dest_tifs, params, vcmt, process_tiles,
+                        process_indices, preread_ifgs)
         parallel.barrier()
         write_time_series_geotiff_mpi(dest_tifs, params, tiles, parallel, rank)
 
@@ -218,7 +218,7 @@ def write_time_series_geotiff_mpi(dest_tifs, params, tiles, parallel, MPI_id):
         tscum_g = np.empty(shape=ifgs[0].shape, dtype=np.float32)
         for n, t in enumerate(tiles):
             tsincr_file = os.path.join(TMPDIR, 'tsincr_{}.npy'.format(n))
-            tscum_file = os.path.join(TMPDIR, 'tscum_{}.npy'.format(n))
+            tscum_file = os.path.join(TMPDIR, 'tscuml_{}.npy'.format(n))
             tsincr = np.load(file=tsincr_file)
             tscum = np.load(file=tscum_file)
 
@@ -274,7 +274,7 @@ def time_series_mpi(ifg_paths, params, vcmt, process_tiles, process_indices,
         res = timeseries.time_series(ifg_parts, params, vcmt, mst_tile)
         tsincr, tscum, tsvel = res
         tsincr_file = os.path.join(TMPDIR, 'tsincr_{}.npy'.format(i))
-        tscum_file = os.path.join(TMPDIR, 'tscum_{}.npy'.format(i))
+        tscum_file = os.path.join(TMPDIR, 'tscuml_{}.npy'.format(i))
         np.save(file=tsincr_file, arr=tsincr)
         np.save(file=tscum_file, arr=tscum)
 
@@ -290,10 +290,7 @@ def ref_phase_estimation_mpi(MPI_myID, ifg_paths, parallel, params,
     process_ref_phs = np.zeros(len(process_ifgs))
 
     if params[cf.REF_EST_METHOD] == 1:
-        # ifg_phase_data_sum = np.zeros(ifgs[0].shape, dtype=np.float32)
         # TODO: revisit as this will likely hit memory limit in NCI
-        # for ifg in ifgs:
-        #     ifg_phase_data_sum += ifg.phase_data
         ifg_phase_data_sum = np.load(file=os.path.join(params[cf.OUT_DIR],
                                                        'phase_sum.npy'))
         comp = np.isnan(ifg_phase_data_sum)  # this is the same as in Matlab
@@ -302,7 +299,6 @@ def ref_phase_estimation_mpi(MPI_myID, ifg_paths, parallel, params,
 
         for n, ifg in enumerate(process_ifgs):
             print process.memory_info()
-            # shared.nan_and_mm_convert(ifg, params)
             ref_phs = rpe.est_ref_phase_method1_multi(ifg.phase_data, comp)
             ifg.phase_data -= ref_phs
             ifg.meta_data[ifc.REF_PHASE] = ifc.REF_PHASE_REMOVED
@@ -315,7 +311,6 @@ def ref_phase_estimation_mpi(MPI_myID, ifg_paths, parallel, params,
         chipsize = 2 * half_chip_size + 1
         thresh = chipsize * chipsize * params[cf.REF_MIN_FRAC]
         for n, ifg in enumerate(process_ifgs):
-            # shared.nan_and_mm_convert(ifg, params)
             ref_phs = rpe.est_ref_phase_method2_multi(ifg.phase_data,
                                                       half_chip_size,
                                                       refpx, refpy, thresh)
@@ -480,6 +475,7 @@ def mpi_mst_calc(dest_tifs, process_tiles, process_indices, preread_ifgs):
 
 def get_process_tiles(dest_tifs, parallel, params):
     ifg = shared.pre_prepare_ifgs([dest_tifs[0]], params)[0]
+    # TODO: changing the nrows and ncols here will break tests, fix this
     tiles = shared.create_tiles(ifg.shape,
                                 n_ifgs=len(dest_tifs), nrows=3, ncols=4)
     no_tiles = len(tiles)

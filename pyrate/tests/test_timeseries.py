@@ -405,7 +405,7 @@ class MPITests(unittest.TestCase):
             cls.tsincr_mpi[t.top_left_y:t.bottom_right_y,
                 t.top_left_x: t.bottom_right_x, :] = np.load(tsincr_file_n)
 
-            tscum_file_n = os.path.join(TMPDIR, 'tscum_{}.npy'.format(i))
+            tscum_file_n = os.path.join(TMPDIR, 'tscuml_{}.npy'.format(i))
             cls.tscum_mpi[t.top_left_y:t.bottom_right_y,
                 t.top_left_x: t.bottom_right_x, :] = np.load(tscum_file_n)
 
