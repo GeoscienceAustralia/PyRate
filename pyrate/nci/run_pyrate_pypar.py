@@ -56,18 +56,7 @@ def main(params, config_file=sys.argv[1]):
         print "Master process found {} worker processors".format(num_processors)
         preread_ifgs = {}
         for i, d in enumerate(dest_tifs):
-            ifg = shared.Ifg(d)
-            ifg.open()
-            ifg.nodata_value = 0
-            phase_data = ifg.phase_data
-            for t in tiles:
-                p_data = phase_data[t.top_left_y:t.bottom_right_y,
-                          t.top_left_x:t.bottom_right_x]
-                phase_file = 'phase_data_{}_{}.npy'.format(
-                    os.path.basename(d).split('.')[0], t.index)
-
-                np.save(file=os.path.join(output_dir, phase_file),
-                        arr=p_data)
+            ifg = save_latest_phase(d, output_dir, tiles)
             nan_fraction = ifg.nan_fraction
             master = ifg.master
             slave = ifg.slave
@@ -179,6 +168,10 @@ def main(params, config_file=sys.argv[1]):
 
     parallel.barrier()
 
+    if rank == MASTER_PROCESS:
+        for d in dest_tifs:
+            save_latest_phase(d, output_dir, tiles)
+
     # linrate mpi computation
     linrate_mpi(rank, dest_tifs, parallel, params, vcmt,
                 process_tiles, process_indices, ifg_shape, preread_ifgs)
@@ -193,6 +186,22 @@ def main(params, config_file=sys.argv[1]):
         write_time_series_geotiff_mpi(dest_tifs, params, tiles, parallel, rank)
 
     parallel.finalize()
+
+
+def save_latest_phase(d, output_dir, tiles):
+    ifg = shared.Ifg(d)
+    ifg.open()
+    ifg.nodata_value = 0
+    phase_data = ifg.phase_data
+    for t in tiles:
+        p_data = phase_data[t.top_left_y:t.bottom_right_y,
+                 t.top_left_x:t.bottom_right_x]
+        phase_file = 'phase_data_{}_{}.npy'.format(
+            os.path.basename(d).split('.')[0], t.index)
+
+        np.save(file=os.path.join(output_dir, phase_file),
+                arr=p_data)
+    return ifg
 
 
 def write_time_series_geotiff_mpi(dest_tifs, params, tiles, parallel, MPI_id):
@@ -267,7 +276,8 @@ def time_series_mpi(ifg_paths, params, vcmt, process_tiles, process_indices,
                     preread_ifgs):
     write_msg('Calculating time series')  # this should be logged
 
-    for i, t in zip(process_indices, process_tiles):
+    for t in process_tiles:
+        i = t.index
         ifg_parts = [shared.IfgPart(p, t, preread_ifgs) for p in ifg_paths]
         mst_file_process_n = os.path.join(TMPDIR, 'mst_mat_{}.npy'.format(i))
         mst_tile = np.load(mst_file_process_n)
