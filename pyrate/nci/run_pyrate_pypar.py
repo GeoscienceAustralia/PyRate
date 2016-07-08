@@ -396,10 +396,10 @@ def orb_fit_calc_mpi(MPI_myID, ifg_paths, num_processors, parallel, params):
     if params[cf.ORBITAL_FIT_METHOD] != 1:
         raise cf.ConfigException('For now orbfit method must be 1')
 
-    ifgs = shared.prepare_ifgs_without_phase(ifg_paths, params)
-    no_ifgs = len(ifgs)
+    # ifgs = shared.prepare_ifgs_without_phase(ifg_paths, params)
+    no_ifgs = len(ifg_paths)
     process_indices = parallel.calc_indices(no_ifgs)
-    process_ifgs = [itemgetter(p)(ifgs) for p in process_indices]
+    process_ifgs = [itemgetter(p)(ifg_paths) for p in process_indices]
 
     mlooked = None
     # difficult to enable MPI on orbfit method 2
@@ -410,8 +410,11 @@ def orb_fit_calc_mpi(MPI_myID, ifg_paths, num_processors, parallel, params):
                                mlooked=mlooked)
     # set orbfit tags after orbital error correction
     for i in process_ifgs:
-        i.write_modified_phase()
-        i.close()
+        ifg = shared.Ifg(i)
+        ifg.open()
+        ifg.dataset.SetMetadataItem(ifc.PYRATE_ORBITAL_ERROR, ifc.ORB_REMOVED)
+        ifg.write_modified_phase()
+        ifg.close()
         # implement mpi logging
 
 

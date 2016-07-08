@@ -55,7 +55,7 @@ QUADRATIC = cf.QUADRATIC
 PART_CUBIC = cf.PART_CUBIC
 
 
-def orbital_correction(ifgs, params, mlooked=None, offset=True):
+def orbital_correction(ifg_paths, params, mlooked=None, offset=True):
     """
     Removes orbital error from given Ifgs.
 
@@ -90,11 +90,15 @@ def orbital_correction(ifgs, params, mlooked=None, offset=True):
             # raises swig object pickle error
             # parmap.map(_independent_correction, ifgs, degree, offset,
             #            processes=params[cf.PROCESSES])
-            for i in ifgs:
-                _independent_correction(i, degree, offset, params)
+            for p in ifg_paths:
+                ifg = shared.Ifg(p)
+                ifg.open()
+                _independent_correction(ifg, degree, offset, params)
         else:
-            for i in ifgs:
-                _independent_correction(i, degree, offset, params)
+            for p in ifg_paths:
+                ifg = shared.Ifg(p)
+                ifg.open()
+                _independent_correction(ifg, degree, offset, params)
     else:
         msg = "Unknown method: '%s', need INDEPENDENT or NETWORK method"
         raise OrbitalError(msg % method)
