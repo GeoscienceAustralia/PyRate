@@ -383,7 +383,7 @@ class Ifg(RasterBase):
                                         self._nodata_value, atol=1e-6))
         return nan_count / float(self.num_cells)
 
-    def write_modified_phase(self):
+    def write_modified_phase(self, data=None):
         """
         Writes phase data to disk.
         For this to work, a copy of the original file
@@ -399,6 +399,11 @@ class Ifg(RasterBase):
             self.dataset = gdal.Open(new_data_path, GA_Update)
         self._phase_band = None
         """
+        if data is not None:
+            assert isinstance(data, np.ndarray)
+            data_r, data_c = data.shape
+            assert data_r == self.nrows and data_c == self.ncols
+            self.phase_data = data
         self.phase_band.WriteArray(self.phase_data)
         for k, v in self.meta_data.items():
             self.dataset.SetMetadataItem(k, v)

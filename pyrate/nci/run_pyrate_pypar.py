@@ -4,7 +4,6 @@ import os
 import sys
 from operator import itemgetter
 import psutil
-
 import numpy as np
 from pyrate import config as cf
 from pyrate import ifgconstants as ifc
@@ -24,7 +23,7 @@ from pyrate.shared import get_tmpdir
 from collections import namedtuple
 import cPickle as cp
 from osgeo import gdal
-gdal.SetCacheMax(2**15)
+gdal.SetCacheMax(64)
 
 TMPDIR = get_tmpdir()
 
@@ -151,8 +150,8 @@ def main(params, config_file=sys.argv[1]):
             ifg.open()
             ifg.nodata_value = params[cf.NO_DATA_VALUE]
             phase_sum += ifg.phase_data
-            # ifg.save_numpy_phase(numpy_file=os.path.join(
-            #     output_dir, os.path.basename(d).split('.')[0] + '.npy'))
+            ifg.save_numpy_phase(numpy_file=os.path.join(
+                output_dir, os.path.basename(d).split('.')[0] + '.npy'))
             ifg.close()
         np.save(file=os.path.join(output_dir, 'phase_sum.npy'), arr=phase_sum)
     parallel.barrier()
@@ -300,6 +299,7 @@ def ref_phase_estimation_mpi(MPI_myID, ifg_paths, parallel, params,
     process_indices = parallel.calc_indices(no_ifgs)
     process_ifgs = [itemgetter(p)(ifgs) for p in process_indices]
     process_ref_phs = np.zeros(len(process_ifgs))
+    output_dir = params[cf.OUT_DIR]
 
     if params[cf.REF_EST_METHOD] == 1:
         # TODO: revisit as this will likely hit memory limit in NCI
@@ -311,10 +311,13 @@ def ref_phase_estimation_mpi(MPI_myID, ifg_paths, parallel, params,
 
         for n, ifg in enumerate(process_ifgs):
             print process.memory_info()
-            ref_phs = rpe.est_ref_phase_method1_multi(ifg.phase_data, comp)
-            ifg.phase_data -= ref_phs
+            numpy_file = os.path.join(
+                output_dir, os.path.basename(ifg.data_path).split('.')[0] + '.npy')
+            phase_data = np.load(numpy_file)
+            ref_phs = rpe.est_ref_phase_method1_multi(phase_data, comp)
+            phase_data -= ref_phs
             ifg.meta_data[ifc.REF_PHASE] = ifc.REF_PHASE_REMOVED
-            ifg.write_modified_phase()
+            ifg.write_modified_phase(data=phase_data)
             process_ref_phs[n] = ref_phs
             ifg.close()
 
