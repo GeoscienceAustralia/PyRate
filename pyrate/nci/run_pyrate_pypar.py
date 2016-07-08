@@ -307,19 +307,9 @@ def ref_phase_estimation_mpi(MPI_myID, ifg_paths, parallel, params,
                                                        'phase_sum.npy'))
         comp = np.isnan(ifg_phase_data_sum)  # this is the same as in Matlab
         comp = np.ravel(comp, order='F')  # this is the same as in Matlab
-        process = psutil.Process(os.getpid())
 
         for n, ifg in enumerate(process_ifgs):
-            print process.memory_info()
-            numpy_file = os.path.join(
-                output_dir, os.path.basename(ifg.data_path).split('.')[0] + '.npy')
-            phase_data = np.load(numpy_file)
-            ref_phs = rpe.est_ref_phase_method1_multi(phase_data, comp)
-            phase_data -= ref_phs
-            ifg.meta_data[ifc.REF_PHASE] = ifc.REF_PHASE_REMOVED
-            ifg.write_modified_phase(data=phase_data)
-            process_ref_phs[n] = ref_phs
-            ifg.close()
+            process_ref_phs[n] = ref_phase_method1_dummy(comp, ifg, output_dir)
 
     elif params[cf.REF_EST_METHOD] == 2:
         half_chip_size = int(np.floor(params[cf.REF_CHIP_SIZE] / 2.0))
@@ -355,6 +345,20 @@ def ref_phase_estimation_mpi(MPI_myID, ifg_paths, parallel, params,
         parallel.send(process_ref_phs, destination=MASTER_PROCESS,
                       tag=MPI_myID)
 
+
+def ref_phase_method1_dummy(comp, ifg, output_dir):
+    process = psutil.Process(os.getpid())
+    print process.memory_info()
+    numpy_file = os.path.join(
+        output_dir, os.path.basename(ifg.data_path).split('.')[0] + '.npy')
+    phase_data = np.load(numpy_file)
+    ref_phs = rpe.est_ref_phase_method1_multi(phase_data, comp)
+    phase_data -= ref_phs
+    ifg.meta_data[ifc.REF_PHASE] = ifc.REF_PHASE_REMOVED
+    ifg.write_modified_phase(data=phase_data)
+
+    ifg.close()
+    return ref_phs
 
 def maxvar_vcm_mpi(MPI_myID, ifg_paths, parallel, params):
     num_processors = parallel.size
@@ -403,6 +407,7 @@ def orb_fit_calc_mpi(MPI_myID, ifg_paths, num_processors, parallel, params):
     # set orbfit tags after orbital error correction
     for i in process_ifgs:
         i.write_modified_phase()
+        i.close()
         # implement mpi logging
 
 
