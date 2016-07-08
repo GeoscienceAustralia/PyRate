@@ -2,6 +2,7 @@ import datetime
 import glob
 import os
 import sys
+import gc
 from operator import itemgetter
 import psutil
 import numpy as np
@@ -294,10 +295,10 @@ def ref_phase_estimation_mpi(MPI_myID, ifg_paths, parallel, params,
                              refpx, refpy):
     write_msg('Finding and removing reference phase')
     num_processors = parallel.size
-    ifgs = shared.prepare_ifgs_without_phase(ifg_paths, params)
-    no_ifgs = len(ifgs)
+    # ifgs = shared.prepare_ifgs_without_phase(ifg_paths, params)
+    no_ifgs = len(ifg_paths)
     process_indices = parallel.calc_indices(no_ifgs)
-    process_ifgs = [itemgetter(p)(ifgs) for p in process_indices]
+    process_ifgs = [itemgetter(p)(ifg_paths) for p in process_indices]
     process_ref_phs = np.zeros(len(process_ifgs))
     output_dir = params[cf.OUT_DIR]
 
@@ -308,8 +309,8 @@ def ref_phase_estimation_mpi(MPI_myID, ifg_paths, parallel, params,
         comp = np.isnan(ifg_phase_data_sum)  # this is the same as in Matlab
         comp = np.ravel(comp, order='F')  # this is the same as in Matlab
 
-        for n, ifg in enumerate(process_ifgs):
-            process_ref_phs[n] = ref_phase_method1_dummy(comp, ifg, output_dir)
+        for n, p in enumerate(process_ifgs):
+            process_ref_phs[n] = ref_phase_method1_dummy(comp, p, output_dir)
 
     elif params[cf.REF_EST_METHOD] == 2:
         half_chip_size = int(np.floor(params[cf.REF_CHIP_SIZE] / 2.0))
@@ -331,7 +332,7 @@ def ref_phase_estimation_mpi(MPI_myID, ifg_paths, parallel, params,
 
     if MPI_myID == MASTER_PROCESS:
         all_indices = parallel.calc_all_indices(no_ifgs)
-        ref_phs = np.zeros(len(ifgs))
+        ref_phs = np.zeros(no_ifgs)
         ref_phs[process_indices] = process_ref_phs
 
         for i in range(1, num_processors):
@@ -346,19 +347,22 @@ def ref_phase_estimation_mpi(MPI_myID, ifg_paths, parallel, params,
                       tag=MPI_myID)
 
 
-def ref_phase_method1_dummy(comp, ifg, output_dir):
+def ref_phase_method1_dummy(comp, ifg_path, output_dir):
     process = psutil.Process(os.getpid())
     print process.memory_info()
     numpy_file = os.path.join(
-        output_dir, os.path.basename(ifg.data_path).split('.')[0] + '.npy')
+        output_dir, os.path.basename(ifg_path).split('.')[0] + '.npy')
     phase_data = np.load(numpy_file)
     ref_phs = rpe.est_ref_phase_method1_multi(phase_data, comp)
     phase_data -= ref_phs
-    ifg.meta_data[ifc.REF_PHASE] = ifc.REF_PHASE_REMOVED
+    ifg = shared.Ifg(ifg_path)
+    ifg.open()
+    md = ifg.meta_data
+    md[ifc.REF_PHASE] = ifc.REF_PHASE_REMOVED
     ifg.write_modified_phase(data=phase_data)
-
     ifg.close()
     return ref_phs
+
 
 def maxvar_vcm_mpi(MPI_myID, ifg_paths, parallel, params):
     num_processors = parallel.size
