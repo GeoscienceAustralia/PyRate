@@ -55,7 +55,7 @@ QUADRATIC = cf.QUADRATIC
 PART_CUBIC = cf.PART_CUBIC
 
 
-def orbital_correction(ifg_paths, params, mlooked=None, offset=True):
+def orbital_correction(ifgs_or_ifg_paths, params, mlooked=None, offset=True):
     """
     Removes orbital error from given Ifgs.
 
@@ -78,6 +78,7 @@ def orbital_correction(ifg_paths, params, mlooked=None, offset=True):
         raise OrbitalError(msg)
 
     if method == NETWORK_METHOD:
+        ifgs = ifgs_or_ifg_paths
         if mlooked is None:
             _network_correction(ifgs, degree, offset)
         else:
@@ -85,20 +86,17 @@ def orbital_correction(ifg_paths, params, mlooked=None, offset=True):
             _network_correction(ifgs, degree, offset, mlooked)
 
     elif method == INDEPENDENT_METHOD:
-        if parallel:
-            # not running in parallel
-            # raises swig object pickle error
-            # parmap.map(_independent_correction, ifgs, degree, offset,
-            #            processes=params[cf.PROCESSES])
-            for p in ifg_paths:
+        # not running in parallel
+        # raises swig object pickle error
+        # parmap.map(_independent_correction, ifgs, degree, offset,
+        #            processes=params[cf.PROCESSES])
+        for p in ifgs_or_ifg_paths:
+            if isinstance(p, basestring):  # ifg paths are supplied
                 ifg = shared.Ifg(p)
                 ifg.open()
-                _independent_correction(ifg, degree, offset, params)
-        else:
-            for p in ifg_paths:
-                ifg = shared.Ifg(p)
-                ifg.open()
-                _independent_correction(ifg, degree, offset, params)
+            else:
+                ifg = p
+            _independent_correction(ifg, degree, offset, params)
     else:
         msg = "Unknown method: '%s', need INDEPENDENT or NETWORK method"
         raise OrbitalError(msg % method)
