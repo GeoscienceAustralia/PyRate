@@ -2,28 +2,25 @@ import datetime
 import glob
 import os
 import sys
-import gc
 from operator import itemgetter
-import psutil
 import numpy as np
+from collections import namedtuple
+import cPickle as cp
+from osgeo import gdal
+
 from pyrate import config as cf
 from pyrate import ifgconstants as ifc
-from pyrate import linrate
 from pyrate import mst
 from pyrate import orbital
-from pyrate import reference_phase_estimation as rpe
 from pyrate import refpixel
 from pyrate import remove_aps_delay as aps
 from pyrate import shared
-from pyrate import timeseries
-from pyrate import vcm as vcm_module
 from pyrate.nci.parallel import Parallel
 from pyrate.scripts import run_pyrate
 from pyrate.scripts.run_pyrate import write_msg
 from pyrate.shared import get_tmpdir
-from collections import namedtuple
-import cPickle as cp
-from osgeo import gdal
+from pyrate.nci import common_nci
+
 gdal.SetCacheMax(64)
 
 TMPDIR = get_tmpdir()
@@ -51,7 +48,7 @@ def main(params, config_file=sys.argv[1]):
 
     # calculate process information
     ifg_shape, process_tiles, process_indices, tiles = \
-        get_process_tiles(dest_tifs, parallel, params)
+        common_nci.get_process_tiles(dest_tifs, parallel, params)
 
     output_dir = params[cf.OUT_DIR]
     if rank == MASTER_PROCESS:
@@ -176,188 +173,6 @@ def save_latest_phase(d, output_dir, tiles):
     return ifg
 
 
-def write_time_series_geotiff_mpi(dest_tifs, params, tiles, parallel, MPI_id):
-    ifgs = shared.prepare_ifgs_without_phase(dest_tifs, params)
-    epochlist, gt, md, wkt = run_pyrate.setup_metadata(ifgs, params)
-
-    # load the first tsincr file to determine the number of time series tifs
-    tsincr_file = os.path.join(TMPDIR, 'tsincr_0.npy')
-    tsincr = np.load(file=tsincr_file)
-
-    no_ts_tifs = tsincr.shape[2]
-    process_tifs = parallel.calc_indices(no_ts_tifs)
-
-    # depending on nvelpar, this will not fit in memory
-    # e.g. nvelpar=100, nrows=10000, ncols=10000, 32bit floats need 40GB memory
-    # 32 * 100 * 10000 * 10000 / 8 bytes = 4e10 bytes = 40 GB
-    # the double for loop is helps us over come the memory limit
-    print 'process {} will write {} ts tifs of total {}'.format(
-        MPI_id, len(process_tifs), no_ts_tifs)
-
-    for i in process_tifs:
-        tsincr_g = np.empty(shape=ifgs[0].shape, dtype=np.float32)
-        tscum_g = np.empty(shape=ifgs[0].shape, dtype=np.float32)
-        for n, t in enumerate(tiles):
-            tsincr_file = os.path.join(TMPDIR, 'tsincr_{}.npy'.format(n))
-            tscum_file = os.path.join(TMPDIR, 'tscuml_{}.npy'.format(n))
-            tsincr = np.load(file=tsincr_file)
-            tscum = np.load(file=tscum_file)
-
-            md[ifc.MASTER_DATE] = epochlist.dates[i + 1]
-            md['PR_SEQ_POS'] = i  # sequence position
-            tsincr_g[t.top_left_y:t.bottom_right_y,
-                     t.top_left_x:t.bottom_right_x] = tsincr[:, :, i]
-            dest = os.path.join(params[cf.OUT_DIR],
-                'tsincr' + "_" + str(epochlist.dates[i + 1]) + ".tif")
-            md[ifc.PRTYPE] = 'tsincr'
-            shared.write_output_geotiff(md, gt, wkt, tsincr_g, dest, np.nan)
-
-            tscum_g[t.top_left_y:t.bottom_right_y,
-                t.top_left_x:t.bottom_right_x] = tscum[:, :, i]
-            dest = os.path.join(params[cf.OUT_DIR],
-                'tscuml' + "_" + str(epochlist.dates[i + 1]) + ".tif")
-            md[ifc.PRTYPE] = 'tscuml'
-            shared.write_output_geotiff(md, gt, wkt, tscum_g, dest, np.nan)
-
-
-def linrate_mpi(MPI_myID, ifg_paths, parallel, params, vcmt,
-                process_tiles, process_indices, ifg_shape, preread_ifgs):
-    write_msg('Calculating linear rate')
-    for i, t in zip(process_indices, process_tiles):
-        ifg_parts = [shared.IfgPart(p, t, preread_ifgs) for p in ifg_paths]
-        mst_n = os.path.join(TMPDIR, 'mst_mat_{}.npy'.format(i))
-        mst_grid_n = np.load(mst_n)
-        res = linrate.linear_rate(ifg_parts, params, vcmt, mst_grid_n)
-
-        for r in res:
-            if r is None:
-                raise ValueError('TODO: bad value')
-        rate, error, samples = res
-        # declare file names
-        rate_file = os.path.join(params[cf.OUT_DIR], 'rate_{}.npy'.format(i))
-        error_file = os.path.join(params[cf.OUT_DIR], 'error_{}.npy'.format(i))
-        samples_file = os.path.join(params[cf.OUT_DIR],
-                                    'samples_{}.npy'.format(i))
-
-        np.save(file=rate_file, arr=rate)
-        np.save(file=error_file, arr=rate)
-        np.save(file=samples_file, arr=samples)
-
-
-def time_series_mpi(ifg_paths, params, vcmt, process_tiles, process_indices,
-                    preread_ifgs):
-    write_msg('Calculating time series')  # this should be logged
-
-    for t in process_tiles:
-        i = t.index
-        ifg_parts = [shared.IfgPart(p, t, preread_ifgs) for p in ifg_paths]
-        mst_file_process_n = os.path.join(TMPDIR, 'mst_mat_{}.npy'.format(i))
-        mst_tile = np.load(mst_file_process_n)
-        res = timeseries.time_series(ifg_parts, params, vcmt, mst_tile)
-        tsincr, tscum, tsvel = res
-        tsincr_file = os.path.join(TMPDIR, 'tsincr_{}.npy'.format(i))
-        tscum_file = os.path.join(TMPDIR, 'tscuml_{}.npy'.format(i))
-        np.save(file=tsincr_file, arr=tsincr)
-        np.save(file=tscum_file, arr=tscum)
-
-
-def ref_phase_estimation_mpi(MPI_myID, ifg_paths, parallel, params,
-                             refpx, refpy):
-    write_msg('Finding and removing reference phase')
-    num_processors = parallel.size
-    # ifgs = shared.prepare_ifgs_without_phase(ifg_paths, params)
-    no_ifgs = len(ifg_paths)
-    process_indices = parallel.calc_indices(no_ifgs)
-    process_ifgs = [itemgetter(p)(ifg_paths) for p in process_indices]
-    process_ref_phs = np.zeros(len(process_ifgs))
-    output_dir = params[cf.OUT_DIR]
-
-    if params[cf.REF_EST_METHOD] == 1:
-        # TODO: revisit as this will likely hit memory limit in NCI
-        comp_file = os.path.join(output_dir, 'comp.npy')
-        comp = np.load(comp_file)
-        for n, p in enumerate(process_ifgs):
-            process_ref_phs[n] = ref_phase_method1_dummy(p, comp, output_dir)
-
-    elif params[cf.REF_EST_METHOD] == 2:
-        half_chip_size = int(np.floor(params[cf.REF_CHIP_SIZE] / 2.0))
-        chipsize = 2 * half_chip_size + 1
-        thresh = chipsize * chipsize * params[cf.REF_MIN_FRAC]
-        for n, ifg in enumerate(process_ifgs):
-            ref_phs = rpe.est_ref_phase_method2_multi(ifg.phase_data,
-                                                      half_chip_size,
-                                                      refpx, refpy, thresh)
-            ifg.phase_data -= ref_phs
-            ifg.meta_data[ifc.REF_PHASE] = ifc.REF_PHASE_REMOVED
-            ifg.write_modified_phase()
-            process_ref_phs[n] = ref_phs
-            ifg.close()
-    else:
-        raise cf.ConfigException('Ref phase estimation method must be 1 or 2')
-
-    ref_phs_file = os.path.join(params[cf.OUT_DIR], 'ref_phs.npy')
-
-    if MPI_myID == MASTER_PROCESS:
-        all_indices = parallel.calc_all_indices(no_ifgs)
-        ref_phs = np.zeros(no_ifgs)
-        ref_phs[process_indices] = process_ref_phs
-
-        for i in range(1, num_processors):
-            process_ref_phs = \
-                parallel.receive(source=i, tag=-1,
-                                 return_status=False)
-            ref_phs[all_indices[i]] = process_ref_phs
-        np.save(file=ref_phs_file, arr=ref_phs)
-    else:
-        # send reference phase data to master process
-        parallel.send(process_ref_phs, destination=MASTER_PROCESS,
-                      tag=MPI_myID)
-
-
-def ref_phase_method1_dummy(ifg_path, comp, output_dir):
-    process = psutil.Process(os.getpid())
-    print process.memory_info()
-    numpy_file = os.path.join(
-        output_dir, os.path.basename(ifg_path).split('.')[0] + '.npy')
-    phase_data = np.load(numpy_file)
-    ref_phs = rpe.est_ref_phase_method1_multi(phase_data, comp)
-    phase_data -= ref_phs
-    ifg = shared.Ifg(ifg_path)
-    ifg.open()
-    md = ifg.meta_data
-    md[ifc.REF_PHASE] = ifc.REF_PHASE_REMOVED
-    ifg.write_modified_phase(data=phase_data)
-    ifg.close()
-    return ref_phs
-
-
-def maxvar_vcm_mpi(MPI_myID, ifg_paths, parallel, params):
-    num_processors = parallel.size
-    ifgs = shared.prepare_ifgs_without_phase(ifg_paths, params)
-    no_ifgs = len(ifgs)
-    process_indices = parallel.calc_indices(no_ifgs)
-    process_ifgs = [itemgetter(p)(ifgs) for p in process_indices]
-    process_maxvar = [vcm_module.cvd(i, params)[0] for i in process_ifgs]
-    maxvar_file = os.path.join(params[cf.OUT_DIR], 'maxvar.npy')
-    if MPI_myID == MASTER_PROCESS:
-        all_indices = parallel.calc_all_indices(no_ifgs)
-        maxvar = np.empty(len(ifgs))
-        maxvar[all_indices[MASTER_PROCESS]] = process_maxvar
-
-        for i in range(1, num_processors):
-            process_maxvar = parallel.receive(source=i, tag=-1,
-                                              return_status=False)
-            maxvar[all_indices[i]] = process_maxvar
-        np.save(file=maxvar_file, arr=maxvar)
-    else:
-        parallel.send(process_maxvar, destination=MASTER_PROCESS, tag=MPI_myID)
-    parallel.barrier()
-    maxvar = np.load(maxvar_file)
-    vcmt = vcm_module.get_vcmt(ifgs, maxvar)
-
-    return maxvar, vcmt
-
-
 def orb_fit_calc_mpi(MPI_myID, ifg_paths, num_processors, parallel, params):
     print 'calculating orbfit using MPI id:', MPI_myID
     if params[cf.ORBITAL_FIT_METHOD] != 1:
@@ -465,17 +280,6 @@ def mpi_mst_calc(dest_tifs, process_tiles, process_indices, preread_ifgs):
 
     for t, p_ind in zip(process_tiles, process_indices):
         save_mst_tile(t, p_ind, preread_ifgs)
-
-
-def get_process_tiles(dest_tifs, parallel, params):
-    ifg = shared.pre_prepare_ifgs([dest_tifs[0]], params)[0]
-    # TODO: changing the nrows and ncols here will break tests, fix this
-    tiles = shared.create_tiles(ifg.shape,
-                                n_ifgs=len(dest_tifs), nrows=3, ncols=4)
-    no_tiles = len(tiles)
-    process_indices = parallel.calc_indices(no_tiles)
-    process_tiles = [itemgetter(p)(tiles) for p in process_indices]
-    return ifg.shape, process_tiles, process_indices, tiles
 
 
 def clean_up_old_files():
