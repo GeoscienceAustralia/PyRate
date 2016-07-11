@@ -24,6 +24,7 @@ from pyrate.shared import get_tmpdir
 from collections import namedtuple
 import cPickle as cp
 from osgeo import gdal
+import parmap
 gdal.SetCacheMax(64)
 
 TMPDIR = get_tmpdir()
@@ -308,8 +309,10 @@ def ref_phase_estimation_mpi(MPI_myID, ifg_paths, parallel, params,
         # TODO: revisit as this will likely hit memory limit in NCI
         comp_file = os.path.join(output_dir, 'comp.npy')
         comp = np.load(comp_file)
-        for n, p in enumerate(process_ifgs):
-            process_ref_phs[n] = ref_phase_method1_dummy(comp, p, output_dir)
+        process_ref_phs = parmap.map(ref_phase_method1_dummy, process_ifgs,
+                                     comp, output_dir, processes=1)
+        # for n, p in enumerate(process_ifgs):
+        #     process_ref_phs[n] = ref_phase_method1_dummy(comp, p, output_dir)
 
     elif params[cf.REF_EST_METHOD] == 2:
         half_chip_size = int(np.floor(params[cf.REF_CHIP_SIZE] / 2.0))
@@ -346,7 +349,7 @@ def ref_phase_estimation_mpi(MPI_myID, ifg_paths, parallel, params,
                       tag=MPI_myID)
 
 
-def ref_phase_method1_dummy(comp, ifg_path, output_dir):
+def ref_phase_method1_dummy(ifg_path, comp, output_dir):
     process = psutil.Process(os.getpid())
     print process.memory_info()
     numpy_file = os.path.join(
