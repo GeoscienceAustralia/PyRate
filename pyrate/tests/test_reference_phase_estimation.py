@@ -514,6 +514,12 @@ class MPITests(unittest.TestCase):
         cmd = str.split()
         subprocess.check_call(cmd)
 
+        str = 'mpirun -np 2 python pyrate/nci/run_pyrate_pypar_2.py ' + \
+              cls.conf_file
+
+        cmd = str.split()
+        subprocess.check_call(cmd)
+
         # load the ref_phs file for testing
         ref_phs_file = os.path.join(cls.params[cf.OUT_DIR], 'ref_phs.npy')
         cls.ref_phs = np.load(ref_phs_file)

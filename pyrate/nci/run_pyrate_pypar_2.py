@@ -44,8 +44,7 @@ def main(params, config_file=sys.argv[1]):
 
     parallel.barrier()
     # estimate and remove reference phase
-    ref_phase_estimation_mpi(rank, dest_tifs, parallel,
-                             params, refpx, refpy)
+    ref_phase_estimation_mpi(rank, dest_tifs, parallel, params, refpx, refpy)
 
     parallel.barrier()
     # all processes need access to maxvar, and vcmt
@@ -74,7 +73,9 @@ def ref_phase_estimation_mpi(MPI_myID, ifg_paths, parallel, params,
         half_chip_size = int(np.floor(params[cf.REF_CHIP_SIZE] / 2.0))
         chipsize = 2 * half_chip_size + 1
         thresh = chipsize * chipsize * params[cf.REF_MIN_FRAC]
-        for n, ifg in enumerate(process_ifgs):
+        for n, p in enumerate(process_ifgs):
+            ifg = shared.Ifg(p)
+            ifg.open()
             ref_phs = rpe.est_ref_phase_method2_multi(ifg.phase_data,
                                                       half_chip_size,
                                                       refpx, refpy, thresh)
