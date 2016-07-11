@@ -988,7 +988,8 @@ def write_msg(msg):
 
 def get_tmpdir():
     if 'TMPDIR' in os.environ:  # NCI tmp dir in each node??
-        TMPDIR = os.environ['TMPDIR']
+        user = os.environ['USER']
+        TMPDIR = os.path.join('/short/dg9', user, 'tmp/')
     else:  # fall back option or when running on PC locally
         import tempfile
         TMPDIR = tempfile.gettempdir()
