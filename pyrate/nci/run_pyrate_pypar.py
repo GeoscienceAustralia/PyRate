@@ -154,7 +154,9 @@ def main(params, config_file=sys.argv[1]):
             ifg.save_numpy_phase(numpy_file=os.path.join(
                 output_dir, os.path.basename(d).split('.')[0] + '.npy'))
             ifg.close()
-        np.save(file=os.path.join(output_dir, 'phase_sum.npy'), arr=phase_sum)
+        comp = np.isnan(phase_sum)  # this is the same as in Matlab
+        comp = np.ravel(comp, order='F')  # this is the same as in Matlab
+        np.save(file=os.path.join(output_dir, 'comp.npy'), arr=comp)
     parallel.barrier()
     # estimate and remove reference phase
     ref_phase_estimation_mpi(rank, dest_tifs, parallel,
@@ -304,11 +306,8 @@ def ref_phase_estimation_mpi(MPI_myID, ifg_paths, parallel, params,
 
     if params[cf.REF_EST_METHOD] == 1:
         # TODO: revisit as this will likely hit memory limit in NCI
-        ifg_phase_data_sum = np.load(file=os.path.join(params[cf.OUT_DIR],
-                                                       'phase_sum.npy'))
-        comp = np.isnan(ifg_phase_data_sum)  # this is the same as in Matlab
-        comp = np.ravel(comp, order='F')  # this is the same as in Matlab
-
+        comp_file = os.path.join(output_dir, 'comp.npy')
+        comp = np.load(comp_file)
         for n, p in enumerate(process_ifgs):
             process_ref_phs[n] = ref_phase_method1_dummy(comp, p, output_dir)
 
