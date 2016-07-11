@@ -55,10 +55,10 @@ def main(params, config_file=sys.argv[1]):
     output_dir = params[cf.OUT_DIR]
     preread_ifgs = os.path.join(output_dir, 'preread_ifgs.pk')
 
-    parallel.barrier()
+    maxvar_file = os.path.join(params[cf.OUT_DIR], 'maxvar.npy')
+    vcmt_file = os.path.join(params[cf.OUT_DIR], 'vcmt.npy')
 
-    # all processes need access to maxvar, and vcmt
-    maxvar, vcmt = maxvar_vcm_mpi(rank, dest_tifs, parallel, params)
+    maxvar, vcmt = np.load(maxvar_file), np.load(vcmt_file)
 
     parallel.barrier()
 
@@ -253,36 +253,6 @@ def ref_phase_method1_dummy(ifg_path, output_dir):
     ifg.write_modified_phase(data=phase_data)
     ifg.close()
     return ref_phs
-
-
-def maxvar_vcm_mpi(rank, ifg_paths, parallel, params):
-    num_processors = parallel.size
-    ifgs = shared.prepare_ifgs_without_phase(ifg_paths, params)
-    no_ifgs = len(ifgs)
-    process_indices = parallel.calc_indices(no_ifgs)
-    process_ifgs = [itemgetter(p)(ifgs) for p in process_indices]
-    process_maxvar = [vcm_module.cvd(i, params)[0] for i in process_ifgs]
-    maxvar_file = os.path.join(params[cf.OUT_DIR], 'maxvar.npy')
-    vcmt_file = os.path.join(params[cf.OUT_DIR], 'vcmt.npy')
-    if rank == MASTER_PROCESS:
-        all_indices = parallel.calc_all_indices(no_ifgs)
-        maxvar = np.empty(len(ifgs))
-        maxvar[all_indices[MASTER_PROCESS]] = process_maxvar
-
-        for i in range(1, num_processors):
-            process_maxvar = parallel.receive(source=i, tag=-1,
-                                              return_status=False)
-            maxvar[all_indices[i]] = process_maxvar
-        np.save(file=maxvar_file, arr=maxvar)
-    else:
-        parallel.send(process_maxvar, destination=MASTER_PROCESS, tag=rank)
-    parallel.barrier()
-    maxvar = np.load(maxvar_file)
-    vcmt = vcm_module.get_vcmt(ifgs, maxvar)
-    if rank == MASTER_PROCESS:
-        np.save(file=vcmt_file, arr=vcmt)
-
-    return maxvar, vcmt
 
 
 def orb_fit_calc_mpi(MPI_myID, ifg_paths, num_processors, parallel, params):

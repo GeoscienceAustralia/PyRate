@@ -56,6 +56,10 @@ def main(params, config_file=sys.argv[1]):
     ref_phase_estimation_mpi(rank, dest_tifs, parallel,
                              params, refpx, refpy)
 
+    parallel.barrier()
+    # all processes need access to maxvar, and vcmt
+    maxvar, vcmt = maxvar_vcm_mpi(rank, dest_tifs, parallel, params)
+
     parallel.finalize()
 
 
@@ -232,7 +236,7 @@ def ref_phase_method1_dummy(ifg_path, output_dir):
     return ref_phs
 
 
-def maxvar_vcm_mpi(MPI_myID, ifg_paths, parallel, params):
+def maxvar_vcm_mpi(rank, ifg_paths, parallel, params):
     num_processors = parallel.size
     ifgs = shared.prepare_ifgs_without_phase(ifg_paths, params)
     no_ifgs = len(ifgs)
@@ -240,7 +244,8 @@ def maxvar_vcm_mpi(MPI_myID, ifg_paths, parallel, params):
     process_ifgs = [itemgetter(p)(ifgs) for p in process_indices]
     process_maxvar = [vcm_module.cvd(i, params)[0] for i in process_ifgs]
     maxvar_file = os.path.join(params[cf.OUT_DIR], 'maxvar.npy')
-    if MPI_myID == MASTER_PROCESS:
+    vcmt_file = os.path.join(params[cf.OUT_DIR], 'vcmt.npy')
+    if rank == MASTER_PROCESS:
         all_indices = parallel.calc_all_indices(no_ifgs)
         maxvar = np.empty(len(ifgs))
         maxvar[all_indices[MASTER_PROCESS]] = process_maxvar
@@ -251,10 +256,12 @@ def maxvar_vcm_mpi(MPI_myID, ifg_paths, parallel, params):
             maxvar[all_indices[i]] = process_maxvar
         np.save(file=maxvar_file, arr=maxvar)
     else:
-        parallel.send(process_maxvar, destination=MASTER_PROCESS, tag=MPI_myID)
+        parallel.send(process_maxvar, destination=MASTER_PROCESS, tag=rank)
     parallel.barrier()
     maxvar = np.load(maxvar_file)
     vcmt = vcm_module.get_vcmt(ifgs, maxvar)
+    if rank == MASTER_PROCESS:
+        np.save(file=vcmt_file, arr=vcmt)
 
     return maxvar, vcmt
 
