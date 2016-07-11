@@ -17,6 +17,7 @@ from pyrate.algorithm import master_slave_ids, get_all_epochs, get_epoch_count
 from pyrate import mst, shared
 from pyrate.shared import nanmedian
 from pyrate import config as cf
+from pyrate import ifgconstants as ifc
 
 
 # Orbital correction tasks
@@ -165,6 +166,9 @@ def _independent_correction(ifg, degree, offset, params):
         fullorb = np.reshape(np.dot(dm, model), ifg.phase_data.shape)
     offset_removal = nanmedian(np.ravel(ifg.phase_data - fullorb))
     ifg.phase_data -= (fullorb - offset_removal)
+    ifg.dataset.SetMetadataItem(ifc.PYRATE_ORBITAL_ERROR, ifc.ORB_REMOVED)
+    ifg.write_modified_phase()
+    ifg.close()
 
 
 def _network_correction(ifgs, degree, offset, m_ifgs=None):
