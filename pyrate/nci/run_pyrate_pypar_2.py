@@ -54,109 +54,43 @@ def main(params, config_file=sys.argv[1]):
         get_process_tiles(dest_tifs, parallel, params)
 
     output_dir = params[cf.OUT_DIR]
-    if rank == MASTER_PROCESS:
-        print "Master process found {} worker processors".format(num_processors)
-        preread_ifgs = {}
-        for i, d in enumerate(dest_tifs):
-            ifg = save_latest_phase(d, output_dir, tiles)
-            nan_fraction = ifg.nan_fraction
-            master = ifg.master
-            slave = ifg.slave
-            time_span = ifg.time_span
-
-            preread_ifgs[d] = {PrereadIfg(path=d,
-                                          nan_fraction=nan_fraction,
-                                          master=master,
-                                          slave=slave,
-                                          time_span=time_span)}
-        cp.dump(preread_ifgs,
-                open(os.path.join(output_dir, 'preread_ifgs.pk'), 'w'))
-
-    parallel.barrier()
-    preread_ifgs = os.path.join(output_dir, 'preread_ifgs.pk')
-
-    mpi_log_filename = os.path.join(output_dir, "mpi_run_pyrate.log")
-
-    if rank == MASTER_PROCESS:
-        output_log_file = open(mpi_log_filename, "w")
-        configfile = open(config_file)
-        output_log_file.write("Starting Simulation at: "
-                              + datetime.datetime.now().strftime(
-                                                "%Y-%m-%d %H:%M:%S"))
-        output_log_file.write("Master process found " +
-                              str(num_processors) +
-                              " worker processors.\n")
-        output_log_file.write("\n")
-        output_log_file.write("\nConfig Settings: start\n")
-        lines = configfile.read()
-        for line in lines:
-            output_log_file.write(line)
-        output_log_file.write("\nConfig Settings: end\n")
-
-        output_log_file.write("\n Input files for run_pyrate are:\n")
-        for b in dest_tifs:
-            output_log_file.write(b + "\n")
-
-        output_log_file.close()
-
-    parallel.barrier()
-
-    print 'Processor {} has {} tiles'.format(rank, len(process_tiles))
-    # Calc mst using MPI
-    if rank == MASTER_PROCESS:
-        mpi_mst_calc(dest_tifs, process_tiles, process_indices, preread_ifgs)
-    else:
-        mpi_mst_calc(dest_tifs, process_tiles, process_indices, preread_ifgs)
-
-    parallel.barrier()
-
-    # Calc ref_pixel using MPI
     ref_pixel_file = os.path.join(params[cf.OUT_DIR], 'ref_pixel.npy')
-    if rank == MASTER_PROCESS:
-        refpx, refpy = ref_pixel_calc_mpi(rank, dest_tifs,
-                                          num_processors, parallel, params)
-        np.save(file=ref_pixel_file, arr=[refpx, refpy])
-    else:
-        ref_pixel_calc_mpi(rank, dest_tifs,
-                           num_processors, parallel, params)
-
-    parallel.barrier()
-    # refpixel read in each process
+    preread_ifgs = os.path.join(output_dir, 'preread_ifgs.pk')
     refpx, refpy = np.load(ref_pixel_file)
     print 'Found reference pixel', refpx, refpy
-    parallel.barrier()
-
-    # remove APS delay here
-    if params[cf.APS_CORRECTION]:
-        ifgs = shared.pre_prepare_ifgs(dest_tifs, params)
-        if run_pyrate.aps_delay_required(ifgs, params):
-            no_ifgs = len(ifgs)
-            process_indices_aps = parallel.calc_indices(no_ifgs)
-            ifgs = aps.remove_aps_delay(ifgs, params, process_indices_aps)
-
-        for i in ifgs:
-            i.close()
 
     parallel.barrier()
-    # required as all processes need orbital corrected ifgs
-    orb_fit_calc_mpi(rank, dest_tifs,
-                     num_processors, parallel, params)
+    # estimate and remove reference phase
+    ref_phase_estimation_mpi(rank, dest_tifs, parallel,
+                             params, refpx, refpy)
     parallel.barrier()
 
-    # save phase data and phase_sum used in the reference phase estimation
+    # all processes need access to maxvar, and vcmt
+    maxvar, vcmt = maxvar_vcm_mpi(rank, dest_tifs, parallel, params)
+
+    vcmt_file = os.path.join(params[cf.OUT_DIR], 'vcmt.npy')
     if rank == MASTER_PROCESS:
-        phase_sum = 0
+        np.save(file=vcmt_file, arr=vcmt)
+
+    parallel.barrier()
+
+    if rank == MASTER_PROCESS:
         for d in dest_tifs:
-            ifg = shared.Ifg(d)
-            ifg.open()
-            ifg.nodata_value = params[cf.NO_DATA_VALUE]
-            phase_sum += ifg.phase_data
-            ifg.save_numpy_phase(numpy_file=os.path.join(
-                output_dir, os.path.basename(d).split('.')[0] + '.npy'))
-            ifg.close()
-        comp = np.isnan(phase_sum)  # this is the same as in Matlab
-        comp = np.ravel(comp, order='F')  # this is the same as in Matlab
-        np.save(file=os.path.join(output_dir, 'comp.npy'), arr=comp)
+            save_latest_phase(d, output_dir, tiles)
+
+    # linrate mpi computation
+    linrate_mpi(rank, dest_tifs, parallel, params, vcmt,
+                process_tiles, process_indices, ifg_shape, preread_ifgs)
+    # TODO: write linrate aggregation function from linrate tiles
+
+    parallel.barrier()
+    # time series mpi computation
+    if params[cf.TIME_SERIES_CAL]:
+        time_series_mpi(dest_tifs, params, vcmt, process_tiles,
+                        process_indices, preread_ifgs)
+        parallel.barrier()
+        write_time_series_geotiff_mpi(dest_tifs, params, tiles, parallel, rank)
+
     parallel.finalize()
 
 
