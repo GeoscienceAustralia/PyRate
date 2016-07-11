@@ -1,29 +1,20 @@
-import datetime
-import glob
 import os
 import sys
-import gc
 from operator import itemgetter
 import psutil
 import numpy as np
+from collections import namedtuple
+from osgeo import gdal
+
 from pyrate import config as cf
 from pyrate import ifgconstants as ifc
-from pyrate import linrate
-from pyrate import mst
-from pyrate import orbital
 from pyrate import reference_phase_estimation as rpe
-from pyrate import refpixel
-from pyrate import remove_aps_delay as aps
 from pyrate import shared
-from pyrate import timeseries
 from pyrate import vcm as vcm_module
 from pyrate.nci.parallel import Parallel
 from pyrate.scripts import run_pyrate
 from pyrate.scripts.run_pyrate import write_msg
 from pyrate.shared import get_tmpdir
-from collections import namedtuple
-import cPickle as cp
-from osgeo import gdal
 gdal.SetCacheMax(64)
 
 TMPDIR = get_tmpdir()
