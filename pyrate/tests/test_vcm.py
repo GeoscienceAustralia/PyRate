@@ -184,9 +184,8 @@ class MatlabEqualityTest(unittest.TestCase):
 
         refx, refy = run_pyrate.find_reference_pixel(ifgs, params)
 
-        if params[cf.ORBITAL_FIT] != 0:
-            run_pyrate.remove_orbital_error(ifgs, params)
-
+        run_pyrate.remove_orbital_error(ifgs, params)
+        ifgs = shared.prepare_ifgs_without_phase(dest_paths, params)
         _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
 
         # Calculate interferogram noise
@@ -249,6 +248,11 @@ class MPITests(unittest.TestCase):
         assert os.path.exists(cls.conf_file)
         str = 'mpirun -np 2 python pyrate/nci/run_pyrate_pypar.py ' + \
               cls.conf_file
+        cmd = str.split()
+        subprocess.check_call(cmd)
+        str = 'mpirun -np 2 python pyrate/nci/run_pyrate_pypar_2.py ' + \
+              cls.conf_file
+
         cmd = str.split()
         subprocess.check_call(cmd)
         maxvar_file = os.path.join(cls.params[cf.OUT_DIR], 'maxvar.npy')
