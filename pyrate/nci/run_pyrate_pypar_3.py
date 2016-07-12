@@ -82,7 +82,9 @@ def main(params, config_file=sys.argv[1]):
 
 
 def save_linrate_mpi(dest_tifs, params, tiles, out_type):
+    # TODO: fix linrate test
     # TODO: write tests for this function
+    print 'saving linrate output type', out_type
     ifgs = shared.prepare_ifgs_without_phase(dest_tifs, params)
     epochlist, gt, md, wkt = run_pyrate.setup_metadata(ifgs, params)
     dest = os.path.join(params[cf.OUT_DIR], out_type + ".tif")
@@ -141,6 +143,8 @@ def write_time_series_geotiff_mpi(dest_tifs, params, tiles, parallel, MPI_id):
                 'tscuml' + "_" + str(epochlist.dates[i + 1]) + ".tif")
             md[ifc.PRTYPE] = 'tscuml'
             shared.write_output_geotiff(md, gt, wkt, tscum_g, dest, np.nan)
+    print 'process {} finished writing {} ts tifs of total {}'.format(
+        MPI_id, len(process_tifs), no_ts_tifs)
 
 
 def linrate_mpi(MPI_myID, ifg_paths, parallel, params, vcmt,
