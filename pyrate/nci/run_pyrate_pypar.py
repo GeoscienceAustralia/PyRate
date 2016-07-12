@@ -135,9 +135,9 @@ def main(params, config_file=sys.argv[1]):
             i.close()
 
     parallel.barrier()
-    # required as all processes need orbital corrected ifgs
-    orb_fit_calc_mpi(rank, dest_tifs,
-                     num_processors, parallel, params)
+
+    orb_fit_calc_mpi(dest_tifs, parallel, params)
+
     parallel.barrier()
 
     # save phase data and phase_sum used in the reference phase estimation
@@ -173,8 +173,8 @@ def save_latest_phase(d, output_dir, tiles):
     return ifg
 
 
-def orb_fit_calc_mpi(MPI_myID, ifg_paths, num_processors, parallel, params):
-    print 'calculating orbfit using MPI id:', MPI_myID
+def orb_fit_calc_mpi(ifg_paths, parallel, params):
+    print 'calculating orbfit correction'
     if params[cf.ORBITAL_FIT_METHOD] != 1:
         raise cf.ConfigException('For now orbfit method must be 1')
 
@@ -184,20 +184,8 @@ def orb_fit_calc_mpi(MPI_myID, ifg_paths, num_processors, parallel, params):
     process_ifgs = [itemgetter(p)(ifg_paths) for p in process_indices]
 
     mlooked = None
-    # difficult to enable MPI on orbfit method 2
-    # so just do orbfit method 1 for now
     # TODO: MPI orbfit method 2
-    orbital.orbital_correction(process_ifgs,
-                               params,
-                               mlooked=mlooked)
-    # set orbfit tags after orbital error correction
-    for i in process_ifgs:
-        ifg = shared.Ifg(i)
-        ifg.open()
-        ifg.dataset.SetMetadataItem(ifc.PYRATE_ORBITAL_ERROR, ifc.ORB_REMOVED)
-        ifg.write_modified_phase()
-        ifg.close()
-        # implement mpi logging
+    orbital.orbital_correction(process_ifgs, params, mlooked=mlooked)
 
 
 def ref_pixel_calc_mpi(MPI_myID, ifg_paths, num_processors, parallel, params):

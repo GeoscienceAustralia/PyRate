@@ -136,6 +136,7 @@ def linrate_mpi(MPI_myID, ifg_paths, parallel, params, vcmt,
                 process_tiles, process_indices, ifg_shape, preread_ifgs):
     write_msg('Calculating linear rate')
     for i, t in zip(process_indices, process_tiles):
+        print 'calculating lin rate of tile {}'.format(i)
         ifg_parts = [shared.IfgPart(p, t, preread_ifgs) for p in ifg_paths]
         mst_n = os.path.join(TMPDIR, 'mst_mat_{}.npy'.format(i))
         mst_grid_n = np.load(mst_n)
