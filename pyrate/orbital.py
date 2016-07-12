@@ -202,11 +202,12 @@ def _network_correction(ifgs, degree, offset, m_ifgs=None):
 
     # create full res DM to expand determined coefficients into full res orbital
     # correction (eg. expand coarser model to full size)
+    ifg_shape = ifgs[0].shape
     dm = get_design_matrix(ifgs[0], degree, offset=False)
 
     for i in ifgs:
         orb = dm.dot(coefs[ids[i.slave]] - coefs[ids[i.master]])
-        orb = orb.reshape(ifgs[0].shape)
+        orb = orb.reshape(ifg_shape)
 
         # offset estimation
         if offset:

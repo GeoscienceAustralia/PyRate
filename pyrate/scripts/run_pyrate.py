@@ -272,12 +272,6 @@ def remove_orbital_error(ifgs, params):
                                params,
                                mlooked=mlooked)
 
-    # write data to disc after orbital error correction
-    # for i in ifgs:
-    #     i.dataset.SetMetadataItem(ifc.PYRATE_ORBITAL_ERROR, ifc.ORB_REMOVED)
-    #     i.write_modified_phase()
-    #     logging.debug('%s: orbital error removed' % i.data_path)
-
 
 def check_orbital_ifgs(ifgs, flags):
     count = sum([f == ifc.ORB_REMOVED for f in flags])
