@@ -65,10 +65,10 @@ def ref_phase_estimation_mpi(MPI_myID, ifg_paths, parallel, params,
     output_dir = params[cf.OUT_DIR]
 
     if params[cf.REF_EST_METHOD] == 1:
-        # TODO: revisit as this will likely hit memory limit in NCI
         for n, p in enumerate(process_ifgs):
             process_ref_phs[n] = ref_phase_method1_dummy(p, output_dir)
-            print 'finished processing', n, 'of',  len(process_ifgs)
+            print 'finished processing {} of ' \
+                  '{}, of {}'.format(n, len(process_ifgs), no_ifgs)
     elif params[cf.REF_EST_METHOD] == 2:
         half_chip_size = int(np.floor(params[cf.REF_CHIP_SIZE] / 2.0))
         chipsize = 2 * half_chip_size + 1
@@ -128,12 +128,19 @@ def ref_phase_method1_dummy(ifg_path, output_dir):
 
 
 def maxvar_vcm_mpi(rank, ifg_paths, parallel, params):
+    print 'calculating maxvar and vcm'
     num_processors = parallel.size
     ifgs = shared.prepare_ifgs_without_phase(ifg_paths, params)
     no_ifgs = len(ifgs)
     process_indices = parallel.calc_indices(no_ifgs)
     process_ifgs = [itemgetter(p)(ifgs) for p in process_indices]
-    process_maxvar = [vcm_module.cvd(i, params)[0] for i in process_ifgs]
+    process_maxvar = []
+    for n, i in enumerate(process_ifgs):
+        print 'calculating maxvar for {} of process ifgs {} of ' \
+              'total {}'.format(n, len(process_ifgs), no_ifgs)
+        print psutil.virtual_memory()
+        process_maxvar.append(vcm_module.cvd(i, params)[0])
+        i.close()
     maxvar_file = os.path.join(params[cf.OUT_DIR], 'maxvar.npy')
     vcmt_file = os.path.join(params[cf.OUT_DIR], 'vcmt.npy')
     if rank == MASTER_PROCESS:

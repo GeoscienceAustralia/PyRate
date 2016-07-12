@@ -102,6 +102,7 @@ def save_linrate_mpi(dest_tifs, params, tiles, out_type):
 
 
 def write_time_series_geotiff_mpi(dest_tifs, params, tiles, parallel, MPI_id):
+    # TODO: This is currently pretty slow - investigate
     ifgs = shared.prepare_ifgs_without_phase(dest_tifs, params)
     epochlist, gt, md, wkt = run_pyrate.setup_metadata(ifgs, params)
 
