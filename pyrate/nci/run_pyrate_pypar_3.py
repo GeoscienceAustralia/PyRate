@@ -69,38 +69,29 @@ def main(params, config_file=sys.argv[1]):
 
     # linrate aggregation
     if rank == 1:
-        ifgs = shared.prepare_ifgs_without_phase(dest_tifs, params)
-        epochlist, gt, md, wkt = run_pyrate.setup_metadata(ifgs, params)
-        dest = os.path.join(params[cf.OUT_DIR], "linrate.tif")
-        md[ifc.MASTER_DATE] = epochlist.dates
-        md[ifc.PRTYPE] = 'linrate'
-        rate = np.zeros(shape=ifgs[0].shape, dtype=np.float32)
-        for t in tiles:
-            rate_file = os.path.join(TMPDIR, 'rate_{}.npy'.format(t.index))
-            rate_tile = np.load(file=rate_file)
-            rate[t.top_left_y:t.bottom_right_y,
-                t.top_left_x:t.bottom_right_x] = rate_tile
-
-        shared.write_output_geotiff(md, gt, wkt, rate, dest, np.nan)
-
+        save_linrate_mpi(dest_tifs, params, tiles, out_type='linrate')
     elif rank == 2:
-        ifgs = shared.prepare_ifgs_without_phase(dest_tifs, params)
-        epochlist, gt, md, wkt = run_pyrate.setup_metadata(ifgs, params)
-        dest = os.path.join(params[cf.OUT_DIR], "linerror.tif")
-        md[ifc.MASTER_DATE] = epochlist.dates
-        md[ifc.PRTYPE] = 'linerror'
-        error = np.zeros(shape=ifgs[0].shape, dtype=np.float32)
-        for t in tiles:
-            error_file = os.path.join(TMPDIR, 'error_{}.npy'.format(t.index))
-            error_tile = np.load(file=error_file)
-            error[t.top_left_y:t.bottom_right_y,
-                t.top_left_x:t.bottom_right_x] = error_tile
-
-        shared.write_output_geotiff(md, gt, wkt, error, dest, np.nan)
+        save_linrate_mpi(dest_tifs, params, tiles, out_type='linerror')
     else:
         pass
 
     parallel.finalize()
+
+
+def save_linrate_mpi(dest_tifs, params, tiles, out_type):
+    # TODO: write tests for this function
+    ifgs = shared.prepare_ifgs_without_phase(dest_tifs, params)
+    epochlist, gt, md, wkt = run_pyrate.setup_metadata(ifgs, params)
+    dest = os.path.join(params[cf.OUT_DIR], out_type + ".tif")
+    md[ifc.MASTER_DATE] = epochlist.dates
+    md[ifc.PRTYPE] = out_type
+    rate = np.zeros(shape=ifgs[0].shape, dtype=np.float32)
+    for t in tiles:
+        rate_file = os.path.join(TMPDIR, out_type + '_{}.npy'.format(t.index))
+        rate_tile = np.load(file=rate_file)
+        rate[t.top_left_y:t.bottom_right_y,
+        t.top_left_x:t.bottom_right_x] = rate_tile
+    shared.write_output_geotiff(md, gt, wkt, rate, dest, np.nan)
 
 
 def write_time_series_geotiff_mpi(dest_tifs, params, tiles, parallel, MPI_id):
@@ -162,9 +153,9 @@ def linrate_mpi(MPI_myID, ifg_paths, parallel, params, vcmt,
                 raise ValueError('TODO: bad value')
         rate, error, samples = res
         # declare file names
-        rate_file = os.path.join(TMPDIR, 'rate_{}.npy'.format(i))
-        error_file = os.path.join(TMPDIR, 'error_{}.npy'.format(i))
-        samples_file = os.path.join(TMPDIR, 'samples_{}.npy'.format(i))
+        rate_file = os.path.join(TMPDIR, 'linrate_{}.npy'.format(i))
+        error_file = os.path.join(TMPDIR, 'linerror_{}.npy'.format(i))
+        samples_file = os.path.join(TMPDIR, 'linsamples_{}.npy'.format(i))
 
         np.save(file=rate_file, arr=rate)
         np.save(file=error_file, arr=rate)
