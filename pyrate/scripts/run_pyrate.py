@@ -334,7 +334,7 @@ def write_linrate_tifs(ifgs, params, res):
     dest = os.path.join(PYRATEPATH, params[cf.OUT_DIR], "linrate.tif")
     md[ifc.MASTER_DATE] = epochlist.dates
     md[ifc.PRTYPE] = 'linrate'
-    write_output_geotiff(md, gt, wkt, error, dest, np.nan)
+    write_output_geotiff(md, gt, wkt, rate, dest, np.nan)
     dest = os.path.join(PYRATEPATH, params[cf.OUT_DIR], "linerror.tif")
     md[ifc.PRTYPE] = 'linerror'
     write_output_geotiff(md, gt, wkt, error, dest, np.nan)
