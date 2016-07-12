@@ -5,9 +5,9 @@ import os
 import sys
 from collections import namedtuple
 from operator import itemgetter
-
 import numpy as np
 from osgeo import gdal
+
 from pyrate import config as cf
 from pyrate import mst
 from pyrate import orbital
@@ -22,15 +22,12 @@ from pyrate.scripts.run_pyrate import write_msg
 from pyrate.shared import get_tmpdir
 
 gdal.SetCacheMax(64)
-
-TMPDIR = get_tmpdir()
-
 __author__ = 'sudipta'
 
 # Constants
 MASTER_PROCESS = 0
 data_path = 'DATAPATH'
-
+TMPDIR = get_tmpdir()
 PrereadIfg = namedtuple('PrereadIfg', 'path nan_fraction master slave time_span')
 
 
@@ -55,7 +52,7 @@ def main(params, config_file=sys.argv[1]):
         print "Master process found {} worker processors".format(num_processors)
         preread_ifgs = {}
         for i, d in enumerate(dest_tifs):
-            ifg = save_latest_phase(d, output_dir, tiles)
+            ifg = save_latest_phase(d, TMPDIR, tiles)
             nan_fraction = ifg.nan_fraction
             master = ifg.master
             slave = ifg.slave
@@ -67,7 +64,7 @@ def main(params, config_file=sys.argv[1]):
                                           slave=slave,
                                           time_span=time_span)}
         cp.dump(preread_ifgs,
-                open(os.path.join(output_dir, 'preread_ifgs.pk'), 'w'))
+                open(os.path.join(TMPDIR, 'preread_ifgs.pk'), 'w'))
 
     parallel.barrier()
     preread_ifgs = os.path.join(output_dir, 'preread_ifgs.pk')

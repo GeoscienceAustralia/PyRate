@@ -53,6 +53,16 @@ GDAL_Y_CELLSIZE = 5
 GDAL_X_FIRST = 0
 GDAL_Y_FIRST = 3
 
+def get_tmpdir():
+    if 'TMPDIR' in os.environ:  # NCI tmp dir in each node??
+        user = os.environ['USER']
+        TMPDIR = os.path.join('/short/dg9', user, 'tmp/')
+    else:  # fall back option or when running on PC locally
+        import tempfile
+        TMPDIR = tempfile.gettempdir()
+    return TMPDIR
+
+TMPDIR = get_tmpdir()
 
 class RasterBase(object):
     """
@@ -433,9 +443,8 @@ class IfgPart(object):
         self.c_end = self.tile.bottom_right_x
         # TODO: fix this if cond
         if ifg_dict is not None:
-            outdir = os.path.dirname(ifg_dict)
             preread_ifgs = cp.load(
-                open(os.path.join(outdir, 'preread_ifgs.pk'), 'r'))
+                open(os.path.join(TMPDIR, 'preread_ifgs.pk'), 'r'))
             ifg = preread_ifgs[ifg_or_path].pop()
             self.nan_fraction = ifg.nan_fraction
             self.master = ifg.master
@@ -443,7 +452,7 @@ class IfgPart(object):
             self.time_span = ifg.time_span
             phase_file = 'phase_data_{}_{}.npy'.format(
                 os.path.basename(ifg_or_path).split('.')[0], tile.index)
-            self.phase_data = np.load(os.path.join(outdir, phase_file))
+            self.phase_data = np.load(os.path.join(TMPDIR, phase_file))
             read = True
         else:
             # check if Ifg was sent.
@@ -984,13 +993,3 @@ def write_msg(msg):
     logging.debug(msg)
     if VERBOSE:
         print msg
-
-
-def get_tmpdir():
-    if 'TMPDIR' in os.environ:  # NCI tmp dir in each node??
-        user = os.environ['USER']
-        TMPDIR = os.path.join('/short/dg9', user, 'tmp/')
-    else:  # fall back option or when running on PC locally
-        import tempfile
-        TMPDIR = tempfile.gettempdir()
-    return TMPDIR
