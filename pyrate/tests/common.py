@@ -145,6 +145,7 @@ class MockIfg(object):
         dimensions of the phase band (so the mock ifg can be resized differently
         to the source interferogram for smaller test datasets).
         """
+        self.dataset = ifg.dataset
         self.master = ifg.master
         self.slave = ifg.slave
         self.data_path = ifg.data_path
@@ -171,8 +172,13 @@ class MockIfg(object):
 
     @property
     def shape(self):
-        return (self.nrows, self.ncols)
+        return self.nrows, self.ncols
 
+    def write_modified_phase(self):  #dummy
+        pass
+
+    def close(self):  # dummy
+        pass
 
 def move_files(source_dir, dest_dir, file_type='*.tif'):
     for filename in glob.glob(os.path.join(source_dir, file_type)):
