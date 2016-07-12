@@ -168,9 +168,7 @@ def _independent_correction(ifg, degree, offset, params):
     ifg.phase_data -= (fullorb - offset_removal)
 
     # set orbfit tags after orbital error correction
-    ifg.dataset.SetMetadataItem(ifc.PYRATE_ORBITAL_ERROR, ifc.ORB_REMOVED)
-    ifg.write_modified_phase()
-    ifg.close()
+    save_orbital_error_corrected_phase(ifg)
 
 
 def _network_correction(ifgs, degree, offset, m_ifgs=None):
@@ -217,6 +215,15 @@ def _network_correction(ifgs, degree, offset, m_ifgs=None):
             orb -= nanmedian(tmp)
 
         i.phase_data -= orb  # remove orbital error from the ifg
+        # set orbfit tags after orbital error correction
+        save_orbital_error_corrected_phase(i)
+
+
+def save_orbital_error_corrected_phase(ifg):
+    # set orbfit tags after orbital error correction
+    ifg.dataset.SetMetadataItem(ifc.PYRATE_ORBITAL_ERROR, ifc.ORB_REMOVED)
+    ifg.write_modified_phase()
+    ifg.close()
 
 
 # TODO: subtract reference pixel coordinate from x and y
