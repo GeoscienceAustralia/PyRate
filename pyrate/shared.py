@@ -432,7 +432,7 @@ class IfgPart(object):
         self.c_start = self.tile.top_left_x
         self.c_end = self.tile.bottom_right_x
         # TODO: fix this if cond
-        if ifg_dict:
+        if ifg_dict is not None:
             outdir = os.path.dirname(ifg_dict)
             preread_ifgs = cp.load(
                 open(os.path.join(outdir, 'preread_ifgs.pk'), 'r'))
