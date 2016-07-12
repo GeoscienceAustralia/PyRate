@@ -390,15 +390,15 @@ class MPITests(unittest.TestCase):
         assert os.path.exists(cls.conf_file)
 
         # Calc time series using MPI
-        str = 'mpirun -np 2 python pyrate/nci/run_pyrate_pypar.py ' + \
+        str = 'mpirun -np 4 python pyrate/nci/run_pyrate_pypar.py ' + \
               cls.conf_file
         cmd = str.split()
         subprocess.check_call(cmd)
-        str = 'mpirun -np 2 python pyrate/nci/run_pyrate_pypar_2.py ' + \
+        str = 'mpirun -np 4 python pyrate/nci/run_pyrate_pypar_2.py ' + \
               cls.conf_file
         cmd = str.split()
         subprocess.check_call(cmd)
-        str = 'mpirun -np 2 python pyrate/nci/run_pyrate_pypar_3.py ' + \
+        str = 'mpirun -np 4 python pyrate/nci/run_pyrate_pypar_3.py ' + \
               cls.conf_file
         cmd = str.split()
         subprocess.check_call(cmd)
