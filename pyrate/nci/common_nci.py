@@ -1,3 +1,4 @@
+import numpy as np
 from pyrate import shared
 from operator import itemgetter
 import glob
@@ -20,3 +21,19 @@ def clean_up_old_files():
     for f in files:
         os.remove(f)
         print 'removed', f
+
+
+def save_latest_phase(d, output_dir, tiles):
+    ifg = shared.Ifg(d)
+    ifg.open()
+    ifg.nodata_value = 0
+    phase_data = ifg.phase_data
+    for t in tiles:
+        p_data = phase_data[t.top_left_y:t.bottom_right_y,
+                 t.top_left_x:t.bottom_right_x]
+        phase_file = 'phase_data_{}_{}.npy'.format(
+            os.path.basename(d).split('.')[0], t.index)
+
+        np.save(file=os.path.join(output_dir, phase_file),
+                arr=p_data)
+    return ifg

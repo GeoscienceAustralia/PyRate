@@ -1,25 +1,25 @@
+import cPickle as cp
 import datetime
 import glob
 import os
 import sys
-from operator import itemgetter
-import numpy as np
 from collections import namedtuple
-import cPickle as cp
-from osgeo import gdal
+from operator import itemgetter
 
+import numpy as np
+from osgeo import gdal
 from pyrate import config as cf
-from pyrate import ifgconstants as ifc
 from pyrate import mst
 from pyrate import orbital
 from pyrate import refpixel
 from pyrate import remove_aps_delay as aps
 from pyrate import shared
+from pyrate.nci import common_nci
+from pyrate.nci.common_nci import save_latest_phase
 from pyrate.nci.parallel import Parallel
 from pyrate.scripts import run_pyrate
 from pyrate.scripts.run_pyrate import write_msg
 from pyrate.shared import get_tmpdir
-from pyrate.nci import common_nci
 
 gdal.SetCacheMax(64)
 
@@ -153,24 +153,8 @@ def main(params, config_file=sys.argv[1]):
             ifg.close()
         comp = np.isnan(phase_sum)  # this is the same as in Matlab
         comp = np.ravel(comp, order='F')  # this is the same as in Matlab
-        np.save(file=os.path.join(output_dir, 'comp.npy'), arr=comp)
+        np.save(file=os.path.join(TMPDIR, 'comp.npy'), arr=comp)
     parallel.finalize()
-
-
-def save_latest_phase(d, output_dir, tiles):
-    ifg = shared.Ifg(d)
-    ifg.open()
-    ifg.nodata_value = 0
-    phase_data = ifg.phase_data
-    for t in tiles:
-        p_data = phase_data[t.top_left_y:t.bottom_right_y,
-                 t.top_left_x:t.bottom_right_x]
-        phase_file = 'phase_data_{}_{}.npy'.format(
-            os.path.basename(d).split('.')[0], t.index)
-
-        np.save(file=os.path.join(output_dir, phase_file),
-                arr=p_data)
-    return ifg
 
 
 def orb_fit_calc_mpi(ifg_paths, parallel, params):

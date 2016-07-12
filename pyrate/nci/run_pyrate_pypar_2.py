@@ -107,7 +107,7 @@ def ref_phase_estimation_mpi(MPI_myID, ifg_paths, parallel, params,
 
 
 def ref_phase_method1_dummy(ifg_path, output_dir):
-    comp_file = os.path.join(output_dir, 'comp.npy')
+    comp_file = os.path.join(TMPDIR, 'comp.npy')
 
     comp = np.load(comp_file)
     process = psutil.Process(os.getpid())

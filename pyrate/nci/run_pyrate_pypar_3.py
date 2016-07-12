@@ -54,14 +54,12 @@ def main(params, config_file=sys.argv[1]):
 
     if rank == MASTER_PROCESS:
         for d in dest_tifs:
-            save_latest_phase(d, output_dir, tiles)
+            common_nci.save_latest_phase(d, output_dir, tiles)
 
     # linrate mpi computation
     linrate_mpi(rank, dest_tifs, parallel, params, vcmt,
                 process_tiles, process_indices, ifg_shape, preread_ifgs)
-    # TODO: write linrate aggregation function from linrate tiles
 
-    parallel.barrier()
     # time series mpi computation
     if params[cf.TIME_SERIES_CAL]:
         time_series_mpi(dest_tifs, params, vcmt, process_tiles,
@@ -70,22 +68,6 @@ def main(params, config_file=sys.argv[1]):
         write_time_series_geotiff_mpi(dest_tifs, params, tiles, parallel, rank)
 
     parallel.finalize()
-
-
-def save_latest_phase(d, output_dir, tiles):
-    ifg = shared.Ifg(d)
-    ifg.open()
-    ifg.nodata_value = 0
-    phase_data = ifg.phase_data
-    for t in tiles:
-        p_data = phase_data[t.top_left_y:t.bottom_right_y,
-                 t.top_left_x:t.bottom_right_x]
-        phase_file = 'phase_data_{}_{}.npy'.format(
-            os.path.basename(d).split('.')[0], t.index)
-
-        np.save(file=os.path.join(output_dir, phase_file),
-                arr=p_data)
-    return ifg
 
 
 def write_time_series_geotiff_mpi(dest_tifs, params, tiles, parallel, MPI_id):
@@ -147,10 +129,9 @@ def linrate_mpi(MPI_myID, ifg_paths, parallel, params, vcmt,
                 raise ValueError('TODO: bad value')
         rate, error, samples = res
         # declare file names
-        rate_file = os.path.join(params[cf.OUT_DIR], 'rate_{}.npy'.format(i))
-        error_file = os.path.join(params[cf.OUT_DIR], 'error_{}.npy'.format(i))
-        samples_file = os.path.join(params[cf.OUT_DIR],
-                                    'samples_{}.npy'.format(i))
+        rate_file = os.path.join(TMPDIR, 'rate_{}.npy'.format(i))
+        error_file = os.path.join(TMPDIR, 'error_{}.npy'.format(i))
+        samples_file = os.path.join(TMPDIR, 'samples_{}.npy'.format(i))
 
         np.save(file=rate_file, arr=rate)
         np.save(file=error_file, arr=rate)
@@ -163,6 +144,7 @@ def time_series_mpi(ifg_paths, params, vcmt, process_tiles, process_indices,
 
     for t in process_tiles:
         i = t.index
+        print 'calculating time series for tile', t.index
         ifg_parts = [shared.IfgPart(p, t, preread_ifgs) for p in ifg_paths]
         mst_file_process_n = os.path.join(TMPDIR, 'mst_mat_{}.npy'.format(i))
         mst_tile = np.load(mst_file_process_n)
