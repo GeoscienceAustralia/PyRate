@@ -72,6 +72,8 @@ def main(params, config_file=sys.argv[1]):
         save_linrate_mpi(dest_tifs, params, tiles, out_type='linrate')
     elif rank == 2:
         save_linrate_mpi(dest_tifs, params, tiles, out_type='linerror')
+    elif rank == 3:
+        save_linrate_mpi(dest_tifs, params, tiles, out_type='linsamples')
     else:
         pass
 
@@ -92,6 +94,8 @@ def save_linrate_mpi(dest_tifs, params, tiles, out_type):
         rate[t.top_left_y:t.bottom_right_y,
         t.top_left_x:t.bottom_right_x] = rate_tile
     shared.write_output_geotiff(md, gt, wkt, rate, dest, np.nan)
+    npy_rate_file = os.path.join(params[cf.OUT_DIR], out_type + '.npy')
+    np.save(file=npy_rate_file, arr=rate)
 
 
 def write_time_series_geotiff_mpi(dest_tifs, params, tiles, parallel, MPI_id):
