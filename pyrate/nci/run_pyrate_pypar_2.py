@@ -15,6 +15,7 @@ from pyrate.nci.parallel import Parallel
 from pyrate.scripts import run_pyrate
 from pyrate.scripts.run_pyrate import write_msg
 from pyrate.shared import get_tmpdir
+from pyrate.nci import common_nci
 gdal.SetCacheMax(64)
 
 TMPDIR = get_tmpdir()
@@ -114,7 +115,7 @@ def ref_phase_method1_dummy(ifg_path, output_dir):
     print process.memory_info()
     print psutil.virtual_memory()
     numpy_file = os.path.join(
-        output_dir, os.path.basename(ifg_path).split('.')[0] + '.npy')
+        TMPDIR, os.path.basename(ifg_path).split('.')[0] + '.npy')
     phase_data = np.load(numpy_file)
     ref_phs = rpe.est_ref_phase_method1_multi(phase_data, comp)
     phase_data -= ref_phs
@@ -139,6 +140,7 @@ def maxvar_vcm_mpi(rank, ifg_paths, parallel, params):
         print 'calculating maxvar for {} of process ifgs {} of ' \
               'total {}'.format(n, len(process_ifgs), no_ifgs)
         print psutil.virtual_memory()
+        # TODO: cvd calculation is still pretty slow - revisit
         process_maxvar.append(vcm_module.cvd(i, params)[0])
         i.close()
     maxvar_file = os.path.join(params[cf.OUT_DIR], 'maxvar.npy')

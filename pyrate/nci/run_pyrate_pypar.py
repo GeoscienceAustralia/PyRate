@@ -146,7 +146,7 @@ def main(params, config_file=sys.argv[1]):
             ifg.nodata_value = params[cf.NO_DATA_VALUE]
             phase_sum += ifg.phase_data
             ifg.save_numpy_phase(numpy_file=os.path.join(
-                output_dir, os.path.basename(d).split('.')[0] + '.npy'))
+                TMPDIR, os.path.basename(d).split('.')[0] + '.npy'))
             ifg.close()
         comp = np.isnan(phase_sum)  # this is the same as in Matlab
         comp = np.ravel(comp, order='F')  # this is the same as in Matlab
