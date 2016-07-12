@@ -67,6 +67,7 @@ def main(params, config_file=sys.argv[1]):
         parallel.barrier()
         write_time_series_geotiff_mpi(dest_tifs, params, tiles, parallel, rank)
 
+    parallel.barrier()
     # linrate aggregation
     if rank == 1:
         save_linrate_mpi(dest_tifs, params, tiles, out_type='linrate')
@@ -92,7 +93,7 @@ def save_linrate_mpi(dest_tifs, params, tiles, out_type):
         rate_file = os.path.join(TMPDIR, out_type + '_{}.npy'.format(t.index))
         rate_tile = np.load(file=rate_file)
         rate[t.top_left_y:t.bottom_right_y,
-        t.top_left_x:t.bottom_right_x] = rate_tile
+            t.top_left_x:t.bottom_right_x] = rate_tile
     shared.write_output_geotiff(md, gt, wkt, rate, dest, np.nan)
     npy_rate_file = os.path.join(params[cf.OUT_DIR], out_type + '.npy')
     np.save(file=npy_rate_file, arr=rate)
@@ -145,7 +146,8 @@ def write_time_series_geotiff_mpi(dest_tifs, params, tiles, parallel, MPI_id):
 def linrate_mpi(MPI_myID, ifg_paths, parallel, params, vcmt,
                 process_tiles, process_indices, ifg_shape, preread_ifgs):
     write_msg('Calculating linear rate')
-    for i, t in zip(process_indices, process_tiles):
+    for t in process_tiles:
+        i = t.index
         print 'calculating lin rate of tile {}'.format(i)
         ifg_parts = [shared.IfgPart(p, t, preread_ifgs) for p in ifg_paths]
         mst_n = os.path.join(TMPDIR, 'mst_mat_{}.npy'.format(i))
