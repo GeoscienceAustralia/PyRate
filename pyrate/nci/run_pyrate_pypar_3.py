@@ -135,24 +135,23 @@ def write_time_series_geotiff_mpi(dest_tifs, params, tiles, parallel, MPI_id):
                 shared.write_output_geotiff(md, gt, wkt, tscum_g, dest, np.nan)
         else:
             tsincr_g = np.empty(shape=ifgs[0].shape, dtype=np.float32)
-            if i >= no_ts_tifs:
-                i %= no_ts_tifs
-                for n, t in enumerate(tiles):
-                    tsincr_file = os.path.join(TMPDIR, 'tsincr_{}.npy'.format(n))
-                    tsincr = np.load(file=tsincr_file)
+            i %= no_ts_tifs
+            for n, t in enumerate(tiles):
+                tsincr_file = os.path.join(TMPDIR, 'tsincr_{}.npy'.format(n))
+                tsincr = np.load(file=tsincr_file)
 
-                    md[ifc.MASTER_DATE] = epochlist.dates[i + 1]
-                    md['PR_SEQ_POS'] = i  # sequence position
-                    tsincr_g[t.top_left_y:t.bottom_right_y,
-                    t.top_left_x:t.bottom_right_x] = tsincr[:, :, i]
-                    dest = os.path.join(params[cf.OUT_DIR],
-                                        'tsincr' + "_" + str(
-                                            epochlist.dates[i + 1]) + ".tif")
-                    md[ifc.PRTYPE] = 'tsincr'
-                    shared.write_output_geotiff(md, gt, wkt, tsincr_g, dest,
-                                                np.nan)
-    print 'process {} finished writing {} ts tifs of total {}'.format(
-        MPI_id, len(process_tifs), no_ts_tifs)
+                md[ifc.MASTER_DATE] = epochlist.dates[i + 1]
+                md['PR_SEQ_POS'] = i  # sequence position
+                tsincr_g[t.top_left_y:t.bottom_right_y,
+                t.top_left_x:t.bottom_right_x] = tsincr[:, :, i]
+                dest = os.path.join(params[cf.OUT_DIR],
+                                    'tsincr' + "_" + str(
+                                        epochlist.dates[i + 1]) + ".tif")
+                md[ifc.PRTYPE] = 'tsincr'
+                shared.write_output_geotiff(md, gt, wkt, tsincr_g, dest,
+                                            np.nan)
+    print 'process {} finished writing {} ts (incr/cuml) tifs ' \
+          'of total {}'.format(MPI_id, len(process_tifs), no_ts_tifs * 2)
 
 
 def linrate_mpi(ifg_paths, params, vcmt, process_tiles, preread_ifgs):
