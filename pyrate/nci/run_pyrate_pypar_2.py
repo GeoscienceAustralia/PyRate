@@ -67,9 +67,10 @@ def ref_phase_estimation_mpi(MPI_myID, ifg_paths, parallel, params,
 
     if params[cf.REF_EST_METHOD] == 1:
         for n, p in enumerate(process_ifgs):
-            process_ref_phs[n] = ref_phase_method1_dummy(p, output_dir)
-            print 'finished processing {} of ' \
-                  '{}, of {}'.format(n, len(process_ifgs), no_ifgs)
+            process_ref_phs[n] = ref_phase_method1_dummy(p)
+            print 'finished processing {} of process total {}, ' \
+                  'of overall {}'.format(n, len(process_ifgs), no_ifgs)
+
     elif params[cf.REF_EST_METHOD] == 2:
         half_chip_size = int(np.floor(params[cf.REF_CHIP_SIZE] / 2.0))
         chipsize = 2 * half_chip_size + 1
@@ -107,7 +108,7 @@ def ref_phase_estimation_mpi(MPI_myID, ifg_paths, parallel, params,
                       tag=MPI_myID)
 
 
-def ref_phase_method1_dummy(ifg_path, output_dir):
+def ref_phase_method1_dummy(ifg_path):
     comp_file = os.path.join(TMPDIR, 'comp.npy')
 
     comp = np.load(comp_file)
@@ -131,10 +132,10 @@ def ref_phase_method1_dummy(ifg_path, output_dir):
 def maxvar_vcm_mpi(rank, ifg_paths, parallel, params):
     print 'calculating maxvar and vcm'
     num_processors = parallel.size
-    ifgs = shared.prepare_ifgs_without_phase(ifg_paths, params)
-    no_ifgs = len(ifgs)
+    # ifgs = shared.prepare_ifgs_without_phase(ifg_paths, params)
+    no_ifgs = len(ifg_paths)
     process_indices = parallel.calc_indices(no_ifgs)
-    process_ifgs = [itemgetter(p)(ifgs) for p in process_indices]
+    process_ifgs = [itemgetter(p)(ifg_paths) for p in process_indices]
     process_maxvar = []
     for n, i in enumerate(process_ifgs):
         print 'calculating maxvar for {} of process ifgs {} of ' \
@@ -142,12 +143,11 @@ def maxvar_vcm_mpi(rank, ifg_paths, parallel, params):
         print psutil.virtual_memory()
         # TODO: cvd calculation is still pretty slow - revisit
         process_maxvar.append(vcm_module.cvd(i, params)[0])
-        i.close()
     maxvar_file = os.path.join(params[cf.OUT_DIR], 'maxvar.npy')
     vcmt_file = os.path.join(params[cf.OUT_DIR], 'vcmt.npy')
     if rank == MASTER_PROCESS:
         all_indices = parallel.calc_all_indices(no_ifgs)
-        maxvar = np.empty(len(ifgs))
+        maxvar = np.empty(no_ifgs)
         maxvar[all_indices[MASTER_PROCESS]] = process_maxvar
 
         for i in range(1, num_processors):
@@ -159,6 +159,7 @@ def maxvar_vcm_mpi(rank, ifg_paths, parallel, params):
         parallel.send(process_maxvar, destination=MASTER_PROCESS, tag=rank)
     parallel.barrier()
     maxvar = np.load(maxvar_file)
+    ifgs = shared.prepare_ifgs_without_phase(ifg_paths, params)
     vcmt = vcm_module.get_vcmt(ifgs, maxvar)
     if rank == MASTER_PROCESS:
         np.save(file=vcmt_file, arr=vcmt)
