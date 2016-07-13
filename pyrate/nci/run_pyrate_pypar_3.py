@@ -65,6 +65,7 @@ def main(params, config_file=sys.argv[1]):
 
     parallel.barrier()
     # linrate aggregation
+    # TODO: identify processes with less load, make them do the remaining tasks
     if rank == 1:
         save_linrate_mpi(dest_tifs, params, tiles, out_type='linrate')
     elif rank == 2:
@@ -107,39 +108,49 @@ def write_time_series_geotiff_mpi(dest_tifs, params, tiles, parallel, MPI_id):
     tsincr = np.load(file=tsincr_file)
 
     no_ts_tifs = tsincr.shape[2]
-    process_tifs = parallel.calc_indices(no_ts_tifs)
+    # we create 2 x no_ts_tigs as we are splitting tsincr and tscuml
+    # to all processes. This saves a lot of time.
+    process_tifs = parallel.calc_indices(no_ts_tifs * 2)
 
     # depending on nvelpar, this will not fit in memory
     # e.g. nvelpar=100, nrows=10000, ncols=10000, 32bit floats need 40GB memory
     # 32 * 100 * 10000 * 10000 / 8 bytes = 4e10 bytes = 40 GB
     # the double for loop is helps us over come the memory limit
-    print 'process {} will write {} ts tifs of total {}'.format(
-        MPI_id, len(process_tifs), no_ts_tifs)
-
+    print 'process {} will write {} ts (incr/cuml) tifs of total {}'.format(
+        MPI_id, len(process_tifs), no_ts_tifs * 2)
     for i in process_tifs:
-        tsincr_g = np.empty(shape=ifgs[0].shape, dtype=np.float32)
         tscum_g = np.empty(shape=ifgs[0].shape, dtype=np.float32)
-        for n, t in enumerate(tiles):
-            tsincr_file = os.path.join(TMPDIR, 'tsincr_{}.npy'.format(n))
-            tscum_file = os.path.join(TMPDIR, 'tscuml_{}.npy'.format(n))
-            tsincr = np.load(file=tsincr_file)
-            tscum = np.load(file=tscum_file)
+        if i < no_ts_tifs:
+            for n, t in enumerate(tiles):
+                tscum_file = os.path.join(TMPDIR, 'tscuml_{}.npy'.format(n))
+                tscum = np.load(file=tscum_file)
 
-            md[ifc.MASTER_DATE] = epochlist.dates[i + 1]
-            md['PR_SEQ_POS'] = i  # sequence position
-            tsincr_g[t.top_left_y:t.bottom_right_y,
-                     t.top_left_x:t.bottom_right_x] = tsincr[:, :, i]
-            dest = os.path.join(params[cf.OUT_DIR],
-                'tsincr' + "_" + str(epochlist.dates[i + 1]) + ".tif")
-            md[ifc.PRTYPE] = 'tsincr'
-            shared.write_output_geotiff(md, gt, wkt, tsincr_g, dest, np.nan)
+                md[ifc.MASTER_DATE] = epochlist.dates[i + 1]
+                md['PR_SEQ_POS'] = i  # sequence position
+                tscum_g[t.top_left_y:t.bottom_right_y,
+                    t.top_left_x:t.bottom_right_x] = tscum[:, :, i]
+                dest = os.path.join(params[cf.OUT_DIR],
+                    'tscuml' + "_" + str(epochlist.dates[i + 1]) + ".tif")
+                md[ifc.PRTYPE] = 'tscuml'
+                shared.write_output_geotiff(md, gt, wkt, tscum_g, dest, np.nan)
+        else:
+            tsincr_g = np.empty(shape=ifgs[0].shape, dtype=np.float32)
+            if i >= no_ts_tifs:
+                i %= no_ts_tifs
+                for n, t in enumerate(tiles):
+                    tsincr_file = os.path.join(TMPDIR, 'tsincr_{}.npy'.format(n))
+                    tsincr = np.load(file=tsincr_file)
 
-            tscum_g[t.top_left_y:t.bottom_right_y,
-                t.top_left_x:t.bottom_right_x] = tscum[:, :, i]
-            dest = os.path.join(params[cf.OUT_DIR],
-                'tscuml' + "_" + str(epochlist.dates[i + 1]) + ".tif")
-            md[ifc.PRTYPE] = 'tscuml'
-            shared.write_output_geotiff(md, gt, wkt, tscum_g, dest, np.nan)
+                    md[ifc.MASTER_DATE] = epochlist.dates[i + 1]
+                    md['PR_SEQ_POS'] = i  # sequence position
+                    tsincr_g[t.top_left_y:t.bottom_right_y,
+                    t.top_left_x:t.bottom_right_x] = tsincr[:, :, i]
+                    dest = os.path.join(params[cf.OUT_DIR],
+                                        'tsincr' + "_" + str(
+                                            epochlist.dates[i + 1]) + ".tif")
+                    md[ifc.PRTYPE] = 'tsincr'
+                    shared.write_output_geotiff(md, gt, wkt, tsincr_g, dest,
+                                                np.nan)
     print 'process {} finished writing {} ts tifs of total {}'.format(
         MPI_id, len(process_tifs), no_ts_tifs)
 
