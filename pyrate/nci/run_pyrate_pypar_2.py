@@ -72,20 +72,11 @@ def ref_phase_estimation_mpi(MPI_myID, ifg_paths, parallel, params,
                   'of overall {}'.format(n, len(process_ifgs), no_ifgs)
 
     elif params[cf.REF_EST_METHOD] == 2:
-        half_chip_size = int(np.floor(params[cf.REF_CHIP_SIZE] / 2.0))
-        chipsize = 2 * half_chip_size + 1
-        thresh = chipsize * chipsize * params[cf.REF_MIN_FRAC]
         for n, p in enumerate(process_ifgs):
-            ifg = shared.Ifg(p)
-            ifg.open()
-            ref_phs = rpe.est_ref_phase_method2_multi(ifg.phase_data,
-                                                      half_chip_size,
-                                                      refpx, refpy, thresh)
-            ifg.phase_data -= ref_phs
-            ifg.meta_data[ifc.REF_PHASE] = ifc.REF_PHASE_REMOVED
-            ifg.write_modified_phase()
-            process_ref_phs[n] = ref_phs
-            ifg.close()
+            process_ref_phs[n] = ref_phase_method2_dummy(params, p,
+                                                         refpx, refpy)
+            print 'finished processing {} of process total {}, ' \
+                  'of overall {}'.format(n, len(process_ifgs), no_ifgs)
     else:
         raise cf.ConfigException('Ref phase estimation method must be 1 or 2')
 
@@ -106,6 +97,22 @@ def ref_phase_estimation_mpi(MPI_myID, ifg_paths, parallel, params,
         # send reference phase data to master process
         parallel.send(process_ref_phs, destination=MASTER_PROCESS,
                       tag=MPI_myID)
+
+
+def ref_phase_method2_dummy(params, ifg_path, refpx, refpy):
+    half_chip_size = int(np.floor(params[cf.REF_CHIP_SIZE] / 2.0))
+    chipsize = 2 * half_chip_size + 1
+    thresh = chipsize * chipsize * params[cf.REF_MIN_FRAC]
+    ifg = shared.Ifg(ifg_path)
+    ifg.open()
+    ref_phs = rpe.est_ref_phase_method2_multi(ifg.phase_data,
+                                              half_chip_size,
+                                              refpx, refpy, thresh)
+    ifg.phase_data -= ref_phs
+    ifg.meta_data[ifc.REF_PHASE] = ifc.REF_PHASE_REMOVED
+    ifg.write_modified_phase()
+    ifg.close()
+    return ref_phs
 
 
 def ref_phase_method1_dummy(ifg_path):
