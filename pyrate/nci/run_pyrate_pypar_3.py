@@ -50,11 +50,9 @@ def main(params, config_file=sys.argv[1]):
 
     maxvar, vcmt = np.load(maxvar_file), np.load(vcmt_file)
 
-    parallel.barrier()
-
     if rank == MASTER_PROCESS:
         for d in dest_tifs:
-            common_nci.save_latest_phase(d, output_dir, tiles)
+            common_nci.save_latest_phase(d, TMPDIR, tiles)
 
     # linrate mpi computation
     linrate_mpi(rank, dest_tifs, parallel, params, vcmt,
