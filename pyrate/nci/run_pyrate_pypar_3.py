@@ -55,13 +55,11 @@ def main(params, config_file=sys.argv[1]):
             common_nci.save_latest_phase(d, TMPDIR, tiles)
 
     # linrate mpi computation
-    linrate_mpi(rank, dest_tifs, parallel, params, vcmt,
-                process_tiles, process_indices, ifg_shape, preread_ifgs)
+    linrate_mpi(dest_tifs, params, vcmt, process_tiles, preread_ifgs)
 
     # time series mpi computation
     if params[cf.TIME_SERIES_CAL]:
-        time_series_mpi(dest_tifs, params, vcmt, process_tiles,
-                        process_indices, preread_ifgs)
+        time_series_mpi(dest_tifs, params, vcmt, process_tiles, preread_ifgs)
         parallel.barrier()
         write_time_series_geotiff_mpi(dest_tifs, params, tiles, parallel, rank)
 
@@ -146,8 +144,7 @@ def write_time_series_geotiff_mpi(dest_tifs, params, tiles, parallel, MPI_id):
         MPI_id, len(process_tifs), no_ts_tifs)
 
 
-def linrate_mpi(MPI_myID, ifg_paths, parallel, params, vcmt,
-                process_tiles, process_indices, ifg_shape, preread_ifgs):
+def linrate_mpi(ifg_paths, params, vcmt, process_tiles, preread_ifgs):
     write_msg('Calculating linear rate')
     for t in process_tiles:
         i = t.index
@@ -171,7 +168,7 @@ def linrate_mpi(MPI_myID, ifg_paths, parallel, params, vcmt,
         np.save(file=samples_file, arr=samples)
 
 
-def time_series_mpi(ifg_paths, params, vcmt, process_tiles, process_indices,
+def time_series_mpi(ifg_paths, params, vcmt, process_tiles,
                     preread_ifgs):
     write_msg('Calculating time series')  # this should be logged
 
