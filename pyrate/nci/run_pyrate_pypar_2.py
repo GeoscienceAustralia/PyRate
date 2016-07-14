@@ -56,6 +56,7 @@ def main(params, config_file=sys.argv[1]):
 
 def ref_phase_estimation_mpi(MPI_myID, ifg_paths, parallel, params,
                              refpx, refpy):
+    # TODO: may benefit from tiling and using a median of median algorithms
     write_msg('Finding and removing reference phase')
     num_processors = parallel.size
     # ifgs = shared.prepare_ifgs_without_phase(ifg_paths, params)
@@ -103,14 +104,21 @@ def ref_phase_method2_dummy(params, ifg_path, refpx, refpy):
     half_chip_size = int(np.floor(params[cf.REF_CHIP_SIZE] / 2.0))
     chipsize = 2 * half_chip_size + 1
     thresh = chipsize * chipsize * params[cf.REF_MIN_FRAC]
-    ifg = shared.Ifg(ifg_path)
-    ifg.open()
-    ref_phs = rpe.est_ref_phase_method2_multi(ifg.phase_data,
+    process = psutil.Process(os.getpid())
+    print process.memory_info()
+    print psutil.virtual_memory()
+    numpy_file = os.path.join(
+        TMPDIR, os.path.basename(ifg_path).split('.')[0] + '.npy')
+    phase_data = np.load(numpy_file)
+    ref_phs = rpe.est_ref_phase_method2_multi(phase_data,
                                               half_chip_size,
                                               refpx, refpy, thresh)
-    ifg.phase_data -= ref_phs
-    ifg.meta_data[ifc.REF_PHASE] = ifc.REF_PHASE_REMOVED
-    ifg.write_modified_phase()
+    phase_data -= ref_phs
+    ifg = shared.Ifg(ifg_path)
+    ifg.open()
+    md = ifg.meta_data
+    md[ifc.REF_PHASE] = ifc.REF_PHASE_REMOVED
+    ifg.write_modified_phase(data=phase_data)
     ifg.close()
     return ref_phs
 
