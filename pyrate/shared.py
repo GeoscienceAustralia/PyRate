@@ -53,16 +53,45 @@ GDAL_Y_CELLSIZE = 5
 GDAL_X_FIRST = 0
 GDAL_Y_FIRST = 3
 
+
+def mkdir_p(path):
+    """ copied from stackoverflow"""
+    try:
+        os.makedirs(path)
+    except OSError as exc:  # Python >2.5
+        if exc.errno == errno.EEXIST and os.path.isdir(path):
+            pass
+        else:
+            raise
+
+
 def get_tmpdir():
     if 'TMPDIR' in os.environ:  # NCI tmp dir in each node??
-        user = os.environ['USER']
-        TMPDIR = os.path.join('/short/dg9', user, 'tmp/')
+        # user = os.environ['USER']
+        # TMPDIR = os.path.join('/short/dg9', user, 'tmp/')
+        node_tmp = os.environ['TMPDIR']
     else:  # fall back option or when running on PC locally
         import tempfile
-        TMPDIR = tempfile.gettempdir()
-    return TMPDIR
+        tmp = tempfile.gettempdir()
+        node_tmp = os.path.join(tmp, 'tmpdir')
+        mkdir_p(node_tmp)
+    return node_tmp
+
+
+def common_tmpdir():
+    if 'TMPDIR' in os.environ:  # NCI tmp dir in each node??
+        user = os.environ['USER']
+        short_tmp = os.path.join('/short/dg9', user, 'tmp/')
+    else:  # fall back option or when running on PC locally
+        import tempfile
+        tmp = tempfile.gettempdir()
+        short_tmp = os.path.join(tmp, 'common')
+        mkdir_p(short_tmp)
+    return short_tmp
+
 
 TMPDIR = get_tmpdir()
+
 
 class RasterBase(object):
     """
@@ -811,19 +840,6 @@ def write_output_geotiff(md, gt, wkt, data, dest, nodata):
 
 class GeotiffException(Exception):
     pass
-
-if __name__ == '__main__':
-    print nanmedian([1, 2, nan, 2, nan, 4])
-
-
-def mkdir_p(path):
-    try:
-        os.makedirs(path)
-    except OSError as exc:  # Python >2.5
-        if exc.errno == errno.EEXIST and os.path.isdir(path):
-            pass
-        else:
-            raise
 
 
 def setup_tiles(shape, n_ifgs=17, nrows=10, ncols=10):
