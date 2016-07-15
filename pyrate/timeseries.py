@@ -173,8 +173,13 @@ def time_series_by_pixel(row, col, B0, SMFACTOR, SMORDER, ifg_data, mst,
             rmrow = asarray([0])  # dummy
 
             while len(rmrow) > 0:
-                B, ifgv, sel, rmrow = remove_rank_def_rows(
-                    B, nvelpar, ifgv, sel)
+                # the if else is introduced to prevent the following:
+                # https://github.com/GeoscienceAustralia/PyRate/issues/69
+                if B.shape[0] > 1:
+                    B, ifgv, sel, rmrow = remove_rank_def_rows(
+                        B, nvelpar, ifgv, sel)
+                else:
+                    return np.empty(nvelpar) * np.nan
 
             # Some epochs have been deleted; get valid epoch indices
             velflag = sum(abs(B), 0)

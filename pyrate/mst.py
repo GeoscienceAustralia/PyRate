@@ -89,7 +89,7 @@ def mst_multiprocessing_map(tiles, paths_or_ifgs, shape):
     return result
 
 
-def mst_multiprocessing(tile, ifgs_or_paths):
+def mst_multiprocessing(tile, ifgs_or_paths, preread_ifgs=None):
     """
     The memory requirement during mpi mst computation is determined by the
     number of ifgs times size of IfgPart. Note that we need all ifg header
@@ -99,7 +99,7 @@ def mst_multiprocessing(tile, ifgs_or_paths):
     :param ifgs_or_paths: all ifg paths of the problem. List of strings.
     :return:
     """
-    ifg_parts = [IfgPart(p, tile) for p in ifgs_or_paths]
+    ifg_parts = [IfgPart(p, tile, preread_ifgs) for p in ifgs_or_paths]
     t_mst = mst_boolean_array(ifg_parts)
     return t_mst
 

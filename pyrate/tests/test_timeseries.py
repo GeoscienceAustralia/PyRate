@@ -155,7 +155,9 @@ class MatlabTimeSeriesEquality(unittest.TestCase):
         ifgs = shared.pre_prepare_ifgs(dest_paths, params)
         mst_grid = run_pyrate.mst_calculation(dest_paths, params)
         refx, refy = run_pyrate.find_reference_pixel(ifgs, params)
+        # Estimate and remove orbit errors
         run_pyrate.remove_orbital_error(ifgs, params)
+        ifgs = shared.prepare_ifgs_without_phase(dest_paths, params)
         _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
 
         maxvar = [vcm_module.cvd(i, params)[0] for i in ifgs]
@@ -259,8 +261,9 @@ class MatlabTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
 
         refx, refy = run_pyrate.find_reference_pixel(ifgs, params)
 
-        if params[cf.ORBITAL_FIT] != 0:
-            run_pyrate.remove_orbital_error(ifgs, params)
+        # Estimate and remove orbit errors
+        run_pyrate.remove_orbital_error(ifgs, params)
+        ifgs = shared.prepare_ifgs_without_phase(dest_paths, params)
 
         _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
 
@@ -346,7 +349,7 @@ class MPITests(unittest.TestCase):
     def setUpClass(cls):
         cls.tif_dir = tempfile.mkdtemp()
         cls.test_conf = common.SYDNEY_TEST_CONF
-
+        cls.temp_dir = tempfile.mkdtemp()
         # change the required params
         cls.params = cf.get_config_params(cls.test_conf)
         cls.params[cf.OBS_DIR] = common.SYD_TEST_GAMMA
@@ -356,6 +359,7 @@ class MPITests(unittest.TestCase):
         cls.params[cf.PARALLEL] = 0
         cls.params[cf.APS_CORRECTION] = 0
         cls.params[cf.REF_EST_METHOD] = 1
+        cls.params[cf.ORBITAL_FIT_METHOD] = 1
         # base_unw_paths need to be geotiffed and multilooked by run_prepifg
         cls.base_unw_paths = run_pyrate.original_ifg_paths(
             cls.params[cf.IFG_FILE_LIST])
@@ -386,7 +390,15 @@ class MPITests(unittest.TestCase):
         assert os.path.exists(cls.conf_file)
 
         # Calc time series using MPI
-        str = 'mpirun -np 2 python pyrate/nci/run_pyrate_pypar.py ' + \
+        str = 'mpirun -np 4 python pyrate/nci/run_pyrate_pypar.py ' + \
+              cls.conf_file
+        cmd = str.split()
+        subprocess.check_call(cmd)
+        str = 'mpirun -np 4 python pyrate/nci/run_pyrate_pypar_2.py ' + \
+              cls.conf_file
+        cmd = str.split()
+        subprocess.check_call(cmd)
+        str = 'mpirun -np 4 python pyrate/nci/run_pyrate_pypar_3.py ' + \
               cls.conf_file
         cmd = str.split()
         subprocess.check_call(cmd)
@@ -398,14 +410,14 @@ class MPITests(unittest.TestCase):
 
         tiles = shared.create_tiles(cls.ifgs[0].shape,
                                     n_ifgs=17, nrows=3, ncols=4)
-        TMPDIR = shared.get_tmpdir()
+        output_dir = cls.params[cf.OUT_DIR]
 
         for i, t in enumerate(tiles):
-            tsincr_file_n = os.path.join(TMPDIR, 'tsincr_{}.npy'.format(i))
+            tsincr_file_n = os.path.join(output_dir, 'tsincr_{}.npy'.format(i))
             cls.tsincr_mpi[t.top_left_y:t.bottom_right_y,
                 t.top_left_x: t.bottom_right_x, :] = np.load(tsincr_file_n)
 
-            tscum_file_n = os.path.join(TMPDIR, 'tscum_{}.npy'.format(i))
+            tscum_file_n = os.path.join(output_dir, 'tscuml_{}.npy'.format(i))
             cls.tscum_mpi[t.top_left_y:t.bottom_right_y,
                 t.top_left_x: t.bottom_right_x, :] = np.load(tscum_file_n)
 
@@ -418,11 +430,11 @@ class MPITests(unittest.TestCase):
         cls.tsincr_tifs_mpi.sort()
 
         # remove all temp numpy files after test
-        for f in glob.glob(os.path.join(TMPDIR, '*.npy')):
+        for f in glob.glob(os.path.join(output_dir, '*.npy')):
             os.remove(f)
 
     def calc_non_mpi_time_series(self):
-        self.temp_dir = tempfile.mkdtemp()
+
         # copy sydney_tif files in temp_dir
         self.params[cf.OUT_DIR] = self.temp_dir
         xlks, ylks, crop = run_pyrate.transform_params(self.params)
@@ -452,6 +464,7 @@ class MPITests(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         shutil.rmtree(cls.tif_dir)
+        shutil.rmtree(cls.temp_dir)
 
     def test_mpi_time_series(self):
         for looks, ref_method in product(range(1, 5), [1, 2]):
@@ -488,7 +501,6 @@ class MPITests(unittest.TestCase):
                 np.testing.assert_array_almost_equal(fs.ReadAsArray(),
                                                      gs.ReadAsArray(),
                                                      decimal=4)
-            shutil.rmtree(self.temp_dir)
 
         log_file = glob.glob(os.path.join(self.tif_dir, '*.log'))[0]
         self.assertTrue(os.path.exists(log_file))

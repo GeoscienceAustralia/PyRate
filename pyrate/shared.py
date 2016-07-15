@@ -7,7 +7,7 @@ Created on 12/09/2012
 """
 import errno
 from itertools import product
-
+import cPickle as cp
 import os, struct
 from array import array
 import math
@@ -52,6 +52,42 @@ GDAL_X_CELLSIZE = 1
 GDAL_Y_CELLSIZE = 5
 GDAL_X_FIRST = 0
 GDAL_Y_FIRST = 3
+
+
+def mkdir_p(path):
+    """ copied from stackoverflow"""
+    try:
+        os.makedirs(path)
+    except OSError as exc:  # Python >2.5
+        if exc.errno == errno.EEXIST and os.path.isdir(path):
+            pass
+        else:
+            raise
+
+
+def get_tmpdir():
+    if 'TMPDIR' in os.environ:  # NCI tmp dir in each node??
+        # user = os.environ['USER']
+        # TMPDIR = os.path.join('/short/dg9', user, 'tmp/')
+        node_tmp = os.environ['TMPDIR']
+    else:  # fall back option or when running on PC locally
+        import tempfile
+        tmp = tempfile.gettempdir()
+        node_tmp = os.path.join(tmp, 'tmpdir')
+        mkdir_p(node_tmp)
+    return node_tmp
+
+
+def common_tmpdir():
+    if 'TMPDIR' in os.environ:  # NCI tmp dir in each node??
+        user = os.environ['USER']
+        short_tmp = os.path.join('/short/dg9', user, 'tmp/')
+    else:  # fall back option or when running on PC locally
+        import tempfile
+        tmp = tempfile.gettempdir()
+        short_tmp = os.path.join(tmp, 'common')
+        mkdir_p(short_tmp)
+    return short_tmp
 
 
 class RasterBase(object):
@@ -213,7 +249,7 @@ class RasterBase(object):
 
 class Ifg(RasterBase):
     """
-    Interferogram class, represents the difference between two acquisitions.
+    Interferrogram class, represents the difference between two acquisitions.
     Ifg objects double as a container for related data.
     """
 
@@ -383,7 +419,7 @@ class Ifg(RasterBase):
                                         self._nodata_value, atol=1e-6))
         return nan_count / float(self.num_cells)
 
-    def write_modified_phase(self):
+    def write_modified_phase(self, data=None):
         """
         Writes phase data to disk.
         For this to work, a copy of the original file
@@ -399,10 +435,18 @@ class Ifg(RasterBase):
             self.dataset = gdal.Open(new_data_path, GA_Update)
         self._phase_band = None
         """
+        if data is not None:
+            assert isinstance(data, np.ndarray)
+            data_r, data_c = data.shape
+            assert data_r == self.nrows and data_c == self.ncols
+            self.phase_data = data
         self.phase_band.WriteArray(self.phase_data)
         for k, v in self.meta_data.items():
             self.dataset.SetMetadataItem(k, v)
         self.dataset.FlushCache()
+
+    def save_numpy_phase(self, numpy_file):
+        np.save(file=numpy_file, arr=self.phase_data)
 
 
 class IfgPart(object):
@@ -410,7 +454,7 @@ class IfgPart(object):
     slice of Ifg data object
     """
 
-    def __init__(self, ifg_or_path, tile):
+    def __init__(self, ifg_or_path, tile, ifg_dict=None):
 
         """
         :param ifg: original ifg
@@ -418,24 +462,38 @@ class IfgPart(object):
         :param r_end: ending (row + 1) of the original ifg
         :return:
         """
-        # check if Ifg was sent.
-        if isinstance(ifg_or_path, Ifg):
-            ifg = ifg_or_path
-        else:
-            self.data_path = ifg_or_path  # should be used with MPI
-            ifg = Ifg(ifg_or_path)
-
         self.tile = tile
         self.r_start = self.tile.top_left_y
         self.r_end = self.tile.bottom_right_y
-        self.phase_data = None
         self.c_start = self.tile.top_left_x
         self.c_end = self.tile.bottom_right_x
-        self.nan_fraction = None
-        self.master = None
-        self.slave = None
-        self.time_span = None
-        read = False
+        # TODO: fix this if cond
+        if ifg_dict is not None:
+            outdir = os.path.dirname(ifg_dict)
+            preread_ifgs = cp.load(open(ifg_dict, 'r'))
+            ifg = preread_ifgs[ifg_or_path].pop()
+            self.nan_fraction = ifg.nan_fraction
+            self.master = ifg.master
+            self.slave = ifg.slave
+            self.time_span = ifg.time_span
+            phase_file = 'phase_data_{}_{}.npy'.format(
+                os.path.basename(ifg_or_path).split('.')[0], tile.index)
+            self.phase_data = np.load(os.path.join(outdir, phase_file))
+            read = True
+        else:
+            # check if Ifg was sent.
+            if isinstance(ifg_or_path, Ifg):
+                ifg = ifg_or_path
+            else:
+                self.data_path = ifg_or_path  # should be used with MPI
+                ifg = Ifg(ifg_or_path)
+            read = False
+            self.phase_data = None
+            self.nan_fraction = None
+            self.master = None
+            self.slave = None
+            self.time_span = None
+
         attempts = 0
         # TODO: The repeated read attempts should be avoided
         # This is done if a process has to release the file lock before another
@@ -449,11 +507,6 @@ class IfgPart(object):
                 print '\nneed to read {ifg} again'.format(ifg=ifg)
                 time.sleep(0.5)
 
-        if not read:
-            raise RasterException('Could not read {ifg}\n after 3 attemps.\n'
-                                  'Rerun prepifg and then use run_pyrate again.'
-                                  .format(ifg=ifg_or_path))
-
     def read_required(self, ifg):
         if not ifg.is_open:
             ifg.open(readonly=True)
@@ -464,6 +517,7 @@ class IfgPart(object):
         self.master = ifg.master
         self.slave = ifg.slave
         self.time_span = ifg.time_span
+        ifg.phase_data = None
         ifg.close()  # close base ifg
         return True
 
@@ -784,19 +838,6 @@ def write_output_geotiff(md, gt, wkt, data, dest, nodata):
 class GeotiffException(Exception):
     pass
 
-if __name__ == '__main__':
-    print nanmedian([1, 2, nan, 2, nan, 4])
-
-
-def mkdir_p(path):
-    try:
-        os.makedirs(path)
-    except OSError as exc:  # Python >2.5
-        if exc.errno == errno.EEXIST and os.path.isdir(path):
-            pass
-        else:
-            raise
-
 
 def setup_tiles(shape, n_ifgs=17, nrows=10, ncols=10):
     """
@@ -869,18 +910,19 @@ def create_tiles(shape, n_ifgs=17, nrows=2, ncols=2):
     max_cols_per_tile = max([len(c) for c in col_arr])
 
     r_step = int(np.ceil(no_y) / nrows)
-    # assume that arrays of 32bit floats can be max ~500MB
+    # assume that arrays of 32bit floats can be max ~100MB
     # determine max array size, 4 bytes per 32 bits
-    r_step_500 = 500 * 1e6 // (4 * n_ifgs * max_cols_per_tile)
+    r_step_500 = 100 * 1e6 // (4 * n_ifgs * max_cols_per_tile)
     r_step = min(r_step, r_step_500)
     nrows = no_y // r_step
     row_arr = np.array_split(range(no_y), nrows)
-    return [Tile((r[0], c[0]), (r[-1]+1, c[-1]+1))
-                for r, c in product(row_arr, col_arr)]
+    return [Tile(i, (r[0], c[0]), (r[-1]+1, c[-1]+1))
+                for i, (r, c) in enumerate(product(row_arr, col_arr))]
 
 
 class Tile:
-    def __init__(self, top_left, bottom_right):
+    def __init__(self, index, top_left, bottom_right):
+        self.index = index
         self.top_left = top_left
         self.bottom_right = bottom_right
         self.top_left_y, self.top_left_x = top_left
@@ -964,14 +1006,3 @@ def write_msg(msg):
     logging.debug(msg)
     if VERBOSE:
         print msg
-
-
-def get_tmpdir():
-    if 'PBS_JOBFS' in os.environ:  # NCI tmp dir in each node
-        TMPDIR = os.environ['PBS_JOBFS']
-    elif 'TMPDIR' in os.environ:  # NCI tmp dir in each node??
-        TMPDIR = os.environ['TMPDIR']
-    else:  # fall back option or when running on PC locally
-        import tempfile
-        TMPDIR = tempfile.gettempdir()
-    return TMPDIR

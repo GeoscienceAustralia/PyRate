@@ -17,6 +17,7 @@ from pyrate.algorithm import master_slave_ids, get_all_epochs, get_epoch_count
 from pyrate import mst, shared
 from pyrate.shared import nanmedian
 from pyrate import config as cf
+from pyrate import ifgconstants as ifc
 
 
 # Orbital correction tasks
@@ -55,7 +56,7 @@ QUADRATIC = cf.QUADRATIC
 PART_CUBIC = cf.PART_CUBIC
 
 
-def orbital_correction(ifgs, params, mlooked=None, offset=True):
+def orbital_correction(ifgs_or_ifg_paths, params, mlooked=None, offset=True):
     """
     Removes orbital error from given Ifgs.
 
@@ -78,6 +79,7 @@ def orbital_correction(ifgs, params, mlooked=None, offset=True):
         raise OrbitalError(msg)
 
     if method == NETWORK_METHOD:
+        ifgs = ifgs_or_ifg_paths
         if mlooked is None:
             _network_correction(ifgs, degree, offset)
         else:
@@ -85,16 +87,17 @@ def orbital_correction(ifgs, params, mlooked=None, offset=True):
             _network_correction(ifgs, degree, offset, mlooked)
 
     elif method == INDEPENDENT_METHOD:
-        if parallel:
-            # not running in parallel
-            # raises swig object pickle error
-            # parmap.map(_independent_correction, ifgs, degree, offset,
-            #            processes=params[cf.PROCESSES])
-            for i in ifgs:
-                _independent_correction(i, degree, offset, params)
-        else:
-            for i in ifgs:
-                _independent_correction(i, degree, offset, params)
+        # not running in parallel
+        # raises swig object pickle error
+        # parmap.map(_independent_correction, ifgs, degree, offset,
+        #            processes=params[cf.PROCESSES])
+        for p in ifgs_or_ifg_paths:
+            if isinstance(p, basestring):  # ifg paths are supplied
+                ifg = shared.Ifg(p)
+                ifg.open()
+            else:
+                ifg = p
+            _independent_correction(ifg, degree, offset, params)
     else:
         msg = "Unknown method: '%s', need INDEPENDENT or NETWORK method"
         raise OrbitalError(msg % method)
@@ -164,6 +167,9 @@ def _independent_correction(ifg, degree, offset, params):
     offset_removal = nanmedian(np.ravel(ifg.phase_data - fullorb))
     ifg.phase_data -= (fullorb - offset_removal)
 
+    # set orbfit tags after orbital error correction
+    save_orbital_error_corrected_phase(ifg)
+
 
 def _network_correction(ifgs, degree, offset, m_ifgs=None):
     """
@@ -196,11 +202,12 @@ def _network_correction(ifgs, degree, offset, m_ifgs=None):
 
     # create full res DM to expand determined coefficients into full res orbital
     # correction (eg. expand coarser model to full size)
+    ifg_shape = ifgs[0].shape
     dm = get_design_matrix(ifgs[0], degree, offset=False)
 
     for i in ifgs:
         orb = dm.dot(coefs[ids[i.slave]] - coefs[ids[i.master]])
-        orb = orb.reshape(ifgs[0].shape)
+        orb = orb.reshape(ifg_shape)
 
         # offset estimation
         if offset:
@@ -209,6 +216,15 @@ def _network_correction(ifgs, degree, offset, m_ifgs=None):
             orb -= nanmedian(tmp)
 
         i.phase_data -= orb  # remove orbital error from the ifg
+        # set orbfit tags after orbital error correction
+        save_orbital_error_corrected_phase(i)
+
+
+def save_orbital_error_corrected_phase(ifg):
+    # set orbfit tags after orbital error correction
+    ifg.dataset.SetMetadataItem(ifc.PYRATE_ORBITAL_ERROR, ifc.ORB_REMOVED)
+    ifg.write_modified_phase()
+    ifg.close()
 
 
 # TODO: subtract reference pixel coordinate from x and y

@@ -9,6 +9,7 @@ from numpy import array, where, isnan, real, imag, sum, sqrt, meshgrid
 from numpy import zeros, vstack, ceil, mean, exp, reshape
 from numpy.linalg import norm
 import numpy as np
+import os
 from scipy.fftpack import fft2, ifft2, fftshift
 from scipy.optimize import fmin
 from pyrate import shared
@@ -40,7 +41,7 @@ def unique_points(points):
     return vstack([array(u) for u in set(points)])
 
 
-def cvd(ifg, params, calc_alpha=False):
+def cvd(ifg_path, params, calc_alpha=False):
     """
     Calculate average covariance versus distance (autocorrelation) and its best
     fitting exponential function
@@ -49,16 +50,25 @@ def cvd(ifg, params, calc_alpha=False):
     :type ifg: :py:class:`pyrate.shared.Ifg`.
     :param calc_alpha: whether you calculate alpha.
     """
+    if isinstance(ifg_path, basestring):  # used during MPI
+        ifg = shared.Ifg(ifg_path)
+        ifg.open()
+    else:
+        ifg = ifg_path
+    # assert isinstance(ifg_path, shared.Ifg)
+    # ifg = ifg_path
     shared.nan_and_mm_convert(ifg, params)
-    # distance division factor of 1000 converts to km and is needed to match
-    # Matlab code output
-    distfact = 1000
     # calculate 2D auto-correlation of image using the
     # spectral method (Wiener-Khinchin theorem)
     if ifg.nan_converted:  # saves heaps of time with no-nan conversion
         phase = where(isnan(ifg.phase_data), 0, ifg.phase_data)
     else:
         phase = ifg.phase_data
+    # distance division factor of 1000 converts to km and is needed to match
+    # Matlab code output
+    distfact = 1000
+
+    nrows, ncols = phase.shape
     fft_phase = fft2(phase)
     pspec = real(fft_phase)**2 + imag(fft_phase)**2
     autocorr_grid = ifft2(pspec)
@@ -66,7 +76,7 @@ def cvd(ifg, params, calc_alpha=False):
     autocorr_grid = fftshift(real(autocorr_grid)) / nzc
 
     # pixel distances from pixel at zero lag (image centre).
-    xx, yy = meshgrid(range(ifg.ncols), range(ifg.nrows))
+    xx, yy = meshgrid(range(ncols), range(nrows))
 
     # r is distance from the center
     # doing np.divide and np.sqrt will improve performance as it keeps
@@ -110,6 +120,9 @@ def cvd(ifg, params, calc_alpha=False):
     indices_to_keep = r < maxdist
     r = r[indices_to_keep]
     acg = acg[indices_to_keep]
+
+    if isinstance(ifg_path, basestring):
+        ifg.close()
 
     if calc_alpha:
         # classify values of r according to bin number

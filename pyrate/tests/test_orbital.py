@@ -775,16 +775,16 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
 
         data_paths = [os.path.join(SYD_TEST_TIF, p) for p in
                       sydney_data_setup_ifg_file_list()]
-        new_data_paths = [os.path.join(self.BASE_DIR, os.path.basename(d))
+        self.new_data_paths = [os.path.join(self.BASE_DIR, os.path.basename(d))
                           for d in data_paths]
         for d in data_paths:
             d_copy = os.path.join(self.BASE_DIR, os.path.basename(d))
             shutil.copy(d, d_copy)
             os.chmod(d_copy, 0660)
 
-        self.ifgs = sydney_data_setup(datafiles=new_data_paths)
+        self.ifgs = sydney_data_setup(datafiles=self.new_data_paths)
 
-        for c, i in enumerate(self.ifgs):
+        for i in self.ifgs:
             if not i.is_open:
                 i.open()
             if not i.nan_converted:

@@ -22,7 +22,8 @@ from pyrate import matlab_mst_kruskal as matlab_mst
 from pyrate import reference_phase_estimation as rpe
 from pyrate import remove_aps_delay as aps
 from pyrate import vcm as vcm_module
-from pyrate.shared import Ifg, write_output_geotiff, pre_prepare_ifgs, write_msg
+from pyrate.shared import Ifg, write_output_geotiff, \
+    pre_prepare_ifgs, write_msg, prepare_ifgs_without_phase
 
 PYRATEPATH = cf.PYRATEPATH
 
@@ -54,7 +55,7 @@ def process_ifgs(ifg_paths_or_instance, params):
 
     # Estimate and remove orbit errors
     remove_orbital_error(ifgs, params)
-
+    ifgs = prepare_ifgs_without_phase(ifg_paths_or_instance, params)
     write_msg('Estimating and removing phase at reference pixel')
     ref_phs, ifgs = rpe.estimate_ref_phase(ifgs, params, refpx, refpy)
 
@@ -271,12 +272,6 @@ def remove_orbital_error(ifgs, params):
                                params,
                                mlooked=mlooked)
 
-    # write data to disc after orbital error correction
-    for i in ifgs:
-        i.dataset.SetMetadataItem(ifc.PYRATE_ORBITAL_ERROR, ifc.ORB_REMOVED)
-        i.write_modified_phase()
-        logging.debug('%s: orbital error removed' % i.data_path)
-
 
 def check_orbital_ifgs(ifgs, flags):
     count = sum([f == ifc.ORB_REMOVED for f in flags])
@@ -339,7 +334,7 @@ def write_linrate_tifs(ifgs, params, res):
     dest = os.path.join(PYRATEPATH, params[cf.OUT_DIR], "linrate.tif")
     md[ifc.MASTER_DATE] = epochlist.dates
     md[ifc.PRTYPE] = 'linrate'
-    write_output_geotiff(md, gt, wkt, error, dest, np.nan)
+    write_output_geotiff(md, gt, wkt, rate, dest, np.nan)
     dest = os.path.join(PYRATEPATH, params[cf.OUT_DIR], "linerror.tif")
     md[ifc.PRTYPE] = 'linerror'
     write_output_geotiff(md, gt, wkt, error, dest, np.nan)

@@ -123,7 +123,14 @@ def sydney_data_setup_gamma_unws():
 
 def sydney5_ifgs():
     """Convenience func to return a subset of 5 linked Ifgs from the testdata"""
-    return [Ifg(join(SYD_TEST_TIF, p)) for p in IFMS5.split()]
+    BASE_DIR = tempfile.mkdtemp()
+    data_paths = [os.path.join(SYD_TEST_TIF, p) for p in IFMS5.split()]
+    new_data_paths = [os.path.join(BASE_DIR, os.path.basename(d))
+                      for d in data_paths]
+    for d in data_paths:
+        shutil.copy(d, os.path.join(BASE_DIR, os.path.basename(d)))
+
+    return [Ifg(p) for p in new_data_paths]
 
 
 def sydney5_mock_ifgs(xs=3, ys=4):
@@ -145,6 +152,7 @@ class MockIfg(object):
         dimensions of the phase band (so the mock ifg can be resized differently
         to the source interferogram for smaller test datasets).
         """
+        self.dataset = ifg.dataset
         self.master = ifg.master
         self.slave = ifg.slave
         self.data_path = ifg.data_path
@@ -171,8 +179,13 @@ class MockIfg(object):
 
     @property
     def shape(self):
-        return (self.nrows, self.ncols)
+        return self.nrows, self.ncols
 
+    def write_modified_phase(self):  #dummy
+        pass
+
+    def close(self):  # dummy
+        pass
 
 def move_files(source_dir, dest_dir, file_type='*.tif'):
     for filename in glob.glob(os.path.join(source_dir, file_type)):

@@ -73,9 +73,8 @@ def main():
                           for p in process_subset_indices]
 
     print 'Processor {mpi_id} has {processes} ' \
-          'sites out of {num_files}'.format(mpi_id=MPI_myID,
-                                            processes=len(process_base_paths),
-                                            num_files=num_files)
+          'interferrograms out of {num_files}'.format(
+        mpi_id=MPI_myID, processes=len(process_base_paths), num_files=num_files)
 
     msg = "running gamma prepifg"
     print msg

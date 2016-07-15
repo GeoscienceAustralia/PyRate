@@ -377,7 +377,15 @@ class MPITests(unittest.TestCase):
         cls.ifgs_serial = common.sydney_data_setup(datafiles=dest_paths)
         cls.conf_mpi = tempfile.mktemp('.conf', dir=cls.tif_dir_mpi)
         cf.write_config_file(cls.params_mpi, cls.conf_mpi)
-        str = 'mpirun -np 2 python pyrate/nci/run_pyrate_pypar.py ' + \
+        str = 'mpirun -np 4 python pyrate/nci/run_pyrate_pypar.py ' + \
+              cls.conf_mpi
+        cmd = str.split()
+        subprocess.check_call(cmd)
+        str = 'mpirun -np 4 python pyrate/nci/run_pyrate_pypar_2.py ' + \
+              cls.conf_mpi
+        cmd = str.split()
+        subprocess.check_call(cmd)
+        str = 'mpirun -np 4 python pyrate/nci/run_pyrate_pypar_3.py ' + \
               cls.conf_mpi
         cmd = str.split()
         subprocess.check_call(cmd)

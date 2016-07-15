@@ -117,8 +117,9 @@ class MatlabEqualityTest(unittest.TestCase):
 
         refx, refy = run_pyrate.find_reference_pixel(ifgs, params)
 
-        if params[cf.ORBITAL_FIT] != 0:
-            run_pyrate.remove_orbital_error(ifgs, params)
+        # Estimate and remove orbit errors
+        run_pyrate.remove_orbital_error(ifgs, params)
+        ifgs = shared.prepare_ifgs_without_phase(dest_paths, params)
 
         _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
 
@@ -236,16 +237,24 @@ class MPITests(unittest.TestCase):
         assert os.path.exists(cls.conf_file)
 
         # Calc time series using MPI
-        str = 'mpirun -np 2 python pyrate/nci/run_pyrate_pypar.py ' + \
+        str = 'mpirun -np 4 python pyrate/nci/run_pyrate_pypar.py ' + \
+              cls.conf_file
+        cmd = str.split()
+        subprocess.check_call(cmd)
+        str = 'mpirun -np 4 python pyrate/nci/run_pyrate_pypar_2.py ' + \
+              cls.conf_file
+        cmd = str.split()
+        subprocess.check_call(cmd)
+        str = 'mpirun -np 4 python pyrate/nci/run_pyrate_pypar_3.py ' + \
               cls.conf_file
         cmd = str.split()
         subprocess.check_call(cmd)
 
-        rate_file = os.path.join(cls.params[cf.OUT_DIR], 'rate.npy')
+        rate_file = os.path.join(cls.params[cf.OUT_DIR], 'linrate.npy')
         cls.rate_mpi = np.load(rate_file)
-        error_file = os.path.join(cls.params[cf.OUT_DIR], 'error.npy')
+        error_file = os.path.join(cls.params[cf.OUT_DIR], 'linerror.npy')
         cls.error_mpi = np.load(error_file)
-        samples_file = os.path.join(cls.params[cf.OUT_DIR], 'samples.npy')
+        samples_file = os.path.join(cls.params[cf.OUT_DIR], 'linsamples.npy')
         cls.samples_mpi = np.load(samples_file)
 
     def calc_non_mpi_time_series(self):

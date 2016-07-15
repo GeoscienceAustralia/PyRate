@@ -183,7 +183,7 @@ class IfgPartTest(unittest.TestCase):
         r_start = 0
         r_end = 10
         for i in self.ifgs:
-            tile = Tile(top_left=(r_start, 0), bottom_right=(r_end, i.ncols))
+            tile = Tile(0, top_left=(r_start, 0), bottom_right=(r_end, i.ncols))
             ifg_part = IfgPart(i.data_path, tile)
             self.assertEqual(ifg_part.phase_data.shape,
                              (r_end-r_start, i.phase_data.shape[1]))
@@ -243,17 +243,17 @@ class MPITests(unittest.TestCase):
         subprocess.check_call(cmd)
 
         tiles = create_tiles(cls.ifgs[0].shape, n_ifgs=17, nrows=3, ncols=4)
-        TMPDIR = get_tmpdir()
+        outdir = params[cf.OUT_DIR]
 
         cls.mst = np.empty(shape=((len(cls.ifgs), ) + cls.ifgs[0].shape),
                            dtype=np.bool)
         for i, t in enumerate(tiles):
-            mst_file_n = os.path.join(TMPDIR, 'mst_mat_{}.npy'.format(i))
+            mst_file_n = os.path.join(outdir, 'mst_mat_{}.npy'.format(i))
             cls.mst[:, t.top_left_y:t.bottom_right_y,
                 t.top_left_x: t.bottom_right_x] = np.load(mst_file_n)
 
         # remove all temporary numpy files saved during test
-        for f in glob.glob(os.path.join(TMPDIR, '*.npy')):
+        for f in glob.glob(os.path.join(outdir, '*.npy')):
             os.remove(f)
         cls.params = params
 

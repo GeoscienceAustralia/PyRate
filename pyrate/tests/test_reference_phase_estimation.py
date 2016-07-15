@@ -514,6 +514,12 @@ class MPITests(unittest.TestCase):
         cmd = str.split()
         subprocess.check_call(cmd)
 
+        str = 'mpirun -np 2 python pyrate/nci/run_pyrate_pypar_2.py ' + \
+              cls.conf_file
+
+        cmd = str.split()
+        subprocess.check_call(cmd)
+
         # load the ref_phs file for testing
         ref_phs_file = os.path.join(cls.params[cf.OUT_DIR], 'ref_phs.npy')
         cls.ref_phs = np.load(ref_phs_file)
@@ -524,13 +530,13 @@ class MPITests(unittest.TestCase):
         cls.params[cf.OUT_DIR] = cls.tmp_dir
         xlks, ylks, crop = run_pyrate.transform_params(cls.params)
 
-        # dest_paths are tifs that have been geotif converted and multilooked
-        dest_paths = run_pyrate.get_dest_paths(
+        # dest_paths_serail are tifs that have been geotif converted and multilooked
+        cls.dest_paths_serial = run_pyrate.get_dest_paths(
             cls.base_unw_paths, crop, cls.params, xlks)
-        # create the dest_paths files
+        # create the dest_paths_serail files
         run_prepifg.gamma_prepifg(cls.base_unw_paths, cls.params)
 
-        run_pyrate.process_ifgs(dest_paths, cls.params)
+        run_pyrate.process_ifgs(cls.dest_paths_serial, cls.params)
         # load the ref_phs file for testing
         ref_phs_file = os.path.join(cls.params[cf.OUT_DIR], 'ref_phs.npy')
         return np.load(ref_phs_file)
@@ -558,6 +564,14 @@ class MPITests(unittest.TestCase):
             original_ref_phs = self.calc_non_mpi_ref_phase()
             np.testing.assert_array_almost_equal(original_ref_phs, self.ref_phs,
                                                  decimal=3)
+            for i, j in zip(self.dest_paths, self.dest_paths_serial):
+                ifg = shared.Ifg(i)
+                jfg = shared.Ifg(j)
+                ifg.open()
+                jfg.open()
+                np.testing.assert_array_almost_equal(ifg.phase_data,
+                                                     jfg.phase_data,
+                                                     decimal=4)
 
         '''test log generated'''
         log_file = glob.glob(os.path.join(self.tif_dir, '*.log'))[0]
