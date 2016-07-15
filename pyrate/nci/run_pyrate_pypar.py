@@ -19,7 +19,6 @@ from pyrate.nci.common_nci import save_latest_phase
 from pyrate.nci.parallel import Parallel
 from pyrate.scripts import run_pyrate
 from pyrate.scripts.run_pyrate import write_msg
-from pyrate.shared import get_tmpdir
 
 gdal.SetCacheMax(64)
 __author__ = 'sudipta'
@@ -27,7 +26,6 @@ __author__ = 'sudipta'
 # Constants
 MASTER_PROCESS = 0
 data_path = 'DATAPATH'
-TMPDIR = get_tmpdir()
 PrereadIfg = namedtuple('PrereadIfg', 'path nan_fraction master slave time_span')
 
 
@@ -48,23 +46,23 @@ def main(params, config_file=sys.argv[1]):
         common_nci.get_process_tiles(dest_tifs, parallel, params)
 
     output_dir = params[cf.OUT_DIR]
+    preread_ifgs = os.path.join(output_dir, 'preread_ifgs.pk')
     if rank == MASTER_PROCESS:
         print "Master process found {} worker processors".format(num_processors)
-        preread_ifgs = {}
+        preread_ifgs_dict = {}
         for i, d in enumerate(dest_tifs):
-            ifg = save_latest_phase(d, TMPDIR, tiles)
+            ifg = save_latest_phase(d, output_dir, tiles)
             nan_fraction = ifg.nan_fraction
             master = ifg.master
             slave = ifg.slave
             time_span = ifg.time_span
 
-            preread_ifgs[d] = {PrereadIfg(path=d,
+            preread_ifgs_dict[d] = {PrereadIfg(path=d,
                                           nan_fraction=nan_fraction,
                                           master=master,
                                           slave=slave,
                                           time_span=time_span)}
-        cp.dump(preread_ifgs,
-                open(os.path.join(TMPDIR, 'preread_ifgs.pk'), 'w'))
+        cp.dump(preread_ifgs_dict, open(preread_ifgs, 'w'))
 
     parallel.barrier()
     preread_ifgs = os.path.join(output_dir, 'preread_ifgs.pk')
@@ -98,9 +96,11 @@ def main(params, config_file=sys.argv[1]):
     print 'Processor {} has {} tiles'.format(rank, len(process_tiles))
     # Calc mst using MPI
     if rank == MASTER_PROCESS:
-        mpi_mst_calc(dest_tifs, process_tiles, process_indices, preread_ifgs)
+        mpi_mst_calc(dest_tifs, process_tiles, process_indices,
+                     preread_ifgs, params)
     else:
-        mpi_mst_calc(dest_tifs, process_tiles, process_indices, preread_ifgs)
+        mpi_mst_calc(dest_tifs, process_tiles, process_indices,
+                     preread_ifgs, params)
 
     parallel.barrier()
 
@@ -136,7 +136,7 @@ def main(params, config_file=sys.argv[1]):
     orb_fit_calc_mpi(dest_tifs, parallel, params)
 
     parallel.barrier()
-
+    output_dir = params[cf.OUT_DIR]
     # save phase data and phase_sum used in the reference phase estimation
     if rank == MASTER_PROCESS:
         phase_sum = 0
@@ -146,11 +146,11 @@ def main(params, config_file=sys.argv[1]):
             ifg.nodata_value = params[cf.NO_DATA_VALUE]
             phase_sum += ifg.phase_data
             ifg.save_numpy_phase(numpy_file=os.path.join(
-                TMPDIR, os.path.basename(d).split('.')[0] + '.npy'))
+                output_dir, os.path.basename(d).split('.')[0] + '.npy'))
             ifg.close()
         comp = np.isnan(phase_sum)  # this is the same as in Matlab
         comp = np.ravel(comp, order='F')  # this is the same as in Matlab
-        np.save(file=os.path.join(TMPDIR, 'comp.npy'), arr=comp)
+        np.save(file=os.path.join(output_dir, 'comp.npy'), arr=comp)
     parallel.finalize()
 
 
@@ -223,7 +223,7 @@ def save_ref_pixel_blocks(grid, half_patch_size, ifg_paths, parallel, params):
             np.save(file=data_file, arr=data)
 
 
-def mpi_mst_calc(dest_tifs, process_tiles, process_indices, preread_ifgs):
+def mpi_mst_calc(dest_tifs, process_tiles, process_indices, preread_ifgs, params):
     """
     MPI function that control each process during MPI run
     :param MPI_myID:
@@ -239,12 +239,13 @@ def mpi_mst_calc(dest_tifs, process_tiles, process_indices, preread_ifgs):
 
     write_msg('Calculating minimum spanning tree matrix '
                          'using NetworkX method')
+    output_dir = params[cf.OUT_DIR]
 
     def save_mst_tile(tile, i, preread_ifgs):
         mst_tile = mst.mst_multiprocessing(tile, dest_tifs, preread_ifgs)
         # locally save the mst_mat
         mst_file_process_n = os.path.join(
-            TMPDIR, 'mst_mat_{}.npy'.format(i))
+            output_dir, 'mst_mat_{}.npy'.format(i))
         np.save(file=mst_file_process_n, arr=mst_tile)
 
     for t, p_ind in zip(process_tiles, process_indices):

@@ -14,11 +14,7 @@ from pyrate import vcm as vcm_module
 from pyrate.nci.parallel import Parallel
 from pyrate.scripts import run_pyrate
 from pyrate.scripts.run_pyrate import write_msg
-from pyrate.shared import get_tmpdir
-from pyrate.nci import common_nci
 gdal.SetCacheMax(64)
-
-TMPDIR = get_tmpdir()
 
 __author__ = 'sudipta'
 
@@ -59,16 +55,14 @@ def ref_phase_estimation_mpi(MPI_myID, ifg_paths, parallel, params,
     # TODO: may benefit from tiling and using a median of median algorithms
     write_msg('Finding and removing reference phase')
     num_processors = parallel.size
-    # ifgs = shared.prepare_ifgs_without_phase(ifg_paths, params)
     no_ifgs = len(ifg_paths)
     process_indices = parallel.calc_indices(no_ifgs)
     process_ifgs = [itemgetter(p)(ifg_paths) for p in process_indices]
     process_ref_phs = np.zeros(len(process_ifgs))
     output_dir = params[cf.OUT_DIR]
-
     if params[cf.REF_EST_METHOD] == 1:
         for n, p in enumerate(process_ifgs):
-            process_ref_phs[n] = ref_phase_method1_dummy(p)
+            process_ref_phs[n] = ref_phase_method1_dummy(p, output_dir)
             print 'finished processing {} of process total {}, ' \
                   'of overall {}'.format(n, len(process_ifgs), no_ifgs)
 
@@ -107,8 +101,9 @@ def ref_phase_method2_dummy(params, ifg_path, refpx, refpy):
     process = psutil.Process(os.getpid())
     print process.memory_info()
     print psutil.virtual_memory()
+    output_dir = params[cf.OUT_DIR]
     numpy_file = os.path.join(
-        TMPDIR, os.path.basename(ifg_path).split('.')[0] + '.npy')
+        output_dir, os.path.basename(ifg_path).split('.')[0] + '.npy')
     phase_data = np.load(numpy_file)
     ref_phs = rpe.est_ref_phase_method2_multi(phase_data,
                                               half_chip_size,
@@ -123,15 +118,14 @@ def ref_phase_method2_dummy(params, ifg_path, refpx, refpy):
     return ref_phs
 
 
-def ref_phase_method1_dummy(ifg_path):
-    comp_file = os.path.join(TMPDIR, 'comp.npy')
-
+def ref_phase_method1_dummy(ifg_path, output_dir):
+    comp_file = os.path.join(output_dir, 'comp.npy')
     comp = np.load(comp_file)
     process = psutil.Process(os.getpid())
     print process.memory_info()
     print psutil.virtual_memory()
     numpy_file = os.path.join(
-        TMPDIR, os.path.basename(ifg_path).split('.')[0] + '.npy')
+        output_dir, os.path.basename(ifg_path).split('.')[0] + '.npy')
     phase_data = np.load(numpy_file)
     ref_phs = rpe.est_ref_phase_method1_multi(phase_data, comp)
     phase_data -= ref_phs
@@ -147,7 +141,6 @@ def ref_phase_method1_dummy(ifg_path):
 def maxvar_vcm_mpi(rank, ifg_paths, parallel, params):
     print 'calculating maxvar and vcm'
     num_processors = parallel.size
-    # ifgs = shared.prepare_ifgs_without_phase(ifg_paths, params)
     no_ifgs = len(ifg_paths)
     process_indices = parallel.calc_indices(no_ifgs)
     process_ifgs = [itemgetter(p)(ifg_paths) for p in process_indices]
