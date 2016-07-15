@@ -91,7 +91,7 @@ def common_tmpdir():
 
 
 TMPDIR = get_tmpdir()
-
+COMMON_TMPDIR = common_tmpdir()
 
 class RasterBase(object):
     """
@@ -473,7 +473,7 @@ class IfgPart(object):
         # TODO: fix this if cond
         if ifg_dict is not None:
             preread_ifgs = cp.load(
-                open(os.path.join(TMPDIR, 'preread_ifgs.pk'), 'r'))
+                open(os.path.join(COMMON_TMPDIR, 'preread_ifgs.pk'), 'r'))
             ifg = preread_ifgs[ifg_or_path].pop()
             self.nan_fraction = ifg.nan_fraction
             self.master = ifg.master
