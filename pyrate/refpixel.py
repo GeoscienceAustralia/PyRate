@@ -4,7 +4,9 @@ import numpy as np
 from itertools import product
 import parmap
 import pyrate.config as cf
-from pyrate.shared import Ifg
+from pyrate.shared import Ifg, common_tmpdir, get_tmpdir
+COMMON_TMPDIR = common_tmpdir()
+TMPDIR = get_tmpdir()
 
 
 # TODO: move error checking to config step (for fail fast)
@@ -101,7 +103,7 @@ def ref_pixel_multi(y, x, half_patch_size, phase_data_or_ifg_paths,
         # one ifg.phase_data in memory at any time
         data = []
         for p in phase_data_or_ifg_paths:
-            data_file = os.path.join(params[cf.OUT_DIR],
+            data_file = os.path.join(TMPDIR,
                                      'ref_phase_data_{b}_{y}_{x}.npy'.format(
                                          b=os.path.basename(p).split('.')[0],
                                          y=y, x=x)
