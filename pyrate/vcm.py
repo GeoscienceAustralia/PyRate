@@ -15,7 +15,7 @@ from scipy.optimize import fmin
 from pyrate import shared
 
 from pyrate.algorithm import master_slave_ids
-TMPDIR = shared.get_tmpdir()
+
 
 def pendiffexp(alphamod, cvdav):
     """

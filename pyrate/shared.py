@@ -90,9 +90,6 @@ def common_tmpdir():
     return short_tmp
 
 
-TMPDIR = get_tmpdir()
-COMMON_TMPDIR = common_tmpdir()
-
 class RasterBase(object):
     """
     Base class for PyRate GeoTIFF based raster datasets.
@@ -472,8 +469,8 @@ class IfgPart(object):
         self.c_end = self.tile.bottom_right_x
         # TODO: fix this if cond
         if ifg_dict is not None:
-            preread_ifgs = cp.load(
-                open(os.path.join(COMMON_TMPDIR, 'preread_ifgs.pk'), 'r'))
+            outdir = os.path.dirname(ifg_dict)
+            preread_ifgs = cp.load(open(ifg_dict, 'r'))
             ifg = preread_ifgs[ifg_or_path].pop()
             self.nan_fraction = ifg.nan_fraction
             self.master = ifg.master
@@ -481,7 +478,7 @@ class IfgPart(object):
             self.time_span = ifg.time_span
             phase_file = 'phase_data_{}_{}.npy'.format(
                 os.path.basename(ifg_or_path).split('.')[0], tile.index)
-            self.phase_data = np.load(os.path.join(TMPDIR, phase_file))
+            self.phase_data = np.load(os.path.join(outdir, phase_file))
             read = True
         else:
             # check if Ifg was sent.
