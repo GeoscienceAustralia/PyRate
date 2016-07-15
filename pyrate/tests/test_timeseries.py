@@ -410,14 +410,14 @@ class MPITests(unittest.TestCase):
 
         tiles = shared.create_tiles(cls.ifgs[0].shape,
                                     n_ifgs=17, nrows=3, ncols=4)
-        TMPDIR = shared.get_tmpdir()
+        output_dir = cls.params[cf.OUT_DIR]
 
         for i, t in enumerate(tiles):
-            tsincr_file_n = os.path.join(TMPDIR, 'tsincr_{}.npy'.format(i))
+            tsincr_file_n = os.path.join(output_dir, 'tsincr_{}.npy'.format(i))
             cls.tsincr_mpi[t.top_left_y:t.bottom_right_y,
                 t.top_left_x: t.bottom_right_x, :] = np.load(tsincr_file_n)
 
-            tscum_file_n = os.path.join(TMPDIR, 'tscuml_{}.npy'.format(i))
+            tscum_file_n = os.path.join(output_dir, 'tscuml_{}.npy'.format(i))
             cls.tscum_mpi[t.top_left_y:t.bottom_right_y,
                 t.top_left_x: t.bottom_right_x, :] = np.load(tscum_file_n)
 
@@ -430,7 +430,7 @@ class MPITests(unittest.TestCase):
         cls.tsincr_tifs_mpi.sort()
 
         # remove all temp numpy files after test
-        for f in glob.glob(os.path.join(TMPDIR, '*.npy')):
+        for f in glob.glob(os.path.join(output_dir, '*.npy')):
             os.remove(f)
 
     def calc_non_mpi_time_series(self):
