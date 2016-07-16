@@ -13,6 +13,7 @@ def get_process_tiles(dest_tifs, parallel, params):
     no_tiles = len(tiles)
     process_indices = parallel.calc_indices(no_tiles)
     process_tiles = [itemgetter(p)(tiles) for p in process_indices]
+    print 'finished processing tile information'
     return ifg.shape, process_tiles, process_indices, tiles
 
 

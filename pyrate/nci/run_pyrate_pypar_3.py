@@ -50,6 +50,8 @@ def main(params):
         for d in dest_tifs:
             common_nci.save_latest_phase(d, output_dir, tiles)
 
+    parallel.barrier()
+    print 'linrate computation started'
     # linrate mpi computation
     linrate_mpi(dest_tifs, params, vcmt, process_tiles, preread_ifgs)
 
