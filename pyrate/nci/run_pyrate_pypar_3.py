@@ -46,9 +46,9 @@ def main(params):
 
     maxvar, vcmt = np.load(maxvar_file), np.load(vcmt_file)
     output_dir = params[cf.OUT_DIR]
-    # if rank == MASTER_PROCESS:
-    for d in dest_tifs:
-        common_nci.save_latest_phase(d, output_dir, tiles)
+    if rank == MASTER_PROCESS:
+        for d in dest_tifs:
+            common_nci.save_latest_phase(d, output_dir, tiles)
 
     # linrate mpi computation
     linrate_mpi(dest_tifs, params, vcmt, process_tiles, preread_ifgs)
