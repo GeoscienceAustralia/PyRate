@@ -101,10 +101,6 @@ def main(params, config_file=sys.argv[1]):
                            num_processors, parallel, params)
 
     parallel.barrier()
-    # refpixel read in each process
-    refpx, refpy = np.load(ref_pixel_file)
-    print 'Found reference pixel', refpx, refpy
-    parallel.barrier()
 
     # remove APS delay here
     if params[cf.APS_CORRECTION]:
