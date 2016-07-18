@@ -2,8 +2,9 @@ import cPickle as cp
 import datetime
 import glob
 import os
+from os.path import join
 import sys
-from collections import namedtuple
+from collections import namedtuple, Counter
 from operator import itemgetter
 import numpy as np
 from osgeo import gdal
@@ -46,27 +47,13 @@ def main(params, config_file=sys.argv[1]):
         common_nci.get_process_tiles(dest_tifs, parallel, params)
 
     output_dir = params[cf.OUT_DIR]
-    preread_ifgs = os.path.join(output_dir, 'preread_ifgs.pk')
+
     if rank == MASTER_PROCESS:
         print "Master process found {} worker processors".format(num_processors)
-        preread_ifgs_dict = {}
-        for i, d in enumerate(dest_tifs):
-            ifg = save_latest_phase(d, output_dir, tiles)
-            nan_fraction = ifg.nan_fraction
-            master = ifg.master
-            slave = ifg.slave
-            time_span = ifg.time_span
 
-            preread_ifgs_dict[d] = {PrereadIfg(path=d,
-                                          nan_fraction=nan_fraction,
-                                          master=master,
-                                          slave=slave,
-                                          time_span=time_span)}
-        cp.dump(preread_ifgs_dict, open(preread_ifgs, 'w'))
+    preread_ifgs = convert_phase_numpy(dest_tifs, output_dir, tiles, parallel)
 
     parallel.barrier()
-    preread_ifgs = os.path.join(output_dir, 'preread_ifgs.pk')
-
     mpi_log_filename = os.path.join(output_dir, "mpi_run_pyrate.log")
 
     if rank == MASTER_PROCESS:
@@ -152,6 +139,52 @@ def main(params, config_file=sys.argv[1]):
         comp = np.ravel(comp, order='F')  # this is the same as in Matlab
         np.save(file=os.path.join(output_dir, 'comp.npy'), arr=comp)
     parallel.finalize()
+
+
+def convert_phase_numpy(dest_tifs, output_dir, tiles, parallel):
+    """
+    1. Convert ifg phase data into numpy files.
+    2. Saves the preread_ifgs dict with information about the ifgs that are
+    later used for fast loading of Ifg files in IfgPart class
+    :param dest_tifs:
+    :param output_dir:
+    :param tiles:
+    :param parallel:
+    :return:
+    """
+    rank = parallel.rank
+    num_processors = parallel.size
+
+    preread_ifgs_dict = {}
+    process_preread_ifgs = os.path.join(output_dir,
+                                        'preread_ifgs_{}.pk'.format(rank))
+    no_tifs = len(dest_tifs)
+    process_indices = parallel.calc_indices(no_tifs)
+    process_tifs = [itemgetter(p)(dest_tifs) for p in process_indices]
+    for i, d in enumerate(process_tifs):
+        ifg = save_latest_phase(d, output_dir, tiles)
+        nan_fraction = ifg.nan_fraction
+        master = ifg.master
+        slave = ifg.slave
+        time_span = ifg.time_span
+
+        preread_ifgs_dict[d] = {PrereadIfg(path=d,
+                                           nan_fraction=nan_fraction,
+                                           master=master,
+                                           slave=slave,
+                                           time_span=time_span)}
+    cp.dump(preread_ifgs_dict, open(process_preread_ifgs, 'w'))
+    parallel.barrier()
+    preread_ifgs = os.path.join(output_dir, 'preread_ifgs.pk')
+    if rank == MASTER_PROCESS:
+        for r in xrange(1, num_processors):
+            temp_file = join(output_dir, 'preread_ifgs_{}.pk'.format(r))
+            temp_dict = cp.load(open(temp_file, 'r'))
+            preread_ifgs_dict.update(temp_dict)
+            os.remove(temp_file)
+        cp.dump(preread_ifgs_dict, open(preread_ifgs, 'w'))
+    print 'finish converting phase_data to numpy in process {}'.format(rank)
+    return preread_ifgs
 
 
 def orb_fit_calc_mpi(ifg_paths, parallel, params):
