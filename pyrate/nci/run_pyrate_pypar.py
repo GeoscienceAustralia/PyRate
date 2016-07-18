@@ -4,14 +4,13 @@ import glob
 import os
 from os.path import join
 import sys
-from collections import namedtuple, Counter
+from collections import namedtuple
 from operator import itemgetter
 import numpy as np
 from osgeo import gdal
 
 from pyrate import config as cf
 from pyrate import mst
-from pyrate import orbital
 from pyrate import refpixel
 from pyrate import remove_aps_delay as aps
 from pyrate import shared
@@ -118,26 +117,6 @@ def main(params, config_file=sys.argv[1]):
         for i in ifgs:
             i.close()
 
-    parallel.barrier()
-
-    orb_fit_calc_mpi(dest_tifs, parallel, params)
-
-    parallel.barrier()
-    output_dir = params[cf.OUT_DIR]
-    # save phase data and phase_sum used in the reference phase estimation
-    if rank == MASTER_PROCESS:
-        phase_sum = 0
-        for d in dest_tifs:
-            ifg = shared.Ifg(d)
-            ifg.open()
-            ifg.nodata_value = params[cf.NO_DATA_VALUE]
-            phase_sum += ifg.phase_data
-            ifg.save_numpy_phase(numpy_file=os.path.join(
-                output_dir, os.path.basename(d).split('.')[0] + '.npy'))
-            ifg.close()
-        comp = np.isnan(phase_sum)  # this is the same as in Matlab
-        comp = np.ravel(comp, order='F')  # this is the same as in Matlab
-        np.save(file=os.path.join(output_dir, 'comp.npy'), arr=comp)
     parallel.finalize()
 
 
@@ -185,21 +164,6 @@ def convert_phase_to_numpy(dest_tifs, output_dir, tiles, parallel):
         cp.dump(preread_ifgs_dict, open(preread_ifgs, 'w'))
     print 'finish converting phase_data to numpy in process {}'.format(rank)
     return preread_ifgs
-
-
-def orb_fit_calc_mpi(ifg_paths, parallel, params):
-    print 'calculating orbfit correction'
-    if params[cf.ORBITAL_FIT_METHOD] != 1:
-        raise cf.ConfigException('For now orbfit method must be 1')
-
-    # ifgs = shared.prepare_ifgs_without_phase(ifg_paths, params)
-    no_ifgs = len(ifg_paths)
-    process_indices = parallel.calc_indices(no_ifgs)
-    process_ifgs = [itemgetter(p)(ifg_paths) for p in process_indices]
-
-    mlooked = None
-    # TODO: MPI orbfit method 2
-    orbital.orbital_correction(process_ifgs, params, mlooked=mlooked)
 
 
 def ref_pixel_calc_mpi(MPI_myID, ifg_paths, num_processors, parallel, params):

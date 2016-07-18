@@ -14,6 +14,7 @@ from pyrate import vcm as vcm_module
 from pyrate.nci.parallel import Parallel
 from pyrate.scripts import run_pyrate
 from pyrate.scripts.run_pyrate import write_msg
+from pyrate import orbital
 gdal.SetCacheMax(64)
 
 __author__ = 'sudipta'
@@ -38,6 +39,26 @@ def main(params, config_file=sys.argv[1]):
     ref_pixel_file = os.path.join(params[cf.OUT_DIR], 'ref_pixel.npy')
     refpx, refpy = np.load(ref_pixel_file)
     print 'Found reference pixel', refpx, refpy
+
+    orb_fit_calc_mpi(dest_tifs, parallel, params)
+
+    parallel.barrier()
+    output_dir = params[cf.OUT_DIR]
+
+    # save phase data and phase_sum used in the reference phase estimation
+    if rank == MASTER_PROCESS:
+        phase_sum = 0
+        for d in dest_tifs:
+            ifg = shared.Ifg(d)
+            ifg.open()
+            ifg.nodata_value = params[cf.NO_DATA_VALUE]
+            phase_sum += ifg.phase_data
+            ifg.save_numpy_phase(numpy_file=os.path.join(
+                output_dir, os.path.basename(d).split('.')[0] + '.npy'))
+            ifg.close()
+        comp = np.isnan(phase_sum)  # this is the same as in Matlab
+        comp = np.ravel(comp, order='F')  # this is the same as in Matlab
+        np.save(file=os.path.join(output_dir, 'comp.npy'), arr=comp)
 
     parallel.barrier()
     # estimate and remove reference phase
@@ -172,6 +193,22 @@ def maxvar_vcm_mpi(rank, ifg_paths, parallel, params):
         np.save(file=vcmt_file, arr=vcmt)
 
     return maxvar, vcmt
+
+
+def orb_fit_calc_mpi(ifg_paths, parallel, params):
+    print 'calculating orbfit correction'
+    if params[cf.ORBITAL_FIT_METHOD] != 1:
+        raise cf.ConfigException('For now orbfit method must be 1')
+
+    # ifgs = shared.prepare_ifgs_without_phase(ifg_paths, params)
+    no_ifgs = len(ifg_paths)
+    process_indices = parallel.calc_indices(no_ifgs)
+    process_ifgs = [itemgetter(p)(ifg_paths) for p in process_indices]
+
+    mlooked = None
+    # TODO: MPI orbfit method 2
+    orbital.orbital_correction(process_ifgs, params, mlooked=mlooked)
+    print 'finished orbfit calculation for process {}'.format(parallel.rank)
 
 
 if __name__ == '__main__':
