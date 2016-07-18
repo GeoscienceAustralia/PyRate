@@ -51,7 +51,7 @@ def main(params, config_file=sys.argv[1]):
     if rank == MASTER_PROCESS:
         print "Master process found {} worker processors".format(num_processors)
 
-    preread_ifgs = convert_phase_numpy(dest_tifs, output_dir, tiles, parallel)
+    preread_ifgs = convert_phase_to_numpy(dest_tifs, output_dir, tiles, parallel)
 
     parallel.barrier()
     mpi_log_filename = os.path.join(output_dir, "mpi_run_pyrate.log")
@@ -84,10 +84,10 @@ def main(params, config_file=sys.argv[1]):
     # Calc mst using MPI
     if rank == MASTER_PROCESS:
         mpi_mst_calc(dest_tifs, process_tiles, process_indices,
-                     preread_ifgs, params)
+                     preread_ifgs, params, parallel)
     else:
         mpi_mst_calc(dest_tifs, process_tiles, process_indices,
-                     preread_ifgs, params)
+                     preread_ifgs, params, parallel)
 
     parallel.barrier()
 
@@ -141,7 +141,7 @@ def main(params, config_file=sys.argv[1]):
     parallel.finalize()
 
 
-def convert_phase_numpy(dest_tifs, output_dir, tiles, parallel):
+def convert_phase_to_numpy(dest_tifs, output_dir, tiles, parallel):
     """
     1. Convert ifg phase data into numpy files.
     2. Saves the preread_ifgs dict with information about the ifgs that are
@@ -161,7 +161,7 @@ def convert_phase_numpy(dest_tifs, output_dir, tiles, parallel):
     no_tifs = len(dest_tifs)
     process_indices = parallel.calc_indices(no_tifs)
     process_tifs = [itemgetter(p)(dest_tifs) for p in process_indices]
-    for i, d in enumerate(process_tifs):
+    for d in process_tifs:
         ifg = save_latest_phase(d, output_dir, tiles)
         nan_fraction = ifg.nan_fraction
         master = ifg.master
@@ -256,7 +256,8 @@ def save_ref_pixel_blocks(grid, half_patch_size, ifg_paths, parallel, params):
             np.save(file=data_file, arr=data)
 
 
-def mpi_mst_calc(dest_tifs, process_tiles, process_indices, preread_ifgs, params):
+def mpi_mst_calc(dest_tifs, process_tiles, process_indices, preread_ifgs,
+                 params, parallel):
     """
     MPI function that control each process during MPI run
     :param MPI_myID:
@@ -283,6 +284,7 @@ def mpi_mst_calc(dest_tifs, process_tiles, process_indices, preread_ifgs, params
 
     for t, p_ind in zip(process_tiles, process_indices):
         save_mst_tile(t, p_ind, preread_ifgs)
+    print 'finished mst calculation for process {}'.format(parallel.rank)
 
 
 def clean_up_old_files():

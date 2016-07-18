@@ -44,7 +44,6 @@ def main(params, config_file=sys.argv[1]):
     ref_phase_estimation_mpi(rank, dest_tifs, parallel, params, refpx, refpy)
 
     parallel.barrier()
-    # all processes need access to maxvar, and vcmt
     maxvar_vcm_mpi(rank, dest_tifs, parallel, params)
 
     parallel.finalize()
