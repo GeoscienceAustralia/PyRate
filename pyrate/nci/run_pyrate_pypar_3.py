@@ -2,6 +2,7 @@ import os
 import sys
 import numpy as np
 from collections import namedtuple
+from operator import itemgetter
 from osgeo import gdal
 
 from pyrate import config as cf
@@ -46,9 +47,13 @@ def main(params):
 
     maxvar, vcmt = np.load(maxvar_file), np.load(vcmt_file)
     output_dir = params[cf.OUT_DIR]
-    if rank == MASTER_PROCESS:
-        for d in dest_tifs:
-            common_nci.save_latest_phase(d, output_dir, tiles)
+
+    # save latest phase data for use in linrate and mpi
+    no_tifs = len(dest_tifs)
+    process_indices = parallel.calc_indices(no_tifs)
+    process_tifs = [itemgetter(p)(dest_tifs) for p in process_indices]
+    for d in process_tifs:
+        common_nci.save_latest_phase(d, output_dir, tiles)
 
     parallel.barrier()
     print 'linrate computation started'
