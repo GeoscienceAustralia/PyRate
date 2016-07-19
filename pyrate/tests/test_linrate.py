@@ -250,6 +250,11 @@ class MPITests(unittest.TestCase):
         cmd = str.split()
         subprocess.check_call(cmd)
 
+        str = 'mpirun -np 4 python pyrate/nci/postprocessing.py ' + \
+              cls.conf_file
+        cmd = str.split()
+        subprocess.check_call(cmd)
+
         rate_file = os.path.join(cls.params[cf.OUT_DIR], 'linrate.npy')
         cls.rate_mpi = np.load(rate_file)
         error_file = os.path.join(cls.params[cf.OUT_DIR], 'linerror.npy')

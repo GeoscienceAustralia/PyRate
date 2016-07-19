@@ -403,6 +403,11 @@ class MPITests(unittest.TestCase):
         cmd = str.split()
         subprocess.check_call(cmd)
 
+        str = 'mpirun -np 4 python pyrate/nci/postprocessing.py ' + \
+              cls.conf_file
+        cmd = str.split()
+        subprocess.check_call(cmd)
+
         # sydney test data known to have a span/nvelpar of 12
         cls.tsincr_mpi = np.empty(shape=(cls.ifgs[0].shape + (12,)),
                            dtype=np.float32)
