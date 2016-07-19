@@ -1,7 +1,6 @@
 import os
 import sys
 from operator import itemgetter
-import psutil
 import numpy as np
 from collections import namedtuple
 from osgeo import gdal
@@ -118,9 +117,6 @@ def ref_phase_method2_dummy(params, ifg_path, refpx, refpy):
     half_chip_size = int(np.floor(params[cf.REF_CHIP_SIZE] / 2.0))
     chipsize = 2 * half_chip_size + 1
     thresh = chipsize * chipsize * params[cf.REF_MIN_FRAC]
-    process = psutil.Process(os.getpid())
-    print process.memory_info()
-    print psutil.virtual_memory()
     output_dir = params[cf.OUT_DIR]
     numpy_file = os.path.join(
         output_dir, os.path.basename(ifg_path).split('.')[0] + '.npy')
@@ -141,9 +137,6 @@ def ref_phase_method2_dummy(params, ifg_path, refpx, refpy):
 def ref_phase_method1_dummy(ifg_path, output_dir):
     comp_file = os.path.join(output_dir, 'comp.npy')
     comp = np.load(comp_file)
-    process = psutil.Process(os.getpid())
-    print process.memory_info()
-    print psutil.virtual_memory()
     numpy_file = os.path.join(
         output_dir, os.path.basename(ifg_path).split('.')[0] + '.npy')
     phase_data = np.load(numpy_file)
@@ -168,7 +161,6 @@ def maxvar_vcm_mpi(rank, ifg_paths, parallel, params):
     for n, i in enumerate(process_ifgs):
         print 'calculating maxvar for {} of process ifgs {} of ' \
               'total {}'.format(n, len(process_ifgs), no_ifgs)
-        print psutil.virtual_memory()
         # TODO: cvd calculation is still pretty slow - revisit
         process_maxvar.append(vcm_module.cvd(i, params)[0])
     maxvar_file = os.path.join(params[cf.OUT_DIR], 'maxvar.npy')

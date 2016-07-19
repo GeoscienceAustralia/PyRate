@@ -1,12 +1,10 @@
 import os
-import sys
 import numpy as np
 from collections import namedtuple
 from operator import itemgetter
 from osgeo import gdal
 
 from pyrate import config as cf
-from pyrate import ifgconstants as ifc
 from pyrate import linrate
 from pyrate import shared
 from pyrate import timeseries
