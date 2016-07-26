@@ -11,7 +11,10 @@ from osgeo import gdal
 import tempfile
 from math import floor
 import numpy as np
-from scipy.stats.stats import nanmean
+try:
+    from scipy.stats.stats import nanmean
+except:  # fix for scipy v0.18.0
+    from scipy import nanmean
 from numpy import isnan, nanmax, nanmin
 from numpy import ones, nan, reshape, sum as npsum
 from numpy.testing import assert_array_almost_equal, assert_array_equal
