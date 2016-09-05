@@ -1,0 +1,11 @@
+#!/bin/bash
+#PBS -P dg9
+#PBS -q normal
+#PBS -l walltime=00:10:00
+#PBS -l mem=128GB
+#PBS -l ncpus=64
+#PBS -l jobfs=64GB
+#PBS -lother=gdata1
+#PBS -l wd
+
+mpirun -np 64 python /home/547/xxx547/repo/PyRate/pyrate/nci/run_prepifg_pypar.py pyrate_xxx.conf
