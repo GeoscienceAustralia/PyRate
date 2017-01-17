@@ -14,8 +14,10 @@ from pyrate.tests import common
 from pyrate import config as cf
 from pyrate.scripts import run_pyrate, run_prepifg
 from pyrate import ifgconstants as ifc
+from pyrate.compat import PyAPS_INSTALLED
 
 
+@unittest.skipUnless(PyAPS_INSTALLED, 'PyAPS must be available for this test')
 class TestMethod1VsMethod2AndMetaData(unittest.TestCase):
 
     @classmethod
@@ -119,6 +121,7 @@ class TestMethod1VsMethod2AndMetaData(unittest.TestCase):
                                                  decimal=4)
 
 
+@unittest.skipUnless(PyAPS_INSTALLED, 'PyAPS must be available for this test')
 class TestOriginalVsEfficientAps(unittest.TestCase):
 
     @classmethod
@@ -223,6 +226,7 @@ class TestOriginalVsEfficientAps(unittest.TestCase):
                                                  decimal=4)
 
 
+@unittest.skipUnless(PyAPS_INSTALLED, 'PyAPS must be available for this test')
 class TestAPSIncidenceVsElevationVsParallel(unittest.TestCase):
     """
     This class tests APS method when incidence map is provided vs elevation map
@@ -286,10 +290,10 @@ class TestAPSIncidenceVsElevationVsParallel(unittest.TestCase):
         cls.params_ele_par[cf.OUT_DIR] = cls.tif_dir_ele_par
         cls.params_ele_par[cf.PARALLEL] = True
         run_prepifg.main(cls.params_ele_par)
-        dest_paths_ele_par = [f for f in
-                          glob.glob(os.path.join(cls.tif_dir_ele_par, '*.tif'))
-                          if "cr" in f and "rlks" in f and
-                          (len(re.findall(ptn, os.path.basename(f))) == 2)]
+        dest_paths_ele_par = \
+            [f for f in glob.glob(os.path.join(cls.tif_dir_ele_par, '*.tif'))
+             if "cr" in f and "rlks" in f and
+             (len(re.findall(ptn, os.path.basename(f))) == 2)]
 
         cls.ifgs_ele_par = common.sydney_data_setup(datafiles=dest_paths_ele_par)
 
@@ -321,6 +325,7 @@ class TestAPSIncidenceVsElevationVsParallel(unittest.TestCase):
                                                  decimal=4)
 
 
+@unittest.skipUnless(PyAPS_INSTALLED, 'PyAPS must be available for this test')
 class MPITests(unittest.TestCase):
     # TODO: add tests for looks > 1
     @classmethod
