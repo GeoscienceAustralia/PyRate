@@ -1,34 +1,5 @@
 #!/usr/bin/env python
-import os
-import sys
 from setuptools import setup
-from setuptools.command.test import test as TestCommand
-
-# If testing in python 2, use subprocess32 instead of built in subprocess
-if os.name == 'posix' and sys.version_info[0] < 3:
-    exta_test_deps = ['subprocess32']
-else:
-    exta_test_deps = []
-
-
-class PyTest(TestCommand):
-
-    user_options = [('pytest-args=', 'a', "Arguments to pass to py.test")]
-
-    def initialize_options(self):
-        super(PyTest, self).initialize_options()
-        self.pytest_args = []
-
-    def finalize_options(self):
-        super(PyTest, self).finalize_options()
-        self.test_suite = True
-        self.test_args = []
-
-    def run_tests(self):
-        # import here, cause outside the eggs aren't loaded
-        import pytest
-        exit(pytest.main(self.pytest_args))
-
 
 readme = open('README.md').read()
 doclink = """
@@ -56,31 +27,42 @@ setup(
 
         ]
     },
+    setup_requires=['numpy >= 1.12.0'],  # required due to netCDF4
     install_requires=[
+        'Click >= 6.0',
+        'numpy >= 1.12.0',
+        'Cython >= 0.22.1',
+        'mpi4py == 2.0.0',
+        'scipy >= 0.15.1',
+        'PyYAML >= 3.11',
+        'netCDF4 == 1.2.6',
+        'GDAL >= 2.0.0',
+        'matplotlib >= 1.4.3',
+        'pyproj >=1.9.5',
+        'networkx >= 1.9.1',
+        'Pillow >= 2.8.2',
+        'parmap',
+        'glob2'
     ],
     extras_require={
-        'demos': [
-            'matplotlib'
-        ],
         'dev': [
+            'bumpversion',
             'sphinx',
             'ghp-import',
             'sphinxcontrib-programoutput'
         ]
     },
-    cmdclass={
-        'test': PyTest
-    },
+    test_suite='pyrate.tests',
     tests_require=[
-        'pytest',
         'pytest-cov',
         'coverage',
         'codecov',
         'tox',
-    ] + exta_test_deps,
+        'pytest'  # pytest should be last
+    ],
     license="Apache Software License 2.0",
     zip_safe=False,
-    keywords='PyRate',
+    keywords='PyRate, InSAR',
     classifiers=[
         'Development Status :: 4 - Beta',
         "Operating System :: POSIX",
@@ -94,5 +76,5 @@ setup(
         "Topic :: Software Development :: Libraries :: Python Modules",
         "Topic :: Scientific/Engineering :: Information Analysis"
         # add more topics
-    ],
+    ]
 )
