@@ -1,18 +1,11 @@
-"""
-Contains objects common to multiple parts of PyRate
-
-Created on 12/09/2012
-
-.. codeauthor:: Ben Davies, Sudipta Basak, Matt Garthwaite
-"""
+from __future__ import print_function
 import errno
 from itertools import product
-import cPickle as cp
-import os, struct
-from array import array
+import pickle as cp
+import os
+import struct
 import math
 from datetime import date
-import logging
 from numpy import where, nan, isnan, sum as nsum, isclose
 import numpy as np
 import random
@@ -25,7 +18,6 @@ import shutil
 import stat
 from pyrate import roipac, gamma, config as cf
 from pyrate import ifgconstants as ifc
-# print screen output
 VERBOSE = True
 
 
@@ -146,8 +138,8 @@ class RasterBase(object):
                 attempts += 1
                 self.dataset = gdal.Open(self.data_path, flag)
             except RuntimeError as e:
-                print e
-                print '\nneed to read {ifg} again'.format(ifg=self.data_path)
+                print(e)
+                print('\nneed to read {ifg} again'.format(ifg=self.data_path))
                 time.sleep(0.5)
 
         if self.dataset is None:
@@ -503,8 +495,8 @@ class IfgPart(object):
                 attempts += 1
                 read = self.read_required(ifg)
             except RuntimeError as e:
-                print e
-                print '\nneed to read {ifg} again'.format(ifg=ifg)
+                print(e)
+                print('\nneed to read {ifg} again'.format(ifg=ifg))
                 time.sleep(0.5)
 
     def read_required(self, ifg):
@@ -1005,4 +997,4 @@ def write_msg(msg):
     """
     logging.debug(msg)
     if VERBOSE:
-        print msg
+        print(msg)

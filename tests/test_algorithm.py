@@ -28,31 +28,32 @@ class LeastSquaresTests(TestCase):
 
     def test_least_squares_covariance(self):
         b = array([[13, 7.2, 5.7]]).T
-        A = array([[1, 0.4, 0.3],[1,1,1]]).T
+        A = array([[1, 0.4, 0.3], [1, 1, 1]]).T
         v = array([[1, 1, 1]]).T
         r = algorithm.least_squares_covariance(A, b, v)
         exp = [10.1628, 2.8744]
         assert_array_almost_equal(r.T.squeeze(), exp, decimal=4)
-
 
     def test_least_squares_covariance_overdetermined(self):
         # must be overdetermined, ie. more observations than params
         b = array([[10]]).T
         A = array([[1]]).T
         v = array([[1]]).T
-        self.assertRaises(ValueError, algorithm.least_squares_covariance, A, b, v)
+        self.assertRaises(ValueError,
+                          algorithm.least_squares_covariance, A, b, v)
 
         # try non transposed style
         b = array([[10]])
         A = array([[1]])
         v = array([[1]])
-        self.assertRaises(ValueError, algorithm.least_squares_covariance, A, b, v)
+        self.assertRaises(ValueError,
+                          algorithm.least_squares_covariance, A, b, v)
 
 
 class AlgorithmTests(TestCase):
-    '''
+    """
     Misc unittests for functions in the algorithm module.
-    '''
+    """
 
     def test_is_square(self):
         self.assertTrue(algorithm.is_square(np.empty((2, 2))))
@@ -61,9 +62,8 @@ class AlgorithmTests(TestCase):
         for shape in [(3, 2), (2, 3)]:
             self.assertFalse(algorithm.is_square(np.empty(shape)))
 
-
     def test_phase_conversion(self):
-        # ROIPAC interferograms are in units of radians, verify conversion to mm
+        # ROIPAC interferograms in units of radians, verify conversion to mm
         xs, ys = 5, 7
         data = (np.arange(xs * ys) - 1.7) * 0.1 # fake a range of values
         data = np.where(data == 0, np.nan, data)
@@ -71,7 +71,6 @@ class AlgorithmTests(TestCase):
         exp = (data * wavelen * 1000) / (4 * pi)
         act = shared.convert_radians_to_mm(data, wavelen)
         assert_allclose(exp, act)
-
 
     def test_unit_vector(self):
         # last values here simulate a descending pass
@@ -89,15 +88,17 @@ class AlgorithmTests(TestCase):
         unitv = [a.reshape(sh) for a in unitv]
 
         # NB: assumes radian inputs
-        act = algorithm.unit_vector(reshape(incidence, sh), reshape(azimuth, sh))
+        act = algorithm.unit_vector(reshape(incidence, sh),
+                                    reshape(azimuth, sh))
         for a, e in zip(act, unitv):
             assert_array_almost_equal(squeeze(a), e)
 
         # check unit vec components have correct signs
         E, N, V = act
-        self.assertTrue((E[:-2]).all() > 0) # test E/W component of ascending is +ve
-        self.assertTrue(E[-1] < 0) # test E/W component of descending is -ve
-        self.assertTrue((N > 0).all()) # ensure all north values are positive
+        # test E/W component of ascending is +ve
+        self.assertTrue((E[:-2]).all() > 0)
+        self.assertTrue(E[-1] < 0)  # test E/W component of descending is -ve
+        self.assertTrue((N > 0).all())  # ensure all north values are positive
 
         # check unit vec components have correct magnitudes
         self.assertTrue((abs(V) > abs(E)).all())
@@ -105,11 +106,10 @@ class AlgorithmTests(TestCase):
         self.assertTrue((abs(E) > abs(N)).all())
 
 
-
 class DateLookupTests(TestCase):
-    '''
+    """
     Tests for the algorithm.ifg_date_lookup() function.
-    '''
+    """
 
     def setUp(self):
         self.ifgs = sydney5_mock_ifgs()
@@ -122,7 +122,6 @@ class DateLookupTests(TestCase):
 
         # test with reversed date tuple, should reorder it according to age
         date_pair = (date(2006, 12, 11), date(2006, 11, 6))
-        print self.ifgs
         i = algorithm.ifg_date_lookup(self.ifgs, date_pair)
         self.assertEqual(self.ifgs[1], i)
 
@@ -130,7 +129,8 @@ class DateLookupTests(TestCase):
     def test_ifg_date_lookup_failure(self):
         # error when lookup cannot find an ifg given a date pair
         dates = (date(2006, 12, 11), date(2007, 3, 26))
-        self.assertRaises(ValueError, algorithm.ifg_date_lookup, self.ifgs, dates)
+        self.assertRaises(ValueError,
+                          algorithm.ifg_date_lookup, self.ifgs, dates)
 
 
     def test_date_lookup_bad_inputs(self):
@@ -139,7 +139,8 @@ class DateLookupTests(TestCase):
                     (date(2007, 3, 26), ""), (date(2007, 3, 26), None) ]
 
         for d in inputs:
-            self.assertRaises(ValueError, algorithm.ifg_date_lookup, self.ifgs, d)
+            self.assertRaises(ValueError,
+                              algorithm.ifg_date_lookup, self.ifgs, d)
 
 
 # TODO: InitialModelTests
@@ -188,8 +189,8 @@ class EpochsTests(TestCase):
         ifgs = sydney5_mock_ifgs()
         for i in ifgs:
             i.nodata_value = 0
-        dates = [date(2006,  8, 28), date(2006, 11, 06), date(2006, 12, 11),
-                date(2007,  1, 15), date(2007,  3, 26), date(2007,  9, 17)]
+        dates = [date(2006, 8, 28), date(2006, 11, 6), date(2006, 12, 11),
+                 date(2007, 1, 15), date(2007, 3, 26), date(2007, 9, 17)]
 
         self.assertEqual(dates, sorted(set(algorithm.get_all_epochs(ifgs))))
 
@@ -199,13 +200,14 @@ class EpochsTests(TestCase):
     def test_master_slave_ids(self):
         d0 = date(2006, 6, 19)
         d1 = date(2006, 8, 28)
-        d2 = date(2006, 10, 02)
-        d3 = date(2006, 11, 06)
+        d2 = date(2006, 10, 2)
+        d3 = date(2006, 11, 6)
         exp = { d0: 0, d1: 1, d2: 2, d3: 3}
 
         # test unordered and with duplicates
         self.assertEqual(exp, algorithm.master_slave_ids([d3, d0, d2, d1]))
-        self.assertEqual(exp, algorithm.master_slave_ids([d3, d0, d2, d1, d3, d0]))
+        self.assertEqual(exp,
+                         algorithm.master_slave_ids([d3, d0, d2, d1, d3, d0]))
 
 if __name__ == "__main__":
     unittest.main()

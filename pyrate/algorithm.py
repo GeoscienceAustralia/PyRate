@@ -1,7 +1,7 @@
 from numpy import sin, cos, unique, histogram, diag, dot
-from pyrate.shared import EpochList, IfgException
-from ifgconstants import DAYS_PER_YEAR
 from scipy.linalg import qr, solve, lstsq
+from pyrate.shared import EpochList, IfgException
+from pyrate.ifgconstants import DAYS_PER_YEAR
 
 
 def is_square(arr):
@@ -96,8 +96,10 @@ def ifg_date_lookup(ifgs, date_pair):
 
     # check master/slave dates are in order
     try:
-        # TODO: Clarify: Is the comparison here for a different date? Then it should be written in a more pythonic way
-        # The if below is always true as long as the dates are different and not in order
+        # TODO: Clarify: Is the comparison here for a different date?
+        # Then it should be written in a more pythonic way
+        # The if below is always true as long as the dates are different
+        # and not in order
         if date_pair[0] > date_pair[1]:
             date_pair = date_pair[1], date_pair[0]
     except:
@@ -107,7 +109,8 @@ def ifg_date_lookup(ifgs, date_pair):
         if date_pair == (i.master, i.slave):
             return i
 
-    raise ValueError("Cannot find Ifg with master/slave of %s" % str(date_pair))
+    raise ValueError("Cannot find Ifg with "
+                     "master/slave of %s" % str(date_pair))
 
 
 def ifg_date_index_lookup(ifgs, date_pair):
@@ -132,7 +135,8 @@ def ifg_date_index_lookup(ifgs, date_pair):
         if date_pair == (ifgs[i].master, ifgs[i].slave):
             return i
 
-    raise ValueError("Cannot find Ifg with master/slave of %s" % str(date_pair))
+    raise ValueError("Cannot find Ifg with "
+                     "master/slave of %s" % str(date_pair))
 
 
 def get_epochs(ifgs):
@@ -175,7 +179,8 @@ def get_epoch_count(ifgs):
 def master_slave_ids(dates):
     '''
     Returns dict of 'date:unique ID' for each date in 'dates'. IDs are ordered
-    from oldest to newest, starting at 0. Replaces ifglist.mas|slvnum in Pirate.
+    from oldest to newest, starting at 0.
+    Replaces ifglist.mas|slvnum in Pirate.
     '''
 
     dset = sorted(set(dates))

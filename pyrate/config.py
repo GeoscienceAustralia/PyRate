@@ -1,3 +1,4 @@
+from __future__ import print_function
 """
 Utilities to parse PyRate configuration files. Includes numerous general PyRate
 constants relating to options in configuration files.
@@ -353,7 +354,8 @@ def parse_namelist(nml):
     Parses name list file into array of paths
     """
     with open(nml) as f_in:
-        return filter(None, (line.rstrip() for line in f_in))
+        lines = [line.rstrip() for line in f_in]
+    return filter(None, lines)
 
 
 class ConfigException(Exception):
