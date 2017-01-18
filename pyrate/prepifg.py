@@ -249,12 +249,13 @@ def mlooked_path(path, looks, crop_out):
         base=base, looks=looks, crop_out=crop_out, ext=ext)
 
 
-def warp_old(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out, verbose,
-         ret_ifg=True):
+def warp_old(ifg, x_looks, y_looks, extents, resolution, thresh,
+             crop_out, verbose, ret_ifg=True):
     """
     Resamples 'ifg' and returns a new Ifg obj.
 
-    :param xlooks: integer factor to scale X axis by, 5 is 5x smaller, 1 is no change.
+    :param xlooks: integer factor to scale X axis by, 5 is 5x smaller,
+        1 is no change.
     :param ylooks: as xlooks, but for Y axis
     :param extents: georeferenced extents for new file: (xfirst, yfirst, xlast, ylast)
     :param resolution: [xres, yres] or None. Sets resolution output Ifg metadata.
@@ -272,10 +273,11 @@ def warp_old(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out, verbo
 
     # It appears that before vrions 1.10 gdal-warp did not copy meta-data
     # ... so we need to. Get the keys from the input here
-    if sum((int(v)*i for v, i in zip(gdal.__version__.split('.')[:2], [10, 1]))) < 20:
+    if (sum((int(v)*i for v, i
+             in zip(gdal.__version__.split('.')[:2], [10, 1]))) < 20):
         fl = ifg.data_path
         dat = gdal.Open(fl)
-        md = {k:v for k, v in dat.GetMetadata().iteritems()}
+        md = {k:v for k, v in dat.GetMetadata().items()}
     else:
         md = None
 
@@ -326,11 +328,15 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out,
     """
     Resamples 'ifg' and returns a new Ifg obj.
 
-    :param xlooks: integer factor to scale X axis by, 5 is 5x smaller, 1 is no change.
-    :param ylooks: as xlooks, but for Y axis
-    :param extents: georeferenced extents for new file: (xfirst, yfirst, xlast, ylast)
-    :param resolution: [xres, yres] or None. Sets resolution output Ifg metadata.
-         Use *None* if raster size is not being changed.
+    :param xlooks: int
+        factor to scale X axis by, 5 is 5x smaller, 1 is no change.
+    :param ylooks: int
+        as xlooks, but for Y axis
+    :param extents: tuple
+        georeferenced extents for new file: (xfirst, yfirst, xlast, ylast)
+    :param resolution: [xres, yres] or None.
+        Sets resolution output Ifg metadata.
+        Use *None* if raster size is not being changed.
     :param thresh: see thresh in prepare_ifgs().
     :param verbose: True to print gdalwarp output to stdout
     """
@@ -362,7 +368,8 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out,
         thresh=thresh,
         out_driver_type=driver_type)
     if not write_to_disc:
-        return resampled_data, out_ds  # this is used in orbfit correction when looks!=1
+        # this is used in orbfit correction when looks!=1
+        return resampled_data, out_ds
 
 
 def resample(data, xscale, yscale, thresh):
@@ -375,8 +382,9 @@ def resample(data, xscale, yscale, thresh):
     :param data: source array to resample to different size
     :param xscale: number of cells to average along X axis
     :param yscale: number of Y axis cells to average
-    :param thresh: minimum allowable proportion of NaN cells (range from 0.0-1.0),
-        eg. 0.25 = 1/4 or more as NaNs results in a NaN value for the output cell.
+    :param thresh: minimum allowable
+        proportion of NaN cells (range from 0.0-1.0), eg. 0.25 = 1/4 or
+        more as NaNs results in a NaN value for the output cell.
     """
     if thresh < 0 or thresh > 1:
         raise ValueError("threshold must be >= 0 and <= 1")
@@ -384,13 +392,14 @@ def resample(data, xscale, yscale, thresh):
     xscale = int(xscale)
     yscale = int(yscale)
     ysize, xsize = data.shape
-    xres, yres = (xsize / xscale), (ysize / yscale)
+    xres, yres = int(xsize / xscale), int(ysize / yscale)
     dest = zeros((yres, xres), dtype=float32) * nan
     tile_cell_count = xscale * yscale
 
-    # calc mean without nans (fractional threshold ignores tiles with excess NaNs)
-    for x in xrange(xres):
-        for y in xrange(yres):
+    # calc mean without nans (fractional threshold ignores tiles
+    # with excess NaNs)
+    for x in range(xres):
+        for y in range(yres):
             tile = data[y * yscale: (y+1) * yscale, x * xscale: (x+1) * xscale]
             nan_fraction = nsum(isnan(tile)) / float(tile_cell_count)
             if nan_fraction < thresh or (nan_fraction == 0 and thresh == 0):
@@ -488,10 +497,13 @@ def custom_bounds(ifgs, xw, ytop, xe, ybot):
         raise PreprocessError('ERROR Custom crop bounds: '
                               'ifgxfirst must be greater than ifgxlast')
 
-    for par, crop, orig, step in zip(['x_first', 'x_last', 'y_first', 'y_last'],
+    for par, crop, orig, step in zip(['x_first', 'x_last',
+                                      'y_first', 'y_last'],
                                      [xw, xe, ytop, ybot],
-                                     [i.x_first, i.x_last, i.y_first, i.y_last],
-                                     [i.x_step, i.x_step, i.y_step, i.y_step]):
+                                     [i.x_first, i.x_last,
+                                      i.y_first, i.y_last],
+                                     [i.x_step, i.x_step,
+                                      i.y_step, i.y_step]):
         diff = crop - orig
         nint = round(diff / step)
 

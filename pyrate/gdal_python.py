@@ -288,5 +288,5 @@ def get_matlab_resampled_data_size(xscale, yscale, data):
     xscale = int(xscale)
     yscale = int(yscale)
     ysize, xsize = data.shape
-    xres, yres = (xsize / xscale), (ysize / yscale)
+    xres, yres = int(xsize / xscale), int(ysize / yscale)
     return xres, yres
