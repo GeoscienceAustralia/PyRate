@@ -15,8 +15,7 @@ import itertools
 import parmap
 
 import pyrate.config as config
-from algorithm import master_slave_ids, get_epochs
-import pyrate.ifgconstants as ifc
+from pyrate.algorithm import master_slave_ids, get_epochs
 from pyrate import config as cf
 from pyrate import mst as mst_module
 

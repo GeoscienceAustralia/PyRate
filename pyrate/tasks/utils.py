@@ -1,12 +1,12 @@
 import os, pickle, luigi
-from StringIO import StringIO
+from pyrate.compat import StringIO
+# from StringIO import StringIO
 from pyrate import config
 from pyrate.config import OBS_DIR, IFG_FILE_LIST, DEM_FILE, DEM_HEADER_FILE, OUT_DIR, ROIPAC_RESOURCE_HEADER
 from pyrate.shared import Ifg, DEM, Incidence
 
 DUMMY_SECTION_NAME = 'pyrate'
 EXTENTS_FILE_NAME = 'region_extents.pkl'
-
 
 
 class InputParam(dict):

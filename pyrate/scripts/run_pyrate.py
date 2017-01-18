@@ -1,3 +1,4 @@
+from __future__ import print_function
 """
 Main workflow script for PyRate
 """
@@ -20,10 +21,12 @@ from pyrate import algorithm
 from pyrate import ifgconstants as ifc
 from pyrate import matlab_mst_kruskal as matlab_mst
 from pyrate import reference_phase_estimation as rpe
-from pyrate import remove_aps_delay as aps
 from pyrate import vcm as vcm_module
 from pyrate.shared import Ifg, write_output_geotiff, \
     pre_prepare_ifgs, write_msg, prepare_ifgs_without_phase
+from pyrate.compat import PyAPS_INSTALLED
+if PyAPS_INSTALLED:
+    from pyrate import remove_aps_delay as aps
 
 PYRATEPATH = cf.PYRATEPATH
 
@@ -45,9 +48,9 @@ def process_ifgs(ifg_paths_or_instance, params):
     refpx, refpy = find_reference_pixel(ifgs, params)
 
     # remove APS delay here, and write aps delay removed ifgs disc
-    if aps_delay_required(ifgs, params):
+    if PyAPS_INSTALLED and aps_delay_required(ifgs, params):
         ifgs = aps.remove_aps_delay(ifgs, params)
-        print 'Finished APS delay correction'
+        print('Finished APS delay correction')
 
     # make sure aps correction flags are consistent
     if params[cf.APS_CORRECTION]:

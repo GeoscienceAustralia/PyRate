@@ -11,8 +11,9 @@ pyrate_gamma.conf
 # TODO: add regex column to check if some values are within bounds? Potential
 # problem with the checking being done in the middle of the runs, as bad values
 # could cause crashes & destroying some of the results.
-import os, time
+import os
 import warnings
+
 PYRATEPATH = os.environ['PYRATEPATH']
 
 # general constants
@@ -372,7 +373,7 @@ def write_config_file(params, output_conf_file):
 
     """
     with open(output_conf_file, 'w') as f:
-        for k, v in params.iteritems():
+        for k, v in params.items():
             if k == ORBITAL_FIT_DEGREE:
                 v = reverse_degree_conv(k, v)
             if v is not None:

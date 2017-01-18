@@ -26,7 +26,8 @@ class LeastSquaresTests(TestCase):
     Unit tests for the PyRate least_squares_covariance() implementation.
     """
 
-    def test_least_squares_covariance(self):
+    @staticmethod
+    def test_least_squares_covariance():
         b = array([[13, 7.2, 5.7]]).T
         A = array([[1, 0.4, 0.3], [1, 1, 1]]).T
         v = array([[1, 1, 1]]).T
@@ -62,7 +63,8 @@ class AlgorithmTests(TestCase):
         for shape in [(3, 2), (2, 3)]:
             self.assertFalse(algorithm.is_square(np.empty(shape)))
 
-    def test_phase_conversion(self):
+    @staticmethod
+    def test_phase_conversion():
         # ROIPAC interferograms in units of radians, verify conversion to mm
         xs, ys = 5, 7
         data = (np.arange(xs * ys) - 1.7) * 0.1 # fake a range of values
@@ -125,18 +127,16 @@ class DateLookupTests(TestCase):
         i = algorithm.ifg_date_lookup(self.ifgs, date_pair)
         self.assertEqual(self.ifgs[1], i)
 
-
     def test_ifg_date_lookup_failure(self):
         # error when lookup cannot find an ifg given a date pair
         dates = (date(2006, 12, 11), date(2007, 3, 26))
         self.assertRaises(ValueError,
                           algorithm.ifg_date_lookup, self.ifgs, dates)
 
-
     def test_date_lookup_bad_inputs(self):
         # test some bad inputs to date lookup
-        inputs = [ (None, None), (1, 10), (34.56, 345.93),
-                    (date(2007, 3, 26), ""), (date(2007, 3, 26), None) ]
+        inputs = [(None, None), (1, 10), (34.56, 345.93),
+                  (date(2007, 3, 26), ""), (date(2007, 3, 26), None)]
 
         for d in inputs:
             self.assertRaises(ValueError,
@@ -154,9 +154,9 @@ class DateLookupTests(TestCase):
 
 
 class EpochsTests(TestCase):
-    '''
+    """
     Unittests for the EpochList class.
-    '''
+    """
 
     def test_get_epochs(self):
         def str2date(s):
@@ -202,7 +202,7 @@ class EpochsTests(TestCase):
         d1 = date(2006, 8, 28)
         d2 = date(2006, 10, 2)
         d3 = date(2006, 11, 6)
-        exp = { d0: 0, d1: 1, d2: 2, d3: 3}
+        exp = {d0: 0, d1: 1, d2: 2, d3: 3}
 
         # test unordered and with duplicates
         self.assertEqual(exp, algorithm.master_slave_ids([d3, d0, d2, d1]))

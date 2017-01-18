@@ -1,6 +1,4 @@
-__author__ = 'Sudipta Basak'
-__date_created__ = '7/12/15'
-
+from __future__ import print_function
 """
 This is the python implementation of the make_mstmat.m very closely
 resembling the matlab.
@@ -311,7 +309,6 @@ def str_to_class(str):
 
 
 def get_all_class_attributes(this_class):
-    print dir(this_class)
     return [attr for attr in dir(this_class)
             if not callable(attr)
             and not attr.startswith("_")]

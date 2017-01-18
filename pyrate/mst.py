@@ -1,3 +1,4 @@
+from __future__ import print_function
 """
 Minimum Spanning Tree functionality for PyRate.
 
@@ -48,7 +49,7 @@ def mst_parallel(ifgs, params):
     :param params:
     :return:
     """
-    print 'Calculating mst using tiles'
+    print('Calculating mst using tiles')
     ncpus = params[cf.PROCESSES]
     no_ifgs = len(ifgs)
     no_y, no_x = ifgs[0].phase_data.shape
@@ -62,15 +63,15 @@ def mst_parallel(ifgs, params):
     result = empty(shape=(no_ifgs, no_y, no_x), dtype=np.bool)
 
     if params[cf.PARALLEL]:
-        print 'Calculating mst using {} tiles in parallel using {} ' \
-              'processes'.format(no_tiles, ncpus)
+        print('Calculating mst using {} tiles in parallel using {} ' \
+              'processes'.format(no_tiles, ncpus))
         t_msts = parmap.map(mst_multiprocessing, tiles, ifg_paths,
                             processes=ncpus)
         for k, tile in enumerate(tiles):
             result[:, tile.top_left_y:tile.bottom_right_y,
                     tile.top_left_x: tile.bottom_right_x] = t_msts[k]
     else:
-        print 'Calculating mst using {} tiles in serial'.format(no_tiles)
+        print('Calculating mst using {} tiles in serial'.format(no_tiles))
         for k, tile in enumerate(tiles):
             result[:, tile.top_left_y:tile.bottom_right_y,
                     tile.top_left_x: tile.bottom_right_x] = \

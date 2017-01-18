@@ -1,14 +1,13 @@
+from __future__ import print_function
 """
 This is a demo of how to remove pyaps delay using PyAPS
 Usage: first run pyrate/scripts/run_prepifg.py using your config file
 Then use the command:
 
 """
-__author__ = 'Sudipta Basak'
-__date_created__ = '4/02/16'
+
 import PyAPS as pa
 import numpy as np
-import sys
 import os
 import re
 import glob2
@@ -183,7 +182,7 @@ def geo_correction(date_pair, dem_header, dem, incidence_angle_or_map):
         dem_header=dem_header, dem=dem, grib=ECMWF, verb=True)
     phs1 = np.zeros((aps1.ny, aps1.nx))
     phs2 = np.zeros((aps2.ny, aps2.nx))
-    print 'Without Lat Lon files'
+    print('Without Lat Lon files')
     aps1.getdelay_pyrate(phs1, dem, inc=incidence_angle_or_map)
     aps2.getdelay_pyrate(phs2, dem, inc=incidence_angle_or_map)
     aps_delay = phs2 - phs1  # delay in meters as we don't provide wavelength
@@ -309,7 +308,7 @@ def geo_correction_original(date_pair, params, incidence_angle_or_map):
         demfmt=GEOTIFF, demtype=np.float32, dem_header=(lon, lat, nx, ny))
     phs1 = np.zeros((aps1.ny, aps1.nx))
     phs2 = np.zeros((aps2.ny, aps2.nx))
-    print 'Without Lat Lon files'
+    print('Without Lat Lon files')
     aps1.getdelay(phs1, inc=incidence_angle_or_map)
     aps2.getdelay(phs2, inc=incidence_angle_or_map)
     aps_delay = phs2 - phs1  # delay in meters as we don't provide wavelength

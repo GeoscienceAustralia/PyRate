@@ -1,9 +1,7 @@
+from __future__ import print_function
 """
 This is a python implementation of the refphsest.m of pirate.
 """
-__author__ = 'Sudipta Basak'
-__date_created__ = '22/12/15'
-
 import numpy as np
 import parmap
 from pyrate import config as cf
@@ -83,12 +81,12 @@ def est_ref_phase_method1(ifgs, params):
     comp = np.isnan(ifg_phase_data_sum)  # this is the same as in Matlab
     comp = np.ravel(comp, order='F')  # this is the same as in Matlab
     if params[cf.PARALLEL]:
-        print "ref phase calculation using multiprocessing"
+        print("ref phase calculation using multiprocessing")
         ref_phs = parmap.map(est_ref_phase_method1_multi, phase_data, comp)
         for n, ifg in enumerate(ifgs):
             ifg.phase_data -= ref_phs[n]
     else:
-        print "ref phase calculation in serial"
+        print("ref phase calculation in serial")
         ref_phs = np.zeros(len(ifgs))
         for n, ifg in enumerate(ifgs):
             ref_phs[n] = est_ref_phase_method1_multi(ifg.phase_data, comp)

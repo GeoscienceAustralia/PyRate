@@ -1,15 +1,13 @@
-'''
+from __future__ import print_function
+"""
 Variance/Covariance matrix functionality for PyRate, ported from Hua Wang's
 MATLAB code for Pirate.
-
-.. codeauthor:: Ben Davies, Matt Garthwaite, Sudipta Basak
-'''
+"""
 
 from numpy import array, where, isnan, real, imag, sum, sqrt, meshgrid
 from numpy import zeros, vstack, ceil, mean, exp, reshape
 from numpy.linalg import norm
 import numpy as np
-import os
 from scipy.fftpack import fft2, ifft2, fftshift
 from scipy.optimize import fmin
 from pyrate import shared
@@ -141,7 +139,7 @@ def cvd(ifg_path, params, calc_alpha=False):
         alphaguess = 2 / (maxbin * w)
         alpha = fmin(pendiffexp, x0=alphaguess, args=(cvdav,), disp=0,
                      xtol=1e-6, ftol=1e-6)
-        print "1st guess alpha", alphaguess, 'converged alpha:', alpha
+        print("1st guess alpha", alphaguess, 'converged alpha:', alpha)
         # maximum variance usually at the zero lag: max(acg[:len(r)])
         return np.max(acg), alpha[0]
     else:
