@@ -6,15 +6,15 @@ This is the python implementation of the make_mstmat.m very closely
 resembling the matlab.
 """
 
-import sys
-import numpy as np
 import itertools
+import sys
 from abc import ABCMeta, abstractmethod
 
-from pyrate.tests.common import sydney_data_setup_ifg_file_list
-from pyrate.tests.common import sydney_data_setup
+import numpy as np
+
 from pyrate.algorithm import get_epochs_and_n
 from pyrate.shared import Ifg
+from tests.common import sydney_data_setup_ifg_file_list
 
 DTYPE = [('id', int), ('master', int), ('slave', int), ('nan_frac', float)]
 
@@ -337,7 +337,8 @@ def get_sub_structure(ifg_list, nan_v):
             for i in indices_chosen]
 
 if __name__ == "__main__":
-    from pyrate.tests import common
+    from tests import common
+
     ifg_instance_main = IfgListPyRate(common.sydney_data_setup_ifg_file_list())
     _ifg_list, _epoch_list = get_nml(ifg_instance_main, nan_conversion=True)
     # mst_mat1 = matlab_mst(_ifg_list)

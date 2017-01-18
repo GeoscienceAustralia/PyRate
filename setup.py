@@ -42,17 +42,17 @@ setup(
         'networkx >= 1.9.1',
         'Pillow >= 2.8.2',
         'parmap',
-        'glob2'
+        'glob2',
+        'bumpversion',
     ],
     extras_require={
         'dev': [
-            'bumpversion',
             'sphinx',
             'ghp-import',
             'sphinxcontrib-programoutput'
         ]
     },
-    test_suite='pyrate.tests',
+    test_suite='tests',
     tests_require=[
         'pytest-cov',
         'coverage',

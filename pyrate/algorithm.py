@@ -1,18 +1,8 @@
-'''
-Random, unsorted collection of algorithms/utility functions for PyRate.
-
-.. codeauthor:: Ben Davies
-'''
-
-# TODO: later refactoring could move these to more relevant modules
-
-
-import math
 from numpy import sin, cos, unique, histogram, diag, dot
 from pyrate.shared import EpochList, IfgException
 from ifgconstants import DAYS_PER_YEAR
-
 from scipy.linalg import qr, solve, lstsq
+
 
 def is_square(arr):
     shape = arr.shape
@@ -21,7 +11,7 @@ def is_square(arr):
     return False
 
 
-def least_squares_covariance(A,b,v):
+def least_squares_covariance(A, b, v):
     """
     Least squares solution in the presence of known covariance.
 

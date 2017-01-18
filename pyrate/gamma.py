@@ -27,7 +27,6 @@ GAMMA = 'GAMMA'
 SPEED_OF_LIGHT_METRES_PER_SECOND = 3e8
 
 
-
 def _check_raw_data(data_path, ncols, nrows):
     size = ncols * nrows * 4 # DEM and Ifg data are 4 byte floats
     act_size = os.stat(data_path).st_size

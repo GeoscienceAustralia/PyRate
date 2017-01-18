@@ -4,21 +4,22 @@ This is used to create the dummy elevation map file .lv_theta file
 '''
 
 import os
+
 import numpy as np
-from pyrate import shared
-from pyrate.tests import common
-from pyrate import gamma
-from pyrate import config as cf
-from pyrate import ifgconstants as ifc
 from osgeo import gdal
+
+from pyrate import gamma
+from pyrate import ifgconstants as ifc
+from pyrate import shared
+from tests import common
 
 elevation_file = os.path.join(common.SYD_TEST_GAMMA,
                               os.path.splitext(common.SYD_TEST_DEM_GAMMA)[0]
                               + '.lv_theta')
 
 inc_file = os.path.join(common.SYD_TEST_GAMMA,
-                             os.path.splitext(common.SYD_TEST_DEM_GAMMA)[0]
-                             + '.inc')
+                        os.path.splitext(common.SYD_TEST_DEM_GAMMA)[0]
+                        + '.inc')
 
 dest_lv_theta = os.path.splitext(elevation_file)[0] + '_lv_theta.tif'
 dest_inc = os.path.splitext(elevation_file)[0] + '_inc.tif'
