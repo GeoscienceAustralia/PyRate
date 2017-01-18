@@ -1,5 +1,3 @@
-__author__ = 'sudipta'
-
 import glob
 import os
 import re
@@ -9,7 +7,7 @@ import tempfile
 import unittest
 
 import numpy as np
-from pyrate.tests import common
+from tests import common
 
 from pyrate import config as cf
 from pyrate import ifgconstants as ifc

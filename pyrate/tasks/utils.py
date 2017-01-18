@@ -2,7 +2,12 @@ import os, pickle, luigi
 from pyrate.compat import StringIO
 # from StringIO import StringIO
 from pyrate import config
-from pyrate.config import OBS_DIR, IFG_FILE_LIST, DEM_FILE, DEM_HEADER_FILE, OUT_DIR, ROIPAC_RESOURCE_HEADER
+from pyrate.config import (OBS_DIR,
+                           IFG_FILE_LIST,
+                           DEM_FILE,
+                           DEM_HEADER_FILE,
+                           OUT_DIR,
+                           ROIPAC_RESOURCE_HEADER)
 from pyrate.shared import Ifg, DEM, Incidence
 
 DUMMY_SECTION_NAME = 'pyrate'
@@ -49,7 +54,9 @@ class IfgListMixin(object):
         file_names = config.parse_namelist(self.ifgListFile)
 
         if tif:
-            file_names = ['%s.tif' % os.path.splitext(os.path.basename(fn))[0] for fn in file_names]
+            file_names = ['%s.tif' %
+                          os.path.splitext(os.path.basename(fn))[0]
+                          for fn in file_names]
 
         obs_dir = self.obsDir
         if obs_dir:
@@ -69,7 +76,9 @@ class IfgListMixin(object):
         file_names = config.parse_namelist(self.ifgListFile)
 
         if tif:
-            file_names = ['%s.tif' % os.path.splitext(os.path.basename(fn))[0] for fn in file_names]
+            file_names = ['%s.tif' %
+                          os.path.splitext(os.path.basename(fn))[0]
+                          for fn in file_names]
 
         out_dir = self.out_dir
         if out_dir:
@@ -129,7 +138,8 @@ class RasterParam(DictParam):
             return Incidence(path)
         else:
             raise luigi.parameter.UnknownParameterException(
-                'rasterBase must be an inscance DEM, Ifg or Incidence is valid')
+                'rasterBase must be an inscance DEM, '
+                'Ifg or Incidence is valid')
 
     def serialize(self, rasterBase):
         """
@@ -146,30 +156,33 @@ class RasterParam(DictParam):
             d = {'type': 'Incidence', 'path': path}
         else:
             raise luigi.parameter.UnknownParameterException(
-                'rasterBase must be an inscance DEM, Ifg or Incidence is valid')
+                'rasterBase must be an inscance DEM, '
+                'Ifg or Incidence is valid')
 
         return super(RasterParam, self).serialize(d)
 
 
-
-def pythonifyConfig(configFile):
-    '''
+def pythonify_config(config_file):
+    """
     Make a copy of a PyRate config file which can be used by Python.
 
     Python and luigi config files *require* section headings. These are not
     present in the PyRate config file, so we make a copy of a PyRate config
     file and add a section heading to it so it can be parsed.
-    '''
+    """
 
-    outputFilename = '{}.python'.format(configFile)
+    out_file = '{}.python'.format(config_file)
 
-    with open(configFile, 'r') as inputFile:
-        with open(outputFilename, 'w') as outputFile:
-            outputFile.write('[{}]\n'.format(DUMMY_SECTION_NAME))
+    with open(config_file, 'r') as inputFile:
+        with open(out_file, 'w') as f:
+            f.write('[{}]\n'.format(DUMMY_SECTION_NAME))
             for line in inputFile:
-                if any(x in line for x in [OBS_DIR, IFG_FILE_LIST, DEM_FILE, DEM_HEADER_FILE, OUT_DIR, ROIPAC_RESOURCE_HEADER]):
+                if any(x in line for x in [OBS_DIR, IFG_FILE_LIST,
+                                           DEM_FILE, DEM_HEADER_FILE,
+                                           OUT_DIR, ROIPAC_RESOURCE_HEADER]):
                     pos = line.find('~')
                     if pos != -1:
-                        line = line[:pos] + os.environ['HOME'] + line[(pos+1):]    # create expanded line
-                outputFile.write(line)
-    return outputFilename
+                        line = line[:pos] + os.environ['HOME'] + \
+                               line[(pos+1):]    # create expanded line
+                f.write(line)
+    return out_file

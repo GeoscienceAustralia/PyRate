@@ -339,7 +339,8 @@ class TestGammaLuigiEquality(unittest.TestCase):
         try:
             shutil.rmtree(cls.non_luigi_base_dir)
         except OSError:
-            print('Failed to remove temp directory: %s' % cls.non_luigi_base_dir)
+            print('Failed to remove temp directory: %s' %
+                  cls.non_luigi_base_dir)
 
     def make_input_files(self, data):
         with open(self.conf_file, 'w') as conf:

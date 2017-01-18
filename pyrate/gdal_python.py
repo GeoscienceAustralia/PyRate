@@ -189,7 +189,7 @@ def crop_rasample_setup(extents, input_tif, new_res, output_file,
     dst.SetGeoTransform(resampled_geotrans)
     dst.SetProjection(resampled_proj)
 
-    for k, v in md.iteritems():
+    for k, v in md.items():
         dst.SetMetadataItem(k, v)
 
     return dst, resampled_proj, src_ds, src_proj
@@ -275,7 +275,7 @@ def crop_resample_average(
     out_ds.SetGeoTransform(dst_ds.GetGeoTransform())
     out_ds.SetProjection(src_ds.GetProjection())
     # copy metadata
-    for k, v in dst_ds.GetMetadata().iteritems():
+    for k, v in dst_ds.GetMetadata().items():
         if k == ifc.PROCESS_STEP:
             out_ds.SetMetadataItem(ifc.PROCESS_STEP, ifc.MULTILOOKED)
         else:

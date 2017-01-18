@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
+from __future__ import print_function
 import sys
 import os
 import logging
-import glob
 import luigi
 import parmap
 
-from pyrate.tasks.utils import pythonifyConfig
+from pyrate.tasks.utils import pythonify_config
 from pyrate.tasks.prepifg import PrepareInterferograms
 from pyrate import prepifg
 from pyrate import config as cf
@@ -54,7 +54,7 @@ def main(params=None):
     else:  # if params not provided read from config file
         if (not params) and ((len(sys.argv) == 1)
                 or (sys.argv[1] == '-h' or sys.argv[1] == '--help')):
-            print usage
+            print(usage)
             return
         base_ifg_paths, _, params = run_pyrate.get_ifg_paths()
         LUIGI = params[cf.LUIGI]  # luigi or no luigi
@@ -66,14 +66,14 @@ def main(params=None):
 
     if LUIGI:
         msg = "running luigi prepifg"
-        print msg
+        print(msg)
         logging.info(msg)
         luigi.configuration.LuigiConfigParser.add_config_path(
-            pythonifyConfig(raw_config_file))
+            pythonify_config(raw_config_file))
         luigi.build([PrepareInterferograms()], local_scheduler=True)
     else:
         msg = "running serial prepifg"
-        print msg
+        print(msg)
         logging.info(msg)
         if PROCESSOR == ROIPAC:
             roipac_prepifg(base_ifg_paths, params)
@@ -86,7 +86,7 @@ def main(params=None):
 
 def roipac_prepifg(base_ifg_paths, params):
     msg = "running roipac prepifg"
-    print msg
+    print(msg)
     logging.info(msg)
     xlooks, ylooks, crop = run_pyrate.transform_params(params)
     dem_file = os.path.join(params[cf.ROIPAC_RESOURCE_HEADER])
@@ -104,14 +104,14 @@ def roipac_prepifg(base_ifg_paths, params):
 
 def gamma_prepifg(base_unw_paths, params):
     msg = "running gamma prepifg"
-    print msg
+    print(msg)
     logging.info(msg)
     parallel = params[cf.PARALLEL]
 
     # dest_base_ifgs: location of geo_tif's
     if parallel:
-        print 'running gamma in parallel with {} ' \
-              'processes'.format(params[cf.PROCESSES])
+        print('running gamma in parallel with {} ' \
+              'processes'.format(params[cf.PROCESSES]))
         dest_base_ifgs = parmap.map(gamma_multiprocessing, base_unw_paths,
                                     params, processes=params[cf.PROCESSES])
     else:
