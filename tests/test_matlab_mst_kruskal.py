@@ -290,7 +290,7 @@ class TestMSTBooleanArray(unittest.TestCase):
         for sf in sydney_files:
             dest = os.path.join(self.ifg_dir, os.path.basename(sf))
             shutil.copy(sf, dest)
-            os.chmod(dest, 0660)
+            os.chmod(dest, 0o660)
         self.sydney_files = glob.glob(os.path.join(self.ifg_dir, "*.tif"))
         self.sydney_ifgs = sydney_data_setup(self.sydney_files)
 

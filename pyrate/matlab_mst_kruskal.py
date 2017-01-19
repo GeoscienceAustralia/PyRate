@@ -244,7 +244,7 @@ def matlab_mst_generator_boolean_array(ifg_instance, p_threshold=1):
     # nan_ifg = np.isnan(data_stack)  # doing nan conversion later saves memory
     num_ifgs, rows, cols = data_stack.shape
 
-    for r, c in itertools.product(xrange(rows), xrange(cols)):
+    for r, c in itertools.product(range(rows), range(cols)):
         # nan_count of the vertical stack of ifg values for a pixel
         mst_yield = np.zeros(num_ifgs, dtype=np.bool)
         nan_count = np.sum(np.isnan(data_stack[ifg_list_mst_id, r, c]))
