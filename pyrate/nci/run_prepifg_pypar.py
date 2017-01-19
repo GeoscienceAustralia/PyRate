@@ -1,4 +1,4 @@
-__author__ = 'sudipta'
+from __future__ import print_function
 import sys
 import os
 import datetime
@@ -8,18 +8,17 @@ from pyrate.nci.parallel import Parallel
 from pyrate.scripts import run_pyrate
 from pyrate import config as cf
 from pyrate.scripts import run_prepifg
-from pyrate import gamma
 from pyrate.shared import Ifg
 from pyrate import prepifg
 
 # Constants
 MASTER_PROCESS = 0
 
-###============================================================================
-#    Usage:  Reads in the gamma config file and produces the tifs from gamma
-#    processed unwrapped interferrograms (ifgs).
-#    mpirun -np 4 python pyrate/nci/run_prepifg_pypar.py gamma_config_file.conf
-#===============================================================================
+###=========================================================================
+# Usage:  Reads in the gamma config file and produces the tifs from gamma
+# processed unwrapped interferrograms (ifgs).
+# mpirun -np 4 python pyrate/nci/run_prepifg_pypar.py gamma_config_file.conf
+#===========================================================================
 
 
 def main():
@@ -28,9 +27,11 @@ def main():
     parallel = Parallel(True)
     MPI_myID = parallel.rank
     num_processors = parallel.size
-    ### Master Process ###
+
+    # Master Process
     if MPI_myID == MASTER_PROCESS:
-        print "Master process found {} worker processors".format(num_processors)
+        print("Master process found {} worker "
+              "processors".format(num_processors))
 
     # Read config file, dest_paths are final mlooked/sampled and cropped tifs
     base_ifg_paths, dest_paths, params = run_pyrate.get_ifg_paths()
@@ -39,7 +40,7 @@ def main():
     output_dir = params[cf.OUT_DIR]
     mpi_log_filename = os.path.join(output_dir, "mpi.log")
 
-    ### Master Process ###
+    # Master Process
     if MPI_myID == MASTER_PROCESS:
         output_log_file = open(mpi_log_filename, "w")
         config_filepath = sys.argv[1]
@@ -72,12 +73,13 @@ def main():
     process_base_paths = [itemgetter(p)(base_ifg_paths)
                           for p in process_subset_indices]
 
-    print 'Processor {mpi_id} has {processes} ' \
+    print('Processor {mpi_id} has {processes} '
           'interferrograms out of {num_files}'.format(
-        mpi_id=MPI_myID, processes=len(process_base_paths), num_files=num_files)
+        mpi_id=MPI_myID, processes=len(process_base_paths),
+        num_files=num_files))
 
     msg = "running gamma prepifg"
-    print msg
+    print(msg)
 
     # location of geo_tif's
     dest_base_ifgs = [os.path.join(

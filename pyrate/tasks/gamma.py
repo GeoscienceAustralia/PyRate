@@ -19,11 +19,10 @@ The interferograms are geocoded/orthorectified to the DEM geometry, so all
 datasets will share the same pixel size and dimensions.
 
 .. todo:: describe incidence files (and any others (for later versions).
-
-.. codeauthor:: Ben Davies, NCI
 """
 
-import os, re, luigi
+import re
+import luigi
 import glob2
 from os.path import join
 from pyrate import config
@@ -33,14 +32,15 @@ from pyrate.tasks.utils import IfgListMixin, InputParam
 
 PTN = re.compile(r'\d{8}')  # match 8 digits for the dates
 
+
 class GammaHasRun(luigi.task.ExternalTask):
     """
     Phaux task used to ensure that the required outputs from GAMMA exist.
     """
 
-    fileName     = luigi.Parameter()
+    fileName = luigi.Parameter()
     masterHeader = luigi.Parameter(default=None)
-    slaveHeader  = luigi.Parameter(default=None)
+    slaveHeader = luigi.Parameter(default=None)
 
     def output(self):
         targets = [luigi.LocalTarget(self.fileName)]
@@ -69,7 +69,6 @@ def get_header_paths(input_file, slc_dir=None):
 
 def file_name_matches(dir, dates):
     return [glob2.glob(join(dir, '**/*%s*slc.par' % m))[0] for m in dates]
-
 
 
 class ConvertFileToGeotiff(luigi.Task):

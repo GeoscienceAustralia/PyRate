@@ -1,5 +1,4 @@
-__author__ = 'sudipta'
-
+from __future__ import print_function
 import glob
 import os
 import re
@@ -13,20 +12,21 @@ from pyrate.scripts import run_prepifg
 from tests import common
 
 
-class MyTestCase(unittest.TestCase):
+class MPITests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
         cls.gamma_pypar_dir = tempfile.mkdtemp()
         cls.gamma_serial_dir = tempfile.mkdtemp()
-        cls.conf_file = os.path.join(common.SYD_TEST_GAMMA, 'pyrate_gamma.conf')
+        cls.conf_file = os.path.join(common.SYD_TEST_GAMMA,
+                                     'pyrate_gamma.conf')
         cls.params = cf.get_config_params(cls.conf_file)
         cls.params[cf.OBS_DIR] = common.SYD_TEST_GAMMA
         cls.params[cf.IFG_FILE_LIST] = os.path.join(common.SYD_TEST_GAMMA,
-                                                     'ifms_17')
+                                                    'ifms_17')
         cls.params[cf.OUT_DIR] = cls.gamma_pypar_dir
         cls.temp_conf_file = tempfile.mktemp(suffix='.conf',
-                                              dir=cls.gamma_pypar_dir)
+                                             dir=cls.gamma_pypar_dir)
         cf.write_config_file(cls.params, cls.temp_conf_file)
 
         # run mpi gamma
