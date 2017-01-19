@@ -471,9 +471,9 @@ def get_same_bounds(ifgs):
     if not all(equal):
         msg = 'Ifgs do not have the same bounding box for crop option: %s'
         raise PreprocessError(msg % ALREADY_SAME_SIZE)
-
-    xmin, xmax = i.x_first, i.x_last
-    ymin, ymax = i.y_first, i.y_last
+    ifg = ifgs[0]
+    xmin, xmax = ifg.x_first, ifg.x_last
+    ymin, ymax = ifg.y_first, ifg.y_last
 
     # swap y_first & y_last when using southern hemisphere -ve coords
     if ymin > ymax:

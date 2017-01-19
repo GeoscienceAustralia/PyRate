@@ -92,7 +92,7 @@ def orbital_correction(ifgs_or_ifg_paths, params, mlooked=None, offset=True):
         # parmap.map(_independent_correction, ifgs, degree, offset,
         #            processes=params[cf.PROCESSES])
         for p in ifgs_or_ifg_paths:
-            if isinstance(p, basestring):  # ifg paths are supplied
+            if isinstance(p, str):  # ifg paths are supplied
                 ifg = shared.Ifg(p)
                 ifg.open()
             else:

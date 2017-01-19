@@ -20,7 +20,7 @@ from numpy.linalg import pinv, inv
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 from scipy.linalg import lstsq
 
-from common import sydney5_mock_ifgs, MockIfg
+from .common import sydney5_mock_ifgs, MockIfg
 from pyrate import algorithm
 from pyrate import config as cf
 from pyrate.orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, QUADRATIC, PART_CUBIC
@@ -618,26 +618,26 @@ def unittest_dm(ifg, method, degree, offset=False, scale=100.0):
     # NB: avoids meshgrid to prevent copying production implementation
     data = empty((ifg.num_cells, ncoef), dtype=float32)
     rows = iter(data)
-    yr = xrange(1, ifg.nrows+1) # simulate meshgrid starting from 1
-    xr = xrange(1, ifg.ncols+1)
+    yr = range(1, ifg.nrows+1)  # simulate meshgrid starting from 1
+    xr = range(1, ifg.ncols+1)
 
     xsz, ysz = [i/scale for i in [ifg.x_size, ifg.y_size]]
 
     if degree == PLANAR:
         for y, x in product(yr, xr):
-            row = rows.next()
+            row = next(rows)
             row[:xlen] = [x * xsz, y * ysz]
     elif degree == QUADRATIC:
         for y, x in product(yr, xr):
             ys = y * ysz
             xs = x * xsz
-            row = rows.next()
+            row = next(rows)
             row[:xlen] = [xs**2, ys**2, xs*ys, xs, ys]
     else:
         for y, x in product(yr, xr):
             ys = y * ysz
             xs = x * xsz
-            row = rows.next()
+            row = next(rows)
             row[:xlen] = [xs*ys**2, xs**2, ys**2, xs*ys, xs, ys]
 
     if offset:
@@ -710,7 +710,7 @@ class MatlabComparisonTestsOrbfitMethod1(unittest.TestCase):
                 try:
                     i.write_modified_phase()
                 except:
-                    os.chmod(i.data_path, 0664)
+                    os.chmod(i.data_path, 664)
                     i.write_modified_phase()
 
     def tearDown(self):
@@ -781,7 +781,7 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
         for d in data_paths:
             d_copy = os.path.join(self.BASE_DIR, os.path.basename(d))
             shutil.copy(d, d_copy)
-            os.chmod(d_copy, 0660)
+            os.chmod(d_copy, 0o660)
 
         self.ifgs = sydney_data_setup(datafiles=self.new_data_paths)
 
