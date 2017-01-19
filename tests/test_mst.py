@@ -14,7 +14,7 @@ from itertools import product
 from numpy import empty, array, nan, isnan, sum as nsum
 
 import numpy as np
-from pyrate.tests.common import MockIfg, sydney5_mock_ifgs, sydney_data_setup
+from tests.common import MockIfg, sydney5_mock_ifgs, sydney_data_setup
 
 from pyrate import algorithm
 from pyrate import config as cf
@@ -42,7 +42,7 @@ class MSTTests(unittest.TestCase):
         res = mst.mst_matrix_as_array(self.ifgs)
         ys, xs = res.shape
 
-        for y, x in product(xrange(ys), xrange(xs)):
+        for y, x in product(range(ys), range(xs)):
             r = res[y, x]
             num_nodes = len(r)
             self.assertTrue(num_nodes < len(epochs.dates))
@@ -65,7 +65,7 @@ class MSTTests(unittest.TestCase):
         ys, xs = ifgs[0].shape
         result = mst.mst_matrix_ifgs_only(ifgs)
 
-        for coord in product(xrange(ys), xrange(xs)):
+        for coord in product(range(ys), range(xs)):
             stack = (i.phase_data[coord] for i in self.ifgs)
             nc = nsum([isnan(n) for n in stack])
             self.assertTrue(len(result[coord]) <= (nifgs - nc))

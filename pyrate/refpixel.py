@@ -64,7 +64,7 @@ def ref_pixel_setup(ifgs_or_paths, params):
         msg = 'Reference pixel search requires 2+ interferograms'
         raise RefPixelError(msg)
 
-    if isinstance(ifgs_or_paths[0], basestring):
+    if isinstance(ifgs_or_paths[0], str):
         head = Ifg(ifgs_or_paths[0])
         head.open(readonly=True)
     else:
@@ -96,7 +96,7 @@ def ref_pixel_mpi(process_grid, half_patch_size, ifgs, thresh, params):
 
 def ref_pixel_multi(y, x, half_patch_size, phase_data_or_ifg_paths,
                     thresh, params):
-    if isinstance(phase_data_or_ifg_paths[0], basestring):  # phase_data_or_ifg is list of ifgs
+    if isinstance(phase_data_or_ifg_paths[0], str):  # phase_data_or_ifg is list of ifgs
         # this consumes a lot less memory
         # one ifg.phase_data in memory at any time
         data = []
@@ -138,7 +138,7 @@ def step(dim, ref, radius):
     # max_dim = dim - (2*radius)  # max possible number for refn(x|y)
     # step = max_dim // (ref-1)
     step = dim // ref  # same as in Matlab
-    return xrange(radius, dim-radius, step)
+    return range(radius, dim-radius, step)
 
 
 def validate_chipsize(chipsize, head):

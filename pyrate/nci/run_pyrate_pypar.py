@@ -1,4 +1,4 @@
-import cPickle as cp
+from __future__ import print_function
 import datetime
 import glob
 import os
@@ -9,16 +9,18 @@ from operator import itemgetter
 import numpy as np
 from osgeo import gdal
 
+from pyrate.compat import pickle as cp, PyAPS_INSTALLED
 from pyrate import config as cf
 from pyrate import mst
 from pyrate import refpixel
-from pyrate import remove_aps_delay as aps
 from pyrate import shared
 from pyrate.nci import common_nci
 from pyrate.nci.common_nci import save_latest_phase
 from pyrate.nci.parallel import Parallel
 from pyrate.scripts import run_pyrate
 from pyrate.scripts.run_pyrate import write_msg
+if PyAPS_INSTALLED:
+    from pyrate import remove_aps_delay as aps
 
 gdal.SetCacheMax(64)
 __author__ = 'sudipta'
@@ -48,9 +50,11 @@ def main(params, config_file=sys.argv[1]):
     output_dir = params[cf.OUT_DIR]
 
     if rank == MASTER_PROCESS:
-        print "Master process found {} worker processors".format(num_processors)
+        print("Master process found {} worker "
+              "processors".format(num_processors))
 
-    preread_ifgs = convert_phase_to_numpy(dest_tifs, output_dir, tiles, parallel)
+    preread_ifgs = convert_phase_to_numpy(dest_tifs,
+                                          output_dir, tiles, parallel)
 
     parallel.barrier()
     mpi_log_filename = os.path.join(output_dir, "mpi_run_pyrate.log")
@@ -79,7 +83,7 @@ def main(params, config_file=sys.argv[1]):
 
     parallel.barrier()
 
-    print 'Processor {} has {} tiles'.format(rank, len(process_tiles))
+    print('Processor {} has {} tiles'.format(rank, len(process_tiles)))
     # Calc mst using MPI
     if rank == MASTER_PROCESS:
         mpi_mst_calc(dest_tifs, process_tiles, process_indices,
@@ -103,7 +107,7 @@ def main(params, config_file=sys.argv[1]):
     parallel.barrier()
 
     # remove APS delay here
-    if params[cf.APS_CORRECTION]:
+    if PyAPS_INSTALLED and params[cf.APS_CORRECTION]:
         ifgs = shared.pre_prepare_ifgs(dest_tifs, params)
         if run_pyrate.aps_delay_required(ifgs, params):
             no_ifgs = len(ifgs)
@@ -148,17 +152,17 @@ def convert_phase_to_numpy(dest_tifs, output_dir, tiles, parallel):
                                            master=master,
                                            slave=slave,
                                            time_span=time_span)}
-    cp.dump(preread_ifgs_dict, open(process_preread_ifgs, 'w'))
+    cp.dump(preread_ifgs_dict, open(process_preread_ifgs, 'wb'))
     parallel.barrier()
     preread_ifgs = os.path.join(output_dir, 'preread_ifgs.pk')
     if rank == MASTER_PROCESS:
-        for r in xrange(1, num_processors):
+        for r in range(1, num_processors):
             temp_file = join(output_dir, 'preread_ifgs_{}.pk'.format(r))
-            temp_dict = cp.load(open(temp_file, 'r'))
+            temp_dict = cp.load(open(temp_file, 'rb'))
             preread_ifgs_dict.update(temp_dict)
             os.remove(temp_file)
-        cp.dump(preread_ifgs_dict, open(preread_ifgs, 'w'))
-    print 'finish converting phase_data to numpy in process {}'.format(rank)
+        cp.dump(preread_ifgs_dict, open(preread_ifgs, 'wb'))
+    print('finish converting phase_data to numpy in process {}'.format(rank))
     return preread_ifgs
 
 
@@ -170,10 +174,10 @@ def ref_pixel_calc_mpi(MPI_myID, ifg_paths, num_processors, parallel, params):
     no_steps = len(grid)
     process_indices = parallel.calc_indices(no_steps)
     process_grid = [itemgetter(p)(grid) for p in process_indices]
-    print 'Processor {mpi_id} has {processes} ' \
+    print('Processor {mpi_id} has {processes} ' \
           'tiles out of {num_files}'.format(mpi_id=MPI_myID,
                                             processes=len(process_indices),
-                                            num_files=no_steps)
+                                            num_files=no_steps))
     mean_sds = refpixel.ref_pixel_mpi(process_grid, half_patch_size,
                                       ifg_paths, thresh, params)
     if MPI_myID == MASTER_PROCESS:
@@ -186,11 +190,11 @@ def ref_pixel_calc_mpi(MPI_myID, ifg_paths, num_processors, parallel, params):
             mean_sds_final[all_indices[i]] = process_mean_sds
 
         refx, refy = refpixel.filter_means(mean_sds_final, grid)
-        print 'finished calculating ref pixel'
+        print('finished calculating ref pixel')
         return refx, refy
     else:
         parallel.send(mean_sds, destination=MASTER_PROCESS, tag=MPI_myID)
-        print 'sent ref pixel to master'
+        print('sent ref pixel to master')
 
 
 def save_ref_pixel_blocks(grid, half_patch_size, ifg_paths, parallel, params):
@@ -244,14 +248,14 @@ def mpi_mst_calc(dest_tifs, process_tiles, process_indices, preread_ifgs,
 
     for t, p_ind in zip(process_tiles, process_indices):
         save_mst_tile(t, p_ind, preread_ifgs)
-    print 'finished mst calculation for process {}'.format(parallel.rank)
+    print('finished mst calculation for process {}'.format(parallel.rank))
 
 
 def clean_up_old_files():
     files = glob.glob(os.path.join('out', '*.tif'))
     for f in files:
         os.remove(f)
-        print 'removed', f
+        print('removed', f)
 
 
 if __name__ == '__main__':

@@ -1,3 +1,4 @@
+from __future__ import print_function
 """
   Title: parallel.py
   
@@ -210,19 +211,3 @@ class Parallel(object):
         if self.is_parallel is True:
             import pypar
             pypar.finalize()
-
-
-# this will run if eqrm_analysis.py is called from DOS prompt or double clicked
-if __name__ == '__main__':
-    parra = Parallel()
-    if False:
-        sites_len = 10
-        sites = range(sites_len)
-        
-        parra = Parallel(is_parallel=False)
-        lo, hi = parra.calc_lo_hi(sites_len)
-        print "lo", lo
-        print "hi", hi
-        print "My work", sites[lo:hi]
-        parra.finalize()
-    print 'parra.rank', parra.rank

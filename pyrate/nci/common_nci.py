@@ -1,3 +1,4 @@
+from __future__ import print_function
 import numpy as np
 from pyrate import shared
 from operator import itemgetter
@@ -13,7 +14,7 @@ def get_process_tiles(dest_tifs, parallel, params):
     no_tiles = len(tiles)
     process_indices = parallel.calc_indices(no_tiles)
     process_tiles = [itemgetter(p)(tiles) for p in process_indices]
-    print 'finished processing tile information'
+    print('finished processing tile information')
     return ifg.shape, process_tiles, process_indices, tiles
 
 
@@ -21,7 +22,7 @@ def clean_up_old_files():
     files = glob.glob(os.path.join('out', '*.tif'))
     for f in files:
         os.remove(f)
-        print 'removed', f
+        print('removed', f)
 
 
 def save_latest_phase(d, output_dir, tiles):

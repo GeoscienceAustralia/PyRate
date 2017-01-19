@@ -243,7 +243,7 @@ def mst_matrix_networkx(ifgs):
     # create MSTs for each pixel in the ifg data stack
     nifgs = len(ifgs)
 
-    for y, x in product(xrange(i.nrows), xrange(i.ncols)):
+    for y, x in product(range(ifgs[0].nrows), range(ifgs[0].ncols)):
         values = data_stack[:, y, x]  # vertical stack of ifg values for a pixel
         nan_count = nsum(isnan(values))
 

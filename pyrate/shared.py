@@ -462,7 +462,7 @@ class IfgPart(object):
         # TODO: fix this if cond
         if ifg_dict is not None:
             outdir = os.path.dirname(ifg_dict)
-            preread_ifgs = cp.load(open(ifg_dict, 'r'))
+            preread_ifgs = cp.load(open(ifg_dict, 'rb'))
             ifg = preread_ifgs[ifg_or_path].pop()
             self.nan_fraction = ifg.nan_fraction
             self.master = ifg.master

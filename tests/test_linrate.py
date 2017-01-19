@@ -1,8 +1,7 @@
-'''
-CUnittests for linrate.py
-
-.. codeauthor:: Ben Davies, Sudipta Basak
-'''
+from __future__ import print_function
+"""
+Unittests for linrate.py
+"""
 
 import glob
 import os
@@ -281,8 +280,8 @@ class MPITests(unittest.TestCase):
     def test_mpi_mst_single_processor(self):
         for looks, ref_method, orbfitmethod in product(range(1, 5), [1, 2],
                                                        [1]):
-            print '=======Testing linear rate for looks:', looks, \
-                'ref_method: ', ref_method
+            print('=======Testing linear rate for looks:', looks, \
+                'ref_method: ', ref_method)
             self.params[cf.IFG_LKSX] = looks
             self.params[cf.IFG_LKSY] = looks
             self.params[cf.REF_EST_METHOD] = ref_method
