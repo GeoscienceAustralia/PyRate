@@ -70,6 +70,8 @@ setup(
         "Natural Language :: English",
         "Programming Language :: Python",
         "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3.4",
+        "Programming Language :: Python :: 3.5",
         # add additional supported python versions
         "Intended Audience :: Science/Research",
         "Intended Audience :: Developers",

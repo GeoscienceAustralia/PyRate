@@ -6,10 +6,12 @@
 #/tests
 /.idea
 .spyderworkspace
-python-graph/
-tests_bk/
 doc
 etc
 out
-# sydney_test/
-tests/sydney_test/out/
+.eggs/
+.tox/
+build/
+docs/
+tests/test_data/
+PyAPS/
