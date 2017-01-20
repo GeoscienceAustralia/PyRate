@@ -149,8 +149,8 @@ class RasterBase(object):
 
     def add_geographic_data(self):
         # add some geographic data
-        self.x_centre = self.ncols / 2
-        self.y_centre = self.nrows / 2
+        self.x_centre = int(self.ncols / 2)
+        self.y_centre = int(self.nrows / 2)
         self.lat_centre = self.y_first + (self.y_step * self.y_centre)
         self.long_centre = self.x_first + (self.x_step * self.x_centre)
         # use cell size from centre of scene

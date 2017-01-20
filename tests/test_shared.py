@@ -1,10 +1,6 @@
-'''
+"""
 Unittests for PyRate shared utility objects.
-
-Created on 12/09/2012
-
-.. codeauthor:: Ben Davies
-'''
+"""
 
 import os
 import shutil
@@ -21,7 +17,7 @@ from numpy.testing import assert_array_equal
 from osgeo import gdal
 from osgeo.gdal import Open, Dataset, UseExceptions
 
-from common import SYD_TEST_TIF, SYD_TEST_DEM_TIF, TEMPDIR
+from tests.common import SYD_TEST_TIF, SYD_TEST_DEM_TIF, TEMPDIR
 from pyrate import config as cf
 from pyrate import gamma
 from pyrate import ifgconstants as ifc
@@ -38,7 +34,7 @@ if not exists(SYD_TEST_TIF):
 
 
 class IfgTests(unittest.TestCase):
-    '''Unit tests for the Ifg/interferogram class.'''
+    """Unit tests for the Ifg/interferogram class."""
 
     def setUp(self):
         self.ifg = Ifg(join(SYD_TEST_TIF, 'geo_060619-061002.tif'))
@@ -47,7 +43,7 @@ class IfgTests(unittest.TestCase):
 
     def test_headers_as_attr(self):
         for a in ['ncols', 'nrows', 'x_first', 'x_step',
-                'y_first', 'y_step', 'wavelength', 'master', 'slave']:
+                  'y_first', 'y_step', 'wavelength', 'master', 'slave']:
             self.assertTrue(getattr(self.ifg, a) is not None)
 
     def test_convert_to_nans(self):
@@ -92,7 +88,7 @@ class IfgTests(unittest.TestCase):
         # manually count # nan cells
         nans = 0
         ys, xs = data.shape
-        for y, x in product(xrange(ys), xrange(xs)):
+        for y, x in product(range(ys), range(xs)):
             if isnan(data[y, x]):
                 nans += 1
         del data
@@ -107,16 +103,19 @@ class IfgTests(unittest.TestCase):
         self.assertFalse(self.ifg.nrows is None)
 
         # test with tolerance from base 90m cell
-        self.assertTrue(self.ifg.y_size > 88.0) # within 2% of cells over sydney?
+        # within 2% of cells over sydney?
+        self.assertTrue(self.ifg.y_size > 88.0)
         self.assertTrue(self.ifg.y_size < 92.0, 'Got %s' % self.ifg.y_size)
 
         syd_width = 76.9 # from nearby pirate coords
-        self.assertTrue(self.ifg.x_size > 0.97 * syd_width) # ~3% tolerance
+        self.assertTrue(self.ifg.x_size > 0.97 * syd_width)  # ~3% tolerance
         self.assertTrue(self.ifg.x_size < 1.03 * syd_width)
 
     def test_centre_latlong(self):
-        lat_exp = self.ifg.y_first + ((self.ifg.nrows / 2) * self.ifg.y_step)
-        long_exp = self.ifg.x_first + ((self.ifg.ncols / 2) * self.ifg.x_step)
+        lat_exp = self.ifg.y_first + \
+                  (int(self.ifg.nrows / 2) * self.ifg.y_step)
+        long_exp = self.ifg.x_first + \
+                   (int(self.ifg.ncols / 2) * self.ifg.x_step)
         self.assertEqual(lat_exp, self.ifg.lat_centre)
         self.assertEqual(long_exp, self.ifg.long_centre)
 
@@ -167,7 +166,8 @@ class IfgIOTests(unittest.TestCase):
         dest = join(base, basename(self.ifg.data_path))
 
         # shutil.copy needs to copy writeable permission from src
-        os.chmod(src, S_IRGRP | S_IWGRP | S_IWOTH | S_IROTH | S_IRUSR | S_IWUSR)
+        os.chmod(src, S_IRGRP | S_IWGRP | S_IWOTH | S_IROTH |
+                 S_IRUSR | S_IWUSR)
         shutil.copy(src, dest)
         os.chmod(src, S_IRGRP | S_IROTH | S_IRUSR)  # revert
 
@@ -184,14 +184,13 @@ class IfgIOTests(unittest.TestCase):
         i.close()
         os.remove(dest)
 
-
     def test_readonly_permission_failure(self):
         # ensure failure if opening R/O permission file as writeable/GA_Update
         self.assertRaises(IOError, self.ifg.open, False)
 
-
     def test_write_fails_on_readonly(self):
-        # check readonly status is same before and after open() for readonly file
+        # check readonly status is same before
+        # and after open() for readonly file
         self.assertTrue(self.ifg.is_read_only)
         self.ifg.open(readonly=True)
         self.assertTrue(self.ifg.is_read_only)
@@ -208,7 +207,8 @@ class IfgIOTests(unittest.TestCase):
         try:
             # NB: self.assertRaises doesn't work here (as it is a property?)
             _ = self.ifg.nan_fraction
-            self.fail("Shouldn't be able to call nan_fraction() with unopened Ifg")
+            self.fail("Shouldn't be able to "
+                      "call nan_fraction() with unopened Ifg")
         except RasterException:
             pass
 
@@ -257,7 +257,8 @@ class IfgIOTests(unittest.TestCase):
 #
 #             diff = array([d[i+1] - d[i] for i in range(len(d)-1)])
 #             res = abs(diff[diff < 0])
-#             self.assertTrue((res < 1e-4).all()) # TODO: check if this is normal
+# TODO: check if this is normal
+#             self.assertTrue((res < 1e-4).all())
 #
 #
 #     def test_azimuth_data(self):
@@ -278,10 +279,9 @@ class DEMTests(unittest.TestCase):
     def setUp(self):
         self.ras = DEM(SYD_TEST_DEM_TIF)
 
-
     def test_create_raster(self):
-        self.assertTrue(os.path.exists(self.ras.data_path)) # validate header path
-
+        # validate header path
+        self.assertTrue(os.path.exists(self.ras.data_path))
 
     def test_headers_as_attr(self):
         self.ras.open()
@@ -291,11 +291,9 @@ class DEMTests(unittest.TestCase):
         for a in attrs:
             self.assertTrue(getattr(self.ras, a) is not None)
 
-
     def test_is_dem(self):
         self.ras = DEM(join(SYD_TEST_TIF, 'geo_060619-061002.tif'))
         self.assertFalse(hasattr(self.ras, 'datum'))
-
 
     def test_open(self):
         self.assertTrue(self.ras.dataset is None)
@@ -305,7 +303,6 @@ class DEMTests(unittest.TestCase):
 
         # ensure open cannot be called twice
         self.failUnlessRaises(RasterException, self.ras.open)
-
 
     def test_band(self):
         # test accessing bands with open and unopened datasets
@@ -331,8 +328,8 @@ class WriteUnwTest(unittest.TestCase):
         cls.params = cf.get_config_params(cls.test_conf)
         cls.params[cf.OBS_DIR] = common.SYD_TEST_GAMMA
         cls.params[cf.PROCESSOR] = 1  # gamma
-        file_list = cf.parse_namelist(os.path.join(common.SYD_TEST_GAMMA,
-                                                   'ifms_17'))
+        file_list = list(cf.parse_namelist(os.path.join(common.SYD_TEST_GAMMA,
+                                                        'ifms_17')))
         fd, cls.params[cf.IFG_FILE_LIST] = tempfile.mkstemp(suffix='.conf',
                                                             dir=cls.tif_dir)
         os.close(fd)
@@ -353,7 +350,7 @@ class WriteUnwTest(unittest.TestCase):
 
         # dest_paths are tifs that have been geotif converted and multilooked
         run_prepifg.gamma_prepifg(cls.base_unw_paths, cls.params)
-        cls.base_unw_paths.pop()  # removed dem as we don't want it in ifgs list
+        cls.base_unw_paths.pop()  # removed dem as we don't want it in ifgs
 
         dest_paths = run_pyrate.get_dest_paths(
             cls.base_unw_paths, crop, cls.params, xlks)
