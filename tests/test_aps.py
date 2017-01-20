@@ -7,18 +7,22 @@ import shutil
 import subprocess
 import tempfile
 import unittest
-
+import pytest
 import gdal
 import numpy as np
 
 from pyrate import config as cf
 from pyrate import ifgconstants as ifc
-from pyrate import remove_aps_delay as aps
 from pyrate.compat import PyAPS_INSTALLED
 from pyrate.scripts import run_pyrate, run_prepifg
-import common
+from tests import common
+if PyAPS_INSTALLED:
+    from pyrate import remove_aps_delay as aps
+
 
 @unittest.skipUnless(PyAPS_INSTALLED, 'PyAPS must be available for this test')
+@pytest.mark.skipif(not PyAPS_INSTALLED,
+                    reason='PyAPS must be available for this test')
 class TestMethod1VsMethod2AndMetaData(unittest.TestCase):
 
     @classmethod
@@ -123,6 +127,8 @@ class TestMethod1VsMethod2AndMetaData(unittest.TestCase):
 
 
 @unittest.skipUnless(PyAPS_INSTALLED, 'PyAPS must be available for this test')
+@pytest.mark.skipif(not PyAPS_INSTALLED,
+                    reason='PyAPS must be available for this test')
 class TestOriginalVsEfficientAps(unittest.TestCase):
 
     @classmethod
@@ -228,6 +234,8 @@ class TestOriginalVsEfficientAps(unittest.TestCase):
 
 
 @unittest.skipUnless(PyAPS_INSTALLED, 'PyAPS must be available for this test')
+@pytest.mark.skipif(not PyAPS_INSTALLED,
+                    reason='PyAPS must be available for this test')
 class TestAPSIncidenceVsElevationVsParallel(unittest.TestCase):
     """
     This class tests APS method when incidence map is provided vs elevation map
