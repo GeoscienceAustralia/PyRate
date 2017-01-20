@@ -133,7 +133,7 @@ def cvd(ifg_path, params, calc_alpha=False):
         # distance instead of bin number
         cvdav[0, :] = np.multiply(range(maxbin), w)
         # mean variance for the bins
-        cvdav[1, :] = map(lambda b: mean(acg[rbin == b]), range(maxbin))
+        cvdav[1, :] = list(map(lambda b: mean(acg[rbin == b]), range(maxbin)))
 
         # calculate best fit function maxvar*exp(-alpha*r)
         alphaguess = 2 / (maxbin * w)
