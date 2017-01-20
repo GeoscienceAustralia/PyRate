@@ -21,6 +21,7 @@ from pyrate import shared, config, prepifg
 from pyrate.scripts import run_pyrate, run_prepifg
 from pyrate.shared import Ifg
 from tests import common
+from tests.common import SYD_TEST_TIF
 
 # taken from http://stackoverflow.com/questions/6260149/os-symlink-support-in-windows
 if os.name == "nt":
@@ -37,11 +38,7 @@ if os.name == "nt":
             pass
     os.symlink = symlink_ms
 
-
-TEST_CORE = join(os.environ['PYRATEPATH'], 'tests', 'sydney_test')
-
 CURRENT_DIR = os.getcwd()
-
 
 def test_transform_params():
     params = {config.IFG_LKSX: 3, config.IFG_LKSY: 2, config.IFG_CROP_OPT: 1}
@@ -60,7 +57,7 @@ def test_warp_required():
 
 
 def test_original_ifg_paths():
-    ifgdir = join(TEST_CORE, 'tif')
+    ifgdir = SYD_TEST_TIF
     ifglist_path = join(ifgdir, 'ifms_17')
     paths = run_pyrate.original_ifg_paths(ifglist_path)
     assert paths[0] == join(ifgdir, 'geo_060619-061002.tif'), str(paths[0])
@@ -122,13 +119,13 @@ class PyRateTests(unittest.TestCase):
         try:
             # copy source data (treat as prepifg already run)
             os.makedirs(cls.BASE_OUT_DIR)
-            for path in glob.glob(join(TEST_CORE, 'tif/*')):
+            for path in glob.glob(join(SYD_TEST_TIF, '*')):
                 dest = join(cls.BASE_OUT_DIR, os.path.basename(path))
                 shutil.copy(path, dest)
-                os.chmod(dest, 0660)
+                os.chmod(dest, 0o660)
 
             os.makedirs(cls.BASE_DEM_DIR)
-            orig_dem = join(TEST_CORE, 'dem', 'sydney_trimmed.tif')
+            orig_dem = common.SYD_TEST_DEM_TIF
             os.symlink(orig_dem, cls.BASE_DEM_FILE)
             os.chdir(cls.BASE_DIR)
 
@@ -197,7 +194,7 @@ class PyRateTests(unittest.TestCase):
 
     def test_refpixel_found(self):
         log_path = self.get_logfile_path()
-        for line in file(log_path):
+        for line in open(log_path, 'r'):
             if 'Reference pixel coordinate:' in line:
                 return
 
@@ -312,7 +309,7 @@ class TestPrePrepareIfgs(unittest.TestCase):
         shared.copytree(common.SYD_TEST_TIF, cls.tmp_dir)
         tifs = glob.glob(os.path.join(cls.tmp_dir, "*.tif"))
         for t in tifs:
-            os.chmod(t, 0644)
+            os.chmod(t, 0o644)
         sydney_ifgs = common.sydney_data_setup(datafiles=tifs)
         ifg_paths = [i.data_path for i in sydney_ifgs]
 
@@ -327,7 +324,7 @@ class TestPrePrepareIfgs(unittest.TestCase):
         shared.copytree(common.SYD_TEST_TIF, cls.tmp_dir2)
         tifs = glob.glob(os.path.join(cls.tmp_dir2, "*.tif"))
         for t in tifs:
-            os.chmod(t, 0644)
+            os.chmod(t, 0o644)
         sydney_ifgs = common.sydney_data_setup(datafiles=tifs)
         ifg_paths = [i.data_path for i in sydney_ifgs]
 

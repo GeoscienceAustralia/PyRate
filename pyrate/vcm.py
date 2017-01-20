@@ -48,7 +48,7 @@ def cvd(ifg_path, params, calc_alpha=False):
     :type ifg: :py:class:`pyrate.shared.Ifg`.
     :param calc_alpha: whether you calculate alpha.
     """
-    if isinstance(ifg_path, basestring):  # used during MPI
+    if isinstance(ifg_path, str):  # used during MPI
         ifg = shared.Ifg(ifg_path)
         ifg.open()
     else:
@@ -119,7 +119,7 @@ def cvd(ifg_path, params, calc_alpha=False):
     r = r[indices_to_keep]
     acg = acg[indices_to_keep]
 
-    if isinstance(ifg_path, basestring):
+    if isinstance(ifg_path, str):
         ifg.close()
 
     if calc_alpha:

@@ -8,7 +8,7 @@ Based on the Matlab Pirate 'stack.m' and Matlab 'lscov.m' functions.
 """
 
 from scipy.linalg import solve, cholesky, qr, inv
-from numpy import nan, isnan, sqrt, diag, delete, ones, array, nonzero, float32
+from numpy import nan, isnan, sqrt, diag, delete, array, float32
 import numpy as np
 import parmap
 import itertools
@@ -70,8 +70,8 @@ def linear_rate(ifgs, params, vcmt, mst=None):
         error = res[:, 1].reshape(rows, cols)
         samples = res[:, 2].reshape(rows, cols)
     else:
-        for i in xrange(rows):
-            for j in xrange(cols):
+        for i in range(rows):
+            for j in range(cols):
                 rate[i, j], error[i, j], samples[i, j] = \
                     linear_rate_by_pixel(i, j, mst, NSIG, obs,
                                          PTHRESH, span, vcmt)
@@ -127,7 +127,7 @@ def linear_rate_by_rows(row, cols, mst, NSIG, obs, PTHRESH, span, vcmt):
     :return:
     """
     res = np.empty(shape=(cols, 3), dtype=np.float32)
-    for col in xrange(cols):
+    for col in range(cols):
         res[col, :] = linear_rate_by_pixel(
             row, col, mst, NSIG, obs, PTHRESH, span, vcmt)
 

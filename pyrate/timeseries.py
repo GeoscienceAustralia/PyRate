@@ -69,7 +69,7 @@ def time_series_setup(ifgs, mst, params):
     tsvel_matrix = np.empty(shape=(nrows, ncols, nvelpar),
                             dtype=np.float32)
     ifg_data = np.zeros((nifgs, nrows, ncols), dtype=float32)
-    for ifg_num in xrange(nifgs):
+    for ifg_num in range(nifgs):
         ifg_data[ifg_num] = ifgs[ifg_num].phase_data
     if mst is None:
         mst = ~isnan(ifg_data)
@@ -119,8 +119,8 @@ def time_series(ifgs, params, vcmt, mst=None):
         res = np.array(res)
         tsvel_matrix = np.reshape(res, newshape=(nrows, ncols, res.shape[1]))
     else:
-        for row in xrange(nrows):
-            for col in xrange(ncols):
+        for row in range(nrows):
+            for col in range(ncols):
                 tsvel_matrix[row, col] = time_series_by_pixel(
                     row, col, B0, SMFACTOR, SMORDER, ifg_data, mst, nvelpar,
                     PTHRESH, vcmt, TSMETHOD, INTERP)

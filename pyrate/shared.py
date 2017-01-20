@@ -382,7 +382,7 @@ class Ifg(RasterBase):
         Generator returning each row of the phase data.
         """
 
-        for y in xrange(self.nrows):
+        for y in range(self.nrows):
             r = self.phase_band.ReadAsArray(yoff=y,
                                             win_xsize=self.ncols, win_ysize=1)
             yield r[0] # squeezes row from (1, WIDTH) to 1D array
