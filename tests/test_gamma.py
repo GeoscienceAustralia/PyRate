@@ -36,7 +36,6 @@ from pyrate.config import (
 from pyrate.scripts import run_pyrate, run_prepifg
 from pyrate.scripts.converttogtif import main as gammaMain
 from pyrate.shared import write_geotiff, GeotiffException
-from pyrate.tasks.utils import DUMMY_SECTION_NAME
 from tests import common
 from tests.common import GAMMA_TEST_DIR, SYD_TEST_GAMMA
 from tests.common import SYD_TEST_DIR, TEMPDIR
@@ -70,7 +69,6 @@ class GammaCommandLineTests(unittest.TestCase):
 
     def makeInputFiles(self, data):
         with open(self.confFile, 'w') as conf:
-            conf.write('[{}]\n'.format(DUMMY_SECTION_NAME))
             conf.write('{}: {}\n'.format(DEM_HEADER_FILE, self.hdr))
             conf.write('{}: {}\n'.format(NO_DATA_VALUE, '0.0'))
             conf.write('{}: {}\n'.format(OBS_DIR, self.base_dir))
@@ -278,13 +276,11 @@ class HeaderCombinationTests(unittest.TestCase):
         exp_wavelen = LIGHTSPEED / 5.3310040e+09
         self.assertEqual(chdr[ifc.PYRATE_WAVELENGTH_METRES], exp_wavelen)
 
-
     def test_fail_non_dict_header(self):
         self.assertRaises(self.err, gamma.combine_headers, H0, '', self.dh)
         self.assertRaises(self.err, gamma.combine_headers, '', H0, self.dh)
         self.assertRaises(self.err, gamma.combine_headers, H0, H1, None)
         self.assertRaises(self.err, gamma.combine_headers, H0, H1, '')
-
 
     def test_fail_mismatching_wavelength(self):
         self.assertRaises(self.err, gamma.combine_headers, H0, H1_ERR, self.dh)
@@ -292,14 +288,11 @@ class HeaderCombinationTests(unittest.TestCase):
     def test_fail_same_date(self):
         self.assertRaises(self.err, gamma.combine_headers, H0, H0, self.dh)
 
-
     def test_fail_bad_date_order(self):
         self.assertRaises(self.err, gamma.combine_headers, H1, H0, self.dh)
 
 
 class TestGammaLuigiEquality(unittest.TestCase):
-
-    SYDNEY_GAMMA_TEST = os.path.join(SYD_TEST_DIR, 'gamma_sydney_test')
 
     @classmethod
     def setUpClass(cls):
@@ -344,7 +337,6 @@ class TestGammaLuigiEquality(unittest.TestCase):
 
     def make_input_files(self, data):
         with open(self.conf_file, 'w') as conf:
-            conf.write('[{}]\n'.format(DUMMY_SECTION_NAME))
             conf.write('{}: {}\n'.format(NO_DATA_VALUE, '0.0'))
             conf.write('{}: {}\n'.format(OBS_DIR, self.base_dir))
             conf.write('{}: {}\n'.format(OUT_DIR, self.base_dir))
@@ -353,7 +345,7 @@ class TestGammaLuigiEquality(unittest.TestCase):
             conf.write('{}: {}\n'.format(LUIGI, self.LUIGI))
             conf.write('{}: {}\n'.format(
                 DEM_HEADER_FILE, os.path.join(
-                    self.SYDNEY_GAMMA_TEST, '20060619_utm_dem.par')))
+                    SYD_TEST_GAMMA, '20060619_utm_dem.par')))
             conf.write('{}: {}\n'.format(IFG_LKSX, '1'))
             conf.write('{}: {}\n'.format(IFG_LKSY, '1'))
             conf.write('{}: {}\n'.format(IFG_CROP_OPT, '1'))
@@ -383,7 +375,7 @@ class TestGammaLuigiEquality(unittest.TestCase):
 
     def common_check(self, conf_file):
         data_paths = glob.glob(
-            os.path.join(self.SYDNEY_GAMMA_TEST, "*_utm.unw"))
+            os.path.join(SYD_TEST_GAMMA, "*_utm.unw"))
 
         self.make_input_files(data_paths)
         sys.argv = ['run_pyrate.py', conf_file]
@@ -401,7 +393,7 @@ class TestGammaLuigiEquality(unittest.TestCase):
             self.assertTrue(os.path.exists(q),
                             '{} does not exist'.format(q))
 
-    def test_equality_of_luigi_and_no_luigi_phase_data(self):
+    def test_luigi_vs_no_luigi_phase_data(self):
         all_luigi_ifgs, all_non_luigi_ifgs = self.shared_setup()
 
         self.assertEqual(len(all_luigi_ifgs),
