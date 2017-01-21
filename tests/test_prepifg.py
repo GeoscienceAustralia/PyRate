@@ -685,5 +685,9 @@ class TestOneIncidenceOrElevationMap(unittest.TestCase):
         self.assertEqual(0, len(inc))
 
 
+def test_parallel():
+    # placeholder
+    pass
+
 if __name__ == "__main__":
     unittest.main()

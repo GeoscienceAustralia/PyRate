@@ -7,11 +7,11 @@ Created on 31/3/13
 '''
 
 from numpy import empty, isnan, reshape, float32, squeeze
-from numpy import dot, vstack, zeros, median, meshgrid
+from numpy import dot, vstack, zeros, meshgrid
+# from joblib import Parallel, delayed
 import numpy as np
 from scipy.linalg import lstsq
 from numpy.linalg import pinv
-import parmap
 
 from pyrate.algorithm import master_slave_ids, get_all_epochs, get_epoch_count
 from pyrate import mst, shared
@@ -87,16 +87,15 @@ def orbital_correction(ifgs_or_ifg_paths, params, mlooked=None, offset=True):
             _network_correction(ifgs, degree, offset, mlooked)
 
     elif method == INDEPENDENT_METHOD:
+        ifgs = [shared.Ifg(ifg).open() if isinstance(ifg, str) else ifg
+                for ifg in ifgs_or_ifg_paths]
+
         # not running in parallel
         # raises swig object pickle error
-        # parmap.map(_independent_correction, ifgs, degree, offset,
-        #            processes=params[cf.PROCESSES])
-        for p in ifgs_or_ifg_paths:
-            if isinstance(p, str):  # ifg paths are supplied
-                ifg = shared.Ifg(p)
-                ifg.open()
-            else:
-                ifg = p
+        # Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
+        #     delayed(_independent_correction)(ifg, degree, offset, params)
+        #     for ifg in ifgs)
+        for ifg in ifgs:
             _independent_correction(ifg, degree, offset, params)
     else:
         msg = "Unknown method: '%s', need INDEPENDENT or NETWORK method"
