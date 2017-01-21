@@ -110,7 +110,7 @@ class ConvertFileToGeotiff(luigi.Task):
         self.outputFile = os.path.join(
             self.outputDir,
             '%s.tif' % os.path.splitext(os.path.basename(self.inputFile))[0])
-        return [luigi.file.LocalTarget(self.outputFile)]
+        return [luigi.LocalTarget(self.outputFile)]
 
     def run(self):
         """
