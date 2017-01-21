@@ -44,7 +44,6 @@ from pyrate.scripts import run_prepifg
 from pyrate.scripts.converttogtif import main as roipacMain
 from pyrate.shared import GeotiffException
 from pyrate.shared import write_geotiff
-from pyrate.tasks.utils import DUMMY_SECTION_NAME
 from tests.common import HEADERS_TEST_DIR, PREP_TEST_OBS, PREP_TEST_TIF
 from tests.common import SYD_TEST_DEM_DIR, SYD_TEST_OBS, TEMPDIR
 from tests.common import SYD_TEST_DEM_ROIPAC, SYD_TEST_DEM_HDR
@@ -85,7 +84,6 @@ class RoipacCommandLine(unittest.TestCase):
 
     def makeInputFiles(self, data, projection):
         with open(self.confFile, 'w') as conf:
-            conf.write('[{}]\n'.format(DUMMY_SECTION_NAME))
             conf.write('{}: {}\n'.format(INPUT_IFG_PROJECTION, projection))
             conf.write('{}: {}\n'.format(NO_DATA_VALUE, '0.0'))
             conf.write('{}: {}\n'.format(OBS_DIR, self.base_dir))
@@ -254,11 +252,11 @@ class HeaderParsingTests(unittest.TestCase):
     def test_parse_short_header_has_timespan(self):
         # Ensures TIME_SPAN_YEAR field is added during parsing
         hdrs = roipac.parse_header(SHORT_HEADER_PATH)
-        self.assertTrue(hdrs.has_key(roipac.TIME_SPAN_YEAR))
+        self.assertIn(roipac.TIME_SPAN_YEAR, hdrs.keys())
 
         # check time span calc
-        master = date(2006, 06, 19)
-        slave = date(2006, 10, 02)
+        master = date(2006, 6, 19)
+        slave = date(2006, 10, 2)
         diff = (slave - master).days / ifc.DAYS_PER_YEAR
         self.assertEqual(diff, hdrs[roipac.TIME_SPAN_YEAR])
 
@@ -311,7 +309,6 @@ class TestRoipacLuigiEquality(unittest.TestCase):
 
     def makeInputFiles(self, data, projection):
         with open(self.confFile, 'w') as conf:
-            conf.write('[{}]\n'.format(DUMMY_SECTION_NAME))
             conf.write('{}: {}\n'.format(INPUT_IFG_PROJECTION, projection))
             conf.write('{}: {}\n'.format(NO_DATA_VALUE, '0.0'))
             conf.write('{}: {}\n'.format(OBS_DIR, self.base_dir))

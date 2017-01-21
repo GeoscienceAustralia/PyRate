@@ -20,14 +20,9 @@ There may be differences with the .rsc file content, with short and long forms.
 The short form has 7 fields, covering raster size, location and wavelength. The
 longer form can have up to 40 fields (see the test data for examples). PyRate
 attempts to handle both forms of header.
-
-Created on 12/09/2012
-
-.. codeauthor:: Ben Davies, NCI <ben.davies@anu.edu.au>
 """
 
-import os, luigi
-import pyrate.ifgconstants as ifc
+import luigi
 import pyrate.config as config
 from pyrate.roipac import *
 from pyrate.shared import write_geotiff
@@ -41,6 +36,7 @@ class RoipacHasRun(luigi.task.ExternalTask):
 
     fileName = luigi.Parameter()
     headerFile = luigi.Parameter()
+
     def output(self):
         targets = [
             luigi.LocalTarget(self.fileName),
@@ -54,11 +50,7 @@ class ResourceHeaderExists(luigi.ExternalTask):
     """
 
     resourceHeader = luigi.Parameter()
-
-    PRIORITY = 100
-
-    def priority(self):
-        return self.PRIORITY
+    property = 100
 
     def output(self):
         return [luigi.LocalTarget(self.resourceHeader)]
@@ -102,7 +94,7 @@ class ConvertFileToGeotiff(luigi.Task):
         self.output_file = os.path.join(
             self.outputDir,
             '%s.tif' % os.path.splitext(os.path.basename(self.inputFile))[0])
-        return [luigi.file.LocalTarget(self.output_file)]
+        return [luigi.LocalTarget(self.output_file)]
 
 
 class _DoConvertToGeotiffRoipac(IfgListMixin, luigi.WrapperTask):
@@ -114,32 +106,33 @@ class _DoConvertToGeotiffRoipac(IfgListMixin, luigi.WrapperTask):
         default=None,
         config_path=InputParam(config.ROIPAC_RESOURCE_HEADER))
 
+    @property
     def priority(self):
         """
         The requires method of this Task *may* reqire the existence of a header
         file... so that needs to be checked first.
         """
-
-        return ResourceHeaderExists.PRIORITY - 1
+        return ResourceHeaderExists.priority - 1
 
     def requires(self):
         if self.resourceHeader is not None:
             header = parse_header(self.resourceHeader)
             if ifc.PYRATE_DATUM not in header:
-                raise Exception('Error: header/resource file does not include DATUM and -p option not given')
+                raise Exception('Error: header/resource file does not '
+                                'include DATUM and -p option not given')
             projection = header[ifc.PYRATE_DATUM]
         else:
             if self.projection:
                 projection = self.projection
             else:
-               raise Exception('Error: no header/resource file given and -p option not specified')
+               raise Exception('Error: no header/resource file given '
+                               'and -p option not specified')
 
         ifgFiles = self.ifgList(tif=False)
         tasks = [ConvertFileToGeotiff(
             inputFile=path,
             projection=projection) for path in ifgFiles]
         return tasks
-
 
 
 class ConvertToGeotiff(luigi.WrapperTask):

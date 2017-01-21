@@ -51,7 +51,7 @@ class GetAnalysisExtents(IfgListMixin, luigi.Task):
             pickle.dump(extents, extFile)
 
     def output(self):
-        return luigi.file.LocalTarget(self.extentsFileName)
+        return luigi.LocalTarget(self.extentsFileName)
 
 
 class PrepareInterferogram(IfgListMixin, luigi.WrapperTask):
@@ -98,7 +98,7 @@ class PrepareInterferogram(IfgListMixin, luigi.WrapperTask):
 
     def output(self):
         if warp_required(self.xlooks, self.ylooks, self.crop_opt):
-            return luigi.file.LocalTarget(
+            return luigi.LocalTarget(
                 mlooked_path(self.ifg.data_path, self.ylooks, self.crop_opt))
         else:
             return []
@@ -107,9 +107,11 @@ class PrepareInterferogram(IfgListMixin, luigi.WrapperTask):
         if self.output():
             return super(luigi.WrapperTask, self).complete()
         else:
-            # then this didn't do anything, so check that the requres are complete
+            # then this didn't do anything, so check that
+            # the requres are complete
             # ... which is exactly what luigi.WrapperTask does.
-            # TODO: This requires knowledge of prepare_ifg, that is opaque. Address with refactoring.
+            # TODO: This requires knowledge of prepare_ifg,
+            # that is opaque. Address with refactoring.
             return super(PrepareInterferogram, self).complete()
 
 
@@ -119,7 +121,8 @@ class PrepareInterferograms(IfgListMixin, luigi.WrapperTask):
         self.extentsRemoved = False
 
     def requires(self):
-        return [PrepareInterferogram(ifg=Ifg(path)) for path in self.ifgTiffList()]
+        return [PrepareInterferogram(ifg=Ifg(path))
+                for path in self.ifgTiffList()]
 
     def run(self):
         try:
@@ -134,7 +137,8 @@ class PrepareInterferograms(IfgListMixin, luigi.WrapperTask):
         self.extentsRemoved = True
 
     def complete(self):
-        return self.extentsRemoved and super(PrepareInterferograms, self).complete()
+        return self.extentsRemoved and \
+               super(PrepareInterferograms, self).complete()
 
 
 class PrepifgException(Exception):

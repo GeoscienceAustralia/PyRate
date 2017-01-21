@@ -1,6 +1,5 @@
 import os, pickle, luigi
-from pyrate.compat import StringIO
-# from StringIO import StringIO
+from io import StringIO, BytesIO
 from pyrate import config
 from pyrate.config import (OBS_DIR,
                            IFG_FILE_LIST,
@@ -27,11 +26,10 @@ class InputParam(dict):
         self['name'] = name
 
 
-
 class IfgListMixin(object):
     """
-    Mixin to aid access to commonly used computed values from the PyRate config
-    file.
+    Mixin to aid access to commonly used computed values from the PyRate
+    config file.
 
     .. todo:: This should perhaps be renamed to something like *ConfigMixin*
         for clarity, as it is ued for accessing more than the list of
@@ -91,7 +89,6 @@ class IfgListMixin(object):
         return os.path.join(self.out_dir, EXTENTS_FILE_NAME)
 
 
-
 class DictParam(luigi.Parameter):
     """
     Parameter for dictionaries.
@@ -111,8 +108,7 @@ class DictParam(luigi.Parameter):
         """
         override of :py:meth:`luigi.Parameter.serialize`.
         """
-
-        sio = StringIO()
+        sio = BytesIO()
         pickle.dump(dct, sio)
         return sio.getvalue()
 

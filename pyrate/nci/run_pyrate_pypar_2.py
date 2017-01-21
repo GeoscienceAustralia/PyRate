@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import sys
 from operator import itemgetter
@@ -16,13 +17,13 @@ from pyrate.scripts.run_pyrate import write_msg
 from pyrate import orbital
 gdal.SetCacheMax(64)
 
-__author__ = 'sudipta'
 
 # Constants
 MASTER_PROCESS = 0
 data_path = 'DATAPATH'
 
-PrereadIfg = namedtuple('PrereadIfg', 'path nan_fraction master slave time_span')
+PrereadIfg = namedtuple('PrereadIfg',
+                        'path nan_fraction master slave time_span')
 
 
 def main(params, config_file=sys.argv[1]):
@@ -37,7 +38,7 @@ def main(params, config_file=sys.argv[1]):
     rank = parallel.rank
     ref_pixel_file = os.path.join(params[cf.OUT_DIR], 'ref_pixel.npy')
     refpx, refpy = np.load(ref_pixel_file)
-    print 'Found reference pixel', refpx, refpy
+    print('Found reference pixel', refpx, refpy)
 
     orb_fit_calc_mpi(dest_tifs, parallel, params)
 
@@ -82,15 +83,15 @@ def ref_phase_estimation_mpi(MPI_myID, ifg_paths, parallel, params,
     if params[cf.REF_EST_METHOD] == 1:
         for n, p in enumerate(process_ifgs):
             process_ref_phs[n] = ref_phase_method1_dummy(p, output_dir)
-            print 'finished processing {} of process total {}, ' \
-                  'of overall {}'.format(n, len(process_ifgs), no_ifgs)
+            print('finished processing {} of process total {}, ' \
+                  'of overall {}'.format(n, len(process_ifgs), no_ifgs))
 
     elif params[cf.REF_EST_METHOD] == 2:
         for n, p in enumerate(process_ifgs):
             process_ref_phs[n] = ref_phase_method2_dummy(params, p,
                                                          refpx, refpy)
-            print 'finished processing {} of process total {}, ' \
-                  'of overall {}'.format(n, len(process_ifgs), no_ifgs)
+            print('finished processing {} of process total {}, ' \
+                  'of overall {}'.format(n, len(process_ifgs), no_ifgs))
     else:
         raise cf.ConfigException('Ref phase estimation method must be 1 or 2')
 
@@ -152,15 +153,15 @@ def ref_phase_method1_dummy(ifg_path, output_dir):
 
 
 def maxvar_vcm_mpi(rank, ifg_paths, parallel, params):
-    print 'calculating maxvar and vcm'
+    print('calculating maxvar and vcm')
     num_processors = parallel.size
     no_ifgs = len(ifg_paths)
     process_indices = parallel.calc_indices(no_ifgs)
     process_ifgs = [itemgetter(p)(ifg_paths) for p in process_indices]
     process_maxvar = []
     for n, i in enumerate(process_ifgs):
-        print 'calculating maxvar for {} of process ifgs {} of ' \
-              'total {}'.format(n, len(process_ifgs), no_ifgs)
+        print('calculating maxvar for {} of process ifgs {} of ' \
+              'total {}'.format(n, len(process_ifgs), no_ifgs))
         # TODO: cvd calculation is still pretty slow - revisit
         process_maxvar.append(vcm_module.cvd(i, params)[0])
     maxvar_file = os.path.join(params[cf.OUT_DIR], 'maxvar.npy')
@@ -188,7 +189,7 @@ def maxvar_vcm_mpi(rank, ifg_paths, parallel, params):
 
 
 def orb_fit_calc_mpi(ifg_paths, parallel, params):
-    print 'calculating orbfit correction'
+    print('calculating orbfit correction')
     if params[cf.ORBITAL_FIT_METHOD] != 1:
         raise cf.ConfigException('For now orbfit method must be 1')
 
@@ -200,7 +201,7 @@ def orb_fit_calc_mpi(ifg_paths, parallel, params):
     mlooked = None
     # TODO: MPI orbfit method 2
     orbital.orbital_correction(process_ifgs, params, mlooked=mlooked)
-    print 'finished orbfit calculation for process {}'.format(parallel.rank)
+    print('finished orbfit calculation for process {}'.format(parallel.rank))
 
 
 if __name__ == '__main__':
