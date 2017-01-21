@@ -12,7 +12,7 @@ from scipy.linalg import qr
 import numpy as np
 import matplotlib.pyplot as plt
 import itertools
-import parmap
+from joblib import Parallel, delayed
 
 import pyrate.config as config
 from pyrate.algorithm import master_slave_ids, get_epochs
@@ -106,16 +106,19 @@ def time_series(ifgs, params, vcmt, mst=None):
         time_series_setup(ifgs, mst, params)
 
     if parallel == 1:
-        tsvel_matrix = parmap.map(time_series_by_rows, range(nrows), B0,
-                                  SMFACTOR, SMORDER, ifg_data, mst, ncols,
-                                  nvelpar, PTHRESH, vcmt, TSMETHOD, INTERP,
-                                  processes=processes)
+        tsvel_matrix = Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
+            delayed(time_series_by_rows)(r, B0,
+                              SMFACTOR, SMORDER, ifg_data, mst, ncols,
+                              nvelpar, PTHRESH, vcmt, TSMETHOD, INTERP)
+            for r in range(nrows))
+
     elif parallel == 2:
-        res = parmap.starmap(time_series_by_pixel,
-                             itertools.product(range(nrows), range(ncols)),
-                             B0, SMFACTOR, SMORDER, ifg_data, mst, nvelpar,
-                             PTHRESH, vcmt, TSMETHOD, INTERP,
-                             processes=processes)
+
+        res = Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
+            delayed(time_series_by_pixel)(i, j, B0,
+                              SMFACTOR, SMORDER, ifg_data, mst, nvelpar,
+                              PTHRESH, vcmt, TSMETHOD, INTERP)
+            for (i, j) in itertools.product(range(nrows), range(ncols)))
         res = np.array(res)
         tsvel_matrix = np.reshape(res, newshape=(nrows, ncols, res.shape[1]))
     else:
