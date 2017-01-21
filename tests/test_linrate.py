@@ -101,9 +101,11 @@ class MatlabEqualityTest(unittest.TestCase):
 
         xlks, ylks, crop = run_pyrate.transform_params(params)
 
-        base_ifg_paths = run_pyrate.original_ifg_paths(params[cf.IFG_FILE_LIST])
+        base_ifg_paths = run_pyrate.original_ifg_paths(
+            params[cf.IFG_FILE_LIST])
 
-        dest_paths = run_pyrate.get_dest_paths(base_ifg_paths, crop, params, xlks)
+        dest_paths = run_pyrate.get_dest_paths(base_ifg_paths,
+                                               crop, params, xlks)
 
         # start run_pyrate copy
         ifgs = shared.pre_prepare_ifgs(dest_paths, params)
@@ -183,136 +185,6 @@ class MatlabEqualityTest(unittest.TestCase):
     def test_lin_rate_samples_serial(self):
         np.testing.assert_array_almost_equal(
             self.samples_s, self.samples_matlab, decimal=3)
-
-
-class MPITests(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.tif_dir = tempfile.mkdtemp()
-        cls.test_conf = common.SYDNEY_TEST_CONF
-
-        # change the required params
-        cls.params = cf.get_config_params(cls.test_conf)
-        cls.params[cf.OBS_DIR] = common.SYD_TEST_GAMMA
-        cls.params[cf.PROCESSOR] = 1  # gamma
-        cls.params[cf.IFG_FILE_LIST] = os.path.join(
-            common.SYD_TEST_GAMMA, 'ifms_17')
-        cls.params[cf.PARALLEL] = 0
-        cls.params[cf.REF_EST_METHOD] = 1
-        cls.params[cf.APS_CORRECTION] = 0
-        cls.params[cf.ORBITAL_FIT_METHOD] = 1
-        # base_unw_paths need to be geotiffed and multilooked by run_prepifg
-        cls.base_unw_paths = run_pyrate.original_ifg_paths(
-            cls.params[cf.IFG_FILE_LIST])
-
-    @classmethod
-    def process(cls):
-        cls.params[cf.OUT_DIR] = cls.tif_dir
-        xlks, ylks, crop = run_pyrate.transform_params(cls.params)
-
-        # dest_paths are tifs that have been geotif converted and multilooked
-        dest_paths = run_pyrate.get_dest_paths(
-            cls.base_unw_paths, crop, cls.params, xlks)
-
-        # create the dest_paths files
-        run_prepifg.gamma_prepifg(cls.base_unw_paths, cls.params)
-
-        # now create test ifgs
-        cls.ifgs = common.sydney_data_setup(datafiles=dest_paths)
-
-        # give the log file any name
-        cls.log_file = os.path.join(cls.tif_dir, 'linrate_mpi.log')
-
-        # create the conf file in out_dir
-        cls.conf_file = tempfile.mktemp(suffix='.conf', dir=cls.tif_dir)
-        cf.write_config_file(cls.params, cls.conf_file)
-
-        # conf file crated?
-        assert os.path.exists(cls.conf_file)
-
-        # Calc time series using MPI
-        str = 'mpirun -np 4 python pyrate/nci/run_pyrate_pypar.py ' + \
-              cls.conf_file
-        cmd = str.split()
-        subprocess.check_call(cmd)
-        str = 'mpirun -np 4 python pyrate/nci/run_pyrate_pypar_2.py ' + \
-              cls.conf_file
-        cmd = str.split()
-        subprocess.check_call(cmd)
-        str = 'mpirun -np 4 python pyrate/nci/run_pyrate_pypar_3.py ' + \
-              cls.conf_file
-        cmd = str.split()
-        subprocess.check_call(cmd)
-
-        str = 'mpirun -np 4 python pyrate/nci/postprocessing.py ' + \
-              cls.conf_file
-        cmd = str.split()
-        subprocess.check_call(cmd)
-
-        rate_file = os.path.join(cls.params[cf.OUT_DIR], 'linrate.npy')
-        cls.rate_mpi = np.load(rate_file)
-        error_file = os.path.join(cls.params[cf.OUT_DIR], 'linerror.npy')
-        cls.error_mpi = np.load(error_file)
-        samples_file = os.path.join(cls.params[cf.OUT_DIR], 'linsamples.npy')
-        cls.samples_mpi = np.load(samples_file)
-
-    def calc_non_mpi_time_series(self):
-        temp_dir = tempfile.mkdtemp()
-        # copy sydney_tif files in temp_dir
-        self.params[cf.OUT_DIR] = temp_dir
-        xlks, ylks, crop = run_pyrate.transform_params(self.params)
-
-        # dest_paths are tifs that have been geotif converted and multilooked
-        dest_paths = run_pyrate.get_dest_paths(
-            self.base_unw_paths, crop, self.params, xlks)
-        # create the dest_paths files
-        run_prepifg.gamma_prepifg(self.base_unw_paths, self.params)
-
-        _, _, _, _, self.rate, self.error, self.samples = \
-            run_pyrate.process_ifgs(dest_paths, self.params)
-
-        shutil.rmtree(temp_dir)
-
-    @classmethod
-    def tearDownClass(cls):
-        shutil.rmtree(cls.tif_dir)
-
-    def test_mpi_mst_single_processor(self):
-        for looks, ref_method, orbfitmethod in product(range(1, 5), [1, 2],
-                                                       [1]):
-            print('=======Testing linear rate for looks:', looks, \
-                'ref_method: ', ref_method)
-            self.params[cf.IFG_LKSX] = looks
-            self.params[cf.IFG_LKSY] = looks
-            self.params[cf.REF_EST_METHOD] = ref_method
-            self.params[cf.ORBITAL_FIT_METHOD] = orbfitmethod
-            self.process()
-            mlooked_ifgs = glob.glob(os.path.join(
-                self.tif_dir, '*_{looks}rlks_*cr.tif'.format(looks=looks)))
-            self.assertEqual(len(mlooked_ifgs), 17)
-            self.calc_non_mpi_time_series()
-            np.testing.assert_array_almost_equal(self.rate,
-                                                 self.rate_mpi,
-                                                 decimal=4)
-
-            np.testing.assert_array_almost_equal(self.error,
-                                                 self.error_mpi,
-                                                 decimal=4)
-            np.testing.assert_array_almost_equal(self.samples,
-                                                 self.samples_mpi,
-                                                 decimal=4)
-
-        # test logfile was created
-        log_file = glob.glob(os.path.join(self.tif_dir, '*.log'))[0]
-        self.assertTrue(os.path.exists(log_file))
-
-        # test linerror.tif and linrate.tif was created
-        rate_file = glob.glob(os.path.join(self.tif_dir, 'linrate.tif'))[0]
-        self.assertTrue(os.path.exists(rate_file))
-
-        error_file = glob.glob(os.path.join(self.tif_dir, 'linerror.tif'))[0]
-        self.assertTrue(os.path.exists(error_file))
-
 
 
 if __name__ == "__main__":
