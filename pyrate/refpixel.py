@@ -2,7 +2,7 @@ from numpy import isnan, std, mean, sum as nsum
 import os
 import numpy as np
 from itertools import product
-import parmap
+from joblib import Parallel, delayed
 import pyrate.config as cf
 from pyrate.shared import Ifg
 
@@ -23,9 +23,11 @@ def ref_pixel(ifgs, params):
     parallel = params[cf.PARALLEL]
     if parallel:
         phase_data = [i.phase_data for i in ifgs]
-        mean_sds = parmap.starmap(ref_pixel_multi, grid,
-                                  half_patch_size, phase_data, thresh, params)
-
+        mean_sds = Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
+            delayed(ref_pixel_multi)(y, x, half_patch_size, phase_data,
+                                     thresh, params)
+            for (y, x) in grid
+        )
         refx, refy = filter_means(mean_sds, grid)
     else:
         phase_data = [i.phase_data for i in ifgs]
