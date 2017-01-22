@@ -259,12 +259,13 @@ def remove_orbital_error(ifgs, params):
         # resampling here to use all prior corrections to orig data
         # can't do multiprocessing without writing to disc, but can do MPI
         # due to swig pickling issue. So multiprocesing is not implemented
-        mlooked_dataset = prepifg.prepare_ifgs([i.data_path for i in ifgs],
-                             crop_opt=prepifg.ALREADY_SAME_SIZE,
-                             xlooks=params[cf.ORBITAL_FIT_LOOKS_X],
-                             ylooks=params[cf.ORBITAL_FIT_LOOKS_Y],
-                             thresh=params[cf.NO_DATA_AVERAGING_THRESHOLD],
-                             write_to_disc=False)
+        mlooked_dataset = prepifg.prepare_ifgs(
+            [i.data_path for i in ifgs],
+            crop_opt=prepifg.ALREADY_SAME_SIZE,
+            xlooks=params[cf.ORBITAL_FIT_LOOKS_X],
+            ylooks=params[cf.ORBITAL_FIT_LOOKS_Y],
+            thresh=params[cf.NO_DATA_AVERAGING_THRESHOLD],
+            write_to_disc=False)
         mlooked = [Ifg(m[1]) for m in mlooked_dataset]
 
         for m in mlooked:

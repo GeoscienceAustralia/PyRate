@@ -3,7 +3,7 @@ from __future__ import print_function
 This is a python implementation of the refphsest.m of pirate.
 """
 import numpy as np
-import parmap
+from joblib import Parallel, delayed
 from pyrate import config as cf
 from pyrate.shared import nanmedian, write_msg
 from pyrate import ifgconstants as ifc
@@ -43,8 +43,11 @@ def est_ref_phase_method2(ifgs, params, refpx, refpy):
     thresh = chipsize * chipsize * params[cf.REF_MIN_FRAC]
     phase_data = [i.phase_data for i in ifgs]
     if params[cf.PARALLEL]:
-        ref_phs = parmap.map(est_ref_phase_method2_multi, phase_data,
-                                 half_chip_size, refpx, refpy, thresh)
+        ref_phs = Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
+            delayed(est_ref_phase_method2_multi)(p, half_chip_size,
+                                                 refpx, refpy, thresh)
+            for p in phase_data)
+
         for n, ifg in enumerate(ifgs):
             ifg.phase_data -= ref_phs[n]
     else:
@@ -82,7 +85,9 @@ def est_ref_phase_method1(ifgs, params):
     comp = np.ravel(comp, order='F')  # this is the same as in Matlab
     if params[cf.PARALLEL]:
         print("ref phase calculation using multiprocessing")
-        ref_phs = parmap.map(est_ref_phase_method1_multi, phase_data, comp)
+        ref_phs = Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
+            delayed(est_ref_phase_method1_multi)(p, comp)
+            for p in phase_data)
         for n, ifg in enumerate(ifgs):
             ifg.phase_data -= ref_phs[n]
     else:

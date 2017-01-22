@@ -11,7 +11,7 @@ import numpy as np
 import os
 import re
 import glob2
-import parmap
+from joblib import Parallel, delayed
 from osgeo import gdalconst, gdal
 from pyrate import config as cf
 from pyrate import ifgconstants as ifc
@@ -82,16 +82,19 @@ def remove_aps_delay(input_ifgs, params, process_indices=None):
     data_paths = [i.data_path for i in ifgs]
 
     if parallel:
-        aps_delay = parmap.map(parallel_aps, data_paths, dem, dem_header,
+        aps_delay = Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
+            delayed(parallel_aps)(d, dem, dem_header,
                                incidence_angle,
                                incidence_map, list_of_dates_for_grb_download,
                                mlooked_dem, params)
+            for d in data_paths)
     else:
         aps_delay = []
         for d in data_paths:  # demo for only one ifg
             aps_delay.append(parallel_aps(d, dem, dem_header, incidence_angle,
-                                     incidence_map, list_of_dates_for_grb_download,
-                                     mlooked_dem, params))
+                                          incidence_map,
+                                          list_of_dates_for_grb_download,
+                                          mlooked_dem, params))
 
     for i, ifg in enumerate(ifgs):
         ifg.phase_data -= aps_delay[i]  # remove delay

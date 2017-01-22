@@ -11,7 +11,7 @@ from itertools import product
 from numpy import array, nan, isnan, float32, empty, sum as nsum
 import numpy as np
 import networkx as nx
-import parmap
+from joblib import Parallel, delayed
 
 from pyrate.algorithm import ifg_date_lookup
 from pyrate.algorithm import ifg_date_index_lookup
@@ -65,8 +65,9 @@ def mst_parallel(ifgs, params):
     if params[cf.PARALLEL]:
         print('Calculating mst using {} tiles in parallel using {} ' \
               'processes'.format(no_tiles, ncpus))
-        t_msts = parmap.map(mst_multiprocessing, tiles, ifg_paths,
-                            processes=ncpus)
+        t_msts = Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
+            delayed(mst_multiprocessing)(t, ifg_paths)
+            for t in tiles)
         for k, tile in enumerate(tiles):
             result[:, tile.top_left_y:tile.bottom_right_y,
                     tile.top_left_x: tile.bottom_right_x] = t_msts[k]

@@ -42,7 +42,7 @@ setup(
         'networkx >= 1.9.1',
         'Pillow >= 2.8.2',
         'luigi >= 2.0.0',
-        'parmap',
+        'joblib',
         'glob2',
         'bumpversion',
     ],
