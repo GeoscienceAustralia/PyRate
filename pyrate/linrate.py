@@ -3,14 +3,12 @@ Pixel-by-pixel linear rate (velocity) estimation using iterative weighted
 least-squares method.
 
 Based on the Matlab Pirate 'stack.m' and Matlab 'lscov.m' functions.
-
-.. codeauthor: Matt Garthwaite, Sudipta Basak
 """
 
 from scipy.linalg import solve, cholesky, qr, inv
 from numpy import nan, isnan, sqrt, diag, delete, array, float32
 import numpy as np
-import parmap
+from joblib import Parallel, delayed
 import itertools
 from pyrate import config as cf
 
@@ -53,17 +51,20 @@ def linear_rate(ifgs, params, vcmt, mst=None):
     # pixel-by-pixel calculation.
     # nested loops to loop over the 2 image dimensions
     if parallel == 1:
-        res = parmap.map(linear_rate_by_rows, range(rows), cols, mst, NSIG, obs,
-                         PTHRESH, span, vcmt, processes=processes)
+
+        res = Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
+            delayed(linear_rate_by_rows)(r, cols, mst, NSIG, obs,
+                         PTHRESH, span, vcmt)
+            for r in range(rows))
         res = np.array(res)
         rate = res[:, :, 0]
         error = res[:, :, 1]
         samples = res[:, :, 2]
     elif parallel == 2:
-        res = parmap.starmap(linear_rate_by_pixel,
-                             itertools.product(range(rows), range(cols)), mst,
-                             NSIG, obs, PTHRESH, span, vcmt,
-                             processes=processes)
+        res = Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
+            delayed(linear_rate_by_pixel)(r, c, mst, NSIG, obs,
+                         PTHRESH, span, vcmt)
+            for r, c in itertools.product(range(rows), range(cols)))
         res = np.array(res)
 
         rate = res[:, 0].reshape(rows, cols)

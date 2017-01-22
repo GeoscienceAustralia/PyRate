@@ -110,7 +110,7 @@ def gamma_prepifg(base_unw_paths, params):
 
     # dest_base_ifgs: location of geo_tif's
     if parallel:
-        print('running gamma in parallel with {} ' \
+        print('running gamma in parallel with {} '
               'processes'.format(params[cf.PROCESSES]))
         dest_base_ifgs = Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
             delayed(gamma_multiprocessing)(p, params)
