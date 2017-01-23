@@ -6,7 +6,6 @@ Main workflow script for PyRate
 import datetime
 import logging
 import os
-import sys
 import numpy as np
 
 import pyrate.config as cf
