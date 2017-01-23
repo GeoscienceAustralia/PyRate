@@ -23,7 +23,8 @@ from pyrate.shared import Ifg
 from tests import common
 from tests.common import SYD_TEST_TIF
 
-# taken from http://stackoverflow.com/questions/6260149/os-symlink-support-in-windows
+# taken from
+# http://stackoverflow.com/questions/6260149/os-symlink-support-in-windows
 if os.name == "nt":
     def symlink_ms(source, link_name):
         import ctypes
@@ -40,9 +41,10 @@ if os.name == "nt":
 
 CURRENT_DIR = os.getcwd()
 
+
 def test_transform_params():
     params = {config.IFG_LKSX: 3, config.IFG_LKSY: 2, config.IFG_CROP_OPT: 1}
-    assert run_pyrate.transform_params(params) == (3, 2, 1)
+    assert cf.transform_params(params) == (3, 2, 1)
 
 
 def test_warp_required():
@@ -59,7 +61,7 @@ def test_warp_required():
 def test_original_ifg_paths():
     ifgdir = SYD_TEST_TIF
     ifglist_path = join(ifgdir, 'ifms_17')
-    paths = run_pyrate.original_ifg_paths(ifglist_path)
+    paths = cf.original_ifg_paths(ifglist_path)
     assert paths[0] == join(ifgdir, 'geo_060619-061002.tif'), str(paths[0])
     assert paths[-1] == join(ifgdir, 'geo_070709-070813.tif')
 
@@ -221,13 +223,13 @@ class ParallelPyRateTests(unittest.TestCase):
         params[cf.PARALLEL] = 1
         params[cf.APS_CORRECTION] = False
 
-        xlks, ylks, crop = run_pyrate.transform_params(params)
+        xlks, ylks, crop = cf.transform_params(params)
 
         # base_unw_paths need to be geotiffed and multilooked by run_prepifg
-        base_unw_paths = run_pyrate.original_ifg_paths(params[cf.IFG_FILE_LIST])
+        base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST])
 
         # dest_paths are tifs that have been geotif converted and multilooked
-        cls.dest_paths = run_pyrate.get_dest_paths(
+        cls.dest_paths = cf.get_dest_paths(
             base_unw_paths, crop, params, xlks)
 
         run_prepifg.gamma_prepifg(base_unw_paths, params)
@@ -241,7 +243,7 @@ class ParallelPyRateTests(unittest.TestCase):
         cls.tif_dir_s = tempfile.mkdtemp()
         params[cf.PARALLEL] = 0
         params[cf.OUT_DIR] = cls.tif_dir_s
-        cls.dest_paths_s = run_pyrate.get_dest_paths(
+        cls.dest_paths_s = cf.get_dest_paths(
             base_unw_paths, crop, params, xlks)
         run_prepifg.gamma_prepifg(base_unw_paths, params)
         cls.mst, cls.refpixel, cls.maxvar, cls.vcmt, cls.rate, \

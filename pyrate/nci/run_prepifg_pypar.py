@@ -34,7 +34,7 @@ def main():
               "processors".format(num_processors))
 
     # Read config file, dest_paths are final mlooked/sampled and cropped tifs
-    base_ifg_paths, dest_paths, params = run_pyrate.get_ifg_paths()
+    base_ifg_paths, dest_paths, params = cf.get_ifg_paths(sys.argv[1])
 
     # logfile
     output_dir = params[cf.OUT_DIR]
@@ -92,7 +92,7 @@ def main():
     # need to come back to the main thread as all ifgs are needed for exts calc
     parallel.barrier()
     ifgs = [Ifg(p) for p in dest_base_ifgs]
-    xlooks, ylooks, crop = run_pyrate.transform_params(params)
+    xlooks, ylooks, crop = cf.transform_params(params)
     exts = prepifg.getAnalysisExtent(crop, ifgs, xlooks, ylooks, userExts=None)
     thresh = params[cf.NO_DATA_AVERAGING_THRESHOLD]
     del ifgs  # to save memory
