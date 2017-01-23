@@ -5,7 +5,6 @@ import datetime
 from operator import itemgetter
 
 from pyrate.nci.parallel import Parallel
-from pyrate.scripts import run_pyrate
 from pyrate import config as cf
 from pyrate.scripts import run_prepifg
 from pyrate.shared import Ifg

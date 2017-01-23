@@ -14,6 +14,7 @@ pyrate_gamma.conf
 import os
 from os.path import splitext
 import warnings
+from pyrate import compat
 
 PYRATEPATH = os.environ['PYRATEPATH']
 
@@ -293,7 +294,8 @@ def _parse_conf_file(content):
         if p not in parameters:
             parameters[p] = '0'  # insert dummies
 
-    parameters = handle_pyaps_parameters(parameters)
+    if compat.PyAPS_INSTALLED:
+        parameters = handle_pyaps_parameters(parameters)
 
     if not parameters:
         raise ConfigException('Cannot parse any parameters from config file')
@@ -436,8 +438,8 @@ def get_dest_paths(base_paths, crop, params, looks):
             for p in dest_mlooked_ifgs]
 
 
-def get_ifg_paths(cfg_path):
-    pars = get_config_params(cfg_path)
+def get_ifg_paths(config_file):
+    pars = get_config_params(config_file)
     ifg_file_list = pars.get(IFG_FILE_LIST)
     pars[IFG_FILE_LIST] = ifg_file_list
 
