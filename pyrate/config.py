@@ -12,8 +12,8 @@ pyrate_gamma.conf
 # problem with the checking being done in the middle of the runs, as bad values
 # could cause crashes & destroying some of the results.
 import os
+from os.path import splitext
 import warnings
-import pyrate.prepifg as prepifg
 
 PYRATEPATH = os.environ['PYRATEPATH']
 
@@ -419,8 +419,17 @@ def original_ifg_paths(ifglist_path):
     return [os.path.join(basedir, p) for p in ifglist]
 
 
+def mlooked_path(path, looks, crop_out):
+    """
+    Adds suffix to path, for creating a new path for mlooked files.
+    """
+    base, ext = splitext(path)
+    return "{base}_{looks}rlks_{crop_out}cr{ext}".format(
+        base=base, looks=looks, crop_out=crop_out, ext=ext)
+
+
 def get_dest_paths(base_paths, crop, params, looks):
-    dest_mlooked_ifgs = [prepifg.mlooked_path(os.path.basename(q).split('.')[0]
+    dest_mlooked_ifgs = [mlooked_path(os.path.basename(q).split('.')[0]
         + '.tif', looks=looks, crop_out=crop) for q in base_paths]
 
     return [os.path.join(os.environ['PYRATEPATH'], params[OUT_DIR], p)

@@ -25,12 +25,13 @@ from numpy.testing import assert_array_almost_equal, assert_array_equal
 
 import glob
 from pyrate.scripts import run_prepifg
-from pyrate import config as cfg
+from pyrate import config as cf
+from pyrate.config import mlooked_path
 from pyrate.shared import Ifg, DEM
 from pyrate.prepifg import CUSTOM_CROP, MAXIMUM_CROP, MINIMUM_CROP, \
     ALREADY_SAME_SIZE
 from pyrate.prepifg import prepare_ifgs, resample, PreprocessError, CustomExts
-from pyrate.prepifg import mlooked_path, extents_from_params
+from pyrate.prepifg import extents_from_params
 from tests.common import SYD_TEST_MATLAB_PREPIFG_DIR
 from tests.common import PREP_TEST_TIF, SYD_TEST_DEM_DIR
 from tests.common import SYD_TEST_DEM_TIF
@@ -80,8 +81,8 @@ def same_exts_ifgs():
 def test_extents_from_params():
     xf, yf = 1.0, 2.0
     xl, yl = 5.0, 7.0
-    pars = {cfg.IFG_XFIRST: xf, cfg.IFG_XLAST: xl,
-            cfg.IFG_YFIRST: yf, cfg.IFG_YLAST: yl}
+    pars = {cf.IFG_XFIRST: xf, cf.IFG_XLAST: xl,
+            cf.IFG_YFIRST: yf, cf.IFG_YLAST: yl}
 
     assert extents_from_params(pars) == CustomExts(xf, yf, xl, yl)
 
@@ -664,7 +665,7 @@ class TestOneIncidenceOrElevationMap(unittest.TestCase):
 
     def common_check(self, ele, inc):
         os.path.exists(self.conf_file)
-        params = cfg.get_config_params(self.conf_file)
+        params = cf.get_config_params(self.conf_file)
         sys.argv = ['dummy', self.conf_file]
         run_prepifg.main(params)
         # test geotiffs created

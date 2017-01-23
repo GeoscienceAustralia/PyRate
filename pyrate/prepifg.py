@@ -20,14 +20,13 @@ from numbers import Number
 from tempfile import mkstemp
 from subprocess import check_call
 from collections import namedtuple
-from os.path import splitext
 import shutil
 
 import numpy as np
 from numpy import array, where, nan, isnan, nanmean, float32, zeros, sum as nsum
 
 from osgeo import gdal
-from pyrate import config as cfg
+from pyrate import config as cf
 from pyrate.shared import Ifg, DEM
 from pyrate import gdal_python as gdalwarp
 from pyrate import ifgconstants as ifc
@@ -107,7 +106,7 @@ def prepare_ifg(
 
     if not do_multilook and crop_opt == ALREADY_SAME_SIZE:
         renamed_path = \
-            mlooked_path(raster.data_path, looks=xlooks, crop_out=crop_opt)
+            cf.mlooked_path(raster.data_path, looks=xlooks, crop_out=crop_opt)
         shutil.copy(raster.data_path, renamed_path)
         # set metadata to indicated has been cropped and multilooked
         # copy file with mlooked path
@@ -240,15 +239,6 @@ def _resample_ifg(ifg, cmd, x_looks, y_looks, thresh, md=None):
     return resample(data, x_looks, y_looks, thresh)
 
 
-def mlooked_path(path, looks, crop_out):
-    """
-    Adds suffix to path, for creating a new path for mlooked files.
-    """
-    base, ext = splitext(path)
-    return "{base}_{looks}rlks_{crop_out}cr{ext}".format(
-        base=base, looks=looks, crop_out=crop_out, ext=ext)
-
-
 def warp_old(ifg, x_looks, y_looks, extents, resolution, thresh,
              crop_out, verbose, ret_ifg=True):
     """
@@ -288,7 +278,7 @@ def warp_old(ifg, x_looks, y_looks, extents, resolution, thresh,
         cmd += ["-tr"] + [str(r) for r in resolution] # change res of final output
 
     # use GDAL to cut (and resample) the final output layers
-    looks_path = mlooked_path(ifg.data_path, y_looks, crop_out)
+    looks_path = cf.mlooked_path(ifg.data_path, y_looks, crop_out)
     cmd += [ifg.data_path, looks_path]
 
     check_call(cmd)
@@ -344,7 +334,7 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out,
         raise ValueError('X and Y looks mismatch')
 
     # cut, average, resample the final output layers
-    looks_path = mlooked_path(ifg.data_path, y_looks, crop_out)
+    looks_path = cf.mlooked_path(ifg.data_path, y_looks, crop_out)
 
     #     # Add missing/updated metadata to resampled ifg/DEM
     #     new_lyr = type(ifg)(looks_path)
@@ -565,5 +555,5 @@ class PreprocessError(Exception):
 
 
 def extents_from_params(params):
-    keys = (cfg.IFG_XFIRST, cfg.IFG_YFIRST, cfg.IFG_XLAST, cfg.IFG_YLAST)
+    keys = (cf.IFG_XFIRST, cf.IFG_YFIRST, cf.IFG_XLAST, cf.IFG_YLAST)
     return CustomExts(*[params[k] for k in keys])

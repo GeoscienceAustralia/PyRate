@@ -386,7 +386,7 @@ def working_ifg_paths(src_paths, xlooks, ylooks, cropping):
     Filter. Returns paths to ifgs to process (eg. checks for mlooked tifs)
     """
     if warp_required(xlooks, ylooks, cropping):
-        mlooked_unw = [prepifg.mlooked_path(p, xlooks, crop_out=cropping)
+        mlooked_unw = [cf.mlooked_path(p, xlooks, crop_out=cropping)
                        for p in src_paths]
         mlooked_paths = [os.path.splitext(m)[0]+'.tif' for m in mlooked_unw]
 
@@ -426,44 +426,6 @@ def main(config_file):
     else:  # Using matlab mst
         ifg_instance = matlab_mst.IfgListPyRate(datafiles=dest_paths)
         process_ifgs(ifg_instance, pars)
-
-
-# def get_ifg_paths():
-#     from optparse import OptionParser
-#     parser = OptionParser(usage='%prog [config-file]\nRuns PyRate workflow.')
-#     parser.add_option('-i', '--ifglist', type=str,
-#                       help='name of file containing list of interferograms')
-#     options, args = parser.parse_args()
-#     log_file_name = init_logging(logging.DEBUG)
-#     try:
-#         cfg_path = args[0] if args else 'pyrate.conf'
-#         global pars
-#         pars = cf.get_config_params(cfg_path)
-#
-#     except IOError as err:
-#         emsg = 'Config file error: %s "%s"' % (err.strerror, err.filename)
-#         logging.debug(emsg)
-#         sys.exit(err.errno)
-#     ifg_file_list = options.ifglist or pars.get(cf.IFG_FILE_LIST)
-#     pars[cf.IFG_FILE_LIST] = ifg_file_list
-#
-#     # log config file
-#     log_config_file(cfg_path, log_file_name)
-#
-#     if ifg_file_list is None:
-#         emsg = 'Error {code}: Interferogram list file name not provided ' \
-#                'or does not exist'.format(code=2)
-#         logging.debug(emsg)
-#         raise IOError(2, emsg)
-#     xlks, ylks, crop = transform_params(pars)
-#
-#     # base_unw_paths need to be geotiffed and multilooked by run_prepifg
-#     base_unw_paths = original_ifg_paths(ifg_file_list)
-#
-#     # dest_paths are tifs that have been geotif converted and multilooked
-#     dest_paths = get_dest_paths(base_unw_paths, crop, pars, xlks)
-#
-#     return base_unw_paths, dest_paths, pars
 
 
 def log_config_file(configfile, log_filename):
