@@ -41,7 +41,7 @@ setup(
         'pyproj >= 1.9.5',
         'networkx >= 1.9.1',
         'Pillow >= 2.8.2',
-        'luigi >= 2.0.0',
+        'luigi == 1.3.0',
         'joblib',
         'glob2',
         'bumpversion',
