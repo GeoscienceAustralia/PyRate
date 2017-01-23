@@ -378,9 +378,8 @@ class TestGammaLuigiEquality(unittest.TestCase):
             os.path.join(SYD_TEST_GAMMA, "*_utm.unw"))
 
         self.make_input_files(data_paths)
-        sys.argv = ['run_pyrate.py', conf_file]
 
-        base_ifg_paths, dest_paths, params = run_pyrate.get_ifg_paths()
+        base_ifg_paths, dest_paths, params = cf.get_ifg_paths(conf_file)
         dest_base_ifgs = [os.path.join(
             params[cf.OUT_DIR], os.path.basename(q).split('.')[0] + '.tif')
             for q in base_ifg_paths]
@@ -457,9 +456,8 @@ class TestGammaParallelVsSerial(unittest.TestCase):
         unw_paths = glob.glob(
             os.path.join(SYD_TEST_GAMMA, "*_utm.unw"))
 
-        sys.argv = ['run_pyrate.py', CONF_FILE]
         # read in the params
-        _, _, params = run_pyrate.get_ifg_paths()
+        _, _, params = cf.get_ifg_paths(CONF_FILE)
         params[cf.OUT_DIR] = cls.serial_dir
         params[cf.PARALLEL] = False
 
