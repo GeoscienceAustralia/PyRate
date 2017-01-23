@@ -13,6 +13,7 @@ pyrate_gamma.conf
 # could cause crashes & destroying some of the results.
 import os
 import warnings
+import pyrate.prepifg as prepifg
 
 PYRATEPATH = os.environ['PYRATEPATH']
 
@@ -257,6 +258,7 @@ def get_config_params(path):
     Returns a dict for the key:value pairs from the .conf file
     """
 
+    print('=====================================', path)
     txt = ''
     with open(path, 'r') as inputFile:
         for line in inputFile:
@@ -395,3 +397,51 @@ def reverse_degree_conv(k, v):
     else:
         raise ValueError(
             "Orbital fit polynomial degree option not recognised")
+
+
+def transform_params(params):
+    """
+    Returns subset of config parameters for cropping and multilooking.
+    """
+
+    t_params = [IFG_LKSX, IFG_LKSY, IFG_CROP_OPT]
+    xlooks, ylooks, crop = [params[k] for k in t_params]
+    return xlooks, ylooks, crop
+
+
+def original_ifg_paths(ifglist_path):
+    """
+    Returns sequence of paths to files in given ifglist file.
+    """
+
+    basedir = os.path.dirname(ifglist_path)
+    ifglist = parse_namelist(os.path.join(PYRATEPATH, ifglist_path))
+    return [os.path.join(basedir, p) for p in ifglist]
+
+
+def get_dest_paths(base_paths, crop, params, looks):
+    dest_mlooked_ifgs = [prepifg.mlooked_path(os.path.basename(q).split('.')[0]
+        + '.tif', looks=looks, crop_out=crop) for q in base_paths]
+
+    return [os.path.join(os.environ['PYRATEPATH'], params[cf.OUT_DIR], p)
+            for p in dest_mlooked_ifgs]
+
+
+def get_ifg_paths(cfg_path):
+    pars = get_config_params(cfg_path)
+    ifg_file_list = pars.get(IFG_FILE_LIST)
+    pars[IFG_FILE_LIST] = ifg_file_list
+
+    if ifg_file_list is None:
+        emsg = 'Error {code}: Interferogram list file name not provided ' \
+               'or does not exist'.format(code=2)
+        raise IOError(2, emsg)
+    xlks, ylks, crop = transform_params(pars)
+
+    # base_unw_paths need to be geotiffed and multilooked by run_prepifg
+    base_unw_paths = original_ifg_paths(ifg_file_list)
+
+    # dest_paths are tifs that have been geotif converted and multilooked
+    dest_paths = get_dest_paths(base_unw_paths, crop, pars, xlks)
+
+    return base_unw_paths, dest_paths, pars

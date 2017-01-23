@@ -17,6 +17,8 @@ from pyrate.shared import write_geotiff, mkdir_p
 from pyrate.tasks import gamma as gamma_task
 import pyrate.ifgconstants as ifc
 
+log = logging.getLogger(__name__)
+
 ROI_PAC_HEADER_FILE_EXT = 'rsc'
 GAMMA = 1
 ROIPAC = 0
@@ -46,7 +48,7 @@ def main(params=None):
         return base_ifg_paths
 
     if params:
-        base_ifg_paths = run_pyrate.original_ifg_paths(params[cf.IFG_FILE_LIST])
+        base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST])
         LUIGI = params[cf.LUIGI]  # luigi or no luigi
         if LUIGI:
             raise cf.ConfigException('params can not be provided with luigi')
@@ -119,7 +121,7 @@ def gamma_prepifg(base_unw_paths, params):
         dest_base_ifgs = [gamma_multiprocessing(b, params)
                           for b in base_unw_paths]
     ifgs = [prepifg.dem_or_ifg(p) for p in dest_base_ifgs]
-    xlooks, ylooks, crop = run_pyrate.transform_params(params)
+    xlooks, ylooks, crop = cf.transform_params(params)
     userExts = (params[cf.IFG_XFIRST], params[cf.IFG_YFIRST],
                 params[cf.IFG_XLAST], params[cf.IFG_YLAST])
     exts = prepifg.getAnalysisExtent(crop, ifgs, xlooks, ylooks,
@@ -154,6 +156,3 @@ def gamma_multiprocessing(b, params):
 
     write_geotiff(combined_headers, b, d, nodata=params[cf.NO_DATA_VALUE])
     return d
-
-if __name__ == '__main__':
-    main()

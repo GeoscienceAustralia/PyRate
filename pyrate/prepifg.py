@@ -27,7 +27,7 @@ import numpy as np
 from numpy import array, where, nan, isnan, nanmean, float32, zeros, sum as nsum
 
 from osgeo import gdal
-import pyrate.config as cfg
+from pyrate import config as cfg
 from pyrate.shared import Ifg, DEM
 from pyrate import gdal_python as gdalwarp
 from pyrate import ifgconstants as ifc

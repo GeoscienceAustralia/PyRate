@@ -368,16 +368,6 @@ def calculate_time_series(ifgs, params, vcmt, mst):
 # write to log file
 
 
-def transform_params(params):
-    """
-    Returns subset of config parameters for cropping and multilooking.
-    """
-
-    t_params = [cf.IFG_LKSX, cf.IFG_LKSY, cf.IFG_CROP_OPT]
-    xlooks, ylooks, crop = [params[k] for k in t_params]
-    return xlooks, ylooks, crop
-
-
 def warp_required(xlooks, ylooks, crop):
     """
     Returns True if params show rasters need to be cropped and/or resized.
@@ -390,16 +380,6 @@ def warp_required(xlooks, ylooks, crop):
         return False
 
     return True
-
-
-def original_ifg_paths(ifglist_path):
-    """
-    Returns sequence of paths to files in given ifglist file.
-    """
-
-    basedir = os.path.dirname(ifglist_path)
-    ifglist = cf.parse_namelist(os.path.join(PYRATEPATH, ifglist_path))
-    return [os.path.join(basedir, p) for p in ifglist]
 
 
 def working_ifg_paths(src_paths, xlooks, ylooks, cropping):
@@ -439,19 +419,8 @@ def init_logging(level):
     return path
 
 
-def get_dest_paths(base_paths, crop, params, looks):
-    dest_mlooked_ifgs = [prepifg.mlooked_path(os.path.basename(q).split('.')[0]
-        + '.tif', looks=looks, crop_out=crop) for q in base_paths]
-
-    return [os.path.join(os.environ['PYRATEPATH'], params[cf.OUT_DIR], p)
-            for p in dest_mlooked_ifgs]
-
-
-# TODO: expand CLI documentation
-# TODO: ensure clean exception handling
-# TODO: add parameter error checking: induce fail fast before number crunching
-def main():
-    base_unw_paths, dest_paths, pars = get_ifg_paths()
+def main(config_file):
+    base_unw_paths, dest_paths, pars = cf.get_ifg_paths(config_file)
 
     if pars[cf.NETWORKX_OR_MATLAB_FLAG]:  # Using networkx mst
         process_ifgs(dest_paths, pars)
@@ -460,42 +429,42 @@ def main():
         process_ifgs(ifg_instance, pars)
 
 
-def get_ifg_paths():
-    from optparse import OptionParser
-    parser = OptionParser(usage='%prog [config-file]\nRuns PyRate workflow.')
-    parser.add_option('-i', '--ifglist', type=str,
-                      help='name of file containing list of interferograms')
-    options, args = parser.parse_args()
-    log_file_name = init_logging(logging.DEBUG)
-    try:
-        cfg_path = args[0] if args else 'pyrate.conf'
-        global pars
-        pars = cf.get_config_params(cfg_path)
-
-    except IOError as err:
-        emsg = 'Config file error: %s "%s"' % (err.strerror, err.filename)
-        logging.debug(emsg)
-        sys.exit(err.errno)
-    ifg_file_list = options.ifglist or pars.get(cf.IFG_FILE_LIST)
-    pars[cf.IFG_FILE_LIST] = ifg_file_list
-
-    # log config file
-    log_config_file(cfg_path, log_file_name)
-
-    if ifg_file_list is None:
-        emsg = 'Error {code}: Interferogram list file name not provided ' \
-               'or does not exist'.format(code=2)
-        logging.debug(emsg)
-        raise IOError(2, emsg)
-    xlks, ylks, crop = transform_params(pars)
-
-    # base_unw_paths need to be geotiffed and multilooked by run_prepifg
-    base_unw_paths = original_ifg_paths(ifg_file_list)
-
-    # dest_paths are tifs that have been geotif converted and multilooked
-    dest_paths = get_dest_paths(base_unw_paths, crop, pars, xlks)
-
-    return base_unw_paths, dest_paths, pars
+# def get_ifg_paths():
+#     from optparse import OptionParser
+#     parser = OptionParser(usage='%prog [config-file]\nRuns PyRate workflow.')
+#     parser.add_option('-i', '--ifglist', type=str,
+#                       help='name of file containing list of interferograms')
+#     options, args = parser.parse_args()
+#     log_file_name = init_logging(logging.DEBUG)
+#     try:
+#         cfg_path = args[0] if args else 'pyrate.conf'
+#         global pars
+#         pars = cf.get_config_params(cfg_path)
+#
+#     except IOError as err:
+#         emsg = 'Config file error: %s "%s"' % (err.strerror, err.filename)
+#         logging.debug(emsg)
+#         sys.exit(err.errno)
+#     ifg_file_list = options.ifglist or pars.get(cf.IFG_FILE_LIST)
+#     pars[cf.IFG_FILE_LIST] = ifg_file_list
+#
+#     # log config file
+#     log_config_file(cfg_path, log_file_name)
+#
+#     if ifg_file_list is None:
+#         emsg = 'Error {code}: Interferogram list file name not provided ' \
+#                'or does not exist'.format(code=2)
+#         logging.debug(emsg)
+#         raise IOError(2, emsg)
+#     xlks, ylks, crop = transform_params(pars)
+#
+#     # base_unw_paths need to be geotiffed and multilooked by run_prepifg
+#     base_unw_paths = original_ifg_paths(ifg_file_list)
+#
+#     # dest_paths are tifs that have been geotif converted and multilooked
+#     dest_paths = get_dest_paths(base_unw_paths, crop, pars, xlks)
+#
+#     return base_unw_paths, dest_paths, pars
 
 
 def log_config_file(configfile, log_filename):
@@ -508,5 +477,3 @@ def log_config_file(configfile, log_filename):
     output_log_file.write("\n===============================================\n")
 
 
-if __name__ == "__main__":
-    main()

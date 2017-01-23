@@ -19,12 +19,12 @@ setup(
     author='Geoscience Australia InSAR team',
     author_email='basaks@gmail.com',
     url='https://github.com/GeoscienceAustralia/PyRate',
-    packages=['pyrate'],
+    packages=['pyrate', 'pyrate.scripts', 'pyrate.tasks'],
     package_dir={'PyRate': 'pyrate'},
     include_package_data=True,
     entry_points={
         'console_scripts': [
-
+            'pyrate = pyrate.scripts.pyrate:cli',
         ]
     },
     setup_requires=['numpy >= 1.12.0'],  # required due to netCDF4
