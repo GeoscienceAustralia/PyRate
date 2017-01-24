@@ -28,5 +28,4 @@ def prepifg(config_file):
 @click.argument('config_file')
 def linrate(config_file):
     config_file = abspath(config_file)
-    # params = cf.get_config_params(config_file)
     run_pyrate.main(config_file)

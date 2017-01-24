@@ -24,7 +24,7 @@ setup(
     include_package_data=True,
     entry_points={
         'console_scripts': [
-            'pyrate = pyrate.scripts.pyrate:cli',
+            'pyrate = pyrate.scripts.main:cli',
         ]
     },
     setup_requires=['numpy >= 1.12.0'],  # required due to netCDF4

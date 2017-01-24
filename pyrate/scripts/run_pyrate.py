@@ -7,6 +7,7 @@ import datetime
 import logging
 import os
 import numpy as np
+from osgeo import gdal
 
 import pyrate.config as cf
 import pyrate.linrate as linrate
@@ -15,7 +16,6 @@ import pyrate.orbital as orbital
 import pyrate.prepifg as prepifg
 import pyrate.refpixel as refpixel
 import pyrate.timeseries as timeseries
-from osgeo import gdal
 from pyrate import algorithm
 from pyrate import ifgconstants as ifc
 from pyrate import matlab_mst_kruskal as matlab_mst
@@ -31,6 +31,7 @@ PYRATEPATH = cf.PYRATEPATH
 
 # print screen output
 VERBOSE = True
+log = logging.getLogger(__name__)
 
 
 def process_ifgs(ifg_paths_or_instance, params):
@@ -49,7 +50,7 @@ def process_ifgs(ifg_paths_or_instance, params):
     # remove APS delay here, and write aps delay removed ifgs disc
     if PyAPS_INSTALLED and aps_delay_required(ifgs, params):
         ifgs = aps.remove_aps_delay(ifgs, params)
-        print('Finished APS delay correction')
+        log.info('Finished APS delay correction')
 
     # make sure aps correction flags are consistent
     if params[cf.APS_CORRECTION]:
@@ -295,6 +296,7 @@ def check_orbital_ifgs(ifgs, flags):
 def find_reference_pixel(ifgs, params):
     # unlikely, but possible the refpixel can be (0,0)
     # check if there is a pre-specified reference pixel coord
+    log.info('Starting reference pixel calculation')
     refx = params[cf.REFX]
     if refx > ifgs[0].ncols - 1:
         raise ValueError("Invalid reference pixel X coordinate: %s" % refx)
@@ -304,17 +306,16 @@ def find_reference_pixel(ifgs, params):
         raise ValueError("Invalid reference pixel Y coordinate: %s" % refy)
 
     if refx == 0 or refy == 0:  # matlab equivalent
-        write_msg('Finding reference pixel')
         refy, refx = refpixel.ref_pixel(ifgs, params)
-        write_msg('Reference pixel coordinate: (%s, %s)' % (refx, refy))
+        log.info('Found reference pixel coordinate: (%s, %s)' % (refx, refy))
     else:
-        write_msg('Reusing config file reference pixel (%s, %s)' % (refx, refy))
+        log.info('Reusing config file reference pixel (%s, %s)' % (refx, refy))
 
     return refx, refy
 
 
 def calculate_linear_rate(ifgs, params, vcmt, mst=None):
-    write_msg('Calculating linear rate')
+    log.info('Calculating linear rate')
 
     # TODO: do these need to be checked?
     res = linrate.linear_rate(ifgs, params, vcmt, mst)
