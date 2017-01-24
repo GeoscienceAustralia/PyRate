@@ -21,7 +21,7 @@ class MPIStreamHandler(logging.StreamHandler):
     """
     def emit(self, record):
         if mpiops.rank == 0:
-            super().emit(record)
+            super(MPIStreamHandler, self).emit(record)
 
 
 class ElapsedFormatter():
