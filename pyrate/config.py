@@ -322,17 +322,17 @@ def handle_pyaps_parameters(parameters):
                                   'one of incidence or elevation map must be '
                                   'provided')
 
-        if parameters[APS_INCIDENCE_MAP] is not None:
-            parameters[APS_INCIDENCE_EXT] = \
-                os.path.basename(parameters[APS_INCIDENCE_MAP]).split('.')[-1]
-            parameters[APS_ELEVATION_MAP] = None
-            parameters[APS_ELEVATION_EXT] = None
-            return parameters
+    if parameters[APS_INCIDENCE_MAP] is not None:
+        parameters[APS_INCIDENCE_EXT] = \
+            os.path.basename(parameters[APS_INCIDENCE_MAP]).split('.')[-1]
+        parameters[APS_ELEVATION_MAP] = None
+        parameters[APS_ELEVATION_EXT] = None
+        return parameters
 
-        # define APS_ELEVATON_EXT for gamma prepifg
-        if parameters[APS_ELEVATION_MAP] is not None:
-            parameters[APS_ELEVATION_EXT] = \
-                os.path.basename(parameters[APS_ELEVATION_MAP]).split('.')[-1]
+    # define APS_ELEVATON_EXT for gamma prepifg
+    if parameters[APS_ELEVATION_MAP] is not None:
+        parameters[APS_ELEVATION_EXT] = \
+            os.path.basename(parameters[APS_ELEVATION_MAP]).split('.')[-1]
 
     return parameters
 
