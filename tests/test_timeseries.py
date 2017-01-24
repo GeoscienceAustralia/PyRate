@@ -1,22 +1,16 @@
-from __future__ import print_function
 """
 Collection of tests for validating PyRate's time series analysis code.
 """
-
-import glob
+from __future__ import print_function
 import os
 import shutil
-import subprocess
 import sys
 import tempfile
 import unittest
 from datetime import date, timedelta
-from itertools import product
 from numpy import nan, asarray, where
-
 import numpy as np
 from numpy.testing import assert_array_almost_equal
-from osgeo import gdal
 
 from pyrate import config as cf
 from pyrate import mst
@@ -25,12 +19,12 @@ from pyrate import shared
 from pyrate import vcm
 from pyrate import vcm as vcm_module
 from pyrate.config import PARALLEL, PROCESSES, NO_DATA_VALUE
-from pyrate.config import TIME_SERIES_INTERP, TIME_SERIES_PTHRESH, NAN_CONVERSION
+from pyrate.config import TIME_SERIES_INTERP, TIME_SERIES_PTHRESH, \
+    NAN_CONVERSION
 from pyrate.config import TIME_SERIES_SM_FACTOR, TIME_SERIES_METHOD
 from pyrate.config import TIME_SERIES_SM_ORDER
 from pyrate.scripts import run_pyrate, run_prepifg
 from pyrate.timeseries import time_series
-from tests import common
 from tests.common import SYD_TEST_DIR
 from tests.common import sydney_data_setup
 
@@ -117,10 +111,11 @@ class TimeSeriesTests(unittest.TestCase):
         slave = [dates[s_num - 1] for s_num in islave]
 
         self.ifgs = [SinglePixelIfg(m, s, p, n) for m, s, p, n in
-            zip(master, slave, phase, nan_fraction)]
+                     zip(master, slave, phase, nan_fraction)]
+
         tsincr, tscum, tsvel = time_series(
             self.ifgs, params=self.params, vcmt=self.vcmt, mst=None)
-        expected = asarray([[[0.50,  3.0,  4.0,  5.5,  6.5]]])
+        expected = asarray([[[0.50, 3.0, 4.0, 5.5, 6.5]]])
         assert_array_almost_equal(tscum, expected, decimal=2)
 
 
@@ -148,8 +143,7 @@ class MatlabTimeSeriesEquality(unittest.TestCase):
 
         base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST])
 
-        dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params,
-                                               xlks)
+        dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
         # start run_pyrate copy
         ifgs = shared.pre_prepare_ifgs(dest_paths, params)
         mst_grid = run_pyrate.mst_calculation(dest_paths, params)
@@ -169,27 +163,29 @@ class MatlabTimeSeriesEquality(unittest.TestCase):
             ifgs, params, vcmt, mst=mst_grid)
 
         params[cf.PARALLEL] = 1
-        cls.tsincr_1, cls.tscum_1, cls.tsvel_1 = run_pyrate.calculate_time_series(
-            ifgs, params, vcmt, mst=mst_grid)
+        cls.tsincr_1, cls.tscum_1, cls.tsvel_1 = \
+            run_pyrate.calculate_time_series(ifgs, params, vcmt, mst=mst_grid)
 
         params[cf.PARALLEL] = 2
-        cls.tsincr_2, cls.tscum_2, cls.tsvel_2 = run_pyrate.calculate_time_series(
-            ifgs, params, vcmt, mst=mst_grid)
+        cls.tsincr_2, cls.tscum_2, cls.tsvel_2 = \
+            run_pyrate.calculate_time_series(ifgs, params, vcmt, mst=mst_grid)
 
         # load the matlab data
-        SYD_TIME_SERIES_DIR = os.path.join(SYD_TEST_DIR, 'matlab_time_series')
-        tsincr_path = os.path.join(SYD_TIME_SERIES_DIR,
+        syd_ts_dir = os.path.join(SYD_TEST_DIR, 'matlab_time_series')
+        tsincr_path = os.path.join(syd_ts_dir,
                                    'ts_incr_interp0_method1.csv')
         ts_incr = np.genfromtxt(tsincr_path)
 
         # the matlab tsvel return is a bit pointless and not tested here
         # tserror is not returned
-        # tserr_path = os.path.join(SYD_TIME_SERIES_DIR, 'ts_error_interp0_method1.csv')
+        # tserr_path = os.path.join(SYD_TIME_SERIES_DIR,
+        # 'ts_error_interp0_method1.csv')
         # ts_err = np.genfromtxt(tserr_path, delimiter=',')
-        tscum_path = os.path.join(SYD_TIME_SERIES_DIR,
+        tscum_path = os.path.join(syd_ts_dir,
                                   'ts_cum_interp0_method1.csv')
         ts_cum = np.genfromtxt(tscum_path)
-        cls.ts_incr = np.reshape(ts_incr, newshape=cls.tsincr_0.shape, order='F')
+        cls.ts_incr = np.reshape(ts_incr,
+                                 newshape=cls.tsincr_0.shape, order='F')
         cls.ts_cum = np.reshape(ts_cum, newshape=cls.tscum_0.shape, order='F')
 
     @classmethod
@@ -197,6 +193,9 @@ class MatlabTimeSeriesEquality(unittest.TestCase):
         shutil.rmtree(cls.temp_out_dir)
 
     def test_time_series_equality_parallel_by_rows(self):
+        """
+        check time series parallel by rows jobs
+        """
 
         self.assertEqual(self.tsincr_1.shape, self.tscum_1.shape)
         self.assertEqual(self.tsvel_1.shape, self.tsincr_1.shape)
@@ -208,7 +207,9 @@ class MatlabTimeSeriesEquality(unittest.TestCase):
             self.ts_cum, self.tscum_1, decimal=3)
 
     def test_time_series_equality_parallel_by_the_pixel(self):
-
+        """
+        check time series parallel by pixel jobs
+        """
         self.assertEqual(self.tsincr_2.shape, self.tscum_2.shape)
         self.assertEqual(self.tsvel_2.shape, self.tsincr_2.shape)
 
@@ -219,6 +220,9 @@ class MatlabTimeSeriesEquality(unittest.TestCase):
             self.ts_cum, self.tscum_2, decimal=3)
 
     def test_time_series_equality_serial_by_the_pixel(self):
+        """
+        check time series
+        """
 
         self.assertEqual(self.tsincr_0.shape, self.tscum_0.shape)
 
@@ -236,13 +240,13 @@ class MatlabTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
     """
     @classmethod
     def setUpClass(cls):
-        params = cf.get_config_params(
-                os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf'))
+        params = cf.get_config_params(os.path.join(SYD_TEST_DIR,
+                                                   'pyrate_system_test.conf'))
 
         cls.temp_out_dir = tempfile.mkdtemp()
 
-        sys.argv = ['run_prepifg.py', os.path.join(SYD_TEST_DIR,
-                                     'pyrate_system_test.conf')]
+        sys.argv = ['run_prepifg.py',
+                    os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf')]
         params[cf.OUT_DIR] = cls.temp_out_dir
         run_prepifg.main(params)
 
@@ -252,8 +256,7 @@ class MatlabTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
 
         base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST])
 
-        dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params,
-                                               xlks)
+        dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
         # start run_pyrate copy
         ifgs = shared.pre_prepare_ifgs(dest_paths, params)
         mst_grid = run_pyrate.mst_calculation(dest_paths, params)
@@ -280,16 +283,12 @@ class MatlabTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
 
         # Calculate time series
         cls.tsincr_2, cls.tscum_2, _ = \
-            run_pyrate.calculate_time_series(
-            ifgs, params, vcmt, mst=mst_grid
-            )
+            run_pyrate.calculate_time_series(ifgs, params, vcmt, mst=mst_grid)
 
         params[cf.PARALLEL] = 0
         # Calculate time series serailly by the pixel
         cls.tsincr_0, cls.tscum_0, _ = \
-            run_pyrate.calculate_time_series(
-            ifgs, params, vcmt, mst=mst_grid
-            )
+            run_pyrate.calculate_time_series(ifgs, params, vcmt, mst=mst_grid)
 
         # copy matlab data
         SYD_TIME_SERIES_DIR = os.path.join(SYD_TEST_DIR, 'matlab_time_series')
@@ -299,13 +298,15 @@ class MatlabTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
 
         # the matlab tsvel return is a bit pointless and not tested here
         # tserror is not returned
-        # tserr_path = os.path.join(SYD_TIME_SERIES_DIR, 'ts_error_interp0_method1.csv')
+        # tserr_path = os.path.join(SYD_TIME_SERIES_DIR,
+        # 'ts_error_interp0_method1.csv')
         # ts_err = np.genfromtxt(tserr_path, delimiter=',')
         tscum_path = os.path.join(SYD_TIME_SERIES_DIR,
                                   'ts_cum_interp0_method2.csv')
         ts_cum = np.genfromtxt(tscum_path)
 
-        cls.ts_incr = np.reshape(ts_incr, newshape=cls.tsincr_0.shape, order='F')
+        cls.ts_incr = np.reshape(ts_incr,
+                                 newshape=cls.tsincr_0.shape, order='F')
         cls.ts_cum = np.reshape(ts_cum, newshape=cls.tscum_0.shape, order='F')
 
     @classmethod

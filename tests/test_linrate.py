@@ -1,16 +1,12 @@
-from __future__ import print_function
 """
 Unittests for linrate.py
 """
-
-import glob
+from __future__ import print_function
 import os
 import shutil
-import subprocess
 import sys
 import tempfile
 import unittest
-from itertools import product
 from numpy import eye, array, ones
 
 import numpy as np
@@ -24,28 +20,6 @@ from pyrate.linrate import linear_rate
 from pyrate.scripts import run_pyrate, run_prepifg
 from tests.common import SYD_TEST_DIR
 
-# TODO: linear rate code
-# 1. replace MST key:value date:date pairs with lists of Ifgs?
-# 2.: MG: fake some data for a 1 pixel test of stack()
-#     figure out what partial inputs we need to do this as a simple test
-# 3. MG is going to check if someome at GA has coded lscov in Py (or C/C++/Fortran??)
-#
-# MG thinks we'll need:
-# 1 all the func args
-# 2 a VCM
-# 3 the time spans (already in Ifgs?)
-# 4 the ifg displacement obs (phase_data)
-
-
-
-# class LinearRateTests(unittest.TestCase):
-#
-#     def test_stack_basic(self):
-#         raise NotImplementedError
-#
-#
-#     def test_args(self):
-#         raise NotImplementedError("Need sanity tests for args to stack()")
 
 def default_params():
     return {'pthr': 3, 'nsig': 3, 'maxsig': 2, 'parallel': 1, 'processes': 8}
@@ -53,14 +27,16 @@ def default_params():
 
 class SinglePixelIfg(object):
 
-    def __init__(self,timespan,phase):
+    def __init__(self, timespan, phase):
         self.time_span = timespan
         self.phase_data = array([[phase]])
 
 
 class LinearRateTests(unittest.TestCase):
-    """Tests the weighted least squares algorithm for determinining
-    the best fitting velocity"""
+    """
+    Tests the weighted least squares algorithm for determinining
+    the best fitting velocity
+    """
 
     def setUp(self):
         phase = [0.5, 3.5, 4, 2.5, 3.5, 1]
@@ -80,31 +56,33 @@ class LinearRateTests(unittest.TestCase):
         assert_array_almost_equal(rate, exprate)
         assert_array_almost_equal(error, experr)
         assert_array_almost_equal(samples, expsamp)
-        
+
 
 class MatlabEqualityTest(unittest.TestCase):
+    """
+    Tests equality vs matlab
+    """
 
     @classmethod
     def setUpClass(cls):
-        params = cf.get_config_params(
-                os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf'))
+        params = cf.get_config_params(os.path.join(SYD_TEST_DIR,
+                                                   'pyrate_system_test.conf'))
 
         cls.temp_out_dir = tempfile.mkdtemp()
 
-        sys.argv = ['run_prepifg.py', os.path.join(SYD_TEST_DIR,
-                                     'pyrate_system_test.conf')]
+        sys.argv = ['run_prepifg.py',
+                    os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf')]
         params[cf.OUT_DIR] = cls.temp_out_dir
         run_prepifg.main(params)
 
         params[cf.REF_EST_METHOD] = 2
 
-        xlks, ylks, crop = cf.transform_params(params)
+        xlks, _, crop = cf.transform_params(params)
 
         base_ifg_paths = cf.original_ifg_paths(
             params[cf.IFG_FILE_LIST])
 
-        dest_paths = cf.get_dest_paths(base_ifg_paths,
-                                               crop, params, xlks)
+        dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
 
         # start run_pyrate copy
         ifgs = shared.pre_prepare_ifgs(dest_paths, params)
@@ -135,53 +113,80 @@ class MatlabEqualityTest(unittest.TestCase):
         cls.rate_s, cls.error_s, cls.samples_s = \
             run_pyrate.calculate_linear_rate(ifgs, params, vcmt, mst=mst_grid)
 
-        MATLAB_LINRATE_DIR = os.path.join(SYD_TEST_DIR, 'matlab_linrate')
+        matlab_linrate_dir = os.path.join(SYD_TEST_DIR, 'matlab_linrate')
 
         cls.rate_matlab = np.genfromtxt(
-            os.path.join(MATLAB_LINRATE_DIR, 'stackmap.csv'), delimiter=',')
+            os.path.join(matlab_linrate_dir, 'stackmap.csv'), delimiter=',')
         cls.error_matlab = np.genfromtxt(
-            os.path.join(MATLAB_LINRATE_DIR, 'errormap.csv'), delimiter=',')
+            os.path.join(matlab_linrate_dir, 'errormap.csv'), delimiter=',')
 
         cls.samples_matlab = np.genfromtxt(
-            os.path.join(MATLAB_LINRATE_DIR, 'coh_sta.csv'), delimiter=',')
+            os.path.join(matlab_linrate_dir, 'coh_sta.csv'), delimiter=',')
 
     @classmethod
     def tearDownClass(cls):
         shutil.rmtree(cls.temp_out_dir)
 
     def test_linear_rate_full_parallel(self):
+        """
+        python multiprocessing by rows vs matlab
+        """
         np.testing.assert_array_almost_equal(
             self.rate, self.rate_matlab, decimal=3)
 
-    def test_lin_rate_error_parallel(self):
+    def test_linrate_error_parallel(self):
+        """
+        python multiprocessing by rows vs matlab
+        """
         np.testing.assert_array_almost_equal(
             self.error, self.error_matlab, decimal=3)
 
-    def test_lin_rate_samples_parallel(self):
+    def test_linrate_samples_parallel(self):
+        """
+        python multiprocessing by rows vs matlab
+        """
         np.testing.assert_array_almost_equal(
             self.samples, self.samples_matlab, decimal=3)
 
-    def test_linear_rate_full_parallel_pixel_level(self):
+    def test_linrate_full_parallel_pixel(self):
+        """
+        python multiprocessing by pixel vs matlab
+        """
         np.testing.assert_array_almost_equal(
             self.rate_2, self.rate_matlab, decimal=3)
 
-    def test_lin_rate_error_parallel_pixel_level(self):
+    def test_linrate_error_parallel_pixel(self):
+        """
+        python multiprocessing by pixel vs matlab
+        """
         np.testing.assert_array_almost_equal(
             self.error_2, self.error_matlab, decimal=3)
 
-    def test_lin_rate_samples_parallel_pixel_level(self):
+    def test_linrate_samples_parallel_pixel(self):
+        """
+        python multiprocessing pixel level vs matlab
+        """
         np.testing.assert_array_almost_equal(
             self.samples_2, self.samples_matlab, decimal=3)
 
     def test_linear_rate_full_serial(self):
+        """
+        python vs matlab
+        """
         np.testing.assert_array_almost_equal(
             self.rate_s, self.rate_matlab, decimal=3)
 
-    def test_lin_rate_error_serial(self):
+    def test_linrate_error_serial(self):
+        """
+        python vs matlab
+        """
         np.testing.assert_array_almost_equal(
             self.error_s, self.error_matlab, decimal=3)
 
-    def test_lin_rate_samples_serial(self):
+    def test_linrate_samples_serial(self):
+        """
+        python lin rate samples vs matlab
+        """
         np.testing.assert_array_almost_equal(
             self.samples_s, self.samples_matlab, decimal=3)
 
