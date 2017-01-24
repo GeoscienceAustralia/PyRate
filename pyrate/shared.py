@@ -967,12 +967,3 @@ def prepare_ifgs_without_phase(ifg_paths, params):
         if not i.is_open:
             i.open(readonly=False)
     return ifgs
-
-
-def write_msg(msg):
-    """
-    write message to log file and screen output
-    """
-    logging.debug(msg)
-    if VERBOSE:
-        print(msg)

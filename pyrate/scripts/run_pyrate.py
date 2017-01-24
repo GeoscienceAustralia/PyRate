@@ -2,8 +2,6 @@ from __future__ import print_function
 """
 Main workflow script for PyRate
 """
-
-import datetime
 import logging
 import os
 import numpy as np
@@ -22,7 +20,7 @@ from pyrate import matlab_mst_kruskal as matlab_mst
 from pyrate import reference_phase_estimation as rpe
 from pyrate import vcm as vcm_module
 from pyrate.shared import Ifg, write_output_geotiff, \
-    pre_prepare_ifgs, write_msg, prepare_ifgs_without_phase
+    pre_prepare_ifgs, prepare_ifgs_without_phase
 from pyrate.compat import PyAPS_INSTALLED
 if PyAPS_INSTALLED:
     from pyrate import remove_aps_delay as aps
@@ -37,7 +35,8 @@ log = logging.getLogger(__name__)
 def process_ifgs(ifg_paths_or_instance, params):
     """
     Top level function to perform PyRate correction steps on given ifgs
-    ifgs: sequence of paths to interferrograms (NB: changes are saved into ifgs)
+    ifgs: sequence of paths to interferrograms
+    (NB: changes are saved into ifgs)
     params: dictionary of configuration parameters
     """
     ifgs = pre_prepare_ifgs(ifg_paths_or_instance, params)
@@ -90,7 +89,7 @@ def process_ifgs(ifg_paths_or_instance, params):
     for i in ifgs:
         i.close()
 
-    write_msg('PyRate workflow completed')
+    log.info('PyRate workflow completed')
     return mst_grid, (refpx, refpy), maxvar, vcmt, rate, error, samples
 
 
@@ -104,17 +103,17 @@ def write_linrate_numpy_files(error, params, rate, samples):
 
 
 def aps_delay_required(ifgs, params):
-    write_msg('Removing APS delay')
+    log.info('Removing APS delay')
 
     if not params[cf.APS_CORRECTION]:
-        write_msg('APS delay removal not required')
+        log.info('APS delay removal not required')
         return False
 
     # perform some general error/sanity checks
     flags = [i.dataset.GetMetadataItem(ifc.PYRATE_APS_ERROR) for i in ifgs]
 
     if all(flags):
-        write_msg('Skipped APS delay removal, ifgs are already aps corrected')
+        log.info('Skipped APS delay removal, ifgs are already aps corrected')
         return False
     else:
         check_aps_ifgs(ifgs)
@@ -126,7 +125,7 @@ def check_aps_ifgs(ifgs):
     flags = [i.dataset.GetMetadataItem(ifc.PYRATE_APS_ERROR) for i in ifgs]
     count = sum([f == aps.APS_STATUS for f in flags])
     if (count < len(flags)) and (count > 0):
-        logging.debug('Detected mix of corrected and uncorrected '
+        log.debug('Detected mix of corrected and uncorrected '
                       'APS delay in ifgs')
 
         for i, flag in zip(ifgs, flags):
@@ -141,8 +140,8 @@ def check_aps_ifgs(ifgs):
 def mst_calculation(ifg_paths_or_instance, params):
     if isinstance(ifg_paths_or_instance, list):
         ifgs = pre_prepare_ifgs(ifg_paths_or_instance, params)
-        write_msg(
-            'Calculating minimum spanning tree matrix using NetworkX method')
+        log.info('Calculating minimum spanning tree matrix using '
+                 'NetworkX')
 
         mst_grid = mst.mst_parallel(ifgs, params)
     else:
@@ -158,9 +157,8 @@ def mst_calculation(ifg_paths_or_instance, params):
             matlab_mst.get_nml(ifg_paths_or_instance,
                                nodata_value=params[cf.NO_DATA_VALUE],
                                nan_conversion=nan_conversion)
-        write_msg(
-            'Calculating minimum spanning tree matrix '
-            'using Matlab-algorithm method')
+        log.info('Calculating minimum spanning tree matrix '
+                 'using Matlab-algorithm method')
         mst_grid = matlab_mst.matlab_mst_boolean_array(ifg_instance_updated)
 
         # Insert INTERP into the params for timeseries calculation
@@ -177,7 +175,7 @@ def mst_calculation(ifg_paths_or_instance, params):
 
 
 def compute_time_series(ifgs, mst_grid, params, vcmt):
-
+    log.info('Calculating time series')
     # Calculate time series
     tsincr, tscum, tsvel = calculate_time_series(
         ifgs, params, vcmt=vcmt, mst=mst_grid)
@@ -237,17 +235,17 @@ def insert_time_series_interpolation(ifg_instance_updated, params):
 
 
 def remove_orbital_error(ifgs, params):
-    write_msg('Calculating orbital error correction')
+    log.info('Calculating orbital error correction')
 
     if not params[cf.ORBITAL_FIT]:
-        write_msg('Orbital correction not required')
+        log.info('Orbital correction not required')
         return
 
     # perform some general error/sanity checks
     flags = [i.dataset.GetMetadataItem(ifc.PYRATE_ORBITAL_ERROR) for i in ifgs]
 
     if all(flags):
-        write_msg('Skipped orbital correction, ifgs already corrected')
+        log.info('Skipped orbital correction, ifgs already corrected')
         return
     else:
         check_orbital_ifgs(ifgs, flags)
@@ -285,9 +283,9 @@ def check_orbital_ifgs(ifgs, flags):
 
         for i, flag in zip(ifgs, flags):
             if flag:
-                msg = '%s: prior orbital error correction detected'
+                msg = '{}: prior orbital error correction detected'.format(i)
             else:
-                msg = '%s: no orbital correction detected'
+                msg = '{}: no orbital correction detected'.format(i)
             logging.debug(msg % i.data_path)
 
         raise orbital.OrbitalError(msg)
@@ -327,11 +325,12 @@ def calculate_linear_rate(ifgs, params, vcmt, mst=None):
 
     write_linrate_tifs(ifgs, params, res)
 
-    logging.debug('Linear rate calculated')
+    log.info('Linear rate calculated')
     return rate, error, samples
 
 
 def write_linrate_tifs(ifgs, params, res):
+    log.info('Writing linrate results')
     rate, error, samples = res
     epochlist, gt, md, wkt = setup_metadata(ifgs, params)
     # TODO: write tests for these functions
@@ -346,14 +345,13 @@ def write_linrate_tifs(ifgs, params, res):
 
 
 def calculate_time_series(ifgs, params, vcmt, mst):
-    write_msg('Calculating time series')
     res = timeseries.time_series(ifgs, params, vcmt, mst)
     for r in res:
         if len(r.shape) != 3:
             logging.error('TODO: time series result shape is incorrect')
             raise timeseries.TimeSeriesError
 
-    logging.debug('Time series calculated')
+    log.info('Time series calculated')
     tsincr, tscum, tsvel = res
     return tsincr, tscum, tsvel
 
@@ -392,10 +390,11 @@ def working_ifg_paths(src_paths, xlooks, ylooks, cropping):
         mlooked_paths = [os.path.splitext(m)[0]+'.tif' for m in mlooked_unw]
 
         if not all([os.path.exists(p) for p in mlooked_paths]):
-            msg = 'Multilooked ifgs do not exist (execute "run_prepifg.py" first)'
+            msg = 'Multilooked ifgs do not exist ' \
+                  '(execute "run_prepifg.py" first)'
             raise IOError(msg)
 
-        logging.debug('Using mlooked interferograms...')
+        log.info('Using mlooked interferograms...')
         return mlooked_paths
     return src_paths  # multi looking not specified, work with base ifgs
 
@@ -426,6 +425,6 @@ def log_config_file(configfile, log_filename):
     for line in lines:
         output_log_file.write(line)
     output_log_file.write("\nConfig Settings: end\n\n")
-    output_log_file.write("\n===============================================\n")
+    output_log_file.write("\n==============================================\n")
 
 

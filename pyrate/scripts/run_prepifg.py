@@ -10,7 +10,6 @@ from pyrate.tasks.utils import pythonify_config
 from pyrate.tasks.prepifg import PrepareInterferograms
 from pyrate import prepifg
 from pyrate import config as cf
-from pyrate.scripts import run_pyrate
 from pyrate import roipac
 from pyrate import gamma
 from pyrate.shared import write_geotiff, mkdir_p
@@ -66,16 +65,12 @@ def main(params=None):
     PROCESSOR = params[cf.PROCESSOR]  # roipac or gamma
 
     if LUIGI:
-        msg = "running luigi prepifg"
-        print(msg)
-        logging.info(msg)
+        log.info("Running luigi prepifg")
         luigi.configuration.LuigiConfigParser.add_config_path(
             pythonify_config(raw_config_file))
         luigi.build([PrepareInterferograms()], local_scheduler=True)
     else:
-        msg = "running serial prepifg"
-        print(msg)
-        logging.info(msg)
+        log.info("Running serial prepifg")
         if PROCESSOR == ROIPAC:
             roipac_prepifg(base_ifg_paths, params)
         elif PROCESSOR == GAMMA:
@@ -83,12 +78,11 @@ def main(params=None):
         else:
             raise prepifg.PreprocessError('Processor must be Roipac(0) or '
                                           'Gamma(1)')
+    log.info('Finished prepifg')
 
 
 def roipac_prepifg(base_ifg_paths, params):
-    msg = "running roipac prepifg"
-    print(msg)
-    logging.info(msg)
+    log.info("Running roipac prepifg")
     xlooks, ylooks, crop = cf.transform_params(params)
     dem_file = os.path.join(params[cf.ROIPAC_RESOURCE_HEADER])
     projection = roipac.parse_header(dem_file)[ifc.PYRATE_DATUM]
@@ -104,9 +98,7 @@ def roipac_prepifg(base_ifg_paths, params):
 
 
 def gamma_prepifg(base_unw_paths, params):
-    msg = "running gamma prepifg"
-    print(msg)
-    logging.info(msg)
+    log.info("Running gamma prepifg")
     parallel = params[cf.PARALLEL]
 
     # dest_base_ifgs: location of geo_tif's
