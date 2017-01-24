@@ -59,7 +59,7 @@ def process_ifgs(ifg_paths_or_instance, params):
     # Estimate and remove orbit errors
     remove_orbital_error(ifgs, params)
     ifgs = prepare_ifgs_without_phase(ifg_paths_or_instance, params)
-    write_msg('Estimating and removing phase at reference pixel')
+    log.info('Estimating and removing phase at reference pixel')
     ref_phs, ifgs = rpe.estimate_ref_phase(ifgs, params, refpx, refpy)
 
     # save reference phase
@@ -67,12 +67,12 @@ def process_ifgs(ifg_paths_or_instance, params):
     np.save(file=ref_phs_file, arr=ref_phs)
 
     # TODO: assign maxvar to ifg metadata (and geotiff)?
-    write_msg('Calculating maximum variance in interferograms')
+    log.info('Calculating maximum variance in interferograms')
     maxvar = [vcm_module.cvd(i, params)[0] for i in ifgs]
     maxvar_file = os.path.join(params[cf.OUT_DIR], 'maxvar.npy')
     np.save(file=maxvar_file, arr=maxvar)
 
-    write_msg('Constructing temporal variance-covariance matrix')
+    log.info('Constructing temporal variance-covariance matrix')
     vcmt = vcm_module.get_vcmt(ifgs, maxvar)
 
     # write vcm output to a file
@@ -407,16 +407,6 @@ def dest_ifg_paths(ifg_paths, outdir):
 
     bases = [os.path.basename(p) for p in ifg_paths]
     return [os.path.join(outdir, p) for p in bases]
-
-
-def init_logging(level):
-    t = datetime.datetime.now()
-    path = 'pyrate_%s.log' % t.isoformat().replace(':', '_')
-    fmt = '%(asctime)s %(message)s'
-    datefmt = '%d/%m/%Y %I:%M:%S %p'
-    logging.basicConfig(filename=path, format=fmt, datefmt=datefmt, level=level)
-    logging.debug('Log started')
-    return path
 
 
 def main(config_file):

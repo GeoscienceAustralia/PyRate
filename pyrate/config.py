@@ -258,15 +258,14 @@ def get_config_params(path):
     """
     Returns a dict for the key:value pairs from the .conf file
     """
-
-    print('=====================================', path)
     txt = ''
     with open(path, 'r') as inputFile:
         for line in inputFile:
             if any(x in line for x in PATHS):
                 pos = line.find('~')
                 if pos != -1:
-                    line = line[:pos] + os.environ['HOME'] + line[(pos+1):]    # create expanded line
+                    # create expanded line
+                    line = line[:pos] + os.environ['HOME'] + line[(pos+1):]
             txt += line
 
     return _parse_conf_file(txt)

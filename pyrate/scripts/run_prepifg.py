@@ -64,7 +64,6 @@ def main(params=None):
         base_ifg_paths = _convert_dem_inc_ele(params, base_ifg_paths)
 
     PROCESSOR = params[cf.PROCESSOR]  # roipac or gamma
-    run_pyrate.init_logging(logging.DEBUG)
 
     if LUIGI:
         msg = "running luigi prepifg"

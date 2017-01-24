@@ -131,9 +131,6 @@ class PyRateTests(unittest.TestCase):
             os.symlink(orig_dem, cls.BASE_DEM_FILE)
             os.chdir(cls.BASE_DIR)
 
-            # manually start logging as main() is being bypassed
-            run_pyrate.init_logging(logging.DEBUG)
-
             params = config.get_config_params(
                 os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf'))
             params[cf.SIM_DIR] = cf.PYRATEPATH
