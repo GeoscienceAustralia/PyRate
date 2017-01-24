@@ -1,4 +1,6 @@
-import os, pickle, luigi
+import os
+import pickle
+import luigi
 from io import StringIO, BytesIO
 from pyrate import config
 from pyrate.config import (OBS_DIR,

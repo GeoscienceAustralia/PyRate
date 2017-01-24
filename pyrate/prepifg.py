@@ -6,10 +6,6 @@ coarser grids before being processed. This module uses gdalwarp to handle these
 operations.
 
 The rasters need to be in GeoTIFF format with PyRate specific metadata headers.
-
-Created on 23/10/2012
-
-.. codeauthor:: Ben Davies
 """
 
 # TODO: check new average option for gdalwarp (GDAL 1.10.x +)
@@ -345,11 +341,7 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out,
     #         # TODO: push out to workflow
     #         #if params.has_key(REPROJECTION_FLAG):
     #         #    reproject()
-    if not write_to_disc:
-        driver_type = 'MEM'
-    else:
-        driver_type = 'GTiff'
-
+    driver_type = 'GTiff' if write_to_disc else 'MEM'
     resampled_data, out_ds = gdalwarp.crop_resample_average(
         input_tif=ifg.data_path,
         extents=extents,

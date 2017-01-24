@@ -58,7 +58,7 @@ def main(params=None):
                 or (sys.argv[1] == '-h' or sys.argv[1] == '--help')):
             print(usage)
             return
-        base_ifg_paths, _, params = run_pyrate.get_ifg_paths()
+        base_ifg_paths, _, params = cf.get_ifg_paths(sys.argv[1])
         LUIGI = params[cf.LUIGI]  # luigi or no luigi
         raw_config_file = sys.argv[1]
         base_ifg_paths = _convert_dem_inc_ele(params, base_ifg_paths)
@@ -90,7 +90,7 @@ def roipac_prepifg(base_ifg_paths, params):
     msg = "running roipac prepifg"
     print(msg)
     logging.info(msg)
-    xlooks, ylooks, crop = run_pyrate.transform_params(params)
+    xlooks, ylooks, crop = cf.transform_params(params)
     dem_file = os.path.join(params[cf.ROIPAC_RESOURCE_HEADER])
     projection = roipac.parse_header(dem_file)[ifc.PYRATE_DATUM]
     dest_base_ifgs = [os.path.join(

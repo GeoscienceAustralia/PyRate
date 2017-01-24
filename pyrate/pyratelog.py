@@ -20,7 +20,7 @@ class MPIStreamHandler(logging.StreamHandler):
     Only logs messages from Node 0
     """
     def emit(self, record):
-        if mpiops.chunk_index == 0:
+        if mpiops.rank == 0:
             super().emit(record)
 
 

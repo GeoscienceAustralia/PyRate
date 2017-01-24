@@ -294,8 +294,7 @@ def _parse_conf_file(content):
         if p not in parameters:
             parameters[p] = '0'  # insert dummies
 
-    if compat.PyAPS_INSTALLED:
-        parameters = handle_pyaps_parameters(parameters)
+    parameters = handle_pyaps_parameters(parameters)
 
     if not parameters:
         raise ConfigException('Cannot parse any parameters from config file')
@@ -304,36 +303,36 @@ def _parse_conf_file(content):
 
 
 def handle_pyaps_parameters(parameters):
-    # define APS_INCIDENCE_EXT for gamma prepifg
-    if ((parameters[APS_INCIDENCE_MAP] is not None) and
-            (parameters[APS_ELEVATION_MAP] is not None)):
-        warnings.warn('Both incidence and elevation map supplied. '
-                      'Using the incidence map and ignoring elevation map')
+    parameters[APS_INCIDENCE_EXT] = None
+    parameters[APS_ELEVATION_EXT] = None
 
-    if (int(parameters[APS_CORRECTION]) and
-            (int(parameters[APS_METHOD]) == 2) and
-            ((parameters[APS_INCIDENCE_MAP] is None) and
-                (parameters[APS_ELEVATION_MAP] is None))):
-        raise ConfigException('When doing APS correction using method 2,'
-                              'the incidence/elevation map method,'
-                              'one of incidence or elevation map must be '
-                              'provided')
+    if compat.PyAPS_INSTALLED:
+        # define APS_INCIDENCE_EXT for gamma prepifg
+        if ((parameters[APS_INCIDENCE_MAP] is not None) and
+                (parameters[APS_ELEVATION_MAP] is not None)):
+            warnings.warn('Both incidence and elevation map supplied. '
+                          'Using the incidence map and ignoring elevation map')
 
-    if parameters[APS_INCIDENCE_MAP] is not None:
-        parameters[APS_INCIDENCE_EXT] = \
-            os.path.basename(parameters[APS_INCIDENCE_MAP]).split('.')[-1]
-        parameters[APS_ELEVATION_MAP] = None
-        parameters[APS_ELEVATION_EXT] = None
-        return parameters
-    else:
-        parameters[APS_INCIDENCE_EXT] = None
+        if (int(parameters[APS_CORRECTION]) and
+                (int(parameters[APS_METHOD]) == 2) and
+                ((parameters[APS_INCIDENCE_MAP] is None) and
+                    (parameters[APS_ELEVATION_MAP] is None))):
+            raise ConfigException('When doing APS correction using method 2,'
+                                  'the incidence/elevation map method,'
+                                  'one of incidence or elevation map must be '
+                                  'provided')
 
-    # define APS_ELEVATON_EXT for gamma prepifg
-    if parameters[APS_ELEVATION_MAP] is not None:
-        parameters[APS_ELEVATION_EXT] = \
-            os.path.basename(parameters[APS_ELEVATION_MAP]).split('.')[-1]
-    else:
-        parameters[APS_ELEVATION_EXT] = None
+        if parameters[APS_INCIDENCE_MAP] is not None:
+            parameters[APS_INCIDENCE_EXT] = \
+                os.path.basename(parameters[APS_INCIDENCE_MAP]).split('.')[-1]
+            parameters[APS_ELEVATION_MAP] = None
+            parameters[APS_ELEVATION_EXT] = None
+            return parameters
+
+        # define APS_ELEVATON_EXT for gamma prepifg
+        if parameters[APS_ELEVATION_MAP] is not None:
+            parameters[APS_ELEVATION_EXT] = \
+                os.path.basename(parameters[APS_ELEVATION_MAP]).split('.')[-1]
 
     return parameters
 
