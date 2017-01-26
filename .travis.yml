@@ -5,32 +5,56 @@ python:
   - "3.5"
   - "3.4"
   - "2.7"
-  - "pypy"
+  # - "pypy"
 
-sudo: false
 cache:
   directories:
+    - $GDALINST
     - ~/.cache/pip
+
+env:
+  global:
+    - PIP_WHEEL_DIR=$HOME/.cache/pip/wheels
+    - PIP_FIND_LINKS=file://$HOME/.cache/pip/wheels
+    - GDALINST=$HOME/gdalinstall
+    - GDALBUILD=$HOME/gdalbuild
+  matrix:
+    - GDALVERSION="1.10.1"  # nci version
+    - GDALVERSION="1.9.2"  # nci version
+    - GDALVERSION="1.11.1"  # nci version
+    - GDALVERSION="2.0.0"  # nci version
+    - GDALVERSION="2.1.1"
+    - GDALVERSION="2.1.0"
 
 addons:
   apt:
     packages:
+    - gdal-bin
+    - libgdal-dev
+    - libpng12-dev
     - libblas-dev
     - liblapack-dev
     - libatlas-dev
     - libatlas-base-dev
     - gfortran
-    - gdal-bin
     - libproj-dev
-    - libgdal-dev
-    - gfortran
 
-# command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
+
+before_install:
+  - pip install -U pip
+  - pip install wheel
+  - . ./scripts/travis_gdal_install.sh
+  - export PATH=$GDALINST/gdal-$GDALVERSION/bin:$PATH
+  - export LD_LIBRARY_PATH=$GDALINST/gdal-$GDALVERSION/lib:$LD_LIBRARY_PATH
+
 install:
+  - "if [ $(gdal-config --version) == \"$GDALVERSION\" ]; then echo \"Using gdal $GDALVERSION\"; else echo \"NOT using gdal $GDALVERSION as expected; aborting\"; exit 1; fi"
   - python setup.py install
 
 # command to run tests, e.g. python setup.py test
 script:
+  - export PYRATEPATH=$(pwd)
+  - export PYTHONPATH=$PYRATEPATH:$PYTHONPTH
   - py.test --cov=./
 
 cache:

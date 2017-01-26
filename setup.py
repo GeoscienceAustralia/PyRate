@@ -1,6 +1,19 @@
 #!/usr/bin/env python
 from setuptools import setup
 from setuptools.command.test import test as TestCommand
+from subprocess import check_output
+import sys
+
+version = sys.version_info
+
+# numpy support for python3.3 not available
+if version.major == 3 and version.minor == 3:
+    NUMPY_VERSION = 'numpy == 1.10.1'
+else:
+    NUMPY_VERSION = 'numpy >= 1.10.1'
+
+GDAL_VERSION = check_output(["gdal-config", "--version"]).decode(
+    encoding="utf-8").split('\n')[0]
 
 
 class PyTest(TestCommand, object):
@@ -47,16 +60,16 @@ setup(
             'pyrate = pyrate.scripts.main:cli',
         ]
     },
-    setup_requires=['numpy >= 1.12.0'],  # required due to netCDF4
+    setup_requires=[NUMPY_VERSION],  # required due to netCDF4
     install_requires=[
         'Click >= 6.0',
-        'numpy >= 1.11.0',
+        NUMPY_VERSION,
         'Cython >= 0.22.1',
         'mpi4py == 2.0.0',
         'scipy >= 0.15.1',
         'PyYAML >= 3.11',
         'netCDF4 == 1.2.6',
-        'GDAL >= 2.0.0',
+        'GDAL == ' + GDAL_VERSION,
         'matplotlib >= 1.4.3',
         'pyproj >= 1.9.5',
         'networkx >= 1.9.1',
@@ -103,7 +116,7 @@ setup(
         # add more topics
     ],
     cmdclass={
-        'test': PyTest
+        'test': PyTest,
         },
 
 )
