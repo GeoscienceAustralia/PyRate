@@ -15,14 +15,14 @@ env:
     - GDALINST=$HOME/gdalinstall
     - GDALBUILD=$HOME/gdalbuild
   matrix:
-    - GDALVERSION="1.10.0"
-    - GDALVERSION="1.10.1"  # nci version
-    - GDALVERSION="1.11.0"
-    - GDALVERSION="1.11.1"  # nci version
-    - GDALVERSION="1.11.2"
+#    - GDALVERSION="1.10.0"
+#    - GDALVERSION="1.10.1"  # nci version
+#    - GDALVERSION="1.11.0"
+#    - GDALVERSION="1.11.1"  # nci version
+#    - GDALVERSION="1.11.2"
     - GDALVERSION="2.0.0"  # nci version
-    - GDALVERSION="2.0.1"
-    - GDALVERSION="2.1.0"
+#    - GDALVERSION="2.0.1"
+#    - GDALVERSION="2.1.0"
 
 addons:
   apt:
@@ -56,7 +56,8 @@ install:
 script:
   - export PYRATEPATH=$(pwd)
   - export PYTHONPATH=$PYRATEPATH:$PYTHONPTH
-  - py.test --cov=./
+  - chmod 444 tests/test_data/sydney_test/tif/geo_070709-070813.tif  # makes the file readonly, used in a test
+  - py.test tests/
 
 cache:
   - apt
