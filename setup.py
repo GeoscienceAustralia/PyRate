@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 from setuptools import setup
-from setuptools.command.test import test as TestCommand
 from subprocess import check_output
 import sys
 
@@ -15,24 +14,6 @@ else:
 GDAL_VERSION = check_output(["gdal-config", "--version"]).decode(
     encoding="utf-8").split('\n')[0]
 
-
-class PyTest(TestCommand, object):
-
-    user_options = [('pytest-args=', 'a', "Arguments to pass to py.test")]
-
-    def initialize_options(self):
-        super(PyTest, self).initialize_options()
-        self.pytest_args = []
-
-    def finalize_options(self):
-        super(PyTest, self).finalize_options()
-        self.test_suite = True
-        self.test_args = []
-
-    def run_tests(self):
-        # import here, cause outside the eggs aren't loaded
-        import pytest
-        exit(pytest.main(self.pytest_args))
 
 readme = open('README.md').read()
 doclink = """
@@ -85,7 +66,7 @@ setup(
             'sphinxcontrib-programoutput'
         ]
     },
-    # test_suite='tests',
+    test_suite='tests',
     tests_require=[
         'pytest-cov',
         'coverage',
@@ -115,8 +96,4 @@ setup(
         "Topic :: Scientific/Engineering :: Information Analysis"
         # add more topics
     ],
-    cmdclass={
-        'test': PyTest,
-        },
-
 )
