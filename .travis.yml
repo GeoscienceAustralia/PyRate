@@ -43,6 +43,7 @@ addons:
 before_install:
   - pip install -U pip
   - pip install wheel
+  - pip install python-daemon==2.1.1
   - . ./scripts/travis_gdal_install.sh
   - export PATH=$GDALINST/gdal-$GDALVERSION/bin:$PATH
   - export LD_LIBRARY_PATH=$GDALINST/gdal-$GDALVERSION/lib:$LD_LIBRARY_PATH
