@@ -44,7 +44,6 @@ setup(
         'luigi == 1.3.0',
         'joblib',
         'glob2',
-        'bumpversion',
     ],
     extras_require={
         'dev': [
@@ -63,15 +62,18 @@ setup(
     ],
     license="Apache Software License 2.0",
     zip_safe=False,
-    keywords='PyRate, InSAR',
+    keywords='PyRate, InSAR, Image Processing',
     classifiers=[
         'Development Status :: 4 - Beta',
         "Operating System :: POSIX",
         "License :: OSI Approved :: Apache Software License",
         "Natural Language :: English",
         "Programming Language :: Python",
+        "Programming Language :: Python :: 2",
         "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.4",
+        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.5",
         # add additional supported python versions
         "Intended Audience :: Science/Research",

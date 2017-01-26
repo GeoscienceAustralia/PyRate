@@ -1,0 +1,43 @@
+language: python
+
+python:
+  - "3.6-dev"
+  - "3.5"
+  - "3.4"
+  - "2.7"
+  - "pypy"
+
+sudo: false
+cache:
+  directories:
+    - ~/.cache/pip
+
+addons:
+  apt:
+    packages:
+    - libblas-dev
+    - liblapack-dev
+    - libatlas-dev
+    - libatlas-base-dev
+    - gfortran
+    - gdal-bin
+    - libproj-dev
+    - libgdal-dev
+    - gfortran
+
+# command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
+install:
+  - python setup.py install
+
+# command to run tests, e.g. python setup.py test
+script:
+  - py.test --cov=./
+
+cache:
+  - apt
+  - pip
+  - directories:
+    - $HOME/.cache/pip
+
+after_success:
+  - codecov
