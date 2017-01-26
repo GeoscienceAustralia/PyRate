@@ -1,5 +1,25 @@
 #!/usr/bin/env python
 from setuptools import setup
+from setuptools.command.test import test as TestCommand
+
+
+class PyTest(TestCommand, object):
+
+    user_options = [('pytest-args=', 'a', "Arguments to pass to py.test")]
+
+    def initialize_options(self):
+        super(PyTest, self).initialize_options()
+        self.pytest_args = []
+
+    def finalize_options(self):
+        super(PyTest, self).finalize_options()
+        self.test_suite = True
+        self.test_args = []
+
+    def run_tests(self):
+        # import here, cause outside the eggs aren't loaded
+        import pytest
+        exit(pytest.main(self.pytest_args))
 
 readme = open('README.md').read()
 doclink = """
@@ -30,7 +50,7 @@ setup(
     setup_requires=['numpy >= 1.12.0'],  # required due to netCDF4
     install_requires=[
         'Click >= 6.0',
-        'numpy >= 1.12.0',
+        'numpy >= 1.11.0',
         'Cython >= 0.22.1',
         'mpi4py == 2.0.0',
         'scipy >= 0.15.1',
@@ -52,7 +72,7 @@ setup(
             'sphinxcontrib-programoutput'
         ]
     },
-    test_suite='tests',
+    # test_suite='tests',
     tests_require=[
         'pytest-cov',
         'coverage',
@@ -81,5 +101,9 @@ setup(
         "Topic :: Software Development :: Libraries :: Python Modules",
         "Topic :: Scientific/Engineering :: Information Analysis"
         # add more topics
-    ]
+    ],
+    cmdclass={
+        'test': PyTest
+        },
+
 )
