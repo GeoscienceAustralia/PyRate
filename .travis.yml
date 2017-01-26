@@ -19,11 +19,13 @@ env:
     - GDALINST=$HOME/gdalinstall
     - GDALBUILD=$HOME/gdalbuild
   matrix:
+    - GDALVERSION="1.10.0"
     - GDALVERSION="1.10.1"  # nci version
-    - GDALVERSION="1.9.2"  # nci version
+    - GDALVERSION="1.11.0"
     - GDALVERSION="1.11.1"  # nci version
+    - GDALVERSION="1.11.2"  # nci version
     - GDALVERSION="2.0.0"  # nci version
-    - GDALVERSION="2.1.1"
+    - GDALVERSION="2.0.1"
     - GDALVERSION="2.1.0"
 
 addons:
@@ -38,6 +40,8 @@ addons:
     - libatlas-base-dev
     - gfortran
     - libproj-dev
+    - openmpi-bin
+    - libopenmpi-dev
 
 
 before_install:
