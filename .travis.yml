@@ -56,7 +56,7 @@ script:
   - export PYRATEPATH=$(pwd)
   - export PYTHONPATH=$PYRATEPATH:$PYTHONPTH
   - chmod 444 tests/test_data/sydney_test/tif/geo_070709-070813.tif  # makes the file readonly, used in a test
-  - py.test tests/
+  - py.test --cov=./
 
 cache:
   - apt
