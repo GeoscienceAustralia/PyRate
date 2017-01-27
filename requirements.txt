@@ -1,6 +1,6 @@
 # reordering required due to requirements
 numpy==1.9.2
-Cython==0.22.1
+Cython==0.25.2
 scipy==0.15.1
 # dumped from anaconda version on rhe-compute
 nose==1.3.7
