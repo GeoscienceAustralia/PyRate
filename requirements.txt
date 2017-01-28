@@ -8,7 +8,7 @@ networkx==1.9.1
 luigi==1.3.0
 matplotlib==1.4.3
 netCDF4==1.1.9
-Flask==0.10.1
+Flask==0.12
 Pillow==2.8.2
 # GDAL==1.11.2  # pip does not recognise the system variables I want to pass
 # SB added
