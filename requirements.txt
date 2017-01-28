@@ -1,5 +1,5 @@
 # reordering required due to requirements
-numpy==1.9.2
+numpy==1.12.0
 Cython==0.22.1
 scipy==0.15.1
 # dumped from anaconda version on rhe-compute
