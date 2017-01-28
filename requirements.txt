@@ -4,7 +4,7 @@ Cython==0.22.1
 scipy==0.15.1
 # dumped from anaconda version on rhe-compute
 nose==1.3.7
-networkx==1.9.1
+networkx==1.11
 luigi==1.3.0
 matplotlib==1.4.3
 netCDF4==1.1.9
