@@ -1,5 +1,5 @@
 [![Build Status](https://travis-ci.org/GeoscienceAustralia/PyRate.svg?branch=master)](https://travis-ci.org/GeoscienceAustralia/PyRate)
-[![Code](https://coveralls.io/repos/github/geoscienceaustralia/pyrate/badge.svg?branch=master)](https://coveralls.io/github/geoscienceaustralia/pyrate?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/GeoscienceAustralia/PyRate/badge.svg?branch=master)](https://coveralls.io/github/GeoscienceAustralia/PyRate?branch=master)
 [![Updates](https://pyup.io/repos/github/geoscienceaustralia/pyrate/shield.svg)](https://pyup.io/repos/github/geoscienceaustralia/pyrate/)
 [![Python 3](https://pyup.io/repos/github/geoscienceaustralia/pyrate/python-3-shield.svg)](https://pyup.io/repos/github/geoscienceaustralia/pyrate/)
    
