@@ -17,3 +17,4 @@ coverage
 codecov
 tox
 pytest
+coveralls >= 1.1
