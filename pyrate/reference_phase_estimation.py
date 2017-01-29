@@ -5,9 +5,11 @@ This is a python implementation of the refphsest.m of pirate.
 import numpy as np
 from joblib import Parallel, delayed
 from pyrate import config as cf
-from pyrate.shared import nanmedian, write_msg
+from pyrate.shared import nanmedian
 from pyrate import ifgconstants as ifc
 import logging
+
+log = logging.getLogger(__name__)
 
 
 def estimate_ref_phase(ifgs, params, refpx, refpy):
@@ -112,7 +114,7 @@ def _validate_ifgs(ifgs):
         raise ReferencePhaseError('Need to provide at least 2 ifgs')
     flags = [i.dataset.GetMetadataItem(ifc.REF_PHASE) for i in ifgs]
     if all(flags):
-        write_msg('Ifgs already reference phase corrected')
+        log.info('Ifgs already reference phase corrected')
         return
     else:
         check_ref_phase_ifgs(ifgs, flags)

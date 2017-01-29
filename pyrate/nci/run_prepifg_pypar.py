@@ -3,15 +3,15 @@ import sys
 import os
 import datetime
 from operator import itemgetter
-
-from pyrate.nci.parallel import Parallel
-from pyrate.scripts import run_pyrate
+import numpy as np
 from pyrate import config as cf
 from pyrate.scripts import run_prepifg
 from pyrate.shared import Ifg
 from pyrate import prepifg
+import pyrate.mpiops as mpi
 
 # Constants
+
 MASTER_PROCESS = 0
 
 ###=========================================================================
@@ -23,32 +23,29 @@ MASTER_PROCESS = 0
 
 def main():
 
-    # Setting up parallelisation
-    parallel = Parallel(True)
-    MPI_myID = parallel.rank
-    num_processors = parallel.size
-
     # Master Process
-    if MPI_myID == MASTER_PROCESS:
+    if mpi.rank == MASTER_PROCESS:
         print("Master process found {} worker "
-              "processors".format(num_processors))
+              "processors".format(mpi.size))
 
     # Read config file, dest_paths are final mlooked/sampled and cropped tifs
-    base_ifg_paths, dest_paths, params = run_pyrate.get_ifg_paths()
+    base_ifg_paths, dest_paths, params = cf.get_ifg_paths(sys.argv[1])
 
     # logfile
     output_dir = params[cf.OUT_DIR]
     mpi_log_filename = os.path.join(output_dir, "mpi.log")
 
     # Master Process
-    if MPI_myID == MASTER_PROCESS:
+    if mpi.rank == MASTER_PROCESS:
         output_log_file = open(mpi_log_filename, "w")
         config_filepath = sys.argv[1]
         configfile = open(config_filepath)
-        output_log_file.write("Starting Simulation at: "
-                + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        output_log_file.write(
+            "Starting Simulation at: " +
+            datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        )
         output_log_file.write("Master process found " +
-                              str(num_processors) +
+                              str(mpi.size) +
                               " worker processors.\n")
         output_log_file.write("\n")
         output_log_file.write("\nConfig Settings: start\n")
@@ -68,14 +65,14 @@ def main():
         output_log_file.close()
 
     num_files = len(dest_paths)
-    process_subset_indices = parallel.calc_indices(num_files)
-
+    process_subset_indices = np.array_split(range(num_files),
+                                            mpi.size)[mpi.rank]
     process_base_paths = [itemgetter(p)(base_ifg_paths)
                           for p in process_subset_indices]
 
     print('Processor {mpi_id} has {processes} '
           'interferrograms out of {num_files}'.format(
-        mpi_id=MPI_myID, processes=len(process_base_paths),
+        mpi_id=mpi.rank, processes=len(process_base_paths),
         num_files=num_files))
 
     msg = "running gamma prepifg"
@@ -90,9 +87,9 @@ def main():
     [run_prepifg.gamma_multiprocessing(b, params) for b in process_base_paths]
 
     # need to come back to the main thread as all ifgs are needed for exts calc
-    parallel.barrier()
+    mpi.comm.barrier()
     ifgs = [Ifg(p) for p in dest_base_ifgs]
-    xlooks, ylooks, crop = run_pyrate.transform_params(params)
+    xlooks, ylooks, crop = cf.transform_params(params)
     exts = prepifg.getAnalysisExtent(crop, ifgs, xlooks, ylooks, userExts=None)
     thresh = params[cf.NO_DATA_AVERAGING_THRESHOLD]
     del ifgs  # to save memory
@@ -100,7 +97,6 @@ def main():
     for p in process_subset_indices:
         data_path = itemgetter(p)(dest_base_ifgs)
         prepifg.prepare_ifg(data_path, xlooks, ylooks, exts, thresh, crop)
-    parallel.finalize()
 
 
 if __name__ == "__main__":

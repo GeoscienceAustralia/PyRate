@@ -15,7 +15,8 @@ def main():
         print(usage)
         return
     rawConfigFile = sys.argv[1]     # this does '~' expansion automatically
-    luigi.configuration.LuigiConfigParser.add_config_path(pythonify_config(rawConfigFile))
+    luigi.configuration.LuigiConfigParser.add_config_path(
+        pythonify_config(rawConfigFile))
     luigi.build([ConvertToGeotiff()], local_scheduler=True)
 
 

@@ -10,12 +10,13 @@ from pyrate.tasks.utils import pythonify_config
 from pyrate.tasks.prepifg import PrepareInterferograms
 from pyrate import prepifg
 from pyrate import config as cf
-from pyrate.scripts import run_pyrate
 from pyrate import roipac
 from pyrate import gamma
 from pyrate.shared import write_geotiff, mkdir_p
 from pyrate.tasks import gamma as gamma_task
 import pyrate.ifgconstants as ifc
+
+log = logging.getLogger(__name__)
 
 ROI_PAC_HEADER_FILE_EXT = 'rsc'
 GAMMA = 1
@@ -46,7 +47,7 @@ def main(params=None):
         return base_ifg_paths
 
     if params:
-        base_ifg_paths = run_pyrate.original_ifg_paths(params[cf.IFG_FILE_LIST])
+        base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST])
         LUIGI = params[cf.LUIGI]  # luigi or no luigi
         if LUIGI:
             raise cf.ConfigException('params can not be provided with luigi')
@@ -56,25 +57,20 @@ def main(params=None):
                 or (sys.argv[1] == '-h' or sys.argv[1] == '--help')):
             print(usage)
             return
-        base_ifg_paths, _, params = run_pyrate.get_ifg_paths()
+        base_ifg_paths, _, params = cf.get_ifg_paths(sys.argv[1])
         LUIGI = params[cf.LUIGI]  # luigi or no luigi
         raw_config_file = sys.argv[1]
         base_ifg_paths = _convert_dem_inc_ele(params, base_ifg_paths)
 
     PROCESSOR = params[cf.PROCESSOR]  # roipac or gamma
-    run_pyrate.init_logging(logging.DEBUG)
 
     if LUIGI:
-        msg = "running luigi prepifg"
-        print(msg)
-        logging.info(msg)
+        log.info("Running luigi prepifg")
         luigi.configuration.LuigiConfigParser.add_config_path(
             pythonify_config(raw_config_file))
         luigi.build([PrepareInterferograms()], local_scheduler=True)
     else:
-        msg = "running serial prepifg"
-        print(msg)
-        logging.info(msg)
+        log.info("Running serial prepifg")
         if PROCESSOR == ROIPAC:
             roipac_prepifg(base_ifg_paths, params)
         elif PROCESSOR == GAMMA:
@@ -82,13 +78,12 @@ def main(params=None):
         else:
             raise prepifg.PreprocessError('Processor must be Roipac(0) or '
                                           'Gamma(1)')
+    log.info('Finished prepifg')
 
 
 def roipac_prepifg(base_ifg_paths, params):
-    msg = "running roipac prepifg"
-    print(msg)
-    logging.info(msg)
-    xlooks, ylooks, crop = run_pyrate.transform_params(params)
+    log.info("Running roipac prepifg")
+    xlooks, ylooks, crop = cf.transform_params(params)
     dem_file = os.path.join(params[cf.ROIPAC_RESOURCE_HEADER])
     projection = roipac.parse_header(dem_file)[ifc.PYRATE_DATUM]
     dest_base_ifgs = [os.path.join(
@@ -103,9 +98,7 @@ def roipac_prepifg(base_ifg_paths, params):
 
 
 def gamma_prepifg(base_unw_paths, params):
-    msg = "running gamma prepifg"
-    print(msg)
-    logging.info(msg)
+    log.info("Running gamma prepifg")
     parallel = params[cf.PARALLEL]
 
     # dest_base_ifgs: location of geo_tif's
@@ -119,7 +112,7 @@ def gamma_prepifg(base_unw_paths, params):
         dest_base_ifgs = [gamma_multiprocessing(b, params)
                           for b in base_unw_paths]
     ifgs = [prepifg.dem_or_ifg(p) for p in dest_base_ifgs]
-    xlooks, ylooks, crop = run_pyrate.transform_params(params)
+    xlooks, ylooks, crop = cf.transform_params(params)
     userExts = (params[cf.IFG_XFIRST], params[cf.IFG_YFIRST],
                 params[cf.IFG_XLAST], params[cf.IFG_YLAST])
     exts = prepifg.getAnalysisExtent(crop, ifgs, xlooks, ylooks,
@@ -154,6 +147,3 @@ def gamma_multiprocessing(b, params):
 
     write_geotiff(combined_headers, b, d, nodata=params[cf.NO_DATA_VALUE])
     return d
-
-if __name__ == '__main__':
-    main()

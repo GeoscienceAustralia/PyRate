@@ -97,7 +97,7 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
         self.make_gamma_input_files(data_paths)
         sys.argv = ['run_pyrate.py', conf_file]
 
-        base_ifg_paths, dest_paths, params = run_pyrate.get_ifg_paths()
+        base_ifg_paths, dest_paths, params = cf.get_ifg_paths(conf_file)
         dest_base_ifgs = [os.path.join(
             params[cf.OUT_DIR], os.path.basename(q).split('.')[0] + '.tif')
             for q in base_ifg_paths]

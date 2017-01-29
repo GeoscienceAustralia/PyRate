@@ -12,7 +12,9 @@ pyrate_gamma.conf
 # problem with the checking being done in the middle of the runs, as bad values
 # could cause crashes & destroying some of the results.
 import os
+from os.path import splitext
 import warnings
+from pyrate import compat
 
 PYRATEPATH = os.environ['PYRATEPATH']
 
@@ -256,14 +258,14 @@ def get_config_params(path):
     """
     Returns a dict for the key:value pairs from the .conf file
     """
-
     txt = ''
     with open(path, 'r') as inputFile:
         for line in inputFile:
             if any(x in line for x in PATHS):
                 pos = line.find('~')
                 if pos != -1:
-                    line = line[:pos] + os.environ['HOME'] + line[(pos+1):]    # create expanded line
+                    # create expanded line
+                    line = line[:pos] + os.environ['HOME'] + line[(pos+1):]
             txt += line
 
     return _parse_conf_file(txt)
@@ -300,20 +302,24 @@ def _parse_conf_file(content):
 
 
 def handle_pyaps_parameters(parameters):
-    # define APS_INCIDENCE_EXT for gamma prepifg
-    if ((parameters[APS_INCIDENCE_MAP] is not None) and
-            (parameters[APS_ELEVATION_MAP] is not None)):
-        warnings.warn('Both incidence and elevation map supplied. '
-                      'Using the incidence map and ignoring elevation map')
+    parameters[APS_INCIDENCE_EXT] = None
+    parameters[APS_ELEVATION_EXT] = None
 
-    if (int(parameters[APS_CORRECTION]) and
-            (int(parameters[APS_METHOD]) == 2) and
-            ((parameters[APS_INCIDENCE_MAP] is None) and
-                (parameters[APS_ELEVATION_MAP] is None))):
-        raise ConfigException('When doing APS correction using method 2,'
-                              'the incidence/elevation map method,'
-                              'one of incidence or elevation map must be '
-                              'provided')
+    if compat.PyAPS_INSTALLED:
+        # define APS_INCIDENCE_EXT for gamma prepifg
+        if ((parameters[APS_INCIDENCE_MAP] is not None) and
+                (parameters[APS_ELEVATION_MAP] is not None)):
+            warnings.warn('Both incidence and elevation map supplied. '
+                          'Using the incidence map and ignoring elevation map')
+
+        if (int(parameters[APS_CORRECTION]) and
+                (int(parameters[APS_METHOD]) == 2) and
+                ((parameters[APS_INCIDENCE_MAP] is None) and
+                    (parameters[APS_ELEVATION_MAP] is None))):
+            raise ConfigException('When doing APS correction using method 2,'
+                                  'the incidence/elevation map method,'
+                                  'one of incidence or elevation map must be '
+                                  'provided')
 
     if parameters[APS_INCIDENCE_MAP] is not None:
         parameters[APS_INCIDENCE_EXT] = \
@@ -321,15 +327,11 @@ def handle_pyaps_parameters(parameters):
         parameters[APS_ELEVATION_MAP] = None
         parameters[APS_ELEVATION_EXT] = None
         return parameters
-    else:
-        parameters[APS_INCIDENCE_EXT] = None
 
     # define APS_ELEVATON_EXT for gamma prepifg
     if parameters[APS_ELEVATION_MAP] is not None:
         parameters[APS_ELEVATION_EXT] = \
             os.path.basename(parameters[APS_ELEVATION_MAP]).split('.')[-1]
-    else:
-        parameters[APS_ELEVATION_EXT] = None
 
     return parameters
 
@@ -395,3 +397,60 @@ def reverse_degree_conv(k, v):
     else:
         raise ValueError(
             "Orbital fit polynomial degree option not recognised")
+
+
+def transform_params(params):
+    """
+    Returns subset of config parameters for cropping and multilooking.
+    """
+
+    t_params = [IFG_LKSX, IFG_LKSY, IFG_CROP_OPT]
+    xlooks, ylooks, crop = [params[k] for k in t_params]
+    return xlooks, ylooks, crop
+
+
+def original_ifg_paths(ifglist_path):
+    """
+    Returns sequence of paths to files in given ifglist file.
+    """
+
+    basedir = os.path.dirname(ifglist_path)
+    ifglist = parse_namelist(os.path.join(PYRATEPATH, ifglist_path))
+    return [os.path.join(basedir, p) for p in ifglist]
+
+
+def mlooked_path(path, looks, crop_out):
+    """
+    Adds suffix to path, for creating a new path for mlooked files.
+    """
+    base, ext = splitext(path)
+    return "{base}_{looks}rlks_{crop_out}cr{ext}".format(
+        base=base, looks=looks, crop_out=crop_out, ext=ext)
+
+
+def get_dest_paths(base_paths, crop, params, looks):
+    dest_mlooked_ifgs = [mlooked_path(os.path.basename(q).split('.')[0]
+        + '.tif', looks=looks, crop_out=crop) for q in base_paths]
+
+    return [os.path.join(os.environ['PYRATEPATH'], params[OUT_DIR], p)
+            for p in dest_mlooked_ifgs]
+
+
+def get_ifg_paths(config_file):
+    pars = get_config_params(config_file)
+    ifg_file_list = pars.get(IFG_FILE_LIST)
+    pars[IFG_FILE_LIST] = ifg_file_list
+
+    if ifg_file_list is None:
+        emsg = 'Error {code}: Interferogram list file name not provided ' \
+               'or does not exist'.format(code=2)
+        raise IOError(2, emsg)
+    xlks, ylks, crop = transform_params(pars)
+
+    # base_unw_paths need to be geotiffed and multilooked by run_prepifg
+    base_unw_paths = original_ifg_paths(ifg_file_list)
+
+    # dest_paths are tifs that have been geotif converted and multilooked
+    dest_paths = get_dest_paths(base_unw_paths, crop, pars, xlks)
+
+    return base_unw_paths, dest_paths, pars

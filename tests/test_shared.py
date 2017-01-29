@@ -342,17 +342,17 @@ class WriteUnwTest(unittest.TestCase):
         cls.params[cf.REF_EST_METHOD] = 1
         cls.params[cf.DEM_FILE] = common.SYD_TEST_DEM_GAMMA
         # base_unw_paths need to be geotiffed and multilooked by run_prepifg
-        cls.base_unw_paths = run_pyrate.original_ifg_paths(
+        cls.base_unw_paths = cf.original_ifg_paths(
             cls.params[cf.IFG_FILE_LIST])
         cls.base_unw_paths.append(common.SYD_TEST_DEM_GAMMA)
 
-        xlks, ylks, crop = run_pyrate.transform_params(cls.params)
+        xlks, ylks, crop = cf.transform_params(cls.params)
 
         # dest_paths are tifs that have been geotif converted and multilooked
         run_prepifg.gamma_prepifg(cls.base_unw_paths, cls.params)
         cls.base_unw_paths.pop()  # removed dem as we don't want it in ifgs
 
-        dest_paths = run_pyrate.get_dest_paths(
+        dest_paths = cf.get_dest_paths(
             cls.base_unw_paths, crop, cls.params, xlks)
         cls.ifgs = common.sydney_data_setup(datafiles=dest_paths)
 

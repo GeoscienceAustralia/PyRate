@@ -10,7 +10,6 @@ from numpy import where, nan, isnan, sum as nsum, isclose
 import numpy as np
 import random
 import string
-from functools import wraps
 import time
 import logging
 import pkg_resources
@@ -19,7 +18,7 @@ import stat
 from pyrate import roipac, gamma, config as cf
 from pyrate import ifgconstants as ifc
 VERBOSE = True
-
+log = logging.getLogger(__name__)
 
 try:
     from osgeo import osr, gdal
@@ -656,28 +655,6 @@ def generate_random_string(N=10):
         string.ascii_letters + string.digits)
                    for _ in range(N))
 
-
-def timer(f):
-    """
-    A simple timing decorator for the entire process.
-
-    """
-    @wraps(f)
-    def wrap(*args, **kwargs):
-        t1 = time.time()
-        res = f(*args, **kwargs)
-
-        tottime = time.time() - t1
-        msg = "%02d:%02d:%02d " % \
-              reduce(lambda ll, b: divmod(ll[0], b) + ll[1:],
-                     [(tottime,), 60, 60])
-
-        logging.info("Time for {0}: {1}".format(f.func_name, msg))
-        return res
-
-    return wrap
-
-
 def nanmedian(x):
     """
     :param x:
@@ -966,6 +943,7 @@ def pre_prepare_ifgs(ifg_paths, params):
         if not i.is_open:
             i.open(readonly=False)
         nan_and_mm_convert(i, params)
+    log.info('Opened ifg for reading')
     return ifgs
 
 
@@ -989,12 +967,3 @@ def prepare_ifgs_without_phase(ifg_paths, params):
         if not i.is_open:
             i.open(readonly=False)
     return ifgs
-
-
-def write_msg(msg):
-    """
-    write message to log file and screen output
-    """
-    logging.debug(msg)
-    if VERBOSE:
-        print(msg)

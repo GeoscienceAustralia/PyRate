@@ -1,9 +1,8 @@
 import os, luigi, pickle
-import pyrate.config as config
+import pyrate.config as cf
 from pyrate.prepifg import (
     Ifg,
     getAnalysisExtent,
-    mlooked_path,
     prepare_ifg,
     PreprocessError)
 from pyrate.tasks.converttogeotif import ConvertToGeotiff
@@ -15,17 +14,17 @@ from pyrate.scripts.run_pyrate import warp_required
 
 
 class GetAnalysisExtents(IfgListMixin, luigi.Task):
-    crop_opt = luigi.IntParameter(config_path=InputParam(config.IFG_CROP_OPT))
+    crop_opt = luigi.IntParameter(config_path=InputParam(cf.IFG_CROP_OPT))
     ifgx_first = luigi.FloatParameter(default=None,
-                                     config_path=InputParam(config.IFG_XFIRST))
+                                      config_path=InputParam(cf.IFG_XFIRST))
     ifgy_first = luigi.FloatParameter(default=None,
-                                     config_path=InputParam(config.IFG_YFIRST))
+                                      config_path=InputParam(cf.IFG_YFIRST))
     ifgx_last = luigi.FloatParameter(default=None,
-                                    config_path=InputParam(config.IFG_XLAST))
+                                     config_path=InputParam(cf.IFG_XLAST))
     ifgy_last = luigi.FloatParameter(default=None,
-                                    config_path=InputParam(config.IFG_YLAST))
-    xlooks = luigi.IntParameter(config_path=InputParam(config.IFG_LKSX))
-    ylooks = luigi.IntParameter(config_path=InputParam(config.IFG_LKSY))
+                                     config_path=InputParam(cf.IFG_YLAST))
+    xlooks = luigi.IntParameter(config_path=InputParam(cf.IFG_LKSX))
+    ylooks = luigi.IntParameter(config_path=InputParam(cf.IFG_LKSY))
 
     def requires(self):
         return [ConvertToGeotiff()]
@@ -74,10 +73,10 @@ class PrepareInterferogram(IfgListMixin, luigi.WrapperTask):
 
     ifg = RasterParam()
     thresh = luigi.FloatParameter(config_path=InputParam(
-        config.NO_DATA_AVERAGING_THRESHOLD))
-    crop_opt = luigi.IntParameter(config_path=InputParam(config.IFG_CROP_OPT))
-    xlooks = luigi.IntParameter(config_path=InputParam(config.IFG_LKSX))
-    ylooks = luigi.IntParameter(config_path=InputParam(config.IFG_LKSY))
+        cf.NO_DATA_AVERAGING_THRESHOLD))
+    crop_opt = luigi.IntParameter(config_path=InputParam(cf.IFG_CROP_OPT))
+    xlooks = luigi.IntParameter(config_path=InputParam(cf.IFG_LKSX))
+    ylooks = luigi.IntParameter(config_path=InputParam(cf.IFG_LKSY))
     # verbose = luigi.BooleanParameter(default=True, significant=False)
 
     def requires(self):
@@ -99,7 +98,9 @@ class PrepareInterferogram(IfgListMixin, luigi.WrapperTask):
     def output(self):
         if warp_required(self.xlooks, self.ylooks, self.crop_opt):
             return luigi.LocalTarget(
-                mlooked_path(self.ifg.data_path, self.ylooks, self.crop_opt))
+                cf.mlooked_path(self.ifg.data_path,
+                                self.ylooks,
+                                self.crop_opt))
         else:
             return []
 

@@ -1,0 +1,43 @@
+import logging
+from mpi4py import MPI
+
+log = logging.getLogger(__name__)
+
+comm = MPI.COMM_WORLD
+"""module-level MPI 'world' object representing all connected nodes
+"""
+
+size = comm.Get_size()
+"""int: the total number of nodes in the MPI world
+"""
+
+rank = comm.Get_rank()
+"""int: the index (from zero) of this node in the MPI world. Also known as
+the rank of the node.
+"""
+
+
+def run_once(f, *args, **kwargs):
+    """Run a function on one node, broadcast result to all
+    This function evaluates a function on a single node in the MPI world,
+    then broadcasts the result of that function to every node in the world.
+    Parameters
+    ----------
+    f : callable
+        The function to be evaluated. Can take arbitrary arguments and return
+        anything or nothing
+    args : optional
+        Other positional arguments to pass on to f
+    kwargs : optional
+        Other named arguments to pass on to f
+    Returns
+    -------
+    result
+        The value returned by f
+    """
+    if rank == 0:
+        f_result = f(*args, **kwargs)
+    else:
+        f_result = None
+    result = comm.bcast(f_result, root=0)
+    return result

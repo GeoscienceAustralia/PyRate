@@ -1,26 +1,28 @@
-name: pyrate1
+name: pyr6
 channels:
-- nmoraitakis
+- conda-forge
 - ioos
 dependencies:
 - cython
 - flask
 - pyhdf
 - gdal
-- grib_api
+#- grib_api
 - hdf4
 - hdf5
 - ipython
 - matplotlib
 - networkx
 - numpy
-- pygrib
+# - pygrib
 - pyproj
 - scipy
 - nose
 - pillow
+- joblib
+- pytest
+- pytest-cov
+- glob2
+- mpi4py
 - pip:
   - luigi==1.3.0
-  - parmap
-  - glob2
-  - git+https://github.com/daleroberts/pypar

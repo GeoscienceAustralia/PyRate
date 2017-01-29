@@ -1,5 +1,39 @@
 #!/usr/bin/env python
 from setuptools import setup
+from setuptools.command.test import test as TestCommand
+from subprocess import check_output
+import sys
+
+version = sys.version_info
+
+# numpy support for python3.3 not available
+if version.major == 3 and version.minor == 3:
+    NUMPY_VERSION = 'numpy == 1.10.1'
+else:
+    NUMPY_VERSION = 'numpy >= 1.10.1'
+
+GDAL_VERSION = check_output(["gdal-config", "--version"]).decode(
+    encoding="utf-8").split('\n')[0]
+
+
+class PyTest(TestCommand, object):
+
+    user_options = [('pytest-args=', 'a', "Arguments to pass to py.test")]
+
+    def initialize_options(self):
+        super(PyTest, self).initialize_options()
+        self.pytest_args = []
+
+    def finalize_options(self):
+        super(PyTest, self).finalize_options()
+        self.test_suite = True
+        self.test_args = []
+
+    def run_tests(self):
+        # import here, cause outside the eggs aren't loaded
+        import pytest
+        exit(pytest.main(self.pytest_args))
+
 
 readme = open('README.md').read()
 doclink = """
@@ -19,32 +53,31 @@ setup(
     author='Geoscience Australia InSAR team',
     author_email='basaks@gmail.com',
     url='https://github.com/GeoscienceAustralia/PyRate',
-    packages=['pyrate'],
+    packages=['pyrate', 'pyrate.scripts', 'pyrate.tasks'],
     package_dir={'PyRate': 'pyrate'},
     include_package_data=True,
     entry_points={
         'console_scripts': [
-
+            'pyrate = pyrate.scripts.main:cli',
         ]
     },
-    setup_requires=['numpy >= 1.12.0'],  # required due to netCDF4
+    setup_requires=[NUMPY_VERSION],  # required due to netCDF4
     install_requires=[
         'Click >= 6.0',
-        'numpy >= 1.12.0',
+        NUMPY_VERSION,
         'Cython >= 0.22.1',
         'mpi4py == 2.0.0',
         'scipy >= 0.15.1',
         'PyYAML >= 3.11',
         'netCDF4 == 1.2.6',
-        'GDAL >= 2.0.0',
+        'GDAL == ' + GDAL_VERSION,
         'matplotlib >= 1.4.3',
         'pyproj >= 1.9.5',
         'networkx >= 1.9.1',
         'Pillow >= 2.8.2',
-        'luigi >= 2.0.0',
+        'luigi == 1.3.0',
         'joblib',
         'glob2',
-        'bumpversion',
     ],
     extras_require={
         'dev': [
@@ -53,7 +86,6 @@ setup(
             'sphinxcontrib-programoutput'
         ]
     },
-    test_suite='tests',
     tests_require=[
         'pytest-cov',
         'coverage',
@@ -63,15 +95,18 @@ setup(
     ],
     license="Apache Software License 2.0",
     zip_safe=False,
-    keywords='PyRate, InSAR',
+    keywords='PyRate, InSAR, Image Processing',
     classifiers=[
         'Development Status :: 4 - Beta',
         "Operating System :: POSIX",
         "License :: OSI Approved :: Apache Software License",
         "Natural Language :: English",
         "Programming Language :: Python",
+        "Programming Language :: Python :: 2",
         "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.4",
+        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.5",
         # add additional supported python versions
         "Intended Audience :: Science/Research",
@@ -79,5 +114,8 @@ setup(
         "Topic :: Software Development :: Libraries :: Python Modules",
         "Topic :: Scientific/Engineering :: Information Analysis"
         # add more topics
-    ]
+    ],
+    cmdclass={
+        'test': PyTest,
+    }
 )

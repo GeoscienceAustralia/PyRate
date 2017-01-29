@@ -2,7 +2,8 @@
 python utility to crop a larger ifg into smaller ifgs
 
 example usage:
-python pyrate/utils/crop_ifgs.py -i tests/sydney_test/tif/geo_060619-061002.tif -o out.tif -e '150.91 -34.229999976 150.949166651  -34.17'
+python pyrate/utils/crop_ifgs.py -i tests/sydney_test/tif/geo_060619-061002.tif
+-o out.tif -e '150.91 -34.229999976 150.949166651  -34.17'
 
 """
 from optparse import OptionParser
@@ -52,7 +53,8 @@ if __name__ == '__main__':
         raise AttributeError('extents to be used for the cropped file.\n'
                              'needs to be a list or tuples of 4 floats\n'
                              "example:"
-                             "--extents '150.91 -34.229999976 150.949166651 -34.17'")
+                             "--extents "
+                             "'150.91 -34.229999976 150.949166651 -34.17'")
 
     crop_using_gdalwarp(input_file=options.input_file,
                         output_file=options.output_file,

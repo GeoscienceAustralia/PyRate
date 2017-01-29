@@ -1,9 +1,5 @@
 """
 Tests for ROIPAC header translation module.
-
-Created on 12/09/2012
-
-.. codeauthor:: Ben Davies, Sudipta Basak
 """
 
 import glob

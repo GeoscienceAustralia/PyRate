@@ -165,12 +165,12 @@ class MatlabEqualityTest(unittest.TestCase):
         params[cf.OUT_DIR] = cls.temp_out_dir
 
         params[cf.REF_EST_METHOD] = 2
-        xlks, ylks, crop = run_pyrate.transform_params(params)
+        xlks, ylks, crop = cf.transform_params(params)
 
-        base_ifg_paths = run_pyrate.original_ifg_paths(
+        base_ifg_paths = cf.original_ifg_paths(
             params[cf.IFG_FILE_LIST])
 
-        dest_paths = run_pyrate.get_dest_paths(base_ifg_paths,
+        dest_paths = cf.get_dest_paths(base_ifg_paths,
                                                crop, params, xlks)
         # start run_pyrate copy
         ifgs = shared.pre_prepare_ifgs(dest_paths, params)

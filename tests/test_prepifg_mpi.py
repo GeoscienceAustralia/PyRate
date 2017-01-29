@@ -58,6 +58,8 @@ class MPITests(unittest.TestCase):
                                         "*.tif")):
             if len(gamma_PTN.findall(i)) == 2:
                 serial_tifs.append(i)
+        mpi_tifs.sort()
+        serial_tifs.sort()
 
         self.assertEqual(len(mpi_tifs), len(serial_tifs))
         for m, s in zip(mpi_tifs, serial_tifs):

@@ -7,7 +7,6 @@
 /.idea
 .spyderworkspace
 doc
-etc
 out
 .eggs/
 .tox/
@@ -15,3 +14,4 @@ build/
 docs/
 tests/test_data/
 PyAPS/
+.cache/
