@@ -16,7 +16,7 @@ import pyrate.refpixel as refpixel
 import pyrate.timeseries as timeseries
 from pyrate import algorithm
 from pyrate import ifgconstants as ifc
-from pyrate import matlab_mst_kruskal as matlab_mst
+from pyrate import matlab_mst as matlab_mst
 from pyrate import reference_phase_estimation as rpe
 from pyrate import vcm as vcm_module
 from pyrate.shared import Ifg, write_output_geotiff, \
@@ -57,7 +57,10 @@ def process_ifgs(ifg_paths_or_instance, params):
 
     # Estimate and remove orbit errors
     remove_orbital_error(ifgs, params)
-    ifgs = prepare_ifgs_without_phase(ifg_paths_or_instance, params)
+    # open ifgs again, but without phase conversion as already converted and
+    # saved to disc
+
+    ifgs = prepare_ifgs_without_phase(ifg_paths_or_instance)
     log.info('Estimating and removing phase at reference pixel')
     ref_phs, ifgs = rpe.estimate_ref_phase(ifgs, params, refpx, refpy)
 
@@ -145,7 +148,7 @@ def mst_calculation(ifg_paths_or_instance, params):
 
         mst_grid = mst.mst_parallel(ifgs, params)
     else:
-        # the matlab side has not been worked for a while, may need updating
+        # FIXME: the matlab side is broken
         nan_conversion = params[cf.NAN_CONVERSION]
         assert isinstance(ifg_paths_or_instance, matlab_mst.IfgListPyRate)
         ifgs = ifg_paths_or_instance.ifgs
@@ -160,9 +163,6 @@ def mst_calculation(ifg_paths_or_instance, params):
         log.info('Calculating minimum spanning tree matrix '
                  'using Matlab-algorithm method')
         mst_grid = matlab_mst.matlab_mst_boolean_array(ifg_instance_updated)
-
-        # Insert INTERP into the params for timeseries calculation
-        # params = insert_time_series_interpolation(ifg_instance_updated, params)
 
     # write mst output to a file
     mst_mat_binary_file = os.path.join(
@@ -426,5 +426,3 @@ def log_config_file(configfile, log_filename):
         output_log_file.write(line)
     output_log_file.write("\nConfig Settings: end\n\n")
     output_log_file.write("\n==============================================\n")
-
-

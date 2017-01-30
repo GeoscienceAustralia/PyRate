@@ -9,13 +9,13 @@ import unittest
 import numpy as np
 
 from pyrate import mst
-from pyrate.matlab_mst_kruskal import IfgListPyRate as IfgList
-from pyrate.matlab_mst_kruskal import calculate_connect_and_ntrees
-from pyrate.matlab_mst_kruskal import get_nml
-from pyrate.matlab_mst_kruskal import matlab_mst, matlab_mst_boolean_array
-from pyrate.matlab_mst_kruskal import matlab_mst_kruskal
-from pyrate.matlab_mst_kruskal import matlab_mst_kruskal_from_ifgs
-from pyrate.matlab_mst_kruskal import sort_list, get_sub_structure
+from pyrate.matlab_mst import IfgListPyRate as IfgList
+from pyrate.matlab_mst import calculate_connect_and_ntrees
+from pyrate.matlab_mst import get_nml
+from pyrate.matlab_mst import matlab_mst, matlab_mst_boolean_array
+from pyrate.matlab_mst import matlab_mst_kruskal
+from pyrate.matlab_mst import matlab_mst_kruskal_from_ifgs
+from pyrate.matlab_mst import sort_list, get_sub_structure
 from tests.common import sydney_data_setup
 from tests.common import sydney_data_setup_ifg_file_list
 

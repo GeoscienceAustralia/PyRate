@@ -961,7 +961,7 @@ def nan_and_mm_convert(ifg, params):
         ifg.convert_to_mm()
 
 
-def prepare_ifgs_without_phase(ifg_paths, params):
+def prepare_ifgs_without_phase(ifg_paths):
     ifgs = [Ifg(p) for p in ifg_paths]
     for i in ifgs:
         if not i.is_open:

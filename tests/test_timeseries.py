@@ -150,7 +150,7 @@ class MatlabTimeSeriesEquality(unittest.TestCase):
         refx, refy = run_pyrate.find_reference_pixel(ifgs, params)
         # Estimate and remove orbit errors
         run_pyrate.remove_orbital_error(ifgs, params)
-        ifgs = shared.prepare_ifgs_without_phase(dest_paths, params)
+        ifgs = shared.prepare_ifgs_without_phase(dest_paths)
         _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
 
         maxvar = [vcm_module.cvd(i, params)[0] for i in ifgs]
@@ -265,7 +265,7 @@ class MatlabTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
 
         # Estimate and remove orbit errors
         run_pyrate.remove_orbital_error(ifgs, params)
-        ifgs = shared.prepare_ifgs_without_phase(dest_paths, params)
+        ifgs = shared.prepare_ifgs_without_phase(dest_paths)
 
         _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
 
