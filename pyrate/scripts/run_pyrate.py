@@ -32,16 +32,20 @@ VERBOSE = True
 log = logging.getLogger(__name__)
 
 
-def process_ifgs(ifg_paths_or_instance, params):
+def process_ifgs(ifg_paths, params):
     """
     Top level function to perform PyRate correction steps on given ifgs
     ifgs: sequence of paths to interferrograms
     (NB: changes are saved into ifgs)
     params: dictionary of configuration parameters
     """
-    ifgs = pre_prepare_ifgs(ifg_paths_or_instance, params)
+    ifgs = pre_prepare_ifgs(ifg_paths, params)
 
-    mst_grid = mst_calculation(ifg_paths_or_instance, params)
+    if params[cf.NETWORKX_OR_MATLAB_FLAG]:   # Using matlab mst
+        mst_grid = mst_calculation(ifg_paths, params)
+    else:
+        ifg_instance = matlab_mst.IfgListPyRate(datafiles=ifg_paths)
+        mst_grid = mst_calculation(ifg_instance, params)
 
     # Estimate reference pixel location
     refpx, refpy = find_reference_pixel(ifgs, params)
@@ -60,7 +64,7 @@ def process_ifgs(ifg_paths_or_instance, params):
     # open ifgs again, but without phase conversion as already converted and
     # saved to disc
 
-    ifgs = prepare_ifgs_without_phase(ifg_paths_or_instance)
+    ifgs = prepare_ifgs_without_phase(ifg_paths)
     log.info('Estimating and removing phase at reference pixel')
     ref_phs, ifgs = rpe.estimate_ref_phase(ifgs, params, refpx, refpy)
 
@@ -148,7 +152,6 @@ def mst_calculation(ifg_paths_or_instance, params):
 
         mst_grid = mst.mst_parallel(ifgs, params)
     else:
-        # FIXME: the matlab side is broken
         nan_conversion = params[cf.NAN_CONVERSION]
         assert isinstance(ifg_paths_or_instance, matlab_mst.IfgListPyRate)
         ifgs = ifg_paths_or_instance.ifgs
@@ -411,11 +414,11 @@ def dest_ifg_paths(ifg_paths, outdir):
 def main(config_file):
     base_unw_paths, dest_paths, pars = cf.get_ifg_paths(config_file)
 
-    if pars[cf.NETWORKX_OR_MATLAB_FLAG]:  # Using networkx mst
-        process_ifgs(dest_paths, pars)
-    else:  # Using matlab mst
-        ifg_instance = matlab_mst.IfgListPyRate(datafiles=dest_paths)
-        process_ifgs(ifg_instance, pars)
+    # if pars[cf.NETWORKX_OR_MATLAB_FLAG]:  # Using networkx mst
+    process_ifgs(dest_paths, pars)
+    # else:  # Using matlab mst
+    #     ifg_instance = matlab_mst.IfgListPyRate(datafiles=dest_paths)
+    #     process_ifgs(ifg_instance, pars)
 
 
 def log_config_file(configfile, log_filename):
