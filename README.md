@@ -26,7 +26,7 @@ Questions or feedback about the PyRate software can be directed to [insar@ga.gov
 
 ## Licencing:
 
-TODO
+PyRate is distributed under an [Apache License, Version 2.0](http://www.apache.org/dev/apply-license.html).
 
 ## Dependencies:
 
