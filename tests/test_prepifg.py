@@ -1,9 +1,6 @@
 """
 Tests for prepifg.py: resampling, subsetting etc.
-
-.. codeauthor:: Ben Davies, Sudipta Basak
 """
-
 import os
 from os.path import exists, join
 import shutil
@@ -128,10 +125,12 @@ class PrepifgOutputTests(unittest.TestCase):
                  "geo_070326-070917_4rlks_3cr.tif"]
         self.exp_files = [join(self.random_dir, p) for p in paths]
 
-    def test_mlooked_paths(self):
+    @staticmethod
+    def test_mlooked_paths():
         test_mlooked_path()
 
-    def test_extents_from_params(self):
+    @staticmethod
+    def test_extents_from_params():
         test_extents_from_params()
 
     def tearDown(self):
@@ -210,7 +209,8 @@ class PrepifgOutputTests(unittest.TestCase):
         # NB: also verifies gdalwarp correctly copies geotransform across
         # NB: expected data copied from gdalinfo output
         gt = ifg.dataset.GetGeoTransform()
-        exp_gt = (150.911666666, 0.000833333, 0, -34.172499999, 0, -0.000833333)
+        exp_gt = (150.911666666, 0.000833333, 0,
+                  -34.172499999, 0, -0.000833333)
         for i, j in zip(gt, exp_gt):
             self.assertAlmostEqual(i, j)
         self.assert_geotransform_equal([self.exp_files[0], self.exp_files[4]])
@@ -222,7 +222,8 @@ class PrepifgOutputTests(unittest.TestCase):
     def test_custom_extents(self):
         xlooks = ylooks = 1
         cext = self._custom_extents_tuple()
-        prepare_ifgs(self.ifg_paths, CUSTOM_CROP, xlooks, ylooks, user_exts=cext)
+        prepare_ifgs(self.ifg_paths, CUSTOM_CROP, xlooks, ylooks,
+                     user_exts=cext)
 
         ifg = Ifg(self.exp_files[2])
         ifg.open()
@@ -266,8 +267,9 @@ class PrepifgOutputTests(unittest.TestCase):
                 tmp_latlon[i] += error
                 cext = CustomExts(*tmp_latlon)
 
-                self.assertRaises(PreprocessError, prepare_ifgs, self.ifg_paths,
-                                  CUSTOM_CROP, xlooks, ylooks, user_exts=cext)
+                self.assertRaises(PreprocessError, prepare_ifgs,
+                                  self.ifg_paths, CUSTOM_CROP,
+                                  xlooks, ylooks, user_exts=cext)
         # close ifgs
         for i in self.ifgs:
             i.close()
@@ -370,7 +372,8 @@ class ThresholdTests(unittest.TestCase):
         for thresh in [-10, -1, -0.5, 1.000001, 10]:
             self.assertRaises(ValueError, resample, data, 2, 2, thresh)
 
-    def test_nan_threshold(self):
+    @staticmethod
+    def test_nan_threshold():
         # test threshold based on number of NaNs per averaging tile
         data = ones((2, 10))
         data[0, 3:] = nan
@@ -387,7 +390,8 @@ class ThresholdTests(unittest.TestCase):
             res = resample(data, xscale=2, yscale=2, thresh=thresh)
             assert_array_equal(res, reshape(exp, res.shape))
 
-    def test_nan_threshold_alt(self):
+    @staticmethod
+    def test_nan_threshold_alt():
         # test threshold on odd numbers
         data = ones((3, 6))
         data[0] = nan
@@ -450,15 +454,15 @@ class SameSizeTests(unittest.TestCase):
 def test_mlooked_path():
     path = 'geo_060619-061002.tif'
     assert mlooked_path(path, looks=2, crop_out=4) == \
-           'geo_060619-061002_2rlks_4cr.tif'
+        'geo_060619-061002_2rlks_4cr.tif'
 
     path = 'some/dir/geo_060619-061002.tif'
     assert mlooked_path(path, looks=4, crop_out=2) == \
-           'some/dir/geo_060619-061002_4rlks_2cr.tif'
+        'some/dir/geo_060619-061002_4rlks_2cr.tif'
 
     path = 'some/dir/geo_060619-061002_4rlks.tif'
     assert mlooked_path(path, looks=4, crop_out=8) == \
-           'some/dir/geo_060619-061002_4rlks_4rlks_8cr.tif'
+        'some/dir/geo_060619-061002_4rlks_4rlks_8cr.tif'
 
 
 # class LineOfSightTests(unittest.TestCase):
@@ -526,7 +530,8 @@ def multilooking(src, xscale, yscale, thresh=0):
             num_values = num_cells - npsum(isnan(patch))
 
             if num_values >= thresh and num_values > 0:
-                reshaped = patch.reshape(size)  # nanmean() only works on 1g axis
+                # nanmean() only works on 1g axis
+                reshaped = patch.reshape(size)
                 dest[row, col] = nanmean(reshaped)
 
     return dest

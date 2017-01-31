@@ -53,7 +53,7 @@ def mst_parallel(ifgs, params):
     ncpus = params[cf.PROCESSES]
     no_ifgs = len(ifgs)
     no_y, no_x = ifgs[0].phase_data.shape
-    tiles = create_tiles(ifgs[0].shape, n_ifgs=no_ifgs)
+    tiles = create_tiles(ifgs[0].shape)
     no_tiles = len(tiles)
     # need to break up the ifg class as multiprocessing does not allow pickling
     # don't read in all the phase data at once

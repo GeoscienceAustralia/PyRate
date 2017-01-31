@@ -4,8 +4,10 @@ Main workflow script for PyRate
 """
 import logging
 import os
+from os.path import join
 import numpy as np
 from osgeo import gdal
+import pickle as cp
 
 import pyrate.config as cf
 import pyrate.linrate as linrate
@@ -20,29 +22,145 @@ from pyrate import matlab_mst as matlab_mst
 from pyrate import reference_phase_estimation as rpe
 from pyrate import vcm as vcm_module
 from pyrate.shared import Ifg, write_output_geotiff, \
-    pre_prepare_ifgs, prepare_ifgs_without_phase
+    pre_prepare_ifgs, prepare_ifgs_without_phase, create_tiles
 from pyrate.compat import PyAPS_INSTALLED
+from pyrate.nci.common_nci import save_latest_phase
+from pyrate import mpiops
 if PyAPS_INSTALLED:
     from pyrate import remove_aps_delay as aps
 
 PYRATEPATH = cf.PYRATEPATH
-
+MASTER_PROCESS = 0
 # print screen output
 VERBOSE = True
 log = logging.getLogger(__name__)
 
 
-def process_ifgs(ifg_paths, params):
+def get_tiles(ifg_path, rows, cols):
+    ifg = Ifg(ifg_path)
+    ifg.open(readonly=True)
+    tiles = create_tiles(ifg.shape, nrows=rows, ncols=cols)
+    ifg.close()
+    return tiles
+
+
+class PrereadIfg:
+
+    def __init__(self, path, nan_fraction, master, slave, time_span):
+        self.path = path
+        self.nan_fraction = nan_fraction
+        self.master = master
+        self.slave = slave
+        self.time_span = time_span
+
+
+def _join_dicts(dicts):
+    if dicts is None:
+        return
+    d = {k: v for D in dicts for k, v in D.items()}
+    return d
+
+
+def convert_phase_to_numpy(dest_tifs, params, tiles):
+    """
+    1. Convert ifg phase data into numpy binary files.
+    2. Save the preread_ifgs dict with information about the ifgs that are
+    later used for fast loading of Ifg files in IfgPart class
+
+    Parameters
+    ----------
+    dest_tifs: list
+        list of destination tifs
+    params: dict
+        config dict
+    tiles: list
+        list of all Tile instances
+
+    Returns
+    -------
+    preread_ifgs: str
+        preread_ifgs file path
+    """
+    preread_ifgs_dict = {}
+    process_tifs = np.array_split(dest_tifs, mpiops.size)[mpiops.rank]
+    for d in process_tifs:
+        ifg = save_latest_phase(d, tiles, params)
+        nan_fraction = ifg.nan_fraction
+        master = ifg.master
+        slave = ifg.slave
+        time_span = ifg.time_span
+        ifg.close()
+
+        preread_ifgs_dict[d] = {PrereadIfg(path=d,
+                                           nan_fraction=nan_fraction,
+                                           master=master,
+                                           slave=slave,
+                                           time_span=time_span)}
+
+    preread_ifgs_dict = _join_dicts(
+        mpiops.comm.gather(preread_ifgs_dict, root=0))
+
+    preread_ifgs = join(params[cf.OUT_DIR], 'preread_ifgs.pk')
+
+    if mpiops.rank == MASTER_PROCESS:
+        cp.dump(preread_ifgs_dict, open(preread_ifgs, 'wb'))
+
+    log.info('finish converting phase_data to numpy '
+             'in process {}'.format(mpiops.rank))
+    mpiops.comm.barrier()
+    return preread_ifgs
+
+
+def mpi_mst_calc(dest_tifs, params, tiles, preread_ifgs):
+    """
+    MPI function that control each process during MPI run
+    :param MPI_myID:
+    :param dest_tifs: paths of cropped amd resampled geotiffs
+    :param mpi_log_filename:
+    :param num_processors:
+    :param parallel: MPI Parallel class instance
+    :param params: config params dictionary
+    :param mst_file: mst file (2d numpy array) save to disc
+    :return:
+    """
+
+    log.info('Calculating mst')
+    log.info('Calculating minimum spanning tree matrix '
+             'using NetworkX method')
+    process_tiles = np.array_split(tiles, mpiops.size)[mpiops.rank]
+
+    # TODO: later change to use Tile.index instead of process indices
+    process_indices = np.array_split(range(len(tiles)),
+                                     mpiops.size)[mpiops.rank]
+
+    def save_mst_tile(tile, i, preread_ifgs):
+        mst_tile = mst.mst_multiprocessing(tile, dest_tifs, preread_ifgs)
+        # locally save the mst_mat
+        mst_file_process_n = os.path.join(
+            params[cf.OUT_DIR], 'mst_mat_{}.npy'.format(i))
+        np.save(file=mst_file_process_n, arr=mst_tile)
+
+    for t, p_ind in zip(process_tiles, process_indices):
+        save_mst_tile(t, p_ind, preread_ifgs)
+    log.info('finished mst calculation for process {}'.format(mpiops.rank))
+
+
+def process_ifgs(ifg_paths, params, rows, cols):
     """
     Top level function to perform PyRate correction steps on given ifgs
     ifgs: sequence of paths to interferrograms
     (NB: changes are saved into ifgs)
     params: dictionary of configuration parameters
     """
+    tiles = get_tiles(ifg_paths[0], rows, cols)
     ifgs = pre_prepare_ifgs(ifg_paths, params)
+    preread_ifgs = convert_phase_to_numpy(ifg_paths,
+                                          params=params,
+                                          tiles=tiles)
 
     if params[cf.NETWORKX_OR_MATLAB_FLAG]:   # Using matlab mst
         mst_grid = mst_calculation(ifg_paths, params)
+        mpi_mst_calc(ifg_paths, params, tiles, preread_ifgs)
     else:
         ifg_instance = matlab_mst.IfgListPyRate(datafiles=ifg_paths)
         mst_grid = mst_calculation(ifg_instance, params)
@@ -411,14 +529,9 @@ def dest_ifg_paths(ifg_paths, outdir):
     return [os.path.join(outdir, p) for p in bases]
 
 
-def main(config_file):
+def main(config_file, rows, cols):
     base_unw_paths, dest_paths, pars = cf.get_ifg_paths(config_file)
-
-    # if pars[cf.NETWORKX_OR_MATLAB_FLAG]:  # Using networkx mst
-    process_ifgs(dest_paths, pars)
-    # else:  # Using matlab mst
-    #     ifg_instance = matlab_mst.IfgListPyRate(datafiles=dest_paths)
-    #     process_ifgs(ifg_instance, pars)
+    process_ifgs(dest_paths, pars, rows, cols)
 
 
 def log_config_file(configfile, log_filename):

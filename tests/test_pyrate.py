@@ -139,7 +139,7 @@ class PyRateTests(unittest.TestCase):
             params[cf.APS_CORRECTION] = 0
             paths = glob.glob(join(cls.BASE_OUT_DIR, 'geo_*-*.tif'))
             params[cf.PARALLEL] = False
-            run_pyrate.process_ifgs(paths, params)
+            run_pyrate.process_ifgs(paths, params, 2, 2)
 
             if not hasattr(cls, 'ifgs'):
                 cls.ifgs = get_ifgs(out_dir=cls.BASE_OUT_DIR)
@@ -233,7 +233,7 @@ class ParallelPyRateTests(unittest.TestCase):
 
         cls.mst_p, cls.refpixel_p, cls.maxvar_p, cls.vcmt_p, cls.rate_p, \
             cls.error_p, cls.samples_p = \
-            run_pyrate.process_ifgs(cls.dest_paths, params)
+            run_pyrate.process_ifgs(cls.dest_paths, params, 3, 3)
         cls.mst_p_2 = run_pyrate.mst_calculation(cls.dest_paths, params)
 
         # now create the non parallel version
@@ -245,7 +245,7 @@ class ParallelPyRateTests(unittest.TestCase):
         run_prepifg.gamma_prepifg(base_unw_paths, params)
         cls.mst, cls.refpixel, cls.maxvar, cls.vcmt, cls.rate, \
         cls.error, cls.samples = \
-            run_pyrate.process_ifgs(cls.dest_paths_s, params)
+            run_pyrate.process_ifgs(cls.dest_paths_s, params, 3, 3)
 
     @classmethod
     def tearDownClass(cls):

@@ -810,46 +810,7 @@ class GeotiffException(Exception):
     pass
 
 
-def setup_tiles(shape, n_ifgs=17, nrows=10, ncols=10):
-    """
-    :param shape: tuple of shape
-    :param processes: processes that are going to to analyze the tiles
-    :param n_ifgs: number of ifgs
-    :param nrows: number of rows of tiles
-    :param ncols: number of columns of tiles
-    :return: list of Tile class instances
-    """
-    if len(shape) != 2:
-        raise ValueError('shape must be a length 2 tuple')
-
-    no_y, no_x = shape
-
-    if ncols > no_x or nrows > no_y:
-        raise ValueError('nrows/cols must be greater than number of y/x-pixels')
-
-    cols = np.array_split(range(no_x), ncols)
-    c_starts = [c[0] for c in cols]
-    c_ends = [c[-1] + 1 for c in cols]
-    max_cols_per_tile = max([len(c) for c in cols])
-
-    r_step = int(np.ceil(no_y)/nrows)
-    # assume that arrays of 32bit floats can be max ~500MB
-    # determine max array size, 4 bytes per 32 bits
-    r_step_500 = 500*1e6//(4*n_ifgs*max_cols_per_tile)
-    r_step = min(r_step, r_step_500)
-    nrows = no_y//r_step
-
-    rows = np.array_split(range(no_y), nrows)
-    r_starts = [c[0] for c in rows]
-    r_ends = [c[-1] + 1 for c in rows]
-
-    top_lefts = list(product(r_starts, c_starts))
-    bottom_rights = list(product(r_ends, c_ends))
-
-    return [Tile(t, b) for t, b in zip(top_lefts, bottom_rights)]
-
-
-def create_tiles(shape, n_ifgs=17, nrows=2, ncols=2):
+def create_tiles(shape, nrows=2, ncols=2):
     """
     shape must be a 2-tuple, i.e., 2d_array.shape.
     The returned list contains nrowsXncols Tiles with each tile preserving the
@@ -861,12 +822,18 @@ def create_tiles(shape, n_ifgs=17, nrows=2, ncols=2):
     When the array shape (rows, cols) are not divisible by (nrows, ncols) then
     some of the array dimensions can change according to numpy.array_split.
 
-    :param shape: tuple of shape
-    :param processes: processes that are going to to analyze the tiles
-    :param n_ifgs: number of ifgs
-    :param nrows: number of rows of tiles
-    :param ncols: number of columns of tiles
-    :return: list of Tile class instances
+    Parameters
+    ----------
+    :param shape: tuple
+        shape tuple of ifg
+    :param nrows: int
+        number of rows of tiles
+    :param ncols: int
+        number of columns of tiles
+
+    Returns
+    -------
+    list of Tile class instances
     """
 
     if len(shape) != 2:
@@ -875,20 +842,11 @@ def create_tiles(shape, n_ifgs=17, nrows=2, ncols=2):
     no_y, no_x = shape
 
     if ncols > no_x or nrows > no_y:
-        raise ValueError('nrows/cols must be greater than number of y/x-pixels')
-
+        raise ValueError('nrows/cols must be greater than ifg dimensions')
     col_arr = np.array_split(range(no_x), ncols)
-    max_cols_per_tile = max([len(c) for c in col_arr])
-
-    r_step = int(np.ceil(no_y) / nrows)
-    # assume that arrays of 32bit floats can be max ~100MB
-    # determine max array size, 4 bytes per 32 bits
-    r_step_500 = 100 * 1e6 // (4 * n_ifgs * max_cols_per_tile)
-    r_step = min(r_step, r_step_500)
-    nrows = no_y // r_step
     row_arr = np.array_split(range(no_y), nrows)
     return [Tile(i, (r[0], c[0]), (r[-1]+1, c[-1]+1))
-                for i, (r, c) in enumerate(product(row_arr, col_arr))]
+            for i, (r, c) in enumerate(product(row_arr, col_arr))]
 
 
 class Tile:
@@ -951,9 +909,11 @@ def pre_prepare_ifgs(ifg_paths, params):
 
 def nan_and_mm_convert(ifg, params):
     """
-    :param ifg: Ifg class instance
-    :param params:
-    :return:
+    Parameters
+    ----------
+    ifg: Ifg class instance
+    params: dict
+        parameters dict
     """
     nan_conversion = params[cf.NAN_CONVERSION]
     if nan_conversion:  # nan conversion happens here in networkx mst

@@ -23,12 +23,12 @@ if PyAPS_INSTALLED:
     from pyrate import remove_aps_delay as aps
 
 gdal.SetCacheMax(64)
-__author__ = 'sudipta'
 
 # Constants
 MASTER_PROCESS = 0
 data_path = 'DATAPATH'
-PrereadIfg = namedtuple('PrereadIfg', 'path nan_fraction master slave time_span')
+PrereadIfg = namedtuple('PrereadIfg',
+                        'path nan_fraction master slave time_span')
 
 
 def main(params, config_file=sys.argv[1]):
@@ -85,12 +85,8 @@ def main(params, config_file=sys.argv[1]):
 
     print('Processor {} has {} tiles'.format(rank, len(process_tiles)))
     # Calc mst using MPI
-    if rank == MASTER_PROCESS:
-        mpi_mst_calc(dest_tifs, process_tiles, process_indices,
-                     preread_ifgs, params, parallel)
-    else:
-        mpi_mst_calc(dest_tifs, process_tiles, process_indices,
-                     preread_ifgs, params, parallel)
+    mpi_mst_calc(dest_tifs, process_tiles, process_indices,
+                 preread_ifgs, params, parallel)
 
     parallel.barrier()
 
