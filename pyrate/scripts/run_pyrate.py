@@ -129,20 +129,31 @@ def mpi_mst_calc(dest_tifs, params, tiles, preread_ifgs):
              'using NetworkX method')
     process_tiles = np.array_split(tiles, mpiops.size)[mpiops.rank]
 
-    # TODO: later change to use Tile.index instead of process indices
-    process_indices = np.array_split(range(len(tiles)),
-                                     mpiops.size)[mpiops.rank]
-
     def save_mst_tile(tile, i, preread_ifgs):
-        mst_tile = mst.mst_multiprocessing(tile, dest_tifs, preread_ifgs)
+        if params[cf.NETWORKX_OR_MATLAB_FLAG]:
+            mst_tile = mst.mst_multiprocessing(tile, dest_tifs, preread_ifgs)
+        else:
+            raise cf.ConfigException('Matlab mst not supported yet')
+            # mst_tile = mst.mst_multiprocessing(tile, dest_tifs, preread_ifgs)
         # locally save the mst_mat
         mst_file_process_n = os.path.join(
             params[cf.OUT_DIR], 'mst_mat_{}.npy'.format(i))
         np.save(file=mst_file_process_n, arr=mst_tile)
 
-    for t, p_ind in zip(process_tiles, process_indices):
-        save_mst_tile(t, p_ind, preread_ifgs)
+    for t in process_tiles:
+        save_mst_tile(t, t.index, preread_ifgs)
     log.info('finished mst calculation for process {}'.format(mpiops.rank))
+
+
+def temp_mst_grid_reconstruct(tiles, ifgs, params):
+    mst_grid = np.empty(shape=(len(ifgs), ifgs[0].shape[0], ifgs[0].shape[1]),
+                        dtype=bool)
+    for t in tiles:
+        mst_f = os.path.join(
+            params[cf.OUT_DIR], 'mst_mat_{}.npy'.format(t.index))
+        mst_grid[:, t.top_left_y:t.bottom_right_y,
+                 t.top_left_x:t.bottom_right_x] = np.load(mst_f)
+    return mst_grid
 
 
 def process_ifgs(ifg_paths, params, rows, cols):
@@ -158,12 +169,8 @@ def process_ifgs(ifg_paths, params, rows, cols):
                                           params=params,
                                           tiles=tiles)
 
-    if params[cf.NETWORKX_OR_MATLAB_FLAG]:   # Using matlab mst
-        mst_grid = mst_calculation(ifg_paths, params)
-        mpi_mst_calc(ifg_paths, params, tiles, preread_ifgs)
-    else:
-        ifg_instance = matlab_mst.IfgListPyRate(datafiles=ifg_paths)
-        mst_grid = mst_calculation(ifg_instance, params)
+    mpi_mst_calc(ifg_paths, params, tiles, preread_ifgs)
+    mst_grid = temp_mst_grid_reconstruct(tiles, ifgs, params)
 
     # Estimate reference pixel location
     refpx, refpy = find_reference_pixel(ifgs, params)

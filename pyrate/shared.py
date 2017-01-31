@@ -824,11 +824,11 @@ def create_tiles(shape, nrows=2, ncols=2):
 
     Parameters
     ----------
-    :param shape: tuple
+    shape: tuple
         shape tuple of ifg
-    :param nrows: int
+    nrows: int
         number of rows of tiles
-    :param ncols: int
+    ncols: int
         number of columns of tiles
 
     Returns
@@ -850,7 +850,21 @@ def create_tiles(shape, nrows=2, ncols=2):
 
 
 class Tile:
+    """
+    Tile class containing part of the ifgs
+    """
     def __init__(self, index, top_left, bottom_right):
+        """
+        Parameters
+        ----------
+        index: int
+            identifying index of a tile
+        top_left: tuple
+            ifg index of top left of tile
+        bottom_right: tuple
+            ifg index of bottom right of tile
+        """
+
         self.index = index
         self.top_left = top_left
         self.bottom_right = bottom_right
