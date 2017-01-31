@@ -70,7 +70,7 @@ $ git clone git@github.com:GeoscienceAustralia/PyRate.git
 4. Install `pyrate`:
 ```bash
 $ cd PyRate
-$ pip install python-daemon==2.1.1  # the latest python-daemon has issues on some systems
+$ pip install python-daemon==2.1.1  # the latest python-daemon had 
 $ python setup.py install
 ```
 
@@ -93,11 +93,6 @@ $ git pull origin
 $ python setup.py install
 ```
 If the pull and the installation complete successfully, the code is ready to run!
-
-
-
-
-
 
 ## Running Batch Jobs
 
