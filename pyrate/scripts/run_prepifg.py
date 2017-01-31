@@ -5,6 +5,7 @@ import os
 import logging
 import luigi
 from joblib import Parallel, delayed
+import numpy as np
 
 from pyrate.tasks.utils import pythonify_config
 from pyrate.tasks.prepifg import PrepareInterferograms
@@ -15,6 +16,7 @@ from pyrate import gamma
 from pyrate.shared import write_geotiff, mkdir_p
 from pyrate.tasks import gamma as gamma_task
 import pyrate.ifgconstants as ifc
+from pyrate import mpiops
 
 log = logging.getLogger(__name__)
 
@@ -64,6 +66,10 @@ def main(params=None):
 
     PROCESSOR = params[cf.PROCESSOR]  # roipac or gamma
 
+    if mpiops.size > 1:
+        LUIGI = False
+        params[cf.PARALLEL] = False
+
     if LUIGI:
         log.info("Running luigi prepifg")
         luigi.configuration.LuigiConfigParser.add_config_path(
@@ -71,10 +77,12 @@ def main(params=None):
         luigi.build([PrepareInterferograms()], local_scheduler=True)
     else:
         log.info("Running serial prepifg")
+        process_base_ifgs_paths = \
+            np.array_split(base_ifg_paths, mpiops.size)[mpiops.rank]
         if PROCESSOR == ROIPAC:
-            roipac_prepifg(base_ifg_paths, params)
+            roipac_prepifg(process_base_ifgs_paths, params)
         elif PROCESSOR == GAMMA:
-            gamma_prepifg(base_ifg_paths, params)
+            gamma_prepifg(process_base_ifgs_paths, params)
         else:
             raise prepifg.PreprocessError('Processor must be Roipac(0) or '
                                           'Gamma(1)')
