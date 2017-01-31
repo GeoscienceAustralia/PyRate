@@ -288,15 +288,19 @@ class ParallelPyRateTests(unittest.TestCase):
         np.testing.assert_array_equal(self.refpixel, self.refpixel_p)
 
     def test_maxvar_equal(self):
-        np.testing.assert_array_equal(self.maxvar, self.maxvar_p)
+        np.testing.assert_array_almost_equal(self.maxvar, self.maxvar_p,
+                                             decimal=4)
 
     def test_vcmt_equal(self):
-        np.testing.assert_array_equal(self.vcmt, self.vcmt_p)
+        np.testing.assert_array_almost_equal(self.vcmt, self.vcmt_p, decimal=4)
 
     def test_linear_rate_equal(self):
-        np.testing.assert_array_almost_equal(self.rate, self.rate_p)
-        np.testing.assert_array_almost_equal(self.error, self.error_p)
-        np.testing.assert_array_almost_equal(self.samples, self.samples_p)
+        np.testing.assert_array_almost_equal(self.rate, self.rate_p,
+                                             decimal=4)
+        np.testing.assert_array_almost_equal(self.error, self.error_p,
+                                             decimal=4)
+        np.testing.assert_array_almost_equal(self.samples, self.samples_p,
+                                             decimal=4)
 
 
 class TestPrePrepareIfgs(unittest.TestCase):
