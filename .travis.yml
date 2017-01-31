@@ -52,6 +52,7 @@ install:
   - if [[ $TRAVIS_PYTHON_VERSION == 3.3 ]]; then pip install numpy==1.10.1 matplotlib==1.5.1; fi
   - pip install -r requirements-dev.txt
   - pip install GDAL==$(gdal-config --version)
+  - python setup.py install
 
 # command to run tests, e.g. python setup.py test
 script:
