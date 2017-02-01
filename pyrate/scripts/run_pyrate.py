@@ -156,6 +156,40 @@ def temp_mst_grid_reconstruct(tiles, ifgs, params):
     return mst_grid
 
 
+def ref_pixel_calc_mpi(ifg_paths, params):
+    half_patch_size, thresh, grid = refpixel.ref_pixel_setup(ifg_paths, params)
+    process_grid = np.array_split(grid, mpiops.size)[mpiops.rank]
+    save_ref_pixel_blocks(process_grid, half_patch_size, ifg_paths, params)
+    mean_sds = refpixel.ref_pixel_mpi(process_grid, half_patch_size,
+                                      ifg_paths, thresh, params)
+    mean_sds = mpiops.comm.gather(mean_sds, root=0)
+    if mpiops.rank == MASTER_PROCESS:
+        mean_sds = np.hstack(mean_sds)
+    refx, refy = mpiops.run_once(refpixel.filter_means, mean_sds, grid)
+    return refx, refy
+
+
+def save_ref_pixel_blocks(grid, half_patch_size, ifg_paths, params):
+    # process_ifg_paths = np.array_split(ifg_paths, mpiops.size)[mpiops.rank]
+    outdir = params[cf.OUT_DIR]
+    for p in ifg_paths:
+        for y, x in grid:
+            ifg = Ifg(p)
+            ifg.open(readonly=True)
+            ifg.nodata_value = params[cf.NO_DATA_VALUE]
+            ifg.convert_to_nans()
+            ifg.convert_to_mm()
+            data = ifg.phase_data[y - half_patch_size:y + half_patch_size + 1,
+                                  x - half_patch_size:x + half_patch_size + 1]
+
+            data_file = os.path.join(outdir,
+                                     'ref_phase_data_{b}_{y}_{x}.npy'.format(
+                                         b=os.path.basename(p).split('.')[0],
+                                         y=y, x=x)
+                                     )
+            np.save(file=data_file, arr=data)
+
+
 def process_ifgs(ifg_paths, params, rows, cols):
     """
     Top level function to perform PyRate correction steps on given ifgs
@@ -163,6 +197,9 @@ def process_ifgs(ifg_paths, params, rows, cols):
     (NB: changes are saved into ifgs)
     params: dictionary of configuration parameters
     """
+    if mpiops.size > 1:
+        params[cf.PARALLEL] = False
+
     tiles = get_tiles(ifg_paths[0], rows, cols)
     ifgs = pre_prepare_ifgs(ifg_paths, params)
     preread_ifgs = convert_phase_to_numpy(ifg_paths,
@@ -173,7 +210,7 @@ def process_ifgs(ifg_paths, params, rows, cols):
     mst_grid = temp_mst_grid_reconstruct(tiles, ifgs, params)
 
     # Estimate reference pixel location
-    refpx, refpy = find_reference_pixel(ifgs, params)
+    refpx, refpy = ref_pixel_calc_mpi(ifg_paths, params)
 
     # remove APS delay here, and write aps delay removed ifgs disc
     if PyAPS_INSTALLED and aps_delay_required(ifgs, params):

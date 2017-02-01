@@ -196,7 +196,8 @@ def ref_pixel_calc_mpi(MPI_myID, ifg_paths, num_processors, parallel, params):
 def save_ref_pixel_blocks(grid, half_patch_size, ifg_paths, parallel, params):
     no_ifgs = len(ifg_paths)
     process_path_indices = parallel.calc_indices(no_ifgs)
-    process_ifg_paths = [itemgetter(p)(ifg_paths) for p in process_path_indices]
+    process_ifg_paths = [itemgetter(p)(ifg_paths)
+                         for p in process_path_indices]
     outdir = params[cf.OUT_DIR]
     for p in process_ifg_paths:
         for y, x in grid:
