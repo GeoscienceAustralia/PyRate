@@ -143,6 +143,7 @@ def mpi_mst_calc(dest_tifs, params, tiles, preread_ifgs):
     for t in process_tiles:
         save_mst_tile(t, t.index, preread_ifgs)
     log.info('finished mst calculation for process {}'.format(mpiops.rank))
+    mpiops.comm.barrier()
 
 
 def temp_mst_grid_reconstruct(tiles, ifgs, params):
@@ -157,6 +158,7 @@ def temp_mst_grid_reconstruct(tiles, ifgs, params):
 
 
 def ref_pixel_calc_mpi(ifg_paths, params):
+    log.info('Starting ref pixel computation')
     half_patch_size, thresh, grid = refpixel.ref_pixel_setup(ifg_paths, params)
     process_grid = np.array_split(grid, mpiops.size)[mpiops.rank]
     save_ref_pixel_blocks(process_grid, half_patch_size, ifg_paths, params)
@@ -166,6 +168,7 @@ def ref_pixel_calc_mpi(ifg_paths, params):
     if mpiops.rank == MASTER_PROCESS:
         mean_sds = np.hstack(mean_sds)
     refx, refy = mpiops.run_once(refpixel.filter_means, mean_sds, grid)
+    log.info('Finished ref pixel computation')
     return refx, refy
 
 
@@ -190,6 +193,17 @@ def save_ref_pixel_blocks(grid, half_patch_size, ifg_paths, params):
             np.save(file=data_file, arr=data)
 
 
+def orb_fit_calc_mpi(ifg_paths, params):
+    log.info('Calculating orbfit correction')
+    if params[cf.ORBITAL_FIT_METHOD] != 1:
+        raise cf.ConfigException('Only orbfit method 1 is supported')
+    process_ifgs = np.array_split(ifg_paths, mpiops.size)[mpiops.rank]
+    mlooked = None
+    # TODO: MPI orbfit method 2
+    orbital.orbital_correction(process_ifgs, params, mlooked=mlooked)
+    log.info('Finished orbfit calculation in process {}'.format(mpiops.rank))
+
+
 def process_ifgs(ifg_paths, params, rows, cols):
     """
     Top level function to perform PyRate correction steps on given ifgs
@@ -212,7 +226,7 @@ def process_ifgs(ifg_paths, params, rows, cols):
     # Estimate reference pixel location
     refpx, refpy = ref_pixel_calc_mpi(ifg_paths, params)
 
-    # remove APS delay here, and write aps delay removed ifgs disc
+    # remove APS delay here, and write aps delay removed ifgs to disc
     if PyAPS_INSTALLED and aps_delay_required(ifgs, params):
         ifgs = aps.remove_aps_delay(ifgs, params)
         log.info('Finished APS delay correction')
@@ -222,7 +236,8 @@ def process_ifgs(ifg_paths, params, rows, cols):
         check_aps_ifgs(ifgs)
 
     # Estimate and remove orbit errors
-    remove_orbital_error(ifgs, params)
+    orb_fit_calc_mpi(ifgs, params)
+
     # open ifgs again, but without phase conversion as already converted and
     # saved to disc
 
