@@ -146,9 +146,13 @@ def mpi_mst_calc(dest_tifs, params, tiles, preread_ifgs):
     mpiops.comm.barrier()
 
 
-def temp_mst_grid_reconstruct(tiles, ifgs, params):
-    mst_grid = np.empty(shape=(len(ifgs), ifgs[0].shape[0], ifgs[0].shape[1]),
+def temp_mst_grid_reconstruct(tiles, ifg_paths, params):
+    ifg = Ifg(ifg_paths[0])
+    ifg.open(readonly=True)
+
+    mst_grid = np.empty(shape=(len(ifg_paths), ifg.shape[0], ifg.shape[1]),
                         dtype=bool)
+    ifg.close()
     for t in tiles:
         mst_f = os.path.join(
             params[cf.OUT_DIR], 'mst_mat_{}.npy'.format(t.index))
@@ -203,7 +207,6 @@ def orb_fit_calc_mpi(ifg_paths, params):
     orbital.orbital_correction(process_ifgs, params, mlooked=mlooked)
     log.info('Finished orbfit calculation in process {}'.format(mpiops.rank))
 
-
 def process_ifgs(ifg_paths, params, rows, cols):
     """
     Top level function to perform PyRate correction steps on given ifgs
@@ -215,18 +218,19 @@ def process_ifgs(ifg_paths, params, rows, cols):
         params[cf.PARALLEL] = False
 
     tiles = get_tiles(ifg_paths[0], rows, cols)
-    ifgs = pre_prepare_ifgs(ifg_paths, params)
+    # ifgs = pre_prepare_ifgs(ifg_paths, params)
     preread_ifgs = convert_phase_to_numpy(ifg_paths,
                                           params=params,
                                           tiles=tiles)
 
     mpi_mst_calc(ifg_paths, params, tiles, preread_ifgs)
-    mst_grid = temp_mst_grid_reconstruct(tiles, ifgs, params)
+    mst_grid = temp_mst_grid_reconstruct(tiles, ifg_paths, params)
 
     # Estimate reference pixel location
     refpx, refpy = ref_pixel_calc_mpi(ifg_paths, params)
 
     # remove APS delay here, and write aps delay removed ifgs to disc
+    # TODO: fix PyAPS integration
     if PyAPS_INSTALLED and aps_delay_required(ifgs, params):
         ifgs = aps.remove_aps_delay(ifgs, params)
         log.info('Finished APS delay correction')
@@ -236,12 +240,14 @@ def process_ifgs(ifg_paths, params, rows, cols):
         check_aps_ifgs(ifgs)
 
     # Estimate and remove orbit errors
-    orb_fit_calc_mpi(ifgs, params)
+    orb_fit_calc_mpi(ifg_paths, params)
+
+    # calculate phase sum for later use in orbfit
+    phase_sum_mpi(ifg_paths, params)
 
     # open ifgs again, but without phase conversion as already converted and
     # saved to disc
-
-    ifgs = prepare_ifgs_without_phase(ifg_paths)
+    # ifgs = prepare_ifgs_without_phase(ifg_paths)
     log.info('Estimating and removing phase at reference pixel')
     ref_phs, ifgs = rpe.estimate_ref_phase(ifgs, params, refpx, refpy)
 
@@ -275,6 +281,46 @@ def process_ifgs(ifg_paths, params, rows, cols):
 
     log.info('PyRate workflow completed')
     return mst_grid, (refpx, refpy), maxvar, vcmt, rate, error, samples
+
+
+def phase_sum_mpi(ifg_paths, params):
+    """
+    save phase data and phase_sum used in the reference phase estimation
+    Parameters
+    ----------
+    ifg_paths: list:
+        list of paths to ifgs
+    params: dict
+        config dict
+    """
+    p_paths = np.array_split(ifg_paths, mpiops.size)[mpiops.rank]
+    ifg = Ifg(p_paths[0])
+    ifg.open(readonly=True)
+    phase_sum = np.empty(shape=ifg.shape, dtype=np.float64)
+    ifg.close()
+
+    for d in p_paths:
+        ifg = Ifg(d)
+        ifg.open()
+        ifg.nodata_value = params[cf.NO_DATA_VALUE]
+        phase_sum += ifg.phase_data
+        ifg.save_numpy_phase(
+            numpy_file=os.path.join(
+                params[cf.OUT_DIR],
+                os.path.basename(d).split('.')[0] + '.npy'
+            )
+        )
+        ifg.close()
+
+    if mpiops.rank == MASTER_PROCESS:
+        for i in range(1, mpiops.size):  # loop is better for memory
+            phase_sum += mpiops.comm.Recv(phase_sum, source=0, tag=i)
+        comp = np.isnan(phase_sum)  # this is the same as in Matlab
+        comp = np.ravel(comp, order='F')  # this is the same as in Matlab
+        np.save(file=os.path.join(params[cf.OUT_DIR], 'comp.npy'), arr=comp)
+    else:
+        mpiops.comm.Send(phase_sum, dest=0, tag=mpiops.rank)
+    mpiops.comm.barrier()
 
 
 def write_linrate_numpy_files(error, params, rate, samples):
