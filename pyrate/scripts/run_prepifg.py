@@ -65,24 +65,24 @@ def main(params=None):
     PROCESSOR = params[cf.PROCESSOR]  # roipac or gamma
 
     if LUIGI:
-        log.info("Running luigi prepifg")
+        log.info("Running prepifg using luigi")
         luigi.configuration.LuigiConfigParser.add_config_path(
             pythonify_config(raw_config_file))
         luigi.build([PrepareInterferograms()], local_scheduler=True)
     else:
-        log.info("Running serial prepifg")
         if PROCESSOR == ROIPAC:
             roipac_prepifg(base_ifg_paths, params)
         elif PROCESSOR == GAMMA:
             gamma_prepifg(base_ifg_paths, params)
         else:
-            raise prepifg.PreprocessError('Processor must be Roipac(0) or '
-                                          'Gamma(1)')
-    log.info('Finished prepifg')
+            raise prepifg.PreprocessError('Processor must be ROIPAC (0) or '
+                                          'GAMMA (1)')
+    log.info("Finished prepifg")
 
 
 def roipac_prepifg(base_ifg_paths, params):
-    log.info("Running roipac prepifg")
+    log.info("Preparing ROIPAC format interferograms")
+    log.info("Running serial prepifg")
     xlooks, ylooks, crop = cf.transform_params(params)
     dem_file = os.path.join(params[cf.ROIPAC_RESOURCE_HEADER])
     projection = roipac.parse_header(dem_file)[ifc.PYRATE_DATUM]
@@ -98,17 +98,18 @@ def roipac_prepifg(base_ifg_paths, params):
 
 
 def gamma_prepifg(base_unw_paths, params):
-    log.info("Running gamma prepifg")
+    log.info("Preparing GAMMA format interferograms")
     parallel = params[cf.PARALLEL]
 
     # dest_base_ifgs: location of geo_tif's
     if parallel:
-        print('running gamma in parallel with {} '
-              'processes'.format(params[cf.PROCESSES]))
+        log.info("Running prepifg in parallel with {} "
+              "processes".format(params[cf.PROCESSES]))
         dest_base_ifgs = Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
             delayed(gamma_multiprocessing)(p, params)
             for p in base_unw_paths)
     else:
+        log.info("Running prepifg in serial")
         dest_base_ifgs = [gamma_multiprocessing(b, params)
                           for b in base_unw_paths]
     ifgs = [prepifg.dem_or_ifg(p) for p in dest_base_ifgs]
@@ -144,6 +145,6 @@ def gamma_multiprocessing(b, params):
             params[cf.OUT_DIR], f + '_' + e + '.tif')
         # TODO: implement incidence class here
         combined_headers['FILE_TYPE'] = 'Incidence'
-
+        
     write_geotiff(combined_headers, b, d, nodata=params[cf.NO_DATA_VALUE])
     return d
