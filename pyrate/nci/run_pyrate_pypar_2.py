@@ -188,22 +188,6 @@ def maxvar_vcm_mpi(rank, ifg_paths, parallel, params):
     return maxvar, vcmt
 
 
-def orb_fit_calc_mpi(ifg_paths, parallel, params):
-    print('calculating orbfit correction')
-    if params[cf.ORBITAL_FIT_METHOD] != 1:
-        raise cf.ConfigException('For now orbfit method must be 1')
-
-    # ifgs = shared.prepare_ifgs_without_phase(ifg_paths, params)
-    no_ifgs = len(ifg_paths)
-    process_indices = parallel.calc_indices(no_ifgs)
-    process_ifgs = [itemgetter(p)(ifg_paths) for p in process_indices]
-
-    mlooked = None
-    # TODO: MPI orbfit method 2
-    orbital.orbital_correction(process_ifgs, params, mlooked=mlooked)
-    print('finished orbfit calculation for process {}'.format(parallel.rank))
-
-
 if __name__ == '__main__':
     # read in the config file, and params for the simulation
     params = run_pyrate.get_ifg_paths()[2]

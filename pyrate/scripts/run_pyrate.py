@@ -197,7 +197,7 @@ def save_ref_pixel_blocks(grid, half_patch_size, ifg_paths, params):
             np.save(file=data_file, arr=data)
 
 
-def orb_fit_calc_mpi(ifg_paths, params):
+def orb_fit_calc(ifg_paths, params):
     log.info('Calculating orbfit correction')
     if params[cf.ORBITAL_FIT_METHOD] != 1:
         raise cf.ConfigException('Only orbfit method 1 is supported')
@@ -206,6 +206,93 @@ def orb_fit_calc_mpi(ifg_paths, params):
     # TODO: MPI orbfit method 2
     orbital.orbital_correction(process_ifgs, params, mlooked=mlooked)
     log.info('Finished orbfit calculation in process {}'.format(mpiops.rank))
+
+
+def ref_phase_estimation_mpi(ifg_paths, params, refpx, refpy, tiles):
+    # TODO: may benefit from tiling and using a median of median algorithms
+    log.info('Finding and removing reference phase')
+    process_ifgs = np.array_split(ifg_paths, mpiops.size)[mpiops.rank]
+    process_ref_phs = np.zeros(len(process_ifgs))
+    output_dir = params[cf.OUT_DIR]
+    if params[cf.REF_EST_METHOD] == 1:
+        for n, p in enumerate(process_ifgs):
+            process_ref_phs[n] = ref_phase_method1_dummy(p, output_dir)
+            log.info('finished processing {} of process total {}, ' \
+                     'of overall {}'.format(n, len(process_ifgs),
+                                            len(ifg_paths)))
+
+    elif params[cf.REF_EST_METHOD] == 2:
+        for n, p in enumerate(process_ifgs):
+            print('========================>>>>>>>>>>>>>>>>>>>>>>>>>', p)
+            process_ref_phs[n] = ref_phase_method2_dummy(params, p,
+                                                         refpx, refpy, tiles)
+            log.info('finished processing {} of process total {}, '
+                     'of overall {}'.format(n, len(process_ifgs),
+                                            len(ifg_paths)))
+    else:
+        raise cf.ConfigException('Ref phase estimation method must be 1 or 2')
+
+    ref_phs_file = os.path.join(params[cf.OUT_DIR], 'ref_phs.npy')
+
+    if mpiops.rank == MASTER_PROCESS:
+        ref_phs = np.zeros(len(ifg_paths))
+        process_indices = np.array_split(range(len(ifg_paths)),
+                                         mpiops.size)[mpiops.rank]
+        ref_phs[process_indices] = process_ref_phs
+        for r in range(1, mpiops.size):
+            process_indices = np.array_split(range(len(ifg_paths)),
+                                             mpiops.size)[r]
+            ref_phs[process_indices] = \
+                mpiops.comm.receive(source=r, tag=r,
+                                    return_status=False)
+        np.save(file=ref_phs_file, arr=ref_phs)
+    else:
+        # send reference phase data to master process
+        mpiops.comm.send(process_ref_phs, destination=MASTER_PROCESS,
+                         tag=mpiops.rank)
+
+
+def ref_phase_method2_dummy(params, ifg_path, refpx, refpy, tiles):
+    half_chip_size = int(np.floor(params[cf.REF_CHIP_SIZE] / 2.0))
+    chipsize = 2 * half_chip_size + 1
+    thresh = chipsize * chipsize * params[cf.REF_MIN_FRAC]
+    output_dir = params[cf.OUT_DIR]
+    numpy_file = os.path.join(
+        output_dir, os.path.basename(ifg_path).split('.')[0] + '.npy')
+    print("INSIDE method2 dummy===================================================================")
+    print(ifg_path)
+    print(numpy_file)
+    phase_data = np.load(numpy_file)
+
+    ref_phs = rpe.est_ref_phase_method2_multi(phase_data,
+                                              half_chip_size,
+                                              refpx, refpy, thresh)
+    phase_data -= ref_phs
+    ifg = Ifg(ifg_path)
+    ifg.open()
+    md = ifg.meta_data
+    md[ifc.REF_PHASE] = ifc.REF_PHASE_REMOVED
+    ifg.write_modified_phase(data=phase_data)
+    ifg.close()
+    return ref_phs
+
+
+def ref_phase_method1_dummy(ifg_path, output_dir):
+    comp_file = os.path.join(output_dir, 'comp.npy')
+    comp = np.load(comp_file)
+    numpy_file = os.path.join(
+        output_dir, os.path.basename(ifg_path).split('.')[0] + '.npy')
+    phase_data = np.load(numpy_file)
+    ref_phs = rpe.est_ref_phase_method1_multi(phase_data, comp)
+    phase_data -= ref_phs
+    ifg = Ifg(ifg_path)
+    ifg.open()
+    md = ifg.meta_data
+    md[ifc.REF_PHASE] = ifc.REF_PHASE_REMOVED
+    ifg.write_modified_phase(data=phase_data)
+    ifg.close()
+    return ref_phs
+
 
 def process_ifgs(ifg_paths, params, rows, cols):
     """
@@ -240,20 +327,23 @@ def process_ifgs(ifg_paths, params, rows, cols):
         check_aps_ifgs(ifgs)
 
     # Estimate and remove orbit errors
-    orb_fit_calc_mpi(ifg_paths, params)
+    orb_fit_calc(ifg_paths, params)
 
-    # calculate phase sum for later use in orbfit
-    phase_sum_mpi(ifg_paths, params)
+    # calculate phase sum for later use in ref phase method 1
+    if params[cf.REF_EST_METHOD] == 1:   # this block can be moved in ref phs 1
+        phase_sum_mpi(ifg_paths, params)
 
     # open ifgs again, but without phase conversion as already converted and
     # saved to disc
-    # ifgs = prepare_ifgs_without_phase(ifg_paths)
+    ifgs = prepare_ifgs_without_phase(ifg_paths)
     log.info('Estimating and removing phase at reference pixel')
     ref_phs, ifgs = rpe.estimate_ref_phase(ifgs, params, refpx, refpy)
 
+    ref_phase_estimation_mpi(ifg_paths, params, refpx, refpy, tiles)
     # save reference phase
-    ref_phs_file = os.path.join(params[cf.OUT_DIR], 'ref_phs.npy')
-    np.save(file=ref_phs_file, arr=ref_phs)
+    # ref_phs_file = os.path.join(params[cf.OUT_DIR], 'ref_phs.npy')
+    # np.save(file=ref_phs_file, arr=ref_phs)
+
 
     # TODO: assign maxvar to ifg metadata (and geotiff)?
     log.info('Calculating maximum variance in interferograms')

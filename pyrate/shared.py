@@ -249,6 +249,11 @@ class Ifg(RasterBase):
     def __init__(self, path):
         """
         Interferogram constructor, for 2 band ROIPAC Ifg raster datasets.
+
+        Parameters
+        ----------
+        path: str
+            path to ifg
         """
 
         RasterBase.__init__(self, path)
@@ -931,6 +936,7 @@ def nan_and_mm_convert(ifg, params):
     """
     nan_conversion = params[cf.NAN_CONVERSION]
     if nan_conversion:  # nan conversion happens here in networkx mst
+        # if not ifg.nan_converted:
         ifg.nodata_value = params[cf.NO_DATA_VALUE]
         ifg.convert_to_nans()
     if not ifg.mm_converted:

@@ -49,6 +49,11 @@ def save_latest_phase(ifg_path, tiles, params):
     ifg.open()
     shared.nan_and_mm_convert(ifg, params)
     phase_data = ifg.phase_data
+
+    # TODO: remove saving whole ifg phase data when possible
+    numpy_file = os.path.join(
+        params[cf.OUT_DIR], os.path.basename(ifg_path).split('.')[0] + '.npy')
+    np.save(file=numpy_file, arr=phase_data)
     for t in tiles:
         p_data = phase_data[
                  t.top_left_y:t.bottom_right_y,

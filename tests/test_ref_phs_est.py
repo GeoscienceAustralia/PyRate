@@ -17,6 +17,7 @@ from pyrate.reference_phase_estimation import (estimate_ref_phase,
                                                ReferencePhaseError)
 from pyrate.scripts import run_prepifg
 from pyrate.scripts import run_pyrate
+from pyrate.shared import Ifg
 from tests import common
 from tests.common import SYD_TEST_DIR
 
@@ -432,8 +433,8 @@ class RefPhsEstimationMatlabTestMethod2Parallel(unittest.TestCase):
                                             'matlab_ref_phase_est')
 
         onlyfiles = [f for f in os.listdir(MATLAB_REF_PHASE_DIR)
-                if os.path.isfile(os.path.join(MATLAB_REF_PHASE_DIR, f))
-                and f.endswith('.csv') and f.__contains__('_ref_phase_')
+                     if os.path.isfile(os.path.join(MATLAB_REF_PHASE_DIR, f))
+                     and f.endswith('.csv') and f.__contains__('_ref_phase_')
                      and f.__contains__('method2')]
 
         count = 0
@@ -465,7 +466,6 @@ class RefPhsEstimationMatlabTestMethod2Parallel(unittest.TestCase):
     def test_estimate_reference_phase_method2(self):
         np.testing.assert_array_almost_equal(matlab_ref_phs_method2,
                                              self.ref_phs, decimal=3)
-
 
 if __name__ == '__main__':
     unittest.main()

@@ -171,7 +171,7 @@ class MockIfg(object):
 
     def open(self):
         # TODO: could move some of the init code here to mimic Ifgs
-        pass # can't actually open anything!
+        pass  # can't actually open anything!
 
     @property
     def nan_count(self):
