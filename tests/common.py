@@ -165,6 +165,7 @@ class MockIfg(object):
         self.num_cells = self.ncols * self.nrows
         self.phase_data = ifg.phase_data[:ysize, :xsize]
         self.nan_fraction = ifg.nan_fraction # use existing overall nan fraction
+        self.is_open = False
 
     def __repr__(self, *args, **kwargs):
         return 'MockIfg: %s -> %s' % (self.master, self.slave)
@@ -186,6 +187,7 @@ class MockIfg(object):
 
     def close(self):  # dummy
         pass
+
 
 def move_files(source_dir, dest_dir, file_type='*.tif'):
     for filename in glob.glob(os.path.join(source_dir, file_type)):

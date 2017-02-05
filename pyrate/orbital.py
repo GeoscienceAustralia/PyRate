@@ -146,7 +146,7 @@ def _independent_correction(ifg, degree, offset, params):
     :param params: parameter dictionary
     """
     ifg = shared.Ifg(ifg) if isinstance(ifg, str) else ifg
-    if hasattr(ifg, 'is_open') and (not ifg.is_open):
+    if not ifg.is_open:
         ifg.open()
     shared.nan_and_mm_convert(ifg, params)
     vphase = reshape(ifg.phase_data, ifg.num_cells)  # vectorise, keeping NODATA
