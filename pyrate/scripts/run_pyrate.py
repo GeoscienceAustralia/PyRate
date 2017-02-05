@@ -208,7 +208,7 @@ def orb_fit_calc(ifg_paths, params):
     log.info('Finished orbfit calculation in process {}'.format(mpiops.rank))
 
 
-def ref_phase_estimation_mpi(ifg_paths, params, refpx, refpy, tiles):
+def ref_phase_estimation_mpi(ifg_paths, params, refpx, refpy):
     # TODO: may benefit from tiling and using a median of median algorithms
     log.info('Finding and removing reference phase')
     process_ifgs = np.array_split(ifg_paths, mpiops.size)[mpiops.rank]
@@ -223,9 +223,8 @@ def ref_phase_estimation_mpi(ifg_paths, params, refpx, refpy, tiles):
 
     elif params[cf.REF_EST_METHOD] == 2:
         for n, p in enumerate(process_ifgs):
-            print('========================>>>>>>>>>>>>>>>>>>>>>>>>>', p)
             process_ref_phs[n] = ref_phase_method2_dummy(params, p,
-                                                         refpx, refpy, tiles)
+                                                         refpx, refpy)
             log.info('finished processing {} of process total {}, '
                      'of overall {}'.format(n, len(process_ifgs),
                                             len(ifg_paths)))
@@ -252,18 +251,14 @@ def ref_phase_estimation_mpi(ifg_paths, params, refpx, refpy, tiles):
                          tag=mpiops.rank)
 
 
-def ref_phase_method2_dummy(params, ifg_path, refpx, refpy, tiles):
+def ref_phase_method2_dummy(params, ifg_path, refpx, refpy):
     half_chip_size = int(np.floor(params[cf.REF_CHIP_SIZE] / 2.0))
     chipsize = 2 * half_chip_size + 1
     thresh = chipsize * chipsize * params[cf.REF_MIN_FRAC]
     output_dir = params[cf.OUT_DIR]
     numpy_file = os.path.join(
         output_dir, os.path.basename(ifg_path).split('.')[0] + '.npy')
-    print("INSIDE method2 dummy===================================================================")
-    print(ifg_path)
-    print(numpy_file)
     phase_data = np.load(numpy_file)
-
     ref_phs = rpe.est_ref_phase_method2_multi(phase_data,
                                               half_chip_size,
                                               refpx, refpy, thresh)
@@ -305,7 +300,6 @@ def process_ifgs(ifg_paths, params, rows, cols):
         params[cf.PARALLEL] = False
 
     tiles = get_tiles(ifg_paths[0], rows, cols)
-    # ifgs = pre_prepare_ifgs(ifg_paths, params)
     preread_ifgs = convert_phase_to_numpy(ifg_paths,
                                           params=params,
                                           tiles=tiles)
@@ -330,6 +324,7 @@ def process_ifgs(ifg_paths, params, rows, cols):
     orb_fit_calc(ifg_paths, params)
 
     # calculate phase sum for later use in ref phase method 1
+    print("REF EST METHOD", params[cf.REF_EST_METHOD])
     if params[cf.REF_EST_METHOD] == 1:   # this block can be moved in ref phs 1
         phase_sum_mpi(ifg_paths, params)
 
@@ -339,7 +334,7 @@ def process_ifgs(ifg_paths, params, rows, cols):
     log.info('Estimating and removing phase at reference pixel')
     ref_phs, ifgs = rpe.estimate_ref_phase(ifgs, params, refpx, refpy)
 
-    ref_phase_estimation_mpi(ifg_paths, params, refpx, refpy, tiles)
+    ref_phase_estimation_mpi(ifg_paths, params, refpx, refpy)
     # save reference phase
     # ref_phs_file = os.path.join(params[cf.OUT_DIR], 'ref_phs.npy')
     # np.save(file=ref_phs_file, arr=ref_phs)
@@ -386,7 +381,8 @@ def phase_sum_mpi(ifg_paths, params):
     p_paths = np.array_split(ifg_paths, mpiops.size)[mpiops.rank]
     ifg = Ifg(p_paths[0])
     ifg.open(readonly=True)
-    phase_sum = np.empty(shape=ifg.shape, dtype=np.float64)
+    shape = ifg.shape
+    phase_sum = np.empty(shape=shape, dtype=np.float64)
     ifg.close()
 
     for d in p_paths:
@@ -403,8 +399,11 @@ def phase_sum_mpi(ifg_paths, params):
         ifg.close()
 
     if mpiops.rank == MASTER_PROCESS:
+        phase_sum_all = phase_sum
         for i in range(1, mpiops.size):  # loop is better for memory
-            phase_sum += mpiops.comm.Recv(phase_sum, source=0, tag=i)
+            phase_sum = np.empty(shape=shape, dtype=np.float64)
+            mpiops.comm.Recv(phase_sum, source=i, tag=i)
+            phase_sum_all += phase_sum
         comp = np.isnan(phase_sum)  # this is the same as in Matlab
         comp = np.ravel(comp, order='F')  # this is the same as in Matlab
         np.save(file=os.path.join(params[cf.OUT_DIR], 'comp.npy'), arr=comp)
