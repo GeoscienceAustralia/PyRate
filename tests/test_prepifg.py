@@ -1,29 +1,26 @@
 """
 Tests for prepifg.py: resampling, subsetting etc.
-
-.. codeauthor:: Ben Davies, Sudipta Basak
 """
-
 import os
+from os.path import exists, join
 import shutil
 import sys
 import tempfile
 import unittest
 from math import floor
-from os.path import exists, join
-
+import re
+import subprocess
+import glob
 import numpy as np
-from osgeo import gdal
-
+from numpy import isnan, nanmax, nanmin, ones, nan, reshape, sum as npsum
+from numpy.testing import assert_array_almost_equal, assert_array_equal
 try:
     from scipy.stats.stats import nanmean
 except:  # fix for scipy v0.18.0
     from scipy import nanmean
-from numpy import isnan, nanmax, nanmin
-from numpy import ones, nan, reshape, sum as npsum
-from numpy.testing import assert_array_almost_equal, assert_array_equal
 
-import glob
+from osgeo import gdal
+
 from pyrate.scripts import run_prepifg
 from pyrate import config as cf
 from pyrate.config import mlooked_path
@@ -32,9 +29,6 @@ from pyrate.prepifg import CUSTOM_CROP, MAXIMUM_CROP, MINIMUM_CROP, \
     ALREADY_SAME_SIZE
 from pyrate.prepifg import prepare_ifgs, resample, PreprocessError, CustomExts
 from pyrate.prepifg import extents_from_params
-from tests.common import SYD_TEST_MATLAB_PREPIFG_DIR
-from tests.common import PREP_TEST_TIF, SYD_TEST_DEM_DIR
-from tests.common import SYD_TEST_DEM_TIF
 from pyrate.tasks.utils import DUMMY_SECTION_NAME
 from pyrate.config import (
     DEM_HEADER_FILE,
@@ -54,6 +48,10 @@ from pyrate.config import (
     APS_ELEVATION_MAP,
     APS_METHOD,
     APS_CORRECTION)
+
+from tests.common import SYD_TEST_MATLAB_PREPIFG_DIR
+from tests.common import PREP_TEST_TIF, SYD_TEST_DEM_DIR
+from tests.common import SYD_TEST_DEM_TIF
 from tests import common
 
 gdal.UseExceptions()
@@ -127,18 +125,20 @@ class PrepifgOutputTests(unittest.TestCase):
                  "geo_070326-070917_4rlks_3cr.tif"]
         self.exp_files = [join(self.random_dir, p) for p in paths]
 
-    def test_mlooked_paths(self):
+    @staticmethod
+    def test_mlooked_paths():
         test_mlooked_path()
 
-    def test_extents_from_params(self):
+    @staticmethod
+    def test_extents_from_params():
         test_extents_from_params()
 
     def tearDown(self):
-        for f in self.exp_files:
-            if exists(f):
-                os.remove(f)
-        for i in self.ifgs:
-            i.close()
+        for exp_file in self.exp_files:
+            if exists(exp_file):
+                os.remove(exp_file)
+        for ifg in self.ifgs:
+            ifg.close()
         shutil.rmtree(self.random_dir)
 
     def _custom_ext_latlons(self):
@@ -149,7 +149,6 @@ class PrepifgOutputTests(unittest.TestCase):
 
     def _custom_extents_tuple(self):
         return CustomExts(*self._custom_ext_latlons())
-
 
     def assert_projection_equal(self, files):
         """
@@ -210,7 +209,8 @@ class PrepifgOutputTests(unittest.TestCase):
         # NB: also verifies gdalwarp correctly copies geotransform across
         # NB: expected data copied from gdalinfo output
         gt = ifg.dataset.GetGeoTransform()
-        exp_gt = (150.911666666, 0.000833333, 0, -34.172499999, 0, -0.000833333)
+        exp_gt = (150.911666666, 0.000833333, 0,
+                  -34.172499999, 0, -0.000833333)
         for i, j in zip(gt, exp_gt):
             self.assertAlmostEqual(i, j)
         self.assert_geotransform_equal([self.exp_files[0], self.exp_files[4]])
@@ -222,7 +222,8 @@ class PrepifgOutputTests(unittest.TestCase):
     def test_custom_extents(self):
         xlooks = ylooks = 1
         cext = self._custom_extents_tuple()
-        prepare_ifgs(self.ifg_paths, CUSTOM_CROP, xlooks, ylooks, user_exts=cext)
+        prepare_ifgs(self.ifg_paths, CUSTOM_CROP, xlooks, ylooks,
+                     user_exts=cext)
 
         ifg = Ifg(self.exp_files[2])
         ifg.open()
@@ -246,7 +247,7 @@ class PrepifgOutputTests(unittest.TestCase):
         for i in [None, '']:
             cext = (150.92, -34.18, 150.94, i)
             self.assertRaises(PreprocessError, prepare_ifgs, self.ifg_paths,
-                                  CUSTOM_CROP, xlooks, ylooks, user_exts=cext)
+                              CUSTOM_CROP, xlooks, ylooks, user_exts=cext)
         # three parameters provided
         self.assertRaises(PreprocessError, prepare_ifgs, self.ifg_paths,
                           CUSTOM_CROP, xlooks, ylooks,
@@ -266,8 +267,9 @@ class PrepifgOutputTests(unittest.TestCase):
                 tmp_latlon[i] += error
                 cext = CustomExts(*tmp_latlon)
 
-                self.assertRaises(PreprocessError, prepare_ifgs, self.ifg_paths,
-                                  CUSTOM_CROP, xlooks, ylooks, user_exts=cext)
+                self.assertRaises(PreprocessError, prepare_ifgs,
+                                  self.ifg_paths, CUSTOM_CROP,
+                                  xlooks, ylooks, user_exts=cext)
         # close ifgs
         for i in self.ifgs:
             i.close()
@@ -370,7 +372,8 @@ class ThresholdTests(unittest.TestCase):
         for thresh in [-10, -1, -0.5, 1.000001, 10]:
             self.assertRaises(ValueError, resample, data, 2, 2, thresh)
 
-    def test_nan_threshold(self):
+    @staticmethod
+    def test_nan_threshold():
         # test threshold based on number of NaNs per averaging tile
         data = ones((2, 10))
         data[0, 3:] = nan
@@ -387,7 +390,8 @@ class ThresholdTests(unittest.TestCase):
             res = resample(data, xscale=2, yscale=2, thresh=thresh)
             assert_array_equal(res, reshape(exp, res.shape))
 
-    def test_nan_threshold_alt(self):
+    @staticmethod
+    def test_nan_threshold_alt():
         # test threshold on odd numbers
         data = ones((3, 6))
         data[0] = nan
@@ -450,15 +454,15 @@ class SameSizeTests(unittest.TestCase):
 def test_mlooked_path():
     path = 'geo_060619-061002.tif'
     assert mlooked_path(path, looks=2, crop_out=4) == \
-           'geo_060619-061002_2rlks_4cr.tif'
+        'geo_060619-061002_2rlks_4cr.tif'
 
     path = 'some/dir/geo_060619-061002.tif'
     assert mlooked_path(path, looks=4, crop_out=2) == \
-           'some/dir/geo_060619-061002_4rlks_2cr.tif'
+        'some/dir/geo_060619-061002_4rlks_2cr.tif'
 
     path = 'some/dir/geo_060619-061002_4rlks.tif'
     assert mlooked_path(path, looks=4, crop_out=8) == \
-           'some/dir/geo_060619-061002_4rlks_4rlks_8cr.tif'
+        'some/dir/geo_060619-061002_4rlks_4rlks_8cr.tif'
 
 
 # class LineOfSightTests(unittest.TestCase):
@@ -482,7 +486,8 @@ def test_mlooked_path():
 class LocalMultilookTests(unittest.TestCase):
     """Tests for local testing functions"""
 
-    def test_multilooking_thresh(self):
+    @staticmethod
+    def test_multilooking_thresh():
         data = ones((3, 6))
         data[0] = nan
         data[1, 2:5] = nan
@@ -514,19 +519,20 @@ def multilooking(src, xscale, yscale, thresh=0):
     dest = ones((rows_lowres, cols_lowres)) * nan
 
     size = xscale * yscale
-    for r in range(rows_lowres):
-        for c in range(cols_lowres):
-            ys = r * yscale
+    for row in range(rows_lowres):
+        for col in range(cols_lowres):
+            ys = row * yscale
             ye = ys + yscale
-            xs = c * xscale
+            xs = col * xscale
             xe = xs + xscale
 
             patch = src[ys:ye, xs:xe]
             num_values = num_cells - npsum(isnan(patch))
 
             if num_values >= thresh and num_values > 0:
-                reshaped = patch.reshape(size)  # nanmean() only works on 1 axis
-                dest[r, c] = nanmean(reshaped)
+                # nanmean() only works on 1g axis
+                reshaped = patch.reshape(size)
+                dest[row, col] = nanmean(reshaped)
 
     return dest
 
@@ -544,8 +550,8 @@ class MatlabEqualityTestRoipacSydneyTestData(unittest.TestCase):
         looks_paths = [mlooked_path(d, looks=1, crop_out=1)
                        for d in self.ifg_paths]
         self.ifgs_with_nan = [Ifg(i) for i in looks_paths]
-        for o in self.ifgs_with_nan:
-            o.open()
+        for ifg in self.ifgs_with_nan:
+            ifg.open()
 
     def tearDown(self):
         for i in self.ifgs_with_nan:
@@ -558,18 +564,17 @@ class MatlabEqualityTestRoipacSydneyTestData(unittest.TestCase):
         Matlab to python prepifg equality test
         """
         # path to csv folders from matlab output
-        from tests.common import SYD_TEST_MATLAB_PREPIFG_DIR
+        onlyfiles = [
+            fln for fln in os.listdir(SYD_TEST_MATLAB_PREPIFG_DIR)
+            if os.path.isfile(os.path.join(SYD_TEST_MATLAB_PREPIFG_DIR, fln))
+            and fln.endswith('.csv') and fln.__contains__('_rad_')
+            ]
 
-        onlyfiles = [f for f in os.listdir(SYD_TEST_MATLAB_PREPIFG_DIR)
-                     if os.path.isfile(
-                os.path.join(SYD_TEST_MATLAB_PREPIFG_DIR, f))
-                     and f.endswith('.csv') and f.__contains__('_rad_')]
-
-        for i, f in enumerate(onlyfiles):
+        for fln in onlyfiles:
             ifg_data = np.genfromtxt(os.path.join(
-                SYD_TEST_MATLAB_PREPIFG_DIR, f), delimiter=',')
+                SYD_TEST_MATLAB_PREPIFG_DIR, fln), delimiter=',')
             for k, j in enumerate(self.ifgs):
-                if f.split('_rad_')[-1].split('.')[0] == \
+                if fln.split('_rad_')[-1].split('.')[0] == \
                         os.path.split(j.data_path)[-1].split('.')[0]:
                     np.testing.assert_array_almost_equal(ifg_data,
                                                          self.ifgs_with_nan[
@@ -584,10 +589,10 @@ class MatlabEqualityTestRoipacSydneyTestData(unittest.TestCase):
         for i in self.ifgs_with_nan:
             if not i.mm_converted:
                 i.convert_to_mm()
-        onlyfiles = [f for f in os.listdir(SYD_TEST_MATLAB_PREPIFG_DIR)
-                     if os.path.isfile(
-                os.path.join(SYD_TEST_MATLAB_PREPIFG_DIR, f))
-                     and f.endswith('.csv') and f.__contains__('_mm_')]
+        onlyfiles = [
+            f for f in os.listdir(SYD_TEST_MATLAB_PREPIFG_DIR)
+            if os.path.isfile(os.path.join(SYD_TEST_MATLAB_PREPIFG_DIR, f))
+            and f.endswith('.csv') and f.__contains__('_mm_')]
 
         count = 0
         for i, f in enumerate(onlyfiles):
@@ -598,21 +603,19 @@ class MatlabEqualityTestRoipacSydneyTestData(unittest.TestCase):
                         os.path.split(j.data_path)[-1].split('.')[0]:
                     count += 1
                     # all numbers equal
-                    np.testing.assert_array_almost_equal(ifg_data,
-                                                         self.ifgs_with_nan[
-                                                             k].phase_data,
-                                                         decimal=2)
+                    np.testing.assert_array_almost_equal(
+                        ifg_data, self.ifgs_with_nan[k].phase_data, decimal=2)
 
                     # means must also be equal
-                    self.assertAlmostEqual(np.nanmean(ifg_data),
-                                           np.nanmean(self.ifgs_with_nan[
-                                                          k].phase_data),
-                                           places=4)
+                    self.assertAlmostEqual(
+                        np.nanmean(ifg_data),
+                        np.nanmean(self.ifgs_with_nan[k].phase_data),
+                        places=4)
 
                     # number of nans must equal
-                    self.assertEqual(np.sum(np.isnan(ifg_data)),
-                                     np.sum(np.isnan(
-                                         self.ifgs_with_nan[k].phase_data)))
+                    self.assertEqual(
+                        np.sum(np.isnan(ifg_data)),
+                        np.sum(np.isnan(self.ifgs_with_nan[k].phase_data)))
 
         # ensure we have the correct number of matches
         self.assertEqual(count, len(self.ifgs))
@@ -686,9 +689,66 @@ class TestOneIncidenceOrElevationMap(unittest.TestCase):
         self.assertEqual(0, len(inc))
 
 
-def test_parallel():
-    # placeholder
-    pass
+class MPITests(unittest.TestCase):
+    """
+    MPI vs Single processor prepifg tests
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.gamma_pypar_dir = tempfile.mkdtemp()
+        cls.gamma_serial_dir = tempfile.mkdtemp()
+        cls.conf_file = os.path.join(common.SYD_TEST_GAMMA,
+                                     'pyrate_gamma.conf')
+        cls.params = cf.get_config_params(cls.conf_file)
+        cls.params[cf.OBS_DIR] = common.SYD_TEST_GAMMA
+        cls.params[cf.IFG_FILE_LIST] = os.path.join(common.SYD_TEST_GAMMA,
+                                                    'ifms_17')
+        cls.params[cf.OUT_DIR] = cls.gamma_pypar_dir
+        cls.temp_conf_file = tempfile.mktemp(suffix='.conf',
+                                             dir=cls.gamma_pypar_dir)
+        cf.write_config_file(cls.params, cls.temp_conf_file)
+
+        # run mpi gamma
+        cmd = "mpirun -np 4 pyrate prepifg " + \
+              cls.temp_conf_file
+        subprocess.check_call(cmd, shell=True)
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(cls.gamma_pypar_dir)
+        shutil.rmtree(cls.gamma_serial_dir)
+
+    def test_mpi_vs_serial_gamma(self):
+        """
+        Test mpi vs single processor prepifg run
+        """
+
+        self.params[cf.OUT_DIR] = self.gamma_serial_dir
+        self.params[cf.PARALLEL] = False
+
+        # run serial gamma
+        run_prepifg.main(self.params)
+        gamma_ptn = re.compile(r'\d{8}')
+        mpi_tifs = []
+        for i in glob.glob(os.path.join(self.gamma_pypar_dir,
+                                        "*.tif")):
+            if len(gamma_ptn.findall(i)) == 2:
+                mpi_tifs.append(i)
+
+        serial_tifs = []
+        for i in glob.glob(os.path.join(self.gamma_serial_dir,
+                                        "*.tif")):
+            if len(gamma_ptn.findall(i)) == 2:
+                serial_tifs.append(i)
+        mpi_tifs.sort()
+        serial_tifs.sort()
+
+        self.assertEqual(len(mpi_tifs), len(serial_tifs))
+        for m_f, s_f in zip(mpi_tifs, serial_tifs):
+            self.assertEqual(os.path.basename(m_f), os.path.basename(s_f))
+        # 17 geotifs, and 17 mlooked tifs
+        self.assertEqual(len(mpi_tifs), 34)
 
 if __name__ == "__main__":
     unittest.main()

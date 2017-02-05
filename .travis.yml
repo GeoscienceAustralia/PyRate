@@ -52,12 +52,13 @@ install:
   - if [[ $TRAVIS_PYTHON_VERSION == 3.3 ]]; then pip install numpy==1.10.1 matplotlib==1.5.1; fi
   - pip install -r requirements-dev.txt
   - pip install GDAL==$(gdal-config --version)
+  - python setup.py install
+  - export PYRATEPATH=$(pwd)
+  - export PYTHONPATH=$PYRATEPATH:$PYTHONPATH
+  - chmod 444 tests/test_data/sydney_test/tif/geo_070709-070813.tif  # makes the file readonly, used in a test
 
 # command to run tests, e.g. python setup.py test
 script:
-  - export PYRATEPATH=$(pwd)
-  - export PYTHONPATH=$PYRATEPATH:$PYTHONPTH
-  - chmod 444 tests/test_data/sydney_test/tif/geo_070709-070813.tif  # makes the file readonly, used in a test
   - py.test --cov-report term-missing:skip-covered --cov=pyrate tests/
 
 cache:

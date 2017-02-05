@@ -23,12 +23,12 @@ if PyAPS_INSTALLED:
     from pyrate import remove_aps_delay as aps
 
 gdal.SetCacheMax(64)
-__author__ = 'sudipta'
 
 # Constants
 MASTER_PROCESS = 0
 data_path = 'DATAPATH'
-PrereadIfg = namedtuple('PrereadIfg', 'path nan_fraction master slave time_span')
+PrereadIfg = namedtuple('PrereadIfg',
+                        'path nan_fraction master slave time_span')
 
 
 def main(params, config_file=sys.argv[1]):
@@ -85,12 +85,8 @@ def main(params, config_file=sys.argv[1]):
 
     print('Processor {} has {} tiles'.format(rank, len(process_tiles)))
     # Calc mst using MPI
-    if rank == MASTER_PROCESS:
-        mpi_mst_calc(dest_tifs, process_tiles, process_indices,
-                     preread_ifgs, params, parallel)
-    else:
-        mpi_mst_calc(dest_tifs, process_tiles, process_indices,
-                     preread_ifgs, params, parallel)
+    mpi_mst_calc(dest_tifs, process_tiles, process_indices,
+                 preread_ifgs, params, parallel)
 
     parallel.barrier()
 
@@ -200,7 +196,8 @@ def ref_pixel_calc_mpi(MPI_myID, ifg_paths, num_processors, parallel, params):
 def save_ref_pixel_blocks(grid, half_patch_size, ifg_paths, parallel, params):
     no_ifgs = len(ifg_paths)
     process_path_indices = parallel.calc_indices(no_ifgs)
-    process_ifg_paths = [itemgetter(p)(ifg_paths) for p in process_path_indices]
+    process_ifg_paths = [itemgetter(p)(ifg_paths)
+                         for p in process_path_indices]
     outdir = params[cf.OUT_DIR]
     for p in process_ifg_paths:
         for y, x in grid:

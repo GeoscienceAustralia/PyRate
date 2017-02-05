@@ -87,15 +87,12 @@ def orbital_correction(ifgs_or_ifg_paths, params, mlooked=None, offset=True):
             _network_correction(ifgs, degree, offset, mlooked)
 
     elif method == INDEPENDENT_METHOD:
-        ifgs = [shared.Ifg(ifg).open() if isinstance(ifg, str) else ifg
-                for ifg in ifgs_or_ifg_paths]
-
         # not running in parallel
         # raises swig object pickle error
         # Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
         #     delayed(_independent_correction)(ifg, degree, offset, params)
         #     for ifg in ifgs)
-        for ifg in ifgs:
+        for ifg in ifgs_or_ifg_paths:
             _independent_correction(ifg, degree, offset, params)
     else:
         msg = "Unknown method: '%s', need INDEPENDENT or NETWORK method"
@@ -148,6 +145,7 @@ def _independent_correction(ifg, degree, offset, params):
     :param offset: boolean
     :param params: parameter dictionary
     """
+    ifg = shared.Ifg(ifg).open() if isinstance(ifg, str) else ifg
     shared.nan_and_mm_convert(ifg, params)
     vphase = reshape(ifg.phase_data, ifg.num_cells)  # vectorise, keeping NODATA
     dm = get_design_matrix(ifg, degree, offset)

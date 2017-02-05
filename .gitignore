@@ -3,7 +3,6 @@
 .project
 .pydevproject
 /tmp
-#/tests
 /.idea
 .spyderworkspace
 doc
@@ -15,3 +14,5 @@ docs/
 tests/test_data/
 PyAPS/
 .cache/
+# .coverage tmp files
+.coverage.*

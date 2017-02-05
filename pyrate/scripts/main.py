@@ -26,6 +26,10 @@ def prepifg(config_file):
 
 @cli.command()
 @click.argument('config_file')
-def linrate(config_file):
+@click.option('-r', '--rows', type=int, default=1,
+              help='divide ifgs into this many rows')
+@click.option('-c', '--cols', type=int, default=1,
+              help='divide ifgs into this many columns')
+def linrate(config_file, rows, cols):
     config_file = abspath(config_file)
-    run_pyrate.main(config_file)
+    run_pyrate.main(config_file, rows, cols)
