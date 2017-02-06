@@ -5,6 +5,8 @@ import copy
 import os
 import unittest
 import pytest
+import tempfile
+import shutil
 from numpy import nan, mean, std, isnan
 
 from pyrate import config as cf
@@ -212,7 +214,7 @@ class MatlabEqualityTest(unittest.TestCase):
         self.params = cf.get_config_params(
             os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf'))
         self.params[cf.PARALLEL] = False
-
+        self.params[cf.OUT_DIR] = tempfile.mkdtemp()
         self.params_alt_ref_frac = copy.copy(self.params)
         self.params_alt_ref_frac[cf.REF_MIN_FRAC] = 0.5
         self.params_all_2s = copy.copy(self.params)
@@ -224,6 +226,9 @@ class MatlabEqualityTest(unittest.TestCase):
         self.params_all_1s[cf.REFNX] = 1
         self.params_all_1s[cf.REFNY] = 1
         self.params_all_1s[cf.REF_MIN_FRAC] = 0.7
+
+    def tearDown(self):
+        shutil.rmtree(self.params[cf.OUT_DIR])
 
     def test_sydney_test_data_ref_pixel(self):
         refx, refy = run_pyrate.ref_pixel_calc(self.ifg_paths, self.params)
@@ -274,6 +279,7 @@ class MatlabEqualityTestMultiprocessParallel(unittest.TestCase):
         self.params = cf.get_config_params(
             os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf'))
         self.params[cf.PARALLEL] = True
+        self.params[cf.OUT_DIR] = tempfile.mkdtemp()
 
         self.params_alt_ref_frac = copy.copy(self.params)
         self.params_alt_ref_frac[cf.REF_MIN_FRAC] = 0.5
@@ -286,6 +292,9 @@ class MatlabEqualityTestMultiprocessParallel(unittest.TestCase):
         self.params_all_1s[cf.REFNX] = 1
         self.params_all_1s[cf.REFNY] = 1
         self.params_all_1s[cf.REF_MIN_FRAC] = 0.7
+
+    def tearDown(self):
+        shutil.rmtree(self.params[cf.OUT_DIR])
 
     def test_sydney_test_data_ref_pixel(self):
         refx, refy = run_pyrate.ref_pixel_calc(self.ifg_paths, self.params)

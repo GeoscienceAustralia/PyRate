@@ -351,9 +351,9 @@ def process_ifgs(ifg_paths, params, rows, cols):
 
     # open ifgs again, but without phase conversion as already converted and
     # saved to disc
-    # ifgs = prepare_ifgs_without_phase(ifg_paths)
+    ifgs = prepare_ifgs_without_phase(ifg_paths)
     # log.info('Estimating and removing phase at reference pixel')
-    # ref_phs, ifgs = rpe.estimate_ref_phase(ifgs, params, refpx, refpy)
+    ref_phs, ifgs = rpe.estimate_ref_phase(ifgs, params, refpx, refpy)
 
     ref_phase_estimation_mpi(ifg_paths, params, refpx, refpy)
     # save reference phase
