@@ -1,25 +1,27 @@
 from __future__ import print_function
-import errno
-from itertools import product
-import pickle as cp
-import os
-import struct
-import math
-from datetime import date
-from math import floor
 
-import pyproj
-from numpy import where, nan, isnan, sum as nsum, isclose
-import numpy as np
-import random
-import string
-import time
+import errno
 import logging
-import pkg_resources
+import math
+import os
+import pickle as cp
+import random
 import shutil
 import stat
-from pyrate import roipac, gamma, config as cf
+import string
+import struct
+import time
+from datetime import date
+from itertools import product
+from math import floor
+
+import numpy as np
+import pkg_resources
+import pyproj
+from numpy import where, nan, isnan, sum as nsum, isclose
+
 from pyrate import ifgconstants as ifc
+from pyrate import roipac, gamma, config as cf
 
 VERBOSE = True
 log = logging.getLogger(__name__)
@@ -454,12 +456,6 @@ class IfgPart(object):
 
     def __init__(self, ifg_or_path, tile, ifg_dict=None):
 
-        """
-        :param ifg: original ifg
-        :param r_start: starting tow of the original ifg
-        :param r_end: ending (row + 1) of the original ifg
-        :return:
-        """
         self.tile = tile
         self.r_start = self.tile.top_left_y
         self.r_end = self.tile.bottom_right_y
@@ -467,16 +463,17 @@ class IfgPart(object):
         self.c_end = self.tile.bottom_right_x
         # TODO: fix this if cond
         if ifg_dict is not None:
-            outdir = os.path.dirname(ifg_dict)
-            preread_ifgs = cp.load(open(ifg_dict, 'rb'))
-            ifg = preread_ifgs[ifg_or_path].pop()
+            # outdir = os.path.dirname(ifg_dict)
+            # preread_ifgs = cp.load(open(ifg_dict, 'rb'))
+            ifg = ifg_dict[ifg_or_path]
             self.nan_fraction = ifg.nan_fraction
             self.master = ifg.master
             self.slave = ifg.slave
             self.time_span = ifg.time_span
             phase_file = 'phase_data_{}_{}.npy'.format(
                 os.path.basename(ifg_or_path).split('.')[0], tile.index)
-            self.phase_data = np.load(os.path.join(outdir, phase_file))
+            self.phase_data = np.load(
+                os.path.join(os.path.dirname(ifg_or_path), phase_file))
             read = True
         else:
             # check if Ifg was sent.
@@ -943,11 +940,16 @@ def nan_and_mm_convert(ifg, params):
         ifg.convert_to_mm()
 
 
-def prepare_ifgs_without_phase(ifg_paths):
+def prepare_ifgs_without_phase(ifg_paths, params):
     ifgs = [Ifg(p) for p in ifg_paths]
     for i in ifgs:
         if not i.is_open:
             i.open(readonly=False)
+        nan_conversion = params[cf.NAN_CONVERSION]
+        if nan_conversion:  # nan conversion happens here in networkx mst
+            # if not ifg.nan_converted:
+            i.nodata_value = params[cf.NO_DATA_VALUE]
+            i.convert_to_nans()
     return ifgs
 
 
@@ -988,3 +990,13 @@ def utm_zone(longitude):
     if longitude == 180:
         return 60.0
     return floor((longitude + 180) / 6.0) + 1
+
+
+class PrereadIfg:
+
+    def __init__(self, path, nan_fraction, master, slave, time_span):
+        self.path = path
+        self.nan_fraction = nan_fraction
+        self.master = master
+        self.slave = slave
+        self.time_span = time_span

@@ -1,6 +1,7 @@
 import logging
-from mpi4py import MPI
 import pickle
+from mpi4py import MPI
+import numpy as np
 
 log = logging.getLogger(__name__)
 # We're having trouble with the MPI pickling and 64bit integers

@@ -157,6 +157,14 @@ def get_vcmt(ifgs, maxvar):
     # c=0.5 for common master or slave; c=-0.5 if master
     # of one matches slave of another
 
+    if isinstance(ifgs, dict):
+        ifgs = [shared.PrereadIfg(v.path,
+                                  v.nan_fraction,
+                                  v.master,
+                                  v.slave,
+                                  v.time_span)
+                for v in ifgs.values()]
+
     nifgs = len(ifgs)
     vcm_pat = zeros((nifgs, nifgs))
 

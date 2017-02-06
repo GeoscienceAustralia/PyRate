@@ -7,7 +7,6 @@ import os
 from os.path import join
 import numpy as np
 from osgeo import gdal
-import pickle as cp
 
 import pyrate.config as cf
 import pyrate.linrate as linrate
@@ -22,7 +21,7 @@ from pyrate import matlab_mst as matlab_mst
 from pyrate import reference_phase_estimation as rpe
 from pyrate import vcm as vcm_module
 from pyrate.shared import Ifg, write_output_geotiff, \
-    pre_prepare_ifgs, prepare_ifgs_without_phase, create_tiles
+    pre_prepare_ifgs, create_tiles, prepare_ifgs_without_phase, PrereadIfg
 from pyrate.compat import PyAPS_INSTALLED
 from pyrate.nci.common_nci import save_latest_tiles
 from pyrate import mpiops
@@ -42,16 +41,6 @@ def get_tiles(ifg_path, rows, cols):
     tiles = create_tiles(ifg.shape, nrows=rows, ncols=cols)
     ifg.close()
     return tiles
-
-
-class PrereadIfg:
-
-    def __init__(self, path, nan_fraction, master, slave, time_span):
-        self.path = path
-        self.nan_fraction = nan_fraction
-        self.master = master
-        self.slave = slave
-        self.time_span = time_span
 
 
 def _join_dicts(dicts):
@@ -78,11 +67,12 @@ def create_ifg_dict(dest_tifs, params, tiles):
 
     Returns
     -------
-    preread_ifgs: str
+    preread_ifgs: dict
         preread_ifgs file path
     """
     preread_ifgs_dict = {}
     process_tifs = np.array_split(dest_tifs, mpiops.size)[mpiops.rank]
+
     for d in process_tifs:
         ifg = save_latest_tiles(d, tiles, params)
         ifg.nodata_value = params[cf.NO_DATA_VALUE]
@@ -92,24 +82,18 @@ def create_ifg_dict(dest_tifs, params, tiles):
         time_span = ifg.time_span
         ifg.close()
 
-        preread_ifgs_dict[d] = {PrereadIfg(path=d,
-                                           nan_fraction=nan_fraction,
-                                           master=master,
-                                           slave=slave,
-                                           time_span=time_span)}
+        preread_ifgs_dict[d] = PrereadIfg(path=d,
+                                          nan_fraction=nan_fraction,
+                                          master=master,
+                                          slave=slave,
+                                          time_span=time_span)
 
     preread_ifgs_dict = _join_dicts(
-        mpiops.comm.gather(preread_ifgs_dict, root=0))
-
-    preread_ifgs = join(params[cf.OUT_DIR], 'preread_ifgs.pk')
-
-    if mpiops.rank == MASTER_PROCESS:
-        cp.dump(preread_ifgs_dict, open(preread_ifgs, 'wb'))
+        mpiops.comm.allgather(preread_ifgs_dict))
 
     log.info('finish converting phase_data to numpy '
              'in process {}'.format(mpiops.rank))
-    mpiops.comm.barrier()
-    return preread_ifgs
+    return preread_ifgs_dict
 
 
 def mpi_mst_calc(dest_tifs, params, tiles, preread_ifgs):
@@ -137,7 +121,7 @@ def mpi_mst_calc(dest_tifs, params, tiles, preread_ifgs):
             raise cf.ConfigException('Matlab mst not supported yet')
             # mst_tile = mst.mst_multiprocessing(tile, dest_tifs, preread_ifgs)
         # locally save the mst_mat
-        mst_file_process_n = os.path.join(
+        mst_file_process_n = join(
             params[cf.OUT_DIR], 'mst_mat_{}.npy'.format(i))
         np.save(file=mst_file_process_n, arr=mst_tile)
 
@@ -155,8 +139,7 @@ def temp_mst_grid_reconstruct(tiles, ifg_paths, params):
                         dtype=bool)
     ifg.close()
     for t in tiles:
-        mst_f = os.path.join(
-            params[cf.OUT_DIR], 'mst_mat_{}.npy'.format(t.index))
+        mst_f = join(params[cf.OUT_DIR], 'mst_mat_{}.npy'.format(t.index))
         mst_grid[:, t.top_left_y:t.bottom_right_y,
                  t.top_left_x:t.bottom_right_x] = np.load(mst_f)
     return mst_grid
@@ -211,11 +194,9 @@ def save_ref_pixel_blocks(grid, half_patch_size, ifg_paths, params):
             data = ifg.phase_data[y - half_patch_size:y + half_patch_size + 1,
                                   x - half_patch_size:x + half_patch_size + 1]
 
-            data_file = os.path.join(outdir,
-                                     'ref_phase_data_{b}_{y}_{x}.npy'.format(
+            data_file = join(outdir, 'ref_phase_data_{b}_{y}_{x}.npy'.format(
                                          b=os.path.basename(p).split('.')[0],
-                                         y=y, x=x)
-                                     )
+                                         y=y, x=x))
             np.save(file=data_file, arr=data)
 
 
@@ -255,24 +236,31 @@ def ref_phase_estimation_mpi(ifg_paths, params, refpx, refpy):
     else:
         raise cf.ConfigException('Ref phase estimation method must be 1 or 2')
 
-    ref_phs_file = os.path.join(params[cf.OUT_DIR], 'ref_phs.npy')
+    ref_phs_file = join(params[cf.OUT_DIR], 'ref_phs.npy')
 
     if mpiops.rank == MASTER_PROCESS:
-        ref_phs = np.zeros(len(ifg_paths))
+        ref_phs = np.zeros(len(ifg_paths), dtype=np.float64)
         process_indices = np.array_split(range(len(ifg_paths)),
                                          mpiops.size)[mpiops.rank]
+        print('rank', mpiops.rank, process_indices)
         ref_phs[process_indices] = process_ref_phs
+        print('ref_phs in master', ref_phs)
         for r in range(1, mpiops.size):
             process_indices = np.array_split(range(len(ifg_paths)),
                                              mpiops.size)[r]
+            print('in loop rank', r, process_indices)
             this_process_ref_phs = np.zeros(shape=len(process_indices),
                                             dtype=np.float64)
-            mpiops.comm.recv(this_process_ref_phs, source=r, tag=r)
+            mpiops.comm.Recv(this_process_ref_phs, source=r, tag=r)
             ref_phs[process_indices] = this_process_ref_phs
+            print(ref_phs)
         np.save(file=ref_phs_file, arr=ref_phs)
     else:
         # send reference phase data to master process
-        mpiops.comm.send(process_ref_phs, dest=MASTER_PROCESS,
+        process_indices = np.array_split(range(len(ifg_paths)),
+                                         mpiops.size)[mpiops.rank]
+        print('rank', mpiops.rank, process_indices)
+        mpiops.comm.Send(process_ref_phs, dest=MASTER_PROCESS,
                          tag=mpiops.rank)
 
 
@@ -295,7 +283,7 @@ def ref_phase_method2_dummy(params, ifg_path, refpx, refpy):
 
 
 def ref_phase_method1_dummy(ifg_path, output_dir):
-    comp_file = os.path.join(output_dir, 'comp.npy')
+    comp_file = join(output_dir, 'comp.npy')
     comp = np.load(comp_file)
     ifg = Ifg(ifg_path)
     ifg.open(readonly=False)
@@ -345,28 +333,13 @@ def process_ifgs(ifg_paths, params, rows, cols):
 
     # open ifgs again, but without phase conversion as already converted and
     # saved to disc
-    ifgs = prepare_ifgs_without_phase(ifg_paths)
+    ifgs = prepare_ifgs_without_phase(ifg_paths, params)
     # log.info('Estimating and removing phase at reference pixel')
     ref_phs, ifgs = rpe.estimate_ref_phase(ifgs, params, refpx, refpy)
 
     ref_phase_estimation_mpi(ifg_paths, params, refpx, refpy)
-    # save reference phase
-    # ref_phs_file = os.path.join(params[cf.OUT_DIR], 'ref_phs.npy')
-    # np.save(file=ref_phs_file, arr=ref_phs)
 
-    # TODO: assign maxvar to ifg metadata (and geotiff)?
-    log.info('Calculating maximum variance in interferograms')
-    maxvar = [vcm_module.cvd(i, params)[0] for i in ifgs]
-    maxvar_file = os.path.join(params[cf.OUT_DIR], 'maxvar.npy')
-    np.save(file=maxvar_file, arr=maxvar)
-
-    log.info('Constructing temporal variance-covariance matrix')
-    vcmt = vcm_module.get_vcmt(ifgs, maxvar)
-
-    # write vcm output to a file
-    vcmt_mat_binary_file = os.path.join(
-        PYRATEPATH, params[cf.OUT_DIR], 'vcmt_mat.npy')
-    np.save(file=vcmt_mat_binary_file, arr=vcmt)
+    maxvar, vcmt = maxvar_vcm_mpi(ifg_paths, params, preread_ifgs)
 
     if params[cf.TIME_SERIES_CAL] != 0:
         compute_time_series(ifgs, mst_grid, params, vcmt)
@@ -374,12 +347,46 @@ def process_ifgs(ifg_paths, params, rows, cols):
     # Calculate linear rate map
     rate, error, samples = calculate_linear_rate(ifgs, params, vcmt, mst_grid)
 
-    # close all open ifgs
-    # for i in ifgs:
-    #     i.close()
-
     log.info('PyRate workflow completed')
     return mst_grid, (refpx, refpy), maxvar, vcmt, rate, error, samples
+
+
+def maxvar_vcm_mpi(ifg_paths, params, preread_ifgs):
+    log.info('Calculating maxvar and vcm')
+    process_indices = np.array_split(range(len(ifg_paths)), mpiops.size)[mpiops.rank]
+    process_ifgs = np.array_split(ifg_paths, mpiops.size)[mpiops.rank]
+    process_maxvar = []
+    for n, i in enumerate(process_ifgs):
+        log.info('Calculating maxvar for {} of process ifgs {} of '
+              'total {}'.format(n+1, len(process_ifgs), len(ifg_paths)))
+        # TODO: cvd calculation is still pretty slow - revisit
+        process_maxvar.append(vcm_module.cvd(i, params)[0])
+    maxvar_file = join(params[cf.OUT_DIR], 'maxvar.npy')
+    vcmt_file = join(params[cf.OUT_DIR], 'vcmt.npy')
+    if mpiops.rank == MASTER_PROCESS:
+        maxvar = np.empty(len(ifg_paths), dtype=np.float64)
+        maxvar[process_indices] = process_maxvar
+        for i in range(1, mpiops.size):
+            rank_indices = np.array_split(range(len(ifg_paths)),
+                                          mpiops.size)[i]
+            this_process_ref_phs = np.empty(len(rank_indices), dtype=np.float64)
+            mpiops.comm.Recv(this_process_ref_phs, source=i, tag=i)
+            # process_maxvar = mpiops.comm.Recv(source=i, tag=i,
+            #                                   return_status=False)
+
+            maxvar[rank_indices] = this_process_ref_phs
+        np.save(file=maxvar_file, arr=maxvar)
+    else:
+        mpiops.comm.Send(np.array(process_maxvar, dtype=np.float64),
+                         dest=MASTER_PROCESS, tag=mpiops.rank)
+    mpiops.comm.barrier()
+    maxvar = np.load(maxvar_file)
+
+    vcmt = vcm_module.get_vcmt(preread_ifgs, maxvar)
+    if mpiops.rank == MASTER_PROCESS:
+        np.save(file=vcmt_file, arr=vcmt)
+
+    return maxvar, vcmt
 
 
 def phase_sum_mpi(ifg_paths, params):
@@ -405,7 +412,7 @@ def phase_sum_mpi(ifg_paths, params):
         ifg.nodata_value = params[cf.NO_DATA_VALUE]
         phase_sum += ifg.phase_data
         ifg.save_numpy_phase(
-            numpy_file=os.path.join(
+            numpy_file=join(
                 params[cf.OUT_DIR],
                 os.path.basename(d).split('.')[0] + '.npy'
             )
@@ -420,16 +427,16 @@ def phase_sum_mpi(ifg_paths, params):
             phase_sum_all += phase_sum
         comp = np.isnan(phase_sum)  # this is the same as in Matlab
         comp = np.ravel(comp, order='F')  # this is the same as in Matlab
-        np.save(file=os.path.join(params[cf.OUT_DIR], 'comp.npy'), arr=comp)
+        np.save(file=join(params[cf.OUT_DIR], 'comp.npy'), arr=comp)
     else:
         mpiops.comm.Send(phase_sum, dest=0, tag=mpiops.rank)
     mpiops.comm.barrier()
 
 
 def write_linrate_numpy_files(error, params, rate, samples):
-    rate_file = os.path.join(params[cf.OUT_DIR], 'rate.npy')
-    error_file = os.path.join(params[cf.OUT_DIR], 'error.npy')
-    samples_file = os.path.join(params[cf.OUT_DIR], 'samples.npy')
+    rate_file = join(params[cf.OUT_DIR], 'rate.npy')
+    error_file = join(params[cf.OUT_DIR], 'error.npy')
+    samples_file = join(params[cf.OUT_DIR], 'samples.npy')
     np.save(file=rate_file, arr=rate)
     np.save(file=error_file, arr=error)
     np.save(file=samples_file, arr=samples)
@@ -494,7 +501,7 @@ def mst_calculation(ifg_paths_or_instance, params):
         mst_grid = matlab_mst.matlab_mst_boolean_array(ifg_instance_updated)
 
     # write mst output to a file
-    mst_mat_binary_file = os.path.join(
+    mst_mat_binary_file = join(
         PYRATEPATH, params[cf.OUT_DIR], 'mst_mat')
     np.save(file=mst_mat_binary_file, arr=mst_grid)
 
@@ -509,9 +516,9 @@ def compute_time_series(ifgs, mst_grid, params, vcmt):
     tsincr, tscum, tsvel = calculate_time_series(
         ifgs, params, vcmt=vcmt, mst=mst_grid)
 
-    # tsvel_file = os.path.join(params[cf.OUT_DIR], 'tsvel.npy')
-    tsincr_file = os.path.join(params[cf.OUT_DIR], 'tsincr.npy')
-    tscum_file = os.path.join(params[cf.OUT_DIR], 'tscum.npy')
+    # tsvel_file = join(params[cf.OUT_DIR], 'tsvel.npy')
+    tsincr_file = join(params[cf.OUT_DIR], 'tsincr.npy')
+    tscum_file = join(params[cf.OUT_DIR], 'tscum.npy')
     np.save(file=tsincr_file, arr=tsincr)
     np.save(file=tscum_file, arr=tscum)
     # np.save(file=tsvel_file, arr=tsvel)
@@ -524,7 +531,7 @@ def compute_time_series(ifgs, mst_grid, params, vcmt):
 
 
 def setup_metadata(ifgs, params):
-    p = os.path.join(params[cf.OUT_DIR], ifgs[0].data_path)
+    p = join(params[cf.OUT_DIR], ifgs[0].data_path)
     ds = gdal.Open(p)
     md = ds.GetMetadata()  # get metadata for writing on output tifs
     gt = ds.GetGeoTransform()  # get geographical bounds of data
@@ -541,7 +548,7 @@ def write_timeseries_geotiff(ifgs, params, tsincr, pr_type):
         md['PR_SEQ_POS'] = i  # sequence position
 
         data = tsincr[:, :, i]
-        dest = os.path.join(
+        dest = join(
             PYRATEPATH, params[cf.OUT_DIR],
             pr_type + "_" + str(epochlist.dates[i + 1]) + ".tif")
         md[ifc.PRTYPE] = pr_type
@@ -642,11 +649,11 @@ def write_linrate_tifs(ifgs, params, res):
     rate, error, samples = res
     epochlist, gt, md, wkt = setup_metadata(ifgs, params)
     # TODO: write tests for these functions
-    dest = os.path.join(PYRATEPATH, params[cf.OUT_DIR], "linrate.tif")
+    dest = join(PYRATEPATH, params[cf.OUT_DIR], "linrate.tif")
     md[ifc.MASTER_DATE] = epochlist.dates
     md[ifc.PRTYPE] = 'linrate'
     write_output_geotiff(md, gt, wkt, rate, dest, np.nan)
-    dest = os.path.join(PYRATEPATH, params[cf.OUT_DIR], "linerror.tif")
+    dest = join(PYRATEPATH, params[cf.OUT_DIR], "linerror.tif")
     md[ifc.PRTYPE] = 'linerror'
     write_output_geotiff(md, gt, wkt, error, dest, np.nan)
     write_linrate_numpy_files(error, params, rate, samples)
@@ -713,7 +720,7 @@ def dest_ifg_paths(ifg_paths, outdir):
     """
 
     bases = [os.path.basename(p) for p in ifg_paths]
-    return [os.path.join(outdir, p) for p in bases]
+    return [join(outdir, p) for p in bases]
 
 
 def main(config_file, rows, cols):

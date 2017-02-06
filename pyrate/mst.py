@@ -99,7 +99,6 @@ def mst_multiprocessing(tile, ifgs_or_paths, preread_ifgs=None):
     To manage memory we need smaller tiles (IfgPart) as number of ifgs go up.
     :param tile: Tile class instance
     :param ifgs_or_paths: all ifg paths of the problem. List of strings.
-    :return:
     """
     ifg_parts = [IfgPart(p, tile, preread_ifgs) for p in ifgs_or_paths]
     t_mst = mst_boolean_array(ifg_parts)
