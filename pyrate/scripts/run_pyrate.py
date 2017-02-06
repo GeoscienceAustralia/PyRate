@@ -161,8 +161,31 @@ def temp_mst_grid_reconstruct(tiles, ifg_paths, params):
     return mst_grid
 
 
-def ref_pixel_calc_mpi(ifg_paths, params):
-    log.info('Starting ref pixel computation')
+def ref_pixel_calc(ifg_paths, params):
+
+    # unlikely, but possible the refpixel can be (0,0)
+    # check if there is a pre-specified reference pixel coord
+    log.info('Starting reference pixel calculation')
+    refx = params[cf.REFX]
+    ifg = Ifg(ifg_paths[0])
+    ifg.open()
+    if refx > ifg.ncols - 1:
+        raise ValueError("Invalid reference pixel X coordinate: %s" % refx)
+
+    refy = params[cf.REFY]
+    if refy > ifg.nrows - 1:
+        raise ValueError("Invalid reference pixel Y coordinate: %s" % refy)
+
+    if refx == 0 or refy == 0:  # matlab equivalent
+        refx, refy = ref_pixel_mpi(ifg_paths, params)
+        log.info('Found reference pixel coordinate: (%s, %s)' % (refx, refy))
+    else:
+        log.info('Reusing config file reference pixel (%s, %s)' % (refx, refy))
+    ifg.close()
+    return refx, refy
+
+
+def ref_pixel_mpi(ifg_paths, params):
     half_patch_size, thresh, grid = refpixel.ref_pixel_setup(ifg_paths, params)
     process_grid = np.array_split(grid, mpiops.size)[mpiops.rank]
     save_ref_pixel_blocks(process_grid, half_patch_size, ifg_paths, params)
@@ -172,12 +195,10 @@ def ref_pixel_calc_mpi(ifg_paths, params):
     if mpiops.rank == MASTER_PROCESS:
         mean_sds = np.hstack(mean_sds)
     refx, refy = mpiops.run_once(refpixel.filter_means, mean_sds, grid)
-    log.info('Finished ref pixel computation')
     return refx, refy
 
 
 def save_ref_pixel_blocks(grid, half_patch_size, ifg_paths, params):
-    # process_ifg_paths = np.array_split(ifg_paths, mpiops.size)[mpiops.rank]
     outdir = params[cf.OUT_DIR]
     for p in ifg_paths:
         for y, x in grid:
@@ -210,7 +231,7 @@ def orb_fit_calc(ifg_paths, params):
 
 def ref_phase_estimation_mpi(ifg_paths, params, refpx, refpy):
     # TODO: may benefit from tiling and using a median of median algorithms
-    log.info('Finding and removing reference phase')
+    log.info('Estimating and removing reference phase')
     process_ifgs = np.array_split(ifg_paths, mpiops.size)[mpiops.rank]
     process_ref_phs = np.zeros(len(process_ifgs), dtype=np.float64)
     output_dir = params[cf.OUT_DIR]
@@ -309,7 +330,7 @@ def process_ifgs(ifg_paths, params, rows, cols):
     mst_grid = temp_mst_grid_reconstruct(tiles, ifg_paths, params)
 
     # Estimate reference pixel location
-    refpx, refpy = ref_pixel_calc_mpi(ifg_paths, params)
+    refpx, refpy = ref_pixel_calc(ifg_paths, params)
 
     # remove APS delay here, and write aps delay removed ifgs to disc
     # TODO: fix PyAPS integration
@@ -330,15 +351,14 @@ def process_ifgs(ifg_paths, params, rows, cols):
 
     # open ifgs again, but without phase conversion as already converted and
     # saved to disc
-    ifgs = prepare_ifgs_without_phase(ifg_paths)
-    log.info('Estimating and removing phase at reference pixel')
-    ref_phs, ifgs = rpe.estimate_ref_phase(ifgs, params, refpx, refpy)
+    # ifgs = prepare_ifgs_without_phase(ifg_paths)
+    # log.info('Estimating and removing phase at reference pixel')
+    # ref_phs, ifgs = rpe.estimate_ref_phase(ifgs, params, refpx, refpy)
 
     ref_phase_estimation_mpi(ifg_paths, params, refpx, refpy)
     # save reference phase
     # ref_phs_file = os.path.join(params[cf.OUT_DIR], 'ref_phs.npy')
     # np.save(file=ref_phs_file, arr=ref_phs)
-
 
     # TODO: assign maxvar to ifg metadata (and geotiff)?
     log.info('Calculating maximum variance in interferograms')
@@ -604,27 +624,6 @@ def check_orbital_ifgs(ifgs, flags):
             logging.debug(msg % i.data_path)
 
         raise orbital.OrbitalError(msg)
-
-
-def find_reference_pixel(ifgs, params):
-    # unlikely, but possible the refpixel can be (0,0)
-    # check if there is a pre-specified reference pixel coord
-    log.info('Starting reference pixel calculation')
-    refx = params[cf.REFX]
-    if refx > ifgs[0].ncols - 1:
-        raise ValueError("Invalid reference pixel X coordinate: %s" % refx)
-
-    refy = params[cf.REFY]
-    if refy > ifgs[0].nrows - 1:
-        raise ValueError("Invalid reference pixel Y coordinate: %s" % refy)
-
-    if refx == 0 or refy == 0:  # matlab equivalent
-        refy, refx = refpixel.ref_pixel(ifgs, params)
-        log.info('Found reference pixel coordinate: (%s, %s)' % (refx, refy))
-    else:
-        log.info('Reusing config file reference pixel (%s, %s)' % (refx, refy))
-
-    return refx, refy
 
 
 def calculate_linear_rate(ifgs, params, vcmt, mst=None):

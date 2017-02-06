@@ -97,7 +97,7 @@ def sydney_data_setup(datafiles=None, is_dir=False):
     return ifgs
 
 
-def sydney_data_setup_ifg_file_list(datafiles=None):
+def sydney_ifg_file_list(datafiles=None):
     """Returns the file list of all the .tif files after prepifg conversion
     input phase data is in radians; these ifgs are in radians - not converted to mm"""
     if datafiles:

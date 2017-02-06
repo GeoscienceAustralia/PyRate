@@ -33,7 +33,7 @@ from tests import common
 from tests.common import SYD_TEST_DIR
 from tests.common import SYD_TEST_MATLAB_ORBITAL_DIR
 from tests.common import SYD_TEST_TIF, sydney_data_setup
-from tests.common import sydney_data_setup_ifg_file_list
+from tests.common import sydney_ifg_file_list
 
 DEG_LOOKUP = {
     2: PLANAR,
@@ -760,7 +760,7 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
         self.params[cf.ORBITAL_FIT_LOOKS_Y] = 1
 
         data_paths = [os.path.join(SYD_TEST_TIF, p) for p in
-                      sydney_data_setup_ifg_file_list()]
+                      sydney_ifg_file_list()]
         self.new_data_paths = [os.path.join(self.BASE_DIR, os.path.basename(d))
                           for d in data_paths]
         for d in data_paths:

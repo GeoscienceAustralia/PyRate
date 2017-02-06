@@ -1,12 +1,10 @@
 import pytest
 import os
-import shutil
 import tempfile
 import random
 import string
 from pyrate import config as cf
 from pyrate import mpiops
-from tests import common
 
 
 @pytest.fixture()
@@ -57,3 +55,13 @@ def mpisync(request):
 
     request.addfinalizer(fin)
     return mpiops.comm
+
+
+@pytest.fixture(params=[0, 1])
+def roipac_or_gamma(request):
+    return request.param
+
+
+@pytest.fixture(params=[1, 2])
+def ref_est_method(request):
+    return request.param

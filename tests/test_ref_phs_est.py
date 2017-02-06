@@ -6,8 +6,8 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import pytest
 from itertools import product
-
 import numpy as np
 
 from pyrate import config as cf
@@ -19,7 +19,7 @@ from pyrate.scripts import run_prepifg
 from pyrate.scripts import run_pyrate
 from pyrate.shared import Ifg
 from tests import common
-from tests.common import SYD_TEST_DIR
+from tests.common import SYD_TEST_DIR, sydney_data_setup
 
 matlab_ref_phs_method1 = [-18.2191658020020,
                       27.7119445800781,
@@ -129,7 +129,7 @@ class RefPhsEstimationMatlabTestMethod1Serial(unittest.TestCase):
         ifgs = shared.pre_prepare_ifgs(dest_paths, params)
         mst_grid = run_pyrate.mst_calculation(dest_paths, params)
         # Estimate reference pixel location
-        refx, refy = run_pyrate.find_reference_pixel(ifgs, params)
+        refx, refy = run_pyrate.ref_pixel_calc(dest_paths, params)
 
         # Estimate and remove orbit errors
         run_pyrate.remove_orbital_error(ifgs, params)
@@ -219,7 +219,7 @@ class RefPhsEstimationMatlabTestMethod1Parallel(unittest.TestCase):
         ifgs = shared.pre_prepare_ifgs(dest_paths, params)
         mst_grid = run_pyrate.mst_calculation(dest_paths, params)
         # Estimate reference pixel location
-        refx, refy = run_pyrate.find_reference_pixel(ifgs, params)
+        refx, refy = run_pyrate.ref_pixel_calc(dest_paths, params)
 
         # Estimate and remove orbit errors
         run_pyrate.remove_orbital_error(ifgs, params)
@@ -314,7 +314,7 @@ class RefPhsEstimationMatlabTestMethod2Serial(unittest.TestCase):
         ifgs = shared.pre_prepare_ifgs(dest_paths, params)
         mst_grid = run_pyrate.mst_calculation(dest_paths, params)
         # Estimate reference pixel location
-        refx, refy = run_pyrate.find_reference_pixel(ifgs, params)
+        refx, refy = run_pyrate.ref_pixel_calc(dest_paths, params)
 
         # Estimate and remove orbit errors
         run_pyrate.remove_orbital_error(ifgs, params)
@@ -408,7 +408,7 @@ class RefPhsEstimationMatlabTestMethod2Parallel(unittest.TestCase):
         ifgs = shared.pre_prepare_ifgs(dest_paths, params)
         mst_grid = run_pyrate.mst_calculation(dest_paths, params)
         # Estimate reference pixel location
-        refx, refy = run_pyrate.find_reference_pixel(ifgs, params)
+        refx, refy = run_pyrate.ref_pixel_calc(dest_paths, params)
 
         # Estimate and remove orbit errors
         run_pyrate.remove_orbital_error(ifgs, params)

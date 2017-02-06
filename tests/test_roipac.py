@@ -45,7 +45,7 @@ from tests.common import SYD_TEST_DEM_DIR, SYD_TEST_OBS, TEMPDIR
 from tests.common import SYD_TEST_DEM_ROIPAC, SYD_TEST_DEM_HDR
 from tests.common import sydney_data_roipac_unws
 from tests.common import sydney_data_setup
-from tests.common import sydney_data_setup_ifg_file_list
+from tests.common import sydney_ifg_file_list
 
 gdal.UseExceptions()
 
@@ -326,7 +326,7 @@ class TestRoipacLuigiEquality(unittest.TestCase):
 
     def test_cmd_ifg_luigi_files_created(self):
         self.dataPaths = sydney_data_roipac_unws()
-        base_exp = sydney_data_setup_ifg_file_list()
+        base_exp = sydney_ifg_file_list()
         self.expPaths = [join(self.luigi_base_dir, os.path.basename(i))
                          for i in base_exp]
         self.luigi = '1'
@@ -337,7 +337,7 @@ class TestRoipacLuigiEquality(unittest.TestCase):
 
     def test_cmd_ifg_no_luigi_files_created(self):
         self.dataPaths = sydney_data_roipac_unws()
-        base_exp = sydney_data_setup_ifg_file_list()
+        base_exp = sydney_ifg_file_list()
         self.expPaths = [join(self.non_luigi_base_dir, os.path.basename(i))
                          for i in base_exp]
         self.luigi = '0'
