@@ -179,7 +179,7 @@ class MatlabEqualityTest(unittest.TestCase):
         refx, refy = run_pyrate.ref_pixel_calc(dest_paths, params)
 
         run_pyrate.remove_orbital_error(ifgs, params)
-        ifgs = shared.prepare_ifgs_without_phase(dest_paths)
+        ifgs = shared.prepare_ifgs_without_phase(dest_paths, params)
         _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
 
         # Calculate interferogram noise
