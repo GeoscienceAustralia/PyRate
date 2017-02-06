@@ -16,5 +16,5 @@ pytest-cov
 coverage
 codecov
 tox
-pytest
+pytest >= 3.0.0
 coveralls >= 1.1
