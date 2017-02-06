@@ -86,14 +86,14 @@ def est_ref_phase_method1(ifgs, params):
     comp = np.isnan(ifg_phase_data_sum)  # this is the same as in Matlab
     comp = np.ravel(comp, order='F')  # this is the same as in Matlab
     if params[cf.PARALLEL]:
-        print("ref phase calculation using multiprocessing")
+        log.info("Calculating ref phase using multiprocessing")
         ref_phs = Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
             delayed(est_ref_phase_method1_multi)(p, comp)
             for p in phase_data)
         for n, ifg in enumerate(ifgs):
             ifg.phase_data -= ref_phs[n]
     else:
-        print("ref phase calculation in serial")
+        log.info("Calculating ref phase")
         ref_phs = np.zeros(len(ifgs))
         for n, ifg in enumerate(ifgs):
             ref_phs[n] = est_ref_phase_method1_multi(ifg.phase_data, comp)

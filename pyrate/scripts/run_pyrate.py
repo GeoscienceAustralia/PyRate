@@ -24,7 +24,7 @@ from pyrate import vcm as vcm_module
 from pyrate.shared import Ifg, write_output_geotiff, \
     pre_prepare_ifgs, prepare_ifgs_without_phase, create_tiles
 from pyrate.compat import PyAPS_INSTALLED
-from pyrate.nci.common_nci import save_latest_phase
+from pyrate.nci.common_nci import save_latest_tiles
 from pyrate import mpiops
 if PyAPS_INSTALLED:
     from pyrate import remove_aps_delay as aps
@@ -61,7 +61,7 @@ def _join_dicts(dicts):
     return d
 
 
-def convert_phase_to_numpy(dest_tifs, params, tiles):
+def create_ifg_dict(dest_tifs, params, tiles):
     """
     1. Convert ifg phase data into numpy binary files.
     2. Save the preread_ifgs dict with information about the ifgs that are
@@ -84,7 +84,8 @@ def convert_phase_to_numpy(dest_tifs, params, tiles):
     preread_ifgs_dict = {}
     process_tifs = np.array_split(dest_tifs, mpiops.size)[mpiops.rank]
     for d in process_tifs:
-        ifg = save_latest_phase(d, tiles, params)
+        ifg = save_latest_tiles(d, tiles, params)
+        ifg.nodata_value = params[cf.NO_DATA_VALUE]
         nan_fraction = ifg.nan_fraction
         master = ifg.master
         slave = ifg.slave
@@ -236,6 +237,8 @@ def ref_phase_estimation_mpi(ifg_paths, params, refpx, refpy):
     process_ref_phs = np.zeros(len(process_ifgs), dtype=np.float64)
     output_dir = params[cf.OUT_DIR]
     if params[cf.REF_EST_METHOD] == 1:
+        # calculate phase sum for later use in ref phase method 1
+        phase_sum_mpi(ifg_paths, params)
         for n, p in enumerate(process_ifgs):
             process_ref_phs[n] = ref_phase_method1_dummy(p, output_dir)
             log.info('finished processing {} of process total {}, ' \
@@ -277,16 +280,13 @@ def ref_phase_method2_dummy(params, ifg_path, refpx, refpy):
     half_chip_size = int(np.floor(params[cf.REF_CHIP_SIZE] / 2.0))
     chipsize = 2 * half_chip_size + 1
     thresh = chipsize * chipsize * params[cf.REF_MIN_FRAC]
-    output_dir = params[cf.OUT_DIR]
-    numpy_file = os.path.join(
-        output_dir, os.path.basename(ifg_path).split('.')[0] + '.npy')
-    phase_data = np.load(numpy_file)
+    ifg = Ifg(ifg_path)
+    ifg.open(readonly=False)
+    phase_data = ifg.phase_data
     ref_phs = rpe.est_ref_phase_method2_multi(phase_data,
                                               half_chip_size,
                                               refpx, refpy, thresh)
     phase_data -= ref_phs
-    ifg = Ifg(ifg_path)
-    ifg.open()
     md = ifg.meta_data
     md[ifc.REF_PHASE] = ifc.REF_PHASE_REMOVED
     ifg.write_modified_phase(data=phase_data)
@@ -297,13 +297,11 @@ def ref_phase_method2_dummy(params, ifg_path, refpx, refpy):
 def ref_phase_method1_dummy(ifg_path, output_dir):
     comp_file = os.path.join(output_dir, 'comp.npy')
     comp = np.load(comp_file)
-    numpy_file = os.path.join(
-        output_dir, os.path.basename(ifg_path).split('.')[0] + '.npy')
-    phase_data = np.load(numpy_file)
+    ifg = Ifg(ifg_path)
+    ifg.open(readonly=False)
+    phase_data = ifg.phase_data
     ref_phs = rpe.est_ref_phase_method1_multi(phase_data, comp)
     phase_data -= ref_phs
-    ifg = Ifg(ifg_path)
-    ifg.open()
     md = ifg.meta_data
     md[ifc.REF_PHASE] = ifc.REF_PHASE_REMOVED
     ifg.write_modified_phase(data=phase_data)
@@ -322,9 +320,9 @@ def process_ifgs(ifg_paths, params, rows, cols):
         params[cf.PARALLEL] = False
 
     tiles = get_tiles(ifg_paths[0], rows, cols)
-    preread_ifgs = convert_phase_to_numpy(ifg_paths,
-                                          params=params,
-                                          tiles=tiles)
+    preread_ifgs = create_ifg_dict(ifg_paths,
+                                   params=params,
+                                   tiles=tiles)
 
     mpi_mst_calc(ifg_paths, params, tiles, preread_ifgs)
     mst_grid = temp_mst_grid_reconstruct(tiles, ifg_paths, params)
@@ -344,10 +342,6 @@ def process_ifgs(ifg_paths, params, rows, cols):
 
     # Estimate and remove orbit errors
     orb_fit_calc(ifg_paths, params)
-
-    # calculate phase sum for later use in ref phase method 1
-    if params[cf.REF_EST_METHOD] == 1:   # this block can be moved in ref phs 1
-        phase_sum_mpi(ifg_paths, params)
 
     # open ifgs again, but without phase conversion as already converted and
     # saved to disc

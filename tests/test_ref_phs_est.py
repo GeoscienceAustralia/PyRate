@@ -467,5 +467,66 @@ class RefPhsEstimationMatlabTestMethod2Parallel(unittest.TestCase):
         np.testing.assert_array_almost_equal(matlab_ref_phs_method2,
                                              self.ref_phs, decimal=3)
 
+
+@pytest.fixture(params=range(1, 6))
+def modify_config(request, tempdir, get_config):
+    test_conf = common.SYDNEY_TEST_CONF
+    params_dict = get_config(test_conf)
+    params_dict[cf.IFG_LKSX] = request.param
+    params_dict[cf.IFG_LKSY] = request.param
+    params_dict[cf.OBS_DIR] = tempdir()
+    shared.copytree(common.SYD_TEST_GAMMA, params_dict[cf.OBS_DIR])
+    params_dict[cf.IFG_FILE_LIST] = os.path.join(
+        params_dict[cf.OBS_DIR], 'ifms_17')
+    params_dict[cf.OUT_DIR] = tempdir()
+
+    params_dict[cf.PARALLEL] = 0
+    params_dict[cf.APS_CORRECTION] = 0
+
+    yield params_dict
+    # clean up
+    shutil.rmtree(params_dict[cf.OUT_DIR])
+    shutil.rmtree(params_dict[cf.OBS_DIR])
+
+
+def test_refpixel_mpi(mpisync, tempdir, modify_config, ref_est_method):
+
+    params_dict = modify_config
+    params_dict[cf.REF_EST_METHOD] = ref_est_method
+    xlks, ylks, crop = cf.transform_params(params_dict)
+    base_unw_paths = cf.original_ifg_paths(
+        params_dict[cf.IFG_FILE_LIST])
+    # dest_paths are tifs that have been geotif converted and multilooked
+    dest_paths = cf.get_dest_paths(
+        base_unw_paths, crop, params_dict, xlks)
+
+    # create the dest_paths files
+    run_prepifg.gamma_prepifg(base_unw_paths, params_dict)
+    refpx, refpy = run_pyrate.ref_pixel_calc(dest_paths, params_dict)
+    run_pyrate.ref_phase_estimation_mpi(dest_paths, params_dict, refpx, refpy)
+    ifgs_mpi = sydney_data_setup(datafiles=dest_paths)
+    ifgs_mpi_out_dir = params_dict[cf.OUT_DIR]
+
+    # old ref phs estimate
+    params_dict_old = modify_config
+    params_dict[cf.OUT_DIR] = tempdir()
+    params_dict[cf.REF_EST_METHOD] = ref_est_method
+    xlks, ylks, crop = cf.transform_params(params_dict)
+    base_unw_paths = cf.original_ifg_paths(
+        params_dict[cf.IFG_FILE_LIST])
+    dest_paths = cf.get_dest_paths(
+        base_unw_paths, crop, params_dict, xlks)
+    run_prepifg.gamma_prepifg(base_unw_paths, params_dict_old)
+    ifgs = sydney_data_setup(datafiles=dest_paths)
+    ref_phs, ifgs = estimate_ref_phase(ifgs, params_dict, refpx, refpy)
+
+    for i, j in zip(ifgs, ifgs_mpi):
+        np.testing.assert_array_almost_equal(i.phase_data, j.phase_data,
+                                             decimal=2)
+        i.close()
+        j.close()
+    shutil.rmtree(ifgs_mpi_out_dir)  # remove mpi out dir
+
+
 if __name__ == '__main__':
     unittest.main()

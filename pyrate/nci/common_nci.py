@@ -31,7 +31,7 @@ def clean_up_old_files():
         log.info('removed {}'.format(f))
 
 
-def save_latest_phase(ifg_path, tiles, params):
+def save_latest_tiles(ifg_path, tiles, params):
     """
     Parameters
     ----------
@@ -50,10 +50,6 @@ def save_latest_phase(ifg_path, tiles, params):
     shared.nan_and_mm_convert(ifg, params)
     phase_data = ifg.phase_data
 
-    # TODO: remove saving whole ifg phase data when possible
-    numpy_file = os.path.join(
-        params[cf.OUT_DIR], os.path.basename(ifg_path).split('.')[0] + '.npy')
-    np.save(file=numpy_file, arr=phase_data)
     for t in tiles:
         p_data = phase_data[
                  t.top_left_y:t.bottom_right_y,
