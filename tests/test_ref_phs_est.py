@@ -402,7 +402,7 @@ class RefPhsEstimationMatlabTestMethod2Parallel(unittest.TestCase):
         base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST])
 
         dest_paths = cf.get_dest_paths(base_ifg_paths, crop,
-                                               params, xlks)
+                                       params, xlks)
 
         # start run_pyrate copy
         ifgs = shared.pre_prepare_ifgs(dest_paths, params)

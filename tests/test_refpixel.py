@@ -1,9 +1,7 @@
-'''
+"""
 Collection of tests for validating PyRate's reference pixel code.
-
-.. codeauthor:: Ben Davies
-'''
-
+"""
+import pytest
 import copy
 import os
 import unittest
@@ -14,7 +12,9 @@ from pyrate import config as cf
 from pyrate.config import ConfigException
 from pyrate.refpixel import ref_pixel, RefPixelError, step
 from pyrate.scripts import run_pyrate
+from pyrate.scripts import run_prepifg
 from tests.common import SYD_TEST_DIR
+from tests import common
 
 # default testing values
 REFNX = 5
@@ -136,7 +136,7 @@ class ReferencePixelTests(unittest.TestCase):
         self.params[cf.REF_MIN_FRAC] = MIN_FRAC
         self.params[cf.PARALLEL] = PARALLEL
         res = ref_pixel(mockifgs, self.params)
-        self.assertEqual((2,2), res)
+        self.assertEqual((2, 2), res)
 
     def test_step(self):
         # test different search windows to verify x/y step calculation
@@ -199,7 +199,7 @@ def _expected_ref_pixel(ifgs, cs):
     urm = mean([std(i[~isnan(i)]) for i in ur])
     llm = mean([std(i[~isnan(i)]) for i in ll])
     lrm = mean([std(i[~isnan(i)]) for i in lr])
-    assert isnan([ulm, urm, llm, lrm]).any() == False
+    assert isnan([ulm, urm, llm, lrm]).any() is False
 
     # coords of the smallest mean is the result
     mn = [ulm, urm, llm, lrm]
@@ -328,6 +328,56 @@ class MatlabEqualityTestMultiprocessParallel(unittest.TestCase):
         self.assertEqual(refx, 2)
         self.assertEqual(refy, 2)
 
+
+@pytest.fixture(params=[1, 2, 3, 4, 5])
+def modify_config(request, tempdir, get_config):
+    test_conf = common.SYDNEY_TEST_CONF
+    params_dict = get_config(test_conf)
+    params_dict[cf.IFG_LKSX] = request.param
+    params_dict[cf.IFG_LKSY] = request.param
+    params_dict[cf.IFG_FILE_LIST] = os.path.join(
+        common.SYD_TEST_GAMMA, 'ifms_17')
+    params_dict[cf.OUT_DIR] = tempdir()
+    params_dict[cf.PARALLEL] = 0
+    params_dict[cf.APS_CORRECTION] = 0
+    return params_dict
+
+
+@pytest.fixture(params=[1, 2])
+def ref_est_method(request):
+    return request.param
+
+
+@pytest.fixture(params=[0, 1])
+def roipac_or_gamma(request):
+    return request.param
+
+
+def test_refpixel_mpi(mpisync, modify_config, ref_est_method, roipac_or_gamma):
+    params_dict = modify_config
+    params_dict[cf.REF_EST_METHOD] = ref_est_method
+    xlks, ylks, crop = cf.transform_params(params_dict)
+    if roipac_or_gamma == 0:
+        params_dict[cf.IFG_FILE_LIST] = os.path.join(
+            common.SYD_TEST_OBS, 'ifms_17')
+
+    base_unw_paths = cf.original_ifg_paths(
+        params_dict[cf.IFG_FILE_LIST])
+    # dest_paths are tifs that have been geotif converted and multilooked
+    dest_paths = cf.get_dest_paths(
+        base_unw_paths, crop, params_dict, xlks)
+    # create the dest_paths files
+    if roipac_or_gamma == 0:
+        run_prepifg.roipac_prepifg(base_unw_paths, params_dict)
+    else:
+        run_prepifg.gamma_prepifg(base_unw_paths, params_dict)
+    refpx, refpy = run_pyrate.ref_pixel_calc_mpi(dest_paths, params_dict)
+    ifgs = sydney_data_setup(datafiles=dest_paths)
+    # old ref pixel calc
+    refx, refy = run_pyrate.find_reference_pixel(ifgs, params_dict)
+    for i in ifgs:  # close ifgs
+        i.close()
+    assert (refpx, refpy) == (refx, refy)
 
 if __name__ == "__main__":
     unittest.main()

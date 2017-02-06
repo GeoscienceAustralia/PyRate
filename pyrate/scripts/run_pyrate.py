@@ -212,7 +212,7 @@ def ref_phase_estimation_mpi(ifg_paths, params, refpx, refpy):
     # TODO: may benefit from tiling and using a median of median algorithms
     log.info('Finding and removing reference phase')
     process_ifgs = np.array_split(ifg_paths, mpiops.size)[mpiops.rank]
-    process_ref_phs = np.zeros(len(process_ifgs))
+    process_ref_phs = np.zeros(len(process_ifgs), dtype=np.float64)
     output_dir = params[cf.OUT_DIR]
     if params[cf.REF_EST_METHOD] == 1:
         for n, p in enumerate(process_ifgs):
@@ -241,13 +241,14 @@ def ref_phase_estimation_mpi(ifg_paths, params, refpx, refpy):
         for r in range(1, mpiops.size):
             process_indices = np.array_split(range(len(ifg_paths)),
                                              mpiops.size)[r]
-            ref_phs[process_indices] = \
-                mpiops.comm.receive(source=r, tag=r,
-                                    return_status=False)
+            this_process_ref_phs = np.zeros(shape=len(process_indices),
+                                            dtype=np.float64)
+            mpiops.comm.recv(this_process_ref_phs, source=r, tag=r)
+            ref_phs[process_indices] = this_process_ref_phs
         np.save(file=ref_phs_file, arr=ref_phs)
     else:
         # send reference phase data to master process
-        mpiops.comm.send(process_ref_phs, destination=MASTER_PROCESS,
+        mpiops.comm.send(process_ref_phs, dest=MASTER_PROCESS,
                          tag=mpiops.rank)
 
 
@@ -324,7 +325,6 @@ def process_ifgs(ifg_paths, params, rows, cols):
     orb_fit_calc(ifg_paths, params)
 
     # calculate phase sum for later use in ref phase method 1
-    print("REF EST METHOD", params[cf.REF_EST_METHOD])
     if params[cf.REF_EST_METHOD] == 1:   # this block can be moved in ref phs 1
         phase_sum_mpi(ifg_paths, params)
 
@@ -361,8 +361,8 @@ def process_ifgs(ifg_paths, params, rows, cols):
     rate, error, samples = calculate_linear_rate(ifgs, params, vcmt, mst_grid)
 
     # close all open ifgs
-    for i in ifgs:
-        i.close()
+    # for i in ifgs:
+    #     i.close()
 
     log.info('PyRate workflow completed')
     return mst_grid, (refpx, refpy), maxvar, vcmt, rate, error, samples
