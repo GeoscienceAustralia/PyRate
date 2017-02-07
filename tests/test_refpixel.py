@@ -392,6 +392,8 @@ def test_refpixel_mpi(mpisync, tempdir, modify_config,
     for i in ifgs:  # close ifgs
         i.close()
     assert (refpx, refpy) == (refx, refy)
+    shutil.rmtree(outdir)
+
 
 if __name__ == "__main__":
     unittest.main()
