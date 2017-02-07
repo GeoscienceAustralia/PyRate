@@ -463,8 +463,6 @@ class IfgPart(object):
         self.c_end = self.tile.bottom_right_x
         # TODO: fix this if cond
         if ifg_dict is not None:
-            # outdir = os.path.dirname(ifg_dict)
-            # preread_ifgs = cp.load(open(ifg_dict, 'rb'))
             ifg = ifg_dict[ifg_or_path]
             self.nan_fraction = ifg.nan_fraction
             self.master = ifg.master
@@ -474,7 +472,6 @@ class IfgPart(object):
                 os.path.basename(ifg_or_path).split('.')[0], tile.index)
             self.phase_data = np.load(
                 os.path.join(os.path.dirname(ifg_or_path), phase_file))
-            read = True
         else:
             # check if Ifg was sent.
             if isinstance(ifg_or_path, Ifg):
@@ -482,25 +479,13 @@ class IfgPart(object):
             else:
                 self.data_path = ifg_or_path  # should be used with MPI
                 ifg = Ifg(ifg_or_path)
-            read = False
             self.phase_data = None
             self.nan_fraction = None
             self.master = None
             self.slave = None
             self.time_span = None
-
-        attempts = 0
-        # TODO: The repeated read attempts should be avoided
-        # This is done if a process has to release the file lock before another
-        # can read that file
-        while (not read) and (attempts < 3):
-            try:
-                attempts += 1
-                read = self.read_required(ifg)
-            except RuntimeError as e:
-                print(e)
-                print('\nneed to read {ifg} again'.format(ifg=ifg))
-                time.sleep(0.5)
+        if isinstance(ifg, Ifg):
+            self.read_required(ifg)
 
     def read_required(self, ifg):
         if not ifg.is_open:
@@ -514,7 +499,6 @@ class IfgPart(object):
         self.time_span = ifg.time_span
         ifg.phase_data = None
         ifg.close()  # close base ifg
-        return True
 
     @property
     def nrows(self):

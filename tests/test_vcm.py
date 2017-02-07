@@ -222,6 +222,10 @@ def modify_config(request, tempdir, get_config):
     shutil.rmtree(params_dict[cf.OBS_DIR])
 
 
+def test_matlab_vs_mpi(mpisync, tempdir, modify_config, ref_est_method,
+                       row_splits, col_splits):
+    pass
+
 def test_vcm_maxvar_mpi(mpisync, tempdir, modify_config, ref_est_method,
                         row_splits, col_splits):
     params_dict = modify_config
@@ -263,23 +267,24 @@ def test_vcm_maxvar_mpi(mpisync, tempdir, modify_config, ref_est_method,
 
     # old ref phs estimate
     params_dict_old = modify_config
-    params_dict[cf.OUT_DIR] = tempdir()
-    params_dict[cf.REF_EST_METHOD] = ref_est_method
+    params_dict_old[cf.OUT_DIR] = tempdir()
+    params_dict_old[cf.REF_EST_METHOD] = ref_est_method
     if mpiops.rank == 0:
-        xlks, ylks, crop = cf.transform_params(params_dict)
+        xlks, ylks, crop = cf.transform_params(params_dict_old)
         base_unw_paths = cf.original_ifg_paths(
-            params_dict[cf.IFG_FILE_LIST])
+            params_dict_old[cf.IFG_FILE_LIST])
         dest_paths = cf.get_dest_paths(
-            base_unw_paths, crop, params_dict, xlks)
+            base_unw_paths, crop, params_dict_old, xlks)
         run_prepifg.gamma_prepifg(base_unw_paths, params_dict_old)
         ifgs = sydney_data_setup(datafiles=dest_paths)
-        ref_phs, ifgs = rpe.estimate_ref_phase(ifgs, params_dict, refpx, refpy)
-        maxvar_s = [cvd(i, params_dict)[0] for i in ifgs]
+        ref_phs, ifgs = rpe.estimate_ref_phase(ifgs, params_dict_old,
+                                               refpx, refpy)
+        maxvar_s = [cvd(i, params_dict_old)[0] for i in ifgs]
         vcmt_s = get_vcmt(ifgs, maxvar)
         np.testing.assert_array_almost_equal(maxvar, maxvar_s)
         np.testing.assert_array_almost_equal(vcmt, vcmt_s)
         shutil.rmtree(ifgs_mpi_out_dir)  # remove mpi out dir
-        shutil.rmtree(params_dict[cf.OUT_DIR])  # remove serial out dir
+        shutil.rmtree(params_dict_old[cf.OUT_DIR])  # remove serial out dir
 
 if __name__ == "__main__":
     unittest.main()

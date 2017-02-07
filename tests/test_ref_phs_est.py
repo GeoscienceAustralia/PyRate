@@ -510,24 +510,24 @@ def test_refphs_mpi(mpisync, tempdir, modify_config, ref_est_method):
 
     # old ref phs estimate
     params_dict_old = modify_config
-    params_dict[cf.OUT_DIR] = tempdir()
-    params_dict[cf.REF_EST_METHOD] = ref_est_method
+    params_dict_old[cf.OUT_DIR] = tempdir()
+    params_dict_old[cf.REF_EST_METHOD] = ref_est_method
     if mpiops.rank == 0:
-        xlks, ylks, crop = cf.transform_params(params_dict)
+        xlks, ylks, crop = cf.transform_params(params_dict_old)
         base_unw_paths = cf.original_ifg_paths(
-            params_dict[cf.IFG_FILE_LIST])
+            params_dict_old[cf.IFG_FILE_LIST])
         dest_paths = cf.get_dest_paths(
-            base_unw_paths, crop, params_dict, xlks)
+            base_unw_paths, crop, params_dict_old, xlks)
         run_prepifg.gamma_prepifg(base_unw_paths, params_dict_old)
         ifgs = sydney_data_setup(datafiles=dest_paths)
-        ref_phs, ifgs = estimate_ref_phase(ifgs, params_dict, refpx, refpy)
+        ref_phs, ifgs = estimate_ref_phase(ifgs, params_dict_old, refpx, refpy)
         for i, j in zip(ifgs, ifgs_mpi):
             np.testing.assert_array_almost_equal(i.phase_data, j.phase_data,
                                                  decimal=2)
             i.close()
             j.close()
         shutil.rmtree(ifgs_mpi_out_dir)  # remove mpi out dir
-        shutil.rmtree(params_dict[cf.OUT_DIR])  # remove serial out dir
+        shutil.rmtree(params_dict_old[cf.OUT_DIR])  # remove serial out dir
 
 
 if __name__ == '__main__':

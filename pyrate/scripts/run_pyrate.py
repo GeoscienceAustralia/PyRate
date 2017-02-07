@@ -1,27 +1,28 @@
-from __future__ import print_function
 """
 Main workflow script for PyRate
 """
+from __future__ import print_function
 import logging
 import os
 from os.path import join
 import numpy as np
 from osgeo import gdal
 
-import pyrate.config as cf
-import pyrate.linrate as linrate
-import pyrate.mst as mst
-import pyrate.orbital as orbital
-import pyrate.prepifg as prepifg
-import pyrate.refpixel as refpixel
-import pyrate.timeseries as timeseries
+from pyrate import config as cf
+from pyrate import linrate
+from pyrate import mst
+from pyrate import orbital
+from pyrate import prepifg
+from pyrate import refpixel
+from pyrate import timeseries
+from pyrate import shared
 from pyrate import algorithm
 from pyrate import ifgconstants as ifc
 from pyrate import matlab_mst as matlab_mst
 from pyrate import ref_phs_est as rpe
 from pyrate import vcm as vcm_module
 from pyrate.shared import Ifg, write_output_geotiff, \
-    pre_prepare_ifgs, create_tiles, prepare_ifgs_without_phase, PrereadIfg
+    pre_prepare_ifgs, create_tiles, PrereadIfg
 from pyrate.compat import PyAPS_INSTALLED
 from pyrate.nci.common_nci import save_latest_tiles
 from pyrate import mpiops
@@ -30,8 +31,6 @@ if PyAPS_INSTALLED:
 
 PYRATEPATH = cf.PYRATEPATH
 MASTER_PROCESS = 0
-# print screen output
-VERBOSE = True
 log = logging.getLogger(__name__)
 
 
@@ -94,14 +93,6 @@ def create_ifg_dict(dest_tifs, params, tiles):
 def mpi_mst_calc(dest_tifs, params, tiles, preread_ifgs):
     """
     MPI function that control each process during MPI run
-    :param MPI_myID:
-    :param dest_tifs: paths of cropped amd resampled geotiffs
-    :param mpi_log_filename:
-    :param num_processors:
-    :param parallel: MPI Parallel class instance
-    :param params: config params dictionary
-    :param mst_file: mst file (2d numpy array) save to disc
-    :return:
     """
 
     log.info('Calculating mst')
@@ -316,12 +307,7 @@ def process_ifgs(ifg_paths, params, rows, cols):
     # Estimate and remove orbit errors
     orb_fit_calc(ifg_paths, params)
 
-    # open ifgs again, but without phase conversion as already converted and
-    # saved to disc
-    # ifgs = prepare_ifgs_without_phase(ifg_paths, params)
-    # log.info('Estimating and removing phase at reference pixel')
-    # ref_phs, ifgs = rpe.estimate_ref_phase(ifgs, params, refpx, refpy)
-
+    # calc and remove reference phase
     ref_phase_estimation_mpi(ifg_paths, params, refpx, refpy)
 
     maxvar, vcmt = maxvar_vcm_mpi(ifg_paths, params, preread_ifgs)
@@ -329,7 +315,8 @@ def process_ifgs(ifg_paths, params, rows, cols):
     ifgs = pre_prepare_ifgs(ifg_paths, params)
 
     if params[cf.TIME_SERIES_CAL] != 0:
-        compute_time_series(ifgs, mst_grid, params, vcmt)
+        time_series_mpi(ifg_paths, params, vcmt, tiles, preread_ifgs)
+        # compute_time_series(ifgs, mst_grid, params, vcmt)
 
     # Calculate linear rate map
     rate, error, samples = calculate_linear_rate(ifgs, params, vcmt, mst_grid)
@@ -482,6 +469,25 @@ def mst_calculation(ifg_paths_or_instance, params):
     for i in ifgs:
         i.close()
     return mst_grid
+
+
+def time_series_mpi(ifg_paths, params, vcmt, tiles, preread_ifgs):
+    process_tiles = np.array_split(tiles, mpiops.size)[mpiops.rank]
+    log.info('Calculating time series')
+    output_dir = params[cf.OUT_DIR]
+    for t in process_tiles:
+        i = t.index
+        log.info('Calculating time series for tile {}'.format(t.index))
+        ifg_parts = [shared.IfgPart(p, t, preread_ifgs) for p in ifg_paths]
+        mst_file_process_n = os.path.join(output_dir,
+                                          'mst_mat_{}.npy'.format(i))
+        mst_tile = np.load(mst_file_process_n)
+        res = timeseries.time_series(ifg_parts, params, vcmt, mst_tile)
+        tsincr, tscum, tsvel = res
+        tsincr_file = os.path.join(output_dir, 'tsincr_{}.npy'.format(i))
+        tscum_file = os.path.join(output_dir, 'tscuml_{}.npy'.format(i))
+        np.save(file=tsincr_file, arr=tsincr)
+        np.save(file=tscum_file, arr=tscum)
 
 
 def compute_time_series(ifgs, mst_grid, params, vcmt):
