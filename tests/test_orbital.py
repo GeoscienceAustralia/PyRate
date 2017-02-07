@@ -58,7 +58,7 @@ class SingleDesignMatrixTests(unittest.TestCase):
         # faked cell sizes
         self.xs = 0.75
         self.ys = 0.8
-        self.ifg = Ifg(join(SYD_TEST_TIF, 'geo_060619-061002.tif'))
+        self.ifg = Ifg(join(SYD_TEST_TIF, 'geo_060619-061002_unw.tif'))
         self.ifg.open()
         self.ifg.nodata_value = 0
 
@@ -732,7 +732,7 @@ class MatlabComparisonTestsOrbfitMethod1(unittest.TestCase):
             ifg_data = np.genfromtxt(os.path.join(
                 SYD_TEST_MATLAB_ORBITAL_DIR, f), delimiter=',')
             for k, j in enumerate(self.ifgs):
-                if os.path.basename(j.data_path).split('.')[0] == \
+                if os.path.basename(j.data_path).split('_unw.')[0] == \
                         os.path.basename(f).split(
                             '_orb_planar_1lks_method1_')[1].split('.')[0]:
                     count += 1
@@ -812,7 +812,7 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
             matlab_phase_data = np.genfromtxt(os.path.join(
                 SYD_TEST_MATLAB_ORBITAL_DIR, f), delimiter=',')
             for k, j in enumerate(self.ifgs):
-                if os.path.basename(j.data_path).split('.')[0] == \
+                if os.path.basename(j.data_path).split('_unw.')[0] == \
                         os.path.basename(f).split(
                             '_method2_')[1].split('.')[0]:
                     count += 1
@@ -847,7 +847,7 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
             matlab_phase_data = np.genfromtxt(os.path.join(
                 SYD_TEST_MATLAB_ORBITAL_DIR, f), delimiter=',')
             for k, j in enumerate(self.ifgs):
-                if os.path.basename(j.data_path).split('.')[0] == \
+                if os.path.basename(j.data_path).split('_unw.')[0] == \
                         os.path.basename(f).split(
                             '_method2_')[1].split('.')[0]:
                     count += 1
