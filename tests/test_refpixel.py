@@ -352,7 +352,7 @@ def modify_config(request, get_config):
     return params_dict
 
 
-def test_refpixel_mpi(mpisync, tempdir, modify_config,
+def test_refpixel_mpi(tempdir, modify_config,
                       ref_est_method, roipac_or_gamma):
     params_dict = modify_config
 
@@ -361,20 +361,18 @@ def test_refpixel_mpi(mpisync, tempdir, modify_config,
         outdir = tempdir()
     else:
         outdir = None
+    outdir = mpiops.comm.bcast(outdir, root=0)
     params_dict[cf.OUT_DIR] = outdir
-
     params_dict[cf.REF_EST_METHOD] = ref_est_method
     xlks, ylks, crop = cf.transform_params(params_dict)
     if roipac_or_gamma == 0:
         params_dict[cf.IFG_FILE_LIST] = os.path.join(
             common.SYD_TEST_OBS, 'ifms_17')
 
-    base_unw_paths = cf.original_ifg_paths(
-        params_dict[cf.IFG_FILE_LIST])
+    base_unw_paths = cf.original_ifg_paths(params_dict[cf.IFG_FILE_LIST])
     # dest_paths are tifs that have been geotif converted and multilooked
-    dest_paths = cf.get_dest_paths(
-        base_unw_paths, crop, params_dict, xlks)
 
+    dest_paths = cf.get_dest_paths(base_unw_paths, crop, params_dict, xlks)
     # run prepifg, create the dest_paths files
     if mpiops.rank == 0:
         # create the dest_paths files
@@ -386,13 +384,15 @@ def test_refpixel_mpi(mpisync, tempdir, modify_config,
     mpiops.comm.barrier()
 
     refpx, refpy = run_pyrate.ref_pixel_calc(dest_paths, params_dict)
-    ifgs = sydney_data_setup(datafiles=dest_paths)
-    # old ref pixel calc
-    refy, refx = ref_pixel(ifgs, params_dict)
-    for i in ifgs:  # close ifgs
-        i.close()
-    assert (refpx, refpy) == (refx, refy)
-    shutil.rmtree(outdir)
+
+    # old single process ref pixel calc
+    if mpiops.rank == 0:
+        ifgs = sydney_data_setup(datafiles=dest_paths)
+        refy, refx = ref_pixel(ifgs, params_dict)
+        for i in ifgs:  # close ifgs
+            i.close()
+        assert (refpx, refpy) == (refx, refy)
+        shutil.rmtree(outdir)
 
 
 if __name__ == "__main__":
