@@ -158,6 +158,8 @@ def get_vcmt(ifgs, maxvar):
     # of one matches slave of another
 
     if isinstance(ifgs, dict):
+        from collections import OrderedDict
+        ifgs = OrderedDict(sorted(ifgs.items()))
         ifgs = [shared.PrereadIfg(v.path,
                                   v.nan_fraction,
                                   v.master,

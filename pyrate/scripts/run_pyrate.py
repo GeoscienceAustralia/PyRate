@@ -4,7 +4,6 @@ Main workflow script for PyRate
 """
 import logging
 import os
-import pickle
 from os.path import join
 import numpy as np
 from osgeo import gdal
@@ -319,9 +318,9 @@ def process_ifgs(ifg_paths, params, rows, cols):
 
     # open ifgs again, but without phase conversion as already converted and
     # saved to disc
-    ifgs = prepare_ifgs_without_phase(ifg_paths, params)
+    # ifgs = prepare_ifgs_without_phase(ifg_paths, params)
     # log.info('Estimating and removing phase at reference pixel')
-    ref_phs, ifgs = rpe.estimate_ref_phase(ifgs, params, refpx, refpy)
+    # ref_phs, ifgs = rpe.estimate_ref_phase(ifgs, params, refpx, refpy)
 
     ref_phase_estimation_mpi(ifg_paths, params, refpx, refpy)
 
@@ -361,7 +360,7 @@ def maxvar_vcm_mpi(ifg_paths, params, preread_ifgs):
         mpiops.comm.Send(np.array(process_maxvar, dtype=np.float64),
                          dest=MASTER_PROCESS, tag=mpiops.rank)
 
-    maxvar =mpiops.comm.bcast(maxvar, root=0)
+    maxvar = mpiops.comm.bcast(maxvar, root=0)
     vcmt = mpiops.run_once(vcm_module.get_vcmt, preread_ifgs, maxvar)
     return maxvar, vcmt
 
