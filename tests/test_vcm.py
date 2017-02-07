@@ -222,7 +222,7 @@ def modify_config(request, tempdir, get_config):
     shutil.rmtree(params_dict[cf.OBS_DIR])
 
 
-def test_matlab_vs_mpi(tempdir, get_config):
+def test_matlab_vs_mpi(mpisync, tempdir, get_config):
     from tests.common import SYD_TEST_DIR
 
     params_dict = get_config(
@@ -240,7 +240,6 @@ def test_matlab_vs_mpi(tempdir, get_config):
     params_dict[cf.OUT_DIR] = outdir
     params_dict[cf.PARALLEL] = False
     xlks, ylks, crop = cf.transform_params(params_dict)
-    print(xlks, ylks, crop)
     base_unw_paths = cf.original_ifg_paths(params_dict[cf.IFG_FILE_LIST])
     # dest_paths are tifs that have been geotif converted and multilooked
     dest_paths = cf.get_dest_paths(base_unw_paths, crop, params_dict, xlks)
@@ -255,7 +254,6 @@ def test_matlab_vs_mpi(tempdir, get_config):
     preread_ifgs = create_ifg_dict(dest_paths,
                                    params=params_dict,
                                    tiles=tiles)
-
     refpx, refpy = run_pyrate.ref_pixel_calc(dest_paths, params_dict)
     run_pyrate.orb_fit_calc(dest_paths, params_dict)
     run_pyrate.ref_phase_estimation_mpi(dest_paths, params_dict, refpx, refpy)
@@ -264,6 +262,8 @@ def test_matlab_vs_mpi(tempdir, get_config):
                                              preread_ifgs)
     np.testing.assert_array_almost_equal(maxvar, matlab_maxvar, decimal=4)
     np.testing.assert_array_almost_equal(matlab_vcm, vcmt, decimal=3)
+    if mpiops.rank == 0:
+        shutil.rmtree(outdir)
 
 
 def test_vcm_maxvar_mpi(mpisync, tempdir, modify_config, ref_est_method,
