@@ -14,6 +14,7 @@ from pyrate.config import ConfigException
 from pyrate.refpixel import ref_pixel, RefPixelError, step
 from pyrate.scripts import run_prepifg
 from pyrate.scripts import run_pyrate
+from pyrate import mpiops
 from tests import common
 from tests.common import SYD_TEST_DIR
 from tests.common import sydney_data_setup, MockIfg, sydney_ifg_file_list
@@ -339,21 +340,29 @@ class MatlabEqualityTestMultiprocessParallel(unittest.TestCase):
 
 
 @pytest.fixture(params=range(1, 6))
-def modify_config(request, tempdir, get_config):
+def modify_config(request, get_config):
     test_conf = common.SYDNEY_TEST_CONF
     params_dict = get_config(test_conf)
     params_dict[cf.IFG_LKSX] = request.param
     params_dict[cf.IFG_LKSY] = request.param
     params_dict[cf.IFG_FILE_LIST] = os.path.join(
         common.SYD_TEST_GAMMA, 'ifms_17')
-    params_dict[cf.OUT_DIR] = tempdir()
     params_dict[cf.PARALLEL] = 0
     params_dict[cf.APS_CORRECTION] = 0
     return params_dict
 
 
-def test_refpixel_mpi(mpisync, modify_config, ref_est_method, roipac_or_gamma):
+def test_refpixel_mpi(mpisync, tempdir, modify_config,
+                      ref_est_method, roipac_or_gamma):
     params_dict = modify_config
+
+    # use the same output dir for all processes
+    if mpiops.rank == 0:
+        outdir = tempdir()
+    else:
+        outdir = None
+    params_dict[cf.OUT_DIR] = outdir
+
     params_dict[cf.REF_EST_METHOD] = ref_est_method
     xlks, ylks, crop = cf.transform_params(params_dict)
     if roipac_or_gamma == 0:
@@ -365,11 +374,17 @@ def test_refpixel_mpi(mpisync, modify_config, ref_est_method, roipac_or_gamma):
     # dest_paths are tifs that have been geotif converted and multilooked
     dest_paths = cf.get_dest_paths(
         base_unw_paths, crop, params_dict, xlks)
-    # create the dest_paths files
-    if roipac_or_gamma == 0:
-        run_prepifg.roipac_prepifg(base_unw_paths, params_dict)
-    else:
-        run_prepifg.gamma_prepifg(base_unw_paths, params_dict)
+
+    # run prepifg, create the dest_paths files
+    if mpiops.rank == 0:
+        # create the dest_paths files
+        if roipac_or_gamma == 0:
+            run_prepifg.roipac_prepifg(base_unw_paths, params_dict)
+        else:
+            run_prepifg.gamma_prepifg(base_unw_paths, params_dict)
+
+    mpiops.comm.barrier()
+
     refpx, refpy = run_pyrate.ref_pixel_calc(dest_paths, params_dict)
     ifgs = sydney_data_setup(datafiles=dest_paths)
     # old ref pixel calc
