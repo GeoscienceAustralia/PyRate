@@ -600,7 +600,7 @@ class MatlabEqualityTestRoipacSydneyTestData(unittest.TestCase):
                 SYD_TEST_MATLAB_PREPIFG_DIR, f), delimiter=',')
             for k, j in enumerate(self.ifgs):
                 if f.split('_mm_')[-1].split('.')[0] == \
-                        os.path.split(j.data_path)[-1].split('.')[0]:
+                        os.path.split(j.data_path)[-1].split('_unw.')[0]:
                     count += 1
                     # all numbers equal
                     np.testing.assert_array_almost_equal(
@@ -671,9 +671,12 @@ class TestOneIncidenceOrElevationMap(unittest.TestCase):
         params = cf.get_config_params(self.conf_file)
         sys.argv = ['dummy', self.conf_file]
         run_prepifg.main(params)
-        # test geotiffs created
-        geotifs = glob.glob(os.path.join(self.base_dir, '*_utm.tif'))
-        self.assertEqual(18, len(geotifs))  # 17 geotiffs and one dem tif
+        # test 17 geotiffs created
+        geotifs = glob.glob(os.path.join(self.base_dir, '*_unw.tif'))
+        self.assertEqual(17, len(geotifs))
+        # test dem geotiff created
+        demtif = glob.glob(os.path.join(self.base_dir, '*_dem.tif'))
+        self.assertEqual(1, len(demtif))
         # elevation/incidence file
         ele = glob.glob(os.path.join(self.base_dir,
                                      '*utm_{ele}.tif'.format(ele=ele)))[0]
