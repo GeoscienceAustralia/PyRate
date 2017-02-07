@@ -264,23 +264,6 @@ def ref_phase_method2_dummy(params, ifg_path, refpx, refpy):
 
 
 def ref_phase_method1(ifg_paths, comp):
-    this_process_ifgs = np.array_split(ifg_paths, mpiops.size)[mpiops.rank]
-    ref_phs = np.empty(len(this_process_ifgs), dtype=np.float64)
-    for i, ifg_path in enumerate(this_process_ifgs):
-        ifg = Ifg(ifg_path)
-        ifg.open(readonly=False)
-        phase_data = ifg.phase_data
-        ref_phs[i] = rpe.est_ref_phase_method1_multi(phase_data, comp)
-        phase_data -= ref_phs[i]
-        md = ifg.meta_data
-        md[ifc.REF_PHASE] = ifc.REF_PHASE_REMOVED
-        ifg.write_modified_phase(data=phase_data)
-        ifg.close()
-    log.info('Ref phase computed in process {}'.format(mpiops.rank))
-    return ref_phs
-
-
-def ref_phase_method1_bk(ifg_paths, comp):
 
     def _inner(ifg_path):
         ifg = Ifg(ifg_path)
