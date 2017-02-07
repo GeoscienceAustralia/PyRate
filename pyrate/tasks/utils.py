@@ -76,9 +76,9 @@ class IfgListMixin(object):
         file_names = config.parse_namelist(self.ifgListFile)
 
         if tif:
-            file_names = ['%s.tif' %
-                          os.path.splitext(os.path.basename(fn))[0]
-                          for fn in file_names]
+            file_names = [os.path.join(os.path.basename(fn).split('.')[0] +
+                        '_' + os.path.basename(fn).split('.')[1] + '.tif') 
+                        for fn in file_names]
 
         out_dir = self.out_dir
         if out_dir:

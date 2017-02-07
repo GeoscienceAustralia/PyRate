@@ -429,8 +429,9 @@ def mlooked_path(path, looks, crop_out):
 
 
 def get_dest_paths(base_paths, crop, params, looks):
-    dest_mlooked_ifgs = [mlooked_path(os.path.basename(q).split('.')[0]
-        + '.tif', looks=looks, crop_out=crop) for q in base_paths]
+    dest_mlooked_ifgs = [mlooked_path(os.path.basename(q).split('.')[0] + '_'
+        + os.path.basename(q).split('.')[1] + '.tif', looks=looks, 
+        crop_out=crop) for q in base_paths]
 
     return [os.path.join(os.environ['PYRATEPATH'], params[OUT_DIR], p)
             for p in dest_mlooked_ifgs]

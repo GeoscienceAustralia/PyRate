@@ -95,11 +95,11 @@ def roipac_prepifg(base_ifg_paths, params):
     xlooks, ylooks, crop = cf.transform_params(params)
     dem_file = os.path.join(params[cf.ROIPAC_RESOURCE_HEADER])
     projection = roipac.parse_header(dem_file)[ifc.PYRATE_DATUM]
-    f, e = os.path.basename(base_ifg_paths).split('.')
-    dest_base_ifgs = os.path.join(params[cf.OUT_DIR], f + '_' + e + '.tif')
-    #dest_base_ifgs = [os.path.join(
-    #    params[cf.OUT_DIR], os.path.basename(q).split('.')[0] + '.tif')
-    #                  for q in base_ifg_paths]
+    dest_base_ifgs = [os.path.join(params[cf.OUT_DIR], 
+                                  os.path.basename(q).split('.')[0] + '_' + 
+                                  os.path.basename(q).split('.')[1] + '.tif')
+                                  for q in base_ifg_paths]
+
     for b, d in zip(base_ifg_paths, dest_base_ifgs):
         header_file = "%s.%s" % (b, ROI_PAC_HEADER_FILE_EXT)
         header = roipac.manage_header(header_file, projection)
@@ -148,10 +148,6 @@ def gamma_multiprocessing(b, params):
     combined_headers = gamma.manage_headers(dem_hdr_path, header_paths)
 
     f, e = os.path.basename(b).split('.')
-    #if e != (params[cf.APS_INCIDENCE_EXT] or params[cf.APS_ELEVATION_EXT]):
-    #    d = os.path.join(
-    #        params[cf.OUT_DIR], f + '.tif')
-    #else:
     d = os.path.join(params[cf.OUT_DIR], f + '_' + e + '.tif')
     if e == (params[cf.APS_INCIDENCE_EXT] or params[cf.APS_ELEVATION_EXT]):
         # TODO: implement incidence class here

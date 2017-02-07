@@ -381,7 +381,8 @@ class TestGammaLuigiEquality(unittest.TestCase):
 
         base_ifg_paths, dest_paths, params = cf.get_ifg_paths(conf_file)
         dest_base_ifgs = [os.path.join(
-            params[cf.OUT_DIR], os.path.basename(q).split('.')[0] + '.tif')
+            params[cf.OUT_DIR], os.path.basename(q).split('.')[0] + '_' +
+            os.path.basename(q).split('.')[1] + '.tif')
             for q in base_ifg_paths]
         sys.argv = ['run_prepifg.py', conf_file]
         run_prepifg.main()
