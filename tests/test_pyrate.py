@@ -139,7 +139,7 @@ class PyRateTests(unittest.TestCase):
             params[cf.APS_CORRECTION] = 0
             paths = glob.glob(join(cls.BASE_OUT_DIR, 'geo_*-*.tif'))
             params[cf.PARALLEL] = False
-            run_pyrate.process_ifgs(paths, params, 2, 2)
+            run_pyrate.process_ifgs(sorted(paths), params, 2, 2)
 
             if not hasattr(cls, 'ifgs'):
                 cls.ifgs = get_ifgs(out_dir=cls.BASE_OUT_DIR)
@@ -152,13 +152,6 @@ class PyRateTests(unittest.TestCase):
     def tearDownClass(cls):
         shutil.rmtree(cls.BASE_DIR, ignore_errors=True)
         os.chdir(CURRENT_DIR)
-
-    # def get_logfile_path(self):
-    #     logpaths = glob.glob(join(self.BASE_DIR, '*.log'))
-    #     if len(logpaths) != 1:
-    #         msg = 'Log not generated. Use --nologcapture if running nosetests'
-    #         self.fail(msg)
-    #     return logpaths[0]
 
     def key_check(self, ifg, key, value):
         'Helper to check for metadata flags'
@@ -190,14 +183,6 @@ class PyRateTests(unittest.TestCase):
 
         for i in self.ifgs:
             self.key_check(i, key, value)
-
-    # def test_refpixel_found(self):
-    #     log_path = self.get_logfile_path()
-    #     for line in open(log_path, 'r'):
-    #         if 'Reference pixel coordinate:' in line:
-    #             return
-    #
-    #     self.fail('No reference pixel found')
 
 
 class ParallelPyRateTests(unittest.TestCase):

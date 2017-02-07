@@ -18,7 +18,7 @@ import pyrate.timeseries as timeseries
 from pyrate import algorithm
 from pyrate import ifgconstants as ifc
 from pyrate import matlab_mst as matlab_mst
-from pyrate import reference_phase_estimation as rpe
+from pyrate import ref_phs_est as rpe
 from pyrate import vcm as vcm_module
 from pyrate.shared import Ifg, write_output_geotiff, \
     pre_prepare_ifgs, create_tiles, prepare_ifgs_without_phase, PrereadIfg
@@ -305,13 +305,13 @@ def process_ifgs(ifg_paths, params, rows, cols):
 
     # remove APS delay here, and write aps delay removed ifgs to disc
     # TODO: fix PyAPS integration
-    if PyAPS_INSTALLED and aps_delay_required(ifgs, params):
-        ifgs = aps.remove_aps_delay(ifgs, params)
+    if PyAPS_INSTALLED and aps_delay_required(ifg_paths, params):
+        ifgs = aps.remove_aps_delay(ifg_paths, params)
         log.info('Finished APS delay correction')
 
     # make sure aps correction flags are consistent
     if params[cf.APS_CORRECTION]:
-        check_aps_ifgs(ifgs)
+        check_aps_ifgs(ifg_paths)
 
     # Estimate and remove orbit errors
     orb_fit_calc(ifg_paths, params)
@@ -325,6 +325,8 @@ def process_ifgs(ifg_paths, params, rows, cols):
     ref_phase_estimation_mpi(ifg_paths, params, refpx, refpy)
 
     maxvar, vcmt = maxvar_vcm_mpi(ifg_paths, params, preread_ifgs)
+
+    ifgs = pre_prepare_ifgs(ifg_paths, params)
 
     if params[cf.TIME_SERIES_CAL] != 0:
         compute_time_series(ifgs, mst_grid, params, vcmt)
@@ -697,7 +699,7 @@ def dest_ifg_paths(ifg_paths, outdir):
 
 def main(config_file, rows, cols):
     base_unw_paths, dest_paths, pars = cf.get_ifg_paths(config_file)
-    process_ifgs(dest_paths, pars, rows, cols)
+    process_ifgs(sorted(dest_paths), pars, rows, cols)
 
 
 def log_config_file(configfile, log_filename):

@@ -11,8 +11,7 @@ import numpy as np
 from pyrate import config as cf
 from pyrate import ifgconstants as ifc
 from pyrate import shared
-from pyrate.reference_phase_estimation import (estimate_ref_phase,
-                                               ReferencePhaseError)
+from pyrate.ref_phs_est import estimate_ref_phase, ReferencePhaseError
 from pyrate.scripts import run_prepifg
 from pyrate.scripts import run_pyrate
 from pyrate import mpiops
@@ -154,7 +153,7 @@ class RefPhsEstimationMatlabTestMethod1Serial(unittest.TestCase):
                                              self.ref_phs,
                                              decimal=3)
 
-    def test_ifgs_after_reference_phase_estimation(self):
+    def test_ifgs_after_ref_phs_est(self):
         MATLAB_REF_PHASE_DIR = os.path.join(SYD_TEST_DIR,
                                                      'matlab_ref_phase_est')
 
@@ -244,7 +243,7 @@ class RefPhsEstimationMatlabTestMethod1Parallel(unittest.TestCase):
                                              self.ref_phs,
                                              decimal=3)
 
-    def test_ifgs_after_reference_phase_estimation(self):
+    def test_ifgs_after_ref_phs_est(self):
         MATLAB_REF_PHASE_DIR = os.path.join(SYD_TEST_DIR,
                                                      'matlab_ref_phase_est')
 
@@ -333,7 +332,7 @@ class RefPhsEstimationMatlabTestMethod2Serial(unittest.TestCase):
     def tearDownClass(cls):
         shutil.rmtree(cls.temp_out_dir)
 
-    def test_ifgs_after_reference_phase_estimation(self):
+    def test_ifgs_after_ref_phs_est(self):
         MATLAB_REF_PHASE_DIR = os.path.join(SYD_TEST_DIR,
                                                      'matlab_ref_phase_est')
 
@@ -404,7 +403,6 @@ class RefPhsEstimationMatlabTestMethod2Parallel(unittest.TestCase):
 
         # start run_pyrate copy
         ifgs = shared.pre_prepare_ifgs(dest_paths, params)
-        mst_grid = run_pyrate.mst_calculation(dest_paths, params)
         # Estimate reference pixel location
         refx, refy = run_pyrate.ref_pixel_calc(dest_paths, params)
 
@@ -426,7 +424,7 @@ class RefPhsEstimationMatlabTestMethod2Parallel(unittest.TestCase):
     def tearDownClass(cls):
         shutil.rmtree(cls.temp_out_dir)
 
-    def test_ifgs_after_reference_phase_estimation(self):
+    def test_ifgs_after_ref_phs_est(self):
         MATLAB_REF_PHASE_DIR = os.path.join(SYD_TEST_DIR,
                                             'matlab_ref_phase_est')
 

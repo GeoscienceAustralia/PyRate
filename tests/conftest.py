@@ -65,3 +65,13 @@ def roipac_or_gamma(request):
 @pytest.fixture(params=[1, 2])
 def ref_est_method(request):
     return request.param
+
+
+@pytest.fixture(params=[1, 5, 10])
+def row_splits(request):
+    return request.param
+
+
+@pytest.fixture(params=[1, 5, 10])
+def col_splits(request):
+    return request.param

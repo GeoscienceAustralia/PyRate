@@ -13,7 +13,7 @@ import numpy as np
 from numpy.testing import assert_array_almost_equal
 
 from pyrate import config as cf
-from pyrate import reference_phase_estimation as rpe
+from pyrate import ref_phs_est as rpe
 from pyrate import shared
 from pyrate import vcm as vcm_module
 from pyrate.linrate import linear_rate

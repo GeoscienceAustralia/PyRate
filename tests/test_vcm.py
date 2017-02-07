@@ -16,7 +16,7 @@ import numpy as np
 from numpy.testing import assert_array_almost_equal
 
 from pyrate import config as cf
-from pyrate import reference_phase_estimation as rpe
+from pyrate import ref_phs_est as rpe
 from pyrate import shared
 from pyrate import mpiops
 from pyrate.scripts import run_pyrate, run_prepifg
@@ -222,7 +222,8 @@ def modify_config(request, tempdir, get_config):
     shutil.rmtree(params_dict[cf.OBS_DIR])
 
 
-def test_vcm_maxvar_mpi(mpisync, tempdir, modify_config, ref_est_method):
+def test_vcm_maxvar_mpi(mpisync, tempdir, modify_config, ref_est_method,
+                        row_splits, col_splits):
     params_dict = modify_config
     if mpiops.rank == 0:
         outdir = tempdir()
@@ -232,6 +233,11 @@ def test_vcm_maxvar_mpi(mpisync, tempdir, modify_config, ref_est_method):
     params_dict[cf.OUT_DIR] = outdir
     params_dict[cf.REF_EST_METHOD] = ref_est_method
     xlks, ylks, crop = cf.transform_params(params_dict)
+    print("xlks, row_splits, col_splits")
+    print(xlks, row_splits, col_splits)
+    if xlks * col_splits > 45 or ylks * row_splits > 70:
+        print('skipping test')
+        return
 
     base_unw_paths = cf.original_ifg_paths(params_dict[cf.IFG_FILE_LIST])
     # dest_paths are tifs that have been geotif converted and multilooked
@@ -243,7 +249,7 @@ def test_vcm_maxvar_mpi(mpisync, tempdir, modify_config, ref_est_method):
 
     mpiops.comm.barrier()
 
-    tiles = get_tiles(dest_paths[0], 3, 3)
+    tiles = get_tiles(dest_paths[0], rows=row_splits, cols=col_splits)
     preread_ifgs = create_ifg_dict(dest_paths,
                                    params=params_dict,
                                    tiles=tiles)
