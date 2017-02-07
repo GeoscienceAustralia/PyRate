@@ -4,6 +4,7 @@ Main workflow script for PyRate
 """
 import logging
 import os
+import pickle
 from os.path import join
 import numpy as np
 from osgeo import gdal
@@ -75,18 +76,13 @@ def create_ifg_dict(dest_tifs, params, tiles):
 
     for d in process_tifs:
         ifg = save_latest_tiles(d, tiles, params)
-        ifg.nodata_value = params[cf.NO_DATA_VALUE]
-        nan_fraction = ifg.nan_fraction
-        master = ifg.master
-        slave = ifg.slave
-        time_span = ifg.time_span
-        ifg.close()
-
         preread_ifgs_dict[d] = PrereadIfg(path=d,
-                                          nan_fraction=nan_fraction,
-                                          master=master,
-                                          slave=slave,
-                                          time_span=time_span)
+                                          nan_fraction=ifg.nan_fraction,
+                                          master=ifg.master,
+                                          slave=ifg.slave,
+                                          time_span=ifg.time_span)
+        # ifg.write_modified_phase()  # we might need this here
+        ifg.close()
 
     preread_ifgs_dict = _join_dicts(
         mpiops.comm.allgather(preread_ifgs_dict))
@@ -152,7 +148,7 @@ def ref_pixel_calc(ifg_paths, params):
     log.info('Starting reference pixel calculation')
     refx = params[cf.REFX]
     ifg = Ifg(ifg_paths[0])
-    ifg.open()
+    ifg.open(readonly=True)
     if refx > ifg.ncols - 1:
         raise ValueError("Invalid reference pixel X coordinate: %s" % refx)
 
@@ -214,24 +210,16 @@ def orb_fit_calc(ifg_paths, params):
 def ref_phase_estimation_mpi(ifg_paths, params, refpx, refpy):
     # TODO: may benefit from tiling and using a median of median algorithms
     log.info('Estimating and removing reference phase')
-    process_ifgs = np.array_split(ifg_paths, mpiops.size)[mpiops.rank]
-    process_ref_phs = np.zeros(len(process_ifgs), dtype=np.float64)
-    output_dir = params[cf.OUT_DIR]
     if params[cf.REF_EST_METHOD] == 1:
         # calculate phase sum for later use in ref phase method 1
-        phase_sum_mpi(ifg_paths, params)
-        for n, p in enumerate(process_ifgs):
-            process_ref_phs[n] = ref_phase_method1_dummy(p, output_dir)
-            log.info('finished processing {} of process total {}, ' \
-                     'of overall {}'.format(n, len(process_ifgs),
-                                            len(ifg_paths)))
-
+        comp = phase_sum_mpi(ifg_paths, params)
+        process_ref_phs = ref_phase_method1(ifg_paths, comp)
     elif params[cf.REF_EST_METHOD] == 2:
-        for n, p in enumerate(process_ifgs):
+        for n, p in enumerate(this_process_ifgs):
             process_ref_phs[n] = ref_phase_method2_dummy(params, p,
                                                          refpx, refpy)
             log.info('finished processing {} of process total {}, '
-                     'of overall {}'.format(n, len(process_ifgs),
+                     'of overall {}'.format(n, len(this_process_ifgs),
                                             len(ifg_paths)))
     else:
         raise cf.ConfigException('Ref phase estimation method must be 1 or 2')
@@ -242,24 +230,17 @@ def ref_phase_estimation_mpi(ifg_paths, params, refpx, refpy):
         ref_phs = np.zeros(len(ifg_paths), dtype=np.float64)
         process_indices = np.array_split(range(len(ifg_paths)),
                                          mpiops.size)[mpiops.rank]
-        print('rank', mpiops.rank, process_indices)
         ref_phs[process_indices] = process_ref_phs
-        print('ref_phs in master', ref_phs)
         for r in range(1, mpiops.size):
             process_indices = np.array_split(range(len(ifg_paths)),
                                              mpiops.size)[r]
-            print('in loop rank', r, process_indices)
             this_process_ref_phs = np.zeros(shape=len(process_indices),
                                             dtype=np.float64)
             mpiops.comm.Recv(this_process_ref_phs, source=r, tag=r)
             ref_phs[process_indices] = this_process_ref_phs
-            print(ref_phs)
         np.save(file=ref_phs_file, arr=ref_phs)
     else:
         # send reference phase data to master process
-        process_indices = np.array_split(range(len(ifg_paths)),
-                                         mpiops.size)[mpiops.rank]
-        print('rank', mpiops.rank, process_indices)
         mpiops.comm.Send(process_ref_phs, dest=MASTER_PROCESS,
                          tag=mpiops.rank)
 
@@ -282,18 +263,39 @@ def ref_phase_method2_dummy(params, ifg_path, refpx, refpy):
     return ref_phs
 
 
-def ref_phase_method1_dummy(ifg_path, output_dir):
-    comp_file = join(output_dir, 'comp.npy')
-    comp = np.load(comp_file)
-    ifg = Ifg(ifg_path)
-    ifg.open(readonly=False)
-    phase_data = ifg.phase_data
-    ref_phs = rpe.est_ref_phase_method1_multi(phase_data, comp)
-    phase_data -= ref_phs
-    md = ifg.meta_data
-    md[ifc.REF_PHASE] = ifc.REF_PHASE_REMOVED
-    ifg.write_modified_phase(data=phase_data)
-    ifg.close()
+def ref_phase_method1(ifg_paths, comp):
+    this_process_ifgs = np.array_split(ifg_paths, mpiops.size)[mpiops.rank]
+    ref_phs = np.empty(len(this_process_ifgs), dtype=np.float64)
+    for i, ifg_path in enumerate(this_process_ifgs):
+        ifg = Ifg(ifg_path)
+        ifg.open(readonly=False)
+        phase_data = ifg.phase_data
+        ref_phs[i] = rpe.est_ref_phase_method1_multi(phase_data, comp)
+        phase_data -= ref_phs[i]
+        md = ifg.meta_data
+        md[ifc.REF_PHASE] = ifc.REF_PHASE_REMOVED
+        ifg.write_modified_phase(data=phase_data)
+        ifg.close()
+    log.info('Ref phase computed in process {}'.format(mpiops.rank))
+    return ref_phs
+
+
+def ref_phase_method1_bk(ifg_paths, comp):
+
+    def _inner(ifg_path):
+        ifg = Ifg(ifg_path)
+        ifg.open(readonly=False)
+        phase_data = ifg.phase_data
+        ref_phase = rpe.est_ref_phase_method1_multi(phase_data, comp)
+        phase_data -= ref_phase
+        md = ifg.meta_data
+        md[ifc.REF_PHASE] = ifc.REF_PHASE_REMOVED
+        ifg.write_modified_phase(data=phase_data)
+        ifg.close()
+        return ref_phase
+    this_process_ifgs = np.array_split(ifg_paths, mpiops.size)[mpiops.rank]
+    ref_phs = np.array([_inner(ifg) for ifg in this_process_ifgs])
+    log.info('Ref phase computed in process {}'.format(mpiops.rank))
     return ref_phs
 
 
@@ -361,8 +363,6 @@ def maxvar_vcm_mpi(ifg_paths, params, preread_ifgs):
               'total {}'.format(n+1, len(process_ifgs), len(ifg_paths)))
         # TODO: cvd calculation is still pretty slow - revisit
         process_maxvar.append(vcm_module.cvd(i, params)[0])
-    maxvar_file = join(params[cf.OUT_DIR], 'maxvar.npy')
-    vcmt_file = join(params[cf.OUT_DIR], 'vcmt.npy')
     if mpiops.rank == MASTER_PROCESS:
         maxvar = np.empty(len(ifg_paths), dtype=np.float64)
         maxvar[process_indices] = process_maxvar
@@ -371,21 +371,14 @@ def maxvar_vcm_mpi(ifg_paths, params, preread_ifgs):
                                           mpiops.size)[i]
             this_process_ref_phs = np.empty(len(rank_indices), dtype=np.float64)
             mpiops.comm.Recv(this_process_ref_phs, source=i, tag=i)
-            # process_maxvar = mpiops.comm.Recv(source=i, tag=i,
-            #                                   return_status=False)
-
             maxvar[rank_indices] = this_process_ref_phs
-        np.save(file=maxvar_file, arr=maxvar)
     else:
+        maxvar = np.empty(len(ifg_paths), dtype=np.float64)
         mpiops.comm.Send(np.array(process_maxvar, dtype=np.float64),
                          dest=MASTER_PROCESS, tag=mpiops.rank)
-    mpiops.comm.barrier()
-    maxvar = np.load(maxvar_file)
 
-    vcmt = vcm_module.get_vcmt(preread_ifgs, maxvar)
-    if mpiops.rank == MASTER_PROCESS:
-        np.save(file=vcmt_file, arr=vcmt)
-
+    maxvar =mpiops.comm.bcast(maxvar, root=0)
+    vcmt = mpiops.run_once(vcm_module.get_vcmt, preread_ifgs, maxvar)
     return maxvar, vcmt
 
 
@@ -403,7 +396,7 @@ def phase_sum_mpi(ifg_paths, params):
     ifg = Ifg(p_paths[0])
     ifg.open(readonly=True)
     shape = ifg.shape
-    phase_sum = np.empty(shape=shape, dtype=np.float64)
+    phase_sum = np.zeros(shape=shape, dtype=np.float64)
     ifg.close()
 
     for d in p_paths:
@@ -411,26 +404,22 @@ def phase_sum_mpi(ifg_paths, params):
         ifg.open()
         ifg.nodata_value = params[cf.NO_DATA_VALUE]
         phase_sum += ifg.phase_data
-        ifg.save_numpy_phase(
-            numpy_file=join(
-                params[cf.OUT_DIR],
-                os.path.basename(d).split('.')[0] + '.npy'
-            )
-        )
         ifg.close()
 
     if mpiops.rank == MASTER_PROCESS:
         phase_sum_all = phase_sum
         for i in range(1, mpiops.size):  # loop is better for memory
-            phase_sum = np.empty(shape=shape, dtype=np.float64)
+            phase_sum = np.zeros(shape=shape, dtype=np.float64)
             mpiops.comm.Recv(phase_sum, source=i, tag=i)
             phase_sum_all += phase_sum
-        comp = np.isnan(phase_sum)  # this is the same as in Matlab
+        comp = np.isnan(phase_sum_all)  # this is the same as in Matlab
         comp = np.ravel(comp, order='F')  # this is the same as in Matlab
-        np.save(file=join(params[cf.OUT_DIR], 'comp.npy'), arr=comp)
     else:
+        comp = None
         mpiops.comm.Send(phase_sum, dest=0, tag=mpiops.rank)
-    mpiops.comm.barrier()
+
+    comp = mpiops.comm.bcast(comp, root=0)
+    return comp
 
 
 def write_linrate_numpy_files(error, params, rate, samples):

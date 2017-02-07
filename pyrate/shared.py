@@ -313,7 +313,7 @@ class Ifg(RasterBase):
             self.phase_data = self.phase_data
             self.nan_converted = True
             msg = '%s: ignored as previous nan conversion detected'
-            # logging.debug(msg % self.data_path)  # should log?
+            log.debug(msg % self.data_path)
             return
         else:
             self.phase_data = where(
@@ -658,6 +658,7 @@ def generate_random_string(N=10):
     return ''.join(random.SystemRandom().choice(
         string.ascii_letters + string.digits)
                    for _ in range(N))
+
 
 def nanmedian(x):
     """

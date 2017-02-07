@@ -150,14 +150,14 @@ class MatlabEqualityTest(unittest.TestCase):
                              5.66661834716797,
                              5.62802362442017]
 
-
         params = cf.get_config_params(
-                os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf'))
+                os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf')
+        )
 
         cls.temp_out_dir = tempfile.mkdtemp()
 
         sys.argv = ['run_prepifg.py', os.path.join(SYD_TEST_DIR,
-                                     'pyrate_system_test.conf')]
+                    'pyrate_system_test.conf')]
 
         params[cf.OUT_DIR] = cls.temp_out_dir
         run_prepifg.main(params)
@@ -174,7 +174,6 @@ class MatlabEqualityTest(unittest.TestCase):
                                                crop, params, xlks)
         # start run_pyrate copy
         ifgs = shared.pre_prepare_ifgs(dest_paths, params)
-        mst_grid = run_pyrate.mst_calculation(dest_paths, params)
 
         refx, refy = run_pyrate.ref_pixel_calc(dest_paths, params)
 
@@ -200,6 +199,11 @@ class MatlabEqualityTest(unittest.TestCase):
         matlab_vcm = np.genfromtxt(os.path.join(MATLAB_VCM_DIR,
                                    'matlab_vcmt.csv'), delimiter=',')
         np.testing.assert_array_almost_equal(matlab_vcm, self.vcmt, decimal=3)
+
+
+def test_mpi_maxvar_vcmt():
+    pass
+
 
 if __name__ == "__main__":
     unittest.main()
