@@ -132,27 +132,29 @@ class VCMTests(unittest.TestCase):
         assert_array_almost_equal(act, exp, decimal=3)
 
 
+matlab_maxvar = [15.4156637191772,
+                 2.85829424858093,
+                 34.3486289978027,
+                 2.59190344810486,
+                 3.18510007858276,
+                 3.61054635047913,
+                 1.64398515224457,
+                 14.9226036071777,
+                 5.13451862335205,
+                 6.82901763916016,
+                 10.9644861221313,
+                 14.5026779174805,
+                 29.3710079193115,
+                 8.00364685058594,
+                 2.06328082084656,
+                 5.66661834716797,
+                 5.62802362442017]
+
+
 class MatlabEqualityTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.matlab_maxvar = [15.4156637191772,
-                             2.85829424858093,
-                             34.3486289978027,
-                             2.59190344810486,
-                             3.18510007858276,
-                             3.61054635047913,
-                             1.64398515224457,
-                             14.9226036071777,
-                             5.13451862335205,
-                             6.82901763916016,
-                             10.9644861221313,
-                             14.5026779174805,
-                             29.3710079193115,
-                             8.00364685058594,
-                             2.06328082084656,
-                             5.66661834716797,
-                             5.62802362442017]
 
         params = cf.get_config_params(
                 os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf')
@@ -165,8 +167,6 @@ class MatlabEqualityTest(unittest.TestCase):
 
         params[cf.OUT_DIR] = cls.temp_out_dir
         run_prepifg.main(params)
-
-        params[cf.OUT_DIR] = cls.temp_out_dir
 
         params[cf.REF_EST_METHOD] = 2
         xlks, ylks, crop = cf.transform_params(params)
@@ -194,7 +194,7 @@ class MatlabEqualityTest(unittest.TestCase):
         shutil.rmtree(cls.temp_out_dir)
 
     def test_matlab_maxvar_equality_sydney_test_files(self):
-        np.testing.assert_array_almost_equal(self.maxvar, self.matlab_maxvar,
+        np.testing.assert_array_almost_equal(self.maxvar, matlab_maxvar,
                                              decimal=3)
 
     def test_matlab_vcmt_equality_sydney_test_files(self):
@@ -222,9 +222,49 @@ def modify_config(request, tempdir, get_config):
     shutil.rmtree(params_dict[cf.OBS_DIR])
 
 
-def test_matlab_vs_mpi(mpisync, tempdir, modify_config, ref_est_method,
-                       row_splits, col_splits):
-    pass
+def test_matlab_vs_mpi(tempdir, get_config):
+    from tests.common import SYD_TEST_DIR
+
+    params_dict = get_config(
+        os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf')
+    )
+
+    MATLAB_VCM_DIR = os.path.join(SYD_TEST_DIR, 'matlab_vcm')
+    matlab_vcm = np.genfromtxt(os.path.join(MATLAB_VCM_DIR,
+                                            'matlab_vcmt.csv'), delimiter=',')
+    if mpiops.rank == 0:
+        outdir = tempdir()
+    else:
+        outdir = None
+    outdir = mpiops.comm.bcast(outdir, root=0)
+    params_dict[cf.OUT_DIR] = outdir
+    params_dict[cf.PARALLEL] = False
+    xlks, ylks, crop = cf.transform_params(params_dict)
+    print(xlks, ylks, crop)
+    base_unw_paths = cf.original_ifg_paths(params_dict[cf.IFG_FILE_LIST])
+    # dest_paths are tifs that have been geotif converted and multilooked
+    dest_paths = cf.get_dest_paths(base_unw_paths, crop, params_dict, xlks)
+
+    # run prepifg, create the dest_paths files
+    if mpiops.rank == 0:
+        run_prepifg.roipac_prepifg(base_unw_paths, params_dict)
+
+    mpiops.comm.barrier()
+
+    tiles = get_tiles(dest_paths[0], rows=1, cols=1)
+    preread_ifgs = create_ifg_dict(dest_paths,
+                                   params=params_dict,
+                                   tiles=tiles)
+
+    refpx, refpy = run_pyrate.ref_pixel_calc(dest_paths, params_dict)
+    run_pyrate.orb_fit_calc(dest_paths, params_dict)
+    run_pyrate.ref_phase_estimation_mpi(dest_paths, params_dict, refpx, refpy)
+
+    maxvar, vcmt = run_pyrate.maxvar_vcm_mpi(dest_paths, params_dict,
+                                             preread_ifgs)
+    np.testing.assert_array_almost_equal(maxvar, matlab_maxvar, decimal=4)
+    np.testing.assert_array_almost_equal(matlab_vcm, vcmt, decimal=3)
+
 
 def test_vcm_maxvar_mpi(mpisync, tempdir, modify_config, ref_est_method,
                         row_splits, col_splits):
