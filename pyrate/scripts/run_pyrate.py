@@ -213,19 +213,13 @@ def ref_phase_estimation_mpi(ifg_paths, params, refpx, refpy):
     if params[cf.REF_EST_METHOD] == 1:
         # calculate phase sum for later use in ref phase method 1
         comp = phase_sum_mpi(ifg_paths, params)
-        process_ref_phs = ref_phase_method1(ifg_paths, comp)
+        process_ref_phs = ref_phs_method1(ifg_paths, comp)
     elif params[cf.REF_EST_METHOD] == 2:
-        for n, p in enumerate(this_process_ifgs):
-            process_ref_phs[n] = ref_phase_method2_dummy(params, p,
-                                                         refpx, refpy)
-            log.info('finished processing {} of process total {}, '
-                     'of overall {}'.format(n, len(this_process_ifgs),
-                                            len(ifg_paths)))
+        process_ref_phs = ref_phs_method2(ifg_paths, params, refpx, refpy)
     else:
         raise cf.ConfigException('Ref phase estimation method must be 1 or 2')
 
     ref_phs_file = join(params[cf.OUT_DIR], 'ref_phs.npy')
-
     if mpiops.rank == MASTER_PROCESS:
         ref_phs = np.zeros(len(ifg_paths), dtype=np.float64)
         process_indices = np.array_split(range(len(ifg_paths)),
@@ -245,25 +239,32 @@ def ref_phase_estimation_mpi(ifg_paths, params, refpx, refpy):
                          tag=mpiops.rank)
 
 
-def ref_phase_method2_dummy(params, ifg_path, refpx, refpy):
+def ref_phs_method2(ifg_paths, params, refpx, refpy):
     half_chip_size = int(np.floor(params[cf.REF_CHIP_SIZE] / 2.0))
     chipsize = 2 * half_chip_size + 1
     thresh = chipsize * chipsize * params[cf.REF_MIN_FRAC]
-    ifg = Ifg(ifg_path)
-    ifg.open(readonly=False)
-    phase_data = ifg.phase_data
-    ref_phs = rpe.est_ref_phase_method2_multi(phase_data,
-                                              half_chip_size,
-                                              refpx, refpy, thresh)
-    phase_data -= ref_phs
-    md = ifg.meta_data
-    md[ifc.REF_PHASE] = ifc.REF_PHASE_REMOVED
-    ifg.write_modified_phase(data=phase_data)
-    ifg.close()
+    process_ifg_paths = np.array_split(ifg_paths, mpiops.size)[mpiops.rank]
+
+    def _inner(ifg_path):
+        ifg = Ifg(ifg_path)
+        ifg.open(readonly=False)
+        phase_data = ifg.phase_data
+        ref_ph = rpe.est_ref_phase_method2_multi(phase_data,
+                                                 half_chip_size,
+                                                 refpx, refpy, thresh)
+        phase_data -= ref_ph
+        md = ifg.meta_data
+        md[ifc.REF_PHASE] = ifc.REF_PHASE_REMOVED
+        ifg.write_modified_phase(data=phase_data)
+        ifg.close()
+        return ref_ph
+
+    ref_phs = np.array([_inner(p) for p in process_ifg_paths])
+    log.info('Ref phase computed in process {}'.format(mpiops.rank))
     return ref_phs
 
 
-def ref_phase_method1(ifg_paths, comp):
+def ref_phs_method1(ifg_paths, comp):
 
     def _inner(ifg_path):
         ifg = Ifg(ifg_path)
