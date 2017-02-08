@@ -1,18 +1,19 @@
 """
 Tests for prepifg.py: resampling, subsetting etc.
 """
+import glob
 import os
-from os.path import exists, join
 import shutil
 import sys
 import tempfile
 import unittest
 from math import floor
-import glob
-import pytest
+from os.path import exists, join
+
 import numpy as np
 from numpy import isnan, nanmax, nanmin, ones, nan, reshape, sum as npsum
 from numpy.testing import assert_array_almost_equal, assert_array_equal
+
 try:
     from scipy.stats.stats import nanmean
 except:  # fix for scipy v0.18.0
@@ -20,7 +21,6 @@ except:  # fix for scipy v0.18.0
 
 from osgeo import gdal
 
-from pyrate import mpiops
 from pyrate.scripts import run_prepifg
 from pyrate import config as cf
 from pyrate.config import mlooked_path
@@ -687,59 +687,6 @@ class TestOneIncidenceOrElevationMap(unittest.TestCase):
         inc = glob.glob(os.path.join(self.base_dir,
                                      '*utm_{inc}.tif'.format(inc=inc)))
         self.assertEqual(0, len(inc))
-
-
-@pytest.fixture(params=range(1, 6))
-def get_lks(request):
-    return request.param
-
-
-@pytest.fixture(params=range(1, 3))
-def get_crop(request):
-    return request.param
-
-
-def test_mpi(mpisync, get_config, tempdir, roipac_or_gamma, get_lks, get_crop):
-    from tests.common import SYDNEY_TEST_CONF
-    from os.path import join, basename
-    params = get_config(SYDNEY_TEST_CONF)
-    outdir = mpiops.run_once(tempdir)
-    params[cf.OUT_DIR] = outdir
-    params[cf.PROCESSOR] = roipac_or_gamma
-    params[cf.PARALLEL] = False
-    params[cf.IFG_LKSX], params[cf.IFG_LKSY] = get_lks, get_lks
-    params[cf.IFG_CROP_OPT] = get_crop
-    if roipac_or_gamma == 1:
-        params[cf.IFG_FILE_LIST] = join(common.SYD_TEST_GAMMA, 'ifms_17')
-        params[cf.OBS_DIR] = common.SYD_TEST_GAMMA
-        params[cf.DEM_FILE] = common.SYD_TEST_DEM_GAMMA
-    run_prepifg.main(params)
-
-    if mpiops.rank == 0:
-        params_s = get_config(SYDNEY_TEST_CONF)
-        params_s[cf.OUT_DIR] = tempdir()
-        params_s[cf.PARALLEL] = True
-        params_s[cf.IFG_LKSX], params_s[cf.IFG_LKSY] = get_lks, get_lks
-        params_s[cf.IFG_CROP_OPT] = get_crop
-        if roipac_or_gamma == 1:
-            base_unw_paths = glob.glob(join(common.SYD_TEST_GAMMA,
-                                            "*_utm.unw"))
-            run_prepifg.gamma_prepifg(base_unw_paths, params_s)
-        else:
-            base_unw_paths = glob.glob(join(common.SYD_TEST_OBS, "*.unw"))
-            run_prepifg.roipac_prepifg(base_unw_paths, params_s)
-
-        mpi_tifs = glob.glob(join(outdir, "*.tif"))
-        serial_tifs = glob.glob(join(params[cf.OUT_DIR], "*.tif"))
-        mpi_tifs.sort()
-        serial_tifs.sort()
-        # 17 geotifs, and 17 mlooked tifs
-        assert len(mpi_tifs) == len(serial_tifs)
-        for m_f, s_f in zip(mpi_tifs, serial_tifs):
-            assert basename(m_f) == basename(s_f)
-
-        shutil.rmtree(outdir)
-        shutil.rmtree(params_s[cf.OUT_DIR])
 
 
 if __name__ == "__main__":

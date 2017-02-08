@@ -4,7 +4,6 @@ Collection of tests for validating PyRate's reference pixel code.
 import copy
 import os
 import unittest
-import pytest
 import tempfile
 import shutil
 from numpy import nan, mean, std, isnan
@@ -12,10 +11,7 @@ from numpy import nan, mean, std, isnan
 from pyrate import config as cf
 from pyrate.config import ConfigException
 from pyrate.refpixel import ref_pixel, RefPixelError, step
-from pyrate.scripts import run_prepifg
 from pyrate.scripts import run_pyrate
-from pyrate import mpiops
-from tests import common
 from tests.common import SYD_TEST_DIR
 from tests.common import sydney_data_setup, MockIfg, sydney_ifg_file_list
 
@@ -337,58 +333,6 @@ class MatlabEqualityTestMultiprocessParallel(unittest.TestCase):
         self.assertEqual(1, self.params_all_1s[cf.REFNY])
         self.assertEqual(refx, 2)
         self.assertEqual(refy, 2)
-
-
-@pytest.fixture(params=range(1, 6))
-def modify_config(request, get_config):
-    test_conf = common.SYDNEY_TEST_CONF
-    params_dict = get_config(test_conf)
-    params_dict[cf.IFG_LKSX] = request.param
-    params_dict[cf.IFG_LKSY] = request.param
-    params_dict[cf.IFG_FILE_LIST] = os.path.join(
-        common.SYD_TEST_GAMMA, 'ifms_17')
-    params_dict[cf.PARALLEL] = 0
-    params_dict[cf.APS_CORRECTION] = 0
-    return params_dict
-
-
-def test_refpixel_mpi(mpisync, tempdir, modify_config,
-                      ref_est_method, roipac_or_gamma):
-    params_dict = modify_config
-
-    # use the same output dir for all processes
-    outdir = mpiops.run_once(tempdir)
-    params_dict[cf.OUT_DIR] = outdir
-    params_dict[cf.REF_EST_METHOD] = ref_est_method
-    xlks, ylks, crop = cf.transform_params(params_dict)
-    if roipac_or_gamma == 0:
-        params_dict[cf.IFG_FILE_LIST] = os.path.join(
-            common.SYD_TEST_OBS, 'ifms_17')
-
-    base_unw_paths = cf.original_ifg_paths(params_dict[cf.IFG_FILE_LIST])
-    # dest_paths are tifs that have been geotif converted and multilooked
-
-    dest_paths = cf.get_dest_paths(base_unw_paths, crop, params_dict, xlks)
-    # run prepifg, create the dest_paths files
-    if mpiops.rank == 0:
-        # create the dest_paths files
-        if roipac_or_gamma == 0:
-            run_prepifg.roipac_prepifg(base_unw_paths, params_dict)
-        else:
-            run_prepifg.gamma_prepifg(base_unw_paths, params_dict)
-
-    mpiops.comm.barrier()
-
-    refpx, refpy = run_pyrate.ref_pixel_calc(dest_paths, params_dict)
-
-    # old single process ref pixel calc
-    if mpiops.rank == 0:
-        ifgs = sydney_data_setup(datafiles=dest_paths)
-        refy, refx = ref_pixel(ifgs, params_dict)
-        for i in ifgs:  # close ifgs
-            i.close()
-        assert (refpx, refpy) == (refx, refy)
-        shutil.rmtree(outdir)
 
 
 if __name__ == "__main__":

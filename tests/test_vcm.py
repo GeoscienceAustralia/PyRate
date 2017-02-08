@@ -9,7 +9,6 @@ import shutil
 import sys
 import tempfile
 import unittest
-import pytest
 from numpy import array
 
 import numpy as np
@@ -18,14 +17,11 @@ from numpy.testing import assert_array_almost_equal
 from pyrate import config as cf
 from pyrate import ref_phs_est as rpe
 from pyrate import shared
-from pyrate import mpiops
-from pyrate import refpixel
 from pyrate.scripts import run_pyrate, run_prepifg
 from pyrate.vcm import cvd, get_vcmt
 from tests.common import SYD_TEST_DIR
 from tests.common import sydney5_mock_ifgs, sydney5_ifgs
 from tests.common import sydney_data_setup
-from tests import common
 
 
 class CovarianceTests(unittest.TestCase):
@@ -212,136 +208,6 @@ class MatlabEqualityTest(unittest.TestCase):
         matlab_vcm = np.genfromtxt(os.path.join(MATLAB_VCM_DIR,
                                    'matlab_vcmt.csv'), delimiter=',')
         np.testing.assert_array_almost_equal(matlab_vcm, self.vcmt, decimal=3)
-
-
-@pytest.fixture(params=range(1, 6))
-def modify_config(request, tempdir, get_config):
-    test_conf = common.SYDNEY_TEST_CONF
-    params_dict = get_config(test_conf)
-    params_dict[cf.IFG_LKSX] = request.param
-    params_dict[cf.IFG_LKSY] = request.param
-    params_dict[cf.OBS_DIR] = tempdir()
-    shared.copytree(common.SYD_TEST_GAMMA, params_dict[cf.OBS_DIR])
-    params_dict[cf.IFG_FILE_LIST] = os.path.join(
-        params_dict[cf.OBS_DIR], 'ifms_17')
-    params_dict[cf.PARALLEL] = 0
-    params_dict[cf.APS_CORRECTION] = 0
-    yield params_dict
-    # clean up
-    shutil.rmtree(params_dict[cf.OBS_DIR])
-
-
-def test_matlab_vs_mpi(mpisync, tempdir, get_config):
-    from tests.common import SYD_TEST_DIR
-
-    params_dict = get_config(
-        os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf')
-    )
-
-    MATLAB_VCM_DIR = os.path.join(SYD_TEST_DIR, 'matlab_vcm')
-    matlab_vcm = np.genfromtxt(os.path.join(MATLAB_VCM_DIR,
-                                            'matlab_vcmt.csv'), delimiter=',')
-    if mpiops.rank == 0:
-        outdir = tempdir()
-    else:
-        outdir = None
-    outdir = mpiops.comm.bcast(outdir, root=0)
-    params_dict[cf.OUT_DIR] = outdir
-    params_dict[cf.PARALLEL] = False
-    xlks, ylks, crop = cf.transform_params(params_dict)
-    base_unw_paths = cf.original_ifg_paths(params_dict[cf.IFG_FILE_LIST])
-    # dest_paths are tifs that have been geotif converted and multilooked
-    dest_paths = cf.get_dest_paths(base_unw_paths, crop, params_dict, xlks)
-
-    # run prepifg, create the dest_paths files
-    if mpiops.rank == 0:
-        run_prepifg.roipac_prepifg(base_unw_paths, params_dict)
-
-    mpiops.comm.barrier()
-
-    tiles = run_pyrate.get_tiles(dest_paths[0], rows=1, cols=1)
-    preread_ifgs = run_pyrate.create_ifg_dict(dest_paths,
-                                              params=params_dict,
-                                              tiles=tiles)
-    refpx, refpy = run_pyrate.ref_pixel_calc(dest_paths, params_dict)
-    run_pyrate.orb_fit_calc(dest_paths, params_dict)
-    run_pyrate.ref_phase_estimation_mpi(dest_paths, params_dict, refpx, refpy)
-
-    maxvar, vcmt = run_pyrate.maxvar_vcm_mpi(dest_paths, params_dict,
-                                             preread_ifgs)
-    np.testing.assert_array_almost_equal(maxvar, matlab_maxvar, decimal=4)
-    np.testing.assert_array_almost_equal(matlab_vcm, vcmt, decimal=3)
-    if mpiops.rank == 0:
-        shutil.rmtree(outdir)
-
-
-def test_vcm_maxvar_mpi(mpisync, tempdir, modify_config, ref_est_method,
-                        row_splits, col_splits):
-
-    params_dict = modify_config
-    outdir = mpiops.run_once(tempdir)
-    params_dict[cf.OUT_DIR] = outdir
-    params_dict[cf.REF_EST_METHOD] = ref_est_method
-    xlks, ylks, crop = cf.transform_params(params_dict)
-    print("xlks, row_splits, col_splits, rank")
-    print(xlks, row_splits, col_splits, mpiops.rank)
-    if xlks * col_splits > 45 or ylks * row_splits > 70:
-        print('skipping test')
-        return
-
-    base_unw_paths = cf.original_ifg_paths(params_dict[cf.IFG_FILE_LIST])
-    # dest_paths are tifs that have been geotif converted and multilooked
-    dest_paths = cf.get_dest_paths(base_unw_paths, crop, params_dict, xlks)
-
-    # run prepifg, create the dest_paths files
-    if mpiops.rank == 0:
-        run_prepifg.gamma_prepifg(base_unw_paths, params_dict)
-
-    mpiops.comm.barrier()
-
-    tiles = run_pyrate.get_tiles(dest_paths[0], rows=row_splits,
-                                 cols=col_splits)
-    preread_ifgs = run_pyrate.create_ifg_dict(dest_paths,
-                                              params=params_dict,
-                                              tiles=tiles)
-
-    refpx, refpy = run_pyrate.ref_pixel_calc(dest_paths, params_dict)
-    run_pyrate.orb_fit_calc(dest_paths, params_dict)
-    run_pyrate.ref_phase_estimation_mpi(dest_paths, params_dict, refpx, refpy)
-
-    maxvar, vcmt = run_pyrate.maxvar_vcm_mpi(dest_paths, params_dict,
-                                             preread_ifgs)
-    ifgs_mpi_out_dir = params_dict[cf.OUT_DIR]
-    ifgs_mpi = sydney_data_setup(datafiles=dest_paths)
-
-    # old vcm/maxvar estimate
-    params_dict_old = modify_config
-    params_dict_old[cf.OUT_DIR] = tempdir()
-    params_dict_old[cf.REF_EST_METHOD] = ref_est_method
-    if mpiops.rank == 0:
-        xlks, ylks, crop = cf.transform_params(params_dict_old)
-        base_unw_paths = cf.original_ifg_paths(
-            params_dict_old[cf.IFG_FILE_LIST])
-        dest_paths = cf.get_dest_paths(
-            base_unw_paths, crop, params_dict_old, xlks)
-        run_prepifg.gamma_prepifg(base_unw_paths, params_dict_old)
-
-        ifgs = shared.pre_prepare_ifgs(dest_paths, params_dict_old)
-        refy, refx = refpixel.ref_pixel(ifgs, params_dict)
-
-        run_pyrate.remove_orbital_error(ifgs, params_dict)
-        ifgs = shared.prepare_ifgs_without_phase(dest_paths, params_dict)
-
-        _, ifgs = rpe.estimate_ref_phase(ifgs, params_dict, refx, refy)
-        maxvar_s = [cvd(i, params_dict_old)[0] for i in ifgs]
-        vcmt_s = get_vcmt(ifgs, maxvar)
-
-        np.testing.assert_array_almost_equal(maxvar, maxvar_s)
-        np.testing.assert_array_almost_equal(vcmt, vcmt_s)
-        for i, j in zip(ifgs, ifgs_mpi):
-            np.testing.assert_array_almost_equal(i.phase_data, j.phase_data)
-        shutil.rmtree(ifgs_mpi_out_dir)  # remove mpi out dir
-        shutil.rmtree(params_dict_old[cf.OUT_DIR])  # remove serial out dir
 
 
 if __name__ == "__main__":
