@@ -19,8 +19,8 @@ from pyrate import config as cf
 from pyrate import ref_phs_est as rpe
 from pyrate import shared
 from pyrate import mpiops
+from pyrate import refpixel
 from pyrate.scripts import run_pyrate, run_prepifg
-from pyrate.scripts.run_pyrate import get_tiles, create_ifg_dict
 from pyrate.vcm import cvd, get_vcmt
 from tests.common import SYD_TEST_DIR
 from tests.common import sydney5_mock_ifgs, sydney5_ifgs
@@ -259,10 +259,10 @@ def test_matlab_vs_mpi(mpisync, tempdir, get_config):
 
     mpiops.comm.barrier()
 
-    tiles = get_tiles(dest_paths[0], rows=1, cols=1)
-    preread_ifgs = create_ifg_dict(dest_paths,
-                                   params=params_dict,
-                                   tiles=tiles)
+    tiles = run_pyrate.get_tiles(dest_paths[0], rows=1, cols=1)
+    preread_ifgs = run_pyrate.create_ifg_dict(dest_paths,
+                                              params=params_dict,
+                                              tiles=tiles)
     refpx, refpy = run_pyrate.ref_pixel_calc(dest_paths, params_dict)
     run_pyrate.orb_fit_calc(dest_paths, params_dict)
     run_pyrate.ref_phase_estimation_mpi(dest_paths, params_dict, refpx, refpy)
@@ -277,7 +277,7 @@ def test_matlab_vs_mpi(mpisync, tempdir, get_config):
 
 def test_vcm_maxvar_mpi(mpisync, tempdir, modify_config, ref_est_method,
                         row_splits, col_splits):
-    from pyrate import refpixel
+
     params_dict = modify_config
     outdir = mpiops.run_once(tempdir)
     params_dict[cf.OUT_DIR] = outdir
@@ -299,10 +299,11 @@ def test_vcm_maxvar_mpi(mpisync, tempdir, modify_config, ref_est_method,
 
     mpiops.comm.barrier()
 
-    tiles = get_tiles(dest_paths[0], rows=row_splits, cols=col_splits)
-    preread_ifgs = create_ifg_dict(dest_paths,
-                                   params=params_dict,
-                                   tiles=tiles)
+    tiles = run_pyrate.get_tiles(dest_paths[0], rows=row_splits,
+                                 cols=col_splits)
+    preread_ifgs = run_pyrate.create_ifg_dict(dest_paths,
+                                              params=params_dict,
+                                              tiles=tiles)
 
     refpx, refpy = run_pyrate.ref_pixel_calc(dest_paths, params_dict)
     run_pyrate.orb_fit_calc(dest_paths, params_dict)

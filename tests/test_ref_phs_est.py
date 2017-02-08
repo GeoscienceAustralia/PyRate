@@ -484,11 +484,7 @@ def modify_config(request, tempdir, get_config):
 def test_refphs_mpi(mpisync, tempdir, modify_config, ref_est_method):
 
     params_dict = modify_config
-    if mpiops.rank == 0:
-        outdir = tempdir()
-    else:
-        outdir = None
-    outdir = mpiops.comm.bcast(outdir, root=0)
+    outdir = mpiops.run_once(tempdir)
     params_dict[cf.OUT_DIR] = outdir
     params_dict[cf.REF_EST_METHOD] = ref_est_method
     xlks, ylks, crop = cf.transform_params(params_dict)
