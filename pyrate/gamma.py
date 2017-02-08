@@ -24,8 +24,6 @@ GAMMA_INCIDENCE = 'incidence_angle'
 RADIANS = 'RADIANS'
 GAMMA = 'GAMMA'
 
-SPEED_OF_LIGHT_METRES_PER_SECOND = 3e8
-
 
 def _check_raw_data(data_path, ncols, nrows):
     size = ncols * nrows * 4 # DEM and Ifg data are 4 byte floats
@@ -116,7 +114,7 @@ def frequency_to_wavelength(freq):
     """
     Convert radar frequency to wavelength
     """
-    return SPEED_OF_LIGHT_METRES_PER_SECOND / freq
+    return ifc.SPEED_OF_LIGHT_METRES_PER_SECOND / freq
 
 
 def combine_headers(hdr0, hdr1, dem_hdr):

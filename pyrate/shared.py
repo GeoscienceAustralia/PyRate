@@ -36,7 +36,6 @@ gdal.UseExceptions()
 PHASE_BAND = 1
 RADIANS = 'RADIANS'
 MILLIMETRES = 'MILLIMETRES'
-MM_PER_METRE = 1000
 GAMMA = 'GAMMA'
 ROIPAC = 'ROIPAC'
 
@@ -649,7 +648,7 @@ def convert_radians_to_mm(data, wavelength):
     data: interferogram phase data
     wavelength: radar wavelength; normally included with SAR instrument metadata
     """
-    return data * MM_PER_METRE * (wavelength / (4 * math.pi))
+    return data * ifc.MM_PER_METRE * (wavelength / (4 * math.pi))
 
 
 def generate_random_string(N=10):
