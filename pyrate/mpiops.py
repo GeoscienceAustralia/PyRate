@@ -47,3 +47,7 @@ def run_once(f, *args, **kwargs):
         f_result = None
     result = comm.bcast(f_result, root=0)
     return result
+
+
+def array_split(arr):
+    return np.array_split(arr, size)[rank]

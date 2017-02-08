@@ -24,7 +24,7 @@ from pyrate import vcm as vcm_module
 from pyrate.shared import Ifg, write_output_geotiff, \
     pre_prepare_ifgs, create_tiles, PrereadIfg
 from pyrate.compat import PyAPS_INSTALLED
-from pyrate.nci.common_nci import save_latest_tiles
+from pyrate.nci.common_nci import prepare_ifg, save_numpy_phase
 from pyrate import mpiops
 if PyAPS_INSTALLED:
     from pyrate import remove_aps_delay as aps
@@ -71,15 +71,14 @@ def create_ifg_dict(dest_tifs, params, tiles):
     """
     preread_ifgs_dict = {}
     process_tifs = np.array_split(dest_tifs, mpiops.size)[mpiops.rank]
-
+    save_numpy_phase(dest_tifs, tiles, params)
     for d in process_tifs:
-        ifg = save_latest_tiles(d, tiles, params)
+        ifg = prepare_ifg(d, params)
         preread_ifgs_dict[d] = PrereadIfg(path=d,
                                           nan_fraction=ifg.nan_fraction,
                                           master=ifg.master,
                                           slave=ifg.slave,
                                           time_span=ifg.time_span)
-        # ifg.write_modified_phase()  # we might need this here
         ifg.close()
 
     preread_ifgs_dict = _join_dicts(
@@ -283,7 +282,7 @@ def process_ifgs(ifg_paths, params, rows, cols):
     if mpiops.size > 1:
         params[cf.PARALLEL] = False
 
-    tiles = get_tiles(ifg_paths[0], rows, cols)
+    tiles = mpiops.run_once(get_tiles, ifg_paths[0], rows, cols)
     preread_ifgs = create_ifg_dict(ifg_paths,
                                    params=params,
                                    tiles=tiles)
@@ -311,8 +310,8 @@ def process_ifgs(ifg_paths, params, rows, cols):
     ref_phase_estimation_mpi(ifg_paths, params, refpx, refpy)
 
     maxvar, vcmt = maxvar_vcm_mpi(ifg_paths, params, preread_ifgs)
-
     ifgs = pre_prepare_ifgs(ifg_paths, params)
+    save_numpy_phase(ifg_paths, tiles, params)
 
     if params[cf.TIME_SERIES_CAL] != 0:
         time_series_mpi(ifg_paths, params, vcmt, tiles, preread_ifgs)
@@ -327,7 +326,8 @@ def process_ifgs(ifg_paths, params, rows, cols):
 
 def maxvar_vcm_mpi(ifg_paths, params, preread_ifgs):
     log.info('Calculating maxvar and vcm')
-    process_indices = np.array_split(range(len(ifg_paths)), mpiops.size)[mpiops.rank]
+    process_indices = np.array_split(
+        range(len(ifg_paths)), mpiops.size)[mpiops.rank]
     process_ifgs = np.array_split(ifg_paths, mpiops.size)[mpiops.rank]
     process_maxvar = []
     for n, i in enumerate(process_ifgs):
@@ -471,6 +471,18 @@ def mst_calculation(ifg_paths_or_instance, params):
     return mst_grid
 
 
+def calculate_time_series(ifgs, params, vcmt, mst):
+    res = timeseries.time_series(ifgs, params, vcmt, mst)
+    for r in res:
+        if len(r.shape) != 3:
+            logging.error('TODO: time series result shape is incorrect')
+            raise timeseries.TimeSeriesError
+
+    log.info('Time series calculated')
+    tsincr, tscum, tsvel = res
+    return tsincr, tscum, tsvel
+
+
 def time_series_mpi(ifg_paths, params, vcmt, tiles, preread_ifgs):
     process_tiles = np.array_split(tiles, mpiops.size)[mpiops.rank]
     log.info('Calculating time series')
@@ -538,7 +550,8 @@ def write_timeseries_geotiff(ifgs, params, tsincr, pr_type):
 def insert_time_series_interpolation(ifg_instance_updated, params):
 
     edges = matlab_mst.get_sub_structure(ifg_instance_updated,
-                                  np.zeros(len(ifg_instance_updated.id), dtype=bool))
+                                  np.zeros(len(ifg_instance_updated.id),
+                                           dtype=bool))
 
     _, _, ntrees = matlab_mst.matlab_mst_kruskal(edges, ntrees=True)
     # if ntrees=1, no interpolation; otherwise interpolate
@@ -637,18 +650,6 @@ def write_linrate_tifs(ifgs, params, res):
     md[ifc.PRTYPE] = 'linerror'
     write_output_geotiff(md, gt, wkt, error, dest, np.nan)
     write_linrate_numpy_files(error, params, rate, samples)
-
-
-def calculate_time_series(ifgs, params, vcmt, mst):
-    res = timeseries.time_series(ifgs, params, vcmt, mst)
-    for r in res:
-        if len(r.shape) != 3:
-            logging.error('TODO: time series result shape is incorrect')
-            raise timeseries.TimeSeriesError
-
-    log.info('Time series calculated')
-    tsincr, tscum, tsvel = res
-    return tsincr, tscum, tsvel
 
 
 # general function template

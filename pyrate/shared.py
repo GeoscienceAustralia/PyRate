@@ -462,7 +462,7 @@ class IfgPart(object):
         self.c_start = self.tile.top_left_x
         self.c_end = self.tile.bottom_right_x
         # TODO: fix this if cond
-        if ifg_dict is not None:
+        if ifg_dict is not None:  # should be used with MPI
             ifg = ifg_dict[ifg_or_path]
             self.nan_fraction = ifg.nan_fraction
             self.master = ifg.master
@@ -470,14 +470,14 @@ class IfgPart(object):
             self.time_span = ifg.time_span
             phase_file = 'phase_data_{}_{}.npy'.format(
                 os.path.basename(ifg_or_path).split('.')[0], tile.index)
-            self.phase_data = np.load(
-                os.path.join(os.path.dirname(ifg_or_path), phase_file))
+            self.phase_data = np.load(os.path.join(
+                os.path.dirname(ifg_or_path), phase_file))
         else:
             # check if Ifg was sent.
             if isinstance(ifg_or_path, Ifg):
                 ifg = ifg_or_path
             else:
-                self.data_path = ifg_or_path  # should be used with MPI
+                self.data_path = ifg_or_path
                 ifg = Ifg(ifg_or_path)
             self.phase_data = None
             self.nan_fraction = None
@@ -859,7 +859,7 @@ class Tile:
         self.bottom_right_y, self.bottom_right_x = bottom_right
 
     def __str__(self):
-        return "Convenience Time class containing tile co-ordinates"
+        return "Convenience Tile class containing tile co-ordinates"
 
 
 def copytree(src, dst, symlinks=False, ignore=None):

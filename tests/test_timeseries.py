@@ -347,7 +347,7 @@ class MatlabTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
             self.ts_cum, self.tscum_0, decimal=3)
 
 
-@pytest.fixture(params=range(1, 2))
+@pytest.fixture(params=range(1, 6))
 def modify_config(request, tempdir, get_config):
     test_conf = common.SYDNEY_TEST_CONF
     params_dict = get_config(test_conf)
@@ -364,8 +364,8 @@ def modify_config(request, tempdir, get_config):
     shutil.rmtree(params_dict[cf.OBS_DIR])
 
 
-def test_timeseries_mpi(mpisync, tempdir, modify_config, ref_est_method=1,
-                        row_splits=1, col_splits=1):
+def test_timeseries_mpi(mpisync, tempdir, modify_config, ref_est_method,
+                        row_splits, col_splits):
     params_dict = modify_config
     outdir = mpiops.run_once(tempdir)
     params_dict[cf.OUT_DIR] = outdir
@@ -387,8 +387,8 @@ def test_timeseries_mpi(mpisync, tempdir, modify_config, ref_est_method=1,
 
     mpiops.comm.barrier()
 
-    tiles = run_pyrate.get_tiles(dest_paths[0], rows=row_splits,
-                                 cols=col_splits)
+    tiles = mpiops.run_once(run_pyrate.get_tiles, dest_paths[0],
+                            rows=row_splits, cols=col_splits)
     preread_ifgs = run_pyrate.create_ifg_dict(dest_paths,
                                               params=params_dict,
                                               tiles=tiles)
@@ -399,7 +399,7 @@ def test_timeseries_mpi(mpisync, tempdir, modify_config, ref_est_method=1,
 
     maxvar, vcmt = run_pyrate.maxvar_vcm_mpi(dest_paths, params_dict,
                                              preread_ifgs)
-
+    run_pyrate.save_numpy_phase(dest_paths, tiles, params_dict)
     run_pyrate.time_series_mpi(dest_paths, params_dict, vcmt, tiles,
                                preread_ifgs)
     ifgs_mpi_out_dir = params_dict[cf.OUT_DIR]
@@ -427,21 +427,20 @@ def test_timeseries_mpi(mpisync, tempdir, modify_config, ref_est_method=1,
         _, ifgs = rpe.estimate_ref_phase(ifgs, params_dict, refx, refy)
         maxvar_s = [vcm.cvd(i, params_dict_old)[0] for i in ifgs]
         vcmt_s = vcm.get_vcmt(ifgs, maxvar)
-
         tsincr, tscum, _ = run_pyrate.calculate_time_series(
             ifgs, params_dict_old, vcmt_s, mst=mst_grid)
 
         mst_mpi = reconstruct_mst(ifgs[0].shape, tiles, ifgs_mpi_out_dir)
         np.testing.assert_array_almost_equal(mst_grid, mst_mpi)
-        tsincr_mpi, tscum_mpi = \
-            reconstruct_times_series(ifgs[0].shape, tiles, ifgs_mpi_out_dir,
-                                     )
+        tsincr_mpi, tscum_mpi = reconstruct_times_series(ifgs[0].shape,
+                                                         tiles,
+                                                         ifgs_mpi_out_dir)
         np.testing.assert_array_almost_equal(maxvar, maxvar_s)
         np.testing.assert_array_almost_equal(vcmt, vcmt_s)
         for i, j in zip(ifgs, ifgs_mpi):
             np.testing.assert_array_almost_equal(i.phase_data, j.phase_data)
-        np.testing.assert_array_almost_equal(tsincr, tsincr_mpi)
-        np.testing.assert_array_almost_equal(tscum, tscum_mpi)
+        np.testing.assert_array_almost_equal(tsincr, tsincr_mpi, decimal=4)
+        np.testing.assert_array_almost_equal(tscum, tscum_mpi, decimal=4)
         shutil.rmtree(ifgs_mpi_out_dir)  # remove mpi out dir
         shutil.rmtree(params_dict_old[cf.OUT_DIR])  # remove serial out dir
 
@@ -455,11 +454,11 @@ def reconstruct_times_series(shape, tiles, output_dir):
 
     for i, t in enumerate(tiles):
         tsincr_file_n = os.path.join(output_dir,
-                                     'tsincr_{}.npy'.format(t.index))
+                                     'tsincr_{}.npy'.format(i))
         tsincr_mpi[t.top_left_y:t.bottom_right_y,
                    t.top_left_x: t.bottom_right_x, :] = np.load(tsincr_file_n)
 
-        tscum_file_n = os.path.join(output_dir, 'tscuml_{}.npy'.format(t.index))
+        tscum_file_n = os.path.join(output_dir, 'tscuml_{}.npy'.format(i))
 
         tscum_mpi[t.top_left_y:t.bottom_right_y,
                   t.top_left_x: t.bottom_right_x, :] = np.load(tscum_file_n)
@@ -475,7 +474,7 @@ def reconstruct_mst(shape, tiles, output_dir):
     mst_mpi = np.empty_like(mst_mpi, dtype=np.float32)
 
     for i, t in enumerate(tiles):
-        mst_file_n = os.path.join(output_dir, 'mst_mat_{}.npy'.format(t.index))
+        mst_file_n = os.path.join(output_dir, 'mst_mat_{}.npy'.format(i))
         mst_mpi[:, t.top_left_y:t.bottom_right_y,
                 t.top_left_x: t.bottom_right_x] = np.load(mst_file_n)
     return mst_mpi
