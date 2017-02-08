@@ -690,22 +690,31 @@ class TestOneIncidenceOrElevationMap(unittest.TestCase):
         self.assertEqual(0, len(inc))
 
 
-def test_mpi(mpisync, get_config, tempdir):
-    from tests.common import SYD_TEST_DIR
+def test_mpi(mpisync, get_config, tempdir, roipac_or_gamma):
+    from tests.common import SYDNEY_TEST_CONF
     from os.path import join, basename
-    params = get_config(os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf'))
+    params = get_config(SYDNEY_TEST_CONF)
     outdir = mpiops.run_once(tempdir)
     params[cf.OUT_DIR] = outdir
+    params[cf.PROCESSOR] = roipac_or_gamma
     params[cf.PARALLEL] = False
+    if roipac_or_gamma == 1:
+        params[cf.IFG_FILE_LIST] = join(common.SYD_TEST_GAMMA, 'ifms_17')
+        params[cf.OBS_DIR] = common.SYD_TEST_GAMMA
+        params[cf.DEM_FILE] = common.SYD_TEST_DEM_GAMMA
     run_prepifg.main(params)
 
     if mpiops.rank == 0:
-        params_s = get_config(join(SYD_TEST_DIR, 'pyrate_system_test.conf'))
+        params_s = get_config(SYDNEY_TEST_CONF)
         params_s[cf.OUT_DIR] = tempdir()
-        params[cf.PARALLEL] = True
-        base_unw_paths = cf.original_ifg_paths(
-            params_s[cf.IFG_FILE_LIST])
-        run_prepifg.roipac_prepifg(base_unw_paths, params_s)
+        params_s[cf.PARALLEL] = True
+        if roipac_or_gamma == 1:
+            base_unw_paths = glob.glob(join(common.SYD_TEST_GAMMA,
+                                            "*_utm.unw"))
+            run_prepifg.gamma_prepifg(base_unw_paths, params_s)
+        else:
+            base_unw_paths = glob.glob(join(common.SYD_TEST_OBS, "*.unw"))
+            run_prepifg.roipac_prepifg(base_unw_paths, params_s)
 
         mpi_tifs = glob.glob(join(outdir, "*.tif"))
         serial_tifs = glob.glob(join(params[cf.OUT_DIR], "*.tif"))

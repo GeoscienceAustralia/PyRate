@@ -188,7 +188,7 @@ class RoipacToGeoTiffTests(unittest.TestCase):
         self.dest = os.path.join(TEMPDIR, 'tmp_roipac_ifg2.tif')
         data_path = join(PREP_TEST_OBS, 'geo_060619-061002.unw')
         self.assertRaises(GeotiffException, write_geotiff, hdrs,
-                            data_path, self.dest, 0)
+                          data_path, self.dest, 0)
 
     def test_mismatching_cell_resolution(self):
         hdrs = self.HDRS.copy()
@@ -291,11 +291,11 @@ class TestRoipacLuigiEquality(unittest.TestCase):
                                                  dir=cls.luigi_base_dir)
         os.close(fp)
         cls.non_luigi_base_dir = tempfile.mkdtemp()
-        fp, cls.non_luigi_confFile = tempfile.mkstemp(suffix='roipac_test.conf',
-                                                  dir=cls.non_luigi_base_dir)
+        fp, cls.non_luigi_confFile = tempfile.mkstemp(
+            suffix='roipac_test.conf', dir=cls.non_luigi_base_dir)
         os.close(fp)
-        fp, cls.non_luigi_ifgListFile = tempfile.mkstemp(suffix='roipac_ifg.list',
-                                                     dir=cls.non_luigi_base_dir)
+        fp, cls.non_luigi_ifgListFile = tempfile.mkstemp(
+            suffix='roipac_ifg.list', dir=cls.non_luigi_base_dir)
         os.close(fp)
 
     @classmethod
