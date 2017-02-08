@@ -1,5 +1,5 @@
 Click >= 6.0
-numpy >=1.10.1
+numpy >=1.9.2
 Cython >= 0.22.1
 mpi4py == 2.0.0
 scipy >= 0.15.1

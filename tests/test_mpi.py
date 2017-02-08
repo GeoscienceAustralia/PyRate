@@ -108,6 +108,16 @@ def modify_config(request, tempdir, get_config):
     shutil.rmtree(params_dict[cf.OBS_DIR])
 
 
+@pytest.fixture(params=range(1, 6))
+def get_lks(request):
+    return request.param
+
+
+@pytest.fixture(params=range(1, 3))
+def get_crop(request):
+    return request.param
+
+
 def test_vcm_matlab_vs_mpi(mpisync, tempdir, get_config):
     from tests.common import SYD_TEST_DIR
 
@@ -153,84 +163,97 @@ def test_vcm_matlab_vs_mpi(mpisync, tempdir, get_config):
 
 
 def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
-                                ref_est_method, row_splits, col_splits):
-    params_dict = modify_config
+                                ref_est_method, row_splits, col_splits,
+                                get_crop):
+    params = modify_config
     outdir = mpiops.run_once(tempdir)
-    params_dict[cf.OUT_DIR] = outdir
-    params_dict[cf.REF_EST_METHOD] = ref_est_method
-    xlks, ylks, crop = cf.transform_params(params_dict)
+    params[cf.OUT_DIR] = outdir
+    params[cf.REF_EST_METHOD] = ref_est_method
+    params[cf.IFG_CROP_OPT] = get_crop
+    xlks, ylks, crop = cf.transform_params(params)
     print("xlks, row_splits, col_splits, rank")
     print(xlks, row_splits, col_splits, mpiops.rank)
     if xlks * col_splits > 45 or ylks * row_splits > 70:
         print('skipping test')
         return
 
-    base_unw_paths = cf.original_ifg_paths(params_dict[cf.IFG_FILE_LIST])
+    base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST])
     # dest_paths are tifs that have been geotif converted and multilooked
-    dest_paths = cf.get_dest_paths(base_unw_paths, crop, params_dict, xlks)
+    dest_paths = cf.get_dest_paths(base_unw_paths, crop, params, xlks)
 
     # run prepifg, create the dest_paths files
     if mpiops.rank == 0:
-        run_prepifg.gamma_prepifg(base_unw_paths, params_dict)
+        run_prepifg.gamma_prepifg(base_unw_paths, params)
 
     mpiops.comm.barrier()
 
     tiles = mpiops.run_once(run_pyrate.get_tiles, dest_paths[0],
                             rows=row_splits, cols=col_splits)
     preread_ifgs = run_pyrate.create_ifg_dict(dest_paths,
-                                              params=params_dict,
+                                              params=params,
                                               tiles=tiles)
-    run_pyrate.mpi_mst_calc(dest_paths, params_dict, tiles, preread_ifgs)
-    refpx, refpy = run_pyrate.ref_pixel_calc(dest_paths, params_dict)
-    run_pyrate.orb_fit_calc(dest_paths, params_dict)
-    run_pyrate.ref_phase_estimation_mpi(dest_paths, params_dict, refpx, refpy)
+    run_pyrate.mpi_mst_calc(dest_paths, params, tiles, preread_ifgs)
+    refpx, refpy = run_pyrate.ref_pixel_calc(dest_paths, params)
+    run_pyrate.orb_fit_calc(dest_paths, params)
+    run_pyrate.ref_phase_estimation_mpi(dest_paths, params, refpx, refpy)
 
-    maxvar, vcmt = run_pyrate.maxvar_vcm_mpi(dest_paths, params_dict,
+    maxvar, vcmt = run_pyrate.maxvar_vcm_mpi(dest_paths, params,
                                              preread_ifgs)
-    run_pyrate.save_numpy_phase(dest_paths, tiles, params_dict)
-    run_pyrate.time_series_mpi(dest_paths, params_dict, vcmt, tiles,
+    run_pyrate.save_numpy_phase(dest_paths, tiles, params)
+    run_pyrate.time_series_mpi(dest_paths, params, vcmt, tiles,
                                preread_ifgs)
-    ifgs_mpi_out_dir = params_dict[cf.OUT_DIR]
+    run_pyrate.linrate_mpi(dest_paths, params, vcmt, tiles,
+                           preread_ifgs)
+    ifgs_mpi_out_dir = params[cf.OUT_DIR]
     ifgs_mpi = sydney_data_setup(datafiles=dest_paths)
 
     # old vcm/maxvar estimate
-    params_dict_old = modify_config
-    params_dict_old[cf.OUT_DIR] = tempdir()
-    params_dict_old[cf.REF_EST_METHOD] = ref_est_method
     if mpiops.rank == 0:
-        xlks, ylks, crop = cf.transform_params(params_dict_old)
+        params_old = modify_config
+        params_old[cf.OUT_DIR] = tempdir()
+        params_old[cf.REF_EST_METHOD] = ref_est_method
+        params_old[cf.IFG_CROP_OPT] = get_crop
+        xlks, ylks, crop = cf.transform_params(params_old)
         base_unw_paths = cf.original_ifg_paths(
-            params_dict_old[cf.IFG_FILE_LIST])
+            params_old[cf.IFG_FILE_LIST])
         dest_paths = cf.get_dest_paths(
-            base_unw_paths, crop, params_dict_old, xlks)
-        run_prepifg.gamma_prepifg(base_unw_paths, params_dict_old)
+            base_unw_paths, crop, params_old, xlks)
+        run_prepifg.gamma_prepifg(base_unw_paths, params_old)
 
-        ifgs = shared.pre_prepare_ifgs(dest_paths, params_dict_old)
-        mst_grid = run_pyrate.mst_calculation(dest_paths, params_dict_old)
-        refy, refx = refpixel.ref_pixel(ifgs, params_dict_old)
+        ifgs = shared.pre_prepare_ifgs(dest_paths, params_old)
+        mst_grid = run_pyrate.mst_calculation(dest_paths, params_old)
+        refy, refx = refpixel.ref_pixel(ifgs, params_old)
 
-        run_pyrate.remove_orbital_error(ifgs, params_dict_old)
-        ifgs = shared.prepare_ifgs_without_phase(dest_paths, params_dict_old)
+        run_pyrate.remove_orbital_error(ifgs, params_old)
+        ifgs = shared.prepare_ifgs_without_phase(dest_paths, params_old)
 
-        _, ifgs = rpe.estimate_ref_phase(ifgs, params_dict_old, refx, refy)
-        maxvar_s = [vcm.cvd(i, params_dict_old)[0] for i in ifgs]
+        _, ifgs = rpe.estimate_ref_phase(ifgs, params_old, refx, refy)
+        maxvar_s = [vcm.cvd(i, params_old)[0] for i in ifgs]
         vcmt_s = vcm.get_vcmt(ifgs, maxvar)
         tsincr, tscum, _ = run_pyrate.calculate_time_series(
-            ifgs, params_dict_old, vcmt_s, mst=mst_grid)
-
+            ifgs, params_old, vcmt_s, mst=mst_grid)
+        rate, error, samples = run_pyrate.calculate_linear_rate(
+            ifgs, params_old, vcmt, mst_grid)
         mst_mpi = reconstruct_mst(ifgs[0].shape, tiles, ifgs_mpi_out_dir)
         np.testing.assert_array_almost_equal(mst_grid, mst_mpi)
         tsincr_mpi, tscum_mpi = reconstruct_times_series(ifgs[0].shape,
                                                          tiles,
                                                          ifgs_mpi_out_dir)
+
+        rate_mpi, error_mpi, samples_mpi = \
+            [reconstruct_linrate(ifgs[0].shape, tiles, ifgs_mpi_out_dir, t)
+             for t in ['linrate', 'linerror', 'linsamples']]
         np.testing.assert_array_almost_equal(maxvar, maxvar_s)
         np.testing.assert_array_almost_equal(vcmt, vcmt_s)
         for i, j in zip(ifgs, ifgs_mpi):
             np.testing.assert_array_almost_equal(i.phase_data, j.phase_data)
         np.testing.assert_array_almost_equal(tsincr, tsincr_mpi, decimal=4)
         np.testing.assert_array_almost_equal(tscum, tscum_mpi, decimal=4)
+        np.testing.assert_array_almost_equal(rate, rate_mpi, decimal=4)
+        np.testing.assert_array_almost_equal(error, error_mpi, decimal=4)
+        np.testing.assert_array_almost_equal(samples, samples_mpi, decimal=4)
         shutil.rmtree(ifgs_mpi_out_dir)  # remove mpi out dir
-        shutil.rmtree(params_dict_old[cf.OUT_DIR])  # remove serial out dir
+        shutil.rmtree(params_old[cf.OUT_DIR])  # remove serial out dir
 
 
 def reconstruct_times_series(shape, tiles, output_dir):
@@ -254,6 +277,17 @@ def reconstruct_times_series(shape, tiles, output_dir):
     return tsincr_mpi, tscum_mpi
 
 
+def reconstruct_linrate(shape, tiles, output_dir, out_type):
+    rate = np.zeros(shape=shape, dtype=np.float32)
+    for t in tiles:
+        rate_file = os.path.join(output_dir, out_type +
+                                 '_{}.npy'.format(t.index))
+        rate_tile = np.load(file=rate_file)
+        rate[t.top_left_y:t.bottom_right_y,
+             t.top_left_x:t.bottom_right_x] = rate_tile
+    return rate
+
+
 def reconstruct_mst(shape, tiles, output_dir):
     mst_file_0 = os.path.join(output_dir, 'mst_mat_{}.npy'.format(0))
     shape0 = np.load(mst_file_0).shape[0]
@@ -266,16 +300,6 @@ def reconstruct_mst(shape, tiles, output_dir):
         mst_mpi[:, t.top_left_y:t.bottom_right_y,
                 t.top_left_x: t.bottom_right_x] = np.load(mst_file_n)
     return mst_mpi
-
-
-@pytest.fixture(params=range(1, 6))
-def get_lks(request):
-    return request.param
-
-
-@pytest.fixture(params=range(1, 3))
-def get_crop(request):
-    return request.param
 
 
 def test_prepifg_mpi(mpisync, get_config, tempdir,
