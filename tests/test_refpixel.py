@@ -352,16 +352,12 @@ def modify_config(request, get_config):
     return params_dict
 
 
-def test_refpixel_mpi(tempdir, modify_config,
+def test_refpixel_mpi(mpisync, tempdir, modify_config,
                       ref_est_method, roipac_or_gamma):
     params_dict = modify_config
 
     # use the same output dir for all processes
-    if mpiops.rank == 0:
-        outdir = tempdir()
-    else:
-        outdir = None
-    outdir = mpiops.comm.bcast(outdir, root=0)
+    outdir = mpiops.run_once(tempdir)
     params_dict[cf.OUT_DIR] = outdir
     params_dict[cf.REF_EST_METHOD] = ref_est_method
     xlks, ylks, crop = cf.transform_params(params_dict)

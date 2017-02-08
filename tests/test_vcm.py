@@ -110,23 +110,42 @@ class VCMTests(unittest.TestCase):
                   4.754]
 
         # Output from Matlab Pirate make_vcmt.m
-        exp = array([[2.879, 0.0, -4.059, -1.820, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ],
-            [0.0, 4.729, 0.0, 0.0, 1.972, 0.0, 0.0, -3.947, -2.987, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ],
-            [-4.059, 0.0, 22.891, 5.133, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -7.497, -10.285, 0.0, 0.0, 0.0, 0.0 ],
-            [-1.820, 0.0, 5.133, 4.604, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.362, 0.0, 0.0, -1.774, 0.0, 0.0 ],
-            [0.0, 1.972, 0.0, 0.0, 3.290, 2.386, 1.439, -3.292, -2.492, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ],
-            [0.0, 0.0, 0.0, 0.0, 2.386, 6.923, 2.088, 0.0, 0.0, -3.273, -4.663, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ],
-            [0.0, 0.0, 0.0, 0.0, 1.439, 2.088, 2.519, 0.0, 0.0, 1.974, 0.0, 0.0, 0.0, -2.213, 0.0, 0.0, 0.0 ],
-            [0.0, -3.947, 0.0, 0.0, -3.292, 0.0, 0.0, 13.177, 4.986, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 4.596, -3.957 ],
-            [0.0, -2.987, 0.0, 0.0, -2.492, 0.0, 0.0, 4.986, 7.548, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.995 ],
-            [0.0, 0.0, 0.0, 0.0, 0.0, -3.273, 1.974, 0.0, 0.0, 6.190, 4.410, 0.0, 0.0, -3.469, 0.0, 0.0, 0.0 ],
-            [0.0, 0.0, 0.0, 0.0, 0.0, -4.663, 0.0, 0.0, 0.0, 4.410, 12.565, 0.0, 0.0, 4.942, 0.0, 0.0, 0.0 ],
-            [0.0, 0.0, -7.497, 3.362, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 9.8221, 6.737, 0.0, -2.591, 0.0, 0.0 ],
-            [0.0, 0.0, -10.285, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 6.737, 18.484, 0.0, 3.554, -5.443, 0.0 ],
-            [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -2.213, 0.0, 0.0, -3.469, 4.942, 0.0, 0.0, 7.776, 0.0, 0.0, 0.0 ],
-            [0.0, 0.0, 0.0, -1.774, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -2.591, 3.554, 0.0, 2.734, -2.093, 0.0 ],
-            [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 4.596, 0.0, 0.0, 0.0, 0.0, -5.443, 0.0, -2.093, 6.411, -2.760 ],
-            [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -3.957, 2.995, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -2.760, 4.754 ]])
+        exp = array([
+            [2.879, 0.0, -4.059, -1.820, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+             0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            [0.0, 4.729, 0.0, 0.0, 1.972, 0.0, 0.0, -3.947, -2.987, 0.0,
+             0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            [-4.059, 0.0, 22.891, 5.133, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+             -7.497, -10.285, 0.0, 0.0, 0.0, 0.0],
+            [-1.820, 0.0, 5.133, 4.604, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+             3.362, 0.0, 0.0, -1.774, 0.0, 0.0],
+            [0.0, 1.972, 0.0, 0.0, 3.290, 2.386, 1.439, -3.292, -2.492, 0.0,
+             0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 2.386, 6.923, 2.088, 0.0, 0.0, -3.273,
+             -4.663, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 1.439, 2.088, 2.519, 0.0, 0.0, 1.974, 0.0,
+             0.0, 0.0, -2.213, 0.0, 0.0, 0.0],
+            [0.0, -3.947, 0.0, 0.0, -3.292, 0.0, 0.0, 13.177, 4.986, 0.0, 0.0,
+             0.0, 0.0, 0.0, 0.0, 4.596, -3.957],
+            [0.0, -2.987, 0.0, 0.0, -2.492, 0.0, 0.0, 4.986, 7.548, 0.0, 0.0,
+             0.0, 0.0, 0.0, 0.0, 0.0, 2.995],
+            [0.0, 0.0, 0.0, 0.0, 0.0, -3.273, 1.974, 0.0, 0.0, 6.190, 4.410,
+             0.0, 0.0, -3.469, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 0.0, -4.663, 0.0, 0.0, 0.0, 4.410, 12.565,
+             0.0, 0.0, 4.942, 0.0, 0.0, 0.0],
+            [0.0, 0.0, -7.497, 3.362, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+             9.8221, 6.737, 0.0, -2.591, 0.0, 0.0],
+            [0.0, 0.0, -10.285, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 6.737,
+             18.484, 0.0, 3.554, -5.443, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -2.213, 0.0, 0.0, -3.469, 4.942,
+             0.0, 0.0, 7.776, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, -1.774, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -2.591,
+             3.554, 0.0, 2.734, -2.093, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 4.596, 0.0, 0.0, 0.0, 0.0,
+             -5.443, 0.0, -2.093, 6.411, -2.760],
+            [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -3.957, 2.995, 0.0, 0.0, 0.0,
+             0.0, 0.0, 0.0, -2.760, 4.754]
+        ])
 
         act = get_vcmt(self.ifgs, maxvar)
         assert_array_almost_equal(act, exp, decimal=3)
@@ -159,28 +178,18 @@ class MatlabEqualityTest(unittest.TestCase):
         params = cf.get_config_params(
                 os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf')
         )
-
         cls.temp_out_dir = tempfile.mkdtemp()
 
         sys.argv = ['run_prepifg.py', os.path.join(SYD_TEST_DIR,
                     'pyrate_system_test.conf')]
-
         params[cf.OUT_DIR] = cls.temp_out_dir
-        run_prepifg.main(params)
-
         params[cf.REF_EST_METHOD] = 2
+        run_prepifg.main(params)
         xlks, ylks, crop = cf.transform_params(params)
-
-        base_ifg_paths = cf.original_ifg_paths(
-            params[cf.IFG_FILE_LIST])
-
-        dest_paths = cf.get_dest_paths(base_ifg_paths,
-                                               crop, params, xlks)
-        # start run_pyrate copy
+        base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST])
+        dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
         ifgs = shared.pre_prepare_ifgs(dest_paths, params)
-
         refx, refy = run_pyrate.ref_pixel_calc(dest_paths, params)
-
         run_pyrate.remove_orbital_error(ifgs, params)
         ifgs = shared.prepare_ifgs_without_phase(dest_paths, params)
         _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
@@ -268,17 +277,14 @@ def test_matlab_vs_mpi(mpisync, tempdir, get_config):
 
 def test_vcm_maxvar_mpi(mpisync, tempdir, modify_config, ref_est_method,
                         row_splits, col_splits):
+    from pyrate import refpixel
     params_dict = modify_config
-    if mpiops.rank == 0:
-        outdir = tempdir()
-    else:
-        outdir = None
-    outdir = mpiops.comm.bcast(outdir, root=0)
+    outdir = mpiops.run_once(tempdir)
     params_dict[cf.OUT_DIR] = outdir
     params_dict[cf.REF_EST_METHOD] = ref_est_method
     xlks, ylks, crop = cf.transform_params(params_dict)
-    print("xlks, row_splits, col_splits")
-    print(xlks, row_splits, col_splits)
+    print("xlks, row_splits, col_splits, rank")
+    print(xlks, row_splits, col_splits, mpiops.rank)
     if xlks * col_splits > 45 or ylks * row_splits > 70:
         print('skipping test')
         return
@@ -299,13 +305,15 @@ def test_vcm_maxvar_mpi(mpisync, tempdir, modify_config, ref_est_method,
                                    tiles=tiles)
 
     refpx, refpy = run_pyrate.ref_pixel_calc(dest_paths, params_dict)
+    run_pyrate.orb_fit_calc(dest_paths, params_dict)
     run_pyrate.ref_phase_estimation_mpi(dest_paths, params_dict, refpx, refpy)
 
     maxvar, vcmt = run_pyrate.maxvar_vcm_mpi(dest_paths, params_dict,
                                              preread_ifgs)
     ifgs_mpi_out_dir = params_dict[cf.OUT_DIR]
+    ifgs_mpi = sydney_data_setup(datafiles=dest_paths)
 
-    # old ref phs estimate
+    # old vcm/maxvar estimate
     params_dict_old = modify_config
     params_dict_old[cf.OUT_DIR] = tempdir()
     params_dict_old[cf.REF_EST_METHOD] = ref_est_method
@@ -316,15 +324,24 @@ def test_vcm_maxvar_mpi(mpisync, tempdir, modify_config, ref_est_method,
         dest_paths = cf.get_dest_paths(
             base_unw_paths, crop, params_dict_old, xlks)
         run_prepifg.gamma_prepifg(base_unw_paths, params_dict_old)
-        ifgs = sydney_data_setup(datafiles=dest_paths)
-        ref_phs, ifgs = rpe.estimate_ref_phase(ifgs, params_dict_old,
-                                               refpx, refpy)
+
+        ifgs = shared.pre_prepare_ifgs(dest_paths, params_dict_old)
+        refy, refx = refpixel.ref_pixel(ifgs, params_dict)
+
+        run_pyrate.remove_orbital_error(ifgs, params_dict)
+        ifgs = shared.prepare_ifgs_without_phase(dest_paths, params_dict)
+
+        _, ifgs = rpe.estimate_ref_phase(ifgs, params_dict, refx, refy)
         maxvar_s = [cvd(i, params_dict_old)[0] for i in ifgs]
         vcmt_s = get_vcmt(ifgs, maxvar)
+
         np.testing.assert_array_almost_equal(maxvar, maxvar_s)
         np.testing.assert_array_almost_equal(vcmt, vcmt_s)
+        for i, j in zip(ifgs, ifgs_mpi):
+            np.testing.assert_array_almost_equal(i.phase_data, j.phase_data)
         shutil.rmtree(ifgs_mpi_out_dir)  # remove mpi out dir
         shutil.rmtree(params_dict_old[cf.OUT_DIR])  # remove serial out dir
+
 
 if __name__ == "__main__":
     unittest.main()
