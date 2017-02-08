@@ -470,7 +470,7 @@ class IfgPart(object):
             phase_file = 'phase_data_{}_{}.npy'.format(
                 basename(ifg_or_path).split('.')[0], tile.index)
             self.phase_data = np.load(join(dirname(ifg_or_path), phase_file))
-            os.remove(join(dirname(ifg_or_path), phase_file))
+            # os.remove(join(dirname(ifg_or_path), phase_file))
         else:
             # check if Ifg was sent.
             if isinstance(ifg_or_path, Ifg):

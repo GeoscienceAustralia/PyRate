@@ -318,9 +318,37 @@ def process_ifgs(ifg_paths, params, rows, cols):
 
     # Calculate linear rate map
     rate, error, samples = calculate_linear_rate(ifgs, params, vcmt, mst_grid)
+    linrate_mpi(ifg_paths, params, vcmt, tiles, preread_ifgs)
 
     log.info('PyRate workflow completed')
     return mst_grid, (refpx, refpy), maxvar, vcmt, rate, error, samples
+
+
+def linrate_mpi(ifg_paths, params, vcmt, tiles, preread_ifgs):
+
+    process_tiles = mpiops.array_split(tiles)
+    log.info('Calculating linear rate')
+    output_dir = params[cf.OUT_DIR]
+    for t in process_tiles:
+        i = t.index
+        log.info('calculating lin rate of tile {}'.format(i))
+        ifg_parts = [shared.IfgPart(p, t, preread_ifgs) for p in ifg_paths]
+        mst_n = os.path.join(output_dir, 'mst_mat_{}.npy'.format(i))
+        mst_grid_n = np.load(mst_n)
+        res = linrate.linear_rate(ifg_parts, params, vcmt, mst_grid_n)
+
+        for r in res:
+            if r is None:
+                raise ValueError('TODO: bad value')
+        rate, error, samples = res
+        # declare file names
+        rate_file = os.path.join(output_dir, 'linrate_{}.npy'.format(i))
+        error_file = os.path.join(output_dir, 'linerror_{}.npy'.format(i))
+        samples_file = os.path.join(output_dir, 'linsamples_{}.npy'.format(i))
+
+        np.save(file=rate_file, arr=rate)
+        np.save(file=error_file, arr=error)
+        np.save(file=samples_file, arr=samples)
 
 
 def maxvar_vcm_mpi(ifg_paths, params, preread_ifgs):
