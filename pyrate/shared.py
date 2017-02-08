@@ -4,7 +4,7 @@ import errno
 import logging
 import math
 import os
-import pickle as cp
+from os.path import basename, dirname, join
 import random
 import shutil
 import stat
@@ -14,10 +14,9 @@ import time
 from datetime import date
 from itertools import product
 from math import floor
-
-import numpy as np
 import pkg_resources
 import pyproj
+import numpy as np
 from numpy import where, nan, isnan, sum as nsum, isclose
 
 from pyrate import ifgconstants as ifc
@@ -469,9 +468,9 @@ class IfgPart(object):
             self.slave = ifg.slave
             self.time_span = ifg.time_span
             phase_file = 'phase_data_{}_{}.npy'.format(
-                os.path.basename(ifg_or_path).split('.')[0], tile.index)
-            self.phase_data = np.load(os.path.join(
-                os.path.dirname(ifg_or_path), phase_file))
+                basename(ifg_or_path).split('.')[0], tile.index)
+            self.phase_data = np.load(join(dirname(ifg_or_path), phase_file))
+            os.remove(join(dirname(ifg_or_path), phase_file))
         else:
             # check if Ifg was sent.
             if isinstance(ifg_or_path, Ifg):

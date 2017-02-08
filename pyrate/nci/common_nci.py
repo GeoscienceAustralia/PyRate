@@ -75,3 +75,4 @@ def save_numpy_phase(ifg_paths, tiles, params):
             np.save(file=join(outdir, phase_file),
                     arr=p_data)
         ifg.close()
+    mpiops.comm.barrier()
