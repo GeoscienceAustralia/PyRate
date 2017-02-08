@@ -298,10 +298,9 @@ def process_ifgs(ifg_paths, params, rows, cols):
     if PyAPS_INSTALLED and aps_delay_required(ifg_paths, params):
         ifgs = aps.remove_aps_delay(ifg_paths, params)
         log.info('Finished APS delay correction')
-
-    # make sure aps correction flags are consistent
-    if params[cf.APS_CORRECTION]:
-        check_aps_ifgs(ifg_paths)
+        # make sure aps correction flags are consistent
+        if params[cf.APS_CORRECTION]:
+            check_aps_ifgs(ifg_paths)
 
     # Estimate and remove orbit errors
     orb_fit_calc(ifg_paths, params)

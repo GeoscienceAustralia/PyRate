@@ -21,6 +21,7 @@ except:  # fix for scipy v0.18.0
 
 from osgeo import gdal
 
+from pyrate import mpiops
 from pyrate.scripts import run_prepifg
 from pyrate import config as cf
 from pyrate.config import mlooked_path
@@ -689,66 +690,35 @@ class TestOneIncidenceOrElevationMap(unittest.TestCase):
         self.assertEqual(0, len(inc))
 
 
-class MPITests(unittest.TestCase):
-    """
-    MPI vs Single processor prepifg tests
-    """
+def test_mpi(mpisync, get_config, tempdir):
+    from tests.common import SYD_TEST_DIR
+    from os.path import join, basename
+    params = get_config(os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf'))
+    outdir = mpiops.run_once(tempdir)
+    params[cf.OUT_DIR] = outdir
+    params[cf.PARALLEL] = False
+    run_prepifg.main(params)
 
-    @classmethod
-    def setUpClass(cls):
-        cls.gamma_pypar_dir = tempfile.mkdtemp()
-        cls.gamma_serial_dir = tempfile.mkdtemp()
-        cls.conf_file = os.path.join(common.SYD_TEST_GAMMA,
-                                     'pyrate_gamma.conf')
-        cls.params = cf.get_config_params(cls.conf_file)
-        cls.params[cf.OBS_DIR] = common.SYD_TEST_GAMMA
-        cls.params[cf.IFG_FILE_LIST] = os.path.join(common.SYD_TEST_GAMMA,
-                                                    'ifms_17')
-        cls.params[cf.OUT_DIR] = cls.gamma_pypar_dir
-        cls.temp_conf_file = tempfile.mktemp(suffix='.conf',
-                                             dir=cls.gamma_pypar_dir)
-        cf.write_config_file(cls.params, cls.temp_conf_file)
+    if mpiops.rank == 0:
+        params_s = get_config(join(SYD_TEST_DIR, 'pyrate_system_test.conf'))
+        params_s[cf.OUT_DIR] = tempdir()
+        params[cf.PARALLEL] = True
+        base_unw_paths = cf.original_ifg_paths(
+            params_s[cf.IFG_FILE_LIST])
+        run_prepifg.roipac_prepifg(base_unw_paths, params_s)
 
-        # run mpi gamma
-        cmd = "mpirun -np 4 pyrate prepifg " + \
-              cls.temp_conf_file
-        subprocess.check_call(cmd, shell=True)
-
-    @classmethod
-    def tearDownClass(cls):
-        shutil.rmtree(cls.gamma_pypar_dir)
-        shutil.rmtree(cls.gamma_serial_dir)
-
-    def test_mpi_vs_serial_gamma(self):
-        """
-        Test mpi vs single processor prepifg run
-        """
-
-        self.params[cf.OUT_DIR] = self.gamma_serial_dir
-        self.params[cf.PARALLEL] = False
-
-        # run serial gamma
-        run_prepifg.main(self.params)
-        gamma_ptn = re.compile(r'\d{8}')
-        mpi_tifs = []
-        for i in glob.glob(os.path.join(self.gamma_pypar_dir,
-                                        "*.tif")):
-            if len(gamma_ptn.findall(i)) == 2:
-                mpi_tifs.append(i)
-
-        serial_tifs = []
-        for i in glob.glob(os.path.join(self.gamma_serial_dir,
-                                        "*.tif")):
-            if len(gamma_ptn.findall(i)) == 2:
-                serial_tifs.append(i)
+        mpi_tifs = glob.glob(join(outdir, "*.tif"))
+        serial_tifs = glob.glob(join(params[cf.OUT_DIR], "*.tif"))
         mpi_tifs.sort()
         serial_tifs.sort()
-
-        self.assertEqual(len(mpi_tifs), len(serial_tifs))
-        for m_f, s_f in zip(mpi_tifs, serial_tifs):
-            self.assertEqual(os.path.basename(m_f), os.path.basename(s_f))
         # 17 geotifs, and 17 mlooked tifs
-        self.assertEqual(len(mpi_tifs), 34)
+        assert len(mpi_tifs) == len(serial_tifs)
+        for m_f, s_f in zip(mpi_tifs, serial_tifs):
+            assert basename(m_f) == basename(s_f)
+
+        shutil.rmtree(outdir)
+        shutil.rmtree(params_s[cf.OUT_DIR])
+
 
 if __name__ == "__main__":
     unittest.main()
