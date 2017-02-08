@@ -373,8 +373,8 @@ def write_timeseries_geotiff(ifgs, params, tsincr, pr_type):
     # setup metadata for writing into result files
     epochlist, gt, md, wkt = setup_metadata(ifgs, params)
     for i in range(tsincr.shape[2]):
-        md[ifc.MASTER_DATE] = epochlist.dates[i + 1]
-        md['PR_SEQ_POS'] = i  # sequence position
+        md[ifc.EPOCH_DATE] = epochlist.dates[i + 1]
+        md['SEQUENCE_POSITION'] = i+1  # sequence position; first time slice is #0
 
         data = tsincr[:, :, i]
         dest = os.path.join(
@@ -503,7 +503,7 @@ def write_linrate_tifs(ifgs, params, res):
     epochlist, gt, md, wkt = setup_metadata(ifgs, params)
     # TODO: write tests for these functions
     dest = os.path.join(PYRATEPATH, params[cf.OUT_DIR], "linrate.tif")
-    md[ifc.MASTER_DATE] = epochlist.dates
+    md[ifc.EPOCH_DATE] = epochlist.dates
     md[ifc.DATA_TYPE] = ifc.LINRATE
     write_output_geotiff(md, gt, wkt, rate, dest, np.nan)
     dest = os.path.join(PYRATEPATH, params[cf.OUT_DIR], "linerror.tif")

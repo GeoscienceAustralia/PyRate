@@ -796,8 +796,9 @@ def write_output_geotiff(md, gt, wkt, data, dest, nodata):
 
     # set other metadata
     ds.SetMetadataItem('DATA_TYPE', str(md['DATA_TYPE']))
-    if 'PR_SEQ_POS' in md:
-        ds.SetMetadataItem('PR_SEQ_POS', str(md['PR_SEQ_POS']))
+    # sequence position for time series products
+    if 'SEQUENCE_POSITION' in md:
+        ds.SetMetadataItem('SEQUENCE_POSITION', str(md['SEQUENCE_POSITION']))
 
     # write data to geotiff
     band = ds.GetRasterBand(1)
