@@ -165,8 +165,8 @@ def parse_header(hdr_file):
         timespan = (subset[ifc.SLAVE_DATE] - subset[ifc.MASTER_DATE]).days / ifc.DAYS_PER_YEAR
         subset[ifc.PYRATE_TIME_SPAN] = timespan
 
-        # Add phase units of interferogram
-        subset[ifc.PYRATE_PHASE_UNITS] = RADIANS
+        # Add data units of interferogram
+        subset[ifc.DATA_UNITS] = RADIANS
 
     # Add InSAR processor flag
     subset[ifc.PYRATE_INSAR_PROCESSOR] = ROIPAC

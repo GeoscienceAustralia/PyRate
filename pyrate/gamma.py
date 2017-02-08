@@ -139,7 +139,7 @@ def combine_headers(hdr0, hdr1, dem_hdr):
             ifc.MASTER_TIME: hdr0[ifc.MASTER_TIME],
             ifc.SLAVE_DATE: date1,
             ifc.SLAVE_TIME: hdr1[ifc.MASTER_TIME],
-            ifc.PYRATE_PHASE_UNITS: RADIANS,
+            ifc.DATA_UNITS: RADIANS,
             ifc.PYRATE_INSAR_PROCESSOR: GAMMA}
 
     # set incidence angle to mean of master and slave

@@ -351,16 +351,16 @@ class Ifg(RasterBase):
         :param ifg: ifg file
         :return: convert wavelength from radians to mm
         """
-        self.mm_converted = True
-        if self.dataset.GetMetadataItem(ifc.PYRATE_PHASE_UNITS) == MILLIMETRES:
+        self.mm_converted = True        
+        if self.dataset.GetMetadataItem(ifc.DATA_UNITS) == MILLIMETRES:
             msg = '%s: ignored as previous phase unit conversion already applied'
             logging.debug(msg % self.data_path)
             self.phase_data = self.phase_data
             return
-        elif self.dataset.GetMetadataItem(ifc.PYRATE_PHASE_UNITS) == RADIANS:
+        elif self.dataset.GetMetadataItem(ifc.DATA_UNITS) == RADIANS:
             self.phase_data = convert_radians_to_mm(self.phase_data,
                                                     self.wavelength)
-            self.meta_data[ifc.PYRATE_PHASE_UNITS] = MILLIMETRES
+            self.meta_data[ifc.DATA_UNITS] = MILLIMETRES
             # self.write_modified_phase()
             # otherwise NaN's don't write to bytecode properly
             # and numpy complains
@@ -696,7 +696,7 @@ def write_geotiff(header, data_path, dest, nodata):
         for k in [ifc.PYRATE_WAVELENGTH_METRES, ifc.PYRATE_TIME_SPAN,
                   ifc.PYRATE_INSAR_PROCESSOR,
                   ifc.MASTER_DATE, ifc.SLAVE_DATE,
-                  ifc.PYRATE_PHASE_UNITS, ifc.DATA_TYPE]:
+                  ifc.DATA_UNITS, ifc.DATA_TYPE]:
             ds.SetMetadataItem(k, str(header[k]))
         if ifg_proc == GAMMA:
             for k in [ifc.MASTER_TIME, ifc.SLAVE_TIME, ifc.PYRATE_INCIDENCE_DEGREES]:
