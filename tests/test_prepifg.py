@@ -8,9 +8,8 @@ import sys
 import tempfile
 import unittest
 from math import floor
-import re
-import subprocess
 import glob
+import pytest
 import numpy as np
 from numpy import isnan, nanmax, nanmin, ones, nan, reshape, sum as npsum
 from numpy.testing import assert_array_almost_equal, assert_array_equal
@@ -690,7 +689,17 @@ class TestOneIncidenceOrElevationMap(unittest.TestCase):
         self.assertEqual(0, len(inc))
 
 
-def test_mpi(mpisync, get_config, tempdir, roipac_or_gamma):
+@pytest.fixture(params=range(1, 6))
+def get_lks(request):
+    return request.param
+
+
+@pytest.fixture(params=range(1, 3))
+def get_crop(request):
+    return request.param
+
+
+def test_mpi(mpisync, get_config, tempdir, roipac_or_gamma, get_lks, get_crop):
     from tests.common import SYDNEY_TEST_CONF
     from os.path import join, basename
     params = get_config(SYDNEY_TEST_CONF)
@@ -698,6 +707,8 @@ def test_mpi(mpisync, get_config, tempdir, roipac_or_gamma):
     params[cf.OUT_DIR] = outdir
     params[cf.PROCESSOR] = roipac_or_gamma
     params[cf.PARALLEL] = False
+    params[cf.IFG_LKSX], params[cf.IFG_LKSY] = get_lks, get_lks
+    params[cf.IFG_CROP_OPT] = get_crop
     if roipac_or_gamma == 1:
         params[cf.IFG_FILE_LIST] = join(common.SYD_TEST_GAMMA, 'ifms_17')
         params[cf.OBS_DIR] = common.SYD_TEST_GAMMA
@@ -708,6 +719,8 @@ def test_mpi(mpisync, get_config, tempdir, roipac_or_gamma):
         params_s = get_config(SYDNEY_TEST_CONF)
         params_s[cf.OUT_DIR] = tempdir()
         params_s[cf.PARALLEL] = True
+        params_s[cf.IFG_LKSX], params_s[cf.IFG_LKSY] = get_lks, get_lks
+        params_s[cf.IFG_CROP_OPT] = get_crop
         if roipac_or_gamma == 1:
             base_unw_paths = glob.glob(join(common.SYD_TEST_GAMMA,
                                             "*_utm.unw"))
