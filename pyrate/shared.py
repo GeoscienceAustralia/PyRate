@@ -792,7 +792,7 @@ def write_output_geotiff(md, gt, wkt, data, dest, nodata):
     # set spatial reference for geotiff
     ds.SetGeoTransform(gt)
     ds.SetProjection(wkt)
-    ds.SetMetadataItem(ifc.MASTER_DATE, str(md[ifc.MASTER_DATE]))
+    ds.SetMetadataItem(ifc.EPOCH_DATE, str(md[ifc.EPOCH_DATE]))
 
     # set other metadata
     ds.SetMetadataItem('DATA_TYPE', str(md['DATA_TYPE']))
