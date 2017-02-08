@@ -696,7 +696,7 @@ def write_geotiff(header, data_path, dest, nodata):
         for k in [ifc.PYRATE_WAVELENGTH_METRES, ifc.PYRATE_TIME_SPAN,
                   ifc.PYRATE_INSAR_PROCESSOR,
                   ifc.MASTER_DATE, ifc.SLAVE_DATE,
-                  ifc.PYRATE_PHASE_UNITS, ifc.PROCESS_STEP]:
+                  ifc.PYRATE_PHASE_UNITS, ifc.DATA_TYPE]:
             ds.SetMetadataItem(k, str(header[k]))
         if ifg_proc == GAMMA:
             for k in [ifc.MASTER_TIME, ifc.SLAVE_TIME, ifc.PYRATE_INCIDENCE_DEGREES]:
@@ -795,7 +795,7 @@ def write_output_geotiff(md, gt, wkt, data, dest, nodata):
     ds.SetMetadataItem(ifc.MASTER_DATE, str(md[ifc.MASTER_DATE]))
 
     # set other metadata
-    ds.SetMetadataItem('PR_TYPE', str(md['PR_TYPE']))
+    ds.SetMetadataItem('DATA_TYPE', str(md['DATA_TYPE']))
     if 'PR_SEQ_POS' in md:
         ds.SetMetadataItem('PR_SEQ_POS', str(md['PR_SEQ_POS']))
 

@@ -182,7 +182,9 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
             mdi = i.meta_data
             mdj = j.meta_data
             for k in mdi:  # all key values equal
-                if is_number(mdi[k]):
+                if k == 'INCIDENCE_DEGREES':
+                    pass # incidence angle not implemented for roipac
+                elif is_number(mdi[k]):
                     self.assertAlmostEqual(
                         float(mdj[k]), float(mdi[k]), places=6)
                 elif mdi[k] == 'ROIPAC' or 'GAMMA':
@@ -192,17 +194,12 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
             if i.data_path.__contains__(
                     '_{looks}rlks_{crop}cr'.format(looks=1, crop=1)):
                 # these are multilooked tifs
-                # test that PROCESS_STEP is MULTILOOKED
-                self.assertEqual(mdi[ifc.PROCESS_STEP],
-                                 ifc.MULTILOOKED)
-                self.assertEqual(mdj[ifc.PROCESS_STEP],
-                                 ifc.MULTILOOKED)
+                # test that DATA_STEP is MULTILOOKED
+                self.assertEqual(mdi[ifc.DATA_TYPE], ifc.MULTILOOKED)
+                self.assertEqual(mdj[ifc.DATA_TYPE], ifc.MULTILOOKED)
             else:
-                # others tifs are just geotiffs
-                self.assertEqual(mdi[ifc.PROCESS_STEP],
-                                 ifc.GEOTIFF)
-                self.assertEqual(mdj[ifc.PROCESS_STEP],
-                                 ifc.GEOTIFF)
+                self.assertEqual(mdi[ifc.DATA_TYPE], ifc.ORIG)
+                self.assertEqual(mdj[ifc.DATA_TYPE], ifc.ORIG)
 
         self.assertEquals(c + 1, len(all_gamma_ifgs))
 

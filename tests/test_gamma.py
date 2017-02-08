@@ -423,8 +423,8 @@ class TestGammaLuigiEquality(unittest.TestCase):
             self.assertEqual(os.path.dirname(i.data_path), self.luigi_base_dir)
             # check meta data equal
             self.assertDictEqual(i.meta_data, j.meta_data)
-            # test that PROCESS_STEP exists in metadata
-            self.assertIn(ifc.PROCESS_STEP, i.meta_data.keys())
+            # test that DATA_TYPE exists in metadata
+            self.assertIn(ifc.DATA_TYPE, i.meta_data.keys())
             md = i.meta_data
             for k in [ifc.SLAVE_TIME, ifc.MASTER_TIME, ifc.MASTER_DATE,
                       ifc.SLAVE_DATE, ifc.PYRATE_WAVELENGTH_METRES,
@@ -433,13 +433,11 @@ class TestGammaLuigiEquality(unittest.TestCase):
             if i.data_path.__contains__(
                     '_{looks}rlks_{crop}cr'.format(looks=1, crop=1)):
                 # these are multilooked tifs
-                # test that PROCESS_STEP is MULTILOOKED
-                self.assertEqual(md[ifc.PROCESS_STEP],
-                                 ifc.MULTILOOKED)
-            else:
-                # others tifs are just geotiffs
-                self.assertEqual(md[ifc.PROCESS_STEP],
-                                 ifc.GEOTIFF)
+                # test that DATA_TYPE is MULTILOOKED
+                self.assertEqual(md[ifc.DATA_TYPE], ifc.MULTILOOKED)
+#            else:
+#                # others tifs are just geotiffs
+#                self.assertEqual(md[ifc.DATA_TYPE], ifc.ORIG)
         self.assertEquals(c + 1, len(all_luigi_ifgs))
 
     def shared_setup(self):
@@ -507,11 +505,11 @@ class TestGammaParallelVsSerial(unittest.TestCase):
             # all metadata equal
             self.assertDictEqual(s.meta_data, p.meta_data)
 
-            # test that PROCESS_STEP exists in metadata
-            self.assertIn(ifc.PROCESS_STEP, s.meta_data.keys())
+            # test that DATA_TYPE exists in metadata
+            self.assertIn(ifc.DATA_TYPE, s.meta_data.keys())
 
-            # test that PROCESS_STEP is MULTILOOKED
-            self.assertEqual(s.meta_data[ifc.PROCESS_STEP], ifc.MULTILOOKED)
+            # test that DATA_TYPE is MULTILOOKED
+            self.assertEqual(s.meta_data[ifc.DATA_TYPE], ifc.MULTILOOKED)
 
 if __name__ == "__main__":
     unittest.main()

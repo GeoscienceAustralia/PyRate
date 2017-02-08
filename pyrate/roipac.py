@@ -203,7 +203,7 @@ def manage_header(header_file, projection):
     header = parse_header(header_file)
     if ifc.PYRATE_DATUM not in header:  # DEM already has DATUM
         header[ifc.PYRATE_DATUM] = projection
-    header[ifc.PROCESS_STEP] = ifc.GEOTIFF  # non-cropped, non-multilooked geotiff
+    header[ifc.DATA_TYPE] = ifc.ORIG  # non-cropped, non-multilooked geotiff
     return header
 
 

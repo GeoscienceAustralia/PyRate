@@ -382,7 +382,7 @@ class WriteUnwTest(unittest.TestCase):
         header[ifc.PYRATE_TIME_SPAN] = 0
         header[ifc.SLAVE_DATE] = 0
         header[ifc.PYRATE_PHASE_UNITS] = 'degrees'
-        header[ifc.PROCESS_STEP] = ifc.GEOTIFF
+        header[ifc.DATA_TYPE] = ifc.ORIG
         header[ifc.SLAVE_TIME] = time(10)
 
         # now create aritrary data

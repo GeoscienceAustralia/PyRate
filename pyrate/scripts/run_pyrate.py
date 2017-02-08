@@ -380,7 +380,10 @@ def write_timeseries_geotiff(ifgs, params, tsincr, pr_type):
         dest = os.path.join(
             PYRATEPATH, params[cf.OUT_DIR],
             pr_type + "_" + str(epochlist.dates[i + 1]) + ".tif")
-        md[ifc.PRTYPE] = pr_type
+        if pr_type == 'tsincr':
+            md[ifc.DATA_TYPE] = ifc.INCR
+        elif pr_type == 'tscuml':
+            md[ifc.DATA_TYPE] = ifc.CUML
         write_output_geotiff(md, gt, wkt, data, dest, np.nan)
 
 
@@ -501,10 +504,10 @@ def write_linrate_tifs(ifgs, params, res):
     # TODO: write tests for these functions
     dest = os.path.join(PYRATEPATH, params[cf.OUT_DIR], "linrate.tif")
     md[ifc.MASTER_DATE] = epochlist.dates
-    md[ifc.PRTYPE] = 'linrate'
+    md[ifc.DATA_TYPE] = ifc.LINRATE
     write_output_geotiff(md, gt, wkt, rate, dest, np.nan)
     dest = os.path.join(PYRATEPATH, params[cf.OUT_DIR], "linerror.tif")
-    md[ifc.PRTYPE] = 'linerror'
+    md[ifc.DATA_TYPE] = ifc.LINERROR
     write_output_geotiff(md, gt, wkt, error, dest, np.nan)
     write_linrate_numpy_files(error, params, rate, samples)
 

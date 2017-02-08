@@ -159,7 +159,7 @@ def combine_headers(hdr0, hdr1, dem_hdr):
         msg = "Wavelength mismatch, check both header files for %s & %s"
         raise GammaException(msg % args)
     # non-cropped, non-multilooked geotif process step information added
-    chdr[ifc.PROCESS_STEP] = ifc.GEOTIFF
+    chdr[ifc.DATA_TYPE] = ifc.ORIG
 
     chdr.update(dem_hdr)  # add geographic data
     return chdr
@@ -174,7 +174,7 @@ def manage_headers(demHeaderFile, headerPaths):
     else:
         # probably have DEM or incidence file
         combinedHeader = demHeader
-        combinedHeader[ifc.PROCESS_STEP] = ifc.GEOTIFF
+        combinedHeader[ifc.DATA_TYPE] = ifc.DEM
 
     return combinedHeader
 
