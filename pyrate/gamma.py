@@ -75,13 +75,13 @@ def parse_epoch_header(path):
     if unit != "Hz":
         msg = 'Unrecognised unit field for radar_frequency: %s'
         raise GammaException(msg % unit)
+    subset[ifc.PYRATE_WAVELENGTH_METRES] = frequency_to_wavelength(float(freq))
 
     incidence, unit = lookup[GAMMA_INCIDENCE]
     if unit != "degrees":
         msg = 'Unrecognised unit field for incidence_angle: %s'
         raise GammaException(msg % unit)
-    subset[ifc.PYRATE_WAVELENGTH_METRES] = frequency_to_wavelength(float(freq))
-    subset[ifc.INCIDENCE_ANGLE] = float(incidence)
+    subset[ifc.PYRATE_INCIDENCE_DEGREES] = float(incidence)
 
     return subset
 
@@ -141,6 +141,15 @@ def combine_headers(hdr0, hdr1, dem_hdr):
             ifc.SLAVE_TIME: hdr1[ifc.MASTER_TIME],
             ifc.PYRATE_PHASE_UNITS: RADIANS,
             ifc.PYRATE_INSAR_PROCESSOR: GAMMA}
+
+    # set incidence angle to mean of master and slave
+    inc_ang = hdr0[ifc.PYRATE_INCIDENCE_DEGREES]
+    if np.isclose(inc_ang, hdr1[ifc.PYRATE_INCIDENCE_DEGREES], atol=1e-1):
+        chdr[ifc.PYRATE_INCIDENCE_DEGREES] = (hdr0[ifc.PYRATE_INCIDENCE_DEGREES] 
+                    + hdr1[ifc.PYRATE_INCIDENCE_DEGREES]) / 2
+    else:
+        msg = "Incidence angles differ by more than 1e-1"
+        raise GammaException(msg)
 
     wavelen = hdr0[ifc.PYRATE_WAVELENGTH_METRES]
     if np.isclose(wavelen, hdr1[ifc.PYRATE_WAVELENGTH_METRES], atol=1e-6):

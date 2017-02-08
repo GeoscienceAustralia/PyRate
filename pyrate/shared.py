@@ -699,7 +699,7 @@ def write_geotiff(header, data_path, dest, nodata):
                   ifc.PYRATE_PHASE_UNITS, ifc.PROCESS_STEP]:
             ds.SetMetadataItem(k, str(header[k]))
         if ifg_proc == GAMMA:
-            for k in [ifc.MASTER_TIME, ifc.SLAVE_TIME]:
+            for k in [ifc.MASTER_TIME, ifc.SLAVE_TIME, ifc.PYRATE_INCIDENCE_DEGREES]:
                 ds.SetMetadataItem(k, str(header[k]))
 
     # position and projection data
