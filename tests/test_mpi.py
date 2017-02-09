@@ -207,7 +207,7 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
     pyrate.shared.save_numpy_phase(dest_paths, tiles, params)
     run_pyrate.time_series_mpi(dest_paths, params, vcmt, tiles, preread_ifgs)
     run_pyrate.linrate_mpi(dest_paths, params, vcmt, tiles, preread_ifgs)
-    postprocessing.main(params, row_splits, col_splits)
+    postprocessing.postprocess_linrate(row_splits, col_splits, params)
     ifgs_mpi_out_dir = params[cf.OUT_DIR]
     ifgs_mpi = sydney_data_setup(datafiles=dest_paths)
 

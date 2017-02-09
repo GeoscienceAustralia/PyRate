@@ -22,24 +22,27 @@ MASTER_PROCESS = 0
 
 def main(config_file, rows, cols):
     # setup paths
-    base_unw_paths, dest_paths, params = cf.get_ifg_paths(config_file)
+    _, _, params = cf.get_ifg_paths(config_file)
+    postprocess_linrate(rows, cols, params)
+
+
+def postprocess_linrate(rows, cols, params):
+    # setup paths
     xlks, ylks, crop = cf.transform_params(params)
+    base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST])
     dest_tifs = cf.get_dest_paths(base_unw_paths, crop, params, xlks)
 
     # load previously saved prepread_ifgs dict
     preread_ifgs_file = join(params[cf.OUT_DIR], 'preread_ifgs.pk')
     ifgs = cp.load(open(preread_ifgs_file, 'rb'))
-
     tiles = run_pyrate.get_tiles(dest_tifs[0], rows, cols)
-
     # save latest phase data for use in linrate and mpi
     # save_timeseries(dest_tifs, params, tiles)
-
     # linrate aggregation
     if mpiops.size >= 3:
-        # [save_linrate(ifgs, params, tiles, out_type=t)
-        #  for i, t in enumerate(['linrate', 'linerror', 'linsamples'])
-        #     if i == mpiops.rank]
+        [save_linrate(ifgs, params, tiles, out_type=t)
+         for i, t in enumerate(['linrate', 'linerror', 'linsamples'])
+         if i == mpiops.rank]
         if mpiops.rank == MASTER_PROCESS:
             save_linrate(ifgs, params, tiles, out_type='linrate')
         elif mpiops.rank == 1:
