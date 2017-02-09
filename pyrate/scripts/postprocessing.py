@@ -20,25 +20,26 @@ log = logging.getLogger(__name__)
 MASTER_PROCESS = 0
 
 
-def main(params, rows, cols):
+def main(config_file, rows, cols):
+    # setup paths
+    base_unw_paths, dest_paths, params = cf.get_ifg_paths(config_file)
+    xlks, ylks, crop = cf.transform_params(params)
+    dest_tifs = cf.get_dest_paths(base_unw_paths, crop, params, xlks)
 
     # load previously saved prepread_ifgs dict
     preread_ifgs_file = join(params[cf.OUT_DIR], 'preread_ifgs.pk')
     ifgs = cp.load(open(preread_ifgs_file, 'rb'))
 
-    # setup paths
-    xlks, ylks, crop = cf.transform_params(params)
-    base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST])
-    dest_tifs = cf.get_dest_paths(base_unw_paths, crop, params, xlks)
-
     tiles = run_pyrate.get_tiles(dest_tifs[0], rows, cols)
-    process_tiles = mpiops.array_split(tiles)
 
-    # # save latest phase data for use in linrate and mpi
-    # write_time_series_geotiff_mpi(dest_tifs, params, tiles)
+    # save latest phase data for use in linrate and mpi
+    # save_timeseries(dest_tifs, params, tiles)
 
     # linrate aggregation
     if mpiops.size >= 3:
+        # [save_linrate(ifgs, params, tiles, out_type=t)
+        #  for i, t in enumerate(['linrate', 'linerror', 'linsamples'])
+        #     if i == mpiops.rank]
         if mpiops.rank == MASTER_PROCESS:
             save_linrate(ifgs, params, tiles, out_type='linrate')
         elif mpiops.rank == 1:
@@ -47,13 +48,12 @@ def main(params, rows, cols):
             save_linrate(ifgs, params, tiles, out_type='linsamples')
     else:
         if mpiops.rank == MASTER_PROCESS:
-            save_linrate(ifgs, params, tiles, out_type='linrate')
-            save_linrate(ifgs, params, tiles, out_type='linerror')
-            save_linrate(ifgs, params, tiles, out_type='linsamples')
+            [save_linrate(ifgs, params, tiles, out_type=t)
+             for t in ['linrate', 'linerror', 'linsamples']]
 
 
 def save_linrate(ifgs_dict, params, tiles, out_type):
-    log.info('Saving linrate output type', out_type)
+    log.info('Saving linrate output type {}'.format(out_type))
     gt, md, wkt = ifgs_dict['gt'], ifgs_dict['md'], ifgs_dict['wkt']
     epochlist = ifgs_dict['epochlist']
     ifgs = [v for v in ifgs_dict.values() if isinstance(v, PrereadIfg)]
@@ -73,7 +73,7 @@ def save_linrate(ifgs_dict, params, tiles, out_type):
     np.save(file=npy_rate_file, arr=rate)
 
 
-def write_time_series_geotiff_mpi(dest_tifs, params, tiles, parallel, MPI_id):
+def save_timeseries(dest_tifs, params, tiles, parallel, MPI_id):
     ifgs = shared.prepare_ifgs_without_phase(dest_tifs, params)
     epochlist, gt, md, wkt = run_pyrate.setup_metadata(ifgs, params)
     output_dir = params[cf.OUT_DIR]
@@ -96,7 +96,8 @@ def write_time_series_geotiff_mpi(dest_tifs, params, tiles, parallel, MPI_id):
         tscum_g = np.empty(shape=ifgs[0].shape, dtype=np.float32)
         if i < no_ts_tifs:
             for n, t in enumerate(tiles):
-                tscum_file = os.path.join(output_dir, 'tscuml_{}.npy'.format(n))
+                tscum_file = os.path.join(output_dir,
+                                          'tscuml_{}.npy'.format(n))
                 tscum = np.load(file=tscum_file)
 
                 md[ifc.MASTER_DATE] = epochlist.dates[i + 1]
@@ -112,7 +113,8 @@ def write_time_series_geotiff_mpi(dest_tifs, params, tiles, parallel, MPI_id):
             tsincr_g = np.empty(shape=ifgs[0].shape, dtype=np.float32)
             i %= no_ts_tifs
             for n, t in enumerate(tiles):
-                tsincr_file = os.path.join(output_dir, 'tsincr_{}.npy'.format(n))
+                tsincr_file = os.path.join(output_dir,
+                                           'tsincr_{}.npy'.format(n))
                 tsincr = np.load(file=tsincr_file)
 
                 md[ifc.MASTER_DATE] = epochlist.dates[i + 1]
