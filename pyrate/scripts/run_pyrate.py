@@ -7,6 +7,7 @@ import os
 from os.path import join
 import numpy as np
 from osgeo import gdal
+import pickle as cp
 
 from pyrate import config as cf
 from pyrate import linrate
@@ -65,27 +66,35 @@ def create_ifg_dict(dest_tifs, params, tiles):
 
     Returns
     -------
-    preread_ifgs: dict
-        preread_ifgs file path
+    ifgs_dict: dict
+        dict containing information regarding ifgs that are used downstream
     """
-    preread_ifgs_dict = {}
+    ifgs_dict = {}
     process_tifs = mpiops.array_split(dest_tifs)
     save_numpy_phase(dest_tifs, tiles, params)
     for d in process_tifs:
         ifg = prepare_ifg(d, params)
-        preread_ifgs_dict[d] = PrereadIfg(path=d,
-                                          nan_fraction=ifg.nan_fraction,
-                                          master=ifg.master,
-                                          slave=ifg.slave,
-                                          time_span=ifg.time_span)
+        ifgs_dict[d] = PrereadIfg(path=d,
+                                  nan_fraction=ifg.nan_fraction,
+                                  master=ifg.master,
+                                  slave=ifg.slave,
+                                  time_span=ifg.time_span)
         ifg.close()
+    ifgs_dict = _join_dicts(mpiops.comm.allgather(ifgs_dict))
 
-    preread_ifgs_dict = _join_dicts(
-        mpiops.comm.allgather(preread_ifgs_dict))
+    if mpiops.rank == MASTER_PROCESS:
+        preread_ifgs = join(params[cf.OUT_DIR], 'preread_ifgs.pk')
+        # add some extra information that's also useful later
+        gt, md, wkt = get_projection_info(process_tifs[0], params)
+        ifgs_dict['epochlist'] = algorithm.get_epochs(ifgs_dict)
+        ifgs_dict['gt'] = gt
+        ifgs_dict['md'] = md
+        ifgs_dict['wkt'] = wkt
+        cp.dump(ifgs_dict, open(preread_ifgs, 'wb'))
 
     log.info('finish converting phase_data to numpy '
              'in process {}'.format(mpiops.rank))
-    return preread_ifgs_dict
+    return ifgs_dict
 
 
 def mpi_mst_calc(dest_tifs, params, tiles, preread_ifgs):
@@ -544,36 +553,38 @@ def compute_time_series(ifgs, mst_grid, params, vcmt):
     return tsincr, tscum, tsvel
 
 
-def setup_metadata(ifgs, params):
-    p = join(params[cf.OUT_DIR], ifgs[0].data_path)
+def get_projection_info(ifg_path, params):
+    p = join(params[cf.OUT_DIR], ifg_path)
     ds = gdal.Open(p)
     md = ds.GetMetadata()  # get metadata for writing on output tifs
     gt = ds.GetGeoTransform()  # get geographical bounds of data
     wkt = ds.GetProjection()  # get projection of data
-    epochlist = algorithm.get_epochs(ifgs)
-    return epochlist, gt, md, wkt
+    ds = None  # close dataset
+    return gt, md, wkt
 
 
 def write_timeseries_geotiff(ifgs, params, tsincr, pr_type):
     # setup metadata for writing into result files
-    epochlist, gt, md, wkt = setup_metadata(ifgs, params)
+    gt, md, wkt = get_projection_info(ifgs, params)
+    epochlist = algorithm.get_epochs(ifgs)
+
     for i in range(tsincr.shape[2]):
         md[ifc.MASTER_DATE] = epochlist.dates[i + 1]
         md['PR_SEQ_POS'] = i  # sequence position
 
         data = tsincr[:, :, i]
-        dest = join(
-            PYRATEPATH, params[cf.OUT_DIR],
-            pr_type + "_" + str(epochlist.dates[i + 1]) + ".tif")
+        dest = join(PYRATEPATH, params[cf.OUT_DIR], pr_type + "_" +
+                    str(epochlist.dates[i + 1]) + ".tif")
         md[ifc.PRTYPE] = pr_type
         write_output_geotiff(md, gt, wkt, data, dest, np.nan)
 
 
+# This is not used anywhere now, but may be useful
 def insert_time_series_interpolation(ifg_instance_updated, params):
 
     edges = matlab_mst.get_sub_structure(ifg_instance_updated,
-                                  np.zeros(len(ifg_instance_updated.id),
-                                           dtype=bool))
+                                         np.zeros(len(ifg_instance_updated.id),
+                                                  dtype=bool))
 
     _, _, ntrees = matlab_mst.matlab_mst_kruskal(edges, ntrees=True)
     # if ntrees=1, no interpolation; otherwise interpolate
@@ -662,7 +673,8 @@ def calculate_linear_rate(ifgs, params, vcmt, mst=None):
 def write_linrate_tifs(ifgs, params, res):
     log.info('Writing linrate results')
     rate, error, samples = res
-    epochlist, gt, md, wkt = setup_metadata(ifgs, params)
+    gt, md, wkt = get_projection_info(ifgs, params)
+    epochlist = algorithm.get_epochs(ifgs)
     # TODO: write tests for these functions
     dest = join(PYRATEPATH, params[cf.OUT_DIR], "linrate.tif")
     md[ifc.MASTER_DATE] = epochlist.dates
@@ -729,13 +741,3 @@ def dest_ifg_paths(ifg_paths, outdir):
 def main(config_file, rows, cols):
     base_unw_paths, dest_paths, pars = cf.get_ifg_paths(config_file)
     process_ifgs(sorted(dest_paths), pars, rows, cols)
-
-
-def log_config_file(configfile, log_filename):
-    output_log_file = open(log_filename, "a")
-    output_log_file.write("\nConfig Settings: start\n")
-    lines = open(configfile).read()
-    for line in lines:
-        output_log_file.write(line)
-    output_log_file.write("\nConfig Settings: end\n\n")
-    output_log_file.write("\n==============================================\n")
