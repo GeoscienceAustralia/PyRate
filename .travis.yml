@@ -69,4 +69,4 @@ cache:
     - $HOME/.cache/pip
 
 after_success:
-  - coveralls || echo "!! intermittent coveralls failure"
+  - if [[ $TRAVIS_PYTHON_VERSION == 3.5 ]]; then coveralls || echo "!! intermittent coveralls failure"; fi
