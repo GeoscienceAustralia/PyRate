@@ -14,7 +14,7 @@ from pyrate import ref_phs_est as rpe
 from pyrate import shared
 from pyrate import vcm
 from pyrate import refpixel
-from pyrate.scripts import run_pyrate, run_prepifg
+from pyrate.scripts import run_pyrate, run_prepifg, postprocessing
 from tests.common import sydney_data_setup
 from tests import common
 from tests.test_vcm import matlab_maxvar
@@ -196,25 +196,21 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
 
     tiles = mpiops.run_once(run_pyrate.get_tiles, dest_paths[0],
                             rows=row_splits, cols=col_splits)
-    preread_ifgs = run_pyrate.create_ifg_dict(dest_paths,
-                                              params=params,
-                                              tiles=tiles)
+    preread_ifgs = run_pyrate.create_ifg_dict(dest_paths, params, tiles)
     run_pyrate.mpi_mst_calc(dest_paths, params, tiles, preread_ifgs)
     refpx, refpy = run_pyrate.ref_pixel_calc(dest_paths, params)
     run_pyrate.orb_fit_calc(dest_paths, params)
     run_pyrate.ref_phase_estimation_mpi(dest_paths, params, refpx, refpy)
 
-    maxvar, vcmt = run_pyrate.maxvar_vcm_mpi(dest_paths, params,
-                                             preread_ifgs)
+    maxvar, vcmt = run_pyrate.maxvar_vcm_mpi(dest_paths, params, preread_ifgs)
     pyrate.shared.save_numpy_phase(dest_paths, tiles, params)
-    run_pyrate.time_series_mpi(dest_paths, params, vcmt, tiles,
-                               preread_ifgs)
-    run_pyrate.linrate_mpi(dest_paths, params, vcmt, tiles,
-                           preread_ifgs)
+    run_pyrate.time_series_mpi(dest_paths, params, vcmt, tiles, preread_ifgs)
+    run_pyrate.linrate_mpi(dest_paths, params, vcmt, tiles, preread_ifgs)
+    postprocessing.main(params, row_splits, col_splits)
     ifgs_mpi_out_dir = params[cf.OUT_DIR]
     ifgs_mpi = sydney_data_setup(datafiles=dest_paths)
 
-    # old vcm/maxvar estimate
+    # single process timeseries/linrate calculation
     if mpiops.rank == 0:
         params_old = modify_config
         params_old[cf.OUT_DIR] = tempdir()
@@ -259,6 +255,15 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
         np.testing.assert_array_almost_equal(rate, rate_mpi, decimal=4)
         np.testing.assert_array_almost_equal(error, error_mpi, decimal=4)
         np.testing.assert_array_almost_equal(samples, samples_mpi, decimal=4)
+        linrate_tif_s = os.path.join(params_old[cf.OUT_DIR], 'linrate.tif')
+        linrate_tif_m = os.path.join(ifgs_mpi_out_dir, 'linrate.tif')
+        common.assert_ifg_phase_equal(linrate_tif_m, linrate_tif_s)
+        linrate_tif_s = os.path.join(params_old[cf.OUT_DIR], 'linerror.tif')
+        linrate_tif_m = os.path.join(ifgs_mpi_out_dir, 'linerror.tif')
+        common.assert_ifg_phase_equal(linrate_tif_m, linrate_tif_s)
+        linrate_tif_s = os.path.join(params_old[cf.OUT_DIR], 'linsamples.tif')
+        linrate_tif_m = os.path.join(ifgs_mpi_out_dir, 'linsamples.tif')
+        common.assert_ifg_phase_equal(linrate_tif_m, linrate_tif_s)
         shutil.rmtree(ifgs_mpi_out_dir)  # remove mpi out dir
         shutil.rmtree(params_old[cf.OUT_DIR])  # remove serial out dir
 

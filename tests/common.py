@@ -9,7 +9,9 @@ import glob
 import shutil
 from os.path import join
 import tempfile
+import numpy as np
 from numpy import isnan, sum as nsum
+from osgeo import gdal
 from pyrate.shared import Ifg
 
 TEMPDIR = tempfile.gettempdir()
@@ -192,3 +194,12 @@ class MockIfg(object):
 def move_files(source_dir, dest_dir, file_type='*.tif'):
     for filename in glob.glob(os.path.join(source_dir, file_type)):
         shutil.move(filename, dest_dir)
+
+
+def assert_ifg_phase_equal(ifg_path1, ifg_path2):
+    ds1 = gdal.Open(ifg_path1)
+    ds2 = gdal.Open(ifg_path2)
+    np.testing.assert_array_almost_equal(ds1.ReadAsArray(), ds2.ReadAsArray())
+    ds1 = None
+    ds2 = None
+

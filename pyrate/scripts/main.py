@@ -3,7 +3,7 @@ import logging
 from os.path import abspath
 from pyrate import pyratelog as pylog
 from pyrate import config as cf
-from pyrate.scripts import run_prepifg, run_pyrate
+from pyrate.scripts import run_prepifg, run_pyrate, postprocessing
 
 log = logging.getLogger(__name__)
 
@@ -33,3 +33,14 @@ def prepifg(config_file):
 def linrate(config_file, rows, cols):
     config_file = abspath(config_file)
     run_pyrate.main(config_file, rows, cols)
+
+
+@cli.command()
+@click.argument('config_file')
+@click.option('-r', '--rows', type=int, default=1,
+              help='divide ifgs into this many rows')
+@click.option('-c', '--cols', type=int, default=1,
+              help='divide ifgs into this many columns')
+def postprocess(config_file, rows, cols):
+    config_file = abspath(config_file)
+    postprocessing.main(config_file, rows, cols)

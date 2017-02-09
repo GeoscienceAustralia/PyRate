@@ -977,12 +977,16 @@ def utm_zone(longitude):
 
 class PrereadIfg:
 
-    def __init__(self, path, nan_fraction, master, slave, time_span):
+    def __init__(self, path, nan_fraction, master, slave, time_span,
+                 nrows, ncols):
         self.path = path
         self.nan_fraction = nan_fraction
         self.master = master
         self.slave = slave
         self.time_span = time_span
+        self.nrows = nrows
+        self.ncols = ncols
+        self.shape = (nrows, ncols)
 
 
 def prepare_ifg(ifg_path, params):

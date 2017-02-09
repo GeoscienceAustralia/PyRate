@@ -78,7 +78,9 @@ def create_ifg_dict(dest_tifs, params, tiles):
                                   nan_fraction=ifg.nan_fraction,
                                   master=ifg.master,
                                   slave=ifg.slave,
-                                  time_span=ifg.time_span)
+                                  time_span=ifg.time_span,
+                                  nrows=ifg.nrows,
+                                  ncols=ifg.ncols)
         ifg.close()
     ifgs_dict = _join_dicts(mpiops.comm.allgather(ifgs_dict))
 
@@ -425,15 +427,6 @@ def phase_sum_mpi(ifg_paths, params):
     return comp
 
 
-def write_linrate_numpy_files(error, params, rate, samples):
-    rate_file = join(params[cf.OUT_DIR], 'rate.npy')
-    error_file = join(params[cf.OUT_DIR], 'error.npy')
-    samples_file = join(params[cf.OUT_DIR], 'samples.npy')
-    np.save(file=rate_file, arr=rate)
-    np.save(file=error_file, arr=error)
-    np.save(file=samples_file, arr=samples)
-
-
 def aps_delay_required(ifgs, params):
     log.info('Removing APS delay')
 
@@ -655,17 +648,13 @@ def check_orbital_ifgs(ifgs, flags):
 
 def calculate_linear_rate(ifgs, params, vcmt, mst=None):
     log.info('Calculating linear rate')
-
-    # TODO: do these need to be checked?
     res = linrate.linear_rate(ifgs, params, vcmt, mst)
     for r in res:
         if r is None:
             raise ValueError('TODO: bad value')
 
     rate, error, samples = res
-
     write_linrate_tifs(ifgs, params, res)
-
     log.info('Linear rate calculated')
     return rate, error, samples
 
@@ -673,9 +662,8 @@ def calculate_linear_rate(ifgs, params, vcmt, mst=None):
 def write_linrate_tifs(ifgs, params, res):
     log.info('Writing linrate results')
     rate, error, samples = res
-    gt, md, wkt = get_projection_info(ifgs, params)
+    gt, md, wkt = get_projection_info(ifgs[0].data_path, params)
     epochlist = algorithm.get_epochs(ifgs)
-    # TODO: write tests for these functions
     dest = join(PYRATEPATH, params[cf.OUT_DIR], "linrate.tif")
     md[ifc.MASTER_DATE] = epochlist.dates
     md[ifc.PRTYPE] = 'linrate'
@@ -683,7 +671,19 @@ def write_linrate_tifs(ifgs, params, res):
     dest = join(PYRATEPATH, params[cf.OUT_DIR], "linerror.tif")
     md[ifc.PRTYPE] = 'linerror'
     write_output_geotiff(md, gt, wkt, error, dest, np.nan)
-    write_linrate_numpy_files(error, params, rate, samples)
+    dest = join(PYRATEPATH, params[cf.OUT_DIR], "linsamples.tif")
+    md[ifc.PRTYPE] = 'linsamples'
+    write_output_geotiff(md, gt, wkt, samples, dest, np.nan)
+    write_linrate_numpy_files(error, rate, samples, params)
+
+
+def write_linrate_numpy_files(error, rate, samples, params):
+    rate_file = join(params[cf.OUT_DIR], 'rate.npy')
+    error_file = join(params[cf.OUT_DIR], 'error.npy')
+    samples_file = join(params[cf.OUT_DIR], 'samples.npy')
+    np.save(file=rate_file, arr=rate)
+    np.save(file=error_file, arr=error)
+    np.save(file=samples_file, arr=samples)
 
 
 # general function template
