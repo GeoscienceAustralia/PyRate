@@ -1,6 +1,6 @@
 from numpy import sin, cos, unique, histogram, diag, dot
 from scipy.linalg import qr, solve, lstsq
-from pyrate.shared import EpochList, IfgException
+from pyrate.shared import EpochList, IfgException, PrereadIfg
 from pyrate.ifgconstants import DAYS_PER_YEAR
 
 
@@ -140,10 +140,11 @@ def ifg_date_index_lookup(ifgs, date_pair):
 
 
 def get_epochs(ifgs):
-    '''
+    """
     Returns an EpochList derived from all given interferograms.
-    '''
-
+    """
+    if isinstance(ifgs, dict):
+        ifgs = [v for v in ifgs.values() if isinstance(v, PrereadIfg)]
     combined = [i.master for i in ifgs] + [i.slave for i in ifgs]
     dates, n = unique(combined, False, True)
     repeat, _ = histogram(n, bins=len(set(n)))
