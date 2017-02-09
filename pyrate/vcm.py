@@ -11,6 +11,7 @@ from scipy.fftpack import fft2, ifft2, fftshift
 from scipy.optimize import fmin
 
 from pyrate import shared
+from pyrate.shared import PrereadIfg
 from pyrate.algorithm import master_slave_ids
 
 
@@ -159,13 +160,9 @@ def get_vcmt(ifgs, maxvar):
 
     if isinstance(ifgs, dict):
         from collections import OrderedDict
+        ifgs = {k: v for k, v in ifgs.items() if isinstance(v, PrereadIfg)}
         ifgs = OrderedDict(sorted(ifgs.items()))
-        ifgs = [shared.PrereadIfg(v.path,
-                                  v.nan_fraction,
-                                  v.master,
-                                  v.slave,
-                                  v.time_span)
-                for v in ifgs.values()]
+        ifgs = ifgs.values()
 
     nifgs = len(ifgs)
     vcm_pat = zeros((nifgs, nifgs))
