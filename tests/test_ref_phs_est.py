@@ -2,41 +2,37 @@ from __future__ import print_function
 import glob
 import os
 import shutil
-import subprocess
 import sys
 import tempfile
 import unittest
-from itertools import product
-
 import numpy as np
 
 from pyrate import config as cf
 from pyrate import ifgconstants as ifc
 from pyrate import shared
-from pyrate.reference_phase_estimation import (estimate_ref_phase,
-                                               ReferencePhaseError)
+from pyrate.ref_phs_est import estimate_ref_phase, ReferencePhaseError
 from pyrate.scripts import run_prepifg
 from pyrate.scripts import run_pyrate
 from tests import common
-from tests.common import SYD_TEST_DIR
+from tests.common import SYD_TEST_DIR, sydney_data_setup
 
 matlab_ref_phs_method1 = [-18.2191658020020,
-                      27.7119445800781,
-                      -18.4944229125977,
-                      -2.92210483551025,
-                      31.1168708801270,
-                      21.2123012542725,
-                      9.01810073852539,
-                      6.08130645751953,
-                      -3.79313516616821,
-                      -11.3826837539673,
-                      -7.28352737426758,
-                      17.6365375518799,
-                      -12.8673439025879,
-                      5.46325922012329,
-                      -35.4149475097656,
-                      -13.5371961593628,
-                      -12.7864856719971]
+                          27.7119445800781,
+                          -18.4944229125977,
+                          -2.92210483551025,
+                          31.1168708801270,
+                          21.2123012542725,
+                          9.01810073852539,
+                          6.08130645751953,
+                          -3.79313516616821,
+                          -11.3826837539673,
+                          -7.28352737426758,
+                          17.6365375518799,
+                          -12.8673439025879,
+                          5.46325922012329,
+                          -35.4149475097656,
+                          -13.5371961593628,
+                          -12.7864856719971]
 
 
 matlab_ref_phs_method2 = [-21.4459648132324,
@@ -128,7 +124,7 @@ class RefPhsEstimationMatlabTestMethod1Serial(unittest.TestCase):
         ifgs = shared.pre_prepare_ifgs(dest_paths, params)
         mst_grid = run_pyrate.mst_calculation(dest_paths, params)
         # Estimate reference pixel location
-        refx, refy = run_pyrate.find_reference_pixel(ifgs, params)
+        refx, refy = run_pyrate.ref_pixel_calc(dest_paths, params)
 
         # Estimate and remove orbit errors
         run_pyrate.remove_orbital_error(ifgs, params)
@@ -155,7 +151,7 @@ class RefPhsEstimationMatlabTestMethod1Serial(unittest.TestCase):
                                              self.ref_phs,
                                              decimal=3)
 
-    def test_ifgs_after_reference_phase_estimation(self):
+    def test_ifgs_after_ref_phs_est(self):
         MATLAB_REF_PHASE_DIR = os.path.join(SYD_TEST_DIR,
                                                      'matlab_ref_phase_est')
 
@@ -218,7 +214,7 @@ class RefPhsEstimationMatlabTestMethod1Parallel(unittest.TestCase):
         ifgs = shared.pre_prepare_ifgs(dest_paths, params)
         mst_grid = run_pyrate.mst_calculation(dest_paths, params)
         # Estimate reference pixel location
-        refx, refy = run_pyrate.find_reference_pixel(ifgs, params)
+        refx, refy = run_pyrate.ref_pixel_calc(dest_paths, params)
 
         # Estimate and remove orbit errors
         run_pyrate.remove_orbital_error(ifgs, params)
@@ -245,7 +241,7 @@ class RefPhsEstimationMatlabTestMethod1Parallel(unittest.TestCase):
                                              self.ref_phs,
                                              decimal=3)
 
-    def test_ifgs_after_reference_phase_estimation(self):
+    def test_ifgs_after_ref_phs_est(self):
         MATLAB_REF_PHASE_DIR = os.path.join(SYD_TEST_DIR,
                                                      'matlab_ref_phase_est')
 
@@ -313,7 +309,7 @@ class RefPhsEstimationMatlabTestMethod2Serial(unittest.TestCase):
         ifgs = shared.pre_prepare_ifgs(dest_paths, params)
         mst_grid = run_pyrate.mst_calculation(dest_paths, params)
         # Estimate reference pixel location
-        refx, refy = run_pyrate.find_reference_pixel(ifgs, params)
+        refx, refy = run_pyrate.ref_pixel_calc(dest_paths, params)
 
         # Estimate and remove orbit errors
         run_pyrate.remove_orbital_error(ifgs, params)
@@ -334,7 +330,7 @@ class RefPhsEstimationMatlabTestMethod2Serial(unittest.TestCase):
     def tearDownClass(cls):
         shutil.rmtree(cls.temp_out_dir)
 
-    def test_ifgs_after_reference_phase_estimation(self):
+    def test_ifgs_after_ref_phs_est(self):
         MATLAB_REF_PHASE_DIR = os.path.join(SYD_TEST_DIR,
                                                      'matlab_ref_phase_est')
 
@@ -401,13 +397,12 @@ class RefPhsEstimationMatlabTestMethod2Parallel(unittest.TestCase):
         base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST])
 
         dest_paths = cf.get_dest_paths(base_ifg_paths, crop,
-                                               params, xlks)
+                                       params, xlks)
 
         # start run_pyrate copy
         ifgs = shared.pre_prepare_ifgs(dest_paths, params)
-        mst_grid = run_pyrate.mst_calculation(dest_paths, params)
         # Estimate reference pixel location
-        refx, refy = run_pyrate.find_reference_pixel(ifgs, params)
+        refx, refy = run_pyrate.ref_pixel_calc(dest_paths, params)
 
         # Estimate and remove orbit errors
         run_pyrate.remove_orbital_error(ifgs, params)
@@ -427,13 +422,13 @@ class RefPhsEstimationMatlabTestMethod2Parallel(unittest.TestCase):
     def tearDownClass(cls):
         shutil.rmtree(cls.temp_out_dir)
 
-    def test_ifgs_after_reference_phase_estimation(self):
+    def test_ifgs_after_ref_phs_est(self):
         MATLAB_REF_PHASE_DIR = os.path.join(SYD_TEST_DIR,
                                             'matlab_ref_phase_est')
 
         onlyfiles = [f for f in os.listdir(MATLAB_REF_PHASE_DIR)
-                if os.path.isfile(os.path.join(MATLAB_REF_PHASE_DIR, f))
-                and f.endswith('.csv') and f.__contains__('_ref_phase_')
+                     if os.path.isfile(os.path.join(MATLAB_REF_PHASE_DIR, f))
+                     and f.endswith('.csv') and f.__contains__('_ref_phase_')
                      and f.__contains__('method2')]
 
         count = 0

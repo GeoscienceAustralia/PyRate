@@ -1,11 +1,11 @@
 language: python
 
 python:
-  - "3.7-dev"
-  - "3.6"
+#  - "3.7-dev"
+#  - "3.6"
   - "3.5"
-  - "3.4"
-  - "3.3"
+#  - "3.4"
+#  - "3.3"
   - "2.7"
 
 
@@ -16,12 +16,12 @@ env:
     - GDALINST=$HOME/gdalinstall
     - GDALBUILD=$HOME/gdalbuild
   matrix:
-    - GDALVERSION="1.11.0"
+#    - GDALVERSION="1.11.0"
     - GDALVERSION="1.11.1"  # nci version
-    - GDALVERSION="1.11.2"
+#    - GDALVERSION="1.11.2"
     - GDALVERSION="2.0.0"  # nci version
-    - GDALVERSION="2.0.1"
-    - GDALVERSION="2.1.0"
+#    - GDALVERSION="2.0.1"
+#    - GDALVERSION="2.1.0"
 
 addons:
   apt:

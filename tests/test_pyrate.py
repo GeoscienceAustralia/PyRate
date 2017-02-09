@@ -139,7 +139,7 @@ class PyRateTests(unittest.TestCase):
             params[cf.APS_CORRECTION] = 0
             paths = glob.glob(join(cls.BASE_OUT_DIR, 'geo_*-*.tif'))
             params[cf.PARALLEL] = False
-            run_pyrate.process_ifgs(paths, params, 2, 2)
+            run_pyrate.process_ifgs(sorted(paths), params, 2, 2)
 
             if not hasattr(cls, 'ifgs'):
                 cls.ifgs = get_ifgs(out_dir=cls.BASE_OUT_DIR)
@@ -152,13 +152,6 @@ class PyRateTests(unittest.TestCase):
     def tearDownClass(cls):
         shutil.rmtree(cls.BASE_DIR, ignore_errors=True)
         os.chdir(CURRENT_DIR)
-
-    # def get_logfile_path(self):
-    #     logpaths = glob.glob(join(self.BASE_DIR, '*.log'))
-    #     if len(logpaths) != 1:
-    #         msg = 'Log not generated. Use --nologcapture if running nosetests'
-    #         self.fail(msg)
-    #     return logpaths[0]
 
     def key_check(self, ifg, key, value):
         'Helper to check for metadata flags'
@@ -191,14 +184,6 @@ class PyRateTests(unittest.TestCase):
         for i in self.ifgs:
             self.key_check(i, key, value)
 
-    # def test_refpixel_found(self):
-    #     log_path = self.get_logfile_path()
-    #     for line in open(log_path, 'r'):
-    #         if 'Reference pixel coordinate:' in line:
-    #             return
-    #
-    #     self.fail('No reference pixel found')
-
 
 class ParallelPyRateTests(unittest.TestCase):
     """
@@ -217,7 +202,7 @@ class ParallelPyRateTests(unittest.TestCase):
         params[cf.IFG_FILE_LIST] = os.path.join(
             common.SYD_TEST_GAMMA, 'ifms_17')
         params[cf.OUT_DIR] = cls.tif_dir
-        params[cf.PARALLEL] = 1
+        params[cf.PARALLEL] = 0
         params[cf.APS_CORRECTION] = False
 
         xlks, ylks, crop = cf.transform_params(params)
@@ -234,7 +219,6 @@ class ParallelPyRateTests(unittest.TestCase):
         cls.mst_p, cls.refpixel_p, cls.maxvar_p, cls.vcmt_p, cls.rate_p, \
             cls.error_p, cls.samples_p = \
             run_pyrate.process_ifgs(cls.dest_paths, params, 3, 3)
-        cls.mst_p_2 = run_pyrate.mst_calculation(cls.dest_paths, params)
 
         # now create the non parallel version
         cls.tif_dir_s = tempfile.mkdtemp()
@@ -244,7 +228,7 @@ class ParallelPyRateTests(unittest.TestCase):
             base_unw_paths, crop, params, xlks)
         run_prepifg.gamma_prepifg(base_unw_paths, params)
         cls.mst, cls.refpixel, cls.maxvar, cls.vcmt, cls.rate, \
-        cls.error, cls.samples = \
+            cls.error, cls.samples = \
             run_pyrate.process_ifgs(cls.dest_paths_s, params, 3, 3)
 
     @classmethod
@@ -281,7 +265,6 @@ class ParallelPyRateTests(unittest.TestCase):
         mst_original_s = mst.mst_boolean_array(ifgs_s)
         np.testing.assert_array_equal(self.mst, mst_original_p)
         np.testing.assert_array_equal(self.mst, mst_original_s)
-        np.testing.assert_array_equal(self.mst, self.mst_p_2)
         np.testing.assert_array_equal(self.mst, self.mst_p)
 
     def test_refpixel_equal(self):

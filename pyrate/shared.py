@@ -1,25 +1,26 @@
 from __future__ import print_function
-import errno
-from itertools import product
-import pickle as cp
-import os
-import struct
-import math
-from datetime import date
-from math import floor
 
-import pyproj
-from numpy import where, nan, isnan, sum as nsum, isclose
-import numpy as np
-import random
-import string
-import time
+import errno
 import logging
-import pkg_resources
+import math
+import os
+from os.path import basename, dirname, join
+import random
 import shutil
 import stat
-from pyrate import roipac, gamma, config as cf
+import string
+import struct
+import time
+from datetime import date
+from itertools import product
+from math import floor
+import pkg_resources
+import pyproj
+import numpy as np
+from numpy import where, nan, isnan, sum as nsum, isclose
+
 from pyrate import ifgconstants as ifc
+from pyrate import roipac, gamma, config as cf
 
 VERBOSE = True
 log = logging.getLogger(__name__)
@@ -249,6 +250,11 @@ class Ifg(RasterBase):
     def __init__(self, path):
         """
         Interferogram constructor, for 2 band ROIPAC Ifg raster datasets.
+
+        Parameters
+        ----------
+        path: str
+            path to ifg
         """
 
         RasterBase.__init__(self, path)
@@ -306,7 +312,7 @@ class Ifg(RasterBase):
             self.phase_data = self.phase_data
             self.nan_converted = True
             msg = '%s: ignored as previous nan conversion detected'
-            # logging.debug(msg % self.data_path)  # should log?
+            log.debug(msg % self.data_path)
             return
         else:
             self.phase_data = where(
@@ -449,56 +455,36 @@ class IfgPart(object):
 
     def __init__(self, ifg_or_path, tile, ifg_dict=None):
 
-        """
-        :param ifg: original ifg
-        :param r_start: starting tow of the original ifg
-        :param r_end: ending (row + 1) of the original ifg
-        :return:
-        """
         self.tile = tile
         self.r_start = self.tile.top_left_y
         self.r_end = self.tile.bottom_right_y
         self.c_start = self.tile.top_left_x
         self.c_end = self.tile.bottom_right_x
         # TODO: fix this if cond
-        if ifg_dict is not None:
-            outdir = os.path.dirname(ifg_dict)
-            preread_ifgs = cp.load(open(ifg_dict, 'rb'))
-            ifg = preread_ifgs[ifg_or_path].pop()
+        if ifg_dict is not None:  # should be used with MPI
+            ifg = ifg_dict[ifg_or_path]
             self.nan_fraction = ifg.nan_fraction
             self.master = ifg.master
             self.slave = ifg.slave
             self.time_span = ifg.time_span
             phase_file = 'phase_data_{}_{}.npy'.format(
-                os.path.basename(ifg_or_path).split('.')[0], tile.index)
-            self.phase_data = np.load(os.path.join(outdir, phase_file))
-            read = True
+                basename(ifg_or_path).split('.')[0], tile.index)
+            self.phase_data = np.load(join(dirname(ifg_or_path), phase_file))
+            # os.remove(join(dirname(ifg_or_path), phase_file))
         else:
             # check if Ifg was sent.
             if isinstance(ifg_or_path, Ifg):
                 ifg = ifg_or_path
             else:
-                self.data_path = ifg_or_path  # should be used with MPI
+                self.data_path = ifg_or_path
                 ifg = Ifg(ifg_or_path)
-            read = False
             self.phase_data = None
             self.nan_fraction = None
             self.master = None
             self.slave = None
             self.time_span = None
-
-        attempts = 0
-        # TODO: The repeated read attempts should be avoided
-        # This is done if a process has to release the file lock before another
-        # can read that file
-        while (not read) and (attempts < 3):
-            try:
-                attempts += 1
-                read = self.read_required(ifg)
-            except RuntimeError as e:
-                print(e)
-                print('\nneed to read {ifg} again'.format(ifg=ifg))
-                time.sleep(0.5)
+        if isinstance(ifg, Ifg):
+            self.read_required(ifg)
 
     def read_required(self, ifg):
         if not ifg.is_open:
@@ -512,7 +498,6 @@ class IfgPart(object):
         self.time_span = ifg.time_span
         ifg.phase_data = None
         ifg.close()  # close base ifg
-        return True
 
     @property
     def nrows(self):
@@ -656,6 +641,7 @@ def generate_random_string(N=10):
     return ''.join(random.SystemRandom().choice(
         string.ascii_letters + string.digits)
                    for _ in range(N))
+
 
 def nanmedian(x):
     """
@@ -872,7 +858,7 @@ class Tile:
         self.bottom_right_y, self.bottom_right_x = bottom_right
 
     def __str__(self):
-        return "Convenience Time class containing tile co-ordinates"
+        return "Convenience Tile class containing tile co-ordinates"
 
 
 def copytree(src, dst, symlinks=False, ignore=None):
@@ -931,17 +917,23 @@ def nan_and_mm_convert(ifg, params):
     """
     nan_conversion = params[cf.NAN_CONVERSION]
     if nan_conversion:  # nan conversion happens here in networkx mst
+        # if not ifg.nan_converted:
         ifg.nodata_value = params[cf.NO_DATA_VALUE]
         ifg.convert_to_nans()
     if not ifg.mm_converted:
         ifg.convert_to_mm()
 
 
-def prepare_ifgs_without_phase(ifg_paths):
+def prepare_ifgs_without_phase(ifg_paths, params):
     ifgs = [Ifg(p) for p in ifg_paths]
     for i in ifgs:
         if not i.is_open:
             i.open(readonly=False)
+        nan_conversion = params[cf.NAN_CONVERSION]
+        if nan_conversion:  # nan conversion happens here in networkx mst
+            # if not ifg.nan_converted:
+            i.nodata_value = params[cf.NO_DATA_VALUE]
+            i.convert_to_nans()
     return ifgs
 
 
@@ -982,3 +974,13 @@ def utm_zone(longitude):
     if longitude == 180:
         return 60.0
     return floor((longitude + 180) / 6.0) + 1
+
+
+class PrereadIfg:
+
+    def __init__(self, path, nan_fraction, master, slave, time_span):
+        self.path = path
+        self.nan_fraction = nan_fraction
+        self.master = master
+        self.slave = slave
+        self.time_span = time_span

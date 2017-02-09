@@ -12,7 +12,7 @@ import numpy as np
 
 from pyrate.algorithm import get_epochs_and_n
 from pyrate.shared import Ifg
-from tests.common import sydney_data_setup_ifg_file_list
+from tests.common import sydney_ifg_file_list
 
 DTYPE = [('id', int), ('master', int), ('slave', int), ('nan_frac', float)]
 
@@ -72,7 +72,7 @@ class IfgListPyRate(IfGMeta):
 
     def __init__(self, datafiles=None):
         if not datafiles:
-            self.datafiles = sydney_data_setup_ifg_file_list()
+            self.datafiles = sydney_ifg_file_list()
         else:
             self.datafiles = datafiles
         self.nml = self.get_nml_list()
@@ -336,7 +336,7 @@ def get_sub_structure(ifg_list, nan_v):
 if __name__ == "__main__":
     from tests import common
 
-    ifg_instance_main = IfgListPyRate(common.sydney_data_setup_ifg_file_list())
+    ifg_instance_main = IfgListPyRate(common.sydney_ifg_file_list())
     _ifg_list, _epoch_list = get_nml(ifg_instance_main, nan_conversion=True)
     # mst_mat1 = matlab_mst(_ifg_list)
     mst_mat2 = matlab_mst_boolean_array(_ifg_list)

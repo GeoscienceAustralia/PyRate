@@ -145,7 +145,9 @@ def _independent_correction(ifg, degree, offset, params):
     :param offset: boolean
     :param params: parameter dictionary
     """
-    ifg = shared.Ifg(ifg).open() if isinstance(ifg, str) else ifg
+    ifg = shared.Ifg(ifg) if isinstance(ifg, str) else ifg
+    if not ifg.is_open:
+        ifg.open()
     shared.nan_and_mm_convert(ifg, params)
     vphase = reshape(ifg.phase_data, ifg.num_cells)  # vectorise, keeping NODATA
     dm = get_design_matrix(ifg, degree, offset)
@@ -166,6 +168,8 @@ def _independent_correction(ifg, degree, offset, params):
 
     # set orbfit tags after orbital error correction
     save_orbital_error_corrected_phase(ifg)
+    if ifg.open():
+        ifg.close()
 
 
 def _network_correction(ifgs, degree, offset, m_ifgs=None):

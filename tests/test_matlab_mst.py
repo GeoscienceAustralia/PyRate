@@ -17,7 +17,7 @@ from pyrate.matlab_mst import matlab_mst_kruskal
 from pyrate.matlab_mst import matlab_mst_kruskal_from_ifgs
 from pyrate.matlab_mst import sort_list, get_sub_structure
 from tests.common import sydney_data_setup
-from tests.common import sydney_data_setup_ifg_file_list
+from tests.common import sydney_ifg_file_list
 
 
 class IfgListTest(unittest.TestCase):
@@ -32,7 +32,7 @@ class IfgListTest(unittest.TestCase):
         self.matlab_slvnum = [3, 5, 7, 9, 5, 6, 8, 11, 12,  8, 13, 9,
                               10, 13, 10, 11, 12]
 
-        ifg_instance = IfgList(sydney_data_setup_ifg_file_list())
+        ifg_instance = IfgList(sydney_ifg_file_list())
         self.ifg_list, self.epoch_list = get_nml(ifg_instance, nodata_value=0)
 
     def test_matlab_n(self):
@@ -53,7 +53,7 @@ class IfgListTest(unittest.TestCase):
 class MatlabMstKruskalTest(unittest.TestCase):
 
     def setUp(self):
-        ifg_instance = IfgList(sydney_data_setup_ifg_file_list())
+        ifg_instance = IfgList(sydney_ifg_file_list())
         self.ifg_list, _ = get_nml(ifg_instance, nodata_value=0)
         self.sorted_list = sort_list(self.ifg_list.id, self.ifg_list.master_num,
                                 self.ifg_list.slave_num, self.ifg_list.nan_frac)
@@ -119,7 +119,7 @@ class MSTKruskalCalcConnectAndNTrees(unittest.TestCase):
 class MSTKruskalConnectAndTresSydneyData(unittest.TestCase):
 
     def test_calculate_connect_and_ntrees_sydney_data(self):
-        ifg_instance = IfgList(sydney_data_setup_ifg_file_list())
+        ifg_instance = IfgList(sydney_ifg_file_list())
         ifg_list, _ = get_nml(ifg_instance, nodata_value=0)
         edges = get_sub_structure(ifg_list, np.zeros(len(ifg_list.id), dtype=bool))
         mst, connected, ntrees = matlab_mst_kruskal(edges,
@@ -132,7 +132,7 @@ class MSTKruskalConnectAndTresSydneyData(unittest.TestCase):
 
     def test_assert_is_not_tree(self):
         non_overlapping = [1, 2, 5, 6, 12, 13, 14, 15, 16, 17]
-        sydney_files = sydney_data_setup_ifg_file_list()
+        sydney_files = sydney_ifg_file_list()
         datafiles = [f for i, f in enumerate(sydney_files)
                      if i+1 in non_overlapping]
         non_overlapping_ifg_isntance = IfgList(datafiles)
@@ -145,7 +145,7 @@ class MSTKruskalConnectAndTresSydneyData(unittest.TestCase):
 
     def test_assert_is_tree(self):
         overlapping = [1, 2, 3, 4, 6, 7, 10, 11, 16, 17]
-        sydney_files = sydney_data_setup_ifg_file_list()
+        sydney_files = sydney_ifg_file_list()
         datafiles = [f for i, f in enumerate(sydney_files)
                      if i+1 in overlapping]
 
@@ -161,7 +161,7 @@ class MSTKruskalConnectAndTresSydneyData(unittest.TestCase):
     def test_assert_two_trees_overlapping(self):
         overlapping = [3, 4, 5, 6, 7, 8, 9, 10, 11, 16, 17]
 
-        sydney_files = sydney_data_setup_ifg_file_list()
+        sydney_files = sydney_ifg_file_list()
         datafiles = [f for i, f in enumerate(sydney_files)
                      if i+1 in overlapping]
         overlapping_ifg_isntance = IfgList(datafiles)
@@ -174,7 +174,7 @@ class MSTKruskalConnectAndTresSydneyData(unittest.TestCase):
 
     def test_assert_two_trees_non_overlapping(self):
         non_overlapping = [2, 5, 6, 12, 13, 15]
-        sydney_files = sydney_data_setup_ifg_file_list()
+        sydney_files = sydney_ifg_file_list()
         datafiles = [f for i, f in enumerate(sydney_files)
                      if i+1 in non_overlapping]
 
@@ -194,7 +194,7 @@ class MatlabMSTTests(unittest.TestCase):
     """
     def setUp(self):
         self.ifgs = sydney_data_setup()
-        self.ifg_file_list = sydney_data_setup_ifg_file_list()
+        self.ifg_file_list = sydney_ifg_file_list()
 
         self.matlab_mst_list = ['geo_060619-061002.tif',
                                 'geo_060828-061211.tif',
@@ -286,7 +286,7 @@ class TestMSTBooleanArray(unittest.TestCase):
 
     def setUp(self):
         self.ifg_dir = tempfile.mkdtemp()
-        sydney_files = sydney_data_setup_ifg_file_list()
+        sydney_files = sydney_ifg_file_list()
         for sf in sydney_files:
             dest = os.path.join(self.ifg_dir, os.path.basename(sf))
             shutil.copy(sf, dest)

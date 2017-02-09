@@ -45,7 +45,7 @@ from tests.common import SYD_TEST_DEM_DIR, SYD_TEST_OBS, TEMPDIR
 from tests.common import SYD_TEST_DEM_ROIPAC, SYD_TEST_DEM_HDR
 from tests.common import sydney_data_roipac_unws
 from tests.common import sydney_data_setup
-from tests.common import sydney_data_setup_ifg_file_list
+from tests.common import sydney_ifg_file_list
 
 gdal.UseExceptions()
 
@@ -188,7 +188,7 @@ class RoipacToGeoTiffTests(unittest.TestCase):
         self.dest = os.path.join(TEMPDIR, 'tmp_roipac_ifg2.tif')
         data_path = join(PREP_TEST_OBS, 'geo_060619-061002.unw')
         self.assertRaises(GeotiffException, write_geotiff, hdrs,
-                            data_path, self.dest, 0)
+                          data_path, self.dest, 0)
 
     def test_mismatching_cell_resolution(self):
         hdrs = self.HDRS.copy()
@@ -291,11 +291,11 @@ class TestRoipacLuigiEquality(unittest.TestCase):
                                                  dir=cls.luigi_base_dir)
         os.close(fp)
         cls.non_luigi_base_dir = tempfile.mkdtemp()
-        fp, cls.non_luigi_confFile = tempfile.mkstemp(suffix='roipac_test.conf',
-                                                  dir=cls.non_luigi_base_dir)
+        fp, cls.non_luigi_confFile = tempfile.mkstemp(
+            suffix='roipac_test.conf', dir=cls.non_luigi_base_dir)
         os.close(fp)
-        fp, cls.non_luigi_ifgListFile = tempfile.mkstemp(suffix='roipac_ifg.list',
-                                                     dir=cls.non_luigi_base_dir)
+        fp, cls.non_luigi_ifgListFile = tempfile.mkstemp(
+            suffix='roipac_ifg.list', dir=cls.non_luigi_base_dir)
         os.close(fp)
 
     @classmethod
@@ -326,7 +326,7 @@ class TestRoipacLuigiEquality(unittest.TestCase):
 
     def test_cmd_ifg_luigi_files_created(self):
         self.dataPaths = sydney_data_roipac_unws()
-        base_exp = sydney_data_setup_ifg_file_list()
+        base_exp = sydney_ifg_file_list()
         self.expPaths = [join(self.luigi_base_dir, os.path.basename(i))
                          for i in base_exp]
         self.luigi = '1'
@@ -337,7 +337,7 @@ class TestRoipacLuigiEquality(unittest.TestCase):
 
     def test_cmd_ifg_no_luigi_files_created(self):
         self.dataPaths = sydney_data_roipac_unws()
-        base_exp = sydney_data_setup_ifg_file_list()
+        base_exp = sydney_ifg_file_list()
         self.expPaths = [join(self.non_luigi_base_dir, os.path.basename(i))
                          for i in base_exp]
         self.luigi = '0'

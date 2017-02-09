@@ -1,12 +1,9 @@
-from __future__ import print_function
 """
 Minimum Spanning Tree functionality for PyRate.
 
 Contains functions to calculate MST using interferograms.
-
-.. codeauthors:: Ben Davies, Sudipta Basak
 """
-
+from __future__ import print_function
 from itertools import product
 from numpy import array, nan, isnan, float32, empty, sum as nsum
 import numpy as np
@@ -99,7 +96,6 @@ def mst_multiprocessing(tile, ifgs_or_paths, preread_ifgs=None):
     To manage memory we need smaller tiles (IfgPart) as number of ifgs go up.
     :param tile: Tile class instance
     :param ifgs_or_paths: all ifg paths of the problem. List of strings.
-    :return:
     """
     ifg_parts = [IfgPart(p, tile, preread_ifgs) for p in ifgs_or_paths]
     t_mst = mst_boolean_array(ifg_parts)
@@ -141,29 +137,6 @@ def mst_boolean_array(ifgs):
     return result
 
 
-def mst_matrix_as_matlab_array(ifgs):
-    """
-    Filter: returns a multi-dimensional array of pixel by pixel
-    by ifg of zeros and ones. like that used by the MATLAB
-    version Pirate.
-    :param ifgs: sequence of Ifg objs
-    """
-    rows = ifgs[0].phase_data.shape[0]
-    cols = ifgs[0].phase_data.shape[1]
-    num_ifgs =len(ifgs)
-    mst_result = empty(shape=(num_ifgs, rows, cols), dtype=object)
-    mst = mst_matrix_ifg_indices(ifgs)
-    for x in range(rows):
-        for y in range(cols):
-            for z in range(num_ifgs):
-                if z in mst[:][x][y]:
-                    mst_result[z, x, y] = 1
-                else:
-                    mst_result[z, x, y] = 0
-
-    return mst_result
-
-
 def mst_matrix_ifgs_only(ifgs):
     """
     Filter: returns array of independent ifgs from the pixel by pixel MST.
@@ -185,28 +158,6 @@ def mst_matrix_ifgs_only(ifgs):
     return result
 
 
-def mst_matrix_ifg_indices(ifgs):
-    """
-    Filter: returns array of independent ifg indices from the pixel by pixel MST.
-
-    The MSTs are stripped of connecting edge info, leaving just the ifgs.
-    ifgs: sequence of Ifg objs.
-
-    :param epochs: an EpochList object derived from the ifgs
-    """
-
-    result = empty(shape=ifgs[0].phase_data.shape, dtype=object)
-
-    for y, x, mst in mst_matrix_networkx(ifgs):
-        if isinstance(mst, list):
-            ifg_sub = [ifg_date_index_lookup(ifgs, d) for d in mst]
-            result[(y, x)] = tuple(ifg_sub)
-        else:
-            result[(y, x)] = mst  # usually NaN
-    return result
-
-
-# TODO: This does not seem to be used anywhere
 def mst_matrix_as_array(ifgs):
     """
     Filter: returns array of pixel by pixel MSTs.
@@ -394,4 +345,3 @@ def minimum_spanning_edges(G, weight='weight', data=True):
             else:
                 yield (u, v)
             subtrees.union(u, v)
-

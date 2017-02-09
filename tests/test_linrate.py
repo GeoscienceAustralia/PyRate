@@ -13,7 +13,7 @@ import numpy as np
 from numpy.testing import assert_array_almost_equal
 
 from pyrate import config as cf
-from pyrate import reference_phase_estimation as rpe
+from pyrate import ref_phs_est as rpe
 from pyrate import shared
 from pyrate import vcm as vcm_module
 from pyrate.linrate import linear_rate
@@ -88,11 +88,11 @@ class MatlabEqualityTest(unittest.TestCase):
         ifgs = shared.pre_prepare_ifgs(dest_paths, params)
         mst_grid = run_pyrate.mst_calculation(dest_paths, params)
 
-        refx, refy = run_pyrate.find_reference_pixel(ifgs, params)
+        refx, refy = run_pyrate.ref_pixel_calc(dest_paths, params)
 
         # Estimate and remove orbit errors
         run_pyrate.remove_orbital_error(ifgs, params)
-        ifgs = shared.prepare_ifgs_without_phase(dest_paths)
+        ifgs = shared.prepare_ifgs_without_phase(dest_paths, params)
 
         _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
 

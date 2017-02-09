@@ -33,7 +33,7 @@ from tests import common
 from tests.common import SYD_TEST_DIR
 from tests.common import SYD_TEST_MATLAB_ORBITAL_DIR
 from tests.common import SYD_TEST_TIF, sydney_data_setup
-from tests.common import sydney_data_setup_ifg_file_list
+from tests.common import sydney_ifg_file_list
 
 DEG_LOOKUP = {
     2: PLANAR,
@@ -691,37 +691,19 @@ class MatlabComparisonTestsOrbfitMethod1(unittest.TestCase):
         self.params[cf.PARALLEL] = False
 
         data_paths = [os.path.join(SYD_TEST_TIF, p) for p in common.IFMS16]
-        new_data_paths = [os.path.join(self.BASE_DIR, os.path.basename(d))
+        self.ifg_paths = [os.path.join(self.BASE_DIR, os.path.basename(d))
                           for d in data_paths]
 
         for d in data_paths:
             shutil.copy(d, os.path.join(self.BASE_DIR, os.path.basename(d)))
 
-        self.ifgs = sydney_data_setup(datafiles=new_data_paths)
-
-        for c, i in enumerate(self.ifgs):
-            if not i.is_open:
-                i.open()
-            if not i.nan_converted:
-                i.convert_to_nans()
-
-            if not i.mm_converted:
-                i.convert_to_mm()
-                try:
-                    i.write_modified_phase()
-                except:
-                    os.chmod(i.data_path, 664)
-                    i.write_modified_phase()
-
     def tearDown(self):
-        for i in self.ifgs:
-            i.close()
         shutil.rmtree(self.BASE_DIR)
 
     def test_orbital_correction_matlab_equality(self):
         from pyrate.scripts import run_pyrate
 
-        run_pyrate.remove_orbital_error(self.ifgs, self.params)
+        run_pyrate.orb_fit_calc(self.ifg_paths, self.params)
 
         onlyfiles = [f for f in os.listdir(SYD_TEST_MATLAB_ORBITAL_DIR)
             if os.path.isfile(os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, f))
@@ -731,25 +713,28 @@ class MatlabComparisonTestsOrbfitMethod1(unittest.TestCase):
         for i, f in enumerate(onlyfiles):
             ifg_data = np.genfromtxt(os.path.join(
                 SYD_TEST_MATLAB_ORBITAL_DIR, f), delimiter=',')
-            for k, j in enumerate(self.ifgs):
-                if os.path.basename(j.data_path).split('.')[0] == \
+            for k, j in enumerate(self.ifg_paths):
+                ifg = Ifg(j)
+                ifg.open()
+                if os.path.basename(j).split('.')[0] == \
                         os.path.basename(f).split(
                             '_orb_planar_1lks_method1_')[1].split('.')[0]:
                     count += 1
                     # all numbers equal
                     np.testing.assert_array_almost_equal(ifg_data,
-                        j.phase_data, decimal=2)
+                        ifg.phase_data, decimal=2)
 
                     # means must also be equal
                     self.assertAlmostEqual(np.nanmean(ifg_data),
-                        np.nanmean(j.phase_data), places=2)
+                        np.nanmean(ifg.phase_data), places=2)
 
                     # number of nans must equal
                     self.assertEqual(np.sum(np.isnan(ifg_data)),
-                                np.sum(np.isnan(j.phase_data)))
+                                np.sum(np.isnan(ifg.phase_data)))
+                ifg.close()
 
         # ensure that we have expected number of matches
-        self.assertEqual(count, len(self.ifgs))
+        self.assertEqual(count, len(self.ifg_paths))
 
 
 class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
@@ -775,7 +760,7 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
         self.params[cf.ORBITAL_FIT_LOOKS_Y] = 1
 
         data_paths = [os.path.join(SYD_TEST_TIF, p) for p in
-                      sydney_data_setup_ifg_file_list()]
+                      sydney_ifg_file_list()]
         self.new_data_paths = [os.path.join(self.BASE_DIR, os.path.basename(d))
                           for d in data_paths]
         for d in data_paths:

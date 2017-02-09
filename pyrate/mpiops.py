@@ -1,6 +1,7 @@
 import logging
-from mpi4py import MPI
 import pickle
+from mpi4py import MPI
+import numpy as np
 
 log = logging.getLogger(__name__)
 # We're having trouble with the MPI pickling and 64bit integers
@@ -46,3 +47,7 @@ def run_once(f, *args, **kwargs):
         f_result = None
     result = comm.bcast(f_result, root=0)
     return result
+
+
+def array_split(arr):
+    return np.array_split(arr, size)[rank]

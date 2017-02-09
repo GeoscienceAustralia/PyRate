@@ -453,8 +453,7 @@ class TestGammaParallelVsSerial(unittest.TestCase):
 
         cls.serial_dir = tempfile.mkdtemp()
         cls.parallel_dir = tempfile.mkdtemp()
-        unw_paths = glob.glob(
-            os.path.join(SYD_TEST_GAMMA, "*_utm.unw"))
+        unw_paths = glob.glob(os.path.join(SYD_TEST_GAMMA, "*_utm.unw"))
 
         # read in the params
         _, _, params = cf.get_ifg_paths(CONF_FILE)

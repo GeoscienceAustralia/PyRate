@@ -15,7 +15,7 @@ import numpy as np
 from numpy.testing import assert_array_almost_equal
 
 from pyrate import config as cf
-from pyrate import reference_phase_estimation as rpe
+from pyrate import ref_phs_est as rpe
 from pyrate import shared
 from pyrate.scripts import run_pyrate, run_prepifg
 from pyrate.vcm import cvd, get_vcmt
@@ -106,80 +106,88 @@ class VCMTests(unittest.TestCase):
                   4.754]
 
         # Output from Matlab Pirate make_vcmt.m
-        exp = array([[2.879, 0.0, -4.059, -1.820, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ],
-            [0.0, 4.729, 0.0, 0.0, 1.972, 0.0, 0.0, -3.947, -2.987, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ],
-            [-4.059, 0.0, 22.891, 5.133, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -7.497, -10.285, 0.0, 0.0, 0.0, 0.0 ],
-            [-1.820, 0.0, 5.133, 4.604, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.362, 0.0, 0.0, -1.774, 0.0, 0.0 ],
-            [0.0, 1.972, 0.0, 0.0, 3.290, 2.386, 1.439, -3.292, -2.492, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ],
-            [0.0, 0.0, 0.0, 0.0, 2.386, 6.923, 2.088, 0.0, 0.0, -3.273, -4.663, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ],
-            [0.0, 0.0, 0.0, 0.0, 1.439, 2.088, 2.519, 0.0, 0.0, 1.974, 0.0, 0.0, 0.0, -2.213, 0.0, 0.0, 0.0 ],
-            [0.0, -3.947, 0.0, 0.0, -3.292, 0.0, 0.0, 13.177, 4.986, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 4.596, -3.957 ],
-            [0.0, -2.987, 0.0, 0.0, -2.492, 0.0, 0.0, 4.986, 7.548, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.995 ],
-            [0.0, 0.0, 0.0, 0.0, 0.0, -3.273, 1.974, 0.0, 0.0, 6.190, 4.410, 0.0, 0.0, -3.469, 0.0, 0.0, 0.0 ],
-            [0.0, 0.0, 0.0, 0.0, 0.0, -4.663, 0.0, 0.0, 0.0, 4.410, 12.565, 0.0, 0.0, 4.942, 0.0, 0.0, 0.0 ],
-            [0.0, 0.0, -7.497, 3.362, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 9.8221, 6.737, 0.0, -2.591, 0.0, 0.0 ],
-            [0.0, 0.0, -10.285, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 6.737, 18.484, 0.0, 3.554, -5.443, 0.0 ],
-            [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -2.213, 0.0, 0.0, -3.469, 4.942, 0.0, 0.0, 7.776, 0.0, 0.0, 0.0 ],
-            [0.0, 0.0, 0.0, -1.774, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -2.591, 3.554, 0.0, 2.734, -2.093, 0.0 ],
-            [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 4.596, 0.0, 0.0, 0.0, 0.0, -5.443, 0.0, -2.093, 6.411, -2.760 ],
-            [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -3.957, 2.995, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -2.760, 4.754 ]])
+        exp = array([
+            [2.879, 0.0, -4.059, -1.820, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+             0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            [0.0, 4.729, 0.0, 0.0, 1.972, 0.0, 0.0, -3.947, -2.987, 0.0,
+             0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            [-4.059, 0.0, 22.891, 5.133, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+             -7.497, -10.285, 0.0, 0.0, 0.0, 0.0],
+            [-1.820, 0.0, 5.133, 4.604, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+             3.362, 0.0, 0.0, -1.774, 0.0, 0.0],
+            [0.0, 1.972, 0.0, 0.0, 3.290, 2.386, 1.439, -3.292, -2.492, 0.0,
+             0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 2.386, 6.923, 2.088, 0.0, 0.0, -3.273,
+             -4.663, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 1.439, 2.088, 2.519, 0.0, 0.0, 1.974, 0.0,
+             0.0, 0.0, -2.213, 0.0, 0.0, 0.0],
+            [0.0, -3.947, 0.0, 0.0, -3.292, 0.0, 0.0, 13.177, 4.986, 0.0, 0.0,
+             0.0, 0.0, 0.0, 0.0, 4.596, -3.957],
+            [0.0, -2.987, 0.0, 0.0, -2.492, 0.0, 0.0, 4.986, 7.548, 0.0, 0.0,
+             0.0, 0.0, 0.0, 0.0, 0.0, 2.995],
+            [0.0, 0.0, 0.0, 0.0, 0.0, -3.273, 1.974, 0.0, 0.0, 6.190, 4.410,
+             0.0, 0.0, -3.469, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 0.0, -4.663, 0.0, 0.0, 0.0, 4.410, 12.565,
+             0.0, 0.0, 4.942, 0.0, 0.0, 0.0],
+            [0.0, 0.0, -7.497, 3.362, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+             9.8221, 6.737, 0.0, -2.591, 0.0, 0.0],
+            [0.0, 0.0, -10.285, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 6.737,
+             18.484, 0.0, 3.554, -5.443, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -2.213, 0.0, 0.0, -3.469, 4.942,
+             0.0, 0.0, 7.776, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, -1.774, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -2.591,
+             3.554, 0.0, 2.734, -2.093, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 4.596, 0.0, 0.0, 0.0, 0.0,
+             -5.443, 0.0, -2.093, 6.411, -2.760],
+            [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -3.957, 2.995, 0.0, 0.0, 0.0,
+             0.0, 0.0, 0.0, -2.760, 4.754]
+        ])
 
         act = get_vcmt(self.ifgs, maxvar)
         assert_array_almost_equal(act, exp, decimal=3)
+
+
+matlab_maxvar = [15.4156637191772,
+                 2.85829424858093,
+                 34.3486289978027,
+                 2.59190344810486,
+                 3.18510007858276,
+                 3.61054635047913,
+                 1.64398515224457,
+                 14.9226036071777,
+                 5.13451862335205,
+                 6.82901763916016,
+                 10.9644861221313,
+                 14.5026779174805,
+                 29.3710079193115,
+                 8.00364685058594,
+                 2.06328082084656,
+                 5.66661834716797,
+                 5.62802362442017]
 
 
 class MatlabEqualityTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.matlab_maxvar = [15.4156637191772,
-                             2.85829424858093,
-                             34.3486289978027,
-                             2.59190344810486,
-                             3.18510007858276,
-                             3.61054635047913,
-                             1.64398515224457,
-                             14.9226036071777,
-                             5.13451862335205,
-                             6.82901763916016,
-                             10.9644861221313,
-                             14.5026779174805,
-                             29.3710079193115,
-                             8.00364685058594,
-                             2.06328082084656,
-                             5.66661834716797,
-                             5.62802362442017]
-
 
         params = cf.get_config_params(
-                os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf'))
-
+                os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf')
+        )
         cls.temp_out_dir = tempfile.mkdtemp()
 
         sys.argv = ['run_prepifg.py', os.path.join(SYD_TEST_DIR,
-                                     'pyrate_system_test.conf')]
-
+                    'pyrate_system_test.conf')]
         params[cf.OUT_DIR] = cls.temp_out_dir
-        run_prepifg.main(params)
-
-        params[cf.OUT_DIR] = cls.temp_out_dir
-
         params[cf.REF_EST_METHOD] = 2
+        run_prepifg.main(params)
         xlks, ylks, crop = cf.transform_params(params)
-
-        base_ifg_paths = cf.original_ifg_paths(
-            params[cf.IFG_FILE_LIST])
-
-        dest_paths = cf.get_dest_paths(base_ifg_paths,
-                                               crop, params, xlks)
-        # start run_pyrate copy
+        base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST])
+        dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
         ifgs = shared.pre_prepare_ifgs(dest_paths, params)
-        mst_grid = run_pyrate.mst_calculation(dest_paths, params)
-
-        refx, refy = run_pyrate.find_reference_pixel(ifgs, params)
-
+        refx, refy = run_pyrate.ref_pixel_calc(dest_paths, params)
         run_pyrate.remove_orbital_error(ifgs, params)
-        ifgs = shared.prepare_ifgs_without_phase(dest_paths)
+        ifgs = shared.prepare_ifgs_without_phase(dest_paths, params)
         _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
 
         # Calculate interferogram noise
@@ -191,7 +199,7 @@ class MatlabEqualityTest(unittest.TestCase):
         shutil.rmtree(cls.temp_out_dir)
 
     def test_matlab_maxvar_equality_sydney_test_files(self):
-        np.testing.assert_array_almost_equal(self.maxvar, self.matlab_maxvar,
+        np.testing.assert_array_almost_equal(self.maxvar, matlab_maxvar,
                                              decimal=3)
 
     def test_matlab_vcmt_equality_sydney_test_files(self):
@@ -200,6 +208,7 @@ class MatlabEqualityTest(unittest.TestCase):
         matlab_vcm = np.genfromtxt(os.path.join(MATLAB_VCM_DIR,
                                    'matlab_vcmt.csv'), delimiter=',')
         np.testing.assert_array_almost_equal(matlab_vcm, self.vcmt, decimal=3)
+
 
 if __name__ == "__main__":
     unittest.main()

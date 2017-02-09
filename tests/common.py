@@ -97,7 +97,7 @@ def sydney_data_setup(datafiles=None, is_dir=False):
     return ifgs
 
 
-def sydney_data_setup_ifg_file_list(datafiles=None):
+def sydney_ifg_file_list(datafiles=None):
     """Returns the file list of all the .tif files after prepifg conversion
     input phase data is in radians; these ifgs are in radians - not converted to mm"""
     if datafiles:
@@ -165,13 +165,14 @@ class MockIfg(object):
         self.num_cells = self.ncols * self.nrows
         self.phase_data = ifg.phase_data[:ysize, :xsize]
         self.nan_fraction = ifg.nan_fraction # use existing overall nan fraction
+        self.is_open = False
 
     def __repr__(self, *args, **kwargs):
         return 'MockIfg: %s -> %s' % (self.master, self.slave)
 
     def open(self):
         # TODO: could move some of the init code here to mimic Ifgs
-        pass # can't actually open anything!
+        pass  # can't actually open anything!
 
     @property
     def nan_count(self):
@@ -186,6 +187,7 @@ class MockIfg(object):
 
     def close(self):  # dummy
         pass
+
 
 def move_files(source_dir, dest_dir, file_type='*.tif'):
     for filename in glob.glob(os.path.join(source_dir, file_type)):
