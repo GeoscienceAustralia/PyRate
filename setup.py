@@ -54,7 +54,7 @@ setup(
     author='Geoscience Australia InSAR team',
     author_email='basaks@gmail.com',
     url='https://github.com/GeoscienceAustralia/PyRate',
-    packages=['pyrate', 'pyrate.scripts', 'pyrate.tasks', 'pyrate.nci'],
+    packages=['pyrate', 'pyrate.scripts', 'pyrate.tasks'],
     package_dir={'PyRate': 'pyrate'},
     include_package_data=True,
     entry_points={

@@ -18,8 +18,7 @@ import pkg_resources
 import pyproj
 import numpy as np
 from numpy import where, nan, isnan, sum as nsum, isclose
-
-from pyrate import ifgconstants as ifc
+from pyrate import ifgconstants as ifc, mpiops
 from pyrate import roipac, gamma, config as cf
 
 VERBOSE = True
@@ -984,3 +983,49 @@ class PrereadIfg:
         self.master = master
         self.slave = slave
         self.time_span = time_span
+
+
+def prepare_ifg(ifg_path, params):
+    """
+    Parameters
+    ----------
+    ifg_path: str
+        ifg path
+    tiles: list
+        list of Tile instances
+    params: dict
+        config dict
+    Returns
+    -------
+    ifg: ifg class instance
+    """
+    ifg = Ifg(ifg_path)
+    ifg.open()
+    nan_and_mm_convert(ifg, params)
+    return ifg
+
+
+def save_numpy_phase(ifg_paths, tiles, params):
+    """
+    :param ifg_paths:
+    :param params:
+    :param tiles:
+    :return:
+    """
+    process_ifgs = mpiops.array_split(ifg_paths)
+    outdir = params[cf.OUT_DIR]
+    for ifg_path in process_ifgs:
+        ifg = Ifg(ifg_path)
+        ifg.open()
+        phase_data = ifg.phase_data
+        bname = basename(ifg_path).split('.')[0]
+        for t in tiles:
+            p_data = phase_data[
+                     t.top_left_y:t.bottom_right_y,
+                     t.top_left_x:t.bottom_right_x
+                     ]
+            phase_file = 'phase_data_{}_{}.npy'.format(bname, t.index)
+            np.save(file=join(outdir, phase_file),
+                    arr=p_data)
+        ifg.close()
+    mpiops.comm.barrier()

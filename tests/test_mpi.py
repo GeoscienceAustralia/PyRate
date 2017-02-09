@@ -9,6 +9,7 @@ import tempfile
 import random
 import string
 
+import pyrate.shared
 from pyrate import ref_phs_est as rpe
 from pyrate import shared
 from pyrate import vcm
@@ -199,7 +200,7 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
 
     maxvar, vcmt = run_pyrate.maxvar_vcm_mpi(dest_paths, params,
                                              preread_ifgs)
-    run_pyrate.save_numpy_phase(dest_paths, tiles, params)
+    pyrate.shared.save_numpy_phase(dest_paths, tiles, params)
     run_pyrate.time_series_mpi(dest_paths, params, vcmt, tiles,
                                preread_ifgs)
     run_pyrate.linrate_mpi(dest_paths, params, vcmt, tiles,

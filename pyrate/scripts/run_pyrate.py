@@ -22,9 +22,8 @@ from pyrate import matlab_mst as matlab_mst
 from pyrate import ref_phs_est as rpe
 from pyrate import vcm as vcm_module
 from pyrate.shared import Ifg, write_output_geotiff, \
-    pre_prepare_ifgs, create_tiles, PrereadIfg
+    pre_prepare_ifgs, create_tiles, PrereadIfg, prepare_ifg, save_numpy_phase
 from pyrate.compat import PyAPS_INSTALLED
-from pyrate.nci.common_nci import prepare_ifg, save_numpy_phase
 from pyrate import mpiops
 if PyAPS_INSTALLED:
     from pyrate import remove_aps_delay as aps
