@@ -49,5 +49,6 @@ def run_once(f, *args, **kwargs):
     return result
 
 
-def array_split(arr):
-    return np.array_split(arr, size)[rank]
+def array_split(arr, process=None):
+    r = process if process else rank
+    return np.array_split(arr, size)[r]

@@ -69,7 +69,7 @@ def create_ifg_dict(dest_tifs, params, tiles):
         preread_ifgs file path
     """
     preread_ifgs_dict = {}
-    process_tifs = np.array_split(dest_tifs, mpiops.size)[mpiops.rank]
+    process_tifs = mpiops.array_split(dest_tifs)
     save_numpy_phase(dest_tifs, tiles, params)
     for d in process_tifs:
         ifg = prepare_ifg(d, params)
@@ -96,7 +96,7 @@ def mpi_mst_calc(dest_tifs, params, tiles, preread_ifgs):
     log.info('Calculating mst')
     log.info('Calculating minimum spanning tree matrix '
              'using NetworkX method')
-    process_tiles = np.array_split(tiles, mpiops.size)[mpiops.rank]
+    process_tiles = mpiops.array_split(tiles)
 
     def save_mst_tile(tile, i, preread_ifgs):
         if params[cf.NETWORKX_OR_MATLAB_FLAG]:
@@ -155,7 +155,7 @@ def ref_pixel_calc(ifg_paths, params):
 
 def ref_pixel_mpi(ifg_paths, params):
     half_patch_size, thresh, grid = refpixel.ref_pixel_setup(ifg_paths, params)
-    process_grid = np.array_split(grid, mpiops.size)[mpiops.rank]
+    process_grid = mpiops.array_split(grid)
     save_ref_pixel_blocks(process_grid, half_patch_size, ifg_paths, params)
     mean_sds = refpixel.ref_pixel_mpi(process_grid, half_patch_size,
                                       ifg_paths, thresh, params)
@@ -188,7 +188,7 @@ def orb_fit_calc(ifg_paths, params):
     log.info('Calculating orbfit correction')
     if params[cf.ORBITAL_FIT_METHOD] != 1:
         raise cf.ConfigException('Only orbfit method 1 is supported')
-    process_ifgs = np.array_split(ifg_paths, mpiops.size)[mpiops.rank]
+    process_ifgs = mpiops.array_split(ifg_paths)
     mlooked = None
     # TODO: MPI orbfit method 2
     orbital.orbital_correction(process_ifgs, params, mlooked=mlooked)
@@ -210,12 +210,10 @@ def ref_phase_estimation_mpi(ifg_paths, params, refpx, refpy):
     ref_phs_file = join(params[cf.OUT_DIR], 'ref_phs.npy')
     if mpiops.rank == MASTER_PROCESS:
         ref_phs = np.zeros(len(ifg_paths), dtype=np.float64)
-        process_indices = np.array_split(range(len(ifg_paths)),
-                                         mpiops.size)[mpiops.rank]
+        process_indices = mpiops.array_split(range(len(ifg_paths)))
         ref_phs[process_indices] = process_ref_phs
         for r in range(1, mpiops.size):
-            process_indices = np.array_split(range(len(ifg_paths)),
-                                             mpiops.size)[r]
+            process_indices = mpiops.array_split(range(len(ifg_paths)), r)
             this_process_ref_phs = np.zeros(shape=len(process_indices),
                                             dtype=np.float64)
             mpiops.comm.Recv(this_process_ref_phs, source=r, tag=r)
@@ -231,7 +229,7 @@ def ref_phs_method2(ifg_paths, params, refpx, refpy):
     half_chip_size = int(np.floor(params[cf.REF_CHIP_SIZE] / 2.0))
     chipsize = 2 * half_chip_size + 1
     thresh = chipsize * chipsize * params[cf.REF_MIN_FRAC]
-    process_ifg_paths = np.array_split(ifg_paths, mpiops.size)[mpiops.rank]
+    process_ifg_paths = mpiops.array_split(ifg_paths)
 
     def _inner(ifg_path):
         ifg = Ifg(ifg_path)
@@ -265,7 +263,7 @@ def ref_phs_method1(ifg_paths, comp):
         ifg.write_modified_phase(data=phase_data)
         ifg.close()
         return ref_phase
-    this_process_ifgs = np.array_split(ifg_paths, mpiops.size)[mpiops.rank]
+    this_process_ifgs = mpiops.array_split(ifg_paths)
     ref_phs = np.array([_inner(ifg) for ifg in this_process_ifgs])
     log.info('Ref phase computed in process {}'.format(mpiops.rank))
     return ref_phs
@@ -352,9 +350,8 @@ def linrate_mpi(ifg_paths, params, vcmt, tiles, preread_ifgs):
 
 def maxvar_vcm_mpi(ifg_paths, params, preread_ifgs):
     log.info('Calculating maxvar and vcm')
-    process_indices = np.array_split(
-        range(len(ifg_paths)), mpiops.size)[mpiops.rank]
-    process_ifgs = np.array_split(ifg_paths, mpiops.size)[mpiops.rank]
+    process_indices = mpiops.array_split(range(len(ifg_paths)))
+    process_ifgs = mpiops.array_split(ifg_paths)
     process_maxvar = []
     for n, i in enumerate(process_ifgs):
         log.info('Calculating maxvar for {} of process ifgs {} of '
@@ -365,8 +362,7 @@ def maxvar_vcm_mpi(ifg_paths, params, preread_ifgs):
         maxvar = np.empty(len(ifg_paths), dtype=np.float64)
         maxvar[process_indices] = process_maxvar
         for i in range(1, mpiops.size):
-            rank_indices = np.array_split(range(len(ifg_paths)),
-                                          mpiops.size)[i]
+            rank_indices = mpiops.array_split(range(len(ifg_paths)), i)
             this_process_ref_phs = np.empty(len(rank_indices), dtype=np.float64)
             mpiops.comm.Recv(this_process_ref_phs, source=i, tag=i)
             maxvar[rank_indices] = this_process_ref_phs
@@ -390,7 +386,7 @@ def phase_sum_mpi(ifg_paths, params):
     params: dict
         config dict
     """
-    p_paths = np.array_split(ifg_paths, mpiops.size)[mpiops.rank]
+    p_paths = mpiops.array_split(ifg_paths)
     ifg = Ifg(p_paths[0])
     ifg.open(readonly=True)
     shape = ifg.shape
@@ -510,7 +506,7 @@ def calculate_time_series(ifgs, params, vcmt, mst):
 
 
 def time_series_mpi(ifg_paths, params, vcmt, tiles, preread_ifgs):
-    process_tiles = np.array_split(tiles, mpiops.size)[mpiops.rank]
+    process_tiles = mpiops.array_split(tiles)
     log.info('Calculating time series')
     output_dir = params[cf.OUT_DIR]
     for t in process_tiles:
