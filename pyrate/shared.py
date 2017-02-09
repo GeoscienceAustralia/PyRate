@@ -671,7 +671,8 @@ def nanmedian(x):
 
 def write_geotiff(header, data_path, dest, nodata):
     """
-    Writes image data to GeoTIFF image with PyRate metadata
+    Writes input image data (interferograms, DEM, incidence maps etc)
+    to GeoTIFF format with PyRate metadata
     """
     is_ifg = ifc.PYRATE_WAVELENGTH_METRES in header
     is_incidence = 'FILE_TYPE' in header
@@ -701,6 +702,10 @@ def write_geotiff(header, data_path, dest, nodata):
         if ifg_proc == GAMMA:
             for k in [ifc.MASTER_TIME, ifc.SLAVE_TIME, ifc.PYRATE_INCIDENCE_DEGREES]:
                 ds.SetMetadataItem(k, str(header[k]))
+    elif is_incidence:
+        ds.SetMetadataItem(ifc.DATA_TYPE, ifc.INCIDENCE)
+    else: # must be dem
+        ds.SetMetadataItem(ifc.DATA_TYPE, ifc.DEM)
 
     # position and projection data
     ds.SetGeoTransform([header[ifc.PYRATE_LONG], header[ifc.PYRATE_X_STEP], 0,
