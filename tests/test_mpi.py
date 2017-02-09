@@ -21,6 +21,8 @@ from tests.test_vcm import matlab_maxvar
 from pyrate import config as cf
 from pyrate import mpiops
 
+TRAVIS = True if 'TRAVIS' in os.environ else False
+
 
 @pytest.fixture()
 def tempdir():
@@ -176,6 +178,10 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
     print(xlks, row_splits, col_splits, mpiops.rank)
     if xlks * col_splits > 45 or ylks * row_splits > 70:
         print('skipping test')
+        return
+
+    if TRAVIS and xlks % 2:
+        print("skipping test during travis")
         return
 
     base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST])
