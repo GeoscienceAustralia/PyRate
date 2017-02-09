@@ -191,6 +191,29 @@ class MockIfg(object):
         pass
 
 
+def reconstruct_linrate(shape, tiles, output_dir, out_type):
+    rate = np.zeros(shape=shape, dtype=np.float32)
+    for t in tiles:
+        rate_file = os.path.join(output_dir, out_type +
+                                 '_{}.npy'.format(t.index))
+        rate_tile = np.load(file=rate_file)
+        rate[t.top_left_y:t.bottom_right_y,
+             t.top_left_x:t.bottom_right_x] = rate_tile
+    return rate
+
+
+def reconstruct_mst(shape, tiles, output_dir):
+    mst_file_0 = os.path.join(output_dir, 'mst_mat_{}.npy'.format(0))
+    shape0 = np.load(mst_file_0).shape[0]
+
+    mst = np.empty(shape=((shape0,) + shape), dtype=np.float32)
+    for i, t in enumerate(tiles):
+        mst_file_n = os.path.join(output_dir, 'mst_mat_{}.npy'.format(i))
+        mst[:, t.top_left_y:t.bottom_right_y,
+                t.top_left_x: t.bottom_right_x] = np.load(mst_file_n)
+    return mst
+
+
 def move_files(source_dir, dest_dir, file_type='*.tif'):
     for filename in glob.glob(os.path.join(source_dir, file_type)):
         shutil.move(filename, dest_dir)

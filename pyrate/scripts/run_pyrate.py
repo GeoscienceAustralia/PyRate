@@ -126,20 +126,6 @@ def mpi_mst_calc(dest_tifs, params, tiles, preread_ifgs):
     mpiops.comm.barrier()
 
 
-def temp_mst_grid_reconstruct(tiles, ifg_paths, params):
-    ifg = Ifg(ifg_paths[0])
-    ifg.open(readonly=True)
-
-    mst_grid = np.empty(shape=(len(ifg_paths), ifg.shape[0], ifg.shape[1]),
-                        dtype=bool)
-    ifg.close()
-    for t in tiles:
-        mst_f = join(params[cf.OUT_DIR], 'mst_mat_{}.npy'.format(t.index))
-        mst_grid[:, t.top_left_y:t.bottom_right_y,
-                 t.top_left_x:t.bottom_right_x] = np.load(mst_f)
-    return mst_grid
-
-
 def ref_pixel_calc(ifg_paths, params):
 
     # unlikely, but possible the refpixel can be (0,0)
@@ -296,7 +282,6 @@ def process_ifgs(ifg_paths, params, rows, cols):
                                    tiles=tiles)
 
     mpi_mst_calc(ifg_paths, params, tiles, preread_ifgs)
-    mst_grid = temp_mst_grid_reconstruct(tiles, ifg_paths, params)
 
     # Estimate reference pixel location
     refpx, refpy = ref_pixel_calc(ifg_paths, params)
@@ -317,19 +302,16 @@ def process_ifgs(ifg_paths, params, rows, cols):
     ref_phase_estimation_mpi(ifg_paths, params, refpx, refpy)
 
     maxvar, vcmt = maxvar_vcm_mpi(ifg_paths, params, preread_ifgs)
-    ifgs = pre_prepare_ifgs(ifg_paths, params)
     save_numpy_phase(ifg_paths, tiles, params)
 
     if params[cf.TIME_SERIES_CAL] != 0:
         time_series_mpi(ifg_paths, params, vcmt, tiles, preread_ifgs)
-        # compute_time_series(ifgs, mst_grid, params, vcmt)
 
     # Calculate linear rate map
-    rate, error, samples = calculate_linear_rate(ifgs, params, vcmt, mst_grid)
     linrate_mpi(ifg_paths, params, vcmt, tiles, preread_ifgs)
 
     log.info('PyRate workflow completed')
-    return mst_grid, (refpx, refpy), maxvar, vcmt, rate, error, samples
+    return (refpx, refpy), maxvar, vcmt
 
 
 def linrate_mpi(ifg_paths, params, vcmt, tiles, preread_ifgs):
@@ -353,7 +335,6 @@ def linrate_mpi(ifg_paths, params, vcmt, tiles, preread_ifgs):
         rate_file = os.path.join(output_dir, 'linrate_{}.npy'.format(i))
         error_file = os.path.join(output_dir, 'linerror_{}.npy'.format(i))
         samples_file = os.path.join(output_dir, 'linsamples_{}.npy'.format(i))
-
         np.save(file=rate_file, arr=rate)
         np.save(file=error_file, arr=error)
         np.save(file=samples_file, arr=samples)

@@ -15,7 +15,8 @@ from pyrate import shared
 from pyrate import vcm
 from pyrate import refpixel
 from pyrate.scripts import run_pyrate, run_prepifg, postprocessing
-from tests.common import sydney_data_setup
+from tests.common import sydney_data_setup, reconstruct_mst, \
+    reconstruct_linrate
 from tests import common
 from tests.test_vcm import matlab_maxvar
 from pyrate import config as cf
@@ -287,31 +288,6 @@ def reconstruct_times_series(shape, tiles, output_dir):
                   t.top_left_x: t.bottom_right_x, :] = np.load(tscum_file_n)
 
     return tsincr_mpi, tscum_mpi
-
-
-def reconstruct_linrate(shape, tiles, output_dir, out_type):
-    rate = np.zeros(shape=shape, dtype=np.float32)
-    for t in tiles:
-        rate_file = os.path.join(output_dir, out_type +
-                                 '_{}.npy'.format(t.index))
-        rate_tile = np.load(file=rate_file)
-        rate[t.top_left_y:t.bottom_right_y,
-             t.top_left_x:t.bottom_right_x] = rate_tile
-    return rate
-
-
-def reconstruct_mst(shape, tiles, output_dir):
-    mst_file_0 = os.path.join(output_dir, 'mst_mat_{}.npy'.format(0))
-    shape0 = np.load(mst_file_0).shape[0]
-
-    mst_mpi = np.empty(shape=((shape0,) + shape), dtype=np.float32)
-    mst_mpi = np.empty_like(mst_mpi, dtype=np.float32)
-
-    for i, t in enumerate(tiles):
-        mst_file_n = os.path.join(output_dir, 'mst_mat_{}.npy'.format(i))
-        mst_mpi[:, t.top_left_y:t.bottom_right_y,
-                t.top_left_x: t.bottom_right_x] = np.load(mst_file_n)
-    return mst_mpi
 
 
 def test_prepifg_mpi(mpisync, get_config, tempdir,

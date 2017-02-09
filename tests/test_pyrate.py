@@ -192,6 +192,7 @@ class ParallelPyRateTests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        rate_types = ['linrate', 'linerror', 'linsamples']
         cls.tif_dir = tempfile.mkdtemp()
         cls.test_conf = common.SYDNEY_TEST_CONF
 
@@ -213,12 +214,16 @@ class ParallelPyRateTests(unittest.TestCase):
         # dest_paths are tifs that have been geotif converted and multilooked
         cls.dest_paths = cf.get_dest_paths(
             base_unw_paths, crop, params, xlks)
-
         run_prepifg.gamma_prepifg(base_unw_paths, params)
-
-        cls.mst_p, cls.refpixel_p, cls.maxvar_p, cls.vcmt_p, cls.rate_p, \
-            cls.error_p, cls.samples_p = \
+        tiles = run_pyrate.get_tiles(cls.dest_paths[0], 3, 3)
+        ifgs = common.sydney_data_setup()
+        cls.refpixel_p, cls.maxvar_p, cls.vcmt_p = \
             run_pyrate.process_ifgs(cls.dest_paths, params, 3, 3)
+        cls.mst_p = common.reconstruct_mst(ifgs[0].shape, tiles, cls.tif_dir)
+        cls.rate_p, cls.error_p, cls.samples_p = [
+            common.reconstruct_linrate(ifgs[0].shape, tiles, cls.tif_dir, t)
+            for t in rate_types
+            ]
 
         # now create the non parallel version
         cls.tif_dir_s = tempfile.mkdtemp()
@@ -227,9 +232,14 @@ class ParallelPyRateTests(unittest.TestCase):
         cls.dest_paths_s = cf.get_dest_paths(
             base_unw_paths, crop, params, xlks)
         run_prepifg.gamma_prepifg(base_unw_paths, params)
-        cls.mst, cls.refpixel, cls.maxvar, cls.vcmt, cls.rate, \
-            cls.error, cls.samples = \
+        cls.refpixel, cls.maxvar, cls.vcmt = \
             run_pyrate.process_ifgs(cls.dest_paths_s, params, 3, 3)
+
+        cls.mst = common.reconstruct_mst(ifgs[0].shape, tiles, cls.tif_dir_s)
+        cls.rate, cls.error, cls.samples = [
+            common.reconstruct_linrate(ifgs[0].shape, tiles, cls.tif_dir_s, t)
+            for t in rate_types
+            ]
 
     @classmethod
     def tearDownClass(cls):
