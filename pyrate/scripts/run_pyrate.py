@@ -357,6 +357,7 @@ def linrate_mpi(ifg_paths, params, vcmt, tiles, preread_ifgs):
         np.save(file=rate_file, arr=rate)
         np.save(file=error_file, arr=error)
         np.save(file=samples_file, arr=samples)
+    mpiops.comm.barrier()
 
 
 def maxvar_vcm_mpi(ifg_paths, params, preread_ifgs):
@@ -524,6 +525,7 @@ def time_series_mpi(ifg_paths, params, vcmt, tiles, preread_ifgs):
         tscum_file = os.path.join(output_dir, 'tscuml_{}.npy'.format(i))
         np.save(file=tsincr_file, arr=tsincr)
         np.save(file=tscum_file, arr=tscum)
+    mpiops.comm.barrier()
 
 
 def compute_time_series(ifgs, mst_grid, params, vcmt):
