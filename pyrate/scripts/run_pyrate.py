@@ -99,7 +99,7 @@ def create_ifg_dict(dest_tifs, params, tiles):
     return ifgs_dict
 
 
-def mpi_mst_calc(dest_tifs, params, tiles, preread_ifgs):
+def mst_calc(dest_tifs, params, tiles, preread_ifgs):
     """
     MPI function that control each process during MPI run
     """
@@ -192,7 +192,7 @@ def orb_fit_calc(ifg_paths, params):
     log.info('Finished orbfit calculation in process {}'.format(mpiops.rank))
 
 
-def ref_phase_estimation_mpi(ifg_paths, params, refpx, refpy):
+def ref_phase_estimation(ifg_paths, params, refpx, refpy):
     # TODO: may benefit from tiling and using a median of median algorithms
     log.info('Estimating and removing reference phase')
     if params[cf.REF_EST_METHOD] == 1:
@@ -281,7 +281,7 @@ def process_ifgs(ifg_paths, params, rows, cols):
                                    params=params,
                                    tiles=tiles)
 
-    mpi_mst_calc(ifg_paths, params, tiles, preread_ifgs)
+    mst_calc(ifg_paths, params, tiles, preread_ifgs)
 
     # Estimate reference pixel location
     refpx, refpy = ref_pixel_calc(ifg_paths, params)
@@ -299,22 +299,22 @@ def process_ifgs(ifg_paths, params, rows, cols):
     orb_fit_calc(ifg_paths, params)
 
     # calc and remove reference phase
-    ref_phase_estimation_mpi(ifg_paths, params, refpx, refpy)
+    ref_phase_estimation(ifg_paths, params, refpx, refpy)
 
     maxvar, vcmt = maxvar_vcm_mpi(ifg_paths, params, preread_ifgs)
     save_numpy_phase(ifg_paths, tiles, params)
 
-    if params[cf.TIME_SERIES_CAL] != 0:
-        time_series_mpi(ifg_paths, params, vcmt, tiles, preread_ifgs)
+    if params[cf.TIME_SERIES_CAL]:
+        timeseries_calc(ifg_paths, params, vcmt, tiles, preread_ifgs)
 
     # Calculate linear rate map
-    linrate_mpi(ifg_paths, params, vcmt, tiles, preread_ifgs)
+    linrate_calc(ifg_paths, params, vcmt, tiles, preread_ifgs)
 
     log.info('PyRate workflow completed')
     return (refpx, refpy), maxvar, vcmt
 
 
-def linrate_mpi(ifg_paths, params, vcmt, tiles, preread_ifgs):
+def linrate_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
 
     process_tiles = mpiops.array_split(tiles)
     log.info('Calculating linear rate')
@@ -489,7 +489,7 @@ def calculate_time_series(ifgs, params, vcmt, mst):
     return tsincr, tscum, tsvel
 
 
-def time_series_mpi(ifg_paths, params, vcmt, tiles, preread_ifgs):
+def timeseries_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
     process_tiles = mpiops.array_split(tiles)
     log.info('Calculating time series')
     output_dir = params[cf.OUT_DIR]
@@ -541,7 +541,7 @@ def get_projection_info(ifg_path, params):
 
 def write_timeseries_geotiff(ifgs, params, tsincr, pr_type):
     # setup metadata for writing into result files
-    gt, md, wkt = get_projection_info(ifgs, params)
+    gt, md, wkt = get_projection_info(ifgs[0].data_path, params)
     epochlist = algorithm.get_epochs(ifgs)
 
     for i in range(tsincr.shape[2]):
@@ -549,7 +549,7 @@ def write_timeseries_geotiff(ifgs, params, tsincr, pr_type):
         md['PR_SEQ_POS'] = i  # sequence position
 
         data = tsincr[:, :, i]
-        dest = join(PYRATEPATH, params[cf.OUT_DIR], pr_type + "_" +
+        dest = join(params[cf.OUT_DIR], pr_type + "_" +
                     str(epochlist.dates[i + 1]) + ".tif")
         md[ifc.PRTYPE] = pr_type
         write_output_geotiff(md, gt, wkt, data, dest, np.nan)
