@@ -24,7 +24,7 @@ $ module unload openmpi
 2. Load the modules requried for installation and running:
 ```bash
 $ module load python3/3.4.3 python3/3.4.3-matplotlib 
-$ module load hdf5/1.8.10 gdal/2.0.0 openmpi/2.0.0 netcdf/4.3.2
+$ module load hdf5/1.8.10 gdal/1.8 openmpi/2.0.0 netcdf/4.3.2
 ```
 (Alternatively, you may wish to add the above lines to your ~/.profile)
 
