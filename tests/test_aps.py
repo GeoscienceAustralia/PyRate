@@ -17,7 +17,7 @@ from pyrate.compat import PyAPS_INSTALLED
 from pyrate.scripts import run_pyrate, run_prepifg
 from tests import common
 if PyAPS_INSTALLED:
-    from pyrate import remove_aps_delay as aps
+    from pyrate import aps
 
 
 @unittest.skipUnless(PyAPS_INSTALLED, 'PyAPS must be available for this test')

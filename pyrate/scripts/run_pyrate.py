@@ -27,7 +27,7 @@ from pyrate.shared import Ifg, write_output_geotiff, \
 from pyrate.compat import PyAPS_INSTALLED
 from pyrate import mpiops
 if PyAPS_INSTALLED:
-    from pyrate import remove_aps_delay as aps
+    from pyrate import aps
 
 PYRATEPATH = cf.PYRATEPATH
 MASTER_PROCESS = 0

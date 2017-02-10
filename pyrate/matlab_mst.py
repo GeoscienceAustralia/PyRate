@@ -1,9 +1,8 @@
-from __future__ import print_function
 """
 This is the python implementation of the make_mstmat.m very closely
 resembling the matlab.
 """
-
+from __future__ import print_function
 import itertools
 import sys
 from abc import ABCMeta, abstractmethod
@@ -12,7 +11,6 @@ import numpy as np
 
 from pyrate.algorithm import get_epochs_and_n
 from pyrate.shared import Ifg
-from tests.common import sydney_ifg_file_list
 
 DTYPE = [('id', int), ('master', int), ('slave', int), ('nan_frac', float)]
 
@@ -71,10 +69,7 @@ class IfgListPyRate(IfGMeta):
     """
 
     def __init__(self, datafiles=None):
-        if not datafiles:
-            self.datafiles = sydney_ifg_file_list()
-        else:
-            self.datafiles = datafiles
+        self.datafiles = datafiles
         self.nml = self.get_nml_list()
         self.ifgs = self.get_ifgs_list()
         self.id = range(len(self.nml))
