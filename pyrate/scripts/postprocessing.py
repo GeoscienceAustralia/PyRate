@@ -15,15 +15,16 @@ gdal.SetCacheMax(64)
 
 log = logging.getLogger(__name__)
 
-
 # Constants
 MASTER_PROCESS = 0
 
 
 def main(config_file, rows, cols):
     # setup paths
-    _, _, params = cf.get_ifg_paths(config_file)
+    base_unw_paths, dest_paths, params= cf.get_ifg_paths(config_file)
     postprocess_linrate(rows, cols, params)
+    if params[cf.TIME_SERIES_CAL]:
+        postprocess_timeseries(rows, cols, params)
 
 
 def postprocess_linrate(rows, cols, params):
@@ -36,19 +37,12 @@ def postprocess_linrate(rows, cols, params):
     preread_ifgs_file = join(params[cf.OUT_DIR], 'preread_ifgs.pk')
     ifgs = cp.load(open(preread_ifgs_file, 'rb'))
     tiles = run_pyrate.get_tiles(dest_tifs[0], rows, cols)
-    # save latest phase data for use in linrate and mpi
-    # save_timeseries(dest_tifs, params, tiles)
+
     # linrate aggregation
     if mpiops.size >= 3:
         [save_linrate(ifgs, params, tiles, out_type=t)
          for i, t in enumerate(['linrate', 'linerror', 'linsamples'])
          if i == mpiops.rank]
-        if mpiops.rank == MASTER_PROCESS:
-            save_linrate(ifgs, params, tiles, out_type='linrate')
-        elif mpiops.rank == 1:
-            save_linrate(ifgs, params, tiles, out_type='linerror')
-        elif mpiops.rank == 2:
-            save_linrate(ifgs, params, tiles, out_type='linsamples')
     else:
         if mpiops.rank == MASTER_PROCESS:
             [save_linrate(ifgs, params, tiles, out_type=t)
@@ -56,7 +50,7 @@ def postprocess_linrate(rows, cols, params):
 
 
 def save_linrate(ifgs_dict, params, tiles, out_type):
-    log.info('Saving linrate output type {}'.format(out_type))
+    log.info('Stating postprocessing {}'.format(out_type))
     gt, md, wkt = ifgs_dict['gt'], ifgs_dict['md'], ifgs_dict['wkt']
     epochlist = ifgs_dict['epochlist']
     ifgs = [v for v in ifgs_dict.values() if isinstance(v, PrereadIfg)]
@@ -74,12 +68,26 @@ def save_linrate(ifgs_dict, params, tiles, out_type):
     shared.write_output_geotiff(md, gt, wkt, rate, dest, np.nan)
     npy_rate_file = os.path.join(params[cf.OUT_DIR], out_type + '.npy')
     np.save(file=npy_rate_file, arr=rate)
+    log.info('Finished postprocessing {}'.format(out_type))
 
 
-def save_timeseries(dest_tifs, params, tiles, parallel, MPI_id):
-    ifgs = shared.prepare_ifgs_without_phase(dest_tifs, params)
-    epochlist, gt, md, wkt = run_pyrate.setup_metadata(ifgs, params)
+def postprocess_timeseries(rows, cols, params):
+    xlks, ylks, crop = cf.transform_params(params)
+    base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST])
+    dest_tifs = cf.get_dest_paths(base_unw_paths, crop, params, xlks)
     output_dir = params[cf.OUT_DIR]
+
+    # load previously saved prepread_ifgs dict
+    preread_ifgs_file = join(output_dir, 'preread_ifgs.pk')
+    ifgs = cp.load(open(preread_ifgs_file, 'rb'))
+
+    # metadata and projections
+    gt, md, wkt = ifgs['gt'], ifgs['md'], ifgs['wkt']
+    epochlist = ifgs['epochlist']
+    ifgs = [v for v in ifgs.values() if isinstance(v, PrereadIfg)]
+
+    tiles = run_pyrate.get_tiles(dest_tifs[0], rows, cols)
+
     # load the first tsincr file to determine the number of time series tifs
     tsincr_file = os.path.join(output_dir, 'tsincr_0.npy')
     tsincr = np.load(file=tsincr_file)
@@ -87,14 +95,15 @@ def save_timeseries(dest_tifs, params, tiles, parallel, MPI_id):
     no_ts_tifs = tsincr.shape[2]
     # we create 2 x no_ts_tifs as we are splitting tsincr and tscuml
     # to all processes.
-    process_tifs = parallel.calc_indices(no_ts_tifs * 2)
+    process_tifs = mpiops.array_split(range(2 * no_ts_tifs))
 
     # depending on nvelpar, this will not fit in memory
     # e.g. nvelpar=100, nrows=10000, ncols=10000, 32bit floats need 40GB memory
     # 32 * 100 * 10000 * 10000 / 8 bytes = 4e10 bytes = 40 GB
     # the double for loop helps us overcome the memory limit
     log.info('process {} will write {} ts (incr/cuml) tifs '
-             'of total {}'.format(MPI_id, len(process_tifs), no_ts_tifs * 2))
+             'of total {}'.format(mpiops.rank, len(process_tifs),
+                                  no_ts_tifs * 2))
     for i in process_tifs:
         tscum_g = np.empty(shape=ifgs[0].shape, dtype=np.float32)
         if i < no_ts_tifs:
@@ -131,4 +140,5 @@ def save_timeseries(dest_tifs, params, tiles, parallel, MPI_id):
                 shared.write_output_geotiff(md, gt, wkt, tsincr_g, dest,
                                             np.nan)
     log.info('process {} finished writing {} ts (incr/cuml) tifs '
-             'of total {}'.format(MPI_id, len(process_tifs), no_ts_tifs * 2))
+             'of total {}'.format(mpiops.rank,
+                                  len(process_tifs), no_ts_tifs * 2))

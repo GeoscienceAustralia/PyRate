@@ -21,6 +21,7 @@ from tests import common
 from tests.test_vcm import matlab_maxvar
 from pyrate import config as cf
 from pyrate import mpiops
+from pyrate import algorithm
 
 TRAVIS = True if 'TRAVIS' in os.environ else False
 
@@ -156,7 +157,7 @@ def test_vcm_matlab_vs_mpi(mpisync, tempdir, get_config):
                                               tiles=tiles)
     refpx, refpy = run_pyrate.ref_pixel_calc(dest_paths, params_dict)
     run_pyrate.orb_fit_calc(dest_paths, params_dict)
-    run_pyrate.ref_phase_estimation_mpi(dest_paths, params_dict, refpx, refpy)
+    run_pyrate.ref_phase_estimation(dest_paths, params_dict, refpx, refpy)
 
     maxvar, vcmt = run_pyrate.maxvar_vcm_mpi(dest_paths, params_dict,
                                              preread_ifgs)
@@ -181,7 +182,7 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
         print('skipping test')
         return
 
-    if TRAVIS and xlks % 2:
+    if TRAVIS and xlks != 2:
         print("skipping test during travis")
         return
 
@@ -198,16 +199,17 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
     tiles = mpiops.run_once(run_pyrate.get_tiles, dest_paths[0],
                             rows=row_splits, cols=col_splits)
     preread_ifgs = run_pyrate.create_ifg_dict(dest_paths, params, tiles)
-    run_pyrate.mpi_mst_calc(dest_paths, params, tiles, preread_ifgs)
+    run_pyrate.mst_calc(dest_paths, params, tiles, preread_ifgs)
     refpx, refpy = run_pyrate.ref_pixel_calc(dest_paths, params)
     run_pyrate.orb_fit_calc(dest_paths, params)
-    run_pyrate.ref_phase_estimation_mpi(dest_paths, params, refpx, refpy)
+    run_pyrate.ref_phase_estimation(dest_paths, params, refpx, refpy)
 
     maxvar, vcmt = run_pyrate.maxvar_vcm_mpi(dest_paths, params, preread_ifgs)
     pyrate.shared.save_numpy_phase(dest_paths, tiles, params)
-    run_pyrate.time_series_mpi(dest_paths, params, vcmt, tiles, preread_ifgs)
-    run_pyrate.linrate_mpi(dest_paths, params, vcmt, tiles, preread_ifgs)
+    run_pyrate.timeseries_calc(dest_paths, params, vcmt, tiles, preread_ifgs)
+    run_pyrate.linrate_calc(dest_paths, params, vcmt, tiles, preread_ifgs)
     postprocessing.postprocess_linrate(row_splits, col_splits, params)
+    postprocessing.postprocess_timeseries(row_splits, col_splits, params)
     ifgs_mpi_out_dir = params[cf.OUT_DIR]
     ifgs_mpi = sydney_data_setup(datafiles=dest_paths)
 
@@ -234,8 +236,8 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
         _, ifgs = rpe.estimate_ref_phase(ifgs, params_old, refx, refy)
         maxvar_s = [vcm.cvd(i, params_old)[0] for i in ifgs]
         vcmt_s = vcm.get_vcmt(ifgs, maxvar)
-        tsincr, tscum, _ = run_pyrate.calculate_time_series(
-            ifgs, params_old, vcmt_s, mst=mst_grid)
+        tsincr, tscum, _ = run_pyrate.compute_time_series(
+            ifgs, mst_grid, params, vcmt)
         rate, error, samples = run_pyrate.calculate_linear_rate(
             ifgs, params_old, vcmt, mst_grid)
         mst_mpi = reconstruct_mst(ifgs[0].shape, tiles, ifgs_mpi_out_dir)
@@ -256,17 +258,29 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
         np.testing.assert_array_almost_equal(rate, rate_mpi, decimal=4)
         np.testing.assert_array_almost_equal(error, error_mpi, decimal=4)
         np.testing.assert_array_almost_equal(samples, samples_mpi, decimal=4)
-        linrate_tif_s = os.path.join(params_old[cf.OUT_DIR], 'linrate.tif')
-        linrate_tif_m = os.path.join(ifgs_mpi_out_dir, 'linrate.tif')
-        common.assert_ifg_phase_equal(linrate_tif_m, linrate_tif_s)
-        linrate_tif_s = os.path.join(params_old[cf.OUT_DIR], 'linerror.tif')
-        linrate_tif_m = os.path.join(ifgs_mpi_out_dir, 'linerror.tif')
-        common.assert_ifg_phase_equal(linrate_tif_m, linrate_tif_s)
-        linrate_tif_s = os.path.join(params_old[cf.OUT_DIR], 'linsamples.tif')
-        linrate_tif_m = os.path.join(ifgs_mpi_out_dir, 'linsamples.tif')
-        common.assert_ifg_phase_equal(linrate_tif_m, linrate_tif_s)
+
+        # assert linear rate output tifs are same
+        _tifs_same(ifgs_mpi_out_dir, params_old[cf.OUT_DIR], 'linrate.tif')
+        _tifs_same(ifgs_mpi_out_dir, params_old[cf.OUT_DIR], 'linerror.tif')
+        _tifs_same(ifgs_mpi_out_dir, params_old[cf.OUT_DIR], 'linsamples.tif')
+
+        # assert time series output tifs are same
+        epochlist = algorithm.get_epochs(ifgs)
+
+        for i in range(tsincr.shape[2]):
+            _tifs_same(ifgs_mpi_out_dir, params_old[cf.OUT_DIR],
+                       'tsincr' + '_' + str(epochlist.dates[i + 1]) + ".tif")
+
+        # 12 timeseries ooutput
+        assert i + 1 == tsincr.shape[2]
         shutil.rmtree(ifgs_mpi_out_dir)  # remove mpi out dir
         shutil.rmtree(params_old[cf.OUT_DIR])  # remove serial out dir
+
+
+def _tifs_same(dir1, dir2, tif):
+    linrate_tif_s = os.path.join(dir1, tif)
+    linrate_tif_m = os.path.join(dir2, tif)
+    common.assert_ifg_phase_equal(linrate_tif_m, linrate_tif_s)
 
 
 def reconstruct_times_series(shape, tiles, output_dir):
