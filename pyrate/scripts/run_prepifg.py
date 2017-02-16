@@ -47,7 +47,9 @@ def main(params=None):
             if params[cf.APS_ELEVATION_MAP]:
                 base_ifg_paths.append(params[cf.APS_ELEVATION_MAP])
         return base_ifg_paths
-
+    if mpiops.size > 1:
+        params[cf.LUIGI] = False
+        params[cf.PARALLEL] = False
     if params:
         base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST])
         LUIGI = params[cf.LUIGI]  # luigi or no luigi
@@ -65,10 +67,6 @@ def main(params=None):
         base_ifg_paths = _convert_dem_inc_ele(params, base_ifg_paths)
 
     PROCESSOR = params[cf.PROCESSOR]  # roipac or gamma
-
-    if mpiops.size > 1:
-        LUIGI = False
-        params[cf.PARALLEL] = False
 
     if LUIGI:
         log.info("Running luigi prepifg")
@@ -128,8 +126,7 @@ def gamma_prepifg(base_unw_paths, params):
     thresh = params[cf.NO_DATA_AVERAGING_THRESHOLD]
     if parallel:
         Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
-            delayed(prepifg.prepare_ifg)(p,
-                   xlooks, ylooks, exts, thresh, crop)
+            delayed(prepifg.prepare_ifg)(p, xlooks, ylooks, exts, thresh, crop)
             for p in dest_base_ifgs)
     else:
         [prepifg.prepare_ifg(i, xlooks, ylooks, exts,
