@@ -29,7 +29,7 @@ $ module unload intel-fc
 $ module unload openmpi
 ```
 
-3. Load the modules requried for installation and running:
+3. Load the modules required for installation and running:
 ```bash
 $ module load python3/3.4.3 python3/3.4.3-matplotlib 
 $ module load hdf5/1.8.10 gdal/2.0.0 openmpi/1.8 netcdf/4.3.2
@@ -47,7 +47,7 @@ export LANG=en_AU.UTF-8
 source $HOME/.local/bin/virtualenvwrapper.sh
 ``` 
 
-5. Install virtualenv and virtualenvwrapper by running the following command
+5. Install virtualenv and `virtualenvwrapper` by running the following command
 on the terminal:
 ```bash
 $ pip3 install  --user virtualenv virtualenvwrapper
