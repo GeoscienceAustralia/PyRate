@@ -57,11 +57,44 @@ TODO
 
 ## PyRate workflow:
 
+`PyRate` installs an executable `pyrate`.
+
+Use `help` for the different command line options:
+
+    >> pyrate --help
+    Usage: pyrate [OPTIONS] COMMAND [ARGS]...
+    
+    Options:
+      -v, --verbosity [DEBUG|INFO|WARNING|ERROR]
+                                      Level of logging
+      --help                          Show this message and exit.
+    
+    Commands:
+      linrate
+      postprocess
+      prepifg
+
+As you can see `pyrate` has three command line options.
+
+1. prepifg
+1. linrate
+1. postprocess
+
+Below we discuss these options.
+
 ### Preparing interferrograms: prepifg
 The first step of PyRate is to convert the unwrapped interforrograms into 
 geotiffs, followed by multilooking and cropping. Both of these operations are 
-performed by the following command:
+performed by `pyrate prepifg` command:
+
+    >> pyrate prepifg --help
+    Usage: pyrate prepifg [OPTIONS] CONFIG_FILE
+    
+    Options:
+      --help  Show this message and exit.
  
+So one can use the `prepfig` command as the following:
+    
     pyrate prepifg /path/to/config_file
     
 The two major steps during the `prepifg` operation are described below.
@@ -85,9 +118,44 @@ Both config files can be used with `prepifg`.
  
 ### Linear rate and time series analysis: linrate
 
+    >> pyrate linrate --help
+    Usage: pyrate linrate [OPTIONS] CONFIG_FILE
+    
+    Options:
+      -r, --rows INTEGER  divide ifgs into this many rows
+      -c, --cols INTEGER  divide ifgs into this many columns
+      --help              Show this message and exit
+
+
 This is the core of the processing tools, handled by the `linrate` command:
     
-    pyrate linrate path/to/config_file
+    pyrate linrate path/to/config_file -c 3 -r 4
+
+This command will does the time series and linear rate analysis, but has the 
+options to break the interferrograms into tiles of `r` rows and `c` columns.
+So this above command will break the interferrograms into 12 tiles and will
+produce 12 linear rate and time series predictions corresponding to each tile.
+
+The optional rows and columns help us create smaller `tiles` of the
+interferrograms that can be accommodated in the memory. The number of tiles
+chosen should be as small as possible that fits in the system memory.
+
+### Putting it back together: postprocess
+The last step in `pyrate` is to put all the tiles back together from the
+`linrate` part.
+
+    >> pyrate postprocess --help
+    Usage: pyrate postprocess [OPTIONS] CONFIG_FILE
+    
+    Options:
+      -r, --rows INTEGER  divide ifgs into this many rows
+      -c, --cols INTEGER  divide ifgs into this many columns
+      --help              Show this message and exit.
+
+Make sure to use the same number of rows and columns with `postprocess` as
+with `linrate`:
+    
+    pyrate postprocess path/to/config_file -c 3 -r 4
 
 ### Running the viewer
 
