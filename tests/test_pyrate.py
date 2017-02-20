@@ -133,7 +133,6 @@ class PyRateTests(unittest.TestCase):
 
             params = config.get_config_params(
                 os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf'))
-            params[cf.SIM_DIR] = cf.PYRATEPATH
             params[cf.OUT_DIR] = cls.BASE_OUT_DIR
             params[cf.PROCESSOR] = 0  # roipac
             params[cf.APS_CORRECTION] = 0
