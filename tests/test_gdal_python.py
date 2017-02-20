@@ -400,7 +400,8 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
 
             # only band 1 is resapled in warp_old
             averaged_and_resampled, _ = gdalwarp.crop_resample_average(
-                self.temp_tif, extents, [res, -res], self.out_tif, thresh)
+                self.temp_tif, extents, [res, -res], self.out_tif, thresh,
+                match_pirate=True)
             ifg = Ifg(self.temp_tif)
             # only band 1 is resampled in warp_old
             data, self.old_prepifg_path = prepifg.warp_old(
@@ -481,7 +482,8 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
                 res = orig_res*x_looks
                 averaged_and_resampled = gdalwarp.crop_resample_average(
                     ifg.data_path, extents, new_res=[res, -res],
-                    output_file=self.temp_tif, thresh=thresh)[0]
+                    output_file=self.temp_tif, thresh=thresh,
+                    match_pirate=True)[0]
 
                 # only band 1 is resampled in warp_old
                 data, self.old_prepifg_path = prepifg.warp_old(
@@ -513,7 +515,7 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
             averaged_and_resampled, out_ds = gdalwarp.crop_resample_average(
                 ifg.data_path, extents, new_res=[res, -res],
                 output_file=self.temp_tif, thresh=thresh,
-                out_driver_type='MEM')
+                out_driver_type='MEM', match_pirate=True)
 
             # only band 1 is resampled in warp_old
             data, self.old_prepifg_path = prepifg.warp_old(
