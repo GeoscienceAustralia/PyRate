@@ -29,7 +29,6 @@ from pyrate import mpiops
 if PyAPS_INSTALLED:
     from pyrate import aps
 
-PYRATEPATH = cf.PYRATEPATH
 MASTER_PROCESS = 0
 log = logging.getLogger(__name__)
 
@@ -471,8 +470,7 @@ def mst_calculation(ifg_paths_or_instance, params):
         mst_grid = matlab_mst.matlab_mst_boolean_array(ifg_instance_updated)
 
     # write mst output to a file
-    mst_mat_binary_file = join(
-        PYRATEPATH, params[cf.OUT_DIR], 'mst_mat')
+    mst_mat_binary_file = join(params[cf.OUT_DIR], 'mst_mat')
     np.save(file=mst_mat_binary_file, arr=mst_grid)
 
     for i in ifgs:
@@ -533,8 +531,7 @@ def compute_time_series(ifgs, mst_grid, params, vcmt):
 
 
 def get_projection_info(ifg_path, params):
-    p = join(params[cf.OUT_DIR], ifg_path)
-    ds = gdal.Open(p)
+    ds = gdal.Open(ifg_path)
     md = ds.GetMetadata()  # get metadata for writing on output tifs
     gt = ds.GetGeoTransform()  # get geographical bounds of data
     wkt = ds.GetProjection()  # get projection of data
@@ -650,14 +647,14 @@ def write_linrate_tifs(ifgs, params, res):
     rate, error, samples = res
     gt, md, wkt = get_projection_info(ifgs[0].data_path, params)
     epochlist = algorithm.get_epochs(ifgs)
-    dest = join(PYRATEPATH, params[cf.OUT_DIR], "linrate.tif")
+    dest = join(params[cf.OUT_DIR], "linrate.tif")
     md[ifc.MASTER_DATE] = epochlist.dates
     md[ifc.PRTYPE] = 'linrate'
     write_output_geotiff(md, gt, wkt, rate, dest, np.nan)
-    dest = join(PYRATEPATH, params[cf.OUT_DIR], "linerror.tif")
+    dest = join(params[cf.OUT_DIR], "linerror.tif")
     md[ifc.PRTYPE] = 'linerror'
     write_output_geotiff(md, gt, wkt, error, dest, np.nan)
-    dest = join(PYRATEPATH, params[cf.OUT_DIR], "linsamples.tif")
+    dest = join(params[cf.OUT_DIR], "linsamples.tif")
     md[ifc.PRTYPE] = 'linsamples'
     write_output_geotiff(md, gt, wkt, samples, dest, np.nan)
     write_linrate_numpy_files(error, rate, samples, params)

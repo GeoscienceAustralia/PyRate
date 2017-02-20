@@ -16,8 +16,6 @@ from os.path import splitext
 import warnings
 from pyrate import compat
 
-PYRATEPATH = os.environ['PYRATEPATH']
-
 # general constants
 NO_MULTILOOKING = 1
 
@@ -415,7 +413,7 @@ def original_ifg_paths(ifglist_path):
     """
 
     basedir = os.path.dirname(ifglist_path)
-    ifglist = parse_namelist(os.path.join(PYRATEPATH, ifglist_path))
+    ifglist = parse_namelist(ifglist_path)
     return [os.path.join(basedir, p) for p in ifglist]
 
 
@@ -430,10 +428,10 @@ def mlooked_path(path, looks, crop_out):
 
 def get_dest_paths(base_paths, crop, params, looks):
     dest_mlooked_ifgs = [mlooked_path(os.path.basename(q).split('.')[0]
-        + '.tif', looks=looks, crop_out=crop) for q in base_paths]
+                                      + '.tif', looks=looks, crop_out=crop)
+                         for q in base_paths]
 
-    return [os.path.join(os.environ['PYRATEPATH'], params[OUT_DIR], p)
-            for p in dest_mlooked_ifgs]
+    return [os.path.join(params[OUT_DIR], p) for p in dest_mlooked_ifgs]
 
 
 def get_ifg_paths(config_file):
