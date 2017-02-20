@@ -164,14 +164,15 @@ def ref_pixel_mpi(ifg_paths, params):
 
 
 def save_ref_pixel_blocks(grid, half_patch_size, ifg_paths, params):
+    log.info('Saving ref pixel blocks')
     outdir = params[cf.OUT_DIR]
     for p in ifg_paths:
+        ifg = Ifg(p)
+        ifg.open(readonly=True)
+        ifg.nodata_value = params[cf.NO_DATA_VALUE]
+        ifg.convert_to_nans()
+        ifg.convert_to_mm()
         for y, x in grid:
-            ifg = Ifg(p)
-            ifg.open(readonly=True)
-            ifg.nodata_value = params[cf.NO_DATA_VALUE]
-            ifg.convert_to_nans()
-            ifg.convert_to_mm()
             data = ifg.phase_data[y - half_patch_size:y + half_patch_size + 1,
                                   x - half_patch_size:x + half_patch_size + 1]
 
@@ -179,6 +180,8 @@ def save_ref_pixel_blocks(grid, half_patch_size, ifg_paths, params):
                                          b=os.path.basename(p).split('.')[0],
                                          y=y, x=x))
             np.save(file=data_file, arr=data)
+        ifg.close()
+    log.info('Saved ref pixel blocks')
 
 
 def orb_fit_calc(ifg_paths, params):

@@ -1,11 +1,13 @@
 from numpy import isnan, std, mean, sum as nsum
 import os
+import logging
 import numpy as np
 from itertools import product
 from joblib import Parallel, delayed
 import pyrate.config as cf
 from pyrate.shared import Ifg
 
+log = logging.getLogger(__name__)
 
 # TODO: move error checking to config step (for fail fast)
 def ref_pixel(ifgs, params):
@@ -44,6 +46,7 @@ def ref_pixel(ifgs, params):
 
 
 def filter_means(mean_sds, grid):
+    log.info('Filtering means during reference pixel computation')
     min_sd = np.finfo(np.float64).max
     refx, refy = None, None
     for m, (y, x) in zip(mean_sds, grid):
@@ -58,6 +61,7 @@ def ref_pixel_setup(ifgs_or_paths, params):
     sets up the grid for reference pixel computation
     Also saves numpy files for later use during ref pixel computation
     """
+    log.info('Setting up ref pixel computation')
     refnx, refny, chipsize, min_frac = params[cf.REFNX], \
                                        params[cf.REFNY], \
                                        params[cf.REF_CHIP_SIZE], \
@@ -85,10 +89,12 @@ def ref_pixel_setup(ifgs_or_paths, params):
     rows, cols = head.shape
     ysteps = step(rows, refny, half_patch_size)
     xsteps = step(cols, refnx, half_patch_size)
+    log.info('Ref pixel setup finished')
     return half_patch_size, thresh, list(product(ysteps, xsteps))
 
 
 def ref_pixel_mpi(process_grid, half_patch_size, ifgs, thresh, params):
+    log.info('Ref pixel calculation started')
     mean_sds = []
     for y, x in process_grid:
         mean_sds.append(ref_pixel_multi(y, x, half_patch_size, ifgs, thresh,
@@ -98,7 +104,8 @@ def ref_pixel_mpi(process_grid, half_patch_size, ifgs, thresh, params):
 
 def ref_pixel_multi(y, x, half_patch_size, phase_data_or_ifg_paths,
                     thresh, params):
-    if isinstance(phase_data_or_ifg_paths[0], str):  # phase_data_or_ifg is list of ifgs
+    # phase_data_or_ifg is list of ifgs
+    if isinstance(phase_data_or_ifg_paths[0], str):
         # this consumes a lot less memory
         # one ifg.phase_data in memory at any time
         data = []
