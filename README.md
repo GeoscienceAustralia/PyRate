@@ -157,16 +157,6 @@ with `linrate`:
     
     pyrate postprocess path/to/config_file -c 3 -r 4
 
-### Running the viewer
-
-You run the viewer from *pyrate/viewer/web.py" and passing the directory containing the (geotif) files you want to look at as the first command line parameter. For example:
-
-	python pyrate/viewer/web.py /path/to/tifs
-
-The program looks for a file *test.ncdf* (specified by `pyrate.viewer.datamanager.IMAGE_STACK_FILE_NAME`) in */path/to/tifs* and if it cannot find it, it will create it from all the files with the tif extension in that directory. It will create (or overwrite) the file *na_frequency.png* at the same time.
-
-These two files will remain once the program exits and **WILL NOT BE AUTOMATICALLY RECREATED IF THE TIFF FILES CHANGE**. That is, one must manually remove *test.ncdf* to cause recreation of it.
-
 ## Integrating PyAPS with PyRate
 
 TODO
