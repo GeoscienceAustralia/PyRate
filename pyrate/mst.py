@@ -1,3 +1,4 @@
+# pylint: disable=invalid-name
 """
 Minimum Spanning Tree functionality for PyRate.
 
@@ -67,24 +68,14 @@ def mst_parallel(ifgs, params):
             for t in tiles)
         for k, tile in enumerate(tiles):
             result[:, tile.top_left_y:tile.bottom_right_y,
-                    tile.top_left_x: tile.bottom_right_x] = t_msts[k]
+                   tile.top_left_x: tile.bottom_right_x] = t_msts[k]
     else:
         print('Calculating mst using {} tiles in serial'.format(no_tiles))
         for k, tile in enumerate(tiles):
             result[:, tile.top_left_y:tile.bottom_right_y,
-                    tile.top_left_x: tile.bottom_right_x] = \
+                   tile.top_left_x: tile.bottom_right_x] = \
                 mst_multiprocessing(tile, ifg_paths)
 
-    return result
-
-
-def mst_multiprocessing_map(tiles, paths_or_ifgs, shape):
-    no_ifgs = len(paths_or_ifgs)
-    result = np.zeros(shape=(no_ifgs, shape[0], shape[1]), dtype=bool)
-    for t in tiles:
-        result[:, t.top_left_x:t.bottom_right_x,
-               t.top_left_y: t.bottom_right_y] = \
-            mst_multiprocessing(t, paths_or_ifgs)
     return result
 
 
@@ -184,10 +175,8 @@ def mst_matrix_networkx(ifgs):
     """
 
     # make default MST to optimise result when no Ifg cells in a stack are nans
-    edges_with_weights_for_networkx = [(i.master, i.slave, i.nan_fraction)
-                                       for i in ifgs]
-    edges, g_nx = minimum_spanning_edges_from_mst(
-        edges_with_weights_for_networkx)
+    edges_with_weights = [(i.master, i.slave, i.nan_fraction) for i in ifgs]
+    edges, g_nx = minimum_spanning_edges_from_mst(edges_with_weights)
 
     # TODO: memory efficiencies can be achieved here with tiling
     data_stack = array([i.phase_data for i in ifgs], dtype=float32)
@@ -211,7 +200,7 @@ def mst_matrix_networkx(ifgs):
         # repeatedly creating new graph objs & reduce RAM use
         ebunch_add = []
         ebunch_delete = []
-        for value, edge in zip(values, edges_with_weights_for_networkx):
+        for value, edge in zip(values, edges_with_weights):
             if not isnan(value):
                 if not g_nx.has_edge(edge[0], edge[1]):
                     ebunch_add.append(edge)
@@ -225,8 +214,19 @@ def mst_matrix_networkx(ifgs):
         yield y, x, minimum_spanning_tree(g_nx).edges()
 
 
-def minimum_spanning_edges_from_mst(edges_with_weights_for_networkx):
-    g_nx = _build_graph_networkx(edges_with_weights_for_networkx)
+def minimum_spanning_edges_from_mst(edges):
+    """
+    Parameters
+    ----------
+    edges: list
+        List of tuples (master, slave, nan_frac) corresponding to ifgs
+    Returns
+    -------
+    edges: list
+        list of mst edges
+    g_nx: nx.Graph() instance
+    """
+    g_nx = _build_graph_networkx(edges)
     T = minimum_spanning_tree(g_nx)  # step ifglist_mst in make_mstmat.m
     edges = T.edges()
     return edges, g_nx
