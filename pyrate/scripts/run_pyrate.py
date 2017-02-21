@@ -87,7 +87,7 @@ def create_ifg_dict(dest_tifs, params, tiles):
         preread_ifgs = join(params[cf.OUT_DIR], 'preread_ifgs.pk')
         # add some extra information that's also useful later
         gt, md, wkt = get_projection_info(process_tifs[0], params)
-        ifgs_dict['epochlist'] = algorithm.get_epochs(ifgs_dict)
+        ifgs_dict['epochlist'] = algorithm.get_epochs(ifgs_dict)[0]
         ifgs_dict['gt'] = gt
         ifgs_dict['md'] = md
         ifgs_dict['wkt'] = wkt
@@ -542,7 +542,7 @@ def get_projection_info(ifg_path, params):
 def write_timeseries_geotiff(ifgs, params, tsincr, pr_type):
     # setup metadata for writing into result files
     gt, md, wkt = get_projection_info(ifgs[0].data_path, params)
-    epochlist = algorithm.get_epochs(ifgs)
+    epochlist = algorithm.get_epochs(ifgs)[0]
 
     for i in range(tsincr.shape[2]):
         md[ifc.MASTER_DATE] = epochlist.dates[i + 1]
@@ -646,7 +646,7 @@ def write_linrate_tifs(ifgs, params, res):
     log.info('Writing linrate results')
     rate, error, samples = res
     gt, md, wkt = get_projection_info(ifgs[0].data_path, params)
-    epochlist = algorithm.get_epochs(ifgs)
+    epochlist = algorithm.get_epochs(ifgs)[0]
     dest = join(params[cf.OUT_DIR], "linrate.tif")
     md[ifc.MASTER_DATE] = epochlist.dates
     md[ifc.PRTYPE] = 'linrate'

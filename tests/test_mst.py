@@ -38,7 +38,7 @@ class MSTTests(unittest.TestCase):
         for i in self.ifgs:
             i.convert_to_nans() # zeros to NaN/NODATA
 
-        epochs = algorithm.get_epochs(self.ifgs)
+        epochs = algorithm.get_epochs(self.ifgs)[0]
         res = mst.mst_matrix_as_array(self.ifgs)
         ys, xs = res.shape
 

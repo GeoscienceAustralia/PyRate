@@ -9,7 +9,7 @@ from abc import ABCMeta, abstractmethod
 
 import numpy as np
 
-from pyrate.algorithm import get_epochs_and_n
+from pyrate.algorithm import get_epochs
 from pyrate.shared import Ifg
 
 DTYPE = [('id', int), ('master', int), ('slave', int), ('nan_frac', float)]
@@ -107,7 +107,7 @@ def get_nml(ifg_list_instance, nodata_value,
     Note: the matlab version tested does not have nan's.
     replaces the ifg_list_instance in place
     """
-    _epoch_list, n = get_epochs_and_n(ifg_list_instance.ifgs)
+    _epoch_list, n = get_epochs(ifg_list_instance.ifgs)
     ifg_list_instance.reshape_n(n)
     if nan_conversion:
         ifg_list_instance.update_nan_frac(nodata_value)

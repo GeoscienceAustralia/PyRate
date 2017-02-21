@@ -96,7 +96,7 @@ def col_splits(request):
     return request.param
 
 
-@pytest.fixture(params=range(1, 6))
+@pytest.fixture(params=[1, 2, 5])
 def modify_config(request, tempdir, get_config):
     test_conf = common.SYDNEY_TEST_CONF
     params_dict = get_config(test_conf)
@@ -265,7 +265,7 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
         _tifs_same(ifgs_mpi_out_dir, params_old[cf.OUT_DIR], 'linsamples.tif')
 
         # assert time series output tifs are same
-        epochlist = algorithm.get_epochs(ifgs)
+        epochlist = algorithm.get_epochs(ifgs)[0]
 
         for i in range(tsincr.shape[2]):
             _tifs_same(ifgs_mpi_out_dir, params_old[cf.OUT_DIR],

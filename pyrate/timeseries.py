@@ -41,7 +41,7 @@ def time_series_setup(ifgs, mst, params):
     pthresh = params[cf.TIME_SERIES_PTHRESH]
     # head = ifgs[0]
     check_time_series_params(pthresh)
-    epochlist = get_epochs(ifgs)
+    epochlist = get_epochs(ifgs)[0]
     nrows = ifgs[0].nrows
     ncols = ifgs[0].ncols
     nifgs = len(ifgs)

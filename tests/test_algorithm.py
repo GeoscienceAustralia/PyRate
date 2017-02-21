@@ -1,8 +1,6 @@
-'''
-Collection of algorithms used in PyRate.
-
-.. codeauthor:: Ben Davies
-'''
+"""
+Tests for algorithms.py.
+"""
 
 import unittest
 from datetime import date
@@ -19,7 +17,6 @@ from pyrate.algorithm import (least_squares_covariance,
                               unit_vector,
                               ifg_date_lookup,
                               get_all_epochs,
-                              get_epoch_count,
                               get_epochs,
                               master_slave_ids,
                               )
@@ -186,7 +183,7 @@ class EpochsTests(TestCase):
         for i in ifgs:
             i.open()
 
-        epochs = get_epochs(ifgs)
+        epochs = get_epochs(ifgs)[0]
 
         self.assertTrue((exp_dates == epochs.dates).all())
         self.assertTrue((exp_repeat == epochs.repeat).all())
@@ -203,7 +200,7 @@ class EpochsTests(TestCase):
         self.assertEqual(dates, sorted(set(get_all_epochs(ifgs))))
 
     def test_get_epoch_count(self):
-        self.assertEqual(6, get_epoch_count(sydney5_mock_ifgs()))
+        self.assertEqual(6, len(set(get_all_epochs(sydney5_mock_ifgs()))))
 
     def test_master_slave_ids(self):
         d0 = date(2006, 6, 19)

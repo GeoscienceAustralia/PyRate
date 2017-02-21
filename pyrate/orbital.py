@@ -13,7 +13,7 @@ import numpy as np
 from scipy.linalg import lstsq
 from numpy.linalg import pinv
 
-from pyrate.algorithm import master_slave_ids, get_all_epochs, get_epoch_count
+from pyrate.algorithm import master_slave_ids, get_all_epochs
 from pyrate import mst, shared
 from pyrate.shared import nanmedian
 from pyrate import config as cf
@@ -297,7 +297,7 @@ def get_network_design_matrix(ifgs, degree, offset):
         raise OrbitalError("Invalid number of Ifgs: %s" % nifgs)
 
     # init sparse network design matrix
-    nepochs = get_epoch_count(ifgs)
+    nepochs = len(set(get_all_epochs(ifgs)))
     ncoef = get_num_params(degree)  # no offsets: they are made separately below
     shape = [ifgs[0].num_cells * nifgs, ncoef * nepochs]
 
