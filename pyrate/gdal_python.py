@@ -1,3 +1,8 @@
+#pylint: disable-msg=too-many-arguments
+#pylint: disable-msg=R0914
+"""
+gdal utilities via python
+"""
 from osgeo import gdal, gdalnumeric, gdalconst
 from PIL import Image, ImageDraw
 import numpy as np
@@ -14,15 +19,15 @@ def world_to_pixel(geo_transform, x, y):
     the pixel location of a geospatial coordinate; from:
     http://pcjericks.github.io/py-gdalogr-cookbook/raster_layers.html#clip-a-geotiff-with-shapefile
     """
-    ulX = geo_transform[0]
-    ulY = geo_transform[3]
+    ul_x = geo_transform[0]
+    ul_y = geo_transform[3]
     res = geo_transform[1]
-    pixel = int(np.round((x - ulX) / res))
-    line = int(np.round((ulY - y) / res))
+    pixel = int(np.round((x - ul_x) / res))
+    line = int(np.round((ul_y - y) / res))
     return pixel, line
 
 
-def crop(input_file, extents, gt=None, nodata=np.nan):
+def crop(input_file, extents, geo_trans=None, nodata=np.nan):
     """
 
     Adapted from http://karthur.org/2015/clipping-rasters-in-python.html
@@ -39,52 +44,52 @@ def crop(input_file, extents, gt=None, nodata=np.nan):
     Arguments:
         rast            A gdal.Dataset or a NumPy array
         features_path   The path to the clipping features
-        gt              An optional GDAL GeoTransform to use instead
+        geo_trans              An optional GDAL GeoTransform to use instead
         nodata          The NoData value; defaults to -9999.
     """
 
     def image_to_array(i):
-        '''
+        """
         Converts a Python Imaging Library (PIL) array to a gdalnumeric image.
-        '''
-        a = gdalnumeric.fromstring(i.tobytes(), 'b')
-        a.shape = i.im.size[1], i.im.size[0]
-        return a
+        """
+        arr = gdalnumeric.fromstring(i.tobytes(), 'b')
+        arr.shape = i.im.size[1], i.im.size[0]
+        return arr
 
     raster = gdal.Open(input_file)
     # Can accept either a gdal.Dataset or numpy.array instance
     if not isinstance(raster, np.ndarray):
-        if not gt:
-            gt = raster.GetGeoTransform()
+        if not geo_trans:
+            geo_trans = raster.GetGeoTransform()
         raster = raster.ReadAsArray()
     else:
-        if not gt:
-            raise
+        if not geo_trans:
+            raise ValueError('geo transform must be supplied')
 
     # Convert the layer extent to image pixel coordinates
     min_x, min_y, max_x, max_y = extents
-    ul_x, ul_y = world_to_pixel(gt, min_x, max_y)
-    lrX, lrY = world_to_pixel(gt, max_x, min_y)
+    ul_x, ul_y = world_to_pixel(geo_trans, min_x, max_y)
+    lr_x, lr_y = world_to_pixel(geo_trans, max_x, min_y)
 
     # Calculate the pixel size of the new image
-    pxWidth = int(lrX - ul_x)
-    pxHeight = int(lrY - ul_y)
+    px_width = int(lr_x - ul_x)
+    px_height = int(lr_y - ul_y)
 
     # If the clipping features extend out-of-bounds and ABOVE the raster...
-    if gt[3] < max_y:
+    if geo_trans[3] < max_y:
         # In such a case... ul_y ends up being negative--can't have that!
-        iY = ul_y
+        # iY = ul_y
         ul_y = 0
 
     # Multi-band image?
     try:
-        clip = raster[:, ul_y:lrY, ul_x:lrX]
+        clip = raster[:, ul_y:lr_y, ul_x:lr_x]
 
     except IndexError:
-        clip = raster[ul_y:lrY, ul_x:lrX]
+        clip = raster[ul_y:lr_y, ul_x:lr_x]
 
     # Create a new geomatrix for the image
-    gt2 = list(gt)
+    gt2 = list(geo_trans)
     gt2[0] = min_x
     gt2[3] = max_y
 
@@ -93,13 +98,13 @@ def crop(input_file, extents, gt=None, nodata=np.nan):
     points = [(min_x, min_y), (max_x, min_y), (max_x, max_y), (min_y, max_y)]
     pixels = []
 
-    # for p in range(pts.GetPointCount()):
-    #     points.append((pts.GetX(p), pts.GetY(p)))
+    # for point in range(pts.GetPointCount()):
+    #     points.append((pts.GetX(point), pts.GetY(point)))
 
-    for p in points:
-        pixels.append(world_to_pixel(gt2, p[0], p[1]))
+    for point in points:
+        pixels.append(world_to_pixel(gt2, point[0], point[1]))
 
-    raster_poly = Image.new('L', size=(pxWidth, pxHeight), color=1)
+    raster_poly = Image.new('L', size=(px_width, px_height), color=1)
     rasterize = ImageDraw.Draw(raster_poly)
     rasterize.polygon(pixels, 0)  # Fill with zeroes
 
@@ -107,7 +112,7 @@ def crop(input_file, extents, gt=None, nodata=np.nan):
     # SB: we don't implement clipping for out-of-bounds and ABOVE the raster
     # We might need this down the line when we have looked at `maximum crop` in
     # detail
-    # if gt[3] < max_y:
+    # if geo_trans[3] < max_y:
     #     # The clip features were "pushed down" to match the bounds of the
     #     #   raster; this step "pulls" them back up
     #     premask = image_to_array(raster_poly)
@@ -118,7 +123,7 @@ def crop(input_file, extents, gt=None, nodata=np.nan):
     #     mask.resize(premask.shape)  # Then fill in from the bottom
     #
     #     # Most importantly, push the clipped piece down
-    #     gt2[3] = max_y - (max_y - gt[3])
+    #     gt2[3] = max_y - (max_y - geo_trans[3])
     #
     # else:
     #     mask = image_to_array(raster_poly)
@@ -146,10 +151,13 @@ def crop(input_file, extents, gt=None, nodata=np.nan):
 
 
 def resample_nearest_neighbour(input_tif, extents, new_res, output_file):
-    dst, resampled_proj, src, src_proj = crop_rasample_setup(extents,
-                                                             input_tif,
-                                                             new_res,
-                                                             output_file)
+    """
+    nearest neighbor resampling via GDAL
+    """
+    dst, resampled_proj, src, _ = crop_rasample_setup(extents,
+                                                      input_tif,
+                                                      new_res,
+                                                      output_file)
     # Do the work
     gdal.ReprojectImage(src, dst, '', resampled_proj,
                         gdalconst.GRA_NearestNeighbour)
@@ -158,19 +166,22 @@ def resample_nearest_neighbour(input_tif, extents, new_res, output_file):
 
 def crop_rasample_setup(extents, input_tif, new_res, output_file,
                         dst_driver_type='GTiff', out_bands=2):
+    """
+    Convenience function for crop/resample setup
+    """
     # Source
     src_ds = gdal.Open(input_tif, gdalconst.GA_ReadOnly)
     src_proj = src_ds.GetProjection()
 
     # source metadata to be copied into the output
-    md = src_ds.GetMetadata()
+    meta_data = src_ds.GetMetadata()
 
     # get the image extents
     min_x, min_y, max_x, max_y = extents
-    gt = src_ds.GetGeoTransform()  # gt is tuple of 6 numbers
+    geo_transform = src_ds.GetGeoTransform()  # tuple of 6 numbers
 
     # Create a new geotransform for the image
-    gt2 = list(gt)
+    gt2 = list(geo_transform)
     gt2[0] = min_x
     gt2[3] = max_y
     # We want a section of source that matches this:
@@ -180,8 +191,8 @@ def crop_rasample_setup(extents, input_tif, new_res, output_file,
     else:
         resampled_geotrans = gt2
 
-    px_height, px_width = get_width_and_height(max_x, max_y, min_x, min_y,
-                                               resampled_geotrans)
+    px_height, px_width = gdalwarp_width_and_height(max_x, max_y, min_x, min_y,
+                                                    resampled_geotrans)
 
     # Output / destination
     dst = gdal.GetDriverByName(dst_driver_type).Create(
@@ -189,19 +200,22 @@ def crop_rasample_setup(extents, input_tif, new_res, output_file,
     dst.SetGeoTransform(resampled_geotrans)
     dst.SetProjection(resampled_proj)
 
-    for k, v in md.items():
+    for k, v in meta_data.items():
         dst.SetMetadataItem(k, v)
 
     return dst, resampled_proj, src_ds, src_proj
 
 
-def get_width_and_height(max_x, max_y, min_x, min_y, resampled_geotrans):
+def gdalwarp_width_and_height(max_x, max_y, min_x, min_y, geo_trans):
+    """
+    Modify pixel height and width based on world_to_pixel
+    """
     # modified image extents
-    ul_x, ul_y = world_to_pixel(resampled_geotrans, min_x, max_y)
-    lrX, lrY = world_to_pixel(resampled_geotrans, max_x, min_y)
+    ul_x, ul_y = world_to_pixel(geo_trans, min_x, max_y)
+    lr_x, lr_y = world_to_pixel(geo_trans, max_x, min_y)
     # Calculate the pixel size of the new image
-    px_width = int(lrX - ul_x)
-    px_height = int(lrY - ul_y)
+    px_width = int(lr_x - ul_x)
+    px_height = int(lr_y - ul_y)
     return px_height, px_width  # this is the same as `gdalwarp`
 
 
@@ -209,7 +223,10 @@ def crop_resample_average(
         input_tif, extents, new_res, output_file, thresh,
         out_driver_type='GTiff',
         match_pirate=False):
-    dst_ds, resampled_proj, src_ds, src_proj = crop_rasample_setup(
+    """
+    Crop, resample, and average a geotif
+    """
+    dst_ds, _, src_ds, _ = crop_rasample_setup(
         extents, input_tif, new_res, output_file,
         out_bands=2, dst_driver_type='MEM')
 
@@ -285,6 +302,9 @@ def crop_resample_average(
 
 
 def get_matlab_resampled_data_size(xscale, yscale, data):
+    """
+    convenience function mimicking the matlab output size
+    """
     xscale = int(xscale)
     yscale = int(yscale)
     ysize, xsize = data.shape

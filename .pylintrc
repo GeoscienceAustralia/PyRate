@@ -226,7 +226,7 @@ expected-line-ending-format=
 [BASIC]
 
 # Good variable names which should always be accepted, separated by a comma
-good-names=i,j,k,ex,Run,_,x,w,f,n,v,t,r,d,c,cd,g,r,q,V,m,A,b,log
+good-names=i,j,k,ex,Run,_,x,w,f,n,v,t,r,d,c,cd,g,r,q,V,m,A,b,log,y
 
 # Bad variable names which should always be refused, separated by a comma
 bad-names=foo,bar,baz,toto,tutu,tata
