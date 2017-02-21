@@ -204,7 +204,7 @@ def _network_correction(ifgs, degree, offset, m_ifgs=None):
 
     for i in ifgs:
         orb = dm.dot(coefs[ids[i.slave]] - coefs[ids[i.master]])
-        orb = orb.reshape(ifgs[0].shape)
+        orb = orb.reshape(i.shape)
 
         # offset estimation
         if offset:
