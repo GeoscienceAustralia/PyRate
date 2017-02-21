@@ -49,6 +49,7 @@ To run the tests, use the following command inside the `PyRate` directory:
 		
 	pip install pytest
 	cd PyRate
+	export PYRATEPATH=/path/to/PyRate
 	pytest tests/
 
 ## Config file:
