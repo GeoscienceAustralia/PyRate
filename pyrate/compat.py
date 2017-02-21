@@ -18,10 +18,15 @@ except ImportError:
 
 
 class PyPASException(Exception):
-    pass
+    """
+    Convenience class for PyAPS status
+    """
 
 
 def validate_sklearn():
+    """
+    Convenience function validating PyAPS status
+    """
     if not PyAPS_INSTALLED:
         raise PyPASException('PyAPS needs to be installed in order '
                              'to use this module')
