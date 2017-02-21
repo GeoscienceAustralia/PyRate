@@ -1,3 +1,4 @@
+# pylint: disable=missing-docstring
 """
 This is the python implementation of the make_mstmat.m very closely
 resembling the matlab.
@@ -15,6 +16,9 @@ DTYPE = [('id', int), ('master', int), ('slave', int), ('nan_frac', float)]
 
 
 class IfGMeta(object):
+    """
+    Metaclass for matlab mst calculation
+    """
     __metaclass__ = ABCMeta
     ifgs = None
     id = None
@@ -66,13 +70,13 @@ class IfgListPyRate(IfGMeta):
     Please note that we don't need BaseT unless we are using variance in ifg
     data as cost.
     """
-
+    # pylint: disable=too-many-instance-attributes
     def __init__(self, datafiles=None):
         self.datafiles = datafiles
         self.nml = self.get_nml_list()
         self.ifgs = self.get_ifgs_list()
         self.id = range(len(self.nml))
-        self.base_T = None
+        self.base_t = None
         self.max_var = np.zeros_like(self.id)
         self.alpha = np.zeros_like(self.id)
         self.nan_frac = np.zeros_like(self.id)
@@ -160,6 +164,9 @@ def matlab_mst_kruskal(edges, ntrees=False):
 
 
 def calculate_connect_and_ntrees(connect, mst_list):
+    """
+    Count isolated trees
+    """
     zero_count = np.where(np.sum(connect, axis=1) == 0)[0]
     if zero_count.shape[0]:
         raise ValueError('Input connect matrix not compatible')
