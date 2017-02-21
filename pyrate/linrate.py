@@ -1,15 +1,17 @@
+# pylint: disable= invalid-name
+# pylint: disable= too-many-locals
+# pylint: disable= too-many-arguments
 """
 Pixel-by-pixel linear rate (velocity) estimation using iterative weighted
 least-squares method.
 
 Based on the Matlab Pirate 'stack.m' and Matlab 'lscov.m' functions.
 """
-
+import itertools
 from scipy.linalg import solve, cholesky, qr, inv
 from numpy import nan, isnan, sqrt, diag, delete, array, float32
 import numpy as np
 from joblib import Parallel, delayed
-import itertools
 from pyrate import config as cf
 
 
@@ -46,7 +48,7 @@ def linear_rate(ifgs, params, vcmt, mst=None):
         samples/coh_sta: statistics of coherent pixels used for stacking
         demerror:  dem errors in metres, not implemented in python
     """
-    maxsig, nsig, pthresh, cols, error, mst, obs, parallel, processes, \
+    maxsig, nsig, pthresh, cols, error, mst, obs, parallel, _, \
         rate, rows, samples, span = linrate_setup(ifgs, mst, params)
 
     # pixel-by-pixel calculation.
@@ -55,8 +57,9 @@ def linear_rate(ifgs, params, vcmt, mst=None):
 
         res = Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
             delayed(linear_rate_by_rows)(r, cols, mst, nsig, obs,
-                         pthresh, span, vcmt)
+                                         pthresh, span, vcmt)
             for r in range(rows))
+        # pylint: disable=redefined-variable-type
         res = np.array(res)
         rate = res[:, :, 0]
         error = res[:, :, 1]
@@ -64,7 +67,7 @@ def linear_rate(ifgs, params, vcmt, mst=None):
     elif parallel == 2:
         res = Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
             delayed(linear_rate_by_pixel)(r, c, mst, nsig, obs,
-                         pthresh, span, vcmt)
+                                          pthresh, span, vcmt)
             for r, c in itertools.product(range(rows), range(cols)))
         res = np.array(res)
 
@@ -90,6 +93,9 @@ def linear_rate(ifgs, params, vcmt, mst=None):
 
 
 def linrate_setup(ifgs, mst, params):
+    """
+    Convenience function for linrate setup
+    """
     # MULTIPROCESSING parameters
     parallel = params[cf.PARALLEL]
     processes = params[cf.PROCESSES]
@@ -139,7 +145,10 @@ def linear_rate_by_rows(row, cols, mst, NSIG, obs, PTHRESH, span, vcmt):
     return res
 
 
-def linear_rate_by_pixel(row, col, mst, NSIG, obs, pthresh, span, vcmt):
+def linear_rate_by_pixel(row, col, mst, nsig, obs, pthresh, span, vcmt):
+    """
+    Compute linear rate for one pixel
+    """
     # find the indices of independent ifgs for given pixel from MST
     ind = np.nonzero(mst[:, row, col])[0]  # only True's in mst are chosen
     # iterative loop to calculate 'robust' velocity for pixel
@@ -189,7 +198,7 @@ def linear_rate_by_pixel(row, col, mst, NSIG, obs, pthresh, span, vcmt):
 
         # test if maximum ratio is greater than user threshold.
         max_val = wr.max()
-        if max_val > NSIG:
+        if max_val > nsig:
             # if yes, discard and re-do the calculation.
             ind = delete(ind, wr.argmax())
         else:

@@ -1,13 +1,8 @@
-'''
-Collection of constants for elements in ROI_PAC headers (\*.rsc)
-+
+"""
+Collection of constants for elements in ROI_PAC headers (*.rsc)
+and
 Collection of constants used at different stages of ifg processing
-
-Created on 14/09/2012
-
-.. codeauthor:: Ben Davies
-.. Sudipta Basak, GA
-'''
+"""
 
 # lookup keys for the fields in PyRate's custom GeoTIFF files
 PYRATE_NCOLS = 'NCOLS'
