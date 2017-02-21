@@ -1,17 +1,14 @@
-'''
+# pylint: disable=invalid-name
+"""
 Module for calculating orbital correction for interferograms.
-
-Created on 31/3/13
-
-.. codeauthor:: Ben Davies, Sudipta Basak
-'''
+"""
 
 from numpy import empty, isnan, reshape, float32, squeeze
 from numpy import dot, vstack, zeros, meshgrid
-# from joblib import Parallel, delayed
 import numpy as np
-from scipy.linalg import lstsq
 from numpy.linalg import pinv
+# from joblib import Parallel, delayed
+from scipy.linalg import lstsq
 
 from pyrate.algorithm import master_slave_ids, get_all_epochs
 from pyrate import mst, shared
@@ -72,7 +69,7 @@ def orbital_correction(ifgs_or_ifg_paths, params, mlooked=None, offset=True):
     """
     degree = params[cf.ORBITAL_FIT_DEGREE]
     method = params[cf.ORBITAL_FIT_METHOD]
-    parallel = params[cf.PARALLEL]  # not implemented
+    # parallel = params[cf.PARALLEL]  # not implemented
 
     if degree not in [PLANAR, QUADRATIC, PART_CUBIC]:
         msg = "Invalid degree of %s for orbital correction" % degree
@@ -203,18 +200,16 @@ def _network_correction(ifgs, degree, offset, m_ifgs=None):
 
     # create full res DM to expand determined coefficients into full res orbital
     # correction (eg. expand coarser model to full size)
-    ifg_shape = ifgs[0].shape
     dm = get_design_matrix(ifgs[0], degree, offset=False)
 
     for i in ifgs:
         orb = dm.dot(coefs[ids[i.slave]] - coefs[ids[i.master]])
-        orb = orb.reshape(ifg_shape)
+        orb = orb.reshape(ifgs[0].shape)
 
         # offset estimation
         if offset:
-            tmp = np.ravel(i.phase_data - orb)
             # bring all ifgs to same base level
-            orb -= nanmedian(tmp)
+            orb -= nanmedian(np.ravel(i.phase_data - orb))
 
         i.phase_data -= orb  # remove orbital error from the ifg
         # set orbfit tags after orbital error correction
@@ -222,6 +217,13 @@ def _network_correction(ifgs, degree, offset, m_ifgs=None):
 
 
 def save_orbital_error_corrected_phase(ifg):
+    """
+    Convenceince function to update metadata and save latest phase after
+    orbital fit correction
+    Parameters
+    ----------
+    ifg: Ifg class instance
+    """
     # set orbfit tags after orbital error correction
     ifg.dataset.SetMetadataItem(ifc.PYRATE_ORBITAL_ERROR, ifc.ORB_REMOVED)
     ifg.write_modified_phase()
@@ -279,6 +281,7 @@ def get_design_matrix(ifg, degree, offset, scale=100.0):
 
 
 def get_network_design_matrix(ifgs, degree, offset):
+    # pylint: disable=too-many-locals
     """
     Returns larger format design matrix for networked error correction.
 
@@ -302,19 +305,19 @@ def get_network_design_matrix(ifgs, degree, offset):
     shape = [ifgs[0].num_cells * nifgs, ncoef * nepochs]
 
     if offset:
-        shape[1] += nifgs # add extra block for offset cols
+        shape[1] += nifgs  # add extra block for offset cols
 
     netdm = zeros(shape, dtype=float32)
 
     # calc location for individual design matrices
     dates = [ifg.master for ifg in ifgs] + [ifg.slave for ifg in ifgs]
     ids = master_slave_ids(dates)
-    offset_col = nepochs * ncoef # base offset for the offset cols
+    offset_col = nepochs * ncoef  # base offset for the offset cols
     tmpdm = get_design_matrix(ifgs[0], degree, offset=False)
 
     # iteratively build up sparse matrix
     for i, ifg in enumerate(ifgs):
-        rs = i * ifg.num_cells # starting row
+        rs = i * ifg.num_cells  # starting row
         m = ids[ifg.master] * ncoef  # start col for master
         s = ids[ifg.slave] * ncoef  # start col for slave
         netdm[rs:rs + ifg.num_cells, m:m + ncoef] = -tmpdm
