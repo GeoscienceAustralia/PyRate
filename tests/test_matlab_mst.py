@@ -11,11 +11,10 @@ import numpy as np
 from pyrate import mst
 from pyrate.matlab_mst import IfgListPyRate as IfgList
 from pyrate.matlab_mst import calculate_connect_and_ntrees
-from pyrate.matlab_mst import get_nml
-from pyrate.matlab_mst import matlab_mst, matlab_mst_boolean_array
+from pyrate.matlab_mst import get_nml, DTYPE
+from pyrate.matlab_mst import matlab_mst, matlab_mst_bool
 from pyrate.matlab_mst import matlab_mst_kruskal
-from pyrate.matlab_mst import matlab_mst_kruskal_from_ifgs
-from pyrate.matlab_mst import sort_list, get_sub_structure
+from pyrate.matlab_mst import get_sub_structure
 from tests.common import sydney_data_setup
 from tests.common import sydney_ifg_file_list
 
@@ -50,30 +49,44 @@ class IfgListTest(unittest.TestCase):
                                       self.ifg_list.slave_num + 1)
 
 
+# SB: this is not used anywhere now
+def sort_list(id_l, master_l, slave_l, nan_frac_l):
+    """
+    sort list based on nan_frac
+    """
+    sorted_list = [(i, m, s, n) for i, m, s, n in
+                   zip(id_l, master_l, slave_l, nan_frac_l)]
+
+    sorted_list = np.array(sorted_list, dtype=DTYPE)
+    return np.sort(sorted_list, order=['nan_frac'])
+
+
 class MatlabMstKruskalTest(unittest.TestCase):
 
     def setUp(self):
         ifg_instance = IfgList(sydney_ifg_file_list())
         self.ifg_list, _ = get_nml(ifg_instance, nodata_value=0)
-        self.sorted_list = sort_list(self.ifg_list.id, self.ifg_list.master_num,
-                                self.ifg_list.slave_num, self.ifg_list.nan_frac)
-        self.matlab_sorted_list_zero_nan_frac = [   (1, 1, 3, 0.0),
-                                                    (2, 2, 5, 0.0),
-                                                    (3, 3, 7, 0.0),
-                                                    (4, 3, 9, 0.0),
-                                                    (5, 4, 5, 0.0),
-                                                    (6, 4, 6, 0.0),
-                                                    (7, 4, 8, 0.0),
-                                                    (8, 5, 11, 0.0),
-                                                    (9, 5, 12, 0.0),
-                                                    (10, 6, 8, 0.0),
-                                                    (11, 6, 13, 0.0),
-                                                    (12, 7, 9, 0.0),
-                                                    (13, 7, 10, 0.0),
-                                                    (14, 8, 13, 0.0),
-                                                    (15, 9, 10, 0.0),
-                                                    (16, 10, 11, 0.0),
-                                                    (17, 11, 12, 0.0)]
+        self.sorted_list = sort_list(self.ifg_list.id,
+                                     self.ifg_list.master_num,
+                                     self.ifg_list.slave_num,
+                                     self.ifg_list.nan_frac)
+        self.matlab_sorted_list_zero_nan_frac = [(1, 1, 3, 0.0),
+                                                 (2, 2, 5, 0.0),
+                                                 (3, 3, 7, 0.0),
+                                                 (4, 3, 9, 0.0),
+                                                 (5, 4, 5, 0.0),
+                                                 (6, 4, 6, 0.0),
+                                                 (7, 4, 8, 0.0),
+                                                 (8, 5, 11, 0.0),
+                                                 (9, 5, 12, 0.0),
+                                                 (10, 6, 8, 0.0),
+                                                 (11, 6, 13, 0.0),
+                                                 (12, 7, 9, 0.0),
+                                                 (13, 7, 10, 0.0),
+                                                 (14, 8, 13, 0.0),
+                                                 (15, 9, 10, 0.0),
+                                                 (16, 10, 11, 0.0),
+                                                 (17, 11, 12, 0.0)]
         self.ifg_list_mst_matlab = [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 13, 16]
 
     def test_sorted_list_equal_matlab(self):
@@ -257,7 +270,7 @@ class MatlabMSTTests(unittest.TestCase):
         """
         ifg_instance = IfgList(datafiles=self.ifg_file_list)
         ifg_list, _ = get_nml(ifg_instance, nodata_value=0)
-        mst_mat = matlab_mst_boolean_array(ifg_list, p_threshold=1)
+        mst_mat = matlab_mst_bool(ifg_list, p_threshold=1)
 
         # path to csv folders from matlab output
         from tests.common import SYD_TEST_MATLAB_MST_DIR
@@ -275,9 +288,10 @@ class MatlabMSTTests(unittest.TestCase):
 
     def test_mas_mat_vs_mst_mat_generator(self):
         ifg_instance = IfgList(datafiles=self.ifg_file_list)
-        ifg_list, _ = get_nml(ifg_instance, nodata_value=0, nan_conversion=True)
+        ifg_list, _ = get_nml(ifg_instance, nodata_value=0,
+                              nan_conversion=True)
         mst_mat1 = matlab_mst(ifg_list)
-        mst_mat2 = matlab_mst_boolean_array(ifg_list)
+        mst_mat2 = matlab_mst_bool(ifg_list)
 
         np.testing.assert_array_equal(mst_mat2, mst_mat1)
 
@@ -320,31 +334,13 @@ class TestMSTBooleanArray(unittest.TestCase):
             get_nml(sydney_ifg_instance, nodata_value=0,
                     nan_conversion=nan_conversion)
 
-        mst_matlab = matlab_mst_boolean_array(ifg_instance_updated)
+        mst_matlab = matlab_mst_bool(ifg_instance_updated)
         np.testing.assert_array_equal(mst_matlab, mst_nx)
 
         # close ifgs for windows
         for i in self.sydney_ifgs:
             i.close()
 
-
-class MSTKruskalFromIfgsTest(unittest.TestCase):
-
-    def test_matlab_mst_kruskal_from_ifgs(self):
-        ifgs = sydney_data_setup()
-        mst_ifgs = matlab_mst_kruskal_from_ifgs(ifgs)
-
-        self.assertEqual(len(mst_ifgs), 12)
-
-        # make sure doing another mst does not change the mst_ifgs
-        datafiles = [i.data_path for i in mst_ifgs]
-        overlapping_ifg_isntance = IfgList(datafiles)
-        ifg_list, _ = get_nml(overlapping_ifg_isntance, nodata_value=0)
-        edges = get_sub_structure(ifg_list,
-                                  np.zeros(len(ifg_list.id), dtype=bool))
-        mst, connected, ntrees = matlab_mst_kruskal(edges, ntrees=True)
-        self.assertEqual(connected.shape[0], 1)
-        self.assertEqual(len(mst), len(mst_ifgs))
 
 if __name__ == '__main__':
     unittest.main()

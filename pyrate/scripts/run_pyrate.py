@@ -467,7 +467,7 @@ def mst_calculation(ifg_paths_or_instance, params):
                                nan_conversion=nan_conversion)
         log.info('Calculating minimum spanning tree matrix '
                  'using Matlab-algorithm method')
-        mst_grid = matlab_mst.matlab_mst_boolean_array(ifg_instance_updated)
+        mst_grid = matlab_mst.matlab_mst_bool(ifg_instance_updated)
 
     # write mst output to a file
     mst_mat_binary_file = join(params[cf.OUT_DIR], 'mst_mat')

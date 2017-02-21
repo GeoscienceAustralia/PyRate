@@ -4,7 +4,6 @@ resembling the matlab.
 """
 from __future__ import print_function
 import itertools
-import sys
 from abc import ABCMeta, abstractmethod
 
 import numpy as np
@@ -101,7 +100,7 @@ def data_setup(datafiles):
 
 
 def get_nml(ifg_list_instance, nodata_value,
-            nan_conversion=False, prefix_len=4):
+            nan_conversion=False):
     """
     A reproduction of getnml.m, the matlab function in pi-rate.
     Note: the matlab version tested does not have nan's.
@@ -115,15 +114,6 @@ def get_nml(ifg_list_instance, nodata_value,
         ifg_list_instance.convert_nans(nan_conversion=nan_conversion)
     ifg_list_instance.make_data_stack()
     return ifg_list_instance, _epoch_list
-
-
-# SB: this is not used anywhere now
-def sort_list(id_l, master_l, slave_l, nan_frac_l):
-    sorted_list = [(i, m, s, n) for i, m, s, n in
-                   zip(id_l, master_l, slave_l, nan_frac_l)]
-
-    sorted_list = np.array(sorted_list, dtype=DTYPE)
-    return np.sort(sorted_list, order=['nan_frac'])
 
 
 def matlab_mst_kruskal(edges, ntrees=False):
@@ -215,7 +205,7 @@ def matlab_mst(ifg_object, p_threshold=1):
     return mst_mat
 
 
-def matlab_mst_generator_boolean_array(ifg_instance, p_threshold=1):
+def matlab_mst_gen(ifg_instance, p_threshold=1):
 
     """
     :param ifg_instance: IfgListPyRate instance
@@ -264,7 +254,7 @@ def matlab_mst_generator_boolean_array(ifg_instance, p_threshold=1):
 
 
 # TODO: performance test matlab_mst_boolean_array vs matlab_mst for large ifgs
-def matlab_mst_boolean_array(ifg_list_instance, p_threshold=1):
+def matlab_mst_bool(ifg_list_instance, p_threshold=1):
     """
     :param ifg_instance: IfgListPyRate instance
     :param p_threshold: minimum number of non-nan values at any pixel for selection
@@ -279,38 +269,10 @@ def matlab_mst_boolean_array(ifg_list_instance, p_threshold=1):
     no_y, no_x = ifg_list_instance.ifgs[0].phase_data.shape
     result = np.empty(shape=(num_ifgs, no_y, no_x), dtype=np.bool)
 
-    for y, x, mst in matlab_mst_generator_boolean_array(ifg_list_instance,
-                                                        p_threshold):
+    for y, x, mst in matlab_mst_gen(ifg_list_instance,
+                                    p_threshold):
         result[:, y, x] = mst
     return result
-
-
-def matlab_mst_kruskal_from_ifgs(ifgs):
-    dest_paths = [i.data_path for i in ifgs]
-    ifg_instance = IfgListPyRate(datafiles=dest_paths)
-    get_nml(ifg_instance, nodata_value=0, nan_conversion=True)
-    edges = get_sub_structure(ifg_instance,
-                              np.zeros(len(ifg_instance.id), dtype=bool))
-    ifg_list_mst_id = matlab_mst_kruskal(edges)
-    return [ifgs[i] for i in ifg_list_mst_id]
-
-
-def str_to_class(str):
-    """
-    :param str: a string
-    :return: class from string
-    """
-    return getattr(sys.modules[__name__], str)
-
-
-def get_all_class_attributes(this_class):
-    return [attr for attr in dir(this_class)
-            if not callable(attr)
-            and not attr.startswith("_")]
-
-
-def get_all_attriblues_of_class(class_instance):
-    return vars(class_instance).keys()
 
 
 def get_sub_structure(ifg_list, nan_v):
@@ -327,12 +289,3 @@ def get_sub_structure(ifg_list, nan_v):
              ifg_list.slave_num[i],
              ifg_list.nan_frac[i])
             for i in indices_chosen]
-
-if __name__ == "__main__":
-    from tests import common
-
-    ifg_instance_main = IfgListPyRate(common.sydney_ifg_file_list())
-    _ifg_list, _epoch_list = get_nml(ifg_instance_main, nan_conversion=True)
-    # mst_mat1 = matlab_mst(_ifg_list)
-    mst_mat2 = matlab_mst_boolean_array(_ifg_list)
-    # print np.array_equal(mst_mat1, mst_mat2)  # assert equality of both methods
