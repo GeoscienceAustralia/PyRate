@@ -1,14 +1,13 @@
-'''
+# coding: utf-8
+# pylint: disable= invalid-name
+"""
 Tools used for reading GAMMA headers.
+"""
 
-.. codeauthor:: Ben Davies, NCI, Sudipta Basak, GA
-'''
-
-import os, datetime
+import os
+import datetime
 import numpy as np
 import pyrate.ifgconstants as ifc
-
-
 
 # constants
 GAMMA_DATE = 'date'
@@ -94,7 +93,7 @@ def parse_dem_header(path):
 
     # NB: many lookup fields have multiple elements, eg ['1000', 'Hz']
     subset = {ifc.PYRATE_NCOLS: int(lookup[GAMMA_WIDTH][0]),
-                ifc.PYRATE_NROWS: int(lookup[GAMMA_NROWS][0])}
+              ifc.PYRATE_NROWS: int(lookup[GAMMA_NROWS][0])}
 
     expected = ['decimal', 'degrees']
     for k in [GAMMA_CORNER_LAT, GAMMA_CORNER_LONG, GAMMA_X_STEP, GAMMA_Y_STEP]:
@@ -158,20 +157,33 @@ def combine_headers(hdr0, hdr1, dem_hdr):
     return chdr
 
 
-def manage_headers(demHeaderFile, headerPaths):
-    demHeader = parse_dem_header(demHeaderFile)
+def manage_headers(dem_header_file, header_paths):
+    """
+    Parameters
+    ----------
+    dem_header_file: str
+        dem header path
+    header_paths:
+        header paths corresponding to the master and slave dates
+    Return
+    ------
+    combined_header: dict
+        combined dict with dem, header file 1 and 2
+    """
+    dem_header = parse_dem_header(dem_header_file)
     # find param files containing filename dates
-    if len(headerPaths) == 2:
-        headers = [parse_epoch_header(hp) for hp in headerPaths]
-        combinedHeader = combine_headers(headers[0], headers[1], demHeader)
+    if len(header_paths) == 2:
+        headers = [parse_epoch_header(hp) for hp in header_paths]
+        combined_header = combine_headers(headers[0], headers[1], dem_header)
     else:
         # probably have DEM or incidence file
-        combinedHeader = demHeader
-        combinedHeader[ifc.PROCESS_STEP] = ifc.GEOTIFF
+        combined_header = dem_header
+        combined_header[ifc.PROCESS_STEP] = ifc.GEOTIFF
 
-    return combinedHeader
+    return combined_header
 
 
 class GammaException(Exception):
-    pass
-
+    """
+    Gamma generic exception class
+    """
