@@ -1,3 +1,8 @@
+# pylint: disable=no-member
+# pylint: disable=invalid-name
+"""
+MPI convenience functions
+"""
 import logging
 import pickle
 from mpi4py import MPI
@@ -7,7 +12,6 @@ log = logging.getLogger(__name__)
 # We're having trouble with the MPI pickling and 64bit integers
 MPI.pickle.dumps = pickle.dumps
 MPI.pickle.loads = pickle.loads
-
 
 comm = MPI.COMM_WORLD
 """module-level MPI 'world' object representing all connected nodes
@@ -50,5 +54,17 @@ def run_once(f, *args, **kwargs):
 
 
 def array_split(arr, process=None):
+    """
+    Convenience function for splitting array elements across MPI processes
+    Parameters
+    ----------
+    arr: ndarray
+        1-D array
+    process: int, optional
+        process for which array members are required.
+        If None, MPI.comm.rank is used instead.
+
+    Returns list corresponding to array members in a a process
+    """
     r = process if process else rank
     return np.array_split(arr, size)[r]

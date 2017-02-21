@@ -260,7 +260,6 @@ def matlab_mst_gen(ifg_instance, p_threshold=1):
                 yield r, c, mst_yield
 
 
-# TODO: performance test matlab_mst_boolean_array vs matlab_mst for large ifgs
 def matlab_mst_bool(ifg_list_instance, p_threshold=1):
     """
     :param ifg_instance: IfgListPyRate instance
@@ -287,7 +286,8 @@ def get_sub_structure(ifg_list, nan_v):
     This is the getsucstruct.m in pi-rate/matlab.
     :param ifg_list: original ifg_list class instance.
     :param nan_v: all ifg values at this location.
-    :return:
+    Returns list of tuples (id, master, slave, nan_frac)
+    corresponding to the chosen ifgs.
     """
     indices_chosen = np.nonzero(~nan_v)[0]
 
