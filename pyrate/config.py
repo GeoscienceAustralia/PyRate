@@ -1,13 +1,13 @@
-from __future__ import print_function
+# coding: utf-8
+# pylint: disable= invalid-name
 """
 Utilities to parse PyRate configuration files. Includes numerous general PyRate
 constants relating to options in configuration files.
 
 Examples of PyRate configuration files are provided in pyrate.conf and
 pyrate_gamma.conf
-
 """
-
+from __future__ import print_function
 # TODO: add regex column to check if some values are within bounds? Potential
 # problem with the checking being done in the middle of the runs, as bad values
 # could cause crashes & destroying some of the results.
@@ -37,7 +37,8 @@ OUT_DIR = 'outdir'
 #NUM_SETS = 'nsets'
 #: STR; Directory containing simulated datasets NOT CURRENTLY USED
 SIM_DIR = 'simdir'
-#: STR; Name of Digital Elevation Model file used in constructing the interferograms
+#: STR; Name of Digital Elevation Model file used in
+# constructing the interferograms
 DEM_FILE = 'demfile'
 #: STR; Name of the header for the DEM
 DEM_HEADER_FILE = 'demHeaderFile'
@@ -45,10 +46,12 @@ DEM_HEADER_FILE = 'demHeaderFile'
 # location of gamma slc files
 SLC_DIR = 'slcFileDir'
 
-#: STR; The projection of the input interferograms. When *PROCESSOR* == 0, either
+#: STR; The projection of the input interferograms.
+# When *PROCESSOR* == 0, either
 #: this or *ROIPAC_RESOURCE_HEADER* must be provided.
 INPUT_IFG_PROJECTION = 'projection'
-#: STR; The resource header used for conferting ROIPAC interferograms. When *PROCESSOR* == 0, either
+#: STR; The resource header used for conferting ROIPAC interferograms.
+# When *PROCESSOR* == 0, either
 #: this or *INPUT_IFG_PROJECTION* must be provided.
 ROIPAC_RESOURCE_HEADER = 'resourceHeader'
 #: FLOAT; The no data value in the interferogram files.
@@ -59,14 +62,17 @@ NO_DATA_AVERAGING_THRESHOLD = 'noDataAveragingThreshold'
 AMPLITUDE_FLAG = 'ampflag'
 #: BOOL (1/0); Use baseline information NOT CURRENTLY USED
 PERP_BASELINE_FLAG = 'basepflag'
-#: BOOL (1/2/3); Re-project data from Line of sight, 1 = vertical, 2 = horizontal, 3 = no conversion
+#: BOOL (1/2/3); Re-project data from Line of sight, 1 = vertical,
+# 2 = horizontal, 3 = no conversion
 REPROJECTION = 'prjflag'
 #: BOOL (0/1); Select MST algorithm, 0 = Matlab-Pirate algorithm, 1 = NetworkX
 NETWORKX_OR_MATLAB_FLAG = 'networkx_or_matlab'
 #: TODO; what does this parameter do?
 NAN_CONVERSION = 'nan_conversion'
 
-#: BOOL (1/2/3/4); Method for cropping interferograms, 1 = minimum overlapping area (intersection), 2 = maximum area (union), 3 = customised area, 4 = all ifgs already same size
+#: BOOL (1/2/3/4); Method for cropping interferograms,
+# 1 = minimum overlapping area (intersection), 2 = maximum area (union),
+# 3 = customised area, 4 = all ifgs already same size
 IFG_CROP_OPT = 'ifgcropopt'
 #: INT; Multi look factor for interferogram preparation in x dimension
 IFG_LKSX = 'ifglksx'
@@ -82,9 +88,11 @@ IFG_YFIRST = 'ifgyfirst'
 IFG_YLAST = 'ifgylast'
 
 # reference pixel parameters
-#: FLOAT; Coordinate in x of reference pixel OR -1 = perform reference pixel search
+#: FLOAT; Coordinate in x of reference pixel OR -1 = perform
+# reference pixel search
 REFX = 'refx'
-#: FLOAT; Coordinate in y of reference pixel OR -1 = perform reference pixel search
+#: FLOAT; Coordinate in y of reference pixel OR -1 = perform
+# reference pixel search
 REFY = 'refy'
 #: INT; Number of reference pixel grid search nodes in x dimension
 REFNX = "refnx"
@@ -92,7 +100,8 @@ REFNX = "refnx"
 REFNY = "refny"
 #: INT; Dimension of reference pixel search window
 REF_CHIP_SIZE = 'refchipsize'
-#: REAL; Minimum fraction of observations required in reference pixel search window for pixel to be a viable reference pixel
+#: REAL; Minimum fraction of observations required in
+# reference pixel search window for pixel to be a viable reference pixel
 REF_MIN_FRAC = 'refminfrac'
 # REFERENCE estimation method
 REF_EST_METHOD = 'refest'
@@ -106,23 +115,32 @@ APS_ELEVATION_MAP = 'elevationmap'
 APS_ELEVATION_EXT = 'APS_ELEVATION_EXT'
 
 # orbital error correction/parameters
-#: BOOL (1/0); Boolean flag controlling whether to apply orbital error correction
+#: BOOL (1/0); Boolean flag controlling whether to apply orbital
+# error correction
 ORBITAL_FIT = 'orbfit'
-#: BOOL (1/2); Method for orbital error correction, 1: ifg by ifg/independent, 2: epoch by epoch/network
+#: BOOL (1/2); Method for orbital error correction, 1: ifg by ifg/independent,
+#  2: epoch by epoch/network
 ORBITAL_FIT_METHOD = 'orbfitmethod'
-#: BOOL (1/2/3) Order of orbital error model, 1 = planar in x and y (2 parameter model, 2 = quadratic in x and y (5 parameter model), 3 = quadratic in x and cubic in y (part-cubic 6 parameter model)
+#: BOOL (1/2/3) Order of orbital error model, 1 = planar
+# in x and y (2 parameter model, 2 = quadratic in x and y (5 parameter model),
+# 3 = quadratic in x and cubic in y (part-cubic 6 parameter model)
 ORBITAL_FIT_DEGREE = 'orbfitdegrees'
 #: INT; Multi look factor for orbital error calculation in x dimension
 ORBITAL_FIT_LOOKS_X = 'orbfitlksx'
 #: INT; Multi look factor for orbital error calculation in y dimension
 ORBITAL_FIT_LOOKS_Y = 'orbfitlksy'
 # ORBITAL_FIT_orbrefest:	 1 BOOLEAN (1/0) # remove reference phase
-# ORBITAL_FIT_ orbmaskflag:   1 BOOLEAN (1/0) # mask some patches for orbital correction
+# ORBITAL_FIT_ orbmaskflag:   1 BOOLEAN (1/0) # mask some patches
+# for orbital correction
 
 # Linear rate/stacking parameters
-#: REAL; Threshold ratio between 'model minus observation' residuals and a-priori observation standard deviations for linear rate estimate acceptance (otherwise remove furthest outlier and re-iterate)
+#: REAL; Threshold ratio between 'model minus observation'
+#  residuals and a-priori observation standard deviations for
+# linear rate estimate acceptance (otherwise remove furthest
+# outlier and re-iterate)
 LR_NSIG = 'nsig'
-#: INT; Number of required input observations per pixel for the linear rate inversion
+#: INT; Number of required input observations per pixel for the
+# linear rate inversion
 LR_PTHRESH = 'pthr'
 #: REAL; Maximum allowable standard error for pixels in linear rate inversion.
 LR_MAXSIG = 'maxsig'
@@ -131,11 +149,14 @@ LR_MAXSIG = 'maxsig'
 TIME_SERIES_CAL = 'tscal'
 #: INT (1/2); Method for time series inversion (1: Laplacian Smoothing; 2: SVD)
 TIME_SERIES_METHOD = 'tsmethod'
-#: INT; Number of required input observations per pixel for time series inversion
+#: INT; Number of required input observations
+# per pixel for time series inversion
 TIME_SERIES_PTHRESH = 'ts_pthr'
-#: INT (1/2); Order of Laplacian smoothing operator, first or second order NOT CURRENTLY USED
+#: INT (1/2); Order of Laplacian smoothing operator, first or
+# second order NOT CURRENTLY USED
 TIME_SERIES_SM_ORDER = 'smorder'
-#: REAL; Laplacian smoothing factor (0: calculate & plot L-curve; others: using the specific smoothing factor 10**smfactor) NOT CURRENTLY USED 
+#: REAL; Laplacian smoothing factor (0: calculate & plot L-curve;
+# others: using the specific smoothing factor 10**smfactor) NOT CURRENTLY USED
 TIME_SERIES_SM_FACTOR = 'smfactor'
 
 # MULTIPROCESSING parameters
@@ -243,11 +264,11 @@ PARAM_CONVERSION = {
 
 
 PATHS = [OBS_DIR, IFG_FILE_LIST, DEM_FILE,
-        DEM_HEADER_FILE, OUT_DIR,
-        ROIPAC_RESOURCE_HEADER,
-        SLC_DIR,
-        APS_INCIDENCE_MAP,
-        APS_ELEVATION_MAP]
+         DEM_HEADER_FILE, OUT_DIR,
+         ROIPAC_RESOURCE_HEADER,
+         SLC_DIR,
+         APS_INCIDENCE_MAP,
+         APS_ELEVATION_MAP]
 
 INT_KEYS = [APS_CORRECTION, APS_METHOD]
 
@@ -275,6 +296,9 @@ def _parse_conf_file(content):
     """
 
     def is_valid(line):
+        """
+        check if line is  not empty or has % or #
+        """
         return line != "" and line[0] not in "%#"
 
     lines = [ln.split() for ln in content.split('\n') if is_valid(ln)]
@@ -299,46 +323,55 @@ def _parse_conf_file(content):
     return _parse_pars(parameters)
 
 
-def handle_pyaps_parameters(parameters):
-    parameters[APS_INCIDENCE_EXT] = None
-    parameters[APS_ELEVATION_EXT] = None
+def handle_pyaps_parameters(params):
+    """
+    Parameters
+    ----------
+    params: dict
+
+    Returns
+    ------
+    params: dict
+    """
+    params[APS_INCIDENCE_EXT] = None
+    params[APS_ELEVATION_EXT] = None
 
     if compat.PyAPS_INSTALLED:
         # define APS_INCIDENCE_EXT for gamma prepifg
-        if ((parameters[APS_INCIDENCE_MAP] is not None) and
-                (parameters[APS_ELEVATION_MAP] is not None)):
+        if ((params[APS_INCIDENCE_MAP] is not None) and
+                (params[APS_ELEVATION_MAP] is not None)):
             warnings.warn('Both incidence and elevation map supplied. '
                           'Using the incidence map and ignoring elevation map')
 
-        if (int(parameters[APS_CORRECTION]) and
-                (int(parameters[APS_METHOD]) == 2) and
-                ((parameters[APS_INCIDENCE_MAP] is None) and
-                    (parameters[APS_ELEVATION_MAP] is None))):
+        if (int(params[APS_CORRECTION]) and
+                (int(params[APS_METHOD]) == 2) and
+                ((params[APS_INCIDENCE_MAP] is None) and
+                 (params[APS_ELEVATION_MAP] is None))):
             raise ConfigException('When doing APS correction using method 2,'
                                   'the incidence/elevation map method,'
                                   'one of incidence or elevation map must be '
                                   'provided')
 
-    if parameters[APS_INCIDENCE_MAP] is not None:
-        parameters[APS_INCIDENCE_EXT] = \
-            os.path.basename(parameters[APS_INCIDENCE_MAP]).split('.')[-1]
-        parameters[APS_ELEVATION_MAP] = None
-        parameters[APS_ELEVATION_EXT] = None
-        return parameters
+    if params[APS_INCIDENCE_MAP] is not None:
+        params[APS_INCIDENCE_EXT] = \
+            os.path.basename(params[APS_INCIDENCE_MAP]).split('.')[-1]
+        params[APS_ELEVATION_MAP] = None
+        params[APS_ELEVATION_EXT] = None
+        return params
 
     # define APS_ELEVATON_EXT for gamma prepifg
-    if parameters[APS_ELEVATION_MAP] is not None:
-        parameters[APS_ELEVATION_EXT] = \
-            os.path.basename(parameters[APS_ELEVATION_MAP]).split('.')[-1]
+    if params[APS_ELEVATION_MAP] is not None:
+        params[APS_ELEVATION_EXT] = \
+            os.path.basename(params[APS_ELEVATION_MAP]).split('.')[-1]
 
-    return parameters
+    return params
 
 
 def _parse_pars(pars):
     """
     Parses and converts config file params from text
     """
-    for k in PARAM_CONVERSION.keys():
+    for k in PARAM_CONVERSION:
         if k in pars:
             conversion_func = PARAM_CONVERSION[k][0]
             if conversion_func:
@@ -375,14 +408,14 @@ def write_config_file(params, output_conf_file):
     with open(output_conf_file, 'w') as f:
         for k, v in params.items():
             if k == ORBITAL_FIT_DEGREE:
-                v = reverse_degree_conv(k, v)
+                v = reverse_degree_conv(v)
             if v is not None:
                 f.write(''.join([k, ':\t', str(v), '\n']))
             else:
                 f.write(''.join([k, ':\t', '', '\n']))
 
 
-def reverse_degree_conv(k, v):
+def reverse_degree_conv(v):
     """
     Convenience: convert numerical degree to human readable string
     """
@@ -427,6 +460,22 @@ def mlooked_path(path, looks, crop_out):
 
 
 def get_dest_paths(base_paths, crop, params, looks):
+    """
+    Parameters
+    ----------
+    base_paths: list
+        unwrapped interferrogram paths
+    crop: int
+        crop method to use
+    params: dict
+        params dict corresponding to config file used
+    looks: int
+        multilooking
+
+    Return
+    ------
+        list of output geotifs
+    """
     dest_mlooked_ifgs = [mlooked_path(os.path.basename(q).split('.')[0]
                                       + '.tif', looks=looks, crop_out=crop)
                          for q in base_paths]
@@ -435,6 +484,21 @@ def get_dest_paths(base_paths, crop, params, looks):
 
 
 def get_ifg_paths(config_file):
+    """
+    Parameters
+    ----------
+    config_file: str
+        config file path
+
+    Return
+    ------
+    base_unw_paths: list
+        list of unwrapped inteferrograms
+    dest_paths: list
+        list of multilooked and cropped geotifs
+    pars: dict
+        dictionary corresponding to the config file.
+    """
     pars = get_config_params(config_file)
     ifg_file_list = pars.get(IFG_FILE_LIST)
     pars[IFG_FILE_LIST] = ifg_file_list
@@ -443,7 +507,7 @@ def get_ifg_paths(config_file):
         emsg = 'Error {code}: Interferogram list file name not provided ' \
                'or does not exist'.format(code=2)
         raise IOError(2, emsg)
-    xlks, ylks, crop = transform_params(pars)
+    xlks, _, crop = transform_params(pars)
 
     # base_unw_paths need to be geotiffed and multilooked by run_prepifg
     base_unw_paths = original_ifg_paths(ifg_file_list)
