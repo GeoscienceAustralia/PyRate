@@ -160,11 +160,12 @@ with `linrate`:
     
 ## MPI Support
 `PyRate` has been designed for supercomputers and instructions to use an HPC
- cluster can be found in the [pbs directory](pbs/README.md).
+ cluster can be found in the [pbs directory](pbs).
 
 ## Python multiprocessing support
-In addition to the MPI support for HPC, `PyRate` can be used using standard 
-multiprocessing simply by turning `parallel:  1` in the config file.
+In addition to the MPI support for HPC, `PyRate` can be use standard 
+multiprocessing simply by turning `parallel:  1` in the config file to take
+advantage of multiple cores on a single PC.
 
 ## Integrating PyAPS with PyRate
 
