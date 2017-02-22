@@ -21,7 +21,7 @@ from pyrate.scripts import run_pyrate, run_prepifg
 from pyrate.vcm import cvd, get_vcmt
 from tests.common import SYD_TEST_DIR
 from tests.common import sydney5_mock_ifgs, sydney5_ifgs
-from tests.common import sydney_data_setup
+from tests.common import sydney_data_setup, prepare_ifgs_without_phase
 
 
 class CovarianceTests(unittest.TestCase):
@@ -187,7 +187,7 @@ class MatlabEqualityTest(unittest.TestCase):
         ifgs = shared.pre_prepare_ifgs(dest_paths, params)
         refx, refy = run_pyrate.ref_pixel_calc(dest_paths, params)
         run_pyrate.remove_orbital_error(ifgs, params)
-        ifgs = shared.prepare_ifgs_without_phase(dest_paths, params)
+        ifgs = prepare_ifgs_without_phase(dest_paths, params)
         _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
 
         # Calculate interferogram noise

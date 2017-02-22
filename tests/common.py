@@ -13,6 +13,7 @@ import numpy as np
 from numpy import isnan, sum as nsum
 from osgeo import gdal
 from pyrate.shared import Ifg
+from pyrate import config as cf
 
 TEMPDIR = tempfile.gettempdir()
 BASE_TEST = join(os.environ['PYRATEPATH'], "tests", "test_data")
@@ -226,3 +227,15 @@ def assert_ifg_phase_equal(ifg_path1, ifg_path2):
     ds1 = None
     ds2 = None
 
+
+def prepare_ifgs_without_phase(ifg_paths, params):
+    ifgs = [Ifg(p) for p in ifg_paths]
+    for i in ifgs:
+        if not i.is_open:
+            i.open(readonly=False)
+        nan_conversion = params[cf.NAN_CONVERSION]
+        if nan_conversion:  # nan conversion happens here in networkx mst
+            # if not ifg.nan_converted:
+            i.nodata_value = params[cf.NO_DATA_VALUE]
+            i.convert_to_nans()
+    return ifgs

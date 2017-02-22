@@ -24,7 +24,7 @@ from pyrate.config import TIME_SERIES_SM_FACTOR, TIME_SERIES_METHOD
 from pyrate.config import TIME_SERIES_SM_ORDER
 from pyrate.scripts import run_pyrate, run_prepifg
 from pyrate.timeseries import time_series
-from tests.common import SYD_TEST_DIR
+from tests.common import SYD_TEST_DIR, prepare_ifgs_without_phase
 from tests.common import sydney_data_setup
 
 
@@ -149,7 +149,7 @@ class MatlabTimeSeriesEquality(unittest.TestCase):
         refx, refy = run_pyrate.ref_pixel_calc(dest_paths, params)
         # Estimate and remove orbit errors
         run_pyrate.remove_orbital_error(ifgs, params)
-        ifgs = shared.prepare_ifgs_without_phase(dest_paths, params)
+        ifgs = prepare_ifgs_without_phase(dest_paths, params)
         _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
 
         maxvar = [vcm.cvd(i, params)[0] for i in ifgs]
@@ -264,7 +264,7 @@ class MatlabTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
 
         # Estimate and remove orbit errors
         run_pyrate.remove_orbital_error(ifgs, params)
-        ifgs = shared.prepare_ifgs_without_phase(dest_paths, params)
+        ifgs = prepare_ifgs_without_phase(dest_paths, params)
 
         _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
 

@@ -923,19 +923,6 @@ def nan_and_mm_convert(ifg, params):
         ifg.convert_to_mm()
 
 
-def prepare_ifgs_without_phase(ifg_paths, params):
-    ifgs = [Ifg(p) for p in ifg_paths]
-    for i in ifgs:
-        if not i.is_open:
-            i.open(readonly=False)
-        nan_conversion = params[cf.NAN_CONVERSION]
-        if nan_conversion:  # nan conversion happens here in networkx mst
-            # if not ifg.nan_converted:
-            i.nodata_value = params[cf.NO_DATA_VALUE]
-            i.convert_to_nans()
-    return ifgs
-
-
 def cell_size(lat, lon, x_step, y_step):
 
     """
@@ -976,7 +963,9 @@ def utm_zone(longitude):
 
 
 class PrereadIfg:
-
+    """
+    Convenience class for handling pre-calculated ifg params
+    """
     def __init__(self, path, nan_fraction, master, slave, time_span,
                  nrows, ncols):
         self.path = path

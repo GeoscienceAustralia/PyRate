@@ -231,7 +231,7 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
         refy, refx = refpixel.ref_pixel(ifgs, params_old)
 
         run_pyrate.remove_orbital_error(ifgs, params_old)
-        ifgs = shared.prepare_ifgs_without_phase(dest_paths, params_old)
+        ifgs = common.prepare_ifgs_without_phase(dest_paths, params_old)
 
         _, ifgs = rpe.estimate_ref_phase(ifgs, params_old, refx, refy)
         maxvar_s = [vcm.cvd(i, params_old)[0] for i in ifgs]

@@ -18,7 +18,7 @@ from pyrate import shared
 from pyrate import vcm as vcm_module
 from pyrate.linrate import linear_rate
 from pyrate.scripts import run_pyrate, run_prepifg
-from tests.common import SYD_TEST_DIR
+from tests.common import SYD_TEST_DIR, prepare_ifgs_without_phase
 
 
 def default_params():
@@ -92,7 +92,7 @@ class MatlabEqualityTest(unittest.TestCase):
 
         # Estimate and remove orbit errors
         run_pyrate.remove_orbital_error(ifgs, params)
-        ifgs = shared.prepare_ifgs_without_phase(dest_paths, params)
+        ifgs = prepare_ifgs_without_phase(dest_paths, params)
 
         _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
 
