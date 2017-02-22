@@ -3,7 +3,7 @@ Variance/Covariance matrix functionality for PyRate, ported from Hua Wang's
 MATLAB code for Pirate.
 """
 from __future__ import print_function
-from numpy import array, where, isnan, real, imag, sum, sqrt, meshgrid
+from numpy import array, where, isnan, real, imag, sqrt, meshgrid
 from numpy import zeros, vstack, ceil, mean, exp, reshape
 from numpy.linalg import norm
 import numpy as np
@@ -23,6 +23,7 @@ def pendiffexp(alphamod, cvdav):
     :param array cvdav: Function magnitude at 0 radius (2 col array of radius,
     variance)
     """
+    # pylint: disable=invalid-name
 
     # maxvar usually at zero lag
     mx = cvdav[1, 0]
@@ -51,6 +52,8 @@ def cvd(ifg_path, params, calc_alpha=False):
     :param calc_alpha: bool
         whether you calculate alpha.
     """
+    # pylint: disable=invalid-name
+    # pylint: disable=too-many-locals
     if isinstance(ifg_path, str):  # used during MPI
         ifg = shared.Ifg(ifg_path)
         ifg.open()
@@ -73,7 +76,7 @@ def cvd(ifg_path, params, calc_alpha=False):
     fft_phase = fft2(phase)
     pspec = real(fft_phase)**2 + imag(fft_phase)**2
     autocorr_grid = ifft2(pspec)
-    nzc = sum(sum(phase != 0))
+    nzc = np.sum(np.sum(phase != 0))
     autocorr_grid = fftshift(real(autocorr_grid)) / nzc
 
     # pixel distances from pixel at zero lag (image centre).
@@ -155,6 +158,7 @@ def get_vcmt(ifgs, maxvar):
     """
     Returns the temporal variance/covariance matrix.
     """
+    # pylint: disable=too-many-locals
     # c=0.5 for common master or slave; c=-0.5 if master
     # of one matches slave of another
 
@@ -162,6 +166,7 @@ def get_vcmt(ifgs, maxvar):
         from collections import OrderedDict
         ifgs = {k: v for k, v in ifgs.items() if isinstance(v, PrereadIfg)}
         ifgs = OrderedDict(sorted(ifgs.items()))
+        # pylint: disable=redefined-variable-type
         ifgs = ifgs.values()
 
     nifgs = len(ifgs)
