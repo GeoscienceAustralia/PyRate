@@ -2,6 +2,8 @@
 Functions for doing an InSAR time series inversion in PyRate.
 Based on the Matlab Pirate 'tsinvnosm.m' and 'tsinvlap.m' functions.
 """
+# pylint: disable=too-many-locals
+# pylint: disable=too-many-arguments
 import itertools
 from numpy import (where, isnan, nan, diff, zeros,
                    float32, cumsum, dot, delete, asarray)
@@ -17,6 +19,7 @@ from pyrate import mst as mst_module
 
 
 def time_series_setup(ifgs, mst, params):
+    """ Convenience function setting up time series computation parameters"""
     if len(ifgs) < 1:
         msg = 'Time series requires 2+ interferograms'
         raise TimeSeriesError(msg)
@@ -54,13 +57,13 @@ def time_series_setup(ifgs, mst, params):
     islave = [mast_slave_ids[ifg.slave] for ifg in ifgs]
     imaster = min(imaster, islave)
     islave = max(imaster, islave)
-    B0 = zeros((nifgs, nvelpar))
+    b0_mat = zeros((nifgs, nvelpar))
     for i in range(nifgs):
-        B0[i, imaster[i]:islave[i]] = span[imaster[i]:islave[i]]
+        b0_mat[i, imaster[i]:islave[i]] = span[imaster[i]:islave[i]]
 
     # change the sign if slave is earlier than master
     isign = where(imaster > islave)
-    B0[isign[0], :] = -B0[isign[0], :]
+    b0_mat[isign[0], :] = -b0_mat[isign[0], :]
     tsvel_matrix = np.empty(shape=(nrows, ncols, nvelpar),
                             dtype=float32)
     ifg_data = np.zeros((nifgs, nrows, ncols), dtype=float32)
@@ -68,8 +71,8 @@ def time_series_setup(ifgs, mst, params):
         ifg_data[ifg_num] = ifgs[ifg_num].phase_data
     if mst is None:
         mst = ~isnan(ifg_data)
-    return B0, interp, pthresh, smfactor, smorder, tsmethod, ifg_data, mst, \
-           ncols, nrows, nvelpar, parallel, span, tsvel_matrix
+    return b0_mat, interp, pthresh, smfactor, smorder, tsmethod, ifg_data, \
+        mst, ncols, nrows, nvelpar, parallel, span, tsvel_matrix
 
 
 def time_series(ifgs, params, vcmt, mst=None):
@@ -97,13 +100,13 @@ def time_series(ifgs, params, vcmt, mst=None):
         covered by the ifgs.).
     """
 
-    B0, interp, p_thresh, sm_factor, sm_order, ts_method, ifg_data, mst, \
+    b0_mat, interp, p_thresh, sm_factor, sm_order, ts_method, ifg_data, mst, \
         ncols, nrows, nvelpar, parallel, span, tsvel_matrix = \
         time_series_setup(ifgs, mst, params)
 
     if parallel == 1:
         tsvel_matrix = Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
-            delayed(time_series_by_rows)(r, B0, sm_factor, sm_order,
+            delayed(time_series_by_rows)(r, b0_mat, sm_factor, sm_order,
                                          ifg_data, mst, ncols, nvelpar,
                                          p_thresh, vcmt, ts_method, interp)
             for r in range(nrows))
@@ -111,7 +114,7 @@ def time_series(ifgs, params, vcmt, mst=None):
     elif parallel == 2:
 
         res = np.array(Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
-            delayed(time_series_by_pixel)(i, j, B0, sm_factor, sm_order,
+            delayed(time_series_by_pixel)(i, j, b0_mat, sm_factor, sm_order,
                                           ifg_data, mst, nvelpar, p_thresh,
                                           vcmt, ts_method, interp)
             for (i, j) in itertools.product(range(nrows), range(ncols))))
@@ -120,34 +123,35 @@ def time_series(ifgs, params, vcmt, mst=None):
         for row in range(nrows):
             for col in range(ncols):
                 tsvel_matrix[row, col] = time_series_by_pixel(
-                    row, col, B0, sm_factor, sm_order, ifg_data, mst, nvelpar,
+                    row, col, b0_mat, sm_factor, sm_order, ifg_data, mst, nvelpar,
                     p_thresh, vcmt, ts_method, interp)
 
     tsvel_matrix = where(tsvel_matrix == 0, nan, tsvel_matrix)
     # SB: do the span multiplication as a numpy linalg operation, MUCH faster
-    # not even this is necessary here, perform late for performance        
+    #  not even this is necessary here, perform late for performance
     tsincr = tsvel_matrix * span
     tscum = cumsum(tsincr, 2)
     # SB: convert zeros to nans not performed in matlab
     # SB: perform this after tsvel_matrix has been nan converted,
     # saves the step of comparing a large matrix (tsincr) to zero.
-    # tscum = where(tscum == 0, nan, tscum) 
-
+    # tscum = where(tscum == 0, nan, tscum)
     return tsincr, tscum, tsvel_matrix
 
 
-def time_series_by_rows(row, B0, sm_factor, sm_order, ifg_data, mst, ncols,
+def time_series_by_rows(row, b0_mat, sm_factor, sm_order, ifg_data, mst, ncols,
                         nvelpar, p_thresh, vcmt, ts_method, interp):
+    """ time series computation for each row of interferrograms """
     tsvel = np.empty(shape=(ncols, nvelpar), dtype=float32)
     for col in range(ncols):
         tsvel[col, :] = time_series_by_pixel(
-            row, col, B0, sm_factor, sm_order, ifg_data, mst, nvelpar,
+            row, col, b0_mat, sm_factor, sm_order, ifg_data, mst, nvelpar,
             p_thresh, vcmt, ts_method, interp)
 
     return tsvel
 
 
 def remove_rank_def_rows(b_mat, nvelpar, ifgv, sel):
+    """ Remove rank deficient rows """
     _, _, e_var = qr(b_mat, mode='economic', pivoting=True)
     licols = e_var[matrix_rank(b_mat):nvelpar]
     [rmrow, _] = where(b_mat[:, licols] != 0)
@@ -159,6 +163,7 @@ def remove_rank_def_rows(b_mat, nvelpar, ifgv, sel):
 
 def time_series_by_pixel(row, col, b0_mat, sm_factor, sm_order, ifg_data, mst,
                          nvelpar, p_thresh, vcmt, method, interp):
+    """ time series computation for each pixel """
     # check pixel for non-redundant ifgs
     sel = np.nonzero(mst[:, row, col])[0]  # trues in mst are chosen
     if len(sel) >= p_thresh:
@@ -186,8 +191,8 @@ def time_series_by_pixel(row, col, b0_mat, sm_factor, sm_order, ifg_data, mst,
             velflag = np.ones(nvelpar)
         if method == 1:
             # Use Laplacian smoothing method
-            tsvel = solve_ts_lap(nvelpar, velflag, ifgv, b_mat,
-                                 sm_order, sm_factor, sel, vcmt)
+            tsvel = _solve_ts_lap(nvelpar, velflag, ifgv, b_mat,
+                                  sm_order, sm_factor, sel, vcmt)
         elif method == 2:
             # Use SVD method
             tsvel = solve_ts_svd(nvelpar, velflag, ifgv, b_mat)
@@ -210,12 +215,13 @@ def solve_ts_svd(nvelpar, velflag, ifgv, b_mat):
     return tsvel
 
 
-def solve_ts_lap(nvelpar, velflag, ifgv, mat_b, smorder, SMFACTOR, sel, vcmt):
+def _solve_ts_lap(nvelpar, velflag, ifgv, mat_b, smorder, smfactor, sel, vcmt):
     """
     Solve the linear least squares system using the Finite Difference
     method using a Laplacian Smoothing operator.
     Similar to the method implemented by Schmidt and Burgmann 2003
     """
+    # pylint: disable=invalid-name
     # Laplacian observations number
     nlap = nvelpar - smorder
     #  Laplacian smoothing coefficient matrix
@@ -228,7 +234,7 @@ def solve_ts_lap(nvelpar, velflag, ifgv, mat_b, smorder, SMFACTOR, sel, vcmt):
             b_lap0[i, i:i+3] = [1, -2, 1]
 
     # Scale the coefficients by Laplacian smoothing factor
-    b_lap0 *= SMFACTOR
+    b_lap0 *= smfactor
 
     # Laplacian smoothing design matrix
     nvelleft = np.count_nonzero(velflag)
@@ -336,5 +342,3 @@ class TimeSeriesError(Exception):
     """
     Generic exception for time series errors.
     """
-
-    pass
