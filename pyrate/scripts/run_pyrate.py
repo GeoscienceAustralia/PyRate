@@ -255,7 +255,7 @@ def ref_phs_method1(ifg_paths, comp):
         ifg = Ifg(ifg_path)
         ifg.open(readonly=False)
         phase_data = ifg.phase_data
-        ref_phase = rpe.est_ref_phase_method1_multi(phase_data, comp)
+        ref_phase = rpe.est_ref_phs_method1(phase_data, comp)
         phase_data -= ref_phase
         md = ifg.meta_data
         md[ifc.REF_PHASE] = ifc.REF_PHASE_REMOVED

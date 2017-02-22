@@ -1,3 +1,6 @@
+"""
+Functions to control log outputs
+"""
 import logging
 import sys
 import traceback
@@ -7,12 +10,17 @@ from pyrate import mpiops
 
 
 def configure(verbosity):
+    """
+    Function to configure logging properties
+    :param verbosity: str
+        one of ['DEBUG', 'INFO', 'WARNING', 'ERROR']
+    """
     log = logging.getLogger("")
     log.setLevel(verbosity)
-    ch = MPIStreamHandler()
+    stream = MPIStreamHandler()
     formatter = ElapsedFormatter()
-    ch.setFormatter(formatter)
-    log.addHandler(ch)
+    stream.setFormatter(formatter)
+    log.addHandler(stream)
 
 
 class MPIStreamHandler(logging.StreamHandler):
@@ -24,9 +32,14 @@ class MPIStreamHandler(logging.StreamHandler):
             super(MPIStreamHandler, self).emit(record)
 
 
-class ElapsedFormatter():
-
+class ElapsedFormatter:
+    """
+    Convenience class for used in showing timestamps
+    """
+    # pylint: disable=too-few-public-methods
+    # pylint: disable=no-self-use
     def format(self, record):
+        """ time formatter """
         lvl = record.levelname
         name = record.name
         t = int(round(record.relativeCreated/1000.0))
