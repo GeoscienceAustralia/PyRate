@@ -1,9 +1,13 @@
+"""
+Postprocessing module to assemble the the linear rate and
+time series outputs
+"""
 import os
 from os.path import join
 import logging
+import pickle as cp
 import numpy as np
 from osgeo import gdal
-import pickle as cp
 
 from pyrate import config as cf
 from pyrate import ifgconstants as ifc
@@ -13,6 +17,7 @@ from pyrate import mpiops
 from pyrate.shared import PrereadIfg
 gdal.SetCacheMax(64)
 
+# pylint: disable=logging-format-interpolation
 log = logging.getLogger(__name__)
 
 # Constants
@@ -20,16 +25,19 @@ MASTER_PROCESS = 0
 
 
 def main(config_file, rows, cols):
+    """ postprocessing main func"""
     # setup paths
-    base_unw_paths, dest_paths, params= cf.get_ifg_paths(config_file)
+    _, _, params = cf.get_ifg_paths(config_file)
     postprocess_linrate(rows, cols, params)
     if params[cf.TIME_SERIES_CAL]:
         postprocess_timeseries(rows, cols, params)
 
 
 def postprocess_linrate(rows, cols, params):
+    """ Postprocess linear rate """
+    # pylint: disable=expression-not-assigned
     # setup paths
-    xlks, ylks, crop = cf.transform_params(params)
+    xlks, _, crop = cf.transform_params(params)
     base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST])
     dest_tifs = cf.get_dest_paths(base_unw_paths, crop, params, xlks)
 
@@ -50,6 +58,7 @@ def postprocess_linrate(rows, cols, params):
 
 
 def save_linrate(ifgs_dict, params, tiles, out_type):
+    """ Save linear rate outputs"""
     log.info('Stating postprocessing {}'.format(out_type))
     gt, md, wkt = ifgs_dict['gt'], ifgs_dict['md'], ifgs_dict['wkt']
     epochlist = ifgs_dict['epochlist']
@@ -57,10 +66,9 @@ def save_linrate(ifgs_dict, params, tiles, out_type):
     dest = os.path.join(params[cf.OUT_DIR], out_type + ".tif")
     md[ifc.MASTER_DATE] = epochlist.dates
     md[ifc.PRTYPE] = out_type
-    output_dir = params[cf.OUT_DIR]
     rate = np.zeros(shape=ifgs[0].shape, dtype=np.float32)
     for t in tiles:
-        rate_file = os.path.join(output_dir, out_type +
+        rate_file = os.path.join(params[cf.OUT_DIR], out_type +
                                  '_{}.npy'.format(t.index))
         rate_tile = np.load(file=rate_file)
         rate[t.top_left_y:t.bottom_right_y,
@@ -72,7 +80,9 @@ def save_linrate(ifgs_dict, params, tiles, out_type):
 
 
 def postprocess_timeseries(rows, cols, params):
-    xlks, ylks, crop = cf.transform_params(params)
+    """ Postprocess time series output """
+    # pylint: disable=too-many-locals
+    xlks, _, crop = cf.transform_params(params)
     base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST])
     dest_tifs = cf.get_dest_paths(base_unw_paths, crop, params, xlks)
     output_dir = params[cf.OUT_DIR]
@@ -92,6 +102,7 @@ def postprocess_timeseries(rows, cols, params):
     tsincr_file = os.path.join(output_dir, 'tsincr_0.npy')
     tsincr = np.load(file=tsincr_file)
 
+    # pylint: disable=no-member
     no_ts_tifs = tsincr.shape[2]
     # we create 2 x no_ts_tifs as we are splitting tsincr and tscuml
     # to all processes.
@@ -101,9 +112,8 @@ def postprocess_timeseries(rows, cols, params):
     # e.g. nvelpar=100, nrows=10000, ncols=10000, 32bit floats need 40GB memory
     # 32 * 100 * 10000 * 10000 / 8 bytes = 4e10 bytes = 40 GB
     # the double for loop helps us overcome the memory limit
-    log.info('process {} will write {} ts (incr/cuml) tifs '
-             'of total {}'.format(mpiops.rank, len(process_tifs),
-                                  no_ts_tifs * 2))
+    log.info('process {} will write {} ts (incr/cuml) tifs of '
+             'total {}'.format(mpiops.rank, len(process_tifs), no_ts_tifs * 2))
     for i in process_tifs:
         tscum_g = np.empty(shape=ifgs[0].shape, dtype=np.float32)
         if i < no_ts_tifs:
@@ -115,7 +125,7 @@ def postprocess_timeseries(rows, cols, params):
                 md[ifc.MASTER_DATE] = epochlist.dates[i + 1]
                 md['PR_SEQ_POS'] = i  # sequence position
                 tscum_g[t.top_left_y:t.bottom_right_y,
-                    t.top_left_x:t.bottom_right_x] = tscum[:, :, i]
+                        t.top_left_x:t.bottom_right_x] = tscum[:, :, i]
                 dest = os.path.join(params[cf.OUT_DIR],
                                     'tscuml' + "_" +
                                     str(epochlist.dates[i + 1]) + ".tif")
@@ -132,13 +142,12 @@ def postprocess_timeseries(rows, cols, params):
                 md[ifc.MASTER_DATE] = epochlist.dates[i + 1]
                 md['PR_SEQ_POS'] = i  # sequence position
                 tsincr_g[t.top_left_y:t.bottom_right_y,
-                t.top_left_x:t.bottom_right_x] = tsincr[:, :, i]
+                         t.top_left_x:t.bottom_right_x] = tsincr[:, :, i]
                 dest = os.path.join(params[cf.OUT_DIR],
                                     'tsincr' + "_" + str(
                                         epochlist.dates[i + 1]) + ".tif")
                 md[ifc.PRTYPE] = 'tsincr'
                 shared.write_output_geotiff(md, gt, wkt, tsincr_g, dest,
                                             np.nan)
-    log.info('process {} finished writing {} ts (incr/cuml) tifs '
-             'of total {}'.format(mpiops.rank,
-                                  len(process_tifs), no_ts_tifs * 2))
+    log.info('process {} finished writing {} ts (incr/cuml) tifs of '
+             'total {}'.format(mpiops.rank, len(process_tifs), no_ts_tifs * 2))
