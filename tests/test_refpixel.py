@@ -107,7 +107,7 @@ class ReferencePixelTests(unittest.TestCase):
         self.params[cf.REF_CHIP_SIZE] = CHIPSIZE
         self.params[cf.REF_MIN_FRAC] = MIN_FRAC
         self.params[cf.PARALLEL] = PARALLEL
-        self.assertRaises(RefPixelError, ref_pixel, mock_ifgs, self.params)
+        self.assertRaises(ValueError, ref_pixel, mock_ifgs, self.params)
 
     def test_refnxy_step_1(self):
         # test step of 1 for refnx|y gets the reference pixel for axis centre

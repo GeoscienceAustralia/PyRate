@@ -28,6 +28,7 @@ exclude_lines =
     raise ValueError
     raise ConfigException
     raise ReferencePhaseError
+    raise RefPixelError
 
     # Don't complain if non-runnable code isn't run:
     if 0:

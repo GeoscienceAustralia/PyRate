@@ -141,7 +141,7 @@ def ref_pixel_calc(ifg_paths, params):
         raise ValueError("Invalid reference pixel Y coordinate: %s" % refy)
 
     if refx == 0 or refy == 0:  # matlab equivalent
-        refx, refy = ref_pixel_mpi(ifg_paths, params)
+        refy, refx = ref_pixel_mpi(ifg_paths, params)
         log.info('Found reference pixel coordinate: (%s, %s)' % (refx, refy))
     else:
         log.info('Reusing config file reference pixel (%s, %s)' % (refx, refy))
@@ -158,8 +158,7 @@ def ref_pixel_mpi(ifg_paths, params):
     mean_sds = mpiops.comm.gather(mean_sds, root=0)
     if mpiops.rank == MASTER_PROCESS:
         mean_sds = np.hstack(mean_sds)
-    refx, refy = mpiops.run_once(refpixel.filter_means, mean_sds, grid)
-    return refx, refy
+    return mpiops.run_once(refpixel.filter_means, mean_sds, grid)
 
 
 def save_ref_pixel_blocks(grid, half_patch_size, ifg_paths, params):

@@ -1,13 +1,15 @@
-from numpy import isnan, std, mean, sum as nsum
 import os
 import logging
 import numpy as np
+from numpy import isnan, std, mean, sum as nsum
 from itertools import product
 from joblib import Parallel, delayed
+
 import pyrate.config as cf
 from pyrate.shared import Ifg
 
 log = logging.getLogger(__name__)
+
 
 # TODO: move error checking to config step (for fail fast)
 def ref_pixel(ifgs, params):
@@ -15,11 +17,17 @@ def ref_pixel(ifgs, params):
     Returns (y,x) reference pixel coordinate from given ifgs.
 
     If the config file REFX or REFY values are empty or subzero, the search for
-    the reference pixel is performed. If the REFX|Y values are within the bounds
-    of the raster, a search is not performed. REFX|Y values outside the upper
-    bounds cause an exception.
+    the reference pixel is performed. If the REFX|Y values are within the
+    bounds of the raster, a search is not performed. REFX|Y values outside
+    the upper bounds cause an exception.
 
-    :param ifgs: sequence of interferograms.
+    Parameters
+    ----------
+    ifgs: list
+        sequence of interferograms.
+    params: dict
+        parameters dictionary
+
     """
     half_patch_size, thresh, grid = ref_pixel_setup(ifgs, params)
     parallel = params[cf.PARALLEL]
@@ -30,14 +38,14 @@ def ref_pixel(ifgs, params):
                                      thresh, params)
             for (y, x) in grid
         )
-        refx, refy = filter_means(mean_sds, grid)
+        refy, refx = filter_means(mean_sds, grid)
     else:
         phase_data = [i.phase_data for i in ifgs]
         mean_sds = []
         for y, x in grid:
             mean_sds.append(ref_pixel_multi(
                 y, x, half_patch_size, phase_data, thresh, params))
-        refx, refy = filter_means(mean_sds, grid)
+        refy, refx = filter_means(mean_sds, grid)
 
     if refy and refx:
         return refy, refx
@@ -46,14 +54,21 @@ def ref_pixel(ifgs, params):
 
 
 def filter_means(mean_sds, grid):
+    """
+    filter the mean standard deviations from each ref pixel block
+    Parameters
+    ----------
+    mean_sds: list
+        list of mean standard deviations from each ref pixel grid
+    grid: list
+        list of grid tuples
+    Return
+    ------
+    tuple of (refy, refx)
+    """
     log.info('Filtering means during reference pixel computation')
-    min_sd = np.finfo(np.float64).max
-    refx, refy = None, None
-    for m, (y, x) in zip(mean_sds, grid):
-        if m and m < min_sd:
-            min_sd = m
-            refy, refx = y, x
-    return refx, refy
+    refp_index = np.nanargmin(mean_sds)
+    return grid[refp_index]
 
 
 def ref_pixel_setup(ifgs_or_paths, params):
@@ -94,6 +109,9 @@ def ref_pixel_setup(ifgs_or_paths, params):
 
 
 def ref_pixel_mpi(process_grid, half_patch_size, ifgs, thresh, params):
+    """
+    convenience function for ref pixel calculation for each process
+    """
     log.info('Ref pixel calculation started')
     mean_sds = []
     for y, x in process_grid:
@@ -104,6 +122,10 @@ def ref_pixel_mpi(process_grid, half_patch_size, ifgs, thresh, params):
 
 def ref_pixel_multi(y, x, half_patch_size, phase_data_or_ifg_paths,
                     thresh, params):
+    """
+    convenience function for for ref pixel optimisation
+    """
+
     # phase_data_or_ifg is list of ifgs
     if isinstance(phase_data_or_ifg_paths[0], str):
         # this consumes a lot less memory
@@ -126,7 +148,7 @@ def ref_pixel_multi(y, x, half_patch_size, phase_data_or_ifg_paths,
         sd = [std(i[~isnan(i)]) for i in data]
         return mean(sd)
     else:
-        return None
+        return np.nan
 
 
 def step(dim, ref, radius):
@@ -135,7 +157,8 @@ def step(dim, ref, radius):
 
     :param dim: total length of the grid dimension.
     :param ref: the desired number of steps.
-    :param radius: the number of cells from the centre of the chip eg. (chipsize / 2).
+    :param radius: the number of cells from the centre of the chip eg.
+    (chipsize / 2).
     '''
 
     # if ref == 1:
@@ -151,6 +174,7 @@ def step(dim, ref, radius):
 
 
 def validate_chipsize(chipsize, head):
+    """sanity check min chipsize"""
     if chipsize is None:
         raise cf.ConfigException('Chipsize is None')
 
@@ -160,6 +184,7 @@ def validate_chipsize(chipsize, head):
 
 
 def validate_minimum_fraction(min_frac):
+    """sanity check min fraction"""
     if min_frac is None:
         raise cf.ConfigException('Minimum fraction is None')
 
@@ -168,7 +193,7 @@ def validate_minimum_fraction(min_frac):
 
 
 def validate_search_win(refnx, refny, chipsize, head):
-    # sanity check X|Y steps
+    """sanity check X|Y steps"""
     if refnx is None:
         raise cf.ConfigException('refnx is None')
 
@@ -190,5 +215,3 @@ class RefPixelError(Exception):
     '''
     Generic exception for reference pixel errors.
     '''
-
-    pass
