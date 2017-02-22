@@ -1,8 +1,11 @@
+"""
+Reference pixel calculation
+"""
 import os
 import logging
+from itertools import product
 import numpy as np
 from numpy import isnan, std, mean, sum as nsum
-from itertools import product
 from joblib import Parallel, delayed
 
 import pyrate.config as cf
@@ -34,17 +37,15 @@ def ref_pixel(ifgs, params):
     if parallel:
         phase_data = [i.phase_data for i in ifgs]
         mean_sds = Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
-            delayed(ref_pixel_multi)(y, x, half_patch_size, phase_data,
-                                     thresh, params)
-            for (y, x) in grid
-        )
+            delayed(ref_pixel_multi)(g, half_patch_size, phase_data,
+                                     thresh, params) for g in grid)
         refy, refx = filter_means(mean_sds, grid)
     else:
         phase_data = [i.phase_data for i in ifgs]
         mean_sds = []
-        for y, x in grid:
+        for g in grid:
             mean_sds.append(ref_pixel_multi(
-                y, x, half_patch_size, phase_data, thresh, params))
+                g, half_patch_size, phase_data, thresh, params))
         refy, refx = filter_means(mean_sds, grid)
 
     if refy and refx:
@@ -114,19 +115,20 @@ def ref_pixel_mpi(process_grid, half_patch_size, ifgs, thresh, params):
     """
     log.info('Ref pixel calculation started')
     mean_sds = []
-    for y, x in process_grid:
-        mean_sds.append(ref_pixel_multi(y, x, half_patch_size, ifgs, thresh,
+    for g in process_grid:
+        mean_sds.append(ref_pixel_multi(g, half_patch_size, ifgs, thresh,
                                         params))
     return mean_sds
 
 
-def ref_pixel_multi(y, x, half_patch_size, phase_data_or_ifg_paths,
+def ref_pixel_multi(g, half_patch_size, phase_data_or_ifg_paths,
                     thresh, params):
     """
     convenience function for for ref pixel optimisation
     """
-
+    # pylint: disable=invalid-name
     # phase_data_or_ifg is list of ifgs
+    y, x, = g
     if isinstance(phase_data_or_ifg_paths[0], str):
         # this consumes a lot less memory
         # one ifg.phase_data in memory at any time
@@ -136,12 +138,11 @@ def ref_pixel_multi(y, x, half_patch_size, phase_data_or_ifg_paths,
             data_file = os.path.join(output_dir,
                                      'ref_phase_data_{b}_{y}_{x}.npy'.format(
                                          b=os.path.basename(p).split('.')[0],
-                                         y=y, x=x)
-                                     )
+                                         y=y, x=x))
             data.append(np.load(file=data_file))
     else:  # phase_data_or_ifg is phase_data list
         data = [p[y - half_patch_size:y + half_patch_size + 1,
-                x - half_patch_size:x + half_patch_size + 1]
+                  x - half_patch_size:x + half_patch_size + 1]
                 for p in phase_data_or_ifg_paths]
     valid = [nsum(~isnan(d)) > thresh for d in data]
     if all(valid):  # ignore if 1+ ifgs have too many incoherent cells
@@ -152,14 +153,14 @@ def ref_pixel_multi(y, x, half_patch_size, phase_data_or_ifg_paths,
 
 
 def step(dim, ref, radius):
-    '''
+    """
     Helper func: returns xrange obj of axis indicies for a search window.
 
     :param dim: total length of the grid dimension.
     :param ref: the desired number of steps.
     :param radius: the number of cells from the centre of the chip eg.
     (chipsize / 2).
-    '''
+    """
 
     # if ref == 1:
     #     # centre a single search step
@@ -169,8 +170,8 @@ def step(dim, ref, radius):
     #     return [radius, dim-radius-1]
     # max_dim = dim - (2*radius)  # max possible number for refn(x|y)
     # step = max_dim // (ref-1)
-    step = dim // ref  # same as in Matlab
-    return range(radius, dim-radius, step)
+    step_size = dim // ref  # same as in Matlab
+    return range(radius, dim-radius, step_size)
 
 
 def validate_chipsize(chipsize, head):

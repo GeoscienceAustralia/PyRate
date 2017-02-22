@@ -26,8 +26,10 @@ Created on 12/09/2012
 .. codeauthor:: Ben Davies, NCI <ben.davies@anu.edu.au>
 """
 
-import os, re, datetime, sys
-import numpy as np
+import os
+import re
+import sys
+import datetime
 import pyrate.ifgconstants as ifc
 
 
@@ -72,14 +74,13 @@ ROIPAC = "ROIPAC"
 
 # store type for each of the header items
 INT_HEADERS = [WIDTH, FILE_LENGTH, XMIN, XMAX, YMIN, YMAX, Z_OFFSET, Z_SCALE]
-STR_HEADERS = [X_UNIT, Y_UNIT, ORBIT_NUMBER, DATUM, PROJECTION ]
+STR_HEADERS = [X_UNIT, Y_UNIT, ORBIT_NUMBER, DATUM, PROJECTION]
 FLOAT_HEADERS = [X_FIRST, X_STEP, Y_FIRST, Y_STEP, TIME_SPAN_YEAR,
-                VELOCITY, HEIGHT, EARTH_RADIUS, WAVELENGTH, HEADING_DEG]
+                 VELOCITY, HEIGHT, EARTH_RADIUS, WAVELENGTH, HEADING_DEG]
 DATE_HEADERS = [DATE, DATE12]
 
 ROIPAC_HEADER_LEFT_JUSTIFY = 18
 ROI_PAC_HEADER_FILE_EXT = "rsc"
-
 
 
 def _check_raw_data(is_ifg, data_path, ncols, nrows):
@@ -96,7 +97,9 @@ def _check_raw_data(is_ifg, data_path, ncols, nrows):
 
 
 def _check_step_mismatch(header):
-    xs, ys = [abs(i) for i in [header[ifc.PYRATE_X_STEP], header[ifc.PYRATE_Y_STEP]]]
+    # pylint: disable=invalid-name
+    xs, ys = [abs(i) for i in [header[ifc.PYRATE_X_STEP],
+                               header[ifc.PYRATE_Y_STEP]]]
 
     if xs != ys:
         msg = 'X and Y cell sizes do not match: %s & %s'
@@ -105,12 +108,13 @@ def _check_step_mismatch(header):
 
 def parse_date(dstr):
     """Parses ROI_PAC 'yymmdd' or 'yymmdd-yymmdd' to date or date tuple"""
-    def to_date(ds):
-        year, month, day = [int(ds[i:i+2]) for i in range(0, 6, 2)]
-        year += 1900 if (year <= 99 and year >= 50) else 2000
+    def to_date(date_str):
+        """convert to date"""
+        year, month, day = [int(date_str[i:i+2]) for i in range(0, 6, 2)]
+        year += 1900 if ((year <= 99) and (year >= 50)) else 2000
         return datetime.date(year, month, day)
 
-    if "-" in dstr: # ranged date
+    if "-" in dstr:  # ranged date
         return tuple([to_date(d) for d in dstr.split("-")])
     else:
         return to_date(dstr)
@@ -145,11 +149,11 @@ def parse_header(hdr_file):
 
     # grab a subset for GeoTIFF conversion
     subset = {ifc.PYRATE_NCOLS: headers[WIDTH],
-                ifc.PYRATE_NROWS: headers[FILE_LENGTH],
-                ifc.PYRATE_LAT: headers[Y_FIRST],
-                ifc.PYRATE_LONG: headers[X_FIRST],
-                ifc.PYRATE_X_STEP: headers[X_STEP],
-                ifc.PYRATE_Y_STEP: headers[Y_STEP], }
+              ifc.PYRATE_NROWS: headers[FILE_LENGTH],
+              ifc.PYRATE_LAT: headers[Y_FIRST],
+              ifc.PYRATE_LONG: headers[X_FIRST],
+              ifc.PYRATE_X_STEP: headers[X_STEP],
+              ifc.PYRATE_Y_STEP: headers[Y_STEP]}
 
     if is_dem:
         subset[ifc.PYRATE_DATUM] = headers[DATUM]
@@ -179,6 +183,7 @@ def parse_header(hdr_file):
 
 
 def _parse_dates_from(filename):
+    # pylint: disable=invalid-name
     # process dates from filename if rsc file doesn't have them (skip for DEMs)
     p = re.compile(r'\d{6}-\d{6}')  # match 2 sets of 6 digits separated by '-'
     m = p.search(filename)
@@ -208,5 +213,6 @@ def manage_header(header_file, projection):
 
 
 class RoipacException(Exception):
-    pass
-
+    """
+    Convenience class for throwing exception
+    """
