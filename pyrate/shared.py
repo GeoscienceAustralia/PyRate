@@ -168,7 +168,6 @@ class RasterBase(object):
         """
         Returns tuple of (Y,X) shape of the raster (as per numpy.shape).
         """
-
         return self.dataset.RasterYSize, self.dataset.RasterXSize
 
     @property
@@ -183,7 +182,6 @@ class RasterBase(object):
         """
         Returns True if the underlying dataset has been opened by GDAL.
         """
-
         return self.dataset is not None
 
     def close(self):
@@ -202,7 +200,6 @@ class RasterBase(object):
     def _get_band(self, band):
         """
         Wrapper (with error checking) for GDAL's Band.GetRasterBand() method.
-
         :param band: number of band, starting at 1
         """
 
@@ -222,7 +219,6 @@ class Ifg(RasterBase):
     def __init__(self, path):
         """
         Interferogram constructor, for 2 band ROIPAC Ifg raster datasets.
-
         Parameters
         ----------
         path: str
@@ -239,6 +235,7 @@ class Ifg(RasterBase):
         self.meta_data = None
         self.wavelength = None
         self._nodata_value = None
+        self.time_span = None
 
     def open(self, readonly=None):
         """
@@ -349,8 +346,9 @@ class Ifg(RasterBase):
             # otherwise NaN's don't write to bytecode properly
             # and numpy complains
             # self.dataset.FlushCache()
-            msg = '%s: converted phase units to millimetres'
-            log.debug(msg % self.data_path)
+            msg = '{}: converted phase units ' \
+                  'to millimetres'.format(self.data_path)
+            log.debug(msg)
         else:
             msg = 'Phase units are not millimetres or radians'
             raise IfgException(msg)
@@ -402,14 +400,14 @@ class Ifg(RasterBase):
 
         if self.is_read_only:
             raise IOError("Cannot write to read only Ifg")
-        """
+
         # keep this block
-        if new_data_path is None:
-            self.dataset = gdal.Open(self.data_path, GA_Update)
-        else:
-            self.dataset = gdal.Open(new_data_path, GA_Update)
-        self._phase_band = None
-        """
+        # if new_data_path is None:
+        #     self.dataset = gdal.Open(self.data_path, GA_Update)
+        # else:
+        #     self.dataset = gdal.Open(new_data_path, GA_Update)
+        # self._phase_band = None
+
         if data is not None:
             assert isinstance(data, np.ndarray)
             data_r, data_c = data.shape
@@ -435,6 +433,7 @@ class IfgPart(object):
     slice of Ifg data object
     """
     # pylint: disable=missing-docstring
+    # pylint: disable=too-many-instance-attributes
     def __init__(self, ifg_or_path, tile, ifg_dict=None):
 
         self.tile = tile
@@ -452,7 +451,6 @@ class IfgPart(object):
             phase_file = 'phase_data_{}_{}.npy'.format(
                 basename(ifg_or_path).split('.')[0], tile.index)
             self.phase_data = np.load(join(dirname(ifg_or_path), phase_file))
-            # os.remove(join(dirname(ifg_or_path), phase_file))
         else:
             # check if Ifg was sent.
             if isinstance(ifg_or_path, Ifg):
@@ -607,6 +605,7 @@ def nanmedian(x):
     :param x:
     :return:
     """
+    # pylint: disable=no-member
     version = [int(i) for i in
                pkg_resources.get_distribution("numpy").version.split('.')]
     if version[0] == 1 and version[1] > 9:
@@ -726,6 +725,7 @@ def write_unw_from_data_or_geotiff(geotif_or_data, dest_unw, ifg_proc):
 
 
 def write_output_geotiff(md, gt, wkt, data, dest, nodata):
+    # pylint: disable=too-many-arguments
     """
     Writes PyRate output data to a GeoTIFF file.
     md is a dictionary containing PyRate metadata
@@ -778,7 +778,6 @@ def create_tiles(shape, nrows=2, ncols=2):
         number of rows of tiles
     ncols: int
         number of columns of tiles
-
     Returns
     -------
     list of Tile class instances
@@ -832,7 +831,6 @@ def copytree(src, dst, symlinks=False, ignore=None):
     :param dst: dst dir to copy to, created if does not exist
     :param symlinks: bool, whether to copy symlink or not
     :param ignore:
-    :return:
     """
     # pylint: disable=invalid-name
     if not os.path.exists(dst):
@@ -869,12 +867,10 @@ def pre_prepare_ifgs(ifg_paths, params):
         list of ifg paths
     params: dict
         parameters dict
-
     Returns
     -------
     ifgs: list
         list of Ifg instances
-
     """
     ifgs = [Ifg(p) for p in ifg_paths]
     for i in ifgs:
@@ -913,7 +909,6 @@ def cell_size(lat, lon, x_step, y_step):
     x_step: horizontal step size in degrees
     y_step: vertical step size in degrees
     """
-
     if lat > 84.0 or lat < -80:
         msg = "No UTM zone for polar region: > 84 degrees N or < 80 degrees S"
         raise ValueError(msg)
@@ -935,7 +930,6 @@ def utm_zone(longitude):
     handle the sub-zoning around Scandanavian countries.
     See http://www.dmap.co.uk/utmworld.htm
     """
-
     if longitude == 180:
         return 60.0
     return floor((longitude + 180) / 6.0) + 1
