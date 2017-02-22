@@ -1,19 +1,17 @@
+"""utilities and classes shared by all other pyrate modules"""
 from __future__ import print_function
-
 import errno
 import logging
 import math
+from math import floor
 import os
 from os.path import basename, dirname, join
-import random
 import shutil
 import stat
-import string
 import struct
 import time
 from datetime import date
 from itertools import product
-from math import floor
 import pkg_resources
 import pyproj
 import numpy as np
@@ -26,7 +24,7 @@ log = logging.getLogger(__name__)
 
 try:
     from osgeo import osr, gdal
-    from osgeo.gdalconst import GA_Update, GA_ReadOnly, GF_Write
+    from osgeo.gdalconst import GA_Update, GA_ReadOnly
 except ImportError:
     import gdal
 
@@ -58,36 +56,12 @@ def mkdir_p(path):
             raise
 
 
-def get_tmpdir():
-    if 'TMPDIR' in os.environ:  # NCI tmp dir in each node??
-        # user = os.environ['USER']
-        # TMPDIR = os.path.join('/short/dg9', user, 'tmp/')
-        node_tmp = os.environ['TMPDIR']
-    else:  # fall back option or when running on PC locally
-        import tempfile
-        tmp = tempfile.gettempdir()
-        node_tmp = os.path.join(tmp, 'tmpdir')
-        mkdir_p(node_tmp)
-    return node_tmp
-
-
-def common_tmpdir():
-    if 'TMPDIR' in os.environ:  # NCI tmp dir in each node??
-        user = os.environ['USER']
-        short_tmp = os.path.join('/short/dg9', user, 'tmp/')
-    else:  # fall back option or when running on PC locally
-        import tempfile
-        tmp = tempfile.gettempdir()
-        short_tmp = os.path.join(tmp, 'common')
-        mkdir_p(short_tmp)
-    return short_tmp
-
-
 class RasterBase(object):
     """
     Base class for PyRate GeoTIFF based raster datasets.
     """
-
+    # pylint: disable=missing-docstring
+    # pylint: disable=too-many-instance-attributes
     def __init__(self, path):
         if isinstance(path, gdal.Dataset):
             self.dataset = path  # path will be Dataset in this case
@@ -118,8 +92,8 @@ class RasterBase(object):
             raise RasterException(msg)
 
         if not os.path.exists(self.data_path):
-            raise IOError('The file {path} does not exist.'
-                    ' Consider running prepifg'.format(path=self.data_path))
+            raise IOError('The file {path} does not exist. Consider running '
+                          'prepifg'.format(path=self.data_path))
 
         # unless read only, by default open files as writeable
         if readonly not in [True, False, None]:
@@ -138,8 +112,7 @@ class RasterBase(object):
             try:
                 attempts += 1
                 self.dataset = gdal.Open(self.data_path, flag)
-            except RuntimeError as e:
-                print(e)
+            except RuntimeError:
                 print('\nneed to read {ifg} again'.format(ifg=self.data_path))
                 time.sleep(0.5)
 
@@ -245,7 +218,7 @@ class Ifg(RasterBase):
     Interferrogram class, represents the difference between two acquisitions.
     Ifg objects double as a container for related data.
     """
-
+    # pylint: disable=too-many-instance-attributes
     def __init__(self, path):
         """
         Interferogram constructor, for 2 band ROIPAC Ifg raster datasets.
@@ -275,6 +248,7 @@ class Ifg(RasterBase):
         self.initialize()
 
     def initialize(self):
+        """basic ifg properties read on opening Ifg"""
         self._init_dates()
         md = self.dataset.GetMetadata()
         self.wavelength = float(md[ifc.PYRATE_WAVELENGTH_METRES])
@@ -283,6 +257,7 @@ class Ifg(RasterBase):
         self.nan_converted = False
 
     def _init_dates(self):
+        """grab master and slade date from metadata"""
         def _to_date(datestr):
             year, month, day = [int(i) for i in datestr.split('-')]
             return date(year, month, day)
@@ -292,7 +267,7 @@ class Ifg(RasterBase):
 
         if all(datestrs):
             self.master, self.slave = [_to_date(s) for s in datestrs]
-            self.time_span = (self.slave - self.master).days / ifc.DAYS_PER_YEAR
+            self.time_span = (self.slave - self.master).days/ifc.DAYS_PER_YEAR
         else:
             msg = 'Missing master and/or slave date in %s' % self.data_path
             raise IfgException(msg)
@@ -305,13 +280,15 @@ class Ifg(RasterBase):
         if (self._nodata_value is None) or (self.dataset is None):
             msg = 'nodata value needs to be set for nan conversion.' \
                   'Use ifg.nodata_value = NoDataValue to set nodata_value'
+            log.warning(msg)
             raise RasterException(msg)
         if ((self.dataset.GetMetadataItem(ifc.NAN_STATUS) == ifc.NAN_CONVERTED)
-            or self.nan_converted):
+                or self.nan_converted):
             self.phase_data = self.phase_data
             self.nan_converted = True
-            msg = '%s: ignored as previous nan conversion detected'
-            log.debug(msg % self.data_path)
+            msg = '{}: ignored as previous nan ' \
+                  'conversion detected'.format(self.data_path)
+            log.debug(msg)
             return
         else:
             self.phase_data = where(
@@ -359,8 +336,9 @@ class Ifg(RasterBase):
         """
         self.mm_converted = True
         if self.dataset.GetMetadataItem(ifc.PYRATE_PHASE_UNITS) == MILLIMETRES:
-            msg = '%s: ignored as previous phase unit conversion already applied'
-            logging.debug(msg % self.data_path)
+            msg = '{}: ignored as previous phase unit conversion ' \
+                  'already applied'.format(self.data_path)
+            log.debug(msg)
             self.phase_data = self.phase_data
             return
         elif self.dataset.GetMetadataItem(ifc.PYRATE_PHASE_UNITS) == RADIANS:
@@ -372,11 +350,10 @@ class Ifg(RasterBase):
             # and numpy complains
             # self.dataset.FlushCache()
             msg = '%s: converted phase units to millimetres'
-            logging.debug(msg % self.data_path)
+            log.debug(msg % self.data_path)
         else:
-           msg = 'Phase units are not millimetres or radians'
-           raise IfgException(msg)
-
+            msg = 'Phase units are not millimetres or radians'
+            raise IfgException(msg)
 
     @phase_data.setter
     def phase_data(self, data):
@@ -444,6 +421,12 @@ class Ifg(RasterBase):
         self.dataset.FlushCache()
 
     def save_numpy_phase(self, numpy_file):
+        """
+        Parameters
+        ----------
+        numpy_file: str
+            file path where phase data is saved
+        """
         np.save(file=numpy_file, arr=self.phase_data)
 
 
@@ -451,7 +434,7 @@ class IfgPart(object):
     """
     slice of Ifg data object
     """
-
+    # pylint: disable=missing-docstring
     def __init__(self, ifg_or_path, tile, ifg_dict=None):
 
         self.tile = tile
@@ -508,6 +491,7 @@ class IfgPart(object):
 
 
 class Incidence(RasterBase):
+    """ Incidence class"""
 
     def __init__(self, path):
         """
@@ -520,7 +504,6 @@ class Incidence(RasterBase):
         self._incidence_data = None
         self._azimuth_data = None
 
-
     @property
     def incidence_band(self):
         '''
@@ -530,7 +513,6 @@ class Incidence(RasterBase):
         if self._incidence_band is None:
             self._incidence_band = self._get_band(1)
         return self._incidence_band
-
 
     @property
     def incidence_data(self):
@@ -542,7 +524,6 @@ class Incidence(RasterBase):
             self._incidence_data = self.incidence_band.ReadAsArray()
         return self._incidence_data
 
-
     @property
     def azimuth_band(self):
         """
@@ -552,7 +533,6 @@ class Incidence(RasterBase):
         if self._azimuth_band is None:
             self._azimuth_band = self._get_band(2)
         return self._azimuth_band
-
 
     @property
     def azimuth_data(self):
@@ -571,21 +551,17 @@ class DEM(RasterBase):
     """
 
     def __init__(self, path):
-        '''DEM constructor.'''
+        """DEM constructor."""
         RasterBase.__init__(self, path)
         self._band = None
 
-
     @property
     def height_band(self):
-        """
-        Returns the GDALBand for the elevation layer.
-        """
+        """Returns the GDALBand for the elevation layer."""
 
         if self._band is None:
             self._band = self._get_band(1)
         return self._band
-
 
 
 class IfgException(Exception):
@@ -593,21 +569,11 @@ class IfgException(Exception):
     Generic exception class for interferogram errors.
     """
 
-    pass
 
 class RasterException(Exception):
     """
     Generic exception for raster errors.
     """
-
-    pass
-
-class PyRateException(Exception):
-    """
-    Generic exception class for PyRate S/W errors.
-    """
-
-    pass
 
 
 class EpochList(object):
@@ -636,12 +602,6 @@ def convert_radians_to_mm(data, wavelength):
     return data * MM_PER_METRE * (wavelength / (4 * math.pi))
 
 
-def generate_random_string(N=10):
-    return ''.join(random.SystemRandom().choice(
-        string.ascii_letters + string.digits)
-                   for _ in range(N))
-
-
 def nanmedian(x):
     """
     :param x:
@@ -659,6 +619,8 @@ def write_geotiff(header, data_path, dest, nodata):
     """
     Writes image data to GeoTIFF image with PyRate metadata
     """
+    # pylint: disable=too-many-branches
+    # pylint: disable=too-many-locals
     is_ifg = ifc.PYRATE_WAVELENGTH_METRES in header
     is_incidence = 'FILE_TYPE' in header
     ifg_proc = header[ifc.PYRATE_INSAR_PROCESSOR]
@@ -667,11 +629,11 @@ def write_geotiff(header, data_path, dest, nodata):
 
     # need to have gamma/roipac functionality here?
     if ifg_proc == ROIPAC:
-        roipac._check_raw_data(is_ifg, data_path, ncols, nrows)
-        roipac._check_step_mismatch(header)
-    else:  #GAMMA
-        gamma._check_raw_data(data_path, ncols, nrows)
-        gamma._check_step_mismatch(header)
+        roipac.check_raw_data(is_ifg, data_path, ncols, nrows)
+        roipac.check_step_mismatch(header)
+    else:  # GAMMA
+        gamma.check_raw_data(data_path, ncols, nrows)
+        gamma.check_step_mismatch(header)
 
     driver = gdal.GetDriverByName("GTiff")
     dtype = gdal.GDT_Float32 if (is_ifg or is_incidence) else gdal.GDT_Int16
@@ -743,7 +705,6 @@ def write_unw_from_data_or_geotiff(geotif_or_data, dest_unw, ifg_proc):
     :param geotif_or_data: data or geotif to covert into unw
     :param dest_unw: destination unw file
     :param ifg_proc: processor type, GAMMA=1, ROIPAC=0
-    :return:
     """
     if ifg_proc != 1:
         raise NotImplementedError('only support gamma processor for now')
@@ -792,7 +753,9 @@ def write_output_geotiff(md, gt, wkt, data, dest, nodata):
 
 
 class GeotiffException(Exception):
-    pass
+    """
+    Geotiff exception class
+    """
 
 
 def create_tiles(shape, nrows=2, ncols=2):
@@ -861,6 +824,7 @@ class Tile:
 
 
 def copytree(src, dst, symlinks=False, ignore=None):
+    # pylint: disable=line-too-long
     """
     copy contents of src dir into dst dir
     stolen from: http://stackoverflow.com/questions/1868714/how-do-i-copy-an-entire-directory-of-files-into-an-existing-directory-using-pyth?lq=1
@@ -870,6 +834,7 @@ def copytree(src, dst, symlinks=False, ignore=None):
     :param ignore:
     :return:
     """
+    # pylint: disable=invalid-name
     if not os.path.exists(dst):
         os.makedirs(dst)
     shutil.copystat(src, dst)
@@ -888,7 +853,7 @@ def copytree(src, dst, symlinks=False, ignore=None):
                 st = os.lstat(s)
                 mode = stat.S_IMODE(st.st_mode)
                 os.lchmod(d, mode)
-            except:
+            except AttributeError:
                 pass  # lchmod not available
         elif os.path.isdir(s):
             copytree(s, d, symlinks, ignore)
@@ -897,6 +862,20 @@ def copytree(src, dst, symlinks=False, ignore=None):
 
 
 def pre_prepare_ifgs(ifg_paths, params):
+    """
+    Parameters
+    ----------
+    ifg_paths: list
+        list of ifg paths
+    params: dict
+        parameters dict
+
+    Returns
+    -------
+    ifgs: list
+        list of Ifg instances
+
+    """
     ifgs = [Ifg(p) for p in ifg_paths]
     for i in ifgs:
         if not i.is_open:
@@ -924,7 +903,7 @@ def nan_and_mm_convert(ifg, params):
 
 
 def cell_size(lat, lon, x_step, y_step):
-
+    # pylint: disable=invalid-name
     """
     Collection of geodesy/pyproj algorithms for PyRate.
     This function depends on PyProj/PROJ4 to replace llh2local.m in MATLAB Pirate.
@@ -966,6 +945,8 @@ class PrereadIfg:
     """
     Convenience class for handling pre-calculated ifg params
     """
+    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-instance-attributes
     def __init__(self, path, nan_fraction, master, slave, time_span,
                  nrows, ncols):
         self.path = path
@@ -1013,10 +994,8 @@ def save_numpy_phase(ifg_paths, tiles, params):
         phase_data = ifg.phase_data
         bname = basename(ifg_path).split('.')[0]
         for t in tiles:
-            p_data = phase_data[
-                     t.top_left_y:t.bottom_right_y,
-                     t.top_left_x:t.bottom_right_x
-                     ]
+            p_data = phase_data[t.top_left_y:t.bottom_right_y,
+                                t.top_left_x:t.bottom_right_x]
             phase_file = 'phase_data_{}_{}.npy'.format(bname, t.index)
             np.save(file=join(outdir, phase_file),
                     arr=p_data)

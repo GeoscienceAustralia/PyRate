@@ -83,7 +83,7 @@ ROIPAC_HEADER_LEFT_JUSTIFY = 18
 ROI_PAC_HEADER_FILE_EXT = "rsc"
 
 
-def _check_raw_data(is_ifg, data_path, ncols, nrows):
+def check_raw_data(is_ifg, data_path, ncols, nrows):
     base_size = ncols * nrows
     if is_ifg:
         size = 4 * base_size * 2  # 2 bands of 4 bytes each
@@ -96,7 +96,7 @@ def _check_raw_data(is_ifg, data_path, ncols, nrows):
         raise RoipacException(msg % (data_path, size, act_size))
 
 
-def _check_step_mismatch(header):
+def check_step_mismatch(header):
     # pylint: disable=invalid-name
     xs, ys = [abs(i) for i in [header[ifc.PYRATE_X_STEP],
                                header[ifc.PYRATE_Y_STEP]]]

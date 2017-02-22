@@ -26,7 +26,7 @@ GAMMA = 'GAMMA'
 SPEED_OF_LIGHT_METRES_PER_SECOND = 3e8
 
 
-def _check_raw_data(data_path, ncols, nrows):
+def check_raw_data(data_path, ncols, nrows):
     size = ncols * nrows * 4 # DEM and Ifg data are 4 byte floats
     act_size = os.stat(data_path).st_size
     if act_size != size:
@@ -34,7 +34,7 @@ def _check_raw_data(data_path, ncols, nrows):
         raise GammaException(msg % (data_path, size, act_size))
 
 
-def _check_step_mismatch(hdr):
+def check_step_mismatch(hdr):
     xs, ys = [abs(i) for i in [hdr[ifc.PYRATE_X_STEP], hdr[ifc.PYRATE_Y_STEP]]]
 
     if xs != ys:

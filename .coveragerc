@@ -26,10 +26,14 @@ exclude_lines =
     raise AssertionError
     raise NotImplementedError
     raise ValueError
+    raise ImportError
     raise ConfigException
     raise ReferencePhaseError
     raise RefPixelError
-    riase RoipacException
+    raise RoipacException
+    raise GeotiffException
+    raise RasterException
+    raise IfgException
 
     # Don't complain if non-runnable code isn't run:
     if 0:
