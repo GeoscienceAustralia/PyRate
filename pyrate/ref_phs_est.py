@@ -1,13 +1,13 @@
-from __future__ import print_function
 """
 This is a python implementation of the refphsest.m of pirate.
 """
+from __future__ import print_function
+import logging
 import numpy as np
 from joblib import Parallel, delayed
 from pyrate import config as cf
 from pyrate.shared import nanmedian
 from pyrate import ifgconstants as ifc
-import logging
 
 log = logging.getLogger(__name__)
 
@@ -40,14 +40,15 @@ def estimate_ref_phase(ifgs, params, refpx, refpy):
 
 
 def est_ref_phase_method2(ifgs, params, refpx, refpy):
+    """ref phs estimate method 2"""
     half_chip_size = int(np.floor(params[cf.REF_CHIP_SIZE] / 2.0))
     chipsize = 2 * half_chip_size + 1
     thresh = chipsize * chipsize * params[cf.REF_MIN_FRAC]
     phase_data = [i.phase_data for i in ifgs]
     if params[cf.PARALLEL]:
         ref_phs = Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
-            delayed(est_ref_phase_method2_multi)(p, half_chip_size,
-                                                 refpx, refpy, thresh)
+            delayed(est_ref_phs_method2)(p, half_chip_size,
+                                         refpx, refpy, thresh)
             for p in phase_data)
 
         for n, ifg in enumerate(ifgs):
@@ -56,18 +57,17 @@ def est_ref_phase_method2(ifgs, params, refpx, refpy):
         ref_phs = np.zeros(len(ifgs))
         for n, ifg in enumerate(ifgs):
             ref_phs[n] = \
-                est_ref_phase_method2_multi(phase_data[n], half_chip_size,
-                                            refpx, refpy, thresh)
+                est_ref_phs_method2(phase_data[n], half_chip_size,
+                                    refpx, refpy, thresh)
             ifg.phase_data -= ref_phs[n]
     return ref_phs
 
 
-def est_ref_phase_method2_multi(phase_data, half_chip_size,
-                                refpx, refpy, thresh):
-    patch = phase_data[
-            refpy - half_chip_size: refpy + half_chip_size + 1,
-            refpx - half_chip_size: refpx + half_chip_size + 1
-            ]
+def est_ref_phs_method2(phase_data, half_chip_size,
+                        refpx, refpy, thresh):
+    """convenience function for ref phs estimate method 2 parallelisation"""
+    patch = phase_data[refpy - half_chip_size: refpy + half_chip_size + 1,
+                       refpx - half_chip_size: refpx + half_chip_size + 1]
     patch = np.reshape(patch, newshape=(-1, 1), order='F')
     if np.sum(~np.isnan(patch)) < thresh:
         raise ReferencePhaseError('The reference pixel'
@@ -77,6 +77,7 @@ def est_ref_phase_method2_multi(phase_data, half_chip_size,
 
 
 def est_ref_phase_method1(ifgs, params):
+    """ref phs estimate method 1 estimation"""
     ifg_phase_data_sum = np.zeros(ifgs[0].shape, dtype=np.float64)
     # TODO: revisit as this will likely hit memory limit in NCI
     phase_data = [i.phase_data for i in ifgs]
@@ -88,7 +89,7 @@ def est_ref_phase_method1(ifgs, params):
     if params[cf.PARALLEL]:
         log.info("Calculating ref phase using multiprocessing")
         ref_phs = Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
-            delayed(est_ref_phase_method1_multi)(p, comp)
+            delayed(est_ref_phs_method1)(p, comp)
             for p in phase_data)
         for n, ifg in enumerate(ifgs):
             ifg.phase_data -= ref_phs[n]
@@ -96,12 +97,13 @@ def est_ref_phase_method1(ifgs, params):
         log.info("Calculating ref phase")
         ref_phs = np.zeros(len(ifgs))
         for n, ifg in enumerate(ifgs):
-            ref_phs[n] = est_ref_phase_method1_multi(ifg.phase_data, comp)
+            ref_phs[n] = est_ref_phs_method1(ifg.phase_data, comp)
             ifg.phase_data -= ref_phs[n]
     return ref_phs
 
 
-def est_ref_phase_method1_multi(phase_data, comp):
+def est_ref_phs_method1(phase_data, comp):
+    """convenience function for ref phs estimate method 1 parallelisation"""
     ifgv = np.ravel(phase_data, order='F')
     ifgv[comp == 1] = np.nan
     # reference phase
@@ -110,6 +112,9 @@ def est_ref_phase_method1_multi(phase_data, comp):
 
 
 def _validate_ifgs(ifgs):
+    """
+    make sure all ifgs have the same ref phase status
+    """
     if len(ifgs) < 2:
         raise ReferencePhaseError('Need to provide at least 2 ifgs')
     flags = [i.dataset.GetMetadataItem(ifc.REF_PHASE) for i in ifgs]
@@ -121,19 +126,23 @@ def _validate_ifgs(ifgs):
 
 
 def check_ref_phase_ifgs(ifgs, flags):
+    """
+    Function to check that the ref phase status of all ifgs are the same
+    """
     count = sum([f == ifc.REF_PHASE_REMOVED for f in flags])
     if (count < len(flags)) and (count > 0):
-        logging.debug('Detected mix of corrected and uncorrected '
-                      'reference phases in ifgs')
+        log.debug('Detected mix of corrected and uncorrected '
+                  'reference phases in ifgs')
 
         for i, flag in zip(ifgs, flags):
             if flag:
-                msg = '%s: prior reference phase correction detected'
+                msg = '{}: prior reference phase ' \
+                      'correction detected'.format(i.data_path)
             else:
-                msg = '%s: no reference phase correction detected'
-            logging.debug(msg % i.data_path)
-
-        raise ReferencePhaseError(msg)
+                msg = '{}: no reference phase ' \
+                      'correction detected'.format(i.data_path)
+            log.debug(msg.format(i.data_path))
+            raise ReferencePhaseError(msg)
 
 
 class ReferencePhaseError(Exception):

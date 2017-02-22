@@ -234,9 +234,9 @@ def ref_phs_method2(ifg_paths, params, refpx, refpy):
         ifg = Ifg(ifg_path)
         ifg.open(readonly=False)
         phase_data = ifg.phase_data
-        ref_ph = rpe.est_ref_phase_method2_multi(phase_data,
-                                                 half_chip_size,
-                                                 refpx, refpy, thresh)
+        ref_ph = rpe.est_ref_phs_method2(phase_data,
+                                         half_chip_size,
+                                         refpx, refpy, thresh)
         phase_data -= ref_ph
         md = ifg.meta_data
         md[ifc.REF_PHASE] = ifc.REF_PHASE_REMOVED
