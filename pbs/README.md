@@ -141,5 +141,6 @@ workon pyrate
 # run command
 mpirun --mca mpi_warn_on_fork 0 pyrate prepifg /path/to/config_file.txt
 mpirun --mca mpi_warn_on_fork 0 pyrate linrate /path/to/config_file.txt
+mpirun --mca mpi_warn_on_fork 0 pyrate postprocess /path/to/config_file.txt
 ```
 

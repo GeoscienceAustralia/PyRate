@@ -15,7 +15,7 @@ a MATLAB tool developed at the University of Leeds.
 
 # Quickstart
 
-Before you start, make sure your system has the following packages installed,
+Before you start, make sure your system has the following packages installed:
 
     sudo apt-get install gdal-bin libgdal-dev libpng12-dev libblas-dev liblapack-dev libatlas-dev libatlas-base-dev gfortran libproj-dev openmpi-bin libopenmpi-dev netcdf-bin libnetcdf11 libnetcdf-dev
 
@@ -157,6 +157,14 @@ Make sure to use the same number of rows and columns with `postprocess` as
 with `linrate`:
     
     pyrate postprocess path/to/config_file -c 3 -r 4
+    
+## MPI Support
+`PyRate` has been designed for supercomputers and instructions to use an HPC
+ cluster can be found in the [pbs directory](pbs/README.md).
+
+## Python multiprocessing support
+In addition to the MPI support for HPC, `PyRate` can be used using standard 
+multiprocessing simply by turning `parallel:  1` in the config file.
 
 ## Integrating PyAPS with PyRate
 
