@@ -1,7 +1,5 @@
 """
 Collection of generic testing utils and mock objs for PyRate.
-
-.. codeauthor:: Ben Davies, Sudipta Basak
 """
 
 import os
@@ -12,8 +10,11 @@ import tempfile
 import numpy as np
 from numpy import isnan, sum as nsum
 from osgeo import gdal
-from pyrate.shared import Ifg
-from pyrate import config as cf
+
+from pyrate.shared import Ifg, pre_prepare_ifgs, get_projection_info, \
+    write_output_geotiff
+from pyrate import config as cf, mst, timeseries, matlab_mst, algorithm, \
+    ifgconstants as ifc
 
 TEMPDIR = tempfile.gettempdir()
 BASE_TEST = join(os.environ['PYRATEPATH'], "tests", "test_data")
@@ -239,3 +240,92 @@ def prepare_ifgs_without_phase(ifg_paths, params):
             i.nodata_value = params[cf.NO_DATA_VALUE]
             i.convert_to_nans()
     return ifgs
+
+
+def mst_calculation(ifg_paths_or_instance, params):
+    if isinstance(ifg_paths_or_instance, list):
+        ifgs = pre_prepare_ifgs(ifg_paths_or_instance, params)
+        mst_grid = mst.mst_parallel(ifgs, params)
+    else:
+        nan_conversion = params[cf.NAN_CONVERSION]
+        assert isinstance(ifg_paths_or_instance, matlab_mst.IfgListPyRate)
+        ifgs = ifg_paths_or_instance.ifgs
+        for i in ifgs:
+            if not i.mm_converted:
+                i.nodata_value = params[cf.NO_DATA_VALUE]
+                i.convert_to_mm()
+        ifg_instance_updated, epoch_list = \
+            matlab_mst.get_nml(ifg_paths_or_instance,
+                               nodata_value=params[cf.NO_DATA_VALUE],
+                               nan_conversion=nan_conversion)
+        mst_grid = matlab_mst.matlab_mst_bool(ifg_instance_updated)
+
+    # write mst output to a file
+    mst_mat_binary_file = join(params[cf.OUT_DIR], 'mst_mat')
+    np.save(file=mst_mat_binary_file, arr=mst_grid)
+
+    for i in ifgs:
+        i.close()
+    return mst_grid
+
+
+def compute_time_series(ifgs, mst_grid, params, vcmt):
+    # Calculate time series
+    tsincr, tscum, tsvel = calculate_time_series(
+        ifgs, params, vcmt=vcmt, mst=mst_grid)
+
+    # tsvel_file = join(params[cf.OUT_DIR], 'tsvel.npy')
+    tsincr_file = join(params[cf.OUT_DIR], 'tsincr.npy')
+    tscum_file = join(params[cf.OUT_DIR], 'tscum.npy')
+    np.save(file=tsincr_file, arr=tsincr)
+    np.save(file=tscum_file, arr=tscum)
+    # np.save(file=tsvel_file, arr=tsvel)
+
+    # TODO: write tests for these functions
+    write_timeseries_geotiff(ifgs, params, tsincr, pr_type='tsincr')
+    write_timeseries_geotiff(ifgs, params, tscum, pr_type='tscuml')
+    # write_timeseries_geotiff(ifgs, params, tsvel, pr_type='tsvel')
+    return tsincr, tscum, tsvel
+
+
+def calculate_time_series(ifgs, params, vcmt, mst):
+    res = timeseries.time_series(ifgs, params, vcmt, mst)
+    for r in res:
+        if len(r.shape) != 3:
+            raise timeseries.TimeSeriesError
+
+    tsincr, tscum, tsvel = res
+    return tsincr, tscum, tsvel
+
+
+# This is not used anywhere now, but may be useful
+def time_series_interpolation(ifg_instance_updated, params):
+
+    edges = matlab_mst.get_sub_structure(ifg_instance_updated,
+                                         np.zeros(len(ifg_instance_updated.id),
+                                                  dtype=bool))
+
+    _, _, ntrees = matlab_mst.matlab_mst_kruskal(edges, ntrees=True)
+    # if ntrees=1, no interpolation; otherwise interpolate
+    if ntrees > 1:
+        params[cf.TIME_SERIES_INTERP] = 1
+    else:
+        params[cf.TIME_SERIES_INTERP] = 0
+
+    return params
+
+
+def write_timeseries_geotiff(ifgs, params, tsincr, pr_type):
+    # setup metadata for writing into result files
+    gt, md, wkt = get_projection_info(ifgs[0].data_path)
+    epochlist = algorithm.get_epochs(ifgs)[0]
+
+    for i in range(tsincr.shape[2]):
+        md[ifc.MASTER_DATE] = epochlist.dates[i + 1]
+        md['PR_SEQ_POS'] = i  # sequence position
+
+        data = tsincr[:, :, i]
+        dest = join(params[cf.OUT_DIR], pr_type + "_" +
+                    str(epochlist.dates[i + 1]) + ".tif")
+        md[ifc.PRTYPE] = pr_type
+        write_output_geotiff(md, gt, wkt, data, dest, np.nan)

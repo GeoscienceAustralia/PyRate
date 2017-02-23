@@ -10,6 +10,7 @@ import random
 import string
 
 import pyrate.shared
+import tests.common
 from pyrate import ref_phs_est as rpe
 from pyrate import shared
 from pyrate import vcm
@@ -227,7 +228,7 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
         run_prepifg.gamma_prepifg(base_unw_paths, params_old)
 
         ifgs = shared.pre_prepare_ifgs(dest_paths, params_old)
-        mst_grid = run_pyrate.mst_calculation(dest_paths, params_old)
+        mst_grid = tests.common.mst_calculation(dest_paths, params_old)
         refy, refx = refpixel.ref_pixel(ifgs, params_old)
 
         run_pyrate.remove_orbital_error(ifgs, params_old)
@@ -236,7 +237,7 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
         _, ifgs = rpe.estimate_ref_phase(ifgs, params_old, refx, refy)
         maxvar_s = [vcm.cvd(i, params_old)[0] for i in ifgs]
         vcmt_s = vcm.get_vcmt(ifgs, maxvar)
-        tsincr, tscum, _ = run_pyrate.compute_time_series(
+        tsincr, tscum, _ = tests.common.compute_time_series(
             ifgs, mst_grid, params, vcmt)
         rate, error, samples = run_pyrate.calculate_linear_rate(
             ifgs, params_old, vcmt, mst_grid)

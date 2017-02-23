@@ -12,6 +12,7 @@ from numpy import nan, asarray, where
 import numpy as np
 from numpy.testing import assert_array_almost_equal
 
+import tests.common
 from pyrate import config as cf
 from pyrate import mst
 from pyrate import ref_phs_est as rpe
@@ -145,7 +146,7 @@ class MatlabTimeSeriesEquality(unittest.TestCase):
         dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
         # start run_pyrate copy
         ifgs = shared.pre_prepare_ifgs(dest_paths, params)
-        mst_grid = run_pyrate.mst_calculation(dest_paths, params)
+        mst_grid = tests.common.mst_calculation(dest_paths, params)
         refx, refy = run_pyrate.ref_pixel_calc(dest_paths, params)
         # Estimate and remove orbit errors
         run_pyrate.remove_orbital_error(ifgs, params)
@@ -158,16 +159,16 @@ class MatlabTimeSeriesEquality(unittest.TestCase):
         params[cf.TIME_SERIES_METHOD] = 1
         params[cf.PARALLEL] = 0
         # Calculate time series
-        cls.tsincr_0, cls.tscum_0, _ = run_pyrate.calculate_time_series(
+        cls.tsincr_0, cls.tscum_0, _ = tests.common.calculate_time_series(
             ifgs, params, vcmt, mst=mst_grid)
 
         params[cf.PARALLEL] = 1
         cls.tsincr_1, cls.tscum_1, cls.tsvel_1 = \
-            run_pyrate.calculate_time_series(ifgs, params, vcmt, mst=mst_grid)
+            tests.common.calculate_time_series(ifgs, params, vcmt, mst=mst_grid)
 
         params[cf.PARALLEL] = 2
         cls.tsincr_2, cls.tscum_2, cls.tsvel_2 = \
-            run_pyrate.calculate_time_series(ifgs, params, vcmt, mst=mst_grid)
+            tests.common.calculate_time_series(ifgs, params, vcmt, mst=mst_grid)
 
         # load the matlab data
         syd_ts_dir = os.path.join(SYD_TEST_DIR, 'matlab_time_series')
@@ -258,7 +259,7 @@ class MatlabTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
         dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
         # start run_pyrate copy
         ifgs = shared.pre_prepare_ifgs(dest_paths, params)
-        mst_grid = run_pyrate.mst_calculation(dest_paths, params)
+        mst_grid = tests.common.mst_calculation(dest_paths, params)
 
         refx, refy = run_pyrate.ref_pixel_calc(dest_paths, params)
 
@@ -275,19 +276,19 @@ class MatlabTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
         params[cf.TIME_SERIES_METHOD] = 2
         params[cf.PARALLEL] = 1
         # Calculate time series
-        cls.tsincr, cls.tscum, _ = run_pyrate.calculate_time_series(
+        cls.tsincr, cls.tscum, _ = tests.common.calculate_time_series(
             ifgs, params, vcmt, mst=mst_grid)
 
         params[cf.PARALLEL] = 2
 
         # Calculate time series
         cls.tsincr_2, cls.tscum_2, _ = \
-            run_pyrate.calculate_time_series(ifgs, params, vcmt, mst=mst_grid)
+            tests.common.calculate_time_series(ifgs, params, vcmt, mst=mst_grid)
 
         params[cf.PARALLEL] = 0
         # Calculate time series serailly by the pixel
         cls.tsincr_0, cls.tscum_0, _ = \
-            run_pyrate.calculate_time_series(ifgs, params, vcmt, mst=mst_grid)
+            tests.common.calculate_time_series(ifgs, params, vcmt, mst=mst_grid)
 
         # copy matlab data
         SYD_TIME_SERIES_DIR = os.path.join(SYD_TEST_DIR, 'matlab_time_series')

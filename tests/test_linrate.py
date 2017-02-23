@@ -12,6 +12,7 @@ from numpy import eye, array, ones
 import numpy as np
 from numpy.testing import assert_array_almost_equal
 
+import tests.common
 from pyrate import config as cf
 from pyrate import ref_phs_est as rpe
 from pyrate import shared
@@ -86,7 +87,7 @@ class MatlabEqualityTest(unittest.TestCase):
 
         # start run_pyrate copy
         ifgs = shared.pre_prepare_ifgs(dest_paths, params)
-        mst_grid = run_pyrate.mst_calculation(dest_paths, params)
+        mst_grid = tests.common.mst_calculation(dest_paths, params)
 
         refx, refy = run_pyrate.ref_pixel_calc(dest_paths, params)
 

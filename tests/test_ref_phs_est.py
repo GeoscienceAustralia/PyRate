@@ -7,6 +7,7 @@ import tempfile
 import unittest
 import numpy as np
 
+import tests.common
 from pyrate import config as cf
 from pyrate import ifgconstants as ifc
 from pyrate import shared
@@ -122,7 +123,7 @@ class RefPhsEstimationMatlabTestMethod1Serial(unittest.TestCase):
 
         # start run_pyrate copy
         ifgs = shared.pre_prepare_ifgs(dest_paths, params)
-        mst_grid = run_pyrate.mst_calculation(dest_paths, params)
+        mst_grid = tests.common.mst_calculation(dest_paths, params)
         # Estimate reference pixel location
         refx, refy = run_pyrate.ref_pixel_calc(dest_paths, params)
 
@@ -212,7 +213,7 @@ class RefPhsEstimationMatlabTestMethod1Parallel(unittest.TestCase):
 
         # start run_pyrate copy
         ifgs = shared.pre_prepare_ifgs(dest_paths, params)
-        mst_grid = run_pyrate.mst_calculation(dest_paths, params)
+        mst_grid = tests.common.mst_calculation(dest_paths, params)
         # Estimate reference pixel location
         refx, refy = run_pyrate.ref_pixel_calc(dest_paths, params)
 
@@ -307,7 +308,7 @@ class RefPhsEstimationMatlabTestMethod2Serial(unittest.TestCase):
 
         # start run_pyrate copy
         ifgs = shared.pre_prepare_ifgs(dest_paths, params)
-        mst_grid = run_pyrate.mst_calculation(dest_paths, params)
+        mst_grid = tests.common.mst_calculation(dest_paths, params)
         # Estimate reference pixel location
         refx, refy = run_pyrate.ref_pixel_calc(dest_paths, params)
 
