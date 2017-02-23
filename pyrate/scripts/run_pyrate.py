@@ -410,9 +410,15 @@ def ref_phs_method1(ifg_paths, comp):
 def process_ifgs(ifg_paths, params, rows, cols):
     """
     Top level function to perform PyRate correction steps on given ifgs
-    ifgs: sequence of paths to interferrograms
-    (NB: changes are saved into ifgs)
-    params: dictionary of configuration parameters
+
+    ifg_paths: list
+        list of ifg paths
+    params: dict
+        parameters dict corresponding to config file
+    rows: int
+        number of rows to break each ifg into
+    cols: int
+        number of cols to break each ifg into
     """
     if mpiops.size > 1:
         params[cf.PARALLEL] = False

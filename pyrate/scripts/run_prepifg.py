@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+"""
+This script converts roipac or gamma format unwrapped interferrograms into
+ geotifs first and then optionally multilook and crop.
+"""
 from __future__ import print_function
 import sys
 import os
@@ -39,9 +43,9 @@ def main(params=None):
     usage = 'Usage: python run_prepifg.py <config file>'
 
     def _convert_dem_inc_ele(params, base_ifg_paths):
-        PROCESSOR = params[cf.PROCESSOR]  # roipac or gamma
+        processor = params[cf.PROCESSOR]  # roipac or gamma
         base_ifg_paths.append(params[cf.DEM_FILE])
-        if PROCESSOR == GAMMA:
+        if processor == GAMMA:
             if params[cf.APS_INCIDENCE_MAP]:
                 base_ifg_paths.append(params[cf.APS_INCIDENCE_MAP])
             if params[cf.APS_ELEVATION_MAP]:
@@ -52,23 +56,24 @@ def main(params=None):
         params[cf.PARALLEL] = False
     if params:
         base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST])
-        LUIGI = params[cf.LUIGI]  # luigi or no luigi
-        if LUIGI:
+        use_luigi = params[cf.LUIGI]  # luigi or no luigi
+        if use_luigi:
             raise cf.ConfigException('params can not be provided with luigi')
         base_ifg_paths = _convert_dem_inc_ele(params, base_ifg_paths)
     else:  # if params not provided read from config file
         if (not params) and ((len(sys.argv) == 1)
-                or (sys.argv[1] == '-h' or sys.argv[1] == '--help')):
+                             or (sys.argv[1] == '-h'
+                                 or sys.argv[1] == '--help')):
             print(usage)
             return
         base_ifg_paths, _, params = cf.get_ifg_paths(sys.argv[1])
-        LUIGI = params[cf.LUIGI]  # luigi or no luigi
+        use_luigi = params[cf.LUIGI]  # luigi or no luigi
         raw_config_file = sys.argv[1]
         base_ifg_paths = _convert_dem_inc_ele(params, base_ifg_paths)
 
-    PROCESSOR = params[cf.PROCESSOR]  # roipac or gamma
+    gamma_or_roipac = params[cf.PROCESSOR]  # roipac or gamma
 
-    if LUIGI:
+    if use_luigi:
         log.info("Running luigi prepifg")
         luigi.configuration.LuigiConfigParser.add_config_path(
             pythonify_config(raw_config_file))
@@ -77,9 +82,9 @@ def main(params=None):
         log.info("Running serial prepifg")
         process_base_ifgs_paths = \
             np.array_split(base_ifg_paths, mpiops.size)[mpiops.rank]
-        if PROCESSOR == ROIPAC:
+        if gamma_or_roipac == ROIPAC:
             roipac_prepifg(process_base_ifgs_paths, params)
-        elif PROCESSOR == GAMMA:
+        elif gamma_or_roipac == GAMMA:
             gamma_prepifg(process_base_ifgs_paths, params)
         else:
             raise prepifg.PreprocessError('Processor must be Roipac(0) or '
@@ -88,6 +93,17 @@ def main(params=None):
 
 
 def roipac_prepifg(base_ifg_paths, params):
+    """
+    Roipac prepifg which combines both conversion to geotiff and multilooking
+     and cropping.
+
+    Parameters
+    ----------
+    base_ifg_paths: list
+        list of unwrapped inteferrograms
+    params: dict
+        parameters dict corresponding to config file
+    """
     log.info("Running roipac prepifg")
     xlooks, ylooks, crop = cf.transform_params(params)
     dem_file = os.path.join(params[cf.ROIPAC_RESOURCE_HEADER])
@@ -104,6 +120,18 @@ def roipac_prepifg(base_ifg_paths, params):
 
 
 def gamma_prepifg(base_unw_paths, params):
+    """
+    Gamma prepifg which combines both conversion to geotiff and multilooking
+     and cropping.
+
+    Parameters
+    ----------
+    base_unw_paths: list
+        list of unwrapped inteferrograms
+    params: dict
+        parameters dict corresponding to config file
+    """
+    # pylint: disable=expression-not-assigned
     log.info("Running gamma prepifg")
     parallel = params[cf.PARALLEL]
 
@@ -119,10 +147,10 @@ def gamma_prepifg(base_unw_paths, params):
                           for b in base_unw_paths]
     ifgs = [prepifg.dem_or_ifg(p) for p in dest_base_ifgs]
     xlooks, ylooks, crop = cf.transform_params(params)
-    userExts = (params[cf.IFG_XFIRST], params[cf.IFG_YFIRST],
-                params[cf.IFG_XLAST], params[cf.IFG_YLAST])
+    user_exts = (params[cf.IFG_XFIRST], params[cf.IFG_YFIRST],
+                 params[cf.IFG_XLAST], params[cf.IFG_YLAST])
     exts = prepifg.getAnalysisExtent(crop, ifgs, xlooks, ylooks,
-                                     userExts=userExts)
+                                     userExts=user_exts)
     thresh = params[cf.NO_DATA_AVERAGING_THRESHOLD]
     if parallel:
         Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
@@ -133,22 +161,33 @@ def gamma_prepifg(base_unw_paths, params):
                              thresh, crop) for i in dest_base_ifgs]
 
 
-def gamma_multiprocessing(b, params):
+def gamma_multiprocessing(unw_path, params):
+    """
+    Gamma multiprocessing wrapper for geotif conversion
+
+    Parameters
+    ----------
+    unw_path: str
+        unwrapped interferrogram path
+    params: dict
+        parameters dict corresponding to config file
+    """
     dem_hdr_path = params[cf.DEM_HEADER_FILE]
-    SLC_DIR = params[cf.SLC_DIR]
+    slc_dir = params[cf.SLC_DIR]
     mkdir_p(params[cf.OUT_DIR])
-    header_paths = gamma_task.get_header_paths(b, slc_dir=SLC_DIR)
+    header_paths = gamma_task.get_header_paths(unw_path, slc_dir=slc_dir)
     combined_headers = gamma.manage_headers(dem_hdr_path, header_paths)
 
-    f, e = os.path.basename(b).split('.')
-    if e != (params[cf.APS_INCIDENCE_EXT] or params[cf.APS_ELEVATION_EXT]):
-        d = os.path.join(
-            params[cf.OUT_DIR], f + '.tif')
+    fname, ext = os.path.basename(unw_path).split('.')
+    if ext != (params[cf.APS_INCIDENCE_EXT] or params[cf.APS_ELEVATION_EXT]):
+        dest = os.path.join(
+            params[cf.OUT_DIR], fname + '.tif')
     else:
-        d = os.path.join(
-            params[cf.OUT_DIR], f + '_' + e + '.tif')
+        dest = os.path.join(
+            params[cf.OUT_DIR], fname + '_' + ext + '.tif')
         # TODO: implement incidence class here
         combined_headers['FILE_TYPE'] = 'Incidence'
 
-    write_geotiff(combined_headers, b, d, nodata=params[cf.NO_DATA_VALUE])
-    return d
+    write_geotiff(combined_headers, unw_path, dest,
+                  nodata=params[cf.NO_DATA_VALUE])
+    return dest
