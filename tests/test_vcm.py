@@ -1,4 +1,7 @@
 from __future__ import print_function
+
+import tests.common
+
 """
 Tests for PyRate's interferogram covariance calculation
 and Variance-Covariance matrix functionality.
@@ -186,7 +189,7 @@ class MatlabEqualityTest(unittest.TestCase):
         dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
         ifgs = shared.pre_prepare_ifgs(dest_paths, params)
         refx, refy = run_pyrate.ref_pixel_calc(dest_paths, params)
-        run_pyrate.remove_orbital_error(ifgs, params)
+        tests.common.remove_orbital_error(ifgs, params)
         ifgs = prepare_ifgs_without_phase(dest_paths, params)
         _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
 

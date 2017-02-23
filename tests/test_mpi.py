@@ -160,8 +160,8 @@ def test_vcm_matlab_vs_mpi(mpisync, tempdir, get_config):
     run_pyrate.orb_fit_calc(dest_paths, params_dict)
     run_pyrate.ref_phase_estimation(dest_paths, params_dict, refpx, refpy)
 
-    maxvar, vcmt = run_pyrate.maxvar_vcm_mpi(dest_paths, params_dict,
-                                             preread_ifgs)
+    maxvar, vcmt = run_pyrate.maxvar_vcm_calc(dest_paths, params_dict,
+                                              preread_ifgs)
     np.testing.assert_array_almost_equal(maxvar, matlab_maxvar, decimal=4)
     np.testing.assert_array_almost_equal(matlab_vcm, vcmt, decimal=3)
     if mpiops.rank == 0:
@@ -205,7 +205,7 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
     run_pyrate.orb_fit_calc(dest_paths, params)
     run_pyrate.ref_phase_estimation(dest_paths, params, refpx, refpy)
 
-    maxvar, vcmt = run_pyrate.maxvar_vcm_mpi(dest_paths, params, preread_ifgs)
+    maxvar, vcmt = run_pyrate.maxvar_vcm_calc(dest_paths, params, preread_ifgs)
     pyrate.shared.save_numpy_phase(dest_paths, tiles, params)
     run_pyrate.timeseries_calc(dest_paths, params, vcmt, tiles, preread_ifgs)
     run_pyrate.linrate_calc(dest_paths, params, vcmt, tiles, preread_ifgs)
@@ -231,7 +231,7 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
         mst_grid = tests.common.mst_calculation(dest_paths, params_old)
         refy, refx = refpixel.ref_pixel(ifgs, params_old)
 
-        run_pyrate.remove_orbital_error(ifgs, params_old)
+        tests.common.remove_orbital_error(ifgs, params_old)
         ifgs = common.prepare_ifgs_without_phase(dest_paths, params_old)
 
         _, ifgs = rpe.estimate_ref_phase(ifgs, params_old, refx, refy)
@@ -239,7 +239,7 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
         vcmt_s = vcm.get_vcmt(ifgs, maxvar)
         tsincr, tscum, _ = tests.common.compute_time_series(
             ifgs, mst_grid, params, vcmt)
-        rate, error, samples = run_pyrate.calculate_linear_rate(
+        rate, error, samples = tests.common.calculate_linear_rate(
             ifgs, params_old, vcmt, mst_grid)
         mst_mpi = reconstruct_mst(ifgs[0].shape, tiles, ifgs_mpi_out_dir)
         np.testing.assert_array_almost_equal(mst_grid, mst_mpi)

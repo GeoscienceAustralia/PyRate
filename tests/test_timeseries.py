@@ -149,7 +149,7 @@ class MatlabTimeSeriesEquality(unittest.TestCase):
         mst_grid = tests.common.mst_calculation(dest_paths, params)
         refx, refy = run_pyrate.ref_pixel_calc(dest_paths, params)
         # Estimate and remove orbit errors
-        run_pyrate.remove_orbital_error(ifgs, params)
+        tests.common.remove_orbital_error(ifgs, params)
         ifgs = prepare_ifgs_without_phase(dest_paths, params)
         _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
 
@@ -264,7 +264,7 @@ class MatlabTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
         refx, refy = run_pyrate.ref_pixel_calc(dest_paths, params)
 
         # Estimate and remove orbit errors
-        run_pyrate.remove_orbital_error(ifgs, params)
+        tests.common.remove_orbital_error(ifgs, params)
         ifgs = prepare_ifgs_without_phase(dest_paths, params)
 
         _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)

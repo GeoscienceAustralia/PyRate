@@ -16,14 +16,13 @@ from pyrate import linrate
 from pyrate import mpiops
 from pyrate import mst
 from pyrate import orbital
-from pyrate import prepifg
 from pyrate import ref_phs_est as rpe
 from pyrate import refpixel
 from pyrate import shared
 from pyrate import timeseries
 from pyrate import vcm as vcm_module
 from pyrate.compat import PyAPS_INSTALLED
-from pyrate.shared import Ifg, write_output_geotiff, create_tiles, \
+from pyrate.shared import Ifg, create_tiles, \
     PrereadIfg, prepare_ifg, save_numpy_phase, get_projection_info
 
 if PyAPS_INSTALLED:
@@ -103,14 +102,12 @@ def mst_calc(dest_tifs, params, tiles, preread_ifgs):
     """
     MPI function that control each process during MPI run
     """
-
-    log.info('Calculating mst')
-    log.info('Calculating minimum spanning tree matrix '
-             'using NetworkX method')
     process_tiles = mpiops.array_split(tiles)
 
     def save_mst_tile(tile, i, preread_ifgs):
         if params[cf.NETWORKX_OR_MATLAB_FLAG]:
+            log.info('Calculating minimum spanning tree matrix '
+                     'using NetworkX method')
             mst_tile = mst.mst_multiprocessing(tile, dest_tifs, preread_ifgs)
         else:
             raise cf.ConfigException('Matlab mst not supported yet')
@@ -198,7 +195,7 @@ def ref_phase_estimation(ifg_paths, params, refpx, refpy):
     log.info('Estimating and removing reference phase')
     if params[cf.REF_EST_METHOD] == 1:
         # calculate phase sum for later use in ref phase method 1
-        comp = phase_sum_mpi(ifg_paths, params)
+        comp = phase_sum(ifg_paths, params)
         process_ref_phs = ref_phs_method1(ifg_paths, comp)
     elif params[cf.REF_EST_METHOD] == 2:
         process_ref_phs = ref_phs_method2(ifg_paths, params, refpx, refpy)
@@ -302,7 +299,7 @@ def process_ifgs(ifg_paths, params, rows, cols):
     # calc and remove reference phase
     ref_phase_estimation(ifg_paths, params, refpx, refpy)
 
-    maxvar, vcmt = maxvar_vcm_mpi(ifg_paths, params, preread_ifgs)
+    maxvar, vcmt = maxvar_vcm_calc(ifg_paths, params, preread_ifgs)
     save_numpy_phase(ifg_paths, tiles, params)
 
     if params[cf.TIME_SERIES_CAL]:
@@ -342,7 +339,7 @@ def linrate_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
     mpiops.comm.barrier()
 
 
-def maxvar_vcm_mpi(ifg_paths, params, preread_ifgs):
+def maxvar_vcm_calc(ifg_paths, params, preread_ifgs):
     log.info('Calculating maxvar and vcm')
     process_indices = mpiops.array_split(range(len(ifg_paths)))
     process_ifgs = mpiops.array_split(ifg_paths)
@@ -371,9 +368,9 @@ def maxvar_vcm_mpi(ifg_paths, params, preread_ifgs):
     return maxvar, vcmt
 
 
-def phase_sum_mpi(ifg_paths, params):
+def phase_sum(ifg_paths, params):
     """
-    save phase data and phase_sum used in the reference phase estimation
+    save phase data and phs_sum used in the reference phase estimation
     Parameters
     ----------
     ifg_paths: list:
@@ -385,27 +382,27 @@ def phase_sum_mpi(ifg_paths, params):
     ifg = Ifg(p_paths[0])
     ifg.open(readonly=True)
     shape = ifg.shape
-    phase_sum = np.zeros(shape=shape, dtype=np.float64)
+    phs_sum = np.zeros(shape=shape, dtype=np.float64)
     ifg.close()
 
     for d in p_paths:
         ifg = Ifg(d)
         ifg.open()
         ifg.nodata_value = params[cf.NO_DATA_VALUE]
-        phase_sum += ifg.phase_data
+        phs_sum += ifg.phase_data
         ifg.close()
 
     if mpiops.rank == MASTER_PROCESS:
-        phase_sum_all = phase_sum
+        phase_sum_all = phs_sum
         for i in range(1, mpiops.size):  # loop is better for memory
-            phase_sum = np.zeros(shape=shape, dtype=np.float64)
-            mpiops.comm.Recv(phase_sum, source=i, tag=i)
-            phase_sum_all += phase_sum
+            phs_sum = np.zeros(shape=shape, dtype=np.float64)
+            mpiops.comm.Recv(phs_sum, source=i, tag=i)
+            phase_sum_all += phs_sum
         comp = np.isnan(phase_sum_all)  # this is the same as in Matlab
         comp = np.ravel(comp, order='F')  # this is the same as in Matlab
     else:
         comp = None
-        mpiops.comm.Send(phase_sum, dest=0, tag=mpiops.rank)
+        mpiops.comm.Send(phs_sum, dest=0, tag=mpiops.rank)
 
     comp = mpiops.comm.bcast(comp, root=0)
     return comp
@@ -429,114 +426,6 @@ def timeseries_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
         np.save(file=tsincr_file, arr=tsincr)
         np.save(file=tscum_file, arr=tscum)
     mpiops.comm.barrier()
-
-
-def remove_orbital_error(ifgs, params):
-    log.info('Calculating orbital error correction')
-
-    if not params[cf.ORBITAL_FIT]:
-        log.info('Orbital correction not required')
-        return
-
-    # perform some general error/sanity checks
-    flags = [i.dataset.GetMetadataItem(ifc.PYRATE_ORBITAL_ERROR) for i in ifgs]
-
-    if all(flags):
-        log.info('Skipped orbital correction, ifgs already corrected')
-        return
-    else:
-        check_orbital_ifgs(ifgs, flags)
-
-    mlooked = None
-
-    if (params[cf.ORBITAL_FIT_LOOKS_X] > 1 or
-            params[cf.ORBITAL_FIT_LOOKS_Y] > 1):
-        # resampling here to use all prior corrections to orig data
-        # can't do multiprocessing without writing to disc, but can do MPI
-        # due to swig pickling issue. So multiprocesing is not implemented
-        mlooked_dataset = prepifg.prepare_ifgs(
-            [i.data_path for i in ifgs],
-            crop_opt=prepifg.ALREADY_SAME_SIZE,
-            xlooks=params[cf.ORBITAL_FIT_LOOKS_X],
-            ylooks=params[cf.ORBITAL_FIT_LOOKS_Y],
-            thresh=params[cf.NO_DATA_AVERAGING_THRESHOLD],
-            write_to_disc=False)
-        mlooked = [Ifg(m[1]) for m in mlooked_dataset]
-
-        for m in mlooked:
-            m.initialize()
-            m.nodata_value = params[cf.NO_DATA_VALUE]
-
-    orbital.orbital_correction(ifgs, params, mlooked=mlooked)
-
-
-def check_orbital_ifgs(ifgs, flags):
-    count = sum([f == ifc.ORB_REMOVED for f in flags])
-    if (count < len(flags)) and (count > 0):
-        log.debug('Detected mix of corrected and uncorrected '
-                  'orbital error in ifgs')
-
-        for i, flag in zip(ifgs, flags):
-            if flag:
-                msg = '{}: prior orbital error correction detected'.format(i)
-            else:
-                msg = '{}: no orbital correction detected'.format(i)
-            log.debug(msg)
-            raise orbital.OrbitalError(msg)
-
-
-def calculate_linear_rate(ifgs, params, vcmt, mst_mat=None):
-    log.info('Calculating linear rate')
-    res = linrate.linear_rate(ifgs, params, vcmt, mst_mat)
-    for r in res:
-        if r is None:
-            raise ValueError('TODO: bad value')
-
-    rate, error, samples = res
-    write_linrate_tifs(ifgs, params, res)
-    log.info('Linear rate calculated')
-    return rate, error, samples
-
-
-def write_linrate_tifs(ifgs, params, res):
-    log.info('Writing linrate results')
-    rate, error, samples = res
-    gt, md, wkt = get_projection_info(ifgs[0].data_path)
-    epochlist = algorithm.get_epochs(ifgs)[0]
-    dest = join(params[cf.OUT_DIR], "linrate.tif")
-    md[ifc.MASTER_DATE] = epochlist.dates
-    md[ifc.PRTYPE] = 'linrate'
-    write_output_geotiff(md, gt, wkt, rate, dest, np.nan)
-    dest = join(params[cf.OUT_DIR], "linerror.tif")
-    md[ifc.PRTYPE] = 'linerror'
-    write_output_geotiff(md, gt, wkt, error, dest, np.nan)
-    dest = join(params[cf.OUT_DIR], "linsamples.tif")
-    md[ifc.PRTYPE] = 'linsamples'
-    write_output_geotiff(md, gt, wkt, samples, dest, np.nan)
-    write_linrate_numpy_files(error, rate, samples, params)
-
-
-def write_linrate_numpy_files(error, rate, samples, params):
-    rate_file = join(params[cf.OUT_DIR], 'rate.npy')
-    error_file = join(params[cf.OUT_DIR], 'error.npy')
-    samples_file = join(params[cf.OUT_DIR], 'samples.npy')
-    np.save(file=rate_file, arr=rate)
-    np.save(file=error_file, arr=error)
-    np.save(file=samples_file, arr=samples)
-
-
-def warp_required(xlooks, ylooks, crop):
-    """
-    Returns True if params show rasters need to be cropped and/or resized.
-    """
-
-    if xlooks > 1 or ylooks > 1:
-        return True
-
-    if crop is None:
-        return False
-
-    return True
 
 
 def main(config_file, rows, cols):

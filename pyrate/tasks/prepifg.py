@@ -10,7 +10,7 @@ from pyrate.tasks.utils import (
     IfgListMixin,
     InputParam,
     RasterParam)
-from pyrate.scripts.run_pyrate import warp_required
+from pyrate.shared import warp_required
 
 
 class GetAnalysisExtents(IfgListMixin, luigi.Task):

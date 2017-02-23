@@ -92,7 +92,7 @@ class MatlabEqualityTest(unittest.TestCase):
         refx, refy = run_pyrate.ref_pixel_calc(dest_paths, params)
 
         # Estimate and remove orbit errors
-        run_pyrate.remove_orbital_error(ifgs, params)
+        tests.common.remove_orbital_error(ifgs, params)
         ifgs = prepare_ifgs_without_phase(dest_paths, params)
 
         _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
@@ -102,19 +102,19 @@ class MatlabEqualityTest(unittest.TestCase):
 
         # Calculate linear rate map
         params[cf.PARALLEL] = 1
-        cls.rate, cls.error, cls.samples = run_pyrate.calculate_linear_rate(
+        cls.rate, cls.error, cls.samples = tests.common.calculate_linear_rate(
             ifgs, params, vcmt, mst_mat=mst_grid)
 
         params[cf.PARALLEL] = 2
         cls.rate_2, cls.error_2, cls.samples_2 = \
-            run_pyrate.calculate_linear_rate(ifgs, params, vcmt,
-                                             mst_mat=mst_grid)
+            tests.common.calculate_linear_rate(ifgs, params, vcmt,
+                                               mst_mat=mst_grid)
 
         params[cf.PARALLEL] = 0
         # Calculate linear rate map
         cls.rate_s, cls.error_s, cls.samples_s = \
-            run_pyrate.calculate_linear_rate(ifgs, params, vcmt,
-                                             mst_mat=mst_grid)
+            tests.common.calculate_linear_rate(ifgs, params, vcmt,
+                                               mst_mat=mst_grid)
 
         matlab_linrate_dir = os.path.join(SYD_TEST_DIR, 'matlab_linrate')
 

@@ -16,6 +16,8 @@ from os.path import join
 
 import numpy as np
 
+import pyrate.shared
+import tests.common
 from pyrate import config as cf
 from pyrate import shared, config, prepifg
 from pyrate.scripts import run_pyrate, run_prepifg
@@ -49,13 +51,13 @@ def test_transform_params():
 
 def test_warp_required():
     nocrop = prepifg.ALREADY_SAME_SIZE
-    assert run_pyrate.warp_required(xlooks=2, ylooks=1, crop=nocrop)
-    assert run_pyrate.warp_required(xlooks=1, ylooks=2, crop=nocrop)
-    assert run_pyrate.warp_required(xlooks=1, ylooks=1, crop=nocrop)
-    assert not run_pyrate.warp_required(xlooks=1, ylooks=1, crop=None)
+    assert pyrate.shared.warp_required(xlooks=2, ylooks=1, crop=nocrop)
+    assert pyrate.shared.warp_required(xlooks=1, ylooks=2, crop=nocrop)
+    assert pyrate.shared.warp_required(xlooks=1, ylooks=1, crop=nocrop)
+    assert not pyrate.shared.warp_required(xlooks=1, ylooks=1, crop=None)
 
     for c in prepifg.CROP_OPTIONS[:-1]:
-        assert run_pyrate.warp_required(xlooks=1, ylooks=1, crop=c)
+        assert pyrate.shared.warp_required(xlooks=1, ylooks=1, crop=c)
 
 
 def test_original_ifg_paths():

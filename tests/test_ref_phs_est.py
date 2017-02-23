@@ -128,7 +128,7 @@ class RefPhsEstimationMatlabTestMethod1Serial(unittest.TestCase):
         refx, refy = run_pyrate.ref_pixel_calc(dest_paths, params)
 
         # Estimate and remove orbit errors
-        run_pyrate.remove_orbital_error(ifgs, params)
+        tests.common.remove_orbital_error(ifgs, params)
 
         for i in ifgs:
             i.close()
@@ -218,7 +218,7 @@ class RefPhsEstimationMatlabTestMethod1Parallel(unittest.TestCase):
         refx, refy = run_pyrate.ref_pixel_calc(dest_paths, params)
 
         # Estimate and remove orbit errors
-        run_pyrate.remove_orbital_error(ifgs, params)
+        tests.common.remove_orbital_error(ifgs, params)
 
         for i in ifgs:
             i.close()
@@ -313,7 +313,7 @@ class RefPhsEstimationMatlabTestMethod2Serial(unittest.TestCase):
         refx, refy = run_pyrate.ref_pixel_calc(dest_paths, params)
 
         # Estimate and remove orbit errors
-        run_pyrate.remove_orbital_error(ifgs, params)
+        tests.common.remove_orbital_error(ifgs, params)
 
         for i in ifgs:
             i.close()
@@ -406,7 +406,7 @@ class RefPhsEstimationMatlabTestMethod2Parallel(unittest.TestCase):
         refx, refy = run_pyrate.ref_pixel_calc(dest_paths, params)
 
         # Estimate and remove orbit errors
-        run_pyrate.remove_orbital_error(ifgs, params)
+        tests.common.remove_orbital_error(ifgs, params)
 
         for i in ifgs:
             i.close()

@@ -2,19 +2,20 @@
 Collection of generic testing utils and mock objs for PyRate.
 """
 
-import os
 import glob
+import os
 import shutil
-from os.path import join
 import tempfile
+from os.path import join
+
 import numpy as np
 from numpy import isnan, sum as nsum
 from osgeo import gdal
 
+from pyrate import config as cf, mst, timeseries, matlab_mst, algorithm, \
+    ifgconstants as ifc, prepifg, orbital, linrate
 from pyrate.shared import Ifg, pre_prepare_ifgs, get_projection_info, \
     write_output_geotiff
-from pyrate import config as cf, mst, timeseries, matlab_mst, algorithm, \
-    ifgconstants as ifc
 
 TEMPDIR = tempfile.gettempdir()
 BASE_TEST = join(os.environ['PYRATEPATH'], "tests", "test_data")
@@ -329,3 +330,97 @@ def write_timeseries_geotiff(ifgs, params, tsincr, pr_type):
                     str(epochlist.dates[i + 1]) + ".tif")
         md[ifc.PRTYPE] = pr_type
         write_output_geotiff(md, gt, wkt, data, dest, np.nan)
+
+
+def remove_orbital_error(ifgs, params):
+    # log.info('Calculating orbital error correction')
+
+    if not params[cf.ORBITAL_FIT]:
+        # log.info('Orbital correction not required')
+        return
+
+    # perform some general error/sanity checks
+    flags = [i.dataset.GetMetadataItem(ifc.PYRATE_ORBITAL_ERROR) for i in ifgs]
+
+    if all(flags):
+        # log.info('Skipped orbital correction, ifgs already corrected')
+        return
+    else:
+        check_orbital_ifgs(ifgs, flags)
+
+    mlooked = None
+
+    if (params[cf.ORBITAL_FIT_LOOKS_X] > 1 or
+            params[cf.ORBITAL_FIT_LOOKS_Y] > 1):
+        # resampling here to use all prior corrections to orig data
+        # can't do multiprocessing without writing to disc, but can do MPI
+        # due to swig pickling issue. So multiprocesing is not implemented
+        mlooked_dataset = prepifg.prepare_ifgs(
+            [i.data_path for i in ifgs],
+            crop_opt=prepifg.ALREADY_SAME_SIZE,
+            xlooks=params[cf.ORBITAL_FIT_LOOKS_X],
+            ylooks=params[cf.ORBITAL_FIT_LOOKS_Y],
+            thresh=params[cf.NO_DATA_AVERAGING_THRESHOLD],
+            write_to_disc=False)
+        mlooked = [Ifg(m[1]) for m in mlooked_dataset]
+
+        for m in mlooked:
+            m.initialize()
+            m.nodata_value = params[cf.NO_DATA_VALUE]
+
+    orbital.orbital_correction(ifgs, params, mlooked=mlooked)
+
+
+def check_orbital_ifgs(ifgs, flags):
+    count = sum([f == ifc.ORB_REMOVED for f in flags])
+    if (count < len(flags)) and (count > 0):
+        # log.debug('Detected mix of corrected and uncorrected '
+        #           'orbital error in ifgs')
+
+        for i, flag in zip(ifgs, flags):
+            if flag:
+                msg = '{}: prior orbital error correction detected'.format(i)
+            else:
+                msg = '{}: no orbital correction detected'.format(i)
+            # log.debug(msg)
+            raise orbital.OrbitalError(msg)
+
+
+def calculate_linear_rate(ifgs, params, vcmt, mst_mat=None):
+    # log.info('Calculating linear rate')
+    res = linrate.linear_rate(ifgs, params, vcmt, mst_mat)
+    for r in res:
+        if r is None:
+            raise ValueError('TODO: bad value')
+
+    rate, error, samples = res
+    write_linrate_tifs(ifgs, params, res)
+    # log.info('Linear rate calculated')
+    return rate, error, samples
+
+
+def write_linrate_tifs(ifgs, params, res):
+    # log.info('Writing linrate results')
+    rate, error, samples = res
+    gt, md, wkt = get_projection_info(ifgs[0].data_path)
+    epochlist = algorithm.get_epochs(ifgs)[0]
+    dest = join(params[cf.OUT_DIR], "linrate.tif")
+    md[ifc.MASTER_DATE] = epochlist.dates
+    md[ifc.PRTYPE] = 'linrate'
+    write_output_geotiff(md, gt, wkt, rate, dest, np.nan)
+    dest = join(params[cf.OUT_DIR], "linerror.tif")
+    md[ifc.PRTYPE] = 'linerror'
+    write_output_geotiff(md, gt, wkt, error, dest, np.nan)
+    dest = join(params[cf.OUT_DIR], "linsamples.tif")
+    md[ifc.PRTYPE] = 'linsamples'
+    write_output_geotiff(md, gt, wkt, samples, dest, np.nan)
+    write_linrate_numpy_files(error, rate, samples, params)
+
+
+def write_linrate_numpy_files(error, rate, samples, params):
+    rate_file = join(params[cf.OUT_DIR], 'rate.npy')
+    error_file = join(params[cf.OUT_DIR], 'error.npy')
+    samples_file = join(params[cf.OUT_DIR], 'samples.npy')
+    np.save(file=rate_file, arr=rate)
+    np.save(file=error_file, arr=error)
+    np.save(file=samples_file, arr=samples)

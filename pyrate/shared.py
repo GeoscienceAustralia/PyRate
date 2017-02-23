@@ -1007,3 +1007,17 @@ def get_projection_info(ifg_path):
     wkt = ds.GetProjection()  # get projection of data
     ds = None  # close dataset
     return gt, md, wkt
+
+
+def warp_required(xlooks, ylooks, crop):
+    """
+    Returns True if params show rasters need to be cropped and/or resized.
+    """
+
+    if xlooks > 1 or ylooks > 1:
+        return True
+
+    if crop is None:
+        return False
+
+    return True
