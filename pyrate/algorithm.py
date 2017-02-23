@@ -35,7 +35,7 @@ def least_squares_covariance(A, b, v):
     b: observations (vector of phase values)
     v: covariances (weights) in vector form
     """
-
+    # pylint: disable=too-many-locals
     # X = LSCOV(A,b,V) returns the vector X that minimizes
     # (A*X-b)'*inv(V)*(A*X-b) for the case in which length(b) > length(X).
     # This is the over-determined least squares problem with covariance V.

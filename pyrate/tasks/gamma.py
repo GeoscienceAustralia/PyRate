@@ -39,16 +39,16 @@ class GammaHasRun(luigi.task.ExternalTask):
     Phaux task used to ensure that the required outputs from GAMMA exist.
     """
 
-    file_name = luigi.Parameter()
-    master_header = luigi.Parameter(default=None)
-    slave_header = luigi.Parameter(default=None)
+    fileName = luigi.Parameter()
+    masterHeader = luigi.Parameter(default=None)
+    slaveHeader = luigi.Parameter(default=None)
 
     def output(self):
-        targets = [luigi.LocalTarget(self.file_name)]
-        if self.master_header is not None:
-            targets.append(luigi.LocalTarget(self.master_header))
-        if self.slave_header is not None:
-            targets.append(luigi.LocalTarget(self.slave_header))
+        targets = [luigi.LocalTarget(self.fileName)]
+        if self.masterHeader is not None:
+            targets.append(luigi.LocalTarget(self.masterHeader))
+        if self.slaveHeader is not None:
+            targets.append(luigi.LocalTarget(self.slaveHeader))
         return targets
 
 
@@ -75,7 +75,7 @@ class ConvertFileToGeotiff(luigi.Task):
     """
 
     input_file = luigi.Parameter()
-    demHeader_file = luigi.Parameter(
+    demHeaderFile = luigi.Parameter(
         config_path=InputParam(config.DEM_HEADER_FILE))
     out_dir = luigi.Parameter(config_path=InputParam(config.OUT_DIR))
     no_data_value = luigi.FloatParameter(
@@ -114,8 +114,7 @@ class ConvertFileToGeotiff(luigi.Task):
         """
         Overload of :py:meth:`luigi.Task.run`.
         """
-        combined_header = manage_headers(self.demHeader_file,
-                                         self.header_paths)
+        combined_header = manage_headers(self.demHeaderFile, self.header_paths)
         write_geotiff(combined_header, self.input_file,
                       self.out_file, self.no_data_value)
 
@@ -123,5 +122,5 @@ class ConvertFileToGeotiff(luigi.Task):
 class ConvertToGeotiff(IfgListMixin, luigi.WrapperTask):
     """ Wrapper class for gamma convert to geotiff"""
     def requires(self):
-        return [ConvertFileToGeotiff(inputFile=fn)
+        return [ConvertFileToGeotiff(input_file=fn)
                 for fn in self.ifg_list(tif=False)]

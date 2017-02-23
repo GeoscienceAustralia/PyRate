@@ -8,7 +8,7 @@ import luigi
 import pyrate.config as cf
 from pyrate.prepifg import (
     Ifg,
-    getAnalysisExtent,
+    get_analysis_extent,
     prepare_ifg,
     PreprocessError)
 from pyrate.tasks.converttogeotif import ConvertToGeotiff
@@ -49,7 +49,7 @@ class GetAnalysisExtents(IfgListMixin, luigi.Task):
 
         ifgs = [Ifg(path) for path in self.ifg_tiff_list()]
 
-        extents = getAnalysisExtent(
+        extents = get_analysis_extent(
             self.crop_opt,
             ifgs,
             self.xlooks,
@@ -80,8 +80,7 @@ class PrepareInterferogram(IfgListMixin, luigi.WrapperTask):
     :param user_exts: CustomExts tuple with user sepcified lat long corners
     :param verbose: Controls level of gdalwarp output
     """
-    # pylint: disable=bad-super-call
-    # pylint: disable=no-member
+    # pylint: disable=bad-super-call, no-member
 
     ifg = RasterParam()
     thresh = luigi.FloatParameter(config_path=InputParam(

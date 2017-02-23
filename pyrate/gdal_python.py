@@ -1,12 +1,12 @@
 """
 gdal utilities via python
 """
+# pylint: disable=too-many-arguments,R0914
 from osgeo import gdal, gdalnumeric, gdalconst
 from PIL import Image, ImageDraw
 import numpy as np
 from pyrate import ifgconstants as ifc
 
-# pylint: disable=too-many-arguments,too-many-locals
 gdal.SetCacheMax(2**15)
 GDAL_WARP_MEMORY_LIMIT = 2**10
 LOW_FLOAT32 = np.finfo(np.float32).min*1e-10

@@ -43,7 +43,7 @@ class IfgListMixin(object):
 
     ifg_list_file = luigi.Parameter(config_path=InputParam(
         config.IFG_FILE_LIST))
-    obsDir = luigi.Parameter(config_path=InputParam(config.OBS_DIR))
+    obs_dir = luigi.Parameter(config_path=InputParam(config.OBS_DIR))
     out_dir = luigi.Parameter(config_path=InputParam(config.OUT_DIR))
 
     def ifg_list(self, tif=True):
@@ -62,7 +62,7 @@ class IfgListMixin(object):
                           os.path.splitext(os.path.basename(fn))[0]
                           for fn in file_names]
 
-        obs_dir = self.obsDir
+        obs_dir = self.obs_dir
         if obs_dir:
             file_names = [os.path.join(obs_dir, fn) for fn in file_names]
 

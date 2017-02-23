@@ -28,6 +28,7 @@ from pyrate.shared import Ifg, DEM
 from pyrate.prepifg import CUSTOM_CROP, MAXIMUM_CROP, MINIMUM_CROP, \
     ALREADY_SAME_SIZE
 from pyrate.prepifg import prepare_ifgs, resample, PreprocessError, CustomExts
+from pyrate.prepifg import extents_from_params
 from pyrate.tasks.utils import DUMMY_SECTION_NAME
 from pyrate.config import (
     DEM_HEADER_FILE,
@@ -48,7 +49,7 @@ from pyrate.config import (
     APS_METHOD,
     APS_CORRECTION)
 
-from tests.common import SYD_TEST_MATLAB_PREPIFG_DIR, extents_from_params
+from tests.common import SYD_TEST_MATLAB_PREPIFG_DIR
 from tests.common import PREP_TEST_TIF, SYD_TEST_DEM_DIR
 from tests.common import SYD_TEST_DEM_TIF
 from tests import common

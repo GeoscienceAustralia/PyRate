@@ -14,7 +14,6 @@ from osgeo import gdal
 
 from pyrate import config as cf, mst, timeseries, matlab_mst, algorithm, \
     ifgconstants as ifc, prepifg, orbital, linrate
-from pyrate.prepifg import CustomExts
 from pyrate.shared import Ifg, pre_prepare_ifgs, get_projection_info, \
     write_output_geotiff
 
@@ -425,8 +424,3 @@ def write_linrate_numpy_files(error, rate, samples, params):
     np.save(file=rate_file, arr=rate)
     np.save(file=error_file, arr=error)
     np.save(file=samples_file, arr=samples)
-
-
-def extents_from_params(params):
-    keys = (cf.IFG_XFIRST, cf.IFG_YFIRST, cf.IFG_XLAST, cf.IFG_YLAST)
-    return CustomExts(*[params[k] for k in keys])

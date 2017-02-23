@@ -1,24 +1,22 @@
 """utilities and classes shared by all other pyrate modules"""
 # pylint: disable=too-many-lines
 from __future__ import print_function
-
 import errno
 import logging
 import math
+from math import floor
 import os
 from os.path import basename, dirname, join
 import shutil
 import stat
 import struct
 import time
-import pkg_resources
 from datetime import date
 from itertools import product
-from math import floor
-
 import numpy as np
 from numpy import where, nan, isnan, sum as nsum, isclose
 import pyproj
+import pkg_resources
 
 from pyrate import ifgconstants as ifc, mpiops
 from pyrate import roipac, gamma, config as cf
@@ -1002,6 +1000,7 @@ def save_numpy_phase(ifg_paths, tiles, params):
 
 
 def get_projection_info(ifg_path):
+    """ return projection information of ifg"""
     ds = gdal.Open(ifg_path)
     md = ds.GetMetadata()  # get metadata for writing on output tifs
     gt = ds.GetGeoTransform()  # get geographical bounds of data

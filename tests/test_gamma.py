@@ -98,7 +98,7 @@ class GammaCommandLineTests(unittest.TestCase):
 
 
 class GammaToGeoTiffTests(unittest.TestCase):
-    'Tests conversion of GAMMA rasters to custom PyRate GeoTIFF'
+    """Tests conversion of GAMMA rasters to custom PyRate GeoTIFF"""
 
     @classmethod
     def setUpClass(cls):

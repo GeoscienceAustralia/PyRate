@@ -84,6 +84,18 @@ ROI_PAC_HEADER_FILE_EXT = "rsc"
 
 
 def check_raw_data(is_ifg, data_path, ncols, nrows):
+    """
+    Parameters
+    ----------
+    is_ifg: bool
+        whether ifg or dem
+    data_path: str
+        path to file
+    ncols: int
+        number of cols in ifg/dem
+    nrows: int
+        number of rows in ifg/dem
+    """
     base_size = ncols * nrows
     if is_ifg:
         size = 4 * base_size * 2  # 2 bands of 4 bytes each

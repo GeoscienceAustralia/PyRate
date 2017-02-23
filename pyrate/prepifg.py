@@ -8,24 +8,23 @@ operations.
 The rasters need to be in GeoTIFF format with PyRate specific metadata headers.
 """
 
-# TODO: check new average option for gdalwarp (GDAL 1.10.x +)
-
+# pylint: disable=too-many-arguments,invalid-name
 import os
-import shutil
-from collections import namedtuple
 from math import modf
 from numbers import Number
-from subprocess import check_call
 from tempfile import mkstemp
-
+from subprocess import check_call
+from collections import namedtuple
+import shutil
 import numpy as np
-from numpy import array, where, nan, isnan, nanmean, float32, zeros, sum as nsum
+from numpy import array, where, nan, isnan, nanmean, float32, zeros, \
+    sum as nsum
 from osgeo import gdal
 
 from pyrate import config as cf
+from pyrate.shared import Ifg, DEM
 from pyrate import gdal_python as gdalwarp
 from pyrate import ifgconstants as ifc
-from pyrate.shared import Ifg, DEM
 
 CustomExts = namedtuple('CustExtents', ['xfirst', 'yfirst', 'xlast', 'ylast'])
 
@@ -44,27 +43,27 @@ def is_number(s):
     try:
         float(s)
         return True
-    except:
+    except ValueError:
         return False
 
 
-def getAnalysisExtent(
-        cropOpt,
+def get_analysis_extent(
+        crop_opt,
         rasters,
         xlooks,
         ylooks,
-        userExts):
+        user_exts):
 
-    if cropOpt not in CROP_OPTIONS:
-        raise PreprocessError("Unrecognised crop option: %s" % cropOpt)
+    if crop_opt not in CROP_OPTIONS:
+        raise PreprocessError("Unrecognised crop option: %s" % crop_opt)
 
-    if cropOpt == CUSTOM_CROP:
-        if not userExts:
+    if crop_opt == CUSTOM_CROP:
+        if not user_exts:
             raise PreprocessError('No custom cropping extents specified')
-        elif len(userExts) != 4: # check for required numbers
+        elif len(user_exts) != 4: # check for required numbers
             raise PreprocessError('Custom extents must have all 4 values')
-        elif len(userExts) == 4:  # check for non floats
-            if not all([is_number(z) for z in userExts]):
+        elif len(user_exts) == 4:  # check for non floats
+            if not all([is_number(z) for z in user_exts]):
                 raise PreprocessError('Custom extents must be 4 numbers')
 
     for raster in rasters:
@@ -74,7 +73,7 @@ def getAnalysisExtent(
     check_looks(xlooks, ylooks)
     check_resolution(rasters)
 
-    return get_extents(rasters, cropOpt, userExts)
+    return get_extents(rasters, crop_opt, user_exts)
 
 
 def prepare_ifg(
@@ -120,8 +119,8 @@ def dummy_warp(renamed_path):
     return data, ifg.dataset
 
 
-# TODO: crop options 0 = no cropping?
-# get rid of same size (but it is in explained file)
+# TODO: crop options 0 = no cropping? get rid of same size
+# (but it is in explained file)
 def prepare_ifgs(
         raster_data_paths,
         crop_opt,
@@ -138,20 +137,22 @@ def prepare_ifgs(
     :param crop_opt: integer cropping type option (see config)
     :param xlooks: multilooking factor for the X axis
     :param ylooks: Y axis multilooking factor
-    :param float thresh: (0.0, 1.0). Controls NaN handling when resampling to coarser grids.
-         Value is the proportion above which the number of NaNs in an area is
-         considered invalid. thresh=0 resamples to NaN if 1 or more contributing
-         cells are NaNs. At 0.25, it resamples to NaN if 1/4 or more contributing
-         cells are NaNs. At 1.0, areas are resampled to NaN only if all
-         contributing cells are NaNs.
+    :param float thresh: (0.0, 1.0). Controls NaN handling when resampling to
+     coarser grids. Value is the proportion above which the number of NaNs in
+     an area is considered invalid. thresh=0 resamples to NaN if 1 or more
+     contributing cells are NaNs. At 0.25, it resamples to NaN if 1/4 or
+     more contributing cells are NaNs. At 1.0, areas are resampled to NaN
+     only if all contributing cells are NaNs.
     :param user_exts: CustomExts tuple with user sepcified lat long corners
     :param verbose: Controls level of gdalwarp output
+    :param write_to_disc: bool, whether to write to disc during warp
     """
     # use metadata check to check whether it's a dem or ifg
     rasters = [dem_or_ifg(r) for r in raster_data_paths]
-    exts = getAnalysisExtent(crop_opt, rasters, xlooks, ylooks, user_exts)
+    exts = get_analysis_extent(crop_opt, rasters, xlooks, ylooks, user_exts)
 
-    return [prepare_ifg(d, xlooks, ylooks, exts, thresh, crop_opt, write_to_disc)
+    return [prepare_ifg(d, xlooks, ylooks, exts, thresh, crop_opt,
+                        write_to_disc)
             for d in raster_data_paths]
 
 
@@ -162,7 +163,6 @@ def dem_or_ifg(data_path):
         return Ifg(data_path)
     else:
         return DEM(data_path)
-
 
 
 def get_extents(ifgs, crop_opt, user_exts=None):
@@ -326,6 +326,7 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out,
         Use *None* if raster size is not being changed.
     :param thresh: see thresh in prepare_ifgs().
     :param verbose: True to print gdalwarp output to stdout
+    :param write_to_disc:
     """
     if x_looks != y_looks:
         raise ValueError('X and Y looks mismatch')
@@ -388,10 +389,6 @@ def resample(data, xscale, yscale, thresh):
             if nan_fraction < thresh or (nan_fraction == 0 and thresh == 0):
                 dest[y, x] = nanmean(tile)
     return dest
-
-
-def reproject():
-    raise NotImplementedError("TODO: Reprojection LOS/Horiz/Vert")
 
 
 def check_resolution(ifgs):
@@ -470,8 +467,7 @@ def custom_bounds(ifgs, xw, ytop, xe, ybot):
     """
     Check and modify input custom crop bounds to line up with grid interval
     """
-    # pylint: disable=too-many-branches,invalid-name,too-many-locals
-
+    # pylint: disable=too-many-branches
     msg = 'Cropped image bounds exceed original image bounds'
     i = ifgs[0]
 
@@ -549,4 +545,12 @@ def check_crop_coords(ifgs, xmin, ymin, xmax, ymax):
 
 
 class PreprocessError(Exception):
-    """ Preprocess exception"""
+    """
+    Preprocess exception
+    """
+
+
+def extents_from_params(params):
+    """ Custom extents from supplied parameters """
+    keys = (cf.IFG_XFIRST, cf.IFG_YFIRST, cf.IFG_XLAST, cf.IFG_YLAST)
+    return CustomExts(*[params[k] for k in keys])
