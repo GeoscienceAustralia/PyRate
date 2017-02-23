@@ -28,6 +28,7 @@ exclude_lines =
     raise NotImplementedError
     raise ValueError
     raise RuntimeError
+    raise IOError
     except OSError
     except ValueError
     except IndexError
