@@ -1,7 +1,9 @@
+""" Utils for prepifg luigi tasks """
 import os
 import pickle
-import luigi
 from io import StringIO, BytesIO
+import luigi
+
 from pyrate import config
 from pyrate.config import (OBS_DIR,
                            IFG_FILE_LIST,
@@ -16,16 +18,17 @@ EXTENTS_FILE_NAME = 'region_extents.pkl'
 
 
 class InputParam(dict):
-    '''
+    """
     Convenience class for specifying the parameter in a PyRate configuration
     file, intended for use in specifying which value in a PyRate configuration
     file should be used for a :py:class:`luigi.Parameter` (which is specified
     by the parameter *conf_path* to its constructor.)
-    '''
+    """
 
     def __init__(self, name):
         self['section'] = DUMMY_SECTION_NAME
         self['name'] = name
+        super(InputParam, self).__init__()
 
 
 class IfgListMixin(object):
@@ -38,11 +41,12 @@ class IfgListMixin(object):
         interferograms.
     """
 
-    ifgListFile = luigi.Parameter(config_path=InputParam(config.IFG_FILE_LIST))
+    ifg_list_file = luigi.Parameter(config_path=InputParam(
+        config.IFG_FILE_LIST))
     obsDir = luigi.Parameter(config_path=InputParam(config.OBS_DIR))
     out_dir = luigi.Parameter(config_path=InputParam(config.OUT_DIR))
 
-    def ifgList(self, tif=True):
+    def ifg_list(self, tif=True):
         """
         Get the list of interferograms to process.
 
@@ -51,7 +55,7 @@ class IfgListMixin(object):
             before conversion to geotif files occurs.
         """
 
-        file_names = config.parse_namelist(self.ifgListFile)
+        file_names = config.parse_namelist(self.ifg_list_file)
 
         if tif:
             file_names = ['%s.tif' %
@@ -64,7 +68,7 @@ class IfgListMixin(object):
 
         return file_names
 
-    def ifgTiffList(self, tif=True):
+    def ifg_tiff_list(self, tif=True):
         """
         Get the list of interferograms to process.
 
@@ -73,7 +77,7 @@ class IfgListMixin(object):
             before conversion to geotif files occurs.
         """
 
-        file_names = config.parse_namelist(self.ifgListFile)
+        file_names = config.parse_namelist(self.ifg_list_file)
 
         if tif:
             file_names = ['%s.tif' %
@@ -87,7 +91,10 @@ class IfgListMixin(object):
         return file_names
 
     @property
-    def extentsFileName(self):
+    def extents_file_name(self):
+        """
+        :return: extents file name
+        """
         return os.path.join(self.out_dir, EXTENTS_FILE_NAME)
 
 
@@ -125,14 +132,14 @@ class RasterParam(DictParam):
         override of :py:meth:`DictParam.parse`.
         """
         dct = super(RasterParam, self).parse(string)
-        rasterType = dct['type']
+        raster_type = dct['type']
         path = dct['path']
 
-        if rasterType == 'DEM':
+        if raster_type == 'DEM':
             return DEM(path)
-        elif rasterType == 'Ifg':
+        elif raster_type == 'Ifg':
             return Ifg(path)
-        elif rasterType == 'Incidence':
+        elif raster_type == 'Incidence':
             return Incidence(path)
         else:
             raise luigi.parameter.UnknownParameterException(
@@ -171,10 +178,10 @@ def pythonify_config(config_file):
 
     out_file = '{}.python'.format(config_file)
 
-    with open(config_file, 'r') as inputFile:
+    with open(config_file, 'r') as input_file:
         with open(out_file, 'w') as f:
             f.write('[{}]\n'.format(DUMMY_SECTION_NAME))
-            for line in inputFile:
+            for line in input_file:
                 if any(x in line for x in [OBS_DIR, IFG_FILE_LIST,
                                            DEM_FILE, DEM_HEADER_FILE,
                                            OUT_DIR, ROIPAC_RESOURCE_HEADER]):

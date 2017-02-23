@@ -1,4 +1,10 @@
-import os, luigi, pickle
+"""
+Luigi prepifg module for setting up luigi prepifg jobs
+"""
+import os
+import pickle
+import luigi
+
 import pyrate.config as cf
 from pyrate.prepifg import (
     Ifg,
@@ -14,6 +20,9 @@ from pyrate.shared import warp_required
 
 
 class GetAnalysisExtents(IfgListMixin, luigi.Task):
+    """
+    Dummy analysis extents gather class used during luigi tasks
+    """
     crop_opt = luigi.IntParameter(config_path=InputParam(cf.IFG_CROP_OPT))
     ifgx_first = luigi.FloatParameter(default=None,
                                       config_path=InputParam(cf.IFG_XFIRST))
@@ -30,27 +39,28 @@ class GetAnalysisExtents(IfgListMixin, luigi.Task):
         return [ConvertToGeotiff()]
 
     def run(self):
-        userExts = (self.ifgx_first, self.ifgy_first, self.ifgx_last, self.ifgy_last)
+        user_exts = (self.ifgx_first, self.ifgy_first,
+                     self.ifgx_last, self.ifgy_last)
 
-        if not all(userExts):
+        if not all(user_exts):
             if self.crop_opt == 3:
                 raise PreprocessError('No custom cropping extents specified')
-            userExts = None
+            user_exts = None
 
-        ifgs = [Ifg(path) for path in self.ifgTiffList()]
+        ifgs = [Ifg(path) for path in self.ifg_tiff_list()]
 
         extents = getAnalysisExtent(
             self.crop_opt,
             ifgs,
             self.xlooks,
             self.ylooks,
-            userExts)
+            user_exts)
 
-        with open(self.extentsFileName, 'wb') as extFile:
-            pickle.dump(extents, extFile)
+        with open(self.extents_file_name, 'wb') as ext_file:
+            pickle.dump(extents, ext_file)
 
     def output(self):
-        return luigi.LocalTarget(self.extentsFileName)
+        return luigi.LocalTarget(self.extents_file_name)
 
 
 class PrepareInterferogram(IfgListMixin, luigi.WrapperTask):
@@ -70,6 +80,8 @@ class PrepareInterferogram(IfgListMixin, luigi.WrapperTask):
     :param user_exts: CustomExts tuple with user sepcified lat long corners
     :param verbose: Controls level of gdalwarp output
     """
+    # pylint: disable=bad-super-call
+    # pylint: disable=no-member
 
     ifg = RasterParam()
     thresh = luigi.FloatParameter(config_path=InputParam(
@@ -83,8 +95,8 @@ class PrepareInterferogram(IfgListMixin, luigi.WrapperTask):
         return [GetAnalysisExtents()]
 
     def run(self):
-        with open(self.extentsFileName, 'rb') as extFile:
-            extents = pickle.load(extFile)
+        with open(self.extents_file_name, 'rb') as ext_file:
+            extents = pickle.load(ext_file)
         prepare_ifg(
             self.ifg.data_path,
             self.xlooks,
@@ -117,32 +129,34 @@ class PrepareInterferogram(IfgListMixin, luigi.WrapperTask):
 
 
 class PrepareInterferograms(IfgListMixin, luigi.WrapperTask):
+    """ Luigi wrapper class """
+
     def __init__(self, *args, **kwargs):
         super(PrepareInterferograms, self).__init__(*args, **kwargs)
-        self.extentsRemoved = False
+        self.extents_removed = False
 
     def requires(self):
         return [PrepareInterferogram(ifg=Ifg(path))
-                for path in self.ifgTiffList()]
+                for path in self.ifg_tiff_list()]
 
     def run(self):
         try:
-            if os.path.exists(self.extentsFileName):
-                os.remove(self.extentsFileName)
+            if os.path.exists(self.extents_file_name):
+                os.remove(self.extents_file_name)
         except:
             raise PrepifgException(
                 'Extents file was not found in the desired '
-                'location: {}'.format(self.extentsFileName),
+                'location: {}'.format(self.extents_file_name),
                 'Make sure your paths are setup correctly in config file')
 
-        self.extentsRemoved = True
+        self.extents_removed = True
 
     def complete(self):
-        return self.extentsRemoved and \
+        return self.extents_removed and \
                super(PrepareInterferograms, self).complete()
 
 
 class PrepifgException(Exception):
-
-    pass
-
+    """
+    Prepifg exception class
+    """

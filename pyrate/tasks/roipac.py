@@ -21,10 +21,11 @@ The short form has 7 fields, covering raster size, location and wavelength. The
 longer form can have up to 40 fields (see the test data for examples). PyRate
 attempts to handle both forms of header.
 """
-
+import os
 import luigi
 import pyrate.config as config
-from pyrate.roipac import *
+from pyrate.roipac import manage_header, ROI_PAC_HEADER_FILE_EXT, parse_header
+from pyrate import ifgconstants as ifc
 from pyrate.shared import write_geotiff
 from pyrate.tasks.utils import InputParam, IfgListMixin
 
@@ -42,7 +43,7 @@ class RoipacHasRun(luigi.task.ExternalTask):
             luigi.LocalTarget(self.fileName),
             luigi.LocalTarget(self.headerFile)]
         return targets
-    
+
 
 class ResourceHeaderExists(luigi.ExternalTask):
     """
@@ -60,7 +61,7 @@ class ConvertFileToGeotiff(luigi.Task):
     """
     Task responsible for converting a ROIPAC file to GeoTif.
     """
-
+    # pylint: disable=attribute-defined-outside-init
     inputFile = luigi.Parameter()
     projection = luigi.Parameter()
     outputDir = luigi.Parameter(config_path=InputParam(config.OUT_DIR))
@@ -125,13 +126,13 @@ class _DoConvertToGeotiffRoipac(IfgListMixin, luigi.WrapperTask):
             if self.projection:
                 projection = self.projection
             else:
-               raise Exception('Error: no header/resource file given '
-                               'and -p option not specified')
+                raise Exception('Error: no header/resource file given '
+                                'and -p option not specified')
 
-        ifgFiles = self.ifgList(tif=False)
+        ifg_files = self.ifg_list(tif=False)
         tasks = [ConvertFileToGeotiff(
             inputFile=path,
-            projection=projection) for path in ifgFiles]
+            projection=projection) for path in ifg_files]
         return tasks
 
 
