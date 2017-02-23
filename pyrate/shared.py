@@ -1,21 +1,24 @@
 """utilities and classes shared by all other pyrate modules"""
 from __future__ import print_function
+
 import errno
 import logging
 import math
-from math import floor
 import os
-from os.path import basename, dirname, join
 import shutil
 import stat
 import struct
 import time
+import pkg_resources
 from datetime import date
 from itertools import product
-import pkg_resources
-import pyproj
+from math import floor
+from os.path import basename, dirname, join
+
 import numpy as np
 from numpy import where, nan, isnan, sum as nsum, isclose
+import pyproj
+
 from pyrate import ifgconstants as ifc, mpiops
 from pyrate import roipac, gamma, config as cf
 
@@ -995,3 +998,12 @@ def save_numpy_phase(ifg_paths, tiles, params):
                     arr=p_data)
         ifg.close()
     mpiops.comm.barrier()
+
+
+def get_projection_info(ifg_path):
+    ds = gdal.Open(ifg_path)
+    md = ds.GetMetadata()  # get metadata for writing on output tifs
+    gt = ds.GetGeoTransform()  # get geographical bounds of data
+    wkt = ds.GetProjection()  # get projection of data
+    ds = None  # close dataset
+    return gt, md, wkt

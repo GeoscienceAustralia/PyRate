@@ -102,16 +102,18 @@ class MatlabEqualityTest(unittest.TestCase):
         # Calculate linear rate map
         params[cf.PARALLEL] = 1
         cls.rate, cls.error, cls.samples = run_pyrate.calculate_linear_rate(
-            ifgs, params, vcmt, mst=mst_grid)
+            ifgs, params, vcmt, mst_mat=mst_grid)
 
         params[cf.PARALLEL] = 2
         cls.rate_2, cls.error_2, cls.samples_2 = \
-            run_pyrate.calculate_linear_rate(ifgs, params, vcmt, mst=mst_grid)
+            run_pyrate.calculate_linear_rate(ifgs, params, vcmt,
+                                             mst_mat=mst_grid)
 
         params[cf.PARALLEL] = 0
         # Calculate linear rate map
         cls.rate_s, cls.error_s, cls.samples_s = \
-            run_pyrate.calculate_linear_rate(ifgs, params, vcmt, mst=mst_grid)
+            run_pyrate.calculate_linear_rate(ifgs, params, vcmt,
+                                             mst_mat=mst_grid)
 
         matlab_linrate_dir = os.path.join(SYD_TEST_DIR, 'matlab_linrate')
 

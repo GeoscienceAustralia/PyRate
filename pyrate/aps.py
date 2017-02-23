@@ -1,23 +1,26 @@
-from __future__ import print_function
 """
 This is a demo of how to remove pyaps delay using PyAPS
 Usage: first run pyrate/scripts/run_prepifg.py using your config file
 Then use the command:
 
 """
-
-import PyAPS as pa
-import numpy as np
+from __future__ import print_function
+import logging
 import os
 import re
 import glob2
+import numpy as np
 from joblib import Parallel, delayed
 from osgeo import gdalconst, gdal
+import PyAPS as pa
+
 from pyrate import config as cf
 from pyrate import ifgconstants as ifc
 from pyrate import prepifg
 from pyrate import gamma
 from operator import itemgetter
+
+log = logging.getLogger(__name__)
 
 PYRATEPATH = os.environ['PYRATEPATH']
 ECMWF_DIR = os.path.join(PYRATEPATH, 'ECMWF')
@@ -369,3 +372,37 @@ class APSException(Exception):
     generic exception class for APS correction
     """
     pass
+
+
+def check_aps_ifgs(ifgs):
+    flags = [i.dataset.GetMetadataItem(ifc.PYRATE_APS_ERROR) for i in ifgs]
+    count = sum([f == APS_STATUS for f in flags])
+    if (count < len(flags)) and (count > 0):
+        log.debug('Detected mix of corrected and uncorrected '
+                      'APS delay in ifgs')
+
+        for i, flag in zip(ifgs, flags):
+            if flag:
+                msg = '%s: prior APS delay correction detected'
+            else:
+                msg = '%s: no APS delay correction detected'
+            logging.debug(msg % i.data_path)
+        raise APSException('Mixed APS removal status in ifg list')
+
+
+def aps_delay_required(ifgs, params):
+    log.info('Removing APS delay')
+
+    if not params[cf.APS_CORRECTION]:
+        log.info('APS delay removal not required')
+        return False
+
+    # perform some general error/sanity checks
+    flags = [i.dataset.GetMetadataItem(ifc.PYRATE_APS_ERROR) for i in ifgs]
+
+    if all(flags):
+        log.info('Skipped APS delay removal, ifgs are already aps corrected')
+        return False
+    else:
+        check_aps_ifgs(ifgs)
+    return True

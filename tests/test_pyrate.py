@@ -66,30 +66,21 @@ def test_original_ifg_paths():
     assert paths[-1] == join(ifgdir, 'geo_070709-070813.tif')
 
 
-# def test_working_ifg_paths():
-#     # working ifg paths is not used anymore
-#     # base file list changes to the correct mlooked file even though
-#     # CROPOUT is the same as the original tif
-#     src_paths = ['temp/ifg0.tif', 'temp/ifg1.tif']
-#
-#     assert run_pyrate.working_ifg_paths(src_paths, 1, 1, 4) == src_paths
-#     assert run_pyrate.working_ifg_paths(src_paths, 0, 0, 4) == src_paths
+def dest_ifg_paths(ifg_paths, outdir):
+    """
+    Returns paths to out/dest ifgs.
+    """
 
-
-def test_working_ifg_paths_mlooked_exists_failure():
-    src_paths = ['temp/ifg0.tif', 'temp/ifg1.tif']
-    try:
-        _ = run_pyrate.working_ifg_paths(src_paths, 2, 2, 4)
-        raise Exception("Didn't fail with missing files")
-    except IOError:
-        return
+    bases = [os.path.basename(p) for p in ifg_paths]
+    return [join(outdir, p) for p in bases]
 
 
 def test_dest_ifg_paths():
     # given source ifgs to process, get paths of ifgs in out dir
     src_paths = ['tif/ifg0.tif', 'tif/ifg1.tif']
-    dest_paths = run_pyrate.dest_ifg_paths(src_paths, outdir='out')
-    assert dest_paths == [os.path.join('out', i) for i in ['ifg0.tif', 'ifg1.tif']]
+    dest_paths = dest_ifg_paths(src_paths, outdir='out')
+    assert dest_paths == [os.path.join('out', i) for i in ['ifg0.tif',
+                                                           'ifg1.tif']]
 
 
 # FIXME: change to read output ifgs

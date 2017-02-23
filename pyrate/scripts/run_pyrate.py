@@ -2,32 +2,35 @@
 Main workflow script for PyRate
 """
 from __future__ import print_function
+
 import logging
 import os
 from os.path import join
-import numpy as np
-from osgeo import gdal
 import pickle as cp
+import numpy as np
 
+from pyrate import algorithm
 from pyrate import config as cf
+from pyrate import ifgconstants as ifc
 from pyrate import linrate
+from pyrate import matlab_mst as matlab_mst
+from pyrate import mpiops
 from pyrate import mst
 from pyrate import orbital
 from pyrate import prepifg
-from pyrate import refpixel
-from pyrate import timeseries
-from pyrate import shared
-from pyrate import algorithm
-from pyrate import ifgconstants as ifc
-from pyrate import matlab_mst as matlab_mst
 from pyrate import ref_phs_est as rpe
+from pyrate import refpixel
+from pyrate import shared
+from pyrate import timeseries
 from pyrate import vcm as vcm_module
-from pyrate.shared import Ifg, write_output_geotiff, \
-    pre_prepare_ifgs, create_tiles, PrereadIfg, prepare_ifg, save_numpy_phase
 from pyrate.compat import PyAPS_INSTALLED
-from pyrate import mpiops
+from pyrate.shared import Ifg, write_output_geotiff, \
+    pre_prepare_ifgs, create_tiles, PrereadIfg, prepare_ifg, \
+    save_numpy_phase, get_projection_info
+
 if PyAPS_INSTALLED:
     from pyrate import aps
+    from pyrate.aps import check_aps_ifgs, aps_delay_required
 
 MASTER_PROCESS = 0
 log = logging.getLogger(__name__)
@@ -86,7 +89,7 @@ def create_ifg_dict(dest_tifs, params, tiles):
     if mpiops.rank == MASTER_PROCESS:
         preread_ifgs = join(params[cf.OUT_DIR], 'preread_ifgs.pk')
         # add some extra information that's also useful later
-        gt, md, wkt = get_projection_info(process_tifs[0], params)
+        gt, md, wkt = get_projection_info(process_tifs[0])
         ifgs_dict['epochlist'] = algorithm.get_epochs(ifgs_dict)[0]
         ifgs_dict['gt'] = gt
         ifgs_dict['md'] = md
@@ -175,8 +178,7 @@ def save_ref_pixel_blocks(grid, half_patch_size, ifg_paths, params):
                                   x - half_patch_size:x + half_patch_size + 1]
 
             data_file = join(outdir, 'ref_phase_data_{b}_{y}_{x}.npy'.format(
-                                         b=os.path.basename(p).split('.')[0],
-                                         y=y, x=x))
+                b=os.path.basename(p).split('.')[0], y=y, x=x))
             np.save(file=data_file, arr=data)
         ifg.close()
     log.info('Saved ref pixel blocks')
@@ -349,7 +351,7 @@ def maxvar_vcm_mpi(ifg_paths, params, preread_ifgs):
     process_maxvar = []
     for n, i in enumerate(process_ifgs):
         log.info('Calculating maxvar for {} of process ifgs {} of '
-              'total {}'.format(n+1, len(process_ifgs), len(ifg_paths)))
+                 'total {}'.format(n+1, len(process_ifgs), len(ifg_paths)))
         # TODO: cvd calculation is still pretty slow - revisit
         process_maxvar.append(vcm_module.cvd(i, params)[0])
     if mpiops.rank == MASTER_PROCESS:
@@ -357,7 +359,8 @@ def maxvar_vcm_mpi(ifg_paths, params, preread_ifgs):
         maxvar[process_indices] = process_maxvar
         for i in range(1, mpiops.size):
             rank_indices = mpiops.array_split(range(len(ifg_paths)), i)
-            this_process_ref_phs = np.empty(len(rank_indices), dtype=np.float64)
+            this_process_ref_phs = np.empty(len(rank_indices),
+                                            dtype=np.float64)
             mpiops.comm.Recv(this_process_ref_phs, source=i, tag=i)
             maxvar[rank_indices] = this_process_ref_phs
     else:
@@ -408,41 +411,6 @@ def phase_sum_mpi(ifg_paths, params):
 
     comp = mpiops.comm.bcast(comp, root=0)
     return comp
-
-
-def aps_delay_required(ifgs, params):
-    log.info('Removing APS delay')
-
-    if not params[cf.APS_CORRECTION]:
-        log.info('APS delay removal not required')
-        return False
-
-    # perform some general error/sanity checks
-    flags = [i.dataset.GetMetadataItem(ifc.PYRATE_APS_ERROR) for i in ifgs]
-
-    if all(flags):
-        log.info('Skipped APS delay removal, ifgs are already aps corrected')
-        return False
-    else:
-        check_aps_ifgs(ifgs)
-
-    return True
-
-
-def check_aps_ifgs(ifgs):
-    flags = [i.dataset.GetMetadataItem(ifc.PYRATE_APS_ERROR) for i in ifgs]
-    count = sum([f == aps.APS_STATUS for f in flags])
-    if (count < len(flags)) and (count > 0):
-        log.debug('Detected mix of corrected and uncorrected '
-                      'APS delay in ifgs')
-
-        for i, flag in zip(ifgs, flags):
-            if flag:
-                msg = '%s: prior APS delay correction detected'
-            else:
-                msg = '%s: no APS delay correction detected'
-            logging.debug(msg % i.data_path)
-        raise aps.APSException('Mixed APS removal status in ifg list')
 
 
 def mst_calculation(ifg_paths_or_instance, params):
@@ -501,7 +469,7 @@ def timeseries_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
                                           'mst_mat_{}.npy'.format(i))
         mst_tile = np.load(mst_file_process_n)
         res = timeseries.time_series(ifg_parts, params, vcmt, mst_tile)
-        tsincr, tscum, tsvel = res
+        tsincr, tscum, _ = res
         tsincr_file = os.path.join(output_dir, 'tsincr_{}.npy'.format(i))
         tscum_file = os.path.join(output_dir, 'tscuml_{}.npy'.format(i))
         np.save(file=tsincr_file, arr=tsincr)
@@ -529,18 +497,9 @@ def compute_time_series(ifgs, mst_grid, params, vcmt):
     return tsincr, tscum, tsvel
 
 
-def get_projection_info(ifg_path, params):
-    ds = gdal.Open(ifg_path)
-    md = ds.GetMetadata()  # get metadata for writing on output tifs
-    gt = ds.GetGeoTransform()  # get geographical bounds of data
-    wkt = ds.GetProjection()  # get projection of data
-    ds = None  # close dataset
-    return gt, md, wkt
-
-
 def write_timeseries_geotiff(ifgs, params, tsincr, pr_type):
     # setup metadata for writing into result files
-    gt, md, wkt = get_projection_info(ifgs[0].data_path, params)
+    gt, md, wkt = get_projection_info(ifgs[0].data_path)
     epochlist = algorithm.get_epochs(ifgs)[0]
 
     for i in range(tsincr.shape[2]):
@@ -555,7 +514,7 @@ def write_timeseries_geotiff(ifgs, params, tsincr, pr_type):
 
 
 # This is not used anywhere now, but may be useful
-def insert_time_series_interpolation(ifg_instance_updated, params):
+def time_series_interpolation(ifg_instance_updated, params):
 
     edges = matlab_mst.get_sub_structure(ifg_instance_updated,
                                          np.zeros(len(ifg_instance_updated.id),
@@ -590,7 +549,7 @@ def remove_orbital_error(ifgs, params):
     mlooked = None
 
     if (params[cf.ORBITAL_FIT_LOOKS_X] > 1 or
-                params[cf.ORBITAL_FIT_LOOKS_Y] > 1):
+            params[cf.ORBITAL_FIT_LOOKS_Y] > 1):
         # resampling here to use all prior corrections to orig data
         # can't do multiprocessing without writing to disc, but can do MPI
         # due to swig pickling issue. So multiprocesing is not implemented
@@ -607,30 +566,27 @@ def remove_orbital_error(ifgs, params):
             m.initialize()
             m.nodata_value = params[cf.NO_DATA_VALUE]
 
-    orbital.orbital_correction(ifgs,
-                               params,
-                               mlooked=mlooked)
+    orbital.orbital_correction(ifgs, params, mlooked=mlooked)
 
 
 def check_orbital_ifgs(ifgs, flags):
     count = sum([f == ifc.ORB_REMOVED for f in flags])
     if (count < len(flags)) and (count > 0):
-        logging.debug('Detected mix of corrected and uncorrected '
-                      'orbital error in ifgs')
+        log.debug('Detected mix of corrected and uncorrected '
+                  'orbital error in ifgs')
 
         for i, flag in zip(ifgs, flags):
             if flag:
                 msg = '{}: prior orbital error correction detected'.format(i)
             else:
                 msg = '{}: no orbital correction detected'.format(i)
-            logging.debug(msg % i.data_path)
+            log.debug(msg)
+            raise orbital.OrbitalError(msg)
 
-        raise orbital.OrbitalError(msg)
 
-
-def calculate_linear_rate(ifgs, params, vcmt, mst=None):
+def calculate_linear_rate(ifgs, params, vcmt, mst_mat=None):
     log.info('Calculating linear rate')
-    res = linrate.linear_rate(ifgs, params, vcmt, mst)
+    res = linrate.linear_rate(ifgs, params, vcmt, mst_mat)
     for r in res:
         if r is None:
             raise ValueError('TODO: bad value')
@@ -644,7 +600,7 @@ def calculate_linear_rate(ifgs, params, vcmt, mst=None):
 def write_linrate_tifs(ifgs, params, res):
     log.info('Writing linrate results')
     rate, error, samples = res
-    gt, md, wkt = get_projection_info(ifgs[0].data_path, params)
+    gt, md, wkt = get_projection_info(ifgs[0].data_path)
     epochlist = algorithm.get_epochs(ifgs)[0]
     dest = join(params[cf.OUT_DIR], "linrate.tif")
     md[ifc.MASTER_DATE] = epochlist.dates
@@ -668,16 +624,6 @@ def write_linrate_numpy_files(error, rate, samples, params):
     np.save(file=samples_file, arr=samples)
 
 
-# general function template
-#
-# add check for pre-existing metadata flag / skip if required
-# perform calculation
-# optionally save modified data to disk if required
-# optionally save correction component to disk (more useful for debugging)
-# set flag in dataset for correction
-# write to log file
-
-
 def warp_required(xlooks, ylooks, crop):
     """
     Returns True if params show rasters need to be cropped and/or resized.
@@ -692,34 +638,7 @@ def warp_required(xlooks, ylooks, crop):
     return True
 
 
-def working_ifg_paths(src_paths, xlooks, ylooks, cropping):
-    """
-    Filter. Returns paths to ifgs to process (eg. checks for mlooked tifs)
-    """
-    if warp_required(xlooks, ylooks, cropping):
-        mlooked_unw = [cf.mlooked_path(p, xlooks, crop_out=cropping)
-                       for p in src_paths]
-        mlooked_paths = [os.path.splitext(m)[0]+'.tif' for m in mlooked_unw]
-
-        if not all([os.path.exists(p) for p in mlooked_paths]):
-            msg = 'Multilooked ifgs do not exist ' \
-                  '(execute "run_prepifg.py" first)'
-            raise IOError(msg)
-
-        log.info('Using mlooked interferograms...')
-        return mlooked_paths
-    return src_paths  # multi looking not specified, work with base ifgs
-
-
-def dest_ifg_paths(ifg_paths, outdir):
-    """
-    Returns paths to out/dest ifgs.
-    """
-
-    bases = [os.path.basename(p) for p in ifg_paths]
-    return [join(outdir, p) for p in bases]
-
-
 def main(config_file, rows, cols):
-    base_unw_paths, dest_paths, pars = cf.get_ifg_paths(config_file)
+    """ linear rate and timeseries execution starts here """
+    _, dest_paths, pars = cf.get_ifg_paths(config_file)
     process_ifgs(sorted(dest_paths), pars, rows, cols)
