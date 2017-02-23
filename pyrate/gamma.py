@@ -1,5 +1,4 @@
 # coding: utf-8
-# pylint: disable= invalid-name
 """
 Tools used for reading GAMMA headers.
 """
@@ -27,7 +26,18 @@ SPEED_OF_LIGHT_METRES_PER_SECOND = 3e8
 
 
 def check_raw_data(data_path, ncols, nrows):
-    size = ncols * nrows * 4 # DEM and Ifg data are 4 byte floats
+    """
+    Parameters
+    ----------
+    data_path: str
+        path to file
+    ncols: int
+        expected number of cols
+    nrows: int
+        expectged number of rows
+    """
+
+    size = ncols * nrows * 4  # DEM and Ifg data are 4 byte floats
     act_size = os.stat(data_path).st_size
     if act_size != size:
         msg = '%s should have size %s, not %s. Is the correct file being used?'
@@ -35,6 +45,13 @@ def check_raw_data(data_path, ncols, nrows):
 
 
 def check_step_mismatch(hdr):
+    """
+    Parameters
+    ----------
+    hdr: dict
+        dict corresponding to header file
+    """
+    # pylint: disable= invalid-name
     xs, ys = [abs(i) for i in [hdr[ifc.PYRATE_X_STEP], hdr[ifc.PYRATE_Y_STEP]]]
 
     if xs != ys:

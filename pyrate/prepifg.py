@@ -40,10 +40,11 @@ GRID_TOL = 1e-6
 
 
 def is_number(s):
+    """ check whether string can be converted to float"""
     try:
         float(s)
         return True
-    except ValueError:
+    except:
         return False
 
 
@@ -53,6 +54,9 @@ def get_analysis_extent(
         xlooks,
         ylooks,
         user_exts):
+    """
+    Returns extents/bounding box args for gdalwarp as strings.
+    """
 
     if crop_opt not in CROP_OPTIONS:
         raise PreprocessError("Unrecognised crop option: %s" % crop_opt)
@@ -84,11 +88,9 @@ def prepare_ifg(
         thresh,
         crop_opt,
         write_to_disc=True):
-    # Determine cmd line args for gdalwarp calls for each ifg (gdalwarp has no
-    # API. For resampling, gdalwarp is called 2x. 1st to subset the source data
-    # for Pirate style averaging/resampling, 2nd to generate the final dataset
-    # with correct extents/shape/cell count. Without resampling, gdalwarp is
-    # only needed to cut out the required segment.
+    """
+    resample and crop ifgs/dems
+    """
 
     do_multilook = xlooks > 1 or ylooks > 1
     # resolution=None completes faster for non-multilooked layers in gdalwarp
@@ -112,6 +114,7 @@ def prepare_ifg(
 
 
 def dummy_warp(renamed_path):
+    """ convenience dummy operation """
     ifg = dem_or_ifg(renamed_path)
     ifg.open()
     ifg.dataset.SetMetadataItem(ifc.PROCESS_STEP, ifc.MULTILOOKED)
@@ -157,6 +160,7 @@ def prepare_ifgs(
 
 
 def dem_or_ifg(data_path):
+    """ whether tif is a dem or an ifg """
     ds = gdal.Open(data_path)
     md = ds.GetMetadata()
     if 'DATE' in md:  # ifg
@@ -250,6 +254,7 @@ def warp_old(ifg, x_looks, y_looks, extents, resolution, thresh,
     :param thresh: see thresh in prepare_ifgs().
     :param verbose: True to print gdalwarp output to stdout
     """
+    # pylint: disable=too-many-locals
     if x_looks != y_looks:
         raise ValueError('X and Y looks mismatch')
 
@@ -326,7 +331,7 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out,
         Use *None* if raster size is not being changed.
     :param thresh: see thresh in prepare_ifgs().
     :param verbose: True to print gdalwarp output to stdout
-    :param write_to_disc:
+    :param write_to_disc: bool, whether to write to disc during warp
     """
     if x_looks != y_looks:
         raise ValueError('X and Y looks mismatch')
@@ -467,6 +472,7 @@ def custom_bounds(ifgs, xw, ytop, xe, ybot):
     """
     Check and modify input custom crop bounds to line up with grid interval
     """
+    # pylint: disable=too-many-locals
     # pylint: disable=too-many-branches
     msg = 'Cropped image bounds exceed original image bounds'
     i = ifgs[0]

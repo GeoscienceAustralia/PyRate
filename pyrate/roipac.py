@@ -109,6 +109,12 @@ def check_raw_data(is_ifg, data_path, ncols, nrows):
 
 
 def check_step_mismatch(header):
+    """
+    Parameters
+    ----------
+    header: dict
+        dict corresponding to header file
+    """
     # pylint: disable=invalid-name
     xs, ys = [abs(i) for i in [header[ifc.PYRATE_X_STEP],
                                header[ifc.PYRATE_Y_STEP]]]
