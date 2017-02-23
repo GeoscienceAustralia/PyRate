@@ -11,6 +11,7 @@ import numpy as np
 
 from pyrate import algorithm
 from pyrate import config as cf
+from pyrate.config import ConfigException
 from pyrate import ifgconstants as ifc
 from pyrate import linrate
 from pyrate import mpiops
@@ -25,7 +26,7 @@ from pyrate.compat import PyAPS_INSTALLED
 from pyrate.shared import Ifg, create_tiles, \
     PrereadIfg, prepare_ifg, save_numpy_phase, get_projection_info
 
-if PyAPS_INSTALLED:
+if PyAPS_INSTALLED:  # pragma: no cover
     # from pyrate import aps
     from pyrate.aps import check_aps_ifgs, aps_delay_required
 
@@ -70,7 +71,7 @@ def _join_dicts(dicts):
     assembled_dict: dict
         dictionary after join
     """
-    if dicts is None:
+    if dicts is None:  # pragma: no cover
         return
     assembled_dict = {k: v for D in dicts for k, v in D.items()}
     return assembled_dict
@@ -150,7 +151,7 @@ def mst_calc(dest_tifs, params, tiles, preread_ifgs):
                      'using NetworkX method')
             mst_tile = mst.mst_multiprocessing(tile, dest_tifs, preread_ifgs)
         else:
-            raise cf.ConfigException('Matlab mst not supported yet')
+            raise ConfigException('Matlab mst not supported yet')
             # mst_tile = mst.mst_multiprocessing(tile, dest_tifs, preread_ifgs)
         # locally save the mst_mat
         mst_file_process_n = join(
@@ -199,7 +200,7 @@ def ref_pixel_calc(ifg_paths, params):
         refy, refx = find_ref_pixel(ifg_paths, params)
         log.info('Found reference pixel coordinate: '
                  '({}, {})'.format(refx, refy))
-    else:
+    else:  # pragma: no cover
         log.info('Reusing config file reference pixel: '
                  '({}, {})'.format(refx, refy))
     ifg.close()
@@ -276,7 +277,7 @@ def orb_fit_calc(ifg_paths, params):
     """
     log.info('Calculating orbfit correction')
     if params[cf.ORBITAL_FIT_METHOD] != 1:
-        raise cf.ConfigException('Only orbfit method 1 is supported')
+        raise ConfigException('Only orbfit method 1 is supported')
     prcs_ifgs = mpiops.array_split(ifg_paths)
     mlooked = None
     # TODO: MPI orbfit method 2
@@ -309,21 +310,21 @@ def ref_phase_estimation(ifg_paths, params, refpx, refpy):
     elif params[cf.REF_EST_METHOD] == 2:
         process_ref_phs = ref_phs_method2(ifg_paths, params, refpx, refpy)
     else:
-        raise cf.ConfigException('Ref phase estimation method must be 1 or 2')
+        raise ConfigException('Ref phase estimation method must be 1 or 2')
 
     ref_phs_file = join(params[cf.OUT_DIR], 'ref_phs.npy')
     if mpiops.rank == MASTER_PROCESS:
         ref_phs = np.zeros(len(ifg_paths), dtype=np.float64)
         process_indices = mpiops.array_split(range(len(ifg_paths)))
         ref_phs[process_indices] = process_ref_phs
-        for r in range(1, mpiops.size):
+        for r in range(1, mpiops.size):  # pragma: no cover
             process_indices = mpiops.array_split(range(len(ifg_paths)), r)
             this_process_ref_phs = np.zeros(shape=len(process_indices),
                                             dtype=np.float64)
             mpiops.comm.Recv(this_process_ref_phs, source=r, tag=r)
             ref_phs[process_indices] = this_process_ref_phs
         np.save(file=ref_phs_file, arr=ref_phs)
-    else:
+    else:  # pragma: no cover
         # send reference phase data to master process
         mpiops.comm.Send(process_ref_phs, dest=MASTER_PROCESS,
                          tag=mpiops.rank)
@@ -435,7 +436,8 @@ def process_ifgs(ifg_paths, params, rows, cols):
 
     # remove APS delay here, and write aps delay removed ifgs to disc
     # TODO: fix PyAPS integration
-    if PyAPS_INSTALLED and aps_delay_required(ifg_paths, params):
+    if PyAPS_INSTALLED and \
+            aps_delay_required(ifg_paths, params):  # pragma: no cover
         # ifgs = aps.remove_aps_delay(ifg_paths, params)
         log.info('Finished APS delay correction')
         # make sure aps correction flags are consistent
@@ -533,13 +535,13 @@ def maxvar_vcm_calc(ifg_paths, params, preread_ifgs):
     if mpiops.rank == MASTER_PROCESS:
         maxvar = np.empty(len(ifg_paths), dtype=np.float64)
         maxvar[process_indices] = process_maxvar
-        for i in range(1, mpiops.size):
+        for i in range(1, mpiops.size):  # pragma: no cover
             rank_indices = mpiops.array_split(range(len(ifg_paths)), i)
             this_process_ref_phs = np.empty(len(rank_indices),
                                             dtype=np.float64)
             mpiops.comm.Recv(this_process_ref_phs, source=i, tag=i)
             maxvar[rank_indices] = this_process_ref_phs
-    else:
+    else:  # pragma: no cover
         maxvar = np.empty(len(ifg_paths), dtype=np.float64)
         mpiops.comm.Send(np.array(process_maxvar, dtype=np.float64),
                          dest=MASTER_PROCESS, tag=mpiops.rank)
@@ -575,13 +577,14 @@ def phase_sum(ifg_paths, params):
 
     if mpiops.rank == MASTER_PROCESS:
         phase_sum_all = phs_sum
-        for i in range(1, mpiops.size):  # loop is better for memory
+        # loop is better for memory
+        for i in range(1, mpiops.size):  # pragma: no cover
             phs_sum = np.zeros(shape=shape, dtype=np.float64)
             mpiops.comm.Recv(phs_sum, source=i, tag=i)
             phase_sum_all += phs_sum
         comp = np.isnan(phase_sum_all)  # this is the same as in Matlab
         comp = np.ravel(comp, order='F')  # this is the same as in Matlab
-    else:
+    else:  # pragma: no cover
         comp = None
         mpiops.comm.Send(phs_sum, dest=0, tag=mpiops.rank)
 
@@ -624,7 +627,7 @@ def timeseries_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
     mpiops.comm.barrier()
 
 
-def main(config_file, rows, cols):
+def main(config_file, rows, cols):  # pragma: no cover
     """ linear rate and timeseries execution starts here """
     _, dest_paths, pars = cf.get_ifg_paths(config_file)
     process_ifgs(sorted(dest_paths), pars, rows, cols)

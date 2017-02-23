@@ -14,7 +14,8 @@ def main():
     for all data types
     """
     usage = 'Usage: gamma.py <config file>'
-    if len(sys.argv) == 1 or sys.argv[1] == '-h' or sys.argv[1] == '--help':
+    if len(sys.argv) == 1 or sys.argv[1] == '-h' \
+            or sys.argv[1] == '--help':  # pragma: no cover
         print(usage)
         return
     raw_config_file = sys.argv[1]     # this does '~' expansion automatically

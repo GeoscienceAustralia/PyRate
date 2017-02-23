@@ -403,7 +403,7 @@ def check_resolution(ifgs):
 
     for var in ['x_step', 'y_step']:
         values = array([getattr(i, var) for i in ifgs])
-        if not (values == values[0]).all():
+        if not (values == values[0]).all():  # pragma: no cover
             msg = "Grid resolution does not match for %s" % var
             raise PreprocessError(msg)
 
@@ -413,11 +413,12 @@ def check_looks(xlooks, ylooks):
     Verifies looks parameters are valid.
     """
 
-    if not (isinstance(xlooks, Number) and isinstance(ylooks, Number)):
+    if not (isinstance(xlooks, Number) and
+            isinstance(ylooks, Number)):  # pragma: no cover
         msg = "Non-numeric looks parameter(s), x: %s, y: %s" % (xlooks, ylooks)
         raise PreprocessError(msg)
 
-    if not (xlooks > 0 and ylooks > 0):
+    if not (xlooks > 0 and ylooks > 0):  # pragma: no cover
         msg = "Invalid looks parameter(s), x: %s, y: %s. " \
               "Looks must be an integer greater than zero" % (xlooks, ylooks)
         raise PreprocessError(msg)
@@ -545,7 +546,8 @@ def check_crop_coords(ifgs, xmin, ymin, xmax, ymax):
         remainder = abs(modf(diff / step)[0])
 
         # handle cases where division gives remainder near zero, or just < 1
-        if (remainder > GRID_TOL) and (remainder < (1 - GRID_TOL)):
+        if (remainder > GRID_TOL) and \
+                (remainder < (1 - GRID_TOL)):  # pragma: no cover
             msg = "%s crop extent not within %s of grid coordinate"
             raise PreprocessError(msg % (par, GRID_TOL))
 

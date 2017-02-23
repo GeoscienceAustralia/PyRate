@@ -15,6 +15,7 @@ from joblib import Parallel, delayed
 
 from pyrate.algorithm import master_slave_ids, get_epochs
 from pyrate import config as cf
+from pyrate.config import ConfigException
 from pyrate import mst as mst_module
 
 
@@ -123,8 +124,8 @@ def time_series(ifgs, params, vcmt, mst=None):
         for row in range(nrows):
             for col in range(ncols):
                 tsvel_matrix[row, col] = time_series_by_pixel(
-                    row, col, b0_mat, sm_factor, sm_order, ifg_data, mst, nvelpar,
-                    p_thresh, vcmt, ts_method, interp)
+                    row, col, b0_mat, sm_factor, sm_order, ifg_data, mst,
+                    nvelpar, p_thresh, vcmt, ts_method, interp)
 
     tsvel_matrix = where(tsvel_matrix == 0, nan, tsvel_matrix)
     # SB: do the span multiplication as a numpy linalg operation, MUCH faster
@@ -283,7 +284,7 @@ def _solve_ts_lap(nvelpar, velflag, ifgv, mat_b, smorder, smfactor, sel, vcmt):
     return tsvel
 
 
-def plot_timeseries(tsincr, tscum, tsvel, output_dir):
+def plot_timeseries(tsincr, tscum, tsvel, output_dir):  # pragma: no cover
     """
     Plot the results of the timeseries analysis.
 
@@ -327,7 +328,7 @@ def check_time_series_params(pthresh):
         Internal convenience function for raising similar errors.
         '''
         msg = "Missing '%s' in configuration options" % option
-        raise cf.ConfigException(msg)
+        raise ConfigException(msg)
 
     if pthresh is None:
         missing_option_error(cf.TIME_SERIES_PTHRESH)

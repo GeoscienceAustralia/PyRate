@@ -27,7 +27,12 @@ exclude_lines =
     raise AssertionError
     raise NotImplementedError
     raise ValueError
+    raise RuntimeError
+    except OSError
+    except ValueError
+    except IndexError
     raise ImportError
+    except ImportError
     raise ConfigException
     raise ReferencePhaseError
     raise RefPixelError
@@ -35,6 +40,9 @@ exclude_lines =
     raise GeotiffException
     raise RasterException
     raise IfgException
+    raise GammaException
+    raise PreprocessError
+    raise TimeSeriesError
 
     # Don't complain if non-runnable code isn't run:
     if 0:

@@ -162,8 +162,8 @@ def parse_header(hdr_file):
             headers[k] = float(headers[k])
         elif k in DATE_HEADERS:
             headers[k] = parse_date(headers[k])
-        else:
-            pass # ignore other headers
+        else:  # pragma: no cover
+            pass  # ignore other headers
 
     # grab a subset for GeoTIFF conversion
     subset = {ifc.PYRATE_NCOLS: headers[WIDTH],
@@ -211,7 +211,7 @@ def _parse_dates_from(filename):
         min_date_len = 13  # assumes "nnnnnn-nnnnnn" format
         if len(s) == min_date_len:
             return parse_date(s)
-    else:
+    else:  # pragma: no cover
         msg = "Filename does not include master/slave dates: %s"
         raise RoipacException(msg % filename)
 

@@ -141,7 +141,7 @@ class RasterParam(DictParam):
             return Ifg(path)
         elif raster_type == 'Incidence':
             return Incidence(path)
-        else:
+        else:  # pragma: no cover
             raise luigi.parameter.UnknownParameterException(
                 'rasterBase must be an inscance DEM, '
                 'Ifg or Incidence is valid')
@@ -159,7 +159,7 @@ class RasterParam(DictParam):
             d = {'type': 'Ifg', 'path': path}
         elif isinstance(rasterBase, Incidence):
             d = {'type': 'Incidence', 'path': path}
-        else:
+        else:  # pragma: no cover
             raise luigi.parameter.UnknownParameterException(
                 'rasterBase must be an inscance DEM, '
                 'Ifg or Incidence is valid')
