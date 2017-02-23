@@ -1,10 +1,12 @@
 """utilities and classes shared by all other pyrate modules"""
+# pylint: disable=too-many-lines
 from __future__ import print_function
 
 import errno
 import logging
 import math
 import os
+from os.path import basename, dirname, join
 import shutil
 import stat
 import struct
@@ -13,7 +15,6 @@ import pkg_resources
 from datetime import date
 from itertools import product
 from math import floor
-from os.path import basename, dirname, join
 
 import numpy as np
 from numpy import where, nan, isnan, sum as nsum, isclose

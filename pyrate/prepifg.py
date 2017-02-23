@@ -11,21 +11,21 @@ The rasters need to be in GeoTIFF format with PyRate specific metadata headers.
 # TODO: check new average option for gdalwarp (GDAL 1.10.x +)
 
 import os
+import shutil
+from collections import namedtuple
 from math import modf
 from numbers import Number
-from tempfile import mkstemp
 from subprocess import check_call
-from collections import namedtuple
-import shutil
+from tempfile import mkstemp
 
 import numpy as np
 from numpy import array, where, nan, isnan, nanmean, float32, zeros, sum as nsum
-
 from osgeo import gdal
+
 from pyrate import config as cf
-from pyrate.shared import Ifg, DEM
 from pyrate import gdal_python as gdalwarp
 from pyrate import ifgconstants as ifc
+from pyrate.shared import Ifg, DEM
 
 CustomExts = namedtuple('CustExtents', ['xfirst', 'yfirst', 'xlast', 'ylast'])
 
@@ -120,7 +120,8 @@ def dummy_warp(renamed_path):
     return data, ifg.dataset
 
 
-# TODO: crop options 0 = no cropping? get rid of same size (but it is in explained file)
+# TODO: crop options 0 = no cropping?
+# get rid of same size (but it is in explained file)
 def prepare_ifgs(
         raster_data_paths,
         crop_opt,
@@ -415,7 +416,8 @@ def check_looks(xlooks, ylooks):
         raise PreprocessError(msg)
 
     if not (xlooks > 0 and ylooks > 0):
-        msg = "Invalid looks parameter(s), x: %s, y: %s. Looks must be an integer greater than zero" % (xlooks, ylooks)
+        msg = "Invalid looks parameter(s), x: %s, y: %s. " \
+              "Looks must be an integer greater than zero" % (xlooks, ylooks)
         raise PreprocessError(msg)
 
 
@@ -468,6 +470,8 @@ def custom_bounds(ifgs, xw, ytop, xe, ybot):
     """
     Check and modify input custom crop bounds to line up with grid interval
     """
+    # pylint: disable=too-many-branches,invalid-name,too-many-locals
+
     msg = 'Cropped image bounds exceed original image bounds'
     i = ifgs[0]
 
@@ -508,6 +512,8 @@ def custom_bounds(ifgs, xw, ytop, xe, ybot):
             if diff < 0:
                 raise PreprocessError(msg)
             y2 = orig + (nint * step)
+        else:
+            raise ValueError('Value error in supplied custom bounds')
 
     if y2 > y1:
         ymin = y1
@@ -543,9 +549,4 @@ def check_crop_coords(ifgs, xmin, ymin, xmax, ymax):
 
 
 class PreprocessError(Exception):
-    pass
-
-
-def extents_from_params(params):
-    keys = (cf.IFG_XFIRST, cf.IFG_YFIRST, cf.IFG_XLAST, cf.IFG_YLAST)
-    return CustomExts(*[params[k] for k in keys])
+    """ Preprocess exception"""

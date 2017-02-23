@@ -33,7 +33,7 @@ def linear_rate(ifgs, params, vcmt, mst=None):
 
     :param ifgs: Sequence of ifg objs from which to extract observations
     :param params: configuration parameters
-    :param vcmt: Derived positive definite temporal variance covariance matrix  
+    :param vcmt: Derived positive definite temporal variance covariance matrix
     :param mst: Pixel-wise matrix describing the minimum spanning tree network
     :param parallel: use multiprocessing or not.
     :param processes: number of parallel processes to use
