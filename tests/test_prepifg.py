@@ -339,19 +339,45 @@ class PrepifgOutputTests(unittest.TestCase):
         # ignore output values as resampling has already been tested for phase
         exp_dem_path = join(SYD_TEST_DEM_DIR, 'sydney_trimmed_4rlks_3cr.tif')
         self.assertTrue(exists(exp_dem_path))
-
+        orignal_dem = DEM(SYD_TEST_DEM_TIF)
+        orignal_dem.open()
+        dem_dtype = orignal_dem.dataset.GetRasterBand(1).DataType
+        orignal_dem.close()
         dem = DEM(exp_dem_path)
         dem.open()
+
+        # test multilooked dem is of the same datatype as the original dem tif
+        self.assertEqual(dem_dtype, dem.dataset.GetRasterBand(1).DataType)
+
         self.assertEqual(dem.dataset.RasterXSize, 20 / scale)
         self.assertEqual(dem.dataset.RasterYSize, 28 / scale)
         data = dem.height_band.ReadAsArray()
         self.assertTrue(data.ptp() != 0)
-
         # close ifgs
         dem.close()
         for i in self.ifgs:
             i.close()
         os.remove(exp_dem_path)
+
+    def test_output_datatype(self):
+        """Test resampling method using a scaling factor of 4"""
+        scale = 4  # assumes square cells
+        self.ifgs.append(DEM(SYD_TEST_DEM_TIF))
+        self.ifg_paths = [i.data_path for i in self.ifgs] + [SYD_TEST_DEM_TIF]
+        cext = self._custom_extents_tuple()
+        xlooks = ylooks = scale
+        prepare_ifgs(self.ifg_paths, CUSTOM_CROP, xlooks, ylooks,
+                     thresh=1.0, user_exts=cext)
+
+        for i in self.ifg_paths:
+            mlooked_ifg = mlooked_path(i, xlooks, CUSTOM_CROP)
+            ds1 = DEM(mlooked_ifg)
+            ds1.open()
+            ds2 = DEM(i)
+            ds2.open()
+            self.assertEqual(ds1.dataset.GetRasterBand(1).DataType,
+                             ds2.dataset.GetRasterBand(1).DataType)
+            ds1 = ds2 = None
 
     def test_invalid_looks(self):
         """Verify only numeric values can be given for multilooking"""

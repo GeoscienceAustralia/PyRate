@@ -503,7 +503,6 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
                 np.testing.assert_array_almost_equal(data_from_file,
                                                      new_from_file)
 
-
     def test_no_out_file_when_driver_type_is_mem(self):
         for ifg in self.ifgs:
             extents = [150.91, -34.229999976, 150.949166651, -34.17]
@@ -592,8 +591,9 @@ class TestMEMVsGTiff(unittest.TestCase):
         self.check('GTiff')
 
 
-class TestGDalAverageResampleing(unittest.TestCase):
-    pass
+# class TestGDalAverageResampleing(unittest.TestCase):
+#     pass
+
 
 if __name__ == '__main__':
     unittest.main()

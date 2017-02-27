@@ -72,7 +72,7 @@ setup(
         'PyYAML >= 3.11',
         'netCDF4 == 1.2.6',
         'GDAL == ' + GDAL_VERSION,
-        'matplotlib >= 1.4.3',
+        'matplotlib == 1.5.1',
         'pyproj >= 1.9.5',
         'networkx >= 1.9.1',
         'Pillow >= 2.8.2',
