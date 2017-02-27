@@ -224,6 +224,22 @@ def crop_resample_average(
         match_pirate=False):
     """
     Crop, resample, and average a geotif
+    Parameters
+    ----------
+    input_tif: str
+        path to input geotif to resample/crop
+    extents: tuple
+        georeferenced extents for new file: (xfirst, yfirst, xlast, ylast)
+    output_file: str
+        output resampled/cropped file name
+    new_res: list
+        [xres, yres] Sets resolution output Ifg metadata.
+    thresh: float
+        nan fraction threshold
+    out_driver_type: str, optional
+        the output driver type. `MEM` or `GTiff`.
+    match_pirate: bool, optional
+        whether to match matlab pirate style resampled/croppped output
     """
     dst_ds, _, _, _ = crop_rasample_setup(
         extents, input_tif, new_res, output_file,
@@ -233,8 +249,10 @@ def crop_resample_average(
     tmp_ds = gdal.GetDriverByName('MEM').CreateCopy('', dst_ds) \
         if (match_pirate and new_res[0]) else None
 
-    resampled_average, src_ds_mem, src_dtype, src_gt = \
+    resampled_average, src_ds_mem = \
         gdal_average(dst_ds, input_tif, thresh)
+    src_dtype = src_ds_mem.GetRasterBand(1).DataType
+    src_gt = src_ds_mem.GetGeoTransform()
 
     # write out to output geotif file
     driver = gdal.GetDriverByName(out_driver_type)
@@ -315,8 +333,19 @@ def gdal_average(dst_ds, input_tif, thresh):
         input geotif
     thresh: float
         nan fraction threshold
+
+    Returns
+    -------
+    resampled_average: ndarray
+        ndarray of of ifg phase data
+    src_ds_mem: gdal.Dataset
+        modified in memory src_ds with nan_fraction in Band2. The nan_fraction
+        is computed efficiently here in gdal in the same step as the that of
+        the resampled average (band 1). This results is huge memory and
+        computational efficiency.
+
     """
-    src_ds, src_ds_mem, src_dtype = _setup_source(input_tif)
+    src_ds, src_ds_mem = _setup_source(input_tif)
     src_ds_mem.GetRasterBand(2).SetNoDataValue(-100000)
     src_gt = src_ds.GetGeoTransform()
     src_ds_mem.SetGeoTransform(src_gt)
@@ -325,7 +354,7 @@ def gdal_average(dst_ds, input_tif, thresh):
     nan_frac = dst_ds.GetRasterBand(2).ReadAsArray()
     resampled_average = dst_ds.GetRasterBand(1).ReadAsArray()
     resampled_average[nan_frac >= thresh] = np.nan
-    return resampled_average, src_ds_mem, src_dtype, src_gt
+    return resampled_average, src_ds_mem
 
 
 def _setup_source(input_tif):
@@ -342,7 +371,8 @@ def _setup_source(input_tif):
     # if data==0, then 1, else 0
     nan_matrix = np.isclose(data, 0, atol=1e-6)
     src_ds_mem.GetRasterBand(2).WriteArray(nan_matrix)
-    return src_ds, src_ds_mem, src_dtype
+    src_ds_mem.SetGeoTransform(src_ds.GetGeoTransform())
+    return src_ds, src_ds_mem
 
 
 def get_matlab_resampled_data_size(xscale, yscale, data):

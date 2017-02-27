@@ -16,6 +16,7 @@ from math import modf
 from numbers import Number
 from subprocess import check_call
 from tempfile import mkstemp
+
 from numpy import array, where, nan, isnan, nanmean, float32, zeros, \
     sum as nsum
 from osgeo import gdal
