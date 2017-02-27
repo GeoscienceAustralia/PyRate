@@ -237,11 +237,12 @@ def crop_resample_average(
 
     src_ds = gdal.Open(input_tif)
     data = src_ds.GetRasterBand(1).ReadAsArray()
+    src_dtype = src_ds.GetRasterBand(1).DataType
 
     mem_driver = gdal.GetDriverByName('MEM')
     src_ds_mem = mem_driver.Create('',
                                    src_ds.RasterXSize, src_ds.RasterYSize,
-                                   2, gdalconst.GDT_Float32)
+                                   2, src_dtype)
 
     src_ds_mem.GetRasterBand(1).WriteArray(data)
     src_ds_mem.GetRasterBand(1).SetNoDataValue(0)
@@ -285,7 +286,7 @@ def crop_resample_average(
 
     # write final pi/pyrate GTiff
     out_ds = driver.Create(output_file, dst_ds.RasterXSize, dst_ds.RasterYSize,
-                           1, gdalconst.GDT_Float32)
+                           1, src_dtype)
     out_ds.GetRasterBand(1).SetNoDataValue(np.nan)
     out_ds.GetRasterBand(1).WriteArray(resampled_average)
     out_ds.SetGeoTransform(dst_ds.GetGeoTransform())
