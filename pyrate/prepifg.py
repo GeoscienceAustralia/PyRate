@@ -44,7 +44,9 @@ def is_number(s):
     try:
         float(s)
         return True
-    except:
+    except TypeError:  # for example if 'None' is sent
+        return False
+    except ValueError:  # for example if a 'string' is sent
         return False
 
 
@@ -64,7 +66,7 @@ def get_analysis_extent(
     if crop_opt == CUSTOM_CROP:
         if not user_exts:
             raise PreprocessError('No custom cropping extents specified')
-        elif len(user_exts) != 4: # check for required numbers
+        elif len(user_exts) != 4:  # check for required numbers
             raise PreprocessError('Custom extents must have all 4 values')
         elif len(user_exts) == 4:  # check for non floats
             if not all([is_number(z) for z in user_exts]):
