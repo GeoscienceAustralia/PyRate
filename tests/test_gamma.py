@@ -151,7 +151,7 @@ class GammaToGeoTiffTests(unittest.TestCase):
         self.compare_rasters(ds, exp_ds)
 
         md = ds.GetMetadata()
-        self.assertEqual(len(md), 10)
+        self.assertEqual(len(md), 11) # 11 metadata items
         self.assertTrue(md[ifc.MASTER_DATE] == str(date(2009, 7, 13)))
         self.assertTrue(md[ifc.SLAVE_DATE] == str(date(2009, 8, 17)))
         self.assertTrue(md[ifc.PYRATE_TIME_SPAN] == str(35 / ifc.DAYS_PER_YEAR))
@@ -219,7 +219,7 @@ class GammaHeaderParsingTests(unittest.TestCase):
         self.assertEqual(hdrs[ifc.PYRATE_WAVELENGTH_METRES], exp_wavelen)
 
         incidence_angle = 22.9671
-        self.assertEqual(hdrs[ifc.INCIDENCE_ANGLE], incidence_angle)
+        self.assertEqual(hdrs[ifc.PYRATE_INCIDENCE_DEGREES], incidence_angle)
 
     def test_parse_gamma_dem_header(self):
         path = join(GAMMA_TEST_DIR, 'dem16x20raw.dem.par')
@@ -237,16 +237,25 @@ class GammaHeaderParsingTests(unittest.TestCase):
 H0 = {ifc.MASTER_DATE : date(2009, 7, 13),
       ifc.MASTER_TIME : time(12),
       ifc.PYRATE_WAVELENGTH_METRES: 1.8,
+      ifc.PYRATE_INCIDENCE_DEGREES: 35.565,
       }
 
 H1 = {ifc.MASTER_DATE : date(2009, 8, 17),
       ifc.MASTER_TIME : time(12, 10, 10),
       ifc.PYRATE_WAVELENGTH_METRES: 1.8,
+      ifc.PYRATE_INCIDENCE_DEGREES: 35.56,
       }
 
-H1_ERR = {ifc.MASTER_DATE : date(2009, 8, 17),
+H1_ERR1 = {ifc.MASTER_DATE : date(2009, 8, 17),
           ifc.MASTER_TIME : time(12),
           ifc.PYRATE_WAVELENGTH_METRES: 2.4,
+          ifc.PYRATE_INCIDENCE_DEGREES: 35.56,
+          }
+
+H1_ERR2 = {ifc.MASTER_DATE : date(2009, 8, 17),
+          ifc.MASTER_TIME : time(12),
+          ifc.PYRATE_WAVELENGTH_METRES: 1.8,
+          ifc.PYRATE_INCIDENCE_DEGREES: 35.76,
           }
 
 
@@ -283,7 +292,10 @@ class HeaderCombinationTests(unittest.TestCase):
         self.assertRaises(self.err, gamma.combine_headers, H0, H1, '')
 
     def test_fail_mismatching_wavelength(self):
-        self.assertRaises(self.err, gamma.combine_headers, H0, H1_ERR, self.dh)
+        self.assertRaises(self.err, gamma.combine_headers, H0, H1_ERR1, self.dh)
+        
+    def test_fail_mismatching_incidence(self):
+        self.assertRaises(self.err, gamma.combine_headers, H0, H1_ERR2, self.dh)
 
     def test_fail_same_date(self):
         self.assertRaises(self.err, gamma.combine_headers, H0, H0, self.dh)
@@ -412,8 +424,8 @@ class TestGammaLuigiEquality(unittest.TestCase):
             self.assertEqual(os.path.dirname(i.data_path), self.luigi_base_dir)
             # check meta data equal
             self.assertDictEqual(i.meta_data, j.meta_data)
-            # test that PROCESS_STEP exists in metadata
-            self.assertIn(ifc.PROCESS_STEP, i.meta_data.keys())
+            # test that DATA_TYPE exists in metadata
+            self.assertIn(ifc.DATA_TYPE, i.meta_data.keys())
             md = i.meta_data
             for k in [ifc.SLAVE_TIME, ifc.MASTER_TIME, ifc.MASTER_DATE,
                       ifc.SLAVE_DATE, ifc.PYRATE_WAVELENGTH_METRES,
@@ -422,13 +434,11 @@ class TestGammaLuigiEquality(unittest.TestCase):
             if i.data_path.__contains__(
                     '_{looks}rlks_{crop}cr'.format(looks=1, crop=1)):
                 # these are multilooked tifs
-                # test that PROCESS_STEP is MULTILOOKED
-                self.assertEqual(md[ifc.PROCESS_STEP],
-                                 ifc.MULTILOOKED)
-            else:
-                # others tifs are just geotiffs
-                self.assertEqual(md[ifc.PROCESS_STEP],
-                                 ifc.GEOTIFF)
+                # test that DATA_TYPE is MULTILOOKED
+                self.assertEqual(md[ifc.DATA_TYPE], ifc.MULTILOOKED)
+#            else:
+#                # others tifs are just geotiffs
+#                self.assertEqual(md[ifc.DATA_TYPE], ifc.ORIG)
         self.assertEquals(c + 1, len(all_luigi_ifgs))
 
     def shared_setup(self):
@@ -495,11 +505,11 @@ class TestGammaParallelVsSerial(unittest.TestCase):
             # all metadata equal
             self.assertDictEqual(s.meta_data, p.meta_data)
 
-            # test that PROCESS_STEP exists in metadata
-            self.assertIn(ifc.PROCESS_STEP, s.meta_data.keys())
+            # test that DATA_TYPE exists in metadata
+            self.assertIn(ifc.DATA_TYPE, s.meta_data.keys())
 
-            # test that PROCESS_STEP is MULTILOOKED
-            self.assertEqual(s.meta_data[ifc.PROCESS_STEP], ifc.MULTILOOKED)
+            # test that DATA_TYPE is MULTILOOKED
+            self.assertEqual(s.meta_data[ifc.DATA_TYPE], ifc.MULTILOOKED)
 
 if __name__ == "__main__":
     unittest.main()

@@ -36,7 +36,6 @@ gdal.UseExceptions()
 PHASE_BAND = 1
 RADIANS = 'RADIANS'
 MILLIMETRES = 'MILLIMETRES'
-MM_PER_METRE = 1000
 GAMMA = 'GAMMA'
 ROIPAC = 'ROIPAC'
 
@@ -335,16 +334,16 @@ class Ifg(RasterBase):
         :return: convert wavelength from radians to mm
         """
         self.mm_converted = True
-        if self.dataset.GetMetadataItem(ifc.PYRATE_PHASE_UNITS) == MILLIMETRES:
+        if self.dataset.GetMetadataItem(ifc.DATA_UNITS) == MILLIMETRES:
             msg = '{}: ignored as previous phase unit conversion ' \
                   'already applied'.format(self.data_path)
             log.debug(msg)
             self.phase_data = self.phase_data
             return
-        elif self.dataset.GetMetadataItem(ifc.PYRATE_PHASE_UNITS) == RADIANS:
+        elif self.dataset.GetMetadataItem(ifc.DATA_UNITS) == RADIANS:
             self.phase_data = convert_radians_to_mm(self.phase_data,
                                                     self.wavelength)
-            self.meta_data[ifc.PYRATE_PHASE_UNITS] = MILLIMETRES
+            self.meta_data[ifc.DATA_UNITS] = MILLIMETRES
             # self.write_modified_phase()
             # otherwise NaN's don't write to bytecode properly
             # and numpy complains
@@ -600,7 +599,7 @@ def convert_radians_to_mm(data, wavelength):
     data: interferogram phase data
     wavelength: radar wavelength; normally included with SAR instrument metadata
     """
-    return data * MM_PER_METRE * (wavelength / (4 * math.pi))
+    return data * ifc.MM_PER_METRE * (wavelength / (4 * math.pi))
 
 
 def nanmedian(x):
@@ -619,7 +618,8 @@ def nanmedian(x):
 
 def write_geotiff(header, data_path, dest, nodata):
     """
-    Writes image data to GeoTIFF image with PyRate metadata
+    Writes input image data (interferograms, DEM, incidence maps etc)
+    to GeoTIFF format with PyRate metadata
     """
     # pylint: disable=too-many-branches
     # pylint: disable=too-many-locals
@@ -646,11 +646,15 @@ def write_geotiff(header, data_path, dest, nodata):
         for k in [ifc.PYRATE_WAVELENGTH_METRES, ifc.PYRATE_TIME_SPAN,
                   ifc.PYRATE_INSAR_PROCESSOR,
                   ifc.MASTER_DATE, ifc.SLAVE_DATE,
-                  ifc.PYRATE_PHASE_UNITS, ifc.PROCESS_STEP]:
+                  ifc.DATA_UNITS, ifc.DATA_TYPE]:
             ds.SetMetadataItem(k, str(header[k]))
         if ifg_proc == GAMMA:
-            for k in [ifc.MASTER_TIME, ifc.SLAVE_TIME]:
+            for k in [ifc.MASTER_TIME, ifc.SLAVE_TIME, ifc.PYRATE_INCIDENCE_DEGREES]:
                 ds.SetMetadataItem(k, str(header[k]))
+    elif is_incidence:
+        ds.SetMetadataItem(ifc.DATA_TYPE, ifc.INCIDENCE)
+    else: # must be dem
+        ds.SetMetadataItem(ifc.DATA_TYPE, ifc.DEM)
 
     # position and projection data
     ds.SetGeoTransform([header[ifc.PYRATE_LONG], header[ifc.PYRATE_X_STEP], 0,
@@ -742,12 +746,13 @@ def write_output_geotiff(md, gt, wkt, data, dest, nodata):
     # set spatial reference for geotiff
     ds.SetGeoTransform(gt)
     ds.SetProjection(wkt)
-    ds.SetMetadataItem(ifc.MASTER_DATE, str(md[ifc.MASTER_DATE]))
+    ds.SetMetadataItem(ifc.EPOCH_DATE, str(md[ifc.EPOCH_DATE]))
 
     # set other metadata
-    ds.SetMetadataItem('PR_TYPE', str(md['PR_TYPE']))
-    if 'PR_SEQ_POS' in md:
-        ds.SetMetadataItem('PR_SEQ_POS', str(md['PR_SEQ_POS']))
+    ds.SetMetadataItem('DATA_TYPE', str(md['DATA_TYPE']))
+    # sequence position for time series products
+    if 'SEQUENCE_POSITION' in md:
+        ds.SetMetadataItem('SEQUENCE_POSITION', str(md['SEQUENCE_POSITION']))
 
     # write data to geotiff
     band = ds.GetRasterBand(1)

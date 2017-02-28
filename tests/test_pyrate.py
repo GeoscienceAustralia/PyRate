@@ -162,8 +162,8 @@ class PyRateTests(unittest.TestCase):
         # self.assertTrue(st.st_size > 0)
 
     def test_phase_conversion(self):
-        # ensure phase has been converted to millimetres
-        key = 'PHASE_UNITS'
+        # ensure phase has been converted from radians to millimetres
+        key = 'DATA_UNITS'
         value = 'MILLIMETRES'
 
         for i in self.ifgs:
@@ -252,8 +252,8 @@ class ParallelPyRateTests(unittest.TestCase):
         self.assertTrue(md[key], value)
 
     def test_phase_conversion(self):
-        # ensure phase has been converted to millimetres
-        key = 'PHASE_UNITS'
+        # ensure phase has been converted from radians to millimetres
+        key = 'DATA_UNITS'
         value = 'MILLIMETRES'
 
         for i in common.sydney_data_setup(datafiles=self.dest_paths):
