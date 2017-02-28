@@ -28,7 +28,7 @@ import glob2
 import luigi
 from pyrate import config
 from pyrate.gamma import manage_headers
-from pyrate.shared import write_geotiff
+from pyrate.shared import write_geotiff, output_tiff_filename
 from pyrate.tasks.utils import IfgListMixin, InputParam
 
 PTN = re.compile(r'\d{8}')  # match 8 digits for the dates
@@ -104,10 +104,7 @@ class ConvertFileToGeotiff(luigi.Task):
         """
         Overload of :py:meth:`luigi.Task.output`.
         """
-
-        self.out_file = os.path.join(
-            self.out_dir,
-            '%s.tif' % os.path.splitext(os.path.basename(self.input_file))[0])
+        self.out_file = output_tiff_filename(self.input_file, self.out_dir)
         return [luigi.LocalTarget(self.out_file)]
 
     def run(self):

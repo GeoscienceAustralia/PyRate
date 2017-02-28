@@ -82,12 +82,12 @@ class GammaCommandLineTests(unittest.TestCase):
     def test_cmd_ifg(self):
         data = join(self.base, '16x20_20090713-20090817_VV_4rlks_utm.unw')
         self.exp_path = os.path.join(
-            self.base_dir, '16x20_20090713-20090817_VV_4rlks_utm.tif')
+            self.base_dir, '16x20_20090713-20090817_VV_4rlks_utm_unw.tif')
         self.common_check(data)
 
     def test_cmd_dem(self):
         data = join(self.base, 'dem16x20raw.dem')
-        self.exp_path = os.path.join(self.base_dir, 'dem16x20raw.tif')
+        self.exp_path = os.path.join(self.base_dir, 'dem16x20raw_dem.tif')
         self.common_check(data)
 
     def common_check(self, data):

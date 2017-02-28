@@ -26,7 +26,7 @@ import luigi
 import pyrate.config as config
 from pyrate.roipac import manage_header, ROI_PAC_HEADER_FILE_EXT, parse_header
 from pyrate import ifgconstants as ifc
-from pyrate.shared import write_geotiff
+from pyrate.shared import write_geotiff, output_tiff_filename
 from pyrate.tasks.utils import InputParam, IfgListMixin
 
 
@@ -89,12 +89,8 @@ class ConvertFileToGeotiff(luigi.Task):
     def output(self):
         """
         Overload of :py:meth:`luigi.Task.output`.
-
-        .. todo:: This is the same as for gamma... refactor.
         """
-        self.output_file = os.path.join(
-            self.outputDir,
-            '%s.tif' % os.path.splitext(os.path.basename(self.inputFile))[0])
+        self.output_file = output_tiff_filename(self.inputFile, self.outputDir)
         return [luigi.LocalTarget(self.output_file)]
 
 
