@@ -322,13 +322,13 @@ def write_timeseries_geotiff(ifgs, params, tsincr, pr_type):
     epochlist = algorithm.get_epochs(ifgs)[0]
 
     for i in range(tsincr.shape[2]):
-        md[ifc.MASTER_DATE] = epochlist.dates[i + 1]
-        md['PR_SEQ_POS'] = i  # sequence position
+        md[ifc.EPOCH_DATE] = epochlist.dates[i + 1]
+        md['SEQUENCE_POSITION'] = i+1  # sequence position
 
         data = tsincr[:, :, i]
         dest = join(params[cf.OUT_DIR], pr_type + "_" +
                     str(epochlist.dates[i + 1]) + ".tif")
-        md[ifc.PRTYPE] = pr_type
+        md[ifc.DATA_TYPE] = pr_type
         write_output_geotiff(md, gt, wkt, data, dest, np.nan)
 
 
@@ -405,14 +405,14 @@ def write_linrate_tifs(ifgs, params, res):
     gt, md, wkt = get_projection_info(ifgs[0].data_path)
     epochlist = algorithm.get_epochs(ifgs)[0]
     dest = join(params[cf.OUT_DIR], "linrate.tif")
-    md[ifc.MASTER_DATE] = epochlist.dates
-    md[ifc.PRTYPE] = 'linrate'
+    md[ifc.EPOCH_DATE] = epochlist.dates
+    md[ifc.DATA_TYPE] = ifc.LINRATE
     write_output_geotiff(md, gt, wkt, rate, dest, np.nan)
     dest = join(params[cf.OUT_DIR], "linerror.tif")
-    md[ifc.PRTYPE] = 'linerror'
+    md[ifc.DATA_TYPE] = ifc.LINERROR
     write_output_geotiff(md, gt, wkt, error, dest, np.nan)
     dest = join(params[cf.OUT_DIR], "linsamples.tif")
-    md[ifc.PRTYPE] = 'linsamples'
+    md[ifc.DATA_TYPE] = ifc.LINSAMP
     write_output_geotiff(md, gt, wkt, samples, dest, np.nan)
     write_linrate_numpy_files(error, rate, samples, params)
 
