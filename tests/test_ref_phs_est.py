@@ -166,7 +166,7 @@ class RefPhsEstimationMatlabTestMethod1Serial(unittest.TestCase):
                 MATLAB_REF_PHASE_DIR, f), delimiter=',')
             for k, j in enumerate(self.ifgs):
                 if f.split('_corrected')[-1].split('.')[0] == \
-                        os.path.split(j.data_path)[-1].split('_1rlks')[0]:
+                        os.path.split(j.data_path)[-1].split('_unw_1rlks')[0]:
                     count += 1
                     # all numbers equal
                     np.testing.assert_array_almost_equal(ifg_data,
@@ -256,7 +256,7 @@ class RefPhsEstimationMatlabTestMethod1Parallel(unittest.TestCase):
                 MATLAB_REF_PHASE_DIR, f), delimiter=',')
             for k, j in enumerate(self.ifgs):
                 if f.split('_corrected')[-1].split('.')[0] == \
-                        os.path.split(j.data_path)[-1].split('_1rlks')[0]:
+                        os.path.split(j.data_path)[-1].split('_unw_1rlks')[0]:
                     count += 1
                     # all numbers equal
                     np.testing.assert_array_almost_equal(
@@ -346,7 +346,7 @@ class RefPhsEstimationMatlabTestMethod2Serial(unittest.TestCase):
                 MATLAB_REF_PHASE_DIR, f), delimiter=',')
             for k, j in enumerate(self.ifgs):
                 if f.split('_corrected_method2')[-1].split('.')[0] == \
-                        os.path.split(j.data_path)[-1].split('_1rlks')[0]:
+                        os.path.split(j.data_path)[-1].split('_unw_1rlks')[0]:
                     count += 1
                     # all numbers equal
                     np.testing.assert_array_almost_equal(ifg_data,
@@ -438,7 +438,7 @@ class RefPhsEstimationMatlabTestMethod2Parallel(unittest.TestCase):
                 MATLAB_REF_PHASE_DIR, f), delimiter=',')
             for k, j in enumerate(self.ifgs):
                 if f.split('_corrected_method2')[-1].split('.')[0] == \
-                        os.path.split(j.data_path)[-1].split('_1rlks')[0]:
+                        os.path.split(j.data_path)[-1].split('_unw_1rlks')[0]:
                     count += 1
                     # all numbers equal
                     np.testing.assert_array_almost_equal(

@@ -39,7 +39,7 @@ class IfgTests(unittest.TestCase):
     """Unit tests for the Ifg/interferogram class."""
 
     def setUp(self):
-        self.ifg = Ifg(join(SYD_TEST_TIF, 'geo_060619-061002.tif'))
+        self.ifg = Ifg(join(SYD_TEST_TIF, 'geo_060619-061002_unw.tif'))
         self.ifg.open()
         self.ifg.nodata_value = 0
 
@@ -135,7 +135,7 @@ class IfgTests(unittest.TestCase):
 class IfgIOTests(unittest.TestCase):
 
     def setUp(self):
-        self.ifg = Ifg(join(SYD_TEST_TIF, 'geo_070709-070813.tif'))
+        self.ifg = Ifg(join(SYD_TEST_TIF, 'geo_070709-070813_unw.tif'))
 
     def test_open(self):
         self.assertTrue(self.ifg.dataset is None)
@@ -294,7 +294,7 @@ class DEMTests(unittest.TestCase):
             self.assertTrue(getattr(self.ras, a) is not None)
 
     def test_is_dem(self):
-        self.ras = DEM(join(SYD_TEST_TIF, 'geo_060619-061002.tif'))
+        self.ras = DEM(join(SYD_TEST_TIF, 'geo_060619-061002_unw.tif'))
         self.assertFalse(hasattr(self.ras, 'datum'))
 
     def test_open(self):
@@ -381,8 +381,8 @@ class WriteUnwTest(unittest.TestCase):
         # not activated and ifg write_geotiff operation works
         header[ifc.PYRATE_TIME_SPAN] = 0
         header[ifc.SLAVE_DATE] = 0
-        header[ifc.PYRATE_PHASE_UNITS] = 'degrees'
-        header[ifc.PROCESS_STEP] = ifc.GEOTIFF
+        header[ifc.DATA_UNITS] = 'degrees'
+        header[ifc.DATA_TYPE] = ifc.ORIG
         header[ifc.SLAVE_TIME] = time(10)
 
         # now create aritrary data
@@ -407,7 +407,8 @@ class WriteUnwTest(unittest.TestCase):
 
     def test_equality_of_unw_with_geotiff(self):
         geotiffs = [os.path.join(
-            self.params[cf.OUT_DIR], os.path.basename(b).split('.')[0] + '.tif')
+            self.params[cf.OUT_DIR], os.path.basename(b).split('.')[0] + '_' 
+            + os.path.basename(b).split('.')[1] + '.tif')
             for b in self.base_unw_paths]
 
         # create .unws from geotiffs and make sure they read the same
@@ -432,8 +433,9 @@ class WriteUnwTest(unittest.TestCase):
 
     def test_unws_created_are_same_as_original(self):
         geotiffs = [os.path.join(
-            self.params[cf.OUT_DIR], os.path.basename(b).split('.')[0] + '.tif')
-                    for b in self.base_unw_paths]
+            self.params[cf.OUT_DIR], os.path.basename(b).split('.')[0] + '_' 
+            + os.path.basename(b).split('.')[1] + '.tif')
+            for b in self.base_unw_paths]
 
         new_base_unw_paths = []
         # create .unws from geotiffs and make sure they read the same
@@ -462,8 +464,9 @@ class WriteUnwTest(unittest.TestCase):
 
     def test_roipac_raises(self):
         geotiffs = [os.path.join(
-            self.params[cf.OUT_DIR], os.path.basename(b).split('.')[0] + '.tif')
-                    for b in self.base_unw_paths]
+            self.params[cf.OUT_DIR], os.path.basename(b).split('.')[0] + '_' 
+            + os.path.basename(b).split('.')[1] + '.tif')
+            for b in self.base_unw_paths]
 
         for g in geotiffs[:1]:
             dest_unw = os.path.join(self.params[cf.OUT_DIR],

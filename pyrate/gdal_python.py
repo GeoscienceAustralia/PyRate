@@ -293,8 +293,8 @@ def crop_resample_average(
     out_ds.SetProjection(src_ds.GetProjection())
     # copy metadata
     for k, v in dst_ds.GetMetadata().items():
-        if k == ifc.PROCESS_STEP:
-            out_ds.SetMetadataItem(ifc.PROCESS_STEP, ifc.MULTILOOKED)
+        if k == ifc.DATA_TYPE:
+            out_ds.SetMetadataItem(ifc.DATA_TYPE, ifc.MULTILOOKED)
         else:
             out_ds.SetMetadataItem(k, v)
 

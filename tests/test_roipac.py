@@ -91,13 +91,13 @@ class RoipacCommandLine(unittest.TestCase):
 
     def test_cmd_ifg(self):
         base_paths = ['geo_070709-070813.unw', 'geo_060619-061002.unw']
-        base_exp = ['geo_070709-070813.tif', 'geo_060619-061002.tif']
+        base_exp = ['geo_070709-070813_unw.tif', 'geo_060619-061002_unw.tif']
         self.dataPaths = [join(SYD_TEST_OBS, i) for i in base_paths]
         self.expPaths = [join(self.base_dir, i) for i in base_exp]
         self.common_check()
 
     def test_cmd_dem(self):
-        self.expPaths = [os.path.join(self.base_dir, 'sydney_trimmed.tif')]
+        self.expPaths = [os.path.join(self.base_dir, 'sydney_trimmed_dem.tif')]
         self.dataPaths = [SYD_TEST_DEM_ROIPAC]
         self.common_check()
 
@@ -140,7 +140,7 @@ class RoipacToGeoTiffTests(unittest.TestCase):
         # tricker: needs ifg header, and DEM one for extents
         hdrs = self.HDRS.copy()
         hdrs[ifc.PYRATE_DATUM] = 'WGS84'
-        hdrs[ifc.PROCESS_STEP] = ifc.GEOTIFF
+        hdrs[ifc.DATA_TYPE] = ifc.ORIG
 
         self.dest = os.path.join('tmp_roipac_ifg.tif')
         data_path = join(PREP_TEST_OBS, 'geo_060619-061002.unw')
@@ -184,7 +184,7 @@ class RoipacToGeoTiffTests(unittest.TestCase):
     def test_bad_projection(self):
         hdrs = self.HDRS.copy()
         hdrs[ifc.PYRATE_DATUM] = 'bad datum string'
-        hdrs[ifc.PROCESS_STEP] = ifc.GEOTIFF
+        hdrs[ifc.DATA_TYPE] = ifc.ORIG
         self.dest = os.path.join(TEMPDIR, 'tmp_roipac_ifg2.tif')
         data_path = join(PREP_TEST_OBS, 'geo_060619-061002.unw')
         self.assertRaises(GeotiffException, write_geotiff, hdrs,

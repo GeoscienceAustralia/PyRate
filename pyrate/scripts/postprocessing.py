@@ -59,13 +59,19 @@ def postprocess_linrate(rows, cols, params):
 
 def save_linrate(ifgs_dict, params, tiles, out_type):
     """ Save linear rate outputs"""
-    log.info('Stating postprocessing {}'.format(out_type))
+    log.info('Starting PyRate postprocessing {}'.format(out_type))
     gt, md, wkt = ifgs_dict['gt'], ifgs_dict['md'], ifgs_dict['wkt']
     epochlist = ifgs_dict['epochlist']
     ifgs = [v for v in ifgs_dict.values() if isinstance(v, PrereadIfg)]
     dest = os.path.join(params[cf.OUT_DIR], out_type + ".tif")
-    md[ifc.MASTER_DATE] = epochlist.dates
-    md[ifc.PRTYPE] = out_type
+    md[ifc.EPOCH_DATE] = epochlist.dates
+    if out_type == 'linrate':    
+        md[ifc.DATA_TYPE] = ifc.LINRATE
+    elif out_type == 'linerror':
+        md[ifc.DATA_TYPE] = ifc.LINERROR
+    else:
+        md[ifc.DATA_TYPE] = ifc.LINSAMP
+        
     rate = np.zeros(shape=ifgs[0].shape, dtype=np.float32)
     for t in tiles:
         rate_file = os.path.join(params[cf.OUT_DIR], out_type +
@@ -76,7 +82,7 @@ def save_linrate(ifgs_dict, params, tiles, out_type):
     shared.write_output_geotiff(md, gt, wkt, rate, dest, np.nan)
     npy_rate_file = os.path.join(params[cf.OUT_DIR], out_type + '.npy')
     np.save(file=npy_rate_file, arr=rate)
-    log.info('Finished postprocessing {}'.format(out_type))
+    log.info('Finished PyRate postprocessing {}'.format(out_type))
 
 
 def postprocess_timeseries(rows, cols, params):
@@ -122,14 +128,14 @@ def postprocess_timeseries(rows, cols, params):
                                           'tscuml_{}.npy'.format(n))
                 tscum = np.load(file=tscum_file)
 
-                md[ifc.MASTER_DATE] = epochlist.dates[i + 1]
-                md['PR_SEQ_POS'] = i  # sequence position
+                md[ifc.EPOCH_DATE] = epochlist.dates[i + 1]
+                md['SEQUENCE_POSITION'] =  i+1  # sequence position; first time slice is #0
                 tscum_g[t.top_left_y:t.bottom_right_y,
                         t.top_left_x:t.bottom_right_x] = tscum[:, :, i]
                 dest = os.path.join(params[cf.OUT_DIR],
                                     'tscuml' + "_" +
                                     str(epochlist.dates[i + 1]) + ".tif")
-                md[ifc.PRTYPE] = 'tscuml'
+                md[ifc.DATA_TYPE] = ifc.CUML
                 shared.write_output_geotiff(md, gt, wkt, tscum_g, dest, np.nan)
         else:
             tsincr_g = np.empty(shape=ifgs[0].shape, dtype=np.float32)
@@ -139,14 +145,14 @@ def postprocess_timeseries(rows, cols, params):
                                            'tsincr_{}.npy'.format(n))
                 tsincr = np.load(file=tsincr_file)
 
-                md[ifc.MASTER_DATE] = epochlist.dates[i + 1]
-                md['PR_SEQ_POS'] = i  # sequence position
+                md[ifc.EPOCH_DATE] = epochlist.dates[i + 1]
+                md['SEQUENCE_POSITION'] = i+1  # sequence position; first time slice is #0
                 tsincr_g[t.top_left_y:t.bottom_right_y,
                          t.top_left_x:t.bottom_right_x] = tsincr[:, :, i]
                 dest = os.path.join(params[cf.OUT_DIR],
                                     'tsincr' + "_" + str(
                                         epochlist.dates[i + 1]) + ".tif")
-                md[ifc.PRTYPE] = 'tsincr'
+                md[ifc.DATA_TYPE] = ifc.INCR
                 shared.write_output_geotiff(md, gt, wkt, tsincr_g, dest,
                                             np.nan)
     log.info('process {} finished writing {} ts (incr/cuml) tifs of '

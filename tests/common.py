@@ -49,11 +49,11 @@ INCID_TEST_DIR = join(BASE_TEST, 'incidence')
 GAMMA_TEST_DIR = join(BASE_TEST, "gamma")
 
 # small dummy ifg list to limit overall # of ifgs
-IFMS5 = """geo_060828-061211.tif
-geo_061106-061211.tif
-geo_061106-070115.tif
-geo_061106-070326.tif
-geo_070326-070917.tif
+IFMS5 = """geo_060828-061211_unw.tif
+geo_061106-061211_unw.tif
+geo_061106-070115_unw.tif
+geo_061106-070326_unw.tif
+geo_070326-070917_unw.tif
 """
 
 UNWS5 = """geo_060828-061211.unw
@@ -63,22 +63,22 @@ geo_061106-070326.unw
 geo_070326-070917.unw
 """
 
-IFMS16 = ['geo_060619-061002.tif',
-        'geo_060828-061211.tif',
-        'geo_061002-070219.tif',
-        'geo_061002-070430.tif',
-        'geo_061106-061211.tif',
-        'geo_061106-070115.tif',
-        'geo_061106-070326.tif',
-        'geo_061211-070709.tif',
-        'geo_061211-070813.tif',
-        'geo_070115-070326.tif',
-        'geo_070115-070917.tif',
-        'geo_070219-070430.tif',
-        'geo_070219-070604.tif',
-        'geo_070326-070917.tif',
-        'geo_070430-070604.tif',
-        'geo_070604-070709.tif']
+IFMS16 = ['geo_060619-061002_unw.tif',
+        'geo_060828-061211_unw.tif',
+        'geo_061002-070219_unw.tif',
+        'geo_061002-070430_unw.tif',
+        'geo_061106-061211_unw.tif',
+        'geo_061106-070115_unw.tif',
+        'geo_061106-070326_unw.tif',
+        'geo_061211-070709_unw.tif',
+        'geo_061211-070813_unw.tif',
+        'geo_070115-070326_unw.tif',
+        'geo_070115-070917_unw.tif',
+        'geo_070219-070430_unw.tif',
+        'geo_070219-070604_unw.tif',
+        'geo_070326-070917_unw.tif',
+        'geo_070430-070604_unw.tif',
+        'geo_070604-070709_unw.tif']
 
 
 def sydney_data_setup(datafiles=None, is_dir=False):
@@ -322,13 +322,13 @@ def write_timeseries_geotiff(ifgs, params, tsincr, pr_type):
     epochlist = algorithm.get_epochs(ifgs)[0]
 
     for i in range(tsincr.shape[2]):
-        md[ifc.MASTER_DATE] = epochlist.dates[i + 1]
-        md['PR_SEQ_POS'] = i  # sequence position
+        md[ifc.EPOCH_DATE] = epochlist.dates[i + 1]
+        md['SEQUENCE_POSITION'] = i+1  # sequence position
 
         data = tsincr[:, :, i]
         dest = join(params[cf.OUT_DIR], pr_type + "_" +
                     str(epochlist.dates[i + 1]) + ".tif")
-        md[ifc.PRTYPE] = pr_type
+        md[ifc.DATA_TYPE] = pr_type
         write_output_geotiff(md, gt, wkt, data, dest, np.nan)
 
 
@@ -405,14 +405,14 @@ def write_linrate_tifs(ifgs, params, res):
     gt, md, wkt = get_projection_info(ifgs[0].data_path)
     epochlist = algorithm.get_epochs(ifgs)[0]
     dest = join(params[cf.OUT_DIR], "linrate.tif")
-    md[ifc.MASTER_DATE] = epochlist.dates
-    md[ifc.PRTYPE] = 'linrate'
+    md[ifc.EPOCH_DATE] = epochlist.dates
+    md[ifc.DATA_TYPE] = ifc.LINRATE
     write_output_geotiff(md, gt, wkt, rate, dest, np.nan)
     dest = join(params[cf.OUT_DIR], "linerror.tif")
-    md[ifc.PRTYPE] = 'linerror'
+    md[ifc.DATA_TYPE] = ifc.LINERROR
     write_output_geotiff(md, gt, wkt, error, dest, np.nan)
     dest = join(params[cf.OUT_DIR], "linsamples.tif")
-    md[ifc.PRTYPE] = 'linsamples'
+    md[ifc.DATA_TYPE] = ifc.LINSAMP
     write_output_geotiff(md, gt, wkt, samples, dest, np.nan)
     write_linrate_numpy_files(error, rate, samples, params)
 

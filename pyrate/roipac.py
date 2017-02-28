@@ -187,8 +187,8 @@ def parse_header(hdr_file):
         timespan = (subset[ifc.SLAVE_DATE] - subset[ifc.MASTER_DATE]).days / ifc.DAYS_PER_YEAR
         subset[ifc.PYRATE_TIME_SPAN] = timespan
 
-        # Add phase units of interferogram
-        subset[ifc.PYRATE_PHASE_UNITS] = RADIANS
+        # Add data units of interferogram
+        subset[ifc.DATA_UNITS] = RADIANS
 
     # Add InSAR processor flag
     subset[ifc.PYRATE_INSAR_PROCESSOR] = ROIPAC
@@ -226,7 +226,7 @@ def manage_header(header_file, projection):
     header = parse_header(header_file)
     if ifc.PYRATE_DATUM not in header:  # DEM already has DATUM
         header[ifc.PYRATE_DATUM] = projection
-    header[ifc.PROCESS_STEP] = ifc.GEOTIFF  # non-cropped, non-multilooked geotiff
+    header[ifc.DATA_TYPE] = ifc.ORIG  # non-cropped, non-multilooked geotiff
     return header
 
 

@@ -64,8 +64,8 @@ def test_original_ifg_paths():
     ifgdir = SYD_TEST_TIF
     ifglist_path = join(ifgdir, 'ifms_17')
     paths = cf.original_ifg_paths(ifglist_path)
-    assert paths[0] == join(ifgdir, 'geo_060619-061002.tif'), str(paths[0])
-    assert paths[-1] == join(ifgdir, 'geo_070709-070813.tif')
+    assert paths[0] == join(ifgdir, 'geo_060619-061002_unw.tif'), str(paths[0])
+    assert paths[-1] == join(ifgdir, 'geo_070709-070813_unw.tif')
 
 
 def dest_ifg_paths(ifg_paths, outdir):
@@ -162,8 +162,8 @@ class PyRateTests(unittest.TestCase):
         # self.assertTrue(st.st_size > 0)
 
     def test_phase_conversion(self):
-        # ensure phase has been converted to millimetres
-        key = 'PHASE_UNITS'
+        # ensure phase has been converted from radians to millimetres
+        key = 'DATA_UNITS'
         value = 'MILLIMETRES'
 
         for i in self.ifgs:
@@ -252,8 +252,8 @@ class ParallelPyRateTests(unittest.TestCase):
         self.assertTrue(md[key], value)
 
     def test_phase_conversion(self):
-        # ensure phase has been converted to millimetres
-        key = 'PHASE_UNITS'
+        # ensure phase has been converted from radians to millimetres
+        key = 'DATA_UNITS'
         value = 'MILLIMETRES'
 
         for i in common.sydney_data_setup(datafiles=self.dest_paths):
