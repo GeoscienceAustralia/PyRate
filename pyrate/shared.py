@@ -1022,3 +1022,10 @@ def warp_required(xlooks, ylooks, crop):
         return False
 
     return True
+
+def output_tiff_filename(inpath, outpath):
+    """
+    return the geotiff filename for a given input filename
+    """
+    fname, ext = os.path.basename(inpath).split('.')
+    return os.path.join(outpath, fname + '_' + ext + '.tif')

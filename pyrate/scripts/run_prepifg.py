@@ -17,7 +17,7 @@ from pyrate import prepifg
 from pyrate import config as cf
 from pyrate import roipac
 from pyrate import gamma
-from pyrate.shared import write_geotiff, mkdir_p
+from pyrate.shared import write_geotiff, mkdir_p, output_tiff_filename
 from pyrate.tasks import gamma as gamma_task
 import pyrate.ifgconstants as ifc
 from pyrate import mpiops
@@ -182,9 +182,9 @@ def gamma_multiprocessing(unw_path, params):
     header_paths = gamma_task.get_header_paths(unw_path, slc_dir=slc_dir)
     combined_headers = gamma.manage_headers(dem_hdr_path, header_paths)
 
-    fname, ext = os.path.basename(unw_path).split('.')
-    dest = os.path.join(params[cf.OUT_DIR], fname + '_' + ext + '.tif')
-    if ext == (params[cf.APS_INCIDENCE_EXT] or params[cf.APS_ELEVATION_EXT]):
+    dest = output_tiff_filename(unw_path, params[cf.OUT_DIR])
+    if os.path.basename(unw_path).split('.')[1] == (params[cf.APS_INCIDENCE_EXT] 
+            or params[cf.APS_ELEVATION_EXT]):
         # TODO: implement incidence class here
         combined_headers['FILE_TYPE'] = 'Incidence'
         
