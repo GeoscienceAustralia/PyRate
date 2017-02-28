@@ -209,18 +209,18 @@ class MatlabMSTTests(unittest.TestCase):
         self.ifgs = sydney_data_setup()
         self.ifg_file_list = sydney_ifg_file_list()
 
-        self.matlab_mst_list = ['geo_060619-061002.tif',
-                                'geo_060828-061211.tif',
-                                'geo_061002-070219.tif',
-                                'geo_061002-070430.tif',
-                                'geo_061106-061211.tif',
-                                'geo_061106-070115.tif',
-                                'geo_061106-070326.tif',
-                                'geo_061211-070709.tif',
-                                'geo_061211-070813.tif',
-                                'geo_070115-070917.tif',
-                                'geo_070219-070604.tif',
-                                'geo_070604-070709.tif']
+        self.matlab_mst_list = ['geo_060619-061002_unw.tif',
+                                'geo_060828-061211_unw.tif',
+                                'geo_061002-070219_unw.tif',
+                                'geo_061002-070430_unw.tif',
+                                'geo_061106-061211_unw.tif',
+                                'geo_061106-070115_unw.tif',
+                                'geo_061106-070326_unw.tif',
+                                'geo_061211-070709_unw.tif',
+                                'geo_061211-070813_unw.tif',
+                                'geo_070115-070917_unw.tif',
+                                'geo_070219-070604_unw.tif',
+                                'geo_070604-070709_unw.tif']
 
         # reorder ifgs as per the matlab list
         self.ifgs = sydney_data_setup()

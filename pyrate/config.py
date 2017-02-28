@@ -476,9 +476,9 @@ def get_dest_paths(base_paths, crop, params, looks):
     ------
         list of output geotifs
     """
-    dest_mlooked_ifgs = [mlooked_path(os.path.basename(q).split('.')[0]
-                                      + '.tif', looks=looks, crop_out=crop)
-                         for q in base_paths]
+    dest_mlooked_ifgs = [mlooked_path(os.path.basename(q).split('.')[0] + '_'
+        + os.path.basename(q).split('.')[1] + '.tif', looks=looks, 
+        crop_out=crop) for q in base_paths]
 
     return [os.path.join(params[OUT_DIR], p) for p in dest_mlooked_ifgs]
 

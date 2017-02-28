@@ -74,7 +74,7 @@ def main(params=None):
     gamma_or_roipac = params[cf.PROCESSOR]  # roipac or gamma
 
     if use_luigi:
-        log.info("Running luigi prepifg")
+        log.info("Running prepifg using luigi")
         luigi.configuration.LuigiConfigParser.add_config_path(
             pythonify_config(raw_config_file))
         luigi.build([PrepareInterferograms()], local_scheduler=True)
@@ -87,9 +87,9 @@ def main(params=None):
         elif gamma_or_roipac == GAMMA:
             gamma_prepifg(process_base_ifgs_paths, params)
         else:
-            raise prepifg.PreprocessError('Processor must be Roipac(0) or '
-                                          'Gamma(1)')
-    log.info('Finished prepifg')
+            raise prepifg.PreprocessError('Processor must be ROIPAC (0) or '
+                                          'GAMMA (1)')
+    log.info("Finished prepifg")
 
 
 def roipac_prepifg(base_ifg_paths, params):
@@ -104,13 +104,16 @@ def roipac_prepifg(base_ifg_paths, params):
     params: dict
         parameters dict corresponding to config file
     """
-    log.info("Running roipac prepifg")
+    log.info("Preparing ROIPAC format interferograms")
+    log.info("Running serial prepifg")
     xlooks, ylooks, crop = cf.transform_params(params)
     dem_file = os.path.join(params[cf.ROIPAC_RESOURCE_HEADER])
     projection = roipac.parse_header(dem_file)[ifc.PYRATE_DATUM]
-    dest_base_ifgs = [os.path.join(
-        params[cf.OUT_DIR], os.path.basename(q).split('.')[0] + '.tif')
-                      for q in base_ifg_paths]
+    dest_base_ifgs = [os.path.join(params[cf.OUT_DIR], 
+                                  os.path.basename(q).split('.')[0] + '_' + 
+                                  os.path.basename(q).split('.')[1] + '.tif')
+                                  for q in base_ifg_paths]
+
     for b, d in zip(base_ifg_paths, dest_base_ifgs):
         header_file = "%s.%s" % (b, ROI_PAC_HEADER_FILE_EXT)
         header = roipac.manage_header(header_file, projection)
@@ -132,17 +135,18 @@ def gamma_prepifg(base_unw_paths, params):
         parameters dict corresponding to config file
     """
     # pylint: disable=expression-not-assigned
-    log.info("Running gamma prepifg")
+    log.info("Preparing GAMMA format interferograms")
     parallel = params[cf.PARALLEL]
 
     # dest_base_ifgs: location of geo_tif's
     if parallel:
-        print('running gamma in parallel with {} '
-              'processes'.format(params[cf.PROCESSES]))
+        log.info("Running prepifg in parallel with {} "
+              "processes".format(params[cf.PROCESSES]))
         dest_base_ifgs = Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
             delayed(gamma_multiprocessing)(p, params)
             for p in base_unw_paths)
     else:
+        log.info("Running prepifg in serial")
         dest_base_ifgs = [gamma_multiprocessing(b, params)
                           for b in base_unw_paths]
     ifgs = [prepifg.dem_or_ifg(p) for p in dest_base_ifgs]
@@ -179,15 +183,11 @@ def gamma_multiprocessing(unw_path, params):
     combined_headers = gamma.manage_headers(dem_hdr_path, header_paths)
 
     fname, ext = os.path.basename(unw_path).split('.')
-    if ext != (params[cf.APS_INCIDENCE_EXT] or params[cf.APS_ELEVATION_EXT]):
-        dest = os.path.join(
-            params[cf.OUT_DIR], fname + '.tif')
-    else:
-        dest = os.path.join(
-            params[cf.OUT_DIR], fname + '_' + ext + '.tif')
+    dest = os.path.join(params[cf.OUT_DIR], fname + '_' + ext + '.tif')
+    if ext == (params[cf.APS_INCIDENCE_EXT] or params[cf.APS_ELEVATION_EXT]):
         # TODO: implement incidence class here
         combined_headers['FILE_TYPE'] = 'Incidence'
-
-    write_geotiff(combined_headers, unw_path, dest,
+        
+    write_geotiff(combined_headers, unw_path, dest, 
                   nodata=params[cf.NO_DATA_VALUE])
     return dest

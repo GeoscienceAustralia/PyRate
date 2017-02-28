@@ -64,8 +64,8 @@ def test_original_ifg_paths():
     ifgdir = SYD_TEST_TIF
     ifglist_path = join(ifgdir, 'ifms_17')
     paths = cf.original_ifg_paths(ifglist_path)
-    assert paths[0] == join(ifgdir, 'geo_060619-061002.tif'), str(paths[0])
-    assert paths[-1] == join(ifgdir, 'geo_070709-070813.tif')
+    assert paths[0] == join(ifgdir, 'geo_060619-061002_unw.tif'), str(paths[0])
+    assert paths[-1] == join(ifgdir, 'geo_070709-070813_unw.tif')
 
 
 def dest_ifg_paths(ifg_paths, outdir):

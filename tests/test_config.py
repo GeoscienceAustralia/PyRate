@@ -62,9 +62,9 @@ class ConfigTest(unittest.TestCase):
         nl = join(SYD_TEST_TIF, 'ifms_17')
         result = list(config.parse_namelist(nl))
         assert len(result) == 17
-        files = ["geo_060619-061002.tif", "geo_060828-061211.tif",
-                    "geo_061002-070430.tif", "geo_070115-070917.tif",
-                    "geo_070219-070604.tif"]
+        files = ["geo_060619-061002_unw.tif", "geo_060828-061211_unw.tif",
+                    "geo_061002-070430_unw.tif", "geo_070115-070917_unw.tif",
+                    "geo_070219-070604_unw.tif"]
 
         for path in files:
             assert path in result
