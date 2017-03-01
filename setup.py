@@ -47,12 +47,11 @@ history = open('HISTORY.rst').read().replace('.. :changelog:', '')
 setup(
     name='PyRate',
     version='0.1.0',
-    description='A Python tool for estimating the average rate '
-                'and surface movement in a stack of images generated '
-                'from Synthetic Aperture Radar (InSAR) data.',
+    description='A Python tool for estimating velocity and time-series '
+                'from Interferometric Synthetic Aperture Radar (InSAR) data.',
     long_description=readme + '\n\n' + doclink + '\n\n' + history,
     author='Geoscience Australia InSAR team',
-    author_email='basaks@gmail.com',
+    author_email='insar@ga.gov.au',
     url='https://github.com/GeoscienceAustralia/PyRate',
     packages=['pyrate', 'pyrate.scripts', 'pyrate.tasks'],
     package_dir={'PyRate': 'pyrate'},
@@ -96,7 +95,8 @@ setup(
     ],
     license="Apache Software License 2.0",
     zip_safe=False,
-    keywords='PyRate, InSAR, Image Processing',
+    keywords='PyRate, Python, InSAR, Geodesy, Remote Sensing, '
+             'Image Processing',
     classifiers=[
         'Development Status :: 4 - Beta',
         "Operating System :: POSIX",
