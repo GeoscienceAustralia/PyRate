@@ -224,73 +224,52 @@ def crop_resample_average(
         match_pirate=False):
     """
     Crop, resample, and average a geotif
+    Parameters
+    ----------
+    input_tif: str
+        path to input geotif to resample/crop
+    extents: tuple
+        georeferenced extents for new file: (xfirst, yfirst, xlast, ylast)
+    output_file: str
+        output resampled/cropped file name
+    new_res: list
+        [xres, yres] Sets resolution output Ifg metadata.
+    thresh: float
+        nan fraction threshold
+    out_driver_type: str, optional
+        the output driver type. `MEM` or `GTiff`.
+    match_pirate: bool, optional
+        whether to match matlab pirate style resampled/croppped output
     """
-    dst_ds, _, src_ds, _ = crop_rasample_setup(
+    dst_ds, _, _, _ = crop_rasample_setup(
         extents, input_tif, new_res, output_file,
         out_bands=2, dst_driver_type='MEM')
 
-    if match_pirate and new_res[0]:
-        # make a temporary copy of the dst_ds for pirate style prepifg
-        tmp_ds = gdal.GetDriverByName('MEM').CreateCopy('', dst_ds)
-    else:
-        tmp_ds = None
+    # make a temporary copy of the dst_ds for pirate style prepifg
+    tmp_ds = gdal.GetDriverByName('MEM').CreateCopy('', dst_ds) \
+        if (match_pirate and new_res[0]) else None
 
-    src_ds = gdal.Open(input_tif)
-    data = src_ds.GetRasterBand(1).ReadAsArray()
-    src_dtype = src_ds.GetRasterBand(1).DataType
-
-    mem_driver = gdal.GetDriverByName('MEM')
-    src_ds_mem = mem_driver.Create('',
-                                   src_ds.RasterXSize, src_ds.RasterYSize,
-                                   2, src_dtype)
-
-    src_ds_mem.GetRasterBand(1).WriteArray(data)
-    src_ds_mem.GetRasterBand(1).SetNoDataValue(0)
-
-    # if data==0, then 1, else 0
-    nan_matrix = np.isclose(data, 0, atol=1e-6)
-    src_ds_mem.GetRasterBand(2).WriteArray(nan_matrix)
-    src_ds_mem.GetRasterBand(2).SetNoDataValue(-100000)
-    src_gt = src_ds.GetGeoTransform()
-
-    src_ds_mem.SetGeoTransform(src_gt)
-
-    gdal.ReprojectImage(src_ds_mem, dst_ds, '', '', gdal.GRA_Average)
-    # dst_ds band2 average is our nan_fraction matrix
-    nan_frac = dst_ds.GetRasterBand(2).ReadAsArray()
-    resampled_average = dst_ds.GetRasterBand(1).ReadAsArray()
-    resampled_average[nan_frac >= thresh] = np.nan
+    resampled_average, src_ds_mem = \
+        gdal_average(dst_ds, input_tif, thresh)
+    src_dtype = src_ds_mem.GetRasterBand(1).DataType
+    src_gt = src_ds_mem.GetGeoTransform()
 
     # write out to output geotif file
     driver = gdal.GetDriverByName(out_driver_type)
 
     # required to match matlab output
     if tmp_ds:
-        xlooks = ylooks = int(new_res[0]/src_gt[1])
-        xres, yres = get_matlab_resampled_data_size(xlooks, ylooks, data)
-        nrows, ncols = resampled_average.shape
-
-        # pirate does nearest neighbor resampling for the last
-        # [yres:nrows, xres:ncols] cells without nan_conversion
-
-        # turn off nan-conversion
-        src_ds_mem.GetRasterBand(1).SetNoDataValue(LOW_FLOAT32)
-        # nearest neighbor resapling
-        gdal.ReprojectImage(src_ds_mem, tmp_ds, '', '',
-                            gdal.GRA_NearestNeighbour)
-        # only take the [yres:nrows, xres:ncols] slice
-        if nrows > yres or ncols > xres:
-            resampled_nearest_neighbor = tmp_ds.GetRasterBand(1).ReadAsArray()
-            resampled_average[yres-nrows:, xres-ncols:] = \
-                resampled_nearest_neighbor[yres-nrows:, xres-ncols:]
+        matlab_alignment(input_tif, new_res, resampled_average, src_ds_mem,
+                         src_gt, tmp_ds)
 
     # write final pi/pyrate GTiff
     out_ds = driver.Create(output_file, dst_ds.RasterXSize, dst_ds.RasterYSize,
                            1, src_dtype)
+
     out_ds.GetRasterBand(1).SetNoDataValue(np.nan)
     out_ds.GetRasterBand(1).WriteArray(resampled_average)
     out_ds.SetGeoTransform(dst_ds.GetGeoTransform())
-    out_ds.SetProjection(src_ds.GetProjection())
+    out_ds.SetProjection(dst_ds.GetProjection())
     # copy metadata
     for k, v in dst_ds.GetMetadata().items():
         if k == ifc.DATA_TYPE:
@@ -299,6 +278,101 @@ def crop_resample_average(
             out_ds.SetMetadataItem(k, v)
 
     return resampled_average, out_ds
+
+
+def matlab_alignment(input_tif, new_res, resampled_average, src_ds_mem, src_gt,
+                     tmp_ds):
+    """
+    Correction step to match python multilook/crop ouput to match that of
+    matlab pirate code.
+
+    Parameters
+    ----------
+    input_tif: str
+        path to input geotif to resample/crop
+    new_res: list
+        [xres, yres] Sets resolution output Ifg metadata.
+    resampled_average: ndarray
+        ndarray from previous step with average resampling
+        applied to phase data
+    src_ds_mem: gdal.Dataset
+        gdal memory dataset object
+    src_gt: tuple
+        geotransform tuple
+    tmp_ds: gdal.Dataset
+        gdal memory dataset object
+
+    Modifies the resampled_average array in place.
+    """
+    src_ds = gdal.Open(input_tif)
+    data = src_ds.GetRasterBand(1).ReadAsArray()
+    xlooks = ylooks = int(new_res[0] / src_gt[1])
+    xres, yres = get_matlab_resampled_data_size(xlooks, ylooks, data)
+    nrows, ncols = resampled_average.shape
+    # pirate does nearest neighbor resampling for the last
+    # [yres:nrows, xres:ncols] cells without nan_conversion
+    # turn off nan-conversion
+    src_ds_mem.GetRasterBand(1).SetNoDataValue(LOW_FLOAT32)
+    # nearest neighbor resapling
+    gdal.ReprojectImage(src_ds_mem, tmp_ds, '', '',
+                        gdal.GRA_NearestNeighbour)
+    # only take the [yres:nrows, xres:ncols] slice
+    if nrows > yres or ncols > xres:
+        resampled_nearest_neighbor = tmp_ds.GetRasterBand(1).ReadAsArray()
+        resampled_average[yres - nrows:, xres - ncols:] = \
+            resampled_nearest_neighbor[yres - nrows:, xres - ncols:]
+
+
+def gdal_average(dst_ds, input_tif, thresh):
+    """
+    Parameters
+    ----------
+    dst_ds: gdal.Dataset
+        destination gdal dataset object
+    input_tif: str
+        input geotif
+    thresh: float
+        nan fraction threshold
+
+    Returns
+    -------
+    resampled_average: ndarray
+        ndarray of of ifg phase data
+    src_ds_mem: gdal.Dataset
+        modified in memory src_ds with nan_fraction in Band2. The nan_fraction
+        is computed efficiently here in gdal in the same step as the that of
+        the resampled average (band 1). This results is huge memory and
+        computational efficiency.
+
+    """
+    src_ds, src_ds_mem = _setup_source(input_tif)
+    src_ds_mem.GetRasterBand(2).SetNoDataValue(-100000)
+    src_gt = src_ds.GetGeoTransform()
+    src_ds_mem.SetGeoTransform(src_gt)
+    gdal.ReprojectImage(src_ds_mem, dst_ds, '', '', gdal.GRA_Average)
+    # dst_ds band2 average is our nan_fraction matrix
+    nan_frac = dst_ds.GetRasterBand(2).ReadAsArray()
+    resampled_average = dst_ds.GetRasterBand(1).ReadAsArray()
+    resampled_average[nan_frac >= thresh] = np.nan
+    return resampled_average, src_ds_mem
+
+
+def _setup_source(input_tif):
+    """convenience setup function"""
+    src_ds = gdal.Open(input_tif)
+    data = src_ds.GetRasterBand(1).ReadAsArray()
+    src_dtype = src_ds.GetRasterBand(1).DataType
+    mem_driver = gdal.GetDriverByName('MEM')
+    src_ds_mem = mem_driver.Create('',
+                                   src_ds.RasterXSize, src_ds.RasterYSize,
+                                   2, src_dtype)
+    src_ds_mem.GetRasterBand(1).WriteArray(data)
+    src_ds_mem.GetRasterBand(1).SetNoDataValue(0)
+    # if data==0, then 1, else 0
+    nan_matrix = np.isclose(data, 0, atol=1e-6)
+    src_ds_mem.GetRasterBand(2).WriteArray(nan_matrix)
+    src_ds_mem.SetGeoTransform(src_ds.GetGeoTransform())
+    return src_ds, src_ds_mem
 
 
 def get_matlab_resampled_data_size(xscale, yscale, data):

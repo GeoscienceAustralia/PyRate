@@ -1,3 +1,7 @@
+from subprocess import check_call
+
+from pyrate.prepifg import _resample_ifg
+
 __author__ = 'sudipta'
 
 import glob
@@ -11,10 +15,11 @@ from numpy import where, nan
 import numpy as np
 from osgeo import gdal, gdalconst
 
-from pyrate import gdal_python as gdalwarp
-from pyrate import prepifg
+from pyrate import gdal_python as gdalwarp, config
 from pyrate.shared import Ifg
+from pyrate import config as cf
 from tests import common
+
 
 
 class TestCrop(unittest.TestCase):
@@ -378,7 +383,7 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
             extents = [str(e) for e in [10, 0, 20, 10]]
 
             # only band 1 is resapled in warp_old
-            data, self.old_prepifg_path = prepifg.warp_old(
+            data, self.old_prepifg_path = warp_old(
                 ifg, x_looks, y_looks, extents, resolution,
                 thresh=thresh, crop_out=4, verbose=False)
 
@@ -404,7 +409,7 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
                 match_pirate=True)
             ifg = Ifg(self.temp_tif)
             # only band 1 is resampled in warp_old
-            data, self.old_prepifg_path = prepifg.warp_old(
+            data, self.old_prepifg_path = warp_old(
                 ifg, x_looks, y_looks, extents_str, [res, -res],
                 thresh=thresh, crop_out=4, verbose=False)
 
@@ -449,7 +454,7 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
                     match_pirate=False)
 
                 # only band 1 is resampled in warp_old
-                data, self.old_prepifg_path = prepifg.warp_old(
+                data, self.old_prepifg_path = warp_old(
                     ifg, x_looks, y_looks, extents_str, [res, -res],
                     thresh=thresh, crop_out=4, verbose=False)
                 yres, xres = data.shape
@@ -486,7 +491,7 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
                     match_pirate=True)[0]
 
                 # only band 1 is resampled in warp_old
-                data, self.old_prepifg_path = prepifg.warp_old(
+                data, self.old_prepifg_path = warp_old(
                     ifg, x_looks, y_looks, extents_str, [res, -res],
                     thresh=thresh, crop_out=4, verbose=False)
                 yres, xres = data.shape
@@ -517,7 +522,7 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
                 out_driver_type='MEM', match_pirate=True)
 
             # only band 1 is resampled in warp_old
-            data, self.old_prepifg_path = prepifg.warp_old(
+            data, self.old_prepifg_path = warp_old(
                 ifg, x_looks, y_looks, extents_str, [res, -res],
                 thresh=thresh, crop_out=4, verbose=False)
             yres, xres = data.shape
@@ -594,6 +599,80 @@ class TestMEMVsGTiff(unittest.TestCase):
 # class TestGDalAverageResampleing(unittest.TestCase):
 #     pass
 
+
+def warp_old(ifg, x_looks, y_looks, extents, resolution, thresh,
+             crop_out, verbose, ret_ifg=True):
+    """
+    Resamples 'ifg' and returns a new Ifg obj.
+
+    :param xlooks: integer factor to scale X axis by, 5 is 5x smaller,
+        1 is no change.
+    :param ylooks: as xlooks, but for Y axis
+    :param extents: georeferenced extents for new file: (xfirst, yfirst, xlast, ylast)
+    :param resolution: [xres, yres] or None. Sets resolution output Ifg metadata.
+         Use *None* if raster size is not being changed.
+    :param thresh: see thresh in prepare_ifgs().
+    :param verbose: True to print gdalwarp output to stdout
+    """
+    # pylint: disable=too-many-locals
+    if x_looks != y_looks:
+        raise ValueError('X and Y looks mismatch')
+
+    # dynamically build command for call to gdalwarp
+    cmd = ["gdalwarp", "-overwrite", "-srcnodata", "None", "-te"] + extents
+    if not verbose:
+        cmd.append("-q")
+
+    # It appears that before vrions 1.10 gdal-warp did not copy meta-data
+    # ... so we need to. Get the keys from the input here
+    if (sum((int(v)*i for v, i
+             in zip(gdal.__version__.split('.')[:2], [10, 1]))) < 20):
+        fl = ifg.data_path
+        dat = gdal.Open(fl)
+        md = {k:v for k, v in dat.GetMetadata().items()}
+    else:
+        md = None
+
+    # HACK: if resampling, cut segment with gdalwarp & manually average tiles
+    data = None
+    if resolution[0]:
+        data = _resample_ifg(ifg, cmd, x_looks, y_looks, thresh, md)
+        cmd += ["-tr"] + [str(r) for r in resolution] # change res of final output
+
+    # use GDAL to cut (and resample) the final output layers
+    looks_path = cf.mlooked_path(ifg.data_path, y_looks, crop_out)
+    cmd += [ifg.data_path, looks_path]
+
+    check_call(cmd)
+    # now write the metadata from the input to the output
+    if md is not None:
+        new_lyr = gdal.Open(looks_path)
+        for k, v in md.iteritems():
+            new_lyr.SetMetadataItem(k, v)
+
+    # Add missing/updated metadata to resampled ifg/DEM
+    new_lyr = type(ifg)(looks_path)
+    new_lyr.open(readonly=False)
+    # for non-DEMs, phase bands need extra metadata & conversions
+    if hasattr(new_lyr, "phase_band"):
+        if data is None:  # data wasn't resampled, so flag incoherent cells
+            data = new_lyr.phase_band.ReadAsArray()
+            data = np.where(np.isclose(data, 0.0, atol=1e-6), np.nan, data)
+
+        # TODO: LOS conversion to vertical/horizontal (projection)
+        # TODO: push out to workflow
+        #if params.has_key(REPROJECTION_FLAG):
+        #    reproject()
+
+        # tricky: write either resampled or the basic cropped data to new layer
+        new_lyr.phase_band.SetNoDataValue(nan)
+        new_lyr.phase_band.WriteArray(data)
+        new_lyr.nan_converted = True
+
+    if ret_ifg:
+        return data, looks_path
+    else:
+        return
 
 if __name__ == '__main__':
     unittest.main()
