@@ -1,4 +1,22 @@
-"""Pyrate execution main module"""
+"""
+This Python module is part of the PyRate software package
+
+This Python module defines executable run configuration for the PyRate software
+
+Copyright 2017 Geoscience Australia
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+"""
 
 from os.path import abspath
 import logging
@@ -23,8 +41,8 @@ def cli(verbosity):
 @click.argument('config_file')
 def prepifg(config_file):
     """
-    Prepifg wrapper. This performs both geotif coverserion and
-    also multilooking (resampling) and cropping
+    Convert input files to geotiff and perform multilooking 
+    (resampling) and/or cropping
     """
     config_file = abspath(config_file)
     params = cf.get_config_params(config_file)
@@ -37,8 +55,8 @@ def prepifg(config_file):
               help='divide ifgs into this many rows')
 @click.option('-c', '--cols', type=int, default=1,
               help='divide ifgs into this many columns')
-def linrate(config_file, rows, cols):
-    """ Time series and linear rate computation"""
+def main(config_file, rows, cols):
+    """Main PyRate workflow including time series and linear rate computation"""
     config_file = abspath(config_file)
     run_pyrate.main(config_file, rows, cols)
 
@@ -47,11 +65,11 @@ def linrate(config_file, rows, cols):
 @click.argument('config_file')
 @click.option('-r', '--rows', type=int, default=1,
               help='divide ifgs into this many rows. Must be same as '
-                   'number of rows used in linrate')
+                   'number of rows used previously in main workflow')
 @click.option('-c', '--cols', type=int, default=1,
               help='divide ifgs into this many columns. Must be same as '
-                   'number of cols used in linrate')
+                   'number of cols used previously in main workflow')
 def postprocess(config_file, rows, cols):
-    """ assemble the linrate and timeseries tiles back together"""
+    """Reassemble output tiles and save as geotiffs"""
     config_file = abspath(config_file)
     postprocessing.main(config_file, rows, cols)
