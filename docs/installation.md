@@ -26,7 +26,7 @@ The python requirements should automatically be built and installed.
 
 ## Anaconda setup for `PyRate`
 
-For anaconda installation and `virtualenv` instruction, [see this guide](conda.md).
+For anaconda installation and `virtualenv` instruction, [see this guide](https://github.com/GeoscienceAustralia/PyRate/blob/master/conda.md).
 
 ## Tests
 

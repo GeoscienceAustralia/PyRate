@@ -1,9 +1,11 @@
-Command Line Scripts
-====================
+Pyrate Scripts Module
+=====================
 
-.. currentmodule:: pyrate.scripts
+.. toctree::
+   :maxdepth: 4
 
-.. autosummary::
-   :toctree: generated/
-
-   main
+   pyrate.scripts.run_prepifg
+   pyrate.scripts.run_pyrate
+   pyrate.scripts.converttogtif
+   pyrate.scripts.postprocessing
+   pyrate.scripts.main
