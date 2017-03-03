@@ -1,7 +1,7 @@
 """
 This Python module is part of the PyRate software package
 
-This Python module implements an algorithm to search for the location 
+This Python module implements an algorithm to search for the location
 of the interferometric reference pixel
 
 Copyright 2017 Geoscience Australia

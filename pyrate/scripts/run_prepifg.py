@@ -1,7 +1,7 @@
 """
 This Python script is part of the PyRate software package
 
-This Python script converts ROI_PAC or GAMMA format unwrapped 
+This Python script converts ROI_PAC or GAMMA format unwrapped
 interferograms into geotiffs and applies optional multilooking and cropping.
 
 Copyright 2017 Geoscience Australia
@@ -125,10 +125,10 @@ def roipac_prepifg(base_ifg_paths, params):
     xlooks, ylooks, crop = cf.transform_params(params)
     dem_file = os.path.join(params[cf.ROIPAC_RESOURCE_HEADER])
     projection = roipac.parse_header(dem_file)[ifc.PYRATE_DATUM]
-    dest_base_ifgs = [os.path.join(params[cf.OUT_DIR], 
-                                  os.path.basename(q).split('.')[0] + '_' + 
-                                  os.path.basename(q).split('.')[1] + '.tif')
-                                  for q in base_ifg_paths]
+    dest_base_ifgs = [os.path.join(params[cf.OUT_DIR],
+                                   os.path.basename(q).split('.')[0] + '_' +
+                                   os.path.basename(q).split('.')[1] + '.tif')
+                      for q in base_ifg_paths]
 
     for b, d in zip(base_ifg_paths, dest_base_ifgs):
         header_file = "%s.%s" % (b, ROI_PAC_HEADER_FILE_EXT)
@@ -157,7 +157,7 @@ def gamma_prepifg(base_unw_paths, params):
     # dest_base_ifgs: location of geo_tif's
     if parallel:
         log.info("Running prepifg in parallel with {} "
-              "processes".format(params[cf.PROCESSES]))
+                 "processes".format(params[cf.PROCESSES]))
         dest_base_ifgs = Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
             delayed(gamma_multiprocessing)(p, params)
             for p in base_unw_paths)
@@ -199,11 +199,11 @@ def gamma_multiprocessing(unw_path, params):
     combined_headers = gamma.manage_headers(dem_hdr_path, header_paths)
 
     dest = output_tiff_filename(unw_path, params[cf.OUT_DIR])
-    if os.path.basename(unw_path).split('.')[1] == (params[cf.APS_INCIDENCE_EXT] 
-            or params[cf.APS_ELEVATION_EXT]):
+    if os.path.basename(unw_path).split('.')[1] == \
+            (params[cf.APS_INCIDENCE_EXT] or params[cf.APS_ELEVATION_EXT]):
         # TODO: implement incidence class here
         combined_headers['FILE_TYPE'] = 'Incidence'
-        
-    write_geotiff(combined_headers, unw_path, dest, 
+
+    write_geotiff(combined_headers, unw_path, dest,
                   nodata=params[cf.NO_DATA_VALUE])
     return dest

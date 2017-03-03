@@ -1,9 +1,9 @@
 """
 This Python module is part of the PyRate software package
 
-This Python module converts interferogram input files to a common geotiff 
+This Python module converts interferogram input files to a common geotiff
 format with PyRate specific metadata headers. The module also implements
-multilooking/downsampling and cropping operations to reduce the size of 
+multilooking/downsampling and cropping operations to reduce the size of
 the computational problem.
 
 Copyright 2017 Geoscience Australia
@@ -132,7 +132,7 @@ def dummy_warp(renamed_path):
     """ convenience dummy operation """
     ifg = dem_or_ifg(renamed_path)
     ifg.open()
-    ifg.dataset.SetMetadataItem(ifc.DATA_TYPE, ifc.MULTILOOKED)    
+    ifg.dataset.SetMetadataItem(ifc.DATA_TYPE, ifc.MULTILOOKED)
     data = ifg.dataset.ReadAsArray()
     return data, ifg.dataset
 

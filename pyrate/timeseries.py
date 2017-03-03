@@ -1,8 +1,8 @@
 """
 This Python module is part of the PyRate software package
 
-This Python module contains functions for computing a time series 
-inversion in PyRate. It is based on the Matlab codes 'tsinvnosm.m' 
+This Python module contains functions for computing a time series
+inversion in PyRate. It is based on the Matlab codes 'tsinvnosm.m'
 and 'tsinvlap.m' contained in the Pirate package.
 
 Copyright 2017 Geoscience Australia

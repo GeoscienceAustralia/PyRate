@@ -1,7 +1,7 @@
 """
 This Python module is part of the PyRate software package
 
-This Python module implements the minimum spanning tree matrix algorithm 
+This Python module implements the minimum spanning tree matrix algorithm
 of the Matlab code in 'make_mstmat.m' of the Pirate package.
 
 Copyright 2017 Geoscience Australia

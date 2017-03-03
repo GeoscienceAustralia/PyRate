@@ -1,7 +1,7 @@
 """
 This Python module is part of the PyRate software package
 
-This Python module contains a collection of constants used in 
+This Python module contains a collection of constants used in
 various components of the PyRate software
 
 Copyright 2017 Geoscience Australia

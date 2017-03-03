@@ -1,9 +1,9 @@
 """
 This Python module is part of the PyRate software package
 
-This Python module implements covariance calculation and 
-Variance/Covariance matrix functionality. The algorithms 
-are based on Matlab codes 'cvdcalc.m' and 'vcmt.m' from 
+This Python module implements covariance calculation and
+Variance/Covariance matrix functionality. The algorithms
+are based on Matlab codes 'cvdcalc.m' and 'vcmt.m' from
 the Pirate package.
 
 Copyright 2017 Geoscience Australia

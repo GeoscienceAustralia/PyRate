@@ -1,9 +1,9 @@
 """
 This Python module is part of the PyRate software package
 
-This Python module implements pixel-by-pixel linear rate 
-(velocity) estimation using an iterative weighted least-squares 
-method. The algorithm is based on the Pirate package 'stack.m' 
+This Python module implements pixel-by-pixel linear rate
+(velocity) estimation using an iterative weighted least-squares
+method. The algorithm is based on the Pirate package 'stack.m'
 and Matlab 'lscov.m' functions.
 
 Copyright 2017 Geoscience Australia

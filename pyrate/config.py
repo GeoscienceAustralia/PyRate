@@ -1,9 +1,9 @@
 """
 This Python module is part of the PyRate software package
 
-This Python module contains utilities to parse PyRate configuration 
-files. It also includes numerous general constants relating to options 
-in configuration files. Examples of PyRate configuration files are 
+This Python module contains utilities to parse PyRate configuration
+files. It also includes numerous general constants relating to options
+in configuration files. Examples of PyRate configuration files are
 provided in the configs/ directory
 
 Copyright 2017 Geoscience Australia
@@ -492,8 +492,9 @@ def get_dest_paths(base_paths, crop, params, looks):
         list of output geotifs
     """
     dest_mlooked_ifgs = [mlooked_path(os.path.basename(q).split('.')[0] + '_'
-        + os.path.basename(q).split('.')[1] + '.tif', looks=looks, 
-        crop_out=crop) for q in base_paths]
+                                      + os.path.basename(q).split('.')[1] +
+                                      '.tif', looks=looks, crop_out=crop)
+                         for q in base_paths]
 
     return [os.path.join(params[OUT_DIR], p) for p in dest_mlooked_ifgs]
 

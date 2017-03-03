@@ -1,7 +1,7 @@
 """
 This Python module is part of the PyRate software package
 
-This Python module implements the minimum spanning tree 
+This Python module implements the minimum spanning tree
 functionality for selecting interferometric observations.
 
 Copyright 2017 Geoscience Australia

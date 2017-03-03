@@ -41,7 +41,7 @@ def cli(verbosity):
 @click.argument('config_file')
 def prepifg(config_file):
     """
-    Convert input files to geotiff and perform multilooking 
+    Convert input files to geotiff and perform multilooking
     (resampling) and/or cropping
     """
     config_file = abspath(config_file)

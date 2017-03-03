@@ -21,7 +21,6 @@ The short form has 7 fields, covering raster size, location and wavelength. The
 longer form can have up to 40 fields (see the test data for examples). PyRate
 attempts to handle both forms of header.
 """
-import os
 import luigi
 import pyrate.config as config
 from pyrate.roipac import manage_header, ROI_PAC_HEADER_FILE_EXT, parse_header

@@ -1,7 +1,7 @@
 """
 This Python module is part of the PyRate software package
 
-This Python module does post-processing steps to assemble the linear 
+This Python module does post-processing steps to assemble the linear
 rate and time series outputs and save as geotiff files
 
 Copyright 2017 Geoscience Australia
@@ -81,13 +81,13 @@ def save_linrate(ifgs_dict, params, tiles, out_type):
     ifgs = [v for v in ifgs_dict.values() if isinstance(v, PrereadIfg)]
     dest = os.path.join(params[cf.OUT_DIR], out_type + ".tif")
     md[ifc.EPOCH_DATE] = epochlist.dates
-    if out_type == 'linrate':    
+    if out_type == 'linrate':
         md[ifc.DATA_TYPE] = ifc.LINRATE
     elif out_type == 'linerror':
         md[ifc.DATA_TYPE] = ifc.LINERROR
     else:
         md[ifc.DATA_TYPE] = ifc.LINSAMP
-        
+
     rate = np.zeros(shape=ifgs[0].shape, dtype=np.float32)
     for t in tiles:
         rate_file = os.path.join(params[cf.OUT_DIR], out_type +
@@ -145,7 +145,8 @@ def postprocess_timeseries(rows, cols, params):
                 tscum = np.load(file=tscum_file)
 
                 md[ifc.EPOCH_DATE] = epochlist.dates[i + 1]
-                md['SEQUENCE_POSITION'] =  i+1  # sequence position; first time slice is #0
+                # sequence position; first time slice is #0
+                md['SEQUENCE_POSITION'] = i+1
                 tscum_g[t.top_left_y:t.bottom_right_y,
                         t.top_left_x:t.bottom_right_x] = tscum[:, :, i]
                 dest = os.path.join(params[cf.OUT_DIR],
@@ -162,7 +163,8 @@ def postprocess_timeseries(rows, cols, params):
                 tsincr = np.load(file=tsincr_file)
 
                 md[ifc.EPOCH_DATE] = epochlist.dates[i + 1]
-                md['SEQUENCE_POSITION'] = i+1  # sequence position; first time slice is #0
+                # sequence position; first time slice is #0
+                md['SEQUENCE_POSITION'] = i+1
                 tsincr_g[t.top_left_y:t.bottom_right_y,
                          t.top_left_x:t.bottom_right_x] = tsincr[:, :, i]
                 dest = os.path.join(params[cf.OUT_DIR],

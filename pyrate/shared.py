@@ -1,7 +1,7 @@
 """
 This Python module is part of the PyRate software package
 
-This Python module contains utilities and classes shared by 
+This Python module contains utilities and classes shared by
 all other PyRate modules
 
 Copyright 2017 Geoscience Australia
@@ -636,6 +636,7 @@ def nanmedian(x):
 
 
 def write_geotiff(header, data_path, dest, nodata):
+    # pylint: disable=too-many-statements
     """
     Writes input image data (interferograms, DEM, incidence maps etc)
     to GeoTIFF format with PyRate metadata
@@ -1046,6 +1047,7 @@ def warp_required(xlooks, ylooks, crop):
         return False
 
     return True
+
 
 def output_tiff_filename(inpath, outpath):
     """
