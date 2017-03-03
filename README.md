@@ -171,3 +171,19 @@ advantage of multiple cores on a single PC.
 
 TODO
 
+# Useful Links
+
+Home Page
+    https://github.com/GeoscienceAustralia/PyRate
+
+Documentation
+    http://geoscienceaustralia.github.io/PyRate
+
+Issue tracking
+    https://github.com/GeoscienceAustralia/PyRate/issues
+
+
+# Bugs & Feedback
+
+For bugs, questions and discussions, please use 
+`Github Issues <https://github.com/GeoscienceAustralia/PyRate/issues>`_.

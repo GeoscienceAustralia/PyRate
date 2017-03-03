@@ -41,7 +41,7 @@ doclink = """
 Documentation
 -------------
 
-The full documentation is at <url to be inserted>."""
+The full documentation is at http://geoscienceaustralia.github.io/PyRate/."""
 history = open('HISTORY.rst').read().replace('.. :changelog:', '')
 
 setup(
