@@ -55,7 +55,7 @@ def prepifg(config_file):
               help='divide ifgs into this many rows')
 @click.option('-c', '--cols', type=int, default=1,
               help='divide ifgs into this many columns')
-def main(config_file, rows, cols):
+def linrate(config_file, rows, cols):
     """Main PyRate workflow including time series and linear rate computation"""
     config_file = abspath(config_file)
     run_pyrate.main(config_file, rows, cols)
