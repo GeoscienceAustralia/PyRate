@@ -1,6 +1,6 @@
 # Usage
 
-## PyRate workflow:
+## PyRate workflow
 
 `PyRate` installs an executable `pyrate`.
 
