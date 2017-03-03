@@ -1,37 +1,27 @@
 """
-Utilities for converting ROIPAC headers to ESRI's BIL format.
+This Python module is part of the PyRate software package
 
-GDAL lacks a driver to parse ROIPAC headers. This module translates ROIPAC
-headers into ESRI's BIL format, which is supported by GDAL. A basic command line
-interface is provided for testing purposes.
+This Python module contains tools for reading ROI_PAC format input data.
 
-The types of ROIPAC files/data used in PyRate are:
+Copyright 2017 Geoscience Australia
 
-- *Interferograms*: a .unw 32 bit float data file, with a .rsc resource/header.
-  The binary data is assumed to contain 2 bands, amplitude and phase.
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
 
-- *DEM*: with a .unw 16 bit signed int binary data file, and a .rsc header
-  There is only a single height band for the binary data.
+       http://www.apache.org/licenses/LICENSE-2.0
 
-.. todo:: Implement & describe incidence files, and any others (for later version)
-
-
-There may be differences with the .rsc file content, with short and long forms.
-The short form has 7 fields, covering raster size, location and wavelength. The
-longer form can have up to 40 fields (see the test data for examples). PyRate
-attempts to handle both forms of header.
-
-Created on 12/09/2012
-
-.. codeauthor:: Ben Davies, NCI <ben.davies@anu.edu.au>
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
 """
-
 import os
 import re
 import sys
 import datetime
 import pyrate.ifgconstants as ifc
-
 
 # ROIPAC RSC header file constants
 WIDTH = "WIDTH"
