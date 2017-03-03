@@ -1,7 +1,7 @@
-Run PyRate Module
-=================
+Convert to GeoTiff Module
+=========================
 
-.. automodule:: pyrate.scripts.run_pyrate
+.. automodule:: pyrate.scripts.converttogtif
     :members:
     :undoc-members:
     :show-inheritance:

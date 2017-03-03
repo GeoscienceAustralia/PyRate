@@ -1,5 +1,5 @@
-Run PyRate Postprocess Module
-=============================
+Postprocess Module
+==================
 
 .. automodule:: pyrate.scripts.postprocessing
     :members:

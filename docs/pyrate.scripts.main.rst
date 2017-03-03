@@ -1,5 +1,5 @@
-Run PyRate Convert to GeoTiff Module
-====================================
+PyRate Main Module
+==================
 
 .. automodule:: pyrate.scripts.main
     :members:
