@@ -482,7 +482,7 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
             extents_str = [str(e) for e in extents]
             orig_res = 0.000833333
             thresh = 0.5
-            for looks in range(10):
+            for looks in range(1, 10):
                 x_looks = y_looks = looks
                 res = orig_res*x_looks
                 averaged_and_resampled = gdalwarp.crop_resample_average(
