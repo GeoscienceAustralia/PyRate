@@ -18,6 +18,7 @@ Copyright 2017 Geoscience Australia
    limitations under the License.
 """
 # pylint: disable=invalid-name
+import logging
 from numpy import empty, isnan, reshape, float32, squeeze
 from numpy import dot, vstack, zeros, meshgrid
 import numpy as np
@@ -26,11 +27,13 @@ from numpy.linalg import pinv
 from scipy.linalg import lstsq
 
 from pyrate.algorithm import master_slave_ids, get_all_epochs
-from pyrate import mst, shared
-from pyrate.shared import nanmedian
+from pyrate import mst, shared, prepifg
+from pyrate.shared import nanmedian, Ifg
 from pyrate import config as cf
 from pyrate import ifgconstants as ifc
+from pyrate import mpiops
 
+log = logging.getLogger(__name__)
 
 # Orbital correction tasks
 #
@@ -104,6 +107,7 @@ def orbital_correction(ifgs_or_ifg_paths, params, mlooked=None, offset=True):
         # Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
         #     delayed(_independent_correction)(ifg, degree, offset, params)
         #     for ifg in ifgs)
+        ifgs_or_ifg_paths = mpiops.array_split(ifgs_or_ifg_paths)
         for ifg in ifgs_or_ifg_paths:
             _independent_correction(ifg, degree, offset, params)
     else:
@@ -189,12 +193,14 @@ def _network_correction(ifgs, degree, offset, m_ifgs=None):
     Calculates orbital correction model, removing this from the ifgs.
     .. warn:: This does in-situ modification of phase_data in the ifgs.
 
-    :param ifgs: interferograms reduced to a minimum tree from prior MST calculations
+    :param ifgs: interferograms reduced to a minimum tree from prior
+        MST calculations
     :param degree: PLANAR, QUADRATIC or PART_CUBIC
     :param offset: True to calculate the model using offsets
-    :param m_ifgs: multilooked ifgs (sequence must be mlooked versions of 'ifgs' arg)
+    :param m_ifgs: multilooked ifgs (sequence must be mlooked
+        versions of 'ifgs' arg)
     """
-    # get DM & filter out NaNs
+
     src_ifgs = ifgs if m_ifgs is None else m_ifgs
     src_ifgs = mst.mst_from_ifgs(src_ifgs)[3]  # use networkx mst
 
@@ -350,4 +356,59 @@ class OrbitalError(Exception):
     Generic class for errors in orbital correction.
     """
 
-    pass
+
+def remove_orbital_error(ifgs, params):
+    log.info('Calculating orbital error correction')
+
+    if not params[cf.ORBITAL_FIT]:
+        log.info('Orbital correction not required')
+        return
+
+    if not isinstance(ifgs[0], Ifg):  # when paths are sent
+        ifgs = [Ifg(i) for i in ifgs]
+        _ = [i.open() for i in ifgs]
+    # perform some general error/sanity checks
+    flags = [i.dataset.GetMetadataItem(ifc.PYRATE_ORBITAL_ERROR)
+             for i in ifgs]
+    if all(flags):
+        log.info('Skipped orbital correction, ifgs already corrected')
+        return
+    else:
+        check_orbital_ifgs(ifgs, flags)
+
+    mlooked = None
+
+    if (params[cf.ORBITAL_FIT_LOOKS_X] > 1 or
+            params[cf.ORBITAL_FIT_LOOKS_Y] > 1):
+        # resampling here to use all prior corrections to orig data
+        # can't do multiprocessing without writing to disc, but can do MPI
+        # due to swig pickling issue. So multiprocesing is not implemented
+        mlooked_dataset = prepifg.prepare_ifgs(
+            [i.data_path for i in ifgs],
+            crop_opt=prepifg.ALREADY_SAME_SIZE,
+            xlooks=params[cf.ORBITAL_FIT_LOOKS_X],
+            ylooks=params[cf.ORBITAL_FIT_LOOKS_Y],
+            thresh=params[cf.NO_DATA_AVERAGING_THRESHOLD],
+            write_to_disc=False)
+        mlooked = [Ifg(m[1]) for m in mlooked_dataset]
+
+        for m in mlooked:
+            m.initialize()
+            m.nodata_value = params[cf.NO_DATA_VALUE]
+
+    orbital_correction(ifgs, params, mlooked=mlooked)
+
+
+def check_orbital_ifgs(ifgs, flags):
+    count = sum([f == ifc.ORB_REMOVED for f in flags])
+    if (count < len(flags)) and (count > 0):
+        log.debug('Detected mix of corrected and uncorrected '
+                  'orbital error in ifgs')
+
+        for i, flag in zip(ifgs, flags):
+            if flag:
+                msg = '{}: prior orbital error correction detected'.format(i)
+            else:
+                msg = '{}: no orbital correction detected'.format(i)
+            log.debug(msg)
+            raise OrbitalError(msg)

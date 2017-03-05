@@ -12,6 +12,7 @@ from numpy import nan, asarray, where
 import numpy as np
 from numpy.testing import assert_array_almost_equal
 
+import pyrate.orbital
 import tests.common
 from pyrate import config as cf
 from pyrate import mst
@@ -149,7 +150,7 @@ class MatlabTimeSeriesEquality(unittest.TestCase):
         mst_grid = tests.common.mst_calculation(dest_paths, params)
         refx, refy = run_pyrate.ref_pixel_calc(dest_paths, params)
         # Estimate and remove orbit errors
-        tests.common.remove_orbital_error(ifgs, params)
+        pyrate.orbital.remove_orbital_error(ifgs, params)
         ifgs = prepare_ifgs_without_phase(dest_paths, params)
         _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
 
@@ -264,7 +265,7 @@ class MatlabTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
         refx, refy = run_pyrate.ref_pixel_calc(dest_paths, params)
 
         # Estimate and remove orbit errors
-        tests.common.remove_orbital_error(ifgs, params)
+        pyrate.orbital.remove_orbital_error(ifgs, params)
         ifgs = prepare_ifgs_without_phase(dest_paths, params)
 
         _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)

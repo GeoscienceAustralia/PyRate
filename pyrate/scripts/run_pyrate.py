@@ -292,12 +292,13 @@ def orb_fit_calc(ifg_paths, params):
         parameters dict corresponding to config file
     """
     log.info('Calculating orbfit correction')
-    if params[cf.ORBITAL_FIT_METHOD] != 1:
-        raise ConfigException('Only orbfit method 1 is supported')
-    prcs_ifgs = mpiops.array_split(ifg_paths)
-    mlooked = None
+    # if params[cf.ORBITAL_FIT_METHOD] != 1:
+    #     raise ConfigException('Only orbfit method 1 is supported')
+    # prcs_ifgs = mpiops.array_split(ifg_paths)
+    # mlooked = None
     # TODO: MPI orbfit method 2
-    orbital.orbital_correction(prcs_ifgs, params, mlooked=mlooked)
+    # orbital.orbital_correction(prcs_ifgs, params, mlooked=mlooked)
+    orbital.remove_orbital_error(ifg_paths, params)
     log.info('Finished orbfit calculation in process {}'.format(mpiops.rank))
 
 

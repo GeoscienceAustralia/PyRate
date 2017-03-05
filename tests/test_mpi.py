@@ -9,6 +9,7 @@ import tempfile
 import random
 import string
 
+import pyrate.orbital
 import pyrate.shared
 import tests.common
 from pyrate import ref_phs_est as rpe
@@ -231,7 +232,7 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
         mst_grid = tests.common.mst_calculation(dest_paths, params_old)
         refy, refx = refpixel.ref_pixel(ifgs, params_old)
 
-        tests.common.remove_orbital_error(ifgs, params_old)
+        pyrate.orbital.remove_orbital_error(ifgs, params_old)
         ifgs = common.prepare_ifgs_without_phase(dest_paths, params_old)
 
         _, ifgs = rpe.estimate_ref_phase(ifgs, params_old, refx, refy)

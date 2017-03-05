@@ -20,6 +20,7 @@ from numpy.linalg import pinv, inv
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 from scipy.linalg import lstsq
 
+import pyrate.orbital
 import tests.common
 from .common import sydney5_mock_ifgs, MockIfg
 from pyrate import algorithm
@@ -787,7 +788,7 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
         shutil.rmtree(self.BASE_DIR)
 
     def test_orbital_correction_matlab_equality_orbfit_method_2(self):
-        tests.common.remove_orbital_error(self.ifgs, self.params)
+        pyrate.orbital.remove_orbital_error(self.ifgs, self.params)
 
         onlyfiles = [f for f in os.listdir(SYD_TEST_MATLAB_ORBITAL_DIR)
             if os.path.isfile(os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, f))
@@ -822,7 +823,7 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
         self.params[cf.ORBITAL_FIT_LOOKS_X] = 2
         self.params[cf.ORBITAL_FIT_LOOKS_Y] = 2
 
-        tests.common.remove_orbital_error(self.ifgs, self.params)
+        pyrate.orbital.remove_orbital_error(self.ifgs, self.params)
 
         onlyfiles = [f for f in os.listdir(SYD_TEST_MATLAB_ORBITAL_DIR)
             if os.path.isfile(os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, f))
