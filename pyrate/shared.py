@@ -1003,10 +1003,16 @@ def prepare_ifg(ifg_path, params):
 
 def save_numpy_phase(ifg_paths, tiles, params):
     """
-    :param ifg_paths:
-    :param params:
-    :param tiles:
-    :return:
+    Save ifg phase data as numpy array.
+
+    Parameters
+    ----------
+    ifg_paths: list
+        list of strings corresponding to ifg paths
+    params: dict
+        config dict
+    tiles: list
+        list of Shared.Tile instances
     """
     process_ifgs = mpiops.array_split(ifg_paths)
     outdir = params[cf.OUT_DIR]
@@ -1026,7 +1032,14 @@ def save_numpy_phase(ifg_paths, tiles, params):
 
 
 def get_projection_info(ifg_path):
-    """ return projection information of ifg"""
+    """
+    return projection information of ifg
+
+    Parameters
+    ----------
+    ifg_path: str
+        ifg path
+    """
     ds = gdal.Open(ifg_path)
     md = ds.GetMetadata()  # get metadata for writing on output tifs
     gt = ds.GetGeoTransform()  # get geographical bounds of data
@@ -1038,6 +1051,17 @@ def get_projection_info(ifg_path):
 def warp_required(xlooks, ylooks, crop):
     """
     Returns True if params show rasters need to be cropped and/or resized.
+
+    Parameters
+    ----------
+    xlooks: int
+        resampling/multilooking in x dir
+
+    ylooks: int
+        resampling/multilooking in y dir
+
+    crop: int
+        ifg crop option
     """
 
     if xlooks > 1 or ylooks > 1:
