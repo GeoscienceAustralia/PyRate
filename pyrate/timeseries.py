@@ -193,8 +193,7 @@ def time_series_by_pixel(row, col, b0_mat, sm_factor, sm_order, ifg_data, mst,
             rmrow = asarray([0])  # dummy
 
             while len(rmrow) > 0:
-                # the if else is introduced to prevent the following:
-                # https://github.com/GeoscienceAustralia/PyRate/issues/69
+                # if b_mat.shape[0] <=1 then we return nans
                 if b_mat.shape[0] > 1:
                     b_mat, ifgv, sel, rmrow = remove_rank_def_rows(
                         b_mat, nvelpar, ifgv, sel)
