@@ -123,19 +123,7 @@ class RasterBase(object):
             raise IOError("Cannot open write protected file for writing")
 
         flag = GA_ReadOnly if self._readonly else GA_Update
-
-        # The while loop helps in situations when a geotiff is read by multiple
-        # processes. If one process has the file open, then delaying read from
-        # another process improves stability of the MPI processs
-        attempts = 0
-        while (self.dataset is None) and (attempts < 3):
-            try:
-                attempts += 1
-                self.dataset = gdal.Open(self.data_path, flag)
-            except RuntimeError:
-                print('\nneed to read {ifg} again'.format(ifg=self.data_path))
-                time.sleep(0.5)
-
+        self.dataset = gdal.Open(self.data_path, flag)
         if self.dataset is None:
             raise RasterException("Error opening %s" % self.data_path)
 

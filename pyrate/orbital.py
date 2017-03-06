@@ -19,6 +19,7 @@ Copyright 2017 Geoscience Australia
 """
 # pylint: disable=invalid-name
 import logging
+from collections import OrderedDict
 from numpy import empty, isnan, reshape, float32, squeeze
 from numpy import dot, vstack, zeros, meshgrid
 import numpy as np
@@ -96,12 +97,12 @@ def orbital_correction(ifgs_or_ifg_paths, params, mlooked=None, offset=True,
 
     if method == NETWORK_METHOD:
         if mlooked is None:
-            _network_correction(ifgs_or_ifg_paths, degree, offset,
-                                preread_ifgs)
+            network_correction(ifgs_or_ifg_paths, degree, offset,
+                               preread_ifgs)
         else:
             _validate_mlooked(mlooked, ifgs_or_ifg_paths)
-            _network_correction(ifgs_or_ifg_paths, degree, offset, mlooked,
-                                preread_ifgs)
+            network_correction(ifgs_or_ifg_paths, degree, offset, mlooked,
+                               preread_ifgs)
 
     elif method == INDEPENDENT_METHOD:
         # not running in parallel
@@ -110,7 +111,7 @@ def orbital_correction(ifgs_or_ifg_paths, params, mlooked=None, offset=True,
         #     delayed(_independent_correction)(ifg, degree, offset, params)
         #     for ifg in ifgs)
         for ifg in ifgs_or_ifg_paths:
-            _independent_correction(ifg, degree, offset, params)
+            independent_correction(ifg, degree, offset, params)
     else:
         msg = "Unknown method: '%s', need INDEPENDENT or NETWORK method"
         raise OrbitalError(msg % method)
@@ -151,7 +152,7 @@ def _get_num_params(degree, offset=None):
     return nparams
 
 
-def _independent_correction(ifg, degree, offset, params):
+def independent_correction(ifg, degree, offset, params):
     """
     Calculates and removes orbital correction from an ifg.
 
@@ -190,7 +191,7 @@ def _independent_correction(ifg, degree, offset, params):
         ifg.close()
 
 
-def _network_correction(ifgs, degree, offset, m_ifgs=None, prered_ifgs=None):
+def network_correction(ifgs, degree, offset, m_ifgs=None, preread_ifgs=None):
     """
     Calculates orbital correction model, removing this from the ifgs.
     .. warn:: This will write orbital error corrected phase_data in the ifgs.
@@ -202,7 +203,6 @@ def _network_correction(ifgs, degree, offset, m_ifgs=None, prered_ifgs=None):
     :param m_ifgs: multilooked orbfit ifgs (sequence must be mlooked
         versions of 'ifgs' arg)
     """
-
     src_ifgs = ifgs if m_ifgs is None else m_ifgs
     src_ifgs = mst.mst_from_ifgs(src_ifgs)[3]  # use networkx mst
 
@@ -217,26 +217,42 @@ def _network_correction(ifgs, degree, offset, m_ifgs=None, prered_ifgs=None):
     orbparams = dot(pinv(B, 1e-6), obsv)
 
     ncoef = _get_num_params(degree)
-    ids = master_slave_ids(get_all_epochs(ifgs))
+    if preread_ifgs:
+        temp_ifgs = OrderedDict(sorted(preread_ifgs.items())).values()
+        ids = master_slave_ids(get_all_epochs(temp_ifgs))
+    else:
+        ids = master_slave_ids(get_all_epochs(ifgs))
     coefs = [orbparams[i:i+ncoef] for i in
              range(0, len(set(ids)) * ncoef, ncoef)]
 
     # create full res DM to expand determined coefficients into full res
     # orbital correction (eg. expand coarser model to full size)
-    dm = get_design_matrix(ifgs[0], degree, offset=False)
+
+    if preread_ifgs:
+        temp_ifg = Ifg(ifgs[0])  # ifgs here are paths
+        temp_ifg.open()
+        dm = get_design_matrix(temp_ifg, degree, offset=False)
+        temp_ifg.close()
+    else:
+        dm = get_design_matrix(ifgs[0], degree, offset=False)
 
     for i in ifgs:
-        orb = dm.dot(coefs[ids[i.slave]] - coefs[ids[i.master]])
-        orb = orb.reshape(i.shape)
+        if not isinstance(i, Ifg):  # then these are paths
+            i = Ifg(i)
+            i.open(readonly=False)
+        _remove_networkx_error(coefs, dm, i, ids, offset)
 
-        # offset estimation
-        if offset:
-            # bring all ifgs to same base level
-            orb -= nanmedian(np.ravel(i.phase_data - orb))
 
-        i.phase_data -= orb  # remove orbital error from the ifg
-        # set orbfit tags after orbital error correction
-        save_orbital_error_corrected_phase(i)
+def _remove_networkx_error(coefs, dm, i, ids, offset):
+    orb = dm.dot(coefs[ids[i.slave]] - coefs[ids[i.master]])
+    orb = orb.reshape(i.shape)
+    # offset estimation
+    if offset:
+        # bring all ifgs to same base level
+        orb -= nanmedian(np.ravel(i.phase_data - orb))
+    i.phase_data -= orb  # remove orbital error from the ifg
+    # set orbfit tags after orbital error correction
+    save_orbital_error_corrected_phase(i)
 
 
 def save_orbital_error_corrected_phase(ifg):
@@ -248,7 +264,6 @@ def save_orbital_error_corrected_phase(ifg):
     ifg: Ifg class instance
     """
     # set orbfit tags after orbital error correction
-    print(ifg)
     ifg.dataset.SetMetadataItem(ifc.PYRATE_ORBITAL_ERROR, ifc.ORB_REMOVED)
     ifg.write_modified_phase()
     ifg.close()
@@ -362,41 +377,35 @@ class OrbitalError(Exception):
     """
 
 
-def remove_orbital_error(ifgs, params, preread_ifgs):
+def remove_orbital_error(ifgs, params, preread_ifgs=None):
     log.info('Calculating orbital error correction')
 
     if not params[cf.ORBITAL_FIT]:
         log.info('Orbital correction not required')
         return
 
-    # remove non ifg keys
-    _ = [preread_ifgs.pop(k) for k in ['gt', 'epochlist', 'md', 'wkt']]
+    if preread_ifgs:  # don't check except for mpi tests
+        # remove non ifg keys
+        _ = [preread_ifgs.pop(k) for k in ['gt', 'epochlist', 'md', 'wkt']]
+        # perform some general error/sanity checks
+        if mpiops.rank == 0:
+            _check_orbital_ifgs(preread_ifgs)
 
-    # perform some general error/sanity checks
-    _check_orbital_ifgs(preread_ifgs)
+    mlooked_dataset = prepifg.prepare_ifgs(
+        ifgs,
+        crop_opt=prepifg.ALREADY_SAME_SIZE,
+        xlooks=params[cf.ORBITAL_FIT_LOOKS_X],
+        ylooks=params[cf.ORBITAL_FIT_LOOKS_Y],
+        thresh=params[cf.NO_DATA_AVERAGING_THRESHOLD],
+        write_to_disc=False)
+    mlooked = [Ifg(m[1]) for m in mlooked_dataset]
 
-    mlooked = None
+    for m in mlooked:
+        m.initialize()
+        m.nodata_value = params[cf.NO_DATA_VALUE]
+        m.convert_to_nans()
+        m.convert_to_mm()
 
-    if (params[cf.ORBITAL_FIT_LOOKS_X] > 1 or
-            params[cf.ORBITAL_FIT_LOOKS_Y] > 1 or
-            params[cf.ORBITAL_FIT_METHOD] == 2):
-        # resampling here to use all prior corrections to orig data
-        # can't do multiprocessing without writing to disc, but can do MPI
-        # due to swig pickling issue. So multiprocesing is not implemented
-        mlooked_dataset = prepifg.prepare_ifgs(
-            ifgs,
-            crop_opt=prepifg.ALREADY_SAME_SIZE,
-            xlooks=params[cf.ORBITAL_FIT_LOOKS_X],
-            ylooks=params[cf.ORBITAL_FIT_LOOKS_Y],
-            thresh=params[cf.NO_DATA_AVERAGING_THRESHOLD],
-            write_to_disc=False)
-        mlooked = [Ifg(m[1]) for m in mlooked_dataset]
-
-        for m in mlooked:
-            m.initialize()
-            m.nodata_value = params[cf.NO_DATA_VALUE]
-            m.convert_to_nans()
-            m.convert_to_mm()
     orbital_correction(ifgs, params, mlooked=mlooked,
                        preread_ifgs=preread_ifgs)
 
@@ -404,12 +413,12 @@ def remove_orbital_error(ifgs, params, preread_ifgs):
 def _check_orbital_ifgs(preread_ifgs):
 
     ifg_paths = sorted(preread_ifgs.keys())
+    # preread_ifgs[i].metadata contains ifg metadata
     flags = [ifc.PYRATE_ORBITAL_ERROR in preread_ifgs[i].metadata
              for i in ifg_paths]
     if all(flags):
         log.info('Skipped orbital correction, ifgs already corrected')
         return
-
     if (sum(flags) < len(flags)) and (sum(flags) > 0):
         log.debug('Detected mix of corrected and uncorrected '
                   'orbital error in ifgs')
@@ -421,3 +430,4 @@ def _check_orbital_ifgs(preread_ifgs):
                 msg = '{}: no orbital correction detected'.format(i)
             log.debug(msg)
             raise OrbitalError(msg)
+    log.info('Orbital error status checked')

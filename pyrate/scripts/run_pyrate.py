@@ -302,7 +302,8 @@ def orb_fit_calc(ifg_paths, params, preread_ifgs):
         prcs_ifgs = mpiops.array_split(ifg_paths)
         orbital.remove_orbital_error(prcs_ifgs, params, preread_ifgs)
     else:
-        orbital.remove_orbital_error(ifg_paths, params, preread_ifgs)
+        if mpiops.rank == MASTER_PROCESS:
+            orbital.remove_orbital_error(ifg_paths, params, preread_ifgs)
     # orbital.remove_orbital_error(ifg_paths, params)
     log.info('Finished orbfit calculation in process {}'.format(mpiops.rank))
 
