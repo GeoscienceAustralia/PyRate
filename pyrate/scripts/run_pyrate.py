@@ -168,12 +168,14 @@ def mst_calc(dest_tifs, params, tiles, preread_ifgs):
 
     def save_mst_tile(tile, i, preread_ifgs):
         """ Convenient inner loop for mst tile saving"""
-        if params[cf.NETWORKX_OR_MATLAB_FLAG]:
+        if params[cf.NETWORKX_OR_MATLAB_FLAG] == 1:
             log.info('Calculating minimum spanning tree matrix '
                      'using NetworkX method')
             mst_tile = mst.mst_multiprocessing(tile, dest_tifs, preread_ifgs)
+        elif params[cf.NETWORKX_OR_MATLAB_FLAG] == 0:
+            raise ConfigException('Matlab mst not supported')
         else:
-            raise ConfigException('Matlab mst not supported yet')
+            raise ConfigException('Only NetworkX mst is supported')
             # mst_tile = mst.mst_multiprocessing(tile, dest_tifs, preread_ifgs)
         # locally save the mst_mat
         mst_file_process_n = join(
