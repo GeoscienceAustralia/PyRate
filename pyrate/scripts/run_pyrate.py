@@ -65,7 +65,7 @@ def get_tiles(ifg_path, rows, cols):
 
     Returns
     -------
-    tiles: dict
+    tiles: list
         list of shared.Tile instances
     """
     ifg = Ifg(ifg_path)
@@ -110,7 +110,7 @@ def create_ifg_dict(dest_tifs, params, tiles):
 
     Returns
     -------
-    ifgs_dict: dict
+    preread_ifgs: dict
         dict containing information regarding ifgs that are used downstream
     """
     ifgs_dict = {}
@@ -124,23 +124,29 @@ def create_ifg_dict(dest_tifs, params, tiles):
                                   slave=ifg.slave,
                                   time_span=ifg.time_span,
                                   nrows=ifg.nrows,
-                                  ncols=ifg.ncols)
+                                  ncols=ifg.ncols,
+                                  metadata=ifg.meta_data)
         ifg.close()
     ifgs_dict = _join_dicts(mpiops.comm.allgather(ifgs_dict))
 
+    preread_ifgs_file = join(params[cf.OUT_DIR], 'preread_ifgs.pk')
+
     if mpiops.rank == MASTER_PROCESS:
-        preread_ifgs = join(params[cf.OUT_DIR], 'preread_ifgs.pk')
+
         # add some extra information that's also useful later
         gt, md, wkt = get_projection_info(process_tifs[0])
         ifgs_dict['epochlist'] = algorithm.get_epochs(ifgs_dict)[0]
         ifgs_dict['gt'] = gt
         ifgs_dict['md'] = md
         ifgs_dict['wkt'] = wkt
-        cp.dump(ifgs_dict, open(preread_ifgs, 'wb'))
+        # dump ifgs_dict file for later use
+        cp.dump(ifgs_dict, open(preread_ifgs_file, 'wb'))
 
+    mpiops.comm.barrier()
+    preread_ifgs = cp.load(open(preread_ifgs_file, 'rb'))
     log.info('finish converting phase_data to numpy '
              'in process {}'.format(mpiops.rank))
-    return ifgs_dict
+    return preread_ifgs
 
 
 def mst_calc(dest_tifs, params, tiles, preread_ifgs):
@@ -280,7 +286,7 @@ def save_ref_pixel_blocks(grid, half_patch_size, ifg_paths, params):
     log.info('Saved ref pixel blocks')
 
 
-def orb_fit_calc(ifg_paths, params):
+def orb_fit_calc(ifg_paths, params, preread_ifgs):
     """
     Orbital fit correction
 
@@ -294,9 +300,9 @@ def orb_fit_calc(ifg_paths, params):
     log.info('Calculating orbfit correction')
     if params[cf.ORBITAL_FIT_METHOD] == 1:
         prcs_ifgs = mpiops.array_split(ifg_paths)
-        orbital.remove_orbital_error(prcs_ifgs, params)
+        orbital.remove_orbital_error(prcs_ifgs, params, preread_ifgs)
     else:
-        orbital.remove_orbital_error(ifg_paths, params)
+        orbital.remove_orbital_error(ifg_paths, params, preread_ifgs)
     # orbital.remove_orbital_error(ifg_paths, params)
     log.info('Finished orbfit calculation in process {}'.format(mpiops.rank))
 
@@ -461,7 +467,7 @@ def process_ifgs(ifg_paths, params, rows, cols):
             check_aps_ifgs(ifg_paths)
 
     # Estimate and remove orbit errors
-    orb_fit_calc(ifg_paths, params)
+    orb_fit_calc(ifg_paths, params, preread_ifgs)
 
     # calc and remove reference phase
     ref_phase_estimation(ifg_paths, params, refpx, refpy)
