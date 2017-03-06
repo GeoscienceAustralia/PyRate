@@ -175,10 +175,15 @@ def orbfit_lks(request):
     return request.param
 
 
+@pytest.fixture(params=[1, 2])
+def orbfit_method(request):
+    return request.param
+
+
 @pytest.mark.skipif(TRAVIS, reason='skipping mpi tests in travis')
 def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
                                 ref_est_method, row_splits, col_splits,
-                                get_crop, orbfit_lks):
+                                get_crop, orbfit_lks, orbfit_method):
     params = modify_config
     outdir = mpiops.run_once(tempdir)
     params[cf.OUT_DIR] = outdir
@@ -186,11 +191,14 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
     params[cf.IFG_CROP_OPT] = get_crop
     params[cf.ORBITAL_FIT_LOOKS_Y] = orbfit_lks
     params[cf.ORBITAL_FIT_LOOKS_X] = orbfit_lks
+    params[cf.ORBITAL_FIT_METHOD] = orbfit_method
     xlks, ylks, crop = cf.transform_params(params)
-    print("xlks, row_splits, col_splits, rank")
-    print(xlks, row_splits, col_splits, mpiops.rank)
+    print("xlks={}, ref_est_method={}, row_splits={}, col_splits={}, "
+          "get_crop={}, orbfit_lks={}, orbfit_method={}, "
+          "rank={}".format(xlks, ref_est_method, row_splits, col_splits,
+                           get_crop, orbfit_lks, orbfit_method, mpiops.rank))
     if xlks * col_splits > 45 or ylks * row_splits > 70:
-        print('skipping test')
+        print('skipping test because lks and col_splits are not compatible')
         return
 
     base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST])
@@ -226,8 +234,9 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
         params_old[cf.OUT_DIR] = tempdir()
         params_old[cf.REF_EST_METHOD] = ref_est_method
         params_old[cf.IFG_CROP_OPT] = get_crop
-        params[cf.ORBITAL_FIT_LOOKS_Y] = orbfit_lks
-        params[cf.ORBITAL_FIT_LOOKS_X] = orbfit_lks
+        params_old[cf.ORBITAL_FIT_LOOKS_Y] = orbfit_lks
+        params_old[cf.ORBITAL_FIT_LOOKS_X] = orbfit_lks
+        params_old[cf.ORBITAL_FIT_METHOD] = orbfit_method
         xlks, ylks, crop = cf.transform_params(params_old)
         base_unw_paths = cf.original_ifg_paths(
             params_old[cf.IFG_FILE_LIST])
