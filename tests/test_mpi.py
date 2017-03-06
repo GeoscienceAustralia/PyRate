@@ -125,6 +125,7 @@ def get_crop(request):
     return request.param
 
 
+@pytest.mark.skipif(TRAVIS, reason='skipping mpi tests in travis')
 def test_vcm_matlab_vs_mpi(mpisync, tempdir, get_config):
     from tests.common import SYD_TEST_DIR
 
@@ -169,23 +170,27 @@ def test_vcm_matlab_vs_mpi(mpisync, tempdir, get_config):
         shutil.rmtree(outdir)
 
 
+@pytest.fixture(params=[1, 2, 5])
+def orbfit_lks(request):
+    return request.param
+
+
+@pytest.mark.skipif(TRAVIS, reason='skipping mpi tests in travis')
 def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
                                 ref_est_method, row_splits, col_splits,
-                                get_crop):
+                                get_crop, orbfit_lks):
     params = modify_config
     outdir = mpiops.run_once(tempdir)
     params[cf.OUT_DIR] = outdir
     params[cf.REF_EST_METHOD] = ref_est_method
     params[cf.IFG_CROP_OPT] = get_crop
+    params[cf.ORBITAL_FIT_LOOKS_Y] = orbfit_lks
+    params[cf.ORBITAL_FIT_LOOKS_X] = orbfit_lks
     xlks, ylks, crop = cf.transform_params(params)
     print("xlks, row_splits, col_splits, rank")
     print(xlks, row_splits, col_splits, mpiops.rank)
     if xlks * col_splits > 45 or ylks * row_splits > 70:
         print('skipping test')
-        return
-
-    if TRAVIS and xlks != 2:
-        print("skipping test during travis")
         return
 
     base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST])
@@ -221,6 +226,8 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
         params_old[cf.OUT_DIR] = tempdir()
         params_old[cf.REF_EST_METHOD] = ref_est_method
         params_old[cf.IFG_CROP_OPT] = get_crop
+        params[cf.ORBITAL_FIT_LOOKS_Y] = orbfit_lks
+        params[cf.ORBITAL_FIT_LOOKS_X] = orbfit_lks
         xlks, ylks, crop = cf.transform_params(params_old)
         base_unw_paths = cf.original_ifg_paths(
             params_old[cf.IFG_FILE_LIST])
@@ -285,6 +292,7 @@ def _tifs_same(dir1, dir2, tif):
     common.assert_ifg_phase_equal(linrate_tif_m, linrate_tif_s)
 
 
+@pytest.mark.skipif(TRAVIS, reason='skipping mpi tests in travis')
 def reconstruct_times_series(shape, tiles, output_dir):
     tsincr_file_0 = os.path.join(output_dir, 'tsincr_{}.npy'.format(0))
     shape3 = np.load(tsincr_file_0).shape[2]
@@ -306,6 +314,7 @@ def reconstruct_times_series(shape, tiles, output_dir):
     return tsincr_mpi, tscum_mpi
 
 
+@pytest.mark.skipif(TRAVIS, reason='skipping mpi tests in travis')
 def test_prepifg_mpi(mpisync, get_config, tempdir,
                      roipac_or_gamma, get_lks, get_crop):
     from tests.common import SYDNEY_TEST_CONF

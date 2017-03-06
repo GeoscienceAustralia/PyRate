@@ -395,8 +395,6 @@ def remove_orbital_error(ifgs, params):
             m.initialize()
             m.nodata_value = params[cf.NO_DATA_VALUE]
 
-    print(mlooked, params[cf.ORBITAL_FIT_METHOD],
-          params[cf.ORBITAL_FIT_LOOKS_X], params[cf.ORBITAL_FIT_LOOKS_Y])
     orbital_correction(ifgs, params, mlooked=mlooked)
 
 
