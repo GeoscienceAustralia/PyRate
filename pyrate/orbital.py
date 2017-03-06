@@ -107,7 +107,6 @@ def orbital_correction(ifgs_or_ifg_paths, params, mlooked=None, offset=True):
         # Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
         #     delayed(_independent_correction)(ifg, degree, offset, params)
         #     for ifg in ifgs)
-        ifgs_or_ifg_paths = mpiops.array_split(ifgs_or_ifg_paths)
         for ifg in ifgs_or_ifg_paths:
             _independent_correction(ifg, degree, offset, params)
     else:
@@ -396,6 +395,8 @@ def remove_orbital_error(ifgs, params):
             m.initialize()
             m.nodata_value = params[cf.NO_DATA_VALUE]
 
+    print(mlooked, params[cf.ORBITAL_FIT_METHOD],
+          params[cf.ORBITAL_FIT_LOOKS_X], params[cf.ORBITAL_FIT_LOOKS_Y])
     orbital_correction(ifgs, params, mlooked=mlooked)
 
 
