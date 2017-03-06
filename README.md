@@ -186,4 +186,4 @@ Issue tracking
 # Bugs & Feedback
 
 For bugs, questions and discussions, please use 
-`Github Issues <https://github.com/GeoscienceAustralia/PyRate/issues>`_.
+[Github Issues](https://github.com/GeoscienceAustralia/PyRate/issues).
