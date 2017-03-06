@@ -153,7 +153,7 @@ def _independent_correction(ifg, degree, offset, params):
     """
     Calculates and removes orbital correction from an ifg.
 
-    .. warn:: Changes are made in place to the Ifg obj.
+    .. warn:: This will write orbital error corrected phase_data in the ifgs.
 
     :param ifg: the ifg to remove remove the orbital error from
     :param degree: type of model to use PLANAR, QUADRATIC etc
@@ -190,7 +190,7 @@ def _independent_correction(ifg, degree, offset, params):
 def _network_correction(ifgs, degree, offset, m_ifgs=None):
     """
     Calculates orbital correction model, removing this from the ifgs.
-    .. warn:: This does in-situ modification of phase_data in the ifgs.
+    .. warn:: This will write orbital error corrected phase_data in the ifgs.
 
     :param ifgs: interferograms reduced to a minimum tree from prior
         MST calculations
@@ -366,14 +366,11 @@ def remove_orbital_error(ifgs, params):
     if not isinstance(ifgs[0], Ifg):  # when paths are sent
         ifgs = [Ifg(i) for i in ifgs]
         _ = [i.open() for i in ifgs]
+        for i in ifgs:
+            shared.nan_and_mm_convert(i, params)
+
     # perform some general error/sanity checks
-    flags = [i.dataset.GetMetadataItem(ifc.PYRATE_ORBITAL_ERROR)
-             for i in ifgs]
-    if all(flags):
-        log.info('Skipped orbital correction, ifgs already corrected')
-        return
-    else:
-        check_orbital_ifgs(ifgs, flags)
+    check_orbital_ifgs(ifgs, params)
 
     mlooked = None
 
@@ -394,11 +391,17 @@ def remove_orbital_error(ifgs, params):
         for m in mlooked:
             m.initialize()
             m.nodata_value = params[cf.NO_DATA_VALUE]
-
     orbital_correction(ifgs, params, mlooked=mlooked)
 
 
-def check_orbital_ifgs(ifgs, flags):
+def check_orbital_ifgs(ifgs, params):
+
+    flags = [i.dataset.GetMetadataItem(ifc.PYRATE_ORBITAL_ERROR)
+             for i in ifgs]
+    if all(flags):
+        log.info('Skipped orbital correction, ifgs already corrected')
+        return
+
     count = sum([f == ifc.ORB_REMOVED for f in flags])
     if (count < len(flags)) and (count > 0):
         log.debug('Detected mix of corrected and uncorrected '
