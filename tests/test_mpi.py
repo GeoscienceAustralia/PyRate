@@ -98,7 +98,7 @@ def col_splits(request):
     return request.param
 
 
-@pytest.fixture(params=[1, 2, 5])
+@pytest.fixture(params=[1])
 def modify_config(request, tempdir, get_config):
     test_conf = common.SYDNEY_TEST_CONF
     params_dict = get_config(test_conf)
@@ -211,18 +211,11 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
 
     mpiops.comm.barrier()
 
+    _, maxvar, vcmt = run_pyrate.process_ifgs(
+        ifg_paths=dest_paths, params=params, rows=row_splits, cols=col_splits)
+
     tiles = mpiops.run_once(run_pyrate.get_tiles, dest_paths[0],
                             rows=row_splits, cols=col_splits)
-    preread_ifgs = run_pyrate.create_ifg_dict(dest_paths, params, tiles)
-    run_pyrate.mst_calc(dest_paths, params, tiles, preread_ifgs)
-    refpx, refpy = run_pyrate.ref_pixel_calc(dest_paths, params)
-    run_pyrate.orb_fit_calc(dest_paths, params)
-    run_pyrate.ref_phase_estimation(dest_paths, params, refpx, refpy)
-
-    maxvar, vcmt = run_pyrate.maxvar_vcm_calc(dest_paths, params, preread_ifgs)
-    pyrate.shared.save_numpy_phase(dest_paths, tiles, params)
-    run_pyrate.timeseries_calc(dest_paths, params, vcmt, tiles, preread_ifgs)
-    run_pyrate.linrate_calc(dest_paths, params, vcmt, tiles, preread_ifgs)
     postprocessing.postprocess_linrate(row_splits, col_splits, params)
     postprocessing.postprocess_timeseries(row_splits, col_splits, params)
     ifgs_mpi_out_dir = params[cf.OUT_DIR]
