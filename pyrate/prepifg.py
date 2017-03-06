@@ -296,9 +296,8 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out,
         output_file=looks_path,
         thresh=thresh,
         out_driver_type=driver_type)
-    if not write_to_disc:
-        # this is used in orbfit correction when looks!=1
-        return resampled_data, out_ds
+
+    return resampled_data, out_ds
 
 
 def resample(data, xscale, yscale, thresh):

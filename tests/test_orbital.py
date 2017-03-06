@@ -27,7 +27,7 @@ from pyrate import algorithm
 from pyrate import config as cf
 from pyrate.orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, QUADRATIC, PART_CUBIC
 from pyrate.orbital import OrbitalError, orbital_correction
-from pyrate.orbital import get_design_matrix, get_network_design_matrix, get_num_params
+from pyrate.orbital import get_design_matrix, get_network_design_matrix, _get_num_params
 from pyrate.scripts import run_pyrate
 from pyrate.shared import Ifg
 from pyrate.shared import nanmedian
@@ -408,7 +408,7 @@ def network_correction(ifgs, deg, off, ml_ifgs=None, tol=1e-6):
 
     # calculate forward correction
     sdm = unittest_dm(ifgs[0], NETWORK_METHOD, deg)
-    ncoef = get_num_params(deg, offset=False)  # NB: ignore offsets for network method
+    ncoef = _get_num_params(deg, offset=False)  # NB: ignore offsets for network method
     assert sdm.shape == (ncells, ncoef)
     orbs = _expand_corrections(ifgs, sdm, params, ncoef, off)
 

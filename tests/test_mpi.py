@@ -129,9 +129,8 @@ def get_crop(request):
 def test_vcm_matlab_vs_mpi(mpisync, tempdir, get_config):
     from tests.common import SYD_TEST_DIR
 
-    params_dict = get_config(
-        os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf')
-    )
+    params_dict = get_config(os.path.join(SYD_TEST_DIR,
+                                          'pyrate_system_test.conf'))
 
     MATLAB_VCM_DIR = os.path.join(SYD_TEST_DIR, 'matlab_vcm')
     matlab_vcm = np.genfromtxt(os.path.join(MATLAB_VCM_DIR,
@@ -182,8 +181,8 @@ def orbfit_method(request):
 
 @pytest.mark.skipif(TRAVIS, reason='skipping mpi tests in travis')
 def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
-                                ref_est_method, row_splits, col_splits,
-                                get_crop, orbfit_lks, orbfit_method):
+                                ref_est_method=1, row_splits=2, col_splits=2,
+                                get_crop=1, orbfit_lks=1, orbfit_method=2):
     params = modify_config
     outdir = mpiops.run_once(tempdir)
     params[cf.OUT_DIR] = outdir

@@ -71,7 +71,8 @@ QUADRATIC = cf.QUADRATIC
 PART_CUBIC = cf.PART_CUBIC
 
 
-def orbital_correction(ifgs_or_ifg_paths, params, mlooked=None, offset=True):
+def orbital_correction(ifgs_or_ifg_paths, params, mlooked=None, offset=True,
+                       preread_ifgs=None):
     """
     Removes orbital error from given Ifgs.
 
@@ -94,12 +95,13 @@ def orbital_correction(ifgs_or_ifg_paths, params, mlooked=None, offset=True):
         raise OrbitalError(msg)
 
     if method == NETWORK_METHOD:
-        ifgs = ifgs_or_ifg_paths
         if mlooked is None:
-            _network_correction(ifgs, degree, offset)
+            _network_correction(ifgs_or_ifg_paths, degree, offset,
+                                preread_ifgs)
         else:
-            _validate_mlooked(mlooked, ifgs)
-            _network_correction(ifgs, degree, offset, mlooked)
+            _validate_mlooked(mlooked, ifgs_or_ifg_paths)
+            _network_correction(ifgs_or_ifg_paths, degree, offset, mlooked,
+                                preread_ifgs)
 
     elif method == INDEPENDENT_METHOD:
         # not running in parallel
@@ -128,7 +130,7 @@ def _validate_mlooked(mlooked, ifgs):
         raise OrbitalError(msg)
 
 
-def get_num_params(degree, offset=None):
+def _get_num_params(degree, offset=None):
     '''
     Returns number of model parameters
     '''
@@ -164,7 +166,8 @@ def _independent_correction(ifg, degree, offset, params):
     if not ifg.is_open:
         ifg.open()
     shared.nan_and_mm_convert(ifg, params)
-    vphase = reshape(ifg.phase_data, ifg.num_cells)  # vectorise, keeping NODATA
+    # vectorise, keeping NODATA
+    vphase = reshape(ifg.phase_data, ifg.num_cells)
     dm = get_design_matrix(ifg, degree, offset)
 
     # filter NaNs out before getting model
@@ -187,7 +190,7 @@ def _independent_correction(ifg, degree, offset, params):
         ifg.close()
 
 
-def _network_correction(ifgs, degree, offset, m_ifgs=None):
+def _network_correction(ifgs, degree, offset, m_ifgs=None, prered_ifgs=None):
     """
     Calculates orbital correction model, removing this from the ifgs.
     .. warn:: This will write orbital error corrected phase_data in the ifgs.
@@ -196,7 +199,7 @@ def _network_correction(ifgs, degree, offset, m_ifgs=None):
         MST calculations
     :param degree: PLANAR, QUADRATIC or PART_CUBIC
     :param offset: True to calculate the model using offsets
-    :param m_ifgs: multilooked ifgs (sequence must be mlooked
+    :param m_ifgs: multilooked orbfit ifgs (sequence must be mlooked
         versions of 'ifgs' arg)
     """
 
@@ -213,13 +216,13 @@ def _network_correction(ifgs, degree, offset, m_ifgs=None):
     obsv = vphase[~isnan(vphase)]
     orbparams = dot(pinv(B, 1e-6), obsv)
 
-    ncoef = get_num_params(degree)
+    ncoef = _get_num_params(degree)
     ids = master_slave_ids(get_all_epochs(ifgs))
     coefs = [orbparams[i:i+ncoef] for i in
              range(0, len(set(ids)) * ncoef, ncoef)]
 
-    # create full res DM to expand determined coefficients into full res orbital
-    # correction (eg. expand coarser model to full size)
+    # create full res DM to expand determined coefficients into full res
+    # orbital correction (eg. expand coarser model to full size)
     dm = get_design_matrix(ifgs[0], degree, offset=False)
 
     for i in ifgs:
@@ -245,6 +248,7 @@ def save_orbital_error_corrected_phase(ifg):
     ifg: Ifg class instance
     """
     # set orbfit tags after orbital error correction
+    print(ifg)
     ifg.dataset.SetMetadataItem(ifc.PYRATE_ORBITAL_ERROR, ifc.ORB_REMOVED)
     ifg.write_modified_phase()
     ifg.close()
@@ -274,7 +278,7 @@ def get_design_matrix(ifg, degree, offset, scale=100.0):
     y = yg.reshape(ifg.num_cells) * ysize
 
     # TODO: performance test this vs np.concatenate (n by 1 cols)??
-    dm = empty((ifg.num_cells, get_num_params(degree, offset)), dtype=float32)
+    dm = empty((ifg.num_cells, _get_num_params(degree, offset)), dtype=float32)
 
     # apply positional parameter values, multiply pixel coordinate by cell size
     # to get distance (a coord by itself doesn't tell us distance from origin)
@@ -321,7 +325,9 @@ def get_network_design_matrix(ifgs, degree, offset):
 
     # init sparse network design matrix
     nepochs = len(set(get_all_epochs(ifgs)))
-    ncoef = get_num_params(degree)  # no offsets: they are made separately below
+
+    # no offsets: they are made separately below
+    ncoef = _get_num_params(degree)
     shape = [ifgs[0].num_cells * nifgs, ncoef * nepochs]
 
     if offset:
@@ -356,31 +362,29 @@ class OrbitalError(Exception):
     """
 
 
-def remove_orbital_error(ifgs, params):
+def remove_orbital_error(ifgs, params, preread_ifgs):
     log.info('Calculating orbital error correction')
 
     if not params[cf.ORBITAL_FIT]:
         log.info('Orbital correction not required')
         return
 
-    if not isinstance(ifgs[0], Ifg):  # when paths are sent
-        ifgs = [Ifg(i) for i in ifgs]
-        _ = [i.open() for i in ifgs]
-        for i in ifgs:
-            shared.nan_and_mm_convert(i, params)
+    # remove non ifg keys
+    _ = [preread_ifgs.pop(k) for k in ['gt', 'epochlist', 'md', 'wkt']]
 
     # perform some general error/sanity checks
-    check_orbital_ifgs(ifgs, params)
+    _check_orbital_ifgs(preread_ifgs)
 
     mlooked = None
 
     if (params[cf.ORBITAL_FIT_LOOKS_X] > 1 or
-            params[cf.ORBITAL_FIT_LOOKS_Y] > 1):
+            params[cf.ORBITAL_FIT_LOOKS_Y] > 1 or
+            params[cf.ORBITAL_FIT_METHOD] == 2):
         # resampling here to use all prior corrections to orig data
         # can't do multiprocessing without writing to disc, but can do MPI
         # due to swig pickling issue. So multiprocesing is not implemented
         mlooked_dataset = prepifg.prepare_ifgs(
-            [i.data_path for i in ifgs],
+            ifgs,
             crop_opt=prepifg.ALREADY_SAME_SIZE,
             xlooks=params[cf.ORBITAL_FIT_LOOKS_X],
             ylooks=params[cf.ORBITAL_FIT_LOOKS_Y],
@@ -391,23 +395,26 @@ def remove_orbital_error(ifgs, params):
         for m in mlooked:
             m.initialize()
             m.nodata_value = params[cf.NO_DATA_VALUE]
-    orbital_correction(ifgs, params, mlooked=mlooked)
+            m.convert_to_nans()
+            m.convert_to_mm()
+    orbital_correction(ifgs, params, mlooked=mlooked,
+                       preread_ifgs=preread_ifgs)
 
 
-def check_orbital_ifgs(ifgs, params):
+def _check_orbital_ifgs(preread_ifgs):
 
-    flags = [i.dataset.GetMetadataItem(ifc.PYRATE_ORBITAL_ERROR)
-             for i in ifgs]
+    ifg_paths = sorted(preread_ifgs.keys())
+    flags = [ifc.PYRATE_ORBITAL_ERROR in preread_ifgs[i].metadata
+             for i in ifg_paths]
     if all(flags):
         log.info('Skipped orbital correction, ifgs already corrected')
         return
 
-    count = sum([f == ifc.ORB_REMOVED for f in flags])
-    if (count < len(flags)) and (count > 0):
+    if (sum(flags) < len(flags)) and (sum(flags) > 0):
         log.debug('Detected mix of corrected and uncorrected '
                   'orbital error in ifgs')
 
-        for i, flag in zip(ifgs, flags):
+        for i, flag in zip(ifg_paths, flags):
             if flag:
                 msg = '{}: prior orbital error correction detected'.format(i)
             else:

@@ -970,7 +970,7 @@ class PrereadIfg:
     # pylint: disable=too-many-arguments
     # pylint: disable=too-many-instance-attributes
     def __init__(self, path, nan_fraction, master, slave, time_span,
-                 nrows, ncols):
+                 nrows, ncols, metadata):
         self.path = path
         self.nan_fraction = nan_fraction
         self.master = master
@@ -979,6 +979,7 @@ class PrereadIfg:
         self.nrows = nrows
         self.ncols = ncols
         self.shape = (nrows, ncols)
+        self.metadata = metadata
 
 
 def prepare_ifg(ifg_path, params):
