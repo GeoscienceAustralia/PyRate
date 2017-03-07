@@ -95,9 +95,22 @@ def est_ref_phs_method2(phase_data, half_chip_size,
 
 
 def est_ref_phase_method1(ifgs, params):
-    """ref phs estimate method 1 estimation"""
+    """
+    ref phs estimate method 1 estimation
+
+    Parameters
+    ----------
+    ifgs: list
+        list of interferograms or shared.IfgPart class instances
+    params: dict
+        parameter dict corresponding to config file
+
+    Returns
+    -------
+    ref_phs: ndarray
+        numpy array of size (nifgs, 1)
+    """
     ifg_phase_data_sum = np.zeros(ifgs[0].shape, dtype=np.float64)
-    # TODO: revisit as this will likely hit memory limit in NCI
     phase_data = [i.phase_data for i in ifgs]
     for ifg in ifgs:
         ifg_phase_data_sum += ifg.phase_data

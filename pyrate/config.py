@@ -267,7 +267,7 @@ PARAM_CONVERSION = {
     PROCESSES: (int, 8),
 
     PROCESSOR: (int, None),
-    NETWORKX_OR_MATLAB_FLAG: (int, 0),
+    NETWORKX_OR_MATLAB_FLAG: (int, 1),
 
     LUIGI: (int, 0),
     NAN_CONVERSION: (int, 0),

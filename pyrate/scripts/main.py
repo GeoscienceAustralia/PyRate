@@ -17,7 +17,7 @@ Copyright 2017 Geoscience Australia
    See the License for the specific language governing permissions and
    limitations under the License.
 """
-
+import sys
 from os.path import abspath
 import logging
 import click
@@ -46,7 +46,11 @@ def prepifg(config_file):
     """
     config_file = abspath(config_file)
     params = cf.get_config_params(config_file)
-    run_prepifg.main(params)
+    if params[cf.LUIGI]:
+        sys.argv[1] = config_file
+        run_prepifg.main()
+    else:
+        run_prepifg.main(params)
 
 
 @cli.command()
