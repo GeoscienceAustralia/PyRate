@@ -1,24 +1,20 @@
+#   This Python module is part of the PyRate software package.
+#
+#   Copyright 2017 Geoscience Australia
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
 """
-Luigi tasks to convert GAMMA headers to ESRI's BIL format.
-
-GAMMA headers need to be translated into a GDAL recognisable format for use in
-PyRate. This module translates GAMMA headers into into ESRI's BIL format,
-allowing GDAL to access the raster data
-
-The types of GAMMA files converted by PyRate are:
-
-- DEM: with a .unw float32 binary data file (MSB order), & '.par' header. There
-  is only a single height band in the binary data.
-
-- Interferograms: have a .unw float32 bit binary data file (MSB order), with a
-  single band for phase data. Two .par resource/header files, each containing
-  details of the epochs used to create the interferogram. No geographic date is
-  stored in these, so the DEM header is required for raster sizes/location etc.
-
-The interferograms are geocoded/orthorectified to the DEM geometry, so all
-datasets will share the same pixel size and dimensions.
-
-.. todo:: describe incidence files (and any others (for later versions).
+This Python module is a Luigi wrapper for converting GAMMA format input data.
 """
 # pylint: disable=attribute-defined-outside-init
 import os
