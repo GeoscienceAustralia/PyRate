@@ -95,11 +95,7 @@ def parse_header_new(path):
 def parse_epoch_header(path):
     """Returns dict of the minimum required epoch metadata needed for PyRate"""
     lookup = parse_header(path)
-    subset = {}
-    year, month, day, hour, mins, sec = [int(float(i))
-                                         for i in lookup[GAMMA_DATE][:6]]
-    subset[ifc.MASTER_DATE] = datetime.date(year, month, day)
-    subset[ifc.MASTER_TIME] = datetime.time(hour, mins, sec)
+    subset = parse_date_time(lookup)
 
     # handle conversion of radar frequency to wavelength
     freq, unit = lookup[GAMMA_FREQUENCY]
@@ -113,6 +109,26 @@ def parse_epoch_header(path):
         msg = 'Unrecognised unit field for incidence_angle: %s'
         raise GammaException(msg % unit)
     subset[ifc.PYRATE_INCIDENCE_DEGREES] = float(incidence)
+
+    return subset
+
+
+def parse_date_time(lookup):
+    """Grab date and time information and convert to datetime objects"""
+    subset = {}
+    if len(lookup[GAMMA_DATE]) == 3:
+        year, month, day, = [int(float(i)) for i in lookup[GAMMA_DATE][:3]]
+        # Occasionally GAMMA header has no time information - default to midnight
+        hour, mins, sec = 0, 0, 0
+    elif len(lookup[GAMMA_DATE]) == 6:
+        year, month, day, hour, mins, sec = [int(float(i))
+                                             for i in lookup[GAMMA_DATE][:6]]
+    else:
+        msg = "Date and time information not complete in GAMMA headers"
+        raise GammaException(msg)
+
+    subset[ifc.MASTER_DATE] = datetime.date(year, month, day)
+    subset[ifc.MASTER_TIME] = datetime.time(hour, mins, sec)
 
     return subset
 
