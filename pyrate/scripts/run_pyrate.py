@@ -304,6 +304,8 @@ def orb_fit_calc(ifg_paths, params, preread_ifgs=None):
         prcs_ifgs = mpiops.array_split(ifg_paths)
         orbital.remove_orbital_error(prcs_ifgs, params, preread_ifgs)
     else:
+        # can use multiple processes if we write data to disc during
+        # remove_orbital_error step
         if mpiops.rank == MASTER_PROCESS:
             orbital.remove_orbital_error(ifg_paths, params, preread_ifgs)
     # orbital.remove_orbital_error(ifg_paths, params)

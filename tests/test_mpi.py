@@ -26,6 +26,8 @@ from pyrate import mpiops
 from pyrate import algorithm
 
 TRAVIS = True if 'TRAVIS' in os.environ else False
+PYTHON3P5 = True if ('TRAVIS_PYTHON_VERSION' in os.environ and
+                     os.environ['TRAVIS_PYTHON_VERSION'] == '3.5') else False
 
 
 @pytest.fixture()
@@ -98,7 +100,7 @@ def col_splits(request):
     return request.param
 
 
-@pytest.fixture(params=[1])
+@pytest.fixture(params=[1, 2, 5])
 def modify_config(request, tempdir, get_config):
     test_conf = common.SYDNEY_TEST_CONF
     params_dict = get_config(test_conf)
@@ -181,8 +183,8 @@ def orbfit_method(request):
 
 @pytest.mark.skipif(TRAVIS, reason='skipping mpi tests in travis')
 def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
-                                ref_est_method=1, row_splits=2, col_splits=2,
-                                get_crop=1, orbfit_lks=1, orbfit_method=2):
+                                ref_est_method, row_splits, col_splits,
+                                get_crop, orbfit_lks, orbfit_method=1):
     params = modify_config
     outdir = mpiops.run_once(tempdir)
     params[cf.OUT_DIR] = outdir
@@ -210,7 +212,7 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
 
     mpiops.comm.barrier()
 
-    _, maxvar, vcmt = run_pyrate.process_ifgs(
+    (refpx, refpy), maxvar, vcmt = run_pyrate.process_ifgs(
         ifg_paths=dest_paths, params=params, rows=row_splits, cols=col_splits)
 
     tiles = mpiops.run_once(run_pyrate.get_tiles, dest_paths[0],
@@ -239,11 +241,12 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
         ifgs = shared.pre_prepare_ifgs(dest_paths, params_old)
         mst_grid = tests.common.mst_calculation(dest_paths, params_old)
         refy, refx = refpixel.ref_pixel(ifgs, params_old)
-
+        assert refx == refpx
+        assert refy == refpy
         pyrate.orbital.remove_orbital_error(ifgs, params_old)
         ifgs = common.prepare_ifgs_without_phase(dest_paths, params_old)
-
-        _, ifgs = rpe.estimate_ref_phase(ifgs, params_old, refx, refy)
+        rpe.estimate_ref_phase(ifgs, params_old, refx, refy)
+        ifgs = shared.pre_prepare_ifgs(dest_paths, params_old)
         maxvar_s = [vcm.cvd(i, params_old)[0] for i in ifgs]
         vcmt_s = vcm.get_vcmt(ifgs, maxvar)
         tsincr, tscum, _ = tests.common.compute_time_series(
@@ -281,7 +284,7 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
             _tifs_same(ifgs_mpi_out_dir, params_old[cf.OUT_DIR],
                        'tsincr' + '_' + str(epochlist.dates[i + 1]) + ".tif")
 
-        # 12 timeseries ooutput
+        # 12 timeseries outputs
         assert i + 1 == tsincr.shape[2]
         shutil.rmtree(ifgs_mpi_out_dir)  # remove mpi out dir
         shutil.rmtree(params_old[cf.OUT_DIR])  # remove serial out dir
