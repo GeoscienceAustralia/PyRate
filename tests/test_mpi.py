@@ -127,7 +127,6 @@ def get_crop(request):
     return request.param
 
 
-@pytest.mark.skipif(TRAVIS, reason='skipping mpi tests in travis')
 def test_vcm_matlab_vs_mpi(mpisync, tempdir, get_config):
     from tests.common import SYD_TEST_DIR
 
@@ -181,7 +180,8 @@ def orbfit_method(request):
     return request.param
 
 
-@pytest.mark.skipif(TRAVIS, reason='skipping mpi tests in travis')
+@pytest.mark.skipif(TRAVIS and not PYTHON3P5,
+                    reason='skipping mpi tests in travis except python 3.5')
 def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
                                 ref_est_method, row_splits, col_splits,
                                 get_crop, orbfit_lks, orbfit_method=1):
@@ -200,6 +200,10 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
                            get_crop, orbfit_lks, orbfit_method, mpiops.rank))
     if xlks * col_splits > 45 or ylks * row_splits > 70:
         print('skipping test because lks and col_splits are not compatible')
+        return
+
+    if TRAVIS and xlks % 2:  # skip if travis to run CI faster
+        print('Skipping in travis env for faster CI run')
         return
 
     base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST])
@@ -241,8 +245,7 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
         ifgs = shared.pre_prepare_ifgs(dest_paths, params_old)
         mst_grid = tests.common.mst_calculation(dest_paths, params_old)
         refy, refx = refpixel.ref_pixel(ifgs, params_old)
-        assert refx == refpx
-        assert refy == refpy
+        assert (refx == refpx) and (refy == refpy)
         pyrate.orbital.remove_orbital_error(ifgs, params_old)
         ifgs = common.prepare_ifgs_without_phase(dest_paths, params_old)
         rpe.estimate_ref_phase(ifgs, params_old, refx, refy)
@@ -318,7 +321,6 @@ def reconstruct_times_series(shape, tiles, output_dir):
     return tsincr_mpi, tscum_mpi
 
 
-@pytest.mark.skipif(TRAVIS, reason='skipping mpi tests in travis')
 def test_prepifg_mpi(mpisync, get_config, tempdir,
                      roipac_or_gamma, get_lks, get_crop):
     from tests.common import SYDNEY_TEST_CONF
