@@ -98,7 +98,8 @@ def orbital_correction(ifgs_or_ifg_paths, params, mlooked=None, offset=True,
     if method == NETWORK_METHOD:
         if mlooked is None:
             network_correction(ifgs_or_ifg_paths, degree, offset,
-                               preread_ifgs)
+                               m_ifgs=mlooked,
+                               preread_ifgs=preread_ifgs)
         else:
             _validate_mlooked(mlooked, ifgs_or_ifg_paths)
             network_correction(ifgs_or_ifg_paths, degree, offset, mlooked,
@@ -397,20 +398,25 @@ def remove_orbital_error(ifgs, params, preread_ifgs=None):
     ifg_paths = [i.data_path for i in ifgs] \
         if isinstance(ifgs[0], Ifg) else ifgs
 
-    mlooked_dataset = prepifg.prepare_ifgs(
-        ifg_paths,
-        crop_opt=prepifg.ALREADY_SAME_SIZE,
-        xlooks=params[cf.ORBITAL_FIT_LOOKS_X],
-        ylooks=params[cf.ORBITAL_FIT_LOOKS_Y],
-        thresh=params[cf.NO_DATA_AVERAGING_THRESHOLD],
-        write_to_disc=False)
-    mlooked = [Ifg(m[1]) for m in mlooked_dataset]
+    mlooked = None
 
-    for m in mlooked:
-        m.initialize()
-        m.nodata_value = params[cf.NO_DATA_VALUE]
-        m.convert_to_nans()
-        m.convert_to_mm()
+    # mlooking is not necessary for independent correction
+    # can use multiple procesing if write_to_disc=True
+    if params[cf.ORBITAL_FIT_METHOD] == 2:
+        mlooked_dataset = prepifg.prepare_ifgs(
+            ifg_paths,
+            crop_opt=prepifg.ALREADY_SAME_SIZE,
+            xlooks=params[cf.ORBITAL_FIT_LOOKS_X],
+            ylooks=params[cf.ORBITAL_FIT_LOOKS_Y],
+            thresh=params[cf.NO_DATA_AVERAGING_THRESHOLD],
+            write_to_disc=False)
+        mlooked = [Ifg(m[1]) for m in mlooked_dataset]
+
+        for m in mlooked:
+            m.initialize()
+            m.nodata_value = params[cf.NO_DATA_VALUE]
+            # m.convert_to_nans()  # already nan converted
+            # m.convert_to_mm()  # already mm converted
 
     orbital_correction(ifgs, params, mlooked=mlooked,
                        preread_ifgs=preread_ifgs)
