@@ -97,13 +97,13 @@ def orbital_correction(ifgs_or_ifg_paths, params, mlooked=None, offset=True,
 
     if method == NETWORK_METHOD:
         if mlooked is None:
-            network_correction(ifgs_or_ifg_paths, degree, offset,
+            network_correction(ifgs_or_ifg_paths, degree, offset, params,
                                m_ifgs=mlooked,
                                preread_ifgs=preread_ifgs)
         else:
             _validate_mlooked(mlooked, ifgs_or_ifg_paths)
-            network_correction(ifgs_or_ifg_paths, degree, offset, mlooked,
-                               preread_ifgs)
+            network_correction(ifgs_or_ifg_paths, degree, offset, params,
+                               mlooked, preread_ifgs)
 
     elif method == INDEPENDENT_METHOD:
         # not running in parallel
@@ -185,14 +185,14 @@ def independent_correction(ifg, degree, offset, params):
         fullorb = np.reshape(np.dot(dm, model), ifg.phase_data.shape)
     offset_removal = nanmedian(np.ravel(ifg.phase_data - fullorb))
     ifg.phase_data -= (fullorb - offset_removal)
-
     # set orbfit tags after orbital error correction
     save_orbital_error_corrected_phase(ifg)
     if ifg.open():
         ifg.close()
 
 
-def network_correction(ifgs, degree, offset, m_ifgs=None, preread_ifgs=None):
+def network_correction(ifgs, degree, offset, params, m_ifgs=None,
+                       preread_ifgs=None):
     """
     Calculates orbital correction model, removing this from the ifgs.
     .. warn:: This will write orbital error corrected phase_data in the ifgs.
@@ -201,8 +201,10 @@ def network_correction(ifgs, degree, offset, m_ifgs=None, preread_ifgs=None):
         MST calculations
     :param degree: PLANAR, QUADRATIC or PART_CUBIC
     :param offset: True to calculate the model using offsets
+    :param params: dict, parameter dictionary
     :param m_ifgs: multilooked orbfit ifgs (sequence must be mlooked
         versions of 'ifgs' arg)
+    :param preread_ifgs: dict, parameters dict corresponding to config file
     """
     # pylint: disable=too-many-locals
     src_ifgs = ifgs if m_ifgs is None else m_ifgs
@@ -245,19 +247,20 @@ def network_correction(ifgs, degree, offset, m_ifgs=None, preread_ifgs=None):
             # are paths
             i = Ifg(i)
             i.open(readonly=False)
+            shared.nan_and_mm_convert(i, params)
         _remove_networkx_error(coefs, dm, i, ids, offset)
 
 
-def _remove_networkx_error(coefs, dm, i, ids, offset):
-    orb = dm.dot(coefs[ids[i.slave]] - coefs[ids[i.master]])
-    orb = orb.reshape(i.shape)
+def _remove_networkx_error(coefs, dm, ifg, ids, offset):
+    orb = dm.dot(coefs[ids[ifg.slave]] - coefs[ids[ifg.master]])
+    orb = orb.reshape(ifg.shape)
     # offset estimation
     if offset:
         # bring all ifgs to same base level
-        orb -= nanmedian(np.ravel(i.phase_data - orb))
-    i.phase_data -= orb  # remove orbital error from the ifg
+        orb -= nanmedian(np.ravel(ifg.phase_data - orb))
+    ifg.phase_data -= orb  # remove orbital error from the ifg
     # set orbfit tags after orbital error correction
-    save_orbital_error_corrected_phase(i)
+    save_orbital_error_corrected_phase(ifg)
 
 
 def save_orbital_error_corrected_phase(ifg):
@@ -428,8 +431,8 @@ def remove_orbital_error(ifgs, params, preread_ifgs=None):
         for m in mlooked:
             m.initialize()
             m.nodata_value = params[cf.NO_DATA_VALUE]
-            # m.convert_to_nans()  # already nan converted
-            # m.convert_to_mm()  # already mm converted
+            m.convert_to_nans()
+            m.convert_to_mm()
 
     orbital_correction(ifgs, params, mlooked=mlooked,
                        preread_ifgs=preread_ifgs)

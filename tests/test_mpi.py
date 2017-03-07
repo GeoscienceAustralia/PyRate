@@ -28,6 +28,8 @@ from pyrate import algorithm
 TRAVIS = True if 'TRAVIS' in os.environ else False
 PYTHON3P5 = True if ('TRAVIS_PYTHON_VERSION' in os.environ and
                      os.environ['TRAVIS_PYTHON_VERSION'] == '3.5') else False
+GDAL2P0 = True if ('GDALVERSION' in os.environ and
+                   os.environ['GDALVERSION'] == '2.0.0') else False
 
 
 @pytest.fixture()
@@ -180,11 +182,12 @@ def orbfit_method(request):
     return request.param
 
 
-@pytest.mark.skipif(TRAVIS and not PYTHON3P5,
-                    reason='skipping mpi tests in travis except python 3.5')
+@pytest.mark.skipif(TRAVIS and (not PYTHON3P5) and (not GDAL2P0),
+                    reason='skipping mpi tests in travis except python 3.5'
+                           'and GDAL=2.0.0')
 def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
                                 ref_est_method, row_splits, col_splits,
-                                get_crop, orbfit_lks, orbfit_method=1):
+                                get_crop, orbfit_lks, orbfit_method):
     params = modify_config
     outdir = mpiops.run_once(tempdir)
     params[cf.OUT_DIR] = outdir
