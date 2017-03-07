@@ -47,7 +47,6 @@ def prepifg(config_file):
     config_file = abspath(config_file)
     params = cf.get_config_params(config_file)
     if params[cf.LUIGI]:
-        sys.argv[1] = config_file
         run_prepifg.main()
     else:
         run_prepifg.main(params)

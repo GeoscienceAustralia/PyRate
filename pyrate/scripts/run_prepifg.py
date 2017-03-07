@@ -56,7 +56,8 @@ def main(params=None):
     important pyrate stuff anyway, but might affect gen_thumbs.py
     going to assume base_ifg_paths is ordered correcly
     """
-    usage = 'Usage: python run_prepifg.py <config file>'
+    usage = 'Usage: pyrate prepifg <config_file>'
+    print(sys.argv)
 
     def _convert_dem_inc_ele(params, base_ifg_paths):
         processor = params[cf.PROCESSOR]  # roipac or gamma
@@ -77,14 +78,12 @@ def main(params=None):
             raise cf.ConfigException('params can not be provided with luigi')
         base_ifg_paths = _convert_dem_inc_ele(params, base_ifg_paths)
     else:  # if params not provided read from config file
-        if (not params) and ((len(sys.argv) == 1)
-                             or (sys.argv[1] == '-h'
-                                 or sys.argv[1] == '--help')):
+        if (not params) and (len(sys.argv) < 3):
             print(usage)
             return
-        base_ifg_paths, _, params = cf.get_ifg_paths(sys.argv[1])
+        base_ifg_paths, _, params = cf.get_ifg_paths(sys.argv[2])
         use_luigi = params[cf.LUIGI]  # luigi or no luigi
-        raw_config_file = sys.argv[1]
+        raw_config_file = sys.argv[2]
         base_ifg_paths = _convert_dem_inc_ele(params, base_ifg_paths)
 
     gamma_or_roipac = params[cf.PROCESSOR]  # roipac or gamma

@@ -30,7 +30,7 @@ from pyrate.config import (
     APS_INCIDENCE_MAP,
     APS_ELEVATION_MAP
     )
-from pyrate.scripts import run_prepifg, run_pyrate
+from pyrate.scripts import run_prepifg
 from tests.common import SYD_TEST_DIR
 from tests.common import sydney_data_setup
 
@@ -95,14 +95,14 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
             os.path.join(self.SYDNEY_GAMMA_TEST, "*_utm.unw"))
 
         self.make_gamma_input_files(data_paths)
-        sys.argv = ['run_pyrate.py', conf_file]
+        sys.argv = ['pyrate', 'prepifg', conf_file]
 
         base_ifg_paths, dest_paths, params = cf.get_ifg_paths(conf_file)
         dest_base_ifgs = [os.path.join(
             params[cf.OUT_DIR], os.path.basename(q).split('.')[0] + '_' +
             os.path.basename(q).split('.')[1] + '.tif') 
             for q in base_ifg_paths]
-        sys.argv = ['run_prepifg.py', conf_file]
+        sys.argv = ['pyrate', 'prepifg', conf_file]
         run_prepifg.main()
 
         for p, q in zip(dest_base_ifgs, dest_paths):
@@ -146,7 +146,7 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
 
     def check_roipac(self):
         self.make_roipac_input_files(self.dataPaths, 'WGS84')
-        sys.argv = ['run_prepifg.py', self.confFile]
+        sys.argv = ['pyrate', 'prepifg', self.confFile]
         run_prepifg.main()
         for path in self.expPaths:
             self.assertTrue(os.path.exists(path),

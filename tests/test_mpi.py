@@ -245,7 +245,7 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
         ifgs = shared.pre_prepare_ifgs(dest_paths, params_old)
         mst_grid = tests.common.mst_calculation(dest_paths, params_old)
         refy, refx = refpixel.ref_pixel(ifgs, params_old)
-        assert (refx == refpx) and (refy == refpy)
+        assert (refx == refpx) and (refy == refpy)  # both must match
         pyrate.orbital.remove_orbital_error(ifgs, params_old)
         ifgs = common.prepare_ifgs_without_phase(dest_paths, params_old)
         rpe.estimate_ref_phase(ifgs, params_old, refx, refy)

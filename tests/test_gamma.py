@@ -396,7 +396,7 @@ class TestGammaLuigiEquality(unittest.TestCase):
             params[cf.OUT_DIR], os.path.basename(q).split('.')[0] + '_' +
             os.path.basename(q).split('.')[1] + '.tif')
             for q in base_ifg_paths]
-        sys.argv = ['run_prepifg.py', conf_file]
+        sys.argv = ['pyrate', 'prepifg', conf_file]
         run_prepifg.main()
 
         for p, q in zip(dest_base_ifgs, dest_paths):
