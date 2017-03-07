@@ -25,10 +25,11 @@ import tests.common
 from .common import sydney5_mock_ifgs, MockIfg
 from pyrate import algorithm
 from pyrate import config as cf
-from pyrate.orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, QUADRATIC, PART_CUBIC
+from pyrate.orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, \
+    QUADRATIC, PART_CUBIC
 from pyrate.orbital import OrbitalError, orbital_correction
-from pyrate.orbital import get_design_matrix, get_network_design_matrix, _get_num_params
-from pyrate.scripts import run_pyrate
+from pyrate.orbital import get_design_matrix, get_network_design_matrix, \
+    _get_num_params
 from pyrate.shared import Ifg
 from pyrate.shared import nanmedian
 from tests import common
@@ -543,9 +544,9 @@ class NetworkCorrectionTestsMultilooking(unittest.TestCase):
 
     def setUp(self):
         # fake some real ifg data by adding nans
-        # TODO: actually make data multilooked by averaging?
         self.ml_ifgs = sydney5_mock_ifgs()
-        self.ifgs = sydney5_mock_ifgs(xs=6, ys=8) # 2x data of default Syd mock
+        # 2x data of default Syd mock
+        self.ifgs = sydney5_mock_ifgs(xs=6, ys=8)
 
         # use different sizes to differentiate axes results
         for ifg in self.ifgs:

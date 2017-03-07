@@ -288,7 +288,7 @@ def save_ref_pixel_blocks(grid, half_patch_size, ifg_paths, params):
     log.info('Saved ref pixel blocks')
 
 
-def orb_fit_calc(ifg_paths, params, preread_ifgs):
+def orb_fit_calc(ifg_paths, params, preread_ifgs=None):
     """
     Orbital fit correction
 
@@ -326,7 +326,6 @@ def ref_phase_estimation(ifg_paths, params, refpx, refpy):
         reference pixel y-coordinate
     """
 
-    # TODO: may benefit from tiling and using a median of median algorithms
     log.info('Estimating and removing reference phase')
     if params[cf.REF_EST_METHOD] == 1:
         # calculate phase sum for later use in ref phase method 1

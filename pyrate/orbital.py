@@ -236,8 +236,11 @@ def network_correction(ifgs, degree, offset, m_ifgs=None, preread_ifgs=None):
     else:
         dm = get_design_matrix(ifgs[0], degree, offset=False)
 
+    # TODO: remove this import from tests suite
+    from tests.common import MockIfg
     for i in ifgs:
-        if not isinstance(i, Ifg):  # then these are paths
+        if not (isinstance(i, Ifg) or isinstance(i, MockIfg)):  # then these
+            # are paths
             i = Ifg(i)
             i.open(readonly=False)
         _remove_networkx_error(coefs, dm, i, ids, offset)
@@ -391,8 +394,11 @@ def remove_orbital_error(ifgs, params, preread_ifgs=None):
         if mpiops.rank == 0:
             _check_orbital_ifgs(preread_ifgs)
 
+    ifg_paths = [i.data_path for i in ifgs] \
+        if isinstance(ifgs[0], Ifg) else ifgs
+
     mlooked_dataset = prepifg.prepare_ifgs(
-        ifgs,
+        ifg_paths,
         crop_opt=prepifg.ALREADY_SAME_SIZE,
         xlooks=params[cf.ORBITAL_FIT_LOOKS_X],
         ylooks=params[cf.ORBITAL_FIT_LOOKS_Y],

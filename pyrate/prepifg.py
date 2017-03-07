@@ -297,7 +297,8 @@ def warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out,
         thresh=thresh,
         out_driver_type=driver_type)
 
-    return resampled_data, out_ds
+    if not write_to_disc:
+        return resampled_data, out_ds
 
 
 def resample(data, xscale, yscale, thresh):
