@@ -30,6 +30,7 @@ import os
 from os.path import splitext
 import warnings
 from pyrate import compat
+from pyrate import mpiops
 
 # general constants
 NO_MULTILOOKING = 1
@@ -302,7 +303,12 @@ def get_config_params(path):
                     line = line[:pos] + os.environ['HOME'] + line[(pos+1):]
             txt += line
 
-    return _parse_conf_file(txt)
+    params = _parse_conf_file(txt)
+    if mpiops.size > 1 and params[LUIGI] == 1:
+        raise ConfigException('LUIGI with MPI not supported. Please '
+                              'turn off LUIGI in config file or '
+                              'use LUIGI without MPI')
+    return params
 
 
 def _parse_conf_file(content):
