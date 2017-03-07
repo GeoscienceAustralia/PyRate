@@ -204,6 +204,7 @@ def network_correction(ifgs, degree, offset, m_ifgs=None, preread_ifgs=None):
     :param m_ifgs: multilooked orbfit ifgs (sequence must be mlooked
         versions of 'ifgs' arg)
     """
+    # pylint: disable=too-many-locals
     src_ifgs = ifgs if m_ifgs is None else m_ifgs
     src_ifgs = mst.mst_from_ifgs(src_ifgs)[3]  # use networkx mst
 
@@ -214,8 +215,7 @@ def network_correction(ifgs, degree, offset, m_ifgs=None, preread_ifgs=None):
 
     # filter NaNs out before getting model
     B = B[~isnan(vphase)]
-    obsv = vphase[~isnan(vphase)]
-    orbparams = dot(pinv(B, 1e-6), obsv)
+    orbparams = dot(pinv(B, 1e-6), vphase[~isnan(vphase)])
 
     ncoef = _get_num_params(degree)
     if preread_ifgs:
@@ -240,7 +240,8 @@ def network_correction(ifgs, degree, offset, m_ifgs=None, preread_ifgs=None):
     # TODO: remove this import from tests suite
     from tests.common import MockIfg
     for i in ifgs:
-        if not (isinstance(i, Ifg) or isinstance(i, MockIfg)):  # then these
+        # open if not Ifg instance
+        if not (isinstance(i, Ifg) or isinstance(i, MockIfg)):  # pragma: no cover
             # are paths
             i = Ifg(i)
             i.open(readonly=False)
@@ -382,6 +383,18 @@ class OrbitalError(Exception):
 
 
 def remove_orbital_error(ifgs, params, preread_ifgs=None):
+    """
+    Wrapper for orbital error removal functionality.
+
+    Parameters
+    ----------
+    ifgs: list
+        list of ifgs or ifg paths
+    params: dict
+        dict corresponding to config parameters
+    preread_ifgs: dict, optional
+        dict containing information regarding MPI jobs
+    """
     log.info('Calculating orbital error correction')
 
     if not params[cf.ORBITAL_FIT]:
@@ -422,7 +435,7 @@ def remove_orbital_error(ifgs, params, preread_ifgs=None):
                        preread_ifgs=preread_ifgs)
 
 
-def _check_orbital_ifgs(preread_ifgs):
+def _check_orbital_ifgs(preread_ifgs):  # pragma: no cover
 
     ifg_paths = sorted(preread_ifgs.keys())
     # preread_ifgs[i].metadata contains ifg metadata

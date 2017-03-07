@@ -29,7 +29,6 @@ from os.path import basename, dirname, join
 import shutil
 import stat
 import struct
-import time
 from datetime import date
 from itertools import product
 import numpy as np
