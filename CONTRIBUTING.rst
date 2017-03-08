@@ -21,6 +21,8 @@ If you are reporting a bug, please include:
 * Any details about your local setup that might be helpful in troubleshooting.
 * Detailed steps to reproduce the bug.
 
+As an example of how to report a bug please see: https://github.com/GeoscienceAustralia/PyRate/issues/146
+
 Fix Bugs
 ~~~~~~~~
 
