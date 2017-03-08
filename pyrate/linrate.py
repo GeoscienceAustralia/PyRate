@@ -31,17 +31,6 @@ from joblib import Parallel, delayed
 from pyrate import config as cf
 
 
-def is_pos_def(x):
-    """
-    Can be used to check if matrix x is +ve def.
-    Works on the basis that all eigenvalues should be +ve
-    """
-    if x.shape[0] == x.shape[1]:
-        return np.all(np.linalg.eigvals(x) > 1e-6)
-    else:
-        return False
-
-
 def linear_rate(ifgs, params, vcmt, mst=None):
     """
     Pixel-by-pixel linear rate (velocity) estimation using iterative
