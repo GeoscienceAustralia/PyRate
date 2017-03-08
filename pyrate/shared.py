@@ -28,7 +28,6 @@ from os.path import basename, dirname, join
 import shutil
 import stat
 import struct
-import time
 from datetime import date
 from itertools import product
 import numpy as np
@@ -122,19 +121,7 @@ class RasterBase(object):
             raise IOError("Cannot open write protected file for writing")
 
         flag = GA_ReadOnly if self._readonly else GA_Update
-
-        # The while loop helps in situations when a geotiff is read by multiple
-        # processes. If one process has the file open, then delaying read from
-        # another process improves stability of the MPI processs
-        attempts = 0
-        while (self.dataset is None) and (attempts < 3):
-            try:
-                attempts += 1
-                self.dataset = gdal.Open(self.data_path, flag)
-            except RuntimeError:
-                print('\nneed to read {ifg} again'.format(ifg=self.data_path))
-                time.sleep(0.5)
-
+        self.dataset = gdal.Open(self.data_path, flag)
         if self.dataset is None:
             raise RasterException("Error opening %s" % self.data_path)
 
@@ -969,7 +956,7 @@ class PrereadIfg:
     # pylint: disable=too-many-arguments
     # pylint: disable=too-many-instance-attributes
     def __init__(self, path, nan_fraction, master, slave, time_span,
-                 nrows, ncols):
+                 nrows, ncols, metadata):
         self.path = path
         self.nan_fraction = nan_fraction
         self.master = master
@@ -978,6 +965,7 @@ class PrereadIfg:
         self.nrows = nrows
         self.ncols = ncols
         self.shape = (nrows, ncols)
+        self.metadata = metadata
 
 
 def prepare_ifg(ifg_path, params):
@@ -1002,10 +990,16 @@ def prepare_ifg(ifg_path, params):
 
 def save_numpy_phase(ifg_paths, tiles, params):
     """
-    :param ifg_paths:
-    :param params:
-    :param tiles:
-    :return:
+    Save ifg phase data as numpy array.
+
+    Parameters
+    ----------
+    ifg_paths: list
+        list of strings corresponding to ifg paths
+    params: dict
+        config dict
+    tiles: list
+        list of Shared.Tile instances
     """
     process_ifgs = mpiops.array_split(ifg_paths)
     outdir = params[cf.OUT_DIR]
@@ -1025,7 +1019,14 @@ def save_numpy_phase(ifg_paths, tiles, params):
 
 
 def get_projection_info(ifg_path):
-    """ return projection information of ifg"""
+    """
+    return projection information of ifg
+
+    Parameters
+    ----------
+    ifg_path: str
+        ifg path
+    """
     ds = gdal.Open(ifg_path)
     md = ds.GetMetadata()  # get metadata for writing on output tifs
     gt = ds.GetGeoTransform()  # get geographical bounds of data
@@ -1037,6 +1038,17 @@ def get_projection_info(ifg_path):
 def warp_required(xlooks, ylooks, crop):
     """
     Returns True if params show rasters need to be cropped and/or resized.
+
+    Parameters
+    ----------
+    xlooks: int
+        resampling/multilooking in x dir
+
+    ylooks: int
+        resampling/multilooking in y dir
+
+    crop: int
+        ifg crop option
     """
 
     if xlooks > 1 or ylooks > 1:

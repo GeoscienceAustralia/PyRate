@@ -198,6 +198,7 @@ def validate_chipsize(chipsize, head):
     if chipsize < 3 or chipsize > head.ncols or (chipsize % 2 == 0):
         msg = "Chipsize setting must be >=3 and at least <= grid width"
         raise ValueError(msg)
+    log.info('Chipsize validation successful')
 
 
 def validate_minimum_fraction(min_frac):

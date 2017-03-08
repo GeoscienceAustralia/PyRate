@@ -98,7 +98,7 @@ def test_dest_ifg_paths():
 
 # FIXME: change to read output ifgs
 def get_ifgs(out_dir, _open=True):
-    paths = glob.glob(join(out_dir, 'geo_*-*.tif'))
+    paths = glob.glob(join(out_dir, 'geo_*-*_unw.tif'))
     ifgs = [shared.Ifg(p) for p in paths]
     assert len(ifgs) == 17, 'Got %s' % ifgs
 

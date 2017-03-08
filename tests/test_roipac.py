@@ -363,7 +363,7 @@ class TestRoipacLuigiEquality(unittest.TestCase):
 
     def common_check(self):
         self.makeInputFiles(self.dataPaths, 'WGS84')
-        sys.argv = ['run_prepifg.py', self.confFile]
+        sys.argv = ['pyrate', 'prepifg', self.confFile]
         run_prepifg.main()
         for path in self.expPaths:
             self.assertTrue(os.path.exists(path),

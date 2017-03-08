@@ -44,6 +44,7 @@ exclude_lines =
     raise GammaException
     raise PreprocessError
     raise TimeSeriesError
+    raise OrbitalError
 
     # Don't complain if non-runnable code isn't run:
     if 0:

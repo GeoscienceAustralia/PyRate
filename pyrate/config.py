@@ -29,6 +29,7 @@ import os
 from os.path import splitext
 import warnings
 from pyrate import compat
+from pyrate import mpiops
 
 # general constants
 NO_MULTILOOKING = 1
@@ -69,7 +70,7 @@ INPUT_IFG_PROJECTION = 'projection'
 #: this or *INPUT_IFG_PROJECTION* must be provided.
 ROIPAC_RESOURCE_HEADER = 'resourceHeader'
 #: FLOAT; The no data value in the interferogram files.
-NO_DATA_VALUE = 'no_data_value'
+NO_DATA_VALUE = 'noDataValue'
 #: FLOAT; No data averaging threshold for prepifg
 NO_DATA_AVERAGING_THRESHOLD = 'noDataAveragingThreshold'
 #: BOOL (1/0); Use amplitude images NOT CURRENTLY USED
@@ -266,7 +267,7 @@ PARAM_CONVERSION = {
     PROCESSES: (int, 8),
 
     PROCESSOR: (int, None),
-    NETWORKX_OR_MATLAB_FLAG: (int, 0),
+    NETWORKX_OR_MATLAB_FLAG: (int, 1),
 
     LUIGI: (int, 0),
     NAN_CONVERSION: (int, 0),
@@ -301,7 +302,12 @@ def get_config_params(path):
                     line = line[:pos] + os.environ['HOME'] + line[(pos+1):]
             txt += line
 
-    return _parse_conf_file(txt)
+    params = _parse_conf_file(txt)
+    if mpiops.size > 1 and params[LUIGI] == 1:
+        raise ConfigException('LUIGI with MPI not supported. Please '
+                              'turn off LUIGI in config file or '
+                              'use LUIGI without MPI')
+    return params
 
 
 def _parse_conf_file(content):

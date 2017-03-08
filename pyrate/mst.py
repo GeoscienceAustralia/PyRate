@@ -19,6 +19,7 @@ functionality for selecting interferometric observations.
 """
 # pylint: disable=invalid-name
 from __future__ import print_function
+import logging
 from itertools import product
 from numpy import array, nan, isnan, float32, empty, sum as nsum
 import numpy as np
@@ -33,6 +34,8 @@ np.seterr(invalid='ignore')  # stops RuntimeWarning in nan conversion
 
 # TODO: may need to implement memory saving row-by-row access
 # TODO: document weighting by either Nan fraction OR variance
+
+log = logging.getLogger(__name__)
 
 
 def mst_from_ifgs(ifgs):

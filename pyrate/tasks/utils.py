@@ -139,7 +139,7 @@ class DictParam(luigi.Parameter):
         return sio.getvalue()
 
 
-class RasterParam(DictParam):
+class RasterParam(DictParam):  # pragma: no cover
     """
     Parameter representing a :py:class:`pyrate.shared.RasterBase` sub class.
     """

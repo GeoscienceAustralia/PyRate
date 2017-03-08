@@ -64,7 +64,7 @@ def get_tiles(ifg_path, rows, cols):
 
     Returns
     -------
-    tiles: dict
+    tiles: list
         list of shared.Tile instances
     """
     ifg = Ifg(ifg_path)
@@ -109,7 +109,7 @@ def create_ifg_dict(dest_tifs, params, tiles):
 
     Returns
     -------
-    ifgs_dict: dict
+    preread_ifgs: dict
         dict containing information regarding ifgs that are used downstream
     """
     ifgs_dict = {}
@@ -123,23 +123,29 @@ def create_ifg_dict(dest_tifs, params, tiles):
                                   slave=ifg.slave,
                                   time_span=ifg.time_span,
                                   nrows=ifg.nrows,
-                                  ncols=ifg.ncols)
+                                  ncols=ifg.ncols,
+                                  metadata=ifg.meta_data)
         ifg.close()
     ifgs_dict = _join_dicts(mpiops.comm.allgather(ifgs_dict))
 
+    preread_ifgs_file = join(params[cf.OUT_DIR], 'preread_ifgs.pk')
+
     if mpiops.rank == MASTER_PROCESS:
-        preread_ifgs = join(params[cf.OUT_DIR], 'preread_ifgs.pk')
+
         # add some extra information that's also useful later
         gt, md, wkt = get_projection_info(process_tifs[0])
         ifgs_dict['epochlist'] = algorithm.get_epochs(ifgs_dict)[0]
         ifgs_dict['gt'] = gt
         ifgs_dict['md'] = md
         ifgs_dict['wkt'] = wkt
-        cp.dump(ifgs_dict, open(preread_ifgs, 'wb'))
+        # dump ifgs_dict file for later use
+        cp.dump(ifgs_dict, open(preread_ifgs_file, 'wb'))
 
+    mpiops.comm.barrier()
+    preread_ifgs = cp.load(open(preread_ifgs_file, 'rb'))
     log.info('finish converting phase_data to numpy '
              'in process {}'.format(mpiops.rank))
-    return ifgs_dict
+    return preread_ifgs
 
 
 def mst_calc(dest_tifs, params, tiles, preread_ifgs):
@@ -161,12 +167,14 @@ def mst_calc(dest_tifs, params, tiles, preread_ifgs):
 
     def save_mst_tile(tile, i, preread_ifgs):
         """ Convenient inner loop for mst tile saving"""
-        if params[cf.NETWORKX_OR_MATLAB_FLAG]:
+        if params[cf.NETWORKX_OR_MATLAB_FLAG] == 1:
             log.info('Calculating minimum spanning tree matrix '
                      'using NetworkX method')
             mst_tile = mst.mst_multiprocessing(tile, dest_tifs, preread_ifgs)
+        elif params[cf.NETWORKX_OR_MATLAB_FLAG] == 0:
+            raise ConfigException('Matlab mst not supported')
         else:
-            raise ConfigException('Matlab mst not supported yet')
+            raise ConfigException('Only NetworkX mst is supported')
             # mst_tile = mst.mst_multiprocessing(tile, dest_tifs, preread_ifgs)
         # locally save the mst_mat
         mst_file_process_n = join(
@@ -279,7 +287,7 @@ def save_ref_pixel_blocks(grid, half_patch_size, ifg_paths, params):
     log.info('Saved ref pixel blocks')
 
 
-def orb_fit_calc(ifg_paths, params):
+def orb_fit_calc(ifg_paths, params, preread_ifgs=None):
     """
     Orbital fit correction
 
@@ -291,12 +299,18 @@ def orb_fit_calc(ifg_paths, params):
         parameters dict corresponding to config file
     """
     log.info('Calculating orbfit correction')
-    if params[cf.ORBITAL_FIT_METHOD] != 1:
-        raise ConfigException('Only orbfit method 1 is supported')
-    prcs_ifgs = mpiops.array_split(ifg_paths)
-    mlooked = None
-    # TODO: MPI orbfit method 2
-    orbital.orbital_correction(prcs_ifgs, params, mlooked=mlooked)
+    if params[cf.ORBITAL_FIT_METHOD] == 1:
+        prcs_ifgs = mpiops.array_split(ifg_paths)
+        orbital.remove_orbital_error(prcs_ifgs, params, preread_ifgs)
+    else:
+        # Here we do all the multilooking in one process, but in memory
+        # can use multiple processes if we write data to disc during
+        # remove_orbital_error step
+        # A performance comparison should be performed be performed for saving
+        # multilooked files on disc vs in memory single process multilooking
+        if mpiops.rank == MASTER_PROCESS:
+            orbital.remove_orbital_error(ifg_paths, params, preread_ifgs)
+    mpiops.comm.barrier()
     log.info('Finished orbfit calculation in process {}'.format(mpiops.rank))
 
 
@@ -316,7 +330,6 @@ def ref_phase_estimation(ifg_paths, params, refpx, refpy):
         reference pixel y-coordinate
     """
 
-    # TODO: may benefit from tiling and using a median of median algorithms
     log.info('Estimating and removing reference phase')
     if params[cf.REF_EST_METHOD] == 1:
         # calculate phase sum for later use in ref phase method 1
@@ -460,7 +473,7 @@ def process_ifgs(ifg_paths, params, rows, cols):
             check_aps_ifgs(ifg_paths)
 
     # Estimate and remove orbit errors
-    orb_fit_calc(ifg_paths, params)
+    orb_fit_calc(ifg_paths, params, preread_ifgs)
 
     # calc and remove reference phase
     ref_phase_estimation(ifg_paths, params, refpx, refpy)

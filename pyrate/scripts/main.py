@@ -16,7 +16,7 @@
 """
 This Python module defines executable run configuration for the PyRate software
 """
-
+import sys
 from os.path import abspath
 import logging
 import click
@@ -45,7 +45,10 @@ def prepifg(config_file):
     """
     config_file = abspath(config_file)
     params = cf.get_config_params(config_file)
-    run_prepifg.main(params)
+    if params[cf.LUIGI]:
+        run_prepifg.main()
+    else:
+        run_prepifg.main(params)
 
 
 @cli.command()

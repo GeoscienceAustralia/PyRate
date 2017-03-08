@@ -16,16 +16,12 @@
 """
 This Python module contains tests for the vcm.py PyRate module.
 """
-from __future__ import print_function
-
-import tests.common
 import os
 import shutil
 import sys
 import tempfile
 import unittest
 from numpy import array
-
 import numpy as np
 from numpy.testing import assert_array_almost_equal
 
@@ -34,6 +30,8 @@ from pyrate import ref_phs_est as rpe
 from pyrate import shared
 from pyrate.scripts import run_pyrate, run_prepifg
 from pyrate.vcm import cvd, get_vcmt
+import pyrate.orbital
+
 from tests.common import SYD_TEST_DIR
 from tests.common import sydney5_mock_ifgs, sydney5_ifgs
 from tests.common import sydney_data_setup, prepare_ifgs_without_phase
@@ -201,7 +199,7 @@ class MatlabEqualityTest(unittest.TestCase):
         dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
         ifgs = shared.pre_prepare_ifgs(dest_paths, params)
         refx, refy = run_pyrate.ref_pixel_calc(dest_paths, params)
-        tests.common.remove_orbital_error(ifgs, params)
+        pyrate.orbital.remove_orbital_error(ifgs, params)
         ifgs = prepare_ifgs_without_phase(dest_paths, params)
         _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
 

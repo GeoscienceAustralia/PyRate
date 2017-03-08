@@ -26,7 +26,9 @@ import os
 import tempfile
 import random
 import string
+from subprocess import check_output
 
+import pyrate.orbital
 import pyrate.shared
 import tests.common
 from pyrate import ref_phs_est as rpe
@@ -43,6 +45,12 @@ from pyrate import mpiops
 from pyrate import algorithm
 
 TRAVIS = True if 'TRAVIS' in os.environ else False
+PYTHON3P5 = True if ('TRAVIS_PYTHON_VERSION' in os.environ and
+                     os.environ['TRAVIS_PYTHON_VERSION'] == '3.5') else False
+# GDAL_VERSION = check_output(["gdal-config", "--version"]).decode(
+#     encoding="utf-8").split('\n')[0]
+GDAL_VERSION = '2.0.0'
+MPITEST = TRAVIS and GDAL_VERSION == '2.0.0'
 
 
 @pytest.fixture()
@@ -105,12 +113,12 @@ def ref_est_method(request):
     return request.param
 
 
-@pytest.fixture(params=[1, 5, 10])
+@pytest.fixture(params=[1, 2, 5])
 def row_splits(request):
     return request.param
 
 
-@pytest.fixture(params=[1, 5, 10])
+@pytest.fixture(params=[1, 2, 5])
 def col_splits(request):
     return request.param
 
@@ -145,9 +153,8 @@ def get_crop(request):
 def test_vcm_matlab_vs_mpi(mpisync, tempdir, get_config):
     from tests.common import SYD_TEST_DIR
 
-    params_dict = get_config(
-        os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf')
-    )
+    params_dict = get_config(os.path.join(SYD_TEST_DIR,
+                                          'pyrate_system_test.conf'))
 
     MATLAB_VCM_DIR = os.path.join(SYD_TEST_DIR, 'matlab_vcm')
     matlab_vcm = np.genfromtxt(os.path.join(MATLAB_VCM_DIR,
@@ -186,24 +193,43 @@ def test_vcm_matlab_vs_mpi(mpisync, tempdir, get_config):
         shutil.rmtree(outdir)
 
 
+@pytest.fixture(params=[1, 2, 5])
+def orbfit_lks(request):
+    return request.param
+
+
+@pytest.fixture(params=[1, 2])
+def orbfit_method(request):
+    return request.param
+
+
+@pytest.mark.skipif(not MPITEST, reason='skipping mpi tests in travis except '
+                                        'python 3.5 and GDAL=2.0.0')
 def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
                                 ref_est_method, row_splits, col_splits,
-                                get_crop):
+                                get_crop, orbfit_lks, orbfit_method):
     params = modify_config
     outdir = mpiops.run_once(tempdir)
     params[cf.OUT_DIR] = outdir
     params[cf.REF_EST_METHOD] = ref_est_method
     params[cf.IFG_CROP_OPT] = get_crop
+    params[cf.ORBITAL_FIT_LOOKS_Y] = orbfit_lks
+    params[cf.ORBITAL_FIT_LOOKS_X] = orbfit_lks
+    params[cf.ORBITAL_FIT_METHOD] = orbfit_method
     xlks, ylks, crop = cf.transform_params(params)
-    print("xlks, row_splits, col_splits, rank")
-    print(xlks, row_splits, col_splits, mpiops.rank)
     if xlks * col_splits > 45 or ylks * row_splits > 70:
-        print('skipping test')
+        print('skipping test because lks and col_splits are not compatible')
         return
 
-    if TRAVIS and xlks != 2:
-        print("skipping test during travis")
+    # skip some tests in travis to run CI faster
+    if TRAVIS and (xlks % 2 or row_splits % 2 or col_splits % 2
+                   or orbfit_lks % 2):
+        print('Skipping in travis env for faster CI run')
         return
+    print("xlks={}, ref_est_method={}, row_splits={}, col_splits={}, "
+          "get_crop={}, orbfit_lks={}, orbfit_method={}, "
+          "rank={}".format(xlks, ref_est_method, row_splits, col_splits,
+                           get_crop, orbfit_lks, orbfit_method, mpiops.rank))
 
     base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST])
     # dest_paths are tifs that have been geotif converted and multilooked
@@ -215,18 +241,11 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
 
     mpiops.comm.barrier()
 
+    (refpx, refpy), maxvar, vcmt = run_pyrate.process_ifgs(
+        ifg_paths=dest_paths, params=params, rows=row_splits, cols=col_splits)
+
     tiles = mpiops.run_once(run_pyrate.get_tiles, dest_paths[0],
                             rows=row_splits, cols=col_splits)
-    preread_ifgs = run_pyrate.create_ifg_dict(dest_paths, params, tiles)
-    run_pyrate.mst_calc(dest_paths, params, tiles, preread_ifgs)
-    refpx, refpy = run_pyrate.ref_pixel_calc(dest_paths, params)
-    run_pyrate.orb_fit_calc(dest_paths, params)
-    run_pyrate.ref_phase_estimation(dest_paths, params, refpx, refpy)
-
-    maxvar, vcmt = run_pyrate.maxvar_vcm_calc(dest_paths, params, preread_ifgs)
-    pyrate.shared.save_numpy_phase(dest_paths, tiles, params)
-    run_pyrate.timeseries_calc(dest_paths, params, vcmt, tiles, preread_ifgs)
-    run_pyrate.linrate_calc(dest_paths, params, vcmt, tiles, preread_ifgs)
     postprocessing.postprocess_linrate(row_splits, col_splits, params)
     postprocessing.postprocess_timeseries(row_splits, col_splits, params)
     ifgs_mpi_out_dir = params[cf.OUT_DIR]
@@ -238,6 +257,9 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
         params_old[cf.OUT_DIR] = tempdir()
         params_old[cf.REF_EST_METHOD] = ref_est_method
         params_old[cf.IFG_CROP_OPT] = get_crop
+        params_old[cf.ORBITAL_FIT_LOOKS_Y] = orbfit_lks
+        params_old[cf.ORBITAL_FIT_LOOKS_X] = orbfit_lks
+        params_old[cf.ORBITAL_FIT_METHOD] = orbfit_method
         xlks, ylks, crop = cf.transform_params(params_old)
         base_unw_paths = cf.original_ifg_paths(
             params_old[cf.IFG_FILE_LIST])
@@ -248,11 +270,11 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
         ifgs = shared.pre_prepare_ifgs(dest_paths, params_old)
         mst_grid = tests.common.mst_calculation(dest_paths, params_old)
         refy, refx = refpixel.ref_pixel(ifgs, params_old)
-
-        tests.common.remove_orbital_error(ifgs, params_old)
+        assert (refx == refpx) and (refy == refpy)  # both must match
+        pyrate.orbital.remove_orbital_error(ifgs, params_old)
         ifgs = common.prepare_ifgs_without_phase(dest_paths, params_old)
-
-        _, ifgs = rpe.estimate_ref_phase(ifgs, params_old, refx, refy)
+        rpe.estimate_ref_phase(ifgs, params_old, refx, refy)
+        ifgs = shared.pre_prepare_ifgs(dest_paths, params_old)
         maxvar_s = [vcm.cvd(i, params_old)[0] for i in ifgs]
         vcmt_s = vcm.get_vcmt(ifgs, maxvar)
         tsincr, tscum, _ = tests.common.compute_time_series(
@@ -290,7 +312,7 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
             _tifs_same(ifgs_mpi_out_dir, params_old[cf.OUT_DIR],
                        'tsincr' + '_' + str(epochlist.dates[i + 1]) + ".tif")
 
-        # 12 timeseries ooutput
+        # 12 timeseries outputs
         assert i + 1 == tsincr.shape[2]
         shutil.rmtree(ifgs_mpi_out_dir)  # remove mpi out dir
         shutil.rmtree(params_old[cf.OUT_DIR])  # remove serial out dir
@@ -302,6 +324,7 @@ def _tifs_same(dir1, dir2, tif):
     common.assert_ifg_phase_equal(linrate_tif_m, linrate_tif_s)
 
 
+@pytest.mark.skipif(TRAVIS, reason='skipping mpi tests in travis')
 def reconstruct_times_series(shape, tiles, output_dir):
     tsincr_file_0 = os.path.join(output_dir, 'tsincr_{}.npy'.format(0))
     shape3 = np.load(tsincr_file_0).shape[2]
