@@ -8,6 +8,7 @@ import os
 import tempfile
 import random
 import string
+from subprocess import check_output
 
 import pyrate.orbital
 import pyrate.shared
@@ -28,8 +29,10 @@ from pyrate import algorithm
 TRAVIS = True if 'TRAVIS' in os.environ else False
 PYTHON3P5 = True if ('TRAVIS_PYTHON_VERSION' in os.environ and
                      os.environ['TRAVIS_PYTHON_VERSION'] == '3.5') else False
-GDAL2P0 = True if ('GDALVERSION' in os.environ and
-                   os.environ['GDALVERSION'] == '2.0.0') else False
+# GDAL_VERSION = check_output(["gdal-config", "--version"]).decode(
+#     encoding="utf-8").split('\n')[0]
+GDAL_VERSION = '2.0.0'
+MPITEST = TRAVIS and GDAL_VERSION == '2.0.0'
 
 
 @pytest.fixture()
@@ -92,12 +95,12 @@ def ref_est_method(request):
     return request.param
 
 
-@pytest.fixture(params=[1, 5, 10])
+@pytest.fixture(params=[1, 2, 5])
 def row_splits(request):
     return request.param
 
 
-@pytest.fixture(params=[1, 5, 10])
+@pytest.fixture(params=[1, 2, 5])
 def col_splits(request):
     return request.param
 
@@ -182,9 +185,8 @@ def orbfit_method(request):
     return request.param
 
 
-@pytest.mark.skipif(TRAVIS and (not PYTHON3P5) and (not GDAL2P0),
-                    reason='skipping mpi tests in travis except python 3.5'
-                           'and GDAL=2.0.0')
+@pytest.mark.skipif(not MPITEST, reason='skipping mpi tests in travis except '
+                                        'python 3.5 and GDAL=2.0.0')
 def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
                                 ref_est_method, row_splits, col_splits,
                                 get_crop, orbfit_lks, orbfit_method):
@@ -197,17 +199,19 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
     params[cf.ORBITAL_FIT_LOOKS_X] = orbfit_lks
     params[cf.ORBITAL_FIT_METHOD] = orbfit_method
     xlks, ylks, crop = cf.transform_params(params)
-    print("xlks={}, ref_est_method={}, row_splits={}, col_splits={}, "
-          "get_crop={}, orbfit_lks={}, orbfit_method={}, "
-          "rank={}".format(xlks, ref_est_method, row_splits, col_splits,
-                           get_crop, orbfit_lks, orbfit_method, mpiops.rank))
     if xlks * col_splits > 45 or ylks * row_splits > 70:
         print('skipping test because lks and col_splits are not compatible')
         return
 
-    if TRAVIS and xlks % 2:  # skip if travis to run CI faster
+    # skip some tests in travis to run CI faster
+    if TRAVIS and (xlks % 2 or row_splits % 2 or col_splits % 2
+                   or orbfit_lks % 2):
         print('Skipping in travis env for faster CI run')
         return
+    print("xlks={}, ref_est_method={}, row_splits={}, col_splits={}, "
+          "get_crop={}, orbfit_lks={}, orbfit_method={}, "
+          "rank={}".format(xlks, ref_est_method, row_splits, col_splits,
+                           get_crop, orbfit_lks, orbfit_method, mpiops.rank))
 
     base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST])
     # dest_paths are tifs that have been geotif converted and multilooked

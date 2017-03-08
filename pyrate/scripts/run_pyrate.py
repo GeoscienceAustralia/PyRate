@@ -304,11 +304,14 @@ def orb_fit_calc(ifg_paths, params, preread_ifgs=None):
         prcs_ifgs = mpiops.array_split(ifg_paths)
         orbital.remove_orbital_error(prcs_ifgs, params, preread_ifgs)
     else:
+        # Here we do all the multilooking in one process, but in memory
         # can use multiple processes if we write data to disc during
         # remove_orbital_error step
+        # A performance comparison should be performed be performed for saving
+        # multilooked files on disc vs in memory single process multilooking
         if mpiops.rank == MASTER_PROCESS:
             orbital.remove_orbital_error(ifg_paths, params, preread_ifgs)
-    # orbital.remove_orbital_error(ifg_paths, params)
+    mpiops.comm.barrier()
     log.info('Finished orbfit calculation in process {}'.format(mpiops.rank))
 
 

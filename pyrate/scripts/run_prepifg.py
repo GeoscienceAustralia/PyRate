@@ -57,7 +57,6 @@ def main(params=None):
     going to assume base_ifg_paths is ordered correcly
     """
     usage = 'Usage: pyrate prepifg <config_file>'
-    print(sys.argv)
 
     def _convert_dem_inc_ele(params, base_ifg_paths):
         processor = params[cf.PROCESSOR]  # roipac or gamma

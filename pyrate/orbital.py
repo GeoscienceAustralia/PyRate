@@ -186,7 +186,7 @@ def independent_correction(ifg, degree, offset, params):
     offset_removal = nanmedian(np.ravel(ifg.phase_data - fullorb))
     ifg.phase_data -= (fullorb - offset_removal)
     # set orbfit tags after orbital error correction
-    save_orbital_error_corrected_phase(ifg)
+    _save_orbital_error_corrected_phase(ifg)
     if ifg.open():
         ifg.close()
 
@@ -260,10 +260,10 @@ def _remove_networkx_error(coefs, dm, ifg, ids, offset):
         orb -= nanmedian(np.ravel(ifg.phase_data - orb))
     ifg.phase_data -= orb  # remove orbital error from the ifg
     # set orbfit tags after orbital error correction
-    save_orbital_error_corrected_phase(ifg)
+    _save_orbital_error_corrected_phase(ifg)
 
 
-def save_orbital_error_corrected_phase(ifg):
+def _save_orbital_error_corrected_phase(ifg):
     """
     Convenceince function to update metadata and save latest phase after
     orbital fit correction
