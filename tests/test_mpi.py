@@ -14,7 +14,8 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 """
-This Python module contains tests for the mpiops.py PyRate module.
+This Python module contains tests for mpi operations in PyRate.
+Tun this module as 'mpirun -n 4 pytest tests/test_mpi.py'
 """
 from __future__ import print_function
 
