@@ -1,22 +1,27 @@
-# Running PyRate on the NCI
+# Running PyRate on a HPC system
 
-This README is a quick guide to getting `PyRate` up and running
-in a PBS batch environment that has MPI support. This setup is common in
-HPC systems such as the NCI (raijin).
+This README is a quick guide to getting the PyRate software up and running
+in a Portable Batch System (PBS) batch environment with MPI support.
+This setup is common in High Performance Compute (HPC) systems such as
+the National Computational Infrastructure's [Raijin]
+(http://nci.org.au/systems-services/national-facility/peak-system/raijin/)
+system.
 
-The instructions below should apply to both single- and multi-node runs
-on the NCI. Just set ncpus in the PBS  directives in the job submission
+The instructions below are tailored to the NCI Raijin system. Some
+instructions may not be applicable depending on the setup of the HPC
+system you are using. They should apply to both single-node and multi-node
+jobs; just set the number of cpus in the PBS directives in the job submission
 script accordingly (e.g. ncpus=32 for 2 nodes).
 
-The instructions assume you are using bash shell.
+These instructions assume you are using bash shell.
 
 ## Pre-installation
 
-These instructions currently only work with gcc and not the Intel compiler.
-Note that on NCI it appears python is compiled against gcc anyway.
+These instructions currently only work with gcc and not the Intel compilers.
 
 
-1. Clone the `PyRate` repo into your home directory:
+1. Clone the `PyRate` repository into your home directory, or some other
+directory of your choice:
 ```bash
 $ cd ~
 $ git clone git@github.com:GeoscienceAustralia/PyRate.git
@@ -41,7 +46,7 @@ $ module load hdf5/1.8.10 gdal/2.0.0 openmpi/1.8 netcdf/4.3.2
 export PATH=$HOME/.local/bin:$PATH
 export PYTHONPATH=$HOME/.local/lib/python3.4/site-packages:$PYTHONPATH
 export PYRATEPATH=~/PyRate
-export VIRTUALENVWRAPPER_PYTHON=/apps/python3/3.4.3/bin/python3                 
+export VIRTUALENVWRAPPER_PYTHON=/apps/python3/3.4.3/bin/python3    
 export LC_ALL=en_AU.UTF-8
 export LANG=en_AU.UTF-8
 source $HOME/.local/bin/virtualenvwrapper.sh
@@ -60,7 +65,7 @@ $ source ~/.profile
 
 ## Installation
 
-1. Create a new virtualenv for pyrate:
+1. Create a new virtualenv for PyRate:
 ```bash
 $ mkvirtualenv --system-site-packages pyrate
 ```
@@ -99,8 +104,8 @@ If the pull and the installation complete successfully, the code is ready to run
 
 ## Running Batch Jobs
 
-in the `pbs` subfolder of `PyRate` there are some example scripts and a
-helper function to assist launching batch jobs over multiple nodes with PBS
+in the `pbs` subfolder of the `PyRate` repo there are some example scripts to
+assist launching batch jobs over multiple nodes with PBS.
 
 ### Batch testing
 
@@ -113,19 +118,25 @@ $ qsub submit_tests.sh
 ### MPIRun
 
 `PyRate` uses MPI internally for parallelization. To run a script or demo
-simply do
+simply do:
 
 ```bash
 $ mpirun -n <num_procs> <command>
 ```
 
-whilst a PBS job submission might look like this:
+For example:
+
+```bash
+$ mpirun -n 16 pyrate prepifg pyrate_pbs.conf
+```
+
+A PBS job submission script might look like this:
 
 ```bash
 #!/bin/bash
-#PBS -P ge3
-#PBS -q normal
-#PBS -l walltime=01:00:00,mem=128GB,ncpus=32,jobfs=20GB
+#PBS -P <project>
+#PBS -q <queue>
+#PBS -l walltime=01:00:00,mem=128GB,ncpus=16,jobfs=20GB
 #PBS -l wd
 
 # setup environment
@@ -138,9 +149,9 @@ source $HOME/.profile
 # start the virtualenv
 workon pyrate
 
-# run command
-mpirun --mca mpi_warn_on_fork 0 pyrate prepifg /path/to/config_file.txt
-mpirun --mca mpi_warn_on_fork 0 pyrate linrate /path/to/config_file.txt
-mpirun --mca mpi_warn_on_fork 0 pyrate postprocess /path/to/config_file.txt
+# run PyRate commands
+mpirun -n 16 pyrate prepifg /path/to/config_file.conf
+mpirun -n 16 pyrate linrate /path/to/config_file.conf
+mpirun -n 16 pyrate postprocess /path/to/config_file.conf
 ```
 
