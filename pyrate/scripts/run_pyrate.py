@@ -219,7 +219,7 @@ def ref_pixel_calc(ifg_paths, params):
     if refy > ifg.nrows - 1:
         raise ValueError("Invalid reference pixel Y coordinate: %s" % refy)
 
-    if refx == 0 or refy == 0:  # matlab equivalent
+    if refx <= 0 or refy <= 0:  # if either zero or negative
         refy, refx = find_ref_pixel(ifg_paths, params)
         log.info('Found reference pixel coordinate: '
                  '({}, {})'.format(refx, refy))
