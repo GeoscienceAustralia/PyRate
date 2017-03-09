@@ -50,12 +50,7 @@ class PyTest(TestCommand, object):
         import pytest
         exit(pytest.main(self.pytest_args))
 
-try:
-    import pypandoc
-    readme = pypandoc.convert('README.md', 'rst')
-except(IOError, ImportError):
-    readme = open('README.md').read()
-
+readme = open('README.rst').read()
 
 doclink = """
 Documentation
