@@ -34,8 +34,8 @@ from pyrate import mpiops
 # general constants
 NO_MULTILOOKING = 1
 
-# is assiged by run_pyrate appropriately, should not be specified in conf file
-TIME_SERIES_INTERP = 'tsinterp'
+# interp is automatically assigned; not needed in conf file
+#TIME_SERIES_INTERP = 'tsinterp'
 
 # constants for lookups
 #: STR; Name of input interferogram list file
@@ -258,16 +258,16 @@ PARAM_CONVERSION = {
 
     #TIME_SERIES_CAL : (bool, False),
     TIME_SERIES_CAL: (int, 0),
-    TIME_SERIES_PTHRESH: (int, 20),
+    TIME_SERIES_PTHRESH: (int, None),
     TIME_SERIES_SM_FACTOR: (float, None),
     TIME_SERIES_SM_ORDER: (int, None),
-    TIME_SERIES_METHOD: (int, 1),
+    TIME_SERIES_METHOD: (int, 2), # Default to SVD method
 
     PARALLEL: (int, None),
     PROCESSES: (int, 8),
 
     PROCESSOR: (int, None),
-    NETWORKX_OR_MATLAB_FLAG: (int, 1),
+    NETWORKX_OR_MATLAB_FLAG: (int, 1), # Default to NetworkX
 
     LUIGI: (int, 0),
     NAN_CONVERSION: (int, 0),
@@ -275,7 +275,7 @@ PARAM_CONVERSION = {
     APS_CORRECTION: (int, 0),
     APS_METHOD: (int, 1)
     }
-    #TIME_SERIES_INTERP : (bool, False)
+    #TIME_SERIES_INTERP : (bool, False) # Automatically assigned in code
 
 
 PATHS = [OBS_DIR, IFG_FILE_LIST, DEM_FILE,

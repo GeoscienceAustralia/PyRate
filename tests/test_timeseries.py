@@ -35,8 +35,7 @@ from pyrate import ref_phs_est as rpe
 from pyrate import shared
 from pyrate import vcm
 from pyrate.config import PARALLEL, PROCESSES, NO_DATA_VALUE
-from pyrate.config import TIME_SERIES_INTERP, TIME_SERIES_PTHRESH, \
-    NAN_CONVERSION
+from pyrate.config import TIME_SERIES_PTHRESH, NAN_CONVERSION
 from pyrate.config import TIME_SERIES_SM_FACTOR, TIME_SERIES_METHOD
 from pyrate.config import TIME_SERIES_SM_ORDER
 from pyrate.scripts import run_pyrate, run_prepifg
@@ -50,7 +49,6 @@ def default_params():
             TIME_SERIES_PTHRESH: 0,
             TIME_SERIES_SM_ORDER: 2,
             TIME_SERIES_SM_FACTOR: -0.25,
-            TIME_SERIES_INTERP: 1,
             PARALLEL: 0,
             PROCESSES: 1,
             NAN_CONVERSION: 1,
