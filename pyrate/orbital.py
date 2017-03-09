@@ -205,7 +205,7 @@ def network_correction(ifgs, degree, offset, params, m_ifgs=None,
         versions of 'ifgs' arg)
     :param preread_ifgs: dict, parameters dict corresponding to config file
     """
-    # pylint: disable=too-many-locals
+    # pylint: disable=too-many-locals, too-many-arguments
     src_ifgs = ifgs if m_ifgs is None else m_ifgs
     src_ifgs = mst.mst_from_ifgs(src_ifgs)[3]  # use networkx mst
 
