@@ -208,23 +208,27 @@ def ref_pixel_calc(ifg_paths, params):
     """
     # unlikely, but possible the refpixel can be (0,0)
     # check if there is a pre-specified reference pixel coord
-    log.info('Starting reference pixel calculation')
     refx = params[cf.REFX]
     ifg = Ifg(ifg_paths[0])
     ifg.open(readonly=True)
     if refx > ifg.ncols - 1:
-        raise ValueError("Invalid reference pixel X coordinate: %s" % refx)
+        msg = ('Supplied reference pixel X coordinate is greater than '
+                'the number of ifg columns: {}').format(refx)
+        raise ValueError(msg)
 
     refy = params[cf.REFY]
     if refy > ifg.nrows - 1:
-        raise ValueError("Invalid reference pixel Y coordinate: %s" % refy)
+        msg = ('Supplied reference pixel Y coordinate is greater than '
+                'the number of ifg rows: {}').format(refy)
+        raise ValueError(msg)
 
-    if refx == 0 or refy == 0:  # matlab equivalent
+    if refx <= 0 or refy <= 0:  # if either zero or negative
+        log.info('Searching for best reference pixel location')
         refy, refx = find_ref_pixel(ifg_paths, params)
-        log.info('Found reference pixel coordinate: '
+        log.info('Selected reference pixel coordinate: '
                  '({}, {})'.format(refx, refy))
     else:  # pragma: no cover
-        log.info('Reusing config file reference pixel: '
+        log.info('Reusing reference pixel from config file: '
                  '({}, {})'.format(refx, refy))
     ifg.close()
     return refx, refy
