@@ -50,8 +50,13 @@ class PyTest(TestCommand, object):
         import pytest
         exit(pytest.main(self.pytest_args))
 
+try:
+    import pypandoc
+    readme = pypandoc.convert('README.md', 'rst')
+except(IOError, ImportError):
+    readme = open('README.md').read()
 
-readme = open('README.md').read()
+
 doclink = """
 Documentation
 -------------
@@ -125,7 +130,7 @@ setup(
         "Programming Language :: Python :: 3.4",
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
+        # "Programming Language :: Python :: 3.7",
         # add additional supported python versions
         "Intended Audience :: Science/Research",
         "Intended Audience :: Developers",
