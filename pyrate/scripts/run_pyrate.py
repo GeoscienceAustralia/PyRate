@@ -520,7 +520,8 @@ def linrate_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
         rate, error, samples = linrate.linear_rate(ifg_parts, params,
                                                    vcmt, mst_grid_n)
         # declare file names
-        np.save(file=os.path.join(output_dir, 'linrate_{}.npy'.format(t.index)),
+        np.save(file=os.path.join(output_dir,
+                                  'linrate_{}.npy'.format(t.index)),
                 arr=rate)
         np.save(file=os.path.join(output_dir,
                                   'linerror_{}.npy'.format(t.index)),

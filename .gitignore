@@ -10,7 +10,7 @@ out
 .eggs/
 .tox/
 build/
-docs/
+docs/_build/
 tests/test_data/
 PyAPS/
 .cache/

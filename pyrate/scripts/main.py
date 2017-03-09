@@ -16,7 +16,6 @@
 """
 This Python module defines executable run configuration for the PyRate software
 """
-import sys
 from os.path import abspath
 import logging
 import click
@@ -58,7 +57,9 @@ def prepifg(config_file):
 @click.option('-c', '--cols', type=int, default=1,
               help='divide ifgs into this many columns')
 def linrate(config_file, rows, cols):
-    """Main PyRate workflow including time series and linear rate computation"""
+    """
+    Main PyRate workflow including time series and linear rate computation
+    """
     config_file = abspath(config_file)
     run_pyrate.main(config_file, rows, cols)
 

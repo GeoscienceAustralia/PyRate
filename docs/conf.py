@@ -186,3 +186,6 @@ epub_copyright = copyright
 epub_exclude_files = ['search.html']
 
 
+# link check ignore
+linkcheck_ignore = [r'http://localhost:\d+/',
+                    'https://github.com/Nekroze/PyRate/fork']

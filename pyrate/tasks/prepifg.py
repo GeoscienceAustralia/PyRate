@@ -86,12 +86,12 @@ class PrepareInterferogram(IfgListMixin, luigi.WrapperTask):
     :param crop_opt: integer cropping type option (see config)
     :param xlooks: multilooking factor for the X axis
     :param ylooks: Y axis multilooking factor
-    :param float thresh: (0.0, 1.0). Controls NaN handling when resampling to coarser grids.
-         Value is the proportion above which the number of NaNs in an area is
-         considered invalid. thresh=0 resamples to NaN if 1 or more contributing
-         cells are NaNs. At 0.25, it resamples to NaN if 1/4 or more contributing
-         cells are NaNs. At 1.0, areas are resampled to NaN only if all
-         contributing cells are NaNs.
+    :param float thresh: (0.0, 1.0). Controls NaN handling when resampling to
+    coarser grids. Value is the proportion above which the number of NaNs in
+    an area is considered invalid. thresh=0 resamples to NaN if 1 or more
+    contributing cells are NaNs. At 0.25, it resamples to NaN if 1/4 or
+    more contributing cells are NaNs. At 1.0, areas are resampled to NaN
+    only if all contributing cells are NaNs.
     :param user_exts: CustomExts tuple with user sepcified lat long corners
     :param verbose: Controls level of gdalwarp output
     """
