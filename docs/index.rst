@@ -13,6 +13,7 @@ Contents:
    :maxdepth: 2
 
    installation
+   pbs
    usage
    contributing
    authors
@@ -27,7 +28,7 @@ Feedback
 If you have any suggestions or questions about **PyRate** feel free to
 email the developers.
 
-If you encounter any errors or problems with **PyRate**, please let me
+If you encounter any errors or problems with **PyRate**, please let us
 know!  Open an Issue at the GitHub
 https://github.com/GeoscienceAustralia/PyRate main repository.
 
