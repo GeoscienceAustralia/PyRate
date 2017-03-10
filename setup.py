@@ -61,7 +61,7 @@ history = open('HISTORY.rst').read().replace('.. :changelog:', '')
 
 setup(
     name='Py-Rate',
-    version='0.1.0',
+    version='0.1.1',
     description='A Python tool for estimating velocity and time-series '
                 'from Interferometric Synthetic Aperture Radar (InSAR) data.',
     long_description=readme + '\n\n' + doclink + '\n\n' + history,
