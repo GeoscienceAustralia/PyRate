@@ -87,8 +87,8 @@ def est_ref_phs_method2(phase_data, half_chip_size,
                        refpx - half_chip_size: refpx + half_chip_size + 1]
     patch = np.reshape(patch, newshape=(-1, 1), order='F')
     if np.sum(~np.isnan(patch)) < thresh:
-        raise ReferencePhaseError('The reference pixel'
-                                  'is not in high coherent area!')
+        raise ReferencePhaseError('The data window at the reference pixel '
+                                  'does not have enough valid observations')
     ref_ph = nanmedian(patch)
     return ref_ph
 

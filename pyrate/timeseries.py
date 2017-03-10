@@ -41,26 +41,37 @@ def time_series_setup(ifgs, mst, params):
         msg = 'Time series requires 2+ interferograms'
         raise TimeSeriesError(msg)
 
-    # check if mst is not a tree, then do interpolate
+    # if mst is not a single tree then do interpolation
     if mst_module.mst_from_ifgs(ifgs)[1]:
-        params[cf.TIME_SERIES_INTERP] = 0
+        interp = 0
     else:
-        params[cf.TIME_SERIES_INTERP] = 1
-
-    # make sure by now we have the time series interpolation parameter
-    assert params[cf.TIME_SERIES_INTERP] is not None
+        interp = 1
 
     # Parallel Processing parameters
     parallel = params[cf.PARALLEL]
     # Time Series parameters
     tsmethod = params[cf.TIME_SERIES_METHOD]
-    interp = params[cf.TIME_SERIES_INTERP]
-    # interp = 1
-    smorder = params[cf.TIME_SERIES_SM_ORDER]
-    smfactor = np.power(10, params[cf.TIME_SERIES_SM_FACTOR])
-    pthresh = params[cf.TIME_SERIES_PTHRESH]
-    # head = ifgs[0]
-    check_time_series_params(pthresh)
+    
+    if tsmethod == 1 and params[cf.TIME_SERIES_SM_ORDER] is None:
+        missing_option_error(cf.TIME_SERIES_SM_ORDER)
+    else:
+        smorder = params[cf.TIME_SERIES_SM_ORDER]
+
+    if tsmethod == 1 and params[cf.TIME_SERIES_SM_FACTOR] is None:
+        missing_option_error(cf.TIME_SERIES_SM_FACTOR)
+    else:
+        smfactor = np.power(10, params[cf.TIME_SERIES_SM_FACTOR])   
+
+    if params[cf.TIME_SERIES_PTHRESH] is None:
+        missing_option_error(cf.TIME_SERIES_PTHRESH)
+    else:
+        pthresh = params[cf.TIME_SERIES_PTHRESH]
+        
+    if pthresh < 0.0 or pthresh > 1000:
+        raise ValueError(
+            "minimum number of coherent observations for a pixel"
+            " TIME_SERIES_PTHRESH setting must be >= 0.0 and <= 1000")
+
     epochlist = get_epochs(ifgs)[0]
     nrows = ifgs[0].nrows
     ncols = ifgs[0].ncols
@@ -333,26 +344,12 @@ def plot_timeseries(tsincr, tscum, tsvel, output_dir):  # pragma: no cover
         plt.close()
 
 
-def check_time_series_params(pthresh):
-    """
-    Validates time series parameter. head is any Ifg.
-    """
-
-    def missing_option_error(option):
-        '''
-        Internal convenience function for raising similar errors.
-        '''
-        msg = "Missing '%s' in configuration options" % option
-        raise ConfigException(msg)
-
-    if pthresh is None:
-        missing_option_error(cf.TIME_SERIES_PTHRESH)
-
-    if pthresh < 0.0 or pthresh > 1000:
-        raise ValueError(
-            "minimum number of coherent observations for a pixel"
-            " TIME_SERIES_PTHRESH setting must be >= 0.0 and <= 1000")
-
+def missing_option_error(option):
+    '''
+    Internal convenience function for raising similar missing option errors.
+    '''
+    msg = "Missing '%s' option in config file" % option
+    raise ConfigException(msg)
 
 class TimeSeriesError(Exception):
     """
