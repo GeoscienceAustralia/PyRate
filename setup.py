@@ -60,7 +60,7 @@ The full documentation is at http://geoscienceaustralia.github.io/PyRate/."""
 history = open('HISTORY.rst').read().replace('.. :changelog:', '')
 
 setup(
-    name='PyRate',
+    name='Py-Rate',
     version='0.1.0',
     description='A Python tool for estimating velocity and time-series '
                 'from Interferometric Synthetic Aperture Radar (InSAR) data.',
