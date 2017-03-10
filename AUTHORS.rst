@@ -7,8 +7,8 @@ Development Lead
 
 * Geoscience Australia InSAR team
 
-PyRate has been developed by [Geoscience Australia](http://www.ga.gov.au)
-and the [National Computational Infrastructure](http://nci.org.au/).
+PyRate has been developed by `Geoscience Australia <http://www.ga.gov.au>`__
+and the `National Computational Infrastructure <http://nci.org.au/>`__.
 
 Contributors
 ------------

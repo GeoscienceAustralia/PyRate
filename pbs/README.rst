@@ -4,8 +4,8 @@ Running PyRate on a HPC system
 This README is a quick guide to getting the PyRate software up and
 running in a Portable Batch System (PBS) batch environment with MPI
 support. This setup is common in High Performance Compute (HPC) systems
-such as the National Computational Infrastructure's [Raijin]
-(http://nci.org.au/systems-services/national-facility/peak-system/raijin/)
+such as the National Computational Infrastructure's `Raijin
+<http://nci.org.au/systems-services/national-facility/peak-system/raijin/>`__
 system.
 
 The instructions below are tailored to the NCI Raijin system. Some
