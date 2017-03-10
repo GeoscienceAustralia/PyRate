@@ -19,10 +19,11 @@ from setuptools.command.test import test as TestCommand
 from subprocess import check_output
 import sys
 
-version = sys.version_info
+python_version = sys.version_info
+__version__ = "0.1.2"
 
 # numpy support for python3.3 not available for version > 1.10.1
-if version.major == 3 and version.minor == 3:
+if python_version.major == 3 and python_version.minor == 3:
     NUMPY_VERSION = 'numpy >= 1.9.2, <= 1.10.1'
 else:
     NUMPY_VERSION = 'numpy >= 1.9.2'
@@ -61,7 +62,7 @@ history = open('HISTORY.rst').read().replace('.. :changelog:', '')
 
 setup(
     name='Py-Rate',
-    version='0.1.1',
+    version=__version__,
     description='A Python tool for estimating velocity and time-series '
                 'from Interferometric Synthetic Aperture Radar (InSAR) data.',
     long_description=readme + '\n\n' + doclink + '\n\n' + history,

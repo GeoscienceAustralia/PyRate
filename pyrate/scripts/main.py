@@ -16,17 +16,29 @@
 """
 This Python module defines executable run configuration for the PyRate software
 """
+import sys
+import os
 from os.path import abspath
 import logging
 import click
 from pyrate import pyratelog as pylog
 from pyrate import config as cf
 from pyrate.scripts import run_prepifg, run_pyrate, postprocessing
+from pyrate import __version__
 
 log = logging.getLogger(__name__)
 
 
+def version_msg():
+    """Returns the Cookiecutter version, location and Python powering it."""
+    python_version = sys.version[:3]
+    location = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    message = u'PyRate %(version)s from {} (Python {})'
+    return message.format(location, python_version)
+
+
 @click.group()
+@click.version_option(__version__, u'-V', u'--version', message=version_msg())
 @click.option('-v', '--verbosity',
               type=click.Choice(['DEBUG', 'INFO', 'WARNING', 'ERROR']),
               default='INFO', help='Level of logging')
