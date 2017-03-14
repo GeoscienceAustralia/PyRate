@@ -213,13 +213,13 @@ def ref_pixel_calc(ifg_paths, params):
     ifg.open(readonly=True)
     if refx > ifg.ncols - 1:
         msg = ('Supplied reference pixel X coordinate is greater than '
-                'the number of ifg columns: {}').format(refx)
+               'the number of ifg columns: {}').format(refx)
         raise ValueError(msg)
 
     refy = params[cf.REFY]
     if refy > ifg.nrows - 1:
         msg = ('Supplied reference pixel Y coordinate is greater than '
-                'the number of ifg rows: {}').format(refy)
+               'the number of ifg rows: {}').format(refy)
         raise ValueError(msg)
 
     if refx <= 0 or refy <= 0:  # if either zero or negative

@@ -42,16 +42,13 @@ def time_series_setup(ifgs, mst, params):
         raise TimeSeriesError(msg)
 
     # if mst is not a single tree then do interpolation
-    if mst_module.mst_from_ifgs(ifgs)[1]:
-        interp = 0
-    else:
-        interp = 1
+    interp = 0 if mst_module.mst_from_ifgs(ifgs)[1] else 1
 
     # Parallel Processing parameters
     parallel = params[cf.PARALLEL]
     # Time Series parameters
     tsmethod = params[cf.TIME_SERIES_METHOD]
-    
+
     if tsmethod == 1 and params[cf.TIME_SERIES_SM_ORDER] is None:
         missing_option_error(cf.TIME_SERIES_SM_ORDER)
     else:
@@ -60,13 +57,13 @@ def time_series_setup(ifgs, mst, params):
     if tsmethod == 1 and params[cf.TIME_SERIES_SM_FACTOR] is None:
         missing_option_error(cf.TIME_SERIES_SM_FACTOR)
     else:
-        smfactor = np.power(10, params[cf.TIME_SERIES_SM_FACTOR])   
+        smfactor = np.power(10, params[cf.TIME_SERIES_SM_FACTOR])
 
     if params[cf.TIME_SERIES_PTHRESH] is None:
         missing_option_error(cf.TIME_SERIES_PTHRESH)
     else:
         pthresh = params[cf.TIME_SERIES_PTHRESH]
-        
+
     if pthresh < 0.0 or pthresh > 1000:
         raise ValueError(
             "minimum number of coherent observations for a pixel"
