@@ -22,50 +22,40 @@ provided in the configs/ directory
 # coding: utf-8
 # pylint: disable= invalid-name
 from __future__ import print_function
-# TODO: add regex column to check if some values are within bounds? Potential
-# problem with the checking being done in the middle of the runs, as bad values
-# could cause crashes & destroying some of the results.
 import os
 from os.path import splitext
 import warnings
 from pyrate import compat
 from pyrate import mpiops
 
+# TODO: add regex column to check if some values are within bounds? Potential
+# problem with the checking being done in the middle of the runs, as bad values
+# could cause crashes & destroying some of the results.
+
 # general constants
 NO_MULTILOOKING = 1
-
-# interp is automatically assigned; not needed in conf file
-#TIME_SERIES_INTERP = 'tsinterp'
 
 # constants for lookups
 #: STR; Name of input interferogram list file
 IFG_FILE_LIST = 'ifgfilelist'
-#: STR; The name of the interferogram processor used (0==ROIPAC, 1==GAMMA)
+#: BOOL (0/1); The interferogram processor used (0==ROIPAC, 1==GAMMA)
 PROCESSOR = 'processor'
 #: STR; Name of directory containing input interferograms.
-#: In the case of Python PyRate, these are the tif files,
-#: Not the outputs from gamma or roipac.
 OBS_DIR = 'obsdir'
 #: STR; Name of directory for saving output products
 OUT_DIR = 'outdir'
-#: INT; Number of simulated datasets NOT CURRENTLY USED
-#NUM_SETS = 'nsets'
-#: STR; Directory containing simulated datasets NOT CURRENTLY USED
-SIM_DIR = 'simdir'
-#: STR; Name of Digital Elevation Model file used in
-# constructing the interferograms
+#: STR; Name of Digital Elevation Model file
 DEM_FILE = 'demfile'
 #: STR; Name of the header for the DEM
 DEM_HEADER_FILE = 'demHeaderFile'
-
-# location of gamma slc files
+#: STR; Name of directory containing GAMMA SLC parameter files
 SLC_DIR = 'slcFileDir'
 
 #: STR; The projection of the input interferograms.
 # When *PROCESSOR* == 0, either
 #: this or *ROIPAC_RESOURCE_HEADER* must be provided.
 INPUT_IFG_PROJECTION = 'projection'
-#: STR; The resource header used for conferting ROIPAC interferograms.
+#: STR; The resource header used for converting ROIPAC interferograms.
 # When *PROCESSOR* == 0, either
 #: this or *INPUT_IFG_PROJECTION* must be provided.
 ROIPAC_RESOURCE_HEADER = 'resourceHeader'
@@ -73,18 +63,15 @@ ROIPAC_RESOURCE_HEADER = 'resourceHeader'
 NO_DATA_VALUE = 'noDataValue'
 #: FLOAT; No data averaging threshold for prepifg
 NO_DATA_AVERAGING_THRESHOLD = 'noDataAveragingThreshold'
-#: BOOL (1/0); Use amplitude images NOT CURRENTLY USED
-AMPLITUDE_FLAG = 'ampflag'
-#: BOOL (1/0); Use baseline information NOT CURRENTLY USED
-PERP_BASELINE_FLAG = 'basepflag'
 #: BOOL (1/2/3); Re-project data from Line of sight, 1 = vertical,
 # 2 = horizontal, 3 = no conversion
-REPROJECTION = 'prjflag'
+REPROJECTION = 'prjflag' # NOT CURRENTLY USED
 #: BOOL (0/1); Select MST algorithm, 0 = Matlab-Pirate algorithm, 1 = NetworkX
 NETWORKX_OR_MATLAB_FLAG = 'networkx_or_matlab'
-#: TODO; what does this parameter do?
+#: BOOL (0/1): Convert no data values to Nan
 NAN_CONVERSION = 'nan_conversion'
 
+# Prepifg parameters
 #: BOOL (1/2/3/4); Method for cropping interferograms,
 # 1 = minimum overlapping area (intersection), 2 = maximum area (union),
 # 3 = customised area, 4 = all ifgs already same size
@@ -103,10 +90,10 @@ IFG_YFIRST = 'ifgyfirst'
 IFG_YLAST = 'ifgylast'
 
 # reference pixel parameters
-#: FLOAT; Coordinate in x of reference pixel OR -1 = perform
+#: INT; Coordinate in x of reference pixel OR -1 = perform
 # reference pixel search
 REFX = 'refx'
-#: FLOAT; Coordinate in y of reference pixel OR -1 = perform
+#: INT; Coordinate in y of reference pixel OR -1 = perform
 # reference pixel search
 REFY = 'refy'
 #: INT; Number of reference pixel grid search nodes in x dimension
@@ -118,7 +105,7 @@ REF_CHIP_SIZE = 'refchipsize'
 #: REAL; Minimum fraction of observations required in
 # reference pixel search window for pixel to be a viable reference pixel
 REF_MIN_FRAC = 'refminfrac'
-# REFERENCE estimation method
+#: BOOL (1/2); Reference phase estimation method
 REF_EST_METHOD = 'refest'
 
 #atmospheric error correction parameter
@@ -144,9 +131,6 @@ ORBITAL_FIT_DEGREE = 'orbfitdegrees'
 ORBITAL_FIT_LOOKS_X = 'orbfitlksx'
 #: INT; Multi look factor for orbital error calculation in y dimension
 ORBITAL_FIT_LOOKS_Y = 'orbfitlksy'
-# ORBITAL_FIT_orbrefest:	 1 BOOLEAN (1/0) # remove reference phase
-# ORBITAL_FIT_ orbmaskflag:   1 BOOLEAN (1/0) # mask some patches
-# for orbital correction
 
 # Linear rate/stacking parameters
 #: REAL; Threshold ratio between 'model minus observation'
@@ -160,6 +144,7 @@ LR_PTHRESH = 'pthr'
 #: REAL; Maximum allowable standard error for pixels in linear rate inversion.
 LR_MAXSIG = 'maxsig'
 
+# Time series parameters
 #: BOOL (1/0); Do Time series calculation
 TIME_SERIES_CAL = 'tscal'
 #: INT (1/2); Method for time series inversion (1: Laplacian Smoothing; 2: SVD)
@@ -173,21 +158,20 @@ TIME_SERIES_SM_ORDER = 'smorder'
 #: REAL; Laplacian smoothing factor (0: calculate & plot L-curve;
 # others: using the specific smoothing factor 10**smfactor) NOT CURRENTLY USED
 TIME_SERIES_SM_FACTOR = 'smfactor'
+# tsinterp is automatically assigned in the code; not needed in conf file
+#TIME_SERIES_INTERP = 'tsinterp'
 
-# MULTIPROCESSING parameters
+#: BOOL (0/1/2); Use parallelisation/Multi-threading
 PARALLEL = 'parallel'
+#: INT; Number of processes for multi-threading
 PROCESSES = 'processes'
 
-# Luigi parameter
+#: BOOL (0/1); Switch for using Luigi to perform prepifg step
 LUIGI = 'use_luigi'
 
-# pickle output or not
-PICKLE = 'pickle'
-
-# ORBITAL ERROR correction constants
+# Orbital error correction constants
 INDEPENDENT_METHOD = 1
 NETWORK_METHOD = 2
-
 PLANAR = 'PLANAR'
 QUADRATIC = 'QUADRATIC'
 PART_CUBIC = 'PART_CUBIC'
@@ -224,11 +208,8 @@ def method_conv(meth):
 # format is	key : (conversion, default value)
 # None = no conversion
 PARAM_CONVERSION = {
-    #PERP_BASELINE_FLAG : (bool, True),
-    #AMPLITUDE_FLAG : (bool, False),
-    #NUM_SETS : (int, 1),
-    REPROJECTION : (int, 3),
-    IFG_CROP_OPT : (int, None), # TODO: default to ALREADY_SAME_SIZE?
+    REPROJECTION : (int, 3), # Default no conversion, CONVERSION NOT IMPLEMENTED
+    IFG_CROP_OPT : (int, 1), # default to area 'intersection' option
     IFG_LKSX : (int, NO_MULTILOOKING),
     IFG_LKSY : (int, NO_MULTILOOKING),
     IFG_XFIRST : (float, None),
@@ -239,43 +220,40 @@ PARAM_CONVERSION = {
 
     REFX: (int, -1),
     REFY: (int, -1),
-    REFNX: (int, 5),  # was 50 in original Pirate code
-    REFNY: (int, 5),  # was 50 in original Pirate code
-    REF_CHIP_SIZE: (int, 3),  # defaults to 21 in orig
-    REF_MIN_FRAC: (float, 0.8),  # uses Pirate default
-    REF_EST_METHOD: (int, 1),  # ref phase estimation method
+    REFNX: (int, 50),
+    REFNY: (int, 50),
+    REF_CHIP_SIZE: (int, 21),
+    REF_MIN_FRAC: (float, 0.8),
+    REF_EST_METHOD: (int, 1), # default to average of whole image
 
-    #ORBITAL_FIT : (bool, False),
     ORBITAL_FIT: (int, 0),
     ORBITAL_FIT_METHOD: (method_conv, NETWORK_METHOD),
     ORBITAL_FIT_DEGREE: (degree_conv, QUADRATIC),
     ORBITAL_FIT_LOOKS_X: (int, NO_MULTILOOKING),
     ORBITAL_FIT_LOOKS_Y: (int, NO_MULTILOOKING),
 
-    LR_NSIG : (int, 3), # Pirate default
-    LR_PTHRESH : (int, 20), # should be based on nepochs since not every project may have 20 epochs
-    LR_MAXSIG : (int, 2), # Pirate default
+    LR_NSIG : (int, 3),
+    # pixel thresh based on nepochs? not every project may have 20 epochs
+    LR_PTHRESH : (int, 20),
+    LR_MAXSIG : (int, 2),
 
-    #TIME_SERIES_CAL : (bool, False),
     TIME_SERIES_CAL: (int, 0),
-    TIME_SERIES_PTHRESH: (int, None),
+    # pixel thresh based on nepochs? not every project may have 20 epochs
+    TIME_SERIES_PTHRESH: (int, 20),
     TIME_SERIES_SM_FACTOR: (float, None),
     TIME_SERIES_SM_ORDER: (int, None),
     TIME_SERIES_METHOD: (int, 2), # Default to SVD method
 
-    PARALLEL: (int, None),
+    PARALLEL: (int, 0),
     PROCESSES: (int, 8),
-
     PROCESSOR: (int, None),
     NETWORKX_OR_MATLAB_FLAG: (int, 1), # Default to NetworkX
-
     LUIGI: (int, 0),
     NAN_CONVERSION: (int, 0),
     NO_DATA_AVERAGING_THRESHOLD: (float, 0.0),
     APS_CORRECTION: (int, 0),
     APS_METHOD: (int, 1)
     }
-    #TIME_SERIES_INTERP : (bool, False) # Automatically assigned in code
 
 
 PATHS = [OBS_DIR, IFG_FILE_LIST, DEM_FILE,
@@ -360,8 +338,8 @@ def handle_pyaps_parameters(params):
         # define APS_INCIDENCE_EXT for gamma prepifg
         if ((params[APS_INCIDENCE_MAP] is not None) and
                 (params[APS_ELEVATION_MAP] is not None)):
-            warnings.warn('Both incidence and elevation map supplied. '
-                          'Using the incidence map and ignoring elevation map')
+            warnings.warn('Both incidence and elevation map supplied. Using '
+                          'the incidence map and ignoring elevation map')
 
         if (int(params[APS_CORRECTION]) and
                 (int(params[APS_METHOD]) == 2) and
