@@ -254,7 +254,7 @@ def crop_resample_average(
     out_driver_type: str, optional
         the output driver type. `MEM` or `GTiff`.
     match_pirate: bool, optional
-        whether to match matlab pirate style resampled/croppped output
+        whether to match matlab pirate style resampled/cropped output
     """
     dst_ds, _, _, _ = crop_rasample_setup(
         extents, input_tif, new_res, output_file,
@@ -277,7 +277,7 @@ def crop_resample_average(
         matlab_alignment(input_tif, new_res, resampled_average, src_ds_mem,
                          src_gt, tmp_ds)
 
-    # write final pi/pyrate GTiff
+    # write final pyrate GTiff
     out_ds = driver.Create(output_file, dst_ds.RasterXSize, dst_ds.RasterYSize,
                            1, src_dtype)
 
@@ -288,7 +288,15 @@ def crop_resample_average(
     # copy metadata
     for k, v in dst_ds.GetMetadata().items():
         if k == ifc.DATA_TYPE:
-            out_ds.SetMetadataItem(ifc.DATA_TYPE, ifc.MULTILOOKED)
+            # update data type metadata
+            if v == ifc.ORIG:
+                out_ds.SetMetadataItem(ifc.DATA_TYPE, ifc.MULTILOOKED)
+            elif v == ifc.DEM:
+                out_ds.SetMetadataItem(ifc.DATA_TYPE, ifc.MLOOKED_DEM)
+            elif v == ifc.INCIDENCE:
+                out_ds.SetMetadataItem(ifc.DATA_TYPE, ifc.MLOOKED_INC)
+            else:
+                raise TypeError('Data Type metadata not recognised')
         else:
             out_ds.SetMetadataItem(k, v)
 
