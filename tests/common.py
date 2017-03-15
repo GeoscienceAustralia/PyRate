@@ -43,7 +43,7 @@ SYD_TEST_GAMMA = join(SYD_TEST_DIR, 'gamma_sydney_test')  # gamma processed unws
 
 SYD_TEST_DEM_DIR = join(SYD_TEST_DIR, 'dem')
 SYD_TEST_MATLAB_MST_DIR = join(SYD_TEST_DIR, 'matlab_mst')
-SYD_TEST_MATLAB_PREPIFG_DIR = join(SYD_TEST_DIR, 'matlab_preifg_output')
+SYD_TEST_MATLAB_PREPIFG_DIR = join(SYD_TEST_DIR, 'matlab_prepifg_output')
 SYD_TEST_MATLAB_ORBITAL_DIR = join(SYD_TEST_DIR,
                                    'matlab_orbital_error_correction')
 SYD_TEST_DEM_ROIPAC = join(SYD_TEST_DEM_DIR, 'sydney_trimmed.dem')
