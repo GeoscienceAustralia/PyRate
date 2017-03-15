@@ -295,6 +295,8 @@ def crop_resample_average(
                 out_ds.SetMetadataItem(ifc.DATA_TYPE, ifc.MLOOKED_DEM)
             elif v == ifc.INCIDENCE:
                 out_ds.SetMetadataItem(ifc.DATA_TYPE, ifc.MLOOKED_INC)
+            elif v == ifc.MULTILOOKED:
+                pass
             else:
                 raise TypeError('Data Type metadata not recognised')
         else:
