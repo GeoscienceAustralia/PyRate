@@ -36,10 +36,10 @@ from pyrate.shared import Ifg, pre_prepare_ifgs, get_projection_info, \
 TEMPDIR = tempfile.gettempdir()
 BASE_TEST = join(os.environ['PYRATEPATH'], "tests", "test_data")
 SYD_TEST_DIR = join(BASE_TEST, "sydney_test")
-SYD_TEST_OBS = join(SYD_TEST_DIR, 'obs')  # roipac processed unws
+SYD_TEST_OBS = join(SYD_TEST_DIR, 'roipac_obs')  # roipac processed unws
 SYD_TEST_OUT = join(SYD_TEST_DIR, 'out')
 SYD_TEST_TIF = join(SYD_TEST_DIR, 'tif')
-SYD_TEST_GAMMA = join(SYD_TEST_DIR, 'gamma_sydney_test')  # gamma processed unws
+SYD_TEST_GAMMA = join(SYD_TEST_DIR, 'gamma_obs')  # gamma processed unws
 
 SYD_TEST_DEM_DIR = join(SYD_TEST_DIR, 'dem')
 SYD_TEST_MATLAB_MST_DIR = join(SYD_TEST_DIR, 'matlab_mst')

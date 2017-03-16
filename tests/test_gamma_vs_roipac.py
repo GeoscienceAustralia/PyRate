@@ -58,7 +58,7 @@ DUMMY_SECTION_NAME = 'pyrate'
 
 class TestGammaVsRoipacEquality(unittest.TestCase):
 
-    SYDNEY_GAMMA_TEST = os.path.join(SYD_TEST_DIR, 'gamma_sydney_test')
+    SYDNEY_GAMMA_TEST = os.path.join(SYD_TEST_DIR, 'gamma_obs')
 
     @classmethod
     def setUpClass(cls):
