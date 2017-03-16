@@ -273,7 +273,7 @@ def save_ref_pixel_blocks(grid, half_patch_size, ifg_paths, params):
         parameters dict corresponding to config file
     """
     log.info('Saving ref pixel blocks')
-    outdir = params[cf.OUT_DIR]
+    outdir = params[cf.TMPDIR]
     for pth in ifg_paths:
         ifg = Ifg(pth)
         ifg.open(readonly=True)
