@@ -15,8 +15,7 @@
 #   limitations under the License.
 """
 This Python module implements a reference phase estimation algorithm
-and is based on the Matlab code in the 'refphsest.m' of the Pirate
-package.
+and is based on the function 'refphsest.m' of the Matlab Pirate package.
 """
 from __future__ import print_function
 import logging
@@ -31,7 +30,7 @@ log = logging.getLogger(__name__)
 
 def estimate_ref_phase(ifgs, params, refpx, refpy):
     """
-    :param ifgs: list of interferrograms
+    :param ifgs: list of interferograms
     :param params: parameters of the simulation
     :param refpx: reference pixel found by ref pixel method
     :param refpy: reference pixel found by ref pixel method

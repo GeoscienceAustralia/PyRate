@@ -17,18 +17,16 @@
 This Python module contains tests for the refpixel.py PyRate module.
 """
 import copy
-import os
 import unittest
 import tempfile
 import shutil
 from numpy import nan, mean, std, isnan
 
 from pyrate import config as cf
-from pyrate.config import ConfigException
-from pyrate.refpixel import ref_pixel, RefPixelError, step
+from pyrate.refpixel import ref_pixel, step
 from pyrate.scripts import run_pyrate
-from tests.common import SYD_TEST_DIR
-from tests.common import sydney_data_setup, MockIfg, sydney_ifg_file_list
+from tests.common import TEST_CONF_FILE
+from tests.common import small_data_setup, MockIfg, small_ifg_file_list
 
 # default testing values
 REFNX = 5
@@ -44,9 +42,8 @@ class ReferencePixelInputTests(unittest.TestCase):
     '''
 
     def setUp(self):
-        self.ifgs = sydney_data_setup()
-        self.params = cf.get_config_params(
-            os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf'))
+        self.ifgs = small_data_setup()
+        self.params = cf.get_config_params(TEST_CONF_FILE)
         self.params[cf.REFNX] = REFNX
         self.params[cf.REFNY] = REFNY
         self.params[cf.REF_CHIP_SIZE] = CHIPSIZE
@@ -55,7 +52,7 @@ class ReferencePixelInputTests(unittest.TestCase):
 
     def test_missing_chipsize(self):
         self.params[cf.REF_CHIP_SIZE] = None
-        self.assertRaises(ConfigException, ref_pixel, self.ifgs, self.params)
+        self.assertRaises(cf.ConfigException, ref_pixel, self.ifgs, self.params)
 
     def test_chipsize_valid(self):
         for illegal in [0, -1, -15, 1, 2, self.ifgs[0].ncols+1, 4, 6, 10, 20]:
@@ -64,7 +61,7 @@ class ReferencePixelInputTests(unittest.TestCase):
 
     def test_minimum_fraction_missing(self):
         self.params[cf.REF_MIN_FRAC] = None
-        self.assertRaises(ConfigException, ref_pixel, self.ifgs, self.params)
+        self.assertRaises(cf.ConfigException, ref_pixel, self.ifgs, self.params)
 
     def test_minimum_fraction_threshold(self):
         for illegal in [-0.1, 1.1, 1.000001, -0.0000001]:
@@ -84,12 +81,12 @@ class ReferencePixelInputTests(unittest.TestCase):
 
     def test_missing_search_windows(self):
         self.params[cf.REFNX] = None
-        self.assertRaises(ConfigException, ref_pixel, self.ifgs, self.params)
+        self.assertRaises(cf.ConfigException, ref_pixel, self.ifgs, self.params)
 
         self.params[cf.REFNX] = REFNX
         self.params[cf.REFNY] = None
 
-        self.assertRaises(ConfigException, ref_pixel, self.ifgs, self.params)
+        self.assertRaises(cf.ConfigException, ref_pixel, self.ifgs, self.params)
 
 
 class ReferencePixelTests(unittest.TestCase):
@@ -98,9 +95,8 @@ class ReferencePixelTests(unittest.TestCase):
     """
 
     def setUp(self):
-        self.ifgs = sydney_data_setup()
-        self.params = cf.get_config_params(
-            os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf'))
+        self.ifgs = small_data_setup()
+        self.params = cf.get_config_params(TEST_CONF_FILE)
         self.params[cf.REFNX] = REFNX
         self.params[cf.REFNY] = REFNY
         self.params[cf.REF_CHIP_SIZE] = CHIPSIZE
@@ -222,9 +218,8 @@ def _expected_ref_pixel(ifgs, cs):
 class MatlabEqualityTest(unittest.TestCase):
 
     def setUp(self):
-        self.ifg_paths = sydney_ifg_file_list()
-        self.params = cf.get_config_params(
-            os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf'))
+        self.ifg_paths = small_ifg_file_list()
+        self.params = cf.get_config_params(TEST_CONF_FILE)
         self.params[cf.PARALLEL] = False
         self.params[cf.OUT_DIR] = tempfile.mkdtemp()
         self.params_alt_ref_frac = copy.copy(self.params)
@@ -242,13 +237,13 @@ class MatlabEqualityTest(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.params[cf.OUT_DIR])
 
-    def test_sydney_test_data_ref_pixel(self):
+    def test_small_test_data_ref_pixel(self):
         refx, refy = run_pyrate.ref_pixel_calc(self.ifg_paths, self.params)
         self.assertEqual(refx, 38)
         self.assertEqual(refy, 58)
         self.assertAlmostEqual(0.8, self.params[cf.REF_MIN_FRAC])
 
-    def test_more_sydney_test_data_ref_pixel(self):
+    def test_more_small_test_data_ref_pixel(self):
 
         refx, refy = run_pyrate.ref_pixel_calc(self.ifg_paths,
                                                self.params_alt_ref_frac)
@@ -256,7 +251,7 @@ class MatlabEqualityTest(unittest.TestCase):
         self.assertEqual(refy, 58)
         self.assertAlmostEqual(0.5, self.params_alt_ref_frac[cf.REF_MIN_FRAC])
 
-    def test_sydney_test_data_ref_pixel_all_2(self):
+    def test_small_test_data_ref_pixel_all_2(self):
 
         refx, refy = run_pyrate.ref_pixel_calc(self.ifg_paths,
                                                self.params_all_2s)
@@ -264,7 +259,7 @@ class MatlabEqualityTest(unittest.TestCase):
         self.assertEqual(refy, 2)
         self.assertAlmostEqual(0.5, self.params_alt_ref_frac[cf.REF_MIN_FRAC])
 
-    def test_sydney_test_data_ref_chipsize_15(self):
+    def test_small_test_data_ref_chipsize_15(self):
 
         refx, refy = run_pyrate.ref_pixel_calc(self.ifg_paths,
                                                self.params_chipsize_15)
@@ -272,7 +267,7 @@ class MatlabEqualityTest(unittest.TestCase):
         self.assertEqual(refy, 7)
         self.assertAlmostEqual(0.5, self.params_alt_ref_frac[cf.REF_MIN_FRAC])
 
-    def test_sydney_test_data_ref_all_1(self):
+    def test_small_test_data_ref_all_1(self):
 
         refx, refy = run_pyrate.ref_pixel_calc(self.ifg_paths,
                                                self.params_all_1s)
@@ -287,9 +282,8 @@ class MatlabEqualityTest(unittest.TestCase):
 class MatlabEqualityTestMultiprocessParallel(unittest.TestCase):
 
     def setUp(self):
-        self.ifg_paths = sydney_ifg_file_list()
-        self.params = cf.get_config_params(
-            os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf'))
+        self.ifg_paths = small_ifg_file_list()
+        self.params = cf.get_config_params(TEST_CONF_FILE)
         self.params[cf.PARALLEL] = True
         self.params[cf.OUT_DIR] = tempfile.mkdtemp()
 
@@ -308,13 +302,13 @@ class MatlabEqualityTestMultiprocessParallel(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.params[cf.OUT_DIR])
 
-    def test_sydney_test_data_ref_pixel(self):
+    def test_small_test_data_ref_pixel(self):
         refx, refy = run_pyrate.ref_pixel_calc(self.ifg_paths, self.params)
         self.assertEqual(refx, 38)
         self.assertEqual(refy, 58)
         self.assertAlmostEqual(0.8, self.params[cf.REF_MIN_FRAC])
 
-    def test_more_sydney_test_data_ref_pixel(self):
+    def test_more_small_test_data_ref_pixel(self):
 
         refx, refy = run_pyrate.ref_pixel_calc(self.ifg_paths,
                                                self.params_alt_ref_frac)
@@ -322,7 +316,7 @@ class MatlabEqualityTestMultiprocessParallel(unittest.TestCase):
         self.assertEqual(refy, 58)
         self.assertAlmostEqual(0.5, self.params_alt_ref_frac[cf.REF_MIN_FRAC])
 
-    def test_sydney_test_data_ref_pixel_all_2(self):
+    def test_small_test_data_ref_pixel_all_2(self):
 
         refx, refy = run_pyrate.ref_pixel_calc(self.ifg_paths,
                                                self.params_all_2s)
@@ -330,7 +324,7 @@ class MatlabEqualityTestMultiprocessParallel(unittest.TestCase):
         self.assertEqual(refy, 2)
         self.assertAlmostEqual(0.5, self.params_alt_ref_frac[cf.REF_MIN_FRAC])
 
-    def test_sydney_test_data_ref_chipsize_15(self):
+    def test_small_test_data_ref_chipsize_15(self):
 
         refx, refy = run_pyrate.ref_pixel_calc(self.ifg_paths,
                                                self.params_chipsize_15)
@@ -338,7 +332,7 @@ class MatlabEqualityTestMultiprocessParallel(unittest.TestCase):
         self.assertEqual(refy, 7)
         self.assertAlmostEqual(0.5, self.params_alt_ref_frac[cf.REF_MIN_FRAC])
 
-    def test_sydney_test_data_ref_all_1(self):
+    def test_small_test_data_ref_all_1(self):
 
         refx, refy = run_pyrate.ref_pixel_calc(self.ifg_paths,
                                                self.params_all_1s)

@@ -28,31 +28,25 @@ import numpy as np
 from numpy.testing import assert_array_almost_equal
 
 import pyrate.orbital
-import tests.common
+import tests.common as common
 from pyrate import config as cf
 from pyrate import mst
 from pyrate import ref_phs_est as rpe
 from pyrate import shared
 from pyrate import vcm
-from pyrate.config import PARALLEL, PROCESSES, NO_DATA_VALUE
-from pyrate.config import TIME_SERIES_PTHRESH, NAN_CONVERSION
-from pyrate.config import TIME_SERIES_SM_FACTOR, TIME_SERIES_METHOD
-from pyrate.config import TIME_SERIES_SM_ORDER
 from pyrate.scripts import run_pyrate, run_prepifg
 from pyrate.timeseries import time_series
-from tests.common import SYD_TEST_DIR, prepare_ifgs_without_phase
-from tests.common import sydney_data_setup
 
 
 def default_params():
-    return {TIME_SERIES_METHOD: 1,
-            TIME_SERIES_PTHRESH: 0,
-            TIME_SERIES_SM_ORDER: 2,
-            TIME_SERIES_SM_FACTOR: -0.25,
-            PARALLEL: 0,
-            PROCESSES: 1,
-            NAN_CONVERSION: 1,
-            NO_DATA_VALUE: 0}
+    return {cf.TIME_SERIES_METHOD: 1,
+            cf.TIME_SERIES_PTHRESH: 0,
+            cf.TIME_SERIES_SM_ORDER: 2,
+            cf.TIME_SERIES_SM_FACTOR: -0.25,
+            cf.PARALLEL: 0,
+            cf.PROCESSES: 1,
+            cf.NAN_CONVERSION: 1,
+            cf.NO_DATA_VALUE: 0}
 
 
 class SinglePixelIfg(object):
@@ -82,7 +76,7 @@ class TimeSeriesTests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.ifgs = sydney_data_setup()
+        cls.ifgs = common.small_data_setup()
         cls.params = default_params()
         cls.mstmat = mst.mst_boolean_array(cls.ifgs)
         cls.maxvar = [vcm.cvd(i, cls.params)[0] for i in cls.ifgs]
@@ -93,12 +87,11 @@ class TimeSeriesTests(unittest.TestCase):
     # 1. This has been replaced due to change in the time_series code.
     # 2. See MatlabTimeSeriesEquality for a more comprehensive test of the
     # new function.
-
     #     """
-    #     Checks that the code works the same as the pirate MatLab code
+    #     Checks that the code works the same as the Matlab Pirate code
     #     """
     #     tsincr, tscum, tsvel = time_series(
-    #         self.ifgs, pthresh=self.params[TIME_SERIES_PTHRESH],
+    #         self.ifgs, pthresh=self.params[cf.TIME_SERIES_PTHRESH],
     #         params=self.params, vcmt=self.vcmt, mst=self.mstmat)
     #     expected = asarray([
     #         -11.09124207, -2.24628582, -11.37726666, -7.98105646,
@@ -135,19 +128,15 @@ class TimeSeriesTests(unittest.TestCase):
 
 class MatlabTimeSeriesEquality(unittest.TestCase):
     """
-    Checks the python function to that of Matlab pirate ts.m and tsinvlap.m
+    Checks the python function to that of Matlab Pirate ts.m and tsinvlap.m
     functionality.
     """
 
     @classmethod
     def setUpClass(cls):
-        params = cf.get_config_params(
-            os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf'))
-
+        params = cf.get_config_params(common.TEST_CONF_FILE)
         cls.temp_out_dir = tempfile.mkdtemp()
-
-        sys.argv = ['run_prepifg.py', os.path.join(SYD_TEST_DIR,
-                                                   'pyrate_system_test.conf')]
+        sys.argv = ['run_prepifg.py', common.TEST_CONF_FILE]
         params[cf.OUT_DIR] = cls.temp_out_dir
         run_prepifg.main(params)
 
@@ -160,11 +149,11 @@ class MatlabTimeSeriesEquality(unittest.TestCase):
         dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
         # start run_pyrate copy
         ifgs = shared.pre_prepare_ifgs(dest_paths, params)
-        mst_grid = tests.common.mst_calculation(dest_paths, params)
+        mst_grid = common.mst_calculation(dest_paths, params)
         refx, refy = run_pyrate.ref_pixel_calc(dest_paths, params)
         # Estimate and remove orbit errors
         pyrate.orbital.remove_orbital_error(ifgs, params)
-        ifgs = prepare_ifgs_without_phase(dest_paths, params)
+        ifgs = common.prepare_ifgs_without_phase(dest_paths, params)
         _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
 
         maxvar = [vcm.cvd(i, params)[0] for i in ifgs]
@@ -173,29 +162,29 @@ class MatlabTimeSeriesEquality(unittest.TestCase):
         params[cf.TIME_SERIES_METHOD] = 1
         params[cf.PARALLEL] = 0
         # Calculate time series
-        cls.tsincr_0, cls.tscum_0, _ = tests.common.calculate_time_series(
+        cls.tsincr_0, cls.tscum_0, _ = common.calculate_time_series(
             ifgs, params, vcmt, mst=mst_grid)
 
         params[cf.PARALLEL] = 1
         cls.tsincr_1, cls.tscum_1, cls.tsvel_1 = \
-            tests.common.calculate_time_series(ifgs, params, vcmt, mst=mst_grid)
+            common.calculate_time_series(ifgs, params, vcmt, mst=mst_grid)
 
         params[cf.PARALLEL] = 2
         cls.tsincr_2, cls.tscum_2, cls.tsvel_2 = \
-            tests.common.calculate_time_series(ifgs, params, vcmt, mst=mst_grid)
+            common.calculate_time_series(ifgs, params, vcmt, mst=mst_grid)
 
         # load the matlab data
-        syd_ts_dir = os.path.join(SYD_TEST_DIR, 'matlab_time_series')
-        tsincr_path = os.path.join(syd_ts_dir,
+        ts_dir = os.path.join(common.SML_TEST_DIR, 'matlab_time_series')
+        tsincr_path = os.path.join(ts_dir,
                                    'ts_incr_interp0_method1.csv')
         ts_incr = np.genfromtxt(tsincr_path)
 
         # the matlab tsvel return is a bit pointless and not tested here
         # tserror is not returned
-        # tserr_path = os.path.join(SYD_TIME_SERIES_DIR,
+        # tserr_path = os.path.join(SML_TIME_SERIES_DIR,
         # 'ts_error_interp0_method1.csv')
         # ts_err = np.genfromtxt(tserr_path, delimiter=',')
-        tscum_path = os.path.join(syd_ts_dir,
+        tscum_path = os.path.join(ts_dir,
                                   'ts_cum_interp0_method1.csv')
         ts_cum = np.genfromtxt(tscum_path)
         cls.ts_incr = np.reshape(ts_incr,
@@ -249,18 +238,14 @@ class MatlabTimeSeriesEquality(unittest.TestCase):
 
 class MatlabTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
     """
-    Checks the python function to that of Matlab pirate ts.m and tsinvlap.m
+    Checks the python function to that of Matlab Pirate ts.m and tsinvlap.m
     functionality.
     """
     @classmethod
     def setUpClass(cls):
-        params = cf.get_config_params(os.path.join(SYD_TEST_DIR,
-                                                   'pyrate_system_test.conf'))
-
+        params = cf.get_config_params(common.TEST_CONF_FILE)
         cls.temp_out_dir = tempfile.mkdtemp()
-
-        sys.argv = ['run_prepifg.py',
-                    os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf')]
+        sys.argv = ['run_prepifg.py', common.TEST_CONF_FILE]
         params[cf.OUT_DIR] = cls.temp_out_dir
         run_prepifg.main(params)
 
@@ -273,13 +258,13 @@ class MatlabTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
         dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
         # start run_pyrate copy
         ifgs = shared.pre_prepare_ifgs(dest_paths, params)
-        mst_grid = tests.common.mst_calculation(dest_paths, params)
+        mst_grid = common.mst_calculation(dest_paths, params)
 
         refx, refy = run_pyrate.ref_pixel_calc(dest_paths, params)
 
         # Estimate and remove orbit errors
         pyrate.orbital.remove_orbital_error(ifgs, params)
-        ifgs = prepare_ifgs_without_phase(dest_paths, params)
+        ifgs = common.prepare_ifgs_without_phase(dest_paths, params)
 
         _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
 
@@ -290,32 +275,33 @@ class MatlabTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
         params[cf.TIME_SERIES_METHOD] = 2
         params[cf.PARALLEL] = 1
         # Calculate time series
-        cls.tsincr, cls.tscum, _ = tests.common.calculate_time_series(
+        cls.tsincr, cls.tscum, _ = common.calculate_time_series(
             ifgs, params, vcmt, mst=mst_grid)
 
         params[cf.PARALLEL] = 2
 
         # Calculate time series
         cls.tsincr_2, cls.tscum_2, _ = \
-            tests.common.calculate_time_series(ifgs, params, vcmt, mst=mst_grid)
+            common.calculate_time_series(ifgs, params, vcmt, mst=mst_grid)
 
         params[cf.PARALLEL] = 0
         # Calculate time series serailly by the pixel
         cls.tsincr_0, cls.tscum_0, _ = \
-            tests.common.calculate_time_series(ifgs, params, vcmt, mst=mst_grid)
+            common.calculate_time_series(ifgs, params, vcmt, mst=mst_grid)
 
         # copy matlab data
-        SYD_TIME_SERIES_DIR = os.path.join(SYD_TEST_DIR, 'matlab_time_series')
-        tsincr_path = os.path.join(SYD_TIME_SERIES_DIR,
+        SML_TIME_SERIES_DIR = os.path.join(common.SML_TEST_DIR,
+                                   'matlab_time_series')
+        tsincr_path = os.path.join(SML_TIME_SERIES_DIR,
                                    'ts_incr_interp0_method2.csv')
         ts_incr = np.genfromtxt(tsincr_path)
 
         # the matlab tsvel return is a bit pointless and not tested here
         # tserror is not returned
-        # tserr_path = os.path.join(SYD_TIME_SERIES_DIR,
+        # tserr_path = os.path.join(SML_TIME_SERIES_DIR,
         # 'ts_error_interp0_method1.csv')
         # ts_err = np.genfromtxt(tserr_path, delimiter=',')
-        tscum_path = os.path.join(SYD_TIME_SERIES_DIR,
+        tscum_path = os.path.join(SML_TIME_SERIES_DIR,
                                   'ts_cum_interp0_method2.csv')
         ts_cum = np.genfromtxt(tscum_path)
 

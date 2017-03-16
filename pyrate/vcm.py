@@ -16,8 +16,8 @@
 """
 This Python module implements covariance calculation and
 Variance/Covariance matrix functionality. The algorithms
-are based on Matlab codes 'cvdcalc.m' and 'vcmt.m' from
-the Pirate package.
+are based on functions 'cvdcalc.m' and 'vcmt.m' from
+the Matlab Pirate package.
 """
 from __future__ import print_function
 from numpy import array, where, isnan, real, imag, sqrt, meshgrid
@@ -118,7 +118,7 @@ def cvd(ifg_path, params, calc_alpha=False):
     r_dist = r_dist[:int(ceil(ifg.num_cells/2.0)) + ifg.nrows]
     acg = acg[:len(r_dist)]
 
-    # Alternative method to remove duplicate cells from Matlab Pirate
+    # Alternative method to remove duplicate cells (from Matlab Pirate code)
     # r_dist = r_dist[:ceil(len(r_dist)/2)+nlines]
     #  Reason for '+nlines' term unknown
 

@@ -66,7 +66,7 @@ NO_DATA_AVERAGING_THRESHOLD = 'noDataAveragingThreshold'
 #: BOOL (1/2/3); Re-project data from Line of sight, 1 = vertical,
 # 2 = horizontal, 3 = no conversion
 REPROJECTION = 'prjflag' # NOT CURRENTLY USED
-#: BOOL (0/1); Select MST algorithm, 0 = Matlab-Pirate algorithm, 1 = NetworkX
+#: BOOL (0/1); Select MST algorithm, 0 = Matlab Pirate algorithm, 1 = NetworkX
 NETWORKX_OR_MATLAB_FLAG = 'networkx_or_matlab'
 #: BOOL (0/1): Convert no data values to Nan
 NAN_CONVERSION = 'nan_conversion'
@@ -375,11 +375,14 @@ def _parse_pars(pars):
     """
     for k in PARAM_CONVERSION:
         if k in pars:
+            # if option value is blank/missing revert to default
+            if pars[k] is None:
+                pars[k] = PARAM_CONVERSION[k][1]
             conversion_func = PARAM_CONVERSION[k][0]
             if conversion_func:
                 pars[k] = conversion_func(pars[k])
         else:
-            # revert empty options to default value
+            # revert missing options to default value
             if k in PARAM_CONVERSION:
                 pars[k] = PARAM_CONVERSION[k][1]
     return pars
@@ -466,7 +469,7 @@ def get_dest_paths(base_paths, crop, params, looks):
     Parameters
     ----------
     base_paths: list
-        unwrapped interferrogram paths
+        unwrapped interferogram paths
     crop: int
         crop method to use
     params: dict

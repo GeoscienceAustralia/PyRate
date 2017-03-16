@@ -55,7 +55,7 @@ install:
   - python setup.py install
   - export PYRATEPATH=$(pwd)
   - export PYTHONPATH=$PYRATEPATH:$PYTHONPATH
-  - chmod 444 tests/test_data/sydney_test/tif/geo_070709-070813_unw.tif  # makes the file readonly, used in a test
+  - chmod 444 tests/test_data/small_test/tif/geo_070709-070813_unw.tif  # makes the file readonly, used in a test
 
 # command to run tests, e.g. python setup.py test
 script:

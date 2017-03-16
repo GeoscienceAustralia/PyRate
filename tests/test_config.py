@@ -23,7 +23,8 @@ import tempfile
 import unittest
 from os.path import join
 
-from .common import SYD_TEST_DIR, SYD_TEST_TIF, SYD_TEST_GAMMA
+from tests.common import SML_TEST_CONF, SML_TEST_TIF, SML_TEST_GAMMA
+from tests.common import TEST_CONF_FILE
 from pyrate import config
 from pyrate.config import (
     DEM_HEADER_FILE,
@@ -52,7 +53,7 @@ class ConfigTest(unittest.TestCase):
 
     @staticmethod
     def test_read_param_file():
-        conf_path = join(SYD_TEST_DIR, 'pyrate.conf')
+        conf_path = TEST_CONF_FILE #join(SML_TEST_CONF, 'pyrate.conf')
         params = config.get_config_params(conf_path)
         for k in params.keys():
             assert k and len(k) > 1
@@ -60,9 +61,18 @@ class ConfigTest(unittest.TestCase):
             assert not k.endswith(":")  # are the colons removed?
 
     @staticmethod
-    def test_read_param_file_no_refpixel():
-        # ensure the parser can handle empty fields
-        conf_path = join(SYD_TEST_DIR, 'pyrate2.conf')
+    def test_read_param_file_missing_option():
+        # ensure the parser can handle missing option fields
+        conf_path = join(SML_TEST_CONF, 'pyrate1.conf')
+        params = config.get_config_params(conf_path)
+
+        assert params[config.REFX] == -1
+        assert params[config.REFY] == -1
+
+    @staticmethod
+    def test_read_param_file_missing_value():
+        # ensure the parser can handle blank option values
+        conf_path = join(SML_TEST_CONF, 'pyrate2.conf')
         params = config.get_config_params(conf_path)
 
         assert params[config.REFX] == -1
@@ -70,7 +80,7 @@ class ConfigTest(unittest.TestCase):
 
     @staticmethod
     def test_parse_namelist():
-        nl = join(SYD_TEST_TIF, 'ifms_17')
+        nl = join(SML_TEST_TIF, 'ifms_17')
         result = list(config.parse_namelist(nl))
         assert len(result) == 17
         files = ["geo_060619-061002_unw.tif", "geo_060828-061211_unw.tif",
@@ -84,7 +94,7 @@ class ConfigTest(unittest.TestCase):
 class ConfigWriteTest(unittest.TestCase):
 
     def test_write_config_file(self):
-        conf_path = join(SYD_TEST_GAMMA, 'pyrate_gamma.conf')
+        conf_path = join(SML_TEST_CONF, 'pyrate_gamma.conf')
         params = config.get_config_params(conf_path)
         temp_config = tempfile.mktemp(suffix='.conf')
         config.write_config_file(params, temp_config)
@@ -92,7 +102,7 @@ class ConfigWriteTest(unittest.TestCase):
         os.remove(temp_config)
 
     def test_new_config_file_and_original_match(self):
-        conf_path = join(SYD_TEST_GAMMA, 'pyrate_gamma.conf')
+        conf_path = join(SML_TEST_CONF, 'pyrate_gamma.conf')
         params = config.get_config_params(conf_path)
         temp_config = tempfile.mktemp(suffix='.conf')
         config.write_config_file(params, temp_config)
@@ -104,7 +114,7 @@ class ConfigWriteTest(unittest.TestCase):
 
 class ConfigAPSParametersTest(unittest.TestCase):
     def setUp(self):
-        self.conf_path = common.SYDNEY_TEST_CONF
+        self.conf_path = common.TEST_CONF_FILE
         self.params = config.get_config_params(self.conf_path)
 
     def test_incidence_and_elevation_keys_exist(self):
@@ -136,7 +146,7 @@ class TestOneIncidenceOrElevationMap(unittest.TestCase):
     def setUp(self):
         self.base_dir = tempfile.mkdtemp()
         self.conf_file = tempfile.mktemp(suffix='.conf', dir=self.base_dir)
-        self.ifgListFile = os.path.join(common.SYD_TEST_GAMMA, 'ifms_17')
+        self.ifgListFile = os.path.join(common.SML_TEST_GAMMA, 'ifms_17')
 
     def tearDown(self):
         shutil.rmtree(self.base_dir)
@@ -152,20 +162,20 @@ class TestOneIncidenceOrElevationMap(unittest.TestCase):
             conf.write('{}: {}\n'.format(LUIGI, '0'))
             conf.write('{}: {}\n'.format(
                 DEM_HEADER_FILE, os.path.join(
-                    common.SYD_TEST_GAMMA, '20060619_utm_dem.par')))
+                    common.SML_TEST_GAMMA, '20060619_utm_dem.par')))
             conf.write('{}: {}\n'.format(IFG_LKSX, '1'))
             conf.write('{}: {}\n'.format(IFG_LKSY, '1'))
             conf.write('{}: {}\n'.format(IFG_CROP_OPT, '1'))
             conf.write('{}: {}\n'.format(NO_DATA_AVERAGING_THRESHOLD, '0.5'))
             conf.write('{}: {}\n'.format(SLC_DIR, ''))
-            conf.write('{}: {}\n'.format(DEM_FILE, common.SYD_TEST_DEM_GAMMA))
+            conf.write('{}: {}\n'.format(DEM_FILE, common.SML_TEST_DEM_GAMMA))
             conf.write('{}: {}\n'.format(APS_INCIDENCE_MAP, inc))
             conf.write('{}: {}\n'.format(APS_ELEVATION_MAP, ele))
             conf.write('{}: {}\n'.format(APS_CORRECTION, '1'))
             conf.write('{}: {}\n'.format(APS_METHOD, '2'))
 
     def test_inc_vs_ele_maps_inc_provided(self):
-        self.make_input_files(inc=common.SYD_TEST_INCIDENCE)
+        self.make_input_files(inc=common.SML_TEST_INCIDENCE)
         assert os.path.exists(self.conf_file)
         params = config.get_config_params(self.conf_file)
         # incidence variables
@@ -181,7 +191,7 @@ class TestOneIncidenceOrElevationMap(unittest.TestCase):
         self.assertIn(config.APS_ELEVATION_MAP, params.keys())
 
     def test_inc_vs_ele_maps_ele_provided(self):
-        self.make_input_files(ele=common.SYD_TEST_ELEVATION)
+        self.make_input_files(ele=common.SML_TEST_ELEVATION)
         assert os.path.exists(self.conf_file)
         params = config.get_config_params(self.conf_file)
         # incidence variables

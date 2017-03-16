@@ -25,7 +25,7 @@ from pyrate.tasks import ConvertToGeotiff
 
 def main():
     """
-    Wrapper function to convert unwrapped interferrograms into geotifs
+    Wrapper function to convert unwrapped interferograms into geotiffs
     for all data types
     """
     usage = 'Usage: gamma.py <config file>'

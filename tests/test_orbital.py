@@ -31,24 +31,22 @@ from numpy.linalg import pinv, inv
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 from scipy.linalg import lstsq
 
-import pyrate.orbital
-import tests.common
-from .common import sydney5_mock_ifgs, MockIfg
+from .common import small5_mock_ifgs, MockIfg
 from pyrate import algorithm
 from pyrate import config as cf
 from pyrate.orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, \
     QUADRATIC, PART_CUBIC
 from pyrate.orbital import OrbitalError, orbital_correction
-from pyrate.orbital import get_design_matrix, get_network_design_matrix, \
-    _get_num_params
+from pyrate.orbital import get_design_matrix, get_network_design_matrix
+from pyrate.orbital import _get_num_params, remove_orbital_error
 from pyrate.shared import Ifg
 from pyrate.shared import nanmedian
-from tests import common
-from tests.common import SYD_TEST_DIR
-from tests.common import SYD_TEST_MATLAB_ORBITAL_DIR
-from tests.common import SYD_TEST_TIF, sydney_data_setup
-from tests.common import sydney_ifg_file_list
+from tests.common import TEST_CONF_FILE, IFMS16
+from tests.common import SML_TEST_MATLAB_ORBITAL_DIR
+from tests.common import SML_TEST_TIF, small_data_setup
+from tests.common import small_ifg_file_list
 
+#TODO: Purpose of this variable? Degrees are 1, 2 and 3 respectively
 DEG_LOOKUP = {
     2: PLANAR,
     5: QUADRATIC,
@@ -72,7 +70,7 @@ class SingleDesignMatrixTests(unittest.TestCase):
         # faked cell sizes
         self.xs = 0.75
         self.ys = 0.8
-        self.ifg = Ifg(join(SYD_TEST_TIF, 'geo_060619-061002_unw.tif'))
+        self.ifg = Ifg(join(SML_TEST_TIF, 'geo_060619-061002_unw.tif'))
         self.ifg.open()
         self.ifg.nodata_value = 0
 
@@ -165,7 +163,7 @@ class IndependentCorrectionTests(unittest.TestCase):
     """Test cases for the orbital correction component of PyRate."""
 
     def setUp(self):
-        self.ifgs = sydney5_mock_ifgs()
+        self.ifgs = small5_mock_ifgs()
         _add_nodata(self.ifgs)
 
         for ifg in self.ifgs:
@@ -261,7 +259,7 @@ class ErrorTests(unittest.TestCase):
 
     def test_invalid_degree_arg(self):
         # test failure of a few different args for 'degree'
-        ifgs = sydney5_mock_ifgs()
+        ifgs = small5_mock_ifgs()
         for d in range(-5, 1):
             self.assertRaises(OrbitalError, get_network_design_matrix, ifgs, d, True)
         for d in range(4, 7):
@@ -269,7 +267,7 @@ class ErrorTests(unittest.TestCase):
 
     def test_invalid_method(self):
         # test failure of a few different args for 'method'
-        ifgs = sydney5_mock_ifgs()
+        ifgs = small5_mock_ifgs()
         params = dict()
         params[cf.ORBITAL_FIT_DEGREE] = PLANAR
         params[cf.PARALLEL] = False
@@ -279,7 +277,7 @@ class ErrorTests(unittest.TestCase):
 
     def test_multilooked_ifgs_arg(self):
         # check some bad args for network method with multilooked ifgs
-        ifgs = sydney5_mock_ifgs()
+        ifgs = small5_mock_ifgs()
         args = [[None, None, None, None, None], ["X"] * 5]
         params = dict()
         params[cf.ORBITAL_FIT_METHOD] = NETWORK_METHOD
@@ -298,7 +296,7 @@ class NetworkDesignMatrixTests(unittest.TestCase):
     """Contains tests verifying creation of sparse network design matrix."""
 
     def setUp(self):
-        self.ifgs = sydney5_mock_ifgs()
+        self.ifgs = small5_mock_ifgs()
         _add_nodata(self.ifgs)
         self.nifgs = len(self.ifgs)
         self.ncells = self.ifgs[0].num_cells
@@ -376,7 +374,7 @@ class NetworkDesignMatrixTests(unittest.TestCase):
             exp = unittest_dm(ifg, NETWORK_METHOD, deg, offset)
             self.assertEqual(exp.shape, (ifg.num_cells, ncoef))
 
-            # NB: this is Hua Wang's MATLAB code slightly modified for Py
+            # NB: this is the Matlab Pirate code slightly modified for Py
             ib1, ib2 = [x * self.ncells for x in (i, i+1)] # row start/end
             jbm = ncoef * self.date_ids[ifg.master] # starting col index for master
             jbs = ncoef * self.date_ids[ifg.slave] # col start for slave
@@ -463,7 +461,7 @@ class NetworkCorrectionTests(unittest.TestCase):
 
     def setUp(self):
         # fake some real ifg data by adding nans
-        self.ifgs = sydney5_mock_ifgs()
+        self.ifgs = small5_mock_ifgs()
         _add_nodata(self.ifgs)
 
         # use different sizes to differentiate axes results
@@ -555,9 +553,9 @@ class NetworkCorrectionTestsMultilooking(unittest.TestCase):
 
     def setUp(self):
         # fake some real ifg data by adding nans
-        self.ml_ifgs = sydney5_mock_ifgs()
-        # 2x data of default Syd mock
-        self.ifgs = sydney5_mock_ifgs(xs=6, ys=8)
+        self.ml_ifgs = small5_mock_ifgs()
+        # 2x data of default Small mock
+        self.ifgs = small5_mock_ifgs(xs=6, ys=8)
 
         # use different sizes to differentiate axes results
         for ifg in self.ifgs:
@@ -672,7 +670,7 @@ def get_date_ids(ifgs):
 
 
 def _add_nodata(ifgs):
-    """Adds some NODATA/nan cells to the sydney mock ifgs"""
+    """Adds some NODATA/nan cells to the small mock ifgs"""
     ifgs[0].phase_data[0, :] = nan # 3 error cells
     ifgs[1].phase_data[2, 1:3] = nan # 2 error cells
     ifgs[2].phase_data[3, 2:3] = nan # 1 err
@@ -694,17 +692,14 @@ class MatlabComparisonTestsOrbfitMethod1(unittest.TestCase):
 
     def setUp(self):
         self.BASE_DIR = tempfile.mkdtemp()
-
-        self.params = cf.get_config_params(
-            os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf'))
-
+        self.params = cf.get_config_params(TEST_CONF_FILE)
         # change to orbital error correction method 1
         self.params[cf.ORBITAL_FIT_METHOD] = 1
         self.params[cf.ORBITAL_FIT_LOOKS_X] = 2
         self.params[cf.ORBITAL_FIT_LOOKS_Y] = 2
         self.params[cf.PARALLEL] = False
 
-        data_paths = [os.path.join(SYD_TEST_TIF, p) for p in common.IFMS16]
+        data_paths = [os.path.join(SML_TEST_TIF, p) for p in IFMS16]
         self.ifg_paths = [os.path.join(self.BASE_DIR, os.path.basename(d))
                           for d in data_paths]
 
@@ -719,14 +714,14 @@ class MatlabComparisonTestsOrbfitMethod1(unittest.TestCase):
 
         run_pyrate.orb_fit_calc(self.ifg_paths, self.params)
 
-        onlyfiles = [f for f in os.listdir(SYD_TEST_MATLAB_ORBITAL_DIR)
-            if os.path.isfile(os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, f))
+        onlyfiles = [f for f in os.listdir(SML_TEST_MATLAB_ORBITAL_DIR)
+            if os.path.isfile(os.path.join(SML_TEST_MATLAB_ORBITAL_DIR, f))
             and f.endswith('.csv') and f.__contains__('_method1_')]
 
         count = 0
         for i, f in enumerate(onlyfiles):
             ifg_data = np.genfromtxt(os.path.join(
-                SYD_TEST_MATLAB_ORBITAL_DIR, f), delimiter=',')
+                SML_TEST_MATLAB_ORBITAL_DIR, f), delimiter=',')
             for k, j in enumerate(self.ifg_paths):
                 ifg = Ifg(j)
                 ifg.open()
@@ -764,17 +759,14 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
     """
     def setUp(self):
         self.BASE_DIR = tempfile.mkdtemp()
-
-        self.params = cf.get_config_params(
-            os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf'))
-
+        self.params = cf.get_config_params(TEST_CONF_FILE)
         # change to orbital error correction method 2
         self.params[cf.ORBITAL_FIT_METHOD] = 2
         self.params[cf.ORBITAL_FIT_LOOKS_X] = 1
         self.params[cf.ORBITAL_FIT_LOOKS_Y] = 1
 
-        data_paths = [os.path.join(SYD_TEST_TIF, p) for p in
-                      sydney_ifg_file_list()]
+        data_paths = [os.path.join(SML_TEST_TIF, p) for p in
+                      small_ifg_file_list()]
         self.new_data_paths = [os.path.join(self.BASE_DIR, os.path.basename(d))
                           for d in data_paths]
         for d in data_paths:
@@ -782,7 +774,7 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
             shutil.copy(d, d_copy)
             os.chmod(d_copy, 0o660)
 
-        self.ifgs = sydney_data_setup(datafiles=self.new_data_paths)
+        self.ifgs = small_data_setup(datafiles=self.new_data_paths)
 
         for i in self.ifgs:
             if not i.is_open:
@@ -800,16 +792,16 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
         shutil.rmtree(self.BASE_DIR)
 
     def test_orbital_correction_matlab_equality_orbfit_method_2(self):
-        pyrate.orbital.remove_orbital_error(self.ifgs, self.params)
+        remove_orbital_error(self.ifgs, self.params)
 
-        onlyfiles = [f for f in os.listdir(SYD_TEST_MATLAB_ORBITAL_DIR)
-            if os.path.isfile(os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, f))
+        onlyfiles = [f for f in os.listdir(SML_TEST_MATLAB_ORBITAL_DIR)
+            if os.path.isfile(os.path.join(SML_TEST_MATLAB_ORBITAL_DIR, f))
             and f.endswith('.csv') and f.__contains__('_method2_')]
 
         count = 0
         for i, f in enumerate(onlyfiles):
             matlab_phase_data = np.genfromtxt(os.path.join(
-                SYD_TEST_MATLAB_ORBITAL_DIR, f), delimiter=',')
+                SML_TEST_MATLAB_ORBITAL_DIR, f), delimiter=',')
             for k, j in enumerate(self.ifgs):
                 if os.path.basename(j.data_path).split('_unw.')[0] == \
                         os.path.basename(f).split(
@@ -835,16 +827,16 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
         self.params[cf.ORBITAL_FIT_LOOKS_X] = 2
         self.params[cf.ORBITAL_FIT_LOOKS_Y] = 2
 
-        pyrate.orbital.remove_orbital_error(self.ifgs, self.params)
+        remove_orbital_error(self.ifgs, self.params)
 
-        onlyfiles = [f for f in os.listdir(SYD_TEST_MATLAB_ORBITAL_DIR)
-            if os.path.isfile(os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, f))
+        onlyfiles = [f for f in os.listdir(SML_TEST_MATLAB_ORBITAL_DIR)
+            if os.path.isfile(os.path.join(SML_TEST_MATLAB_ORBITAL_DIR, f))
             and f.endswith('.csv') and f.__contains__('_method2_')]
 
         count = 0
         for i, f in enumerate(onlyfiles):
             matlab_phase_data = np.genfromtxt(os.path.join(
-                SYD_TEST_MATLAB_ORBITAL_DIR, f), delimiter=',')
+                SML_TEST_MATLAB_ORBITAL_DIR, f), delimiter=',')
             for k, j in enumerate(self.ifgs):
                 if os.path.basename(j.data_path).split('_unw.')[0] == \
                         os.path.basename(f).split(

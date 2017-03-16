@@ -35,25 +35,26 @@ from pyrate.shared import Ifg, pre_prepare_ifgs, get_projection_info, \
 
 TEMPDIR = tempfile.gettempdir()
 BASE_TEST = join(os.environ['PYRATEPATH'], "tests", "test_data")
-SYD_TEST_DIR = join(BASE_TEST, "sydney_test")
-SYD_TEST_OBS = join(SYD_TEST_DIR, 'obs')  # roipac processed unws
-SYD_TEST_OUT = join(SYD_TEST_DIR, 'out')
-SYD_TEST_TIF = join(SYD_TEST_DIR, 'tif')
-SYD_TEST_GAMMA = join(SYD_TEST_DIR, 'gamma_sydney_test')  # gamma processed unws
+SML_TEST_DIR = join(BASE_TEST, "small_test")
+SML_TEST_OBS = join(SML_TEST_DIR, 'roipac_obs')  # roipac processed unws
+SML_TEST_OUT = join(SML_TEST_DIR, 'out')
+SML_TEST_TIF = join(SML_TEST_DIR, 'tif')
+SML_TEST_GAMMA = join(SML_TEST_DIR, 'gamma_obs')  # gamma processed unws
+SML_TEST_CONF = join(SML_TEST_DIR, 'conf')
 
-SYD_TEST_DEM_DIR = join(SYD_TEST_DIR, 'dem')
-SYD_TEST_MATLAB_MST_DIR = join(SYD_TEST_DIR, 'matlab_mst')
-SYD_TEST_MATLAB_PREPIFG_DIR = join(SYD_TEST_DIR, 'matlab_preifg_output')
-SYD_TEST_MATLAB_ORBITAL_DIR = join(SYD_TEST_DIR,
+SML_TEST_DEM_DIR = join(SML_TEST_DIR, 'dem')
+SML_TEST_MATLAB_MST_DIR = join(SML_TEST_DIR, 'matlab_mst')
+SML_TEST_MATLAB_PREPIFG_DIR = join(SML_TEST_DIR, 'matlab_prepifg_output')
+SML_TEST_MATLAB_ORBITAL_DIR = join(SML_TEST_DIR,
                                    'matlab_orbital_error_correction')
-SYD_TEST_DEM_ROIPAC = join(SYD_TEST_DEM_DIR, 'sydney_trimmed.dem')
-SYD_TEST_DEM_GAMMA = join(SYD_TEST_GAMMA, '20060619_utm.dem')
-SYD_TEST_INCIDENCE = join(SYD_TEST_GAMMA, '20060619_utm.inc')
-SYD_TEST_ELEVATION = join(SYD_TEST_GAMMA, '20060619_utm.lv_theta')
-SYD_TEST_DEM_HDR_GAMMA = join(SYD_TEST_GAMMA, '20060619_utm_dem.par')
-SYD_TEST_DEM_HDR = join(SYD_TEST_DEM_DIR, 'sydney_trimmed.dem.rsc')
-SYD_TEST_DEM_TIF = join(SYD_TEST_DEM_DIR, 'sydney_trimmed.tif')
-SYDNEY_TEST_CONF = join(SYD_TEST_DIR, 'pyrate_system_test.conf')
+SML_TEST_DEM_ROIPAC = join(SML_TEST_DEM_DIR, 'roipac_test_trimmed.dem')
+SML_TEST_DEM_GAMMA = join(SML_TEST_GAMMA, '20060619_utm.dem')
+SML_TEST_INCIDENCE = join(SML_TEST_GAMMA, '20060619_utm.inc')
+SML_TEST_ELEVATION = join(SML_TEST_GAMMA, '20060619_utm.lv_theta')
+SML_TEST_DEM_HDR_GAMMA = join(SML_TEST_GAMMA, '20060619_utm_dem.par')
+SML_TEST_DEM_HDR = join(SML_TEST_DEM_DIR, 'roipac_test_trimmed.dem.rsc')
+SML_TEST_DEM_TIF = join(SML_TEST_DEM_DIR, 'roipac_test_trimmed.tif')
+TEST_CONF_FILE = join(SML_TEST_CONF, 'pyrate_system_test.conf')
 
 PREP_TEST_DIR = join(BASE_TEST, 'prepifg')
 PREP_TEST_OBS = join(PREP_TEST_DIR, 'obs')
@@ -97,17 +98,17 @@ IFMS16 = ['geo_060619-061002_unw.tif',
         'geo_070604-070709_unw.tif']
 
 
-def sydney_data_setup(datafiles=None, is_dir=False):
-    """Returns Ifg objs for the files in the sydney test dir
+def small_data_setup(datafiles=None, is_dir=False):
+    """Returns Ifg objs for the files in the small test dir
     input phase data is in radians; these ifgs are in radians - not converted to mm"""
     if is_dir:
         datafiles = glob.glob(join(datafiles, "*.tif"))
     else:
         if datafiles:
             for i, d in enumerate(datafiles):
-                datafiles[i] = os.path.join(SYD_TEST_TIF, d)
+                datafiles[i] = os.path.join(SML_TEST_TIF, d)
         else:
-            datafiles = glob.glob(join(SYD_TEST_TIF, "*.tif"))
+            datafiles = glob.glob(join(SML_TEST_TIF, "*.tif"))
     datafiles.sort()
     ifgs = [Ifg(i) for i in datafiles]
     
@@ -118,34 +119,34 @@ def sydney_data_setup(datafiles=None, is_dir=False):
     return ifgs
 
 
-def sydney_ifg_file_list(datafiles=None):
+def small_ifg_file_list(datafiles=None):
     """Returns the file list of all the .tif files after prepifg conversion
     input phase data is in radians; these ifgs are in radians - not converted to mm"""
     if datafiles:
         for i, d in enumerate(datafiles):
-            datafiles[i] = os.path.join(SYD_TEST_TIF, d)
+            datafiles[i] = os.path.join(SML_TEST_TIF, d)
     else:
-        datafiles = glob.glob(join(SYD_TEST_TIF, "*.tif"))
+        datafiles = glob.glob(join(SML_TEST_TIF, "*.tif"))
     datafiles.sort()
     return datafiles
 
 
-def sydney_data_roipac_unws():
+def small_data_roipac_unws():
     """Returns unw file list before prepifg operation
     input phase data is in radians; these ifgs are in radians - not converted to mm"""
-    return glob.glob(join(SYD_TEST_OBS, "*.unw"))
+    return glob.glob(join(SML_TEST_OBS, "*.unw"))
 
 
-def sydney_data_setup_gamma_unws():
+def small_data_setup_gamma_unws():
     """Returns unw file list before prepifg operation
     input phase data is in radians; these ifgs are in radians - not converted to mm"""
-    return glob.glob(join(SYD_TEST_GAMMA, "*.unw"))
+    return glob.glob(join(SML_TEST_GAMMA, "*.unw"))
 
 
-def sydney5_ifgs():
+def small5_ifgs():
     """Convenience func to return a subset of 5 linked Ifgs from the testdata"""
     BASE_DIR = tempfile.mkdtemp()
-    data_paths = [os.path.join(SYD_TEST_TIF, p) for p in IFMS5.split()]
+    data_paths = [os.path.join(SML_TEST_TIF, p) for p in IFMS5.split()]
     new_data_paths = [os.path.join(BASE_DIR, os.path.basename(d))
                       for d in data_paths]
     for d in data_paths:
@@ -154,9 +155,9 @@ def sydney5_ifgs():
     return [Ifg(p) for p in new_data_paths]
 
 
-def sydney5_mock_ifgs(xs=3, ys=4):
-    '''Returns smaller mocked version of sydney Ifgs for testing'''
-    ifgs = sydney5_ifgs()
+def small5_mock_ifgs(xs=3, ys=4):
+    '''Returns smaller mocked version of small Ifgs for testing'''
+    ifgs = small5_ifgs()
     for i in ifgs:
         i.open()
         i.nodata_value = 0

@@ -50,15 +50,15 @@ from pyrate.config import (
     APS_ELEVATION_MAP
     )
 from pyrate.scripts import run_prepifg
-from tests.common import SYD_TEST_DIR
-from tests.common import sydney_data_setup
+from tests.common import SML_TEST_DIR
+from tests.common import small_data_setup
 
 DUMMY_SECTION_NAME = 'pyrate'
 
 
 class TestGammaVsRoipacEquality(unittest.TestCase):
 
-    SYDNEY_GAMMA_TEST = os.path.join(SYD_TEST_DIR, 'gamma_sydney_test')
+    SMLNEY_GAMMA_TEST = os.path.join(SML_TEST_DIR, 'gamma_obs')
 
     @classmethod
     def setUpClass(cls):
@@ -89,15 +89,15 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
             conf.write('{}: {}\n'.format(LUIGI, self.LUIGI))
             conf.write('{}: {}\n'.format(
                 DEM_HEADER_FILE, os.path.join(
-                    self.SYDNEY_GAMMA_TEST, '20060619_utm_dem.par')))
+                    self.SMLNEY_GAMMA_TEST, '20060619_utm_dem.par')))
             conf.write('{}: {}\n'.format(IFG_LKSX, '1'))
             conf.write('{}: {}\n'.format(IFG_LKSY, '1'))
             conf.write('{}: {}\n'.format(IFG_CROP_OPT, '1'))
             conf.write('{}: {}\n'.format(NO_DATA_AVERAGING_THRESHOLD, '0.5'))
             conf.write('{}: {}\n'.format(SLC_DIR, ''))
-            conf.write('{}: {}\n'.format(DEM_FILE, common.SYD_TEST_DEM_GAMMA))
+            conf.write('{}: {}\n'.format(DEM_FILE, common.SML_TEST_DEM_GAMMA))
             conf.write('{}: {}\n'.format(APS_INCIDENCE_MAP,
-                                         common.SYD_TEST_INCIDENCE))
+                                         common.SML_TEST_INCIDENCE))
             conf.write('{}: {}\n'.format(APS_ELEVATION_MAP, ''))
         with open(self.ifgListFile, 'w') as ifgl:
             ifgl.write('\n'.join(data))
@@ -111,7 +111,7 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
 
     def check_gamma(self, conf_file):
         data_paths = glob.glob(
-            os.path.join(self.SYDNEY_GAMMA_TEST, "*_utm.unw"))
+            os.path.join(self.SMLNEY_GAMMA_TEST, "*_utm.unw"))
 
         self.make_gamma_input_files(data_paths)
         sys.argv = ['pyrate', 'prepifg', conf_file]
@@ -141,20 +141,20 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
             conf.write('{}: {}\n'.format(PROCESSOR, '0'))
             conf.write('{}: {}\n'.format(LUIGI, self.luigi))
             conf.write('{}: {}\n'.format(ROIPAC_RESOURCE_HEADER,
-                                         common.SYD_TEST_DEM_HDR))
+                                         common.SML_TEST_DEM_HDR))
             conf.write('{}: {}\n'.format(IFG_LKSX, '1'))
             conf.write('{}: {}\n'.format(IFG_LKSY, '1'))
             conf.write('{}: {}\n'.format(IFG_CROP_OPT, '1'))
             conf.write('{}: {}\n'.format(NO_DATA_AVERAGING_THRESHOLD, '0.5'))
-            conf.write('{}: {}\n'.format(DEM_FILE, common.SYD_TEST_DEM_ROIPAC))
+            conf.write('{}: {}\n'.format(DEM_FILE, common.SML_TEST_DEM_ROIPAC))
             conf.write('{}: {}\n'.format(APS_INCIDENCE_MAP, ''))
             conf.write('{}: {}\n'.format(APS_ELEVATION_MAP, ''))
         with open(self.ifgListFile, 'w') as ifgl:
             ifgl.write('\n'.join(data))
 
     def test_cmd_ifg_no_roipac_files_created_roipac(self):
-        self.dataPaths = common.sydney_data_roipac_unws()
-        base_exp = common.sydney_ifg_file_list()
+        self.dataPaths = common.small_data_roipac_unws()
+        base_exp = common.small_ifg_file_list()
         self.expPaths = [os.path.join(self.roipac_base_dir, os.path.basename(i))
                          for i in base_exp]
         self.luigi = '0'
@@ -178,8 +178,8 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
                                         "*.tif")):
             if len(gamma_PTN.findall(i)) == 2:
                 gamma_files.append(i)
-        all_gamma_ifgs = sydney_data_setup(gamma_files)
-        all_roipac_ifgs = sydney_data_setup(
+        all_gamma_ifgs = small_data_setup(gamma_files)
+        all_roipac_ifgs = small_data_setup(
             glob.glob(os.path.join(self.roipac_base_dir, "geo*.tif")))
         c = 0
         for c, (r, g) in enumerate(zip(all_roipac_ifgs, all_gamma_ifgs)):
@@ -194,8 +194,8 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
                                         "*.tif")):
             if len(gamma_PTN.findall(i)) == 2:
                 gamma_files.append(i)
-        all_gamma_ifgs = sydney_data_setup(gamma_files)
-        all_roipac_ifgs = sydney_data_setup(
+        all_gamma_ifgs = small_data_setup(gamma_files)
+        all_roipac_ifgs = small_data_setup(
             glob.glob(os.path.join(self.roipac_base_dir, "geo*.tif")))
         c = 0
         for c, (i, j) in enumerate(zip(all_gamma_ifgs, all_roipac_ifgs)):

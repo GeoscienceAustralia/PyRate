@@ -254,13 +254,13 @@ def crop_resample_average(
     out_driver_type: str, optional
         the output driver type. `MEM` or `GTiff`.
     match_pirate: bool, optional
-        whether to match matlab pirate style resampled/cropped output
+        whether to match Matlab Pirate style resampled/cropped output
     """
     dst_ds, _, _, _ = crop_rasample_setup(
         extents, input_tif, new_res, output_file,
         out_bands=2, dst_driver_type='MEM')
 
-    # make a temporary copy of the dst_ds for pirate style prepifg
+    # make a temporary copy of the dst_ds for Pirate style prepifg
     tmp_ds = gdal.GetDriverByName('MEM').CreateCopy('', dst_ds) \
         if (match_pirate and new_res[0]) else None
 
@@ -272,7 +272,7 @@ def crop_resample_average(
     # write out to output geotif file
     driver = gdal.GetDriverByName(out_driver_type)
 
-    # required to match matlab output
+    # required to match Matlab Pirate output
     if tmp_ds:
         matlab_alignment(input_tif, new_res, resampled_average, src_ds_mem,
                          src_gt, tmp_ds)
@@ -309,7 +309,7 @@ def matlab_alignment(input_tif, new_res, resampled_average, src_ds_mem, src_gt,
                      tmp_ds):
     """
     Correction step to match python multilook/crop ouput to match that of
-    matlab pirate code.
+    Matlab Pirate code.
 
     Parameters
     ----------
@@ -334,7 +334,7 @@ def matlab_alignment(input_tif, new_res, resampled_average, src_ds_mem, src_gt,
     xlooks = ylooks = int(new_res[0] / src_gt[1])
     xres, yres = get_matlab_resampled_data_size(xlooks, ylooks, data)
     nrows, ncols = resampled_average.shape
-    # pirate does nearest neighbor resampling for the last
+    # Matlab Pirate does nearest neighbor resampling for the last
     # [yres:nrows, xres:ncols] cells without nan_conversion
     # turn off nan-conversion
     src_ds_mem.GetRasterBand(1).SetNoDataValue(LOW_FLOAT32)
@@ -402,7 +402,7 @@ def _setup_source(input_tif):
 
 def get_matlab_resampled_data_size(xscale, yscale, data):
     """
-    convenience function mimicking the matlab output size
+    convenience function mimicking the Matlab Pirate output size
     """
     xscale = int(xscale)
     yscale = int(yscale)

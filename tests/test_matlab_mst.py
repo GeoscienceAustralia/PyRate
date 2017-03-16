@@ -31,8 +31,8 @@ from pyrate.matlab_mst import get_nml, DTYPE
 from pyrate.matlab_mst import matlab_mst, matlab_mst_bool
 from pyrate.matlab_mst import matlab_mst_kruskal
 from pyrate.matlab_mst import get_sub_structure
-from tests.common import sydney_data_setup
-from tests.common import sydney_ifg_file_list
+from tests.common import small_data_setup
+from tests.common import small_ifg_file_list
 
 
 class IfgListTest(unittest.TestCase):
@@ -47,7 +47,7 @@ class IfgListTest(unittest.TestCase):
         self.matlab_slvnum = [3, 5, 7, 9, 5, 6, 8, 11, 12,  8, 13, 9,
                               10, 13, 10, 11, 12]
 
-        ifg_instance = IfgList(sydney_ifg_file_list())
+        ifg_instance = IfgList(small_ifg_file_list())
         self.ifg_list, self.epoch_list = get_nml(ifg_instance, nodata_value=0)
 
     def test_matlab_n(self):
@@ -80,7 +80,7 @@ def sort_list(id_l, master_l, slave_l, nan_frac_l):
 class MatlabMstKruskalTest(unittest.TestCase):
 
     def setUp(self):
-        ifg_instance = IfgList(sydney_ifg_file_list())
+        ifg_instance = IfgList(small_ifg_file_list())
         self.ifg_list, _ = get_nml(ifg_instance, nodata_value=0)
         self.sorted_list = sort_list(self.ifg_list.id,
                                      self.ifg_list.master_num,
@@ -145,10 +145,10 @@ class MSTKruskalCalcConnectAndNTrees(unittest.TestCase):
             calculate_connect_and_ntrees(connect_start, [])
 
 
-class MSTKruskalConnectAndTresSydneyData(unittest.TestCase):
+class MSTKruskalConnectAndTreesSmallData(unittest.TestCase):
 
-    def test_calculate_connect_and_ntrees_sydney_data(self):
-        ifg_instance = IfgList(sydney_ifg_file_list())
+    def test_calculate_connect_and_ntrees_small_data(self):
+        ifg_instance = IfgList(small_ifg_file_list())
         ifg_list, _ = get_nml(ifg_instance, nodata_value=0)
         edges = get_sub_structure(ifg_list, np.zeros(len(ifg_list.id), dtype=bool))
         mst, connected, ntrees = matlab_mst_kruskal(edges,
@@ -161,8 +161,8 @@ class MSTKruskalConnectAndTresSydneyData(unittest.TestCase):
 
     def test_assert_is_not_tree(self):
         non_overlapping = [1, 2, 5, 6, 12, 13, 14, 15, 16, 17]
-        sydney_files = sydney_ifg_file_list()
-        datafiles = [f for i, f in enumerate(sydney_files)
+        small_files = small_ifg_file_list()
+        datafiles = [f for i, f in enumerate(small_files)
                      if i+1 in non_overlapping]
         non_overlapping_ifg_isntance = IfgList(datafiles)
         ifg_list, _ = get_nml(non_overlapping_ifg_isntance, nodata_value=0)
@@ -174,8 +174,8 @@ class MSTKruskalConnectAndTresSydneyData(unittest.TestCase):
 
     def test_assert_is_tree(self):
         overlapping = [1, 2, 3, 4, 6, 7, 10, 11, 16, 17]
-        sydney_files = sydney_ifg_file_list()
-        datafiles = [f for i, f in enumerate(sydney_files)
+        small_files = small_ifg_file_list()
+        datafiles = [f for i, f in enumerate(small_files)
                      if i+1 in overlapping]
 
         overlapping_ifg_isntance = IfgList(datafiles)
@@ -190,8 +190,8 @@ class MSTKruskalConnectAndTresSydneyData(unittest.TestCase):
     def test_assert_two_trees_overlapping(self):
         overlapping = [3, 4, 5, 6, 7, 8, 9, 10, 11, 16, 17]
 
-        sydney_files = sydney_ifg_file_list()
-        datafiles = [f for i, f in enumerate(sydney_files)
+        small_files = small_ifg_file_list()
+        datafiles = [f for i, f in enumerate(small_files)
                      if i+1 in overlapping]
         overlapping_ifg_isntance = IfgList(datafiles)
         ifg_list, _ = get_nml(overlapping_ifg_isntance, nodata_value=0)
@@ -203,8 +203,8 @@ class MSTKruskalConnectAndTresSydneyData(unittest.TestCase):
 
     def test_assert_two_trees_non_overlapping(self):
         non_overlapping = [2, 5, 6, 12, 13, 15]
-        sydney_files = sydney_ifg_file_list()
-        datafiles = [f for i, f in enumerate(sydney_files)
+        small_files = small_ifg_file_list()
+        datafiles = [f for i, f in enumerate(small_files)
                      if i+1 in non_overlapping]
 
         non_overlapping_ifg_isntance = IfgList(datafiles)
@@ -222,8 +222,8 @@ class MatlabMSTTests(unittest.TestCase):
     Tests to ensure matlab and python mst outputs are the same.
     """
     def setUp(self):
-        self.ifgs = sydney_data_setup()
-        self.ifg_file_list = sydney_ifg_file_list()
+        self.ifgs = small_data_setup()
+        self.ifg_file_list = small_ifg_file_list()
 
         self.matlab_mst_list = ['geo_060619-061002_unw.tif',
                                 'geo_060828-061211_unw.tif',
@@ -239,7 +239,7 @@ class MatlabMSTTests(unittest.TestCase):
                                 'geo_070604-070709_unw.tif']
 
         # reorder ifgs as per the matlab list
-        self.ifgs = sydney_data_setup()
+        self.ifgs = small_data_setup()
 
     def test_matlab_mst_kruskal(self):
         """
@@ -267,13 +267,13 @@ class MatlabMSTTests(unittest.TestCase):
         mst_mat = matlab_mst(ifg_list, p_threshold=1)
 
         # path to csv folders from matlab output
-        from tests.common import SYD_TEST_MATLAB_MST_DIR
+        from tests.common import SML_TEST_MATLAB_MST_DIR
 
-        onlyfiles = [f for f in os.listdir(SYD_TEST_MATLAB_MST_DIR)
-                if os.path.isfile(os.path.join(SYD_TEST_MATLAB_MST_DIR, f))]
+        onlyfiles = [f for f in os.listdir(SML_TEST_MATLAB_MST_DIR)
+                if os.path.isfile(os.path.join(SML_TEST_MATLAB_MST_DIR, f))]
 
         for i, f in enumerate(onlyfiles):
-            mst_f = np.genfromtxt(os.path.join(SYD_TEST_MATLAB_MST_DIR, f),
+            mst_f = np.genfromtxt(os.path.join(SML_TEST_MATLAB_MST_DIR, f),
                                   delimiter=',')
             for k, j in enumerate(self.ifg_file_list):
                 if f.split('matlab_')[-1].split('.')[0] == \
@@ -289,13 +289,13 @@ class MatlabMSTTests(unittest.TestCase):
         mst_mat = matlab_mst_bool(ifg_list, p_threshold=1)
 
         # path to csv folders from matlab output
-        from tests.common import SYD_TEST_MATLAB_MST_DIR
+        from tests.common import SML_TEST_MATLAB_MST_DIR
 
-        onlyfiles = [f for f in os.listdir(SYD_TEST_MATLAB_MST_DIR)
-                if os.path.isfile(os.path.join(SYD_TEST_MATLAB_MST_DIR, f))]
+        onlyfiles = [f for f in os.listdir(SML_TEST_MATLAB_MST_DIR)
+                if os.path.isfile(os.path.join(SML_TEST_MATLAB_MST_DIR, f))]
 
         for i, f in enumerate(onlyfiles):
-            mst_f = np.genfromtxt(os.path.join(SYD_TEST_MATLAB_MST_DIR, f),
+            mst_f = np.genfromtxt(os.path.join(SML_TEST_MATLAB_MST_DIR, f),
                                   delimiter=',')
             for k, j in enumerate(self.ifg_file_list):
                 if f.split('matlab_')[-1].split('.')[0] == \
@@ -316,20 +316,20 @@ class TestMSTBooleanArray(unittest.TestCase):
 
     def setUp(self):
         self.ifg_dir = tempfile.mkdtemp()
-        sydney_files = sydney_ifg_file_list()
-        for sf in sydney_files:
+        small_files = small_ifg_file_list()
+        for sf in small_files:
             dest = os.path.join(self.ifg_dir, os.path.basename(sf))
             shutil.copy(sf, dest)
             os.chmod(dest, 0o660)
-        self.sydney_files = glob.glob(os.path.join(self.ifg_dir, "*.tif"))
-        self.sydney_ifgs = sydney_data_setup(self.sydney_files)
+        self.small_files = glob.glob(os.path.join(self.ifg_dir, "*.tif"))
+        self.small_ifgs = small_data_setup(self.small_files)
 
     def tearDown(self):
         shutil.rmtree(self.ifg_dir)
 
     def test_mst_boolean_array(self):
         nan_conversion = 1
-        for i in self.sydney_ifgs:
+        for i in self.small_ifgs:
             if not i.is_open:
                 i.open(readonly=False)
             if nan_conversion:  # nan conversion happens here in networkx mst
@@ -338,23 +338,23 @@ class TestMSTBooleanArray(unittest.TestCase):
             if not i.mm_converted:
                 i.convert_to_mm()
                 i.write_modified_phase()
-        mst_nx = mst.mst_boolean_array(self.sydney_ifgs)
+        mst_nx = mst.mst_boolean_array(self.small_ifgs)
 
-        sydney_ifg_instance = IfgList(datafiles=self.sydney_files)
-        ifgs = sydney_ifg_instance.ifgs
+        small_ifg_instance = IfgList(datafiles=self.small_files)
+        ifgs = small_ifg_instance.ifgs
         for i in ifgs:
             if not i.mm_converted:
                 i.convert_to_mm()
                 i.write_modified_phase()
         ifg_instance_updated, epoch_list = \
-            get_nml(sydney_ifg_instance, nodata_value=0,
+            get_nml(small_ifg_instance, nodata_value=0,
                     nan_conversion=nan_conversion)
 
         mst_matlab = matlab_mst_bool(ifg_instance_updated)
         np.testing.assert_array_equal(mst_matlab, mst_nx)
 
         # close ifgs for windows
-        for i in self.sydney_ifgs:
+        for i in self.small_ifgs:
             i.close()
 
 

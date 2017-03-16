@@ -34,7 +34,6 @@ from pyrate.ref_phs_est import estimate_ref_phase, ReferencePhaseError
 from pyrate.scripts import run_prepifg
 from pyrate.scripts import run_pyrate
 from tests import common
-from tests.common import SYD_TEST_DIR, sydney_data_setup
 
 matlab_ref_phs_method1 = [-18.2191658020020,
                           27.7119445800781,
@@ -83,11 +82,11 @@ class RefPhsTests(unittest.TestCase):
         self.params[cf.REF_EST_METHOD] = 1
         self.params[cf.PARALLEL] = False
         self.refpx, self.refpy = 38, 58
-        shared.copytree(common.SYD_TEST_TIF, self.tmp_dir)
-        sydney_tifs = glob.glob(os.path.join(self.tmp_dir, "*.tif"))
-        for s in sydney_tifs:
+        shared.copytree(common.SML_TEST_TIF, self.tmp_dir)
+        small_tifs = glob.glob(os.path.join(self.tmp_dir, "*.tif"))
+        for s in small_tifs:
             os.chmod(s, 0o644)
-        self.ifgs = common.sydney_data_setup(self.tmp_dir, is_dir=True)
+        self.ifgs = common.small_data_setup(self.tmp_dir, is_dir=True)
 
     def tearDown(self):
         shutil.rmtree(self.tmp_dir)
@@ -120,12 +119,9 @@ class RefPhsEstimationMatlabTestMethod1Serial(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
 
-        params = cf.get_config_params(
-                os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf'))
-
+        params = cf.get_config_params(common.TEST_CONF_FILE)
         cls.temp_out_dir = tempfile.mkdtemp()
-        sys.argv = ['run_prepifg.py', os.path.join(SYD_TEST_DIR,
-                                     'pyrate_system_test.conf')]
+        sys.argv = ['run_prepifg.py', common.TEST_CONF_FILE]
         params[cf.OUT_DIR] = cls.temp_out_dir
         run_prepifg.main(params)
 
@@ -172,7 +168,7 @@ class RefPhsEstimationMatlabTestMethod1Serial(unittest.TestCase):
                                              decimal=3)
 
     def test_ifgs_after_ref_phs_est(self):
-        MATLAB_REF_PHASE_DIR = os.path.join(SYD_TEST_DIR,
+        MATLAB_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR,
                                                      'matlab_ref_phase_est')
 
         onlyfiles = [f for f in os.listdir(MATLAB_REF_PHASE_DIR)
@@ -210,12 +206,9 @@ class RefPhsEstimationMatlabTestMethod1Parallel(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
 
-        params = cf.get_config_params(
-                os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf'))
-
+        params = cf.get_config_params(common.TEST_CONF_FILE)
         cls.temp_out_dir = tempfile.mkdtemp()
-        sys.argv = ['run_prepifg.py', os.path.join(SYD_TEST_DIR,
-                                     'pyrate_system_test.conf')]
+        sys.argv = ['run_prepifg.py', common.TEST_CONF_FILE]
         params[cf.OUT_DIR] = cls.temp_out_dir
         run_prepifg.main(params)
 
@@ -262,7 +255,7 @@ class RefPhsEstimationMatlabTestMethod1Parallel(unittest.TestCase):
                                              decimal=3)
 
     def test_ifgs_after_ref_phs_est(self):
-        MATLAB_REF_PHASE_DIR = os.path.join(SYD_TEST_DIR,
+        MATLAB_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR,
                                                      'matlab_ref_phase_est')
 
         onlyfiles = [f for f in os.listdir(MATLAB_REF_PHASE_DIR)
@@ -303,13 +296,9 @@ class RefPhsEstimationMatlabTestMethod2Serial(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
 
-        params = cf.get_config_params(
-                os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf'))
-
+        params = cf.get_config_params(common.TEST_CONF_FILE)
         cls.temp_out_dir = tempfile.mkdtemp()
-
-        sys.argv = ['run_prepifg.py', os.path.join(SYD_TEST_DIR,
-                                     'pyrate_system_test.conf')]
+        sys.argv = ['run_prepifg.py', common.TEST_CONF_FILE]
         params[cf.OUT_DIR] = cls.temp_out_dir
 
         run_prepifg.main(params)
@@ -351,7 +340,7 @@ class RefPhsEstimationMatlabTestMethod2Serial(unittest.TestCase):
         shutil.rmtree(cls.temp_out_dir)
 
     def test_ifgs_after_ref_phs_est(self):
-        MATLAB_REF_PHASE_DIR = os.path.join(SYD_TEST_DIR,
+        MATLAB_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR,
                                                      'matlab_ref_phase_est')
 
         onlyfiles = [f for f in os.listdir(MATLAB_REF_PHASE_DIR)
@@ -397,13 +386,9 @@ class RefPhsEstimationMatlabTestMethod2Parallel(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
 
-        params = cf.get_config_params(
-                os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf'))
-
+        params = cf.get_config_params(common.TEST_CONF_FILE)
         cls.temp_out_dir = tempfile.mkdtemp()
-
-        sys.argv = ['run_prepifg.py', os.path.join(SYD_TEST_DIR,
-                                     'pyrate_system_test.conf')]
+        sys.argv = ['run_prepifg.py', common.TEST_CONF_FILE]
         params[cf.OUT_DIR] = cls.temp_out_dir
 
         run_prepifg.main(params)
@@ -443,7 +428,7 @@ class RefPhsEstimationMatlabTestMethod2Parallel(unittest.TestCase):
         shutil.rmtree(cls.temp_out_dir)
 
     def test_ifgs_after_ref_phs_est(self):
-        MATLAB_REF_PHASE_DIR = os.path.join(SYD_TEST_DIR,
+        MATLAB_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR,
                                             'matlab_ref_phase_est')
 
         onlyfiles = [f for f in os.listdir(MATLAB_REF_PHASE_DIR)

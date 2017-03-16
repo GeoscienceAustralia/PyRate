@@ -55,9 +55,9 @@ from pyrate.scripts import run_pyrate, run_prepifg
 from pyrate.scripts.converttogtif import main as gammaMain
 from pyrate.shared import write_geotiff, GeotiffException
 from tests import common
-from tests.common import GAMMA_TEST_DIR, SYD_TEST_GAMMA
-from tests.common import SYD_TEST_DIR, TEMPDIR
-from tests.common import sydney_data_setup
+from tests.common import GAMMA_TEST_DIR, SML_TEST_GAMMA
+from tests.common import TEST_CONF_FILE, TEMPDIR
+from tests.common import small_data_setup
 
 gdal.UseExceptions()
 
@@ -375,15 +375,15 @@ class TestGammaLuigiEquality(unittest.TestCase):
             conf.write('{}: {}\n'.format(LUIGI, self.LUIGI))
             conf.write('{}: {}\n'.format(
                 DEM_HEADER_FILE, os.path.join(
-                    SYD_TEST_GAMMA, '20060619_utm_dem.par')))
+                    SML_TEST_GAMMA, '20060619_utm_dem.par')))
             conf.write('{}: {}\n'.format(IFG_LKSX, '1'))
             conf.write('{}: {}\n'.format(IFG_LKSY, '1'))
             conf.write('{}: {}\n'.format(IFG_CROP_OPT, '1'))
             conf.write('{}: {}\n'.format(NO_DATA_AVERAGING_THRESHOLD, '0.5'))
             conf.write('{}: {}\n'.format(SLC_DIR, ''))
-            conf.write('{}: {}\n'.format(DEM_FILE, common.SYD_TEST_DEM_GAMMA))
+            conf.write('{}: {}\n'.format(DEM_FILE, common.SML_TEST_DEM_GAMMA))
             conf.write('{}: {}\n'.format(APS_INCIDENCE_MAP,
-                                         common.SYD_TEST_INCIDENCE))
+                                         common.SML_TEST_INCIDENCE))
             conf.write('{}: {}\n'.format(APS_ELEVATION_MAP, ''))
         with open(self.ifgListFile, 'w') as ifgl:
             ifgl.write('\n'.join(data))
@@ -405,7 +405,7 @@ class TestGammaLuigiEquality(unittest.TestCase):
 
     def common_check(self, conf_file):
         data_paths = glob.glob(
-            os.path.join(SYD_TEST_GAMMA, "*_utm.unw"))
+            os.path.join(SML_TEST_GAMMA, "*_utm.unw"))
 
         self.make_input_files(data_paths)
 
@@ -462,7 +462,7 @@ class TestGammaLuigiEquality(unittest.TestCase):
     def shared_setup(self):
         self.test_cmd_ifg_no_luigi_files_created()
         self.test_cmd_ifg_luigi_files_created()
-        all_luigi_ifgs = sydney_data_setup(
+        all_luigi_ifgs = small_data_setup(
             glob.glob(os.path.join(self.luigi_base_dir, "*.tif")))
         all_non_luigi_files = []
         gamma_PTN = re.compile(r'\d{8}')
@@ -470,7 +470,7 @@ class TestGammaLuigiEquality(unittest.TestCase):
                                         "*.tif")):
             if len(gamma_PTN.findall(i)) == 2:
                 all_non_luigi_files.append(i)
-        all_non_luigi_ifgs = sydney_data_setup(all_non_luigi_files)
+        all_non_luigi_ifgs = small_data_setup(all_non_luigi_files)
         return all_luigi_ifgs, all_non_luigi_ifgs
 
 
@@ -478,14 +478,13 @@ class TestGammaParallelVsSerial(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        CONF_FILE = os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf')
 
         cls.serial_dir = tempfile.mkdtemp()
         cls.parallel_dir = tempfile.mkdtemp()
-        unw_paths = glob.glob(os.path.join(SYD_TEST_GAMMA, "*_utm.unw"))
+        unw_paths = glob.glob(os.path.join(SML_TEST_GAMMA, "*_utm.unw"))
 
         # read in the params
-        _, _, params = cf.get_ifg_paths(CONF_FILE)
+        _, _, params = cf.get_ifg_paths(TEST_CONF_FILE)
         params[cf.OUT_DIR] = cls.serial_dir
         params[cf.PARALLEL] = False
 
@@ -503,20 +502,20 @@ class TestGammaParallelVsSerial(unittest.TestCase):
         shutil.rmtree(cls.serial_dir)
 
     def test_equality(self):
-        serial_ifgs = sydney_data_setup(
+        serial_ifgs = small_data_setup(
             datafiles=glob.glob(os.path.join(self.serial_dir, "*_1cr.tif")))
 
-        parallel_ifgs = sydney_data_setup(
+        parallel_ifgs = small_data_setup(
             datafiles=glob.glob(os.path.join(self.parallel_dir, "*_1cr.tif")))
 
         for s, p in zip(serial_ifgs, parallel_ifgs):
             np.testing.assert_array_almost_equal(s.phase_data, p.phase_data)
 
     def test_meta_data_exist(self):
-        serial_ifgs = sydney_data_setup(
+        serial_ifgs = small_data_setup(
             datafiles=glob.glob(os.path.join(self.serial_dir, "*_1cr.tif")))
 
-        parallel_ifgs = sydney_data_setup(
+        parallel_ifgs = small_data_setup(
             datafiles=glob.glob(os.path.join(self.parallel_dir, "*_1cr.tif")))
         for s, p in zip(serial_ifgs, parallel_ifgs):
 

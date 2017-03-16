@@ -37,7 +37,7 @@ from pyrate.algorithm import (least_squares_covariance,
 
 from pyrate.config import parse_namelist
 from pyrate.shared import Ifg, convert_radians_to_mm
-from tests.common import sydney5_mock_ifgs, SYD_TEST_TIF
+from tests.common import small5_mock_ifgs, SML_TEST_TIF
 
 
 class LeastSquaresTests(TestCase):
@@ -133,7 +133,7 @@ class DateLookupTests(TestCase):
     """
 
     def setUp(self):
-        self.ifgs = sydney5_mock_ifgs()
+        self.ifgs = small5_mock_ifgs()
 
     def test_ifg_date_lookup(self):
         # check reverse lookup of ifg given a master and slave date tuple
@@ -191,9 +191,8 @@ class EpochsTests(TestCase):
         exp_spans = [0, 0.1916, 0.2875, 0.3833, 0.4791, 0.5749, 0.6708, 0.7666,
                             0.8624, 0.9582, 1.0541, 1.1499, 1.2457]
 
-        # test against Hua's results
-        ifms = join(SYD_TEST_TIF, "ifms_17")
-        ifgs = [Ifg(join(SYD_TEST_TIF, p)) for p in parse_namelist(ifms)]
+        ifms = join(SML_TEST_TIF, "ifms_17")
+        ifgs = [Ifg(join(SML_TEST_TIF, p)) for p in parse_namelist(ifms)]
         for i in ifgs:
             i.open()
 
@@ -205,7 +204,7 @@ class EpochsTests(TestCase):
 
     def test_get_all_epochs(self):
         # test function to extract all dates from sequence of ifgs
-        ifgs = sydney5_mock_ifgs()
+        ifgs = small5_mock_ifgs()
         for i in ifgs:
             i.nodata_value = 0
         dates = [date(2006, 8, 28), date(2006, 11, 6), date(2006, 12, 11),
@@ -214,7 +213,7 @@ class EpochsTests(TestCase):
         self.assertEqual(dates, sorted(set(get_all_epochs(ifgs))))
 
     def test_get_epoch_count(self):
-        self.assertEqual(6, len(set(get_all_epochs(sydney5_mock_ifgs()))))
+        self.assertEqual(6, len(set(get_all_epochs(small5_mock_ifgs()))))
 
     def test_master_slave_ids(self):
         d0 = date(2006, 6, 19)

@@ -46,31 +46,31 @@ class TestMethod1VsMethod2AndMetaData(unittest.TestCase):
     def setUpClass(cls):
         cls.tif_dir = tempfile.mkdtemp()
         cls.tif_dir_method2 = tempfile.mkdtemp()
-        cls.test_conf = common.SYDNEY_TEST_CONF
+        cls.test_conf = common.TEST_CONF_FILE
 
         # change the required params
         cls.params = cf.get_config_params(cls.test_conf)
-        cls.params[cf.OBS_DIR] = common.SYD_TEST_GAMMA
+        cls.params[cf.OBS_DIR] = common.SML_TEST_GAMMA
         cls.params[cf.PROCESSOR] = 1  # gamma
-        file_list = cf.parse_namelist(os.path.join(common.SYD_TEST_GAMMA,
+        file_list = cf.parse_namelist(os.path.join(common.SML_TEST_GAMMA,
                                                    'ifms_17'))
         cls.params[cf.IFG_FILE_LIST] = tempfile.mktemp(dir=cls.tif_dir)
         # write a short filelist with only 3 gamma unws
         with open(cls.params[cf.IFG_FILE_LIST], 'w') as fp:
             for f in file_list[:2]:
-                fp.write(os.path.join(common.SYD_TEST_GAMMA, f) + '\n')
+                fp.write(os.path.join(common.SML_TEST_GAMMA, f) + '\n')
         cls.params[cf.OUT_DIR] = cls.tif_dir
         cls.params[cf.PARALLEL] = True
         cls.params[cf.REF_EST_METHOD] = 1
-        cls.params[cf.DEM_FILE] = common.SYD_TEST_DEM_GAMMA
-        cls.params[cf.APS_INCIDENCE_MAP] = common.SYD_TEST_INCIDENCE
+        cls.params[cf.DEM_FILE] = common.SML_TEST_DEM_GAMMA
+        cls.params[cf.APS_INCIDENCE_MAP] = common.SML_TEST_INCIDENCE
         # base_unw_paths need to be geotiffed and multilooked by run_prepifg
         base_unw_paths = run_pyrate.original_ifg_paths(
             cls.params[cf.IFG_FILE_LIST])
         # add dem
-        base_unw_paths.append(common.SYD_TEST_DEM_GAMMA)
+        base_unw_paths.append(common.SML_TEST_DEM_GAMMA)
         # add incidence
-        base_unw_paths.append(common.SYD_TEST_INCIDENCE)
+        base_unw_paths.append(common.SML_TEST_INCIDENCE)
 
         xlks, ylks, crop = run_pyrate.transform_params(cls.params)
 
@@ -90,11 +90,11 @@ class TestMethod1VsMethod2AndMetaData(unittest.TestCase):
 
         dest_paths = run_pyrate.get_dest_paths(
             base_unw_paths, crop, cls.params, xlks)
-        cls.ifgs = common.sydney_data_setup(datafiles=dest_paths)
+        cls.ifgs = common.small_data_setup(datafiles=dest_paths)
 
         dest_paths_m2 = run_pyrate.get_dest_paths(
             base_unw_paths, crop, cls.params_method2, xlks)
-        cls.ifgs_method2 = common.sydney_data_setup(datafiles=dest_paths_m2)
+        cls.ifgs_method2 = common.small_data_setup(datafiles=dest_paths_m2)
         aps.remove_aps_delay(cls.ifgs, cls.params)
         aps.remove_aps_delay(cls.ifgs_method2, cls.params_method2)
 
@@ -127,12 +127,12 @@ class TestMethod1VsMethod2AndMetaData(unittest.TestCase):
     def test_dem_tifs_present(self):
         # geotiffed dem
         os.path.exists(os.path.join(self.params[cf.OUT_DIR],
-                       os.path.splitext(common.SYD_TEST_DEM_GAMMA)[0]
+                       os.path.splitext(common.SML_TEST_DEM_GAMMA)[0]
                                     + '.tif'))
 
         # multilooked dem
         os.path.exists(os.path.join(self.params[cf.OUT_DIR],
-                       os.path.splitext(common.SYD_TEST_DEM_GAMMA)[0]
+                       os.path.splitext(common.SML_TEST_DEM_GAMMA)[0]
                         + '_{looks}rlks_{crop}cr.tif'.format(
                            looks=self.params[cf.IFG_LKSX],
                            crop=self.params[cf.IFG_CROP_OPT])))
@@ -152,31 +152,31 @@ class TestOriginalVsEfficientAps(unittest.TestCase):
     def setUpClass(cls):
         cls.tif_dir = tempfile.mkdtemp()
         cls.tif_dir_original = tempfile.mkdtemp()
-        cls.test_conf = common.SYDNEY_TEST_CONF
+        cls.test_conf = common.TEST_CONF_FILE
 
         # change the required params
         cls.params = cf.get_config_params(cls.test_conf)
-        cls.params[cf.OBS_DIR] = common.SYD_TEST_GAMMA
+        cls.params[cf.OBS_DIR] = common.SML_TEST_GAMMA
         cls.params[cf.PROCESSOR] = 1  # gamma
-        file_list = cf.parse_namelist(os.path.join(common.SYD_TEST_GAMMA,
+        file_list = cf.parse_namelist(os.path.join(common.SML_TEST_GAMMA,
                                                    'ifms_17'))
         cls.params[cf.IFG_FILE_LIST] = tempfile.mktemp(dir=cls.tif_dir)
         # write a short filelist with only 3 gamma unws
         with open(cls.params[cf.IFG_FILE_LIST], 'w') as fp:
             for f in file_list[:2]:
-                fp.write(os.path.join(common.SYD_TEST_GAMMA, f) + '\n')
+                fp.write(os.path.join(common.SML_TEST_GAMMA, f) + '\n')
         cls.params[cf.OUT_DIR] = cls.tif_dir
         cls.params[cf.PARALLEL] = True
         cls.params[cf.REF_EST_METHOD] = 2
-        cls.params[cf.DEM_FILE] = common.SYD_TEST_DEM_GAMMA
-        cls.params[cf.APS_INCIDENCE_MAP] = common.SYD_TEST_INCIDENCE
+        cls.params[cf.DEM_FILE] = common.SML_TEST_DEM_GAMMA
+        cls.params[cf.APS_INCIDENCE_MAP] = common.SML_TEST_INCIDENCE
         # base_unw_paths need to be geotiffed and multilooked by run_prepifg
         base_unw_paths = run_pyrate.original_ifg_paths(
             cls.params[cf.IFG_FILE_LIST])
         # add dem
-        base_unw_paths.append(common.SYD_TEST_DEM_GAMMA)
+        base_unw_paths.append(common.SML_TEST_DEM_GAMMA)
         # add incidence
-        base_unw_paths.append(common.SYD_TEST_INCIDENCE)
+        base_unw_paths.append(common.SML_TEST_INCIDENCE)
 
         xlks, ylks, crop = run_pyrate.transform_params(cls.params)
 
@@ -196,11 +196,11 @@ class TestOriginalVsEfficientAps(unittest.TestCase):
 
         dest_paths = run_pyrate.get_dest_paths(
             base_unw_paths, crop, cls.params, xlks)
-        cls.ifgs = common.sydney_data_setup(datafiles=dest_paths)
+        cls.ifgs = common.small_data_setup(datafiles=dest_paths)
 
         dest_paths_orig = run_pyrate.get_dest_paths(
             base_unw_paths, crop, cls.params_original, xlks)
-        cls.ifgs_orig = common.sydney_data_setup(datafiles=dest_paths_orig)
+        cls.ifgs_orig = common.small_data_setup(datafiles=dest_paths_orig)
         aps.remove_aps_delay(cls.ifgs, cls.params)
         aps.remove_aps_delay_original(cls.ifgs_orig, cls.params_original)
 
@@ -234,12 +234,12 @@ class TestOriginalVsEfficientAps(unittest.TestCase):
     def test_dem_tifs_present(self):
         # geotiffed dem
         os.path.exists(os.path.join(self.params[cf.OUT_DIR],
-                       os.path.splitext(common.SYD_TEST_DEM_GAMMA)[0]
+                       os.path.splitext(common.SML_TEST_DEM_GAMMA)[0]
                                     + '.tif'))
 
         # multilooked dem
         os.path.exists(os.path.join(self.params[cf.OUT_DIR],
-                       os.path.splitext(common.SYD_TEST_DEM_GAMMA)[0]
+                       os.path.splitext(common.SML_TEST_DEM_GAMMA)[0]
                         + '_{looks}rlks_{crop}cr.tif'.format(
                            looks=self.params[cf.IFG_LKSX],
                            crop=self.params[cf.IFG_CROP_OPT])))
@@ -263,13 +263,13 @@ class TestAPSIncidenceVsElevationVsParallel(unittest.TestCase):
         cls.tif_dir_inc = tempfile.mkdtemp()
         cls.tif_dir_ele = tempfile.mkdtemp()
         cls.tif_dir_ele_par = tempfile.mkdtemp()
-        cls.test_conf = common.SYDNEY_TEST_CONF
+        cls.test_conf = common.TEST_CONF_FILE
 
         # change the required params
         cls.params_inc = cf.get_config_params(cls.test_conf)
-        cls.params_inc[cf.OBS_DIR] = common.SYD_TEST_GAMMA
+        cls.params_inc[cf.OBS_DIR] = common.SML_TEST_GAMMA
         cls.params_inc[cf.PROCESSOR] = 1  # gamma
-        file_list = cf.parse_namelist(os.path.join(common.SYD_TEST_GAMMA,
+        file_list = cf.parse_namelist(os.path.join(common.SML_TEST_GAMMA,
                                                    'ifms_17'))
         # config file
         cls.params_inc[cf.IFG_FILE_LIST] = tempfile.mktemp(dir=cls.tif_dir_inc)
@@ -277,14 +277,14 @@ class TestAPSIncidenceVsElevationVsParallel(unittest.TestCase):
         # write a short filelist with only 3 gamma unws
         with open(cls.params_inc[cf.IFG_FILE_LIST], 'w') as fp:
             for f in file_list[:2]:
-                fp.write(os.path.join(common.SYD_TEST_GAMMA, f) + '\n')
+                fp.write(os.path.join(common.SML_TEST_GAMMA, f) + '\n')
 
         cls.params_inc[cf.OUT_DIR] = cls.tif_dir_inc
         cls.params_inc[cf.PARALLEL] = 0
         cls.params_inc[cf.REF_EST_METHOD] = 1
         cls.params_inc[cf.APS_METHOD] = 2
-        cls.params_inc[cf.DEM_FILE] = common.SYD_TEST_DEM_GAMMA
-        cls.params_inc[cf.APS_INCIDENCE_MAP] = common.SYD_TEST_INCIDENCE
+        cls.params_inc[cf.DEM_FILE] = common.SML_TEST_DEM_GAMMA
+        cls.params_inc[cf.APS_INCIDENCE_MAP] = common.SML_TEST_INCIDENCE
         run_prepifg.main(cls.params_inc)
 
         # now create the config for the elevation_map case
@@ -293,7 +293,7 @@ class TestAPSIncidenceVsElevationVsParallel(unittest.TestCase):
         cls.params_ele[cf.APS_METHOD] = 2
         cls.params_ele[cf.APS_INCIDENCE_MAP] = None
         cls.params_ele[cf.APS_INCIDENCE_EXT] = None
-        cls.params_ele[cf.APS_ELEVATION_MAP] = common.SYD_TEST_ELEVATION
+        cls.params_ele[cf.APS_ELEVATION_MAP] = common.SML_TEST_ELEVATION
         cls.params_ele[cf.APS_ELEVATION_EXT] = 'lv_theta'
         run_prepifg.main(cls.params_ele)
 
@@ -302,14 +302,14 @@ class TestAPSIncidenceVsElevationVsParallel(unittest.TestCase):
                           glob.glob(os.path.join(cls.tif_dir_inc, '*.tif'))
                           if ("cr" in f) and ("rlks" in f) and
                           (len(re.findall(ptn, os.path.basename(f))) == 2)]
-        cls.ifgs_inc = common.sydney_data_setup(datafiles=dest_paths_inc)
+        cls.ifgs_inc = common.small_data_setup(datafiles=dest_paths_inc)
 
         dest_paths_ele = [f for f in
                           glob.glob(os.path.join(cls.tif_dir_ele, '*.tif'))
                           if "cr" in f and "rlks" in f and
                           (len(re.findall(ptn, os.path.basename(f))) == 2)]
 
-        cls.ifgs_ele = common.sydney_data_setup(datafiles=dest_paths_ele)
+        cls.ifgs_ele = common.small_data_setup(datafiles=dest_paths_ele)
 
         # now create the config for the elevation map parallel case
         cls.params_ele_par = copy.copy(cls.params_ele)
@@ -321,7 +321,7 @@ class TestAPSIncidenceVsElevationVsParallel(unittest.TestCase):
              if "cr" in f and "rlks" in f and
              (len(re.findall(ptn, os.path.basename(f))) == 2)]
 
-        cls.ifgs_ele_par = common.sydney_data_setup(datafiles=dest_paths_ele_par)
+        cls.ifgs_ele_par = common.small_data_setup(datafiles=dest_paths_ele_par)
 
         aps.remove_aps_delay(cls.ifgs_inc, cls.params_inc)
         aps.remove_aps_delay(cls.ifgs_ele, cls.params_ele)
@@ -358,33 +358,33 @@ class MPITests(unittest.TestCase):
     def setUpClass(cls):
         cls.tif_dir_serial = tempfile.mkdtemp()
         cls.tif_dir_mpi = tempfile.mkdtemp()
-        cls.test_conf = common.SYDNEY_TEST_CONF
+        cls.test_conf = common.TEST_CONF_FILE
 
         # change the required params
         cls.params = cf.get_config_params(cls.test_conf)
-        cls.params[cf.OBS_DIR] = common.SYD_TEST_GAMMA
+        cls.params[cf.OBS_DIR] = common.SML_TEST_GAMMA
         cls.params[cf.PROCESSOR] = 1  # gamma
-        file_list = cf.parse_namelist(os.path.join(common.SYD_TEST_GAMMA,
+        file_list = cf.parse_namelist(os.path.join(common.SML_TEST_GAMMA,
                                                    'ifms_17'))
         cls.params[cf.IFG_FILE_LIST] = tempfile.mktemp(dir=cls.tif_dir_serial)
         # write a short filelist with only 3 gamma unws
         with open(cls.params[cf.IFG_FILE_LIST], 'w') as fp:
             for f in file_list[:2]:
-                fp.write(os.path.join(common.SYD_TEST_GAMMA, f) + '\n')
+                fp.write(os.path.join(common.SML_TEST_GAMMA, f) + '\n')
         cls.params[cf.OUT_DIR] = cls.tif_dir_serial
         cls.params[cf.PARALLEL] = 0
         cls.params[cf.REF_EST_METHOD] = 2
         cls.params[cf.IFG_LKSX] = 1
         cls.params[cf.IFG_LKSY] = 1
-        cls.params[cf.DEM_FILE] = common.SYD_TEST_DEM_GAMMA
-        cls.params[cf.APS_INCIDENCE_MAP] = common.SYD_TEST_INCIDENCE
+        cls.params[cf.DEM_FILE] = common.SML_TEST_DEM_GAMMA
+        cls.params[cf.APS_INCIDENCE_MAP] = common.SML_TEST_INCIDENCE
         # base_unw_paths need to be geotiffed and multilooked by run_prepifg
         base_unw_paths = run_pyrate.original_ifg_paths(
             cls.params[cf.IFG_FILE_LIST])
         # add dem
-        base_unw_paths.append(common.SYD_TEST_DEM_GAMMA)
+        base_unw_paths.append(common.SML_TEST_DEM_GAMMA)
         # add incidence
-        base_unw_paths.append(common.SYD_TEST_INCIDENCE)
+        base_unw_paths.append(common.SML_TEST_INCIDENCE)
 
         xlks, ylks, crop = run_pyrate.transform_params(cls.params)
 
@@ -405,7 +405,7 @@ class MPITests(unittest.TestCase):
         dest_paths_mpi = run_pyrate.get_dest_paths(
             base_unw_paths, crop, cls.params_mpi, xlks)
         run_pyrate.process_ifgs(dest_paths, cls.params)
-        cls.ifgs_serial = common.sydney_data_setup(datafiles=dest_paths)
+        cls.ifgs_serial = common.small_data_setup(datafiles=dest_paths)
         cls.conf_mpi = tempfile.mktemp('.conf', dir=cls.tif_dir_mpi)
         cf.write_config_file(cls.params_mpi, cls.conf_mpi)
         str = 'mpirun -np 4 python pyrate/nci/run_pyrate_pypar.py ' + \
@@ -420,7 +420,7 @@ class MPITests(unittest.TestCase):
               cls.conf_mpi
         cmd = str.split()
         subprocess.check_call(cmd)
-        cls.ifgs_mpi = common.sydney_data_setup(datafiles=dest_paths_mpi)
+        cls.ifgs_mpi = common.small_data_setup(datafiles=dest_paths_mpi)
 
     @classmethod
     def tearDownClass(cls):
@@ -452,12 +452,12 @@ class MPITests(unittest.TestCase):
     def test_dem_tifs_present(self):
         # geotiffed dem
         os.path.exists(os.path.join(self.params_mpi[cf.OUT_DIR],
-                       os.path.splitext(common.SYD_TEST_DEM_GAMMA)[0]
+                       os.path.splitext(common.SML_TEST_DEM_GAMMA)[0]
                                     + '.tif'))
 
         # multilooked dem
         os.path.exists(os.path.join(self.params_mpi[cf.OUT_DIR],
-                       os.path.splitext(common.SYD_TEST_DEM_GAMMA)[0]
+                       os.path.splitext(common.SML_TEST_DEM_GAMMA)[0]
                         + '_{looks}rlks_{crop}cr.tif'.format(
                            looks=self.params_mpi[cf.IFG_LKSX],
                            crop=self.params_mpi[cf.IFG_CROP_OPT])))

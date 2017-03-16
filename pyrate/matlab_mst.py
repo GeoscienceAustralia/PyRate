@@ -15,7 +15,7 @@
 #   limitations under the License.
 """
 This Python module implements the minimum spanning tree matrix algorithm
-of the Matlab code in 'make_mstmat.m' of the Pirate package.
+of the function 'make_mstmat.m' of the Matlab Pirate package.
 """
 # pylint: disable=missing-docstring
 from __future__ import print_function
@@ -32,7 +32,7 @@ DTYPE = [('id', int), ('master', int), ('slave', int), ('nan_frac', float)]
 
 class IfGMeta(object):
     """
-    Metaclass for matlab mst calculation
+    Metaclass for Matlab Pirate MST calculation
     """
     __metaclass__ = ABCMeta
     ifgs = None
@@ -81,7 +81,7 @@ class IfGMeta(object):
 
 class IfgListPyRate(IfGMeta):
     """
-    copy of matlab ifglist in getnml.m.
+    Copy of Matlab Pirate ifglist in getnml.m.
     Please note that we don't need BaseT unless we are using variance in ifg
     data as cost.
     """
@@ -107,7 +107,7 @@ class IfgListPyRate(IfGMeta):
 
 
 def data_setup(datafiles):
-    '''Returns Ifg objs for the files in the sydney test dir
+    '''Returns Ifg objs for the files in the small_test data dir
     input phase data is in radians;
     these ifgs are in radians - not converted to mm'''
     datafiles.sort()
@@ -121,8 +121,8 @@ def data_setup(datafiles):
 def get_nml(ifg_list_instance, nodata_value,
             nan_conversion=False):
     """
-    A reproduction of getnml.m, the matlab function in pi-rate.
-    Note: the matlab version tested does not have nan's.
+    A reproduction of getnml.m, the function in Matlab Pirate.
+    Note: the Matlab version tested does not have nan's.
     replaces the ifg_list_instance in place
     """
     _epoch_list, n = get_epochs(ifg_list_instance.ifgs)
@@ -137,7 +137,7 @@ def get_nml(ifg_list_instance, nodata_value,
 
 def matlab_mst_kruskal(edges, ntrees=False):
     """
-    This is an implementation of the pi-rate mst_kruskal.m
+    This is an implementation of the Matlab Pirate mst_kruskal.m
     :param edges: list of edges, list of tuples (id, master, slave, nan_frac)
     :return:
     """
@@ -196,7 +196,7 @@ def calculate_connect_and_ntrees(connect, mst_list):
 
 def matlab_mst(ifg_object, p_threshold=1):
     """
-    This is an implementation of matlab/pirate make_mstmat.m.
+    This is an implementation of the Matlab Pirate make_mstmat.m function.
     """
     edges = get_sub_structure(ifg_object,
                               np.zeros(len(ifg_object.id), dtype=bool))
@@ -233,13 +233,13 @@ def matlab_mst_gen(ifg_instance, p_threshold=1):
     :param ifg_instance: IfgListPyRate instance
     :param p_threshold: minimum number of non-nan values at any pixel for selection
 
-    This is an implementation of matlab/pirate make_mstmat.m.
+    This is an implementation of the Matlab Pirate make_mstmat.m function.
     This we will be able to call from mst.py and the rest of the
     python framework setup so far.
 
     Please note that the generator version is more memory efficient.
     If memory was not a concern we could have found the entire mst matrix in the
-    previous function and this would have been unnecessary.
+    'matlab_mst' function and this would have been unnecessary.
     """
     edges = get_sub_structure(ifg_instance,
                               np.zeros(len(ifg_instance.id), dtype=bool))
@@ -298,7 +298,7 @@ def matlab_mst_bool(ifg_list_instance, p_threshold=1):
 
 def get_sub_structure(ifg_list, nan_v):
     """
-    This is the getsucstruct.m in pi-rate/matlab.
+    This is an implementation of the getsubstruct.m function from Matlab Pirate.
     :param ifg_list: original ifg_list class instance.
     :param nan_v: all ifg values at this location.
     Returns list of tuples (id, master, slave, nan_frac)

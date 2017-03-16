@@ -64,9 +64,9 @@ from pyrate.config import (
     APS_METHOD,
     APS_CORRECTION)
 
-from tests.common import SYD_TEST_MATLAB_PREPIFG_DIR
-from tests.common import PREP_TEST_TIF, SYD_TEST_DEM_DIR
-from tests.common import SYD_TEST_DEM_TIF
+from tests.common import SML_TEST_MATLAB_PREPIFG_DIR
+from tests.common import PREP_TEST_TIF, SML_TEST_DEM_DIR
+from tests.common import SML_TEST_DEM_TIF
 from tests import common
 
 gdal.UseExceptions()
@@ -326,7 +326,7 @@ class PrepifgOutputTests(unittest.TestCase):
     def test_multilook(self):
         """Test resampling method using a scaling factor of 4"""
         scale = 4  # assumes square cells
-        self.ifgs.append(DEM(SYD_TEST_DEM_TIF))
+        self.ifgs.append(DEM(SML_TEST_DEM_TIF))
         self.ifg_paths = [i.data_path for i in self.ifgs]
         cext = self._custom_extents_tuple()
         xlooks = ylooks = scale
@@ -352,9 +352,9 @@ class PrepifgOutputTests(unittest.TestCase):
 
         # verify DEM has been correctly processed
         # ignore output values as resampling has already been tested for phase
-        exp_dem_path = join(SYD_TEST_DEM_DIR, 'sydney_trimmed_4rlks_3cr.tif')
+        exp_dem_path = join(SML_TEST_DEM_DIR, 'roipac_test_trimmed_4rlks_3cr.tif')
         self.assertTrue(exists(exp_dem_path))
-        orignal_dem = DEM(SYD_TEST_DEM_TIF)
+        orignal_dem = DEM(SML_TEST_DEM_TIF)
         orignal_dem.open()
         dem_dtype = orignal_dem.dataset.GetRasterBand(1).DataType
         orignal_dem.close()
@@ -377,8 +377,8 @@ class PrepifgOutputTests(unittest.TestCase):
     def test_output_datatype(self):
         """Test resampling method using a scaling factor of 4"""
         scale = 4  # assumes square cells
-        self.ifgs.append(DEM(SYD_TEST_DEM_TIF))
-        self.ifg_paths = [i.data_path for i in self.ifgs] + [SYD_TEST_DEM_TIF]
+        self.ifgs.append(DEM(SML_TEST_DEM_TIF))
+        self.ifg_paths = [i.data_path for i in self.ifgs] + [SML_TEST_DEM_TIF]
         cext = self._custom_extents_tuple()
         xlooks = ylooks = scale
         prepare_ifgs(self.ifg_paths, CUSTOM_CROP, xlooks, ylooks,
@@ -543,7 +543,7 @@ class LocalMultilookTests(unittest.TestCase):
 
 def multilooking(src, xscale, yscale, thresh=0):
     """
-    Port of looks.m from MATLAB Pirate.
+    Implementation of Matlab Pirate looks.m function.
 
     src: numpy array of phase data
     thresh: min number of non-NaNs required for a valid tile resampling
@@ -578,14 +578,14 @@ def multilooking(src, xscale, yscale, thresh=0):
     return dest
 
 
-class MatlabEqualityTestRoipacSydneyTestData(unittest.TestCase):
+class MatlabEqualityTestRoipacSmallTestData(unittest.TestCase):
     """
-    Matlab to python roipac prepifg equality test for sydney test data
+    Matlab to python roipac prepifg equality test for small test data
     """
 
     def setUp(self):
-        from tests.common import sydney_data_setup
-        self.ifgs = sydney_data_setup()
+        from tests.common import small_data_setup
+        self.ifgs = small_data_setup()
         self.ifg_paths = [i.data_path for i in self.ifgs]
         prepare_ifgs(self.ifg_paths, crop_opt=1, xlooks=1, ylooks=1)
         looks_paths = [mlooked_path(d, looks=1, crop_out=1)
@@ -606,14 +606,14 @@ class MatlabEqualityTestRoipacSydneyTestData(unittest.TestCase):
         """
         # path to csv folders from matlab output
         onlyfiles = [
-            fln for fln in os.listdir(SYD_TEST_MATLAB_PREPIFG_DIR)
-            if os.path.isfile(os.path.join(SYD_TEST_MATLAB_PREPIFG_DIR, fln))
+            fln for fln in os.listdir(SML_TEST_MATLAB_PREPIFG_DIR)
+            if os.path.isfile(os.path.join(SML_TEST_MATLAB_PREPIFG_DIR, fln))
             and fln.endswith('.csv') and fln.__contains__('_rad_')
             ]
 
         for fln in onlyfiles:
             ifg_data = np.genfromtxt(os.path.join(
-                SYD_TEST_MATLAB_PREPIFG_DIR, fln), delimiter=',')
+                SML_TEST_MATLAB_PREPIFG_DIR, fln), delimiter=',')
             for k, j in enumerate(self.ifgs):
                 if fln.split('_rad_')[-1].split('.')[0] == \
                         os.path.split(j.data_path)[-1].split('.')[0]:
@@ -631,14 +631,14 @@ class MatlabEqualityTestRoipacSydneyTestData(unittest.TestCase):
             if not i.mm_converted:
                 i.convert_to_mm()
         onlyfiles = [
-            f for f in os.listdir(SYD_TEST_MATLAB_PREPIFG_DIR)
-            if os.path.isfile(os.path.join(SYD_TEST_MATLAB_PREPIFG_DIR, f))
+            f for f in os.listdir(SML_TEST_MATLAB_PREPIFG_DIR)
+            if os.path.isfile(os.path.join(SML_TEST_MATLAB_PREPIFG_DIR, f))
             and f.endswith('.csv') and f.__contains__('_mm_')]
 
         count = 0
         for i, f in enumerate(onlyfiles):
             ifg_data = np.genfromtxt(os.path.join(
-                SYD_TEST_MATLAB_PREPIFG_DIR, f), delimiter=',')
+                SML_TEST_MATLAB_PREPIFG_DIR, f), delimiter=',')
             for k, j in enumerate(self.ifgs):
                 if f.split('_mm_')[-1].split('.')[0] == \
                         os.path.split(j.data_path)[-1].split('_unw.')[0]:
@@ -667,7 +667,7 @@ class TestOneIncidenceOrElevationMap(unittest.TestCase):
     def setUp(self):
         self.base_dir = tempfile.mkdtemp()
         self.conf_file = tempfile.mktemp(suffix='.conf', dir=self.base_dir)
-        self.ifgListFile = os.path.join(common.SYD_TEST_GAMMA, 'ifms_17')
+        self.ifgListFile = os.path.join(common.SML_TEST_GAMMA, 'ifms_17')
 
     def tearDown(self):
         shutil.rmtree(self.base_dir)
@@ -676,20 +676,20 @@ class TestOneIncidenceOrElevationMap(unittest.TestCase):
         with open(self.conf_file, 'w') as conf:
             conf.write('[{}]\n'.format(DUMMY_SECTION_NAME))
             conf.write('{}: {}\n'.format(NO_DATA_VALUE, '0.0'))
-            conf.write('{}: {}\n'.format(OBS_DIR, common.SYD_TEST_GAMMA))
+            conf.write('{}: {}\n'.format(OBS_DIR, common.SML_TEST_GAMMA))
             conf.write('{}: {}\n'.format(OUT_DIR, self.base_dir))
             conf.write('{}: {}\n'.format(IFG_FILE_LIST, self.ifgListFile))
             conf.write('{}: {}\n'.format(PROCESSOR, '1'))
             conf.write('{}: {}\n'.format(LUIGI, '0'))
             conf.write('{}: {}\n'.format(
                 DEM_HEADER_FILE, os.path.join(
-                    common.SYD_TEST_GAMMA, '20060619_utm_dem.par')))
+                    common.SML_TEST_GAMMA, '20060619_utm_dem.par')))
             conf.write('{}: {}\n'.format(IFG_LKSX, '1'))
             conf.write('{}: {}\n'.format(IFG_LKSY, '1'))
             conf.write('{}: {}\n'.format(IFG_CROP_OPT, '1'))
             conf.write('{}: {}\n'.format(NO_DATA_AVERAGING_THRESHOLD, '0.5'))
             conf.write('{}: {}\n'.format(SLC_DIR, ''))
-            conf.write('{}: {}\n'.format(DEM_FILE, common.SYD_TEST_DEM_GAMMA))
+            conf.write('{}: {}\n'.format(DEM_FILE, common.SML_TEST_DEM_GAMMA))
             conf.write('{}: {}\n'.format(APS_INCIDENCE_MAP, inc))
             conf.write('{}: {}\n'.format(APS_ELEVATION_MAP, ele))
             conf.write('{}: {}\n'.format(APS_CORRECTION, '1'))
@@ -698,13 +698,13 @@ class TestOneIncidenceOrElevationMap(unittest.TestCase):
     def test_only_inc_file_created(self):
         inc_ext = 'inc'
         ele_ext = 'lv_theta'
-        self.make_input_files(inc=common.SYD_TEST_INCIDENCE)
+        self.make_input_files(inc=common.SML_TEST_INCIDENCE)
         self.common_check(inc_ext, ele_ext)
 
     def test_only_ele_file_created(self):
         inc_ext = 'inc'
         ele_ext = 'lv_theta'
-        self.make_input_files(ele=common.SYD_TEST_ELEVATION)
+        self.make_input_files(ele=common.SML_TEST_ELEVATION)
         self.common_check(ele_ext, inc_ext)
 
     def common_check(self, ele, inc):

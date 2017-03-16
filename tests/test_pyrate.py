@@ -18,23 +18,18 @@ This Python module contains system integration tests for the PyRate workflow.
 """
 
 import glob
-import logging
+#import logging
 import os
 import shutil
 import tempfile
 import unittest
 from os.path import join
-
 import numpy as np
 
-import pyrate.shared
-import tests.common
 from pyrate import config as cf
 from pyrate import shared, config, prepifg
 from pyrate.scripts import run_pyrate, run_prepifg
-from pyrate.shared import Ifg
 from tests import common
-from tests.common import SYD_TEST_TIF
 
 # taken from
 # http://stackoverflow.com/questions/6260149/os-symlink-support-in-windows
@@ -62,17 +57,17 @@ def test_transform_params():
 
 def test_warp_required():
     nocrop = prepifg.ALREADY_SAME_SIZE
-    assert pyrate.shared.warp_required(xlooks=2, ylooks=1, crop=nocrop)
-    assert pyrate.shared.warp_required(xlooks=1, ylooks=2, crop=nocrop)
-    assert pyrate.shared.warp_required(xlooks=1, ylooks=1, crop=nocrop)
-    assert not pyrate.shared.warp_required(xlooks=1, ylooks=1, crop=None)
+    assert shared.warp_required(xlooks=2, ylooks=1, crop=nocrop)
+    assert shared.warp_required(xlooks=1, ylooks=2, crop=nocrop)
+    assert shared.warp_required(xlooks=1, ylooks=1, crop=nocrop)
+    assert not shared.warp_required(xlooks=1, ylooks=1, crop=None)
 
     for c in prepifg.CROP_OPTIONS[:-1]:
-        assert pyrate.shared.warp_required(xlooks=1, ylooks=1, crop=c)
+        assert shared.warp_required(xlooks=1, ylooks=1, crop=c)
 
 
 def test_original_ifg_paths():
-    ifgdir = SYD_TEST_TIF
+    ifgdir = common.SML_TEST_TIF
     ifglist_path = join(ifgdir, 'ifms_17')
     paths = cf.original_ifg_paths(ifglist_path)
     assert paths[0] == join(ifgdir, 'geo_060619-061002_unw.tif'), str(paths[0])
@@ -119,24 +114,22 @@ class PyRateTests(unittest.TestCase):
         cls.BASE_DIR = tempfile.mkdtemp()
         cls.BASE_OUT_DIR = join(cls.BASE_DIR, 'out')
         cls.BASE_DEM_DIR = join(cls.BASE_DIR, 'dem')
-        cls.BASE_DEM_FILE = join(cls.BASE_DEM_DIR, 'sydney_trimmed.tif')
-        from tests.common import SYD_TEST_DIR
+        cls.BASE_DEM_FILE = join(cls.BASE_DEM_DIR, 'roipac_test_trimmed.tif')
 
         try:
             # copy source data (treat as prepifg already run)
             os.makedirs(cls.BASE_OUT_DIR)
-            for path in glob.glob(join(SYD_TEST_TIF, '*')):
+            for path in glob.glob(join(common.SML_TEST_TIF, '*')):
                 dest = join(cls.BASE_OUT_DIR, os.path.basename(path))
                 shutil.copy(path, dest)
                 os.chmod(dest, 0o660)
 
             os.makedirs(cls.BASE_DEM_DIR)
-            orig_dem = common.SYD_TEST_DEM_TIF
+            orig_dem = common.SML_TEST_DEM_TIF
             os.symlink(orig_dem, cls.BASE_DEM_FILE)
             os.chdir(cls.BASE_DIR)
 
-            params = config.get_config_params(
-                os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf'))
+            params = config.get_config_params(common.TEST_CONF_FILE)
             params[cf.OUT_DIR] = cls.BASE_OUT_DIR
             params[cf.PROCESSOR] = 0  # roipac
             params[cf.APS_CORRECTION] = 0
@@ -197,14 +190,14 @@ class ParallelPyRateTests(unittest.TestCase):
     def setUpClass(cls):
         rate_types = ['linrate', 'linerror', 'linsamples']
         cls.tif_dir = tempfile.mkdtemp()
-        cls.test_conf = common.SYDNEY_TEST_CONF
+        cls.test_conf = common.TEST_CONF_FILE
 
         # change the required params
         params = cf.get_config_params(cls.test_conf)
-        params[cf.OBS_DIR] = common.SYD_TEST_GAMMA
+        params[cf.OBS_DIR] = common.SML_TEST_GAMMA
         params[cf.PROCESSOR] = 1  # gamma
         params[cf.IFG_FILE_LIST] = os.path.join(
-            common.SYD_TEST_GAMMA, 'ifms_17')
+            common.SML_TEST_GAMMA, 'ifms_17')
         params[cf.OUT_DIR] = cls.tif_dir
         params[cf.PARALLEL] = 0
         params[cf.APS_CORRECTION] = False
@@ -220,7 +213,7 @@ class ParallelPyRateTests(unittest.TestCase):
             base_unw_paths, crop, params, xlks)
         run_prepifg.gamma_prepifg(base_unw_paths, params)
         tiles = run_pyrate.get_tiles(cls.dest_paths[0], 3, 3)
-        ifgs = common.sydney_data_setup()
+        ifgs = common.small_data_setup()
         cls.refpixel_p, cls.maxvar_p, cls.vcmt_p = \
             run_pyrate.process_ifgs(cls.dest_paths, params, 3, 3)
         cls.mst_p = common.reconstruct_mst(ifgs[0].shape, tiles,
@@ -259,7 +252,7 @@ class ParallelPyRateTests(unittest.TestCase):
         key = 'ORBITAL_ERROR'
         value = 'REMOVED'
 
-        for i in common.sydney_data_setup(datafiles=self.dest_paths):
+        for i in common.small_data_setup(datafiles=self.dest_paths):
             self.key_check(i, key, value)
 
     def key_check(self, ifg, key, value):
@@ -273,14 +266,14 @@ class ParallelPyRateTests(unittest.TestCase):
         key = 'DATA_UNITS'
         value = 'MILLIMETRES'
 
-        for i in common.sydney_data_setup(datafiles=self.dest_paths):
+        for i in common.small_data_setup(datafiles=self.dest_paths):
             self.key_check(i, key, value)
 
     def test_mst_equal(self):
         from pyrate import mst
-        ifgs = common.sydney_data_setup(datafiles=self.dest_paths)
+        ifgs = common.small_data_setup(datafiles=self.dest_paths)
         mst_original_p = mst.mst_boolean_array(ifgs)
-        ifgs_s = common.sydney_data_setup(datafiles=self.dest_paths_s)
+        ifgs_s = common.small_data_setup(datafiles=self.dest_paths_s)
         mst_original_s = mst.mst_boolean_array(ifgs_s)
         np.testing.assert_array_equal(self.mst, mst_original_p)
         np.testing.assert_array_equal(self.mst, mst_original_s)
@@ -309,14 +302,14 @@ class TestPrePrepareIfgs(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        params = config.get_config_params(common.SYDNEY_TEST_CONF)
+        params = config.get_config_params(common.TEST_CONF_FILE)
         cls.tmp_dir = tempfile.mkdtemp()
-        shared.copytree(common.SYD_TEST_TIF, cls.tmp_dir)
+        shared.copytree(common.SML_TEST_TIF, cls.tmp_dir)
         tifs = glob.glob(os.path.join(cls.tmp_dir, "*.tif"))
         for t in tifs:
             os.chmod(t, 0o644)
-        sydney_ifgs = common.sydney_data_setup(datafiles=tifs)
-        ifg_paths = [i.data_path for i in sydney_ifgs]
+        small_ifgs = common.small_data_setup(datafiles=tifs)
+        ifg_paths = [i.data_path for i in small_ifgs]
 
         cls.ifg_ret = shared.pre_prepare_ifgs(ifg_paths, params=params)
         for i in cls.ifg_ret:
@@ -326,14 +319,14 @@ class TestPrePrepareIfgs(unittest.TestCase):
 
         # prepare a second set
         cls.tmp_dir2 = tempfile.mkdtemp()
-        shared.copytree(common.SYD_TEST_TIF, cls.tmp_dir2)
+        shared.copytree(common.SML_TEST_TIF, cls.tmp_dir2)
         tifs = glob.glob(os.path.join(cls.tmp_dir2, "*.tif"))
         for t in tifs:
             os.chmod(t, 0o644)
-        sydney_ifgs = common.sydney_data_setup(datafiles=tifs)
-        ifg_paths = [i.data_path for i in sydney_ifgs]
+        small_ifgs = common.small_data_setup(datafiles=tifs)
+        ifg_paths = [i.data_path for i in small_ifgs]
 
-        cls.ifgs = [Ifg(p) for p in ifg_paths]
+        cls.ifgs = [shared.Ifg(p) for p in ifg_paths]
 
         for i in cls.ifgs:
             if not i.is_open:
@@ -350,7 +343,7 @@ class TestPrePrepareIfgs(unittest.TestCase):
         shutil.rmtree(cls.tmp_dir2)
         shutil.rmtree(cls.tmp_dir)
 
-    def test_sydney_data_prep_phase_equality(self):
+    def test_small_data_prep_phase_equality(self):
         for i, j in zip(self.ifgs, self.ifg_ret):
             np.testing.assert_array_almost_equal(i.phase_data, j.phase_data)
             self.assertFalse((i.phase_data == 0).any())
@@ -358,7 +351,7 @@ class TestPrePrepareIfgs(unittest.TestCase):
             i.phase_data[4, 2] = 0
             self.assertTrue((i.phase_data == 0).any())
 
-    def test_sydney_data_prep_metadata_equality(self):
+    def test_small_data_prep_metadata_equality(self):
         for i, j in zip(self.ifgs, self.ifg_ret):
             self.assertDictEqual(i.meta_data, j.meta_data)
 

@@ -122,7 +122,7 @@ def _build_graph_networkx(edges_with_weights):
 def mst_boolean_array(ifgs):
     """
     Filter: returns array of independent ifgs from the pixel by pixel MST,
-    like that used by the MATLAB version Pirate.
+    like that used by the Matlab Pirate package.
 
     The MSTs are stripped of connecting edge info, leaving just the ifgs.
 

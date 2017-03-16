@@ -196,7 +196,7 @@ def master_slave_ids(dates):
     """
     Returns dict of 'date:unique ID' for each date in 'dates'. IDs are ordered
     from oldest to newest, starting at 0.
-    Replaces ifglist.mas|slvnum in Pirate.
+    Replaces ifglist.mas|slvnum used in the Matlab Pirate package.
     """
 
     dset = sorted(set(dates))
