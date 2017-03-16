@@ -128,7 +128,7 @@ def create_ifg_dict(dest_tifs, params, tiles):
         ifg.close()
     ifgs_dict = _join_dicts(mpiops.comm.allgather(ifgs_dict))
 
-    preread_ifgs_file = join(params[cf.OUT_DIR], 'preread_ifgs.pk')
+    preread_ifgs_file = join(params[cf.TMPDIR], 'preread_ifgs.pk')
 
     if mpiops.rank == MASTER_PROCESS:
 
@@ -178,7 +178,7 @@ def mst_calc(dest_tifs, params, tiles, preread_ifgs):
             # mst_tile = mst.mst_multiprocessing(tile, dest_tifs, preread_ifgs)
         # locally save the mst_mat
         mst_file_process_n = join(
-            params[cf.OUT_DIR], 'mst_mat_{}.npy'.format(i))
+            params[cf.TMPDIR], 'mst_mat_{}.npy'.format(i))
         np.save(file=mst_file_process_n, arr=mst_tile)
 
     for t in process_tiles:
@@ -344,7 +344,7 @@ def ref_phase_estimation(ifg_paths, params, refpx, refpy):
     else:
         raise ConfigException('Ref phase estimation method must be 1 or 2')
 
-    ref_phs_file = join(params[cf.OUT_DIR], 'ref_phs.npy')
+    ref_phs_file = join(params[cf.TMPDIR], 'ref_phs.npy')
     if mpiops.rank == MASTER_PROCESS:
         ref_phs = np.zeros(len(ifg_paths), dtype=np.float64)
         process_indices = mpiops.array_split(range(len(ifg_paths)))
@@ -515,7 +515,7 @@ def linrate_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
 
     process_tiles = mpiops.array_split(tiles)
     log.info('Calculating linear rate')
-    output_dir = params[cf.OUT_DIR]
+    output_dir = params[cf.TMPDIR]
     for t in process_tiles:
         log.info('calculating lin rate of tile {}'.format(t.index))
         ifg_parts = [shared.IfgPart(p, t, preread_ifgs) for p in ifg_paths]
@@ -645,7 +645,7 @@ def timeseries_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
     """
     process_tiles = mpiops.array_split(tiles)
     log.info('Calculating time series')
-    output_dir = params[cf.OUT_DIR]
+    output_dir = params[cf.TMPDIR]
     for t in process_tiles:
         log.info('Calculating time series for tile {}'.format(t.index))
         ifg_parts = [shared.IfgPart(p, t, preread_ifgs) for p in ifg_paths]
