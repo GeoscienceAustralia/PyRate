@@ -45,7 +45,7 @@ def linear_rate(ifgs, params, vcmt, mst=None):
     :return:
         rate: linear rate (velocity) map
         error: standard deviation of the rate map
-        samples: statistics of coherent observations used in calculation        
+        samples: statistics of coherent observations used in calculation
     """
     maxsig, nsig, pthresh, cols, error, mst, obs, parallel, _, \
         rate, rows, samples, span = linrate_setup(ifgs, mst, params)
