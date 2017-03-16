@@ -457,7 +457,8 @@ class IfgPart(object):
             self.time_span = ifg.time_span
             phase_file = 'phase_data_{}_{}.npy'.format(
                 basename(ifg_or_path).split('.')[0], tile.index)
-            self.phase_data = np.load(join(dirname(ifg_or_path), phase_file))
+            self.phase_data = np.load(join(dirname(ifg_or_path), cf.TMPDIR,
+                                           phase_file))
         else:
             # check if Ifg was sent.
             if isinstance(ifg_or_path, Ifg):
@@ -1002,7 +1003,9 @@ def save_numpy_phase(ifg_paths, tiles, params):
         list of Shared.Tile instances
     """
     process_ifgs = mpiops.array_split(ifg_paths)
-    outdir = params[cf.OUT_DIR]
+    outdir = params[cf.TMPDIR]
+    if not os.path.exists(outdir):
+        mkdir_p(outdir)
     for ifg_path in process_ifgs:
         ifg = Ifg(ifg_path)
         ifg.open()
