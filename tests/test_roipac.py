@@ -58,9 +58,9 @@ from pyrate.shared import write_geotiff
 from tests.common import HEADERS_TEST_DIR, PREP_TEST_OBS, PREP_TEST_TIF
 from tests.common import SYD_TEST_DEM_DIR, SYD_TEST_OBS, TEMPDIR
 from tests.common import SYD_TEST_DEM_ROIPAC, SYD_TEST_DEM_HDR
-from tests.common import sydney_data_roipac_unws
-from tests.common import sydney_data_setup
-from tests.common import sydney_ifg_file_list
+from tests.common import small_data_roipac_unws
+from tests.common import small_data_setup
+from tests.common import small_ifg_file_list
 
 gdal.UseExceptions()
 
@@ -341,8 +341,8 @@ class TestRoipacLuigiEquality(unittest.TestCase):
             ifgl.write('\n'.join(data))
 
     def test_cmd_ifg_luigi_files_created(self):
-        self.dataPaths = sydney_data_roipac_unws()
-        base_exp = sydney_ifg_file_list()
+        self.dataPaths = small_data_roipac_unws()
+        base_exp = small_ifg_file_list()
         self.expPaths = [join(self.luigi_base_dir, os.path.basename(i))
                          for i in base_exp]
         self.luigi = '1'
@@ -352,8 +352,8 @@ class TestRoipacLuigiEquality(unittest.TestCase):
         self.common_check()
 
     def test_cmd_ifg_no_luigi_files_created(self):
-        self.dataPaths = sydney_data_roipac_unws()
-        base_exp = sydney_ifg_file_list()
+        self.dataPaths = small_data_roipac_unws()
+        base_exp = small_ifg_file_list()
         self.expPaths = [join(self.non_luigi_base_dir, os.path.basename(i))
                          for i in base_exp]
         self.luigi = '0'
@@ -378,9 +378,9 @@ class TestRoipacLuigiEquality(unittest.TestCase):
         non_luigi_files = glob.glob(os.path.join(
             self.non_luigi_base_dir, "geo*.tif"))
 
-        all_luigi_ifgs = sydney_data_setup(
+        all_luigi_ifgs = small_data_setup(
             glob.glob(os.path.join(self.luigi_base_dir, "geo*.tif")))
-        all_non_luigi_ifgs = sydney_data_setup(
+        all_non_luigi_ifgs = small_data_setup(
             glob.glob(os.path.join(self.non_luigi_base_dir, "geo*.tif")))
 
         self.assertEqual(len(all_non_luigi_ifgs), len(all_luigi_ifgs))

@@ -57,7 +57,7 @@ from pyrate.shared import write_geotiff, GeotiffException
 from tests import common
 from tests.common import GAMMA_TEST_DIR, SYD_TEST_GAMMA
 from tests.common import TEST_CONF_FILE, TEMPDIR
-from tests.common import sydney_data_setup
+from tests.common import small_data_setup
 
 gdal.UseExceptions()
 
@@ -462,7 +462,7 @@ class TestGammaLuigiEquality(unittest.TestCase):
     def shared_setup(self):
         self.test_cmd_ifg_no_luigi_files_created()
         self.test_cmd_ifg_luigi_files_created()
-        all_luigi_ifgs = sydney_data_setup(
+        all_luigi_ifgs = small_data_setup(
             glob.glob(os.path.join(self.luigi_base_dir, "*.tif")))
         all_non_luigi_files = []
         gamma_PTN = re.compile(r'\d{8}')
@@ -470,7 +470,7 @@ class TestGammaLuigiEquality(unittest.TestCase):
                                         "*.tif")):
             if len(gamma_PTN.findall(i)) == 2:
                 all_non_luigi_files.append(i)
-        all_non_luigi_ifgs = sydney_data_setup(all_non_luigi_files)
+        all_non_luigi_ifgs = small_data_setup(all_non_luigi_files)
         return all_luigi_ifgs, all_non_luigi_ifgs
 
 
@@ -502,20 +502,20 @@ class TestGammaParallelVsSerial(unittest.TestCase):
         shutil.rmtree(cls.serial_dir)
 
     def test_equality(self):
-        serial_ifgs = sydney_data_setup(
+        serial_ifgs = small_data_setup(
             datafiles=glob.glob(os.path.join(self.serial_dir, "*_1cr.tif")))
 
-        parallel_ifgs = sydney_data_setup(
+        parallel_ifgs = small_data_setup(
             datafiles=glob.glob(os.path.join(self.parallel_dir, "*_1cr.tif")))
 
         for s, p in zip(serial_ifgs, parallel_ifgs):
             np.testing.assert_array_almost_equal(s.phase_data, p.phase_data)
 
     def test_meta_data_exist(self):
-        serial_ifgs = sydney_data_setup(
+        serial_ifgs = small_data_setup(
             datafiles=glob.glob(os.path.join(self.serial_dir, "*_1cr.tif")))
 
-        parallel_ifgs = sydney_data_setup(
+        parallel_ifgs = small_data_setup(
             datafiles=glob.glob(os.path.join(self.parallel_dir, "*_1cr.tif")))
         for s, p in zip(serial_ifgs, parallel_ifgs):
 

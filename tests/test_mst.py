@@ -27,7 +27,7 @@ from itertools import product
 from numpy import empty, array, nan, isnan, sum as nsum
 
 import numpy as np
-from tests.common import MockIfg, sydney5_mock_ifgs, sydney_data_setup
+from tests.common import MockIfg, small5_mock_ifgs, small_data_setup
 
 from pyrate import algorithm
 from pyrate import config as cf
@@ -41,7 +41,7 @@ class MSTTests(unittest.TestCase):
     '''Basic verification of minimum spanning tree (MST) functionality.'''
 
     def setUp(self):
-        self.ifgs = sydney_data_setup()
+        self.ifgs = small_data_setup()
 
     def test_mst_matrix_as_array(self):
         # Verifies MST matrix func returns array with dict/trees in each cell
@@ -73,7 +73,7 @@ class MSTTests(unittest.TestCase):
 
     def test_mst_matrix_as_ifgs(self):
         # ensure only ifgs are returned, not individual MST graphs
-        ifgs = sydney5_mock_ifgs()
+        ifgs = small5_mock_ifgs()
         nifgs = len(ifgs)
         ys, xs = ifgs[0].shape
         result = mst.mst_matrix_ifgs_only(ifgs)
@@ -124,7 +124,7 @@ class DefaultMSTTests(unittest.TestCase):
 
     def test_default_mst(self):
         # default MST from full set of Ifgs shouldn't drop any nodes
-        ifgs = sydney5_mock_ifgs()
+        ifgs = small5_mock_ifgs()
         dates = [(i.master, i.slave) for i in ifgs]
 
         res = mst.mst_from_ifgs(ifgs)[0]
@@ -145,7 +145,7 @@ class DefaultMSTTests(unittest.TestCase):
 
 class NetworkxMSTTreeCheck(unittest.TestCase):
     def setUp(self):
-        self.ifgs = sydney_data_setup()
+        self.ifgs = small_data_setup()
 
     def test_assert_is_not_tree(self):
         non_overlapping = [1, 2, 5, 6, 12, 13, 14, 15, 16, 17]
@@ -155,7 +155,7 @@ class NetworkxMSTTreeCheck(unittest.TestCase):
         self.assertFalse(is_tree)
         self.assertEqual(4, ntrees)
 
-    def test_sydney_data_tree(self):
+    def test_small_data_tree(self):
         self.assertTrue(mst.mst_from_ifgs(self.ifgs)[1])
 
     def test_assert_is_tree(self):
@@ -188,7 +188,7 @@ class NetworkxMSTTreeCheck(unittest.TestCase):
 class IfgPartTest(unittest.TestCase):
 
     def setUp(self):
-        self.ifgs = sydney_data_setup()
+        self.ifgs = small_data_setup()
         self.params = cf.get_config_params(common.TEST_CONF_FILE)
 
     def test_ifg_part_shape_and_slice(self):

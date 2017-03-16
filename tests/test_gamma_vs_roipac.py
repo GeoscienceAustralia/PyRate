@@ -51,7 +51,7 @@ from pyrate.config import (
     )
 from pyrate.scripts import run_prepifg
 from tests.common import SYD_TEST_DIR
-from tests.common import sydney_data_setup
+from tests.common import small_data_setup
 
 DUMMY_SECTION_NAME = 'pyrate'
 
@@ -153,8 +153,8 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
             ifgl.write('\n'.join(data))
 
     def test_cmd_ifg_no_roipac_files_created_roipac(self):
-        self.dataPaths = common.sydney_data_roipac_unws()
-        base_exp = common.sydney_ifg_file_list()
+        self.dataPaths = common.small_data_roipac_unws()
+        base_exp = common.small_ifg_file_list()
         self.expPaths = [os.path.join(self.roipac_base_dir, os.path.basename(i))
                          for i in base_exp]
         self.luigi = '0'
@@ -178,8 +178,8 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
                                         "*.tif")):
             if len(gamma_PTN.findall(i)) == 2:
                 gamma_files.append(i)
-        all_gamma_ifgs = sydney_data_setup(gamma_files)
-        all_roipac_ifgs = sydney_data_setup(
+        all_gamma_ifgs = small_data_setup(gamma_files)
+        all_roipac_ifgs = small_data_setup(
             glob.glob(os.path.join(self.roipac_base_dir, "geo*.tif")))
         c = 0
         for c, (r, g) in enumerate(zip(all_roipac_ifgs, all_gamma_ifgs)):
@@ -194,8 +194,8 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
                                         "*.tif")):
             if len(gamma_PTN.findall(i)) == 2:
                 gamma_files.append(i)
-        all_gamma_ifgs = sydney_data_setup(gamma_files)
-        all_roipac_ifgs = sydney_data_setup(
+        all_gamma_ifgs = small_data_setup(gamma_files)
+        all_roipac_ifgs = small_data_setup(
             glob.glob(os.path.join(self.roipac_base_dir, "geo*.tif")))
         c = 0
         for c, (i, j) in enumerate(zip(all_gamma_ifgs, all_roipac_ifgs)):

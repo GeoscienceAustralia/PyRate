@@ -31,7 +31,7 @@ from numpy.linalg import pinv, inv
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 from scipy.linalg import lstsq
 
-from .common import sydney5_mock_ifgs, MockIfg
+from .common import small5_mock_ifgs, MockIfg
 from pyrate import algorithm
 from pyrate import config as cf
 from pyrate.orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, \
@@ -43,8 +43,8 @@ from pyrate.shared import Ifg
 from pyrate.shared import nanmedian
 from tests.common import TEST_CONF_FILE, IFMS16
 from tests.common import SYD_TEST_MATLAB_ORBITAL_DIR
-from tests.common import SYD_TEST_TIF, sydney_data_setup
-from tests.common import sydney_ifg_file_list
+from tests.common import SYD_TEST_TIF, small_data_setup
+from tests.common import small_ifg_file_list
 
 #TODO: Purpose of this variable? Degrees are 1, 2 and 3 respectively
 DEG_LOOKUP = {
@@ -163,7 +163,7 @@ class IndependentCorrectionTests(unittest.TestCase):
     """Test cases for the orbital correction component of PyRate."""
 
     def setUp(self):
-        self.ifgs = sydney5_mock_ifgs()
+        self.ifgs = small5_mock_ifgs()
         _add_nodata(self.ifgs)
 
         for ifg in self.ifgs:
@@ -259,7 +259,7 @@ class ErrorTests(unittest.TestCase):
 
     def test_invalid_degree_arg(self):
         # test failure of a few different args for 'degree'
-        ifgs = sydney5_mock_ifgs()
+        ifgs = small5_mock_ifgs()
         for d in range(-5, 1):
             self.assertRaises(OrbitalError, get_network_design_matrix, ifgs, d, True)
         for d in range(4, 7):
@@ -267,7 +267,7 @@ class ErrorTests(unittest.TestCase):
 
     def test_invalid_method(self):
         # test failure of a few different args for 'method'
-        ifgs = sydney5_mock_ifgs()
+        ifgs = small5_mock_ifgs()
         params = dict()
         params[cf.ORBITAL_FIT_DEGREE] = PLANAR
         params[cf.PARALLEL] = False
@@ -277,7 +277,7 @@ class ErrorTests(unittest.TestCase):
 
     def test_multilooked_ifgs_arg(self):
         # check some bad args for network method with multilooked ifgs
-        ifgs = sydney5_mock_ifgs()
+        ifgs = small5_mock_ifgs()
         args = [[None, None, None, None, None], ["X"] * 5]
         params = dict()
         params[cf.ORBITAL_FIT_METHOD] = NETWORK_METHOD
@@ -296,7 +296,7 @@ class NetworkDesignMatrixTests(unittest.TestCase):
     """Contains tests verifying creation of sparse network design matrix."""
 
     def setUp(self):
-        self.ifgs = sydney5_mock_ifgs()
+        self.ifgs = small5_mock_ifgs()
         _add_nodata(self.ifgs)
         self.nifgs = len(self.ifgs)
         self.ncells = self.ifgs[0].num_cells
@@ -461,7 +461,7 @@ class NetworkCorrectionTests(unittest.TestCase):
 
     def setUp(self):
         # fake some real ifg data by adding nans
-        self.ifgs = sydney5_mock_ifgs()
+        self.ifgs = small5_mock_ifgs()
         _add_nodata(self.ifgs)
 
         # use different sizes to differentiate axes results
@@ -553,9 +553,9 @@ class NetworkCorrectionTestsMultilooking(unittest.TestCase):
 
     def setUp(self):
         # fake some real ifg data by adding nans
-        self.ml_ifgs = sydney5_mock_ifgs()
+        self.ml_ifgs = small5_mock_ifgs()
         # 2x data of default Syd mock
-        self.ifgs = sydney5_mock_ifgs(xs=6, ys=8)
+        self.ifgs = small5_mock_ifgs(xs=6, ys=8)
 
         # use different sizes to differentiate axes results
         for ifg in self.ifgs:
@@ -670,7 +670,7 @@ def get_date_ids(ifgs):
 
 
 def _add_nodata(ifgs):
-    """Adds some NODATA/nan cells to the sydney mock ifgs"""
+    """Adds some NODATA/nan cells to the small mock ifgs"""
     ifgs[0].phase_data[0, :] = nan # 3 error cells
     ifgs[1].phase_data[2, 1:3] = nan # 2 error cells
     ifgs[2].phase_data[3, 2:3] = nan # 1 err
@@ -766,7 +766,7 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
         self.params[cf.ORBITAL_FIT_LOOKS_Y] = 1
 
         data_paths = [os.path.join(SYD_TEST_TIF, p) for p in
-                      sydney_ifg_file_list()]
+                      small_ifg_file_list()]
         self.new_data_paths = [os.path.join(self.BASE_DIR, os.path.basename(d))
                           for d in data_paths]
         for d in data_paths:
@@ -774,7 +774,7 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
             shutil.copy(d, d_copy)
             os.chmod(d_copy, 0o660)
 
-        self.ifgs = sydney_data_setup(datafiles=self.new_data_paths)
+        self.ifgs = small_data_setup(datafiles=self.new_data_paths)
 
         for i in self.ifgs:
             if not i.is_open:

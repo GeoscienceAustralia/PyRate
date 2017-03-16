@@ -83,10 +83,10 @@ class RefPhsTests(unittest.TestCase):
         self.params[cf.PARALLEL] = False
         self.refpx, self.refpy = 38, 58
         shared.copytree(common.SYD_TEST_TIF, self.tmp_dir)
-        sydney_tifs = glob.glob(os.path.join(self.tmp_dir, "*.tif"))
-        for s in sydney_tifs:
+        small_tifs = glob.glob(os.path.join(self.tmp_dir, "*.tif"))
+        for s in small_tifs:
             os.chmod(s, 0o644)
-        self.ifgs = common.sydney_data_setup(self.tmp_dir, is_dir=True)
+        self.ifgs = common.small_data_setup(self.tmp_dir, is_dir=True)
 
     def tearDown(self):
         shutil.rmtree(self.tmp_dir)

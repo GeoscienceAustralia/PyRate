@@ -580,12 +580,12 @@ def multilooking(src, xscale, yscale, thresh=0):
 
 class MatlabEqualityTestRoipacSydneyTestData(unittest.TestCase):
     """
-    Matlab to python roipac prepifg equality test for sydney test data
+    Matlab to python roipac prepifg equality test for small test data
     """
 
     def setUp(self):
-        from tests.common import sydney_data_setup
-        self.ifgs = sydney_data_setup()
+        from tests.common import small_data_setup
+        self.ifgs = small_data_setup()
         self.ifg_paths = [i.data_path for i in self.ifgs]
         prepare_ifgs(self.ifg_paths, crop_opt=1, xlooks=1, ylooks=1)
         looks_paths = [mlooked_path(d, looks=1, crop_out=1)

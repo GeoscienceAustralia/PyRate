@@ -47,7 +47,7 @@ from tests import common
 UseExceptions()
 
 if not exists(SYD_TEST_TIF):
-    sys.exit("ERROR: Missing sydney_test data for unit tests\n")
+    sys.exit("ERROR: Missing small_test data for unit tests\n")
 
 
 class IfgTests(unittest.TestCase):
@@ -120,7 +120,7 @@ class IfgTests(unittest.TestCase):
         self.assertFalse(self.ifg.nrows is None)
 
         # test with tolerance from base 90m cell
-        # within 2% of cells over sydney?
+        # within 2% of cells over small?
         self.assertTrue(self.ifg.y_size > 88.0)
         self.assertTrue(self.ifg.y_size < 92.0, 'Got %s' % self.ifg.y_size)
 
@@ -371,7 +371,7 @@ class WriteUnwTest(unittest.TestCase):
 
         dest_paths = cf.get_dest_paths(
             cls.base_unw_paths, crop, cls.params, xlks)
-        cls.ifgs = common.sydney_data_setup(datafiles=dest_paths)
+        cls.ifgs = common.small_data_setup(datafiles=dest_paths)
 
     @classmethod
     def tearDownClass(cls):

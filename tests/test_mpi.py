@@ -37,7 +37,7 @@ from pyrate import shared
 from pyrate import vcm
 from pyrate import refpixel
 from pyrate.scripts import run_pyrate, run_prepifg, postprocessing
-from tests.common import sydney_data_setup, reconstruct_mst, \
+from tests.common import small_data_setup, reconstruct_mst, \
     reconstruct_linrate
 from tests import common
 from tests.test_vcm import matlab_maxvar
@@ -247,7 +247,7 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
     postprocessing.postprocess_linrate(row_splits, col_splits, params)
     postprocessing.postprocess_timeseries(row_splits, col_splits, params)
     ifgs_mpi_out_dir = params[cf.OUT_DIR]
-    ifgs_mpi = sydney_data_setup(datafiles=dest_paths)
+    ifgs_mpi = small_data_setup(datafiles=dest_paths)
 
     # single process timeseries/linrate calculation
     if mpiops.rank == 0:

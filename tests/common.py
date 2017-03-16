@@ -35,7 +35,7 @@ from pyrate.shared import Ifg, pre_prepare_ifgs, get_projection_info, \
 
 TEMPDIR = tempfile.gettempdir()
 BASE_TEST = join(os.environ['PYRATEPATH'], "tests", "test_data")
-SYD_TEST_DIR = join(BASE_TEST, "sydney_test")
+SYD_TEST_DIR = join(BASE_TEST, "small_test")
 SYD_TEST_OBS = join(SYD_TEST_DIR, 'roipac_obs')  # roipac processed unws
 SYD_TEST_OUT = join(SYD_TEST_DIR, 'out')
 SYD_TEST_TIF = join(SYD_TEST_DIR, 'tif')
@@ -98,8 +98,8 @@ IFMS16 = ['geo_060619-061002_unw.tif',
         'geo_070604-070709_unw.tif']
 
 
-def sydney_data_setup(datafiles=None, is_dir=False):
-    """Returns Ifg objs for the files in the sydney test dir
+def small_data_setup(datafiles=None, is_dir=False):
+    """Returns Ifg objs for the files in the small test dir
     input phase data is in radians; these ifgs are in radians - not converted to mm"""
     if is_dir:
         datafiles = glob.glob(join(datafiles, "*.tif"))
@@ -119,7 +119,7 @@ def sydney_data_setup(datafiles=None, is_dir=False):
     return ifgs
 
 
-def sydney_ifg_file_list(datafiles=None):
+def small_ifg_file_list(datafiles=None):
     """Returns the file list of all the .tif files after prepifg conversion
     input phase data is in radians; these ifgs are in radians - not converted to mm"""
     if datafiles:
@@ -131,19 +131,19 @@ def sydney_ifg_file_list(datafiles=None):
     return datafiles
 
 
-def sydney_data_roipac_unws():
+def small_data_roipac_unws():
     """Returns unw file list before prepifg operation
     input phase data is in radians; these ifgs are in radians - not converted to mm"""
     return glob.glob(join(SYD_TEST_OBS, "*.unw"))
 
 
-def sydney_data_setup_gamma_unws():
+def small_data_setup_gamma_unws():
     """Returns unw file list before prepifg operation
     input phase data is in radians; these ifgs are in radians - not converted to mm"""
     return glob.glob(join(SYD_TEST_GAMMA, "*.unw"))
 
 
-def sydney5_ifgs():
+def small5_ifgs():
     """Convenience func to return a subset of 5 linked Ifgs from the testdata"""
     BASE_DIR = tempfile.mkdtemp()
     data_paths = [os.path.join(SYD_TEST_TIF, p) for p in IFMS5.split()]
@@ -155,9 +155,9 @@ def sydney5_ifgs():
     return [Ifg(p) for p in new_data_paths]
 
 
-def sydney5_mock_ifgs(xs=3, ys=4):
-    '''Returns smaller mocked version of sydney Ifgs for testing'''
-    ifgs = sydney5_ifgs()
+def small5_mock_ifgs(xs=3, ys=4):
+    '''Returns smaller mocked version of small Ifgs for testing'''
+    ifgs = small5_ifgs()
     for i in ifgs:
         i.open()
         i.nodata_value = 0

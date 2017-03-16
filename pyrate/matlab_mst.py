@@ -107,7 +107,7 @@ class IfgListPyRate(IfGMeta):
 
 
 def data_setup(datafiles):
-    '''Returns Ifg objs for the files in the sydney test dir
+    '''Returns Ifg objs for the files in the small_test data dir
     input phase data is in radians;
     these ifgs are in radians - not converted to mm'''
     datafiles.sort()

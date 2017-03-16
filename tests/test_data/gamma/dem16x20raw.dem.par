@@ -1,5 +1,5 @@
 Gamma DIFF&GEO DEM/MAP parameter file
-title: sydney_1s_srtm.dem
+title:
 DEM_projection:     EQA
 data_format:        REAL*4
 DEM_hgt_offset:          0.00000

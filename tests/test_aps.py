@@ -90,11 +90,11 @@ class TestMethod1VsMethod2AndMetaData(unittest.TestCase):
 
         dest_paths = run_pyrate.get_dest_paths(
             base_unw_paths, crop, cls.params, xlks)
-        cls.ifgs = common.sydney_data_setup(datafiles=dest_paths)
+        cls.ifgs = common.small_data_setup(datafiles=dest_paths)
 
         dest_paths_m2 = run_pyrate.get_dest_paths(
             base_unw_paths, crop, cls.params_method2, xlks)
-        cls.ifgs_method2 = common.sydney_data_setup(datafiles=dest_paths_m2)
+        cls.ifgs_method2 = common.small_data_setup(datafiles=dest_paths_m2)
         aps.remove_aps_delay(cls.ifgs, cls.params)
         aps.remove_aps_delay(cls.ifgs_method2, cls.params_method2)
 
@@ -196,11 +196,11 @@ class TestOriginalVsEfficientAps(unittest.TestCase):
 
         dest_paths = run_pyrate.get_dest_paths(
             base_unw_paths, crop, cls.params, xlks)
-        cls.ifgs = common.sydney_data_setup(datafiles=dest_paths)
+        cls.ifgs = common.small_data_setup(datafiles=dest_paths)
 
         dest_paths_orig = run_pyrate.get_dest_paths(
             base_unw_paths, crop, cls.params_original, xlks)
-        cls.ifgs_orig = common.sydney_data_setup(datafiles=dest_paths_orig)
+        cls.ifgs_orig = common.small_data_setup(datafiles=dest_paths_orig)
         aps.remove_aps_delay(cls.ifgs, cls.params)
         aps.remove_aps_delay_original(cls.ifgs_orig, cls.params_original)
 
@@ -302,14 +302,14 @@ class TestAPSIncidenceVsElevationVsParallel(unittest.TestCase):
                           glob.glob(os.path.join(cls.tif_dir_inc, '*.tif'))
                           if ("cr" in f) and ("rlks" in f) and
                           (len(re.findall(ptn, os.path.basename(f))) == 2)]
-        cls.ifgs_inc = common.sydney_data_setup(datafiles=dest_paths_inc)
+        cls.ifgs_inc = common.small_data_setup(datafiles=dest_paths_inc)
 
         dest_paths_ele = [f for f in
                           glob.glob(os.path.join(cls.tif_dir_ele, '*.tif'))
                           if "cr" in f and "rlks" in f and
                           (len(re.findall(ptn, os.path.basename(f))) == 2)]
 
-        cls.ifgs_ele = common.sydney_data_setup(datafiles=dest_paths_ele)
+        cls.ifgs_ele = common.small_data_setup(datafiles=dest_paths_ele)
 
         # now create the config for the elevation map parallel case
         cls.params_ele_par = copy.copy(cls.params_ele)
@@ -321,7 +321,7 @@ class TestAPSIncidenceVsElevationVsParallel(unittest.TestCase):
              if "cr" in f and "rlks" in f and
              (len(re.findall(ptn, os.path.basename(f))) == 2)]
 
-        cls.ifgs_ele_par = common.sydney_data_setup(datafiles=dest_paths_ele_par)
+        cls.ifgs_ele_par = common.small_data_setup(datafiles=dest_paths_ele_par)
 
         aps.remove_aps_delay(cls.ifgs_inc, cls.params_inc)
         aps.remove_aps_delay(cls.ifgs_ele, cls.params_ele)
@@ -405,7 +405,7 @@ class MPITests(unittest.TestCase):
         dest_paths_mpi = run_pyrate.get_dest_paths(
             base_unw_paths, crop, cls.params_mpi, xlks)
         run_pyrate.process_ifgs(dest_paths, cls.params)
-        cls.ifgs_serial = common.sydney_data_setup(datafiles=dest_paths)
+        cls.ifgs_serial = common.small_data_setup(datafiles=dest_paths)
         cls.conf_mpi = tempfile.mktemp('.conf', dir=cls.tif_dir_mpi)
         cf.write_config_file(cls.params_mpi, cls.conf_mpi)
         str = 'mpirun -np 4 python pyrate/nci/run_pyrate_pypar.py ' + \
@@ -420,7 +420,7 @@ class MPITests(unittest.TestCase):
               cls.conf_mpi
         cmd = str.split()
         subprocess.check_call(cmd)
-        cls.ifgs_mpi = common.sydney_data_setup(datafiles=dest_paths_mpi)
+        cls.ifgs_mpi = common.small_data_setup(datafiles=dest_paths_mpi)
 
     @classmethod
     def tearDownClass(cls):

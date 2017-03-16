@@ -31,13 +31,13 @@ from pyrate import shared
 from pyrate.scripts import run_pyrate, run_prepifg
 from pyrate.vcm import cvd, get_vcmt
 import pyrate.orbital
-from tests.common import sydney5_mock_ifgs, sydney5_ifgs, TEST_CONF_FILE
-from tests.common import sydney_data_setup, prepare_ifgs_without_phase
+from tests.common import small5_mock_ifgs, small5_ifgs, TEST_CONF_FILE
+from tests.common import small_data_setup, prepare_ifgs_without_phase
 
 
 class CovarianceTests(unittest.TestCase):
     def setUp(self):
-        self.ifgs = sydney_data_setup()
+        self.ifgs = small_data_setup()
         for i in self.ifgs:
             i.mm_converted = True
         params = dict()
@@ -46,7 +46,7 @@ class CovarianceTests(unittest.TestCase):
         self.params = params
 
     def test_covariance_basic(self):
-        ifgs = sydney5_ifgs()
+        ifgs = small5_ifgs()
 
         for i in ifgs:
             i.open()
@@ -94,10 +94,10 @@ class CovarianceTests(unittest.TestCase):
 class VCMTests(unittest.TestCase):
 
     def setUp(self):
-        self.ifgs = sydney_data_setup()
+        self.ifgs = small_data_setup()
 
     def test_vcm_basic(self):
-        ifgs = sydney5_mock_ifgs(5, 9)
+        ifgs = small5_mock_ifgs(5, 9)
         maxvar = [8.486, 12.925, 6.313, 0.788, 0.649]
 
         # from Matlab Pirate make_vcmt.m code
@@ -205,11 +205,11 @@ class MatlabEqualityTest(unittest.TestCase):
     def tearDownClass(cls):
         shutil.rmtree(cls.temp_out_dir)
 
-    def test_matlab_maxvar_equality_sydney_test_files(self):
+    def test_matlab_maxvar_equality_small_test_files(self):
         np.testing.assert_array_almost_equal(self.maxvar, matlab_maxvar,
                                              decimal=3)
 
-    def test_matlab_vcmt_equality_sydney_test_files(self):
+    def test_matlab_vcmt_equality_small_test_files(self):
         from tests.common import SYD_TEST_DIR
         MATLAB_VCM_DIR = os.path.join(SYD_TEST_DIR, 'matlab_vcm')
         matlab_vcm = np.genfromtxt(os.path.join(MATLAB_VCM_DIR,

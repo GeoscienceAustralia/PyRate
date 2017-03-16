@@ -76,7 +76,7 @@ class TimeSeriesTests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.ifgs = common.sydney_data_setup()
+        cls.ifgs = common.small_data_setup()
         cls.params = default_params()
         cls.mstmat = mst.mst_boolean_array(cls.ifgs)
         cls.maxvar = [vcm.cvd(i, cls.params)[0] for i in cls.ifgs]

@@ -26,7 +26,7 @@ from pyrate import config as cf
 from pyrate.refpixel import ref_pixel, step
 from pyrate.scripts import run_pyrate
 from tests.common import TEST_CONF_FILE
-from tests.common import sydney_data_setup, MockIfg, sydney_ifg_file_list
+from tests.common import small_data_setup, MockIfg, small_ifg_file_list
 
 # default testing values
 REFNX = 5
@@ -42,7 +42,7 @@ class ReferencePixelInputTests(unittest.TestCase):
     '''
 
     def setUp(self):
-        self.ifgs = sydney_data_setup()
+        self.ifgs = small_data_setup()
         self.params = cf.get_config_params(TEST_CONF_FILE)
         self.params[cf.REFNX] = REFNX
         self.params[cf.REFNY] = REFNY
@@ -95,7 +95,7 @@ class ReferencePixelTests(unittest.TestCase):
     """
 
     def setUp(self):
-        self.ifgs = sydney_data_setup()
+        self.ifgs = small_data_setup()
         self.params = cf.get_config_params(TEST_CONF_FILE)
         self.params[cf.REFNX] = REFNX
         self.params[cf.REFNY] = REFNY
@@ -218,7 +218,7 @@ def _expected_ref_pixel(ifgs, cs):
 class MatlabEqualityTest(unittest.TestCase):
 
     def setUp(self):
-        self.ifg_paths = sydney_ifg_file_list()
+        self.ifg_paths = small_ifg_file_list()
         self.params = cf.get_config_params(TEST_CONF_FILE)
         self.params[cf.PARALLEL] = False
         self.params[cf.OUT_DIR] = tempfile.mkdtemp()
@@ -237,13 +237,13 @@ class MatlabEqualityTest(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.params[cf.OUT_DIR])
 
-    def test_sydney_test_data_ref_pixel(self):
+    def test_small_test_data_ref_pixel(self):
         refx, refy = run_pyrate.ref_pixel_calc(self.ifg_paths, self.params)
         self.assertEqual(refx, 38)
         self.assertEqual(refy, 58)
         self.assertAlmostEqual(0.8, self.params[cf.REF_MIN_FRAC])
 
-    def test_more_sydney_test_data_ref_pixel(self):
+    def test_more_small_test_data_ref_pixel(self):
 
         refx, refy = run_pyrate.ref_pixel_calc(self.ifg_paths,
                                                self.params_alt_ref_frac)
@@ -251,7 +251,7 @@ class MatlabEqualityTest(unittest.TestCase):
         self.assertEqual(refy, 58)
         self.assertAlmostEqual(0.5, self.params_alt_ref_frac[cf.REF_MIN_FRAC])
 
-    def test_sydney_test_data_ref_pixel_all_2(self):
+    def test_small_test_data_ref_pixel_all_2(self):
 
         refx, refy = run_pyrate.ref_pixel_calc(self.ifg_paths,
                                                self.params_all_2s)
@@ -259,7 +259,7 @@ class MatlabEqualityTest(unittest.TestCase):
         self.assertEqual(refy, 2)
         self.assertAlmostEqual(0.5, self.params_alt_ref_frac[cf.REF_MIN_FRAC])
 
-    def test_sydney_test_data_ref_chipsize_15(self):
+    def test_small_test_data_ref_chipsize_15(self):
 
         refx, refy = run_pyrate.ref_pixel_calc(self.ifg_paths,
                                                self.params_chipsize_15)
@@ -267,7 +267,7 @@ class MatlabEqualityTest(unittest.TestCase):
         self.assertEqual(refy, 7)
         self.assertAlmostEqual(0.5, self.params_alt_ref_frac[cf.REF_MIN_FRAC])
 
-    def test_sydney_test_data_ref_all_1(self):
+    def test_small_test_data_ref_all_1(self):
 
         refx, refy = run_pyrate.ref_pixel_calc(self.ifg_paths,
                                                self.params_all_1s)
@@ -282,7 +282,7 @@ class MatlabEqualityTest(unittest.TestCase):
 class MatlabEqualityTestMultiprocessParallel(unittest.TestCase):
 
     def setUp(self):
-        self.ifg_paths = sydney_ifg_file_list()
+        self.ifg_paths = small_ifg_file_list()
         self.params = cf.get_config_params(TEST_CONF_FILE)
         self.params[cf.PARALLEL] = True
         self.params[cf.OUT_DIR] = tempfile.mkdtemp()
@@ -302,13 +302,13 @@ class MatlabEqualityTestMultiprocessParallel(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.params[cf.OUT_DIR])
 
-    def test_sydney_test_data_ref_pixel(self):
+    def test_small_test_data_ref_pixel(self):
         refx, refy = run_pyrate.ref_pixel_calc(self.ifg_paths, self.params)
         self.assertEqual(refx, 38)
         self.assertEqual(refy, 58)
         self.assertAlmostEqual(0.8, self.params[cf.REF_MIN_FRAC])
 
-    def test_more_sydney_test_data_ref_pixel(self):
+    def test_more_small_test_data_ref_pixel(self):
 
         refx, refy = run_pyrate.ref_pixel_calc(self.ifg_paths,
                                                self.params_alt_ref_frac)
@@ -316,7 +316,7 @@ class MatlabEqualityTestMultiprocessParallel(unittest.TestCase):
         self.assertEqual(refy, 58)
         self.assertAlmostEqual(0.5, self.params_alt_ref_frac[cf.REF_MIN_FRAC])
 
-    def test_sydney_test_data_ref_pixel_all_2(self):
+    def test_small_test_data_ref_pixel_all_2(self):
 
         refx, refy = run_pyrate.ref_pixel_calc(self.ifg_paths,
                                                self.params_all_2s)
@@ -324,7 +324,7 @@ class MatlabEqualityTestMultiprocessParallel(unittest.TestCase):
         self.assertEqual(refy, 2)
         self.assertAlmostEqual(0.5, self.params_alt_ref_frac[cf.REF_MIN_FRAC])
 
-    def test_sydney_test_data_ref_chipsize_15(self):
+    def test_small_test_data_ref_chipsize_15(self):
 
         refx, refy = run_pyrate.ref_pixel_calc(self.ifg_paths,
                                                self.params_chipsize_15)
@@ -332,7 +332,7 @@ class MatlabEqualityTestMultiprocessParallel(unittest.TestCase):
         self.assertEqual(refy, 7)
         self.assertAlmostEqual(0.5, self.params_alt_ref_frac[cf.REF_MIN_FRAC])
 
-    def test_sydney_test_data_ref_all_1(self):
+    def test_small_test_data_ref_all_1(self):
 
         refx, refy = run_pyrate.ref_pixel_calc(self.ifg_paths,
                                                self.params_all_1s)

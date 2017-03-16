@@ -212,7 +212,7 @@ class ParallelPyRateTests(unittest.TestCase):
             base_unw_paths, crop, params, xlks)
         run_prepifg.gamma_prepifg(base_unw_paths, params)
         tiles = run_pyrate.get_tiles(cls.dest_paths[0], 3, 3)
-        ifgs = common.sydney_data_setup()
+        ifgs = common.small_data_setup()
         cls.refpixel_p, cls.maxvar_p, cls.vcmt_p = \
             run_pyrate.process_ifgs(cls.dest_paths, params, 3, 3)
         cls.mst_p = common.reconstruct_mst(ifgs[0].shape, tiles, cls.tif_dir)
@@ -246,7 +246,7 @@ class ParallelPyRateTests(unittest.TestCase):
         key = 'ORBITAL_ERROR'
         value = 'REMOVED'
 
-        for i in common.sydney_data_setup(datafiles=self.dest_paths):
+        for i in common.small_data_setup(datafiles=self.dest_paths):
             self.key_check(i, key, value)
 
     def key_check(self, ifg, key, value):
@@ -260,14 +260,14 @@ class ParallelPyRateTests(unittest.TestCase):
         key = 'DATA_UNITS'
         value = 'MILLIMETRES'
 
-        for i in common.sydney_data_setup(datafiles=self.dest_paths):
+        for i in common.small_data_setup(datafiles=self.dest_paths):
             self.key_check(i, key, value)
 
     def test_mst_equal(self):
         from pyrate import mst
-        ifgs = common.sydney_data_setup(datafiles=self.dest_paths)
+        ifgs = common.small_data_setup(datafiles=self.dest_paths)
         mst_original_p = mst.mst_boolean_array(ifgs)
-        ifgs_s = common.sydney_data_setup(datafiles=self.dest_paths_s)
+        ifgs_s = common.small_data_setup(datafiles=self.dest_paths_s)
         mst_original_s = mst.mst_boolean_array(ifgs_s)
         np.testing.assert_array_equal(self.mst, mst_original_p)
         np.testing.assert_array_equal(self.mst, mst_original_s)
@@ -302,8 +302,8 @@ class TestPrePrepareIfgs(unittest.TestCase):
         tifs = glob.glob(os.path.join(cls.tmp_dir, "*.tif"))
         for t in tifs:
             os.chmod(t, 0o644)
-        sydney_ifgs = common.sydney_data_setup(datafiles=tifs)
-        ifg_paths = [i.data_path for i in sydney_ifgs]
+        small_ifgs = common.small_data_setup(datafiles=tifs)
+        ifg_paths = [i.data_path for i in small_ifgs]
 
         cls.ifg_ret = shared.pre_prepare_ifgs(ifg_paths, params=params)
         for i in cls.ifg_ret:
@@ -317,8 +317,8 @@ class TestPrePrepareIfgs(unittest.TestCase):
         tifs = glob.glob(os.path.join(cls.tmp_dir2, "*.tif"))
         for t in tifs:
             os.chmod(t, 0o644)
-        sydney_ifgs = common.sydney_data_setup(datafiles=tifs)
-        ifg_paths = [i.data_path for i in sydney_ifgs]
+        small_ifgs = common.small_data_setup(datafiles=tifs)
+        ifg_paths = [i.data_path for i in small_ifgs]
 
         cls.ifgs = [shared.Ifg(p) for p in ifg_paths]
 
@@ -337,7 +337,7 @@ class TestPrePrepareIfgs(unittest.TestCase):
         shutil.rmtree(cls.tmp_dir2)
         shutil.rmtree(cls.tmp_dir)
 
-    def test_sydney_data_prep_phase_equality(self):
+    def test_small_data_prep_phase_equality(self):
         for i, j in zip(self.ifgs, self.ifg_ret):
             np.testing.assert_array_almost_equal(i.phase_data, j.phase_data)
             self.assertFalse((i.phase_data == 0).any())
@@ -345,7 +345,7 @@ class TestPrePrepareIfgs(unittest.TestCase):
             i.phase_data[4, 2] = 0
             self.assertTrue((i.phase_data == 0).any())
 
-    def test_sydney_data_prep_metadata_equality(self):
+    def test_small_data_prep_metadata_equality(self):
         for i, j in zip(self.ifgs, self.ifg_ret):
             self.assertDictEqual(i.meta_data, j.meta_data)
 
