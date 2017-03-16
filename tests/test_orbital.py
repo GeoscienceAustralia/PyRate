@@ -42,8 +42,8 @@ from pyrate.orbital import _get_num_params, remove_orbital_error
 from pyrate.shared import Ifg
 from pyrate.shared import nanmedian
 from tests.common import TEST_CONF_FILE, IFMS16
-from tests.common import SYD_TEST_MATLAB_ORBITAL_DIR
-from tests.common import SYD_TEST_TIF, small_data_setup
+from tests.common import SML_TEST_MATLAB_ORBITAL_DIR
+from tests.common import SML_TEST_TIF, small_data_setup
 from tests.common import small_ifg_file_list
 
 #TODO: Purpose of this variable? Degrees are 1, 2 and 3 respectively
@@ -70,7 +70,7 @@ class SingleDesignMatrixTests(unittest.TestCase):
         # faked cell sizes
         self.xs = 0.75
         self.ys = 0.8
-        self.ifg = Ifg(join(SYD_TEST_TIF, 'geo_060619-061002_unw.tif'))
+        self.ifg = Ifg(join(SML_TEST_TIF, 'geo_060619-061002_unw.tif'))
         self.ifg.open()
         self.ifg.nodata_value = 0
 
@@ -554,7 +554,7 @@ class NetworkCorrectionTestsMultilooking(unittest.TestCase):
     def setUp(self):
         # fake some real ifg data by adding nans
         self.ml_ifgs = small5_mock_ifgs()
-        # 2x data of default Syd mock
+        # 2x data of default Small mock
         self.ifgs = small5_mock_ifgs(xs=6, ys=8)
 
         # use different sizes to differentiate axes results
@@ -699,7 +699,7 @@ class MatlabComparisonTestsOrbfitMethod1(unittest.TestCase):
         self.params[cf.ORBITAL_FIT_LOOKS_Y] = 2
         self.params[cf.PARALLEL] = False
 
-        data_paths = [os.path.join(SYD_TEST_TIF, p) for p in IFMS16]
+        data_paths = [os.path.join(SML_TEST_TIF, p) for p in IFMS16]
         self.ifg_paths = [os.path.join(self.BASE_DIR, os.path.basename(d))
                           for d in data_paths]
 
@@ -714,14 +714,14 @@ class MatlabComparisonTestsOrbfitMethod1(unittest.TestCase):
 
         run_pyrate.orb_fit_calc(self.ifg_paths, self.params)
 
-        onlyfiles = [f for f in os.listdir(SYD_TEST_MATLAB_ORBITAL_DIR)
-            if os.path.isfile(os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, f))
+        onlyfiles = [f for f in os.listdir(SML_TEST_MATLAB_ORBITAL_DIR)
+            if os.path.isfile(os.path.join(SML_TEST_MATLAB_ORBITAL_DIR, f))
             and f.endswith('.csv') and f.__contains__('_method1_')]
 
         count = 0
         for i, f in enumerate(onlyfiles):
             ifg_data = np.genfromtxt(os.path.join(
-                SYD_TEST_MATLAB_ORBITAL_DIR, f), delimiter=',')
+                SML_TEST_MATLAB_ORBITAL_DIR, f), delimiter=',')
             for k, j in enumerate(self.ifg_paths):
                 ifg = Ifg(j)
                 ifg.open()
@@ -765,7 +765,7 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
         self.params[cf.ORBITAL_FIT_LOOKS_X] = 1
         self.params[cf.ORBITAL_FIT_LOOKS_Y] = 1
 
-        data_paths = [os.path.join(SYD_TEST_TIF, p) for p in
+        data_paths = [os.path.join(SML_TEST_TIF, p) for p in
                       small_ifg_file_list()]
         self.new_data_paths = [os.path.join(self.BASE_DIR, os.path.basename(d))
                           for d in data_paths]
@@ -794,14 +794,14 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
     def test_orbital_correction_matlab_equality_orbfit_method_2(self):
         remove_orbital_error(self.ifgs, self.params)
 
-        onlyfiles = [f for f in os.listdir(SYD_TEST_MATLAB_ORBITAL_DIR)
-            if os.path.isfile(os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, f))
+        onlyfiles = [f for f in os.listdir(SML_TEST_MATLAB_ORBITAL_DIR)
+            if os.path.isfile(os.path.join(SML_TEST_MATLAB_ORBITAL_DIR, f))
             and f.endswith('.csv') and f.__contains__('_method2_')]
 
         count = 0
         for i, f in enumerate(onlyfiles):
             matlab_phase_data = np.genfromtxt(os.path.join(
-                SYD_TEST_MATLAB_ORBITAL_DIR, f), delimiter=',')
+                SML_TEST_MATLAB_ORBITAL_DIR, f), delimiter=',')
             for k, j in enumerate(self.ifgs):
                 if os.path.basename(j.data_path).split('_unw.')[0] == \
                         os.path.basename(f).split(
@@ -829,14 +829,14 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
 
         remove_orbital_error(self.ifgs, self.params)
 
-        onlyfiles = [f for f in os.listdir(SYD_TEST_MATLAB_ORBITAL_DIR)
-            if os.path.isfile(os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, f))
+        onlyfiles = [f for f in os.listdir(SML_TEST_MATLAB_ORBITAL_DIR)
+            if os.path.isfile(os.path.join(SML_TEST_MATLAB_ORBITAL_DIR, f))
             and f.endswith('.csv') and f.__contains__('_method2_')]
 
         count = 0
         for i, f in enumerate(onlyfiles):
             matlab_phase_data = np.genfromtxt(os.path.join(
-                SYD_TEST_MATLAB_ORBITAL_DIR, f), delimiter=',')
+                SML_TEST_MATLAB_ORBITAL_DIR, f), delimiter=',')
             for k, j in enumerate(self.ifgs):
                 if os.path.basename(j.data_path).split('_unw.')[0] == \
                         os.path.basename(f).split(

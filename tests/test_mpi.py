@@ -130,7 +130,7 @@ def modify_config(request, tempdir, get_config):
     params_dict[cf.IFG_LKSX] = request.param
     params_dict[cf.IFG_LKSY] = request.param
     params_dict[cf.OBS_DIR] = tempdir()
-    shared.copytree(common.SYD_TEST_GAMMA, params_dict[cf.OBS_DIR])
+    shared.copytree(common.SML_TEST_GAMMA, params_dict[cf.OBS_DIR])
     params_dict[cf.IFG_FILE_LIST] = os.path.join(
         params_dict[cf.OBS_DIR], 'ifms_17')
     params_dict[cf.PARALLEL] = False
@@ -151,10 +151,10 @@ def get_crop(request):
 
 
 def test_vcm_matlab_vs_mpi(mpisync, tempdir, get_config):
-    from tests.common import SYD_TEST_DIR, TEST_CONF_FILE
+    from tests.common import SML_TEST_DIR, TEST_CONF_FILE
 
     params_dict = get_config(TEST_CONF_FILE)
-    MATLAB_VCM_DIR = os.path.join(SYD_TEST_DIR, 'matlab_vcm')
+    MATLAB_VCM_DIR = os.path.join(SML_TEST_DIR, 'matlab_vcm')
     matlab_vcm = np.genfromtxt(os.path.join(MATLAB_VCM_DIR,
                                             'matlab_vcmt.csv'), delimiter=',')
     if mpiops.rank == 0:
@@ -356,9 +356,9 @@ def test_prepifg_mpi(mpisync, get_config, tempdir,
     params[cf.IFG_LKSX], params[cf.IFG_LKSY] = get_lks, get_lks
     params[cf.IFG_CROP_OPT] = get_crop
     if roipac_or_gamma == 1:
-        params[cf.IFG_FILE_LIST] = join(common.SYD_TEST_GAMMA, 'ifms_17')
-        params[cf.OBS_DIR] = common.SYD_TEST_GAMMA
-        params[cf.DEM_FILE] = common.SYD_TEST_DEM_GAMMA
+        params[cf.IFG_FILE_LIST] = join(common.SML_TEST_GAMMA, 'ifms_17')
+        params[cf.OBS_DIR] = common.SML_TEST_GAMMA
+        params[cf.DEM_FILE] = common.SML_TEST_DEM_GAMMA
     run_prepifg.main(params)
 
     if mpiops.rank == 0:
@@ -368,11 +368,11 @@ def test_prepifg_mpi(mpisync, get_config, tempdir,
         params_s[cf.IFG_LKSX], params_s[cf.IFG_LKSY] = get_lks, get_lks
         params_s[cf.IFG_CROP_OPT] = get_crop
         if roipac_or_gamma == 1:
-            base_unw_paths = glob.glob(join(common.SYD_TEST_GAMMA,
+            base_unw_paths = glob.glob(join(common.SML_TEST_GAMMA,
                                             "*_utm.unw"))
             run_prepifg.gamma_prepifg(base_unw_paths, params_s)
         else:
-            base_unw_paths = glob.glob(join(common.SYD_TEST_OBS, "*.unw"))
+            base_unw_paths = glob.glob(join(common.SML_TEST_OBS, "*.unw"))
             run_prepifg.roipac_prepifg(base_unw_paths, params_s)
 
         mpi_tifs = glob.glob(join(outdir, "*.tif"))

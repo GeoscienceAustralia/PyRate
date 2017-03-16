@@ -37,7 +37,7 @@ from pyrate.algorithm import (least_squares_covariance,
 
 from pyrate.config import parse_namelist
 from pyrate.shared import Ifg, convert_radians_to_mm
-from tests.common import small5_mock_ifgs, SYD_TEST_TIF
+from tests.common import small5_mock_ifgs, SML_TEST_TIF
 
 
 class LeastSquaresTests(TestCase):
@@ -192,8 +192,8 @@ class EpochsTests(TestCase):
                             0.8624, 0.9582, 1.0541, 1.1499, 1.2457]
 
         # test against Hua's results
-        ifms = join(SYD_TEST_TIF, "ifms_17")
-        ifgs = [Ifg(join(SYD_TEST_TIF, p)) for p in parse_namelist(ifms)]
+        ifms = join(SML_TEST_TIF, "ifms_17")
+        ifgs = [Ifg(join(SML_TEST_TIF, p)) for p in parse_namelist(ifms)]
         for i in ifgs:
             i.open()
 

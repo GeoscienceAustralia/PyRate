@@ -35,7 +35,7 @@ from pyrate import shared
 from pyrate import vcm as vcm_module
 from pyrate.linrate import linear_rate
 from pyrate.scripts import run_pyrate, run_prepifg
-from tests.common import SYD_TEST_DIR, prepare_ifgs_without_phase
+from tests.common import SML_TEST_DIR, prepare_ifgs_without_phase
 from tests.common import TEST_CONF_FILE
 
 
@@ -130,7 +130,7 @@ class MatlabEqualityTest(unittest.TestCase):
             tests.common.calculate_linear_rate(ifgs, params, vcmt,
                                                mst_mat=mst_grid)
 
-        matlab_linrate_dir = os.path.join(SYD_TEST_DIR, 'matlab_linrate')
+        matlab_linrate_dir = os.path.join(SML_TEST_DIR, 'matlab_linrate')
 
         cls.rate_matlab = np.genfromtxt(
             os.path.join(matlab_linrate_dir, 'stackmap.csv'), delimiter=',')

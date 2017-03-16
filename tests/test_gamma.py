@@ -55,7 +55,7 @@ from pyrate.scripts import run_pyrate, run_prepifg
 from pyrate.scripts.converttogtif import main as gammaMain
 from pyrate.shared import write_geotiff, GeotiffException
 from tests import common
-from tests.common import GAMMA_TEST_DIR, SYD_TEST_GAMMA
+from tests.common import GAMMA_TEST_DIR, SML_TEST_GAMMA
 from tests.common import TEST_CONF_FILE, TEMPDIR
 from tests.common import small_data_setup
 
@@ -375,15 +375,15 @@ class TestGammaLuigiEquality(unittest.TestCase):
             conf.write('{}: {}\n'.format(LUIGI, self.LUIGI))
             conf.write('{}: {}\n'.format(
                 DEM_HEADER_FILE, os.path.join(
-                    SYD_TEST_GAMMA, '20060619_utm_dem.par')))
+                    SML_TEST_GAMMA, '20060619_utm_dem.par')))
             conf.write('{}: {}\n'.format(IFG_LKSX, '1'))
             conf.write('{}: {}\n'.format(IFG_LKSY, '1'))
             conf.write('{}: {}\n'.format(IFG_CROP_OPT, '1'))
             conf.write('{}: {}\n'.format(NO_DATA_AVERAGING_THRESHOLD, '0.5'))
             conf.write('{}: {}\n'.format(SLC_DIR, ''))
-            conf.write('{}: {}\n'.format(DEM_FILE, common.SYD_TEST_DEM_GAMMA))
+            conf.write('{}: {}\n'.format(DEM_FILE, common.SML_TEST_DEM_GAMMA))
             conf.write('{}: {}\n'.format(APS_INCIDENCE_MAP,
-                                         common.SYD_TEST_INCIDENCE))
+                                         common.SML_TEST_INCIDENCE))
             conf.write('{}: {}\n'.format(APS_ELEVATION_MAP, ''))
         with open(self.ifgListFile, 'w') as ifgl:
             ifgl.write('\n'.join(data))
@@ -405,7 +405,7 @@ class TestGammaLuigiEquality(unittest.TestCase):
 
     def common_check(self, conf_file):
         data_paths = glob.glob(
-            os.path.join(SYD_TEST_GAMMA, "*_utm.unw"))
+            os.path.join(SML_TEST_GAMMA, "*_utm.unw"))
 
         self.make_input_files(data_paths)
 
@@ -481,7 +481,7 @@ class TestGammaParallelVsSerial(unittest.TestCase):
 
         cls.serial_dir = tempfile.mkdtemp()
         cls.parallel_dir = tempfile.mkdtemp()
-        unw_paths = glob.glob(os.path.join(SYD_TEST_GAMMA, "*_utm.unw"))
+        unw_paths = glob.glob(os.path.join(SML_TEST_GAMMA, "*_utm.unw"))
 
         # read in the params
         _, _, params = cf.get_ifg_paths(TEST_CONF_FILE)

@@ -56,8 +56,8 @@ from pyrate.scripts.converttogtif import main as roipacMain
 from pyrate.shared import GeotiffException
 from pyrate.shared import write_geotiff
 from tests.common import HEADERS_TEST_DIR, PREP_TEST_OBS, PREP_TEST_TIF
-from tests.common import SYD_TEST_DEM_DIR, SYD_TEST_OBS, TEMPDIR
-from tests.common import SYD_TEST_DEM_ROIPAC, SYD_TEST_DEM_HDR
+from tests.common import SML_TEST_DEM_DIR, SML_TEST_OBS, TEMPDIR
+from tests.common import SML_TEST_DEM_ROIPAC, SML_TEST_DEM_HDR
 from tests.common import small_data_roipac_unws
 from tests.common import small_data_setup
 from tests.common import small_ifg_file_list
@@ -70,7 +70,7 @@ if not exists(HEADERS_TEST_DIR):
     sys.exit("ERROR: Missing the 'headers' data for unittests\n")
 
 # constants
-SHORT_HEADER_PATH = join(SYD_TEST_OBS, 'geo_060619-061002.unw.rsc')
+SHORT_HEADER_PATH = join(SML_TEST_OBS, 'geo_060619-061002.unw.rsc')
 FULL_HEADER_PATH = join(HEADERS_TEST_DIR, "geo_060619-060828.unw.rsc")
 
 
@@ -107,14 +107,14 @@ class RoipacCommandLine(unittest.TestCase):
     def test_cmd_ifg(self):
         base_paths = ['geo_070709-070813.unw', 'geo_060619-061002.unw']
         base_exp = ['geo_070709-070813_unw.tif', 'geo_060619-061002_unw.tif']
-        self.dataPaths = [join(SYD_TEST_OBS, i) for i in base_paths]
+        self.dataPaths = [join(SML_TEST_OBS, i) for i in base_paths]
         self.expPaths = [join(self.base_dir, i) for i in base_exp]
         self.common_check()
 
     def test_cmd_dem(self):
         self.expPaths = [os.path.join(self.base_dir, 
                                       'roipac_test_trimmed_dem.tif')]
-        self.dataPaths = [SYD_TEST_DEM_ROIPAC]
+        self.dataPaths = [SML_TEST_DEM_ROIPAC]
         self.common_check()
 
     def common_check(self):
@@ -139,11 +139,11 @@ class RoipacToGeoTiffTests(unittest.TestCase):
             os.remove(self.dest)
 
     def test_to_geotiff_dem(self):
-        hdr = roipac.parse_header(SYD_TEST_DEM_HDR)        
+        hdr = roipac.parse_header(SML_TEST_DEM_HDR)        
         self.dest = os.path.join(TEMPDIR, "tmp_roipac_dem.tif")
 
-        write_geotiff(hdr, SYD_TEST_DEM_ROIPAC, self.dest, nodata=0)
-        exp_path = join(SYD_TEST_DEM_DIR, 'roipac_test_trimmed.tif')
+        write_geotiff(hdr, SML_TEST_DEM_ROIPAC, self.dest, nodata=0)
+        exp_path = join(SML_TEST_DEM_DIR, 'roipac_test_trimmed.tif')
         exp_ds = gdal.Open(exp_path)
         ds = gdal.Open(self.dest)
 
@@ -329,12 +329,12 @@ class TestRoipacLuigiEquality(unittest.TestCase):
             conf.write('{}: {}\n'.format(PROCESSOR, '0'))
             conf.write('{}: {}\n'.format(LUIGI, self.luigi))
             conf.write('{}: {}\n'.format(ROIPAC_RESOURCE_HEADER,
-                                         SYD_TEST_DEM_HDR))
+                                         SML_TEST_DEM_HDR))
             conf.write('{}: {}\n'.format(IFG_LKSX, '1'))
             conf.write('{}: {}\n'.format(IFG_LKSY, '1'))
             conf.write('{}: {}\n'.format(IFG_CROP_OPT, '1'))
             conf.write('{}: {}\n'.format(NO_DATA_AVERAGING_THRESHOLD, '0.5'))
-            conf.write('{}: {}\n'.format(DEM_FILE, SYD_TEST_DEM_ROIPAC))
+            conf.write('{}: {}\n'.format(DEM_FILE, SML_TEST_DEM_ROIPAC))
             conf.write('{}: {}\n'.format(APS_INCIDENCE_MAP, ''))
             conf.write('{}: {}\n'.format(APS_ELEVATION_MAP, ''))
         with open(self.ifgListFile, 'w') as ifgl:

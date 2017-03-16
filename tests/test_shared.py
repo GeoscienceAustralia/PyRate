@@ -32,7 +32,7 @@ from numpy.testing import assert_array_equal
 from osgeo import gdal
 from osgeo.gdal import Open, Dataset, UseExceptions
 
-from tests.common import SYD_TEST_TIF, SYD_TEST_DEM_TIF, TEMPDIR
+from tests.common import SML_TEST_TIF, SML_TEST_DEM_TIF, TEMPDIR
 from pyrate import config as cf
 from pyrate import gamma
 from pyrate import ifgconstants as ifc
@@ -46,7 +46,7 @@ from tests import common
 
 UseExceptions()
 
-if not exists(SYD_TEST_TIF):
+if not exists(SML_TEST_TIF):
     sys.exit("ERROR: Missing small_test data for unit tests\n")
 
 
@@ -54,7 +54,7 @@ class IfgTests(unittest.TestCase):
     """Unit tests for the Ifg/interferogram class."""
 
     def setUp(self):
-        self.ifg = Ifg(join(SYD_TEST_TIF, 'geo_060619-061002_unw.tif'))
+        self.ifg = Ifg(join(SML_TEST_TIF, 'geo_060619-061002_unw.tif'))
         self.ifg.open()
         self.ifg.nodata_value = 0
 
@@ -124,9 +124,9 @@ class IfgTests(unittest.TestCase):
         self.assertTrue(self.ifg.y_size > 88.0)
         self.assertTrue(self.ifg.y_size < 92.0, 'Got %s' % self.ifg.y_size)
 
-        syd_width = 76.9 # from nearby pirate coords
-        self.assertTrue(self.ifg.x_size > 0.97 * syd_width)  # ~3% tolerance
-        self.assertTrue(self.ifg.x_size < 1.03 * syd_width)
+        width = 76.9 # from nearby pirate coords
+        self.assertTrue(self.ifg.x_size > 0.97 * width)  # ~3% tolerance
+        self.assertTrue(self.ifg.x_size < 1.03 * width)
 
     def test_centre_latlong(self):
         lat_exp = self.ifg.y_first + \
@@ -150,7 +150,7 @@ class IfgTests(unittest.TestCase):
 class IfgIOTests(unittest.TestCase):
 
     def setUp(self):
-        self.ifg = Ifg(join(SYD_TEST_TIF, 'geo_070709-070813_unw.tif'))
+        self.ifg = Ifg(join(SML_TEST_TIF, 'geo_070709-070813_unw.tif'))
 
     def test_open(self):
         self.assertTrue(self.ifg.dataset is None)
@@ -294,7 +294,7 @@ class DEMTests(unittest.TestCase):
     'Unit tests to verify operations on GeoTIFF format DEMs'
 
     def setUp(self):
-        self.ras = DEM(SYD_TEST_DEM_TIF)
+        self.ras = DEM(SML_TEST_DEM_TIF)
 
     def test_create_raster(self):
         # validate header path
@@ -309,7 +309,7 @@ class DEMTests(unittest.TestCase):
             self.assertTrue(getattr(self.ras, a) is not None)
 
     def test_is_dem(self):
-        self.ras = DEM(join(SYD_TEST_TIF, 'geo_060619-061002_unw.tif'))
+        self.ras = DEM(join(SML_TEST_TIF, 'geo_060619-061002_unw.tif'))
         self.assertFalse(hasattr(self.ras, 'datum'))
 
     def test_open(self):
@@ -343,9 +343,9 @@ class WriteUnwTest(unittest.TestCase):
 
         # change the required params
         cls.params = cf.get_config_params(cls.test_conf)
-        cls.params[cf.OBS_DIR] = common.SYD_TEST_GAMMA
+        cls.params[cf.OBS_DIR] = common.SML_TEST_GAMMA
         cls.params[cf.PROCESSOR] = 1  # gamma
-        file_list = list(cf.parse_namelist(os.path.join(common.SYD_TEST_GAMMA,
+        file_list = list(cf.parse_namelist(os.path.join(common.SML_TEST_GAMMA,
                                                         'ifms_17')))
         fd, cls.params[cf.IFG_FILE_LIST] = tempfile.mkstemp(suffix='.conf',
                                                             dir=cls.tif_dir)
@@ -353,15 +353,15 @@ class WriteUnwTest(unittest.TestCase):
         # write a short filelist with only 3 gamma unws
         with open(cls.params[cf.IFG_FILE_LIST], 'w') as fp:
             for f in file_list[:3]:
-                fp.write(os.path.join(common.SYD_TEST_GAMMA, f) + '\n')
+                fp.write(os.path.join(common.SML_TEST_GAMMA, f) + '\n')
         cls.params[cf.OUT_DIR] = cls.tif_dir
         cls.params[cf.PARALLEL] = 0
         cls.params[cf.REF_EST_METHOD] = 1
-        cls.params[cf.DEM_FILE] = common.SYD_TEST_DEM_GAMMA
+        cls.params[cf.DEM_FILE] = common.SML_TEST_DEM_GAMMA
         # base_unw_paths need to be geotiffed and multilooked by run_prepifg
         cls.base_unw_paths = cf.original_ifg_paths(
             cls.params[cf.IFG_FILE_LIST])
-        cls.base_unw_paths.append(common.SYD_TEST_DEM_GAMMA)
+        cls.base_unw_paths.append(common.SML_TEST_DEM_GAMMA)
 
         xlks, ylks, crop = cf.transform_params(cls.params)
 
@@ -385,11 +385,11 @@ class WriteUnwTest(unittest.TestCase):
         temp_tif = tempfile.mktemp(suffix='.tif')
 
         # setup some header files for use in write_geotif
-        dem_header_file = common.SYD_TEST_DEM_HDR_GAMMA
+        dem_header_file = common.SML_TEST_DEM_HDR_GAMMA
         dem_header = gamma.parse_dem_header(dem_header_file)
 
         header = gamma.parse_epoch_header(
-            os.path.join(common.SYD_TEST_GAMMA, '20060828_slc.par'))
+            os.path.join(common.SML_TEST_GAMMA, '20060828_slc.par'))
         header.update(dem_header)
 
         # insert some dummy data so we are the dem in write_geotiff is not

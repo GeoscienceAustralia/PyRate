@@ -145,7 +145,7 @@ class MSTKruskalCalcConnectAndNTrees(unittest.TestCase):
             calculate_connect_and_ntrees(connect_start, [])
 
 
-class MSTKruskalConnectAndTresSydneyData(unittest.TestCase):
+class MSTKruskalConnectAndTreesSmallData(unittest.TestCase):
 
     def test_calculate_connect_and_ntrees_small_data(self):
         ifg_instance = IfgList(small_ifg_file_list())
@@ -267,13 +267,13 @@ class MatlabMSTTests(unittest.TestCase):
         mst_mat = matlab_mst(ifg_list, p_threshold=1)
 
         # path to csv folders from matlab output
-        from tests.common import SYD_TEST_MATLAB_MST_DIR
+        from tests.common import SML_TEST_MATLAB_MST_DIR
 
-        onlyfiles = [f for f in os.listdir(SYD_TEST_MATLAB_MST_DIR)
-                if os.path.isfile(os.path.join(SYD_TEST_MATLAB_MST_DIR, f))]
+        onlyfiles = [f for f in os.listdir(SML_TEST_MATLAB_MST_DIR)
+                if os.path.isfile(os.path.join(SML_TEST_MATLAB_MST_DIR, f))]
 
         for i, f in enumerate(onlyfiles):
-            mst_f = np.genfromtxt(os.path.join(SYD_TEST_MATLAB_MST_DIR, f),
+            mst_f = np.genfromtxt(os.path.join(SML_TEST_MATLAB_MST_DIR, f),
                                   delimiter=',')
             for k, j in enumerate(self.ifg_file_list):
                 if f.split('matlab_')[-1].split('.')[0] == \
@@ -289,13 +289,13 @@ class MatlabMSTTests(unittest.TestCase):
         mst_mat = matlab_mst_bool(ifg_list, p_threshold=1)
 
         # path to csv folders from matlab output
-        from tests.common import SYD_TEST_MATLAB_MST_DIR
+        from tests.common import SML_TEST_MATLAB_MST_DIR
 
-        onlyfiles = [f for f in os.listdir(SYD_TEST_MATLAB_MST_DIR)
-                if os.path.isfile(os.path.join(SYD_TEST_MATLAB_MST_DIR, f))]
+        onlyfiles = [f for f in os.listdir(SML_TEST_MATLAB_MST_DIR)
+                if os.path.isfile(os.path.join(SML_TEST_MATLAB_MST_DIR, f))]
 
         for i, f in enumerate(onlyfiles):
-            mst_f = np.genfromtxt(os.path.join(SYD_TEST_MATLAB_MST_DIR, f),
+            mst_f = np.genfromtxt(os.path.join(SML_TEST_MATLAB_MST_DIR, f),
                                   delimiter=',')
             for k, j in enumerate(self.ifg_file_list):
                 if f.split('matlab_')[-1].split('.')[0] == \

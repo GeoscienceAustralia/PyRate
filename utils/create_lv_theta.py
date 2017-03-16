@@ -28,23 +28,23 @@ from pyrate import ifgconstants as ifc
 from pyrate import shared
 from tests import common
 
-elevation_file = os.path.join(common.SYD_TEST_GAMMA,
-                              os.path.splitext(common.SYD_TEST_DEM_GAMMA)[0]
+elevation_file = os.path.join(common.SML_TEST_GAMMA,
+                              os.path.splitext(common.SML_TEST_DEM_GAMMA)[0]
                               + '.lv_theta')
 
-inc_file = os.path.join(common.SYD_TEST_GAMMA,
-                        os.path.splitext(common.SYD_TEST_DEM_GAMMA)[0]
+inc_file = os.path.join(common.SML_TEST_GAMMA,
+                        os.path.splitext(common.SML_TEST_DEM_GAMMA)[0]
                         + '.inc')
 
 dest_lv_theta = os.path.splitext(elevation_file)[0] + '_lv_theta.tif'
 dest_inc = os.path.splitext(elevation_file)[0] + '_inc.tif'
 
-dem_header_file = common.SYD_TEST_DEM_HDR_GAMMA
+dem_header_file = common.SML_TEST_DEM_HDR_GAMMA
 
 dem_header = gamma.parse_dem_header(dem_header_file)
 
 header = gamma.parse_epoch_header(
-    os.path.join(common.SYD_TEST_GAMMA, '20060828_slc.par'))
+    os.path.join(common.SML_TEST_GAMMA, '20060828_slc.par'))
 
 
 incidence_angle = header[ifc.PYRATE_INCIDENCE_DEGREES]

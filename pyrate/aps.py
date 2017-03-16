@@ -174,11 +174,11 @@ def rdr_correction(date_pair):
     raise NotImplementedError("This has not been implemented yet for PyRate")
     # aps1 = pa.PyAPS_rdr(
     #     os.path.join(ECMWF_DIR, ECMWF_PRE + date_pair[0] + ECMWF_EXT),
-    #     SYD_TEST_DEM_ROIPAC, grib='ECMWF', verb=True,
+    #     SML_TEST_DEM_ROIPAC, grib='ECMWF', verb=True,
     #     demfmt='HGT', demtype=np.int16)
     # aps2 = pa.PyAPS_rdr(
     #     os.path.join(ECMWF_DIR, ECMWF_PRE + date_pair[1] + ECMWF_EXT),
-    #     SYD_TEST_DEM_ROIPAC, grib='ECMWF', verb=True,
+    #     SML_TEST_DEM_ROIPAC, grib='ECMWF', verb=True,
     #     demfmt='HGT', demtype=np.int16)
     # phs1 = np.zeros((aps1.ny, aps1.nx))
     # phs2 = np.zeros((aps2.ny, aps2.nx))

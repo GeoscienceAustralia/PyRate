@@ -67,7 +67,7 @@ def test_warp_required():
 
 
 def test_original_ifg_paths():
-    ifgdir = common.SYD_TEST_TIF
+    ifgdir = common.SML_TEST_TIF
     ifglist_path = join(ifgdir, 'ifms_17')
     paths = cf.original_ifg_paths(ifglist_path)
     assert paths[0] == join(ifgdir, 'geo_060619-061002_unw.tif'), str(paths[0])
@@ -119,13 +119,13 @@ class PyRateTests(unittest.TestCase):
         try:
             # copy source data (treat as prepifg already run)
             os.makedirs(cls.BASE_OUT_DIR)
-            for path in glob.glob(join(common.SYD_TEST_TIF, '*')):
+            for path in glob.glob(join(common.SML_TEST_TIF, '*')):
                 dest = join(cls.BASE_OUT_DIR, os.path.basename(path))
                 shutil.copy(path, dest)
                 os.chmod(dest, 0o660)
 
             os.makedirs(cls.BASE_DEM_DIR)
-            orig_dem = common.SYD_TEST_DEM_TIF
+            orig_dem = common.SML_TEST_DEM_TIF
             os.symlink(orig_dem, cls.BASE_DEM_FILE)
             os.chdir(cls.BASE_DIR)
 
@@ -194,10 +194,10 @@ class ParallelPyRateTests(unittest.TestCase):
 
         # change the required params
         params = cf.get_config_params(cls.test_conf)
-        params[cf.OBS_DIR] = common.SYD_TEST_GAMMA
+        params[cf.OBS_DIR] = common.SML_TEST_GAMMA
         params[cf.PROCESSOR] = 1  # gamma
         params[cf.IFG_FILE_LIST] = os.path.join(
-            common.SYD_TEST_GAMMA, 'ifms_17')
+            common.SML_TEST_GAMMA, 'ifms_17')
         params[cf.OUT_DIR] = cls.tif_dir
         params[cf.PARALLEL] = 0
         params[cf.APS_CORRECTION] = False
@@ -298,7 +298,7 @@ class TestPrePrepareIfgs(unittest.TestCase):
     def setUpClass(cls):
         params = config.get_config_params(common.TEST_CONF_FILE)
         cls.tmp_dir = tempfile.mkdtemp()
-        shared.copytree(common.SYD_TEST_TIF, cls.tmp_dir)
+        shared.copytree(common.SML_TEST_TIF, cls.tmp_dir)
         tifs = glob.glob(os.path.join(cls.tmp_dir, "*.tif"))
         for t in tifs:
             os.chmod(t, 0o644)
@@ -313,7 +313,7 @@ class TestPrePrepareIfgs(unittest.TestCase):
 
         # prepare a second set
         cls.tmp_dir2 = tempfile.mkdtemp()
-        shared.copytree(common.SYD_TEST_TIF, cls.tmp_dir2)
+        shared.copytree(common.SML_TEST_TIF, cls.tmp_dir2)
         tifs = glob.glob(os.path.join(cls.tmp_dir2, "*.tif"))
         for t in tifs:
             os.chmod(t, 0o644)

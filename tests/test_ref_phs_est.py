@@ -82,7 +82,7 @@ class RefPhsTests(unittest.TestCase):
         self.params[cf.REF_EST_METHOD] = 1
         self.params[cf.PARALLEL] = False
         self.refpx, self.refpy = 38, 58
-        shared.copytree(common.SYD_TEST_TIF, self.tmp_dir)
+        shared.copytree(common.SML_TEST_TIF, self.tmp_dir)
         small_tifs = glob.glob(os.path.join(self.tmp_dir, "*.tif"))
         for s in small_tifs:
             os.chmod(s, 0o644)
@@ -168,7 +168,7 @@ class RefPhsEstimationMatlabTestMethod1Serial(unittest.TestCase):
                                              decimal=3)
 
     def test_ifgs_after_ref_phs_est(self):
-        MATLAB_REF_PHASE_DIR = os.path.join(common.SYD_TEST_DIR,
+        MATLAB_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR,
                                                      'matlab_ref_phase_est')
 
         onlyfiles = [f for f in os.listdir(MATLAB_REF_PHASE_DIR)
@@ -255,7 +255,7 @@ class RefPhsEstimationMatlabTestMethod1Parallel(unittest.TestCase):
                                              decimal=3)
 
     def test_ifgs_after_ref_phs_est(self):
-        MATLAB_REF_PHASE_DIR = os.path.join(common.SYD_TEST_DIR,
+        MATLAB_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR,
                                                      'matlab_ref_phase_est')
 
         onlyfiles = [f for f in os.listdir(MATLAB_REF_PHASE_DIR)
@@ -340,7 +340,7 @@ class RefPhsEstimationMatlabTestMethod2Serial(unittest.TestCase):
         shutil.rmtree(cls.temp_out_dir)
 
     def test_ifgs_after_ref_phs_est(self):
-        MATLAB_REF_PHASE_DIR = os.path.join(common.SYD_TEST_DIR,
+        MATLAB_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR,
                                                      'matlab_ref_phase_est')
 
         onlyfiles = [f for f in os.listdir(MATLAB_REF_PHASE_DIR)
@@ -428,7 +428,7 @@ class RefPhsEstimationMatlabTestMethod2Parallel(unittest.TestCase):
         shutil.rmtree(cls.temp_out_dir)
 
     def test_ifgs_after_ref_phs_est(self):
-        MATLAB_REF_PHASE_DIR = os.path.join(common.SYD_TEST_DIR,
+        MATLAB_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR,
                                             'matlab_ref_phase_est')
 
         onlyfiles = [f for f in os.listdir(MATLAB_REF_PHASE_DIR)

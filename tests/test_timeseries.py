@@ -175,17 +175,17 @@ class MatlabTimeSeriesEquality(unittest.TestCase):
             common.calculate_time_series(ifgs, params, vcmt, mst=mst_grid)
 
         # load the matlab data
-        syd_ts_dir = os.path.join(common.SYD_TEST_DIR, 'matlab_time_series')
-        tsincr_path = os.path.join(syd_ts_dir,
+        ts_dir = os.path.join(common.SML_TEST_DIR, 'matlab_time_series')
+        tsincr_path = os.path.join(ts_dir,
                                    'ts_incr_interp0_method1.csv')
         ts_incr = np.genfromtxt(tsincr_path)
 
         # the matlab tsvel return is a bit pointless and not tested here
         # tserror is not returned
-        # tserr_path = os.path.join(SYD_TIME_SERIES_DIR,
+        # tserr_path = os.path.join(SML_TIME_SERIES_DIR,
         # 'ts_error_interp0_method1.csv')
         # ts_err = np.genfromtxt(tserr_path, delimiter=',')
-        tscum_path = os.path.join(syd_ts_dir,
+        tscum_path = os.path.join(ts_dir,
                                   'ts_cum_interp0_method1.csv')
         ts_cum = np.genfromtxt(tscum_path)
         cls.ts_incr = np.reshape(ts_incr,
@@ -291,18 +291,18 @@ class MatlabTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
             common.calculate_time_series(ifgs, params, vcmt, mst=mst_grid)
 
         # copy matlab data
-        SYD_TIME_SERIES_DIR = os.path.join(common.SYD_TEST_DIR,
+        SML_TIME_SERIES_DIR = os.path.join(common.SML_TEST_DIR,
                                    'matlab_time_series')
-        tsincr_path = os.path.join(SYD_TIME_SERIES_DIR,
+        tsincr_path = os.path.join(SML_TIME_SERIES_DIR,
                                    'ts_incr_interp0_method2.csv')
         ts_incr = np.genfromtxt(tsincr_path)
 
         # the matlab tsvel return is a bit pointless and not tested here
         # tserror is not returned
-        # tserr_path = os.path.join(SYD_TIME_SERIES_DIR,
+        # tserr_path = os.path.join(SML_TIME_SERIES_DIR,
         # 'ts_error_interp0_method1.csv')
         # ts_err = np.genfromtxt(tserr_path, delimiter=',')
-        tscum_path = os.path.join(SYD_TIME_SERIES_DIR,
+        tscum_path = os.path.join(SML_TIME_SERIES_DIR,
                                   'ts_cum_interp0_method2.csv')
         ts_cum = np.genfromtxt(tscum_path)
 

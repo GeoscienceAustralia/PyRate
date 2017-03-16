@@ -210,8 +210,8 @@ class MatlabEqualityTest(unittest.TestCase):
                                              decimal=3)
 
     def test_matlab_vcmt_equality_small_test_files(self):
-        from tests.common import SYD_TEST_DIR
-        MATLAB_VCM_DIR = os.path.join(SYD_TEST_DIR, 'matlab_vcm')
+        from tests.common import SML_TEST_DIR
+        MATLAB_VCM_DIR = os.path.join(SML_TEST_DIR, 'matlab_vcm')
         matlab_vcm = np.genfromtxt(os.path.join(MATLAB_VCM_DIR,
                                    'matlab_vcmt.csv'), delimiter=',')
         np.testing.assert_array_almost_equal(matlab_vcm, self.vcmt, decimal=3)
