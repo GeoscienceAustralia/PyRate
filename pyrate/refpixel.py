@@ -109,9 +109,9 @@ def ref_pixel_setup(ifgs_or_paths, params):
         head = ifgs_or_paths[0]
 
     # sanity check inputs
-    validate_chipsize(chipsize, head)
-    validate_minimum_fraction(min_frac)
-    validate_search_win(refnx, refny, chipsize, head)
+    _validate_chipsize(chipsize, head)
+    _validate_minimum_fraction(min_frac)
+    _validate_search_win(refnx, refny, chipsize, head)
     # pre-calculate useful amounts
     half_patch_size = chipsize // 2
     chipsize = half_patch_size * 2 + 1
@@ -149,7 +149,7 @@ def ref_pixel_multi(g, half_patch_size, phase_data_or_ifg_paths,
         # this consumes a lot less memory
         # one ifg.phase_data in memory at any time
         data = []
-        output_dir = params[cf.OUT_DIR]
+        output_dir = params[cf.TMPDIR]
         for p in phase_data_or_ifg_paths:
             data_file = os.path.join(output_dir,
                                      'ref_phase_data_{b}_{y}_{x}.npy'.format(
@@ -190,7 +190,7 @@ def step(dim, ref, radius):
     return range(radius, dim-radius, step_size)
 
 
-def validate_chipsize(chipsize, head):
+def _validate_chipsize(chipsize, head):
     """sanity check min chipsize"""
     if chipsize is None:
         raise cf.ConfigException('Chipsize is None')
@@ -201,7 +201,7 @@ def validate_chipsize(chipsize, head):
     log.info('Chipsize validation successful')
 
 
-def validate_minimum_fraction(min_frac):
+def _validate_minimum_fraction(min_frac):
     """sanity check min fraction"""
     if min_frac is None:
         raise cf.ConfigException('Minimum fraction is None')
@@ -210,7 +210,7 @@ def validate_minimum_fraction(min_frac):
         raise ValueError("Minimum fraction setting must be >= 0.0 and <= 1.0 ")
 
 
-def validate_search_win(refnx, refny, chipsize, head):
+def _validate_search_win(refnx, refny, chipsize, head):
     """sanity check X|Y steps"""
     if refnx is None:
         raise cf.ConfigException('refnx is None')

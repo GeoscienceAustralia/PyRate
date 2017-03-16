@@ -82,16 +82,6 @@ def parse_header(path):
     return dict((i[0][:-1], i[1:]) for i in raw_segs)
 
 
-def parse_header_new(path):
-    """Parses all GAMMA epoch/DEM header file fields into a dictionary"""
-    with open(path) as f:
-        text = f.read().splitlines()
-        raw_segs = [line.split() for line in text]
-
-    # convert the content into a giant dict of all key, values
-    return dict((i[0], i[1]) for i in raw_segs)
-
-
 def parse_epoch_header(path):
     """Returns dict of the minimum required epoch metadata needed for PyRate"""
     lookup = parse_header(path)
@@ -99,13 +89,13 @@ def parse_epoch_header(path):
 
     # handle conversion of radar frequency to wavelength
     freq, unit = lookup[GAMMA_FREQUENCY]
-    if unit != "Hz":
+    if unit != "Hz":  # pragma: no cover
         msg = 'Unrecognised unit field for radar_frequency: %s'
         raise GammaException(msg % unit)
     subset[ifc.PYRATE_WAVELENGTH_METRES] = frequency_to_wavelength(float(freq))
 
     incidence, unit = lookup[GAMMA_INCIDENCE]
-    if unit != "degrees":
+    if unit != "degrees":  # pragma: no cover
         msg = 'Unrecognised unit field for incidence_angle: %s'
         raise GammaException(msg % unit)
     subset[ifc.PYRATE_INCIDENCE_DEGREES] = float(incidence)
@@ -116,14 +106,14 @@ def parse_epoch_header(path):
 def parse_date_time(lookup):
     """Grab date and time information and convert to datetime objects"""
     subset = {}
-    if len(lookup[GAMMA_DATE]) == 3:
+    if len(lookup[GAMMA_DATE]) == 3:  # pragma: no cover
         year, month, day, = [int(float(i)) for i in lookup[GAMMA_DATE][:3]]
         # Occasionally GAMMA header has no time information - default to midnight
         hour, mins, sec = 0, 0, 0
     elif len(lookup[GAMMA_DATE]) == 6:
         year, month, day, hour, mins, sec = [int(float(i))
                                              for i in lookup[GAMMA_DATE][:6]]
-    else:
+    else:  # pragma: no cover
         msg = "Date and time information not complete in GAMMA headers"
         raise GammaException(msg)
 
@@ -144,7 +134,7 @@ def parse_dem_header(path):
     expected = ['decimal', 'degrees']
     for k in [GAMMA_CORNER_LAT, GAMMA_CORNER_LONG, GAMMA_X_STEP, GAMMA_Y_STEP]:
         units = lookup[GAMMA_CORNER_LAT][1:]
-        if units != expected:
+        if units != expected:  # pragma: no cover
             msg = "Unrecognised units for GAMMA %s field\n. Got %s, expected %s"
             raise GammaException(msg % (k, units, expected))
 

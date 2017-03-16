@@ -94,6 +94,9 @@ def orbital_correction(ifgs_or_ifg_paths, params, mlooked=None, offset=True,
         msg = "Invalid degree of %s for orbital correction" % degree
         raise OrbitalError(msg)
 
+    log.info('Removing orbital error using orbital method correction {}'
+             ' and degree={}'.format(method, degree))
+
     if method == NETWORK_METHOD:
         if mlooked is None:
             network_correction(ifgs_or_ifg_paths, degree, offset, params,

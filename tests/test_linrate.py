@@ -90,6 +90,8 @@ class MatlabEqualityTest(unittest.TestCase):
         sys.argv = ['run_prepifg.py',
                     os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf')]
         params[cf.OUT_DIR] = cls.temp_out_dir
+        params[cf.TMPDIR] = os.path.join(params[cf.OUT_DIR], cf.TMPDIR)
+        shared.mkdir_p(params[cf.TMPDIR])
         run_prepifg.main(params)
 
         params[cf.REF_EST_METHOD] = 2

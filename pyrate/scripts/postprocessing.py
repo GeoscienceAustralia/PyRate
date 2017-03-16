@@ -57,7 +57,7 @@ def postprocess_linrate(rows, cols, params):
     dest_tifs = cf.get_dest_paths(base_unw_paths, crop, params, xlks)
 
     # load previously saved prepread_ifgs dict
-    preread_ifgs_file = join(params[cf.OUT_DIR], 'preread_ifgs.pk')
+    preread_ifgs_file = join(params[cf.TMPDIR], 'preread_ifgs.pk')
     ifgs = cp.load(open(preread_ifgs_file, 'rb'))
     tiles = run_pyrate.get_tiles(dest_tifs[0], rows, cols)
 
@@ -89,7 +89,7 @@ def save_linrate(ifgs_dict, params, tiles, out_type):
 
     rate = np.zeros(shape=ifgs[0].shape, dtype=np.float32)
     for t in tiles:
-        rate_file = os.path.join(params[cf.OUT_DIR], out_type +
+        rate_file = os.path.join(params[cf.TMPDIR], out_type +
                                  '_{}.npy'.format(t.index))
         rate_tile = np.load(file=rate_file)
         rate[t.top_left_y:t.bottom_right_y,
@@ -106,7 +106,7 @@ def postprocess_timeseries(rows, cols, params):
     xlks, _, crop = cf.transform_params(params)
     base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST])
     dest_tifs = cf.get_dest_paths(base_unw_paths, crop, params, xlks)
-    output_dir = params[cf.OUT_DIR]
+    output_dir = params[cf.TMPDIR]
 
     # load previously saved prepread_ifgs dict
     preread_ifgs_file = join(output_dir, 'preread_ifgs.pk')

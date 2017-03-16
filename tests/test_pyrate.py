@@ -208,6 +208,7 @@ class ParallelPyRateTests(unittest.TestCase):
         params[cf.OUT_DIR] = cls.tif_dir
         params[cf.PARALLEL] = 0
         params[cf.APS_CORRECTION] = False
+        params[cf.TMPDIR] = os.path.join(params[cf.OUT_DIR], cf.TMPDIR)
 
         xlks, ylks, crop = cf.transform_params(params)
 
@@ -222,9 +223,11 @@ class ParallelPyRateTests(unittest.TestCase):
         ifgs = common.sydney_data_setup()
         cls.refpixel_p, cls.maxvar_p, cls.vcmt_p = \
             run_pyrate.process_ifgs(cls.dest_paths, params, 3, 3)
-        cls.mst_p = common.reconstruct_mst(ifgs[0].shape, tiles, cls.tif_dir)
+        cls.mst_p = common.reconstruct_mst(ifgs[0].shape, tiles,
+                                           params[cf.TMPDIR])
         cls.rate_p, cls.error_p, cls.samples_p = [
-            common.reconstruct_linrate(ifgs[0].shape, tiles, cls.tif_dir, t)
+            common.reconstruct_linrate(
+                ifgs[0].shape, tiles, params[cf.TMPDIR], t)
             for t in rate_types
             ]
 
@@ -232,15 +235,18 @@ class ParallelPyRateTests(unittest.TestCase):
         cls.tif_dir_s = tempfile.mkdtemp()
         params[cf.PARALLEL] = 0
         params[cf.OUT_DIR] = cls.tif_dir_s
+        params[cf.TMPDIR] = os.path.join(params[cf.OUT_DIR], cf.TMPDIR)
         cls.dest_paths_s = cf.get_dest_paths(
             base_unw_paths, crop, params, xlks)
         run_prepifg.gamma_prepifg(base_unw_paths, params)
         cls.refpixel, cls.maxvar, cls.vcmt = \
             run_pyrate.process_ifgs(cls.dest_paths_s, params, 3, 3)
 
-        cls.mst = common.reconstruct_mst(ifgs[0].shape, tiles, cls.tif_dir_s)
+        cls.mst = common.reconstruct_mst(ifgs[0].shape, tiles,
+                                         params[cf.TMPDIR])
         cls.rate, cls.error, cls.samples = [
-            common.reconstruct_linrate(ifgs[0].shape, tiles, cls.tif_dir_s, t)
+            common.reconstruct_linrate(
+                ifgs[0].shape, tiles, params[cf.TMPDIR], t)
             for t in rate_types
             ]
 
