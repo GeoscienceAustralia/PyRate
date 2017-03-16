@@ -916,7 +916,8 @@ def cell_size(lat, lon, x_step, y_step):
     # pylint: disable=invalid-name
     """
     Collection of geodesy/pyproj algorithms for PyRate.
-    This function depends on PyProj/PROJ4 to replace llh2local.m in MATLAB Pirate.
+    This function depends on PyProj/PROJ4 to implement the function
+    llh2local.m used in Matlab Pirate.
     Converts X|Y_STEP in degrees to X & Y cell length/width in metres.
     lat: latitude in degrees
     lon: longitude in degrees

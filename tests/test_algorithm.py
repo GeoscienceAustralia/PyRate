@@ -191,7 +191,6 @@ class EpochsTests(TestCase):
         exp_spans = [0, 0.1916, 0.2875, 0.3833, 0.4791, 0.5749, 0.6708, 0.7666,
                             0.8624, 0.9582, 1.0541, 1.1499, 1.2457]
 
-        # test against Hua's results
         ifms = join(SML_TEST_TIF, "ifms_17")
         ifgs = [Ifg(join(SML_TEST_TIF, p)) for p in parse_namelist(ifms)]
         for i in ifgs:

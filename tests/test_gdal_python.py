@@ -31,7 +31,7 @@ from numpy import where, nan
 import numpy as np
 from osgeo import gdal, gdalconst
 
-from pyrate import gdal_python as gdalwarp, config
+from pyrate import gdal_python as gdalwarp
 from pyrate.shared import Ifg
 from pyrate import config as cf
 from tests import common
@@ -483,8 +483,8 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
                     data, averaged_and_resapled, decimal=4)
 
                 # make sure they are the same after they are opened again
-                # Last [yres:nrows, xres:ncols] won't match due to pirate
-                # dropping last few rows/colums depending on resolution/looks
+                # Last [yres:nrows, xres:ncols] won't match due to Pirate
+                # dropping last few rows/columns depending on resolution/looks
                 data_from_file = gdal.Open(self.old_prepifg_path).ReadAsArray()
                 new_from_file = out_ds.ReadAsArray()
                 np.testing.assert_array_almost_equal(

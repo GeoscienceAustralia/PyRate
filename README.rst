@@ -108,7 +108,7 @@ As you can see ``pyrate`` has three command line options.
 
 Below we discuss these options.
 
-Preparing interferrograms: prepifg
+Preparing interferograms: prepifg
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The first step of PyRate is to convert the unwrapped interforrograms
@@ -185,13 +185,13 @@ command:
     pyrate linrate path/to/config_file -c 3 -r 4
 
 This command will does the time series and linear rate analysis, but has
-the options to break the interferrograms into tiles of ``r`` rows and
-``c`` columns. So this above command will break the interferrograms into
+the options to break the interferograms into tiles of ``r`` rows and
+``c`` columns. So this above command will break the interferograms into
 12 tiles and will produce 12 linear rate and time series predictions
 corresponding to each tile.
 
 The optional rows and columns help us create smaller ``tiles`` of the
-interferrograms that can be accommodated in the memory. The number of
+interferograms that can be accommodated in the memory. The number of
 tiles chosen should be as small as possible that fits in the system
 memory.
 

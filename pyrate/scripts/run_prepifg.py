@@ -185,7 +185,7 @@ def gamma_multiprocessing(unw_path, params):
     Parameters
     ----------
     unw_path: str
-        unwrapped interferrogram path
+        unwrapped interferogram path
     params: dict
         parameters dict corresponding to config file
     """

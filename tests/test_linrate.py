@@ -202,7 +202,7 @@ class MatlabEqualityTest(unittest.TestCase):
 
     def test_linrate_samples(self):
         """
-        python lin rate samples vs matlab
+        python linrate samples vs matlab
         """
         np.testing.assert_array_almost_equal(
             self.samples_s, self.samples_matlab, decimal=3)

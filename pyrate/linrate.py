@@ -16,7 +16,7 @@
 """
 This Python module implements pixel-by-pixel linear rate
 (velocity) estimation using an iterative weighted least-squares
-method. The algorithm is based on the Pirate package 'stack.m'
+method. The algorithm is based on the Matlab Pirate package 'stack.m'
 and Matlab 'lscov.m' functions.
 """
 # pylint: disable= invalid-name
@@ -43,12 +43,9 @@ def linear_rate(ifgs, params, vcmt, mst=None):
     :param processes: number of parallel processes to use
 
     :return:
-        python/matlab variable names
-        rate/ifg_stack: stacked interferogram (i.e., rate map)
-        error/std_stack: standard deviation of the stacked interferogram
-                  (i.e., error map)
-        samples/coh_sta: statistics of coherent pixels used for stacking
-        demerror:  dem errors in metres, not implemented in python
+        rate: linear rate (velocity) map
+        error: standard deviation of the rate map
+        samples: statistics of coherent observations used in calculation        
     """
     maxsig, nsig, pthresh, cols, error, mst, obs, parallel, _, \
         rate, rows, samples, span = linrate_setup(ifgs, mst, params)
@@ -89,7 +86,7 @@ def linear_rate(ifgs, params, vcmt, mst=None):
     mask[mask] &= error[mask] > maxsig
     rate[mask] = nan
     error[mask] = nan
-    # samples[mask] = nan  # TODO: Confirm this step is missing in matlab?
+    #samples[mask] = nan # should we also mask the samples?
 
     return rate, error, samples
 
@@ -166,8 +163,7 @@ def linear_rate_by_pixel(row, col, mst, nsig, obs, pthresh, span, vcmt):
         # Subset of full VCM matrix for selected observations
         vcm_temp = vcmt[ind, np.vstack(ind)]
 
-        # start matlab lscov routine
-
+        # start Matlab lscov.m function
         # Get the lower triangle cholesky decomposition.
         # V must be positive definite (symmetrical and square)
         T = cholesky(vcm_temp, 1)
@@ -184,7 +180,7 @@ def linear_rate_by_pixel(row, col, mst, nsig, obs, pthresh, span, vcmt):
 
         # Compute the Lstsq coefficient for the velocity
         v = solve(R, z)
-        # end matlab lscov routine
+        # end Matlab lscov.m function
 
         # Compute the model errors
         err1 = inv(vcm_temp).dot(B.conj().transpose())

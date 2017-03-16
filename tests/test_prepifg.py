@@ -543,7 +543,7 @@ class LocalMultilookTests(unittest.TestCase):
 
 def multilooking(src, xscale, yscale, thresh=0):
     """
-    Port of looks.m from MATLAB Pirate.
+    Implementation of Matlab Pirate looks.m function.
 
     src: numpy array of phase data
     thresh: min number of non-NaNs required for a valid tile resampling

@@ -374,7 +374,7 @@ class NetworkDesignMatrixTests(unittest.TestCase):
             exp = unittest_dm(ifg, NETWORK_METHOD, deg, offset)
             self.assertEqual(exp.shape, (ifg.num_cells, ncoef))
 
-            # NB: this is Hua Wang's MATLAB code slightly modified for Py
+            # NB: this is the Matlab Pirate code slightly modified for Py
             ib1, ib2 = [x * self.ncells for x in (i, i+1)] # row start/end
             jbm = ncoef * self.date_ids[ifg.master] # starting col index for master
             jbs = ncoef * self.date_ids[ifg.slave] # col start for slave

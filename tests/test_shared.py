@@ -124,7 +124,7 @@ class IfgTests(unittest.TestCase):
         self.assertTrue(self.ifg.y_size > 88.0)
         self.assertTrue(self.ifg.y_size < 92.0, 'Got %s' % self.ifg.y_size)
 
-        width = 76.9 # from nearby pirate coords
+        width = 76.9 # from nearby Pirate coords
         self.assertTrue(self.ifg.x_size > 0.97 * width)  # ~3% tolerance
         self.assertTrue(self.ifg.x_size < 1.03 * width)
 

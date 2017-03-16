@@ -87,9 +87,8 @@ class TimeSeriesTests(unittest.TestCase):
     # 1. This has been replaced due to change in the time_series code.
     # 2. See MatlabTimeSeriesEquality for a more comprehensive test of the
     # new function.
-
     #     """
-    #     Checks that the code works the same as the pirate MatLab code
+    #     Checks that the code works the same as the Matlab Pirate code
     #     """
     #     tsincr, tscum, tsvel = time_series(
     #         self.ifgs, pthresh=self.params[cf.TIME_SERIES_PTHRESH],
@@ -129,7 +128,7 @@ class TimeSeriesTests(unittest.TestCase):
 
 class MatlabTimeSeriesEquality(unittest.TestCase):
     """
-    Checks the python function to that of Matlab pirate ts.m and tsinvlap.m
+    Checks the python function to that of Matlab Pirate ts.m and tsinvlap.m
     functionality.
     """
 
@@ -239,7 +238,7 @@ class MatlabTimeSeriesEquality(unittest.TestCase):
 
 class MatlabTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
     """
-    Checks the python function to that of Matlab pirate ts.m and tsinvlap.m
+    Checks the python function to that of Matlab Pirate ts.m and tsinvlap.m
     functionality.
     """
     @classmethod

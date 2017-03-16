@@ -156,7 +156,7 @@ def time_series(ifgs, params, vcmt, mst=None):
     #  not even this is necessary here, perform late for performance
     tsincr = tsvel_matrix * span
     tscum = cumsum(tsincr, 2)
-    # SB: convert zeros to nans not performed in matlab
+    # SB: converting zeros to nans not performed in Matlab Pirate
     # SB: perform this after tsvel_matrix has been nan converted,
     # saves the step of comparing a large matrix (tsincr) to zero.
     # tscum = where(tscum == 0, nan, tscum)
@@ -165,7 +165,7 @@ def time_series(ifgs, params, vcmt, mst=None):
 
 def time_series_by_rows(row, b0_mat, sm_factor, sm_order, ifg_data, mst, ncols,
                         nvelpar, p_thresh, vcmt, ts_method, interp):
-    """ time series computation for each row of interferrograms """
+    """ time series computation for each row of interferograms """
     tsvel = np.empty(shape=(ncols, nvelpar), dtype=float32)
     for col in range(ncols):
         tsvel[col, :] = time_series_by_pixel(
@@ -293,7 +293,7 @@ def _solve_ts_lap(nvelpar, velflag, ifgv, mat_b, smorder, smfactor, sel, vcmt):
 
     # solve the equation by least-squares
     # calculate velocities
-    # we get the lower triangle in numpy, matlab gives upper triangle
+    # we get the lower triangle in numpy, Matlab gives upper triangle
     w = cholesky(pinv(vcm_tmp)).T
     wb = dot(w, mat_b)
     wl = dot(w, obsv)
@@ -303,7 +303,7 @@ def _solve_ts_lap(nvelpar, velflag, ifgv, mat_b, smorder, smfactor, sel, vcmt):
     tsvel = np.empty(nvelpar, dtype=float32) * np.nan
     tsvel[~np.isclose(velflag, 0.0, atol=1e-8)] = x[:nvelleft]
 
-    # TODO: implement uncertainty estimates (tserror) like in matlab code
+    # TODO: implement uncertainty estimates (tserror) like in Matlab Pirate code
     return tsvel
 
 
