@@ -284,7 +284,7 @@ def get_config_params(path):
             txt += line
 
     params = _parse_conf_file(txt)
-    params[TMPDIR] = os.path.join(params[OUT_DIR], 'tmpdir')
+    params[TMPDIR] = os.path.join(os.path.abspath(params[OUT_DIR]), 'tmpdir')
     if mpiops.size > 1 and params[LUIGI] == 1:
         raise ConfigException('LUIGI with MPI not supported. Please '
                               'turn off LUIGI in config file or '
