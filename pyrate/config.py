@@ -371,11 +371,14 @@ def _parse_pars(pars):
     """
     for k in PARAM_CONVERSION:
         if k in pars:
+            # if option value is blank/missing revert to default
+            if pars[k] is None:
+                pars[k] = PARAM_CONVERSION[k][1]
             conversion_func = PARAM_CONVERSION[k][0]
             if conversion_func:
                 pars[k] = conversion_func(pars[k])
         else:
-            # revert empty options to default value
+            # revert missing options to default value
             if k in PARAM_CONVERSION:
                 pars[k] = PARAM_CONVERSION[k][1]
     return pars

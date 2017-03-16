@@ -61,8 +61,17 @@ class ConfigTest(unittest.TestCase):
             assert not k.endswith(":")  # are the colons removed?
 
     @staticmethod
-    def test_read_param_file_no_refpixel():
-        # ensure the parser can handle empty fields
+    def test_read_param_file_missing_option():
+        # ensure the parser can handle missing option fields
+        conf_path = join(SYD_TEST_CONF, 'pyrate1.conf')
+        params = config.get_config_params(conf_path)
+
+        assert params[config.REFX] == -1
+        assert params[config.REFY] == -1
+
+    @staticmethod
+    def test_read_param_file_missing_value():
+        # ensure the parser can handle blank option values
         conf_path = join(SYD_TEST_CONF, 'pyrate2.conf')
         params = config.get_config_params(conf_path)
 
@@ -85,7 +94,7 @@ class ConfigTest(unittest.TestCase):
 class ConfigWriteTest(unittest.TestCase):
 
     def test_write_config_file(self):
-        conf_path = join(SYD_TEST_GAMMA, 'pyrate_gamma.conf')
+        conf_path = join(SYD_TEST_CONF, 'pyrate_gamma.conf')
         params = config.get_config_params(conf_path)
         temp_config = tempfile.mktemp(suffix='.conf')
         config.write_config_file(params, temp_config)
@@ -93,7 +102,7 @@ class ConfigWriteTest(unittest.TestCase):
         os.remove(temp_config)
 
     def test_new_config_file_and_original_match(self):
-        conf_path = join(SYD_TEST_GAMMA, 'pyrate_gamma.conf')
+        conf_path = join(SYD_TEST_CONF, 'pyrate_gamma.conf')
         params = config.get_config_params(conf_path)
         temp_config = tempfile.mktemp(suffix='.conf')
         config.write_config_file(params, temp_config)
