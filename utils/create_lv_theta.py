@@ -1,3 +1,18 @@
+# This Python module is part of the PyRate software package
+#
+# Copyright 2017 Geoscience Australia
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
 '''
 This is used to create the dummy incidence map file .inc file
 This is used to create the dummy elevation map file .lv_theta file
@@ -32,7 +47,7 @@ header = gamma.parse_epoch_header(
     os.path.join(common.SYD_TEST_GAMMA, '20060828_slc.par'))
 
 
-incidence_angle = header[ifc.INCIDENCE_ANGLE]
+incidence_angle = header[ifc.PYRATE_INCIDENCE_DEGREES]
 incidence_data = np.ones(shape=(dem_header[ifc.PYRATE_NROWS],
                                 dem_header[ifc.PYRATE_NCOLS])
                          ) * incidence_angle
@@ -52,8 +67,8 @@ shared.write_unw_from_data_or_geotiff(geotif_or_data=elevation_data,
 header.update(dem_header)
 header[ifc.PYRATE_TIME_SPAN] = 0
 header[ifc.SLAVE_DATE] = 0
-header[ifc.PYRATE_PHASE_UNITS] = 'degrees'
-header[ifc.PROCESS_STEP] = ifc.GEOTIFF
+header[ifc.DATA_UNITS] = 'degrees'
+header[ifc.DATA_TYPE] = ifc.INCIDENCE
 header[ifc.SLAVE_TIME] = 0
 shared.write_geotiff(header=header, data_path=elevation_file,
                      dest=dest_lv_theta, nodata=np.nan)
