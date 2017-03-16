@@ -125,7 +125,7 @@ def col_splits(request):
 
 @pytest.fixture(params=[1, 2, 5])
 def modify_config(request, tempdir, get_config):
-    test_conf = common.SYDNEY_TEST_CONF
+    test_conf = common.TEST_CONF_FILE
     params_dict = get_config(test_conf)
     params_dict[cf.IFG_LKSX] = request.param
     params_dict[cf.IFG_LKSY] = request.param
@@ -151,11 +151,9 @@ def get_crop(request):
 
 
 def test_vcm_matlab_vs_mpi(mpisync, tempdir, get_config):
-    from tests.common import SYD_TEST_DIR
+    from tests.common import SYD_TEST_DIR, TEST_CONF_FILE
 
-    params_dict = get_config(os.path.join(SYD_TEST_DIR,
-                                          'pyrate_system_test.conf'))
-
+    params_dict = get_config(TEST_CONF_FILE)
     MATLAB_VCM_DIR = os.path.join(SYD_TEST_DIR, 'matlab_vcm')
     matlab_vcm = np.genfromtxt(os.path.join(MATLAB_VCM_DIR,
                                             'matlab_vcmt.csv'), delimiter=',')
@@ -348,9 +346,9 @@ def reconstruct_times_series(shape, tiles, output_dir):
 
 def test_prepifg_mpi(mpisync, get_config, tempdir,
                      roipac_or_gamma, get_lks, get_crop):
-    from tests.common import SYDNEY_TEST_CONF
+    from tests.common import TEST_CONF_FILE
     from os.path import join, basename
-    params = get_config(SYDNEY_TEST_CONF)
+    params = get_config(TEST_CONF_FILE)
     outdir = mpiops.run_once(tempdir)
     params[cf.OUT_DIR] = outdir
     params[cf.PROCESSOR] = roipac_or_gamma
@@ -364,7 +362,7 @@ def test_prepifg_mpi(mpisync, get_config, tempdir,
     run_prepifg.main(params)
 
     if mpiops.rank == 0:
-        params_s = get_config(SYDNEY_TEST_CONF)
+        params_s = get_config(TEST_CONF_FILE)
         params_s[cf.OUT_DIR] = tempdir()
         params_s[cf.PARALLEL] = True
         params_s[cf.IFG_LKSX], params_s[cf.IFG_LKSY] = get_lks, get_lks

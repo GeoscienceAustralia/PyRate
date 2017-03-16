@@ -189,8 +189,7 @@ class IfgPartTest(unittest.TestCase):
 
     def setUp(self):
         self.ifgs = sydney_data_setup()
-        self.params = cf.get_config_params(
-            os.path.join(common.SYD_TEST_DIR, 'pyrate_system_test.conf'))
+        self.params = cf.get_config_params(common.TEST_CONF_FILE)
 
     def test_ifg_part_shape_and_slice(self):
         r_start = 0

@@ -18,23 +18,18 @@ This Python module contains system integration tests for the PyRate workflow.
 """
 
 import glob
-import logging
+#import logging
 import os
 import shutil
 import tempfile
 import unittest
 from os.path import join
-
 import numpy as np
 
-import pyrate.shared
-import tests.common
 from pyrate import config as cf
 from pyrate import shared, config, prepifg
 from pyrate.scripts import run_pyrate, run_prepifg
-from pyrate.shared import Ifg
 from tests import common
-from tests.common import SYD_TEST_TIF
 
 # taken from
 # http://stackoverflow.com/questions/6260149/os-symlink-support-in-windows
@@ -62,17 +57,17 @@ def test_transform_params():
 
 def test_warp_required():
     nocrop = prepifg.ALREADY_SAME_SIZE
-    assert pyrate.shared.warp_required(xlooks=2, ylooks=1, crop=nocrop)
-    assert pyrate.shared.warp_required(xlooks=1, ylooks=2, crop=nocrop)
-    assert pyrate.shared.warp_required(xlooks=1, ylooks=1, crop=nocrop)
-    assert not pyrate.shared.warp_required(xlooks=1, ylooks=1, crop=None)
+    assert shared.warp_required(xlooks=2, ylooks=1, crop=nocrop)
+    assert shared.warp_required(xlooks=1, ylooks=2, crop=nocrop)
+    assert shared.warp_required(xlooks=1, ylooks=1, crop=nocrop)
+    assert not shared.warp_required(xlooks=1, ylooks=1, crop=None)
 
     for c in prepifg.CROP_OPTIONS[:-1]:
-        assert pyrate.shared.warp_required(xlooks=1, ylooks=1, crop=c)
+        assert shared.warp_required(xlooks=1, ylooks=1, crop=c)
 
 
 def test_original_ifg_paths():
-    ifgdir = SYD_TEST_TIF
+    ifgdir = common.SYD_TEST_TIF
     ifglist_path = join(ifgdir, 'ifms_17')
     paths = cf.original_ifg_paths(ifglist_path)
     assert paths[0] == join(ifgdir, 'geo_060619-061002_unw.tif'), str(paths[0])
@@ -120,12 +115,11 @@ class PyRateTests(unittest.TestCase):
         cls.BASE_OUT_DIR = join(cls.BASE_DIR, 'out')
         cls.BASE_DEM_DIR = join(cls.BASE_DIR, 'dem')
         cls.BASE_DEM_FILE = join(cls.BASE_DEM_DIR, 'sydney_trimmed.tif')
-        from tests.common import SYD_TEST_DIR
 
         try:
             # copy source data (treat as prepifg already run)
             os.makedirs(cls.BASE_OUT_DIR)
-            for path in glob.glob(join(SYD_TEST_TIF, '*')):
+            for path in glob.glob(join(common.SYD_TEST_TIF, '*')):
                 dest = join(cls.BASE_OUT_DIR, os.path.basename(path))
                 shutil.copy(path, dest)
                 os.chmod(dest, 0o660)
@@ -135,8 +129,7 @@ class PyRateTests(unittest.TestCase):
             os.symlink(orig_dem, cls.BASE_DEM_FILE)
             os.chdir(cls.BASE_DIR)
 
-            params = config.get_config_params(
-                os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf'))
+            params = config.get_config_params(common.TEST_CONF_FILE)
             params[cf.OUT_DIR] = cls.BASE_OUT_DIR
             params[cf.PROCESSOR] = 0  # roipac
             params[cf.APS_CORRECTION] = 0
@@ -197,7 +190,7 @@ class ParallelPyRateTests(unittest.TestCase):
     def setUpClass(cls):
         rate_types = ['linrate', 'linerror', 'linsamples']
         cls.tif_dir = tempfile.mkdtemp()
-        cls.test_conf = common.SYDNEY_TEST_CONF
+        cls.test_conf = common.TEST_CONF_FILE
 
         # change the required params
         params = cf.get_config_params(cls.test_conf)
@@ -303,7 +296,7 @@ class TestPrePrepareIfgs(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        params = config.get_config_params(common.SYDNEY_TEST_CONF)
+        params = config.get_config_params(common.TEST_CONF_FILE)
         cls.tmp_dir = tempfile.mkdtemp()
         shared.copytree(common.SYD_TEST_TIF, cls.tmp_dir)
         tifs = glob.glob(os.path.join(cls.tmp_dir, "*.tif"))
@@ -327,7 +320,7 @@ class TestPrePrepareIfgs(unittest.TestCase):
         sydney_ifgs = common.sydney_data_setup(datafiles=tifs)
         ifg_paths = [i.data_path for i in sydney_ifgs]
 
-        cls.ifgs = [Ifg(p) for p in ifg_paths]
+        cls.ifgs = [shared.Ifg(p) for p in ifg_paths]
 
         for i in cls.ifgs:
             if not i.is_open:

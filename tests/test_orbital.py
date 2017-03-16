@@ -31,24 +31,22 @@ from numpy.linalg import pinv, inv
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 from scipy.linalg import lstsq
 
-import pyrate.orbital
-import tests.common
 from .common import sydney5_mock_ifgs, MockIfg
 from pyrate import algorithm
 from pyrate import config as cf
 from pyrate.orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, \
     QUADRATIC, PART_CUBIC
 from pyrate.orbital import OrbitalError, orbital_correction
-from pyrate.orbital import get_design_matrix, get_network_design_matrix, \
-    _get_num_params
+from pyrate.orbital import get_design_matrix, get_network_design_matrix
+from pyrate.orbital import _get_num_params, remove_orbital_error
 from pyrate.shared import Ifg
 from pyrate.shared import nanmedian
-from tests import common
-from tests.common import SYD_TEST_DIR
+from tests.common import TEST_CONF_FILE, IFMS16
 from tests.common import SYD_TEST_MATLAB_ORBITAL_DIR
 from tests.common import SYD_TEST_TIF, sydney_data_setup
 from tests.common import sydney_ifg_file_list
 
+#TODO: Purpose of this variable? Degrees are 1, 2 and 3 respectively
 DEG_LOOKUP = {
     2: PLANAR,
     5: QUADRATIC,
@@ -694,17 +692,14 @@ class MatlabComparisonTestsOrbfitMethod1(unittest.TestCase):
 
     def setUp(self):
         self.BASE_DIR = tempfile.mkdtemp()
-
-        self.params = cf.get_config_params(
-            os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf'))
-
+        self.params = cf.get_config_params(TEST_CONF_FILE)
         # change to orbital error correction method 1
         self.params[cf.ORBITAL_FIT_METHOD] = 1
         self.params[cf.ORBITAL_FIT_LOOKS_X] = 2
         self.params[cf.ORBITAL_FIT_LOOKS_Y] = 2
         self.params[cf.PARALLEL] = False
 
-        data_paths = [os.path.join(SYD_TEST_TIF, p) for p in common.IFMS16]
+        data_paths = [os.path.join(SYD_TEST_TIF, p) for p in IFMS16]
         self.ifg_paths = [os.path.join(self.BASE_DIR, os.path.basename(d))
                           for d in data_paths]
 
@@ -764,10 +759,7 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
     """
     def setUp(self):
         self.BASE_DIR = tempfile.mkdtemp()
-
-        self.params = cf.get_config_params(
-            os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf'))
-
+        self.params = cf.get_config_params(TEST_CONF_FILE)
         # change to orbital error correction method 2
         self.params[cf.ORBITAL_FIT_METHOD] = 2
         self.params[cf.ORBITAL_FIT_LOOKS_X] = 1
@@ -800,7 +792,7 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
         shutil.rmtree(self.BASE_DIR)
 
     def test_orbital_correction_matlab_equality_orbfit_method_2(self):
-        pyrate.orbital.remove_orbital_error(self.ifgs, self.params)
+        remove_orbital_error(self.ifgs, self.params)
 
         onlyfiles = [f for f in os.listdir(SYD_TEST_MATLAB_ORBITAL_DIR)
             if os.path.isfile(os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, f))
@@ -835,7 +827,7 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
         self.params[cf.ORBITAL_FIT_LOOKS_X] = 2
         self.params[cf.ORBITAL_FIT_LOOKS_Y] = 2
 
-        pyrate.orbital.remove_orbital_error(self.ifgs, self.params)
+        remove_orbital_error(self.ifgs, self.params)
 
         onlyfiles = [f for f in os.listdir(SYD_TEST_MATLAB_ORBITAL_DIR)
             if os.path.isfile(os.path.join(SYD_TEST_MATLAB_ORBITAL_DIR, f))

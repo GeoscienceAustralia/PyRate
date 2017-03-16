@@ -23,7 +23,8 @@ import tempfile
 import unittest
 from os.path import join
 
-from .common import SYD_TEST_DIR, SYD_TEST_TIF, SYD_TEST_GAMMA
+from tests.common import SYD_TEST_CONF, SYD_TEST_TIF, SYD_TEST_GAMMA
+from tests.common import TEST_CONF_FILE
 from pyrate import config
 from pyrate.config import (
     DEM_HEADER_FILE,
@@ -52,7 +53,7 @@ class ConfigTest(unittest.TestCase):
 
     @staticmethod
     def test_read_param_file():
-        conf_path = join(SYD_TEST_DIR, 'pyrate.conf')
+        conf_path = TEST_CONF_FILE #join(SYD_TEST_CONF, 'pyrate.conf')
         params = config.get_config_params(conf_path)
         for k in params.keys():
             assert k and len(k) > 1
@@ -62,7 +63,7 @@ class ConfigTest(unittest.TestCase):
     @staticmethod
     def test_read_param_file_no_refpixel():
         # ensure the parser can handle empty fields
-        conf_path = join(SYD_TEST_DIR, 'pyrate2.conf')
+        conf_path = join(SYD_TEST_CONF, 'pyrate2.conf')
         params = config.get_config_params(conf_path)
 
         assert params[config.REFX] == -1
@@ -104,7 +105,7 @@ class ConfigWriteTest(unittest.TestCase):
 
 class ConfigAPSParametersTest(unittest.TestCase):
     def setUp(self):
-        self.conf_path = common.SYDNEY_TEST_CONF
+        self.conf_path = common.TEST_CONF_FILE
         self.params = config.get_config_params(self.conf_path)
 
     def test_incidence_and_elevation_keys_exist(self):

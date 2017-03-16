@@ -40,6 +40,7 @@ SYD_TEST_OBS = join(SYD_TEST_DIR, 'roipac_obs')  # roipac processed unws
 SYD_TEST_OUT = join(SYD_TEST_DIR, 'out')
 SYD_TEST_TIF = join(SYD_TEST_DIR, 'tif')
 SYD_TEST_GAMMA = join(SYD_TEST_DIR, 'gamma_obs')  # gamma processed unws
+SYD_TEST_CONF = join(SYD_TEST_DIR, 'conf')
 
 SYD_TEST_DEM_DIR = join(SYD_TEST_DIR, 'dem')
 SYD_TEST_MATLAB_MST_DIR = join(SYD_TEST_DIR, 'matlab_mst')
@@ -53,7 +54,7 @@ SYD_TEST_ELEVATION = join(SYD_TEST_GAMMA, '20060619_utm.lv_theta')
 SYD_TEST_DEM_HDR_GAMMA = join(SYD_TEST_GAMMA, '20060619_utm_dem.par')
 SYD_TEST_DEM_HDR = join(SYD_TEST_DEM_DIR, 'sydney_trimmed.dem.rsc')
 SYD_TEST_DEM_TIF = join(SYD_TEST_DEM_DIR, 'sydney_trimmed.tif')
-SYDNEY_TEST_CONF = join(SYD_TEST_DIR, 'pyrate_system_test.conf')
+TEST_CONF_FILE = join(SYD_TEST_CONF, 'pyrate_system_test.conf')
 
 PREP_TEST_DIR = join(BASE_TEST, 'prepifg')
 PREP_TEST_OBS = join(PREP_TEST_DIR, 'obs')

@@ -31,9 +31,7 @@ from pyrate import shared
 from pyrate.scripts import run_pyrate, run_prepifg
 from pyrate.vcm import cvd, get_vcmt
 import pyrate.orbital
-
-from tests.common import SYD_TEST_DIR
-from tests.common import sydney5_mock_ifgs, sydney5_ifgs
+from tests.common import sydney5_mock_ifgs, sydney5_ifgs, TEST_CONF_FILE
 from tests.common import sydney_data_setup, prepare_ifgs_without_phase
 
 
@@ -184,13 +182,9 @@ class MatlabEqualityTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
 
-        params = cf.get_config_params(
-                os.path.join(SYD_TEST_DIR, 'pyrate_system_test.conf')
-        )
+        params = cf.get_config_params(TEST_CONF_FILE)
         cls.temp_out_dir = tempfile.mkdtemp()
-
-        sys.argv = ['run_prepifg.py', os.path.join(SYD_TEST_DIR,
-                    'pyrate_system_test.conf')]
+        sys.argv = ['run_prepifg.py', TEST_CONF_FILE]
         params[cf.OUT_DIR] = cls.temp_out_dir
         params[cf.REF_EST_METHOD] = 2
         run_prepifg.main(params)

@@ -46,7 +46,7 @@ class TestMethod1VsMethod2AndMetaData(unittest.TestCase):
     def setUpClass(cls):
         cls.tif_dir = tempfile.mkdtemp()
         cls.tif_dir_method2 = tempfile.mkdtemp()
-        cls.test_conf = common.SYDNEY_TEST_CONF
+        cls.test_conf = common.TEST_CONF_FILE
 
         # change the required params
         cls.params = cf.get_config_params(cls.test_conf)
@@ -152,7 +152,7 @@ class TestOriginalVsEfficientAps(unittest.TestCase):
     def setUpClass(cls):
         cls.tif_dir = tempfile.mkdtemp()
         cls.tif_dir_original = tempfile.mkdtemp()
-        cls.test_conf = common.SYDNEY_TEST_CONF
+        cls.test_conf = common.TEST_CONF_FILE
 
         # change the required params
         cls.params = cf.get_config_params(cls.test_conf)
@@ -263,7 +263,7 @@ class TestAPSIncidenceVsElevationVsParallel(unittest.TestCase):
         cls.tif_dir_inc = tempfile.mkdtemp()
         cls.tif_dir_ele = tempfile.mkdtemp()
         cls.tif_dir_ele_par = tempfile.mkdtemp()
-        cls.test_conf = common.SYDNEY_TEST_CONF
+        cls.test_conf = common.TEST_CONF_FILE
 
         # change the required params
         cls.params_inc = cf.get_config_params(cls.test_conf)
@@ -358,7 +358,7 @@ class MPITests(unittest.TestCase):
     def setUpClass(cls):
         cls.tif_dir_serial = tempfile.mkdtemp()
         cls.tif_dir_mpi = tempfile.mkdtemp()
-        cls.test_conf = common.SYDNEY_TEST_CONF
+        cls.test_conf = common.TEST_CONF_FILE
 
         # change the required params
         cls.params = cf.get_config_params(cls.test_conf)
