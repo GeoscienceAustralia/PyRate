@@ -211,6 +211,7 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
     params = modify_config
     outdir = mpiops.run_once(tempdir)
     params[cf.OUT_DIR] = outdir
+    params[cf.TMPDIR] = os.path.join(params[cf.OUT_DIR], cf.TMPDIR)
     params[cf.REF_EST_METHOD] = ref_est_method
     params[cf.IFG_CROP_OPT] = get_crop
     params[cf.ORBITAL_FIT_LOOKS_Y] = orbfit_lks
@@ -281,14 +282,14 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
             ifgs, mst_grid, params, vcmt)
         rate, error, samples = tests.common.calculate_linear_rate(
             ifgs, params_old, vcmt, mst_grid)
-        mst_mpi = reconstruct_mst(ifgs[0].shape, tiles, ifgs_mpi_out_dir)
+        mst_mpi = reconstruct_mst(ifgs[0].shape, tiles, params[cf.TMPDIR])
         np.testing.assert_array_almost_equal(mst_grid, mst_mpi)
         tsincr_mpi, tscum_mpi = reconstruct_times_series(ifgs[0].shape,
                                                          tiles,
-                                                         ifgs_mpi_out_dir)
+                                                         params[cf.TMPDIR])
 
         rate_mpi, error_mpi, samples_mpi = \
-            [reconstruct_linrate(ifgs[0].shape, tiles, ifgs_mpi_out_dir, t)
+            [reconstruct_linrate(ifgs[0].shape, tiles, params[cf.TMPDIR], t)
              for t in ['linrate', 'linerror', 'linsamples']]
         np.testing.assert_array_almost_equal(maxvar, maxvar_s)
         np.testing.assert_array_almost_equal(vcmt, vcmt_s)
