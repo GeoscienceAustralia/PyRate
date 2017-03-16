@@ -1,21 +1,36 @@
+# This Python module is part of the PyRate software package
+#
+# Copyright 2017 Geoscience Australia
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
 """
 Based on: http://gis.stackexchange.com/questions/130199/changing-color-of-raster-images-based-on-their-data-values-gdal
-Utility script to convert gray tif into color.
+Utility script to convert grayscale geotiff into colour.
 ================================================================================
 Usage:
 -------------
 Custom color:
-python gdaldem.py input_tif.tif color.txt output_color.tif
+python gdaldem.py input.tif color.txt output_color.tif
 Auto color:
-python gdaldem.py input_tif.tif auto output_color.tif
+python gdaldem.py input.tif auto output_color.tif
 
 Examples:
 -------------
 Custom color:
-python pyrate/utils/gdaldem.py tests/sydney_test/dem/sydney_trimmed.tif pyrate/utils/sydney_dem_color.txt out_tif.tif
+python utils/gdaldem.py tests/test_data/small_test/dem/roipac_test_trimmed.tif utils/tiff_colour_map.txt out.tif
 
 Auto color:
-python pyrate/utils/gdaldem.py tests/sydney_test/dem/sydney_trimmed.tif auto out_tif.tif
+python utils/gdaldem.py tests/test_data/small_test/dem/roipac_test_trimmed.tif auto out.tif
 
 """
 import subprocess

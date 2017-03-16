@@ -1,8 +1,23 @@
+# This Python module is part of the PyRate software package
+#
+# Copyright 2017 Geoscience Australia
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
 """
-python utility to crop a larger ifg into smaller ifgs
+python utility to crop an interferogram
 
 example usage:
-python pyrate/utils/crop_ifgs.py -i tests/sydney_test/tif/geo_060619-061002.tif
+python pyrate/utils/crop_ifgs.py -i tests/test_data/small_test/tif/geo_060619-061002.tif
 -o out.tif -e '150.91 -34.229999976 150.949166651  -34.17'
 
 """
@@ -22,13 +37,13 @@ def crop_using_gdalwarp(input_file, output_file, extents):
 if __name__ == '__main__':
     parser = OptionParser(usage='%prog -i input_file -o output_file'
                                 ' -e extents\n'
-                                'Crop a larger interferrogram into '
+                                'Crop a larger interferogram into '
                                 'smaller ones')
     parser.add_option('-i', '--input', type=str, dest='input_file',
-                      help='name of input interferrogram')
+                      help='name of input interferogram')
 
     parser.add_option('-o', '--out', type=str, dest='output_file',
-                      help='name of cropped output interferrogram')
+                      help='name of cropped output interferogram')
 
     parser.add_option('-e', '--extents', type=str, dest='extents',
                       help='extents to be used for the cropped file.\n'
