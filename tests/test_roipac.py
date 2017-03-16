@@ -112,7 +112,8 @@ class RoipacCommandLine(unittest.TestCase):
         self.common_check()
 
     def test_cmd_dem(self):
-        self.expPaths = [os.path.join(self.base_dir, 'sydney_trimmed_dem.tif')]
+        self.expPaths = [os.path.join(self.base_dir, 
+                                      'roipac_test_trimmed_dem.tif')]
         self.dataPaths = [SYD_TEST_DEM_ROIPAC]
         self.common_check()
 
@@ -142,7 +143,7 @@ class RoipacToGeoTiffTests(unittest.TestCase):
         self.dest = os.path.join(TEMPDIR, "tmp_roipac_dem.tif")
 
         write_geotiff(hdr, SYD_TEST_DEM_ROIPAC, self.dest, nodata=0)
-        exp_path = join(SYD_TEST_DEM_DIR, 'sydney_trimmed.tif')
+        exp_path = join(SYD_TEST_DEM_DIR, 'roipac_test_trimmed.tif')
         exp_ds = gdal.Open(exp_path)
         ds = gdal.Open(self.dest)
 

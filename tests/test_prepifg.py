@@ -352,7 +352,7 @@ class PrepifgOutputTests(unittest.TestCase):
 
         # verify DEM has been correctly processed
         # ignore output values as resampling has already been tested for phase
-        exp_dem_path = join(SYD_TEST_DEM_DIR, 'sydney_trimmed_4rlks_3cr.tif')
+        exp_dem_path = join(SYD_TEST_DEM_DIR, 'roipac_test_trimmed_4rlks_3cr.tif')
         self.assertTrue(exists(exp_dem_path))
         orignal_dem = DEM(SYD_TEST_DEM_TIF)
         orignal_dem.open()

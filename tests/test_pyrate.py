@@ -114,7 +114,7 @@ class PyRateTests(unittest.TestCase):
         cls.BASE_DIR = tempfile.mkdtemp()
         cls.BASE_OUT_DIR = join(cls.BASE_DIR, 'out')
         cls.BASE_DEM_DIR = join(cls.BASE_DIR, 'dem')
-        cls.BASE_DEM_FILE = join(cls.BASE_DEM_DIR, 'sydney_trimmed.tif')
+        cls.BASE_DEM_FILE = join(cls.BASE_DEM_DIR, 'roipac_test_trimmed.tif')
 
         try:
             # copy source data (treat as prepifg already run)
