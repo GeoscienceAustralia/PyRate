@@ -129,7 +129,7 @@ class PyRateTests(unittest.TestCase):
             os.symlink(orig_dem, cls.BASE_DEM_FILE)
             os.chdir(cls.BASE_DIR)
 
-            params = config.get_config_params(common.TEST_CONF_FILE)
+            params = config.get_config_params(common.TEST_CONF_ROIPAC)
             params[cf.OUT_DIR] = cls.BASE_OUT_DIR
             params[cf.PROCESSOR] = 0  # roipac
             params[cf.APS_CORRECTION] = 0
@@ -190,7 +190,7 @@ class ParallelPyRateTests(unittest.TestCase):
     def setUpClass(cls):
         rate_types = ['linrate', 'linerror', 'linsamples']
         cls.tif_dir = tempfile.mkdtemp()
-        cls.test_conf = common.TEST_CONF_FILE
+        cls.test_conf = common.TEST_CONF_GAMMA
 
         # change the required params
         params = cf.get_config_params(cls.test_conf)
@@ -302,7 +302,7 @@ class TestPrePrepareIfgs(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        params = config.get_config_params(common.TEST_CONF_FILE)
+        params = config.get_config_params(common.TEST_CONF_ROIPAC)
         cls.tmp_dir = tempfile.mkdtemp()
         shared.copytree(common.SML_TEST_TIF, cls.tmp_dir)
         tifs = glob.glob(os.path.join(cls.tmp_dir, "*.tif"))

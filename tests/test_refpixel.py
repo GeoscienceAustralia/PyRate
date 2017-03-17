@@ -25,7 +25,7 @@ from numpy import nan, mean, std, isnan
 from pyrate import config as cf
 from pyrate.refpixel import ref_pixel, step
 from pyrate.scripts import run_pyrate
-from tests.common import TEST_CONF_FILE
+from tests.common import TEST_CONF_ROIPAC
 from tests.common import small_data_setup, MockIfg, small_ifg_file_list
 
 # default testing values
@@ -43,7 +43,7 @@ class ReferencePixelInputTests(unittest.TestCase):
 
     def setUp(self):
         self.ifgs = small_data_setup()
-        self.params = cf.get_config_params(TEST_CONF_FILE)
+        self.params = cf.get_config_params(TEST_CONF_ROIPAC)
         self.params[cf.REFNX] = REFNX
         self.params[cf.REFNY] = REFNY
         self.params[cf.REF_CHIP_SIZE] = CHIPSIZE
@@ -96,7 +96,7 @@ class ReferencePixelTests(unittest.TestCase):
 
     def setUp(self):
         self.ifgs = small_data_setup()
-        self.params = cf.get_config_params(TEST_CONF_FILE)
+        self.params = cf.get_config_params(TEST_CONF_ROIPAC)
         self.params[cf.REFNX] = REFNX
         self.params[cf.REFNY] = REFNY
         self.params[cf.REF_CHIP_SIZE] = CHIPSIZE
@@ -219,7 +219,7 @@ class MatlabEqualityTest(unittest.TestCase):
 
     def setUp(self):
         self.ifg_paths = small_ifg_file_list()
-        self.params = cf.get_config_params(TEST_CONF_FILE)
+        self.params = cf.get_config_params(TEST_CONF_ROIPAC)
         self.params[cf.PARALLEL] = False
         self.params[cf.OUT_DIR] = tempfile.mkdtemp()
         self.params_alt_ref_frac = copy.copy(self.params)
@@ -283,7 +283,7 @@ class MatlabEqualityTestMultiprocessParallel(unittest.TestCase):
 
     def setUp(self):
         self.ifg_paths = small_ifg_file_list()
-        self.params = cf.get_config_params(TEST_CONF_FILE)
+        self.params = cf.get_config_params(TEST_CONF_ROIPAC)
         self.params[cf.PARALLEL] = True
         self.params[cf.OUT_DIR] = tempfile.mkdtemp()
 

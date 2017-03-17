@@ -339,7 +339,7 @@ class WriteUnwTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.tif_dir = tempfile.mkdtemp()
-        cls.test_conf = common.TEST_CONF_FILE
+        cls.test_conf = common.TEST_CONF_GAMMA
 
         # change the required params
         cls.params = cf.get_config_params(cls.test_conf)

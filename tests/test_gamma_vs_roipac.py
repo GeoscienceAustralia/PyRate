@@ -43,7 +43,6 @@ from pyrate.config import (
     IFG_CROP_OPT,
     NO_DATA_AVERAGING_THRESHOLD,
     INPUT_IFG_PROJECTION,
-    ROIPAC_RESOURCE_HEADER,
     SLC_DIR,
     DEM_FILE,
     APS_INCIDENCE_MAP,
@@ -140,7 +139,7 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
             conf.write('{}: {}\n'.format(IFG_FILE_LIST, self.ifgListFile))
             conf.write('{}: {}\n'.format(PROCESSOR, '0'))
             conf.write('{}: {}\n'.format(LUIGI, self.luigi))
-            conf.write('{}: {}\n'.format(ROIPAC_RESOURCE_HEADER,
+            conf.write('{}: {}\n'.format(DEM_HEADER_FILE,
                                          common.SML_TEST_DEM_HDR))
             conf.write('{}: {}\n'.format(IFG_LKSX, '1'))
             conf.write('{}: {}\n'.format(IFG_LKSY, '1'))

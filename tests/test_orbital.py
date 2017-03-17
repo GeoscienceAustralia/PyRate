@@ -41,7 +41,7 @@ from pyrate.orbital import get_design_matrix, get_network_design_matrix
 from pyrate.orbital import _get_num_params, remove_orbital_error
 from pyrate.shared import Ifg
 from pyrate.shared import nanmedian
-from tests.common import TEST_CONF_FILE, IFMS16
+from tests.common import TEST_CONF_ROIPAC, IFMS16
 from tests.common import SML_TEST_MATLAB_ORBITAL_DIR
 from tests.common import SML_TEST_TIF, small_data_setup
 from tests.common import small_ifg_file_list
@@ -692,7 +692,7 @@ class MatlabComparisonTestsOrbfitMethod1(unittest.TestCase):
 
     def setUp(self):
         self.BASE_DIR = tempfile.mkdtemp()
-        self.params = cf.get_config_params(TEST_CONF_FILE)
+        self.params = cf.get_config_params(TEST_CONF_ROIPAC)
         # change to orbital error correction method 1
         self.params[cf.ORBITAL_FIT_METHOD] = 1
         self.params[cf.ORBITAL_FIT_LOOKS_X] = 2
@@ -759,7 +759,7 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
     """
     def setUp(self):
         self.BASE_DIR = tempfile.mkdtemp()
-        self.params = cf.get_config_params(TEST_CONF_FILE)
+        self.params = cf.get_config_params(TEST_CONF_ROIPAC)
         # change to orbital error correction method 2
         self.params[cf.ORBITAL_FIT_METHOD] = 2
         self.params[cf.ORBITAL_FIT_LOOKS_X] = 1

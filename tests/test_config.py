@@ -23,8 +23,8 @@ import tempfile
 import unittest
 from os.path import join
 
-from tests.common import SML_TEST_CONF, SML_TEST_TIF, SML_TEST_GAMMA
-from tests.common import TEST_CONF_FILE
+from tests.common import SML_TEST_CONF, SML_TEST_TIF
+from tests.common import TEST_CONF_ROIPAC, TEST_CONF_GAMMA
 from pyrate import config
 from pyrate.config import (
     DEM_HEADER_FILE,
@@ -53,8 +53,7 @@ class ConfigTest(unittest.TestCase):
 
     @staticmethod
     def test_read_param_file():
-        conf_path = TEST_CONF_FILE #join(SML_TEST_CONF, 'pyrate.conf')
-        params = config.get_config_params(conf_path)
+        params = config.get_config_params(TEST_CONF_ROIPAC)
         for k in params.keys():
             assert k and len(k) > 1
             assert params[k] != ''
@@ -94,16 +93,14 @@ class ConfigTest(unittest.TestCase):
 class ConfigWriteTest(unittest.TestCase):
 
     def test_write_config_file(self):
-        conf_path = join(SML_TEST_CONF, 'pyrate_gamma.conf')
-        params = config.get_config_params(conf_path)
+        params = config.get_config_params(TEST_CONF_GAMMA)
         temp_config = tempfile.mktemp(suffix='.conf')
         config.write_config_file(params, temp_config)
         self.assertTrue(os.path.exists(temp_config))
         os.remove(temp_config)
 
     def test_new_config_file_and_original_match(self):
-        conf_path = join(SML_TEST_CONF, 'pyrate_gamma.conf')
-        params = config.get_config_params(conf_path)
+        params = config.get_config_params(TEST_CONF_GAMMA)
         temp_config = tempfile.mktemp(suffix='.conf')
         config.write_config_file(params, temp_config)
         new_params = config.get_config_params(temp_config)
@@ -114,7 +111,7 @@ class ConfigWriteTest(unittest.TestCase):
 
 class ConfigAPSParametersTest(unittest.TestCase):
     def setUp(self):
-        self.conf_path = common.TEST_CONF_FILE
+        self.conf_path = TEST_CONF_ROIPAC
         self.params = config.get_config_params(self.conf_path)
 
     def test_incidence_and_elevation_keys_exist(self):

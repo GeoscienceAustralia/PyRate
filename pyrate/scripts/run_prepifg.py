@@ -119,7 +119,7 @@ def roipac_prepifg(base_ifg_paths, params):
 
     log.info("Running prepifg in serial")
     xlooks, ylooks, crop = cf.transform_params(params)
-    rsc_file = os.path.join(params[cf.ROIPAC_RESOURCE_HEADER])
+    rsc_file = os.path.join(params[cf.DEM_HEADER_FILE])
     if rsc_file is not None:
         projection = roipac.parse_header(rsc_file)[ifc.PYRATE_DATUM]
     else:

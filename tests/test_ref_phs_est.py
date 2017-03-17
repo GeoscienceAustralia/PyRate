@@ -119,9 +119,9 @@ class RefPhsEstimationMatlabTestMethod1Serial(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
 
-        params = cf.get_config_params(common.TEST_CONF_FILE)
+        params = cf.get_config_params(common.TEST_CONF_ROIPAC)
         cls.temp_out_dir = tempfile.mkdtemp()
-        sys.argv = ['run_prepifg.py', common.TEST_CONF_FILE]
+        sys.argv = ['run_prepifg.py', common.TEST_CONF_ROIPAC]
         params[cf.OUT_DIR] = cls.temp_out_dir
         run_prepifg.main(params)
 
@@ -206,9 +206,9 @@ class RefPhsEstimationMatlabTestMethod1Parallel(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
 
-        params = cf.get_config_params(common.TEST_CONF_FILE)
+        params = cf.get_config_params(common.TEST_CONF_ROIPAC)
         cls.temp_out_dir = tempfile.mkdtemp()
-        sys.argv = ['run_prepifg.py', common.TEST_CONF_FILE]
+        sys.argv = ['run_prepifg.py', common.TEST_CONF_ROIPAC]
         params[cf.OUT_DIR] = cls.temp_out_dir
         run_prepifg.main(params)
 
@@ -296,9 +296,9 @@ class RefPhsEstimationMatlabTestMethod2Serial(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
 
-        params = cf.get_config_params(common.TEST_CONF_FILE)
+        params = cf.get_config_params(common.TEST_CONF_ROIPAC)
         cls.temp_out_dir = tempfile.mkdtemp()
-        sys.argv = ['run_prepifg.py', common.TEST_CONF_FILE]
+        sys.argv = ['run_prepifg.py', common.TEST_CONF_ROIPAC]
         params[cf.OUT_DIR] = cls.temp_out_dir
 
         run_prepifg.main(params)
@@ -386,9 +386,9 @@ class RefPhsEstimationMatlabTestMethod2Parallel(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
 
-        params = cf.get_config_params(common.TEST_CONF_FILE)
+        params = cf.get_config_params(common.TEST_CONF_ROIPAC)
         cls.temp_out_dir = tempfile.mkdtemp()
-        sys.argv = ['run_prepifg.py', common.TEST_CONF_FILE]
+        sys.argv = ['run_prepifg.py', common.TEST_CONF_ROIPAC]
         params[cf.OUT_DIR] = cls.temp_out_dir
 
         run_prepifg.main(params)

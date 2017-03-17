@@ -26,8 +26,7 @@ from pyrate.config import (OBS_DIR,
                            IFG_FILE_LIST,
                            DEM_FILE,
                            DEM_HEADER_FILE,
-                           OUT_DIR,
-                           ROIPAC_RESOURCE_HEADER)
+                           OUT_DIR)
 from pyrate.shared import Ifg, DEM, Incidence
 
 DUMMY_SECTION_NAME = 'pyrate'
@@ -201,7 +200,7 @@ def pythonify_config(config_file):
             for line in input_file:
                 if any(x in line for x in [OBS_DIR, IFG_FILE_LIST,
                                            DEM_FILE, DEM_HEADER_FILE,
-                                           OUT_DIR, ROIPAC_RESOURCE_HEADER]):
+                                           OUT_DIR]):
                     pos = line.find('~')
                     if pos != -1:
                         line = line[:pos] + os.environ['HOME'] + \

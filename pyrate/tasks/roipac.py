@@ -95,7 +95,7 @@ class _DoConvertToGeotiffRoipac(IfgListMixin, luigi.WrapperTask):
 
     resourceHeader = luigi.Parameter(
         default=None,
-        config_path=InputParam(config.ROIPAC_RESOURCE_HEADER))
+        config_path=InputParam(config.DEM_HEADER_FILE))
 
     @property
     def priority(self):
@@ -136,7 +136,7 @@ class ConvertToGeotiff(luigi.WrapperTask):
 
     resourceHeader = luigi.Parameter(
         default=None,
-        config_path=InputParam(config.ROIPAC_RESOURCE_HEADER))
+        config_path=InputParam(config.DEM_HEADER_FILE))
 
     def requires(self):
         tasks = [_DoConvertToGeotiffRoipac()]

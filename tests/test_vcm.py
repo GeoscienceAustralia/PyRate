@@ -31,7 +31,7 @@ from pyrate import shared
 from pyrate.scripts import run_pyrate, run_prepifg
 from pyrate.vcm import cvd, get_vcmt
 import pyrate.orbital
-from tests.common import small5_mock_ifgs, small5_ifgs, TEST_CONF_FILE
+from tests.common import small5_mock_ifgs, small5_ifgs, TEST_CONF_ROIPAC
 from tests.common import small_data_setup, prepare_ifgs_without_phase
 
 
@@ -182,9 +182,9 @@ class MatlabEqualityTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
 
-        params = cf.get_config_params(TEST_CONF_FILE)
+        params = cf.get_config_params(TEST_CONF_ROIPAC)
         cls.temp_out_dir = tempfile.mkdtemp()
-        sys.argv = ['run_prepifg.py', TEST_CONF_FILE]
+        sys.argv = ['run_prepifg.py', TEST_CONF_ROIPAC]
         params[cf.OUT_DIR] = cls.temp_out_dir
         params[cf.REF_EST_METHOD] = 2
         run_prepifg.main(params)

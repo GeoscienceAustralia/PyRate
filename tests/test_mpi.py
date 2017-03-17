@@ -125,7 +125,7 @@ def col_splits(request):
 
 @pytest.fixture(params=[1, 2, 5])
 def modify_config(request, tempdir, get_config):
-    test_conf = common.TEST_CONF_FILE
+    test_conf = common.TEST_CONF_ROIPAC
     params_dict = get_config(test_conf)
     params_dict[cf.IFG_LKSX] = request.param
     params_dict[cf.IFG_LKSY] = request.param
@@ -151,9 +151,9 @@ def get_crop(request):
 
 
 def test_vcm_matlab_vs_mpi(mpisync, tempdir, get_config):
-    from tests.common import SML_TEST_DIR, TEST_CONF_FILE
+    from tests.common import SML_TEST_DIR, TEST_CONF_ROIPAC
 
-    params_dict = get_config(TEST_CONF_FILE)
+    params_dict = get_config(TEST_CONF_ROIPAC)
     MATLAB_VCM_DIR = os.path.join(SML_TEST_DIR, 'matlab_vcm')
     matlab_vcm = np.genfromtxt(os.path.join(MATLAB_VCM_DIR,
                                             'matlab_vcmt.csv'), delimiter=',')
@@ -356,12 +356,14 @@ def reconstruct_times_series(shape, tiles, output_dir):
 
 def test_prepifg_mpi(mpisync, get_config, tempdir,
                      roipac_or_gamma, get_lks, get_crop):
-    from tests.common import TEST_CONF_FILE
+    from tests.common import TEST_CONF_ROIPAC, TEST_CONF_GAMMA
     from os.path import join, basename
-    params = get_config(TEST_CONF_FILE)
+    if roipac_or_gamma == 1:
+        params = get_config(TEST_CONF_GAMMA)
+    else:
+        params = get_config(TEST_CONF_ROIPAC)
     outdir = mpiops.run_once(tempdir)
     params[cf.OUT_DIR] = outdir
-    params[cf.PROCESSOR] = roipac_or_gamma
     params[cf.PARALLEL] = False
     params[cf.IFG_LKSX], params[cf.IFG_LKSY] = get_lks, get_lks
     params[cf.IFG_CROP_OPT] = get_crop
@@ -369,10 +371,14 @@ def test_prepifg_mpi(mpisync, get_config, tempdir,
         params[cf.IFG_FILE_LIST] = join(common.SML_TEST_GAMMA, 'ifms_17')
         params[cf.OBS_DIR] = common.SML_TEST_GAMMA
         params[cf.DEM_FILE] = common.SML_TEST_DEM_GAMMA
+        params[cf.DEM_HEADER_FILE] = common.SML_TEST_DEM_HDR_GAMMA
     run_prepifg.main(params)
 
     if mpiops.rank == 0:
-        params_s = get_config(TEST_CONF_FILE)
+        if roipac_or_gamma == 1:
+            params_s = get_config(TEST_CONF_GAMMA)
+        else:
+            params_s = get_config(TEST_CONF_ROIPAC)
         params_s[cf.OUT_DIR] = tempdir()
         params_s[cf.PARALLEL] = True
         params_s[cf.IFG_LKSX], params_s[cf.IFG_LKSY] = get_lks, get_lks

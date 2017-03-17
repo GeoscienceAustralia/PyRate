@@ -53,12 +53,7 @@ SLC_DIR = 'slcFileDir'
 
 #: STR; The projection of the input interferograms.
 # When *PROCESSOR* == 0, either
-#: this or *ROIPAC_RESOURCE_HEADER* must be provided.
 INPUT_IFG_PROJECTION = 'projection'
-#: STR; The resource header used for converting ROIPAC interferograms.
-# When *PROCESSOR* == 0, either
-#: this or *INPUT_IFG_PROJECTION* must be provided.
-ROIPAC_RESOURCE_HEADER = 'resourceHeader'
 #: FLOAT; The no data value in the interferogram files.
 NO_DATA_VALUE = 'noDataValue'
 #: FLOAT; No data averaging threshold for prepifg
@@ -261,7 +256,6 @@ PARAM_CONVERSION = {
 
 PATHS = [OBS_DIR, IFG_FILE_LIST, DEM_FILE,
          DEM_HEADER_FILE, OUT_DIR,
-         ROIPAC_RESOURCE_HEADER,
          SLC_DIR,
          APS_INCIDENCE_MAP,
          APS_ELEVATION_MAP]

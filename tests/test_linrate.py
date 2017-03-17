@@ -36,7 +36,7 @@ from pyrate import vcm as vcm_module
 from pyrate.linrate import linear_rate
 from pyrate.scripts import run_pyrate, run_prepifg
 from tests.common import SML_TEST_DIR, prepare_ifgs_without_phase
-from tests.common import TEST_CONF_FILE
+from tests.common import TEST_CONF_ROIPAC
 
 
 def default_params():
@@ -83,10 +83,10 @@ class MatlabEqualityTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        params = cf.get_config_params(TEST_CONF_FILE)
+        params = cf.get_config_params(TEST_CONF_ROIPAC)
         cls.temp_out_dir = tempfile.mkdtemp()
 
-        sys.argv = ['run_prepifg.py', TEST_CONF_FILE]
+        sys.argv = ['run_prepifg.py', TEST_CONF_ROIPAC]
         params[cf.OUT_DIR] = cls.temp_out_dir
         params[cf.TMPDIR] = os.path.join(params[cf.OUT_DIR], cf.TMPDIR)
         shared.mkdir_p(params[cf.TMPDIR])

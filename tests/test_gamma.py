@@ -56,7 +56,7 @@ from pyrate.scripts.converttogtif import main as gammaMain
 from pyrate.shared import write_geotiff, GeotiffException
 from tests import common
 from tests.common import GAMMA_TEST_DIR, SML_TEST_GAMMA
-from tests.common import TEST_CONF_FILE, TEMPDIR
+from tests.common import TEST_CONF_GAMMA, TEMPDIR
 from tests.common import small_data_setup
 
 gdal.UseExceptions()
@@ -484,7 +484,7 @@ class TestGammaParallelVsSerial(unittest.TestCase):
         unw_paths = glob.glob(os.path.join(SML_TEST_GAMMA, "*_utm.unw"))
 
         # read in the params
-        _, _, params = cf.get_ifg_paths(TEST_CONF_FILE)
+        _, _, params = cf.get_ifg_paths(TEST_CONF_GAMMA)
         params[cf.OUT_DIR] = cls.serial_dir
         params[cf.PARALLEL] = False
 
