@@ -1,4 +1,4 @@
-name: pyr6
+name: pyrate
 channels:
 - conda-forge
 - ioos
@@ -24,5 +24,7 @@ dependencies:
 - pytest-cov
 - glob2
 - mpi4py
+- netcdf4
 - pip:
   - luigi==1.3.0
+  - pyYAML
