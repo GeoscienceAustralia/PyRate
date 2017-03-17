@@ -119,8 +119,12 @@ def roipac_prepifg(base_ifg_paths, params):
 
     log.info("Running prepifg in serial")
     xlooks, ylooks, crop = cf.transform_params(params)
-    dem_file = os.path.join(params[cf.ROIPAC_RESOURCE_HEADER])
-    projection = roipac.parse_header(dem_file)[ifc.PYRATE_DATUM]
+    rsc_file = os.path.join(params[cf.ROIPAC_RESOURCE_HEADER])
+    if rsc_file is not None:
+        projection = roipac.parse_header(rsc_file)[ifc.PYRATE_DATUM]
+    else:
+        raise roipac.RoipacException('No DEM resource/header file is '
+                                     'provided')
     dest_base_ifgs = [os.path.join(params[cf.OUT_DIR],
                                    os.path.basename(q).split('.')[0] + '_' +
                                    os.path.basename(q).split('.')[1] + '.tif')

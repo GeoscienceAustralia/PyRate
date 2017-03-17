@@ -18,7 +18,6 @@ This Python module contains tools for reading ROI_PAC format input data.
 """
 import os
 import re
-import sys
 import datetime
 import pyrate.ifgconstants as ifc
 
@@ -137,7 +136,8 @@ def parse_header(hdr_file):
         headers = dict(lines)
         is_dem = True if DATUM in headers or Z_SCALE in headers or PROJECTION in headers else False
         if is_dem and DATUM not in headers:
-            sys.exit('Error: no DATUM parameter in DEM header/resource file')
+            msg = 'No "DATUM" parameter in DEM header/resource file'
+            raise RoipacException(msg)
     except ValueError:
         msg = "Unable to parse content of %s. Is it a ROIPAC header file?"
         raise RoipacException(msg % hdr_file)
