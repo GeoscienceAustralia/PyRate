@@ -44,7 +44,16 @@ To install, simply run ``setup.py``:
 
     python setup.py install
 
-or install with ``pip``:
+or install with ``pip`` from github:
+
+.. code-block:: console
+
+    pip install git+https://github.com/GeoscienceAustralia/PyRate
+
+The command above installs the latest version of ``PyRate`` from github.
+``PyRate`` is also on ``pypi``, the python package manager.
+
+To install from ``pypi`` simply do
 
 .. code-block:: console
 
