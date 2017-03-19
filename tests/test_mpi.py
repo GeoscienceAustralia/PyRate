@@ -38,7 +38,7 @@ from pyrate import vcm
 from pyrate import refpixel
 from pyrate.scripts import run_pyrate, run_prepifg, postprocessing
 from tests.common import small_data_setup, reconstruct_mst, \
-    reconstruct_linrate
+    reconstruct_linrate, SML_TEST_DEM_HDR_GAMMA
 from tests import common
 from tests.test_vcm import matlab_maxvar
 from pyrate import config as cf
@@ -216,6 +216,7 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
     outdir = mpiops.run_once(tempdir)
     params[cf.OUT_DIR] = outdir
     params[cf.TMPDIR] = os.path.join(params[cf.OUT_DIR], cf.TMPDIR)
+    params[cf.DEM_HEADER_FILE] = SML_TEST_DEM_HDR_GAMMA
     params[cf.REF_EST_METHOD] = ref_est_method
     params[cf.IFG_CROP_OPT] = get_crop
     params[cf.ORBITAL_FIT_LOOKS_Y] = orbfit_lks
