@@ -5,10 +5,6 @@ PyRate - a Python tool for RAte and Time-series Estimation
    :target: https://travis-ci.org/GeoscienceAustralia/PyRate
 .. image:: https://coveralls.io/repos/github/GeoscienceAustralia/PyRate/badge.svg?branch=master
    :target: https://coveralls.io/github/GeoscienceAustralia/PyRate?branch=master
-.. image:: https://pyup.io/repos/github/geoscienceaustralia/pyrate/shield.svg
-   :target: https://pyup.io/repos/github/geoscienceaustralia/pyrate/
-.. image:: https://pyup.io/repos/github/geoscienceaustralia/pyrate/python-3-shield.svg
-   :target: https://pyup.io/repos/github/geoscienceaustralia/pyrate/
 
 PyRate is a Python tool for estimating the average rate (velocity) and
 incremental time-series of surface movement for every pixel in a stack
