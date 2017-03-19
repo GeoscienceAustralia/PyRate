@@ -83,6 +83,7 @@ class RoipacCommandLine(unittest.TestCase):
             TEMPDIR, '{}/roipac_ifg.list'.format(random_text))
         self.base_dir = os.path.dirname(self.confFile)
         shared.mkdir_p(self.base_dir)
+        self.hdr = SML_TEST_DEM_HDR
 
     def tearDown(self):
         def rmPaths(paths):
@@ -95,6 +96,7 @@ class RoipacCommandLine(unittest.TestCase):
 
     def makeInputFiles(self, data, projection):
         with open(self.confFile, 'w') as conf:
+            conf.write('{}: {}\n'.format(DEM_HEADER_FILE, self.hdr))
             conf.write('{}: {}\n'.format(INPUT_IFG_PROJECTION, projection))
             conf.write('{}: {}\n'.format(NO_DATA_VALUE, '0.0'))
             conf.write('{}: {}\n'.format(OBS_DIR, self.base_dir))

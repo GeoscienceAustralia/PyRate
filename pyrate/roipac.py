@@ -134,7 +134,8 @@ def parse_header(hdr_file):
     try:
         lines = [e.split() for e in text.split("\n") if e != ""]
         headers = dict(lines)
-        is_dem = True if DATUM in headers or Z_SCALE in headers or PROJECTION in headers else False
+        is_dem = True if DATUM in headers or Z_SCALE in headers \
+                         or PROJECTION in headers else False
         if is_dem and DATUM not in headers:
             msg = 'No "DATUM" parameter in DEM header/resource file'
             raise RoipacException(msg)
