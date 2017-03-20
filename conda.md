@@ -1,12 +1,10 @@
-Instructions for setting up up an anaconda virtualenv on the linux server 'rhe-compute1' at GA.
+Instructions for setting up an Anaconda virtual environment on a typical Red Hat linux server.
  
-## Download the conda installer
+## Install Anaconda:
 
-For `rhe-compute` [download this version] (https://repo.continuum.io/archive/Anaconda2-4.1.1-Linux-x86.sh). 
+For 64bit linux download this version of the conda installer: https://repo.continuum.io/archive/Anaconda2-4.1.1-Linux-x86.sh
 
-## Install anaconda:
-
-On 64bit linux:
+Run the installer using the linux bash interpreter:
     
     bash Anaconda2-4.1.1-Linux-x86.sh
 
@@ -14,34 +12,32 @@ Accept all default options. This will install anaconda in the `~/anaconda2` dire
  
 ## Set up proxys for pip (only applicable if working behind proxy):
  
-    export http_proxy=http://proxy.ga.gov.au:8080
-    export https_proxy=http://proxy.ga.gov.au:8080
+    export http_proxy=<proxy_server>:<port>
+    export https_proxy=<proxy_server>:<port>
  
 ## Set up `~/.condarc` with proxy pass information (only applicable if working behind proxy):
  
 For conda installer to work you need to create a `~/.condarc` file with the following proxy-pass information:
  
     proxy_servers:
-        http: http://proxy.ga.gov.au:8080
-        https: http://proxy.ga.gov.au:8080
+        http: <proxy_server>:<port>
+        https: <proxy_server>:<port>
         
-## Clone the repo:
+## Clone the PyRate repo:
 
-The rest of the instructions assume that you cloned the `PyRate` Git repository in your home directory. 
+The rest of the instructions assume that you cloned the `PyRate` Git repository in your home directory: 
 
-Clone the repo:    
-
+    cd ~
     git clone git@github.com:GeoscienceAustralia/PyRate.git
     
-This will prompt for your rsa key passphrase. If you have access to `PyRate` repo and once you have entered the passphrase, `PyRate` will clone in your current directory. 
+This will prompt for your rsa key passphrase. If you have access to `PyRate` repo and once you have entered the passphrase, `PyRate` will clone in your current (home) directory. 
 
 
-## Set up PYRATEPATH
-You need to add the directory containing the `pyrate` folder to the `PYTHONPATH` environment variable.
+## Set up envrionment variables
 
-The environment variable `PYRATEPATH` needs to point to the folder where you put the test data. This is how I set up my environment variable:
+You need to add the directory containing the `pyrate/` directory to the `PYTHONPATH` environment variable, and the environment variable `PYRATEPATH` needs to point to the directory containing the `tests/` directory:
 
-	export PYRATEPATH="/nas/users/u92456/unix/PyRate"
+	export PYRATEPATH="~/PyRate"
 	export PYTHONPATH=$PYRATEPATH/:$PYTHONPATH
     
 
@@ -50,13 +46,15 @@ The environment variable `PYRATEPATH` needs to point to the folder where you put
     source ~/anaconda2/bin/activate ~/anaconda2/
     conda install -c conda conda-env        
 
-The `conda-env` package enables `yml` based installation.
+The `conda-env` package enables YAML based installation.
 
 Note that using the `source activate` command only works cleanly when using the bash shell
 
 ## Create the `pyrate` environment
+
+The required packages for PyRate are listed in the environment.yml (YAML format) file:
     
-    conda env create -f /path/to/PyRate/environment.yml
+    conda env create -f $PYRATEPATH/environment.yml
 
 ## Activate the `pyrate` environment
 
@@ -64,7 +62,7 @@ Note that using the `source activate` command only works cleanly when using the 
 
 ## Support for `pygrib`, a package used by `PyAPS` (skip this step if not using PyAPS)
 
-`pygrib` does not install properly in `redhat` systems, `rhe-compute1` being one of them. The way around is the following:
+`pygrib` does not install properly in `redhat` systems. The work around is the following:
 
     cp ~/anaconda2/envs/pyrate/lib/libpng16.so.16 ~/anaconda2/envs/pyrate/lib/libpng16.so.16.bk
     conda install libpng=1.2.50
@@ -80,16 +78,21 @@ Explanation of the previous three steps:
     
 ## Run `PyRate` tests
 
-To run the tests, use the following command inside the `PyRate` directory:
+To run the full suite of tests, use the following command inside the `PyRate` directory:
 		
-	cd PyRate
+	cd ~/PyRate
 	py.test tests/
-	
+
+To run the tests for a particular module:
+
+	py.test tests/test_orbital.py
+
 ## Deactivate
-Once you are done using `PyRate` you could deactivate from the conda env using: 
+
+Once you are done using `PyRate` you could deactivate the conda environment using: 
 
     source deactivate
 
-## Back to main anaconda if you need to:
+## Back to main Anaconda environment if you need to:
     
     source activate /home/user/anaconda2
