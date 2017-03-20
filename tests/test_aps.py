@@ -14,7 +14,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 """
-This Python module contains tests for the aps.py PyRate module.
+This Python module contains tests for the pyaps.py PyRate module.
 """
 import copy
 import glob
@@ -34,7 +34,7 @@ from pyrate.compat import PyAPS_INSTALLED
 from pyrate.scripts import run_pyrate, run_prepifg
 from tests import common
 if PyAPS_INSTALLED:
-    from pyrate import aps
+    from pyrate import pyaps
 
 
 @unittest.skipUnless(PyAPS_INSTALLED, 'PyAPS must be available for this test')
@@ -95,8 +95,8 @@ class TestMethod1VsMethod2AndMetaData(unittest.TestCase):
         dest_paths_m2 = run_pyrate.get_dest_paths(
             base_unw_paths, crop, cls.params_method2, xlks)
         cls.ifgs_method2 = common.small_data_setup(datafiles=dest_paths_m2)
-        aps.remove_aps_delay(cls.ifgs, cls.params)
-        aps.remove_aps_delay(cls.ifgs_method2, cls.params_method2)
+        pyaps.remove_aps_delay(cls.ifgs, cls.params)
+        pyaps.remove_aps_delay(cls.ifgs_method2, cls.params_method2)
 
     @classmethod
     def tearDownClass(cls):
@@ -113,7 +113,7 @@ class TestMethod1VsMethod2AndMetaData(unittest.TestCase):
             md = i.meta_data
             i.close()
             self.assertIn(ifc.PYRATE_APS_ERROR, md.keys())
-            self.assertIn(aps.APS_STATUS, md.values())
+            self.assertIn(pyaps.APS_STATUS, md.values())
 
     def test_meta_data_was_written(self):
         for i in self.ifgs:
@@ -201,8 +201,8 @@ class TestOriginalVsEfficientAps(unittest.TestCase):
         dest_paths_orig = run_pyrate.get_dest_paths(
             base_unw_paths, crop, cls.params_original, xlks)
         cls.ifgs_orig = common.small_data_setup(datafiles=dest_paths_orig)
-        aps.remove_aps_delay(cls.ifgs, cls.params)
-        aps.remove_aps_delay_original(cls.ifgs_orig, cls.params_original)
+        pyaps.remove_aps_delay(cls.ifgs, cls.params)
+        pyaps.remove_aps_delay_original(cls.ifgs_orig, cls.params_original)
 
     @classmethod
     def tearDownClass(cls):
@@ -219,7 +219,7 @@ class TestOriginalVsEfficientAps(unittest.TestCase):
             md = i.meta_data
             i.close()
             self.assertIn(ifc.PYRATE_APS_ERROR, md.keys())
-            self.assertIn(aps.APS_STATUS, md.values())
+            self.assertIn(pyaps.APS_STATUS, md.values())
 
     def test_meta_data_was_written(self):
         for i in self.ifgs:
@@ -323,9 +323,9 @@ class TestAPSIncidenceVsElevationVsParallel(unittest.TestCase):
 
         cls.ifgs_ele_par = common.small_data_setup(datafiles=dest_paths_ele_par)
 
-        aps.remove_aps_delay(cls.ifgs_inc, cls.params_inc)
-        aps.remove_aps_delay(cls.ifgs_ele, cls.params_ele)
-        aps.remove_aps_delay(cls.ifgs_ele_par, cls.params_ele_par)
+        pyaps.remove_aps_delay(cls.ifgs_inc, cls.params_inc)
+        pyaps.remove_aps_delay(cls.ifgs_ele, cls.params_ele)
+        pyaps.remove_aps_delay(cls.ifgs_ele_par, cls.params_ele_par)
 
     @classmethod
     def tearDownClass(cls):
@@ -438,7 +438,7 @@ class MPITests(unittest.TestCase):
             md_s = j.meta_data
             self.assertIn(ifc.PYRATE_APS_ERROR, md_s.keys())
             self.assertIn(ifc.PYRATE_APS_ERROR, md.keys())
-            self.assertIn(aps.APS_STATUS, md.values())
+            self.assertIn(pyaps.APS_STATUS, md.values())
 
     def test_meta_data_was_written(self):
         for i in self.ifgs_mpi:
