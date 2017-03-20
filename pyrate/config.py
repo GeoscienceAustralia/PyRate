@@ -139,6 +139,12 @@ LR_PTHRESH = 'pthr'
 #: REAL; Maximum allowable standard error for pixels in linear rate inversion.
 LR_MAXSIG = 'maxsig'
 
+# spatio-temporal filter
+# atmospheric delay errors fitting parameters
+# atmfitmethod = 1: interferogram by interferogram; atmfitmethod = 2, epoch by epoch
+ATM_FIT = 'atmfit'
+ATM_FIT_METHOD = 'atmfitmethod'
+
 # Time series parameters
 #: BOOL (1/0); Do Time series calculation
 TIME_SERIES_CAL = 'tscal'
@@ -230,17 +236,20 @@ PARAM_CONVERSION = {
     ORBITAL_FIT_LOOKS_X: (int, NO_MULTILOOKING),
     ORBITAL_FIT_LOOKS_Y: (int, NO_MULTILOOKING),
 
-    LR_NSIG : (int, 3),
+    LR_NSIG: (int, 3),
     # pixel thresh based on nepochs? not every project may have 20 epochs
-    LR_PTHRESH : (int, 20),
-    LR_MAXSIG : (int, 2),
+    LR_PTHRESH: (int, 20),
+    LR_MAXSIG: (int, 2),
+
+    ATM_FIT: (int, 0),
+    ATM_FIT_METHOD: (int, 2),
 
     TIME_SERIES_CAL: (int, 0),
     # pixel thresh based on nepochs? not every project may have 20 epochs
     TIME_SERIES_PTHRESH: (int, 20),
     TIME_SERIES_SM_FACTOR: (float, None),
     TIME_SERIES_SM_ORDER: (int, None),
-    TIME_SERIES_METHOD: (int, 2), # Default to SVD method
+    TIME_SERIES_METHOD: (int, 2),  # Default to SVD method
 
     PARALLEL: (int, 0),
     PROCESSES: (int, 8),
