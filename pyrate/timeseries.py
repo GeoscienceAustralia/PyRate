@@ -49,25 +49,7 @@ def time_series_setup(ifgs, mst, params):
     # Time Series parameters
     tsmethod = params[cf.TIME_SERIES_METHOD]
 
-    if tsmethod == 1 and params[cf.TIME_SERIES_SM_ORDER] is None:
-        missing_option_error(cf.TIME_SERIES_SM_ORDER)
-    else:
-        smorder = params[cf.TIME_SERIES_SM_ORDER]
-
-    if tsmethod == 1 and params[cf.TIME_SERIES_SM_FACTOR] is None:
-        missing_option_error(cf.TIME_SERIES_SM_FACTOR)
-    else:
-        smfactor = np.power(10, params[cf.TIME_SERIES_SM_FACTOR])
-
-    if params[cf.TIME_SERIES_PTHRESH] is None:
-        missing_option_error(cf.TIME_SERIES_PTHRESH)
-    else:
-        pthresh = params[cf.TIME_SERIES_PTHRESH]
-
-    if pthresh < 0.0 or pthresh > 1000:
-        raise ValueError(
-            "minimum number of coherent observations for a pixel"
-            " TIME_SERIES_PTHRESH setting must be >= 0.0 and <= 1000")
+    pthresh, smfactor, smorder = _validate_params(params, tsmethod)
 
     epochlist = get_epochs(ifgs)[0]
     nrows = ifgs[0].nrows
@@ -98,6 +80,27 @@ def time_series_setup(ifgs, mst, params):
         mst = ~isnan(ifg_data)
     return b0_mat, interp, pthresh, smfactor, smorder, tsmethod, ifg_data, \
         mst, ncols, nrows, nvelpar, parallel, span, tsvel_matrix
+
+
+def _validate_params(params, tsmethod):
+    if tsmethod == 1 and params[cf.TIME_SERIES_SM_ORDER] is None:
+        missing_option_error(cf.TIME_SERIES_SM_ORDER)
+    else:
+        smorder = params[cf.TIME_SERIES_SM_ORDER]
+    if tsmethod == 1 and params[cf.TIME_SERIES_SM_FACTOR] is None:
+        missing_option_error(cf.TIME_SERIES_SM_FACTOR)
+    else:
+        smfactor = np.power(10, params[cf.TIME_SERIES_SM_FACTOR])
+
+    if params[cf.TIME_SERIES_PTHRESH] is None:
+        missing_option_error(cf.TIME_SERIES_PTHRESH)
+    else:
+        pthresh = params[cf.TIME_SERIES_PTHRESH]
+        if pthresh < 0.0 or pthresh > 1000:
+            raise ValueError(
+                "minimum number of coherent observations for a pixel"
+                " TIME_SERIES_PTHRESH setting must be >= 0.0 and <= 1000")
+    return pthresh, smfactor, smorder
 
 
 def time_series(ifgs, params, vcmt, mst=None):
@@ -215,8 +218,8 @@ def time_series_by_pixel(row, col, b0_mat, sm_factor, sm_order, ifg_data, mst,
             velflag = np.ones(nvelpar)
         if method == 1:
             # Use Laplacian smoothing method
-            tsvel = _solve_ts_lap(nvelpar, velflag, ifgv, b_mat,
-                                  sm_order, sm_factor, sel, vcmt)
+            tsvel = solve_ts_lap(nvelpar, velflag, ifgv, b_mat,
+                                 sm_order, sm_factor, sel, vcmt)
         elif method == 2:
             # Use SVD method
             tsvel = solve_ts_svd(nvelpar, velflag, ifgv, b_mat)
@@ -239,7 +242,7 @@ def solve_ts_svd(nvelpar, velflag, ifgv, b_mat):
     return tsvel
 
 
-def _solve_ts_lap(nvelpar, velflag, ifgv, mat_b, smorder, smfactor, sel, vcmt):
+def solve_ts_lap(nvelpar, velflag, ifgv, mat_b, smorder, smfactor, sel, vcmt):
     """
     Solve the linear least squares system using the Finite Difference
     method using a Laplacian Smoothing operator.
@@ -347,6 +350,7 @@ def missing_option_error(option):
     '''
     msg = "Missing '%s' option in config file" % option
     raise ConfigException(msg)
+
 
 class TimeSeriesError(Exception):
     """

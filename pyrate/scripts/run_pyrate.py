@@ -43,7 +43,7 @@ from pyrate.shared import Ifg, create_tiles, \
 
 if PyAPS_INSTALLED:  # pragma: no cover
     # from pyrate import aps
-    from pyrate.aps import check_aps_ifgs, aps_delay_required
+    from pyrate.pyaps import check_aps_ifgs, aps_delay_required
 
 MASTER_PROCESS = 0
 log = logging.getLogger(__name__)
