@@ -147,6 +147,16 @@ ATM_FIT_METHOD = 'atmfitmethod'
 # spatio-temporal filter
 APSEST = 'apsest'
 
+# temporal high-pass filter parameters
+THPF_METHOD = 'thpfmethod'
+THPF_CUTOFF = 'thpfcutoff'
+THPF_PTHR = 'thpfpthr'
+
+# spatially correlated noise low-pass filter parameters
+SLPF_METHOD = 'slpfmethod'
+SLPF_CUTOFF = 'slpfcutoff'
+SLPF_ORDER = 'slpforder'
+
 # Time series parameters
 #: BOOL (1/0); Do Time series calculation
 TIME_SERIES_CAL = 'tscal'
@@ -247,6 +257,9 @@ PARAM_CONVERSION = {
     ATM_FIT_METHOD: (int, 2),
 
     APSEST: (int, 0),
+    THPF_METHOD: (int, 1),
+    THPF_CUTOFF: (float, 0.0),
+    THPF_PTHR: (int, 1),
 
     TIME_SERIES_CAL: (int, 0),
     # pixel thresh based on nepochs? not every project may have 20 epochs
