@@ -139,12 +139,7 @@ def postprocess_timeseries(rows, cols, params):
         tscum_g = np.empty(shape=ifgs[0].shape, dtype=np.float32)
         if i < no_ts_tifs:
             for n, t in enumerate(tiles):
-                tscum_file = os.path.join(output_dir,
-                                          'tscuml_{}.npy'.format(n))
-                tscum = np.load(file=tscum_file)
-                tscum_g[t.top_left_y:t.bottom_right_y,
-                        t.top_left_x:t.bottom_right_x] = tscum[:, :, i]
-
+                _assemble_tiles(i, n, t, tscum_g, output_dir, 'tscuml')
             md[ifc.EPOCH_DATE] = epochlist.dates[i + 1]
             # sequence position; first time slice is #0
             md['SEQUENCE_POSITION'] = i+1
@@ -157,11 +152,7 @@ def postprocess_timeseries(rows, cols, params):
             tsincr_g = np.empty(shape=ifgs[0].shape, dtype=np.float32)
             i %= no_ts_tifs
             for n, t in enumerate(tiles):
-                tsincr_file = os.path.join(output_dir,
-                                           'tsincr_{}.npy'.format(n))
-                tsincr = np.load(file=tsincr_file)
-                tsincr_g[t.top_left_y:t.bottom_right_y,
-                         t.top_left_x:t.bottom_right_x] = tsincr[:, :, i]
+                _assemble_tiles(i, n, t, tsincr_g, output_dir, 'tsincr')
             md[ifc.EPOCH_DATE] = epochlist.dates[i + 1]
             # sequence position; first time slice is #0
             md['SEQUENCE_POSITION'] = i+1
@@ -172,3 +163,11 @@ def postprocess_timeseries(rows, cols, params):
             shared.write_output_geotiff(md, gt, wkt, tsincr_g, dest, np.nan)
     log.info('process {} finished writing {} ts (incr/cuml) tifs of '
              'total {}'.format(mpiops.rank, len(process_tifs), no_ts_tifs * 2))
+
+
+def _assemble_tiles(i, n, tile, tsincr_g, output_dir, outtype):
+    tsincr_file = os.path.join(output_dir,
+                               '{}_{}.npy'.format(outtype, n))
+    tsincr = np.load(file=tsincr_file)
+    tsincr_g[tile.top_left_y:tile.bottom_right_y,
+    tile.top_left_x:tile.bottom_right_x] = tsincr[:, :, i]
