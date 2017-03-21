@@ -448,7 +448,6 @@ class IfgPart(object):
         self.r_end = self.tile.bottom_right_y
         self.c_start = self.tile.top_left_x
         self.c_end = self.tile.bottom_right_x
-        # TODO: fix this if cond
         if ifg_dict is not None:  # should be used with MPI
             ifg = ifg_dict[ifg_or_path]
             self.nan_fraction = ifg.nan_fraction
@@ -590,7 +589,7 @@ class EpochList(object):
     def __init__(self, dates=None, repeat=None, spans=None):
         self.dates = dates # list of unique dates from all the ifgs
         self.repeat = repeat
-        self.spans = spans # time span from earliest ifg
+        self.spans = spans  # time span from earliest ifg
 
     def __str__(self):
         return "EpochList: %s" % str(self.dates)

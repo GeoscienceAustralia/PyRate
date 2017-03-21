@@ -147,10 +147,10 @@ ATM_FIT_METHOD = 'atmfitmethod'
 # spatio-temporal filter
 APSEST = 'apsest'
 
-# temporal high-pass filter parameters
-THPF_METHOD = 'thpfmethod'
-THPF_CUTOFF = 'thpfcutoff'
-THPF_PTHR = 'thpfpthr'
+# temporal low-pass filter parameters
+TLPF_METHOD = 'tlpfmethod'
+TLPF_CUTOFF = 'tlpfcutoff'
+TLPF_PTHR = 'tlpfpthr'
 
 # spatially correlated noise low-pass filter parameters
 SLPF_METHOD = 'slpfmethod'
@@ -240,7 +240,7 @@ PARAM_CONVERSION = {
     REFNY: (int, 50),
     REF_CHIP_SIZE: (int, 21),
     REF_MIN_FRAC: (float, 0.8),
-    REF_EST_METHOD: (int, 1), # default to average of whole image
+    REF_EST_METHOD: (int, 1),  # default to average of whole image
 
     ORBITAL_FIT: (int, 0),
     ORBITAL_FIT_METHOD: (method_conv, NETWORK_METHOD),
@@ -257,9 +257,9 @@ PARAM_CONVERSION = {
     ATM_FIT_METHOD: (int, 2),
 
     APSEST: (int, 0),
-    THPF_METHOD: (int, 1),
-    THPF_CUTOFF: (float, 0.0),
-    THPF_PTHR: (int, 1),
+    TLPF_METHOD: (int, 1),
+    TLPF_CUTOFF: (float, 0.0),
+    TLPF_PTHR: (int, 1),
 
     TIME_SERIES_CAL: (int, 0),
     # pixel thresh based on nepochs? not every project may have 20 epochs
