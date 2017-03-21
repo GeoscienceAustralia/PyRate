@@ -483,6 +483,8 @@ def process_ifgs(ifg_paths, params, rows, cols):
     spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs)
 
     maxvar, vcmt = maxvar_vcm_calc(ifg_paths, params, preread_ifgs)
+
+    # save phase data tiles as numpy array for timeseries and linrate calc
     save_numpy_phase(ifg_paths, tiles, params)
 
     timeseries_calc(ifg_paths, params, vcmt, tiles, preread_ifgs)
@@ -561,7 +563,6 @@ def maxvar_vcm_calc(ifg_paths, params, preread_ifgs):
     for n, i in enumerate(prcs_ifgs):
         log.info('Calculating maxvar for {} of process ifgs {} of '
                  'total {}'.format(n+1, len(prcs_ifgs), len(ifg_paths)))
-        # TODO: cvd calculation is still pretty slow - revisit
         process_maxvar.append(vcm_module.cvd(i, params)[0])
     if mpiops.rank == MASTER_PROCESS:
         maxvar = np.empty(len(ifg_paths), dtype=np.float64)

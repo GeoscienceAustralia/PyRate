@@ -69,8 +69,7 @@ def cvd(ifg_path, params, calc_alpha=False):
     :param calc_alpha: bool
         whether you calculate alpha.
     """
-    # pylint: disable=invalid-name
-    # pylint: disable=too-many-locals
+
     if isinstance(ifg_path, str):  # used during MPI
         ifg = shared.Ifg(ifg_path)
         ifg.open()
@@ -81,60 +80,65 @@ def cvd(ifg_path, params, calc_alpha=False):
     shared.nan_and_mm_convert(ifg, params)
     # calculate 2D auto-correlation of image using the
     # spectral method (Wiener-Khinchin theorem)
-    if ifg.nan_converted:  # saves heaps of time with no-nan conversion
+    if ifg.nan_converted:  # if nancoverted earlier, convert nans back to 0's
         phase = where(isnan(ifg.phase_data), 0, ifg.phase_data)
     else:
         phase = ifg.phase_data
+
+    maxvar, alpha = _cvd(phase, ifg, calc_alpha)
+
+    if isinstance(ifg_path, str):
+        ifg.close()
+
+    return maxvar, alpha
+
+
+def _cvd(phase, ifg, calc_alpha):
+    # pylint: disable=invalid-name
+    # pylint: disable=too-many-locals
+
     # distance division factor of 1000 converts to km and is needed to match
     # Matlab code output
     distfact = 1000
 
     nrows, ncols = phase.shape
     fft_phase = fft2(phase)
-    pspec = real(fft_phase)**2 + imag(fft_phase)**2
+    pspec = real(fft_phase) ** 2 + imag(fft_phase) ** 2
     autocorr_grid = ifft2(pspec)
     nzc = np.sum(np.sum(phase != 0))
     autocorr_grid = fftshift(real(autocorr_grid)) / nzc
-
     # pixel distances from pixel at zero lag (image centre).
     xx, yy = meshgrid(range(ncols), range(nrows))
-
     # r_dist is distance from the center
     # doing np.divide and np.sqrt will improve performance as it keeps
     # calculations in the numpy land
-    r_dist = np.divide(np.sqrt(((xx-ifg.x_centre) * ifg.x_size)**2 +
-                               ((yy-ifg.y_centre) * ifg.y_size)**2), distfact)
-
+    r_dist = np.divide(np.sqrt(((xx - ifg.x_centre) * ifg.x_size) ** 2 +
+                               ((yy - ifg.y_centre) * ifg.y_size) ** 2),
+                       distfact)
     r_dist = reshape(r_dist, ifg.num_cells)
     acg = reshape(autocorr_grid, ifg.num_cells)
-
     # Symmetry in image; keep only unique points
     # tmp = unique_points(zip(acg, r_dist))
     # Sudipta: Is this faster than keeping only the 1st half as in Matlab?
     # Sudipta: Unlikely, as unique_point is a search/comparison,
     # whereas keeping 1st half is just numpy indexing.
     # If it is not faster, why was this done differently here?
-
-    r_dist = r_dist[:int(ceil(ifg.num_cells/2.0)) + ifg.nrows]
+    r_dist = r_dist[:int(ceil(ifg.num_cells / 2.0)) + ifg.nrows]
     acg = acg[:len(r_dist)]
-
     # Alternative method to remove duplicate cells (from Matlab Pirate code)
     # r_dist = r_dist[:ceil(len(r_dist)/2)+nlines]
     #  Reason for '+nlines' term unknown
-
     # eg. array([x for x in set([(1,1), (2,2), (1,1)])])
     # the above shortens r_dist by some number of cells
-
     # bin width for collecting data
     bin_width = max(ifg.x_size, ifg.y_size) * 2 / distfact
-
     # pick the smallest axis to determine circle search radius
     # print 'ifg.X_CENTRE, ifg.Y_CENTRE=', ifg.x_centre, ifg.y_centre
     # print 'ifg.X_SIZE, ifg.Y_SIZE', ifg.x_size, ifg.y_size
     if (ifg.x_centre * ifg.x_size) < (ifg.y_centre * ifg.y_size):
         maxdist = ifg.x_centre * ifg.x_size / distfact
     else:
-        maxdist = ifg.y_centre * ifg.y_size/ distfact
+        maxdist = ifg.y_centre * ifg.y_size / distfact
 
     # filter out data where the of lag distance is greater than maxdist
     # r_dist = array([e for e in rorig if e <= maxdist]) #
@@ -143,10 +147,6 @@ def cvd(ifg_path, params, calc_alpha=False):
     indices_to_keep = r_dist < maxdist
     r_dist = r_dist[indices_to_keep]
     acg = acg[indices_to_keep]
-
-    if isinstance(ifg_path, str):
-        ifg.close()
-
     if calc_alpha:
         # classify values of r_dist according to bin number
         rbin = ceil(r_dist / bin_width).astype(int)
@@ -162,7 +162,7 @@ def cvd(ifg_path, params, calc_alpha=False):
 
         # calculate best fit function maxvar*exp(-alpha*r_dist)
         alphaguess = 2 / (maxbin * bin_width)
-        alpha = fmin(pendiffexp, x0=alphaguess, args=(cvdav,), disp=0,
+        alpha = fmin(pendiffexp, x0=alphaguess, args=(cvdav,), disp=False,
                      xtol=1e-6, ftol=1e-6)
         print("1st guess alpha", alphaguess, 'converged alpha:', alpha)
         # maximum variance usually at the zero lag: max(acg[:len(r_dist)])
