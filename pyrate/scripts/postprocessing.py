@@ -142,16 +142,16 @@ def postprocess_timeseries(rows, cols, params):
                 tscum_file = os.path.join(output_dir,
                                           'tscuml_{}.npy'.format(n))
                 tscum = np.load(file=tscum_file)
-
-                md[ifc.EPOCH_DATE] = epochlist.dates[i + 1]
-                # sequence position; first time slice is #0
-                md['SEQUENCE_POSITION'] = i+1
                 tscum_g[t.top_left_y:t.bottom_right_y,
                         t.top_left_x:t.bottom_right_x] = tscum[:, :, i]
-                dest = os.path.join(params[cf.OUT_DIR],
-                                    'tscuml' + "_" +
-                                    str(epochlist.dates[i + 1]) + ".tif")
-                md[ifc.DATA_TYPE] = ifc.CUML
+
+            md[ifc.EPOCH_DATE] = epochlist.dates[i + 1]
+            # sequence position; first time slice is #0
+            md['SEQUENCE_POSITION'] = i+1
+            dest = os.path.join(params[cf.OUT_DIR],
+                                'tscuml' + "_" +
+                                str(epochlist.dates[i + 1]) + ".tif")
+            md[ifc.DATA_TYPE] = ifc.CUML
             shared.write_output_geotiff(md, gt, wkt, tscum_g, dest, np.nan)
         else:
             tsincr_g = np.empty(shape=ifgs[0].shape, dtype=np.float32)
@@ -160,17 +160,15 @@ def postprocess_timeseries(rows, cols, params):
                 tsincr_file = os.path.join(output_dir,
                                            'tsincr_{}.npy'.format(n))
                 tsincr = np.load(file=tsincr_file)
-
-                md[ifc.EPOCH_DATE] = epochlist.dates[i + 1]
-                # sequence position; first time slice is #0
-                md['SEQUENCE_POSITION'] = i+1
                 tsincr_g[t.top_left_y:t.bottom_right_y,
                          t.top_left_x:t.bottom_right_x] = tsincr[:, :, i]
-                dest = os.path.join(params[cf.OUT_DIR],
-                                    'tsincr' + "_" + str(
-                                        epochlist.dates[i + 1]) + ".tif")
-                md[ifc.DATA_TYPE] = ifc.INCR
-            shared.write_output_geotiff(md, gt, wkt, tsincr_g, dest,
-                                        np.nan)
+            md[ifc.EPOCH_DATE] = epochlist.dates[i + 1]
+            # sequence position; first time slice is #0
+            md['SEQUENCE_POSITION'] = i+1
+            dest = os.path.join(params[cf.OUT_DIR],
+                                'tsincr' + "_" + str(
+                                    epochlist.dates[i + 1]) + ".tif")
+            md[ifc.DATA_TYPE] = ifc.INCR
+            shared.write_output_geotiff(md, gt, wkt, tsincr_g, dest, np.nan)
     log.info('process {} finished writing {} ts (incr/cuml) tifs of '
              'total {}'.format(mpiops.rank, len(process_tifs), no_ts_tifs * 2))
