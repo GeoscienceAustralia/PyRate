@@ -26,7 +26,6 @@ import numpy as np
 
 from pyrate import algorithm
 from pyrate import config as cf
-from pyrate.config import ConfigException
 from pyrate import ifgconstants as ifc
 from pyrate import linrate
 from pyrate import mpiops
@@ -37,12 +36,13 @@ from pyrate import refpixel
 from pyrate import shared
 from pyrate import timeseries
 from pyrate import vcm as vcm_module
+from pyrate.aps import spatio_temporal_filter
 from pyrate.compat import PyAPS_INSTALLED
+from pyrate.config import ConfigException
 from pyrate.shared import Ifg, create_tiles, \
     PrereadIfg, prepare_ifg, save_numpy_phase, get_projection_info
 
 if PyAPS_INSTALLED:  # pragma: no cover
-    # from pyrate import aps
     from pyrate.pyaps import check_aps_ifgs, aps_delay_required
 
 MASTER_PROCESS = 0
@@ -453,7 +453,7 @@ def process_ifgs(ifg_paths, params, rows, cols):
     cols: int
         number of cols to break each ifg into
     """
-    if mpiops.size > 1:
+    if mpiops.size > 1: # turn of multiprocessing during mpi jobs
         params[cf.PARALLEL] = False
 
     tiles = mpiops.run_once(get_tiles, ifg_paths[0], rows, cols)
@@ -463,7 +463,6 @@ def process_ifgs(ifg_paths, params, rows, cols):
 
     mst_calc(ifg_paths, params, tiles, preread_ifgs)
 
-    # Estimate reference pixel location
     refpx, refpy = ref_pixel_calc(ifg_paths, params)
 
     # remove APS delay here, and write aps delay removed ifgs to disc
@@ -476,19 +475,18 @@ def process_ifgs(ifg_paths, params, rows, cols):
         if params[cf.APS_CORRECTION]:
             check_aps_ifgs(ifg_paths)
 
-    # Estimate and remove orbit errors
     orb_fit_calc(ifg_paths, params, preread_ifgs)
 
-    # calc and remove reference phase
     ref_phase_estimation(ifg_paths, params, refpx, refpy)
+
+    # spatio-temporal aps filter
+    spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs)
 
     maxvar, vcmt = maxvar_vcm_calc(ifg_paths, params, preread_ifgs)
     save_numpy_phase(ifg_paths, tiles, params)
 
-    if params[cf.TIME_SERIES_CAL]:
-        timeseries_calc(ifg_paths, params, vcmt, tiles, preread_ifgs)
+    timeseries_calc(ifg_paths, params, vcmt, tiles, preread_ifgs)
 
-    # Calculate linear rate map
     linrate_calc(ifg_paths, params, vcmt, tiles, preread_ifgs)
 
     log.info('PyRate workflow completed')
@@ -643,6 +641,9 @@ def timeseries_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
         dict containing ifg characteristics for efficient computing
 
     """
+    if not params[cf.TIME_SERIES_CAL]:
+        log.info('Time series calculation not required.')
+        return
     process_tiles = mpiops.array_split(tiles)
     log.info('Calculating time series')
     output_dir = params[cf.TMPDIR]
@@ -658,9 +659,3 @@ def timeseries_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
         np.save(file=os.path.join(output_dir, 'tscuml_{}.npy'.format(t.index)),
                 arr=tscum)
     mpiops.comm.barrier()
-
-
-def main(config_file, rows, cols):  # pragma: no cover
-    """ linear rate and timeseries execution starts here """
-    _, dest_paths, pars = cf.get_ifg_paths(config_file)
-    process_ifgs(sorted(dest_paths), pars, rows, cols)

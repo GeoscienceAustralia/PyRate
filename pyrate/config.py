@@ -139,11 +139,13 @@ LR_PTHRESH = 'pthr'
 #: REAL; Maximum allowable standard error for pixels in linear rate inversion.
 LR_MAXSIG = 'maxsig'
 
-# spatio-temporal filter
 # atmospheric delay errors fitting parameters
 # atmfitmethod = 1: interferogram by interferogram; atmfitmethod = 2, epoch by epoch
 ATM_FIT = 'atmfit'
 ATM_FIT_METHOD = 'atmfitmethod'
+
+# spatio-temporal filter
+APSEST = 'apsest'
 
 # Time series parameters
 #: BOOL (1/0); Do Time series calculation
@@ -243,6 +245,8 @@ PARAM_CONVERSION = {
 
     ATM_FIT: (int, 0),
     ATM_FIT_METHOD: (int, 2),
+
+    APSEST: (int, 0),
 
     TIME_SERIES_CAL: (int, 0),
     # pixel thresh based on nepochs? not every project may have 20 epochs

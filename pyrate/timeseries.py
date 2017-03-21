@@ -103,7 +103,7 @@ def _validate_params(params, tsmethod):
     return pthresh, smfactor, smorder
 
 
-def time_series(ifgs, params, vcmt, mst=None):
+def time_series(ifgs, params, vcmt=None, mst=None):
     """
     Returns time series data from the given interferograms.
 
@@ -144,7 +144,7 @@ def time_series(ifgs, params, vcmt, mst=None):
         res = np.array(Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
             delayed(time_series_by_pixel)(i, j, b0_mat, sm_factor, sm_order,
                                           ifg_data, mst, nvelpar, p_thresh,
-                                          vcmt, ts_method, interp)
+                                          interp, vcmt, ts_method)
             for (i, j) in itertools.product(range(nrows), range(ncols))))
         tsvel_matrix = np.reshape(res, newshape=(nrows, ncols, res.shape[1]))
     else:
@@ -152,7 +152,7 @@ def time_series(ifgs, params, vcmt, mst=None):
             for col in range(ncols):
                 tsvel_matrix[row, col] = time_series_by_pixel(
                     row, col, b0_mat, sm_factor, sm_order, ifg_data, mst,
-                    nvelpar, p_thresh, vcmt, ts_method, interp)
+                    nvelpar, p_thresh, interp, vcmt, ts_method)
 
     tsvel_matrix = where(tsvel_matrix == 0, nan, tsvel_matrix)
     # SB: do the span multiplication as a numpy linalg operation, MUCH faster
@@ -173,7 +173,7 @@ def time_series_by_rows(row, b0_mat, sm_factor, sm_order, ifg_data, mst, ncols,
     for col in range(ncols):
         tsvel[col, :] = time_series_by_pixel(
             row, col, b0_mat, sm_factor, sm_order, ifg_data, mst, nvelpar,
-            p_thresh, vcmt, ts_method, interp)
+            p_thresh, interp, vcmt, ts_method)
 
     return tsvel
 
@@ -190,7 +190,7 @@ def remove_rank_def_rows(b_mat, nvelpar, ifgv, sel):
 
 
 def time_series_by_pixel(row, col, b0_mat, sm_factor, sm_order, ifg_data, mst,
-                         nvelpar, p_thresh, vcmt, method, interp):
+                         nvelpar, p_thresh, interp, vcmt, method):
     """ time series computation for each pixel """
     # check pixel for non-redundant ifgs
     sel = np.nonzero(mst[:, row, col])[0]  # trues in mst are chosen
