@@ -20,8 +20,9 @@ from __future__ import print_function
 
 import logging
 import os
-from os.path import join
 import pickle as cp
+from os.path import join
+
 import numpy as np
 
 from pyrate import algorithm
@@ -39,39 +40,14 @@ from pyrate import vcm as vcm_module
 from pyrate.aps import spatio_temporal_filter
 from pyrate.compat import PyAPS_INSTALLED
 from pyrate.config import ConfigException
-from pyrate.shared import Ifg, create_tiles, \
-    PrereadIfg, prepare_ifg, save_numpy_phase, get_projection_info
+from pyrate.shared import Ifg, PrereadIfg, prepare_ifg, save_numpy_phase, \
+    get_projection_info, get_tiles
 
 if PyAPS_INSTALLED:  # pragma: no cover
     from pyrate.pyaps import check_aps_ifgs, aps_delay_required
 
 MASTER_PROCESS = 0
 log = logging.getLogger(__name__)
-
-
-def get_tiles(ifg_path, rows, cols):
-    """
-    Break up the ifgs into tiles based on user supplied rows and cols
-
-    Parameters
-    ----------
-    ifg_path: str
-        list of destination tifs
-    rows: int
-        number of rows to break each ifg into
-    cols: int
-        number of cols to break each ifg into
-
-    Returns
-    -------
-    tiles: list
-        list of shared.Tile instances
-    """
-    ifg = Ifg(ifg_path)
-    ifg.open(readonly=True)
-    tiles = create_tiles(ifg.shape, nrows=rows, ncols=cols)
-    ifg.close()
-    return tiles
 
 
 def _join_dicts(dicts):

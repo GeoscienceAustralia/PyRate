@@ -24,10 +24,10 @@ import pickle as cp
 import numpy as np
 from osgeo import gdal
 
+import pyrate.shared
 from pyrate import config as cf
 from pyrate import ifgconstants as ifc
 from pyrate import shared
-from pyrate.scripts import run_pyrate
 from pyrate import mpiops
 from pyrate.shared import PrereadIfg
 gdal.SetCacheMax(64)
@@ -59,7 +59,7 @@ def postprocess_linrate(rows, cols, params):
     # load previously saved prepread_ifgs dict
     preread_ifgs_file = join(params[cf.TMPDIR], 'preread_ifgs.pk')
     ifgs = cp.load(open(preread_ifgs_file, 'rb'))
-    tiles = run_pyrate.get_tiles(dest_tifs[0], rows, cols)
+    tiles = pyrate.shared.get_tiles(dest_tifs[0], rows, cols)
 
     # linrate aggregation
     if mpiops.size >= 3:
@@ -117,7 +117,7 @@ def postprocess_timeseries(rows, cols, params):
     epochlist = ifgs['epochlist']
     ifgs = [v for v in ifgs.values() if isinstance(v, PrereadIfg)]
 
-    tiles = run_pyrate.get_tiles(dest_tifs[0], rows, cols)
+    tiles = pyrate.shared.get_tiles(dest_tifs[0], rows, cols)
 
     # load the first tsincr file to determine the number of time series tifs
     tsincr_file = os.path.join(output_dir, 'tsincr_0.npy')

@@ -26,6 +26,7 @@ import unittest
 from os.path import join
 import numpy as np
 
+import pyrate.shared
 from pyrate import config as cf
 from pyrate import shared, config, prepifg
 from pyrate.scripts import run_pyrate, run_prepifg
@@ -212,7 +213,7 @@ class ParallelPyRateTests(unittest.TestCase):
         cls.dest_paths = cf.get_dest_paths(
             base_unw_paths, crop, params, xlks)
         run_prepifg.gamma_prepifg(base_unw_paths, params)
-        tiles = run_pyrate.get_tiles(cls.dest_paths[0], 3, 3)
+        tiles = pyrate.shared.get_tiles(cls.dest_paths[0], 3, 3)
         ifgs = common.small_data_setup()
         cls.refpixel_p, cls.maxvar_p, cls.vcmt_p = \
             run_pyrate.process_ifgs(cls.dest_paths, params, 3, 3)
