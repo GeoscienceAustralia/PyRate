@@ -152,7 +152,7 @@ def postprocess_timeseries(rows, cols, params):
                                     'tscuml' + "_" +
                                     str(epochlist.dates[i + 1]) + ".tif")
                 md[ifc.DATA_TYPE] = ifc.CUML
-                shared.write_output_geotiff(md, gt, wkt, tscum_g, dest, np.nan)
+            shared.write_output_geotiff(md, gt, wkt, tscum_g, dest, np.nan)
         else:
             tsincr_g = np.empty(shape=ifgs[0].shape, dtype=np.float32)
             i %= no_ts_tifs
@@ -170,7 +170,7 @@ def postprocess_timeseries(rows, cols, params):
                                     'tsincr' + "_" + str(
                                         epochlist.dates[i + 1]) + ".tif")
                 md[ifc.DATA_TYPE] = ifc.INCR
-                shared.write_output_geotiff(md, gt, wkt, tsincr_g, dest,
-                                            np.nan)
+            shared.write_output_geotiff(md, gt, wkt, tsincr_g, dest,
+                                        np.nan)
     log.info('process {} finished writing {} ts (incr/cuml) tifs of '
              'total {}'.format(mpiops.rank, len(process_tifs), no_ts_tifs * 2))
