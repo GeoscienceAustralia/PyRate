@@ -73,7 +73,8 @@ def linrate(config_file, rows, cols):
     Main PyRate workflow including time series and linear rate computation
     """
     config_file = abspath(config_file)
-    run_pyrate.main(config_file, rows, cols)
+    _, dest_paths, pars = cf.get_ifg_paths(config_file)
+    run_pyrate.process_ifgs(sorted(dest_paths), pars, rows, cols)
 
 
 @cli.command()
