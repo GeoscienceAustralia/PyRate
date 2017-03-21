@@ -1069,3 +1069,28 @@ def output_tiff_filename(inpath, outpath):
     """
     fname, ext = os.path.basename(inpath).split('.')
     return os.path.join(outpath, fname + '_' + ext + '.tif')
+
+
+def get_tiles(ifg_path, rows, cols):
+    """
+    Break up the ifgs into tiles based on user supplied rows and cols
+
+    Parameters
+    ----------
+    ifg_path: str
+        list of destination tifs
+    rows: int
+        number of rows to break each ifg into
+    cols: int
+        number of cols to break each ifg into
+
+    Returns
+    -------
+    tiles: list
+        list of shared.Tile instances
+    """
+    ifg = Ifg(ifg_path)
+    ifg.open(readonly=True)
+    tiles = create_tiles(ifg.shape, nrows=rows, ncols=cols)
+    ifg.close()
+    return tiles

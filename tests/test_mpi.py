@@ -175,7 +175,7 @@ def test_vcm_matlab_vs_mpi(mpisync, tempdir, get_config):
 
     mpiops.comm.barrier()
 
-    tiles = run_pyrate.get_tiles(dest_paths[0], rows=1, cols=1)
+    tiles = pyrate.shared.get_tiles(dest_paths[0], rows=1, cols=1)
     preread_ifgs = run_pyrate.create_ifg_dict(dest_paths,
                                               params=params_dict,
                                               tiles=tiles)
@@ -252,7 +252,7 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
     (refpx, refpy), maxvar, vcmt = run_pyrate.process_ifgs(
         ifg_paths=dest_paths, params=params, rows=row_splits, cols=col_splits)
 
-    tiles = mpiops.run_once(run_pyrate.get_tiles, dest_paths[0],
+    tiles = mpiops.run_once(pyrate.shared.get_tiles, dest_paths[0],
                             rows=row_splits, cols=col_splits)
     postprocessing.postprocess_linrate(row_splits, col_splits, params)
     postprocessing.postprocess_timeseries(row_splits, col_splits, params)
