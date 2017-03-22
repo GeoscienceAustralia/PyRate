@@ -241,11 +241,10 @@ def network_correction(ifgs, degree, offset, params, m_ifgs=None,
     else:
         dm = get_design_matrix(ifgs[0], degree, offset=False)
 
-    # TODO: remove this import from tests suite
-    from tests.common import MockIfg
+    # from tests.common import MockIfg
     for i in ifgs:
         # open if not Ifg instance
-        if not (isinstance(i, Ifg) or isinstance(i, MockIfg)):  # pragma: no cover
+        if isinstance(i, str):  # pragma: no cover
             # are paths
             i = Ifg(i)
             i.open(readonly=False)
