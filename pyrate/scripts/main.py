@@ -21,6 +21,7 @@ import os
 from os.path import abspath
 import logging
 import click
+import json
 from pyrate import pyratelog as pylog
 from pyrate import config as cf
 from pyrate.scripts import run_prepifg, run_pyrate, postprocessing
@@ -56,6 +57,8 @@ def prepifg(config_file):
     """
     config_file = abspath(config_file)
     params = cf.get_config_params(config_file)
+    log.info('This job was run with the following parameters:')
+    log.info(json.dumps(params, indent=4, sort_keys=True))
     if params[cf.LUIGI]:
         run_prepifg.main()
     else:
@@ -73,8 +76,10 @@ def linrate(config_file, rows, cols):
     Main PyRate workflow including time series and linear rate computation
     """
     config_file = abspath(config_file)
-    _, dest_paths, pars = cf.get_ifg_paths(config_file)
-    run_pyrate.process_ifgs(sorted(dest_paths), pars, rows, cols)
+    _, dest_paths, params = cf.get_ifg_paths(config_file)
+    log.info('This job was run with the following parameters:')
+    log.info(json.dumps(params, indent=4, sort_keys=True))
+    run_pyrate.process_ifgs(sorted(dest_paths), params, rows, cols)
 
 
 @cli.command()
