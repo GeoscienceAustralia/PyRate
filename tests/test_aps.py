@@ -15,8 +15,7 @@ ifgs_pk = os.path.join(SML_TEST_DIR, 'matlab_aps', 'preread_ifgs.pk')
 ifgs_pk = pickle.load(open(ifgs_pk, 'rb'))
 
 # tlp filter output from matlab
-ts_hp = sio.loadmat(os.path.join(SML_TEST_DIR, 'matlab_aps',
-                                     'ts_hp.mat'))
+ts_hp = sio.loadmat(os.path.join(SML_TEST_DIR, 'matlab_aps', 'ts_hp.mat'))
 
 
 def test_tlpfilter_matlab():
@@ -24,6 +23,6 @@ def test_tlpfilter_matlab():
     params = cf.get_config_params(os.path.join(TEST_CONF_GAMMA))
     tsincr = tsincr_svd['tsincr']
     tsfilt_incr = tlpfilter(tsincr, epochlist, params)
-    # TODO: why don't the entire matrices match?
-    np.testing.assert_almost_equal(ts_hp['ts_hp'][:30, :47, :],
-                                   tsfilt_incr[:30, :47, :], decimal=4)
+    tsfilt_incr_matlab = ts_hp['ts_hp']
+    np.testing.assert_almost_equal(tsfilt_incr_matlab,
+                                   tsfilt_incr, decimal=4)
