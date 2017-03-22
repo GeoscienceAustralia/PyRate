@@ -16,3 +16,9 @@ PyAPS/
 .cache/
 # .coverage tmp files
 .coverage.*
+.vscode/
+dist/
+*.egg-info/
+.installed.cfg
+*.egg
+*__pycache__/

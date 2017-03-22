@@ -42,18 +42,25 @@ def temporal_low_pass_filter(ifg_paths, params, tiles, preread_ifgs):
             t.index)), arr=tsincr)
 
     # need to assemble tsincr from all processes
-    shape = preread_ifgs[ifg_paths[0]].shape + (tsincr.shape[2], )
-    tsincr_g = np.empty(shape=shape, dtype=np.float32)
+    tsincr_g = mpiops.run_once(_assemble_tsincr, ifg_paths, params,
+                               preread_ifgs, tiles, tsincr.shape[2])
+    tsfilt_incr = mpiops.run_once(tlpfilter, tsincr_g, epochlist, params)
+    ts_hp = tsincr_g - tsfilt_incr
+    log.info('Finished applying temporal low pass filter')
+    return ts_hp
 
-    for i in range(tsincr.shape[2]):
+
+def _assemble_tsincr(ifg_paths, params, preread_ifgs, tiles, nvelpar):
+    shape = preread_ifgs[ifg_paths[0]].shape + (nvelpar,)
+    tsincr_g = np.empty(shape=shape, dtype=np.float32)
+    for i in range(nvelpar):
         for n, t in enumerate(tiles):
             assemble_tiles(i, n, t, tsincr_g[:, :, i], params[cf.TMPDIR],
                            'tsincr_aps')
-
-    ts_hp = tsincr_g - tlpfilter(tsincr_g, epochlist, params)
-    log.info('Finished applying temporal low pass filter')
+    return tsincr_g
 
 
+# TODO: use tiles here and distribute amongst processes
 def tlpfilter(tsincr, epochlist, params):
     """temporal low pass filter"""
     nanmat = ~isnan(tsincr)
