@@ -171,7 +171,7 @@ def get_epochs(ifgs):
     """
     Returns an EpochList derived from all given interferograms.
     """
-    log.info('Finding epochs')
+    log.info('Finding unique epochs in given interferogram network')
     if isinstance(ifgs, dict):
         ifgs = [v for v in ifgs.values() if isinstance(v, PrereadIfg)]
     combined = get_all_epochs(ifgs)

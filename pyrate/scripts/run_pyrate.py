@@ -143,7 +143,7 @@ def create_ifg_dict(dest_tifs, params, tiles):
 
     mpiops.comm.barrier()
     preread_ifgs = cp.load(open(preread_ifgs_file, 'rb'))
-    log.info('finish converting phase_data to numpy '
+    log.info('Finished converting phase_data to numpy '
              'in process {}'.format(mpiops.rank))
     return preread_ifgs
 
@@ -514,10 +514,10 @@ def linrate_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
     """
 
     process_tiles = mpiops.array_split(tiles)
-    log.info('Calculating linear rate')
+    log.info('Calculating linear rate map')
     output_dir = params[cf.TMPDIR]
     for t in process_tiles:
-        log.info('calculating lin rate of tile {}'.format(t.index))
+        log.info('Calculating linear rate of tile {}'.format(t.index))
         ifg_parts = [shared.IfgPart(p, t, preread_ifgs) for p in ifg_paths]
         mst_grid_n = np.load(os.path.join(output_dir,
                                           'mst_mat_{}.npy'.format(t.index)))
@@ -556,13 +556,13 @@ def maxvar_vcm_calc(ifg_paths, params, preread_ifgs):
     vcmt: ndarray
         array of shape (nifgs, nifgs)
     """
-    log.info('Calculating maxvar and vcm')
     process_indices = mpiops.array_split(range(len(ifg_paths)))
     prcs_ifgs = mpiops.array_split(ifg_paths)
     process_maxvar = []
     for n, i in enumerate(prcs_ifgs):
-        log.info('Calculating maxvar for {} of process ifgs {} of '
-                 'total {}'.format(n+1, len(prcs_ifgs), len(ifg_paths)))
+        log.info('Fitting Covariance function for {} out of {} ifgs assigned '
+                 'to this process, out of a total {} ifgs'.format(
+                     n+1, len(prcs_ifgs), len(ifg_paths)))
         # TODO: cvd calculation is still pretty slow - revisit
         process_maxvar.append(vcm_module.cvd(i, params)[0])
     if mpiops.rank == MASTER_PROCESS:
@@ -580,6 +580,7 @@ def maxvar_vcm_calc(ifg_paths, params, preread_ifgs):
                          dest=MASTER_PROCESS, tag=mpiops.rank)
 
     maxvar = mpiops.comm.bcast(maxvar, root=0)
+    log.info('Assembling Temporal Variance-Covariance Matrix')
     vcmt = mpiops.run_once(vcm_module.get_vcmt, preread_ifgs, maxvar)
     return maxvar, vcmt
 
