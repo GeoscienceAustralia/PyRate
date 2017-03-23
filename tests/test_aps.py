@@ -1,17 +1,18 @@
 import os
-import pickle
 import scipy.io as sio
 import numpy as np
 from pyrate.algorithm import get_epochs
 from pyrate.aps import tlpfilter
 from pyrate import config as cf
+from pyrate.compat import pickle, PY3
 from tests.common import SML_TEST_DIR, TEST_CONF_GAMMA
 
 # tsincr matrix from matlab using svd timeseries method
 tsincr_svd = sio.loadmat(os.path.join(SML_TEST_DIR, 'matlab_aps',
                                       'tsincr_svd.mat'))
 # prepread ifgs pickle file
-ifgs_pk = os.path.join(SML_TEST_DIR, 'matlab_aps', 'preread_ifgs.pk')
+preread_pk = 'preread_ifgs.pk' if PY3 else 'preread_ifgs_py2.pk'
+ifgs_pk = os.path.join(SML_TEST_DIR, 'matlab_aps', preread_pk)
 ifgs_pk = pickle.load(open(ifgs_pk, 'rb'))
 
 # tlp filter output from matlab
