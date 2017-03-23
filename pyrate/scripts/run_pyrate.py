@@ -310,15 +310,15 @@ def orb_fit_calc(ifg_paths, params, preread_ifgs=None):
         # Here we do all the multilooking in one process, but in memory
         # can use multiple processes if we write data to disc during
         # remove_orbital_error step
-        # A performance comparison should be performed be performed for saving
-        # multilooked files on disc vs in memory single process multilooking
+        # A performance comparison should be made for saving multilooked
+        # files on disc vs in memory single process multilooking
         if mpiops.rank == MASTER_PROCESS:
             orbital.remove_orbital_error(ifg_paths, params, preread_ifgs)
     mpiops.comm.barrier()
     #log.info('Finished orbfit calculation in process {}'.format(mpiops.rank))
 
 
-def ref_phase_estimation(ifg_paths, params, refpx, refpy):
+def ref_phase_estimation(ifg_paths, params, refpx, refpy, preread_ifgs=None):
     """
     Reference phase estimation
 
@@ -333,8 +333,22 @@ def ref_phase_estimation(ifg_paths, params, refpx, refpy):
     refpy: float
         reference pixel y-coordinate
     """
-
-    log.info('Estimating and removing reference phase')
+    # perform some checks on existing ifgs
+    if preread_ifgs:  # check unless for mpi tests
+        log.info('Checking status of reference phase estimation')
+        ifg_paths = sorted(preread_ifgs.keys())
+        # preread_ifgs[i].metadata contains ifg metadata
+        flags = [ifc.PYRATE_REF_PHASE in preread_ifgs[i].metadata
+                 for i in ifg_paths]
+        if all(flags):
+            log.info('Skipped reference phase estimation, ifgs already corrected')        
+            return True
+        elif (sum(flags) < len(flags)) and (sum(flags) > 0):
+            log.debug('Detected mix of corrected and uncorrected '
+                      'reference phases in ifgs')
+        else:
+            log.info('Estimating and removing reference phase')
+    
     if params[cf.REF_EST_METHOD] == 1:
         # calculate phase sum for later use in ref phase method 1
         comp = phase_sum(ifg_paths, params)
@@ -395,7 +409,7 @@ def ref_phs_method2(ifg_paths, params, refpx, refpy):
                                          refpx, refpy, thresh)
         phase_data -= ref_ph
         md = ifg.meta_data
-        md[ifc.REF_PHASE] = ifc.REF_PHASE_REMOVED
+        md[ifc.PYRATE_REF_PHASE] = ifc.REF_PHASE_REMOVED
         ifg.write_modified_phase(data=phase_data)
         ifg.close()
         return ref_ph
@@ -430,7 +444,7 @@ def ref_phs_method1(ifg_paths, comp):
         ref_phase = rpe.est_ref_phs_method1(phase_data, comp)
         phase_data -= ref_phase
         md = ifg.meta_data
-        md[ifc.REF_PHASE] = ifc.REF_PHASE_REMOVED
+        md[ifc.PYRATE_REF_PHASE] = ifc.REF_PHASE_REMOVED
         ifg.write_modified_phase(data=phase_data)
         ifg.close()
         return ref_phase
@@ -464,6 +478,7 @@ def process_ifgs(ifg_paths, params, rows, cols):
     mst_calc(ifg_paths, params, tiles, preread_ifgs)
 
     # Estimate reference pixel location
+    # TODO: Skip this if reference phase already removed?
     refpx, refpy = ref_pixel_calc(ifg_paths, params)
 
     # remove APS delay here, and write aps delay removed ifgs to disc
@@ -480,7 +495,7 @@ def process_ifgs(ifg_paths, params, rows, cols):
     orb_fit_calc(ifg_paths, params, preread_ifgs)
 
     # calc and remove reference phase
-    ref_phase_estimation(ifg_paths, params, refpx, refpy)
+    ref_phase_estimation(ifg_paths, params, refpx, refpy, preread_ifgs)
 
     # calculate maxvar and alpha values
     maxvar = maxvar_alpha_calc(ifg_paths, params, preread_ifgs)

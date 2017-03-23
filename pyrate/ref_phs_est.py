@@ -50,7 +50,7 @@ def estimate_ref_phase(ifgs, params, refpx, refpy):
         raise ReferencePhaseError('No such option. Use refest=1 or 2')
 
     for i in ifgs:
-        i.meta_data[ifc.REF_PHASE] = ifc.REF_PHASE_REMOVED
+        i.meta_data[ifc.PYRATE_REF_PHASE] = ifc.REF_PHASE_REMOVED
         i.write_modified_phase()
     return ref_phs, ifgs
 
@@ -146,7 +146,7 @@ def _validate_ifgs(ifgs):
     """
     if len(ifgs) < 2:
         raise ReferencePhaseError('Need to provide at least 2 ifgs')
-    flags = [i.dataset.GetMetadataItem(ifc.REF_PHASE) for i in ifgs]
+    flags = [i.dataset.GetMetadataItem(ifc.PYRATE_REF_PHASE) for i in ifgs]
     if all(flags):
         log.info('Ifgs already reference phase corrected')
         return

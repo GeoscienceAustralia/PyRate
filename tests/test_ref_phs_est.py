@@ -98,7 +98,7 @@ class RefPhsTests(unittest.TestCase):
     def test_metadata(self):
         estimate_ref_phase(self.ifgs, self.params, self.refpx, self.refpy)
         for s in self.ifgs:
-            self.assertEqual(s.dataset.GetMetadataItem(ifc.REF_PHASE),
+            self.assertEqual(s.dataset.GetMetadataItem(ifc.PYRATE_REF_PHASE),
                              ifc.REF_PHASE_REMOVED)
 
     def test_mixed_metadata_raises(self):
