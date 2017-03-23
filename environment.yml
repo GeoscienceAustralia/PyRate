@@ -11,7 +11,7 @@ dependencies:
 - hdf4
 - hdf5
 - ipython
-- matplotlib
+- matplotlib=1.5.1
 - networkx
 - numpy
 # - pygrib
