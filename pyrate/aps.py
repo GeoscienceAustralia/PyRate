@@ -68,18 +68,20 @@ def tlpfilter(tsincr, epochlist, params):
     intv = np.diff(epochlist.spans)  # time interval for the neighboring epoch
     span = epochlist.spans[: tsincr.shape[2]] + intv/2  # accumulated time
     rows, cols = tsincr.shape[:2]
-
+    cutoff = params[cf.TLPF_CUTOFF]
+    method = params[cf.TLPF_METHOD]
+    threshold = params[cf.TLPF_PTHR]
     for i in range(rows):
         for j in range(cols):
             sel = np.nonzero(nanmat[i, j, :])[0]  # don't select if nan
             m = len(sel)
-            if m >= params[cf.TLPF_PTHR]:
+            if m >= threshold:
                 for k in range(m):
                     yr = span[sel] - span[sel[k]]
-                    if params[cf.TLPF_METHOD] == 1:  # gaussian filter
-                        wgt = np.exp(-(yr/params[cf.TLPF_CUTOFF]) ** 2/2)
-                    elif params[cf.TLPF_METHOD] == 2:  # triangular filter
-                        wgt = params[cf.TLPF_CUTOFF] - abs(yr)
+                    if method == 1:  # gaussian filter
+                        wgt = np.exp(-(yr/cutoff) ** 2/2)
+                    elif method == 2:  # triangular filter
+                        wgt = cutoff - abs(yr)
                         wgt[wgt < 0] = 0
                     else:  # mean filter
                         wgt = np.ones(m)
