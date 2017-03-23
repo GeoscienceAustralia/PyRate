@@ -400,8 +400,6 @@ def remove_orbital_error(ifgs, params, preread_ifgs=None):
     preread_ifgs: dict, optional
         dict containing information regarding MPI jobs
     """
-    log.info('Calculating orbital error correction')
-
     if not params[cf.ORBITAL_FIT]:
         log.info('Orbital correction not required')
         return
@@ -411,7 +409,8 @@ def remove_orbital_error(ifgs, params, preread_ifgs=None):
         _ = [preread_ifgs.pop(k) for k in ['gt', 'epochlist', 'md', 'wkt']]
         # perform some general error/sanity checks
         if mpiops.rank == 0:
-            _check_orbital_ifgs(preread_ifgs)
+            if _check_orbital_ifgs(preread_ifgs):
+                return # return if True condition returned
 
     ifg_paths = [i.data_path for i in ifgs] \
         if isinstance(ifgs[0], Ifg) else ifgs
@@ -441,15 +440,18 @@ def remove_orbital_error(ifgs, params, preread_ifgs=None):
 
 
 def _check_orbital_ifgs(preread_ifgs):  # pragma: no cover
-
+    """ 
+    Check if the correction has already been performed in a previous run
+    """
+    log.info('Checking Orbital error status')
     ifg_paths = sorted(preread_ifgs.keys())
     # preread_ifgs[i].metadata contains ifg metadata
     flags = [ifc.PYRATE_ORBITAL_ERROR in preread_ifgs[i].metadata
              for i in ifg_paths]
     if all(flags):
-        log.info('Skipped orbital correction, ifgs already corrected')
-        return
-    if (sum(flags) < len(flags)) and (sum(flags) > 0):
+        log.info('Skipped orbital corrections, ifgs already corrected')        
+        return True
+    elif (sum(flags) < len(flags)) and (sum(flags) > 0):
         log.debug('Detected mix of corrected and uncorrected '
                   'orbital error in ifgs')
 
@@ -460,4 +462,6 @@ def _check_orbital_ifgs(preread_ifgs):  # pragma: no cover
                 msg = '{}: no orbital correction detected'.format(i)
             log.debug(msg)
             raise OrbitalError(msg)
-    log.info('Orbital error status checked')
+    else:
+        log.info('Calculating orbital corrections')
+        return False

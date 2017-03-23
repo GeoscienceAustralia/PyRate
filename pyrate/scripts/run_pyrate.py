@@ -293,7 +293,7 @@ def save_ref_pixel_blocks(grid, half_patch_size, ifg_paths, params):
 
 def orb_fit_calc(ifg_paths, params, preread_ifgs=None):
     """
-    Orbital fit correction
+    MPI wrapper for orbital fit correction
 
     Parameters
     ----------
@@ -302,7 +302,7 @@ def orb_fit_calc(ifg_paths, params, preread_ifgs=None):
     params: dict
         parameters dict corresponding to config file
     """
-    log.info('Calculating orbfit correction')
+    #log.info('Calculating orbfit correction')
     if params[cf.ORBITAL_FIT_METHOD] == 1:
         prcs_ifgs = mpiops.array_split(ifg_paths)
         orbital.remove_orbital_error(prcs_ifgs, params, preread_ifgs)
@@ -315,7 +315,7 @@ def orb_fit_calc(ifg_paths, params, preread_ifgs=None):
         if mpiops.rank == MASTER_PROCESS:
             orbital.remove_orbital_error(ifg_paths, params, preread_ifgs)
     mpiops.comm.barrier()
-    log.info('Finished orbfit calculation in process {}'.format(mpiops.rank))
+    #log.info('Finished orbfit calculation in process {}'.format(mpiops.rank))
 
 
 def ref_phase_estimation(ifg_paths, params, refpx, refpy):
@@ -484,7 +484,7 @@ def process_ifgs(ifg_paths, params, rows, cols):
 
     # calculate maxvar and alpha values
     maxvar = maxvar_alpha_calc(ifg_paths, params, preread_ifgs)
-    
+
     # assemble variance-covariance matrix
     vcmt = vcm_calc(preread_ifgs, maxvar)
     save_numpy_phase(ifg_paths, tiles, params)
@@ -568,16 +568,16 @@ def maxvar_alpha_calc(ifg_paths, params, preread_ifgs):
                  'to this process, out of a total {} ifgs'.format(
                      n+1, len(prcs_ifgs), len(ifg_paths)))
         # TODO: cvd calculation is still pretty slow - revisit
-        process_maxvar.append(vcm_module.cvd(i, params, calc_alpha=False, write_values=True)[0])
+        process_maxvar.append(vcm_module.cvd(i, params, calc_alpha=True, write_values=True)[0])
     if mpiops.rank == MASTER_PROCESS:
         maxvar = np.empty(len(ifg_paths), dtype=np.float64)
         maxvar[process_indices] = process_maxvar
         for i in range(1, mpiops.size):  # pragma: no cover
             rank_indices = mpiops.array_split(range(len(ifg_paths)), i)
-            this_process_ref_phs = np.empty(len(rank_indices),
+            this_process_maxvar = np.empty(len(rank_indices),
                                             dtype=np.float64)
-            mpiops.comm.Recv(this_process_ref_phs, source=i, tag=i)
-            maxvar[rank_indices] = this_process_ref_phs
+            mpiops.comm.Recv(this_process_maxvar, source=i, tag=i)
+            maxvar[rank_indices] = this_process_maxvar
     else:  # pragma: no cover
         maxvar = np.empty(len(ifg_paths), dtype=np.float64)
         mpiops.comm.Send(np.array(process_maxvar, dtype=np.float64),
