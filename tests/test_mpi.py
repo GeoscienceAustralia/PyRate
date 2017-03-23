@@ -183,9 +183,10 @@ def test_vcm_matlab_vs_mpi(mpisync, tempdir, get_config):
     run_pyrate.orb_fit_calc(dest_paths, params_dict)
     run_pyrate.ref_phase_estimation(dest_paths, params_dict, refpx, refpy)
 
-    maxvar, vcmt = run_pyrate.maxvar_vcm_calc(dest_paths, params_dict,
+    maxvar = run_pyrate.maxvar_alpha_calc(dest_paths, params_dict,
                                               preread_ifgs)
     np.testing.assert_array_almost_equal(maxvar, matlab_maxvar, decimal=4)
+    vcmt = run_pyrate.vcm_calc(preread_ifgs, maxvar)
     np.testing.assert_array_almost_equal(matlab_vcm, vcmt, decimal=3)
     if mpiops.rank == 0:
         shutil.rmtree(outdir)

@@ -482,7 +482,11 @@ def process_ifgs(ifg_paths, params, rows, cols):
     # calc and remove reference phase
     ref_phase_estimation(ifg_paths, params, refpx, refpy)
 
-    maxvar, vcmt = maxvar_vcm_calc(ifg_paths, params, preread_ifgs)
+    # calculate maxvar and alpha values
+    maxvar = maxvar_alpha_calc(ifg_paths, params, preread_ifgs)
+    
+    # assemble variance-covariance matrix
+    vcmt = vcm_calc(preread_ifgs, maxvar)
     save_numpy_phase(ifg_paths, tiles, params)
 
     if params[cf.TIME_SERIES_CAL]:
@@ -536,9 +540,9 @@ def linrate_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
     mpiops.comm.barrier()
 
 
-def maxvar_vcm_calc(ifg_paths, params, preread_ifgs):
+def maxvar_alpha_calc(ifg_paths, params, preread_ifgs):
     """
-    mpi capable maxvar and vcmt computation
+    mpi capable maxvar and alpha computation
 
     Parameters
     ----------
@@ -578,11 +582,29 @@ def maxvar_vcm_calc(ifg_paths, params, preread_ifgs):
         maxvar = np.empty(len(ifg_paths), dtype=np.float64)
         mpiops.comm.Send(np.array(process_maxvar, dtype=np.float64),
                          dest=MASTER_PROCESS, tag=mpiops.rank)
+    return maxvar
 
+
+def vcm_calc(preread_ifgs, maxvar):
+    """
+    Temporal Variance-Covariance Matrix computation
+
+    Parameters
+    ----------
+    preread_ifgs: dict
+        dict containing ifg characteristics for efficient computing
+    maxvar: ndarray
+        array of shape (nifgs, 1)
+
+    Returns
+    -------
+    vcmt: ndarray
+        array of shape (nifgs, nifgs)
+    """
     maxvar = mpiops.comm.bcast(maxvar, root=0)
     log.info('Assembling Temporal Variance-Covariance Matrix')
     vcmt = mpiops.run_once(vcm_module.get_vcmt, preread_ifgs, maxvar)
-    return maxvar, vcmt
+    return vcmt
 
 
 def phase_sum(ifg_paths, params):
