@@ -19,6 +19,8 @@ ifgs_pk = pickle.load(open(ifgs_pk, 'rb'))
 ts_hp = sio.loadmat(os.path.join(SML_TEST_DIR, 'matlab_aps', 'ts_hp.mat'))
 ts_hp_m2 = sio.loadmat(os.path.join(SML_TEST_DIR, 'matlab_aps',
                                     'ts_hp_m2.mat'))
+ts_hp_m3 = sio.loadmat(os.path.join(SML_TEST_DIR, 'matlab_aps',
+                                    'ts_hp_m3.mat'))
 
 
 
@@ -39,5 +41,16 @@ def test_tlpfilter_triangular_method_matlab():
     tsincr = tsincr_svd['tsincr']
     tsfilt_incr = tlpfilter(tsincr, epochlist, params)
     tsfilt_incr_matlab = ts_hp_m2['ts_hp']
+    np.testing.assert_almost_equal(tsfilt_incr_matlab,
+                                   tsfilt_incr, decimal=4)
+
+
+def test_tlpfilter_mean_matlab():
+    epochlist = get_epochs(ifgs_pk)[0]
+    params = cf.get_config_params(os.path.join(TEST_CONF_GAMMA))
+    params[cf.TLPF_METHOD] = 3
+    tsincr = tsincr_svd['tsincr']
+    tsfilt_incr = tlpfilter(tsincr, epochlist, params)
+    tsfilt_incr_matlab = ts_hp_m3['ts_hp']
     np.testing.assert_almost_equal(tsfilt_incr_matlab,
                                    tsfilt_incr, decimal=4)
