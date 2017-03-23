@@ -21,6 +21,7 @@ the Matlab Pirate package.
 """
 from __future__ import print_function
 import logging
+from os.path import join, basename
 from numpy import array, where, isnan, real, imag, sqrt, meshgrid
 from numpy import zeros, vstack, ceil, mean, exp, reshape
 from numpy.linalg import norm
@@ -30,6 +31,7 @@ from scipy.optimize import fmin
 
 from pyrate import shared
 from pyrate import ifgconstants as ifc
+from pyrate import config as cf
 from pyrate.shared import PrereadIfg, Ifg
 from pyrate.algorithm import master_slave_ids
 
@@ -61,7 +63,7 @@ def _unique_points(points):
     return vstack([array(u) for u in set(points)])
 
 
-def cvd(ifg_path, params, calc_alpha=False, write_values=False):
+def cvd(ifg_path, params, calc_alpha=False, write_vals=False, save_acg=False):
     """
     Calculate the 1D covariance function of an entire interferogram as the 
     radial average of its 2D autocorrelation.
@@ -72,14 +74,16 @@ def cvd(ifg_path, params, calc_alpha=False, write_values=False):
         dictionary of configuration parameters
     :param calc_alpha: bool
         calculate alpha, the exponential length-scale of decay factor.
-    :param write_values: bool
+    :param write_vals: bool
         write maxvar and alpha values to interferogram metadata.
+    :param save_acg: bool
+        write acg and radial distance data to numpy array
     """
     # pylint: disable=invalid-name
     # pylint: disable=too-many-locals
     if isinstance(ifg_path, str):  # used during MPI
         ifg = Ifg(ifg_path)
-        if write_values:
+        if write_vals:
             ifg.open(readonly=False)
         else:
             ifg.open()
@@ -153,7 +157,10 @@ def cvd(ifg_path, params, calc_alpha=False, write_values=False):
     indices_to_keep = r_dist < maxdist
     r_dist = r_dist[indices_to_keep]
     acg = acg[indices_to_keep]
-    # maximum variance usually at the zero lag: max(acg[:len(r_dist)])
+    
+    # save acg vs dist observations to disk
+    if save_acg: _save_cvd_data(acg, r_dist, ifg_path, params[cf.TMPDIR])
+    # NOTE maximum variance usually at the zero lag: max(acg[:len(r_dist)])
     maxvar = np.max(acg)
 
     if calc_alpha:
@@ -180,24 +187,29 @@ def cvd(ifg_path, params, calc_alpha=False, write_values=False):
         alpha = None
 
     log.info('Best fit Maxvar = {}, Alpha = {}'.format(maxvar, alpha))
-    if write_values: _add_metadata(ifg, maxvar, alpha)
+    if write_vals: _add_metadata(ifg, maxvar, alpha)
 
     if isinstance(ifg_path, str):
         ifg.close()
         
     return maxvar, alpha
 
+
 def _add_metadata(ifg, maxvar, alpha):
     """convenience function for saving metadata to ifg"""
-    #ifg = Ifg(ifg_path)
-    #ifg.open(readonly=False)
     md = ifg.meta_data
-    #print(md[ifc.PYRATE_MAXVAR], maxvar)
     md[ifc.PYRATE_MAXVAR] = str(maxvar) #.astype('str')
     md[ifc.PYRATE_ALPHA] = str(alpha) #.astype('str')
     ifg.write_modified_phase()
-    #ifg.close()
-    #[_update_metadata(p, m, a) for p, m, a in zip(ifg_paths, maxvar, alpha)]
+
+
+def _save_cvd_data(acg, r_dist, ifg_path, outdir):
+    """ function to save numpy array of autocorrelation data to disk"""
+    data = np.column_stack((acg, r_dist))
+    data_file = join(outdir, 'cvd_data_{b}.npy'.format(
+                b=basename(ifg_path).split('.')[0]))
+    np.save(file=data_file, arr=data)
+
 
 def get_vcmt(ifgs, maxvar):
     """
