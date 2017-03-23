@@ -33,6 +33,11 @@ try:
 except ImportError:
     PyAPS_INSTALLED = False
 
+if PY3:
+    import pickle
+else:
+    import cPickle as pickle
+
 
 class PyAPSException(Exception):
     """
