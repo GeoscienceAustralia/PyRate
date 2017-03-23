@@ -34,7 +34,8 @@ from pyrate.algorithm import master_slave_ids
 
 def pendiffexp(alphamod, cvdav):
     """
-    Fits an exponential model to data.
+    Exponential function for fitting the 1D covariance after Parsons et al.,
+    Geophys. J. Int., 2006.
 
     :param float alphamod: Exponential decay exponent.
     :param array cvdav: Function magnitude at 0 radius (2 col array of radius,
@@ -48,7 +49,7 @@ def pendiffexp(alphamod, cvdav):
 
 
 # this is not used any more
-def unique_points(points):
+def _unique_points(points):
     """
     Returns unique points from a list of coordinates.
 
@@ -59,15 +60,15 @@ def unique_points(points):
 
 def cvd(ifg_path, params, calc_alpha=False):
     """
-    Calculate average covariance versus distance (autocorrelation) and its
-    best fitting exponential function
+    Calculate the 1D covariance function of an entire interferogram as the 
+    radial average of its 2D autocorrelation.
 
     :param ifg_path: An interferogram.
         ifg: :py:class:`pyrate.shared.Ifg`.
-    :param: params: dict
-        dict of config params
+    :param params: dict
+        dictionary of configuration parameters
     :param calc_alpha: bool
-        whether you calculate alpha.
+        calculate alpha, the exponential length-scale of decay factor.
     """
     # pylint: disable=invalid-name
     # pylint: disable=too-many-locals
@@ -79,16 +80,17 @@ def cvd(ifg_path, params, calc_alpha=False):
     # assert isinstance(ifg_path, shared.Ifg)
     # ifg = ifg_path
     shared.nan_and_mm_convert(ifg, params)
-    # calculate 2D auto-correlation of image using the
-    # spectral method (Wiener-Khinchin theorem)
+
     if ifg.nan_converted:  # saves heaps of time with no-nan conversion
         phase = where(isnan(ifg.phase_data), 0, ifg.phase_data)
     else:
         phase = ifg.phase_data
     # distance division factor of 1000 converts to km and is needed to match
-    # Matlab code output
+    # Matlab Pirate code output
     distfact = 1000
 
+    # calculate 2D auto-correlation of image using the
+    # spectral method (Wiener-Khinchin theorem)
     nrows, ncols = phase.shape
     fft_phase = fft2(phase)
     pspec = real(fft_phase)**2 + imag(fft_phase)**2
@@ -96,12 +98,12 @@ def cvd(ifg_path, params, calc_alpha=False):
     nzc = np.sum(np.sum(phase != 0))
     autocorr_grid = fftshift(real(autocorr_grid)) / nzc
 
-    # pixel distances from pixel at zero lag (image centre).
+    # pixel distances from zero lag (image centre).
     xx, yy = meshgrid(range(ncols), range(nrows))
 
-    # r_dist is distance from the center
+    # r_dist is radial distance from the centre
     # doing np.divide and np.sqrt will improve performance as it keeps
-    # calculations in the numpy land
+    # calculations in the numpy space
     r_dist = np.divide(np.sqrt(((xx-ifg.x_centre) * ifg.x_size)**2 +
                                ((yy-ifg.y_centre) * ifg.y_size)**2), distfact)
 
@@ -135,10 +137,10 @@ def cvd(ifg_path, params, calc_alpha=False):
         maxdist = ifg.x_centre * ifg.x_size / distfact
     else:
         maxdist = ifg.y_centre * ifg.y_size/ distfact
-
-    # filter out data where the of lag distance is greater than maxdist
+    
+    # Here we use data at all radial distances.
+    # Otherwise filter out data where the distance is greater than maxdist
     # r_dist = array([e for e in rorig if e <= maxdist]) #
-    # MG: prefers to use all the data
     # acg = array([e for e in rorig if e <= maxdist])
     indices_to_keep = r_dist < maxdist
     r_dist = r_dist[indices_to_keep]
@@ -173,7 +175,19 @@ def cvd(ifg_path, params, calc_alpha=False):
 
 def get_vcmt(ifgs, maxvar):
     """
-    Returns the temporal variance/covariance matrix.
+    Assembles a temporal variance/covariance matrix using the method 
+    described by Biggs et al., Geophys. J. Int, 2007. Matrix elements are 
+    evaluated according to sig_i * sig_j * C_ij where i and j are two 
+    interferograms and C is a matrix of coefficients:
+        C = 1 if the master and slave epochs of i and j are equal
+        C = 0.5 if have i and j share either a common master or slave epoch
+        C = -0.5 if the master of i or j equals the slave of the other
+        C = 0 otherwise
+    
+    :param ifgs: A stack of interferograms.
+        ifg: :py:class:`pyrate.shared.Ifg`.
+    :param maxvar: ndarray
+        numpy array of maximum variance values for each interferogram.    
     """
     # pylint: disable=too-many-locals
     # c=0.5 for common master or slave; c=-0.5 if master
@@ -204,7 +218,7 @@ def get_vcmt(ifgs, maxvar):
                 vcm_pat[i, j] = -0.5
 
             if mas1 == mas2 and slv1 == slv2:
-                vcm_pat[i, j] = 1.0  # handle testing ifg against itself
+                vcm_pat[i, j] = 1.0  # diagonal elements
 
     # make covariance matrix in time domain
     std = sqrt(maxvar).reshape((nifgs, 1))
