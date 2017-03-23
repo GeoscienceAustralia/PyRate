@@ -20,6 +20,7 @@ are based on functions 'cvdcalc.m' and 'vcmt.m' from
 the Matlab Pirate package.
 """
 from __future__ import print_function
+import logging
 from numpy import array, where, isnan, real, imag, sqrt, meshgrid
 from numpy import zeros, vstack, ceil, mean, exp, reshape
 from numpy.linalg import norm
@@ -28,9 +29,11 @@ from scipy.fftpack import fft2, ifft2, fftshift
 from scipy.optimize import fmin
 
 from pyrate import shared
-from pyrate.shared import PrereadIfg
+from pyrate import ifgconstants as ifc
+from pyrate.shared import PrereadIfg, Ifg
 from pyrate.algorithm import master_slave_ids
 
+log = logging.getLogger(__name__)
 
 def pendiffexp(alphamod, cvdav):
     """
@@ -58,7 +61,7 @@ def _unique_points(points):
     return vstack([array(u) for u in set(points)])
 
 
-def cvd(ifg_path, params, calc_alpha=False):
+def cvd(ifg_path, params, calc_alpha=False, write_values=False):
     """
     Calculate the 1D covariance function of an entire interferogram as the 
     radial average of its 2D autocorrelation.
@@ -69,12 +72,17 @@ def cvd(ifg_path, params, calc_alpha=False):
         dictionary of configuration parameters
     :param calc_alpha: bool
         calculate alpha, the exponential length-scale of decay factor.
+    :param write_values: bool
+        write maxvar and alpha values to interferogram metadata.
     """
     # pylint: disable=invalid-name
     # pylint: disable=too-many-locals
     if isinstance(ifg_path, str):  # used during MPI
-        ifg = shared.Ifg(ifg_path)
-        ifg.open()
+        ifg = Ifg(ifg_path)
+        if write_values:
+            ifg.open(readonly=False)
+        else:
+            ifg.open()
     else:
         ifg = ifg_path
     # assert isinstance(ifg_path, shared.Ifg)
@@ -145,9 +153,8 @@ def cvd(ifg_path, params, calc_alpha=False):
     indices_to_keep = r_dist < maxdist
     r_dist = r_dist[indices_to_keep]
     acg = acg[indices_to_keep]
-
-    if isinstance(ifg_path, str):
-        ifg.close()
+    # maximum variance usually at the zero lag: max(acg[:len(r_dist)])
+    maxvar = np.max(acg)
 
     if calc_alpha:
         # classify values of r_dist according to bin number
@@ -166,12 +173,31 @@ def cvd(ifg_path, params, calc_alpha=False):
         alphaguess = 2 / (maxbin * bin_width)
         alpha = fmin(pendiffexp, x0=alphaguess, args=(cvdav,), disp=0,
                      xtol=1e-6, ftol=1e-6)
-        print("1st guess alpha", alphaguess, 'converged alpha:', alpha)
-        # maximum variance usually at the zero lag: max(acg[:len(r_dist)])
-        return np.max(acg), alpha[0]
+        #print("1st guess alpha", alphaguess, 'converged alpha:', alpha)
+        
+        alpha = alpha[0]
     else:
-        return np.max(acg), None
+        alpha = None
 
+    log.info('Best fit Maxvar = {}, Alpha = {}'.format(maxvar, alpha))
+    if write_values: _add_metadata(ifg, maxvar, alpha)
+
+    if isinstance(ifg_path, str):
+        ifg.close()
+        
+    return maxvar, alpha
+
+def _add_metadata(ifg, maxvar, alpha):
+    """convenience function for saving metadata to ifg"""
+    #ifg = Ifg(ifg_path)
+    #ifg.open(readonly=False)
+    md = ifg.meta_data
+    #print(md[ifc.PYRATE_MAXVAR], maxvar)
+    md[ifc.PYRATE_MAXVAR] = str(maxvar) #.astype('str')
+    md[ifc.PYRATE_ALPHA] = str(alpha) #.astype('str')
+    ifg.write_modified_phase()
+    #ifg.close()
+    #[_update_metadata(p, m, a) for p, m, a in zip(ifg_paths, maxvar, alpha)]
 
 def get_vcmt(ifgs, maxvar):
     """

@@ -568,7 +568,7 @@ def maxvar_alpha_calc(ifg_paths, params, preread_ifgs):
                  'to this process, out of a total {} ifgs'.format(
                      n+1, len(prcs_ifgs), len(ifg_paths)))
         # TODO: cvd calculation is still pretty slow - revisit
-        process_maxvar.append(vcm_module.cvd(i, params)[0])
+        process_maxvar.append(vcm_module.cvd(i, params, calc_alpha=False, write_values=True)[0])
     if mpiops.rank == MASTER_PROCESS:
         maxvar = np.empty(len(ifg_paths), dtype=np.float64)
         maxvar[process_indices] = process_maxvar
