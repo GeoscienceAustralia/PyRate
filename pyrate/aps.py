@@ -71,6 +71,32 @@ def tlpfilter(tsincr, epochlist, params):
     cutoff = params[cf.TLPF_CUTOFF]
     method = params[cf.TLPF_METHOD]
     threshold = params[cf.TLPF_PTHR]
+    if method == 1:  # gaussian filter
+        func = gauss
+    elif method == 2:
+        func = triangle
+    else:
+        func = mean_filter
+
+    _tlpfilter(cols, cutoff, nanmat, rows, span, threshold, tsfilt_incr,
+               tsincr, func)
+    return tsfilt_incr
+
+
+gauss = lambda m, yr, cutoff: np.exp(-(yr / cutoff) ** 2 / 2)
+
+
+def triangle(m, yr, cutoff):
+    wgt = cutoff - abs(yr)
+    wgt[wgt < 0] = 0
+    return wgt
+
+
+mean_filter = lambda m, yr, cutoff: np.ones(m)
+
+
+def _tlpfilter(cols, cutoff, nanmat, rows, span, threshold, tsfilt_incr,
+               tsincr, func):
     for i in range(rows):
         for j in range(cols):
             sel = np.nonzero(nanmat[i, j, :])[0]  # don't select if nan
@@ -78,13 +104,6 @@ def tlpfilter(tsincr, epochlist, params):
             if m >= threshold:
                 for k in range(m):
                     yr = span[sel] - span[sel[k]]
-                    if method == 1:  # gaussian filter
-                        wgt = np.exp(-(yr/cutoff) ** 2/2)
-                    elif method == 2:  # triangular filter
-                        wgt = cutoff - abs(yr)
-                        wgt[wgt < 0] = 0
-                    else:  # mean filter
-                        wgt = np.ones(m)
+                    wgt = func(m, yr, cutoff)
                     wgt /= np.sum(wgt)
                     tsfilt_incr[i, j, sel[k]] = np.sum(tsincr[i, j, sel] * wgt)
-    return tsfilt_incr
