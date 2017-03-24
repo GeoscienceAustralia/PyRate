@@ -20,6 +20,7 @@ are based on functions 'cvdcalc.m' and 'vcmt.m' from
 the Matlab Pirate package.
 """
 from __future__ import print_function
+import logging
 from numpy import array, where, isnan, real, imag, sqrt, meshgrid
 from numpy import zeros, vstack, ceil, mean, exp, reshape
 from numpy.linalg import norm
@@ -30,6 +31,9 @@ from scipy.optimize import fmin
 from pyrate import shared
 from pyrate.shared import PrereadIfg
 from pyrate.algorithm import master_slave_ids
+
+
+log = logging.getLogger(__name__)
 
 
 def pendiffexp(alphamod, cvdav):
@@ -48,7 +52,7 @@ def pendiffexp(alphamod, cvdav):
 
 
 # this is not used any more
-def unique_points(points):
+def unique_points(points):  # pragma: no cover
     """
     Returns unique points from a list of coordinates.
 
@@ -85,7 +89,7 @@ def cvd(ifg_path, params, calc_alpha=False):
     else:
         phase = ifg.phase_data
 
-    maxvar, alpha = _cvd(phase, ifg, calc_alpha)
+    maxvar, alpha = cvd_from_phase(phase, ifg, calc_alpha)
 
     if isinstance(ifg_path, str):
         ifg.close()
@@ -93,7 +97,25 @@ def cvd(ifg_path, params, calc_alpha=False):
     return maxvar, alpha
 
 
-def _cvd(phase, ifg, calc_alpha):
+def cvd_from_phase(phase, ifg, calc_alpha):
+    """
+    A convenience class reused in many places to compute cvd from phase data
+    and a ifg class
+    Parameters
+    ----------
+    phase: ndarray
+        phase data corresping to the ifg
+    ifg: shared.Ifg class instance
+    calc_alpha: bool, optional
+        whether alpha is required
+
+    Return
+    ------
+    maxvar: float
+        maxvar
+    alpha:
+        alpha
+    """
     # pylint: disable=invalid-name
     # pylint: disable=too-many-locals
 
@@ -145,9 +167,9 @@ def _cvd(phase, ifg, calc_alpha):
     # MG: prefers to use all the data
     # acg = array([e for e in rorig if e <= maxdist])
     indices_to_keep = r_dist < maxdist
-    r_dist = r_dist[indices_to_keep]
     acg = acg[indices_to_keep]
     if calc_alpha:
+        r_dist = r_dist[indices_to_keep]
         # classify values of r_dist according to bin number
         rbin = ceil(r_dist / bin_width).astype(int)
         maxbin = max(rbin)  # consistent with Matlab code
@@ -164,7 +186,7 @@ def _cvd(phase, ifg, calc_alpha):
         alphaguess = 2 / (maxbin * bin_width)
         alpha = fmin(pendiffexp, x0=alphaguess, args=(cvdav,), disp=False,
                      xtol=1e-6, ftol=1e-6)
-        print("1st guess alpha", alphaguess, 'converged alpha:', alpha)
+        log.info("1st guess alpha", alphaguess, 'converged alpha:', alpha)
         # maximum variance usually at the zero lag: max(acg[:len(r_dist)])
         return np.max(acg), alpha[0]
     else:

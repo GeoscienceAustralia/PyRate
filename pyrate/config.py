@@ -261,6 +261,10 @@ PARAM_CONVERSION = {
     TLPF_CUTOFF: (float, 0.0),
     TLPF_PTHR: (int, 1),
 
+    SLPF_METHOD: (int, 1),
+    SLPF_CUTOFF: (float, 0.0),
+    SLPF_ORDER: (int, 1),
+
     TIME_SERIES_CAL: (int, 0),
     # pixel thresh based on nepochs? not every project may have 20 epochs
     TIME_SERIES_PTHRESH: (int, 20),
