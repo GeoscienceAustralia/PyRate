@@ -65,7 +65,7 @@ def _unique_points(points):
 
 def cvd(ifg_path, params, calc_alpha=False, write_vals=False, save_acg=False):
     """
-    Calculate the 1D covariance function of an entire interferogram as the 
+    Calculate the 1D covariance function of an entire interferogram as the
     radial average of its 2D autocorrelation.
 
     :param ifg_path: An interferogram.
@@ -149,7 +149,7 @@ def cvd(ifg_path, params, calc_alpha=False, write_vals=False, save_acg=False):
         maxdist = ifg.x_centre * ifg.x_size / distfact
     else:
         maxdist = ifg.y_centre * ifg.y_size/ distfact
-    
+
     # Here we use data at all radial distances.
     # Otherwise filter out data where the distance is greater than maxdist
     # r_dist = array([e for e in rorig if e <= maxdist]) #
@@ -157,9 +157,10 @@ def cvd(ifg_path, params, calc_alpha=False, write_vals=False, save_acg=False):
     indices_to_keep = r_dist < maxdist
     r_dist = r_dist[indices_to_keep]
     acg = acg[indices_to_keep]
-    
+
     # save acg vs dist observations to disk
-    if save_acg: _save_cvd_data(acg, r_dist, ifg_path, params[cf.TMPDIR])
+    if save_acg:
+        _save_cvd_data(acg, r_dist, ifg_path, params[cf.TMPDIR])
     # NOTE maximum variance usually at the zero lag: max(acg[:len(r_dist)])
     maxvar = np.max(acg)
 
@@ -181,17 +182,16 @@ def cvd(ifg_path, params, calc_alpha=False, write_vals=False, save_acg=False):
         alpha = fmin(pendiffexp, x0=alphaguess, args=(cvdav,), disp=0,
                      xtol=1e-6, ftol=1e-6)
         #print("1st guess alpha", alphaguess, 'converged alpha:', alpha)
-        
         alpha = alpha[0]
     else:
         alpha = None
 
     log.info('Best fit Maxvar = {}, Alpha = {}'.format(maxvar, alpha))
-    if write_vals: _add_metadata(ifg, maxvar, alpha)
+    if write_vals:
+        _add_metadata(ifg, maxvar, alpha)
 
     if isinstance(ifg_path, str):
         ifg.close()
-        
     return maxvar, alpha
 
 
@@ -207,25 +207,25 @@ def _save_cvd_data(acg, r_dist, ifg_path, outdir):
     """ function to save numpy array of autocorrelation data to disk"""
     data = np.column_stack((acg, r_dist))
     data_file = join(outdir, 'cvd_data_{b}.npy'.format(
-                b=basename(ifg_path).split('.')[0]))
+        b=basename(ifg_path).split('.')[0]))
     np.save(file=data_file, arr=data)
 
 
 def get_vcmt(ifgs, maxvar):
     """
-    Assembles a temporal variance/covariance matrix using the method 
-    described by Biggs et al., Geophys. J. Int, 2007. Matrix elements are 
-    evaluated according to sig_i * sig_j * C_ij where i and j are two 
+    Assembles a temporal variance/covariance matrix using the method
+    described by Biggs et al., Geophys. J. Int, 2007. Matrix elements are
+    evaluated according to sig_i * sig_j * C_ij where i and j are two
     interferograms and C is a matrix of coefficients:
         C = 1 if the master and slave epochs of i and j are equal
         C = 0.5 if have i and j share either a common master or slave epoch
         C = -0.5 if the master of i or j equals the slave of the other
         C = 0 otherwise
-    
+
     :param ifgs: A stack of interferograms.
         ifg: :py:class:`pyrate.shared.Ifg`.
     :param maxvar: ndarray
-        numpy array of maximum variance values for each interferogram.    
+        numpy array of maximum variance values for each interferogram.
     """
     # pylint: disable=too-many-locals
     # c=0.5 for common master or slave; c=-0.5 if master

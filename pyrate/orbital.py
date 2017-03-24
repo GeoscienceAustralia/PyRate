@@ -440,7 +440,7 @@ def remove_orbital_error(ifgs, params, preread_ifgs=None):
 
 
 def _check_orbital_ifgs(preread_ifgs):  # pragma: no cover
-    """ 
+    """
     Check if the correction has already been performed in a previous run
     """
     log.info('Checking Orbital error status')
@@ -449,7 +449,7 @@ def _check_orbital_ifgs(preread_ifgs):  # pragma: no cover
     flags = [ifc.PYRATE_ORBITAL_ERROR in preread_ifgs[i].metadata
              for i in ifg_paths]
     if all(flags):
-        log.info('Skipped orbital corrections, ifgs already corrected')        
+        log.info('Skipped orbital corrections, ifgs already corrected')
         return True
     elif (sum(flags) < len(flags)) and (sum(flags) > 0):
         log.debug('Detected mix of corrected and uncorrected '

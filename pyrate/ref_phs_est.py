@@ -37,8 +37,8 @@ def estimate_ref_phase(ifgs, params, refpx, refpy):
     :returns:
         :ref_phs: reference phase correction
         :ifgs: reference phase data removed list of ifgs
-    """    
-    _check_ref_phs_ifgs(ifgs)
+    """
+    check_ref_phs_ifgs(ifgs)
 
     # set reference phase as the average of the whole image (recommended)
     if params[cf.REF_EST_METHOD] == 1:
@@ -138,22 +138,22 @@ def est_ref_phs_method1(phase_data, comp):
     return nanmedian(ifgv)
 
 
-def _check_ref_phs_ifgs(ifgs, preread_ifgs=None):
+def check_ref_phs_ifgs(ifgs, preread_ifgs=None):
     """
     Function to check that the ref phase status of all ifgs are the same
     """
     log.info('Checking status of reference phase estimation')
     if len(ifgs) < 2:
         raise ReferencePhaseError('Need to provide at least 2 ifgs')
-    
+
     if preread_ifgs: # check unless for mpi tests
         flags = [ifc.PYRATE_REF_PHASE in preread_ifgs[i].metadata
-                    for i in ifgs]
+                 for i in ifgs]
     else:
-        flags = [True if i.dataset.GetMetadataItem(ifc.PYRATE_REF_PHASE) 
-                    else False for i in ifgs]
+        flags = [True if i.dataset.GetMetadataItem(ifc.PYRATE_REF_PHASE)
+                 else False for i in ifgs]
 
-    if (sum(flags) == len(flags)):
+    if sum(flags) == len(flags):
         log.info('Skipped reference phase estimation, ' \
                  'ifgs already corrected')
         return True
