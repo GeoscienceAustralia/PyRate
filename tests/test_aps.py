@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 
 from pyrate.algorithm import get_epochs
-from pyrate.aps import tlpfilter
+from pyrate.aps.temporal import tlpfilter
 from pyrate import config as cf
 from pyrate.compat import pickle, PY3
 from tests.common import SML_TEST_DIR, TEST_CONF_GAMMA
