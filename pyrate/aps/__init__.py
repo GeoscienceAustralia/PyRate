@@ -6,7 +6,7 @@ import numpy as np
 
 from pyrate import config as cf, mpiops, shared
 from pyrate.algorithm import get_epochs
-from pyrate.aps.spatial import slpfilter
+from pyrate.aps.spatial import spatial_low_pass_filter
 from pyrate.aps.temporal import tlpfilter
 from pyrate.scripts.postprocessing import assemble_tiles
 from pyrate.shared import Ifg
@@ -16,7 +16,6 @@ log = logging.getLogger(__name__)
 
 
 def spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs):
-    log.info('Calculating time series for spatio-temporal filter application')
     if not params[cf.APSEST]:
         log.info('APS correction not required.')
         return
@@ -27,12 +26,15 @@ def spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs):
     tsfilt_incr = mpiops.run_once(tlpfilter, tsincr, epochlist, params)
 
     ts_lp = tsincr - tsfilt_incr
-    ifg = Ifg(ifg_paths[0])
+    ifg = Ifg(ifg_paths[0])  # just grab any for parameters in slpfilter
     ifg.open()
 
-    # ts_aps = slpfilter()
+    ts_aps = spatial_low_pass_filter(ts_lp, ifg, params)
     ifg.close()
-    # return tsincr - ts_aps
+    tsincr -= ts_aps
+
+    # need ts2ifgs equivalent here
+    # save ifgs
     
 
 def calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles):

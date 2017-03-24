@@ -186,7 +186,8 @@ def cvd_from_phase(phase, ifg, calc_alpha):
         alphaguess = 2 / (maxbin * bin_width)
         alpha = fmin(pendiffexp, x0=alphaguess, args=(cvdav,), disp=False,
                      xtol=1e-6, ftol=1e-6)
-        log.info("1st guess alpha", alphaguess, 'converged alpha:', alpha)
+        log.info("1st guess alpha {}, converged "
+                 "alpha: {}".format(alphaguess, alpha))
         # maximum variance usually at the zero lag: max(acg[:len(r_dist)])
         return np.max(acg), alpha[0]
     else:
