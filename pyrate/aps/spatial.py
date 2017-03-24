@@ -17,11 +17,12 @@ def spatial_low_pass_filter(ts_hp, ifg, params):
 
 
 def slpfilter(phase, ifg, params):
-    if np.sum(np.isnan(ifg)) == 0:  # if there are no nans in the data
+    if np.sum(np.isnan(phase)) == 0:  # if there are no nans in the data
         return ifg
-
-    if params[cf.SLPF_CUTOFF] == 0:
+    cutoff = params[cf.SLPF_CUTOFF]
+    if cutoff == 0:
         maxvar, alpha = cvd_from_phase(phase, ifg, calc_alpha=True)
+        cutoff = 1/alpha
 
     # find the center of the imag
     rows, cols = ifg.shape
@@ -38,10 +39,9 @@ def slpfilter(phase, ifg, params):
     xx = (xx - cx) * ifg.x_size
     yy = (yy-cy) * ifg.y_size
     dist = np.divide(np.sqrt(((xx - ifg.x_centre) * ifg.x_size) ** 2 +
-                           ((yy - ifg.y_centre) * ifg.y_size) ** 2),
+                     ((yy - ifg.y_centre) * ifg.y_size) ** 2),
                      distfact)
 
-    cutoff = params[cf.SLPF_CUTOFF]
     if params[cf.SLPF_METHOD] == 1:  # butterworth low pass filter
         H = 1./(1+((dist / cutoff) ** (2*params[cf.SLPF_ORDER])))
     else:  # Gaussian lowpass filter
@@ -49,6 +49,6 @@ def slpfilter(phase, ifg, params):
 
     outf = imf * H
     out = np.real(ifft2(ifftshift(outf)))
-    out[np.isnan(ifg)] = np.nan
+    out[np.isnan(phase)] = np.nan
 
     return out
