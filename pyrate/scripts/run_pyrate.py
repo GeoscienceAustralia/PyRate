@@ -301,6 +301,8 @@ def orb_fit_calc(ifg_paths, params, preread_ifgs=None):
         list of ifg paths
     params: dict
         parameters dict corresponding to config file
+    preread_ifgs: dict
+        dict containing information regarding ifgs
     """
     #log.info('Calculating orbfit correction')
     if params[cf.ORBITAL_FIT_METHOD] == 1:
@@ -332,32 +334,27 @@ def ref_phase_estimation(ifg_paths, params, refpx, refpy, preread_ifgs=None):
         reference pixel x-coordinate
     refpy: float
         reference pixel y-coordinate
+    preread_ifgs: dict
+        dict containing information regarding ifgs
     """
     # perform some checks on existing ifgs
-    if preread_ifgs:  # check unless for mpi tests
-        log.info('Checking status of reference phase estimation')
+    if preread_ifgs and mpiops.rank == MASTER_PROCESS:
         ifg_paths = sorted(preread_ifgs.keys())
-        # preread_ifgs[i].metadata contains ifg metadata
-        flags = [ifc.PYRATE_REF_PHASE in preread_ifgs[i].metadata
-                 for i in ifg_paths]
-        if all(flags):
-            log.info('Skipped reference phase estimation, ifgs already corrected')        
-            return True
-        elif (sum(flags) < len(flags)) and (sum(flags) > 0):
-            log.debug('Detected mix of corrected and uncorrected '
-                      'reference phases in ifgs')
-        else:
-            log.info('Estimating and removing reference phase')
-    
+        if rpe._check_ref_phs_ifgs(ifg_paths, preread_ifgs):
+            return # return if True condition returned
+
     if params[cf.REF_EST_METHOD] == 1:
         # calculate phase sum for later use in ref phase method 1
         comp = phase_sum(ifg_paths, params)
+        log.info('Computing reference phase via method 1')
         process_ref_phs = ref_phs_method1(ifg_paths, comp)
     elif params[cf.REF_EST_METHOD] == 2:
+        log.info('Computing reference phase via method 2')
         process_ref_phs = ref_phs_method2(ifg_paths, params, refpx, refpy)
     else:
         raise ConfigException('Ref phase estimation method must be 1 or 2')
 
+    # Save reference phase numpy arrays to disk
     ref_phs_file = join(params[cf.TMPDIR], 'ref_phs.npy')
     if mpiops.rank == MASTER_PROCESS:
         ref_phs = np.zeros(len(ifg_paths), dtype=np.float64)
@@ -374,6 +371,7 @@ def ref_phase_estimation(ifg_paths, params, refpx, refpy, preread_ifgs=None):
         # send reference phase data to master process
         mpiops.comm.Send(process_ref_phs, dest=MASTER_PROCESS,
                          tag=mpiops.rank)
+    log.info('Completed reference phase estimation')
 
 
 def ref_phs_method2(ifg_paths, params, refpx, refpy):
