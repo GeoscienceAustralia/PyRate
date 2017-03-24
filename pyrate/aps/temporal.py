@@ -8,6 +8,8 @@ log = logging.getLogger(__name__)
 
 # TODO: use tiles here and distribute amongst processes
 def tlpfilter(tsincr, epochlist, params):
+    log.info('Applying temporal low pass filter')
+
     """temporal low pass filter"""
     nanmat = ~isnan(tsincr)
     tsfilt_incr = np.empty_like(tsincr, dtype=np.float32) * np.nan
