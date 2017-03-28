@@ -148,8 +148,7 @@ def cvd_from_phase(phase, ifg, calc_alpha):
     #  Reason for '+nlines' term unknown
     # eg. array([x for x in set([(1,1), (2,2), (1,1)])])
     # the above shortens r_dist by some number of cells
-    # bin width for collecting data
-    bin_width = max(ifg.x_size, ifg.y_size) * 2 / distfact  # km
+
     # pick the smallest axis to determine circle search radius
     # print 'ifg.X_CENTRE, ifg.Y_CENTRE=', ifg.x_centre, ifg.y_centre
     # print 'ifg.X_SIZE, ifg.Y_SIZE', ifg.x_size, ifg.y_size
@@ -165,10 +164,12 @@ def cvd_from_phase(phase, ifg, calc_alpha):
     indices_to_keep = r_dist < maxdist
     acg = acg[indices_to_keep]
     if calc_alpha:
+        # bin width for collecting data
+        bin_width = max(ifg.x_size, ifg.y_size) * 2 / distfact  # km
         r_dist = r_dist[indices_to_keep]  # km
         # classify values of r_dist according to bin number
         rbin = ceil(r_dist / bin_width).astype(int)
-        maxbin = max(rbin)  # consistent with Matlab code
+        maxbin = max(rbin) - 1  # consistent with Matlab code
 
         cvdav = zeros(shape=(2, maxbin))
 
