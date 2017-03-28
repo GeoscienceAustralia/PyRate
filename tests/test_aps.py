@@ -2,10 +2,11 @@ import os
 import scipy.io as sio
 import numpy as np
 import pytest
+from collections import namedtuple
 
 from pyrate.algorithm import get_epochs
 from pyrate.aps.temporal import tlpfilter
-from pyrate.aps.spatial import _slp_filter
+from pyrate.aps.spatial import _slp_filter, spatial_low_pass_filter
 from pyrate import config as cf
 from pyrate.compat import pickle, PY3
 from tests.common import SML_TEST_DIR, TEST_CONF_GAMMA, small_data_setup
@@ -53,21 +54,27 @@ tsincr = tsincr_svd['tsincr']
 
 params[cf.TLPF_METHOD] = 3
 ts_hp_before_slpfilter = tsincr - tlpfilter(tsincr, epochlist, params)
+
+# convert nan's into zeros
+ts_hp_before_slpfilter[np.isnan(ts_hp_before_slpfilter)] = 0
+
 ts_aps_m1 = sio.loadmat(os.path.join(SML_TEST_DIR, 'matlab_aps',
                                      'ts_aps.mat'))['ts_aps']
 ts_aps_m2 = sio.loadmat(os.path.join(SML_TEST_DIR, 'matlab_aps',
                                      'ts_aps_m2.mat'))['ts_aps']
+
+xpsize = 76.834133036409  # copied from matlab since pyrate's don't match
+ypsize = 92.426722191659
 
 
 def test_slpfilter_matlab(slpfilter_method):
     # TODO: write tests for alpha = 0 special case when alpha (1/cutoff) is
     # computed
 
-    params[cf.TLPF_METHOD] = slpfilter_method
+    params[cf.SLPF_METHOD] = slpfilter_method
     ifgs = small_data_setup()
-    xpsize = 76.834133036409  # copied from matlab since pyrate's don't match
-    ypsize = 92.426722191659
-    ts_aps = np.zeros_like(ts_aps_m1)
+    ts_aps_m = ts_aps_m1 if slpfilter_method == 1 else ts_aps_m2
+    ts_aps = np.zeros_like(ts_aps_m)
     rows, cols = ifgs[0].shape
     for i in range(ts_aps.shape[2]):
         ts_aps[:, :, i] = _slp_filter(cutoff=params[cf.SLPF_CUTOFF],
@@ -76,4 +83,20 @@ def test_slpfilter_matlab(slpfilter_method):
                                       params=params,
                                       phase=ts_hp_before_slpfilter[:, :, i])
 
-    np.testing.assert_array_almost_equal(ts_aps, ts_aps_m1, decimal=4)
+    np.testing.assert_array_almost_equal(ts_aps, ts_aps_m, decimal=4)
+
+
+def test_slpfilter_accumulated(slpfilter_method):
+    import copy
+    ts_aps_before = copy.copy(ts_hp_before_slpfilter)
+    params[cf.SLPF_METHOD] = slpfilter_method
+    ifgs = small_data_setup()
+    ts_aps_m = ts_aps_m1 if slpfilter_method == 1 else ts_aps_m2
+    Ifg = namedtuple('Ifg', 'x_size, y_size, shape')
+    ifg = Ifg(x_size=xpsize, y_size=ypsize, shape=ifgs[0].shape)
+    ts_aps = spatial_low_pass_filter(ts_aps_before,
+                                     ifg, params=params)
+
+    for i in ifgs:
+        i.close()
+    np.testing.assert_array_almost_equal(ts_aps, ts_aps_m, decimal=4)

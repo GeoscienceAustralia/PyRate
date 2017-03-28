@@ -63,7 +63,6 @@ def _slp_filter(phase, cutoff, rows, cols, x_size, y_size, params):
     cx = np.floor(cols/2)
     cy = np.floor(rows/2)
     # fft for the input image
-    phase[np.isnan(phase)] = 0
     imf = fftshift(fft2(phase))
     # calculate distance
     distfact = 1.0e3  # to convert into meters
@@ -73,8 +72,10 @@ def _slp_filter(phase, cutoff, rows, cols, x_size, y_size, params):
     dist = np.sqrt(xx ** 2 + yy ** 2)/distfact  # km
 
     if params[cf.SLPF_METHOD] == 1:  # butterworth low pass filter
+        print('should print butterworth')
         H = 1. / (1 + ((dist / cutoff) ** (2 * params[cf.SLPF_ORDER])))
     else:  # Gaussian low pass filter
+        print('should print gaussian')
         H = np.exp(-(dist ** 2) / (2 * cutoff ** 2))
     outf = imf * H
     out = np.real(ifft2(ifftshift(outf)))
