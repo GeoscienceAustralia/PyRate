@@ -25,6 +25,7 @@ def spatial_low_pass_filter(ts_hp, ifg, params):
         shape (ifg.shape, n_epochs)  
     """
     log.info('Applying spatial low pass filter')
+    ts_hp[np.isnan(ts_hp)] = 0  # need it here for cvd and fft
     for i in range(ts_hp.shape[2]):
         ts_hp[:, :, i] = slpfilter(ts_hp[:, :, i], ifg, params)
 
@@ -50,7 +51,6 @@ def slpfilter(phase, ifg, params):
     if np.all(np.isnan(phase)):  # return for nan matrix
         return phase
     cutoff = params[cf.SLPF_CUTOFF]
-    phase[np.isnan(phase)] = 0  # need it here for cvd calc
     if cutoff == 0:
         maxvar, alpha = cvd_from_phase(phase, ifg, calc_alpha=True)
         cutoff = 1.0/alpha

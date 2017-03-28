@@ -137,15 +137,15 @@ def cvd_from_phase(phase, ifg, calc_alpha):
     r_dist = np.divide(np.sqrt(((xx - ifg.x_centre) * ifg.x_size) ** 2 +
                                ((yy - ifg.y_centre) * ifg.y_size) ** 2),
                        distfact)  # km
-    r_dist = reshape(r_dist, ifg.num_cells)
-    acg = reshape(autocorr_grid, ifg.num_cells)
+    r_dist = reshape(r_dist, phase.size)
+    acg = reshape(autocorr_grid, phase.size)
     # Symmetry in image; keep only unique points
     # tmp = unique_points(zip(acg, r_dist))
     # Sudipta: Is this faster than keeping only the 1st half as in Matlab?
     # Sudipta: Unlikely, as unique_point is a search/comparison,
     # whereas keeping 1st half is just numpy indexing.
     # If it is not faster, why was this done differently here?
-    r_dist = r_dist[:int(ceil(ifg.num_cells / 2.0)) + ifg.nrows]
+    r_dist = r_dist[:int(ceil(phase.size / 2.0)) + nrows]
     acg = acg[:len(r_dist)]
     # Alternative method to remove duplicate cells (from Matlab Pirate code)
     # r_dist = r_dist[:ceil(len(r_dist)/2)+nlines]
