@@ -124,11 +124,7 @@ def cvd_from_phase(phase, ifg, calc_alpha):
     distfact = 1000
 
     nrows, ncols = phase.shape
-    fft_phase = fft2(phase)
-    pspec = real(fft_phase) ** 2 + imag(fft_phase) ** 2
-    autocorr_grid = ifft2(pspec)
-    nzc = np.sum(np.sum(phase != 0))
-    autocorr_grid = fftshift(real(autocorr_grid)) / nzc
+    autocorr_grid = _get_autogrid(phase)
     # pixel distances from pixel at zero lag (image centre).
     xx, yy = meshgrid(range(ncols), range(nrows))
     # r_dist is distance from the center
@@ -158,9 +154,9 @@ def cvd_from_phase(phase, ifg, calc_alpha):
     # print 'ifg.X_CENTRE, ifg.Y_CENTRE=', ifg.x_centre, ifg.y_centre
     # print 'ifg.X_SIZE, ifg.Y_SIZE', ifg.x_size, ifg.y_size
     if (ifg.x_centre * ifg.x_size) < (ifg.y_centre * ifg.y_size):
-        maxdist = ifg.x_centre * ifg.x_size / distfact
+        maxdist = (ifg.x_centre+1) * ifg.x_size / distfact
     else:
-        maxdist = ifg.y_centre * ifg.y_size / distfact
+        maxdist = (ifg.y_centre+1) * ifg.y_size / distfact
 
     # filter out data where the of lag distance is greater than maxdist
     # r_dist = array([e for e in rorig if e <= maxdist]) #
@@ -192,6 +188,15 @@ def cvd_from_phase(phase, ifg, calc_alpha):
         return np.max(acg), alpha[0]  # alpha unit 1/km
     else:
         return np.max(acg), None
+
+
+def _get_autogrid(phase):
+    fft_phase = fft2(phase)
+    pspec = real(fft_phase) ** 2 + imag(fft_phase) ** 2
+    autocorr_grid = ifft2(pspec)
+    nzc = np.sum(np.sum(phase != 0))
+    autocorr_grid = fftshift(real(autocorr_grid)) / nzc
+    return autocorr_grid
 
 
 def get_vcmt(ifgs, maxvar):
