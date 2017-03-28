@@ -17,38 +17,36 @@ def spatial_low_pass_filter(ts_hp, ifg, params):
 
 
 def slpfilter(phase, ifg, params):
-    if np.sum(np.isnan(phase)) == 0:  # if there are no nans in the data
-        return ifg
+    if np.all(np.isnan(phase)):  # return for nan matrix
+        return phase
     cutoff = params[cf.SLPF_CUTOFF]
+    phase[np.isnan(phase)] = 0  # need it here for cvd calc
     if cutoff == 0:
         maxvar, alpha = cvd_from_phase(phase, ifg, calc_alpha=True)
-        cutoff = 1/alpha
-
-    # find the center of the imag
+        cutoff = 1.0/alpha
     rows, cols = ifg.shape
-    cx = ifg.x_centre
-    cy = ifg.y_centre
+    return _slp_filter(phase, cutoff, rows, cols,
+                       ifg.x_size, ifg.y_size, params)
 
+
+def _slp_filter(phase, cutoff, rows, cols, x_size, y_size, params):
+    cx = np.floor(cols/2)
+    cy = np.floor(rows/2)
     # fft for the input image
     phase[np.isnan(phase)] = 0
     imf = fftshift(fft2(phase))
-
     # calculate distance
-    distfact = 1000.0  # to convert into km
+    distfact = 1.0e3  # to convert into meters
     [xx, yy] = np.meshgrid(range(cols), range(rows))
-    xx = (xx - cx) * ifg.x_size
-    yy = (yy-cy) * ifg.y_size
-    dist = np.divide(np.sqrt(((xx - ifg.x_centre) * ifg.x_size) ** 2 +
-                     ((yy - ifg.y_centre) * ifg.y_size) ** 2),
-                     distfact)
+    xx = (xx - cx) * x_size
+    yy = (yy - cy) * y_size
+    dist = np.sqrt(xx ** 2 + yy ** 2)/distfact
 
     if params[cf.SLPF_METHOD] == 1:  # butterworth low pass filter
-        H = 1./(1+((dist / cutoff) ** (2*params[cf.SLPF_ORDER])))
-    else:  # Gaussian lowpass filter
-        H = np.exp(-(dist ** 2)/(2 * cutoff**2))
-
+        H = 1. / (1 + ((dist / cutoff) ** (2 * params[cf.SLPF_ORDER])))
+    else:  # Gaussian low pass filter
+        H = np.exp(-(dist ** 2) / (2 * cutoff ** 2))
     outf = imf * H
     out = np.real(ifft2(ifftshift(outf)))
     out[np.isnan(phase)] = np.nan
-
     return out
