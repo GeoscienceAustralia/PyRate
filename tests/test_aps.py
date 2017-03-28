@@ -60,9 +60,12 @@ ts_aps_m2 = sio.loadmat(os.path.join(SML_TEST_DIR, 'matlab_aps',
 
 
 def test_slpfilter_matlab(slpfilter_method):
+    # TODO: write tests for alpha = 0 special case when alpha (1/cutoff) is
+    # computed
+
     params[cf.TLPF_METHOD] = slpfilter_method
     ifgs = small_data_setup()
-    xpsize = 76.834133036409
+    xpsize = 76.834133036409  # copied from matlab since pyrate's don't match
     ypsize = 92.426722191659
     ts_aps = np.zeros_like(ts_aps_m1)
     rows, cols = ifgs[0].shape

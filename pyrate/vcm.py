@@ -136,7 +136,7 @@ def cvd_from_phase(phase, ifg, calc_alpha):
     # calculations in the numpy land
     r_dist = np.divide(np.sqrt(((xx - ifg.x_centre) * ifg.x_size) ** 2 +
                                ((yy - ifg.y_centre) * ifg.y_size) ** 2),
-                       distfact)
+                       distfact)  # km
     r_dist = reshape(r_dist, ifg.num_cells)
     acg = reshape(autocorr_grid, ifg.num_cells)
     # Symmetry in image; keep only unique points
@@ -153,7 +153,7 @@ def cvd_from_phase(phase, ifg, calc_alpha):
     # eg. array([x for x in set([(1,1), (2,2), (1,1)])])
     # the above shortens r_dist by some number of cells
     # bin width for collecting data
-    bin_width = max(ifg.x_size, ifg.y_size) * 2 / distfact
+    bin_width = max(ifg.x_size, ifg.y_size) * 2 / distfact  # km
     # pick the smallest axis to determine circle search radius
     # print 'ifg.X_CENTRE, ifg.Y_CENTRE=', ifg.x_centre, ifg.y_centre
     # print 'ifg.X_SIZE, ifg.Y_SIZE', ifg.x_size, ifg.y_size
@@ -169,7 +169,7 @@ def cvd_from_phase(phase, ifg, calc_alpha):
     indices_to_keep = r_dist < maxdist
     acg = acg[indices_to_keep]
     if calc_alpha:
-        r_dist = r_dist[indices_to_keep]
+        r_dist = r_dist[indices_to_keep]  # km
         # classify values of r_dist according to bin number
         rbin = ceil(r_dist / bin_width).astype(int)
         maxbin = max(rbin)  # consistent with Matlab code
@@ -189,7 +189,7 @@ def cvd_from_phase(phase, ifg, calc_alpha):
         log.info("1st guess alpha {}, converged "
                  "alpha: {}".format(alphaguess, alpha))
         # maximum variance usually at the zero lag: max(acg[:len(r_dist)])
-        return np.max(acg), alpha[0]
+        return np.max(acg), alpha[0]  # alpha unit 1/km
     else:
         return np.max(acg), None
 
