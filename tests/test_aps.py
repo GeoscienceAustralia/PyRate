@@ -1,8 +1,9 @@
 import os
+import copy
+from collections import namedtuple
 import scipy.io as sio
 import numpy as np
 import pytest
-from collections import namedtuple
 
 from pyrate.algorithm import get_epochs
 from pyrate.aps.temporal import tlpfilter
@@ -62,7 +63,8 @@ ts_aps_m1 = sio.loadmat(os.path.join(SML_TEST_DIR, 'matlab_aps',
                                      'ts_aps.mat'))['ts_aps']
 ts_aps_m2 = sio.loadmat(os.path.join(SML_TEST_DIR, 'matlab_aps',
                                      'ts_aps_m2.mat'))['ts_aps']
-
+ts_aps_m_auto = sio.loadmat(os.path.join(SML_TEST_DIR, 'matlab_aps',
+                                         'ts_aps_auto_cutoff.mat'))['ts_aps']
 xpsize = 76.834133036409  # copied from matlab since pyrate's don't match
 ypsize = 92.426722191659
 
@@ -82,12 +84,12 @@ def test_slpfilter_matlab(slpfilter_method):
                                       x_size=xpsize, y_size=ypsize,
                                       params=params,
                                       phase=ts_hp_before_slpfilter[:, :, i])
-
+    for i in ifgs:
+        i.close()
     np.testing.assert_array_almost_equal(ts_aps, ts_aps_m, decimal=4)
 
 
 def test_slpfilter_accumulated(slpfilter_method):
-    import copy
     ts_aps_before = copy.copy(ts_hp_before_slpfilter)
     params[cf.SLPF_METHOD] = slpfilter_method
     ifgs = small_data_setup()
@@ -100,3 +102,20 @@ def test_slpfilter_accumulated(slpfilter_method):
     for i in ifgs:
         i.close()
     np.testing.assert_array_almost_equal(ts_aps, ts_aps_m, decimal=4)
+
+
+def test_slpfilter_auto_cutoff(slpfilter_method=2):
+    ts_aps_before = copy.copy(ts_hp_before_slpfilter)
+    params[cf.SLPF_METHOD] = slpfilter_method
+    params[cf.SLPF_CUTOFF] = 0
+    ifgs = small_data_setup()
+    Ifg = namedtuple('Ifg', 'x_centre, y_centre, x_size, y_size, shape')
+    ifg = Ifg(x_size=xpsize, y_size=ypsize, shape=ifgs[0].shape,
+              x_centre=ifgs[0].x_centre, y_centre=ifgs[0].y_centre)
+
+    ts_aps = spatial_low_pass_filter(ts_aps_before,
+                                     ifg, params=params)
+
+    for i in ifgs:
+        i.close()
+    np.testing.assert_array_almost_equal(ts_aps, ts_aps_m_auto, decimal=4)
