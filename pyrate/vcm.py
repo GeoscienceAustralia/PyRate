@@ -32,6 +32,9 @@ from pyrate import shared
 from pyrate.shared import PrereadIfg
 from pyrate.algorithm import master_slave_ids
 
+# distance division factor of 1000 converts to km and is needed to match
+# Matlab code output
+DISTFACT = 1000
 
 log = logging.getLogger(__name__)
 
@@ -61,7 +64,7 @@ def unique_points(points):  # pragma: no cover
     return vstack([array(u) for u in set(points)])
 
 
-def cvd(ifg_path, params, calc_alpha=False):
+def cvd(ifg_path, params, r_dist, calc_alpha=False):
     """
     Calculate average covariance versus distance (autocorrelation) and its
     best fitting exponential function
@@ -89,7 +92,7 @@ def cvd(ifg_path, params, calc_alpha=False):
     else:
         phase = ifg.phase_data
 
-    maxvar, alpha = cvd_from_phase(phase, ifg, calc_alpha)
+    maxvar, alpha = cvd_from_phase(phase, ifg, r_dist, calc_alpha)
 
     if isinstance(ifg_path, str):
         ifg.close()
@@ -97,7 +100,7 @@ def cvd(ifg_path, params, calc_alpha=False):
     return maxvar, alpha
 
 
-def cvd_from_phase(phase, ifg, calc_alpha):
+def cvd_from_phase(phase, ifg, r_dist, calc_alpha):
     """
     A convenience class reused in many places to compute cvd from phase data
     and a ifg class
@@ -119,21 +122,7 @@ def cvd_from_phase(phase, ifg, calc_alpha):
     # pylint: disable=invalid-name
     # pylint: disable=too-many-locals
 
-    # distance division factor of 1000 converts to km and is needed to match
-    # Matlab code output
-    distfact = 1000
-
-    nrows, ncols = phase.shape
     autocorr_grid = _get_autogrid(phase)
-    # pixel distances from pixel at zero lag (image centre).
-    xx, yy = meshgrid(range(ncols), range(nrows))
-    # r_dist is distance from the center
-    # doing np.divide and np.sqrt will improve performance as it keeps
-    # calculations in the numpy land
-    r_dist = np.divide(np.sqrt(((xx - ifg.x_centre) * ifg.x_size) ** 2 +
-                               ((yy - ifg.y_centre) * ifg.y_size) ** 2),
-                       distfact)  # km
-    r_dist = reshape(r_dist, phase.size, order='F')
     acg = reshape(autocorr_grid, phase.size, order='F')
     # Symmetry in image; keep only unique points
     # tmp = unique_points(zip(acg, r_dist))
@@ -141,7 +130,7 @@ def cvd_from_phase(phase, ifg, calc_alpha):
     # Sudipta: Unlikely, as unique_point is a search/comparison,
     # whereas keeping 1st half is just numpy indexing.
     # If it is not faster, why was this done differently here?
-    r_dist = r_dist[:int(ceil(phase.size / 2.0)) + nrows]
+    # r_dist = r_dist[:int(ceil(phase.size / 2.0)) + nrows]
     acg = acg[:len(r_dist)]
     # Alternative method to remove duplicate cells (from Matlab Pirate code)
     # r_dist = r_dist[:ceil(len(r_dist)/2)+nlines]
@@ -151,9 +140,9 @@ def cvd_from_phase(phase, ifg, calc_alpha):
 
     # pick the smallest axis to determine circle search radius
     if (ifg.x_centre * ifg.x_size) < (ifg.y_centre * ifg.y_size):
-        maxdist = (ifg.x_centre+1) * ifg.x_size / distfact
+        maxdist = (ifg.x_centre+1) * ifg.x_size / DISTFACT
     else:
-        maxdist = (ifg.y_centre+1) * ifg.y_size / distfact
+        maxdist = (ifg.y_centre+1) * ifg.y_size / DISTFACT
 
     # filter out data where the of lag distance is greater than maxdist
     # r_dist = array([e for e in rorig if e <= maxdist]) #
@@ -164,7 +153,7 @@ def cvd_from_phase(phase, ifg, calc_alpha):
 
     if calc_alpha:
         # bin width for collecting data
-        bin_width = max(ifg.x_size, ifg.y_size) * 2 / distfact  # km
+        bin_width = max(ifg.x_size, ifg.y_size) * 2 / DISTFACT  # km
         r_dist = r_dist[indices_to_keep]  # km
         # classify values of r_dist according to bin number
         rbin = ceil(r_dist / bin_width).astype(int)
@@ -187,6 +176,32 @@ def cvd_from_phase(phase, ifg, calc_alpha):
         return np.max(acg), alpha[0]  # alpha unit 1/km
     else:
         return np.max(acg), None
+
+
+class RDist:
+    def __init__(self, ifg):
+        self.r_dist = None
+        self.ifg = ifg
+        self.nrows, self.ncols = ifg.shape
+
+    def __call__(self):
+
+        if self.r_dist is None:
+            size = self.nrows * self.ncols
+            # pixel distances from pixel at zero lag (image centre).
+            xx, yy = meshgrid(range(self.ncols), range(self.nrows))
+            # r_dist is distance from the center
+            # doing np.divide and np.sqrt will improve performance as it keeps
+            # calculations in the numpy land
+            self.r_dist = np.divide(np.sqrt(((xx - self.ifg.x_centre) *
+                                             self.ifg.x_size) ** 2 +
+                                    ((yy - self.ifg.y_centre) *
+                                     self.ifg.y_size) ** 2),
+                                    DISTFACT)  # km
+            self.r_dist = reshape(self.r_dist, size, order='F')
+            self.r_dist = self.r_dist[:int(ceil(size / 2.0)) + self.nrows]
+
+        return self.r_dist
 
 
 def _get_autogrid(phase):

@@ -38,6 +38,27 @@ def spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs):
     
 
 def calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles):
+    """
+    Time series inversion with no smoothing (svd method)
+    This is the matlab tsinvnosm.m equivalent.
+    
+    Parameters
+    ----------
+    ifg_paths: list
+        list of ifg paths
+    params: dict
+        parameters dict
+    preread_ifgs: dict
+        prepread ifgs dict
+    tiles: list
+        list of shared.Tile class instances
+    
+    Returns
+    -------
+    tsincr_g: ndarray
+        non smooth (svd method) time series of shape (ifg.shape, nvels)
+    
+    """
     log.info('Calculating time series without smoothing for '
              'spatio-temporal filter')
     # copy params temporarily
@@ -71,3 +92,7 @@ def _assemble_tsincr(ifg_paths, params, preread_ifgs, tiles, nvelpar):
             assemble_tiles(i, n, t, tsincr_g[:, :, i], params[cf.TMPDIR],
                            'tsincr_aps')
     return tsincr_g
+
+
+def ts_to_ifgs(ts, params):
+    pass
