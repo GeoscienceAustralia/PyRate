@@ -133,8 +133,8 @@ def cvd_from_phase(phase, ifg, calc_alpha):
     r_dist = np.divide(np.sqrt(((xx - ifg.x_centre) * ifg.x_size) ** 2 +
                                ((yy - ifg.y_centre) * ifg.y_size) ** 2),
                        distfact)  # km
-    r_dist = reshape(r_dist, phase.size)
-    acg = reshape(autocorr_grid, phase.size)
+    r_dist = reshape(r_dist, phase.size, order='F')
+    acg = reshape(autocorr_grid, phase.size, order='F')
     # Symmetry in image; keep only unique points
     # tmp = unique_points(zip(acg, r_dist))
     # Sudipta: Is this faster than keeping only the 1st half as in Matlab?
@@ -150,8 +150,6 @@ def cvd_from_phase(phase, ifg, calc_alpha):
     # the above shortens r_dist by some number of cells
 
     # pick the smallest axis to determine circle search radius
-    # print 'ifg.X_CENTRE, ifg.Y_CENTRE=', ifg.x_centre, ifg.y_centre
-    # print 'ifg.X_SIZE, ifg.Y_SIZE', ifg.x_size, ifg.y_size
     if (ifg.x_centre * ifg.x_size) < (ifg.y_centre * ifg.y_size):
         maxdist = (ifg.x_centre+1) * ifg.x_size / distfact
     else:
@@ -163,6 +161,7 @@ def cvd_from_phase(phase, ifg, calc_alpha):
     # acg = array([e for e in rorig if e <= maxdist])
     indices_to_keep = r_dist < maxdist
     acg = acg[indices_to_keep]
+
     if calc_alpha:
         # bin width for collecting data
         bin_width = max(ifg.x_size, ifg.y_size) * 2 / distfact  # km
@@ -171,14 +170,13 @@ def cvd_from_phase(phase, ifg, calc_alpha):
         rbin = ceil(r_dist / bin_width).astype(int)
         maxbin = max(rbin) - 1  # consistent with Matlab code
 
-        cvdav = zeros(shape=(2, maxbin))
+        cvdav = zeros(shape=(2, maxbin + 1))
 
         # the following stays in numpy land
         # distance instead of bin number
-        cvdav[0, :] = np.multiply(range(maxbin), bin_width)
+        cvdav[0, :] = np.multiply(range(maxbin + 1), bin_width)
         # mean variance for the bins
-        cvdav[1, :] = [mean(acg[rbin == b]) for b in range(maxbin)]
-
+        cvdav[1, :] = [mean(acg[rbin == b]) for b in range(maxbin + 1)]
         # calculate best fit function maxvar*exp(-alpha*r_dist)
         alphaguess = 2 / (maxbin * bin_width)
         alpha = fmin(pendiffexp, x0=alphaguess, args=(cvdav,), disp=False,
