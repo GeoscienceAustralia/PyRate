@@ -10,6 +10,7 @@ from pyrate.aps.spatial import spatial_low_pass_filter
 from pyrate.aps.temporal import tlpfilter
 from pyrate.scripts.postprocessing import assemble_tiles
 from pyrate.shared import Ifg
+from pyrate import ifgconstants as ifc
 from pyrate.timeseries import time_series
 
 log = logging.getLogger(__name__)
@@ -28,13 +29,11 @@ def spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs):
     ts_lp = tsincr - tsfilt_incr
     ifg = Ifg(ifg_paths[0])  # just grab any for parameters in slpfilter
     ifg.open()
-
-    ts_aps = spatial_low_pass_filter(ts_lp, ifg, params)
+    ts_aps = mpiops.run_once(spatial_low_pass_filter, ts_lp, ifg, params)
     ifg.close()
     tsincr -= ts_aps
 
-    # need ts2ifgs equivalent here
-    # save ifgs
+    mpiops.run_once(ts_to_ifgs, tsincr, preread_ifgs)
     
 
 def calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles):
@@ -98,5 +97,33 @@ def _assemble_tsincr(ifg_paths, params, preread_ifgs, tiles, nvelpar):
     return tsincr_g
 
 
-def ts_to_ifgs(ts, params):
-    pass
+def ts_to_ifgs(ts, preread_ifgs):
+
+    log.info('Converting time series to ifgs')
+    from pyrate.algorithm import master_slave_ids, get_all_epochs, get_epochs
+
+    from collections import OrderedDict
+
+    ifgs = list(OrderedDict(sorted(preread_ifgs.items())).values())
+    epochlist, n = get_epochs(ifgs)
+    index_master, index_slave = n[:len(ifgs)], n[len(ifgs):]
+    for i in range(len(ifgs)):
+        phase = np.sum(ts[:, :, index_master[i]: index_slave[i]-1], axis=2)
+        _save_aps_corrected_phase(ifgs[i].path, phase)
+
+
+def _save_aps_corrected_phase(ifg_path, phase):
+    """
+    Convenceince function to update metadata and save latest phase after
+    orbital fit correction
+    Parameters
+    ----------
+    ifg: Ifg class instance
+    """
+
+    ifg = Ifg(ifg_path)
+    ifg.open(readonly=False)
+    # set aps tags after aps error correction
+    ifg.dataset.SetMetadataItem(ifc.PYRATE_APS_ERROR, ifc.APS_REMOVED)
+    ifg.write_modified_phase(data=phase)
+    ifg.close()

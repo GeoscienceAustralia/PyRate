@@ -112,7 +112,7 @@ class TestMethod1VsMethod2AndMetaData(unittest.TestCase):
         for i in self.ifgs:
             md = i.meta_data
             i.close()
-            self.assertIn(ifc.PYRATE_APS_ERROR, md.keys())
+            self.assertIn(ifc.PYRATE_WEATHER_ERROR, md.keys())
             self.assertIn(pyaps.APS_STATUS, md.values())
 
     def test_meta_data_was_written(self):
@@ -218,7 +218,7 @@ class TestOriginalVsEfficientAps(unittest.TestCase):
         for i in self.ifgs:
             md = i.meta_data
             i.close()
-            self.assertIn(ifc.PYRATE_APS_ERROR, md.keys())
+            self.assertIn(ifc.PYRATE_WEATHER_ERROR, md.keys())
             self.assertIn(pyaps.APS_STATUS, md.values())
 
     def test_meta_data_was_written(self):
@@ -436,8 +436,8 @@ class MPITests(unittest.TestCase):
         for j, i in zip(self.ifgs_serial, self.ifgs_mpi):
             md = i.meta_data
             md_s = j.meta_data
-            self.assertIn(ifc.PYRATE_APS_ERROR, md_s.keys())
-            self.assertIn(ifc.PYRATE_APS_ERROR, md.keys())
+            self.assertIn(ifc.PYRATE_WEATHER_ERROR, md_s.keys())
+            self.assertIn(ifc.PYRATE_WEATHER_ERROR, md.keys())
             self.assertIn(pyaps.APS_STATUS, md.values())
 
     def test_meta_data_was_written(self):
@@ -446,7 +446,7 @@ class MPITests(unittest.TestCase):
             ds = gdal.Open(i.data_path)
             md_w = ds.GetMetadata()
             self.assertDictEqual(md, md_w)
-            self.assertIn(ifc.PYRATE_APS_ERROR, md_w.keys())
+            self.assertIn(ifc.PYRATE_WEATHER_ERROR, md_w.keys())
             ds = None
 
     def test_dem_tifs_present(self):

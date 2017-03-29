@@ -116,9 +116,9 @@ def remove_aps_delay(input_ifgs, params, process_indices=None):
     for i, ifg in enumerate(ifgs):
         ifg.phase_data -= aps_delay[i]  # remove delay
         # add to ifg.meta_data
-        ifg.meta_data[ifc.PYRATE_APS_ERROR] = APS_STATUS
+        ifg.meta_data[ifc.PYRATE_WEATHER_ERROR] = APS_STATUS
         # write meta_data to file
-        ifg.dataset.SetMetadataItem(ifc.PYRATE_APS_ERROR, APS_STATUS)
+        ifg.dataset.SetMetadataItem(ifc.PYRATE_WEATHER_ERROR, APS_STATUS)
         ifg.write_modified_phase()
         # ifg.close()  # close ifg files, required for gdal dataset to close files
 
@@ -291,9 +291,9 @@ def remove_aps_delay_original(ifgs, params):
 
         ifg.phase_data -= aps_delay  # remove delay
         # add it to the meta_data dict
-        ifg.meta_data[ifc.PYRATE_APS_ERROR] = APS_STATUS
+        ifg.meta_data[ifc.PYRATE_WEATHER_ERROR] = APS_STATUS
         # write meta_data to file
-        ifg.dataset.SetMetadataItem(ifc.PYRATE_APS_ERROR, APS_STATUS)
+        ifg.dataset.SetMetadataItem(ifc.PYRATE_WEATHER_ERROR, APS_STATUS)
 
         ifg.write_modified_phase()
 
@@ -389,7 +389,7 @@ class APSException(Exception):
 
 
 def check_aps_ifgs(ifgs):
-    flags = [i.dataset.GetMetadataItem(ifc.PYRATE_APS_ERROR) for i in ifgs]
+    flags = [i.dataset.GetMetadataItem(ifc.PYRATE_WEATHER_ERROR) for i in ifgs]
     count = sum([f == APS_STATUS for f in flags])
     if (count < len(flags)) and (count > 0):
         log.debug('Detected mix of corrected and uncorrected '
@@ -412,7 +412,7 @@ def aps_delay_required(ifgs, params):
         return False
 
     # perform some general error/sanity checks
-    flags = [i.dataset.GetMetadataItem(ifc.PYRATE_APS_ERROR) for i in ifgs]
+    flags = [i.dataset.GetMetadataItem(ifc.PYRATE_WEATHER_ERROR) for i in ifgs]
 
     if all(flags):
         log.info('Skipped APS delay removal, ifgs are already aps corrected')

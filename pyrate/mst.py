@@ -54,7 +54,7 @@ def mst_from_ifgs(ifgs):
     ifg_sub = [ifg_date_index_lookup(ifgs, d) for d in edges]
     mst_ifgs = [i for k, i in enumerate(ifgs) if k in ifg_sub]
     return mst.edges(), nx.is_tree(mst), \
-           nx.number_connected_components(mst), mst_ifgs
+        nx.number_connected_components(mst), mst_ifgs
 
 
 def mst_parallel(ifgs, params):
