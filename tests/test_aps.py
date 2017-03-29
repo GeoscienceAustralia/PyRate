@@ -94,8 +94,9 @@ def test_slpfilter_accumulated(slpfilter_method):
     params[cf.SLPF_METHOD] = slpfilter_method
     ifgs = small_data_setup()
     ts_aps_m = ts_aps_m1 if slpfilter_method == 1 else ts_aps_m2
-    Ifg = namedtuple('Ifg', 'x_size, y_size, shape')
-    ifg = Ifg(x_size=xpsize, y_size=ypsize, shape=ifgs[0].shape)
+    Ifg = namedtuple('Ifg', 'x_centre, y_centre, x_size, y_size, shape')
+    ifg = Ifg(x_size=xpsize, y_size=ypsize, shape=ifgs[0].shape,
+              x_centre=ifgs[0].x_centre, y_centre=ifgs[0].y_centre)
     ts_aps = spatial_low_pass_filter(ts_aps_before,
                                      ifg, params=params)
 
@@ -119,3 +120,7 @@ def test_slpfilter_auto_cutoff(slpfilter_method=2):
     for i in ifgs:
         i.close()
     np.testing.assert_array_almost_equal(ts_aps, ts_aps_m_auto, decimal=4)
+
+
+def test_calc_svd_time_series():
+    pass

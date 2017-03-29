@@ -79,7 +79,8 @@ class TimeSeriesTests(unittest.TestCase):
         cls.ifgs = common.small_data_setup()
         cls.params = default_params()
         cls.mstmat = mst.mst_boolean_array(cls.ifgs)
-        cls.maxvar = [vcm.cvd(i, cls.params)[0] for i in cls.ifgs]
+        r_dist = vcm.RDist(cls.ifgs[0])()
+        cls.maxvar = [vcm.cvd(i, cls.params, r_dist)[0] for i in cls.ifgs]
         cls.vcmt = vcm.get_vcmt(cls.ifgs, cls.maxvar)
 
     # def test_time_series(self):
@@ -155,8 +156,8 @@ class MatlabTimeSeriesEquality(unittest.TestCase):
         pyrate.orbital.remove_orbital_error(ifgs, params)
         ifgs = common.prepare_ifgs_without_phase(dest_paths, params)
         _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
-
-        maxvar = [vcm.cvd(i, params)[0] for i in ifgs]
+        r_dist = vcm.RDist(ifgs[0])()
+        maxvar = [vcm.cvd(i, params, r_dist)[0] for i in ifgs]
         vcmt = vcm.get_vcmt(ifgs, maxvar)
 
         params[cf.TIME_SERIES_METHOD] = 1
@@ -267,9 +268,9 @@ class MatlabTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
         ifgs = common.prepare_ifgs_without_phase(dest_paths, params)
 
         _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
-
+        r_dist = vcm.RDist(ifgs[0])()
         # Calculate interferogram noise
-        maxvar = [vcm.cvd(i, params)[0] for i in ifgs]
+        maxvar = [vcm.cvd(i, params, r_dist)[0] for i in ifgs]
         vcmt = vcm.get_vcmt(ifgs, maxvar)
 
         params[cf.TIME_SERIES_METHOD] = 2

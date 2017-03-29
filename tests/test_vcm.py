@@ -29,7 +29,7 @@ from pyrate import config as cf
 from pyrate import ref_phs_est as rpe
 from pyrate import shared
 from pyrate.scripts import run_pyrate, run_prepifg
-from pyrate.vcm import cvd, get_vcmt
+from pyrate.vcm import cvd, get_vcmt, RDist
 import pyrate.orbital
 from tests.common import small5_mock_ifgs, small5_ifgs, TEST_CONF_ROIPAC
 from tests.common import small_data_setup, prepare_ifgs_without_phase
@@ -44,17 +44,17 @@ class CovarianceTests(unittest.TestCase):
         params[cf.NO_DATA_VALUE] = 0
         params[cf.NAN_CONVERSION] = True
         self.params = params
+        self.r_dist = RDist(self.ifgs[0])()
 
     def test_covariance_basic(self):
         ifgs = small5_ifgs()
-
         for i in ifgs:
             i.open()
 
             if bool((i.phase_data == 0).all()) is True:
                 raise Exception("All zero")
 
-            maxvar, alpha = cvd(i, self.params, calc_alpha=True)
+            maxvar, alpha = cvd(i, self.params, self.r_dist, calc_alpha=True)
             self.assertTrue(maxvar is not None)
             self.assertTrue(alpha is not None)
             print("maxvar: %s, alpha: %s" % (maxvar, alpha))
@@ -77,7 +77,7 @@ class CovarianceTests(unittest.TestCase):
             if bool((i.phase_data == 0).all()) is True:
                 raise Exception("All zero")
 
-            maxvar, alpha = cvd(i, self.params, calc_alpha=True)
+            maxvar, alpha = cvd(i, self.params, self.r_dist, calc_alpha=True)
             self.assertTrue(maxvar is not None)
             self.assertTrue(alpha is not None)
            
@@ -196,9 +196,9 @@ class MatlabEqualityTest(unittest.TestCase):
         pyrate.orbital.remove_orbital_error(ifgs, params)
         ifgs = prepare_ifgs_without_phase(dest_paths, params)
         _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
-
+        r_dist = RDist(ifgs[0])()
         # Calculate interferogram noise
-        cls.maxvar = [cvd(i, params)[0] for i in ifgs]
+        cls.maxvar = [cvd(i, params, r_dist)[0] for i in ifgs]
         cls.vcmt = get_vcmt(ifgs, cls.maxvar)
 
     @classmethod

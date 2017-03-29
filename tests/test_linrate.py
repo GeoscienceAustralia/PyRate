@@ -112,8 +112,8 @@ class MatlabEqualityTest(unittest.TestCase):
         ifgs = prepare_ifgs_without_phase(dest_paths, params)
 
         _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
-
-        maxvar = [vcm_module.cvd(i, params)[0] for i in ifgs]
+        r_dist = vcm_module.RDist(ifgs[0])()
+        maxvar = [vcm_module.cvd(i, params, r_dist)[0] for i in ifgs]
         vcmt = vcm_module.get_vcmt(ifgs, maxvar)
 
         # Calculate linear rate map
