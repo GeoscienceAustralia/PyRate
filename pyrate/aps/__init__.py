@@ -2,7 +2,9 @@ import logging
 import os
 from copy import deepcopy
 
+from collections import OrderedDict
 import numpy as np
+
 
 from pyrate import config as cf, mpiops, shared
 from pyrate.algorithm import get_epochs
@@ -87,10 +89,10 @@ def calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles):
     return tsincr_g
 
 
-def _assemble_tsincr(ifg_paths, params, preread_ifgs, tiles, nvelpar):
-    shape = preread_ifgs[ifg_paths[0]].shape + (nvelpar,)
+def _assemble_tsincr(ifg_paths, params, preread_ifgs, tiles, nvels):
+    shape = preread_ifgs[ifg_paths[0]].shape + (nvels,)
     tsincr_g = np.empty(shape=shape, dtype=np.float32)
-    for i in range(nvelpar):
+    for i in range(nvels):
         for n, t in enumerate(tiles):
             assemble_tiles(i, n, t, tsincr_g[:, :, i], params[cf.TMPDIR],
                            'tsincr_aps')
@@ -98,27 +100,39 @@ def _assemble_tsincr(ifg_paths, params, preread_ifgs, tiles, nvelpar):
 
 
 def ts_to_ifgs(ts, preread_ifgs):
-
+    """
+    Function that takes a time series and converts into ifg phase data
+    Parameters
+    ----------
+    ts: ndarray
+        time series nd array (ifg.shape, nvels)
+    preread_ifgs: dict
+        dict with ifg basic informations
+    
+    Saves ifgs on disc after conversion.
+    """
     log.info('Converting time series to ifgs')
-    from pyrate.algorithm import master_slave_ids, get_all_epochs, get_epochs
-
-    from collections import OrderedDict
 
     ifgs = list(OrderedDict(sorted(preread_ifgs.items())).values())
     epochlist, n = get_epochs(ifgs)
     index_master, index_slave = n[:len(ifgs)], n[len(ifgs):]
+    print(type(ifgs))
     for i in range(len(ifgs)):
         phase = np.sum(ts[:, :, index_master[i]: index_slave[i]-1], axis=2)
+        print(i, np.sum(np.isnan(phase)))
         _save_aps_corrected_phase(ifgs[i].path, phase)
 
 
 def _save_aps_corrected_phase(ifg_path, phase):
     """
-    Convenceince function to update metadata and save latest phase after
-    orbital fit correction
+    Update metadata and save latest phase after
+    spatio-temporal filter (aps) correction
     Parameters
     ----------
-    ifg: Ifg class instance
+    ifg_path: str
+        path to ifg
+    phase: ndarray
+        ndarray corresponding to ifg phase data of shape ifg.shape
     """
 
     ifg = Ifg(ifg_path)
