@@ -534,12 +534,13 @@ def maxvar_vcm_calc(ifg_paths, params, preread_ifgs):
     """
     log.info('Calculating maxvar and vcm')
     process_indices = mpiops.array_split(range(len(ifg_paths)))
+    r_dist = mpiops.run_once(_get_r_dist, ifg_paths[0])
     prcs_ifgs = mpiops.array_split(ifg_paths)
     process_maxvar = []
     for n, i in enumerate(prcs_ifgs):
         log.info('Calculating maxvar for {} of process ifgs {} of '
                  'total {}'.format(n+1, len(prcs_ifgs), len(ifg_paths)))
-        process_maxvar.append(vcm_module.cvd(i, params)[0])
+        process_maxvar.append(vcm_module.cvd(i, r_dist, params)[0])
     if mpiops.rank == MASTER_PROCESS:
         maxvar = np.empty(len(ifg_paths), dtype=np.float64)
         maxvar[process_indices] = process_maxvar
@@ -557,6 +558,13 @@ def maxvar_vcm_calc(ifg_paths, params, preread_ifgs):
     maxvar = mpiops.comm.bcast(maxvar, root=0)
     vcmt = mpiops.run_once(vcm_module.get_vcmt, preread_ifgs, maxvar)
     return maxvar, vcmt
+
+
+def _get_r_dist(ifg_path):
+    ifg = Ifg(ifg_path)
+    r_dist = vcm_module.RDist(ifg)()
+    ifg.close()
+    return r_dist
 
 
 def phase_sum(ifg_paths, params):
