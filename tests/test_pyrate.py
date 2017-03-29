@@ -18,7 +18,6 @@ This Python module contains system integration tests for the PyRate workflow.
 """
 
 import glob
-#import logging
 import os
 import shutil
 import tempfile

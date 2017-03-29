@@ -82,8 +82,7 @@ def cvd(ifg_path, params, r_dist, calc_alpha=False):
         ifg.open()
     else:
         ifg = ifg_path
-    # assert isinstance(ifg_path, shared.Ifg)
-    # ifg = ifg_path
+
     shared.nan_and_mm_convert(ifg, params)
     # calculate 2D auto-correlation of image using the
     # spectral method (Wiener-Khinchin theorem)

@@ -540,7 +540,7 @@ def maxvar_vcm_calc(ifg_paths, params, preread_ifgs):
     for n, i in enumerate(prcs_ifgs):
         log.info('Calculating maxvar for {} of process ifgs {} of '
                  'total {}'.format(n+1, len(prcs_ifgs), len(ifg_paths)))
-        process_maxvar.append(vcm_module.cvd(i, r_dist, params)[0])
+        process_maxvar.append(vcm_module.cvd(i, params, r_dist)[0])
     if mpiops.rank == MASTER_PROCESS:
         maxvar = np.empty(len(ifg_paths), dtype=np.float64)
         maxvar[process_indices] = process_maxvar
@@ -562,6 +562,7 @@ def maxvar_vcm_calc(ifg_paths, params, preread_ifgs):
 
 def _get_r_dist(ifg_path):
     ifg = Ifg(ifg_path)
+    ifg.open()
     r_dist = vcm_module.RDist(ifg)()
     ifg.close()
     return r_dist

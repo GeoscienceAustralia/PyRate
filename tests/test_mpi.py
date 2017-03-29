@@ -50,7 +50,7 @@ PYTHON3P5 = True if ('TRAVIS_PYTHON_VERSION' in os.environ and
                      os.environ['TRAVIS_PYTHON_VERSION'] == '3.5') else False
 GDAL_VERSION = check_output(["gdal-config", "--version"]).decode(
     encoding="utf-8").split('\n')[0]
-MPITEST = TRAVIS and GDAL_VERSION == '2.0.0'
+MPITEST = TRAVIS and GDAL_VERSION == '2.1.0'
 
 
 @pytest.fixture()
@@ -284,7 +284,8 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
         ifgs = common.prepare_ifgs_without_phase(dest_paths, params_old)
         rpe.estimate_ref_phase(ifgs, params_old, refx, refy)
         ifgs = shared.pre_prepare_ifgs(dest_paths, params_old)
-        maxvar_s = [vcm.cvd(i, params_old)[0] for i in ifgs]
+        r_dist = vcm.RDist(ifgs[0])()
+        maxvar_s = [vcm.cvd(i, params_old, r_dist)[0] for i in ifgs]
         vcmt_s = vcm.get_vcmt(ifgs, maxvar)
         tsincr, tscum, _ = tests.common.compute_time_series(
             ifgs, mst_grid, params, vcmt)
