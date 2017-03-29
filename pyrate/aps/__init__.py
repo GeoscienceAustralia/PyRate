@@ -67,6 +67,8 @@ def calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles):
 
     process_tiles = mpiops.array_split(tiles)
     output_dir = params[cf.TMPDIR]
+
+    nvels = None
     for t in process_tiles:
         log.info('Calculating time series for tile {}'.format(t.index))
         ifg_parts = [shared.IfgPart(p, t, preread_ifgs) for p in ifg_paths]
@@ -76,10 +78,12 @@ def calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles):
         tsincr = time_series(ifg_parts, new_params, vcmt=None, mst=mst_tile)[0]
         np.save(file=os.path.join(output_dir, 'tsincr_aps_{}.npy'.format(
             t.index)), arr=tsincr)
+        nvels = tsincr.shape[2]
 
+    nvels = mpiops.comm.bcast(nvels, root=0)
     # need to assemble tsincr from all processes
     tsincr_g = mpiops.run_once(_assemble_tsincr, ifg_paths, params,
-                               preread_ifgs, tiles, tsincr.shape[2])
+                               preread_ifgs, tiles, nvels)
     log.info('Finished calculating time series for spatio-temporal filter')
     return tsincr_g
 
