@@ -19,6 +19,23 @@ log = logging.getLogger(__name__)
 
 
 def spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs):
+    """
+    Applies spatio-temportal (aps) filter and save the interferograms.
+    
+    A first step is to compute the time series using the non-smooth SVD method.
+    This is followed by temporal and spatial filters respectively.
+     
+    Parameters
+    ----------
+    ifg_paths: list
+        list of ifg paths
+    params: dict
+        parameters dict
+    tiles: list
+        list of shared.Tile class instances
+    preread_ifgs: dict
+        dictionary of {ifgpath:shared.PrereadIfg class instances}
+    """
     if not params[cf.APSEST]:
         log.info('APS correction not required.')
         return
@@ -116,10 +133,8 @@ def ts_to_ifgs(ts, preread_ifgs):
     ifgs = list(OrderedDict(sorted(preread_ifgs.items())).values())
     epochlist, n = get_epochs(ifgs)
     index_master, index_slave = n[:len(ifgs)], n[len(ifgs):]
-    print(type(ifgs))
     for i in range(len(ifgs)):
         phase = np.sum(ts[:, :, index_master[i]: index_slave[i]-1], axis=2)
-        print(i, np.sum(np.isnan(phase)))
         _save_aps_corrected_phase(ifgs[i].path, phase)
 
 

@@ -2,7 +2,7 @@ import logging
 import numpy as np
 from scipy.fftpack import fft2, ifft2, fftshift, ifftshift
 from pyrate import config as cf
-from pyrate.vcm import cvd_from_phase, RDist
+from pyrate.covariance import cvd_from_phase, RDist
 
 log = logging.getLogger(__name__)
 

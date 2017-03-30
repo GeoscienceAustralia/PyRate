@@ -36,7 +36,7 @@ from pyrate import ref_phs_est as rpe
 from pyrate import refpixel
 from pyrate import shared
 from pyrate import timeseries
-from pyrate import vcm as vcm_module
+from pyrate import covariance as vcm_module
 from pyrate.aps import spatio_temporal_filter
 from pyrate.compat import PyAPS_INSTALLED
 from pyrate.config import ConfigException
