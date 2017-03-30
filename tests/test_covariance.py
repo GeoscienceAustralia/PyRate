@@ -186,6 +186,8 @@ class MatlabEqualityTest(unittest.TestCase):
         cls.temp_out_dir = tempfile.mkdtemp()
         sys.argv = ['run_prepifg.py', TEST_CONF_ROIPAC]
         params[cf.OUT_DIR] = cls.temp_out_dir
+        params[cf.TMPDIR] = os.path.join(cls.temp_out_dir, cf.TMPDIR)
+        shared.mkdir_p(params[cf.TMPDIR])
         params[cf.REF_EST_METHOD] = 2
         run_prepifg.main(params)
         xlks, ylks, crop = cf.transform_params(params)
