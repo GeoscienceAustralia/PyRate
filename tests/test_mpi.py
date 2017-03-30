@@ -34,13 +34,13 @@ import pyrate.shared
 import tests.common
 from pyrate import ref_phs_est as rpe
 from pyrate import shared
-from pyrate import vcm
+from pyrate import covariance
 from pyrate import refpixel
 from pyrate.scripts import run_pyrate, run_prepifg, postprocessing
 from tests.common import small_data_setup, reconstruct_mst, \
     reconstruct_linrate, SML_TEST_DEM_HDR_GAMMA
 from tests import common
-from tests.test_vcm import matlab_maxvar
+from tests.test_covariance import matlab_maxvar
 from pyrate import config as cf
 from pyrate import mpiops
 from pyrate import algorithm
@@ -284,9 +284,9 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
         ifgs = common.prepare_ifgs_without_phase(dest_paths, params_old)
         rpe.estimate_ref_phase(ifgs, params_old, refx, refy)
         ifgs = shared.pre_prepare_ifgs(dest_paths, params_old)
-        r_dist = vcm.RDist(ifgs[0])()
-        maxvar_s = [vcm.cvd(i, params_old, r_dist)[0] for i in ifgs]
-        vcmt_s = vcm.get_vcmt(ifgs, maxvar)
+        r_dist = covariance.RDist(ifgs[0])()
+        maxvar_s = [covariance.cvd(i, params_old, r_dist)[0] for i in ifgs]
+        vcmt_s = covariance.get_vcmt(ifgs, maxvar)
         tsincr, tscum, _ = tests.common.compute_time_series(
             ifgs, mst_grid, params, vcmt)
         rate, error, samples = tests.common.calculate_linear_rate(

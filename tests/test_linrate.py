@@ -32,7 +32,7 @@ import tests.common
 from pyrate import config as cf
 from pyrate import ref_phs_est as rpe
 from pyrate import shared
-from pyrate import vcm as vcm_module
+from pyrate import covariance as vcm_module
 from pyrate.linrate import linear_rate
 from pyrate.scripts import run_pyrate, run_prepifg
 from tests.common import SML_TEST_DIR, prepare_ifgs_without_phase

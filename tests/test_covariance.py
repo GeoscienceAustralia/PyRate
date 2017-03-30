@@ -14,7 +14,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 """
-This Python module contains tests for the vcm.py PyRate module.
+This Python module contains tests for the covariance.py PyRate module.
 """
 import os
 import shutil
@@ -29,7 +29,7 @@ from pyrate import config as cf
 from pyrate import ref_phs_est as rpe
 from pyrate import shared
 from pyrate.scripts import run_pyrate, run_prepifg
-from pyrate.vcm import cvd, get_vcmt, RDist
+from pyrate.covariance import cvd, get_vcmt, RDist
 import pyrate.orbital
 from tests.common import small5_mock_ifgs, small5_ifgs, TEST_CONF_ROIPAC
 from tests.common import small_data_setup, prepare_ifgs_without_phase
