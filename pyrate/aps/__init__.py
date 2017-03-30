@@ -58,6 +58,7 @@ def spatio_temporal_filter(tsincr, ifg, params, preread_ifgs):
     ts_lp = tsincr - tsfilt_incr
     ts_aps = mpiops.run_once(spatial_low_pass_filter, ts_lp, ifg, params)
     tsincr -= ts_aps
+
     mpiops.run_once(ts_to_ifgs, tsincr, preread_ifgs)
     
 
@@ -139,7 +140,7 @@ def ts_to_ifgs(ts, preread_ifgs):
     epochlist, n = get_epochs(ifgs)
     index_master, index_slave = n[:len(ifgs)], n[len(ifgs):]
     for i in range(len(ifgs)):
-        phase = np.sum(ts[:, :, index_master[i]: index_slave[i]-1], axis=2)
+        phase = np.sum(ts[:, :, index_master[i]: index_slave[i]], axis=2)
         _save_aps_corrected_phase(ifgs[i].path, phase)
 
 
@@ -154,7 +155,6 @@ def _save_aps_corrected_phase(ifg_path, phase):
     phase: ndarray
         ndarray corresponding to ifg phase data of shape ifg.shape
     """
-
     ifg = Ifg(ifg_path)
     ifg.open(readonly=False)
     ifg.phase_data[~np.isnan(ifg.phase_data)] = \
