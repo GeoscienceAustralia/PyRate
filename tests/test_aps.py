@@ -128,35 +128,45 @@ def test_spatio_temporal_filter():
     from pyrate import shared
     from os.path import basename, join
     from collections import OrderedDict
+    from pyrate.scripts import run_prepifg
+    from osgeo import gdal
+    from pyrate import ifgconstants as ifc
     ifg_out = sio.loadmat(os.path.join(SML_TEST_DIR, 'matlab_aps',
                           'ifg_spatio_temp_out.mat'))['ifg']
 
     tsincr = sio.loadmat(os.path.join(SML_TEST_DIR, 'matlab_aps',
                                       'tsincr_svd.mat'))['tsincr']
-    print(ifg_out.shape)
+    params = cf.get_config_params(os.path.join(TEST_CONF_GAMMA))
     params[cf.OUT_DIR] = tempfile.mkdtemp()
-    params[cf.TMPDIR] = shared.mkdir_p(join(params[cf.OUT_DIR],
-                                                    cf.TMPDIR))
+    params[cf.TMPDIR] = join(params[cf.OUT_DIR], cf.TMPDIR)
+    shared.mkdir_p(params[cf.TMPDIR])
+    params[cf.SLPF_METHOD] = 2
+    params[cf.SLPF_CUTOFF] = 0
+    params[cf.SLPF_ORDER] = 1
+    params[cf.TLPF_METHOD] = 3
+    params[cf.TLPF_CUTOFF] = 0.25
+    params[cf.TLPF_PTHR] = 5
     ifgs = small_data_setup()
     _ = [ifgs_pk.pop(k) for k in ['gt', 'epochlist', 'md', 'wkt']]
     preread_ifgs = {join(params[cf.OUT_DIR], basename(k)): v
                     for k, v in ifgs_pk.items()}
     preread_ifgs = OrderedDict(sorted(preread_ifgs.items()))
-    from pyrate.scripts import run_prepifg
+
     run_prepifg.main(params)
     for k, v in preread_ifgs.items():
         v.path = join(params[cf.OUT_DIR], basename(k))
         preread_ifgs[k] = v
-    spatio_temporal_filter(tsincr, ifgs[0], params, preread_ifgs)
+    ifg = ifgs[0]
+    ifg.x_size = xpsize
+    ifg.y_size = ypsize
+    spatio_temporal_filter(tsincr, ifg, params, preread_ifgs)
     for i in ifgs:
         i.close()
 
-    from osgeo import gdal
-    from pyrate import ifgconstants as ifc
     for (p, v), i in zip(preread_ifgs.items(), range(ifg_out.shape[2])):
         ds = gdal.Open(p)
         metadata = ds.GetMetadata()
         assert ifc.PYRATE_APS_ERROR in metadata
         assert metadata[ifc.PYRATE_APS_ERROR] == ifc.APS_REMOVED
         arr = ds.GetRasterBand(1).ReadAsArray()
-        np.testing.assert_array_almost_equal(arr, ifg_out[:, :, i])
+        np.testing.assert_array_almost_equal(arr, ifg_out[:, :, i], decimal=3)
