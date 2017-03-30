@@ -22,7 +22,7 @@ import logging
 import os
 import pickle as cp
 from os.path import join
-
+from collections import OrderedDict
 import numpy as np
 
 from pyrate import algorithm
@@ -37,7 +37,7 @@ from pyrate import refpixel
 from pyrate import shared
 from pyrate import timeseries
 from pyrate import covariance as vcm_module
-from pyrate.aps import spatio_temporal_filter
+from pyrate.aps import wrap_spatio_temporal_filter
 from pyrate.compat import PyAPS_INSTALLED
 from pyrate.config import ConfigException
 from pyrate.shared import Ifg, PrereadIfg, prepare_ifg, save_numpy_phase, \
@@ -118,7 +118,8 @@ def create_ifg_dict(dest_tifs, params, tiles):
         cp.dump(ifgs_dict, open(preread_ifgs_file, 'wb'))
 
     mpiops.comm.barrier()
-    preread_ifgs = cp.load(open(preread_ifgs_file, 'rb'))
+    preread_ifgs = OrderedDict(sorted(cp.load(open(preread_ifgs_file,
+                                                   'rb')).items()))
     log.info('finish converting phase_data to numpy '
              'in process {}'.format(mpiops.rank))
     return preread_ifgs
@@ -456,7 +457,7 @@ def process_ifgs(ifg_paths, params, rows, cols):
     ref_phase_estimation(ifg_paths, params, refpx, refpy)
 
     # spatio-temporal aps filter
-    spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs)
+    wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs)
 
     maxvar, vcmt = maxvar_vcm_calc(ifg_paths, params, preread_ifgs)
 

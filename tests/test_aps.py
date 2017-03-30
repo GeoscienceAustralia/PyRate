@@ -10,6 +10,7 @@ from pyrate.aps.temporal import tlpfilter
 from pyrate.aps.spatial import _slp_filter, spatial_low_pass_filter
 from pyrate import config as cf
 from pyrate.compat import pickle, PY3
+from pyrate.aps import spatio_temporal_filter
 from tests.common import SML_TEST_DIR, TEST_CONF_GAMMA, small_data_setup
 
 # tsincr matrix from matlab using svd timeseries method
@@ -122,5 +123,40 @@ def test_slpfilter_auto_cutoff(slpfilter_method=2):
     np.testing.assert_array_almost_equal(ts_aps, ts_aps_m_auto, decimal=4)
 
 
-def test_calc_svd_time_series():
-    pass
+def test_spatio_temporal_filter():
+    import tempfile
+    from pyrate import shared
+    from os.path import basename, join
+    from collections import OrderedDict
+    ifg_out = sio.loadmat(os.path.join(SML_TEST_DIR, 'matlab_aps',
+                          'ifg_spatio_temp_out.mat'))['ifg']
+
+    tsincr = sio.loadmat(os.path.join(SML_TEST_DIR, 'matlab_aps',
+                                      'tsincr_svd.mat'))['tsincr']
+    print(ifg_out.shape)
+    params[cf.OUT_DIR] = tempfile.mkdtemp()
+    params[cf.TMPDIR] = shared.mkdir_p(join(params[cf.OUT_DIR],
+                                                    cf.TMPDIR))
+    ifgs = small_data_setup()
+    _ = [ifgs_pk.pop(k) for k in ['gt', 'epochlist', 'md', 'wkt']]
+    preread_ifgs = {join(params[cf.OUT_DIR], basename(k)): v
+                    for k, v in ifgs_pk.items()}
+    preread_ifgs = OrderedDict(sorted(preread_ifgs.items()))
+    from pyrate.scripts import run_prepifg
+    run_prepifg.main(params)
+    for k, v in preread_ifgs.items():
+        v.path = join(params[cf.OUT_DIR], basename(k))
+        preread_ifgs[k] = v
+    spatio_temporal_filter(tsincr, ifgs[0], params, preread_ifgs)
+    for i in ifgs:
+        i.close()
+
+    from osgeo import gdal
+    from pyrate import ifgconstants as ifc
+    for (p, v), i in zip(preread_ifgs.items(), range(ifg_out.shape[2])):
+        ds = gdal.Open(p)
+        metadata = ds.GetMetadata()
+        assert ifc.PYRATE_APS_ERROR in metadata
+        assert metadata[ifc.PYRATE_APS_ERROR] == ifc.APS_REMOVED
+        arr = ds.GetRasterBand(1).ReadAsArray()
+        np.testing.assert_array_almost_equal(arr, ifg_out[:, :, i])
