@@ -1,10 +1,8 @@
 import logging
 import os
 from copy import deepcopy
-
 from collections import OrderedDict
 import numpy as np
-
 
 from pyrate import config as cf, mpiops, shared
 from pyrate.algorithm import get_epochs
@@ -18,7 +16,24 @@ from pyrate.timeseries import time_series
 log = logging.getLogger(__name__)
 
 
-def spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs):
+def wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs):
+    """
+    Just a wrapper for spatio-tempotal-filter so it can be tested.
+    See docstring for spatio_temporal_filter.
+    Required due to matlab and python using different mst implementations
+    """
+    if not params[cf.APSEST]:
+        log.info('APS correction not required.')
+        return
+    tsincr = calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles)
+
+    ifg = Ifg(ifg_paths[0])  # just grab any for parameters in slpfilter
+    ifg.open()
+    spatio_temporal_filter(tsincr, ifg, params, preread_ifgs)
+    ifg.close()
+
+
+def spatio_temporal_filter(tsincr, ifg, params, preread_ifgs):
     """
     Applies spatio-temportal (aps) filter and save the interferograms.
     
@@ -27,7 +42,9 @@ def spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs):
      
     Parameters
     ----------
-    ifg_paths: list
+    tsincr: ndarray
+        time series array of size (ifg.shape, nvels)
+    ifg: shated.Ifg instance
         list of ifg paths
     params: dict
         parameters dict
@@ -36,22 +53,11 @@ def spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs):
     preread_ifgs: dict
         dictionary of {ifgpath:shared.PrereadIfg class instances}
     """
-    if not params[cf.APSEST]:
-        log.info('APS correction not required.')
-        return
-
-    tsincr = calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles)
-    
     epochlist = mpiops.run_once(get_epochs, preread_ifgs)[0]
     tsfilt_incr = mpiops.run_once(tlpfilter, tsincr, epochlist, params)
-
     ts_lp = tsincr - tsfilt_incr
-    ifg = Ifg(ifg_paths[0])  # just grab any for parameters in slpfilter
-    ifg.open()
     ts_aps = mpiops.run_once(spatial_low_pass_filter, ts_lp, ifg, params)
-    ifg.close()
     tsincr -= ts_aps
-
     mpiops.run_once(ts_to_ifgs, tsincr, preread_ifgs)
     
 
@@ -129,7 +135,6 @@ def ts_to_ifgs(ts, preread_ifgs):
     Saves ifgs on disc after conversion.
     """
     log.info('Converting time series to ifgs')
-
     ifgs = list(OrderedDict(sorted(preread_ifgs.items())).values())
     epochlist, n = get_epochs(ifgs)
     index_master, index_slave = n[:len(ifgs)], n[len(ifgs):]
@@ -152,7 +157,9 @@ def _save_aps_corrected_phase(ifg_path, phase):
 
     ifg = Ifg(ifg_path)
     ifg.open(readonly=False)
+    ifg.phase_data[~np.isnan(ifg.phase_data)] = \
+        phase[~np.isnan(ifg.phase_data)]
     # set aps tags after aps error correction
     ifg.dataset.SetMetadataItem(ifc.PYRATE_APS_ERROR, ifc.APS_REMOVED)
-    ifg.write_modified_phase(data=phase)
+    ifg.write_modified_phase()
     ifg.close()

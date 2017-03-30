@@ -11,6 +11,7 @@ def tlpfilter(tsincr, epochlist, params):
     log.info('Applying temporal low pass filter')
 
     """temporal low pass filter"""
+    print(type(tsincr))
     nanmat = ~isnan(tsincr)
     tsfilt_incr = np.empty_like(tsincr, dtype=np.float32) * np.nan
     intv = np.diff(epochlist.spans)  # time interval for the neighboring epoch
