@@ -2,11 +2,11 @@ Instructions for setting up an Anaconda virtual environment on a typical Red Hat
  
 ## Install Anaconda:
 
-For 64bit linux download this version of the conda installer: https://repo.continuum.io/archive/Anaconda2-4.1.1-Linux-x86.sh
+For 64bit linux download this version of the conda installer: https://repo.continuum.io/archive/Anaconda2-4.1.1-Linux-x86_64.sh
 
 Run the installer using the linux bash interpreter:
     
-    bash Anaconda2-4.1.1-Linux-x86.sh
+    bash Anaconda2-4.1.1-Linux-x86_64.sh
 
 Accept all default options. This will install anaconda in the `~/anaconda2` directory.
  
