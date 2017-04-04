@@ -26,9 +26,11 @@ from pyrate import mpiops
 
 def configure(verbosity):
     """
-    Function to configure logging properties
-    :param verbosity: str
-        one of ['DEBUG', 'INFO', 'WARNING', 'ERROR']
+    Function to configure logging properties.
+    
+    :param verbosity: 'DEBUG', 'INFO', 'WARNING', or 'ERROR'
+    
+    :return xxxx
     """
     log = logging.getLogger("")
     log.setLevel(verbosity)
@@ -40,7 +42,7 @@ def configure(verbosity):
 
 class MPIStreamHandler(logging.StreamHandler):
     """
-    Only logs messages from Node 0
+    Only logs messages from Node 0.
     """
     def emit(self, record):
         if mpiops.rank == 0:
@@ -49,12 +51,12 @@ class MPIStreamHandler(logging.StreamHandler):
 
 class ElapsedFormatter:
     """
-    Convenience class for used in showing timestamps
+    Convenience class for used in showing timestamps.
     """
     # pylint: disable=too-few-public-methods
     # pylint: disable=no-self-use
     def format(self, record):
-        """ time formatter """
+        """Time formatter """
         lvl = record.levelname
         name = record.name
         t = int(round(record.relativeCreated/1000.0))
@@ -65,7 +67,7 @@ class ElapsedFormatter:
 
 def warn_with_traceback(message, category, filename, lineno, line=None):
     """
-    copied from:
+    Copied from:
     http://stackoverflow.com/questions/22373927/get-traceback-of-warnings
     """
     traceback.print_stack()

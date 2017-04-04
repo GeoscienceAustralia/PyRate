@@ -30,13 +30,15 @@ log = logging.getLogger(__name__)
 
 def estimate_ref_phase(ifgs, params, refpx, refpy):
     """
-    :param ifgs: list of interferograms
-    :param params: parameters of the simulation
-    :param refpx: reference pixel found by ref pixel method
-    :param refpy: reference pixel found by ref pixel method
-    :returns:
-        :ref_phs: reference phase correction
-        :ifgs: reference phase data removed list of ifgs
+    xxxxx
+    
+    :param ifgs: List of interferograms
+    :param params: Parameters of the simulation
+    :param refpx: Reference pixel X found by ref pixel method
+    :param refpy: Reference pixel Y found by ref pixel method
+    
+    :return ref_phs: Reference phase correction
+    :return ifgs: Reference phase data removed from list of interferograms
     """
     _validate_ifgs(ifgs)
 
@@ -56,7 +58,17 @@ def estimate_ref_phase(ifgs, params, refpx, refpy):
 
 
 def est_ref_phase_method2(ifgs, params, refpx, refpy):
-    """ref phs estimate method 2"""
+    """
+    Reference phase estimate method 2. xxxx
+    
+    :param ifgs: List of interferograms
+    :param params: Parameters of the simulation
+    :param refpx: Reference pixel X found by ref pixel method
+    :param refpy: Reference pixel Y found by ref pixel method
+    
+    :return ref_phs: Reference phase correction
+    :return ifgs: Reference phase data removed from list of interferograms
+    """
     half_chip_size = int(np.floor(params[cf.REF_CHIP_SIZE] / 2.0))
     chipsize = 2 * half_chip_size + 1
     thresh = chipsize * chipsize * params[cf.REF_MIN_FRAC]
@@ -81,7 +93,17 @@ def est_ref_phase_method2(ifgs, params, refpx, refpy):
 
 def est_ref_phs_method2(phase_data, half_chip_size,
                         refpx, refpy, thresh):
-    """convenience function for ref phs estimate method 2 parallelisation"""
+    """
+    Convenience function for reference phase estimate method 2 parallelisation.
+    
+    :param phase_data: xxxx
+    :param half_chip_size: xxxx
+    :param refpx: xxxx
+    :param refpy: xxxx
+    :param thres: xxxx
+    
+    :return xxxx
+    """
     patch = phase_data[refpy - half_chip_size: refpy + half_chip_size + 1,
                        refpx - half_chip_size: refpx + half_chip_size + 1]
     patch = np.reshape(patch, newshape=(-1, 1), order='F')
@@ -94,19 +116,12 @@ def est_ref_phs_method2(phase_data, half_chip_size,
 
 def est_ref_phase_method1(ifgs, params):
     """
-    ref phs estimate method 1 estimation
+    Reference phase estimate method 1 estimation.
 
-    Parameters
-    ----------
-    ifgs: list
-        list of interferograms or shared.IfgPart class instances
-    params: dict
-        parameter dict corresponding to config file
+    :param ifgs: List of interferograms or shared.IfgPart class instances
+    :param params: Parameter dictionary corresponding to config file
 
-    Returns
-    -------
-    ref_phs: ndarray
-        numpy array of size (nifgs, 1)
+    :return ref_phs: Numpy array of size (nifgs, 1)
     """
     ifg_phase_data_sum = np.zeros(ifgs[0].shape, dtype=np.float64)
     phase_data = [i.phase_data for i in ifgs]
@@ -132,7 +147,14 @@ def est_ref_phase_method1(ifgs, params):
 
 
 def est_ref_phs_method1(phase_data, comp):
-    """convenience function for ref phs estimate method 1 parallelisation"""
+    """
+    Convenience function for ref phs estimate method 1 parallelisation.
+    
+    :param phase_data: xxxx
+    :param comp: xxxx
+    
+    :return xxxx
+    """
     ifgv = np.ravel(phase_data, order='F')
     ifgv[comp == 1] = np.nan
     # reference phase
@@ -142,7 +164,7 @@ def est_ref_phs_method1(phase_data, comp):
 
 def _validate_ifgs(ifgs):
     """
-    make sure all ifgs have the same ref phase status
+    Make sure all interferograms have the same reference phase status.
     """
     if len(ifgs) < 2:
         raise ReferencePhaseError('Need to provide at least 2 ifgs')
@@ -156,7 +178,12 @@ def _validate_ifgs(ifgs):
 
 def check_ref_phase_ifgs(ifgs, flags):
     """
-    Function to check that the ref phase status of all ifgs are the same
+    Function to check that the reference phase status of all interferograms are the same.
+    
+    :param ifgs: xxxx
+    :param flags: xxxx
+    
+    :return xxxx    
     """
     count = sum([f == ifc.REF_PHASE_REMOVED for f in flags])
     if (count < len(flags)) and (count > 0):
