@@ -1,8 +1,8 @@
 # Usage
 
-## PyRate workflow
+## PyRate Workflow
 
-`PyRate` installs an executable `pyrate`.
+After PyRate has been installed, the `pyrate` program is available.
 
 Use `help` for the different command line options:
 
@@ -19,18 +19,23 @@ Use `help` for the different command line options:
       postprocess
       prepifg
 
-As you can see `pyrate` has three command line options.
 
-1. prepifg
-1. linrate
-1. postprocess
+The ``pyrate`` program has four command line options corresponding to
+different parts of the workflow.
 
-Below we discuss these options.
+1. ``prepifg``
+2. ``correct``
+3. ``linrate_timeseries``
+4. ``postprocess``
 
-### Preparing interferograms: prepifg
-The first step of PyRate is to convert the unwrapped interferograms into
-geotiffs, followed by multilooking and cropping. Both of these operations are
-performed by `pyrate prepifg` command:
+
+#### 1. prepifg: Preparing input interferograms
+
+The first step of PyRate is to convert the GAMMA or ROI\_PAC format
+unwrapped interferograms into geotiff format, followed by applying
+multi-looking and cropping operations. These procedures are all
+performed by ``pyrate prepifg`` command:
+
 
     >> pyrate prepifg --help
     Usage: pyrate prepifg [OPTIONS] CONFIG_FILE
@@ -38,30 +43,53 @@ performed by `pyrate prepifg` command:
     Options:
       --help  Show this message and exit.
 
-So one can use the `prepfig` command as the following:
+The ``prepfig`` command is used as follows:
+
 
     pyrate prepifg /path/to/config_file
 
-The two major steps during the `prepifg` operation are described below.
+The two major steps during the ``prepifg`` operation are described
+below.
 
-#### Data formatting: convert to geotiff
+**Data formatting: convert to geotiff**
 
-The `prepifg` command will determine the input format from the value specified
-at the *processor:* keyword in the config file (0: ROI\_PAC; 1: GAMMA)
+The ``prepifg`` command will determine the input format from the value
+specified at the *processor:* keyword in the config file (0: ROI\_PAC;
+1: GAMMA)
 
-A GAMMA translation requires a geographic DEM header file (\*.dem.par) and SLC parameter files (\*.slc.par) for both master and slave images to extract metadata required for the formatting. Therefore three header files are needed to format each geocoded unwrapped GAMMA interferogram <GAMMA_FILE>. The path and name of the DEM header file are specified in the config file under the *demHeaderFile:* keyword. The SLC parameter files should be in the same location as the interferogram file and are found automatically by date string pattern matching.
+Each GAMMA geocoded unwrapped interferogram requires three header files to extract metadata required for data formatting: a geocoded DEM header file (*\*.dem.par*), and the master and slave epoch SLC parameter files (*\*.slc.par*).
 
-A ROI\_PAC translation requires a header/resource file (*.rsc* extension) for the geocoded unwrapped ROI_PAC interferogram (in the same directory) and either the geographic projection (e.g. 'WGS84') specified as an option or a header/resource file for the geographic DEM containing the geographic projection in the parameter DATUM:
+The path and name of the DEM header file are specified in the config file under the *demHeaderFile:* keyword.
 
-#### Image transformations: multilooking and cropping
-This `prepifg` command will also perform multi-looking (resampling) and
-cropping the images.
+The SLC parameter files should be in the directory specified in the config file under the *slcFileDir:* keyword. SLC parameter files for a particular interferogram are found automatically by date string pattern matching.
 
-Two examples of the config files are provided in `configs` directory,
-with examples of the `roipac` and `gamma` prepifg configuration.
-Both config files can be used with `prepifg`.
+Each ROI_PAC geocoded unwrapped interferogram  requires its own header/resource file (*\*.unw.rsc*) . These header files need to be stored in the same directory as the interferograms.  In addition, the geocoded DEM header file (*\*.dem.rsc*) is required and its path and name are specified in the config file under the *demHeaderFile:* keyword. The geographic projection in the parameter *DATUM:* is extracted from the DEM header file.
 
-### Linear rate and time series analysis: linrate
+**Image transformations: multi-looking and cropping**
+
+The ``prepifg`` command will also perform multi-looking (image
+sub-sampling) and cropping of the input interferograms.
+
+Two example config files are provided in the *configs/* directory, one each for ROI_PAC and GAMMA prepifg configuration.
+Either config files can be used with ``prepifg``.
+
+
+#### 2. correct: Calculation of corrections
+
+This is the core of the processing tools, handled by the ``correct``
+command:
+
+
+    pyrate correct path/to/config_file -c 3 -r 4
+
+This command will perform xxxxxxxxxxx, and has the option to break the interferograms into tiles of ``r`` rows and
+``c`` columns. For example, the above command will break the interferograms into 12 tiles and will produce 12 linear rate and time series products corresponding to each tile.
+
+The option of rows and columns can be used to create smaller ``tiles`` of the full size interferograms. This enables large interferograms to be more easily be accommodated in system memory. The number of tiles chosen should be as small as possible that fits in the system memory.
+
+
+#### 3. linrate_timeseries: Linear rate and time series analysis
+
 
     >> pyrate linrate --help
     Usage: pyrate linrate [OPTIONS] CONFIG_FILE
@@ -71,23 +99,19 @@ Both config files can be used with `prepifg`.
       -c, --cols INTEGER  divide ifgs into this many columns
       --help              Show this message and exit
 
+The ``linrate`` command will perform the time series and linear rate analysis:
 
-This is the core of the processing tools, handled by the `linrate` command:
 
     pyrate linrate path/to/config_file -c 3 -r 4
 
-This command will does the time series and linear rate analysis, but has the
-options to break the interferograms into tiles of `r` rows and `c` columns.
-So this above command will break the interferograms into 12 tiles and will
-produce 12 linear rate and time series predictions corresponding to each tile.
+This command also has the option to break the interferograms into tiles of ``r`` rows and
+``c`` columns (see ``correct`` command above).
 
-The optional rows and columns help us create smaller `tiles` of the
-interferograms that can be accommodated in the memory. The number of tiles
-chosen should be as small as possible that fits in the system memory.
 
-### Putting it back together: postprocess
-The last step in `pyrate` is to put all the tiles back together from the
-`linrate` part.
+#### 4. postprocess: Putting the tiles back together
+
+The last step of the PyRate workflow is to re-assemble the tiles and save geotiff files of the final time series and linear rate products.
+
 
     >> pyrate postprocess --help
     Usage: pyrate postprocess [OPTIONS] CONFIG_FILE
@@ -97,16 +121,22 @@ The last step in `pyrate` is to put all the tiles back together from the
       -c, --cols INTEGER  divide ifgs into this many columns
       --help              Show this message and exit.
 
-Make sure to use the same number of rows and columns with `postprocess` as
-with `linrate`:
+Make sure to use the same number of rows and columns that was used in the
+previous ``linrate`` step:
+
 
     pyrate postprocess path/to/config_file -c 3 -r 4
 
-## MPI Support
-`PyRate` has been designed for supercomputers and instructions to use an HPC
- cluster can be found in the [pbs directory](pbs).
 
-## Python multiprocessing support
-In addition to the MPI support for HPC, `PyRate` can be use standard
-multiprocessing simply by turning `parallel:  1` in the config file to take
-advantage of multiple cores on a single PC.
+
+## MPI Support
+
+PyRate has been designed for use on High Performance Computers and
+instructions to use a HPC cluster can be found in the [pbs directory](pbs).
+
+
+## Python Multi-threading Support
+
+In addition to the MPI support for HPC, PyRate can use standard
+multi-threading simply by turning ``parallel:  1`` in the config file to
+take advantage of multiple cores on a single PC.

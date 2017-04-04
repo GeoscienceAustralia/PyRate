@@ -1,40 +1,68 @@
 # Installation
 
-## Quickstart
+## Initial Setup
 
-Before you start, make sure your system has the following packages installed:
+Before you start, you will need to have a number of packages installed on your Linux system. These can either be installed directly onto the system, or you can use a virtual environment.
+
+
+### Direct Install
+
+Make sure your system has the following packages installed. If not, run the command:
+
 
     sudo apt-get install gdal-bin libgdal-dev libpng12-dev libblas-dev liblapack-dev libatlas-dev libatlas-base-dev gfortran libproj-dev openmpi-bin libopenmpi-dev netcdf-bin libnetcdf11 libnetcdf-dev
 
 
-We strongly recommend using a [`virtualenv`](https://gist.github.com/basaks/b33ea9106c7d1d72ac3a79fdcea430eb).
+### Virtual Environment
 
-One might need to install a slightly older `python-daemon` to install `PyRate`:
+You can use one of the two virtual environment options below:
+
+##### Virtualenv
+
+1. Install [virtualenv](https://gist.github.com/basaks/b33ea9106c7d1d72ac3a79fdcea430eb).
+2. You may need to install a slightly older python-daemon to install PyRate:
+
 
     pip install python-daemon==2.1.1
 
-To install, simply run ``setup.py``:
+3. Install PyRate by using one of the following options.
+
+- Run ``setup.py``:
+
 
     python setup.py install
 
-or install with ``pip``:
+- Install the latest version of PyRate with ``pip`` from github:
+
 
     pip install git+https://github.com/GeoscienceAustralia/PyRate
 
-The python requirements should automatically be built and installed.
+- PyRate is also on ``pypi``, the Python package manager. To install, run:
 
 
-## Anaconda setup for `PyRate`
+    pip install Py-Rate
 
-For anaconda installation and `virtualenv` instruction, [see this guide](https://github.com/GeoscienceAustralia/PyRate/blob/master/conda.md).
+The Python requirements should automatically be built and installed.
+
+
+#### Anaconda
+
+Install Anaconda [using this guide](https://github.com/GeoscienceAustralia/PyRate/blob/master/conda.md).
+
 
 ## Tests
 
-Tests use [pytest](http://doc.pytest.org/en/latest/) and can be found in *tests*.
+A suite of tests have been developed for use in testing PyRate functionality. The tests use [pytest](http://doc.pytest.org/en/latest/) and can be found
+in the *tests/* directory. A small test dataset is included in the
+*tests/test_data/* directory.
 
-To run the tests, use the following command inside the `PyRate` directory:
+To run the tests, use the following command inside the top level *PyRate/* directory:
 
-	pip install pytest
-	cd PyRate
-	export PYRATEPATH=/path/to/PyRate
-	pytest tests/
+
+    pip install pytest
+    cd PyRate
+    export PYRATEPATH=/path/to/PyRate
+    pytest tests/
+
+
+
