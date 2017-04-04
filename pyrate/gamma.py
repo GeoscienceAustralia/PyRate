@@ -40,14 +40,13 @@ GAMMA = 'GAMMA'
 
 def check_raw_data(data_path, ncols, nrows):
     """
-    Parameters
-    ----------
-    data_path: str
-        path to file
-    ncols: int
-        expected number of columns
-    nrows: int
-        expected number of rows
+    xxxxxxxxxxx.
+    
+    :param data_path: path to file
+    :param ncols: expected number of columns 
+    :param nrows: expected number of rows
+    
+    :return xxxx: xxxx
     """
 
     size = ncols * nrows * 4  # DEM and Ifg data are 4 byte floats
@@ -59,10 +58,11 @@ def check_raw_data(data_path, ncols, nrows):
 
 def check_step_mismatch(hdr):
     """
-    Parameters
-    ----------
-    hdr: dict
-        dict corresponding to header file
+    xxxxxxxxxxx.
+    
+    :param hdr: dict corresponding to header file
+    
+    :return xxxx: xxxx
     """
     # pylint: disable= invalid-name
     xs, ys = [abs(i) for i in [hdr[ifc.PYRATE_X_STEP], hdr[ifc.PYRATE_Y_STEP]]]
@@ -73,7 +73,13 @@ def check_step_mismatch(hdr):
 
 
 def parse_header(path):
-    """Parses all GAMMA epoch/DEM header file fields into a dictionary"""
+    """
+    Parses all GAMMA epoch/DEM header file fields into a dictionary.
+    
+    :param path: xxxx
+        
+    :return xxxx: xxxx
+    """
     with open(path) as f:
         text = f.read().splitlines()
         raw_segs = [line.split() for line in text if ':' in line]
@@ -83,7 +89,13 @@ def parse_header(path):
 
 
 def parse_epoch_header(path):
-    """Returns dict of the minimum required epoch metadata needed for PyRate"""
+    """
+    Returns dict of the minimum required epoch metadata needed for PyRate.
+    
+    :param path: xxxx
+        
+    :return xxxx: xxxx
+    """
     lookup = parse_header(path)
     subset = parse_date_time(lookup)
 
@@ -104,7 +116,13 @@ def parse_epoch_header(path):
 
 
 def parse_date_time(lookup):
-    """Grab date and time information and convert to datetime objects"""
+    """
+    Grab date and time information and convert to datetime objects.
+    
+    :param lookup: xxxx
+        
+    :return xxxx: xxxx   
+    """
     subset = {}
     if len(lookup[GAMMA_DATE]) == 3:  # pragma: no cover
         year, month, day, = [int(float(i)) for i in lookup[GAMMA_DATE][:3]]
@@ -124,7 +142,13 @@ def parse_date_time(lookup):
 
 
 def parse_dem_header(path):
-    """Returns dict of metadata for converting GAMMA to custom PyRate GeoTIFF"""
+    """
+    Returns dict of metadata for converting GAMMA to custom PyRate GeoTIFF.
+    
+    :param path: xxxx
+        
+    :return xxxx: xxxx 
+    """
     lookup = parse_header(path)
 
     # NB: many lookup fields have multiple elements, eg ['1000', 'Hz']
@@ -149,19 +173,24 @@ def parse_dem_header(path):
 
 def frequency_to_wavelength(freq):
     """
-    Convert radar frequency to wavelength
+    Convert radar frequency to wavelength.
+    
+    :param freq: xxxx
+        
+    :return xxxx: xxxx  
     """
     return ifc.SPEED_OF_LIGHT_METRES_PER_SECOND / freq
 
 
 def combine_headers(hdr0, hdr1, dem_hdr):
     """
-    Combines both epoch header lookups into single ifg header/dict
-    Parameters
-    ----------
-        hdr0: header for the earliest/master ifg
-        hdr1: header for the latest/slave ifg
-        dem_hdr: dict of DEM header attributes
+    Combines both epoch header lookups into single ifg header/dict.
+
+    :param hdr0: header for the earliest/master ifg
+    :param hdr1: header for the latest/slave ifg
+    :param dem_hdr: dict of DEM header attributes
+        
+    :return xxxx: xxxx        
     """
     if not all([isinstance(a, dict) for a in [hdr0, hdr1, dem_hdr]]):
         raise GammaException('Header args need to be dicts')
@@ -206,16 +235,12 @@ def combine_headers(hdr0, hdr1, dem_hdr):
 
 def manage_headers(dem_header_file, header_paths):
     """
-    Parameters
-    ----------
-    dem_header_file: str
-        dem header path
-    header_paths:
-        header paths corresponding to the master and slave dates
-    Return
-    ------
-    combined_header: dict
-        combined dict with dem, header file 1 and 2
+    xxxxxxxxx.
+
+    :param dem_header_file: Dem header path
+    :param header_paths: Header paths corresponding to the master and slave dates
+
+    :return combined_header: Combined dict with dem, header file 1 and 2
     """
     dem_header = parse_dem_header(dem_header_file)
     # find param files containing filename dates
