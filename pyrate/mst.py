@@ -40,9 +40,12 @@ log = logging.getLogger(__name__)
 
 def mst_from_ifgs(ifgs):
     """
-    Returns default MST dict for the given Ifgs. The MST is calculated using a
+    Returns default MST dict for the given interferograms. The MST is calculated using a
     weighting based on the number of incoherent cells in the phase band.
 
+    :param ifgs: xxxx
+
+    :return xxxx
     """
 
     edges_with_weights_for_networkx = [(i.master, i.slave, i.nan_fraction)
@@ -59,10 +62,12 @@ def mst_from_ifgs(ifgs):
 
 def mst_parallel(ifgs, params):
     """
-    wrapper function for calculating ifgs in non mpi runs
-    :param ifgs:
-    :param params:
-    :return:
+    Wrapper function for calculating interferograms in non MPI runs.
+    
+    :param ifgs: xxxx
+    :param params: xxxx
+
+    :return xxxx
     """
     print('Calculating mst using tiles')
     ncpus = params[cf.PROCESSES]
@@ -99,11 +104,15 @@ def mst_parallel(ifgs, params):
 def mst_multiprocessing(tile, ifgs_or_paths, preread_ifgs=None):
     """
     The memory requirement during mpi mst computation is determined by the
-    number of ifgs times size of IfgPart. Note that we need all ifg header
-    information (like masters/slave dates) for mst computation.
-    To manage memory we need smaller tiles (IfgPart) as number of ifgs go up.
+    number of interferograms times size of IfgPart. Note that we need all interferogram header
+    information (like masters/slave dates) for MST computation.
+    To manage memory we need smaller tiles (IfgPart) as number of interferograms go up.
+    
     :param tile: Tile class instance
-    :param ifgs_or_paths: all ifg paths of the problem. List of strings.
+    :param ifgs_or_paths: All interferograms paths of the problem. List of strings
+    :param preread_ifgs: xxxx
+    
+    :return xxxx
     """
     ifg_parts = [IfgPart(p, tile, preread_ifgs) for p in ifgs_or_paths]
     t_mst = mst_boolean_array(ifg_parts)
@@ -121,13 +130,12 @@ def _build_graph_networkx(edges_with_weights):
 
 def mst_boolean_array(ifgs):
     """
-    Filter: returns array of independent ifgs from the pixel by pixel MST,
+    The MSTs are stripped of connecting edge info, leaving just the interferograms.
+
+    :param ifgs: Sequence of interferogram objects
+        
+    :return Filter: returns array of independent ifgs from the pixel by pixel MST,
     like that used by the Matlab Pirate package.
-
-    The MSTs are stripped of connecting edge info, leaving just the ifgs.
-
-    :param ifgs: sequence of Ifg objs
-    :param epochs: an EpochList object derived from the ifgs
     """
     no_ifgs = len(ifgs)
     no_y, no_x = ifgs[0].phase_data.shape
@@ -147,12 +155,11 @@ def mst_boolean_array(ifgs):
 
 def mst_matrix_ifgs_only(ifgs):
     """
-    Filter: returns array of independent ifgs from the pixel by pixel MST.
+    The MSTs are stripped of connecting edge info, leaving just the interferograms.
 
-    The MSTs are stripped of connecting edge info, leaving just the ifgs.
-
-    :param ifgs: sequence of Ifg objs
-    :param epochs: an EpochList object derived from the ifgs
+    :param ifgs: Sequence of interferogram objects
+    
+    :return Filter: Returns array of independent interferograms from the pixel by pixel MST.
     """
 
     result = empty(shape=ifgs[0].phase_data.shape, dtype=object)
@@ -168,12 +175,11 @@ def mst_matrix_ifgs_only(ifgs):
 
 def mst_matrix_as_array(ifgs):
     """
-    Filter: returns array of pixel by pixel MSTs.
-
     Each pixel contains an MST (with connecting edges etc).
 
-    :param ifgs: sequence of Ifg objs
-    :param epochs: an EpochList object derived from the ifgs
+    :param ifgs: Sequence of interferogram objects
+    
+    :return Filter: returns array of pixel by pixel MSTs.
     """
 
     mst_result = empty(shape=ifgs[0].phase_data.shape, dtype=object)
@@ -187,8 +193,11 @@ def mst_matrix_as_array(ifgs):
 # other weighting criterion is required later
 def mst_matrix_networkx(ifgs):
     """
-    Generates/emits MST trees on a pixel-by-pixel basis for the given ifgs.
-    :param ifgs: sequence of Ifg objs
+    Generates/emits MST trees on a pixel-by-pixel basis for the given interferograms.
+    
+    :param ifgs: Sequence of interferogram objects
+    
+    :return xxxxx
     """
 
     # make default MST to optimise result when no Ifg cells in a stack are nans
@@ -233,15 +242,11 @@ def mst_matrix_networkx(ifgs):
 
 def minimum_spanning_edges_from_mst(edges):
     """
-    Parameters
-    ----------
-    edges: list
-        List of tuples (master, slave, nan_frac) corresponding to ifgs
-    Returns
-    -------
-    edges: list
-        list of mst edges
-    g_nx: nx.Graph() instance
+    xxxxx
+    
+    :param edges: List of tuples (master, slave, nan_frac) corresponding to interferograms
+    
+    :return edges: List of mst edges (g_nx: nx.Graph() instance)
     """
     g_nx = _build_graph_networkx(edges)
     T = minimum_spanning_tree(g_nx)  # step ifglist_mst in make_mstmat.m
@@ -250,7 +255,8 @@ def minimum_spanning_edges_from_mst(edges):
 
 
 def minimum_spanning_tree(G, weight='weight'):
-    """Return a minimum spanning tree or forest of an undirected
+    """
+    Return a minimum spanning tree or forest of an undirected
     weighted graph.
 
     A minimum spanning tree is a subgraph of the graph (a tree) with
@@ -260,17 +266,10 @@ def minimum_spanning_tree(G, weight='weight'):
     spanning forest is a union of the spanning trees for each
     connected component of the graph.
 
-    Parameters
-    ----------
-    G : NetworkX Graph
+    :param G: NetworkX Graph
+    :param weight:  Edge data key to use for weight (default 'weight')
 
-    weight : string
-       Edge data key to use for weight (default 'weight').
-
-    Returns
-    -------
-    G : NetworkX Graph
-       A minimum spanning tree or forest.
+    :return G: NetworkX Graph, a minimum spanning tree or forest.
 
     Examples
     --------
@@ -299,27 +298,19 @@ def minimum_spanning_tree(G, weight='weight'):
 
 
 def minimum_spanning_edges(G, weight='weight', data=True):
-    """Generate edges in a minimum spanning forest of an undirected
+    """
+    Generate edges in a minimum spanning forest of an undirected
     weighted graph.
 
     A minimum spanning tree is a subgraph of the graph (a tree)
     with the minimum sum of edge weights.  A spanning forest is a
     union of the spanning trees for each connected component of the graph.
 
-    Parameters
-    ----------
-    G : NetworkX Graph
+    :param G: NetworkX Graph
+    :param weight: Edge data key to use for weight (default 'weight')
+    :param data: If True yield the edge data along with the edge (optional)
 
-    weight : string
-       Edge data key to use for weight (default 'weight').
-
-    data : bool, optional
-       If True yield the edge data along with the edge.
-
-    Returns
-    -------
-    edges : iterator
-       A generator that produces edges in the minimum spanning tree.
+    :return edges: iterator. A generator that produces edges in the minimum spanning tree.
        The edges are three-tuples (u,v,w) where w is the weight.
 
     Examples
