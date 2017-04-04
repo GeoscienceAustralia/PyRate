@@ -45,9 +45,9 @@ def check_raw_data(data_path, ncols, nrows):
     data_path: str
         path to file
     ncols: int
-        expected number of cols
+        expected number of columns
     nrows: int
-        expectged number of rows
+        expected number of rows
     """
 
     size = ncols * nrows * 4  # DEM and Ifg data are 4 byte floats
@@ -157,10 +157,11 @@ def frequency_to_wavelength(freq):
 def combine_headers(hdr0, hdr1, dem_hdr):
     """
     Combines both epoch header lookups into single ifg header/dict
-
-    hdr0: header for the earliest/master ifg
-    hdr1: header for the latest/slave ifg
-    dem_hdr: dict of DEM header attributes
+    Parameters
+    ----------
+        hdr0: header for the earliest/master ifg
+        hdr1: header for the latest/slave ifg
+        dem_hdr: dict of DEM header attributes
     """
     if not all([isinstance(a, dict) for a in [hdr0, hdr1, dem_hdr]]):
         raise GammaException('Header args need to be dicts')
