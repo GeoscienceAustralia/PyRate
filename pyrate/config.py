@@ -17,7 +17,7 @@
 This Python module contains utilities to parse PyRate configuration
 files. It also includes numerous general constants relating to options
 in configuration files. Examples of PyRate configuration files are
-provided in the configs/ directory
+provided in the configs/ directory.
 """
 # coding: utf-8
 # pylint: disable= invalid-name
@@ -40,7 +40,7 @@ NO_MULTILOOKING = 1
 IFG_FILE_LIST = 'ifgfilelist'
 #: BOOL (0/1); The interferogram processor used (0==ROIPAC, 1==GAMMA)
 PROCESSOR = 'processor'
-#: STR; Name of directory containing input interferograms.
+#: STR; Name of directory containing input interferograms
 OBS_DIR = 'obsdir'
 #: STR; Name of directory for saving output products
 OUT_DIR = 'outdir'
@@ -52,9 +52,9 @@ DEM_HEADER_FILE = 'demHeaderFile'
 SLC_DIR = 'slcFileDir'
 
 #: STR; The projection of the input interferograms.
-# When *PROCESSOR* == 0, either
+#: When *PROCESSOR* == 0, either
 INPUT_IFG_PROJECTION = 'projection'
-#: FLOAT; The no data value in the interferogram files.
+#: FLOAT; The no data value in the interferogram files
 NO_DATA_VALUE = 'noDataValue'
 #: FLOAT; No data averaging threshold for prepifg
 NO_DATA_AVERAGING_THRESHOLD = 'noDataAveragingThreshold'
@@ -68,28 +68,28 @@ NAN_CONVERSION = 'nan_conversion'
 
 # Prepifg parameters
 #: BOOL (1/2/3/4); Method for cropping interferograms,
-# 1 = minimum overlapping area (intersection), 2 = maximum area (union),
-# 3 = customised area, 4 = all ifgs already same size
+#: 1 = minimum overlapping area (intersection), 2 = maximum area (union),
+#: 3 = customised area, 4 = all interferograms already same size
 IFG_CROP_OPT = 'ifgcropopt'
 #: INT; Multi look factor for interferogram preparation in x dimension
 IFG_LKSX = 'ifglksx'
 #: INT; Multi look factor for interferogram preparation in y dimension
 IFG_LKSY = 'ifglksy'
-#: REAL; Minimum longitude for cropping with method 3
+#: REAL; Minimum longitude for cropping with method 3 (customised area)
 IFG_XFIRST = 'ifgxfirst'
-#: REAL; Maximum longitude for cropping with method 3
+#: REAL; Maximum longitude for cropping with method 3 (customised area)
 IFG_XLAST = 'ifgxlast'
-#: REAL; Minimum latitude for cropping with method 3
+#: REAL; Minimum latitude for cropping with method 3 (customised area)
 IFG_YFIRST = 'ifgyfirst'
-#: REAL; Maximum latitude for cropping with method 3
+#: REAL; Maximum latitude for cropping with method 3 (customised area)
 IFG_YLAST = 'ifgylast'
 
 # reference pixel parameters
 #: INT; Coordinate in x of reference pixel OR -1 = perform
-# reference pixel search
+#: reference pixel search
 REFX = 'refx'
 #: INT; Coordinate in y of reference pixel OR -1 = perform
-# reference pixel search
+#: reference pixel search
 REFY = 'refy'
 #: INT; Number of reference pixel grid search nodes in x dimension
 REFNX = "refnx"
@@ -98,7 +98,7 @@ REFNY = "refny"
 #: INT; Dimension of reference pixel search window
 REF_CHIP_SIZE = 'refchipsize'
 #: REAL; Minimum fraction of observations required in
-# reference pixel search window for pixel to be a viable reference pixel
+#: reference pixel search window for pixel to be a viable reference pixel
 REF_MIN_FRAC = 'refminfrac'
 #: BOOL (1/2); Reference phase estimation method
 REF_EST_METHOD = 'refest'
@@ -113,14 +113,14 @@ APS_ELEVATION_EXT = 'APS_ELEVATION_EXT'
 
 # orbital error correction/parameters
 #: BOOL (1/0); Boolean flag controlling whether to apply orbital
-# error correction
+#: error correction
 ORBITAL_FIT = 'orbfit'
 #: BOOL (1/2); Method for orbital error correction, 1: ifg by ifg/independent,
-#  2: epoch by epoch/network
+#:  2: epoch by epoch/network
 ORBITAL_FIT_METHOD = 'orbfitmethod'
 #: BOOL (1/2/3) Order of orbital error model, 1 = planar
-# in x and y (2 parameter model, 2 = quadratic in x and y (5 parameter model),
-# 3 = quadratic in x and cubic in y (part-cubic 6 parameter model)
+#: in x and y (2 parameter model, 2 = quadratic in x and y (5 parameter model),
+#: 3 = quadratic in x and cubic in y (part-cubic 6 parameter model)
 ORBITAL_FIT_DEGREE = 'orbfitdegrees'
 #: INT; Multi look factor for orbital error calculation in x dimension
 ORBITAL_FIT_LOOKS_X = 'orbfitlksx'
@@ -129,14 +129,14 @@ ORBITAL_FIT_LOOKS_Y = 'orbfitlksy'
 
 # Linear rate/stacking parameters
 #: REAL; Threshold ratio between 'model minus observation'
-#  residuals and a-priori observation standard deviations for
-# linear rate estimate acceptance (otherwise remove furthest
-# outlier and re-iterate)
+#: residuals and a-priori observation standard deviations for
+#: linear rate estimate acceptance (otherwise remove furthest
+#: outlier and re-iterate)
 LR_NSIG = 'nsig'
 #: INT; Number of required input observations per pixel for the
-# linear rate inversion
+#: linear rate inversion
 LR_PTHRESH = 'pthr'
-#: REAL; Maximum allowable standard error for pixels in linear rate inversion.
+#: REAL; Maximum allowable standard error for pixels in linear rate inversion
 LR_MAXSIG = 'maxsig'
 
 # Time series parameters
@@ -145,13 +145,13 @@ TIME_SERIES_CAL = 'tscal'
 #: INT (1/2); Method for time series inversion (1: Laplacian Smoothing; 2: SVD)
 TIME_SERIES_METHOD = 'tsmethod'
 #: INT; Number of required input observations
-# per pixel for time series inversion
+#: per pixel for time series inversion
 TIME_SERIES_PTHRESH = 'ts_pthr'
 #: INT (1/2); Order of Laplacian smoothing operator, first or
-# second order NOT CURRENTLY USED
+#: second order NOT CURRENTLY USED
 TIME_SERIES_SM_ORDER = 'smorder'
 #: REAL; Laplacian smoothing factor (0: calculate & plot L-curve;
-# others: using the specific smoothing factor 10**smfactor) NOT CURRENTLY USED
+#: others: using the specific smoothing factor 10**smfactor) NOT CURRENTLY USED
 TIME_SERIES_SM_FACTOR = 'smfactor'
 # tsinterp is automatically assigned in the code; not needed in conf file
 #TIME_SERIES_INTERP = 'tsinterp'
@@ -393,7 +393,7 @@ def parse_namelist(nml):
 
 class ConfigException(Exception):
     """
-    Default exception class for configuration errors.
+    Default exception class for configuration errors
     """
     pass
 
@@ -431,7 +431,7 @@ def reverse_degree_conv(v):
 
 def transform_params(params):
     """
-    Returns subset of config parameters for cropping and multilooking.
+    Returns subset of config parameters for cropping and multilooking
     """
 
     t_params = [IFG_LKSX, IFG_LKSY, IFG_CROP_OPT]
@@ -441,7 +441,7 @@ def transform_params(params):
 
 def original_ifg_paths(ifglist_path):
     """
-    Returns sequence of paths to files in given ifglist file.
+    Returns sequence of paths to files in given ifglist file
     """
 
     basedir = os.path.dirname(ifglist_path)
@@ -451,7 +451,7 @@ def original_ifg_paths(ifglist_path):
 
 def mlooked_path(path, looks, crop_out):
     """
-    Adds suffix to path, for creating a new path for mlooked files.
+    Adds suffix to path, for creating a new path for mlooked files
     """
     base, ext = splitext(path)
     return "{base}_{looks}rlks_{crop_out}cr{ext}".format(
@@ -497,7 +497,7 @@ def get_ifg_paths(config_file):
     dest_paths: list
         list of multilooked and cropped geotifs
     pars: dict
-        dictionary corresponding to the config file.
+        dictionary corresponding to the config file
     """
     pars = get_config_params(config_file)
     ifg_file_list = pars.get(IFG_FILE_LIST)

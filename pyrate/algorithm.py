@@ -33,7 +33,7 @@ def is_square(arr):
         numpy array
     Return
     ------
-    whether arr is square or not
+    determines whether a numpy array is square or not
     """
     shape = arr.shape
     if len(shape) == 2 and (shape[0] == shape[1]):
@@ -43,12 +43,15 @@ def is_square(arr):
 
 def least_squares_covariance(A, b, v):
     """
-    Least squares solution in the presence of known covariance.
-
-    This function is known as lscov() in MATLAB.
+    Parameters
+    ----------    
     A: design matrix
     b: observations (vector of phase values)
     v: covariances (weights) in vector form
+    Return
+    ------
+    Least squares solution in the presence of known covariance
+    This function is known as lscov() in MATLAB    
     """
     # pylint: disable=too-many-locals
     # X = LSCOV(A,b,V) returns the vector X that minimizes
@@ -92,9 +95,13 @@ def least_squares_covariance(A, b, v):
 
 def los_conversion(phase_data, unit_vec):
     """
-    Converts phase from line-of-sight (LOS) to horizontal/vertical components.
-    phase_data - phase band data array (eg. ifg.phase_data)
-    unit_vec - 3 component sequence, eg. [EW, NS, vertical]
+    Parameters
+    ----------    
+    phase_data: phase band data array (eg. ifg.phase_data)
+    unit_vec: 3 component sequence, eg. [EW, NS, vertical]
+    Return
+    ------    
+    Converts phase from line-of-sight (LOS) to horizontal/vertical components
     """
 
     # NB: currently not tested as implementation is too simple
@@ -103,6 +110,12 @@ def los_conversion(phase_data, unit_vec):
 
 def unit_vector(incidence, azimuth):
     """
+    Parameters
+    ----------
+    incidence: xxxxxxx
+    azimuth: xxxxxxxx
+    Return
+    ------      
     Returns unit vector tuple (east_west, north_south, vertical).
     """
 
@@ -113,10 +126,14 @@ def unit_vector(incidence, azimuth):
 
 
 def ifg_date_lookup(ifgs, date_pair):
-    """
-    Returns an Ifg which has a master/slave dates given in 'date_pair'.
-    ifgs - list of Ifg objects to search in
-    date_pair - a (datetime.date, datetime.date) tuple
+    """  
+    Parameters
+    ----------
+    ifgs: list of interferogram objects to search in
+    date_pair: a (datetime.date, datetime.date) tuple
+    Return
+    ------    
+    Returns an interferogram which has a master/slave date given in 'date_pair'    
     """
     if len(date_pair) != 2:
         msg = "Need (datetime.date, datetime.date) master/slave pair"
@@ -143,9 +160,13 @@ def ifg_date_lookup(ifgs, date_pair):
 
 def ifg_date_index_lookup(ifgs, date_pair):
     """
-    Returns an Ifg index which has a master/slave dates given in 'date_pair'.
-    ifgs - list of Ifg objects to search in
-    date_pair - a (datetime.date, datetime.date) tuple
+    Parameters
+    ----------
+    ifgs: list of interferogram objects to search in
+    date_pair: a (datetime.date, datetime.date) tuple
+    Return
+    ------       
+    Returns an interferogram index which has a master/slave dates given in 'date_pair'.
     """
 
     if len(date_pair) != 2:
@@ -169,7 +190,12 @@ def ifg_date_index_lookup(ifgs, date_pair):
 
 def get_epochs(ifgs):
     """
-    Returns an EpochList derived from all given interferograms.
+    Parameters
+    ----------
+    ifgs: list of interferogram objects
+    Return
+    ------
+    Returns an EpochList derived from all given interferograms
     """
     log.info('Finding epochs')
     if isinstance(ifgs, dict):
@@ -186,7 +212,12 @@ def get_epochs(ifgs):
 
 def get_all_epochs(ifgs):
     """
-    Returns sequence of all master and slave dates in given ifgs.
+    Parameters
+    ----------
+    ifgs: list of interferogram objects
+    Return
+    ------
+    Returns a sequence of all master and slave dates from all given interferograms
     """
 
     return [ifg.master for ifg in ifgs] + [ifg.slave for ifg in ifgs]
@@ -194,6 +225,11 @@ def get_all_epochs(ifgs):
 
 def master_slave_ids(dates):
     """
+    Parameters
+    ----------
+    dates: list of dates
+    Return
+    ------
     Returns dict of 'date:unique ID' for each date in 'dates'. IDs are ordered
     from oldest to newest, starting at 0.
     Replaces ifglist.mas|slvnum used in the Matlab Pirate package.
