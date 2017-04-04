@@ -16,6 +16,8 @@ Contributors
 * Sudipta Basak (GA)
 * Ben Davies (NCI)
 * Matt Garthwaite (GA)
+* Sarah Lawrie (GA)
+* Thomas Fuhrmann (GA)
 * Simon Knapp (GA)
 * Negin Moghaddam (GA)
 * Vanessa Newey (GA)
