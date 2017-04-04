@@ -21,7 +21,7 @@ If you are reporting a bug, please include:
 * Any details about your local setup that might be helpful in troubleshooting.
 * Detailed steps to reproduce the bug.
 
-As an example of how to report a bug please see: https://github.com/GeoscienceAustralia/PyRate/issues/146
+ For an example of how to report a bug please see: https://github.com/GeoscienceAustralia/PyRate/issues/146
 
 Fix Bugs
 ~~~~~~~~
@@ -57,10 +57,9 @@ If you are proposing a feature:
 Get Started!
 ------------
 
-Ready to contribute? Here's how to set up `PyRate` for
-local development.
+Ready to contribute? Here's how to set up PyRate for local development.
 
-1. Fork_ the `PyRate` repo on GitHub.
+1. Fork_ the `PyRate` repository on GitHub.
 2. Clone your fork locally::
 
     $ git clone git@github.com:GeoscienceAustralia/PyRate.git
@@ -71,7 +70,7 @@ local development.
 
 Now you can make your changes locally.
 
-4. When you're done making changes, check that your changes pass style and unit
+4. When you're finished making changes, check that your changes pass style and unit
    tests, including testing other Python versions with tox::
 
     $ tox
@@ -94,7 +93,7 @@ Pull Request Guidelines
 Before you submit a pull request, check that it meets these guidelines:
 
 1. The pull request should include tests.
-2. If the pull request adds functionality, the docs should be updated. Put
+2. If the pull request adds functionality, the documents should be updated. Put
    your new functionality into a function with a docstring, and add the
    feature to the list in README.rst.
 3. The pull request should work for Python 2.7, and 3.3, 3.4, 3.5, 3.6, 3.7
