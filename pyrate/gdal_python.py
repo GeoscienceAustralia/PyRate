@@ -55,16 +55,17 @@ def crop(input_file, extents, geo_trans=None, nodata=np.nan):
     http://pcjericks.github.io/py-gdalogr-cookbook/raster_layers.html
     #clip-a-geotiff-with-shapefile
 
-    Arguments:
-        rast            A gdal.Dataset or a NumPy array
-        features_path   The path to the clipping features
-        geo_trans              An optional GDAL GeoTransform to use instead
-        nodata          The NoData value; defaults to -9999.
+    Parameters
+    ----------
+    rast:            A gdal.Dataset or a NumPy array
+    features_path:   The path to the clipping features
+    geo_trans:       An optional GDAL GeoTransform to use instead
+    nodata:          The NoData value; defaults to -9999
     """
 
     def image_to_array(i):
         """
-        Converts a Python Imaging Library (PIL) array to a gdalnumeric image.
+        Converts a Python Imaging Library (PIL) array to a gdalnumeric image
         """
         arr = gdalnumeric.fromstring(i.tobytes(), 'b')
         arr.shape = i.im.size[1], i.im.size[0]
@@ -166,7 +167,7 @@ def crop(input_file, extents, geo_trans=None, nodata=np.nan):
 
 def resample_nearest_neighbour(input_tif, extents, new_res, output_file):
     """
-    nearest neighbor resampling via GDAL
+    Nearest neighbor resampling via GDAL
     """
     dst, resampled_proj, src, _ = crop_rasample_setup(extents,
                                                       input_tif,
@@ -239,6 +240,7 @@ def crop_resample_average(
         match_pirate=False):
     """
     Crop, resample, and average a geotif
+    
     Parameters
     ----------
     input_tif: str
