@@ -15,7 +15,7 @@
 #   limitations under the License.
 """
 This Python module contains utilities and classes shared by
-all other PyRate modules
+all other PyRate modules.
 """
 # pylint: disable=too-many-lines
 from __future__ import print_function
@@ -64,7 +64,9 @@ GDAL_Y_FIRST = 3
 
 
 def mkdir_p(path):
-    """ copied from stackoverflow"""
+    """
+    Copied from stackoverflow.
+    """
     try:
         os.makedirs(path)
     except OSError as exc:  # Python >2.5
@@ -104,6 +106,8 @@ class RasterBase(object):
     def open(self, readonly=None):
         """
         Opens generic raster dataset.
+        
+        :param readonly: True/False, or None to open as underlying file setting        
         """
         if self.dataset is not None:
             msg = "open() already called for %s" % self
@@ -128,6 +132,9 @@ class RasterBase(object):
         self.add_geographic_data()
 
     def add_geographic_data(self):
+        """
+        xxxxxx
+        """
         # add some geographic data
         self.x_centre = int(self.ncols / 2)
         self.y_centre = int(self.nrows / 2)
@@ -139,34 +146,58 @@ class RasterBase(object):
 
     @property
     def ncols(self):
+        """
+        xxxxxx
+        """
         return self.dataset.RasterXSize
 
     @property
     def nrows(self):
+        """
+        xxxxxx
+        """
         return self.dataset.RasterYSize
 
     @property
     def x_step(self):
+        """
+        xxxxxx
+        """
         return float(self.dataset.GetGeoTransform()[GDAL_X_CELLSIZE])
 
     @property
     def y_step(self):
+        """
+        xxxxxx
+        """
         return float(self.dataset.GetGeoTransform()[GDAL_Y_CELLSIZE])
 
     @property
     def x_first(self):
+        """
+        xxxxxx
+        """
         return float(self.dataset.GetGeoTransform()[GDAL_X_FIRST])
 
     @property
     def x_last(self):
+        """
+        xxxxxx
+        """
         return self.x_first + (self.x_step * self.ncols)
 
     @property
     def y_first(self):
+        """
+        xxxxxx
+        """
         return float(self.dataset.GetGeoTransform()[GDAL_Y_FIRST])
 
     @property
     def y_last(self):
+        """
+        xxxxxx
+        """
         return self.y_first + (self.y_step * self.nrows)
 
     @property
@@ -178,6 +209,9 @@ class RasterBase(object):
 
     @property
     def num_cells(self):
+        """
+        xxxxxx
+        """
         if self.is_open:
             return self.dataset.RasterXSize * self.dataset.RasterYSize
         else:
@@ -193,19 +227,23 @@ class RasterBase(object):
     def close(self):
         """
         Explicitly closes file opened by gdal.Open()
-        This is required in windows, otherwise opened files can not be removed,
-        because windows locks opened files.
+        This is required in Windows, otherwise opened files can not be removed,
+        because Windows locks opened files.
         """
         if self.is_open:
             self.dataset = None
 
     @property
     def is_read_only(self):
+        """
+        xxxxxx
+        """
         return self._readonly
 
     def _get_band(self, band):
         """
         Wrapper (with error checking) for GDAL's Band.GetRasterBand() method.
+        
         :param band: number of band, starting at 1
         """
 
@@ -224,11 +262,9 @@ class Ifg(RasterBase):
     # pylint: disable=too-many-instance-attributes
     def __init__(self, path):
         """
-        Interferogram constructor, for 2 band ROIPAC Ifg raster datasets.
-        Parameters
-        ----------
-        path: str
-            path to ifg
+        Interferogram constructor, for 2 band ROI_PAC interferogram raster datasets.
+        
+        :param path: Path to interferogram
         """
 
         RasterBase.__init__(self, path)
@@ -245,13 +281,17 @@ class Ifg(RasterBase):
 
     def open(self, readonly=None):
         """
-        :param bool readonly: True/False, or None to open as underlying file setting
+        Opens generic raster dataset.
+                
+        :param readonly: True/False, or None to open as underlying file setting
         """
         RasterBase.open(self, readonly)
         self.initialize()
 
     def initialize(self):
-        """basic ifg properties read on opening Ifg"""
+        """
+        Basic interferogram properties read on opening interferogram.
+        """
         self._init_dates()
         md = self.dataset.GetMetadata()
         self.wavelength = float(md[ifc.PYRATE_WAVELENGTH_METRES])
@@ -260,7 +300,9 @@ class Ifg(RasterBase):
         self.nan_converted = False
 
     def _init_dates(self):
-        """grab master and slade date from metadata"""
+        """
+        Grab master and slave date from metadata.
+        """
         def _to_date(datestr):
             year, month, day = [int(i) for i in datestr.split('-')]
             return date(year, month, day)
@@ -277,7 +319,8 @@ class Ifg(RasterBase):
 
     def convert_to_nans(self):
         """
-        Converts given values in phase data to NaNs
+        Converts given values in phase data to NaNs.
+        
         :param val: value to convert, default is 0
         """
         if (self._nodata_value is None) \
@@ -321,6 +364,12 @@ class Ifg(RasterBase):
 
     @nodata_value.setter
     def nodata_value(self, val):
+        """
+        xxxx
+        
+        :param val: xxxx
+        """
+
         self._nodata_value = val
 
     @property
@@ -335,8 +384,9 @@ class Ifg(RasterBase):
 
     def convert_to_mm(self):
         """
+        Convert wavelength from radians to mm.
+        
         :param ifg: ifg file
-        :return: convert wavelength from radians to mm
         """
         self.mm_converted = True
         if self.dataset.GetMetadataItem(ifc.DATA_UNITS) == MILLIMETRES:
@@ -362,6 +412,11 @@ class Ifg(RasterBase):
 
     @phase_data.setter
     def phase_data(self, data):
+        """
+        xxxx
+
+        :param data: xxxx
+        """
         self._phase_data = data
 
     @property
@@ -403,6 +458,8 @@ class Ifg(RasterBase):
         """
         Writes phase data to disk.
         For this to work, a copy of the original file
+        
+        :param data: xxxx
         """
 
         if self.is_read_only:
@@ -427,17 +484,16 @@ class Ifg(RasterBase):
 
     def save_numpy_phase(self, numpy_file):
         """
-        Parameters
-        ----------
-        numpy_file: str
-            file path where phase data is saved
+        Save phase data.
+        
+        :param numpy_file: File path where phase data is saved
         """
         np.save(file=numpy_file, arr=self.phase_data)
 
 
 class IfgPart(object):
     """
-    slice of Ifg data object
+    Slice of Ifg data object.
     """
     # pylint: disable=missing-docstring
     # pylint: disable=too-many-instance-attributes
@@ -475,6 +531,11 @@ class IfgPart(object):
             self.read_required(ifg)
 
     def read_required(self, ifg):
+        """
+        xxxx
+        
+        :param ifg: xxxx 
+        """
         if not ifg.is_open:
             ifg.open(readonly=True)
         ifg.nodata_value = 0
@@ -489,15 +550,21 @@ class IfgPart(object):
 
     @property
     def nrows(self):
+        """
+        xxxx
+        """
         return self.r_end - self.r_start
 
     @property
     def ncols(self):
+        """
+        xxxx
+        """
         return self.c_end - self.c_start
 
 
 class Incidence(RasterBase):   # pragma: no cover
-    """ Incidence class"""
+    """Incidence class."""
 
     def __init__(self, path):
         """
@@ -512,9 +579,9 @@ class Incidence(RasterBase):   # pragma: no cover
 
     @property
     def incidence_band(self):
-        '''
+        """
         Returns the GDALBand for the incidence angle layer.
-        '''
+        """
 
         if self._incidence_band is None:
             self._incidence_band = self._get_band(1)
@@ -553,17 +620,21 @@ class Incidence(RasterBase):   # pragma: no cover
 
 class DEM(RasterBase):
     """
-    Generic raster class for ROIPAC single band DEM files.
+    Generic raster class for ROI_PAC single band DEM files.
     """
 
     def __init__(self, path):
-        """DEM constructor."""
+        """
+        DEM constructor.
+        """
         RasterBase.__init__(self, path)
         self._band = None
 
     @property
     def height_band(self):
-        """Returns the GDALBand for the elevation layer."""
+        """
+        Returns the GDALBand for the elevation layer.
+        """
 
         if self._band is None:
             self._band = self._get_band(1)
@@ -601,17 +672,22 @@ class EpochList(object):
 
 def convert_radians_to_mm(data, wavelength):
     """
-    Translates phase from radians to millimetres
-    data: interferogram phase data
-    wavelength: radar wavelength; normally included with SAR instrument metadata
+    Translates phase from radians to millimetres.
+    
+    :param data: Interferogram phase data
+    :param wavelength: Radar wavelength; normally included with SAR instrument metadata
+    
+    :return xxxx
     """
     return data * ifc.MM_PER_METRE * (wavelength / (4 * math.pi))
 
 
 def nanmedian(x):
     """
-    :param x:
-    :return:
+    xxxx 
+    
+    :param x: xxxx
+    :return xxxx
     """
     # pylint: disable=no-member
     version = [int(i) for i in
@@ -626,7 +702,14 @@ def write_geotiff(header, data_path, dest, nodata):
     # pylint: disable=too-many-statements
     """
     Writes input image data (interferograms, DEM, incidence maps etc)
-    to GeoTIFF format with PyRate metadata
+    to GeoTIFF format with PyRate metadata.
+    
+    :param header: xxxx
+    :param data_path: xxxx
+    :param dest: xxxx
+    :param nodata: xxxx
+    
+    :return xxxx
     """
     # pylint: disable=too-many-branches
     # pylint: disable=too-many-locals
@@ -715,9 +798,13 @@ def write_geotiff(header, data_path, dest, nodata):
 
 def write_unw_from_data_or_geotiff(geotif_or_data, dest_unw, ifg_proc):
     """
-    :param geotif_or_data: data or geotif to covert into unw
-    :param dest_unw: destination unw file
-    :param ifg_proc: processor type, GAMMA=1, ROIPAC=0
+    xxxx
+    
+    :param geotif_or_data: Data or geotiff to covert into unwrapped
+    :param dest_unw: Destination unwrapped file
+    :param ifg_proc: Processor type, GAMMA=1, ROIPAC=0
+    
+    :return xxxx
     """
     if ifg_proc != 1:
         raise NotImplementedError('only support gamma processor for now')
@@ -742,9 +829,15 @@ def write_output_geotiff(md, gt, wkt, data, dest, nodata):
     # pylint: disable=too-many-arguments
     """
     Writes PyRate output data to a GeoTIFF file.
-    md is a dictionary containing PyRate metadata
-    gt is the GDAL geotransform for the data
-    wkt is the GDAL projection information for the data
+    
+    :param md: Dictionary containing PyRate metadata
+    :param gt: GDAL geotransform for the data
+    :param wkt: GDAL projection information for the data
+    :param data: xxxx
+    :param dest: xxxx
+    :param nodata: xxxx
+    
+    :return xxxx
     """
 
     driver = gdal.GetDriverByName("GTiff")
@@ -769,33 +862,27 @@ def write_output_geotiff(md, gt, wkt, data, dest, nodata):
 
 class GeotiffException(Exception):
     """
-    Geotiff exception class
+    Geotiff exception class.
     """
 
 
 def create_tiles(shape, nrows=2, ncols=2):
     """
-    shape must be a 2-tuple, i.e., 2d_array.shape.
+    Shape must be a 2-tuple, i.e., 2d_array.shape.
     The returned list contains nrowsXncols Tiles with each tile preserving the
-    "physical" layout of original arr.
+    "physical" layout of original array.
 
-    The number of rows can be changed (increased) such that  the resulting tiles
+    The number of rows can be changed (increased) such that the resulting tiles
     with float32's do not exceed 500MB in memory.
 
-    When the array shape (rows, cols) are not divisible by (nrows, ncols) then
+    When the array shape (rows, columns) are not divisible by (nrows, ncols) then
     some of the array dimensions can change according to numpy.array_split.
 
-    Parameters
-    ----------
-    shape: tuple
-        shape tuple of ifg
-    nrows: int
-        number of rows of tiles
-    ncols: int
-        number of columns of tiles
-    Returns
-    -------
-    list of Tile class instances
+    :param shape: Shape tuple of interferogram
+    :param nrows: Number of rows of tiles
+    :param ncols: Number of columns of tiles
+
+    :return List of Tile class instances.
     """
 
     if len(shape) != 2:
@@ -813,18 +900,13 @@ def create_tiles(shape, nrows=2, ncols=2):
 
 class Tile:
     """
-    Tile class containing part of the ifgs
+    Tile class containing part of the interferograms.
     """
     def __init__(self, index, top_left, bottom_right):
         """
-        Parameters
-        ----------
-        index: int
-            identifying index of a tile
-        top_left: tuple
-            ifg index of top left of tile
-        bottom_right: tuple
-            ifg index of bottom right of tile
+        :param index: Identifying index of a tile
+        :param top_left: Interferogram index of top left of tile
+        :param bottom_right: Interferogram index of bottom right of tile
         """
 
         self.index = index
@@ -840,12 +922,13 @@ class Tile:
 def copytree(src, dst, symlinks=False, ignore=None):
     # pylint: disable=line-too-long
     """
-    copy contents of src dir into dst dir
-    stolen from: http://stackoverflow.com/questions/1868714/how-do-i-copy-an-entire-directory-of-files-into-an-existing-directory-using-pyth?lq=1
-    :param src: source dir to copy from
-    :param dst: dst dir to copy to, created if does not exist
-    :param symlinks: bool, whether to copy symlink or not
-    :param ignore:
+    Copy contents of src dir into dst dir
+    copied from: http://stackoverflow.com/questions/1868714/how-do-i-copy-an-entire-directory-of-files-into-an-existing-directory-using-pyth?lq=1
+    
+    :param src: Source directory to copy from
+    :param dst: Destination directory to copy to, created if does not exist
+    :param symlinks: Whether to copy symlink or not
+    :param ignore: xxxx
     """
     # pylint: disable=invalid-name
     if not os.path.exists(dst):  # pragma: no cover
@@ -876,16 +959,12 @@ def copytree(src, dst, symlinks=False, ignore=None):
 
 def pre_prepare_ifgs(ifg_paths, params):
     """
-    Parameters
-    ----------
-    ifg_paths: list
-        list of ifg paths
-    params: dict
-        parameters dict
-    Returns
-    -------
-    ifgs: list
-        list of Ifg instances
+    xxxx
+
+    :param ifg_paths: List of interferogram paths
+    :param params: Parameters dictionary
+    
+    :return ifgs: List of interferogram instances
     """
     ifgs = [Ifg(p) for p in ifg_paths]
     for i in ifgs:
@@ -898,11 +977,12 @@ def pre_prepare_ifgs(ifg_paths, params):
 
 def nan_and_mm_convert(ifg, params):
     """
-    Parameters
-    ----------
-    ifg: Ifg class instance
-    params: dict
-        parameters dict
+    xxxx
+    
+    :param ifg: Interferogram class instance
+    :param params: Parameters dictionary
+    
+    :return xxxx
     """
     nan_conversion = params[cf.NAN_CONVERSION]
     if nan_conversion:  # nan conversion happens here in networkx mst
@@ -920,10 +1000,13 @@ def cell_size(lat, lon, x_step, y_step):
     This function depends on PyProj/PROJ4 to implement the function
     llh2local.m used in Matlab Pirate.
     Converts X|Y_STEP in degrees to X & Y cell length/width in metres.
-    lat: latitude in degrees
-    lon: longitude in degrees
-    x_step: horizontal step size in degrees
-    y_step: vertical step size in degrees
+    
+    :param lat: Latitude in degrees
+    :param lon: Longitude in degrees
+    :param x_step: Horizontal step size in degrees
+    :param y_step: Vertical step size in degrees
+    
+    :return xxxx
     """
     if lat > 84.0 or lat < -80:
         msg = "No UTM zone for polar region: > 84 degrees N or < 80 degrees S"
@@ -945,6 +1028,10 @@ def utm_zone(longitude):
     Returns basic UTM zone for given longitude in degrees. Currently does NOT
     handle the sub-zoning around Scandanavian countries.
     See http://www.dmap.co.uk/utmworld.htm
+    
+    :param longitude: xxxxx
+    
+    :return xxxx
     """
     if longitude == 180:
         return 60.0
@@ -953,7 +1040,7 @@ def utm_zone(longitude):
 
 class PrereadIfg:
     """
-    Convenience class for handling pre-calculated ifg params
+    Convenience class for handling pre-calculated interferogram parameters.
     """
     # pylint: disable=too-many-arguments
     # pylint: disable=too-many-instance-attributes
@@ -972,17 +1059,13 @@ class PrereadIfg:
 
 def prepare_ifg(ifg_path, params):
     """
-    Parameters
-    ----------
-    ifg_path: str
-        ifg path
-    tiles: list
-        list of Tile instances
-    params: dict
-        config dict
-    Returns
-    -------
-    ifg: ifg class instance
+    xxxx
+    
+    :param ifg_path: Interferogram path
+    :param tiles: List of Tile instances
+    :param params: Configuration dictionary
+    
+    :return ifg: Inteferogram class instance
     """
     ifg = Ifg(ifg_path)
     ifg.open()
@@ -992,16 +1075,13 @@ def prepare_ifg(ifg_path, params):
 
 def save_numpy_phase(ifg_paths, tiles, params):
     """
-    Save ifg phase data as numpy array.
+    Save interferogram phase data as numpy array.
 
-    Parameters
-    ----------
-    ifg_paths: list
-        list of strings corresponding to ifg paths
-    params: dict
-        config dict
-    tiles: list
-        list of Shared.Tile instances
+    :param ifg_paths: List of strings corresponding to interferogram paths
+    :param tiles: List of Shared.Tile instances    
+    :param params: Configuration dictionary
+
+    :return xxxx
     """
     process_ifgs = mpiops.array_split(ifg_paths)
     outdir = params[cf.TMPDIR]
@@ -1024,12 +1104,11 @@ def save_numpy_phase(ifg_paths, tiles, params):
 
 def get_projection_info(ifg_path):
     """
-    return projection information of ifg
+    Return projection information of interferogram.
 
-    Parameters
-    ----------
-    ifg_path: str
-        ifg path
+    :param ifg_path: Interferogram path
+    
+    :return xxxx
     """
     ds = gdal.Open(ifg_path)
     md = ds.GetMetadata()  # get metadata for writing on output tifs
@@ -1043,16 +1122,11 @@ def warp_required(xlooks, ylooks, crop):
     """
     Returns True if params show rasters need to be cropped and/or resized.
 
-    Parameters
-    ----------
-    xlooks: int
-        resampling/multilooking in x dir
-
-    ylooks: int
-        resampling/multilooking in y dir
-
-    crop: int
-        ifg crop option
+    :param xlooks: Resampling/multi-looking in x dir
+    :param ylooks: Resampling/multilooking in y dir
+    :param crop: Interferogram crop option
+    
+    :return xxxx
     """
 
     if xlooks > 1 or ylooks > 1:
@@ -1066,7 +1140,12 @@ def warp_required(xlooks, ylooks, crop):
 
 def output_tiff_filename(inpath, outpath):
     """
-    return the geotiff filename for a given input filename
+    Return the geotiff filename for a given input filename.
+    
+    :param inpath: path of input file location
+    :param outpath: path of output file location
+    
+    :return: Geotiff filename for a given file.
     """
     fname, ext = os.path.basename(inpath).split('.')
     return os.path.join(outpath, fname + '_' + ext + '.tif')

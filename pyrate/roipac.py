@@ -21,7 +21,7 @@ import re
 import datetime
 import pyrate.ifgconstants as ifc
 
-# ROIPAC RSC header file constants
+# ROI_PAC RSC header file constants
 WIDTH = "WIDTH"
 FILE_LENGTH = "FILE_LENGTH"
 XMIN = "XMIN"
@@ -36,7 +36,7 @@ Y_STEP = "Y_STEP"
 Y_UNIT = "Y_UNIT"
 TIME_SPAN_YEAR = "TIME_SPAN_YEAR"
 
-# Old ROIPAC headers (may not be needed)
+# Old ROI_PAC headers (may not be needed)
 ORBIT_NUMBER = "ORBIT_NUMBER"
 VELOCITY = "VELOCITY"
 HEIGHT = "HEIGHT"
@@ -73,16 +73,14 @@ ROI_PAC_HEADER_FILE_EXT = "rsc"
 
 def check_raw_data(is_ifg, data_path, ncols, nrows):
     """
-    Parameters
-    ----------
-    is_ifg: bool
-        whether ifg or dem
-    data_path: str
-        path to file
-    ncols: int
-        number of cols in ifg/dem
-    nrows: int
-        number of rows in ifg/dem
+    xxxx
+
+    :param is_ifg: Whether interferogram or dem
+    :param data_path: Path to file
+    :param ncols: Number of columns in interferogram/dem
+    :param nrows: Number of rows in interferogram/dem
+    
+    :return xxxx
     """
     base_size = ncols * nrows
     if is_ifg:
@@ -98,10 +96,11 @@ def check_raw_data(is_ifg, data_path, ncols, nrows):
 
 def check_step_mismatch(header):
     """
-    Parameters
-    ----------
-    header: dict
-        dict corresponding to header file
+    xxxx
+    
+    :param header: Dictionary corresponding to header file
+    
+    :return xxxx
     """
     # pylint: disable=invalid-name
     xs, ys = [abs(i) for i in [header[ifc.PYRATE_X_STEP],
@@ -113,7 +112,13 @@ def check_step_mismatch(header):
 
 
 def parse_date(dstr):
-    """Parses ROI_PAC 'yymmdd' or 'yymmdd-yymmdd' to date or date tuple"""
+    """
+    Parses ROI_PAC 'yymmdd' or 'yymmdd-yymmdd' to date or date tuple.
+    
+    :param dstr: xxxx
+    
+    :return xxxx
+    """
     def to_date(date_str):
         """convert to date"""
         year, month, day = [int(date_str[i:i+2]) for i in range(0, 6, 2)]
@@ -127,7 +132,13 @@ def parse_date(dstr):
 
 
 def parse_header(hdr_file):
-    """Parses ROI_PAC header file to a dict"""
+    """
+    Parses ROI_PAC header file to a dictionary>
+    
+    :param hdr_file: xxxx
+    
+    :return xxxx
+    """
     with open(hdr_file) as f:
         text = f.read()
 
@@ -191,6 +202,8 @@ def parse_header(hdr_file):
 
 
 def _parse_dates_from(filename):
+    """xxxxx"""
+
     # pylint: disable=invalid-name
     # process dates from filename if rsc file doesn't have them (skip for DEMs)
     p = re.compile(r'\d{6}-\d{6}')  # match 2 sets of 6 digits separated by '-'
@@ -208,10 +221,12 @@ def _parse_dates_from(filename):
 
 def manage_header(header_file, projection):
     """
-    :param header_file:
-    :param projection: project form dem header
-    ....projection = roipac.parse_header(dem_file)[ifc.PYRATE_DATUM]
-    :return:
+    xxxx
+    
+    :param header_file: xxxx
+    :param projection: Projection from dem header. projection = roipac.parse_header(dem_file)[ifc.PYRATE_DATUM]
+    
+    :return: xxxx
     """
     header = parse_header(header_file)
     if ifc.PYRATE_DATUM not in header:  # DEM already has DATUM
@@ -222,5 +237,5 @@ def manage_header(header_file, projection):
 
 class RoipacException(Exception):
     """
-    Convenience class for throwing exception
+    Convenience class for throwing ROI_PAC exception.
     """

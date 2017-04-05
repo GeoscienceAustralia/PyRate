@@ -36,9 +36,11 @@ def pendiffexp(alphamod, cvdav):
     """
     Fits an exponential model to data.
 
-    :param float alphamod: Exponential decay exponent.
-    :param array cvdav: Function magnitude at 0 radius (2 col array of radius,
+    :param float alphamod: Exponential decay exponent
+    :param array cvdav: Function magnitude at 0 radius (2 column array of radius,
     variance)
+    
+    :return xxxx
     """
     # pylint: disable=invalid-name
 
@@ -52,7 +54,9 @@ def unique_points(points):
     """
     Returns unique points from a list of coordinates.
 
-    :param points: Sequence of (y,x) or (x,y) tuples.
+    :param points: Sequence of (y,x) or (x,y) tuples
+    
+    :return xxxx
     """
     return vstack([array(u) for u in set(points)])
 
@@ -60,14 +64,13 @@ def unique_points(points):
 def cvd(ifg_path, params, calc_alpha=False):
     """
     Calculate average covariance versus distance (autocorrelation) and its
-    best fitting exponential function
+    best fitting exponential function.
 
-    :param ifg_path: An interferogram.
-        ifg: :py:class:`pyrate.shared.Ifg`.
-    :param: params: dict
-        dict of config params
-    :param calc_alpha: bool
-        whether you calculate alpha.
+    :param ifg_path: An interferogram. ifg: :py:class:`pyrate.shared.Ifg`
+    :param: params: Dictionary of configuration parameters
+    :param calc_alpha: Whether to calculate alpha
+    
+    :return xxxx
     """
     # pylint: disable=invalid-name
     # pylint: disable=too-many-locals
@@ -174,6 +177,11 @@ def cvd(ifg_path, params, calc_alpha=False):
 def get_vcmt(ifgs, maxvar):
     """
     Returns the temporal variance/covariance matrix.
+    
+    :param ifgs: xxxx
+    :param maxvar: xxxx
+    
+    :return xxxx
     """
     # pylint: disable=too-many-locals
     # c=0.5 for common master or slave; c=-0.5 if master
