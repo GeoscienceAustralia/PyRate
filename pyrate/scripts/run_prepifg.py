@@ -15,7 +15,7 @@
 #   limitations under the License.
 """
 This Python script converts ROI_PAC or GAMMA format unwrapped
-interferograms into geotiffs and applies optional multilooking and cropping.
+interferograms into geotiffs and applies optional multi-looking and cropping.
 """
 # -*- coding: utf-8 -*-
 from __future__ import print_function
@@ -46,8 +46,11 @@ ROIPAC = 0
 
 def main(params=None):
     """
-    :param params: parameters dictionary read in from the config file
-    :return:
+    xxxx
+    
+    :param params: Parameters dictionary read in from the config file
+    
+    :return xxxx
     """
     # TODO: looks like base_ifg_paths are ordered according to ifg list
     # This probably won't be a problem because input list won't be reordered
@@ -101,15 +104,13 @@ def main(params=None):
 
 def roipac_prepifg(base_ifg_paths, params):
     """
-    ROI_PAC prepifg which combines both conversion to geotiff and multilooking
+    ROI_PAC prepifg which combines both conversion to geotiff and multi-looking
      and cropping.
 
-    Parameters
-    ----------
-    base_ifg_paths: list
-        list of unwrapped inteferrograms
-    params: dict
-        parameters dict corresponding to config file
+    :param base_ifg_paths: List of unwrapped interferograms
+    :param params: Parameters dictionary corresponding to config file
+    
+    :return xxxx
     """
     log.info("Preparing ROI_PAC format interferograms")
     parallel = params[cf.PARALLEL]
@@ -140,15 +141,13 @@ def roipac_prepifg(base_ifg_paths, params):
 
 def gamma_prepifg(base_unw_paths, params):
     """
-    GAMMA prepifg which combines both conversion to geotiff and multilooking
+    GAMMA prepifg which combines both conversion to geotiff and multi-looking
      and cropping.
 
-    Parameters
-    ----------
-    base_unw_paths: list
-        list of unwrapped inteferrograms
-    params: dict
-        parameters dict corresponding to config file
+    :param base_unw_paths: List of unwrapped interferograms
+    :param params: Parameters dictionary corresponding to config file
+    
+    :return xxxx
     """
     # pylint: disable=expression-not-assigned
     log.info("Preparing GAMMA format interferograms")
@@ -184,14 +183,12 @@ def gamma_prepifg(base_unw_paths, params):
 
 def gamma_multiprocessing(unw_path, params):
     """
-    Gamma multiprocessing wrapper for geotif conversion
+    Gamma multiprocessing wrapper for geotif conversion.
 
-    Parameters
-    ----------
-    unw_path: str
-        unwrapped interferogram path
-    params: dict
-        parameters dict corresponding to config file
+    :param unw_path: Wnwrapped interferogram path
+    :param params: Parameters dictionary corresponding to config file
+    
+    :return xxxx
     """
     dem_hdr_path = params[cf.DEM_HEADER_FILE]
     slc_dir = params[cf.SLC_DIR]

@@ -15,7 +15,7 @@
 #   limitations under the License.
 """
 This Python module does post-processing steps to assemble the linear
-rate and time series outputs and save as geotiff files
+rate and time series outputs and save as geotiff files.
 """
 import os
 from os.path import join
@@ -40,7 +40,13 @@ MASTER_PROCESS = 0
 
 
 def main(config_file, rows, cols):
-    """ postprocessing main func"""
+    """ 
+    Post-processing main function.
+    
+    :param config_file: xxxxx
+    :param rows: xxxx
+    :param cols: xxxx
+    """
     # setup paths
     _, _, params = cf.get_ifg_paths(config_file)
     postprocess_linrate(rows, cols, params)
@@ -49,7 +55,15 @@ def main(config_file, rows, cols):
 
 
 def postprocess_linrate(rows, cols, params):
-    """ Postprocess linear rate """
+    """
+    Postprocess linear rate.
+    
+    :param rows: xxxx
+    :param cols: xxxx
+    :param params: xxxx
+    
+    :return xxxx
+    """
     # pylint: disable=expression-not-assigned
     # setup paths
     xlks, _, crop = cf.transform_params(params)
@@ -73,7 +87,16 @@ def postprocess_linrate(rows, cols, params):
 
 
 def save_linrate(ifgs_dict, params, tiles, out_type):
-    """ Save linear rate outputs"""
+    """
+    Save linear rate outputs.
+    
+    :param ifgs_dict: xxxx
+    :param params: xxxx
+    :param tiles: xxxx
+    :param out_type: xxxx
+    
+    :return xxxx
+    """
     log.info('Starting PyRate postprocessing {}'.format(out_type))
     gt, md, wkt = ifgs_dict['gt'], ifgs_dict['md'], ifgs_dict['wkt']
     epochlist = ifgs_dict['epochlist']
@@ -101,7 +124,15 @@ def save_linrate(ifgs_dict, params, tiles, out_type):
 
 
 def postprocess_timeseries(rows, cols, params):
-    """ Postprocess time series output """
+    """
+    Postprocess time series output.
+    
+    :param rows: xxxx
+    :param cols: xxxx
+    :param params: xxxx
+    
+    :return xxxx    
+    """
     # pylint: disable=too-many-locals
     xlks, _, crop = cf.transform_params(params)
     base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST])

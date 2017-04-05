@@ -14,7 +14,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 """
-This Python module uses Luigi to convert interferograms to geotiff format
+This Python module uses Luigi to convert interferograms to geotiff format.
 """
 from __future__ import print_function
 import sys
@@ -26,7 +26,7 @@ from pyrate.tasks import ConvertToGeotiff
 def main():
     """
     Wrapper function to convert unwrapped interferograms into geotiffs
-    for all data types
+    for all data types.
     """
     usage = 'Usage: gamma.py <config file>'
     if len(sys.argv) == 1 or sys.argv[1] == '-h' \
