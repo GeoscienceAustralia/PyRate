@@ -50,7 +50,7 @@ PYTHON3P5 = True if ('TRAVIS_PYTHON_VERSION' in os.environ and
                      os.environ['TRAVIS_PYTHON_VERSION'] == '3.5') else False
 GDAL_VERSION = check_output(["gdal-config", "--version"]).decode(
     encoding="utf-8").split('\n')[0]
-MPITEST = TRAVIS and GDAL_VERSION == '2.1.0'
+MPITEST = TRAVIS and GDAL_VERSION == '2.0.0'
 
 
 @pytest.fixture()
