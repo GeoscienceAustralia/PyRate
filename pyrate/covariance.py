@@ -214,7 +214,19 @@ def _get_autogrid(phase):
 
 def get_vcmt(ifgs, maxvar):
     """
-    Returns the temporal variance/covariance matrix.
+    Assembles a temporal variance/covariance matrix using the method
+    described by Biggs et al., Geophys. J. Int, 2007. Matrix elements are
+    evaluated according to sig_i * sig_j * C_ij where i and j are two
+    interferograms and C is a matrix of coefficients:
+        C = 1 if the master and slave epochs of i and j are equal
+        C = 0.5 if have i and j share either a common master or slave epoch
+        C = -0.5 if the master of i or j equals the slave of the other
+        C = 0 otherwise
+
+    :param ifgs: A stack of interferograms.
+        ifg: :py:class:`pyrate.shared.Ifg`.
+    :param maxvar: ndarray
+        numpy array of maximum variance values for each interferogram.
     """
     # pylint: disable=too-many-locals
     # c=0.5 for common master or slave; c=-0.5 if master
@@ -245,7 +257,7 @@ def get_vcmt(ifgs, maxvar):
                 vcm_pat[i, j] = -0.5
 
             if mas1 == mas2 and slv1 == slv2:
-                vcm_pat[i, j] = 1.0  # handle testing ifg against itself
+                vcm_pat[i, j] = 1.0  # diagonal elements
 
     # make covariance matrix in time domain
     std = sqrt(maxvar).reshape((nifgs, 1))

@@ -38,7 +38,7 @@ def estimate_ref_phase(ifgs, params, refpx, refpy):
         :ref_phs: reference phase correction
         :ifgs: reference phase data removed list of ifgs
     """
-    _validate_ifgs(ifgs)
+    _check_ref_phs_ifgs(ifgs)
 
     # set reference phase as the average of the whole image (recommended)
     if params[cf.REF_EST_METHOD] == 1:
@@ -50,7 +50,7 @@ def estimate_ref_phase(ifgs, params, refpx, refpy):
         raise ReferencePhaseError('No such option. Use refest=1 or 2')
 
     for i in ifgs:
-        i.meta_data[ifc.REF_PHASE] = ifc.REF_PHASE_REMOVED
+        i.meta_data[ifc.PYRATE_REF_PHASE] = ifc.REF_PHASE_REMOVED
         i.write_modified_phase()
     return ref_phs, ifgs
 
@@ -140,29 +140,27 @@ def est_ref_phs_method1(phase_data, comp):
     return ref_ph
 
 
-def _validate_ifgs(ifgs):
-    """
-    make sure all ifgs have the same ref phase status
-    """
-    if len(ifgs) < 2:
-        raise ReferencePhaseError('Need to provide at least 2 ifgs')
-    flags = [i.dataset.GetMetadataItem(ifc.REF_PHASE) for i in ifgs]
-    if all(flags):
-        log.info('Ifgs already reference phase corrected')
-        return
-    else:
-        check_ref_phase_ifgs(ifgs, flags)
-
-
-def check_ref_phase_ifgs(ifgs, flags):
+def _check_ref_phs_ifgs(ifgs, preread_ifgs=None):
     """
     Function to check that the ref phase status of all ifgs are the same
     """
-    count = sum([f == ifc.REF_PHASE_REMOVED for f in flags])
-    if (count < len(flags)) and (count > 0):
+    log.info('Checking status of reference phase estimation')
+    if len(ifgs) < 2:
+        raise ReferencePhaseError('Need to provide at least 2 ifgs')
+
+    if preread_ifgs:  # check unless for mpi tests
+        flags = [ifc.PYRATE_REF_PHASE in preread_ifgs[i].metadata
+                 for i in ifgs]
+    else:
+        flags = [True if i.dataset.GetMetadataItem(ifc.PYRATE_REF_PHASE)
+                 else False for i in ifgs]
+
+    if sum(flags) == len(flags):
+        log.info('Skipped reference phase estimation, ifgs already corrected')
+        return True
+    elif (sum(flags) < len(flags)) and (sum(flags) > 0):
         log.debug('Detected mix of corrected and uncorrected '
                   'reference phases in ifgs')
-
         for i, flag in zip(ifgs, flags):
             if flag:
                 msg = '{}: prior reference phase ' \
@@ -172,6 +170,9 @@ def check_ref_phase_ifgs(ifgs, flags):
                       'correction detected'.format(i.data_path)
             log.debug(msg.format(i.data_path))
             raise ReferencePhaseError(msg)
+    else:  # count == 0
+        log.info('Estimating and removing reference phase')
+        return False
 
 
 class ReferencePhaseError(Exception):

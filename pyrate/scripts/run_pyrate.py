@@ -280,6 +280,19 @@ def orb_fit_calc(ifg_paths, params, preread_ifgs=None):
         parameters dict corresponding to config file
     """
     log.info('Calculating orbfit correction')
+
+    if not params[cf.ORBITAL_FIT]:
+        log.info('Orbital correction not required')
+        return
+
+    if preread_ifgs:  # don't check except for mpi tests
+        # remove non ifg keys
+        _ = [preread_ifgs.pop(k) for k in ['gt', 'epochlist', 'md', 'wkt']]
+        # perform some general error/sanity checks
+        if mpiops.run_once(orbital.check_orbital_ifgs, preread_ifgs):
+            log.info('Finished orbfit calculation')
+            return  # return if True condition returned
+
     if params[cf.ORBITAL_FIT_METHOD] == 1:
         prcs_ifgs = mpiops.array_split(ifg_paths)
         orbital.remove_orbital_error(prcs_ifgs, params, preread_ifgs)
@@ -372,7 +385,7 @@ def ref_phs_method2(ifg_paths, params, refpx, refpy):
                                          refpx, refpy, thresh)
         phase_data -= ref_ph
         md = ifg.meta_data
-        md[ifc.REF_PHASE] = ifc.REF_PHASE_REMOVED
+        md[ifc.PYRATE_REF_PHASE] = ifc.REF_PHASE_REMOVED
         ifg.write_modified_phase(data=phase_data)
         ifg.close()
         return ref_ph
@@ -407,7 +420,7 @@ def ref_phs_method1(ifg_paths, comp):
         ref_phase = rpe.est_ref_phs_method1(phase_data, comp)
         phase_data -= ref_phase
         md = ifg.meta_data
-        md[ifc.REF_PHASE] = ifc.REF_PHASE_REMOVED
+        md[ifc.PYRATE_REF_PHASE] = ifc.REF_PHASE_REMOVED
         ifg.write_modified_phase(data=phase_data)
         ifg.close()
         return ref_phase
