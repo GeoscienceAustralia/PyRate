@@ -120,7 +120,7 @@ def create_ifg_dict(dest_tifs, params, tiles):
     mpiops.comm.barrier()
     preread_ifgs = OrderedDict(sorted(cp.load(open(preread_ifgs_file,
                                                    'rb')).items()))
-    log.info('finish converting phase_data to numpy '
+    log.info('Finished converting phase_data to numpy '
              'in process {}'.format(mpiops.rank))
     return preread_ifgs
 
@@ -270,7 +270,7 @@ def save_ref_pixel_blocks(grid, half_patch_size, ifg_paths, params):
 
 def orb_fit_calc(ifg_paths, params, preread_ifgs=None):
     """
-    Orbital fit correction
+    MPI wrapper for orbital fit correction
 
     Parameters
     ----------
@@ -278,6 +278,8 @@ def orb_fit_calc(ifg_paths, params, preread_ifgs=None):
         list of ifg paths
     params: dict
         parameters dict corresponding to config file
+    preread_ifgs: dict, optional
+        dict containing information regarding ifgs
     """
     log.info('Calculating orbfit correction')
 
@@ -300,15 +302,15 @@ def orb_fit_calc(ifg_paths, params, preread_ifgs=None):
         # Here we do all the multilooking in one process, but in memory
         # can use multiple processes if we write data to disc during
         # remove_orbital_error step
-        # A performance comparison should be performed be performed for saving
-        # multilooked files on disc vs in memory single process multilooking
+        # A performance comparison should be made for saving multilooked
+        # files on disc vs in memory single process multilooking
         if mpiops.rank == MASTER_PROCESS:
             orbital.remove_orbital_error(ifg_paths, params, preread_ifgs)
     mpiops.comm.barrier()
-    log.info('Finished orbfit calculation in process {}'.format(mpiops.rank))
+    log.info('Finished orbfit calculation')
 
 
-def ref_phase_estimation(ifg_paths, params, refpx, refpy):
+def ref_phase_estimation(ifg_paths, params, refpx, refpy, preread_ifgs=None):
     """
     Reference phase estimation
 
@@ -322,18 +324,27 @@ def ref_phase_estimation(ifg_paths, params, refpx, refpy):
         reference pixel x-coordinate
     refpy: float
         reference pixel y-coordinate
+    preread_ifgs: dict
+        dict containing information regarding ifgs
     """
+    # perform some checks on existing ifgs
+    if preread_ifgs and mpiops.rank == MASTER_PROCESS:
+        ifg_paths = sorted(preread_ifgs.keys())
+        if mpiops.run_once(rpe.check_ref_phs_ifgs, ifg_paths, preread_ifgs):
+            return  # return if True condition returned
 
-    log.info('Estimating and removing reference phase')
     if params[cf.REF_EST_METHOD] == 1:
         # calculate phase sum for later use in ref phase method 1
         comp = phase_sum(ifg_paths, params)
+        log.info('Computing reference phase via method 1')
         process_ref_phs = ref_phs_method1(ifg_paths, comp)
     elif params[cf.REF_EST_METHOD] == 2:
+        log.info('Computing reference phase via method 2')
         process_ref_phs = ref_phs_method2(ifg_paths, params, refpx, refpy)
     else:
         raise ConfigException('Ref phase estimation method must be 1 or 2')
 
+    # Save reference phase numpy arrays to disk
     ref_phs_file = join(params[cf.TMPDIR], 'ref_phs.npy')
     if mpiops.rank == MASTER_PROCESS:
         ref_phs = np.zeros(len(ifg_paths), dtype=np.float64)
@@ -350,6 +361,7 @@ def ref_phase_estimation(ifg_paths, params, refpx, refpy):
         # send reference phase data to master process
         mpiops.comm.Send(process_ref_phs, dest=MASTER_PROCESS,
                          tag=mpiops.rank)
+    log.info('Completed reference phase estimation')
 
 
 def ref_phs_method2(ifg_paths, params, refpx, refpy):
@@ -443,7 +455,7 @@ def process_ifgs(ifg_paths, params, rows, cols):
     cols: int
         number of cols to break each ifg into
     """
-    if mpiops.size > 1: # turn of multiprocessing during mpi jobs
+    if mpiops.size > 1:  # turn of multiprocessing during mpi jobs
         params[cf.PARALLEL] = False
 
     tiles = mpiops.run_once(get_tiles, ifg_paths[0], rows, cols)
@@ -504,10 +516,10 @@ def linrate_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
     """
 
     process_tiles = mpiops.array_split(tiles)
-    log.info('Calculating linear rate')
+    log.info('Calculating linear rate map')
     output_dir = params[cf.TMPDIR]
     for t in process_tiles:
-        log.info('calculating lin rate of tile {}'.format(t.index))
+        log.info('Calculating linear rate of tile {}'.format(t.index))
         ifg_parts = [shared.IfgPart(p, t, preread_ifgs) for p in ifg_paths]
         mst_grid_n = np.load(os.path.join(output_dir,
                                           'mst_mat_{}.npy'.format(t.index)))
@@ -641,9 +653,6 @@ def timeseries_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
         dict containing ifg characteristics for efficient computing
 
     """
-    if not params[cf.TIME_SERIES_CAL]:
-        log.info('Time series calculation not required.')
-        return
     process_tiles = mpiops.array_split(tiles)
     log.info('Calculating time series')
     output_dir = params[cf.TMPDIR]
