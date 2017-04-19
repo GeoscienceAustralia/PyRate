@@ -45,7 +45,7 @@ class PyAPSException(Exception):
     """
 
 
-def validate_sklearn():
+def validate_pyaps():
     """
     Convenience function validating PyAPS status
     """
