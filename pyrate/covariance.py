@@ -201,7 +201,8 @@ def cvd_from_phase(phase, ifg, r_dist, calc_alpha, save_acg=False,
 
     # optionally save acg vs dist observations to disk
     if save_acg:
-        _save_cvd_data(acg, r_dist, ifg.data_path, params[cf.TMPDIR])
+        _save_cvd_data(acg, r_dist[indices_to_keep],
+                       ifg.data_path, params[cf.TMPDIR])
 
     if calc_alpha:
         # bin width for collecting data
