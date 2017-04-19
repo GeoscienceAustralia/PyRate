@@ -74,16 +74,28 @@ def cvd(ifg_path, params, r_dist, calc_alpha=False,
     Calculate the 1D covariance function of an entire interferogram as the
     radial average of its 2D autocorrelation.
 
-    :param ifg_path: An interferogram.
+    Parameters
+    ----------
+    ifg_path : An interferogram.
         ifg: :py:class:`pyrate.shared.Ifg`.
-    :param params: dict
+    params : dict
         dictionary of configuration parameters
-    :param calc_alpha: bool
+    r_dist : ndarray
+        array of distance from the centre of the interferogram. See Rdist 
+        class for more details
+    calc_alpha : bool
         calculate alpha, the exponential length-scale of decay factor.
-    :param write_vals: bool
+    write_vals : bool
         write maxvar and alpha values to interferogram metadata.
-    :param save_acg: bool
+    save_acg : bool
         write acg and radial distance data to numpy array
+    
+    Returns
+    -------
+    maxvar : ndarray
+        array of shape (nifgs, 1)
+    alpha : ndarray
+        array of shape (nifgs, 1)
     """
 
     if isinstance(ifg_path, str):  # used during MPI
@@ -101,7 +113,7 @@ def cvd(ifg_path, params, r_dist, calc_alpha=False,
         phase = ifg.phase_data
 
     maxvar, alpha = cvd_from_phase(phase, ifg, r_dist, calc_alpha,
-                                   save_acg=save_acg)
+                                   save_acg=save_acg, params=params)
 
     if write_vals:
         _add_metadata(ifg, maxvar, alpha)
@@ -115,8 +127,8 @@ def cvd(ifg_path, params, r_dist, calc_alpha=False,
 def _add_metadata(ifg, maxvar, alpha):
     """convenience function for saving metadata to ifg"""
     md = ifg.meta_data
-    md[ifc.PYRATE_MAXVAR] = str(maxvar) #.astype('str')
-    md[ifc.PYRATE_ALPHA] = str(alpha) #.astype('str')
+    md[ifc.PYRATE_MAXVAR] = str(maxvar)
+    md[ifc.PYRATE_ALPHA] = str(alpha)
     ifg.write_modified_phase()
 
 
@@ -135,19 +147,24 @@ def cvd_from_phase(phase, ifg, r_dist, calc_alpha, save_acg=False,
     and a ifg class
     Parameters
     ----------
-    phase: ndarray
+    phase : ndarray
         phase data corresping to the ifg
-    ifg: shared.Ifg class instance
-    calc_alpha: bool, optional
+    ifg : shared.Ifg class instance
+    r_dist : ndarray
+        array of distance from the centre of the interferogram. See Rdist 
+        class for more details
+    calc_alpha : bool, optional
         whether alpha is required
-    save_acg: bool, optional
+    save_acg : bool, optional
         write acg and radial distance data to numpy array
+    params : dict, optional
+        dictionary of config parameters. Must be provided if save_acg=True
 
     Return
     ------
-    maxvar: float
+    maxvar : float
         maxvar
-    alpha:
+    alpha :
         alpha
     """
     # pylint: disable=invalid-name
