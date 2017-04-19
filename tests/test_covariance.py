@@ -30,6 +30,7 @@ from pyrate import ref_phs_est as rpe
 from pyrate import shared
 from pyrate.scripts import run_pyrate, run_prepifg
 from pyrate.covariance import cvd, get_vcmt, RDist
+from pyrate import ifgconstants as ifc
 import pyrate.orbital
 from tests.common import small5_mock_ifgs, small5_ifgs, TEST_CONF_ROIPAC
 from tests.common import small_data_setup, prepare_ifgs_without_phase
@@ -190,6 +191,7 @@ class MatlabEqualityTest(unittest.TestCase):
         shared.mkdir_p(params[cf.TMPDIR])
         params[cf.REF_EST_METHOD] = 2
         run_prepifg.main(params)
+        cls.params = params
         xlks, ylks, crop = cf.transform_params(params)
         base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST])
         dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
@@ -197,14 +199,17 @@ class MatlabEqualityTest(unittest.TestCase):
         refx, refy = run_pyrate.ref_pixel_calc(dest_paths, params)
         pyrate.orbital.remove_orbital_error(ifgs, params)
         ifgs = prepare_ifgs_without_phase(dest_paths, params)
-        _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
+        _, cls.ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
         r_dist = RDist(ifgs[0])()
         # Calculate interferogram noise
-        cls.maxvar = [cvd(i, params, r_dist)[0] for i in ifgs]
+        cls.maxvar = [cvd(i, params, r_dist, calc_alpha=True,
+                          save_acg=True, write_vals=True)[0] for i in ifgs]
         cls.vcmt = get_vcmt(ifgs, cls.maxvar)
 
     @classmethod
     def tearDownClass(cls):
+        for i in cls.ifgs:
+            i.close()
         shutil.rmtree(cls.temp_out_dir)
 
     def test_matlab_maxvar_equality_small_test_files(self):
@@ -218,6 +223,18 @@ class MatlabEqualityTest(unittest.TestCase):
                                    'matlab_vcmt.csv'), delimiter=',')
         np.testing.assert_array_almost_equal(matlab_vcm, self.vcmt, decimal=3)
 
+    def test_metadata(self):
+        for ifg in self.ifgs:
+            assert ifc.PYRATE_MAXVAR in ifg.meta_data
+            assert ifc.PYRATE_ALPHA in ifg.meta_data
+
+    def test_save_cvd_data(self):
+        from os.path import join, basename, isfile
+        for ifg in self.ifgs:
+            data_file = join(self.params[cf.TMPDIR],
+                             'cvd_data_{b}.npy'.format(
+                                 b=basename(ifg.data_path).split('.')[0]))
+            assert isfile(data_file)
 
 if __name__ == "__main__":
     unittest.main()
