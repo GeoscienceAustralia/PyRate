@@ -31,7 +31,6 @@ from pyrate import mst, shared, prepifg
 from pyrate.shared import nanmedian, Ifg
 from pyrate import config as cf
 from pyrate import ifgconstants as ifc
-from pyrate import mpiops
 
 log = logging.getLogger(__name__)
 

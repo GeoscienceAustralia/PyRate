@@ -35,6 +35,7 @@ from pyrate.algorithm import master_slave_ids
 from pyrate import ifgconstants as ifc
 from pyrate import config as cf
 
+# pylint: disable=too-many-arguments
 # distance division factor of 1000 converts to km and is needed to match
 # Matlab code output
 DISTFACT = 1000
@@ -213,6 +214,10 @@ def cvd_from_phase(phase, ifg, r_dist, calc_alpha, save_acg=False,
 
 
 class RDist:
+    """
+    RDist class used for caching r_dist during maxvar/alpha computation
+    """
+    # pylint: disable=invalid-name
     def __init__(self, ifg):
         self.r_dist = None
         self.ifg = ifg
@@ -229,8 +234,8 @@ class RDist:
             # calculations in the numpy land
             self.r_dist = np.divide(np.sqrt(((xx - self.ifg.x_centre) *
                                              self.ifg.x_size) ** 2 +
-                                    ((yy - self.ifg.y_centre) *
-                                     self.ifg.y_size) ** 2),
+                                            ((yy - self.ifg.y_centre) *
+                                             self.ifg.y_size) ** 2),
                                     DISTFACT)  # km
             self.r_dist = reshape(self.r_dist, size, order='F')
             self.r_dist = self.r_dist[:int(ceil(size / 2.0)) + self.nrows]

@@ -207,7 +207,7 @@ def orbfit_degrees(request):
 
 
 @pytest.mark.skipif(not MPITEST, reason='skipping mpi tests in travis except '
-                                        'python 3.5 and GDAL=2.0.0')
+                                        'in TRAVIS and GDAL=2.0.0')
 def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
                                 ref_est_method, row_splits, col_splits,
                                 get_crop, orbfit_lks, orbfit_method,

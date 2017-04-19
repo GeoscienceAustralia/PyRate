@@ -54,9 +54,10 @@ def main(params=None):
     # and the original gamma generated list is ordered) this may not affect
     # the important pyrate stuff anyway, but might affect gen_thumbs.py.
     # Going to assume base_ifg_paths is ordered correcly
+    # pylint: disable=too-many-branches
 
     usage = 'Usage: pyrate prepifg <config_file>'
-    if mpiops.size > 1: # Over-ride input options if this is an MPI job
+    if mpiops.size > 1:  # Over-ride input options if this is an MPI job
         params[cf.LUIGI] = False
         params[cf.PARALLEL] = False
 

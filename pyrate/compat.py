@@ -17,7 +17,7 @@
 This Python module tests compatibilities
 """
 # coding: utf-8
-# pylint: disable= invalid-name,  unused-import
+# pylint: disable= invalid-name,  unused-import, import-error
 
 from __future__ import absolute_import
 import sys

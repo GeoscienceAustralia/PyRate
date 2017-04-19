@@ -1,3 +1,22 @@
+#   This Python module is part of the PyRate software package.
+#
+#   Copyright 2017 Geoscience Australia
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+"""
+Temporal low pass filter.
+"""
+# pylint: disable=invalid-name, too-many-locals, too-many-arguments
 import logging
 import numpy as np
 from numpy import isnan
@@ -8,9 +27,24 @@ log = logging.getLogger(__name__)
 
 # TODO: use tiles here and distribute amongst processes
 def tlpfilter(tsincr, epochlist, params):
-    log.info('Applying temporal low pass filter')
+    """
+    Temporal low pass filter
 
-    """temporal low pass filter"""
+    Parameters
+    ----------
+    tsincr : ndarray
+        time series array of size (ifg.shape, nvels)
+    epochlist : list
+        list of shared.EpochList class instances
+    params : dict
+        parameters dict
+
+    Returns
+    -------
+    tsfilt_incr : ndarray
+        temporal filtered time series of shape (ifg.shape, nvels)
+    """
+    log.info('Applying temporal low pass filter')
     nanmat = ~isnan(tsincr)
     tsfilt_incr = np.empty_like(tsincr, dtype=np.float32) * np.nan
     intv = np.diff(epochlist.spans)  # time interval for the neighboring epoch
@@ -22,7 +56,7 @@ def tlpfilter(tsincr, epochlist, params):
     if method == 1:  # gaussian filter
         func = gauss
     elif method == 2:  # triangular filter
-        func = triangle
+        func = _triangle
     else:
         func = mean_filter
 
@@ -35,7 +69,8 @@ def tlpfilter(tsincr, epochlist, params):
 gauss = lambda m, yr, cutoff: np.exp(-(yr / cutoff) ** 2 / 2)
 
 
-def triangle(m, yr, cutoff):
+def _triangle(m, yr, cutoff):
+    # pylint: disable=unused-argument
     wgt = cutoff - abs(yr)
     wgt[wgt < 0] = 0
     return wgt

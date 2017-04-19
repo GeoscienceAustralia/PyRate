@@ -1,3 +1,22 @@
+#   This Python module is part of the PyRate software package.
+#
+#   Copyright 2017 Geoscience Australia
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+"""
+Spatial low pass filter.
+"""
+# pylint: disable=invalid-name, too-many-locals, too-many-arguments
 import logging
 import numpy as np
 from scipy.fftpack import fft2, ifft2, fftshift, ifftshift
@@ -12,17 +31,17 @@ def spatial_low_pass_filter(ts_hp, ifg, params):
     Parameters
     ----------
     ts_hp: ndarray
-        time series from previous temporal low pass filter output of 
+        time series from previous temporal low pass filter output of
         shape (ifg.shape, n_epochs)
     ifg: shared.Ifg instance
     params: dict
         params dict
-    
+
     Returns
     -------
     ts_hp: ndarray
-        spatio-temporal filtered time series output of 
-        shape (ifg.shape, n_epochs)  
+        spatio-temporal filtered time series output of
+        shape (ifg.shape, n_epochs)
     """
     log.info('Applying spatial low pass filter')
     ts_hp[np.isnan(ts_hp)] = 0  # need it here for cvd and fft
@@ -43,7 +62,7 @@ def slpfilter(phase, ifg, r_dist, params):
     ifg: shared.Ifg class instance
     params: dict
         paramters dict
-    
+
     Returns
     -------
     out: ndarray
@@ -53,9 +72,8 @@ def slpfilter(phase, ifg, r_dist, params):
         return phase
     cutoff = params[cf.SLPF_CUTOFF]
 
-
     if cutoff == 0:
-        maxvar, alpha = cvd_from_phase(phase, ifg, r_dist, calc_alpha=True)
+        _, alpha = cvd_from_phase(phase, ifg, r_dist, calc_alpha=True)
         cutoff = 1.0/alpha
     rows, cols = ifg.shape
     return _slp_filter(phase, cutoff, rows, cols,

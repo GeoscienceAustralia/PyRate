@@ -20,8 +20,8 @@ from __future__ import print_function
 
 import logging
 import os
-import pickle as cp
 from os.path import join
+import pickle as cp
 from collections import OrderedDict
 import numpy as np
 
