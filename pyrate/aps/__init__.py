@@ -1,3 +1,22 @@
+#   This Python module is part of the PyRate software package.
+#
+#   Copyright 2017 Geoscience Australia
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+"""
+This is the aps/spatio-temporal filter main module.
+"""
+
 import logging
 import os
 from copy import deepcopy
@@ -36,10 +55,10 @@ def wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs):
 def spatio_temporal_filter(tsincr, ifg, params, preread_ifgs):
     """
     Applies spatio-temportal (aps) filter and save the interferograms.
-    
+
     A first step is to compute the time series using the non-smooth SVD method.
     This is followed by temporal and spatial filters respectively.
-     
+
     Parameters
     ----------
     tsincr: ndarray
@@ -60,13 +79,13 @@ def spatio_temporal_filter(tsincr, ifg, params, preread_ifgs):
     tsincr -= ts_aps
 
     mpiops.run_once(ts_to_ifgs, tsincr, preread_ifgs)
-    
+
 
 def calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles):
     """
     Time series inversion with no smoothing (svd method)
     This is the matlab tsinvnosm.m equivalent.
-    
+
     Parameters
     ----------
     ifg_paths: list
@@ -77,12 +96,12 @@ def calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles):
         prepread ifgs dict
     tiles: list
         list of shared.Tile class instances
-    
+
     Returns
     -------
     tsincr_g: ndarray
         non smooth (svd method) time series of shape (ifg.shape, nvels)
-    
+
     """
     log.info('Calculating time series without smoothing for '
              'spatio-temporal filter')
@@ -95,11 +114,11 @@ def calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles):
 
     nvels = None
     for t in process_tiles:
-        log.info('Calculating time series for tile {}'.format(t.index))
+        log.info('Calculating time series for tile {} during aps '
+                 'correction'.format(t.index))
         ifg_parts = [shared.IfgPart(p, t, preread_ifgs) for p in ifg_paths]
         mst_tile = np.load(os.path.join(output_dir,
                                         'mst_mat_{}.npy'.format(t.index)))
-        # don't save this time_series calc, this is done as part of aps filter
         tsincr = time_series(ifg_parts, new_params, vcmt=None, mst=mst_tile)[0]
         np.save(file=os.path.join(output_dir, 'tsincr_aps_{}.npy'.format(
             t.index)), arr=tsincr)
@@ -132,16 +151,16 @@ def ts_to_ifgs(ts, preread_ifgs):
         time series nd array (ifg.shape, nvels)
     preread_ifgs: dict
         dict with ifg basic informations
-    
+
     Saves ifgs on disc after conversion.
     """
     log.info('Converting time series to ifgs')
     ifgs = list(OrderedDict(sorted(preread_ifgs.items())).values())
-    epochlist, n = get_epochs(ifgs)
+    _, n = get_epochs(ifgs)
     index_master, index_slave = n[:len(ifgs)], n[len(ifgs):]
-    for i in range(len(ifgs)):
+    for i, ifg in enumerate(ifgs):
         phase = np.sum(ts[:, :, index_master[i]: index_slave[i]], axis=2)
-        _save_aps_corrected_phase(ifgs[i].path, phase)
+        _save_aps_corrected_phase(ifg.path, phase)
 
 
 def _save_aps_corrected_phase(ifg_path, phase):

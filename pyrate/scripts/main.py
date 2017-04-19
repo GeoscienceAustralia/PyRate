@@ -20,8 +20,8 @@ import sys
 import os
 from os.path import abspath
 import logging
-import click
 import json
+import click
 from pyrate import pyratelog as pylog
 from pyrate import config as cf
 from pyrate.scripts import run_prepifg, run_pyrate, postprocessing
