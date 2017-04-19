@@ -38,7 +38,7 @@ def estimate_ref_phase(ifgs, params, refpx, refpy):
         :ref_phs: reference phase correction
         :ifgs: reference phase data removed list of ifgs
     """
-    _check_ref_phs_ifgs(ifgs)
+    check_ref_phs_ifgs(ifgs)
 
     # set reference phase as the average of the whole image (recommended)
     if params[cf.REF_EST_METHOD] == 1:
@@ -135,12 +135,10 @@ def est_ref_phs_method1(phase_data, comp):
     """convenience function for ref phs estimate method 1 parallelisation"""
     ifgv = np.ravel(phase_data, order='F')
     ifgv[comp == 1] = np.nan
-    # reference phase
-    ref_ph = nanmedian(ifgv)
-    return ref_ph
+    return nanmedian(ifgv)
 
 
-def _check_ref_phs_ifgs(ifgs, preread_ifgs=None):
+def check_ref_phs_ifgs(ifgs, preread_ifgs=None):
     """
     Function to check that the ref phase status of all ifgs are the same
     """
@@ -149,6 +147,7 @@ def _check_ref_phs_ifgs(ifgs, preread_ifgs=None):
         raise ReferencePhaseError('Need to provide at least 2 ifgs')
 
     if preread_ifgs:  # check unless for mpi tests
+        # preread_ifgs[i].metadata contains ifg metadata
         flags = [ifc.PYRATE_REF_PHASE in preread_ifgs[i].metadata
                  for i in ifgs]
     else:

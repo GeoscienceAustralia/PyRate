@@ -20,6 +20,7 @@ are based on functions 'cvdcalc.m' and 'vcmt.m' from
 the Matlab Pirate package.
 """
 from __future__ import print_function
+from os.path import basename, join
 import logging
 from numpy import array, where, isnan, real, imag, sqrt, meshgrid
 from numpy import zeros, vstack, ceil, mean, exp, reshape
@@ -31,6 +32,8 @@ from scipy.optimize import fmin
 from pyrate import shared
 from pyrate.shared import PrereadIfg
 from pyrate.algorithm import master_slave_ids
+from pyrate import ifgconstants as ifc
+from pyrate import config as cf
 
 # distance division factor of 1000 converts to km and is needed to match
 # Matlab code output
@@ -64,17 +67,22 @@ def unique_points(points):  # pragma: no cover
     return vstack([array(u) for u in set(points)])
 
 
-def cvd(ifg_path, params, r_dist, calc_alpha=False):
+def cvd(ifg_path, params, r_dist, calc_alpha=False,
+        write_vals=False, save_acg=False):
     """
-    Calculate average covariance versus distance (autocorrelation) and its
-    best fitting exponential function
+    Calculate the 1D covariance function of an entire interferogram as the
+    radial average of its 2D autocorrelation.
 
     :param ifg_path: An interferogram.
         ifg: :py:class:`pyrate.shared.Ifg`.
-    :param: params: dict
-        dict of config params
+    :param params: dict
+        dictionary of configuration parameters
     :param calc_alpha: bool
-        whether you calculate alpha.
+        calculate alpha, the exponential length-scale of decay factor.
+    :param write_vals: bool
+        write maxvar and alpha values to interferogram metadata.
+    :param save_acg: bool
+        write acg and radial distance data to numpy array
     """
 
     if isinstance(ifg_path, str):  # used during MPI
@@ -91,7 +99,11 @@ def cvd(ifg_path, params, r_dist, calc_alpha=False):
     else:
         phase = ifg.phase_data
 
-    maxvar, alpha = cvd_from_phase(phase, ifg, r_dist, calc_alpha)
+    maxvar, alpha = cvd_from_phase(phase, ifg, r_dist, calc_alpha,
+                                   save_acg=save_acg)
+
+    if write_vals:
+        _add_metadata(ifg, maxvar, alpha)
 
     if isinstance(ifg_path, str):
         ifg.close()
@@ -99,7 +111,24 @@ def cvd(ifg_path, params, r_dist, calc_alpha=False):
     return maxvar, alpha
 
 
-def cvd_from_phase(phase, ifg, r_dist, calc_alpha):
+def _add_metadata(ifg, maxvar, alpha):
+    """convenience function for saving metadata to ifg"""
+    md = ifg.meta_data
+    md[ifc.PYRATE_MAXVAR] = str(maxvar) #.astype('str')
+    md[ifc.PYRATE_ALPHA] = str(alpha) #.astype('str')
+    ifg.write_modified_phase()
+
+
+def _save_cvd_data(acg, r_dist, ifg_path, outdir):
+    """ function to save numpy array of autocorrelation data to disk"""
+    data = np.column_stack((acg, r_dist))
+    data_file = join(outdir, 'cvd_data_{b}.npy'.format(
+        b=basename(ifg_path).split('.')[0]))
+    np.save(file=data_file, arr=data)
+
+
+def cvd_from_phase(phase, ifg, r_dist, calc_alpha, save_acg=False,
+                   params=None):
     """
     A convenience class reused in many places to compute cvd from phase data
     and a ifg class
@@ -110,6 +139,8 @@ def cvd_from_phase(phase, ifg, r_dist, calc_alpha):
     ifg: shared.Ifg class instance
     calc_alpha: bool, optional
         whether alpha is required
+    save_acg: bool, optional
+        write acg and radial distance data to numpy array
 
     Return
     ------
@@ -149,6 +180,10 @@ def cvd_from_phase(phase, ifg, r_dist, calc_alpha):
     # acg = array([e for e in rorig if e <= maxdist])
     indices_to_keep = r_dist < maxdist
     acg = acg[indices_to_keep]
+
+    # optionally save acg vs dist observations to disk
+    if save_acg:
+        _save_cvd_data(acg, r_dist, ifg.data_path, params[cf.TMPDIR])
 
     if calc_alpha:
         # bin width for collecting data
