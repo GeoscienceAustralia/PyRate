@@ -61,7 +61,7 @@ def slpfilter(phase, ifg, r_dist, params):
         time series for one epoch
     ifg: shared.Ifg class instance
     params: dict
-        paramters dict
+        parameters dict
 
     Returns
     -------
