@@ -43,7 +43,7 @@ before_install:
   - pip install -U pip
   - pip install wheel
   - pip install python-daemon==2.1.1
-  - . ./scripts/travis_gdal_install.sh
+  - . ./utils/travis_gdal_install.sh
   - export PATH=$GDALINST/gdal-$GDALVERSION/bin:$PATH
   - export LD_LIBRARY_PATH=$GDALINST/gdal-$GDALVERSION/lib:$LD_LIBRARY_PATH
 
@@ -59,7 +59,8 @@ install:
 
 # command to run tests, e.g. python setup.py test
 script:
-  - py.test --cov-report term-missing:skip-covered --cov=pyrate tests/
+  - if [[ $TRAVIS_PYTHON_VERSION == 2.7 && $GDALVERSION == 2.0.0 ]]; then mpirun -n 4 pytest --cov-report term-missing:skip-covered --cov=pyrate tests/test_mpi.py; fi
+  - pytest --cov-report term-missing:skip-covered --cov=pyrate tests/
 
 cache:
   - apt
