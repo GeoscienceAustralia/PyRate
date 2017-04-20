@@ -20,6 +20,7 @@ Spatial low pass filter.
 import logging
 import numpy as np
 from scipy.fftpack import fft2, ifft2, fftshift, ifftshift
+from scipy.interpolate import griddata
 from pyrate import config as cf
 from pyrate.covariance import cvd_from_phase, RDist
 
@@ -44,13 +45,34 @@ def spatial_low_pass_filter(ts_hp, ifg, params):
         shape (ifg.shape, n_epochs)
     """
     log.info('Applying spatial low pass filter')
-    ts_hp[np.isnan(ts_hp)] = 0  # need it here for cvd and fft
+
+    if params[cf.SLPF_NANFILL] == 0:
+        ts_hp[np.isnan(ts_hp)] = 0  # need it here for cvd and fft
+    else:  # optionally interpolate
+        ts_hp = _interpolate_nans(ts_hp, params[cf.SLPF_NANFILL_METHOD])
     r_dist = RDist(ifg)()
     for i in range(ts_hp.shape[2]):
         ts_hp[:, :, i] = slpfilter(ts_hp[:, :, i], ifg, r_dist, params)
 
     log.info('Finished applying spatial low pass filter')
     return ts_hp
+
+
+def _interpolate_nans(arr, method='linear'):
+    """
+    Fill nans in arr with interpolated values
+    """
+    rows, cols = np.indices(arr.shape[:2])
+    for i in range(arr.shape[2]):
+        a = arr[:, :, i]
+        a[np.isnan(a)] = griddata(
+            (rows[~np.isnan(a)], cols[~np.isnan(a)]),  # points we know
+            a[~np.isnan(a)],  # values we know
+            (rows[np.isnan(a)], cols[np.isnan(a)]),  # points to interpolate
+            method=method
+        )
+        a[np.isnan(a)] = 0  # zero fill boundary/edge nans
+    return arr
 
 
 def slpfilter(phase, ifg, r_dist, params):
