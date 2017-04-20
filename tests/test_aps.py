@@ -170,3 +170,18 @@ def test_spatio_temporal_filter():
         assert metadata[ifc.PYRATE_APS_ERROR] == ifc.APS_REMOVED
         arr = ds.GetRasterBand(1).ReadAsArray()
         np.testing.assert_array_almost_equal(arr, ifg_out[:, :, i], decimal=3)
+
+
+def test_interpolate_nans_2d():
+    from pyrate.aps.spatial import _interpolate_nans_2d
+    from copy import copy
+    a = np.arange(25).reshape((5, 5)).astype(float)
+    a[np.random.randint(2, size=(5, 5)).astype(bool)] = np.nan
+    a_copy = copy(a)
+    rows, cols = np.indices(a.shape)
+    _interpolate_nans_2d(a, rows, cols, method='cubic')
+    assert np.sum(np.isnan(a)) == 0
+    np.testing.assert_array_almost_equal(a[~np.isnan(a_copy)],
+                                         a_copy[~np.isnan(a_copy)],
+                                         decimal=4)
+

@@ -73,9 +73,9 @@ def spatio_temporal_filter(tsincr, ifg, params, preread_ifgs):
         dictionary of {ifgpath:shared.PrereadIfg class instances}
     """
     epochlist = mpiops.run_once(get_epochs, preread_ifgs)[0]
-    tsfilt_incr = mpiops.run_once(tlpfilter, tsincr, epochlist, params)
-    ts_lp = tsincr - tsfilt_incr
-    ts_aps = mpiops.run_once(spatial_low_pass_filter, ts_lp, ifg, params)
+    ts_lp = mpiops.run_once(tlpfilter, tsincr, epochlist, params)
+    ts_hp = tsincr - ts_lp
+    ts_aps = mpiops.run_once(spatial_low_pass_filter, ts_hp, ifg, params)
     tsincr -= ts_aps
 
     mpiops.run_once(ts_to_ifgs, tsincr, preread_ifgs)
