@@ -482,7 +482,7 @@ def process_ifgs(ifg_paths, params, rows, cols):
     ref_phase_estimation(ifg_paths, params, refpx, refpy)
 
     # spatio-temporal aps filter
-    # wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs)
+    wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs)
 
     maxvar, vcmt = maxvar_vcm_calc(ifg_paths, params, preread_ifgs)
 
@@ -567,7 +567,7 @@ def maxvar_vcm_calc(ifg_paths, params, preread_ifgs):
         log.info('Calculating maxvar for {} of process ifgs {} of '
                  'total {}'.format(n+1, len(prcs_ifgs), len(ifg_paths)))
         process_maxvar.append(vcm_module.cvd(i, params, r_dist,
-                                             calc_alpha=False,
+                                             calc_alpha=True,
                                              write_vals=True,
                                              save_acg=True)[0])
     if mpiops.rank == MASTER_PROCESS:
