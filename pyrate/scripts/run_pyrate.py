@@ -330,9 +330,12 @@ def ref_phase_estimation(ifg_paths, params, refpx, refpy, preread_ifgs=None):
         dict containing information regarding ifgs
     """
     # perform some checks on existing ifgs
-    if preread_ifgs and mpiops.rank == MASTER_PROCESS:
-        ifg_paths = sorted(preread_ifgs.keys())
-        if mpiops.run_once(rpe.check_ref_phs_ifgs, ifg_paths, preread_ifgs):
+    #if preread_ifgs and mpiops.rank == MASTER_PROCESS:
+    if preread_ifgs:
+        log.info('Checking reference phase estimation status')
+        if mpiops.run_once(shared.check_correction_status, preread_ifgs,
+                           ifc.PYRATE_REF_PHASE):
+            log.info('Finished reference phase estimation')
             return  # return if True condition returned
 
     if params[cf.REF_EST_METHOD] == 1:
@@ -363,7 +366,7 @@ def ref_phase_estimation(ifg_paths, params, refpx, refpy, preread_ifgs=None):
         # send reference phase data to master process
         mpiops.comm.Send(process_ref_phs, dest=MASTER_PROCESS,
                          tag=mpiops.rank)
-    log.info('Completed reference phase estimation')
+    log.info('Finished reference phase estimation')
 
 
 def ref_phs_method2(ifg_paths, params, refpx, refpy):
@@ -461,9 +464,8 @@ def process_ifgs(ifg_paths, params, rows, cols):
         params[cf.PARALLEL] = False
 
     tiles = mpiops.run_once(get_tiles, ifg_paths[0], rows, cols)
-    preread_ifgs = create_ifg_dict(ifg_paths,
-                                   params=params,
-                                   tiles=tiles)
+
+    preread_ifgs = create_ifg_dict(ifg_paths, params=params, tiles=tiles)
 
     mst_calc(ifg_paths, params, tiles, preread_ifgs)
 
@@ -481,7 +483,7 @@ def process_ifgs(ifg_paths, params, rows, cols):
 
     orb_fit_calc(ifg_paths, params, preread_ifgs)
 
-    ref_phase_estimation(ifg_paths, params, refpx, refpy)
+    ref_phase_estimation(ifg_paths, params, refpx, refpy, preread_ifgs)
 
     # spatio-temporal aps filter
     wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs)
