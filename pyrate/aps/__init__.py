@@ -14,7 +14,9 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 """
-This is the aps/spatio-temporal filter main module.
+This Python module implements a spatio-temporal filter method
+for correcting interferograms for atmospheric phase screen (APS)
+signals.
 """
 
 import logging
@@ -37,13 +39,22 @@ log = logging.getLogger(__name__)
 
 def wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs):
     """
-    Just a wrapper for spatio-tempotal-filter so it can be tested.
+    A wrapper for the spatio-temporal-filter so it can be tested.
     See docstring for spatio_temporal_filter.
-    Required due to matlab and python using different mst implementations
+    Required due to differences between Matlab and Python MST 
+    implementations.
     """
     if not params[cf.APSEST]:
         log.info('APS correction not required.')
         return
+
+    # perform some checks on existing ifgs
+    log.info('Checking APS correction status')
+    if mpiops.run_once(shared.check_correction_status, preread_ifgs,
+                       ifc.PYRATE_APS_ERROR):
+        log.info('Finished APS correction')
+        return  # return if True condition returned
+        
     tsincr = calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles)
 
     ifg = Ifg(ifg_paths[0])  # just grab any for parameters in slpfilter
@@ -54,9 +65,10 @@ def wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs):
 
 def spatio_temporal_filter(tsincr, ifg, params, preread_ifgs):
     """
-    Applies spatio-temportal (aps) filter and save the interferograms.
+    Applies a spatio-temporal (APS) filter and saves the corrected 
+    interferograms.
 
-    A first step is to compute the time series using the non-smooth SVD method.
+    The first step is to compute the time series using the SVD method.
     This is followed by temporal and spatial filters respectively.
 
     Parameters
@@ -83,8 +95,9 @@ def spatio_temporal_filter(tsincr, ifg, params, preread_ifgs):
 
 def calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles):
     """
-    Time series inversion with no smoothing (svd method)
-    This is the matlab tsinvnosm.m equivalent.
+    Time series inversion with no smoothing (SVD method)
+    This is the equivalent of the tsinvnosm.m function in the Matlab 
+    Pirate package.
 
     Parameters
     ----------
@@ -103,7 +116,7 @@ def calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles):
         non smooth (svd method) time series of shape (ifg.shape, nvels)
 
     """
-    log.info('Calculating time series without smoothing for '
+    log.info('Calculating time series via SVD method for '
              'spatio-temporal filter')
     # copy params temporarily
     new_params = deepcopy(params)
@@ -133,6 +146,7 @@ def calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles):
 
 
 def _assemble_tsincr(ifg_paths, params, preread_ifgs, tiles, nvels):
+    """function to reconstruct time series images from tiles"""
     shape = preread_ifgs[ifg_paths[0]].shape + (nvels,)
     tsincr_g = np.empty(shape=shape, dtype=np.float32)
     for i in range(nvels):
@@ -144,7 +158,10 @@ def _assemble_tsincr(ifg_paths, params, preread_ifgs, tiles, nvels):
 
 def ts_to_ifgs(ts, preread_ifgs):
     """
-    Function that takes a time series and converts into ifg phase data
+    Function that converts a displacement time series into interferometric
+    phase observations. Used to re-construct an interferogram network 
+    from a time series.
+    
     Parameters
     ----------
     ts: ndarray
@@ -165,8 +182,9 @@ def ts_to_ifgs(ts, preread_ifgs):
 
 def _save_aps_corrected_phase(ifg_path, phase):
     """
-    Update metadata and save latest phase after
-    spatio-temporal filter (aps) correction
+    Update interferogram metadata and phase data after
+    spatio-temporal filter (APS) correction.
+    
     Parameters
     ----------
     ifg_path: str
