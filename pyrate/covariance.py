@@ -262,12 +262,22 @@ class RDist:
 
 
 def _get_autogrid(phase):
-    fft_phase = fft2(phase)
-    pspec = real(fft_phase) ** 2 + imag(fft_phase) ** 2
-    autocorr_grid = ifft2(pspec)
+    autocorr_grid = _calc_autoc_grid(phase)
     nzc = np.sum(np.sum(phase != 0))
     autocorr_grid = fftshift(real(autocorr_grid)) / nzc
     return autocorr_grid
+
+
+def _calc_autoc_grid(phase):
+    pspec = _calc_power_spectrum(phase)
+    autocorr_grid = ifft2(pspec)
+    return autocorr_grid.astype(np.float32)
+
+
+def _calc_power_spectrum(phase):
+    fft_phase = fft2(phase)
+    pspec = real(fft_phase) ** 2 + imag(fft_phase) ** 2
+    return pspec.astype(dtype=np.float32)
 
 
 def get_vcmt(ifgs, maxvar):
