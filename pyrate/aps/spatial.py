@@ -45,7 +45,6 @@ def spatial_low_pass_filter(ts_lp, ifg, params):
         shape (ifg.shape, n_epochs)
     """
     log.info('Applying spatial low pass filter')
-    nans = np.isnan(ts_lp)
     if params[cf.SLPF_NANFILL] == 0:
         ts_lp[np.isnan(ts_lp)] = 0  # need it here for cvd and fft
     else:  # optionally interpolate, operation is inplace
@@ -53,7 +52,6 @@ def spatial_low_pass_filter(ts_lp, ifg, params):
     r_dist = RDist(ifg)()
     for i in range(ts_lp.shape[2]):
         ts_lp[:, :, i] = slpfilter(ts_lp[:, :, i], ifg, r_dist, params)
-    ts_lp[nans] = np.nan  # put the nans back in
     log.info('Finished applying spatial low pass filter')
     return ts_lp
 

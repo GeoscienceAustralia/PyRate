@@ -143,6 +143,7 @@ def test_spatio_temporal_filter():
     params[cf.SLPF_METHOD] = 2
     params[cf.SLPF_CUTOFF] = 0
     params[cf.SLPF_ORDER] = 1
+    params[cf.SLPF_NANFILL] = 0
     params[cf.TLPF_METHOD] = 3
     params[cf.TLPF_CUTOFF] = 0.25
     params[cf.TLPF_PTHR] = 5
@@ -172,16 +173,20 @@ def test_spatio_temporal_filter():
         np.testing.assert_array_almost_equal(arr, ifg_out[:, :, i], decimal=3)
 
 
-def test_interpolate_nans_2d():
-    from pyrate.aps.spatial import _interpolate_nans_2d
+@pytest.fixture(params=['cubic', 'linear', 'nearest'])
+def interp_method(request):
+    return request.param
+
+
+def test_interpolate_nans(interp_method):
+    from pyrate.aps.spatial import _interpolate_nans
     from copy import copy
-    a = np.arange(25).reshape((5, 5)).astype(float)
-    a[np.random.randint(2, size=(5, 5)).astype(bool)] = np.nan
+    a = np.arange(25*3).reshape((5, 5, 3)).astype(float)
+    a[np.random.randint(2, size=(5, 5, 3)).astype(bool)] = np.nan
     a_copy = copy(a)
-    rows, cols = np.indices(a.shape)
-    _interpolate_nans_2d(a, rows, cols, method='cubic')
+
+    _interpolate_nans(a, method=interp_method)
     assert np.sum(np.isnan(a)) == 0
     np.testing.assert_array_almost_equal(a[~np.isnan(a_copy)],
                                          a_copy[~np.isnan(a_copy)],
                                          decimal=4)
-
