@@ -128,8 +128,8 @@ ready to run!
 Running Batch Jobs
 ------------------
 
-in the ``pbs`` subfolder of the ``PyRate`` repo there are some example
-scripts to assist launching batch jobs over multiple nodes with PBS.
+An example script to assist launching batch jobs over multiple nodes with PBS
+ at the bottom of this ``readme``.
 
 Batch testing
 ~~~~~~~~~~~~~
@@ -166,6 +166,7 @@ A PBS job submission script might look like this:
     #PBS -q <queue>
     #PBS -l walltime=01:00:00,mem=128GB,ncpus=16,jobfs=20GB
     #PBS -l wd
+    #PBS -j oe
 
     # setup environment
     module unload intel-cc
@@ -178,6 +179,11 @@ A PBS job submission script might look like this:
     workon pyrate
 
     # run PyRate commands
-    mpirun -n 16 pyrate prepifg /path/to/config_file.conf
-    mpirun -n 16 pyrate linrate /path/to/config_file.conf
-    mpirun -n 16 pyrate postprocess /path/to/config_file.conf
+    mpirun --mca mpi_warn_o pyrate prepifg /path/to/config_file.conf
+    mpirun --mca mpi_warn_o pyrate linrate /path/to/config_file.conf
+    mpirun --mca mpi_warn_o pyrate postprocess /path/to/config_file.conf
+
+
+``--mca mpi_warn_o`` prevents mpi fork warnings. To distribute the job
+between nodes and to manage memory between processes use something  like
+``-map-by ppr:4:node``, which will start 4 jobs per node.
