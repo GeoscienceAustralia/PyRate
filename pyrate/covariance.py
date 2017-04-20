@@ -271,7 +271,7 @@ def _get_autogrid(phase):
 def _calc_autoc_grid(phase):
     pspec = _calc_power_spectrum(phase)
     autocorr_grid = ifft2(pspec)
-    return autocorr_grid.astype(np.float32)
+    return autocorr_grid.astype(dtype=np.complex64)
 
 
 def _calc_power_spectrum(phase):
