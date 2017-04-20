@@ -1094,3 +1094,34 @@ def get_tiles(ifg_path, rows, cols):
     tiles = create_tiles(ifg.shape, nrows=rows, ncols=cols)
     ifg.close()
     return tiles
+
+
+def check_correction_status(preread_ifgs, meta):  # pragma: no cover
+    """
+    Check if a correction has already been performed in a previous run
+    """
+    ifg_paths = sorted(preread_ifgs.keys())
+    # preread_ifgs[i].metadata contains ifg metadata
+    flags = [meta in preread_ifgs[i].metadata
+             for i in ifg_paths]
+    if all(flags):
+        log.info('Skipped: interferograms already corrected')
+        return True
+    elif (sum(flags) < len(flags)) and (sum(flags) > 0):
+        log.debug('Detected mix of corrected and uncorrected interferograms')
+        for i, flag in zip(ifg_paths, flags):
+            if flag:
+                msg = '{}: correction detected'.format(i)
+            else:
+                msg = '{}: correction NOT detected'.format(i)
+            log.debug(msg)
+            raise CorrectionStatusError(msg)
+    else:
+        log.info('Calculating corrections')
+        return False
+
+
+class CorrectionStatusError(Exception):
+    """
+    Generic class for correction status errors.
+    """

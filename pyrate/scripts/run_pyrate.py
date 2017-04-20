@@ -291,8 +291,10 @@ def orb_fit_calc(ifg_paths, params, preread_ifgs=None):
         # remove non ifg keys
         _ = [preread_ifgs.pop(k) for k in ['gt', 'epochlist', 'md', 'wkt']]
         # perform some general error/sanity checks
-        if mpiops.run_once(orbital.check_orbital_ifgs, preread_ifgs):
-            log.info('Finished orbfit calculation')
+        log.info('Checking Orbital error correction status')
+        if mpiops.run_once(shared.check_correction_status, preread_ifgs,
+                           ifc.PYRATE_ORBITAL_ERROR):
+            log.info('Finished Orbital error correction')
             return  # return if True condition returned
 
     if params[cf.ORBITAL_FIT_METHOD] == 1:
@@ -307,7 +309,7 @@ def orb_fit_calc(ifg_paths, params, preread_ifgs=None):
         if mpiops.rank == MASTER_PROCESS:
             orbital.remove_orbital_error(ifg_paths, params, preread_ifgs)
     mpiops.comm.barrier()
-    log.info('Finished orbfit calculation')
+    log.info('Finished Orbital error correction')
 
 
 def ref_phase_estimation(ifg_paths, params, refpx, refpy, preread_ifgs=None):
