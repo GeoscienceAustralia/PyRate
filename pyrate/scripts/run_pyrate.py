@@ -656,6 +656,10 @@ def timeseries_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
         dict containing ifg characteristics for efficient computing
 
     """
+    if params[cf.TIME_SERIES_CAL] == 0:
+        log.info('Time Series Calculation not required')
+        return
+
     process_tiles = mpiops.array_split(tiles)
     log.info('Calculating time series')
     output_dir = params[cf.TMPDIR]
