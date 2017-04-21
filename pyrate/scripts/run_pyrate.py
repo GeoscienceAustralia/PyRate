@@ -38,13 +38,13 @@ from pyrate import shared
 from pyrate import timeseries
 from pyrate import covariance as vcm_module
 from pyrate.aps import wrap_spatio_temporal_filter
-from pyrate.compat import PyAPS_INSTALLED
+#from pyrate.compat import PyAPS_INSTALLED
 from pyrate.config import ConfigException
 from pyrate.shared import Ifg, PrereadIfg, prepare_ifg, save_numpy_phase, \
     get_projection_info, get_tiles
 
-if PyAPS_INSTALLED:  # pragma: no cover
-    from pyrate.pyaps import check_aps_ifgs, aps_delay_required
+#if PyAPS_INSTALLED:  # pragma: no cover
+#    from pyrate.pyaps import check_aps_ifgs, aps_delay_required
 
 MASTER_PROCESS = 0
 log = logging.getLogger(__name__)
@@ -471,15 +471,7 @@ def process_ifgs(ifg_paths, params, rows, cols):
 
     refpx, refpy = ref_pixel_calc(ifg_paths, params)
 
-    # remove APS delay here, and write aps delay removed ifgs to disc
-    # TODO: fix PyAPS integration
-    if PyAPS_INSTALLED and \
-            aps_delay_required(ifg_paths, params):  # pragma: no cover
-        # ifgs = aps.remove_aps_delay(ifg_paths, params)
-        log.info('Finished APS delay correction')
-        # make sure aps correction flags are consistent
-        if params[cf.APS_CORRECTION]:
-            check_aps_ifgs(ifg_paths)
+    # TODO: remove weather model derived APS delay here (pyaps.py)
 
     orb_fit_calc(ifg_paths, params, preread_ifgs)
 

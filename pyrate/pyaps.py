@@ -91,7 +91,7 @@ def remove_aps_delay(input_ifgs, params, process_indices=None):
     elif params[cf.APS_METHOD] == 2:
         incidence_map = get_incidence_map()
     else:
-        raise APSException('PyAPS method must be 1 or 2')
+        raise PyAPSException('PyAPS method must be 1 or 2')
 
     list_of_dates_for_grb_download = []
 
@@ -165,7 +165,7 @@ def parallel_aps(data_path, dem, dem_header, incidence_angle, incidence_map,
         # no need to calculate incidence map for all ifgs, they are the same
         aps_delay = geo_correction(date_pair, dem_header, dem, incidence_map)
     else:
-        raise APSException('APS method must be 1 or 2')
+        raise PyAPSException('APS method must be 1 or 2')
     return aps_delay
 
 
@@ -286,7 +286,7 @@ def remove_aps_delay_original(ifgs, params):
             aps_delay = geo_correction_original(date_pair, params,
                                                 incidence_map)
         else:
-            raise APSException('APS method must be 1 or 2')
+            raise PyAPSException('PyAPS method must be 1 or 2')
 
 
         ifg.phase_data -= aps_delay  # remove delay
@@ -381,42 +381,44 @@ def return_pyaps_lat_lon(dem_header):
     return lat, lon, nx, ny
 
 
-class APSException(Exception):
+class PyAPSException(Exception):
     """
     generic exception class for APS correction
     """
     pass
 
 
-def check_aps_ifgs(ifgs):
+def _check_aps_ifgs(ifgs):
+    # this function to be replaced with generic status check in shared module
     flags = [i.dataset.GetMetadataItem(ifc.PYRATE_WEATHER_ERROR) for i in ifgs]
     count = sum([f == APS_STATUS for f in flags])
     if (count < len(flags)) and (count > 0):
         log.debug('Detected mix of corrected and uncorrected '
-                      'APS delay in ifgs')
+                      'PyAPS delay in ifgs')
 
         for i, flag in zip(ifgs, flags):
             if flag:
-                msg = '%s: prior APS delay correction detected'
+                msg = '%s: prior PyAPS delay correction detected'
             else:
-                msg = '%s: no APS delay correction detected'
+                msg = '%s: no PyAPS delay correction detected'
             logging.debug(msg % i.data_path)
-        raise APSException('Mixed APS removal status in ifg list')
+        raise PyAPSException('Mixed PyAPS removal status in ifg list')
 
 
-def aps_delay_required(ifgs, params):
-    log.info('Removing APS delay')
+def _aps_delay_required(ifgs, params):
+    # this functionality to be integrated in to run_pyrate script
+    log.info('Removing PyAPS delay')
 
     if not params[cf.APS_CORRECTION]:
-        log.info('APS delay removal not required')
+        log.info('PyAPS delay removal not required')
         return False
 
     # perform some general error/sanity checks
     flags = [i.dataset.GetMetadataItem(ifc.PYRATE_WEATHER_ERROR) for i in ifgs]
 
     if all(flags):
-        log.info('Skipped APS delay removal, ifgs are already aps corrected')
+        log.info('Skipped PyAPS delay removal, ifgs are already PyAPS corrected')
         return False
     else:
-        check_aps_ifgs(ifgs)
+        _check_aps_ifgs(ifgs)
     return True
