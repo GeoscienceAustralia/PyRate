@@ -81,7 +81,7 @@ def cvd(ifg_path, params, r_dist, calc_alpha=False,
     params : dict
         dictionary of configuration parameters
     r_dist : ndarray
-        array of distance from the centre of the interferogram. See Rdist 
+        array of distance from the centre of the interferogram. See Rdist
         class for more details
     calc_alpha : bool
         calculate alpha, the exponential length-scale of decay factor.
@@ -89,7 +89,7 @@ def cvd(ifg_path, params, r_dist, calc_alpha=False,
         write maxvar and alpha values to interferogram metadata.
     save_acg : bool
         write acg and radial distance data to numpy array
-    
+
     Returns
     -------
     maxvar : ndarray
@@ -151,7 +151,7 @@ def cvd_from_phase(phase, ifg, r_dist, calc_alpha, save_acg=False,
         phase data corresping to the ifg
     ifg : shared.Ifg class instance
     r_dist : ndarray
-        array of distance from the centre of the interferogram. See Rdist 
+        array of distance from the centre of the interferogram. See Rdist
         class for more details
     calc_alpha : bool, optional
         whether alpha is required

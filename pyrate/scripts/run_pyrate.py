@@ -38,13 +38,13 @@ from pyrate import shared
 from pyrate import timeseries
 from pyrate import covariance as vcm_module
 from pyrate.aps import wrap_spatio_temporal_filter
-from pyrate.compat import PyAPS_INSTALLED
+#from pyrate.compat import PyAPS_INSTALLED
 from pyrate.config import ConfigException
 from pyrate.shared import Ifg, PrereadIfg, prepare_ifg, save_numpy_phase, \
     get_projection_info, get_tiles
 
-if PyAPS_INSTALLED:  # pragma: no cover
-    from pyrate.pyaps import check_aps_ifgs, aps_delay_required
+#if PyAPS_INSTALLED:  # pragma: no cover
+#    from pyrate.pyaps import check_aps_ifgs, aps_delay_required
 
 MASTER_PROCESS = 0
 log = logging.getLogger(__name__)
@@ -291,8 +291,10 @@ def orb_fit_calc(ifg_paths, params, preread_ifgs=None):
         # remove non ifg keys
         _ = [preread_ifgs.pop(k) for k in ['gt', 'epochlist', 'md', 'wkt']]
         # perform some general error/sanity checks
-        if mpiops.run_once(orbital.check_orbital_ifgs, preread_ifgs):
-            log.info('Finished orbfit calculation')
+        log.info('Checking Orbital error correction status')
+        if mpiops.run_once(shared.check_correction_status, preread_ifgs,
+                           ifc.PYRATE_ORBITAL_ERROR):
+            log.info('Finished Orbital error correction')
             return  # return if True condition returned
 
     if params[cf.ORBITAL_FIT_METHOD] == 1:
@@ -307,7 +309,7 @@ def orb_fit_calc(ifg_paths, params, preread_ifgs=None):
         if mpiops.rank == MASTER_PROCESS:
             orbital.remove_orbital_error(ifg_paths, params, preread_ifgs)
     mpiops.comm.barrier()
-    log.info('Finished orbfit calculation')
+    log.info('Finished Orbital error correction')
 
 
 def ref_phase_estimation(ifg_paths, params, refpx, refpy, preread_ifgs=None):
@@ -328,9 +330,12 @@ def ref_phase_estimation(ifg_paths, params, refpx, refpy, preread_ifgs=None):
         dict containing information regarding ifgs
     """
     # perform some checks on existing ifgs
-    if preread_ifgs and mpiops.rank == MASTER_PROCESS:
-        ifg_paths = sorted(preread_ifgs.keys())
-        if mpiops.run_once(rpe.check_ref_phs_ifgs, ifg_paths, preread_ifgs):
+    #if preread_ifgs and mpiops.rank == MASTER_PROCESS:
+    if preread_ifgs:
+        log.info('Checking reference phase estimation status')
+        if mpiops.run_once(shared.check_correction_status, preread_ifgs,
+                           ifc.PYRATE_REF_PHASE):
+            log.info('Finished reference phase estimation')
             return  # return if True condition returned
 
     if params[cf.REF_EST_METHOD] == 1:
@@ -361,7 +366,7 @@ def ref_phase_estimation(ifg_paths, params, refpx, refpy, preread_ifgs=None):
         # send reference phase data to master process
         mpiops.comm.Send(process_ref_phs, dest=MASTER_PROCESS,
                          tag=mpiops.rank)
-    log.info('Completed reference phase estimation')
+    log.info('Finished reference phase estimation')
 
 
 def ref_phs_method2(ifg_paths, params, refpx, refpy):
@@ -459,27 +464,18 @@ def process_ifgs(ifg_paths, params, rows, cols):
         params[cf.PARALLEL] = False
 
     tiles = mpiops.run_once(get_tiles, ifg_paths[0], rows, cols)
-    preread_ifgs = create_ifg_dict(ifg_paths,
-                                   params=params,
-                                   tiles=tiles)
+
+    preread_ifgs = create_ifg_dict(ifg_paths, params=params, tiles=tiles)
 
     mst_calc(ifg_paths, params, tiles, preread_ifgs)
 
     refpx, refpy = ref_pixel_calc(ifg_paths, params)
 
-    # remove APS delay here, and write aps delay removed ifgs to disc
-    # TODO: fix PyAPS integration
-    if PyAPS_INSTALLED and \
-            aps_delay_required(ifg_paths, params):  # pragma: no cover
-        # ifgs = aps.remove_aps_delay(ifg_paths, params)
-        log.info('Finished APS delay correction')
-        # make sure aps correction flags are consistent
-        if params[cf.APS_CORRECTION]:
-            check_aps_ifgs(ifg_paths)
+    # TODO: remove weather model derived APS delay here (pyaps.py)
 
     orb_fit_calc(ifg_paths, params, preread_ifgs)
 
-    ref_phase_estimation(ifg_paths, params, refpx, refpy)
+    ref_phase_estimation(ifg_paths, params, refpx, refpy, preread_ifgs)
 
     # spatio-temporal aps filter
     wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs)
@@ -656,9 +652,17 @@ def timeseries_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
         dict containing ifg characteristics for efficient computing
 
     """
-    process_tiles = mpiops.array_split(tiles)
-    log.info('Calculating time series')
+    if params[cf.TIME_SERIES_CAL] == 0:
+        log.info('Time Series Calculation not required')
+        return
+
+    if params[cf.TIME_SERIES_METHOD] == 1:
+        log.info('Calculating time series using Laplacian Smoothing method')
+    elif params[cf.TIME_SERIES_METHOD] == 2:
+        log.info('Calculating time series using SVD method')
+
     output_dir = params[cf.TMPDIR]
+    process_tiles = mpiops.array_split(tiles)
     for t in process_tiles:
         log.info('Calculating time series for tile {}'.format(t.index))
         ifg_parts = [shared.IfgPart(p, t, preread_ifgs) for p in ifg_paths]
