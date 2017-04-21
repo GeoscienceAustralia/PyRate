@@ -656,9 +656,13 @@ def timeseries_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
         log.info('Time Series Calculation not required')
         return
 
-    process_tiles = mpiops.array_split(tiles)
-    log.info('Calculating time series')
+    if params[cf.TIME_SERIES_METHOD] == 1:
+        log.info('Calculating time series using Laplacian Smoothing method')
+    elif params[cf.TIME_SERIES_METHOD] == 2:
+        log.info('Calculating time series using SVD method')
+
     output_dir = params[cf.TMPDIR]
+    process_tiles = mpiops.array_split(tiles)
     for t in process_tiles:
         log.info('Calculating time series for tile {}'.format(t.index))
         ifg_parts = [shared.IfgPart(p, t, preread_ifgs) for p in ifg_paths]
