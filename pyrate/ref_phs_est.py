@@ -140,7 +140,7 @@ def est_ref_phs_method1(phase_data, comp):
 def _check_ref_phs_ifgs(ifgs):
     """
     Convenience function to check the ref phase status of all ifgs
-    """    
+    """
     if len(ifgs) < 2:
         raise ReferencePhaseError('Need to provide at least 2 ifgs')
     # The following code is duplicated from shared.check_correction_status

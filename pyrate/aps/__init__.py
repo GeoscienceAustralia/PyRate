@@ -41,7 +41,7 @@ def wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs):
     """
     A wrapper for the spatio-temporal-filter so it can be tested.
     See docstring for spatio_temporal_filter.
-    Required due to differences between Matlab and Python MST 
+    Required due to differences between Matlab and Python MST
     implementations.
     """
     if not params[cf.APSEST]:
@@ -54,7 +54,7 @@ def wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs):
                        ifc.PYRATE_APS_ERROR):
         log.info('Finished APS correction')
         return  # return if True condition returned
-        
+
     tsincr = calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles)
 
     ifg = Ifg(ifg_paths[0])  # just grab any for parameters in slpfilter
@@ -65,7 +65,7 @@ def wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs):
 
 def spatio_temporal_filter(tsincr, ifg, params, preread_ifgs):
     """
-    Applies a spatio-temporal (APS) filter and saves the corrected 
+    Applies a spatio-temporal (APS) filter and saves the corrected
     interferograms.
 
     The first step is to compute the time series using the SVD method.
@@ -96,7 +96,7 @@ def spatio_temporal_filter(tsincr, ifg, params, preread_ifgs):
 def calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles):
     """
     Time series inversion with no smoothing (SVD method)
-    This is the equivalent of the tsinvnosm.m function in the Matlab 
+    This is the equivalent of the tsinvnosm.m function in the Matlab
     Pirate package.
 
     Parameters
@@ -159,9 +159,9 @@ def _assemble_tsincr(ifg_paths, params, preread_ifgs, tiles, nvels):
 def ts_to_ifgs(ts, preread_ifgs):
     """
     Function that converts a displacement time series into interferometric
-    phase observations. Used to re-construct an interferogram network 
+    phase observations. Used to re-construct an interferogram network
     from a time series.
-    
+
     Parameters
     ----------
     ts: ndarray
@@ -184,7 +184,7 @@ def _save_aps_corrected_phase(ifg_path, phase):
     """
     Update interferogram metadata and phase data after
     spatio-temporal filter (APS) correction.
-    
+
     Parameters
     ----------
     ifg_path: str
