@@ -20,17 +20,18 @@ Spatial low pass filter.
 import logging
 import numpy as np
 from scipy.fftpack import fft2, ifft2, fftshift, ifftshift
+from scipy.interpolate import griddata
 from pyrate import config as cf
 from pyrate.covariance import cvd_from_phase, RDist
 
 log = logging.getLogger(__name__)
 
 
-def spatial_low_pass_filter(ts_hp, ifg, params):
+def spatial_low_pass_filter(ts_lp, ifg, params):
     """
     Parameters
     ----------
-    ts_hp: ndarray
+    ts_lp: ndarray
         time series from previous temporal low pass filter output of
         shape (ifg.shape, n_epochs)
     ifg: shared.Ifg instance
@@ -44,13 +45,50 @@ def spatial_low_pass_filter(ts_hp, ifg, params):
         shape (ifg.shape, n_epochs)
     """
     log.info('Applying spatial low pass filter')
-    ts_hp[np.isnan(ts_hp)] = 0  # need it here for cvd and fft
+    if params[cf.SLPF_NANFILL] == 0:
+        ts_lp[np.isnan(ts_lp)] = 0  # need it here for cvd and fft
+    else:  # optionally interpolate, operation is inplace
+        _interpolate_nans(ts_lp, params[cf.SLPF_NANFILL_METHOD])
     r_dist = RDist(ifg)()
-    for i in range(ts_hp.shape[2]):
-        ts_hp[:, :, i] = slpfilter(ts_hp[:, :, i], ifg, r_dist, params)
-
+    for i in range(ts_lp.shape[2]):
+        ts_lp[:, :, i] = slpfilter(ts_lp[:, :, i], ifg, r_dist, params)
     log.info('Finished applying spatial low pass filter')
-    return ts_hp
+    return ts_lp
+
+
+def _interpolate_nans(arr, method='linear'):
+    """
+    Fill nans in arr with interpolated values. Nanfill and interpolation
+    are performed inplace
+    """
+    rows, cols = np.indices(arr.shape[:2])
+    for i in range(arr.shape[2]):
+        a = arr[:, :, i]
+        _interpolate_nans_2d(a, rows, cols, method)
+
+
+def _interpolate_nans_2d(a, rows, cols, method):
+    """
+    inplace interpolation and nanfill
+    
+    Parameters
+    ----------
+    a : ndarray
+        2d ndarray to be interpolated
+    rows : ndarray
+        2d ndarray of row indices
+    cols : ndarray
+        3d ndarray of col indices
+    method: str
+        one of 'nearest', 'linear', and 'cubic'
+    """
+    a[np.isnan(a)] = griddata(
+        (rows[~np.isnan(a)], cols[~np.isnan(a)]),  # points we know
+        a[~np.isnan(a)],  # values we know
+        (rows[np.isnan(a)], cols[np.isnan(a)]),  # points to interpolate
+        method=method
+    )
+    a[np.isnan(a)] = 0  # zero fill boundary/edge nans
 
 
 def slpfilter(phase, ifg, r_dist, params):

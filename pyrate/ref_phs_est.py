@@ -39,7 +39,6 @@ def estimate_ref_phase(ifgs, params, refpx, refpy):
         :ifgs: reference phase data removed list of ifgs
     """
     check_ref_phs_ifgs(ifgs)
-
     # set reference phase as the average of the whole image (recommended)
     if params[cf.REF_EST_METHOD] == 1:
         ref_phs = est_ref_phase_method1(ifgs, params)

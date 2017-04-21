@@ -156,6 +156,8 @@ TLPF_PTHR = 'tlpfpthr'
 SLPF_METHOD = 'slpfmethod'
 SLPF_CUTOFF = 'slpfcutoff'
 SLPF_ORDER = 'slpforder'
+SLPF_NANFILL = 'slpnanfill'
+SLPF_NANFILL_METHOD = 'slpnanfill_method'
 
 # Time series parameters
 #: BOOL (1/0); Do Time series calculation
@@ -264,6 +266,7 @@ PARAM_CONVERSION = {
     SLPF_METHOD: (int, 1),
     SLPF_CUTOFF: (float, 0.0),
     SLPF_ORDER: (int, 1),
+    SLPF_NANFILL: (int, 0),
 
     TIME_SERIES_CAL: (int, 0),
     # pixel thresh based on nepochs? not every project may have 20 epochs
