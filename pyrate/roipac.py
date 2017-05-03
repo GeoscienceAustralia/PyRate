@@ -16,7 +16,7 @@
 """
 This Python module contains tools for reading ROI_PAC format input data.
 """
-import os
+#import os
 import re
 import datetime
 import pyrate.ifgconstants as ifc
@@ -69,47 +69,6 @@ DATE_HEADERS = [DATE, DATE12]
 
 ROIPAC_HEADER_LEFT_JUSTIFY = 18
 ROI_PAC_HEADER_FILE_EXT = "rsc"
-
-
-def check_raw_data(is_ifg, data_path, ncols, nrows):
-    """
-    Parameters
-    ----------
-    is_ifg: bool
-        whether ifg or dem
-    data_path: str
-        path to file
-    ncols: int
-        number of cols in ifg/dem
-    nrows: int
-        number of rows in ifg/dem
-    """
-    base_size = ncols * nrows
-    if is_ifg:
-        size = 4 * base_size * 2  # 2 bands of 4 bytes each
-    else:
-        size = 2 * base_size  # single 2 byte band
-
-    act_size = os.stat(data_path).st_size
-    if act_size != size:
-        msg = '%s should have size %s, not %s. Is the correct file being used?'
-        raise RoipacException(msg % (data_path, size, act_size))
-
-
-def check_step_mismatch(header):
-    """
-    Parameters
-    ----------
-    header: dict
-        dict corresponding to header file
-    """
-    # pylint: disable=invalid-name
-    xs, ys = [abs(i) for i in [header[ifc.PYRATE_X_STEP],
-                               header[ifc.PYRATE_Y_STEP]]]
-
-    if xs != ys:
-        msg = 'X and Y cell sizes do not match: %s & %s'
-        raise RoipacException(msg % (xs, ys))
 
 
 def parse_date(dstr):

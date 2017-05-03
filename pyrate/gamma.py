@@ -18,7 +18,7 @@ This Python module contains tools for reading GAMMA format input data.
 """
 # coding: utf-8
 
-import os
+#import os
 import datetime
 import numpy as np
 import pyrate.ifgconstants as ifc
@@ -36,40 +36,6 @@ GAMMA_FREQUENCY = 'radar_frequency'
 GAMMA_INCIDENCE = 'incidence_angle'
 RADIANS = 'RADIANS'
 GAMMA = 'GAMMA'
-
-
-def check_raw_data(data_path, ncols, nrows):
-    """
-    Parameters
-    ----------
-    data_path: str
-        path to file
-    ncols: int
-        expected number of cols
-    nrows: int
-        expectged number of rows
-    """
-
-    size = ncols * nrows * 4  # DEM and Ifg data are 4 byte floats
-    act_size = os.stat(data_path).st_size
-    if act_size != size:
-        msg = '%s should have size %s, not %s. Is the correct file being used?'
-        raise GammaException(msg % (data_path, size, act_size))
-
-
-def check_step_mismatch(hdr):
-    """
-    Parameters
-    ----------
-    hdr: dict
-        dict corresponding to header file
-    """
-    # pylint: disable= invalid-name
-    xs, ys = [abs(i) for i in [hdr[ifc.PYRATE_X_STEP], hdr[ifc.PYRATE_Y_STEP]]]
-
-    if xs != ys:
-        msg = 'X and Y cell sizes do not match: %s & %s'
-        raise GammaException(msg % (xs, ys))
 
 
 def parse_header(path):

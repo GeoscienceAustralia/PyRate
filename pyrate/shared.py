@@ -36,7 +36,7 @@ import pyproj
 import pkg_resources
 
 from pyrate import ifgconstants as ifc, mpiops
-from pyrate import roipac, gamma, config as cf
+from pyrate import config as cf
 
 VERBOSE = True
 log = logging.getLogger(__name__)
@@ -634,14 +634,14 @@ def write_geotiff(header, data_path, dest, nodata):
     ifg_proc = header[ifc.PYRATE_INSAR_PROCESSOR]
     ncols = header[ifc.PYRATE_NCOLS]
     nrows = header[ifc.PYRATE_NROWS]
+    bytes_per_col, fmtstr = _data_format(ifg_proc, is_ifg, ncols)
+    if is_ifg and ifg_proc == ROIPAC:
+        # roipac ifg has 2 bands
+        _check_raw_data(bytes_per_col*2, data_path, ncols, nrows)
+    else:
+        _check_raw_data(bytes_per_col, data_path, ncols, nrows)
 
-    # need to have gamma/roipac functionality here?
-    if ifg_proc == ROIPAC:
-        roipac.check_raw_data(is_ifg, data_path, ncols, nrows)
-        roipac.check_step_mismatch(header)
-    else:  # GAMMA
-        gamma.check_raw_data(data_path, ncols, nrows)
-        gamma.check_step_mismatch(header)
+    _check_pixel_res_mismatch(header)
 
     driver = gdal.GetDriverByName("GTiff")
     dtype = gdal.GDT_Float32 if (is_ifg or is_incidence) else gdal.GDT_Int16
@@ -679,20 +679,6 @@ def write_geotiff(header, data_path, dest, nodata):
     band = ds.GetRasterBand(1)
     band.SetNoDataValue(nodata)
 
-    if ifg_proc == GAMMA:
-        fmtstr = '!' + ('f' * ncols)  # data format is big endian float32s
-        bytes_per_col = 4
-    elif ifg_proc == ROIPAC:
-        if is_ifg:
-            fmtstr = '<' + ('f' * ncols)  # roipac ifgs are little endian float32s
-            bytes_per_col = 4
-        else:
-            fmtstr = '<' + ('h' * ncols)  # roipac DEM is little endian signed int16
-            bytes_per_col = 2
-    else:  # pragma: no cover
-        msg = 'Unrecognised InSAR Processor: %s' % ifg_proc
-        raise GeotiffException(msg)
-
     row_bytes = ncols * bytes_per_col
 
     with open(data_path, 'rb') as f:
@@ -710,6 +696,50 @@ def write_geotiff(header, data_path, dest, nodata):
     # Needed? Only in ROIPAC code
     ds = None  # manual close
     del ds
+
+
+def _data_format(ifg_proc, is_ifg, ncols):
+    """
+    function to determine the bytesize and format of input files
+    """
+    if ifg_proc == GAMMA:
+        fmtstr = '!' + ('f' * ncols)  # data format is big endian float32s
+        bytes_per_col = 4
+    elif ifg_proc == ROIPAC:
+        if is_ifg:
+            fmtstr = '<' + ('f' * ncols)  # roipac ifgs are little endian float32s
+            bytes_per_col = 4
+        else:
+            fmtstr = '<' + ('h' * ncols)  # roipac DEM is little endian signed int16
+            bytes_per_col = 2
+    else:  # pragma: no cover
+        msg = 'Unrecognised InSAR Processor: %s' % ifg_proc
+        raise GeotiffException(msg)
+    return bytes_per_col, fmtstr
+
+
+def _check_raw_data(bytes_per_col, data_path, ncols, nrows):
+    """
+    function to check the file size is as expected
+    """
+    size = ncols * nrows * bytes_per_col
+    act_size = os.stat(data_path).st_size
+    if act_size != size:
+        msg = '%s should have size %s, not %s. Is the correct file being used?'
+        raise GeotiffException(msg % (data_path, size, act_size))
+
+
+def _check_pixel_res_mismatch(header):
+    """
+    function to check equality of pixel resolution in X and Y dimensions
+    """
+    # pylint: disable=invalid-name
+    xs, ys = [abs(i) for i in [header[ifc.PYRATE_X_STEP],
+                               header[ifc.PYRATE_Y_STEP]]]
+
+    if xs != ys:
+        msg = 'X and Y cell sizes do not match: %s & %s'
+        raise GeotiffException(msg % (xs, ys))
 
 
 def write_unw_from_data_or_geotiff(geotif_or_data, dest_unw, ifg_proc):
