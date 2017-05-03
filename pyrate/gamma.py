@@ -189,7 +189,7 @@ def combine_headers(hdr0, hdr1, dem_hdr):
 
 def manage_headers(dem_header_file, header_paths):
     """
-    Manage and combine  header files for interferograms, DEM and
+    Manage and combine  header files for GAMMA interferograms, DEM and
     incidence files
 
     :param str dem_header_file: DEM header path

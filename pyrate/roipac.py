@@ -72,9 +72,16 @@ ROI_PAC_HEADER_FILE_EXT = "rsc"
 
 
 def parse_date(dstr):
-    """Parses ROI_PAC 'yymmdd' or 'yymmdd-yymmdd' to date or date tuple"""
+    """
+    Parses ROI_PAC 'yymmdd' or 'yymmdd-yymmdd' format string to datetime.
+
+    :param str dstr: 'date' or 'date1-date2' string
+
+    :return: dstr: datetime string or tuple
+    :rtype: str or tuple
+    """
     def to_date(date_str):
-        """convert to date"""
+        """convert string to datetime"""
         year, month, day = [int(date_str[i:i+2]) for i in range(0, 6, 2)]
         year += 1900 if ((year <= 99) and (year >= 50)) else 2000
         return datetime.date(year, month, day)
@@ -86,7 +93,14 @@ def parse_date(dstr):
 
 
 def parse_header(hdr_file):
-    """Parses ROI_PAC header file to a dict"""
+    """
+    Parses ROI_PAC header file metadata to a dictionary.
+
+    :param str hdr_file: path to ROI_PAC *.rsc file
+
+    :return: subset: subset of metadata
+    :rtype: dict
+    """
     with open(hdr_file) as f:
         text = f.read()
 
@@ -150,6 +164,7 @@ def parse_header(hdr_file):
 
 
 def _parse_dates_from(filename):
+    """Determine dates from file name"""
     # pylint: disable=invalid-name
     # process dates from filename if rsc file doesn't have them (skip for DEMs)
     p = re.compile(r'\d{6}-\d{6}')  # match 2 sets of 6 digits separated by '-'
@@ -167,11 +182,16 @@ def _parse_dates_from(filename):
 
 def manage_header(header_file, projection):
     """
-    :param header_file:
-    :param projection: project form dem header
-    ....projection = roipac.parse_header(dem_file)[ifc.PYRATE_DATUM]
-    :return:
+    Manage header files for ROI_PAC interferograms and DEM files.
+    NB: projection = roipac.parse_header(dem_file)[ifc.PYRATE_DATUM]
+
+    :param str header_file: ROI_PAC *.rsc header file path
+    :param projection: Projection obtained from dem header.
+
+    :return: combined_header: Combined metadata dictionary
+    :rtype: dict
     """
+
     header = parse_header(header_file)
     if ifc.PYRATE_DATUM not in header:  # DEM already has DATUM
         header[ifc.PYRATE_DATUM] = projection
