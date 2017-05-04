@@ -26,13 +26,13 @@ import numpy as np
 
 from pyrate import mst
 from pyrate.matlab_mst import IfgListPyRate as IfgList
-from pyrate.matlab_mst import calculate_connect_and_ntrees
-from pyrate.matlab_mst import get_nml, DTYPE
+from pyrate.matlab_mst import calculate_connect_and_ntrees, DTYPE
 from pyrate.matlab_mst import matlab_mst, matlab_mst_bool
 from pyrate.matlab_mst import matlab_mst_kruskal
 from pyrate.matlab_mst import get_sub_structure
 from tests.common import small_data_setup
 from tests.common import small_ifg_file_list
+from tests.common import get_nml
 
 
 class IfgListTest(unittest.TestCase):

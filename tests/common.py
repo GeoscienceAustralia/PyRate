@@ -274,7 +274,7 @@ def mst_calculation(ifg_paths_or_instance, params):
                 i.nodata_value = params[cf.NO_DATA_VALUE]
                 i.convert_to_mm()
         ifg_instance_updated, epoch_list = \
-            matlab_mst.get_nml(ifg_paths_or_instance,
+            get_nml(ifg_paths_or_instance,
                                nodata_value=params[cf.NO_DATA_VALUE],
                                nan_conversion=nan_conversion)
         mst_grid = matlab_mst.matlab_mst_bool(ifg_instance_updated)
@@ -286,6 +286,31 @@ def mst_calculation(ifg_paths_or_instance, params):
     for i in ifgs:
         i.close()
     return mst_grid
+
+
+def get_nml(ifg_list_instance, nodata_value,
+            nan_conversion=False):
+    """
+    A translation of the Matlab Pirate 'getnml.m' function.
+    Note: the Matlab version tested does not have nan's.    
+
+    :param xxx(eg str, tuple, int, float...) ifg_list_instance: xxxx
+    :param float nodata_value: No data value in image
+    :param bool nan_conversion: Convert NaNs
+    
+    :return: ifg_list_instance: replaces in place
+    :rtype: list
+    :return: _epoch_list: list of epochs
+    :rtype: list
+    """
+    _epoch_list, n = algorithm.get_epochs(ifg_list_instance.ifgs)
+    ifg_list_instance.reshape_n(n)
+    if nan_conversion:
+        ifg_list_instance.update_nan_frac(nodata_value)
+        # turn on for nan conversion
+        ifg_list_instance.convert_nans(nan_conversion=nan_conversion)
+    ifg_list_instance.make_data_stack()
+    return ifg_list_instance, _epoch_list
 
 
 def compute_time_series(ifgs, mst_grid, params, vcmt):
