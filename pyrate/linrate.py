@@ -35,28 +35,30 @@ def linear_rate(ifgs, params, vcmt, mst=None):
     Pixel-by-pixel linear rate (velocity) estimation using iterative
     weighted least-squares method.
 
-    :param ifgs: Sequence of ifg objs from which to extract observations
-    :param params: configuration parameters
-    :param vcmt: Derived positive definite temporal variance covariance matrix
-    :param mst: Pixel-wise matrix describing the minimum spanning tree network
-    :param parallel: use multiprocessing or not.
-    :param processes: number of parallel processes to use
+    :param Ifg.object ifgs: Sequence of interferogram objects from which to extract observations
+    :param dict params: Configuration parameters
+    :param ndarray vcmt: Derived positive definite temporal variance covariance matrix
+    :param ndarray mst: Pixel-wise matrix describing the minimum spanning tree network
+    :param int parallel: Use multiprocessing or not
+    :param int processes: Number of parallel processes to use
 
-    :return:
-        rate: linear rate (velocity) map
-        error: standard deviation of the rate map
-        samples: statistics of coherent observations used in calculation
+    :return: rate: Linear rate (velocity) map
+    :rtype: ndarray
+    :return: error: Standard deviation of the rate map
+    :rtype: ndarray
+    :return: samples: Statistics of observations used in calculation
+    :rtype: ndarray
     """
     maxsig, nsig, pthresh, cols, error, mst, obs, parallel, _, \
-        rate, rows, samples, span = linrate_setup(ifgs, mst, params)
+        rate, rows, samples, span = _linrate_setup(ifgs, mst, params)
 
     # pixel-by-pixel calculation.
     # nested loops to loop over the 2 image dimensions
     if parallel == 1:
 
         res = Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
-            delayed(linear_rate_by_rows)(r, cols, mst, nsig, obs,
-                                         pthresh, span, vcmt)
+            delayed(_linear_rate_by_rows)(r, cols, mst, nsig, obs,
+                                          pthresh, span, vcmt)
             for r in range(rows))
         # pylint: disable=redefined-variable-type
         res = np.array(res)
@@ -65,8 +67,8 @@ def linear_rate(ifgs, params, vcmt, mst=None):
         samples = res[:, :, 2]
     elif parallel == 2:
         res = Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
-            delayed(linear_rate_by_pixel)(r, c, mst, nsig, obs,
-                                          pthresh, span, vcmt)
+            delayed(_linear_rate_by_pixel)(r, c, mst, nsig, obs,
+                                           pthresh, span, vcmt)
             for r, c in itertools.product(range(rows), range(cols)))
         res = np.array(res)
 
@@ -77,8 +79,8 @@ def linear_rate(ifgs, params, vcmt, mst=None):
         for i in range(rows):
             for j in range(cols):
                 rate[i, j], error[i, j], samples[i, j] = \
-                    linear_rate_by_pixel(i, j, mst, nsig, obs,
-                                         pthresh, span, vcmt)
+                    _linear_rate_by_pixel(i, j, mst, nsig, obs,
+                                          pthresh, span, vcmt)
 
     # overwrite the data whose error is larger than the
     # maximum sigma user threshold
@@ -91,7 +93,7 @@ def linear_rate(ifgs, params, vcmt, mst=None):
     return rate, error, samples
 
 
-def linrate_setup(ifgs, mst, params):
+def _linrate_setup(ifgs, mst, params):
     """
     Convenience function for linrate setup
     """
@@ -123,31 +125,20 @@ def linrate_setup(ifgs, mst, params):
            rate, rows, samples, span
 
 
-def linear_rate_by_rows(row, cols, mst, NSIG, obs, PTHRESH, span, vcmt):
-    """
-    helper function for parallel 'row' runs
-    :param row:
-    :param cols:
-    :param mst:
-    :param NSIG:
-    :param obs:
-    :param PTHRESH:
-    :param span: span calculated in linarate function
-    :param vcmt: temporal vcm matrix
-    :return:
-    """
+def _linear_rate_by_rows(row, cols, mst, nsig, obs, pthresh, span, vcmt):
+    """helper function for parallel 'row' linear rate computation runs"""
+
     res = np.empty(shape=(cols, 3), dtype=np.float32)
     for col in range(cols):
-        res[col, :] = linear_rate_by_pixel(
-            row, col, mst, NSIG, obs, PTHRESH, span, vcmt)
+        res[col, :] = _linear_rate_by_pixel(
+            row, col, mst, nsig, obs, pthresh, span, vcmt)
 
     return res
 
 
-def linear_rate_by_pixel(row, col, mst, nsig, obs, pthresh, span, vcmt):
-    """
-    Compute linear rate for one pixel
-    """
+def _linear_rate_by_pixel(row, col, mst, nsig, obs, pthresh, span, vcmt):
+    """helper function for computing linear rate for one pixel"""
+
     # find the indices of independent ifgs for given pixel from MST
     ind = np.nonzero(mst[:, row, col])[0]  # only True's in mst are chosen
     # iterative loop to calculate 'robust' velocity for pixel
