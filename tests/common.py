@@ -267,7 +267,7 @@ def mst_calculation(ifg_paths_or_instance, params):
         mst_grid = mst.mst_parallel(ifgs, params)
     else:
         nan_conversion = params[cf.NAN_CONVERSION]
-        assert isinstance(ifg_paths_or_instance, matlab_mst.IfgListPyRate)
+        assert isinstance(ifg_paths_or_instance, matlab_mst._IfgListPyRate)
         ifgs = ifg_paths_or_instance.ifgs
         for i in ifgs:
             if not i.mm_converted:
@@ -277,7 +277,7 @@ def mst_calculation(ifg_paths_or_instance, params):
             get_nml(ifg_paths_or_instance,
                                nodata_value=params[cf.NO_DATA_VALUE],
                                nan_conversion=nan_conversion)
-        mst_grid = matlab_mst.matlab_mst_bool(ifg_instance_updated)
+        mst_grid = matlab_mst._matlab_mst_bool(ifg_instance_updated)
 
     # write mst output to a file
     mst_mat_binary_file = join(params[cf.OUT_DIR], 'mst_mat')
@@ -345,11 +345,11 @@ def calculate_time_series(ifgs, params, vcmt, mst):
 # This is not used anywhere now, but may be useful
 def time_series_interpolation(ifg_instance_updated, params):
 
-    edges = matlab_mst.get_sub_structure(ifg_instance_updated,
+    edges = matlab_mst._get_sub_structure(ifg_instance_updated,
                                          np.zeros(len(ifg_instance_updated.id),
                                                   dtype=bool))
 
-    _, _, ntrees = matlab_mst.matlab_mst_kruskal(edges, ntrees=True)
+    _, _, ntrees = matlab_mst._matlab_mst_kruskal(edges, ntrees=True)
     # if ntrees=1, no interpolation; otherwise interpolate
     if ntrees > 1:
         params[cf.TIME_SERIES_INTERP] = 1

@@ -29,7 +29,7 @@ from pyrate.shared import Ifg
 DTYPE = [('id', int), ('master', int), ('slave', int), ('nan_frac', float)]
 
 
-class IfGMeta(object):
+class _IfGMeta(object):
     """
     Metaclass for Matlab Pirate MST calculation
     """
@@ -82,7 +82,7 @@ class IfGMeta(object):
                                    dtype=np.float32)
 
 
-class IfgListPyRate(IfGMeta):
+class _IfgListPyRate(_IfGMeta):
     """
     Interferogram list class
     Copy of functionality in Matlab Pirate 'getnml.m'
@@ -121,16 +121,16 @@ def _data_setup(datafiles):
     return ifgs
 
 
-def matlab_mst_kruskal(edges, ntrees=False):
+def _matlab_mst_kruskal(edges, ntrees=False):
     """
     This is an implementation of Kruskal minimum spanning tree algorithm
     similar to Matlab Pirate mst_kruskal.m function
-    
+
     :param list edges: List of edges comprising tuples (id, master, slave, nan_frac)
     :param int ntrees: number of trees in the network
-    
-    :return: mst_list
-    :rtype: ndarray
+
+    :return: mst_list subset of input MST list
+    :rtype: list
     :return: connect: matrix of network connections
     :rtype: ndarray
     :return: ntrees: number of trees in network
@@ -168,20 +168,20 @@ def matlab_mst_kruskal(edges, ntrees=False):
 
     # count isolated trees
     if ntrees:
-        return calculate_connect_and_ntrees(connect, mst_list)
+        return _calculate_connect_and_ntrees(connect, mst_list)
     else:
         return [i[0] for i in mst_list]
 
 
-def calculate_connect_and_ntrees(connect, mst_list):
+def _calculate_connect_and_ntrees(connect, mst_list):
     """
     Determine network connections and count isolated network 'trees'
 
     :param ndarray connect: matrix of network connections
     :param ndarray mst_list: MST list of interferograms
-    
-    :return: mst_list
-    :rtype: ndarray
+
+    :return: mst_list: subset of input MST list
+    :rtype: list
     :return: connect: matrix of network connections
     :rtype: ndarray
     :return: ntrees: number of trees in network
@@ -199,9 +199,9 @@ def calculate_connect_and_ntrees(connect, mst_list):
     return [i[0] for i in mst_list], connect, ntrees
 
 
-def matlab_mst(ifg_object, p_threshold=1):
+def _matlab_mst(ifg_object, p_threshold=1):
     """
-    Construct a pixel-by-pixel matrix containing unique minimum spanning 
+    Construct a pixel-by-pixel matrix containing unique minimum spanning
     tree networks.
     This is an implementation of the Matlab Pirate 'make_mstmat.m' function.
 
@@ -211,10 +211,10 @@ def matlab_mst(ifg_object, p_threshold=1):
     :return: mstmat: Minimum Spanning Tree matrix
     :rtype: ndarray
     """
-    edges = get_sub_structure(ifg_object,
-                              np.zeros(len(ifg_object.id), dtype=bool))
+    edges = _get_sub_structure(ifg_object,
+                               np.zeros(len(ifg_object.id), dtype=bool))
 
-    ifg_list_mst_id = matlab_mst_kruskal(edges)
+    ifg_list_mst_id = _matlab_mst_kruskal(edges)
     data_stack = ifg_object.data_stack
     nan_ifg = np.isnan(data_stack)
     mst_mat = np.zeros_like(nan_ifg, dtype=np.bool)
@@ -229,9 +229,9 @@ def matlab_mst(ifg_object, p_threshold=1):
                 if num_ifgs - np.count_nonzero(nan_v) >= p_threshold:
                     # get all valid ifgs from ifglist,
                     # and then select the ones that are not nan on this pixel
-                    edges = get_sub_structure(ifg_object, nan_v)
+                    edges = _get_sub_structure(ifg_object, nan_v)
                     # calculate mst again
-                    ifglist_mst_valid_id = matlab_mst_kruskal(edges)
+                    ifglist_mst_valid_id = _matlab_mst_kruskal(edges)
                     mst_mat[ifglist_mst_valid_id, r, c] = 1
                 else:
                     pass
@@ -240,24 +240,24 @@ def matlab_mst(ifg_object, p_threshold=1):
     return mst_mat
 
 
-def matlab_mst_gen(ifg_instance, p_threshold=1):
+def _matlab_mst_gen(ifg_instance, p_threshold=1):
     """
-    Construct a pixel-by-pixel matrix containing unique minimum spanning 
+    Construct a pixel-by-pixel matrix containing unique minimum spanning
     tree networks.
     This is an implementation of the Matlab Pirate 'make_mstmat.m' function.
     This is a generator version of the 'pyrate.matlab_mst.matlab_mst'
     function that is more memory efficient.
 
-    :param ifg_instance: IfgListPyRate instance
+    :param ifg_instance: _IfgListPyRate instance
     :param int p_threshold: threshold for valid observations for a pixel
 
     :return: mst_yield: Minimum Spanning Tree matrix
     :rtype: ndarray
     """
-    edges = get_sub_structure(ifg_instance,
-                              np.zeros(len(ifg_instance.id), dtype=bool))
+    edges = _get_sub_structure(ifg_instance,
+                               np.zeros(len(ifg_instance.id), dtype=bool))
 
-    ifg_list_mst_id = matlab_mst_kruskal(edges)
+    ifg_list_mst_id = _matlab_mst_kruskal(edges)
     data_stack = ifg_instance.data_stack
     # np.array([i.phase_data for i in ifg_list.ifgs],
     #                   dtype=np.float32)
@@ -278,22 +278,22 @@ def matlab_mst_gen(ifg_instance, p_threshold=1):
             if (num_ifgs - nan_count) >= p_threshold:
                 # get all valid ifgs from ifglist,
                 # and then select the ones that are not nan on this pixel
-                new_edges = get_sub_structure(
+                new_edges = _get_sub_structure(
                     ifg_instance, nan_v)
                 # calculate mst again
-                ifglist_mst_valid_id = matlab_mst_kruskal(new_edges)
+                ifglist_mst_valid_id = _matlab_mst_kruskal(new_edges)
                 mst_yield[ifglist_mst_valid_id] = True
                 yield r, c, mst_yield
             else:
                 yield r, c, mst_yield
 
 
-def matlab_mst_bool(ifg_list_instance, p_threshold=1):
+def _matlab_mst_bool(ifg_list_instance, p_threshold=1):
     """
-    Construct a pixel-by-pixel matrix containing unique minimum spanning 
+    Construct a pixel-by-pixel matrix containing unique minimum spanning
     tree networks.
 
-    :param ifg_list_instance: IfgListPyRate instance
+    :param ifg_list_instance: _IfgListPyRate instance
     :param int p_threshold: Minimum number of non-nan values at any pixel for selection
 
     :return: result: Minimum Spanning Tree matrix
@@ -307,21 +307,21 @@ def matlab_mst_bool(ifg_list_instance, p_threshold=1):
     no_y, no_x = ifg_list_instance.ifgs[0].phase_data.shape
     result = np.empty(shape=(num_ifgs, no_y, no_x), dtype=np.bool)
 
-    for y, x, mst in matlab_mst_gen(ifg_list_instance,
-                                    p_threshold):
+    for y, x, mst in _matlab_mst_gen(ifg_list_instance,
+                                     p_threshold):
         result[:, y, x] = mst
     return result
 
 
-def get_sub_structure(ifg_list, nan_v):
+def _get_sub_structure(ifg_list, nan_v):
     """
     This is an implementation of the getsubstruct.m function from Matlab Pirate.
 
     :param ifg_list: Original ifg_list class instance
     :param ndarray nan_v: All interferogram values at this location
-    
+
     :return: List of tuples (id, master, slave, nan_frac) for chosen ifgs.
-    :rtype: tuple
+    :rtype: list
     """
     indices_chosen = np.nonzero(~nan_v)[0]
 

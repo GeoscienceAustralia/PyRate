@@ -25,11 +25,11 @@ import unittest
 import numpy as np
 
 from pyrate import mst
-from pyrate.matlab_mst import IfgListPyRate as IfgList
-from pyrate.matlab_mst import calculate_connect_and_ntrees, DTYPE
-from pyrate.matlab_mst import matlab_mst, matlab_mst_bool
-from pyrate.matlab_mst import matlab_mst_kruskal
-from pyrate.matlab_mst import get_sub_structure
+from pyrate.matlab_mst import _IfgListPyRate as IfgList
+from pyrate.matlab_mst import _calculate_connect_and_ntrees, DTYPE
+from pyrate.matlab_mst import _matlab_mst, _matlab_mst_bool
+from pyrate.matlab_mst import _matlab_mst_kruskal
+from pyrate.matlab_mst import _get_sub_structure
 from tests.common import small_data_setup
 from tests.common import small_ifg_file_list
 from tests.common import get_nml
@@ -111,9 +111,9 @@ class MatlabMstKruskalTest(unittest.TestCase):
             self.assertEquals((s[0]+1, s[1]+1, s[2]+1, s[3]), m)
 
     def test_mst_kruskal_matlab(self):
-        edges = get_sub_structure(self.ifg_list,
+        edges = _get_sub_structure(self.ifg_list,
                                   np.zeros(len(self.ifg_list.id), dtype=bool))
-        ifg_list_mst = matlab_mst_kruskal(edges)
+        ifg_list_mst = _matlab_mst_kruskal(edges)
         ifg_list_mst = [i + 1 for i in ifg_list_mst]  # add 1 to each index
         self.assertSequenceEqual(ifg_list_mst, self.ifg_list_mst_matlab)
 
@@ -122,13 +122,13 @@ class MSTKruskalCalcConnectAndNTrees(unittest.TestCase):
     def test_calculate_connect_and_ntrees(self):
         connect_start = np.ones(shape=(10, 10), dtype=bool)
         connect_start[1, :-1] = False
-        _, connect, ntrees = calculate_connect_and_ntrees(connect_start, [])
+        _, connect, ntrees = _calculate_connect_and_ntrees(connect_start, [])
         self.assertEqual(ntrees, 9)
         np.testing.assert_array_equal(connect,
                                       np.ones(shape=(9, 10), dtype=bool))
         connect_start[2:5, :-1] = False
 
-        _, connect, ntrees = calculate_connect_and_ntrees(connect_start, [])
+        _, connect, ntrees = _calculate_connect_and_ntrees(connect_start, [])
         self.assertEqual(ntrees, 6)
         np.testing.assert_array_equal(connect,
                                       np.ones(shape=(6, 10), dtype=bool))
@@ -137,12 +137,12 @@ class MSTKruskalCalcConnectAndNTrees(unittest.TestCase):
         connect_start = np.eye(10, dtype=bool)
         connect_start[1, :] = False
         with self.assertRaises(ValueError):
-            calculate_connect_and_ntrees(connect_start, [])
+            _calculate_connect_and_ntrees(connect_start, [])
 
     def test_calculate_connect_and_ntrees_raise_2(self):
         connect_start = np.eye(10, dtype=bool)
         with self.assertRaises(ValueError):
-            calculate_connect_and_ntrees(connect_start, [])
+            _calculate_connect_and_ntrees(connect_start, [])
 
 
 class MSTKruskalConnectAndTreesSmallData(unittest.TestCase):
@@ -150,8 +150,8 @@ class MSTKruskalConnectAndTreesSmallData(unittest.TestCase):
     def test_calculate_connect_and_ntrees_small_data(self):
         ifg_instance = IfgList(small_ifg_file_list())
         ifg_list, _ = get_nml(ifg_instance, nodata_value=0)
-        edges = get_sub_structure(ifg_list, np.zeros(len(ifg_list.id), dtype=bool))
-        mst, connected, ntrees = matlab_mst_kruskal(edges,
+        edges = _get_sub_structure(ifg_list, np.zeros(len(ifg_list.id), dtype=bool))
+        mst, connected, ntrees = _matlab_mst_kruskal(edges,
             ntrees=True
             )
 
@@ -166,9 +166,9 @@ class MSTKruskalConnectAndTreesSmallData(unittest.TestCase):
                      if i+1 in non_overlapping]
         non_overlapping_ifg_isntance = IfgList(datafiles)
         ifg_list, _ = get_nml(non_overlapping_ifg_isntance, nodata_value=0)
-        edges = get_sub_structure(ifg_list,
+        edges = _get_sub_structure(ifg_list,
                                   np.zeros(len(ifg_list.id), dtype=bool))
-        mst, connected, ntrees = matlab_mst_kruskal(edges, ntrees=True)
+        mst, connected, ntrees = _matlab_mst_kruskal(edges, ntrees=True)
         self.assertEqual(connected.shape[0], 4)
         self.assertEqual(ntrees, 4)
 
@@ -181,9 +181,9 @@ class MSTKruskalConnectAndTreesSmallData(unittest.TestCase):
         overlapping_ifg_isntance = IfgList(datafiles)
 
         ifg_list, _ = get_nml(overlapping_ifg_isntance, nodata_value=0)
-        edges = get_sub_structure(ifg_list,
+        edges = _get_sub_structure(ifg_list,
                                   np.zeros(len(ifg_list.id), dtype=bool))
-        _, connected, ntrees = matlab_mst_kruskal(edges, ntrees=True)
+        _, connected, ntrees = _matlab_mst_kruskal(edges, ntrees=True)
         self.assertEqual(ntrees, 4)
         self.assertEqual(connected.shape[0], 4)
 
@@ -195,9 +195,9 @@ class MSTKruskalConnectAndTreesSmallData(unittest.TestCase):
                      if i+1 in overlapping]
         overlapping_ifg_isntance = IfgList(datafiles)
         ifg_list, _ = get_nml(overlapping_ifg_isntance, nodata_value=0)
-        edges = get_sub_structure(ifg_list,
+        edges = _get_sub_structure(ifg_list,
                                   np.zeros(len(ifg_list.id), dtype=bool))
-        mst, connected, ntrees = matlab_mst_kruskal(edges, ntrees=True)
+        mst, connected, ntrees = _matlab_mst_kruskal(edges, ntrees=True)
         self.assertEqual(connected.shape[0], 2)
         self.assertEqual(ntrees, 2)
 
@@ -210,9 +210,9 @@ class MSTKruskalConnectAndTreesSmallData(unittest.TestCase):
         non_overlapping_ifg_isntance = IfgList(datafiles)
 
         ifg_list, _ = get_nml(non_overlapping_ifg_isntance, nodata_value=0)
-        edges = get_sub_structure(ifg_list,
+        edges = _get_sub_structure(ifg_list,
                                   np.zeros(len(ifg_list.id), dtype=bool))
-        _, connected, ntrees = matlab_mst_kruskal(edges, ntrees=True)
+        _, connected, ntrees = _matlab_mst_kruskal(edges, ntrees=True)
         self.assertEqual(ntrees, 2)
         self.assertEqual(connected.shape[0], 2)
 
@@ -247,9 +247,9 @@ class MatlabMSTTests(unittest.TestCase):
         """
         ifg_instance = IfgList(datafiles=self.ifg_file_list)
         ifg_list, _ = get_nml(ifg_instance, nodata_value=0)
-        edges = get_sub_structure(ifg_list,
+        edges = _get_sub_structure(ifg_list,
                                   np.zeros(len(ifg_list.id), dtype=bool))
-        ifg_list_mst_id = matlab_mst_kruskal(edges)
+        ifg_list_mst_id = _matlab_mst_kruskal(edges)
 
         self.assertEquals(len(self.matlab_mst_list),
                           len(ifg_list_mst_id))
@@ -264,7 +264,7 @@ class MatlabMSTTests(unittest.TestCase):
         """
         ifg_instance = IfgList(datafiles=self.ifg_file_list)
         ifg_list, _ = get_nml(ifg_instance, nodata_value=0)
-        mst_mat = matlab_mst(ifg_list, p_threshold=1)
+        mst_mat = _matlab_mst(ifg_list, p_threshold=1)
 
         # path to csv folders from matlab output
         from tests.common import SML_TEST_MATLAB_MST_DIR
@@ -286,7 +286,7 @@ class MatlabMSTTests(unittest.TestCase):
         """
         ifg_instance = IfgList(datafiles=self.ifg_file_list)
         ifg_list, _ = get_nml(ifg_instance, nodata_value=0)
-        mst_mat = matlab_mst_bool(ifg_list, p_threshold=1)
+        mst_mat = _matlab_mst_bool(ifg_list, p_threshold=1)
 
         # path to csv folders from matlab output
         from tests.common import SML_TEST_MATLAB_MST_DIR
@@ -306,8 +306,8 @@ class MatlabMSTTests(unittest.TestCase):
         ifg_instance = IfgList(datafiles=self.ifg_file_list)
         ifg_list, _ = get_nml(ifg_instance, nodata_value=0,
                               nan_conversion=True)
-        mst_mat1 = matlab_mst(ifg_list)
-        mst_mat2 = matlab_mst_bool(ifg_list)
+        mst_mat1 = _matlab_mst(ifg_list)
+        mst_mat2 = _matlab_mst_bool(ifg_list)
 
         np.testing.assert_array_equal(mst_mat2, mst_mat1)
 
@@ -350,7 +350,7 @@ class TestMSTBooleanArray(unittest.TestCase):
             get_nml(small_ifg_instance, nodata_value=0,
                     nan_conversion=nan_conversion)
 
-        mst_matlab = matlab_mst_bool(ifg_instance_updated)
+        mst_matlab = _matlab_mst_bool(ifg_instance_updated)
         np.testing.assert_array_equal(mst_matlab, mst_nx)
 
         # close ifgs for windows
