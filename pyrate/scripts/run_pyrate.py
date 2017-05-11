@@ -149,9 +149,9 @@ def mst_calc(dest_tifs, params, tiles, preread_ifgs):
                      'using NetworkX method')
             mst_tile = mst.mst_multiprocessing(tile, dest_tifs, preread_ifgs)
         elif params[cf.NETWORKX_OR_MATLAB_FLAG] == 0:
-            raise ConfigException('Matlab mst not supported')
+            raise ConfigException('Matlab-style MST not supported')
         else:
-            raise ConfigException('Only NetworkX mst is supported')
+            raise ConfigException('Only NetworkX MST is supported')
             # mst_tile = mst.mst_multiprocessing(tile, dest_tifs, preread_ifgs)
         # locally save the mst_mat
         mst_file_process_n = join(
