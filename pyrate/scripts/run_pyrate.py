@@ -228,12 +228,12 @@ def find_ref_pixel(ifg_paths, params):
     half_patch_size, thresh, grid = refpixel.ref_pixel_setup(ifg_paths, params)
     process_grid = mpiops.array_split(grid)
     save_ref_pixel_blocks(process_grid, half_patch_size, ifg_paths, params)
-    mean_sds = refpixel.ref_pixel_mpi(process_grid, half_patch_size,
+    mean_sds = refpixel._ref_pixel_mpi(process_grid, half_patch_size,
                                       ifg_paths, thresh, params)
     mean_sds = mpiops.comm.gather(mean_sds, root=0)
     if mpiops.rank == MASTER_PROCESS:
         mean_sds = np.hstack(mean_sds)
-    return mpiops.run_once(refpixel.filter_means, mean_sds, grid)
+    return mpiops.run_once(refpixel.find_min_mean, mean_sds, grid)
 
 
 def save_ref_pixel_blocks(grid, half_patch_size, ifg_paths, params):

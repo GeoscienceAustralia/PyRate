@@ -23,7 +23,7 @@ import shutil
 from numpy import nan, mean, std, isnan
 
 from pyrate import config as cf
-from pyrate.refpixel import ref_pixel, step
+from pyrate.refpixel import ref_pixel, _step
 from pyrate.scripts import run_pyrate
 from tests.common import TEST_CONF_ROIPAC
 from tests.common import small_data_setup, MockIfg, small_ifg_file_list
@@ -161,19 +161,19 @@ class ReferencePixelTests(unittest.TestCase):
         radius = 2
         refnx = 2
         exp = [2, 25, 44]
-        act = step(width, refnx, radius)
+        act = _step(width, refnx, radius)
         assert_equal(act, exp)
 
         # test with 3 windows
         refnx = 3
         exp = [2, 17, 32]
-        act = step(width, refnx, radius)
+        act = _step(width, refnx, radius)
         assert_equal(act, exp)
 
         # test 4 search windows
         refnx = 4
         exp = [2, 13, 24, 35]
-        act = step(width, refnx, radius)
+        act = _step(width, refnx, radius)
         assert_equal(act, exp)
 
     def test_ref_pixel(self):
