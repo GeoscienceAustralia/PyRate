@@ -36,7 +36,7 @@ from pyrate import algorithm
 from pyrate import config as cf
 from pyrate.orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, \
     QUADRATIC, PART_CUBIC
-from pyrate.orbital import OrbitalError, orbital_correction
+from pyrate.orbital import OrbitalError, _orbital_correction
 from pyrate.orbital import get_design_matrix, get_network_design_matrix
 from pyrate.orbital import _get_num_params, remove_orbital_error
 from pyrate.shared import Ifg
@@ -209,7 +209,7 @@ class IndependentCorrectionTests(unittest.TestCase):
         params[cf.NAN_CONVERSION] = False
         for i in self.ifgs:
             i.mm_converted = True
-        orbital_correction(self.ifgs, params, None, offset)
+        _orbital_correction(self.ifgs, params, None, offset)
         corrected = array([c.phase_data for c in self.ifgs])
 
         self.assertFalse((orig == corrected).all())
@@ -273,7 +273,7 @@ class ErrorTests(unittest.TestCase):
         params[cf.PARALLEL] = False
         for m in [None, 5, -1, -3, 45.8]:
             params[cf.ORBITAL_FIT_METHOD] = m
-            self.assertRaises(OrbitalError, orbital_correction, ifgs, params, None)
+            self.assertRaises(OrbitalError, _orbital_correction, ifgs, params, None)
 
     def test_multilooked_ifgs_arg(self):
         # check some bad args for network method with multilooked ifgs
@@ -285,11 +285,11 @@ class ErrorTests(unittest.TestCase):
         params[cf.ORBITAL_FIT_DEGREE] = PLANAR
         for a in args:
             args = (ifgs, params, a)
-            self.assertRaises(OrbitalError, orbital_correction, *args)
+            self.assertRaises(OrbitalError, _orbital_correction, *args)
 
         # ensure failure if # ifgs doesn't match # mlooked ifgs
         args = (ifgs, params, ifgs[:4])
-        self.assertRaises(OrbitalError, orbital_correction, *args)
+        self.assertRaises(OrbitalError, _orbital_correction, *args)
 
 
 class NetworkDesignMatrixTests(unittest.TestCase):
@@ -543,7 +543,7 @@ class NetworkCorrectionTests(unittest.TestCase):
         params[cf.ORBITAL_FIT_METHOD] = NETWORK_METHOD
         params[cf.ORBITAL_FIT_DEGREE] = deg
         params[cf.PARALLEL] = False
-        orbital_correction(ifgs, params, None, offset)
+        _orbital_correction(ifgs, params, None, offset)
         act = [i.phase_data for i in ifgs]
         assert_array_almost_equal(act, exp, decimal=5)
 
@@ -606,7 +606,7 @@ class NetworkCorrectionTestsMultilooking(unittest.TestCase):
         params[cf.ORBITAL_FIT_METHOD] = NETWORK_METHOD
         params[cf.ORBITAL_FIT_DEGREE] = deg
         params[cf.PARALLEL] = False
-        orbital_correction(ifgs, params, self.ml_ifgs, offset)
+        _orbital_correction(ifgs, params, self.ml_ifgs, offset)
         act = [i.phase_data for i in ifgs]
         assert_array_almost_equal(act, exp, decimal=4)
 
