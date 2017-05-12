@@ -314,23 +314,12 @@ def orb_fit_calc(ifg_paths, params, preread_ifgs=None):
 
 def ref_phase_estimation(ifg_paths, params, refpx, refpy, preread_ifgs=None):
     """
-    Reference phase estimation
-
-    Parameters
-    ----------
-    ifg_paths: list
-        list of ifg paths
-    params: dict
-        parameters dict corresponding to config file
-    refpx: float
-        reference pixel x-coordinate
-    refpy: float
-        reference pixel y-coordinate
-    preread_ifgs: dict
-        dict containing information regarding ifgs
+    Wrapper function for MPI-enabled reference phase estimation.
+    Refer to documentation for ref_est_phs.estimate_ref_phase.
     """
     # perform some checks on existing ifgs
     #if preread_ifgs and mpiops.rank == MASTER_PROCESS:
+    #TODO: implement MPI capability into ref_phs_est module and remove here
     if preread_ifgs:
         log.info('Checking reference phase estimation status')
         if mpiops.run_once(shared.check_correction_status, preread_ifgs,
@@ -371,22 +360,8 @@ def ref_phase_estimation(ifg_paths, params, refpx, refpy, preread_ifgs=None):
 
 def ref_phs_method2(ifg_paths, params, refpx, refpy):
     """
-    Reference phase computation using method 2
-    Parameters
-    ----------
-    ifg_paths: list
-        list of ifg paths
-    params: dict
-        parameters dict corresponding to config file
-    refpx: float
-        reference pixel x-coordinate
-    refpy: float
-        reference pixel y-coordinate
-
-    Returns
-    -------
-    ref_phs: ndarray
-        array of reference phase of shape ifg.shape
+    MPI wrapper for reference phase computation using method 2.
+    Refer to documentation for ref_est_phs.est_ref_phase_method2.
     """
     half_chip_size = int(np.floor(params[cf.REF_CHIP_SIZE] / 2.0))
     chipsize = 2 * half_chip_size + 1
@@ -397,7 +372,7 @@ def ref_phs_method2(ifg_paths, params, refpx, refpy):
         ifg = Ifg(ifg_path)
         ifg.open(readonly=False)
         phase_data = ifg.phase_data
-        ref_ph = rpe.est_ref_phs_method2(phase_data,
+        ref_ph = rpe._est_ref_phs_method2(phase_data,
                                          half_chip_size,
                                          refpx, refpy, thresh)
         phase_data -= ref_ph
@@ -414,19 +389,8 @@ def ref_phs_method2(ifg_paths, params, refpx, refpy):
 
 def ref_phs_method1(ifg_paths, comp):
     """
-    Reference phase computation using method 1
-
-    Parameters
-    ----------
-    ifg_paths: list
-        list of ifg paths
-    comp: ndarray
-        array of phase sum of all ifgs of shape ifg.shape
-
-    Returns
-    -------
-    ref_phs: ndarray
-        array of reference phase of shape ifg.shape
+    MPI wrapper for reference phase computation using method 1.
+    Refer to documentation for ref_est_phs.est_ref_phase_method1.
     """
 
     def _inner(ifg_path):
@@ -434,7 +398,7 @@ def ref_phs_method1(ifg_paths, comp):
         ifg = Ifg(ifg_path)
         ifg.open(readonly=False)
         phase_data = ifg.phase_data
-        ref_phase = rpe.est_ref_phs_method1(phase_data, comp)
+        ref_phase = rpe._est_ref_phs_method1(phase_data, comp)
         phase_data -= ref_phase
         md = ifg.meta_data
         md[ifc.PYRATE_REF_PHASE] = ifc.REF_PHASE_REMOVED
