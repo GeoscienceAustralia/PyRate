@@ -40,8 +40,7 @@ from pyrate import covariance as vcm_module
 from pyrate.aps import wrap_spatio_temporal_filter
 #from pyrate.compat import PyAPS_INSTALLED
 from pyrate.config import ConfigException
-from pyrate.shared import Ifg, PrereadIfg, prepare_ifg, save_numpy_phase, \
-    get_projection_info, get_tiles
+from pyrate.shared import Ifg, PrereadIfg, save_numpy_phase, get_tiles
 
 #if PyAPS_INSTALLED:  # pragma: no cover
 #    from pyrate.pyaps import check_aps_ifgs, aps_delay_required
@@ -92,7 +91,7 @@ def create_ifg_dict(dest_tifs, params, tiles):
     process_tifs = mpiops.array_split(dest_tifs)
     save_numpy_phase(dest_tifs, tiles, params)
     for d in process_tifs:
-        ifg = prepare_ifg(d, params)
+        ifg = shared._prep_ifg(d, params)
         ifgs_dict[d] = PrereadIfg(path=d,
                                   nan_fraction=ifg.nan_fraction,
                                   master=ifg.master,
@@ -109,7 +108,7 @@ def create_ifg_dict(dest_tifs, params, tiles):
     if mpiops.rank == MASTER_PROCESS:
 
         # add some extra information that's also useful later
-        gt, md, wkt = get_projection_info(process_tifs[0])
+        gt, md, wkt = shared.get_geotiff_header_info(process_tifs[0])
         ifgs_dict['epochlist'] = algorithm.get_epochs(ifgs_dict)[0]
         ifgs_dict['gt'] = gt
         ifgs_dict['md'] = md

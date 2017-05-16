@@ -150,7 +150,7 @@ class MatlabTimeSeriesEquality(unittest.TestCase):
 
         dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
         # start run_pyrate copy
-        ifgs = shared.pre_prepare_ifgs(dest_paths, params)
+        ifgs = common.pre_prepare_ifgs(dest_paths, params)
         mst_grid = common.mst_calculation(dest_paths, params)
         refx, refy = run_pyrate.ref_pixel_calc(dest_paths, params)
         # Estimate and remove orbit errors
@@ -259,7 +259,7 @@ class MatlabTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
 
         dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
         # start run_pyrate copy
-        ifgs = shared.pre_prepare_ifgs(dest_paths, params)
+        ifgs = common.pre_prepare_ifgs(dest_paths, params)
         mst_grid = common.mst_calculation(dest_paths, params)
 
         refx, refy = run_pyrate.ref_pixel_calc(dest_paths, params)

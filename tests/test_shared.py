@@ -40,7 +40,7 @@ from pyrate import prepifg
 from pyrate import shared
 from pyrate.scripts import run_prepifg
 from pyrate.shared import Ifg, DEM, RasterException
-from pyrate.shared import cell_size, utm_zone
+from pyrate.shared import cell_size, _utm_zone
 
 from tests import common
 
@@ -496,19 +496,19 @@ class GeodesyTests(unittest.TestCase):
     def test_utm_zone(self):
         # test some different zones (collected manually)
         for lon in [174.0, 176.5, 179.999, 180.0]:
-            self.assertEqual(60, utm_zone(lon))
+            self.assertEqual(60, _utm_zone(lon))
 
         for lon in [144.0, 144.1, 146.3456, 149.9999]:
-            self.assertEqual(55, utm_zone(lon))
+            self.assertEqual(55, _utm_zone(lon))
 
         for lon in [-180.0, -179.275, -176.925]:
-            self.assertEqual(1, utm_zone(lon))
+            self.assertEqual(1, _utm_zone(lon))
 
         for lon in [-72.0, -66.1]:
-            self.assertEqual(19, utm_zone(lon))
+            self.assertEqual(19, _utm_zone(lon))
 
         for lon in [0.0, 0.275, 3.925, 5.999]:
-            self.assertEqual(31, utm_zone(lon))
+            self.assertEqual(31, _utm_zone(lon))
 
 
     def test_cell_size_polar_region(self):

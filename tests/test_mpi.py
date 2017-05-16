@@ -33,12 +33,11 @@ import pyrate.orbital
 import pyrate.shared
 import tests.common
 from pyrate import ref_phs_est as rpe
-from pyrate import shared
 from pyrate import covariance
 from pyrate import refpixel
 from pyrate.scripts import run_pyrate, run_prepifg, postprocessing
 from tests.common import small_data_setup, reconstruct_mst, \
-    reconstruct_linrate, SML_TEST_DEM_HDR_GAMMA
+    reconstruct_linrate, SML_TEST_DEM_HDR_GAMMA, pre_prepare_ifgs
 from tests import common
 from tests.test_covariance import matlab_maxvar
 from pyrate import config as cf
@@ -130,7 +129,7 @@ def modify_config(request, tempdir, get_config):
     params_dict[cf.IFG_LKSX] = request.param
     params_dict[cf.IFG_LKSY] = request.param
     params_dict[cf.OBS_DIR] = tempdir()
-    shared.copytree(common.SML_TEST_GAMMA, params_dict[cf.OBS_DIR])
+    common.copytree(common.SML_TEST_GAMMA, params_dict[cf.OBS_DIR])
     params_dict[cf.IFG_FILE_LIST] = os.path.join(
         params_dict[cf.OBS_DIR], 'ifms_17')
     params_dict[cf.PARALLEL] = False
@@ -276,14 +275,14 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
             base_unw_paths, crop, params_old, xlks)
         run_prepifg.gamma_prepifg(base_unw_paths, params_old)
 
-        ifgs = shared.pre_prepare_ifgs(dest_paths, params_old)
+        ifgs = pre_prepare_ifgs(dest_paths, params_old)
         mst_grid = tests.common.mst_calculation(dest_paths, params_old)
         refy, refx = refpixel.ref_pixel(ifgs, params_old)
         assert (refx == refpx) and (refy == refpy)  # both must match
         pyrate.orbital.remove_orbital_error(ifgs, params_old)
         ifgs = common.prepare_ifgs_without_phase(dest_paths, params_old)
         rpe.estimate_ref_phase(ifgs, params_old, refx, refy)
-        ifgs = shared.pre_prepare_ifgs(dest_paths, params_old)
+        ifgs = pre_prepare_ifgs(dest_paths, params_old)
         r_dist = covariance.RDist(ifgs[0])()
         maxvar_s = [covariance.cvd(i, params_old, r_dist)[0] for i in ifgs]
         vcmt_s = covariance.get_vcmt(ifgs, maxvar)
