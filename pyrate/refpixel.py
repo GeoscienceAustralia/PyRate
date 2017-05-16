@@ -18,6 +18,7 @@ This Python module implements an algorithm to search for the location
 of the interferometric reference pixel
 """
 import os
+from os.path import join
 import logging
 from itertools import product
 import numpy as np
@@ -131,6 +132,36 @@ def ref_pixel_setup(ifgs_or_paths, params):
     xsteps = _step(cols, refnx, half_patch_size)
     log.info('Ref pixel setup finished')
     return half_patch_size, thresh, list(product(ysteps, xsteps))
+
+
+def save_ref_pixel_blocks(grid, half_patch_size, ifg_paths, params):
+    """
+    Save reference pixel grid blocks to numpy array files on disk
+
+    :param list grid: List of tuples (y, x) corresponding to ref pixel grids
+    :param int half_patch_size: patch size in pixels
+    :param list ifg_paths: list of interferogram paths
+    :param dict params: Dictionary of configuration parameters
+
+    :return: None, file saved to disk
+    """
+    log.info('Saving ref pixel blocks')
+    outdir = params[cf.TMPDIR]
+    for pth in ifg_paths:
+        ifg = Ifg(pth)
+        ifg.open(readonly=True)
+        ifg.nodata_value = params[cf.NO_DATA_VALUE]
+        ifg.convert_to_nans()
+        ifg.convert_to_mm()
+        for y, x in grid:
+            data = ifg.phase_data[y - half_patch_size:y + half_patch_size + 1,
+                                  x - half_patch_size:x + half_patch_size + 1]
+
+            data_file = join(outdir, 'ref_phase_data_{b}_{y}_{x}.npy'.format(
+                    b=os.path.basename(pth).split('.')[0], y=y, x=x))
+            np.save(file=data_file, arr=data)
+        ifg.close()
+    log.info('Saved ref pixel blocks')
 
 
 def _ref_pixel_mpi(process_grid, half_patch_size, ifgs, thresh, params):

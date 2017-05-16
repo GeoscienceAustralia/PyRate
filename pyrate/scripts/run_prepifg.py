@@ -46,8 +46,9 @@ ROIPAC = 0
 
 def main(params=None):
     """
-    :param params: parameters dictionary read in from the config file
-    :return:
+    Main workflow function for preparing interferograms for PyRate.
+
+    :param dict params: Parameters dictionary read in from the config file
     """
     # TODO: looks like base_ifg_paths are ordered according to ifg list
     # This probably won't be a problem because input list won't be reordered
@@ -102,15 +103,11 @@ def main(params=None):
 
 def roipac_prepifg(base_ifg_paths, params):
     """
-    ROI_PAC prepifg which combines both conversion to geotiff and multilooking
-     and cropping.
+    Prepare ROI_PAC interferograms which combines both conversion to geotiff
+    and multilooking/cropping operations.
 
-    Parameters
-    ----------
-    base_ifg_paths: list
-        list of unwrapped inteferrograms
-    params: dict
-        parameters dict corresponding to config file
+    :param list base_ifg_paths: List of unwrapped interferograms
+    :param dict params: Parameters dictionary corresponding to config file
     """
     log.info("Preparing ROI_PAC format interferograms")
     parallel = params[cf.PARALLEL]
@@ -141,15 +138,11 @@ def roipac_prepifg(base_ifg_paths, params):
 
 def gamma_prepifg(base_unw_paths, params):
     """
-    GAMMA prepifg which combines both conversion to geotiff and multilooking
-     and cropping.
+    Prepare GAMMA interferograms which combines both conversion to geotiff
+    and multilooking/cropping operations.
 
-    Parameters
-    ----------
-    base_unw_paths: list
-        list of unwrapped inteferrograms
-    params: dict
-        parameters dict corresponding to config file
+    :param list base_ifg_paths: List of unwrapped interferograms
+    :param dict params: Parameters dictionary corresponding to config file
     """
     # pylint: disable=expression-not-assigned
     log.info("Preparing GAMMA format interferograms")
@@ -160,11 +153,11 @@ def gamma_prepifg(base_unw_paths, params):
         log.info("Running prepifg in parallel with {} "
                  "processes".format(params[cf.PROCESSES]))
         dest_base_ifgs = Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
-            delayed(gamma_multiprocessing)(p, params)
+            delayed(_gamma_multiprocessing)(p, params)
             for p in base_unw_paths)
     else:
         log.info("Running prepifg in serial")
-        dest_base_ifgs = [gamma_multiprocessing(b, params)
+        dest_base_ifgs = [_gamma_multiprocessing(b, params)
                           for b in base_unw_paths]
 
     ifgs = [prepifg.dem_or_ifg(p) for p in dest_base_ifgs]
@@ -183,16 +176,9 @@ def gamma_prepifg(base_unw_paths, params):
                              thresh, crop) for i in dest_base_ifgs]
 
 
-def gamma_multiprocessing(unw_path, params):
+def _gamma_multiprocessing(unw_path, params):
     """
-    Gamma multiprocessing wrapper for geotif conversion
-
-    Parameters
-    ----------
-    unw_path: str
-        unwrapped interferogram path
-    params: dict
-        parameters dict corresponding to config file
+    Multiprocessing wrapper for GAMMA geotiff conversion
     """
     dem_hdr_path = params[cf.DEM_HEADER_FILE]
     slc_dir = params[cf.SLC_DIR]

@@ -39,16 +39,21 @@ MASTER_PROCESS = 0
 
 
 def main(config_file, rows, cols):
-    """ postprocessing main func"""
+    """
+    PyRate post-processing main function. Assembles product tiles in to
+    single geotiff files
+    """
     # setup paths
     _, _, params = cf.get_ifg_paths(config_file)
-    postprocess_linrate(rows, cols, params)
+    _postprocess_linrate(rows, cols, params)
     if params[cf.TIME_SERIES_CAL]:
-        postprocess_timeseries(rows, cols, params)
+        _postprocess_timeseries(rows, cols, params)
 
 
-def postprocess_linrate(rows, cols, params):
-    """ Postprocess linear rate """
+def _postprocess_linrate(rows, cols, params):
+    """
+    Postprocess linear rate outputs
+    """
     # pylint: disable=expression-not-assigned
     # setup paths
     xlks, _, crop = cf.transform_params(params)
@@ -62,17 +67,19 @@ def postprocess_linrate(rows, cols, params):
 
     # linrate aggregation
     if mpiops.size >= 3:
-        [save_linrate(ifgs, params, tiles, out_type=t)
+        [_save_linrate(ifgs, params, tiles, out_type=t)
          for i, t in enumerate(['linrate', 'linerror', 'linsamples'])
          if i == mpiops.rank]
     else:
         if mpiops.rank == MASTER_PROCESS:
-            [save_linrate(ifgs, params, tiles, out_type=t)
+            [_save_linrate(ifgs, params, tiles, out_type=t)
              for t in ['linrate', 'linerror', 'linsamples']]
 
 
-def save_linrate(ifgs_dict, params, tiles, out_type):
-    """ Save linear rate outputs"""
+def _save_linrate(ifgs_dict, params, tiles, out_type):
+    """
+    Save linear rate outputs
+    """
     log.info('Starting PyRate postprocessing {}'.format(out_type))
     gt, md, wkt = ifgs_dict['gt'], ifgs_dict['md'], ifgs_dict['wkt']
     epochlist = ifgs_dict['epochlist']
@@ -99,8 +106,10 @@ def save_linrate(ifgs_dict, params, tiles, out_type):
     log.info('Finished PyRate postprocessing {}'.format(out_type))
 
 
-def postprocess_timeseries(rows, cols, params):
-    """ Postprocess time series output """
+def _postprocess_timeseries(rows, cols, params):
+    """
+    Postprocess time series output
+    """
     # pylint: disable=too-many-locals
     xlks, _, crop = cf.transform_params(params)
     base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST])
@@ -138,7 +147,7 @@ def postprocess_timeseries(rows, cols, params):
         tscum_g = np.empty(shape=ifgs[0].shape, dtype=np.float32)
         if i < no_ts_tifs:
             for n, t in enumerate(tiles):
-                assemble_tiles(i, n, t, tscum_g, output_dir, 'tscuml')
+                _assemble_tiles(i, n, t, tscum_g, output_dir, 'tscuml')
             md[ifc.EPOCH_DATE] = epochlist.dates[i + 1]
             # sequence position; first time slice is #0
             md['SEQUENCE_POSITION'] = i+1
@@ -151,7 +160,7 @@ def postprocess_timeseries(rows, cols, params):
             tsincr_g = np.empty(shape=ifgs[0].shape, dtype=np.float32)
             i %= no_ts_tifs
             for n, t in enumerate(tiles):
-                assemble_tiles(i, n, t, tsincr_g, output_dir, 'tsincr')
+                _assemble_tiles(i, n, t, tsincr_g, output_dir, 'tsincr')
             md[ifc.EPOCH_DATE] = epochlist.dates[i + 1]
             # sequence position; first time slice is #0
             md['SEQUENCE_POSITION'] = i+1
@@ -164,9 +173,11 @@ def postprocess_timeseries(rows, cols, params):
              'total {}'.format(mpiops.rank, len(process_tifs), no_ts_tifs * 2))
 
 
-def assemble_tiles(i, n, tile, tsincr_g, output_dir, outtype):
+def _assemble_tiles(i, n, tile, tsincr_g, output_dir, outtype):
     # pylint: disable=too-many-arguments
-    """ A reusable time series assembling function"""
+    """
+    A reusable time series tile assembly function
+    """
     tsincr_file = os.path.join(output_dir,
                                '{}_{}.npy'.format(outtype, n))
     tsincr = np.load(file=tsincr_file)

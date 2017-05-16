@@ -29,7 +29,7 @@ from pyrate import config as cf, mpiops, shared
 from pyrate.algorithm import get_epochs
 from pyrate.aps.spatial import spatial_low_pass_filter
 from pyrate.aps.temporal import tlpfilter
-from pyrate.scripts.postprocessing import assemble_tiles
+from pyrate.scripts.postprocessing import _assemble_tiles
 from pyrate.shared import Ifg
 from pyrate import ifgconstants as ifc
 from pyrate.timeseries import time_series
@@ -151,7 +151,7 @@ def _assemble_tsincr(ifg_paths, params, preread_ifgs, tiles, nvels):
     tsincr_g = np.empty(shape=shape, dtype=np.float32)
     for i in range(nvels):
         for n, t in enumerate(tiles):
-            assemble_tiles(i, n, t, tsincr_g[:, :, i], params[cf.TMPDIR],
+            _assemble_tiles(i, n, t, tsincr_g[:, :, i], params[cf.TMPDIR],
                            'tsincr_aps')
     return tsincr_g
 

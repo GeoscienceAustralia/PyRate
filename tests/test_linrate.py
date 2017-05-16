@@ -105,7 +105,7 @@ class MatlabEqualityTest(unittest.TestCase):
         ifgs = pre_prepare_ifgs(dest_paths, params)
         mst_grid = tests.common.mst_calculation(dest_paths, params)
 
-        refx, refy = run_pyrate.ref_pixel_calc(dest_paths, params)
+        refx, refy = run_pyrate._ref_pixel_calc(dest_paths, params)
 
         # Estimate and remove orbit errors
         pyrate.orbital.remove_orbital_error(ifgs, params)

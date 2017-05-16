@@ -197,7 +197,7 @@ class MatlabEqualityTest(unittest.TestCase):
         base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST])
         dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
-        refx, refy = run_pyrate.ref_pixel_calc(dest_paths, params)
+        refx, refy = run_pyrate._ref_pixel_calc(dest_paths, params)
         pyrate.orbital.remove_orbital_error(ifgs, params)
         ifgs = prepare_ifgs_without_phase(dest_paths, params)
         _, cls.ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)

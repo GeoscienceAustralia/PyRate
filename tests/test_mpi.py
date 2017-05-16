@@ -175,14 +175,14 @@ def test_vcm_matlab_vs_mpi(mpisync, tempdir, get_config):
     mpiops.comm.barrier()
 
     tiles = pyrate.shared.get_tiles(dest_paths[0], rows=1, cols=1)
-    preread_ifgs = run_pyrate.create_ifg_dict(dest_paths,
+    preread_ifgs = run_pyrate._create_ifg_dict(dest_paths,
                                               params=params_dict,
                                               tiles=tiles)
-    refpx, refpy = run_pyrate.ref_pixel_calc(dest_paths, params_dict)
-    run_pyrate.orb_fit_calc(dest_paths, params_dict)
-    run_pyrate.ref_phase_estimation(dest_paths, params_dict, refpx, refpy)
+    refpx, refpy = run_pyrate._ref_pixel_calc(dest_paths, params_dict)
+    run_pyrate._orb_fit_calc(dest_paths, params_dict)
+    run_pyrate._ref_phase_estimation(dest_paths, params_dict, refpx, refpy)
 
-    maxvar, vcmt = run_pyrate.maxvar_vcm_calc(dest_paths, params_dict,
+    maxvar, vcmt = run_pyrate._maxvar_vcm_calc(dest_paths, params_dict,
                                               preread_ifgs)
     np.testing.assert_array_almost_equal(maxvar, matlab_maxvar, decimal=4)
     np.testing.assert_array_almost_equal(matlab_vcm, vcmt, decimal=3)
@@ -253,8 +253,8 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
 
     tiles = mpiops.run_once(pyrate.shared.get_tiles, dest_paths[0],
                             rows=row_splits, cols=col_splits)
-    postprocessing.postprocess_linrate(row_splits, col_splits, params)
-    postprocessing.postprocess_timeseries(row_splits, col_splits, params)
+    postprocessing._postprocess_linrate(row_splits, col_splits, params)
+    postprocessing._postprocess_timeseries(row_splits, col_splits, params)
     ifgs_mpi_out_dir = params[cf.OUT_DIR]
     ifgs_mpi = small_data_setup(datafiles=dest_paths)
 

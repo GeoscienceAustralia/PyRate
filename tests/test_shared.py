@@ -435,7 +435,7 @@ class WriteUnwTest(unittest.TestCase):
                 geotif_or_data=g, dest_unw= dest_unw, ifg_proc=1)
             dest_unws.append(dest_unw)
 
-        new_geotiffs = [run_prepifg.gamma_multiprocessing(b, self.params)
+        new_geotiffs = [run_prepifg._gamma_multiprocessing(b, self.params)
                         for b in dest_unws]
 
         for g, u in zip(geotiffs, new_geotiffs):
@@ -465,7 +465,7 @@ class WriteUnwTest(unittest.TestCase):
             new_base_unw_paths.append(dest_unw)
 
         # make sure we can recovert the unws to gettiffs
-        new_geotiffs = [run_prepifg.gamma_multiprocessing(b, self.params)
+        new_geotiffs = [run_prepifg._gamma_multiprocessing(b, self.params)
                         for b in new_base_unw_paths]
 
         # assert data equal

@@ -712,7 +712,7 @@ class MatlabComparisonTestsOrbfitMethod1(unittest.TestCase):
     def test_orbital_correction_matlab_equality(self):
         from pyrate.scripts import run_pyrate
 
-        run_pyrate.orb_fit_calc(self.ifg_paths, self.params)
+        run_pyrate._orb_fit_calc(self.ifg_paths, self.params)
 
         onlyfiles = [f for f in os.listdir(SML_TEST_MATLAB_ORBITAL_DIR)
             if os.path.isfile(os.path.join(SML_TEST_MATLAB_ORBITAL_DIR, f))

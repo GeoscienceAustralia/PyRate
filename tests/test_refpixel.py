@@ -238,14 +238,14 @@ class MatlabEqualityTest(unittest.TestCase):
         shutil.rmtree(self.params[cf.OUT_DIR])
 
     def test_small_test_data_ref_pixel(self):
-        refx, refy = run_pyrate.ref_pixel_calc(self.ifg_paths, self.params)
+        refx, refy = run_pyrate._ref_pixel_calc(self.ifg_paths, self.params)
         self.assertEqual(refx, 38)
         self.assertEqual(refy, 58)
         self.assertAlmostEqual(0.8, self.params[cf.REF_MIN_FRAC])
 
     def test_more_small_test_data_ref_pixel(self):
 
-        refx, refy = run_pyrate.ref_pixel_calc(self.ifg_paths,
+        refx, refy = run_pyrate._ref_pixel_calc(self.ifg_paths,
                                                self.params_alt_ref_frac)
         self.assertEqual(refx, 38)
         self.assertEqual(refy, 58)
@@ -253,7 +253,7 @@ class MatlabEqualityTest(unittest.TestCase):
 
     def test_small_test_data_ref_pixel_all_2(self):
 
-        refx, refy = run_pyrate.ref_pixel_calc(self.ifg_paths,
+        refx, refy = run_pyrate._ref_pixel_calc(self.ifg_paths,
                                                self.params_all_2s)
         self.assertEqual(refx, 25)
         self.assertEqual(refy, 2)
@@ -261,7 +261,7 @@ class MatlabEqualityTest(unittest.TestCase):
 
     def test_small_test_data_ref_chipsize_15(self):
 
-        refx, refy = run_pyrate.ref_pixel_calc(self.ifg_paths,
+        refx, refy = run_pyrate._ref_pixel_calc(self.ifg_paths,
                                                self.params_chipsize_15)
         self.assertEqual(refx, 7)
         self.assertEqual(refy, 7)
@@ -269,7 +269,7 @@ class MatlabEqualityTest(unittest.TestCase):
 
     def test_small_test_data_ref_all_1(self):
 
-        refx, refy = run_pyrate.ref_pixel_calc(self.ifg_paths,
+        refx, refy = run_pyrate._ref_pixel_calc(self.ifg_paths,
                                                self.params_all_1s)
 
         self.assertAlmostEqual(0.7, self.params_all_1s[cf.REF_MIN_FRAC])
@@ -303,14 +303,14 @@ class MatlabEqualityTestMultiprocessParallel(unittest.TestCase):
         shutil.rmtree(self.params[cf.OUT_DIR])
 
     def test_small_test_data_ref_pixel(self):
-        refx, refy = run_pyrate.ref_pixel_calc(self.ifg_paths, self.params)
+        refx, refy = run_pyrate._ref_pixel_calc(self.ifg_paths, self.params)
         self.assertEqual(refx, 38)
         self.assertEqual(refy, 58)
         self.assertAlmostEqual(0.8, self.params[cf.REF_MIN_FRAC])
 
     def test_more_small_test_data_ref_pixel(self):
 
-        refx, refy = run_pyrate.ref_pixel_calc(self.ifg_paths,
+        refx, refy = run_pyrate._ref_pixel_calc(self.ifg_paths,
                                                self.params_alt_ref_frac)
         self.assertEqual(refx, 38)
         self.assertEqual(refy, 58)
@@ -318,7 +318,7 @@ class MatlabEqualityTestMultiprocessParallel(unittest.TestCase):
 
     def test_small_test_data_ref_pixel_all_2(self):
 
-        refx, refy = run_pyrate.ref_pixel_calc(self.ifg_paths,
+        refx, refy = run_pyrate._ref_pixel_calc(self.ifg_paths,
                                                self.params_all_2s)
         self.assertEqual(refx, 25)
         self.assertEqual(refy, 2)
@@ -326,7 +326,7 @@ class MatlabEqualityTestMultiprocessParallel(unittest.TestCase):
 
     def test_small_test_data_ref_chipsize_15(self):
 
-        refx, refy = run_pyrate.ref_pixel_calc(self.ifg_paths,
+        refx, refy = run_pyrate._ref_pixel_calc(self.ifg_paths,
                                                self.params_chipsize_15)
         self.assertEqual(refx, 7)
         self.assertEqual(refy, 7)
@@ -334,7 +334,7 @@ class MatlabEqualityTestMultiprocessParallel(unittest.TestCase):
 
     def test_small_test_data_ref_all_1(self):
 
-        refx, refy = run_pyrate.ref_pixel_calc(self.ifg_paths,
+        refx, refy = run_pyrate._ref_pixel_calc(self.ifg_paths,
                                                self.params_all_1s)
 
         self.assertAlmostEqual(0.7, self.params_all_1s[cf.REF_MIN_FRAC])
