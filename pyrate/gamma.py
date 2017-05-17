@@ -18,7 +18,7 @@ This Python module contains tools for reading GAMMA format input data.
 """
 # coding: utf-8
 
-import os
+#import os
 import datetime
 import numpy as np
 import pyrate.ifgconstants as ifc
@@ -38,42 +38,8 @@ RADIANS = 'RADIANS'
 GAMMA = 'GAMMA'
 
 
-def check_raw_data(data_path, ncols, nrows):
-    """
-    Parameters
-    ----------
-    data_path: str
-        path to file
-    ncols: int
-        expected number of cols
-    nrows: int
-        expectged number of rows
-    """
-
-    size = ncols * nrows * 4  # DEM and Ifg data are 4 byte floats
-    act_size = os.stat(data_path).st_size
-    if act_size != size:
-        msg = '%s should have size %s, not %s. Is the correct file being used?'
-        raise GammaException(msg % (data_path, size, act_size))
-
-
-def check_step_mismatch(hdr):
-    """
-    Parameters
-    ----------
-    hdr: dict
-        dict corresponding to header file
-    """
-    # pylint: disable= invalid-name
-    xs, ys = [abs(i) for i in [hdr[ifc.PYRATE_X_STEP], hdr[ifc.PYRATE_Y_STEP]]]
-
-    if xs != ys:
-        msg = 'X and Y cell sizes do not match: %s & %s'
-        raise GammaException(msg % (xs, ys))
-
-
-def parse_header(path):
-    """Parses all GAMMA epoch/DEM header file fields into a dictionary"""
+def _parse_header(path):
+    """Parses all GAMMA header file fields into a dictionary"""
     with open(path) as f:
         text = f.read().splitlines()
         raw_segs = [line.split() for line in text if ':' in line]
@@ -83,16 +49,23 @@ def parse_header(path):
 
 
 def parse_epoch_header(path):
-    """Returns dict of the minimum required epoch metadata needed for PyRate"""
-    lookup = parse_header(path)
-    subset = parse_date_time(lookup)
+    """
+    Returns dictionary of epoch metadata required for PyRate
+
+    :param str path: Full path to Gamma *slc.par file
+
+    :return: subset: subset of full metadata
+    :rtype: dict
+    """
+    lookup = _parse_header(path)
+    subset = _parse_date_time(lookup)
 
     # handle conversion of radar frequency to wavelength
     freq, unit = lookup[GAMMA_FREQUENCY]
     if unit != "Hz":  # pragma: no cover
         msg = 'Unrecognised unit field for radar_frequency: %s'
         raise GammaException(msg % unit)
-    subset[ifc.PYRATE_WAVELENGTH_METRES] = frequency_to_wavelength(float(freq))
+    subset[ifc.PYRATE_WAVELENGTH_METRES] = _frequency_to_wavelength(float(freq))
 
     incidence, unit = lookup[GAMMA_INCIDENCE]
     if unit != "degrees":  # pragma: no cover
@@ -103,8 +76,8 @@ def parse_epoch_header(path):
     return subset
 
 
-def parse_date_time(lookup):
-    """Grab date and time information and convert to datetime objects"""
+def _parse_date_time(lookup):
+    """Grab date and time metadata and convert to datetime objects"""
     subset = {}
     if len(lookup[GAMMA_DATE]) == 3:  # pragma: no cover
         year, month, day, = [int(float(i)) for i in lookup[GAMMA_DATE][:3]]
@@ -124,8 +97,15 @@ def parse_date_time(lookup):
 
 
 def parse_dem_header(path):
-    """Returns dict of metadata for converting GAMMA to custom PyRate GeoTIFF"""
-    lookup = parse_header(path)
+    """
+    Returns dictionary of DEM metadata required for PyRate
+
+    :param str path: Full path to Gamma *dem.par file
+
+    :return: subset: subset of full metadata
+    :rtype: dict
+    """
+    lookup = _parse_header(path)
 
     # NB: many lookup fields have multiple elements, eg ['1000', 'Hz']
     subset = {ifc.PYRATE_NCOLS: int(lookup[GAMMA_WIDTH][0]),
@@ -147,7 +127,7 @@ def parse_dem_header(path):
     return subset
 
 
-def frequency_to_wavelength(freq):
+def _frequency_to_wavelength(freq):
     """
     Convert radar frequency to wavelength
     """
@@ -156,11 +136,15 @@ def frequency_to_wavelength(freq):
 
 def combine_headers(hdr0, hdr1, dem_hdr):
     """
-    Combines both epoch header lookups into single ifg header/dict
+    Combines metadata for master and slave epochs and DEM into a single
+    dictionary for an interferogram.
 
-    hdr0: header for the earliest/master ifg
-    hdr1: header for the latest/slave ifg
-    dem_hdr: dict of DEM header attributes
+    :param dict hdr0: Metadata for the master image
+    :param dict hdr1: Metadata for the slave image
+    :param dict dem_hdr: Metadata for the DEM
+
+    :return: chdr: combined metadata
+    :rtype: dict
     """
     if not all([isinstance(a, dict) for a in [hdr0, hdr1, dem_hdr]]):
         raise GammaException('Header args need to be dicts')
@@ -205,16 +189,14 @@ def combine_headers(hdr0, hdr1, dem_hdr):
 
 def manage_headers(dem_header_file, header_paths):
     """
-    Parameters
-    ----------
-    dem_header_file: str
-        dem header path
-    header_paths:
-        header paths corresponding to the master and slave dates
-    Return
-    ------
-    combined_header: dict
-        combined dict with dem, header file 1 and 2
+    Manage and combine  header files for GAMMA interferograms, DEM and
+    incidence files
+
+    :param str dem_header_file: DEM header path
+    :param list header_paths: List of master/slave header paths
+
+    :return: combined_header: Combined metadata dictionary
+    :rtype: dict
     """
     dem_header = parse_dem_header(dem_header_file)
     # find param files containing filename dates

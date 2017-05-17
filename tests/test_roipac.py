@@ -50,7 +50,6 @@ from pyrate.config import (
     APS_INCIDENCE_MAP,
     APS_ELEVATION_MAP
     )
-from pyrate.roipac import RoipacException
 from pyrate.scripts import run_prepifg
 from pyrate.scripts.converttogtif import main as roipacMain
 from pyrate.shared import GeotiffException
@@ -192,7 +191,7 @@ class RoipacToGeoTiffTests(unittest.TestCase):
         self.dest = os.path.join(TEMPDIR, 'tmp_roipac_ifg.tif')
         data_path = join(PREP_TEST_TIF, 'geo_060619-061002.tif')
         self.assertRaises(
-            roipac.RoipacException,
+            GeotiffException,
             write_geotiff,
             self.HDRS,
             data_path,
@@ -215,7 +214,7 @@ class RoipacToGeoTiffTests(unittest.TestCase):
         data_path = join(PREP_TEST_OBS, 'geo_060619-061002.unw')
         self.dest = os.path.join(TEMPDIR, 'fake')
 
-        self.assertRaises(RoipacException, write_geotiff, hdrs,
+        self.assertRaises(GeotiffException, write_geotiff, hdrs,
                             data_path, self.dest, 0)
 
     def compare_rasters(self, ds, exp_ds):

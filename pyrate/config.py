@@ -52,7 +52,6 @@ DEM_HEADER_FILE = 'demHeaderFile'
 SLC_DIR = 'slcFileDir'
 
 #: STR; The projection of the input interferograms.
-# When *PROCESSOR* == 0, either
 INPUT_IFG_PROJECTION = 'projection'
 #: FLOAT; The no data value in the interferogram files.
 NO_DATA_VALUE = 'noDataValue'
@@ -67,9 +66,7 @@ NETWORKX_OR_MATLAB_FLAG = 'networkx_or_matlab'
 NAN_CONVERSION = 'nan_conversion'
 
 # Prepifg parameters
-#: BOOL (1/2/3/4); Method for cropping interferograms,
-# 1 = minimum overlapping area (intersection), 2 = maximum area (union),
-# 3 = customised area, 4 = all ifgs already same size
+#: BOOL (1/2/3/4); Method for cropping interferograms, 1 = minimum overlapping area (intersection), 2 = maximum area (union), 3 = customised area, 4 = all ifgs already same size
 IFG_CROP_OPT = 'ifgcropopt'
 #: INT; Multi look factor for interferogram preparation in x dimension
 IFG_LKSX = 'ifglksx'
@@ -85,11 +82,9 @@ IFG_YFIRST = 'ifgyfirst'
 IFG_YLAST = 'ifgylast'
 
 # reference pixel parameters
-#: INT; Coordinate in x of reference pixel OR -1 = perform
-# reference pixel search
+#: INT; Coordinate in x of reference pixel OR -1 = perform search
 REFX = 'refx'
-#: INT; Coordinate in y of reference pixel OR -1 = perform
-# reference pixel search
+#: INT; Coordinate in y of reference pixel OR -1 = perform search
 REFY = 'refy'
 #: INT; Number of reference pixel grid search nodes in x dimension
 REFNX = "refnx"
@@ -97,13 +92,12 @@ REFNX = "refnx"
 REFNY = "refny"
 #: INT; Dimension of reference pixel search window
 REF_CHIP_SIZE = 'refchipsize'
-#: REAL; Minimum fraction of observations required in
-# reference pixel search window for pixel to be a viable reference pixel
+#: REAL; Minimum fraction of observations required in search window for pixel to be a viable reference pixel
 REF_MIN_FRAC = 'refminfrac'
 #: BOOL (1/2); Reference phase estimation method
 REF_EST_METHOD = 'refest'
 
-#atmospheric error correction parameter
+#atmospheric error correction parameters NOT CURRENTLY USED
 APS_CORRECTION = 'apscorrect'
 APS_METHOD = 'apsmethod'
 APS_INCIDENCE_MAP = 'incidencemap'
@@ -112,15 +106,11 @@ APS_ELEVATION_MAP = 'elevationmap'
 APS_ELEVATION_EXT = 'APS_ELEVATION_EXT'
 
 # orbital error correction/parameters
-#: BOOL (1/0); Boolean flag controlling whether to apply orbital
-# error correction
+#: BOOL (1/0); Flag controlling whether to apply orbital error correction
 ORBITAL_FIT = 'orbfit'
-#: BOOL (1/2); Method for orbital error correction, 1: ifg by ifg/independent,
-#  2: epoch by epoch/network
+#: BOOL (1/2); Method for orbital error correction, 1: independent, 2: network
 ORBITAL_FIT_METHOD = 'orbfitmethod'
-#: BOOL (1/2/3) Order of orbital error model, 1 = planar
-# in x and y (2 parameter model, 2 = quadratic in x and y (5 parameter model),
-# 3 = quadratic in x and cubic in y (part-cubic 6 parameter model)
+#: BOOL (1/2/3) Order of orbital error model, 1 = planar in x and y (2 parameter model, 2 = quadratic in x and y (5 parameter model), 3 = quadratic in x and cubic in y (part-cubic 6 parameter model)
 ORBITAL_FIT_DEGREE = 'orbfitdegrees'
 #: INT; Multi look factor for orbital error calculation in x dimension
 ORBITAL_FIT_LOOKS_X = 'orbfitlksx'
@@ -128,23 +118,19 @@ ORBITAL_FIT_LOOKS_X = 'orbfitlksx'
 ORBITAL_FIT_LOOKS_Y = 'orbfitlksy'
 
 # Linear rate/stacking parameters
-#: REAL; Threshold ratio between 'model minus observation'
-#  residuals and a-priori observation standard deviations for
-# linear rate estimate acceptance (otherwise remove furthest
-# outlier and re-iterate)
+#: REAL; Threshold ratio between 'model minus observation' residuals and a-priori observation standard deviations for linear rate estimate acceptance (otherwise remove furthest outlier and re-iterate)
 LR_NSIG = 'nsig'
-#: INT; Number of required input observations per pixel for the
-# linear rate inversion
+#: INT; Number of required observations per pixel for the linear rate inversion
 LR_PTHRESH = 'pthr'
 #: REAL; Maximum allowable standard error for pixels in linear rate inversion.
 LR_MAXSIG = 'maxsig'
 
-# atmospheric delay errors fitting parameters
+# atmospheric delay errors fitting parameters NOT CURRENTLY USED
 # atmfitmethod = 1: interferogram by interferogram; atmfitmethod = 2, epoch by epoch
-ATM_FIT = 'atmfit'
-ATM_FIT_METHOD = 'atmfitmethod'
+#ATM_FIT = 'atmfit'
+#ATM_FIT_METHOD = 'atmfitmethod'
 
-# spatio-temporal filter
+#: BOOL (0/1) Do spatio-temporal filter
 APSEST = 'apsest'
 
 # temporal low-pass filter parameters
@@ -164,14 +150,11 @@ SLPF_NANFILL_METHOD = 'slpnanfill_method'
 TIME_SERIES_CAL = 'tscal'
 #: INT (1/2); Method for time series inversion (1: Laplacian Smoothing; 2: SVD)
 TIME_SERIES_METHOD = 'tsmethod'
-#: INT; Number of required input observations
-# per pixel for time series inversion
+#: INT; Number of required input observations per pixel for time series inversion
 TIME_SERIES_PTHRESH = 'ts_pthr'
-#: INT (1/2); Order of Laplacian smoothing operator, first or
-# second order NOT CURRENTLY USED
+#: INT (1/2); Order of Laplacian smoothing operator, first or # second order
 TIME_SERIES_SM_ORDER = 'smorder'
-#: REAL; Laplacian smoothing factor (0: calculate & plot L-curve;
-# others: using the specific smoothing factor 10**smfactor) NOT CURRENTLY USED
+#: REAL; Laplacian smoothing factor (values used is 10**smfactor)
 TIME_SERIES_SM_FACTOR = 'smfactor'
 # tsinterp is automatically assigned in the code; not needed in conf file
 #TIME_SERIES_INTERP = 'tsinterp'
@@ -184,7 +167,7 @@ PROCESSES = 'processes'
 #: BOOL (0/1); Switch for using Luigi to perform prepifg step
 LUIGI = 'use_luigi'
 
-# Orbital error correction constants
+# Orbital error correction constants for conversion to readable flags
 INDEPENDENT_METHOD = 1
 NETWORK_METHOD = 2
 PLANAR = 'PLANAR'
@@ -195,9 +178,9 @@ PART_CUBIC = 'PART_CUBIC'
 TMPDIR = 'tmpdir'
 
 
-def degree_conv(deg):
+def _degree_conv(deg):
     """
-    Convenience: convert numerical degree to human readable string
+    Convenience: convert numerical degree flag to human readable string
     """
 
     degree = int(deg)
@@ -210,9 +193,9 @@ def degree_conv(deg):
     raise ValueError("Orbital fit polynomial degree option not recognised")
 
 
-def method_conv(meth):
+def _method_conv(meth):
     """
-    Convenience: convert numerical method to human readable string
+    Convenience: convert numerical method flag to human readable string
     """
 
     method = int(meth)
@@ -245,8 +228,8 @@ PARAM_CONVERSION = {
     REF_EST_METHOD: (int, 1),  # default to average of whole image
 
     ORBITAL_FIT: (int, 0),
-    ORBITAL_FIT_METHOD: (method_conv, NETWORK_METHOD),
-    ORBITAL_FIT_DEGREE: (degree_conv, QUADRATIC),
+    ORBITAL_FIT_METHOD: (_method_conv, NETWORK_METHOD),
+    ORBITAL_FIT_DEGREE: (_degree_conv, QUADRATIC),
     ORBITAL_FIT_LOOKS_X: (int, NO_MULTILOOKING),
     ORBITAL_FIT_LOOKS_Y: (int, NO_MULTILOOKING),
 
@@ -255,8 +238,8 @@ PARAM_CONVERSION = {
     LR_PTHRESH: (int, 20),
     LR_MAXSIG: (int, 2),
 
-    ATM_FIT: (int, 0),
-    ATM_FIT_METHOD: (int, 2),
+    #ATM_FIT: (int, 0), NOT CURRENTLY USED
+    #ATM_FIT_METHOD: (int, 2),
 
     APSEST: (int, 0),
     TLPF_METHOD: (int, 1),
@@ -298,8 +281,15 @@ INT_KEYS = [APS_CORRECTION, APS_METHOD]
 
 def get_config_params(path):
     """
-    Returns a dict for the key:value pairs from the .conf file
+    Returns a dictionary of key:value parameter pairs from the
+    configuration file
+
+    :param str path: path of config file
+
+    :return: params
+    :rtype: dict
     """
+
     txt = ''
     with open(path, 'r') as inputFile:
         for line in inputFile:
@@ -321,16 +311,16 @@ def get_config_params(path):
 
 def _parse_conf_file(content):
     """
-    Parser for converting text content into a dict of parameters
+    Parser for converting text content into a dictionary of parameters
     """
 
-    def is_valid(line):
+    def _is_valid(line):
         """
-        check if line is  not empty or has % or #
+        Check if line is not empty or has % or #
         """
         return line != "" and line[0] not in "%#"
 
-    lines = [ln.split() for ln in content.split('\n') if is_valid(ln)]
+    lines = [ln.split() for ln in content.split('\n') if _is_valid(ln)]
 
     # convert "field:   value" lines to [field, value]
     kvpair = [(e[0].rstrip(":"), e[1]) for e in lines if len(e) == 2] \
@@ -344,7 +334,7 @@ def _parse_conf_file(content):
         if p not in parameters:
             parameters[p] = '0'  # insert dummies
 
-    parameters = handle_pyaps_parameters(parameters)
+    parameters = _handle_extra_parameters(parameters)
 
     if not parameters:
         raise ConfigException('Cannot parse any parameters from config file')
@@ -352,15 +342,9 @@ def _parse_conf_file(content):
     return _parse_pars(parameters)
 
 
-def handle_pyaps_parameters(params):
+def _handle_extra_parameters(params):
     """
-    Parameters
-    ----------
-    params: dict
-
-    Returns
-    ------
-    params: dict
+    Function to check if requirements for weather model correction are given
     """
     params[APS_INCIDENCE_EXT] = None
     params[APS_ELEVATION_EXT] = None
@@ -418,7 +402,13 @@ def _parse_pars(pars):
 def parse_namelist(nml):
     """
     Parses name list file into array of paths
+
+    :param str nml: interferogram file list
+
+    :return: list of interferogram file names
+    :rtype: list
     """
+
     with open(nml) as f_in:
         lines = [line.rstrip() for line in f_in]
     return filter(None, lines)
@@ -433,21 +423,24 @@ class ConfigException(Exception):
 
 def write_config_file(params, output_conf_file):
     """
-    takes a param object and write the config file. Reverse of get_conf_params
-    :param params: params dictionary
+    Takes a param object and writes the config file. Reverse of get_conf_params.
+
+    :param dict params: parameter dictionary
+    :param str output_conf_file: output file name
 
     """
+
     with open(output_conf_file, 'w') as f:
         for k, v in params.items():
             if k == ORBITAL_FIT_DEGREE:
-                v = reverse_degree_conv(v)
+                v = _reverse_degree_conv(v)
             if v is not None:
                 f.write(''.join([k, ':\t', str(v), '\n']))
             else:
                 f.write(''.join([k, ':\t', '', '\n']))
 
 
-def reverse_degree_conv(v):
+def _reverse_degree_conv(v):
     """
     Convenience: convert numerical degree to human readable string
     """
@@ -464,7 +457,12 @@ def reverse_degree_conv(v):
 
 def transform_params(params):
     """
-    Returns subset of config parameters for cropping and multilooking.
+    Returns subset of all parameters for cropping and multilooking.
+
+    :param dict params: Parameter dictionary
+
+    :return xlooks, ylooks, crop
+    :rtype int
     """
 
     t_params = [IFG_LKSX, IFG_LKSY, IFG_CROP_OPT]
@@ -475,6 +473,11 @@ def transform_params(params):
 def original_ifg_paths(ifglist_path):
     """
     Returns sequence of paths to files in given ifglist file.
+
+    :param str ifglist_path: full path to interferogram file list
+
+    :return: full path to ifg files
+    :rtype: list
     """
 
     basedir = os.path.dirname(ifglist_path)
@@ -484,8 +487,16 @@ def original_ifg_paths(ifglist_path):
 
 def mlooked_path(path, looks, crop_out):
     """
-    Adds suffix to path, for creating a new path for mlooked files.
+    Adds suffix to ifg path, for creating a new path for multilooked files.
+
+    :param str path: original interferogram path
+    :param int looks: number of range looks applied
+    :param int crop_out: crop option applied
+
+    :return: multilooked file name
+    :rtype: str
     """
+
     base, ext = splitext(path)
     return "{base}_{looks}rlks_{crop_out}cr{ext}".format(
         base=base, looks=looks, crop_out=crop_out, ext=ext)
@@ -493,21 +504,17 @@ def mlooked_path(path, looks, crop_out):
 
 def get_dest_paths(base_paths, crop, params, looks):
     """
-    Parameters
-    ----------
-    base_paths: list
-        unwrapped interferogram paths
-    crop: int
-        crop method to use
-    params: dict
-        params dict corresponding to config file used
-    looks: int
-        multilooking
+    Determines the full path names for the destination multilooked files
 
-    Return
-    ------
-        list of output geotifs
+    :param list base_paths: original interferogram paths
+    :param int crop: Crop option applied
+    :param dict params: Parameters dictionary
+    :param int looks: number of range looks applied
+
+    :return: full path names for destination files
+    :rtype: list
     """
+
     dest_mlooked_ifgs = [mlooked_path(os.path.basename(q).split('.')[0] + '_'
                                       + os.path.basename(q).split('.')[1] +
                                       '.tif', looks=looks, crop_out=crop)
@@ -518,34 +525,32 @@ def get_dest_paths(base_paths, crop, params, looks):
 
 def get_ifg_paths(config_file):
     """
-    Parameters
-    ----------
-    config_file: str
-        config file path
+    Read the configuration file, extract interferogram file list and determine
+    input and output interferogram path names.
 
-    Return
-    ------
-    base_unw_paths: list
-        list of unwrapped inteferrograms
-    dest_paths: list
-        list of multilooked and cropped geotifs
-    pars: dict
-        dictionary corresponding to the config file.
+    :param str config_file: Configuration file path
+
+    :return: base_unw_paths: List of unwrapped inteferograms
+    :return: dest_paths: List of multi-looked and cropped geotifs
+    :return: params: Dictionary corresponding to the config file
+    :rtype: list
+    :rtype: list
+    :rtype: dict
     """
-    pars = get_config_params(config_file)
-    ifg_file_list = pars.get(IFG_FILE_LIST)
-    pars[IFG_FILE_LIST] = ifg_file_list
+    params = get_config_params(config_file)
+    ifg_file_list = params.get(IFG_FILE_LIST)
+    params[IFG_FILE_LIST] = ifg_file_list
 
     if ifg_file_list is None:
         emsg = 'Error {code}: Interferogram list file name not provided ' \
                'or does not exist'.format(code=2)
         raise IOError(2, emsg)
-    xlks, _, crop = transform_params(pars)
+    xlks, _, crop = transform_params(params)
 
     # base_unw_paths need to be geotiffed and multilooked by run_prepifg
     base_unw_paths = original_ifg_paths(ifg_file_list)
 
     # dest_paths are tifs that have been geotif converted and multilooked
-    dest_paths = get_dest_paths(base_unw_paths, crop, pars, xlks)
+    dest_paths = get_dest_paths(base_unw_paths, crop, params, xlks)
 
-    return base_unw_paths, dest_paths, pars
+    return base_unw_paths, dest_paths, params

@@ -304,14 +304,14 @@ class TestPrePrepareIfgs(unittest.TestCase):
     def setUpClass(cls):
         params = config.get_config_params(common.TEST_CONF_ROIPAC)
         cls.tmp_dir = tempfile.mkdtemp()
-        shared.copytree(common.SML_TEST_TIF, cls.tmp_dir)
+        common.copytree(common.SML_TEST_TIF, cls.tmp_dir)
         tifs = glob.glob(os.path.join(cls.tmp_dir, "*.tif"))
         for t in tifs:
             os.chmod(t, 0o644)
         small_ifgs = common.small_data_setup(datafiles=tifs)
         ifg_paths = [i.data_path for i in small_ifgs]
 
-        cls.ifg_ret = shared.pre_prepare_ifgs(ifg_paths, params=params)
+        cls.ifg_ret = common.pre_prepare_ifgs(ifg_paths, params=params)
         for i in cls.ifg_ret:
             i.close()
 
@@ -319,7 +319,7 @@ class TestPrePrepareIfgs(unittest.TestCase):
 
         # prepare a second set
         cls.tmp_dir2 = tempfile.mkdtemp()
-        shared.copytree(common.SML_TEST_TIF, cls.tmp_dir2)
+        common.copytree(common.SML_TEST_TIF, cls.tmp_dir2)
         tifs = glob.glob(os.path.join(cls.tmp_dir2, "*.tif"))
         for t in tifs:
             os.chmod(t, 0o644)

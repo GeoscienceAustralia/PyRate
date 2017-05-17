@@ -32,6 +32,7 @@ from pyrate.scripts import run_pyrate, run_prepifg
 from pyrate.covariance import cvd, get_vcmt, RDist
 from pyrate import ifgconstants as ifc
 import pyrate.orbital
+from tests import common
 from tests.common import small5_mock_ifgs, small5_ifgs, TEST_CONF_ROIPAC
 from tests.common import small_data_setup, prepare_ifgs_without_phase
 
@@ -195,8 +196,8 @@ class MatlabEqualityTest(unittest.TestCase):
         xlks, ylks, crop = cf.transform_params(params)
         base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST])
         dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
-        ifgs = shared.pre_prepare_ifgs(dest_paths, params)
-        refx, refy = run_pyrate.ref_pixel_calc(dest_paths, params)
+        ifgs = common.pre_prepare_ifgs(dest_paths, params)
+        refx, refy = run_pyrate._ref_pixel_calc(dest_paths, params)
         pyrate.orbital.remove_orbital_error(ifgs, params)
         ifgs = prepare_ifgs_without_phase(dest_paths, params)
         _, cls.ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)

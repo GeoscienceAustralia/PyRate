@@ -26,10 +26,8 @@ import unittest
 import numpy as np
 
 import pyrate.orbital
-import tests.common
 from pyrate import config as cf
 from pyrate import ifgconstants as ifc
-from pyrate import shared
 from pyrate.ref_phs_est import estimate_ref_phase, ReferencePhaseError
 from pyrate.scripts import run_prepifg
 from pyrate.scripts import run_pyrate
@@ -82,7 +80,7 @@ class RefPhsTests(unittest.TestCase):
         self.params[cf.REF_EST_METHOD] = 1
         self.params[cf.PARALLEL] = False
         self.refpx, self.refpy = 38, 58
-        shared.copytree(common.SML_TEST_TIF, self.tmp_dir)
+        common.copytree(common.SML_TEST_TIF, self.tmp_dir)
         small_tifs = glob.glob(os.path.join(self.tmp_dir, "*.tif"))
         for s in small_tifs:
             os.chmod(s, 0o644)
@@ -137,10 +135,10 @@ class RefPhsEstimationMatlabTestMethod1Serial(unittest.TestCase):
                                                params, xlks)
 
         # start run_pyrate copy
-        ifgs = shared.pre_prepare_ifgs(dest_paths, params)
-        mst_grid = tests.common.mst_calculation(dest_paths, params)
+        ifgs = common.pre_prepare_ifgs(dest_paths, params)
+        mst_grid = common.mst_calculation(dest_paths, params)
         # Estimate reference pixel location
-        refx, refy = run_pyrate.ref_pixel_calc(dest_paths, params)
+        refx, refy = run_pyrate._ref_pixel_calc(dest_paths, params)
 
         # Estimate and remove orbit errors
         pyrate.orbital.remove_orbital_error(ifgs, params)
@@ -148,7 +146,7 @@ class RefPhsEstimationMatlabTestMethod1Serial(unittest.TestCase):
         for i in ifgs:
             i.close()
 
-        ifgs = shared.pre_prepare_ifgs(dest_paths, params)
+        ifgs = common.pre_prepare_ifgs(dest_paths, params)
 
         cls.ref_phs, cls.ifgs = estimate_ref_phase(ifgs, params, refx, refy)
 
@@ -224,10 +222,10 @@ class RefPhsEstimationMatlabTestMethod1Parallel(unittest.TestCase):
                                                params, xlks)
 
         # start run_pyrate copy
-        ifgs = shared.pre_prepare_ifgs(dest_paths, params)
-        mst_grid = tests.common.mst_calculation(dest_paths, params)
+        ifgs = common.pre_prepare_ifgs(dest_paths, params)
+        mst_grid = common.mst_calculation(dest_paths, params)
         # Estimate reference pixel location
-        refx, refy = run_pyrate.ref_pixel_calc(dest_paths, params)
+        refx, refy = run_pyrate._ref_pixel_calc(dest_paths, params)
 
         # Estimate and remove orbit errors
         pyrate.orbital.remove_orbital_error(ifgs, params)
@@ -235,7 +233,7 @@ class RefPhsEstimationMatlabTestMethod1Parallel(unittest.TestCase):
         for i in ifgs:
             i.close()
 
-        ifgs = shared.pre_prepare_ifgs(dest_paths, params)
+        ifgs = common.pre_prepare_ifgs(dest_paths, params)
 
         cls.ref_phs, cls.ifgs = estimate_ref_phase(ifgs, params, refx, refy)
 
@@ -315,10 +313,10 @@ class RefPhsEstimationMatlabTestMethod2Serial(unittest.TestCase):
                                                params, xlks)
 
         # start run_pyrate copy
-        ifgs = shared.pre_prepare_ifgs(dest_paths, params)
-        mst_grid = tests.common.mst_calculation(dest_paths, params)
+        ifgs = common.pre_prepare_ifgs(dest_paths, params)
+        mst_grid = common.mst_calculation(dest_paths, params)
         # Estimate reference pixel location
-        refx, refy = run_pyrate.ref_pixel_calc(dest_paths, params)
+        refx, refy = run_pyrate._ref_pixel_calc(dest_paths, params)
 
         # Estimate and remove orbit errors
         pyrate.orbital.remove_orbital_error(ifgs, params)
@@ -326,7 +324,7 @@ class RefPhsEstimationMatlabTestMethod2Serial(unittest.TestCase):
         for i in ifgs:
             i.close()
 
-        ifgs = shared.pre_prepare_ifgs(dest_paths, params)
+        ifgs = common.pre_prepare_ifgs(dest_paths, params)
 
         cls.ref_phs, cls.ifgs = estimate_ref_phase(ifgs, params, refx, refy)
 
@@ -405,9 +403,9 @@ class RefPhsEstimationMatlabTestMethod2Parallel(unittest.TestCase):
                                        params, xlks)
 
         # start run_pyrate copy
-        ifgs = shared.pre_prepare_ifgs(dest_paths, params)
+        ifgs = common.pre_prepare_ifgs(dest_paths, params)
         # Estimate reference pixel location
-        refx, refy = run_pyrate.ref_pixel_calc(dest_paths, params)
+        refx, refy = run_pyrate._ref_pixel_calc(dest_paths, params)
 
         # Estimate and remove orbit errors
         pyrate.orbital.remove_orbital_error(ifgs, params)
@@ -415,7 +413,7 @@ class RefPhsEstimationMatlabTestMethod2Parallel(unittest.TestCase):
         for i in ifgs:
             i.close()
 
-        ifgs = shared.pre_prepare_ifgs(dest_paths, params)
+        ifgs = common.pre_prepare_ifgs(dest_paths, params)
 
         cls.ref_phs, cls.ifgs = estimate_ref_phase(ifgs, params, refx, refy)
         # end run_pyrate copy

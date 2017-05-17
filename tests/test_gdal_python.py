@@ -337,7 +337,7 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
 
     def setUp(self):
         self.test_dir = tempfile.mktemp()
-        shutil.copytree(common.SML_TEST_TIF, self.test_dir)
+        common.copytree(common.SML_TEST_TIF, self.test_dir)
         self.ifgs = common.small_data_setup(
             datafiles=glob.glob(os.path.join(self.test_dir, "*.tif")))
         self.ref_gtif = gdal.Open(self.ifgs[0].data_path, gdalconst.GA_ReadOnly)

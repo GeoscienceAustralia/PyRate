@@ -21,7 +21,9 @@ PyRate test suite.
 import glob
 import os
 import shutil
+import stat
 import tempfile
+import logging
 from os.path import join
 
 import numpy as np
@@ -30,8 +32,8 @@ from osgeo import gdal
 
 from pyrate import config as cf, mst, timeseries, matlab_mst, algorithm, \
     ifgconstants as ifc, linrate
-from pyrate.shared import Ifg, pre_prepare_ifgs, get_projection_info, \
-    write_output_geotiff
+from pyrate.shared import Ifg, nan_and_mm_convert, get_geotiff_header_info, \
+    write_output_geotiff 
 
 TEMPDIR = tempfile.gettempdir()
 BASE_TEST = join(os.environ['PYRATEPATH'], "tests", "test_data")
@@ -97,6 +99,8 @@ IFMS16 = ['geo_060619-061002_unw.tif',
         'geo_070326-070917_unw.tif',
         'geo_070430-070604_unw.tif',
         'geo_070604-070709_unw.tif']
+
+log = logging.getLogger(__name__)
 
 
 def small_data_setup(datafiles=None, is_dir=False):
@@ -267,17 +271,17 @@ def mst_calculation(ifg_paths_or_instance, params):
         mst_grid = mst.mst_parallel(ifgs, params)
     else:
         nan_conversion = params[cf.NAN_CONVERSION]
-        assert isinstance(ifg_paths_or_instance, matlab_mst.IfgListPyRate)
+        assert isinstance(ifg_paths_or_instance, matlab_mst._IfgListPyRate)
         ifgs = ifg_paths_or_instance.ifgs
         for i in ifgs:
             if not i.mm_converted:
                 i.nodata_value = params[cf.NO_DATA_VALUE]
                 i.convert_to_mm()
         ifg_instance_updated, epoch_list = \
-            matlab_mst.get_nml(ifg_paths_or_instance,
+            get_nml(ifg_paths_or_instance,
                                nodata_value=params[cf.NO_DATA_VALUE],
                                nan_conversion=nan_conversion)
-        mst_grid = matlab_mst.matlab_mst_bool(ifg_instance_updated)
+        mst_grid = matlab_mst._matlab_mst_bool(ifg_instance_updated)
 
     # write mst output to a file
     mst_mat_binary_file = join(params[cf.OUT_DIR], 'mst_mat')
@@ -286,6 +290,31 @@ def mst_calculation(ifg_paths_or_instance, params):
     for i in ifgs:
         i.close()
     return mst_grid
+
+
+def get_nml(ifg_list_instance, nodata_value,
+            nan_conversion=False):
+    """
+    A translation of the Matlab Pirate 'getnml.m' function.
+    Note: the Matlab version tested does not have nan's.    
+
+    :param xxx(eg str, tuple, int, float...) ifg_list_instance: xxxx
+    :param float nodata_value: No data value in image
+    :param bool nan_conversion: Convert NaNs
+    
+    :return: ifg_list_instance: replaces in place
+    :rtype: list
+    :return: _epoch_list: list of epochs
+    :rtype: list
+    """
+    _epoch_list, n = algorithm.get_epochs(ifg_list_instance.ifgs)
+    ifg_list_instance.reshape_n(n)
+    if nan_conversion:
+        ifg_list_instance.update_nan_frac(nodata_value)
+        # turn on for nan conversion
+        ifg_list_instance.convert_nans(nan_conversion=nan_conversion)
+    ifg_list_instance.make_data_stack()
+    return ifg_list_instance, _epoch_list
 
 
 def compute_time_series(ifgs, mst_grid, params, vcmt):
@@ -320,11 +349,11 @@ def calculate_time_series(ifgs, params, vcmt, mst):
 # This is not used anywhere now, but may be useful
 def time_series_interpolation(ifg_instance_updated, params):
 
-    edges = matlab_mst.get_sub_structure(ifg_instance_updated,
+    edges = matlab_mst._get_sub_structure(ifg_instance_updated,
                                          np.zeros(len(ifg_instance_updated.id),
                                                   dtype=bool))
 
-    _, _, ntrees = matlab_mst.matlab_mst_kruskal(edges, ntrees=True)
+    _, _, ntrees = matlab_mst._matlab_mst_kruskal(edges, ntrees=True)
     # if ntrees=1, no interpolation; otherwise interpolate
     if ntrees > 1:
         params[cf.TIME_SERIES_INTERP] = 1
@@ -336,7 +365,7 @@ def time_series_interpolation(ifg_instance_updated, params):
 
 def write_timeseries_geotiff(ifgs, params, tsincr, pr_type):
     # setup metadata for writing into result files
-    gt, md, wkt = get_projection_info(ifgs[0].data_path)
+    gt, md, wkt = get_geotiff_header_info(ifgs[0].data_path)
     epochlist = algorithm.get_epochs(ifgs)[0]
 
     for i in range(tsincr.shape[2]):
@@ -366,7 +395,7 @@ def calculate_linear_rate(ifgs, params, vcmt, mst_mat=None):
 def write_linrate_tifs(ifgs, params, res):
     # log.info('Writing linrate results')
     rate, error, samples = res
-    gt, md, wkt = get_projection_info(ifgs[0].data_path)
+    gt, md, wkt = get_geotiff_header_info(ifgs[0].data_path)
     epochlist = algorithm.get_epochs(ifgs)[0]
     dest = join(params[cf.OUT_DIR], "linrate.tif")
     md[ifc.EPOCH_DATE] = epochlist.dates
@@ -388,3 +417,54 @@ def write_linrate_numpy_files(error, rate, samples, params):
     np.save(file=rate_file, arr=rate)
     np.save(file=error_file, arr=error)
     np.save(file=samples_file, arr=samples)
+
+
+def copytree(src, dst, symlinks=False, ignore=None):
+    # pylint: disable=line-too-long
+    """
+    Copy entire contents of src directory into dst directory.
+    See: http://stackoverflow.com/questions/1868714/how-do-i-copy-an-entire-directory-of-files-into-an-existing-directory-using-pyth?lq=1
+
+    :param str src: source directory path
+    :param str dst: destination directory path (created if does not exist)
+    :param bool symlinks: Whether to copy symlink or not
+    :param bool ignore:
+    """
+    # pylint: disable=invalid-name
+    if not os.path.exists(dst):  # pragma: no cover
+        os.makedirs(dst)
+    shutil.copystat(src, dst)
+    lst = os.listdir(src)
+    if ignore:
+        excl = ignore(src, lst)
+        lst = [x for x in lst if x not in excl]
+    for item in lst:
+        s = os.path.join(src, item)
+        d = os.path.join(dst, item)
+        if symlinks and os.path.islink(s):  # pragma: no cover
+            if os.path.lexists(d):
+                os.remove(d)
+            os.symlink(os.readlink(s), d)
+            try:
+                st = os.lstat(s)
+                mode = stat.S_IMODE(st.st_mode)
+                os.lchmod(d, mode)
+            except AttributeError:
+                pass  # lchmod not available
+        elif os.path.isdir(s):  # pragma: no cover
+            copytree(s, d, symlinks, ignore)
+        else:
+            shutil.copy2(s, d)
+
+
+def pre_prepare_ifgs(ifg_paths, params):
+    """
+    Open ifg for reading
+    """
+    ifgs = [Ifg(p) for p in ifg_paths]
+    for i in ifgs:
+        if not i.is_open:
+            i.open(readonly=False)
+        nan_and_mm_convert(i, params)
+    log.info('Opened ifg for reading')
+    return ifgs

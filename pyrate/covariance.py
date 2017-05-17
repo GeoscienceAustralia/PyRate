@@ -43,23 +43,22 @@ DISTFACT = 1000
 log = logging.getLogger(__name__)
 
 
-def pendiffexp(alphamod, cvdav):
+def _pendiffexp(alphamod, cvdav):
     """
     Fits an exponential model to data.
 
     :param float alphamod: Exponential decay exponent.
-    :param array cvdav: Function magnitude at 0 radius (2 col array of radius,
-    variance)
+    :param ndarray cvdav: Function magnitude at 0 radius (2 col array of
+    radius, variance)
     """
     # pylint: disable=invalid-name
-
     # maxvar usually at zero lag
     mx = cvdav[1, 0]
     return norm(cvdav[1, :] - (mx * exp(-alphamod * cvdav[0, :])))
 
 
 # this is not used any more
-def unique_points(points):  # pragma: no cover
+def _unique_points(points):  # pragma: no cover
     """
     Returns unique points from a list of coordinates.
 
@@ -74,28 +73,21 @@ def cvd(ifg_path, params, r_dist, calc_alpha=False,
     Calculate the 1D covariance function of an entire interferogram as the
     radial average of its 2D autocorrelation.
 
-    Parameters
-    ----------
-    ifg_path : An interferogram.
-        ifg: :py:class:`pyrate.shared.Ifg`.
-    params : dict
-        dictionary of configuration parameters
-    r_dist : ndarray
-        array of distance from the centre of the interferogram. See Rdist
-        class for more details
-    calc_alpha : bool
-        calculate alpha, the exponential length-scale of decay factor.
-    write_vals : bool
-        write maxvar and alpha values to interferogram metadata.
-    save_acg : bool
-        write acg and radial distance data to numpy array
+    :param str ifg_path: An interferogram file path. OR
+    :param Ifg class ifg_path: A pyrate.shared.Ifg class object
+    :param dict params: Dictionary of configuration parameters
+    :param ndarray r_dist: Array of distance values from the image centre
+                (See Rdist class for more details)
+    :param bool calc_alpha: If True calculate alpha
+    :param bool write_vals: If True write maxvar and alpha values to
+                interferogram metadata
+    :param bool save_acg: If True write autocorrelation and radial distance
+                data to numpy array file on disk
 
-    Returns
-    -------
-    maxvar : ndarray
-        array of shape (nifgs, 1)
-    alpha : ndarray
-        array of shape (nifgs, 1)
+    :return: maxvar: The maximum variance (at zero lag)
+    :rtype: float
+    :return: alpha: the exponential length-scale of decay factor
+    :rtype: float
     """
 
     if isinstance(ifg_path, str):  # used during MPI
@@ -125,7 +117,9 @@ def cvd(ifg_path, params, r_dist, calc_alpha=False,
 
 
 def _add_metadata(ifg, maxvar, alpha):
-    """convenience function for saving metadata to ifg"""
+    """
+    Convenience function for saving metadata to ifg
+    """
     md = ifg.meta_data
     md[ifc.PYRATE_MAXVAR] = str(maxvar)
     md[ifc.PYRATE_ALPHA] = str(alpha)
@@ -133,7 +127,9 @@ def _add_metadata(ifg, maxvar, alpha):
 
 
 def _save_cvd_data(acg, r_dist, ifg_path, outdir):
-    """ function to save numpy array of autocorrelation data to disk"""
+    """
+    Function to save numpy array of autocorrelation data to disk
+    """
     data = np.column_stack((acg, r_dist))
     data_file = join(outdir, 'cvd_data_{b}.npy'.format(
         b=basename(ifg_path).split('.')[0]))
@@ -143,29 +139,23 @@ def _save_cvd_data(acg, r_dist, ifg_path, outdir):
 def cvd_from_phase(phase, ifg, r_dist, calc_alpha, save_acg=False,
                    params=None):
     """
-    A convenience class reused in many places to compute cvd from phase data
-    and a ifg class
-    Parameters
-    ----------
-    phase : ndarray
-        phase data corresping to the ifg
-    ifg : shared.Ifg class instance
-    r_dist : ndarray
-        array of distance from the centre of the interferogram. See Rdist
-        class for more details
-    calc_alpha : bool, optional
-        whether alpha is required
-    save_acg : bool, optional
-        write acg and radial distance data to numpy array
-    params : dict, optional
-        dictionary of config parameters. Must be provided if save_acg=True
+    A convenience function used to compute radial autocovariance from phase
+    data
 
-    Return
-    ------
-    maxvar : float
-        maxvar
-    alpha :
-        alpha
+    :param ndarray phase: An array of interferogram phase data
+    :param Ifg class ifg: A pyrate.shared.Ifg class instance
+    :param ndarray r_dist: Array of distance values from the image centre
+                (See Rdist class for more details)
+    :param bool calc_alpha: If True calculate alpha
+    :param bool save_acg: If True write autocorrelation and radial distance
+                data to numpy array file on disk
+    :param dict params: [optional] Dictionary of configuration parameters;
+                Must be provided if save_acg=True
+
+    :return: maxvar: The maximum variance (at zero lag)
+    :rtype: float
+    :return: alpha: the exponential length-scale of decay factor
+    :rtype: float
     """
     # pylint: disable=invalid-name
     # pylint: disable=too-many-locals
@@ -173,7 +163,7 @@ def cvd_from_phase(phase, ifg, r_dist, calc_alpha, save_acg=False,
     autocorr_grid = _get_autogrid(phase)
     acg = reshape(autocorr_grid, phase.size, order='F')
     # Symmetry in image; keep only unique points
-    # tmp = unique_points(zip(acg, r_dist))
+    # tmp = _unique_points(zip(acg, r_dist))
     # Sudipta: Is this faster than keeping only the 1st half as in Matlab?
     # Sudipta: Unlikely, as unique_point is a search/comparison,
     # whereas keeping 1st half is just numpy indexing.
@@ -221,7 +211,7 @@ def cvd_from_phase(phase, ifg, r_dist, calc_alpha, save_acg=False,
         cvdav[1, :] = [mean(acg[rbin == b]) for b in range(maxbin + 1)]
         # calculate best fit function maxvar*exp(-alpha*r_dist)
         alphaguess = 2 / (maxbin * bin_width)
-        alpha = fmin(pendiffexp, x0=alphaguess, args=(cvdav,), disp=False,
+        alpha = fmin(_pendiffexp, x0=alphaguess, args=(cvdav,), disp=False,
                      xtol=1e-6, ftol=1e-6)
         log.info("1st guess alpha {}, converged "
                  "alpha: {}".format(alphaguess, alpha))
@@ -231,7 +221,7 @@ def cvd_from_phase(phase, ifg, r_dist, calc_alpha, save_acg=False,
         return np.max(acg), None
 
 
-class RDist:
+class RDist():
     """
     RDist class used for caching r_dist during maxvar/alpha computation
     """
@@ -262,6 +252,9 @@ class RDist:
 
 
 def _get_autogrid(phase):
+    """
+    Helper function to assist with memory re-allocation during FFT calculation
+    """
     autocorr_grid = _calc_autoc_grid(phase)
     nzc = np.sum(np.sum(phase != 0))
     autocorr_grid = fftshift(real(autocorr_grid)) / nzc
@@ -269,12 +262,18 @@ def _get_autogrid(phase):
 
 
 def _calc_autoc_grid(phase):
+    """
+    Helper function to assist with memory re-allocation during FFT calculation
+    """
     pspec = _calc_power_spectrum(phase)
     autocorr_grid = ifft2(pspec)
     return autocorr_grid.astype(dtype=np.complex64)
 
 
 def _calc_power_spectrum(phase):
+    """
+    Helper function to assist with memory re-allocation during FFT calculation
+    """
     fft_phase = fft2(phase)
     pspec = real(fft_phase) ** 2 + imag(fft_phase) ** 2
     return pspec.astype(dtype=np.float32)
@@ -291,10 +290,12 @@ def get_vcmt(ifgs, maxvar):
         C = -0.5 if the master of i or j equals the slave of the other
         C = 0 otherwise
 
-    :param ifgs: A stack of interferograms.
-        ifg: :py:class:`pyrate.shared.Ifg`.
-    :param maxvar: ndarray
-        numpy array of maximum variance values for each interferogram.
+    :param list ifgs: A list of pyrate.shared.Ifg class objects.
+    :param ndarray maxvar: numpy array of maximum variance values for the
+                interferograms.
+
+    :return: vcm_t: temporal variance-covariance matrix
+    :rtype: ndarray
     """
     # pylint: disable=too-many-locals
     # c=0.5 for common master or slave; c=-0.5 if master

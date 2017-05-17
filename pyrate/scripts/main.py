@@ -31,7 +31,9 @@ log = logging.getLogger(__name__)
 
 
 def version_msg():
-    """Returns the Cookiecutter version, location and Python powering it."""
+    """
+    Returns the Cookiecutter version and location of Python beiing used
+    """
     python_version = sys.version[:3]
     location = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     message = u'PyRate %(version)s from {} (Python {})'
@@ -91,6 +93,8 @@ def linrate(config_file, rows, cols):
               help='divide ifgs into this many columns. Must be same as '
                    'number of cols used previously in main workflow')
 def postprocess(config_file, rows, cols):
-    """Reassemble output tiles and save as geotiffs"""
+    """
+    Reassemble PyRate output tiles and save as geotiffs
+    """
     config_file = abspath(config_file)
     postprocessing.main(config_file, rows, cols)

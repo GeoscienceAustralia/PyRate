@@ -6,11 +6,11 @@ import numpy as np
 import pytest
 
 from pyrate.algorithm import get_epochs
-from pyrate.aps.temporal import tlpfilter
-from pyrate.aps.spatial import _slp_filter, spatial_low_pass_filter
+from pyrate.aps import temporal_low_pass_filter as tlpfilter
+from pyrate.aps import _slp_filter, spatial_low_pass_filter
+from pyrate.aps import spatio_temporal_filter
 from pyrate import config as cf
 from pyrate.compat import pickle, PY3
-from pyrate.aps import spatio_temporal_filter
 from tests.common import SML_TEST_DIR, TEST_CONF_GAMMA, small_data_setup
 
 # tsincr matrix from matlab using svd timeseries method
@@ -179,7 +179,7 @@ def interp_method(request):
 
 
 def test_interpolate_nans(interp_method):
-    from pyrate.aps.spatial import _interpolate_nans
+    from pyrate.aps import _interpolate_nans
     from copy import copy
     a = np.arange(25*3).reshape((5, 5, 3)).astype(float)
     a[np.random.randint(2, size=(5, 5, 3)).astype(bool)] = np.nan
