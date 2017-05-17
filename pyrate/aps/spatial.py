@@ -14,7 +14,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 """
-Spatial low pass filter.
+This Python module implements a spatial low pass filter.
 """
 # pylint: disable=invalid-name, too-many-locals, too-many-arguments
 import logging
@@ -29,20 +29,18 @@ log = logging.getLogger(__name__)
 
 def spatial_low_pass_filter(ts_lp, ifg, params):
     """
-    Parameters
-    ----------
-    ts_lp: ndarray
-        time series from previous temporal low pass filter output of
-        shape (ifg.shape, n_epochs)
-    ifg: shared.Ifg instance
-    params: dict
-        params dict
+    Filter time series data spatially using either a Butterworth or Gaussian
+    low pass filter defined by a cut-off distance. If the cut-off distance is
+    defined as zero in the parameters dictionary then it is calculated for
+    each time step using the pyrate.covariance.cvd_from_phase method.
 
-    Returns
-    -------
-    ts_hp: ndarray
-        spatio-temporal filtered time series output of
-        shape (ifg.shape, n_epochs)
+    :param ndarray ts_lp: Array of time series data, the result of a temporal
+                low pass filter operation. shape (ifg.shape, n_epochs)
+    :param shared.Ifg instance ifg: interferogram object
+    :param dict params: Dictionary of configuration parameters
+
+    :return: ts_hp: filtered time series data of shape (ifg.shape, n_epochs)
+    :rtype: ndarray
     """
     log.info('Applying spatial low pass filter')
     if params[cf.SLPF_NANFILL] == 0:
@@ -51,15 +49,15 @@ def spatial_low_pass_filter(ts_lp, ifg, params):
         _interpolate_nans(ts_lp, params[cf.SLPF_NANFILL_METHOD])
     r_dist = RDist(ifg)()
     for i in range(ts_lp.shape[2]):
-        ts_lp[:, :, i] = slpfilter(ts_lp[:, :, i], ifg, r_dist, params)
+        ts_lp[:, :, i] = _slpfilter(ts_lp[:, :, i], ifg, r_dist, params)
     log.info('Finished applying spatial low pass filter')
     return ts_lp
 
 
 def _interpolate_nans(arr, method='linear'):
     """
-    Fill nans in arr with interpolated values. Nanfill and interpolation
-    are performed inplace
+    Fill any NaN values in arr with interpolated values. Nanfill and
+    interpolation are performed in place.
     """
     rows, cols = np.indices(arr.shape[:2])
     for i in range(arr.shape[2]):
@@ -69,18 +67,12 @@ def _interpolate_nans(arr, method='linear'):
 
 def _interpolate_nans_2d(a, rows, cols, method):
     """
-    inplace interpolation and nanfill
-    
-    Parameters
-    ----------
-    a : ndarray
-        2d ndarray to be interpolated
-    rows : ndarray
-        2d ndarray of row indices
-    cols : ndarray
-        3d ndarray of col indices
-    method: str
-        one of 'nearest', 'linear', and 'cubic'
+    In-place array interpolation and nanfill
+
+    :param ndarray a: 2d ndarray to be interpolated
+    :param ndarray rows: 2d ndarray of row indices
+    :param ndarray cols: 2d ndarray of col indices
+    :param str method: Method; one of 'nearest', 'linear', and 'cubic'
     """
     a[np.isnan(a)] = griddata(
         (rows[~np.isnan(a)], cols[~np.isnan(a)]),  # points we know
@@ -91,20 +83,9 @@ def _interpolate_nans_2d(a, rows, cols, method):
     a[np.isnan(a)] = 0  # zero fill boundary/edge nans
 
 
-def slpfilter(phase, ifg, r_dist, params):
+def _slpfilter(phase, ifg, r_dist, params):
     """
-    Parameters
-    ----------
-    phase: ndarray
-        time series for one epoch
-    ifg: shared.Ifg class instance
-    params: dict
-        parameters dict
-
-    Returns
-    -------
-    out: ndarray
-        spatially filtered output time series same size as ifgs
+    Wrapper function for spatial low pass filter
     """
     if np.all(np.isnan(phase)):  # return for nan matrix
         return phase
@@ -119,6 +100,9 @@ def slpfilter(phase, ifg, r_dist, params):
 
 
 def _slp_filter(phase, cutoff, rows, cols, x_size, y_size, params):
+    """
+    Function to perform spatial low pass filter
+    """
     cx = np.floor(cols/2)
     cy = np.floor(rows/2)
     # fft for the input image

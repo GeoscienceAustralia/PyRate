@@ -28,7 +28,7 @@ import numpy as np
 from pyrate import config as cf, mpiops, shared
 from pyrate.algorithm import get_epochs
 from pyrate.aps.spatial import spatial_low_pass_filter
-from pyrate.aps.temporal import tlpfilter
+from pyrate.aps.temporal import temporal_low_pass_filter
 from pyrate.scripts.postprocessing import _assemble_tiles
 from pyrate.shared import Ifg
 from pyrate import ifgconstants as ifc
@@ -37,9 +37,9 @@ from pyrate.timeseries import time_series
 log = logging.getLogger(__name__)
 
 
-def wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs):
+def _wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs):
     """
-    A wrapper for the spatio-temporal-filter so it can be tested.
+    A wrapper for the spatio-temporal filter so it can be tested.
     See docstring for spatio_temporal_filter.
     Required due to differences between Matlab and Python MST
     implementations.
@@ -55,7 +55,7 @@ def wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs):
         log.info('Finished APS correction')
         return  # return if True condition returned
 
-    tsincr = calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles)
+    tsincr = _calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles)
 
     ifg = Ifg(ifg_paths[0])  # just grab any for parameters in slpfilter
     ifg.open()
@@ -65,57 +65,35 @@ def wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs):
 
 def spatio_temporal_filter(tsincr, ifg, params, preread_ifgs):
     """
-    Applies a spatio-temporal (APS) filter and saves the corrected
-    interferograms.
+    Applies a spatio-temporal filter to remove the atmospheric phase screen
+    (APS) and saves the corrected interferograms. Before performing this step,
+    the time series must be computed using the SVD method. This function then
+    performs temporal and spatial filtering.
 
-    The first step is to compute the time series using the SVD method.
-    This is followed by temporal and spatial filters respectively.
+    :param ndarray tsincr: incremental time series array of size
+                (ifg.shape, nepochs-1)
+    :param list ifg: List of pyrate.shared.Ifg class objects.
+    :param dict params: Dictionary of configuration parameter
+    :param list tiles: List of pyrate.shared.Tile class objects
+    :param dict preread_ifgs: Dictionary of shared.PrereadIfg class instances
 
-    Parameters
-    ----------
-    tsincr: ndarray
-        time series array of size (ifg.shape, nvels)
-    ifg: shated.Ifg instance
-        list of ifg paths
-    params: dict
-        parameters dict
-    tiles: list
-        list of shared.Tile class instances
-    preread_ifgs: dict
-        dictionary of {ifgpath:shared.PrereadIfg class instances}
+    :return: None, corrected interferograms are saved to disk
     """
     epochlist = mpiops.run_once(get_epochs, preread_ifgs)[0]
-    ts_lp = mpiops.run_once(tlpfilter, tsincr, epochlist, params)
+    ts_lp = mpiops.run_once(temporal_low_pass_filter, tsincr, epochlist, params)
     ts_hp = tsincr - ts_lp
     ts_aps = mpiops.run_once(spatial_low_pass_filter, ts_hp, ifg, params)
     tsincr -= ts_aps
 
-    mpiops.run_once(ts_to_ifgs, tsincr, preread_ifgs)
+    mpiops.run_once(_ts_to_ifgs, tsincr, preread_ifgs)
 
 
-def calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles):
+def _calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles):
     """
-    Time series inversion with no smoothing (SVD method)
-    This is the equivalent of the tsinvnosm.m function in the Matlab
-    Pirate package.
-
-    Parameters
-    ----------
-    ifg_paths: list
-        list of ifg paths
-    params: dict
-        parameters dict
-    preread_ifgs: dict
-        prepread ifgs dict
-    tiles: list
-        list of shared.Tile class instances
-
-    Returns
-    -------
-    tsincr_g: ndarray
-        non smooth (svd method) time series of shape (ifg.shape, nvels)
-
+    Helper function to obtain time series for spatio-temporal filter
+    using SVD method
     """
+    # Is there other existing functions that can perform this same job?
     log.info('Calculating time series via SVD method for '
              'spatio-temporal filter')
     # copy params temporarily
@@ -146,51 +124,43 @@ def calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles):
 
 
 def _assemble_tsincr(ifg_paths, params, preread_ifgs, tiles, nvels):
-    """function to reconstruct time series images from tiles"""
+    """
+    Helper function to reconstruct time series images from tiles
+    """
     shape = preread_ifgs[ifg_paths[0]].shape + (nvels,)
     tsincr_g = np.empty(shape=shape, dtype=np.float32)
     for i in range(nvels):
         for n, t in enumerate(tiles):
             _assemble_tiles(i, n, t, tsincr_g[:, :, i], params[cf.TMPDIR],
-                           'tsincr_aps')
+                            'tsincr_aps')
     return tsincr_g
 
 
-def ts_to_ifgs(ts, preread_ifgs):
+def _ts_to_ifgs(tsincr, preread_ifgs):
     """
-    Function that converts a displacement time series into interferometric
-    phase observations. Used to re-construct an interferogram network
-    from a time series.
+    Function that converts an incremental displacement time series into
+    interferometric phase observations. Used to re-construct an interferogram
+    network from a time series.
 
-    Parameters
-    ----------
-    ts: ndarray
-        time series nd array (ifg.shape, nvels)
-    preread_ifgs: dict
-        dict with ifg basic informations
+    :param ndarray tsincr: incremental time series array of size
+                (ifg.shape, nepochs-1)
+    :param dict preread_ifgs: Dictionary of shared.PrereadIfg class instances
 
-    Saves ifgs on disc after conversion.
+    :return: None, interferograms are saved to disk
     """
     log.info('Converting time series to ifgs')
     ifgs = list(OrderedDict(sorted(preread_ifgs.items())).values())
     _, n = get_epochs(ifgs)
     index_master, index_slave = n[:len(ifgs)], n[len(ifgs):]
     for i, ifg in enumerate(ifgs):
-        phase = np.sum(ts[:, :, index_master[i]: index_slave[i]], axis=2)
+        phase = np.sum(tsincr[:, :, index_master[i]: index_slave[i]], axis=2)
         _save_aps_corrected_phase(ifg.path, phase)
 
 
 def _save_aps_corrected_phase(ifg_path, phase):
     """
-    Update interferogram metadata and phase data after
+    Save (update) interferogram metadata and phase data after
     spatio-temporal filter (APS) correction.
-
-    Parameters
-    ----------
-    ifg_path: str
-        path to ifg
-    phase: ndarray
-        ndarray corresponding to ifg phase data of shape ifg.shape
     """
     ifg = Ifg(ifg_path)
     ifg.open(readonly=False)

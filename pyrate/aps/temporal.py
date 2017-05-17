@@ -14,7 +14,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 """
-Temporal low pass filter.
+This Python module implements a temporal low pass filter.
 """
 # pylint: disable=invalid-name, too-many-locals, too-many-arguments
 import logging
@@ -26,23 +26,18 @@ log = logging.getLogger(__name__)
 
 
 # TODO: use tiles here and distribute amongst processes
-def tlpfilter(tsincr, epochlist, params):
+def temporal_low_pass_filter(tsincr, epochlist, params):
     """
-    Temporal low pass filter
+    Filter time series data temporally using either a Gaussian, triangular
+    or mean low pass filter defined by a cut-off time period (in years).
 
-    Parameters
-    ----------
-    tsincr : ndarray
-        time series array of size (ifg.shape, nvels)
-    epochlist : list
-        list of shared.EpochList class instances
-    params : dict
-        parameters dict
+    :param ndarray tsincr: Array of incremental time series data of shape
+                (ifg.shape, n_epochs)
+    :param list epochlist: List of shared.EpochList class instances
+    :param dict params: Dictionary of configuration parameters
 
-    Returns
-    -------
-    tsfilt_incr : ndarray
-        temporal filtered time series of shape (ifg.shape, nvels)
+    :return: tsfilt_incr: filtered time series data, shape (ifg.shape, nepochs)
+    :rtype: ndarray
     """
     log.info('Applying temporal low pass filter')
     nanmat = ~isnan(tsincr)
@@ -65,22 +60,27 @@ def tlpfilter(tsincr, epochlist, params):
     log.info('Finished applying temporal low pass filter')
     return tsfilt_incr
 
-
+# Throwaway function to define Gaussian filter weights
 gauss = lambda m, yr, cutoff: np.exp(-(yr / cutoff) ** 2 / 2)
 
 
 def _triangle(m, yr, cutoff):
-    # pylint: disable=unused-argument
+    """
+    Define triangular filter weights
+    """
     wgt = cutoff - abs(yr)
     wgt[wgt < 0] = 0
     return wgt
 
-
+# Throwaway function to define Mean filter weights
 mean_filter = lambda m, yr, cutoff: np.ones(m)
 
 
 def _tlpfilter(cols, cutoff, nanmat, rows, span, threshold, tsfilt_incr,
                tsincr, func):
+    """
+    Wrapper function for temporal low pass filter
+    """
     for i in range(rows):
         for j in range(cols):
             sel = np.nonzero(nanmat[i, j, :])[0]  # don't select if nan

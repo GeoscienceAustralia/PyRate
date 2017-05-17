@@ -37,7 +37,7 @@ from pyrate import refpixel
 from pyrate import shared
 from pyrate import timeseries
 from pyrate import covariance as vcm_module
-from pyrate.aps import wrap_spatio_temporal_filter
+from pyrate.aps import _wrap_spatio_temporal_filter
 #from pyrate.compat import PyAPS_INSTALLED
 from pyrate.config import ConfigException
 from pyrate.shared import Ifg, PrereadIfg, get_tiles
@@ -391,7 +391,7 @@ def process_ifgs(ifg_paths, params, tiley, tilex):
     _ref_phase_estimation(ifg_paths, params, refpx, refpy, preread_ifgs)
 
     # spatio-temporal aps filter
-    wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs)
+    _wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs)
 
     maxvar, vcmt = _maxvar_vcm_calc(ifg_paths, params, preread_ifgs)
 

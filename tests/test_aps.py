@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 
 from pyrate.algorithm import get_epochs
-from pyrate.aps.temporal import tlpfilter
+from pyrate.aps.temporal import temporal_low_pass_filter as tlpfilter
 from pyrate.aps.spatial import _slp_filter, spatial_low_pass_filter
 from pyrate import config as cf
 from pyrate.compat import pickle, PY3
