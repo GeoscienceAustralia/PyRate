@@ -28,7 +28,7 @@ GAMMA_PROCESSOR = 1
 
 class ConvertToGeotiff(luigi.WrapperTask):
     """
-    Luigi wrapper class for both roipac and gamma geotiff conversion
+    Luigi wrapper class for both ROI_PAC and GAMMA geotiff conversion
     """
     processor = luigi.IntParameter(config_path=InputParam(config.PROCESSOR))
 
