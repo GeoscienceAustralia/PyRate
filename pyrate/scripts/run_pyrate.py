@@ -357,14 +357,14 @@ def _ref_phs_method1(ifg_paths, comp):
     return ref_phs
 
 
-def process_ifgs(ifg_paths, params, tiley, tilex):
+def process_ifgs(ifg_paths, params, rows, cols):
     """
     Top level function to perform PyRate workflow on given interferograms
 
     :param list ifg_paths: List of interferogram paths
     :param dict params: Dictionary of configuration parameters
-    :param int tiley: Number of sub-tiles in y direction
-    :param int tilex: Number of sub-tiles in x direction
+    :param int rows: Number of sub-tiles in y direction
+    :param int cols: Number of sub-tiles in x direction
     
     :return: refpt: tuple of reference pixel x and y position
     :rtype: tuple
@@ -376,7 +376,7 @@ def process_ifgs(ifg_paths, params, tiley, tilex):
     if mpiops.size > 1:  # turn of multiprocessing during mpi jobs
         params[cf.PARALLEL] = False
 
-    tiles = mpiops.run_once(get_tiles, ifg_paths[0], tiley, tilex)
+    tiles = mpiops.run_once(get_tiles, ifg_paths[0], rows, cols)
 
     preread_ifgs = _create_ifg_dict(ifg_paths, params=params, tiles=tiles)
 
