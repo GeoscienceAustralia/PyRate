@@ -28,37 +28,28 @@ log = logging.getLogger(__name__)
 MPI.pickle.dumps = pickle.dumps
 MPI.pickle.loads = pickle.loads
 
+# module-level MPI 'world' object representing all connected nodes
 comm = MPI.COMM_WORLD
-"""module-level MPI 'world' object representing all connected nodes
-"""
 
+# int: the total number of nodes in the MPI world
 size = comm.Get_size()
-"""int: the total number of nodes in the MPI world
-"""
 
+# int: the index (from zero) of this node in the MPI world. Also known as
+# the rank of the node.
 rank = comm.Get_rank()
-"""int: the index (from zero) of this node in the MPI world. Also known as
-the rank of the node.
-"""
 
 
 def run_once(f, *args, **kwargs):
-    """Run a function on one node, broadcast result to all
-    This function evaluates a function on a single node in the MPI world,
-    then broadcasts the result of that function to every node in the world.
-    Parameters
-    ----------
-    f : callable
-        The function to be evaluated. Can take arbitrary arguments and return
-        anything or nothing
-    args : optional
-        Other positional arguments to pass on to f
-    kwargs : optional
-        Other named arguments to pass on to f
-    Returns
-    -------
-    result
-        The value returned by f
+    """
+    Run a function on one node and then broadcast result to all.
+
+    :param str f: The function to be evaluated. Can take arbitrary arguments
+                and return anything or nothing
+    :param str args: Other positional arguments to pass on to f (optional)
+    :param str kwargs: Other named arguments to pass on to f (optional)
+
+    :return: The value returned by f.
+    :rtype: unknown
     """
     if rank == 0:
         f_result = f(*args, **kwargs)
@@ -71,15 +62,13 @@ def run_once(f, *args, **kwargs):
 def array_split(arr, process=None):
     """
     Convenience function for splitting array elements across MPI processes
-    Parameters
-    ----------
-    arr: ndarray
-        1-D array
-    process: int, optional
-        process for which array members are required.
-        If None, MPI.comm.rank is used instead.
 
-    Returns list corresponding to array members in a a process
+    :param ndarray arr: Numpy array
+    :param int process: Process for which array members are required.
+                If None, MPI.comm.rank is used instead. (optional)
+
+    :return List corresponding to array members in a process.
+    :rtype: list
     """
     r = process if process else rank
     return np.array_split(arr, size)[r]
