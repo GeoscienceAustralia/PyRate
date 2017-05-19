@@ -7,6 +7,7 @@ Python Modules
    algorithm
    aps
    config
+   covariance
    gamma
    gdal_python
    ifgconstants
@@ -21,4 +22,3 @@ Python Modules
    roipac
    shared
    timeseries
-   vcm
