@@ -79,7 +79,7 @@ def find_min_mean(mean_sds, grid):
         reference pixel grid
     :param list grid: List of ref pixel coordinates tuples
 
-    :return Tuple of (refy, refx) with minimum mean
+    :return: Tuple of (refy, refx) with minimum mean
     :rtype: tuple    
     """
     log.info('Filtering means during reference pixel computation')

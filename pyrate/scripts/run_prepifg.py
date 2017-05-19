@@ -141,7 +141,7 @@ def gamma_prepifg(base_unw_paths, params):
     Prepare GAMMA interferograms which combines both conversion to geotiff
     and multilooking/cropping operations.
 
-    :param list base_ifg_paths: List of unwrapped interferograms
+    :param list base_unw_paths: List of unwrapped interferograms
     :param dict params: Parameters dictionary corresponding to config file
     """
     # pylint: disable=expression-not-assigned
