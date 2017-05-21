@@ -52,7 +52,7 @@ def parse_epoch_header(path):
     """
     Returns dictionary of epoch metadata required for PyRate
 
-    :param str path: Full path to Gamma *slc.par file
+    :param str path: `Full path to Gamma *slc.par file`
 
     :return: subset: subset of full metadata
     :rtype: dict
@@ -100,7 +100,7 @@ def parse_dem_header(path):
     """
     Returns dictionary of DEM metadata required for PyRate
 
-    :param str path: Full path to Gamma *dem.par file
+    :param str path: `Full path to Gamma *dem.par file`
 
     :return: subset: subset of full metadata
     :rtype: dict

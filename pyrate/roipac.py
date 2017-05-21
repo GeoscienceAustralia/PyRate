@@ -96,7 +96,7 @@ def parse_header(hdr_file):
     """
     Parses ROI_PAC header file metadata to a dictionary.
 
-    :param str hdr_file: path to ROI_PAC *.rsc file
+    :param str hdr_file: `path to ROI_PAC *.rsc file`
 
     :return: subset: subset of metadata
     :rtype: dict
@@ -185,7 +185,7 @@ def manage_header(header_file, projection):
     Manage header files for ROI_PAC interferograms and DEM files.
     NB: projection = roipac.parse_header(dem_file)[ifc.PYRATE_DATUM]
 
-    :param str header_file: ROI_PAC *.rsc header file path
+    :param str header_file: `ROI_PAC *.rsc header file path`
     :param projection: Projection obtained from dem header.
 
     :return: combined_header: Combined metadata dictionary

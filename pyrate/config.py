@@ -428,6 +428,8 @@ def write_config_file(params, output_conf_file):
     :param dict params: parameter dictionary
     :param str output_conf_file: output file name
 
+    :return: config file
+    :rtype: list
     """
 
     with open(output_conf_file, 'w') as f:
@@ -461,8 +463,8 @@ def transform_params(params):
 
     :param dict params: Parameter dictionary
 
-    :return xlooks, ylooks, crop
-    :rtype int
+    :return: xlooks, ylooks, crop
+    :rtype: int
     """
 
     t_params = [IFG_LKSX, IFG_LKSY, IFG_CROP_OPT]

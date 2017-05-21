@@ -97,6 +97,7 @@ Before you submit a pull request, check that it meets these guidelines:
    feature to the list in README.rst.
 3. The pull request should work for Python 2.7, and 3.3, 3.4, 3.5, 3.6, 3.7
     and for PyPy.
+
    Check https://travis-ci.org/GeoscienceAustralia/PyRate
    under pull requests for active pull requests or run the ``tox`` command and
    make sure that the tests pass for all supported Python versions.

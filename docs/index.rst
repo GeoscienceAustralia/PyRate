@@ -13,7 +13,7 @@ Contents:
    :maxdepth: 2
 
    installation
-   pbs
+   hpc
    usage
    contributing
    authors

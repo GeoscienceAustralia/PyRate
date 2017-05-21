@@ -195,8 +195,23 @@ def prepare_ifgs(raster_data_paths, crop_opt, xlooks, ylooks, thresh=0.5,
     Wrapper function to prepare a sequence of interferogram files for
     PyRate analysis. See prepifg.prepare_ifg() for full description of
     inputs and returns.
+    
+    Note: function need refining for crop options
 
     :param list raster_data_paths: List of interferogram file paths
+    :param int crop_opt: Crop option
+    :param int xlooks: Number of multi-looks in x; 5 is 5 times smaller,
+        1 is no change
+    :param int ylooks: Number of multi-looks in y
+    :param float thresh: see thresh in prepare_ifgs()
+    :param tuple user_exts: Tuple of user defined georeferenced extents for
+        new file: (xfirst, yfirst, xlast, ylast)cropping coordinates
+    :param bool write_to_disk: Write new data to disk
+
+    :return: resampled_data: output cropped and resampled image
+    :rtype: ndarray
+    :return: out_ds: destination gdal dataset object
+    :rtype: gdal.Dataset
     """
     # use metadata check to check whether it's a dem or ifg
     rasters = [dem_or_ifg(r) for r in raster_data_paths]

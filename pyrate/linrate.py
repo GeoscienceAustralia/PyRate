@@ -39,8 +39,6 @@ def linear_rate(ifgs, params, vcmt, mst=None):
     :param dict params: Configuration parameters
     :param ndarray vcmt: Derived positive definite temporal variance covariance matrix
     :param ndarray mst: Pixel-wise matrix describing the minimum spanning tree network
-    :param int parallel: Use multiprocessing or not
-    :param int processes: Number of parallel processes to use
 
     :return: rate: Linear rate (velocity) map
     :rtype: ndarray

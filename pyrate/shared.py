@@ -1146,7 +1146,7 @@ def check_correction_status(preread_ifgs, meta):  # pragma: no cover
     :param str meta: Meta data flag to check for
 
     :return: True if correction has been performed, otherwise False
-    :rtype:bool
+    :rtype: bool
     """
     ifg_paths = sorted(preread_ifgs.keys())
     # preread_ifgs[i].metadata contains ifg metadata

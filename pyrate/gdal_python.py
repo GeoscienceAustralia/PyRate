@@ -268,8 +268,8 @@ def crop_resample_average(
 
     :param str input_tif: Path to input geotiff to resample/crop
     :param tuple extents: Cropping extents (xfirst, yfirst, xlast, ylast)
-    :param str output_file: Path to output resampled/cropped geotiff
     :param list new_res: [xres, yres] resolution of output image
+    :param str output_file: Path to output resampled/cropped geotiff
     :param float thresh: NaN fraction threshold
     :param str out_driver_type: The output driver; `MEM` or `GTiff` (optional)
     :param bool match_pirate: Match Matlab Pirate output (optional)

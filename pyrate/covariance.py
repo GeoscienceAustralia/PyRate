@@ -285,10 +285,11 @@ def get_vcmt(ifgs, maxvar):
     described by Biggs et al., Geophys. J. Int, 2007. Matrix elements are
     evaluated according to sig_i * sig_j * C_ij where i and j are two
     interferograms and C is a matrix of coefficients:
-        C = 1 if the master and slave epochs of i and j are equal
-        C = 0.5 if have i and j share either a common master or slave epoch
-        C = -0.5 if the master of i or j equals the slave of the other
-        C = 0 otherwise
+
+    C = 1 if the master and slave epochs of i and j are equal
+    C = 0.5 if have i and j share either a common master or slave epoch
+    C = -0.5 if the master of i or j equals the slave of the other
+    C = 0 otherwise
 
     :param list ifgs: A list of pyrate.shared.Ifg class objects.
     :param ndarray maxvar: numpy array of maximum variance values for the

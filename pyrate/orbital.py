@@ -192,7 +192,7 @@ def independent_orbital_correction(ifg, degree, offset, params):
     Calculates and removes an orbital error surface from a single independent
     interferogram.
 
-    .. warn:: This will write orbital error corrected phase_data to the ifg.
+    Warning: This will write orbital error corrected phase_data to the ifg.
 
     :param Ifg class instance ifg: the interferogram to be corrected
     :param str degree: model to fit (PLANAR / QUADRATIC / PART_CUBIC)
@@ -235,7 +235,7 @@ def network_orbital_correction(ifgs, degree, offset, params, m_ifgs=None,
     This algorithm implements a network inversion to determine orbital
     corrections for a set of interferograms forming a connected network.
 
-    .. warn:: This will write orbital error corrected phase_data to the ifgs.
+    Warning: This will write orbital error corrected phase_data to the ifgs.
 
     :param list ifgs: List of Ifg class objects reduced to a minimum spanning
         tree network
