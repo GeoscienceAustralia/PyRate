@@ -52,7 +52,7 @@ class MSTTests(unittest.TestCase):
             i.convert_to_nans() # zeros to NaN/NODATA
 
         epochs = algorithm.get_epochs(self.ifgs)[0]
-        res = mst.mst_matrix_as_array(self.ifgs)
+        res = mst._mst_matrix_as_array(self.ifgs)
         ys, xs = res.shape
 
         for y, x in product(range(ys), range(xs)):
@@ -76,7 +76,7 @@ class MSTTests(unittest.TestCase):
         ifgs = small5_mock_ifgs()
         nifgs = len(ifgs)
         ys, xs = ifgs[0].shape
-        result = mst.mst_matrix_ifgs_only(ifgs)
+        result = mst._mst_matrix_ifgs_only(ifgs)
 
         for coord in product(range(ys), range(xs)):
             stack = (i.phase_data[coord] for i in self.ifgs)
@@ -91,7 +91,7 @@ class MSTTests(unittest.TestCase):
         num_coherent = 3
 
         def assert_equal():
-            res = mst.mst_matrix_as_array(mock_ifgs)
+            res = mst._mst_matrix_as_array(mock_ifgs)
             self.assertEqual(len(res[0,0]), num_coherent)
 
         mock_ifgs = [MockIfg(i, 1, 1) for i in self.ifgs]
@@ -111,7 +111,7 @@ class MSTTests(unittest.TestCase):
         for m in mock_ifgs:
             m.phase_data[:] = nan
 
-        res = mst.mst_matrix_as_array(mock_ifgs)
+        res = mst._mst_matrix_as_array(mock_ifgs)
         exp = empty((1,1), dtype=object)
         exp[:] = nan
 

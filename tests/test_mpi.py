@@ -33,14 +33,13 @@ import pyrate.orbital
 import pyrate.shared
 import tests.common
 from pyrate import ref_phs_est as rpe
-from pyrate import shared
-from pyrate import vcm
+from pyrate import covariance
 from pyrate import refpixel
 from pyrate.scripts import run_pyrate, run_prepifg, postprocessing
 from tests.common import small_data_setup, reconstruct_mst, \
-    reconstruct_linrate, SML_TEST_DEM_HDR_GAMMA
+    reconstruct_linrate, SML_TEST_DEM_HDR_GAMMA, pre_prepare_ifgs
 from tests import common
-from tests.test_vcm import matlab_maxvar
+from tests.test_covariance import matlab_maxvar
 from pyrate import config as cf
 from pyrate import mpiops
 from pyrate import algorithm
@@ -130,7 +129,7 @@ def modify_config(request, tempdir, get_config):
     params_dict[cf.IFG_LKSX] = request.param
     params_dict[cf.IFG_LKSY] = request.param
     params_dict[cf.OBS_DIR] = tempdir()
-    shared.copytree(common.SML_TEST_GAMMA, params_dict[cf.OBS_DIR])
+    common.copytree(common.SML_TEST_GAMMA, params_dict[cf.OBS_DIR])
     params_dict[cf.IFG_FILE_LIST] = os.path.join(
         params_dict[cf.OBS_DIR], 'ifms_17')
     params_dict[cf.PARALLEL] = False
@@ -175,15 +174,15 @@ def test_vcm_matlab_vs_mpi(mpisync, tempdir, get_config):
 
     mpiops.comm.barrier()
 
-    tiles = run_pyrate.get_tiles(dest_paths[0], rows=1, cols=1)
-    preread_ifgs = run_pyrate.create_ifg_dict(dest_paths,
+    tiles = pyrate.shared.get_tiles(dest_paths[0], rows=1, cols=1)
+    preread_ifgs = run_pyrate._create_ifg_dict(dest_paths,
                                               params=params_dict,
                                               tiles=tiles)
-    refpx, refpy = run_pyrate.ref_pixel_calc(dest_paths, params_dict)
-    run_pyrate.orb_fit_calc(dest_paths, params_dict)
-    run_pyrate.ref_phase_estimation(dest_paths, params_dict, refpx, refpy)
+    refpx, refpy = run_pyrate._ref_pixel_calc(dest_paths, params_dict)
+    run_pyrate._orb_fit_calc(dest_paths, params_dict)
+    run_pyrate._ref_phase_estimation(dest_paths, params_dict, refpx, refpy)
 
-    maxvar, vcmt = run_pyrate.maxvar_vcm_calc(dest_paths, params_dict,
+    maxvar, vcmt = run_pyrate._maxvar_vcm_calc(dest_paths, params_dict,
                                               preread_ifgs)
     np.testing.assert_array_almost_equal(maxvar, matlab_maxvar, decimal=4)
     np.testing.assert_array_almost_equal(matlab_vcm, vcmt, decimal=3)
@@ -207,7 +206,7 @@ def orbfit_degrees(request):
 
 
 @pytest.mark.skipif(not MPITEST, reason='skipping mpi tests in travis except '
-                                        'python 3.5 and GDAL=2.0.0')
+                                        'in TRAVIS and GDAL=2.0.0')
 def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
                                 ref_est_method, row_splits, col_splits,
                                 get_crop, orbfit_lks, orbfit_method,
@@ -252,10 +251,10 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
     (refpx, refpy), maxvar, vcmt = run_pyrate.process_ifgs(
         ifg_paths=dest_paths, params=params, rows=row_splits, cols=col_splits)
 
-    tiles = mpiops.run_once(run_pyrate.get_tiles, dest_paths[0],
+    tiles = mpiops.run_once(pyrate.shared.get_tiles, dest_paths[0],
                             rows=row_splits, cols=col_splits)
-    postprocessing.postprocess_linrate(row_splits, col_splits, params)
-    postprocessing.postprocess_timeseries(row_splits, col_splits, params)
+    postprocessing._postprocess_linrate(row_splits, col_splits, params)
+    postprocessing._postprocess_timeseries(row_splits, col_splits, params)
     ifgs_mpi_out_dir = params[cf.OUT_DIR]
     ifgs_mpi = small_data_setup(datafiles=dest_paths)
 
@@ -276,16 +275,17 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
             base_unw_paths, crop, params_old, xlks)
         run_prepifg.gamma_prepifg(base_unw_paths, params_old)
 
-        ifgs = shared.pre_prepare_ifgs(dest_paths, params_old)
+        ifgs = pre_prepare_ifgs(dest_paths, params_old)
         mst_grid = tests.common.mst_calculation(dest_paths, params_old)
         refy, refx = refpixel.ref_pixel(ifgs, params_old)
         assert (refx == refpx) and (refy == refpy)  # both must match
         pyrate.orbital.remove_orbital_error(ifgs, params_old)
         ifgs = common.prepare_ifgs_without_phase(dest_paths, params_old)
         rpe.estimate_ref_phase(ifgs, params_old, refx, refy)
-        ifgs = shared.pre_prepare_ifgs(dest_paths, params_old)
-        maxvar_s = [vcm.cvd(i, params_old)[0] for i in ifgs]
-        vcmt_s = vcm.get_vcmt(ifgs, maxvar)
+        ifgs = pre_prepare_ifgs(dest_paths, params_old)
+        r_dist = covariance.RDist(ifgs[0])()
+        maxvar_s = [covariance.cvd(i, params_old, r_dist)[0] for i in ifgs]
+        vcmt_s = covariance.get_vcmt(ifgs, maxvar)
         tsincr, tscum, _ = tests.common.compute_time_series(
             ifgs, mst_grid, params, vcmt)
         rate, error, samples = tests.common.calculate_linear_rate(

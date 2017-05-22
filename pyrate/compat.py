@@ -17,7 +17,7 @@
 This Python module tests compatibilities
 """
 # coding: utf-8
-# pylint: disable= invalid-name,  unused-import
+# pylint: disable= invalid-name,  unused-import, import-error
 
 from __future__ import absolute_import
 import sys
@@ -33,6 +33,11 @@ try:
 except ImportError:
     PyAPS_INSTALLED = False
 
+if PY3:
+    import pickle
+else:
+    import cPickle as pickle
+
 
 class PyAPSException(Exception):
     """
@@ -40,7 +45,7 @@ class PyAPSException(Exception):
     """
 
 
-def validate_sklearn():
+def validate_pyaps():
     """
     Convenience function validating PyAPS status
     """

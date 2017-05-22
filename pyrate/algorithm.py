@@ -14,7 +14,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 """
-This Python module contains a collection of algorithms used in PyRate
+This Python module contains a collection of generic algorithms used in PyRate
 """
 import logging
 from numpy import sin, cos, unique, histogram, diag, dot
@@ -27,14 +27,14 @@ log = logging.getLogger(__name__)
 
 def is_square(arr):
     """
-    Parameters
-    ----------
-    arr: ndarray
-        numpy array
-    Return
-    ------
-    whether arr is square or not
+    Determines whether an array is square or not.
+
+    :param ndarray arr: numpy array
+
+    :return: condition
+    :rtype: bool
     """
+
     shape = arr.shape
     if len(shape) == 2 and (shape[0] == shape[1]):
         return True
@@ -44,12 +44,16 @@ def is_square(arr):
 def least_squares_covariance(A, b, v):
     """
     Least squares solution in the presence of known covariance.
-
     This function is known as lscov() in MATLAB.
-    A: design matrix
-    b: observations (vector of phase values)
-    v: covariances (weights) in vector form
+
+    :param ndarray A: Design matrix
+    :param ndarray b: Observations (vector of phase values)
+    :param ndarray v: Covariances (vector of weights)
+
+    :return: solution
+    :rtype: ndarray
     """
+
     # pylint: disable=too-many-locals
     # X = LSCOV(A,b,V) returns the vector X that minimizes
     # (A*X-b)'*inv(V)*(A*X-b) for the case in which length(b) > length(X).
@@ -93,8 +97,12 @@ def least_squares_covariance(A, b, v):
 def los_conversion(phase_data, unit_vec):
     """
     Converts phase from line-of-sight (LOS) to horizontal/vertical components.
-    phase_data - phase band data array (eg. ifg.phase_data)
-    unit_vec - 3 component sequence, eg. [EW, NS, vertical]
+
+    :param ndarray phase_data: Phase band data array (eg. ifg.phase_data)
+    :param tuple unit_vec: 3 component unit vector e.g. (EW, NS, vertical)
+
+    :return: converted_phase
+    :rtype: ndarray
     """
 
     # NB: currently not tested as implementation is too simple
@@ -104,6 +112,12 @@ def los_conversion(phase_data, unit_vec):
 def unit_vector(incidence, azimuth):
     """
     Returns unit vector tuple (east_west, north_south, vertical).
+
+    :param float incidence: incidence angle w.r.t. nadir
+    :param float azimuth: azimuth of looking vector
+
+    :return: Unit vector (EW, NS, vertical).
+    :rtype: tuple
     """
 
     vertical = cos(incidence)
@@ -114,10 +128,16 @@ def unit_vector(incidence, azimuth):
 
 def ifg_date_lookup(ifgs, date_pair):
     """
-    Returns an Ifg which has a master/slave dates given in 'date_pair'.
-    ifgs - list of Ifg objects to search in
-    date_pair - a (datetime.date, datetime.date) tuple
+    Returns the Interferogram which has the master and slave dates given
+    in 'date_pair'.
+
+    :param list ifgs: List of interferogram objects to search
+    :param tuple date_pair: A (datetime.date, datetime.date)
+
+    :return: interferogram list
+    :rtype: list
     """
+
     if len(date_pair) != 2:
         msg = "Need (datetime.date, datetime.date) master/slave pair"
         raise IfgException(msg)
@@ -143,9 +163,14 @@ def ifg_date_lookup(ifgs, date_pair):
 
 def ifg_date_index_lookup(ifgs, date_pair):
     """
-    Returns an Ifg index which has a master/slave dates given in 'date_pair'.
-    ifgs - list of Ifg objects to search in
-    date_pair - a (datetime.date, datetime.date) tuple
+    Returns the Interferogram index which has the master and slave dates
+    given in 'date_pair'.
+
+    :param list ifgs: List of interferogram objects to search
+    :param tuple date_pair: A (datetime.date, datetime.date)
+
+    :return: interferogram index
+    :rtype: int
     """
 
     if len(date_pair) != 2:
@@ -169,9 +194,15 @@ def ifg_date_index_lookup(ifgs, date_pair):
 
 def get_epochs(ifgs):
     """
-    Returns an EpochList derived from all given interferograms.
+    Returns an EpochList derived from the given interferograms.
+
+    :param list ifgs: List of interferogram objects
+
+    :return: EpochList
+    :rtype: list
     """
-    log.info('Finding epochs')
+
+    log.info('Finding unique epochs in given interferogram network')
     if isinstance(ifgs, dict):
         ifgs = [v for v in ifgs.values() if isinstance(v, PrereadIfg)]
     combined = get_all_epochs(ifgs)
@@ -186,7 +217,12 @@ def get_epochs(ifgs):
 
 def get_all_epochs(ifgs):
     """
-    Returns sequence of all master and slave dates in given ifgs.
+    Returns a sequence of all master and slave dates in given interferograms.
+
+    :param list ifgs: List of interferogram objects
+
+    :return: master and slave dates
+    :rtype: list
     """
 
     return [ifg.master for ifg in ifgs] + [ifg.slave for ifg in ifgs]
@@ -194,9 +230,14 @@ def get_all_epochs(ifgs):
 
 def master_slave_ids(dates):
     """
-    Returns dict of 'date:unique ID' for each date in 'dates'. IDs are ordered
-    from oldest to newest, starting at 0.
-    Replaces ifglist.mas|slvnum used in the Matlab Pirate package.
+    Returns a dictionary of 'date:unique ID' for each date in 'dates'.
+    IDs are ordered from oldest to newest, starting at 0.
+    Implements ifglist.mas|slvnum used in the Matlab Pirate package.
+
+    :param list dates: List of dates
+
+    :return: unique dates IDs
+    :rtype: dict
     """
 
     dset = sorted(set(dates))

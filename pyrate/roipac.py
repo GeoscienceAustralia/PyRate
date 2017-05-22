@@ -16,7 +16,7 @@
 """
 This Python module contains tools for reading ROI_PAC format input data.
 """
-import os
+#import os
 import re
 import datetime
 import pyrate.ifgconstants as ifc
@@ -71,51 +71,17 @@ ROIPAC_HEADER_LEFT_JUSTIFY = 18
 ROI_PAC_HEADER_FILE_EXT = "rsc"
 
 
-def check_raw_data(is_ifg, data_path, ncols, nrows):
-    """
-    Parameters
-    ----------
-    is_ifg: bool
-        whether ifg or dem
-    data_path: str
-        path to file
-    ncols: int
-        number of cols in ifg/dem
-    nrows: int
-        number of rows in ifg/dem
-    """
-    base_size = ncols * nrows
-    if is_ifg:
-        size = 4 * base_size * 2  # 2 bands of 4 bytes each
-    else:
-        size = 2 * base_size  # single 2 byte band
-
-    act_size = os.stat(data_path).st_size
-    if act_size != size:
-        msg = '%s should have size %s, not %s. Is the correct file being used?'
-        raise RoipacException(msg % (data_path, size, act_size))
-
-
-def check_step_mismatch(header):
-    """
-    Parameters
-    ----------
-    header: dict
-        dict corresponding to header file
-    """
-    # pylint: disable=invalid-name
-    xs, ys = [abs(i) for i in [header[ifc.PYRATE_X_STEP],
-                               header[ifc.PYRATE_Y_STEP]]]
-
-    if xs != ys:
-        msg = 'X and Y cell sizes do not match: %s & %s'
-        raise RoipacException(msg % (xs, ys))
-
-
 def parse_date(dstr):
-    """Parses ROI_PAC 'yymmdd' or 'yymmdd-yymmdd' to date or date tuple"""
+    """
+    Parses ROI_PAC 'yymmdd' or 'yymmdd-yymmdd' format string to datetime.
+
+    :param str dstr: 'date' or 'date1-date2' string
+
+    :return: dstr: datetime string or tuple
+    :rtype: str or tuple
+    """
     def to_date(date_str):
-        """convert to date"""
+        """convert string to datetime"""
         year, month, day = [int(date_str[i:i+2]) for i in range(0, 6, 2)]
         year += 1900 if ((year <= 99) and (year >= 50)) else 2000
         return datetime.date(year, month, day)
@@ -127,7 +93,14 @@ def parse_date(dstr):
 
 
 def parse_header(hdr_file):
-    """Parses ROI_PAC header file to a dict"""
+    """
+    Parses ROI_PAC header file metadata to a dictionary.
+
+    :param str hdr_file: `path to ROI_PAC *.rsc file`
+
+    :return: subset: subset of metadata
+    :rtype: dict
+    """
     with open(hdr_file) as f:
         text = f.read()
 
@@ -191,6 +164,7 @@ def parse_header(hdr_file):
 
 
 def _parse_dates_from(filename):
+    """Determine dates from file name"""
     # pylint: disable=invalid-name
     # process dates from filename if rsc file doesn't have them (skip for DEMs)
     p = re.compile(r'\d{6}-\d{6}')  # match 2 sets of 6 digits separated by '-'
@@ -208,11 +182,16 @@ def _parse_dates_from(filename):
 
 def manage_header(header_file, projection):
     """
-    :param header_file:
-    :param projection: project form dem header
-    ....projection = roipac.parse_header(dem_file)[ifc.PYRATE_DATUM]
-    :return:
+    Manage header files for ROI_PAC interferograms and DEM files.
+    NB: projection = roipac.parse_header(dem_file)[ifc.PYRATE_DATUM]
+
+    :param str header_file: `ROI_PAC *.rsc header file path`
+    :param projection: Projection obtained from dem header.
+
+    :return: combined_header: Combined metadata dictionary
+    :rtype: dict
     """
+
     header = parse_header(header_file)
     if ifc.PYRATE_DATUM not in header:  # DEM already has DATUM
         header[ifc.PYRATE_DATUM] = projection

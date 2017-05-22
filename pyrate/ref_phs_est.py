@@ -30,16 +30,19 @@ log = logging.getLogger(__name__)
 
 def estimate_ref_phase(ifgs, params, refpx, refpy):
     """
-    :param ifgs: list of interferograms
-    :param params: parameters of the simulation
-    :param refpx: reference pixel found by ref pixel method
-    :param refpy: reference pixel found by ref pixel method
-    :returns:
-        :ref_phs: reference phase correction
-        :ifgs: reference phase data removed list of ifgs
-    """
-    _validate_ifgs(ifgs)
+    Wrapper function for reference phase estimation and interferogram
+    correction.
 
+    :param list ifgs: List of interferogram objects
+    :param dict params: Dictionary of configuration parameters
+    :param int refpx: Reference pixel X found by ref pixel method
+    :param int refpy: Reference pixel Y found by ref pixel method
+
+    :return: ref_phs: Numpy array of reference phase values of size (nifgs, 1)
+    :rtype: ndarray
+    :return: ifgs: Reference phase data is removed interferograms in place
+    """
+    _check_ref_phs_ifgs(ifgs)
     # set reference phase as the average of the whole image (recommended)
     if params[cf.REF_EST_METHOD] == 1:
         ref_phs = est_ref_phase_method1(ifgs, params)
@@ -50,21 +53,33 @@ def estimate_ref_phase(ifgs, params, refpx, refpy):
         raise ReferencePhaseError('No such option. Use refest=1 or 2')
 
     for i in ifgs:
-        i.meta_data[ifc.REF_PHASE] = ifc.REF_PHASE_REMOVED
+        i.meta_data[ifc.PYRATE_REF_PHASE] = ifc.REF_PHASE_REMOVED
         i.write_modified_phase()
     return ref_phs, ifgs
 
 
 def est_ref_phase_method2(ifgs, params, refpx, refpy):
-    """ref phs estimate method 2"""
+    """
+    Reference phase estimation using method 2. Reference phase is the
+    median calculated with a patch around the supplied reference pixel.
+
+    :param list ifgs: List of interferogram objects
+    :param dict params: Dictionary of configuration parameters
+    :param int refpx: Reference pixel X found by ref pixel method
+    :param int refpy: Reference pixel Y found by ref pixel method
+
+    :return: ref_phs: Numpy array of reference phase values of size (nifgs, 1)
+    :rtype: ndarray
+    :return: ifgs: Reference phase data is removed interferograms in place
+    """
     half_chip_size = int(np.floor(params[cf.REF_CHIP_SIZE] / 2.0))
     chipsize = 2 * half_chip_size + 1
     thresh = chipsize * chipsize * params[cf.REF_MIN_FRAC]
     phase_data = [i.phase_data for i in ifgs]
     if params[cf.PARALLEL]:
         ref_phs = Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
-            delayed(est_ref_phs_method2)(p, half_chip_size,
-                                         refpx, refpy, thresh)
+            delayed(_est_ref_phs_method2)(p, half_chip_size,
+                                          refpx, refpy, thresh)
             for p in phase_data)
 
         for n, ifg in enumerate(ifgs):
@@ -73,15 +88,16 @@ def est_ref_phase_method2(ifgs, params, refpx, refpy):
         ref_phs = np.zeros(len(ifgs))
         for n, ifg in enumerate(ifgs):
             ref_phs[n] = \
-                est_ref_phs_method2(phase_data[n], half_chip_size,
-                                    refpx, refpy, thresh)
+                _est_ref_phs_method2(phase_data[n], half_chip_size,
+                                     refpx, refpy, thresh)
             ifg.phase_data -= ref_phs[n]
     return ref_phs
 
 
-def est_ref_phs_method2(phase_data, half_chip_size,
-                        refpx, refpy, thresh):
-    """convenience function for ref phs estimate method 2 parallelisation"""
+def _est_ref_phs_method2(phase_data, half_chip_size, refpx, refpy, thresh):
+    """
+    Convenience function for ref phs estimate method 2 parallelisation
+    """
     patch = phase_data[refpy - half_chip_size: refpy + half_chip_size + 1,
                        refpx - half_chip_size: refpx + half_chip_size + 1]
     patch = np.reshape(patch, newshape=(-1, 1), order='F')
@@ -94,19 +110,15 @@ def est_ref_phs_method2(phase_data, half_chip_size,
 
 def est_ref_phase_method1(ifgs, params):
     """
-    ref phs estimate method 1 estimation
+    Reference phase estimation using method 1. Reference phase is the
+    median of the whole interferogram image.
 
-    Parameters
-    ----------
-    ifgs: list
-        list of interferograms or shared.IfgPart class instances
-    params: dict
-        parameter dict corresponding to config file
+    :param list ifgs: List of interferogram objects
+    :param dict params: Dictionary of configuration parameters
 
-    Returns
-    -------
-    ref_phs: ndarray
-        numpy array of size (nifgs, 1)
+    :return: ref_phs: Numpy array of reference phase values of size (nifgs, 1)
+    :rtype: ndarray
+    :return: ifgs: Reference phase data is removed interferograms in place
     """
     ifg_phase_data_sum = np.zeros(ifgs[0].shape, dtype=np.float64)
     phase_data = [i.phase_data for i in ifgs]
@@ -118,7 +130,7 @@ def est_ref_phase_method1(ifgs, params):
     if params[cf.PARALLEL]:
         log.info("Calculating ref phase using multiprocessing")
         ref_phs = Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
-            delayed(est_ref_phs_method1)(p, comp)
+            delayed(_est_ref_phs_method1)(p, comp)
             for p in phase_data)
         for n, ifg in enumerate(ifgs):
             ifg.phase_data -= ref_phs[n]
@@ -126,43 +138,36 @@ def est_ref_phase_method1(ifgs, params):
         log.info("Calculating ref phase")
         ref_phs = np.zeros(len(ifgs))
         for n, ifg in enumerate(ifgs):
-            ref_phs[n] = est_ref_phs_method1(ifg.phase_data, comp)
+            ref_phs[n] = _est_ref_phs_method1(ifg.phase_data, comp)
             ifg.phase_data -= ref_phs[n]
     return ref_phs
 
 
-def est_ref_phs_method1(phase_data, comp):
-    """convenience function for ref phs estimate method 1 parallelisation"""
+def _est_ref_phs_method1(phase_data, comp):
+    """
+    Convenience function for ref phs estimate method 1 parallelisation
+    """
     ifgv = np.ravel(phase_data, order='F')
     ifgv[comp == 1] = np.nan
-    # reference phase
-    ref_ph = nanmedian(ifgv)
-    return ref_ph
+    return nanmedian(ifgv)
 
 
-def _validate_ifgs(ifgs):
+def _check_ref_phs_ifgs(ifgs):
     """
-    make sure all ifgs have the same ref phase status
+    Convenience function to check the ref phase status of all ifgs
     """
     if len(ifgs) < 2:
         raise ReferencePhaseError('Need to provide at least 2 ifgs')
-    flags = [i.dataset.GetMetadataItem(ifc.REF_PHASE) for i in ifgs]
-    if all(flags):
-        log.info('Ifgs already reference phase corrected')
-        return
-    else:
-        check_ref_phase_ifgs(ifgs, flags)
+    # The following code is duplicated from shared.check_correction_status
+    flags = [True if i.dataset.GetMetadataItem(ifc.PYRATE_REF_PHASE)
+             else False for i in ifgs]
 
-
-def check_ref_phase_ifgs(ifgs, flags):
-    """
-    Function to check that the ref phase status of all ifgs are the same
-    """
-    count = sum([f == ifc.REF_PHASE_REMOVED for f in flags])
-    if (count < len(flags)) and (count > 0):
+    if sum(flags) == len(flags):
+        log.info('Skipped reference phase estimation, ifgs already corrected')
+        return True
+    elif (sum(flags) < len(flags)) and (sum(flags) > 0):
         log.debug('Detected mix of corrected and uncorrected '
                   'reference phases in ifgs')
-
         for i, flag in zip(ifgs, flags):
             if flag:
                 msg = '{}: prior reference phase ' \
@@ -172,6 +177,9 @@ def check_ref_phase_ifgs(ifgs, flags):
                       'correction detected'.format(i.data_path)
             log.debug(msg.format(i.data_path))
             raise ReferencePhaseError(msg)
+    else:  # count == 0
+        log.info('Estimating and removing reference phase')
+        return False
 
 
 class ReferencePhaseError(Exception):

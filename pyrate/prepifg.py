@@ -50,25 +50,18 @@ CROP_OPTIONS = [MINIMUM_CROP, MAXIMUM_CROP, CUSTOM_CROP, ALREADY_SAME_SIZE]
 GRID_TOL = 1e-6
 
 
-def is_number(s):
-    """ check whether string can be converted to float"""
-    try:
-        float(s)
-        return True
-    except TypeError:  # for example if 'None' is sent
-        return False
-    except ValueError:  # for example if a 'string' is sent
-        return False
-
-
-def get_analysis_extent(
-        crop_opt,
-        rasters,
-        xlooks,
-        ylooks,
-        user_exts):
+def get_analysis_extent(crop_opt, rasters, xlooks, ylooks, user_exts):
     """
-    Returns extents/bounding box args for gdalwarp as strings.
+    Function checks prepifg parameters and returns extents/bounding box.
+
+    :param int crop_opt: Cropping option
+    :param list rasters: List of either Ifg or DEM class objects
+    :param int xlooks: Number of multi-looks in x
+    :param int ylooks: Number of multi-looks in y
+    :param tuple user_exts: Tuple of user defined cropping coordinates
+
+    :return: extents: tuple of four bounding coordinates
+    :rtype: tuple
     """
 
     if crop_opt not in CROP_OPTIONS:
@@ -80,29 +73,98 @@ def get_analysis_extent(
         elif len(user_exts) != 4:  # check for required numbers
             raise PreprocessError('Custom extents must have all 4 values')
         elif len(user_exts) == 4:  # check for non floats
-            if not all([is_number(z) for z in user_exts]):
+            if not all([_is_number(z) for z in user_exts]):
                 raise PreprocessError('Custom extents must be 4 numbers')
 
     for raster in rasters:
         if not raster.is_open:
             raster.open()
 
-    check_looks(xlooks, ylooks)
-    check_resolution(rasters)
+    _check_looks(xlooks, ylooks)
+    _check_resolution(rasters)
 
-    return get_extents(rasters, crop_opt, user_exts)
+    return _get_extents(rasters, crop_opt, user_exts)
 
 
-def prepare_ifg(
-        raster_path,
-        xlooks,
-        ylooks,
-        exts,
-        thresh,
-        crop_opt,
-        write_to_disc=True):
+def _is_number(s):
     """
-    resample and crop ifgs/dems
+    Check whether string can be converted to float
+    """
+    try:
+        float(s)
+        return True
+    except TypeError:  # for example if 'None' is sent
+        return False
+    except ValueError:  # for example if a 'string' is sent
+        return False
+
+
+def _check_looks(xlooks, ylooks):
+    """
+    Convenience function to verify that looks parameters are valid.
+    """
+
+    if not (isinstance(xlooks, Number) and
+            isinstance(ylooks, Number)):  # pragma: no cover
+        msg = "Non-numeric looks parameter(s), x: %s, y: %s" % (xlooks, ylooks)
+        raise PreprocessError(msg)
+
+    if not (xlooks > 0 and ylooks > 0):  # pragma: no cover
+        msg = "Invalid looks parameter(s), x: %s, y: %s. " \
+              "Looks must be an integer greater than zero" % (xlooks, ylooks)
+        raise PreprocessError(msg)
+
+
+def _check_resolution(ifgs):
+    """
+    Convenience function to verify Ifg resolutions are equal.
+    """
+
+    for var in ['x_step', 'y_step']:
+        values = array([getattr(i, var) for i in ifgs])
+        if not (values == values[0]).all():  # pragma: no cover
+            msg = "Grid resolution does not match for %s" % var
+            raise PreprocessError(msg)
+
+
+def _get_extents(ifgs, crop_opt, user_exts=None):
+    """
+    Convenience function that returns extents/bounding box.
+    """
+
+    if crop_opt == MINIMUM_CROP:
+        extents = _min_bounds(ifgs)
+    elif crop_opt == MAXIMUM_CROP:
+        extents = _max_bounds(ifgs)
+    elif crop_opt == CUSTOM_CROP:
+        extents = _custom_bounds(ifgs, *user_exts)
+    else:
+        extents = _get_same_bounds(ifgs)
+
+    _check_crop_coords(ifgs, *extents)
+    return extents
+
+
+def prepare_ifg(raster_path, xlooks, ylooks, exts, thresh, crop_opt,
+                write_to_disk=True):
+    """
+    Open, resample, crop and optionally save to disk an interferogram or DEM.
+    Returns are only given if write_to_disk=False
+
+    :param str raster_path: Raster file path name
+    :param int xlooks: Number of multi-looks in x; 5 is 5 times smaller,
+        1 is no change
+    :param int ylooks: Number of multi-looks in y
+    :param tuple exts: Tuple of user defined georeferenced extents for
+        new file: (xfirst, yfirst, xlast, ylast)cropping coordinates
+    :param float thresh: see thresh in prepare_ifgs()
+    :param int crop_opt: Crop option
+    :param bool write_to_disk: Write new data to disk
+
+    :return: resampled_data: output cropped and resampled image
+    :rtype: ndarray
+    :return: out_ds: destination gdal dataset object
+    :rtype: gdal.Dataset
     """
 
     do_multilook = xlooks > 1 or ylooks > 1
@@ -120,48 +182,36 @@ def prepare_ifg(
         shutil.copy(raster.data_path, renamed_path)
         # set metadata to indicated has been cropped and multilooked
         # copy file with mlooked path
-        return dummy_warp(renamed_path)
+        return _dummy_warp(renamed_path)
 
-    return warp(raster, xlooks, ylooks, exts, resolution, thresh,
-                crop_opt, write_to_disc)
-
-
-def dummy_warp(renamed_path):
-    """ convenience dummy operation """
-    ifg = dem_or_ifg(renamed_path)
-    ifg.open()
-    ifg.dataset.SetMetadataItem(ifc.DATA_TYPE, ifc.MULTILOOKED)
-    data = ifg.dataset.ReadAsArray()
-    return data, ifg.dataset
+    return _warp(raster, xlooks, ylooks, exts, resolution, thresh,
+                 crop_opt, write_to_disk)
 
 
 # TODO: crop options 0 = no cropping? get rid of same size
-# (but it is in explained file)
-def prepare_ifgs(
-        raster_data_paths,
-        crop_opt,
-        xlooks,
-        ylooks,
-        thresh=0.5,
-        user_exts=None,
-        write_to_disc=True):
+def prepare_ifgs(raster_data_paths, crop_opt, xlooks, ylooks, thresh=0.5,
+                 user_exts=None, write_to_disc=True):
     """
-    Produces multilooked/resampled data files for PyRate analysis.
+    Wrapper function to prepare a sequence of interferogram files for
+    PyRate analysis. See prepifg.prepare_ifg() for full description of
+    inputs and returns.
+    
+    Note: function need refining for crop options
 
-    :param raster_data_paths: sequence of Ifg data paths
-            (Currently DEMs are not supported)
-    :param crop_opt: integer cropping type option (see config)
-    :param xlooks: multilooking factor for the X axis
-    :param ylooks: Y axis multilooking factor
-    :param float thresh: (0.0, 1.0). Controls NaN handling when resampling to
-     coarser grids. Value is the proportion above which the number of NaNs in
-     an area is considered invalid. thresh=0 resamples to NaN if 1 or more
-     contributing cells are NaNs. At 0.25, it resamples to NaN if 1/4 or
-     more contributing cells are NaNs. At 1.0, areas are resampled to NaN
-     only if all contributing cells are NaNs.
-    :param user_exts: CustomExts tuple with user sepcified lat long corners
-    :param verbose: Controls level of gdalwarp output
-    :param write_to_disc: bool, whether to write to disc during warp
+    :param list raster_data_paths: List of interferogram file paths
+    :param int crop_opt: Crop option
+    :param int xlooks: Number of multi-looks in x; 5 is 5 times smaller,
+        1 is no change
+    :param int ylooks: Number of multi-looks in y
+    :param float thresh: see thresh in prepare_ifgs()
+    :param tuple user_exts: Tuple of user defined georeferenced extents for
+        new file: (xfirst, yfirst, xlast, ylast)cropping coordinates
+    :param bool write_to_disk: Write new data to disk
+
+    :return: resampled_data: output cropped and resampled image
+    :rtype: ndarray
+    :return: out_ds: destination gdal dataset object
+    :rtype: gdal.Dataset
     """
     # use metadata check to check whether it's a dem or ifg
     rasters = [dem_or_ifg(r) for r in raster_data_paths]
@@ -173,7 +223,14 @@ def prepare_ifgs(
 
 
 def dem_or_ifg(data_path):
-    """ whether tif is a dem or an ifg """
+    """
+    Returns an Ifg or DEM class object from input geotiff file.
+
+    :param str data_path: file path name
+
+    :return: Interferogram or DEM object from input file
+    :rtype: Ifg or DEM class object
+    """
     ds = gdal.Open(data_path)
     md = ds.GetMetadata()
     if 'DATE' in md:  # ifg
@@ -182,25 +239,7 @@ def dem_or_ifg(data_path):
         return DEM(data_path)
 
 
-def get_extents(ifgs, crop_opt, user_exts=None):
-    """
-    Returns extents/bounding box args for gdalwarp as strings.
-    """
-
-    if crop_opt == MINIMUM_CROP:
-        extents = min_bounds(ifgs)
-    elif crop_opt == MAXIMUM_CROP:
-        extents = max_bounds(ifgs)
-    elif crop_opt == CUSTOM_CROP:
-        extents = custom_bounds(ifgs, *user_exts)
-    else:
-        extents = get_same_bounds(ifgs)
-
-    check_crop_coords(ifgs, *extents)
-    return extents
-
-
-# TODO: push out to a shared module
+# TODO: Not currently used; remove in future?
 def _file_ext(raster):
     """
     Returns file ext string based on type of raster.
@@ -217,6 +256,86 @@ def _file_ext(raster):
         raise NotImplementedError("Missing raster types for LOS, Coherence and baseline")
 
 
+def _dummy_warp(renamed_path):
+    """
+    Convenience dummy operation for when no multi-looking or cropping
+    required
+    """
+    ifg = dem_or_ifg(renamed_path)
+    ifg.open()
+    ifg.dataset.SetMetadataItem(ifc.DATA_TYPE, ifc.MULTILOOKED)
+    data = ifg.dataset.ReadAsArray()
+    return data, ifg.dataset
+
+
+def _warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out,
+          write_to_disk=True):
+    """
+    Convenience function for calling GDAL functionality
+    """
+    if x_looks != y_looks:
+        raise ValueError('X and Y looks mismatch')
+
+    # cut, average, resample the final output layers
+    looks_path = cf.mlooked_path(ifg.data_path, y_looks, crop_out)
+
+    #     # Add missing/updated metadata to resampled ifg/DEM
+    #     new_lyr = type(ifg)(looks_path)
+    #     new_lyr.open(readonly=True)
+    #     # for non-DEMs, phase bands need extra metadata & conversions
+    #     if hasattr(new_lyr, "phase_band"):
+    #         # TODO: LOS conversion to vertical/horizontal (projection)
+    #         # TODO: push out to workflow
+    #         #if params.has_key(REPROJECTION_FLAG):
+    #         #    reproject()
+    driver_type = 'GTiff' if write_to_disk else 'MEM'
+    resampled_data, out_ds = gdalwarp.crop_resample_average(
+        input_tif=ifg.data_path,
+        extents=extents,
+        new_res=resolution,
+        output_file=looks_path,
+        thresh=thresh,
+        out_driver_type=driver_type)
+
+    if not write_to_disk:
+        return resampled_data, out_ds
+
+# TODO: Not being used. Remove in future?
+def _resample(data, xscale, yscale, thresh):
+    """
+    Resamples/averages 'data' to return an array from the averaging of blocks
+    of several tiles in 'data'. NB: Assumes incoherent cells are NaNs.
+
+    :param data: source array to resample to different size
+    :param xscale: number of cells to average along X axis
+    :param yscale: number of Y axis cells to average
+    :param thresh: minimum allowable
+        proportion of NaN cells (range from 0.0-1.0), eg. 0.25 = 1/4 or
+        more as NaNs results in a NaN value for the output cell.
+    """
+    # TODO: make more efficient
+    if thresh < 0 or thresh > 1:
+        raise ValueError("threshold must be >= 0 and <= 1")
+
+    xscale = int(xscale)
+    yscale = int(yscale)
+    ysize, xsize = data.shape
+    xres, yres = int(xsize / xscale), int(ysize / yscale)
+    dest = zeros((yres, xres), dtype=float32) * nan
+    tile_cell_count = xscale * yscale
+
+    # calc mean without nans (fractional threshold ignores tiles
+    # with excess NaNs)
+    for x in range(xres):
+        for y in range(yres):
+            tile = data[y * yscale: (y+1) * yscale, x * xscale: (x+1) * xscale]
+            nan_fraction = nsum(isnan(tile)) / float(tile_cell_count)
+            if nan_fraction < thresh or (nan_fraction == 0 and thresh == 0):
+                dest[y, x] = nanmean(tile)
+    return dest
+
+
+# TODO: Not being used. Remove in future?
 def _resample_ifg(ifg, cmd, x_looks, y_looks, thresh, md=None):
     """
     Convenience function to resample data from a given Ifg (more coarse).
@@ -250,119 +369,10 @@ def _resample_ifg(ifg, cmd, x_looks, y_looks, thresh, md=None):
     tmp.close()  # manual close
     os.close(fp)
     os.remove(tmp_path)
-    return resample(data, x_looks, y_looks, thresh)
+    return _resample(data, x_looks, y_looks, thresh)
 
 
-def warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out,
-         write_to_disc=True):
-    """
-    Resamples 'ifg' and returns a new Ifg obj.
-
-    :param xlooks: int
-        factor to scale X axis by, 5 is 5x smaller, 1 is no change.
-    :param ylooks: int
-        as xlooks, but for Y axis
-    :param extents: tuple
-        georeferenced extents for new file: (xfirst, yfirst, xlast, ylast)
-    :param resolution: [xres, yres] or None.
-        Sets resolution output Ifg metadata.
-        Use *None* if raster size is not being changed.
-    :param thresh: see thresh in prepare_ifgs().
-    :param verbose: True to print gdalwarp output to stdout
-    :param write_to_disc: bool, whether to write to disc during warp
-    """
-    if x_looks != y_looks:
-        raise ValueError('X and Y looks mismatch')
-
-    # cut, average, resample the final output layers
-    looks_path = cf.mlooked_path(ifg.data_path, y_looks, crop_out)
-
-    #     # Add missing/updated metadata to resampled ifg/DEM
-    #     new_lyr = type(ifg)(looks_path)
-    #     new_lyr.open(readonly=True)
-    #     # for non-DEMs, phase bands need extra metadata & conversions
-    #     if hasattr(new_lyr, "phase_band"):
-    #         # TODO: LOS conversion to vertical/horizontal (projection)
-    #         # TODO: push out to workflow
-    #         #if params.has_key(REPROJECTION_FLAG):
-    #         #    reproject()
-    driver_type = 'GTiff' if write_to_disc else 'MEM'
-    resampled_data, out_ds = gdalwarp.crop_resample_average(
-        input_tif=ifg.data_path,
-        extents=extents,
-        new_res=resolution,
-        output_file=looks_path,
-        thresh=thresh,
-        out_driver_type=driver_type)
-
-    if not write_to_disc:
-        return resampled_data, out_ds
-
-
-def resample(data, xscale, yscale, thresh):
-    """
-    # TODO: make more efficient
-    This is the slowest step in prepifg
-    Resamples/averages 'data' to return an array from the averaging of blocks
-    of several tiles in 'data'. NB: Assumes incoherent cells are NaNs.
-
-    :param data: source array to resample to different size
-    :param xscale: number of cells to average along X axis
-    :param yscale: number of Y axis cells to average
-    :param thresh: minimum allowable
-        proportion of NaN cells (range from 0.0-1.0), eg. 0.25 = 1/4 or
-        more as NaNs results in a NaN value for the output cell.
-    """
-    if thresh < 0 or thresh > 1:
-        raise ValueError("threshold must be >= 0 and <= 1")
-
-    xscale = int(xscale)
-    yscale = int(yscale)
-    ysize, xsize = data.shape
-    xres, yres = int(xsize / xscale), int(ysize / yscale)
-    dest = zeros((yres, xres), dtype=float32) * nan
-    tile_cell_count = xscale * yscale
-
-    # calc mean without nans (fractional threshold ignores tiles
-    # with excess NaNs)
-    for x in range(xres):
-        for y in range(yres):
-            tile = data[y * yscale: (y+1) * yscale, x * xscale: (x+1) * xscale]
-            nan_fraction = nsum(isnan(tile)) / float(tile_cell_count)
-            if nan_fraction < thresh or (nan_fraction == 0 and thresh == 0):
-                dest[y, x] = nanmean(tile)
-    return dest
-
-
-def check_resolution(ifgs):
-    """
-    Verifies Ifg resolutions are equal for the given grids.
-    """
-
-    for var in ['x_step', 'y_step']:
-        values = array([getattr(i, var) for i in ifgs])
-        if not (values == values[0]).all():  # pragma: no cover
-            msg = "Grid resolution does not match for %s" % var
-            raise PreprocessError(msg)
-
-
-def check_looks(xlooks, ylooks):
-    """
-    Verifies looks parameters are valid.
-    """
-
-    if not (isinstance(xlooks, Number) and
-            isinstance(ylooks, Number)):  # pragma: no cover
-        msg = "Non-numeric looks parameter(s), x: %s, y: %s" % (xlooks, ylooks)
-        raise PreprocessError(msg)
-
-    if not (xlooks > 0 and ylooks > 0):  # pragma: no cover
-        msg = "Invalid looks parameter(s), x: %s, y: %s. " \
-              "Looks must be an integer greater than zero" % (xlooks, ylooks)
-        raise PreprocessError(msg)
-
-
-def min_bounds(ifgs):
+def _min_bounds(ifgs):
     """
     Returns bounds for overlapping area of the given interferograms.
     """
@@ -374,7 +384,7 @@ def min_bounds(ifgs):
     return xmin, ymin, xmax, ymax
 
 
-def max_bounds(ifgs):
+def _max_bounds(ifgs):
     """
     Returns bounds for the total area covered by the given interferograms.
     """
@@ -386,7 +396,7 @@ def max_bounds(ifgs):
     return xmin, ymin, xmax, ymax
 
 
-def get_same_bounds(ifgs):
+def _get_same_bounds(ifgs):
     """
     Check and return bounding box for ALREADY_SAME_SIZE option.
     """
@@ -407,7 +417,7 @@ def get_same_bounds(ifgs):
     return xmin, ymin, xmax, ymax
 
 
-def custom_bounds(ifgs, xw, ytop, xe, ybot):
+def _custom_bounds(ifgs, xw, ytop, xe, ybot):
     """
     Check and modify input custom crop bounds to line up with grid interval
     """
@@ -466,7 +476,7 @@ def custom_bounds(ifgs, xw, ytop, xe, ybot):
     return xmin, ymin, xmax, ymax
 
 
-def check_crop_coords(ifgs, xmin, ymin, xmax, ymax):
+def _check_crop_coords(ifgs, xmin, ymin, xmax, ymax):
     """
     Ensures cropping coords line up with grid system within tolerance.
     """
@@ -494,9 +504,3 @@ class PreprocessError(Exception):
     """
     Preprocess exception
     """
-
-
-def extents_from_params(params):
-    """ Custom extents from supplied parameters """
-    keys = (cf.IFG_XFIRST, cf.IFG_YFIRST, cf.IFG_XLAST, cf.IFG_YLAST)
-    return CustomExts(*[params[k] for k in keys])

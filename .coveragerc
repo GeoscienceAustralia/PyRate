@@ -8,9 +8,8 @@ omit =
     # omit these files
     pyrate/pyratelog.py
     pyrate/scripts/main.py
-    pyrate/aps.py
+    pyrate/pyaps.py
     pyrate/compat.py
-    *__init__*
 
 [report]
 # Regexes for lines to exclude from consideration
@@ -45,6 +44,7 @@ exclude_lines =
     raise PreprocessError
     raise TimeSeriesError
     raise OrbitalError
+    raise CorrectionStatusError
 
     # Don't complain if non-runnable code isn't run:
     if 0:

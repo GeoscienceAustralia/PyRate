@@ -27,7 +27,6 @@ from osgeo import gdal
 from pyrate import config as cf
 from pyrate import ifgconstants as ifc
 from pyrate import shared
-from pyrate.scripts import run_pyrate
 from pyrate import mpiops
 from pyrate.shared import PrereadIfg
 gdal.SetCacheMax(64)
@@ -40,16 +39,21 @@ MASTER_PROCESS = 0
 
 
 def main(config_file, rows, cols):
-    """ postprocessing main func"""
+    """
+    PyRate post-processing main function. Assembles product tiles in to
+    single geotiff files
+    """
     # setup paths
     _, _, params = cf.get_ifg_paths(config_file)
-    postprocess_linrate(rows, cols, params)
+    _postprocess_linrate(rows, cols, params)
     if params[cf.TIME_SERIES_CAL]:
-        postprocess_timeseries(rows, cols, params)
+        _postprocess_timeseries(rows, cols, params)
 
 
-def postprocess_linrate(rows, cols, params):
-    """ Postprocess linear rate """
+def _postprocess_linrate(rows, cols, params):
+    """
+    Postprocess linear rate outputs
+    """
     # pylint: disable=expression-not-assigned
     # setup paths
     xlks, _, crop = cf.transform_params(params)
@@ -59,21 +63,23 @@ def postprocess_linrate(rows, cols, params):
     # load previously saved prepread_ifgs dict
     preread_ifgs_file = join(params[cf.TMPDIR], 'preread_ifgs.pk')
     ifgs = cp.load(open(preread_ifgs_file, 'rb'))
-    tiles = run_pyrate.get_tiles(dest_tifs[0], rows, cols)
+    tiles = shared.get_tiles(dest_tifs[0], rows, cols)
 
     # linrate aggregation
     if mpiops.size >= 3:
-        [save_linrate(ifgs, params, tiles, out_type=t)
+        [_save_linrate(ifgs, params, tiles, out_type=t)
          for i, t in enumerate(['linrate', 'linerror', 'linsamples'])
          if i == mpiops.rank]
     else:
         if mpiops.rank == MASTER_PROCESS:
-            [save_linrate(ifgs, params, tiles, out_type=t)
+            [_save_linrate(ifgs, params, tiles, out_type=t)
              for t in ['linrate', 'linerror', 'linsamples']]
 
 
-def save_linrate(ifgs_dict, params, tiles, out_type):
-    """ Save linear rate outputs"""
+def _save_linrate(ifgs_dict, params, tiles, out_type):
+    """
+    Save linear rate outputs
+    """
     log.info('Starting PyRate postprocessing {}'.format(out_type))
     gt, md, wkt = ifgs_dict['gt'], ifgs_dict['md'], ifgs_dict['wkt']
     epochlist = ifgs_dict['epochlist']
@@ -100,8 +106,10 @@ def save_linrate(ifgs_dict, params, tiles, out_type):
     log.info('Finished PyRate postprocessing {}'.format(out_type))
 
 
-def postprocess_timeseries(rows, cols, params):
-    """ Postprocess time series output """
+def _postprocess_timeseries(rows, cols, params):
+    """
+    Postprocess time series output
+    """
     # pylint: disable=too-many-locals
     xlks, _, crop = cf.transform_params(params)
     base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST])
@@ -117,7 +125,7 @@ def postprocess_timeseries(rows, cols, params):
     epochlist = ifgs['epochlist']
     ifgs = [v for v in ifgs.values() if isinstance(v, PrereadIfg)]
 
-    tiles = run_pyrate.get_tiles(dest_tifs[0], rows, cols)
+    tiles = shared.get_tiles(dest_tifs[0], rows, cols)
 
     # load the first tsincr file to determine the number of time series tifs
     tsincr_file = os.path.join(output_dir, 'tsincr_0.npy')
@@ -139,38 +147,39 @@ def postprocess_timeseries(rows, cols, params):
         tscum_g = np.empty(shape=ifgs[0].shape, dtype=np.float32)
         if i < no_ts_tifs:
             for n, t in enumerate(tiles):
-                tscum_file = os.path.join(output_dir,
-                                          'tscuml_{}.npy'.format(n))
-                tscum = np.load(file=tscum_file)
-
-                md[ifc.EPOCH_DATE] = epochlist.dates[i + 1]
-                # sequence position; first time slice is #0
-                md['SEQUENCE_POSITION'] = i+1
-                tscum_g[t.top_left_y:t.bottom_right_y,
-                        t.top_left_x:t.bottom_right_x] = tscum[:, :, i]
-                dest = os.path.join(params[cf.OUT_DIR],
-                                    'tscuml' + "_" +
-                                    str(epochlist.dates[i + 1]) + ".tif")
-                md[ifc.DATA_TYPE] = ifc.CUML
-                shared.write_output_geotiff(md, gt, wkt, tscum_g, dest, np.nan)
+                _assemble_tiles(i, n, t, tscum_g, output_dir, 'tscuml')
+            md[ifc.EPOCH_DATE] = epochlist.dates[i + 1]
+            # sequence position; first time slice is #0
+            md['SEQUENCE_POSITION'] = i+1
+            dest = os.path.join(params[cf.OUT_DIR],
+                                'tscuml' + "_" +
+                                str(epochlist.dates[i + 1]) + ".tif")
+            md[ifc.DATA_TYPE] = ifc.CUML
+            shared.write_output_geotiff(md, gt, wkt, tscum_g, dest, np.nan)
         else:
             tsincr_g = np.empty(shape=ifgs[0].shape, dtype=np.float32)
             i %= no_ts_tifs
             for n, t in enumerate(tiles):
-                tsincr_file = os.path.join(output_dir,
-                                           'tsincr_{}.npy'.format(n))
-                tsincr = np.load(file=tsincr_file)
-
-                md[ifc.EPOCH_DATE] = epochlist.dates[i + 1]
-                # sequence position; first time slice is #0
-                md['SEQUENCE_POSITION'] = i+1
-                tsincr_g[t.top_left_y:t.bottom_right_y,
-                         t.top_left_x:t.bottom_right_x] = tsincr[:, :, i]
-                dest = os.path.join(params[cf.OUT_DIR],
-                                    'tsincr' + "_" + str(
-                                        epochlist.dates[i + 1]) + ".tif")
-                md[ifc.DATA_TYPE] = ifc.INCR
-                shared.write_output_geotiff(md, gt, wkt, tsincr_g, dest,
-                                            np.nan)
+                _assemble_tiles(i, n, t, tsincr_g, output_dir, 'tsincr')
+            md[ifc.EPOCH_DATE] = epochlist.dates[i + 1]
+            # sequence position; first time slice is #0
+            md['SEQUENCE_POSITION'] = i+1
+            dest = os.path.join(params[cf.OUT_DIR],
+                                'tsincr' + "_" + str(
+                                    epochlist.dates[i + 1]) + ".tif")
+            md[ifc.DATA_TYPE] = ifc.INCR
+            shared.write_output_geotiff(md, gt, wkt, tsincr_g, dest, np.nan)
     log.info('process {} finished writing {} ts (incr/cuml) tifs of '
              'total {}'.format(mpiops.rank, len(process_tifs), no_ts_tifs * 2))
+
+
+def _assemble_tiles(i, n, tile, tsincr_g, output_dir, outtype):
+    # pylint: disable=too-many-arguments
+    """
+    A reusable time series tile assembly function
+    """
+    tsincr_file = os.path.join(output_dir,
+                               '{}_{}.npy'.format(outtype, n))
+    tsincr = np.load(file=tsincr_file)
+    tsincr_g[tile.top_left_y:tile.bottom_right_y,
+             tile.top_left_x:tile.bottom_right_x] = tsincr[:, :, i]

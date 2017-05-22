@@ -14,409 +14,327 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 """
-This Python module implements atmospheric corrections derived 
-from external weather model data. The algorithms are based on 
-those implemented in the 'PyAPS' package developed by Caltech
+This Python module implements a spatio-temporal filter method
+for correcting interferograms for atmospheric phase screen (APS)
+signals.
 """
-from __future__ import print_function
+# pylint: disable=invalid-name, too-many-locals, too-many-arguments
 import logging
 import os
-import re
-import glob2
+from copy import deepcopy
+from collections import OrderedDict
 import numpy as np
-from joblib import Parallel, delayed
-from osgeo import gdalconst, gdal
-import PyAPS as pa
+from numpy import isnan
+from scipy.fftpack import fft2, ifft2, fftshift, ifftshift
+from scipy.interpolate import griddata
 
-from pyrate import config as cf
+from pyrate import config as cf, mpiops, shared
+from pyrate.covariance import cvd_from_phase, RDist
+from pyrate.algorithm import get_epochs
+from pyrate.scripts.postprocessing import _assemble_tiles
+from pyrate.shared import Ifg
 from pyrate import ifgconstants as ifc
-from pyrate import prepifg
-from pyrate import gamma
-from operator import itemgetter
+from pyrate.timeseries import time_series
 
 log = logging.getLogger(__name__)
 
-PYRATEPATH = os.environ['PYRATEPATH']
-ECMWF_DIR = os.path.join(PYRATEPATH, 'ECMWF')
-ECMWF_PRE = 'ERA-Int_'
-ECMWF_EXT = '_12.grib'  # TODO: build dynamically with closest available grib
-APS_STATUS = 'REMOVED'
-GEOTIFF = 'GEOTIFF'
-ECMWF = 'ECMWF'
-GAMMA_PTN = re.compile(r'\d{8}')
-ROIPAC_PTN = re.compile(r'\d{6}')
+
+def _wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs):
+    """
+    A wrapper for the spatio-temporal filter so it can be tested.
+    See docstring for spatio_temporal_filter.
+    Required due to differences between Matlab and Python MST
+    implementations.
+    """
+    if not params[cf.APSEST]:
+        log.info('APS correction not required.')
+        return
+
+    # perform some checks on existing ifgs
+    log.info('Checking APS correction status')
+    if mpiops.run_once(shared.check_correction_status, preread_ifgs,
+                       ifc.PYRATE_APS_ERROR):
+        log.info('Finished APS correction')
+        return  # return if True condition returned
+
+    tsincr = _calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles)
+
+    ifg = Ifg(ifg_paths[0])  # just grab any for parameters in slpfilter
+    ifg.open()
+    spatio_temporal_filter(tsincr, ifg, params, preread_ifgs)
+    ifg.close()
 
 
-def remove_aps_delay(input_ifgs, params, process_indices=None):
+def spatio_temporal_filter(tsincr, ifg, params, preread_ifgs):
+    """
+    Applies a spatio-temporal filter to remove the atmospheric phase screen
+    (APS) and saves the corrected interferograms. Before performing this step,
+    the time series must be computed using the SVD method. This function then
+    performs temporal and spatial filtering.
 
-    def get_incidence_map():
-        if params[cf.APS_ELEVATION_MAP] is not None:
-            f, e = os.path.basename(params[cf.APS_ELEVATION_MAP]).split(
-                '.')
-        else:
-            f, e = os.path.basename(params[cf.APS_INCIDENCE_MAP]).split(
-                '.')
-        multilooked = os.path.join(
-            params[cf.OUT_DIR],
-            f + '_' + e +
-            '_{looks}rlks_{crop}cr.tif'.format(
-                looks=params[cf.IFG_LKSX],
-                crop=params[
-                    cf.IFG_CROP_OPT]))
-        assert os.path.exists(multilooked), \
-            'cropped and multilooked incidence map file not found. ' \
-            'Use apsmethod=1, Or run prepifg with gamma processor'
-        ds = gdal.Open(multilooked, gdalconst.GA_ReadOnly)
-        if params[cf.APS_INCIDENCE_MAP] is not None:
-            incidence_map = ds.ReadAsArray()
-        else:
-            incidence_map = 90 - ds.ReadAsArray()
-        ds = None  # close file
-        return incidence_map
+    :param ndarray tsincr: incremental time series array of size
+                (ifg.shape, nepochs-1)
+    :param list ifg: List of pyrate.shared.Ifg class objects.
+    :param dict params: Dictionary of configuration parameter
+    :param list tiles: List of pyrate.shared.Tile class objects
+    :param dict preread_ifgs: Dictionary of shared.PrereadIfg class instances
 
-    if process_indices is not None:
-        ifgs = [itemgetter(p)(input_ifgs) for p in process_indices]
-        [ifg.close() for i, ifg in enumerate(input_ifgs)
-         if i not in process_indices]
-    else:
-        ifgs = input_ifgs
+    :return: None, corrected interferograms are saved to disk
+    """
+    epochlist = mpiops.run_once(get_epochs, preread_ifgs)[0]
+    ts_lp = mpiops.run_once(temporal_low_pass_filter, tsincr, epochlist,
+                            params)
+    ts_hp = tsincr - ts_lp
+    ts_aps = mpiops.run_once(spatial_low_pass_filter, ts_hp, ifg, params)
+    tsincr -= ts_aps
 
-    lat, lon, nx, ny, dem, mlooked_dem = read_dem(params)
-    dem_header = (lon, lat, nx, ny)
+    mpiops.run_once(_ts_to_ifgs, tsincr, preread_ifgs)
 
-    incidence_angle = None
 
-    if params[cf.APS_METHOD] == 1:
-        incidence_map = np.ones_like(dem)  # dummy
-    elif params[cf.APS_METHOD] == 2:
-        incidence_map = get_incidence_map()
-    else:
-        raise APSException('PyAPS method must be 1 or 2')
+def _calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles):
+    """
+    Helper function to obtain time series for spatio-temporal filter
+    using SVD method
+    """
+    # Is there other existing functions that can perform this same job?
+    log.info('Calculating time series via SVD method for '
+             'spatio-temporal filter')
+    # copy params temporarily
+    new_params = deepcopy(params)
+    new_params[cf.TIME_SERIES_METHOD] = 2  # use SVD method
 
-    list_of_dates_for_grb_download = []
+    process_tiles = mpiops.array_split(tiles)
+    output_dir = params[cf.TMPDIR]
 
-    parallel = params[cf.PARALLEL]
-    data_paths = [i.data_path for i in ifgs]
+    nvels = None
+    for t in process_tiles:
+        log.info('Calculating time series for tile {} during aps '
+                 'correction'.format(t.index))
+        ifg_parts = [shared.IfgPart(p, t, preread_ifgs) for p in ifg_paths]
+        mst_tile = np.load(os.path.join(output_dir,
+                                        'mst_mat_{}.npy'.format(t.index)))
+        tsincr = time_series(ifg_parts, new_params, vcmt=None, mst=mst_tile)[0]
+        np.save(file=os.path.join(output_dir, 'tsincr_aps_{}.npy'.format(
+            t.index)), arr=tsincr)
+        nvels = tsincr.shape[2]
 
-    if parallel:
-        aps_delay = Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
-            delayed(parallel_aps)(d, dem, dem_header,
-                               incidence_angle,
-                               incidence_map, list_of_dates_for_grb_download,
-                               mlooked_dem, params)
-            for d in data_paths)
-    else:
-        aps_delay = []
-        for d in data_paths:  # demo for only one ifg
-            aps_delay.append(parallel_aps(d, dem, dem_header, incidence_angle,
-                                          incidence_map,
-                                          list_of_dates_for_grb_download,
-                                          mlooked_dem, params))
+    nvels = mpiops.comm.bcast(nvels, root=0)
+    # need to assemble tsincr from all processes
+    tsincr_g = mpiops.run_once(_assemble_tsincr, ifg_paths, params,
+                               preread_ifgs, tiles, nvels)
+    log.info('Finished calculating time series for spatio-temporal filter')
+    return tsincr_g
 
+
+def _assemble_tsincr(ifg_paths, params, preread_ifgs, tiles, nvels):
+    """
+    Helper function to reconstruct time series images from tiles
+    """
+    shape = preread_ifgs[ifg_paths[0]].shape + (nvels,)
+    tsincr_g = np.empty(shape=shape, dtype=np.float32)
+    for i in range(nvels):
+        for n, t in enumerate(tiles):
+            _assemble_tiles(i, n, t, tsincr_g[:, :, i], params[cf.TMPDIR],
+                            'tsincr_aps')
+    return tsincr_g
+
+
+def _ts_to_ifgs(tsincr, preread_ifgs):
+    """
+    Function that converts an incremental displacement time series into
+    interferometric phase observations. Used to re-construct an interferogram
+    network from a time series.
+
+    :param ndarray tsincr: incremental time series array of size
+                (ifg.shape, nepochs-1)
+    :param dict preread_ifgs: Dictionary of shared.PrereadIfg class instances
+
+    :return: None, interferograms are saved to disk
+    """
+    log.info('Converting time series to ifgs')
+    ifgs = list(OrderedDict(sorted(preread_ifgs.items())).values())
+    _, n = get_epochs(ifgs)
+    index_master, index_slave = n[:len(ifgs)], n[len(ifgs):]
     for i, ifg in enumerate(ifgs):
-        ifg.phase_data -= aps_delay[i]  # remove delay
-        # add to ifg.meta_data
-        ifg.meta_data[ifc.PYRATE_APS_ERROR] = APS_STATUS
-        # write meta_data to file
-        ifg.dataset.SetMetadataItem(ifc.PYRATE_APS_ERROR, APS_STATUS)
-        ifg.write_modified_phase()
-        # ifg.close()  # close ifg files, required for gdal dataset to close files
-
-    return ifgs
+        phase = np.sum(tsincr[:, :, index_master[i]: index_slave[i]], axis=2)
+        _save_aps_corrected_phase(ifg.path, phase)
 
 
-def parallel_aps(data_path, dem, dem_header, incidence_angle, incidence_map,
-                 list_of_dates_for_grb_download, mlooked_dem, params):
-    if params[cf.PROCESSOR] == 1:  # gamma
-        date_pair = [i for i in GAMMA_PTN.findall(os.path.basename(data_path))]
-    elif params[cf.PROCESSOR] == 0:  # roipac
-        # adding 20 to dates here, so dates before 2000 won't work
-        # TODO: fix pre 2000 dates
-        date_pair = ['20' + i for i in
-                     ROIPAC_PTN.findall(os.path.basename(data_path))]
-    else:
-        raise AttributeError('processor needs to be gamma(1) or roipac(0)')
-    list_of_dates_for_grb_download += date_pair
-    first_grb = os.path.join(ECMWF_DIR,
-                             ECMWF_PRE + date_pair[0] + ECMWF_EXT)
-    second_grb = os.path.join(ECMWF_DIR,
-                              ECMWF_PRE + date_pair[1] + ECMWF_EXT)
-    # download .grb file if does not exist
-    if not (os.path.exists(first_grb) and os.path.exists(second_grb)):
-        # download weather files at 12:00 UTC (other options 00:00, 06:00, 18:00)
-        pa.ecmwf_download(date_pair, '12', 'ECMWF')
-
-    # rdr_correction(date_pair)
-    # TODO: lat lon correction when lat and lon files are available
-    # aps1.getgeodelay(phs1, inc=23.0, wvl=0.056,
-    #   lat=os.path.join(PYAPS_EXAMPLES, 'lat.flt'),
-    #   lon=os.path.join(PYAPS_EXAMPLES, 'lon.flt'))
-    # aps2.getgeodelay(phs2, inc=23.0, wvl=0.056,
-    #   lat=os.path.join(PYAPS_EXAMPLES, 'lat.flt'),
-    #   lon=os.path.join(PYAPS_EXAMPLES, 'lon.flt'))
-    # LLphs = phs2-phs1
-    # print dem_header, mlooked_dem
-    if params[cf.APS_METHOD] == 1:
-        # no need to calculate incidence angle for all ifgs, they are the same
-        if incidence_angle is None:
-            incidence_angle = get_incidence_angle(date_pair, params)
-        aps_delay = geo_correction(date_pair, dem_header, dem, incidence_angle)
-    elif params[cf.APS_METHOD] == 2:
-        # no need to calculate incidence map for all ifgs, they are the same
-        aps_delay = geo_correction(date_pair, dem_header, dem, incidence_map)
-    else:
-        raise APSException('APS method must be 1 or 2')
-    return aps_delay
-
-
-def rdr_correction(date_pair):
-    """ using rdr coordinates to remove APS """
-    raise NotImplementedError("This has not been implemented yet for PyRate")
-    # aps1 = pa.PyAPS_rdr(
-    #     os.path.join(ECMWF_DIR, ECMWF_PRE + date_pair[0] + ECMWF_EXT),
-    #     SML_TEST_DEM_ROIPAC, grib='ECMWF', verb=True,
-    #     demfmt='HGT', demtype=np.int16)
-    # aps2 = pa.PyAPS_rdr(
-    #     os.path.join(ECMWF_DIR, ECMWF_PRE + date_pair[1] + ECMWF_EXT),
-    #     SML_TEST_DEM_ROIPAC, grib='ECMWF', verb=True,
-    #     demfmt='HGT', demtype=np.int16)
-    # phs1 = np.zeros((aps1.ny, aps1.nx))
-    # phs2 = np.zeros((aps2.ny, aps2.nx))
-    # print 'Without Lat Lon files'
-    # # using random incidence angle
-    # aps1.getdelay(phs1, inc=23.0)
-    # aps2.getdelay(phs2, inc=23.0)
-    # aps_delay = phs2 - phs1  # delay in meters as we don't provide wavelength
-    # return aps_delay
-
-
-def geo_correction(date_pair, dem_header, dem, incidence_angle_or_map):
-
-    """ using geo coordinates to remove APS """
-
-    aps1 = pa.PyAPSPyRateGeo(
-        os.path.join(ECMWF_DIR, ECMWF_PRE + date_pair[0] + ECMWF_EXT),
-        dem_header=dem_header, dem=dem, grib=ECMWF, verb=True)
-    aps2 = pa.PyAPSPyRateGeo(
-        os.path.join(ECMWF_DIR, ECMWF_PRE + date_pair[1] + ECMWF_EXT),
-        dem_header=dem_header, dem=dem, grib=ECMWF, verb=True)
-    phs1 = np.zeros((aps1.ny, aps1.nx))
-    phs2 = np.zeros((aps2.ny, aps2.nx))
-    print('Without Lat Lon files')
-    aps1.getdelay_pyrate(phs1, dem, inc=incidence_angle_or_map)
-    aps2.getdelay_pyrate(phs2, dem, inc=incidence_angle_or_map)
-    aps_delay = phs2 - phs1  # delay in meters as we don't provide wavelength
-    return aps_delay
-
-
-def remove_aps_delay_original(ifgs, params):
-    list_of_dates_for_grb_download = []
-
-    incidence_angle = None
-    incidence_map = None
-    for ifg in ifgs:  # demo for only one ifg
-        if params[cf.PROCESSOR] == 1:  # gamma
-            PTN = re.compile(r'\d{8}')
-            date_pair = [i for i in PTN.findall(os.path.basename(ifg.data_path))]
-        elif params[cf.PROCESSOR] == 0:  # roipac
-            # adding 20 to dates here, so dates before 2000 won't work
-            # TODO: fix pre 2000 dates
-            PTN = re.compile(r'\d{6}')
-            date_pair = ['20' + i for i in
-                         PTN.findall(os.path.basename(ifg.data_path))]
-        else:
-            raise AttributeError('processor needs to be gamma(1) or roipac(0)')
-
-        list_of_dates_for_grb_download += date_pair
-
-        first_grb = os.path.join(ECMWF_DIR,
-                                 ECMWF_PRE + date_pair[0] + ECMWF_EXT)
-        second_grb = os.path.join(ECMWF_DIR,
-                                  ECMWF_PRE + date_pair[1] + ECMWF_EXT)
-
-        # download .grb file if does not exist
-        if not (os.path.exists(first_grb) and os.path.exists(second_grb)):
-            # download weather files at 12:00 UTC (other options 00:00, 06:00, 18:00)
-            pa.ecmwf_download(date_pair, '12', 'ECMWF')
-
-        def get_incidence_map():
-            """
-            :param incidence_map:
-            :param params:
-            :param inc_or_ele: 1 when incidence map, 0 when elevation map
-            :return:
-            """
-            if params[cf.APS_ELEVATION_MAP] is not None:
-                f, e = os.path.basename(params[cf.APS_ELEVATION_MAP]).split(
-                    '.')
-            else:
-                f, e = os.path.basename(params[cf.APS_INCIDENCE_MAP]).split(
-                    '.')
-            multilooked = os.path.join(
-                params[cf.OUT_DIR],
-                f + '_' + e +
-                '_{looks}rlks_{crop}cr.tif'.format(
-                    looks=params[cf.IFG_LKSX],
-                    crop=params[
-                        cf.IFG_CROP_OPT]))
-            assert os.path.exists(multilooked), \
-                'cropped and multilooked incidence map file not found. ' \
-                'Use apsmethod=1, Or run prepifg with gamma processor'
-            ds = gdal.Open(multilooked, gdalconst.GA_ReadOnly)
-            if params[cf.APS_INCIDENCE_MAP] is not None:
-                incidence_map = ds.ReadAsArray()
-            else:
-                incidence_map = 90 - ds.ReadAsArray()
-            ds = None  # close file
-            return incidence_map
-
-        if params[cf.APS_METHOD] == 1:
-            # no need to calculate incidence angle for all ifgs, they are the same
-            if incidence_angle is None:
-                incidence_angle = get_incidence_angle(date_pair, params)
-            aps_delay = geo_correction(date_pair, params, incidence_angle)
-        elif params[cf.APS_METHOD] == 2:
-            # no need to calculate incidence map for all ifgs, they are the same
-            if incidence_map is None:
-                if params[cf.APS_INCIDENCE_MAP] is not None:
-                    incidence_map = get_incidence_map()
-                else:  # elevation map was provided
-                    assert params[cf.APS_ELEVATION_MAP] is not None
-                    incidence_map = get_incidence_map()
-            aps_delay = geo_correction_original(date_pair, params,
-                                                incidence_map)
-        else:
-            raise APSException('APS method must be 1 or 2')
-
-
-        ifg.phase_data -= aps_delay  # remove delay
-        # add it to the meta_data dict
-        ifg.meta_data[ifc.PYRATE_APS_ERROR] = APS_STATUS
-        # write meta_data to file
-        ifg.dataset.SetMetadataItem(ifc.PYRATE_APS_ERROR, APS_STATUS)
-
-        ifg.write_modified_phase()
-
-
-def geo_correction_original(date_pair, params, incidence_angle_or_map):
-
-    dem_file = params[cf.DEM_FILE]
-    geotif_dem = os.path.join(
-        params[cf.OUT_DIR], os.path.basename(dem_file).split('.')[0] + '.tif')
-
-    mlooked_dem = prepifg.mlooked_path(geotif_dem,
-                                       looks=params[cf.IFG_LKSX],
-                                       crop_out=params[cf.IFG_CROP_OPT])
-    # make sure mlooked dem exist
-    if not os.path.exists(mlooked_dem):
-        raise prepifg.PreprocessError('mlooked dem was not found.'
-                                      'Please run prepifg.')
-
-    dem_header = gamma.parse_dem_header(params[cf.DEM_HEADER_FILE])
-    lat, lon, nx, ny = return_pyaps_lat_lon(dem_header)
-
-
-    """ using geo coordinates to remove APS """
-
-    aps1 = pa.PyAPS_geo(
-        os.path.join(ECMWF_DIR, ECMWF_PRE + date_pair[0] + ECMWF_EXT),
-        mlooked_dem, grib=ECMWF, verb=True,
-        demfmt=GEOTIFF, demtype=np.float32, dem_header=(lon, lat, nx, ny))
-    aps2 = pa.PyAPS_geo(
-        os.path.join(ECMWF_DIR, ECMWF_PRE + date_pair[1] + ECMWF_EXT),
-        mlooked_dem, grib=ECMWF, verb=True,
-        demfmt=GEOTIFF, demtype=np.float32, dem_header=(lon, lat, nx, ny))
-    phs1 = np.zeros((aps1.ny, aps1.nx))
-    phs2 = np.zeros((aps2.ny, aps2.nx))
-    print('Without Lat Lon files')
-    aps1.getdelay(phs1, inc=incidence_angle_or_map)
-    aps2.getdelay(phs2, inc=incidence_angle_or_map)
-    aps_delay = phs2 - phs1  # delay in meters as we don't provide wavelength
-    return aps_delay
-
-
-def read_dem(params):
-    dem_file = params[cf.DEM_FILE]
-    geotif_dem = os.path.join(
-        params[cf.OUT_DIR], os.path.basename(dem_file).split('.')[0] + '.tif')
-    mlooked_dem = prepifg.mlooked_path(geotif_dem,
-                                       looks=params[cf.IFG_LKSX],
-                                       crop_out=params[cf.IFG_CROP_OPT])
-    # make sure mlooked dem exist
-    if not os.path.exists(mlooked_dem):
-        raise prepifg.PreprocessError('mlooked dem was not found.'
-                                      'Please run prepifg.')
-    dem_header = gamma.parse_dem_header(params[cf.DEM_HEADER_FILE])
-    lat, lon, nx, ny = return_pyaps_lat_lon(dem_header)
-
-    ds = gdal.Open(mlooked_dem, gdalconst.GA_ReadOnly)
-    dem = ds.ReadAsArray()
-    ds = None
-    return lat, lon, nx, ny, dem, mlooked_dem
-
-
-def get_incidence_angle(date_pair, params):
-    # incidence angle exists in unw header files, not in dem
-    SLC_DIR = params[cf.SLC_DIR] if params[cf.SLC_DIR] else \
-        params[cf.OBS_DIR]
-    header_path = glob2.glob(os.path.join(
-        SLC_DIR, '**/*%s*slc.par' % date_pair[0]))[0]
-    header = gamma.parse_epoch_header(header_path)
-    incidence_angle = header[ifc.INCIDENCE_ANGLE]
-    return incidence_angle
-
-
-def return_pyaps_lat_lon(dem_header):
-    nx, ny = dem_header[ifc.PYRATE_NCOLS], dem_header[ifc.PYRATE_NROWS]
-    lat = np.zeros((2, 1))
-    lon = np.zeros((2, 1))
-    lat[1] = dem_header[ifc.PYRATE_LAT]
-    lon[0] = dem_header[ifc.PYRATE_LONG]
-    if lon[0] < 0:
-        lon[0] += 360.0
-    dx = np.float(dem_header[ifc.PYRATE_X_STEP])
-    dy = np.float(dem_header[ifc.PYRATE_Y_STEP])
-    lat[0] = lat[1] + dy * ny
-    lon[1] = lon[0] + dx * nx
-    return lat, lon, nx, ny
-
-
-class APSException(Exception):
+def _save_aps_corrected_phase(ifg_path, phase):
     """
-    generic exception class for APS correction
+    Save (update) interferogram metadata and phase data after
+    spatio-temporal filter (APS) correction.
     """
-    pass
+    ifg = Ifg(ifg_path)
+    ifg.open(readonly=False)
+    ifg.phase_data[~np.isnan(ifg.phase_data)] = \
+        phase[~np.isnan(ifg.phase_data)]
+    # set aps tags after aps error correction
+    ifg.dataset.SetMetadataItem(ifc.PYRATE_APS_ERROR, ifc.APS_REMOVED)
+    ifg.write_modified_phase()
+    ifg.close()
 
 
-def check_aps_ifgs(ifgs):
-    flags = [i.dataset.GetMetadataItem(ifc.PYRATE_APS_ERROR) for i in ifgs]
-    count = sum([f == APS_STATUS for f in flags])
-    if (count < len(flags)) and (count > 0):
-        log.debug('Detected mix of corrected and uncorrected '
-                      'APS delay in ifgs')
+def spatial_low_pass_filter(ts_lp, ifg, params):
+    """
+    Filter time series data spatially using either a Butterworth or Gaussian
+    low pass filter defined by a cut-off distance. If the cut-off distance is
+    defined as zero in the parameters dictionary then it is calculated for
+    each time step using the pyrate.covariance.cvd_from_phase method.
 
-        for i, flag in zip(ifgs, flags):
-            if flag:
-                msg = '%s: prior APS delay correction detected'
-            else:
-                msg = '%s: no APS delay correction detected'
-            logging.debug(msg % i.data_path)
-        raise APSException('Mixed APS removal status in ifg list')
+    :param ndarray ts_lp: Array of time series data, the result of a temporal
+                low pass filter operation. shape (ifg.shape, n_epochs)
+    :param shared.Ifg instance ifg: interferogram object
+    :param dict params: Dictionary of configuration parameters
+
+    :return: ts_hp: filtered time series data of shape (ifg.shape, n_epochs)
+    :rtype: ndarray
+    """
+    log.info('Applying spatial low pass filter')
+    if params[cf.SLPF_NANFILL] == 0:
+        ts_lp[np.isnan(ts_lp)] = 0  # need it here for cvd and fft
+    else:  # optionally interpolate, operation is inplace
+        _interpolate_nans(ts_lp, params[cf.SLPF_NANFILL_METHOD])
+    r_dist = RDist(ifg)()
+    for i in range(ts_lp.shape[2]):
+        ts_lp[:, :, i] = _slpfilter(ts_lp[:, :, i], ifg, r_dist, params)
+    log.info('Finished applying spatial low pass filter')
+    return ts_lp
 
 
-def aps_delay_required(ifgs, params):
-    log.info('Removing APS delay')
+def _interpolate_nans(arr, method='linear'):
+    """
+    Fill any NaN values in arr with interpolated values. Nanfill and
+    interpolation are performed in place.
+    """
+    rows, cols = np.indices(arr.shape[:2])
+    for i in range(arr.shape[2]):
+        a = arr[:, :, i]
+        _interpolate_nans_2d(a, rows, cols, method)
 
-    if not params[cf.APS_CORRECTION]:
-        log.info('APS delay removal not required')
-        return False
 
-    # perform some general error/sanity checks
-    flags = [i.dataset.GetMetadataItem(ifc.PYRATE_APS_ERROR) for i in ifgs]
+def _interpolate_nans_2d(a, rows, cols, method):
+    """
+    In-place array interpolation and nanfill
 
-    if all(flags):
-        log.info('Skipped APS delay removal, ifgs are already aps corrected')
-        return False
+    :param ndarray a: 2d ndarray to be interpolated
+    :param ndarray rows: 2d ndarray of row indices
+    :param ndarray cols: 2d ndarray of col indices
+    :param str method: Method; one of 'nearest', 'linear', and 'cubic'
+    """
+    a[np.isnan(a)] = griddata(
+        (rows[~np.isnan(a)], cols[~np.isnan(a)]),  # points we know
+        a[~np.isnan(a)],  # values we know
+        (rows[np.isnan(a)], cols[np.isnan(a)]),  # points to interpolate
+        method=method
+    )
+    a[np.isnan(a)] = 0  # zero fill boundary/edge nans
+
+
+def _slpfilter(phase, ifg, r_dist, params):
+    """
+    Wrapper function for spatial low pass filter
+    """
+    if np.all(np.isnan(phase)):  # return for nan matrix
+        return phase
+    cutoff = params[cf.SLPF_CUTOFF]
+
+    if cutoff == 0:
+        _, alpha = cvd_from_phase(phase, ifg, r_dist, calc_alpha=True)
+        cutoff = 1.0/alpha
+    rows, cols = ifg.shape
+    return _slp_filter(phase, cutoff, rows, cols,
+                       ifg.x_size, ifg.y_size, params)
+
+
+def _slp_filter(phase, cutoff, rows, cols, x_size, y_size, params):
+    """
+    Function to perform spatial low pass filter
+    """
+    cx = np.floor(cols/2)
+    cy = np.floor(rows/2)
+    # fft for the input image
+    imf = fftshift(fft2(phase))
+    # calculate distance
+    distfact = 1.0e3  # to convert into meters
+    [xx, yy] = np.meshgrid(range(cols), range(rows))
+    xx = (xx - cx) * x_size  # these are in meters as x_size in meters
+    yy = (yy - cy) * y_size
+    dist = np.sqrt(xx ** 2 + yy ** 2)/distfact  # km
+
+    if params[cf.SLPF_METHOD] == 1:  # butterworth low pass filter
+        H = 1. / (1 + ((dist / cutoff) ** (2 * params[cf.SLPF_ORDER])))
+    else:  # Gaussian low pass filter
+        H = np.exp(-(dist ** 2) / (2 * cutoff ** 2))
+    outf = imf * H
+    out = np.real(ifft2(ifftshift(outf)))
+    out[np.isnan(phase)] = np.nan
+    return out  # out is units of phase, i.e. mm
+
+
+# TODO: use tiles here and distribute amongst processes
+def temporal_low_pass_filter(tsincr, epochlist, params):
+    """
+    Filter time series data temporally using either a Gaussian, triangular
+    or mean low pass filter defined by a cut-off time period (in years).
+
+    :param ndarray tsincr: Array of incremental time series data of shape
+                (ifg.shape, n_epochs)
+    :param list epochlist: List of shared.EpochList class instances
+    :param dict params: Dictionary of configuration parameters
+
+    :return: tsfilt_incr: filtered time series data, shape (ifg.shape, nepochs)
+    :rtype: ndarray
+    """
+    log.info('Applying temporal low pass filter')
+    nanmat = ~isnan(tsincr)
+    tsfilt_incr = np.empty_like(tsincr, dtype=np.float32) * np.nan
+    intv = np.diff(epochlist.spans)  # time interval for the neighboring epoch
+    span = epochlist.spans[: tsincr.shape[2]] + intv/2  # accumulated time
+    rows, cols = tsincr.shape[:2]
+    cutoff = params[cf.TLPF_CUTOFF]
+    method = params[cf.TLPF_METHOD]
+    threshold = params[cf.TLPF_PTHR]
+    if method == 1:  # gaussian filter
+        func = gauss
+    elif method == 2:  # triangular filter
+        func = _triangle
     else:
-        check_aps_ifgs(ifgs)
-    return True
+        func = mean_filter
+
+    _tlpfilter(cols, cutoff, nanmat, rows, span, threshold, tsfilt_incr,
+               tsincr, func)
+    log.info('Finished applying temporal low pass filter')
+    return tsfilt_incr
+
+# Throwaway function to define Gaussian filter weights
+gauss = lambda m, yr, cutoff: np.exp(-(yr / cutoff) ** 2 / 2)
+
+
+def _triangle(m, yr, cutoff):
+    """
+    Define triangular filter weights
+    """
+    wgt = cutoff - abs(yr)
+    wgt[wgt < 0] = 0
+    return wgt
+
+# Throwaway function to define Mean filter weights
+mean_filter = lambda m, yr, cutoff: np.ones(m)
+
+
+def _tlpfilter(cols, cutoff, nanmat, rows, span, threshold, tsfilt_incr,
+               tsincr, func):
+    """
+    Wrapper function for temporal low pass filter
+    """
+    for i in range(rows):
+        for j in range(cols):
+            sel = np.nonzero(nanmat[i, j, :])[0]  # don't select if nan
+            m = len(sel)
+            if m >= threshold:
+                for k in range(m):
+                    yr = span[sel] - span[sel[k]]
+                    wgt = func(m, yr, cutoff)
+                    wgt /= np.sum(wgt)
+                    tsfilt_incr[i, j, sel[k]] = np.sum(tsincr[i, j, sel] * wgt)

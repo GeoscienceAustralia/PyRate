@@ -20,6 +20,7 @@ import sys
 import os
 from os.path import abspath
 import logging
+import json
 import click
 from pyrate import pyratelog as pylog
 from pyrate import config as cf
@@ -30,7 +31,9 @@ log = logging.getLogger(__name__)
 
 
 def version_msg():
-    """Returns the Cookiecutter version, location and Python powering it."""
+    """
+    Returns the Cookiecutter version and location of Python beiing used
+    """
     python_version = sys.version[:3]
     location = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     message = u'PyRate %(version)s from {} (Python {})'
@@ -56,6 +59,8 @@ def prepifg(config_file):
     """
     config_file = abspath(config_file)
     params = cf.get_config_params(config_file)
+    log.info('This job was run with the following parameters:')
+    log.info(json.dumps(params, indent=4, sort_keys=True))
     if params[cf.LUIGI]:
         run_prepifg.main()
     else:
@@ -73,7 +78,10 @@ def linrate(config_file, rows, cols):
     Main PyRate workflow including time series and linear rate computation
     """
     config_file = abspath(config_file)
-    run_pyrate.main(config_file, rows, cols)
+    _, dest_paths, params = cf.get_ifg_paths(config_file)
+    log.info('This job was run with the following parameters:')
+    log.info(json.dumps(params, indent=4, sort_keys=True))
+    run_pyrate.process_ifgs(sorted(dest_paths), params, rows, cols)
 
 
 @cli.command()
@@ -85,6 +93,8 @@ def linrate(config_file, rows, cols):
               help='divide ifgs into this many columns. Must be same as '
                    'number of cols used previously in main workflow')
 def postprocess(config_file, rows, cols):
-    """Reassemble output tiles and save as geotiffs"""
+    """
+    Reassemble PyRate output tiles and save as geotiffs
+    """
     config_file = abspath(config_file)
     postprocessing.main(config_file, rows, cols)

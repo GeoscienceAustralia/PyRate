@@ -32,9 +32,8 @@ PTN = re.compile(r'\d{8}')  # match 8 digits for the dates
 
 class GammaHasRun(luigi.task.ExternalTask):
     """
-    Phaux task used to ensure that the required outputs from GAMMA exist.
+    Phantom task used to ensure that the required outputs from GAMMA exist.
     """
-
     fileName = luigi.Parameter()
     masterHeader = luigi.Parameter(default=None)
     slaveHeader = luigi.Parameter(default=None)
@@ -50,10 +49,13 @@ class GammaHasRun(luigi.task.ExternalTask):
 
 def get_header_paths(input_file, slc_dir=None):
     """
-    function that matches input file names with header file names
-    :param input_file: input gamma .unw file
-    :return: corresponding header files that matches, or empty list if no match
-    found
+    Function that matches input GAMMA file names with GAMMA header file names
+
+    :param str input_file: input GAMMA .unw file.
+    :param str slc_dir: GAMMA SLC header file directory
+
+    :return: list of matching header files
+    :rtype: list
     """
     if slc_dir:
         dir_name = slc_dir
@@ -67,9 +69,8 @@ def get_header_paths(input_file, slc_dir=None):
 
 class ConvertFileToGeotiff(luigi.Task):
     """
-    Task responsible for converting a GAMMA file to GeoTif.
+    Task responsible for converting a GAMMA file to GeoTiff.
     """
-
     input_file = luigi.Parameter()
     demHeaderFile = luigi.Parameter(
         config_path=InputParam(config.DEM_HEADER_FILE))
@@ -80,9 +81,8 @@ class ConvertFileToGeotiff(luigi.Task):
 
     def requires(self):
         """
-        Overload of :py:meth:`luigi.Task.requires`.
-
-        Ensures that the required input exists.
+        Overload of :py:meth:`luigi.Task.requires`. Ensures that the required
+        input exists.
         """
         self.header_paths = get_header_paths(self.input_file, self.slc_dir)
 
@@ -113,7 +113,7 @@ class ConvertFileToGeotiff(luigi.Task):
 
 
 class ConvertToGeotiff(IfgListMixin, luigi.WrapperTask):
-    """ Wrapper class for gamma convert to geotiff"""
+    """ Wrapper class for GAMMA conversion to geotiff"""
     def requires(self):
         return [ConvertFileToGeotiff(input_file=fn)
                 for fn in self.ifg_list(tif=False)]

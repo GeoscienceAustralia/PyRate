@@ -17,6 +17,7 @@ Contributors
 * Ben Davies (NCI)
 * Matt Garthwaite (GA)
 * Simon Knapp (GA)
+* Sarah Lawrie (GA)
 * Negin Moghaddam (GA)
 * Vanessa Newey (GA)
 * Garrick Paskos (GA)

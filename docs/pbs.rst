@@ -1,1 +1,0 @@
-.. include:: ../pbs/README.rst

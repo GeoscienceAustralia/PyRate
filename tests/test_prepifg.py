@@ -42,8 +42,7 @@ from pyrate.config import mlooked_path
 from pyrate.shared import Ifg, DEM
 from pyrate.prepifg import CUSTOM_CROP, MAXIMUM_CROP, MINIMUM_CROP, \
     ALREADY_SAME_SIZE
-from pyrate.prepifg import prepare_ifgs, resample, PreprocessError, CustomExts
-from pyrate.prepifg import extents_from_params
+from pyrate.prepifg import prepare_ifgs, _resample, PreprocessError, CustomExts
 from pyrate.tasks.utils import DUMMY_SECTION_NAME
 from pyrate.config import (
     DEM_HEADER_FILE,
@@ -89,6 +88,12 @@ def diff_exts_ifgs():
 def same_exts_ifgs():
     """Return pair of Ifgs with same extents"""
     return [Ifg(join(PREP_TEST_TIF, f)) for f in ('0.tif', '1.tif')]
+
+
+def extents_from_params(params):
+    """Custom extents from supplied parameters"""
+    keys = (cf.IFG_XFIRST, cf.IFG_YFIRST, cf.IFG_XLAST, cf.IFG_YLAST)
+    return CustomExts(*[params[k] for k in keys])
 
 
 def test_extents_from_params():
@@ -411,7 +416,7 @@ class ThresholdTests(unittest.TestCase):
     def test_nan_threshold_inputs(self):
         data = ones((1, 1))
         for thresh in [-10, -1, -0.5, 1.000001, 10]:
-            self.assertRaises(ValueError, resample, data, 2, 2, thresh)
+            self.assertRaises(ValueError, _resample, data, 2, 2, thresh)
 
     @staticmethod
     def test_nan_threshold():
@@ -428,7 +433,7 @@ class ThresholdTests(unittest.TestCase):
                     (1.0, [1, 1, 1, 1, nan])]
 
         for thresh, exp in expected:
-            res = resample(data, xscale=2, yscale=2, thresh=thresh)
+            res = _resample(data, xscale=2, yscale=2, thresh=thresh)
             assert_array_equal(res, reshape(exp, res.shape))
 
     @staticmethod
@@ -440,7 +445,7 @@ class ThresholdTests(unittest.TestCase):
 
         expected = [(0.4, [nan, nan]), (0.5, [1, nan]), (0.7, [1, 1])]
         for thresh, exp in expected:
-            res = resample(data, xscale=3, yscale=3, thresh=thresh)
+            res = _resample(data, xscale=3, yscale=3, thresh=thresh)
             assert_array_equal(res, reshape(exp, res.shape))
 
 

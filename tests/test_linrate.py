@@ -32,11 +32,11 @@ import tests.common
 from pyrate import config as cf
 from pyrate import ref_phs_est as rpe
 from pyrate import shared
-from pyrate import vcm as vcm_module
+from pyrate import covariance as vcm_module
 from pyrate.linrate import linear_rate
 from pyrate.scripts import run_pyrate, run_prepifg
 from tests.common import SML_TEST_DIR, prepare_ifgs_without_phase
-from tests.common import TEST_CONF_ROIPAC
+from tests.common import TEST_CONF_ROIPAC, pre_prepare_ifgs
 
 
 def default_params():
@@ -102,18 +102,18 @@ class MatlabEqualityTest(unittest.TestCase):
         dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
 
         # start run_pyrate copy
-        ifgs = shared.pre_prepare_ifgs(dest_paths, params)
+        ifgs = pre_prepare_ifgs(dest_paths, params)
         mst_grid = tests.common.mst_calculation(dest_paths, params)
 
-        refx, refy = run_pyrate.ref_pixel_calc(dest_paths, params)
+        refx, refy = run_pyrate._ref_pixel_calc(dest_paths, params)
 
         # Estimate and remove orbit errors
         pyrate.orbital.remove_orbital_error(ifgs, params)
         ifgs = prepare_ifgs_without_phase(dest_paths, params)
 
         _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
-
-        maxvar = [vcm_module.cvd(i, params)[0] for i in ifgs]
+        r_dist = vcm_module.RDist(ifgs[0])()
+        maxvar = [vcm_module.cvd(i, params, r_dist)[0] for i in ifgs]
         vcmt = vcm_module.get_vcmt(ifgs, maxvar)
 
         # Calculate linear rate map

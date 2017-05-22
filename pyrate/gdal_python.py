@@ -30,20 +30,30 @@ LOW_FLOAT32 = np.finfo(np.float32).min*1e-10
 def world_to_pixel(geo_transform, x, y):
     """
     Uses a gdal geomatrix (gdal.GetGeoTransform()) to calculate
-    the pixel location of a geospatial coordinate; from:
-    http://pcjericks.github.io/py-gdalogr-cookbook/raster_layers.html#clip-a-geotiff-with-shapefile
+    the pixel location of a geospatial coordinate;
+    see: http://pcjericks.github.io/py-gdalogr-cookbook/raster_layers.html
+
+    :param list geo_transform: Affine transformation coefficients
+    :param float x: longitude coordinate
+    :param float y: latitude coordinate
+
+    :return: col: pixel column number
+    :rtype: int
+    :return: line: pixel line number
+    :rtype: int
     """
     ul_x = geo_transform[0]
     ul_y = geo_transform[3]
-    res = geo_transform[1]
-    pixel = int(np.round((x - ul_x) / res))
-    line = int(np.round((ul_y - y) / res))
-    return pixel, line
+    xres = geo_transform[1]
+    yres = geo_transform[5]
+    col = int(np.round((x - ul_x) / xres))
+    line = int(np.round((ul_y - y) / abs(yres))) # yres has negative size
+
+    return col, line
 
 
 def crop(input_file, extents, geo_trans=None, nodata=np.nan):
     """
-
     Adapted from http://karthur.org/2015/clipping-rasters-in-python.html
 
     Clips a raster (given as either a gdal.Dataset or as a numpy.array
@@ -60,6 +70,16 @@ def crop(input_file, extents, geo_trans=None, nodata=np.nan):
         features_path   The path to the clipping features
         geo_trans              An optional GDAL GeoTransform to use instead
         nodata          The NoData value; defaults to -9999.
+
+    :param str input_file: input image file path
+    :param list extents: extents for the cropped area
+    :param list geo_trans: An optional GDAL GeoTransform to use instead
+    :param int nodata: The NoData value; defaults to -9999
+
+    :return: clip: cropped part of the image
+    :rtype: ndarray
+    :return: gt2: geotransform parameters for the cropped image
+    :rtype: list
     """
 
     def image_to_array(i):
@@ -166,20 +186,26 @@ def crop(input_file, extents, geo_trans=None, nodata=np.nan):
 
 def resample_nearest_neighbour(input_tif, extents, new_res, output_file):
     """
-    nearest neighbor resampling via GDAL
+    Nearest neighbor resampling and cropping of an image.
+
+    :param str input_tif: input geotiff file path
+    :param list extents: new extents for cropping
+    :param float new_res: new resolution for resampling
+    :param str output_file: output geotiff file path
+
+    :return: dst: resampled image
+    :rtype: ndarray
     """
-    dst, resampled_proj, src, _ = crop_rasample_setup(extents,
-                                                      input_tif,
-                                                      new_res,
-                                                      output_file)
+    dst, resampled_proj, src, _ = _crop_resample_setup(extents, input_tif,
+                                                       new_res, output_file)
     # Do the work
     gdal.ReprojectImage(src, dst, '', resampled_proj,
                         gdalconst.GRA_NearestNeighbour)
     return dst.ReadAsArray()
 
 
-def crop_rasample_setup(extents, input_tif, new_res, output_file,
-                        dst_driver_type='GTiff', out_bands=2):
+def _crop_resample_setup(extents, input_tif, new_res, output_file,
+                         dst_driver_type='GTiff', out_bands=2):
     """
     Convenience function for crop/resample setup
     """
@@ -205,8 +231,8 @@ def crop_rasample_setup(extents, input_tif, new_res, output_file,
     else:
         resampled_geotrans = gt2
 
-    px_height, px_width = gdalwarp_width_and_height(max_x, max_y, min_x, min_y,
-                                                    resampled_geotrans)
+    px_height, px_width = _gdalwarp_width_and_height(max_x, max_y, min_x,
+                                                     min_y, resampled_geotrans)
 
     # Output / destination
     dst = gdal.GetDriverByName(dst_driver_type).Create(
@@ -220,9 +246,9 @@ def crop_rasample_setup(extents, input_tif, new_res, output_file,
     return dst, resampled_proj, src_ds, src_proj
 
 
-def gdalwarp_width_and_height(max_x, max_y, min_x, min_y, geo_trans):
+def _gdalwarp_width_and_height(max_x, max_y, min_x, min_y, geo_trans):
     """
-    Modify pixel height and width based on world_to_pixel
+    Modify pixel height and width
     """
     # modified image extents
     ul_x, ul_y = world_to_pixel(geo_trans, min_x, max_y)
@@ -238,25 +264,22 @@ def crop_resample_average(
         out_driver_type='GTiff',
         match_pirate=False):
     """
-    Crop, resample, and average a geotif
-    Parameters
-    ----------
-    input_tif: str
-        path to input geotif to resample/crop
-    extents: tuple
-        georeferenced extents for new file: (xfirst, yfirst, xlast, ylast)
-    output_file: str
-        output resampled/cropped file name
-    new_res: list
-        [xres, yres] Sets resolution output Ifg metadata.
-    thresh: float
-        nan fraction threshold
-    out_driver_type: str, optional
-        the output driver type. `MEM` or `GTiff`.
-    match_pirate: bool, optional
-        whether to match Matlab Pirate style resampled/cropped output
+    Crop, resample, and average a geotiff image.
+
+    :param str input_tif: Path to input geotiff to resample/crop
+    :param tuple extents: Cropping extents (xfirst, yfirst, xlast, ylast)
+    :param list new_res: [xres, yres] resolution of output image
+    :param str output_file: Path to output resampled/cropped geotiff
+    :param float thresh: NaN fraction threshold
+    :param str out_driver_type: The output driver; `MEM` or `GTiff` (optional)
+    :param bool match_pirate: Match Matlab Pirate output (optional)
+
+    :return: resampled_average: output cropped and resampled image
+    :rtype: ndarray
+    :return: out_ds: destination gdal dataset object
+    :rtype: gdal.Dataset
     """
-    dst_ds, _, _, _ = crop_rasample_setup(
+    dst_ds, _, _, _ = _crop_resample_setup(
         extents, input_tif, new_res, output_file,
         out_bands=2, dst_driver_type='MEM')
 
@@ -274,8 +297,8 @@ def crop_resample_average(
 
     # required to match Matlab Pirate output
     if tmp_ds:
-        matlab_alignment(input_tif, new_res, resampled_average, src_ds_mem,
-                         src_gt, tmp_ds)
+        _matlab_alignment(input_tif, new_res, resampled_average, src_ds_mem,
+                          src_gt, tmp_ds)
 
     # write final pyrate GTiff
     out_ds = driver.Create(output_file, dst_ds.RasterXSize, dst_ds.RasterYSize,
@@ -305,34 +328,16 @@ def crop_resample_average(
     return resampled_average, out_ds
 
 
-def matlab_alignment(input_tif, new_res, resampled_average, src_ds_mem, src_gt,
-                     tmp_ds):
+def _matlab_alignment(input_tif, new_res, resampled_average, src_ds_mem,
+                      src_gt, tmp_ds):
     """
-    Correction step to match python multilook/crop ouput to match that of
-    Matlab Pirate code.
-
-    Parameters
-    ----------
-    input_tif: str
-        path to input geotif to resample/crop
-    new_res: list
-        [xres, yres] Sets resolution output Ifg metadata.
-    resampled_average: ndarray
-        ndarray from previous step with average resampling
-        applied to phase data
-    src_ds_mem: gdal.Dataset
-        gdal memory dataset object
-    src_gt: tuple
-        geotransform tuple
-    tmp_ds: gdal.Dataset
-        gdal memory dataset object
-
-    Modifies the resampled_average array in place.
+    Correction step to match python multi-look/crop output to match that of
+    Matlab Pirate code. Modifies the resampled_average array in place.
     """
     src_ds = gdal.Open(input_tif)
     data = src_ds.GetRasterBand(1).ReadAsArray()
     xlooks = ylooks = int(new_res[0] / src_gt[1])
-    xres, yres = get_matlab_resampled_data_size(xlooks, ylooks, data)
+    xres, yres = _get_matlab_resampled_data_size(xlooks, ylooks, data)
     nrows, ncols = resampled_average.shape
     # Matlab Pirate does nearest neighbor resampling for the last
     # [yres:nrows, xres:ncols] cells without nan_conversion
@@ -350,25 +355,19 @@ def matlab_alignment(input_tif, new_res, resampled_average, src_ds_mem, src_gt,
 
 def gdal_average(dst_ds, input_tif, thresh):
     """
-    Parameters
-    ----------
-    dst_ds: gdal.Dataset
-        destination gdal dataset object
-    input_tif: str
-        input geotif
-    thresh: float
-        nan fraction threshold
+    Perform subsampling of an image by averaging values
 
-    Returns
-    -------
-    resampled_average: ndarray
-        ndarray of of ifg phase data
-    src_ds_mem: gdal.Dataset
-        modified in memory src_ds with nan_fraction in Band2. The nan_fraction
+    :param gdal.Dataset dst_ds: Destination gdal dataset object
+    :param str input_tif: Input geotif
+    :param float thresh: NaN fraction threshold
+
+    :return resampled_average: resampled image data
+    :rtype: ndarray
+    :return src_ds_mem: Modified in memory src_ds with nan_fraction in Band2. The nan_fraction
         is computed efficiently here in gdal in the same step as the that of
         the resampled average (band 1). This results is huge memory and
-        computational efficiency.
-
+        computational efficiency
+    :rtype: gdal.Dataset
     """
     src_ds, src_ds_mem = _setup_source(input_tif)
     src_ds_mem.GetRasterBand(2).SetNoDataValue(-100000)
@@ -383,7 +382,7 @@ def gdal_average(dst_ds, input_tif, thresh):
 
 
 def _setup_source(input_tif):
-    """convenience setup function"""
+    """convenience setup function for gdal_average"""
     src_ds = gdal.Open(input_tif)
     data = src_ds.GetRasterBand(1).ReadAsArray()
     src_dtype = src_ds.GetRasterBand(1).DataType
@@ -400,10 +399,8 @@ def _setup_source(input_tif):
     return src_ds, src_ds_mem
 
 
-def get_matlab_resampled_data_size(xscale, yscale, data):
-    """
-    convenience function mimicking the Matlab Pirate output size
-    """
+def _get_matlab_resampled_data_size(xscale, yscale, data):
+    """convenience function mimicking the Matlab Pirate output size"""
     xscale = int(xscale)
     yscale = int(yscale)
     ysize, xsize = data.shape

@@ -26,7 +26,7 @@ from pyrate.tasks.utils import InputParam, IfgListMixin
 
 class RoipacHasRun(luigi.task.ExternalTask):
     """
-    Phaux task used to ensure that the required outputs from ROIPAC exist.
+    Phantom task used to ensure that the required outputs from ROIPAC exist.
     """
 
     fileName = luigi.Parameter()
@@ -41,7 +41,7 @@ class RoipacHasRun(luigi.task.ExternalTask):
 
 class ResourceHeaderExists(luigi.ExternalTask):
     """
-    Ensure that the resource header exists.
+    Phantom task used to ensure that the resource header file exists.
     """
 
     resourceHeader = luigi.Parameter()
@@ -53,7 +53,7 @@ class ResourceHeaderExists(luigi.ExternalTask):
 
 class ConvertFileToGeotiff(luigi.Task):
     """
-    Task responsible for converting a ROIPAC file to GeoTif.
+    Luigi task responsible for converting a ROI_PAC file to GeoTiff.
     """
     # pylint: disable=attribute-defined-outside-init
     inputFile = luigi.Parameter()
@@ -64,9 +64,8 @@ class ConvertFileToGeotiff(luigi.Task):
 
     def requires(self):
         """
-        Overload of :py:meth:`luigi.Task.requires`.
-
-        Ensures that the required input exists.
+        Overload of :py:meth:`luigi.Task.requires`. Ensures that the required
+        input exists.
         """
         self.header_file = "%s.%s" % (self.inputFile, ROI_PAC_HEADER_FILE_EXT)
         tasks = [RoipacHasRun(
@@ -76,6 +75,9 @@ class ConvertFileToGeotiff(luigi.Task):
         return tasks
 
     def run(self):
+        """
+        Overload of :py:meth:`luigi.Task.run`.
+        """
         header = manage_header(self.header_file, self.projection)
         write_geotiff(header, self.inputFile, self.output_file,
                       self.no_data_value)
@@ -89,6 +91,9 @@ class ConvertFileToGeotiff(luigi.Task):
 
 
 class _DoConvertToGeotiffRoipac(IfgListMixin, luigi.WrapperTask):
+    """
+    Luigi task for ROI_PAC to geotiff conversion
+    """
     projection = luigi.Parameter(
         default=None,
         config_path=InputParam(config.INPUT_IFG_PROJECTION))
@@ -128,12 +133,9 @@ class _DoConvertToGeotiffRoipac(IfgListMixin, luigi.WrapperTask):
 
 class ConvertToGeotiff(luigi.WrapperTask):
     """
-    Convert ROIPAC files to geotifs.
-
-    This delegates the actual conversions tasks which operate on individual
-    files and is purely a convenience wrapper.
+    This convenience wrapper delegates the actual tasks of converting
+    ROI_PAC files to geotiffs. Each task operates on individual files.
     """
-
     resourceHeader = luigi.Parameter(
         default=None,
         config_path=InputParam(config.DEM_HEADER_FILE))

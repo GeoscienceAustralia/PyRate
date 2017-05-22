@@ -1,4 +1,4 @@
-PyRate Main Module
+PyRate main Script
 ==================
 
 .. automodule:: pyrate.scripts.main

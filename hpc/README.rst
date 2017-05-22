@@ -1,7 +1,7 @@
 Running PyRate on a HPC system
 ==============================
 
-This README is a quick guide to getting the PyRate software up and
+This is a quick guide to getting the PyRate software up and
 running in a Portable Batch System (PBS) batch environment with MPI
 support. This setup is common in High Performance Compute (HPC) systems
 such as the National Computational Infrastructure's `Raijin
@@ -16,14 +16,14 @@ the job submission script accordingly (e.g. ncpus=32 for 2 nodes).
 
 These instructions assume you are using bash shell.
 
+----------------
 Pre-installation
 ----------------
 
-These instructions currently only work with gcc and not the Intel
-compilers.
+Note: These instructions currently only work with gcc and not Intel compilers.
 
-1. Clone the ``PyRate`` repository into your home directory, or some
-   other directory of your choice:
+1. Clone the PyRate repository into your home directory, or another directory
+of your choice:
 
    .. code:: bash
 
@@ -46,9 +46,9 @@ compilers.
        $ module load hdf5/1.8.10 gdal/2.0.0 openmpi/1.8 netcdf/4.3.2
 
    (Alternatively, you may wish to add the above lines to your
-   ~/.profile)
+   ``~/.profile`` file)
 
-4. Now add the following lines to the end of your ~/.profile:
+4. Now add the following lines to the end of your ``~/.profile`` file:
 
    .. code:: bash
 
@@ -60,19 +60,19 @@ compilers.
        export LANG=en_AU.UTF-8
        source $HOME/.local/bin/virtualenvwrapper.sh
 
-5. Install virtualenv and ``virtualenvwrapper`` by running the following
-   command on the terminal:
+5. Install virtualenv and ``virtualenvwrapper`` in a terminal:
 
    .. code:: bash
 
        $ pip3 install  --user virtualenv virtualenvwrapper
 
-6. Refresh your environment by reloading your profile:
+6. Refresh your environment by sourcing your ``~/.profile`` file:
 
    .. code:: bash
 
        $ source ~/.profile
 
+------------
 Installation
 ------------
 
@@ -93,7 +93,7 @@ Installation
    .. code:: bash
 
        $ cd $PYRATEPATH
-       $ pip install python-daemon==2.1.1  # the latest python-daemon had 
+       $ pip install python-daemon==2.1.1
        $ python setup.py install
 
 4. Once installation has completed, you can run the tests to verify
@@ -102,12 +102,13 @@ Installation
    .. code:: bash
 
        $ pip install pytest
-       $ py.test ~/PyRate/tests/
+       $ pytest ~/PyRate/tests/
 
+-----------------
 Updating the Code
 -----------------
 
-To update the code, first make sure you are in the ``pyrate`` virtual
+To update the PyRate code, first make sure you are in the ``pyrate`` virtual
 environment:
 
 .. code:: bash
@@ -125,11 +126,12 @@ Next, pull the latest commit from the master branch, and install:
 If the pull and the installation complete successfully, the code is
 ready to run!
 
+------------------
 Running Batch Jobs
 ------------------
 
-in the ``pbs`` subfolder of the ``PyRate`` repo there are some example
-scripts to assist launching batch jobs over multiple nodes with PBS.
+An example script to assist launching batch jobs over multiple nodes with PBS
+is given at the bottom of this ``readme``.
 
 Batch testing
 ~~~~~~~~~~~~~
@@ -144,8 +146,8 @@ To check everything is working, submit the tests as a batch job:
 MPIRun
 ~~~~~~
 
-``PyRate`` uses MPI internally for parallelization. To run a script or
-demo simply do:
+PyRate uses MPI internally for parallelization. To run a script or
+demo, use the command:
 
 .. code:: bash
 
@@ -166,6 +168,7 @@ A PBS job submission script might look like this:
     #PBS -q <queue>
     #PBS -l walltime=01:00:00,mem=128GB,ncpus=16,jobfs=20GB
     #PBS -l wd
+    #PBS -j oe
 
     # setup environment
     module unload intel-cc
@@ -178,6 +181,11 @@ A PBS job submission script might look like this:
     workon pyrate
 
     # run PyRate commands
-    mpirun -n 16 pyrate prepifg /path/to/config_file.conf
-    mpirun -n 16 pyrate linrate /path/to/config_file.conf
-    mpirun -n 16 pyrate postprocess /path/to/config_file.conf
+    mpirun --mca mpi_warn_o pyrate prepifg /path/to/config_file.conf
+    mpirun --mca mpi_warn_o pyrate linrate /path/to/config_file.conf
+    mpirun --mca mpi_warn_o pyrate postprocess /path/to/config_file.conf
+
+
+``--mca mpi_warn_o`` prevents mpi fork warnings. To distribute the job
+between nodes and to manage memory between processes use something  like
+``-map-by ppr:4:node``, which will start 4 jobs per node.

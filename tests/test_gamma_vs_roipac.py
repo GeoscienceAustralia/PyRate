@@ -30,6 +30,7 @@ from tests import common
 
 from pyrate import config as cf
 from pyrate import ifgconstants as ifc
+from pyrate.prepifg import _is_number
 from pyrate.config import (
     DEM_HEADER_FILE,
     NO_DATA_VALUE,
@@ -203,7 +204,7 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
             for k in mdi:  # all key values equal
                 if k == 'INCIDENCE_DEGREES':
                     pass # incidence angle not implemented for roipac
-                elif is_number(mdi[k]):
+                elif _is_number(mdi[k]):
                     self.assertAlmostEqual(
                         float(mdj[k]), float(mdi[k]), places=6)
                 elif mdi[k] == 'ROIPAC' or 'GAMMA':
@@ -221,14 +222,6 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
                 self.assertEqual(mdj[ifc.DATA_TYPE], ifc.ORIG)
 
         self.assertEquals(c + 1, len(all_gamma_ifgs))
-
-
-def is_number(s):
-    try:
-        float(s)
-        return True
-    except ValueError:
-        return False
 
 
 if __name__ == '__main__':

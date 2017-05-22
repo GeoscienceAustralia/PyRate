@@ -35,8 +35,10 @@ from pyrate.config import ConfigException
 from pyrate import mst as mst_module
 
 
-def time_series_setup(ifgs, mst, params):
-    """ Convenience function setting up time series computation parameters"""
+def _time_series_setup(ifgs, mst, params):
+    """
+    Convenience function for setting up time series computation parameters
+    """
     if len(ifgs) < 1:
         msg = 'Time series requires 2+ interferograms'
         raise TimeSeriesError(msg)
@@ -49,25 +51,7 @@ def time_series_setup(ifgs, mst, params):
     # Time Series parameters
     tsmethod = params[cf.TIME_SERIES_METHOD]
 
-    if tsmethod == 1 and params[cf.TIME_SERIES_SM_ORDER] is None:
-        missing_option_error(cf.TIME_SERIES_SM_ORDER)
-    else:
-        smorder = params[cf.TIME_SERIES_SM_ORDER]
-
-    if tsmethod == 1 and params[cf.TIME_SERIES_SM_FACTOR] is None:
-        missing_option_error(cf.TIME_SERIES_SM_FACTOR)
-    else:
-        smfactor = np.power(10, params[cf.TIME_SERIES_SM_FACTOR])
-
-    if params[cf.TIME_SERIES_PTHRESH] is None:
-        missing_option_error(cf.TIME_SERIES_PTHRESH)
-    else:
-        pthresh = params[cf.TIME_SERIES_PTHRESH]
-
-    if pthresh < 0.0 or pthresh > 1000:
-        raise ValueError(
-            "minimum number of coherent observations for a pixel"
-            " TIME_SERIES_PTHRESH setting must be >= 0.0 and <= 1000")
+    pthresh, smfactor, smorder = _validate_params(params, tsmethod)
 
     epochlist = get_epochs(ifgs)[0]
     nrows = ifgs[0].nrows
@@ -100,15 +84,42 @@ def time_series_setup(ifgs, mst, params):
         mst, ncols, nrows, nvelpar, parallel, span, tsvel_matrix
 
 
-def time_series(ifgs, params, vcmt, mst=None):
+def _validate_params(params, tsmethod):
     """
-    Returns time series data from the given interferograms.
+    Helper function to validate supplied time series parameters
+    """
+    if tsmethod == 1 and params[cf.TIME_SERIES_SM_ORDER] is None:
+        _missing_option_error(cf.TIME_SERIES_SM_ORDER)
+    else:
+        smorder = params[cf.TIME_SERIES_SM_ORDER]
+    if tsmethod == 1 and params[cf.TIME_SERIES_SM_FACTOR] is None:
+        _missing_option_error(cf.TIME_SERIES_SM_FACTOR)
+    else:
+        smfactor = np.power(10, params[cf.TIME_SERIES_SM_FACTOR])
 
-    :param ifgs: Network of interferograms.
-    :param params: configuration parameters
-    :param vcmt: Derived positive definite temporal variance covariance matrix
-    :param mst: [optional] array of ifg indexes from the MST-matrix.
-    :param parallel: use parallel processing or not.
+    if params[cf.TIME_SERIES_PTHRESH] is None:
+        _missing_option_error(cf.TIME_SERIES_PTHRESH)
+    else:
+        pthresh = params[cf.TIME_SERIES_PTHRESH]
+        if pthresh < 0.0 or pthresh > 1000:
+            raise ValueError(
+                "minimum number of coherent observations for a pixel"
+                " TIME_SERIES_PTHRESH setting must be >= 0.0 and <= 1000")
+    return pthresh, smfactor, smorder
+
+
+def time_series(ifgs, params, vcmt=None, mst=None):
+    """
+    Calculates the displacement time series from the given interferogram
+    network. Solves the linear least squares system using either the SVD
+    method (similar to the SBAS method implemented by Berardino et al. 2002)
+    or a Finite Difference method using a Laplacian Smoothing operator
+    (similar to the method implemented by Schmidt and Burgmann 2003)
+
+    :param list ifgs: list of interferogram class objects.
+    :param dict params: Dictionary of configuration parameters
+    :param ndarray vcmt: Positive definite temporal variance covariance matrix
+    :param ndarray mst: [optional] Minimum spanning tree array.
 
     :return: Tuple with the elements:
 
@@ -122,34 +133,34 @@ def time_series(ifgs, params, vcmt, mst=None):
         - *nrows* is the number of rows in the ifgs,
         - *ncols* is the  number of columns in the ifgs, and
         - *nepochs* is the number of unique epochs (dates)
-        covered by the ifgs.).
+    :rtype: tuple
     """
 
     b0_mat, interp, p_thresh, sm_factor, sm_order, ts_method, ifg_data, mst, \
         ncols, nrows, nvelpar, parallel, span, tsvel_matrix = \
-        time_series_setup(ifgs, mst, params)
+        _time_series_setup(ifgs, mst, params)
 
     if parallel == 1:
         tsvel_matrix = Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
-            delayed(time_series_by_rows)(r, b0_mat, sm_factor, sm_order,
-                                         ifg_data, mst, ncols, nvelpar,
-                                         p_thresh, vcmt, ts_method, interp)
+            delayed(_time_series_by_rows)(r, b0_mat, sm_factor, sm_order,
+                                          ifg_data, mst, ncols, nvelpar,
+                                          p_thresh, vcmt, ts_method, interp)
             for r in range(nrows))
 
     elif parallel == 2:
 
         res = np.array(Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
-            delayed(time_series_by_pixel)(i, j, b0_mat, sm_factor, sm_order,
-                                          ifg_data, mst, nvelpar, p_thresh,
-                                          vcmt, ts_method, interp)
+            delayed(_time_series_by_pixel)(i, j, b0_mat, sm_factor, sm_order,
+                                           ifg_data, mst, nvelpar, p_thresh,
+                                           interp, vcmt, ts_method)
             for (i, j) in itertools.product(range(nrows), range(ncols))))
         tsvel_matrix = np.reshape(res, newshape=(nrows, ncols, res.shape[1]))
     else:
         for row in range(nrows):
             for col in range(ncols):
-                tsvel_matrix[row, col] = time_series_by_pixel(
+                tsvel_matrix[row, col] = _time_series_by_pixel(
                     row, col, b0_mat, sm_factor, sm_order, ifg_data, mst,
-                    nvelpar, p_thresh, vcmt, ts_method, interp)
+                    nvelpar, p_thresh, interp, vcmt, ts_method)
 
     tsvel_matrix = where(tsvel_matrix == 0, nan, tsvel_matrix)
     # SB: do the span multiplication as a numpy linalg operation, MUCH faster
@@ -163,20 +174,24 @@ def time_series(ifgs, params, vcmt, mst=None):
     return tsincr, tscum, tsvel_matrix
 
 
-def time_series_by_rows(row, b0_mat, sm_factor, sm_order, ifg_data, mst, ncols,
-                        nvelpar, p_thresh, vcmt, ts_method, interp):
-    """ time series computation for each row of interferograms """
+def _time_series_by_rows(row, b0_mat, sm_factor, sm_order, ifg_data, mst, ncols,
+                         nvelpar, p_thresh, vcmt, ts_method, interp):
+    """
+    Wrapper function for splitting time series computation by rows.
+    """
     tsvel = np.empty(shape=(ncols, nvelpar), dtype=float32)
     for col in range(ncols):
-        tsvel[col, :] = time_series_by_pixel(
+        tsvel[col, :] = _time_series_by_pixel(
             row, col, b0_mat, sm_factor, sm_order, ifg_data, mst, nvelpar,
-            p_thresh, vcmt, ts_method, interp)
+            p_thresh, interp, vcmt, ts_method)
 
     return tsvel
 
 
-def remove_rank_def_rows(b_mat, nvelpar, ifgv, sel):
-    """ Remove rank deficient rows """
+def _remove_rank_def_rows(b_mat, nvelpar, ifgv, sel):
+    """
+    Remove rank deficient rows of design matrix
+    """
     _, _, e_var = qr(b_mat, mode='economic', pivoting=True)
     licols = e_var[matrix_rank(b_mat):nvelpar]
     [rmrow, _] = where(b_mat[:, licols] != 0)
@@ -186,9 +201,11 @@ def remove_rank_def_rows(b_mat, nvelpar, ifgv, sel):
     return b_mat, ifgv, sel, rmrow
 
 
-def time_series_by_pixel(row, col, b0_mat, sm_factor, sm_order, ifg_data, mst,
-                         nvelpar, p_thresh, vcmt, method, interp):
-    """ time series computation for each pixel """
+def _time_series_by_pixel(row, col, b0_mat, sm_factor, sm_order, ifg_data, mst,
+                          nvelpar, p_thresh, interp, vcmt, method):
+    """
+    Wrapper function for splitting time series computation by pixels.
+    """
     # check pixel for non-redundant ifgs
     sel = np.nonzero(mst[:, row, col])[0]  # trues in mst are chosen
     if len(sel) >= p_thresh:
@@ -202,7 +219,7 @@ def time_series_by_pixel(row, col, b0_mat, sm_factor, sm_order, ifg_data, mst,
             while len(rmrow) > 0:
                 # if b_mat.shape[0] <=1 then we return nans
                 if b_mat.shape[0] > 1:
-                    b_mat, ifgv, sel, rmrow = remove_rank_def_rows(
+                    b_mat, ifgv, sel, rmrow = _remove_rank_def_rows(
                         b_mat, nvelpar, ifgv, sel)
                 else:
                     return np.empty(nvelpar) * np.nan
@@ -219,7 +236,7 @@ def time_series_by_pixel(row, col, b0_mat, sm_factor, sm_order, ifg_data, mst,
                                   sm_order, sm_factor, sel, vcmt)
         elif method == 2:
             # Use SVD method
-            tsvel = solve_ts_svd(nvelpar, velflag, ifgv, b_mat)
+            tsvel = _solve_ts_svd(nvelpar, velflag, ifgv, b_mat)
         else:
             raise ValueError("Unrecognised time series method")
         return tsvel
@@ -227,10 +244,9 @@ def time_series_by_pixel(row, col, b0_mat, sm_factor, sm_order, ifg_data, mst,
         return np.empty(nvelpar) * np.nan
 
 
-def solve_ts_svd(nvelpar, velflag, ifgv, b_mat):
+def _solve_ts_svd(nvelpar, velflag, ifgv, b_mat):
     """
     Solve the linear least squares system using the SVD method.
-    Similar to the SBAS method implemented by Berardino et al. 2002
     """
     # pre-allocate the velocity matrix
     tsvel = np.empty(nvelpar, dtype=float32) * np.nan
@@ -243,7 +259,6 @@ def _solve_ts_lap(nvelpar, velflag, ifgv, mat_b, smorder, smfactor, sel, vcmt):
     """
     Solve the linear least squares system using the Finite Difference
     method using a Laplacian Smoothing operator.
-    Similar to the method implemented by Schmidt and Burgmann 2003
     """
     # pylint: disable=invalid-name
     # Laplacian observations number
@@ -307,15 +322,10 @@ def _solve_ts_lap(nvelpar, velflag, ifgv, mat_b, smorder, smfactor, sel, vcmt):
     return tsvel
 
 
-def plot_timeseries(tsincr, tscum, tsvel, output_dir):  # pragma: no cover
+def _plot_timeseries(tsincr, tscum, tsvel, output_dir):  # pragma: no cover
     """
-    Plot the results of the timeseries analysis.
-
     A very basic plotting function used in code development
-
-    .. todo:: this should be moved and tidied up
     """
-
     nvelpar = len(tsincr[0, 0, :])
     for i in range(nvelpar):
 
@@ -332,7 +342,6 @@ def plot_timeseries(tsincr, tscum, tsvel, output_dir):  # pragma: no cover
         plt.draw()
         plt.savefig(output_dir + 'tscum_' + str(i) + '.png')
         plt.close()
-
         imgplot = plt.imshow(tsvel[:, :, i])
         imgplot.set_clim(-50, 100)
         plt.colorbar(ticks=[-50, 50, 100], orientation='horizontal')
@@ -341,12 +350,13 @@ def plot_timeseries(tsincr, tscum, tsvel, output_dir):  # pragma: no cover
         plt.close()
 
 
-def missing_option_error(option):
-    '''
-    Internal convenience function for raising similar missing option errors.
-    '''
+def _missing_option_error(option):
+    """
+    Convenience function for raising similar missing option errors.
+    """
     msg = "Missing '%s' option in config file" % option
     raise ConfigException(msg)
+
 
 class TimeSeriesError(Exception):
     """

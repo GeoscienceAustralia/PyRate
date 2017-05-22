@@ -1,4 +1,4 @@
-Python Modules
+PyRate Modules
 ==============
 
 .. toctree::
@@ -7,11 +7,10 @@ Python Modules
    algorithm
    aps
    config
+   covariance
    gamma
    gdal_python
-   ifgconstants
    linrate
-   matlab_mst
    mst
    orbital
    prepifg
@@ -21,4 +20,3 @@ Python Modules
    roipac
    shared
    timeseries
-   vcm

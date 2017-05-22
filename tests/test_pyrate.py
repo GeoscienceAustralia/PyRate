@@ -18,7 +18,6 @@ This Python module contains system integration tests for the PyRate workflow.
 """
 
 import glob
-#import logging
 import os
 import shutil
 import tempfile
@@ -26,6 +25,7 @@ import unittest
 from os.path import join
 import numpy as np
 
+import pyrate.shared
 from pyrate import config as cf
 from pyrate import shared, config, prepifg
 from pyrate.scripts import run_pyrate, run_prepifg
@@ -212,7 +212,7 @@ class ParallelPyRateTests(unittest.TestCase):
         cls.dest_paths = cf.get_dest_paths(
             base_unw_paths, crop, params, xlks)
         run_prepifg.gamma_prepifg(base_unw_paths, params)
-        tiles = run_pyrate.get_tiles(cls.dest_paths[0], 3, 3)
+        tiles = pyrate.shared.get_tiles(cls.dest_paths[0], 3, 3)
         ifgs = common.small_data_setup()
         cls.refpixel_p, cls.maxvar_p, cls.vcmt_p = \
             run_pyrate.process_ifgs(cls.dest_paths, params, 3, 3)
@@ -304,14 +304,14 @@ class TestPrePrepareIfgs(unittest.TestCase):
     def setUpClass(cls):
         params = config.get_config_params(common.TEST_CONF_ROIPAC)
         cls.tmp_dir = tempfile.mkdtemp()
-        shared.copytree(common.SML_TEST_TIF, cls.tmp_dir)
+        common.copytree(common.SML_TEST_TIF, cls.tmp_dir)
         tifs = glob.glob(os.path.join(cls.tmp_dir, "*.tif"))
         for t in tifs:
             os.chmod(t, 0o644)
         small_ifgs = common.small_data_setup(datafiles=tifs)
         ifg_paths = [i.data_path for i in small_ifgs]
 
-        cls.ifg_ret = shared.pre_prepare_ifgs(ifg_paths, params=params)
+        cls.ifg_ret = common.pre_prepare_ifgs(ifg_paths, params=params)
         for i in cls.ifg_ret:
             i.close()
 
@@ -319,7 +319,7 @@ class TestPrePrepareIfgs(unittest.TestCase):
 
         # prepare a second set
         cls.tmp_dir2 = tempfile.mkdtemp()
-        shared.copytree(common.SML_TEST_TIF, cls.tmp_dir2)
+        common.copytree(common.SML_TEST_TIF, cls.tmp_dir2)
         tifs = glob.glob(os.path.join(cls.tmp_dir2, "*.tif"))
         for t in tifs:
             os.chmod(t, 0o644)

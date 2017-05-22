@@ -11,8 +11,14 @@ out
 .tox/
 build/
 docs/_build/
-tests/test_data/
+#tests/test_data/
 PyAPS/
 .cache/
 # .coverage tmp files
 .coverage.*
+.vscode/
+dist/
+*.egg-info/
+.installed.cfg
+*.egg
+*__pycache__/
