@@ -1,4 +1,4 @@
-Python Modules
+PyRate Modules
 ==============
 
 .. toctree::
@@ -10,9 +10,7 @@ Python Modules
    covariance
    gamma
    gdal_python
-   ifgconstants
    linrate
-   matlab_mst
    mst
    orbital
    prepifg

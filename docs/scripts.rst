@@ -1,5 +1,5 @@
-Pyrate Scripts Module
-=====================
+PyRate Scripts
+==============
 
 .. toctree::
    :maxdepth: 4

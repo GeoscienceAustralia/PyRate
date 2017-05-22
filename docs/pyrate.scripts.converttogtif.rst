@@ -1,5 +1,5 @@
-Convert to GeoTiff Module
-=========================
+PyRate converttogtif Script
+===========================
 
 .. automodule:: pyrate.scripts.converttogtif
     :members:

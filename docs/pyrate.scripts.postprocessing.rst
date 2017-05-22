@@ -1,5 +1,5 @@
-Postprocess Module
-==================
+PyRate postprocessing Script
+============================
 
 .. automodule:: pyrate.scripts.postprocessing
     :members:

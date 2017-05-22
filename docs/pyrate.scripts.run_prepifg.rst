@@ -1,5 +1,5 @@
-Run Prepifg Module
-==================
+PyRate run_prepifg Script
+=========================
 
 .. automodule:: pyrate.scripts.run_prepifg
     :members:

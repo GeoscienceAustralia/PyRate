@@ -1,5 +1,5 @@
-Run PyRate Module
-=================
+PyRate run_pyrate Script
+========================
 
 .. automodule:: pyrate.scripts.run_pyrate
     :members:
