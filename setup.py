@@ -54,10 +54,9 @@ class PyTest(TestCommand, object):
 readme = open('README.rst').read()
 
 doclink = """
-Documentation
--------------
 
-The full documentation is at http://geoscienceaustralia.github.io/PyRate/."""
+Please see the full documentation at http://geoscienceaustralia.github.io/PyRate/."""
+
 history = open('HISTORY.rst').read().replace('.. :changelog:', '')
 
 setup(
@@ -65,7 +64,7 @@ setup(
     version=__version__,
     description='A Python tool for estimating velocity and time-series '
                 'from Interferometric Synthetic Aperture Radar (InSAR) data.',
-    long_description=readme + '\n\n' + doclink + '\n\n' + history,
+    long_description=doclink,
     author='Geoscience Australia InSAR team',
     author_email='insar@ga.gov.au',
     url='https://github.com/GeoscienceAustralia/PyRate',
