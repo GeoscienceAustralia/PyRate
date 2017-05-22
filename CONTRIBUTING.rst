@@ -32,20 +32,22 @@ is open to whoever wants to implement it.
 Implement Features
 ~~~~~~~~~~~~~~~~~~
 
-Look through the GitHub issues for features. Anything tagged with "feature"
-is open to whoever wants to implement it.
+Look through the GitHub issues for new features. Anything tagged with
+"enhancement" is open to whoever wants to implement it.
 
 Write Documentation
 ~~~~~~~~~~~~~~~~~~~
 
 PyRate could always use more documentation, whether as part of the
 official PyRate docs, in docstrings, or even on the web in blog posts,
-articles, and such.
+articles etc.
 
 Submit Feedback
 ~~~~~~~~~~~~~~~
 
-The best way to send feedback is to file an issue at https://github.com/GeoscienceAustralia/PyRate/issues.
+The best way to send feedback is to file an Issue_.
+
+.. _Issue: https://github.com/GeoscienceAustralia/PyRate/issues
 
 If you are proposing a feature:
 
@@ -84,7 +86,7 @@ Now you can make your changes locally.
 
 6. Submit a pull request through the GitHub website.
 
-.. _Fork: https://github.com/Nekroze/PyRate/fork
+.. _Fork: https://help.github.com/articles/fork-a-repo/
 
 Pull Request Guidelines
 -----------------------

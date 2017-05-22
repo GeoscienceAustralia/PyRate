@@ -24,13 +24,13 @@ Contents:
    :maxdepth: 2
 
    installation
-   hpc
    usage
+   hpc
    contributing
    authors
    history
+   scripts   
    modules
-   scripts
 
 
 Feedback

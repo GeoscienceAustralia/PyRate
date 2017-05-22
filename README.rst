@@ -16,9 +16,9 @@ Documentation: http://geoscienceaustralia.github.io/PyRate
 
 Issue tracking: https://github.com/GeoscienceAustralia/PyRate/issues
 
-=============
-Initial Setup
-=============
+============
+Installation
+============
 
 Before you start, you will need to have a number of packages installed on your Linux system. These can either be installed directly onto the system, or you can use a virtual environment.
 
@@ -77,9 +77,29 @@ The Python requirements should automatically be built and installed.
 For using PyRate in an Anaconda environment `use this
 guide <https://github.com/GeoscienceAustralia/PyRate/blob/master/conda.md>`_.
 
-===========
-Config File
-===========
+=====
+Tests
+=====
+
+A suite of tests have been developed for use in testing PyRate functionality
+and for further code development. The tests use
+`pytest <http://doc.pytest.org/en/latest/>`_ and can be found in the *tests/*
+directory. A small test dataset is included in the *tests/test_data/*
+directory.
+
+To run the tests, use the following command inside the top level *PyRate/*
+directory:
+
+.. code-block:: console
+
+    pip install pytest
+    cd PyRate
+    export PYRATEPATH=/path/to/PyRate
+    pytest tests/
+
+==================
+Configuration File
+==================
 
 Example configuration files for running PyRate with GAMMA or ROI\_PAC format
 interferograms are contained in the *configs/* directory.
@@ -88,7 +108,7 @@ interferograms are contained in the *configs/* directory.
 PyRate Workflow
 ===============
 
-After following the steps under Initial Setup, an executable program
+After following the steps under Installation, an executable program
 ``pyrate`` is created.
 
 Use ``help`` for the different command line options:
@@ -109,7 +129,7 @@ Use ``help`` for the different command line options:
       prepifg
 
 The ``pyrate`` program has three command line options corresponding to 
-different parts of the PyRate workflow.
+different parts of the PyRate workflow:
 
 1. ``prepifg``
 2. ``linrate``
@@ -223,7 +243,7 @@ Non-optional pre-processing steps include:
 - Identification of a suitable reference pixel
 - Removal of reference phase from interferograms
 - Calculation of interferogram covariance
-- Assembly of the varianec-covariance matrix
+- Assembly of the variance-covariance matrix
 
 ***********************************************
 3. postprocess: Putting the tiles back together
@@ -248,26 +268,6 @@ previous ``linrate`` step:
 .. code-block:: python
 
     pyrate postprocess path/to/config_file -c 3 -r 4
-
-=====
-Tests
-=====
-
-A suite of tests have been developed for use in testing PyRate functionality
-and for further code development. The tests use
-`pytest <http://doc.pytest.org/en/latest/>`_ and can be found in the *tests/*
-directory. A small test dataset is included in the *tests/test_data/*
-directory.
-
-To run the tests, use the following command inside the top level *PyRate/*
-directory:
-
-.. code-block:: console
-
-    pip install pytest
-    cd PyRate
-    export PYRATEPATH=/path/to/PyRate
-    pytest tests/
 
 ===========
 MPI Support
