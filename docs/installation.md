@@ -48,6 +48,12 @@ Note: if you are using a HPC environment, refer to [these instructions instead](
 
 The Python requirements should automatically be built and installed.
 
+If `matplotlib` does not install easily in a `virtualenv`, use this:
+
+    sudo apt-get -y build-dep matplotlib
+
+Then re-install `matplotlib` in your `virtualenv`.
+
 
 ### Anaconda
 
