@@ -195,8 +195,6 @@ def _orb_fit_calc(ifg_paths, params, preread_ifgs=None):
         return
 
     if preread_ifgs:  # don't check except for mpi tests
-        # remove non ifg keys
-        _ = [preread_ifgs.pop(k) for k in ['gt', 'epochlist', 'md', 'wkt']]
         # perform some general error/sanity checks
         log.info('Checking Orbital error correction status')
         if mpiops.run_once(shared.check_correction_status, preread_ifgs,
@@ -385,6 +383,9 @@ def process_ifgs(ifg_paths, params, rows, cols):
     refpx, refpy = _ref_pixel_calc(ifg_paths, params)
 
     # TODO: remove weather model derived APS delay here (pyaps.py)
+
+    # remove non ifg keys
+    _ = [preread_ifgs.pop(k) for k in ['gt', 'epochlist', 'md', 'wkt']]
 
     _orb_fit_calc(ifg_paths, params, preread_ifgs)
 
