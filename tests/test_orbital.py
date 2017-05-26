@@ -694,7 +694,7 @@ class MatlabComparisonTestsOrbfitMethod1(unittest.TestCase):
         self.BASE_DIR = tempfile.mkdtemp()
         self.params = cf.get_config_params(TEST_CONF_ROIPAC)
         # change to orbital error correction method 1
-        self.params[cf.ORBITAL_FIT_METHOD] = 1
+        self.params[cf.ORBITAL_FIT_METHOD] = INDEPENDENT_METHOD
         self.params[cf.ORBITAL_FIT_LOOKS_X] = 2
         self.params[cf.ORBITAL_FIT_LOOKS_Y] = 2
         self.params[cf.PARALLEL] = False
@@ -761,7 +761,7 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
         self.BASE_DIR = tempfile.mkdtemp()
         self.params = cf.get_config_params(TEST_CONF_ROIPAC)
         # change to orbital error correction method 2
-        self.params[cf.ORBITAL_FIT_METHOD] = 2
+        self.params[cf.ORBITAL_FIT_METHOD] = NETWORK_METHOD
         self.params[cf.ORBITAL_FIT_LOOKS_X] = 1
         self.params[cf.ORBITAL_FIT_LOOKS_Y] = 1
 
@@ -823,7 +823,7 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
         does not test anything except that the method is working
         """
         # change to orbital error correction method 2
-        self.params[cf.ORBITAL_FIT_METHOD] = 2
+        self.params[cf.ORBITAL_FIT_METHOD] = NETWORK_METHOD
         self.params[cf.ORBITAL_FIT_LOOKS_X] = 2
         self.params[cf.ORBITAL_FIT_LOOKS_Y] = 2
 
