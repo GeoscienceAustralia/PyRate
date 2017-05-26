@@ -677,7 +677,7 @@ def nanmedian(x):
     """
     # pylint: disable=no-member
     version = [int(i) for i in
-               pkg_resources.get_distribution("numpy").version.split('.')]
+               pkg_resources.get_distribution("numpy").version.split('.')[:2]]
     if version[0] == 1 and version[1] > 9:
         return np.nanmedian(x)
     else:   # pragma: no cover
