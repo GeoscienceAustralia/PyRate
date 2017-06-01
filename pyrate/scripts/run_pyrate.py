@@ -195,8 +195,6 @@ def _orb_fit_calc(ifg_paths, params, preread_ifgs=None):
         return
 
     if preread_ifgs:  # don't check except for mpi tests
-        # remove non ifg keys
-        _ = [preread_ifgs.pop(k) for k in ['gt', 'epochlist', 'md', 'wkt']]
         # perform some general error/sanity checks
         log.info('Checking Orbital error correction status')
         if mpiops.run_once(shared.check_correction_status, preread_ifgs,
@@ -380,15 +378,20 @@ def process_ifgs(ifg_paths, params, rows, cols):
 
     preread_ifgs = _create_ifg_dict(ifg_paths, params=params, tiles=tiles)
 
-    _mst_calc(ifg_paths, params, tiles, preread_ifgs)
+#    _mst_calc(ifg_paths, params, tiles, preread_ifgs)
 
     refpx, refpy = _ref_pixel_calc(ifg_paths, params)
 
     # TODO: remove weather model derived APS delay here (pyaps.py)
 
+    # remove non ifg keys
+    _ = [preread_ifgs.pop(k) for k in ['gt', 'epochlist', 'md', 'wkt']]
+
     _orb_fit_calc(ifg_paths, params, preread_ifgs)
 
     _ref_phase_estimation(ifg_paths, params, refpx, refpy, preread_ifgs)
+
+    _mst_calc(ifg_paths, params, tiles, preread_ifgs)
 
     # spatio-temporal aps filter
     _wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs)

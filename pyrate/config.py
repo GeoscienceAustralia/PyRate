@@ -168,8 +168,8 @@ PROCESSES = 'processes'
 LUIGI = 'use_luigi'
 
 # Orbital error correction constants for conversion to readable flags
-INDEPENDENT_METHOD = 1
-NETWORK_METHOD = 2
+INDEPENDENT_METHOD = 'INDEPENDENT'
+NETWORK_METHOD = 'NETWORK'
 PLANAR = 'PLANAR'
 QUADRATIC = 'QUADRATIC'
 PART_CUBIC = 'PART_CUBIC'
@@ -178,11 +178,10 @@ PART_CUBIC = 'PART_CUBIC'
 TMPDIR = 'tmpdir'
 
 
-def _degree_conv(deg):
+def _orb_degree_conv(deg):
     """
     Convenience: convert numerical degree flag to human readable string
     """
-
     degree = int(deg)
     if degree == 1:
         return PLANAR
@@ -193,11 +192,10 @@ def _degree_conv(deg):
     raise ValueError("Orbital fit polynomial degree option not recognised")
 
 
-def _method_conv(meth):
+def _orb_method_conv(meth):
     """
     Convenience: convert numerical method flag to human readable string
     """
-
     method = int(meth)
     if method == 1:
         return INDEPENDENT_METHOD
@@ -228,8 +226,8 @@ PARAM_CONVERSION = {
     REF_EST_METHOD: (int, 1),  # default to average of whole image
 
     ORBITAL_FIT: (int, 0),
-    ORBITAL_FIT_METHOD: (_method_conv, NETWORK_METHOD),
-    ORBITAL_FIT_DEGREE: (_degree_conv, QUADRATIC),
+    ORBITAL_FIT_METHOD: (_orb_method_conv, NETWORK_METHOD),
+    ORBITAL_FIT_DEGREE: (_orb_degree_conv, QUADRATIC),
     ORBITAL_FIT_LOOKS_X: (int, NO_MULTILOOKING),
     ORBITAL_FIT_LOOKS_Y: (int, NO_MULTILOOKING),
 
@@ -435,16 +433,18 @@ def write_config_file(params, output_conf_file):
     with open(output_conf_file, 'w') as f:
         for k, v in params.items():
             if k == ORBITAL_FIT_DEGREE:
-                v = _reverse_degree_conv(v)
+                v = _reverse_orb_degree_conv(v)
+            if k == ORBITAL_FIT_METHOD:
+                v = _reverse_orb_method_conv(v)
             if v is not None:
                 f.write(''.join([k, ':\t', str(v), '\n']))
             else:
                 f.write(''.join([k, ':\t', '', '\n']))
 
 
-def _reverse_degree_conv(v):
+def _reverse_orb_degree_conv(v):
     """
-    Convenience: convert numerical degree to human readable string
+    Convenience: convert degree to integer for config file
     """
     if v == PLANAR:
         return 1
@@ -455,6 +455,19 @@ def _reverse_degree_conv(v):
     else:
         raise ValueError(
             "Orbital fit polynomial degree option not recognised")
+
+
+def _reverse_orb_method_conv(v):
+    """
+    Convenience: convert method to integer for config file
+    """
+    if v == INDEPENDENT_METHOD:
+        return 1
+    if v == NETWORK_METHOD:
+        return 2
+    else:
+        raise ValueError(
+            "Orbital fit method option not recognised")
 
 
 def transform_params(params):

@@ -93,7 +93,7 @@ def remove_orbital_error(ifgs, params, preread_ifgs=None):
 
     # mlooking is not necessary for independent correction
     # can use multiple procesing if write_to_disc=True
-    if params[cf.ORBITAL_FIT_METHOD] == 2:
+    if params[cf.ORBITAL_FIT_METHOD] == NETWORK_METHOD:
         mlooked_dataset = prepifg.prepare_ifgs(
             ifg_paths,
             crop_opt=prepifg.ALREADY_SAME_SIZE,
@@ -126,7 +126,7 @@ def _orbital_correction(ifgs_or_ifg_paths, params, mlooked=None, offset=True,
         msg = "Invalid degree of %s for orbital correction" % degree
         raise OrbitalError(msg)
 
-    log.info('Removing orbital error using orbital method correction {}'
+    log.info('Removing orbital error using {} correction method'
              ' and degree={}'.format(method, degree))
 
     if method == NETWORK_METHOD:

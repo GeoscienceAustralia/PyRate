@@ -101,9 +101,12 @@ def _est_ref_phs_method2(phase_data, half_chip_size, refpx, refpy, thresh):
     patch = phase_data[refpy - half_chip_size: refpy + half_chip_size + 1,
                        refpx - half_chip_size: refpx + half_chip_size + 1]
     patch = np.reshape(patch, newshape=(-1, 1), order='F')
-    if np.sum(~np.isnan(patch)) < thresh:
+    nanfrac = np.sum(~np.isnan(patch))
+    if nanfrac < thresh:
         raise ReferencePhaseError('The data window at the reference pixel '
-                                  'does not have enough valid observations')
+                                  'does not have enough valid observations. '
+                                  'Actual = {}, Threshold = {}.'.format(
+                                          nanfrac, thresh))
     ref_ph = nanmedian(patch)
     return ref_ph
 

@@ -195,7 +195,7 @@ def orbfit_lks(request):
     return request.param
 
 
-@pytest.fixture(params=[1, 2])
+@pytest.fixture(params=[cf.INDEPENDENT_METHOD, cf.NETWORK_METHOD])
 def orbfit_method(request):
     return request.param
 
