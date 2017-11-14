@@ -303,11 +303,18 @@ For bugs, questions and discussions, please use `Github
 Issues <https://github.com/GeoscienceAustralia/PyRate/issues>`_.
 
 ========
+License
+========
+This repository is licensed under Apache License 2.0. See the `License deed <LICENSE>`_ in this repository for details.
+
+========
 Contacts
 ========
 
-**Sudipta Basak**
-*Lead Developer* <sudipta.basak@ga.gov.au> or <basaks@gmail.com>
-
-**Matt Garthwaite**
-*Developer* <matt.garthwaite@ga.gov.au>
+| **Sudipta Basak**  
+| *Lead Developer*  
+| sudipta.basak@ga.gov.au or basaks@gmail.com  
+| 
+| **Matt Garthwaite**  
+| *Developer*  
+| matt.garthwaite@ga.gov.au  
