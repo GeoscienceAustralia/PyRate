@@ -108,7 +108,7 @@ class MatlabMstKruskalTest(unittest.TestCase):
     def test_sorted_list_equal_matlab(self):
         for s, m in zip(self.sorted_list,
                         self.matlab_sorted_list_zero_nan_frac):
-            self.assertEquals((s[0]+1, s[1]+1, s[2]+1, s[3]), m)
+            self.assertEqual((s[0]+1, s[1]+1, s[2]+1, s[3]), m)
 
     def test_mst_kruskal_matlab(self):
         edges = _get_sub_structure(self.ifg_list,
@@ -251,7 +251,7 @@ class MatlabMSTTests(unittest.TestCase):
                                   np.zeros(len(ifg_list.id), dtype=bool))
         ifg_list_mst_id = _matlab_mst_kruskal(edges)
 
-        self.assertEquals(len(self.matlab_mst_list),
+        self.assertEqual(len(self.matlab_mst_list),
                           len(ifg_list_mst_id))
 
         for i in ifg_list_mst_id:

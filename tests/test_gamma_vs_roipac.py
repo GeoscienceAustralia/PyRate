@@ -184,8 +184,8 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
         c = 0
         for c, (r, g) in enumerate(zip(all_roipac_ifgs, all_gamma_ifgs)):
             np.testing.assert_array_equal(r.phase_data, g.phase_data)
-        self.assertEquals(c+1, len(all_roipac_ifgs))
-        self.assertEquals(c+1, len(all_gamma_ifgs))
+        self.assertEqual(c+1, len(all_roipac_ifgs))
+        self.assertEqual(c+1, len(all_gamma_ifgs))
 
     def test_equality_of_meta_data(self):
         gamma_PTN = re.compile(r'\d{8}')
@@ -210,7 +210,7 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
                 elif mdi[k] == 'ROIPAC' or 'GAMMA':
                     pass # INSAR_PROCESSOR can not be equal
                 else:
-                    self.assertEquals(mdj[k], mdi[k])
+                    self.assertEqual(mdj[k], mdi[k])
             if i.data_path.__contains__(
                     '_{looks}rlks_{crop}cr'.format(looks=1, crop=1)):
                 # these are multilooked tifs
@@ -221,7 +221,7 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
                 self.assertEqual(mdi[ifc.DATA_TYPE], ifc.ORIG)
                 self.assertEqual(mdj[ifc.DATA_TYPE], ifc.ORIG)
 
-        self.assertEquals(c + 1, len(all_gamma_ifgs))
+        self.assertEqual(c + 1, len(all_gamma_ifgs))
 
 
 if __name__ == '__main__':

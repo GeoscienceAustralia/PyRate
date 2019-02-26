@@ -429,11 +429,11 @@ class TestGammaLuigiEquality(unittest.TestCase):
         self.assertEqual(len(all_luigi_ifgs),
                          len(glob.glob(os.path.join(
                              self.luigi_base_dir, "*.tif"))))
-        self.assertEquals(len(all_luigi_ifgs), len(all_non_luigi_ifgs))
+        self.assertEqual(len(all_luigi_ifgs), len(all_non_luigi_ifgs))
         c = 0
         for c, (i, j) in enumerate(zip(all_luigi_ifgs, all_non_luigi_ifgs)):
             np.testing.assert_array_equal(i.phase_data, j.phase_data)
-        self.assertEquals(c + 1, len(all_luigi_ifgs))
+        self.assertEqual(c + 1, len(all_luigi_ifgs))
 
     def test_equality_of_meta_data(self):
         all_luigi_ifgs, all_non_luigi_ifgs = self.shared_setup()
@@ -457,7 +457,7 @@ class TestGammaLuigiEquality(unittest.TestCase):
 #            else:
 #                # others tifs are just geotiffs
 #                self.assertEqual(md[ifc.DATA_TYPE], ifc.ORIG)
-        self.assertEquals(c + 1, len(all_luigi_ifgs))
+        self.assertEqual(c + 1, len(all_luigi_ifgs))
 
     def shared_setup(self):
         self.test_cmd_ifg_no_luigi_files_created()
