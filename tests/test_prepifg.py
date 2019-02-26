@@ -26,13 +26,8 @@ from math import floor
 from os.path import exists, join
 
 import numpy as np
-from numpy import isnan, nanmax, nanmin, ones, nan, reshape, sum as npsum
+from numpy import isnan, nanmax, nanmin, nanmean, ones, nan, reshape, sum as npsum
 from numpy.testing import assert_array_almost_equal, assert_array_equal
-
-try:
-    from scipy.stats.stats import nanmean
-except:  # fix for scipy v0.18.0
-    from scipy import nanmean
 
 from osgeo import gdal
 
@@ -654,8 +649,8 @@ class MatlabEqualityTestRoipacSmallTestData(unittest.TestCase):
 
                     # means must also be equal
                     self.assertAlmostEqual(
-                        np.nanmean(ifg_data),
-                        np.nanmean(self.ifgs_with_nan[k].phase_data),
+                        nanmean(ifg_data),
+                        nanmean(self.ifgs_with_nan[k].phase_data),
                         places=4)
 
                     # number of nans must equal
