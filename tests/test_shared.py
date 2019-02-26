@@ -161,7 +161,7 @@ class IfgIOTests(unittest.TestCase):
         self.assertTrue(isinstance(self.ifg.dataset, Dataset))
 
         # ensure open cannot be called twice
-        self.failUnlessRaises(RasterException, self.ifg.open, True)
+        self.assertRaises(RasterException, self.ifg.open, True)
 
     def test_open_ifg_from_dataset(self):
         """
@@ -319,7 +319,7 @@ class DEMTests(unittest.TestCase):
         self.assertTrue(isinstance(self.ras.dataset, Dataset))
 
         # ensure open cannot be called twice
-        self.failUnlessRaises(RasterException, self.ras.open)
+        self.assertRaises(RasterException, self.ras.open)
 
     def test_band(self):
         # test accessing bands with open and unopened datasets
