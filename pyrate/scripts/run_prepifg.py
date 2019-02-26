@@ -178,7 +178,7 @@ def gamma_prepifg(base_unw_paths, params):
 
 def _gamma_multiprocessing(unw_path, params):
     """
-    Multiprocessing wrapper for GAMMA geotiff conversion
+    Multiprocessing wrapper for GAMMA full-res geotiff conversion
     """
     dem_hdr_path = params[cf.DEM_HEADER_FILE]
     slc_dir = params[cf.SLC_DIR]
@@ -192,6 +192,11 @@ def _gamma_multiprocessing(unw_path, params):
         # TODO: implement incidence class here
         combined_headers['FILE_TYPE'] = 'Incidence'
 
-    write_geotiff(combined_headers, unw_path, dest,
-                  nodata=params[cf.NO_DATA_VALUE])
+    # Create full-res geotiff if not already on disk
+    if not os.path.exists(dest):
+        write_geotiff(combined_headers, unw_path, dest,
+                      nodata=params[cf.NO_DATA_VALUE])
+    else:
+        log.info("Full-res geotiff already exists")
+
     return dest
