@@ -715,7 +715,7 @@ def write_geotiff(header, data_path, dest, nodata):
 
     driver = gdal.GetDriverByName("GTiff")
     dtype = gdal.GDT_Float32 if (is_ifg or is_incidence) else gdal.GDT_Int16
-    ds = driver.Create(dest, ncols, nrows, 1, dtype)
+    ds = driver.Create(dest, ncols, nrows, 1, dtype, options=['compress=packbits'])
 
     # write pyrate parameters to headers
     if is_ifg:
@@ -861,7 +861,7 @@ def write_output_geotiff(md, gt, wkt, data, dest, nodata):
 
     driver = gdal.GetDriverByName("GTiff")
     nrows, ncols = data.shape
-    ds = driver.Create(dest, ncols, nrows, 1, gdal.GDT_Float32)
+    ds = driver.Create(dest, ncols, nrows, 1, gdal.GDT_Float32, options=['compress=packbits'])
     # set spatial reference for geotiff
     ds.SetGeoTransform(gt)
     ds.SetProjection(wkt)

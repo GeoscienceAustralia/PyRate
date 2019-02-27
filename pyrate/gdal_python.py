@@ -302,7 +302,7 @@ def crop_resample_average(
 
     # write final pyrate GTiff
     out_ds = driver.Create(output_file, dst_ds.RasterXSize, dst_ds.RasterYSize,
-                           1, src_dtype)
+                           1, src_dtype, options=['compress=packbits'])
 
     out_ds.GetRasterBand(1).SetNoDataValue(np.nan)
     out_ds.GetRasterBand(1).WriteArray(resampled_average)
