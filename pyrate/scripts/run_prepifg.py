@@ -83,6 +83,8 @@ def main(params=None):
         if params[cf.APS_ELEVATION_MAP]:
             base_ifg_paths.append(params[cf.APS_ELEVATION_MAP])
 
+    mkdir_p(params[cf.OUT_DIR]) # create output dir
+
     if use_luigi:
         log.info("Running prepifg using luigi")
         luigi.configuration.LuigiConfigParser.add_config_path(
@@ -182,11 +184,10 @@ def _gamma_multiprocessing(unw_path, params):
     """
     dem_hdr_path = params[cf.DEM_HEADER_FILE]
     slc_dir = params[cf.SLC_DIR]
-    mkdir_p(params[cf.OUT_DIR])
     header_paths = gamma_task.get_header_paths(unw_path, slc_dir=slc_dir)
     combined_headers = gamma.manage_headers(dem_hdr_path, header_paths)
-
     dest = output_tiff_filename(unw_path, params[cf.OUT_DIR])
+
     if os.path.basename(unw_path).split('.')[1] == \
             (params[cf.APS_INCIDENCE_EXT] or params[cf.APS_ELEVATION_EXT]):
         # TODO: implement incidence class here
