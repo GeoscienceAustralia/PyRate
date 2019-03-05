@@ -28,7 +28,7 @@ addons:
     packages:
     - gdal-bin
     - libgdal-dev
-    - libpng12-dev
+#    - libpng12-dev
     - libblas-dev
     - liblapack-dev
     - libatlas-dev
