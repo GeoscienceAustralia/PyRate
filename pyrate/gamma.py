@@ -18,10 +18,14 @@ This Python module contains tools for reading GAMMA format input data.
 """
 # coding: utf-8
 
-#import os
+from os.path import join, split
+import re
+import glob2
 from datetime import date, time, timedelta
 import numpy as np
 import pyrate.ifgconstants as ifc
+
+PTN = re.compile(r'\d{8}')  # match 8 digits for the dates
 
 # constants
 GAMMA_DATE = 'date'
@@ -215,6 +219,25 @@ def manage_headers(dem_header_file, header_paths):
         combined_header[ifc.DATA_TYPE] = ifc.DEM
 
     return combined_header
+
+
+def get_header_paths(input_file, slc_dir=None):
+    """
+    Function that matches input GAMMA file names with GAMMA header file names
+
+    :param str input_file: input GAMMA .unw file.
+    :param str slc_dir: GAMMA SLC header file directory
+    :return: list of matching header files
+    :rtype: list
+    """
+    if slc_dir:
+        dir_name = slc_dir
+        _, file_name = split(input_file)
+    else:  # header file must exist in the same dir as that of .unw
+        dir_name, file_name = split(input_file)
+    matches = PTN.findall(file_name)
+    return [glob2.glob(join(dir_name, '**/*%s*slc.par' % m))[0]
+            for m in matches]
 
 
 class GammaException(Exception):

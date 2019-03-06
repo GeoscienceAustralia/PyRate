@@ -17,17 +17,11 @@
 This Python module is a Luigi wrapper for converting GAMMA format input data.
 """
 # pylint: disable=attribute-defined-outside-init
-import os
-from os.path import join
-import re
-import glob2
 import luigi
 from pyrate import config
-from pyrate.gamma import manage_headers
+from pyrate.gamma import manage_headers, get_header_paths
 from pyrate.shared import write_geotiff, output_tiff_filename
 from pyrate.tasks.utils import IfgListMixin, InputParam
-
-PTN = re.compile(r'\d{8}')  # match 8 digits for the dates
 
 
 class GammaHasRun(luigi.task.ExternalTask):
@@ -45,26 +39,6 @@ class GammaHasRun(luigi.task.ExternalTask):
         if self.slaveHeader is not None:
             targets.append(luigi.LocalTarget(self.slaveHeader))
         return targets
-
-
-def get_header_paths(input_file, slc_dir=None):
-    """
-    Function that matches input GAMMA file names with GAMMA header file names
-
-    :param str input_file: input GAMMA .unw file.
-    :param str slc_dir: GAMMA SLC header file directory
-
-    :return: list of matching header files
-    :rtype: list
-    """
-    if slc_dir:
-        dir_name = slc_dir
-        _, file_name = os.path.split(input_file)
-    else:  # header file must exist in the same dir as that of .unw
-        dir_name, file_name = os.path.split(input_file)
-    matches = PTN.findall(file_name)
-    return [glob2.glob(join(dir_name, '**/*%s*slc.par' % m))[0]
-            for m in matches]
 
 
 class ConvertFileToGeotiff(luigi.Task):
