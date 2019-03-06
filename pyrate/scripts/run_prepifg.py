@@ -32,8 +32,7 @@ from pyrate import prepifg
 from pyrate import config as cf
 from pyrate import roipac
 from pyrate import gamma
-from pyrate.shared import write_geotiff, mkdir_p, output_tiff_filename
-from pyrate.tasks import gamma as gamma_task
+from pyrate import shared
 import pyrate.ifgconstants as ifc
 from pyrate import mpiops
 
@@ -83,7 +82,7 @@ def main(params=None):
         if params[cf.APS_ELEVATION_MAP]:
             base_ifg_paths.append(params[cf.APS_ELEVATION_MAP])
 
-    mkdir_p(params[cf.OUT_DIR]) # create output dir
+    shared.mkdir_p(params[cf.OUT_DIR]) # create output dir
 
     if use_luigi:
         log.info("Running prepifg using luigi")
@@ -93,111 +92,165 @@ def main(params=None):
     else:
         process_base_ifgs_paths = \
             np.array_split(base_ifg_paths, mpiops.size)[mpiops.rank]
-        if processor == ROIPAC:
-            roipac_prepifg(process_base_ifgs_paths, params)
-        elif processor == GAMMA:
-            gamma_prepifg(process_base_ifgs_paths, params)
-        else:
-            raise prepifg.PreprocessError('Processor must be ROI_PAC (0) or '
-                                          'GAMMA (1)')
+        gtiff_paths = do_geotiff(process_base_ifgs_paths, params)
+        do_prepifg(gtiff_paths, params)
+#        if processor == ROIPAC:
+#            roipac_prepifg(process_base_ifgs_paths, params)
+#        elif processor == GAMMA:
+#            gamma_prepifg(process_base_ifgs_paths, params)
+#        else:
+#            raise prepifg.PreprocessError('Processor must be ROI_PAC (0) or '
+#                                          'GAMMA (1)')
     log.info("Finished prepifg")
 
 
-def roipac_prepifg(base_ifg_paths, params):
+#def roipac_prepifg(base_ifg_paths, params):
+#    """
+#    Prepare ROI_PAC interferograms which combines both conversion to geotiff
+#    and multilooking/cropping operations.
+#
+#    :param list base_ifg_paths: List of unwrapped interferograms
+#    :param dict params: Parameters dictionary corresponding to config file
+#    """
+#    log.info("Preparing ROI_PAC format interferograms")
+#    parallel = params[cf.PARALLEL]
+#
+#    if parallel:
+#        log.info("Parallel prepifg is not implemented for ROI_PAC")
+#
+#    log.info("Running prepifg in serial")
+#    xlooks, ylooks, crop = cf.transform_params(params)
+#    rsc_file = os.path.join(params[cf.DEM_HEADER_FILE])
+#    if rsc_file is not None:
+#        projection = roipac.parse_header(rsc_file)[ifc.PYRATE_DATUM]
+#    else:
+#        raise roipac.RoipacException('No DEM resource/header file is '
+#                                     'provided')
+#    dest_base_ifgs = [os.path.join(params[cf.OUT_DIR],
+#                                   os.path.basename(q).split('.')[0] + '_' +
+#                                   os.path.basename(q).split('.')[1] + '.tif')
+#                      for q in base_ifg_paths]
+#
+#    for b, d in zip(base_ifg_paths, dest_base_ifgs):
+#        header_file = "%s.%s" % (b, ROI_PAC_HEADER_FILE_EXT)
+#        header = roipac.manage_header(header_file, projection)
+#        write_geotiff(header, b, d, nodata=params[cf.NO_DATA_VALUE])
+#    prepifg.prepare_ifgs(
+#        dest_base_ifgs, crop_opt=crop, xlooks=xlooks, ylooks=ylooks)
+
+
+def do_geotiff(base_unw_paths, params):
     """
-    Prepare ROI_PAC interferograms which combines both conversion to geotiff
-    and multilooking/cropping operations.
-
-    :param list base_ifg_paths: List of unwrapped interferograms
-    :param dict params: Parameters dictionary corresponding to config file
-    """
-    log.info("Preparing ROI_PAC format interferograms")
-    parallel = params[cf.PARALLEL]
-
-    if parallel:
-        log.info("Parallel prepifg is not implemented for ROI_PAC")
-
-    log.info("Running prepifg in serial")
-    xlooks, ylooks, crop = cf.transform_params(params)
-    rsc_file = os.path.join(params[cf.DEM_HEADER_FILE])
-    if rsc_file is not None:
-        projection = roipac.parse_header(rsc_file)[ifc.PYRATE_DATUM]
-    else:
-        raise roipac.RoipacException('No DEM resource/header file is '
-                                     'provided')
-    dest_base_ifgs = [os.path.join(params[cf.OUT_DIR],
-                                   os.path.basename(q).split('.')[0] + '_' +
-                                   os.path.basename(q).split('.')[1] + '.tif')
-                      for q in base_ifg_paths]
-
-    for b, d in zip(base_ifg_paths, dest_base_ifgs):
-        header_file = "%s.%s" % (b, ROI_PAC_HEADER_FILE_EXT)
-        header = roipac.manage_header(header_file, projection)
-        write_geotiff(header, b, d, nodata=params[cf.NO_DATA_VALUE])
-    prepifg.prepare_ifgs(
-        dest_base_ifgs, crop_opt=crop, xlooks=xlooks, ylooks=ylooks)
-
-
-def gamma_prepifg(base_unw_paths, params):
-    """
-    Prepare GAMMA interferograms which combines both conversion to geotiff
-    and multilooking/cropping operations.
+    Convert input interferograms to geotiff format.
 
     :param list base_unw_paths: List of unwrapped interferograms
     :param dict params: Parameters dictionary corresponding to config file
     """
     # pylint: disable=expression-not-assigned
-    log.info("Preparing GAMMA format interferograms")
+    log.info("Converting input interferograms to geotiff")
     parallel = params[cf.PARALLEL]
 
-    # dest_base_ifgs: location of geo_tif's
     if parallel:
-        log.info("Running prepifg in parallel with {} "
+        log.info("Running geotiff conversion in parallel with {} "
                  "processes".format(params[cf.PROCESSES]))
         dest_base_ifgs = Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
-            delayed(_gamma_multiprocessing)(p, params)
+            delayed(_geotiff_multiprocessing)(p, params)
             for p in base_unw_paths)
     else:
-        log.info("Running prepifg in serial")
-        dest_base_ifgs = [_gamma_multiprocessing(b, params)
+        log.info("Running geotiff conversion in serial")
+        dest_base_ifgs = [_geotiff_multiprocessing(b, params)
                           for b in base_unw_paths]
 
-    ifgs = [prepifg.dem_or_ifg(p) for p in dest_base_ifgs]
-    xlooks, ylooks, crop = cf.transform_params(params)
-    user_exts = (params[cf.IFG_XFIRST], params[cf.IFG_YFIRST],
-                 params[cf.IFG_XLAST], params[cf.IFG_YLAST])
-    exts = prepifg.get_analysis_extent(crop, ifgs, xlooks, ylooks,
-                                       user_exts=user_exts)
-    thresh = params[cf.NO_DATA_AVERAGING_THRESHOLD]
-    if parallel:
-        Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
-            delayed(prepifg.prepare_ifg)(p, xlooks, ylooks, exts, thresh, crop)
-            for p in dest_base_ifgs)
-    else:
-        [prepifg.prepare_ifg(i, xlooks, ylooks, exts,
-                             thresh, crop) for i in dest_base_ifgs]
+    return dest_base_ifgs
 
 
-def _gamma_multiprocessing(unw_path, params):
+def do_prepifg(gtiff_paths, params):
     """
-    Multiprocessing wrapper for GAMMA full-res geotiff conversion
+    Prepare interferograms by applying multilooking/cropping operations.
+
+    :param list gtiff_paths: List of full-res geotiffs
+    :param dict params: Parameters dictionary corresponding to config file
+    """
+    # pylint: disable=expression-not-assigned
+    log.info("Preparing interferograms by cropping/multilooking")
+    parallel = params[cf.PARALLEL]
+
+    if all([os.path.isfile(f) for f in gtiff_paths]):
+        ifgs = [prepifg.dem_or_ifg(p) for p in gtiff_paths]
+        xlooks, ylooks, crop = cf.transform_params(params)
+        user_exts = (params[cf.IFG_XFIRST], params[cf.IFG_YFIRST],
+                     params[cf.IFG_XLAST], params[cf.IFG_YLAST])
+        exts = prepifg.get_analysis_extent(crop, ifgs, xlooks, ylooks,
+                                           user_exts=user_exts)
+        thresh = params[cf.NO_DATA_AVERAGING_THRESHOLD]
+        if parallel:
+            Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
+                delayed(prepifg.prepare_ifg)(p, xlooks, ylooks, exts, thresh, crop)
+                for p in gtiff_paths)
+        else:
+            [prepifg.prepare_ifg(i, xlooks, ylooks, exts,
+                                 thresh, crop) for i in gtiff_paths]
+#            prepifg.prepare_ifgs(gtiff_paths, crop_opt=crop, xlooks=xlooks, 
+#                ylooks=ylooks, thresh=thresh, user_exts=user_exts)
+    else:
+        log.info("Full-res geotiffs do not exist")
+
+
+def _geotiff_multiprocessing(unw_path, params):
+    """
+    Multiprocessing wrapper for full-res geotiff conversion
+    """
+    dest = shared.output_tiff_filename(unw_path, params[cf.OUT_DIR])
+    processor = params[cf.PROCESSOR]  # roipac or gamma
+
+    # Create full-res geotiff if not already on disk
+    if not os.path.exists(dest):
+        if processor == GAMMA:
+            header = _gamma_header(unw_path, params)
+        elif processor == ROIPAC:
+            header = _roipac_header(unw_path, params)
+        else:
+            raise prepifg.PreprocessError('Processor must be ROI_PAC (0) or '
+                                          'GAMMA (1)')
+        shared.write_geotiff(header, unw_path, dest,
+                      nodata=params[cf.NO_DATA_VALUE])
+    else:
+        log.info("Full-res geotiff already exists")
+
+    return dest
+
+
+def _gamma_header(unw_path, params):
+    """
+    Function to obtain combined Gamma headers
     """
     dem_hdr_path = params[cf.DEM_HEADER_FILE]
     slc_dir = params[cf.SLC_DIR]
-    header_paths = gamma_task.get_header_paths(unw_path, slc_dir=slc_dir)
+    header_paths = gamma.get_header_paths(unw_path, slc_dir=slc_dir)
     combined_headers = gamma.manage_headers(dem_hdr_path, header_paths)
-    dest = output_tiff_filename(unw_path, params[cf.OUT_DIR])
 
     if os.path.basename(unw_path).split('.')[1] == \
             (params[cf.APS_INCIDENCE_EXT] or params[cf.APS_ELEVATION_EXT]):
         # TODO: implement incidence class here
         combined_headers['FILE_TYPE'] = 'Incidence'
 
-    # Create full-res geotiff if not already on disk
-    if not os.path.exists(dest):
-        write_geotiff(combined_headers, unw_path, dest,
-                      nodata=params[cf.NO_DATA_VALUE])
-    else:
-        log.info("Full-res geotiff already exists")
+    return combined_headers
 
-    return dest
+
+def _roipac_header(unw_path, params):
+    """
+    Function to obtain a Roipac headers
+    """
+    rsc_file = os.path.join(params[cf.DEM_HEADER_FILE])
+    if rsc_file is not None:
+        projection = roipac.parse_header(rsc_file)[ifc.PYRATE_DATUM]
+    else:
+        raise roipac.RoipacException('No DEM resource/header file is '
+                                     'provided')
+
+    header_file = "%s.%s" % (unw_path, ROI_PAC_HEADER_FILE_EXT)
+    header = roipac.manage_header(header_file, projection)
+
+    return header
+
+
