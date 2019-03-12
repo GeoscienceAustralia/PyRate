@@ -70,7 +70,9 @@ def main(params=None):
         use_luigi = params[cf.LUIGI]  # luigi or no luigi
         raw_config_file = sys.argv[2]
 
-    base_ifg_paths.append(params[cf.DEM_FILE])
+    if params[cf.DEM_FILE] is not None: # optional DEM conversion
+        base_ifg_paths.append(params[cf.DEM_FILE])
+
     processor = params[cf.PROCESSOR]  # roipac or gamma
     if processor == GAMMA: # Incidence/elevation only supported for GAMMA
         if params[cf.APS_INCIDENCE_MAP]:
