@@ -684,6 +684,20 @@ def nanmedian(x):
         return np.median(x[~np.isnan(x)])
 
 
+def _is_interferogram(hdr):
+    """
+    Convenience function to determine if file is interferogram
+    """
+    return ifc.PYRATE_WAVELENGTH_METRES in hdr
+
+
+def _is_incidence(hdr):
+    """
+    Convenience function to determine if incidence file
+    """
+    return 'FILE_TYPE' in hdr
+
+
 def write_geotiff(header, data_path, dest, nodata):
     # pylint: disable=too-many-statements
     """
@@ -699,13 +713,11 @@ def write_geotiff(header, data_path, dest, nodata):
     """
     # pylint: disable=too-many-branches
     # pylint: disable=too-many-locals
-    is_ifg = ifc.PYRATE_WAVELENGTH_METRES in header
-    is_incidence = 'FILE_TYPE' in header
     ifg_proc = header[ifc.PYRATE_INSAR_PROCESSOR]
     ncols = header[ifc.PYRATE_NCOLS]
     nrows = header[ifc.PYRATE_NROWS]
-    bytes_per_col, fmtstr = _data_format(ifg_proc, is_ifg, ncols)
-    if is_ifg and ifg_proc == ROIPAC:
+    bytes_per_col, fmtstr = _data_format(ifg_proc, _is_interferogram(header), ncols)
+    if _is_interferogram(header) and ifg_proc == ROIPAC:
         # roipac ifg has 2 bands
         _check_raw_data(bytes_per_col*2, data_path, ncols, nrows)
     else:
@@ -713,34 +725,20 @@ def write_geotiff(header, data_path, dest, nodata):
 
     _check_pixel_res_mismatch(header)
 
-    # write pyrate parameters to headers
-    md = dict()
-    if is_ifg:
-        for k in [ifc.PYRATE_WAVELENGTH_METRES, ifc.PYRATE_TIME_SPAN,
-                  ifc.PYRATE_INSAR_PROCESSOR,
-                  ifc.MASTER_DATE, ifc.SLAVE_DATE,
-                  ifc.DATA_UNITS, ifc.DATA_TYPE]:
-            md.update({k: str(header[k])})
-        if ifg_proc == GAMMA:
-            for k in [ifc.MASTER_TIME, ifc.SLAVE_TIME, ifc.PYRATE_INCIDENCE_DEGREES]:
-                md.update({k: str(header[k])})
-    elif is_incidence:
-        md.update({ifc.DATA_TYPE:ifc.INCIDENCE})
-    else: # must be dem
-        md.update({ifc.DATA_TYPE:ifc.DEM})
-
     # position and projection data
     gt = [header[ifc.PYRATE_LONG], header[ifc.PYRATE_X_STEP], 0,
             header[ifc.PYRATE_LAT], 0, header[ifc.PYRATE_Y_STEP]]
     srs = osr.SpatialReference()
     res = srs.SetWellKnownGeogCS(header[ifc.PYRATE_DATUM])
-
     if res:
         msg = 'Unrecognised projection: %s' % header[ifc.PYRATE_DATUM]
         raise GeotiffException(msg)
 
     crs = srs.ExportToWkt()
-    dtype = 'float32' if (is_ifg or is_incidence) else 'int16'
+    dtype = 'float32' if (_is_interferogram(header) or _is_incidence(header)) else 'int16'
+
+    # get subset of relevant metadata
+    md = collate_metadata(header)
 
     ds = gdal_dataset(dest, ncols, nrows, driver="GTiff", bands=1,
                  dtype=dtype, metadata=md, crs=crs,
@@ -755,7 +753,7 @@ def write_geotiff(header, data_path, dest, nodata):
     with open(data_path, 'rb') as f:
         for y in range(nrows):
             if ifg_proc == ROIPAC:
-                if is_ifg:
+                if _is_interferogram(header):
                     f.seek(row_bytes, 1)  # skip interleaved band 1
 
             data = struct.unpack(fmtstr, f.read(row_bytes))
@@ -792,6 +790,32 @@ def gdal_dataset(out_fname, columns, rows, driver="GTiff", bands=1,
             outds.SetMetadataItem(k, str(v))
 
     return outds
+
+
+def collate_metadata(header):
+    """
+    Grab metadata relevant to PyRate from input metadata
+
+    :param dict header: Input file metadata dictionary
+
+    :return: dict of relevant metadata for PyRate
+    """
+    md = dict()
+    if _is_interferogram(header):
+        for k in [ifc.PYRATE_WAVELENGTH_METRES, ifc.PYRATE_TIME_SPAN,
+                  ifc.PYRATE_INSAR_PROCESSOR,
+                  ifc.MASTER_DATE, ifc.SLAVE_DATE,
+                  ifc.DATA_UNITS, ifc.DATA_TYPE]:
+            md.update({k: str(header[k])})
+        if header[ifc.PYRATE_INSAR_PROCESSOR] == GAMMA:
+            for k in [ifc.MASTER_TIME, ifc.SLAVE_TIME, ifc.PYRATE_INCIDENCE_DEGREES]:
+                md.update({k: str(header[k])})
+    elif _is_incidence(header):
+        md.update({ifc.DATA_TYPE:ifc.INCIDENCE})
+    else: # must be dem
+        md.update({ifc.DATA_TYPE:ifc.DEM})
+
+    return md
 
 
 def _data_format(ifg_proc, is_ifg, ncols):

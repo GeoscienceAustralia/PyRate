@@ -24,22 +24,22 @@ import rasterio
 from pyrate import ifgconstants as ifc
 
 
-def metadata(header):
-    """
-    Standardise the metadata to enable simpler output for the
-    write_geotif function.
-
-    :param header:
-    :type dict:
-        Dictionary containing interferogram metadata.
-
-    :return:
-        A dict containing specific flags for either ifg, dem or
-        incidence.
-    """
-    # similiar to what is written in the Conversion base class' _pass_header
-
-    return
+#def metadata(header):
+#    """
+#    Standardise the metadata to enable simpler output for the
+#    write_geotif function.
+#
+#    :param header:
+#    :type dict:
+#        Dictionary containing interferogram metadata.
+#
+#    :return:
+#        A dict containing specific flags for either ifg, dem or
+#        incidence.
+#    """
+#    # similiar to what is written in the Conversion base class' _pass_header
+#
+#    return
 
 
 def rio_dataset(out_fname, columns, rows, driver="GTiff", bands=1,
