@@ -78,28 +78,28 @@ def rio_dataset(out_fname, columns, rows, driver="GTiff", bands=1,
     return outds
 
 
-def gdal_dataset(out_fname, columns, rows, driver="GTiff", bands=1,
-                 dtype='float32', metadata=None, crs=None,
-                 geotransform=None, creation_opts=None):
-    """
-    Initialises a py-GDAL dataset object for writing image data.
-    """
-    gdal_dtype = gdal.GDT_Float32 if dtype == 'float32' else gdal.GDT_Int16
-
-    # create output dataset
-    driver = gdal.GetDriverByName(driver)
-    outds = driver.Create(out_fname, columns, rows, bands, dtype,
-                          options=creation_opts)
-
-    # geospatial info
-    outds.SetGeoTransform(geotransform)
-    outds.SetProjection(crs)
-
-    # global metadata
-    if metadata is not None:
-        outds.SetMetadataItem(k, str(v)) # just following PyRate's example, but what if value is numeric???
-
-    return outds
+#def gdal_dataset(out_fname, columns, rows, driver="GTiff", bands=1,
+#                 dtype='float32', metadata=None, crs=None,
+#                 geotransform=None, creation_opts=None):
+#    """
+#    Initialises a py-GDAL dataset object for writing image data.
+#    """
+#    gdal_dtype = gdal.GDT_Float32 if dtype == 'float32' else gdal.GDT_Int16
+#
+#    # create output dataset
+#    driver = gdal.GetDriverByName(driver)
+#    outds = driver.Create(out_fname, columns, rows, bands, dtype,
+#                          options=creation_opts)
+#
+#    # geospatial info
+#    outds.SetGeoTransform(geotransform)
+#    outds.SetProjection(crs)
+#
+#    # global metadata
+#    if metadata is not None:
+#        outds.SetMetadataItem(k, str(v)) # just following PyRate's example, but what if value is numeric???
+#
+#    return outds
 
 
 def write_geotiff(data, out_fname, dtype='float32', metadata=None, crs=None,

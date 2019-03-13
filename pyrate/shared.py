@@ -713,29 +713,25 @@ def write_geotiff(header, data_path, dest, nodata):
 
     _check_pixel_res_mismatch(header)
 
-    driver = gdal.GetDriverByName("GTiff")
-    dtype = gdal.GDT_Float32 if (is_ifg or is_incidence) else gdal.GDT_Int16
-    ds = driver.Create(dest, ncols, nrows, 1, dtype, options=['compress=packbits'])
-
     # write pyrate parameters to headers
+    md = dict()
     if is_ifg:
         for k in [ifc.PYRATE_WAVELENGTH_METRES, ifc.PYRATE_TIME_SPAN,
                   ifc.PYRATE_INSAR_PROCESSOR,
                   ifc.MASTER_DATE, ifc.SLAVE_DATE,
                   ifc.DATA_UNITS, ifc.DATA_TYPE]:
-            ds.SetMetadataItem(k, str(header[k]))
+            md.update({k: str(header[k])})
         if ifg_proc == GAMMA:
             for k in [ifc.MASTER_TIME, ifc.SLAVE_TIME, ifc.PYRATE_INCIDENCE_DEGREES]:
-                ds.SetMetadataItem(k, str(header[k]))
+                md.update({k: str(header[k])})
     elif is_incidence:
-        ds.SetMetadataItem(ifc.DATA_TYPE, ifc.INCIDENCE)
+        md.update({ifc.DATA_TYPE:ifc.INCIDENCE})
     else: # must be dem
-        ds.SetMetadataItem(ifc.DATA_TYPE, ifc.DEM)
+        md.update({ifc.DATA_TYPE:ifc.DEM})
 
     # position and projection data
-    ds.SetGeoTransform([header[ifc.PYRATE_LONG], header[ifc.PYRATE_X_STEP], 0,
-                        header[ifc.PYRATE_LAT], 0, header[ifc.PYRATE_Y_STEP]])
-
+    gt = [header[ifc.PYRATE_LONG], header[ifc.PYRATE_X_STEP], 0,
+            header[ifc.PYRATE_LAT], 0, header[ifc.PYRATE_Y_STEP]]
     srs = osr.SpatialReference()
     res = srs.SetWellKnownGeogCS(header[ifc.PYRATE_DATUM])
 
@@ -743,7 +739,12 @@ def write_geotiff(header, data_path, dest, nodata):
         msg = 'Unrecognised projection: %s' % header[ifc.PYRATE_DATUM]
         raise GeotiffException(msg)
 
-    ds.SetProjection(srs.ExportToWkt())
+    crs = srs.ExportToWkt()
+    dtype = 'float32' if (is_ifg or is_incidence) else 'int16'
+
+    ds = gdal_dataset(dest, ncols, nrows, driver="GTiff", bands=1,
+                 dtype=dtype, metadata=md, crs=crs,
+                 geotransform=gt, creation_opts=['compress=packbits'])
 
     # copy data from the binary file
     band = ds.GetRasterBand(1)
@@ -766,6 +767,31 @@ def write_geotiff(header, data_path, dest, nodata):
     # Needed? Only in ROIPAC code
     ds = None  # manual close
     del ds
+
+
+def gdal_dataset(out_fname, columns, rows, driver="GTiff", bands=1,
+                 dtype='float32', metadata=None, crs=None,
+                 geotransform=None, creation_opts=None):
+    """
+    Initialises a py-GDAL dataset object for writing image data.
+    """
+    gdal_dtype = gdal.GDT_Float32 if dtype == 'float32' else gdal.GDT_Int16
+
+    # create output dataset
+    driver = gdal.GetDriverByName(driver)
+    outds = driver.Create(out_fname, columns, rows, bands, gdal_dtype,
+                          options=creation_opts)
+
+    # geospatial info
+    outds.SetGeoTransform(geotransform)
+    outds.SetProjection(crs)
+
+    # add metadata
+    if metadata is not None:
+        for k, v in metadata.items():
+            outds.SetMetadataItem(k, str(v))
+
+    return outds
 
 
 def _data_format(ifg_proc, is_ifg, ncols):
