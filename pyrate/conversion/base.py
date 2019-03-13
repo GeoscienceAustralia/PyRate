@@ -148,6 +148,12 @@ def write_geotiff(data, out_fname, dtype='float32', metadata=None, crs=None,
 class Conversion(object):
 
     """
+    *****************************************************************
+    NOTE!
+    This presents a concept for a future direction when there is a
+    greater need to support more formats.
+    *****************************************************************
+
     The base conversion class.
     Ideally this is subclassed for each format type that requires
     conversion.
