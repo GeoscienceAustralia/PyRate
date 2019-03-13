@@ -21,7 +21,7 @@ various formats and output to GeoTIFF (which can be extended to other formats).
 
 import gdal
 import rasterio
-import ifc
+from pyrate import ifgconstants as ifc
 
 
 def metadata(header):
@@ -38,6 +38,8 @@ def metadata(header):
         incidence.
     """
     # similiar to what is written in the Conversion base class' _pass_header
+
+    return
 
 
 def rio_dataset(out_fname, columns, rows, driver="GTiff", bands=1,
