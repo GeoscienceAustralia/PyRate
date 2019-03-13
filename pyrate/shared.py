@@ -698,7 +698,7 @@ def _is_incidence(hdr):
     return 'FILE_TYPE' in hdr
 
 
-def write_geotiff(header, data_path, dest, nodata):
+def write_fullres_geotiff(header, data_path, dest, nodata):
     # pylint: disable=too-many-statements
     """
     Creates a copy of input image data (interferograms, DEM, incidence maps
