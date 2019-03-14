@@ -939,9 +939,6 @@ def write_geotiff(data, outds, nodata):
     """
     A generic routine for writing a NumPy array to a geotiff.
 
-#    :param dict md: Dictionary containing PyRate metadata
-#    :param list gt: GDAL geotransform for the data
-#    :param list wkt: GDAL projection information for the data
     :param ndarray data: Output data array to save
     :param obj outds: GDAL destination object
     :param float nodata: No data value of data
@@ -957,20 +954,6 @@ def write_geotiff(data, outds, nodata):
         msg = "Only support dimensions of '2 <= dims <= 3'."
         raise GeotiffException(msg)
 
-#    driver = gdal.GetDriverByName("GTiff")
-#    nrows, ncols = data.shape
-#    ds = driver.Create(dest, ncols, nrows, 1, gdal.GDT_Float32, options=['compress=packbits'])
-#    # set spatial reference for geotiff
-#    ds.SetGeoTransform(gt)
-#    ds.SetProjection(wkt)
-#    ds.SetMetadataItem(ifc.EPOCH_DATE, str(md[ifc.EPOCH_DATE]))
-#
-#    # set other metadata
-#    ds.SetMetadataItem('DATA_TYPE', str(md['DATA_TYPE']))
-#    # sequence position for time series products
-#    if 'SEQUENCE_POSITION' in md:
-#        ds.SetMetadataItem('SEQUENCE_POSITION', str(md['SEQUENCE_POSITION']))
-#
     # write data to geotiff
     band = outds.GetRasterBand(1)
     band.SetNoDataValue(nodata)
