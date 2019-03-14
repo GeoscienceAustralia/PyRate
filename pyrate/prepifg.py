@@ -33,7 +33,7 @@ from numpy import array, where, nan, isnan, nanmean, float32, zeros, \
 from osgeo import gdal
 
 from pyrate import config as cf
-from pyrate import gdal_python as gdalwarp
+from pyrate.gdal_python import crop_resample_average
 from pyrate import ifgconstants as ifc
 from pyrate.shared import Ifg, DEM
 
@@ -289,7 +289,7 @@ def _warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out,
     #         #if params.has_key(REPROJECTION_FLAG):
     #         #    reproject()
     driver_type = 'GTiff' if write_to_disk else 'MEM'
-    resampled_data, out_ds = gdalwarp.crop_resample_average(
+    resampled_data, out_ds = crop_resample_average(
         input_tif=ifg.data_path,
         extents=extents,
         new_res=resolution,
