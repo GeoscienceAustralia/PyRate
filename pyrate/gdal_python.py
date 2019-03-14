@@ -21,6 +21,7 @@ from osgeo import gdal, gdalnumeric, gdalconst
 from PIL import Image, ImageDraw
 import numpy as np
 from pyrate import ifgconstants as ifc
+from pyrate import shared
 
 gdal.SetCacheMax(2**15)
 GDAL_WARP_MEMORY_LIMIT = 2**10
@@ -292,38 +293,39 @@ def crop_resample_average(
     src_dtype = src_ds_mem.GetRasterBand(1).DataType
     src_gt = src_ds_mem.GetGeoTransform()
 
-    # write out to output geotif file
-    driver = gdal.GetDriverByName(out_driver_type)
-
     # required to match Matlab Pirate output
     if tmp_ds:
         _matlab_alignment(input_tif, new_res, resampled_average, src_ds_mem,
                           src_gt, tmp_ds)
 
-    # write final pyrate GTiff
-    out_ds = driver.Create(output_file, dst_ds.RasterXSize, dst_ds.RasterYSize,
-                           1, src_dtype, options=['compress=packbits'])
+    # grab metadata from existing geotiff
+    gt = dst_ds.GetGeoTransform()
+    wkt = dst_ds.GetProjection()
 
-    out_ds.GetRasterBand(1).SetNoDataValue(np.nan)
-    out_ds.GetRasterBand(1).WriteArray(resampled_average)
-    out_ds.SetGeoTransform(dst_ds.GetGeoTransform())
-    out_ds.SetProjection(dst_ds.GetProjection())
-    # copy metadata
-    for k, v in dst_ds.GetMetadata().items():
+    # copy and update metadata
+    md = dst_ds.GetMetadata()
+
+    # TEST HERE IF EXISTING FILE HAS PYRATE METADATA. IF NOT ADD HERE
+
+    for k, v in md.items():
         if k == ifc.DATA_TYPE:
             # update data type metadata
             if v == ifc.ORIG:
-                out_ds.SetMetadataItem(ifc.DATA_TYPE, ifc.MULTILOOKED)
+                md.update({ifc.DATA_TYPE:ifc.MULTILOOKED})
             elif v == ifc.DEM:
-                out_ds.SetMetadataItem(ifc.DATA_TYPE, ifc.MLOOKED_DEM)
+                md.update({ifc.DATA_TYPE:ifc.MLOOKED_DEM})
             elif v == ifc.INCIDENCE:
-                out_ds.SetMetadataItem(ifc.DATA_TYPE, ifc.MLOOKED_INC)
+                md.update({ifc.DATA_TYPE:ifc.MLOOKED_INC})
             elif v == ifc.MULTILOOKED:
                 pass
             else:
                 raise TypeError('Data Type metadata not recognised')
-        else:
-            out_ds.SetMetadataItem(k, v)
+
+    out_ds = shared.gdal_dataset(output_file, dst_ds.RasterXSize, dst_ds.RasterYSize,
+                 driver="GTiff", bands=1, dtype=src_dtype, metadata=md, crs=wkt,
+                 geotransform=gt, creation_opts=['compress=packbits'])
+
+    shared.write_geotiff(resampled_average, out_ds, np.nan) 
 
     return resampled_average, out_ds
 

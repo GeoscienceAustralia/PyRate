@@ -771,7 +771,13 @@ def gdal_dataset(out_fname, columns, rows, driver="GTiff", bands=1,
     """
     Initialises a py-GDAL dataset object for writing image data.
     """
-    gdal_dtype = gdal.GDT_Float32 if dtype == 'float32' else gdal.GDT_Int16
+    if dtype == 'float32':
+        gdal_dtype = gdal.GDT_Float32
+    elif dtype == 'int16':
+        gdal_dtype = gdal.GDT_Int16
+    else:
+        # assume gdal.GDT val is passed to function
+        gdal_dtype = dtype
 
     # create output dataset
     driver = gdal.GetDriverByName(driver)
