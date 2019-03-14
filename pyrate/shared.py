@@ -734,14 +734,15 @@ def write_fullres_geotiff(header, data_path, dest, nodata):
         msg = 'Unrecognised projection: %s' % header[ifc.PYRATE_DATUM]
         raise GeotiffException(msg)
 
-    crs = srs.ExportToWkt()
+    wkt = srs.ExportToWkt()
     dtype = 'float32' if (_is_interferogram(header) or _is_incidence(header)) else 'int16'
 
     # get subset of relevant metadata
     md = collate_metadata(header)
 
+    # create GDAL object
     ds = gdal_dataset(dest, ncols, nrows, driver="GTiff", bands=1,
-                 dtype=dtype, metadata=md, crs=crs,
+                 dtype=dtype, metadata=md, crs=wkt,
                  geotransform=gt, creation_opts=['compress=packbits'])
 
     # copy data from the binary file
@@ -757,12 +758,9 @@ def write_fullres_geotiff(header, data_path, dest, nodata):
                     f.seek(row_bytes, 1)  # skip interleaved band 1
 
             data = struct.unpack(fmtstr, f.read(row_bytes))
-            #else: # GAMMA
-            #    data = struct.unpack(fmtstr, f.read(ncols * 4))
 
             band.WriteArray(np.array(data).reshape(1, ncols), yoff=y)
 
-    # Needed? Only in ROIPAC code
     ds = None  # manual close
     del ds
 
@@ -894,6 +892,7 @@ def write_unw_from_data_or_geotiff(geotif_or_data, dest_unw, ifg_proc):
             f.write(col_data)
 
 
+# This function may be able to be deprecated
 def write_output_geotiff(md, gt, wkt, data, dest, nodata):
     # pylint: disable=too-many-arguments
     """
@@ -927,6 +926,54 @@ def write_output_geotiff(md, gt, wkt, data, dest, nodata):
     band = ds.GetRasterBand(1)
     band.SetNoDataValue(nodata)
     band.WriteArray(data, 0, 0)
+
+
+def write_geotiff(data, outds, nodata):
+    # pylint: disable=too-many-arguments
+    """
+    A generic routine for writing a NumPy array to a geotiff.
+
+#    :param dict md: Dictionary containing PyRate metadata
+#    :param list gt: GDAL geotransform for the data
+#    :param list wkt: GDAL projection information for the data
+    :param ndarray data: Output data array to save
+    :param obj outds: GDAL destination object
+    :param float nodata: No data value of data
+
+    :return None, file saved to disk
+    """
+    # only support "2 <= dims <= 3"
+    if data.ndim == 3:
+        count, height, width = data.shape
+    elif data.ndim == 2:
+        height, width = data.shape
+    else:
+        msg = "Only support dimensions of '2 <= dims <= 3'."
+        raise GeotiffException(msg)
+
+#    driver = gdal.GetDriverByName("GTiff")
+#    nrows, ncols = data.shape
+#    ds = driver.Create(dest, ncols, nrows, 1, gdal.GDT_Float32, options=['compress=packbits'])
+#    # set spatial reference for geotiff
+#    ds.SetGeoTransform(gt)
+#    ds.SetProjection(wkt)
+#    ds.SetMetadataItem(ifc.EPOCH_DATE, str(md[ifc.EPOCH_DATE]))
+#
+#    # set other metadata
+#    ds.SetMetadataItem('DATA_TYPE', str(md['DATA_TYPE']))
+#    # sequence position for time series products
+#    if 'SEQUENCE_POSITION' in md:
+#        ds.SetMetadataItem('SEQUENCE_POSITION', str(md['SEQUENCE_POSITION']))
+#
+    # write data to geotiff
+    band = outds.GetRasterBand(1)
+    band.SetNoDataValue(nodata)
+    band.WriteArray(data, 0, 0)
+
+    outds = None
+    band = None
+    del outds
+    del band
 
 
 class GeotiffException(Exception):
