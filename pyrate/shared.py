@@ -738,11 +738,11 @@ def write_fullres_geotiff(header, data_path, dest, nodata):
     dtype = 'float32' if (_is_interferogram(header) or _is_incidence(header)) else 'int16'
 
     # get subset of relevant metadata
-    md = collate_metadata(header)
+    #md = collate_metadata(header) # Not needed in full-res geotiff
 
     # create GDAL object
     ds = gdal_dataset(dest, ncols, nrows, driver="GTiff", bands=1,
-                 dtype=dtype, metadata=md, crs=wkt,
+                 dtype=dtype, metadata=None, crs=wkt,
                  geotransform=gt, creation_opts=['compress=packbits'])
 
     # copy data from the binary file
@@ -1220,7 +1220,12 @@ def output_tiff_filename(inpath, outpath):
     :rtype: str
     """
     fname, ext = os.path.basename(inpath).split('.')
-    return os.path.join(outpath, fname + '_' + ext + '.tif')
+    if ext == 'tif':
+        name = os.path.join(outpath, fname + '.tif')
+    else:
+        name = os.path.join(outpath, fname + '_' + ext + '.tif')
+
+    return name
 
 
 def check_correction_status(preread_ifgs, meta):  # pragma: no cover
