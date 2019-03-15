@@ -33,11 +33,14 @@ from pyrate import config as cf
 from pyrate import shared
 import pyrate.ifgconstants as ifc
 from pyrate import mpiops
+from pyrate.prepifg import PreprocessError
+from pyrate import gamma
+from pyrate import roipac
 
 log = logging.getLogger(__name__)
 
 GAMMA = 1
-
+ROIPAC = 0
 
 def main(params=None):
     """
@@ -91,7 +94,7 @@ def main(params=None):
         process_base_ifgs_paths = \
             np.array_split(base_ifg_paths, mpiops.size)[mpiops.rank]
         gtiff_paths = [shared.output_tiff_filename(f, \
-            params[cf.OUT_DIR]) for f in process_base_ifgs_paths]
+            params[cf.OBS_DIR]) for f in process_base_ifgs_paths]
         do_prepifg(gtiff_paths, params)
     log.info("Finished prepifg")
 
@@ -117,12 +120,29 @@ def do_prepifg(gtiff_paths, params):
         thresh = params[cf.NO_DATA_AVERAGING_THRESHOLD]
         if parallel:
             Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
-                delayed(prepifg.prepare_ifg)(p, xlooks, ylooks, exts, thresh, crop)
-                for p in gtiff_paths)
+                delayed(_prepifg_multiprocessing)(p, xlooks, ylooks, exts, thresh, crop,
+                        params) for p in gtiff_paths)
         else:
-            [prepifg.prepare_ifg(i, xlooks, ylooks, exts,
-                                 thresh, crop) for i in gtiff_paths]
+            [_prepifg_multiprocessing(p, xlooks, ylooks, exts, thresh, crop,
+                                      params) for p in gtiff_paths]
     else:
         log.info("Full-res geotiffs do not exist")
+
+
+def _prepifg_multiprocessing(path, xlooks, ylooks, exts, thresh, crop, params):
+    """
+    Multiprocessing wrapper for prepifg
+    """
+    processor = params[cf.PROCESSOR]  # roipac or gamma
+    if processor == GAMMA:
+        header = gamma.gamma_header(path, params)
+    elif processor == ROIPAC:
+        header = roipac.roipac_header(path, params)
+    else:
+            raise PreprocessError('Processor must be ROI_PAC (0) or '
+                                          'GAMMA (1)')
+
+    prepifg.prepare_ifg(path, xlooks, ylooks, exts, thresh, crop,
+                                 out_path=params[cf.OUT_DIR])
 
 

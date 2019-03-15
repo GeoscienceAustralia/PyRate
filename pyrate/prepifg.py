@@ -35,7 +35,7 @@ from osgeo import gdal
 from pyrate import config as cf
 from pyrate.gdal_python import crop_resample_average
 from pyrate import ifgconstants as ifc
-from pyrate.shared import Ifg, DEM
+from pyrate.shared import Ifg, DEM, output_tiff_filename
 
 CustomExts = namedtuple('CustExtents', ['xfirst', 'yfirst', 'xlast', 'ylast'])
 
@@ -146,12 +146,12 @@ def _get_extents(ifgs, crop_opt, user_exts=None):
 
 
 def prepare_ifg(raster_path, xlooks, ylooks, exts, thresh, crop_opt,
-                write_to_disk=True):
+                write_to_disk=True, out_path=None):
     """
     Open, resample, crop and optionally save to disk an interferogram or DEM.
     Returns are only given if write_to_disk=False
 
-    :param str raster_path: Raster file path name
+    :param str raster_path: Input raster file path name
     :param int xlooks: Number of multi-looks in x; 5 is 5 times smaller,
         1 is no change
     :param int ylooks: Number of multi-looks in y
@@ -160,6 +160,7 @@ def prepare_ifg(raster_path, xlooks, ylooks, exts, thresh, crop_opt,
     :param float thresh: see thresh in prepare_ifgs()
     :param int crop_opt: Crop option
     :param bool write_to_disk: Write new data to disk
+    :param str out_path: Path for output file
 
     :return: resampled_data: output cropped and resampled image
     :rtype: ndarray
@@ -185,12 +186,12 @@ def prepare_ifg(raster_path, xlooks, ylooks, exts, thresh, crop_opt,
         return _dummy_warp(renamed_path)
 
     return _warp(raster, xlooks, ylooks, exts, resolution, thresh,
-                 crop_opt, write_to_disk)
+                 crop_opt, write_to_disk, out_path)
 
 
 # TODO: crop options 0 = no cropping? get rid of same size
 def prepare_ifgs(raster_data_paths, crop_opt, xlooks, ylooks, thresh=0.5,
-                 user_exts=None, write_to_disc=True):
+                 user_exts=None, write_to_disc=True, out_path=None):
     """
     Wrapper function to prepare a sequence of interferogram files for
     PyRate analysis. See prepifg.prepare_ifg() for full description of
@@ -218,7 +219,7 @@ def prepare_ifgs(raster_data_paths, crop_opt, xlooks, ylooks, thresh=0.5,
     exts = get_analysis_extent(crop_opt, rasters, xlooks, ylooks, user_exts)
 
     return [prepare_ifg(d, xlooks, ylooks, exts, thresh, crop_opt,
-                        write_to_disc)
+                        write_to_disc, out_path)
             for d in raster_data_paths]
 
 
@@ -269,7 +270,7 @@ def _dummy_warp(renamed_path):
 
 
 def _warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out,
-          write_to_disk=True):
+          write_to_disk=True, out_path=None):
     """
     Convenience function for calling GDAL functionality
     """
@@ -277,7 +278,9 @@ def _warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out,
         raise ValueError('X and Y looks mismatch')
 
     # cut, average, resample the final output layers
-    looks_path = cf.mlooked_path(ifg.data_path, y_looks, crop_out)
+    op = output_tiff_filename(ifg.data_path, out_path)
+    looks_path = cf.mlooked_path(op, y_looks, crop_out)
+    print(looks_path)
 
     #     # Add missing/updated metadata to resampled ifg/DEM
     #     new_lyr = type(ifg)(looks_path)

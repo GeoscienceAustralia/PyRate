@@ -83,8 +83,6 @@ def main(params=None):
         if params[cf.APS_ELEVATION_MAP]:
             base_ifg_paths.append(params[cf.APS_ELEVATION_MAP])
 
-    shared.mkdir_p(params[cf.OUT_DIR]) # create output dir
-
     if use_luigi:
         log.info("Running converttogtif using luigi")
         luigi.configuration.LuigiConfigParser.add_config_path(
