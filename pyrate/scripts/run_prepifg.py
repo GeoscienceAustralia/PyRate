@@ -143,6 +143,6 @@ def _prepifg_multiprocessing(path, xlooks, ylooks, exts, thresh, crop, params):
                                           'GAMMA (1)')
 
     prepifg.prepare_ifg(path, xlooks, ylooks, exts, thresh, crop,
-                                 out_path=params[cf.OUT_DIR])
+                                 out_path=params[cf.OUT_DIR], header=header)
 
 

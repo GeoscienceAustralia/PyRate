@@ -737,12 +737,12 @@ def write_fullres_geotiff(header, data_path, dest, nodata):
     wkt = srs.ExportToWkt()
     dtype = 'float32' if (_is_interferogram(header) or _is_incidence(header)) else 'int16'
 
-    # get subset of relevant metadata
-    #md = collate_metadata(header) # Not needed in full-res geotiff
+    # get subset of metadata relevant to PyRate
+    md = collate_metadata(header)
 
     # create GDAL object
     ds = gdal_dataset(dest, ncols, nrows, driver="GTiff", bands=1,
-                 dtype=dtype, metadata=None, crs=wkt,
+                 dtype=dtype, metadata=md, crs=wkt,
                  geotransform=gt, creation_opts=['compress=packbits'])
 
     # copy data from the binary file

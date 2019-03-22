@@ -263,7 +263,7 @@ def _gdalwarp_width_and_height(max_x, max_y, min_x, min_y, geo_trans):
 def crop_resample_average(
         input_tif, extents, new_res, output_file, thresh,
         out_driver_type='GTiff',
-        match_pirate=False):
+        match_pirate=False, hdr=None):
     """
     Crop, resample, and average a geotiff image.
 
@@ -274,6 +274,7 @@ def crop_resample_average(
     :param float thresh: NaN fraction threshold
     :param str out_driver_type: The output driver; `MEM` or `GTiff` (optional)
     :param bool match_pirate: Match Matlab Pirate output (optional)
+    :param dict hdr: dictionary of metadata
 
     :return: resampled_average: output cropped and resampled image
     :rtype: ndarray
@@ -302,11 +303,13 @@ def crop_resample_average(
     gt = dst_ds.GetGeoTransform()
     wkt = dst_ds.GetProjection()
 
-    # copy and update metadata
-    md = dst_ds.GetMetadata()
-
     # TEST HERE IF EXISTING FILE HAS PYRATE METADATA. IF NOT ADD HERE
+    if not ifc.DATA_TYPE in dst_ds.GetMetadata():
+        md = shared.collate_metadata(hdr)
+    else: 
+        md = dst_ds.GetMetadata()
 
+    # update metadata for output
     for k, v in md.items():
         if k == ifc.DATA_TYPE:
             # update data type metadata
