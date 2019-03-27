@@ -392,8 +392,8 @@ class WriteUnwTest(unittest.TestCase):
             os.path.join(common.SML_TEST_GAMMA, '20060828_slc.par'))
         header.update(dem_header)
 
-        # insert some dummy data so we are the dem in write_geotiff is not
-        # not activated and ifg write_geotiff operation works
+        # insert some dummy data so we are the dem in write_fullres_geotiff is not
+        # not activated and ifg write_fullres_geotiff operation works
         header[ifc.PYRATE_TIME_SPAN] = 0
         header[ifc.SLAVE_DATE] = 0
         header[ifc.DATA_UNITS] = 'degrees'
@@ -409,7 +409,7 @@ class WriteUnwTest(unittest.TestCase):
                                               dest_unw=temp_unw,
                                               ifg_proc=1)
         # convert the .unw to geotif
-        shared.write_geotiff(header=header, data_path=temp_unw,
+        shared.write_fullres_geotiff(header=header, data_path=temp_unw,
                              dest=temp_tif, nodata=np.nan)
 
         # now compare geotiff with original numpy array

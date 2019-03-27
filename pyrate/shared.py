@@ -684,7 +684,21 @@ def nanmedian(x):
         return np.median(x[~np.isnan(x)])
 
 
-def write_geotiff(header, data_path, dest, nodata):
+def _is_interferogram(hdr):
+    """
+    Convenience function to determine if file is interferogram
+    """
+    return ifc.PYRATE_WAVELENGTH_METRES in hdr
+
+
+def _is_incidence(hdr):
+    """
+    Convenience function to determine if incidence file
+    """
+    return 'FILE_TYPE' in hdr
+
+
+def write_fullres_geotiff(header, data_path, dest, nodata):
     # pylint: disable=too-many-statements
     """
     Creates a copy of input image data (interferograms, DEM, incidence maps
@@ -699,13 +713,11 @@ def write_geotiff(header, data_path, dest, nodata):
     """
     # pylint: disable=too-many-branches
     # pylint: disable=too-many-locals
-    is_ifg = ifc.PYRATE_WAVELENGTH_METRES in header
-    is_incidence = 'FILE_TYPE' in header
     ifg_proc = header[ifc.PYRATE_INSAR_PROCESSOR]
     ncols = header[ifc.PYRATE_NCOLS]
     nrows = header[ifc.PYRATE_NROWS]
-    bytes_per_col, fmtstr = _data_format(ifg_proc, is_ifg, ncols)
-    if is_ifg and ifg_proc == ROIPAC:
+    bytes_per_col, fmtstr = _data_format(ifg_proc, _is_interferogram(header), ncols)
+    if _is_interferogram(header) and ifg_proc == ROIPAC:
         # roipac ifg has 2 bands
         _check_raw_data(bytes_per_col*2, data_path, ncols, nrows)
     else:
@@ -713,37 +725,25 @@ def write_geotiff(header, data_path, dest, nodata):
 
     _check_pixel_res_mismatch(header)
 
-    driver = gdal.GetDriverByName("GTiff")
-    dtype = gdal.GDT_Float32 if (is_ifg or is_incidence) else gdal.GDT_Int16
-    ds = driver.Create(dest, ncols, nrows, 1, dtype, options=['compress=packbits'])
-
-    # write pyrate parameters to headers
-    if is_ifg:
-        for k in [ifc.PYRATE_WAVELENGTH_METRES, ifc.PYRATE_TIME_SPAN,
-                  ifc.PYRATE_INSAR_PROCESSOR,
-                  ifc.MASTER_DATE, ifc.SLAVE_DATE,
-                  ifc.DATA_UNITS, ifc.DATA_TYPE]:
-            ds.SetMetadataItem(k, str(header[k]))
-        if ifg_proc == GAMMA:
-            for k in [ifc.MASTER_TIME, ifc.SLAVE_TIME, ifc.PYRATE_INCIDENCE_DEGREES]:
-                ds.SetMetadataItem(k, str(header[k]))
-    elif is_incidence:
-        ds.SetMetadataItem(ifc.DATA_TYPE, ifc.INCIDENCE)
-    else: # must be dem
-        ds.SetMetadataItem(ifc.DATA_TYPE, ifc.DEM)
-
     # position and projection data
-    ds.SetGeoTransform([header[ifc.PYRATE_LONG], header[ifc.PYRATE_X_STEP], 0,
-                        header[ifc.PYRATE_LAT], 0, header[ifc.PYRATE_Y_STEP]])
-
+    gt = [header[ifc.PYRATE_LONG], header[ifc.PYRATE_X_STEP], 0,
+            header[ifc.PYRATE_LAT], 0, header[ifc.PYRATE_Y_STEP]]
     srs = osr.SpatialReference()
     res = srs.SetWellKnownGeogCS(header[ifc.PYRATE_DATUM])
-
     if res:
         msg = 'Unrecognised projection: %s' % header[ifc.PYRATE_DATUM]
         raise GeotiffException(msg)
 
-    ds.SetProjection(srs.ExportToWkt())
+    wkt = srs.ExportToWkt()
+    dtype = 'float32' if (_is_interferogram(header) or _is_incidence(header)) else 'int16'
+
+    # get subset of metadata relevant to PyRate
+    md = collate_metadata(header)
+
+    # create GDAL object
+    ds = gdal_dataset(dest, ncols, nrows, driver="GTiff", bands=1,
+                 dtype=dtype, metadata=md, crs=wkt,
+                 geotransform=gt, creation_opts=['compress=packbits'])
 
     # copy data from the binary file
     band = ds.GetRasterBand(1)
@@ -754,18 +754,72 @@ def write_geotiff(header, data_path, dest, nodata):
     with open(data_path, 'rb') as f:
         for y in range(nrows):
             if ifg_proc == ROIPAC:
-                if is_ifg:
+                if _is_interferogram(header):
                     f.seek(row_bytes, 1)  # skip interleaved band 1
 
             data = struct.unpack(fmtstr, f.read(row_bytes))
-            #else: # GAMMA
-            #    data = struct.unpack(fmtstr, f.read(ncols * 4))
 
             band.WriteArray(np.array(data).reshape(1, ncols), yoff=y)
 
-    # Needed? Only in ROIPAC code
     ds = None  # manual close
     del ds
+
+
+def gdal_dataset(out_fname, columns, rows, driver="GTiff", bands=1,
+                 dtype='float32', metadata=None, crs=None,
+                 geotransform=None, creation_opts=None):
+    """
+    Initialises a py-GDAL dataset object for writing image data.
+    """
+    if dtype == 'float32':
+        gdal_dtype = gdal.GDT_Float32
+    elif dtype == 'int16':
+        gdal_dtype = gdal.GDT_Int16
+    else:
+        # assume gdal.GDT val is passed to function
+        gdal_dtype = dtype
+
+    # create output dataset
+    driver = gdal.GetDriverByName(driver)
+    outds = driver.Create(out_fname, columns, rows, bands, gdal_dtype,
+                          options=creation_opts)
+
+    # geospatial info
+    outds.SetGeoTransform(geotransform)
+    outds.SetProjection(crs)
+
+    # add metadata
+    if metadata is not None:
+        for k, v in metadata.items():
+            outds.SetMetadataItem(k, str(v))
+
+    return outds
+
+
+def collate_metadata(header):
+    """
+    Grab metadata relevant to PyRate from input metadata
+
+    :param dict header: Input file metadata dictionary
+
+    :return: dict of relevant metadata for PyRate
+    """
+    md = dict()
+    if _is_interferogram(header):
+        for k in [ifc.PYRATE_WAVELENGTH_METRES, ifc.PYRATE_TIME_SPAN,
+                  ifc.PYRATE_INSAR_PROCESSOR,
+                  ifc.MASTER_DATE, ifc.SLAVE_DATE,
+                  ifc.DATA_UNITS, ifc.DATA_TYPE]:
+            md.update({k: str(header[k])})
+        if header[ifc.PYRATE_INSAR_PROCESSOR] == GAMMA:
+            for k in [ifc.MASTER_TIME, ifc.SLAVE_TIME, ifc.PYRATE_INCIDENCE_DEGREES]:
+                md.update({k: str(header[k])})
+    elif _is_incidence(header):
+        md.update({ifc.DATA_TYPE:ifc.INCIDENCE})
+    else: # must be dem
+        md.update({ifc.DATA_TYPE:ifc.DEM})
+
+    return md
 
 
 def _data_format(ifg_proc, is_ifg, ncols):
@@ -844,6 +898,7 @@ def write_unw_from_data_or_geotiff(geotif_or_data, dest_unw, ifg_proc):
             f.write(col_data)
 
 
+# This function may be able to be deprecated
 def write_output_geotiff(md, gt, wkt, data, dest, nodata):
     # pylint: disable=too-many-arguments
     """
@@ -877,6 +932,37 @@ def write_output_geotiff(md, gt, wkt, data, dest, nodata):
     band = ds.GetRasterBand(1)
     band.SetNoDataValue(nodata)
     band.WriteArray(data, 0, 0)
+
+
+def write_geotiff(data, outds, nodata):
+    # pylint: disable=too-many-arguments
+    """
+    A generic routine for writing a NumPy array to a geotiff.
+
+    :param ndarray data: Output data array to save
+    :param obj outds: GDAL destination object
+    :param float nodata: No data value of data
+
+    :return None, file saved to disk
+    """
+    # only support "2 <= dims <= 3"
+    if data.ndim == 3:
+        count, height, width = data.shape
+    elif data.ndim == 2:
+        height, width = data.shape
+    else:
+        msg = "Only support dimensions of '2 <= dims <= 3'."
+        raise GeotiffException(msg)
+
+    # write data to geotiff
+    band = outds.GetRasterBand(1)
+    band.SetNoDataValue(nodata)
+    band.WriteArray(data, 0, 0)
+
+    outds = None
+    band = None
+    del outds
+    del band
 
 
 class GeotiffException(Exception):
@@ -1134,7 +1220,12 @@ def output_tiff_filename(inpath, outpath):
     :rtype: str
     """
     fname, ext = os.path.basename(inpath).split('.')
-    return os.path.join(outpath, fname + '_' + ext + '.tif')
+    if ext == 'tif':
+        name = os.path.join(outpath, fname + '.tif')
+    else:
+        name = os.path.join(outpath, fname + '_' + ext + '.tif')
+
+    return name
 
 
 def check_correction_status(preread_ifgs, meta):  # pragma: no cover

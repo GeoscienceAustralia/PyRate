@@ -38,7 +38,6 @@ from pyrate import mpiops
 
 log = logging.getLogger(__name__)
 
-ROI_PAC_HEADER_FILE_EXT = 'rsc'
 GAMMA = 1
 ROIPAC = 0
 
@@ -84,8 +83,6 @@ def main(params=None):
         if params[cf.APS_ELEVATION_MAP]:
             base_ifg_paths.append(params[cf.APS_ELEVATION_MAP])
 
-    shared.mkdir_p(params[cf.OUT_DIR]) # create output dir
-
     if use_luigi:
         log.info("Running converttogtif using luigi")
         luigi.configuration.LuigiConfigParser.add_config_path(
@@ -127,57 +124,24 @@ def _geotiff_multiprocessing(unw_path, params):
     """
     Multiprocessing wrapper for full-res geotiff conversion
     """
-    dest = shared.output_tiff_filename(unw_path, params[cf.OUT_DIR])
+    dest = shared.output_tiff_filename(unw_path, params[cf.OBS_DIR])
+    print(dest)
     processor = params[cf.PROCESSOR]  # roipac or gamma
 
     # Create full-res geotiff if not already on disk
     if not os.path.exists(dest):
         if processor == GAMMA:
-            header = _gamma_header(unw_path, params)
+            header = gamma.gamma_header(unw_path, params)
         elif processor == ROIPAC:
-            header = _roipac_header(unw_path, params)
+            header = roipac.roipac_header(unw_path, params)
         else:
             raise PreprocessError('Processor must be ROI_PAC (0) or '
                                           'GAMMA (1)')
-        shared.write_geotiff(header, unw_path, dest,
+        shared.write_fullres_geotiff(header, unw_path, dest,
                       nodata=params[cf.NO_DATA_VALUE])
     else:
         log.info("Full-res geotiff already exists")
 
     return dest
-
-
-def _gamma_header(unw_path, params):
-    """
-    Function to obtain combined Gamma headers
-    """
-    dem_hdr_path = params[cf.DEM_HEADER_FILE]
-    slc_dir = params[cf.SLC_DIR]
-    header_paths = gamma.get_header_paths(unw_path, slc_dir=slc_dir)
-    combined_headers = gamma.manage_headers(dem_hdr_path, header_paths)
-
-    if os.path.basename(unw_path).split('.')[1] == \
-            (params[cf.APS_INCIDENCE_EXT] or params[cf.APS_ELEVATION_EXT]):
-        # TODO: implement incidence class here
-        combined_headers['FILE_TYPE'] = 'Incidence'
-
-    return combined_headers
-
-
-def _roipac_header(unw_path, params):
-    """
-    Function to obtain a Roipac headers
-    """
-    rsc_file = os.path.join(params[cf.DEM_HEADER_FILE])
-    if rsc_file is not None:
-        projection = roipac.parse_header(rsc_file)[ifc.PYRATE_DATUM]
-    else:
-        raise roipac.RoipacException('No DEM resource/header file is '
-                                     'provided')
-
-    header_file = "%s.%s" % (unw_path, ROI_PAC_HEADER_FILE_EXT)
-    header = roipac.manage_header(header_file, projection)
-
-    return header
 
 

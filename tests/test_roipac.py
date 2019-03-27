@@ -53,7 +53,7 @@ from pyrate.config import (
 from pyrate.scripts import run_prepifg
 from pyrate.scripts.converttogtif import main as roipacMain
 from pyrate.shared import GeotiffException
-from pyrate.shared import write_geotiff
+from pyrate.shared import write_fullres_geotiff
 from tests.common import HEADERS_TEST_DIR, PREP_TEST_OBS, PREP_TEST_TIF
 from tests.common import SML_TEST_DEM_DIR, SML_TEST_OBS, TEMPDIR
 from tests.common import SML_TEST_DEM_ROIPAC, SML_TEST_DEM_HDR
@@ -143,7 +143,7 @@ class RoipacToGeoTiffTests(unittest.TestCase):
         hdr = roipac.parse_header(SML_TEST_DEM_HDR)        
         self.dest = os.path.join(TEMPDIR, "tmp_roipac_dem.tif")
 
-        write_geotiff(hdr, SML_TEST_DEM_ROIPAC, self.dest, nodata=0)
+        write_fullres_geotiff(hdr, SML_TEST_DEM_ROIPAC, self.dest, nodata=0)
         exp_path = join(SML_TEST_DEM_DIR, 'roipac_test_trimmed.tif')
         exp_ds = gdal.Open(exp_path)
         ds = gdal.Open(self.dest)
@@ -161,7 +161,7 @@ class RoipacToGeoTiffTests(unittest.TestCase):
 
         self.dest = os.path.join('tmp_roipac_ifg.tif')
         data_path = join(PREP_TEST_OBS, 'geo_060619-061002.unw')
-        write_geotiff(hdrs, data_path, self.dest, nodata=0)
+        write_fullres_geotiff(hdrs, data_path, self.dest, nodata=0)
 
         ds = gdal.Open(self.dest)
         band = ds.GetRasterBand(1)
@@ -192,7 +192,7 @@ class RoipacToGeoTiffTests(unittest.TestCase):
         data_path = join(PREP_TEST_TIF, 'geo_060619-061002.tif')
         self.assertRaises(
             GeotiffException,
-            write_geotiff,
+            write_fullres_geotiff,
             self.HDRS,
             data_path,
             self.dest,
@@ -204,7 +204,7 @@ class RoipacToGeoTiffTests(unittest.TestCase):
         hdrs[ifc.DATA_TYPE] = ifc.ORIG
         self.dest = os.path.join(TEMPDIR, 'tmp_roipac_ifg2.tif')
         data_path = join(PREP_TEST_OBS, 'geo_060619-061002.unw')
-        self.assertRaises(GeotiffException, write_geotiff, hdrs,
+        self.assertRaises(GeotiffException, write_fullres_geotiff, hdrs,
                           data_path, self.dest, 0)
 
     def test_mismatching_cell_resolution(self):
@@ -214,7 +214,7 @@ class RoipacToGeoTiffTests(unittest.TestCase):
         data_path = join(PREP_TEST_OBS, 'geo_060619-061002.unw')
         self.dest = os.path.join(TEMPDIR, 'fake')
 
-        self.assertRaises(GeotiffException, write_geotiff, hdrs,
+        self.assertRaises(GeotiffException, write_fullres_geotiff, hdrs,
                             data_path, self.dest, 0)
 
     def compare_rasters(self, ds, exp_ds):

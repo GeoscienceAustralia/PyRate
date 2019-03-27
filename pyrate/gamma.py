@@ -20,10 +20,12 @@ This Python module contains tools for reading GAMMA format input data.
 
 from os.path import join, split
 import re
+import os
 import glob2
 from datetime import date, time, timedelta
 import numpy as np
 import pyrate.ifgconstants as ifc
+from pyrate import config as cf
 
 PTN = re.compile(r'\d{8}')  # match 8 digits for the dates
 
@@ -225,7 +227,7 @@ def get_header_paths(input_file, slc_dir=None):
     """
     Function that matches input GAMMA file names with GAMMA header file names
 
-    :param str input_file: input GAMMA .unw file.
+    :param str input_file: input GAMMA image file.
     :param str slc_dir: GAMMA SLC header file directory
     :return: list of matching header files
     :rtype: list
@@ -233,11 +235,28 @@ def get_header_paths(input_file, slc_dir=None):
     if slc_dir:
         dir_name = slc_dir
         _, file_name = split(input_file)
-    else:  # header file must exist in the same dir as that of .unw
+    else:  # header file must exist in the same dir as that of image file
         dir_name, file_name = split(input_file)
     matches = PTN.findall(file_name)
     return [glob2.glob(join(dir_name, '**/*%s*slc.par' % m))[0]
             for m in matches]
+
+
+def gamma_header(file_path, params):
+    """
+    Function to obtain combined Gamma headers for image file
+    """
+    dem_hdr_path = params[cf.DEM_HEADER_FILE]
+    slc_dir = params[cf.SLC_DIR]
+    header_paths = get_header_paths(file_path, slc_dir=slc_dir)
+    combined_headers = manage_headers(dem_hdr_path, header_paths)
+
+    if os.path.basename(file_path).split('.')[1] == \
+            (params[cf.APS_INCIDENCE_EXT] or params[cf.APS_ELEVATION_EXT]):
+        # TODO: implement incidence class here
+        combined_headers['FILE_TYPE'] = 'Incidence'
+
+    return combined_headers
 
 
 class GammaException(Exception):
