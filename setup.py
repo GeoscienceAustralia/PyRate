@@ -78,21 +78,21 @@ setup(
     },
     setup_requires=[NUMPY_VERSION],  # required due to netCDF4
     install_requires=[
-        'Click >= 6.0',
-        NUMPY_VERSION,
-        'Cython >= 0.22.1',
-        'mpi4py == 2.0.0',
-        'scipy >= 0.15.1',
-        'PyYAML >= 3.11',
-        'netCDF4 == 1.2.6',
-        'GDAL == ' + GDAL_VERSION,
-        'matplotlib == 1.5.1',
-        'pyproj >= 1.9.5',
-        'networkx >= 1.9.1',
-        'Pillow >= 2.8.2',
-        'luigi == 1.3.0',
-        'joblib',
-        'glob2'
+        'Click==6.7',
+        'numpy==1.12.1',
+        'Cython==0.25.2',
+        'mpi4py==2.0.0',
+        'scipy==0.19.0',
+        'PyYAML==3.12',
+        'netCDF4==1.2.6',
+        'GDAL==' + GDAL_VERSION,
+        'matplotlib==1.5.1',
+        'pyproj==1.9.5.1',
+        'networkx==1.11',
+        'Pillow==4.1.1',
+        'luigi==1.3.0',
+        'joblib==0.11',
+        'glob2==0.5'
     ],
     extras_require={
         'dev': [
