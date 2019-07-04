@@ -112,12 +112,13 @@ class MSTTests(unittest.TestCase):
             m.phase_data[:] = nan
 
         res = mst._mst_matrix_as_array(mock_ifgs)
-        exp = empty((1,1), dtype=object)
+        exp = empty((1,1)) #, dtype=object)
         exp[:] = nan
 
         shape = (mock_ifgs[0].nrows, mock_ifgs[0].ncols)
         self.assertTrue(res.shape == shape)
-        self.assertEqual(exp, res)
+        self.assertTrue(res.shape == exp.shape)
+        self.assertTrue(isnan(res[0][0]) and isnan(exp[0][0]))
 
 
 class DefaultMSTTests(unittest.TestCase):
