@@ -23,11 +23,11 @@ python_version = sys.version_info
 __version__ = "0.2.1"
 
 # numpy support for python3.3 not available for version > 1.10.1
-if python_version.major == 3 and python_version.minor == 3:
-    NUMPY_VERSION = 'numpy >= 1.9.2, <= 1.10.1'
-else:
-    NUMPY_VERSION = 'numpy >= 1.9.2'
-
+#if python_version.major == 3 and python_version.minor == 3:
+#    NUMPY_VERSION = 'numpy >= 1.9.2, <= 1.10.1'
+#else:
+#    NUMPY_VERSION = 'numpy >= 1.9.2'
+NUMPY_VERSION = '>= 1.12.1'
 
 GDAL_VERSION = check_output(["gdal-config", "--version"]).decode(
     encoding="utf-8").split('\n')[0]
@@ -78,21 +78,21 @@ setup(
     },
     setup_requires=[NUMPY_VERSION],  # required due to netCDF4
     install_requires=[
-        'Click==6.7',
-        'numpy==1.12.1',
-        'Cython==0.25.2',
+        'Click>=6.7',
+        'numpy>=1.12.1',
+        'Cython>=0.25.2',
         'mpi4py==2.0.0',
-        'scipy==0.19.0',
-        'PyYAML==3.12',
-        'netCDF4==1.2.6',
+        'scipy>=0.19.0',
+        'PyYAML>=3.12',
+        'netCDF4>=1.2.6',
         'GDAL==' + GDAL_VERSION,
-        'matplotlib==1.5.1',
+        'matplotlib>=1.5.1',
         'pyproj==1.9.5.1',
         'networkx==1.11',
-        'Pillow==4.1.1',
+        'Pillow>=4.1.1',
         'luigi==1.3.0',
-        'joblib==0.11',
-        'glob2==0.5'
+        'joblib>=0.11',
+        'glob2>=0.5'
     ],
     extras_require={
         'dev': [
