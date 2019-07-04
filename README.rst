@@ -1,3 +1,5 @@
+.. image:: docs/PyRate_logo.png
+
 PyRate - a Python tool for InSAR Rate and Time-series Estimation
 ================================================================
 
