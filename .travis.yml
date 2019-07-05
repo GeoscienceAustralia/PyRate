@@ -1,6 +1,6 @@
 language: python
 
-python: 3.6 # 3.6.7 - NCI supported
+python: 3.6
 
 os: linux
 
@@ -12,14 +12,12 @@ env:
     - PIP_FIND_LINKS=file://$HOME/.cache/pip/wheels
     - GDALINST=$HOME/gdalinstall
     - GDALBUILD=$HOME/gdalbuild
-  matrix:
-    - GDALVERSION="2.2.2" # NCI Version
     - GDALVERSION="2.2.3" # Ubuntu 18.04 version
 
 before_install:
   - sudo apt-get update
-  - sudo apt-get -y install gdal-bin=$GDALVERSION
-  - sudo apt-get -y install libgdal-dev=$GDALVERSION
+  - sudo apt-get -y install gdal-bin
+  - sudo apt-get -y install libgdal-dev
   - sudo apt-get -y install libatlas-base-dev
   - sudo apt-get -y install openmpi-bin
   - sudo apt-get -y install libopenmpi-dev
