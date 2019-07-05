@@ -1,3 +1,11 @@
+echo "This script will install Python 3.6.8 and additional packages required by PyRate. Continue?" 
+    select yn in "Yes" "No"; do
+    case $yn in
+        Yes ) break;;
+        No ) exit;; 
+    esac
+done
+
 # OS package requirements for Ubuntu 18.04
 sudo apt-get update
 sudo apt-get -y install \
@@ -7,6 +15,6 @@ sudo apt-get -y install \
     openmpi-bin \
     libopenmpi-dev \
     libnetcdf13 \
+    python3 \
     python3-dev 
-    
 
