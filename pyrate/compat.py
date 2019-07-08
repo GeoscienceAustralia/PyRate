@@ -26,29 +26,9 @@ import sys
 PY3 = (sys.version_info[0] == 3)
 
 
-try:
-    import pygrib
-    import PyAPS
-    PyAPS_INSTALLED = True
-except ImportError:
-    PyAPS_INSTALLED = False
 
 if PY3:
     import pickle
 else:
     import cPickle as pickle
 
-
-class PyAPSException(Exception):
-    """
-    Convenience class for PyAPS status
-    """
-
-
-def validate_pyaps():
-    """
-    Convenience function validating PyAPS status
-    """
-    if not PyAPS_INSTALLED:
-        raise PyAPSException('PyAPS needs to be installed in order '
-                             'to use this module')

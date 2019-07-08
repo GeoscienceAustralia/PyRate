@@ -38,12 +38,8 @@ from pyrate import shared
 from pyrate import timeseries
 from pyrate import covariance as vcm_module
 from pyrate.aps import _wrap_spatio_temporal_filter
-#from pyrate.compat import PyAPS_INSTALLED
 from pyrate.config import ConfigException
 from pyrate.shared import Ifg, PrereadIfg, get_tiles
-
-#if PyAPS_INSTALLED:  # pragma: no cover
-#    from pyrate.pyaps import check_aps_ifgs, aps_delay_required
 
 MASTER_PROCESS = 0
 log = logging.getLogger(__name__)
@@ -378,11 +374,10 @@ def process_ifgs(ifg_paths, params, rows, cols):
 
     preread_ifgs = _create_ifg_dict(ifg_paths, params=params, tiles=tiles)
 
-#    _mst_calc(ifg_paths, params, tiles, preread_ifgs)
+    # _mst_calc(ifg_paths, params, tiles, preread_ifgs)
 
     refpx, refpy = _ref_pixel_calc(ifg_paths, params)
 
-    # TODO: remove weather model derived APS delay here (pyaps.py)
 
     # remove non ifg keys
     _ = [preread_ifgs.pop(k) for k in ['gt', 'epochlist', 'md', 'wkt']]
