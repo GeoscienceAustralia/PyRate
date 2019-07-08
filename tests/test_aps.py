@@ -131,11 +131,9 @@ def test_spatio_temporal_filter():
     from pyrate.scripts import run_prepifg
     from osgeo import gdal
     from pyrate import ifgconstants as ifc
-    ifg_out = sio.loadmat(os.path.join(SML_TEST_DIR, 'matlab_aps',
-                          'ifg_spatio_temp_out.mat'))['ifg']
+    ifg_out = sio.loadmat(os.path.join(SML_TEST_DIR, 'matlab_aps', 'ifg_spatio_temp_out.mat'))['ifg']
 
-    tsincr = sio.loadmat(os.path.join(SML_TEST_DIR, 'matlab_aps',
-                                      'tsincr_svd.mat'))['tsincr']
+    tsincr = sio.loadmat(os.path.join(SML_TEST_DIR, 'matlab_aps', 'tsincr_svd.mat'))['tsincr']
     params = cf.get_config_params(os.path.join(TEST_CONF_GAMMA))
     params[cf.OUT_DIR] = tempfile.mkdtemp()
     params[cf.TMPDIR] = join(params[cf.OUT_DIR], cf.TMPDIR)
@@ -149,18 +147,20 @@ def test_spatio_temporal_filter():
     params[cf.TLPF_PTHR] = 5
     ifgs = small_data_setup()
     _ = [ifgs_pk.pop(k) for k in ['gt', 'epochlist', 'md', 'wkt']]
-    preread_ifgs = {join(params[cf.OUT_DIR], basename(k)): v
-                    for k, v in ifgs_pk.items()}
+    preread_ifgs = {join(params[cf.OUT_DIR], basename(k)): v for k, v in ifgs_pk.items()}
     preread_ifgs = OrderedDict(sorted(preread_ifgs.items()))
+
 
     run_prepifg.main(params)
     for k, v in preread_ifgs.items():
         v.path = join(params[cf.OUT_DIR], basename(k))
         preread_ifgs[k] = v
+
     ifg = ifgs[0]
     ifg.x_size = xpsize
     ifg.y_size = ypsize
     spatio_temporal_filter(tsincr, ifg, params, preread_ifgs)
+
     for i in ifgs:
         i.close()
 
