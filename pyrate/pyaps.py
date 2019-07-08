@@ -33,10 +33,11 @@ from pyrate import ifgconstants as ifc
 from pyrate import prepifg
 from pyrate import gamma
 from operator import itemgetter
+from constants import PYRATEPATH
 
 log = logging.getLogger(__name__)
 
-PYRATEPATH = os.environ['PYRATEPATH']
+PYRATEPATH = PYRATEPATH
 ECMWF_DIR = os.path.join(PYRATEPATH, 'ECMWF')
 ECMWF_PRE = 'ERA-Int_'
 ECMWF_EXT = '_12.grib'  # TODO: build dynamically with closest available grib

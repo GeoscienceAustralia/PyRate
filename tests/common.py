@@ -33,10 +33,12 @@ from osgeo import gdal
 from pyrate import config as cf, mst, timeseries, matlab_mst, algorithm, \
     ifgconstants as ifc, linrate
 from pyrate.shared import Ifg, nan_and_mm_convert, get_geotiff_header_info, \
-    write_output_geotiff 
+    write_output_geotiff
+
+from constants import PYRATEPATH
 
 TEMPDIR = tempfile.gettempdir()
-BASE_TEST = join(os.environ['PYRATEPATH'], "tests", "test_data")
+BASE_TEST = join(PYRATEPATH, "tests", "test_data")
 SML_TEST_DIR = join(BASE_TEST, "small_test")
 SML_TEST_OBS = join(SML_TEST_DIR, 'roipac_obs')  # roipac processed unws
 SML_TEST_OUT = join(SML_TEST_DIR, 'out')
