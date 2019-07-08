@@ -23,6 +23,7 @@ import logging
 from itertools import product
 from numpy import array, nan, isnan, float32, empty, sum as nsum
 import numpy as np
+from networkx.classes.reportviews import EdgeView
 import networkx as nx
 from joblib import Parallel, delayed
 
@@ -157,10 +158,10 @@ def mst_boolean_array(ifgs):
     nifgs = len(ifgs)
     ny, nx = ifgs[0].phase_data.shape
     result = empty(shape=(nifgs, ny, nx), dtype=np.bool)
-
+    
     for y, x, mst in mst_matrix_networkx(ifgs):
         # mst is a list of datetime.date tuples
-        if isinstance(mst, list):
+        if isinstance(mst, EdgeView):
             ifg_sub = [ifg_date_index_lookup(ifgs, d) for d in mst]
             ifg_sub_bool = [True if i in ifg_sub else False
                             for i in range(nifgs)]  # boolean conversion
@@ -179,7 +180,7 @@ def _mst_matrix_ifgs_only(ifgs):
     result = empty(shape=ifgs[0].phase_data.shape, dtype=object)
 
     for y, x, mst in mst_matrix_networkx(ifgs):
-        if isinstance(mst, list):
+        if isinstance(mst, EdgeView):
             ifg_sub = [ifg_date_lookup(ifgs, d) for d in mst]
             result[(y, x)] = tuple(ifg_sub)
         else:
@@ -216,11 +217,9 @@ def mst_matrix_networkx(ifgs):
     :return: mst: list of tuples for edges in the minimum spanning tree
     :rtype: list
     """
-
     # make default MST to optimise result when no Ifg cells in a stack are nans
     edges_with_weights = [(i.master, i.slave, i.nan_fraction) for i in ifgs]
     edges, g_nx = _minimum_spanning_edges_from_mst(edges_with_weights)
-
     # TODO: memory efficiencies can be achieved here with tiling
     data_stack = array([i.phase_data for i in ifgs], dtype=float32)
 
