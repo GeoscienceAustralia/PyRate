@@ -45,10 +45,8 @@ from pyrate import mpiops
 from pyrate import algorithm
 
 TRAVIS = True if 'TRAVIS' in os.environ else False
-PYTHON3P5 = True if ('TRAVIS_PYTHON_VERSION' in os.environ and
-                     os.environ['TRAVIS_PYTHON_VERSION'] == '3.5') else False
-GDAL_VERSION = check_output(["gdal-config", "--version"]).decode(
-    encoding="utf-8").split('\n')[0]
+PYTHON3P5 = True if ('TRAVIS_PYTHON_VERSION' in os.environ and os.environ['TRAVIS_PYTHON_VERSION'] == '3.5') else False
+GDAL_VERSION = check_output(["gdal-config", "--version"]).decode(encoding="utf-8").split('\n')[0]
 MPITEST = TRAVIS and GDAL_VERSION == '2.0.0'
 
 
@@ -66,8 +64,7 @@ def tempdir():
 def random_filename(tmpdir_factory):
     def make_random_filename(ext=''):
         dir = str(tmpdir_factory.mktemp('pyrate').realpath())
-        fname = ''.join(random.choice(string.ascii_lowercase)
-                        for _ in range(10))
+        fname = ''.join(random.choice(string.ascii_lowercase) for _ in range(10))
         return os.path.join(dir, fname + ext)
     return make_random_filename
 
