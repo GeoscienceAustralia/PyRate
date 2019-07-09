@@ -12,7 +12,6 @@ out
 build/
 docs/_build/
 #tests/test_data/
-PyAPS/
 .cache/
 # .coverage tmp files
 .coverage.*
