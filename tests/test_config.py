@@ -16,7 +16,6 @@
 '''
 This Python module contains tests for the config.py PyRate module.
 '''
-import pytest
 import os
 import shutil
 import tempfile
@@ -45,7 +44,6 @@ from pyrate.config import (
     APS_METHOD,
     APS_CORRECTION)
 from pyrate.tasks.utils import DUMMY_SECTION_NAME
-from pyrate.compat import PyAPS_INSTALLED
 from tests import common
 
 
@@ -202,14 +200,6 @@ class TestOneIncidenceOrElevationMap(unittest.TestCase):
         self.assertIsNotNone(params[config.APS_ELEVATION_MAP])
         self.assertIn(config.APS_ELEVATION_EXT, params.keys())
         self.assertIn(config.APS_ELEVATION_MAP, params.keys())
-
-    @pytest.mark.skipif(not PyAPS_INSTALLED,
-                        reason='grib or pyaps not installed')
-    def test_inc_vs_ele_maps_none_provided(self):
-        self.make_input_files()
-        assert os.path.exists(self.conf_file)
-        self.assertRaises(config.ConfigException,
-                          config.get_config_params, self.conf_file)
 
 
 if __name__ == "__main__":
