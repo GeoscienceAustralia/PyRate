@@ -485,6 +485,7 @@ class TestGammaParallelVsSerial(unittest.TestCase):
 
         # read in the params
         _, _, params = cf.get_ifg_paths(TEST_CONF_GAMMA)
+
         params[cf.OUT_DIR] = cls.serial_dir
         params[cf.PARALLEL] = False
 

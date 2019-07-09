@@ -33,9 +33,7 @@ class RoipacHasRun(luigi.task.ExternalTask):
     headerFile = luigi.Parameter()
 
     def output(self):
-        targets = [
-            luigi.LocalTarget(self.fileName),
-            luigi.LocalTarget(self.headerFile)]
+        targets = [ luigi.LocalTarget(self.fileName), luigi.LocalTarget(self.headerFile)]
         return targets
 
 
@@ -59,8 +57,7 @@ class ConvertFileToGeotiff(luigi.Task):
     inputFile = luigi.Parameter()
     projection = luigi.Parameter()
     outputDir = luigi.Parameter(config_path=InputParam(config.OUT_DIR))
-    no_data_value = luigi.FloatParameter(
-        config_path=InputParam(config.NO_DATA_VALUE))
+    no_data_value = luigi.FloatParameter(config_path=InputParam(config.NO_DATA_VALUE))
 
     def requires(self):
         """
@@ -68,10 +65,7 @@ class ConvertFileToGeotiff(luigi.Task):
         input exists.
         """
         self.header_file = "%s.%s" % (self.inputFile, ROI_PAC_HEADER_FILE_EXT)
-        tasks = [RoipacHasRun(
-            fileName=self.inputFile,
-            headerFile=self.header_file)]
-
+        tasks = [RoipacHasRun(fileName=self.inputFile, headerFile=self.header_file)]
         return tasks
 
     def run(self):
@@ -79,8 +73,7 @@ class ConvertFileToGeotiff(luigi.Task):
         Overload of :py:meth:`luigi.Task.run`.
         """
         header = manage_header(self.header_file, self.projection)
-        write_geotiff(header, self.inputFile, self.output_file,
-                      self.no_data_value)
+        write_geotiff(header, self.inputFile, self.output_file, self.no_data_value)
 
     def output(self):
         """
@@ -94,13 +87,8 @@ class _DoConvertToGeotiffRoipac(IfgListMixin, luigi.WrapperTask):
     """
     Luigi task for ROI_PAC to geotiff conversion
     """
-    projection = luigi.Parameter(
-        default=None,
-        config_path=InputParam(config.INPUT_IFG_PROJECTION))
-
-    resourceHeader = luigi.Parameter(
-        default=None,
-        config_path=InputParam(config.DEM_HEADER_FILE))
+    projection = luigi.Parameter(default=None, config_path=InputParam(config.INPUT_IFG_PROJECTION))
+    resourceHeader = luigi.Parameter(default=None, config_path=InputParam(config.DEM_HEADER_FILE))
 
     @property
     def priority(self):
@@ -114,20 +102,15 @@ class _DoConvertToGeotiffRoipac(IfgListMixin, luigi.WrapperTask):
         if self.resourceHeader is not None:
             header = parse_header(self.resourceHeader)
             if ifc.PYRATE_DATUM not in header:
-                raise Exception('Error: header/resource file does not '
-                                'include DATUM and -p option not given')
+                raise Exception('Error: header/resource file does not include DATUM and -p option not given')
             projection = header[ifc.PYRATE_DATUM]
         else:
             if self.projection:
                 projection = self.projection
             else:
-                raise Exception('Error: no header/resource file given '
-                                'and -p option not specified')
-
+                raise Exception('Error: no header/resource file given and -p option not specified')
         ifg_files = self.ifg_list(tif=False)
-        tasks = [ConvertFileToGeotiff(
-            inputFile=path,
-            projection=projection) for path in ifg_files]
+        tasks = [ConvertFileToGeotiff(inputFile=path, projection=projection) for path in ifg_files]
         return tasks
 
 
@@ -136,13 +119,10 @@ class ConvertToGeotiff(luigi.WrapperTask):
     This convenience wrapper delegates the actual tasks of converting
     ROI_PAC files to geotiffs. Each task operates on individual files.
     """
-    resourceHeader = luigi.Parameter(
-        default=None,
-        config_path=InputParam(config.DEM_HEADER_FILE))
+    resourceHeader = luigi.Parameter(default=None, config_path=InputParam(config.DEM_HEADER_FILE))
 
     def requires(self):
         tasks = [_DoConvertToGeotiffRoipac()]
         if self.resourceHeader is not None:
             tasks.append(ResourceHeaderExists(self.resourceHeader))
-
         return tasks

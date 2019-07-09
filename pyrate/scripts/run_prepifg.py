@@ -87,8 +87,7 @@ def main(params=None):
 
     if use_luigi:
         log.info("Running prepifg using luigi")
-        luigi.configuration.LuigiConfigParser.add_config_path(
-            pythonify_config(raw_config_file))
+        luigi.configuration.LuigiConfigParser.add_config_path(pythonify_config(raw_config_file))
         luigi.build([PrepareInterferograms()], local_scheduler=True)
     else:
         process_base_ifgs_paths = \
