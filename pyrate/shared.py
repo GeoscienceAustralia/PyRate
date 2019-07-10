@@ -305,6 +305,7 @@ class Ifg(RasterBase):
             return date(year, month, day)
 
         md = self.dataset.GetMetadata()
+
         datestrs = [md[k] for k in [ifc.MASTER_DATE, ifc.SLAVE_DATE]]
 
         if all(datestrs):
