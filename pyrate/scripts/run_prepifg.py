@@ -59,21 +59,21 @@ def main(params=None):
 
     usage = 'Usage: pyrate prepifg <config_file>'
     if mpiops.size > 1:  # Over-ride input options if this is an MPI job
-        params[cf.LUIGI] = False
+        # params[cf.LUIGI] = False
         params[cf.PARALLEL] = False
 
     if params:
         base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST])
-        use_luigi = params[cf.LUIGI]  # luigi or no luigi
-        if use_luigi:
-            raise cf.ConfigException('params can not be provided with luigi')
+        # use_luigi = params[cf.LUIGI]  # luigi or no luigi
+        # if use_luigi:
+        #     raise cf.ConfigException('params can not be provided with luigi')
     else:  # if params not provided read from config file
         if (not params) and (len(sys.argv) < 3):
             print(usage)
             return
         base_ifg_paths, _, params = cf.get_ifg_paths(sys.argv[2])
-        use_luigi = params[cf.LUIGI]  # luigi or no luigi
-        raw_config_file = sys.argv[2]
+        # use_luigi = params[cf.LUIGI]  # luigi or no luigi
+        # raw_config_file = sys.argv[2]
 
     base_ifg_paths.append(params[cf.DEM_FILE])
     processor = params[cf.PROCESSOR]  # roipac or gamma
@@ -85,20 +85,19 @@ def main(params=None):
 
     mkdir_p(params[cf.OUT_DIR]) # create output dir
 
-    if use_luigi:
-        log.info("Running prepifg using luigi")
-        luigi.configuration.LuigiConfigParser.add_config_path(pythonify_config(raw_config_file))
-        luigi.build([PrepareInterferograms()], local_scheduler=True)
+    # if False:
+    # # if use_luigi:
+    #     log.info("Running prepifg using luigi")
+    #     luigi.configuration.LuigiConfigParser.add_config_path(pythonify_config(raw_config_file))
+    #     luigi.build([PrepareInterferograms()], local_scheduler=True)
+    # else:
+    process_base_ifgs_paths = np.array_split(base_ifg_paths, mpiops.size)[mpiops.rank]
+    if processor == ROIPAC:
+        roipac_prepifg(process_base_ifgs_paths, params)
+    elif processor == GAMMA:
+        gamma_prepifg(process_base_ifgs_paths, params)
     else:
-        process_base_ifgs_paths = \
-            np.array_split(base_ifg_paths, mpiops.size)[mpiops.rank]
-        if processor == ROIPAC:
-            roipac_prepifg(process_base_ifgs_paths, params)
-        elif processor == GAMMA:
-            gamma_prepifg(process_base_ifgs_paths, params)
-        else:
-            raise prepifg.PreprocessError('Processor must be ROI_PAC (0) or '
-                                          'GAMMA (1)')
+        raise prepifg.PreprocessError('Processor must be ROI_PAC (0) or GAMMA (1)')
     log.info("Finished prepifg")
 
 

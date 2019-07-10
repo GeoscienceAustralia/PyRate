@@ -40,7 +40,7 @@ from pyrate.config import (
     OUT_DIR,
     IFG_FILE_LIST,
     PROCESSOR,
-    LUIGI,
+    # LUIGI,
     IFG_CROP_OPT,
     IFG_LKSX,
     IFG_LKSY,
@@ -328,7 +328,7 @@ class TestRoipacLuigiEquality(unittest.TestCase):
             conf.write('{}: {}\n'.format(OUT_DIR, self.base_dir))
             conf.write('{}: {}\n'.format(IFG_FILE_LIST, self.ifgListFile))
             conf.write('{}: {}\n'.format(PROCESSOR, '0'))
-            conf.write('{}: {}\n'.format(LUIGI, self.luigi))
+            # conf.write('{}: {}\n'.format(LUIGI, self.luigi))
             conf.write('{}: {}\n'.format(DEM_HEADER_FILE,
                                          SML_TEST_DEM_HDR))
             conf.write('{}: {}\n'.format(IFG_LKSX, '1'))
