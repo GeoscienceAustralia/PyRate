@@ -76,7 +76,7 @@ setup(
         'Click==7.0',
         'numpy==1.16.4',
         'Cython==0.29.11',
-        'mpi4py==2.0.0',
+        'mpi4py==3.0.2',
         'scipy==1.3.0',
         'PyYAML==5.1.1',
         'netCDF4==1.5.1.2',
