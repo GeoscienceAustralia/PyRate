@@ -39,14 +39,10 @@ class GetAnalysisExtents(IfgListMixin, luigi.Task):
     Class used to gather analysis extents used during Luigi tasks
     """
     crop_opt = luigi.IntParameter(config_path=InputParam(cf.IFG_CROP_OPT))
-    ifgx_first = luigi.FloatParameter(default=None,
-                                      config_path=InputParam(cf.IFG_XFIRST))
-    ifgy_first = luigi.FloatParameter(default=None,
-                                      config_path=InputParam(cf.IFG_YFIRST))
-    ifgx_last = luigi.FloatParameter(default=None,
-                                     config_path=InputParam(cf.IFG_XLAST))
-    ifgy_last = luigi.FloatParameter(default=None,
-                                     config_path=InputParam(cf.IFG_YLAST))
+    ifgx_first = luigi.FloatParameter(default=None, config_path=InputParam(cf.IFG_XFIRST))
+    ifgy_first = luigi.FloatParameter(default=None, config_path=InputParam(cf.IFG_YFIRST))
+    ifgx_last = luigi.FloatParameter(default=None, config_path=InputParam(cf.IFG_XLAST))
+    ifgy_last = luigi.FloatParameter(default=None, config_path=InputParam(cf.IFG_YLAST))
     xlooks = luigi.IntParameter(config_path=InputParam(cf.IFG_LKSX))
     ylooks = luigi.IntParameter(config_path=InputParam(cf.IFG_LKSY))
 
@@ -64,12 +60,7 @@ class GetAnalysisExtents(IfgListMixin, luigi.Task):
 
         ifgs = [Ifg(path) for path in self.ifg_tiff_list()]
 
-        extents = get_analysis_extent(
-            self.crop_opt,
-            ifgs,
-            self.xlooks,
-            self.ylooks,
-            user_exts)
+        extents = get_analysis_extent(self.crop_opt, ifgs, self.xlooks, self.ylooks, user_exts)
 
         with open(self.extents_file_name, 'wb') as ext_file:
             pickle.dump(extents, ext_file)
@@ -87,8 +78,7 @@ class PrepareInterferogram(IfgListMixin, luigi.WrapperTask):
     # pylint: disable=bad-super-call, no-member
 
     ifg = RasterParam()
-    thresh = luigi.FloatParameter(config_path=InputParam(
-        cf.NO_DATA_AVERAGING_THRESHOLD))
+    thresh = luigi.FloatParameter(config_path=InputParam(cf.NO_DATA_AVERAGING_THRESHOLD))
     crop_opt = luigi.IntParameter(config_path=InputParam(cf.IFG_CROP_OPT))
     xlooks = luigi.IntParameter(config_path=InputParam(cf.IFG_LKSX))
     ylooks = luigi.IntParameter(config_path=InputParam(cf.IFG_LKSY))
@@ -100,22 +90,13 @@ class PrepareInterferogram(IfgListMixin, luigi.WrapperTask):
     def run(self):
         with open(self.extents_file_name, 'rb') as ext_file:
             extents = pickle.load(ext_file)
-        prepare_ifg(
-            self.ifg.data_path,
-            self.xlooks,
-            self.ylooks,
-            extents,
-            self.thresh,
-            self.crop_opt
-            )
+        prepare_ifg(self.ifg.data_path, self.xlooks, self.ylooks, extents, self.thresh, self.crop_opt)
         self.ifg.close()
 
     def output(self):
         if warp_required(self.xlooks, self.ylooks, self.crop_opt):
             return luigi.LocalTarget(
-                cf.mlooked_path(self.ifg.data_path,
-                                self.ylooks,
-                                self.crop_opt))
+                cf.mlooked_path(self.ifg.data_path, self.ylooks, self.crop_opt))
         else:
             return []
 
@@ -159,8 +140,7 @@ class PrepareInterferograms(IfgListMixin, luigi.WrapperTask):
         self.extents_removed = True
 
     def complete(self):
-        return self.extents_removed and \
-               super(PrepareInterferograms, self).complete()
+        return self.extents_removed and super(PrepareInterferograms, self).complete()
 
 
 class PrepifgException(Exception):

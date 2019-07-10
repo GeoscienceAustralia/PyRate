@@ -29,13 +29,11 @@ def main():
     for all data types
     """
     usage = 'Usage: gamma.py <config file>'
-    if len(sys.argv) == 1 or sys.argv[1] == '-h' \
-            or sys.argv[1] == '--help':  # pragma: no cover
+    if len(sys.argv) == 1 or sys.argv[1] == '-h' or sys.argv[1] == '--help':  # pragma: no cover
         print(usage)
         return
     raw_config_file = sys.argv[1]     # this does '~' expansion automatically
-    luigi.configuration.LuigiConfigParser.add_config_path(
-        pythonify_config(raw_config_file))
+    luigi.configuration.LuigiConfigParser.add_config_path(pythonify_config(raw_config_file))
     luigi.build([ConvertToGeotiff()], local_scheduler=True)
 
 

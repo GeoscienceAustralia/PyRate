@@ -38,7 +38,7 @@ from pyrate.config import (
     IFG_FILE_LIST,
     PROCESSOR,
     OUT_DIR,
-    LUIGI,
+    # LUIGI,
     IFG_LKSX,
     IFG_LKSY,
     IFG_CROP_OPT,
@@ -86,7 +86,7 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
             conf.write('{}: {}\n'.format(OUT_DIR, self.base_dir))
             conf.write('{}: {}\n'.format(IFG_FILE_LIST, self.ifgListFile))
             conf.write('{}: {}\n'.format(PROCESSOR, '1'))
-            conf.write('{}: {}\n'.format(LUIGI, self.LUIGI))
+            # conf.write('{}: {}\n'.format(LUIGI, self.LUIGI))
             conf.write('{}: {}\n'.format(
                 DEM_HEADER_FILE, os.path.join(
                     self.SMLNEY_GAMMA_TEST, '20060619_utm_dem.par')))
@@ -139,7 +139,7 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
             conf.write('{}: {}\n'.format(OUT_DIR, self.base_dir))
             conf.write('{}: {}\n'.format(IFG_FILE_LIST, self.ifgListFile))
             conf.write('{}: {}\n'.format(PROCESSOR, '0'))
-            conf.write('{}: {}\n'.format(LUIGI, self.luigi))
+            # conf.write('{}: {}\n'.format(LUIGI, self.luigi))
             conf.write('{}: {}\n'.format(DEM_HEADER_FILE,
                                          common.SML_TEST_DEM_HDR))
             conf.write('{}: {}\n'.format(IFG_LKSX, '1'))
