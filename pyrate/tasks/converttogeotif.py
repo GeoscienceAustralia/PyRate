@@ -16,27 +16,27 @@
 """
 This Python module is a Luigi wrapper for converting input data to geotiff.
 """
-import luigi
+# import luigi
 import pyrate.config as config
 from pyrate.tasks.utils import InputParam
-from pyrate.tasks.roipac import ConvertToGeotiff as ConvertToGeotiffRoipac
-from pyrate.tasks.gamma import ConvertToGeotiff as ConvertToGeotiffGamma
+# from pyrate.tasks.roipac import ConvertToGeotiff as ConvertToGeotiffRoipac
+# from pyrate.tasks.gamma import ConvertToGeotiff as ConvertToGeotiffGamma
 
 ROIPAC_PROCESSOR = 0
 GAMMA_PROCESSOR = 1
 
 
-class ConvertToGeotiff(luigi.WrapperTask):
-    """
-    Luigi wrapper class for both ROI_PAC and GAMMA geotiff conversion
-    """
-    processor = luigi.IntParameter(config_path=InputParam(config.PROCESSOR))
-
-    def requires(self):
-        if self.processor == int(ROIPAC_PROCESSOR):
-            return [ConvertToGeotiffRoipac()]
-        elif self.processor == int(GAMMA_PROCESSOR):
-            return [ConvertToGeotiffGamma()]
-        else:
-            raise luigi.parameter.ParameterException(
-                'invalid value for parameter {}'.format(config.PROCESSOR))
+# class ConvertToGeotiff(luigi.WrapperTask):
+#     """
+#     Luigi wrapper class for both ROI_PAC and GAMMA geotiff conversion
+#     """
+#     processor = luigi.IntParameter(config_path=InputParam(config.PROCESSOR))
+#
+#     def requires(self):
+#         if self.processor == int(ROIPAC_PROCESSOR):
+#             return [ConvertToGeotiffRoipac()]
+#         elif self.processor == int(GAMMA_PROCESSOR):
+#             return [ConvertToGeotiffGamma()]
+#         else:
+#             raise luigi.parameter.ParameterException(
+#                 'invalid value for parameter {}'.format(config.PROCESSOR))

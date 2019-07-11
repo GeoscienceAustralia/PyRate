@@ -51,7 +51,7 @@ from pyrate.config import (
     APS_ELEVATION_MAP
     )
 from pyrate.scripts import run_prepifg
-from pyrate.scripts.converttogtif import main as roipacMain
+# from pyrate.scripts.converttogtif import main as roipacMain
 from pyrate.shared import GeotiffException
 from pyrate.shared import write_geotiff
 from tests.common import HEADERS_TEST_DIR, PREP_TEST_OBS, PREP_TEST_TIF
@@ -105,26 +105,28 @@ class RoipacCommandLine(unittest.TestCase):
         with open(self.ifgListFile, 'w') as ifgl:
             ifgl.write('\n'.join(data))
 
-    def test_cmd_ifg(self):
-        base_paths = ['geo_070709-070813.unw', 'geo_060619-061002.unw']
-        base_exp = ['geo_070709-070813_unw.tif', 'geo_060619-061002_unw.tif']
-        self.dataPaths = [join(SML_TEST_OBS, i) for i in base_paths]
-        self.expPaths = [join(self.base_dir, i) for i in base_exp]
-        self.common_check()
+    # def test_cmd_ifg(self):
+    #     base_paths = ['geo_070709-070813.unw', 'geo_060619-061002.unw']
+    #     base_exp = ['geo_070709-070813_unw.tif', 'geo_060619-061002_unw.tif']
+    #     self.dataPaths = [join(SML_TEST_OBS, i) for i in base_paths]
+    #     self.expPaths = [join(self.base_dir, i) for i in base_exp]
+    #     self.common_check()
 
-    def test_cmd_dem(self):
-        self.expPaths = [os.path.join(self.base_dir, 
-                                      'roipac_test_trimmed_dem.tif')]
-        self.dataPaths = [SML_TEST_DEM_ROIPAC]
-        self.common_check()
+    # def test_cmd_dem(self):
+    #     self.expPaths = [os.path.join(self.base_dir,
+    #                                   'roipac_test_trimmed_dem.tif')]
+    #     self.dataPaths = [SML_TEST_DEM_ROIPAC]
+    # calling legacy luigi method
+    #     self.common_check()
 
-    def common_check(self):
-        self.makeInputFiles(self.dataPaths, 'WGS84')
-        sys.argv = ['roipac.py', self.confFile]
-        roipacMain()
-        for path in self.expPaths:
-            self.assertTrue(os.path.exists(path),
-                            '{} does not exist'.format(path))
+    # def common_check(self):
+    #     self.makeInputFiles(self.dataPaths, 'WGS84')
+    #     sys.argv = ['roipac.py', self.confFile]
+    # calling legacy luigi method
+    #     roipacMain()
+    #     for path in self.expPaths:
+    #         self.assertTrue(os.path.exists(path),
+    #                         '{} does not exist'.format(path))
 
 
 class RoipacToGeoTiffTests(unittest.TestCase):
