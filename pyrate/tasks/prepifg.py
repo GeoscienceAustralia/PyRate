@@ -18,7 +18,7 @@ This Python module is a Luigi wrapper for the prepifg module.
 """
 import os
 import pickle
-import luigi
+# import luigi
 
 import pyrate.config as cf
 from pyrate.prepifg import (

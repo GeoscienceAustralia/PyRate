@@ -19,7 +19,7 @@ This Python module contains utilities for prepifg Luigi tasks.
 import os
 import pickle
 from io import StringIO, BytesIO
-import luigi
+# import luigi
 
 from pyrate import config
 from pyrate.config import (OBS_DIR,

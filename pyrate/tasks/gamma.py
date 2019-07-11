@@ -21,7 +21,7 @@ import os
 from os.path import join
 import re
 import glob2
-import luigi
+# import luigi
 from pyrate import config
 from pyrate.gamma import manage_headers
 from pyrate.shared import write_geotiff, output_tiff_filename

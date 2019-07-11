@@ -85,7 +85,7 @@ setup(
         'pyproj==1.9.5.1',
         'networkx==2.3',
         'Pillow==6.1.0',
-        'luigi==1.3.0',
+        # 'luigi==1.3.0',
         'joblib==0.13.2',
         'glob2==0.7'
     ],

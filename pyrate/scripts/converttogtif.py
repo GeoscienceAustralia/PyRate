@@ -18,7 +18,7 @@ This Python module uses Luigi to convert interferograms to geotiff format
 """
 from __future__ import print_function
 import sys
-import luigi
+# import luigi
 from pyrate.tasks.utils import pythonify_config
 from pyrate.tasks import ConvertToGeotiff
 

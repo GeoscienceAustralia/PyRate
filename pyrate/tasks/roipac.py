@@ -16,7 +16,7 @@
 """
 This Python module is a Luigi wrapper for converting ROI_PAC format input data.
 """
-import luigi
+# import luigi
 import pyrate.config as config
 from pyrate.roipac import manage_header, ROI_PAC_HEADER_FILE_EXT, parse_header
 from pyrate import ifgconstants as ifc

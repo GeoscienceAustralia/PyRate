@@ -16,7 +16,7 @@
 """
 This Python module is a Luigi wrapper for converting input data to geotiff.
 """
-import luigi
+# import luigi
 import pyrate.config as config
 from pyrate.tasks.utils import InputParam
 from pyrate.tasks.roipac import ConvertToGeotiff as ConvertToGeotiffRoipac
