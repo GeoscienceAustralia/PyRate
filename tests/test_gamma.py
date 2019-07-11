@@ -52,7 +52,7 @@ from pyrate.config import (
     APS_INCIDENCE_MAP,
     APS_ELEVATION_MAP)
 from pyrate.scripts import run_prepifg
-from pyrate.scripts.converttogtif import main as gammaMain
+# from pyrate.scripts.converttogtif import main as gammaMain
 from pyrate.shared import write_geotiff, GeotiffException
 from tests import common
 from tests.common import GAMMA_TEST_DIR, SML_TEST_GAMMA
@@ -67,14 +67,11 @@ LIGHTSPEED = 3e8  # approx
 class GammaCommandLineTests(unittest.TestCase):
 
     def setUp(self):
-        self.base = join(PYRATEPATH,
-                         'tests', 'test_data', 'gamma')
+        self.base = join(PYRATEPATH,'tests', 'test_data', 'gamma')
         self.hdr = join(self.base, 'dem16x20raw.dem.par')
         temp_text = tempfile.mktemp()
-        self.confFile = os.path.join(TEMPDIR,
-                                     '{}/gamma_test.cfg'.format(temp_text))
-        self.ifgListFile = os.path.join(
-            TEMPDIR, '{}/gamma_ifg.list'.format(temp_text))
+        self.confFile = os.path.join(TEMPDIR,'{}/gamma_test.cfg'.format(temp_text))
+        self.ifgListFile = os.path.join(TEMPDIR, '{}/gamma_ifg.list'.format(temp_text))
         self.base_dir = os.path.dirname(self.confFile)
         shared.mkdir_p(self.base_dir)
 
@@ -97,22 +94,22 @@ class GammaCommandLineTests(unittest.TestCase):
         with open(self.ifgListFile, 'w') as ifgl:
             ifgl.write(data)
 
-    def test_cmd_ifg(self):
-        data = join(self.base, '16x20_20090713-20090817_VV_4rlks_utm.unw')
-        self.exp_path = os.path.join(
-            self.base_dir, '16x20_20090713-20090817_VV_4rlks_utm_unw.tif')
-        self.common_check(data)
+    # def test_cmd_ifg(self):
+    #     data = join(self.base, '16x20_20090713-20090817_VV_4rlks_utm.unw')
+    #     self.exp_path = os.path.join(self.base_dir, '16x20_20090713-20090817_VV_4rlks_utm_unw.tif')
+    #     self.common_check(data)
 
-    def test_cmd_dem(self):
-        data = join(self.base, 'dem16x20raw.dem')
-        self.exp_path = os.path.join(self.base_dir, 'dem16x20raw_dem.tif')
-        self.common_check(data)
+    # def test_cmd_dem(self):
+    #     data = join(self.base, 'dem16x20raw.dem')
+    #     self.exp_path = os.path.join(self.base_dir, 'dem16x20raw_dem.tif')
+    #     self.common_check(data)
 
-    def common_check(self, data):
-        self.makeInputFiles(data)
-        sys.argv = ['gamma.py', self.confFile]
-        gammaMain()
-        self.assertTrue(os.path.exists(self.exp_path))
+    # def common_check(self, data):
+    #     self.makeInputFiles(data)
+    #     sys.argv = ['gamma.py', self.confFile]
+    #     # this calls legacy luigi method
+    #     gammaMain()
+    #     self.assertTrue(os.path.exists(self.exp_path))
 
 
 class GammaToGeoTiffTests(unittest.TestCase):
@@ -183,20 +180,16 @@ class GammaToGeoTiffTests(unittest.TestCase):
     def test_to_geotiff_wrong_input_data(self):
         # use TIF, not UNW for data
         self.dest = os.path.join(TEMPDIR, 'tmp_gamma_ifg.tif')
-        data_path = join(GAMMA_TEST_DIR,
-                         '16x20_20090713-20090817_VV_4rlks_utm.tif')
-        self.assertRaises(GeotiffException, write_geotiff,
-                            self.COMBINED, data_path, self.dest, nodata=0)
+        data_path = join(GAMMA_TEST_DIR,'16x20_20090713-20090817_VV_4rlks_utm.tif')
+        self.assertRaises(GeotiffException, write_geotiff, self.COMBINED, data_path, self.dest, nodata=0)
 
     def test_mismatching_cell_resolution(self):
         hdrs = self.DEM_HDR.copy()
         hdrs[ifc.PYRATE_X_STEP] = 0.1  # fake a mismatch
-        data_path = join(GAMMA_TEST_DIR,
-                         '16x20_20090713-20090817_VV_4rlks_utm.unw')
+        data_path = join(GAMMA_TEST_DIR, '16x20_20090713-20090817_VV_4rlks_utm.unw')
         self.dest = os.path.join(TEMPDIR, 'fake')
 
-        self.assertRaises(GeotiffException, write_geotiff, hdrs,
-                            data_path, self.dest, 0)
+        self.assertRaises(GeotiffException, write_geotiff, hdrs, data_path, self.dest, 0)
 
     def compare_rasters(self, ds, exp_ds):
         band = ds.GetRasterBand(1)
@@ -217,8 +210,7 @@ class GammaToGeoTiffTests(unittest.TestCase):
         hdr[ifc.PYRATE_DATUM] = 'nonexistent projection'
         data_path = join(GAMMA_TEST_DIR, 'dem16x20raw.dem')
         self.dest = os.path.join(TEMPDIR, 'tmp_gamma_dem2.tif')
-        self.assertRaises(GeotiffException, write_geotiff, hdr,
-                            data_path, self.dest, nodata=0)
+        self.assertRaises(GeotiffException, write_geotiff, hdr, data_path, self.dest, nodata=0)
 
 
 class GammaHeaderParsingTests(unittest.TestCase):
@@ -330,22 +322,10 @@ class TestGammaLuigiEquality(unittest.TestCase):
 
         luigi_dir = tempfile.mktemp()
         non_luigi_dir = tempfile.mkdtemp()
-        cls.luigi_confFile = os.path.join(
-            TEMPDIR,
-            '{}/gamma_test.conf'.format(luigi_dir)
-        )
-        cls.luigi_ifgListFile = os.path.join(
-            TEMPDIR,
-            '{}/gamma_ifg.list'.format(luigi_dir)
-        )
-        cls.non_luigi_confFile = os.path.join(
-            TEMPDIR,
-            '{}/gamma_test.conf'.format(non_luigi_dir)
-        )
-        cls.non_luigi_ifgListFile = os.path.join(
-            TEMPDIR,
-            '{}/gamma_ifg.list'.format(non_luigi_dir)
-        )
+        cls.luigi_confFile = os.path.join(TEMPDIR, '{}/gamma_test.conf'.format(luigi_dir))
+        cls.luigi_ifgListFile = os.path.join(TEMPDIR, '{}/gamma_ifg.list'.format(luigi_dir))
+        cls.non_luigi_confFile = os.path.join(TEMPDIR, '{}/gamma_test.conf'.format(non_luigi_dir))
+        cls.non_luigi_ifgListFile = os.path.join(TEMPDIR, '{}/gamma_ifg.list'.format(non_luigi_dir))
 
         cls.luigi_base_dir = os.path.dirname(cls.luigi_confFile)
         cls.non_luigi_base_dir = os.path.dirname(cls.non_luigi_confFile)
@@ -357,14 +337,12 @@ class TestGammaLuigiEquality(unittest.TestCase):
         try:
             shutil.rmtree(cls.luigi_base_dir)
         except OSError:
-            print('Failed to remove temp directory: %s'
-                  % cls.luigi_base_dir)
+            print('Failed to remove temp directory: %s' % cls.luigi_base_dir)
 
         try:
             shutil.rmtree(cls.non_luigi_base_dir)
         except OSError:
-            print('Failed to remove temp directory: %s' %
-                  cls.non_luigi_base_dir)
+            print('Failed to remove temp directory: %s' % cls.non_luigi_base_dir)
 
     def make_input_files(self, data):
         with open(self.conf_file, 'w') as conf:
@@ -374,17 +352,14 @@ class TestGammaLuigiEquality(unittest.TestCase):
             conf.write('{}: {}\n'.format(IFG_FILE_LIST, self.ifgListFile))
             conf.write('{}: {}\n'.format(PROCESSOR, '1'))
             # conf.write('{}: {}\n'.format(LUIGI, self.LUIGI))
-            conf.write('{}: {}\n'.format(
-                DEM_HEADER_FILE, os.path.join(
-                    SML_TEST_GAMMA, '20060619_utm_dem.par')))
+            conf.write('{}: {}\n'.format(DEM_HEADER_FILE, os.path.join(SML_TEST_GAMMA, '20060619_utm_dem.par')))
             conf.write('{}: {}\n'.format(IFG_LKSX, '1'))
             conf.write('{}: {}\n'.format(IFG_LKSY, '1'))
             conf.write('{}: {}\n'.format(IFG_CROP_OPT, '1'))
             conf.write('{}: {}\n'.format(NO_DATA_AVERAGING_THRESHOLD, '0.5'))
             conf.write('{}: {}\n'.format(SLC_DIR, ''))
             conf.write('{}: {}\n'.format(DEM_FILE, common.SML_TEST_DEM_GAMMA))
-            conf.write('{}: {}\n'.format(APS_INCIDENCE_MAP,
-                                         common.SML_TEST_INCIDENCE))
+            conf.write('{}: {}\n'.format(APS_INCIDENCE_MAP, common.SML_TEST_INCIDENCE))
             conf.write('{}: {}\n'.format(APS_ELEVATION_MAP, ''))
         with open(self.ifgListFile, 'w') as ifgl:
             ifgl.write('\n'.join(data))
@@ -411,18 +386,14 @@ class TestGammaLuigiEquality(unittest.TestCase):
         self.make_input_files(data_paths)
 
         base_ifg_paths, dest_paths, params = cf.get_ifg_paths(conf_file)
-        dest_base_ifgs = [os.path.join(
-            params[cf.OUT_DIR], os.path.basename(q).split('.')[0] + '_' +
-            os.path.basename(q).split('.')[1] + '.tif')
-            for q in base_ifg_paths]
+        dest_base_ifgs = [os.path.join(params[cf.OUT_DIR], os.path.basename(q).split('.')[0] + '_' +
+            os.path.basename(q).split('.')[1] + '.tif') for q in base_ifg_paths]
         sys.argv = ['pyrate', 'prepifg', conf_file]
         run_prepifg.main()
 
         for p, q in zip(dest_base_ifgs, dest_paths):
-            self.assertTrue(os.path.exists(p),
-                            '{} does not exist'.format(p))
-            self.assertTrue(os.path.exists(q),
-                            '{} does not exist'.format(q))
+            self.assertTrue(os.path.exists(p), '{} does not exist'.format(p))
+            self.assertTrue(os.path.exists(q), '{} does not exist'.format(q))
 
     # def test_luigi_vs_no_luigi_phase_data(self):
     #     all_luigi_ifgs, all_non_luigi_ifgs = self.shared_setup()

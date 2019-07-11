@@ -25,26 +25,27 @@ import glob2
 from pyrate import config
 from pyrate.gamma import manage_headers
 from pyrate.shared import write_geotiff, output_tiff_filename
-from pyrate.tasks.utils import IfgListMixin, InputParam
+from pyrate.tasks.utils import InputParam
+# from pyrate.tasks.utils import IfgListMixin
 
 PTN = re.compile(r'\d{8}')  # match 8 digits for the dates
 
 
-class GammaHasRun(luigi.task.ExternalTask):
-    """
-    Phantom task used to ensure that the required outputs from GAMMA exist.
-    """
-    fileName = luigi.Parameter()
-    masterHeader = luigi.Parameter(default=None)
-    slaveHeader = luigi.Parameter(default=None)
-
-    def output(self):
-        targets = [luigi.LocalTarget(self.fileName)]
-        if self.masterHeader is not None:
-            targets.append(luigi.LocalTarget(self.masterHeader))
-        if self.slaveHeader is not None:
-            targets.append(luigi.LocalTarget(self.slaveHeader))
-        return targets
+# class GammaHasRun(luigi.task.ExternalTask):
+#     """
+#     Phantom task used to ensure that the required outputs from GAMMA exist.
+#     """
+#     fileName = luigi.Parameter()
+#     masterHeader = luigi.Parameter(default=None)
+#     slaveHeader = luigi.Parameter(default=None)
+#
+#     def output(self):
+#         targets = [luigi.LocalTarget(self.fileName)]
+#         if self.masterHeader is not None:
+#             targets.append(luigi.LocalTarget(self.masterHeader))
+#         if self.slaveHeader is not None:
+#             targets.append(luigi.LocalTarget(self.slaveHeader))
+#         return targets
 
 
 def get_header_paths(input_file, slc_dir=None):
@@ -67,53 +68,53 @@ def get_header_paths(input_file, slc_dir=None):
             for m in matches]
 
 
-class ConvertFileToGeotiff(luigi.Task):
-    """
-    Task responsible for converting a GAMMA file to GeoTiff.
-    """
-    input_file = luigi.Parameter()
-    demHeaderFile = luigi.Parameter(
-        config_path=InputParam(config.DEM_HEADER_FILE))
-    out_dir = luigi.Parameter(config_path=InputParam(config.OUT_DIR))
-    no_data_value = luigi.FloatParameter(
-        config_path=InputParam(config.NO_DATA_VALUE))
-    slc_dir = luigi.Parameter(config_path=InputParam(config.SLC_DIR))
+# class ConvertFileToGeotiff(luigi.Task):
+#     """
+#     Task responsible for converting a GAMMA file to GeoTiff.
+#     """
+#     input_file = luigi.Parameter()
+#     demHeaderFile = luigi.Parameter(
+#         config_path=InputParam(config.DEM_HEADER_FILE))
+#     out_dir = luigi.Parameter(config_path=InputParam(config.OUT_DIR))
+#     no_data_value = luigi.FloatParameter(
+#         config_path=InputParam(config.NO_DATA_VALUE))
+#     slc_dir = luigi.Parameter(config_path=InputParam(config.SLC_DIR))
+#
+#     def requires(self):
+#         """
+#         Overload of :py:meth:`luigi.Task.requires`. Ensures that the required
+#         input exists.
+#         """
+#         self.header_paths = get_header_paths(self.input_file, self.slc_dir)
+#
+#         if len(self.header_paths) == 2:
+#             tasks = [GammaHasRun(
+#                 fileName=self.input_file,
+#                 masterHeader=self.header_paths[0],
+#                 slaveHeader=self.header_paths[1])]
+#         else:
+#             tasks = [GammaHasRun(fileName=self.input_file)]
+#
+#         return tasks
+#
+#     def output(self):
+#         """
+#         Overload of :py:meth:`luigi.Task.output`.
+#         """
+#         self.out_file = output_tiff_filename(self.input_file, self.out_dir)
+#         return [luigi.LocalTarget(self.out_file)]
+#
+#     def run(self):
+#         """
+#         Overload of :py:meth:`luigi.Task.run`.
+#         """
+#         combined_header = manage_headers(self.demHeaderFile, self.header_paths)
+#         write_geotiff(combined_header, self.input_file,
+#                       self.out_file, self.no_data_value)
 
-    def requires(self):
-        """
-        Overload of :py:meth:`luigi.Task.requires`. Ensures that the required
-        input exists.
-        """
-        self.header_paths = get_header_paths(self.input_file, self.slc_dir)
 
-        if len(self.header_paths) == 2:
-            tasks = [GammaHasRun(
-                fileName=self.input_file,
-                masterHeader=self.header_paths[0],
-                slaveHeader=self.header_paths[1])]
-        else:
-            tasks = [GammaHasRun(fileName=self.input_file)]
-
-        return tasks
-
-    def output(self):
-        """
-        Overload of :py:meth:`luigi.Task.output`.
-        """
-        self.out_file = output_tiff_filename(self.input_file, self.out_dir)
-        return [luigi.LocalTarget(self.out_file)]
-
-    def run(self):
-        """
-        Overload of :py:meth:`luigi.Task.run`.
-        """
-        combined_header = manage_headers(self.demHeaderFile, self.header_paths)
-        write_geotiff(combined_header, self.input_file,
-                      self.out_file, self.no_data_value)
-
-
-class ConvertToGeotiff(IfgListMixin, luigi.WrapperTask):
-    """ Wrapper class for GAMMA conversion to geotiff"""
-    def requires(self):
-        return [ConvertFileToGeotiff(input_file=fn)
-                for fn in self.ifg_list(tif=False)]
+# class ConvertToGeotiff(IfgListMixin, luigi.WrapperTask):
+#     """ Wrapper class for GAMMA conversion to geotiff"""
+#     def requires(self):
+#         return [ConvertFileToGeotiff(input_file=fn)
+#                 for fn in self.ifg_list(tif=False)]

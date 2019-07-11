@@ -20,7 +20,7 @@ from __future__ import print_function
 import sys
 # import luigi
 from pyrate.tasks.utils import pythonify_config
-from pyrate.tasks import ConvertToGeotiff
+# from pyrate.tasks import ConvertToGeotiff
 
 
 def main():
@@ -33,8 +33,8 @@ def main():
         print(usage)
         return
     raw_config_file = sys.argv[1]     # this does '~' expansion automatically
-    luigi.configuration.LuigiConfigParser.add_config_path(pythonify_config(raw_config_file))
-    luigi.build([ConvertToGeotiff()], local_scheduler=True)
+    # luigi.configuration.LuigiConfigParser.add_config_path(pythonify_config(raw_config_file))
+    # luigi.build([ConvertToGeotiff()], local_scheduler=True)
 
 
 if __name__ == "__main__":
