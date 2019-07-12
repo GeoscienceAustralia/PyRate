@@ -495,12 +495,9 @@ def _timeseries_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
     for t in process_tiles:
         log.info('Calculating time series for tile {}'.format(t.index))
         ifg_parts = [shared.IfgPart(p, t, preread_ifgs) for p in ifg_paths]
-        mst_tile = np.load(os.path.join(output_dir,
-                                        'mst_mat_{}.npy'.format(t.index)))
+        mst_tile = np.load(os.path.join(output_dir, 'mst_mat_{}.npy'.format(t.index)))
         res = timeseries.time_series(ifg_parts, params, vcmt, mst_tile)
         tsincr, tscum, _ = res
-        np.save(file=os.path.join(output_dir, 'tsincr_{}.npy'.format(t.index)),
-                arr=tsincr)
-        np.save(file=os.path.join(output_dir, 'tscuml_{}.npy'.format(t.index)),
-                arr=tscum)
+        np.save(file=os.path.join(output_dir, 'tsincr_{}.npy'.format(t.index)), arr=tsincr)
+        np.save(file=os.path.join(output_dir, 'tscuml_{}.npy'.format(t.index)), arr=tscum)
     mpiops.comm.barrier()
