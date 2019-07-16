@@ -63,7 +63,7 @@ setup(
     author='Geoscience Australia InSAR team',
     author_email='insar@ga.gov.au',
     url='https://github.com/GeoscienceAustralia/PyRate',
-    packages=['pyrate', 'pyrate.scripts', 'pyrate.tasks'],
+    packages=['pyrate', 'pyrate.scripts'],
     package_dir={'PyRate': 'pyrate'},
     include_package_data=True,
     entry_points={

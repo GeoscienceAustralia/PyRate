@@ -131,13 +131,11 @@ def _save_cvd_data(acg, r_dist, ifg_path, outdir):
     Function to save numpy array of autocorrelation data to disk
     """
     data = np.column_stack((acg, r_dist))
-    data_file = join(outdir, 'cvd_data_{b}.npy'.format(
-        b=basename(ifg_path).split('.')[0]))
+    data_file = join(outdir, 'cvd_data_{b}.npy'.format(b=basename(ifg_path).split('.')[0]))
     np.save(file=data_file, arr=data)
 
 
-def cvd_from_phase(phase, ifg, r_dist, calc_alpha, save_acg=False,
-                   params=None):
+def cvd_from_phase(phase, ifg, r_dist, calc_alpha, save_acg=False, params=None):
     """
     A convenience function used to compute radial autocovariance from phase
     data

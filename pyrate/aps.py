@@ -52,8 +52,7 @@ def _wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs):
 
     # perform some checks on existing ifgs
     log.info('Checking APS correction status')
-    if mpiops.run_once(shared.check_correction_status, preread_ifgs,
-                       ifc.PYRATE_APS_ERROR):
+    if mpiops.run_once(shared.check_correction_status, preread_ifgs, ifc.PYRATE_APS_ERROR):
         log.info('Finished APS correction')
         return  # return if True condition returned
 
@@ -82,8 +81,7 @@ def spatio_temporal_filter(tsincr, ifg, params, preread_ifgs):
     :return: None, corrected interferograms are saved to disk
     """
     epochlist = mpiops.run_once(get_epochs, preread_ifgs)[0]
-    ts_lp = mpiops.run_once(temporal_low_pass_filter, tsincr, epochlist,
-                            params)
+    ts_lp = mpiops.run_once(temporal_low_pass_filter, tsincr, epochlist, params)
     ts_hp = tsincr - ts_lp
     ts_aps = mpiops.run_once(spatial_low_pass_filter, ts_hp, ifg, params)
     tsincr -= ts_aps
@@ -111,17 +109,14 @@ def _calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles):
         log.info('Calculating time series for tile {} during aps '
                  'correction'.format(t.index))
         ifg_parts = [shared.IfgPart(p, t, preread_ifgs) for p in ifg_paths]
-        mst_tile = np.load(os.path.join(output_dir,
-                                        'mst_mat_{}.npy'.format(t.index)))
+        mst_tile = np.load(os.path.join(output_dir, 'mst_mat_{}.npy'.format(t.index)))
         tsincr = time_series(ifg_parts, new_params, vcmt=None, mst=mst_tile)[0]
-        np.save(file=os.path.join(output_dir, 'tsincr_aps_{}.npy'.format(
-            t.index)), arr=tsincr)
+        np.save(file=os.path.join(output_dir, 'tsincr_aps_{}.npy'.format(t.index)), arr=tsincr)
         nvels = tsincr.shape[2]
 
     nvels = mpiops.comm.bcast(nvels, root=0)
     # need to assemble tsincr from all processes
-    tsincr_g = mpiops.run_once(_assemble_tsincr, ifg_paths, params,
-                               preread_ifgs, tiles, nvels)
+    tsincr_g = mpiops.run_once(_assemble_tsincr, ifg_paths, params, preread_ifgs, tiles, nvels)
     log.info('Finished calculating time series for spatio-temporal filter')
     return tsincr_g
 
@@ -134,8 +129,8 @@ def _assemble_tsincr(ifg_paths, params, preread_ifgs, tiles, nvels):
     tsincr_g = np.empty(shape=shape, dtype=np.float32)
     for i in range(nvels):
         for n, t in enumerate(tiles):
-            _assemble_tiles(i, n, t, tsincr_g[:, :, i], params[cf.TMPDIR],
-                            'tsincr_aps')
+            _assemble_tiles(i, n, t, tsincr_g[:, :, i], params[cf.TMPDIR], 'tsincr_aps')
+
     return tsincr_g
 
 
@@ -167,8 +162,7 @@ def _save_aps_corrected_phase(ifg_path, phase):
     """
     ifg = Ifg(ifg_path)
     ifg.open(readonly=False)
-    ifg.phase_data[~np.isnan(ifg.phase_data)] = \
-        phase[~np.isnan(ifg.phase_data)]
+    ifg.phase_data[~np.isnan(ifg.phase_data)] = phase[~np.isnan(ifg.phase_data)]
     # set aps tags after aps error correction
     ifg.dataset.SetMetadataItem(ifc.PYRATE_APS_ERROR, ifc.APS_REMOVED)
     ifg.write_modified_phase()
@@ -193,7 +187,8 @@ def spatial_low_pass_filter(ts_lp, ifg, params):
     log.info('Applying spatial low pass filter')
     if params[cf.SLPF_NANFILL] == 0:
         ts_lp[np.isnan(ts_lp)] = 0  # need it here for cvd and fft
-    else:  # optionally interpolate, operation is inplace
+    else:
+        # optionally interpolate, operation is inplace
         _interpolate_nans(ts_lp, params[cf.SLPF_NANFILL_METHOD])
     r_dist = RDist(ifg)()
     for i in range(ts_lp.shape[2]):
