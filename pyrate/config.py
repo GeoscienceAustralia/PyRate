@@ -300,10 +300,7 @@ def get_config_params(path):
 
     params = _parse_conf_file(txt)
     params[TMPDIR] = os.path.join(os.path.abspath(params[OUT_DIR]), 'tmpdir')
-    # if mpiops.size > 1 and params[LUIGI] == 1:
-    #     raise ConfigException('LUIGI with MPI not supported. Please '
-    #                           'turn off LUIGI in config file or '
-    #                           'use LUIGI without MPI')
+
     return params
 
 
@@ -356,8 +353,7 @@ def _handle_extra_parameters(params):
 
     # define APS_ELEVATON_EXT for gamma prepifg
     if params[APS_ELEVATION_MAP] is not None:
-        params[APS_ELEVATION_EXT] = \
-            os.path.basename(params[APS_ELEVATION_MAP]).split('.')[-1]
+        params[APS_ELEVATION_EXT] = os.path.basename(params[APS_ELEVATION_MAP]).split('.')[-1]
 
     return params
 

@@ -38,7 +38,7 @@ from pyrate.shared import Ifg, DEM
 from pyrate.prepifg import CUSTOM_CROP, MAXIMUM_CROP, MINIMUM_CROP, \
     ALREADY_SAME_SIZE
 from pyrate.prepifg import prepare_ifgs, _resample, PreprocessError, CustomExts
-from pyrate.tasks.utils import DUMMY_SECTION_NAME
+# from pyrate.tasks.utils import DUMMY_SECTION_NAME
 from pyrate.config import (
     DEM_HEADER_FILE,
     NO_DATA_VALUE,
@@ -64,6 +64,7 @@ from tests.common import SML_TEST_DEM_TIF
 from tests import common
 
 gdal.UseExceptions()
+DUMMY_SECTION_NAME = 'pyrate'
 
 if not exists(PREP_TEST_TIF):
     sys.exit("ERROR: Missing 'prepifg' dir for unittests\n")

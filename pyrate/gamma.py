@@ -17,8 +17,6 @@
 This Python module contains tools for reading GAMMA format input data.
 """
 # coding: utf-8
-
-#import os
 from datetime import date, time, timedelta
 import numpy as np
 import pyrate.ifgconstants as ifc
@@ -114,8 +112,7 @@ def parse_dem_header(path):
     lookup = _parse_header(path)
 
     # NB: many lookup fields have multiple elements, eg ['1000', 'Hz']
-    subset = {ifc.PYRATE_NCOLS: int(lookup[GAMMA_WIDTH][0]),
-              ifc.PYRATE_NROWS: int(lookup[GAMMA_NROWS][0])}
+    subset = {ifc.PYRATE_NCOLS: int(lookup[GAMMA_WIDTH][0]), ifc.PYRATE_NROWS: int(lookup[GAMMA_NROWS][0])}
 
     expected = ['decimal', 'degrees']
     for k in [GAMMA_CORNER_LAT, GAMMA_CORNER_LONG, GAMMA_X_STEP, GAMMA_Y_STEP]:
@@ -172,9 +169,7 @@ def combine_headers(hdr0, hdr1, dem_hdr):
     # set incidence angle to mean of master and slave
     inc_ang = hdr0[ifc.PYRATE_INCIDENCE_DEGREES]
     if np.isclose(inc_ang, hdr1[ifc.PYRATE_INCIDENCE_DEGREES], atol=1e-1):
-        chdr[ifc.PYRATE_INCIDENCE_DEGREES] = \
-            (hdr0[ifc.PYRATE_INCIDENCE_DEGREES] +
-             hdr1[ifc.PYRATE_INCIDENCE_DEGREES]) / 2
+        chdr[ifc.PYRATE_INCIDENCE_DEGREES] = (hdr0[ifc.PYRATE_INCIDENCE_DEGREES]+hdr1[ifc.PYRATE_INCIDENCE_DEGREES])/2
     else:
         msg = "Incidence angles differ by more than 1e-1"
         raise GammaException(msg)

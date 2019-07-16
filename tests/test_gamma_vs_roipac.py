@@ -38,7 +38,6 @@ from pyrate.config import (
     IFG_FILE_LIST,
     PROCESSOR,
     OUT_DIR,
-    # LUIGI,
     IFG_LKSX,
     IFG_LKSY,
     IFG_CROP_OPT,

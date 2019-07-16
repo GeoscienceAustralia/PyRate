@@ -43,9 +43,9 @@ from pyrate.config import (
     APS_ELEVATION_MAP,
     APS_METHOD,
     APS_CORRECTION)
-from pyrate.tasks.utils import DUMMY_SECTION_NAME
+# from pyrate.tasks.utils import DUMMY_SECTION_NAME
 from tests import common
-
+DUMMY_SECTION_NAME = 'pyrate'
 
 class ConfigTest(unittest.TestCase):
 

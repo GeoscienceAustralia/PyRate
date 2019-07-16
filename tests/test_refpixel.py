@@ -28,6 +28,13 @@ from pyrate.scripts import run_pyrate
 from tests.common import TEST_CONF_ROIPAC
 from tests.common import small_data_setup, MockIfg, small_ifg_file_list
 
+
+# TODO: figure out how  editing  resource.setrlimit fixes the error
+# to fix the open to many files error
+# https://stackoverflow.com/questions/18280612/ioerror-errno-24-too-many-open-files
+import resource
+soft, hard = resource.getrlimit(resource.RLIMIT_NOFILE)
+resource.setrlimit(resource.RLIMIT_NOFILE, (hard, hard))
 # default testing values
 REFNX = 5
 REFNY = 7
@@ -245,24 +252,21 @@ class MatlabEqualityTest(unittest.TestCase):
 
     def test_more_small_test_data_ref_pixel(self):
 
-        refx, refy = run_pyrate._ref_pixel_calc(self.ifg_paths,
-                                               self.params_alt_ref_frac)
+        refx, refy = run_pyrate._ref_pixel_calc(self.ifg_paths, self.params_alt_ref_frac)
         self.assertEqual(refx, 38)
         self.assertEqual(refy, 58)
         self.assertAlmostEqual(0.5, self.params_alt_ref_frac[cf.REF_MIN_FRAC])
 
     def test_small_test_data_ref_pixel_all_2(self):
 
-        refx, refy = run_pyrate._ref_pixel_calc(self.ifg_paths,
-                                               self.params_all_2s)
+        refx, refy = run_pyrate._ref_pixel_calc(self.ifg_paths, self.params_all_2s)
         self.assertEqual(refx, 25)
         self.assertEqual(refy, 2)
         self.assertAlmostEqual(0.5, self.params_alt_ref_frac[cf.REF_MIN_FRAC])
 
     def test_small_test_data_ref_chipsize_15(self):
 
-        refx, refy = run_pyrate._ref_pixel_calc(self.ifg_paths,
-                                               self.params_chipsize_15)
+        refx, refy = run_pyrate._ref_pixel_calc(self.ifg_paths, self.params_chipsize_15)
         self.assertEqual(refx, 7)
         self.assertEqual(refy, 7)
         self.assertAlmostEqual(0.5, self.params_alt_ref_frac[cf.REF_MIN_FRAC])
@@ -310,16 +314,14 @@ class MatlabEqualityTestMultiprocessParallel(unittest.TestCase):
 
     def test_more_small_test_data_ref_pixel(self):
 
-        refx, refy = run_pyrate._ref_pixel_calc(self.ifg_paths,
-                                               self.params_alt_ref_frac)
+        refx, refy = run_pyrate._ref_pixel_calc(self.ifg_paths, self.params_alt_ref_frac)
         self.assertEqual(refx, 38)
         self.assertEqual(refy, 58)
         self.assertAlmostEqual(0.5, self.params_alt_ref_frac[cf.REF_MIN_FRAC])
 
     def test_small_test_data_ref_pixel_all_2(self):
 
-        refx, refy = run_pyrate._ref_pixel_calc(self.ifg_paths,
-                                               self.params_all_2s)
+        refx, refy = run_pyrate._ref_pixel_calc(self.ifg_paths, self.params_all_2s)
         self.assertEqual(refx, 25)
         self.assertEqual(refy, 2)
         self.assertAlmostEqual(0.5, self.params_alt_ref_frac[cf.REF_MIN_FRAC])
@@ -334,8 +336,7 @@ class MatlabEqualityTestMultiprocessParallel(unittest.TestCase):
 
     def test_small_test_data_ref_all_1(self):
 
-        refx, refy = run_pyrate._ref_pixel_calc(self.ifg_paths,
-                                               self.params_all_1s)
+        refx, refy = run_pyrate._ref_pixel_calc(self.ifg_paths, self.params_all_1s)
 
         self.assertAlmostEqual(0.7, self.params_all_1s[cf.REF_MIN_FRAC])
         self.assertEqual(1, self.params_all_1s[cf.REFNX])
