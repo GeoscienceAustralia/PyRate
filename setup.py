@@ -71,14 +71,12 @@ setup(
             'pyrate = pyrate.scripts.main:cli',
         ]
     },
-    setup_requires=[NUMPY_VERSION],  # required due to netCDF4
     install_requires=[
         'Click==7.0',
         'numpy==1.16.4',
         'Cython==0.29.11',
         'mpi4py==3.0.2',
         'scipy==1.3.0',
-        'netCDF4==1.5.1.2',
         'GDAL==' + GDAL_VERSION,
         'pyproj==1.9.5.1',
         'networkx==2.3',
