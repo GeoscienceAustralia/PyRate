@@ -78,7 +78,6 @@ setup(
         'Cython==0.29.11',
         'mpi4py==3.0.2',
         'scipy==1.3.0',
-        'PyYAML==5.1.1',
         'netCDF4==1.5.1.2',
         'GDAL==' + GDAL_VERSION,
         'pyproj==1.9.5.1',
