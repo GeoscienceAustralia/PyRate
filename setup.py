@@ -91,11 +91,11 @@ setup(
         ]
     },
     tests_require=[
-        'pytest-cov',
-        'coverage',
-        'codecov',
-        'tox',
-        'pytest'  # pytest should be last
+        'pytest-cov==2.5.1',
+        'coverage==4.5.3',
+        'codecov==2.0.15',
+        'tox==3.13.2',
+        'pytest==3.0.0'  # pytest should be last
     ],
     license="Apache Software License 2.0",
     zip_safe=False,
