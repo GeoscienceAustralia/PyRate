@@ -78,6 +78,7 @@ setup(
         'mpi4py==3.0.2',
         'scipy==1.3.0',
         'GDAL==' + GDAL_VERSION,
+        'Pillow==6.1.0',
         'pyproj==1.9.5.1',
         'networkx==2.3',
         'joblib==0.13.2',
