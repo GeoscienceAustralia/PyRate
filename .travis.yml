@@ -2,7 +2,7 @@ branches:
   only:
   - develop
   - /^release-.*$/
-  - /.*-travis-.*$/
+  - /.*-travis$/
   - master
 
 language: python
