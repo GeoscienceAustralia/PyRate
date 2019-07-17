@@ -2,6 +2,7 @@ branches:
   only:
   - develop
   - /^release-.*$/
+  - /.*$-^travis-.*$/
   - master
 
 language: python
@@ -12,36 +13,18 @@ os: linux
 
 dist: bionic # Ubuntu 18.04
 
-env:
-  global:
-    - PIP_WHEEL_DIR=$HOME/.cache/pip/wheels
-    - PIP_FIND_LINKS=file://$HOME/.cache/pip/wheels
-    - GDALINST=$HOME/gdalinstall
-    - GDALBUILD=$HOME/gdalbuild
-    - GDALVERSION="2.2.3" # Ubuntu 18.04 version
-
 before_install:
   - sudo apt-get update
   - sudo apt-get -y install gdal-bin
   - sudo apt-get -y install libgdal-dev
-  - sudo apt-get -y install libatlas-base-dev
   - sudo apt-get -y install openmpi-bin
   - sudo apt-get -y install libopenmpi-dev
-  - sudo apt-get -y install libnetcdf13
-  - sudo apt-get -y install python3-dev
   - export C_INCLUDE_PATH=$C_INCLUDE_PATH:/usr/include/gdal
   - export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:/usr/include/gdal
   - pip install -U pip
-  - pip install python-daemon==2.1.1
-  # I want to test if apt version works
-  # - . ./utils/travis_gdal_install.sh
-  # - export PATH=$GDALINST/gdal-$GDALVERSION/bin:$PATH
-  # - export LD_LIBRARY_PATH=$GDALINST/gdal-$GDALVERSION/lib:$LD_LIBRARY_PATH
   
 install:
-  - "if [ $(gdal-config --version) == \"$GDALVERSION\" ]; then echo \"Using gdal $GDALVERSION\"; else echo \"NOT using gdal $GDALVERSION as expected; aborting\"; exit 1; fi"
   - pip install -r requirements-dev.txt
-  - pip install GDAL==$(gdal-config --version)
   - python setup.py install
   - export PYRATEPATH=$(pwd)
   - export PYTHONPATH=$PYRATEPATH:$PYTHONPATH
@@ -51,10 +34,7 @@ install:
 script:
   - pytest --cov-report term-missing:skip-covered --cov=pyrate tests/
 
-cache:
-  - apt
-  - pip
-  - directories:
-    - $GDALINST
-    - $HOME/.cache/pip
-
+# cache:
+#   - apt
+#   - pip
+#   - $HOME/.cache/pip
