@@ -22,8 +22,6 @@ import sys
 python_version = sys.version_info
 __version__ = "0.2.1"
 
-NUMPY_VERSION = 'numpy==1.16.4'
-
 GDAL_VERSION = check_output(["gdal-config", "--version"]).decode(
     encoding="utf-8").split('\n')[0]
 
@@ -71,6 +69,7 @@ setup(
             'pyrate = pyrate.scripts.main:cli',
         ]
     },
+    setup_requires =['numpy==1.16.4'],
     install_requires=[
         'Click==7.0',
         'numpy==1.16.4',
