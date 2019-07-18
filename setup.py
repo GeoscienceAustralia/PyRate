@@ -20,7 +20,7 @@ from subprocess import check_output
 import sys
 
 python_version = sys.version_info
-__version__ = "0.3.0"
+__version__ = "0.2.1"
 
 # Get requirements (and dev requirements for testing) from requirements
 #  txt files. Also ensure we are using correct GDAL version.
@@ -94,20 +94,12 @@ setup(
         "License :: OSI Approved :: Apache Software License",
         "Natural Language :: English",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.3",
-        "Programming Language :: Python :: 3.4",
-        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
-        # "Programming Language :: Python :: 3.7",
-        # add additional supported python versions
         "Intended Audience :: Science/Research",
         "Intended Audience :: Developers",
         "Topic :: Software Development :: Libraries :: Python Modules",
         "Topic :: Scientific/Engineering :: Information Analysis"
-        # add more topics
     ],
     cmdclass={
         'test': PyTest,
