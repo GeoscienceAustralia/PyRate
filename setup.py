@@ -20,14 +20,23 @@ from subprocess import check_output
 import sys
 
 python_version = sys.version_info
-__version__ = "0.2.1"
+__version__ = "0.3.0"
 
+# Get requirements (and dev requirements for testing) from requirements
+#  txt files. Also ensure we are using correct GDAL version.
+with open('requirements.txt') as f:
+    requirements = f.read().splitlines()
+with open('requirements-test.txt') as f:
+    test_requirements = f.read().splitlines()
+with open('requirements-dev.txt') as f:
+    dev_requirements = f.read().splitlines()
 GDAL_VERSION = check_output(["gdal-config", "--version"]).decode(
     encoding="utf-8").split('\n')[0]
-
+requirements = [r + f'=={GDAL_VERSION}' if r == 'GDAL' 
+                else r for r in requirements]
+setup_requirements = [r for r in requirements if "numpy==" in r]
 
 class PyTest(TestCommand, object):
-
     user_options = [('pytest-args=', 'a', "Arguments to pass to py.test")]
 
     def initialize_options(self):
@@ -69,34 +78,12 @@ setup(
             'pyrate = pyrate.scripts.main:cli',
         ]
     },
-    setup_requires =['numpy==1.16.4'],
-    install_requires=[
-        'Click==7.0',
-        'numpy==1.16.4',
-        'Cython==0.29.11',
-        'mpi4py==3.0.2',
-        'scipy==1.3.0',
-        'GDAL==' + GDAL_VERSION,
-        'Pillow==6.1.0',
-        'pyproj==1.9.5.1',
-        'networkx==2.3',
-        'joblib==0.13.2',
-        'glob2==0.7'
-    ],
+    setup_requires = setup_requirements,
+    install_requires=requirements,
     extras_require={
-        'dev': [
-            'sphinx',
-            'ghp-import',
-            'sphinxcontrib-programoutput'
-        ]
+        'dev': dev_requirements
     },
-    tests_require=[
-        'pytest-cov==2.5.1',
-        'coverage==4.5.3',
-        'codecov==2.0.15',
-        'tox==3.13.2',
-        'pytest==3.0.0'  # pytest should be last
-    ],
+    tests_require=test_requirements,
     license="Apache Software License 2.0",
     zip_safe=False,
     keywords='PyRate, Python, InSAR, Geodesy, Remote Sensing, '
