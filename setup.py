@@ -22,8 +22,6 @@ import sys
 python_version = sys.version_info
 __version__ = "0.2.1"
 
-NUMPY_VERSION = 'numpy==1.16.4'
-
 GDAL_VERSION = check_output(["gdal-config", "--version"]).decode(
     encoding="utf-8").split('\n')[0]
 
@@ -71,21 +69,17 @@ setup(
             'pyrate = pyrate.scripts.main:cli',
         ]
     },
-    setup_requires=[NUMPY_VERSION],  # required due to netCDF4
+    setup_requires =['numpy==1.16.4'],
     install_requires=[
         'Click==7.0',
         'numpy==1.16.4',
         'Cython==0.29.11',
         'mpi4py==3.0.2',
         'scipy==1.3.0',
-        'PyYAML==5.1.1',
-        'netCDF4==1.5.1.2',
         'GDAL==' + GDAL_VERSION,
-        'matplotlib==3.1.1',
+        'Pillow==6.1.0',
         'pyproj==1.9.5.1',
         'networkx==2.3',
-        'Pillow==6.1.0',
-        # 'luigi==1.3.0',
         'joblib==0.13.2',
         'glob2==0.7'
     ],
@@ -97,11 +91,11 @@ setup(
         ]
     },
     tests_require=[
-        'pytest-cov',
-        'coverage',
-        'codecov',
-        'tox',
-        'pytest'  # pytest should be last
+        'pytest-cov==2.5.1',
+        'coverage==4.5.3',
+        'codecov==2.0.15',
+        'tox==3.13.2',
+        'pytest==3.0.0'  # pytest should be last
     ],
     license="Apache Software License 2.0",
     zip_safe=False,

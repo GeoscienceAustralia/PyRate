@@ -26,7 +26,6 @@ from numpy import (where, isnan, nan, diff, zeros,
 from numpy.linalg import matrix_rank, pinv, cholesky
 import numpy as np
 from scipy.linalg import qr
-import matplotlib.pyplot as plt
 from joblib import Parallel, delayed
 
 from pyrate.algorithm import master_slave_ids, get_epochs
@@ -320,35 +319,6 @@ def _solve_ts_lap(nvelpar, velflag, ifgv, mat_b, smorder, smfactor, sel, vcmt):
 
     # TODO: implement uncertainty estimates (tserror) like in Matlab Pirate code
     return tsvel
-
-
-def _plot_timeseries(tsincr, tscum, tsvel, output_dir):  # pragma: no cover
-    """
-    A very basic plotting function used in code development
-    """
-    nvelpar = len(tsincr[0, 0, :])
-    for i in range(nvelpar):
-
-        imgplot = plt.imshow(tsincr[:, :, i])
-        imgplot.set_clim(-10, 10)
-        plt.colorbar(ticks=[-10, 0, 10], orientation='horizontal')
-        plt.draw()
-        plt.savefig(output_dir + 'tsincr_' + str(i) + '.png')
-        plt.close()
-        plt.figure()
-        imgplot = plt.imshow(tscum[:, :, i])
-        imgplot.set_clim(-10, 10)
-        plt.colorbar(ticks=[-10, 0, 10], orientation='horizontal')
-        plt.draw()
-        plt.savefig(output_dir + 'tscum_' + str(i) + '.png')
-        plt.close()
-        imgplot = plt.imshow(tsvel[:, :, i])
-        imgplot.set_clim(-50, 100)
-        plt.colorbar(ticks=[-50, 50, 100], orientation='horizontal')
-        plt.draw()
-        plt.savefig(output_dir + 'tsvel_' + str(i) + '.png')
-        plt.close()
-
 
 def _missing_option_error(option):
     """
