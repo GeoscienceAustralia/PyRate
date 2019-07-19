@@ -6,7 +6,7 @@ Unreleased (2019-07-xx)
 +++++++++++++++++++++++
 Added
 -----
-* `apt-install.sh` in utils/ that lists Ubuntu/apt package requirements.
+* `apt_install.sh` in utils/ that lists Ubuntu/apt package requirements.
 * `load_modules.sh` in utils/ that sets up Raijin environment.
 
 Fixed
@@ -23,7 +23,7 @@ Removed
 Changed
 -------
 * Requirements now managed by 'requirements.txt' file, parsed by setup.py.
-* Requirements now split across base 'requirments.txt' and files for dev 
+* Requirements now split across base 'requirements.txt' and files for dev 
   ('requirements-dev.txt') and testing ('requirements-test.txt')
 * Moved default config files to top level source directory.
 * Pinned Python dependencies to specific versions.
