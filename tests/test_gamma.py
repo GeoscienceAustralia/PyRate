@@ -58,7 +58,7 @@ from tests import common
 from tests.common import GAMMA_TEST_DIR, SML_TEST_GAMMA
 from tests.common import TEST_CONF_GAMMA, TEMPDIR
 from tests.common import small_data_setup
-from constants import PYRATEPATH
+from tests.constants import PYRATEPATH
 gdal.UseExceptions()
 
 LIGHTSPEED = 3e8  # approx

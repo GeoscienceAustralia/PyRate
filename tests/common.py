@@ -35,7 +35,7 @@ from pyrate import config as cf, mst, timeseries, matlab_mst, algorithm, \
 from pyrate.shared import Ifg, nan_and_mm_convert, get_geotiff_header_info, \
     write_output_geotiff
 
-from constants import PYRATEPATH
+from tests.constants import PYRATEPATH
 
 TEMPDIR = tempfile.gettempdir()
 BASE_TEST = join(PYRATEPATH, "tests", "test_data")

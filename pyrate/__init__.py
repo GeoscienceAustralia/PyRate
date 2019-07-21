@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import pkg_resources
 
 """
 PyRate
@@ -6,5 +7,4 @@ PyRate
 
 Main package for PyRate.
 """
-
-__version__ = '0.2.1'
+__version__ = pkg_resources.require("Py-Rate")[0].version
