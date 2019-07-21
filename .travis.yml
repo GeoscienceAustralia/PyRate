@@ -24,6 +24,7 @@ before_install:
   - pip install -U pip
   
 install:
+  - pip install -r requirements-test.txt
   - pip install -r requirements-dev.txt
   - python setup.py install
   - export PYRATEPATH=$(pwd)
