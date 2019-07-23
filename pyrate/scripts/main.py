@@ -25,7 +25,7 @@ import click
 from pyrate import pyratelog as pylog
 from pyrate import config as cf
 from pyrate.scripts import run_prepifg, run_pyrate, postprocessing
-from pyrate import __version__
+from setup import __version__
 
 log = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ def version_msg():
 
 
 @click.group()
-@click.version_option(__version__, u'-V', u'--version', message=version_msg())
+@click.version_option(__version__, u'-V', u'--version')
 @click.option('-v', '--verbosity',
               type=click.Choice(['DEBUG', 'INFO', 'WARNING', 'ERROR']),
               default='INFO', help='Level of logging')

@@ -20,7 +20,7 @@ from subprocess import check_output
 import sys
 
 python_version = sys.version_info
-__version__ = "0.2.1"
+__version__ = "0.3.0"
 
 # Get requirements (and dev requirements for testing) from requirements
 #  txt files. Also ensure we are using correct GDAL version.
