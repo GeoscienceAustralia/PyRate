@@ -1,0 +1,440 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Usage &mdash; PyRate  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Running PyRate on a HPC system" href="hpc.html" />
+    <link rel="prev" title="Installation" href="installation.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> PyRate
+          
+
+          
+          </a>
+
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#direct-install">Direct Install</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#virtual-environment">Virtual Environment</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#virtualenv">Virtualenv</a></li>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#anaconda">Anaconda</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#tests">Tests</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#configuration-file">Configuration File</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pyrate-workflow">PyRate workflow</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#prepifg-preparing-input-interferograms">prepifg: Preparing input interferograms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#linrate-main-workflow-and-linear-rate-and-time-series-analysis">linrate: Main workflow and linear rate and time series analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#postprocess-putting-the-tiles-back-together">postprocess: Putting the tiles back together</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#mpi-support">MPI Support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#python-multiprocessing-support">Python multiprocessing support</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="hpc.html">Running PyRate on a HPC system</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="hpc.html#pre-installation">Pre-installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hpc.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hpc.html#updating-the-code">Updating the Code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hpc.html#running-batch-jobs">Running Batch Jobs</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hpc.html#batch-testing">Batch testing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hpc.html#mpirun">MPIRun</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#types-of-contributions">Types of Contributions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="contributing.html#report-bugs">Report Bugs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="contributing.html#fix-bugs">Fix Bugs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="contributing.html#implement-features">Implement Features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="contributing.html#write-documentation">Write Documentation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="contributing.html#submit-feedback">Submit Feedback</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#get-started">Get Started!</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#pull-request-guidelines">Pull Request Guidelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#tips">Tips</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="authors.html#development-lead">Development Lead</a></li>
+<li class="toctree-l2"><a class="reference internal" href="authors.html#contributors">Contributors</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">Release History</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="history.html#unreleased-2019-07-xx">Unreleased (2019-07-xx)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="history.html#added">Added</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html#fixed">Fixed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html#removed">Removed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html#changed">Changed</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.1.0 (2017-01-31)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="scripts.html">PyRate Scripts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.run_prepifg.html">PyRate run_prepifg Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.run_pyrate.html">PyRate run_pyrate Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.postprocessing.html">PyRate postprocessing Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.main.html">PyRate main Script</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">PyRate Modules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="algorithm.html">Algorithm Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aps.html">Atmospheric Phase Screen Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config.html">Config Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="covariance.html">Covariance Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gamma.html">GAMMA Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gdal_python.html">GDAL-Python Bindings Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="linrate.html">Linrate Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mst.html">Minimum Spanning Tree Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="orbital.html">Orbital Error Correction Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepifg.html">Prepifg Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyratelog.html">Logging Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ref_phs_est.html">Reference Phase Calculation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="refpixel.html">Reference Pixel Calculation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="roipac.html">ROI_PAC Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="shared.html">Shared Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="timeseries.html">Time Series Module</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PyRate</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Usage</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/usage.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="usage">
+<h1>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="configuration-file">
+<h2>Configuration File<a class="headerlink" href="#configuration-file" title="Permalink to this headline">¶</a></h2>
+<p>Example configuration files for running PyRate with GAMMA or ROI_PAC
+format interferograms are contained in the <em>configs/</em> directory.</p>
+</div>
+<div class="section" id="pyrate-workflow">
+<h2>PyRate workflow<a class="headerlink" href="#pyrate-workflow" title="Permalink to this headline">¶</a></h2>
+<p>After following the steps in <a class="reference external" href="installation.html">Installation</a>, an
+executable program <code class="docutils literal notranslate"><span class="pre">pyrate</span></code> is created.</p>
+<p>Use <code class="docutils literal notranslate"><span class="pre">help</span></code> for the different command line options:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;</span> <span class="n">pyrate</span> <span class="o">--</span><span class="n">help</span>
+<span class="n">Usage</span><span class="p">:</span> <span class="n">pyrate</span> <span class="p">[</span><span class="n">OPTIONS</span><span class="p">]</span> <span class="n">COMMAND</span> <span class="p">[</span><span class="n">ARGS</span><span class="p">]</span><span class="o">...</span>
+
+<span class="n">Options</span><span class="p">:</span>
+  <span class="o">-</span><span class="n">v</span><span class="p">,</span> <span class="o">--</span><span class="n">verbosity</span> <span class="p">[</span><span class="n">DEBUG</span><span class="o">|</span><span class="n">INFO</span><span class="o">|</span><span class="n">WARNING</span><span class="o">|</span><span class="n">ERROR</span><span class="p">]</span>
+                                  <span class="n">Level</span> <span class="n">of</span> <span class="n">logging</span>
+  <span class="o">--</span><span class="n">help</span>                          <span class="n">Show</span> <span class="n">this</span> <span class="n">message</span> <span class="ow">and</span> <span class="n">exit</span><span class="o">.</span>
+
+<span class="n">Commands</span><span class="p">:</span>
+  <span class="n">linrate</span>
+  <span class="n">postprocess</span>
+  <span class="n">prepifg</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">pyrate</span></code> program has three command line options corresponding to
+different parts of the PyRate workflow:</p>
+<ol class="arabic simple">
+<li><p>prepifg</p></li>
+<li><p>linrate</p></li>
+<li><p>postprocess</p></li>
+</ol>
+<p>Below we discuss these options.</p>
+<div class="section" id="prepifg-preparing-input-interferograms">
+<h3>prepifg: Preparing input interferograms<a class="headerlink" href="#prepifg-preparing-input-interferograms" title="Permalink to this headline">¶</a></h3>
+<p>The first step of PyRate is to convert the GAMMA or ROI_PAC format
+unwrapped interferograms into geotiff format, followed by applying
+multi-looking and cropping operations. These procedures are all
+performed by the <code class="docutils literal notranslate"><span class="pre">pyrate</span> <span class="pre">prepifg</span></code> command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;</span> <span class="n">pyrate</span> <span class="n">prepifg</span> <span class="o">--</span><span class="n">help</span>
+<span class="n">Usage</span><span class="p">:</span> <span class="n">pyrate</span> <span class="n">prepifg</span> <span class="p">[</span><span class="n">OPTIONS</span><span class="p">]</span> <span class="n">CONFIG_FILE</span>
+
+<span class="n">Options</span><span class="p">:</span>
+  <span class="o">--</span><span class="n">help</span>  <span class="n">Show</span> <span class="n">this</span> <span class="n">message</span> <span class="ow">and</span> <span class="n">exit</span><span class="o">.</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">prepifg</span></code> command is used as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pyrate</span> <span class="n">prepifg</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">config_file</span>
+</pre></div>
+</div>
+<p>The two major steps during the <code class="docutils literal notranslate"><span class="pre">prepifg</span></code> operation are described
+below.</p>
+<div class="section" id="data-formatting-convert-to-geotiff">
+<h4>Data formatting: convert to geotiff<a class="headerlink" href="#data-formatting-convert-to-geotiff" title="Permalink to this headline">¶</a></h4>
+<p>The <code class="docutils literal notranslate"><span class="pre">prepifg</span></code> command will determine the input format from the value
+specified at the <em>processor:</em> keyword in the config file (0: ROI_PAC;
+1: GAMMA)</p>
+<p>Each GAMMA geocoded unwrapped interferogram requires three header files
+to extract metadata required for data formatting: a geocoded DEM header
+file (<em>*.dem.par</em>), and the master and slave epoch SLC parameter files
+(<em>*.slc.par</em>).</p>
+<p>The path and name of the DEM header file are specified in the config
+file under the <em>demHeaderFile:</em> keyword.</p>
+<p>The SLC parameter files should be in the directory specified in the
+config file under the <em>slcFileDir:</em> keyword. SLC parameter files for a
+particular interferogram are found automatically by date-string pattern
+matching.</p>
+<p>Each ROI_PAC geocoded unwrapped interferogram requires its own
+header/resource file (<em>*.unw.rsc</em>). These header files need to be
+stored in the same directory as the interferograms.</p>
+<p>In addition, the geocoded DEM header file (<em>*.dem.rsc</em>) is required and
+its path and name are specified in the config file under the
+<em>demHeaderFile:</em> keyword. The geographic projection in the parameter
+<em>DATUM:</em> is extracted from the DEM header file.</p>
+</div>
+<div class="section" id="image-transformations-multilooking-and-cropping">
+<h4>Image transformations: multilooking and cropping<a class="headerlink" href="#image-transformations-multilooking-and-cropping" title="Permalink to this headline">¶</a></h4>
+<p>The <code class="docutils literal notranslate"><span class="pre">prepifg</span></code> command will also perform multi-looking (image
+sub-sampling) and cropping of the input interferograms.</p>
+<p>Two example configuration files are provided in the <em>configs/</em>
+directory, one each for ROI_PAC and GAMMA prepifg configuration. Either
+configuration file can be used with <code class="docutils literal notranslate"><span class="pre">prepifg</span></code>.</p>
+</div>
+</div>
+<div class="section" id="linrate-main-workflow-and-linear-rate-and-time-series-analysis">
+<h3>linrate: Main workflow and linear rate and time series analysis<a class="headerlink" href="#linrate-main-workflow-and-linear-rate-and-time-series-analysis" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;</span> <span class="n">pyrate</span> <span class="n">linrate</span> <span class="o">--</span><span class="n">help</span>
+<span class="n">Usage</span><span class="p">:</span> <span class="n">pyrate</span> <span class="n">linrate</span> <span class="p">[</span><span class="n">OPTIONS</span><span class="p">]</span> <span class="n">CONFIG_FILE</span>
+
+<span class="n">Options</span><span class="p">:</span>
+  <span class="o">-</span><span class="n">r</span><span class="p">,</span> <span class="o">--</span><span class="n">rows</span> <span class="n">INTEGER</span>  <span class="n">divide</span> <span class="n">ifgs</span> <span class="n">into</span> <span class="n">this</span> <span class="n">many</span> <span class="n">rows</span>
+  <span class="o">-</span><span class="n">c</span><span class="p">,</span> <span class="o">--</span><span class="n">cols</span> <span class="n">INTEGER</span>  <span class="n">divide</span> <span class="n">ifgs</span> <span class="n">into</span> <span class="n">this</span> <span class="n">many</span> <span class="n">columns</span>
+  <span class="o">--</span><span class="n">help</span>              <span class="n">Show</span> <span class="n">this</span> <span class="n">message</span> <span class="ow">and</span> <span class="n">exit</span>
+</pre></div>
+</div>
+<p>This is the core of the PyRate processing workflow, handled by the
+<code class="docutils literal notranslate"><span class="pre">linrate</span></code> command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pyrate</span> <span class="n">linrate</span> <span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">config_file</span> <span class="o">-</span><span class="n">c</span> <span class="mi">3</span> <span class="o">-</span><span class="n">r</span> <span class="mi">4</span>
+</pre></div>
+</div>
+<p>This command will perform the time series and linear rate analysis and
+has the option to break the interferograms into a number of tiles in
+<code class="docutils literal notranslate"><span class="pre">r</span></code> rows and <code class="docutils literal notranslate"><span class="pre">c</span></code> columns. For example, the above command will break
+the interferograms into 12 tiles and will produce 12 linear rate and
+time series products corresponding to each tile.</p>
+<p>The optional rows and columns arguments can be used to create smaller
+tiles of the full size interferograms. This enables large interferograms
+to be more easily be accommodated in memory. The number of tiles chosen
+should be as small as possible that fits in the system memory.</p>
+<p>Optionally, an orbital error correction and a spatio-temporal filter
+operation to estimate and remove atmospheric phase screen signals is
+applied to the interferograms prior to time series and linear rate
+analysis. The corrected interferograms are updated on disk and the
+corrections are not re-applied upon subsequent runs. This functionality
+is controlled by the <em>orbfit:</em> and <em>apsest:</em> options in the
+configuration file.</p>
+<p>Non-optional pre-processing steps include: - Minimum Spanning Tree
+matrix calculation - Identification of a suitable reference pixel -
+Removal of reference phase from interferograms - Calculation of
+interferogram covariance - Assembly of the variance-covariance matrix</p>
+</div>
+<div class="section" id="postprocess-putting-the-tiles-back-together">
+<h3>postprocess: Putting the tiles back together<a class="headerlink" href="#postprocess-putting-the-tiles-back-together" title="Permalink to this headline">¶</a></h3>
+<p>The last step of the PyRate workflow is to re-assemble the tiles and
+save geotiff files of the final time series and linear rate products.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;</span> <span class="n">pyrate</span> <span class="n">postprocess</span> <span class="o">--</span><span class="n">help</span>
+<span class="n">Usage</span><span class="p">:</span> <span class="n">pyrate</span> <span class="n">postprocess</span> <span class="p">[</span><span class="n">OPTIONS</span><span class="p">]</span> <span class="n">CONFIG_FILE</span>
+
+<span class="n">Options</span><span class="p">:</span>
+  <span class="o">-</span><span class="n">r</span><span class="p">,</span> <span class="o">--</span><span class="n">rows</span> <span class="n">INTEGER</span>  <span class="n">divide</span> <span class="n">ifgs</span> <span class="n">into</span> <span class="n">this</span> <span class="n">many</span> <span class="n">rows</span>
+  <span class="o">-</span><span class="n">c</span><span class="p">,</span> <span class="o">--</span><span class="n">cols</span> <span class="n">INTEGER</span>  <span class="n">divide</span> <span class="n">ifgs</span> <span class="n">into</span> <span class="n">this</span> <span class="n">many</span> <span class="n">columns</span>
+  <span class="o">--</span><span class="n">help</span>              <span class="n">Show</span> <span class="n">this</span> <span class="n">message</span> <span class="ow">and</span> <span class="n">exit</span><span class="o">.</span>
+</pre></div>
+</div>
+<p>Make sure to use the same number of rows and columns that was used in
+the previous <code class="docutils literal notranslate"><span class="pre">linrate</span></code> step:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pyrate</span> <span class="n">postprocess</span> <span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">config_file</span> <span class="o">-</span><span class="n">c</span> <span class="mi">3</span> <span class="o">-</span><span class="n">r</span> <span class="mi">4</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="mpi-support">
+<h2>MPI Support<a class="headerlink" href="#mpi-support" title="Permalink to this headline">¶</a></h2>
+<p>PyRate has been designed for use on High Performance Computers and
+instructions to use a HPC cluster can be found in the <a class="reference external" href="hpc">hpc
+guide</a>.</p>
+</div>
+<div class="section" id="python-multiprocessing-support">
+<h2>Python multiprocessing support<a class="headerlink" href="#python-multiprocessing-support" title="Permalink to this headline">¶</a></h2>
+<p>In addition to the MPI support for HPC, PyRate can use standard
+multi-threading simply by turning <code class="docutils literal notranslate"><span class="pre">parallel:</span>&#160; <span class="pre">1</span></code> in the configuration
+file to take advantage of multiple cores on a single PC.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="hpc.html" class="btn btn-neutral float-right" title="Running PyRate on a HPC system" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="installation.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Geoscience Australia
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

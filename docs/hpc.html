@@ -1,0 +1,446 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Running PyRate on a HPC system &mdash; PyRate  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Contributing" href="contributing.html" />
+    <link rel="prev" title="Usage" href="usage.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> PyRate
+          
+
+          
+          </a>
+
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#direct-install">Direct Install</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#virtual-environment">Virtual Environment</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#virtualenv">Virtualenv</a></li>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#anaconda">Anaconda</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#tests">Tests</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#configuration-file">Configuration File</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#pyrate-workflow">PyRate workflow</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="usage.html#prepifg-preparing-input-interferograms">prepifg: Preparing input interferograms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage.html#linrate-main-workflow-and-linear-rate-and-time-series-analysis">linrate: Main workflow and linear rate and time series analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage.html#postprocess-putting-the-tiles-back-together">postprocess: Putting the tiles back together</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#mpi-support">MPI Support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#python-multiprocessing-support">Python multiprocessing support</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Running PyRate on a HPC system</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#pre-installation">Pre-installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#updating-the-code">Updating the Code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#running-batch-jobs">Running Batch Jobs</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#batch-testing">Batch testing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mpirun">MPIRun</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#types-of-contributions">Types of Contributions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="contributing.html#report-bugs">Report Bugs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="contributing.html#fix-bugs">Fix Bugs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="contributing.html#implement-features">Implement Features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="contributing.html#write-documentation">Write Documentation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="contributing.html#submit-feedback">Submit Feedback</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#get-started">Get Started!</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#pull-request-guidelines">Pull Request Guidelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#tips">Tips</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="authors.html#development-lead">Development Lead</a></li>
+<li class="toctree-l2"><a class="reference internal" href="authors.html#contributors">Contributors</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">Release History</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="history.html#unreleased-2019-07-xx">Unreleased (2019-07-xx)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="history.html#added">Added</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html#fixed">Fixed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html#removed">Removed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html#changed">Changed</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.1.0 (2017-01-31)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="scripts.html">PyRate Scripts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.run_prepifg.html">PyRate run_prepifg Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.run_pyrate.html">PyRate run_pyrate Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.postprocessing.html">PyRate postprocessing Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.main.html">PyRate main Script</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">PyRate Modules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="algorithm.html">Algorithm Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aps.html">Atmospheric Phase Screen Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config.html">Config Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="covariance.html">Covariance Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gamma.html">GAMMA Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gdal_python.html">GDAL-Python Bindings Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="linrate.html">Linrate Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mst.html">Minimum Spanning Tree Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="orbital.html">Orbital Error Correction Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepifg.html">Prepifg Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyratelog.html">Logging Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ref_phs_est.html">Reference Phase Calculation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="refpixel.html">Reference Pixel Calculation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="roipac.html">ROI_PAC Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="shared.html">Shared Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="timeseries.html">Time Series Module</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PyRate</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Running PyRate on a HPC system</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/hpc.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="running-pyrate-on-a-hpc-system">
+<h1>Running PyRate on a HPC system<a class="headerlink" href="#running-pyrate-on-a-hpc-system" title="Permalink to this headline">¶</a></h1>
+<p>This is a quick guide to getting the PyRate software up and
+running in a Portable Batch System (PBS) batch environment with MPI
+support. This setup is common in High Performance Compute (HPC) systems
+such as the National Computational Infrastructure’s <a class="reference external" href="http://nci.org.au/systems-services/national-facility/peak-system/raijin/">Raijin</a>
+system.</p>
+<p>The instructions below are tailored to the NCI Raijin system. Some
+instructions may not be applicable depending on the setup of the HPC
+system you are using. They should apply to both single-node and
+multi-node jobs; just set the number of cpus in the PBS directives in
+the job submission script accordingly (e.g. ncpus=32 for 2 nodes).</p>
+<p>These instructions assume you are using bash shell.</p>
+<div class="section" id="pre-installation">
+<h2>Pre-installation<a class="headerlink" href="#pre-installation" title="Permalink to this headline">¶</a></h2>
+<p>Note: These instructions currently only work with gcc and not Intel compilers.</p>
+<p>1. Clone the PyRate repository into your home directory, or another directory
+of your choice:</p>
+<blockquote>
+<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ <span class="nb">cd</span> ~
+$ git clone git@github.com:GeoscienceAustralia/PyRate.git
+</pre></div>
+</div>
+</div></blockquote>
+<ol class="arabic" start="2">
+<li><p>Unload the icc compiler and default openmpi from the terminal:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ module unload intel-cc
+$ module unload intel-fc
+$ module unload openmpi
+</pre></div>
+</div>
+</li>
+<li><p>Load the modules required for installation and running:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ module load python3/3.4.3 python3/3.4.3-matplotlib
+$ module load hdf5/1.8.10 gdal/2.0.0 openmpi/1.8 netcdf/4.3.2
+</pre></div>
+</div>
+<p>(Alternatively, you may wish to add the above lines to your
+<code class="docutils literal notranslate"><span class="pre">~/.profile</span></code> file)</p>
+</li>
+<li><p>Now add the following lines to the end of your <code class="docutils literal notranslate"><span class="pre">~/.profile</span></code> file:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span> <span class="nv">PATH</span><span class="o">=</span><span class="nv">$HOME</span>/.local/bin:<span class="nv">$PATH</span>
+<span class="nb">export</span> <span class="nv">PYTHONPATH</span><span class="o">=</span><span class="nv">$HOME</span>/.local/lib/python3.4/site-packages:<span class="nv">$PYTHONPATH</span>
+<span class="nb">export</span> <span class="nv">PYRATEPATH</span><span class="o">=</span>~/PyRate
+<span class="nb">export</span> <span class="nv">VIRTUALENVWRAPPER_PYTHON</span><span class="o">=</span>/apps/python3/3.4.3/bin/python3
+<span class="nb">export</span> <span class="nv">LC_ALL</span><span class="o">=</span>en_AU.UTF-8
+<span class="nb">export</span> <span class="nv">LANG</span><span class="o">=</span>en_AU.UTF-8
+<span class="nb">source</span> <span class="nv">$HOME</span>/.local/bin/virtualenvwrapper.sh
+</pre></div>
+</div>
+</li>
+<li><p>Install virtualenv and <code class="docutils literal notranslate"><span class="pre">virtualenvwrapper</span></code> in a terminal:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ pip3 install  --user virtualenv virtualenvwrapper
+</pre></div>
+</div>
+</li>
+<li><p>Refresh your environment by sourcing your <code class="docutils literal notranslate"><span class="pre">~/.profile</span></code> file:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ <span class="nb">source</span> ~/.profile
+</pre></div>
+</div>
+</li>
+</ol>
+</div>
+<div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic">
+<li><p>Create a new virtualenv for PyRate:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ mkvirtualenv --system-site-packages pyrate
+</pre></div>
+</div>
+</li>
+<li><p>Make sure the virtualenv is activated:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ workon pyrate
+</pre></div>
+</div>
+</li>
+<li><p>Install <code class="docutils literal notranslate"><span class="pre">pyrate</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ <span class="nb">cd</span> <span class="nv">$PYRATEPATH</span>
+$ pip install python-daemon<span class="o">==</span><span class="m">2</span>.1.1
+$ python setup.py install
+</pre></div>
+</div>
+</li>
+<li><p>Once installation has completed, you can run the tests to verify
+everything has gone correctly:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ pip install pytest
+$ pytest ~/PyRate/tests/
+</pre></div>
+</div>
+</li>
+</ol>
+</div>
+<div class="section" id="updating-the-code">
+<h2>Updating the Code<a class="headerlink" href="#updating-the-code" title="Permalink to this headline">¶</a></h2>
+<p>To update the PyRate code, first make sure you are in the <code class="docutils literal notranslate"><span class="pre">pyrate</span></code> virtual
+environment:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ workon pyrate
+</pre></div>
+</div>
+<p>Next, pull the latest commit from the master branch, and install:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ <span class="nb">cd</span> <span class="nv">$PYRATEPATH</span>
+$ git pull origin
+$ python setup.py install
+</pre></div>
+</div>
+<p>If the pull and the installation complete successfully, the code is
+ready to run!</p>
+</div>
+<div class="section" id="running-batch-jobs">
+<h2>Running Batch Jobs<a class="headerlink" href="#running-batch-jobs" title="Permalink to this headline">¶</a></h2>
+<p>An example script to assist launching batch jobs over multiple nodes with PBS
+is given at the bottom of this <code class="docutils literal notranslate"><span class="pre">readme</span></code>.</p>
+<div class="section" id="batch-testing">
+<h3>Batch testing<a class="headerlink" href="#batch-testing" title="Permalink to this headline">¶</a></h3>
+<p>To check everything is working, submit the tests as a batch job:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ <span class="nb">cd</span> <span class="nv">$PYRATEPATH</span>/pbs
+$ qsub submit_tests.sh
+</pre></div>
+</div>
+</div>
+<div class="section" id="mpirun">
+<h3>MPIRun<a class="headerlink" href="#mpirun" title="Permalink to this headline">¶</a></h3>
+<p>PyRate uses MPI internally for parallelization. To run a script or
+demo, use the command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ mpirun -n &lt;num_procs&gt; &lt;command&gt;
+</pre></div>
+</div>
+<p>For example:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ mpirun -n <span class="m">16</span> pyrate prepifg pyrate_pbs.conf
+</pre></div>
+</div>
+<p>A PBS job submission script might look like this:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/bin/bash</span>
+<span class="c1">#PBS -P &lt;project&gt;</span>
+<span class="c1">#PBS -q &lt;queue&gt;</span>
+<span class="c1">#PBS -l walltime=01:00:00,mem=128GB,ncpus=16,jobfs=20GB</span>
+<span class="c1">#PBS -l wd</span>
+<span class="c1">#PBS -j oe</span>
+
+<span class="c1"># setup environment</span>
+module unload intel-cc
+module unload intel-fc
+module load python3/3.4.3 python3/3.4.3-matplotlib
+module load load hdf5/1.8.10 gdal/2.0.0
+<span class="nb">source</span> <span class="nv">$HOME</span>/.profile
+
+<span class="c1"># start the virtualenv</span>
+workon pyrate
+
+<span class="c1"># run PyRate commands</span>
+mpirun --mca mpi_warn_o pyrate prepifg /path/to/config_file.conf
+mpirun --mca mpi_warn_o pyrate linrate /path/to/config_file.conf
+mpirun --mca mpi_warn_o pyrate postprocess /path/to/config_file.conf
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">--mca</span> <span class="pre">mpi_warn_o</span></code> prevents mpi fork warnings. To distribute the job
+between nodes and to manage memory between processes use something  like
+<code class="docutils literal notranslate"><span class="pre">-map-by</span> <span class="pre">ppr:4:node</span></code>, which will start 4 jobs per node.</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="contributing.html" class="btn btn-neutral float-right" title="Contributing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="usage.html" class="btn btn-neutral float-left" title="Usage" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Geoscience Australia
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
