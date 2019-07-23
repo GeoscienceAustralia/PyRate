@@ -23,3 +23,4 @@ pyrate postprocess pyrate_gamma.conf -c 3 -r 4
 cd /PyRate/docs
 make html
 
+# Note: Test fail in docker windows because its unable to change file permissions
