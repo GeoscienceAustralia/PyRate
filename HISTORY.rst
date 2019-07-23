@@ -31,10 +31,10 @@ Changed
 - Travis only builds on master, develop and \*-travis branches.
 
 0.2.0 (2017-05-22)
-++++++++++++++++++
+------------------
 - Stable beta release.
 
 0.1.0 (2017-01-31)
-++++++++++++++++++
+------------------
 - First release on PyPI.
 
