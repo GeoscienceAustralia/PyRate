@@ -234,8 +234,71 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="pyrate-run-prepifg-script">
-<h1>PyRate run_prepifg Script<a class="headerlink" href="#pyrate-run-prepifg-script" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-pyrate.scripts.run_prepifg">
+<span id="pyrate-run-prepifg-script"></span><h1>PyRate run_prepifg Script<a class="headerlink" href="#module-pyrate.scripts.run_prepifg" title="Permalink to this headline">¶</a></h1>
+<p>This Python script converts ROI_PAC or GAMMA format unwrapped
+interferograms into geotiffs and applies optional multilooking and cropping.</p>
+<dl class="function">
+<dt id="pyrate.scripts.run_prepifg.gamma_prepifg">
+<code class="sig-prename descclassname">pyrate.scripts.run_prepifg.</code><code class="sig-name descname">gamma_prepifg</code><span class="sig-paren">(</span><em class="sig-param">base_unw_paths</em>, <em class="sig-param">params</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/scripts/run_prepifg.html#gamma_prepifg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.scripts.run_prepifg.gamma_prepifg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prepare GAMMA interferograms which combines both conversion to geotiff
+and multilooking/cropping operations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>base_unw_paths</strong> (<em>list</em>) – List of unwrapped interferograms</p></li>
+<li><p><strong>params</strong> (<em>dict</em>) – Parameters dictionary corresponding to config file</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyrate.scripts.run_prepifg.get_header_paths">
+<code class="sig-prename descclassname">pyrate.scripts.run_prepifg.</code><code class="sig-name descname">get_header_paths</code><span class="sig-paren">(</span><em class="sig-param">input_file</em>, <em class="sig-param">slc_dir=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/scripts/run_prepifg.html#get_header_paths"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.scripts.run_prepifg.get_header_paths" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function that matches input GAMMA file names with GAMMA header file names</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_file</strong> (<em>str</em>) – input GAMMA .unw file.</p></li>
+<li><p><strong>slc_dir</strong> (<em>str</em>) – GAMMA SLC header file directory</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>list of matching header files</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyrate.scripts.run_prepifg.main">
+<code class="sig-prename descclassname">pyrate.scripts.run_prepifg.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><em class="sig-param">params=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/scripts/run_prepifg.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.scripts.run_prepifg.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main workflow function for preparing interferograms for PyRate.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>params</strong> (<em>dict</em>) – Parameters dictionary read in from the config file</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyrate.scripts.run_prepifg.roipac_prepifg">
+<code class="sig-prename descclassname">pyrate.scripts.run_prepifg.</code><code class="sig-name descname">roipac_prepifg</code><span class="sig-paren">(</span><em class="sig-param">base_ifg_paths</em>, <em class="sig-param">params</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/scripts/run_prepifg.html#roipac_prepifg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.scripts.run_prepifg.roipac_prepifg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prepare ROI_PAC interferograms which combines both conversion to geotiff
+and multilooking/cropping operations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>base_ifg_paths</strong> (<em>list</em>) – List of unwrapped interferograms</p></li>
+<li><p><strong>params</strong> (<em>dict</em>) – Parameters dictionary corresponding to config file</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 </div>
 
 

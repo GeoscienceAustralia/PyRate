@@ -1,0 +1,667 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pyrate.gdal_python &mdash; PyRate  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> PyRate
+          
+
+          
+          </a>
+
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#direct-install">Direct Install</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#virtual-environment">Virtual Environment</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../installation.html#virtualenv">Virtualenv</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../installation.html#anaconda">Anaconda</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#tests">Tests</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage.html">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../usage.html#configuration-file">Configuration File</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage.html#pyrate-workflow">PyRate workflow</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../usage.html#prepifg-preparing-input-interferograms">prepifg: Preparing input interferograms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../usage.html#linrate-main-workflow-and-linear-rate-and-time-series-analysis">linrate: Main workflow and linear rate and time series analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../usage.html#postprocess-putting-the-tiles-back-together">postprocess: Putting the tiles back together</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage.html#mpi-support">MPI Support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage.html#python-multiprocessing-support">Python multiprocessing support</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../hpc.html">Running PyRate on a HPC system</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../hpc.html#pre-installation">Pre-installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../hpc.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../hpc.html#updating-the-code">Updating the Code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../hpc.html#running-batch-jobs">Running Batch Jobs</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../hpc.html#batch-testing">Batch testing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../hpc.html#mpirun">MPIRun</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../contributing.html#types-of-contributions">Types of Contributions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../contributing.html#report-bugs">Report Bugs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../contributing.html#fix-bugs">Fix Bugs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../contributing.html#implement-features">Implement Features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../contributing.html#write-documentation">Write Documentation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../contributing.html#submit-feedback">Submit Feedback</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../contributing.html#get-started">Get Started!</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../contributing.html#pull-request-guidelines">Pull Request Guidelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../contributing.html#tips">Tips</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../authors.html">Credits</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../authors.html#development-lead">Development Lead</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../authors.html#contributors">Contributors</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../history.html">Release History</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#unreleased-2019-07-xx">Unreleased (2019-07-xx)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../history.html#added">Added</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../history.html#fixed">Fixed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../history.html#removed">Removed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../history.html#changed">Changed</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id1">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id2">0.1.0 (2017-01-31)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../scripts.html">PyRate Scripts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../pyrate.scripts.run_prepifg.html">PyRate run_prepifg Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pyrate.scripts.run_pyrate.html">PyRate run_pyrate Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pyrate.scripts.postprocessing.html">PyRate postprocessing Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pyrate.scripts.main.html">PyRate main Script</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">PyRate Modules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../algorithm.html">Algorithm Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../aps.html">Atmospheric Phase Screen Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../config.html">Config Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../covariance.html">Covariance Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../gamma.html">GAMMA Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../gdal_python.html">GDAL-Python Bindings Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../linrate.html">Linrate Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../mst.html">Minimum Spanning Tree Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../orbital.html">Orbital Error Correction Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../prepifg.html">Prepifg Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pyratelog.html">Logging Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../ref_phs_est.html">Reference Phase Calculation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../refpixel.html">Reference Pixel Calculation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../roipac.html">ROI_PAC Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../shared.html">Shared Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../timeseries.html">Time Series Module</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">PyRate</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>pyrate.gdal_python</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pyrate.gdal_python</h1><div class="highlight"><pre>
+<span></span><span class="c1">#   This Python module is part of the PyRate software package.</span>
+<span class="c1">#</span>
+<span class="c1">#   Copyright 2017 Geoscience Australia</span>
+<span class="c1">#</span>
+<span class="c1">#   Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1">#   you may not use this file except in compliance with the License.</span>
+<span class="c1">#   You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#      http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1">#   Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1">#   distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1">#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1">#   See the License for the specific language governing permissions and</span>
+<span class="c1">#   limitations under the License.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This Python module contains bindings for the GDAL library</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c1"># coding: utf-8</span>
+<span class="c1"># pylint: disable=too-many-arguments,R0914</span>
+<span class="kn">import</span> <span class="nn">gc</span>
+<span class="kn">from</span> <span class="nn">osgeo</span> <span class="k">import</span> <span class="n">gdal</span><span class="p">,</span> <span class="n">gdalnumeric</span><span class="p">,</span> <span class="n">gdalconst</span>
+<span class="kn">from</span> <span class="nn">PIL</span> <span class="k">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">ImageDraw</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">pyrate</span> <span class="k">import</span> <span class="n">ifgconstants</span> <span class="k">as</span> <span class="n">ifc</span>
+
+<span class="n">gdal</span><span class="o">.</span><span class="n">SetCacheMax</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="mi">15</span><span class="p">)</span>
+<span class="n">GDAL_WARP_MEMORY_LIMIT</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="mi">10</span>
+<span class="n">LOW_FLOAT32</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span><span class="o">.</span><span class="n">min</span><span class="o">*</span><span class="mf">1e-10</span>
+
+
+<div class="viewcode-block" id="world_to_pixel"><a class="viewcode-back" href="../../gdal_python.html#pyrate.gdal_python.world_to_pixel">[docs]</a><span class="k">def</span> <span class="nf">world_to_pixel</span><span class="p">(</span><span class="n">geo_transform</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Uses a gdal geomatrix (gdal.GetGeoTransform()) to calculate</span>
+<span class="sd">    the pixel location of a geospatial coordinate;</span>
+<span class="sd">    see: http://pcjericks.github.io/py-gdalogr-cookbook/raster_layers.html</span>
+
+<span class="sd">    :param list geo_transform: Affine transformation coefficients</span>
+<span class="sd">    :param float x: longitude coordinate</span>
+<span class="sd">    :param float y: latitude coordinate</span>
+
+<span class="sd">    :return: col: pixel column number</span>
+<span class="sd">    :rtype: int</span>
+<span class="sd">    :return: line: pixel line number</span>
+<span class="sd">    :rtype: int</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ul_x</span> <span class="o">=</span> <span class="n">geo_transform</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">ul_y</span> <span class="o">=</span> <span class="n">geo_transform</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+    <span class="n">xres</span> <span class="o">=</span> <span class="n">geo_transform</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">yres</span> <span class="o">=</span> <span class="n">geo_transform</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+    <span class="n">col</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">((</span><span class="n">x</span> <span class="o">-</span> <span class="n">ul_x</span><span class="p">)</span> <span class="o">/</span> <span class="n">xres</span><span class="p">))</span>
+    <span class="n">line</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">((</span><span class="n">ul_y</span> <span class="o">-</span> <span class="n">y</span><span class="p">)</span> <span class="o">/</span> <span class="nb">abs</span><span class="p">(</span><span class="n">yres</span><span class="p">)))</span> <span class="c1"># yres has negative size</span>
+
+    <span class="k">return</span> <span class="n">col</span><span class="p">,</span> <span class="n">line</span></div>
+
+
+<div class="viewcode-block" id="crop"><a class="viewcode-back" href="../../gdal_python.html#pyrate.gdal_python.crop">[docs]</a><span class="k">def</span> <span class="nf">crop</span><span class="p">(</span><span class="n">input_file</span><span class="p">,</span> <span class="n">extents</span><span class="p">,</span> <span class="n">geo_trans</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nodata</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Adapted from http://karthur.org/2015/clipping-rasters-in-python.html</span>
+
+<span class="sd">    Clips a raster (given as either a gdal.Dataset or as a numpy.array</span>
+<span class="sd">    instance) to a polygon layer provided by a Shapefile (or other vector</span>
+<span class="sd">    layer). If a numpy.array is given, a &quot;GeoTransform&quot; must be provided</span>
+<span class="sd">    (via dataset.GetGeoTransform() in GDAL). Returns an array. Clip features</span>
+<span class="sd">    must be a dissolved, single-part geometry (not multi-part). Modified from:</span>
+
+<span class="sd">    http://pcjericks.github.io/py-gdalogr-cookbook/raster_layers.html</span>
+<span class="sd">    #clip-a-geotiff-with-shapefile</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        rast            A gdal.Dataset or a NumPy array</span>
+<span class="sd">        features_path   The path to the clipping features</span>
+<span class="sd">        geo_trans              An optional GDAL GeoTransform to use instead</span>
+<span class="sd">        nodata          The NoData value; defaults to -9999.</span>
+
+<span class="sd">    :param str input_file: input image file path</span>
+<span class="sd">    :param list extents: extents for the cropped area</span>
+<span class="sd">    :param list geo_trans: An optional GDAL GeoTransform to use instead</span>
+<span class="sd">    :param int nodata: The NoData value; defaults to -9999</span>
+
+<span class="sd">    :return: clip: cropped part of the image</span>
+<span class="sd">    :rtype: ndarray</span>
+<span class="sd">    :return: gt2: geotransform parameters for the cropped image</span>
+<span class="sd">    :rtype: list</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">image_to_array</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Converts a Python Imaging Library (PIL) array to a gdalnumeric image.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">gdalnumeric</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">tobytes</span><span class="p">(),</span> <span class="s1">&#39;b&#39;</span><span class="p">)</span>
+        <span class="n">arr</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="n">i</span><span class="o">.</span><span class="n">im</span><span class="o">.</span><span class="n">size</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">i</span><span class="o">.</span><span class="n">im</span><span class="o">.</span><span class="n">size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">arr</span>
+
+    <span class="n">raster</span> <span class="o">=</span> <span class="n">gdal</span><span class="o">.</span><span class="n">Open</span><span class="p">(</span><span class="n">input_file</span><span class="p">)</span>
+    <span class="c1"># Can accept either a gdal.Dataset or numpy.array instance</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">raster</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">geo_trans</span><span class="p">:</span>
+            <span class="n">geo_trans</span> <span class="o">=</span> <span class="n">raster</span><span class="o">.</span><span class="n">GetGeoTransform</span><span class="p">()</span>
+        <span class="n">raster</span> <span class="o">=</span> <span class="n">raster</span><span class="o">.</span><span class="n">ReadAsArray</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">geo_trans</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;geo transform must be supplied&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Convert the layer extent to image pixel coordinates</span>
+    <span class="n">min_x</span><span class="p">,</span> <span class="n">min_y</span><span class="p">,</span> <span class="n">max_x</span><span class="p">,</span> <span class="n">max_y</span> <span class="o">=</span> <span class="n">extents</span>
+    <span class="n">ul_x</span><span class="p">,</span> <span class="n">ul_y</span> <span class="o">=</span> <span class="n">world_to_pixel</span><span class="p">(</span><span class="n">geo_trans</span><span class="p">,</span> <span class="n">min_x</span><span class="p">,</span> <span class="n">max_y</span><span class="p">)</span>
+    <span class="n">lr_x</span><span class="p">,</span> <span class="n">lr_y</span> <span class="o">=</span> <span class="n">world_to_pixel</span><span class="p">(</span><span class="n">geo_trans</span><span class="p">,</span> <span class="n">max_x</span><span class="p">,</span> <span class="n">min_y</span><span class="p">)</span>
+
+    <span class="c1"># Calculate the pixel size of the new image</span>
+    <span class="n">px_width</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">lr_x</span> <span class="o">-</span> <span class="n">ul_x</span><span class="p">)</span>
+    <span class="n">px_height</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">lr_y</span> <span class="o">-</span> <span class="n">ul_y</span><span class="p">)</span>
+
+    <span class="c1"># If the clipping features extend out-of-bounds and ABOVE the raster...</span>
+    <span class="k">if</span> <span class="n">geo_trans</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">max_y</span><span class="p">:</span>
+        <span class="c1"># In such a case... ul_y ends up being negative--can&#39;t have that!</span>
+        <span class="c1"># iY = ul_y</span>
+        <span class="n">ul_y</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1"># Multi-band image?</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">clip</span> <span class="o">=</span> <span class="n">raster</span><span class="p">[:,</span> <span class="n">ul_y</span><span class="p">:</span><span class="n">lr_y</span><span class="p">,</span> <span class="n">ul_x</span><span class="p">:</span><span class="n">lr_x</span><span class="p">]</span>
+
+    <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+        <span class="n">clip</span> <span class="o">=</span> <span class="n">raster</span><span class="p">[</span><span class="n">ul_y</span><span class="p">:</span><span class="n">lr_y</span><span class="p">,</span> <span class="n">ul_x</span><span class="p">:</span><span class="n">lr_x</span><span class="p">]</span>
+
+    <span class="c1"># Create a new geomatrix for the image</span>
+    <span class="n">gt2</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">geo_trans</span><span class="p">)</span>
+    <span class="n">gt2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">min_x</span>
+    <span class="n">gt2</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">max_y</span>
+
+    <span class="c1"># Map points to pixels for drawing the boundary on a blank 8-bit,</span>
+    <span class="c1">#   black and white, mask image.</span>
+    <span class="n">points</span> <span class="o">=</span> <span class="p">[(</span><span class="n">min_x</span><span class="p">,</span> <span class="n">min_y</span><span class="p">),</span> <span class="p">(</span><span class="n">max_x</span><span class="p">,</span> <span class="n">min_y</span><span class="p">),</span> <span class="p">(</span><span class="n">max_x</span><span class="p">,</span> <span class="n">max_y</span><span class="p">),</span> <span class="p">(</span><span class="n">min_y</span><span class="p">,</span> <span class="n">max_y</span><span class="p">)]</span>
+    <span class="n">pixels</span> <span class="o">=</span> <span class="p">[]</span>
+
+
+    <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">points</span><span class="p">:</span>
+        <span class="n">pixels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">world_to_pixel</span><span class="p">(</span><span class="n">gt2</span><span class="p">,</span> <span class="n">point</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">point</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+
+    <span class="n">raster_poly</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s1">&#39;L&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">px_width</span><span class="p">,</span> <span class="n">px_height</span><span class="p">),</span> <span class="n">color</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">rasterize</span> <span class="o">=</span> <span class="n">ImageDraw</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="n">raster_poly</span><span class="p">)</span>
+    <span class="n">rasterize</span><span class="o">.</span><span class="n">polygon</span><span class="p">(</span><span class="n">pixels</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># Fill with zeroes</span>
+
+
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">image_to_array</span><span class="p">(</span><span class="n">raster_poly</span><span class="p">)</span>
+
+    <span class="c1"># Clip the image using the mask</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">clip</span> <span class="o">=</span> <span class="n">gdalnumeric</span><span class="o">.</span><span class="n">choose</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="p">(</span><span class="n">clip</span><span class="p">,</span> <span class="n">nodata</span><span class="p">))</span>
+
+    <span class="c1"># If the clipping features extend out-of-bounds and BELOW the raster...</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="c1"># We have to cut the clipping features to the raster!</span>
+        <span class="n">rshp</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">mask</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">mask</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">!=</span> <span class="n">clip</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]:</span>
+            <span class="n">rshp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">clip</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">mask</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">clip</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="n">rshp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">clip</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">mask</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="o">*</span><span class="n">rshp</span><span class="p">,</span> <span class="n">refcheck</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="n">clip</span> <span class="o">=</span> <span class="n">gdalnumeric</span><span class="o">.</span><span class="n">choose</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="p">(</span><span class="n">clip</span><span class="p">,</span> <span class="n">nodata</span><span class="p">))</span>
+
+    <span class="c1"># AttributeError: &#39;numpy.ndarray&#39; object has no attribute &#39;close&#39;</span>
+    <span class="c1"># raster.close()</span>
+    <span class="n">raster</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">return</span> <span class="n">clip</span><span class="p">,</span> <span class="n">gt2</span></div>
+
+
+<div class="viewcode-block" id="resample_nearest_neighbour"><a class="viewcode-back" href="../../gdal_python.html#pyrate.gdal_python.resample_nearest_neighbour">[docs]</a><span class="k">def</span> <span class="nf">resample_nearest_neighbour</span><span class="p">(</span><span class="n">input_tif</span><span class="p">,</span> <span class="n">extents</span><span class="p">,</span> <span class="n">new_res</span><span class="p">,</span> <span class="n">output_file</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Nearest neighbor resampling and cropping of an image.</span>
+
+<span class="sd">    :param str input_tif: input geotiff file path</span>
+<span class="sd">    :param list extents: new extents for cropping</span>
+<span class="sd">    :param float new_res: new resolution for resampling</span>
+<span class="sd">    :param str output_file: output geotiff file path</span>
+
+<span class="sd">    :return: dst: resampled image</span>
+<span class="sd">    :rtype: ndarray</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dst</span><span class="p">,</span> <span class="n">resampled_proj</span><span class="p">,</span> <span class="n">src</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_crop_resample_setup</span><span class="p">(</span><span class="n">extents</span><span class="p">,</span> <span class="n">input_tif</span><span class="p">,</span>
+                                                       <span class="n">new_res</span><span class="p">,</span> <span class="n">output_file</span><span class="p">)</span>
+    <span class="c1"># Do the work</span>
+    <span class="n">gdal</span><span class="o">.</span><span class="n">ReprojectImage</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">resampled_proj</span><span class="p">,</span>
+                        <span class="n">gdalconst</span><span class="o">.</span><span class="n">GRA_NearestNeighbour</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">dst</span><span class="o">.</span><span class="n">ReadAsArray</span><span class="p">()</span></div>
+
+
+<span class="k">def</span> <span class="nf">_crop_resample_setup</span><span class="p">(</span><span class="n">extents</span><span class="p">,</span> <span class="n">input_tif</span><span class="p">,</span> <span class="n">new_res</span><span class="p">,</span> <span class="n">output_file</span><span class="p">,</span>
+                         <span class="n">dst_driver_type</span><span class="o">=</span><span class="s1">&#39;GTiff&#39;</span><span class="p">,</span> <span class="n">out_bands</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convenience function for crop/resample setup</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Source</span>
+    <span class="n">src_ds</span> <span class="o">=</span> <span class="n">gdal</span><span class="o">.</span><span class="n">Open</span><span class="p">(</span><span class="n">input_tif</span><span class="p">,</span> <span class="n">gdalconst</span><span class="o">.</span><span class="n">GA_ReadOnly</span><span class="p">)</span>
+    <span class="n">src_proj</span> <span class="o">=</span> <span class="n">src_ds</span><span class="o">.</span><span class="n">GetProjection</span><span class="p">()</span>
+
+    <span class="c1"># source metadata to be copied into the output</span>
+    <span class="n">meta_data</span> <span class="o">=</span> <span class="n">src_ds</span><span class="o">.</span><span class="n">GetMetadata</span><span class="p">()</span>
+
+    <span class="c1"># get the image extents</span>
+    <span class="n">min_x</span><span class="p">,</span> <span class="n">min_y</span><span class="p">,</span> <span class="n">max_x</span><span class="p">,</span> <span class="n">max_y</span> <span class="o">=</span> <span class="n">extents</span>
+    <span class="n">geo_transform</span> <span class="o">=</span> <span class="n">src_ds</span><span class="o">.</span><span class="n">GetGeoTransform</span><span class="p">()</span>  <span class="c1"># tuple of 6 numbers</span>
+
+    <span class="c1"># Create a new geotransform for the image</span>
+    <span class="n">gt2</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">geo_transform</span><span class="p">)</span>
+    <span class="n">gt2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">min_x</span>
+    <span class="n">gt2</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">max_y</span>
+    <span class="c1"># We want a section of source that matches this:</span>
+    <span class="n">resampled_proj</span> <span class="o">=</span> <span class="n">src_proj</span>
+    <span class="k">if</span> <span class="n">new_res</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>  <span class="c1"># if new_res is not None, it can&#39;t be zero either</span>
+        <span class="n">resampled_geotrans</span> <span class="o">=</span> <span class="n">gt2</span><span class="p">[:</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">new_res</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">+</span> <span class="n">gt2</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">new_res</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">resampled_geotrans</span> <span class="o">=</span> <span class="n">gt2</span>
+
+    <span class="n">px_height</span><span class="p">,</span> <span class="n">px_width</span> <span class="o">=</span> <span class="n">_gdalwarp_width_and_height</span><span class="p">(</span><span class="n">max_x</span><span class="p">,</span> <span class="n">max_y</span><span class="p">,</span> <span class="n">min_x</span><span class="p">,</span>
+                                                     <span class="n">min_y</span><span class="p">,</span> <span class="n">resampled_geotrans</span><span class="p">)</span>
+
+    <span class="c1"># Output / destination</span>
+    <span class="n">dst</span> <span class="o">=</span> <span class="n">gdal</span><span class="o">.</span><span class="n">GetDriverByName</span><span class="p">(</span><span class="n">dst_driver_type</span><span class="p">)</span><span class="o">.</span><span class="n">Create</span><span class="p">(</span>
+        <span class="n">output_file</span><span class="p">,</span> <span class="n">px_width</span><span class="p">,</span> <span class="n">px_height</span><span class="p">,</span> <span class="n">out_bands</span><span class="p">,</span> <span class="n">gdalconst</span><span class="o">.</span><span class="n">GDT_Float32</span><span class="p">)</span>
+    <span class="n">dst</span><span class="o">.</span><span class="n">SetGeoTransform</span><span class="p">(</span><span class="n">resampled_geotrans</span><span class="p">)</span>
+    <span class="n">dst</span><span class="o">.</span><span class="n">SetProjection</span><span class="p">(</span><span class="n">resampled_proj</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">meta_data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">dst</span><span class="o">.</span><span class="n">SetMetadataItem</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">dst</span><span class="p">,</span> <span class="n">resampled_proj</span><span class="p">,</span> <span class="n">src_ds</span><span class="p">,</span> <span class="n">src_proj</span>
+
+
+<span class="k">def</span> <span class="nf">_gdalwarp_width_and_height</span><span class="p">(</span><span class="n">max_x</span><span class="p">,</span> <span class="n">max_y</span><span class="p">,</span> <span class="n">min_x</span><span class="p">,</span> <span class="n">min_y</span><span class="p">,</span> <span class="n">geo_trans</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Modify pixel height and width</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># modified image extents</span>
+    <span class="n">ul_x</span><span class="p">,</span> <span class="n">ul_y</span> <span class="o">=</span> <span class="n">world_to_pixel</span><span class="p">(</span><span class="n">geo_trans</span><span class="p">,</span> <span class="n">min_x</span><span class="p">,</span> <span class="n">max_y</span><span class="p">)</span>
+    <span class="n">lr_x</span><span class="p">,</span> <span class="n">lr_y</span> <span class="o">=</span> <span class="n">world_to_pixel</span><span class="p">(</span><span class="n">geo_trans</span><span class="p">,</span> <span class="n">max_x</span><span class="p">,</span> <span class="n">min_y</span><span class="p">)</span>
+    <span class="c1"># Calculate the pixel size of the new image</span>
+    <span class="n">px_width</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">lr_x</span> <span class="o">-</span> <span class="n">ul_x</span><span class="p">)</span>
+    <span class="n">px_height</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">lr_y</span> <span class="o">-</span> <span class="n">ul_y</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">px_height</span><span class="p">,</span> <span class="n">px_width</span>  <span class="c1"># this is the same as `gdalwarp`</span>
+
+
+<div class="viewcode-block" id="crop_resample_average"><a class="viewcode-back" href="../../gdal_python.html#pyrate.gdal_python.crop_resample_average">[docs]</a><span class="k">def</span> <span class="nf">crop_resample_average</span><span class="p">(</span>
+        <span class="n">input_tif</span><span class="p">,</span> <span class="n">extents</span><span class="p">,</span> <span class="n">new_res</span><span class="p">,</span> <span class="n">output_file</span><span class="p">,</span> <span class="n">thresh</span><span class="p">,</span>
+        <span class="n">out_driver_type</span><span class="o">=</span><span class="s1">&#39;GTiff&#39;</span><span class="p">,</span>
+        <span class="n">match_pirate</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Crop, resample, and average a geotiff image.</span>
+
+<span class="sd">    :param str input_tif: Path to input geotiff to resample/crop</span>
+<span class="sd">    :param tuple extents: Cropping extents (xfirst, yfirst, xlast, ylast)</span>
+<span class="sd">    :param list new_res: [xres, yres] resolution of output image</span>
+<span class="sd">    :param str output_file: Path to output resampled/cropped geotiff</span>
+<span class="sd">    :param float thresh: NaN fraction threshold</span>
+<span class="sd">    :param str out_driver_type: The output driver; `MEM` or `GTiff` (optional)</span>
+<span class="sd">    :param bool match_pirate: Match Matlab Pirate output (optional)</span>
+
+<span class="sd">    :return: resampled_average: output cropped and resampled image</span>
+<span class="sd">    :rtype: ndarray</span>
+<span class="sd">    :return: out_ds: destination gdal dataset object</span>
+<span class="sd">    :rtype: gdal.Dataset</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dst_ds</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_crop_resample_setup</span><span class="p">(</span>
+        <span class="n">extents</span><span class="p">,</span> <span class="n">input_tif</span><span class="p">,</span> <span class="n">new_res</span><span class="p">,</span> <span class="n">output_file</span><span class="p">,</span>
+        <span class="n">out_bands</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">dst_driver_type</span><span class="o">=</span><span class="s1">&#39;MEM&#39;</span><span class="p">)</span>
+
+    <span class="c1"># make a temporary copy of the dst_ds for Pirate style prepifg</span>
+    <span class="n">tmp_ds</span> <span class="o">=</span> <span class="n">gdal</span><span class="o">.</span><span class="n">GetDriverByName</span><span class="p">(</span><span class="s1">&#39;MEM&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">CreateCopy</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">dst_ds</span><span class="p">)</span> \
+        <span class="k">if</span> <span class="p">(</span><span class="n">match_pirate</span> <span class="ow">and</span> <span class="n">new_res</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">else</span> <span class="kc">None</span>
+
+    <span class="n">resampled_average</span><span class="p">,</span> <span class="n">src_ds_mem</span> <span class="o">=</span> \
+        <span class="n">gdal_average</span><span class="p">(</span><span class="n">dst_ds</span><span class="p">,</span> <span class="n">input_tif</span><span class="p">,</span> <span class="n">thresh</span><span class="p">)</span>
+    <span class="n">src_dtype</span> <span class="o">=</span> <span class="n">src_ds_mem</span><span class="o">.</span><span class="n">GetRasterBand</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">DataType</span>
+    <span class="n">src_gt</span> <span class="o">=</span> <span class="n">src_ds_mem</span><span class="o">.</span><span class="n">GetGeoTransform</span><span class="p">()</span>
+
+    <span class="c1"># write out to output geotif file</span>
+    <span class="n">driver</span> <span class="o">=</span> <span class="n">gdal</span><span class="o">.</span><span class="n">GetDriverByName</span><span class="p">(</span><span class="n">out_driver_type</span><span class="p">)</span>
+
+    <span class="c1"># required to match Matlab Pirate output</span>
+    <span class="k">if</span> <span class="n">tmp_ds</span><span class="p">:</span>
+        <span class="n">_matlab_alignment</span><span class="p">(</span><span class="n">input_tif</span><span class="p">,</span> <span class="n">new_res</span><span class="p">,</span> <span class="n">resampled_average</span><span class="p">,</span> <span class="n">src_ds_mem</span><span class="p">,</span>
+                          <span class="n">src_gt</span><span class="p">,</span> <span class="n">tmp_ds</span><span class="p">)</span>
+
+    <span class="c1"># write final pyrate GTiff</span>
+    <span class="n">out_ds</span> <span class="o">=</span> <span class="n">driver</span><span class="o">.</span><span class="n">Create</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="n">dst_ds</span><span class="o">.</span><span class="n">RasterXSize</span><span class="p">,</span> <span class="n">dst_ds</span><span class="o">.</span><span class="n">RasterYSize</span><span class="p">,</span>
+                           <span class="mi">1</span><span class="p">,</span> <span class="n">src_dtype</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;compress=packbits&#39;</span><span class="p">])</span>
+
+    <span class="n">out_ds</span><span class="o">.</span><span class="n">GetRasterBand</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">SetNoDataValue</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+    <span class="n">out_ds</span><span class="o">.</span><span class="n">GetRasterBand</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">WriteArray</span><span class="p">(</span><span class="n">resampled_average</span><span class="p">)</span>
+    <span class="n">out_ds</span><span class="o">.</span><span class="n">SetGeoTransform</span><span class="p">(</span><span class="n">dst_ds</span><span class="o">.</span><span class="n">GetGeoTransform</span><span class="p">())</span>
+    <span class="n">out_ds</span><span class="o">.</span><span class="n">SetProjection</span><span class="p">(</span><span class="n">dst_ds</span><span class="o">.</span><span class="n">GetProjection</span><span class="p">())</span>
+    <span class="c1"># copy metadata</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">dst_ds</span><span class="o">.</span><span class="n">GetMetadata</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="n">ifc</span><span class="o">.</span><span class="n">DATA_TYPE</span><span class="p">:</span>
+            <span class="c1"># update data type metadata</span>
+            <span class="k">if</span> <span class="n">v</span> <span class="o">==</span> <span class="n">ifc</span><span class="o">.</span><span class="n">ORIG</span><span class="p">:</span>
+                <span class="n">out_ds</span><span class="o">.</span><span class="n">SetMetadataItem</span><span class="p">(</span><span class="n">ifc</span><span class="o">.</span><span class="n">DATA_TYPE</span><span class="p">,</span> <span class="n">ifc</span><span class="o">.</span><span class="n">MULTILOOKED</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">v</span> <span class="o">==</span> <span class="n">ifc</span><span class="o">.</span><span class="n">DEM</span><span class="p">:</span>
+                <span class="n">out_ds</span><span class="o">.</span><span class="n">SetMetadataItem</span><span class="p">(</span><span class="n">ifc</span><span class="o">.</span><span class="n">DATA_TYPE</span><span class="p">,</span> <span class="n">ifc</span><span class="o">.</span><span class="n">MLOOKED_DEM</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">v</span> <span class="o">==</span> <span class="n">ifc</span><span class="o">.</span><span class="n">INCIDENCE</span><span class="p">:</span>
+                <span class="n">out_ds</span><span class="o">.</span><span class="n">SetMetadataItem</span><span class="p">(</span><span class="n">ifc</span><span class="o">.</span><span class="n">DATA_TYPE</span><span class="p">,</span> <span class="n">ifc</span><span class="o">.</span><span class="n">MLOOKED_INC</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">v</span> <span class="o">==</span> <span class="n">ifc</span><span class="o">.</span><span class="n">MULTILOOKED</span><span class="p">:</span>
+                <span class="k">pass</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Data Type metadata not recognised&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">out_ds</span><span class="o">.</span><span class="n">SetMetadataItem</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">resampled_average</span><span class="p">,</span> <span class="n">out_ds</span></div>
+
+
+<span class="k">def</span> <span class="nf">_matlab_alignment</span><span class="p">(</span><span class="n">input_tif</span><span class="p">,</span> <span class="n">new_res</span><span class="p">,</span> <span class="n">resampled_average</span><span class="p">,</span> <span class="n">src_ds_mem</span><span class="p">,</span>
+                      <span class="n">src_gt</span><span class="p">,</span> <span class="n">tmp_ds</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Correction step to match python multi-look/crop output to match that of</span>
+<span class="sd">    Matlab Pirate code. Modifies the resampled_average array in place.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">src_ds</span> <span class="o">=</span> <span class="n">gdal</span><span class="o">.</span><span class="n">Open</span><span class="p">(</span><span class="n">input_tif</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">src_ds</span><span class="o">.</span><span class="n">GetRasterBand</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">ReadAsArray</span><span class="p">()</span>
+    <span class="n">xlooks</span> <span class="o">=</span> <span class="n">ylooks</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">new_res</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">src_gt</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">xres</span><span class="p">,</span> <span class="n">yres</span> <span class="o">=</span> <span class="n">_get_matlab_resampled_data_size</span><span class="p">(</span><span class="n">xlooks</span><span class="p">,</span> <span class="n">ylooks</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+    <span class="n">nrows</span><span class="p">,</span> <span class="n">ncols</span> <span class="o">=</span> <span class="n">resampled_average</span><span class="o">.</span><span class="n">shape</span>
+    <span class="c1"># Matlab Pirate does nearest neighbor resampling for the last</span>
+    <span class="c1"># [yres:nrows, xres:ncols] cells without nan_conversion</span>
+    <span class="c1"># turn off nan-conversion</span>
+    <span class="n">src_ds_mem</span><span class="o">.</span><span class="n">GetRasterBand</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">SetNoDataValue</span><span class="p">(</span><span class="n">LOW_FLOAT32</span><span class="p">)</span>
+    <span class="c1"># nearest neighbor resapling</span>
+    <span class="n">gdal</span><span class="o">.</span><span class="n">ReprojectImage</span><span class="p">(</span><span class="n">src_ds_mem</span><span class="p">,</span> <span class="n">tmp_ds</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+                        <span class="n">gdal</span><span class="o">.</span><span class="n">GRA_NearestNeighbour</span><span class="p">)</span>
+    <span class="c1"># only take the [yres:nrows, xres:ncols] slice</span>
+    <span class="k">if</span> <span class="n">nrows</span> <span class="o">&gt;</span> <span class="n">yres</span> <span class="ow">or</span> <span class="n">ncols</span> <span class="o">&gt;</span> <span class="n">xres</span><span class="p">:</span>
+        <span class="n">resampled_nearest_neighbor</span> <span class="o">=</span> <span class="n">tmp_ds</span><span class="o">.</span><span class="n">GetRasterBand</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">ReadAsArray</span><span class="p">()</span>
+        <span class="n">resampled_average</span><span class="p">[</span><span class="n">yres</span> <span class="o">-</span> <span class="n">nrows</span><span class="p">:,</span> <span class="n">xres</span> <span class="o">-</span> <span class="n">ncols</span><span class="p">:]</span> <span class="o">=</span> \
+            <span class="n">resampled_nearest_neighbor</span><span class="p">[</span><span class="n">yres</span> <span class="o">-</span> <span class="n">nrows</span><span class="p">:,</span> <span class="n">xres</span> <span class="o">-</span> <span class="n">ncols</span><span class="p">:]</span>
+
+
+<div class="viewcode-block" id="gdal_average"><a class="viewcode-back" href="../../gdal_python.html#pyrate.gdal_python.gdal_average">[docs]</a><span class="k">def</span> <span class="nf">gdal_average</span><span class="p">(</span><span class="n">dst_ds</span><span class="p">,</span> <span class="n">input_tif</span><span class="p">,</span> <span class="n">thresh</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Perform subsampling of an image by averaging values</span>
+
+<span class="sd">    :param gdal.Dataset dst_ds: Destination gdal dataset object</span>
+<span class="sd">    :param str input_tif: Input geotif</span>
+<span class="sd">    :param float thresh: NaN fraction threshold</span>
+
+<span class="sd">    :return resampled_average: resampled image data</span>
+<span class="sd">    :rtype: ndarray</span>
+<span class="sd">    :return src_ds_mem: Modified in memory src_ds with nan_fraction in Band2. The nan_fraction</span>
+<span class="sd">        is computed efficiently here in gdal in the same step as the that of</span>
+<span class="sd">        the resampled average (band 1). This results is huge memory and</span>
+<span class="sd">        computational efficiency</span>
+<span class="sd">    :rtype: gdal.Dataset</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">src_ds</span><span class="p">,</span> <span class="n">src_ds_mem</span> <span class="o">=</span> <span class="n">_setup_source</span><span class="p">(</span><span class="n">input_tif</span><span class="p">)</span>
+    <span class="n">src_ds_mem</span><span class="o">.</span><span class="n">GetRasterBand</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">SetNoDataValue</span><span class="p">(</span><span class="o">-</span><span class="mi">100000</span><span class="p">)</span>
+    <span class="n">src_gt</span> <span class="o">=</span> <span class="n">src_ds</span><span class="o">.</span><span class="n">GetGeoTransform</span><span class="p">()</span>
+    <span class="n">src_ds_mem</span><span class="o">.</span><span class="n">SetGeoTransform</span><span class="p">(</span><span class="n">src_gt</span><span class="p">)</span>
+    <span class="n">gdal</span><span class="o">.</span><span class="n">ReprojectImage</span><span class="p">(</span><span class="n">src_ds_mem</span><span class="p">,</span> <span class="n">dst_ds</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">gdal</span><span class="o">.</span><span class="n">GRA_Average</span><span class="p">)</span>
+    <span class="c1"># dst_ds band2 average is our nan_fraction matrix</span>
+    <span class="n">nan_frac</span> <span class="o">=</span> <span class="n">dst_ds</span><span class="o">.</span><span class="n">GetRasterBand</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">ReadAsArray</span><span class="p">()</span>
+    <span class="n">resampled_average</span> <span class="o">=</span> <span class="n">dst_ds</span><span class="o">.</span><span class="n">GetRasterBand</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">ReadAsArray</span><span class="p">()</span>
+    <span class="n">resampled_average</span><span class="p">[</span><span class="n">nan_frac</span> <span class="o">&gt;=</span> <span class="n">thresh</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+    <span class="k">return</span> <span class="n">resampled_average</span><span class="p">,</span> <span class="n">src_ds_mem</span></div>
+
+
+<span class="k">def</span> <span class="nf">_setup_source</span><span class="p">(</span><span class="n">input_tif</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;convenience setup function for gdal_average&quot;&quot;&quot;</span>
+    <span class="n">src_ds</span> <span class="o">=</span> <span class="n">gdal</span><span class="o">.</span><span class="n">Open</span><span class="p">(</span><span class="n">input_tif</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">src_ds</span><span class="o">.</span><span class="n">GetRasterBand</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">ReadAsArray</span><span class="p">()</span>
+    <span class="n">src_dtype</span> <span class="o">=</span> <span class="n">src_ds</span><span class="o">.</span><span class="n">GetRasterBand</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">DataType</span>
+    <span class="n">mem_driver</span> <span class="o">=</span> <span class="n">gdal</span><span class="o">.</span><span class="n">GetDriverByName</span><span class="p">(</span><span class="s1">&#39;MEM&#39;</span><span class="p">)</span>
+    <span class="n">src_ds_mem</span> <span class="o">=</span> <span class="n">mem_driver</span><span class="o">.</span><span class="n">Create</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+                                   <span class="n">src_ds</span><span class="o">.</span><span class="n">RasterXSize</span><span class="p">,</span> <span class="n">src_ds</span><span class="o">.</span><span class="n">RasterYSize</span><span class="p">,</span>
+                                   <span class="mi">2</span><span class="p">,</span> <span class="n">src_dtype</span><span class="p">)</span>
+    <span class="n">src_ds_mem</span><span class="o">.</span><span class="n">GetRasterBand</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">WriteArray</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">src_ds_mem</span><span class="o">.</span><span class="n">GetRasterBand</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">SetNoDataValue</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="c1"># if data==0, then 1, else 0</span>
+    <span class="n">nan_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">)</span>
+    <span class="n">src_ds_mem</span><span class="o">.</span><span class="n">GetRasterBand</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">WriteArray</span><span class="p">(</span><span class="n">nan_matrix</span><span class="p">)</span>
+    <span class="n">src_ds_mem</span><span class="o">.</span><span class="n">SetGeoTransform</span><span class="p">(</span><span class="n">src_ds</span><span class="o">.</span><span class="n">GetGeoTransform</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">src_ds</span><span class="p">,</span> <span class="n">src_ds_mem</span>
+
+
+<span class="k">def</span> <span class="nf">_get_matlab_resampled_data_size</span><span class="p">(</span><span class="n">xscale</span><span class="p">,</span> <span class="n">yscale</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;convenience function mimicking the Matlab Pirate output size&quot;&quot;&quot;</span>
+    <span class="n">xscale</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">xscale</span><span class="p">)</span>
+    <span class="n">yscale</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">yscale</span><span class="p">)</span>
+    <span class="n">ysize</span><span class="p">,</span> <span class="n">xsize</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">xres</span><span class="p">,</span> <span class="n">yres</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">xsize</span> <span class="o">/</span> <span class="n">xscale</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">ysize</span> <span class="o">/</span> <span class="n">yscale</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">xres</span><span class="p">,</span> <span class="n">yres</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Geoscience Australia
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
