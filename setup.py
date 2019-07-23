@@ -32,8 +32,8 @@ with open('requirements-dev.txt') as f:
     dev_requirements = f.read().splitlines()
 GDAL_VERSION = check_output(["gdal-config", "--version"]).decode(
     encoding="utf-8").split('\n')[0]
-requirements = [r + f'=={GDAL_VERSION}' if r == 'GDAL' 
-                else r for r in requirements]
+# requirements = [r + f'=={GDAL_VERSION}' if r == 'GDAL' else r for r in requirements]
+requirements = [r for r in requirements].append('GDAL=='+str(GDAL_VERSION))
 setup_requirements = [r for r in requirements if "numpy==" in r]
 
 class PyTest(TestCommand, object):
