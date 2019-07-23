@@ -13,12 +13,12 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
+# coding: utf-8
 """
 This Python module implements the minimum spanning tree
 functionality for selecting interferometric observations.
 """
 # pylint: disable=invalid-name
-from __future__ import print_function
 import logging
 from itertools import product
 from numpy import array, nan, isnan, float32, empty, sum as nsum

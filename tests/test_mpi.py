@@ -1,3 +1,4 @@
+# coding: utf-8
 #   This Python module is part of the PyRate software package.
 #
 #   Copyright 2017 Geoscience Australia
@@ -17,8 +18,6 @@
 This Python module contains tests for mpi operations in PyRate.
 Tun this module as 'mpirun -n 4 pytest tests/test_mpi.py'
 """
-from __future__ import print_function
-
 import glob
 import shutil
 import numpy as np
