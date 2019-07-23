@@ -13,5 +13,6 @@ RUN pip3 install python-daemon==2.1.1
 RUN pip3 install --upgrade setuptools
 
 ADD . / PyRate/
+RUN sed -i 's/GDAL//g' requirements.txt
 RUN cd PyRate && pip3 install -r requirements.txt
 RUN pip3 install GDAL==$(gdal-config --version) --global-option=build_ext --global-option="-I/usr/include/gdal"
