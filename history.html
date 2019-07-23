@@ -131,13 +131,13 @@
 </ul>
 </li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#unreleased-2019-07-xx">Unreleased (2019-07-xx)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#unreleased-2019-07-xx">Unreleased (2019-07-xx)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#added">Added</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fixed">Fixed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#removed">Removed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#changed">Changed</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="#added">Added</a></li>
-<li class="toctree-l1"><a class="reference internal" href="#fixed">Fixed</a></li>
-<li class="toctree-l1"><a class="reference internal" href="#removed">Removed</a></li>
-<li class="toctree-l1"><a class="reference internal" href="#changed">Changed</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#id1">0.2.0 (2017-05-22)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#id2">0.1.0 (2017-01-31)</a></li>
 </ul>
@@ -236,23 +236,21 @@
 <h1>Release History<a class="headerlink" href="#release-history" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="unreleased-2019-07-xx">
 <h2>Unreleased (2019-07-xx)<a class="headerlink" href="#unreleased-2019-07-xx" title="Permalink to this headline">¶</a></h2>
-</div>
-</div>
 <div class="section" id="added">
-<h1>Added<a class="headerlink" href="#added" title="Permalink to this headline">¶</a></h1>
+<h3>Added<a class="headerlink" href="#added" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p><cite>apt_install.sh</cite> in utils/ that lists Ubuntu/apt package requirements.</p></li>
 <li><p><cite>load_modules.sh</cite> in utils/ that sets up Raijin environment.</p></li>
 </ul>
 </div>
 <div class="section" id="fixed">
-<h1>Fixed<a class="headerlink" href="#fixed" title="Permalink to this headline">¶</a></h1>
+<h3>Fixed<a class="headerlink" href="#fixed" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Errors being caused by newer version of networkx. Nx 2.3 now supported.</p></li>
 </ul>
 </div>
 <div class="section" id="removed">
-<h1>Removed<a class="headerlink" href="#removed" title="Permalink to this headline">¶</a></h1>
+<h3>Removed<a class="headerlink" href="#removed" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Unused Python and OS packages.</p></li>
 <li><p>environment.yml - conda env will now be installed using ‘requirements.txt’.</p></li>
@@ -261,7 +259,7 @@
 </ul>
 </div>
 <div class="section" id="changed">
-<h1>Changed<a class="headerlink" href="#changed" title="Permalink to this headline">¶</a></h1>
+<h3>Changed<a class="headerlink" href="#changed" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Requirements now managed by ‘requirements.txt’ file, parsed by setup.py.</p></li>
 <li><p>Requirements now split across base ‘requirements.txt’ and files for dev
@@ -271,6 +269,8 @@
 <li><p>Travis build now installs GDAL from apt.</p></li>
 <li><p>Travis only builds on master, develop and *-travis branches.</p></li>
 </ul>
+</div>
+</div>
 <div class="section" id="id1">
 <h2>0.2.0 (2017-05-22)<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">

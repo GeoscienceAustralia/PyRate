@@ -8,4 +8,4 @@ PyRate main Script
 
       prepifg
       linrate
-      pyrate.scripts.postprocessing
+      postprocess
