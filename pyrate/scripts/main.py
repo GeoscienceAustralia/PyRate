@@ -25,19 +25,9 @@ import click
 from pyrate import pyratelog as pylog
 from pyrate import config as cf
 from pyrate.scripts import run_prepifg, run_pyrate, postprocessing
-from setup import __version__
+from pyrate import __version__
 
 log = logging.getLogger(__name__)
-
-
-def version_msg():
-    """
-    Returns the Cookiecutter version and location of Python beiing used
-    """
-    python_version = sys.version[:3]
-    location = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    message = u'PyRate %(version)s from {} (Python {})'
-    return message.format(location, python_version)
 
 
 @click.group()
