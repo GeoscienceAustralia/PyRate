@@ -19,3 +19,4 @@ coverage==4.5.3
 codecov==2.0.15
 tox==3.13.2
 pytest==3.0.0
+GDAL
