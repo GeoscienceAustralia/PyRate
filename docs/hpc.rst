@@ -28,7 +28,7 @@ of your choice:
    .. code:: bash
 
        $ cd ~
-       $ git clone git@github.com:GeoscienceAustralia/PyRate.git
+       $ git clone https://github.com/GeoscienceAustralia/PyRate.git
 
 2. Unload the icc compiler and default openmpi from the terminal:
 
@@ -48,23 +48,23 @@ of your choice:
    (Alternatively, you may wish to add the above lines to your
    ``~/.profile`` file)
 
-4. Now add the following lines to the end of your ``~/.profile`` file:
-
-   .. code:: bash
-
-       export PATH=$HOME/.local/bin:$PATH
-       export PYTHONPATH=$HOME/.local/lib/python3.4/site-packages:$PYTHONPATH
-       export PYRATEPATH=~/PyRate
-       export VIRTUALENVWRAPPER_PYTHON=/apps/python3/3.4.3/bin/python3    
-       export LC_ALL=en_AU.UTF-8
-       export LANG=en_AU.UTF-8
-       source $HOME/.local/bin/virtualenvwrapper.sh
-
-5. Install virtualenv and ``virtualenvwrapper`` in a terminal:
+4. Install virtualenv and ``virtualenvwrapper`` in a terminal:
 
    .. code:: bash
 
        $ pip3 install  --user virtualenv virtualenvwrapper
+
+5. Now add the following lines to the end of your ``~/.profile`` file:
+
+   .. code:: bash
+
+       echo export PATH=$HOME/.local/bin:$PATH >> ~/.profile
+       echo export PYTHONPATH=$HOME/.local/lib/python3.4/site-packages:$PYTHONPATH >> ~/.profile
+       echo export PYRATEPATH=~/PyRate >> ~/.profile
+       echo export VIRTUALENVWRAPPER_PYTHON=/apps/python3/3.4.3/bin/python3 >> ~/.profile
+       echo export LC_ALL=en_AU.UTF-8 >> ~/.profile
+       echo export LANG=en_AU.UTF-8 >> ~/.profile
+       echo source $HOME/.local/bin/virtualenvwrapper.sh >> ~/.profile
 
 6. Refresh your environment by sourcing your ``~/.profile`` file:
 
@@ -103,6 +103,17 @@ Installation
 
        $ pip install pytest
        $ pytest ~/PyRate/tests/
+
+5. Run work flow
+
+    # chmod 444 /PyRate/tests/test_data/small_test/tif/geo_070709-070813_unw.tif
+    # python3 -m pytest tests/
+    # python3 -m pytest --cov-report term-missing:skip-covered --cov=pyrate tests/
+
+    # Run workflow
+    pyrate prepifg pyrate_gamma.conf
+    pyrate linrate pyrate_gamma.conf -c 3 -r 4
+    pyrate postprocess pyrate_gamma.conf -c 3 -r 4
 
 -----------------
 Updating the Code
