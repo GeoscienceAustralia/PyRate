@@ -17,9 +17,10 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
+import os
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
+import datetime
 import sphinx_rtd_theme
 
 # -- General configuration ------------------------------------------------
@@ -32,14 +33,14 @@ import sphinx_rtd_theme
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = ['sphinx.ext.autodoc',
-    'sphinx.ext.imgmath',
-    'sphinx.ext.viewcode',
-    'sphinx.ext.githubpages',
-    'sphinx.ext.autosummary',
-    'matplotlib.sphinxext.plot_directive',
-    'IPython.sphinxext.ipython_console_highlighting',
-    'IPython.sphinxext.ipython_directive',
-    'sphinxcontrib.programoutput']
+              'sphinx.ext.imgmath',
+              'sphinx.ext.viewcode',
+              'sphinx.ext.githubpages',
+              'sphinx.ext.autosummary',
+              'matplotlib.sphinxext.plot_directive',
+              'IPython.sphinxext.ipython_console_highlighting',
+              'IPython.sphinxext.ipython_directive',
+              'sphinxcontrib.programoutput']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -57,7 +58,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'PyRate'
-copyright = '2017, Geoscience Australia'
+copyright = str(datetime.datetime.now().year)+', Geoscience Australia'
 author = 'Geoscience Australia InSAR team'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -111,7 +112,8 @@ html_theme_options = {
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = [os.path.join('_build', 'html', '_static')]
+
 
 
 # -- Options for HTMLHelp output ------------------------------------------

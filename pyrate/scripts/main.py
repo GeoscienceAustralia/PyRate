@@ -30,18 +30,8 @@ from pyrate import __version__
 log = logging.getLogger(__name__)
 
 
-def version_msg():
-    """
-    Returns the Cookiecutter version and location of Python beiing used
-    """
-    python_version = sys.version[:3]
-    location = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    message = u'PyRate %(version)s from {} (Python {})'
-    return message.format(location, python_version)
-
-
 @click.group()
-@click.version_option(__version__, u'-V', u'--version', message=version_msg())
+@click.version_option(__version__, u'-V', u'--version')
 @click.option('-v', '--verbosity',
               type=click.Choice(['DEBUG', 'INFO', 'WARNING', 'ERROR']),
               default='INFO', help='Level of logging')
