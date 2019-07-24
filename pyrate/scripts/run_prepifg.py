@@ -18,7 +18,6 @@ This Python script converts ROI_PAC or GAMMA format unwrapped
 interferograms into geotiffs and applies optional multilooking and cropping.
 """
 # -*- coding: utf-8 -*-
-from __future__ import print_function
 import sys
 import logging
 import os

@@ -13,11 +13,11 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
+# coding: utf-8
 """
 This Python module implements a reference phase estimation algorithm
 and is based on the function 'refphsest.m' of the Matlab Pirate package.
 """
-from __future__ import print_function
 import logging
 import numpy as np
 from joblib import Parallel, delayed

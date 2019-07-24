@@ -21,11 +21,10 @@ provided in the configs/ directory
 """
 # coding: utf-8
 # pylint: disable= invalid-name
-from __future__ import print_function
 import os
 from os.path import splitext
 import warnings
-from pyrate import compat
+import pickle
 from pyrate import mpiops
 
 # TODO: add regex column to check if some values are within bounds? Potential

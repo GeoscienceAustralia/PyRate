@@ -16,7 +16,6 @@
 """
 This Python module contains tests for the gamma.py PyRate module.
 """
-from __future__ import print_function
 import glob
 import os
 import re
@@ -52,7 +51,6 @@ from pyrate.config import (
     APS_INCIDENCE_MAP,
     APS_ELEVATION_MAP)
 from pyrate.scripts import run_prepifg
-# from pyrate.scripts.converttogtif import main as gammaMain
 from pyrate.shared import write_geotiff, GeotiffException
 from tests import common
 from tests.common import GAMMA_TEST_DIR, SML_TEST_GAMMA
@@ -395,54 +393,6 @@ class TestGammaLuigiEquality(unittest.TestCase):
             self.assertTrue(os.path.exists(p), '{} does not exist'.format(p))
             self.assertTrue(os.path.exists(q), '{} does not exist'.format(q))
 
-    # def test_luigi_vs_no_luigi_phase_data(self):
-    #     all_luigi_ifgs, all_non_luigi_ifgs = self.shared_setup()
-    #
-    #     self.assertEqual(len(all_luigi_ifgs),
-    #                      len(glob.glob(os.path.join(
-    #                          self.luigi_base_dir, "*.tif"))))
-    #     self.assertEqual(len(all_luigi_ifgs), len(all_non_luigi_ifgs))
-    #     c = 0
-    #     for c, (i, j) in enumerate(zip(all_luigi_ifgs, all_non_luigi_ifgs)):
-    #         np.testing.assert_array_equal(i.phase_data, j.phase_data)
-    #     self.assertEqual(c + 1, len(all_luigi_ifgs))
-
-#     def test_equality_of_meta_data(self):
-#         all_luigi_ifgs, all_non_luigi_ifgs = self.shared_setup()
-#         c = 0
-#         for c, (i, j) in enumerate(zip(all_luigi_ifgs, all_non_luigi_ifgs)):
-#             self.assertEqual(os.path.dirname(i.data_path), self.luigi_base_dir)
-#             # check meta data equal
-#             self.assertDictEqual(i.meta_data, j.meta_data)
-#             # test that DATA_TYPE exists in metadata
-#             self.assertIn(ifc.DATA_TYPE, i.meta_data.keys())
-#             md = i.meta_data
-#             for k in [ifc.SLAVE_TIME, ifc.MASTER_TIME, ifc.MASTER_DATE,
-#                       ifc.SLAVE_DATE, ifc.PYRATE_WAVELENGTH_METRES,
-#                       ifc.PYRATE_TIME_SPAN, ifc.PYRATE_INSAR_PROCESSOR]:
-#                 self.assertIn(k, md)
-#             if i.data_path.__contains__(
-#                     '_{looks}rlks_{crop}cr'.format(looks=1, crop=1)):
-#                 # these are multilooked tifs
-#                 # test that DATA_TYPE is MULTILOOKED
-#                 self.assertEqual(md[ifc.DATA_TYPE], ifc.MULTILOOKED)
-# #            else:
-# #                # others tifs are just geotiffs
-# #                self.assertEqual(md[ifc.DATA_TYPE], ifc.ORIG)
-#         self.assertEqual(c + 1, len(all_luigi_ifgs))
-
-    # def shared_setup(self):
-    #     self.test_cmd_ifg_no_luigi_files_created()
-    #     self.test_cmd_ifg_luigi_files_created()
-    #     all_luigi_ifgs = small_data_setup(glob.glob(os.path.join(self.luigi_base_dir, "*.tif")))
-    #     all_non_luigi_files = []
-    #     gamma_PTN = re.compile(r'\d{8}')
-    #     for i in glob.glob(os.path.join(self.non_luigi_base_dir, "*.tif")):
-    #         if len(gamma_PTN.findall(i)) == 2:
-    #             all_non_luigi_files.append(i)
-    #     all_non_luigi_ifgs = small_data_setup(all_non_luigi_files)
-    #     return all_luigi_ifgs, all_non_luigi_ifgs
-
 
 class TestGammaParallelVsSerial(unittest.TestCase):
 
@@ -498,6 +448,7 @@ class TestGammaParallelVsSerial(unittest.TestCase):
 
             # test that DATA_TYPE is MULTILOOKED
             self.assertEqual(s.meta_data[ifc.DATA_TYPE], ifc.MULTILOOKED)
+
 
 if __name__ == "__main__":
     unittest.main()

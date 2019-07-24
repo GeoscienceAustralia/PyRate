@@ -13,10 +13,10 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
+# coding: utf-8
 """
 This Python module contains tests for the ref_phs_est.py PyRate module.
 """
-from __future__ import print_function
 import glob
 import os
 import shutil

@@ -19,7 +19,7 @@ Variance/Covariance matrix functionality. The algorithms
 are based on functions 'cvdcalc.m' and 'vcmt.m' from
 the Matlab Pirate package.
 """
-from __future__ import print_function
+# coding: utf-8
 from os.path import basename, join
 import logging
 from numpy import array, where, isnan, real, imag, sqrt, meshgrid

@@ -13,17 +13,15 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
+# coding: utf-8
 """
 This Python module implements the minimum spanning tree matrix algorithm
 of the function 'make_mstmat.m' of the Matlab Pirate package.
 """
 # pylint: disable=missing-docstring
-from __future__ import print_function
 import itertools
 from abc import ABCMeta, abstractmethod
-
 import numpy as np
-
 from pyrate.shared import Ifg
 
 DTYPE = [('id', int), ('master', int), ('slave', int), ('nan_frac', float)]
@@ -299,10 +297,10 @@ def _matlab_mst_bool(ifg_list_instance, p_threshold=1):
     :return: result: Minimum Spanning Tree matrix
     :rtype: ndarray
     """
-    #This should have the same output as matlab_mst. Should be tested.
-    #Please note that the generator version is more memory efficient.
-    #If memory was not a concern we could have found the entire mst matrix in the
-    #previous function and this would have been unnecessary.
+    # This should have the same output as matlab_mst. Should be tested.
+    # Please note that the generator version is more memory efficient.
+    # If memory was not a concern we could have found the entire mst matrix in the
+    # previous function and this would have been unnecessary.
     num_ifgs = len(ifg_list_instance.ifgs)
     no_y, no_x = ifg_list_instance.ifgs[0].phase_data.shape
     result = np.empty(shape=(num_ifgs, no_y, no_x), dtype=np.bool)

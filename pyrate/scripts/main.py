@@ -16,9 +16,7 @@
 """
 This Python module defines executable run configuration for the PyRate software
 """
-import sys
 import os
-from os.path import abspath
 import logging
 import json
 import click
@@ -47,7 +45,7 @@ def prepifg(config_file):
     Convert input files to geotiff and perform multilooking
     (resampling) and/or cropping
     """
-    config_file = abspath(config_file)
+    config_file = os.path.abspath(config_file)
     params = cf.get_config_params(config_file)
     log.info('This job was run with the following parameters:')
     log.info(json.dumps(params, indent=4, sort_keys=True))
@@ -64,7 +62,7 @@ def linrate(config_file, rows, cols):
     """
     Main PyRate workflow including time series and linear rate computation
     """
-    config_file = abspath(config_file)
+    config_file = os.path.abspath(config_file)
     _, dest_paths, params = cf.get_ifg_paths(config_file)
     log.info('This job was run with the following parameters:')
     log.info(json.dumps(params, indent=4, sort_keys=True))
@@ -83,5 +81,5 @@ def postprocess(config_file, rows, cols):
     """
     Reassemble PyRate output tiles and save as geotiffs
     """
-    config_file = abspath(config_file)
+    config_file = os.path.abspath(config_file)
     postprocessing.main(config_file, rows, cols)
