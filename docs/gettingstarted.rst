@@ -1,5 +1,5 @@
-Installation
-============
+Getting Started
+===============
 
 Step by step guide to install Pyrate and run toy example.
 

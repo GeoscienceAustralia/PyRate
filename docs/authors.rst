@@ -13,6 +13,8 @@ and the `National Computational Infrastructure <http://nci.org.au/>`__.
 Contributors
 ------------
 
+* Brenainn Moushall (GA)
+* Sheece Gardezi (GA)
 * Sudipta Basak (GA)
 * Ben Davies (NCI)
 * Matt Garthwaite (GA)

@@ -28,8 +28,7 @@ Contents:
    hpc
    contributing
    authors
-   history
-   scripts   
+   scripts
    modules
 
 
