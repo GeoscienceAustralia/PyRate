@@ -23,7 +23,7 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   installation
+   gettingstarted
    usage
    hpc
    contributing
@@ -37,9 +37,7 @@ Feedback
 --------
 
 If you have any suggestions or questions about **PyRate** feel free to
-email the developers_. 
-
-.. _developers: http://geoscienceaustralia.github.io/PyRate/authors.html
+email Geoscience Australia InSAR team <insar@ga.gov.au>.
 
 If you encounter any errors or problems with **PyRate**, please let us
 know!  Open an Issue_ in the GitHub repository.
