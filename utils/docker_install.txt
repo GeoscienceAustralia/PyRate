@@ -9,12 +9,6 @@ docker run -it --rm -v %cd%:/PyRate pyrate-image:1.0 /bin/bash
 cd PyRate
 python3 setup.py install
 
-# Run tests
-# Note: Test fail in docker windows because its unable to change file permissions
-# chmod 444 /PyRate/tests/test_data/small_test/tif/geo_070709-070813_unw.tif
-# python3 -m pytest tests/
-# python3 -m pytest --cov-report term-missing:skip-covered --cov=pyrate tests/
-
 # Run workflow
 pyrate prepifg pyrate_gamma.conf
 pyrate linrate pyrate_gamma.conf -c 3 -r 4

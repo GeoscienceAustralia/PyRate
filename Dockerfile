@@ -9,10 +9,10 @@ ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 
 RUN apt install -y python3 python3-dev python3-pip
-RUN pip3 install python-daemon==2.1.1
 RUN pip3 install --upgrade setuptools
 
 ADD . / PyRate/
-RUN sed -i 's/GDAL//g' requirements.txt
+RUN cd PyRate && sed -i 's/GDAL//g' requirements.txt
 RUN cd PyRate && pip3 install -r requirements.txt
 RUN pip3 install GDAL==$(gdal-config --version) --global-option=build_ext --global-option="-I/usr/include/gdal"
+RUN cd PyRate && pip3 install -r requirements-dev.txt
