@@ -78,14 +78,27 @@
             
             
               <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#direct-install">Direct Install</a></li>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#virtual-environment">Virtual Environment</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="installation.html#virtualenv">Virtualenv</a></li>
-<li class="toctree-l3"><a class="reference internal" href="installation.html#anaconda">Anaconda</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gettingstarted.html">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#ubuntu">Ubuntu</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="gettingstarted.html#setup">Setup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gettingstarted.html#usage">Usage</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#tests">Tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#docker">Docker</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="gettingstarted.html#id1">Setup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gettingstarted.html#id2">Usage</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#nci">NCI</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="gettingstarted.html#id3">Setup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gettingstarted.html#id4">Usage</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#anaconda">Anaconda</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="gettingstarted.html#install">Install</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#tests">Tests</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a><ul>
@@ -128,18 +141,6 @@
 <li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="authors.html#development-lead">Development Lead</a></li>
 <li class="toctree-l2"><a class="reference internal" href="authors.html#contributors">Contributors</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="history.html#unreleased-2019-07-xx">Unreleased (2019-07-xx)</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="history.html#added">Added</a></li>
-<li class="toctree-l3"><a class="reference internal" href="history.html#fixed">Fixed</a></li>
-<li class="toctree-l3"><a class="reference internal" href="history.html#removed">Removed</a></li>
-<li class="toctree-l3"><a class="reference internal" href="history.html#changed">Changed</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="scripts.html">PyRate Scripts</a><ul>
@@ -252,7 +253,7 @@ the job submission script accordingly (e.g. ncpus=32 for 2 nodes).</p>
 of your choice:</p>
 <blockquote>
 <div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ <span class="nb">cd</span> ~
-$ git clone git@github.com:GeoscienceAustralia/PyRate.git
+$ git clone https://github.com/GeoscienceAustralia/PyRate.git
 </pre></div>
 </div>
 </div></blockquote>
@@ -272,19 +273,19 @@ $ module load hdf5/1.8.10 gdal/2.0.0 openmpi/1.8 netcdf/4.3.2
 <p>(Alternatively, you may wish to add the above lines to your
 <code class="docutils literal notranslate"><span class="pre">~/.profile</span></code> file)</p>
 </li>
-<li><p>Now add the following lines to the end of your <code class="docutils literal notranslate"><span class="pre">~/.profile</span></code> file:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span> <span class="nv">PATH</span><span class="o">=</span><span class="nv">$HOME</span>/.local/bin:<span class="nv">$PATH</span>
-<span class="nb">export</span> <span class="nv">PYTHONPATH</span><span class="o">=</span><span class="nv">$HOME</span>/.local/lib/python3.4/site-packages:<span class="nv">$PYTHONPATH</span>
-<span class="nb">export</span> <span class="nv">PYRATEPATH</span><span class="o">=</span>~/PyRate
-<span class="nb">export</span> <span class="nv">VIRTUALENVWRAPPER_PYTHON</span><span class="o">=</span>/apps/python3/3.4.3/bin/python3
-<span class="nb">export</span> <span class="nv">LC_ALL</span><span class="o">=</span>en_AU.UTF-8
-<span class="nb">export</span> <span class="nv">LANG</span><span class="o">=</span>en_AU.UTF-8
-<span class="nb">source</span> <span class="nv">$HOME</span>/.local/bin/virtualenvwrapper.sh
+<li><p>Install virtualenv and <code class="docutils literal notranslate"><span class="pre">virtualenvwrapper</span></code> in a terminal:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ pip3 install  --user virtualenv virtualenvwrapper
 </pre></div>
 </div>
 </li>
-<li><p>Install virtualenv and <code class="docutils literal notranslate"><span class="pre">virtualenvwrapper</span></code> in a terminal:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ pip3 install  --user virtualenv virtualenvwrapper
+<li><p>Now add the following lines to the end of your <code class="docutils literal notranslate"><span class="pre">~/.profile</span></code> file:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">echo</span> <span class="nb">export</span> <span class="nv">PATH</span><span class="o">=</span><span class="nv">$HOME</span>/.local/bin:<span class="nv">$PATH</span> &gt;&gt; ~/.profile
+<span class="nb">echo</span> <span class="nb">export</span> <span class="nv">PYTHONPATH</span><span class="o">=</span><span class="nv">$HOME</span>/.local/lib/python3.4/site-packages:<span class="nv">$PYTHONPATH</span> &gt;&gt; ~/.profile
+<span class="nb">echo</span> <span class="nb">export</span> <span class="nv">PYRATEPATH</span><span class="o">=</span>~/PyRate &gt;&gt; ~/.profile
+<span class="nb">echo</span> <span class="nb">export</span> <span class="nv">VIRTUALENVWRAPPER_PYTHON</span><span class="o">=</span>/apps/python3/3.4.3/bin/python3 &gt;&gt; ~/.profile
+<span class="nb">echo</span> <span class="nb">export</span> <span class="nv">LC_ALL</span><span class="o">=</span>en_AU.UTF-8 &gt;&gt; ~/.profile
+<span class="nb">echo</span> <span class="nb">export</span> <span class="nv">LANG</span><span class="o">=</span>en_AU.UTF-8 &gt;&gt; ~/.profile
+<span class="nb">echo</span> <span class="nb">source</span> <span class="nv">$HOME</span>/.local/bin/virtualenvwrapper.sh &gt;&gt; ~/.profile
 </pre></div>
 </div>
 </li>
@@ -321,6 +322,17 @@ everything has gone correctly:</p>
 $ pytest ~/PyRate/tests/
 </pre></div>
 </div>
+</li>
+<li><p>Run work flow</p>
+<blockquote>
+<div><p># chmod 444 /PyRate/tests/test_data/small_test/tif/geo_070709-070813_unw.tif
+# python3 -m pytest tests/
+# python3 -m pytest –cov-report term-missing:skip-covered –cov=pyrate tests/</p>
+<p># Run workflow
+pyrate prepifg pyrate_gamma.conf
+pyrate linrate pyrate_gamma.conf -c 3 -r 4
+pyrate postprocess pyrate_gamma.conf -c 3 -r 4</p>
+</div></blockquote>
 </li>
 </ol>
 </div>

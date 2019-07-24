@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ROI_PAC Module &mdash; PyRate  documentation</title>
+  <title>Docker &mdash; PyRate  documentation</title>
   
 
   
@@ -34,9 +34,7 @@
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Shared Module" href="shared.html" />
-    <link rel="prev" title="Reference Pixel Calculation Module" href="refpixel.html" /> 
+    <link rel="search" title="Search" href="search.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -77,7 +75,7 @@
               
             
             
-              <ul class="current">
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="gettingstarted.html">Getting Started</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#ubuntu">Ubuntu</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="gettingstarted.html#setup">Setup</a></li>
@@ -150,7 +148,7 @@
 <li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.main.html">PyRate main Script</a></li>
 </ul>
 </li>
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">PyRate Modules</a><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="modules.html">PyRate Modules</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="algorithm.html">Algorithm Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="aps.html">Atmospheric Phase Screen Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="config.html">Config Module</a></li>
@@ -164,7 +162,7 @@
 <li class="toctree-l2"><a class="reference internal" href="pyratelog.html">Logging Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ref_phs_est.html">Reference Phase Calculation Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="refpixel.html">Reference Pixel Calculation Module</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">ROI_PAC Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="roipac.html">ROI_PAC Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="shared.html">Shared Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="timeseries.html">Time Series Module</a></li>
 </ul>
@@ -214,15 +212,13 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-          <li><a href="modules.html">PyRate Modules</a> &raquo;</li>
-        
-      <li>ROI_PAC Module</li>
+      <li>Docker</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="_sources/roipac.rst.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/docker.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -235,70 +231,32 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="module-pyrate.roipac">
-<span id="roi-pac-module"></span><h1>ROI_PAC Module<a class="headerlink" href="#module-pyrate.roipac" title="Permalink to this headline">¶</a></h1>
-<p>This Python module contains tools for reading ROI_PAC format input data.</p>
-<dl class="exception">
-<dt id="pyrate.roipac.RoipacException">
-<em class="property">exception </em><code class="sig-prename descclassname">pyrate.roipac.</code><code class="sig-name descname">RoipacException</code><a class="reference internal" href="_modules/pyrate/roipac.html#RoipacException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.roipac.RoipacException" title="Permalink to this definition">¶</a></dt>
-<dd><p>Convenience class for throwing exception</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyrate.roipac.manage_header">
-<code class="sig-prename descclassname">pyrate.roipac.</code><code class="sig-name descname">manage_header</code><span class="sig-paren">(</span><em class="sig-param">header_file</em>, <em class="sig-param">projection</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/roipac.html#manage_header"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.roipac.manage_header" title="Permalink to this definition">¶</a></dt>
-<dd><p>Manage header files for ROI_PAC interferograms and DEM files.
-NB: projection = roipac.parse_header(dem_file)[ifc.PYRATE_DATUM]</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>header_file</strong> (<em>str</em>) – <cite>ROI_PAC *.rsc header file path</cite></p></li>
-<li><p><strong>projection</strong> – Projection obtained from dem header.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>combined_header: Combined metadata dictionary</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>dict</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyrate.roipac.parse_date">
-<code class="sig-prename descclassname">pyrate.roipac.</code><code class="sig-name descname">parse_date</code><span class="sig-paren">(</span><em class="sig-param">dstr</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/roipac.html#parse_date"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.roipac.parse_date" title="Permalink to this definition">¶</a></dt>
-<dd><p>Parses ROI_PAC ‘yymmdd’ or ‘yymmdd-yymmdd’ format string to datetime.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>dstr</strong> (<em>str</em>) – ‘date’ or ‘date1-date2’ string</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>dstr: datetime string or tuple</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>str or tuple</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyrate.roipac.parse_header">
-<code class="sig-prename descclassname">pyrate.roipac.</code><code class="sig-name descname">parse_header</code><span class="sig-paren">(</span><em class="sig-param">hdr_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/roipac.html#parse_header"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.roipac.parse_header" title="Permalink to this definition">¶</a></dt>
-<dd><p>Parses ROI_PAC header file metadata to a dictionary.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>hdr_file</strong> (<em>str</em>) – <cite>path to ROI_PAC *.rsc file</cite></p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>subset: subset of metadata</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>dict</p>
-</dd>
-</dl>
-</dd></dl>
-
+  <div class="section" id="docker">
+<h1>Docker<a class="headerlink" href="#docker" title="Permalink to this headline">¶</a></h1>
+<p>Can be used to run PyRate on linux, Windows and MacOS.</p>
+<div class="section" id="setup">
+<h2>Setup<a class="headerlink" href="#setup" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="n">git</span><span class="nd">@github</span><span class="o">.</span><span class="n">com</span><span class="p">:</span><span class="n">GeoscienceAustralia</span><span class="o">/</span><span class="n">PyRate</span><span class="o">.</span><span class="n">git</span>
+<span class="n">cd</span> <span class="n">PyRate</span>
+<span class="n">docker</span> <span class="n">build</span> <span class="o">-</span><span class="n">t</span> <span class="n">pyrate</span><span class="o">-</span><span class="n">image</span><span class="p">:</span><span class="mf">1.0</span> <span class="o">.</span>
+<span class="n">docker</span> <span class="n">run</span> <span class="o">-</span><span class="n">it</span> <span class="o">--</span><span class="n">rm</span> <span class="o">-</span><span class="n">v</span> <span class="o">%</span><span class="n">cd</span><span class="o">%</span><span class="p">:</span><span class="o">/</span><span class="n">PyRate</span> <span class="n">pyrate</span><span class="o">-</span><span class="n">image</span><span class="p">:</span><span class="mf">1.0</span> <span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">bash</span>
+</pre></div>
+</div>
+<p>Build PyRate package</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="n">PyRate</span>
+<span class="n">python3</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">install</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<p>Run workflow</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pyrate</span> <span class="n">prepifg</span> <span class="n">pyrate_gamma</span><span class="o">.</span><span class="n">conf</span>
+<span class="n">pyrate</span> <span class="n">linrate</span> <span class="n">pyrate_gamma</span><span class="o">.</span><span class="n">conf</span> <span class="o">-</span><span class="n">c</span> <span class="mi">3</span> <span class="o">-</span><span class="n">r</span> <span class="mi">4</span>
+<span class="n">pyrate</span> <span class="n">postprocess</span> <span class="n">pyrate_gamma</span><span class="o">.</span><span class="n">conf</span> <span class="o">-</span><span class="n">c</span> <span class="mi">3</span> <span class="o">-</span><span class="n">r</span> <span class="mi">4</span>
+</pre></div>
+</div>
+</div>
 </div>
 
 
@@ -306,15 +264,6 @@ NB: projection = roipac.parse_header(dem_file)[ifc.PYRATE_DATUM]</p>
            
           </div>
           <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="shared.html" class="btn btn-neutral float-right" title="Shared Module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="refpixel.html" class="btn btn-neutral float-left" title="Reference Pixel Calculation Module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
-    </div>
   
 
   <hr/>

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Release History &mdash; PyRate  documentation</title>
+  <title>Anaconda &mdash; PyRate  documentation</title>
   
 
   
@@ -34,9 +34,7 @@
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="PyRate Scripts" href="scripts.html" />
-    <link rel="prev" title="Credits" href="authors.html" /> 
+    <link rel="search" title="Search" href="search.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -77,8 +75,8 @@
               
             
             
-              <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="gettingstarted.html">Installation</a><ul>
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="gettingstarted.html">Getting Started</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#ubuntu">Ubuntu</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="gettingstarted.html#setup">Setup</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gettingstarted.html#usage">Usage</a></li>
@@ -141,18 +139,6 @@
 <li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="authors.html#development-lead">Development Lead</a></li>
 <li class="toctree-l2"><a class="reference internal" href="authors.html#contributors">Contributors</a></li>
-</ul>
-</li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#unreleased-2019-07-xx">Unreleased (2019-07-xx)</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#added">Added</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#fixed">Fixed</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#removed">Removed</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#changed">Changed</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#id1">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id2">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="scripts.html">PyRate Scripts</a><ul>
@@ -226,13 +212,13 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>Release History</li>
+      <li>Anaconda</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="_sources/history.rst.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/conda.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -245,56 +231,111 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="release-history">
-<h1>Release History<a class="headerlink" href="#release-history" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="unreleased-2019-07-xx">
-<h2>Unreleased (2019-07-xx)<a class="headerlink" href="#unreleased-2019-07-xx" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="added">
-<h3>Added<a class="headerlink" href="#added" title="Permalink to this headline">¶</a></h3>
-<ul class="simple">
-<li><p><cite>apt_install.sh</cite> in utils/ that lists Ubuntu/apt package requirements.</p></li>
-<li><p><cite>load_modules.sh</cite> in utils/ that sets up Raijin environment.</p></li>
-</ul>
+  <p>Instructions for setting up an Anaconda virtual environment on a typical
+Red Hat linux server.</p>
+<div class="section" id="anaconda">
+<h1>Anaconda<a class="headerlink" href="#anaconda" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="install">
+<h2>Install<a class="headerlink" href="#install" title="Permalink to this headline">¶</a></h2>
+<p>For 64-bit linux download this version of the conda installer:
+<a class="reference external" href="https://repo.continuum.io/archive/Anaconda2-4.1.1-Linux-x86_64.sh">https://repo.continuum.io/archive/Anaconda2-4.1.1-Linux-x86_64.sh</a></p>
+<p>Run the installer using the linux bash interpreter:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">bash</span> <span class="n">Anaconda2</span><span class="o">-</span><span class="mf">4.1</span><span class="o">.</span><span class="mi">1</span><span class="o">-</span><span class="n">Linux</span><span class="o">-</span><span class="n">x86_64</span><span class="o">.</span><span class="n">sh</span>
+</pre></div>
 </div>
-<div class="section" id="fixed">
-<h3>Fixed<a class="headerlink" href="#fixed" title="Permalink to this headline">¶</a></h3>
-<ul class="simple">
-<li><p>Errors being caused by newer version of networkx. Nx 2.3 now supported.</p></li>
-</ul>
-</div>
-<div class="section" id="removed">
-<h3>Removed<a class="headerlink" href="#removed" title="Permalink to this headline">¶</a></h3>
-<ul class="simple">
-<li><p>Unused Python and OS packages.</p></li>
-<li><p>environment.yml - conda env will now be installed using ‘requirements.txt’.</p></li>
-<li><p>HPC directory - hpc README.rst moved to docs.</p></li>
-<li><p>setup.cfg - no longer needed.</p></li>
-</ul>
-</div>
-<div class="section" id="changed">
-<h3>Changed<a class="headerlink" href="#changed" title="Permalink to this headline">¶</a></h3>
-<ul class="simple">
-<li><p>Requirements now managed by ‘requirements.txt’ file, parsed by setup.py.</p></li>
-<li><p>Requirements now split across base ‘requirements.txt’ and files for dev
-(‘requirements-dev.txt’) and testing (‘requirements-test.txt’)</p></li>
-<li><p>Moved default config files to top level source directory.</p></li>
-<li><p>Pinned Python dependencies to specific versions.</p></li>
-<li><p>Travis build now installs GDAL from apt.</p></li>
-<li><p>Travis only builds on master, develop and *-travis branches.</p></li>
-</ul>
+<p>Accept all default options. This will install anaconda in the
+<code class="docutils literal notranslate"><span class="pre">~/anaconda2</span></code> directory.</p>
+<div class="section" id="set-up-proxys-for-pip-only-applicable-if-working-behind-proxy">
+<h3>Set up proxys for pip (only applicable if working behind proxy):<a class="headerlink" href="#set-up-proxys-for-pip-only-applicable-if-working-behind-proxy" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">export</span> <span class="n">http_proxy</span><span class="o">=&lt;</span><span class="n">proxy_server</span><span class="o">&gt;</span><span class="p">:</span><span class="o">&lt;</span><span class="n">port</span><span class="o">&gt;</span>
+<span class="n">export</span> <span class="n">https_proxy</span><span class="o">=&lt;</span><span class="n">proxy_server</span><span class="o">&gt;</span><span class="p">:</span><span class="o">&lt;</span><span class="n">port</span><span class="o">&gt;</span>
+</pre></div>
 </div>
 </div>
-<div class="section" id="id1">
-<h2>0.2.0 (2017-05-22)<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
-<ul class="simple">
-<li><p>Stable beta release.</p></li>
-</ul>
+<div class="section" id="set-up-condarc-with-proxy-pass-information-only-applicable-if-working-behind-proxy">
+<h3>Set up <code class="docutils literal notranslate"><span class="pre">~/.condarc</span></code> with proxy pass information (only applicable if working behind proxy):<a class="headerlink" href="#set-up-condarc-with-proxy-pass-information-only-applicable-if-working-behind-proxy" title="Permalink to this headline">¶</a></h3>
+<p>For conda installer to work you need to create a <code class="docutils literal notranslate"><span class="pre">~/.condarc</span></code> file
+with the following proxy-pass information:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">proxy_servers</span><span class="p">:</span>
+    <span class="n">http</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">proxy_server</span><span class="o">&gt;</span><span class="p">:</span><span class="o">&lt;</span><span class="n">port</span><span class="o">&gt;</span>
+    <span class="n">https</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">proxy_server</span><span class="o">&gt;</span><span class="p">:</span><span class="o">&lt;</span><span class="n">port</span><span class="o">&gt;</span>
+</pre></div>
 </div>
-<div class="section" id="id2">
-<h2>0.1.0 (2017-01-31)<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
-<ul class="simple">
-<li><p>First release on PyPI.</p></li>
-</ul>
+</div>
+<div class="section" id="clone-the-pyrate-repo">
+<h3>Clone the PyRate repo:<a class="headerlink" href="#clone-the-pyrate-repo" title="Permalink to this headline">¶</a></h3>
+<p>The rest of the instructions assume that you cloned the <code class="docutils literal notranslate"><span class="pre">PyRate</span></code> Git
+repository in your home directory:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="o">~</span>
+<span class="n">git</span> <span class="n">clone</span> <span class="n">git</span><span class="nd">@github</span><span class="o">.</span><span class="n">com</span><span class="p">:</span><span class="n">GeoscienceAustralia</span><span class="o">/</span><span class="n">PyRate</span><span class="o">.</span><span class="n">git</span>
+</pre></div>
+</div>
+<p>This will prompt for your rsa key passphrase. If you have access to
+<code class="docutils literal notranslate"><span class="pre">PyRate</span></code> repo and once you have entered the passphrase, <code class="docutils literal notranslate"><span class="pre">PyRate</span></code>
+will clone in your current (home) directory.</p>
+</div>
+<div class="section" id="set-up-environment-variables">
+<h3>Set up environment variables<a class="headerlink" href="#set-up-environment-variables" title="Permalink to this headline">¶</a></h3>
+<p>You need to add the directory containing the <code class="docutils literal notranslate"><span class="pre">pyrate/</span></code> directory to
+the <code class="docutils literal notranslate"><span class="pre">PYTHONPATH</span></code> environment variable, and the environment variable
+<code class="docutils literal notranslate"><span class="pre">PYRATEPATH</span></code> needs to point to the directory containing the <code class="docutils literal notranslate"><span class="pre">tests/</span></code>
+directory:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>export PYRATEPATH=&quot;~/PyRate&quot;
+export PYTHONPATH=$PYRATEPATH/:$PYTHONPATH
+</pre></div>
+</div>
+</div>
+<div class="section" id="activate-anaconda-and-install-conda-env">
+<h3>Activate <code class="docutils literal notranslate"><span class="pre">anaconda</span></code> and install <code class="docutils literal notranslate"><span class="pre">conda-env</span></code><a class="headerlink" href="#activate-anaconda-and-install-conda-env" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">source</span> <span class="o">~/</span><span class="n">anaconda2</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">activate</span> <span class="o">~/</span><span class="n">anaconda2</span><span class="o">/</span>
+<span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">conda</span> <span class="n">conda</span><span class="o">-</span><span class="n">env</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">conda-env</span></code> package enables YAML based installation.</p>
+<p>Note that using the <code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">activate</span></code> command only works cleanly when
+using the bash shell</p>
+</div>
+<div class="section" id="create-the-pyrate-environment">
+<h3>Create the <code class="docutils literal notranslate"><span class="pre">pyrate</span></code> environment<a class="headerlink" href="#create-the-pyrate-environment" title="Permalink to this headline">¶</a></h3>
+<p>The required packages for PyRate are listed in the environment.yml (YAML
+format) file:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>conda env create -f $PYRATEPATH/environment.yml
+</pre></div>
+</div>
+</div>
+<div class="section" id="activate-the-pyrate-environment">
+<h3>Activate the <code class="docutils literal notranslate"><span class="pre">pyrate</span></code> environment<a class="headerlink" href="#activate-the-pyrate-environment" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">source</span> <span class="o">~/</span><span class="n">anaconda2</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">activate</span> <span class="n">pyrate</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="run-pyrate-tests">
+<h3>Run <code class="docutils literal notranslate"><span class="pre">PyRate</span></code> tests<a class="headerlink" href="#run-pyrate-tests" title="Permalink to this headline">¶</a></h3>
+<p>To run the full suite of tests, use the following command inside the
+<code class="docutils literal notranslate"><span class="pre">PyRate</span></code> directory:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="o">~/</span><span class="n">PyRate</span>
+<span class="n">py</span><span class="o">.</span><span class="n">test</span> <span class="n">tests</span><span class="o">/</span>
+</pre></div>
+</div>
+<p>To run the tests for a particular module:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">py</span><span class="o">.</span><span class="n">test</span> <span class="n">tests</span><span class="o">/</span><span class="n">test_orbital</span><span class="o">.</span><span class="n">py</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="deactivate">
+<h3>Deactivate<a class="headerlink" href="#deactivate" title="Permalink to this headline">¶</a></h3>
+<p>Once you are done using <code class="docutils literal notranslate"><span class="pre">PyRate</span></code> you could deactivate the conda
+environment using:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">source</span> <span class="n">deactivate</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="back-to-main-anaconda-environment-if-you-need-to">
+<h3>Back to main Anaconda environment if you need to:<a class="headerlink" href="#back-to-main-anaconda-environment-if-you-need-to" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">source</span> <span class="n">activate</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">user</span><span class="o">/</span><span class="n">anaconda2</span>
+</pre></div>
+</div>
+</div>
 </div>
 </div>
 
@@ -303,15 +344,6 @@
            
           </div>
           <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="scripts.html" class="btn btn-neutral float-right" title="PyRate Scripts" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="authors.html" class="btn btn-neutral float-left" title="Credits" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
-    </div>
   
 
   <hr/>
