@@ -13,13 +13,18 @@ and the `National Computational Infrastructure <http://nci.org.au/>`__.
 Contributors
 ------------
 
-* Brenainn Moushall (GA)
-* Sheece Gardezi (GA)
-* Sudipta Basak (GA)
-* Ben Davies (NCI)
-* Matt Garthwaite (GA)
-* Simon Knapp (GA)
-* Sarah Lawrie (GA)
-* Negin Moghaddam (GA)
-* Vanessa Newey (GA)
-* Garrick Paskos (GA)
+Thanks to `all the contributors`_ who helped in building this project.
+
+.. _`all the contributors`: https://github.com/GeoscienceAustralia/PyRate/graphs/contributors
+
+
+.. * Brenainn Moushall (GA)
+.. * Sheece Gardezi (GA)
+.. * Sudipta Basak (GA)
+.. * Ben Davies (NCI)
+.. * Matt Garthwaite (GA)
+.. * Simon Knapp (GA)
+.. * Sarah Lawrie (GA)
+.. * Negin Moghaddam (GA)
+.. * Vanessa Newey (GA)
+.. * Garrick Paskos (GA)

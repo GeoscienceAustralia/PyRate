@@ -11,7 +11,7 @@ Types of Contributions
 ----------------------
 
 Report Bugs
-~~~~~~~~~~~
+^^^^^^^^^^^
 
 Report bugs at https://github.com/GeoscienceAustralia/PyRate/issues.
 
@@ -24,26 +24,26 @@ If you are reporting a bug, please include:
 For an example of how to report a bug please see: https://github.com/GeoscienceAustralia/PyRate/issues/146
 
 Fix Bugs
-~~~~~~~~
+^^^^^^^^
 
 Look through the GitHub issues for bugs. Anything tagged with "bug"
 is open to whoever wants to implement it.
 
 Implement Features
-~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^
 
 Look through the GitHub issues for new features. Anything tagged with
 "enhancement" is open to whoever wants to implement it.
 
 Write Documentation
-~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^
 
 PyRate could always use more documentation, whether as part of the
 official PyRate docs, in docstrings, or even on the web in blog posts,
 articles etc.
 
 Submit Feedback
-~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^
 
 The best way to send feedback is to file an Issue_.
 
@@ -62,27 +62,39 @@ Get Started!
 Ready to contribute? Here's how to set up `PyRate` for local development.
 
 1. Fork_ the `PyRate` repository on GitHub.
-2. Clone your fork locally::
+2. Clone your fork locally
 
-    $ git clone git@github.com:GeoscienceAustralia/PyRate.git
+::
 
-3. Create a branch for local development::
+    git clone git@github.com:GeoscienceAustralia/PyRate.git
 
-    $ git checkout -b name-of-your-bugfix-or-feature
+3. Create a branch for local development
+
+::
+
+    git checkout -b name-of-your-bugfix-or-feature
 
 Now you can make your changes locally.
 
 4. When you're finished making changes, check that your changes pass style and unit
-   tests, including testing other Python versions with tox::
+   tests. A suite of tests have been developed for use in testing PyRate functionality
+   and for further code development. The tests use `pytest <http://doc.pytest.org/en/latest/>`__
+   and can be found in the *tests/* directory. A small test dataset is included in the *tests/test\_data/* directory.
 
-    $ pip install tox
-    $ tox
+::
 
-5. Commit your changes and push your branch to GitHub::
+    cd PyRate
+    pytest tests/
+    pip install tox
+    tox
 
-    $ git add .
-    $ git commit -m "Your detailed description of your changes."
-    $ git push origin name-of-your-bugfix-or-feature
+5. Commit your changes and push your branch to GitHub
+
+::
+
+    git add .
+    git commit -m "Your detailed description of your changes."
+    git push origin name-of-your-bugfix-or-feature
 
 6. Submit a pull request through the GitHub website.
 
@@ -97,17 +109,8 @@ Before you submit a pull request, check that it meets these guidelines:
 2. If the pull request adds functionality, the documentation should be updated.
    Put your new functionality into a function with a docstring, and add the
    feature to the list in README.rst.
-3. The pull request should work for Python 2.7, and 3.3, 3.4, 3.5, 3.6, 3.7
-    and for PyPy.
+3. The pull request should work for Python 3.3+ and for PyPy.
 
    Check https://travis-ci.org/GeoscienceAustralia/PyRate
    under pull requests for active pull requests or run the ``tox`` command and
    make sure that the tests pass for all supported Python versions.
-
-
-Tips
-----
-
-To run a subset of tests::
-
-	 $ py.test test/test_mst.py
