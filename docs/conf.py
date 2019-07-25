@@ -42,7 +42,8 @@ extensions = ['sphinx.ext.autodoc',
               'matplotlib.sphinxext.plot_directive',
               'IPython.sphinxext.ipython_console_highlighting',
               'IPython.sphinxext.ipython_directive',
-              'sphinxcontrib.programoutput']
+              'sphinxcontrib.programoutput'
+              ]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -112,7 +113,8 @@ html_theme_options = {
     # 'titles_only': True,
     'navigation_depth': 2,
     'logo_only': True,
-    'prev_next_buttons_location': 'top'
+    'prev_next_buttons_location': 'top',
+    'style_nav_header_background': 'white'
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
@@ -204,3 +206,6 @@ epub_exclude_files = ['search.html']
 # link check ignore
 linkcheck_ignore = [r'http://localhost:\d+/',
                     'https://github.com/Nekroze/PyRate/fork']
+
+def setup(app):
+    app.add_stylesheet('css/custom.css')
