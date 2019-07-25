@@ -34,6 +34,9 @@ Contents:
    scripts
    modules
 
+
+
+.. _Home: https://geoscienceaustralia.github.io/PyRate/
 .. _`Github Repository`: https://github.com/GeoscienceAustralia/PyRate
 .. _`Issue tracking`: https://github.com/GeoscienceAustralia/PyRate/issues
 
@@ -55,4 +58,3 @@ Indices and tables
 
 * :ref:`genindex`
 * :ref:`modindex`
-* :ref:`search`

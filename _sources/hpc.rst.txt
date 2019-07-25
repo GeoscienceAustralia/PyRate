@@ -1,5 +1,10 @@
-HCP
+HPC
 ------
+
+.. TODO
+
+Tt is only applicable to the raijin HPC system of the National Computational Infrastructure.
+We don't know how applicable it is to other supercomputer systems
 
 Setup
 ^^^^^
@@ -9,7 +14,7 @@ Login to Raijin
 ::
 
     ssh <user_name>@raijin.nci.org.au
-    git clone git clone https://github.com/GeoscienceAustralia/PyRate.git
+    git clone https://github.com/GeoscienceAustralia/PyRate.git
 
 Load the required Raijin  modules and fix the PYTHONPATH
 
