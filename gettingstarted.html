@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Getting Started &mdash; PyRate  documentation</title>
+  <title>Getting Started &mdash; PyRate 0.3.0 documentation</title>
   
 
   
@@ -50,9 +50,12 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> PyRate
+            <a href="index.html">
           
 
+          
+            
+            <img src="_static/PyRate_logo.png" class="logo" alt="Logo"/>
           
           </a>
 
@@ -79,63 +82,22 @@
             
               <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Getting Started</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#ubuntu">Ubuntu</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#setup">Setup</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#usage">Usage</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#docker">Docker</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id1">Setup</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id2">Usage</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#nci">NCI</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id3">Setup</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id4">Usage</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#anaconda">Anaconda</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#install">Install</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#tests">Tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ubuntu">Ubuntu</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#docker">Docker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#hcp">HCP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#anaconda">Anaconda</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="usage.html#configuration-file">Configuration File</a></li>
-<li class="toctree-l2"><a class="reference internal" href="usage.html#pyrate-workflow">PyRate workflow</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="usage.html#prepifg-preparing-input-interferograms">prepifg: Preparing input interferograms</a></li>
-<li class="toctree-l3"><a class="reference internal" href="usage.html#linrate-main-workflow-and-linear-rate-and-time-series-analysis">linrate: Main workflow and linear rate and time series analysis</a></li>
-<li class="toctree-l3"><a class="reference internal" href="usage.html#postprocess-putting-the-tiles-back-together">postprocess: Putting the tiles back together</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="usage.html#mpi-support">MPI Support</a></li>
-<li class="toctree-l2"><a class="reference internal" href="usage.html#python-multiprocessing-support">Python multiprocessing support</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="hpc.html">Running PyRate on a HPC system</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="hpc.html#pre-installation">Pre-installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hpc.html#installation">Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hpc.html#updating-the-code">Updating the Code</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hpc.html#running-batch-jobs">Running Batch Jobs</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="hpc.html#batch-testing">Batch testing</a></li>
-<li class="toctree-l3"><a class="reference internal" href="hpc.html#mpirun">MPIRun</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#configuration">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#workflow">Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#multiprocessing">Multiprocessing</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="contributing.html#types-of-contributions">Types of Contributions</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="contributing.html#report-bugs">Report Bugs</a></li>
-<li class="toctree-l3"><a class="reference internal" href="contributing.html#fix-bugs">Fix Bugs</a></li>
-<li class="toctree-l3"><a class="reference internal" href="contributing.html#implement-features">Implement Features</a></li>
-<li class="toctree-l3"><a class="reference internal" href="contributing.html#write-documentation">Write Documentation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="contributing.html#submit-feedback">Submit Feedback</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#types-of-contributions">Types of Contributions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="contributing.html#get-started">Get Started!</a></li>
 <li class="toctree-l2"><a class="reference internal" href="contributing.html#pull-request-guidelines">Pull Request Guidelines</a></li>
-<li class="toctree-l2"><a class="reference internal" href="contributing.html#tips">Tips</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a><ul>
@@ -220,13 +182,20 @@
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="_sources/gettingstarted.rst.txt" rel="nofollow"> View page source</a>
-          
         
       </li>
     
   </ul>
 
+  
+  <div class="rst-breadcrumbs-buttons" role="navigation" aria-label="breadcrumb navigation">
+      
+        <a href="usage.html" class="btn btn-neutral float-right" title="Usage" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to the documentation for PyRate!" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+  </div>
   
   <hr/>
 </div>
@@ -235,7 +204,8 @@
             
   <div class="section" id="getting-started">
 <h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h1>
-<p>Step by step guide to install Pyrate and run toy example.</p>
+<p>This is a quick guide to getting the PyRate software up and running in various platforms.
+Step by step guide to install Pyrate and run toy example.</p>
 <div class="section" id="ubuntu">
 <h2>Ubuntu<a class="headerlink" href="#ubuntu" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="setup">
@@ -291,8 +261,8 @@
 </div>
 </div>
 </div>
-<div class="section" id="nci">
-<h2>NCI<a class="headerlink" href="#nci" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="hcp">
+<h2>HCP<a class="headerlink" href="#hcp" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="id3">
 <h3>Setup<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
 <p>Login to Raijin</p>
@@ -381,8 +351,7 @@ will clone in your current (home) directory.</p>
 <h4>Set up environment variables<a class="headerlink" href="#set-up-environment-variables" title="Permalink to this headline">¶</a></h4>
 <p>You need to add the directory containing the <code class="docutils literal notranslate"><span class="pre">pyrate/</span></code> directory to
 the <code class="docutils literal notranslate"><span class="pre">PYTHONPATH</span></code> environment variable, and the environment variable
-<code class="docutils literal notranslate"><span class="pre">PYRATEPATH</span></code> needs to point to the directory containing the <code class="docutils literal notranslate"><span class="pre">tests/</span></code>
-directory:</p>
+<code class="docutils literal notranslate"><span class="pre">PYRATEPATH</span></code> needs to point to the root directory:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>export PYRATEPATH=&quot;~/PyRate&quot;
 export PYTHONPATH=$PYRATEPATH/:$PYTHONPATH
 </pre></div>
@@ -411,19 +380,7 @@ format) file:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">source</span> <span class="o">~/</span><span class="n">anaconda2</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">activate</span> <span class="n">pyrate</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="run-pyrate-tests">
-<h4>Run <code class="docutils literal notranslate"><span class="pre">PyRate</span></code> tests<a class="headerlink" href="#run-pyrate-tests" title="Permalink to this headline">¶</a></h4>
-<p>To run the full suite of tests, use the following command inside the
-<code class="docutils literal notranslate"><span class="pre">PyRate</span></code> directory:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="o">~/</span><span class="n">PyRate</span>
-<span class="n">py</span><span class="o">.</span><span class="n">test</span> <span class="n">tests</span><span class="o">/</span>
-</pre></div>
-</div>
-<p>To run the tests for a particular module:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">py</span><span class="o">.</span><span class="n">test</span> <span class="n">tests</span><span class="o">/</span><span class="n">test_orbital</span><span class="o">.</span><span class="n">py</span>
-</pre></div>
-</div>
+<p></p>
 </div>
 <div class="section" id="deactivate">
 <h4>Deactivate<a class="headerlink" href="#deactivate" title="Permalink to this headline">¶</a></h4>
@@ -441,20 +398,6 @@ environment using:</p>
 </div>
 </div>
 </div>
-<div class="section" id="tests">
-<h2>Tests<a class="headerlink" href="#tests" title="Permalink to this headline">¶</a></h2>
-<p>A suite of tests have been developed for use in testing PyRate
-functionality and for further code development. The tests use
-<a class="reference external" href="http://doc.pytest.org/en/latest/">pytest</a> and can be found in the
-<em>tests/</em> directory. A small test dataset is included in the
-<em>tests/test_data/</em> directory.</p>
-<p>To run the tests, use the following command inside the top level
-<em>PyRate/</em> directory:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="n">PyRate</span>
-<span class="n">pytest</span> <span class="n">tests</span><span class="o">/</span>
-</pre></div>
-</div>
-</div>
 </div>
 
 
@@ -462,15 +405,6 @@ functionality and for further code development. The tests use
            
           </div>
           <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="usage.html" class="btn btn-neutral float-right" title="Usage" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to the documentation for PyRate!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
-    </div>
   
 
   <hr/>

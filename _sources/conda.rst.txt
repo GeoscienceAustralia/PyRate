@@ -60,8 +60,7 @@ Set up environment variables
 
 You need to add the directory containing the ``pyrate/`` directory to
 the ``PYTHONPATH`` environment variable, and the environment variable
-``PYRATEPATH`` needs to point to the directory containing the ``tests/``
-directory:
+``PYRATEPATH`` needs to point to the root directory:
 
 ::
 
@@ -98,22 +97,7 @@ Activate the ``pyrate`` environment
 
     source ~/anaconda2/bin/activate pyrate
 
-Run ``PyRate`` tests
-""""""""""""""""""""
-
-To run the full suite of tests, use the following command inside the
-``PyRate`` directory:
-
-::
-
-    cd ~/PyRate
-    py.test tests/
-
-To run the tests for a particular module:
-
-::
-
-    py.test tests/test_orbital.py
+\
 
 Deactivate
 """"""""""

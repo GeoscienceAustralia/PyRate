@@ -1,14 +1,17 @@
 Usage
 =====
 
-Configuration File
-------------------
+Configuration
+-------------
 
-Example configuration files for running PyRate with GAMMA or ROI\_PAC
-format interferograms are contained in the *configs/* directory.
+Various parameters_ can be set in the configration file. Example configuration files for running PyRate with GAMMA
+format interferograms are contained in the *pyrate_gamma.conf* file.
 
-PyRate workflow
----------------
+.. _parameters: https://geoscienceaustralia.github.io/PyRate/config.html
+
+
+Workflow
+--------
 
 After following the steps in `Installation <installation.html>`__, an
 executable program ``pyrate`` is created.
@@ -170,16 +173,9 @@ the previous ``linrate`` step:
 
     pyrate postprocess path/to/config_file -c 3 -r 4
 
-MPI Support
------------
+Multiprocessing
+---------------
 
-PyRate has been designed for use on High Performance Computers and
-instructions to use a HPC cluster can be found in the `hpc
-guide <hpc>`__.
-
-Python multiprocessing support
-------------------------------
-
-In addition to the MPI support for HPC, PyRate can use standard
-multi-threading simply by turning ``parallel:  1`` in the configuration
+PyRate can use standard multi-threading simply by turning
+``parallel:  1`` in the configuration
 file to take advantage of multiple cores on a single PC.

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Usage &mdash; PyRate  documentation</title>
+  <title>Usage &mdash; PyRate 0.3.0 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Running PyRate on a HPC system" href="hpc.html" />
+    <link rel="next" title="Contributing" href="contributing.html" />
     <link rel="prev" title="Getting Started" href="gettingstarted.html" /> 
 </head>
 
@@ -50,9 +50,12 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> PyRate
+            <a href="index.html">
           
 
+          
+            
+            <img src="_static/PyRate_logo.png" class="logo" alt="Logo"/>
           
           </a>
 
@@ -79,63 +82,22 @@
             
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="gettingstarted.html">Getting Started</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#ubuntu">Ubuntu</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="gettingstarted.html#setup">Setup</a></li>
-<li class="toctree-l3"><a class="reference internal" href="gettingstarted.html#usage">Usage</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#docker">Docker</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="gettingstarted.html#id1">Setup</a></li>
-<li class="toctree-l3"><a class="reference internal" href="gettingstarted.html#id2">Usage</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#nci">NCI</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="gettingstarted.html#id3">Setup</a></li>
-<li class="toctree-l3"><a class="reference internal" href="gettingstarted.html#id4">Usage</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#anaconda">Anaconda</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="gettingstarted.html#install">Install</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#tests">Tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#ubuntu">Ubuntu</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#docker">Docker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#hcp">HCP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#anaconda">Anaconda</a></li>
 </ul>
 </li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Usage</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#configuration-file">Configuration File</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#pyrate-workflow">PyRate workflow</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#prepifg-preparing-input-interferograms">prepifg: Preparing input interferograms</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#linrate-main-workflow-and-linear-rate-and-time-series-analysis">linrate: Main workflow and linear rate and time series analysis</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#postprocess-putting-the-tiles-back-together">postprocess: Putting the tiles back together</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#mpi-support">MPI Support</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#python-multiprocessing-support">Python multiprocessing support</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="hpc.html">Running PyRate on a HPC system</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="hpc.html#pre-installation">Pre-installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hpc.html#installation">Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hpc.html#updating-the-code">Updating the Code</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hpc.html#running-batch-jobs">Running Batch Jobs</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="hpc.html#batch-testing">Batch testing</a></li>
-<li class="toctree-l3"><a class="reference internal" href="hpc.html#mpirun">MPIRun</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="#configuration">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#workflow">Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#multiprocessing">Multiprocessing</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="contributing.html#types-of-contributions">Types of Contributions</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="contributing.html#report-bugs">Report Bugs</a></li>
-<li class="toctree-l3"><a class="reference internal" href="contributing.html#fix-bugs">Fix Bugs</a></li>
-<li class="toctree-l3"><a class="reference internal" href="contributing.html#implement-features">Implement Features</a></li>
-<li class="toctree-l3"><a class="reference internal" href="contributing.html#write-documentation">Write Documentation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="contributing.html#submit-feedback">Submit Feedback</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#types-of-contributions">Types of Contributions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="contributing.html#get-started">Get Started!</a></li>
 <li class="toctree-l2"><a class="reference internal" href="contributing.html#pull-request-guidelines">Pull Request Guidelines</a></li>
-<li class="toctree-l2"><a class="reference internal" href="contributing.html#tips">Tips</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a><ul>
@@ -220,13 +182,20 @@
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="_sources/usage.rst.txt" rel="nofollow"> View page source</a>
-          
         
       </li>
     
   </ul>
 
+  
+  <div class="rst-breadcrumbs-buttons" role="navigation" aria-label="breadcrumb navigation">
+      
+        <a href="contributing.html" class="btn btn-neutral float-right" title="Contributing" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="gettingstarted.html" class="btn btn-neutral float-left" title="Getting Started" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+  </div>
   
   <hr/>
 </div>
@@ -235,13 +204,13 @@
             
   <div class="section" id="usage">
 <h1>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="configuration-file">
-<h2>Configuration File<a class="headerlink" href="#configuration-file" title="Permalink to this headline">¶</a></h2>
-<p>Example configuration files for running PyRate with GAMMA or ROI_PAC
-format interferograms are contained in the <em>configs/</em> directory.</p>
+<div class="section" id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h2>
+<p>Various <a class="reference external" href="https://geoscienceaustralia.github.io/PyRate/config.html">parameters</a> can be set in the configration file. Example configuration files for running PyRate with GAMMA
+format interferograms are contained in the <em>pyrate_gamma.conf</em> file.</p>
 </div>
-<div class="section" id="pyrate-workflow">
-<h2>PyRate workflow<a class="headerlink" href="#pyrate-workflow" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="workflow">
+<h2>Workflow<a class="headerlink" href="#workflow" title="Permalink to this headline">¶</a></h2>
 <p>After following the steps in <a class="reference external" href="installation.html">Installation</a>, an
 executable program <code class="docutils literal notranslate"><span class="pre">pyrate</span></code> is created.</p>
 <p>Use <code class="docutils literal notranslate"><span class="pre">help</span></code> for the different command line options:</p>
@@ -375,16 +344,10 @@ the previous <code class="docutils literal notranslate"><span class="pre">linrat
 </div>
 </div>
 </div>
-<div class="section" id="mpi-support">
-<h2>MPI Support<a class="headerlink" href="#mpi-support" title="Permalink to this headline">¶</a></h2>
-<p>PyRate has been designed for use on High Performance Computers and
-instructions to use a HPC cluster can be found in the <a class="reference external" href="hpc">hpc
-guide</a>.</p>
-</div>
-<div class="section" id="python-multiprocessing-support">
-<h2>Python multiprocessing support<a class="headerlink" href="#python-multiprocessing-support" title="Permalink to this headline">¶</a></h2>
-<p>In addition to the MPI support for HPC, PyRate can use standard
-multi-threading simply by turning <code class="docutils literal notranslate"><span class="pre">parallel:</span>&#160; <span class="pre">1</span></code> in the configuration
+<div class="section" id="multiprocessing">
+<h2>Multiprocessing<a class="headerlink" href="#multiprocessing" title="Permalink to this headline">¶</a></h2>
+<p>PyRate can use standard multi-threading simply by turning
+<code class="docutils literal notranslate"><span class="pre">parallel:</span>&#160; <span class="pre">1</span></code> in the configuration
 file to take advantage of multiple cores on a single PC.</p>
 </div>
 </div>
@@ -394,15 +357,6 @@ file to take advantage of multiple cores on a single PC.</p>
            
           </div>
           <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="hpc.html" class="btn btn-neutral float-right" title="Running PyRate on a HPC system" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="gettingstarted.html" class="btn btn-neutral float-left" title="Getting Started" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
-    </div>
   
 
   <hr/>
