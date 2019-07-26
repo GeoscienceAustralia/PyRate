@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>pyrate.pyratelog &mdash; PyRate 0.2.1 documentation</title>
+  <title>pyrate.mpiops &mdash; PyRate 0.2.1 documentation</title>
   
 
   
@@ -165,7 +165,7 @@
         
           <li><a href="../index.html">Module code</a> &raquo;</li>
         
-      <li>pyrate.pyratelog</li>
+      <li>pyrate.mpiops</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -180,7 +180,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <h1>Source code for pyrate.pyratelog</h1><div class="highlight"><pre>
+  <h1>Source code for pyrate.mpiops</h1><div class="highlight"><pre>
 <span></span><span class="c1">#   This Python module is part of the PyRate software package.</span>
 <span class="c1">#</span>
 <span class="c1">#   Copyright 2017 Geoscience Australia</span>
@@ -197,67 +197,63 @@
 <span class="c1">#   See the License for the specific language governing permissions and</span>
 <span class="c1">#   limitations under the License.</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">This Python module contains functions to control PyRate log outputs</span>
+<span class="sd">This Python module contains MPI convenience functions for PyRate</span>
 <span class="sd">&quot;&quot;&quot;</span>
+<span class="c1"># pylint: disable=no-member</span>
+<span class="c1"># pylint: disable=invalid-name</span>
 <span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">sys</span>
-<span class="kn">import</span> <span class="nn">traceback</span>
-<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">from</span> <span class="nn">mpi4py</span> <span class="k">import</span> <span class="n">MPI</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">pyrate</span> <span class="k">import</span> <span class="n">mpiops</span>
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="c1"># We&#39;re having trouble with the MPI pickling and 64bit integers</span>
+<span class="n">MPI</span><span class="o">.</span><span class="n">pickle</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">pickle</span><span class="o">.</span><span class="n">dumps</span><span class="p">,</span> <span class="n">pickle</span><span class="o">.</span><span class="n">loads</span><span class="p">)</span>
+
+<span class="c1"># module-level MPI &#39;world&#39; object representing all connected nodes</span>
+<span class="n">comm</span> <span class="o">=</span> <span class="n">MPI</span><span class="o">.</span><span class="n">COMM_WORLD</span>
+
+<span class="c1"># int: the total number of nodes in the MPI world</span>
+<span class="n">size</span> <span class="o">=</span> <span class="n">comm</span><span class="o">.</span><span class="n">Get_size</span><span class="p">()</span>
+
+<span class="c1"># int: the index (from zero) of this node in the MPI world. Also known as</span>
+<span class="c1"># the rank of the node.</span>
+<span class="n">rank</span> <span class="o">=</span> <span class="n">comm</span><span class="o">.</span><span class="n">Get_rank</span><span class="p">()</span>
 
 
-<div class="viewcode-block" id="configure"><a class="viewcode-back" href="../../pyratelog.html#pyrate.pyratelog.configure">[docs]</a><span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="n">verbosity</span><span class="p">):</span>
+<div class="viewcode-block" id="run_once"><a class="viewcode-back" href="../../pyrate.html#pyrate.mpiops.run_once">[docs]</a><span class="k">def</span> <span class="nf">run_once</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Function to configure logging properties</span>
+<span class="sd">    Run a function on one node and then broadcast result to all.</span>
 
-<span class="sd">    :param str verbosity: [&#39;DEBUG&#39;, &#39;INFO&#39;, &#39;WARNING&#39;, or &#39;ERROR&#39;]</span>
+<span class="sd">    :param str f: The function to be evaluated. Can take arbitrary arguments</span>
+<span class="sd">                and return anything or nothing</span>
+<span class="sd">    :param str args: Other positional arguments to pass on to f (optional)</span>
+<span class="sd">    :param str kwargs: Other named arguments to pass on to f (optional)</span>
 
-<span class="sd">    :return: None</span>
+<span class="sd">    :return: The value returned by f.</span>
+<span class="sd">    :rtype: unknown</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
-    <span class="n">log</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">verbosity</span><span class="p">)</span>
-    <span class="n">stream</span> <span class="o">=</span> <span class="n">_MPIStreamHandler</span><span class="p">()</span>
-    <span class="n">formatter</span> <span class="o">=</span> <span class="n">_ElapsedFormatter</span><span class="p">()</span>
-    <span class="n">stream</span><span class="o">.</span><span class="n">setFormatter</span><span class="p">(</span><span class="n">formatter</span><span class="p">)</span>
-    <span class="n">log</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">stream</span><span class="p">)</span></div>
+    <span class="k">if</span> <span class="n">rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">f_result</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">f_result</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">comm</span><span class="o">.</span><span class="n">bcast</span><span class="p">(</span><span class="n">f_result</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">result</span></div>
 
 
-<span class="k">class</span> <span class="nc">_MPIStreamHandler</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">StreamHandler</span><span class="p">):</span>
+<div class="viewcode-block" id="array_split"><a class="viewcode-back" href="../../pyrate.html#pyrate.mpiops.array_split">[docs]</a><span class="k">def</span> <span class="nf">array_split</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">process</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Only logs messages from Node 0</span>
+<span class="sd">    Convenience function for splitting array elements across MPI processes</span>
+
+<span class="sd">    :param ndarray arr: Numpy array</span>
+<span class="sd">    :param int process: Process for which array members are required.</span>
+<span class="sd">                If None, MPI.comm.rank is used instead. (optional)</span>
+
+<span class="sd">    :return List corresponding to array members in a process.</span>
+<span class="sd">    :rtype: list</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">emit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="nb">super</span><span class="p">(</span><span class="n">_MPIStreamHandler</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
-
-
-<span class="k">class</span> <span class="nc">_ElapsedFormatter</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Convenience class used to show timestamps</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># pylint: disable=too-few-public-methods</span>
-    <span class="c1"># pylint: disable=no-self-use</span>
-    <span class="k">def</span> <span class="nf">format</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; time formatter &quot;&quot;&quot;</span>
-        <span class="n">lvl</span> <span class="o">=</span> <span class="n">record</span><span class="o">.</span><span class="n">levelname</span>
-        <span class="n">name</span> <span class="o">=</span> <span class="n">record</span><span class="o">.</span><span class="n">name</span>
-        <span class="n">t</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">relativeCreated</span><span class="o">/</span><span class="mf">1000.0</span><span class="p">))</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="n">record</span><span class="o">.</span><span class="n">getMessage</span><span class="p">()</span>
-        <span class="n">logstr</span> <span class="o">=</span> <span class="s2">&quot;+</span><span class="si">{}</span><span class="s2">s </span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">lvl</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">logstr</span>
-
-
-<span class="c1">#TODO: Not currently used. Remove in future?</span>
-<span class="k">def</span> <span class="nf">_warn_with_traceback</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">category</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">lineno</span><span class="p">,</span> <span class="n">line</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    copied from:</span>
-<span class="sd">    http://stackoverflow.com/questions/22373927/get-traceback-of-warnings</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">traceback</span><span class="o">.</span><span class="n">print_stack</span><span class="p">()</span>
-    <span class="n">log</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span>
-    <span class="n">log</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">warnings</span><span class="o">.</span><span class="n">formatwarning</span><span class="p">(</span>
-        <span class="n">message</span><span class="p">,</span> <span class="n">category</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">lineno</span><span class="p">,</span> <span class="n">line</span><span class="p">))</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">process</span> <span class="k">if</span> <span class="n">process</span> <span class="k">else</span> <span class="n">rank</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array_split</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">size</span><span class="p">)[</span><span class="n">r</span><span class="p">]</span></div>
 </pre></div>
 
            </div>

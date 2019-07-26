@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>PyRate run_prepifg Script &mdash; PyRate 0.2.1 documentation</title>
+  <title>pyrate.scripts package &mdash; PyRate 0.2.1 documentation</title>
   
 
   
@@ -36,8 +36,7 @@
   <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="PyRate run_pyrate Script" href="pyrate.scripts.run_pyrate.html" />
-    <link rel="prev" title="PyRate Scripts" href="scripts.html" /> 
+    <link rel="prev" title="pyrate package" href="pyrate.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -108,15 +107,15 @@
 <li class="toctree-l2"><a class="reference internal" href="authors.html#contributors">Contributors</a></li>
 </ul>
 </li>
-<li class="toctree-l1 current"><a class="reference internal" href="scripts.html">PyRate Scripts</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">PyRate run_prepifg Script</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts.html">PyRate Scripts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.run_prepifg.html">PyRate run_prepifg Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.run_pyrate.html">PyRate run_pyrate Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.postprocessing.html">PyRate postprocessing Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.main.html">PyRate main Script</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="modules.html">pyrate</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.html">pyrate package</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">pyrate</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="pyrate.html">pyrate package</a></li>
 </ul>
 </li>
 </ul>
@@ -165,9 +164,11 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-          <li><a href="scripts.html">PyRate Scripts</a> &raquo;</li>
+          <li><a href="modules.html">pyrate</a> &raquo;</li>
         
-      <li>PyRate run_prepifg Script</li>
+          <li><a href="pyrate.html">pyrate package</a> &raquo;</li>
+        
+      <li>pyrate.scripts package</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -181,10 +182,8 @@
   
   <div class="rst-breadcrumbs-buttons" role="navigation" aria-label="breadcrumb navigation">
       
-        <a href="pyrate.scripts.run_pyrate.html" class="btn btn-neutral float-right" title="PyRate run_pyrate Script" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
-      
-        <a href="scripts.html" class="btn btn-neutral float-left" title="PyRate Scripts" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="pyrate.html" class="btn btn-neutral float-left" title="pyrate package" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
   </div>
   
@@ -193,8 +192,35 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="module-pyrate.scripts.run_prepifg">
-<span id="pyrate-run-prepifg-script"></span><h1>PyRate run_prepifg Script<a class="headerlink" href="#module-pyrate.scripts.run_prepifg" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="pyrate-scripts-package">
+<h1>pyrate.scripts package<a class="headerlink" href="#pyrate-scripts-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-pyrate.scripts.main">
+<span id="pyrate-scripts-main-module"></span><h2>pyrate.scripts.main module<a class="headerlink" href="#module-pyrate.scripts.main" title="Permalink to this headline">¶</a></h2>
+<p>This Python module defines executable run configuration for the PyRate software</p>
+<dl class="function">
+<dt id="pyrate.scripts.main.version_msg">
+<code class="sig-prename descclassname">pyrate.scripts.main.</code><code class="sig-name descname">version_msg</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/scripts/main.html#version_msg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.scripts.main.version_msg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the Cookiecutter version and location of Python beiing used</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-pyrate.scripts.postprocessing">
+<span id="pyrate-scripts-postprocessing-module"></span><h2>pyrate.scripts.postprocessing module<a class="headerlink" href="#module-pyrate.scripts.postprocessing" title="Permalink to this headline">¶</a></h2>
+<p>This Python module does post-processing steps to assemble the linear
+rate and time series outputs and save as geotiff files</p>
+<dl class="function">
+<dt id="pyrate.scripts.postprocessing.main">
+<code class="sig-prename descclassname">pyrate.scripts.postprocessing.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><em class="sig-param">config_file</em>, <em class="sig-param">rows</em>, <em class="sig-param">cols</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/scripts/postprocessing.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.scripts.postprocessing.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>PyRate post-processing main function. Assembles product tiles in to
+single geotiff files</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-pyrate.scripts.run_prepifg">
+<span id="pyrate-scripts-run-prepifg-module"></span><h2>pyrate.scripts.run_prepifg module<a class="headerlink" href="#module-pyrate.scripts.run_prepifg" title="Permalink to this headline">¶</a></h2>
 <p>This Python script converts ROI_PAC or GAMMA format unwrapped
 interferograms into geotiffs and applies optional multilooking and cropping.</p>
 <dl class="function">
@@ -258,6 +284,48 @@ and multilooking/cropping operations.</p>
 </dl>
 </dd></dl>
 
+</div>
+<div class="section" id="module-pyrate.scripts.run_pyrate">
+<span id="pyrate-scripts-run-pyrate-module"></span><h2>pyrate.scripts.run_pyrate module<a class="headerlink" href="#module-pyrate.scripts.run_pyrate" title="Permalink to this headline">¶</a></h2>
+<p>This Python module runs the main PyRate processing workflow</p>
+<dl class="function">
+<dt id="pyrate.scripts.run_pyrate.process_ifgs">
+<code class="sig-prename descclassname">pyrate.scripts.run_pyrate.</code><code class="sig-name descname">process_ifgs</code><span class="sig-paren">(</span><em class="sig-param">ifg_paths</em>, <em class="sig-param">params</em>, <em class="sig-param">rows</em>, <em class="sig-param">cols</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/scripts/run_pyrate.html#process_ifgs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.scripts.run_pyrate.process_ifgs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Top level function to perform PyRate workflow on given interferograms</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ifg_paths</strong> (<em>list</em>) – List of interferogram paths</p></li>
+<li><p><strong>params</strong> (<em>dict</em>) – Dictionary of configuration parameters</p></li>
+<li><p><strong>rows</strong> (<em>int</em>) – Number of sub-tiles in y direction</p></li>
+<li><p><strong>cols</strong> (<em>int</em>) – Number of sub-tiles in x direction</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>refpt: tuple of reference pixel x and y position</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>maxvar: array of maximum variance values of interferograms</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>vcmt: Variance-covariance matrix array</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-pyrate.scripts">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-pyrate.scripts" title="Permalink to this headline">¶</a></h2>
+</div>
 </div>
 
 

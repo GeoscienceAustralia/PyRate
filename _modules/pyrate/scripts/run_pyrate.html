@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>pyrate.scripts.run_pyrate &mdash; PyRate 0.3.0 documentation</title>
+  <title>pyrate.scripts.run_pyrate &mdash; PyRate 0.2.1 documentation</title>
   
 
   
@@ -113,23 +113,8 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../pyrate.scripts.main.html">PyRate main Script</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">PyRate Modules</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../algorithm.html">Algorithm Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../aps.html">Atmospheric Phase Screen Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../config.html">Config Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../covariance.html">Covariance Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../gamma.html">GAMMA Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../gdal_python.html">GDAL-Python Bindings Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../linrate.html">Linrate Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../mst.html">Minimum Spanning Tree Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../orbital.html">Orbital Error Correction Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../prepifg.html">Prepifg Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../pyratelog.html">Logging Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../ref_phs_est.html">Reference Phase Calculation Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../refpixel.html">Reference Pixel Calculation Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../roipac.html">ROI_PAC Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../shared.html">Shared Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../timeseries.html">Time Series Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">pyrate</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../pyrate.html">pyrate package</a></li>
 </ul>
 </li>
 </ul>
@@ -211,10 +196,11 @@
 <span class="c1">#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
 <span class="c1">#   See the License for the specific language governing permissions and</span>
 <span class="c1">#   limitations under the License.</span>
-<span class="c1"># coding: utf-8</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">This Python module runs the main PyRate processing workflow</span>
 <span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span>
+
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">os.path</span> <span class="k">import</span> <span class="n">join</span>

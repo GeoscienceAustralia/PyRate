@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>pyrate.gamma &mdash; PyRate 0.3.0 documentation</title>
+  <title>pyrate.gamma &mdash; PyRate 0.2.1 documentation</title>
   
 
   
@@ -113,23 +113,8 @@
 <li class="toctree-l2"><a class="reference internal" href="../../pyrate.scripts.main.html">PyRate main Script</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../modules.html">PyRate Modules</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../algorithm.html">Algorithm Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../aps.html">Atmospheric Phase Screen Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../config.html">Config Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../covariance.html">Covariance Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../gamma.html">GAMMA Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../gdal_python.html">GDAL-Python Bindings Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../linrate.html">Linrate Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../mst.html">Minimum Spanning Tree Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../orbital.html">Orbital Error Correction Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../prepifg.html">Prepifg Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../pyratelog.html">Logging Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../ref_phs_est.html">Reference Phase Calculation Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../refpixel.html">Reference Pixel Calculation Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../roipac.html">ROI_PAC Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../shared.html">Shared Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../timeseries.html">Time Series Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">pyrate</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../pyrate.html">pyrate package</a></li>
 </ul>
 </li>
 </ul>
@@ -245,7 +230,7 @@
     <span class="k">return</span> <span class="nb">dict</span><span class="p">((</span><span class="n">i</span><span class="p">[</span><span class="mi">0</span><span class="p">][:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">i</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">raw_segs</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="parse_epoch_header"><a class="viewcode-back" href="../../gamma.html#pyrate.gamma.parse_epoch_header">[docs]</a><span class="k">def</span> <span class="nf">parse_epoch_header</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+<div class="viewcode-block" id="parse_epoch_header"><a class="viewcode-back" href="../../pyrate.html#pyrate.gamma.parse_epoch_header">[docs]</a><span class="k">def</span> <span class="nf">parse_epoch_header</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns dictionary of epoch metadata required for PyRate</span>
 
@@ -298,7 +283,7 @@
     <span class="k">return</span> <span class="n">subset</span>
 
 
-<div class="viewcode-block" id="parse_dem_header"><a class="viewcode-back" href="../../gamma.html#pyrate.gamma.parse_dem_header">[docs]</a><span class="k">def</span> <span class="nf">parse_dem_header</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+<div class="viewcode-block" id="parse_dem_header"><a class="viewcode-back" href="../../pyrate.html#pyrate.gamma.parse_dem_header">[docs]</a><span class="k">def</span> <span class="nf">parse_dem_header</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns dictionary of DEM metadata required for PyRate</span>
 
@@ -335,7 +320,7 @@
     <span class="k">return</span> <span class="n">ifc</span><span class="o">.</span><span class="n">SPEED_OF_LIGHT_METRES_PER_SECOND</span> <span class="o">/</span> <span class="n">freq</span>
 
 
-<div class="viewcode-block" id="combine_headers"><a class="viewcode-back" href="../../gamma.html#pyrate.gamma.combine_headers">[docs]</a><span class="k">def</span> <span class="nf">combine_headers</span><span class="p">(</span><span class="n">hdr0</span><span class="p">,</span> <span class="n">hdr1</span><span class="p">,</span> <span class="n">dem_hdr</span><span class="p">):</span>
+<div class="viewcode-block" id="combine_headers"><a class="viewcode-back" href="../../pyrate.html#pyrate.gamma.combine_headers">[docs]</a><span class="k">def</span> <span class="nf">combine_headers</span><span class="p">(</span><span class="n">hdr0</span><span class="p">,</span> <span class="n">hdr1</span><span class="p">,</span> <span class="n">dem_hdr</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Combines metadata for master and slave epochs and DEM into a single</span>
 <span class="sd">    dictionary for an interferogram.</span>
@@ -386,7 +371,7 @@
     <span class="k">return</span> <span class="n">chdr</span></div>
 
 
-<div class="viewcode-block" id="manage_headers"><a class="viewcode-back" href="../../gamma.html#pyrate.gamma.manage_headers">[docs]</a><span class="k">def</span> <span class="nf">manage_headers</span><span class="p">(</span><span class="n">dem_header_file</span><span class="p">,</span> <span class="n">header_paths</span><span class="p">):</span>
+<div class="viewcode-block" id="manage_headers"><a class="viewcode-back" href="../../pyrate.html#pyrate.gamma.manage_headers">[docs]</a><span class="k">def</span> <span class="nf">manage_headers</span><span class="p">(</span><span class="n">dem_header_file</span><span class="p">,</span> <span class="n">header_paths</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Manage and combine  header files for GAMMA interferograms, DEM and</span>
 <span class="sd">    incidence files</span>
@@ -410,7 +395,7 @@
     <span class="k">return</span> <span class="n">combined_header</span></div>
 
 
-<div class="viewcode-block" id="GammaException"><a class="viewcode-back" href="../../gamma.html#pyrate.gamma.GammaException">[docs]</a><span class="k">class</span> <span class="nc">GammaException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<div class="viewcode-block" id="GammaException"><a class="viewcode-back" href="../../pyrate.html#pyrate.gamma.GammaException">[docs]</a><span class="k">class</span> <span class="nc">GammaException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Gamma generic exception class</span>
 <span class="sd">    &quot;&quot;&quot;</span></div>

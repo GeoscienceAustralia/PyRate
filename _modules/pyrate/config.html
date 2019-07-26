@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>pyrate.config &mdash; PyRate 0.3.0 documentation</title>
+  <title>pyrate.config &mdash; PyRate 0.2.1 documentation</title>
   
 
   
@@ -113,23 +113,8 @@
 <li class="toctree-l2"><a class="reference internal" href="../../pyrate.scripts.main.html">PyRate main Script</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../modules.html">PyRate Modules</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../algorithm.html">Algorithm Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../aps.html">Atmospheric Phase Screen Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../config.html">Config Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../covariance.html">Covariance Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../gamma.html">GAMMA Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../gdal_python.html">GDAL-Python Bindings Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../linrate.html">Linrate Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../mst.html">Minimum Spanning Tree Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../orbital.html">Orbital Error Correction Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../prepifg.html">Prepifg Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../pyratelog.html">Logging Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../ref_phs_est.html">Reference Phase Calculation Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../refpixel.html">Reference Pixel Calculation Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../roipac.html">ROI_PAC Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../shared.html">Shared Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../timeseries.html">Time Series Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">pyrate</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../pyrate.html">pyrate package</a></li>
 </ul>
 </li>
 </ul>
@@ -219,10 +204,11 @@
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="c1"># coding: utf-8</span>
 <span class="c1"># pylint: disable= invalid-name</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">os.path</span> <span class="k">import</span> <span class="n">splitext</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
-<span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">from</span> <span class="nn">pyrate</span> <span class="k">import</span> <span class="n">compat</span>
 <span class="kn">from</span> <span class="nn">pyrate</span> <span class="k">import</span> <span class="n">mpiops</span>
 
 <span class="c1"># TODO: add regex column to check if some values are within bounds? Potential</span>
@@ -474,7 +460,7 @@
 <span class="n">INT_KEYS</span> <span class="o">=</span> <span class="p">[</span><span class="n">APS_CORRECTION</span><span class="p">,</span> <span class="n">APS_METHOD</span><span class="p">]</span>
 
 
-<div class="viewcode-block" id="get_config_params"><a class="viewcode-back" href="../../config.html#pyrate.config.get_config_params">[docs]</a><span class="k">def</span> <span class="nf">get_config_params</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+<div class="viewcode-block" id="get_config_params"><a class="viewcode-back" href="../../pyrate.html#pyrate.config.get_config_params">[docs]</a><span class="k">def</span> <span class="nf">get_config_params</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns a dictionary of key:value parameter pairs from the</span>
 <span class="sd">    configuration file</span>
@@ -574,7 +560,7 @@
     <span class="k">return</span> <span class="n">pars</span>
 
 
-<div class="viewcode-block" id="parse_namelist"><a class="viewcode-back" href="../../config.html#pyrate.config.parse_namelist">[docs]</a><span class="k">def</span> <span class="nf">parse_namelist</span><span class="p">(</span><span class="n">nml</span><span class="p">):</span>
+<div class="viewcode-block" id="parse_namelist"><a class="viewcode-back" href="../../pyrate.html#pyrate.config.parse_namelist">[docs]</a><span class="k">def</span> <span class="nf">parse_namelist</span><span class="p">(</span><span class="n">nml</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Parses name list file into array of paths</span>
 
@@ -589,14 +575,14 @@
     <span class="k">return</span> <span class="nb">filter</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">lines</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="ConfigException"><a class="viewcode-back" href="../../config.html#pyrate.config.ConfigException">[docs]</a><span class="k">class</span> <span class="nc">ConfigException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<div class="viewcode-block" id="ConfigException"><a class="viewcode-back" href="../../pyrate.html#pyrate.config.ConfigException">[docs]</a><span class="k">class</span> <span class="nc">ConfigException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Default exception class for configuration errors.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">pass</span></div>
 
 
-<div class="viewcode-block" id="write_config_file"><a class="viewcode-back" href="../../config.html#pyrate.config.write_config_file">[docs]</a><span class="k">def</span> <span class="nf">write_config_file</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">output_conf_file</span><span class="p">):</span>
+<div class="viewcode-block" id="write_config_file"><a class="viewcode-back" href="../../pyrate.html#pyrate.config.write_config_file">[docs]</a><span class="k">def</span> <span class="nf">write_config_file</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">output_conf_file</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Takes a param object and writes the config file. Reverse of get_conf_params.</span>
 
@@ -647,7 +633,7 @@
             <span class="s2">&quot;Orbital fit method option not recognised&quot;</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="transform_params"><a class="viewcode-back" href="../../config.html#pyrate.config.transform_params">[docs]</a><span class="k">def</span> <span class="nf">transform_params</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+<div class="viewcode-block" id="transform_params"><a class="viewcode-back" href="../../pyrate.html#pyrate.config.transform_params">[docs]</a><span class="k">def</span> <span class="nf">transform_params</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns subset of all parameters for cropping and multilooking.</span>
 
@@ -662,7 +648,7 @@
     <span class="k">return</span> <span class="n">xlooks</span><span class="p">,</span> <span class="n">ylooks</span><span class="p">,</span> <span class="n">crop</span></div>
 
 
-<div class="viewcode-block" id="original_ifg_paths"><a class="viewcode-back" href="../../config.html#pyrate.config.original_ifg_paths">[docs]</a><span class="k">def</span> <span class="nf">original_ifg_paths</span><span class="p">(</span><span class="n">ifglist_path</span><span class="p">):</span>
+<div class="viewcode-block" id="original_ifg_paths"><a class="viewcode-back" href="../../pyrate.html#pyrate.config.original_ifg_paths">[docs]</a><span class="k">def</span> <span class="nf">original_ifg_paths</span><span class="p">(</span><span class="n">ifglist_path</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns sequence of paths to files in given ifglist file.</span>
 
@@ -677,7 +663,7 @@
     <span class="k">return</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">basedir</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">ifglist</span><span class="p">]</span></div>
 
 
-<div class="viewcode-block" id="mlooked_path"><a class="viewcode-back" href="../../config.html#pyrate.config.mlooked_path">[docs]</a><span class="k">def</span> <span class="nf">mlooked_path</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">looks</span><span class="p">,</span> <span class="n">crop_out</span><span class="p">):</span>
+<div class="viewcode-block" id="mlooked_path"><a class="viewcode-back" href="../../pyrate.html#pyrate.config.mlooked_path">[docs]</a><span class="k">def</span> <span class="nf">mlooked_path</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">looks</span><span class="p">,</span> <span class="n">crop_out</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Adds suffix to ifg path, for creating a new path for multilooked files.</span>
 
@@ -694,7 +680,7 @@
         <span class="n">base</span><span class="o">=</span><span class="n">base</span><span class="p">,</span> <span class="n">looks</span><span class="o">=</span><span class="n">looks</span><span class="p">,</span> <span class="n">crop_out</span><span class="o">=</span><span class="n">crop_out</span><span class="p">,</span> <span class="n">ext</span><span class="o">=</span><span class="n">ext</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="get_dest_paths"><a class="viewcode-back" href="../../config.html#pyrate.config.get_dest_paths">[docs]</a><span class="k">def</span> <span class="nf">get_dest_paths</span><span class="p">(</span><span class="n">base_paths</span><span class="p">,</span> <span class="n">crop</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">looks</span><span class="p">):</span>
+<div class="viewcode-block" id="get_dest_paths"><a class="viewcode-back" href="../../pyrate.html#pyrate.config.get_dest_paths">[docs]</a><span class="k">def</span> <span class="nf">get_dest_paths</span><span class="p">(</span><span class="n">base_paths</span><span class="p">,</span> <span class="n">crop</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">looks</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Determines the full path names for the destination multilooked files</span>
 
@@ -715,7 +701,7 @@
     <span class="k">return</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">OUT_DIR</span><span class="p">],</span> <span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">dest_mlooked_ifgs</span><span class="p">]</span></div>
 
 
-<div class="viewcode-block" id="get_ifg_paths"><a class="viewcode-back" href="../../config.html#pyrate.config.get_ifg_paths">[docs]</a><span class="k">def</span> <span class="nf">get_ifg_paths</span><span class="p">(</span><span class="n">config_file</span><span class="p">):</span>
+<div class="viewcode-block" id="get_ifg_paths"><a class="viewcode-back" href="../../pyrate.html#pyrate.config.get_ifg_paths">[docs]</a><span class="k">def</span> <span class="nf">get_ifg_paths</span><span class="p">(</span><span class="n">config_file</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Read the configuration file, extract interferogram file list and determine</span>
 <span class="sd">    input and output interferogram path names.</span>

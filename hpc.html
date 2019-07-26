@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>HPC &mdash; PyRate 0.3.0 documentation</title>
+  <title>HPC &mdash; PyRate 0.2.1 documentation</title>
   
 
   
@@ -113,23 +113,8 @@
 <li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.main.html">PyRate main Script</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="modules.html">PyRate Modules</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="algorithm.html">Algorithm Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="aps.html">Atmospheric Phase Screen Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="config.html">Config Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="covariance.html">Covariance Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="gamma.html">GAMMA Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="gdal_python.html">GDAL-Python Bindings Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="linrate.html">Linrate Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mst.html">Minimum Spanning Tree Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="orbital.html">Orbital Error Correction Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="prepifg.html">Prepifg Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyratelog.html">Logging Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ref_phs_est.html">Reference Phase Calculation Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="refpixel.html">Reference Pixel Calculation Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="roipac.html">ROI_PAC Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="shared.html">Shared Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="timeseries.html">Time Series Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">pyrate</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.html">pyrate package</a></li>
 </ul>
 </li>
 </ul>
@@ -197,32 +182,36 @@
             
   <div class="section" id="hpc">
 <h1>HPC<a class="headerlink" href="#hpc" title="Permalink to this headline">¶</a></h1>
-<p>It is only applicable to the Raijin HPC system of the National Computational Infrastructure.
-We don’t know how applicable it is to other supercomputer systems.</p>
-<p>Login to Raijin</p>
+<p>These instructions have been tested with the Raijin platform of the
+National Computational Infrastructure (NCI).
+The process for other HPC platforms may differ.</p>
+<p>Login to Raijin:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ssh</span> <span class="o">&lt;</span><span class="n">user_name</span><span class="o">&gt;</span><span class="nd">@raijin</span><span class="o">.</span><span class="n">nci</span><span class="o">.</span><span class="n">org</span><span class="o">.</span><span class="n">au</span>
 <span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">GeoscienceAustralia</span><span class="o">/</span><span class="n">PyRate</span><span class="o">.</span><span class="n">git</span>
 </pre></div>
 </div>
-<p>Load the required Raijin  modules and fix the PYTHONPATH</p>
+<p>Load the required Raijin modules (this will also remove the default NCI GDAL
+Python bindings so we can build and use our own):</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">source</span> <span class="n">PyRate</span><span class="o">/</span><span class="n">utils</span><span class="o">/</span><span class="n">load_modules</span><span class="o">.</span><span class="n">sh</span>
 </pre></div>
 </div>
-<p>Create a python virtual environment</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python3</span> <span class="o">-</span><span class="n">m</span> <span class="n">venv</span> <span class="n">PyRateVM</span>
-<span class="n">source</span> <span class="n">PyRateVM</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">activate</span>
+<p>Create a Python virtual environment:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python3</span> <span class="o">-</span><span class="n">m</span> <span class="n">venv</span> <span class="o">~/</span><span class="n">PyRateVenv</span>
+<span class="n">source</span> <span class="o">~/</span><span class="n">PyRateVenv</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">activate</span>
 </pre></div>
 </div>
-<p>Install required libraries</p>
+<p>Install PyRate:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="n">PyRate</span>
 <span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">install</span>
 </pre></div>
 </div>
-<p>Run interactive session</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">qsub</span> <span class="o">-</span><span class="n">I</span> <span class="o">-</span><span class="n">q</span> <span class="n">expressbw</span> <span class="o">-</span><span class="n">l</span> <span class="n">walltime</span><span class="o">=</span><span class="mi">2</span><span class="p">:</span><span class="mi">00</span><span class="p">:</span><span class="mi">00</span><span class="p">,</span><span class="n">mem</span><span class="o">=</span><span class="mi">256</span><span class="n">Gb</span><span class="p">,</span><span class="n">ncpus</span><span class="o">=</span><span class="mi">28</span><span class="p">,</span><span class="n">wd</span>
+<p>Following this, PyRate will be available for PBS jobs. To verify the
+installation, first run interactive session:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">qsub</span> <span class="o">-</span><span class="n">I</span> <span class="o">-</span><span class="n">q</span> <span class="n">expressbw</span> <span class="o">-</span><span class="n">l</span> <span class="n">walltime</span><span class="o">=</span><span class="mi">2</span><span class="p">:</span><span class="mi">00</span><span class="p">:</span><span class="mi">00</span><span class="p">,</span><span class="n">mem</span><span class="o">=</span><span class="mi">256</span><span class="n">Gb</span><span class="p">,</span><span class="n">ncpus</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span><span class="n">wd</span>
 </pre></div>
 </div>
-<p>Wait for interactive session to start and then run workflow</p>
+<p>Once the session has started, you will need to reactivate your virtual
+environment and reload the required modules:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="o">~</span>
 <span class="n">source</span> <span class="n">PyRateVM</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">activate</span>
 <span class="n">source</span> <span class="n">PyRate</span><span class="o">/</span><span class="n">utils</span><span class="o">/</span><span class="n">load_modules</span><span class="o">.</span><span class="n">sh</span>
