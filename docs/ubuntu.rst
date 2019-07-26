@@ -1,9 +1,6 @@
 Ubuntu
 ------
 
-Setup
-^^^^^
-
 Build PyRate package
 
 ::
