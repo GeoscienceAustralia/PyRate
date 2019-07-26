@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>HPC &mdash; PyRate 0.2.1 documentation</title>
+  <title>Release History &mdash; PyRate 0.2.1 documentation</title>
   
 
   
@@ -163,7 +163,7 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>HPC</li>
+      <li>Release History</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -180,42 +180,58 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="hpc">
-<h1>HPC<a class="headerlink" href="#hpc" title="Permalink to this headline">¶</a></h1>
-<p>These instructions have been tested with the Raijin platform of the
-National Computational Infrastructure (NCI).
-The process for other HPC platforms may differ.</p>
-<p>Login to Raijin:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ssh</span> <span class="o">&lt;</span><span class="n">user_name</span><span class="o">&gt;</span><span class="nd">@raijin</span><span class="o">.</span><span class="n">nci</span><span class="o">.</span><span class="n">org</span><span class="o">.</span><span class="n">au</span>
-<span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">GeoscienceAustralia</span><span class="o">/</span><span class="n">PyRate</span><span class="o">.</span><span class="n">git</span>
-</pre></div>
+  <div class="section" id="release-history">
+<h1>Release History<a class="headerlink" href="#release-history" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="id1">
+<h2>0.3.0 (2019-07-26)<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="added">
+<h3>Added<a class="headerlink" href="#added" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p><cite>apt_install.sh</cite> in utils/ that lists Ubuntu/apt package requirements.</p></li>
+<li><p><cite>load_modules.sh</cite> in utils/ that sets up Raijin environment.</p></li>
+</ul>
 </div>
-<p>Load the required Raijin modules (this will also remove the default NCI GDAL
-Python bindings so we can build and use our own):</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">source</span> <span class="n">PyRate</span><span class="o">/</span><span class="n">utils</span><span class="o">/</span><span class="n">load_modules</span><span class="o">.</span><span class="n">sh</span>
-</pre></div>
+<div class="section" id="fixed">
+<h3>Fixed<a class="headerlink" href="#fixed" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Errors being caused by newer version of networkx. Nx 2.3 now supported.</p></li>
+</ul>
 </div>
-<p>Create a Python virtual environment:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python3</span> <span class="o">-</span><span class="n">m</span> <span class="n">venv</span> <span class="o">~/</span><span class="n">PyRateVenv</span>
-<span class="n">source</span> <span class="o">~/</span><span class="n">PyRateVenv</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">activate</span>
-</pre></div>
+<div class="section" id="removed">
+<h3>Removed<a class="headerlink" href="#removed" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Unused Python and OS packages.</p></li>
+<li><p>environment.yml - conda env will now be installed using ‘requirements.txt’.</p></li>
+<li><p>HPC directory - hpc README.rst moved to docs.</p></li>
+<li><p>setup.cfg - no longer needed.</p></li>
+</ul>
 </div>
-<p>Install PyRate:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="n">PyRate</span>
-<span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">install</span>
-</pre></div>
+<div class="section" id="changed">
+<h3>Changed<a class="headerlink" href="#changed" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Requirements now managed by ‘requirements.txt’ file, parsed by setup.py.</p></li>
+<li><p>Requirements now split across base ‘requirements.txt’ and files for dev
+(‘requirements-dev.txt’) and testing (‘requirements-test.txt’)</p></li>
+<li><p>Moved default config files to top level source directory.</p></li>
+<li><p>Pinned Python dependencies to specific versions.</p></li>
+<li><p>Travis build now installs GDAL from apt.</p></li>
+<li><p>Travis only builds on master, develop and *-travis branches.</p></li>
+<li><p>Consolidated documentation into /docs.</p></li>
+<li><p>Updated install instructions for Ubuntu and NCI.</p></li>
+</ul>
 </div>
-<p>Following this, PyRate will be available for PBS jobs. To verify the
-installation, first run an interactive session:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">qsub</span> <span class="o">-</span><span class="n">I</span> <span class="o">-</span><span class="n">q</span> <span class="n">expressbw</span> <span class="o">-</span><span class="n">l</span> <span class="n">walltime</span><span class="o">=</span><span class="mi">2</span><span class="p">:</span><span class="mi">00</span><span class="p">:</span><span class="mi">00</span><span class="p">,</span><span class="n">mem</span><span class="o">=</span><span class="mi">256</span><span class="n">Gb</span><span class="p">,</span><span class="n">ncpus</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span><span class="n">wd</span>
-</pre></div>
 </div>
-<p>Once the session has started, you will need to reactivate your virtual
-environment and reload the required modules:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="o">~</span>
-<span class="n">source</span> <span class="n">PyRateVM</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">activate</span>
-<span class="n">source</span> <span class="n">PyRate</span><span class="o">/</span><span class="n">utils</span><span class="o">/</span><span class="n">load_modules</span><span class="o">.</span><span class="n">sh</span>
-</pre></div>
+<div class="section" id="id2">
+<h2>0.2.0 (2017-05-22)<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Stable beta release.</p></li>
+</ul>
+</div>
+<div class="section" id="id3">
+<h2>0.1.0 (2017-01-31)<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>First release on PyPI.</p></li>
+</ul>
 </div>
 </div>
 

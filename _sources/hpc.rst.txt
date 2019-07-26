@@ -35,7 +35,7 @@ Install PyRate:
 
 
 Following this, PyRate will be available for PBS jobs. To verify the 
-installation, first run interactive session:
+installation, first run an interactive session:
 
 ::
 
