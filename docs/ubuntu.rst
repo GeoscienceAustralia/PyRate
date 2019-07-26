@@ -1,7 +1,7 @@
 Ubuntu
 ------
 
-Clone the PyRate repository, install required packages and install PyRate.
+Clone the PyRate repository, install required packages and install PyRate:
 
 ::
 
@@ -14,7 +14,7 @@ Clone the PyRate repository, install required packages and install PyRate.
 
     python3 setup.py install
 
-PyRate can also be installed from the Python package index.
+PyRate can also be installed from the Python package index:
 
 ::
 

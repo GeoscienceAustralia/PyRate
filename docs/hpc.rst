@@ -1,31 +1,32 @@
 HPC
 ------
 
-It is only applicable to the Raijin HPC system of the National Computational Infrastructure.
-We don't know how applicable it is to other supercomputer systems.
+These instructions have been tested with the Raijin platform of the 
+National Computational Infrastructure (NCI). 
+The process for other HPC platforms may differ. 
 
-Login to Raijin
+Login to Raijin:
 
 ::
 
     ssh <user_name>@raijin.nci.org.au
     git clone https://github.com/GeoscienceAustralia/PyRate.git
 
-Load the required Raijin  modules and fix the PYTHONPATH
+Load the required Raijin modules (this will also remove the default NCI GDAL
+Python bindings so we can build and use our own):
 
 ::
 
     source PyRate/utils/load_modules.sh
 
-Create a python virtual environment
+Create a Python virtual environment:
 
 ::
 
+    python3 -m venv ~/PyRateVenv
+    source ~/PyRateVenv/bin/activate
 
-    python3 -m venv PyRateVM
-    source PyRateVM/bin/activate
-
-Install required libraries
+Install PyRate:
 
 ::
 
@@ -33,14 +34,15 @@ Install required libraries
     python setup.py install
 
 
-Run interactive session
+Following this, PyRate will be available for PBS jobs. To verify the 
+installation, first run interactive session:
 
 ::
 
+    qsub -I -q expressbw -l walltime=2:00:00,mem=256Gb,ncpus=4,wd
 
-    qsub -I -q expressbw -l walltime=2:00:00,mem=256Gb,ncpus=28,wd
-
-Wait for interactive session to start and then run workflow
+Once the session has started, you will need to reactivate your virtual 
+environment and reload the required modules:
 
 ::
 
