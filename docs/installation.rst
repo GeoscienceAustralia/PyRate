@@ -1,91 +1,38 @@
 Installation
-============
+===============
 
-Before you start, you will need to have a number of packages installed
-on your Linux system. These can either be installed directly onto the
-system, or you can use a virtual environment.
+This is a quick guide to getting the PyRate software up and running in various platforms.
+Step by step guide to install Pyrate and run toy example.
 
-Direct Install
---------------
+.. include:: ubuntu.rst
+.. include:: docker.rst
+.. include:: hpc.rst
 
-Make sure your system has the following packages installed. If not, run
-the command:
 
-::
-
-    sudo apt-get install gdal-bin libgdal-dev libpng12-dev libblas-dev liblapack-dev libatlas-dev libatlas-base-dev gfortran libproj-dev openmpi-bin libopenmpi-dev netcdf-bin libnetcdf11 libnetcdf-dev
-
-Virtual Environment
+Verify Installation
 -------------------
 
-You can use one of the two virtual environment options below:
-
-Note: if you are using a HPC environment, refer to `these instructions
-instead <hpc.html>`__.
-
-Virtualenv
-~~~~~~~~~~
-
-1. Install
-   ```virtualenv`` <https://gist.github.com/basaks/b33ea9106c7d1d72ac3a79fdcea430eb>`__.
-
-2. You may need to install a slightly older ``python-daemon`` to install
-   PyRate:
-
-   pip install python-daemon==2.1.1
-
-3. Install PyRate by using one of the following options.
-
--- Run ``setup.py``:
+To verify PyRate has been successfully installed, run the workflow with the
+included example config file and data:
 
 ::
 
-    python setup.py install
+    pyrate prepifg pyrate_gamma.conf
+    pyrate linrate pyrate_gamma.conf -c 3 -r 4
+    pyrate postprocess pyrate_gamma.conf -c 3 -r 4
 
--- Install the latest version of PyRate with ``pip`` from github:
-
+On Raijin and other HPC systems, you can utilise MPI to run PyRate in parallel:
+    
 ::
 
-    pip install git+https://github.com/GeoscienceAustralia/PyRate
+    # Modify 'n' based on the number of processors available.
+    mpirun -n 4 pyrate prepifg pyrate_gamma.conf
+    mpirun -n 4 pyrate linrate pyrate_gamma.conf -c 3 -r 4
+    mpirun -n 4 pyrate postprocess pyrate_gamma.conf -c 3 -r 4
 
--- PyRate is also on ``pypi``, the Python package manager. To install,
-run:
+If the installation has been successful, this workflow will complete without 
+errors and results will be available in:
 
-::
-
-    pip install Py-Rate
-
-The Python requirements should automatically be built and installed.
-
-If ``matplotlib`` does not install easily in a ``virtualenv``, use this:
-::
-
-    sudo apt-get -y build-dep matplotlib
-
-Then re-install ``matplotlib`` in your ``virtualenv``.
-
-Anaconda
-~~~~~~~~
-
-For using PyRate in an Anaconda environment `use this
-guide <https://github.com/GeoscienceAustralia/PyRate/blob/master/conda.md>`__.
-
-Tests
------
-
-A suite of tests have been developed for use in testing PyRate
-functionality and for further code development. The tests use
-`pytest <http://doc.pytest.org/en/latest/>`__ and can be found in the
-*tests/* directory. A small test dataset is included in the
-*tests/test\_data/* directory.
-
-To run the tests, use the following command inside the top level
-*PyRate/* directory:
-
-::
-
-    pip install pytest
-    cd PyRate
-    export PYRATEPATH=/path/to/PyRate
-    pytest tests/
-
+:: 
+    
+    ~/PyRate/out

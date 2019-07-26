@@ -1,8 +1,11 @@
 Instructions for setting up an Anaconda virtual environment on a typical
 Red Hat linux server.
 
-Install Anaconda:
------------------
+Anaconda
+--------
+
+Install
+^^^^^^^
 
 For 64-bit linux download this version of the conda installer:
 https://repo.continuum.io/archive/Anaconda2-4.1.1-Linux-x86\_64.sh
@@ -17,7 +20,7 @@ Accept all default options. This will install anaconda in the
 ``~/anaconda2`` directory.
 
 Set up proxys for pip (only applicable if working behind proxy):
-----------------------------------------------------------------
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 ::
 
@@ -25,7 +28,7 @@ Set up proxys for pip (only applicable if working behind proxy):
     export https_proxy=<proxy_server>:<port>
 
 Set up ``~/.condarc`` with proxy pass information (only applicable if working behind proxy):
---------------------------------------------------------------------------------------------
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 For conda installer to work you need to create a ``~/.condarc`` file
 with the following proxy-pass information:
@@ -38,7 +41,7 @@ with the following proxy-pass information:
         
 
 Clone the PyRate repo:
-----------------------
+""""""""""""""""""""""
 
 The rest of the instructions assume that you cloned the ``PyRate`` Git
 repository in your home directory:
@@ -52,13 +55,12 @@ This will prompt for your rsa key passphrase. If you have access to
 ``PyRate`` repo and once you have entered the passphrase, ``PyRate``
 will clone in your current (home) directory.
 
-Set up envrionment variables
-----------------------------
+Set up environment variables
+""""""""""""""""""""""""""""
 
 You need to add the directory containing the ``pyrate/`` directory to
 the ``PYTHONPATH`` environment variable, and the environment variable
-``PYRATEPATH`` needs to point to the directory containing the ``tests/``
-directory:
+``PYRATEPATH`` needs to point to the root directory:
 
 ::
 
@@ -66,7 +68,7 @@ directory:
     export PYTHONPATH=$PYRATEPATH/:$PYTHONPATH
 
 Activate ``anaconda`` and install ``conda-env``
------------------------------------------------
+"""""""""""""""""""""""""""""""""""""""""""""""
 
 ::
 
@@ -79,7 +81,7 @@ Note that using the ``source activate`` command only works cleanly when
 using the bash shell
 
 Create the ``pyrate`` environment
----------------------------------
+"""""""""""""""""""""""""""""""""
 
 The required packages for PyRate are listed in the environment.yml (YAML
 format) file:
@@ -89,31 +91,16 @@ format) file:
     conda env create -f $PYRATEPATH/environment.yml
 
 Activate the ``pyrate`` environment
------------------------------------
+"""""""""""""""""""""""""""""""""""
 
 ::
 
     source ~/anaconda2/bin/activate pyrate
 
-Run ``PyRate`` tests
---------------------
-
-To run the full suite of tests, use the following command inside the
-``PyRate`` directory:
-
-::
-
-    cd ~/PyRate
-    py.test tests/
-
-To run the tests for a particular module:
-
-::
-
-    py.test tests/test_orbital.py
+\
 
 Deactivate
-----------
+""""""""""
 
 Once you are done using ``PyRate`` you could deactivate the conda
 environment using:
@@ -123,7 +110,7 @@ environment using:
     source deactivate
 
 Back to main Anaconda environment if you need to:
--------------------------------------------------
+"""""""""""""""""""""""""""""""""""""""""""""""""
 
 ::
 

@@ -16,3 +16,4 @@ RUN cd PyRate && sed -i 's/GDAL//g' requirements.txt
 RUN cd PyRate && pip3 install -r requirements.txt
 RUN pip3 install GDAL==$(gdal-config --version) --global-option=build_ext --global-option="-I/usr/include/gdal"
 RUN cd PyRate && pip3 install -r requirements-dev.txt
+RUN cd PyRate && python3 setup.py install

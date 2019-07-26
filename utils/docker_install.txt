@@ -6,8 +6,7 @@ docker build -t pyrate-image:1.0 .
 docker run -it --rm -v %cd%:/PyRate pyrate-image:1.0 /bin/bash
 
 # build PyRate package
-cd PyRate
-python3 setup.py install
+cd /PyRate && python3 setup.py install
 
 # Run workflow
 pyrate prepifg pyrate_gamma.conf
@@ -15,6 +14,5 @@ pyrate linrate pyrate_gamma.conf -c 3 -r 4
 pyrate postprocess pyrate_gamma.conf -c 3 -r 4
 
 # Build Sphinx docs
-cd /PyRate/docs
-make html
+cd /PyRate/docs && make html
 

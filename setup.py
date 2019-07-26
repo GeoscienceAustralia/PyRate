@@ -59,7 +59,7 @@ doclink = """
 
 Please see the full documentation at http://geoscienceaustralia.github.io/PyRate/."""
 
-history = open('HISTORY.rst').read().replace('.. :changelog:', '')
+# history = open('docs/history.rst').read().replace('.. :changelog:', '')
 
 setup(
     name='Py-Rate',
