@@ -1,0 +1,27 @@
+Gamma DIFF&GEO DEM/MAP parameter file
+title:
+DEM_projection:     EQA
+data_format:        REAL*4
+DEM_hgt_offset:          0.00000
+DEM_scale:               1.00000
+width:               16
+nlines:              20
+corner_lat:    -33.3831945  decimal degrees
+corner_lon:    150.3870833  decimal degrees
+post_lat:   -6.9444445e-05  decimal degrees
+post_lon:    6.9444445e-05  decimal degrees
+
+ellipsoid_name: WGS 84
+ellipsoid_ra:        6378137.000   m
+ellipsoid_reciprocal_flattening:  298.2572236
+
+datum_name: WGS 1984
+datum_shift_dx:              0.000   m
+datum_shift_dy:              0.000   m
+datum_shift_dz:              0.000   m
+datum_scale_m:         0.00000e+00
+datum_rotation_alpha:  0.00000e+00   arc-sec
+datum_rotation_beta:   0.00000e+00   arc-sec
+datum_rotation_gamma:  0.00000e+00   arc-sec
+datum_country_list Global Definition, WGS84, World
+
