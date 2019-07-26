@@ -1,17 +1,22 @@
 Ubuntu
 ------
 
-Build PyRate package
+Clone the PyRate repository, install required packages and install PyRate.
 
 ::
 
     git clone git@github.com:GeoscienceAustralia/PyRate.git
-    source PyRate/utils/apt_install.sh
+    ./PyRate/utils/apt_install.sh
+
+    # Add GDAL includes to C/CPLUS paths before building Python GDAL bindings.
+    export C_INCLUDE_PATH=/usr/include/gdal
+    export CPLUS_INCLUDE_PATH=/usr/include/gdal
+
     python3 setup.py install
 
-Set environment variables
+PyRate can also be installed from the Python package index.
 
 ::
 
-    export C_INCLUDE_PATH=/usr/include/gdal
-    export CPLUS_INCLUDE_PATH=/usr/include/gdal
+    pip install Py-Rate
+
