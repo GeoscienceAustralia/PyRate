@@ -82,11 +82,11 @@
             
             
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="gettingstarted.html">Getting Started</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#ubuntu">Ubuntu</a></li>
-<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#docker">Docker</a></li>
-<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#hpc">HPC</a></li>
-<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#anaconda">Anaconda</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#ubuntu">Ubuntu</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#docker">Docker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#hpc">HPC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#verify-installation">Verify Installation</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a><ul>
@@ -205,20 +205,6 @@ download and install docker on your machine.</p>
 <span class="n">cd</span> <span class="n">PyRate</span>
 <span class="n">docker</span> <span class="n">build</span> <span class="o">-</span><span class="n">t</span> <span class="n">pyrate</span><span class="o">-</span><span class="n">image</span><span class="p">:</span><span class="mf">1.0</span> <span class="o">.</span>
 <span class="n">docker</span> <span class="n">run</span> <span class="o">-</span><span class="n">it</span> <span class="o">--</span><span class="n">rm</span> <span class="o">-</span><span class="n">v</span> <span class="o">%</span><span class="n">cd</span><span class="o">%</span><span class="p">:</span><span class="o">/</span><span class="n">PyRate</span> <span class="n">pyrate</span><span class="o">-</span><span class="n">image</span><span class="p">:</span><span class="mf">1.0</span> <span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">bash</span>
-</pre></div>
-</div>
-<p>Build PyRate package</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="n">PyRate</span>
-<span class="n">python3</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">install</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="usage">
-<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
-<p>Run workflow</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pyrate</span> <span class="n">prepifg</span> <span class="n">pyrate_gamma</span><span class="o">.</span><span class="n">conf</span>
-<span class="n">pyrate</span> <span class="n">linrate</span> <span class="n">pyrate_gamma</span><span class="o">.</span><span class="n">conf</span> <span class="o">-</span><span class="n">c</span> <span class="mi">3</span> <span class="o">-</span><span class="n">r</span> <span class="mi">4</span>
-<span class="n">pyrate</span> <span class="n">postprocess</span> <span class="n">pyrate_gamma</span><span class="o">.</span><span class="n">conf</span> <span class="o">-</span><span class="n">c</span> <span class="mi">3</span> <span class="o">-</span><span class="n">r</span> <span class="mi">4</span>
 </pre></div>
 </div>
 </div>

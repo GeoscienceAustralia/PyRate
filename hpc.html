@@ -82,11 +82,11 @@
             
             
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="gettingstarted.html">Getting Started</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#ubuntu">Ubuntu</a></li>
-<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#docker">Docker</a></li>
-<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#hpc">HPC</a></li>
-<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#anaconda">Anaconda</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#ubuntu">Ubuntu</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#docker">Docker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#hpc">HPC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#verify-installation">Verify Installation</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a><ul>
@@ -220,9 +220,6 @@ We don’t know how applicable it is to other supercomputer systems.</p>
 <span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">install</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="usage">
-<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <p>Run interactive session</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">qsub</span> <span class="o">-</span><span class="n">I</span> <span class="o">-</span><span class="n">q</span> <span class="n">expressbw</span> <span class="o">-</span><span class="n">l</span> <span class="n">walltime</span><span class="o">=</span><span class="mi">2</span><span class="p">:</span><span class="mi">00</span><span class="p">:</span><span class="mi">00</span><span class="p">,</span><span class="n">mem</span><span class="o">=</span><span class="mi">256</span><span class="n">Gb</span><span class="p">,</span><span class="n">ncpus</span><span class="o">=</span><span class="mi">28</span><span class="p">,</span><span class="n">wd</span>
 </pre></div>
@@ -231,11 +228,6 @@ We don’t know how applicable it is to other supercomputer systems.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="o">~</span>
 <span class="n">source</span> <span class="n">PyRateVM</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">activate</span>
 <span class="n">source</span> <span class="n">PyRate</span><span class="o">/</span><span class="n">utils</span><span class="o">/</span><span class="n">load_modules</span><span class="o">.</span><span class="n">sh</span>
-
-<span class="n">cd</span> <span class="n">PyRate</span>
-<span class="n">mpirun</span> <span class="o">-</span><span class="n">np</span> <span class="mi">4</span> <span class="n">pyrate</span> <span class="n">prepifg</span> <span class="n">pyrate_gamma</span><span class="o">.</span><span class="n">conf</span>
-<span class="n">mpirun</span> <span class="o">-</span><span class="n">np</span> <span class="mi">4</span> <span class="n">pyrate</span> <span class="n">linrate</span> <span class="n">pyrate_gamma</span><span class="o">.</span><span class="n">conf</span>
-<span class="n">mpirun</span> <span class="o">-</span><span class="n">np</span> <span class="mi">4</span> <span class="n">pyrate</span> <span class="n">postprocess</span> <span class="n">pyrate_gamma</span><span class="o">.</span><span class="n">conf</span>
 </pre></div>
 </div>
 </div>
