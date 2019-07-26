@@ -26,9 +26,9 @@ On Raijin and other HPC systems, you can utilise MPI to run PyRate in parallel:
 ::
 
     # Modify 'n' based on the number of processors available.
-    mpirun -n 4 pyrate prepifg pyrate_gamma.conf
-    mpirun -n 4 pyrate linrate pyrate_gamma.conf -c 3 -r 4
-    mpirun -n 4 pyrate postprocess pyrate_gamma.conf -c 3 -r 4
+    mpirun -n 12 pyrate prepifg pyrate_gamma.conf
+    mpirun -n 12 pyrate linrate pyrate_gamma.conf -c 3 -r 4
+    mpirun -n 12 pyrate postprocess pyrate_gamma.conf -c 3 -r 4
 
 If the installation has been successful, this workflow will complete without 
 errors and results will be available in:
