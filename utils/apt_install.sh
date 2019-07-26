@@ -13,5 +13,5 @@ sudo apt-get -y install \
     libgdal-dev \
     openmpi-bin \
     libopenmpi-dev \
-    python3 \
+    python3 
 
