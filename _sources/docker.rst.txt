@@ -4,10 +4,6 @@ Docker
 Can be used to run PyRate on linux, Windows and MacOS. Please follow the instruction at https://hub.docker.com/ to
 download and install docker on your machine.
 
-
-Setup
-^^^^^
-
 ::
 
     git clone git@github.com:GeoscienceAustralia/PyRate.git

@@ -4,9 +4,6 @@ HPC
 It is only applicable to the Raijin HPC system of the National Computational Infrastructure.
 We don't know how applicable it is to other supercomputer systems.
 
-Setup
-^^^^^
-
 Login to Raijin
 
 ::
