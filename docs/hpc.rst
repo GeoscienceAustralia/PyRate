@@ -39,7 +39,7 @@ installation, first run an interactive session:
 
 ::
 
-    qsub -I -q expressbw -l walltime=2:00:00,mem=256Gb,ncpus=12,wd
+    qsub -I -q expressbw -l walltime=2:00:00,mem=256Gb,ncpus=4,wd
 
 Once the session has started, you will need to reactivate your virtual 
 environment and reload the required modules:
