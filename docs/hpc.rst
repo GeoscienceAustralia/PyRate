@@ -1,8 +1,6 @@
 HPC
 ------
 
-.. TODO
-
 It is only applicable to the Raijin HPC system of the National Computational Infrastructure.
 We don't know how applicable it is to other supercomputer systems.
 
@@ -37,8 +35,6 @@ Install required libraries
     cd PyRate
     python setup.py install
 
-Usage
-^^^^^
 
 Run interactive session
 
@@ -54,8 +50,3 @@ Wait for interactive session to start and then run workflow
     cd ~
     source PyRateVM/bin/activate
     source PyRate/utils/load_modules.sh
-
-    cd PyRate
-    mpirun -np 4 pyrate prepifg pyrate_gamma.conf
-    mpirun -np 4 pyrate linrate pyrate_gamma.conf
-    mpirun -np 4 pyrate postprocess pyrate_gamma.conf

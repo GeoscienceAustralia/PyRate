@@ -27,7 +27,7 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   gettingstarted
+   installation
    usage
    contributing
    authors
