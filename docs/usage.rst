@@ -4,8 +4,8 @@ Usage
 Configuration
 -------------
 
-Various parameters_ can be set in the configration file. Example configuration file for running PyRate with GAMMA
-format interferograms are contained in the *pyrate_gamma.conf* file.
+Various parameters_ can be set in the configration file. Example parameters for running PyRate with GAMMA
+format interferograms are contained in the example configuration file *input_parameters.conf*.
 
 .. _parameters: https://geoscienceaustralia.github.io/PyRate/config.html
 
