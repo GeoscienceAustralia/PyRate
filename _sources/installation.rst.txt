@@ -12,7 +12,7 @@ Step by step guide to install Pyrate and run toy example.
 Verify Installation
 -------------------
 
-To run the verify PyRate has been sucessfully installed, run toy example workflow:
+To verify PyRate has been successfully installed, run toy example workflow:
 
 ::
 
