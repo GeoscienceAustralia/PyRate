@@ -1,6 +1,6 @@
 .. image:: docs/PyRate_logo_50.png
 
-PyRate - a Python tool for InSAR Rate and Time-series Estimation
+Python tool for InSAR Rate and Time-series Estimation
 ================================================================
 
 .. image:: https://travis-ci.org/GeoscienceAustralia/PyRate.svg?branch=master
