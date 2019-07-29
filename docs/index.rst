@@ -31,6 +31,7 @@ Contents:
    usage
    contributing
    authors
+   history
    scripts
    modules
 
@@ -56,5 +57,5 @@ know!  Open an Issue_ in the GitHub repository.
 Indices and tables
 ==================
 
-* :ref:`genindex`
 * :ref:`modindex`
+* :ref:`genindex`
