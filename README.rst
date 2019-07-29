@@ -18,7 +18,5 @@ PyRate is a Python tool for estimating the average rate (velocity) and cumulativ
 
 The PyRate project started in 2012 as a partial Python translation of "Pirate", a Matlab tool developed by the University of Leeds and the Guangdong University of Technology.
 
-PyRate is compatible with: Python 3.
-
 The full PyRate documentation is available at http://geoscienceaustralia.github.io/PyRate
 
