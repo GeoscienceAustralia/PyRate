@@ -83,7 +83,7 @@
             
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#ubuntu">Ubuntu</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#ubuntu-18-04">Ubuntu 18.04</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#docker">Docker</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#hpc">HPC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#verify-installation">Verify Installation</a></li>
@@ -229,7 +229,7 @@ Python bindings so we can build and use our own):</p>
 </div>
 <p>Following this, PyRate will be available for PBS jobs. To verify the
 installation, first run an interactive session:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">qsub</span> <span class="o">-</span><span class="n">I</span> <span class="o">-</span><span class="n">q</span> <span class="n">expressbw</span> <span class="o">-</span><span class="n">l</span> <span class="n">walltime</span><span class="o">=</span><span class="mi">2</span><span class="p">:</span><span class="mi">00</span><span class="p">:</span><span class="mi">00</span><span class="p">,</span><span class="n">mem</span><span class="o">=</span><span class="mi">256</span><span class="n">Gb</span><span class="p">,</span><span class="n">ncpus</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span><span class="n">wd</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">qsub</span> <span class="o">-</span><span class="n">I</span> <span class="o">-</span><span class="n">q</span> <span class="n">expressbw</span> <span class="o">-</span><span class="n">l</span> <span class="n">walltime</span><span class="o">=</span><span class="mi">01</span><span class="p">:</span><span class="mi">00</span><span class="p">:</span><span class="mi">00</span><span class="p">,</span><span class="n">mem</span><span class="o">=</span><span class="mi">16</span><span class="n">Gb</span><span class="p">,</span><span class="n">ncpus</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span><span class="n">wd</span>
 </pre></div>
 </div>
 <p>Once the session has started, you will need to reactivate your virtual

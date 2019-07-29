@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Ubuntu &mdash; PyRate 0.3.0 documentation</title>
+  <title>Ubuntu 18.04 &mdash; PyRate 0.3.0 documentation</title>
   
 
   
@@ -83,7 +83,7 @@
             
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#ubuntu">Ubuntu</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#ubuntu-18-04">Ubuntu 18.04</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#docker">Docker</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#hpc">HPC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#verify-installation">Verify Installation</a></li>
@@ -185,7 +185,7 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>Ubuntu</li>
+      <li>Ubuntu 18.04</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -202,17 +202,20 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="ubuntu">
-<h1>Ubuntu<a class="headerlink" href="#ubuntu" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="ubuntu-18-04">
+<h1>Ubuntu 18.04<a class="headerlink" href="#ubuntu-18-04" title="Permalink to this headline">¶</a></h1>
+<p>These instructions have been tested on Ubuntu 18.04. If using another
+distribution, you will have to install packages equivalent to those listed
+in <cite>apt_install.sh</cite>.</p>
 <p>Clone the PyRate repository, install required packages and install PyRate:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="n">git</span><span class="nd">@github</span><span class="o">.</span><span class="n">com</span><span class="p">:</span><span class="n">GeoscienceAustralia</span><span class="o">/</span><span class="n">PyRate</span><span class="o">.</span><span class="n">git</span>
-<span class="o">./</span><span class="n">PyRate</span><span class="o">/</span><span class="n">utils</span><span class="o">/</span><span class="n">apt_install</span><span class="o">.</span><span class="n">sh</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>git clone git@github.com:GeoscienceAustralia/PyRate.git
+./PyRate/utils/apt_install.sh
 
-<span class="c1"># Add GDAL includes to C/CPLUS paths before building Python GDAL bindings.</span>
-<span class="n">export</span> <span class="n">C_INCLUDE_PATH</span><span class="o">=/</span><span class="n">usr</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">gdal</span>
-<span class="n">export</span> <span class="n">CPLUS_INCLUDE_PATH</span><span class="o">=/</span><span class="n">usr</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">gdal</span>
+# Add GDAL includes to C/CPLUS paths before building Python GDAL bindings.
+export C_INCLUDE_PATH=$C_INCLUDE_PATH:/usr/include/gdal
+export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:/usr/include/gdal
 
-<span class="n">python3</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">install</span>
+python3 setup.py install
 </pre></div>
 </div>
 <p>PyRate can also be installed from the Python package index:</p>

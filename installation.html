@@ -37,7 +37,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Usage" href="usage.html" />
-    <link rel="prev" title="Welcome to the documentation for PyRate!" href="index.html" /> 
+    <link rel="prev" title="PyRate documentation" href="index.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -85,7 +85,7 @@
             
               <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#ubuntu">Ubuntu</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ubuntu-18-04">Ubuntu 18.04</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#docker">Docker</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#hpc">HPC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#verify-installation">Verify Installation</a></li>
@@ -204,7 +204,7 @@
         <a href="usage.html" class="btn btn-neutral float-right" title="Usage" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to the documentation for PyRate!" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="index.html" class="btn btn-neutral float-left" title="PyRate documentation" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
   </div>
   
@@ -217,17 +217,20 @@
 <h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
 <p>This is a quick guide to getting the PyRate software up and running in various platforms.
 Step by step guide to install Pyrate and run toy example.</p>
-<div class="section" id="ubuntu">
-<h2>Ubuntu<a class="headerlink" href="#ubuntu" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="ubuntu-18-04">
+<h2>Ubuntu 18.04<a class="headerlink" href="#ubuntu-18-04" title="Permalink to this headline">¶</a></h2>
+<p>These instructions have been tested on Ubuntu 18.04. If using another
+distribution, you will have to install packages equivalent to those listed
+in <cite>apt_install.sh</cite>.</p>
 <p>Clone the PyRate repository, install required packages and install PyRate:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="n">git</span><span class="nd">@github</span><span class="o">.</span><span class="n">com</span><span class="p">:</span><span class="n">GeoscienceAustralia</span><span class="o">/</span><span class="n">PyRate</span><span class="o">.</span><span class="n">git</span>
-<span class="o">./</span><span class="n">PyRate</span><span class="o">/</span><span class="n">utils</span><span class="o">/</span><span class="n">apt_install</span><span class="o">.</span><span class="n">sh</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>git clone git@github.com:GeoscienceAustralia/PyRate.git
+./PyRate/utils/apt_install.sh
 
-<span class="c1"># Add GDAL includes to C/CPLUS paths before building Python GDAL bindings.</span>
-<span class="n">export</span> <span class="n">C_INCLUDE_PATH</span><span class="o">=/</span><span class="n">usr</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">gdal</span>
-<span class="n">export</span> <span class="n">CPLUS_INCLUDE_PATH</span><span class="o">=/</span><span class="n">usr</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">gdal</span>
+# Add GDAL includes to C/CPLUS paths before building Python GDAL bindings.
+export C_INCLUDE_PATH=$C_INCLUDE_PATH:/usr/include/gdal
+export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:/usr/include/gdal
 
-<span class="n">python3</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">install</span>
+python3 setup.py install
 </pre></div>
 </div>
 <p>PyRate can also be installed from the Python package index:</p>
@@ -237,8 +240,8 @@ Step by step guide to install Pyrate and run toy example.</p>
 </div>
 <div class="section" id="docker">
 <h2>Docker<a class="headerlink" href="#docker" title="Permalink to this headline">¶</a></h2>
-<p>Can be used to run PyRate on linux, Windows and MacOS. Please follow the instruction at <a class="reference external" href="https://hub.docker.com/">https://hub.docker.com/</a> to
-download and install docker on your machine:</p>
+<p>Docker can be used to run PyRate on Linux, Windows and MacOS. Please follow the instruction at <a class="reference external" href="https://hub.docker.com/">https://hub.docker.com/</a> to
+download and install Docker on your machine. Then run:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="n">git</span><span class="nd">@github</span><span class="o">.</span><span class="n">com</span><span class="p">:</span><span class="n">GeoscienceAustralia</span><span class="o">/</span><span class="n">PyRate</span><span class="o">.</span><span class="n">git</span>
 <span class="n">cd</span> <span class="n">PyRate</span>
 <span class="n">docker</span> <span class="n">build</span> <span class="o">-</span><span class="n">t</span> <span class="n">pyrate</span><span class="o">-</span><span class="n">image</span><span class="p">:</span><span class="mf">1.0</span> <span class="o">.</span>
@@ -273,7 +276,7 @@ Python bindings so we can build and use our own):</p>
 </div>
 <p>Following this, PyRate will be available for PBS jobs. To verify the
 installation, first run an interactive session:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">qsub</span> <span class="o">-</span><span class="n">I</span> <span class="o">-</span><span class="n">q</span> <span class="n">expressbw</span> <span class="o">-</span><span class="n">l</span> <span class="n">walltime</span><span class="o">=</span><span class="mi">2</span><span class="p">:</span><span class="mi">00</span><span class="p">:</span><span class="mi">00</span><span class="p">,</span><span class="n">mem</span><span class="o">=</span><span class="mi">256</span><span class="n">Gb</span><span class="p">,</span><span class="n">ncpus</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span><span class="n">wd</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">qsub</span> <span class="o">-</span><span class="n">I</span> <span class="o">-</span><span class="n">q</span> <span class="n">expressbw</span> <span class="o">-</span><span class="n">l</span> <span class="n">walltime</span><span class="o">=</span><span class="mi">01</span><span class="p">:</span><span class="mi">00</span><span class="p">:</span><span class="mi">00</span><span class="p">,</span><span class="n">mem</span><span class="o">=</span><span class="mi">16</span><span class="n">Gb</span><span class="p">,</span><span class="n">ncpus</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span><span class="n">wd</span>
 </pre></div>
 </div>
 <p>Once the session has started, you will need to reactivate your virtual
@@ -288,16 +291,16 @@ environment and reload the required modules:</p>
 <h2>Verify Installation<a class="headerlink" href="#verify-installation" title="Permalink to this headline">¶</a></h2>
 <p>To verify PyRate has been successfully installed, run the workflow with the
 included example config file and data:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pyrate</span> <span class="n">prepifg</span> <span class="n">pyrate_gamma</span><span class="o">.</span><span class="n">conf</span>
-<span class="n">pyrate</span> <span class="n">linrate</span> <span class="n">pyrate_gamma</span><span class="o">.</span><span class="n">conf</span> <span class="o">-</span><span class="n">c</span> <span class="mi">3</span> <span class="o">-</span><span class="n">r</span> <span class="mi">4</span>
-<span class="n">pyrate</span> <span class="n">postprocess</span> <span class="n">pyrate_gamma</span><span class="o">.</span><span class="n">conf</span> <span class="o">-</span><span class="n">c</span> <span class="mi">3</span> <span class="o">-</span><span class="n">r</span> <span class="mi">4</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pyrate</span> <span class="n">prepifg</span> <span class="n">input_parameters</span><span class="o">.</span><span class="n">conf</span>
+<span class="n">pyrate</span> <span class="n">linrate</span> <span class="n">input_parameters</span><span class="o">.</span><span class="n">conf</span>
+<span class="n">pyrate</span> <span class="n">postprocess</span> <span class="n">input_parameters</span><span class="o">.</span><span class="n">conf</span>
 </pre></div>
 </div>
 <p>On Raijin and other HPC systems, you can utilise MPI to run PyRate in parallel:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Modify &#39;n&#39; based on the number of processors available.</span>
-<span class="n">mpirun</span> <span class="o">-</span><span class="n">n</span> <span class="mi">4</span> <span class="n">pyrate</span> <span class="n">prepifg</span> <span class="n">pyrate_gamma</span><span class="o">.</span><span class="n">conf</span>
-<span class="n">mpirun</span> <span class="o">-</span><span class="n">n</span> <span class="mi">4</span> <span class="n">pyrate</span> <span class="n">linrate</span> <span class="n">pyrate_gamma</span><span class="o">.</span><span class="n">conf</span> <span class="o">-</span><span class="n">c</span> <span class="mi">3</span> <span class="o">-</span><span class="n">r</span> <span class="mi">4</span>
-<span class="n">mpirun</span> <span class="o">-</span><span class="n">n</span> <span class="mi">4</span> <span class="n">pyrate</span> <span class="n">postprocess</span> <span class="n">pyrate_gamma</span><span class="o">.</span><span class="n">conf</span> <span class="o">-</span><span class="n">c</span> <span class="mi">3</span> <span class="o">-</span><span class="n">r</span> <span class="mi">4</span>
+<span class="n">mpirun</span> <span class="o">-</span><span class="n">n</span> <span class="mi">4</span> <span class="n">pyrate</span> <span class="n">prepifg</span> <span class="n">input_parameters</span><span class="o">.</span><span class="n">conf</span>
+<span class="n">mpirun</span> <span class="o">-</span><span class="n">n</span> <span class="mi">4</span> <span class="n">pyrate</span> <span class="n">linrate</span> <span class="n">input_parameters</span><span class="o">.</span><span class="n">conf</span> <span class="o">-</span><span class="n">c</span> <span class="mi">2</span> <span class="o">-</span><span class="n">r</span> <span class="mi">2</span>
+<span class="n">mpirun</span> <span class="o">-</span><span class="n">n</span> <span class="mi">4</span> <span class="n">pyrate</span> <span class="n">postprocess</span> <span class="n">input_parameters</span><span class="o">.</span><span class="n">conf</span> <span class="o">-</span><span class="n">c</span> <span class="mi">2</span> <span class="o">-</span><span class="n">r</span> <span class="mi">2</span>
 </pre></div>
 </div>
 <p>If the installation has been successful, this workflow will complete without
