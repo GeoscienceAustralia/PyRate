@@ -19,6 +19,8 @@ Removed
 - environment.yml - conda env will now be installed using 'requirements.txt'.
 - HPC directory - hpc README.rst moved to docs.
 - setup.cfg - no longer needed.
+- Luigi functionality - hasn't been operational and is reported as vulnerable.
+  Single machine parallelism is achieved with joblib. 
 
 Changed
 +++++++
