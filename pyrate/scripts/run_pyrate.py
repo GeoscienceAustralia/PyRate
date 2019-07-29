@@ -13,11 +13,10 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
+# coding: utf-8
 """
 This Python module runs the main PyRate processing workflow
 """
-from __future__ import print_function
-
 import logging
 import os
 from os.path import join
@@ -38,12 +37,8 @@ from pyrate import shared
 from pyrate import timeseries
 from pyrate import covariance as vcm_module
 from pyrate.aps import _wrap_spatio_temporal_filter
-#from pyrate.compat import PyAPS_INSTALLED
 from pyrate.config import ConfigException
 from pyrate.shared import Ifg, PrereadIfg, get_tiles
-
-#if PyAPS_INSTALLED:  # pragma: no cover
-#    from pyrate.pyaps import check_aps_ifgs, aps_delay_required
 
 MASTER_PROCESS = 0
 log = logging.getLogger(__name__)
@@ -378,11 +373,10 @@ def process_ifgs(ifg_paths, params, rows, cols):
 
     preread_ifgs = _create_ifg_dict(ifg_paths, params=params, tiles=tiles)
 
-#    _mst_calc(ifg_paths, params, tiles, preread_ifgs)
+    # _mst_calc(ifg_paths, params, tiles, preread_ifgs)
 
     refpx, refpy = _ref_pixel_calc(ifg_paths, params)
 
-    # TODO: remove weather model derived APS delay here (pyaps.py)
 
     # remove non ifg keys
     _ = [preread_ifgs.pop(k) for k in ['gt', 'epochlist', 'md', 'wkt']]
@@ -500,12 +494,9 @@ def _timeseries_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
     for t in process_tiles:
         log.info('Calculating time series for tile {}'.format(t.index))
         ifg_parts = [shared.IfgPart(p, t, preread_ifgs) for p in ifg_paths]
-        mst_tile = np.load(os.path.join(output_dir,
-                                        'mst_mat_{}.npy'.format(t.index)))
+        mst_tile = np.load(os.path.join(output_dir, 'mst_mat_{}.npy'.format(t.index)))
         res = timeseries.time_series(ifg_parts, params, vcmt, mst_tile)
         tsincr, tscum, _ = res
-        np.save(file=os.path.join(output_dir, 'tsincr_{}.npy'.format(t.index)),
-                arr=tsincr)
-        np.save(file=os.path.join(output_dir, 'tscuml_{}.npy'.format(t.index)),
-                arr=tscum)
+        np.save(file=os.path.join(output_dir, 'tsincr_{}.npy'.format(t.index)), arr=tsincr)
+        np.save(file=os.path.join(output_dir, 'tscuml_{}.npy'.format(t.index)), arr=tscum)
     mpiops.comm.barrier()

@@ -17,6 +17,7 @@
 This Python module contains bindings for the GDAL library
 """
 # pylint: disable=too-many-arguments,R0914
+import gc
 from osgeo import gdal, gdalnumeric, gdalconst
 from PIL import Image, ImageDraw
 import numpy as np
@@ -132,8 +133,6 @@ def crop(input_file, extents, geo_trans=None, nodata=np.nan):
     points = [(min_x, min_y), (max_x, min_y), (max_x, max_y), (min_y, max_y)]
     pixels = []
 
-    # for point in range(pts.GetPointCount()):
-    #     points.append((pts.GetX(point), pts.GetY(point)))
 
     for point in points:
         pixels.append(world_to_pixel(gt2, point[0], point[1]))
@@ -142,25 +141,7 @@ def crop(input_file, extents, geo_trans=None, nodata=np.nan):
     rasterize = ImageDraw.Draw(raster_poly)
     rasterize.polygon(pixels, 0)  # Fill with zeroes
 
-    # If the clipping features extend out-of-bounds and ABOVE the raster...
-    # SB: we don't implement clipping for out-of-bounds and ABOVE the raster
-    # We might need this down the line when we have looked at `maximum crop` in
-    # detail
-    # if geo_trans[3] < max_y:
-    #     # The clip features were "pushed down" to match the bounds of the
-    #     #   raster; this step "pulls" them back up
-    #     premask = image_to_array(raster_poly)
-    #     # We slice out the piece of our clip features that are "off the map"
-    #     mask = np.ndarray((premask.shape[-2] - abs(iY),
-    #                        premask.shape[-1]), premask.dtype)
-    #     mask[:] = premask[abs(iY):, :]
-    #     mask.resize(premask.shape)  # Then fill in from the bottom
-    #
-    #     # Most importantly, push the clipped piece down
-    #     gt2[3] = max_y - (max_y - geo_trans[3])
-    #
-    # else:
-    #     mask = image_to_array(raster_poly)
+
     mask = image_to_array(raster_poly)
 
     # Clip the image using the mask
@@ -180,7 +161,11 @@ def crop(input_file, extents, geo_trans=None, nodata=np.nan):
         mask.resize(*rshp, refcheck=False)
 
         clip = gdalnumeric.choose(mask, (clip, nodata))
-    raster = None  # manual close
+
+    # AttributeError: 'numpy.ndarray' object has no attribute 'close'
+    # raster.close()
+    raster = None
+
     return clip, gt2
 
 
@@ -302,7 +287,7 @@ def crop_resample_average(
 
     # write final pyrate GTiff
     out_ds = driver.Create(output_file, dst_ds.RasterXSize, dst_ds.RasterYSize,
-                           1, src_dtype)
+                           1, src_dtype, options=['compress=packbits'])
 
     out_ds.GetRasterBand(1).SetNoDataValue(np.nan)
     out_ds.GetRasterBand(1).WriteArray(resampled_average)

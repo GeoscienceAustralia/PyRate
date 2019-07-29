@@ -21,11 +21,10 @@ provided in the configs/ directory
 """
 # coding: utf-8
 # pylint: disable= invalid-name
-from __future__ import print_function
 import os
 from os.path import splitext
 import warnings
-from pyrate import compat
+import pickle
 from pyrate import mpiops
 
 # TODO: add regex column to check if some values are within bounds? Potential
@@ -164,9 +163,6 @@ PARALLEL = 'parallel'
 #: INT; Number of processes for multi-threading
 PROCESSES = 'processes'
 
-#: BOOL (0/1); Switch for using Luigi to perform prepifg step
-LUIGI = 'use_luigi'
-
 # Orbital error correction constants for conversion to readable flags
 INDEPENDENT_METHOD = 'INDEPENDENT'
 NETWORK_METHOD = 'NETWORK'
@@ -260,7 +256,6 @@ PARAM_CONVERSION = {
     PROCESSES: (int, 8),
     PROCESSOR: (int, None),
     NETWORKX_OR_MATLAB_FLAG: (int, 1), # Default to NetworkX
-    LUIGI: (int, 0),
     NAN_CONVERSION: (int, 0),
     NO_DATA_AVERAGING_THRESHOLD: (float, 0.0),
     APS_CORRECTION: (int, 0),
@@ -300,10 +295,7 @@ def get_config_params(path):
 
     params = _parse_conf_file(txt)
     params[TMPDIR] = os.path.join(os.path.abspath(params[OUT_DIR]), 'tmpdir')
-    if mpiops.size > 1 and params[LUIGI] == 1:
-        raise ConfigException('LUIGI with MPI not supported. Please '
-                              'turn off LUIGI in config file or '
-                              'use LUIGI without MPI')
+
     return params
 
 
@@ -347,22 +339,6 @@ def _handle_extra_parameters(params):
     params[APS_INCIDENCE_EXT] = None
     params[APS_ELEVATION_EXT] = None
 
-    if compat.PyAPS_INSTALLED:
-        # define APS_INCIDENCE_EXT for gamma prepifg
-        if ((params[APS_INCIDENCE_MAP] is not None) and
-                (params[APS_ELEVATION_MAP] is not None)):
-            warnings.warn('Both incidence and elevation map supplied. Using '
-                          'the incidence map and ignoring elevation map')
-
-        if (int(params[APS_CORRECTION]) and
-                (int(params[APS_METHOD]) == 2) and
-                ((params[APS_INCIDENCE_MAP] is None) and
-                 (params[APS_ELEVATION_MAP] is None))):
-            raise ConfigException('When doing APS correction using method 2,'
-                                  'the incidence/elevation map method,'
-                                  'one of incidence or elevation map must be '
-                                  'provided')
-
     if params[APS_INCIDENCE_MAP] is not None:
         params[APS_INCIDENCE_EXT] = \
             os.path.basename(params[APS_INCIDENCE_MAP]).split('.')[-1]
@@ -372,8 +348,7 @@ def _handle_extra_parameters(params):
 
     # define APS_ELEVATON_EXT for gamma prepifg
     if params[APS_ELEVATION_MAP] is not None:
-        params[APS_ELEVATION_EXT] = \
-            os.path.basename(params[APS_ELEVATION_MAP]).split('.')[-1]
+        params[APS_ELEVATION_EXT] = os.path.basename(params[APS_ELEVATION_MAP]).split('.')[-1]
 
     return params
 

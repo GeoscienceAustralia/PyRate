@@ -16,9 +16,7 @@
 """
 This Python module defines executable run configuration for the PyRate software
 """
-import sys
 import os
-from os.path import abspath
 import logging
 import json
 import click
@@ -30,18 +28,8 @@ from pyrate import __version__
 log = logging.getLogger(__name__)
 
 
-def version_msg():
-    """
-    Returns the Cookiecutter version and location of Python beiing used
-    """
-    python_version = sys.version[:3]
-    location = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    message = u'PyRate %(version)s from {} (Python {})'
-    return message.format(location, python_version)
-
-
 @click.group()
-@click.version_option(__version__, u'-V', u'--version', message=version_msg())
+@click.version_option(__version__, u'-V', u'--version')
 @click.option('-v', '--verbosity',
               type=click.Choice(['DEBUG', 'INFO', 'WARNING', 'ERROR']),
               default='INFO', help='Level of logging')
@@ -57,14 +45,11 @@ def prepifg(config_file):
     Convert input files to geotiff and perform multilooking
     (resampling) and/or cropping
     """
-    config_file = abspath(config_file)
+    config_file = os.path.abspath(config_file)
     params = cf.get_config_params(config_file)
     log.info('This job was run with the following parameters:')
     log.info(json.dumps(params, indent=4, sort_keys=True))
-    if params[cf.LUIGI]:
-        run_prepifg.main()
-    else:
-        run_prepifg.main(params)
+    run_prepifg.main(params)
 
 
 @cli.command()
@@ -77,7 +62,7 @@ def linrate(config_file, rows, cols):
     """
     Main PyRate workflow including time series and linear rate computation
     """
-    config_file = abspath(config_file)
+    config_file = os.path.abspath(config_file)
     _, dest_paths, params = cf.get_ifg_paths(config_file)
     log.info('This job was run with the following parameters:')
     log.info(json.dumps(params, indent=4, sort_keys=True))
@@ -96,5 +81,5 @@ def postprocess(config_file, rows, cols):
     """
     Reassemble PyRate output tiles and save as geotiffs
     """
-    config_file = abspath(config_file)
+    config_file = os.path.abspath(config_file)
     postprocessing.main(config_file, rows, cols)

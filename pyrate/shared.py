@@ -13,12 +13,12 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
+# coding: utf-8
 """
 This Python module contains utilities and classes shared by
 all other PyRate modules
 """
 # pylint: disable=too-many-lines
-from __future__ import print_function
 import errno
 import logging
 import math
@@ -305,6 +305,7 @@ class Ifg(RasterBase):
             return date(year, month, day)
 
         md = self.dataset.GetMetadata()
+
         datestrs = [md[k] for k in [ifc.MASTER_DATE, ifc.SLAVE_DATE]]
 
         if all(datestrs):
@@ -715,7 +716,7 @@ def write_geotiff(header, data_path, dest, nodata):
 
     driver = gdal.GetDriverByName("GTiff")
     dtype = gdal.GDT_Float32 if (is_ifg or is_incidence) else gdal.GDT_Int16
-    ds = driver.Create(dest, ncols, nrows, 1, dtype)
+    ds = driver.Create(dest, ncols, nrows, 1, dtype, options=['compress=packbits'])
 
     # write pyrate parameters to headers
     if is_ifg:
@@ -861,7 +862,7 @@ def write_output_geotiff(md, gt, wkt, data, dest, nodata):
 
     driver = gdal.GetDriverByName("GTiff")
     nrows, ncols = data.shape
-    ds = driver.Create(dest, ncols, nrows, 1, gdal.GDT_Float32)
+    ds = driver.Create(dest, ncols, nrows, 1, gdal.GDT_Float32, options=['compress=packbits'])
     # set spatial reference for geotiff
     ds.SetGeoTransform(gt)
     ds.SetProjection(wkt)
@@ -1115,7 +1116,6 @@ def warp_required(xlooks, ylooks, crop):
     :return: True if params show rasters need to be cropped and/or resized
     :rtype: bool
     """
-    # Only used in Luigi functionality
     if xlooks > 1 or ylooks > 1:
         return True
     if crop is None:

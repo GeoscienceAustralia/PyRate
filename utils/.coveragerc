@@ -8,8 +8,6 @@ omit =
     # omit these files
     pyrate/pyratelog.py
     pyrate/scripts/main.py
-    pyrate/pyaps.py
-    pyrate/compat.py
 
 [report]
 # Regexes for lines to exclude from consideration

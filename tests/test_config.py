@@ -16,7 +16,6 @@
 '''
 This Python module contains tests for the config.py PyRate module.
 '''
-import pytest
 import os
 import shutil
 import tempfile
@@ -34,7 +33,6 @@ from pyrate.config import (
     PROCESSOR,
     OUT_DIR,
     SLC_DIR,
-    LUIGI,
     IFG_LKSX,
     IFG_LKSY,
     IFG_CROP_OPT,
@@ -44,10 +42,9 @@ from pyrate.config import (
     APS_ELEVATION_MAP,
     APS_METHOD,
     APS_CORRECTION)
-from pyrate.tasks.utils import DUMMY_SECTION_NAME
-from pyrate.compat import PyAPS_INSTALLED
+# from pyrate.tasks.utils import DUMMY_SECTION_NAME
 from tests import common
-
+DUMMY_SECTION_NAME = 'pyrate'
 
 class ConfigTest(unittest.TestCase):
 
@@ -156,7 +153,6 @@ class TestOneIncidenceOrElevationMap(unittest.TestCase):
             conf.write('{}: {}\n'.format(OUT_DIR, self.base_dir))
             conf.write('{}: {}\n'.format(IFG_FILE_LIST, self.ifgListFile))
             conf.write('{}: {}\n'.format(PROCESSOR, '1'))
-            conf.write('{}: {}\n'.format(LUIGI, '0'))
             conf.write('{}: {}\n'.format(
                 DEM_HEADER_FILE, os.path.join(
                     common.SML_TEST_GAMMA, '20060619_utm_dem.par')))
@@ -202,14 +198,6 @@ class TestOneIncidenceOrElevationMap(unittest.TestCase):
         self.assertIsNotNone(params[config.APS_ELEVATION_MAP])
         self.assertIn(config.APS_ELEVATION_EXT, params.keys())
         self.assertIn(config.APS_ELEVATION_MAP, params.keys())
-
-    @pytest.mark.skipif(not PyAPS_INSTALLED,
-                        reason='grib or pyaps not installed')
-    def test_inc_vs_ele_maps_none_provided(self):
-        self.make_input_files()
-        assert os.path.exists(self.conf_file)
-        self.assertRaises(config.ConfigException,
-                          config.get_config_params, self.conf_file)
 
 
 if __name__ == "__main__":

@@ -30,8 +30,6 @@ from pyrate import shared
 from pyrate import mpiops
 from pyrate.shared import PrereadIfg
 gdal.SetCacheMax(64)
-
-# pylint: disable=logging-format-interpolation
 log = logging.getLogger(__name__)
 
 # Constants
@@ -178,8 +176,6 @@ def _assemble_tiles(i, n, tile, tsincr_g, output_dir, outtype):
     """
     A reusable time series tile assembly function
     """
-    tsincr_file = os.path.join(output_dir,
-                               '{}_{}.npy'.format(outtype, n))
+    tsincr_file = os.path.join(output_dir, '{}_{}.npy'.format(outtype, n))
     tsincr = np.load(file=tsincr_file)
-    tsincr_g[tile.top_left_y:tile.bottom_right_y,
-             tile.top_left_x:tile.bottom_right_x] = tsincr[:, :, i]
+    tsincr_g[tile.top_left_y:tile.bottom_right_y, tile.top_left_x:tile.bottom_right_x] = tsincr[:, :, i]

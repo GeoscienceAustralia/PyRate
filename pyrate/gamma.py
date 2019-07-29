@@ -17,14 +17,13 @@
 This Python module contains tools for reading GAMMA format input data.
 """
 # coding: utf-8
-
-#import os
-import datetime
+from datetime import date, time, timedelta
 import numpy as np
 import pyrate.ifgconstants as ifc
 
 # constants
 GAMMA_DATE = 'date'
+GAMMA_TIME = 'center_time'
 GAMMA_WIDTH = 'width'
 GAMMA_NROWS = 'nlines'
 GAMMA_CORNER_LAT = 'corner_lat'
@@ -81,17 +80,22 @@ def _parse_date_time(lookup):
     subset = {}
     if len(lookup[GAMMA_DATE]) == 3:  # pragma: no cover
         year, month, day, = [int(float(i)) for i in lookup[GAMMA_DATE][:3]]
-        # Occasionally GAMMA header has no time information - default to midnight
-        hour, mins, sec = 0, 0, 0
+        if lookup.get(GAMMA_TIME) != None:
+            t = lookup[GAMMA_TIME][0]
+            h, m, s = str(timedelta(seconds=float(t))).split(":")
+            hour = int(h); min = int(m); sec = int(s.split(".")[0])
+        else:
+            # Occasionally GAMMA header has no time information - default to midnight
+            hour, min, sec = 0, 0, 0
     elif len(lookup[GAMMA_DATE]) == 6:
-        year, month, day, hour, mins, sec = [int(float(i))
+        year, month, day, hour, min, sec = [int(float(i))
                                              for i in lookup[GAMMA_DATE][:6]]
     else:  # pragma: no cover
         msg = "Date and time information not complete in GAMMA headers"
         raise GammaException(msg)
 
-    subset[ifc.MASTER_DATE] = datetime.date(year, month, day)
-    subset[ifc.MASTER_TIME] = datetime.time(hour, mins, sec)
+    subset[ifc.MASTER_DATE] = date(year, month, day)
+    subset[ifc.MASTER_TIME] = time(hour, min, sec)
 
     return subset
 
@@ -108,8 +112,7 @@ def parse_dem_header(path):
     lookup = _parse_header(path)
 
     # NB: many lookup fields have multiple elements, eg ['1000', 'Hz']
-    subset = {ifc.PYRATE_NCOLS: int(lookup[GAMMA_WIDTH][0]),
-              ifc.PYRATE_NROWS: int(lookup[GAMMA_NROWS][0])}
+    subset = {ifc.PYRATE_NCOLS: int(lookup[GAMMA_WIDTH][0]), ifc.PYRATE_NROWS: int(lookup[GAMMA_NROWS][0])}
 
     expected = ['decimal', 'degrees']
     for k in [GAMMA_CORNER_LAT, GAMMA_CORNER_LONG, GAMMA_X_STEP, GAMMA_Y_STEP]:
@@ -166,9 +169,7 @@ def combine_headers(hdr0, hdr1, dem_hdr):
     # set incidence angle to mean of master and slave
     inc_ang = hdr0[ifc.PYRATE_INCIDENCE_DEGREES]
     if np.isclose(inc_ang, hdr1[ifc.PYRATE_INCIDENCE_DEGREES], atol=1e-1):
-        chdr[ifc.PYRATE_INCIDENCE_DEGREES] = \
-            (hdr0[ifc.PYRATE_INCIDENCE_DEGREES] +
-             hdr1[ifc.PYRATE_INCIDENCE_DEGREES]) / 2
+        chdr[ifc.PYRATE_INCIDENCE_DEGREES] = (hdr0[ifc.PYRATE_INCIDENCE_DEGREES]+hdr1[ifc.PYRATE_INCIDENCE_DEGREES])/2
     else:
         msg = "Incidence angles differ by more than 1e-1"
         raise GammaException(msg)

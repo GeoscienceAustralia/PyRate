@@ -18,22 +18,19 @@ This Python script converts ROI_PAC or GAMMA format unwrapped
 interferograms into geotiffs and applies optional multilooking and cropping.
 """
 # -*- coding: utf-8 -*-
-from __future__ import print_function
 import sys
-import os
 import logging
-import luigi
+import os
+from os.path import join
+import re
+import glob2
 from joblib import Parallel, delayed
 import numpy as np
-
-from pyrate.tasks.utils import pythonify_config
-from pyrate.tasks.prepifg import PrepareInterferograms
 from pyrate import prepifg
 from pyrate import config as cf
 from pyrate import roipac
 from pyrate import gamma
 from pyrate.shared import write_geotiff, mkdir_p, output_tiff_filename
-from pyrate.tasks import gamma as gamma_task
 import pyrate.ifgconstants as ifc
 from pyrate import mpiops
 
@@ -59,21 +56,16 @@ def main(params=None):
 
     usage = 'Usage: pyrate prepifg <config_file>'
     if mpiops.size > 1:  # Over-ride input options if this is an MPI job
-        params[cf.LUIGI] = False
         params[cf.PARALLEL] = False
 
     if params:
         base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST])
-        use_luigi = params[cf.LUIGI]  # luigi or no luigi
-        if use_luigi:
-            raise cf.ConfigException('params can not be provided with luigi')
-    else:  # if params not provided read from config file
+    else:
+        # if params not provided read from config file
         if (not params) and (len(sys.argv) < 3):
             print(usage)
             return
         base_ifg_paths, _, params = cf.get_ifg_paths(sys.argv[2])
-        use_luigi = params[cf.LUIGI]  # luigi or no luigi
-        raw_config_file = sys.argv[2]
 
     base_ifg_paths.append(params[cf.DEM_FILE])
     processor = params[cf.PROCESSOR]  # roipac or gamma
@@ -83,23 +75,37 @@ def main(params=None):
         if params[cf.APS_ELEVATION_MAP]:
             base_ifg_paths.append(params[cf.APS_ELEVATION_MAP])
 
-    if use_luigi:
-        log.info("Running prepifg using luigi")
-        luigi.configuration.LuigiConfigParser.add_config_path(
-            pythonify_config(raw_config_file))
-        luigi.build([PrepareInterferograms()], local_scheduler=True)
+    mkdir_p(params[cf.OUT_DIR]) # create output dir
+
+    process_base_ifgs_paths = np.array_split(base_ifg_paths, mpiops.size)[mpiops.rank]
+    if processor == ROIPAC:
+        roipac_prepifg(process_base_ifgs_paths, params)
+    elif processor == GAMMA:
+        gamma_prepifg(process_base_ifgs_paths, params)
     else:
-        process_base_ifgs_paths = \
-            np.array_split(base_ifg_paths, mpiops.size)[mpiops.rank]
-        if processor == ROIPAC:
-            roipac_prepifg(process_base_ifgs_paths, params)
-        elif processor == GAMMA:
-            gamma_prepifg(process_base_ifgs_paths, params)
-        else:
-            raise prepifg.PreprocessError('Processor must be ROI_PAC (0) or '
-                                          'GAMMA (1)')
+        raise prepifg.PreprocessError('Processor must be ROI_PAC (0) or GAMMA (1)')
     log.info("Finished prepifg")
 
+
+PTN = re.compile(r'\d{8}')  # match 8 digits for the dates
+
+def get_header_paths(input_file, slc_dir=None):
+    """
+    Function that matches input GAMMA file names with GAMMA header file names
+
+    :param str input_file: input GAMMA .unw file.
+    :param str slc_dir: GAMMA SLC header file directory
+
+    :return: list of matching header files
+    :rtype: list
+    """
+    if slc_dir:
+        dir_name = slc_dir
+        _, file_name = os.path.split(input_file)
+    else:  # header file must exist in the same dir as that of .unw
+        dir_name, file_name = os.path.split(input_file)
+    matches = PTN.findall(file_name)
+    return [glob2.glob(join(dir_name, '**/*%s*slc.par' % m))[0] for m in matches]
 
 def roipac_prepifg(base_ifg_paths, params):
     """
@@ -172,26 +178,28 @@ def gamma_prepifg(base_unw_paths, params):
             delayed(prepifg.prepare_ifg)(p, xlooks, ylooks, exts, thresh, crop)
             for p in dest_base_ifgs)
     else:
-        [prepifg.prepare_ifg(i, xlooks, ylooks, exts,
-                             thresh, crop) for i in dest_base_ifgs]
+        [prepifg.prepare_ifg(i, xlooks, ylooks, exts, thresh, crop) for i in dest_base_ifgs]
 
 
 def _gamma_multiprocessing(unw_path, params):
     """
-    Multiprocessing wrapper for GAMMA geotiff conversion
+    Multiprocessing wrapper for GAMMA full-res geotiff conversion
     """
     dem_hdr_path = params[cf.DEM_HEADER_FILE]
     slc_dir = params[cf.SLC_DIR]
-    mkdir_p(params[cf.OUT_DIR])
-    header_paths = gamma_task.get_header_paths(unw_path, slc_dir=slc_dir)
+    header_paths = get_header_paths(unw_path, slc_dir=slc_dir)
     combined_headers = gamma.manage_headers(dem_hdr_path, header_paths)
-
     dest = output_tiff_filename(unw_path, params[cf.OUT_DIR])
-    if os.path.basename(unw_path).split('.')[1] == \
-            (params[cf.APS_INCIDENCE_EXT] or params[cf.APS_ELEVATION_EXT]):
+
+    if os.path.basename(unw_path).split('.')[1] == (params[cf.APS_INCIDENCE_EXT] or params[cf.APS_ELEVATION_EXT]):
         # TODO: implement incidence class here
         combined_headers['FILE_TYPE'] = 'Incidence'
 
-    write_geotiff(combined_headers, unw_path, dest,
-                  nodata=params[cf.NO_DATA_VALUE])
+    # Create full-res geotiff if not already on disk
+    if not os.path.exists(dest):
+        write_geotiff(combined_headers, unw_path, dest,
+                      nodata=params[cf.NO_DATA_VALUE])
+    else:
+        log.info("Full-res geotiff already exists")
+
     return dest

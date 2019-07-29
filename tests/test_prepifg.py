@@ -26,13 +26,8 @@ from math import floor
 from os.path import exists, join
 
 import numpy as np
-from numpy import isnan, nanmax, nanmin, ones, nan, reshape, sum as npsum
+from numpy import isnan, nanmax, nanmin, nanmean, ones, nan, reshape, sum as npsum
 from numpy.testing import assert_array_almost_equal, assert_array_equal
-
-try:
-    from scipy.stats.stats import nanmean
-except:  # fix for scipy v0.18.0
-    from scipy import nanmean
 
 from osgeo import gdal
 
@@ -43,7 +38,7 @@ from pyrate.shared import Ifg, DEM
 from pyrate.prepifg import CUSTOM_CROP, MAXIMUM_CROP, MINIMUM_CROP, \
     ALREADY_SAME_SIZE
 from pyrate.prepifg import prepare_ifgs, _resample, PreprocessError, CustomExts
-from pyrate.tasks.utils import DUMMY_SECTION_NAME
+# from pyrate.tasks.utils import DUMMY_SECTION_NAME
 from pyrate.config import (
     DEM_HEADER_FILE,
     NO_DATA_VALUE,
@@ -52,7 +47,6 @@ from pyrate.config import (
     PROCESSOR,
     OUT_DIR,
     SLC_DIR,
-    LUIGI,
     IFG_LKSX,
     IFG_LKSY,
     IFG_CROP_OPT,
@@ -69,6 +63,7 @@ from tests.common import SML_TEST_DEM_TIF
 from tests import common
 
 gdal.UseExceptions()
+DUMMY_SECTION_NAME = 'pyrate'
 
 if not exists(PREP_TEST_TIF):
     sys.exit("ERROR: Missing 'prepifg' dir for unittests\n")
@@ -654,8 +649,8 @@ class MatlabEqualityTestRoipacSmallTestData(unittest.TestCase):
 
                     # means must also be equal
                     self.assertAlmostEqual(
-                        np.nanmean(ifg_data),
-                        np.nanmean(self.ifgs_with_nan[k].phase_data),
+                        nanmean(ifg_data),
+                        nanmean(self.ifgs_with_nan[k].phase_data),
                         places=4)
 
                     # number of nans must equal
@@ -685,7 +680,6 @@ class TestOneIncidenceOrElevationMap(unittest.TestCase):
             conf.write('{}: {}\n'.format(OUT_DIR, self.base_dir))
             conf.write('{}: {}\n'.format(IFG_FILE_LIST, self.ifgListFile))
             conf.write('{}: {}\n'.format(PROCESSOR, '1'))
-            conf.write('{}: {}\n'.format(LUIGI, '0'))
             conf.write('{}: {}\n'.format(
                 DEM_HEADER_FILE, os.path.join(
                     common.SML_TEST_GAMMA, '20060619_utm_dem.par')))

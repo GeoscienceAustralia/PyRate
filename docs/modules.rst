@@ -1,4 +1,4 @@
-PyRate Modules
+Pyrate Modules
 ==============
 
 .. toctree::

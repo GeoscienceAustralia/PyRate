@@ -19,7 +19,7 @@ Variance/Covariance matrix functionality. The algorithms
 are based on functions 'cvdcalc.m' and 'vcmt.m' from
 the Matlab Pirate package.
 """
-from __future__ import print_function
+# coding: utf-8
 from os.path import basename, join
 import logging
 from numpy import array, where, isnan, real, imag, sqrt, meshgrid
@@ -131,13 +131,11 @@ def _save_cvd_data(acg, r_dist, ifg_path, outdir):
     Function to save numpy array of autocorrelation data to disk
     """
     data = np.column_stack((acg, r_dist))
-    data_file = join(outdir, 'cvd_data_{b}.npy'.format(
-        b=basename(ifg_path).split('.')[0]))
+    data_file = join(outdir, 'cvd_data_{b}.npy'.format(b=basename(ifg_path).split('.')[0]))
     np.save(file=data_file, arr=data)
 
 
-def cvd_from_phase(phase, ifg, r_dist, calc_alpha, save_acg=False,
-                   params=None):
+def cvd_from_phase(phase, ifg, r_dist, calc_alpha, save_acg=False, params=None):
     """
     A convenience function used to compute radial autocovariance from phase
     data

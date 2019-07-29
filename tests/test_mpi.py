@@ -1,3 +1,4 @@
+# coding: utf-8
 #   This Python module is part of the PyRate software package.
 #
 #   Copyright 2017 Geoscience Australia
@@ -17,8 +18,6 @@
 This Python module contains tests for mpi operations in PyRate.
 Tun this module as 'mpirun -n 4 pytest tests/test_mpi.py'
 """
-from __future__ import print_function
-
 import glob
 import shutil
 import numpy as np
@@ -45,10 +44,8 @@ from pyrate import mpiops
 from pyrate import algorithm
 
 TRAVIS = True if 'TRAVIS' in os.environ else False
-PYTHON3P5 = True if ('TRAVIS_PYTHON_VERSION' in os.environ and
-                     os.environ['TRAVIS_PYTHON_VERSION'] == '3.5') else False
-GDAL_VERSION = check_output(["gdal-config", "--version"]).decode(
-    encoding="utf-8").split('\n')[0]
+PYTHON3P5 = True if ('TRAVIS_PYTHON_VERSION' in os.environ and os.environ['TRAVIS_PYTHON_VERSION'] == '3.5') else False
+GDAL_VERSION = check_output(["gdal-config", "--version"]).decode(encoding="utf-8").split('\n')[0]
 MPITEST = TRAVIS and GDAL_VERSION == '2.0.0'
 
 
@@ -66,8 +63,7 @@ def tempdir():
 def random_filename(tmpdir_factory):
     def make_random_filename(ext=''):
         dir = str(tmpdir_factory.mktemp('pyrate').realpath())
-        fname = ''.join(random.choice(string.ascii_lowercase)
-                        for _ in range(10))
+        fname = ''.join(random.choice(string.ascii_lowercase) for _ in range(10))
         return os.path.join(dir, fname + ext)
     return make_random_filename
 
@@ -130,8 +126,7 @@ def modify_config(request, tempdir, get_config):
     params_dict[cf.IFG_LKSY] = request.param
     params_dict[cf.OBS_DIR] = tempdir()
     common.copytree(common.SML_TEST_GAMMA, params_dict[cf.OBS_DIR])
-    params_dict[cf.IFG_FILE_LIST] = os.path.join(
-        params_dict[cf.OBS_DIR], 'ifms_17')
+    params_dict[cf.IFG_FILE_LIST] = os.path.join(params_dict[cf.OBS_DIR], 'ifms_17')
     params_dict[cf.PARALLEL] = False
     params_dict[cf.APS_CORRECTION] = 0
     yield params_dict
@@ -154,8 +149,7 @@ def test_vcm_matlab_vs_mpi(mpisync, tempdir, get_config):
 
     params_dict = get_config(TEST_CONF_ROIPAC)
     MATLAB_VCM_DIR = os.path.join(SML_TEST_DIR, 'matlab_vcm')
-    matlab_vcm = np.genfromtxt(os.path.join(MATLAB_VCM_DIR,
-                                            'matlab_vcmt.csv'), delimiter=',')
+    matlab_vcm = np.genfromtxt(os.path.join(MATLAB_VCM_DIR, 'matlab_vcmt.csv'), delimiter=',')
     if mpiops.rank == 0:
         outdir = tempdir()
     else:
@@ -205,8 +199,7 @@ def orbfit_degrees(request):
     return request.param
 
 
-@pytest.mark.skipif(not MPITEST, reason='skipping mpi tests in travis except '
-                                        'in TRAVIS and GDAL=2.0.0')
+@pytest.mark.skipif(not MPITEST, reason='skipping mpi tests in travis except in TRAVIS and GDAL=2.0.0')
 def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
                                 ref_est_method, row_splits, col_splits,
                                 get_crop, orbfit_lks, orbfit_method,
@@ -228,15 +221,13 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
         return
 
     # skip some tests in travis to run CI faster
-    if TRAVIS and (xlks % 2 or row_splits % 2 or col_splits % 2
-                   or orbfit_lks % 2):
+    if TRAVIS and (xlks % 2 or row_splits % 2 or col_splits % 2 or orbfit_lks % 2):
         print('Skipping in travis env for faster CI run')
         return
     print("xlks={}, ref_est_method={}, row_splits={}, col_splits={}, "
           "get_crop={}, orbfit_lks={}, orbfit_method={}, "
           "rank={}".format(xlks, ref_est_method, row_splits, col_splits,
-                           get_crop, orbfit_lks, orbfit_method, orbfit_degrees,
-                           mpiops.rank))
+                           get_crop, orbfit_lks, orbfit_method, orbfit_degrees, mpiops.rank))
 
     base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST])
     # dest_paths are tifs that have been geotif converted and multilooked
@@ -248,11 +239,12 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
 
     mpiops.comm.barrier()
 
-    (refpx, refpy), maxvar, vcmt = run_pyrate.process_ifgs(
-        ifg_paths=dest_paths, params=params, rows=row_splits, cols=col_splits)
+    (refpx, refpy), maxvar, vcmt = run_pyrate.process_ifgs( ifg_paths=dest_paths,
+                                                            params=params,
+                                                            rows=row_splits,
+                                                            cols=col_splits )
 
-    tiles = mpiops.run_once(pyrate.shared.get_tiles, dest_paths[0],
-                            rows=row_splits, cols=col_splits)
+    tiles = mpiops.run_once(pyrate.shared.get_tiles, dest_paths[0], rows=row_splits, cols=col_splits)
     postprocessing._postprocess_linrate(row_splits, col_splits, params)
     postprocessing._postprocess_timeseries(row_splits, col_splits, params)
     ifgs_mpi_out_dir = params[cf.OUT_DIR]
@@ -269,10 +261,8 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
         params_old[cf.ORBITAL_FIT_METHOD] = orbfit_method
         params_old[cf.ORBITAL_FIT_DEGREE] = orbfit_degrees
         xlks, ylks, crop = cf.transform_params(params_old)
-        base_unw_paths = cf.original_ifg_paths(
-            params_old[cf.IFG_FILE_LIST])
-        dest_paths = cf.get_dest_paths(
-            base_unw_paths, crop, params_old, xlks)
+        base_unw_paths = cf.original_ifg_paths(params_old[cf.IFG_FILE_LIST])
+        dest_paths = cf.get_dest_paths(base_unw_paths, crop, params_old, xlks)
         run_prepifg.gamma_prepifg(base_unw_paths, params_old)
 
         ifgs = pre_prepare_ifgs(dest_paths, params_old)
@@ -286,19 +276,14 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
         r_dist = covariance.RDist(ifgs[0])()
         maxvar_s = [covariance.cvd(i, params_old, r_dist)[0] for i in ifgs]
         vcmt_s = covariance.get_vcmt(ifgs, maxvar)
-        tsincr, tscum, _ = tests.common.compute_time_series(
-            ifgs, mst_grid, params, vcmt)
-        rate, error, samples = tests.common.calculate_linear_rate(
-            ifgs, params_old, vcmt, mst_grid)
+        tsincr, tscum, _ = tests.common.compute_time_series(ifgs, mst_grid, params, vcmt)
+        rate, error, samples = tests.common.calculate_linear_rate(ifgs, params_old, vcmt, mst_grid)
         mst_mpi = reconstruct_mst(ifgs[0].shape, tiles, params[cf.TMPDIR])
         np.testing.assert_array_almost_equal(mst_grid, mst_mpi)
-        tsincr_mpi, tscum_mpi = reconstruct_times_series(ifgs[0].shape,
-                                                         tiles,
-                                                         params[cf.TMPDIR])
+        tsincr_mpi, tscum_mpi = reconstruct_times_series(ifgs[0].shape, tiles, params[cf.TMPDIR])
 
         rate_mpi, error_mpi, samples_mpi = \
-            [reconstruct_linrate(ifgs[0].shape, tiles, params[cf.TMPDIR], t)
-             for t in ['linrate', 'linerror', 'linsamples']]
+            [reconstruct_linrate(ifgs[0].shape, tiles, params[cf.TMPDIR], t) for t in ['linrate', 'linerror', 'linsamples']]
         np.testing.assert_array_almost_equal(maxvar, maxvar_s)
         np.testing.assert_array_almost_equal(vcmt, vcmt_s)
         for i, j in zip(ifgs, ifgs_mpi):
@@ -318,8 +303,7 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
         epochlist = algorithm.get_epochs(ifgs)[0]
 
         for i in range(tsincr.shape[2]):
-            _tifs_same(ifgs_mpi_out_dir, params_old[cf.OUT_DIR],
-                       'tsincr' + '_' + str(epochlist.dates[i + 1]) + ".tif")
+            _tifs_same(ifgs_mpi_out_dir, params_old[cf.OUT_DIR], 'tsincr' + '_' + str(epochlist.dates[i + 1]) + ".tif")
 
         # 12 timeseries outputs
         assert i + 1 == tsincr.shape[2]
@@ -342,15 +326,12 @@ def reconstruct_times_series(shape, tiles, output_dir):
     tscum_mpi = np.empty_like(tsincr_mpi, dtype=np.float32)
 
     for i, t in enumerate(tiles):
-        tsincr_file_n = os.path.join(output_dir,
-                                     'tsincr_{}.npy'.format(i))
-        tsincr_mpi[t.top_left_y:t.bottom_right_y,
-                   t.top_left_x: t.bottom_right_x, :] = np.load(tsincr_file_n)
+        tsincr_file_n = os.path.join(output_dir, 'tsincr_{}.npy'.format(i))
+        tsincr_mpi[t.top_left_y:t.bottom_right_y, t.top_left_x: t.bottom_right_x, :] = np.load(tsincr_file_n)
 
         tscum_file_n = os.path.join(output_dir, 'tscuml_{}.npy'.format(i))
 
-        tscum_mpi[t.top_left_y:t.bottom_right_y,
-                  t.top_left_x: t.bottom_right_x, :] = np.load(tscum_file_n)
+        tscum_mpi[t.top_left_y:t.bottom_right_y, t.top_left_x: t.bottom_right_x, :] = np.load(tscum_file_n)
 
     return tsincr_mpi, tscum_mpi
 

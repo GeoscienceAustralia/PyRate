@@ -1,57 +1,31 @@
+branches:
+  only:
+  - develop
+  - /^release-.*$/
+  - /.*-travis$/
+  - master
+
 language: python
 
-python:
-#  - "3.7-dev"
-#  - "3.6"
-  - "3.5"
-#  - "3.4"
-#  - "3.3"
-  - "2.7"
+python: 3.6
 
+os: linux
 
-env:
-  global:
-    - PIP_WHEEL_DIR=$HOME/.cache/pip/wheels
-    - PIP_FIND_LINKS=file://$HOME/.cache/pip/wheels
-    - GDALINST=$HOME/gdalinstall
-    - GDALBUILD=$HOME/gdalbuild
-  matrix:
-#    - GDALVERSION="1.11.0"
-    - GDALVERSION="1.11.1"  # nci version
-#    - GDALVERSION="1.11.2"
-    - GDALVERSION="2.0.0"  # nci version
-#    - GDALVERSION="2.0.1"
-#    - GDALVERSION="2.1.0"
-
-addons:
-  apt:
-    packages:
-    - gdal-bin
-    - libgdal-dev
-    - libpng12-dev
-    - libblas-dev
-    - liblapack-dev
-    - libatlas-dev
-    - libatlas-base-dev
-    - gfortran
-    - libproj-dev
-    - openmpi-bin
-    - libopenmpi-dev
-
+dist: bionic # Ubuntu 18.04
 
 before_install:
+  - sudo apt-get update
+  - sudo apt-get -y install gdal-bin
+  - sudo apt-get -y install libgdal-dev
+  - sudo apt-get -y install openmpi-bin
+  - sudo apt-get -y install libopenmpi-dev
+  - export C_INCLUDE_PATH=$C_INCLUDE_PATH:/usr/include/gdal
+  - export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:/usr/include/gdal
   - pip install -U pip
-  - pip install wheel
-  - pip install python-daemon==2.1.1
-  - . ./utils/travis_gdal_install.sh
-  - export PATH=$GDALINST/gdal-$GDALVERSION/bin:$PATH
-  - export LD_LIBRARY_PATH=$GDALINST/gdal-$GDALVERSION/lib:$LD_LIBRARY_PATH
-
+  
 install:
-  - "if [ $(gdal-config --version) == \"$GDALVERSION\" ]; then echo \"Using gdal $GDALVERSION\"; else echo \"NOT using gdal $GDALVERSION as expected; aborting\"; exit 1; fi"
-  - if [[ $TRAVIS_PYTHON_VERSION == 3.3 ]]; then pip install numpy==1.10.1 matplotlib==1.5.1; fi
+  - pip install -r requirements-test.txt
   - pip install -r requirements-dev.txt
-  - pip install GDAL==$(gdal-config --version)
   - python setup.py install
   - export PYRATEPATH=$(pwd)
   - export PYTHONPATH=$PYRATEPATH:$PYTHONPATH
@@ -59,15 +33,9 @@ install:
 
 # command to run tests, e.g. python setup.py test
 script:
-  - if [[ $TRAVIS_PYTHON_VERSION == 2.7 && $GDALVERSION == 2.0.0 ]]; then mpirun -n 4 pytest --cov-report term-missing:skip-covered --cov=pyrate tests/test_mpi.py; fi
   - pytest --cov-report term-missing:skip-covered --cov=pyrate tests/
 
-cache:
-  - apt
-  - pip
-  - directories:
-    - $GDALINST
-    - $HOME/.cache/pip
-
-after_success:
-  - if [[ $TRAVIS_PYTHON_VERSION == 3.5 && $GDALVERSION == 2.0.0 ]]; then coveralls || echo "!! intermittent coveralls failure"; fi
+# cache:
+#   - apt
+#   - pip
+#   - $HOME/.cache/pip
