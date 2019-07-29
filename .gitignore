@@ -1,3 +1,5 @@
+!*docs/_build/html/404.html
+
 *.pyo
 *.pyc
 .project
@@ -30,3 +32,4 @@ Py_Rate.egg-info
 *tests/test_data/prepifg/tif/0_2rlks_4cr.tif
 *tests/test_data/prepifg/tif/1_1rlks_4cr.tif
 *tests/test_data/prepifg/tif/1_2rlks_4cr.tif
+
