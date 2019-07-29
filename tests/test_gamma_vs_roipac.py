@@ -85,7 +85,6 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
             conf.write('{}: {}\n'.format(OUT_DIR, self.base_dir))
             conf.write('{}: {}\n'.format(IFG_FILE_LIST, self.ifgListFile))
             conf.write('{}: {}\n'.format(PROCESSOR, '1'))
-            # conf.write('{}: {}\n'.format(LUIGI, self.LUIGI))
             conf.write('{}: {}\n'.format(
                 DEM_HEADER_FILE, os.path.join(
                     self.SMLNEY_GAMMA_TEST, '20060619_utm_dem.par')))
@@ -102,7 +101,6 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
             ifgl.write('\n'.join(data))
 
     def test_cmd_ifg_no_gamma_files_created(self):
-        self.LUIGI = '0'  # luigi or no luigi
         self.conf_file = self.gamma_conffile
         self.base_dir = self.gamma_base_dir
         self.ifgListFile = self.gamma_ifgListFile
@@ -138,7 +136,6 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
             conf.write('{}: {}\n'.format(OUT_DIR, self.base_dir))
             conf.write('{}: {}\n'.format(IFG_FILE_LIST, self.ifgListFile))
             conf.write('{}: {}\n'.format(PROCESSOR, '0'))
-            # conf.write('{}: {}\n'.format(LUIGI, self.luigi))
             conf.write('{}: {}\n'.format(DEM_HEADER_FILE,
                                          common.SML_TEST_DEM_HDR))
             conf.write('{}: {}\n'.format(IFG_LKSX, '1'))
@@ -156,7 +153,6 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
         base_exp = common.small_ifg_file_list()
         self.expPaths = [os.path.join(self.roipac_base_dir, os.path.basename(i))
                          for i in base_exp]
-        self.luigi = '0'
         self.confFile = self.roipac_conffile
         self.ifgListFile = self.roipac_ifgListFile
         self.base_dir = self.roipac_base_dir
@@ -169,22 +165,6 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
         for path in self.expPaths:
             self.assertTrue(os.path.exists(path),
                             '{} does not exist'.format(path))
-
-    def test_equality_of_luigi_and_no_luigi_phase_data(self):
-        gamma_PTN = re.compile(r'\d{8}')
-        gamma_files = []
-        for i in glob.glob(os.path.join(self.gamma_base_dir,
-                                        "*.tif")):
-            if len(gamma_PTN.findall(i)) == 2:
-                gamma_files.append(i)
-        all_gamma_ifgs = small_data_setup(gamma_files)
-        all_roipac_ifgs = small_data_setup(
-            glob.glob(os.path.join(self.roipac_base_dir, "geo*.tif")))
-        c = 0
-        for c, (r, g) in enumerate(zip(all_roipac_ifgs, all_gamma_ifgs)):
-            np.testing.assert_array_equal(r.phase_data, g.phase_data)
-        self.assertEqual(c+1, len(all_roipac_ifgs))
-        self.assertEqual(c+1, len(all_gamma_ifgs))
 
     def test_equality_of_meta_data(self):
         gamma_PTN = re.compile(r'\d{8}')

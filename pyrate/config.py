@@ -163,9 +163,6 @@ PARALLEL = 'parallel'
 #: INT; Number of processes for multi-threading
 PROCESSES = 'processes'
 
-#: BOOL (0/1); Switch for using Luigi to perform prepifg step
-# LUIGI = 'use_luigi'
-
 # Orbital error correction constants for conversion to readable flags
 INDEPENDENT_METHOD = 'INDEPENDENT'
 NETWORK_METHOD = 'NETWORK'
@@ -259,7 +256,6 @@ PARAM_CONVERSION = {
     PROCESSES: (int, 8),
     PROCESSOR: (int, None),
     NETWORKX_OR_MATLAB_FLAG: (int, 1), # Default to NetworkX
-    # LUIGI: (int, 0),
     NAN_CONVERSION: (int, 0),
     NO_DATA_AVERAGING_THRESHOLD: (float, 0.0),
     APS_CORRECTION: (int, 0),

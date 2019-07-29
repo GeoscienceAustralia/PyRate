@@ -1116,7 +1116,6 @@ def warp_required(xlooks, ylooks, crop):
     :return: True if params show rasters need to be cropped and/or resized
     :rtype: bool
     """
-    # Only used in Luigi functionality
     if xlooks > 1 or ylooks > 1:
         return True
     if crop is None:

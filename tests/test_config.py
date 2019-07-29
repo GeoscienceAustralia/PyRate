@@ -33,7 +33,6 @@ from pyrate.config import (
     PROCESSOR,
     OUT_DIR,
     SLC_DIR,
-    # LUIGI,
     IFG_LKSX,
     IFG_LKSY,
     IFG_CROP_OPT,
@@ -154,7 +153,6 @@ class TestOneIncidenceOrElevationMap(unittest.TestCase):
             conf.write('{}: {}\n'.format(OUT_DIR, self.base_dir))
             conf.write('{}: {}\n'.format(IFG_FILE_LIST, self.ifgListFile))
             conf.write('{}: {}\n'.format(PROCESSOR, '1'))
-            # conf.write('{}: {}\n'.format(LUIGI, '0'))
             conf.write('{}: {}\n'.format(
                 DEM_HEADER_FILE, os.path.join(
                     common.SML_TEST_GAMMA, '20060619_utm_dem.par')))

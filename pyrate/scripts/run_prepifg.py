@@ -56,7 +56,6 @@ def main(params=None):
 
     usage = 'Usage: pyrate prepifg <config_file>'
     if mpiops.size > 1:  # Over-ride input options if this is an MPI job
-        # params[cf.LUIGI] = False
         params[cf.PARALLEL] = False
 
     if params:

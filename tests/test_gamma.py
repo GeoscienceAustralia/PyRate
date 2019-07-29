@@ -42,7 +42,6 @@ from pyrate.config import (
     PROCESSOR,
     OUT_DIR,
     SLC_DIR,
-    # LUIGI,
     IFG_LKSX,
     IFG_LKSY,
     IFG_CROP_OPT,
@@ -91,24 +90,6 @@ class GammaCommandLineTests(unittest.TestCase):
             conf.write('{}: {}\n'.format(SLC_DIR, ''))
         with open(self.ifgListFile, 'w') as ifgl:
             ifgl.write(data)
-
-    # def test_cmd_ifg(self):
-    #     data = join(self.base, '16x20_20090713-20090817_VV_4rlks_utm.unw')
-    #     self.exp_path = os.path.join(self.base_dir, '16x20_20090713-20090817_VV_4rlks_utm_unw.tif')
-    #     self.common_check(data)
-
-    # def test_cmd_dem(self):
-    #     data = join(self.base, 'dem16x20raw.dem')
-    #     self.exp_path = os.path.join(self.base_dir, 'dem16x20raw_dem.tif')
-    #     self.common_check(data)
-
-    # def common_check(self, data):
-    #     self.makeInputFiles(data)
-    #     sys.argv = ['gamma.py', self.confFile]
-    #     # this calls legacy luigi method
-    #     gammaMain()
-    #     self.assertTrue(os.path.exists(self.exp_path))
-
 
 class GammaToGeoTiffTests(unittest.TestCase):
     """Tests conversion of GAMMA rasters to custom PyRate GeoTIFF"""
@@ -311,87 +292,6 @@ class HeaderCombinationTests(unittest.TestCase):
 
     def test_fail_bad_date_order(self):
         self.assertRaises(self.err, gamma.combine_headers, H1, H0, self.dh)
-
-
-class TestGammaLuigiEquality(unittest.TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-
-        luigi_dir = tempfile.mktemp()
-        non_luigi_dir = tempfile.mkdtemp()
-        cls.luigi_confFile = os.path.join(TEMPDIR, '{}/gamma_test.conf'.format(luigi_dir))
-        cls.luigi_ifgListFile = os.path.join(TEMPDIR, '{}/gamma_ifg.list'.format(luigi_dir))
-        cls.non_luigi_confFile = os.path.join(TEMPDIR, '{}/gamma_test.conf'.format(non_luigi_dir))
-        cls.non_luigi_ifgListFile = os.path.join(TEMPDIR, '{}/gamma_ifg.list'.format(non_luigi_dir))
-
-        cls.luigi_base_dir = os.path.dirname(cls.luigi_confFile)
-        cls.non_luigi_base_dir = os.path.dirname(cls.non_luigi_confFile)
-        shared.mkdir_p(cls.luigi_base_dir)
-        shared.mkdir_p(cls.non_luigi_base_dir)
-
-    @classmethod
-    def tearDownClass(cls):
-        try:
-            shutil.rmtree(cls.luigi_base_dir)
-        except OSError:
-            print('Failed to remove temp directory: %s' % cls.luigi_base_dir)
-
-        try:
-            shutil.rmtree(cls.non_luigi_base_dir)
-        except OSError:
-            print('Failed to remove temp directory: %s' % cls.non_luigi_base_dir)
-
-    def make_input_files(self, data):
-        with open(self.conf_file, 'w') as conf:
-            conf.write('{}: {}\n'.format(NO_DATA_VALUE, '0.0'))
-            conf.write('{}: {}\n'.format(OBS_DIR, self.base_dir))
-            conf.write('{}: {}\n'.format(OUT_DIR, self.base_dir))
-            conf.write('{}: {}\n'.format(IFG_FILE_LIST, self.ifgListFile))
-            conf.write('{}: {}\n'.format(PROCESSOR, '1'))
-            # conf.write('{}: {}\n'.format(LUIGI, self.LUIGI))
-            conf.write('{}: {}\n'.format(DEM_HEADER_FILE, os.path.join(SML_TEST_GAMMA, '20060619_utm_dem.par')))
-            conf.write('{}: {}\n'.format(IFG_LKSX, '1'))
-            conf.write('{}: {}\n'.format(IFG_LKSY, '1'))
-            conf.write('{}: {}\n'.format(IFG_CROP_OPT, '1'))
-            conf.write('{}: {}\n'.format(NO_DATA_AVERAGING_THRESHOLD, '0.5'))
-            conf.write('{}: {}\n'.format(SLC_DIR, ''))
-            conf.write('{}: {}\n'.format(DEM_FILE, common.SML_TEST_DEM_GAMMA))
-            conf.write('{}: {}\n'.format(APS_INCIDENCE_MAP, common.SML_TEST_INCIDENCE))
-            conf.write('{}: {}\n'.format(APS_ELEVATION_MAP, ''))
-        with open(self.ifgListFile, 'w') as ifgl:
-            ifgl.write('\n'.join(data))
-
-    # def test_cmd_ifg_luigi_files_created(self):
-    #
-    #     # self.LUIGI = '1'  # luigi or no luigi
-    #     self.conf_file = self.luigi_confFile
-    #     self.base_dir = self.luigi_base_dir
-    #     self.ifgListFile = self.luigi_ifgListFile
-    #     self.common_check(self.luigi_confFile)
-
-    # def test_cmd_ifg_no_luigi_files_created(self):
-    #     # self.LUIGI = '0'  # luigi or no luigi
-    #     self.conf_file = self.non_luigi_confFile
-    #     self.base_dir = self.non_luigi_base_dir
-    #     self.ifgListFile = self.non_luigi_ifgListFile
-    #     self.common_check(self.non_luigi_confFile)
-
-    def common_check(self, conf_file):
-        data_paths = glob.glob(
-            os.path.join(SML_TEST_GAMMA, "*_utm.unw"))
-
-        self.make_input_files(data_paths)
-
-        base_ifg_paths, dest_paths, params = cf.get_ifg_paths(conf_file)
-        dest_base_ifgs = [os.path.join(params[cf.OUT_DIR], os.path.basename(q).split('.')[0] + '_' +
-            os.path.basename(q).split('.')[1] + '.tif') for q in base_ifg_paths]
-        sys.argv = ['pyrate', 'prepifg', conf_file]
-        run_prepifg.main()
-
-        for p, q in zip(dest_base_ifgs, dest_paths):
-            self.assertTrue(os.path.exists(p), '{} does not exist'.format(p))
-            self.assertTrue(os.path.exists(q), '{} does not exist'.format(q))
 
 
 class TestGammaParallelVsSerial(unittest.TestCase):
