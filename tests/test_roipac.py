@@ -40,7 +40,6 @@ from pyrate.config import (
     OUT_DIR,
     IFG_FILE_LIST,
     PROCESSOR,
-    # LUIGI,
     IFG_CROP_OPT,
     IFG_LKSX,
     IFG_LKSY,
@@ -104,30 +103,6 @@ class RoipacCommandLine(unittest.TestCase):
             conf.write('{}: {}\n'.format(PROCESSOR, '0'))
         with open(self.ifgListFile, 'w') as ifgl:
             ifgl.write('\n'.join(data))
-
-    # def test_cmd_ifg(self):
-    #     base_paths = ['geo_070709-070813.unw', 'geo_060619-061002.unw']
-    #     base_exp = ['geo_070709-070813_unw.tif', 'geo_060619-061002_unw.tif']
-    #     self.dataPaths = [join(SML_TEST_OBS, i) for i in base_paths]
-    #     self.expPaths = [join(self.base_dir, i) for i in base_exp]
-    #     self.common_check()
-
-    # def test_cmd_dem(self):
-    #     self.expPaths = [os.path.join(self.base_dir,
-    #                                   'roipac_test_trimmed_dem.tif')]
-    #     self.dataPaths = [SML_TEST_DEM_ROIPAC]
-    # calling legacy luigi method
-    #     self.common_check()
-
-    # def common_check(self):
-    #     self.makeInputFiles(self.dataPaths, 'WGS84')
-    #     sys.argv = ['roipac.py', self.confFile]
-    # calling legacy luigi method
-    #     roipacMain()
-    #     for path in self.expPaths:
-    #         self.assertTrue(os.path.exists(path),
-    #                         '{} does not exist'.format(path))
-
 
 class RoipacToGeoTiffTests(unittest.TestCase):
     """Tests conversion of GAMMA rasters to custom PyRate GeoTIFF"""
@@ -296,104 +271,6 @@ class HeaderParsingTests(unittest.TestCase):
         hdrs = roipac.parse_header(FULL_HEADER_PATH)
         self.assertAlmostEqual(hdrs[roipac.X_LAST], 151.8519444445)
         self.assertAlmostEqual(hdrs[roipac.Y_LAST], -34.625)
-
-
-class TestRoipacLuigiEquality(unittest.TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        cls.luigi_base_dir = tempfile.mkdtemp()
-        fp, cls.luigi_conf_file = \
-            tempfile.mkstemp(suffix='roipac_test.conf', dir=cls.luigi_base_dir)
-        os.close(fp)
-        fp, cls.luigi_ifgListFile = tempfile.mkstemp(suffix='roipac_ifg.list',
-                                                 dir=cls.luigi_base_dir)
-        os.close(fp)
-        cls.non_luigi_base_dir = tempfile.mkdtemp()
-        fp, cls.non_luigi_confFile = tempfile.mkstemp(
-            suffix='roipac_test.conf', dir=cls.non_luigi_base_dir)
-        os.close(fp)
-        fp, cls.non_luigi_ifgListFile = tempfile.mkstemp(
-            suffix='roipac_ifg.list', dir=cls.non_luigi_base_dir)
-        os.close(fp)
-
-    @classmethod
-    def tearDownClass(cls):
-        shutil.rmtree(cls.luigi_base_dir)
-        shutil.rmtree(cls.non_luigi_base_dir)
-
-    def makeInputFiles(self, data, projection):
-        with open(self.confFile, 'w') as conf:
-            conf.write('{}: {}\n'.format(INPUT_IFG_PROJECTION, projection))
-            conf.write('{}: {}\n'.format(NO_DATA_VALUE, '0.0'))
-            conf.write('{}: {}\n'.format(OBS_DIR, self.base_dir))
-            conf.write('{}: {}\n'.format(OUT_DIR, self.base_dir))
-            conf.write('{}: {}\n'.format(IFG_FILE_LIST, self.ifgListFile))
-            conf.write('{}: {}\n'.format(PROCESSOR, '0'))
-            # conf.write('{}: {}\n'.format(LUIGI, self.luigi))
-            conf.write('{}: {}\n'.format(DEM_HEADER_FILE,
-                                         SML_TEST_DEM_HDR))
-            conf.write('{}: {}\n'.format(IFG_LKSX, '1'))
-            conf.write('{}: {}\n'.format(IFG_LKSY, '1'))
-            conf.write('{}: {}\n'.format(IFG_CROP_OPT, '1'))
-            conf.write('{}: {}\n'.format(NO_DATA_AVERAGING_THRESHOLD, '0.5'))
-            conf.write('{}: {}\n'.format(DEM_FILE, SML_TEST_DEM_ROIPAC))
-            conf.write('{}: {}\n'.format(APS_INCIDENCE_MAP, ''))
-            conf.write('{}: {}\n'.format(APS_ELEVATION_MAP, ''))
-        with open(self.ifgListFile, 'w') as ifgl:
-            ifgl.write('\n'.join(data))
-
-    def test_cmd_ifg_luigi_files_created(self):
-        self.dataPaths = small_data_roipac_unws()
-        base_exp = small_ifg_file_list()
-        self.expPaths = [join(self.luigi_base_dir, os.path.basename(i))
-                         for i in base_exp]
-        self.luigi = '1'
-        self.confFile = self.luigi_conf_file
-        self.ifgListFile = self.luigi_ifgListFile
-        self.base_dir = self.luigi_base_dir
-        self.common_check()
-
-    def test_cmd_ifg_no_luigi_files_created(self):
-        self.dataPaths = small_data_roipac_unws()
-        base_exp = small_ifg_file_list()
-        self.expPaths = [join(self.non_luigi_base_dir, os.path.basename(i))
-                         for i in base_exp]
-        self.luigi = '0'
-        self.confFile = self.non_luigi_confFile
-        self.ifgListFile = self.non_luigi_ifgListFile
-        self.base_dir = self.non_luigi_base_dir
-        self.common_check()
-
-    def common_check(self):
-        self.makeInputFiles(self.dataPaths, 'WGS84')
-        sys.argv = ['pyrate', 'prepifg', self.confFile]
-        run_prepifg.main()
-        for path in self.expPaths:
-            self.assertTrue(os.path.exists(path),
-                            '{} does not exist'.format(path))
-
-    def test_equality_of_luigi_and_no_luigi(self):
-        # necessary if this test is run by itself
-        self.test_cmd_ifg_luigi_files_created()
-        self.test_cmd_ifg_no_luigi_files_created()
-
-        non_luigi_files = glob.glob(os.path.join(
-            self.non_luigi_base_dir, "geo*.tif"))
-
-        all_luigi_ifgs = small_data_setup(
-            glob.glob(os.path.join(self.luigi_base_dir, "geo*.tif")))
-        all_non_luigi_ifgs = small_data_setup(
-            glob.glob(os.path.join(self.non_luigi_base_dir, "geo*.tif")))
-
-        self.assertEqual(len(all_non_luigi_ifgs), len(all_luigi_ifgs))
-        self.assertEqual(len(non_luigi_files), len(all_luigi_ifgs))
-        c = 0
-        for c, (i, j) in enumerate(zip(all_luigi_ifgs, all_non_luigi_ifgs)):
-            np.testing.assert_array_equal(i.phase_data, j.phase_data)
-
-        self.assertEqual(c+1, len(all_luigi_ifgs))
-
 
 if __name__ == "__main__":
     unittest.main()
