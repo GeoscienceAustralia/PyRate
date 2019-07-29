@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>pyrate &mdash; PyRate 0.2.1 documentation</title>
+  <title>Pyrate Modules &mdash; PyRate 0.3.0 documentation</title>
   
 
   
@@ -36,7 +36,7 @@
   <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="pyrate package" href="pyrate.html" />
+    <link rel="next" title="Algorithm Module" href="algorithm.html" />
     <link rel="prev" title="PyRate main Script" href="pyrate.scripts.main.html" /> 
 </head>
 
@@ -108,6 +108,12 @@
 <li class="toctree-l2"><a class="reference internal" href="authors.html#contributors">Contributors</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">Release History</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id3">0.1.0 (2017-01-31)</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="scripts.html">PyRate Scripts</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.run_prepifg.html">PyRate run_prepifg Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.run_pyrate.html">PyRate run_pyrate Script</a></li>
@@ -115,8 +121,24 @@
 <li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.main.html">PyRate main Script</a></li>
 </ul>
 </li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">pyrate</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.html">pyrate package</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Pyrate Modules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="algorithm.html">Algorithm Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aps.html">Atmospheric Phase Screen Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="conda.html">Anaconda</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config.html">Config Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="covariance.html">Covariance Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gamma.html">GAMMA Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gdal_python.html">GDAL-Python Bindings Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="linrate.html">Linrate Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mst.html">Minimum Spanning Tree Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="orbital.html">Orbital Error Correction Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepifg.html">Prepifg Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyratelog.html">Logging Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ref_phs_est.html">Reference Phase Calculation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="refpixel.html">Reference Pixel Calculation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="roipac.html">ROI_PAC Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="shared.html">Shared Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="timeseries.html">Time Series Module</a></li>
 </ul>
 </li>
 </ul>
@@ -165,7 +187,7 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>pyrate</li>
+      <li>Pyrate Modules</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -179,7 +201,7 @@
   
   <div class="rst-breadcrumbs-buttons" role="navigation" aria-label="breadcrumb navigation">
       
-        <a href="pyrate.html" class="btn btn-neutral float-right" title="pyrate package" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="algorithm.html" class="btn btn-neutral float-right" title="Algorithm Module" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="pyrate.scripts.main.html" class="btn btn-neutral float-left" title="PyRate main Script" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
@@ -191,46 +213,41 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="pyrate">
-<h1>pyrate<a class="headerlink" href="#pyrate" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="pyrate-modules">
+<h1>Pyrate Modules<a class="headerlink" href="#pyrate-modules" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="pyrate.html">pyrate package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.html#subpackages">Subpackages</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="pyrate.scripts.html">pyrate.scripts package</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="pyrate.scripts.html#submodules">Submodules</a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyrate.scripts.html#module-pyrate.scripts.main">pyrate.scripts.main module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyrate.scripts.html#module-pyrate.scripts.postprocessing">pyrate.scripts.postprocessing module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyrate.scripts.html#module-pyrate.scripts.run_prepifg">pyrate.scripts.run_prepifg module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyrate.scripts.html#module-pyrate.scripts.run_pyrate">pyrate.scripts.run_pyrate module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyrate.scripts.html#module-pyrate.scripts">Module contents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="algorithm.html">Algorithm Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="aps.html">Atmospheric Phase Screen Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="conda.html">Anaconda</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="conda.html#install">Install</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="conda.html#set-up-proxys-for-pip-only-applicable-if-working-behind-proxy">Set up proxys for pip (only applicable if working behind proxy):</a></li>
+<li class="toctree-l3"><a class="reference internal" href="conda.html#set-up-condarc-with-proxy-pass-information-only-applicable-if-working-behind-proxy">Set up <code class="docutils literal notranslate"><span class="pre">~/.condarc</span></code> with proxy pass information (only applicable if working behind proxy):</a></li>
+<li class="toctree-l3"><a class="reference internal" href="conda.html#clone-the-pyrate-repo">Clone the PyRate repo:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="conda.html#set-up-environment-variables">Set up environment variables</a></li>
+<li class="toctree-l3"><a class="reference internal" href="conda.html#activate-anaconda-and-install-conda-env">Activate <code class="docutils literal notranslate"><span class="pre">anaconda</span></code> and install <code class="docutils literal notranslate"><span class="pre">conda-env</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="conda.html#create-the-pyrate-environment">Create the <code class="docutils literal notranslate"><span class="pre">pyrate</span></code> environment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="conda.html#activate-the-pyrate-environment">Activate the <code class="docutils literal notranslate"><span class="pre">pyrate</span></code> environment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="conda.html#deactivate">Deactivate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="conda.html#back-to-main-anaconda-environment-if-you-need-to">Back to main Anaconda environment if you need to:</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.html#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.html#module-pyrate.algorithm">pyrate.algorithm module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.html#module-pyrate.aps">pyrate.aps module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.html#module-pyrate.config">pyrate.config module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.html#module-pyrate.covariance">pyrate.covariance module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.html#module-pyrate.gamma">pyrate.gamma module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.html#module-pyrate.gdal_python">pyrate.gdal_python module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.html#module-pyrate.ifgconstants">pyrate.ifgconstants module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.html#module-pyrate.linrate">pyrate.linrate module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.html#module-pyrate.matlab_mst">pyrate.matlab_mst module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.html#module-pyrate.mpiops">pyrate.mpiops module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.html#module-pyrate.mst">pyrate.mst module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.html#module-pyrate.orbital">pyrate.orbital module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.html#module-pyrate.prepifg">pyrate.prepifg module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.html#module-pyrate.pyratelog">pyrate.pyratelog module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.html#module-pyrate.ref_phs_est">pyrate.ref_phs_est module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.html#module-pyrate.refpixel">pyrate.refpixel module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.html#module-pyrate.roipac">pyrate.roipac module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.html#module-pyrate.shared">pyrate.shared module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.html#module-pyrate.timeseries">pyrate.timeseries module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.html#module-pyrate">Module contents</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="covariance.html">Covariance Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gamma.html">GAMMA Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gdal_python.html">GDAL-Python Bindings Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="linrate.html">Linrate Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mst.html">Minimum Spanning Tree Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="orbital.html">Orbital Error Correction Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="prepifg.html">Prepifg Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyratelog.html">Logging Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ref_phs_est.html">Reference Phase Calculation Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="refpixel.html">Reference Pixel Calculation Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roipac.html">ROI_PAC Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="timeseries.html">Time Series Module</a></li>
 </ul>
 </div>
 </div>

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Release History &mdash; PyRate 0.3.0 documentation</title>
+  <title>Welcome to the documentation for PyRate! &mdash; PyRate 0.3.0 documentation</title>
   
 
   
@@ -33,11 +33,8 @@
   
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="PyRate Scripts" href="scripts.html" />
-    <link rel="prev" title="Credits" href="authors.html" /> 
+    <link rel="search" title="Search" href="search.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -83,12 +80,12 @@
               
             
             
-              <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#ubuntu">Ubuntu</a></li>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#docker">Docker</a></li>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#hpc">HPC</a></li>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#verify-installation">Verify Installation</a></li>
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="gettingstarted.html">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#ubuntu">Ubuntu</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#docker">Docker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#hpc">HPC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#anaconda">Anaconda</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a><ul>
@@ -108,12 +105,6 @@
 <li class="toctree-l2"><a class="reference internal" href="authors.html#contributors">Contributors</a></li>
 </ul>
 </li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#id1">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id2">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id3">0.1.0 (2017-01-31)</a></li>
-</ul>
-</li>
 <li class="toctree-l1"><a class="reference internal" href="scripts.html">PyRate Scripts</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.run_prepifg.html">PyRate run_prepifg Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.run_pyrate.html">PyRate run_pyrate Script</a></li>
@@ -121,10 +112,9 @@
 <li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.main.html">PyRate main Script</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="modules.html">Pyrate Modules</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">PyRate Modules</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="algorithm.html">Algorithm Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="aps.html">Atmospheric Phase Screen Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="conda.html">Anaconda</a></li>
 <li class="toctree-l2"><a class="reference internal" href="config.html">Config Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="covariance.html">Covariance Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gamma.html">GAMMA Module</a></li>
@@ -187,7 +177,7 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>Release History</li>
+      <li>Welcome to the documentation for PyRate!</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -199,73 +189,95 @@
   </ul>
 
   
-  <div class="rst-breadcrumbs-buttons" role="navigation" aria-label="breadcrumb navigation">
-      
-        <a href="scripts.html" class="btn btn-neutral float-right" title="PyRate Scripts" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="authors.html" class="btn btn-neutral float-left" title="Credits" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
-  </div>
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="release-history">
-<h1>Release History<a class="headerlink" href="#release-history" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="id1">
-<h2>0.3.0 (2019-07-26)<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="added">
-<h3>Added<a class="headerlink" href="#added" title="Permalink to this headline">¶</a></h3>
+  <div class="section" id="welcome-to-the-documentation-for-pyrate">
+<h1>Welcome to the documentation for PyRate!<a class="headerlink" href="#welcome-to-the-documentation-for-pyrate" title="Permalink to this headline">¶</a></h1>
+<p>PyRate is a Python tool for estimating the average rate (velocity) and
+incremental time-series of surface movement for every pixel in a stack of
+images generated by interferometric processing of Synthetic Aperture Radar
+(InSAR) data. It has been designed to use GAMMA or ROI_PAC format geocoded
+unwrapped interferograms.</p>
+<p>PyRate is a partial Python translation of Pirate, a Matlab tool developed
+by the University of Leeds and the Guangdong University of Technology.</p>
+<div class="section" id="contents">
+<h2>Contents:<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li><p><cite>apt_install.sh</cite> in utils/ that lists Ubuntu/apt package requirements.</p></li>
-<li><p><cite>load_modules.sh</cite> in utils/ that sets up Raijin environment.</p></li>
+<li><p><a class="reference external" href="https://github.com/GeoscienceAustralia/PyRate">Github Repository</a></p></li>
+<li><p><a class="reference external" href="https://github.com/GeoscienceAustralia/PyRate/issues">Issue tracking</a></p></li>
+</ul>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="gettingstarted.html">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#ubuntu">Ubuntu</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#docker">Docker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#hpc">HPC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gettingstarted.html#anaconda">Anaconda</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#configuration">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#workflow">Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#multiprocessing">Multiprocessing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#types-of-contributions">Types of Contributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#get-started">Get Started!</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#pull-request-guidelines">Pull Request Guidelines</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="authors.html#development-lead">Development Lead</a></li>
+<li class="toctree-l2"><a class="reference internal" href="authors.html#contributors">Contributors</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="scripts.html">PyRate Scripts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.run_prepifg.html">PyRate run_prepifg Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.run_pyrate.html">PyRate run_pyrate Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.postprocessing.html">PyRate postprocessing Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.main.html">PyRate main Script</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">PyRate Modules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="algorithm.html">Algorithm Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aps.html">Atmospheric Phase Screen Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config.html">Config Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="covariance.html">Covariance Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gamma.html">GAMMA Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gdal_python.html">GDAL-Python Bindings Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="linrate.html">Linrate Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mst.html">Minimum Spanning Tree Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="orbital.html">Orbital Error Correction Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepifg.html">Prepifg Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyratelog.html">Logging Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ref_phs_est.html">Reference Phase Calculation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="refpixel.html">Reference Pixel Calculation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="roipac.html">ROI_PAC Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="shared.html">Shared Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="timeseries.html">Time Series Module</a></li>
+</ul>
+</li>
 </ul>
 </div>
-<div class="section" id="fixed">
-<h3>Fixed<a class="headerlink" href="#fixed" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="feedback">
+<h2>Feedback<a class="headerlink" href="#feedback" title="Permalink to this headline">¶</a></h2>
+<p>If you have any suggestions or questions about <strong>PyRate</strong> feel free to
+email Geoscience Australia InSAR team &lt;<a class="reference external" href="mailto:insar&#37;&#52;&#48;ga&#46;gov&#46;au">insar<span>&#64;</span>ga<span>&#46;</span>gov<span>&#46;</span>au</a>&gt;.</p>
+<p>If you encounter any errors or problems with <strong>PyRate</strong>, please let us
+know!  Open an <a class="reference external" href="https://github.com/GeoscienceAustralia/PyRate/issues">Issue</a> in the GitHub repository.</p>
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
 <ul class="simple">
-<li><p>Errors being caused by newer version of networkx. Nx 2.3 now supported.</p></li>
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
 </ul>
-</div>
-<div class="section" id="removed">
-<h3>Removed<a class="headerlink" href="#removed" title="Permalink to this headline">¶</a></h3>
-<ul class="simple">
-<li><p>Unused Python and OS packages.</p></li>
-<li><p>environment.yml - conda env will now be installed using ‘requirements.txt’.</p></li>
-<li><p>HPC directory - hpc README.rst moved to docs.</p></li>
-<li><p>setup.cfg - no longer needed.</p></li>
-</ul>
-</div>
-<div class="section" id="changed">
-<h3>Changed<a class="headerlink" href="#changed" title="Permalink to this headline">¶</a></h3>
-<ul class="simple">
-<li><p>Requirements now managed by ‘requirements.txt’ file, parsed by setup.py.</p></li>
-<li><p>Requirements now split across base ‘requirements.txt’ and files for dev
-(‘requirements-dev.txt’) and testing (‘requirements-test.txt’)</p></li>
-<li><p>Moved default config files to top level source directory.</p></li>
-<li><p>Pinned Python dependencies to specific versions.</p></li>
-<li><p>Travis build now installs GDAL from apt.</p></li>
-<li><p>Travis only builds on master, develop and *-travis branches.</p></li>
-<li><p>Consolidated documentation into /docs.</p></li>
-<li><p>Updated install instructions for Ubuntu and NCI.</p></li>
-</ul>
-</div>
-</div>
-<div class="section" id="id2">
-<h2>0.2.0 (2017-05-22)<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
-<ul class="simple">
-<li><p>Stable beta release.</p></li>
-</ul>
-</div>
-<div class="section" id="id3">
-<h2>0.1.0 (2017-01-31)<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
-<ul class="simple">
-<li><p>First release on PyPI.</p></li>
-</ul>
-</div>
 </div>
 
 

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>pyrate.linrate &mdash; PyRate 0.2.1 documentation</title>
+  <title>pyrate.linrate &mdash; PyRate 0.3.0 documentation</title>
   
 
   
@@ -106,6 +106,12 @@
 <li class="toctree-l2"><a class="reference internal" href="../../authors.html#contributors">Contributors</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../../history.html">Release History</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id1">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id2">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id3">0.1.0 (2017-01-31)</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../scripts.html">PyRate Scripts</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../pyrate.scripts.run_prepifg.html">PyRate run_prepifg Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../pyrate.scripts.run_pyrate.html">PyRate run_pyrate Script</a></li>
@@ -113,8 +119,24 @@
 <li class="toctree-l2"><a class="reference internal" href="../../pyrate.scripts.main.html">PyRate main Script</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../modules.html">pyrate</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../pyrate.html">pyrate package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">Pyrate Modules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../algorithm.html">Algorithm Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../aps.html">Atmospheric Phase Screen Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../conda.html">Anaconda</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../config.html">Config Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../covariance.html">Covariance Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../gamma.html">GAMMA Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../gdal_python.html">GDAL-Python Bindings Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../linrate.html">Linrate Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../mst.html">Minimum Spanning Tree Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../orbital.html">Orbital Error Correction Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../prepifg.html">Prepifg Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pyratelog.html">Logging Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../ref_phs_est.html">Reference Phase Calculation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../refpixel.html">Reference Pixel Calculation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../roipac.html">ROI_PAC Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../shared.html">Shared Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../timeseries.html">Time Series Module</a></li>
 </ul>
 </li>
 </ul>
@@ -213,7 +235,7 @@
 <span class="kn">from</span> <span class="nn">pyrate</span> <span class="k">import</span> <span class="n">config</span> <span class="k">as</span> <span class="n">cf</span>
 
 
-<div class="viewcode-block" id="linear_rate"><a class="viewcode-back" href="../../pyrate.html#pyrate.linrate.linear_rate">[docs]</a><span class="k">def</span> <span class="nf">linear_rate</span><span class="p">(</span><span class="n">ifgs</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">vcmt</span><span class="p">,</span> <span class="n">mst</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="linear_rate"><a class="viewcode-back" href="../../linrate.html#pyrate.linrate.linear_rate">[docs]</a><span class="k">def</span> <span class="nf">linear_rate</span><span class="p">(</span><span class="n">ifgs</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">vcmt</span><span class="p">,</span> <span class="n">mst</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Pixel-by-pixel linear rate (velocity) estimation using iterative</span>
 <span class="sd">    weighted least-squares method.</span>

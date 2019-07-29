@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>pyrate.algorithm &mdash; PyRate 0.2.1 documentation</title>
+  <title>pyrate.algorithm &mdash; PyRate 0.3.0 documentation</title>
   
 
   
@@ -106,6 +106,12 @@
 <li class="toctree-l2"><a class="reference internal" href="../../authors.html#contributors">Contributors</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../../history.html">Release History</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id1">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id2">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id3">0.1.0 (2017-01-31)</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../scripts.html">PyRate Scripts</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../pyrate.scripts.run_prepifg.html">PyRate run_prepifg Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../pyrate.scripts.run_pyrate.html">PyRate run_pyrate Script</a></li>
@@ -113,8 +119,24 @@
 <li class="toctree-l2"><a class="reference internal" href="../../pyrate.scripts.main.html">PyRate main Script</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../modules.html">pyrate</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../pyrate.html">pyrate package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">Pyrate Modules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../algorithm.html">Algorithm Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../aps.html">Atmospheric Phase Screen Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../conda.html">Anaconda</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../config.html">Config Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../covariance.html">Covariance Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../gamma.html">GAMMA Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../gdal_python.html">GDAL-Python Bindings Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../linrate.html">Linrate Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../mst.html">Minimum Spanning Tree Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../orbital.html">Orbital Error Correction Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../prepifg.html">Prepifg Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pyratelog.html">Logging Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../ref_phs_est.html">Reference Phase Calculation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../refpixel.html">Reference Pixel Calculation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../roipac.html">ROI_PAC Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../shared.html">Shared Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../timeseries.html">Time Series Module</a></li>
 </ul>
 </li>
 </ul>
@@ -208,7 +230,7 @@
 <span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="is_square"><a class="viewcode-back" href="../../pyrate.html#pyrate.algorithm.is_square">[docs]</a><span class="k">def</span> <span class="nf">is_square</span><span class="p">(</span><span class="n">arr</span><span class="p">):</span>
+<div class="viewcode-block" id="is_square"><a class="viewcode-back" href="../../algorithm.html#pyrate.algorithm.is_square">[docs]</a><span class="k">def</span> <span class="nf">is_square</span><span class="p">(</span><span class="n">arr</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Determines whether an array is square or not.</span>
 
@@ -224,7 +246,7 @@
     <span class="k">return</span> <span class="kc">False</span></div>
 
 
-<div class="viewcode-block" id="least_squares_covariance"><a class="viewcode-back" href="../../pyrate.html#pyrate.algorithm.least_squares_covariance">[docs]</a><span class="k">def</span> <span class="nf">least_squares_covariance</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+<div class="viewcode-block" id="least_squares_covariance"><a class="viewcode-back" href="../../algorithm.html#pyrate.algorithm.least_squares_covariance">[docs]</a><span class="k">def</span> <span class="nf">least_squares_covariance</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Least squares solution in the presence of known covariance.</span>
 <span class="sd">    This function is known as lscov() in MATLAB.</span>
@@ -277,7 +299,7 @@
     <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="p">(</span><span class="n">c</span><span class="o">-</span><span class="n">f</span> <span class="o">*</span> <span class="n">tmp</span><span class="p">))</span></div>
 
 
-<div class="viewcode-block" id="los_conversion"><a class="viewcode-back" href="../../pyrate.html#pyrate.algorithm.los_conversion">[docs]</a><span class="k">def</span> <span class="nf">los_conversion</span><span class="p">(</span><span class="n">phase_data</span><span class="p">,</span> <span class="n">unit_vec</span><span class="p">):</span>
+<div class="viewcode-block" id="los_conversion"><a class="viewcode-back" href="../../algorithm.html#pyrate.algorithm.los_conversion">[docs]</a><span class="k">def</span> <span class="nf">los_conversion</span><span class="p">(</span><span class="n">phase_data</span><span class="p">,</span> <span class="n">unit_vec</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Converts phase from line-of-sight (LOS) to horizontal/vertical components.</span>
 
@@ -292,7 +314,7 @@
     <span class="k">return</span> <span class="n">phase_data</span> <span class="o">*</span> <span class="n">unit_vec</span></div>
 
 
-<div class="viewcode-block" id="unit_vector"><a class="viewcode-back" href="../../pyrate.html#pyrate.algorithm.unit_vector">[docs]</a><span class="k">def</span> <span class="nf">unit_vector</span><span class="p">(</span><span class="n">incidence</span><span class="p">,</span> <span class="n">azimuth</span><span class="p">):</span>
+<div class="viewcode-block" id="unit_vector"><a class="viewcode-back" href="../../algorithm.html#pyrate.algorithm.unit_vector">[docs]</a><span class="k">def</span> <span class="nf">unit_vector</span><span class="p">(</span><span class="n">incidence</span><span class="p">,</span> <span class="n">azimuth</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns unit vector tuple (east_west, north_south, vertical).</span>
 
@@ -309,7 +331,7 @@
     <span class="k">return</span> <span class="n">east_west</span><span class="p">,</span> <span class="n">north_south</span><span class="p">,</span> <span class="n">vertical</span></div>
 
 
-<div class="viewcode-block" id="ifg_date_lookup"><a class="viewcode-back" href="../../pyrate.html#pyrate.algorithm.ifg_date_lookup">[docs]</a><span class="k">def</span> <span class="nf">ifg_date_lookup</span><span class="p">(</span><span class="n">ifgs</span><span class="p">,</span> <span class="n">date_pair</span><span class="p">):</span>
+<div class="viewcode-block" id="ifg_date_lookup"><a class="viewcode-back" href="../../algorithm.html#pyrate.algorithm.ifg_date_lookup">[docs]</a><span class="k">def</span> <span class="nf">ifg_date_lookup</span><span class="p">(</span><span class="n">ifgs</span><span class="p">,</span> <span class="n">date_pair</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns the Interferogram which has the master and slave dates given</span>
 <span class="sd">    in &#39;date_pair&#39;.</span>
@@ -344,7 +366,7 @@
                      <span class="s2">&quot;master/slave of </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">date_pair</span><span class="p">))</span></div>
 
 
-<div class="viewcode-block" id="ifg_date_index_lookup"><a class="viewcode-back" href="../../pyrate.html#pyrate.algorithm.ifg_date_index_lookup">[docs]</a><span class="k">def</span> <span class="nf">ifg_date_index_lookup</span><span class="p">(</span><span class="n">ifgs</span><span class="p">,</span> <span class="n">date_pair</span><span class="p">):</span>
+<div class="viewcode-block" id="ifg_date_index_lookup"><a class="viewcode-back" href="../../algorithm.html#pyrate.algorithm.ifg_date_index_lookup">[docs]</a><span class="k">def</span> <span class="nf">ifg_date_index_lookup</span><span class="p">(</span><span class="n">ifgs</span><span class="p">,</span> <span class="n">date_pair</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns the Interferogram index which has the master and slave dates</span>
 <span class="sd">    given in &#39;date_pair&#39;.</span>
@@ -375,7 +397,7 @@
                      <span class="s2">&quot;master/slave of </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">date_pair</span><span class="p">))</span></div>
 
 
-<div class="viewcode-block" id="get_epochs"><a class="viewcode-back" href="../../pyrate.html#pyrate.algorithm.get_epochs">[docs]</a><span class="k">def</span> <span class="nf">get_epochs</span><span class="p">(</span><span class="n">ifgs</span><span class="p">):</span>
+<div class="viewcode-block" id="get_epochs"><a class="viewcode-back" href="../../algorithm.html#pyrate.algorithm.get_epochs">[docs]</a><span class="k">def</span> <span class="nf">get_epochs</span><span class="p">(</span><span class="n">ifgs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns an EpochList derived from the given interferograms.</span>
 
@@ -398,7 +420,7 @@
     <span class="k">return</span> <span class="n">EpochList</span><span class="p">(</span><span class="n">dates</span><span class="p">,</span> <span class="n">repeat</span><span class="p">,</span> <span class="n">span</span><span class="p">),</span> <span class="n">n</span></div>
 
 
-<div class="viewcode-block" id="get_all_epochs"><a class="viewcode-back" href="../../pyrate.html#pyrate.algorithm.get_all_epochs">[docs]</a><span class="k">def</span> <span class="nf">get_all_epochs</span><span class="p">(</span><span class="n">ifgs</span><span class="p">):</span>
+<div class="viewcode-block" id="get_all_epochs"><a class="viewcode-back" href="../../algorithm.html#pyrate.algorithm.get_all_epochs">[docs]</a><span class="k">def</span> <span class="nf">get_all_epochs</span><span class="p">(</span><span class="n">ifgs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns a sequence of all master and slave dates in given interferograms.</span>
 
@@ -411,7 +433,7 @@
     <span class="k">return</span> <span class="p">[</span><span class="n">ifg</span><span class="o">.</span><span class="n">master</span> <span class="k">for</span> <span class="n">ifg</span> <span class="ow">in</span> <span class="n">ifgs</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">ifg</span><span class="o">.</span><span class="n">slave</span> <span class="k">for</span> <span class="n">ifg</span> <span class="ow">in</span> <span class="n">ifgs</span><span class="p">]</span></div>
 
 
-<div class="viewcode-block" id="master_slave_ids"><a class="viewcode-back" href="../../pyrate.html#pyrate.algorithm.master_slave_ids">[docs]</a><span class="k">def</span> <span class="nf">master_slave_ids</span><span class="p">(</span><span class="n">dates</span><span class="p">):</span>
+<div class="viewcode-block" id="master_slave_ids"><a class="viewcode-back" href="../../algorithm.html#pyrate.algorithm.master_slave_ids">[docs]</a><span class="k">def</span> <span class="nf">master_slave_ids</span><span class="p">(</span><span class="n">dates</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns a dictionary of &#39;date:unique ID&#39; for each date in &#39;dates&#39;.</span>
 <span class="sd">    IDs are ordered from oldest to newest, starting at 0.</span>

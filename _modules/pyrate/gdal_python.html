@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>pyrate.gdal_python &mdash; PyRate 0.2.1 documentation</title>
+  <title>pyrate.gdal_python &mdash; PyRate 0.3.0 documentation</title>
   
 
   
@@ -106,6 +106,12 @@
 <li class="toctree-l2"><a class="reference internal" href="../../authors.html#contributors">Contributors</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../../history.html">Release History</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id1">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id2">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id3">0.1.0 (2017-01-31)</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../scripts.html">PyRate Scripts</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../pyrate.scripts.run_prepifg.html">PyRate run_prepifg Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../pyrate.scripts.run_pyrate.html">PyRate run_pyrate Script</a></li>
@@ -113,8 +119,24 @@
 <li class="toctree-l2"><a class="reference internal" href="../../pyrate.scripts.main.html">PyRate main Script</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../modules.html">pyrate</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../pyrate.html">pyrate package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">Pyrate Modules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../algorithm.html">Algorithm Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../aps.html">Atmospheric Phase Screen Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../conda.html">Anaconda</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../config.html">Config Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../covariance.html">Covariance Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../gamma.html">GAMMA Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../gdal_python.html">GDAL-Python Bindings Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../linrate.html">Linrate Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../mst.html">Minimum Spanning Tree Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../orbital.html">Orbital Error Correction Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../prepifg.html">Prepifg Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pyratelog.html">Logging Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../ref_phs_est.html">Reference Phase Calculation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../refpixel.html">Reference Pixel Calculation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../roipac.html">ROI_PAC Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../shared.html">Shared Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../timeseries.html">Time Series Module</a></li>
 </ul>
 </li>
 </ul>
@@ -211,7 +233,7 @@
 <span class="n">LOW_FLOAT32</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span><span class="o">.</span><span class="n">min</span><span class="o">*</span><span class="mf">1e-10</span>
 
 
-<div class="viewcode-block" id="world_to_pixel"><a class="viewcode-back" href="../../pyrate.html#pyrate.gdal_python.world_to_pixel">[docs]</a><span class="k">def</span> <span class="nf">world_to_pixel</span><span class="p">(</span><span class="n">geo_transform</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+<div class="viewcode-block" id="world_to_pixel"><a class="viewcode-back" href="../../gdal_python.html#pyrate.gdal_python.world_to_pixel">[docs]</a><span class="k">def</span> <span class="nf">world_to_pixel</span><span class="p">(</span><span class="n">geo_transform</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Uses a gdal geomatrix (gdal.GetGeoTransform()) to calculate</span>
 <span class="sd">    the pixel location of a geospatial coordinate;</span>
@@ -236,7 +258,7 @@
     <span class="k">return</span> <span class="n">col</span><span class="p">,</span> <span class="n">line</span></div>
 
 
-<div class="viewcode-block" id="crop"><a class="viewcode-back" href="../../pyrate.html#pyrate.gdal_python.crop">[docs]</a><span class="k">def</span> <span class="nf">crop</span><span class="p">(</span><span class="n">input_file</span><span class="p">,</span> <span class="n">extents</span><span class="p">,</span> <span class="n">geo_trans</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nodata</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">):</span>
+<div class="viewcode-block" id="crop"><a class="viewcode-back" href="../../gdal_python.html#pyrate.gdal_python.crop">[docs]</a><span class="k">def</span> <span class="nf">crop</span><span class="p">(</span><span class="n">input_file</span><span class="p">,</span> <span class="n">extents</span><span class="p">,</span> <span class="n">geo_trans</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nodata</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Adapted from http://karthur.org/2015/clipping-rasters-in-python.html</span>
 
@@ -352,7 +374,7 @@
     <span class="k">return</span> <span class="n">clip</span><span class="p">,</span> <span class="n">gt2</span></div>
 
 
-<div class="viewcode-block" id="resample_nearest_neighbour"><a class="viewcode-back" href="../../pyrate.html#pyrate.gdal_python.resample_nearest_neighbour">[docs]</a><span class="k">def</span> <span class="nf">resample_nearest_neighbour</span><span class="p">(</span><span class="n">input_tif</span><span class="p">,</span> <span class="n">extents</span><span class="p">,</span> <span class="n">new_res</span><span class="p">,</span> <span class="n">output_file</span><span class="p">):</span>
+<div class="viewcode-block" id="resample_nearest_neighbour"><a class="viewcode-back" href="../../gdal_python.html#pyrate.gdal_python.resample_nearest_neighbour">[docs]</a><span class="k">def</span> <span class="nf">resample_nearest_neighbour</span><span class="p">(</span><span class="n">input_tif</span><span class="p">,</span> <span class="n">extents</span><span class="p">,</span> <span class="n">new_res</span><span class="p">,</span> <span class="n">output_file</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Nearest neighbor resampling and cropping of an image.</span>
 
@@ -427,7 +449,7 @@
     <span class="k">return</span> <span class="n">px_height</span><span class="p">,</span> <span class="n">px_width</span>  <span class="c1"># this is the same as `gdalwarp`</span>
 
 
-<div class="viewcode-block" id="crop_resample_average"><a class="viewcode-back" href="../../pyrate.html#pyrate.gdal_python.crop_resample_average">[docs]</a><span class="k">def</span> <span class="nf">crop_resample_average</span><span class="p">(</span>
+<div class="viewcode-block" id="crop_resample_average"><a class="viewcode-back" href="../../gdal_python.html#pyrate.gdal_python.crop_resample_average">[docs]</a><span class="k">def</span> <span class="nf">crop_resample_average</span><span class="p">(</span>
         <span class="n">input_tif</span><span class="p">,</span> <span class="n">extents</span><span class="p">,</span> <span class="n">new_res</span><span class="p">,</span> <span class="n">output_file</span><span class="p">,</span> <span class="n">thresh</span><span class="p">,</span>
         <span class="n">out_driver_type</span><span class="o">=</span><span class="s1">&#39;GTiff&#39;</span><span class="p">,</span>
         <span class="n">match_pirate</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
@@ -521,7 +543,7 @@
             <span class="n">resampled_nearest_neighbor</span><span class="p">[</span><span class="n">yres</span> <span class="o">-</span> <span class="n">nrows</span><span class="p">:,</span> <span class="n">xres</span> <span class="o">-</span> <span class="n">ncols</span><span class="p">:]</span>
 
 
-<div class="viewcode-block" id="gdal_average"><a class="viewcode-back" href="../../pyrate.html#pyrate.gdal_python.gdal_average">[docs]</a><span class="k">def</span> <span class="nf">gdal_average</span><span class="p">(</span><span class="n">dst_ds</span><span class="p">,</span> <span class="n">input_tif</span><span class="p">,</span> <span class="n">thresh</span><span class="p">):</span>
+<div class="viewcode-block" id="gdal_average"><a class="viewcode-back" href="../../gdal_python.html#pyrate.gdal_python.gdal_average">[docs]</a><span class="k">def</span> <span class="nf">gdal_average</span><span class="p">(</span><span class="n">dst_ds</span><span class="p">,</span> <span class="n">input_tif</span><span class="p">,</span> <span class="n">thresh</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Perform subsampling of an image by averaging values</span>
 

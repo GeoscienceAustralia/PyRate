@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>pyrate.prepifg &mdash; PyRate 0.2.1 documentation</title>
+  <title>pyrate.prepifg &mdash; PyRate 0.3.0 documentation</title>
   
 
   
@@ -106,6 +106,12 @@
 <li class="toctree-l2"><a class="reference internal" href="../../authors.html#contributors">Contributors</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../../history.html">Release History</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id1">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id2">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id3">0.1.0 (2017-01-31)</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../scripts.html">PyRate Scripts</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../pyrate.scripts.run_prepifg.html">PyRate run_prepifg Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../pyrate.scripts.run_pyrate.html">PyRate run_pyrate Script</a></li>
@@ -113,8 +119,24 @@
 <li class="toctree-l2"><a class="reference internal" href="../../pyrate.scripts.main.html">PyRate main Script</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../modules.html">pyrate</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../pyrate.html">pyrate package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">Pyrate Modules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../algorithm.html">Algorithm Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../aps.html">Atmospheric Phase Screen Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../conda.html">Anaconda</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../config.html">Config Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../covariance.html">Covariance Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../gamma.html">GAMMA Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../gdal_python.html">GDAL-Python Bindings Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../linrate.html">Linrate Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../mst.html">Minimum Spanning Tree Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../orbital.html">Orbital Error Correction Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../prepifg.html">Prepifg Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pyratelog.html">Logging Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../ref_phs_est.html">Reference Phase Calculation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../refpixel.html">Reference Pixel Calculation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../roipac.html">ROI_PAC Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../shared.html">Shared Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../timeseries.html">Time Series Module</a></li>
 </ul>
 </li>
 </ul>
@@ -233,7 +255,7 @@
 <span class="n">GRID_TOL</span> <span class="o">=</span> <span class="mf">1e-6</span>
 
 
-<div class="viewcode-block" id="get_analysis_extent"><a class="viewcode-back" href="../../pyrate.html#pyrate.prepifg.get_analysis_extent">[docs]</a><span class="k">def</span> <span class="nf">get_analysis_extent</span><span class="p">(</span><span class="n">crop_opt</span><span class="p">,</span> <span class="n">rasters</span><span class="p">,</span> <span class="n">xlooks</span><span class="p">,</span> <span class="n">ylooks</span><span class="p">,</span> <span class="n">user_exts</span><span class="p">):</span>
+<div class="viewcode-block" id="get_analysis_extent"><a class="viewcode-back" href="../../prepifg.html#pyrate.prepifg.get_analysis_extent">[docs]</a><span class="k">def</span> <span class="nf">get_analysis_extent</span><span class="p">(</span><span class="n">crop_opt</span><span class="p">,</span> <span class="n">rasters</span><span class="p">,</span> <span class="n">xlooks</span><span class="p">,</span> <span class="n">ylooks</span><span class="p">,</span> <span class="n">user_exts</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Function checks prepifg parameters and returns extents/bounding box.</span>
 
@@ -328,7 +350,7 @@
     <span class="k">return</span> <span class="n">extents</span>
 
 
-<div class="viewcode-block" id="prepare_ifg"><a class="viewcode-back" href="../../pyrate.html#pyrate.prepifg.prepare_ifg">[docs]</a><span class="k">def</span> <span class="nf">prepare_ifg</span><span class="p">(</span><span class="n">raster_path</span><span class="p">,</span> <span class="n">xlooks</span><span class="p">,</span> <span class="n">ylooks</span><span class="p">,</span> <span class="n">exts</span><span class="p">,</span> <span class="n">thresh</span><span class="p">,</span> <span class="n">crop_opt</span><span class="p">,</span>
+<div class="viewcode-block" id="prepare_ifg"><a class="viewcode-back" href="../../prepifg.html#pyrate.prepifg.prepare_ifg">[docs]</a><span class="k">def</span> <span class="nf">prepare_ifg</span><span class="p">(</span><span class="n">raster_path</span><span class="p">,</span> <span class="n">xlooks</span><span class="p">,</span> <span class="n">ylooks</span><span class="p">,</span> <span class="n">exts</span><span class="p">,</span> <span class="n">thresh</span><span class="p">,</span> <span class="n">crop_opt</span><span class="p">,</span>
                 <span class="n">write_to_disk</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Open, resample, crop and optionally save to disk an interferogram or DEM.</span>
@@ -372,7 +394,7 @@
 
 
 <span class="c1"># TODO: crop options 0 = no cropping? get rid of same size</span>
-<div class="viewcode-block" id="prepare_ifgs"><a class="viewcode-back" href="../../pyrate.html#pyrate.prepifg.prepare_ifgs">[docs]</a><span class="k">def</span> <span class="nf">prepare_ifgs</span><span class="p">(</span><span class="n">raster_data_paths</span><span class="p">,</span> <span class="n">crop_opt</span><span class="p">,</span> <span class="n">xlooks</span><span class="p">,</span> <span class="n">ylooks</span><span class="p">,</span> <span class="n">thresh</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+<div class="viewcode-block" id="prepare_ifgs"><a class="viewcode-back" href="../../prepifg.html#pyrate.prepifg.prepare_ifgs">[docs]</a><span class="k">def</span> <span class="nf">prepare_ifgs</span><span class="p">(</span><span class="n">raster_data_paths</span><span class="p">,</span> <span class="n">crop_opt</span><span class="p">,</span> <span class="n">xlooks</span><span class="p">,</span> <span class="n">ylooks</span><span class="p">,</span> <span class="n">thresh</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
                  <span class="n">user_exts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">write_to_disc</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Wrapper function to prepare a sequence of interferogram files for</span>
@@ -405,7 +427,7 @@
             <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">raster_data_paths</span><span class="p">]</span></div>
 
 
-<div class="viewcode-block" id="dem_or_ifg"><a class="viewcode-back" href="../../pyrate.html#pyrate.prepifg.dem_or_ifg">[docs]</a><span class="k">def</span> <span class="nf">dem_or_ifg</span><span class="p">(</span><span class="n">data_path</span><span class="p">):</span>
+<div class="viewcode-block" id="dem_or_ifg"><a class="viewcode-back" href="../../prepifg.html#pyrate.prepifg.dem_or_ifg">[docs]</a><span class="k">def</span> <span class="nf">dem_or_ifg</span><span class="p">(</span><span class="n">data_path</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns an Ifg or DEM class object from input geotiff file.</span>
 
@@ -683,7 +705,7 @@
             <span class="k">raise</span> <span class="n">PreprocessError</span><span class="p">(</span><span class="n">msg</span> <span class="o">%</span> <span class="p">(</span><span class="n">par</span><span class="p">,</span> <span class="n">GRID_TOL</span><span class="p">))</span>
 
 
-<div class="viewcode-block" id="PreprocessError"><a class="viewcode-back" href="../../pyrate.html#pyrate.prepifg.PreprocessError">[docs]</a><span class="k">class</span> <span class="nc">PreprocessError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<div class="viewcode-block" id="PreprocessError"><a class="viewcode-back" href="../../prepifg.html#pyrate.prepifg.PreprocessError">[docs]</a><span class="k">class</span> <span class="nc">PreprocessError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Preprocess exception</span>
 <span class="sd">    &quot;&quot;&quot;</span></div>

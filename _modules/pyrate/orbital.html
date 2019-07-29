@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>pyrate.orbital &mdash; PyRate 0.2.1 documentation</title>
+  <title>pyrate.orbital &mdash; PyRate 0.3.0 documentation</title>
   
 
   
@@ -106,6 +106,12 @@
 <li class="toctree-l2"><a class="reference internal" href="../../authors.html#contributors">Contributors</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../../history.html">Release History</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id1">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id2">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id3">0.1.0 (2017-01-31)</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../scripts.html">PyRate Scripts</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../pyrate.scripts.run_prepifg.html">PyRate run_prepifg Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../pyrate.scripts.run_pyrate.html">PyRate run_pyrate Script</a></li>
@@ -113,8 +119,24 @@
 <li class="toctree-l2"><a class="reference internal" href="../../pyrate.scripts.main.html">PyRate main Script</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../modules.html">pyrate</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../pyrate.html">pyrate package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">Pyrate Modules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../algorithm.html">Algorithm Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../aps.html">Atmospheric Phase Screen Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../conda.html">Anaconda</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../config.html">Config Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../covariance.html">Covariance Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../gamma.html">GAMMA Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../gdal_python.html">GDAL-Python Bindings Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../linrate.html">Linrate Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../mst.html">Minimum Spanning Tree Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../orbital.html">Orbital Error Correction Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../prepifg.html">Prepifg Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pyratelog.html">Logging Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../ref_phs_est.html">Reference Phase Calculation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../refpixel.html">Reference Pixel Calculation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../roipac.html">ROI_PAC Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../shared.html">Shared Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../timeseries.html">Time Series Module</a></li>
 </ul>
 </li>
 </ul>
@@ -253,7 +275,7 @@
 <span class="n">PART_CUBIC</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">PART_CUBIC</span>
 
 
-<div class="viewcode-block" id="remove_orbital_error"><a class="viewcode-back" href="../../pyrate.html#pyrate.orbital.remove_orbital_error">[docs]</a><span class="k">def</span> <span class="nf">remove_orbital_error</span><span class="p">(</span><span class="n">ifgs</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">preread_ifgs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="remove_orbital_error"><a class="viewcode-back" href="../../orbital.html#pyrate.orbital.remove_orbital_error">[docs]</a><span class="k">def</span> <span class="nf">remove_orbital_error</span><span class="p">(</span><span class="n">ifgs</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">preread_ifgs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Wrapper function for PyRate orbital error removal functionality.</span>
 
@@ -370,7 +392,7 @@
     <span class="k">return</span> <span class="n">nparams</span>
 
 
-<div class="viewcode-block" id="independent_orbital_correction"><a class="viewcode-back" href="../../pyrate.html#pyrate.orbital.independent_orbital_correction">[docs]</a><span class="k">def</span> <span class="nf">independent_orbital_correction</span><span class="p">(</span><span class="n">ifg</span><span class="p">,</span> <span class="n">degree</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+<div class="viewcode-block" id="independent_orbital_correction"><a class="viewcode-back" href="../../orbital.html#pyrate.orbital.independent_orbital_correction">[docs]</a><span class="k">def</span> <span class="nf">independent_orbital_correction</span><span class="p">(</span><span class="n">ifg</span><span class="p">,</span> <span class="n">degree</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Calculates and removes an orbital error surface from a single independent</span>
 <span class="sd">    interferogram.</span>
@@ -412,7 +434,7 @@
         <span class="n">ifg</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
 
 
-<div class="viewcode-block" id="network_orbital_correction"><a class="viewcode-back" href="../../pyrate.html#pyrate.orbital.network_orbital_correction">[docs]</a><span class="k">def</span> <span class="nf">network_orbital_correction</span><span class="p">(</span><span class="n">ifgs</span><span class="p">,</span> <span class="n">degree</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">m_ifgs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<div class="viewcode-block" id="network_orbital_correction"><a class="viewcode-back" href="../../orbital.html#pyrate.orbital.network_orbital_correction">[docs]</a><span class="k">def</span> <span class="nf">network_orbital_correction</span><span class="p">(</span><span class="n">ifgs</span><span class="p">,</span> <span class="n">degree</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">m_ifgs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                                <span class="n">preread_ifgs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This algorithm implements a network inversion to determine orbital</span>
@@ -504,7 +526,7 @@
 
 
 <span class="c1"># TODO: subtract reference pixel coordinate from x and y</span>
-<div class="viewcode-block" id="get_design_matrix"><a class="viewcode-back" href="../../pyrate.html#pyrate.orbital.get_design_matrix">[docs]</a><span class="k">def</span> <span class="nf">get_design_matrix</span><span class="p">(</span><span class="n">ifg</span><span class="p">,</span> <span class="n">degree</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">100.0</span><span class="p">):</span>
+<div class="viewcode-block" id="get_design_matrix"><a class="viewcode-back" href="../../orbital.html#pyrate.orbital.get_design_matrix">[docs]</a><span class="k">def</span> <span class="nf">get_design_matrix</span><span class="p">(</span><span class="n">ifg</span><span class="p">,</span> <span class="n">degree</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">100.0</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns orbital error design matrix with columns for model parameters.</span>
 
@@ -557,7 +579,7 @@
     <span class="k">return</span> <span class="n">dm</span></div>
 
 
-<div class="viewcode-block" id="get_network_design_matrix"><a class="viewcode-back" href="../../pyrate.html#pyrate.orbital.get_network_design_matrix">[docs]</a><span class="k">def</span> <span class="nf">get_network_design_matrix</span><span class="p">(</span><span class="n">ifgs</span><span class="p">,</span> <span class="n">degree</span><span class="p">,</span> <span class="n">offset</span><span class="p">):</span>
+<div class="viewcode-block" id="get_network_design_matrix"><a class="viewcode-back" href="../../orbital.html#pyrate.orbital.get_network_design_matrix">[docs]</a><span class="k">def</span> <span class="nf">get_network_design_matrix</span><span class="p">(</span><span class="n">ifgs</span><span class="p">,</span> <span class="n">degree</span><span class="p">,</span> <span class="n">offset</span><span class="p">):</span>
     <span class="c1"># pylint: disable=too-many-locals</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns larger-format design matrix for network error correction. The</span>
@@ -612,7 +634,7 @@
     <span class="k">return</span> <span class="n">netdm</span></div>
 
 
-<div class="viewcode-block" id="OrbitalError"><a class="viewcode-back" href="../../pyrate.html#pyrate.orbital.OrbitalError">[docs]</a><span class="k">class</span> <span class="nc">OrbitalError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<div class="viewcode-block" id="OrbitalError"><a class="viewcode-back" href="../../orbital.html#pyrate.orbital.OrbitalError">[docs]</a><span class="k">class</span> <span class="nc">OrbitalError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Generic class for errors in orbital correction.</span>
 <span class="sd">    &quot;&quot;&quot;</span></div>
