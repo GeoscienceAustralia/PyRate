@@ -6,7 +6,6 @@ Pyrate Modules
 
    algorithm
    aps
-   conda
    config
    covariance
    gamma
