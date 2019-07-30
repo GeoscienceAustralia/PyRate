@@ -2,6 +2,16 @@
 
 Release History
 ===============
+Unreleased (2019-xx-xx)
+-----------------------
+Added
++++++
+- Python 3.7 support
+
+Changed
++++++++
+- 'linrate' command has been renamed to 'process'
+
 0.3.0 (2019-07-26)
 -----------------------
 Added
