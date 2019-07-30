@@ -6,4 +6,5 @@ matplotlib==3.1.1
 IPython==7.6.1
 sphinxcontrib-programoutput==0.14
 setuptools==41.0.1
+twine==1.13.0
 wheel==0.33.4
