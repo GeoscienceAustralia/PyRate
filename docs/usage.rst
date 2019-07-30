@@ -23,21 +23,24 @@ Use ``help`` for the different command line options:
     >> pyrate --help
     Usage: pyrate [OPTIONS] COMMAND [ARGS]...
 
+      Commandline options and logging setup
+
     Options:
+      -V, --version                   Show the version and exit.
       -v, --verbosity [DEBUG|INFO|WARNING|ERROR]
                                       Level of logging
       --help                          Show this message and exit.
 
     Commands:
-      linrate
-      postprocess
-      prepifg
+      postprocess  Step 3: Reassemble PyRate output tiles and save as geotiffs
+      prepifg      Step 1: Convert input files to geotiff and perform multilooking...
+      process      Step 2: Main PyRate workflow including time series and linear rate...
 
 The ``pyrate`` program has three command line options corresponding to
 different parts of the PyRate workflow:
 
 1. prepifg
-2. linrate
+2. process
 3. postprocess
 
 Below we discuss these options.
@@ -106,13 +109,13 @@ Two example configuration files are provided in the *configs/*
 directory, one each for ROI\_PAC and GAMMA prepifg configuration. Either
 configuration file can be used with ``prepifg``.
 
-linrate: Main workflow and linear rate and time series analysis
+process: Main workflow and linear rate and time series analysis
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ::
 
-    >> pyrate linrate --help
-    Usage: pyrate linrate [OPTIONS] CONFIG_FILE
+    >> pyrate process --help
+    Usage: pyrate process [OPTIONS] CONFIG_FILE
 
     Options:
       -r, --rows INTEGER  divide ifgs into this many rows
@@ -120,11 +123,11 @@ linrate: Main workflow and linear rate and time series analysis
       --help              Show this message and exit
 
 This is the core of the PyRate processing workflow, handled by the
-``linrate`` command:
+``process`` command:
 
 ::
 
-    pyrate linrate path/to/config_file -c 3 -r 4
+    pyrate process path/to/config_file -c 3 -r 4
 
 This command will perform the time series and linear rate analysis and
 has the option to break the interferograms into a number of tiles in
@@ -167,7 +170,7 @@ save geotiff files of the final time series and linear rate products.
       --help              Show this message and exit.
 
 Make sure to use the same number of rows and columns that was used in
-the previous ``linrate`` step:
+the previous ``process`` step:
 
 ::
 
