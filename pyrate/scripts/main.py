@@ -42,7 +42,7 @@ def cli(verbosity):
 @click.argument('config_file')
 def prepifg(config_file):
     """
-    Convert input files to geotiff and perform multilooking
+    Step 1: Convert input files to geotiff and perform multilooking
     (resampling) and/or cropping
     """
     config_file = os.path.abspath(config_file)
@@ -58,9 +58,9 @@ def prepifg(config_file):
               help='divide ifgs into this many rows')
 @click.option('-c', '--cols', type=int, default=1,
               help='divide ifgs into this many columns')
-def linrate(config_file, rows, cols):
+def process(config_file, rows, cols):
     """
-    Main PyRate workflow including time series and linear rate computation
+    Step 2: Main PyRate workflow including time series and linear rate computation
     """
     config_file = os.path.abspath(config_file)
     _, dest_paths, params = cf.get_ifg_paths(config_file)
@@ -79,7 +79,7 @@ def linrate(config_file, rows, cols):
                    'number of cols used previously in main workflow')
 def postprocess(config_file, rows, cols):
     """
-    Reassemble PyRate output tiles and save as geotiffs
+    Step 3: Reassemble PyRate output tiles and save as geotiffs
     """
     config_file = os.path.abspath(config_file)
     postprocessing.main(config_file, rows, cols)

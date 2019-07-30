@@ -7,5 +7,5 @@ PyRate main Script
    .. autosummary::
 
       prepifg
-      linrate
+      process
       postprocess
