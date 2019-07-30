@@ -1000,11 +1000,12 @@ def cell_size(lat, lon, x_step, y_step):
     zone = _utm_zone(lon)
     p0 = pyproj.Proj(proj='latlong', ellps='WGS84')
     p1 = pyproj.Proj(proj='utm', zone=zone, ellps='WGS84')
-    assert p0.is_latlong()
-    assert not p1.is_latlong()
 
-    x0, y0 = pyproj.transform(p0, p1, lon, lat)
-    x1, y1 = pyproj.transform(p0, p1, lon + x_step, lat + y_step)
+    x0, y0 = pyproj.transform(p0, p1, lon, lat, 
+        errcheck=True)
+    x1, y1 = pyproj.transform(p0, p1, lon + x_step, lat + y_step, 
+        errcheck=True)
+
     return tuple(abs(e) for e in (x1 - x0, y1 - y0))
 
 
