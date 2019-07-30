@@ -1,4 +1,4 @@
-echo "This script will install Python 3.6.8 and additional packages required by PyRate. Continue?" 
+echo "This script will install packages required by PyRate. Continue?" 
     select yn in "Yes" "No"; do
     case $yn in
         Yes ) break;;
@@ -12,6 +12,5 @@ sudo apt-get -y install \
     gdal-bin \
     libgdal-dev \
     openmpi-bin \
-    libopenmpi-dev \
-    python3 
+    libopenmpi-dev 
 
