@@ -1,7 +1,7 @@
 module unload intel-cc
 module unload intel-fc
 module unload openmpi
-module load python3/3.6.7
+module load python3/3.7.2
 module load gdal/2.2.2
 module load openmpi/2.1.1
 
