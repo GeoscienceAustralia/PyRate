@@ -28,7 +28,7 @@ from numpy.testing import assert_array_almost_equal
 from pyrate import config as cf
 from pyrate import ref_phs_est as rpe
 from pyrate import shared
-from pyrate.scripts import run_pyrate, run_prepifg
+from pyrate.scripts import run_pyrate, run_prepifg, converttogtif
 from pyrate.covariance import cvd, get_vcmt, RDist
 from pyrate import ifgconstants as ifc
 import pyrate.orbital
@@ -191,6 +191,7 @@ class MatlabEqualityTest(unittest.TestCase):
         params[cf.TMPDIR] = os.path.join(cls.temp_out_dir, cf.TMPDIR)
         shared.mkdir_p(params[cf.TMPDIR])
         params[cf.REF_EST_METHOD] = 2
+        converttogtif.main(params)
         run_prepifg.main(params)
         cls.params = params
         xlks, ylks, crop = cf.transform_params(params)
