@@ -25,8 +25,6 @@ import logging
 from joblib import Parallel, delayed
 import numpy as np
 
-from pyrate.tasks.utils import pythonify_config
-from pyrate.tasks import ConvertToGeotiff
 from pyrate.prepifg import PreprocessError
 from pyrate import config as cf
 from pyrate import roipac
@@ -113,7 +111,6 @@ def _geotiff_multiprocessing(unw_path, params):
     Multiprocessing wrapper for full-res geotiff conversion
     """
     dest = shared.output_tiff_filename(unw_path, params[cf.OBS_DIR])
-    print(dest)
     processor = params[cf.PROCESSOR]  # roipac or gamma
 
     # Create full-res geotiff if not already on disk
