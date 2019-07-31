@@ -77,18 +77,12 @@ def main(params=None):
             base_ifg_paths.append(params[cf.APS_ELEVATION_MAP])
 
     shared.mkdir_p(params[cf.OUT_DIR]) # create output dir
-
-    process_base_ifgs_paths = np.array_split(base_ifg_paths, mpiops.size)[mpiops.rank]
-    if processor == ROIPAC:
-        roipac_prepifg(process_base_ifgs_paths, params)
-    elif processor == GAMMA:
-        gamma_prepifg(process_base_ifgs_paths, params)
-    else:
-        process_base_ifgs_paths = \
-            np.array_split(base_ifg_paths, mpiops.size)[mpiops.rank]
-        gtiff_paths = [shared.output_tiff_filename(f, \
-            params[cf.OBS_DIR]) for f in process_base_ifgs_paths]
-        do_prepifg(gtiff_paths, params)
+    
+    process_base_ifgs_paths = \
+        np.array_split(base_ifg_paths, mpiops.size)[mpiops.rank]
+    gtiff_paths = [shared.output_tiff_filename(f, \
+        params[cf.OBS_DIR]) for f in process_base_ifgs_paths]
+    do_prepifg(gtiff_paths, params)
     log.info("Finished prepifg")
 
 
