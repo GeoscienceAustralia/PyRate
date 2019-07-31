@@ -48,10 +48,7 @@ def converttogeotiff(config_file):
     params = cf.get_config_params(config_file)
     log.info('This job was run with the following parameters:')
     log.info(json.dumps(params, indent=4, sort_keys=True))
-    if params[cf.LUIGI]:
-        converttogtif.main()
-    else:
-        converttogtif.main(params)
+    converttogtif.main(params)
 
 
 @cli.command()
