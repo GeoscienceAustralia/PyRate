@@ -31,7 +31,7 @@ from numpy import where, nan
 import numpy as np
 from osgeo import gdal, gdalconst
 
-from pyrate import gdal_python as gdalwarp
+from pyrate import gdal_python
 from pyrate.shared import Ifg
 from pyrate import config as cf
 from tests import common
@@ -52,7 +52,7 @@ class TestCrop(unittest.TestCase):
             t_cmd = cmd + [s.data_path,  temp_tif]
             subprocess.check_call(t_cmd)
             clipped_ref = gdal.Open(temp_tif).ReadAsArray()
-            clipped = gdalwarp.crop(s.data_path, extents)[0]
+            clipped = gdal_python.crop(s.data_path, extents)[0]
             np.testing.assert_array_almost_equal(clipped_ref, clipped)
             os.remove(temp_tif)
 
@@ -89,7 +89,7 @@ class TestResample(unittest.TestCase):
 
             resampled_temp_tif = tempfile.mktemp(suffix='.tif',
                                                  prefix='resampled_')
-            resampled = gdalwarp.resample_nearest_neighbour(s.data_path,
+            resampled = gdal_python.resample_nearest_neighbour(s.data_path,
                                                             extents, res,
                                                             resampled_temp_tif)
             np.testing.assert_array_almost_equal(resampled_ref,
@@ -114,7 +114,7 @@ class TestResample(unittest.TestCase):
             for s in small_test_ifgs:
                 resampled_temp_tif = tempfile.mktemp(suffix='.tif',
                                                     prefix='resampled_')
-                gdalwarp.resample_nearest_neighbour(s.data_path, extents,
+                gdal_python.resample_nearest_neighbour(s.data_path, extents,
                                                     [res, -res],
                                                     resampled_temp_tif)
                 self.assertTrue(os.path.exists(resampled_temp_tif))
@@ -125,10 +125,10 @@ class TestResample(unittest.TestCase):
         # minX, minY, maxX, maxY = extents
         extents = [150.91, -34.229999976, 150.949166651, -34.17]
         for s in small_test_ifgs:
-            clipped = gdalwarp.crop(s.data_path, extents)[0]
+            clipped = gdal_python.crop(s.data_path, extents)[0]
             resampled_temp_tif = tempfile.mktemp(suffix='.tif',
                                                 prefix='resampled_')
-            resampled = gdalwarp.resample_nearest_neighbour(
+            resampled = gdal_python.resample_nearest_neighbour(
                 s.data_path, extents, [None, None], resampled_temp_tif)
             self.assertTrue(os.path.exists(resampled_temp_tif))
             np.testing.assert_array_almost_equal(resampled[0, :, :], clipped)
@@ -143,7 +143,7 @@ class TestResample(unittest.TestCase):
 
             resampled_temp_tif = tempfile.mktemp(suffix='.tif',
                                                 prefix='resampled_')
-            gdalwarp.resample_nearest_neighbour(
+            gdal_python.resample_nearest_neighbour(
                 s.data_path, extents, [None, None], resampled_temp_tif)
             dst_ds = gdal.Open(resampled_temp_tif)
             md = dst_ds.GetMetadata()
@@ -420,7 +420,7 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
             self.manipulation(data, self.temp_tif, self.md)
 
             # only band 1 is resapled in warp_old
-            averaged_and_resampled, _ = gdalwarp.crop_resample_average(
+            averaged_and_resampled, _ = gdal_python.crop_resample_average(
                 self.temp_tif, extents, [res, -res], self.out_tif, thresh,
                 match_pirate=True)
             ifg = Ifg(self.temp_tif)
@@ -464,7 +464,7 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
             for looks in range(10):
                 x_looks = y_looks = looks
                 res = orig_res*x_looks
-                averaged_and_resapled, out_ds = gdalwarp.crop_resample_average(
+                averaged_and_resapled, out_ds = gdal_python.crop_resample_average(
                     ifg.data_path, extents, new_res=[res, -res],
                     output_file=self.temp_tif, thresh=thresh,
                     match_pirate=False)
@@ -501,7 +501,7 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
             for looks in range(1, 10):
                 x_looks = y_looks = looks
                 res = orig_res*x_looks
-                averaged_and_resampled = gdalwarp.crop_resample_average(
+                averaged_and_resampled = gdal_python.crop_resample_average(
                     ifg.data_path, extents, new_res=[res, -res],
                     output_file=self.temp_tif, thresh=thresh,
                     match_pirate=True)[0]
@@ -532,7 +532,7 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
             thresh = 0.5
             x_looks = y_looks = 6
             res = orig_res*x_looks
-            averaged_and_resampled, out_ds = gdalwarp.crop_resample_average(
+            averaged_and_resampled, out_ds = gdal_python.crop_resample_average(
                 ifg.data_path, extents, new_res=[res, -res],
                 output_file=self.temp_tif, thresh=thresh,
                 out_driver_type='MEM', match_pirate=True)

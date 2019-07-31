@@ -22,7 +22,7 @@ import json
 import click
 from pyrate import pyratelog as pylog
 from pyrate import config as cf
-from pyrate.scripts import run_prepifg, run_pyrate, postprocessing
+from pyrate.scripts import converttogtif, run_prepifg, run_pyrate, postprocessing
 from pyrate import __version__
 
 log = logging.getLogger(__name__)
@@ -40,10 +40,25 @@ def cli(verbosity):
 
 @cli.command()
 @click.argument('config_file')
+def converttogeotiff(config_file):
+    """
+    Convert input files to geotiff
+    """
+    config_file = abspath(config_file)
+    params = cf.get_config_params(config_file)
+    log.info('This job was run with the following parameters:')
+    log.info(json.dumps(params, indent=4, sort_keys=True))
+    if params[cf.LUIGI]:
+        converttogtif.main()
+    else:
+        converttogtif.main(params)
+
+
+@cli.command()
+@click.argument('config_file')
 def prepifg(config_file):
     """
-    Step 1: Convert input files to geotiff and perform multilooking
-    (resampling) and/or cropping
+    Perform multilooking (resampling) and/or cropping on input files
     """
     config_file = os.path.abspath(config_file)
     params = cf.get_config_params(config_file)

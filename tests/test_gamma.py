@@ -50,7 +50,8 @@ from pyrate.config import (
     APS_INCIDENCE_MAP,
     APS_ELEVATION_MAP)
 from pyrate.scripts import run_prepifg
-from pyrate.shared import write_geotiff, GeotiffException
+from pyrate.scripts.converttogtif import main as gammaMain
+from pyrate.shared import write_fullres_geotiff, GeotiffException
 from tests import common
 from tests.common import GAMMA_TEST_DIR, SML_TEST_GAMMA
 from tests.common import TEST_CONF_GAMMA, TEMPDIR
@@ -116,7 +117,7 @@ class GammaToGeoTiffTests(unittest.TestCase):
         data_path = join(GAMMA_TEST_DIR, 'dem16x20raw.dem')
         self.dest = os.path.join(TEMPDIR, "tmp_gamma_dem.tif")
 
-        write_geotiff(hdr, data_path, self.dest, nodata=0)
+        write_fullres_geotiff(hdr, data_path, self.dest, nodata=0)
         exp_path = join(GAMMA_TEST_DIR, 'dem16x20_subset_from_gamma.tif')
         exp_ds = gdal.Open(exp_path)
         ds = gdal.Open(self.dest)
@@ -133,7 +134,7 @@ class GammaToGeoTiffTests(unittest.TestCase):
         self.dest = os.path.join(TEMPDIR, 'tmp_gamma_ifg.tif')
         data_path = join(GAMMA_TEST_DIR,
                          '16x20_20090713-20090817_VV_4rlks_utm.unw')
-        write_geotiff(self.COMBINED, data_path, self.dest, nodata=0)
+        write_fullres_geotiff(self.COMBINED, data_path, self.dest, nodata=0)
 
         ds = gdal.Open(self.dest)
         exp_path = join(GAMMA_TEST_DIR, '16x20_20090713-20090817_VV_4rlks_utm.tif')
@@ -159,8 +160,10 @@ class GammaToGeoTiffTests(unittest.TestCase):
     def test_to_geotiff_wrong_input_data(self):
         # use TIF, not UNW for data
         self.dest = os.path.join(TEMPDIR, 'tmp_gamma_ifg.tif')
-        data_path = join(GAMMA_TEST_DIR,'16x20_20090713-20090817_VV_4rlks_utm.tif')
-        self.assertRaises(GeotiffException, write_geotiff, self.COMBINED, data_path, self.dest, nodata=0)
+        data_path = join(GAMMA_TEST_DIR,
+                         '16x20_20090713-20090817_VV_4rlks_utm.tif')
+        self.assertRaises(GeotiffException, write_fullres_geotiff,
+                            self.COMBINED, data_path, self.dest, nodata=0)
 
     def test_mismatching_cell_resolution(self):
         hdrs = self.DEM_HDR.copy()
@@ -168,7 +171,8 @@ class GammaToGeoTiffTests(unittest.TestCase):
         data_path = join(GAMMA_TEST_DIR, '16x20_20090713-20090817_VV_4rlks_utm.unw')
         self.dest = os.path.join(TEMPDIR, 'fake')
 
-        self.assertRaises(GeotiffException, write_geotiff, hdrs, data_path, self.dest, 0)
+        self.assertRaises(GeotiffException, write_fullres_geotiff, hdrs,
+                            data_path, self.dest, 0)
 
     def compare_rasters(self, ds, exp_ds):
         band = ds.GetRasterBand(1)
@@ -189,7 +193,8 @@ class GammaToGeoTiffTests(unittest.TestCase):
         hdr[ifc.PYRATE_DATUM] = 'nonexistent projection'
         data_path = join(GAMMA_TEST_DIR, 'dem16x20raw.dem')
         self.dest = os.path.join(TEMPDIR, 'tmp_gamma_dem2.tif')
-        self.assertRaises(GeotiffException, write_geotiff, hdr, data_path, self.dest, nodata=0)
+        self.assertRaises(GeotiffException, write_fullres_geotiff, hdr,
+                            data_path, self.dest, nodata=0)
 
 
 class GammaHeaderParsingTests(unittest.TestCase):
