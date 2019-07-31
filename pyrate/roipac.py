@@ -201,7 +201,8 @@ def manage_header(header_file, projection):
 
 def roipac_header(file_path, params):
     """
-    Function to obtain a header for roipac interferogram file
+    Function to obtain a header for roipac interferogram file or converted
+    geotiff.
     """
     rsc_file = os.path.join(params[cf.DEM_HEADER_FILE])
     if rsc_file is not None:
@@ -209,8 +210,14 @@ def roipac_header(file_path, params):
     else:
         raise RoipacException('No DEM resource/header file is '
                                      'provided')
+    if file_path.endswith('_dem.tif'):
+        header_file = os.path.join(params[cf.DEM_HEADER_FILE])
+    elif file_path.endswith('_unw.tif'):
+        base_file = file_path[:-8]
+        header_file = base_file + '.unw.' + ROI_PAC_HEADER_FILE_EXT
+    else:
+        header_file = "%s.%s" % (file_path, ROI_PAC_HEADER_FILE_EXT)
 
-    header_file = "%s.%s" % (file_path, ROI_PAC_HEADER_FILE_EXT)
     header = manage_header(header_file, projection)
 
     return header
