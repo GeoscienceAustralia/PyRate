@@ -310,7 +310,7 @@ def crop_resample_average(
                 raise TypeError('Data Type metadata not recognised')
 
     out_ds = shared.gdal_dataset(output_file, dst_ds.RasterXSize, dst_ds.RasterYSize,
-                 driver="GTiff", bands=1, dtype=src_dtype, metadata=md, crs=wkt,
+                 driver=out_driver_type, bands=1, dtype=src_dtype, metadata=md, crs=wkt,
                  geotransform=gt, creation_opts=['compress=packbits'])
 
     shared.write_geotiff(resampled_average, out_ds, np.nan) 
