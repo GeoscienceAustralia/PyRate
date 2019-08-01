@@ -1218,6 +1218,7 @@ def output_tiff_filename(inpath, outpath):
     """
     fname, ext = os.path.basename(inpath).split('.')
     if ext == 'tif':
+        print(inpath, outpath)
         name = os.path.join(outpath, fname + '.tif')
     else:
         name = os.path.join(outpath, fname + '_' + ext + '.tif')

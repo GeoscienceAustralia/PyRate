@@ -106,6 +106,10 @@ IFMS16 = ['geo_060619-061002_unw.tif',
 
 log = logging.getLogger(__name__)
 
+def remove_tifs(path):
+    tifs = glob.glob(os.path.join(path, '*.tif'))
+    for tif in tifs:
+        os.remove(tif)
 
 def small_data_setup(datafiles=None, is_dir=False):
     """Returns Ifg objs for the files in the small test dir

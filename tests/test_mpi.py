@@ -34,9 +34,10 @@ import tests.common
 from pyrate import ref_phs_est as rpe
 from pyrate import covariance
 from pyrate import refpixel
-from pyrate.scripts import run_pyrate, run_prepifg, postprocessing
-from tests.common import small_data_setup, reconstruct_mst, \
-    reconstruct_linrate, SML_TEST_DEM_HDR_GAMMA, pre_prepare_ifgs
+from pyrate.scripts import (
+    run_pyrate, run_prepifg, postprocessing, converttogtif)
+from tests.common import (small_data_setup, reconstruct_mst, 
+    reconstruct_linrate, SML_TEST_DEM_HDR_GAMMA, pre_prepare_ifgs)
 from tests import common
 from tests.test_covariance import matlab_maxvar
 from pyrate import config as cf
@@ -164,7 +165,8 @@ def test_vcm_matlab_vs_mpi(mpisync, tempdir, get_config):
 
     # run prepifg, create the dest_paths files
     if mpiops.rank == 0:
-        run_prepifg.roipac_prepifg(base_unw_paths, params_dict)
+        converttogtif.main(params_dict)
+        run_prepifg.main(params_dict)
 
     mpiops.comm.barrier()
 
@@ -182,6 +184,7 @@ def test_vcm_matlab_vs_mpi(mpisync, tempdir, get_config):
     np.testing.assert_array_almost_equal(matlab_vcm, vcmt, decimal=3)
     if mpiops.rank == 0:
         shutil.rmtree(outdir)
+        common.remove_tifs(params_dict[cf.OBS_DIR])
 
 
 @pytest.fixture(params=[1, 2, 5])
@@ -368,10 +371,10 @@ def test_prepifg_mpi(mpisync, get_config, tempdir,
         if roipac_or_gamma == 1:
             base_unw_paths = glob.glob(join(common.SML_TEST_GAMMA,
                                             "*_utm.unw"))
-            run_prepifg.gamma_prepifg(base_unw_paths, params_s)
+            run_prepifg.main(params)
         else:
             base_unw_paths = glob.glob(join(common.SML_TEST_OBS, "*.unw"))
-            run_prepifg.roipac_prepifg(base_unw_paths, params_s)
+            run_prepifg.main(params_s)
 
         mpi_tifs = glob.glob(join(outdir, "*.tif"))
         serial_tifs = glob.glob(join(params[cf.OUT_DIR], "*.tif"))
