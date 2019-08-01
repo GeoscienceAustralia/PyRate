@@ -306,26 +306,21 @@ class TestGammaParallelVsSerial(unittest.TestCase):
     """
     @classmethod
     def setUpClass(cls):
-        import pprint
-        cls.serial_dir = tempfile.mkdtemp()
-        cls.parallel_dir = tempfile.mkdtemp()
-
         # read in the params
         _, _, params = cf.get_ifg_paths(TEST_CONF_GAMMA)
+        glob_prefix = "*utm_unw_1rlks_1cr.tif"
 
         # SERIAL
+        cls.serial_dir = tempfile.mkdtemp()
         params[cf.OUT_DIR] = cls.serial_dir
         params[cf.PARALLEL] = False
         shared.mkdir_p(cls.serial_dir)
 
         gtif_paths = converttogtif.main(params)
-        # print(f"first serial gtif = {gtif_paths[0]}")
         run_prepifg.main(params)
 
-        serial_df = glob.glob(os.path.join(cls.serial_dir, "*utm_uwn_1rlks_1cr.tif"))
+        serial_df = glob.glob(os.path.join(cls.serial_dir, glob_prefix))
         cls.serial_ifgs = small_data_setup(datafiles=serial_df)
-        print("SERIAL IFGS")
-        pprint.pprint(cls.serial_ifgs)
 
         # Clean up serial converted tifs so we can test parallel conversion
         tifs = glob.glob(os.path.join(SML_TEST_GAMMA, '*.tif'))
@@ -333,18 +328,16 @@ class TestGammaParallelVsSerial(unittest.TestCase):
             os.remove(tif)
 
         # PARALLEL 
+        cls.parallel_dir = tempfile.mkdtemp()
         params[cf.OUT_DIR] = cls.parallel_dir
         params[cf.PARALLEL] = True
         shared.mkdir_p(cls.parallel_dir)
 
         gtif_paths = converttogtif.main(params)
-        # print(f"first para gtif = {gtif_paths[0]}")
         run_prepifg.main(params)
         
-        para_df = glob.glob(os.path.join(cls.parallel_dir, "*utm_unw_1rlks_1cr.tif"))
+        para_df = glob.glob(os.path.join(cls.parallel_dir, glob_prefix))
         cls.para_ifgs = small_data_setup(datafiles=para_df)
-        print("PARA IFGS")
-        pprint.pprint(cls.para_ifgs)
 
     @classmethod
     def tearDownClass(cls):
@@ -355,25 +348,10 @@ class TestGammaParallelVsSerial(unittest.TestCase):
             os.remove(tif)
 
     def test_equality(self):
-        #Exclude DEM from comparison
-        #serial_df = glob.glob(os.path.join(self.serial_dir, "*_1cr.tif"))
-        #serial_df = [df for df in datafiles if 'dem' not in df]
-        #serial_ifgs = small_data_setup(datafiles=serial_df)
-
-        #para_df = glob.glob(os.path.join(self.parallel_dir, "*_1cr.tif"))
-        #datafiles = [df for df in datafiles if 'dem' not in df]
-        #parallel_ifgs = small_data_setup(datafiles=datafiles)
-
         for s, p in zip(self.serial_ifgs, self.para_ifgs):
             np.testing.assert_array_almost_equal(s.phase_data, p.phase_data)
 
     def test_meta_data_exist(self):
-        #serial_ifgs = small_data_setup(
-        #    datafiles=glob.glob(os.path.join(self.serial_dir, "*_1cr.tif")))
-
-        #parallel_ifgs = small_data_setup(
-        #    datafiles=glob.glob(os.path.join(self.parallel_dir, "*_1cr.tif")))
-
         for s, p in zip(self.serial_ifgs, self.para_ifgs):
             # all metadata equal
             self.assertDictEqual(s.meta_data, p.meta_data)

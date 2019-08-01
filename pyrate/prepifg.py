@@ -172,12 +172,10 @@ def prepare_ifg(raster_path, xlooks, ylooks, exts, thresh, crop_opt,
     # resolution=None completes faster for non-multilooked layers in gdalwarp
     resolution = [None, None]
     raster = dem_or_ifg(raster_path)
-    # print(f"prepare_ifg: raster = {raster}") - good
     if not raster.is_open:
         raster.open()
     if do_multilook:
         resolution = [xlooks * raster.x_step, ylooks * raster.y_step]
-    # print(f"prepaire_ifg: raster post multilook = {raster}") - good
     if not do_multilook and crop_opt == ALREADY_SAME_SIZE:
         renamed_path = \
             cf.mlooked_path(raster.data_path, looks=xlooks, crop_out=crop_opt)
@@ -299,7 +297,6 @@ def _warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out,
         output_file=looks_path,
         thresh=thresh,
         out_driver_type=driver_type, hdr=header)
-
     if not write_to_disk:
         return resampled_data, out_ds
 
