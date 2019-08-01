@@ -1217,8 +1217,8 @@ def output_tiff_filename(inpath, outpath):
     :rtype: str
     """
     fname, ext = os.path.basename(inpath).split('.')
+    outpath = inpath if outpath is None else outpath
     if ext == 'tif':
-        print(inpath, outpath)
         name = os.path.join(outpath, fname + '.tif')
     else:
         name = os.path.join(outpath, fname + '_' + ext + '.tif')
