@@ -49,8 +49,7 @@ from pyrate.config import (
     DEM_FILE,
     APS_INCIDENCE_MAP,
     APS_ELEVATION_MAP)
-from pyrate.scripts import run_prepifg
-from pyrate.scripts.converttogtif import main as gammaMain
+from pyrate.scripts import run_prepifg, converttogtif
 from pyrate.shared import write_fullres_geotiff, GeotiffException
 from tests import common
 from tests.common import GAMMA_TEST_DIR, SML_TEST_GAMMA
@@ -300,57 +299,86 @@ class HeaderCombinationTests(unittest.TestCase):
 
 
 class TestGammaParallelVsSerial(unittest.TestCase):
-
+    """
+    Test Gamma prepifg produces correct results when run in serial and 
+    parallel and that metadata is correctly set by both methods. These tests
+    exclude the comparison of DEM files.
+    """
     @classmethod
     def setUpClass(cls):
-
+        import pprint
         cls.serial_dir = tempfile.mkdtemp()
         cls.parallel_dir = tempfile.mkdtemp()
-        unw_paths = glob.glob(os.path.join(SML_TEST_GAMMA, "*_utm.unw"))
 
         # read in the params
         _, _, params = cf.get_ifg_paths(TEST_CONF_GAMMA)
 
+        # SERIAL
         params[cf.OUT_DIR] = cls.serial_dir
         params[cf.PARALLEL] = False
-
         shared.mkdir_p(cls.serial_dir)
-        run_prepifg.gamma_prepifg(unw_paths, params)
 
+        gtif_paths = converttogtif.main(params)
+        # print(f"first serial gtif = {gtif_paths[0]}")
+        run_prepifg.main(params)
+
+        serial_df = glob.glob(os.path.join(cls.serial_dir, "*utm_uwn_1rlks_1cr.tif"))
+        cls.serial_ifgs = small_data_setup(datafiles=serial_df)
+        print("SERIAL IFGS")
+        pprint.pprint(cls.serial_ifgs)
+
+        # Clean up serial converted tifs so we can test parallel conversion
+        tifs = glob.glob(os.path.join(SML_TEST_GAMMA, '*.tif'))
+        for tif in tifs:
+            os.remove(tif)
+
+        # PARALLEL 
         params[cf.OUT_DIR] = cls.parallel_dir
         params[cf.PARALLEL] = True
         shared.mkdir_p(cls.parallel_dir)
-        run_prepifg.gamma_prepifg(unw_paths, params)
+
+        gtif_paths = converttogtif.main(params)
+        # print(f"first para gtif = {gtif_paths[0]}")
+        run_prepifg.main(params)
+        
+        para_df = glob.glob(os.path.join(cls.parallel_dir, "*utm_unw_1rlks_1cr.tif"))
+        cls.para_ifgs = small_data_setup(datafiles=para_df)
+        print("PARA IFGS")
+        pprint.pprint(cls.para_ifgs)
 
     @classmethod
     def tearDownClass(cls):
         shutil.rmtree(cls.parallel_dir)
         shutil.rmtree(cls.serial_dir)
+        tifs = glob.glob(os.path.join(SML_TEST_GAMMA, '*.tif'))
+        for tif in tifs:
+            os.remove(tif)
 
     def test_equality(self):
-        serial_ifgs = small_data_setup(
-            datafiles=glob.glob(os.path.join(self.serial_dir, "*_1cr.tif")))
+        #Exclude DEM from comparison
+        #serial_df = glob.glob(os.path.join(self.serial_dir, "*_1cr.tif"))
+        #serial_df = [df for df in datafiles if 'dem' not in df]
+        #serial_ifgs = small_data_setup(datafiles=serial_df)
 
-        parallel_ifgs = small_data_setup(
-            datafiles=glob.glob(os.path.join(self.parallel_dir, "*_1cr.tif")))
+        #para_df = glob.glob(os.path.join(self.parallel_dir, "*_1cr.tif"))
+        #datafiles = [df for df in datafiles if 'dem' not in df]
+        #parallel_ifgs = small_data_setup(datafiles=datafiles)
 
-        for s, p in zip(serial_ifgs, parallel_ifgs):
+        for s, p in zip(self.serial_ifgs, self.para_ifgs):
             np.testing.assert_array_almost_equal(s.phase_data, p.phase_data)
 
     def test_meta_data_exist(self):
-        serial_ifgs = small_data_setup(
-            datafiles=glob.glob(os.path.join(self.serial_dir, "*_1cr.tif")))
+        #serial_ifgs = small_data_setup(
+        #    datafiles=glob.glob(os.path.join(self.serial_dir, "*_1cr.tif")))
 
-        parallel_ifgs = small_data_setup(
-            datafiles=glob.glob(os.path.join(self.parallel_dir, "*_1cr.tif")))
-        for s, p in zip(serial_ifgs, parallel_ifgs):
+        #parallel_ifgs = small_data_setup(
+        #    datafiles=glob.glob(os.path.join(self.parallel_dir, "*_1cr.tif")))
 
+        for s, p in zip(self.serial_ifgs, self.para_ifgs):
             # all metadata equal
             self.assertDictEqual(s.meta_data, p.meta_data)
-
             # test that DATA_TYPE exists in metadata
             self.assertIn(ifc.DATA_TYPE, s.meta_data.keys())
-
             # test that DATA_TYPE is MULTILOOKED
             self.assertEqual(s.meta_data[ifc.DATA_TYPE], ifc.MULTILOOKED)
 

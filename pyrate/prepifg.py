@@ -168,16 +168,16 @@ def prepare_ifg(raster_path, xlooks, ylooks, exts, thresh, crop_opt,
     :return: out_ds: destination gdal dataset object
     :rtype: gdal.Dataset
     """
-
     do_multilook = xlooks > 1 or ylooks > 1
     # resolution=None completes faster for non-multilooked layers in gdalwarp
     resolution = [None, None]
     raster = dem_or_ifg(raster_path)
+    # print(f"prepare_ifg: raster = {raster}") - good
     if not raster.is_open:
         raster.open()
     if do_multilook:
         resolution = [xlooks * raster.x_step, ylooks * raster.y_step]
-
+    # print(f"prepaire_ifg: raster post multilook = {raster}") - good
     if not do_multilook and crop_opt == ALREADY_SAME_SIZE:
         renamed_path = \
             cf.mlooked_path(raster.data_path, looks=xlooks, crop_out=crop_opt)
@@ -235,7 +235,7 @@ def dem_or_ifg(data_path):
     """
     ds = gdal.Open(data_path)
     md = ds.GetMetadata()
-    if 'DATE' in md:  # ifg
+    if ifc.MASTER_DATE in md:  # ifg
         return Ifg(data_path)
     else:
         return DEM(data_path)
@@ -281,7 +281,6 @@ def _warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out,
     # cut, average, resample the final output layers
     op = output_tiff_filename(ifg.data_path, out_path)
     looks_path = cf.mlooked_path(op, y_looks, crop_out)
-    print(looks_path)
 
     #     # Add missing/updated metadata to resampled ifg/DEM
     #     new_lyr = type(ifg)(looks_path)

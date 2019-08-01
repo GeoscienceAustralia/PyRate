@@ -52,13 +52,13 @@ def main(params=None):
     # the important pyrate stuff anyway, but might affect gen_thumbs.py.
     # Going to assume base_ifg_paths is ordered correcly
     # pylint: disable=too-many-branches
-
     usage = 'Usage: pyrate prepifg <config_file>'
     if mpiops.size > 1:  # Over-ride input options if this is an MPI job
         params[cf.PARALLEL] = False
 
     if params:
-        base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST])
+        base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST])    
+        # print(f"run_prepifg: first base ifg path = {base_ifg_paths[0]}")
     else:
         # if params not provided read from config file
         if (not params) and (len(sys.argv) < 3):
@@ -82,6 +82,7 @@ def main(params=None):
         np.array_split(base_ifg_paths, mpiops.size)[mpiops.rank]
     gtiff_paths = [shared.output_tiff_filename(f, \
         params[cf.OBS_DIR]) for f in process_base_ifgs_paths]
+    # print(f"run_prepifg: first gtiff path = {gtiff_paths[0]}")
     do_prepifg(gtiff_paths, params)
     log.info("Finished prepifg")
 
@@ -99,6 +100,7 @@ def do_prepifg(gtiff_paths, params):
 
     if all([os.path.isfile(f) for f in gtiff_paths]):
         ifgs = [prepifg.dem_or_ifg(p) for p in gtiff_paths]
+        # print(f"do_prepifg: first ifg = {ifgs[0]}")
         xlooks, ylooks, crop = cf.transform_params(params)
         user_exts = (params[cf.IFG_XFIRST], params[cf.IFG_YFIRST],
                      params[cf.IFG_XLAST], params[cf.IFG_YLAST])
@@ -126,9 +128,10 @@ def _prepifg_multiprocessing(path, xlooks, ylooks, exts, thresh, crop, params):
     elif processor == ROIPAC:
         header = roipac.roipac_header(path, params)
     else:
-            raise PreprocessError('Processor must be ROI_PAC (0) or '
+        raise PreprocessError('Processor must be ROI_PAC (0) or '
                                           'GAMMA (1)')
 
+    # print(f"_prepifg_multiprocessing: path = {path}")
     prepifg.prepare_ifg(path, xlooks, ylooks, exts, thresh, crop,
                                  out_path=params[cf.OUT_DIR], header=header)
 

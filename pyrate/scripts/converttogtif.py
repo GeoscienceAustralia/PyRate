@@ -79,6 +79,7 @@ def main(params=None):
         np.array_split(base_ifg_paths, mpiops.size)[mpiops.rank]
     gtiff_paths = do_geotiff(process_base_ifgs_paths, params)
     log.info("Finished converttogtif")
+    return gtiff_paths
 
 
 def do_geotiff(base_unw_paths, params):
@@ -102,7 +103,6 @@ def do_geotiff(base_unw_paths, params):
         log.info("Running geotiff conversion in serial")
         dest_base_ifgs = [_geotiff_multiprocessing(b, params)
                           for b in base_unw_paths]
-
     return dest_base_ifgs
 
 
