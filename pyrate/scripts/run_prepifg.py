@@ -112,8 +112,9 @@ def do_prepifg(gtiff_paths, params):
             [_prepifg_multiprocessing(p, xlooks, ylooks, exts, thresh, crop,
                                       params) for p in gtiff_paths]
     else:
-        log.info("Full-res geotiffs do not exist")
-
+        log.error("Full-res geotiffs do not exist. Ensure you have"
+            " converted your interferograms to geotiffs.")
+        sys.exit()
 
 def _prepifg_multiprocessing(path, xlooks, ylooks, exts, thresh, crop, params):
     """

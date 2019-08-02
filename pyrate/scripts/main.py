@@ -44,7 +44,7 @@ def converttogeotiff(config_file):
     """
     Convert input files to geotiff
     """
-    config_file = abspath(config_file)
+    config_file = os.path.abspath(config_file)
     params = cf.get_config_params(config_file)
     log.info('This job was run with the following parameters:')
     log.info(json.dumps(params, indent=4, sort_keys=True))
