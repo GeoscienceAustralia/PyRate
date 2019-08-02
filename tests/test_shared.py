@@ -379,6 +379,7 @@ class WriteUnwTest(unittest.TestCase):
         for i in cls.ifgs:
             i.close()
         shutil.rmtree(cls.tif_dir)
+        common.remove_tifs(cls.params[cf.OBS_DIR])
 
     def test_unw_contains_same_data_as_numpy_array(self):
         from datetime import time
