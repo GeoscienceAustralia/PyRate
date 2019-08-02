@@ -38,7 +38,7 @@ from pyrate import gamma
 from pyrate import ifgconstants as ifc
 from pyrate import prepifg
 from pyrate import shared
-from pyrate.scripts import run_prepifg
+from pyrate.scripts import run_prepifg, converttogtif
 from pyrate.shared import Ifg, DEM, RasterException
 from pyrate.shared import cell_size, _utm_zone
 
@@ -364,14 +364,15 @@ class WriteUnwTest(unittest.TestCase):
         cls.base_unw_paths.append(common.SML_TEST_DEM_GAMMA)
 
         xlks, ylks, crop = cf.transform_params(cls.params)
-
         # dest_paths are tifs that have been geotif converted and multilooked
-        run_prepifg.gamma_prepifg(cls.base_unw_paths, cls.params)
+        converttogtif.main(cls.params)
+        run_prepifg.main(cls.params)
+        # run_prepifg.gamma_prepifg(cls.base_unw_paths, cls.params)
         cls.base_unw_paths.pop()  # removed dem as we don't want it in ifgs
 
-        dest_paths = cf.get_dest_paths(
+        cls.dest_paths = cf.get_dest_paths(
             cls.base_unw_paths, crop, cls.params, xlks)
-        cls.ifgs = common.small_data_setup(datafiles=dest_paths)
+        cls.ifgs = common.small_data_setup(datafiles=cls.dest_paths)
 
     @classmethod
     def tearDownClass(cls):
@@ -420,13 +421,11 @@ class WriteUnwTest(unittest.TestCase):
         os.remove(temp_tif)
         os.remove(temp_unw)
 
-    def test_equality_of_unw_with_geotiff(self):
-        geotiffs = [os.path.join(
-            self.params[cf.OUT_DIR], os.path.basename(b).split('.')[0] + '_' 
-            + os.path.basename(b).split('.')[1] + '.tif')
-            for b in self.base_unw_paths]
+    def test_multilooked_tiffs_converted_to_unw_are_same(self):
+        # Get multilooked geotiffs
+        geotiffs = self.dest_paths
 
-        # create .unws from geotiffs and make sure they read the same
+        # Convert back to .unw
         dest_unws = []
         for g in geotiffs:
             dest_unw = os.path.join(self.params[cf.OUT_DIR],
@@ -434,41 +433,12 @@ class WriteUnwTest(unittest.TestCase):
             shared.write_unw_from_data_or_geotiff(
                 geotif_or_data=g, dest_unw= dest_unw, ifg_proc=1)
             dest_unws.append(dest_unw)
+        
+        # Convert back to tiff
+        new_geotiffs = converttogtif.do_geotiff(dest_unws, self.params)
 
-        new_geotiffs = [run_prepifg._gamma_multiprocessing(b, self.params)
-                        for b in dest_unws]
-
-        for g, u in zip(geotiffs, new_geotiffs):
-            g_ds = gdal.Open(g)
-            u_gs = gdal.Open(u)
-            np.testing.assert_array_almost_equal(u_gs.ReadAsArray(),
-                                                 g_ds.ReadAsArray())
-            u_gs = None
-            g_ds = None
-
-    def test_unws_created_are_same_as_original(self):
-        geotiffs = [os.path.join(
-            self.params[cf.OUT_DIR], os.path.basename(b).split('.')[0] + '_' 
-            + os.path.basename(b).split('.')[1] + '.tif')
-            for b in self.base_unw_paths]
-
-        new_base_unw_paths = []
-        # create .unws from geotiffs and make sure they read the same
-        for g in geotiffs:
-            dest_unw = os.path.join(self.params[cf.OUT_DIR],
-                                    os.path.splitext(g)[0] + '.unw')
-            shared.write_unw_from_data_or_geotiff(
-                geotif_or_data=g, dest_unw=dest_unw, ifg_proc=1)
-
-            # unws created
-            assert os.path.exists(dest_unw)
-            new_base_unw_paths.append(dest_unw)
-
-        # make sure we can recovert the unws to gettiffs
-        new_geotiffs = [run_prepifg._gamma_multiprocessing(b, self.params)
-                        for b in new_base_unw_paths]
-
-        # assert data equal
+        # Ensure original multilooked geotiffs and 
+        #  unw back to geotiff are the same
         for g, u in zip(geotiffs, new_geotiffs):
             g_ds = gdal.Open(g)
             u_gs = gdal.Open(u)
