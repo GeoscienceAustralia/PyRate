@@ -31,7 +31,7 @@ from numpy.testing import assert_array_almost_equal, assert_array_equal
 
 from osgeo import gdal
 
-from pyrate.scripts import run_prepifg
+from pyrate.scripts import run_prepifg, converttogtif
 from pyrate import config as cf
 from pyrate.config import mlooked_path
 from pyrate.shared import Ifg, DEM
@@ -670,7 +670,9 @@ class TestOneIncidenceOrElevationMap(unittest.TestCase):
         self.ifgListFile = os.path.join(common.SML_TEST_GAMMA, 'ifms_17')
 
     def tearDown(self):
+        params = cf.get_config_params(self.conf_file)
         shutil.rmtree(self.base_dir)
+        common.remove_tifs(params[cf.OBS_DIR])
 
     def make_input_files(self, inc='', ele=''):
         with open(self.conf_file, 'w') as conf:
@@ -709,16 +711,17 @@ class TestOneIncidenceOrElevationMap(unittest.TestCase):
     def common_check(self, ele, inc):
         os.path.exists(self.conf_file)
         params = cf.get_config_params(self.conf_file)
+        converttogtif.main(params)
         sys.argv = ['dummy', self.conf_file]
         run_prepifg.main(params)
         # test 17 geotiffs created
-        geotifs = glob.glob(os.path.join(self.base_dir, '*_unw.tif'))
+        geotifs = glob.glob(os.path.join(params[cf.OBS_DIR], '*_unw.tif'))
         self.assertEqual(17, len(geotifs))
         # test dem geotiff created
-        demtif = glob.glob(os.path.join(self.base_dir, '*_dem.tif'))
+        demtif = glob.glob(os.path.join(params[cf.OBS_DIR], '*_dem.tif'))
         self.assertEqual(1, len(demtif))
         # elevation/incidence file
-        ele = glob.glob(os.path.join(self.base_dir,
+        ele = glob.glob(os.path.join(params[cf.OBS_DIR],
                                      '*utm_{ele}.tif'.format(ele=ele)))[0]
         self.assertTrue(os.path.exists(ele))
         # mlooked tifs
