@@ -289,7 +289,7 @@ def crop_resample_average(
     wkt = dst_ds.GetProjection()
 
     # TEST HERE IF EXISTING FILE HAS PYRATE METADATA. IF NOT ADD HERE
-    if not ifc.DATA_TYPE in dst_ds.GetMetadata():
+    if not ifc.DATA_TYPE in dst_ds.GetMetadata() and hdr is not None:
         md = shared.collate_metadata(hdr)
     else: 
         md = dst_ds.GetMetadata()
