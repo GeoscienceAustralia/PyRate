@@ -29,8 +29,7 @@ import pyrate.orbital
 from pyrate import config as cf
 from pyrate import ifgconstants as ifc
 from pyrate.ref_phs_est import estimate_ref_phase, ReferencePhaseError
-from pyrate.scripts import run_prepifg
-from pyrate.scripts import run_pyrate
+from pyrate.scripts import run_prepifg, run_pyrate, converttogtif
 from tests import common
 
 matlab_ref_phs_method1 = [-18.2191658020020,
@@ -121,6 +120,7 @@ class RefPhsEstimationMatlabTestMethod1Serial(unittest.TestCase):
         cls.temp_out_dir = tempfile.mkdtemp()
         sys.argv = ['run_prepifg.py', common.TEST_CONF_ROIPAC]
         params[cf.OUT_DIR] = cls.temp_out_dir
+        converttogtif.main(params)
         run_prepifg.main(params)
 
         params[cf.OUT_DIR] = cls.temp_out_dir
@@ -159,6 +159,8 @@ class RefPhsEstimationMatlabTestMethod1Serial(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         shutil.rmtree(cls.temp_out_dir)
+        common.remove_tifs(
+            cf.get_config_params(common.TEST_CONF_ROIPAC)[cf.OBS_DIR])
 
     def test_estimate_reference_phase(self):
         np.testing.assert_array_almost_equal(matlab_ref_phs_method1,
@@ -208,6 +210,7 @@ class RefPhsEstimationMatlabTestMethod1Parallel(unittest.TestCase):
         cls.temp_out_dir = tempfile.mkdtemp()
         sys.argv = ['run_prepifg.py', common.TEST_CONF_ROIPAC]
         params[cf.OUT_DIR] = cls.temp_out_dir
+        converttogtif.main(params)
         run_prepifg.main(params)
 
         params[cf.OUT_DIR] = cls.temp_out_dir
@@ -246,6 +249,8 @@ class RefPhsEstimationMatlabTestMethod1Parallel(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         shutil.rmtree(cls.temp_out_dir)
+        common.remove_tifs(
+            cf.get_config_params(common.TEST_CONF_ROIPAC)[cf.OBS_DIR])
 
     def test_estimate_reference_phase(self):
         np.testing.assert_array_almost_equal(matlab_ref_phs_method1,
@@ -298,7 +303,7 @@ class RefPhsEstimationMatlabTestMethod2Serial(unittest.TestCase):
         cls.temp_out_dir = tempfile.mkdtemp()
         sys.argv = ['run_prepifg.py', common.TEST_CONF_ROIPAC]
         params[cf.OUT_DIR] = cls.temp_out_dir
-
+        converttogtif.main(params)
         run_prepifg.main(params)
 
         params[cf.OUT_DIR] = cls.temp_out_dir
@@ -336,6 +341,9 @@ class RefPhsEstimationMatlabTestMethod2Serial(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         shutil.rmtree(cls.temp_out_dir)
+        common.remove_tifs(
+            cf.get_config_params(common.TEST_CONF_ROIPAC)[cf.OBS_DIR])
+
 
     def test_ifgs_after_ref_phs_est(self):
         MATLAB_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR,
@@ -388,7 +396,7 @@ class RefPhsEstimationMatlabTestMethod2Parallel(unittest.TestCase):
         cls.temp_out_dir = tempfile.mkdtemp()
         sys.argv = ['run_prepifg.py', common.TEST_CONF_ROIPAC]
         params[cf.OUT_DIR] = cls.temp_out_dir
-
+        converttogtif.main(params)
         run_prepifg.main(params)
 
         params[cf.OUT_DIR] = cls.temp_out_dir
@@ -424,6 +432,8 @@ class RefPhsEstimationMatlabTestMethod2Parallel(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         shutil.rmtree(cls.temp_out_dir)
+        common.remove_tifs(
+            cf.get_config_params(common.TEST_CONF_ROIPAC)[cf.OBS_DIR])
 
     def test_ifgs_after_ref_phs_est(self):
         MATLAB_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR,
