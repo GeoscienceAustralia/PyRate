@@ -215,83 +215,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="module-pyrate.aps">
-<span id="atmospheric-phase-screen-module"></span><h1>Atmospheric Phase Screen Module<a class="headerlink" href="#module-pyrate.aps" title="Permalink to this headline">¶</a></h1>
-<p>This Python module implements a spatio-temporal filter method
-for correcting interferograms for atmospheric phase screen (APS)
-signals.</p>
-<dl class="function">
-<dt id="pyrate.aps.spatial_low_pass_filter">
-<code class="sig-prename descclassname">pyrate.aps.</code><code class="sig-name descname">spatial_low_pass_filter</code><span class="sig-paren">(</span><em class="sig-param">ts_lp</em>, <em class="sig-param">ifg</em>, <em class="sig-param">params</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/aps.html#spatial_low_pass_filter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.aps.spatial_low_pass_filter" title="Permalink to this definition">¶</a></dt>
-<dd><p>Filter time series data spatially using either a Butterworth or Gaussian
-low pass filter defined by a cut-off distance. If the cut-off distance is
-defined as zero in the parameters dictionary then it is calculated for
-each time step using the pyrate.covariance.cvd_from_phase method.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>ts_lp</strong> (<em>ndarray</em>) – Array of time series data, the result of a temporal
-low pass filter operation. shape (ifg.shape, n_epochs)</p></li>
-<li><p><strong>instance ifg</strong> (<a class="reference internal" href="shared.html#pyrate.shared.Ifg" title="pyrate.shared.Ifg"><em>shared.Ifg</em></a>) – interferogram object</p></li>
-<li><p><strong>params</strong> (<em>dict</em>) – Dictionary of configuration parameters</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>ts_hp: filtered time series data of shape (ifg.shape, n_epochs)</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>ndarray</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyrate.aps.spatio_temporal_filter">
-<code class="sig-prename descclassname">pyrate.aps.</code><code class="sig-name descname">spatio_temporal_filter</code><span class="sig-paren">(</span><em class="sig-param">tsincr</em>, <em class="sig-param">ifg</em>, <em class="sig-param">params</em>, <em class="sig-param">preread_ifgs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/aps.html#spatio_temporal_filter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.aps.spatio_temporal_filter" title="Permalink to this definition">¶</a></dt>
-<dd><p>Applies a spatio-temporal filter to remove the atmospheric phase screen
-(APS) and saves the corrected interferograms. Before performing this step,
-the time series must be computed using the SVD method. This function then
-performs temporal and spatial filtering.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>tsincr</strong> (<em>ndarray</em>) – incremental time series array of size
-(ifg.shape, nepochs-1)</p></li>
-<li><p><strong>ifg</strong> (<em>list</em>) – List of pyrate.shared.Ifg class objects.</p></li>
-<li><p><strong>params</strong> (<em>dict</em>) – Dictionary of configuration parameter</p></li>
-<li><p><strong>tiles</strong> (<em>list</em>) – List of pyrate.shared.Tile class objects</p></li>
-<li><p><strong>preread_ifgs</strong> (<em>dict</em>) – Dictionary of shared.PrereadIfg class instances</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>None, corrected interferograms are saved to disk</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyrate.aps.temporal_low_pass_filter">
-<code class="sig-prename descclassname">pyrate.aps.</code><code class="sig-name descname">temporal_low_pass_filter</code><span class="sig-paren">(</span><em class="sig-param">tsincr</em>, <em class="sig-param">epochlist</em>, <em class="sig-param">params</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/aps.html#temporal_low_pass_filter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.aps.temporal_low_pass_filter" title="Permalink to this definition">¶</a></dt>
-<dd><p>Filter time series data temporally using either a Gaussian, triangular
-or mean low pass filter defined by a cut-off time period (in years).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>tsincr</strong> (<em>ndarray</em>) – Array of incremental time series data of shape
-(ifg.shape, n_epochs)</p></li>
-<li><p><strong>epochlist</strong> (<em>list</em>) – List of shared.EpochList class instances</p></li>
-<li><p><strong>params</strong> (<em>dict</em>) – Dictionary of configuration parameters</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>tsfilt_incr: filtered time series data, shape (ifg.shape, nepochs)</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>ndarray</p>
-</dd>
-</dl>
-</dd></dl>
-
+  <div class="section" id="atmospheric-phase-screen-module">
+<h1>Atmospheric Phase Screen Module<a class="headerlink" href="#atmospheric-phase-screen-module" title="Permalink to this headline">¶</a></h1>
 </div>
 
 
