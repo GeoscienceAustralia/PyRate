@@ -56,5 +56,7 @@ deploy:
     branch: sheece-sphinx-travis
   github-token: $GITHUB_TOKEN
   local-dir: docs/_build/html
-  committer-from-gh: true
+  project_name: PyRate
+  email: insar@ga.gov.au
+  name: InSAR Team
 
