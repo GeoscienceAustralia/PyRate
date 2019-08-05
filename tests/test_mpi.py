@@ -357,7 +357,9 @@ def test_prepifg_mpi(mpisync, get_config, tempdir,
         params[cf.OBS_DIR] = common.SML_TEST_GAMMA
         params[cf.DEM_FILE] = common.SML_TEST_DEM_GAMMA
         params[cf.DEM_HEADER_FILE] = common.SML_TEST_DEM_HDR_GAMMA
+    converttogtif.main(params)
     run_prepifg.main(params)
+    common.remove_tifs(params[cf.OBS_DIR])    
 
     if mpiops.rank == 0:
         if roipac_or_gamma == 1:
@@ -368,6 +370,7 @@ def test_prepifg_mpi(mpisync, get_config, tempdir,
         params_s[cf.PARALLEL] = True
         params_s[cf.IFG_LKSX], params_s[cf.IFG_LKSY] = get_lks, get_lks
         params_s[cf.IFG_CROP_OPT] = get_crop
+        converttogtif.main(params)
         if roipac_or_gamma == 1:
             base_unw_paths = glob.glob(join(common.SML_TEST_GAMMA,
                                             "*_utm.unw"))
@@ -387,3 +390,4 @@ def test_prepifg_mpi(mpisync, get_config, tempdir,
 
         shutil.rmtree(outdir)
         shutil.rmtree(params_s[cf.OUT_DIR])
+        common.remove_tifs(params[cf.OBS_DIR])
