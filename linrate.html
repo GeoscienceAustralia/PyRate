@@ -215,47 +215,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="module-pyrate.linrate">
-<span id="linrate-module"></span><h1>Linrate Module<a class="headerlink" href="#module-pyrate.linrate" title="Permalink to this headline">¶</a></h1>
-<p>This Python module implements pixel-by-pixel linear rate
-(velocity) estimation using an iterative weighted least-squares
-method. The algorithm is based on the Matlab Pirate package ‘stack.m’
-and Matlab ‘lscov.m’ functions.</p>
-<dl class="function">
-<dt id="pyrate.linrate.linear_rate">
-<code class="sig-prename descclassname">pyrate.linrate.</code><code class="sig-name descname">linear_rate</code><span class="sig-paren">(</span><em class="sig-param">ifgs</em>, <em class="sig-param">params</em>, <em class="sig-param">vcmt</em>, <em class="sig-param">mst=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/linrate.html#linear_rate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.linrate.linear_rate" title="Permalink to this definition">¶</a></dt>
-<dd><p>Pixel-by-pixel linear rate (velocity) estimation using iterative
-weighted least-squares method.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>ifgs</strong> (<em>Ifg.object</em>) – Sequence of interferogram objects from which to extract observations</p></li>
-<li><p><strong>params</strong> (<em>dict</em>) – Configuration parameters</p></li>
-<li><p><strong>vcmt</strong> (<em>ndarray</em>) – Derived positive definite temporal variance covariance matrix</p></li>
-<li><p><strong>mst</strong> (<em>ndarray</em>) – Pixel-wise matrix describing the minimum spanning tree network</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>rate: Linear rate (velocity) map</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>ndarray</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>error: Standard deviation of the rate map</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>ndarray</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>samples: Statistics of observations used in calculation</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>ndarray</p>
-</dd>
-</dl>
-</dd></dl>
-
+  <div class="section" id="linrate-module">
+<h1>Linrate Module<a class="headerlink" href="#linrate-module" title="Permalink to this headline">¶</a></h1>
 </div>
 
 
