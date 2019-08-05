@@ -37,7 +37,7 @@ from pyrate import covariance as vcm_module
 from pyrate.linrate import linear_rate
 from pyrate.scripts import run_pyrate, run_prepifg, converttogtif
 from tests.common import (SML_TEST_DIR, prepare_ifgs_without_phase,
-    TEST_CONF_ROIPAC, pre_prepaire_ifgs, remove_tifs)
+    TEST_CONF_ROIPAC, pre_prepare_ifgs, remove_tifs)
 
 
 def default_params():
