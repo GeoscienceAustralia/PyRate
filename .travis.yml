@@ -44,16 +44,20 @@ script:
 #   - apt
 #   - pip
 #   - $HOME/.cache/pip
-deploy:
-  provider: pages
-  skip-cleanup: true
-  keep-history: true
-  verbose: true
-  on:
-    branch: sheece-travis-sphinx-integration
-  github-token: $GITHUB_TOKEN
-  local-dir: docs/_build/html
-  project_name: PyRate
-  email: insar@ga.gov.au
-  name: InSAR Team
+jobs:
+  include:
+    - stage: deploy
+      python: 3.6
+      deploy:
+        provider: pages
+        skip-cleanup: true
+        keep-history: true
+        verbose: true
+        on:
+          branch: sheece-travis-sphinx-integration
+        github-token: $GITHUB_TOKEN
+        local-dir: docs/_build/html
+        project_name: PyRate
+        email: insar@ga.gov.au
+        name: InSAR Team
 
