@@ -343,7 +343,7 @@ class TestGammaParallelVsSerial(unittest.TestCase):
     def tearDownClass(cls):
         shutil.rmtree(cls.parallel_dir)
         shutil.rmtree(cls.serial_dir)
-        remove_tifs(SML_TEST_GAMMA)
+        common.remove_tifs(SML_TEST_GAMMA)
 
     def test_equality(self):
         for s, p in zip(self.serial_ifgs, self.para_ifgs):
