@@ -124,9 +124,8 @@ def _geotiff_multiprocessing(unw_path, params):
                                           'GAMMA (1)')
         shared.write_fullres_geotiff(header, unw_path, dest,
                       nodata=params[cf.NO_DATA_VALUE])
+        return dest
     else:
         log.info("Full-res geotiff already exists")
-
-    return dest
-
+        return None
 
