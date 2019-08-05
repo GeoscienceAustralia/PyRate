@@ -90,7 +90,6 @@ def remove_orbital_error(ifgs, params, preread_ifgs=None):
         if isinstance(ifgs[0], Ifg) else ifgs
 
     mlooked = None
-
     # mlooking is not necessary for independent correction
     # can use multiple procesing if write_to_disc=True
     if params[cf.ORBITAL_FIT_METHOD] == NETWORK_METHOD:

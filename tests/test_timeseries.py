@@ -34,7 +34,7 @@ from pyrate import mst
 from pyrate import ref_phs_est as rpe
 from pyrate import shared
 from pyrate import covariance
-from pyrate.scripts import run_pyrate, run_prepifg
+from pyrate.scripts import run_pyrate, run_prepifg, converttogtif
 from pyrate.timeseries import time_series
 
 
@@ -140,6 +140,7 @@ class MatlabTimeSeriesEquality(unittest.TestCase):
         cls.temp_out_dir = tempfile.mkdtemp()
         sys.argv = ['run_prepifg.py', common.TEST_CONF_ROIPAC]
         params[cf.OUT_DIR] = cls.temp_out_dir
+        converttogtif.main(params)
         run_prepifg.main(params)
 
         params[cf.REF_EST_METHOD] = 2
@@ -196,6 +197,8 @@ class MatlabTimeSeriesEquality(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         shutil.rmtree(cls.temp_out_dir)
+        common.remove_tifs(
+            cf.get_config_params(common.TEST_CONF_ROIPAC)[cf.OBS_DIR])
 
     def test_time_series_equality_parallel_by_rows(self):
         """
@@ -249,6 +252,7 @@ class MatlabTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
         cls.temp_out_dir = tempfile.mkdtemp()
         sys.argv = ['run_prepifg.py', common.TEST_CONF_ROIPAC]
         params[cf.OUT_DIR] = cls.temp_out_dir
+        converttogtif.main(params)
         run_prepifg.main(params)
 
         params[cf.REF_EST_METHOD] = 2
@@ -314,6 +318,8 @@ class MatlabTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         shutil.rmtree(cls.temp_out_dir)
+        common.remove_tifs(
+            cf.get_config_params(common.TEST_CONF_ROIPAC)[cf.OBS_DIR])
 
     def test_time_series_equality_parallel_by_rows(self):
 

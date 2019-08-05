@@ -35,6 +35,7 @@ install:
 
 # command to run tests, e.g. python setup.py test
 script:
+  - pip install numpy==1.16.4
   - pytest --cov-report term-missing:skip-covered --cov=pyrate tests/
 
 # cache:

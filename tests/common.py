@@ -30,10 +30,10 @@ import numpy as np
 from numpy import isnan, sum as nsum
 from osgeo import gdal
 
-from pyrate import config as cf, mst, timeseries, matlab_mst, algorithm, \
-    ifgconstants as ifc, linrate
-from pyrate.shared import Ifg, nan_and_mm_convert, get_geotiff_header_info, \
-    write_output_geotiff
+from pyrate import (config as cf, mst, timeseries, matlab_mst, algorithm, 
+    ifgconstants as ifc, linrate)
+from pyrate.shared import (Ifg, nan_and_mm_convert, get_geotiff_header_info, 
+    write_output_geotiff)
 
 from tests.constants import PYRATEPATH
 
@@ -106,6 +106,10 @@ IFMS16 = ['geo_060619-061002_unw.tif',
 
 log = logging.getLogger(__name__)
 
+def remove_tifs(path):
+    tifs = glob.glob(os.path.join(path, '*.tif'))
+    for tif in tifs:
+        os.remove(tif)
 
 def small_data_setup(datafiles=None, is_dir=False):
     """Returns Ifg objs for the files in the small test dir

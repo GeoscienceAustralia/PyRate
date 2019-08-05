@@ -22,10 +22,11 @@ import shutil
 import sys
 import tempfile
 import unittest
-from numpy import eye, array, ones
 
+from numpy import eye, array, ones
 import numpy as np
 from numpy.testing import assert_array_almost_equal
+import glob
 
 import pyrate.orbital
 import tests.common
@@ -34,9 +35,9 @@ from pyrate import ref_phs_est as rpe
 from pyrate import shared
 from pyrate import covariance as vcm_module
 from pyrate.linrate import linear_rate
-from pyrate.scripts import run_pyrate, run_prepifg
-from tests.common import SML_TEST_DIR, prepare_ifgs_without_phase
-from tests.common import TEST_CONF_ROIPAC, pre_prepare_ifgs
+from pyrate.scripts import run_pyrate, run_prepifg, converttogtif
+from tests.common import (SML_TEST_DIR, prepare_ifgs_without_phase,
+    TEST_CONF_ROIPAC, pre_prepare_ifgs, remove_tifs)
 
 
 def default_params():
@@ -85,11 +86,11 @@ class MatlabEqualityTest(unittest.TestCase):
     def setUpClass(cls):
         params = cf.get_config_params(TEST_CONF_ROIPAC)
         cls.temp_out_dir = tempfile.mkdtemp()
-
-        sys.argv = ['run_prepifg.py', TEST_CONF_ROIPAC]
+        
         params[cf.OUT_DIR] = cls.temp_out_dir
         params[cf.TMPDIR] = os.path.join(params[cf.OUT_DIR], cf.TMPDIR)
         shared.mkdir_p(params[cf.TMPDIR])
+        converttogtif.main(params)
         run_prepifg.main(params)
 
         params[cf.REF_EST_METHOD] = 2
@@ -98,9 +99,10 @@ class MatlabEqualityTest(unittest.TestCase):
 
         base_ifg_paths = cf.original_ifg_paths(
             params[cf.IFG_FILE_LIST])
-
+        
         dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
-
+        print(f"base_ifg_paths={base_ifg_paths}") 
+        print(f"dest_paths={dest_paths}")
         # start run_pyrate copy
         ifgs = pre_prepare_ifgs(dest_paths, params)
         mst_grid = tests.common.mst_calculation(dest_paths, params)
@@ -145,6 +147,8 @@ class MatlabEqualityTest(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         shutil.rmtree(cls.temp_out_dir)
+        params = cf.get_config_params(TEST_CONF_ROIPAC)
+        remove_tifs(params[cf.OBS_DIR])
 
     def test_linear_rate_full_parallel(self):
         """
