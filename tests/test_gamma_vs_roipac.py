@@ -49,8 +49,7 @@ from pyrate.config import (
     APS_ELEVATION_MAP
     )
 from pyrate.scripts import run_prepifg, converttogtif
-from tests.common import SML_TEST_DIR
-from tests.common import small_data_setup
+from tests.common import SML_TEST_DIR, small_data_setup, remove_tifs
 
 DUMMY_SECTION_NAME = 'pyrate'
 
@@ -77,12 +76,8 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
     def tearDownClass(cls):
         shutil.rmtree(cls.gamma_base_dir)
         shutil.rmtree(cls.roipac_base_dir)
-        tifs = glob.glob(os.path.join(cls.SMLNEY_GAMMA_TEST, '*.tif'))
-        for tif in tifs:
-            os.remove(tif)
-        tifs = glob.glob(os.path.join(common.SML_TEST_OBS, '*.tif'))
-        for tif in tifs:
-            os.remove(tif)
+        remove_tifs(cls.SMLNEY_GAMMA_TEST)
+        remove_tifs(common.SML_TEST_OBS)
 
     def make_gamma_input_files(self, data):
         with open(self.conf_file, 'w') as conf:

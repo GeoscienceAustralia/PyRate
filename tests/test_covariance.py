@@ -33,8 +33,8 @@ from pyrate.covariance import cvd, get_vcmt, RDist
 from pyrate import ifgconstants as ifc
 import pyrate.orbital
 from tests import common
-from tests.common import small5_mock_ifgs, small5_ifgs, TEST_CONF_ROIPAC
-from tests.common import small_data_setup, prepare_ifgs_without_phase
+from tests.common import (small5_mock_ifgs, small5_ifgs, TEST_CONF_ROIPAC,
+    small_data_setup, prepare_ifgs_without_phase)
 
 
 class CovarianceTests(unittest.TestCase):
@@ -213,6 +213,8 @@ class MatlabEqualityTest(unittest.TestCase):
         for i in cls.ifgs:
             i.close()
         shutil.rmtree(cls.temp_out_dir)
+        params = cf.get_config_params(TEST_CONF_ROIPAC)
+        common.remove_tifs(params[cf.OBS_DIR])
 
     def test_matlab_maxvar_equality_small_test_files(self):
         np.testing.assert_array_almost_equal(self.maxvar, matlab_maxvar,

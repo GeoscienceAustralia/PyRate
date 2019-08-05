@@ -36,8 +36,8 @@ from pyrate import shared
 from pyrate import covariance as vcm_module
 from pyrate.linrate import linear_rate
 from pyrate.scripts import run_pyrate, run_prepifg, converttogtif
-from tests.common import SML_TEST_DIR, prepare_ifgs_without_phase
-from tests.common import TEST_CONF_ROIPAC, pre_prepare_ifgs
+from tests.common import (SML_TEST_DIR, prepare_ifgs_without_phase,
+    TEST_CONF_ROIPAC, pre_prepaire_ifgs, remove_tifs)
 
 
 def default_params():
@@ -148,9 +148,7 @@ class MatlabEqualityTest(unittest.TestCase):
     def tearDownClass(cls):
         shutil.rmtree(cls.temp_out_dir)
         params = cf.get_config_params(TEST_CONF_ROIPAC)
-        tifs = glob.glob(os.path.join(params[cf.OBS_DIR], '*.tif'))
-        for tif in tifs:
-            os.remove(tif)
+        remove_tifs(params[cf.OBS_DIR])
 
     def test_linear_rate_full_parallel(self):
         """
