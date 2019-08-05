@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Installation &mdash; PyRate 0.3.0 documentation</title>
+  <title>Installation &mdash; PyRate 0.3.0.post3 documentation</title>
   
 
   
@@ -109,9 +109,10 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Release History</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="history.html#unreleased-2019-xx-xx">Unreleased (2019-xx-xx)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id3">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id4">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id5">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="scripts.html">PyRate Scripts</a><ul>
@@ -221,6 +222,7 @@ Step by step guide to install Pyrate and run toy example.</p>
 <p>These instructions have been tested on Ubuntu 18.04. If using another
 distribution, you will have to install packages equivalent to those listed
 in <cite>apt_install.sh</cite>.</p>
+<p>Ensure you have Python 3.6 or 3.7 installed.</p>
 <p>Clone the PyRate repository, install required packages and install PyRate:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>git clone git@github.com:GeoscienceAustralia/PyRate.git
 ./PyRate/utils/apt_install.sh
@@ -281,7 +283,7 @@ installation, first run an interactive session:</p>
 <p>Once the session has started, you will need to reactivate your virtual
 environment and reload the required modules:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="o">~</span>
-<span class="n">source</span> <span class="n">PyRateVM</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">activate</span>
+<span class="n">source</span> <span class="n">PyRateVenv</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">activate</span>
 <span class="n">source</span> <span class="n">PyRate</span><span class="o">/</span><span class="n">utils</span><span class="o">/</span><span class="n">load_modules</span><span class="o">.</span><span class="n">sh</span>
 </pre></div>
 </div>
@@ -291,14 +293,14 @@ environment and reload the required modules:</p>
 <p>To verify PyRate has been successfully installed, run the workflow with the
 included example config file and data:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pyrate</span> <span class="n">prepifg</span> <span class="n">input_parameters</span><span class="o">.</span><span class="n">conf</span>
-<span class="n">pyrate</span> <span class="n">linrate</span> <span class="n">input_parameters</span><span class="o">.</span><span class="n">conf</span>
+<span class="n">pyrate</span> <span class="n">process</span> <span class="n">input_parameters</span><span class="o">.</span><span class="n">conf</span>
 <span class="n">pyrate</span> <span class="n">postprocess</span> <span class="n">input_parameters</span><span class="o">.</span><span class="n">conf</span>
 </pre></div>
 </div>
 <p>On Raijin and other HPC systems, you can utilise MPI to run PyRate in parallel:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Modify &#39;n&#39; based on the number of processors available.</span>
 <span class="n">mpirun</span> <span class="o">-</span><span class="n">n</span> <span class="mi">4</span> <span class="n">pyrate</span> <span class="n">prepifg</span> <span class="n">input_parameters</span><span class="o">.</span><span class="n">conf</span>
-<span class="n">mpirun</span> <span class="o">-</span><span class="n">n</span> <span class="mi">4</span> <span class="n">pyrate</span> <span class="n">linrate</span> <span class="n">input_parameters</span><span class="o">.</span><span class="n">conf</span> <span class="o">-</span><span class="n">c</span> <span class="mi">2</span> <span class="o">-</span><span class="n">r</span> <span class="mi">2</span>
+<span class="n">mpirun</span> <span class="o">-</span><span class="n">n</span> <span class="mi">4</span> <span class="n">pyrate</span> <span class="n">process</span> <span class="n">input_parameters</span><span class="o">.</span><span class="n">conf</span> <span class="o">-</span><span class="n">c</span> <span class="mi">2</span> <span class="o">-</span><span class="n">r</span> <span class="mi">2</span>
 <span class="n">mpirun</span> <span class="o">-</span><span class="n">n</span> <span class="mi">4</span> <span class="n">pyrate</span> <span class="n">postprocess</span> <span class="n">input_parameters</span><span class="o">.</span><span class="n">conf</span> <span class="o">-</span><span class="n">c</span> <span class="mi">2</span> <span class="o">-</span><span class="n">r</span> <span class="mi">2</span>
 </pre></div>
 </div>

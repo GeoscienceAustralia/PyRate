@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Usage &mdash; PyRate 0.3.0 documentation</title>
+  <title>Usage &mdash; PyRate 0.3.0.post3 documentation</title>
   
 
   
@@ -109,9 +109,10 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Release History</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="history.html#unreleased-2019-xx-xx">Unreleased (2019-xx-xx)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id3">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id4">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id5">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="scripts.html">PyRate Scripts</a><ul>
@@ -227,22 +228,25 @@ executable program <code class="docutils literal notranslate"><span class="pre">
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;</span> <span class="n">pyrate</span> <span class="o">--</span><span class="n">help</span>
 <span class="n">Usage</span><span class="p">:</span> <span class="n">pyrate</span> <span class="p">[</span><span class="n">OPTIONS</span><span class="p">]</span> <span class="n">COMMAND</span> <span class="p">[</span><span class="n">ARGS</span><span class="p">]</span><span class="o">...</span>
 
+  <span class="n">Commandline</span> <span class="n">options</span> <span class="ow">and</span> <span class="n">logging</span> <span class="n">setup</span>
+
 <span class="n">Options</span><span class="p">:</span>
+  <span class="o">-</span><span class="n">V</span><span class="p">,</span> <span class="o">--</span><span class="n">version</span>                   <span class="n">Show</span> <span class="n">the</span> <span class="n">version</span> <span class="ow">and</span> <span class="n">exit</span><span class="o">.</span>
   <span class="o">-</span><span class="n">v</span><span class="p">,</span> <span class="o">--</span><span class="n">verbosity</span> <span class="p">[</span><span class="n">DEBUG</span><span class="o">|</span><span class="n">INFO</span><span class="o">|</span><span class="n">WARNING</span><span class="o">|</span><span class="n">ERROR</span><span class="p">]</span>
                                   <span class="n">Level</span> <span class="n">of</span> <span class="n">logging</span>
   <span class="o">--</span><span class="n">help</span>                          <span class="n">Show</span> <span class="n">this</span> <span class="n">message</span> <span class="ow">and</span> <span class="n">exit</span><span class="o">.</span>
 
 <span class="n">Commands</span><span class="p">:</span>
-  <span class="n">linrate</span>
-  <span class="n">postprocess</span>
-  <span class="n">prepifg</span>
+  <span class="n">postprocess</span>  <span class="n">Step</span> <span class="mi">3</span><span class="p">:</span> <span class="n">Reassemble</span> <span class="n">PyRate</span> <span class="n">output</span> <span class="n">tiles</span> <span class="ow">and</span> <span class="n">save</span> <span class="k">as</span> <span class="n">geotiffs</span>
+  <span class="n">prepifg</span>      <span class="n">Step</span> <span class="mi">1</span><span class="p">:</span> <span class="n">Convert</span> <span class="nb">input</span> <span class="n">files</span> <span class="n">to</span> <span class="n">geotiff</span> <span class="ow">and</span> <span class="n">perform</span> <span class="n">multilooking</span><span class="o">...</span>
+  <span class="n">process</span>      <span class="n">Step</span> <span class="mi">2</span><span class="p">:</span> <span class="n">Main</span> <span class="n">PyRate</span> <span class="n">workflow</span> <span class="n">including</span> <span class="n">time</span> <span class="n">series</span> <span class="ow">and</span> <span class="n">linear</span> <span class="n">rate</span><span class="o">...</span>
 </pre></div>
 </div>
 <p>The <code class="docutils literal notranslate"><span class="pre">pyrate</span></code> program has three command line options corresponding to
 different parts of the PyRate workflow:</p>
 <ol class="arabic simple">
 <li><p>prepifg</p></li>
-<li><p>linrate</p></li>
+<li><p>process</p></li>
 <li><p>postprocess</p></li>
 </ol>
 <p>Below we discuss these options.</p>
@@ -297,10 +301,10 @@ directory, one each for ROI_PAC and GAMMA prepifg configuration. Either
 configuration file can be used with <code class="docutils literal notranslate"><span class="pre">prepifg</span></code>.</p>
 </div>
 </div>
-<div class="section" id="linrate-main-workflow-and-linear-rate-and-time-series-analysis">
-<h3>linrate: Main workflow and linear rate and time series analysis<a class="headerlink" href="#linrate-main-workflow-and-linear-rate-and-time-series-analysis" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;</span> <span class="n">pyrate</span> <span class="n">linrate</span> <span class="o">--</span><span class="n">help</span>
-<span class="n">Usage</span><span class="p">:</span> <span class="n">pyrate</span> <span class="n">linrate</span> <span class="p">[</span><span class="n">OPTIONS</span><span class="p">]</span> <span class="n">CONFIG_FILE</span>
+<div class="section" id="process-main-workflow-and-linear-rate-and-time-series-analysis">
+<h3>process: Main workflow and linear rate and time series analysis<a class="headerlink" href="#process-main-workflow-and-linear-rate-and-time-series-analysis" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;</span> <span class="n">pyrate</span> <span class="n">process</span> <span class="o">--</span><span class="n">help</span>
+<span class="n">Usage</span><span class="p">:</span> <span class="n">pyrate</span> <span class="n">process</span> <span class="p">[</span><span class="n">OPTIONS</span><span class="p">]</span> <span class="n">CONFIG_FILE</span>
 
 <span class="n">Options</span><span class="p">:</span>
   <span class="o">-</span><span class="n">r</span><span class="p">,</span> <span class="o">--</span><span class="n">rows</span> <span class="n">INTEGER</span>  <span class="n">divide</span> <span class="n">ifgs</span> <span class="n">into</span> <span class="n">this</span> <span class="n">many</span> <span class="n">rows</span>
@@ -309,8 +313,8 @@ configuration file can be used with <code class="docutils literal notranslate"><
 </pre></div>
 </div>
 <p>This is the core of the PyRate processing workflow, handled by the
-<code class="docutils literal notranslate"><span class="pre">linrate</span></code> command:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pyrate</span> <span class="n">linrate</span> <span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">config_file</span> <span class="o">-</span><span class="n">c</span> <span class="mi">3</span> <span class="o">-</span><span class="n">r</span> <span class="mi">4</span>
+<code class="docutils literal notranslate"><span class="pre">process</span></code> command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pyrate</span> <span class="n">process</span> <span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">config_file</span> <span class="o">-</span><span class="n">c</span> <span class="mi">3</span> <span class="o">-</span><span class="n">r</span> <span class="mi">4</span>
 </pre></div>
 </div>
 <p>This command will perform the time series and linear rate analysis and
@@ -348,7 +352,7 @@ save geotiff files of the final time series and linear rate products.</p>
 </pre></div>
 </div>
 <p>Make sure to use the same number of rows and columns that was used in
-the previous <code class="docutils literal notranslate"><span class="pre">linrate</span></code> step:</p>
+the previous <code class="docutils literal notranslate"><span class="pre">process</span></code> step:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pyrate</span> <span class="n">postprocess</span> <span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">config_file</span> <span class="o">-</span><span class="n">c</span> <span class="mi">3</span> <span class="o">-</span><span class="n">r</span> <span class="mi">4</span>
 </pre></div>
 </div>

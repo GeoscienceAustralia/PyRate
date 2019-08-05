@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>pyrate.shared &mdash; PyRate 0.3.0 documentation</title>
+  <title>pyrate.shared &mdash; PyRate 0.3.0.post3 documentation</title>
   
 
   
@@ -107,9 +107,10 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../history.html">Release History</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#unreleased-2019-xx-xx">Unreleased (2019-xx-xx)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../history.html#id1">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../history.html#id2">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../history.html#id3">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id4">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id5">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../scripts.html">PyRate Scripts</a><ul>
@@ -1204,11 +1205,12 @@
     <span class="n">zone</span> <span class="o">=</span> <span class="n">_utm_zone</span><span class="p">(</span><span class="n">lon</span><span class="p">)</span>
     <span class="n">p0</span> <span class="o">=</span> <span class="n">pyproj</span><span class="o">.</span><span class="n">Proj</span><span class="p">(</span><span class="n">proj</span><span class="o">=</span><span class="s1">&#39;latlong&#39;</span><span class="p">,</span> <span class="n">ellps</span><span class="o">=</span><span class="s1">&#39;WGS84&#39;</span><span class="p">)</span>
     <span class="n">p1</span> <span class="o">=</span> <span class="n">pyproj</span><span class="o">.</span><span class="n">Proj</span><span class="p">(</span><span class="n">proj</span><span class="o">=</span><span class="s1">&#39;utm&#39;</span><span class="p">,</span> <span class="n">zone</span><span class="o">=</span><span class="n">zone</span><span class="p">,</span> <span class="n">ellps</span><span class="o">=</span><span class="s1">&#39;WGS84&#39;</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="n">p0</span><span class="o">.</span><span class="n">is_latlong</span><span class="p">()</span>
-    <span class="k">assert</span> <span class="ow">not</span> <span class="n">p1</span><span class="o">.</span><span class="n">is_latlong</span><span class="p">()</span>
 
-    <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">pyproj</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">p0</span><span class="p">,</span> <span class="n">p1</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">)</span>
-    <span class="n">x1</span><span class="p">,</span> <span class="n">y1</span> <span class="o">=</span> <span class="n">pyproj</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">p0</span><span class="p">,</span> <span class="n">p1</span><span class="p">,</span> <span class="n">lon</span> <span class="o">+</span> <span class="n">x_step</span><span class="p">,</span> <span class="n">lat</span> <span class="o">+</span> <span class="n">y_step</span><span class="p">)</span>
+    <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">pyproj</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">p0</span><span class="p">,</span> <span class="n">p1</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> 
+        <span class="n">errcheck</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">x1</span><span class="p">,</span> <span class="n">y1</span> <span class="o">=</span> <span class="n">pyproj</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">p0</span><span class="p">,</span> <span class="n">p1</span><span class="p">,</span> <span class="n">lon</span> <span class="o">+</span> <span class="n">x_step</span><span class="p">,</span> <span class="n">lat</span> <span class="o">+</span> <span class="n">y_step</span><span class="p">,</span> 
+        <span class="n">errcheck</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
     <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="p">(</span><span class="n">x1</span> <span class="o">-</span> <span class="n">x0</span><span class="p">,</span> <span class="n">y1</span> <span class="o">-</span> <span class="n">y0</span><span class="p">))</span></div>
 
 
