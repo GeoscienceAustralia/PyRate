@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>GAMMA Module &mdash; PyRate 0.3.0_3 documentation</title>
+  <title>Python Module Index &mdash; PyRate 0.3.0_3 documentation</title>
   
 
   
@@ -36,8 +36,9 @@
   <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="GDAL-Python Bindings Module" href="gdal_python.html" />
-    <link rel="prev" title="Covariance Module" href="covariance.html" /> 
+ 
+
+
 </head>
 
 <body class="wy-body-for-nav">
@@ -83,7 +84,7 @@
               
             
             
-              <ul class="current">
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#ubuntu-18-04">Ubuntu 18.04</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#docker">Docker</a></li>
@@ -122,12 +123,12 @@
 <li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.main.html">PyRate main Script</a></li>
 </ul>
 </li>
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">Pyrate Modules</a><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="modules.html">Pyrate Modules</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="algorithm.html">Algorithm Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="aps.html">Atmospheric Phase Screen Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="config.html">Config Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="covariance.html">Covariance Module</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">GAMMA Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gamma.html">GAMMA Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gdal_python.html">GDAL-Python Bindings Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="linrate.html">Linrate Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="mst.html">Minimum Spanning Tree Module</a></li>
@@ -187,121 +188,139 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-          <li><a href="modules.html">Pyrate Modules</a> &raquo;</li>
-        
-      <li>GAMMA Module</li>
+      <li>Python Module Index</li>
     
     
       <li class="wy-breadcrumbs-aside">
-        
-            
         
       </li>
     
   </ul>
 
   
-  <div class="rst-breadcrumbs-buttons" role="navigation" aria-label="breadcrumb navigation">
-      
-        <a href="gdal_python.html" class="btn btn-neutral float-right" title="GDAL-Python Bindings Module" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="covariance.html" class="btn btn-neutral float-left" title="Covariance Module" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
-  </div>
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="module-pyrate.gamma">
-<span id="gamma-module"></span><h1>GAMMA Module<a class="headerlink" href="#module-pyrate.gamma" title="Permalink to this headline">¶</a></h1>
-<p>This Python module contains tools for reading GAMMA format input data.</p>
-<dl class="exception">
-<dt id="pyrate.gamma.GammaException">
-<em class="property">exception </em><code class="sig-prename descclassname">pyrate.gamma.</code><code class="sig-name descname">GammaException</code><a class="reference internal" href="_modules/pyrate/gamma.html#GammaException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.gamma.GammaException" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gamma generic exception class</p>
-</dd></dl>
 
-<dl class="function">
-<dt id="pyrate.gamma.combine_headers">
-<code class="sig-prename descclassname">pyrate.gamma.</code><code class="sig-name descname">combine_headers</code><span class="sig-paren">(</span><em class="sig-param">hdr0</em>, <em class="sig-param">hdr1</em>, <em class="sig-param">dem_hdr</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/gamma.html#combine_headers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.gamma.combine_headers" title="Permalink to this definition">¶</a></dt>
-<dd><p>Combines metadata for master and slave epochs and DEM into a single
-dictionary for an interferogram.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>hdr0</strong> (<em>dict</em>) – Metadata for the master image</p></li>
-<li><p><strong>hdr1</strong> (<em>dict</em>) – Metadata for the slave image</p></li>
-<li><p><strong>dem_hdr</strong> (<em>dict</em>) – Metadata for the DEM</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>chdr: combined metadata</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>dict</p>
-</dd>
-</dl>
-</dd></dl>
+   <h1>Python Module Index</h1>
 
-<dl class="function">
-<dt id="pyrate.gamma.manage_headers">
-<code class="sig-prename descclassname">pyrate.gamma.</code><code class="sig-name descname">manage_headers</code><span class="sig-paren">(</span><em class="sig-param">dem_header_file</em>, <em class="sig-param">header_paths</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/gamma.html#manage_headers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.gamma.manage_headers" title="Permalink to this definition">¶</a></dt>
-<dd><p>Manage and combine  header files for GAMMA interferograms, DEM and
-incidence files</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>dem_header_file</strong> (<em>str</em>) – DEM header path</p></li>
-<li><p><strong>header_paths</strong> (<em>list</em>) – List of master/slave header paths</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>combined_header: Combined metadata dictionary</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>dict</p>
-</dd>
-</dl>
-</dd></dl>
+   <div class="modindex-jumpbox">
+   <a href="#cap-p"><strong>p</strong></a>
+   </div>
 
-<dl class="function">
-<dt id="pyrate.gamma.parse_dem_header">
-<code class="sig-prename descclassname">pyrate.gamma.</code><code class="sig-name descname">parse_dem_header</code><span class="sig-paren">(</span><em class="sig-param">path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/gamma.html#parse_dem_header"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.gamma.parse_dem_header" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns dictionary of DEM metadata required for PyRate</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>path</strong> (<em>str</em>) – <cite>Full path to Gamma *dem.par file</cite></p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>subset: subset of full metadata</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>dict</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyrate.gamma.parse_epoch_header">
-<code class="sig-prename descclassname">pyrate.gamma.</code><code class="sig-name descname">parse_epoch_header</code><span class="sig-paren">(</span><em class="sig-param">path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/gamma.html#parse_epoch_header"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.gamma.parse_epoch_header" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns dictionary of epoch metadata required for PyRate</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>path</strong> (<em>str</em>) – <cite>Full path to Gamma *slc.par file</cite></p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>subset: subset of full metadata</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>dict</p>
-</dd>
-</dl>
-</dd></dl>
-
-</div>
+   <table class="indextable modindextable">
+     <tr class="pcap"><td></td><td>&#160;</td><td></td></tr>
+     <tr class="cap" id="cap-p"><td></td><td>
+       <strong>p</strong></td><td></td></tr>
+     <tr>
+       <td><img src="_static/minus.png" class="toggler"
+              id="toggle-1" style="display: none" alt="-" /></td>
+       <td>
+       <code class="xref">pyrate</code></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="algorithm.html#module-pyrate.algorithm"><code class="xref">pyrate.algorithm</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="aps.html#module-pyrate.aps"><code class="xref">pyrate.aps</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="config.html#module-pyrate.config"><code class="xref">pyrate.config</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="covariance.html#module-pyrate.covariance"><code class="xref">pyrate.covariance</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="gamma.html#module-pyrate.gamma"><code class="xref">pyrate.gamma</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="gdal_python.html#module-pyrate.gdal_python"><code class="xref">pyrate.gdal_python</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="linrate.html#module-pyrate.linrate"><code class="xref">pyrate.linrate</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="mst.html#module-pyrate.mst"><code class="xref">pyrate.mst</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="orbital.html#module-pyrate.orbital"><code class="xref">pyrate.orbital</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="prepifg.html#module-pyrate.prepifg"><code class="xref">pyrate.prepifg</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="pyratelog.html#module-pyrate.pyratelog"><code class="xref">pyrate.pyratelog</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="ref_phs_est.html#module-pyrate.ref_phs_est"><code class="xref">pyrate.ref_phs_est</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="refpixel.html#module-pyrate.refpixel"><code class="xref">pyrate.refpixel</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="roipac.html#module-pyrate.roipac"><code class="xref">pyrate.roipac</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="pyrate.scripts.main.html#module-pyrate.scripts.main"><code class="xref">pyrate.scripts.main</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="pyrate.scripts.postprocessing.html#module-pyrate.scripts.postprocessing"><code class="xref">pyrate.scripts.postprocessing</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="pyrate.scripts.run_prepifg.html#module-pyrate.scripts.run_prepifg"><code class="xref">pyrate.scripts.run_prepifg</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="pyrate.scripts.run_pyrate.html#module-pyrate.scripts.run_pyrate"><code class="xref">pyrate.scripts.run_pyrate</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="shared.html#module-pyrate.shared"><code class="xref">pyrate.shared</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="timeseries.html#module-pyrate.timeseries"><code class="xref">pyrate.timeseries</code></a></td><td>
+       <em></em></td></tr>
+   </table>
 
 
            </div>

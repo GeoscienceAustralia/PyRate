@@ -1,0 +1,584 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pyrate.covariance &mdash; PyRate 0.3.0_3 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: white" >
+          
+
+          
+            <a href="../../index.html">
+          
+
+          
+            
+            <img src="../../_static/PyRate_logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+    <li><a href="https://geoscienceaustralia.github.io/PyRate/">Home</a></li>
+    
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#ubuntu-18-04">Ubuntu 18.04</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#docker">Docker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#hpc">HPC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#verify-installation">Verify Installation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage.html">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../usage.html#configuration">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage.html#workflow">Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage.html#multiprocessing">Multiprocessing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../contributing.html#types-of-contributions">Types of Contributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../contributing.html#get-started">Get Started!</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../contributing.html#pull-request-guidelines">Pull Request Guidelines</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../authors.html">Credits</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../authors.html#development-lead">Development Lead</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../authors.html#contributors">Contributors</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../history.html">Release History</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#unreleased-2019-xx-xx">Unreleased (2019-xx-xx)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id1">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id4">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id5">0.1.0 (2017-01-31)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../scripts.html">PyRate Scripts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../pyrate.scripts.run_prepifg.html">PyRate run_prepifg Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pyrate.scripts.run_pyrate.html">PyRate run_pyrate Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pyrate.scripts.postprocessing.html">PyRate postprocessing Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pyrate.scripts.main.html">PyRate main Script</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">Pyrate Modules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../algorithm.html">Algorithm Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../aps.html">Atmospheric Phase Screen Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../config.html">Config Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../covariance.html">Covariance Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../gamma.html">GAMMA Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../gdal_python.html">GDAL-Python Bindings Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../linrate.html">Linrate Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../mst.html">Minimum Spanning Tree Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../orbital.html">Orbital Error Correction Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../prepifg.html">Prepifg Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pyratelog.html">Logging Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../ref_phs_est.html">Reference Phase Calculation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../refpixel.html">Reference Pixel Calculation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../roipac.html">ROI_PAC Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../shared.html">Shared Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../timeseries.html">Time Series Module</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">PyRate</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>pyrate.covariance</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pyrate.covariance</h1><div class="highlight"><pre>
+<span></span><span class="c1">#   This Python module is part of the PyRate software package.</span>
+<span class="c1">#</span>
+<span class="c1">#   Copyright 2017 Geoscience Australia</span>
+<span class="c1">#</span>
+<span class="c1">#   Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1">#   you may not use this file except in compliance with the License.</span>
+<span class="c1">#   You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#       http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1">#   Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1">#   distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1">#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1">#   See the License for the specific language governing permissions and</span>
+<span class="c1">#   limitations under the License.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This Python module implements covariance calculation and</span>
+<span class="sd">Variance/Covariance matrix functionality. The algorithms</span>
+<span class="sd">are based on functions &#39;cvdcalc.m&#39; and &#39;vcmt.m&#39; from</span>
+<span class="sd">the Matlab Pirate package.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c1"># coding: utf-8</span>
+<span class="kn">from</span> <span class="nn">os.path</span> <span class="k">import</span> <span class="n">basename</span><span class="p">,</span> <span class="n">join</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="k">import</span> <span class="n">array</span><span class="p">,</span> <span class="n">where</span><span class="p">,</span> <span class="n">isnan</span><span class="p">,</span> <span class="n">real</span><span class="p">,</span> <span class="n">imag</span><span class="p">,</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">meshgrid</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="k">import</span> <span class="n">zeros</span><span class="p">,</span> <span class="n">vstack</span><span class="p">,</span> <span class="n">ceil</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">exp</span><span class="p">,</span> <span class="n">reshape</span>
+<span class="kn">from</span> <span class="nn">numpy.linalg</span> <span class="k">import</span> <span class="n">norm</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.fftpack</span> <span class="k">import</span> <span class="n">fft2</span><span class="p">,</span> <span class="n">ifft2</span><span class="p">,</span> <span class="n">fftshift</span>
+<span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="k">import</span> <span class="n">fmin</span>
+
+<span class="kn">from</span> <span class="nn">pyrate</span> <span class="k">import</span> <span class="n">shared</span>
+<span class="kn">from</span> <span class="nn">pyrate.shared</span> <span class="k">import</span> <span class="n">PrereadIfg</span>
+<span class="kn">from</span> <span class="nn">pyrate.algorithm</span> <span class="k">import</span> <span class="n">master_slave_ids</span>
+<span class="kn">from</span> <span class="nn">pyrate</span> <span class="k">import</span> <span class="n">ifgconstants</span> <span class="k">as</span> <span class="n">ifc</span>
+<span class="kn">from</span> <span class="nn">pyrate</span> <span class="k">import</span> <span class="n">config</span> <span class="k">as</span> <span class="n">cf</span>
+
+<span class="c1"># pylint: disable=too-many-arguments</span>
+<span class="c1"># distance division factor of 1000 converts to km and is needed to match</span>
+<span class="c1"># Matlab code output</span>
+<span class="n">DISTFACT</span> <span class="o">=</span> <span class="mi">1000</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_pendiffexp</span><span class="p">(</span><span class="n">alphamod</span><span class="p">,</span> <span class="n">cvdav</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Fits an exponential model to data.</span>
+
+<span class="sd">    :param float alphamod: Exponential decay exponent.</span>
+<span class="sd">    :param ndarray cvdav: Function magnitude at 0 radius (2 col array of</span>
+<span class="sd">    radius, variance)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># pylint: disable=invalid-name</span>
+    <span class="c1"># maxvar usually at zero lag</span>
+    <span class="n">mx</span> <span class="o">=</span> <span class="n">cvdav</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">norm</span><span class="p">(</span><span class="n">cvdav</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span> <span class="o">-</span> <span class="p">(</span><span class="n">mx</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">alphamod</span> <span class="o">*</span> <span class="n">cvdav</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:])))</span>
+
+
+<span class="c1"># this is not used any more</span>
+<span class="k">def</span> <span class="nf">_unique_points</span><span class="p">(</span><span class="n">points</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns unique points from a list of coordinates.</span>
+
+<span class="sd">    :param points: Sequence of (y,x) or (x,y) tuples.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">vstack</span><span class="p">([</span><span class="n">array</span><span class="p">(</span><span class="n">u</span><span class="p">)</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">points</span><span class="p">)])</span>
+
+
+<div class="viewcode-block" id="cvd"><a class="viewcode-back" href="../../covariance.html#pyrate.covariance.cvd">[docs]</a><span class="k">def</span> <span class="nf">cvd</span><span class="p">(</span><span class="n">ifg_path</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">r_dist</span><span class="p">,</span> <span class="n">calc_alpha</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">write_vals</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">save_acg</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the 1D covariance function of an entire interferogram as the</span>
+<span class="sd">    radial average of its 2D autocorrelation.</span>
+
+<span class="sd">    :param str ifg_path: An interferogram file path. OR</span>
+<span class="sd">    :param Ifg class ifg_path: A pyrate.shared.Ifg class object</span>
+<span class="sd">    :param dict params: Dictionary of configuration parameters</span>
+<span class="sd">    :param ndarray r_dist: Array of distance values from the image centre</span>
+<span class="sd">                (See Rdist class for more details)</span>
+<span class="sd">    :param bool calc_alpha: If True calculate alpha</span>
+<span class="sd">    :param bool write_vals: If True write maxvar and alpha values to</span>
+<span class="sd">                interferogram metadata</span>
+<span class="sd">    :param bool save_acg: If True write autocorrelation and radial distance</span>
+<span class="sd">                data to numpy array file on disk</span>
+
+<span class="sd">    :return: maxvar: The maximum variance (at zero lag)</span>
+<span class="sd">    :rtype: float</span>
+<span class="sd">    :return: alpha: the exponential length-scale of decay factor</span>
+<span class="sd">    :rtype: float</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ifg_path</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>  <span class="c1"># used during MPI</span>
+        <span class="n">ifg</span> <span class="o">=</span> <span class="n">shared</span><span class="o">.</span><span class="n">Ifg</span><span class="p">(</span><span class="n">ifg_path</span><span class="p">)</span>
+        <span class="n">ifg</span><span class="o">.</span><span class="n">open</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ifg</span> <span class="o">=</span> <span class="n">ifg_path</span>
+
+    <span class="n">shared</span><span class="o">.</span><span class="n">nan_and_mm_convert</span><span class="p">(</span><span class="n">ifg</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+    <span class="c1"># calculate 2D auto-correlation of image using the</span>
+    <span class="c1"># spectral method (Wiener-Khinchin theorem)</span>
+    <span class="k">if</span> <span class="n">ifg</span><span class="o">.</span><span class="n">nan_converted</span><span class="p">:</span>  <span class="c1"># if nancoverted earlier, convert nans back to 0&#39;s</span>
+        <span class="n">phase</span> <span class="o">=</span> <span class="n">where</span><span class="p">(</span><span class="n">isnan</span><span class="p">(</span><span class="n">ifg</span><span class="o">.</span><span class="n">phase_data</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">ifg</span><span class="o">.</span><span class="n">phase_data</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">phase</span> <span class="o">=</span> <span class="n">ifg</span><span class="o">.</span><span class="n">phase_data</span>
+
+    <span class="n">maxvar</span><span class="p">,</span> <span class="n">alpha</span> <span class="o">=</span> <span class="n">cvd_from_phase</span><span class="p">(</span><span class="n">phase</span><span class="p">,</span> <span class="n">ifg</span><span class="p">,</span> <span class="n">r_dist</span><span class="p">,</span> <span class="n">calc_alpha</span><span class="p">,</span>
+                                   <span class="n">save_acg</span><span class="o">=</span><span class="n">save_acg</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">write_vals</span><span class="p">:</span>
+        <span class="n">_add_metadata</span><span class="p">(</span><span class="n">ifg</span><span class="p">,</span> <span class="n">maxvar</span><span class="p">,</span> <span class="n">alpha</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ifg_path</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">ifg</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">maxvar</span><span class="p">,</span> <span class="n">alpha</span></div>
+
+
+<span class="k">def</span> <span class="nf">_add_metadata</span><span class="p">(</span><span class="n">ifg</span><span class="p">,</span> <span class="n">maxvar</span><span class="p">,</span> <span class="n">alpha</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convenience function for saving metadata to ifg</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">md</span> <span class="o">=</span> <span class="n">ifg</span><span class="o">.</span><span class="n">meta_data</span>
+    <span class="n">md</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_MAXVAR</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">maxvar</span><span class="p">)</span>
+    <span class="n">md</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_ALPHA</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">alpha</span><span class="p">)</span>
+    <span class="n">ifg</span><span class="o">.</span><span class="n">write_modified_phase</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">_save_cvd_data</span><span class="p">(</span><span class="n">acg</span><span class="p">,</span> <span class="n">r_dist</span><span class="p">,</span> <span class="n">ifg_path</span><span class="p">,</span> <span class="n">outdir</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function to save numpy array of autocorrelation data to disk</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">((</span><span class="n">acg</span><span class="p">,</span> <span class="n">r_dist</span><span class="p">))</span>
+    <span class="n">data_file</span> <span class="o">=</span> <span class="n">join</span><span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="s1">&#39;cvd_data_</span><span class="si">{b}</span><span class="s1">.npy&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">b</span><span class="o">=</span><span class="n">basename</span><span class="p">(</span><span class="n">ifg_path</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]))</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">data_file</span><span class="p">,</span> <span class="n">arr</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="cvd_from_phase"><a class="viewcode-back" href="../../covariance.html#pyrate.covariance.cvd_from_phase">[docs]</a><span class="k">def</span> <span class="nf">cvd_from_phase</span><span class="p">(</span><span class="n">phase</span><span class="p">,</span> <span class="n">ifg</span><span class="p">,</span> <span class="n">r_dist</span><span class="p">,</span> <span class="n">calc_alpha</span><span class="p">,</span> <span class="n">save_acg</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A convenience function used to compute radial autocovariance from phase</span>
+<span class="sd">    data</span>
+
+<span class="sd">    :param ndarray phase: An array of interferogram phase data</span>
+<span class="sd">    :param Ifg class ifg: A pyrate.shared.Ifg class instance</span>
+<span class="sd">    :param ndarray r_dist: Array of distance values from the image centre</span>
+<span class="sd">                (See Rdist class for more details)</span>
+<span class="sd">    :param bool calc_alpha: If True calculate alpha</span>
+<span class="sd">    :param bool save_acg: If True write autocorrelation and radial distance</span>
+<span class="sd">                data to numpy array file on disk</span>
+<span class="sd">    :param dict params: [optional] Dictionary of configuration parameters;</span>
+<span class="sd">                Must be provided if save_acg=True</span>
+
+<span class="sd">    :return: maxvar: The maximum variance (at zero lag)</span>
+<span class="sd">    :rtype: float</span>
+<span class="sd">    :return: alpha: the exponential length-scale of decay factor</span>
+<span class="sd">    :rtype: float</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># pylint: disable=invalid-name</span>
+    <span class="c1"># pylint: disable=too-many-locals</span>
+
+    <span class="n">autocorr_grid</span> <span class="o">=</span> <span class="n">_get_autogrid</span><span class="p">(</span><span class="n">phase</span><span class="p">)</span>
+    <span class="n">acg</span> <span class="o">=</span> <span class="n">reshape</span><span class="p">(</span><span class="n">autocorr_grid</span><span class="p">,</span> <span class="n">phase</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;F&#39;</span><span class="p">)</span>
+    <span class="c1"># Symmetry in image; keep only unique points</span>
+    <span class="c1"># tmp = _unique_points(zip(acg, r_dist))</span>
+    <span class="c1"># Sudipta: Is this faster than keeping only the 1st half as in Matlab?</span>
+    <span class="c1"># Sudipta: Unlikely, as unique_point is a search/comparison,</span>
+    <span class="c1"># whereas keeping 1st half is just numpy indexing.</span>
+    <span class="c1"># If it is not faster, why was this done differently here?</span>
+    <span class="c1"># r_dist = r_dist[:int(ceil(phase.size / 2.0)) + nrows]</span>
+    <span class="n">acg</span> <span class="o">=</span> <span class="n">acg</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="n">r_dist</span><span class="p">)]</span>
+    <span class="c1"># Alternative method to remove duplicate cells (from Matlab Pirate code)</span>
+    <span class="c1"># r_dist = r_dist[:ceil(len(r_dist)/2)+nlines]</span>
+    <span class="c1">#  Reason for &#39;+nlines&#39; term unknown</span>
+    <span class="c1"># eg. array([x for x in set([(1,1), (2,2), (1,1)])])</span>
+    <span class="c1"># the above shortens r_dist by some number of cells</span>
+
+    <span class="c1"># pick the smallest axis to determine circle search radius</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">ifg</span><span class="o">.</span><span class="n">x_centre</span> <span class="o">*</span> <span class="n">ifg</span><span class="o">.</span><span class="n">x_size</span><span class="p">)</span> <span class="o">&lt;</span> <span class="p">(</span><span class="n">ifg</span><span class="o">.</span><span class="n">y_centre</span> <span class="o">*</span> <span class="n">ifg</span><span class="o">.</span><span class="n">y_size</span><span class="p">):</span>
+        <span class="n">maxdist</span> <span class="o">=</span> <span class="p">(</span><span class="n">ifg</span><span class="o">.</span><span class="n">x_centre</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">ifg</span><span class="o">.</span><span class="n">x_size</span> <span class="o">/</span> <span class="n">DISTFACT</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">maxdist</span> <span class="o">=</span> <span class="p">(</span><span class="n">ifg</span><span class="o">.</span><span class="n">y_centre</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">ifg</span><span class="o">.</span><span class="n">y_size</span> <span class="o">/</span> <span class="n">DISTFACT</span>
+
+    <span class="c1"># filter out data where the of lag distance is greater than maxdist</span>
+    <span class="c1"># r_dist = array([e for e in rorig if e &lt;= maxdist]) #</span>
+    <span class="c1"># MG: prefers to use all the data</span>
+    <span class="c1"># acg = array([e for e in rorig if e &lt;= maxdist])</span>
+    <span class="n">indices_to_keep</span> <span class="o">=</span> <span class="n">r_dist</span> <span class="o">&lt;</span> <span class="n">maxdist</span>
+    <span class="n">acg</span> <span class="o">=</span> <span class="n">acg</span><span class="p">[</span><span class="n">indices_to_keep</span><span class="p">]</span>
+
+    <span class="c1"># optionally save acg vs dist observations to disk</span>
+    <span class="k">if</span> <span class="n">save_acg</span><span class="p">:</span>
+        <span class="n">_save_cvd_data</span><span class="p">(</span><span class="n">acg</span><span class="p">,</span> <span class="n">r_dist</span><span class="p">[</span><span class="n">indices_to_keep</span><span class="p">],</span>
+                       <span class="n">ifg</span><span class="o">.</span><span class="n">data_path</span><span class="p">,</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TMPDIR</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">calc_alpha</span><span class="p">:</span>
+        <span class="c1"># bin width for collecting data</span>
+        <span class="n">bin_width</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">ifg</span><span class="o">.</span><span class="n">x_size</span><span class="p">,</span> <span class="n">ifg</span><span class="o">.</span><span class="n">y_size</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">/</span> <span class="n">DISTFACT</span>  <span class="c1"># km</span>
+        <span class="n">r_dist</span> <span class="o">=</span> <span class="n">r_dist</span><span class="p">[</span><span class="n">indices_to_keep</span><span class="p">]</span>  <span class="c1"># km</span>
+        <span class="c1"># classify values of r_dist according to bin number</span>
+        <span class="n">rbin</span> <span class="o">=</span> <span class="n">ceil</span><span class="p">(</span><span class="n">r_dist</span> <span class="o">/</span> <span class="n">bin_width</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">maxbin</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">rbin</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>  <span class="c1"># consistent with Matlab code</span>
+
+        <span class="n">cvdav</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">maxbin</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+
+        <span class="c1"># the following stays in numpy land</span>
+        <span class="c1"># distance instead of bin number</span>
+        <span class="n">cvdav</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">maxbin</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">bin_width</span><span class="p">)</span>
+        <span class="c1"># mean variance for the bins</span>
+        <span class="n">cvdav</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="p">[</span><span class="n">mean</span><span class="p">(</span><span class="n">acg</span><span class="p">[</span><span class="n">rbin</span> <span class="o">==</span> <span class="n">b</span><span class="p">])</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">maxbin</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span>
+        <span class="c1"># calculate best fit function maxvar*exp(-alpha*r_dist)</span>
+        <span class="n">alphaguess</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="n">maxbin</span> <span class="o">*</span> <span class="n">bin_width</span><span class="p">)</span>
+        <span class="n">alpha</span> <span class="o">=</span> <span class="n">fmin</span><span class="p">(</span><span class="n">_pendiffexp</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="n">alphaguess</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">cvdav</span><span class="p">,),</span> <span class="n">disp</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                     <span class="n">xtol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span> <span class="n">ftol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;1st guess alpha </span><span class="si">{}</span><span class="s2">, converged &quot;</span>
+                 <span class="s2">&quot;alpha: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">alphaguess</span><span class="p">,</span> <span class="n">alpha</span><span class="p">))</span>
+        <span class="c1"># maximum variance usually at the zero lag: max(acg[:len(r_dist)])</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">acg</span><span class="p">),</span> <span class="n">alpha</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># alpha unit 1/km</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">acg</span><span class="p">),</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="RDist"><a class="viewcode-back" href="../../covariance.html#pyrate.covariance.RDist">[docs]</a><span class="k">class</span> <span class="nc">RDist</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    RDist class used for caching r_dist during maxvar/alpha computation</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># pylint: disable=invalid-name</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ifg</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">r_dist</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ifg</span> <span class="o">=</span> <span class="n">ifg</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nrows</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ncols</span> <span class="o">=</span> <span class="n">ifg</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">r_dist</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nrows</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">ncols</span>
+            <span class="c1"># pixel distances from pixel at zero lag (image centre).</span>
+            <span class="n">xx</span><span class="p">,</span> <span class="n">yy</span> <span class="o">=</span> <span class="n">meshgrid</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ncols</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nrows</span><span class="p">))</span>
+            <span class="c1"># r_dist is distance from the center</span>
+            <span class="c1"># doing np.divide and np.sqrt will improve performance as it keeps</span>
+            <span class="c1"># calculations in the numpy land</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">r_dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(((</span><span class="n">xx</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">ifg</span><span class="o">.</span><span class="n">x_centre</span><span class="p">)</span> <span class="o">*</span>
+                                             <span class="bp">self</span><span class="o">.</span><span class="n">ifg</span><span class="o">.</span><span class="n">x_size</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span>
+                                            <span class="p">((</span><span class="n">yy</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">ifg</span><span class="o">.</span><span class="n">y_centre</span><span class="p">)</span> <span class="o">*</span>
+                                             <span class="bp">self</span><span class="o">.</span><span class="n">ifg</span><span class="o">.</span><span class="n">y_size</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">),</span>
+                                    <span class="n">DISTFACT</span><span class="p">)</span>  <span class="c1"># km</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">r_dist</span> <span class="o">=</span> <span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">r_dist</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;F&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">r_dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">r_dist</span><span class="p">[:</span><span class="nb">int</span><span class="p">(</span><span class="n">ceil</span><span class="p">(</span><span class="n">size</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">))</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">nrows</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">r_dist</span></div>
+
+
+<span class="k">def</span> <span class="nf">_get_autogrid</span><span class="p">(</span><span class="n">phase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Helper function to assist with memory re-allocation during FFT calculation</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">autocorr_grid</span> <span class="o">=</span> <span class="n">_calc_autoc_grid</span><span class="p">(</span><span class="n">phase</span><span class="p">)</span>
+    <span class="n">nzc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">phase</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">))</span>
+    <span class="n">autocorr_grid</span> <span class="o">=</span> <span class="n">fftshift</span><span class="p">(</span><span class="n">real</span><span class="p">(</span><span class="n">autocorr_grid</span><span class="p">))</span> <span class="o">/</span> <span class="n">nzc</span>
+    <span class="k">return</span> <span class="n">autocorr_grid</span>
+
+
+<span class="k">def</span> <span class="nf">_calc_autoc_grid</span><span class="p">(</span><span class="n">phase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Helper function to assist with memory re-allocation during FFT calculation</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">pspec</span> <span class="o">=</span> <span class="n">_calc_power_spectrum</span><span class="p">(</span><span class="n">phase</span><span class="p">)</span>
+    <span class="n">autocorr_grid</span> <span class="o">=</span> <span class="n">ifft2</span><span class="p">(</span><span class="n">pspec</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">autocorr_grid</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex64</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_calc_power_spectrum</span><span class="p">(</span><span class="n">phase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Helper function to assist with memory re-allocation during FFT calculation</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fft_phase</span> <span class="o">=</span> <span class="n">fft2</span><span class="p">(</span><span class="n">phase</span><span class="p">)</span>
+    <span class="n">pspec</span> <span class="o">=</span> <span class="n">real</span><span class="p">(</span><span class="n">fft_phase</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">imag</span><span class="p">(</span><span class="n">fft_phase</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="k">return</span> <span class="n">pspec</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="get_vcmt"><a class="viewcode-back" href="../../covariance.html#pyrate.covariance.get_vcmt">[docs]</a><span class="k">def</span> <span class="nf">get_vcmt</span><span class="p">(</span><span class="n">ifgs</span><span class="p">,</span> <span class="n">maxvar</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Assembles a temporal variance/covariance matrix using the method</span>
+<span class="sd">    described by Biggs et al., Geophys. J. Int, 2007. Matrix elements are</span>
+<span class="sd">    evaluated according to sig_i * sig_j * C_ij where i and j are two</span>
+<span class="sd">    interferograms and C is a matrix of coefficients:</span>
+
+<span class="sd">    C = 1 if the master and slave epochs of i and j are equal</span>
+<span class="sd">    C = 0.5 if have i and j share either a common master or slave epoch</span>
+<span class="sd">    C = -0.5 if the master of i or j equals the slave of the other</span>
+<span class="sd">    C = 0 otherwise</span>
+
+<span class="sd">    :param list ifgs: A list of pyrate.shared.Ifg class objects.</span>
+<span class="sd">    :param ndarray maxvar: numpy array of maximum variance values for the</span>
+<span class="sd">                interferograms.</span>
+
+<span class="sd">    :return: vcm_t: temporal variance-covariance matrix</span>
+<span class="sd">    :rtype: ndarray</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># pylint: disable=too-many-locals</span>
+    <span class="c1"># c=0.5 for common master or slave; c=-0.5 if master</span>
+    <span class="c1"># of one matches slave of another</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ifgs</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">OrderedDict</span>
+        <span class="n">ifgs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">ifgs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">PrereadIfg</span><span class="p">)}</span>
+        <span class="n">ifgs</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">ifgs</span><span class="o">.</span><span class="n">items</span><span class="p">()))</span>
+        <span class="c1"># pylint: disable=redefined-variable-type</span>
+        <span class="n">ifgs</span> <span class="o">=</span> <span class="n">ifgs</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+
+    <span class="n">nifgs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ifgs</span><span class="p">)</span>
+    <span class="n">vcm_pat</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">((</span><span class="n">nifgs</span><span class="p">,</span> <span class="n">nifgs</span><span class="p">))</span>
+
+    <span class="n">dates</span> <span class="o">=</span> <span class="p">[</span><span class="n">ifg</span><span class="o">.</span><span class="n">master</span> <span class="k">for</span> <span class="n">ifg</span> <span class="ow">in</span> <span class="n">ifgs</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">ifg</span><span class="o">.</span><span class="n">slave</span> <span class="k">for</span> <span class="n">ifg</span> <span class="ow">in</span> <span class="n">ifgs</span><span class="p">]</span>
+    <span class="n">ids</span> <span class="o">=</span> <span class="n">master_slave_ids</span><span class="p">(</span><span class="n">dates</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ifg</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ifgs</span><span class="p">):</span>
+        <span class="n">mas1</span><span class="p">,</span> <span class="n">slv1</span> <span class="o">=</span> <span class="n">ids</span><span class="p">[</span><span class="n">ifg</span><span class="o">.</span><span class="n">master</span><span class="p">],</span> <span class="n">ids</span><span class="p">[</span><span class="n">ifg</span><span class="o">.</span><span class="n">slave</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">ifg2</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ifgs</span><span class="p">):</span>
+            <span class="n">mas2</span><span class="p">,</span> <span class="n">slv2</span> <span class="o">=</span> <span class="n">ids</span><span class="p">[</span><span class="n">ifg2</span><span class="o">.</span><span class="n">master</span><span class="p">],</span> <span class="n">ids</span><span class="p">[</span><span class="n">ifg2</span><span class="o">.</span><span class="n">slave</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">mas1</span> <span class="o">==</span> <span class="n">mas2</span> <span class="ow">or</span> <span class="n">slv1</span> <span class="o">==</span> <span class="n">slv2</span><span class="p">:</span>
+                <span class="n">vcm_pat</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span>
+
+            <span class="k">if</span> <span class="n">mas1</span> <span class="o">==</span> <span class="n">slv2</span> <span class="ow">or</span> <span class="n">slv1</span> <span class="o">==</span> <span class="n">mas2</span><span class="p">:</span>
+                <span class="n">vcm_pat</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.5</span>
+
+            <span class="k">if</span> <span class="n">mas1</span> <span class="o">==</span> <span class="n">mas2</span> <span class="ow">and</span> <span class="n">slv1</span> <span class="o">==</span> <span class="n">slv2</span><span class="p">:</span>
+                <span class="n">vcm_pat</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>  <span class="c1"># diagonal elements</span>
+
+    <span class="c1"># make covariance matrix in time domain</span>
+    <span class="n">std</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">maxvar</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">nifgs</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">vcm_t</span> <span class="o">=</span> <span class="n">std</span> <span class="o">*</span> <span class="n">std</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">vcm_t</span> <span class="o">*</span> <span class="n">vcm_pat</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Geoscience Australia
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+  
+<p>asdasdasd</p>
+        <!-- your html code here -->
+ 
+
+
+</body>
+</html>

@@ -1,0 +1,757 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pyrate.prepifg &mdash; PyRate 0.3.0_3 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: white" >
+          
+
+          
+            <a href="../../index.html">
+          
+
+          
+            
+            <img src="../../_static/PyRate_logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+    <li><a href="https://geoscienceaustralia.github.io/PyRate/">Home</a></li>
+    
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#ubuntu-18-04">Ubuntu 18.04</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#docker">Docker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#hpc">HPC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#verify-installation">Verify Installation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage.html">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../usage.html#configuration">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage.html#workflow">Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage.html#multiprocessing">Multiprocessing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../contributing.html#types-of-contributions">Types of Contributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../contributing.html#get-started">Get Started!</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../contributing.html#pull-request-guidelines">Pull Request Guidelines</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../authors.html">Credits</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../authors.html#development-lead">Development Lead</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../authors.html#contributors">Contributors</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../history.html">Release History</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#unreleased-2019-xx-xx">Unreleased (2019-xx-xx)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id1">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id4">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id5">0.1.0 (2017-01-31)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../scripts.html">PyRate Scripts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../pyrate.scripts.run_prepifg.html">PyRate run_prepifg Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pyrate.scripts.run_pyrate.html">PyRate run_pyrate Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pyrate.scripts.postprocessing.html">PyRate postprocessing Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pyrate.scripts.main.html">PyRate main Script</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">Pyrate Modules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../algorithm.html">Algorithm Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../aps.html">Atmospheric Phase Screen Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../config.html">Config Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../covariance.html">Covariance Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../gamma.html">GAMMA Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../gdal_python.html">GDAL-Python Bindings Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../linrate.html">Linrate Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../mst.html">Minimum Spanning Tree Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../orbital.html">Orbital Error Correction Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../prepifg.html">Prepifg Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pyratelog.html">Logging Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../ref_phs_est.html">Reference Phase Calculation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../refpixel.html">Reference Pixel Calculation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../roipac.html">ROI_PAC Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../shared.html">Shared Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../timeseries.html">Time Series Module</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">PyRate</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>pyrate.prepifg</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pyrate.prepifg</h1><div class="highlight"><pre>
+<span></span><span class="c1">#   This Python module is part of the PyRate software package</span>
+<span class="c1">#</span>
+<span class="c1">#   Copyright 2017 Geoscience Australia</span>
+<span class="c1">#</span>
+<span class="c1">#   Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1">#   you may not use this file except in compliance with the License.</span>
+<span class="c1">#   You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#       http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1">#   Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1">#   distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1">#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1">#   See the License for the specific language governing permissions and</span>
+<span class="c1">#   limitations under the License.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This Python module converts interferogram input files to a common geotiff</span>
+<span class="sd">format with PyRate specific metadata headers. The module also implements</span>
+<span class="sd">multilooking/downsampling and cropping operations to reduce the size of</span>
+<span class="sd">the computational problem.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c1"># pylint: disable=too-many-arguments,invalid-name</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">namedtuple</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="k">import</span> <span class="n">modf</span>
+<span class="kn">from</span> <span class="nn">numbers</span> <span class="k">import</span> <span class="n">Number</span>
+<span class="kn">from</span> <span class="nn">subprocess</span> <span class="k">import</span> <span class="n">check_call</span>
+<span class="kn">from</span> <span class="nn">tempfile</span> <span class="k">import</span> <span class="n">mkstemp</span>
+
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="k">import</span> <span class="n">array</span><span class="p">,</span> <span class="n">where</span><span class="p">,</span> <span class="n">nan</span><span class="p">,</span> <span class="n">isnan</span><span class="p">,</span> <span class="n">nanmean</span><span class="p">,</span> <span class="n">float32</span><span class="p">,</span> <span class="n">zeros</span><span class="p">,</span> \
+    <span class="nb">sum</span> <span class="k">as</span> <span class="n">nsum</span>
+<span class="kn">from</span> <span class="nn">osgeo</span> <span class="k">import</span> <span class="n">gdal</span>
+
+<span class="kn">from</span> <span class="nn">pyrate</span> <span class="k">import</span> <span class="n">config</span> <span class="k">as</span> <span class="n">cf</span>
+<span class="kn">from</span> <span class="nn">pyrate</span> <span class="k">import</span> <span class="n">gdal_python</span> <span class="k">as</span> <span class="n">gdalwarp</span>
+<span class="kn">from</span> <span class="nn">pyrate</span> <span class="k">import</span> <span class="n">ifgconstants</span> <span class="k">as</span> <span class="n">ifc</span>
+<span class="kn">from</span> <span class="nn">pyrate.shared</span> <span class="k">import</span> <span class="n">Ifg</span><span class="p">,</span> <span class="n">DEM</span>
+
+<span class="n">CustomExts</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s1">&#39;CustExtents&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;xfirst&#39;</span><span class="p">,</span> <span class="s1">&#39;yfirst&#39;</span><span class="p">,</span> <span class="s1">&#39;xlast&#39;</span><span class="p">,</span> <span class="s1">&#39;ylast&#39;</span><span class="p">])</span>
+
+
+<span class="c1"># Constants</span>
+<span class="n">MINIMUM_CROP</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">MAXIMUM_CROP</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">CUSTOM_CROP</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="n">ALREADY_SAME_SIZE</span> <span class="o">=</span> <span class="mi">4</span>
+<span class="n">CROP_OPTIONS</span> <span class="o">=</span> <span class="p">[</span><span class="n">MINIMUM_CROP</span><span class="p">,</span> <span class="n">MAXIMUM_CROP</span><span class="p">,</span> <span class="n">CUSTOM_CROP</span><span class="p">,</span> <span class="n">ALREADY_SAME_SIZE</span><span class="p">]</span>
+
+<span class="n">GRID_TOL</span> <span class="o">=</span> <span class="mf">1e-6</span>
+
+
+<div class="viewcode-block" id="get_analysis_extent"><a class="viewcode-back" href="../../prepifg.html#pyrate.prepifg.get_analysis_extent">[docs]</a><span class="k">def</span> <span class="nf">get_analysis_extent</span><span class="p">(</span><span class="n">crop_opt</span><span class="p">,</span> <span class="n">rasters</span><span class="p">,</span> <span class="n">xlooks</span><span class="p">,</span> <span class="n">ylooks</span><span class="p">,</span> <span class="n">user_exts</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function checks prepifg parameters and returns extents/bounding box.</span>
+
+<span class="sd">    :param int crop_opt: Cropping option</span>
+<span class="sd">    :param list rasters: List of either Ifg or DEM class objects</span>
+<span class="sd">    :param int xlooks: Number of multi-looks in x</span>
+<span class="sd">    :param int ylooks: Number of multi-looks in y</span>
+<span class="sd">    :param tuple user_exts: Tuple of user defined cropping coordinates</span>
+
+<span class="sd">    :return: extents: tuple of four bounding coordinates</span>
+<span class="sd">    :rtype: tuple</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">crop_opt</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">CROP_OPTIONS</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">PreprocessError</span><span class="p">(</span><span class="s2">&quot;Unrecognised crop option: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">crop_opt</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">crop_opt</span> <span class="o">==</span> <span class="n">CUSTOM_CROP</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">user_exts</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PreprocessError</span><span class="p">(</span><span class="s1">&#39;No custom cropping extents specified&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">user_exts</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">4</span><span class="p">:</span>  <span class="c1"># check for required numbers</span>
+            <span class="k">raise</span> <span class="n">PreprocessError</span><span class="p">(</span><span class="s1">&#39;Custom extents must have all 4 values&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">user_exts</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>  <span class="c1"># check for non floats</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([</span><span class="n">_is_number</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">user_exts</span><span class="p">]):</span>
+                <span class="k">raise</span> <span class="n">PreprocessError</span><span class="p">(</span><span class="s1">&#39;Custom extents must be 4 numbers&#39;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">raster</span> <span class="ow">in</span> <span class="n">rasters</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">raster</span><span class="o">.</span><span class="n">is_open</span><span class="p">:</span>
+            <span class="n">raster</span><span class="o">.</span><span class="n">open</span><span class="p">()</span>
+
+    <span class="n">_check_looks</span><span class="p">(</span><span class="n">xlooks</span><span class="p">,</span> <span class="n">ylooks</span><span class="p">)</span>
+    <span class="n">_check_resolution</span><span class="p">(</span><span class="n">rasters</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">_get_extents</span><span class="p">(</span><span class="n">rasters</span><span class="p">,</span> <span class="n">crop_opt</span><span class="p">,</span> <span class="n">user_exts</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">_is_number</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check whether string can be converted to float</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="nb">float</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>  <span class="c1"># for example if &#39;None&#39; is sent</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>  <span class="c1"># for example if a &#39;string&#39; is sent</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+
+<span class="k">def</span> <span class="nf">_check_looks</span><span class="p">(</span><span class="n">xlooks</span><span class="p">,</span> <span class="n">ylooks</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convenience function to verify that looks parameters are valid.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">xlooks</span><span class="p">,</span> <span class="n">Number</span><span class="p">)</span> <span class="ow">and</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">ylooks</span><span class="p">,</span> <span class="n">Number</span><span class="p">)):</span>  <span class="c1"># pragma: no cover</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Non-numeric looks parameter(s), x: </span><span class="si">%s</span><span class="s2">, y: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">xlooks</span><span class="p">,</span> <span class="n">ylooks</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">PreprocessError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">xlooks</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">ylooks</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Invalid looks parameter(s), x: </span><span class="si">%s</span><span class="s2">, y: </span><span class="si">%s</span><span class="s2">. &quot;</span> \
+              <span class="s2">&quot;Looks must be an integer greater than zero&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">xlooks</span><span class="p">,</span> <span class="n">ylooks</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">PreprocessError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_check_resolution</span><span class="p">(</span><span class="n">ifgs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convenience function to verify Ifg resolutions are equal.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;x_step&#39;</span><span class="p">,</span> <span class="s1">&#39;y_step&#39;</span><span class="p">]:</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">array</span><span class="p">([</span><span class="nb">getattr</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">var</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ifgs</span><span class="p">])</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">values</span> <span class="o">==</span> <span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>  <span class="c1"># pragma: no cover</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Grid resolution does not match for </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">var</span>
+            <span class="k">raise</span> <span class="n">PreprocessError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_get_extents</span><span class="p">(</span><span class="n">ifgs</span><span class="p">,</span> <span class="n">crop_opt</span><span class="p">,</span> <span class="n">user_exts</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convenience function that returns extents/bounding box.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">crop_opt</span> <span class="o">==</span> <span class="n">MINIMUM_CROP</span><span class="p">:</span>
+        <span class="n">extents</span> <span class="o">=</span> <span class="n">_min_bounds</span><span class="p">(</span><span class="n">ifgs</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">crop_opt</span> <span class="o">==</span> <span class="n">MAXIMUM_CROP</span><span class="p">:</span>
+        <span class="n">extents</span> <span class="o">=</span> <span class="n">_max_bounds</span><span class="p">(</span><span class="n">ifgs</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">crop_opt</span> <span class="o">==</span> <span class="n">CUSTOM_CROP</span><span class="p">:</span>
+        <span class="n">extents</span> <span class="o">=</span> <span class="n">_custom_bounds</span><span class="p">(</span><span class="n">ifgs</span><span class="p">,</span> <span class="o">*</span><span class="n">user_exts</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">extents</span> <span class="o">=</span> <span class="n">_get_same_bounds</span><span class="p">(</span><span class="n">ifgs</span><span class="p">)</span>
+
+    <span class="n">_check_crop_coords</span><span class="p">(</span><span class="n">ifgs</span><span class="p">,</span> <span class="o">*</span><span class="n">extents</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">extents</span>
+
+
+<div class="viewcode-block" id="prepare_ifg"><a class="viewcode-back" href="../../prepifg.html#pyrate.prepifg.prepare_ifg">[docs]</a><span class="k">def</span> <span class="nf">prepare_ifg</span><span class="p">(</span><span class="n">raster_path</span><span class="p">,</span> <span class="n">xlooks</span><span class="p">,</span> <span class="n">ylooks</span><span class="p">,</span> <span class="n">exts</span><span class="p">,</span> <span class="n">thresh</span><span class="p">,</span> <span class="n">crop_opt</span><span class="p">,</span>
+                <span class="n">write_to_disk</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Open, resample, crop and optionally save to disk an interferogram or DEM.</span>
+<span class="sd">    Returns are only given if write_to_disk=False</span>
+
+<span class="sd">    :param str raster_path: Raster file path name</span>
+<span class="sd">    :param int xlooks: Number of multi-looks in x; 5 is 5 times smaller,</span>
+<span class="sd">        1 is no change</span>
+<span class="sd">    :param int ylooks: Number of multi-looks in y</span>
+<span class="sd">    :param tuple exts: Tuple of user defined georeferenced extents for</span>
+<span class="sd">        new file: (xfirst, yfirst, xlast, ylast)cropping coordinates</span>
+<span class="sd">    :param float thresh: see thresh in prepare_ifgs()</span>
+<span class="sd">    :param int crop_opt: Crop option</span>
+<span class="sd">    :param bool write_to_disk: Write new data to disk</span>
+
+<span class="sd">    :return: resampled_data: output cropped and resampled image</span>
+<span class="sd">    :rtype: ndarray</span>
+<span class="sd">    :return: out_ds: destination gdal dataset object</span>
+<span class="sd">    :rtype: gdal.Dataset</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">do_multilook</span> <span class="o">=</span> <span class="n">xlooks</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">ylooks</span> <span class="o">&gt;</span> <span class="mi">1</span>
+    <span class="c1"># resolution=None completes faster for non-multilooked layers in gdalwarp</span>
+    <span class="n">resolution</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+    <span class="n">raster</span> <span class="o">=</span> <span class="n">dem_or_ifg</span><span class="p">(</span><span class="n">raster_path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">raster</span><span class="o">.</span><span class="n">is_open</span><span class="p">:</span>
+        <span class="n">raster</span><span class="o">.</span><span class="n">open</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">do_multilook</span><span class="p">:</span>
+        <span class="n">resolution</span> <span class="o">=</span> <span class="p">[</span><span class="n">xlooks</span> <span class="o">*</span> <span class="n">raster</span><span class="o">.</span><span class="n">x_step</span><span class="p">,</span> <span class="n">ylooks</span> <span class="o">*</span> <span class="n">raster</span><span class="o">.</span><span class="n">y_step</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">do_multilook</span> <span class="ow">and</span> <span class="n">crop_opt</span> <span class="o">==</span> <span class="n">ALREADY_SAME_SIZE</span><span class="p">:</span>
+        <span class="n">renamed_path</span> <span class="o">=</span> \
+            <span class="n">cf</span><span class="o">.</span><span class="n">mlooked_path</span><span class="p">(</span><span class="n">raster</span><span class="o">.</span><span class="n">data_path</span><span class="p">,</span> <span class="n">looks</span><span class="o">=</span><span class="n">xlooks</span><span class="p">,</span> <span class="n">crop_out</span><span class="o">=</span><span class="n">crop_opt</span><span class="p">)</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">raster</span><span class="o">.</span><span class="n">data_path</span><span class="p">,</span> <span class="n">renamed_path</span><span class="p">)</span>
+        <span class="c1"># set metadata to indicated has been cropped and multilooked</span>
+        <span class="c1"># copy file with mlooked path</span>
+        <span class="k">return</span> <span class="n">_dummy_warp</span><span class="p">(</span><span class="n">renamed_path</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">_warp</span><span class="p">(</span><span class="n">raster</span><span class="p">,</span> <span class="n">xlooks</span><span class="p">,</span> <span class="n">ylooks</span><span class="p">,</span> <span class="n">exts</span><span class="p">,</span> <span class="n">resolution</span><span class="p">,</span> <span class="n">thresh</span><span class="p">,</span>
+                 <span class="n">crop_opt</span><span class="p">,</span> <span class="n">write_to_disk</span><span class="p">)</span></div>
+
+
+<span class="c1"># TODO: crop options 0 = no cropping? get rid of same size</span>
+<div class="viewcode-block" id="prepare_ifgs"><a class="viewcode-back" href="../../prepifg.html#pyrate.prepifg.prepare_ifgs">[docs]</a><span class="k">def</span> <span class="nf">prepare_ifgs</span><span class="p">(</span><span class="n">raster_data_paths</span><span class="p">,</span> <span class="n">crop_opt</span><span class="p">,</span> <span class="n">xlooks</span><span class="p">,</span> <span class="n">ylooks</span><span class="p">,</span> <span class="n">thresh</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+                 <span class="n">user_exts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">write_to_disc</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Wrapper function to prepare a sequence of interferogram files for</span>
+<span class="sd">    PyRate analysis. See prepifg.prepare_ifg() for full description of</span>
+<span class="sd">    inputs and returns.</span>
+<span class="sd">    </span>
+<span class="sd">    Note: function need refining for crop options</span>
+
+<span class="sd">    :param list raster_data_paths: List of interferogram file paths</span>
+<span class="sd">    :param int crop_opt: Crop option</span>
+<span class="sd">    :param int xlooks: Number of multi-looks in x; 5 is 5 times smaller,</span>
+<span class="sd">        1 is no change</span>
+<span class="sd">    :param int ylooks: Number of multi-looks in y</span>
+<span class="sd">    :param float thresh: see thresh in prepare_ifgs()</span>
+<span class="sd">    :param tuple user_exts: Tuple of user defined georeferenced extents for</span>
+<span class="sd">        new file: (xfirst, yfirst, xlast, ylast)cropping coordinates</span>
+<span class="sd">    :param bool write_to_disk: Write new data to disk</span>
+
+<span class="sd">    :return: resampled_data: output cropped and resampled image</span>
+<span class="sd">    :rtype: ndarray</span>
+<span class="sd">    :return: out_ds: destination gdal dataset object</span>
+<span class="sd">    :rtype: gdal.Dataset</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># use metadata check to check whether it&#39;s a dem or ifg</span>
+    <span class="n">rasters</span> <span class="o">=</span> <span class="p">[</span><span class="n">dem_or_ifg</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">raster_data_paths</span><span class="p">]</span>
+    <span class="n">exts</span> <span class="o">=</span> <span class="n">get_analysis_extent</span><span class="p">(</span><span class="n">crop_opt</span><span class="p">,</span> <span class="n">rasters</span><span class="p">,</span> <span class="n">xlooks</span><span class="p">,</span> <span class="n">ylooks</span><span class="p">,</span> <span class="n">user_exts</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">[</span><span class="n">prepare_ifg</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">xlooks</span><span class="p">,</span> <span class="n">ylooks</span><span class="p">,</span> <span class="n">exts</span><span class="p">,</span> <span class="n">thresh</span><span class="p">,</span> <span class="n">crop_opt</span><span class="p">,</span>
+                        <span class="n">write_to_disc</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">raster_data_paths</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="dem_or_ifg"><a class="viewcode-back" href="../../prepifg.html#pyrate.prepifg.dem_or_ifg">[docs]</a><span class="k">def</span> <span class="nf">dem_or_ifg</span><span class="p">(</span><span class="n">data_path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns an Ifg or DEM class object from input geotiff file.</span>
+
+<span class="sd">    :param str data_path: file path name</span>
+
+<span class="sd">    :return: Interferogram or DEM object from input file</span>
+<span class="sd">    :rtype: Ifg or DEM class object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ds</span> <span class="o">=</span> <span class="n">gdal</span><span class="o">.</span><span class="n">Open</span><span class="p">(</span><span class="n">data_path</span><span class="p">)</span>
+    <span class="n">md</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">GetMetadata</span><span class="p">()</span>
+    <span class="k">if</span> <span class="s1">&#39;DATE&#39;</span> <span class="ow">in</span> <span class="n">md</span><span class="p">:</span>  <span class="c1"># ifg</span>
+        <span class="k">return</span> <span class="n">Ifg</span><span class="p">(</span><span class="n">data_path</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">DEM</span><span class="p">(</span><span class="n">data_path</span><span class="p">)</span></div>
+
+
+<span class="c1"># TODO: Not currently used; remove in future?</span>
+<span class="k">def</span> <span class="nf">_file_ext</span><span class="p">(</span><span class="n">raster</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns file ext string based on type of raster.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">raster</span><span class="p">,</span> <span class="n">Ifg</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;tif&quot;</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">raster</span><span class="p">,</span> <span class="n">DEM</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;dem&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># TODO: several possible file types to implement:</span>
+        <span class="c1"># Coherence file: single band</span>
+        <span class="c1"># LOS file:  has 2 bands: beam incidence angle &amp; ground azimuth)</span>
+        <span class="c1"># Baseline file: perpendicular baselines (single band?)</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Missing raster types for LOS, Coherence and baseline&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_dummy_warp</span><span class="p">(</span><span class="n">renamed_path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convenience dummy operation for when no multi-looking or cropping</span>
+<span class="sd">    required</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ifg</span> <span class="o">=</span> <span class="n">dem_or_ifg</span><span class="p">(</span><span class="n">renamed_path</span><span class="p">)</span>
+    <span class="n">ifg</span><span class="o">.</span><span class="n">open</span><span class="p">()</span>
+    <span class="n">ifg</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">SetMetadataItem</span><span class="p">(</span><span class="n">ifc</span><span class="o">.</span><span class="n">DATA_TYPE</span><span class="p">,</span> <span class="n">ifc</span><span class="o">.</span><span class="n">MULTILOOKED</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">ifg</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">ReadAsArray</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">data</span><span class="p">,</span> <span class="n">ifg</span><span class="o">.</span><span class="n">dataset</span>
+
+
+<span class="k">def</span> <span class="nf">_warp</span><span class="p">(</span><span class="n">ifg</span><span class="p">,</span> <span class="n">x_looks</span><span class="p">,</span> <span class="n">y_looks</span><span class="p">,</span> <span class="n">extents</span><span class="p">,</span> <span class="n">resolution</span><span class="p">,</span> <span class="n">thresh</span><span class="p">,</span> <span class="n">crop_out</span><span class="p">,</span>
+          <span class="n">write_to_disk</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convenience function for calling GDAL functionality</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">x_looks</span> <span class="o">!=</span> <span class="n">y_looks</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;X and Y looks mismatch&#39;</span><span class="p">)</span>
+
+    <span class="c1"># cut, average, resample the final output layers</span>
+    <span class="n">looks_path</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">mlooked_path</span><span class="p">(</span><span class="n">ifg</span><span class="o">.</span><span class="n">data_path</span><span class="p">,</span> <span class="n">y_looks</span><span class="p">,</span> <span class="n">crop_out</span><span class="p">)</span>
+
+    <span class="c1">#     # Add missing/updated metadata to resampled ifg/DEM</span>
+    <span class="c1">#     new_lyr = type(ifg)(looks_path)</span>
+    <span class="c1">#     new_lyr.open(readonly=True)</span>
+    <span class="c1">#     # for non-DEMs, phase bands need extra metadata &amp; conversions</span>
+    <span class="c1">#     if hasattr(new_lyr, &quot;phase_band&quot;):</span>
+    <span class="c1">#         # TODO: LOS conversion to vertical/horizontal (projection)</span>
+    <span class="c1">#         # TODO: push out to workflow</span>
+    <span class="c1">#         #if params.has_key(REPROJECTION_FLAG):</span>
+    <span class="c1">#         #    reproject()</span>
+    <span class="n">driver_type</span> <span class="o">=</span> <span class="s1">&#39;GTiff&#39;</span> <span class="k">if</span> <span class="n">write_to_disk</span> <span class="k">else</span> <span class="s1">&#39;MEM&#39;</span>
+    <span class="n">resampled_data</span><span class="p">,</span> <span class="n">out_ds</span> <span class="o">=</span> <span class="n">gdalwarp</span><span class="o">.</span><span class="n">crop_resample_average</span><span class="p">(</span>
+        <span class="n">input_tif</span><span class="o">=</span><span class="n">ifg</span><span class="o">.</span><span class="n">data_path</span><span class="p">,</span>
+        <span class="n">extents</span><span class="o">=</span><span class="n">extents</span><span class="p">,</span>
+        <span class="n">new_res</span><span class="o">=</span><span class="n">resolution</span><span class="p">,</span>
+        <span class="n">output_file</span><span class="o">=</span><span class="n">looks_path</span><span class="p">,</span>
+        <span class="n">thresh</span><span class="o">=</span><span class="n">thresh</span><span class="p">,</span>
+        <span class="n">out_driver_type</span><span class="o">=</span><span class="n">driver_type</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">write_to_disk</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">resampled_data</span><span class="p">,</span> <span class="n">out_ds</span>
+
+<span class="c1"># TODO: Not being used. Remove in future?</span>
+<span class="k">def</span> <span class="nf">_resample</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">xscale</span><span class="p">,</span> <span class="n">yscale</span><span class="p">,</span> <span class="n">thresh</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Resamples/averages &#39;data&#39; to return an array from the averaging of blocks</span>
+<span class="sd">    of several tiles in &#39;data&#39;. NB: Assumes incoherent cells are NaNs.</span>
+
+<span class="sd">    :param data: source array to resample to different size</span>
+<span class="sd">    :param xscale: number of cells to average along X axis</span>
+<span class="sd">    :param yscale: number of Y axis cells to average</span>
+<span class="sd">    :param thresh: minimum allowable</span>
+<span class="sd">        proportion of NaN cells (range from 0.0-1.0), eg. 0.25 = 1/4 or</span>
+<span class="sd">        more as NaNs results in a NaN value for the output cell.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># TODO: make more efficient</span>
+    <span class="k">if</span> <span class="n">thresh</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">thresh</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;threshold must be &gt;= 0 and &lt;= 1&quot;</span><span class="p">)</span>
+
+    <span class="n">xscale</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">xscale</span><span class="p">)</span>
+    <span class="n">yscale</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">yscale</span><span class="p">)</span>
+    <span class="n">ysize</span><span class="p">,</span> <span class="n">xsize</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">xres</span><span class="p">,</span> <span class="n">yres</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">xsize</span> <span class="o">/</span> <span class="n">xscale</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">ysize</span> <span class="o">/</span> <span class="n">yscale</span><span class="p">)</span>
+    <span class="n">dest</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">((</span><span class="n">yres</span><span class="p">,</span> <span class="n">xres</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">float32</span><span class="p">)</span> <span class="o">*</span> <span class="n">nan</span>
+    <span class="n">tile_cell_count</span> <span class="o">=</span> <span class="n">xscale</span> <span class="o">*</span> <span class="n">yscale</span>
+
+    <span class="c1"># calc mean without nans (fractional threshold ignores tiles</span>
+    <span class="c1"># with excess NaNs)</span>
+    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">xres</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">yres</span><span class="p">):</span>
+            <span class="n">tile</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">y</span> <span class="o">*</span> <span class="n">yscale</span><span class="p">:</span> <span class="p">(</span><span class="n">y</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">yscale</span><span class="p">,</span> <span class="n">x</span> <span class="o">*</span> <span class="n">xscale</span><span class="p">:</span> <span class="p">(</span><span class="n">x</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">xscale</span><span class="p">]</span>
+            <span class="n">nan_fraction</span> <span class="o">=</span> <span class="n">nsum</span><span class="p">(</span><span class="n">isnan</span><span class="p">(</span><span class="n">tile</span><span class="p">))</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">tile_cell_count</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">nan_fraction</span> <span class="o">&lt;</span> <span class="n">thresh</span> <span class="ow">or</span> <span class="p">(</span><span class="n">nan_fraction</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">thresh</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
+                <span class="n">dest</span><span class="p">[</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">]</span> <span class="o">=</span> <span class="n">nanmean</span><span class="p">(</span><span class="n">tile</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">dest</span>
+
+
+<span class="c1"># TODO: Not being used. Remove in future?</span>
+<span class="k">def</span> <span class="nf">_resample_ifg</span><span class="p">(</span><span class="n">ifg</span><span class="p">,</span> <span class="n">cmd</span><span class="p">,</span> <span class="n">x_looks</span><span class="p">,</span> <span class="n">y_looks</span><span class="p">,</span> <span class="n">thresh</span><span class="p">,</span> <span class="n">md</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convenience function to resample data from a given Ifg (more coarse).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Create tmp ifg and extract data array for manual resampling as gdalwarp</span>
+    <span class="c1"># lacks the averaging method implemented in Matlab Pirate</span>
+    <span class="n">fp</span><span class="p">,</span> <span class="n">tmp_path</span> <span class="o">=</span> <span class="n">mkstemp</span><span class="p">(</span><span class="n">suffix</span><span class="o">=</span><span class="s1">&#39;.tif&#39;</span><span class="p">)</span>
+    <span class="n">check_call</span><span class="p">(</span><span class="n">cmd</span> <span class="o">+</span> <span class="p">[</span><span class="n">ifg</span><span class="o">.</span><span class="n">data_path</span><span class="p">,</span> <span class="n">tmp_path</span><span class="p">])</span>
+
+    <span class="c1"># now write the metadata from the input to the output</span>
+    <span class="k">if</span> <span class="n">md</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">new_lyr</span> <span class="o">=</span> <span class="n">gdal</span><span class="o">.</span><span class="n">Open</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">md</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="n">new_lyr</span><span class="o">.</span><span class="n">SetMetadataItem</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+        <span class="n">new_lyr</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># manually close</span>
+
+    <span class="n">tmp</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">ifg</span><span class="p">)(</span><span class="n">tmp_path</span><span class="p">)</span>  <span class="c1"># dynamically handle Ifgs &amp; Rasters</span>
+    <span class="n">tmp</span><span class="o">.</span><span class="n">open</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ifg</span><span class="p">,</span> <span class="n">Ifg</span><span class="p">):</span>
+        <span class="c1"># TODO: add an option to retain amplitude band (resample this if reqd)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">tmp</span><span class="o">.</span><span class="n">phase_band</span><span class="o">.</span><span class="n">ReadAsArray</span><span class="p">()</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">where</span><span class="p">(</span><span class="n">data</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="n">nan</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>  <span class="c1"># flag incoherent cells as NaNs</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ifg</span><span class="p">,</span> <span class="n">DEM</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">tmp</span><span class="o">.</span><span class="n">height_band</span><span class="o">.</span><span class="n">ReadAsArray</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># TODO: need to handle resampling of LOS and baseline files</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Resampling LOS &amp; baseline not implemented&quot;</span><span class="p">)</span>
+
+    <span class="n">tmp</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>  <span class="c1"># manual close</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_resample</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">x_looks</span><span class="p">,</span> <span class="n">y_looks</span><span class="p">,</span> <span class="n">thresh</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_min_bounds</span><span class="p">(</span><span class="n">ifgs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns bounds for overlapping area of the given interferograms.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">xmin</span> <span class="o">=</span> <span class="nb">max</span><span class="p">([</span><span class="n">i</span><span class="o">.</span><span class="n">x_first</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ifgs</span><span class="p">])</span>
+    <span class="n">ymax</span> <span class="o">=</span> <span class="nb">min</span><span class="p">([</span><span class="n">i</span><span class="o">.</span><span class="n">y_first</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ifgs</span><span class="p">])</span>
+    <span class="n">xmax</span> <span class="o">=</span> <span class="nb">min</span><span class="p">([</span><span class="n">i</span><span class="o">.</span><span class="n">x_last</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ifgs</span><span class="p">])</span>
+    <span class="n">ymin</span> <span class="o">=</span> <span class="nb">max</span><span class="p">([</span><span class="n">i</span><span class="o">.</span><span class="n">y_last</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ifgs</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">xmin</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">ymax</span>
+
+
+<span class="k">def</span> <span class="nf">_max_bounds</span><span class="p">(</span><span class="n">ifgs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns bounds for the total area covered by the given interferograms.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">xmin</span> <span class="o">=</span> <span class="nb">min</span><span class="p">([</span><span class="n">i</span><span class="o">.</span><span class="n">x_first</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ifgs</span><span class="p">])</span>
+    <span class="n">ymax</span> <span class="o">=</span> <span class="nb">max</span><span class="p">([</span><span class="n">i</span><span class="o">.</span><span class="n">y_first</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ifgs</span><span class="p">])</span>
+    <span class="n">xmax</span> <span class="o">=</span> <span class="nb">max</span><span class="p">([</span><span class="n">i</span><span class="o">.</span><span class="n">x_last</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ifgs</span><span class="p">])</span>
+    <span class="n">ymin</span> <span class="o">=</span> <span class="nb">min</span><span class="p">([</span><span class="n">i</span><span class="o">.</span><span class="n">y_last</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ifgs</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">xmin</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">ymax</span>
+
+
+<span class="k">def</span> <span class="nf">_get_same_bounds</span><span class="p">(</span><span class="n">ifgs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check and return bounding box for ALREADY_SAME_SIZE option.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">tfs</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">GetGeoTransform</span><span class="p">()</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ifgs</span><span class="p">]</span>
+    <span class="n">equal</span> <span class="o">=</span> <span class="p">[</span><span class="n">t</span> <span class="o">==</span> <span class="n">tfs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tfs</span><span class="p">[</span><span class="mi">1</span><span class="p">:]]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">equal</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Ifgs do not have the same bounding box for crop option: </span><span class="si">%s</span><span class="s1">&#39;</span>
+        <span class="k">raise</span> <span class="n">PreprocessError</span><span class="p">(</span><span class="n">msg</span> <span class="o">%</span> <span class="n">ALREADY_SAME_SIZE</span><span class="p">)</span>
+    <span class="n">ifg</span> <span class="o">=</span> <span class="n">ifgs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span> <span class="o">=</span> <span class="n">ifg</span><span class="o">.</span><span class="n">x_first</span><span class="p">,</span> <span class="n">ifg</span><span class="o">.</span><span class="n">x_last</span>
+    <span class="n">ymin</span><span class="p">,</span> <span class="n">ymax</span> <span class="o">=</span> <span class="n">ifg</span><span class="o">.</span><span class="n">y_first</span><span class="p">,</span> <span class="n">ifg</span><span class="o">.</span><span class="n">y_last</span>
+
+    <span class="c1"># swap y_first &amp; y_last when using southern hemisphere -ve coords</span>
+    <span class="k">if</span> <span class="n">ymin</span> <span class="o">&gt;</span> <span class="n">ymax</span><span class="p">:</span>
+        <span class="n">ymin</span><span class="p">,</span> <span class="n">ymax</span> <span class="o">=</span> <span class="n">ymax</span><span class="p">,</span> <span class="n">ymin</span>
+
+    <span class="k">return</span> <span class="n">xmin</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">ymax</span>
+
+
+<span class="k">def</span> <span class="nf">_custom_bounds</span><span class="p">(</span><span class="n">ifgs</span><span class="p">,</span> <span class="n">xw</span><span class="p">,</span> <span class="n">ytop</span><span class="p">,</span> <span class="n">xe</span><span class="p">,</span> <span class="n">ybot</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check and modify input custom crop bounds to line up with grid interval</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># pylint: disable=too-many-locals</span>
+    <span class="c1"># pylint: disable=too-many-branches</span>
+    <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Cropped image bounds exceed original image bounds&#39;</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="n">ifgs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">ytop</span> <span class="o">&lt;</span> <span class="n">ybot</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">PreprocessError</span><span class="p">(</span><span class="s1">&#39;ERROR Custom crop bounds: &#39;</span>
+                              <span class="s1">&#39;ifgyfirst must be greater than ifgylast&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">xe</span> <span class="o">&lt;</span> <span class="n">xw</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">PreprocessError</span><span class="p">(</span><span class="s1">&#39;ERROR Custom crop bounds: &#39;</span>
+                              <span class="s1">&#39;ifgxfirst must be greater than ifgxlast&#39;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">par</span><span class="p">,</span> <span class="n">crop</span><span class="p">,</span> <span class="n">orig</span><span class="p">,</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">([</span><span class="s1">&#39;x_first&#39;</span><span class="p">,</span> <span class="s1">&#39;x_last&#39;</span><span class="p">,</span>
+                                      <span class="s1">&#39;y_first&#39;</span><span class="p">,</span> <span class="s1">&#39;y_last&#39;</span><span class="p">],</span>
+                                     <span class="p">[</span><span class="n">xw</span><span class="p">,</span> <span class="n">xe</span><span class="p">,</span> <span class="n">ytop</span><span class="p">,</span> <span class="n">ybot</span><span class="p">],</span>
+                                     <span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">x_first</span><span class="p">,</span> <span class="n">i</span><span class="o">.</span><span class="n">x_last</span><span class="p">,</span>
+                                      <span class="n">i</span><span class="o">.</span><span class="n">y_first</span><span class="p">,</span> <span class="n">i</span><span class="o">.</span><span class="n">y_last</span><span class="p">],</span>
+                                     <span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">x_step</span><span class="p">,</span> <span class="n">i</span><span class="o">.</span><span class="n">x_step</span><span class="p">,</span>
+                                      <span class="n">i</span><span class="o">.</span><span class="n">y_step</span><span class="p">,</span> <span class="n">i</span><span class="o">.</span><span class="n">y_step</span><span class="p">]):</span>
+        <span class="n">diff</span> <span class="o">=</span> <span class="n">crop</span> <span class="o">-</span> <span class="n">orig</span>
+        <span class="n">nint</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">diff</span> <span class="o">/</span> <span class="n">step</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">par</span> <span class="o">==</span> <span class="s1">&#39;x_first&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">diff</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">PreprocessError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="n">xmin</span> <span class="o">=</span> <span class="n">orig</span> <span class="o">+</span> <span class="p">(</span><span class="n">nint</span> <span class="o">*</span> <span class="n">step</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">par</span> <span class="o">==</span> <span class="s1">&#39;x_last&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">diff</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">PreprocessError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="n">xmax</span> <span class="o">=</span> <span class="n">orig</span> <span class="o">+</span> <span class="p">(</span><span class="n">nint</span> <span class="o">*</span> <span class="n">step</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">par</span> <span class="o">==</span> <span class="s1">&#39;y_first&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">diff</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">PreprocessError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="n">y1</span> <span class="o">=</span> <span class="n">orig</span> <span class="o">+</span> <span class="p">(</span><span class="n">nint</span> <span class="o">*</span> <span class="n">step</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">par</span> <span class="o">==</span> <span class="s1">&#39;y_last&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">diff</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">PreprocessError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="n">y2</span> <span class="o">=</span> <span class="n">orig</span> <span class="o">+</span> <span class="p">(</span><span class="n">nint</span> <span class="o">*</span> <span class="n">step</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Value error in supplied custom bounds&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">y2</span> <span class="o">&gt;</span> <span class="n">y1</span><span class="p">:</span>
+        <span class="n">ymin</span> <span class="o">=</span> <span class="n">y1</span>
+        <span class="n">ymax</span> <span class="o">=</span> <span class="n">y2</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ymin</span> <span class="o">=</span> <span class="n">y2</span>
+        <span class="n">ymax</span> <span class="o">=</span> <span class="n">y1</span>
+
+    <span class="k">return</span> <span class="n">xmin</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">ymax</span>
+
+
+<span class="k">def</span> <span class="nf">_check_crop_coords</span><span class="p">(</span><span class="n">ifgs</span><span class="p">,</span> <span class="n">xmin</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">ymax</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Ensures cropping coords line up with grid system within tolerance.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># NB: assumption is the first Ifg is correct, so only test against it</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="n">ifgs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">par</span><span class="p">,</span> <span class="n">crop</span><span class="p">,</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">([</span><span class="s1">&#39;x_first&#39;</span><span class="p">,</span> <span class="s1">&#39;x_last&#39;</span><span class="p">,</span> <span class="s1">&#39;y_first&#39;</span><span class="p">,</span> <span class="s1">&#39;y_last&#39;</span><span class="p">],</span>
+                               <span class="p">[</span><span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">ymax</span><span class="p">,</span> <span class="n">ymin</span><span class="p">],</span>
+                               <span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">x_step</span><span class="p">,</span> <span class="n">i</span><span class="o">.</span><span class="n">x_step</span><span class="p">,</span> <span class="n">i</span><span class="o">.</span><span class="n">y_step</span><span class="p">,</span> <span class="n">i</span><span class="o">.</span><span class="n">y_step</span><span class="p">]):</span>
+
+        <span class="c1"># is diff of the given extent from grid a multiple of X|Y_STEP ?</span>
+        <span class="n">param</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">par</span><span class="p">)</span>
+        <span class="n">diff</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">crop</span> <span class="o">-</span> <span class="n">param</span><span class="p">)</span>
+        <span class="n">remainder</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">modf</span><span class="p">(</span><span class="n">diff</span> <span class="o">/</span> <span class="n">step</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="c1"># handle cases where division gives remainder near zero, or just &lt; 1</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">remainder</span> <span class="o">&gt;</span> <span class="n">GRID_TOL</span><span class="p">)</span> <span class="ow">and</span> \
+                <span class="p">(</span><span class="n">remainder</span> <span class="o">&lt;</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">GRID_TOL</span><span class="p">)):</span>  <span class="c1"># pragma: no cover</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> crop extent not within </span><span class="si">%s</span><span class="s2"> of grid coordinate&quot;</span>
+            <span class="k">raise</span> <span class="n">PreprocessError</span><span class="p">(</span><span class="n">msg</span> <span class="o">%</span> <span class="p">(</span><span class="n">par</span><span class="p">,</span> <span class="n">GRID_TOL</span><span class="p">))</span>
+
+
+<div class="viewcode-block" id="PreprocessError"><a class="viewcode-back" href="../../prepifg.html#pyrate.prepifg.PreprocessError">[docs]</a><span class="k">class</span> <span class="nc">PreprocessError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Preprocess exception</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Geoscience Australia
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+  
+<p>asdasdasd</p>
+        <!-- your html code here -->
+ 
+
+
+</body>
+</html>
