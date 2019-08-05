@@ -323,9 +323,7 @@ class TestGammaParallelVsSerial(unittest.TestCase):
         cls.serial_ifgs = small_data_setup(datafiles=serial_df)
 
         # Clean up serial converted tifs so we can test parallel conversion
-        tifs = glob.glob(os.path.join(SML_TEST_GAMMA, '*.tif'))
-        for tif in tifs:
-            os.remove(tif)
+        common.remove_tifs(SML_TEST_GAMMA)
 
         # PARALLEL 
         cls.parallel_dir = tempfile.mkdtemp()
