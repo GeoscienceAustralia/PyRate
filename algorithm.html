@@ -215,8 +215,183 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="algorithm-module">
-<h1>Algorithm Module<a class="headerlink" href="#algorithm-module" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-pyrate.algorithm">
+<span id="algorithm-module"></span><h1>Algorithm Module<a class="headerlink" href="#module-pyrate.algorithm" title="Permalink to this headline">¶</a></h1>
+<p>This Python module contains a collection of generic algorithms used in PyRate</p>
+<dl class="function">
+<dt id="pyrate.algorithm.get_all_epochs">
+<code class="sig-prename descclassname">pyrate.algorithm.</code><code class="sig-name descname">get_all_epochs</code><span class="sig-paren">(</span><em class="sig-param">ifgs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/algorithm.html#get_all_epochs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.algorithm.get_all_epochs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a sequence of all master and slave dates in given interferograms.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>ifgs</strong> (<em>list</em>) – List of interferogram objects</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>master and slave dates</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyrate.algorithm.get_epochs">
+<code class="sig-prename descclassname">pyrate.algorithm.</code><code class="sig-name descname">get_epochs</code><span class="sig-paren">(</span><em class="sig-param">ifgs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/algorithm.html#get_epochs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.algorithm.get_epochs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns an EpochList derived from the given interferograms.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>ifgs</strong> (<em>list</em>) – List of interferogram objects</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>EpochList</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyrate.algorithm.ifg_date_index_lookup">
+<code class="sig-prename descclassname">pyrate.algorithm.</code><code class="sig-name descname">ifg_date_index_lookup</code><span class="sig-paren">(</span><em class="sig-param">ifgs</em>, <em class="sig-param">date_pair</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/algorithm.html#ifg_date_index_lookup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.algorithm.ifg_date_index_lookup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the Interferogram index which has the master and slave dates
+given in ‘date_pair’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ifgs</strong> (<em>list</em>) – List of interferogram objects to search</p></li>
+<li><p><strong>date_pair</strong> (<em>tuple</em>) – A (datetime.date, datetime.date)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>interferogram index</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyrate.algorithm.ifg_date_lookup">
+<code class="sig-prename descclassname">pyrate.algorithm.</code><code class="sig-name descname">ifg_date_lookup</code><span class="sig-paren">(</span><em class="sig-param">ifgs</em>, <em class="sig-param">date_pair</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/algorithm.html#ifg_date_lookup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.algorithm.ifg_date_lookup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the Interferogram which has the master and slave dates given
+in ‘date_pair’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ifgs</strong> (<em>list</em>) – List of interferogram objects to search</p></li>
+<li><p><strong>date_pair</strong> (<em>tuple</em>) – A (datetime.date, datetime.date)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>interferogram list</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyrate.algorithm.is_square">
+<code class="sig-prename descclassname">pyrate.algorithm.</code><code class="sig-name descname">is_square</code><span class="sig-paren">(</span><em class="sig-param">arr</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/algorithm.html#is_square"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.algorithm.is_square" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines whether an array is square or not.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>arr</strong> (<em>ndarray</em>) – numpy array</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>condition</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyrate.algorithm.least_squares_covariance">
+<code class="sig-prename descclassname">pyrate.algorithm.</code><code class="sig-name descname">least_squares_covariance</code><span class="sig-paren">(</span><em class="sig-param">A</em>, <em class="sig-param">b</em>, <em class="sig-param">v</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/algorithm.html#least_squares_covariance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.algorithm.least_squares_covariance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Least squares solution in the presence of known covariance.
+This function is known as lscov() in MATLAB.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>A</strong> (<em>ndarray</em>) – Design matrix</p></li>
+<li><p><strong>b</strong> (<em>ndarray</em>) – Observations (vector of phase values)</p></li>
+<li><p><strong>v</strong> (<em>ndarray</em>) – Covariances (vector of weights)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>solution</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyrate.algorithm.los_conversion">
+<code class="sig-prename descclassname">pyrate.algorithm.</code><code class="sig-name descname">los_conversion</code><span class="sig-paren">(</span><em class="sig-param">phase_data</em>, <em class="sig-param">unit_vec</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/algorithm.html#los_conversion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.algorithm.los_conversion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts phase from line-of-sight (LOS) to horizontal/vertical components.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>phase_data</strong> (<em>ndarray</em>) – Phase band data array (eg. ifg.phase_data)</p></li>
+<li><p><strong>unit_vec</strong> (<em>tuple</em>) – 3 component unit vector e.g. (EW, NS, vertical)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>converted_phase</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyrate.algorithm.master_slave_ids">
+<code class="sig-prename descclassname">pyrate.algorithm.</code><code class="sig-name descname">master_slave_ids</code><span class="sig-paren">(</span><em class="sig-param">dates</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/algorithm.html#master_slave_ids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.algorithm.master_slave_ids" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a dictionary of ‘date:unique ID’ for each date in ‘dates’.
+IDs are ordered from oldest to newest, starting at 0.
+Implements ifglist.mas|slvnum used in the Matlab Pirate package.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>dates</strong> (<em>list</em>) – List of dates</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>unique dates IDs</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyrate.algorithm.unit_vector">
+<code class="sig-prename descclassname">pyrate.algorithm.</code><code class="sig-name descname">unit_vector</code><span class="sig-paren">(</span><em class="sig-param">incidence</em>, <em class="sig-param">azimuth</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/algorithm.html#unit_vector"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.algorithm.unit_vector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns unit vector tuple (east_west, north_south, vertical).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>incidence</strong> (<em>float</em>) – incidence angle w.r.t. nadir</p></li>
+<li><p><strong>azimuth</strong> (<em>float</em>) – azimuth of looking vector</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Unit vector (EW, NS, vertical).</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
 </div>
 
 

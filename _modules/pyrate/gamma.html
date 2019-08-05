@@ -1,0 +1,469 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pyrate.gamma &mdash; PyRate 0.3.0_3 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: white" >
+          
+
+          
+            <a href="../../index.html">
+          
+
+          
+            
+            <img src="../../_static/PyRate_logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+    <li><a href="https://geoscienceaustralia.github.io/PyRate/">Home</a></li>
+    
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#ubuntu-18-04">Ubuntu 18.04</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#docker">Docker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#hpc">HPC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#verify-installation">Verify Installation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage.html">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../usage.html#configuration">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage.html#workflow">Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage.html#multiprocessing">Multiprocessing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../contributing.html#types-of-contributions">Types of Contributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../contributing.html#get-started">Get Started!</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../contributing.html#pull-request-guidelines">Pull Request Guidelines</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../authors.html">Credits</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../authors.html#development-lead">Development Lead</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../authors.html#contributors">Contributors</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../history.html">Release History</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#unreleased-2019-xx-xx">Unreleased (2019-xx-xx)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id1">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id4">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id5">0.1.0 (2017-01-31)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../scripts.html">PyRate Scripts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../pyrate.scripts.run_prepifg.html">PyRate run_prepifg Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pyrate.scripts.run_pyrate.html">PyRate run_pyrate Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pyrate.scripts.postprocessing.html">PyRate postprocessing Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pyrate.scripts.main.html">PyRate main Script</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">Pyrate Modules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../algorithm.html">Algorithm Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../aps.html">Atmospheric Phase Screen Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../config.html">Config Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../covariance.html">Covariance Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../gamma.html">GAMMA Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../gdal_python.html">GDAL-Python Bindings Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../linrate.html">Linrate Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../mst.html">Minimum Spanning Tree Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../orbital.html">Orbital Error Correction Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../prepifg.html">Prepifg Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pyratelog.html">Logging Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../ref_phs_est.html">Reference Phase Calculation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../refpixel.html">Reference Pixel Calculation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../roipac.html">ROI_PAC Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../shared.html">Shared Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../timeseries.html">Time Series Module</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">PyRate</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>pyrate.gamma</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pyrate.gamma</h1><div class="highlight"><pre>
+<span></span><span class="c1">#   This Python module is part of the PyRate software package.</span>
+<span class="c1">#</span>
+<span class="c1">#   Copyright 2017 Geoscience Australia</span>
+<span class="c1">#</span>
+<span class="c1">#   Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1">#   you may not use this file except in compliance with the License.</span>
+<span class="c1">#   You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#       http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1">#   Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1">#   distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1">#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1">#   See the License for the specific language governing permissions and</span>
+<span class="c1">#   limitations under the License.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This Python module contains tools for reading GAMMA format input data.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c1"># coding: utf-8</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">date</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">timedelta</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pyrate.ifgconstants</span> <span class="k">as</span> <span class="nn">ifc</span>
+
+<span class="c1"># constants</span>
+<span class="n">GAMMA_DATE</span> <span class="o">=</span> <span class="s1">&#39;date&#39;</span>
+<span class="n">GAMMA_TIME</span> <span class="o">=</span> <span class="s1">&#39;center_time&#39;</span>
+<span class="n">GAMMA_WIDTH</span> <span class="o">=</span> <span class="s1">&#39;width&#39;</span>
+<span class="n">GAMMA_NROWS</span> <span class="o">=</span> <span class="s1">&#39;nlines&#39;</span>
+<span class="n">GAMMA_CORNER_LAT</span> <span class="o">=</span> <span class="s1">&#39;corner_lat&#39;</span>
+<span class="n">GAMMA_CORNER_LONG</span> <span class="o">=</span> <span class="s1">&#39;corner_lon&#39;</span>
+<span class="n">GAMMA_Y_STEP</span> <span class="o">=</span> <span class="s1">&#39;post_lat&#39;</span>
+<span class="n">GAMMA_X_STEP</span> <span class="o">=</span> <span class="s1">&#39;post_lon&#39;</span>
+<span class="n">GAMMA_DATUM</span> <span class="o">=</span> <span class="s1">&#39;ellipsoid_name&#39;</span>
+<span class="n">GAMMA_FREQUENCY</span> <span class="o">=</span> <span class="s1">&#39;radar_frequency&#39;</span>
+<span class="n">GAMMA_INCIDENCE</span> <span class="o">=</span> <span class="s1">&#39;incidence_angle&#39;</span>
+<span class="n">RADIANS</span> <span class="o">=</span> <span class="s1">&#39;RADIANS&#39;</span>
+<span class="n">GAMMA</span> <span class="o">=</span> <span class="s1">&#39;GAMMA&#39;</span>
+
+
+<span class="k">def</span> <span class="nf">_parse_header</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses all GAMMA header file fields into a dictionary&quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+        <span class="n">raw_segs</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">text</span> <span class="k">if</span> <span class="s1">&#39;:&#39;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">]</span>
+
+    <span class="c1"># convert the content into a giant dict of all key, values</span>
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">((</span><span class="n">i</span><span class="p">[</span><span class="mi">0</span><span class="p">][:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">i</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">raw_segs</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="parse_epoch_header"><a class="viewcode-back" href="../../gamma.html#pyrate.gamma.parse_epoch_header">[docs]</a><span class="k">def</span> <span class="nf">parse_epoch_header</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns dictionary of epoch metadata required for PyRate</span>
+
+<span class="sd">    :param str path: `Full path to Gamma *slc.par file`</span>
+
+<span class="sd">    :return: subset: subset of full metadata</span>
+<span class="sd">    :rtype: dict</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">lookup</span> <span class="o">=</span> <span class="n">_parse_header</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="n">subset</span> <span class="o">=</span> <span class="n">_parse_date_time</span><span class="p">(</span><span class="n">lookup</span><span class="p">)</span>
+
+    <span class="c1"># handle conversion of radar frequency to wavelength</span>
+    <span class="n">freq</span><span class="p">,</span> <span class="n">unit</span> <span class="o">=</span> <span class="n">lookup</span><span class="p">[</span><span class="n">GAMMA_FREQUENCY</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">unit</span> <span class="o">!=</span> <span class="s2">&quot;Hz&quot;</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Unrecognised unit field for radar_frequency: </span><span class="si">%s</span><span class="s1">&#39;</span>
+        <span class="k">raise</span> <span class="n">GammaException</span><span class="p">(</span><span class="n">msg</span> <span class="o">%</span> <span class="n">unit</span><span class="p">)</span>
+    <span class="n">subset</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_WAVELENGTH_METRES</span><span class="p">]</span> <span class="o">=</span> <span class="n">_frequency_to_wavelength</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">freq</span><span class="p">))</span>
+
+    <span class="n">incidence</span><span class="p">,</span> <span class="n">unit</span> <span class="o">=</span> <span class="n">lookup</span><span class="p">[</span><span class="n">GAMMA_INCIDENCE</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">unit</span> <span class="o">!=</span> <span class="s2">&quot;degrees&quot;</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Unrecognised unit field for incidence_angle: </span><span class="si">%s</span><span class="s1">&#39;</span>
+        <span class="k">raise</span> <span class="n">GammaException</span><span class="p">(</span><span class="n">msg</span> <span class="o">%</span> <span class="n">unit</span><span class="p">)</span>
+    <span class="n">subset</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_INCIDENCE_DEGREES</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">incidence</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">subset</span></div>
+
+
+<span class="k">def</span> <span class="nf">_parse_date_time</span><span class="p">(</span><span class="n">lookup</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Grab date and time metadata and convert to datetime objects&quot;&quot;&quot;</span>
+    <span class="n">subset</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lookup</span><span class="p">[</span><span class="n">GAMMA_DATE</span><span class="p">])</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+        <span class="n">year</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="n">day</span><span class="p">,</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">i</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">lookup</span><span class="p">[</span><span class="n">GAMMA_DATE</span><span class="p">][:</span><span class="mi">3</span><span class="p">]]</span>
+        <span class="k">if</span> <span class="n">lookup</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">GAMMA_TIME</span><span class="p">)</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="n">lookup</span><span class="p">[</span><span class="n">GAMMA_TIME</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">h</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">timedelta</span><span class="p">(</span><span class="n">seconds</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">t</span><span class="p">)))</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
+            <span class="n">hour</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">h</span><span class="p">);</span> <span class="nb">min</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">m</span><span class="p">);</span> <span class="n">sec</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Occasionally GAMMA header has no time information - default to midnight</span>
+            <span class="n">hour</span><span class="p">,</span> <span class="nb">min</span><span class="p">,</span> <span class="n">sec</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">lookup</span><span class="p">[</span><span class="n">GAMMA_DATE</span><span class="p">])</span> <span class="o">==</span> <span class="mi">6</span><span class="p">:</span>
+        <span class="n">year</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="n">day</span><span class="p">,</span> <span class="n">hour</span><span class="p">,</span> <span class="nb">min</span><span class="p">,</span> <span class="n">sec</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+                                             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">lookup</span><span class="p">[</span><span class="n">GAMMA_DATE</span><span class="p">][:</span><span class="mi">6</span><span class="p">]]</span>
+    <span class="k">else</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Date and time information not complete in GAMMA headers&quot;</span>
+        <span class="k">raise</span> <span class="n">GammaException</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="n">subset</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">MASTER_DATE</span><span class="p">]</span> <span class="o">=</span> <span class="n">date</span><span class="p">(</span><span class="n">year</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="n">day</span><span class="p">)</span>
+    <span class="n">subset</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">MASTER_TIME</span><span class="p">]</span> <span class="o">=</span> <span class="n">time</span><span class="p">(</span><span class="n">hour</span><span class="p">,</span> <span class="nb">min</span><span class="p">,</span> <span class="n">sec</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">subset</span>
+
+
+<div class="viewcode-block" id="parse_dem_header"><a class="viewcode-back" href="../../gamma.html#pyrate.gamma.parse_dem_header">[docs]</a><span class="k">def</span> <span class="nf">parse_dem_header</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns dictionary of DEM metadata required for PyRate</span>
+
+<span class="sd">    :param str path: `Full path to Gamma *dem.par file`</span>
+
+<span class="sd">    :return: subset: subset of full metadata</span>
+<span class="sd">    :rtype: dict</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">lookup</span> <span class="o">=</span> <span class="n">_parse_header</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+    <span class="c1"># NB: many lookup fields have multiple elements, eg [&#39;1000&#39;, &#39;Hz&#39;]</span>
+    <span class="n">subset</span> <span class="o">=</span> <span class="p">{</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_NCOLS</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">lookup</span><span class="p">[</span><span class="n">GAMMA_WIDTH</span><span class="p">][</span><span class="mi">0</span><span class="p">]),</span> <span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_NROWS</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">lookup</span><span class="p">[</span><span class="n">GAMMA_NROWS</span><span class="p">][</span><span class="mi">0</span><span class="p">])}</span>
+
+    <span class="n">expected</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;decimal&#39;</span><span class="p">,</span> <span class="s1">&#39;degrees&#39;</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="n">GAMMA_CORNER_LAT</span><span class="p">,</span> <span class="n">GAMMA_CORNER_LONG</span><span class="p">,</span> <span class="n">GAMMA_X_STEP</span><span class="p">,</span> <span class="n">GAMMA_Y_STEP</span><span class="p">]:</span>
+        <span class="n">units</span> <span class="o">=</span> <span class="n">lookup</span><span class="p">[</span><span class="n">GAMMA_CORNER_LAT</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span>
+        <span class="k">if</span> <span class="n">units</span> <span class="o">!=</span> <span class="n">expected</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Unrecognised units for GAMMA </span><span class="si">%s</span><span class="s2"> field</span><span class="se">\n</span><span class="s2">. Got </span><span class="si">%s</span><span class="s2">, expected </span><span class="si">%s</span><span class="s2">&quot;</span>
+            <span class="k">raise</span> <span class="n">GammaException</span><span class="p">(</span><span class="n">msg</span> <span class="o">%</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">units</span><span class="p">,</span> <span class="n">expected</span><span class="p">))</span>
+
+    <span class="n">subset</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_LAT</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">lookup</span><span class="p">[</span><span class="n">GAMMA_CORNER_LAT</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">subset</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_LONG</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">lookup</span><span class="p">[</span><span class="n">GAMMA_CORNER_LONG</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">subset</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_Y_STEP</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">lookup</span><span class="p">[</span><span class="n">GAMMA_Y_STEP</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">subset</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_X_STEP</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">lookup</span><span class="p">[</span><span class="n">GAMMA_X_STEP</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">subset</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_DATUM</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lookup</span><span class="p">[</span><span class="n">GAMMA_DATUM</span><span class="p">])</span>
+    <span class="n">subset</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_INSAR_PROCESSOR</span><span class="p">]</span> <span class="o">=</span> <span class="n">GAMMA</span>
+    <span class="k">return</span> <span class="n">subset</span></div>
+
+
+<span class="k">def</span> <span class="nf">_frequency_to_wavelength</span><span class="p">(</span><span class="n">freq</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert radar frequency to wavelength</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">ifc</span><span class="o">.</span><span class="n">SPEED_OF_LIGHT_METRES_PER_SECOND</span> <span class="o">/</span> <span class="n">freq</span>
+
+
+<div class="viewcode-block" id="combine_headers"><a class="viewcode-back" href="../../gamma.html#pyrate.gamma.combine_headers">[docs]</a><span class="k">def</span> <span class="nf">combine_headers</span><span class="p">(</span><span class="n">hdr0</span><span class="p">,</span> <span class="n">hdr1</span><span class="p">,</span> <span class="n">dem_hdr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Combines metadata for master and slave epochs and DEM into a single</span>
+<span class="sd">    dictionary for an interferogram.</span>
+
+<span class="sd">    :param dict hdr0: Metadata for the master image</span>
+<span class="sd">    :param dict hdr1: Metadata for the slave image</span>
+<span class="sd">    :param dict dem_hdr: Metadata for the DEM</span>
+
+<span class="sd">    :return: chdr: combined metadata</span>
+<span class="sd">    :rtype: dict</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="p">[</span><span class="n">hdr0</span><span class="p">,</span> <span class="n">hdr1</span><span class="p">,</span> <span class="n">dem_hdr</span><span class="p">]]):</span>
+        <span class="k">raise</span> <span class="n">GammaException</span><span class="p">(</span><span class="s1">&#39;Header args need to be dicts&#39;</span><span class="p">)</span>
+
+    <span class="n">date0</span><span class="p">,</span> <span class="n">date1</span> <span class="o">=</span> <span class="n">hdr0</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">MASTER_DATE</span><span class="p">],</span> <span class="n">hdr1</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">MASTER_DATE</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">date0</span> <span class="o">==</span> <span class="n">date1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GammaException</span><span class="p">(</span><span class="s2">&quot;Can&#39;t combine headers for the same day&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">date1</span> <span class="o">&lt;</span> <span class="n">date0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GammaException</span><span class="p">(</span><span class="s2">&quot;Wrong date order&quot;</span><span class="p">)</span>
+
+    <span class="n">chdr</span> <span class="o">=</span> <span class="p">{</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_TIME_SPAN</span><span class="p">:</span> <span class="p">(</span><span class="n">date1</span> <span class="o">-</span> <span class="n">date0</span><span class="p">)</span><span class="o">.</span><span class="n">days</span> <span class="o">/</span> <span class="n">ifc</span><span class="o">.</span><span class="n">DAYS_PER_YEAR</span><span class="p">,</span>
+            <span class="n">ifc</span><span class="o">.</span><span class="n">MASTER_DATE</span><span class="p">:</span> <span class="n">date0</span><span class="p">,</span>
+            <span class="n">ifc</span><span class="o">.</span><span class="n">MASTER_TIME</span><span class="p">:</span> <span class="n">hdr0</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">MASTER_TIME</span><span class="p">],</span>
+            <span class="n">ifc</span><span class="o">.</span><span class="n">SLAVE_DATE</span><span class="p">:</span> <span class="n">date1</span><span class="p">,</span>
+            <span class="n">ifc</span><span class="o">.</span><span class="n">SLAVE_TIME</span><span class="p">:</span> <span class="n">hdr1</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">MASTER_TIME</span><span class="p">],</span>
+            <span class="n">ifc</span><span class="o">.</span><span class="n">DATA_UNITS</span><span class="p">:</span> <span class="n">RADIANS</span><span class="p">,</span>
+            <span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_INSAR_PROCESSOR</span><span class="p">:</span> <span class="n">GAMMA</span><span class="p">}</span>
+
+    <span class="c1"># set incidence angle to mean of master and slave</span>
+    <span class="n">inc_ang</span> <span class="o">=</span> <span class="n">hdr0</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_INCIDENCE_DEGREES</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">inc_ang</span><span class="p">,</span> <span class="n">hdr1</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_INCIDENCE_DEGREES</span><span class="p">],</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-1</span><span class="p">):</span>
+        <span class="n">chdr</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_INCIDENCE_DEGREES</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">hdr0</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_INCIDENCE_DEGREES</span><span class="p">]</span><span class="o">+</span><span class="n">hdr1</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_INCIDENCE_DEGREES</span><span class="p">])</span><span class="o">/</span><span class="mi">2</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Incidence angles differ by more than 1e-1&quot;</span>
+        <span class="k">raise</span> <span class="n">GammaException</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="n">wavelen</span> <span class="o">=</span> <span class="n">hdr0</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_WAVELENGTH_METRES</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">wavelen</span><span class="p">,</span> <span class="n">hdr1</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_WAVELENGTH_METRES</span><span class="p">],</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">):</span>
+        <span class="n">chdr</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_WAVELENGTH_METRES</span><span class="p">]</span> <span class="o">=</span> <span class="n">wavelen</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">(</span><span class="n">chdr</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">MASTER_DATE</span><span class="p">],</span> <span class="n">chdr</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">SLAVE_DATE</span><span class="p">])</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Wavelength mismatch, check both header files for </span><span class="si">%s</span><span class="s2"> &amp; </span><span class="si">%s</span><span class="s2">&quot;</span>
+        <span class="k">raise</span> <span class="n">GammaException</span><span class="p">(</span><span class="n">msg</span> <span class="o">%</span> <span class="n">args</span><span class="p">)</span>
+    <span class="c1"># non-cropped, non-multilooked geotif process step information added</span>
+    <span class="n">chdr</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">DATA_TYPE</span><span class="p">]</span> <span class="o">=</span> <span class="n">ifc</span><span class="o">.</span><span class="n">ORIG</span>
+
+    <span class="n">chdr</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">dem_hdr</span><span class="p">)</span>  <span class="c1"># add geographic data</span>
+    <span class="k">return</span> <span class="n">chdr</span></div>
+
+
+<div class="viewcode-block" id="manage_headers"><a class="viewcode-back" href="../../gamma.html#pyrate.gamma.manage_headers">[docs]</a><span class="k">def</span> <span class="nf">manage_headers</span><span class="p">(</span><span class="n">dem_header_file</span><span class="p">,</span> <span class="n">header_paths</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Manage and combine  header files for GAMMA interferograms, DEM and</span>
+<span class="sd">    incidence files</span>
+
+<span class="sd">    :param str dem_header_file: DEM header path</span>
+<span class="sd">    :param list header_paths: List of master/slave header paths</span>
+
+<span class="sd">    :return: combined_header: Combined metadata dictionary</span>
+<span class="sd">    :rtype: dict</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dem_header</span> <span class="o">=</span> <span class="n">parse_dem_header</span><span class="p">(</span><span class="n">dem_header_file</span><span class="p">)</span>
+    <span class="c1"># find param files containing filename dates</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">header_paths</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">headers</span> <span class="o">=</span> <span class="p">[</span><span class="n">parse_epoch_header</span><span class="p">(</span><span class="n">hp</span><span class="p">)</span> <span class="k">for</span> <span class="n">hp</span> <span class="ow">in</span> <span class="n">header_paths</span><span class="p">]</span>
+        <span class="n">combined_header</span> <span class="o">=</span> <span class="n">combine_headers</span><span class="p">(</span><span class="n">headers</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">headers</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">dem_header</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># probably have DEM or incidence file</span>
+        <span class="n">combined_header</span> <span class="o">=</span> <span class="n">dem_header</span>
+        <span class="n">combined_header</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">DATA_TYPE</span><span class="p">]</span> <span class="o">=</span> <span class="n">ifc</span><span class="o">.</span><span class="n">DEM</span>
+
+    <span class="k">return</span> <span class="n">combined_header</span></div>
+
+
+<div class="viewcode-block" id="GammaException"><a class="viewcode-back" href="../../gamma.html#pyrate.gamma.GammaException">[docs]</a><span class="k">class</span> <span class="nc">GammaException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Gamma generic exception class</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Geoscience Australia
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+  
+<p>asdasdasd</p>
+        <!-- your html code here -->
+ 
+
+
+</body>
+</html>

@@ -1,0 +1,585 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pyrate.timeseries &mdash; PyRate 0.3.0_3 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: white" >
+          
+
+          
+            <a href="../../index.html">
+          
+
+          
+            
+            <img src="../../_static/PyRate_logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+    <li><a href="https://geoscienceaustralia.github.io/PyRate/">Home</a></li>
+    
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#ubuntu-18-04">Ubuntu 18.04</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#docker">Docker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#hpc">HPC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#verify-installation">Verify Installation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage.html">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../usage.html#configuration">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage.html#workflow">Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage.html#multiprocessing">Multiprocessing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../contributing.html#types-of-contributions">Types of Contributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../contributing.html#get-started">Get Started!</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../contributing.html#pull-request-guidelines">Pull Request Guidelines</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../authors.html">Credits</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../authors.html#development-lead">Development Lead</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../authors.html#contributors">Contributors</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../history.html">Release History</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#unreleased-2019-xx-xx">Unreleased (2019-xx-xx)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id1">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id4">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id5">0.1.0 (2017-01-31)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../scripts.html">PyRate Scripts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../pyrate.scripts.run_prepifg.html">PyRate run_prepifg Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pyrate.scripts.run_pyrate.html">PyRate run_pyrate Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pyrate.scripts.postprocessing.html">PyRate postprocessing Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pyrate.scripts.main.html">PyRate main Script</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">Pyrate Modules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../algorithm.html">Algorithm Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../aps.html">Atmospheric Phase Screen Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../config.html">Config Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../covariance.html">Covariance Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../gamma.html">GAMMA Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../gdal_python.html">GDAL-Python Bindings Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../linrate.html">Linrate Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../mst.html">Minimum Spanning Tree Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../orbital.html">Orbital Error Correction Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../prepifg.html">Prepifg Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pyratelog.html">Logging Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../ref_phs_est.html">Reference Phase Calculation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../refpixel.html">Reference Pixel Calculation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../roipac.html">ROI_PAC Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../shared.html">Shared Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../timeseries.html">Time Series Module</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">PyRate</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>pyrate.timeseries</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pyrate.timeseries</h1><div class="highlight"><pre>
+<span></span><span class="c1">#   This Python module is part of the PyRate software package.</span>
+<span class="c1">#</span>
+<span class="c1">#   Copyright 2017 Geoscience Australia</span>
+<span class="c1">#</span>
+<span class="c1">#   Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1">#   you may not use this file except in compliance with the License.</span>
+<span class="c1">#   You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#       http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1">#   Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1">#   distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1">#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1">#   See the License for the specific language governing permissions and</span>
+<span class="c1">#   limitations under the License.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This Python module contains functions for computing a time series</span>
+<span class="sd">inversion in PyRate. It is based on the Matlab codes &#39;tsinvnosm.m&#39;</span>
+<span class="sd">and &#39;tsinvlap.m&#39; contained in the Pirate package.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c1"># pylint: disable=too-many-locals</span>
+<span class="c1"># pylint: disable=too-many-arguments</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="k">import</span> <span class="p">(</span><span class="n">where</span><span class="p">,</span> <span class="n">isnan</span><span class="p">,</span> <span class="n">nan</span><span class="p">,</span> <span class="n">diff</span><span class="p">,</span> <span class="n">zeros</span><span class="p">,</span>
+                   <span class="n">float32</span><span class="p">,</span> <span class="n">cumsum</span><span class="p">,</span> <span class="n">dot</span><span class="p">,</span> <span class="n">delete</span><span class="p">,</span> <span class="n">asarray</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">numpy.linalg</span> <span class="k">import</span> <span class="n">matrix_rank</span><span class="p">,</span> <span class="n">pinv</span><span class="p">,</span> <span class="n">cholesky</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="k">import</span> <span class="n">qr</span>
+<span class="kn">from</span> <span class="nn">joblib</span> <span class="k">import</span> <span class="n">Parallel</span><span class="p">,</span> <span class="n">delayed</span>
+
+<span class="kn">from</span> <span class="nn">pyrate.algorithm</span> <span class="k">import</span> <span class="n">master_slave_ids</span><span class="p">,</span> <span class="n">get_epochs</span>
+<span class="kn">from</span> <span class="nn">pyrate</span> <span class="k">import</span> <span class="n">config</span> <span class="k">as</span> <span class="n">cf</span>
+<span class="kn">from</span> <span class="nn">pyrate.config</span> <span class="k">import</span> <span class="n">ConfigException</span>
+<span class="kn">from</span> <span class="nn">pyrate</span> <span class="k">import</span> <span class="n">mst</span> <span class="k">as</span> <span class="n">mst_module</span>
+
+
+<span class="k">def</span> <span class="nf">_time_series_setup</span><span class="p">(</span><span class="n">ifgs</span><span class="p">,</span> <span class="n">mst</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convenience function for setting up time series computation parameters</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ifgs</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Time series requires 2+ interferograms&#39;</span>
+        <span class="k">raise</span> <span class="n">TimeSeriesError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="c1"># if mst is not a single tree then do interpolation</span>
+    <span class="n">interp</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">mst_module</span><span class="o">.</span><span class="n">mst_from_ifgs</span><span class="p">(</span><span class="n">ifgs</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="k">else</span> <span class="mi">1</span>
+
+    <span class="c1"># Parallel Processing parameters</span>
+    <span class="n">parallel</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">PARALLEL</span><span class="p">]</span>
+    <span class="c1"># Time Series parameters</span>
+    <span class="n">tsmethod</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TIME_SERIES_METHOD</span><span class="p">]</span>
+
+    <span class="n">pthresh</span><span class="p">,</span> <span class="n">smfactor</span><span class="p">,</span> <span class="n">smorder</span> <span class="o">=</span> <span class="n">_validate_params</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">tsmethod</span><span class="p">)</span>
+
+    <span class="n">epochlist</span> <span class="o">=</span> <span class="n">get_epochs</span><span class="p">(</span><span class="n">ifgs</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">nrows</span> <span class="o">=</span> <span class="n">ifgs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">nrows</span>
+    <span class="n">ncols</span> <span class="o">=</span> <span class="n">ifgs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">ncols</span>
+    <span class="n">nifgs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ifgs</span><span class="p">)</span>
+    <span class="n">span</span> <span class="o">=</span> <span class="n">diff</span><span class="p">(</span><span class="n">epochlist</span><span class="o">.</span><span class="n">spans</span><span class="p">)</span>
+    <span class="n">nepoch</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">epochlist</span><span class="o">.</span><span class="n">dates</span><span class="p">)</span>  <span class="c1"># epoch number</span>
+    <span class="n">nvelpar</span> <span class="o">=</span> <span class="n">nepoch</span> <span class="o">-</span> <span class="mi">1</span>  <span class="c1"># velocity parameters number</span>
+    <span class="c1"># nlap = nvelpar - smorder  # Laplacian observations number</span>
+    <span class="n">mast_slave_ids</span> <span class="o">=</span> <span class="n">master_slave_ids</span><span class="p">(</span><span class="n">epochlist</span><span class="o">.</span><span class="n">dates</span><span class="p">)</span>
+    <span class="n">imaster</span> <span class="o">=</span> <span class="p">[</span><span class="n">mast_slave_ids</span><span class="p">[</span><span class="n">ifg</span><span class="o">.</span><span class="n">master</span><span class="p">]</span> <span class="k">for</span> <span class="n">ifg</span> <span class="ow">in</span> <span class="n">ifgs</span><span class="p">]</span>
+    <span class="n">islave</span> <span class="o">=</span> <span class="p">[</span><span class="n">mast_slave_ids</span><span class="p">[</span><span class="n">ifg</span><span class="o">.</span><span class="n">slave</span><span class="p">]</span> <span class="k">for</span> <span class="n">ifg</span> <span class="ow">in</span> <span class="n">ifgs</span><span class="p">]</span>
+    <span class="n">imaster</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">imaster</span><span class="p">,</span> <span class="n">islave</span><span class="p">)</span>
+    <span class="n">islave</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">imaster</span><span class="p">,</span> <span class="n">islave</span><span class="p">)</span>
+    <span class="n">b0_mat</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">((</span><span class="n">nifgs</span><span class="p">,</span> <span class="n">nvelpar</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nifgs</span><span class="p">):</span>
+        <span class="n">b0_mat</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">imaster</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span><span class="n">islave</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="o">=</span> <span class="n">span</span><span class="p">[</span><span class="n">imaster</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span><span class="n">islave</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span>
+
+    <span class="c1"># change the sign if slave is earlier than master</span>
+    <span class="n">isign</span> <span class="o">=</span> <span class="n">where</span><span class="p">(</span><span class="n">imaster</span> <span class="o">&gt;</span> <span class="n">islave</span><span class="p">)</span>
+    <span class="n">b0_mat</span><span class="p">[</span><span class="n">isign</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">:]</span> <span class="o">=</span> <span class="o">-</span><span class="n">b0_mat</span><span class="p">[</span><span class="n">isign</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">:]</span>
+    <span class="n">tsvel_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">nrows</span><span class="p">,</span> <span class="n">ncols</span><span class="p">,</span> <span class="n">nvelpar</span><span class="p">),</span>
+                            <span class="n">dtype</span><span class="o">=</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">ifg_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nifgs</span><span class="p">,</span> <span class="n">nrows</span><span class="p">,</span> <span class="n">ncols</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">float32</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">ifg_num</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nifgs</span><span class="p">):</span>
+        <span class="n">ifg_data</span><span class="p">[</span><span class="n">ifg_num</span><span class="p">]</span> <span class="o">=</span> <span class="n">ifgs</span><span class="p">[</span><span class="n">ifg_num</span><span class="p">]</span><span class="o">.</span><span class="n">phase_data</span>
+    <span class="k">if</span> <span class="n">mst</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">mst</span> <span class="o">=</span> <span class="o">~</span><span class="n">isnan</span><span class="p">(</span><span class="n">ifg_data</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">b0_mat</span><span class="p">,</span> <span class="n">interp</span><span class="p">,</span> <span class="n">pthresh</span><span class="p">,</span> <span class="n">smfactor</span><span class="p">,</span> <span class="n">smorder</span><span class="p">,</span> <span class="n">tsmethod</span><span class="p">,</span> <span class="n">ifg_data</span><span class="p">,</span> \
+        <span class="n">mst</span><span class="p">,</span> <span class="n">ncols</span><span class="p">,</span> <span class="n">nrows</span><span class="p">,</span> <span class="n">nvelpar</span><span class="p">,</span> <span class="n">parallel</span><span class="p">,</span> <span class="n">span</span><span class="p">,</span> <span class="n">tsvel_matrix</span>
+
+
+<span class="k">def</span> <span class="nf">_validate_params</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">tsmethod</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Helper function to validate supplied time series parameters</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">tsmethod</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TIME_SERIES_SM_ORDER</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_missing_option_error</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">TIME_SERIES_SM_ORDER</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">smorder</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TIME_SERIES_SM_ORDER</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">tsmethod</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TIME_SERIES_SM_FACTOR</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_missing_option_error</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">TIME_SERIES_SM_FACTOR</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">smfactor</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TIME_SERIES_SM_FACTOR</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TIME_SERIES_PTHRESH</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_missing_option_error</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">TIME_SERIES_PTHRESH</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">pthresh</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TIME_SERIES_PTHRESH</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">pthresh</span> <span class="o">&lt;</span> <span class="mf">0.0</span> <span class="ow">or</span> <span class="n">pthresh</span> <span class="o">&gt;</span> <span class="mi">1000</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;minimum number of coherent observations for a pixel&quot;</span>
+                <span class="s2">&quot; TIME_SERIES_PTHRESH setting must be &gt;= 0.0 and &lt;= 1000&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">pthresh</span><span class="p">,</span> <span class="n">smfactor</span><span class="p">,</span> <span class="n">smorder</span>
+
+
+<div class="viewcode-block" id="time_series"><a class="viewcode-back" href="../../timeseries.html#pyrate.timeseries.time_series">[docs]</a><span class="k">def</span> <span class="nf">time_series</span><span class="p">(</span><span class="n">ifgs</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">vcmt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mst</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the displacement time series from the given interferogram</span>
+<span class="sd">    network. Solves the linear least squares system using either the SVD</span>
+<span class="sd">    method (similar to the SBAS method implemented by Berardino et al. 2002)</span>
+<span class="sd">    or a Finite Difference method using a Laplacian Smoothing operator</span>
+<span class="sd">    (similar to the method implemented by Schmidt and Burgmann 2003)</span>
+
+<span class="sd">    :param list ifgs: list of interferogram class objects.</span>
+<span class="sd">    :param dict params: Dictionary of configuration parameters</span>
+<span class="sd">    :param ndarray vcmt: Positive definite temporal variance covariance matrix</span>
+<span class="sd">    :param ndarray mst: [optional] Minimum spanning tree array.</span>
+
+<span class="sd">    :return: Tuple with the elements:</span>
+
+<span class="sd">        - incremental displacement time series,</span>
+<span class="sd">        - cumulative displacement time series, and</span>
+<span class="sd">        - velocity for the epoch interval</span>
+
+<span class="sd">        these outputs are multi-dimensional arrays of</span>
+<span class="sd">        size(nrows, ncols, nepochs-1), where:</span>
+
+<span class="sd">        - *nrows* is the number of rows in the ifgs,</span>
+<span class="sd">        - *ncols* is the  number of columns in the ifgs, and</span>
+<span class="sd">        - *nepochs* is the number of unique epochs (dates)</span>
+<span class="sd">    :rtype: tuple</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">b0_mat</span><span class="p">,</span> <span class="n">interp</span><span class="p">,</span> <span class="n">p_thresh</span><span class="p">,</span> <span class="n">sm_factor</span><span class="p">,</span> <span class="n">sm_order</span><span class="p">,</span> <span class="n">ts_method</span><span class="p">,</span> <span class="n">ifg_data</span><span class="p">,</span> <span class="n">mst</span><span class="p">,</span> \
+        <span class="n">ncols</span><span class="p">,</span> <span class="n">nrows</span><span class="p">,</span> <span class="n">nvelpar</span><span class="p">,</span> <span class="n">parallel</span><span class="p">,</span> <span class="n">span</span><span class="p">,</span> <span class="n">tsvel_matrix</span> <span class="o">=</span> \
+        <span class="n">_time_series_setup</span><span class="p">(</span><span class="n">ifgs</span><span class="p">,</span> <span class="n">mst</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">parallel</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">tsvel_matrix</span> <span class="o">=</span> <span class="n">Parallel</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">PROCESSES</span><span class="p">],</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">50</span><span class="p">)(</span>
+            <span class="n">delayed</span><span class="p">(</span><span class="n">_time_series_by_rows</span><span class="p">)(</span><span class="n">r</span><span class="p">,</span> <span class="n">b0_mat</span><span class="p">,</span> <span class="n">sm_factor</span><span class="p">,</span> <span class="n">sm_order</span><span class="p">,</span>
+                                          <span class="n">ifg_data</span><span class="p">,</span> <span class="n">mst</span><span class="p">,</span> <span class="n">ncols</span><span class="p">,</span> <span class="n">nvelpar</span><span class="p">,</span>
+                                          <span class="n">p_thresh</span><span class="p">,</span> <span class="n">vcmt</span><span class="p">,</span> <span class="n">ts_method</span><span class="p">,</span> <span class="n">interp</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nrows</span><span class="p">))</span>
+
+    <span class="k">elif</span> <span class="n">parallel</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+
+        <span class="n">res</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">Parallel</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">PROCESSES</span><span class="p">],</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">50</span><span class="p">)(</span>
+            <span class="n">delayed</span><span class="p">(</span><span class="n">_time_series_by_pixel</span><span class="p">)(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">b0_mat</span><span class="p">,</span> <span class="n">sm_factor</span><span class="p">,</span> <span class="n">sm_order</span><span class="p">,</span>
+                                           <span class="n">ifg_data</span><span class="p">,</span> <span class="n">mst</span><span class="p">,</span> <span class="n">nvelpar</span><span class="p">,</span> <span class="n">p_thresh</span><span class="p">,</span>
+                                           <span class="n">interp</span><span class="p">,</span> <span class="n">vcmt</span><span class="p">,</span> <span class="n">ts_method</span><span class="p">)</span>
+            <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">nrows</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="n">ncols</span><span class="p">))))</span>
+        <span class="n">tsvel_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">newshape</span><span class="o">=</span><span class="p">(</span><span class="n">nrows</span><span class="p">,</span> <span class="n">ncols</span><span class="p">,</span> <span class="n">res</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nrows</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ncols</span><span class="p">):</span>
+                <span class="n">tsvel_matrix</span><span class="p">[</span><span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">_time_series_by_pixel</span><span class="p">(</span>
+                    <span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">b0_mat</span><span class="p">,</span> <span class="n">sm_factor</span><span class="p">,</span> <span class="n">sm_order</span><span class="p">,</span> <span class="n">ifg_data</span><span class="p">,</span> <span class="n">mst</span><span class="p">,</span>
+                    <span class="n">nvelpar</span><span class="p">,</span> <span class="n">p_thresh</span><span class="p">,</span> <span class="n">interp</span><span class="p">,</span> <span class="n">vcmt</span><span class="p">,</span> <span class="n">ts_method</span><span class="p">)</span>
+
+    <span class="n">tsvel_matrix</span> <span class="o">=</span> <span class="n">where</span><span class="p">(</span><span class="n">tsvel_matrix</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="n">nan</span><span class="p">,</span> <span class="n">tsvel_matrix</span><span class="p">)</span>
+    <span class="c1"># SB: do the span multiplication as a numpy linalg operation, MUCH faster</span>
+    <span class="c1">#  not even this is necessary here, perform late for performance</span>
+    <span class="n">tsincr</span> <span class="o">=</span> <span class="n">tsvel_matrix</span> <span class="o">*</span> <span class="n">span</span>
+    <span class="n">tscum</span> <span class="o">=</span> <span class="n">cumsum</span><span class="p">(</span><span class="n">tsincr</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="c1"># SB: converting zeros to nans not performed in Matlab Pirate</span>
+    <span class="c1"># SB: perform this after tsvel_matrix has been nan converted,</span>
+    <span class="c1"># saves the step of comparing a large matrix (tsincr) to zero.</span>
+    <span class="c1"># tscum = where(tscum == 0, nan, tscum)</span>
+    <span class="k">return</span> <span class="n">tsincr</span><span class="p">,</span> <span class="n">tscum</span><span class="p">,</span> <span class="n">tsvel_matrix</span></div>
+
+
+<span class="k">def</span> <span class="nf">_time_series_by_rows</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">b0_mat</span><span class="p">,</span> <span class="n">sm_factor</span><span class="p">,</span> <span class="n">sm_order</span><span class="p">,</span> <span class="n">ifg_data</span><span class="p">,</span> <span class="n">mst</span><span class="p">,</span> <span class="n">ncols</span><span class="p">,</span>
+                         <span class="n">nvelpar</span><span class="p">,</span> <span class="n">p_thresh</span><span class="p">,</span> <span class="n">vcmt</span><span class="p">,</span> <span class="n">ts_method</span><span class="p">,</span> <span class="n">interp</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Wrapper function for splitting time series computation by rows.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">tsvel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">ncols</span><span class="p">,</span> <span class="n">nvelpar</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">float32</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ncols</span><span class="p">):</span>
+        <span class="n">tsvel</span><span class="p">[</span><span class="n">col</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">_time_series_by_pixel</span><span class="p">(</span>
+            <span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">b0_mat</span><span class="p">,</span> <span class="n">sm_factor</span><span class="p">,</span> <span class="n">sm_order</span><span class="p">,</span> <span class="n">ifg_data</span><span class="p">,</span> <span class="n">mst</span><span class="p">,</span> <span class="n">nvelpar</span><span class="p">,</span>
+            <span class="n">p_thresh</span><span class="p">,</span> <span class="n">interp</span><span class="p">,</span> <span class="n">vcmt</span><span class="p">,</span> <span class="n">ts_method</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">tsvel</span>
+
+
+<span class="k">def</span> <span class="nf">_remove_rank_def_rows</span><span class="p">(</span><span class="n">b_mat</span><span class="p">,</span> <span class="n">nvelpar</span><span class="p">,</span> <span class="n">ifgv</span><span class="p">,</span> <span class="n">sel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Remove rank deficient rows of design matrix</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">e_var</span> <span class="o">=</span> <span class="n">qr</span><span class="p">(</span><span class="n">b_mat</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;economic&#39;</span><span class="p">,</span> <span class="n">pivoting</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">licols</span> <span class="o">=</span> <span class="n">e_var</span><span class="p">[</span><span class="n">matrix_rank</span><span class="p">(</span><span class="n">b_mat</span><span class="p">):</span><span class="n">nvelpar</span><span class="p">]</span>
+    <span class="p">[</span><span class="n">rmrow</span><span class="p">,</span> <span class="n">_</span><span class="p">]</span> <span class="o">=</span> <span class="n">where</span><span class="p">(</span><span class="n">b_mat</span><span class="p">[:,</span> <span class="n">licols</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">b_mat</span> <span class="o">=</span> <span class="n">delete</span><span class="p">(</span><span class="n">b_mat</span><span class="p">,</span> <span class="n">rmrow</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">ifgv</span> <span class="o">=</span> <span class="n">delete</span><span class="p">(</span><span class="n">ifgv</span><span class="p">,</span> <span class="n">rmrow</span><span class="p">)</span>
+    <span class="n">sel</span> <span class="o">=</span> <span class="n">delete</span><span class="p">(</span><span class="n">sel</span><span class="p">,</span> <span class="n">rmrow</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">b_mat</span><span class="p">,</span> <span class="n">ifgv</span><span class="p">,</span> <span class="n">sel</span><span class="p">,</span> <span class="n">rmrow</span>
+
+
+<span class="k">def</span> <span class="nf">_time_series_by_pixel</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">b0_mat</span><span class="p">,</span> <span class="n">sm_factor</span><span class="p">,</span> <span class="n">sm_order</span><span class="p">,</span> <span class="n">ifg_data</span><span class="p">,</span> <span class="n">mst</span><span class="p">,</span>
+                          <span class="n">nvelpar</span><span class="p">,</span> <span class="n">p_thresh</span><span class="p">,</span> <span class="n">interp</span><span class="p">,</span> <span class="n">vcmt</span><span class="p">,</span> <span class="n">method</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Wrapper function for splitting time series computation by pixels.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># check pixel for non-redundant ifgs</span>
+    <span class="n">sel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">mst</span><span class="p">[:,</span> <span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># trues in mst are chosen</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sel</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">p_thresh</span><span class="p">:</span>
+        <span class="n">ifgv</span> <span class="o">=</span> <span class="n">ifg_data</span><span class="p">[</span><span class="n">sel</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">]</span>
+        <span class="c1"># make design matrix, b_mat</span>
+        <span class="n">b_mat</span> <span class="o">=</span> <span class="n">b0_mat</span><span class="p">[</span><span class="n">sel</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="k">if</span> <span class="n">interp</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># remove rank deficient rows</span>
+            <span class="n">rmrow</span> <span class="o">=</span> <span class="n">asarray</span><span class="p">([</span><span class="mi">0</span><span class="p">])</span>  <span class="c1"># dummy</span>
+
+            <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">rmrow</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c1"># if b_mat.shape[0] &lt;=1 then we return nans</span>
+                <span class="k">if</span> <span class="n">b_mat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">b_mat</span><span class="p">,</span> <span class="n">ifgv</span><span class="p">,</span> <span class="n">sel</span><span class="p">,</span> <span class="n">rmrow</span> <span class="o">=</span> <span class="n">_remove_rank_def_rows</span><span class="p">(</span>
+                        <span class="n">b_mat</span><span class="p">,</span> <span class="n">nvelpar</span><span class="p">,</span> <span class="n">ifgv</span><span class="p">,</span> <span class="n">sel</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">nvelpar</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+
+            <span class="c1"># Some epochs have been deleted; get valid epoch indices</span>
+            <span class="n">velflag</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">b_mat</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="c1"># remove corresponding columns in design matrix</span>
+            <span class="n">b_mat</span> <span class="o">=</span> <span class="n">b_mat</span><span class="p">[:,</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">velflag</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">velflag</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">nvelpar</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># Use Laplacian smoothing method</span>
+            <span class="n">tsvel</span> <span class="o">=</span> <span class="n">_solve_ts_lap</span><span class="p">(</span><span class="n">nvelpar</span><span class="p">,</span> <span class="n">velflag</span><span class="p">,</span> <span class="n">ifgv</span><span class="p">,</span> <span class="n">b_mat</span><span class="p">,</span>
+                                  <span class="n">sm_order</span><span class="p">,</span> <span class="n">sm_factor</span><span class="p">,</span> <span class="n">sel</span><span class="p">,</span> <span class="n">vcmt</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="c1"># Use SVD method</span>
+            <span class="n">tsvel</span> <span class="o">=</span> <span class="n">_solve_ts_svd</span><span class="p">(</span><span class="n">nvelpar</span><span class="p">,</span> <span class="n">velflag</span><span class="p">,</span> <span class="n">ifgv</span><span class="p">,</span> <span class="n">b_mat</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unrecognised time series method&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">tsvel</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">nvelpar</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+
+
+<span class="k">def</span> <span class="nf">_solve_ts_svd</span><span class="p">(</span><span class="n">nvelpar</span><span class="p">,</span> <span class="n">velflag</span><span class="p">,</span> <span class="n">ifgv</span><span class="p">,</span> <span class="n">b_mat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Solve the linear least squares system using the SVD method.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># pre-allocate the velocity matrix</span>
+    <span class="n">tsvel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">nvelpar</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">float32</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+    <span class="c1"># solve least squares equation using Moore-Penrose pseudoinverse</span>
+    <span class="n">tsvel</span><span class="p">[</span><span class="n">velflag</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">dot</span><span class="p">(</span><span class="n">pinv</span><span class="p">(</span><span class="n">b_mat</span><span class="p">),</span> <span class="n">ifgv</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">tsvel</span>
+
+
+<span class="k">def</span> <span class="nf">_solve_ts_lap</span><span class="p">(</span><span class="n">nvelpar</span><span class="p">,</span> <span class="n">velflag</span><span class="p">,</span> <span class="n">ifgv</span><span class="p">,</span> <span class="n">mat_b</span><span class="p">,</span> <span class="n">smorder</span><span class="p">,</span> <span class="n">smfactor</span><span class="p">,</span> <span class="n">sel</span><span class="p">,</span> <span class="n">vcmt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Solve the linear least squares system using the Finite Difference</span>
+<span class="sd">    method using a Laplacian Smoothing operator.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># pylint: disable=invalid-name</span>
+    <span class="c1"># Laplacian observations number</span>
+    <span class="n">nlap</span> <span class="o">=</span> <span class="n">nvelpar</span> <span class="o">-</span> <span class="n">smorder</span>
+    <span class="c1">#  Laplacian smoothing coefficient matrix</span>
+    <span class="n">b_lap0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">nlap</span><span class="p">,</span> <span class="n">nvelpar</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nlap</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">smorder</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">b_lap0</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">b_lap0</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+
+    <span class="c1"># Scale the coefficients by Laplacian smoothing factor</span>
+    <span class="n">b_lap0</span> <span class="o">*=</span> <span class="n">smfactor</span>
+
+    <span class="c1"># Laplacian smoothing design matrix</span>
+    <span class="n">nvelleft</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">velflag</span><span class="p">)</span>
+    <span class="n">nlap</span> <span class="o">=</span> <span class="n">nvelleft</span> <span class="o">-</span> <span class="n">smorder</span>
+
+    <span class="c1"># constrain for the first and the last incremental</span>
+    <span class="n">b_lap1</span> <span class="o">=</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">nvelleft</span><span class="p">),</span> <span class="n">nvelleft</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">b_lap1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">b_lapn</span> <span class="o">=</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">nvelleft</span><span class="p">),</span> <span class="n">nvelleft</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">b_lapn</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+    <span class="n">b_lap</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">nlap</span> <span class="o">+</span> <span class="mi">2</span><span class="p">,</span> <span class="n">nvelleft</span><span class="p">))</span>
+    <span class="n">b_lap</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">b_lap1</span>
+    <span class="n">b_lap</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="n">nlap</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">b_lap0</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">nlap</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="n">nvelleft</span><span class="p">]</span>
+    <span class="n">b_lap</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">b_lapn</span>
+
+    <span class="n">nlap</span> <span class="o">+=</span> <span class="mi">2</span>
+
+    <span class="c1"># add laplacian design matrix to existing design matrix</span>
+    <span class="n">mat_b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">mat_b</span><span class="p">,</span> <span class="n">b_lap</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="c1"># combine ifg and Laplacian smooth vector</span>
+    <span class="n">v_lap</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nlap</span><span class="p">)</span>
+    <span class="n">obsv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">ifgv</span><span class="p">,</span> <span class="n">v_lap</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="c1"># make variance-covariance matrix</span>
+    <span class="c1"># new covariance matrix, adding the laplacian equations</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">sel</span><span class="p">)</span>
+    <span class="n">nobs</span> <span class="o">=</span> <span class="n">m</span> <span class="o">+</span> <span class="n">nlap</span>
+    <span class="n">vcm_tmp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">nobs</span><span class="p">)</span>
+    <span class="n">vcm_tmp</span><span class="p">[:</span><span class="n">m</span><span class="p">,</span> <span class="p">:</span><span class="n">m</span><span class="p">]</span> <span class="o">=</span> <span class="n">vcmt</span><span class="p">[</span><span class="n">sel</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">sel</span><span class="p">)]</span>
+
+    <span class="c1"># solve the equation by least-squares</span>
+    <span class="c1"># calculate velocities</span>
+    <span class="c1"># we get the lower triangle in numpy, Matlab gives upper triangle</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">cholesky</span><span class="p">(</span><span class="n">pinv</span><span class="p">(</span><span class="n">vcm_tmp</span><span class="p">))</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">wb</span> <span class="o">=</span> <span class="n">dot</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">mat_b</span><span class="p">)</span>
+    <span class="n">wl</span> <span class="o">=</span> <span class="n">dot</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">obsv</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">dot</span><span class="p">(</span><span class="n">pinv</span><span class="p">(</span><span class="n">wb</span><span class="p">,</span> <span class="n">rcond</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">),</span> <span class="n">wl</span><span class="p">)</span>
+
+    <span class="c1"># TODO: implement residuals and roughness calculations</span>
+    <span class="n">tsvel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">nvelpar</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">float32</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+    <span class="n">tsvel</span><span class="p">[</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">velflag</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">)]</span> <span class="o">=</span> <span class="n">x</span><span class="p">[:</span><span class="n">nvelleft</span><span class="p">]</span>
+
+    <span class="c1"># TODO: implement uncertainty estimates (tserror) like in Matlab Pirate code</span>
+    <span class="k">return</span> <span class="n">tsvel</span>
+
+<span class="k">def</span> <span class="nf">_missing_option_error</span><span class="p">(</span><span class="n">option</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convenience function for raising similar missing option errors.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Missing &#39;</span><span class="si">%s</span><span class="s2">&#39; option in config file&quot;</span> <span class="o">%</span> <span class="n">option</span>
+    <span class="k">raise</span> <span class="n">ConfigException</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="TimeSeriesError"><a class="viewcode-back" href="../../timeseries.html#pyrate.timeseries.TimeSeriesError">[docs]</a><span class="k">class</span> <span class="nc">TimeSeriesError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generic exception for time series errors.</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Geoscience Australia
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+  
+<p>asdasdasd</p>
+        <!-- your html code here -->
+ 
+
+
+</body>
+</html>
