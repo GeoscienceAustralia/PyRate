@@ -4,6 +4,7 @@ branches:
   - /^release-.*$/
   - /.*-travis$/
   - master
+  - sheece-sphinx-travis
 
 language: python
 
@@ -31,14 +32,32 @@ install:
   - python setup.py install
   - export PYRATEPATH=$(pwd)
   - export PYTHONPATH=$PYRATEPATH:$PYTHONPATH
-  - chmod 444 tests/test_data/small_test/tif/geo_070709-070813_unw.tif  # makes the file readonly, used in a test
+
+#  - chmod 444 tests/test_data/small_test/tif/geo_070709-070813_unw.tif  # makes the file readonly, used in a test
 
 # command to run tests, e.g. python setup.py test
 script:
   - pip install numpy==1.16.4
   - pytest --cov-report term-missing:skip-covered --cov=pyrate tests/
+  - cd docs && make html
 
 # cache:
 #   - apt
 #   - pip
 #   - $HOME/.cache/pip
+
+#after_success:
+#  - cd docs && make html
+deploy:
+  provider: pages
+  skip-cleanup: true
+  keep-history: true
+  verbose: true
+  on:
+    branch: sheece-sphinx-travis
+  github-token: $GITHUB_TOKEN
+  local-dir: docs/_build/html
+  project_name: PyRate
+  email: insar@ga.gov.au
+  name: InSAR Team
+
