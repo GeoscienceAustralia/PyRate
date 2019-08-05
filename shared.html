@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Shared Module &mdash; PyRate 0.3.0_3 documentation</title>
+  <title>Shared Module &mdash; PyRate 0.3.0.post3 documentation</title>
   
 
   
@@ -549,6 +549,20 @@ in a previous run by interrogating PyRate meta data entries</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="pyrate.shared.collate_metadata">
+<code class="sig-prename descclassname">pyrate.shared.</code><code class="sig-name descname">collate_metadata</code><span class="sig-paren">(</span><em class="sig-param">header</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/shared.html#collate_metadata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.shared.collate_metadata" title="Permalink to this definition">¶</a></dt>
+<dd><p>Grab metadata relevant to PyRate from input metadata</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>header</strong> (<em>dict</em>) – Input file metadata dictionary</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>dict of relevant metadata for PyRate</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
 <dt id="pyrate.shared.convert_radians_to_mm">
 <code class="sig-prename descclassname">pyrate.shared.</code><code class="sig-name descname">convert_radians_to_mm</code><span class="sig-paren">(</span><em class="sig-param">data</em>, <em class="sig-param">wavelength</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/shared.html#convert_radians_to_mm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.shared.convert_radians_to_mm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Function to translates phase in units of radians to units in millimetres.</p>
@@ -592,6 +606,12 @@ to numpy.array_split.</p>
 <dd class="field-odd"><p>list</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyrate.shared.gdal_dataset">
+<code class="sig-prename descclassname">pyrate.shared.</code><code class="sig-name descname">gdal_dataset</code><span class="sig-paren">(</span><em class="sig-param">out_fname</em>, <em class="sig-param">columns</em>, <em class="sig-param">rows</em>, <em class="sig-param">driver='GTiff'</em>, <em class="sig-param">bands=1</em>, <em class="sig-param">dtype='float32'</em>, <em class="sig-param">metadata=None</em>, <em class="sig-param">crs=None</em>, <em class="sig-param">geotransform=None</em>, <em class="sig-param">creation_opts=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/shared.html#gdal_dataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.shared.gdal_dataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialises a py-GDAL dataset object for writing image data.</p>
 </dd></dl>
 
 <dl class="function">
@@ -753,8 +773,8 @@ Use different numpy algorithm dependent on numpy version.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="pyrate.shared.write_geotiff">
-<code class="sig-prename descclassname">pyrate.shared.</code><code class="sig-name descname">write_geotiff</code><span class="sig-paren">(</span><em class="sig-param">header</em>, <em class="sig-param">data_path</em>, <em class="sig-param">dest</em>, <em class="sig-param">nodata</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/shared.html#write_geotiff"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.shared.write_geotiff" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrate.shared.write_fullres_geotiff">
+<code class="sig-prename descclassname">pyrate.shared.</code><code class="sig-name descname">write_fullres_geotiff</code><span class="sig-paren">(</span><em class="sig-param">header</em>, <em class="sig-param">data_path</em>, <em class="sig-param">dest</em>, <em class="sig-param">nodata</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/shared.html#write_fullres_geotiff"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.shared.write_fullres_geotiff" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates a copy of input image data (interferograms, DEM, incidence maps
 etc) in GeoTIFF format with PyRate metadata.</p>
 <dl class="field-list simple">
@@ -770,6 +790,22 @@ etc) in GeoTIFF format with PyRate metadata.</p>
 <dd class="field-even"><p>None, file saved to disk</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyrate.shared.write_geotiff">
+<code class="sig-prename descclassname">pyrate.shared.</code><code class="sig-name descname">write_geotiff</code><span class="sig-paren">(</span><em class="sig-param">data</em>, <em class="sig-param">outds</em>, <em class="sig-param">nodata</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/shared.html#write_geotiff"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.shared.write_geotiff" title="Permalink to this definition">¶</a></dt>
+<dd><p>A generic routine for writing a NumPy array to a geotiff.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>ndarray</em>) – Output data array to save</p></li>
+<li><p><strong>outds</strong> (<em>obj</em>) – GDAL destination object</p></li>
+<li><p><strong>nodata</strong> (<em>float</em>) – No data value of data</p></li>
+</ul>
+</dd>
+</dl>
+<p>:return None, file saved to disk</p>
 </dd></dl>
 
 <dl class="function">

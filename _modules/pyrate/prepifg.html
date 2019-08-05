@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>pyrate.prepifg &mdash; PyRate 0.3.0_3 documentation</title>
+  <title>pyrate.prepifg &mdash; PyRate 0.3.0.post3 documentation</title>
   
 
   
@@ -238,9 +238,9 @@
 <span class="kn">from</span> <span class="nn">osgeo</span> <span class="k">import</span> <span class="n">gdal</span>
 
 <span class="kn">from</span> <span class="nn">pyrate</span> <span class="k">import</span> <span class="n">config</span> <span class="k">as</span> <span class="n">cf</span>
-<span class="kn">from</span> <span class="nn">pyrate</span> <span class="k">import</span> <span class="n">gdal_python</span> <span class="k">as</span> <span class="n">gdalwarp</span>
+<span class="kn">from</span> <span class="nn">pyrate.gdal_python</span> <span class="k">import</span> <span class="n">crop_resample_average</span>
 <span class="kn">from</span> <span class="nn">pyrate</span> <span class="k">import</span> <span class="n">ifgconstants</span> <span class="k">as</span> <span class="n">ifc</span>
-<span class="kn">from</span> <span class="nn">pyrate.shared</span> <span class="k">import</span> <span class="n">Ifg</span><span class="p">,</span> <span class="n">DEM</span>
+<span class="kn">from</span> <span class="nn">pyrate.shared</span> <span class="k">import</span> <span class="n">Ifg</span><span class="p">,</span> <span class="n">DEM</span><span class="p">,</span> <span class="n">output_tiff_filename</span>
 
 <span class="n">CustomExts</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s1">&#39;CustExtents&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;xfirst&#39;</span><span class="p">,</span> <span class="s1">&#39;yfirst&#39;</span><span class="p">,</span> <span class="s1">&#39;xlast&#39;</span><span class="p">,</span> <span class="s1">&#39;ylast&#39;</span><span class="p">])</span>
 
@@ -351,12 +351,12 @@
 
 
 <div class="viewcode-block" id="prepare_ifg"><a class="viewcode-back" href="../../prepifg.html#pyrate.prepifg.prepare_ifg">[docs]</a><span class="k">def</span> <span class="nf">prepare_ifg</span><span class="p">(</span><span class="n">raster_path</span><span class="p">,</span> <span class="n">xlooks</span><span class="p">,</span> <span class="n">ylooks</span><span class="p">,</span> <span class="n">exts</span><span class="p">,</span> <span class="n">thresh</span><span class="p">,</span> <span class="n">crop_opt</span><span class="p">,</span>
-                <span class="n">write_to_disk</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+                <span class="n">write_to_disk</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">out_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Open, resample, crop and optionally save to disk an interferogram or DEM.</span>
 <span class="sd">    Returns are only given if write_to_disk=False</span>
 
-<span class="sd">    :param str raster_path: Raster file path name</span>
+<span class="sd">    :param str raster_path: Input raster file path name</span>
 <span class="sd">    :param int xlooks: Number of multi-looks in x; 5 is 5 times smaller,</span>
 <span class="sd">        1 is no change</span>
 <span class="sd">    :param int ylooks: Number of multi-looks in y</span>
@@ -365,13 +365,14 @@
 <span class="sd">    :param float thresh: see thresh in prepare_ifgs()</span>
 <span class="sd">    :param int crop_opt: Crop option</span>
 <span class="sd">    :param bool write_to_disk: Write new data to disk</span>
+<span class="sd">    :param str out_path: Path for output file</span>
+<span class="sd">    :param dict header: dictionary of metadata from header file</span>
 
 <span class="sd">    :return: resampled_data: output cropped and resampled image</span>
 <span class="sd">    :rtype: ndarray</span>
 <span class="sd">    :return: out_ds: destination gdal dataset object</span>
 <span class="sd">    :rtype: gdal.Dataset</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="n">do_multilook</span> <span class="o">=</span> <span class="n">xlooks</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">ylooks</span> <span class="o">&gt;</span> <span class="mi">1</span>
     <span class="c1"># resolution=None completes faster for non-multilooked layers in gdalwarp</span>
     <span class="n">resolution</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
@@ -380,7 +381,6 @@
         <span class="n">raster</span><span class="o">.</span><span class="n">open</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">do_multilook</span><span class="p">:</span>
         <span class="n">resolution</span> <span class="o">=</span> <span class="p">[</span><span class="n">xlooks</span> <span class="o">*</span> <span class="n">raster</span><span class="o">.</span><span class="n">x_step</span><span class="p">,</span> <span class="n">ylooks</span> <span class="o">*</span> <span class="n">raster</span><span class="o">.</span><span class="n">y_step</span><span class="p">]</span>
-
     <span class="k">if</span> <span class="ow">not</span> <span class="n">do_multilook</span> <span class="ow">and</span> <span class="n">crop_opt</span> <span class="o">==</span> <span class="n">ALREADY_SAME_SIZE</span><span class="p">:</span>
         <span class="n">renamed_path</span> <span class="o">=</span> \
             <span class="n">cf</span><span class="o">.</span><span class="n">mlooked_path</span><span class="p">(</span><span class="n">raster</span><span class="o">.</span><span class="n">data_path</span><span class="p">,</span> <span class="n">looks</span><span class="o">=</span><span class="n">xlooks</span><span class="p">,</span> <span class="n">crop_out</span><span class="o">=</span><span class="n">crop_opt</span><span class="p">)</span>
@@ -390,12 +390,12 @@
         <span class="k">return</span> <span class="n">_dummy_warp</span><span class="p">(</span><span class="n">renamed_path</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">_warp</span><span class="p">(</span><span class="n">raster</span><span class="p">,</span> <span class="n">xlooks</span><span class="p">,</span> <span class="n">ylooks</span><span class="p">,</span> <span class="n">exts</span><span class="p">,</span> <span class="n">resolution</span><span class="p">,</span> <span class="n">thresh</span><span class="p">,</span>
-                 <span class="n">crop_opt</span><span class="p">,</span> <span class="n">write_to_disk</span><span class="p">)</span></div>
+                 <span class="n">crop_opt</span><span class="p">,</span> <span class="n">write_to_disk</span><span class="p">,</span> <span class="n">out_path</span><span class="p">,</span> <span class="n">header</span><span class="p">)</span></div>
 
 
 <span class="c1"># TODO: crop options 0 = no cropping? get rid of same size</span>
 <div class="viewcode-block" id="prepare_ifgs"><a class="viewcode-back" href="../../prepifg.html#pyrate.prepifg.prepare_ifgs">[docs]</a><span class="k">def</span> <span class="nf">prepare_ifgs</span><span class="p">(</span><span class="n">raster_data_paths</span><span class="p">,</span> <span class="n">crop_opt</span><span class="p">,</span> <span class="n">xlooks</span><span class="p">,</span> <span class="n">ylooks</span><span class="p">,</span> <span class="n">thresh</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
-                 <span class="n">user_exts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">write_to_disc</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+                 <span class="n">user_exts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">write_to_disc</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">out_path</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Wrapper function to prepare a sequence of interferogram files for</span>
 <span class="sd">    PyRate analysis. See prepifg.prepare_ifg() for full description of</span>
@@ -423,7 +423,7 @@
     <span class="n">exts</span> <span class="o">=</span> <span class="n">get_analysis_extent</span><span class="p">(</span><span class="n">crop_opt</span><span class="p">,</span> <span class="n">rasters</span><span class="p">,</span> <span class="n">xlooks</span><span class="p">,</span> <span class="n">ylooks</span><span class="p">,</span> <span class="n">user_exts</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="p">[</span><span class="n">prepare_ifg</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">xlooks</span><span class="p">,</span> <span class="n">ylooks</span><span class="p">,</span> <span class="n">exts</span><span class="p">,</span> <span class="n">thresh</span><span class="p">,</span> <span class="n">crop_opt</span><span class="p">,</span>
-                        <span class="n">write_to_disc</span><span class="p">)</span>
+                        <span class="n">write_to_disc</span><span class="p">,</span> <span class="n">out_path</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">raster_data_paths</span><span class="p">]</span></div>
 
 
@@ -438,7 +438,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">ds</span> <span class="o">=</span> <span class="n">gdal</span><span class="o">.</span><span class="n">Open</span><span class="p">(</span><span class="n">data_path</span><span class="p">)</span>
     <span class="n">md</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">GetMetadata</span><span class="p">()</span>
-    <span class="k">if</span> <span class="s1">&#39;DATE&#39;</span> <span class="ow">in</span> <span class="n">md</span><span class="p">:</span>  <span class="c1"># ifg</span>
+    <span class="k">if</span> <span class="n">ifc</span><span class="o">.</span><span class="n">MASTER_DATE</span> <span class="ow">in</span> <span class="n">md</span><span class="p">:</span>  <span class="c1"># ifg</span>
         <span class="k">return</span> <span class="n">Ifg</span><span class="p">(</span><span class="n">data_path</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">DEM</span><span class="p">(</span><span class="n">data_path</span><span class="p">)</span></div>
@@ -474,7 +474,7 @@
 
 
 <span class="k">def</span> <span class="nf">_warp</span><span class="p">(</span><span class="n">ifg</span><span class="p">,</span> <span class="n">x_looks</span><span class="p">,</span> <span class="n">y_looks</span><span class="p">,</span> <span class="n">extents</span><span class="p">,</span> <span class="n">resolution</span><span class="p">,</span> <span class="n">thresh</span><span class="p">,</span> <span class="n">crop_out</span><span class="p">,</span>
-          <span class="n">write_to_disk</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+          <span class="n">write_to_disk</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">out_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Convenience function for calling GDAL functionality</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -482,7 +482,8 @@
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;X and Y looks mismatch&#39;</span><span class="p">)</span>
 
     <span class="c1"># cut, average, resample the final output layers</span>
-    <span class="n">looks_path</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">mlooked_path</span><span class="p">(</span><span class="n">ifg</span><span class="o">.</span><span class="n">data_path</span><span class="p">,</span> <span class="n">y_looks</span><span class="p">,</span> <span class="n">crop_out</span><span class="p">)</span>
+    <span class="n">op</span> <span class="o">=</span> <span class="n">output_tiff_filename</span><span class="p">(</span><span class="n">ifg</span><span class="o">.</span><span class="n">data_path</span><span class="p">,</span> <span class="n">out_path</span><span class="p">)</span>
+    <span class="n">looks_path</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">mlooked_path</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">y_looks</span><span class="p">,</span> <span class="n">crop_out</span><span class="p">)</span>
 
     <span class="c1">#     # Add missing/updated metadata to resampled ifg/DEM</span>
     <span class="c1">#     new_lyr = type(ifg)(looks_path)</span>
@@ -494,14 +495,13 @@
     <span class="c1">#         #if params.has_key(REPROJECTION_FLAG):</span>
     <span class="c1">#         #    reproject()</span>
     <span class="n">driver_type</span> <span class="o">=</span> <span class="s1">&#39;GTiff&#39;</span> <span class="k">if</span> <span class="n">write_to_disk</span> <span class="k">else</span> <span class="s1">&#39;MEM&#39;</span>
-    <span class="n">resampled_data</span><span class="p">,</span> <span class="n">out_ds</span> <span class="o">=</span> <span class="n">gdalwarp</span><span class="o">.</span><span class="n">crop_resample_average</span><span class="p">(</span>
+    <span class="n">resampled_data</span><span class="p">,</span> <span class="n">out_ds</span> <span class="o">=</span> <span class="n">crop_resample_average</span><span class="p">(</span>
         <span class="n">input_tif</span><span class="o">=</span><span class="n">ifg</span><span class="o">.</span><span class="n">data_path</span><span class="p">,</span>
         <span class="n">extents</span><span class="o">=</span><span class="n">extents</span><span class="p">,</span>
         <span class="n">new_res</span><span class="o">=</span><span class="n">resolution</span><span class="p">,</span>
         <span class="n">output_file</span><span class="o">=</span><span class="n">looks_path</span><span class="p">,</span>
         <span class="n">thresh</span><span class="o">=</span><span class="n">thresh</span><span class="p">,</span>
-        <span class="n">out_driver_type</span><span class="o">=</span><span class="n">driver_type</span><span class="p">)</span>
-
+        <span class="n">out_driver_type</span><span class="o">=</span><span class="n">driver_type</span><span class="p">,</span> <span class="n">hdr</span><span class="o">=</span><span class="n">header</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">write_to_disk</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">resampled_data</span><span class="p">,</span> <span class="n">out_ds</span>
 

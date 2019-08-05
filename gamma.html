@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>GAMMA Module &mdash; PyRate 0.3.0_3 documentation</title>
+  <title>GAMMA Module &mdash; PyRate 0.3.0.post3 documentation</title>
   
 
   
@@ -242,6 +242,32 @@ dictionary for an interferogram.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyrate.gamma.gamma_header">
+<code class="sig-prename descclassname">pyrate.gamma.</code><code class="sig-name descname">gamma_header</code><span class="sig-paren">(</span><em class="sig-param">file_path</em>, <em class="sig-param">params</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/gamma.html#gamma_header"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.gamma.gamma_header" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to obtain combined Gamma headers for image file</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyrate.gamma.get_header_paths">
+<code class="sig-prename descclassname">pyrate.gamma.</code><code class="sig-name descname">get_header_paths</code><span class="sig-paren">(</span><em class="sig-param">input_file</em>, <em class="sig-param">slc_dir=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/gamma.html#get_header_paths"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.gamma.get_header_paths" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function that matches input GAMMA file names with GAMMA header file names</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_file</strong> (<em>str</em>) – input GAMMA image file.</p></li>
+<li><p><strong>slc_dir</strong> (<em>str</em>) – GAMMA SLC header file directory</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>list of matching header files</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list</p>
 </dd>
 </dl>
 </dd></dl>

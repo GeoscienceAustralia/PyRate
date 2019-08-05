@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>pyrate.gdal_python &mdash; PyRate 0.3.0_3 documentation</title>
+  <title>pyrate.gdal_python &mdash; PyRate 0.3.0.post3 documentation</title>
   
 
   
@@ -227,6 +227,7 @@
 <span class="kn">from</span> <span class="nn">PIL</span> <span class="k">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">ImageDraw</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">pyrate</span> <span class="k">import</span> <span class="n">ifgconstants</span> <span class="k">as</span> <span class="n">ifc</span>
+<span class="kn">from</span> <span class="nn">pyrate</span> <span class="k">import</span> <span class="n">shared</span>
 
 <span class="n">gdal</span><span class="o">.</span><span class="n">SetCacheMax</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="mi">15</span><span class="p">)</span>
 <span class="n">GDAL_WARP_MEMORY_LIMIT</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="mi">10</span>
@@ -452,7 +453,7 @@
 <div class="viewcode-block" id="crop_resample_average"><a class="viewcode-back" href="../../gdal_python.html#pyrate.gdal_python.crop_resample_average">[docs]</a><span class="k">def</span> <span class="nf">crop_resample_average</span><span class="p">(</span>
         <span class="n">input_tif</span><span class="p">,</span> <span class="n">extents</span><span class="p">,</span> <span class="n">new_res</span><span class="p">,</span> <span class="n">output_file</span><span class="p">,</span> <span class="n">thresh</span><span class="p">,</span>
         <span class="n">out_driver_type</span><span class="o">=</span><span class="s1">&#39;GTiff&#39;</span><span class="p">,</span>
-        <span class="n">match_pirate</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="n">match_pirate</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">hdr</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Crop, resample, and average a geotiff image.</span>
 
@@ -463,6 +464,7 @@
 <span class="sd">    :param float thresh: NaN fraction threshold</span>
 <span class="sd">    :param str out_driver_type: The output driver; `MEM` or `GTiff` (optional)</span>
 <span class="sd">    :param bool match_pirate: Match Matlab Pirate output (optional)</span>
+<span class="sd">    :param dict hdr: dictionary of metadata</span>
 
 <span class="sd">    :return: resampled_average: output cropped and resampled image</span>
 <span class="sd">    :rtype: ndarray</span>
@@ -482,38 +484,41 @@
     <span class="n">src_dtype</span> <span class="o">=</span> <span class="n">src_ds_mem</span><span class="o">.</span><span class="n">GetRasterBand</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">DataType</span>
     <span class="n">src_gt</span> <span class="o">=</span> <span class="n">src_ds_mem</span><span class="o">.</span><span class="n">GetGeoTransform</span><span class="p">()</span>
 
-    <span class="c1"># write out to output geotif file</span>
-    <span class="n">driver</span> <span class="o">=</span> <span class="n">gdal</span><span class="o">.</span><span class="n">GetDriverByName</span><span class="p">(</span><span class="n">out_driver_type</span><span class="p">)</span>
-
     <span class="c1"># required to match Matlab Pirate output</span>
     <span class="k">if</span> <span class="n">tmp_ds</span><span class="p">:</span>
         <span class="n">_matlab_alignment</span><span class="p">(</span><span class="n">input_tif</span><span class="p">,</span> <span class="n">new_res</span><span class="p">,</span> <span class="n">resampled_average</span><span class="p">,</span> <span class="n">src_ds_mem</span><span class="p">,</span>
                           <span class="n">src_gt</span><span class="p">,</span> <span class="n">tmp_ds</span><span class="p">)</span>
 
-    <span class="c1"># write final pyrate GTiff</span>
-    <span class="n">out_ds</span> <span class="o">=</span> <span class="n">driver</span><span class="o">.</span><span class="n">Create</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="n">dst_ds</span><span class="o">.</span><span class="n">RasterXSize</span><span class="p">,</span> <span class="n">dst_ds</span><span class="o">.</span><span class="n">RasterYSize</span><span class="p">,</span>
-                           <span class="mi">1</span><span class="p">,</span> <span class="n">src_dtype</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;compress=packbits&#39;</span><span class="p">])</span>
+    <span class="c1"># grab metadata from existing geotiff</span>
+    <span class="n">gt</span> <span class="o">=</span> <span class="n">dst_ds</span><span class="o">.</span><span class="n">GetGeoTransform</span><span class="p">()</span>
+    <span class="n">wkt</span> <span class="o">=</span> <span class="n">dst_ds</span><span class="o">.</span><span class="n">GetProjection</span><span class="p">()</span>
 
-    <span class="n">out_ds</span><span class="o">.</span><span class="n">GetRasterBand</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">SetNoDataValue</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
-    <span class="n">out_ds</span><span class="o">.</span><span class="n">GetRasterBand</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">WriteArray</span><span class="p">(</span><span class="n">resampled_average</span><span class="p">)</span>
-    <span class="n">out_ds</span><span class="o">.</span><span class="n">SetGeoTransform</span><span class="p">(</span><span class="n">dst_ds</span><span class="o">.</span><span class="n">GetGeoTransform</span><span class="p">())</span>
-    <span class="n">out_ds</span><span class="o">.</span><span class="n">SetProjection</span><span class="p">(</span><span class="n">dst_ds</span><span class="o">.</span><span class="n">GetProjection</span><span class="p">())</span>
-    <span class="c1"># copy metadata</span>
-    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">dst_ds</span><span class="o">.</span><span class="n">GetMetadata</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="c1"># TEST HERE IF EXISTING FILE HAS PYRATE METADATA. IF NOT ADD HERE</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">ifc</span><span class="o">.</span><span class="n">DATA_TYPE</span> <span class="ow">in</span> <span class="n">dst_ds</span><span class="o">.</span><span class="n">GetMetadata</span><span class="p">()</span> <span class="ow">and</span> <span class="n">hdr</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">md</span> <span class="o">=</span> <span class="n">shared</span><span class="o">.</span><span class="n">collate_metadata</span><span class="p">(</span><span class="n">hdr</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span> 
+        <span class="n">md</span> <span class="o">=</span> <span class="n">dst_ds</span><span class="o">.</span><span class="n">GetMetadata</span><span class="p">()</span>
+
+    <span class="c1"># update metadata for output</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">md</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="n">ifc</span><span class="o">.</span><span class="n">DATA_TYPE</span><span class="p">:</span>
             <span class="c1"># update data type metadata</span>
             <span class="k">if</span> <span class="n">v</span> <span class="o">==</span> <span class="n">ifc</span><span class="o">.</span><span class="n">ORIG</span><span class="p">:</span>
-                <span class="n">out_ds</span><span class="o">.</span><span class="n">SetMetadataItem</span><span class="p">(</span><span class="n">ifc</span><span class="o">.</span><span class="n">DATA_TYPE</span><span class="p">,</span> <span class="n">ifc</span><span class="o">.</span><span class="n">MULTILOOKED</span><span class="p">)</span>
+                <span class="n">md</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">ifc</span><span class="o">.</span><span class="n">DATA_TYPE</span><span class="p">:</span><span class="n">ifc</span><span class="o">.</span><span class="n">MULTILOOKED</span><span class="p">})</span>
             <span class="k">elif</span> <span class="n">v</span> <span class="o">==</span> <span class="n">ifc</span><span class="o">.</span><span class="n">DEM</span><span class="p">:</span>
-                <span class="n">out_ds</span><span class="o">.</span><span class="n">SetMetadataItem</span><span class="p">(</span><span class="n">ifc</span><span class="o">.</span><span class="n">DATA_TYPE</span><span class="p">,</span> <span class="n">ifc</span><span class="o">.</span><span class="n">MLOOKED_DEM</span><span class="p">)</span>
+                <span class="n">md</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">ifc</span><span class="o">.</span><span class="n">DATA_TYPE</span><span class="p">:</span><span class="n">ifc</span><span class="o">.</span><span class="n">MLOOKED_DEM</span><span class="p">})</span>
             <span class="k">elif</span> <span class="n">v</span> <span class="o">==</span> <span class="n">ifc</span><span class="o">.</span><span class="n">INCIDENCE</span><span class="p">:</span>
-                <span class="n">out_ds</span><span class="o">.</span><span class="n">SetMetadataItem</span><span class="p">(</span><span class="n">ifc</span><span class="o">.</span><span class="n">DATA_TYPE</span><span class="p">,</span> <span class="n">ifc</span><span class="o">.</span><span class="n">MLOOKED_INC</span><span class="p">)</span>
+                <span class="n">md</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">ifc</span><span class="o">.</span><span class="n">DATA_TYPE</span><span class="p">:</span><span class="n">ifc</span><span class="o">.</span><span class="n">MLOOKED_INC</span><span class="p">})</span>
             <span class="k">elif</span> <span class="n">v</span> <span class="o">==</span> <span class="n">ifc</span><span class="o">.</span><span class="n">MULTILOOKED</span><span class="p">:</span>
                 <span class="k">pass</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Data Type metadata not recognised&#39;</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">out_ds</span><span class="o">.</span><span class="n">SetMetadataItem</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+
+    <span class="n">out_ds</span> <span class="o">=</span> <span class="n">shared</span><span class="o">.</span><span class="n">gdal_dataset</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="n">dst_ds</span><span class="o">.</span><span class="n">RasterXSize</span><span class="p">,</span> <span class="n">dst_ds</span><span class="o">.</span><span class="n">RasterYSize</span><span class="p">,</span>
+                 <span class="n">driver</span><span class="o">=</span><span class="n">out_driver_type</span><span class="p">,</span> <span class="n">bands</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">src_dtype</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="n">md</span><span class="p">,</span> <span class="n">crs</span><span class="o">=</span><span class="n">wkt</span><span class="p">,</span>
+                 <span class="n">geotransform</span><span class="o">=</span><span class="n">gt</span><span class="p">,</span> <span class="n">creation_opts</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;compress=packbits&#39;</span><span class="p">])</span>
+
+    <span class="n">shared</span><span class="o">.</span><span class="n">write_geotiff</span><span class="p">(</span><span class="n">resampled_average</span><span class="p">,</span> <span class="n">out_ds</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span> 
 
     <span class="k">return</span> <span class="n">resampled_average</span><span class="p">,</span> <span class="n">out_ds</span></div>
 

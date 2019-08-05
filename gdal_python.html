@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>GDAL-Python Bindings Module &mdash; PyRate 0.3.0_3 documentation</title>
+  <title>GDAL-Python Bindings Module &mdash; PyRate 0.3.0.post3 documentation</title>
   
 
   
@@ -262,7 +262,7 @@ nodata          The NoData value; defaults to -9999.</p>
 
 <dl class="function">
 <dt id="pyrate.gdal_python.crop_resample_average">
-<code class="sig-prename descclassname">pyrate.gdal_python.</code><code class="sig-name descname">crop_resample_average</code><span class="sig-paren">(</span><em class="sig-param">input_tif</em>, <em class="sig-param">extents</em>, <em class="sig-param">new_res</em>, <em class="sig-param">output_file</em>, <em class="sig-param">thresh</em>, <em class="sig-param">out_driver_type='GTiff'</em>, <em class="sig-param">match_pirate=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/gdal_python.html#crop_resample_average"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.gdal_python.crop_resample_average" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.gdal_python.</code><code class="sig-name descname">crop_resample_average</code><span class="sig-paren">(</span><em class="sig-param">input_tif</em>, <em class="sig-param">extents</em>, <em class="sig-param">new_res</em>, <em class="sig-param">output_file</em>, <em class="sig-param">thresh</em>, <em class="sig-param">out_driver_type='GTiff'</em>, <em class="sig-param">match_pirate=False</em>, <em class="sig-param">hdr=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/gdal_python.html#crop_resample_average"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.gdal_python.crop_resample_average" title="Permalink to this definition">¶</a></dt>
 <dd><p>Crop, resample, and average a geotiff image.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -274,6 +274,7 @@ nodata          The NoData value; defaults to -9999.</p>
 <li><p><strong>thresh</strong> (<em>float</em>) – NaN fraction threshold</p></li>
 <li><p><strong>out_driver_type</strong> (<em>str</em>) – The output driver; <cite>MEM</cite> or <cite>GTiff</cite> (optional)</p></li>
 <li><p><strong>match_pirate</strong> (<em>bool</em>) – Match Matlab Pirate output (optional)</p></li>
+<li><p><strong>hdr</strong> (<em>dict</em>) – dictionary of metadata</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>

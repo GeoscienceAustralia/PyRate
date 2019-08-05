@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Prepifg Module &mdash; PyRate 0.3.0_3 documentation</title>
+  <title>Prepifg Module &mdash; PyRate 0.3.0.post3 documentation</title>
   
 
   
@@ -275,13 +275,13 @@ the computational problem.</p>
 
 <dl class="function">
 <dt id="pyrate.prepifg.prepare_ifg">
-<code class="sig-prename descclassname">pyrate.prepifg.</code><code class="sig-name descname">prepare_ifg</code><span class="sig-paren">(</span><em class="sig-param">raster_path</em>, <em class="sig-param">xlooks</em>, <em class="sig-param">ylooks</em>, <em class="sig-param">exts</em>, <em class="sig-param">thresh</em>, <em class="sig-param">crop_opt</em>, <em class="sig-param">write_to_disk=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/prepifg.html#prepare_ifg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.prepifg.prepare_ifg" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.prepifg.</code><code class="sig-name descname">prepare_ifg</code><span class="sig-paren">(</span><em class="sig-param">raster_path</em>, <em class="sig-param">xlooks</em>, <em class="sig-param">ylooks</em>, <em class="sig-param">exts</em>, <em class="sig-param">thresh</em>, <em class="sig-param">crop_opt</em>, <em class="sig-param">write_to_disk=True</em>, <em class="sig-param">out_path=None</em>, <em class="sig-param">header=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/prepifg.html#prepare_ifg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.prepifg.prepare_ifg" title="Permalink to this definition">¶</a></dt>
 <dd><p>Open, resample, crop and optionally save to disk an interferogram or DEM.
 Returns are only given if write_to_disk=False</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>raster_path</strong> (<em>str</em>) – Raster file path name</p></li>
+<li><p><strong>raster_path</strong> (<em>str</em>) – Input raster file path name</p></li>
 <li><p><strong>xlooks</strong> (<em>int</em>) – Number of multi-looks in x; 5 is 5 times smaller,
 1 is no change</p></li>
 <li><p><strong>ylooks</strong> (<em>int</em>) – Number of multi-looks in y</p></li>
@@ -290,6 +290,8 @@ new file: (xfirst, yfirst, xlast, ylast)cropping coordinates</p></li>
 <li><p><strong>thresh</strong> (<em>float</em>) – see thresh in prepare_ifgs()</p></li>
 <li><p><strong>crop_opt</strong> (<em>int</em>) – Crop option</p></li>
 <li><p><strong>write_to_disk</strong> (<em>bool</em>) – Write new data to disk</p></li>
+<li><p><strong>out_path</strong> (<em>str</em>) – Path for output file</p></li>
+<li><p><strong>header</strong> (<em>dict</em>) – dictionary of metadata from header file</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -309,7 +311,7 @@ new file: (xfirst, yfirst, xlast, ylast)cropping coordinates</p></li>
 
 <dl class="function">
 <dt id="pyrate.prepifg.prepare_ifgs">
-<code class="sig-prename descclassname">pyrate.prepifg.</code><code class="sig-name descname">prepare_ifgs</code><span class="sig-paren">(</span><em class="sig-param">raster_data_paths</em>, <em class="sig-param">crop_opt</em>, <em class="sig-param">xlooks</em>, <em class="sig-param">ylooks</em>, <em class="sig-param">thresh=0.5</em>, <em class="sig-param">user_exts=None</em>, <em class="sig-param">write_to_disc=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/prepifg.html#prepare_ifgs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.prepifg.prepare_ifgs" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.prepifg.</code><code class="sig-name descname">prepare_ifgs</code><span class="sig-paren">(</span><em class="sig-param">raster_data_paths</em>, <em class="sig-param">crop_opt</em>, <em class="sig-param">xlooks</em>, <em class="sig-param">ylooks</em>, <em class="sig-param">thresh=0.5</em>, <em class="sig-param">user_exts=None</em>, <em class="sig-param">write_to_disc=True</em>, <em class="sig-param">out_path=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/prepifg.html#prepare_ifgs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.prepifg.prepare_ifgs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Wrapper function to prepare a sequence of interferogram files for
 PyRate analysis. See prepifg.prepare_ifg() for full description of
 inputs and returns.</p>
