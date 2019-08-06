@@ -35,7 +35,15 @@ log = logging.getLogger(__name__)
               type=click.Choice(['DEBUG', 'INFO', 'WARNING', 'ERROR']),
               default='INFO', help='Level of logging')
 def cli(verbosity):
-    """Commandline options and logging setup"""
+    """
+    CLI for carrying out PyRate workflow. Typical workflow:\n
+        Step 1: converttogeotiff\n
+        Step 2: prepifg\n
+        Step 3: process\n
+        Step 4: postprocess\n
+    Refer to https://geoscienceaustralia.github.io/PyRate/usage.html for 
+    more details.
+    """
     pylog.configure(verbosity)
 
 
