@@ -22,7 +22,8 @@ import json
 import click
 from pyrate import pyratelog as pylog
 from pyrate import config as cf
-from pyrate.scripts import converttogtif, run_prepifg, run_pyrate, postprocessing
+from pyrate.scripts import (converttogtif, run_prepifg, run_pyrate, 
+    postprocessing)
 from pyrate import __version__
 
 log = logging.getLogger(__name__)
@@ -42,7 +43,7 @@ def cli(verbosity):
 @click.argument('config_file')
 def converttogeotiff(config_file):
     """
-    Convert input files to geotiff
+    Convert interferograms to geotiff.
     """
     config_file = os.path.abspath(config_file)
     params = cf.get_config_params(config_file)
@@ -55,7 +56,7 @@ def converttogeotiff(config_file):
 @click.argument('config_file')
 def prepifg(config_file):
     """
-    Perform multilooking (resampling) and/or cropping on input files
+    Perform multilooking and cropping on geotiffs.
     """
     config_file = os.path.abspath(config_file)
     params = cf.get_config_params(config_file)
@@ -72,7 +73,7 @@ def prepifg(config_file):
               help='divide ifgs into this many columns')
 def process(config_file, rows, cols):
     """
-    Step 2: Main PyRate workflow including time series and linear rate computation
+    Time series and linear rate computation.
     """
     config_file = os.path.abspath(config_file)
     _, dest_paths, params = cf.get_ifg_paths(config_file)
@@ -91,7 +92,7 @@ def process(config_file, rows, cols):
                    'number of cols used previously in main workflow')
 def postprocess(config_file, rows, cols):
     """
-    Step 3: Reassemble PyRate output tiles and save as geotiffs
+    Reassemble computed tiles and save as geotiffs.
     """
     config_file = os.path.abspath(config_file)
     postprocessing.main(config_file, rows, cols)
