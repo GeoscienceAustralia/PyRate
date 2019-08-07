@@ -61,7 +61,17 @@ converttogeotiff: Converting input intergerograms
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Before PyRate can process GAMMA or ROI\_PAC intergerograms, they need to be
-converted into geotiff format. 
+converted into geotiff format by the ``converttogeotiff`` command.
+
+::
+
+    >> pyrate converttogeotiff --help
+    Usage: pyrate converttogeotiff [OPTIONS] CONFIG_FILE
+
+      Convert interferograms to geotiff.
+
+    Options:
+      --help  Show this message and exit. 
 
 The ``converttogeotiff`` command will determine the input format from the value
 specified at the *processor:* keyword in the config file (0: ROI\_PAC;
@@ -97,7 +107,7 @@ already exist.
 prepifg: Preparing input interferograms
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The second step of PyRate is  applying multi-looking and cropping 
+The second step of PyRate is applying multi-looking and cropping 
 operations to the converted interferograms. 
 These procedures are all performed by the ``pyrate prepifg`` command:
 
@@ -125,9 +135,7 @@ reduce the computational complexity of performing the time series and
 linear rate analysis.
 
 An example configuration file is provided in the root source directory
-as ``input_parameters.conf``. The relevant options for ``prepifg``
-are TODO: EXPLAIN HOW TO CONFIGURE PREPIFG AND WHAT THE OPTIONS DO.
-
+as ``input_parameters.conf``. 
 
 process: Main workflow and linear rate and time series analysis
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
