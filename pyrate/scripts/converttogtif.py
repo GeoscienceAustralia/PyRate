@@ -41,7 +41,7 @@ ROIPAC = 0
 
 def main(params=None):
     """
-    Function for converting input interferograms into geotiffs.
+    Parse parameters and prepare files for conversion.
 
     :param dict params: Parameters dictionary read in from the config file
     """
