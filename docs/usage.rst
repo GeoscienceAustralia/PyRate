@@ -16,14 +16,24 @@ Workflow
 After following the steps in `Installation <installation.html>`__, an
 executable program ``pyrate`` is created.
 
-Use ``help`` for the different command line options:
+Use ``--help`` for the different command line options:
 
 ::
 
-    >> pyrate --help
     Usage: pyrate [OPTIONS] COMMAND [ARGS]...
 
-      Commandline options and logging setup
+        CLI for carrying out PyRate workflow. Typical workflow:
+
+            Step 1: converttogeotiff
+
+            Step 2: prepifg
+
+            Step 3: process
+
+            Step 4: postprocess
+
+        Refer to https://geoscienceaustralia.github.io/PyRate/usage.html for more
+        details.
 
     Options:
       -V, --version                   Show the version and exit.
@@ -32,48 +42,38 @@ Use ``help`` for the different command line options:
       --help                          Show this message and exit.
 
     Commands:
-      postprocess  Step 3: Reassemble PyRate output tiles and save as geotiffs
-      prepifg      Step 1: Convert input files to geotiff and perform multilooking...
-      process      Step 2: Main PyRate workflow including time series and linear rate...
+      converttogeotiff  Convert interferograms to geotiff.
+      postprocess       Reassemble computed tiles and save as geotiffs.
+      prepifg           Perform multilooking and cropping on geotiffs.
+      process           Time series and linear rate computation.
 
-The ``pyrate`` program has three command line options corresponding to
+The ``pyrate`` program has four command line options corresponding to
 different parts of the PyRate workflow:
 
-1. prepifg
-2. process
-3. postprocess
+1. converttogeotiff
+2. prepifg
+3. process
+4. postprocess
 
 Below we discuss these options.
 
-prepifg: Preparing input interferograms
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+converttogeotiff: Converting input intergerograms
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The first step of PyRate is to convert the GAMMA or ROI\_PAC format
-unwrapped interferograms into geotiff format, followed by applying
-multi-looking and cropping operations. These procedures are all
-performed by the ``pyrate prepifg`` command:
+Before PyRate can process GAMMA or ROI\_PAC intergerograms, they need to be
+converted into geotiff format by the ``converttogeotiff`` command.
 
 ::
 
-    >> pyrate prepifg --help
-    Usage: pyrate prepifg [OPTIONS] CONFIG_FILE
+    >> pyrate converttogeotiff --help
+    Usage: pyrate converttogeotiff [OPTIONS] CONFIG_FILE
+
+      Convert interferograms to geotiff.
 
     Options:
-      --help  Show this message and exit.
+      --help  Show this message and exit. 
 
-The ``prepifg`` command is used as follows:
-
-::
-
-    pyrate prepifg /path/to/config_file
-
-The two major steps during the ``prepifg`` operation are described
-below.
-
-Data formatting: convert to geotiff
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The ``prepifg`` command will determine the input format from the value
+The ``converttogeotiff`` command will determine the input format from the value
 specified at the *processor:* keyword in the config file (0: ROI\_PAC;
 1: GAMMA)
 
@@ -99,15 +99,43 @@ its path and name are specified in the config file under the
 *demHeaderFile:* keyword. The geographic projection in the parameter
 *DATUM:* is extracted from the DEM header file.
 
+Upon completion, geotiff formatted copies of the input files will be placed
+in the directory the input files are located in. Note that ``converttogeotiff``
+will not perform the conversion if geotiffs for the provided input files
+already exist.
+
+prepifg: Preparing input interferograms
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The second step of PyRate is applying multi-looking and cropping 
+operations to the converted interferograms. 
+These procedures are all performed by the ``pyrate prepifg`` command:
+
+::
+
+    >> pyrate prepifg --help
+    Usage: pyrate prepifg [OPTIONS] CONFIG_FILE
+
+    Options:
+      --help  Show this message and exit.
+
+The ``prepifg`` command is used as follows:
+
+::
+
+    pyrate prepifg /path/to/config_file
+
 Image transformations: multilooking and cropping
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``prepifg`` command will also perform multi-looking (image
-sub-sampling) and cropping of the input interferograms.
+The ``prepifg`` command will perform multi-looking (image
+sub-sampling) and cropping of the input interferograms in geotiff format.
+The purpose of this is to reduce the resolution of the interferograms to 
+reduce the computational complexity of performing the time series and 
+linear rate analysis.
 
-Two example configuration files are provided in the *configs/*
-directory, one each for ROI\_PAC and GAMMA prepifg configuration. Either
-configuration file can be used with ``prepifg``.
+An example configuration file is provided in the root source directory
+as ``input_parameters.conf``. 
 
 process: Main workflow and linear rate and time series analysis
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
