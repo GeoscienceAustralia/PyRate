@@ -116,6 +116,7 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="scripts.html">PyRate Scripts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.converttogtif.html">PyRate converttogtif Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.run_prepifg.html">PyRate run_prepifg Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.run_pyrate.html">PyRate run_pyrate Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.postprocessing.html">PyRate postprocessing Script</a></li>
@@ -292,13 +293,16 @@ environment and reload the required modules:</p>
 <h2>Verify Installation<a class="headerlink" href="#verify-installation" title="Permalink to this headline">¶</a></h2>
 <p>To verify PyRate has been successfully installed, run the workflow with the
 included example config file and data:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pyrate</span> <span class="n">prepifg</span> <span class="n">input_parameters</span><span class="o">.</span><span class="n">conf</span>
-<span class="n">pyrate</span> <span class="n">process</span> <span class="n">input_parameters</span><span class="o">.</span><span class="n">conf</span>
-<span class="n">pyrate</span> <span class="n">postprocess</span> <span class="n">input_parameters</span><span class="o">.</span><span class="n">conf</span>
-</pre></div>
-</div>
+<dl class="simple">
+<dt>::</dt><dd><p>pyrate converttogeotiff input_parameters.conf
+pyrate prepifg input_parameters.conf
+pyrate process input_parameters.conf
+pyrate postprocess input_parameters.conf</p>
+</dd>
+</dl>
 <p>On Raijin and other HPC systems, you can utilise MPI to run PyRate in parallel:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Modify &#39;n&#39; based on the number of processors available.</span>
+<span class="n">mpirun</span> <span class="o">-</span><span class="n">n</span> <span class="mi">4</span> <span class="n">pyrate</span> <span class="n">converttogeotiff</span> <span class="n">input_parameters</span><span class="o">.</span><span class="n">conf</span>
 <span class="n">mpirun</span> <span class="o">-</span><span class="n">n</span> <span class="mi">4</span> <span class="n">pyrate</span> <span class="n">prepifg</span> <span class="n">input_parameters</span><span class="o">.</span><span class="n">conf</span>
 <span class="n">mpirun</span> <span class="o">-</span><span class="n">n</span> <span class="mi">4</span> <span class="n">pyrate</span> <span class="n">process</span> <span class="n">input_parameters</span><span class="o">.</span><span class="n">conf</span> <span class="o">-</span><span class="n">c</span> <span class="mi">2</span> <span class="o">-</span><span class="n">r</span> <span class="mi">2</span>
 <span class="n">mpirun</span> <span class="o">-</span><span class="n">n</span> <span class="mi">4</span> <span class="n">pyrate</span> <span class="n">postprocess</span> <span class="n">input_parameters</span><span class="o">.</span><span class="n">conf</span> <span class="o">-</span><span class="n">c</span> <span class="mi">2</span> <span class="o">-</span><span class="n">r</span> <span class="mi">2</span>

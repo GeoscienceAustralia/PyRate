@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>pyrate.scripts.run_prepifg &mdash; PyRate 0.3.0.post3 documentation</title>
+  <title>pyrate.scripts.converttogtif &mdash; PyRate 0.3.0.post3 documentation</title>
   
 
   
@@ -188,7 +188,7 @@
         
           <li><a href="../../index.html">Module code</a> &raquo;</li>
         
-      <li>pyrate.scripts.run_prepifg</li>
+      <li>pyrate.scripts.converttogtif</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -203,7 +203,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <h1>Source code for pyrate.scripts.run_prepifg</h1><div class="highlight"><pre>
+  <h1>Source code for pyrate.scripts.converttogtif</h1><div class="highlight"><pre>
 <span></span><span class="c1">#   This Python module is part of the PyRate software package.</span>
 <span class="c1">#</span>
 <span class="c1">#   Copyright 2017 Geoscience Australia</span>
@@ -220,35 +220,34 @@
 <span class="c1">#   See the License for the specific language governing permissions and</span>
 <span class="c1">#   limitations under the License.</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">This Python script applies optional multilooking and cropping to input</span>
-<span class="sd">interferogram geotiff files.</span>
+<span class="sd">This Python script converts ROI_PAC or GAMMA format input interferograms </span>
+<span class="sd">into geotiff format files</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span>
 <span class="kn">import</span> <span class="nn">sys</span>
-<span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">from</span> <span class="nn">os.path</span> <span class="k">import</span> <span class="n">join</span>
-<span class="kn">import</span> <span class="nn">re</span>
-<span class="kn">import</span> <span class="nn">glob2</span>
+<span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">from</span> <span class="nn">joblib</span> <span class="k">import</span> <span class="n">Parallel</span><span class="p">,</span> <span class="n">delayed</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">pyrate</span> <span class="k">import</span> <span class="n">prepifg</span>
+
+<span class="kn">from</span> <span class="nn">pyrate.prepifg</span> <span class="k">import</span> <span class="n">PreprocessError</span>
 <span class="kn">from</span> <span class="nn">pyrate</span> <span class="k">import</span> <span class="n">config</span> <span class="k">as</span> <span class="n">cf</span>
+<span class="kn">from</span> <span class="nn">pyrate</span> <span class="k">import</span> <span class="n">roipac</span>
+<span class="kn">from</span> <span class="nn">pyrate</span> <span class="k">import</span> <span class="n">gamma</span>
 <span class="kn">from</span> <span class="nn">pyrate</span> <span class="k">import</span> <span class="n">shared</span>
 <span class="kn">import</span> <span class="nn">pyrate.ifgconstants</span> <span class="k">as</span> <span class="nn">ifc</span>
 <span class="kn">from</span> <span class="nn">pyrate</span> <span class="k">import</span> <span class="n">mpiops</span>
-<span class="kn">from</span> <span class="nn">pyrate.prepifg</span> <span class="k">import</span> <span class="n">PreprocessError</span>
-<span class="kn">from</span> <span class="nn">pyrate</span> <span class="k">import</span> <span class="n">gamma</span>
-<span class="kn">from</span> <span class="nn">pyrate</span> <span class="k">import</span> <span class="n">roipac</span>
 
 <span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 <span class="n">GAMMA</span> <span class="o">=</span> <span class="mi">1</span>
 <span class="n">ROIPAC</span> <span class="o">=</span> <span class="mi">0</span>
 
-<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../../pyrate.scripts.run_prepifg.html#pyrate.scripts.run_prepifg.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../../pyrate.scripts.converttogtif.html#pyrate.scripts.converttogtif.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Main workflow function for preparing interferograms for PyRate.</span>
+<span class="sd">    Parse parameters and prepare files for conversion.</span>
 
 <span class="sd">    :param dict params: Parameters dictionary read in from the config file</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -258,18 +257,19 @@
     <span class="c1"># the important pyrate stuff anyway, but might affect gen_thumbs.py.</span>
     <span class="c1"># Going to assume base_ifg_paths is ordered correcly</span>
     <span class="c1"># pylint: disable=too-many-branches</span>
-    <span class="n">usage</span> <span class="o">=</span> <span class="s1">&#39;Usage: pyrate prepifg &lt;config_file&gt;&#39;</span>
+
+    <span class="n">usage</span> <span class="o">=</span> <span class="s1">&#39;Usage: pyrate converttogtif &lt;config_file&gt;&#39;</span>
     <span class="k">if</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># Over-ride input options if this is an MPI job</span>
         <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">PARALLEL</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
 
     <span class="k">if</span> <span class="n">params</span><span class="p">:</span>
-        <span class="n">base_ifg_paths</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">original_ifg_paths</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">IFG_FILE_LIST</span><span class="p">])</span>    
-    <span class="k">else</span><span class="p">:</span>
-        <span class="c1"># if params not provided read from config file</span>
+        <span class="n">base_ifg_paths</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">original_ifg_paths</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">IFG_FILE_LIST</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>  <span class="c1"># if params not provided read from config file</span>
         <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">params</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">):</span>
             <span class="nb">print</span><span class="p">(</span><span class="n">usage</span><span class="p">)</span>
             <span class="k">return</span>
         <span class="n">base_ifg_paths</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">get_ifg_paths</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">raw_config_file</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
 
     <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">DEM_FILE</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="c1"># optional DEM conversion</span>
         <span class="n">base_ifg_paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">DEM_FILE</span><span class="p">])</span>
@@ -281,63 +281,59 @@
         <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">APS_ELEVATION_MAP</span><span class="p">]:</span>
             <span class="n">base_ifg_paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">APS_ELEVATION_MAP</span><span class="p">])</span>
 
-    <span class="n">shared</span><span class="o">.</span><span class="n">mkdir_p</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">OUT_DIR</span><span class="p">])</span> <span class="c1"># create output dir</span>
-    
     <span class="n">process_base_ifgs_paths</span> <span class="o">=</span> \
         <span class="n">np</span><span class="o">.</span><span class="n">array_split</span><span class="p">(</span><span class="n">base_ifg_paths</span><span class="p">,</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">size</span><span class="p">)[</span><span class="n">mpiops</span><span class="o">.</span><span class="n">rank</span><span class="p">]</span>
-    <span class="n">gtiff_paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">shared</span><span class="o">.</span><span class="n">output_tiff_filename</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> \
-        <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">OBS_DIR</span><span class="p">])</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">process_base_ifgs_paths</span><span class="p">]</span>
-    <span class="n">do_prepifg</span><span class="p">(</span><span class="n">gtiff_paths</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
-    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Finished prepifg&quot;</span><span class="p">)</span></div>
+    <span class="n">gtiff_paths</span> <span class="o">=</span> <span class="n">do_geotiff</span><span class="p">(</span><span class="n">process_base_ifgs_paths</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Finished converttogtif&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">gtiff_paths</span></div>
 
 
-<div class="viewcode-block" id="do_prepifg"><a class="viewcode-back" href="../../../pyrate.scripts.run_prepifg.html#pyrate.scripts.run_prepifg.do_prepifg">[docs]</a><span class="k">def</span> <span class="nf">do_prepifg</span><span class="p">(</span><span class="n">gtiff_paths</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+<div class="viewcode-block" id="do_geotiff"><a class="viewcode-back" href="../../../pyrate.scripts.converttogtif.html#pyrate.scripts.converttogtif.do_geotiff">[docs]</a><span class="k">def</span> <span class="nf">do_geotiff</span><span class="p">(</span><span class="n">base_unw_paths</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Prepare interferograms by applying multilooking/cropping operations.</span>
+<span class="sd">    Convert input interferograms to geotiff format.</span>
 
-<span class="sd">    :param list gtiff_paths: List of full-res geotiffs</span>
+<span class="sd">    :param list base_unw_paths: List of unwrapped interferograms</span>
 <span class="sd">    :param dict params: Parameters dictionary corresponding to config file</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># pylint: disable=expression-not-assigned</span>
-    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Preparing interferograms by cropping/multilooking&quot;</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Converting input interferograms to geotiff&quot;</span><span class="p">)</span>
     <span class="n">parallel</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">PARALLEL</span><span class="p">]</span>
 
-    <span class="k">if</span> <span class="nb">all</span><span class="p">([</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">gtiff_paths</span><span class="p">]):</span>
-        <span class="n">ifgs</span> <span class="o">=</span> <span class="p">[</span><span class="n">prepifg</span><span class="o">.</span><span class="n">dem_or_ifg</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">gtiff_paths</span><span class="p">]</span>
-        <span class="n">xlooks</span><span class="p">,</span> <span class="n">ylooks</span><span class="p">,</span> <span class="n">crop</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">transform_params</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
-        <span class="n">user_exts</span> <span class="o">=</span> <span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">IFG_XFIRST</span><span class="p">],</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">IFG_YFIRST</span><span class="p">],</span>
-                     <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">IFG_XLAST</span><span class="p">],</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">IFG_YLAST</span><span class="p">])</span>
-        <span class="n">exts</span> <span class="o">=</span> <span class="n">prepifg</span><span class="o">.</span><span class="n">get_analysis_extent</span><span class="p">(</span><span class="n">crop</span><span class="p">,</span> <span class="n">ifgs</span><span class="p">,</span> <span class="n">xlooks</span><span class="p">,</span> <span class="n">ylooks</span><span class="p">,</span>
-                                           <span class="n">user_exts</span><span class="o">=</span><span class="n">user_exts</span><span class="p">)</span>
-        <span class="n">thresh</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">NO_DATA_AVERAGING_THRESHOLD</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">parallel</span><span class="p">:</span>
-            <span class="n">Parallel</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">PROCESSES</span><span class="p">],</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">50</span><span class="p">)(</span>
-                <span class="n">delayed</span><span class="p">(</span><span class="n">_prepifg_multiprocessing</span><span class="p">)(</span><span class="n">p</span><span class="p">,</span> <span class="n">xlooks</span><span class="p">,</span> <span class="n">ylooks</span><span class="p">,</span> <span class="n">exts</span><span class="p">,</span> <span class="n">thresh</span><span class="p">,</span> <span class="n">crop</span><span class="p">,</span>
-                        <span class="n">params</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">gtiff_paths</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="p">[</span><span class="n">_prepifg_multiprocessing</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">xlooks</span><span class="p">,</span> <span class="n">ylooks</span><span class="p">,</span> <span class="n">exts</span><span class="p">,</span> <span class="n">thresh</span><span class="p">,</span> <span class="n">crop</span><span class="p">,</span>
-                                      <span class="n">params</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">gtiff_paths</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">parallel</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Running geotiff conversion in parallel with </span><span class="si">{}</span><span class="s2"> &quot;</span>
+                 <span class="s2">&quot;processes&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">PROCESSES</span><span class="p">]))</span>
+        <span class="n">dest_base_ifgs</span> <span class="o">=</span> <span class="n">Parallel</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">PROCESSES</span><span class="p">],</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">50</span><span class="p">)(</span>
+            <span class="n">delayed</span><span class="p">(</span><span class="n">_geotiff_multiprocessing</span><span class="p">)(</span><span class="n">p</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">base_unw_paths</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Full-res geotiffs do not exist. Ensure you have&quot;</span>
-            <span class="s2">&quot; converted your interferograms to geotiffs.&quot;</span><span class="p">)</span>
-        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></div>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Running geotiff conversion in serial&quot;</span><span class="p">)</span>
+        <span class="n">dest_base_ifgs</span> <span class="o">=</span> <span class="p">[</span><span class="n">_geotiff_multiprocessing</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+                          <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">base_unw_paths</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">dest_base_ifgs</span></div>
 
-<span class="k">def</span> <span class="nf">_prepifg_multiprocessing</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">xlooks</span><span class="p">,</span> <span class="n">ylooks</span><span class="p">,</span> <span class="n">exts</span><span class="p">,</span> <span class="n">thresh</span><span class="p">,</span> <span class="n">crop</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+
+<span class="k">def</span> <span class="nf">_geotiff_multiprocessing</span><span class="p">(</span><span class="n">unw_path</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Multiprocessing wrapper for prepifg</span>
+<span class="sd">    Multiprocessing wrapper for full-res geotiff conversion</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dest</span> <span class="o">=</span> <span class="n">shared</span><span class="o">.</span><span class="n">output_tiff_filename</span><span class="p">(</span><span class="n">unw_path</span><span class="p">,</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">OBS_DIR</span><span class="p">])</span>
     <span class="n">processor</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">PROCESSOR</span><span class="p">]</span>  <span class="c1"># roipac or gamma</span>
-    <span class="k">if</span> <span class="n">processor</span> <span class="o">==</span> <span class="n">GAMMA</span><span class="p">:</span>
-        <span class="n">header</span> <span class="o">=</span> <span class="n">gamma</span><span class="o">.</span><span class="n">gamma_header</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">processor</span> <span class="o">==</span> <span class="n">ROIPAC</span><span class="p">:</span>
-        <span class="n">header</span> <span class="o">=</span> <span class="n">roipac</span><span class="o">.</span><span class="n">roipac_header</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">PreprocessError</span><span class="p">(</span><span class="s1">&#39;Processor must be ROI_PAC (0) or &#39;</span>
+
+    <span class="c1"># Create full-res geotiff if not already on disk</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">dest</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">processor</span> <span class="o">==</span> <span class="n">GAMMA</span><span class="p">:</span>
+            <span class="n">header</span> <span class="o">=</span> <span class="n">gamma</span><span class="o">.</span><span class="n">gamma_header</span><span class="p">(</span><span class="n">unw_path</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">processor</span> <span class="o">==</span> <span class="n">ROIPAC</span><span class="p">:</span>
+            <span class="n">header</span> <span class="o">=</span> <span class="n">roipac</span><span class="o">.</span><span class="n">roipac_header</span><span class="p">(</span><span class="n">unw_path</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PreprocessError</span><span class="p">(</span><span class="s1">&#39;Processor must be ROI_PAC (0) or &#39;</span>
                                           <span class="s1">&#39;GAMMA (1)&#39;</span><span class="p">)</span>
-
-    <span class="n">prepifg</span><span class="o">.</span><span class="n">prepare_ifg</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">xlooks</span><span class="p">,</span> <span class="n">ylooks</span><span class="p">,</span> <span class="n">exts</span><span class="p">,</span> <span class="n">thresh</span><span class="p">,</span> <span class="n">crop</span><span class="p">,</span>
-                                 <span class="n">out_path</span><span class="o">=</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">OUT_DIR</span><span class="p">],</span> <span class="n">header</span><span class="o">=</span><span class="n">header</span><span class="p">)</span>
-
+        <span class="n">shared</span><span class="o">.</span><span class="n">write_fullres_geotiff</span><span class="p">(</span><span class="n">header</span><span class="p">,</span> <span class="n">unw_path</span><span class="p">,</span> <span class="n">dest</span><span class="p">,</span>
+                      <span class="n">nodata</span><span class="o">=</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">NO_DATA_VALUE</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">dest</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Full-res geotiff already exists&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
 
 </pre></div>
 

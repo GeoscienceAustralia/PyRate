@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>HPC &mdash; PyRate 0.3.0.post3 documentation</title>
+  <title>PyRate converttogtif Script &mdash; PyRate 0.3.0.post3 documentation</title>
   
 
   
@@ -35,7 +35,9 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" /> 
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="PyRate run_prepifg Script" href="pyrate.scripts.run_prepifg.html" />
+    <link rel="prev" title="PyRate Scripts" href="scripts.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -81,7 +83,7 @@
               
             
             
-              <ul>
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#ubuntu-18-04">Ubuntu 18.04</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#docker">Docker</a></li>
@@ -113,8 +115,8 @@
 <li class="toctree-l2"><a class="reference internal" href="history.html#id5">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="scripts.html">PyRate Scripts</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.converttogtif.html">PyRate converttogtif Script</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="scripts.html">PyRate Scripts</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">PyRate converttogtif Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.run_prepifg.html">PyRate run_prepifg Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.run_pyrate.html">PyRate run_pyrate Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.postprocessing.html">PyRate postprocessing Script</a></li>
@@ -186,7 +188,9 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>HPC</li>
+          <li><a href="scripts.html">PyRate Scripts</a> &raquo;</li>
+        
+      <li>PyRate converttogtif Script</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -198,48 +202,49 @@
   </ul>
 
   
+  <div class="rst-breadcrumbs-buttons" role="navigation" aria-label="breadcrumb navigation">
+      
+        <a href="pyrate.scripts.run_prepifg.html" class="btn btn-neutral float-right" title="PyRate run_prepifg Script" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="scripts.html" class="btn btn-neutral float-left" title="PyRate Scripts" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+  </div>
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="hpc">
-<h1>HPC<a class="headerlink" href="#hpc" title="Permalink to this headline">¶</a></h1>
-<p>These instructions have been tested with the Raijin platform of the
-National Computational Infrastructure (NCI).
-The process for other HPC platforms may differ.</p>
-<p>Login to Raijin:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ssh</span> <span class="o">&lt;</span><span class="n">user_name</span><span class="o">&gt;</span><span class="nd">@raijin</span><span class="o">.</span><span class="n">nci</span><span class="o">.</span><span class="n">org</span><span class="o">.</span><span class="n">au</span>
-<span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">GeoscienceAustralia</span><span class="o">/</span><span class="n">PyRate</span><span class="o">.</span><span class="n">git</span>
-</pre></div>
-</div>
-<p>Load the required Raijin modules (this will also remove the default NCI GDAL
-Python bindings so we can build and use our own):</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">source</span> <span class="n">PyRate</span><span class="o">/</span><span class="n">utils</span><span class="o">/</span><span class="n">load_modules</span><span class="o">.</span><span class="n">sh</span>
-</pre></div>
-</div>
-<p>Create a Python virtual environment:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python3</span> <span class="o">-</span><span class="n">m</span> <span class="n">venv</span> <span class="o">~/</span><span class="n">PyRateVenv</span>
-<span class="n">source</span> <span class="o">~/</span><span class="n">PyRateVenv</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">activate</span>
-</pre></div>
-</div>
-<p>Install PyRate:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="n">PyRate</span>
-<span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">install</span>
-</pre></div>
-</div>
-<p>Following this, PyRate will be available for PBS jobs. To verify the
-installation, first run an interactive session:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">qsub</span> <span class="o">-</span><span class="n">I</span> <span class="o">-</span><span class="n">q</span> <span class="n">expressbw</span> <span class="o">-</span><span class="n">l</span> <span class="n">walltime</span><span class="o">=</span><span class="mi">01</span><span class="p">:</span><span class="mi">00</span><span class="p">:</span><span class="mi">00</span><span class="p">,</span><span class="n">mem</span><span class="o">=</span><span class="mi">16</span><span class="n">Gb</span><span class="p">,</span><span class="n">ncpus</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span><span class="n">wd</span>
-</pre></div>
-</div>
-<p>Once the session has started, you will need to reactivate your virtual
-environment and reload the required modules:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="o">~</span>
-<span class="n">source</span> <span class="n">PyRateVenv</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">activate</span>
-<span class="n">source</span> <span class="n">PyRate</span><span class="o">/</span><span class="n">utils</span><span class="o">/</span><span class="n">load_modules</span><span class="o">.</span><span class="n">sh</span>
-</pre></div>
-</div>
+  <div class="section" id="pyrate-converttogtif-script">
+<h1>PyRate converttogtif Script<a class="headerlink" href="#pyrate-converttogtif-script" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-pyrate.scripts.converttogtif"></span><p>This Python script converts ROI_PAC or GAMMA format input interferograms 
+into geotiff format files</p>
+<dl class="function">
+<dt id="pyrate.scripts.converttogtif.do_geotiff">
+<code class="sig-prename descclassname">pyrate.scripts.converttogtif.</code><code class="sig-name descname">do_geotiff</code><span class="sig-paren">(</span><em class="sig-param">base_unw_paths</em>, <em class="sig-param">params</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/scripts/converttogtif.html#do_geotiff"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.scripts.converttogtif.do_geotiff" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert input interferograms to geotiff format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>base_unw_paths</strong> (<em>list</em>) – List of unwrapped interferograms</p></li>
+<li><p><strong>params</strong> (<em>dict</em>) – Parameters dictionary corresponding to config file</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyrate.scripts.converttogtif.main">
+<code class="sig-prename descclassname">pyrate.scripts.converttogtif.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><em class="sig-param">params=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/scripts/converttogtif.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.scripts.converttogtif.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse parameters and prepare files for conversion.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>params</strong> (<em>dict</em>) – Parameters dictionary read in from the config file</p>
+</dd>
+</dl>
+</dd></dl>
+
 </div>
 
 
