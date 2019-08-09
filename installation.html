@@ -294,17 +294,21 @@ environment and reload the required modules:</p>
 <p>To verify PyRate has been successfully installed, run the workflow with the
 included example config file and data:</p>
 <dl class="simple">
-<dt>::</dt><dd><p>pyrate converttogeotiff input_parameters.conf
+<dt>::</dt><dd><p>
+cd ~/PyRate
+pyrate converttogeotiff input_parameters.conf
 pyrate prepifg input_parameters.conf
-pyrate process input_parameters.conf
-pyrate postprocess input_parameters.conf</p>
+pyrate linrate input_parameters.conf
+pyrate postprocess input_parameters.conf
+
+</p>
 </dd>
 </dl>
 <p>On Raijin and other HPC systems, you can utilise MPI to run PyRate in parallel:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Modify &#39;n&#39; based on the number of processors available.</span>
-<span class="n">mpirun</span> <span class="o">-</span><span class="n">n</span> <span class="mi">4</span> <span class="n">pyrate</span> <span class="n">converttogeotiff</span> <span class="n">input_parameters</span><span class="o">.</span><span class="n">conf</span>
+<span class="n">cd ~/PyRate</span>
 <span class="n">mpirun</span> <span class="o">-</span><span class="n">n</span> <span class="mi">4</span> <span class="n">pyrate</span> <span class="n">prepifg</span> <span class="n">input_parameters</span><span class="o">.</span><span class="n">conf</span>
-<span class="n">mpirun</span> <span class="o">-</span><span class="n">n</span> <span class="mi">4</span> <span class="n">pyrate</span> <span class="n">process</span> <span class="n">input_parameters</span><span class="o">.</span><span class="n">conf</span> <span class="o">-</span><span class="n">c</span> <span class="mi">2</span> <span class="o">-</span><span class="n">r</span> <span class="mi">2</span>
+<span class="n">mpirun</span> <span class="o">-</span><span class="n">n</span> <span class="mi">4</span> <span class="n">pyrate</span> <span class="n">linrate</span> <span class="n">input_parameters</span><span class="o">.</span><span class="n">conf</span> <span class="o">-</span><span class="n">c</span> <span class="mi">2</span> <span class="o">-</span><span class="n">r</span> <span class="mi">2</span>
 <span class="n">mpirun</span> <span class="o">-</span><span class="n">n</span> <span class="mi">4</span> <span class="n">pyrate</span> <span class="n">postprocess</span> <span class="n">input_parameters</span><span class="o">.</span><span class="n">conf</span> <span class="o">-</span><span class="n">c</span> <span class="mi">2</span> <span class="o">-</span><span class="n">r</span> <span class="mi">2</span>
 </pre></div>
 </div>
