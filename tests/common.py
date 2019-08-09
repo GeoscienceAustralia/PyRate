@@ -47,10 +47,10 @@ SML_TEST_GAMMA = join(SML_TEST_DIR, 'gamma_obs')  # gamma processed unws
 SML_TEST_CONF = join(SML_TEST_DIR, 'conf')
 
 SML_TEST_DEM_DIR = join(SML_TEST_DIR, 'dem')
-SML_TEST_MATLAB_MST_DIR = join(SML_TEST_DIR, 'matlab_mst')
-SML_TEST_MATLAB_PREPIFG_DIR = join(SML_TEST_DIR, 'matlab_prepifg_output')
+SML_TEST_MATLAB_MST_DIR = join(SML_TEST_DIR, 'mst')
+SML_TEST_MATLAB_PREPIFG_DIR = join(SML_TEST_DIR, 'prepifg_output')
 SML_TEST_MATLAB_ORBITAL_DIR = join(SML_TEST_DIR,
-                                   'matlab_orbital_error_correction')
+                                   'orbital_error_correction')
 SML_TEST_DEM_ROIPAC = join(SML_TEST_DEM_DIR, 'roipac_test_trimmed.dem')
 SML_TEST_DEM_GAMMA = join(SML_TEST_GAMMA, '20060619_utm.dem')
 SML_TEST_INCIDENCE = join(SML_TEST_GAMMA, '20060619_utm.inc')

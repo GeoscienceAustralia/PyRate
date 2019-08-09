@@ -14,7 +14,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 """
-This Python module contains tests for the matlab_mst.py PyRate module.
+This Python module contains tests for the mst.py PyRate module.
 """
 import glob
 import os

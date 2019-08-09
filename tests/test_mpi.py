@@ -149,8 +149,8 @@ def test_vcm_matlab_vs_mpi(mpisync, tempdir, get_config):
     from tests.common import SML_TEST_DIR, TEST_CONF_ROIPAC
 
     params_dict = get_config(TEST_CONF_ROIPAC)
-    MATLAB_VCM_DIR = os.path.join(SML_TEST_DIR, 'matlab_vcm')
-    matlab_vcm = np.genfromtxt(os.path.join(MATLAB_VCM_DIR, 'matlab_vcmt.csv'), delimiter=',')
+    MATLAB_VCM_DIR = os.path.join(SML_TEST_DIR, 'vcm')
+    matlab_vcm = np.genfromtxt(os.path.join(MATLAB_VCM_DIR, 'vcmt.csv'), delimiter=',')
     if mpiops.rank == 0:
         outdir = tempdir()
     else:

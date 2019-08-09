@@ -177,7 +177,7 @@ class MatlabTimeSeriesEquality(unittest.TestCase):
             common.calculate_time_series(ifgs, params, vcmt, mst=mst_grid)
 
         # load the matlab data
-        ts_dir = os.path.join(common.SML_TEST_DIR, 'matlab_time_series')
+        ts_dir = os.path.join(common.SML_TEST_DIR, 'time_series')
         tsincr_path = os.path.join(ts_dir,
                                    'ts_incr_interp0_method1.csv')
         ts_incr = np.genfromtxt(tsincr_path)
@@ -297,7 +297,7 @@ class MatlabTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
 
         # copy matlab data
         SML_TIME_SERIES_DIR = os.path.join(common.SML_TEST_DIR,
-                                   'matlab_time_series')
+                                   'time_series')
         tsincr_path = os.path.join(SML_TIME_SERIES_DIR,
                                    'ts_incr_interp0_method2.csv')
         ts_incr = np.genfromtxt(tsincr_path)

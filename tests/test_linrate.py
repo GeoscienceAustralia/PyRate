@@ -134,15 +134,15 @@ class MatlabEqualityTest(unittest.TestCase):
             tests.common.calculate_linear_rate(ifgs, params, vcmt,
                                                mst_mat=mst_grid)
 
-        matlab_linrate_dir = os.path.join(SML_TEST_DIR, 'matlab_linrate')
+        linrate_dir = os.path.join(SML_TEST_DIR, 'linrate')
 
         cls.rate_matlab = np.genfromtxt(
-            os.path.join(matlab_linrate_dir, 'stackmap.csv'), delimiter=',')
+            os.path.join(linrate_dir, 'stackmap.csv'), delimiter=',')
         cls.error_matlab = np.genfromtxt(
-            os.path.join(matlab_linrate_dir, 'errormap.csv'), delimiter=',')
+            os.path.join(linrate_dir, 'errormap.csv'), delimiter=',')
 
         cls.samples_matlab = np.genfromtxt(
-            os.path.join(matlab_linrate_dir, 'coh_sta.csv'), delimiter=',')
+            os.path.join(linrate_dir, 'coh_sta.csv'), delimiter=',')
 
     @classmethod
     def tearDownClass(cls):

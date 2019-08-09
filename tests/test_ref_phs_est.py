@@ -169,7 +169,7 @@ class RefPhsEstimationMatlabTestMethod1Serial(unittest.TestCase):
 
     def test_ifgs_after_ref_phs_est(self):
         MATLAB_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR,
-                                                     'matlab_ref_phase_est')
+                                                     'ref_phase_est')
 
         onlyfiles = [f for f in os.listdir(MATLAB_REF_PHASE_DIR)
                 if os.path.isfile(os.path.join(MATLAB_REF_PHASE_DIR, f))
@@ -259,7 +259,7 @@ class RefPhsEstimationMatlabTestMethod1Parallel(unittest.TestCase):
 
     def test_ifgs_after_ref_phs_est(self):
         MATLAB_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR,
-                                                     'matlab_ref_phase_est')
+                                                     'ref_phase_est')
 
         onlyfiles = [f for f in os.listdir(MATLAB_REF_PHASE_DIR)
                 if os.path.isfile(os.path.join(MATLAB_REF_PHASE_DIR, f))
@@ -347,7 +347,7 @@ class RefPhsEstimationMatlabTestMethod2Serial(unittest.TestCase):
 
     def test_ifgs_after_ref_phs_est(self):
         MATLAB_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR,
-                                                     'matlab_ref_phase_est')
+                                                     'ref_phase_est')
 
         onlyfiles = [f for f in os.listdir(MATLAB_REF_PHASE_DIR)
                 if os.path.isfile(os.path.join(MATLAB_REF_PHASE_DIR, f))
@@ -437,7 +437,7 @@ class RefPhsEstimationMatlabTestMethod2Parallel(unittest.TestCase):
 
     def test_ifgs_after_ref_phs_est(self):
         MATLAB_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR,
-                                            'matlab_ref_phase_est')
+                                            'ref_phase_est')
 
         onlyfiles = [f for f in os.listdir(MATLAB_REF_PHASE_DIR)
                      if os.path.isfile(os.path.join(MATLAB_REF_PHASE_DIR, f))

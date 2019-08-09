@@ -243,7 +243,7 @@ def _matlab_mst_gen(ifg_instance, p_threshold=1):
     Construct a pixel-by-pixel matrix containing unique minimum spanning
     tree networks.
     This is an implementation of the Matlab Pirate 'make_mstmat.m' function.
-    This is a generator version of the 'pyrate.matlab_mst.matlab_mst'
+    This is a generator version of the 'pyrate.mst.mst'
     function that is more memory efficient.
 
     :param ifg_instance: _IfgListPyRate instance
@@ -297,7 +297,7 @@ def _matlab_mst_bool(ifg_list_instance, p_threshold=1):
     :return: result: Minimum Spanning Tree matrix
     :rtype: ndarray
     """
-    # This should have the same output as matlab_mst. Should be tested.
+    # This should have the same output as mst. Should be tested.
     # Please note that the generator version is more memory efficient.
     # If memory was not a concern we could have found the entire mst matrix in the
     # previous function and this would have been unnecessary.

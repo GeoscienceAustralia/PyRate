@@ -222,9 +222,9 @@ class MatlabEqualityTest(unittest.TestCase):
 
     def test_matlab_vcmt_equality_small_test_files(self):
         from tests.common import SML_TEST_DIR
-        MATLAB_VCM_DIR = os.path.join(SML_TEST_DIR, 'matlab_vcm')
+        MATLAB_VCM_DIR = os.path.join(SML_TEST_DIR, 'vcm')
         matlab_vcm = np.genfromtxt(os.path.join(MATLAB_VCM_DIR,
-                                   'matlab_vcmt.csv'), delimiter=',')
+                                   'vcmt.csv'), delimiter=',')
         np.testing.assert_array_almost_equal(matlab_vcm, self.vcmt, decimal=3)
 
     def test_metadata(self):
