@@ -5,15 +5,16 @@ branches:
   - /.*-travis$/
   - master
 
-language: python
-
-python: 
-- "3.6"
-- "3.7"
-
 os: linux
-
 dist: bionic # Ubuntu 18.04
+
+language: python
+cache: pip
+
+python:
+  - "3.6"
+  - "3.7"
+
 
 before_install:
   - sudo apt-get update
@@ -24,7 +25,8 @@ before_install:
   - export C_INCLUDE_PATH=$C_INCLUDE_PATH:/usr/include/gdal
   - export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:/usr/include/gdal
   - pip install -U pip
-  
+  - pip install codecov
+
 install:
   - pip install -r requirements-test.txt
   - pip install -r requirements-dev.txt
@@ -38,7 +40,32 @@ script:
   - pip install numpy==1.16.4
   - pytest --cov-report term-missing:skip-covered --cov=pyrate tests/
 
-# cache:
-#   - apt
-#   - pip
-#   - $HOME/.cache/pip
+after_success:
+  - codecov
+
+jobs:
+  include:
+    - stage: deploy
+      python: 3.6
+      script:
+        - pip install numpy==1.16.4
+        - cd docs && make html
+      deploy:
+        provider: pages
+        skip-cleanup: true
+        keep-history: true
+        verbose: true
+        on:
+          branch: master
+        github-token: $GITHUB_TOKEN
+        local-dir: docs/_build/html
+        project_name: PyRate
+        email: insar@ga.gov.au
+        name: InSAR Team
+
+notifications:
+  email:
+    recipients:
+      - $SHEECE_EMAIL
+    on_success: never
+    on_failure: always
