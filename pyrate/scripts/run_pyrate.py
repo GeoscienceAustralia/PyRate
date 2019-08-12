@@ -275,8 +275,8 @@ def _phase_sum(ifg_paths, params):
             phs_sum = np.zeros(shape=shape, dtype=np.float64)
             mpiops.comm.Recv(phs_sum, source=i, tag=i)
             phase_sum_all += phs_sum
-        comp = np.isnan(phase_sum_all)  # this is the same as in Matlab
-        comp = np.ravel(comp, order='F')  # this is the same as in Matlab
+        comp = np.isnan(phase_sum_all)
+        comp = np.ravel(comp, order='F')
     else:  # pragma: no cover
         comp = None
         mpiops.comm.Send(phs_sum, dest=0, tag=mpiops.rank)

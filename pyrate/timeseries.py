@@ -15,8 +15,7 @@
 #   limitations under the License.
 """
 This Python module contains functions for computing a time series
-inversion in PyRate. It is based on the Matlab codes 'tsinvnosm.m'
-and 'tsinvlap.m' contained in the Pirate package.
+inversion in PyRate.
 """
 # pylint: disable=too-many-locals
 # pylint: disable=too-many-arguments
@@ -166,7 +165,6 @@ def time_series(ifgs, params, vcmt=None, mst=None):
     #  not even this is necessary here, perform late for performance
     tsincr = tsvel_matrix * span
     tscum = cumsum(tsincr, 2)
-    # SB: converting zeros to nans not performed in Matlab Pirate
     # SB: perform this after tsvel_matrix has been nan converted,
     # saves the step of comparing a large matrix (tsincr) to zero.
     # tscum = where(tscum == 0, nan, tscum)
@@ -307,7 +305,7 @@ def _solve_ts_lap(nvelpar, velflag, ifgv, mat_b, smorder, smfactor, sel, vcmt):
 
     # solve the equation by least-squares
     # calculate velocities
-    # we get the lower triangle in numpy, Matlab gives upper triangle
+    # we get the lower triangle in numpy
     w = cholesky(pinv(vcm_tmp)).T
     wb = dot(w, mat_b)
     wl = dot(w, obsv)
@@ -317,7 +315,7 @@ def _solve_ts_lap(nvelpar, velflag, ifgv, mat_b, smorder, smfactor, sel, vcmt):
     tsvel = np.empty(nvelpar, dtype=float32) * np.nan
     tsvel[~np.isclose(velflag, 0.0, atol=1e-8)] = x[:nvelleft]
 
-    # TODO: implement uncertainty estimates (tserror) like in Matlab Pirate code
+    # TODO: implement uncertainty estimates (tserror)
     return tsvel
 
 def _missing_option_error(option):

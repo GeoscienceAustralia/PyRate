@@ -30,7 +30,7 @@ import numpy as np
 from numpy import isnan, sum as nsum
 from osgeo import gdal
 
-from pyrate import (config as cf, mst, timeseries, matlab_mst, algorithm, 
+from pyrate import (config as cf, mst, timeseries, algorithm,
     ifgconstants as ifc, linrate)
 from pyrate.shared import (Ifg, nan_and_mm_convert, get_geotiff_header_info, 
     write_output_geotiff)
@@ -47,9 +47,8 @@ SML_TEST_GAMMA = join(SML_TEST_DIR, 'gamma_obs')  # gamma processed unws
 SML_TEST_CONF = join(SML_TEST_DIR, 'conf')
 
 SML_TEST_DEM_DIR = join(SML_TEST_DIR, 'dem')
-SML_TEST_MATLAB_MST_DIR = join(SML_TEST_DIR, 'mst')
-SML_TEST_MATLAB_PREPIFG_DIR = join(SML_TEST_DIR, 'prepifg_output')
-SML_TEST_MATLAB_ORBITAL_DIR = join(SML_TEST_DIR,
+SML_TEST_LEGACY_PREPIFG_DIR = join(SML_TEST_DIR, 'prepifg_output')
+SML_TEST_LEGACY_ORBITAL_DIR = join(SML_TEST_DIR,
                                    'orbital_error_correction')
 SML_TEST_DEM_ROIPAC = join(SML_TEST_DEM_DIR, 'roipac_test_trimmed.dem')
 SML_TEST_DEM_GAMMA = join(SML_TEST_GAMMA, '20060619_utm.dem')
@@ -277,35 +276,19 @@ def mst_calculation(ifg_paths_or_instance, params):
     if isinstance(ifg_paths_or_instance, list):
         ifgs = pre_prepare_ifgs(ifg_paths_or_instance, params)
         mst_grid = mst.mst_parallel(ifgs, params)
-    else:
-        nan_conversion = params[cf.NAN_CONVERSION]
-        assert isinstance(ifg_paths_or_instance, matlab_mst._IfgListPyRate)
-        ifgs = ifg_paths_or_instance.ifgs
+        # write mst output to a file
+        mst_mat_binary_file = join(params[cf.OUT_DIR], 'mst_mat')
+        np.save(file=mst_mat_binary_file, arr=mst_grid)
+
         for i in ifgs:
-            if not i.mm_converted:
-                i.nodata_value = params[cf.NO_DATA_VALUE]
-                i.convert_to_mm()
-        ifg_instance_updated, epoch_list = \
-            get_nml(ifg_paths_or_instance,
-                               nodata_value=params[cf.NO_DATA_VALUE],
-                               nan_conversion=nan_conversion)
-        mst_grid = matlab_mst._matlab_mst_bool(ifg_instance_updated)
-
-    # write mst output to a file
-    mst_mat_binary_file = join(params[cf.OUT_DIR], 'mst_mat')
-    np.save(file=mst_mat_binary_file, arr=mst_grid)
-
-    for i in ifgs:
-        i.close()
-    return mst_grid
+            i.close()
+        return mst_grid
+    return None
 
 
 def get_nml(ifg_list_instance, nodata_value,
             nan_conversion=False):
     """
-    A translation of the Matlab Pirate 'getnml.m' function.
-    Note: the Matlab version tested does not have nan's.    
-
     :param xxx(eg str, tuple, int, float...) ifg_list_instance: xxxx
     :param float nodata_value: No data value in image
     :param bool nan_conversion: Convert NaNs
@@ -352,23 +335,6 @@ def calculate_time_series(ifgs, params, vcmt, mst):
 
     tsincr, tscum, tsvel = res
     return tsincr, tscum, tsvel
-
-
-# This is not used anywhere now, but may be useful
-def time_series_interpolation(ifg_instance_updated, params):
-
-    edges = matlab_mst._get_sub_structure(ifg_instance_updated,
-                                         np.zeros(len(ifg_instance_updated.id),
-                                                  dtype=bool))
-
-    _, _, ntrees = matlab_mst._matlab_mst_kruskal(edges, ntrees=True)
-    # if ntrees=1, no interpolation; otherwise interpolate
-    if ntrees > 1:
-        params[cf.TIME_SERIES_INTERP] = 1
-    else:
-        params[cf.TIME_SERIES_INTERP] = 0
-
-    return params
 
 
 def write_timeseries_geotiff(ifgs, params, tsincr, pr_type):

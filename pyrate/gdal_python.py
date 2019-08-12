@@ -258,7 +258,7 @@ def crop_resample_average(
     :param str output_file: Path to output resampled/cropped geotiff
     :param float thresh: NaN fraction threshold
     :param str out_driver_type: The output driver; `MEM` or `GTiff` (optional)
-    :param bool match_pirate: Match Matlab Pirate output (optional)
+    :param bool match_pirate: Match Legacy output (optional)
     :param dict hdr: dictionary of metadata
 
     :return: resampled_average: output cropped and resampled image
@@ -279,9 +279,9 @@ def crop_resample_average(
     src_dtype = src_ds_mem.GetRasterBand(1).DataType
     src_gt = src_ds_mem.GetGeoTransform()
 
-    # required to match Matlab Pirate output
+    # required to match Legacy output
     if tmp_ds:
-        _matlab_alignment(input_tif, new_res, resampled_average, src_ds_mem,
+        _alignment(input_tif, new_res, resampled_average, src_ds_mem,
                           src_gt, tmp_ds)
 
     # grab metadata from existing geotiff
@@ -318,18 +318,18 @@ def crop_resample_average(
     return resampled_average, out_ds
 
 
-def _matlab_alignment(input_tif, new_res, resampled_average, src_ds_mem,
+def _alignment(input_tif, new_res, resampled_average, src_ds_mem,
                       src_gt, tmp_ds):
     """
     Correction step to match python multi-look/crop output to match that of
-    Matlab Pirate code. Modifies the resampled_average array in place.
+    Legacy data. Modifies the resampled_average array in place.
     """
     src_ds = gdal.Open(input_tif)
     data = src_ds.GetRasterBand(1).ReadAsArray()
     xlooks = ylooks = int(new_res[0] / src_gt[1])
-    xres, yres = _get_matlab_resampled_data_size(xlooks, ylooks, data)
+    xres, yres = _get_resampled_data_size(xlooks, ylooks, data)
     nrows, ncols = resampled_average.shape
-    # Matlab Pirate does nearest neighbor resampling for the last
+    # Legacy nearest neighbor resampling for the last
     # [yres:nrows, xres:ncols] cells without nan_conversion
     # turn off nan-conversion
     src_ds_mem.GetRasterBand(1).SetNoDataValue(LOW_FLOAT32)
@@ -389,8 +389,8 @@ def _setup_source(input_tif):
     return src_ds, src_ds_mem
 
 
-def _get_matlab_resampled_data_size(xscale, yscale, data):
-    """convenience function mimicking the Matlab Pirate output size"""
+def _get_resampled_data_size(xscale, yscale, data):
+    """convenience function mimicking the Legacy output size"""
     xscale = int(xscale)
     yscale = int(yscale)
     ysize, xsize = data.shape

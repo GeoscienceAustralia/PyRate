@@ -15,8 +15,7 @@
 #   limitations under the License.
 # coding: utf-8
 """
-This Python module implements a reference phase estimation algorithm
-and is based on the function 'refphsest.m' of the Matlab Pirate package.
+This Python module implements a reference phase estimation algorithm.
 """
 import logging
 import numpy as np
@@ -128,8 +127,8 @@ def est_ref_phase_method1(ifgs, params):
     for ifg in ifgs:
         ifg_phase_data_sum += ifg.phase_data
 
-    comp = np.isnan(ifg_phase_data_sum)  # this is the same as in Matlab
-    comp = np.ravel(comp, order='F')  # this is the same as in Matlab
+    comp = np.isnan(ifg_phase_data_sum)
+    comp = np.ravel(comp, order='F')
     if params[cf.PARALLEL]:
         log.info("Calculating ref phase using multiprocessing")
         ref_phs = Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(

@@ -57,7 +57,7 @@ from pyrate.config import (
     APS_METHOD,
     APS_CORRECTION)
 
-from tests.common import SML_TEST_MATLAB_PREPIFG_DIR
+from tests.common import SML_TEST_LEGACY_PREPIFG_DIR
 from tests.common import PREP_TEST_TIF, SML_TEST_DEM_DIR
 from tests.common import SML_TEST_DEM_TIF
 from tests import common
@@ -543,8 +543,6 @@ class LocalMultilookTests(unittest.TestCase):
 
 def multilooking(src, xscale, yscale, thresh=0):
     """
-    Implementation of Matlab Pirate looks.m function.
-
     src: numpy array of phase data
     thresh: min number of non-NaNs required for a valid tile resampling
     """
@@ -578,9 +576,9 @@ def multilooking(src, xscale, yscale, thresh=0):
     return dest
 
 
-class MatlabEqualityTestRoipacSmallTestData(unittest.TestCase):
+class LegacyEqualityTestRoipacSmallTestData(unittest.TestCase):
     """
-    Matlab to python roipac prepifg equality test for small test data
+    Legacy roipac prepifg equality test for small test data
     """
 
     def setUp(self):
@@ -600,20 +598,20 @@ class MatlabEqualityTestRoipacSmallTestData(unittest.TestCase):
                 i.close()
                 os.remove(i.data_path)
 
-    def test_matlab_prepifg_equality_array(self):
+    def test_legacy_prepifg_equality_array(self):
         """
-        Matlab to python prepifg equality test
+        Legacy prepifg equality test
         """
-        # path to csv folders from matlab output
+        # path to csv folders from legacy output
         onlyfiles = [
-            fln for fln in os.listdir(SML_TEST_MATLAB_PREPIFG_DIR)
-            if os.path.isfile(os.path.join(SML_TEST_MATLAB_PREPIFG_DIR, fln))
+            fln for fln in os.listdir(SML_TEST_LEGACY_PREPIFG_DIR)
+            if os.path.isfile(os.path.join(SML_TEST_LEGACY_PREPIFG_DIR, fln))
             and fln.endswith('.csv') and fln.__contains__('_rad_')
             ]
 
         for fln in onlyfiles:
             ifg_data = np.genfromtxt(os.path.join(
-                SML_TEST_MATLAB_PREPIFG_DIR, fln), delimiter=',')
+                SML_TEST_LEGACY_PREPIFG_DIR, fln), delimiter=',')
             for k, j in enumerate(self.ifgs):
                 if fln.split('_rad_')[-1].split('.')[0] == \
                         os.path.split(j.data_path)[-1].split('.')[0]:
@@ -622,23 +620,23 @@ class MatlabEqualityTestRoipacSmallTestData(unittest.TestCase):
                                                              k].phase_data,
                                                          decimal=2)
 
-    def test_matlab_prepifg_and_convert_phase(self):
+    def test_legacy_prepifg_and_convert_phase(self):
         """
-        Matlab to python prepifg equality test
+        Legacy data prepifg equality test
         """
-        # path to csv folders from matlab output
+        # path to csv folders from legacy output
         for i in self.ifgs_with_nan:
             if not i.mm_converted:
                 i.convert_to_mm()
         onlyfiles = [
-            f for f in os.listdir(SML_TEST_MATLAB_PREPIFG_DIR)
-            if os.path.isfile(os.path.join(SML_TEST_MATLAB_PREPIFG_DIR, f))
+            f for f in os.listdir(SML_TEST_LEGACY_PREPIFG_DIR)
+            if os.path.isfile(os.path.join(SML_TEST_LEGACY_PREPIFG_DIR, f))
             and f.endswith('.csv') and f.__contains__('_mm_')]
 
         count = 0
         for i, f in enumerate(onlyfiles):
             ifg_data = np.genfromtxt(os.path.join(
-                SML_TEST_MATLAB_PREPIFG_DIR, f), delimiter=',')
+                SML_TEST_LEGACY_PREPIFG_DIR, f), delimiter=',')
             for k, j in enumerate(self.ifgs):
                 if f.split('_mm_')[-1].split('.')[0] == \
                         os.path.split(j.data_path)[-1].split('_unw.')[0]:

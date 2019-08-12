@@ -342,7 +342,7 @@ def _resample_ifg(ifg, cmd, x_looks, y_looks, thresh, md=None):
     """
 
     # Create tmp ifg and extract data array for manual resampling as gdalwarp
-    # lacks the averaging method implemented in Matlab Pirate
+    # lacks the averaging method
     fp, tmp_path = mkstemp(suffix='.tif')
     check_call(cmd + [ifg.data_path, tmp_path])
 

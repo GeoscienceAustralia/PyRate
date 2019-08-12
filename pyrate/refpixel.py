@@ -228,7 +228,7 @@ def _step(dim, ref, radius):
     #     return [radius, dim-radius-1]
     # max_dim = dim - (2*radius)  # max possible number for refn(x|y)
     # step = max_dim // (ref-1)
-    step_size = dim // ref  # same as in Matlab
+    step_size = dim // ref
     return range(radius, dim-radius, step_size)
 
 
