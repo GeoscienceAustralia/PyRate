@@ -512,7 +512,7 @@ def test_mlooked_path():
 # TODO: this needs to work from config and incidence files on disk
 # TODO: is convflag (see 'ifgconv' setting) used or just defaulted?
 # TODO: los conversion has 4 options: 1: ignore, 2: vertical, 3: N/S, 4: E/W
-# also have a 5th option of arbitrary azimuth angle (Pirate doesn't have this)
+# also have a 5th option of arbitrary azimuth angle (PyRate doesn't have this)
 #    params = _default_extents_param()
 #    params[IFG_CROP_OPT] = MINIMUM_CROP
 #    params[PROJECTION_FLAG] = None

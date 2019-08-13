@@ -248,7 +248,7 @@ def _gdalwarp_width_and_height(max_x, max_y, min_x, min_y, geo_trans):
 def crop_resample_average(
         input_tif, extents, new_res, output_file, thresh,
         out_driver_type='GTiff',
-        match_pirate=False, hdr=None):
+        match_pyrate=False, hdr=None):
     """
     Crop, resample, and average a geotiff image.
 
@@ -258,7 +258,7 @@ def crop_resample_average(
     :param str output_file: Path to output resampled/cropped geotiff
     :param float thresh: NaN fraction threshold
     :param str out_driver_type: The output driver; `MEM` or `GTiff` (optional)
-    :param bool match_pirate: Match Legacy output (optional)
+    :param bool match_pyrate: Match Legacy output (optional)
     :param dict hdr: dictionary of metadata
 
     :return: resampled_average: output cropped and resampled image
@@ -270,9 +270,9 @@ def crop_resample_average(
         extents, input_tif, new_res, output_file,
         out_bands=2, dst_driver_type='MEM')
 
-    # make a temporary copy of the dst_ds for Pirate style prepifg
+    # make a temporary copy of the dst_ds for PyRate style prepifg
     tmp_ds = gdal.GetDriverByName('MEM').CreateCopy('', dst_ds) \
-        if (match_pirate and new_res[0]) else None
+        if (match_pyrate and new_res[0]) else None
 
     resampled_average, src_ds_mem = \
         gdal_average(dst_ds, input_tif, thresh)
