@@ -150,7 +150,7 @@ def test_vcm_legacy_vs_mpi(mpisync, tempdir, get_config):
 
     params_dict = get_config(TEST_CONF_ROIPAC)
     LEGACY_VCM_DIR = os.path.join(SML_TEST_DIR, 'vcm')
-    lagecy_vcm = np.genfromtxt(os.path.join(LEGACY_VCM_DIR, 'vcmt.csv'), delimiter=',')
+    legacy_vcm = np.genfromtxt(os.path.join(LEGACY_VCM_DIR, 'vcmt.csv'), delimiter=',')
     if mpiops.rank == 0:
         outdir = tempdir()
     else:
@@ -181,7 +181,7 @@ def test_vcm_legacy_vs_mpi(mpisync, tempdir, get_config):
     maxvar, vcmt = run_pyrate._maxvar_vcm_calc(dest_paths, params_dict,
                                               preread_ifgs)
     np.testing.assert_array_almost_equal(maxvar, legacy_maxvar, decimal=4)
-    np.testing.assert_array_almost_equal(lagecy_vcm, vcmt, decimal=3)
+    np.testing.assert_array_almost_equal(legacy_vcm, vcmt, decimal=3)
     if mpiops.rank == 0:
         shutil.rmtree(outdir)
         common.remove_tifs(params_dict[cf.OBS_DIR])
