@@ -21,6 +21,7 @@ provided in the configs/ directory
 """
 # coding: utf-8
 # pylint: disable= invalid-name
+from typing import List
 import os
 from os.path import splitext
 import warnings
@@ -63,6 +64,8 @@ REPROJECTION = 'prjflag' # NOT CURRENTLY USED
 NETWORKX_OR_MATLAB_FLAG = 'networkx_or_matlab'
 #: BOOL (0/1): Convert no data values to Nan
 NAN_CONVERSION = 'nan_conversion'
+#: BOOL (0/1): Perform coherence masking
+COHERENCE_MASK = 'coherence_mask'
 
 # Prepifg parameters
 #: BOOL (1/2/3/4); Method for cropping interferograms, 1 = minimum overlapping area (intersection), 2 = maximum area (union), 3 = customised area, 4 = all ifgs already same size
@@ -212,7 +215,7 @@ PARAM_CONVERSION = {
     IFG_YFIRST : (float, None),
     IFG_YLAST : (float, None),
     NO_DATA_VALUE: (float, 0.0),
-
+    
     REFX: (int, -1),
     REFY: (int, -1),
     REFNX: (int, 50),
@@ -259,7 +262,8 @@ PARAM_CONVERSION = {
     NAN_CONVERSION: (int, 0),
     NO_DATA_AVERAGING_THRESHOLD: (float, 0.0),
     APS_CORRECTION: (int, 0),
-    APS_METHOD: (int, 1)
+    APS_METHOD: (int, 1),
+    COHERENCE_MASK: (int, 1)
     }
 
 
@@ -348,7 +352,8 @@ def _handle_extra_parameters(params):
 
     # define APS_ELEVATON_EXT for gamma prepifg
     if params[APS_ELEVATION_MAP] is not None:
-        params[APS_ELEVATION_EXT] = os.path.basename(params[APS_ELEVATION_MAP]).split('.')[-1]
+        params[APS_ELEVATION_EXT] = os.path.basename(
+            params[APS_ELEVATION_MAP]).split('.')[-1]
 
     return params
 
@@ -469,10 +474,24 @@ def original_ifg_paths(ifglist_path):
     :return: full path to ifg files
     :rtype: list
     """
-
     basedir = os.path.dirname(ifglist_path)
     ifglist = parse_namelist(ifglist_path)
     return [os.path.join(basedir, p) for p in ifglist]
+
+def coherence_paths(ifg_paths: str) -> List[str]:
+    """
+    Returns paths to corresponding coherence files for given IFGs. Assumes
+    that each IFG has a corresponding coherence file in the same directory
+    with the same prefix.
+
+    Args:
+        ifg_paths: List of paths to intergerogram files.
+        
+    Returns:
+        A list of full paths to coherence files.
+    """
+    return [p.replace(os.path.splitext(p[1]), '.cc') for p in ifg_paths]
+        
 
 
 def mlooked_path(path, looks, crop_out):
@@ -486,7 +505,6 @@ def mlooked_path(path, looks, crop_out):
     :return: multilooked file name
     :rtype: str
     """
-
     base, ext = splitext(path)
     return "{base}_{looks}rlks_{crop_out}cr{ext}".format(
         base=base, looks=looks, crop_out=crop_out, ext=ext)
@@ -537,10 +555,14 @@ def get_ifg_paths(config_file):
         raise IOError(2, emsg)
     xlks, _, crop = transform_params(params)
 
-    # base_unw_paths need to be geotiffed and multilooked by run_prepifg
+    # base_unw_paths need to be geotiffed by converttogeotiff
+    #   and multilooked by run_prepifg
     base_unw_paths = original_ifg_paths(ifg_file_list)
+    if params[COHERENCE_MASK]:
+        
 
-    # dest_paths are tifs that have been geotif converted and multilooked
+    # dest_paths are tifs that have been coherence masked (if enabled),
+    #  cropped and multilooked
     dest_paths = get_dest_paths(base_unw_paths, crop, params, xlks)
 
     return base_unw_paths, dest_paths, params
