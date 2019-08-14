@@ -64,8 +64,6 @@ REPROJECTION = 'prjflag' # NOT CURRENTLY USED
 NETWORKX_OR_MATLAB_FLAG = 'networkx_or_matlab'
 #: BOOL (0/1): Convert no data values to Nan
 NAN_CONVERSION = 'nan_conversion'
-#: BOOL (0/1): Perform coherence masking
-COHERENCE_MASK = 'coherence_mask'
 
 # Prepifg parameters
 #: BOOL (1/2/3/4); Method for cropping interferograms, 1 = minimum overlapping area (intersection), 2 = maximum area (union), 3 = customised area, 4 = all ifgs already same size
@@ -98,6 +96,13 @@ REF_CHIP_SIZE = 'refchipsize'
 REF_MIN_FRAC = 'refminfrac'
 #: BOOL (1/2); Reference phase estimation method
 REF_EST_METHOD = 'refest'
+
+# coherence masking parameters
+COH_MASK = 'cohmask'
+"""int: perform coherence masking, 1 = yes, 0 = no"""
+COH_THRESH = 'cohthresh'
+"""float: coherence treshold"""
+
 
 #atmospheric error correction parameters NOT CURRENTLY USED
 APS_CORRECTION = 'apscorrect'
@@ -216,6 +221,9 @@ PARAM_CONVERSION = {
     IFG_YLAST : (float, None),
     NO_DATA_VALUE: (float, 0.0),
     
+    COH_MASK: (int, 0),
+    COH_THRESH: (float, 6.0),
+
     REFX: (int, -1),
     REFY: (int, -1),
     REFNX: (int, 50),
