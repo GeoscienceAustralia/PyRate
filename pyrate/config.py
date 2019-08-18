@@ -51,6 +51,7 @@ DEM_HEADER_FILE = 'demHeaderFile'
 #: STR; Name of directory containing GAMMA SLC parameter files
 SLC_DIR = 'slcFileDir'
 
+
 #: STR; The projection of the input interferograms.
 INPUT_IFG_PROJECTION = 'projection'
 #: FLOAT; The no data value in the interferogram files.
@@ -102,7 +103,8 @@ COH_MASK = 'cohmask'
 """int: perform coherence masking, 1 = yes, 0 = no"""
 COH_THRESH = 'cohthresh'
 """float: coherence treshold"""
-
+COH_DIR = 'cohFileDir'
+"""str: Directory containing coherence .cc files"""
 
 #atmospheric error correction parameters NOT CURRENTLY USED
 APS_CORRECTION = 'apscorrect'
@@ -276,7 +278,7 @@ PARAM_CONVERSION = {
 
 PATHS = [OBS_DIR, IFG_FILE_LIST, DEM_FILE,
          DEM_HEADER_FILE, OUT_DIR,
-         SLC_DIR,
+         SLC_DIR, COH_DIR,
          APS_INCIDENCE_MAP,
          APS_ELEVATION_MAP]
 
@@ -497,6 +499,12 @@ def coherence_paths(ifg_paths: str) -> List[str]:
     Returns:
         A list of full paths to coherence files.
     """
+    params[IFG_FILE_LIST] = ifg_file_list
+    if ifg_file_list is None:
+        emsg = 'Error {code}: Interferogram list file name not provided ' \
+               'or does not exist'.format(code=2)
+        raise IOError(2, emsg)
+
     return [p.replace(os.path.splitext(p[1]), '.cc') for p in ifg_paths]
         
 
@@ -554,7 +562,6 @@ def get_ifg_paths(config_file):
     """
     params = get_config_params(config_file)
     ifg_file_list = params.get(IFG_FILE_LIST)
-    params[IFG_FILE_LIST] = ifg_file_list
 
     if ifg_file_list is None:
         emsg = 'Error {code}: Interferogram list file name not provided ' \
