@@ -475,7 +475,7 @@ def original_ifg_paths(ifglist_path):
     ifglist = parse_namelist(ifglist_path)
     return [os.path.join(basedir, p) for p in ifglist]
 
-def coherence_paths() -> List[str]:
+def coherence_paths(config_file) -> List[str]:
     """
     Returns paths to corresponding coherence files for given IFGs. Assumes
     that each IFG has a corresponding coherence file in the coherence file
