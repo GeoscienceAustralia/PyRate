@@ -507,7 +507,7 @@ def coherence_paths(params) -> List[str]:
     #  ifg file
     coh_paths = list()
     for epoch in epochs:
-        coh_path = glob2.glob(os.path.join(coh_dir, f'{epoch}*.cc'))
+        coh_path = glob2.glob(os.path.join(coh_dir, '**', f'{epoch}*.cc'))
         if len(coh_path) == 0:
             raise IOError("No coherence files found for ifg with epoch " 
                           "{epoch}. Check that the correct coherence files "
