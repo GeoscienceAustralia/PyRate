@@ -475,7 +475,7 @@ def original_ifg_paths(ifglist_path):
     ifglist = parse_namelist(ifglist_path)
     return [os.path.join(basedir, p) for p in ifglist]
 
-def coherence_paths(ifg_paths: str) -> List[str]:
+def coherence_paths() -> List[str]:
     """
     Returns paths to corresponding coherence files for given IFGs. Assumes
     that each IFG has a corresponding coherence file in the coherence file
@@ -490,14 +490,23 @@ def coherence_paths(ifg_paths: str) -> List[str]:
     params = get_config_params(config_file)
     ifg_file_list = params.get(IFG_FILE_LIST)
     if ifg_file_list is None:
-        emsg = 'Error {code}: Interferogram list file name not provided ' \
-               'or does not exist'.format(code=2)
-        raise IOError(2, emsg)
+        code = 2
+        emsg = (f'Error {code}: Interferogram list file name not provided ' 
+               'or does not exist')        
+        raise IOError(code, emsg)
     
     pattern = re.compile(r'\d{8}-\d{8}')
     epochs = [re.match(pattern, ifg).group(0) for ifg in ifg_file_list]
-    coh_paths = [glob2.glob(os.path.join(params[COH_DIR], f'{epoch}*.cc')) 
+    coh_dir = params.get(COH_DIR)
+    if coh_dir is None:
+        code = 2
+        emsg = (f'Error {code}: Coherence file directory not provided '
+                'or does not exist') 
+        raise IOError(code, emsg)
+
+    coh_paths = [glob2.glob(os.path.join(coh_dir, f'{epoch}*.cc')) 
                  for epoch in epochs]
+
     if len(coh_paths) < len(ifg_file_list):
         # TODO: handle this
         pass

@@ -65,8 +65,9 @@ def main(params=None):
         base_ifg_paths, _, params = cf.get_ifg_paths(sys.argv[2])
         raw_config_file = sys.argv[2]
 
-    if params[cf.COHERENCE_MASK]:
-        base_ifg_paths.append(cf.coherence_paths)
+    if params[cf.COH_MASK]:
+        base_ifg_paths.append(cf.coherence_paths())
+    print(f'paths with coherence files: {base_ifg_paths}')
 
     if params[cf.DEM_FILE] is not None: # optional DEM conversion
         base_ifg_paths.append(params[cf.DEM_FILE])
