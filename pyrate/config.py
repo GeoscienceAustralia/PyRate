@@ -24,9 +24,14 @@ provided in the configs/ directory
 from typing import List
 import os
 from os.path import splitext
+import re
 import warnings
 import pickle
+
+import glob2
+
 from pyrate import mpiops
+
 
 # TODO: add regex column to check if some values are within bounds? Potential
 # problem with the checking being done in the middle of the runs, as bad values
@@ -183,7 +188,6 @@ PART_CUBIC = 'PART_CUBIC'
 # dir for temp files
 TMPDIR = 'tmpdir'
 
-
 def _orb_degree_conv(deg):
     """
     Convenience: convert numerical degree flag to human readable string
@@ -275,7 +279,6 @@ PARAM_CONVERSION = {
     APS_METHOD: (int, 1),
     }
 
-
 PATHS = [OBS_DIR, IFG_FILE_LIST, DEM_FILE,
          DEM_HEADER_FILE, OUT_DIR,
          SLC_DIR, COH_DIR,
@@ -283,7 +286,6 @@ PATHS = [OBS_DIR, IFG_FILE_LIST, DEM_FILE,
          APS_ELEVATION_MAP]
 
 INT_KEYS = [APS_CORRECTION, APS_METHOD]
-
 
 def get_config_params(path):
     """
@@ -295,7 +297,6 @@ def get_config_params(path):
     :return: params
     :rtype: dict
     """
-
     txt = ''
     with open(path, 'r') as inputFile:
         for line in inputFile:
@@ -311,12 +312,10 @@ def get_config_params(path):
 
     return params
 
-
 def _parse_conf_file(content):
     """
     Parser for converting text content into a dictionary of parameters
     """
-
     def _is_valid(line):
         """
         Check if line is not empty or has % or #
@@ -344,7 +343,6 @@ def _parse_conf_file(content):
 
     return _parse_pars(parameters)
 
-
 def _handle_extra_parameters(params):
     """
     Function to check if requirements for weather model correction are given
@@ -366,7 +364,6 @@ def _handle_extra_parameters(params):
 
     return params
 
-
 def _parse_pars(pars):
     """
     Parses and converts config file params from text
@@ -385,7 +382,6 @@ def _parse_pars(pars):
                 pars[k] = PARAM_CONVERSION[k][1]
     return pars
 
-
 def parse_namelist(nml):
     """
     Parses name list file into array of paths
@@ -395,18 +391,15 @@ def parse_namelist(nml):
     :return: list of interferogram file names
     :rtype: list
     """
-
     with open(nml) as f_in:
         lines = [line.rstrip() for line in f_in]
     return filter(None, lines)
-
 
 class ConfigException(Exception):
     """
     Default exception class for configuration errors.
     """
     pass
-
 
 def write_config_file(params, output_conf_file):
     """
@@ -418,7 +411,6 @@ def write_config_file(params, output_conf_file):
     :return: config file
     :rtype: list
     """
-
     with open(output_conf_file, 'w') as f:
         for k, v in params.items():
             if k == ORBITAL_FIT_DEGREE:
@@ -429,7 +421,6 @@ def write_config_file(params, output_conf_file):
                 f.write(''.join([k, ':\t', str(v), '\n']))
             else:
                 f.write(''.join([k, ':\t', '', '\n']))
-
 
 def _reverse_orb_degree_conv(v):
     """
@@ -445,7 +436,6 @@ def _reverse_orb_degree_conv(v):
         raise ValueError(
             "Orbital fit polynomial degree option not recognised")
 
-
 def _reverse_orb_method_conv(v):
     """
     Convenience: convert method to integer for config file
@@ -457,7 +447,6 @@ def _reverse_orb_method_conv(v):
     else:
         raise ValueError(
             "Orbital fit method option not recognised")
-
 
 def transform_params(params):
     """
@@ -472,7 +461,6 @@ def transform_params(params):
     t_params = [IFG_LKSX, IFG_LKSY, IFG_CROP_OPT]
     xlooks, ylooks, crop = [params[k] for k in t_params]
     return xlooks, ylooks, crop
-
 
 def original_ifg_paths(ifglist_path):
     """
@@ -490,8 +478,8 @@ def original_ifg_paths(ifglist_path):
 def coherence_paths(ifg_paths: str) -> List[str]:
     """
     Returns paths to corresponding coherence files for given IFGs. Assumes
-    that each IFG has a corresponding coherence file in the same directory
-    with the same prefix.
+    that each IFG has a corresponding coherence file in the coherence file
+    directory and they share epoch prefixes.
 
     Args:
         ifg_paths: List of paths to intergerogram files.
@@ -499,14 +487,22 @@ def coherence_paths(ifg_paths: str) -> List[str]:
     Returns:
         A list of full paths to coherence files.
     """
-    params[IFG_FILE_LIST] = ifg_file_list
+    params = get_config_params(config_file)
+    ifg_file_list = params.get(IFG_FILE_LIST)
     if ifg_file_list is None:
         emsg = 'Error {code}: Interferogram list file name not provided ' \
                'or does not exist'.format(code=2)
         raise IOError(2, emsg)
+    
+    pattern = re.compile(r'\d{8}-\d{8}')
+    epochs = [re.match(pattern, ifg).group(0) for ifg in ifg_file_list]
+    coh_paths = [glob2.glob(os.path.join(params[COH_DIR], f'{epoch}*.cc')) 
+                 for epoch in epochs]
+    if len(coh_paths) < len(ifg_file_list):
+        # TODO: handle this
+        pass
 
-    return [p.replace(os.path.splitext(p[1]), '.cc') for p in ifg_paths]
-        
+    return coh_paths
 
 
 def mlooked_path(path, looks, crop_out):
@@ -523,7 +519,6 @@ def mlooked_path(path, looks, crop_out):
     base, ext = splitext(path)
     return "{base}_{looks}rlks_{crop_out}cr{ext}".format(
         base=base, looks=looks, crop_out=crop_out, ext=ext)
-
 
 def get_dest_paths(base_paths, crop, params, looks):
     """
@@ -544,7 +539,6 @@ def get_dest_paths(base_paths, crop, params, looks):
                          for q in base_paths]
 
     return [os.path.join(params[OUT_DIR], p) for p in dest_mlooked_ifgs]
-
 
 def get_ifg_paths(config_file):
     """
