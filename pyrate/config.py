@@ -108,8 +108,11 @@ COH_MASK = 'cohmask'
 """int: perform coherence masking, 1 = yes, 0 = no"""
 COH_THRESH = 'cohthresh'
 """float: coherence treshold"""
-COH_DIR = 'cohFileDir'
+COH_DIR = 'cohfiledir'
 """str: Directory containing coherence .cc files"""
+COH_SUF = 'cohsuffix'
+"""str: Optional suffix for searching for coherence files.
+   Usage is {master_epoch}-{slave_epoch}*{suffix}.cc"""
 
 #atmospheric error correction parameters NOT CURRENTLY USED
 APS_CORRECTION = 'apscorrect'
@@ -506,8 +509,10 @@ def coherence_paths(params) -> List[str]:
     # get coherence file paths and ensure we have 1-to-1 match for each
     #  ifg file
     coh_paths = list()
+    suf = params.get(COH_SUF)
+    suf = '' if suf is None else suf 
     for epoch in epochs:
-        coh_path = glob2.glob(os.path.join(coh_dir, '**', f'{epoch}*.cc'))
+        coh_path = glob2.glob(os.path.join(coh_dir, '**', f'{epoch}*{suf}.cc'))
         if len(coh_path) == 0:
             raise IOError("No coherence files found for ifg with epoch " 
                           "{epoch}. Check that the correct coherence files "
