@@ -513,7 +513,7 @@ def coherence_paths(params) -> List[str]:
                           "{epoch}. Check that the correct coherence files "
                           "exist in {coh_dir}.")
         elif len(coh_path) > 1:
-            raise IOError("Found more than coherence file for ifg with epoch "
+            raise IOError("Found more than one coherence file for ifg with epoch "
                           "{epoch}. Check that the correct coherence files "
                           "exist in {coh_dir}.")
         else:
