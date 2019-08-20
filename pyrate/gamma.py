@@ -220,7 +220,7 @@ def manage_headers(dem_header_file, header_paths):
     return combined_header
 
 
-def get_header_paths(input_file, slc_dir=None):
+def get_header_paths(input_file, slc_dir):
     """
     Function that matches input GAMMA file names with GAMMA header file names
 
@@ -229,14 +229,11 @@ def get_header_paths(input_file, slc_dir=None):
     :return: list of matching header files
     :rtype: list
     """
-    if slc_dir:
-        dir_name = slc_dir
-        _, file_name = split(input_file)
-    else:  # header file must exist in the same dir as that of image file
-        dir_name, file_name = split(input_file)
+    _, file_name = split(input_file)
     matches = PTN.findall(file_name)
-    return [glob2.glob(join(dir_name, '**/*%s*slc.par' % m))[0]
-            for m in matches]
+    headers = [glob2.glob(join(slc_dir, '**/*%s*slc.par' % m))[0]
+            	for m in matches]
+    return headers
 
 
 def gamma_header(file_path, params):
@@ -245,6 +242,8 @@ def gamma_header(file_path, params):
     """
     dem_hdr_path = params[cf.DEM_HEADER_FILE]
     slc_dir = params[cf.SLC_DIR]
+    # If no slc_dir provided, look for headers in obs dir.
+    slc_dir = params[cf.OBS_DIR] if slc_dir is None else slc_dir
     header_paths = get_header_paths(file_path, slc_dir=slc_dir)
     combined_headers = manage_headers(dem_hdr_path, header_paths)
 
