@@ -500,12 +500,8 @@ def coherence_paths(params) -> List[str]:
     pattern = re.compile(r'\d{8}-\d{8}')
     epochs = [re.match(pattern, ifg).group(0) for ifg in ifgs]
     coh_dir = params.get(COH_DIR)
-    if coh_dir is None:
-        code = 2
-        emsg = (f'Error {code}: Coherence file directory not provided '
-                'or does not exist') 
-        raise IOError(code, emsg)
-
+    coh_dir = params[OBS_DIR] if coh_dir is None else coh_dir
+    
     # get coherence file paths and ensure we have 1-to-1 match for each
     #  ifg file
     coh_paths = list()
