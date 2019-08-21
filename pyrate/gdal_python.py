@@ -55,6 +55,8 @@ def coherence_masking(raster, coh_raster, coh_thresh):
     formula = 'b*(a>=t)-999*(a<t)'
     res = ne.evaluate(formula, local_dict=var)
     res[res==np.nan]=999
+    a_band.SetNoDataValue(999)
+    raster.nodata_value(999)
     a_band.WriteArray(res)
     
 def world_to_pixel(geo_transform, x, y):
