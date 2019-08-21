@@ -44,7 +44,7 @@ def coherence_masking(raster, coh_raster, coh_thresh):
         coh_raster: The coherence GDAL dataset.
     """
     a_band = raster._get_band(1)
-    b_band = raster._get_band(1)
+    b_band = coh_raster._get_band(1)
     andv = a_band.GetNoDataValue()
     bndv = b_band.GetNoDataValue()
     a = a_band.ReadAsArray()
@@ -56,8 +56,9 @@ def coherence_masking(raster, coh_raster, coh_thresh):
     res = ne.evaluate(formula, local_dict=var)
     res[res==np.nan]=999
     a_band.SetNoDataValue(999)
-    raster.nodata_value(999)
     a_band.WriteArray(res)
+    # Update Ifg object properties
+    raster.nodata_value = 999
     
 def world_to_pixel(geo_transform, x, y):
     """
@@ -277,8 +278,8 @@ def _gdalwarp_width_and_height(max_x, max_y, min_x, min_y, geo_trans):
 
 def crop_resample_average(
         input_tif, extents, new_res, output_file, thresh,
-        out_driver_type='GTiff',
-        match_pirate=False, hdr=None):
+        out_driver_type='GTiff', 
+        match_pirate=False, hdr=None, coh_path=None, coh_thresh=None):
     """
     Crop, resample, and average a geotiff image.
 
@@ -328,13 +329,19 @@ def crop_resample_average(
     for k, v in md.items():
         if k == ifc.DATA_TYPE:
             # update data type metadata
-            if v == ifc.ORIG:
-                md.update({ifc.DATA_TYPE:ifc.MULTILOOKED})
+            if v == ifc.ORIG and coh_path:
+                md.update({ifc.DATA_TYPE:ifc.COHERENCE})
+            elif v == ifc.ORIG and not coh_path:
+                md.update({ifc.DATA_TYPE:ifc.COHERENCE})
             elif v == ifc.DEM:
                 md.update({ifc.DATA_TYPE:ifc.MLOOKED_DEM})
             elif v == ifc.INCIDENCE:
                 md.update({ifc.DATA_TYPE:ifc.MLOOKED_INC})
-            elif v == ifc.MULTILOOKED:
+            elif v == ifc.COHERENCE and coh_path:
+                pass
+            elif v == ifc.MULTILOOKED and coh_path:
+                md.update({ifc.DATA_TYPE:ifc.COHERENCE})
+            elif v == ifc.MULTILOOKED and not coh_path:
                 pass
             else:
                 raise TypeError('Data Type metadata not recognised')
