@@ -176,7 +176,7 @@ def prepare_ifg(raster_path, xlooks, ylooks, exts, thresh, crop_opt,
     if not raster.is_open:
         raster.open()
     if coh_path:
-        coh_raster = dem_or_ifg(raster_path)
+        coh_raster = dem_or_ifg(coh_path)
         if not coh_raster.is_open:
             coh_raster.open()
         coherence_masking(raster, coh_raster, coh_thresh)

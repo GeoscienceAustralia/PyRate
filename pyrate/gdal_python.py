@@ -17,10 +17,11 @@
 This Python module contains bindings for the GDAL library
 """
 # pylint: disable=too-many-arguments,R0914
-import gc
 from osgeo import gdal, gdalnumeric, gdalconst
 from PIL import Image, ImageDraw
 import numpy as np
+import numexpr as ne
+
 from pyrate import ifgconstants as ifc
 from pyrate import shared
 
@@ -30,19 +31,32 @@ LOW_FLOAT32 = np.finfo(np.float32).min*1e-10
 
 def coherence_masking(raster, coh_raster, coh_thresh):
     """
-    Preform coherence masking.
+    Perform coherence masking on raster in-place. 
+  
+    Based on gdal_calc formula provided by Nahidul:
+    gdal_calc.py -A 20151127-20151209_VV_8rlks_flat_eqa.cc.tif 
+     -B 20151127-20151209_VV_8rlks_eqa.unw.tif 
+     --outfile=test_v1.tif --calc="B*(A>=0.8)-999*(A<0.8)" 
+     --NoDataValue=999
 
     Args:
         raster: The interferogram to mask as GDAL dataset.
         coh_raster: The coherence GDAL dataset.
     """
-    a = raster.GetRasterBand(1).ReadAsArray()
-    b = coh_raster.GetRasterBand(1).ReadAsArray()
-    andv = a.GetNoDataValue()
-    bndv = b.GetNoDataValue()
-    print(f'andv = {andv}, bndv = {bndv}')
-    raise Exception('HCF')
-
+    a_band = raster._get_band(1)
+    b_band = raster._get_band(1)
+    andv = a_band.GetNoDataValue()
+    bndv = b_band.GetNoDataValue()
+    a = a_band.ReadAsArray()
+    b = b_band.ReadAsArray()
+    a[a==andv]=np.nan
+    b[b==bndv]=np.nan
+    var = {'a': a, 'b': b, 't': coh_thresh}
+    formula = 'b*(a>=t)-999*(a<t)'
+    res = ne.evaluate(formula, local_dict=var)
+    res[res==np.nan]=999
+    a_band.WriteArray(res)
+    
 def world_to_pixel(geo_transform, x, y):
     """
     Uses a gdal geomatrix (gdal.GetGeoTransform()) to calculate
