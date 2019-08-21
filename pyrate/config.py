@@ -23,7 +23,7 @@ provided in the configs/ directory
 # pylint: disable= invalid-name
 from typing import List
 import os
-from os.path import splitext
+from os.path import splitext, split
 import re
 import warnings
 import pickle
@@ -490,13 +490,14 @@ def coherence_path_for(path, params, tif=False) -> str:
     Returns:
         Path to coherence file in tif format.
     """
+    _, file = split(path)
     pattern = re.compile(r'\d{8}-\d{8}')
-    epoch = re.match(pattern, path).group(0)
+    epoch = re.match(pattern, file).group(0)
     coh_dir = params.get(COH_DIR)
     coh_dir = params[OBS_DIR] if coh_dir is None else coh_dir
     suf = params.get(COH_SUF)
     suf = '' if suf is None else suf
-    ext = '.cc.tif' if tif else '.cc'
+    ext = '_cc.tif' if tif else '.cc'
     coh_path = glob2.glob(os.path.join(coh_dir, '**', f'{epoch}*{suf}{ext}'))
     if len(coh_path) == 0:
         raise IOError(f"No coherence files found for ifg with epoch " 
