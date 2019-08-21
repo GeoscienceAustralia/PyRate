@@ -490,7 +490,7 @@ def coherence_path_for(path, params, tif=False) -> str:
     Returns:
         Path to coherence file in tif format.
     """
-    pattern = re.compile(r'\d{8}-d{8}')
+    pattern = re.compile(r'\d{8}-\d{8}')
     epoch = re.match(pattern, path).group(0)
     coh_dir = params.get(COH_DIR)
     coh_dir = params[OBS_DIR] if coh_dir is None else coh_dir
@@ -507,7 +507,7 @@ def coherence_path_for(path, params, tif=False) -> str:
                       f"{epoch}. Check that the correct coherence files "
                       f"exist in {coh_dir}. Found:\n {coh_path}")
     else:
-        return coh_path
+        return coh_path[0]
 
 def coherence_paths(params) -> List[str]:
     """
