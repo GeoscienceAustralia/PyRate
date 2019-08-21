@@ -478,6 +478,37 @@ def original_ifg_paths(ifglist_path):
     ifglist = parse_namelist(ifglist_path)
     return [os.path.join(basedir, p) for p in ifglist]
 
+def coherence_path_for(path, params, tif=False) -> str:
+    """
+    Returns path to coherence file in tif format for given interferogram.
+
+    Args:
+        path: Path to intergerogram to find coherence file for.
+        params: Parameter dictionary.
+        tif: Find converted tif if True, else find .cc file.
+
+    Returns:
+        Path to coherence file in tif format.
+    """
+    pattern = re.compile(r'\d{8}-d{8}')
+    epoch = re.match(pattern, path).group(0)
+    coh_dir = params.get(COH_DIR)
+    coh_dir = params[OBS_DIR] if coh_dir is None else coh_dir
+    suf = params.get(COH_SUF)
+    suf = '' if suf is None else suf
+    ext = '.cc.tif' if tif else '.cc'
+    coh_path = glob2.glob(os.path.join(coh_dir, '**', f'{epoch}*{suf}{ext}'))
+    if len(coh_path) == 0:
+        raise IOError(f"No coherence files found for ifg with epoch " 
+                      f"{epoch}. Check that the correct coherence files "
+                      f"exist in {coh_dir}.")
+    elif len(coh_path) > 1:
+        raise IOError(f"Found more than one coherence file for ifg with epoch "
+                      f"{epoch}. Check that the correct coherence files "
+                      f"exist in {coh_dir}. Found:\n {coh_path}")
+    else:
+        return coh_path
+
 def coherence_paths(params) -> List[str]:
     """
     Returns paths to corresponding coherence files for given IFGs. Assumes
@@ -497,32 +528,9 @@ def coherence_paths(params) -> List[str]:
                'or does not exist')        
         raise IOError(code, emsg)
     ifgs = parse_namelist(ifg_file_list)
-    pattern = re.compile(r'\d{8}-\d{8}')
-    epochs = [re.match(pattern, ifg).group(0) for ifg in ifgs]
-    coh_dir = params.get(COH_DIR)
-    coh_dir = params[OBS_DIR] if coh_dir is None else coh_dir
-    
-    # get coherence file paths and ensure we have 1-to-1 match for each
-    #  ifg file
-    coh_paths = list()
-    suf = params.get(COH_SUF)
-    suf = '' if suf is None else suf 
-    for epoch in epochs:
-        coh_path = glob2.glob(os.path.join(coh_dir, '**', f'{epoch}*{suf}.cc'))
-        if len(coh_path) == 0:
-            raise IOError("No coherence files found for ifg with epoch " 
-                          "{epoch}. Check that the correct coherence files "
-                          "exist in {coh_dir}.")
-        elif len(coh_path) > 1:
-            raise IOError("Found more than one coherence file for ifg with epoch "
-                          "{epoch}. Check that the correct coherence files "
-                          "exist in {coh_dir}.")
-        else:
-            coh_paths.extend(coh_path)
-
+    coh_paths = [coherence_path_for(ifg, params) for ifg in ifgs]
     return coh_paths
-
-
+    
 def mlooked_path(path, looks, crop_out):
     """
     Adds suffix to ifg path, for creating a new path for multilooked files.
