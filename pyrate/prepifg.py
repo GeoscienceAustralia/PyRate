@@ -33,7 +33,7 @@ from numpy import array, where, nan, isnan, nanmean, float32, zeros, \
 from osgeo import gdal
 
 from pyrate import config as cf
-from pyrate.gdal_python import crop_resample_average
+from pyrate.gdal_python import crop_resample_average, coherence_masking
 from pyrate import ifgconstants as ifc
 from pyrate.shared import Ifg, DEM, output_tiff_filename
 
@@ -146,7 +146,8 @@ def _get_extents(ifgs, crop_opt, user_exts=None):
 
 
 def prepare_ifg(raster_path, xlooks, ylooks, exts, thresh, crop_opt,
-                write_to_disk=True, out_path=None, header=None):
+                write_to_disk=True, out_path=None, header=None,
+                coh_path=None, coh_thresh=None):
     """
     Open, resample, crop and optionally save to disk an interferogram or DEM.
     Returns are only given if write_to_disk=False
@@ -174,6 +175,12 @@ def prepare_ifg(raster_path, xlooks, ylooks, exts, thresh, crop_opt,
     raster = dem_or_ifg(raster_path)
     if not raster.is_open:
         raster.open()
+    if coh_path:
+        coh_raster = dem_or_ifg(raster_path)
+        if not coh_raster.is_open:
+            coh_raster.open()
+        coherence_masking(raster, coh_raster, coh_thresh)
+        coh_raster = None
     if do_multilook:
         resolution = [xlooks * raster.x_step, ylooks * raster.y_step]
     if not do_multilook and crop_opt == ALREADY_SAME_SIZE:

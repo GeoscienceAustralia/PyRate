@@ -28,6 +28,20 @@ gdal.SetCacheMax(2**15)
 GDAL_WARP_MEMORY_LIMIT = 2**10
 LOW_FLOAT32 = np.finfo(np.float32).min*1e-10
 
+def coherence_masking(raster, coh_raster, coh_thresh):
+    """
+    Preform coherence masking.
+
+    Args:
+        raster: The interferogram to mask as GDAL dataset.
+        coh_raster: The coherence GDAL dataset.
+    """
+    a = raster.GetRasterBand(1).ReadAsArray()
+    b = coh_raster.GetRasterBand(1).ReadAsArray()
+    andv = a.GetNoDataValue()
+    bndv = b.GetNoDataValue()
+    print(f'andv = {andv}, bndv = {bndv}')
+    raise Exception('HCF')
 
 def world_to_pixel(geo_transform, x, y):
     """
