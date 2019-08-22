@@ -50,7 +50,7 @@ def coherence_masking(raster, coh_raster, coh_thresh):
     b = b_band.ReadAsArray()
     var = {'a': a, 'b': b, 't': coh_thresh, 'ndv': andv}
     formula = 'b*(a>=t)+ndv*(a<t)'
-    res = ne.evaluate(formula), locals_dict=var)
+    res = ne.evaluate(formula, locals_dict=var)
     a_band.WriteArray(res)
     
 def world_to_pixel(geo_transform, x, y):
