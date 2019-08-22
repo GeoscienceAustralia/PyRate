@@ -46,19 +46,12 @@ def coherence_masking(raster, coh_raster, coh_thresh):
     a_band = raster._get_band(1)
     b_band = coh_raster._get_band(1)
     andv = a_band.GetNoDataValue()
-    bndv = b_band.GetNoDataValue()
     a = a_band.ReadAsArray()
     b = b_band.ReadAsArray()
-    a[a==andv]=np.nan
-    b[b==bndv]=np.nan
-    var = {'a': a, 'b': b, 't': coh_thresh}
-    formula = 'b*(a>=t)-999*(a<t)'
-    res = ne.evaluate(formula, local_dict=var)
-    res[res==np.nan]=999
-    a_band.SetNoDataValue(999)
+    var = {'a': a, 'b': b, 't': coh_thresh, 'ndv': andv}
+    formula = 'b*(a>=t)+ndv*(a<t)'
+    res = ne.evaluate(formula), locals_dict=var)
     a_band.WriteArray(res)
-    # Update Ifg object properties
-    raster.nodata_value = 999
     
 def world_to_pixel(geo_transform, x, y):
     """
