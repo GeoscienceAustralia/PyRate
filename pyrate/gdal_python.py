@@ -37,7 +37,7 @@ def coherence_masking(raster, coh_raster, coh_thresh):
     gdal_calc.py -A 20151127-20151209_VV_8rlks_flat_eqa.cc.tif 
      -B 20151127-20151209_VV_8rlks_eqa.unw.tif 
      --outfile=test_v1.tif --calc="B*(A>=0.8)-999*(A<0.8)" 
-     --NoDataValue=999
+     --NoDataValue=-999
 
     Args:
         raster: The interferogram to mask as GDAL dataset.
@@ -50,7 +50,7 @@ def coherence_masking(raster, coh_raster, coh_thresh):
     b = b_band.ReadAsArray()
     var = {'a': a, 'b': b, 't': coh_thresh, 'ndv': andv}
     formula = 'b*(a>=t)+ndv*(a<t)'
-    res = ne.evaluate(formula, locals_dict=var)
+    res = ne.evaluate(formula, local_dict=var)
     a_band.WriteArray(res)
     
 def world_to_pixel(geo_transform, x, y):
