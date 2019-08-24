@@ -175,12 +175,12 @@ def prepare_ifg(raster_path, xlooks, ylooks, exts, thresh, crop_opt,
     raster = dem_or_ifg(raster_path)
     if not raster.is_open:
         raster.open()
-    if coh_path:
-        coh_raster = dem_or_ifg(coh_path)
-        if not coh_raster.is_open:
-            coh_raster.open()
-        coherence_masking(raster, coh_raster, coh_thresh)
-        coh_raster = None
+    #if coh_path:
+    #    coh_raster = dem_or_ifg(coh_path)
+    #    if not coh_raster.is_open:
+    #        coh_raster.open()
+    #    coherence_masking(raster, coh_raster, coh_thresh)
+    #    coh_raster = None
     if do_multilook:
         resolution = [xlooks * raster.x_step, ylooks * raster.y_step]
     if not do_multilook and crop_opt == ALREADY_SAME_SIZE:
@@ -192,7 +192,8 @@ def prepare_ifg(raster_path, xlooks, ylooks, exts, thresh, crop_opt,
         return _dummy_warp(renamed_path)
 
     return _warp(raster, xlooks, ylooks, exts, resolution, thresh,
-                 crop_opt, write_to_disk, out_path, header)
+                 crop_opt, write_to_disk, out_path, header,
+		 coh_path, coh_thresh)
 
 
 # TODO: crop options 0 = no cropping? get rid of same size
@@ -276,7 +277,8 @@ def _dummy_warp(renamed_path):
 
 
 def _warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out,
-          write_to_disk=True, out_path=None, header=None):
+          write_to_disk=True, out_path=None, header=None,
+          coh_path=None, coh_thresh=None):
     """
     Convenience function for calling GDAL functionality
     """
@@ -303,7 +305,8 @@ def _warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out,
         new_res=resolution,
         output_file=looks_path,
         thresh=thresh,
-        out_driver_type=driver_type, hdr=header)
+        out_driver_type=driver_type, hdr=header,
+        coh_path=coh_path, coh_thresh=coh_thresh)
     if not write_to_disk:
         return resampled_data, out_ds
 
