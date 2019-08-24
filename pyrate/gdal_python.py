@@ -46,12 +46,11 @@ def coherence_masking(src_ds, coh_ds, coh_thresh):
         coh_thresh: The coherence threshold.
     """
     a_band = src_ds.GetRasterBand(1)
-    a_ndv = a_band.GetNoDataValue()
+    ndv = a_band.GetNoDataValue()
     b_band = coh_ds.GetRasterBand(1)
     a = a_band.ReadAsArray()
     b = b_band.ReadAsArray()
-    print(f'masking with {coh_thresh} and {a_ndv}')
-    var = {'a': a, 'b': b, 't': coh_thresh, 'ndv': a_ndv}
+    var = {'a': a, 'b': b, 't': coh_thresh, 'ndv': ndv}
     formula = 'b*(a>=t)+ndv*(a<t)'
     res = ne.evaluate(formula, local_dict=var)
     a_band.WriteArray(res)
@@ -300,26 +299,24 @@ def crop_resample_average(
     # make a temporary copy of the dst_ds for Pirate style prepifg
     tmp_ds = gdal.GetDriverByName('MEM').CreateCopy('', dst_ds) \
         if (match_pirate and new_res[0]) else None
-    
+
     src_ds, src_ds_mem = _setup_source(input_tif)   
-    print(f'pre masking: {np.min(src_ds.GetRasterBand(1).ReadAsArray())}, {np.max(src_ds.GetRasterBand(1).ReadAsArray())}')
+
     if coh_path and coh_thresh:
         coh_raster = prepifg.dem_or_ifg(coh_path)
         coh_raster.open()
         coh_ds = coh_raster.dataset
-        coherence_masking(src_ds, coh_ds, coh_thresh)
+        coherence_masking(src_ds_mem, coh_ds, coh_thresh)
     elif coh_path and not coh_thresh:
         raise ValueError(f"Coherence file provided without a coherence "
                          f"threshold. Please ensure you provide 'cohthresh' "
                          f"in your config if coherence masking is enabled.")
- 
-    print(f'post masking: {np.min(src_ds.GetRasterBand(1).ReadAsArray())}, {np.max(src_ds.GetRasterBand(1).ReadAsArray())}')
+
     resampled_average, src_ds_mem = \
         gdal_average(dst_ds, src_ds, src_ds_mem, thresh)
     src_dtype = src_ds_mem.GetRasterBand(1).DataType
     src_gt = src_ds_mem.GetGeoTransform()
 
-    print(f'post resample: {np.min(src_ds_mem.GetRasterBand(1).ReadAsArray())}, {np.max(src_ds_mem.GetRasterBand(1).ReadAsArray())}')
     # required to match Matlab Pirate output
     if tmp_ds:
         _matlab_alignment(input_tif, new_res, resampled_average, src_ds_mem,
