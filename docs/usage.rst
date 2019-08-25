@@ -125,6 +125,27 @@ The ``prepifg`` command is used as follows:
 
     pyrate prepifg /path/to/config_file
 
+Coherence masking
+^^^^^^^^^^^^^^^^^
+
+If specified, ``prepifg`` will perform coherence masking of the unwrapped
+interferogram before multilooking and cropping is performed. This requires
+corresponding coherence images for each unwrapped interferogram. 
+
+The masking is performed with the raster calcuation:
+
+.. math::
+    B*(A>=T)+NDV*(A<T)
+
+where ``B`` is the coherence band, ``A`` is the intergerogram band, ``T`` is
+the coherence threshold and ``NDV`` is the interferogram no data value.
+
+Coherence masking is enabled  by setting the ``cohmask`` argument to ``1`` in
+the configuration file. A threshold, ``cohthresh`` needs to be provided. If
+``cohfiledir`` is provided, this is where PyRate will look for coherence 
+images. If not provided it will look in observations directory where the
+unwrapped interferograms exist.
+
 Image transformations: multilooking and cropping
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
