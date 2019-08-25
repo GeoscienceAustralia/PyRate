@@ -43,8 +43,6 @@ def _wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs):
     """
     A wrapper for the spatio-temporal filter so it can be tested.
     See docstring for spatio_temporal_filter.
-    Required due to differences between Matlab and Python MST
-    implementations.
     """
     if not params[cf.APSEST]:
         log.info('APS correction not required.')

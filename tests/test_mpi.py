@@ -39,7 +39,7 @@ from pyrate.scripts import (
 from tests.common import (small_data_setup, reconstruct_mst, 
     reconstruct_linrate, SML_TEST_DEM_HDR_GAMMA, pre_prepare_ifgs)
 from tests import common
-from tests.test_covariance import matlab_maxvar
+from tests.test_covariance import legacy_maxvar
 from pyrate import config as cf
 from pyrate import mpiops
 from pyrate import algorithm
@@ -145,12 +145,12 @@ def get_crop(request):
     return request.param
 
 
-def test_vcm_matlab_vs_mpi(mpisync, tempdir, get_config):
+def test_vcm_legacy_vs_mpi(mpisync, tempdir, get_config):
     from tests.common import SML_TEST_DIR, TEST_CONF_ROIPAC
 
     params_dict = get_config(TEST_CONF_ROIPAC)
-    MATLAB_VCM_DIR = os.path.join(SML_TEST_DIR, 'matlab_vcm')
-    matlab_vcm = np.genfromtxt(os.path.join(MATLAB_VCM_DIR, 'matlab_vcmt.csv'), delimiter=',')
+    LEGACY_VCM_DIR = os.path.join(SML_TEST_DIR, 'vcm')
+    legacy_vcm = np.genfromtxt(os.path.join(LEGACY_VCM_DIR, 'vcmt.csv'), delimiter=',')
     if mpiops.rank == 0:
         outdir = tempdir()
     else:
@@ -180,8 +180,8 @@ def test_vcm_matlab_vs_mpi(mpisync, tempdir, get_config):
 
     maxvar, vcmt = run_pyrate._maxvar_vcm_calc(dest_paths, params_dict,
                                               preread_ifgs)
-    np.testing.assert_array_almost_equal(maxvar, matlab_maxvar, decimal=4)
-    np.testing.assert_array_almost_equal(matlab_vcm, vcmt, decimal=3)
+    np.testing.assert_array_almost_equal(maxvar, legacy_maxvar, decimal=4)
+    np.testing.assert_array_almost_equal(legacy_vcm, vcmt, decimal=3)
     if mpiops.rank == 0:
         shutil.rmtree(outdir)
         common.remove_tifs(params_dict[cf.OBS_DIR])

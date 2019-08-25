@@ -45,10 +45,10 @@ log = logging.getLogger(__name__)
 
 
 # Design notes:
-# The orbital correction code is based on Matlab Pirate, but includes several
-# enhancements. Pirate creates sparse arrays for the linear inversion, which
-# contain many empty cells. This is unnecessary for the independent method, and
-# temporarily wastes potentially a lot of memory.
+# The orbital correction code includes several enhancements. PyRate creates
+# sparse arrays for the linear inversion, which contain many empty cells.
+# This is unnecessary for the independent method, and temporarily wastes
+# potentially a lot of memory.
 #
 # For the independent method, PyRate makes individual small design matrices and
 # corrects the Ifgs one by one. If required in the correction, the offsets

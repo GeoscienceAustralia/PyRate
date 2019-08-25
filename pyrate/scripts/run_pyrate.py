@@ -115,18 +115,10 @@ def _mst_calc(dest_tifs, params, tiles, preread_ifgs):
         """
         Convenient inner loop for mst tile saving
         """
-        if params[cf.NETWORKX_OR_MATLAB_FLAG] == 1:
-            log.info('Calculating minimum spanning tree matrix '
-                     'using NetworkX method')
-            mst_tile = mst.mst_multiprocessing(tile, dest_tifs, preread_ifgs)
-        elif params[cf.NETWORKX_OR_MATLAB_FLAG] == 0:
-            raise ConfigException('Matlab-style MST not supported')
-        else:
-            raise ConfigException('Only NetworkX MST is supported')
-            # mst_tile = mst.mst_multiprocessing(tile, dest_tifs, preread_ifgs)
+        log.info('Calculating minimum spanning tree matrix using NetworkX method')
+        mst_tile = mst.mst_multiprocessing(tile, dest_tifs, preread_ifgs)
         # locally save the mst_mat
-        mst_file_process_n = join(
-            params[cf.TMPDIR], 'mst_mat_{}.npy'.format(i))
+        mst_file_process_n = join(params[cf.TMPDIR], 'mst_mat_{}.npy'.format(i))
         np.save(file=mst_file_process_n, arr=mst_tile)
 
     for t in process_tiles:
@@ -283,8 +275,8 @@ def _phase_sum(ifg_paths, params):
             phs_sum = np.zeros(shape=shape, dtype=np.float64)
             mpiops.comm.Recv(phs_sum, source=i, tag=i)
             phase_sum_all += phs_sum
-        comp = np.isnan(phase_sum_all)  # this is the same as in Matlab
-        comp = np.ravel(comp, order='F')  # this is the same as in Matlab
+        comp = np.isnan(phase_sum_all)
+        comp = np.ravel(comp, order='F')
     else:  # pragma: no cover
         comp = None
         mpiops.comm.Send(phs_sum, dest=0, tag=mpiops.rank)

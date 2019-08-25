@@ -15,9 +15,7 @@
 #   limitations under the License.
 """
 This Python module implements covariance calculation and
-Variance/Covariance matrix functionality. The algorithms
-are based on functions 'cvdcalc.m' and 'vcmt.m' from
-the Matlab Pirate package.
+Variance/Covariance matrix functionality.
 """
 # coding: utf-8
 from os.path import basename, join
@@ -36,8 +34,7 @@ from pyrate import ifgconstants as ifc
 from pyrate import config as cf
 
 # pylint: disable=too-many-arguments
-# distance division factor of 1000 converts to km and is needed to match
-# Matlab code output
+# distance division factor of 1000 converts to km and is needed to match legacy output
 DISTFACT = 1000
 
 log = logging.getLogger(__name__)
@@ -162,13 +159,12 @@ def cvd_from_phase(phase, ifg, r_dist, calc_alpha, save_acg=False, params=None):
     acg = reshape(autocorr_grid, phase.size, order='F')
     # Symmetry in image; keep only unique points
     # tmp = _unique_points(zip(acg, r_dist))
-    # Sudipta: Is this faster than keeping only the 1st half as in Matlab?
     # Sudipta: Unlikely, as unique_point is a search/comparison,
     # whereas keeping 1st half is just numpy indexing.
     # If it is not faster, why was this done differently here?
     # r_dist = r_dist[:int(ceil(phase.size / 2.0)) + nrows]
     acg = acg[:len(r_dist)]
-    # Alternative method to remove duplicate cells (from Matlab Pirate code)
+    # Alternative method to remove duplicate cells
     # r_dist = r_dist[:ceil(len(r_dist)/2)+nlines]
     #  Reason for '+nlines' term unknown
     # eg. array([x for x in set([(1,1), (2,2), (1,1)])])
@@ -198,7 +194,7 @@ def cvd_from_phase(phase, ifg, r_dist, calc_alpha, save_acg=False, params=None):
         r_dist = r_dist[indices_to_keep]  # km
         # classify values of r_dist according to bin number
         rbin = ceil(r_dist / bin_width).astype(int)
-        maxbin = max(rbin) - 1  # consistent with Matlab code
+        maxbin = max(rbin) - 1  # consistent with Legacy data
 
         cvdav = zeros(shape=(2, maxbin + 1))
 

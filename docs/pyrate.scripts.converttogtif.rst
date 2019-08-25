@@ -1,5 +1,5 @@
 PyRate converttogtif Script
-=========================
+===========================
 
 .. automodule:: pyrate.scripts.converttogtif
     :members:

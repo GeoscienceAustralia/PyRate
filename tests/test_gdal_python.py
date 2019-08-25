@@ -422,7 +422,7 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
             # only band 1 is resapled in warp_old
             averaged_and_resampled, _ = gdal_python.crop_resample_average(
                 self.temp_tif, extents, [res, -res], self.out_tif, thresh,
-                match_pirate=True)
+                match_pyrate=True)
             ifg = Ifg(self.temp_tif)
             # only band 1 is resampled in warp_old
             data, self.old_prepifg_path = warp_old(
@@ -453,7 +453,7 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
         src_ds.FlushCache()
         return dst_ds, src_ds
 
-    def test_gdal_python_vs_old_prepifg_no_match_pirate(self):
+    def test_gdal_python_vs_old_prepifg_no_match_pyrate(self):
 
         for ifg in self.ifgs:
             extents = [150.91, -34.229999976, 150.949166651, -34.17]
@@ -467,7 +467,7 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
                 averaged_and_resapled, out_ds = gdal_python.crop_resample_average(
                     ifg.data_path, extents, new_res=[res, -res],
                     output_file=self.temp_tif, thresh=thresh,
-                    match_pirate=False)
+                    match_pyrate=False)
 
                 # only band 1 is resampled in warp_old
                 data, self.old_prepifg_path = warp_old(
@@ -483,7 +483,7 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
                     data, averaged_and_resapled, decimal=4)
 
                 # make sure they are the same after they are opened again
-                # Last [yres:nrows, xres:ncols] won't match due to Pirate
+                # Last [yres:nrows, xres:ncols] won't match due to PyRate
                 # dropping last few rows/columns depending on resolution/looks
                 data_from_file = gdal.Open(self.old_prepifg_path).ReadAsArray()
                 new_from_file = out_ds.ReadAsArray()
@@ -504,7 +504,7 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
                 averaged_and_resampled = gdal_python.crop_resample_average(
                     ifg.data_path, extents, new_res=[res, -res],
                     output_file=self.temp_tif, thresh=thresh,
-                    match_pirate=True)[0]
+                    match_pyrate=True)[0]
 
                 # only band 1 is resampled in warp_old
                 data, self.old_prepifg_path = warp_old(
@@ -535,7 +535,7 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
             averaged_and_resampled, out_ds = gdal_python.crop_resample_average(
                 ifg.data_path, extents, new_res=[res, -res],
                 output_file=self.temp_tif, thresh=thresh,
-                out_driver_type='MEM', match_pirate=True)
+                out_driver_type='MEM', match_pyrate=True)
 
             # only band 1 is resampled in warp_old
             data, self.old_prepifg_path = warp_old(
