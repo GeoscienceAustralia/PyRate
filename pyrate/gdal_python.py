@@ -339,7 +339,7 @@ def crop_resample_average(
             if v == ifc.ORIG and coh_path:
                 md.update({ifc.DATA_TYPE:ifc.COHERENCE})
             elif v == ifc.ORIG and not coh_path:
-                md.update({ifc.DATA_TYPE:ifc.COHERENCE})
+                md.update({ifc.DATA_TYPE:ifc.MLOOKED_DEM})
             elif v == ifc.DEM:
                 md.update({ifc.DATA_TYPE:ifc.MLOOKED_DEM})
             elif v == ifc.INCIDENCE:
