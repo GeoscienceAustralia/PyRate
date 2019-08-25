@@ -44,7 +44,6 @@ def is_square(arr):
 def least_squares_covariance(A, b, v):
     """
     Least squares solution in the presence of known covariance.
-    This function is known as lscov() in MATLAB.
 
     :param ndarray A: Design matrix
     :param ndarray b: Observations (vector of phase values)
@@ -232,7 +231,6 @@ def master_slave_ids(dates):
     """
     Returns a dictionary of 'date:unique ID' for each date in 'dates'.
     IDs are ordered from oldest to newest, starting at 0.
-    Implements ifglist.mas|slvnum used in the Matlab Pirate package.
 
     :param list dates: List of dates
 

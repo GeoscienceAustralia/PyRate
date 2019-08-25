@@ -351,8 +351,6 @@ def _resample_ifg(ifg, cmd, x_looks, y_looks, thresh, md=None):
     Convenience function to resample data from a given Ifg (more coarse).
     """
 
-    # Create tmp ifg and extract data array for manual resampling as gdalwarp
-    # lacks the averaging method implemented in Matlab Pirate
     fp, tmp_path = mkstemp(suffix='.tif')
     check_call(cmd + [ifg.data_path, tmp_path])
 

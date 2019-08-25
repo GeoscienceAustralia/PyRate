@@ -16,8 +16,7 @@
 """
 This Python module implements pixel-by-pixel linear rate
 (velocity) estimation using an iterative weighted least-squares
-method. The algorithm is based on the Matlab Pirate package 'stack.m'
-and Matlab 'lscov.m' functions.
+method.
 """
 # pylint: disable= invalid-name
 # pylint: disable= too-many-locals
@@ -152,7 +151,6 @@ def _linear_rate_by_pixel(row, col, mst, nsig, obs, pthresh, span, vcmt):
         # Subset of full VCM matrix for selected observations
         vcm_temp = vcmt[ind, np.vstack(ind)]
 
-        # start Matlab lscov.m function
         # Get the lower triangle cholesky decomposition.
         # V must be positive definite (symmetrical and square)
         T = cholesky(vcm_temp, 1)
@@ -169,7 +167,6 @@ def _linear_rate_by_pixel(row, col, mst, nsig, obs, pthresh, span, vcmt):
 
         # Compute the Lstsq coefficient for the velocity
         v = solve(R, z)
-        # end Matlab lscov.m function
 
         # Compute the model errors
         err1 = inv(vcm_temp).dot(B.conj().transpose())

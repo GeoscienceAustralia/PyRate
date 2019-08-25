@@ -32,7 +32,7 @@ from pyrate.ref_phs_est import estimate_ref_phase, ReferencePhaseError
 from pyrate.scripts import run_prepifg, run_pyrate, converttogtif
 from tests import common
 
-matlab_ref_phs_method1 = [-18.2191658020020,
+legacy_ref_phs_method1 = [-18.2191658020020,
                           27.7119445800781,
                           -18.4944229125977,
                           -2.92210483551025,
@@ -51,7 +51,7 @@ matlab_ref_phs_method1 = [-18.2191658020020,
                           -12.7864856719971]
 
 
-matlab_ref_phs_method2 = [-21.4459648132324,
+legacy_ref_phs_method2 = [-21.4459648132324,
                           27.1714553833008,
                           -20.8264484405518,
                           -3.47468209266663,
@@ -108,9 +108,9 @@ class RefPhsTests(unittest.TestCase):
                           self.ifgs, self.params, self.refpx, self.refpy)
 
 
-class RefPhsEstimationMatlabTestMethod1Serial(unittest.TestCase):
+class RefPhsEstimationLegacyTestMethod1Serial(unittest.TestCase):
     """
-    Reference phase estimation method 1 is tested vs matlab output
+    Reference phase estimation method 1 is tested vs legacy output
     """
 
     @classmethod
@@ -163,22 +163,22 @@ class RefPhsEstimationMatlabTestMethod1Serial(unittest.TestCase):
             cf.get_config_params(common.TEST_CONF_ROIPAC)[cf.OBS_DIR])
 
     def test_estimate_reference_phase(self):
-        np.testing.assert_array_almost_equal(matlab_ref_phs_method1,
+        np.testing.assert_array_almost_equal(legacy_ref_phs_method1,
                                              self.ref_phs,
                                              decimal=3)
 
     def test_ifgs_after_ref_phs_est(self):
-        MATLAB_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR,
-                                                     'matlab_ref_phase_est')
+        LEGACY_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR,
+                                                     'ref_phase_est')
 
-        onlyfiles = [f for f in os.listdir(MATLAB_REF_PHASE_DIR)
-                if os.path.isfile(os.path.join(MATLAB_REF_PHASE_DIR, f))
+        onlyfiles = [f for f in os.listdir(LEGACY_REF_PHASE_DIR)
+                if os.path.isfile(os.path.join(LEGACY_REF_PHASE_DIR, f))
                 and f.endswith('.csv') and f.__contains__('_ref_phase_')]
 
         count = 0
         for i, f in enumerate(onlyfiles):
             ifg_data = np.genfromtxt(os.path.join(
-                MATLAB_REF_PHASE_DIR, f), delimiter=',')
+                LEGACY_REF_PHASE_DIR, f), delimiter=',')
             for k, j in enumerate(self.ifgs):
                 if f.split('_corrected')[-1].split('.')[0] == \
                         os.path.split(j.data_path)[-1].split('_unw_1rlks')[0]:
@@ -199,9 +199,9 @@ class RefPhsEstimationMatlabTestMethod1Serial(unittest.TestCase):
         self.assertEqual(count, len(self.ifgs))
 
 
-class RefPhsEstimationMatlabTestMethod1Parallel(unittest.TestCase):
+class RefPhsEstimationLegacyTestMethod1Parallel(unittest.TestCase):
     """
-    Reference phase estimation method 1 is tested vs matlab output
+    Reference phase estimation method 1 is tested vs legacy output
     """
     @classmethod
     def setUpClass(cls):
@@ -253,22 +253,22 @@ class RefPhsEstimationMatlabTestMethod1Parallel(unittest.TestCase):
             cf.get_config_params(common.TEST_CONF_ROIPAC)[cf.OBS_DIR])
 
     def test_estimate_reference_phase(self):
-        np.testing.assert_array_almost_equal(matlab_ref_phs_method1,
+        np.testing.assert_array_almost_equal(legacy_ref_phs_method1,
                                              self.ref_phs,
                                              decimal=3)
 
     def test_ifgs_after_ref_phs_est(self):
-        MATLAB_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR,
-                                                     'matlab_ref_phase_est')
+        LEGACY_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR,
+                                                     'ref_phase_est')
 
-        onlyfiles = [f for f in os.listdir(MATLAB_REF_PHASE_DIR)
-                if os.path.isfile(os.path.join(MATLAB_REF_PHASE_DIR, f))
+        onlyfiles = [f for f in os.listdir(LEGACY_REF_PHASE_DIR)
+                if os.path.isfile(os.path.join(LEGACY_REF_PHASE_DIR, f))
                 and f.endswith('.csv') and f.__contains__('_ref_phase_')]
 
         count = 0
         for i, f in enumerate(onlyfiles):
             ifg_data = np.genfromtxt(os.path.join(
-                MATLAB_REF_PHASE_DIR, f), delimiter=',')
+                LEGACY_REF_PHASE_DIR, f), delimiter=',')
             for k, j in enumerate(self.ifgs):
                 if f.split('_corrected')[-1].split('.')[0] == \
                         os.path.split(j.data_path)[-1].split('_unw_1rlks')[0]:
@@ -291,9 +291,9 @@ class RefPhsEstimationMatlabTestMethod1Parallel(unittest.TestCase):
         self.assertEqual(count, len(self.ifgs))
 
 
-class RefPhsEstimationMatlabTestMethod2Serial(unittest.TestCase):
+class RefPhsEstimationLegacyTestMethod2Serial(unittest.TestCase):
     """
-    Reference phase estimation method 2 is tested vs matlab output
+    Reference phase estimation method 2 is tested vs legacy output
     """
 
     @classmethod
@@ -346,18 +346,18 @@ class RefPhsEstimationMatlabTestMethod2Serial(unittest.TestCase):
 
 
     def test_ifgs_after_ref_phs_est(self):
-        MATLAB_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR,
-                                                     'matlab_ref_phase_est')
+        LEGACY_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR,
+                                                     'ref_phase_est')
 
-        onlyfiles = [f for f in os.listdir(MATLAB_REF_PHASE_DIR)
-                if os.path.isfile(os.path.join(MATLAB_REF_PHASE_DIR, f))
+        onlyfiles = [f for f in os.listdir(LEGACY_REF_PHASE_DIR)
+                if os.path.isfile(os.path.join(LEGACY_REF_PHASE_DIR, f))
                 and f.endswith('.csv') and f.__contains__('_ref_phase_')
                      and f.__contains__('method2')]
 
         count = 0
         for i, f in enumerate(onlyfiles):
             ifg_data = np.genfromtxt(os.path.join(
-                MATLAB_REF_PHASE_DIR, f), delimiter=',')
+                LEGACY_REF_PHASE_DIR, f), delimiter=',')
             for k, j in enumerate(self.ifgs):
                 if f.split('_corrected_method2')[-1].split('.')[0] == \
                         os.path.split(j.data_path)[-1].split('_unw_1rlks')[0]:
@@ -379,13 +379,13 @@ class RefPhsEstimationMatlabTestMethod2Serial(unittest.TestCase):
         self.assertEqual(count, len(self.ifgs))
 
     def test_estimate_reference_phase_method2(self):
-        np.testing.assert_array_almost_equal(matlab_ref_phs_method2,
+        np.testing.assert_array_almost_equal(legacy_ref_phs_method2,
                                              self.ref_phs, decimal=3)
 
 
-class RefPhsEstimationMatlabTestMethod2Parallel(unittest.TestCase):
+class RefPhsEstimationLegacyTestMethod2Parallel(unittest.TestCase):
     """
-    Reference phase estimation method 2 is tested vs matlab output
+    Reference phase estimation method 2 is tested vs legacy output
 
     """
     # TODO: Improve the parallel tests to remove duplication from serial tests
@@ -436,18 +436,18 @@ class RefPhsEstimationMatlabTestMethod2Parallel(unittest.TestCase):
             cf.get_config_params(common.TEST_CONF_ROIPAC)[cf.OBS_DIR])
 
     def test_ifgs_after_ref_phs_est(self):
-        MATLAB_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR,
-                                            'matlab_ref_phase_est')
+        LEGACY_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR,
+                                            'ref_phase_est')
 
-        onlyfiles = [f for f in os.listdir(MATLAB_REF_PHASE_DIR)
-                     if os.path.isfile(os.path.join(MATLAB_REF_PHASE_DIR, f))
+        onlyfiles = [f for f in os.listdir(LEGACY_REF_PHASE_DIR)
+                     if os.path.isfile(os.path.join(LEGACY_REF_PHASE_DIR, f))
                      and f.endswith('.csv') and f.__contains__('_ref_phase_')
                      and f.__contains__('method2')]
 
         count = 0
         for i, f in enumerate(onlyfiles):
             ifg_data = np.genfromtxt(os.path.join(
-                MATLAB_REF_PHASE_DIR, f), delimiter=',')
+                LEGACY_REF_PHASE_DIR, f), delimiter=',')
             for k, j in enumerate(self.ifgs):
                 if f.split('_corrected_method2')[-1].split('.')[0] == \
                         os.path.split(j.data_path)[-1].split('_unw_1rlks')[0]:
@@ -471,7 +471,7 @@ class RefPhsEstimationMatlabTestMethod2Parallel(unittest.TestCase):
         self.assertEqual(count, len(self.ifgs))
 
     def test_estimate_reference_phase_method2(self):
-        np.testing.assert_array_almost_equal(matlab_ref_phs_method2,
+        np.testing.assert_array_almost_equal(legacy_ref_phs_method2,
                                              self.ref_phs, decimal=3)
 
 

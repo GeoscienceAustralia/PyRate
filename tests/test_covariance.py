@@ -62,7 +62,7 @@ class CovarianceTests(unittest.TestCase):
             print("maxvar: %s, alpha: %s" % (maxvar, alpha))
 
     def test_covariance_17ifgs(self):
-        # From Matlab Pirate after raw data import
+        # After raw data import
         # (no reference pixel correction and units in radians)
         exp_maxvar = [5.6149, 8.7710, 2.9373, 0.3114, 12.9931, 2.0459, 0.4236,
                       2.1243, 0.4745, 0.6725, 0.8333, 3.8232, 3.3052, 2.4925,
@@ -102,7 +102,6 @@ class VCMTests(unittest.TestCase):
         ifgs = small5_mock_ifgs(5, 9)
         maxvar = [8.486, 12.925, 6.313, 0.788, 0.649]
 
-        # from Matlab Pirate make_vcmt.m code
         exp = array([[8.486, 5.2364, 0.0, 0.0, 0.0],
             [5.2364, 12.925,  4.5165,  1.5957,  0.0],
             [0.0, 4.5165, 6.313, 1.1152, 0.0],
@@ -118,7 +117,6 @@ class VCMTests(unittest.TestCase):
                   7.548, 6.190, 12.565, 9.822, 18.484, 7.776, 2.734, 6.411,
                   4.754]
 
-        # Output from Matlab Pirate make_vcmt.m
         exp = array([
             [2.879, 0.0, -4.059, -1.820, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
              0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
@@ -160,7 +158,7 @@ class VCMTests(unittest.TestCase):
         assert_array_almost_equal(act, exp, decimal=3)
 
 
-matlab_maxvar = [15.4156637191772,
+legacy_maxvar = [15.4156637191772,
                  2.85829424858093,
                  34.3486289978027,
                  2.59190344810486,
@@ -179,7 +177,7 @@ matlab_maxvar = [15.4156637191772,
                  5.62802362442017]
 
 
-class MatlabEqualityTest(unittest.TestCase):
+class LegacyEqualityTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -216,16 +214,16 @@ class MatlabEqualityTest(unittest.TestCase):
         params = cf.get_config_params(TEST_CONF_ROIPAC)
         common.remove_tifs(params[cf.OBS_DIR])
 
-    def test_matlab_maxvar_equality_small_test_files(self):
-        np.testing.assert_array_almost_equal(self.maxvar, matlab_maxvar,
+    def test_legacy_maxvar_equality_small_test_files(self):
+        np.testing.assert_array_almost_equal(self.maxvar, legacy_maxvar,
                                              decimal=3)
 
-    def test_matlab_vcmt_equality_small_test_files(self):
+    def test_legacy_vcmt_equality_small_test_files(self):
         from tests.common import SML_TEST_DIR
-        MATLAB_VCM_DIR = os.path.join(SML_TEST_DIR, 'matlab_vcm')
-        matlab_vcm = np.genfromtxt(os.path.join(MATLAB_VCM_DIR,
-                                   'matlab_vcmt.csv'), delimiter=',')
-        np.testing.assert_array_almost_equal(matlab_vcm, self.vcmt, decimal=3)
+        LEGACY_VCM_DIR = os.path.join(SML_TEST_DIR, 'vcm')
+        legacy_vcm = np.genfromtxt(os.path.join(LEGACY_VCM_DIR,
+                                   'vcmt.csv'), delimiter=',')
+        np.testing.assert_array_almost_equal(legacy_vcm, self.vcmt, decimal=3)
 
     def test_metadata(self):
         for ifg in self.ifgs:

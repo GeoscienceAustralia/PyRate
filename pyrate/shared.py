@@ -1077,7 +1077,6 @@ def cell_size(lat, lon, x_step, y_step):
     :return: tuple of X and Y cell size floats
     :rtype: tuple
     """
-    # Equivalent of llh2local.m used in Matlab Pirate.
     if lat > 84.0 or lat < -80:
         msg = "No UTM zone for polar region: > 84 degrees N or < 80 degrees S"
         raise ValueError(msg)

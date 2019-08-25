@@ -65,7 +65,7 @@ class LinearRateTests(unittest.TestCase):
     def test_linear_rate(self):
         # Simple test with one pixel and equal weighting
         exprate = array([[5.0]])
-        experr = array([[0.836242010007091]])  # from Matlab Pirate
+        experr = array([[0.836242010007091]])
         expsamp = array([[5]])
         vcmt = eye(6, 6)
         mst = ones((6, 1, 1))
@@ -77,9 +77,9 @@ class LinearRateTests(unittest.TestCase):
         assert_array_almost_equal(samples, expsamp)
 
 
-class MatlabEqualityTest(unittest.TestCase):
+class LegacyEqualityTest(unittest.TestCase):
     """
-    Tests equality vs matlab
+    Tests equality with legacy data
     """
 
     @classmethod
@@ -134,15 +134,15 @@ class MatlabEqualityTest(unittest.TestCase):
             tests.common.calculate_linear_rate(ifgs, params, vcmt,
                                                mst_mat=mst_grid)
 
-        matlab_linrate_dir = os.path.join(SML_TEST_DIR, 'matlab_linrate')
+        linrate_dir = os.path.join(SML_TEST_DIR, 'linrate')
 
-        cls.rate_matlab = np.genfromtxt(
-            os.path.join(matlab_linrate_dir, 'stackmap.csv'), delimiter=',')
-        cls.error_matlab = np.genfromtxt(
-            os.path.join(matlab_linrate_dir, 'errormap.csv'), delimiter=',')
+        cls.rate_container = np.genfromtxt(
+            os.path.join(linrate_dir, 'stackmap.csv'), delimiter=',')
+        cls.error_container = np.genfromtxt(
+            os.path.join(linrate_dir, 'errormap.csv'), delimiter=',')
 
-        cls.samples_matlab = np.genfromtxt(
-            os.path.join(matlab_linrate_dir, 'coh_sta.csv'), delimiter=',')
+        cls.samples_container = np.genfromtxt(
+            os.path.join(linrate_dir, 'coh_sta.csv'), delimiter=',')
 
     @classmethod
     def tearDownClass(cls):
@@ -194,24 +194,24 @@ class MatlabEqualityTest(unittest.TestCase):
 
     def test_linear_rate(self):
         """
-        python vs matlab
+        Compare with legacy data
         """
         np.testing.assert_array_almost_equal(
-            self.rate_s, self.rate_matlab, decimal=3)
+            self.rate_s, self.rate_container, decimal=3)
 
     def test_linrate_error(self):
         """
-        python vs matlab
+        Compare with legacy data
         """
         np.testing.assert_array_almost_equal(
-            self.error_s, self.error_matlab, decimal=3)
+            self.error_s, self.error_container, decimal=3)
 
     def test_linrate_samples(self):
         """
-        python linrate samples vs matlab
+        Compare with legacy data
         """
         np.testing.assert_array_almost_equal(
-            self.samples_s, self.samples_matlab, decimal=3)
+            self.samples_s, self.samples_container, decimal=3)
 
 
 if __name__ == "__main__":

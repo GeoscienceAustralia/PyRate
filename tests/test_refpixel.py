@@ -222,7 +222,7 @@ def _expected_ref_pixel(ifgs, cs):
     mn = [ulm, urm, llm, lrm]
 
 
-class MatlabEqualityTest(unittest.TestCase):
+class LegacyEqualityTest(unittest.TestCase):
 
     def setUp(self):
         self.ifg_paths = small_ifg_file_list()
@@ -283,7 +283,7 @@ class MatlabEqualityTest(unittest.TestCase):
         self.assertEqual(refy, 2)
 
 
-class MatlabEqualityTestMultiprocessParallel(unittest.TestCase):
+class LegacyEqualityTestMultiprocessParallel(unittest.TestCase):
 
     def setUp(self):
         self.ifg_paths = small_ifg_file_list()

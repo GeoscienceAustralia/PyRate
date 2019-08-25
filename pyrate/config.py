@@ -66,8 +66,6 @@ NO_DATA_AVERAGING_THRESHOLD = 'noDataAveragingThreshold'
 #: BOOL (1/2/3); Re-project data from Line of sight, 1 = vertical,
 # 2 = horizontal, 3 = no conversion
 REPROJECTION = 'prjflag' # NOT CURRENTLY USED
-#: BOOL (0/1); Select MST algorithm, 0 = Matlab Pirate algorithm, 1 = NetworkX
-NETWORKX_OR_MATLAB_FLAG = 'networkx_or_matlab'
 #: BOOL (0/1): Convert no data values to Nan
 NAN_CONVERSION = 'nan_conversion'
 
@@ -272,7 +270,6 @@ PARAM_CONVERSION = {
     PARALLEL: (int, 0),
     PROCESSES: (int, 8),
     PROCESSOR: (int, None),
-    NETWORKX_OR_MATLAB_FLAG: (int, 1), # Default to NetworkX
     NAN_CONVERSION: (int, 0),
     NO_DATA_AVERAGING_THRESHOLD: (float, 0.0),
     APS_CORRECTION: (int, 0),

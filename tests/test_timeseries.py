@@ -84,24 +84,6 @@ class TimeSeriesTests(unittest.TestCase):
                       for i in cls.ifgs]
         cls.vcmt = covariance.get_vcmt(cls.ifgs, cls.maxvar)
 
-    # def test_time_series(self):
-    # Sudipta:
-    # 1. This has been replaced due to change in the time_series code.
-    # 2. See MatlabTimeSeriesEquality for a more comprehensive test of the
-    # new function.
-    #     """
-    #     Checks that the code works the same as the Matlab Pirate code
-    #     """
-    #     tsincr, tscum, tsvel = time_series(
-    #         self.ifgs, pthresh=self.params[cf.TIME_SERIES_PTHRESH],
-    #         params=self.params, vcmt=self.vcmt, mst=self.mstmat)
-    #     expected = asarray([
-    #         -11.09124207, -2.24628582, -11.37726666, -7.98105646,
-    #         -8.95696049, -4.35343281, -10.64072681, -2.56493343,
-    #         -6.24070214, -7.64697381, -8.59650367, -9.55619863])
-    #
-    #     assert_array_almost_equal(tscum[10, 10, :], expected)
-
     def test_time_series_unit(self):
         """
         Checks that the code works the same as the calculated example
@@ -128,11 +110,7 @@ class TimeSeriesTests(unittest.TestCase):
         assert_array_almost_equal(tscum, expected, decimal=2)
 
 
-class MatlabTimeSeriesEquality(unittest.TestCase):
-    """
-    Checks the python function to that of Matlab Pirate ts.m and tsinvlap.m
-    functionality.
-    """
+class LegacyTimeSeriesEquality(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -176,17 +154,12 @@ class MatlabTimeSeriesEquality(unittest.TestCase):
         cls.tsincr_2, cls.tscum_2, cls.tsvel_2 = \
             common.calculate_time_series(ifgs, params, vcmt, mst=mst_grid)
 
-        # load the matlab data
-        ts_dir = os.path.join(common.SML_TEST_DIR, 'matlab_time_series')
+        # load the legacy data
+        ts_dir = os.path.join(common.SML_TEST_DIR, 'time_series')
         tsincr_path = os.path.join(ts_dir,
                                    'ts_incr_interp0_method1.csv')
         ts_incr = np.genfromtxt(tsincr_path)
 
-        # the matlab tsvel return is a bit pointless and not tested here
-        # tserror is not returned
-        # tserr_path = os.path.join(SML_TIME_SERIES_DIR,
-        # 'ts_error_interp0_method1.csv')
-        # ts_err = np.genfromtxt(tserr_path, delimiter=',')
         tscum_path = os.path.join(ts_dir,
                                   'ts_cum_interp0_method1.csv')
         ts_cum = np.genfromtxt(tscum_path)
@@ -241,11 +214,8 @@ class MatlabTimeSeriesEquality(unittest.TestCase):
             self.ts_cum, self.tscum_0, decimal=3)
 
 
-class MatlabTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
-    """
-    Checks the python function to that of Matlab Pirate ts.m and tsinvlap.m
-    functionality.
-    """
+class LegacyTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
+
     @classmethod
     def setUpClass(cls):
         params = cf.get_config_params(common.TEST_CONF_ROIPAC)
@@ -295,18 +265,13 @@ class MatlabTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
         cls.tsincr_0, cls.tscum_0, _ = \
             common.calculate_time_series(ifgs, params, vcmt, mst=mst_grid)
 
-        # copy matlab data
+        # copy legacy data
         SML_TIME_SERIES_DIR = os.path.join(common.SML_TEST_DIR,
-                                   'matlab_time_series')
+                                   'time_series')
         tsincr_path = os.path.join(SML_TIME_SERIES_DIR,
                                    'ts_incr_interp0_method2.csv')
         ts_incr = np.genfromtxt(tsincr_path)
 
-        # the matlab tsvel return is a bit pointless and not tested here
-        # tserror is not returned
-        # tserr_path = os.path.join(SML_TIME_SERIES_DIR,
-        # 'ts_error_interp0_method1.csv')
-        # ts_err = np.genfromtxt(tserr_path, delimiter=',')
         tscum_path = os.path.join(SML_TIME_SERIES_DIR,
                                   'ts_cum_interp0_method2.csv')
         ts_cum = np.genfromtxt(tscum_path)
