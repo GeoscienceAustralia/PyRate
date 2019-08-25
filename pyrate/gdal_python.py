@@ -274,7 +274,7 @@ def _gdalwarp_width_and_height(max_x, max_y, min_x, min_y, geo_trans):
 def crop_resample_average(
         input_tif, extents, new_res, output_file, thresh,
         out_driver_type='GTiff', 
-        match_pirate=False, hdr=None, coh_path=None, coh_thresh=None):
+        match_pyrate=False, hdr=None, coh_path=None, coh_thresh=None):
     """
     Crop, resample, and average a geotiff image.
 
