@@ -45,6 +45,7 @@ def cli(verbosity):
     more details.
     """
     pylog.configure(verbosity)
+    cf.LOG_LEVEL = verbosity
 
 
 @cli.command()

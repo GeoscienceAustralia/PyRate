@@ -23,9 +23,11 @@ import logging
 import os
 from os.path import join
 import re
+
 import glob2
 from joblib import Parallel, delayed
 import numpy as np
+
 from pyrate import prepifg
 from pyrate import config as cf
 from pyrate import shared
@@ -105,7 +107,8 @@ def do_prepifg(gtiff_paths, params):
                                            user_exts=user_exts)
         thresh = params[cf.NO_DATA_AVERAGING_THRESHOLD]
         if parallel:
-            Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
+            Parallel(n_jobs=params[cf.PROCESSES], 
+                     verbose=shared.joblib_log_level(cf.LOG_LEVEL))(
                 delayed(_prepifg_multiprocessing)(p, xlooks, ylooks, exts, thresh, crop,
                         params) for p in gtiff_paths)
         else:
