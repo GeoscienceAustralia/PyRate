@@ -31,6 +31,7 @@ Contents:
 
    installation
    usage
+   troubleshooting
    contributing
    authors
    history
