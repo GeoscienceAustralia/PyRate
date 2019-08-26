@@ -96,7 +96,8 @@ def do_geotiff(base_unw_paths, params):
     if parallel:
         log.info("Running geotiff conversion in parallel with {} "
                  "processes".format(params[cf.PROCESSES]))
-        dest_base_ifgs = Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
+        dest_base_ifgs = Parallel(n_jobs=params[cf.PROCESSES], 
+                         verbose=shared.joblib_log_level(cf.LOG_LEVEL))(
             delayed(_geotiff_multiprocessing)(p, params)
             for p in base_unw_paths)
     else:

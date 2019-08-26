@@ -28,7 +28,7 @@ from scipy.linalg import lstsq
 
 from pyrate.algorithm import master_slave_ids, get_all_epochs
 from pyrate import mst, shared, prepifg
-from pyrate.shared import nanmedian, Ifg
+from pyrate.shared import nanmedian, Ifg, joblib_log_level
 from pyrate import config as cf
 from pyrate import ifgconstants as ifc
 
@@ -141,7 +141,8 @@ def _orbital_correction(ifgs_or_ifg_paths, params, mlooked=None, offset=True,
     elif method == INDEPENDENT_METHOD:
         # not running in parallel
         # raises swig object pickle error
-        # Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
+        # Parallel(n_jobs=params[cf.PROCESSES], 
+        #          verbose=joblib_log_level(cf.LOG_LEVEL))(
         #     delayed(_independent_correction)(ifg, degree, offset, params)
         #     for ifg in ifgs)
         for ifg in ifgs_or_ifg_paths:

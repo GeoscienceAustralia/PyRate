@@ -30,7 +30,7 @@ from joblib import Parallel, delayed
 from pyrate.algorithm import ifg_date_lookup
 from pyrate.algorithm import ifg_date_index_lookup
 from pyrate import config as cf
-from pyrate.shared import IfgPart, create_tiles
+from pyrate.shared import IfgPart, create_tiles, joblib_log_level
 np.seterr(invalid='ignore')  # stops RuntimeWarning in nan conversion
 
 # TODO: may need to implement memory saving row-by-row access
@@ -96,7 +96,8 @@ def mst_parallel(ifgs, params):
     if params[cf.PARALLEL]:
         log.info('Calculating MST using {} tiles in parallel using {} ' \
                  'processes'.format(no_tiles, ncpus))
-        t_msts = Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
+        t_msts = Parallel(n_jobs=params[cf.PROCESSES], 
+                          verbose=joblib_log_level(cf.LOG_LEVEL))(
             delayed(mst_multiprocessing)(t, ifg_paths)
             for t in tiles)
         for k, tile in enumerate(tiles):
