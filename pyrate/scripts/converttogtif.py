@@ -18,7 +18,6 @@ This Python script converts ROI_PAC or GAMMA format input interferograms
 into geotiff format files
 """
 # -*- coding: utf-8 -*-
-from __future__ import print_function
 import sys
 import os
 import logging
