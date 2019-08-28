@@ -106,7 +106,7 @@ COH_MASK = 'cohmask'
 """int: perform coherence masking, 1 = yes, 0 = no"""
 COH_THRESH = 'cohthresh'
 """float: coherence treshold"""
-COH_DIR = 'cohfiledir'
+COH_FILE_DIR = 'cohfiledir'
 """str: Directory containing coherence .cc files"""
 
 #atmospheric error correction parameters NOT CURRENTLY USED
@@ -278,7 +278,7 @@ PARAM_CONVERSION = {
 
 PATHS = [OBS_DIR, IFG_FILE_LIST, DEM_FILE,
          DEM_HEADER_FILE, OUT_DIR,
-         SLC_DIR, COH_DIR,
+         SLC_DIR, COH_FILE_DIR,
          APS_INCIDENCE_MAP,
          APS_ELEVATION_MAP]
 
@@ -487,7 +487,7 @@ def coherence_path_for(path, params, tif=False) -> str:
     _, file = split(path)
     pattern = re.compile(r'\d{8}-\d{8}')
     epoch = re.match(pattern, file).group(0)
-    coh_dir = params.get(COH_DIR)
+    coh_dir = params.get(COH_FILE_DIR)
     coh_dir = params[OBS_DIR] if coh_dir is None else coh_dir
     ext = '_cc.tif' if tif else '.cc'
     coh_path = glob2.glob(os.path.join(coh_dir, '**', f'{epoch}*{ext}'))

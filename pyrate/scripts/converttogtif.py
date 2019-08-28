@@ -114,10 +114,10 @@ def _geotiff_multiprocessing(unw_path, params):
     Multiprocessing wrapper for full-res geotiff conversion
     """
     # TODO: Need a more robust method for identifying coherence files.
-    if params[cf.COH_DIR] and unw_path.endswith('.cc'):
+    if params[cf.COH_FILE_DIR] and unw_path.endswith('.cc'):
         # If the user has provided a dir for coherence files, place 
         #  converted coherence files in that directory.
-        dest = shared.output_tiff_filename(unw_path, params[cf.COH_DIR])
+        dest = shared.output_tiff_filename(unw_path, params[cf.COH_FILE_DIR])
     else:
         dest = shared.output_tiff_filename(unw_path, params[cf.OBS_DIR])
     processor = params[cf.PROCESSOR]  # roipac or gamma
