@@ -132,13 +132,14 @@ def _prepifg_multiprocessing(path, xlooks, ylooks, exts, thresh, crop, params):
     #  IFG.
     # TODO: Refactor _is_interferogram to be unprotected (remove '_')
     if params[cf.COH_MASK] and shared._is_interferogram(header):
-        coh_path = cf.coherence_path_for(path, params, tif=True)
-        coh_thresh = params[cf.COH_THRESH]
+        coherence_path = cf.coherence_path_for(path, params, tif=True)
+        coherence_thresh = params[cf.COH_THRESH]
     else:
-        coh_path = None
-        coh_thresh = None
+        coherence_path = None
+        coherence_thresh = None
 
     prepifg.prepare_ifg(path, xlooks, ylooks, exts, thresh, crop,
                         out_path=params[cf.OUT_DIR], header=header,
-                        coh_path=coh_path, coh_thresh=coh_thresh)
+                        coherence_path=coherence_path, 
+                        coherence_thresh=coherence_thresh)
 

@@ -487,20 +487,21 @@ def coherence_path_for(path, params, tif=False) -> str:
     _, file = split(path)
     pattern = re.compile(r'\d{8}-\d{8}')
     epoch = re.match(pattern, file).group(0)
-    coh_dir = params.get(COH_FILE_DIR)
-    coh_dir = params[OBS_DIR] if coh_dir is None else coh_dir
+    coherence_dir = params.get(COH_FILE_DIR)
+    coherence_dir = params[OBS_DIR] if coherence_dir is None else coherence_dir
     ext = '_cc.tif' if tif else '.cc'
-    coh_path = glob2.glob(os.path.join(coh_dir, '**', f'{epoch}*{ext}'))
-    if len(coh_path) == 0:
+    coherence_path = glob2.glob(
+                        os.path.join(coherence_dir, '**', f'{epoch}*{ext}'))
+    if len(coherence_path) == 0:
         raise IOError(f"No coherence files found for ifg with epoch " 
                       f"{epoch}. Check that the correct coherence files "
-                      f"exist in {coh_dir}.")
-    elif len(coh_path) > 1:
+                      f"exist in {coherence_dir}.")
+    elif len(coherence_path) > 1:
         raise IOError(f"Found more than one coherence file for ifg with epoch "
                       f"{epoch}. Check that the correct coherence files "
-                      f"exist in {coh_dir}. Found:\n {coh_path}")
+                      f"exist in {coherence_dir}. Found:\n {coherence_path}")
     else:
-        return coh_path[0]
+        return coherence_path[0]
 
 def coherence_paths(params) -> List[str]:
     """
@@ -521,8 +522,8 @@ def coherence_paths(params) -> List[str]:
                'or does not exist')        
         raise IOError(code, emsg)
     ifgs = parse_namelist(ifg_file_list)
-    coh_paths = [coherence_path_for(ifg, params) for ifg in ifgs]
-    return coh_paths
+    coherence_paths = [coherence_path_for(ifg, params) for ifg in ifgs]
+    return coherence_paths
     
 def mlooked_path(path, looks, crop_out):
     """

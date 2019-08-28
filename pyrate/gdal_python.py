@@ -30,7 +30,7 @@ gdal.SetCacheMax(2**15)
 GDAL_WARP_MEMORY_LIMIT = 2**10
 LOW_FLOAT32 = np.finfo(np.float32).min*1e-10
 
-def coherence_masking(src_ds, coh_ds, coh_thresh):
+def coherence_masking(src_ds, coherence_ds, coherence_thresh):
     """
     Perform coherence masking on raster in-place. 
   
@@ -42,15 +42,15 @@ def coherence_masking(src_ds, coh_ds, coh_thresh):
 
     Args:
         ds: The interferogram to mask as GDAL dataset.
-        coh_ds: The coherence GDAL dataset.
-        coh_thresh: The coherence threshold.
+        coherence_ds: The coherence GDAL dataset.
+        coherence_thresh: The coherence threshold.
     """
     a_band = src_ds.GetRasterBand(1)
     ndv = a_band.GetNoDataValue()
-    b_band = coh_ds.GetRasterBand(1)
+    b_band = coherence_ds.GetRasterBand(1)
     a = a_band.ReadAsArray()
     b = b_band.ReadAsArray()
-    var = {'a': a, 'b': b, 't': coh_thresh, 'ndv': ndv}
+    var = {'a': a, 'b': b, 't': coherence_thresh, 'ndv': ndv}
     formula = 'b*(a>=t)+ndv*(a<t)'
     res = ne.evaluate(formula, local_dict=var)
     a_band.WriteArray(res)
@@ -274,7 +274,7 @@ def _gdalwarp_width_and_height(max_x, max_y, min_x, min_y, geo_trans):
 def crop_resample_average(
         input_tif, extents, new_res, output_file, thresh,
         out_driver_type='GTiff', 
-        match_pyrate=False, hdr=None, coh_path=None, coh_thresh=None):
+        match_pyrate=False, hdr=None, coherence_path=None, coherence_thresh=None):
     """
     Crop, resample, and average a geotiff image.
 
@@ -302,12 +302,12 @@ def crop_resample_average(
 
     src_ds, src_ds_mem = _setup_source(input_tif)   
 
-    if coh_path and coh_thresh:
-        coh_raster = prepifg.dem_or_ifg(coh_path)
-        coh_raster.open()
-        coh_ds = coh_raster.dataset
-        coherence_masking(src_ds_mem, coh_ds, coh_thresh)
-    elif coh_path and not coh_thresh:
+    if coherence_path and coherence_thresh:
+        coherence_raster = prepifg.dem_or_ifg(coherence_path)
+        coherence_raster.open()
+        coherence_ds = coherence_raster.dataset
+        coherence_masking(src_ds_mem, coherence_ds, coherence_thresh)
+    elif coherence_path and not coherence_thresh:
         raise ValueError(f"Coherence file provided without a coherence "
                          f"threshold. Please ensure you provide 'cohthresh' "
                          f"in your config if coherence masking is enabled.")
@@ -336,19 +336,19 @@ def crop_resample_average(
     for k, v in md.items():
         if k == ifc.DATA_TYPE:
             # update data type metadata
-            if v == ifc.ORIG and coh_path:
+            if v == ifc.ORIG and coherence_path:
                 md.update({ifc.DATA_TYPE:ifc.COHERENCE})
-            elif v == ifc.ORIG and not coh_path:
+            elif v == ifc.ORIG and not coherence_path:
                 md.update({ifc.DATA_TYPE:ifc.MULTILOOKED})
             elif v == ifc.DEM:
                 md.update({ifc.DATA_TYPE:ifc.MLOOKED_DEM})
             elif v == ifc.INCIDENCE:
                 md.update({ifc.DATA_TYPE:ifc.MLOOKED_INC})
-            elif v == ifc.COHERENCE and coh_path:
+            elif v == ifc.COHERENCE and coherence_path:
                 pass
-            elif v == ifc.MULTILOOKED and coh_path:
+            elif v == ifc.MULTILOOKED and coherence_path:
                 md.update({ifc.DATA_TYPE:ifc.COHERENCE})
-            elif v == ifc.MULTILOOKED and not coh_path:
+            elif v == ifc.MULTILOOKED and not coherence_path:
                 pass
             else:
                 raise TypeError('Data Type metadata not recognised')
