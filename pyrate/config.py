@@ -474,12 +474,17 @@ def original_ifg_paths(ifglist_path):
 
 def coherence_path_for(path, params, tif=False) -> str:
     """
-    Returns path to coherence file in tif format for given interferogram.
+    Returns path to coherence file for given interferogram. Pattern matches
+    based on an expected filename of {epoch}*{extension}.
+    
+    Example:
+        '20151025-20160501_eqa_filt.cc'
+        Datepair is the epoch, .cc is the extension.
 
     Args:
         path: Path to intergerogram to find coherence file for.
         params: Parameter dictionary.
-        tif: Find converted tif if True, else find .cc file.
+        tif: Find converted tif if True (_cc.tif), else find .cc file.
 
     Returns:
         Path to coherence file in tif format.
