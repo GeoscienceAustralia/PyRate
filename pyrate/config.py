@@ -107,7 +107,7 @@ COH_MASK = 'cohmask'
 COH_THRESH = 'cohthresh'
 """float: coherence treshold"""
 COH_FILE_DIR = 'cohfiledir'
-"""str: Directory containing coherence .cc files"""
+"""str: Directory containing coherence .cc files. Defaults to OBS_DIR if not provided."""
 
 #atmospheric error correction parameters NOT CURRENTLY USED
 APS_CORRECTION = 'apscorrect'
