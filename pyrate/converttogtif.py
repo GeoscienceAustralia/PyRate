@@ -123,8 +123,7 @@ def _geotiff_multiprocessing(unw_path, params):
         elif processor == ROIPAC:
             header = roipac.roipac_header(unw_path, params)
         else:
-            raise PreprocessError('Processor must be ROI_PAC (0) or '
-                                          'GAMMA (1)')
+            raise PreprocessError('Processor must be ROI_PAC (0) or GAMMA (1)')
         shared.write_fullres_geotiff(header, unw_path, dest,
                                      nodata=params[cf.NO_DATA_VALUE])
         return dest

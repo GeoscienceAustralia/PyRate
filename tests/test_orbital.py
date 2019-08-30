@@ -707,9 +707,9 @@ class LegacyComparisonTestsOrbfitMethod1(unittest.TestCase):
         shutil.rmtree(self.BASE_DIR)
 
     def test_orbital_correction_legacy_equality(self):
-        from pyrate import run_pyrate
+        from pyrate import process
 
-        run_pyrate._orb_fit_calc(self.ifg_paths, self.params)
+        process._orb_fit_calc(self.ifg_paths, self.params)
 
         onlyfiles = [f for f in os.listdir(SML_TEST_LEGACY_ORBITAL_DIR)
             if os.path.isfile(os.path.join(SML_TEST_LEGACY_ORBITAL_DIR, f))

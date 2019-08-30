@@ -30,7 +30,7 @@ from numpy.testing import assert_array_almost_equal
 import pyrate.core.orbital
 import tests.common as common
 from pyrate.core import ref_phs_est as rpe, config as cf, mst, covariance
-from pyrate import run_pyrate, run_prepifg, converttogtif
+from pyrate import process, prepifg, converttogtif
 from pyrate.core.timeseries import time_series
 
 
@@ -112,10 +112,10 @@ class LegacyTimeSeriesEquality(unittest.TestCase):
     def setUpClass(cls):
         params = cf.get_config_params(common.TEST_CONF_ROIPAC)
         cls.temp_out_dir = tempfile.mkdtemp()
-        sys.argv = ['run_prepifg.py', common.TEST_CONF_ROIPAC]
+        sys.argv = ['prepifg.py', common.TEST_CONF_ROIPAC]
         params[cf.OUT_DIR] = cls.temp_out_dir
         converttogtif.main(params)
-        run_prepifg.main(params)
+        prepifg.main(params)
 
         params[cf.REF_EST_METHOD] = 2
 
@@ -127,7 +127,7 @@ class LegacyTimeSeriesEquality(unittest.TestCase):
         # start run_pyrate copy
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         mst_grid = common.mst_calculation(dest_paths, params)
-        refx, refy = run_pyrate._ref_pixel_calc(dest_paths, params)
+        refx, refy = process._ref_pixel_calc(dest_paths, params)
         # Estimate and remove orbit errors
         pyrate.core.orbital.remove_orbital_error(ifgs, params)
         ifgs = common.prepare_ifgs_without_phase(dest_paths, params)
@@ -216,10 +216,10 @@ class LegacyTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
     def setUpClass(cls):
         params = cf.get_config_params(common.TEST_CONF_ROIPAC)
         cls.temp_out_dir = tempfile.mkdtemp()
-        sys.argv = ['run_prepifg.py', common.TEST_CONF_ROIPAC]
+        sys.argv = ['prepifg.py', common.TEST_CONF_ROIPAC]
         params[cf.OUT_DIR] = cls.temp_out_dir
         converttogtif.main(params)
-        run_prepifg.main(params)
+        prepifg.main(params)
 
         params[cf.REF_EST_METHOD] = 2
 
@@ -232,7 +232,7 @@ class LegacyTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         mst_grid = common.mst_calculation(dest_paths, params)
 
-        refx, refy = run_pyrate._ref_pixel_calc(dest_paths, params)
+        refx, refy = process._ref_pixel_calc(dest_paths, params)
 
         # Estimate and remove orbit errors
         pyrate.core.orbital.remove_orbital_error(ifgs, params)

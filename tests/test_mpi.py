@@ -32,7 +32,7 @@ import pyrate.core.orbital
 import pyrate.core.shared
 import tests.common
 from pyrate import (
-    run_pyrate, run_prepifg, postprocessing, converttogtif)
+    process, prepifg, postprocess, converttogtif)
 from tests.common import (small_data_setup, reconstruct_mst, 
     reconstruct_linrate, SML_TEST_DEM_HDR_GAMMA, pre_prepare_ifgs)
 from tests import common
@@ -161,20 +161,20 @@ def test_vcm_legacy_vs_mpi(mpisync, tempdir, get_config):
     # run prepifg, create the dest_paths files
     if mpiops.rank == 0:
         converttogtif.main(params_dict)
-        run_prepifg.main(params_dict)
+        prepifg.main(params_dict)
 
     mpiops.comm.barrier()
 
     tiles = pyrate.core.shared.get_tiles(dest_paths[0], rows=1, cols=1)
-    preread_ifgs = run_pyrate._create_ifg_dict(dest_paths,
-                                              params=params_dict,
-                                              tiles=tiles)
-    refpx, refpy = run_pyrate._ref_pixel_calc(dest_paths, params_dict)
-    run_pyrate._orb_fit_calc(dest_paths, params_dict)
-    run_pyrate._ref_phase_estimation(dest_paths, params_dict, refpx, refpy)
+    preread_ifgs = process._create_ifg_dict(dest_paths,
+                                            params=params_dict,
+                                            tiles=tiles)
+    refpx, refpy = process._ref_pixel_calc(dest_paths, params_dict)
+    process._orb_fit_calc(dest_paths, params_dict)
+    process._ref_phase_estimation(dest_paths, params_dict, refpx, refpy)
 
-    maxvar, vcmt = run_pyrate._maxvar_vcm_calc(dest_paths, params_dict,
-                                              preread_ifgs)
+    maxvar, vcmt = process._maxvar_vcm_calc(dest_paths, params_dict,
+                                            preread_ifgs)
     np.testing.assert_array_almost_equal(maxvar, legacy_maxvar, decimal=4)
     np.testing.assert_array_almost_equal(legacy_vcm, vcmt, decimal=3)
     if mpiops.rank == 0:
@@ -233,18 +233,18 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
 
     # run prepifg, create the dest_paths files
     if mpiops.rank == 0:
-        run_prepifg.gamma_prepifg(base_unw_paths, params)
+        prepifg.gamma_prepifg(base_unw_paths, params)
 
     mpiops.comm.barrier()
 
-    (refpx, refpy), maxvar, vcmt = run_pyrate.process_ifgs( ifg_paths=dest_paths,
-                                                            params=params,
-                                                            rows=row_splits,
-                                                            cols=col_splits )
+    (refpx, refpy), maxvar, vcmt = process.process_ifgs(ifg_paths=dest_paths,
+                                                        params=params,
+                                                        rows=row_splits,
+                                                        cols=col_splits)
 
     tiles = mpiops.run_once(pyrate.core.shared.get_tiles, dest_paths[0], rows=row_splits, cols=col_splits)
-    postprocessing._postprocess_linrate(row_splits, col_splits, params)
-    postprocessing._postprocess_timeseries(row_splits, col_splits, params)
+    postprocess._postprocess_linrate(row_splits, col_splits, params)
+    postprocess._postprocess_timeseries(row_splits, col_splits, params)
     ifgs_mpi_out_dir = params[cf.OUT_DIR]
     ifgs_mpi = small_data_setup(datafiles=dest_paths)
 
@@ -261,7 +261,7 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
         xlks, ylks, crop = cf.transform_params(params_old)
         base_unw_paths = cf.original_ifg_paths(params_old[cf.IFG_FILE_LIST])
         dest_paths = cf.get_dest_paths(base_unw_paths, crop, params_old, xlks)
-        run_prepifg.gamma_prepifg(base_unw_paths, params_old)
+        prepifg.gamma_prepifg(base_unw_paths, params_old)
 
         ifgs = pre_prepare_ifgs(dest_paths, params_old)
         mst_grid = tests.common.mst_calculation(dest_paths, params_old)
@@ -353,7 +353,7 @@ def test_prepifg_mpi(mpisync, get_config, tempdir,
         params[cf.DEM_FILE] = common.SML_TEST_DEM_GAMMA
         params[cf.DEM_HEADER_FILE] = common.SML_TEST_DEM_HDR_GAMMA
     converttogtif.main(params)
-    run_prepifg.main(params)
+    prepifg.main(params)
     common.remove_tifs(params[cf.OBS_DIR])    
 
     if mpiops.rank == 0:
@@ -369,10 +369,10 @@ def test_prepifg_mpi(mpisync, get_config, tempdir,
         if roipac_or_gamma == 1:
             base_unw_paths = glob.glob(join(common.SML_TEST_GAMMA,
                                             "*_utm.unw"))
-            run_prepifg.main(params)
+            prepifg.main(params)
         else:
             base_unw_paths = glob.glob(join(common.SML_TEST_OBS, "*.unw"))
-            run_prepifg.main(params_s)
+            prepifg.main(params_s)
 
         mpi_tifs = glob.glob(join(outdir, "*.tif"))
         serial_tifs = glob.glob(join(params[cf.OUT_DIR], "*.tif"))

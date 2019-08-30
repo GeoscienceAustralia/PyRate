@@ -1,7 +1,7 @@
-PyRate converttogtif Script
+PyRate Converttogtif Script
 ===========================
 
-.. automodule:: pyrate.scripts.converttogtif
+.. automodule:: pyrate.converttogtif
     :members:
     :undoc-members:
     :show-inheritance:

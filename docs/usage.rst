@@ -37,7 +37,7 @@ Use ``--help`` for the different command line options:
 
     Options:
       -V, --version                   Show the version and exit.
-      -v, --verbosity [DEBUG|INFO|WARNING|ERROR]
+      -v, --verbosity [DEBUG | INFO | WARNING | ERROR]
                                       Level of logging
       --help                          Show this message and exit.
 
@@ -66,7 +66,7 @@ converted into geotiff format by the ``converttogeotiff`` command.
 ::
 
     >> pyrate converttogeotiff --help
-    Usage: pyrate converttogeotiff [OPTIONS] CONFIG_FILE
+    Usage: pyrate converttogeotiff -f CONFIG_FILE
 
       Convert interferograms to geotiff.
 
@@ -114,7 +114,7 @@ These procedures are all performed by the ``pyrate prepifg`` command:
 ::
 
     >> pyrate prepifg --help
-    Usage: pyrate prepifg [OPTIONS] CONFIG_FILE
+    Usage: pyrate prepifg  -f CONFIG_FILE [OPTIONS]
 
     Options:
       --help  Show this message and exit.
@@ -123,7 +123,7 @@ The ``prepifg`` command is used as follows:
 
 ::
 
-    pyrate prepifg /path/to/config_file
+    pyrate prepifg -f /path/to/config_file
 
 Coherence masking
 ^^^^^^^^^^^^^^^^^
@@ -167,6 +167,7 @@ process: Main workflow and linear rate and time series analysis
     Usage: pyrate process [OPTIONS] CONFIG_FILE
 
     Options:
+      -f, --config_file STRING path to configuration file
       -r, --rows INTEGER  divide ifgs into this many rows
       -c, --cols INTEGER  divide ifgs into this many columns
       --help              Show this message and exit
@@ -176,7 +177,7 @@ This is the core of the PyRate processing workflow, handled by the
 
 ::
 
-    pyrate process path/to/config_file -c 3 -r 4
+    pyrate process -f path/to/config_file -c 3 -r 4
 
 This command will perform the time series and linear rate analysis and
 has the option to break the interferograms into a number of tiles in
@@ -211,9 +212,10 @@ save geotiff files of the final time series and linear rate products.
 ::
 
     >> pyrate postprocess --help
-    Usage: pyrate postprocess [OPTIONS] CONFIG_FILE
+    Usage: pyrate postprocess -f CONFIG_FILE [OPTIONS]
 
     Options:
+      -f, --config_file STRING path to configuration file
       -r, --rows INTEGER  divide ifgs into this many rows
       -c, --cols INTEGER  divide ifgs into this many columns
       --help              Show this message and exit.
@@ -223,7 +225,7 @@ the previous ``process`` step:
 
 ::
 
-    pyrate postprocess path/to/config_file -c 3 -r 4
+    pyrate postprocess -f path/to/config_file -c 3 -r 4
 
 Multiprocessing
 ---------------

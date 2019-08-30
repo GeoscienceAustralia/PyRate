@@ -1,7 +1,7 @@
-PyRate run_prepifg Script
+PyRate Prepifg Script
 =========================
 
-.. automodule:: pyrate.scripts.run_prepifg
+.. automodule:: pyrate.prepifg
     :members:
     :undoc-members:
     :show-inheritance:

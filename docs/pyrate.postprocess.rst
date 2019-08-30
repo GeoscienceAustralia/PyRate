@@ -1,7 +1,7 @@
-PyRate postprocessing Script
+PyRate Postprocessing Script
 ============================
 
-.. automodule:: pyrate.scripts.postprocessing
+.. automodule:: pyrate.postprocess
     :members:
     :undoc-members:
     :show-inheritance:

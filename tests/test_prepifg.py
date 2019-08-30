@@ -31,7 +31,7 @@ from numpy.testing import assert_array_almost_equal, assert_array_equal
 
 from osgeo import gdal
 
-from pyrate import run_prepifg, converttogtif
+from pyrate import prepifg, converttogtif
 from pyrate.core import config as cf
 from pyrate.core.config import mlooked_path
 from pyrate.core.shared import Ifg, DEM
@@ -711,7 +711,7 @@ class TestOneIncidenceOrElevationMap(unittest.TestCase):
         params = cf.get_config_params(self.conf_file)
         converttogtif.main(params)
         sys.argv = ['dummy', self.conf_file]
-        run_prepifg.main(params)
+        prepifg.main(params)
         # test 17 geotiffs created
         geotifs = glob.glob(os.path.join(params[cf.OBS_DIR], '*_unw.tif'))
         self.assertEqual(17, len(geotifs))

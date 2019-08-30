@@ -5,7 +5,7 @@ import glob
 import copy
 
 import pyrate.core.config as cf
-from pyrate import converttogtif, run_prepifg
+from pyrate import converttogtif, prepifg
 from tests import common
 
 
@@ -72,11 +72,11 @@ class PrepifgConversionTests(unittest.TestCase):
 
     def test_no_tifs_exits(self):
         with pytest.raises(SystemExit):
-            run_prepifg.main(self.params)
+            prepifg.main(self.params)
 
     def test_tifs_succeeds(self):
         converttogtif.main(self.params)
-        run_prepifg.main(self.params) 
+        prepifg.main(self.params)
         
     def teardown_method(self, method):
         common.remove_tifs(self.params[cf.OBS_DIR])

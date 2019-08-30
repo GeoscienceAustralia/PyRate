@@ -46,7 +46,7 @@ from pyrate.core.config import (
     APS_INCIDENCE_MAP,
     APS_ELEVATION_MAP
     )
-from pyrate import run_prepifg, converttogtif
+from pyrate import prepifg, converttogtif
 from tests.common import SML_TEST_DIR, small_data_setup, remove_tifs
 
 DUMMY_SECTION_NAME = 'pyrate'
@@ -121,7 +121,7 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
         sys.argv = ['pyrate', 'converttogeotiff', conf_file]
         converttogtif.main()
         sys.argv = ['pyrate', 'prepifg', conf_file]
-        run_prepifg.main()
+        prepifg.main()
         
         for p, q in zip(dest_base_ifgs, dest_paths):
             self.assertTrue(os.path.exists(p),
@@ -165,7 +165,7 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
         sys.argv = ['pyrate', 'converttogeotiff', self.confFile]
         converttogtif.main()
         sys.argv = ['pyrate', 'prepifg', self.confFile]
-        run_prepifg.main()
+        prepifg.main()
         for path in self.expPaths:
             self.assertTrue(os.path.exists(path),
                             '{} does not exist'.format(path))

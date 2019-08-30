@@ -1,5 +1,5 @@
 GDAL-Python Bindings Module
 ===========================
 
-.. automodule:: pyrate.gdal_python
+.. automodule:: pyrate.core.gdal_python
    :members:

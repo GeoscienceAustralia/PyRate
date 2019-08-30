@@ -21,14 +21,14 @@ import logging
 import argparse
 from argparse import RawTextHelpFormatter
 from pyrate.core import config as cf
-from pyrate import (converttogtif, run_prepifg, run_pyrate, postprocessing)
+from pyrate import (converttogtif, prepifg, process, postprocess)
 from pyrate import __version__
 from pyrate.core import pyratelog
 
 log = logging.getLogger(__name__)
 
 
-def converttogeotiff(config_file):
+def converttogeotiff_handler(config_file):
     """
     Convert interferograms to geotiff.
     """
@@ -37,30 +37,30 @@ def converttogeotiff(config_file):
     converttogtif.main(params)
 
 
-def prepifg(config_file):
+def prepifg_handler(config_file):
     """
     Perform multilooking and cropping on geotiffs.
     """
     config_file = os.path.abspath(config_file)
     params = cf.get_config_params(config_file)
-    run_prepifg.main(params)
+    prepifg.main(params)
 
 
-def process(config_file, rows, cols):
+def process_handler(config_file, rows, cols):
     """
     Time series and linear rate computation.
     """
     config_file = os.path.abspath(config_file)
     _, dest_paths, params = cf.get_ifg_paths(config_file)
-    run_pyrate.process_ifgs(sorted(dest_paths), params, rows, cols)
+    process.process_ifgs(sorted(dest_paths), params, rows, cols)
 
 
-def postprocess(config_file, rows, cols):
+def postprocess_handler(config_file, rows, cols):
     """
     Reassemble computed tiles and save as geotiffs.
     """
     config_file = os.path.abspath(config_file)
-    postprocessing.main(config_file, rows, cols)
+    postprocess.main(config_file, rows, cols)
 
 
 def main():
@@ -87,7 +87,7 @@ more details.
     parser_converttogeotiff = subparsers.add_parser('converttogeotiff',
                                                     help='Convert interferograms to geotiff.', add_help=True)
 
-    parser_converttogeotiff.add_argument('--config_file', action="store", type=str, default=None,
+    parser_converttogeotiff.add_argument('-f', '--config_file', action="store", type=str, default=None,
                                          help="Pass configuration file", required=True)
 
     # create the parser for the "prepifg" command
@@ -140,16 +140,16 @@ more details.
         log.info("Verbosity set to " + str(args.verbosity) + ".")
 
     if args.command == "converttogeotiff":
-        converttogeotiff(args.config_file)
+        converttogeotiff_handler(args.config_file)
 
     if args.command == "prepifg":
-        prepifg(args.config_file)
+        prepifg_handler(args.config_file)
 
     if args.command == "process":
-        process(args.config_file, args.rows, args.cols)
+        process_handler(args.config_file, args.rows, args.cols)
 
     if args.command == "postprocess":
-        postprocess(args.config_file, args.rows, args.cols)
+        postprocess_handler(args.config_file, args.rows, args.cols)
 
 
 if __name__ == "__main__":
