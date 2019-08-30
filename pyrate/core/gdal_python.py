@@ -22,9 +22,7 @@ from PIL import Image, ImageDraw
 import numpy as np
 import numexpr as ne
 
-from pyrate import ifgconstants as ifc
-from pyrate import shared
-from pyrate import prepifg 
+from pyrate.core import shared, ifgconstants as ifc, prepifg
 
 gdal.SetCacheMax(2**15)
 GDAL_WARP_MEMORY_LIMIT = 2**10
@@ -354,8 +352,8 @@ def crop_resample_average(
                 raise TypeError('Data Type metadata not recognised')
 
     out_ds = shared.gdal_dataset(output_file, dst_ds.RasterXSize, dst_ds.RasterYSize,
-                 driver=out_driver_type, bands=1, dtype=src_dtype, metadata=md, crs=wkt,
-                 geotransform=gt, creation_opts=['compress=packbits'])
+                                 driver=out_driver_type, bands=1, dtype=src_dtype, metadata=md, crs=wkt,
+                                 geotransform=gt, creation_opts=['compress=packbits'])
 
     shared.write_geotiff(resampled_average, out_ds, np.nan) 
 

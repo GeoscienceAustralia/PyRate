@@ -22,9 +22,9 @@ import tempfile
 import shutil
 from numpy import nan, mean, std, isnan
 
-from pyrate import config as cf
-from pyrate.refpixel import ref_pixel, _step
-from pyrate.scripts import run_pyrate
+from pyrate.core import config as cf
+from pyrate.core.refpixel import ref_pixel, _step
+from pyrate import run_pyrate
 from tests.common import TEST_CONF_ROIPAC
 from tests.common import small_data_setup, MockIfg, small_ifg_file_list
 

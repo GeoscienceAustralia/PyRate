@@ -24,11 +24,8 @@ import pickle as cp
 import numpy as np
 from osgeo import gdal
 
-from pyrate import config as cf
-from pyrate import ifgconstants as ifc
-from pyrate import shared
-from pyrate import mpiops
-from pyrate.shared import PrereadIfg
+from pyrate.core import shared, ifgconstants as ifc, mpiops, config as cf
+from pyrate.core.shared import PrereadIfg
 gdal.SetCacheMax(64)
 log = logging.getLogger(__name__)
 

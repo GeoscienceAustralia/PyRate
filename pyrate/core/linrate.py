@@ -26,7 +26,7 @@ from scipy.linalg import solve, cholesky, qr, inv
 from numpy import nan, isnan, sqrt, diag, delete, array, float32
 import numpy as np
 from joblib import Parallel, delayed
-from pyrate import config as cf
+from pyrate.core import config as cf
 
 
 def linear_rate(ifgs, params, vcmt, mst=None):

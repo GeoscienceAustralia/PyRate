@@ -17,11 +17,6 @@
 This module contains tests for the mst.py PyRate module.
 '''
 
-import glob
-import os
-import shutil
-import subprocess
-import tempfile
 import unittest
 from itertools import product
 from numpy import empty, array, nan, isnan, sum as nsum
@@ -29,11 +24,8 @@ from numpy import empty, array, nan, isnan, sum as nsum
 import numpy as np
 from tests.common import MockIfg, small5_mock_ifgs, small_data_setup
 
-from pyrate import algorithm
-from pyrate import config as cf
-from pyrate import mst
-from pyrate.scripts import run_pyrate, run_prepifg
-from pyrate.shared import IfgPart, Tile, create_tiles
+from pyrate.core import algorithm, config as cf, mst
+from pyrate.core.shared import IfgPart, Tile
 from tests import common
 
 

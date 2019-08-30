@@ -4,8 +4,8 @@ import pytest
 import glob
 import copy
 
-import pyrate.config as cf
-from pyrate.scripts import converttogtif, run_prepifg
+import pyrate.core.config as cf
+from pyrate import converttogtif, run_prepifg
 from tests import common
 
 

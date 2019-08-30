@@ -33,14 +33,10 @@ from osgeo import gdal
 from osgeo.gdal import Open, Dataset, UseExceptions
 
 from tests.common import SML_TEST_TIF, SML_TEST_DEM_TIF, TEMPDIR
-from pyrate import config as cf
-from pyrate import gamma
-from pyrate import ifgconstants as ifc
-from pyrate import prepifg
-from pyrate import shared
-from pyrate.scripts import run_prepifg, converttogtif
-from pyrate.shared import Ifg, DEM, RasterException
-from pyrate.shared import cell_size, _utm_zone
+from pyrate.core import shared, ifgconstants as ifc, config as cf, prepifg, gamma
+from pyrate import run_prepifg, converttogtif
+from pyrate.core.shared import Ifg, DEM, RasterException
+from pyrate.core.shared import cell_size, _utm_zone
 
 from tests import common
 
@@ -170,10 +166,10 @@ class IfgIOTests(unittest.TestCase):
         """
         paths = [self.ifg.data_path]
         mlooked_phase_data = prepifg.prepare_ifgs(paths,
-                             crop_opt=prepifg.ALREADY_SAME_SIZE,
-                             xlooks=2,
-                             ylooks=2,
-                             write_to_disc=False)
+                                                  crop_opt=prepifg.ALREADY_SAME_SIZE,
+                                                  xlooks=2,
+                                                  ylooks=2,
+                                                  write_to_disc=False)
         mlooked = [Ifg(m[1]) for m in mlooked_phase_data]
         self.assertRaises(RasterException, mlooked[0].open)
 
@@ -412,7 +408,7 @@ class WriteUnwTest(unittest.TestCase):
                                               ifg_proc=1)
         # convert the .unw to geotif
         shared.write_fullres_geotiff(header=header, data_path=temp_unw,
-                             dest=temp_tif, nodata=np.nan)
+                                     dest=temp_tif, nodata=np.nan)
 
         # now compare geotiff with original numpy array
         ds = gdal.Open(temp_tif, gdal.GA_ReadOnly)

@@ -21,19 +21,10 @@ interferogram geotiff files.
 import sys
 import logging
 import os
-from os.path import join
-import re
-import glob2
 from joblib import Parallel, delayed
 import numpy as np
-from pyrate import prepifg
-from pyrate import config as cf
-from pyrate import shared
-import pyrate.ifgconstants as ifc
-from pyrate import mpiops
-from pyrate.prepifg import PreprocessError
-from pyrate import gamma
-from pyrate import roipac
+from pyrate.core import shared, mpiops, config as cf, prepifg, gamma, roipac
+from pyrate.core.prepifg import PreprocessError
 
 log = logging.getLogger(__name__)
 
@@ -77,10 +68,8 @@ def main(params=None):
 
     shared.mkdir_p(params[cf.OUT_DIR]) # create output dir
     
-    process_base_ifgs_paths = \
-        np.array_split(base_ifg_paths, mpiops.size)[mpiops.rank]
-    gtiff_paths = [shared.output_tiff_filename(f, \
-        params[cf.OBS_DIR]) for f in process_base_ifgs_paths]
+    process_base_ifgs_paths = np.array_split(base_ifg_paths, mpiops.size)[mpiops.rank]
+    gtiff_paths = [shared.output_tiff_filename(f, params[cf.OBS_DIR]) for f in process_base_ifgs_paths]
     do_prepifg(gtiff_paths, params)
     log.info("Finished prepifg")
 
@@ -140,6 +129,6 @@ def _prepifg_multiprocessing(path, xlooks, ylooks, exts, thresh, crop, params):
 
     prepifg.prepare_ifg(path, xlooks, ylooks, exts, thresh, crop,
                         out_path=params[cf.OUT_DIR], header=header,
-                        coherence_path=coherence_path, 
+                        coherence_path=coherence_path,
                         coherence_thresh=coherence_thresh)
 

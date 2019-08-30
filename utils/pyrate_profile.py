@@ -24,7 +24,7 @@ from pycallgraph import PyCallGraph
 from pycallgraph import Config
 from pycallgraph import GlobbingFilter
 from pycallgraph.output import GraphvizOutput
-from pyrate.scripts import run_pyrate
+from pyrate import run_pyrate
 
 config = Config()
 config.trace_filter = GlobbingFilter(exclude=[

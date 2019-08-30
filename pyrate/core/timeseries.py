@@ -27,10 +27,9 @@ import numpy as np
 from scipy.linalg import qr
 from joblib import Parallel, delayed
 
-from pyrate.algorithm import master_slave_ids, get_epochs
-from pyrate import config as cf
-from pyrate.config import ConfigException
-from pyrate import mst as mst_module
+from pyrate.core.algorithm import master_slave_ids, get_epochs
+from pyrate.core import config as cf, mst as mst_module
+from pyrate.core.config import ConfigException
 
 
 def _time_series_setup(ifgs, mst, params):

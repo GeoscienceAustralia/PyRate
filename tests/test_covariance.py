@@ -25,13 +25,10 @@ from numpy import array
 import numpy as np
 from numpy.testing import assert_array_almost_equal
 
-from pyrate import config as cf
-from pyrate import ref_phs_est as rpe
-from pyrate import shared
-from pyrate.scripts import run_pyrate, run_prepifg, converttogtif
-from pyrate.covariance import cvd, get_vcmt, RDist
-from pyrate import ifgconstants as ifc
-import pyrate.orbital
+from pyrate.core import shared, ref_phs_est as rpe, ifgconstants as ifc, config as cf
+from pyrate import run_pyrate, run_prepifg, converttogtif
+from pyrate.core.covariance import cvd, get_vcmt, RDist
+import pyrate.core.orbital
 from tests import common
 from tests.common import (small5_mock_ifgs, small5_ifgs, TEST_CONF_ROIPAC,
     small_data_setup, prepare_ifgs_without_phase)
@@ -197,7 +194,7 @@ class LegacyEqualityTest(unittest.TestCase):
         dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         refx, refy = run_pyrate._ref_pixel_calc(dest_paths, params)
-        pyrate.orbital.remove_orbital_error(ifgs, params)
+        pyrate.core.orbital.remove_orbital_error(ifgs, params)
         ifgs = prepare_ifgs_without_phase(dest_paths, params)
         _, cls.ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
         r_dist = RDist(ifgs[0])()

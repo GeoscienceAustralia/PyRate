@@ -32,15 +32,14 @@ from numpy.testing import assert_array_equal, assert_array_almost_equal
 from scipy.linalg import lstsq
 
 from .common import small5_mock_ifgs, MockIfg
-from pyrate import algorithm
-from pyrate import config as cf
-from pyrate.orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, \
+from pyrate.core import algorithm, config as cf
+from pyrate.core.orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, \
     QUADRATIC, PART_CUBIC
-from pyrate.orbital import OrbitalError, _orbital_correction
-from pyrate.orbital import get_design_matrix, get_network_design_matrix
-from pyrate.orbital import _get_num_params, remove_orbital_error
-from pyrate.shared import Ifg
-from pyrate.shared import nanmedian
+from pyrate.core.orbital import OrbitalError, _orbital_correction
+from pyrate.core.orbital import get_design_matrix, get_network_design_matrix
+from pyrate.core.orbital import _get_num_params, remove_orbital_error
+from pyrate.core.shared import Ifg
+from pyrate.core.shared import nanmedian
 from tests.common import TEST_CONF_ROIPAC, IFMS16
 from tests.common import SML_TEST_LEGACY_ORBITAL_DIR
 from tests.common import SML_TEST_TIF, small_data_setup
@@ -708,7 +707,7 @@ class LegacyComparisonTestsOrbfitMethod1(unittest.TestCase):
         shutil.rmtree(self.BASE_DIR)
 
     def test_orbital_correction_legacy_equality(self):
-        from pyrate.scripts import run_pyrate
+        from pyrate import run_pyrate
 
         run_pyrate._orb_fit_calc(self.ifg_paths, self.params)
 

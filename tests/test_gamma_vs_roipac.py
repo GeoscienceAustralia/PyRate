@@ -25,13 +25,11 @@ import sys
 import tempfile
 import unittest
 
-import numpy as np
 from tests import common
 
-from pyrate import config as cf
-from pyrate import ifgconstants as ifc
-from pyrate.prepifg import _is_number
-from pyrate.config import (
+from pyrate.core import ifgconstants as ifc, config as cf
+from pyrate.core.prepifg import _is_number
+from pyrate.core.config import (
     DEM_HEADER_FILE,
     NO_DATA_VALUE,
     OBS_DIR,
@@ -48,7 +46,7 @@ from pyrate.config import (
     APS_INCIDENCE_MAP,
     APS_ELEVATION_MAP
     )
-from pyrate.scripts import run_prepifg, converttogtif
+from pyrate import run_prepifg, converttogtif
 from tests.common import SML_TEST_DIR, small_data_setup, remove_tifs
 
 DUMMY_SECTION_NAME = 'pyrate'

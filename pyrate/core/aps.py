@@ -28,13 +28,12 @@ from numpy import isnan
 from scipy.fftpack import fft2, ifft2, fftshift, ifftshift
 from scipy.interpolate import griddata
 
-from pyrate import config as cf, mpiops, shared
-from pyrate.covariance import cvd_from_phase, RDist
-from pyrate.algorithm import get_epochs
-from pyrate.scripts.postprocessing import _assemble_tiles
-from pyrate.shared import Ifg
-from pyrate import ifgconstants as ifc
-from pyrate.timeseries import time_series
+from pyrate.core import shared, ifgconstants as ifc, mpiops, config as cf
+from pyrate.core.covariance import cvd_from_phase, RDist
+from pyrate.core.algorithm import get_epochs
+from pyrate.postprocessing import _assemble_tiles
+from pyrate.core.shared import Ifg
+from pyrate.core.timeseries import time_series
 
 log = logging.getLogger(__name__)
 

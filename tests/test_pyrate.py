@@ -25,10 +25,9 @@ import unittest
 from os.path import join
 import numpy as np
 
-import pyrate.shared
-from pyrate import config as cf
-from pyrate import shared, config, prepifg
-from pyrate.scripts import run_pyrate, run_prepifg, converttogtif
+import pyrate.core.shared
+from pyrate.core import shared, config as cf, config, prepifg, mst
+from pyrate import run_pyrate, run_prepifg, converttogtif
 from tests import common
 
 # taken from
@@ -214,7 +213,7 @@ class ParallelPyRateTests(unittest.TestCase):
             base_unw_paths, crop, params, xlks)
         gtif_paths = converttogtif.do_geotiff(base_unw_paths, params)
         run_prepifg.do_prepifg(gtif_paths, params)
-        tiles = pyrate.shared.get_tiles(cls.dest_paths[0], 3, 3)
+        tiles = pyrate.core.shared.get_tiles(cls.dest_paths[0], 3, 3)
         ifgs = common.small_data_setup()
         cls.refpixel_p, cls.maxvar_p, cls.vcmt_p = \
             run_pyrate.process_ifgs(cls.dest_paths, params, 3, 3)
@@ -276,7 +275,6 @@ class ParallelPyRateTests(unittest.TestCase):
             self.key_check(i, key, value)
 
     def test_mst_equal(self):
-        from pyrate import mst
         ifgs = common.small_data_setup(datafiles=self.dest_paths)
         mst_original_p = mst.mst_boolean_array(ifgs)
         ifgs_s = common.small_data_setup(datafiles=self.dest_paths_s)

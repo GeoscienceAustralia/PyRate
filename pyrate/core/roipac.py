@@ -19,8 +19,8 @@ This Python module contains tools for reading ROI_PAC format input data.
 import os
 import re
 import datetime
-import pyrate.ifgconstants as ifc
-from pyrate import config as cf
+import pyrate.core.ifgconstants as ifc
+from pyrate.core import config as cf
 
 # ROIPAC RSC header file constants
 WIDTH = "WIDTH"

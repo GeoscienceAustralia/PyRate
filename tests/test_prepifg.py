@@ -31,15 +31,15 @@ from numpy.testing import assert_array_almost_equal, assert_array_equal
 
 from osgeo import gdal
 
-from pyrate.scripts import run_prepifg, converttogtif
-from pyrate import config as cf
-from pyrate.config import mlooked_path
-from pyrate.shared import Ifg, DEM
-from pyrate.prepifg import CUSTOM_CROP, MAXIMUM_CROP, MINIMUM_CROP, \
+from pyrate import run_prepifg, converttogtif
+from pyrate.core import config as cf
+from pyrate.core.config import mlooked_path
+from pyrate.core.shared import Ifg, DEM
+from pyrate.core.prepifg import CUSTOM_CROP, MAXIMUM_CROP, MINIMUM_CROP, \
     ALREADY_SAME_SIZE
-from pyrate.prepifg import prepare_ifgs, _resample, PreprocessError, CustomExts
+from pyrate.core.prepifg import prepare_ifgs, _resample, PreprocessError, CustomExts
 # from pyrate.tasks.utils import DUMMY_SECTION_NAME
-from pyrate.config import (
+from pyrate.core.config import (
     DEM_HEADER_FILE,
     NO_DATA_VALUE,
     OBS_DIR,

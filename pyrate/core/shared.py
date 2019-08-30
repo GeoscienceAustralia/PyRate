@@ -33,8 +33,7 @@ from numpy import where, nan, isnan, sum as nsum, isclose
 import pyproj
 import pkg_resources
 
-from pyrate import ifgconstants as ifc, mpiops
-from pyrate import config as cf
+from pyrate.core import ifgconstants as ifc, mpiops, config as cf
 
 VERBOSE = True
 log = logging.getLogger(__name__)
@@ -1224,7 +1223,6 @@ def output_tiff_filename(inpath, outpath):
         name = os.path.join(outpath, fname + '.tif')
     else:
         name = os.path.join(outpath, fname + '_' + ext + '.tif')
-
     return name
 
 

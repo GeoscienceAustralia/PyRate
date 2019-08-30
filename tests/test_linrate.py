@@ -19,23 +19,18 @@ This Python module contains tests for the linrate.py PyRate module.
 """
 import os
 import shutil
-import sys
 import tempfile
 import unittest
 
 from numpy import eye, array, ones
 import numpy as np
 from numpy.testing import assert_array_almost_equal
-import glob
 
-import pyrate.orbital
+import pyrate.core.orbital
 import tests.common
-from pyrate import config as cf
-from pyrate import ref_phs_est as rpe
-from pyrate import shared
-from pyrate import covariance as vcm_module
-from pyrate.linrate import linear_rate
-from pyrate.scripts import run_pyrate, run_prepifg, converttogtif
+from pyrate.core import shared, ref_phs_est as rpe, config as cf, covariance as vcm_module
+from pyrate.core.linrate import linear_rate
+from pyrate import run_pyrate, run_prepifg, converttogtif
 from tests.common import (SML_TEST_DIR, prepare_ifgs_without_phase,
     TEST_CONF_ROIPAC, pre_prepare_ifgs, remove_tifs)
 
@@ -110,7 +105,7 @@ class LegacyEqualityTest(unittest.TestCase):
         refx, refy = run_pyrate._ref_pixel_calc(dest_paths, params)
 
         # Estimate and remove orbit errors
-        pyrate.orbital.remove_orbital_error(ifgs, params)
+        pyrate.core.orbital.remove_orbital_error(ifgs, params)
         ifgs = prepare_ifgs_without_phase(dest_paths, params)
 
         _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)

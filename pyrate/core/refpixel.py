@@ -25,8 +25,8 @@ import numpy as np
 from numpy import isnan, std, mean, sum as nsum
 from joblib import Parallel, delayed
 
-import pyrate.config as cf
-from pyrate.shared import Ifg
+import pyrate.core.config as cf
+from pyrate.core.shared import Ifg
 
 log = logging.getLogger(__name__)
 

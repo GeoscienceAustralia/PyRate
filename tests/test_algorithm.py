@@ -26,17 +26,17 @@ from unittest import TestCase
 import numpy as np
 from numpy.testing import assert_array_almost_equal, assert_allclose
 
-from pyrate.algorithm import (least_squares_covariance,
-                              is_square,
-                              unit_vector,
-                              ifg_date_lookup,
-                              get_all_epochs,
-                              get_epochs,
-                              master_slave_ids,
-                              )
+from pyrate.core.algorithm import (least_squares_covariance,
+                                   is_square,
+                                   unit_vector,
+                                   ifg_date_lookup,
+                                   get_all_epochs,
+                                   get_epochs,
+                                   master_slave_ids,
+                                   )
 
-from pyrate.config import parse_namelist
-from pyrate.shared import Ifg, convert_radians_to_mm
+from pyrate.core.config import parse_namelist
+from pyrate.core.shared import Ifg, convert_radians_to_mm
 from tests.common import small5_mock_ifgs, SML_TEST_TIF
 
 

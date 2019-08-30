@@ -26,11 +26,9 @@ from numpy.linalg import pinv
 # from joblib import Parallel, delayed
 from scipy.linalg import lstsq
 
-from pyrate.algorithm import master_slave_ids, get_all_epochs
-from pyrate import mst, shared, prepifg
-from pyrate.shared import nanmedian, Ifg
-from pyrate import config as cf
-from pyrate import ifgconstants as ifc
+from pyrate.core.algorithm import master_slave_ids, get_all_epochs
+from pyrate.core import shared, ifgconstants as ifc, config as cf, prepifg, mst
+from pyrate.core.shared import nanmedian, Ifg
 
 log = logging.getLogger(__name__)
 
