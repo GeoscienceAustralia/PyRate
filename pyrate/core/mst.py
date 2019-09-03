@@ -31,6 +31,8 @@ from pyrate.core.algorithm import ifg_date_lookup
 from pyrate.core.algorithm import ifg_date_index_lookup
 from pyrate.core import config as cf
 from pyrate.core.shared import IfgPart, create_tiles
+from pyrate.core.shared import joblib_log_level
+
 np.seterr(invalid='ignore')  # stops RuntimeWarning in nan conversion
 
 # TODO: may need to implement memory saving row-by-row access

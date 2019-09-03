@@ -21,6 +21,7 @@ import os
 from os.path import join
 import logging
 from itertools import product
+from pyrate.core.shared import joblib_log_level
 
 import numpy as np
 from numpy import isnan, std, mean, sum as nsum

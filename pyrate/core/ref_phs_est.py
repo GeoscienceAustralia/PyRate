@@ -23,6 +23,7 @@ import numpy as np
 from joblib import Parallel, delayed
 from pyrate.core.shared import nanmedian
 from pyrate.core import ifgconstants as ifc, config as cf
+from pyrate.core.shared import joblib_log_level
 
 log = logging.getLogger(__name__)
 
