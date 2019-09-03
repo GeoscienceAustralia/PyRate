@@ -45,9 +45,9 @@ def coherence_masking(src_ds, coherence_ds, coherence_thresh):
         coherence_ds: The coherence GDAL dataset.
         coherence_thresh: The coherence threshold.
     """
-    a_band = src_ds.GetRasterBand(1)
-    ndv = a_band.GetNoDataValue()
-    b_band = coherence_ds.GetRasterBand(1)
+    a_band = coherence_ds.GetRasterBand(1)
+    b_band = src_ds.GetRasterBand(1)
+    ndv = b_band.GetNoDataValue()
     a = a_band.ReadAsArray()
     b = b_band.ReadAsArray()
     var = {'a': a, 'b': b, 't': coherence_thresh, 'ndv': ndv}
