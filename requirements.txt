@@ -9,3 +9,4 @@ networkx==2.3
 numpy==1.16.4
 pyproj==2.2.1
 scipy==1.3.0
+numexpr==2.7.0

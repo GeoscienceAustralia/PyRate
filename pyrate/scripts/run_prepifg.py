@@ -131,8 +131,18 @@ def _prepifg_multiprocessing(path, xlooks, ylooks, exts, thresh, crop, params):
     else:
         raise PreprocessError('Processor must be ROI_PAC (0) or '
                                           'GAMMA (1)')
+    # If we're performing coherence masking, find the coherence file for this
+    #  IFG.
+    # TODO: Refactor _is_interferogram to be unprotected (remove '_')
+    if params[cf.COH_MASK] and shared._is_interferogram(header):
+        coherence_path = cf.coherence_path_for(path, params, tif=True)
+        coherence_thresh = params[cf.COH_THRESH]
+    else:
+        coherence_path = None
+        coherence_thresh = None
 
     prepifg.prepare_ifg(path, xlooks, ylooks, exts, thresh, crop,
-                                 out_path=params[cf.OUT_DIR], header=header)
-
+                        out_path=params[cf.OUT_DIR], header=header,
+                        coherence_path=coherence_path, 
+                        coherence_thresh=coherence_thresh)
 

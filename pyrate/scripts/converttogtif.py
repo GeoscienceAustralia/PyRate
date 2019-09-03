@@ -18,7 +18,6 @@ This Python script converts ROI_PAC or GAMMA format input interferograms
 into geotiff format files
 """
 # -*- coding: utf-8 -*-
-from __future__ import print_function
 import sys
 import os
 import logging
@@ -64,6 +63,9 @@ def main(params=None):
             return
         base_ifg_paths, _, params = cf.get_ifg_paths(sys.argv[2])
         raw_config_file = sys.argv[2]
+
+    if params[cf.COH_MASK]:
+        base_ifg_paths.extend(cf.coherence_paths(params))
 
     if params[cf.DEM_FILE] is not None: # optional DEM conversion
         base_ifg_paths.append(params[cf.DEM_FILE])
@@ -111,7 +113,13 @@ def _geotiff_multiprocessing(unw_path, params):
     """
     Multiprocessing wrapper for full-res geotiff conversion
     """
-    dest = shared.output_tiff_filename(unw_path, params[cf.OBS_DIR])
+    # TODO: Need a more robust method for identifying coherence files.
+    if params[cf.COH_FILE_DIR] and unw_path.endswith('.cc'):
+        # If the user has provided a dir for coherence files, place 
+        #  converted coherence files in that directory.
+        dest = shared.output_tiff_filename(unw_path, params[cf.COH_FILE_DIR])
+    else:
+        dest = shared.output_tiff_filename(unw_path, params[cf.OBS_DIR])
     processor = params[cf.PROCESSOR]  # roipac or gamma
 
     # Create full-res geotiff if not already on disk

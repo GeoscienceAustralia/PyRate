@@ -33,7 +33,7 @@ from numpy import array, where, nan, isnan, nanmean, float32, zeros, \
 from osgeo import gdal
 
 from pyrate import config as cf
-from pyrate.gdal_python import crop_resample_average
+from pyrate.gdal_python import crop_resample_average, coherence_masking
 from pyrate import ifgconstants as ifc
 from pyrate.shared import Ifg, DEM, output_tiff_filename
 
@@ -146,7 +146,8 @@ def _get_extents(ifgs, crop_opt, user_exts=None):
 
 
 def prepare_ifg(raster_path, xlooks, ylooks, exts, thresh, crop_opt,
-                write_to_disk=True, out_path=None, header=None):
+                write_to_disk=True, out_path=None, header=None,
+                coherence_path=None, coherence_thresh=None):
     """
     Open, resample, crop and optionally save to disk an interferogram or DEM.
     Returns are only given if write_to_disk=False
@@ -185,7 +186,8 @@ def prepare_ifg(raster_path, xlooks, ylooks, exts, thresh, crop_opt,
         return _dummy_warp(renamed_path)
 
     return _warp(raster, xlooks, ylooks, exts, resolution, thresh,
-                 crop_opt, write_to_disk, out_path, header)
+                 crop_opt, write_to_disk, out_path, header,
+		 coherence_path, coherence_thresh)
 
 
 # TODO: crop options 0 = no cropping? get rid of same size
@@ -253,7 +255,8 @@ def _file_ext(raster):
         # Coherence file: single band
         # LOS file:  has 2 bands: beam incidence angle & ground azimuth)
         # Baseline file: perpendicular baselines (single band?)
-        raise NotImplementedError("Missing raster types for LOS, Coherence and baseline")
+        raise NotImplementedError("Missing raster types for LOS, " 
+                                  "Coherence and baseline")
 
 
 def _dummy_warp(renamed_path):
@@ -269,7 +272,8 @@ def _dummy_warp(renamed_path):
 
 
 def _warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out,
-          write_to_disk=True, out_path=None, header=None):
+          write_to_disk=True, out_path=None, header=None,
+          coherence_path=None, coherence_thresh=None):
     """
     Convenience function for calling GDAL functionality
     """
@@ -296,7 +300,8 @@ def _warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out,
         new_res=resolution,
         output_file=looks_path,
         thresh=thresh,
-        out_driver_type=driver_type, hdr=header)
+        out_driver_type=driver_type, hdr=header,
+        coherence_path=coherence_path, coherence_thresh=coherence_thresh)
     if not write_to_disk:
         return resampled_data, out_ds
 
