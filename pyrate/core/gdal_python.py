@@ -22,7 +22,7 @@ from PIL import Image, ImageDraw
 import numpy as np
 import numexpr as ne
 
-from pyrate.core import shared, ifgconstants as ifc, prepifg
+from pyrate.core import shared, ifgconstants as ifc, prepifg_helper
 
 gdal.SetCacheMax(2**15)
 GDAL_WARP_MEMORY_LIMIT = 2**10
@@ -301,7 +301,7 @@ def crop_resample_average(
     src_ds, src_ds_mem = _setup_source(input_tif)   
 
     if coherence_path and coherence_thresh:
-        coherence_raster = prepifg.dem_or_ifg(coherence_path)
+        coherence_raster = prepifg_helper.dem_or_ifg(coherence_path)
         coherence_raster.open()
         coherence_ds = coherence_raster.dataset
         coherence_masking(src_ds_mem, coherence_ds, coherence_thresh)

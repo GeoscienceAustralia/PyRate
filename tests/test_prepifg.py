@@ -35,9 +35,9 @@ from pyrate import prepifg, converttogtif
 from pyrate.core import config as cf
 from pyrate.core.config import mlooked_path
 from pyrate.core.shared import Ifg, DEM
-from pyrate.core.prepifg import CUSTOM_CROP, MAXIMUM_CROP, MINIMUM_CROP, \
+from pyrate.core.prepifg_helper import CUSTOM_CROP, MAXIMUM_CROP, MINIMUM_CROP, \
     ALREADY_SAME_SIZE
-from pyrate.core.prepifg import prepare_ifgs, _resample, PreprocessError, CustomExts
+from pyrate.core.prepifg_helper import prepare_ifgs, _resample, PreprocessError, CustomExts
 # from pyrate.tasks.utils import DUMMY_SECTION_NAME
 from pyrate.core.config import (
     DEM_HEADER_FILE,

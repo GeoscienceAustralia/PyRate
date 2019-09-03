@@ -33,7 +33,7 @@ from osgeo import gdal
 from osgeo.gdal import Open, Dataset, UseExceptions
 
 from tests.common import SML_TEST_TIF, SML_TEST_DEM_TIF, TEMPDIR
-from pyrate.core import shared, ifgconstants as ifc, config as cf, prepifg, gamma
+from pyrate.core import shared, ifgconstants as ifc, config as cf, prepifg_helper, gamma
 from pyrate import prepifg, converttogtif
 from pyrate.core.shared import Ifg, DEM, RasterException
 from pyrate.core.shared import cell_size, _utm_zone
@@ -165,11 +165,11 @@ class IfgIOTests(unittest.TestCase):
         gdal.Dataset object as Dataset has already been read in
         """
         paths = [self.ifg.data_path]
-        mlooked_phase_data = prepifg.prepare_ifgs(paths,
-                                                  crop_opt=prepifg.ALREADY_SAME_SIZE,
-                                                  xlooks=2,
-                                                  ylooks=2,
-                                                  write_to_disc=False)
+        mlooked_phase_data = prepifg_helper.prepare_ifgs(paths,
+                                                         crop_opt=prepifg_helper.ALREADY_SAME_SIZE,
+                                                         xlooks=2,
+                                                         ylooks=2,
+                                                         write_to_disc=False)
         mlooked = [Ifg(m[1]) for m in mlooked_phase_data]
         self.assertRaises(RasterException, mlooked[0].open)
 

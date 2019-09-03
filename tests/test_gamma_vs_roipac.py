@@ -28,7 +28,7 @@ import unittest
 from tests import common
 
 from pyrate.core import ifgconstants as ifc, config as cf
-from pyrate.core.prepifg import _is_number
+from pyrate.core.prepifg_helper import _is_number
 from pyrate.core.config import (
     DEM_HEADER_FILE,
     NO_DATA_VALUE,

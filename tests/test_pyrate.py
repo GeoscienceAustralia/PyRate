@@ -26,7 +26,7 @@ from os.path import join
 import numpy as np
 
 import pyrate.core.shared
-from pyrate.core import shared, config as cf, config, prepifg, mst
+from pyrate.core import shared, config as cf, config, prepifg_helper, mst
 from pyrate import process, prepifg, converttogtif
 from tests import common
 
@@ -55,13 +55,13 @@ def test_transform_params():
 
 
 def test_warp_required():
-    nocrop = prepifg.ALREADY_SAME_SIZE
+    nocrop = prepifg_helper.ALREADY_SAME_SIZE
     assert shared.warp_required(xlooks=2, ylooks=1, crop=nocrop)
     assert shared.warp_required(xlooks=1, ylooks=2, crop=nocrop)
     assert shared.warp_required(xlooks=1, ylooks=1, crop=nocrop)
     assert not shared.warp_required(xlooks=1, ylooks=1, crop=None)
 
-    for c in prepifg.CROP_OPTIONS[:-1]:
+    for c in prepifg_helper.CROP_OPTIONS[:-1]:
         assert shared.warp_required(xlooks=1, ylooks=1, crop=c)
 
 

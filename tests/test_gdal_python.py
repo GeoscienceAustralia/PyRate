@@ -18,7 +18,7 @@ This Python module contains tests for the gdal_python.py PyRate module.
 """
 from subprocess import check_call
 
-from pyrate.core.prepifg import _resample_ifg
+from pyrate.core.prepifg_helper import _resample_ifg
 
 import glob
 import os

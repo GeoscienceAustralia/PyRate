@@ -23,8 +23,8 @@ import logging
 import os
 from joblib import Parallel, delayed
 import numpy as np
-from pyrate.core import shared, mpiops, config as cf, prepifg, gamma, roipac
-from pyrate.core.prepifg import PreprocessError
+from pyrate.core import shared, mpiops, config as cf, prepifg_helper, gamma, roipac
+from pyrate.core.prepifg_helper import PreprocessError
 
 log = logging.getLogger(__name__)
 
@@ -86,12 +86,12 @@ def do_prepifg(gtiff_paths, params):
     parallel = params[cf.PARALLEL]
 
     if all([os.path.isfile(f) for f in gtiff_paths]):
-        ifgs = [prepifg.dem_or_ifg(p) for p in gtiff_paths]
+        ifgs = [prepifg_helper.dem_or_ifg(p) for p in gtiff_paths]
         xlooks, ylooks, crop = cf.transform_params(params)
         user_exts = (params[cf.IFG_XFIRST], params[cf.IFG_YFIRST],
                      params[cf.IFG_XLAST], params[cf.IFG_YLAST])
-        exts = prepifg.get_analysis_extent(crop, ifgs, xlooks, ylooks,
-                                           user_exts=user_exts)
+        exts = prepifg_helper.get_analysis_extent(crop, ifgs, xlooks, ylooks,
+                                                  user_exts=user_exts)
         thresh = params[cf.NO_DATA_AVERAGING_THRESHOLD]
         if parallel:
             Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
@@ -127,8 +127,8 @@ def _prepifg_multiprocessing(path, xlooks, ylooks, exts, thresh, crop, params):
         coherence_path = None
         coherence_thresh = None
 
-    prepifg.prepare_ifg(path, xlooks, ylooks, exts, thresh, crop,
-                        out_path=params[cf.OUT_DIR], header=header,
-                        coherence_path=coherence_path,
-                        coherence_thresh=coherence_thresh)
+    prepifg_helper.prepare_ifg(path, xlooks, ylooks, exts, thresh, crop,
+                               out_path=params[cf.OUT_DIR], header=header,
+                               coherence_path=coherence_path,
+                               coherence_thresh=coherence_thresh)
 
