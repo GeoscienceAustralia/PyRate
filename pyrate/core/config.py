@@ -34,6 +34,7 @@ import glob2
 
 # general constants
 NO_MULTILOOKING = 1
+LOG_LEVEL = 'INFO'
 
 # constants for lookups
 #: STR; Name of input interferogram list file

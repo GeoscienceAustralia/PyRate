@@ -20,6 +20,7 @@ inversion in PyRate.
 # pylint: disable=too-many-locals
 # pylint: disable=too-many-arguments
 import itertools
+
 from numpy import (where, isnan, nan, diff, zeros,
                    float32, cumsum, dot, delete, asarray)
 from numpy.linalg import matrix_rank, pinv, cholesky
@@ -138,7 +139,8 @@ def time_series(ifgs, params, vcmt=None, mst=None):
         _time_series_setup(ifgs, mst, params)
 
     if parallel == 1:
-        tsvel_matrix = Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
+        tsvel_matrix = Parallel(n_jobs=params[cf.PROCESSES], 
+                                verbose=joblib_log_level(cf.LOG_LEVEL))(
             delayed(_time_series_by_rows)(r, b0_mat, sm_factor, sm_order,
                                           ifg_data, mst, ncols, nvelpar,
                                           p_thresh, vcmt, ts_method, interp)
@@ -146,7 +148,8 @@ def time_series(ifgs, params, vcmt=None, mst=None):
 
     elif parallel == 2:
 
-        res = np.array(Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
+        res = np.array(Parallel(n_jobs=params[cf.PROCESSES], 
+                                verbose=joblib_log_level(cf.LOG_LEVEL))(
             delayed(_time_series_by_pixel)(i, j, b0_mat, sm_factor, sm_order,
                                            ifg_data, mst, nvelpar, p_thresh,
                                            interp, vcmt, ts_method)

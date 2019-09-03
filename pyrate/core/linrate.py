@@ -22,11 +22,13 @@ method.
 # pylint: disable= too-many-locals
 # pylint: disable= too-many-arguments
 import itertools
+
 from scipy.linalg import solve, cholesky, qr, inv
 from numpy import nan, isnan, sqrt, diag, delete, array, float32
 import numpy as np
 from joblib import Parallel, delayed
 from pyrate.core import config as cf
+from pyrate.shared import joblib_log_level
 
 
 def linear_rate(ifgs, params, vcmt, mst=None):
@@ -53,7 +55,8 @@ def linear_rate(ifgs, params, vcmt, mst=None):
     # nested loops to loop over the 2 image dimensions
     if parallel == 1:
 
-        res = Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
+        res = Parallel(n_jobs=params[cf.PROCESSES], 
+                       verbose=joblib_log_level(cf.LOG_LEVEL))(
             delayed(_linear_rate_by_rows)(r, cols, mst, nsig, obs,
                                           pthresh, span, vcmt)
             for r in range(rows))
@@ -63,7 +66,8 @@ def linear_rate(ifgs, params, vcmt, mst=None):
         error = res[:, :, 1]
         samples = res[:, :, 2]
     elif parallel == 2:
-        res = Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
+        res = Parallel(n_jobs=params[cf.PROCESSES], 
+                       verbose=joblib_log_level(cf.LOG_LEVEL))(
             delayed(_linear_rate_by_pixel)(r, c, mst, nsig, obs,
                                            pthresh, span, vcmt)
             for r, c in itertools.product(range(rows), range(cols)))

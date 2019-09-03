@@ -59,6 +59,14 @@ GDAL_Y_CELLSIZE = 5
 GDAL_X_FIRST = 0
 GDAL_Y_FIRST = 3
 
+def joblib_log_level(level: str) -> int:
+    """
+    Convert python log level to joblib int verbosity.
+    """ 
+    if level == 'INFO':
+        return 0
+    else:
+        return 60
 
 def mkdir_p(path):
     """

@@ -96,7 +96,8 @@ def mst_parallel(ifgs, params):
     if params[cf.PARALLEL]:
         log.info('Calculating MST using {} tiles in parallel using {} ' \
                  'processes'.format(no_tiles, ncpus))
-        t_msts = Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
+        t_msts = Parallel(n_jobs=params[cf.PROCESSES], 
+                          verbose=joblib_log_level(cf.LOG_LEVEL))(
             delayed(mst_multiprocessing)(t, ifg_paths)
             for t in tiles)
         for k, tile in enumerate(tiles):

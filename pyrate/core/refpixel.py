@@ -21,6 +21,7 @@ import os
 from os.path import join
 import logging
 from itertools import product
+
 import numpy as np
 from numpy import isnan, std, mean, sum as nsum
 from joblib import Parallel, delayed
@@ -53,7 +54,8 @@ def ref_pixel(ifgs, params):
     parallel = params[cf.PARALLEL]
     if parallel:
         phase_data = [i.phase_data for i in ifgs]
-        mean_sds = Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
+        mean_sds = Parallel(n_jobs=params[cf.PROCESSES], 
+                            verbose=joblib_log_level(cf.LOG_LEVEL))(
             delayed(_ref_pixel_multi)(g, half_patch_size, phase_data,
                                      thresh, params) for g in grid)
         refy, refx = find_min_mean(mean_sds, grid)

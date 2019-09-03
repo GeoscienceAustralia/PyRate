@@ -18,6 +18,7 @@
 This Python module implements a reference phase estimation algorithm.
 """
 import logging
+
 import numpy as np
 from joblib import Parallel, delayed
 from pyrate.core.shared import nanmedian
@@ -75,7 +76,8 @@ def est_ref_phase_method2(ifgs, params, refpx, refpy):
     thresh = chipsize * chipsize * params[cf.REF_MIN_FRAC]
     phase_data = [i.phase_data for i in ifgs]
     if params[cf.PARALLEL]:
-        ref_phs = Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
+        ref_phs = Parallel(n_jobs=params[cf.PROCESSES],
+                           verbose=joblib_log_level(cf.LOG_LEVEL))(
             delayed(_est_ref_phs_method2)(p, half_chip_size,
                                           refpx, refpy, thresh)
             for p in phase_data)
@@ -130,7 +132,8 @@ def est_ref_phase_method1(ifgs, params):
     comp = np.ravel(comp, order='F')
     if params[cf.PARALLEL]:
         log.info("Calculating ref phase using multiprocessing")
-        ref_phs = Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
+        ref_phs = Parallel(n_jobs=params[cf.PROCESSES], 
+                           verbose=joblib_log_level(cf.LOG_LEVEL))(
             delayed(_est_ref_phs_method1)(p, comp)
             for p in phase_data)
         for n, ifg in enumerate(ifgs):
