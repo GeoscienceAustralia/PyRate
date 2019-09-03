@@ -15,10 +15,10 @@ pip3 install pyproj==2.2.1
 cd /PyRate && python3 setup.py install
 
 # Run workflow
-pyrate converttogeotiff input_parameters.conf
-pyrate prepifg input_parameters.conf
-pyrate process input_parameters.conf -c 3 -r 4
-pyrate postprocess input_parameters.conf -c 3 -r 4
+pyrate converttogeotiff -f input_parameters.conf
+pyrate prepifg -f input_parameters.conf
+pyrate process -f input_parameters.conf -c 3 -r 4
+pyrate postprocess -f input_parameters.conf -c 3 -r 4
 
 # Build Sphinx docs
 cd /PyRate/docs && make html
