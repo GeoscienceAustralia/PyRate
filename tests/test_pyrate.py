@@ -25,10 +25,9 @@ import unittest
 from os.path import join
 import numpy as np
 
-import pyrate.shared
-from pyrate import config as cf
-from pyrate import shared, config, prepifg
-from pyrate.scripts import run_pyrate, run_prepifg, converttogtif
+import pyrate.core.shared
+from pyrate.core import shared, config as cf, config, prepifg_helper, mst
+from pyrate import process, prepifg, converttogtif
 from tests import common
 
 # taken from
@@ -56,13 +55,13 @@ def test_transform_params():
 
 
 def test_warp_required():
-    nocrop = prepifg.ALREADY_SAME_SIZE
+    nocrop = prepifg_helper.ALREADY_SAME_SIZE
     assert shared.warp_required(xlooks=2, ylooks=1, crop=nocrop)
     assert shared.warp_required(xlooks=1, ylooks=2, crop=nocrop)
     assert shared.warp_required(xlooks=1, ylooks=1, crop=nocrop)
     assert not shared.warp_required(xlooks=1, ylooks=1, crop=None)
 
-    for c in prepifg.CROP_OPTIONS[:-1]:
+    for c in prepifg_helper.CROP_OPTIONS[:-1]:
         assert shared.warp_required(xlooks=1, ylooks=1, crop=c)
 
 
@@ -135,7 +134,7 @@ class PyRateTests(unittest.TestCase):
             params[cf.APS_CORRECTION] = 0
             paths = glob.glob(join(cls.BASE_OUT_DIR, 'geo_*-*.tif'))
             params[cf.PARALLEL] = False
-            run_pyrate.process_ifgs(sorted(paths), params, 2, 2)
+            process.process_ifgs(sorted(paths), params, 2, 2)
 
             if not hasattr(cls, 'ifgs'):
                 cls.ifgs = get_ifgs(out_dir=cls.BASE_OUT_DIR)
@@ -213,11 +212,11 @@ class ParallelPyRateTests(unittest.TestCase):
         cls.dest_paths = cf.get_dest_paths(
             base_unw_paths, crop, params, xlks)
         gtif_paths = converttogtif.do_geotiff(base_unw_paths, params)
-        run_prepifg.do_prepifg(gtif_paths, params)
-        tiles = pyrate.shared.get_tiles(cls.dest_paths[0], 3, 3)
+        prepifg.do_prepifg(gtif_paths, params)
+        tiles = pyrate.core.shared.get_tiles(cls.dest_paths[0], 3, 3)
         ifgs = common.small_data_setup()
         cls.refpixel_p, cls.maxvar_p, cls.vcmt_p = \
-            run_pyrate.process_ifgs(cls.dest_paths, params, 3, 3)
+            process.process_ifgs(cls.dest_paths, params, 3, 3)
         cls.mst_p = common.reconstruct_mst(ifgs[0].shape, tiles,
                                            params[cf.TMPDIR])
         cls.rate_p, cls.error_p, cls.samples_p = [
@@ -236,9 +235,9 @@ class ParallelPyRateTests(unittest.TestCase):
         cls.dest_paths_s = cf.get_dest_paths(
             base_unw_paths, crop, params, xlks)
         gtif_paths = converttogtif.do_geotiff(base_unw_paths, params)
-        run_prepifg.do_prepifg(gtif_paths, params)
+        prepifg.do_prepifg(gtif_paths, params)
         cls.refpixel, cls.maxvar, cls.vcmt = \
-            run_pyrate.process_ifgs(cls.dest_paths_s, params, 3, 3)
+            process.process_ifgs(cls.dest_paths_s, params, 3, 3)
 
         cls.mst = common.reconstruct_mst(ifgs[0].shape, tiles,
                                          params[cf.TMPDIR])
@@ -276,7 +275,6 @@ class ParallelPyRateTests(unittest.TestCase):
             self.key_check(i, key, value)
 
     def test_mst_equal(self):
-        from pyrate import mst
         ifgs = common.small_data_setup(datafiles=self.dest_paths)
         mst_original_p = mst.mst_boolean_array(ifgs)
         ifgs_s = common.small_data_setup(datafiles=self.dest_paths_s)

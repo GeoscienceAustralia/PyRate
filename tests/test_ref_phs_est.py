@@ -25,11 +25,10 @@ import tempfile
 import unittest
 import numpy as np
 
-import pyrate.orbital
-from pyrate import config as cf
-from pyrate import ifgconstants as ifc
-from pyrate.ref_phs_est import estimate_ref_phase, ReferencePhaseError
-from pyrate.scripts import run_prepifg, run_pyrate, converttogtif
+import pyrate.core.orbital
+from pyrate.core import ifgconstants as ifc, config as cf
+from pyrate.core.ref_phs_est import estimate_ref_phase, ReferencePhaseError
+from pyrate import prepifg, process, converttogtif
 from tests import common
 
 legacy_ref_phs_method1 = [-18.2191658020020,
@@ -118,10 +117,10 @@ class RefPhsEstimationLegacyTestMethod1Serial(unittest.TestCase):
 
         params = cf.get_config_params(common.TEST_CONF_ROIPAC)
         cls.temp_out_dir = tempfile.mkdtemp()
-        sys.argv = ['run_prepifg.py', common.TEST_CONF_ROIPAC]
+        sys.argv = ['prepifg.py', common.TEST_CONF_ROIPAC]
         params[cf.OUT_DIR] = cls.temp_out_dir
         converttogtif.main(params)
-        run_prepifg.main(params)
+        prepifg.main(params)
 
         params[cf.OUT_DIR] = cls.temp_out_dir
         params[cf.REF_EST_METHOD] = 1
@@ -138,10 +137,10 @@ class RefPhsEstimationLegacyTestMethod1Serial(unittest.TestCase):
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         mst_grid = common.mst_calculation(dest_paths, params)
         # Estimate reference pixel location
-        refx, refy = run_pyrate._ref_pixel_calc(dest_paths, params)
+        refx, refy = process._ref_pixel_calc(dest_paths, params)
 
         # Estimate and remove orbit errors
-        pyrate.orbital.remove_orbital_error(ifgs, params)
+        pyrate.core.orbital.remove_orbital_error(ifgs, params)
 
         for i in ifgs:
             i.close()
@@ -208,10 +207,10 @@ class RefPhsEstimationLegacyTestMethod1Parallel(unittest.TestCase):
 
         params = cf.get_config_params(common.TEST_CONF_ROIPAC)
         cls.temp_out_dir = tempfile.mkdtemp()
-        sys.argv = ['run_prepifg.py', common.TEST_CONF_ROIPAC]
+        sys.argv = ['prepifg.py', common.TEST_CONF_ROIPAC]
         params[cf.OUT_DIR] = cls.temp_out_dir
         converttogtif.main(params)
-        run_prepifg.main(params)
+        prepifg.main(params)
 
         params[cf.OUT_DIR] = cls.temp_out_dir
         params[cf.REF_EST_METHOD] = 1
@@ -228,10 +227,10 @@ class RefPhsEstimationLegacyTestMethod1Parallel(unittest.TestCase):
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         mst_grid = common.mst_calculation(dest_paths, params)
         # Estimate reference pixel location
-        refx, refy = run_pyrate._ref_pixel_calc(dest_paths, params)
+        refx, refy = process._ref_pixel_calc(dest_paths, params)
 
         # Estimate and remove orbit errors
-        pyrate.orbital.remove_orbital_error(ifgs, params)
+        pyrate.core.orbital.remove_orbital_error(ifgs, params)
 
         for i in ifgs:
             i.close()
@@ -301,10 +300,10 @@ class RefPhsEstimationLegacyTestMethod2Serial(unittest.TestCase):
 
         params = cf.get_config_params(common.TEST_CONF_ROIPAC)
         cls.temp_out_dir = tempfile.mkdtemp()
-        sys.argv = ['run_prepifg.py', common.TEST_CONF_ROIPAC]
+        sys.argv = ['prepifg.py', common.TEST_CONF_ROIPAC]
         params[cf.OUT_DIR] = cls.temp_out_dir
         converttogtif.main(params)
-        run_prepifg.main(params)
+        prepifg.main(params)
 
         params[cf.OUT_DIR] = cls.temp_out_dir
         params[cf.REF_EST_METHOD] = 2
@@ -321,10 +320,10 @@ class RefPhsEstimationLegacyTestMethod2Serial(unittest.TestCase):
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         mst_grid = common.mst_calculation(dest_paths, params)
         # Estimate reference pixel location
-        refx, refy = run_pyrate._ref_pixel_calc(dest_paths, params)
+        refx, refy = process._ref_pixel_calc(dest_paths, params)
 
         # Estimate and remove orbit errors
-        pyrate.orbital.remove_orbital_error(ifgs, params)
+        pyrate.core.orbital.remove_orbital_error(ifgs, params)
 
         for i in ifgs:
             i.close()
@@ -394,10 +393,10 @@ class RefPhsEstimationLegacyTestMethod2Parallel(unittest.TestCase):
 
         params = cf.get_config_params(common.TEST_CONF_ROIPAC)
         cls.temp_out_dir = tempfile.mkdtemp()
-        sys.argv = ['run_prepifg.py', common.TEST_CONF_ROIPAC]
+        sys.argv = ['prepifg.py', common.TEST_CONF_ROIPAC]
         params[cf.OUT_DIR] = cls.temp_out_dir
         converttogtif.main(params)
-        run_prepifg.main(params)
+        prepifg.main(params)
 
         params[cf.OUT_DIR] = cls.temp_out_dir
         params[cf.REF_EST_METHOD] = 2
@@ -413,10 +412,10 @@ class RefPhsEstimationLegacyTestMethod2Parallel(unittest.TestCase):
         # start run_pyrate copy
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         # Estimate reference pixel location
-        refx, refy = run_pyrate._ref_pixel_calc(dest_paths, params)
+        refx, refy = process._ref_pixel_calc(dest_paths, params)
 
         # Estimate and remove orbit errors
-        pyrate.orbital.remove_orbital_error(ifgs, params)
+        pyrate.core.orbital.remove_orbital_error(ifgs, params)
 
         for i in ifgs:
             i.close()

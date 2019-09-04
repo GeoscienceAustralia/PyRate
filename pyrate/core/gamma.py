@@ -24,8 +24,8 @@ import os
 import glob2
 from datetime import date, time, timedelta
 import numpy as np
-import pyrate.ifgconstants as ifc
-from pyrate import config as cf
+import pyrate.core.ifgconstants as ifc
+from pyrate.core import config as cf
 
 PTN = re.compile(r'\d{8}')  # match 8 digits for the dates
 

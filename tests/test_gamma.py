@@ -18,9 +18,7 @@ This Python module contains tests for the gamma.py PyRate module.
 """
 import glob
 import os
-import re
 import shutil
-import sys
 import tempfile
 import unittest
 from datetime import date, time
@@ -30,27 +28,18 @@ import numpy as np
 from numpy.testing import assert_array_almost_equal
 from osgeo import gdal
 
-import pyrate.ifgconstants as ifc
-from pyrate import config as cf
-from pyrate import gamma
-from pyrate import shared
-from pyrate.config import (
+import pyrate.core.ifgconstants as ifc
+from pyrate.core import shared, config as cf, gamma
+from pyrate.core.config import (
     DEM_HEADER_FILE,
     NO_DATA_VALUE,
     OBS_DIR,
     IFG_FILE_LIST,
     PROCESSOR,
     OUT_DIR,
-    SLC_DIR,
-    IFG_LKSX,
-    IFG_LKSY,
-    IFG_CROP_OPT,
-    NO_DATA_AVERAGING_THRESHOLD,
-    DEM_FILE,
-    APS_INCIDENCE_MAP,
-    APS_ELEVATION_MAP)
-from pyrate.scripts import run_prepifg, converttogtif
-from pyrate.shared import write_fullres_geotiff, GeotiffException
+    SLC_DIR)
+from pyrate import prepifg, converttogtif
+from pyrate.core.shared import write_fullres_geotiff, GeotiffException
 from tests import common
 from tests.common import GAMMA_TEST_DIR, SML_TEST_GAMMA
 from tests.common import TEST_CONF_GAMMA, TEMPDIR
@@ -317,7 +306,7 @@ class TestGammaParallelVsSerial(unittest.TestCase):
         shared.mkdir_p(cls.serial_dir)
 
         gtif_paths = converttogtif.main(params)
-        run_prepifg.main(params)
+        prepifg.main(params)
 
         serial_df = glob.glob(os.path.join(cls.serial_dir, glob_prefix))
         cls.serial_ifgs = small_data_setup(datafiles=serial_df)
@@ -332,7 +321,7 @@ class TestGammaParallelVsSerial(unittest.TestCase):
         shared.mkdir_p(cls.parallel_dir)
 
         gtif_paths = converttogtif.main(params)
-        run_prepifg.main(params)
+        prepifg.main(params)
         
         para_df = glob.glob(os.path.join(cls.parallel_dir, glob_prefix))
         cls.para_ifgs = small_data_setup(datafiles=para_df)

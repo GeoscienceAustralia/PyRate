@@ -27,10 +27,12 @@ from networkx.classes.reportviews import EdgeView
 import networkx as nx
 from joblib import Parallel, delayed
 
-from pyrate.algorithm import ifg_date_lookup
-from pyrate.algorithm import ifg_date_index_lookup
-from pyrate import config as cf
-from pyrate.shared import IfgPart, create_tiles, joblib_log_level
+from pyrate.core.algorithm import ifg_date_lookup
+from pyrate.core.algorithm import ifg_date_index_lookup
+from pyrate.core import config as cf
+from pyrate.core.shared import IfgPart, create_tiles
+from pyrate.core.shared import joblib_log_level
+
 np.seterr(invalid='ignore')  # stops RuntimeWarning in nan conversion
 
 # TODO: may need to implement memory saving row-by-row access

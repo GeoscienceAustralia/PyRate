@@ -1,5 +1,5 @@
 ROI_PAC Module
 ==============
 
-.. automodule:: pyrate.roipac
+.. automodule:: pyrate.core.roipac
    :members:

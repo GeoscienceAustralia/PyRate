@@ -24,8 +24,8 @@ from os.path import join
 
 from tests.common import SML_TEST_CONF, SML_TEST_TIF
 from tests.common import TEST_CONF_ROIPAC, TEST_CONF_GAMMA
-from pyrate import config
-from pyrate.config import (
+from pyrate.core import config
+from pyrate.core.config import (
     DEM_HEADER_FILE,
     NO_DATA_VALUE,
     OBS_DIR,

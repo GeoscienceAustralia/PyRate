@@ -1,5 +1,5 @@
 Reference Pixel Calculation Module
 ==================================
 
-.. automodule:: pyrate.refpixel
+.. automodule:: pyrate.core.refpixel
    :members:

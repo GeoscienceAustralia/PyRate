@@ -1,5 +1,5 @@
 Covariance Module
 =====================
 
-.. automodule:: pyrate.covariance
+.. automodule:: pyrate.core.covariance
    :members:

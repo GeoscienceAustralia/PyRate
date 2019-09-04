@@ -24,21 +24,11 @@ import pickle as cp
 from collections import OrderedDict
 import numpy as np
 
-from pyrate import algorithm
-from pyrate import config as cf
-from pyrate import ifgconstants as ifc
-from pyrate import linrate
-from pyrate import mpiops
-from pyrate import mst
-from pyrate import orbital
-from pyrate import ref_phs_est as rpe
-from pyrate import refpixel
-from pyrate import shared
-from pyrate import timeseries
-from pyrate import covariance as vcm_module
-from pyrate.aps import _wrap_spatio_temporal_filter
-from pyrate.config import ConfigException
-from pyrate.shared import Ifg, PrereadIfg, get_tiles
+from pyrate.core import shared, algorithm, orbital, ref_phs_est as rpe, ifgconstants as ifc, mpiops, config as cf, \
+    timeseries, mst, covariance as vcm_module, linrate, refpixel
+from pyrate.core.aps import _wrap_spatio_temporal_filter
+from pyrate.core.config import ConfigException
+from pyrate.core.shared import Ifg, PrereadIfg, get_tiles
 
 MASTER_PROCESS = 0
 log = logging.getLogger(__name__)
@@ -150,7 +140,7 @@ def _ref_pixel_calc(ifg_paths, params):
     if refx <= 0 or refy <= 0:  # if either zero or negative
         log.info('Searching for best reference pixel location')
 
-        half_patch_size, thresh, grid = refpixel.ref_pixel_setup(ifg_paths, 
+        half_patch_size, thresh, grid = refpixel.ref_pixel_setup(ifg_paths,
                                                                  params)
         process_grid = mpiops.array_split(grid)
         refpixel.save_ref_pixel_blocks(process_grid, half_patch_size,

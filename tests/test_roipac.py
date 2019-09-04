@@ -17,7 +17,6 @@
 This Python module contains tests for the roipac.py PyRate module.
 """
 
-import glob
 import os
 import shutil
 import sys
@@ -26,39 +25,26 @@ import unittest
 from datetime import date
 from os.path import exists, join
 
-import numpy as np
 from numpy.testing import assert_array_almost_equal
 from osgeo import gdal
 
-import pyrate.ifgconstants as ifc
-from pyrate import roipac
-from pyrate import shared
-from pyrate.config import (
+import pyrate.core.ifgconstants as ifc
+from pyrate.core import shared, roipac
+from pyrate.core.config import (
     INPUT_IFG_PROJECTION,
     NO_DATA_VALUE,
     OBS_DIR,
     OUT_DIR,
     IFG_FILE_LIST,
     PROCESSOR,
-    IFG_CROP_OPT,
-    IFG_LKSX,
-    IFG_LKSY,
-    NO_DATA_AVERAGING_THRESHOLD,
-    DEM_FILE,
-    DEM_HEADER_FILE,
-    APS_INCIDENCE_MAP,
-    APS_ELEVATION_MAP
-    )
-from pyrate.scripts import run_prepifg
+    DEM_HEADER_FILE
+)
 # from pyrate.scripts.converttogtif import main as roipacMain
-from pyrate.shared import GeotiffException
-from pyrate.shared import write_fullres_geotiff
+from pyrate.core.shared import GeotiffException
+from pyrate.core.shared import write_fullres_geotiff
 from tests.common import HEADERS_TEST_DIR, PREP_TEST_OBS, PREP_TEST_TIF
 from tests.common import SML_TEST_DEM_DIR, SML_TEST_OBS, TEMPDIR
 from tests.common import SML_TEST_DEM_ROIPAC, SML_TEST_DEM_HDR
-from tests.common import small_data_roipac_unws
-from tests.common import small_data_setup
-from tests.common import small_ifg_file_list
 
 gdal.UseExceptions()
 

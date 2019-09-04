@@ -30,10 +30,9 @@ import numpy as np
 from numpy import isnan, sum as nsum
 from osgeo import gdal
 
-from pyrate import (config as cf, mst, timeseries, algorithm,
-    ifgconstants as ifc, linrate)
-from pyrate.shared import (Ifg, nan_and_mm_convert, get_geotiff_header_info, 
-    write_output_geotiff)
+from pyrate.core import algorithm, ifgconstants as ifc, config as cf, timeseries, mst, linrate
+from pyrate.core.shared import (Ifg, nan_and_mm_convert, get_geotiff_header_info,
+                                write_output_geotiff)
 
 from tests.constants import PYRATEPATH
 

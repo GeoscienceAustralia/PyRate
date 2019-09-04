@@ -27,11 +27,9 @@ import numpy as np
 from scipy.fftpack import fft2, ifft2, fftshift
 from scipy.optimize import fmin
 
-from pyrate import shared
-from pyrate.shared import PrereadIfg
-from pyrate.algorithm import master_slave_ids
-from pyrate import ifgconstants as ifc
-from pyrate import config as cf
+from pyrate.core import shared, ifgconstants as ifc, config as cf
+from pyrate.core.shared import PrereadIfg
+from pyrate.core.algorithm import master_slave_ids
 
 # pylint: disable=too-many-arguments
 # distance division factor of 1000 converts to km and is needed to match legacy output

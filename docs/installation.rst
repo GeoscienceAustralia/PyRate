@@ -16,20 +16,20 @@ To verify PyRate has been successfully installed, run the workflow with the
 included example config file and data:
 
 ::
-    pyrate converttogeotiff input_parameters.conf
-    pyrate prepifg input_parameters.conf
-    pyrate process input_parameters.conf
-    pyrate postprocess input_parameters.conf
+    pyrate converttogeotiff -f input_parameters.conf
+    pyrate prepifg -f input_parameters.conf
+    pyrate process -f input_parameters.conf
+    pyrate postprocess -f input_parameters.conf
 
 On Raijin and other HPC systems, you can utilise MPI to run PyRate in parallel:
-    
+
 ::
 
     # Modify 'n' based on the number of processors available.
-    mpirun -n 4 pyrate converttogeotiff input_parameters.conf
-    mpirun -n 4 pyrate prepifg input_parameters.conf
-    mpirun -n 4 pyrate process input_parameters.conf -c 2 -r 2
-    mpirun -n 4 pyrate postprocess input_parameters.conf -c 2 -r 2
+    mpirun -n 4 pyrate converttogeotiff -f input_parameters.conf
+    mpirun -n 4 pyrate prepifg -f input_parameters.conf
+    mpirun -n 4 pyrate process -f input_parameters.conf -c 2 -r 2
+    mpirun -n 4 pyrate postprocess -f input_parameters.conf -c 2 -r 2
 
 If the installation has been successful, this workflow will complete without 
 errors and results will be available in:

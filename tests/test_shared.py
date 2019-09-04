@@ -33,14 +33,10 @@ from osgeo import gdal
 from osgeo.gdal import Open, Dataset, UseExceptions
 
 from tests.common import SML_TEST_TIF, SML_TEST_DEM_TIF, TEMPDIR
-from pyrate import config as cf
-from pyrate import gamma
-from pyrate import ifgconstants as ifc
-from pyrate import prepifg
-from pyrate import shared
-from pyrate.scripts import run_prepifg, converttogtif
-from pyrate.shared import Ifg, DEM, RasterException
-from pyrate.shared import cell_size, _utm_zone
+from pyrate.core import shared, ifgconstants as ifc, config as cf, prepifg_helper, gamma
+from pyrate import prepifg, converttogtif
+from pyrate.core.shared import Ifg, DEM, RasterException
+from pyrate.core.shared import cell_size, _utm_zone
 
 from tests import common
 
@@ -169,11 +165,11 @@ class IfgIOTests(unittest.TestCase):
         gdal.Dataset object as Dataset has already been read in
         """
         paths = [self.ifg.data_path]
-        mlooked_phase_data = prepifg.prepare_ifgs(paths,
-                             crop_opt=prepifg.ALREADY_SAME_SIZE,
-                             xlooks=2,
-                             ylooks=2,
-                             write_to_disc=False)
+        mlooked_phase_data = prepifg_helper.prepare_ifgs(paths,
+                                                         crop_opt=prepifg_helper.ALREADY_SAME_SIZE,
+                                                         xlooks=2,
+                                                         ylooks=2,
+                                                         write_to_disc=False)
         mlooked = [Ifg(m[1]) for m in mlooked_phase_data]
         self.assertRaises(RasterException, mlooked[0].open)
 
@@ -366,7 +362,7 @@ class WriteUnwTest(unittest.TestCase):
         xlks, ylks, crop = cf.transform_params(cls.params)
         # dest_paths are tifs that have been geotif converted and multilooked
         converttogtif.main(cls.params)
-        run_prepifg.main(cls.params)
+        prepifg.main(cls.params)
         # run_prepifg.gamma_prepifg(cls.base_unw_paths, cls.params)
         cls.base_unw_paths.pop()  # removed dem as we don't want it in ifgs
 
@@ -412,7 +408,7 @@ class WriteUnwTest(unittest.TestCase):
                                               ifg_proc=1)
         # convert the .unw to geotif
         shared.write_fullres_geotiff(header=header, data_path=temp_unw,
-                             dest=temp_tif, nodata=np.nan)
+                                     dest=temp_tif, nodata=np.nan)
 
         # now compare geotiff with original numpy array
         ds = gdal.Open(temp_tif, gdal.GA_ReadOnly)

@@ -70,15 +70,15 @@ setup(
     author='Geoscience Australia InSAR team',
     author_email='insar@ga.gov.au',
     url='https://github.com/GeoscienceAustralia/PyRate',
-    packages=['pyrate', 'pyrate.scripts'],
+    packages=['pyrate', 'pyrate.core'],
     package_dir={'PyRate': 'pyrate'},
     include_package_data=True,
     entry_points={
-        'console_scripts': [
-            'pyrate = pyrate.scripts.main:cli',
-        ]
-    },
-    setup_requires = setup_requirements,
+          'console_scripts': [
+              'pyrate = pyrate.__main__:main'
+          ]
+      },
+    setup_requires=setup_requirements,
     install_requires=requirements,
     extras_require={
         'dev': dev_requirements

@@ -1,7 +1,7 @@
-PyRate run_pyrate Script
+PyRate Process Script
 ========================
 
-.. automodule:: pyrate.scripts.run_pyrate
+.. automodule:: pyrate.process
     :members:
     :undoc-members:
     :show-inheritance:

@@ -18,7 +18,7 @@ This Python module contains tests for the gdal_python.py PyRate module.
 """
 from subprocess import check_call
 
-from pyrate.prepifg import _resample_ifg
+from pyrate.core.prepifg_helper import _resample_ifg
 
 import glob
 import os
@@ -31,9 +31,8 @@ from numpy import where, nan
 import numpy as np
 from osgeo import gdal, gdalconst
 
-from pyrate import gdal_python
-from pyrate.shared import Ifg
-from pyrate import config as cf
+from pyrate.core import gdal_python, config as cf
+from pyrate.core.shared import Ifg
 from tests import common
 
 
@@ -90,8 +89,8 @@ class TestResample(unittest.TestCase):
             resampled_temp_tif = tempfile.mktemp(suffix='.tif',
                                                  prefix='resampled_')
             resampled = gdal_python.resample_nearest_neighbour(s.data_path,
-                                                            extents, res,
-                                                            resampled_temp_tif)
+                                                               extents, res,
+                                                               resampled_temp_tif)
             np.testing.assert_array_almost_equal(resampled_ref,
                                                  resampled[0, :, :])
             os.remove(temp_tif)
@@ -115,8 +114,8 @@ class TestResample(unittest.TestCase):
                 resampled_temp_tif = tempfile.mktemp(suffix='.tif',
                                                     prefix='resampled_')
                 gdal_python.resample_nearest_neighbour(s.data_path, extents,
-                                                    [res, -res],
-                                                    resampled_temp_tif)
+                                                       [res, -res],
+                                                       resampled_temp_tif)
                 self.assertTrue(os.path.exists(resampled_temp_tif))
                 os.remove(resampled_temp_tif)
 

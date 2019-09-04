@@ -1,5 +1,5 @@
 Minimum Spanning Tree Module
 ============================
 
-.. automodule:: pyrate.mst
+.. automodule:: pyrate.core.mst
    :members:

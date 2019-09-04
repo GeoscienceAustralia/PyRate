@@ -27,15 +27,11 @@ from numpy import nan, asarray, where
 import numpy as np
 from numpy.testing import assert_array_almost_equal
 
-import pyrate.orbital
+import pyrate.core.orbital
 import tests.common as common
-from pyrate import config as cf
-from pyrate import mst
-from pyrate import ref_phs_est as rpe
-from pyrate import shared
-from pyrate import covariance
-from pyrate.scripts import run_pyrate, run_prepifg, converttogtif
-from pyrate.timeseries import time_series
+from pyrate.core import ref_phs_est as rpe, config as cf, mst, covariance
+from pyrate import process, prepifg, converttogtif
+from pyrate.core.timeseries import time_series
 
 
 def default_params():
@@ -116,10 +112,10 @@ class LegacyTimeSeriesEquality(unittest.TestCase):
     def setUpClass(cls):
         params = cf.get_config_params(common.TEST_CONF_ROIPAC)
         cls.temp_out_dir = tempfile.mkdtemp()
-        sys.argv = ['run_prepifg.py', common.TEST_CONF_ROIPAC]
+        sys.argv = ['prepifg.py', common.TEST_CONF_ROIPAC]
         params[cf.OUT_DIR] = cls.temp_out_dir
         converttogtif.main(params)
-        run_prepifg.main(params)
+        prepifg.main(params)
 
         params[cf.REF_EST_METHOD] = 2
 
@@ -131,9 +127,9 @@ class LegacyTimeSeriesEquality(unittest.TestCase):
         # start run_pyrate copy
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         mst_grid = common.mst_calculation(dest_paths, params)
-        refx, refy = run_pyrate._ref_pixel_calc(dest_paths, params)
+        refx, refy = process._ref_pixel_calc(dest_paths, params)
         # Estimate and remove orbit errors
-        pyrate.orbital.remove_orbital_error(ifgs, params)
+        pyrate.core.orbital.remove_orbital_error(ifgs, params)
         ifgs = common.prepare_ifgs_without_phase(dest_paths, params)
         _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
         r_dist = covariance.RDist(ifgs[0])()
@@ -220,10 +216,10 @@ class LegacyTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
     def setUpClass(cls):
         params = cf.get_config_params(common.TEST_CONF_ROIPAC)
         cls.temp_out_dir = tempfile.mkdtemp()
-        sys.argv = ['run_prepifg.py', common.TEST_CONF_ROIPAC]
+        sys.argv = ['prepifg.py', common.TEST_CONF_ROIPAC]
         params[cf.OUT_DIR] = cls.temp_out_dir
         converttogtif.main(params)
-        run_prepifg.main(params)
+        prepifg.main(params)
 
         params[cf.REF_EST_METHOD] = 2
 
@@ -236,10 +232,10 @@ class LegacyTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         mst_grid = common.mst_calculation(dest_paths, params)
 
-        refx, refy = run_pyrate._ref_pixel_calc(dest_paths, params)
+        refx, refy = process._ref_pixel_calc(dest_paths, params)
 
         # Estimate and remove orbit errors
-        pyrate.orbital.remove_orbital_error(ifgs, params)
+        pyrate.core.orbital.remove_orbital_error(ifgs, params)
         ifgs = common.prepare_ifgs_without_phase(dest_paths, params)
 
         _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)

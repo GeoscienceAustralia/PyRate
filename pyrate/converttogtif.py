@@ -24,13 +24,8 @@ import logging
 from joblib import Parallel, delayed
 import numpy as np
 
-from pyrate.prepifg import PreprocessError
-from pyrate import config as cf
-from pyrate import roipac
-from pyrate import gamma
-from pyrate import shared
-import pyrate.ifgconstants as ifc
-from pyrate import mpiops
+from pyrate.core.prepifg_helper import PreprocessError
+from pyrate.core import shared, mpiops, config as cf, gamma, roipac
 
 log = logging.getLogger(__name__)
 
@@ -129,10 +124,9 @@ def _geotiff_multiprocessing(unw_path, params):
         elif processor == ROIPAC:
             header = roipac.roipac_header(unw_path, params)
         else:
-            raise PreprocessError('Processor must be ROI_PAC (0) or '
-                                          'GAMMA (1)')
+            raise PreprocessError('Processor must be ROI_PAC (0) or GAMMA (1)')
         shared.write_fullres_geotiff(header, unw_path, dest,
-                      nodata=params[cf.NO_DATA_VALUE])
+                                     nodata=params[cf.NO_DATA_VALUE])
         return dest
     else:
         log.info("Full-res geotiff already exists")

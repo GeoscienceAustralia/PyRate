@@ -1,5 +1,5 @@
 Logging Module
 ==============
 
-.. automodule:: pyrate.pyratelog
+.. automodule:: pyrate.core.pyratelog
    :members:
