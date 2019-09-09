@@ -43,15 +43,16 @@ def coherence_masking(src_ds, coherence_ds, coherence_thresh):
         coherence_ds: The coherence GDAL dataset.
         coherence_thresh: The coherence threshold.
     """
-    a_band = coherence_ds.GetRasterBand(1)
-    b_band = src_ds.GetRasterBand(1)
-    ndv = b_band.GetNoDataValue()
-    a = a_band.ReadAsArray()
-    b = b_band.ReadAsArray()
-    var = {'a': a, 'b': b, 't': coherence_thresh, 'ndv': ndv}
-    formula = 'b*(a>=t)+ndv*(a<t)'
+    coherence_band = coherence_ds.GetRasterBand(1)
+    src_band = src_ds.GetRasterBand(1)
+    # ndv = src_band.GetNoDataValue()
+    ndv = np.nan
+    coherence = coherence_band.ReadAsArray()
+    src = src_band.ReadAsArray()
+    var = {'coh': coherence, 'src': src, 't': coherence_thresh, 'ndv': ndv}
+    formula = 'where(coh>=t, src, ndv)'
     res = ne.evaluate(formula, local_dict=var)
-    a_band.WriteArray(res)
+    src_band.WriteArray(res)
     
 def world_to_pixel(geo_transform, x, y):
     """
