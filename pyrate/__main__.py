@@ -76,7 +76,7 @@ Refer to https://geoscienceaustralia.github.io/PyRate/usage.html for
 more details.
                                             """,
                                      add_help=True, formatter_class=RawTextHelpFormatter)
-    parser.add_argument('-v', '--verbosity',  type=str, default='DEBUG',
+    parser.add_argument('-v', '--verbosity',  type=str, default='INFO',
                         choices=['DEBUG', 'INFO', 'WARNING', 'ERROR'],
                         help="increase output verbosity")
 
