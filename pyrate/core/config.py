@@ -292,7 +292,7 @@ PARAM_VALIDATION = {
     REF_MIN_FRAC: (lambda a: True,
                    "IMPLEMENT VALIDATOR"),
     REF_EST_METHOD: (lambda a: a == 1 or a == 2,
-                     "IMPLEMENT VALIDATOR"), 
+                     f"'{REF_EST_METHOD}': must select option 1 or 2."), 
 
     ORBITAL_FIT: (lambda a: a == 0 or a == 1, 
                   f"'{ORBITAL_FIT}': must select option 0 or 1."),
@@ -303,12 +303,12 @@ PARAM_VALIDATION = {
     ORBITAL_FIT_LOOKS_X: (lambda a: a >= 1, 
                           f"'{ORBITAL_FIT_LOOKS_X}': must be >= 1."),
     ORBITAL_FIT_LOOKS_Y: (lambda a: a >= 1, 
-                          f"'{ORBITAL_FIT_LOOKS_Y}': must be >= 2."),
+                          f"'{ORBITAL_FIT_LOOKS_Y}': must be >= 1."),
 
     LR_NSIG: (lambda a: True,
               "IMPLEMENT VALIDATOR"),
-    LR_PTHRESH: (lambda a: True, 
-                 "IMPLEMENT VALIDATOR"),
+    LR_PTHRESH: (lambda a: a >= 1, 
+                 "'{LR_PTHRESH}': must be >= 1"),
     LR_MAXSIG: (lambda a: True,
                 "IMPLEMENT VALIDATOR"),
 
@@ -332,8 +332,8 @@ PARAM_VALIDATION = {
 
     TIME_SERIES_CAL: (lambda a: a == 0 or a == 1, 
                       "'{TIME_SERIES_CAL}': must select option 0 or 1."),
-    TIME_SERIES_PTHRESH: (lambda a: True, 
-                          "IMPLEMENT VALIDATOR"),
+    TIME_SERIES_PTHRESH: (lambda a: a >= 1, 
+                          "'{TIME_SERIES_PTHRESH}': must be >= 1"),
     TIME_SERIES_SM_FACTOR: (lambda a: True, 
                             "IMPLEMENT VALIDATOR"),
     TIME_SERIES_SM_ORDER: (lambda a: a == 1 or a == 2,
