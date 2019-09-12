@@ -475,7 +475,8 @@ def _parse_pars(pars):
                  pars[k] = PARAM_CONVERSION[k][1]
                  _logger.warning(f"No value found for parameter '{k}'. Providing "
                                  f"default value {pars[k]}.")
-    return _validate_pars(pars)
+    _validate_pars(pars)
+    return pars
 
 def _validate_pars(pars):
     """
@@ -491,11 +492,48 @@ def _validate_pars(pars):
         if not validator[0](pars[k]):
             errors.append(validator[1]) 
 
+    ifgs_err = _validate_ifms(pars[IFG_FILE_LIST])    
+    if ifgs_err is not None:
+        errors.append(ifgs_err)
+
+    ifgs = list(parse_namelist(pars[IFG_FILE_LIST]))
+    n_ifgs = len(ifgs)
+    ts_pthr_err = _validate_obs_threshold(n_ifgs, pars, LR_PTHRESH)
+    if ts_pthr_err:
+        errors.append(ts_pthr_err)
+    lr_pthr_err = _validate_obs_threshold(n_ifgs, pars, TIME_SERIES_PTHRESH)
+    if lr_pthr_err:
+        errors.append(lr_pthr_err)
+
+    slc_err = _validate_gamma_headers(ifgs, pars[SLC_DIR])
+    if slc_err:
+        errors.extend(slc_err)
+
     if errors:
         errors.insert(0, "invalid parameters")
-        raise ValueError('\n'.join(errors))
+        raise ConfigException('\n'.join(errors))
 
-    return pars
+def _validate_ifms(ifg_file_list):
+    ifgs = parse_namelist(ifg_file_list)
+    if not all([os.path.exists(ifg) for ifg in ifgs]):
+        return f"'{IFG_FILE_LIST}': interferograms specified in file must exist."
+
+def _validate_obs_threshold(n_ifgs, pars, key):
+    thresh = pars[key]
+    if thresh > n_ifgs:
+        return (f"'{key}': not enough interferograms have been specified ({n_ifgs}) "
+                f"to satisfy threshold ({thresh}).")
+                
+def _validate_gamma_headers(ifgs, slc_dir):
+    from pyrate.core.gamma import get_header_paths
+    errors = []
+    for ifg in ifgs:
+        headers = get_header_paths(ifg, slc_dir)
+        if len(headers) < 2:
+            fname = os.path.split(os.path.splitext(ifg)[0])[1]
+            errors.append(f"'{SLC_DIR}': Headers not found for interferogram '{fname}'. ")
+
+    return errors
 
 class ConfigException(Exception):
     """
