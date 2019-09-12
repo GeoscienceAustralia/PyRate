@@ -480,7 +480,14 @@ def _parse_pars(pars):
 
 def _validate_pars(pars):
     """
-    Calls validation functions on each parameter.
+    Calls validation functions on each parameter, collects errors and 
+    raises an exception with collected errors if errors occurred.
+
+    Args:
+        pars: the parameters dictionary.
+
+    Raises:
+        ConfigException: if errors occur during parameter validation.
     """
     errors = []
 
@@ -492,11 +499,12 @@ def _validate_pars(pars):
         if not validator[0](pars[k]):
             errors.append(validator[1]) 
 
-    ifgs_err = _validate_ifms(pars[IFG_FILE_LIST])    
-    if ifgs_err is not None:
-        errors.append(ifgs_err)
-
     ifgs = list(parse_namelist(pars[IFG_FILE_LIST]))
+
+    ifgs_err = _validate_ifms(ifgs, pars[OBS_DIR])    
+    if ifgs_err is not None:
+        errors.extend(ifgs_err)
+
     n_ifgs = len(ifgs)
 
     ts_pthr_err = _validate_obs_threshold(n_ifgs, pars, LR_PTHRESH)
@@ -515,25 +523,63 @@ def _validate_pars(pars):
         errors.insert(0, "invalid parameters")
         raise ConfigException('\n'.join(errors))
 
-def _validate_ifms(ifg_file_list):
-    ifgs = parse_namelist(ifg_file_list)
-    if not all([os.path.exists(ifg) for ifg in ifgs]):
-        return f"'{IFG_FILE_LIST}': interferograms specified in file must exist."
+def _validate_ifms(ifgs, obs_dir):
+    """
+    Checks that the IFGs specified in IFG_FILE_LIST exist.
+
+    Args:
+        ifgs: list of IFG filenames.
+        obs_dir: the observations directory where the IFGs should exist.
+
+    Returns:
+        A list of error messages with one for each IFG that doesn't exist, 
+        otherwise an empty list if all IFGs exist.
+    """
+    ifg_paths = [os.path.join(obs_dir, ifg) for ifg in ifgs]
+    errors = []
+    for path in ifg_paths:
+        if not os.path.exists(path):
+            fname = os.path.split(os.path.splitext(path)[0])[1]
+            errors.append(f"'{IFG_FILE_LIST}': interferogram '{fname}' does not exist.")
+    return errors
 
 def _validate_obs_threshold(n_ifgs, pars, key):
+    """
+    Validates parameters that specify an observations threshold.
+
+    Args:
+        n_ifgs: the number of IFGs specified in IFG_FILE_LIST.
+        pars: the parameters dictionary.
+        key: key for the observations threshold being validated.
+
+    Returns:
+        An error message if n_ifgs is less than the value set by the 
+        threshold parameterm, otherwise None.
+    """
     thresh = pars[key]
     if thresh > n_ifgs:
         return (f"'{key}': not enough interferograms have been specified ({n_ifgs}) "
                 f"to satisfy threshold ({thresh}).")
                 
 def _validate_gamma_headers(ifgs, slc_dir):
+    """
+    Validates that gamme headers exist for specified IFGs.
+
+    Args:
+        ifgs: list of IFG filenames.
+        slc_dir: the slc directory where gamma headers should exist.
+
+    Returns:
+        A list of error messages with one for each IFG that doesn't have 
+        2 matching headers (one for each epoch), otherwise an empty list if
+        all headers exist.
+    """
     from pyrate.core.gamma import get_header_paths
     errors = []
     for ifg in ifgs:
         headers = get_header_paths(ifg, slc_dir)
         if len(headers) < 2:
-            fname = os.path.split(os.path.splitext(ifg)[0])[1]
-            errors.append(f"'{SLC_DIR}': Headers not found for interferogram '{fname}'. ")
+            errors.append(f"'{SLC_DIR}': Headers not found for interferogram '{ifg}'. ")
 
     return errors
 
