@@ -498,9 +498,11 @@ def _validate_pars(pars):
 
     ifgs = list(parse_namelist(pars[IFG_FILE_LIST]))
     n_ifgs = len(ifgs)
+
     ts_pthr_err = _validate_obs_threshold(n_ifgs, pars, LR_PTHRESH)
     if ts_pthr_err:
         errors.append(ts_pthr_err)
+
     lr_pthr_err = _validate_obs_threshold(n_ifgs, pars, TIME_SERIES_PTHRESH)
     if lr_pthr_err:
         errors.append(lr_pthr_err)
