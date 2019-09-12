@@ -257,19 +257,38 @@ PATHS = [OBS_DIR, IFG_FILE_LIST, DEM_FILE,
 INT_KEYS = [APS_CORRECTION, APS_METHOD]
 
 PARAM_VALIDATION = {
-    IFG_CROP_OPT : (lambda a: a == 1 or a == 2 or a == 3 or a == 4,
+    OBS_DIR: (lambda a: a is not None and os.path.exists(a),
+              f"'{OBS_DIR}': directory must be provided and must exist."),
+    IFG_FILE_LIST: (lambda a: a is not None and os.path.exists(a),
+              f"'{IFG_FILE_LIST}': file must be provided and must exist."),
+    DEM_FILE: (lambda a: a is not None and os.path.exists(a),
+              f"'{DEM_FILE}': file must be provided and must exist."),
+    DEM_HEADER_FILE: (lambda a: a is not None and os.path.exists(a),
+              f"'{DEM_HEADER_FILE}': file must be provided and must exist."),
+    OUT_DIR: (lambda a: a is not None,
+              f"'{OBS_DIR}': directory must be provided."),
+    SLC_DIR: (lambda a: a is not None and os.path.exists(a),
+              f"'{SLC_DIR}': directory must be provided and must exist."),
+    COH_FILE_DIR: (lambda a: os.path.exists(a) if a is not None else True,
+                   f"'{COH_FILE_DIR}': directory must exist."),
+    APS_INCIDENCE_MAP: (lambda a: os.path.exists(a) if a is not None else True,
+                        f"'{APS_INCIDENCE_MAP}': file must exist."),
+    APS_ELEVATION_MAP: (lambda a: os.path.exists(a) if a is not None else True,
+                        f"'{APS_ELEVATION_MAP}': file must exists."),
+
+    IFG_CROP_OPT: (lambda a: a == 1 or a == 2 or a == 3 or a == 4,
                     f"'{IFG_CROP_OPT}': must select option 1, 2, 3, or 4."), 
-    IFG_LKSX : (lambda a: a >= 1, 
+    IFG_LKSX: (lambda a: a >= 1, 
                 f"'{IFG_LKSX}': must be >= 1."),
-    IFG_LKSY : (lambda a: a >= 1,
+    IFG_LKSY: (lambda a: a >= 1,
                 f"'{IFG_LKSY}': must be >= 1."),
-    IFG_XFIRST : (lambda a: True, 
+    IFG_XFIRST: (lambda a: True, 
                   "IMPLEMENT VALIDATOR"),
-    IFG_XLAST : (lambda a: True, 
+    IFG_XLAST: (lambda a: True, 
                  "IMPLEMENT VALIDATOR"),
-    IFG_YFIRST : (lambda a: True,
+    IFG_YFIRST: (lambda a: True,
                  "IMPLEMENT VALIDATOR"),
-    IFG_YLAST : (lambda a: True,
+    IFG_YLAST: (lambda a: True,
                 "IMPLEMENT VALIDATOR"),
     NO_DATA_VALUE: (lambda a: True,
                     "Any float value valid."),
@@ -467,6 +486,7 @@ def _validate_pars(pars):
     for k in pars.keys():
         validator = PARAM_VALIDATION.get(k)
         if validator is None:
+            _logger.debug(f"No validator implemented for '{k}'.")
             continue
         if not validator[0](pars[k]):
             errors.append(validator[1]) 
@@ -476,6 +496,15 @@ def _validate_pars(pars):
         raise ValueError('\n'.join(errors))
 
     return pars
+
+class ConfigException(Exception):
+    """
+    Default exception class for configuration errors.
+    """
+    pass
+
+
+# CONFIG UTILS - TO BE MOVED?
 
 def parse_namelist(nml):
     """
@@ -489,12 +518,6 @@ def parse_namelist(nml):
     with open(nml) as f_in:
         lines = [line.rstrip() for line in f_in]
     return filter(None, lines)
-
-class ConfigException(Exception):
-    """
-    Default exception class for configuration errors.
-    """
-    pass
 
 def write_config_file(params, output_conf_file):
     """
@@ -516,7 +539,6 @@ def write_config_file(params, output_conf_file):
                 f.write(''.join([k, ':\t', str(v), '\n']))
             else:
                 f.write(''.join([k, ':\t', '', '\n']))
-
 
 def transform_params(params):
     """
