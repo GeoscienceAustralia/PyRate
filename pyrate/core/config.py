@@ -200,7 +200,7 @@ PARAM_CONVERSION = {
     NO_DATA_VALUE: (float, 0.0),
     
     COH_MASK: (int, 0),
-    COH_THRESH: (float, 0.6),
+    COH_THRESH: (float, 0.1),
 
     REFX: (int, -1),
     REFY: (int, -1),
