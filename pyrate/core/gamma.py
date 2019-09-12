@@ -231,8 +231,11 @@ def get_header_paths(input_file, slc_dir):
     """
     _, file_name = split(input_file)
     matches = PTN.findall(file_name)
-    headers = [glob2.glob(join(slc_dir, '**/*%s*slc.par' % m))[0]
-            	for m in matches]
+    headers = []
+    for m in matches:
+        files = glob2.glob(join(slc_dir, '**/*%s*slc.par' % m))   
+        if files:
+            headers.append(files[0])
     return headers
 
 
