@@ -25,8 +25,11 @@ from typing import List
 import os
 from os.path import splitext, split
 import re
+import logging
 
 import glob2
+
+_logger = logging.getLogger(__name__)
 
 # TODO: add regex column to check if some values are within bounds? Potential
 # problem with the checking being done in the middle of the runs, as bad values
@@ -173,39 +176,14 @@ PARALLEL = 'parallel'
 PROCESSES = 'processes'
 
 # Orbital error correction constants for conversion to readable flags
-INDEPENDENT_METHOD = 'INDEPENDENT'
-NETWORK_METHOD = 'NETWORK'
-PLANAR = 'PLANAR'
-QUADRATIC = 'QUADRATIC'
-PART_CUBIC = 'PART_CUBIC'
+INDEPENDENT_METHOD = 1
+NETWORK_METHOD = 2
+PLANAR = 1
+QUADRATIC = 2
+PART_CUBIC = 3
 
 # dir for temp files
 TMPDIR = 'tmpdir'
-
-def _orb_degree_conv(deg):
-    """
-    Convenience: convert numerical degree flag to human readable string
-    """
-    degree = int(deg)
-    if degree == 1:
-        return PLANAR
-    if degree == 2:
-        return QUADRATIC
-    if degree == 3:
-        return PART_CUBIC
-    raise ValueError("Orbital fit polynomial degree option not recognised")
-
-
-def _orb_method_conv(meth):
-    """
-    Convenience: convert numerical method flag to human readable string
-    """
-    method = int(meth)
-    if method == 1:
-        return INDEPENDENT_METHOD
-    if method == 2:
-        return NETWORK_METHOD
-    raise ValueError("Orbital fit method not recognised")
 
 # Lookup to help convert args to correct type/defaults
 # format is	key : (conversion, default value)
@@ -233,8 +211,8 @@ PARAM_CONVERSION = {
     REF_EST_METHOD: (int, 1),  # default to average of whole image
 
     ORBITAL_FIT: (int, 0),
-    ORBITAL_FIT_METHOD: (_orb_method_conv, NETWORK_METHOD),
-    ORBITAL_FIT_DEGREE: (_orb_degree_conv, QUADRATIC),
+    ORBITAL_FIT_METHOD: (int, NETWORK_METHOD),
+    ORBITAL_FIT_DEGREE: (int, QUADRATIC),
     ORBITAL_FIT_LOOKS_X: (int, NO_MULTILOOKING),
     ORBITAL_FIT_LOOKS_Y: (int, NO_MULTILOOKING),
 
@@ -268,8 +246,6 @@ PARAM_CONVERSION = {
     PROCESSOR: (int, None),
     NAN_CONVERSION: (int, 0),
     NO_DATA_AVERAGING_THRESHOLD: (float, 0.0),
-    APS_CORRECTION: (int, 0),
-    APS_METHOD: (int, 1),
     }
 
 PATHS = [OBS_DIR, IFG_FILE_LIST, DEM_FILE,
@@ -279,6 +255,104 @@ PATHS = [OBS_DIR, IFG_FILE_LIST, DEM_FILE,
          APS_ELEVATION_MAP]
 
 INT_KEYS = [APS_CORRECTION, APS_METHOD]
+
+PARAM_VALIDATION = {
+    IFG_CROP_OPT : (lambda a: a == 1 or a == 2 or a == 3 or a == 4,
+                    f"'{IFG_CROP_OPT}': must select option 1, 2, 3, or 4."), 
+    IFG_LKSX : (lambda a: a >= 1, 
+                f"'{IFG_LKSX}': must be >= 1."),
+    IFG_LKSY : (lambda a: a >= 1,
+                f"'{IFG_LKSY}': must be >= 1."),
+    IFG_XFIRST : (lambda a: True, 
+                  "IMPLEMENT VALIDATOR"),
+    IFG_XLAST : (lambda a: True, 
+                 "IMPLEMENT VALIDATOR"),
+    IFG_YFIRST : (lambda a: True,
+                 "IMPLEMENT VALIDATOR"),
+    IFG_YLAST : (lambda a: True,
+                "IMPLEMENT VALIDATOR"),
+    NO_DATA_VALUE: (lambda a: True,
+                    "Any float value valid."),
+    
+    COH_MASK: (lambda a: a == 0 or a == 1,
+               f"'{COH_MASK}': must select option 0 or 1."),
+    COH_THRESH: (lambda a: True,
+                 "IMPLEMENT VALIDATOR"),
+
+    REFX: (lambda a: True,
+           "Any int value valid."),
+    REFY: (lambda a: True, 
+           "Any int value valid."),
+    REFNX: (lambda a: True,
+            "IMPLEMENT VALIDATOR"),
+    REFNY: (lambda a: True, 
+            "IMPLEMENT VALIDATOR"),
+    REF_CHIP_SIZE: (lambda a: True,
+                    "IMPLEMENT VALIDATOR"),
+    REF_MIN_FRAC: (lambda a: True,
+                   "IMPLEMENT VALIDATOR"),
+    REF_EST_METHOD: (lambda a: a == 1 or a == 2,
+                     "IMPLEMENT VALIDATOR"), 
+
+    ORBITAL_FIT: (lambda a: a == 0 or a == 1, 
+                  f"'{ORBITAL_FIT}': must select option 0 or 1."),
+    ORBITAL_FIT_METHOD: (lambda a: a == 1 or a == 2 , 
+                         f"'{ORBITAL_FIT_METHOD}': must select option 1 or 2."),
+    ORBITAL_FIT_DEGREE: (lambda a: a == 1 or a == 2 or a == 3, 
+                         f"'{ORBITAL_FIT_DEGREE}': must select option 1, 2 or 3."),
+    ORBITAL_FIT_LOOKS_X: (lambda a: a >= 1, 
+                          f"'{ORBITAL_FIT_LOOKS_X}': must be >= 1."),
+    ORBITAL_FIT_LOOKS_Y: (lambda a: a >= 1, 
+                          f"'{ORBITAL_FIT_LOOKS_Y}': must be >= 2."),
+
+    LR_NSIG: (lambda a: True,
+              "IMPLEMENT VALIDATOR"),
+    LR_PTHRESH: (lambda a: True, 
+                 "IMPLEMENT VALIDATOR"),
+    LR_MAXSIG: (lambda a: True,
+                "IMPLEMENT VALIDATOR"),
+
+    APSEST: (lambda a: a == 0 or a == 1,
+             f"'{APSEST}': must select option 0 or 1." ),
+    TLPF_METHOD: (lambda a: a == 1 or a == 2 or a == 3, 
+                  f"'{TLPF_METHOD}': must select option 1, 2 or 3."),
+    TLPF_CUTOFF: (lambda a: True, 
+                  "'IMPLEMENT VALIDATOR'"),
+    TLPF_PTHR: (lambda a: True, 
+                "'IMPLEMENT VALIDATOR'"),
+
+    SLPF_METHOD: (lambda a: a == 1 or a == 2,
+                  "'{SLPF_METHOD}': must select option 1 or 2.") ,
+    SLPF_CUTOFF: (lambda a: True, 
+                  "IMPLEMENT VALIDATOR"),
+    SLPF_ORDER: (lambda a: True, 
+                 "IMPLEMENT VALIDATOR"),
+    SLPF_NANFILL: (lambda a: a == 0 or a == 1, 
+                   "'{SLPF_NANFILL}': must select option 0 or 1."),
+
+    TIME_SERIES_CAL: (lambda a: a == 0 or a == 1, 
+                      "'{TIME_SERIES_CAL}': must select option 0 or 1."),
+    TIME_SERIES_PTHRESH: (lambda a: True, 
+                          "IMPLEMENT VALIDATOR"),
+    TIME_SERIES_SM_FACTOR: (lambda a: True, 
+                            "IMPLEMENT VALIDATOR"),
+    TIME_SERIES_SM_ORDER: (lambda a: a == 1 or a == 2,
+                           f"'{TIME_SERIES_SM_ORDER}': must select option 1 or 2." ),
+    TIME_SERIES_METHOD: (lambda a: a == 1 or a == 2,
+                         f"'{TIME_SERIES_METHOD}': must select option 1 or 2."),
+
+    PARALLEL: (lambda a: a == 0 or a == 1 or a == 2, 
+               f"'{PARALLEL}': must select option 0 or 1 or 2."),
+    PROCESSES: (lambda a: a >= 1,
+                f"'{PROCESSES}': must be >= 1."),
+    PROCESSOR: (lambda a: a == 0 or a == 1,
+                f"'{PROCESSOR}': must select option 0 or 1. )"),
+    NAN_CONVERSION: (lambda a: a == 0 or a == 1, 
+                     f"'{NAN_CONVERSION}': must select option 0 or 1."),
+    NO_DATA_AVERAGING_THRESHOLD: (lambda a: True, 
+                                  "Any float value valid."),
+    }
+"""dict: basic bounds checking validation functions for each parameter."""
 
 def get_config_params(path):
     """
@@ -299,7 +373,6 @@ def get_config_params(path):
                     # create expanded line
                     line = line[:pos] + os.environ['HOME'] + line[(pos+1):]
             txt += line
-
     params = _parse_conf_file(txt)
     params[TMPDIR] = os.path.join(os.path.abspath(params[OUT_DIR]), 'tmpdir')
 
@@ -366,13 +439,42 @@ def _parse_pars(pars):
             # if option value is blank/missing revert to default
             if pars[k] is None:
                 pars[k] = PARAM_CONVERSION[k][1]
+                _logger.warning(f"No value found for parameter '{k}'. Providing "
+                                f"default value {pars[k]}.")
             conversion_func = PARAM_CONVERSION[k][0]
             if conversion_func:
-                pars[k] = conversion_func(pars[k])
+                try:
+                    pars[k] = conversion_func(pars[k])
+                except ValueError as e:
+                    _logger.error(f"Unable to convert '{k}': {pars[k]} to expected "
+                                  f"type {conversion_func.__name__}.")
+                    raise e
+                    
         else:
             # revert missing options to default value
             if k in PARAM_CONVERSION:
-                pars[k] = PARAM_CONVERSION[k][1]
+                 pars[k] = PARAM_CONVERSION[k][1]
+                 _logger.warning(f"No value found for parameter '{k}'. Providing "
+                                 f"default value {pars[k]}.")
+    return _validate_pars(pars)
+
+def _validate_pars(pars):
+    """
+    Calls validation functions on each parameter.
+    """
+    errors = []
+
+    for k in pars.keys():
+        validator = PARAM_VALIDATION.get(k)
+        if validator is None:
+            continue
+        if not validator[0](pars[k]):
+            errors.append(validator[1]) 
+
+    if errors:
+        errors.insert(0, "invalid parameters")
+        raise ValueError('\n'.join(errors))
+
     return pars
 
 def parse_namelist(nml):
@@ -415,31 +517,6 @@ def write_config_file(params, output_conf_file):
             else:
                 f.write(''.join([k, ':\t', '', '\n']))
 
-def _reverse_orb_degree_conv(v):
-    """
-    Convenience: convert degree to integer for config file
-    """
-    if v == PLANAR:
-        return 1
-    if v == QUADRATIC:
-        return 2
-    if v == PART_CUBIC:
-        return 3
-    else:
-        raise ValueError(
-            "Orbital fit polynomial degree option not recognised")
-
-def _reverse_orb_method_conv(v):
-    """
-    Convenience: convert method to integer for config file
-    """
-    if v == INDEPENDENT_METHOD:
-        return 1
-    if v == NETWORK_METHOD:
-        return 2
-    else:
-        raise ValueError(
-            "Orbital fit method option not recognised")
 
 def transform_params(params):
     """
