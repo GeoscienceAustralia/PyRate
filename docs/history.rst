@@ -2,15 +2,29 @@
 
 Release History
 ===============
-Unreleased (2019-xx-xx)
+0.4.0 (2019-09-12)
 -----------------------
 Added
 +++++
-- Python 3.7 support
+- Python 3.7 support.
+- Optional 'converttogeotiff' step.
+- Building of docs integrated with Travis CI.
+- Coherence masking, view coherence masking section in 'input_parameters.conf'
+  for options.
 
 Changed
 +++++++
-- 'linrate' command has been renamed to 'process'
+- 'linrate' command has been renamed to 'process'.
+- CLI structure, config files now need to provided with '-f' flag.
+- Reduced console output, default setting is now INFO.
+- Restructure of code layout, src modules now in 'core' directory and scripts
+  at top level.
+
+Removed
++++++++
+- Unused luigi code.
+- References to Matlab.
+- Python 3.6 support.
 
 0.3.0 (2019-07-26)
 -----------------------
@@ -51,4 +65,3 @@ Changed
 0.1.0 (2017-01-31)
 ------------------
 - First release on PyPI.
-
