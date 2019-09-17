@@ -224,7 +224,6 @@ def get_header_paths(input_file, slc_file_list, slc_dir):
     epochs = PTN.findall(file_name)
     header_names = cf.parse_namelist(slc_file_list)
     matches = [hdr for hdr in header_names if any(e in hdr for e in epochs)]
-    print(f"{input_file}: {matches}")
     return [os.path.join(slc_dir, hdr) for hdr in matches]
 
 def gamma_header(ifg_file_path, params):
@@ -236,7 +235,8 @@ def gamma_header(ifg_file_path, params):
         params: PyRate parameters dictionary.
 
     Returns:
-        
+        A combined header dictionary containing metadata from matching
+        gamma headers and DEM header.   
     """
     dem_hdr_path = params[cf.DEM_HEADER_FILE]
     slc_dir = params[cf.SLC_DIR]
