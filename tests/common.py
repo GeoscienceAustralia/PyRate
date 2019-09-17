@@ -44,6 +44,7 @@ SML_TEST_OUT = join(SML_TEST_DIR, 'out')
 SML_TEST_TIF = join(SML_TEST_DIR, 'tif')
 SML_TEST_GAMMA = join(SML_TEST_DIR, 'gamma_obs')  # gamma processed unws
 SML_TEST_CONF = join(SML_TEST_DIR, 'conf')
+SML_TEST_GAMMA_HEADER_LIST = join(SML_TEST_GAMMA, 'headers')
 
 SML_TEST_DEM_DIR = join(SML_TEST_DIR, 'dem')
 SML_TEST_LEGACY_PREPIFG_DIR = join(SML_TEST_DIR, 'prepifg_output')
