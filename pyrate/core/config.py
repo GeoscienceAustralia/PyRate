@@ -51,6 +51,8 @@ DEM_FILE = 'demfile'
 DEM_HEADER_FILE = 'demHeaderFile'
 #: STR; Name of directory containing GAMMA SLC parameter files
 SLC_DIR = 'slcFileDir'
+# STR; Name of the file list containing the pool of available SLC headers
+SLC_FILE_LIST = 'slcfilelist'
 
 
 #: STR; The projection of the input interferograms.
@@ -104,6 +106,8 @@ COH_THRESH = 'cohthresh'
 """float: coherence treshold"""
 COH_FILE_DIR = 'cohfiledir'
 """str: Directory containing coherence .cc files. Defaults to OBS_DIR if not provided."""
+COH_FILE_LIST = 'cohfilelist'
+"""str: Name of the file list containing the pool of available coherence files"""
 
 #atmospheric error correction parameters NOT CURRENTLY USED
 APS_CORRECTION = 'apscorrect'
@@ -274,7 +278,7 @@ PARAM_CONVERSION = {
 
 PATHS = [OBS_DIR, IFG_FILE_LIST, DEM_FILE,
          DEM_HEADER_FILE, OUT_DIR,
-         SLC_DIR, COH_FILE_DIR,
+         SLC_DIR, SLC_FILE_LIST, COH_FILE_DIR, COH_FILE_LIST,
          APS_INCIDENCE_MAP,
          APS_ELEVATION_MAP]
 
