@@ -493,24 +493,26 @@ def coherence_path_for(path, params, tif=False) -> str:
     Returns:
         Path to coherence file in tif format.
     """
-    _, file = split(path)
+    _, filename = split(path)
     pattern = re.compile(r'\d{8}-\d{8}')
-    epoch = re.match(pattern, file).group(0)
-    coherence_dir = params.get(COH_FILE_DIR)
-    coherence_dir = params[OBS_DIR] if coherence_dir is None else coherence_dir
-    ext = '_cc.tif' if tif else '.cc'
-    coherence_path = glob2.glob(
-                        os.path.join(coherence_dir, '**', f'{epoch}*{ext}'))
-    if len(coherence_path) == 0:
+    epoch = re.match(pattern, filename).group(0)
+    coherence_dir = params[COH_FILE_DIR]
+    coherence_name = [name for name in parse_namelist(params[COH_FILE_LIST]) 
+                      if epoch in name]
+    if len(coherence_name) == 0:
         raise IOError(f"No coherence files found for ifg with epoch " 
                       f"{epoch}. Check that the correct coherence files "
                       f"exist in {coherence_dir}.")
-    elif len(coherence_path) > 1:
+    elif len(coherence_name) > 1:
         raise IOError(f"Found more than one coherence file for ifg with epoch "
                       f"{epoch}. Check that the correct coherence files "
-                      f"exist in {coherence_dir}. Found:\n {coherence_path}")
+                      f"exist in {coherence_dir}. Found:\n {coherence_name}")
     else:
-        return coherence_path[0]
+        if tif:
+            coherence_name = coherence_name[0] + '.tif'
+        else:
+            coherence_name = coherence_name[0]
+        return os.path.join(coherence_dir, coherence_name)
 
 def coherence_paths(params) -> List[str]:
     """
@@ -525,11 +527,6 @@ def coherence_paths(params) -> List[str]:
         A list of full paths to coherence files.
     """
     ifg_file_list = params.get(IFG_FILE_LIST)
-    if ifg_file_list is None:
-        code = 2
-        emsg = (f'Error {code}: Interferogram list file name not provided ' 
-               'or does not exist')        
-        raise IOError(code, emsg)
     ifgs = parse_namelist(ifg_file_list)
     coherence_paths = [coherence_path_for(ifg, params) for ifg in ifgs]
     return coherence_paths
