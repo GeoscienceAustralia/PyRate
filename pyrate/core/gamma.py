@@ -240,9 +240,6 @@ def gamma_header(ifg_file_path, params):
     """
     dem_hdr_path = params[cf.DEM_HEADER_FILE]
     slc_dir = params[cf.SLC_DIR]
-    # If no slc_dir provided, look for headers in obs dir.
-    # TODO: implement this as a default in config module.
-    slc_dir = params[cf.OBS_DIR] if slc_dir is None else slc_dir
     header_paths = get_header_paths(ifg_file_path, 
                                     params[cf.SLC_FILE_LIST], 
                                     slc_dir=slc_dir)

@@ -282,6 +282,8 @@ PATHS = [OBS_DIR, IFG_FILE_LIST, DEM_FILE,
          APS_INCIDENCE_MAP,
          APS_ELEVATION_MAP]
 
+DEFAULT_TO_OBS_DIR = [SLC_DIR, COH_FILE_DIR]
+
 INT_KEYS = [APS_CORRECTION, APS_METHOD]
 
 def get_config_params(path):
@@ -365,18 +367,20 @@ def _parse_pars(pars):
     """
     Parses and converts config file params from text
     """
+    # Fallback to default for missing values and perform conversion.
     for k in PARAM_CONVERSION:
-        if k in pars:
-            # if option value is blank/missing revert to default
-            if pars[k] is None:
-                pars[k] = PARAM_CONVERSION[k][1]
+        if pars.get(k) is None:
+            pars[k] = PARAM_CONVERSION[k][1]
+        else:
             conversion_func = PARAM_CONVERSION[k][0]
             if conversion_func:
                 pars[k] = conversion_func(pars[k])
-        else:
-            # revert missing options to default value
-            if k in PARAM_CONVERSION:
-                pars[k] = PARAM_CONVERSION[k][1]
+
+    # Fallback to default for missing paths.
+    for p in DEFAULT_TO_OBS_DIR:
+        if pars.get(p) is None:
+            pars[p] = pars[OBS_DIR]
+
     return pars
 
 def parse_namelist(nml):
