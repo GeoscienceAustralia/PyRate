@@ -208,33 +208,33 @@ PARAM_CONVERSION = {
 
     REFX: (int, -1),
     REFY: (int, -1),
-    REFNX: (int, 50),
-    REFNY: (int, 50),
+    REFNX: (int, 10),
+    REFNY: (int, 10),
     REF_CHIP_SIZE: (int, 21),
-    REF_MIN_FRAC: (float, 0.8),
+    REF_MIN_FRAC: (float, 0.5),
     REF_EST_METHOD: (int, 1),  # default to average of whole image
 
     ORBITAL_FIT: (int, 0),
     ORBITAL_FIT_METHOD: (int, NETWORK_METHOD),
-    ORBITAL_FIT_DEGREE: (int, QUADRATIC),
-    ORBITAL_FIT_LOOKS_X: (int, NO_MULTILOOKING),
-    ORBITAL_FIT_LOOKS_Y: (int, NO_MULTILOOKING),
+    ORBITAL_FIT_DEGREE: (int, PLANAR),
+    ORBITAL_FIT_LOOKS_X: (int, 10),
+    ORBITAL_FIT_LOOKS_Y: (int, 10),
 
-    LR_NSIG: (int, 3),
+    LR_NSIG: (int, 2),
     # pixel thresh based on nepochs? not every project may have 20 epochs
     LR_PTHRESH: (int, 20),
-    LR_MAXSIG: (int, 2),
+    LR_MAXSIG: (int, 10),
 
     #ATM_FIT: (int, 0), NOT CURRENTLY USED
     #ATM_FIT_METHOD: (int, 2),
 
     APSEST: (int, 0),
     TLPF_METHOD: (int, 1),
-    TLPF_CUTOFF: (float, 0.0),
+    TLPF_CUTOFF: (float, 1.0),
     TLPF_PTHR: (int, 1),
 
     SLPF_METHOD: (int, 1),
-    SLPF_CUTOFF: (float, 0.0),
+    SLPF_CUTOFF: (float, 1.0),
     SLPF_ORDER: (int, 1),
     SLPF_NANFILL: (int, 0),
 
