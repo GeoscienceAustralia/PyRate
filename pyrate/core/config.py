@@ -274,7 +274,7 @@ PARAM_VALIDATION = {
               f"'{DEM_HEADER_FILE}': file must be provided and must exist."),
     OUT_DIR: (lambda a: a is not None,
               f"'{OBS_DIR}': directory must be provided."),
-        APS_INCIDENCE_MAP: (lambda a: os.path.exists(a) if a is not None else True,
+    APS_INCIDENCE_MAP: (lambda a: os.path.exists(a) if a is not None else True,
                         f"'{APS_INCIDENCE_MAP}': file must exist."),
     APS_ELEVATION_MAP: (lambda a: os.path.exists(a) if a is not None else True,
                         f"'{APS_ELEVATION_MAP}': file must exists."),
@@ -303,26 +303,27 @@ PARAM_VALIDATION = {
            "Any int value valid."),
     REFY: (lambda a: True, 
            "Any int value valid."),
-    REFNX: (lambda a: False,
-            f"'{REFNX}': IMPLEMENT VALIDATOR"),
-    REFNY: (lambda a: False, 
-            f"'{REFNY}': IMPLEMENT VALIDATOR"),
-    REF_CHIP_SIZE: (lambda a: False,
-                    f"'{REF_CHIP_SIZE}': IMPLEMENT VALIDATOR"),
-    REF_MIN_FRAC: (lambda a: False,
-                   f"'{REF_MIN_FRAC}': IMPLEMENT VALIDATOR"),
+    REFNX: (lambda a: 1 <= a <= 50,
+            f"'{REFNX}': must be between 1 and 50 (inclusive)."),
+    REFNY: (lambda a: 1 <= a <= 50, 
+            f"'{REFNY}': must be between 1 and 50 (inclusive)."),
+    REF_CHIP_SIZE: (lambda a: 1 <= a <= 101 and a % 2 == 1,
+                    f"'{REF_CHIP_SIZE}': must be between 1 and 101 " 
+                     "(inclusive) and must be an odd number."),
+    REF_MIN_FRAC: (lambda a: 0.0 <= a <= 1.0,
+                   f"'{REF_MIN_FRAC}': must be between 0.0 and 1.0 (inclusive)."),
     REF_EST_METHOD: (lambda a: a == 1 or a == 2,
                      f"'{REF_EST_METHOD}': must select option 1 or 2."), 
 
     ORBITAL_FIT: (lambda a: a == 0 or a == 1, 
                   f"'{ORBITAL_FIT}': must select option 0 or 1."),
     
-    LR_NSIG: (lambda a: False,
-              f"'{LR_NSIG}': IMPLEMENT VALIDATOR"),
+    LR_NSIG: (lambda a: 1 <= a <= 10,
+              f"'{LR_NSIG}': must be between 1 and 10 (inclusive)."),
     LR_PTHRESH: (lambda a: a >= 1, 
                  f"'{LR_PTHRESH}': must be >= 1"),
-    LR_MAXSIG: (lambda a: False,
-                f"'{LR_MAXSIG}': IMPLEMENT VALIDATOR"),
+    LR_MAXSIG: (lambda a: 0 <= a <= 1000,
+                f"'{LR_MAXSIG}': must be between 0 and 1000 (inclusive)."),
 
     APSEST: (lambda a: a == 0 or a == 1,
              f"'{APSEST}': must select option 0 or 1." ),
@@ -373,16 +374,16 @@ ORBITAL_FIT_VALIDATION = {
 APSEST_VALIDATION = {
     TLPF_METHOD: (lambda a: a == 1 or a == 2 or a == 3, 
                   f"'{TLPF_METHOD}': must select option 1, 2 or 3."),
-    TLPF_CUTOFF: (lambda a: False, 
-                  f"'{TLPF_CUTOFF}': IMPLEMENT VALIDATOR"),
-    TLPF_PTHR: (lambda a: False, 
-                f"'{TLPF_PTHR}': IMPLEMENT VALIDATOR"),
+    TLPF_CUTOFF: (lambda a: a >= 0.0027, # 1 day in years 
+                  f"'{TLPF_CUTOFF}': must be >= 0.0027."),
+    TLPF_PTHR: (lambda a: a >= 1, 
+                f"'{TLPF_PTHR}': must be >= 1."),
     SLPF_METHOD: (lambda a: a == 1 or a == 2,
                   f"'{SLPF_METHOD}': must select option 1 or 2.") ,
-    SLPF_CUTOFF: (lambda a: False, 
-                  f"'{SLPF_CUTOFF}': IMPLEMENT VALIDATOR"),
-    SLPF_ORDER: (lambda a: False, 
-                 f"'{SLPF_ORDER}': IMPLEMENT VALIDATOR"),
+    SLPF_CUTOFF: (lambda a: a >= 0.001, 
+                  f"'{SLPF_CUTOFF}': must be >= 0.001."),
+    SLPF_ORDER: (lambda a: 1 >= a >= 3, 
+                 f"'{SLPF_ORDER}': must be between 1 and 3 (inclusive)."),
     SLPF_NANFILL: (lambda a: a == 0 or a == 1, 
                    f"'{SLPF_NANFILL}': must select option 0 or 1."),
 }
@@ -390,8 +391,9 @@ APSEST_VALIDATION = {
 TIME_SERIES_VALIDATION = {
     TIME_SERIES_PTHRESH: (lambda a: a >= 1, 
                           f"'{TIME_SERIES_PTHRESH}': must be >= 1"),
-    TIME_SERIES_SM_FACTOR: (lambda a: False, 
-                            f"'{TIME_SERIES_SM_FACTOR}': IMPLEMENT VALIDATOR"),
+    #TODO: Matt to investigate smoothing factor values.
+    TIME_SERIES_SM_FACTOR: (lambda a: True, 
+                            f"'{TIME_SERIES_SM_FACTOR}':"),
     TIME_SERIES_SM_ORDER: (lambda a: a == 1 or a == 2,
                            f"'{TIME_SERIES_SM_ORDER}': must select option 1 or 2." ),
     TIME_SERIES_METHOD: (lambda a: a == 1 or a == 2,
@@ -557,9 +559,12 @@ def _validate_pars(pars):
 
     # Validate that GAMMA headers exist.
     if pars[PROCESSOR] == GAMMA:
-        slc_err = _validate_gamma_headers(ifgs, pars[SLC_FILE_LIST], pars[SLC_DIR])
-        if slc_err:
-            errors.extend(slc_err)
+        errors.extend(_validate_gamma_headers(
+            ifgs, pars[SLC_FILE_LIST], pars[SLC_DIR]))
+
+    # Validate that coherence files exist.
+    if pars[COH_MASK]:
+        errors.extend(_validate_coherence_files(ifgs, pars))
 
     if errors:
         errors.insert(0, "invalid parameters")
@@ -629,8 +634,21 @@ def _validate_gamma_headers(ifgs, slc_file_list, slc_dir):
     for ifg in ifgs:
         headers = get_header_paths(ifg, slc_file_list, slc_dir)
         if len(headers) < 2:
-            errors.append(f"'{SLC_DIR}': Headers not found for interferogram '{ifg}'. ")
+            errors.append(f"'{SLC_DIR}': Headers not found for interferogram '{ifg}'.")
 
+    return errors
+
+def _validate_coherence_files(ifgs, pars):
+    errors = []
+    for ifg in ifgs:
+        paths = coherence_paths_for(ifg, pars)
+        if len(paths) == 0:
+            errors.append(f"'{COH_DIR}': no coherence files found for "
+                          f"intergerogram '{ifg'}.")
+        elif len(paths) > 2:
+            errors.append(f"'{COH_DIR}': found more than one coherence file "
+                          f"for {ifg}. There must be only one coherence file "
+                          f"per interferogram. Found {paths}."
     return errors
 
 class ConfigException(Exception):
@@ -703,7 +721,7 @@ def original_ifg_paths(ifglist_path):
     ifglist = parse_namelist(ifglist_path)
     return [os.path.join(basedir, p) for p in ifglist]
 
-def coherence_path_for(path, params, tif=False) -> str:
+def coherence_paths_for(path, params, tif=False) -> str:
     """
     Returns path to coherence file for given interferogram. Pattern matches
     based on epoch in filename.
@@ -718,31 +736,19 @@ def coherence_path_for(path, params, tif=False) -> str:
         tif: Find converted tif if True (_cc.tif), else find .cc file.
 
     Returns:
-        Path to coherence file in tif format.
+        Path to coherence file.
     """
     _, filename = split(path)
     pattern = re.compile(r'\d{8}-\d{8}')
     epoch = re.match(pattern, filename).group(0)
     coherence_dir = params[COH_FILE_DIR]
-    coherence_name = [name for name in parse_namelist(params[COH_FILE_LIST]) 
-                      if epoch in name]
-    if len(coherence_name) == 0:
-        raise IOError(f"No coherence files found for ifg with epoch " 
-                      f"{epoch}. Check that the correct coherence files "
-                      f"exist in {coherence_dir}.")
-    elif len(coherence_name) > 1:
-        raise IOError(f"Found more than one coherence file for ifg with epoch "
-                      f"{epoch}. Check that the correct coherence files "
-                      f"exist in {coherence_dir}. Found:\n {coherence_name}")
-    else:
-        if tif:
-            name, ext = os.path.splitext(coherence_name[0])
-            tif_ext = ext.replace('.', '_') + '.tif'
-            coherence_name = name + tif_ext
-        else:
-            coherence_name = coherence_name[0]
+    matches = [name for name in parse_namelist(params[COH_FILE_LIST]) 
+               if epoch in name]
+    if tif:
+       names_exts = [os.path.splitext(match) for m in matches]
+       matches = [ne[0] + ne[1].replace('.', '_') + '.tif' for ne in names_ext]
 
-        return os.path.join(coherence_dir, coherence_name)
+    return [os.path.join(coherence_dir, m) for m in matches]
 
 def coherence_paths(params) -> List[str]:
     """
@@ -758,7 +764,7 @@ def coherence_paths(params) -> List[str]:
     """
     ifg_file_list = params.get(IFG_FILE_LIST)
     ifgs = parse_namelist(ifg_file_list)
-    coherence_paths = [coherence_path_for(ifg, params) for ifg in ifgs]
+    coherence_paths = [*coherence_paths_for(ifg, params) for ifg in ifgs]
     return coherence_paths
     
 def mlooked_path(path, looks, crop_out):
@@ -813,10 +819,6 @@ def get_ifg_paths(config_file):
     params = get_config_params(config_file)
     ifg_file_list = params.get(IFG_FILE_LIST)
 
-    if ifg_file_list is None:
-        emsg = 'Error {code}: Interferogram list file name not provided ' \
-               'or does not exist'.format(code=2)
-        raise IOError(2, emsg)
     xlks, _, crop = transform_params(params)
 
     # base_unw_paths need to be geotiffed by converttogeotiff
