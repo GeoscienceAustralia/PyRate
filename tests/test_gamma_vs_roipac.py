@@ -42,6 +42,7 @@ from pyrate.core.config import (
     NO_DATA_AVERAGING_THRESHOLD,
     INPUT_IFG_PROJECTION,
     SLC_DIR,
+    SLC_FILE_LIST,
     DEM_FILE,
     APS_INCIDENCE_MAP,
     APS_ELEVATION_MAP
@@ -93,6 +94,8 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
             conf.write('{}: {}\n'.format(IFG_CROP_OPT, '1'))
             conf.write('{}: {}\n'.format(NO_DATA_AVERAGING_THRESHOLD, '0.5'))
             conf.write('{}: {}\n'.format(SLC_DIR, ''))
+            conf.write('{}: {}\n'.format(SLC_FILE_LIST, 
+                                         common.SML_TEST_GAMMA_HEADER_LIST))
             conf.write('{}: {}\n'.format(DEM_FILE, common.SML_TEST_DEM_GAMMA))
             conf.write('{}: {}\n'.format(APS_INCIDENCE_MAP,
                                          common.SML_TEST_INCIDENCE))

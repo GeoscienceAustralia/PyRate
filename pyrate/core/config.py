@@ -51,6 +51,8 @@ DEM_FILE = 'demfile'
 DEM_HEADER_FILE = 'demHeaderFile'
 #: STR; Name of directory containing GAMMA SLC parameter files
 SLC_DIR = 'slcFileDir'
+# STR; Name of the file list containing the pool of available SLC headers
+SLC_FILE_LIST = 'slcfilelist'
 
 
 #: STR; The projection of the input interferograms.
@@ -104,6 +106,8 @@ COH_THRESH = 'cohthresh'
 """float: coherence treshold"""
 COH_FILE_DIR = 'cohfiledir'
 """str: Directory containing coherence .cc files. Defaults to OBS_DIR if not provided."""
+COH_FILE_LIST = 'cohfilelist'
+"""str: Name of the file list containing the pool of available coherence files"""
 
 #atmospheric error correction parameters NOT CURRENTLY USED
 APS_CORRECTION = 'apscorrect'
@@ -274,9 +278,11 @@ PARAM_CONVERSION = {
 
 PATHS = [OBS_DIR, IFG_FILE_LIST, DEM_FILE,
          DEM_HEADER_FILE, OUT_DIR,
-         SLC_DIR, COH_FILE_DIR,
+         SLC_DIR, SLC_FILE_LIST, COH_FILE_DIR, COH_FILE_LIST,
          APS_INCIDENCE_MAP,
          APS_ELEVATION_MAP]
+
+DEFAULT_TO_OBS_DIR = [SLC_DIR, COH_FILE_DIR]
 
 INT_KEYS = [APS_CORRECTION, APS_METHOD]
 
@@ -361,18 +367,20 @@ def _parse_pars(pars):
     """
     Parses and converts config file params from text
     """
+    # Fallback to default for missing values and perform conversion.
     for k in PARAM_CONVERSION:
-        if k in pars:
-            # if option value is blank/missing revert to default
-            if pars[k] is None:
-                pars[k] = PARAM_CONVERSION[k][1]
+        if pars.get(k) is None:
+            pars[k] = PARAM_CONVERSION[k][1]
+        else:
             conversion_func = PARAM_CONVERSION[k][0]
             if conversion_func:
                 pars[k] = conversion_func(pars[k])
-        else:
-            # revert missing options to default value
-            if k in PARAM_CONVERSION:
-                pars[k] = PARAM_CONVERSION[k][1]
+
+    # Fallback to default for missing paths.
+    for p in DEFAULT_TO_OBS_DIR:
+        if pars.get(p) is None:
+            pars[p] = pars[OBS_DIR]
+
     return pars
 
 def parse_namelist(nml):
@@ -471,11 +479,11 @@ def original_ifg_paths(ifglist_path):
 def coherence_path_for(path, params, tif=False) -> str:
     """
     Returns path to coherence file for given interferogram. Pattern matches
-    based on an expected filename of {epoch}*{extension}.
+    based on epoch in filename.
     
     Example:
         '20151025-20160501_eqa_filt.cc'
-        Datepair is the epoch, .cc is the extension.
+        Datepair is the epoch.
 
     Args:
         path: Path to intergerogram to find coherence file for.
@@ -485,24 +493,29 @@ def coherence_path_for(path, params, tif=False) -> str:
     Returns:
         Path to coherence file in tif format.
     """
-    _, file = split(path)
+    _, filename = split(path)
     pattern = re.compile(r'\d{8}-\d{8}')
-    epoch = re.match(pattern, file).group(0)
-    coherence_dir = params.get(COH_FILE_DIR)
-    coherence_dir = params[OBS_DIR] if coherence_dir is None else coherence_dir
-    ext = '_cc.tif' if tif else '.cc'
-    coherence_path = glob2.glob(
-                        os.path.join(coherence_dir, '**', f'{epoch}*{ext}'))
-    if len(coherence_path) == 0:
+    epoch = re.match(pattern, filename).group(0)
+    coherence_dir = params[COH_FILE_DIR]
+    coherence_name = [name for name in parse_namelist(params[COH_FILE_LIST]) 
+                      if epoch in name]
+    if len(coherence_name) == 0:
         raise IOError(f"No coherence files found for ifg with epoch " 
                       f"{epoch}. Check that the correct coherence files "
                       f"exist in {coherence_dir}.")
-    elif len(coherence_path) > 1:
+    elif len(coherence_name) > 1:
         raise IOError(f"Found more than one coherence file for ifg with epoch "
                       f"{epoch}. Check that the correct coherence files "
-                      f"exist in {coherence_dir}. Found:\n {coherence_path}")
+                      f"exist in {coherence_dir}. Found:\n {coherence_name}")
     else:
-        return coherence_path[0]
+        if tif:
+            name, ext = os.path.splitext(coherence_name[0])
+            tif_ext = ext.replace('.', '_') + '.tif'
+            coherence_name = name + tif_ext
+        else:
+            coherence_name = coherence_name[0]
+
+        return os.path.join(coherence_dir, coherence_name)
 
 def coherence_paths(params) -> List[str]:
     """
@@ -517,11 +530,6 @@ def coherence_paths(params) -> List[str]:
         A list of full paths to coherence files.
     """
     ifg_file_list = params.get(IFG_FILE_LIST)
-    if ifg_file_list is None:
-        code = 2
-        emsg = (f'Error {code}: Interferogram list file name not provided ' 
-               'or does not exist')        
-        raise IOError(code, emsg)
     ifgs = parse_namelist(ifg_file_list)
     coherence_paths = [coherence_path_for(ifg, params) for ifg in ifgs]
     return coherence_paths
