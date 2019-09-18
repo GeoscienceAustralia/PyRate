@@ -25,6 +25,7 @@ from typing import List
 import os
 from os.path import splitext, split
 import re
+import itertools
 import logging
 
 import glob2
@@ -37,6 +38,7 @@ _logger = logging.getLogger(__name__)
 
 # general constants
 NO_MULTILOOKING = 1
+ROIPAC = 0
 GAMMA = 1
 LOG_LEVEL = 'INFO'
 
@@ -223,7 +225,7 @@ PARAM_CONVERSION = {
 
     LR_NSIG: (int, 2),
     # pixel thresh based on nepochs? not every project may have 20 epochs
-    LR_PTHRESH: (int, 20),
+    LR_PTHRESH: (int, 3),
     LR_MAXSIG: (int, 10),
 
     #ATM_FIT: (int, 0), NOT CURRENTLY USED
@@ -241,7 +243,7 @@ PARAM_CONVERSION = {
 
     TIME_SERIES_CAL: (int, 0),
     # pixel thresh based on nepochs? not every project may have 20 epochs
-    TIME_SERIES_PTHRESH: (int, 20),
+    TIME_SERIES_PTHRESH: (int, 3),
     TIME_SERIES_SM_FACTOR: (float, None),
     TIME_SERIES_SM_ORDER: (int, None),
     TIME_SERIES_METHOD: (int, 2),  # Default to SVD method
@@ -285,13 +287,13 @@ PARAM_VALIDATION = {
                 f"'{IFG_LKSX}': must be >= 1."),
     IFG_LKSY: (lambda a: a >= 1,
                 f"'{IFG_LKSY}': must be >= 1."),
-    IFG_XFIRST: (lambda a: False, 
+    IFG_XFIRST: (lambda a: True, 
                  f"'{IFG_XFIRST}': IMPLEMENT VALIDATOR"),
-    IFG_XLAST: (lambda a: False, 
+    IFG_XLAST: (lambda a: True, 
                 f"'{IFG_XLAST}': IMPLEMENT VALIDATOR"),
-    IFG_YFIRST: (lambda a: False,
+    IFG_YFIRST: (lambda a: True,
                  f"'{IFG_YFIRST}': IMPLEMENT VALIDATOR"),
-    IFG_YLAST: (lambda a: False,
+    IFG_YLAST: (lambda a: True,
                 f"'{IFG_YLAST}': IMPLEMENT VALIDATOR"),
     NO_DATA_VALUE: (lambda a: True,
                     "Any float value valid."),
@@ -515,8 +517,13 @@ def _validate_pars(pars):
     Raises:
         ConfigException: if errors occur during parameter validation.
     """
-    errors = []
+    def raise_errors(errors):
+        if errors:
+            errors.insert(0, "invalid parameters")
+            raise ConfigException('\n'.join(errors))
 
+    errors = []
+    
     # Basic validation of parameters that are always used.
     for k in pars.keys():
         validator = PARAM_VALIDATION.get(k)
@@ -526,6 +533,8 @@ def _validate_pars(pars):
         if not validator[0](pars[k]):
             errors.append(validator[1]) 
     
+    raise_errors(errors)
+
     # Basic validation of parameters that are only used if feature is on.
     errors.extend(_optional_validators(PROCESSOR, GAMMA_VALIDATION, pars))
     errors.extend(_optional_validators(COH_MASK, COHERENCE_VALIDATION, pars))
@@ -534,23 +543,27 @@ def _validate_pars(pars):
                     TIME_SERIES_CAL, TIME_SERIES_VALIDATION, pars))
     errors.extend(_optional_validators(
                     ORBITAL_FIT, ORBITAL_FIT_VALIDATION, pars))
+    
+    raise_errors(errors)
 
     # Validate parameters related to number of interferograms available.
     ifgs = list(parse_namelist(pars[IFG_FILE_LIST]))
     # Check IFGs exist.
-    errors.extend(_validate_ifms(ifgs, pars[OBS_DIR]))    
+    errors.extend(_validate_ifms(ifgs, pars[OBS_DIR], pars[PROCESSOR]))    
     
     # Validate parameters related to observation thresholds.
     n_ifgs = len(ifgs)
-
-    lr_pthr_err = _validate_obs_threshold(n_ifgs, pars, TIME_SERIES_PTHRESH)
-    if lr_pthr_err:
-        errors.append(lr_pthr_err)
     
-    if pars[TIME_SERIES_CAL]:
-        ts_pthr_err = _validate_obs_threshold(n_ifgs, pars, LR_PTHRESH)
-        if ts_pthr_err:
-            errors.append(ts_pthr_err)
+    # TODO: based on nepoch
+    #lr_pthr_err = _validate_obs_threshold(n_ifgs, pars, TIME_SERIES_PTHRESH)
+    #if lr_pthr_err:
+    #    errors.append(lr_pthr_err)
+
+    # TODO: based on nepoch
+    #if pars[TIME_SERIES_CAL]:
+    #    ts_pthr_err = _validate_obs_threshold(n_ifgs, pars, LR_PTHRESH)
+    #    if ts_pthr_err:
+    #        errors.append(ts_pthr_err)
 
     if pars[APSEST]:
         tlpf_pthr_err = _validate_obs_threshold(n_ifgs, pars, TLPF_PTHR)
@@ -565,10 +578,8 @@ def _validate_pars(pars):
     # Validate that coherence files exist.
     if pars[COH_MASK]:
         errors.extend(_validate_coherence_files(ifgs, pars))
-
-    if errors:
-        errors.insert(0, "invalid parameters")
-        raise ConfigException('\n'.join(errors))
+    
+    raise_errors(errors)    
 
 def _optional_validators(key, validators, pars):
     errors = []
@@ -578,7 +589,7 @@ def _optional_validators(key, validators, pars):
                 errors.append(validator[1])
     return errors
 
-def _validate_ifms(ifgs, obs_dir):
+def _validate_ifms(ifgs, obs_dir, processor):
     """
     Checks that the IFGs specified in IFG_FILE_LIST exist.
 
@@ -590,11 +601,38 @@ def _validate_ifms(ifgs, obs_dir):
         A list of error messages with one for each IFG that doesn't exist, 
         otherwise an empty list if all IFGs exist.
     """
-    ifg_paths = [os.path.join(obs_dir, ifg) for ifg in ifgs]
     errors = []
+    # Check for epochs in filenames.
+    if processor == GAMMA:
+        PTN = re.compile(r'\d{8}-\d{8}')
+        for ifg in ifgs:
+            epochs = PTN.findall(ifg)
+            if len(epochs) == 0:
+                errors.append(f"'{IFG_FILE_LIST}': interferogram {ifg} does not "
+                               "contain a 16-digit epoch pair of format "
+                               "XXXXXXXX-YYYYYYYY.")
+            if len(epochs) > 1:
+                errors.append(f"'{IFG_FILE_LIST}': interferogram {ifg} contains "
+                               "more than one epoch. There must be only one epoch "
+                               "in the filename.")
+    elif processor == ROIPAC:
+        PTN = re.compile(r'\d{6}-\d{6}')
+        for ifg in ifgs:
+            epochs = PTN.findall(ifg)
+            if len(epochs) == 0:
+                errors.append(f"'{IFG_FILE_LIST}': interferogram {ifg} does not "
+                               "contain a 12-digit epoch pair of format "
+                               "XXXXXX-YYYYYY.")
+            if len(epochs) > 1:
+                errors.append(f"'{IFG_FILE_LIST}': interferogram {ifg} contains "
+                               "more than one epoch. There must be only one epoch "
+                               "in the filename.")
+
+    # Check that interferograms exist.
+    ifg_paths = [os.path.join(obs_dir, ifg) for ifg in ifgs]
     for path in ifg_paths:
         if not os.path.exists(path):
-            fname = os.path.split(os.path.splitext(path)[0])[1]
+            fname = os.path.split(path)[1]
             errors.append(f"'{IFG_FILE_LIST}': interferogram '{fname}' does not exist.")
     return errors
 
@@ -631,24 +669,54 @@ def _validate_gamma_headers(ifgs, slc_file_list, slc_dir):
     """
     from pyrate.core.gamma import get_header_paths
     errors = []
+
+    # Check for epochs in filenames.
+    PTN = re.compile(r'\d{8}')
+    for slc in parse_namelist(slc_file_list):
+        epochs = PTN.findall(slc)
+        if len(epochs) == 0:
+            errors.append(f"'{SLC_FILE_LIST}': header '{slc}' does not contain "
+                          "an 8-digit epoch of format XXXXXXXX.")
+        if len(epochs) > 1:
+            errors.append(f"'{SLC_FILE_LIST}': header '{slc}' contains more "
+                           "than one epoch. There must be only one epoch in "
+                           "the filename.")
+
+    # Check there are enough headers for each IFG.
     for ifg in ifgs:
         headers = get_header_paths(ifg, slc_file_list, slc_dir)
         if len(headers) < 2:
-            errors.append(f"'{SLC_DIR}': Headers not found for interferogram '{ifg}'.")
+            errors.append(f"'{SLC_DIR}': Headers not found for interferogram "
+                           "'{ifg}'.")
 
     return errors
 
 def _validate_coherence_files(ifgs, pars):
     errors = []
+
+    # Check for epochs in filenames.
+    pattern = re.compile(r'\d{8}-\d{8}')
+    for coh in parse_namelist(pars[COH_FILE_LIST]):
+        epochs = PTN.findall(coh)
+        if len(epochs) == 0:
+            errors.append(f"'{COH_FILE_LIST}': coherence file '{coh}' does not "
+                           "contain a 16-digit epoch pair of format "
+                           "XXXXXXXX-YYYYYYYY.")
+        if len(epochs) > 1:
+            errors.append(f"'{COH_FILE_LIST}': coherence file '{coh}' contains "
+                           "more than one epoch. There must be only one epoch "
+                           "in the filename.")
+    
+    # Check there is a coherence file for each IFG.
     for ifg in ifgs:
         paths = coherence_paths_for(ifg, pars)
         if len(paths) == 0:
             errors.append(f"'{COH_DIR}': no coherence files found for "
-                          f"intergerogram '{ifg'}.")
+                          f"intergerogram '{ifg}'.")
         elif len(paths) > 2:
             errors.append(f"'{COH_DIR}': found more than one coherence file "
-                          f"for {ifg}. There must be only one coherence file "
-                          f"per interferogram. Found {paths}."
+                          f"for '{ifg}'. There must be only one coherence file "
+                          f"per interferogram. Found {paths}.")
     return errors
 
 class ConfigException(Exception):
@@ -685,10 +753,6 @@ def write_config_file(params, output_conf_file):
     """
     with open(output_conf_file, 'w') as f:
         for k, v in params.items():
-            if k == ORBITAL_FIT_DEGREE:
-                v = _reverse_orb_degree_conv(v)
-            if k == ORBITAL_FIT_METHOD:
-                v = _reverse_orb_method_conv(v)
             if v is not None:
                 f.write(''.join([k, ':\t', str(v), '\n']))
             else:
@@ -764,8 +828,8 @@ def coherence_paths(params) -> List[str]:
     """
     ifg_file_list = params.get(IFG_FILE_LIST)
     ifgs = parse_namelist(ifg_file_list)
-    coherence_paths = [*coherence_paths_for(ifg, params) for ifg in ifgs]
-    return coherence_paths
+    coherence_paths = [coherence_paths_for(ifg, params) for ifg in ifgs]
+    return list(itertools.chain.from_iterable(coherence_paths))
     
 def mlooked_path(path, looks, crop_out):
     """

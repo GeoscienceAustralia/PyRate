@@ -33,6 +33,7 @@ from pyrate.core.config import (
     PROCESSOR,
     OUT_DIR,
     SLC_DIR,
+    SLC_FILE_LIST,
     IFG_LKSX,
     IFG_LKSY,
     IFG_CROP_OPT,
@@ -45,6 +46,10 @@ from pyrate.core.config import (
 # from pyrate.tasks.utils import DUMMY_SECTION_NAME
 from tests import common
 DUMMY_SECTION_NAME = 'pyrate'
+
+class ConfigValidationTest(unittest.TestCase):
+    def test_good_conf_passes(self):
+        params = config.get_config_params(TEST_CONF_GAMMA)
 
 class ConfigTest(unittest.TestCase):
 
@@ -149,7 +154,7 @@ class TestOneIncidenceOrElevationMap(unittest.TestCase):
         with open(self.conf_file, 'w') as conf:
             conf.write('[{}]\n'.format(DUMMY_SECTION_NAME))
             conf.write('{}: {}\n'.format(NO_DATA_VALUE, '0.0'))
-            conf.write('{}: {}\n'.format(OBS_DIR, self.base_dir))
+            conf.write('{}: {}\n'.format(OBS_DIR, common.SML_TEST_GAMMA))
             conf.write('{}: {}\n'.format(OUT_DIR, self.base_dir))
             conf.write('{}: {}\n'.format(IFG_FILE_LIST, self.ifgListFile))
             conf.write('{}: {}\n'.format(PROCESSOR, '1'))
@@ -161,6 +166,7 @@ class TestOneIncidenceOrElevationMap(unittest.TestCase):
             conf.write('{}: {}\n'.format(IFG_CROP_OPT, '1'))
             conf.write('{}: {}\n'.format(NO_DATA_AVERAGING_THRESHOLD, '0.5'))
             conf.write('{}: {}\n'.format(SLC_DIR, ''))
+            conf.write('{}: {}\n'.format(SLC_FILE_LIST, common.SML_TEST_GAMMA_HEADER_LIST))
             conf.write('{}: {}\n'.format(DEM_FILE, common.SML_TEST_DEM_GAMMA))
             conf.write('{}: {}\n'.format(APS_INCIDENCE_MAP, inc))
             conf.write('{}: {}\n'.format(APS_ELEVATION_MAP, ele))
