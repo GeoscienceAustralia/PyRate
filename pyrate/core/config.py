@@ -525,13 +525,13 @@ def _validate_pars(pars):
             errors.append(validator[1]) 
     
     # Basic validation of parameters that are only used if feature is on.
-    errors.extend(_optional_validators(PROCESSOR, GAMMA_VALIDATION, pars)
-    errors.extend(_optional_validators(COH_MASK, COHERENCE_VALIDATION, pars)
-    errors.extend(_optional_validators(APSEST, APSEST_VALIDATION, pars)
+    errors.extend(_optional_validators(PROCESSOR, GAMMA_VALIDATION, pars))
+    errors.extend(_optional_validators(COH_MASK, COHERENCE_VALIDATION, pars))
+    errors.extend(_optional_validators(APSEST, APSEST_VALIDATION, pars))
     errors.extend(_optional_validators(
-                    TIME_SERIES_CAL, TIME_SERIES_VALIDATION, pars)
+                    TIME_SERIES_CAL, TIME_SERIES_VALIDATION, pars))
     errors.extend(_optional_validators(
-                    ORBITAL_FIT, ORBITAL_FIT_VALIDATION, pars)
+                    ORBITAL_FIT, ORBITAL_FIT_VALIDATION, pars))
 
     # Validate parameters related to number of interferograms available.
     ifgs = list(parse_namelist(pars[IFG_FILE_LIST]))
@@ -557,7 +557,7 @@ def _validate_pars(pars):
 
     # Validate that GAMMA headers exist.
     if pars[PROCESSOR] == GAMMA:
-        slc_err = _validate_gamma_headers(ifgs, pars[SLC_DIR])
+        slc_err = _validate_gamma_headers(ifgs, pars[SLC_FILE_LIST], pars[SLC_DIR])
         if slc_err:
             errors.extend(slc_err)
 
@@ -611,7 +611,7 @@ def _validate_obs_threshold(n_ifgs, pars, key):
         return (f"'{key}': not enough interferograms have been specified ({n_ifgs}) "
                 f"to satisfy threshold ({thresh}).")
                 
-def _validate_gamma_headers(ifgs, slc_dir):
+def _validate_gamma_headers(ifgs, slc_file_list, slc_dir):
     """
     Validates that gamme headers exist for specified IFGs.
 
@@ -627,7 +627,7 @@ def _validate_gamma_headers(ifgs, slc_dir):
     from pyrate.core.gamma import get_header_paths
     errors = []
     for ifg in ifgs:
-        headers = get_header_paths(ifg, slc_dir)
+        headers = get_header_paths(ifg, slc_file_list, slc_dir)
         if len(headers) < 2:
             errors.append(f"'{SLC_DIR}': Headers not found for interferogram '{ifg}'. ")
 
