@@ -17,15 +17,14 @@
 This Python module contains tools for reading GAMMA format input data.
 """
 # coding: utf-8
-
 from os.path import join, split
 import re
 import os
-import glob2
 from datetime import date, time, timedelta
 import numpy as np
 import pyrate.core.ifgconstants as ifc
 from pyrate.core import config as cf
+
 
 PTN = re.compile(r'\d{8}')  # match 8 digits for the dates
 
@@ -44,7 +43,6 @@ GAMMA_INCIDENCE = 'incidence_angle'
 RADIANS = 'RADIANS'
 GAMMA = 'GAMMA'
 
-
 def _parse_header(path):
     """Parses all GAMMA header file fields into a dictionary"""
     with open(path) as f:
@@ -53,7 +51,6 @@ def _parse_header(path):
 
     # convert the content into a giant dict of all key, values
     return dict((i[0][:-1], i[1:]) for i in raw_segs)
-
 
 def parse_epoch_header(path):
     """
@@ -82,7 +79,6 @@ def parse_epoch_header(path):
 
     return subset
 
-
 def _parse_date_time(lookup):
     """Grab date and time metadata and convert to datetime objects"""
     subset = {}
@@ -106,7 +102,6 @@ def _parse_date_time(lookup):
     subset[ifc.MASTER_TIME] = time(hour, min, sec)
 
     return subset
-
 
 def parse_dem_header(path):
     """
@@ -137,13 +132,11 @@ def parse_dem_header(path):
     subset[ifc.PYRATE_INSAR_PROCESSOR] = GAMMA
     return subset
 
-
 def _frequency_to_wavelength(freq):
     """
     Convert radar frequency to wavelength
     """
     return ifc.SPEED_OF_LIGHT_METRES_PER_SECOND / freq
-
 
 def combine_headers(hdr0, hdr1, dem_hdr):
     """
@@ -195,7 +188,6 @@ def combine_headers(hdr0, hdr1, dem_hdr):
     chdr.update(dem_hdr)  # add geographic data
     return chdr
 
-
 def manage_headers(dem_header_file, header_paths):
     """
     Manage and combine  header files for GAMMA interferograms, DEM and
@@ -219,8 +211,7 @@ def manage_headers(dem_header_file, header_paths):
 
     return combined_header
 
-
-def get_header_paths(input_file, slc_dir):
+def get_header_paths(input_file, slc_file_list, slc_dir):
     """
     Function that matches input GAMMA file names with GAMMA header file names
 
@@ -230,27 +221,31 @@ def get_header_paths(input_file, slc_dir):
     :rtype: list
     """
     _, file_name = split(input_file)
-    matches = PTN.findall(file_name)
-    headers = []
-    for m in matches:
-        files = glob2.glob(join(slc_dir, '**/*%s*slc.par' % m))   
-        if files:
-            headers.append(files[0])
-    return headers
+    epochs = PTN.findall(file_name)
+    header_names = cf.parse_namelist(slc_file_list)
+    matches = [hdr for hdr in header_names if any(e in hdr for e in epochs)]
+    return [os.path.join(slc_dir, hdr) for hdr in matches]
 
-
-def gamma_header(file_path, params):
+def gamma_header(ifg_file_path, params):
     """
     Function to obtain combined Gamma headers for image file
+    
+    Args:
+        ifg_file_path: Path to interferogram file to find headers for.
+        params: PyRate parameters dictionary.
+
+    Returns:
+        A combined header dictionary containing metadata from matching
+        gamma headers and DEM header.   
     """
     dem_hdr_path = params[cf.DEM_HEADER_FILE]
     slc_dir = params[cf.SLC_DIR]
-    # If no slc_dir provided, look for headers in obs dir.
-    slc_dir = params[cf.OBS_DIR] if slc_dir is None else slc_dir
-    header_paths = get_header_paths(file_path, slc_dir=slc_dir)
+    header_paths = get_header_paths(ifg_file_path, 
+                                    params[cf.SLC_FILE_LIST], 
+                                    slc_dir=slc_dir)
     combined_headers = manage_headers(dem_hdr_path, header_paths)
 
-    if os.path.basename(file_path).split('.')[1] == \
+    if os.path.basename(ifg_file_path).split('.')[1] == \
             (params[cf.APS_INCIDENCE_EXT] or params[cf.APS_ELEVATION_EXT]):
         # TODO: implement incidence class here
         combined_headers['FILE_TYPE'] = 'Incidence'
