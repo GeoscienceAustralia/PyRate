@@ -479,11 +479,11 @@ def original_ifg_paths(ifglist_path):
 def coherence_path_for(path, params, tif=False) -> str:
     """
     Returns path to coherence file for given interferogram. Pattern matches
-    based on an expected filename of {epoch}*{extension}.
+    based on epoch in filename.
     
     Example:
         '20151025-20160501_eqa_filt.cc'
-        Datepair is the epoch, .cc is the extension.
+        Datepair is the epoch.
 
     Args:
         path: Path to intergerogram to find coherence file for.
