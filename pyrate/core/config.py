@@ -509,9 +509,12 @@ def coherence_path_for(path, params, tif=False) -> str:
                       f"exist in {coherence_dir}. Found:\n {coherence_name}")
     else:
         if tif:
-            coherence_name = coherence_name[0] + '.tif'
+            name, ext = os.path.splitext(coherence_name[0])
+            tif_ext = ext.replace('.', '_') + '.tif'
+            coherence_name = name + tif_ext
         else:
             coherence_name = coherence_name[0]
+
         return os.path.join(coherence_dir, coherence_name)
 
 def coherence_paths(params) -> List[str]:
