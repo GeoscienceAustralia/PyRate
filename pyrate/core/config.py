@@ -37,6 +37,7 @@ _logger = logging.getLogger(__name__)
 
 # general constants
 NO_MULTILOOKING = 1
+GAMMA = 1
 LOG_LEVEL = 'INFO'
 
 # constants for lookups
@@ -273,11 +274,7 @@ PARAM_VALIDATION = {
               f"'{DEM_HEADER_FILE}': file must be provided and must exist."),
     OUT_DIR: (lambda a: a is not None,
               f"'{OBS_DIR}': directory must be provided."),
-    SLC_DIR: (lambda a: a is not None and os.path.exists(a),
-              f"'{SLC_DIR}': directory must be provided and must exist."),
-    COH_FILE_DIR: (lambda a: os.path.exists(a) if a is not None else True,
-                   f"'{COH_FILE_DIR}': directory must exist."),
-    APS_INCIDENCE_MAP: (lambda a: os.path.exists(a) if a is not None else True,
+        APS_INCIDENCE_MAP: (lambda a: os.path.exists(a) if a is not None else True,
                         f"'{APS_INCIDENCE_MAP}': file must exist."),
     APS_ELEVATION_MAP: (lambda a: os.path.exists(a) if a is not None else True,
                         f"'{APS_ELEVATION_MAP}': file must exists."),
@@ -301,9 +298,7 @@ PARAM_VALIDATION = {
     
     COH_MASK: (lambda a: a == 0 or a == 1,
                f"'{COH_MASK}': must select option 0 or 1."),
-    COH_THRESH: (lambda a: False,
-                 f"'{COH_THRESH}': IMPLEMENT VALIDATOR"),
-
+    
     REFX: (lambda a: True,
            "Any int value valid."),
     REFY: (lambda a: True, 
@@ -321,15 +316,7 @@ PARAM_VALIDATION = {
 
     ORBITAL_FIT: (lambda a: a == 0 or a == 1, 
                   f"'{ORBITAL_FIT}': must select option 0 or 1."),
-    ORBITAL_FIT_METHOD: (lambda a: a == 1 or a == 2 , 
-                         f"'{ORBITAL_FIT_METHOD}': must select option 1 or 2."),
-    ORBITAL_FIT_DEGREE: (lambda a: a == 1 or a == 2 or a == 3, 
-                         f"'{ORBITAL_FIT_DEGREE}': must select option 1, 2 or 3."),
-    ORBITAL_FIT_LOOKS_X: (lambda a: a >= 1, 
-                          f"'{ORBITAL_FIT_LOOKS_X}': must be >= 1."),
-    ORBITAL_FIT_LOOKS_Y: (lambda a: a >= 1, 
-                          f"'{ORBITAL_FIT_LOOKS_Y}': must be >= 1."),
-
+    
     LR_NSIG: (lambda a: False,
               f"'{LR_NSIG}': IMPLEMENT VALIDATOR"),
     LR_PTHRESH: (lambda a: a >= 1, 
@@ -339,32 +326,9 @@ PARAM_VALIDATION = {
 
     APSEST: (lambda a: a == 0 or a == 1,
              f"'{APSEST}': must select option 0 or 1." ),
-    TLPF_METHOD: (lambda a: a == 1 or a == 2 or a == 3, 
-                  f"'{TLPF_METHOD}': must select option 1, 2 or 3."),
-    TLPF_CUTOFF: (lambda a: False, 
-                  f"'{TLPF_CUTOFF}': IMPLEMENT VALIDATOR"),
-    TLPF_PTHR: (lambda a: False, 
-                f"'{TLPF_PTHR}': IMPLEMENT VALIDATOR"),
-
-    SLPF_METHOD: (lambda a: a == 1 or a == 2,
-                  f"'{SLPF_METHOD}': must select option 1 or 2.") ,
-    SLPF_CUTOFF: (lambda a: False, 
-                  f"'{SLPF_CUTOFF}': IMPLEMENT VALIDATOR"),
-    SLPF_ORDER: (lambda a: False, 
-                 f"'{SLPF_ORDER}': IMPLEMENT VALIDATOR"),
-    SLPF_NANFILL: (lambda a: a == 0 or a == 1, 
-                   f"'{SLPF_NANFILL}': must select option 0 or 1."),
-
+    
     TIME_SERIES_CAL: (lambda a: a == 0 or a == 1, 
                       f"'{TIME_SERIES_CAL}': must select option 0 or 1."),
-    TIME_SERIES_PTHRESH: (lambda a: a >= 1, 
-                          f"'{TIME_SERIES_PTHRESH}': must be >= 1"),
-    TIME_SERIES_SM_FACTOR: (lambda a: False, 
-                            f"'{TIME_SERIES_SM_FACTOR}': IMPLEMENT VALIDATOR"),
-    TIME_SERIES_SM_ORDER: (lambda a: a == 1 or a == 2,
-                           f"'{TIME_SERIES_SM_ORDER}': must select option 1 or 2." ),
-    TIME_SERIES_METHOD: (lambda a: a == 1 or a == 2,
-                         f"'{TIME_SERIES_METHOD}': must select option 1 or 2."),
 
     PARALLEL: (lambda a: a == 0 or a == 1 or a == 2, 
                f"'{PARALLEL}': must select option 0 or 1 or 2."),
@@ -377,7 +341,62 @@ PARAM_VALIDATION = {
     NO_DATA_AVERAGING_THRESHOLD: (lambda a: True, 
                                   "Any float value valid."),
     }
-"""dict: basic bounds checking validation functions for each parameter."""
+"""dict: basic bounds checking validation functions for 'alawys used' parameters."""
+
+GAMMA_VALIDATION = {
+    SLC_DIR: (lambda a: os.path.exists(a),
+              f"'{SLC_DIR}': directory must must exist."),
+    SLC_FILE_LIST: (lambda a: a is not None and os.path.exists(a),
+                    f"'{SLC_FILE_LIST}': file must be provided and must exist."),
+}
+
+COHERENCE_VALIDATION = {
+    COH_THRESH: (lambda a: 0.0 <= a <= 1.0,
+                 f"'{COH_THRESH}': must be between 0.0 and 1.0 (inclusive)."),
+    COH_FILE_DIR: (lambda a: os.path.exists(a),
+                   f"'{COH_FILE_DIR}': directory must exist."),
+    COH_FILE_LIST: (lambda a: a is not None and os.path.exists(a),
+                    f"'{COH_FILE_LIST}': file must be provided and must exist."),
+}
+
+ORBITAL_FIT_VALIDATION = {
+    ORBITAL_FIT_METHOD: (lambda a: a == 1 or a == 2 , 
+                         f"'{ORBITAL_FIT_METHOD}': must select option 1 or 2."),
+    ORBITAL_FIT_DEGREE: (lambda a: a == 1 or a == 2 or a == 3, 
+                         f"'{ORBITAL_FIT_DEGREE}': must select option 1, 2 or 3."),
+    ORBITAL_FIT_LOOKS_X: (lambda a: a >= 1, 
+                          f"'{ORBITAL_FIT_LOOKS_X}': must be >= 1."),
+    ORBITAL_FIT_LOOKS_Y: (lambda a: a >= 1, 
+                          f"'{ORBITAL_FIT_LOOKS_Y}': must be >= 1."),
+}
+
+APSEST_VALIDATION = {
+    TLPF_METHOD: (lambda a: a == 1 or a == 2 or a == 3, 
+                  f"'{TLPF_METHOD}': must select option 1, 2 or 3."),
+    TLPF_CUTOFF: (lambda a: False, 
+                  f"'{TLPF_CUTOFF}': IMPLEMENT VALIDATOR"),
+    TLPF_PTHR: (lambda a: False, 
+                f"'{TLPF_PTHR}': IMPLEMENT VALIDATOR"),
+    SLPF_METHOD: (lambda a: a == 1 or a == 2,
+                  f"'{SLPF_METHOD}': must select option 1 or 2.") ,
+    SLPF_CUTOFF: (lambda a: False, 
+                  f"'{SLPF_CUTOFF}': IMPLEMENT VALIDATOR"),
+    SLPF_ORDER: (lambda a: False, 
+                 f"'{SLPF_ORDER}': IMPLEMENT VALIDATOR"),
+    SLPF_NANFILL: (lambda a: a == 0 or a == 1, 
+                   f"'{SLPF_NANFILL}': must select option 0 or 1."),
+}
+
+TIME_SERIES_VALIDATION = {
+    TIME_SERIES_PTHRESH: (lambda a: a >= 1, 
+                          f"'{TIME_SERIES_PTHRESH}': must be >= 1"),
+    TIME_SERIES_SM_FACTOR: (lambda a: False, 
+                            f"'{TIME_SERIES_SM_FACTOR}': IMPLEMENT VALIDATOR"),
+    TIME_SERIES_SM_ORDER: (lambda a: a == 1 or a == 2,
+                           f"'{TIME_SERIES_SM_ORDER}': must select option 1 or 2." ),
+    TIME_SERIES_METHOD: (lambda a: a == 1 or a == 2,
+                         f"'{TIME_SERIES_METHOD}': must select option 1 or 2."),
+}
 
 def get_config_params(path):
     """
@@ -496,6 +515,7 @@ def _validate_pars(pars):
     """
     errors = []
 
+    # Basic validation of parameters that are always used.
     for k in pars.keys():
         validator = PARAM_VALIDATION.get(k)
         if validator is None:
@@ -503,30 +523,55 @@ def _validate_pars(pars):
             continue
         if not validator[0](pars[k]):
             errors.append(validator[1]) 
+    
+    # Basic validation of parameters that are only used if feature is on.
+    errors.extend(_optional_validators(PROCESSOR, GAMMA_VALIDATION, pars)
+    errors.extend(_optional_validators(COH_MASK, COHERENCE_VALIDATION, pars)
+    errors.extend(_optional_validators(APSEST, APSEST_VALIDATION, pars)
+    errors.extend(_optional_validators(
+                    TIME_SERIES_CAL, TIME_SERIES_VALIDATION, pars)
+    errors.extend(_optional_validators(
+                    ORBITAL_FIT, ORBITAL_FIT_VALIDATION, pars)
 
+    # Validate parameters related to number of interferograms available.
     ifgs = list(parse_namelist(pars[IFG_FILE_LIST]))
-
-    ifgs_err = _validate_ifms(ifgs, pars[OBS_DIR])    
-    if ifgs_err is not None:
-        errors.extend(ifgs_err)
-
+    # Check IFGs exist.
+    errors.extend(_validate_ifms(ifgs, pars[OBS_DIR]))    
+    
+    # Validate parameters related to observation thresholds.
     n_ifgs = len(ifgs)
-
-    ts_pthr_err = _validate_obs_threshold(n_ifgs, pars, LR_PTHRESH)
-    if ts_pthr_err:
-        errors.append(ts_pthr_err)
 
     lr_pthr_err = _validate_obs_threshold(n_ifgs, pars, TIME_SERIES_PTHRESH)
     if lr_pthr_err:
         errors.append(lr_pthr_err)
+    
+    if pars[TIME_SERIES_CAL]:
+        ts_pthr_err = _validate_obs_threshold(n_ifgs, pars, LR_PTHRESH)
+        if ts_pthr_err:
+            errors.append(ts_pthr_err)
 
-    slc_err = _validate_gamma_headers(ifgs, pars[SLC_DIR])
-    if slc_err:
-        errors.extend(slc_err)
+    if pars[APSEST]:
+        tlpf_pthr_err = _validate_obs_threshold(n_ifgs, pars, TLPF_PTHR)
+        if tlpf_pthr_err:
+            errors.append(tlpf_pthr_err)
+
+    # Validate that GAMMA headers exist.
+    if pars[PROCESSOR] == GAMMA:
+        slc_err = _validate_gamma_headers(ifgs, pars[SLC_DIR])
+        if slc_err:
+            errors.extend(slc_err)
 
     if errors:
         errors.insert(0, "invalid parameters")
         raise ConfigException('\n'.join(errors))
+
+def _optional_validators(key, validators, pars):
+    errors = []
+    if pars[key]:
+        for k, validator in validators.items():
+            if not validator[0](pars[k]):
+                errors.append(validator[1])
+    return errors
 
 def _validate_ifms(ifgs, obs_dir):
     """
