@@ -20,12 +20,21 @@ import os
 import shutil
 import tempfile
 import unittest
+import copy
 from os.path import join
+
+import pytest
 
 from tests.common import SML_TEST_CONF, SML_TEST_TIF
 from tests.common import TEST_CONF_ROIPAC, TEST_CONF_GAMMA
 from pyrate.core import config
 from pyrate.core.config import (
+    COHERENCE_VALIDATION,
+    ORBITAL_FIT_VALIDATION,
+    APSEST_VALIDATION,
+    TIME_SERIES_VALIDATION,
+    PARAM_VALIDATION,
+    GAMMA_VALIDATION,
     DEM_HEADER_FILE,
     NO_DATA_VALUE,
     OBS_DIR,
@@ -34,22 +43,291 @@ from pyrate.core.config import (
     OUT_DIR,
     SLC_DIR,
     SLC_FILE_LIST,
+    COH_MASK,
+    COH_THRESH,
+    COH_FILE_DIR,
+    COH_FILE_LIST,
     IFG_LKSX,
     IFG_LKSY,
     IFG_CROP_OPT,
+    REFNX,
+    REFNY,
+    REF_CHIP_SIZE,
+    REF_MIN_FRAC,
+    ORBITAL_FIT,
+    ORBITAL_FIT_METHOD,
+    ORBITAL_FIT_DEGREE,
+    ORBITAL_FIT_LOOKS_X,
+    ORBITAL_FIT_LOOKS_Y,
+    LR_NSIG,
+    LR_MAXSIG,
+    LR_PTHRESH,
+    APSEST,
+    TLPF_METHOD,
+    TLPF_CUTOFF,
+    TLPF_PTHR,
+    SLPF_METHOD,
+    SLPF_CUTOFF,
+    SLPF_ORDER,
+    SLPF_NANFILL,
+    TIME_SERIES_CAL,
+    TIME_SERIES_PTHRESH,
+    TIME_SERIES_SM_FACTOR,
+    TIME_SERIES_SM_ORDER,
+    TIME_SERIES_METHOD,
+    PARALLEL,
+    PROCESSES,
+    NAN_CONVERSION,
     NO_DATA_AVERAGING_THRESHOLD,
     DEM_FILE,
     APS_INCIDENCE_MAP,
     APS_ELEVATION_MAP,
     APS_METHOD,
-    APS_CORRECTION)
+    APS_CORRECTION,
+    ConfigException)
 # from pyrate.tasks.utils import DUMMY_SECTION_NAME
 from tests import common
 DUMMY_SECTION_NAME = 'pyrate'
 
-class ConfigValidationTest(unittest.TestCase):
-    def test_good_conf_passes(self):
-        params = config.get_config_params(TEST_CONF_GAMMA)
+class ValidateTestConfig(unittest.TestCase):
+    def test_gamma_conf_passes(self):
+        config.get_config_params(TEST_CONF_GAMMA)
+        
+    def test_roipac_conf_passes(self):
+        config.get_config_params(TEST_CONF_ROIPAC)
+
+class TestConfigValidation(unittest.TestCase):
+    def setUp(self):
+        """
+        Get a copy of the GAMMA params and also use this to verify that 
+        they are correct before we start testing.
+        """
+        self.params = copy.deepcopy(config.get_config_params(TEST_CONF_GAMMA))  
+        self.dummy_dir = '/i/should/not/exist/'
+        if os.path.exists(self.dummy_dir):
+            raise IOError("'dummy_dir' needs to be non-existant for testing.")
+    
+    def test_validators(self):
+        """
+        Test validation functions for 'compulsory' parameters.
+        """
+        def validate(key, value):
+            return PARAM_VALIDATION[key][0](value)
+
+        self.assertTrue(validate(OBS_DIR, self.params[OBS_DIR]))
+        self.assertFalse(validate(OBS_DIR, None))
+        self.assertFalse(validate(OBS_DIR, self.dummy_dir))
+
+        self.assertTrue(validate(IFG_FILE_LIST, self.params[IFG_FILE_LIST]))
+        self.assertFalse(validate(IFG_FILE_LIST, None))
+        self.assertFalse(validate(IFG_FILE_LIST, self.dummy_dir))
+        
+        self.assertTrue(validate(DEM_FILE, self.params[DEM_FILE]))
+        self.assertFalse(validate(DEM_FILE, None))
+        self.assertFalse(validate(DEM_FILE, self.dummy_dir))
+
+        self.assertTrue(validate(DEM_HEADER_FILE, self.params[DEM_HEADER_FILE]))
+        self.assertFalse(validate(DEM_HEADER_FILE, None))
+        self.assertFalse(validate(DEM_HEADER_FILE, self.dummy_dir))
+
+        self.assertTrue(validate(OUT_DIR, self.params[OUT_DIR]))
+        self.assertFalse(validate(OUT_DIR, None))
+        # OUT_DIR gets created at runtime
+        self.assertTrue(validate(OUT_DIR, self.dummy_dir))
+        
+        self.assertTrue(validate(APS_INCIDENCE_MAP, self.params[APS_INCIDENCE_MAP]))
+        self.assertFalse(validate(APS_INCIDENCE_MAP, self.dummy_dir))
+        self.assertTrue(validate(APS_INCIDENCE_MAP, None))
+
+        self.assertTrue(validate(APS_ELEVATION_MAP, self.params[APS_ELEVATION_MAP]))
+        self.assertFalse(validate(APS_ELEVATION_MAP, self.dummy_dir))
+        self.assertTrue(validate(APS_ELEVATION_MAP, None))
+
+        self.assertTrue(validate(IFG_CROP_OPT, 1))
+        self.assertTrue(validate(IFG_CROP_OPT, 2))
+        self.assertTrue(validate(IFG_CROP_OPT, 3))
+        self.assertTrue(validate(IFG_CROP_OPT, 4))
+        self.assertFalse(validate(IFG_CROP_OPT, 0))
+        self.assertFalse(validate(IFG_CROP_OPT, 5))
+
+        self.assertTrue(validate(IFG_LKSX, self.params[IFG_LKSX]))
+        self.assertFalse(validate(IFG_LKSX, 0))
+
+        self.assertTrue(validate(IFG_LKSY, self.params[IFG_LKSY]))
+        self.assertFalse(validate(IFG_LKSY, 0))
+
+        # TODO: IFG_XFIRST, IFG_XLAST, IFG_YFIRST, IFG_YLAST
+    
+        self.assertTrue(validate(NO_DATA_VALUE, self.params[NO_DATA_VALUE]))
+
+        self.assertTrue(validate(COH_MASK, 0))
+        self.assertTrue(validate(COH_MASK, 1))
+        self.assertFalse(validate(COH_MASK, -1))
+        self.assertFalse(validate(COH_MASK, 2))
+
+        # TODO: REFX, REFY
+
+        self.assertTrue(validate(REFNX, self.params[REFNX]))
+        self.assertFalse(validate(REFNX, 0))
+        self.assertFalse(validate(REFNX, 51))
+        
+        self.assertTrue(validate(REFNY, self.params[REFNY]))
+        self.assertFalse(validate(REFNY, 0))
+        self.assertFalse(validate(REFNY, 51))          
+
+        self.assertTrue(validate(REF_CHIP_SIZE, self.params[REF_CHIP_SIZE]))
+        self.assertFalse(validate(REF_CHIP_SIZE, 2))
+        self.assertFalse(validate(REF_CHIP_SIZE, 0))
+        self.assertFalse(validate(REF_CHIP_SIZE, 102))
+        
+        self.assertTrue(validate(REF_MIN_FRAC, self.params[REF_MIN_FRAC]))
+        self.assertFalse(validate(REF_MIN_FRAC, -0.1))
+        self.assertFalse(validate(REF_MIN_FRAC, 1.1))
+
+        self.assertTrue(validate(ORBITAL_FIT, 0))
+        self.assertTrue(validate(ORBITAL_FIT, 1))
+        self.assertFalse(validate(ORBITAL_FIT, -1))
+        self.assertFalse(validate(ORBITAL_FIT, 2))
+        
+        self.assertTrue(validate(LR_NSIG, self.params[LR_NSIG]))
+        self.assertFalse(validate(LR_NSIG, 0))
+        self.assertFalse(validate(LR_NSIG, 11))
+        
+        self.assertTrue(validate(LR_PTHRESH, self.params[LR_PTHRESH]))
+        self.assertFalse(validate(LR_PTHRESH, 0))
+        
+        self.assertTrue(validate(LR_MAXSIG, self.params[LR_MAXSIG]))
+        self.assertFalse(validate(LR_MAXSIG, -1))
+        self.assertFalse(validate(LR_MAXSIG, 1001))
+
+        self.assertTrue(validate(APSEST, 0))
+        self.assertTrue(validate(APSEST, 1))
+        self.assertFalse(validate(APSEST, -1))
+        self.assertFalse(validate(APSEST, 2))
+        
+        self.assertTrue(validate(TIME_SERIES_CAL, 0))
+        self.assertTrue(validate(TIME_SERIES_CAL, 1))
+        self.assertFalse(validate(TIME_SERIES_CAL, -1))
+        self.assertFalse(validate(TIME_SERIES_CAL, 2))
+        
+        self.assertTrue(validate(PARALLEL, 0))
+        self.assertTrue(validate(PARALLEL, 1))
+        self.assertTrue(validate(PARALLEL, 2))
+        self.assertFalse(validate(PARALLEL, -1))
+        self.assertFalse(validate(PARALLEL, 3))
+        
+        self.assertTrue(validate(PROCESSES, 1))
+        self.assertFalse(validate(PROCESSES, -1))
+        self.assertFalse(validate(PROCESSES, 0))
+        
+        self.assertTrue(validate(PROCESSOR, 0))
+        self.assertTrue(validate(PROCESSOR, 1))
+        self.assertFalse(validate(PROCESSOR, -1))
+        self.assertFalse(validate(PROCESSOR, 2))
+
+        self.assertTrue(validate(NAN_CONVERSION, 0))
+        self.assertTrue(validate(NAN_CONVERSION, 1))
+        self.assertFalse(validate(NAN_CONVERSION, -1))
+        self.assertFalse(validate(NAN_CONVERSION, 2))
+
+        self.assertTrue(validate(NO_DATA_AVERAGING_THRESHOLD, 
+                                 self.params[NO_DATA_AVERAGING_THRESHOLD]))
+
+    def test_gamma_validators(self):
+        def validate(key, value):
+            return GAMMA_VALIDATION[key][0](value)
+
+        self.assertTrue(validate(SLC_DIR, self.params[SLC_DIR]))
+        self.assertTrue(validate(SLC_DIR, None))
+        self.assertFalse(validate(SLC_DIR, self.dummy_dir))
+
+        self.assertTrue(validate(SLC_DIR, self.params[SLC_FILE_LIST]))
+        self.assertFalse(validate(SLC_FILE_LIST, None))
+        self.assertFalse(validate(SLC_FILE_LIST, self.dummy_dir))
+
+    def test_coherence_validators(self):
+        def validate(key, value):
+            return COHERENCE_VALIDATION[key][0](value)
+
+        self.assertTrue(validate(COH_THRESH, 0.1))
+        self.assertFalse(validate(COH_THRESH, -0.1))
+        self.assertFalse(validate(COH_THRESH, 1.1))
+        
+        self.assertTrue(validate(COH_FILE_DIR, None))
+        self.assertFalse(validate(COH_FILE_DIR, self.dummy_dir))
+        
+        self.assertFalse(validate(COH_FILE_LIST, None))
+        self.assertFalse(validate(COH_FILE_LIST, self.dummy_dir))
+        
+    def test_orbital_validators(self):
+        def validate(key, value):
+            return ORBITAL_FIT_VALIDATION[key][0](value)
+
+        self.assertTrue(validate(ORBITAL_FIT_METHOD, 1))
+        self.assertTrue(validate(ORBITAL_FIT_METHOD, 2))
+        self.assertFalse(validate(ORBITAL_FIT_METHOD, 0))
+        self.assertFalse(validate(ORBITAL_FIT_METHOD, 3))
+
+        self.assertTrue(validate(ORBITAL_FIT_DEGREE, 1))
+        self.assertTrue(validate(ORBITAL_FIT_DEGREE, 2))
+        self.assertTrue(validate(ORBITAL_FIT_DEGREE, 3))
+        self.assertFalse(validate(ORBITAL_FIT_DEGREE, 0))
+        self.assertFalse(validate(ORBITAL_FIT_DEGREE, 4))
+    
+        self.assertFalse(validate(ORBITAL_FIT_LOOKS_X, 0))
+
+        self.assertFalse(validate(ORBITAL_FIT_LOOKS_Y, 0))
+
+    def test_apsest_validators(self):
+        def validate(key, value):
+            return APSEST_VALIDATION[key][0](value)
+        
+        for i in range(1, 4):
+            self.assertTrue(validate(TLPF_METHOD, i))
+        self.assertFalse(validate(TLPF_METHOD, 0))
+        self.assertFalse(validate(TLPF_METHOD, 4))
+
+        self.assertFalse(validate(TLPF_CUTOFF, 0.0026))
+        self.assertTrue(validate(TLPF_CUTOFF, 0.0028))
+
+        self.assertFalse(validate(TLPF_PTHR, 0))
+        self.assertTrue(validate(TLPF_PTHR, 1))
+
+        self.assertTrue(validate(SLPF_METHOD, 1))
+        self.assertTrue(validate(SLPF_METHOD, 2))
+    
+        self.assertTrue(validate(SLPF_CUTOFF, 0.001))
+        self.assertFalse(validate(SLPF_CUTOFF, 0.0))
+
+        for i in range(1, 4):
+            self.assertTrue(validate(SLPF_ORDER, i))
+        self.assertFalse(validate(SLPF_ORDER, 0))
+        self.assertFalse(validate(SLPF_ORDER, 4))
+
+        self.assertTrue(validate(SLPF_NANFILL, 0))
+        self.assertTrue(validate(SLPF_NANFILL, 1))
+        self.assertFalse(validate(SLPF_NANFILL, -1))
+        self.assertFalse(validate(SLPF_NANFILL, 2))
+
+    def test_time_series_validators(self):
+        def validate(key, value):
+            return TIME_SERIES_VALIDATION[key][0](value)
+
+        self.assertTrue(validate(TIME_SERIES_PTHRESH, 1))
+        self.assertFalse(validate(TIME_SERIES_PTHRESH, 0))
+        
+        #TODO: SM_FACTOR
+
+        self.assertTrue(validate(TIME_SERIES_SM_ORDER, 1))
+        self.assertTrue(validate(TIME_SERIES_SM_ORDER, 2))
+        self.assertFalse(validate(TIME_SERIES_SM_ORDER, 0))
+        self.assertFalse(validate(TIME_SERIES_SM_ORDER, 3))
+
+        self.assertTrue(validate(TIME_SERIES_METHOD, 1))
+        self.assertTrue(validate(TIME_SERIES_METHOD, 2))
+        self.assertFalse(validate(TIME_SERIES_METHOD, 0))
+        self.assertFalse(validate(TIME_SERIES_METHOD, 3))
+
 
 class ConfigTest(unittest.TestCase):
 

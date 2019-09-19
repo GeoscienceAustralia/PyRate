@@ -288,13 +288,13 @@ PARAM_VALIDATION = {
     IFG_LKSY: (lambda a: a >= 1,
                 f"'{IFG_LKSY}': must be >= 1."),
     IFG_XFIRST: (lambda a: True, 
-                 f"'{IFG_XFIRST}': IMPLEMENT VALIDATOR"),
+                 f"'{IFG_XFIRST}': Any pixel coordinate."),
     IFG_XLAST: (lambda a: True, 
-                f"'{IFG_XLAST}': IMPLEMENT VALIDATOR"),
+                f"'{IFG_XLAST}': Any pixel coordinate."),
     IFG_YFIRST: (lambda a: True,
-                 f"'{IFG_YFIRST}': IMPLEMENT VALIDATOR"),
+                 f"'{IFG_YFIRST}': Any pixel coordinate."),
     IFG_YLAST: (lambda a: True,
-                f"'{IFG_YLAST}': IMPLEMENT VALIDATOR"),
+                f"'{IFG_YLAST}': Any pixel coordinate."),
     NO_DATA_VALUE: (lambda a: True,
                     "Any float value valid."),
     
@@ -347,7 +347,7 @@ PARAM_VALIDATION = {
 """dict: basic bounds checking validation functions for 'alawys used' parameters."""
 
 GAMMA_VALIDATION = {
-    SLC_DIR: (lambda a: os.path.exists(a),
+    SLC_DIR: (lambda a: os.path.exists(a) if a is not None else True,
               f"'{SLC_DIR}': directory must must exist."),
     SLC_FILE_LIST: (lambda a: a is not None and os.path.exists(a),
                     f"'{SLC_FILE_LIST}': file must be provided and must exist."),
@@ -356,7 +356,7 @@ GAMMA_VALIDATION = {
 COHERENCE_VALIDATION = {
     COH_THRESH: (lambda a: 0.0 <= a <= 1.0,
                  f"'{COH_THRESH}': must be between 0.0 and 1.0 (inclusive)."),
-    COH_FILE_DIR: (lambda a: os.path.exists(a),
+    COH_FILE_DIR: (lambda a: os.path.exists(a) if a is not None else True,
                    f"'{COH_FILE_DIR}': directory must exist."),
     COH_FILE_LIST: (lambda a: a is not None and os.path.exists(a),
                     f"'{COH_FILE_LIST}': file must be provided and must exist."),
@@ -384,7 +384,7 @@ APSEST_VALIDATION = {
                   f"'{SLPF_METHOD}': must select option 1 or 2.") ,
     SLPF_CUTOFF: (lambda a: a >= 0.001, 
                   f"'{SLPF_CUTOFF}': must be >= 0.001."),
-    SLPF_ORDER: (lambda a: 1 >= a >= 3, 
+    SLPF_ORDER: (lambda a: 1 <= a <= 3, 
                  f"'{SLPF_ORDER}': must be between 1 and 3 (inclusive)."),
     SLPF_NANFILL: (lambda a: a == 0 or a == 1, 
                    f"'{SLPF_NANFILL}': must select option 0 or 1."),
