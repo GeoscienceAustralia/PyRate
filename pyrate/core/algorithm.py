@@ -201,12 +201,12 @@ def get_epochs(ifgs):
     :rtype: list
     """
 
-    log.info('Finding unique epochs in given interferogram network')
     if isinstance(ifgs, dict):
         ifgs = [v for v in ifgs.values() if isinstance(v, PrereadIfg)]
     combined = get_all_epochs(ifgs)
     dates, n = unique(combined, False, True)
     repeat, _ = histogram(n, bins=len(set(n)))
+    log.info('Found {} unique epochs in the {} interferogram network'.format(len(dates), len(ifgs)))
 
     # absolute span for each date from the zero/start point
     span = [(dates[i] - dates[0]).days / DAYS_PER_YEAR
