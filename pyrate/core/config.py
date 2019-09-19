@@ -555,10 +555,9 @@ def _validate_pars(pars):
     # Validate parameters related to observation thresholds.
     n_ifgs = len(ifgs)
     
-    # TODO: based on nepoch
-    #lr_pthr_err = _validate_obs_threshold(n_ifgs, pars, TIME_SERIES_PTHRESH)
-    #if lr_pthr_err:
-    #    errors.append(lr_pthr_err)
+    lr_pthr_err = _validate_obs_threshold(n_ifgs, pars, TIME_SERIES_PTHRESH)
+    if lr_pthr_err:
+        errors.append(lr_pthr_err)
 
     # TODO: based on nepoch
     #if pars[TIME_SERIES_CAL]:
@@ -696,7 +695,7 @@ def _validate_coherence_files(ifgs, pars):
     errors = []
 
     # Check for epochs in filenames.
-    pattern = re.compile(r'\d{8}-\d{8}')
+    PTN = re.compile(r'\d{8}-\d{8}')
     for coh in parse_namelist(pars[COH_FILE_LIST]):
         epochs = PTN.findall(coh)
         if len(epochs) == 0:
@@ -712,10 +711,10 @@ def _validate_coherence_files(ifgs, pars):
     for ifg in ifgs:
         paths = coherence_paths_for(ifg, pars)
         if len(paths) == 0:
-            errors.append(f"'{COH_DIR}': no coherence files found for "
+            errors.append(f"'{COH_FILE_DIR}': no coherence files found for "
                           f"intergerogram '{ifg}'.")
         elif len(paths) > 2:
-            errors.append(f"'{COH_DIR}': found more than one coherence file "
+            errors.append(f"'{COH_FILE_DIR}': found more than one coherence file "
                           f"for '{ifg}'. There must be only one coherence file "
                           f"per interferogram. Found {paths}.")
     return errors
