@@ -128,7 +128,10 @@ class PyRateTests(unittest.TestCase):
             os.symlink(orig_dem, cls.BASE_DEM_FILE)
             os.chdir(cls.BASE_DIR)
 
-            params = config.get_config_params(common.TEST_CONF_ROIPAC)
+            # Turn off validation because we're in a different working dir
+            #  and relative paths in config won't be work.
+            params = config.get_config_params(common.TEST_CONF_ROIPAC,
+                                               validate=False)
             params[cf.OUT_DIR] = cls.BASE_OUT_DIR
             params[cf.PROCESSOR] = 0  # roipac
             params[cf.APS_CORRECTION] = 0

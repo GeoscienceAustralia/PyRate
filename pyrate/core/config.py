@@ -402,7 +402,7 @@ TIME_SERIES_VALIDATION = {
                          f"'{TIME_SERIES_METHOD}': must select option 1 or 2."),
 }
 
-def get_config_params(path):
+def get_config_params(path, validate=True):
     """
     Returns a dictionary of key:value parameter pairs from the
     configuration file
@@ -421,12 +421,12 @@ def get_config_params(path):
                     # create expanded line
                     line = line[:pos] + os.environ['HOME'] + line[(pos+1):]
             txt += line
-    params = _parse_conf_file(txt)
+    params = _parse_conf_file(txt, validate)
     params[TMPDIR] = os.path.join(os.path.abspath(params[OUT_DIR]), 'tmpdir')
 
     return params
 
-def _parse_conf_file(content):
+def _parse_conf_file(content, validate=True):
     """
     Parser for converting text content into a dictionary of parameters
     """
@@ -455,7 +455,7 @@ def _parse_conf_file(content):
     if not parameters:
         raise ConfigException('Cannot parse any parameters from config file')
 
-    return _parse_pars(parameters)
+    return _parse_pars(parameters, validate)
 
 def _handle_extra_parameters(params):
     """
@@ -478,7 +478,7 @@ def _handle_extra_parameters(params):
 
     return params
 
-def _parse_pars(pars):
+def _parse_pars(pars, validate=True):
     """
     Parses and converts config file params from text
     """
@@ -503,7 +503,8 @@ def _parse_pars(pars):
         if pars.get(p) is None:
             pars[p] = pars[OBS_DIR]
 
-    _validate_pars(pars)
+    if validate:
+        _validate_pars(pars)
     return pars
 
 def _validate_pars(pars):
