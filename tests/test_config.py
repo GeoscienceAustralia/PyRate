@@ -29,6 +29,13 @@ from tests.common import SML_TEST_CONF, SML_TEST_TIF
 from tests.common import TEST_CONF_ROIPAC, TEST_CONF_GAMMA
 from pyrate.core import config
 from pyrate.core.config import (
+    validate_parameters, validate_optional_parameters, validate_epochs,
+    validate_obs_thresholds, validate_ifgs, validate_gamma_headers,
+    validate_coherence_files)
+from pyrate.core.config import (
+    SIXTEEN_DIGIT_EPOCH_PAIR,
+    TWELVE_DIGIT_EPOCH_PAIR,
+    EIGHT_DIGIT_EPOCH,
     COHERENCE_VALIDATION,
     ORBITAL_FIT_VALIDATION,
     APSEST_VALIDATION,
@@ -84,7 +91,6 @@ from pyrate.core.config import (
     APS_ELEVATION_MAP,
     APS_METHOD,
     APS_CORRECTION,
-    validate_parameters,
     ConfigException)
 # from pyrate.tasks.utils import DUMMY_SECTION_NAME
 from tests import common
@@ -334,7 +340,7 @@ class TestConfigValidation(unittest.TestCase):
         self.params[PROCESSOR] = 1
         self.params[SLC_FILE_LIST] = None
         with pytest.raises(ConfigException):
-            validate_parameters(self.params)
+            validate_optional_parameters(self.params)
 
         self.params[PROCESSOR] = 0
         validate_parameters(self.params)
@@ -343,66 +349,112 @@ class TestConfigValidation(unittest.TestCase):
         self.params[COH_MASK] = 1
         self.params[COH_FILE_LIST] = None
         with pytest.raises(ConfigException):
-            validate_parameters(self.params)
+            validate_optional_parameters(self.params)
 
         self.params[COH_MASK] = 0
-        validate_parameters(self.params)
+        validate_optional_parameters(self.params)
 
     def test_orbital_validation_only_performed_when_on(self):
         self.params[ORBITAL_FIT] = 1
         self.params[ORBITAL_FIT_METHOD] = 0
         with pytest.raises(ConfigException):
-            validate_parameters(self.params)
+            validate_optional_parameters(self.params)
             
         self.params[ORBITAL_FIT] = 0
-        validate_parameters(self.params)
+        validate_optional_parameters(self.params)
 
     def test_apsest_validation_only_performed_when_on(self):
         self.params[APSEST] = 1
         self.params[TLPF_METHOD] = 0
         with pytest.raises(ConfigException):
-            validate_parameters(self.params)
+            validate_optional_parameters(self.params)
 
         self.params[APSEST] = 0
-        validate_parameters(self.params)
+        validate_optional_parameters(self.params)
 
     def test_time_series_validation_only_performed_when_on(self):
         self.params[TIME_SERIES_CAL] = 1
         self.params[TIME_SERIES_PTHRESH] = 0
         with pytest.raises(ConfigException):
-            validate_parameters(self.params)
+            validate_optional_parameters(self.params)
         
         self.params[TIME_SERIES_CAL] = 0
-        validate_parameters(self.params)
+        validate_optional_parameters(self.params)
 
     def test_epochs_in_gamma_obs(self):
-        validate_parameters(self.params)
+        validate_epochs(self.params[IFG_FILE_LIST], SIXTEEN_DIGIT_EPOCH_PAIR)
         self.params[IFG_FILE_LIST] = \
             os.path.join(common.SML_TEST_GAMMA, 'bad_epochs_ifms_17')
         with pytest.raises(ConfigException):
-            validate_parameters(self.params)
+            validate_epochs(self.params[IFG_FILE_LIST],
+                            SIXTEEN_DIGIT_EPOCH_PAIR)
 
     def test_epochs_in_roipac_obs(self):
-        validate_parameters(self.roipac_params)
+        validate_epochs(self.roipac_params[IFG_FILE_LIST], 
+                        TWELVE_DIGIT_EPOCH_PAIR)
         self.roipac_params[IFG_FILE_LIST] = \
             os.path.join(common.SML_TEST_OBS, 'bad_epochs_ifms_17')
         with pytest.raises(ConfigException):
-            validate_parameters(self.roipac_params)
+            validate_epochs(self.roipac_params[IFG_FILE_LIST], 
+                            TWELVE_DIGIT_EPOCH_PAIR)
 
     def test_epochs_in_gamma_headers(self):
-        validate_parameters(self.params)
+        validate_epochs(self.params[SLC_FILE_LIST], EIGHT_DIGIT_EPOCH)
         self.params[SLC_FILE_LIST] = \
             os.path.join(common.SML_TEST_GAMMA, 'bad_epochs_headers')
         with pytest.raises(ConfigException):
-            validate_parameters(self.params)
+            validate_epochs(self.params[SLC_FILE_LIST], 
+                            EIGHT_DIGIT_EPOCH)
 
     def test_epochs_in_coherence_files(self):
         self.params[COH_MASK] = 1
-        self.params[COH_FILE_LIST] = os.path.join(common.SML_TEST_GAMMA, 'ifms_17')
-        validate_parameters(self.params)
-        self.params[COH_FILE_LIST] = os.path.join(common.SML_TEST_GAMMA, 'bad_epochs_ifms_17')
+        self.params[COH_FILE_LIST] = \
+            os.path.join(common.SML_TEST_GAMMA, 'ifms_17')
+        validate_epochs(self.params[COH_FILE_LIST], SIXTEEN_DIGIT_EPOCH_PAIR)
+        self.params[COH_FILE_LIST] = \
+            os.path.join(common.SML_TEST_GAMMA, 'bad_epochs_ifms_17')
         with pytest.raises(ConfigException):
-            validate_parameters(self.params)
+            validate_epochs(self.params[COH_FILE_LIST],     
+                            SIXTEEN_DIGIT_EPOCH_PAIR)
+
+    def test_ifgs_exist(self):
+        validate_ifgs(self.params[IFG_FILE_LIST], self.params[OBS_DIR])
+        self.params[IFG_FILE_LIST] = \
+            os.path.join(common.SML_TEST_GAMMA, 'bad_epochs_ifms_17')
+        with pytest.raises(ConfigException):
+            validate_ifgs(self.params[IFG_FILE_LIST], self.params[OBS_DIR])
+
+    def test_gamma_headers_exist(self):
+        validate_gamma_headers(self.params[IFG_FILE_LIST],
+                               self.params[SLC_FILE_LIST],
+                               self.params[SLC_DIR])
+        self.params[SLC_FILE_LIST] = \
+            os.path.join(common.SML_TEST_GAMMA, 'bad_epochs_headers')
+        with pytest.raises(ConfigException):
+            validate_gamma_headers(self.params[IFG_FILE_LIST],
+                                   self.params[SLC_FILE_LIST],
+                                   self.params[SLC_DIR])
+
+    def test_coherence_files_exist(self):
+        self.params[COH_MASK] = 1
+        self.params[COH_FILE_LIST] = \
+            os.path.join(common.SML_TEST_GAMMA, 'ifms_17')
+        validate_coherence_files(self.params[IFG_FILE_LIST], self.params)
+        self.params[COH_FILE_LIST] = \
+            os.path.join(common.SML_TEST_GAMMA, 'bad_epochs_ifms_17')
+        with pytest.raises(ConfigException):
+            validate_coherence_files(self.params[IFG_FILE_LIST], self.params)
+
+    def test_obs_thresholds(self):
+        self.params[TIME_SERIES_PTHRESH] = 16
+        self.params[TLPF_PTHR] = 16
+        validate_obs_thresholds(self.params[IFG_FILE_LIST], self.params)
+        
+        self.params[TIME_SERIES_PTHRESH] = 18
+        self.params[TLPF_PTHR] = 18
+        with pytest.raises(ConfigException):
+            validate_obs_thresholds(self.params[IFG_FILE_LIST], self.params)
+        
 
 class ConfigTest(unittest.TestCase):
 
