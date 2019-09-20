@@ -924,8 +924,8 @@ def validate_obs_thresholds(ifg_file_list, pars):
     def validate(n, p, k):
         thresh = p[k]
         if thresh > n:
-            return [f"'{key}': not enough interferograms have been specified "
-                    f"({n_ifgs}) to satisfy threshold ({thresh})."]
+            return [f"'{k}': not enough interferograms have been specified "
+                    f"({n}) to satisfy threshold ({thresh})."]
         else:
             return []
     
