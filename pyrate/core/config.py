@@ -811,10 +811,19 @@ def validate_parameters(pars):
     else:
         validate_epochs(ifl, TWELVE_DIGIT_EPOCH_PAIR)
 
-    #validate_minimum_epochs()
     validate_ifgs(ifl, pars[OBS_DIR])
+    
+    # Get info regarding epochs and dimensions needed for validation.
+    crop_opts = _crop_opts(pars)
+    extents, n_epoch, max_span = \
+        _get_ifg_information(pars[IFG_FILE_LIST], pars[OBS_DIR], crop_opts)
+    
+    validate_minimum_epochs(n_epochs)
+
     validate_obs_thresholds(ifl, pars)
-    #validate_epoch_thresholds()
+    validate_epoch_thresholds(n_epochs, pars)
+
+    #validate_pixel_parameters(extents, pars)
 
     if GAMMA:
         validate_epochs(pars[SLC_FILE_LIST], EIGHT_DIGIT_EPOCH)
@@ -830,6 +839,13 @@ def _raise_errors(errors):
         raise ConfigException('\n'.join(errors))
     else:
         return True
+
+def validate_minimum_epochs(n_epochs):
+    errors = []
+    if n_epochs < 3:
+        errors.append(f"'{IFG_FILE_LIST}': total number of epochs is less "
+                       "than 3. 3 more unique epochs are required by PyRate.")
+    _raise_errors(errors)
 
 def validate_compulsory_parameters(pars):
     # Basic validation of parameters that are always used.
@@ -936,6 +952,14 @@ def validate_obs_thresholds(ifg_file_list, pars):
         errors.extend(validate(n_ifgs, pars, TLPF_PTHR))
 
     return _raise_errors(errors)
+
+def validate_epoch_thresholds(n_epochs, pars):
+    errors = []
+    if n_epochs < pars[LR_PTHR]:
+        errors.append[f"'{LR_PTHR}': not enough epochs have been specified "
+                      f"({n_epochs}) to satisfy threshold ({thresh})."]
+
+    return _raise_errors(errors)
             
 def validate_gamma_headers(ifg_file_list, slc_file_list, slc_dir):
     """
@@ -975,6 +999,35 @@ def validate_coherence_files(ifg_file_list, pars):
                           f"coherence file per interferogram. Found {paths}.")
 
     return _raise_errors(errors)
+
+def _get_ifg_information(ifg_file_list, obs_dir, crop_opts):
+    """
+    """
+    from pyrate.core.shared import Ifg
+    from pyrate.core.prepifg_helper import _get_extents, CustomExts
+    from pyrate.core.algorithm import get_epochs
+    rasters = [Ifg(os.path.join(obs_dir, ifg)) for ifg 
+               in parse_namelist(ifg_file_list)]
+    for r in rasters:
+        if not r.is_open:
+            r.open()
+
+    extents = _get_extents(rasters, crop_opts[0], crop_opts[1])
+    epoch_list = get_epochs(rasters)
+    n_epochs = len(epoch_list.dates)
+    max_span = max(epoch_list.spans)
+    return extents, n_epochs, max_span
+
+def _crop_opts(params):
+    crop_opt = params[IFG_CROP_OPT]
+    if crop_opt == 3:
+        xfirst = params[IFG_XFIRST]
+        yfirst = params[IFG_YFIRST]
+        xlast = params[IFG_XLAST]
+        ylast = params[IFG_YLAST]
+        return crop_opt, CustomExts(xfirst, yfirst, xlast, ylast)
+    else:
+        return crop_opt, None
 
 class ConfigException(Exception):
     """
