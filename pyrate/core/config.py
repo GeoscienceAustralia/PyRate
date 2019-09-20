@@ -30,7 +30,7 @@ import logging
 
 import glob2
 
-# from pyrate.core.validation import validate_parameters 
+from pyrate.core.ifgconstants import YEARS_PER_DAY
 
 _logger = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ ROIPAC = 0
 GAMMA = 1
 LOG_LEVEL = 'INFO'
 SIXTEEN_DIGIT_EPOCH_PAIR = r'\d{8}-\d{8}'
-TWELVE_DIGIT_EPOCH_PAIR = r'\d(6)-\d{6}'
+TWELVE_DIGIT_EPOCH_PAIR = r'\d{6}-\d{6}'
 EIGHT_DIGIT_EPOCH = r'\d{8}'
 
 # constants for lookups
@@ -368,7 +368,7 @@ def _parse_pars(pars, validate=True):
             pars[p] = pars[OBS_DIR]
 
     if validate:
-        validation.validate_parameters(pars)
+        validate_parameters(pars)
     return pars
 
 
@@ -542,7 +542,8 @@ def get_ifg_paths(config_file):
 
     return base_unw_paths, dest_paths, params
 
-# Paramater validation
+# ==== PARAMETER VALIDATION ==== #
+
 PARAM_VALIDATION = {
     OBS_DIR: (
         lambda a: a is not None and os.path.exists(a),
@@ -844,7 +845,7 @@ def validate_compulsory_parameters(pars):
     return _raise_errors(errors)
     
 def validate_optional_parameters(pars):
-    def validate(on, key, validators, pars):
+    def validate(on, validators, pars):
         errors = []
         if on:
             for k, validator in validators.items():
@@ -855,16 +856,16 @@ def validate_optional_parameters(pars):
     errors = []
 
     errors.extend(
-        validate(COH_MASK, COHERENCE_VALIDATION, pars))
+        validate(pars[COH_MASK], COHERENCE_VALIDATION, pars))
     errors.extend(
-        validate(APSEST, APSEST_VALIDATION, pars))
+        validate(pars[APSEST], APSEST_VALIDATION, pars))
     errors.extend(
-        validate(TIME_SERIES_CAL, TIME_SERIES_VALIDATION, pars))
+        validate(pars[TIME_SERIES_CAL], TIME_SERIES_VALIDATION, pars))
     errors.extend(
-        validate(ORBITAL_FIT, ORBITAL_FIT_VALIDATION, pars))
+        validate(pars[ORBITAL_FIT], ORBITAL_FIT_VALIDATION, pars))
     errors.extend(
         validate(pars[PROCESSOR]==GAMMA, GAMMA_VALIDATION, pars))
-    errors.extent(
+    errors.extend(
         validate(pars[IFG_CROP_OPT]==3, CUSTOM_CROP_VALIDATION, pars))
 
     return _raise_errors(errors)
@@ -872,16 +873,16 @@ def validate_optional_parameters(pars):
 def validate_epochs(file_list, pattern):
     errors = []
     PTN = re.compile(pattern)
-    filenames = config.parse_namelist(file_list)
+    filenames = parse_namelist(file_list)
     for fn in filenames:
         epochs = PTN.findall(fn)
         if len(epochs) == 0:
             errors.append(f"'{file_list}': {fn} does not contain an epoch of "
-                           "format {pattern}.")
+                          f"format {pattern}.")
         if len(epochs) > 1:
             errors.append(f"'{file_list}': {fn} does contains more than "
-                           "one epoch of {pattern}. There must be only one "
-                           "epoch in the filename.")
+                          f"one epoch of {pattern}. There must be only one "
+                          f"epoch in the filename.")
 
     return _raise_errors(errors)
 
@@ -898,7 +899,7 @@ def validate_ifgs(ifg_file_list, obs_dir):
         otherwise an empty list if all IFGs exist.
     """
     errors = []
-    ifgs = config.parse_namelist(ifg_file_list)
+    ifgs = parse_namelist(ifg_file_list)
     ifg_paths = [os.path.join(obs_dir, ifg) for ifg in ifgs]
     for path in ifg_paths:
         if not os.path.exists(path):
@@ -929,7 +930,7 @@ def validate_obs_thresholds(ifg_file_list, pars):
             return []
     
     errors = []
-    n_ifgs = len(list(config.parse_namelist(ifg_file_list)))
+    n_ifgs = len(list(parse_namelist(ifg_file_list)))
     errors.extend(validate(n_ifgs, pars, TIME_SERIES_PTHRESH))
     if pars[APSEST]:
         errors.extend(validate(n_ifgs, pars, TLPF_PTHR))
@@ -952,18 +953,18 @@ def validate_gamma_headers(ifg_file_list, slc_file_list, slc_dir):
     from pyrate.core.gamma import get_header_paths
     errors = []
     
-    for ifg in config.parse_namelist(ifg_file_list):
+    for ifg in parse_namelist(ifg_file_list):
         headers = get_header_paths(ifg, slc_file_list, slc_dir)
         if len(headers) < 2:
             errors.append(f"'{SLC_DIR}': Headers not found for interferogram "
                            "'{ifg}'.")
 
-    return _raise_errrors(errors)
+    return _raise_errors(errors)
 
 def validate_coherence_files(ifg_file_list, pars):
     errors = []
     
-    for ifg in config.parse_namelist(ifg_file_list):
+    for ifg in parse_namelist(ifg_file_list):
         paths = coherence_paths_for(ifg, pars)
         if len(paths) == 0:
             errors.append(f"'{COH_FILE_DIR}': no coherence files found for "

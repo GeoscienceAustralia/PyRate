@@ -29,7 +29,6 @@ from tests.common import SML_TEST_CONF, SML_TEST_TIF
 from tests.common import TEST_CONF_ROIPAC, TEST_CONF_GAMMA
 from pyrate.core import config
 from pyrate.core.config import (
-    _validate_pars,
     COHERENCE_VALIDATION,
     ORBITAL_FIT_VALIDATION,
     APSEST_VALIDATION,
@@ -85,6 +84,7 @@ from pyrate.core.config import (
     APS_ELEVATION_MAP,
     APS_METHOD,
     APS_CORRECTION,
+    validate_parameters,
     ConfigException)
 # from pyrate.tasks.utils import DUMMY_SECTION_NAME
 from tests import common
@@ -334,75 +334,75 @@ class TestConfigValidation(unittest.TestCase):
         self.params[PROCESSOR] = 1
         self.params[SLC_FILE_LIST] = None
         with pytest.raises(ConfigException):
-            _validate_pars(self.params)
+            validate_parameters(self.params)
 
         self.params[PROCESSOR] = 0
-        _validate_pars(self.params)
+        validate_parameters(self.params)
 
     def test_coherence_validation_only_performed_when_on(self):
         self.params[COH_MASK] = 1
         self.params[COH_FILE_LIST] = None
         with pytest.raises(ConfigException):
-            _validate_pars(self.params)
+            validate_parameters(self.params)
 
         self.params[COH_MASK] = 0
-        _validate_pars(self.params)
+        validate_parameters(self.params)
 
     def test_orbital_validation_only_performed_when_on(self):
         self.params[ORBITAL_FIT] = 1
         self.params[ORBITAL_FIT_METHOD] = 0
         with pytest.raises(ConfigException):
-            _validate_pars(self.params)
+            validate_parameters(self.params)
             
         self.params[ORBITAL_FIT] = 0
-        _validate_pars(self.params)
+        validate_parameters(self.params)
 
     def test_apsest_validation_only_performed_when_on(self):
         self.params[APSEST] = 1
         self.params[TLPF_METHOD] = 0
         with pytest.raises(ConfigException):
-            _validate_pars(self.params)
+            validate_parameters(self.params)
 
         self.params[APSEST] = 0
-        _validate_pars(self.params)
+        validate_parameters(self.params)
 
     def test_time_series_validation_only_performed_when_on(self):
         self.params[TIME_SERIES_CAL] = 1
         self.params[TIME_SERIES_PTHRESH] = 0
         with pytest.raises(ConfigException):
-            _validate_pars(self.params)
+            validate_parameters(self.params)
         
         self.params[TIME_SERIES_CAL] = 0
-        _validate_pars(self.params)
+        validate_parameters(self.params)
 
     def test_epochs_in_gamma_obs(self):
-        _validate_pars(self.params)
+        validate_parameters(self.params)
         self.params[IFG_FILE_LIST] = \
             os.path.join(common.SML_TEST_GAMMA, 'bad_epochs_ifms_17')
         with pytest.raises(ConfigException):
-            _validate_pars(self.params)
+            validate_parameters(self.params)
 
     def test_epochs_in_roipac_obs(self):
-        _validate_pars(self.roipac_params)
+        validate_parameters(self.roipac_params)
         self.roipac_params[IFG_FILE_LIST] = \
             os.path.join(common.SML_TEST_OBS, 'bad_epochs_ifms_17')
         with pytest.raises(ConfigException):
-            _validate_pars(self.roipac_params)
+            validate_parameters(self.roipac_params)
 
     def test_epochs_in_gamma_headers(self):
-        _validate_pars(self.params)
+        validate_parameters(self.params)
         self.params[SLC_FILE_LIST] = \
             os.path.join(common.SML_TEST_GAMMA, 'bad_epochs_headers')
         with pytest.raises(ConfigException):
-            _validate_pars(self.params)
+            validate_parameters(self.params)
 
     def test_epochs_in_coherence_files(self):
         self.params[COH_MASK] = 1
         self.params[COH_FILE_LIST] = os.path.join(common.SML_TEST_GAMMA, 'ifms_17')
-        _validate_pars(self.params)
+        validate_parameters(self.params)
         self.params[COH_FILE_LIST] = os.path.join(common.SML_TEST_GAMMA, 'bad_epochs_ifms_17')
         with pytest.raises(ConfigException):
-            _validate_pars(self.params)
+            validate_parameters(self.params)
 
 class ConfigTest(unittest.TestCase):
 
