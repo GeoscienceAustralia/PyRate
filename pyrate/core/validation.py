@@ -2,6 +2,7 @@ import re
 import itertools
 import logging
 
+from pyrate.core.ifgconstants import YEARS_PER_DAY
 from pyrate.core import config
 from pyrate.core.config import (
     DEM_HEADER_FILE,
@@ -56,147 +57,249 @@ from pyrate.core.config import (
     ConfigException)
 
 PARAM_VALIDATION = {
-    OBS_DIR: (lambda a: a is not None and os.path.exists(a),
-              f"'{OBS_DIR}': directory must be provided and must exist."),
-    IFG_FILE_LIST: (lambda a: a is not None and os.path.exists(a),
-              f"'{IFG_FILE_LIST}': file must be provided and must exist."),
-    DEM_FILE: (lambda a: a is not None and os.path.exists(a),
-              f"'{DEM_FILE}': file must be provided and must exist."),
-    DEM_HEADER_FILE: (lambda a: a is not None and os.path.exists(a),
-              f"'{DEM_HEADER_FILE}': file must be provided and must exist."),
-    OUT_DIR: (lambda a: a is not None,
-              f"'{OBS_DIR}': directory must be provided."),
-    APS_INCIDENCE_MAP: (lambda a: os.path.exists(a) if a is not None else True,
-                        f"'{APS_INCIDENCE_MAP}': file must exist."),
-    APS_ELEVATION_MAP: (lambda a: os.path.exists(a) if a is not None else True,
-                        f"'{APS_ELEVATION_MAP}': file must exists."),
-
-    IFG_CROP_OPT: (lambda a: a == 1 or a == 2 or a == 3 or a == 4,
-                    f"'{IFG_CROP_OPT}': must select option 1, 2, 3, or 4."), 
-    IFG_LKSX: (lambda a: a >= 1, 
-                f"'{IFG_LKSX}': must be >= 1."),
-    IFG_LKSY: (lambda a: a >= 1,
-                f"'{IFG_LKSY}': must be >= 1."),
-    NO_DATA_VALUE: (lambda a: True,
-                    "Any float value valid."),
-    
-    COH_MASK: (lambda a: a == 0 or a == 1,
-               f"'{COH_MASK}': must select option 0 or 1."),
-    
-    REFX: (lambda a: True,
-           "Any int value valid."),
-    REFY: (lambda a: True, 
-           "Any int value valid."),
-    REFNX: (lambda a: 1 <= a <= 50,
-            f"'{REFNX}': must be between 1 and 50 (inclusive)."),
-    REFNY: (lambda a: 1 <= a <= 50, 
-            f"'{REFNY}': must be between 1 and 50 (inclusive)."),
-    REF_CHIP_SIZE: (lambda a: 1 <= a <= 101 and a % 2 == 1,
-                    f"'{REF_CHIP_SIZE}': must be between 1 and 101 " 
-                     "(inclusive) and must be an odd number."),
-    REF_MIN_FRAC: (lambda a: 0.0 <= a <= 1.0,
-                   f"'{REF_MIN_FRAC}': must be between 0.0 and 1.0 "
-                    "(inclusive)."),
-    REF_EST_METHOD: (lambda a: a == 1 or a == 2,
-                     f"'{REF_EST_METHOD}': must select option 1 or 2."), 
-
-    ORBITAL_FIT: (lambda a: a == 0 or a == 1, 
-                  f"'{ORBITAL_FIT}': must select option 0 or 1."),
-    
-    LR_NSIG: (lambda a: 1 <= a <= 10,
-              f"'{LR_NSIG}': must be between 1 and 10 (inclusive)."),
-    LR_PTHRESH: (lambda a: a >= 1, 
-                 f"'{LR_PTHRESH}': must be >= 1"),
-    LR_MAXSIG: (lambda a: 0 <= a <= 1000,
-                f"'{LR_MAXSIG}': must be between 0 and 1000 (inclusive)."),
-
-    APSEST: (lambda a: a == 0 or a == 1,
-             f"'{APSEST}': must select option 0 or 1." ),
-    
-    TIME_SERIES_CAL: (lambda a: a == 0 or a == 1, 
-                      f"'{TIME_SERIES_CAL}': must select option 0 or 1."),
-
-    PARALLEL: (lambda a: a == 0 or a == 1 or a == 2, 
-               f"'{PARALLEL}': must select option 0 or 1 or 2."),
-    PROCESSES: (lambda a: a >= 1,
-                f"'{PROCESSES}': must be >= 1."),
-    PROCESSOR: (lambda a: a == 0 or a == 1,
-                f"'{PROCESSOR}': must select option 0 or 1. )"),
-    NAN_CONVERSION: (lambda a: a == 0 or a == 1, 
-                     f"'{NAN_CONVERSION}': must select option 0 or 1."),
-    NO_DATA_AVERAGING_THRESHOLD: (lambda a: True, 
-                                  "Any float value valid."),
-    }
+    OBS_DIR: (
+        lambda a: a is not None and os.path.exists(a),
+        f"'{OBS_DIR}': directory must be provided and must exist."
+    ),
+    IFG_FILE_LIST: (
+        lambda a: a is not None and os.path.exists(a),
+        f"'{IFG_FILE_LIST}': file must be provided and must exist."
+    ),
+    DEM_FILE: (
+        lambda a: a is not None and os.path.exists(a),
+        f"'{DEM_FILE}': file must be provided and must exist."
+    ),
+    DEM_HEADER_FILE: (
+        lambda a: a is not None and os.path.exists(a),
+        f"'{DEM_HEADER_FILE}': file must be provided and must exist."
+    ),
+    OUT_DIR: (
+        lambda a: a is not None,
+        f"'{OBS_DIR}': directory must be provided."
+    ),
+    APS_INCIDENCE_MAP: (
+        lambda a: os.path.exists(a) if a is not None else True,
+        f"'{APS_INCIDENCE_MAP}': file must exist."
+    ),
+    APS_ELEVATION_MAP: (
+        lambda a: os.path.exists(a) if a is not None else True,
+        f"'{APS_ELEVATION_MAP}': file must exists."
+    ),
+    IFG_CROP_OPT: (
+        lambda a: a == 1 or a == 2 or a == 3 or a == 4,
+        f"'{IFG_CROP_OPT}': must select option 1, 2, 3, or 4."
+    ), 
+    IFG_LKSX: (
+        lambda a: a >= 1, 
+        f"'{IFG_LKSX}': must be >= 1."
+    ),
+    IFG_LKSY: (
+        lambda a: a >= 1,
+        f"'{IFG_LKSY}': must be >= 1."
+    ),
+    NO_DATA_VALUE: (
+        lambda a: True,
+        "Any float value valid."
+    ),
+    COH_MASK: (
+        lambda a: a == 0 or a == 1,
+        f"'{COH_MASK}': must select option 0 or 1."
+    ),
+    REFX: (
+        lambda a: True,
+        "Any int value valid."
+    ),
+    REFY: (
+        lambda a: True, 
+        "Any int value valid."
+    ),
+    REFNX: (
+        lambda a: 1 <= a <= 50,
+        f"'{REFNX}': must be between 1 and 50 (inclusive)."
+    ),
+    REFNY: (
+        lambda a: 1 <= a <= 50, 
+        f"'{REFNY}': must be between 1 and 50 (inclusive)."
+    ),
+    REF_CHIP_SIZE: (
+        lambda a: 1 <= a <= 101 and a % 2 == 1,
+        f"'{REF_CHIP_SIZE}': must be between 1 and 101 (inclusive) and be odd." 
+    ),
+    REF_MIN_FRAC: (
+        lambda a: 0.0 <= a <= 1.0,
+        f"'{REF_MIN_FRAC}': must be between 0.0 and 1.0 "
+         "(inclusive)."
+    ),
+    REF_EST_METHOD: (
+        lambda a: a == 1 or a == 2,
+        f"'{REF_EST_METHOD}': must select option 1 or 2."
+    ), 
+    ORBITAL_FIT: (
+        lambda a: a == 0 or a == 1, 
+        f"'{ORBITAL_FIT}': must select option 0 or 1."
+    ),
+    LR_NSIG: (
+        lambda a: 1 <= a <= 10,
+        f"'{LR_NSIG}': must be between 1 and 10 (inclusive)."
+    ),
+    LR_PTHRESH: (
+        lambda a: a >= 1, 
+        f"'{LR_PTHRESH}': must be >= 1"
+    ),
+    LR_MAXSIG: (
+        lambda a: 0 <= a <= 1000,
+        f"'{LR_MAXSIG}': must be between 0 and 1000 (inclusive)."
+    ),
+    APSEST: (
+        lambda a: a == 0 or a == 1,
+        f"'{APSEST}': must select option 0 or 1." 
+    ),
+    TIME_SERIES_CAL: (
+        lambda a: a == 0 or a == 1, 
+        f"'{TIME_SERIES_CAL}': must select option 0 or 1."
+    ),
+    PARALLEL: (
+        lambda a: a == 0 or a == 1 or a == 2, 
+        f"'{PARALLEL}': must select option 0 or 1 or 2."
+    ),
+    PROCESSES: (
+        lambda a: a >= 1,
+        f"'{PROCESSES}': must be >= 1."
+    ),
+    PROCESSOR: (
+        lambda a: a == 0 or a == 1,
+        f"'{PROCESSOR}': must select option 0 or 1."
+    ),
+    NAN_CONVERSION: (
+        lambda a: a == 0 or a == 1, 
+        f"'{NAN_CONVERSION}': must select option 0 or 1."
+    ),
+    NO_DATA_AVERAGING_THRESHOLD: (
+        lambda a: True, 
+        "Any float value valid."),
+}
 """dict: basic validation functions for compulsory parameters."""
 
 CUSTOM_CROP_VALIDATION = {
-    IFG_XFIRST: (lambda a: True, 
-                 f"'{IFG_XFIRST}': Any pixel coordinate."),
-    IFG_XLAST: (lambda a: True, 
-                f"'{IFG_XLAST}': Any pixel coordinate."),
-    IFG_YFIRST: (lambda a: True,
-                 f"'{IFG_YFIRST}': Any pixel coordinate."),
-    IFG_YLAST: (lambda a: True,
-                f"'{IFG_YLAST}': Any pixel coordinate."),
+    IFG_XFIRST: (
+        lambda a: True, 
+        f"'{IFG_XFIRST}': Any pixel coordinate."
+    ),
+    IFG_XLAST: (
+        lambda a: True, 
+        f"'{IFG_XLAST}': Any pixel coordinate."
+    ),
+    IFG_YFIRST: (
+        lambda a: True,
+        f"'{IFG_YFIRST}': Any pixel coordinate."
+    ),
+    IFG_YLAST: (
+        lambda a: True,
+        f"'{IFG_YLAST}': Any pixel coordinate."
+    ),
 }
+"""dict: basic validation functions for custom cropping parameters."""
 
 GAMMA_VALIDATION = {
-    SLC_DIR: (lambda a: os.path.exists(a) if a is not None else True,
-              f"'{SLC_DIR}': directory must must exist."),
-    SLC_FILE_LIST: (lambda a: a is not None and os.path.exists(a),
-                    f"'{SLC_FILE_LIST}': file must be provided and must "
-                     "exist."),
+    SLC_DIR: (
+        lambda a: os.path.exists(a) if a is not None else True,
+        f"'{SLC_DIR}': directory must must exist."
+    ),
+    SLC_FILE_LIST: (
+        lambda a: a is not None and os.path.exists(a),
+        f"'{SLC_FILE_LIST}': file must be provided and must exist."
+    ),
 }
 """dict: basic validation functions for gamma parameters."""
 
 COHERENCE_VALIDATION = {
-    COH_THRESH: (lambda a: 0.0 <= a <= 1.0,
-                 f"'{COH_THRESH}': must be between 0.0 and 1.0 (inclusive)."),
-    COH_FILE_DIR: (lambda a: os.path.exists(a) if a is not None else True,
-                   f"'{COH_FILE_DIR}': directory must exist."),
-    COH_FILE_LIST: (lambda a: a is not None and os.path.exists(a),
-                    f"'{COH_FILE_LIST}': file must be provided and must exist."),
+    COH_THRESH: (
+        lambda a: 0.0 <= a <= 1.0,
+        f"'{COH_THRESH}': must be between 0.0 and 1.0 (inclusive)."
+    ),
+    COH_FILE_DIR: (
+        lambda a: os.path.exists(a) if a is not None else True,
+        f"'{COH_FILE_DIR}': directory must exist."
+    ),
+    COH_FILE_LIST: (
+        lambda a: a is not None and os.path.exists(a),
+        f"'{COH_FILE_LIST}': file must be provided and must exist."
+    ),
 }
+"""dict: basic validation functions for coherence parameters."""
 
 ORBITAL_FIT_VALIDATION = {
-    ORBITAL_FIT_METHOD: (lambda a: a == 1 or a == 2 , 
-                         f"'{ORBITAL_FIT_METHOD}': must select option 1 or 2."),
-    ORBITAL_FIT_DEGREE: (lambda a: a == 1 or a == 2 or a == 3, 
-                         f"'{ORBITAL_FIT_DEGREE}': must select option 1, 2 or 3."),
-    ORBITAL_FIT_LOOKS_X: (lambda a: a >= 1, 
-                          f"'{ORBITAL_FIT_LOOKS_X}': must be >= 1."),
-    ORBITAL_FIT_LOOKS_Y: (lambda a: a >= 1, 
-                          f"'{ORBITAL_FIT_LOOKS_Y}': must be >= 1."),
+    ORBITAL_FIT_METHOD: (
+        lambda a: a == 1 or a == 2 , 
+        f"'{ORBITAL_FIT_METHOD}': must select option 1 or 2."
+    ),
+    ORBITAL_FIT_DEGREE: (
+        lambda a: a == 1 or a == 2 or a == 3, 
+        f"'{ORBITAL_FIT_DEGREE}': must select option 1, 2 or 3."
+    ),
+    ORBITAL_FIT_LOOKS_X: (
+        lambda a: a >= 1, 
+        f"'{ORBITAL_FIT_LOOKS_X}': must be >= 1."
+    ),
+    ORBITAL_FIT_LOOKS_Y: (
+        lambda a: a >= 1, 
+        f"'{ORBITAL_FIT_LOOKS_Y}': must be >= 1."
+    ),
 }
+"""dict: basic validation fucntions for orbital error correction parameters."""
 
 APSEST_VALIDATION = {
-    TLPF_METHOD: (lambda a: a == 1 or a == 2 or a == 3, 
-                  f"'{TLPF_METHOD}': must select option 1, 2 or 3."),
-    TLPF_CUTOFF: (lambda a: a >= 0.0027, # 1 day in years 
-                  f"'{TLPF_CUTOFF}': must be >= 0.0027."),
-    TLPF_PTHR: (lambda a: a >= 1, 
-                f"'{TLPF_PTHR}': must be >= 1."),
-    SLPF_METHOD: (lambda a: a == 1 or a == 2,
-                  f"'{SLPF_METHOD}': must select option 1 or 2.") ,
-    SLPF_CUTOFF: (lambda a: a >= 0.001, 
-                  f"'{SLPF_CUTOFF}': must be >= 0.001."),
-    SLPF_ORDER: (lambda a: 1 <= a <= 3, 
-                 f"'{SLPF_ORDER}': must be between 1 and 3 (inclusive)."),
-    SLPF_NANFILL: (lambda a: a == 0 or a == 1, 
-                   f"'{SLPF_NANFILL}': must select option 0 or 1."),
+    TLPF_METHOD: (
+        lambda a: a == 1 or a == 2 or a == 3, 
+        f"'{TLPF_METHOD}': must select option 1, 2 or 3."
+    ),
+    TLPF_CUTOFF: (
+        lambda a: a >= YEARS_PER_DAY, # 1 day in years 
+        f"'{TLPF_CUTOFF}': must be >= {YEARS_PER_DAY}."
+    ),
+    TLPF_PTHR: (
+        lambda a: a >= 1, 
+        f"'{TLPF_PTHR}': must be >= 1."
+    ),
+    SLPF_METHOD: (
+        lambda a: a == 1 or a == 2,
+        f"'{SLPF_METHOD}': must select option 1 or 2."
+    ),
+    SLPF_CUTOFF: (
+        lambda a: a >= 0.001, 
+        f"'{SLPF_CUTOFF}': must be >= 0.001."
+    ),
+    SLPF_ORDER: (
+        lambda a: 1 <= a <= 3, 
+        f"'{SLPF_ORDER}': must be between 1 and 3 (inclusive)."
+    ),
+    SLPF_NANFILL: (
+        lambda a: a == 0 or a == 1, 
+        f"'{SLPF_NANFILL}': must select option 0 or 1."
+    ),
 }
+"""dict: basic validation functions for atmospheric correction parameters."""
 
 TIME_SERIES_VALIDATION = {
-    TIME_SERIES_PTHRESH: (lambda a: a >= 1, 
-                          f"'{TIME_SERIES_PTHRESH}': must be >= 1"),
+    TIME_SERIES_PTHRESH: (
+        lambda a: a >= 1, 
+        f"'{TIME_SERIES_PTHRESH}': must be >= 1"
+    ),
     #TODO: Matt to investigate smoothing factor values.
-    TIME_SERIES_SM_FACTOR: (lambda a: True, 
-                            f"'{TIME_SERIES_SM_FACTOR}':"),
-    TIME_SERIES_SM_ORDER: (lambda a: a == 1 or a == 2,
-                           f"'{TIME_SERIES_SM_ORDER}': must select option 1 or 2." ),
-    TIME_SERIES_METHOD: (lambda a: a == 1 or a == 2,
-                         f"'{TIME_SERIES_METHOD}': must select option 1 or 2."),
+    TIME_SERIES_SM_FACTOR: (
+        lambda a: True, 
+        f"'{TIME_SERIES_SM_FACTOR}':"
+    ),
+    TIME_SERIES_SM_ORDER: (
+        lambda a: a == 1 or a == 2,
+         f"'{TIME_SERIES_SM_ORDER}': must select option 1 or 2." 
+    ),
+    TIME_SERIES_METHOD: (
+        lambda a: a == 1 or a == 2,
+        f"'{TIME_SERIES_METHOD}': must select option 1 or 2."
+    ),
 }
+"""dict: basic vaidation functions for time series parameters."""
 
 def validate_parameters(pars):
     """
@@ -407,8 +510,8 @@ def _validate_coherence_files(ifgs, pars):
             errors.append(f"'{COH_FILE_DIR}': no coherence files found for "
                           f"intergerogram '{ifg}'.")
         elif len(paths) > 2:
-            errors.append(f"'{COH_FILE_DIR}': found more than one coherence file "
-                          f"for '{ifg}'. There must be only one coherence file "
-                          f"per interferogram. Found {paths}.")
+            errors.append(f"'{COH_FILE_DIR}': found more than one coherence "
+                          f"file for '{ifg}'. There must be only one "
+                          f"coherence file per interferogram. Found {paths}.")
     return errors
 
