@@ -419,18 +419,19 @@ def transform_params(params):
     xlooks, ylooks, crop = [params[k] for k in t_params]
     return xlooks, ylooks, crop
 
-def original_ifg_paths(ifglist_path):
+def original_ifg_paths(ifglist_path, obs_dir):
     """
     Returns sequence of paths to files in given ifglist file.
 
-    :param str ifglist_path: full path to interferogram file list
+    Args:
+        ifglist_path: Absolute path to interferogram file list.
+        obs_dir: Absolute path to observations directory.
 
-    :return: full path to ifg files
-    :rtype: list
+    Returns:
+        list: List of full paths to interferogram files.
     """
-    basedir = os.path.dirname(ifglist_path)
     ifglist = parse_namelist(ifglist_path)
-    return [os.path.join(basedir, p) for p in ifglist]
+    return [os.path.join(obs_dir, p) for p in ifglist]
 
 def coherence_paths_for(path, params, tif=False) -> str:
     """
@@ -534,7 +535,7 @@ def get_ifg_paths(config_file):
 
     # base_unw_paths need to be geotiffed by converttogeotiff
     #   and multilooked by run_prepifg
-    base_unw_paths = original_ifg_paths(ifg_file_list)
+    base_unw_paths = original_ifg_paths(ifg_file_list, params[OBS_DIR])
 
     # dest_paths are tifs that have been coherence masked (if enabled),
     #  cropped and multilooked
@@ -814,14 +815,14 @@ def validate_parameters(pars):
     validate_ifgs(ifl, pars[OBS_DIR])
     
     # Get info regarding epochs and dimensions needed for validation.
-    crop_opts = _crop_opts(pars)
-    extents, n_epoch, max_span = \
-        _get_ifg_information(pars[IFG_FILE_LIST], pars[OBS_DIR], crop_opts)
+    # crop_opts = _crop_opts(pars)
+    # extents, n_epoch, max_span = \
+    #    _get_ifg_information(pars[IFG_FILE_LIST], pars[OBS_DIR], crop_opts)
     
-    validate_minimum_epochs(n_epochs)
+    # validate_minimum_epochs(n_epochs)
 
     validate_obs_thresholds(ifl, pars)
-    validate_epoch_thresholds(n_epochs, pars)
+    # validate_epoch_thresholds(n_epochs, pars)
 
     #validate_pixel_parameters(extents, pars)
 

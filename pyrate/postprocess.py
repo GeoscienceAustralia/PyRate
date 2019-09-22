@@ -52,7 +52,8 @@ def _postprocess_linrate(rows, cols, params):
     # pylint: disable=expression-not-assigned
     # setup paths
     xlks, _, crop = cf.transform_params(params)
-    base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST])
+    base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST],
+                                           params[cf.OBS_DIR])
     dest_tifs = cf.get_dest_paths(base_unw_paths, crop, params, xlks)
 
     # load previously saved prepread_ifgs dict
@@ -107,7 +108,8 @@ def _postprocess_timeseries(rows, cols, params):
     """
     # pylint: disable=too-many-locals
     xlks, _, crop = cf.transform_params(params)
-    base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST])
+    base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST], 
+                                           params[cf.OBS_DIR])
     dest_tifs = cf.get_dest_paths(base_unw_paths, crop, params, xlks)
     output_dir = params[cf.TMPDIR]
 

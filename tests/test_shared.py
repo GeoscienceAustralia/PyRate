@@ -356,7 +356,7 @@ class WriteUnwTest(unittest.TestCase):
         cls.params[cf.DEM_FILE] = common.SML_TEST_DEM_GAMMA
         # base_unw_paths need to be geotiffed and multilooked by run_prepifg
         cls.base_unw_paths = cf.original_ifg_paths(
-            cls.params[cf.IFG_FILE_LIST])
+            cls.params[cf.IFG_FILE_LIST], cls.params[cf.OBS_DIR])
         cls.base_unw_paths.append(common.SML_TEST_DEM_GAMMA)
 
         xlks, ylks, crop = cf.transform_params(cls.params)

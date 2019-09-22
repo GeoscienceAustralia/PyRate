@@ -190,7 +190,8 @@ class LegacyEqualityTest(unittest.TestCase):
         prepifg.main(params)
         cls.params = params
         xlks, ylks, crop = cf.transform_params(params)
-        base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST])
+        base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST],
+                                               params[cf.OBS_DIR])
         dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         refx, refy = process._ref_pixel_calc(dest_paths, params)

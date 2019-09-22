@@ -154,7 +154,8 @@ def test_vcm_legacy_vs_mpi(mpisync, tempdir, get_config):
     params_dict[cf.OUT_DIR] = outdir
     params_dict[cf.PARALLEL] = False
     xlks, ylks, crop = cf.transform_params(params_dict)
-    base_unw_paths = cf.original_ifg_paths(params_dict[cf.IFG_FILE_LIST])
+    base_unw_paths = cf.original_ifg_paths(params_dict[cf.IFG_FILE_LIST],
+                                           params_dict[cf.OBS_DIR])
     # dest_paths are tifs that have been geotif converted and multilooked
     dest_paths = cf.get_dest_paths(base_unw_paths, crop, params_dict, xlks)
 
@@ -227,7 +228,8 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
           "rank={}".format(xlks, ref_est_method, row_splits, col_splits,
                            get_crop, orbfit_lks, orbfit_method, orbfit_degrees, mpiops.rank))
 
-    base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST])
+    base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST],
+                                           params[cf.OBS_DIR])
     # dest_paths are tifs that have been geotif converted and multilooked
     dest_paths = cf.get_dest_paths(base_unw_paths, crop, params, xlks)
 
@@ -259,7 +261,8 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
         params_old[cf.ORBITAL_FIT_METHOD] = orbfit_method
         params_old[cf.ORBITAL_FIT_DEGREE] = orbfit_degrees
         xlks, ylks, crop = cf.transform_params(params_old)
-        base_unw_paths = cf.original_ifg_paths(params_old[cf.IFG_FILE_LIST])
+        base_unw_paths = cf.original_ifg_paths(params_old[cf.IFG_FILE_LIST],
+                                               params_old[cf.OBS_DIR])
         dest_paths = cf.get_dest_paths(base_unw_paths, crop, params_old, xlks)
         prepifg.gamma_prepifg(base_unw_paths, params_old)
 

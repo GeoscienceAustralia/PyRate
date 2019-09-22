@@ -68,7 +68,7 @@ def test_warp_required():
 def test_original_ifg_paths():
     ifgdir = common.SML_TEST_TIF
     ifglist_path = join(ifgdir, 'ifms_17')
-    paths = cf.original_ifg_paths(ifglist_path)
+    paths = cf.original_ifg_paths(ifglist_path, ifgdir)
     assert paths[0] == join(ifgdir, 'geo_060619-061002_unw.tif'), str(paths[0])
     assert paths[-1] == join(ifgdir, 'geo_070709-070813_unw.tif')
 
@@ -209,7 +209,8 @@ class ParallelPyRateTests(unittest.TestCase):
 
         # base_unw_paths need to be geotiffed by converttogeotif 
         #  and multilooked by run_prepifg
-        base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST])
+        base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST],
+                                               params[cf.OBS_DIR])
 
         # dest_paths are tifs that have been geotif converted and multilooked
         cls.dest_paths = cf.get_dest_paths(
