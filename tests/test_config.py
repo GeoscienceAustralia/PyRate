@@ -32,7 +32,7 @@ from pyrate.core.config import (
     validate_obs_thresholds, validate_ifgs, validate_gamma_headers,
     validate_coherence_files, validate_tifs_exist, validate_pixel_parameters,
     validate_minimum_epochs, validate_epoch_thresholds, validate_epoch_cutoff,
-    validate_extent_parameters)
+    validate_extent_parameters, validate_reference_pixel_search_windows)
 from pyrate.core.config import (
     SIXTEEN_DIGIT_EPOCH_PAIR,
     TWELVE_DIGIT_EPOCH_PAIR,
@@ -487,6 +487,21 @@ class TestConfigValidationWithGeotiffs(unittest.TestCase):
         self.params[REFY] = 73
         with pytest.raises(ConfigException):
             validate_pixel_parameters(self.n_cols, self.n_rows, self.params)
+
+    def test_validate_search_windows(self):
+        self.params[REF_CHIP_SIZE] = 21
+        self.params[REFNX] = 2
+        self.params[REFNY] = 3
+        validate_reference_pixel_search_windows(self.n_cols, self.n_rows, self.params)
+
+        self.params[REFNX] = 3
+        with pytest.raises(ConfigException):
+            validate_reference_pixel_search_windows(self.n_cols, self.n_rows, self.params)
+
+        self.params[REFNX] = 2
+        self.params[REFNY] = 4
+        with pytest.raises(ConfigException):
+            validate_reference_pixel_search_windows(self.n_cols, self.n_rows, self.params)
 
     def test_validate_multilook_parameters(self):
         self.params[IFG_LKSX] = 48

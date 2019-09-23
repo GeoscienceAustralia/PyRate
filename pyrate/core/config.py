@@ -847,14 +847,13 @@ def validate_parameters(pars: Dict, requires_tif: bool=False):
         extents, n_cols, n_rows, n_epochs, max_span = \
            _get_ifg_information(pars[IFG_FILE_LIST], pars[OBS_DIR], crop_opts)
         validate_pixel_parameters(n_cols, n_rows, pars)
+        validate_reference_pixel_search_windows(n_cols, n_rows, pars)
         validate_extent_parameters(extents, pars)
         validate_minimum_epochs(n_epochs, MINIMUM_NUMBER_EPOCHS)
         validate_epoch_thresholds(n_epochs, pars)
         validate_epoch_cutoff(max_span, TLPF_CUTOFF, pars)
 
     validate_obs_thresholds(ifl, pars)
-
-    #TODO: validate_reference_pixel_search_windows
 
     if is_GAMMA:
         validate_epochs(pars[SLC_FILE_LIST], EIGHT_DIGIT_EPOCH)
@@ -1224,6 +1223,44 @@ def validate_pixel_parameters(n_cols: int, n_rows: int, pars: Dict) -> Optional[
         errors.extend(_validate_multilook(ORBITAL_FIT_LOOKS_X, n_cols, 'x'))
         errors.extend(_validate_multilook(ORBITAL_FIT_LOOKS_Y, n_rows, 'y'))
 
+    return _raise_errors(errors)
+
+def validate_reference_pixel_search_windows(n_cols: int, n_rows: int, 
+                                            pars: Dict) -> Optional[bool]:
+    """
+    Validates that the reference pixel search windows provided by user
+    fit within the scene being processed.
+
+    Args:
+        n_cols: Number of pixel columns (X) in the scene.
+        n_rows: Number of pixel rows (Y) in the scene.
+    
+    Returns:
+        True if the scene can accomodate the search windows (no overlap).
+
+    Raises:
+        ConfigException: If the scene cannot accomodate the search windows.
+    """
+    from math import floor
+
+    errors = []
+    refnx = pars[REFNX]
+    refny = pars[REFNY]
+    chip_size = pars[REF_CHIP_SIZE]
+    
+    x_windows = floor(n_cols/chip_size)
+    if refnx > x_windows:
+        errors.append(f"'{REFNX}' & '{REF_CHIP_SIZE}': search windows do not "
+                      f"fit in scene on X axis (number of columns: {n_cols}). "
+                      f"Reduce {REF_CHIP_SIZE} or {REFNX} so that {REFNX} "
+                      f"is less than or equal to (columns / {REF_CHIP_SIZE}).")
+    y_windows = floor(n_rows/chip_size)
+    if refny > y_windows:
+        errors.append(f"'{REFNY}' & '{REF_CHIP_SIZE}': search windows do not "
+                      f"fit in scene on Y axis (number of rows: {n_rows}). "
+                      f"Reduce {REF_CHIP_SIZE} or {REFNY} so that {REFNY} "
+                      f"is less than or equal to (rows / {REF_CHIP_SIZE}).")
+    
     return _raise_errors(errors)
 
 def validate_gamma_headers(ifg_file_list: str, slc_file_list: str, 
