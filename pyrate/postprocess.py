@@ -33,13 +33,12 @@ log = logging.getLogger(__name__)
 MASTER_PROCESS = 0
 
 
-def main(config_file, rows, cols):
+def main(params, rows, cols):
     """
     PyRate post-processing main function. Assembles product tiles in to
     single geotiff files
     """
     # setup paths
-    _, _, params = cf.get_ifg_paths(config_file)
     _postprocess_linrate(rows, cols, params)
     if params[cf.TIME_SERIES_CAL]:
         _postprocess_timeseries(rows, cols, params)

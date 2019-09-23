@@ -33,7 +33,7 @@ def converttogeotiff_handler(config_file):
     Convert interferograms to geotiff.
     """
     config_file = os.path.abspath(config_file)
-    params = cf.get_config_params(config_file)
+    params = cf.get_config_params(config_file, requires_tif=False)
     converttogtif.main(params)
 
 
@@ -42,7 +42,7 @@ def prepifg_handler(config_file):
     Perform multilooking and cropping on geotiffs.
     """
     config_file = os.path.abspath(config_file)
-    params = cf.get_config_params(config_file)
+    params = cf.get_config_params(config_file, requires_tif=True)
     prepifg.main(params)
 
 
@@ -51,7 +51,7 @@ def process_handler(config_file, rows, cols):
     Time series and linear rate computation.
     """
     config_file = os.path.abspath(config_file)
-    _, dest_paths, params = cf.get_ifg_paths(config_file)
+    _, dest_paths, params = cf.get_ifg_paths(config_file, requires_tif=True)
     process.process_ifgs(sorted(dest_paths), params, rows, cols)
 
 
@@ -60,7 +60,8 @@ def postprocess_handler(config_file, rows, cols):
     Reassemble computed tiles and save as geotiffs.
     """
     config_file = os.path.abspath(config_file)
-    postprocess.main(config_file, rows, cols)
+    _, _, params = cf.get_ifg_paths(config_file, requires_tif=True)
+    postprocess.main(params, rows, cols)
 
 CLI_DESC = """
 PyRate workflow: 
