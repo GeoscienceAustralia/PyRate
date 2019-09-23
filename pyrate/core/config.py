@@ -23,6 +23,7 @@ provided in the configs/ directory
 # pylint: disable=invalid-name
 # pylint: disable=W1203
 # pylint: disable=too-many-locals
+# pylint: disable=trailing-whitespace
 from typing import List, Tuple, Dict, Optional
 import os
 from os.path import splitext, split
@@ -42,6 +43,7 @@ LOG_LEVEL = 'INFO'
 SIXTEEN_DIGIT_EPOCH_PAIR = r'\d{8}-\d{8}'
 TWELVE_DIGIT_EPOCH_PAIR = r'\d{6}-\d{6}'
 EIGHT_DIGIT_EPOCH = r'\d{8}'
+MINIMUM_NUMBER_EPOCHS = 3
 
 # constants for lookups
 #: STR; Name of input interferogram list file
@@ -266,15 +268,18 @@ DEFAULT_TO_OBS_DIR = [SLC_DIR, COH_FILE_DIR]
 
 INT_KEYS = [APS_CORRECTION, APS_METHOD]
 
-def get_config_params(path, validate=True, requires_tif=False):
+def get_config_params(path: str, validate: bool=True, requires_tif: bool=False) -> Dict:
     """
-    Returns a dictionary of key:value parameter pairs from the
-    configuration file
-
-    :param str path: path of config file
-
-    :return: params
-    :rtype: dict
+    Reads the parameters file provided by the user and converts it into
+    a dictionary.
+    
+    Args:
+        path: Absolute path to the parameters file.
+        validate: Validate the parameters if True, otherwise skip validation.
+        requires_tif: True if the calling process requires interferograms
+                      in geotiff format (performs additional validation).
+    Returns:
+       A dictionary of parameters. 
     """
     txt = ''
     with open(path, 'r') as inputFile:
@@ -290,9 +295,15 @@ def get_config_params(path, validate=True, requires_tif=False):
 
     return params
 
-def _parse_conf_file(content, validate=True, requires_tif=False):
+def _parse_conf_file(content, validate: bool=True, requires_tif: bool=False) -> Dict:
     """
-    Parser for converting text content into a dictionary of parameters
+    Converts the parameters from their text form into a dictionary.
+    
+    Args:
+        content: Parameters as text.
+        
+    Returns:
+        A dictionary of parameters.
     """
     def _is_valid(line):
         """
@@ -323,7 +334,7 @@ def _parse_conf_file(content, validate=True, requires_tif=False):
 
 def _handle_extra_parameters(params):
     """
-    Function to check if requirements for weather model correction are given
+    Function to check if requirements for weather model correction are given.
     """
     params[APS_INCIDENCE_EXT] = None
     params[APS_ELEVATION_EXT] = None
@@ -342,9 +353,16 @@ def _handle_extra_parameters(params):
 
     return params
 
-def _parse_pars(pars, validate=True, requires_tif=False):
+def _parse_pars(pars, validate: bool=True, requires_tif: bool=False) -> Dict:
     """
-    Parses and converts config file params from text
+    Takes dictionary of parameters, converting values to required type
+    and providing defaults for missing values.
+
+    Args:
+        pars: Parameters dictionary.
+
+    Returns:
+        Dictionary of converted (and optionally validated) parameters.
     """
     # Fallback to default for missing values and perform conversion.
     for k in PARAM_CONVERSION:
@@ -603,27 +621,6 @@ PARAM_VALIDATION = {
         lambda a: True,
         "Any int value valid."
     ),
-    REFNX: (
-        lambda a: 1 <= a <= 50,
-        f"'{REFNX}': must be between 1 and 50 (inclusive)."
-    ),
-    REFNY: (
-        lambda a: 1 <= a <= 50,
-        f"'{REFNY}': must be between 1 and 50 (inclusive)."
-    ),
-    REF_CHIP_SIZE: (
-        lambda a: 1 <= a <= 101 and a % 2 == 1,
-        f"'{REF_CHIP_SIZE}': must be between 1 and 101 (inclusive) and be odd."
-    ),
-    REF_MIN_FRAC: (
-        lambda a: 0.0 <= a <= 1.0,
-        f"'{REF_MIN_FRAC}': must be between 0.0 and 1.0 "
-        "(inclusive)."
-    ),
-    REF_EST_METHOD: (
-        lambda a: a in (1, 2),
-        f"'{REF_EST_METHOD}': must select option 1 or 2."
-    ),
     ORBITAL_FIT: (
         lambda a: a in (0, 1),
         f"'{ORBITAL_FIT}': must select option 0 or 1."
@@ -791,18 +788,43 @@ TIME_SERIES_VALIDATION = {
 }
 """dict: basic vaidation functions for time series parameters."""
 
-def validate_parameters(pars, requires_tif=False):
+REFERENCE_PIXEL_VALIDATION = {
+    REFNX: (
+        lambda a: 1 <= a <= 50,
+        f"'{REFNX}': must be between 1 and 50 (inclusive)."
+    ),
+    REFNY: (
+        lambda a: 1 <= a <= 50,
+        f"'{REFNY}': must be between 1 and 50 (inclusive)."
+    ),
+    REF_CHIP_SIZE: (
+        lambda a: 1 <= a <= 101 and a % 2 == 1,
+        f"'{REF_CHIP_SIZE}': must be between 1 and 101 (inclusive) and be odd."
+    ),
+    REF_MIN_FRAC: (
+        lambda a: 0.0 <= a <= 1.0,
+        f"'{REF_MIN_FRAC}': must be between 0.0 and 1.0 "
+        "(inclusive)."
+    ),
+    REF_EST_METHOD: (
+        lambda a: a in (1, 2),
+        f"'{REF_EST_METHOD}': must select option 1 or 2."
+    ),
+}
+"""dict: basic validation functions for reference pixel search parameters."""
+
+def validate_parameters(pars: Dict, requires_tif: bool=False):
     """
-    Calls validation functions on each parameter, collects errors and
-    raises an exception with collected errors if errors occurred.
+    Main validation function. Calls validation subfunctions and gathers
+    some required variables for performing validation.
 
     Args:
-        pars: the parameters dictionary.
+        pars: The parameters dictionary.
         requires_tif: Whether the currently used workflow requires
                       interferograms in tif format.
 
     Raises:
-        ConfigException: if errors occur during parameter validation.
+        ConfigException: If errors occur during parameter validation.
     """
     is_GAMMA = pars[PROCESSOR] == GAMMA
     ifl = pars[IFG_FILE_LIST]
@@ -817,21 +839,22 @@ def validate_parameters(pars, requires_tif=False):
 
     validate_ifgs(ifl, pars[OBS_DIR])
 
-    extents, n_epochs, max_span, x_step, y_step = None, None, None, None, None
+    extents, n_cols, n_rows, n_epochs, max_span = None, None, None, None, None
     if requires_tif:
         validate_tifs_exist(pars[IFG_FILE_LIST], pars[OBS_DIR])
         # Get info regarding epochs and dimensions needed for validation.
         crop_opts = _crop_opts(pars)
-        extents, n_epochs, max_span, x_step, y_step = \
+        extents, n_cols, n_rows, n_epochs, max_span = \
            _get_ifg_information(pars[IFG_FILE_LIST], pars[OBS_DIR], crop_opts)
-        validate_pixel_parameters(extents, x_step, y_step, pars)
-        validate_minimum_epochs(n_epochs)
+        validate_pixel_parameters(n_cols, n_rows, pars)
+        validate_extent_parameters(extents, pars)
+        validate_minimum_epochs(n_epochs, MINIMUM_NUMBER_EPOCHS)
         validate_epoch_thresholds(n_epochs, pars)
         validate_epoch_cutoff(max_span, TLPF_CUTOFF, pars)
 
     validate_obs_thresholds(ifl, pars)
 
-    #validate_reference_pixel_search_windows
+    #TODO: validate_reference_pixel_search_windows
 
     if is_GAMMA:
         validate_epochs(pars[SLC_FILE_LIST], EIGHT_DIGIT_EPOCH)
@@ -841,14 +864,28 @@ def validate_parameters(pars, requires_tif=False):
         validate_epochs(pars[COH_FILE_LIST], SIXTEEN_DIGIT_EPOCH_PAIR)
         validate_coherence_files(ifl, pars)
 
-def _raise_errors(errors):
+def _raise_errors(errors: List[str]):
+    """
+    Convenience function for raising an exception with errors.
+    """
     if errors:
         errors.insert(0, "invalid parameters")
         raise ConfigException('\n'.join(errors))
     return True
 
-def validate_compulsory_parameters(pars):
-    # Basic validation of parameters that are always used.
+def validate_compulsory_parameters(pars: Dict) -> Optional[bool]:
+    """
+    Calls the validators for compulsory (always used) parameters.
+    
+    Args:
+        pars: The parameters dictionary.
+
+    Returns:
+        True if validation is successful.
+        
+    Raises:
+        ConfigException: If validation fails.
+    """
     errors = []
     for k in pars.keys():
         validator = PARAM_VALIDATION.get(k)
@@ -860,8 +897,31 @@ def validate_compulsory_parameters(pars):
 
     return _raise_errors(errors)
 
-def validate_optional_parameters(pars):
-    def validate(on, validators, pars):
+def validate_optional_parameters(pars: Dict):
+    """ 
+    Calls the validators for optional parameters.
+    
+    Args:
+        pars: The parameters dictionary.
+        
+    Returns:
+        True if validation successful.
+        
+    Raises:
+        ConfigException: If validation fails.
+    """
+    def validate(on: bool, validators: Dict, pars: Dict) -> List[str]:
+        """
+        Convenience method for calling validators.
+    
+        Args:
+            on: Determines whether to call the validators.
+            validators: A dictionary of validator functions.
+            pars: Parameters dictionary.
+
+        Returns:
+            A list of errors.           
+        """
         errors = []
         if on:
             for k, validator in validators.items():
@@ -883,17 +943,50 @@ def validate_optional_parameters(pars):
         validate(pars[PROCESSOR] == GAMMA, GAMMA_VALIDATION, pars))
     errors.extend(
         validate(pars[IFG_CROP_OPT] == 3, CUSTOM_CROP_VALIDATION, pars))
+    errors.extend(
+        validate(pars[REFX] > 0 and pars[REFY] > 0, REFERENCE_PIXEL_VALIDATION, pars))
 
     return _raise_errors(errors)
 
-def validate_minimum_epochs(n_epochs):
-    errors = []
-    if n_epochs < 3:
-        errors.append(f"'{IFG_FILE_LIST}': total number of epochs is less "
-                      "than 3. 3 more unique epochs are required by PyRate.")
-    _raise_errors(errors)   
+def validate_minimum_epochs(n_epochs: int, min_epochs: int) -> Optional[bool]:
+    """
+    Validates the minimum number of epochs required for PyRate to produce
+    good results. 
 
-def validate_epochs(file_list, pattern):
+    Args:
+        n_epochs: The number of unique epochs in the collection of interferograms
+                  provided as input.
+        min_epochs: The minimum number of epochs PyRate requires.
+
+    Returns:
+        True if there are enough epochs to satisfy minimum epochs.
+    
+    Raises:
+        ConfigException: If there are not enough epochs to satisfy min epochs.
+    """
+    errors = []
+    if n_epochs < min_epochs:
+        errors.append(f"'{IFG_FILE_LIST}': total number of epochs is less "
+                      "than {min_epochs}. {min_epochs} or "
+                      "more unique epochs are required by PyRate.")
+    _raise_errors(errors)
+
+def validate_epochs(file_list: str, pattern: str) -> Optional[bool]:
+    """
+    Validate that user provided file names contain the correct pattern of
+    epochs.
+
+    Args:
+        file_list: Path to the list of files to validate.
+        pattern: Regex string for finding the epoch(s).
+
+    Returns:
+        True if all names in file list contain the epoch pattern *once*.
+
+    Raises:
+        ConfigException: If not all names in the file list don't contain
+                         the epoch pattern or contain it more than once.
+    """
     errors = []
     PTN = re.compile(pattern)
     filenames = parse_namelist(file_list)
@@ -909,14 +1002,41 @@ def validate_epochs(file_list, pattern):
 
     return _raise_errors(errors)
 
-def validate_epoch_cutoff(max_span, cutoff, pars):
+def validate_epoch_cutoff(max_span: float, cutoff: str, pars: Dict) -> Optional[bool]:
+    """
+    Validate cutoff parameters that rely on the data timespan.
+    
+    Args:
+        max_span: The maximum temporal span of the provided data in years.
+        cutoff: The key of the cutoff parameter.
+        pars: The parameters dictionary.
+    
+    Returns:
+        True if the cutoff is less than the maximum data timespan.
+    
+    Raises:
+        ConfigException: If the cutoff is greater than the max data timespan.
+    """
     errors = []
     if pars[cutoff] > max_span:
         errors.append("'{cutoff}': must be less than max time span of "
                       "data in years ({max_span}).")
     return _raise_errors(errors)
 
-def validate_tifs_exist(ifg_file_list, obs_dir):
+def validate_tifs_exist(ifg_file_list: str, obs_dir: str) -> Optional[bool]:
+    """
+    Validates that provided interferograms exist in geotiff format.
+
+    Args:
+        ifg_file_list: Path to file containing interfergram file names.
+        obs_dir: Path to observations directory.
+
+    Returns:
+        True if all interferograms exist in geotiff format.
+
+    Raises:
+        ConfigException: If not all intergerograms exist in geotiff format.
+    """
     from pyrate.core.shared import output_tiff_filename
 
     errors = []
@@ -932,17 +1052,19 @@ def validate_tifs_exist(ifg_file_list, obs_dir):
 
     return _raise_errors(errors)
 
-def validate_ifgs(ifg_file_list, obs_dir):
+def validate_ifgs(ifg_file_list: str, obs_dir: str) -> Optional[bool]:
     """
-    Checks that the IFGs specified in IFG_FILE_LIST exist.
+    Validates that provided interferograms exist.
 
     Args:
-        ifgs: list of IFG filenames.
-        obs_dir: the observations directory where the IFGs should exist.
+        ifg_file_list: Path to file containing interferogram file names..
+        obs_dir: Path to observations directory.
 
     Returns:
-        A list of error messages with one for each IFG that doesn't exist,
-        otherwise an empty list if all IFGs exist.
+        True if all interferograms exist.
+
+    Raises:
+        ConfigException: If not all interferograms exist.
     """
     errors = []
     ifgs = parse_namelist(ifg_file_list)
@@ -954,18 +1076,20 @@ def validate_ifgs(ifg_file_list, obs_dir):
 
     return _raise_errors(errors)
 
-def validate_obs_thresholds(ifg_file_list, pars):
+def validate_obs_thresholds(ifg_file_list: str, pars: Dict) -> Optional[bool]:
     """
     Validates parameters that specify an observations threshold.
 
     Args:
-        n_ifgs: the number of IFGs specified in IFG_FILE_LIST.
-        pars: the parameters dictionary.
-        key: key for the observations threshold being validated.
-
+        ifg_file_list: Path to the file containing interferogram file names.
+        pars: Parameters dictionary.
+    
     Returns:
-        An error message if n_ifgs is less than the value set by the
-        threshold parameterm, otherwise None.
+        True if there are enough interferograms to satisfy all observation thresholds.
+
+    Raises:
+        ConfigException: If there not enough interferograms to satisfy all observation
+                         thresholds.
     """
     def validate(n, p, k):
         thresh = p[k]
@@ -982,100 +1106,144 @@ def validate_obs_thresholds(ifg_file_list, pars):
 
     return _raise_errors(errors)
 
-def validate_epoch_thresholds(n_epochs, pars):
+def validate_epoch_thresholds(n_epochs: int, pars: Dict) -> Optional[bool]:
+    """
+    Validates threshold paramters that rely on the number of epochs
+    available.
+
+    Args:
+        n_epochs: The number of unique epochs in the collection of interferograms
+                  provided as input.
+        pars: Parameters dictionary.
+    
+    Returns:
+        True if there are enough epochs to satisfy all epoch thresholds.
+
+    Raises:
+        ConfigException: If there are not enough epochs to satisfy all epoch thresholds.
+    """
     errors = []
     thresh = pars[LR_PTHRESH]
-    if n_epochs < pars[thresh]:
+    if n_epochs < thresh:
         errors.append(f"'{LR_PTHRESH}': not enough epochs have been specified "
                       f"({n_epochs}) to satisfy threshold ({thresh}).")
 
     return _raise_errors(errors)
 
-def validate_pixel_parameters(extents: Tuple[float],
-                              x_step: float, y_step: float,
-                              pars) -> Optional[bool]:
+def validate_extent_parameters(extents: Tuple[float, float, float, float], 
+                               pars: Dict) -> Optional[bool]:
     """
-    Validate parameters that provide pixel coordinates by checking they fit
+    Validate parameters that provide lat/long coordinates by checking they fit
     within the scene being processed.
 
     Args:
         extents : Tuple of (xmin, xmax, ymin, ymax) describing the extents
-                  of the scene being processed.
-        x_step: Pixel size in X dimension in degrees.
-        y_step: Pixel size in Y dimension in degrees.
+                  of the scene being processed in degrees.
         pars: Parameters dictionary.
 
     Returns:
-        True if validation is successful, otherwise raises.
+        True if validation is successful.
 
     Raises:
-        ConfigException: if validation fails.
+        ConfigExeption: If validation fails.
     """
     errors = []
     xmin, ymin, xmax, ymax = extents
-    x_dim_string = f"(xmin: {xmin}, xmax: {xmax}"
-    y_dim_string = f"(ymin: {ymin}, ymax: {ymax}"
-
-    # Check reference pixel coordinates within scene.
-    if not xmin <= pars[REFX] <= xmax:
-        errors.append(f"'{REFX}': reference pixel coodinate is "
-                      f"outside bounds of scene ({x_dim_string}).")
-
-    if not ymin <= pars[REFY] <= ymax:
-        errors.append(f"'{REFY}': reference pixel coodinate is "
-                      f"outside bounds of scene ({y_dim_string}).")
+    x_dim_string = f"(xmin: {xmin}, xmax: {xmax})"
+    y_dim_string = f"(ymin: {ymin}, ymax: {ymax})"
 
     # Check crop coordinates within scene.
-    def _validate_crop_coord(var_name, dim_val, dim_string):
-        if pars[var_name] < dim_val:
-            return [f"'{var_name}': crop coordinate "
-                    f"is outside bounds of scene ({dim_string})."]
+    def _validate_crop_coord(var_name, dim_min, dim_max, dim_string):
+        if not dim_min < pars[var_name] < dim_max:
+            return [f"'{var_name}': crop coordinate ({pars[var_name]}) "
+                    f"is outside bounds of scene {dim_string}."]
 
         return []
 
-    errors.extend(_validate_crop_coord(IFG_XFIRST, xmin, x_dim_string))
-    errors.extend(_validate_crop_coord(IFG_YFIRST, ymin, y_dim_string))
-    errors.extend(_validate_crop_coord(IFG_XLAST, xmax, x_dim_string))
-    errors.extend(_validate_crop_coord(IFG_YLAST, ymax, y_dim_string))
+    errors.extend(_validate_crop_coord(IFG_XFIRST, xmin, xmax, x_dim_string))
+    errors.extend(_validate_crop_coord(IFG_YFIRST, ymin, ymax, y_dim_string))
+    errors.extend(_validate_crop_coord(IFG_XLAST, xmin, xmax, x_dim_string))
+    errors.extend(_validate_crop_coord(IFG_YLAST, ymin, ymax, y_dim_string))
 
     # Check SLPF_CUTOFF within scene *in kilometeres*.
     DEG_TO_KM = 111.32 # km per degree
     x_extent = abs(xmin - xmax)
     y_extent = abs(ymin - ymax)
-    x_extent_km = x_extent * x_step * DEG_TO_KM
-    y_extent_km = y_extent * y_step * DEG_TO_KM
+    x_extent_km = x_extent *  DEG_TO_KM
+    y_extent_km = y_extent *  DEG_TO_KM
     if pars[SLPF_CUTOFF] > max(x_extent_km, y_extent_km):
         errors.append(f"'{SLPF_CUTOFF}': cutoff is out of bounds, must be "
                       "less than max scene bound (in km) "
                       f"({max(x_extent_km, y_extent_km)}).")
 
+    return _raise_errors(errors)
+
+def validate_pixel_parameters(n_cols: int, n_rows: int, pars: Dict) -> Optional[bool]:
+    """
+    Validate parameters that provide pixel coordinates by verifying they
+    are within the scene being processed.
+
+    Args:
+        extents : Tuple of (xmin, xmax, ymin, ymax) describing the extents
+                  of the scene being processed in degrees.
+        n_cols: Number of pixel columns (X) in the raster.
+        n_rows: Number of pixel rows (X) in the raster.
+        pars: Parameters dictionary.
+
+    Returns:
+        True if validation is successful.
+
+    Raises:
+        ConfigException: If validation fails.
+    """
+    errors = []
+    x_dim_string = f"(xmin: 0, xmax: {n_cols}"
+    y_dim_string = f"(ymin: 0, ymax: {n_rows}"
+
+    # Check reference pixel coordinates within scene.
+    if pars[REFX] > 0 and pars[REFY] > 0:
+        if not 0 < pars[REFX] <= n_cols:
+            errors.append(f"'{REFX}': reference pixel coodinate is "
+                          f"outside bounds of scene ({x_dim_string}).")
+
+        if not 0 < pars[REFY] <= n_rows:
+            errors.append(f"'{REFY}': reference pixel coodinate is "
+                          f"outside bounds of scene ({y_dim_string}).")
+
     # Check multilooks (extent/val) >= 1.
     def _validate_multilook(var_name, dim_val, dim_string):
         if dim_val / pars[var_name] < 1:
-            return [f"'{var_name}': ({dim_string} extent / multilook value) "
-                    "must be greater than or equal to 1."]
+            return [f"'{var_name}': ({dim_string} pixel extent: {dim_val} / "
+                    "multilook value: {pars[var_name]}) must be greater than "
+                    "or equal to 1."]
         return []
 
-    errors.extend(_validate_multilook(IFG_LKSX, x_extent, 'x'))
-    errors.extend(_validate_multilook(IFG_LKSY, y_extent, 'y'))
+    errors.extend(_validate_multilook(IFG_LKSX, n_cols, 'x'))
+    errors.extend(_validate_multilook(IFG_LKSY, n_rows, 'y'))
     if pars[ORBITAL_FIT]:
-        errors.extend(_validate_multilook(ORBITAL_FIT_LOOKS_X, x_extent, 'x'))
-        errors.extend(_validate_multilook(ORBITAL_FIT_LOOKS_Y, y_extent, 'y'))
+        errors.extend(_validate_multilook(ORBITAL_FIT_LOOKS_X, n_cols, 'x'))
+        errors.extend(_validate_multilook(ORBITAL_FIT_LOOKS_Y, n_rows, 'y'))
 
     return _raise_errors(errors)
 
-def validate_gamma_headers(ifg_file_list, slc_file_list, slc_dir):
+def validate_gamma_headers(ifg_file_list: str, slc_file_list: str, 
+                           slc_dir: str) -> Optional[bool]:
     """
-    Validates that gamma headers exist for specified IFGs.
+    Validates that a pair of GAMMA headers exist for each provided
+    GAMMA interferogram.
 
     Args:
-        ifgs: List of IFG filenames.
-        slc_dir: The slc directory where gamma headers should exist.
+        ifg_file_list: Path to the file listing filenames of interferograms.
+        slc_file_list: Path to the file listing filenames of GAMMA headers.
+        slc_dir: Path to directory containing GAMMA headers.
 
     Returns:
-        A list of error messages with one for each IFG that doesn't have
-        2 matching headers (one for each epoch), otherwise an empty list if
-        all headers exist.
+        True if there are exactly 2 headers for each interogram (one for
+        each epoch).
+
+    Raises:
+        ConfigException: If there are 0 or more than 2 matching headers
+                         for an interferogram.
     """
     from pyrate.core.gamma import get_header_paths
     errors = []
@@ -1088,7 +1256,22 @@ def validate_gamma_headers(ifg_file_list, slc_file_list, slc_dir):
 
     return _raise_errors(errors)
 
-def validate_coherence_files(ifg_file_list, pars):
+def validate_coherence_files(ifg_file_list: str, pars: Dict) -> Optional[bool]:
+    """
+    Validates that there is a matching coherence file for each provided
+    interferogram.
+
+    Args:
+        ifg_file_list: Path to file listing interferogram names.
+        pars: The parameters dictionary.
+
+    Returns:
+        True if there is exactly 1 coherence file for each interferogram.
+
+    Raises:
+        ConfigException: If there are 0 or more than 1 matching coherence
+                         files for an interferogram.
+    """
     errors = []
 
     for ifg in parse_namelist(ifg_file_list):
@@ -1103,27 +1286,54 @@ def validate_coherence_files(ifg_file_list, pars):
 
     return _raise_errors(errors)
 
-def _get_ifg_information(ifg_file_list, obs_dir, crop_opts):
+def _get_ifg_information(ifg_file_list: str, obs_dir: str, crop_opts: Tuple) -> Tuple:
     """
+    Retrieves spatial and temporal information from the provided interferograms.
+    Requires the interferograms to exist in geotiff format.
+
+    Args:
+        ifg_file_list: Path to file containing list of interferogram file names.
+        obs_dir: Path to observations directory.
+        crop_opts: Crop options from parameters.
+
+    Returns:
+        Tuple containing extents (xmin, ymin, xmax, ymax), number of pixel
+        columns, number of pixel rows, number of unique epochs and maximum
+        time span of the data.
     """
-    from pyrate.core.shared import Ifg
+    from pyrate.core.shared import Ifg, output_tiff_filename
     from pyrate.core.prepifg_helper import _get_extents
     from pyrate.core.algorithm import get_epochs
-    rasters = [Ifg(os.path.join(obs_dir, ifg)) for ifg
-               in parse_namelist(ifg_file_list)]
+    ifg_paths = [os.path.join(obs_dir, ifg) for ifg in parse_namelist(ifg_file_list)]
+    rasters = [Ifg(output_tiff_filename(f, obs_dir)) for f in ifg_paths]
+
     for r in rasters:
         if not r.is_open:
             r.open()
 
+    # extents = xmin, ymin, xmax, ymax
     extents = _get_extents(rasters, crop_opts[0], crop_opts[1])
     epoch_list = get_epochs(rasters)[0]
     n_epochs = len(epoch_list.dates)
     max_span = max(epoch_list.spans)
     # Assuming resolutions have been verified to be the same.
-    x_step, y_step = rasters[0].x_step, rasters[0].y_step
-    return extents, n_epochs, max_span, x_step, y_step
+    x_step = rasters[0].x_step
+    y_step = rasters[0].y_step
 
-def _crop_opts(params):
+    # Get the pixel bounds. Ifg/Raster objects do have 'ncols'/'nrows' 
+    #  properties, but we'll calculate it off the extents we got above
+    #  because these take into account the chosen cropping option (until
+    #  the stack of interferograms is cropped it's not known what the 
+    #  pixel dimensions will be).
+    n_cols = abs(int(abs(extents[0] - extents[2]) / x_step))
+    n_rows = abs(int(abs(extents[1] - extents[3]) / y_step))
+
+    return extents, n_cols, n_rows, n_epochs, max_span
+
+def _crop_opts(params: Dict) -> Tuple:
+    """
+    Convenience function for getting crop options from parameters.
+    """
     from pyrate.core.prepifg_helper import CustomExts
 
     crop_opt = params[IFG_CROP_OPT]
