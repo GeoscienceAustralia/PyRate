@@ -1,4 +1,3 @@
-#   This Python module is part of the PyRate software package.
 #
 #   Copyright 2017 Geoscience Australia
 #
@@ -31,7 +30,9 @@ from pyrate.core import config
 from pyrate.core.config import (
     validate_parameters, validate_optional_parameters, validate_epochs,
     validate_obs_thresholds, validate_ifgs, validate_gamma_headers,
-    validate_coherence_files)
+    validate_coherence_files, validate_tifs_exist, validate_pixel_parameters,
+    validate_minimum_epochs, validate_epoch_thresholds, validate_epoch_cutoff,
+    validate_extent_parameters)
 from pyrate.core.config import (
     SIXTEEN_DIGIT_EPOCH_PAIR,
     TWELVE_DIGIT_EPOCH_PAIR,
@@ -57,6 +58,9 @@ from pyrate.core.config import (
     IFG_LKSX,
     IFG_LKSY,
     IFG_CROP_OPT,
+    IFG_XFIRST, IFG_XLAST,
+    IFG_YFIRST, IFG_YLAST,
+    REFX, REFY,
     REFNX,
     REFNY,
     REF_CHIP_SIZE,
@@ -172,25 +176,6 @@ class TestConfigValidation(unittest.TestCase):
         self.assertTrue(validate(COH_MASK, 1))
         self.assertFalse(validate(COH_MASK, -1))
         self.assertFalse(validate(COH_MASK, 2))
-
-        # TODO: REFX, REFY
-
-        self.assertTrue(validate(REFNX, self.params[REFNX]))
-        self.assertFalse(validate(REFNX, 0))
-        self.assertFalse(validate(REFNX, 51))
-        
-        self.assertTrue(validate(REFNY, self.params[REFNY]))
-        self.assertFalse(validate(REFNY, 0))
-        self.assertFalse(validate(REFNY, 51))          
-
-        self.assertTrue(validate(REF_CHIP_SIZE, self.params[REF_CHIP_SIZE]))
-        self.assertFalse(validate(REF_CHIP_SIZE, 2))
-        self.assertFalse(validate(REF_CHIP_SIZE, 0))
-        self.assertFalse(validate(REF_CHIP_SIZE, 102))
-        
-        self.assertTrue(validate(REF_MIN_FRAC, self.params[REF_MIN_FRAC]))
-        self.assertFalse(validate(REF_MIN_FRAC, -0.1))
-        self.assertFalse(validate(REF_MIN_FRAC, 1.1))
 
         self.assertTrue(validate(ORBITAL_FIT, 0))
         self.assertTrue(validate(ORBITAL_FIT, 1))
@@ -381,6 +366,17 @@ class TestConfigValidation(unittest.TestCase):
         self.params[TIME_SERIES_CAL] = 0
         validate_optional_parameters(self.params)
 
+    def test_ref_pixel_validation_only_performed_when_on(self):
+        self.params[REFX] = 1
+        self.params[REFY] = 1
+        self.params[REFNY] = 100
+        with pytest.raises(ConfigException):
+            validate_optional_parameters(self.params)
+
+        self.params[REFX] = 0
+        self.params[REFY] = 0
+        validate_optional_parameters(self.params)
+
     def test_epochs_in_gamma_obs(self):
         validate_epochs(self.params[IFG_FILE_LIST], SIXTEEN_DIGIT_EPOCH_PAIR)
         self.params[IFG_FILE_LIST] = \
@@ -454,6 +450,91 @@ class TestConfigValidation(unittest.TestCase):
         self.params[TLPF_PTHR] = 18
         with pytest.raises(ConfigException):
             validate_obs_thresholds(self.params[IFG_FILE_LIST], self.params)
+
+class TestConfigValidationWithGeotiffs(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        from pyrate import converttogtif
+        cls.params = config.get_config_params(TEST_CONF_GAMMA)
+        converttogtif.main(cls.params)
+    
+    @classmethod
+    def tearDownClass(cls):
+        common.remove_tifs(cls.params[OBS_DIR])
+        
+    def setUp(self):
+        self.params = config.get_config_params(TEST_CONF_GAMMA,
+                                               requires_tif=True)
+        self.dummy_dir = '/i/should/not/exist'
+        crop_opts = config._crop_opts(self.params)
+        self.extents, self.n_cols, self.n_rows, self.n_epochs, self.max_span =\
+            config._get_ifg_information(self.params[IFG_FILE_LIST],
+                                        self.params[OBS_DIR],
+                                        crop_opts)
+        if os.path.exists(self.dummy_dir):
+            raise IOError("{dummy_dir} needs to not exist for test purposes.")
+    
+    def test_validate_tifs_exist(self):
+        validate_tifs_exist(self.params[IFG_FILE_LIST], self.params[OBS_DIR])
+        with pytest.raises(ConfigException):
+            validate_tifs_exist(self.params[IFG_FILE_LIST], self.dummy_dir)
+
+    def test_validate_refx_refy_parameters(self):
+        self.params[REFX] = 20
+        self.params[REFY] = 20
+        validate_pixel_parameters(self.n_cols, self.n_rows, self.params)
+        self.params[REFX] = 48
+        self.params[REFY] = 73
+        with pytest.raises(ConfigException):
+            validate_pixel_parameters(self.n_cols, self.n_rows, self.params)
+
+    def test_validate_multilook_parameters(self):
+        self.params[IFG_LKSX] = 48
+        self.params[IFG_LKSY] = 73
+        with pytest.raises(ConfigException):
+            validate_pixel_parameters(self.n_cols, self.n_rows, self.params)
+        
+        self.params[IFG_LKSX] = 1
+        self.params[IFG_LKSY] = 1
+        self.params[ORBITAL_FIT_LOOKS_X] = 48
+        self.params[ORBITAL_FIT_LOOKS_Y] = 73
+        with pytest.raises(ConfigException):
+            validate_pixel_parameters(self.n_cols, self.n_rows, self.params)       
+
+    def test_validate_ifg_crop_coordinates(self):
+        self.params[IFG_XFIRST] = 150.0
+        with pytest.raises(ConfigException):
+            validate_extent_parameters(self.extents, self.params)
+        self.params[IFG_XFIRST] = 150.92
+
+        self.params[IFG_XLAST] = 150.95
+        with pytest.raises(ConfigException):
+            validate_extent_parameters(self.extents, self.params)
+        self.params[IFG_XLAST] = 150.94
+
+        self.params[IFG_YFIRST] = -34.16
+        with pytest.raises(ConfigException):
+            validate_extent_parameters(self.extents, self.params)
+        self.params[IFG_YFIRST] = -34.18
+
+        self.params[IFG_YLAST] = -34.24
+        with pytest.raises(ConfigException):
+            validate_extent_parameters(self.extents, self.params)
+    
+    def test_validate_epoch_thresholds(self):
+        with pytest.raises(ConfigException):
+            validate_minimum_epochs(self.n_epochs, 50)
+        
+        validate_epoch_thresholds(self.n_epochs, self.params)
+        self.params[LR_PTHRESH] = 20
+        with pytest.raises(ConfigException):
+            validate_epoch_thresholds(self.n_epochs, self.params)
+        self.params[LR_PTHRESH] = 5
+        
+        self.params[SLPF_CUTOFF] = 1000
+        with pytest.raises(ConfigException):
+            validate_epoch_cutoff(self.max_span, SLPF_CUTOFF, self.params)
+        
         
 
 class ConfigTest(unittest.TestCase):
