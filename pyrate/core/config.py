@@ -1158,11 +1158,12 @@ def validate_extent_parameters(extents: Tuple[float, float, float, float],
                     f"is outside bounds of scene {dim_string}."]
 
         return []
-
-    errors.extend(_validate_crop_coord(IFG_XFIRST, xmin, xmax, x_dim_string))
-    errors.extend(_validate_crop_coord(IFG_YFIRST, ymin, ymax, y_dim_string))
-    errors.extend(_validate_crop_coord(IFG_XLAST, xmin, xmax, x_dim_string))
-    errors.extend(_validate_crop_coord(IFG_YLAST, ymin, ymax, y_dim_string))
+    
+    if pars[IFG_CROP_OPT] == 3:
+        errors.extend(_validate_crop_coord(IFG_XFIRST, xmin, xmax, x_dim_string))
+        errors.extend(_validate_crop_coord(IFG_YFIRST, ymin, ymax, y_dim_string))
+        errors.extend(_validate_crop_coord(IFG_XLAST, xmin, xmax, x_dim_string))
+        errors.extend(_validate_crop_coord(IFG_YLAST, ymin, ymax, y_dim_string))
 
     # Check SLPF_CUTOFF within scene *in kilometeres*.
     DEG_TO_KM = 111.32 # km per degree
