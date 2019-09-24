@@ -2,7 +2,7 @@
 
 Release History
 ===============
-0.4.0 (2019-09-12)
+0.4.0 (2019-09-24)
 -----------------------
 Added
 +++++
@@ -11,6 +11,8 @@ Added
 - Building of docs integrated with Travis CI.
 - Coherence masking, view coherence masking section in 'input_parameters.conf'
   for options.
+- Parameter validation.
+- SLC and coherence file lists for file discovery.
 
 Changed
 +++++++
