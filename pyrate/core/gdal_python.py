@@ -17,6 +17,8 @@
 This Python module contains bindings for the GDAL library
 """
 # pylint: disable=too-many-arguments,R0914
+import logging
+
 from osgeo import gdal, gdalnumeric, gdalconst
 from PIL import Image, ImageDraw
 import numpy as np
@@ -24,6 +26,7 @@ import numexpr as ne
 
 from pyrate.core import shared, ifgconstants as ifc, prepifg_helper
 
+_logger = logging.getLogger(__name__)
 gdal.SetCacheMax(2**15)
 GDAL_WARP_MEMORY_LIMIT = 2**10
 LOW_FLOAT32 = np.finfo(np.float32).min*1e-10
@@ -352,9 +355,11 @@ def crop_resample_average(
             else:
                 raise TypeError('Data Type metadata not recognised')
 
+    # In-memory GDAL driver doesn't support compression so turn it off.
+    creation_opts = ['compress=packbits'] if out_driver_type != 'MEM' else []
     out_ds = shared.gdal_dataset(output_file, dst_ds.RasterXSize, dst_ds.RasterYSize,
                                  driver=out_driver_type, bands=1, dtype=src_dtype, metadata=md, crs=wkt,
-                                 geotransform=gt, creation_opts=['compress=packbits'])
+                                 geotransform=gt, creation_opts=creation_opts)
 
     shared.write_geotiff(resampled_average, out_ds, np.nan) 
 

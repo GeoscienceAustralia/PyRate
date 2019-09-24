@@ -68,7 +68,7 @@ def test_warp_required():
 def test_original_ifg_paths():
     ifgdir = common.SML_TEST_TIF
     ifglist_path = join(ifgdir, 'ifms_17')
-    paths = cf.original_ifg_paths(ifglist_path)
+    paths = cf.original_ifg_paths(ifglist_path, ifgdir)
     assert paths[0] == join(ifgdir, 'geo_060619-061002_unw.tif'), str(paths[0])
     assert paths[-1] == join(ifgdir, 'geo_070709-070813_unw.tif')
 
@@ -128,7 +128,10 @@ class PyRateTests(unittest.TestCase):
             os.symlink(orig_dem, cls.BASE_DEM_FILE)
             os.chdir(cls.BASE_DIR)
 
-            params = config.get_config_params(common.TEST_CONF_ROIPAC)
+            # Turn off validation because we're in a different working dir
+            #  and relative paths in config won't be work.
+            params = config.get_config_params(common.TEST_CONF_ROIPAC,
+                                               validate=False)
             params[cf.OUT_DIR] = cls.BASE_OUT_DIR
             params[cf.PROCESSOR] = 0  # roipac
             params[cf.APS_CORRECTION] = 0
@@ -206,7 +209,8 @@ class ParallelPyRateTests(unittest.TestCase):
 
         # base_unw_paths need to be geotiffed by converttogeotif 
         #  and multilooked by run_prepifg
-        base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST])
+        base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST],
+                                               params[cf.OBS_DIR])
 
         # dest_paths are tifs that have been geotif converted and multilooked
         cls.dest_paths = cf.get_dest_paths(

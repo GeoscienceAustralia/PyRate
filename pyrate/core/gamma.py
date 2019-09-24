@@ -26,8 +26,6 @@ import pyrate.core.ifgconstants as ifc
 from pyrate.core import config as cf
 
 
-PTN = re.compile(r'\d{8}')  # match 8 digits for the dates
-
 # constants
 GAMMA_DATE = 'date'
 GAMMA_TIME = 'center_time'
@@ -221,6 +219,7 @@ def get_header_paths(input_file, slc_file_list, slc_dir):
     :rtype: list
     """
     _, file_name = split(input_file)
+    PTN = re.compile(r'\d{8}')  # match 8 digits for the dates
     epochs = PTN.findall(file_name)
     header_names = cf.parse_namelist(slc_file_list)
     matches = [hdr for hdr in header_names if any(e in hdr for e in epochs)]
