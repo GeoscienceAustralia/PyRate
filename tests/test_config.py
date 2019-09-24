@@ -37,12 +37,12 @@ from pyrate.core.config import (
     SIXTEEN_DIGIT_EPOCH_PAIR,
     TWELVE_DIGIT_EPOCH_PAIR,
     EIGHT_DIGIT_EPOCH,
-    COHERENCE_VALIDATION,
-    ORBITAL_FIT_VALIDATION,
-    APSEST_VALIDATION,
-    TIME_SERIES_VALIDATION,
-    PARAM_VALIDATION,
-    GAMMA_VALIDATION,
+    _COHERENCE_VALIDATION,
+    _ORBITAL_FIT_VALIDATION,
+    _APSEST_VALIDATION,
+    _TIME_SERIES_VALIDATION,
+    _PARAM_VALIDATION,
+    _GAMMA_VALIDATION,
     DEM_HEADER_FILE,
     NO_DATA_VALUE,
     OBS_DIR,
@@ -124,7 +124,7 @@ class TestConfigValidation(unittest.TestCase):
         Test validation functions for 'compulsory' parameters.
         """
         def validate(key, value):
-            return PARAM_VALIDATION[key][0](value)
+            return _PARAM_VALIDATION[key][0](value)
 
         self.assertTrue(validate(OBS_DIR, self.params[OBS_DIR]))
         self.assertFalse(validate(OBS_DIR, None))
@@ -228,7 +228,7 @@ class TestConfigValidation(unittest.TestCase):
 
     def test_gamma_validators(self):
         def validate(key, value):
-            return GAMMA_VALIDATION[key][0](value)
+            return _GAMMA_VALIDATION[key][0](value)
 
         self.assertTrue(validate(SLC_DIR, self.params[SLC_DIR]))
         self.assertTrue(validate(SLC_DIR, None))
@@ -240,7 +240,7 @@ class TestConfigValidation(unittest.TestCase):
 
     def test_coherence_validators(self):
         def validate(key, value):
-            return COHERENCE_VALIDATION[key][0](value)
+            return _COHERENCE_VALIDATION[key][0](value)
 
         self.assertTrue(validate(COH_THRESH, 0.1))
         self.assertFalse(validate(COH_THRESH, -0.1))
@@ -254,7 +254,7 @@ class TestConfigValidation(unittest.TestCase):
         
     def test_orbital_validators(self):
         def validate(key, value):
-            return ORBITAL_FIT_VALIDATION[key][0](value)
+            return _ORBITAL_FIT_VALIDATION[key][0](value)
 
         self.assertTrue(validate(ORBITAL_FIT_METHOD, 1))
         self.assertTrue(validate(ORBITAL_FIT_METHOD, 2))
@@ -273,7 +273,7 @@ class TestConfigValidation(unittest.TestCase):
 
     def test_apsest_validators(self):
         def validate(key, value):
-            return APSEST_VALIDATION[key][0](value)
+            return _APSEST_VALIDATION[key][0](value)
         
         for i in range(1, 4):
             self.assertTrue(validate(TLPF_METHOD, i))
@@ -304,7 +304,7 @@ class TestConfigValidation(unittest.TestCase):
 
     def test_time_series_validators(self):
         def validate(key, value):
-            return TIME_SERIES_VALIDATION[key][0](value)
+            return _TIME_SERIES_VALIDATION[key][0](value)
 
         self.assertTrue(validate(TIME_SERIES_PTHRESH, 1))
         self.assertFalse(validate(TIME_SERIES_PTHRESH, 0))

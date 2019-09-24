@@ -23,7 +23,7 @@ class CoherenceMaskingTest(unittest.TestCase):
     def test_find_coherence_files_for_ifgs(self):
         ifg_paths = [os.path.join(self.params[cf.OBS_DIR], ifg) 
                      for ifg in cf.parse_namelist(self.params[cf.IFG_FILE_LIST])]
-        coherence_files = [cf.coherence_path_for(path, self.params, tif=False)
+        coherence_files = [cf.coherence_paths_for(path, self.params, tif=False)
                            for path in ifg_paths]
         self.assertEqual(len(coherence_files), 17)
     
