@@ -277,7 +277,7 @@ def get_config_params(path: str, validate: bool=True, requires_tif: bool=False) 
         path: Absolute path to the parameters file.
         validate: Validate the parameters if True, otherwise skip validation.
         requires_tif: True if the calling process requires interferograms
-                      in geotiff format (performs additional validation).
+            in geotiff format (performs additional validation).
     Returns:
        A dictionary of parameters. 
     """
@@ -564,7 +564,7 @@ def get_ifg_paths(config_file, requires_tif=False):
 
 # ==== PARAMETER VALIDATION ==== #
 
-PARAM_VALIDATION = {
+_PARAM_VALIDATION = {
     OBS_DIR: (
         lambda a: a is not None and os.path.exists(a),
         f"'{OBS_DIR}': directory must be provided and must exist."
@@ -667,7 +667,7 @@ PARAM_VALIDATION = {
 }
 """dict: basic validation functions for compulsory parameters."""
 
-CUSTOM_CROP_VALIDATION = {
+_CUSTOM_CROP_VALIDATION = {
     IFG_XFIRST: (
         lambda a: a is not None,
         f"'{IFG_XFIRST}': must be provided."
@@ -687,7 +687,7 @@ CUSTOM_CROP_VALIDATION = {
 }
 """dict: basic validation functions for custom cropping parameters."""
 
-GAMMA_VALIDATION = {
+_GAMMA_VALIDATION = {
     SLC_DIR: (
         lambda a: os.path.exists(a) if a is not None else True,
         f"'{SLC_DIR}': directory must must exist."
@@ -699,7 +699,7 @@ GAMMA_VALIDATION = {
 }
 """dict: basic validation functions for gamma parameters."""
 
-COHERENCE_VALIDATION = {
+_COHERENCE_VALIDATION = {
     COH_THRESH: (
         lambda a: 0.0 <= a <= 1.0,
         f"'{COH_THRESH}': must be between 0.0 and 1.0 (inclusive)."
@@ -715,7 +715,7 @@ COHERENCE_VALIDATION = {
 }
 """dict: basic validation functions for coherence parameters."""
 
-ORBITAL_FIT_VALIDATION = {
+_ORBITAL_FIT_VALIDATION = {
     ORBITAL_FIT_METHOD: (
         lambda a: a in (1, 2),
         f"'{ORBITAL_FIT_METHOD}': must select option 1 or 2."
@@ -735,7 +735,7 @@ ORBITAL_FIT_VALIDATION = {
 }
 """dict: basic validation fucntions for orbital error correction parameters."""
 
-APSEST_VALIDATION = {
+_APSEST_VALIDATION = {
     TLPF_METHOD: (
         lambda a: a in (1, 2, 3),
         f"'{TLPF_METHOD}': must select option 1, 2 or 3."
@@ -767,7 +767,7 @@ APSEST_VALIDATION = {
 }
 """dict: basic validation functions for atmospheric correction parameters."""
 
-TIME_SERIES_VALIDATION = {
+_TIME_SERIES_VALIDATION = {
     TIME_SERIES_PTHRESH: (
         lambda a: a >= 1,
         f"'{TIME_SERIES_PTHRESH}': must be >= 1"
@@ -788,7 +788,7 @@ TIME_SERIES_VALIDATION = {
 }
 """dict: basic vaidation functions for time series parameters."""
 
-REFERENCE_PIXEL_VALIDATION = {
+_REFERENCE_PIXEL_VALIDATION = {
     REFNX: (
         lambda a: 1 <= a <= 50,
         f"'{REFNX}': must be between 1 and 50 (inclusive)."
@@ -821,7 +821,7 @@ def validate_parameters(pars: Dict, requires_tif: bool=False):
     Args:
         pars: The parameters dictionary.
         requires_tif: Whether the currently used workflow requires
-                      interferograms in tif format.
+            interferograms in tif format.
 
     Raises:
         ConfigException: If errors occur during parameter validation.
@@ -887,7 +887,7 @@ def validate_compulsory_parameters(pars: Dict) -> Optional[bool]:
     """
     errors = []
     for k in pars.keys():
-        validator = PARAM_VALIDATION.get(k)
+        validator = _PARAM_VALIDATION.get(k)
         if validator is None:
             _logger.debug(f"No validator implemented for '{k}'.")
             continue
@@ -931,19 +931,19 @@ def validate_optional_parameters(pars: Dict):
     errors = []
 
     errors.extend(
-        validate(pars[COH_MASK], COHERENCE_VALIDATION, pars))
+        validate(pars[COH_MASK], _COHERENCE_VALIDATION, pars))
     errors.extend(
-        validate(pars[APSEST], APSEST_VALIDATION, pars))
+        validate(pars[APSEST], _APSEST_VALIDATION, pars))
     errors.extend(
-        validate(pars[TIME_SERIES_CAL], TIME_SERIES_VALIDATION, pars))
+        validate(pars[TIME_SERIES_CAL], _TIME_SERIES_VALIDATION, pars))
     errors.extend(
-        validate(pars[ORBITAL_FIT], ORBITAL_FIT_VALIDATION, pars))
+        validate(pars[ORBITAL_FIT], _ORBITAL_FIT_VALIDATION, pars))
     errors.extend(
-        validate(pars[PROCESSOR] == GAMMA, GAMMA_VALIDATION, pars))
+        validate(pars[PROCESSOR] == GAMMA, _GAMMA_VALIDATION, pars))
     errors.extend(
-        validate(pars[IFG_CROP_OPT] == 3, CUSTOM_CROP_VALIDATION, pars))
+        validate(pars[IFG_CROP_OPT] == 3, _CUSTOM_CROP_VALIDATION, pars))
     errors.extend(
-        validate(pars[REFX] > 0 and pars[REFY] > 0, REFERENCE_PIXEL_VALIDATION, pars))
+        validate(pars[REFX] > 0 and pars[REFY] > 0, _REFERENCE_PIXEL_VALIDATION, pars))
 
     return _raise_errors(errors)
 
@@ -954,7 +954,7 @@ def validate_minimum_epochs(n_epochs: int, min_epochs: int) -> Optional[bool]:
 
     Args:
         n_epochs: The number of unique epochs in the collection of interferograms
-                  provided as input.
+            provided as input.
         min_epochs: The minimum number of epochs PyRate requires.
 
     Returns:
@@ -984,7 +984,7 @@ def validate_epochs(file_list: str, pattern: str) -> Optional[bool]:
 
     Raises:
         ConfigException: If not all names in the file list don't contain
-                         the epoch pattern or contain it more than once.
+            the epoch pattern or contain it more than once.
     """
     errors = []
     PTN = re.compile(pattern)
@@ -1088,7 +1088,7 @@ def validate_obs_thresholds(ifg_file_list: str, pars: Dict) -> Optional[bool]:
 
     Raises:
         ConfigException: If there not enough interferograms to satisfy all observation
-                         thresholds.
+            thresholds.
     """
     def validate(n, p, k):
         thresh = p[k]
@@ -1112,7 +1112,7 @@ def validate_epoch_thresholds(n_epochs: int, pars: Dict) -> Optional[bool]:
 
     Args:
         n_epochs: The number of unique epochs in the collection of interferograms
-                  provided as input.
+            provided as input.
         pars: Parameters dictionary.
     
     Returns:
@@ -1137,14 +1137,14 @@ def validate_extent_parameters(extents: Tuple[float, float, float, float],
 
     Args:
         extents : Tuple of (xmin, xmax, ymin, ymax) describing the extents
-                  of the scene being processed in degrees.
+            of the scene being processed in degrees.
         pars: Parameters dictionary.
 
     Returns:
         True if validation is successful.
 
     Raises:
-        ConfigExeption: If validation fails.
+        ConfigException: If validation fails.
     """
     errors = []
     xmin, ymin, xmax, ymax = extents
@@ -1184,8 +1184,8 @@ def validate_pixel_parameters(n_cols: int, n_rows: int, pars: Dict) -> Optional[
     are within the scene being processed.
 
     Args:
-        extents : Tuple of (xmin, xmax, ymin, ymax) describing the extents
-                  of the scene being processed in degrees.
+        extents: Tuple of (xmin, xmax, ymin, ymax) describing the extents
+            of the scene being processed in degrees.
         n_cols: Number of pixel columns (X) in the raster.
         n_rows: Number of pixel rows (X) in the raster.
         pars: Parameters dictionary.
@@ -1281,7 +1281,7 @@ def validate_gamma_headers(ifg_file_list: str, slc_file_list: str,
 
     Raises:
         ConfigException: If there are 0 or more than 2 matching headers
-                         for an interferogram.
+            for an interferogram.
     """
     from pyrate.core.gamma import get_header_paths
     errors = []
@@ -1308,7 +1308,7 @@ def validate_coherence_files(ifg_file_list: str, pars: Dict) -> Optional[bool]:
 
     Raises:
         ConfigException: If there are 0 or more than 1 matching coherence
-                         files for an interferogram.
+            files for an interferogram.
     """
     errors = []
 
