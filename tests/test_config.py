@@ -517,6 +517,7 @@ class TestConfigValidationWithGeotiffs(unittest.TestCase):
             validate_pixel_parameters(self.n_cols, self.n_rows, self.params)       
 
     def test_validate_ifg_crop_coordinates(self):
+        self.params[IFG_CROP_OPT] = 3
         self.params[IFG_XFIRST] = 150.0
         with pytest.raises(ConfigException):
             validate_extent_parameters(self.extents, self.params)
