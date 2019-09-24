@@ -1225,13 +1225,10 @@ def output_tiff_filename(inpath, outpath):
     :return: Geotiff filename for the given file.
     :rtype: str
     """
-    fname, ext = os.path.basename(inpath).split('.')
-    outpath = os.path.dirname(inpath) if outpath is None else outpath
-    if ext == 'tif':
-        name = os.path.join(outpath, fname + '.tif')
-    else:
-        name = os.path.join(outpath, fname + '_' + ext + '.tif')
-    return name
+    dirname, filename = os.path.split(inpath)
+    outpath = dirname if outpath is None else outpath
+    new_filename = filename.replace('.', '_') + '.tif' 
+    return os.path.join(outpath, new_filename)
 
 
 def check_correction_status(preread_ifgs, meta):  # pragma: no cover
