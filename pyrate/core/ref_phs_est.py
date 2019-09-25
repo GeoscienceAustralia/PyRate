@@ -31,7 +31,7 @@ log = logging.getLogger(__name__)
 
 MASTER_PROCESS = 0
 
-def estimate_ref_phase(ifg_paths, params, refpx, refpy, preread_ifgs=None):
+def estimate_ref_phase(ifg_paths, params, refpx, refpy):
     """
     Wrapper function for reference phase estimation and interferogram
     correction.
@@ -54,7 +54,10 @@ def estimate_ref_phase(ifg_paths, params, refpx, refpy, preread_ifgs=None):
     #   est_ref_phase_method2 in this module.
 
     # Check if IFGs already corrected.
-    if preread_ifgs and mpiops.run_once(check_correction_status, preread_ifgs, 
+    if len(ifg_paths) < 2:
+        raise ReferencePhaseError("At least two interferograms required for "
+                                  f"phase correction ({len(ifg_paths)}) provided.")
+    if mpiops.run_once(check_correction_status, ifg_paths, 
                                         ifc.PYRATE_REF_PHASE):  
         log.info('Skipped: interferograms already corrected')
         return
@@ -89,7 +92,10 @@ def estimate_ref_phase(ifg_paths, params, refpx, refpy, preread_ifgs=None):
     log.info('Finished reference phase estimation')
     
     # Preserve old return value so tests don't break.
-    ifgs = [Ifg(ifg_path) for ifg_path in ifg_paths]
+    if isinstance(ifg_paths[0], Ifg):
+        ifgs = ifg_paths
+    else:
+        ifgs = [Ifg(ifg_path) for ifg_path in ifg_paths]
     return ref_phs, ifgs
 
 def est_ref_phase_method2(ifg_paths, params, refpx, refpy):
@@ -113,10 +119,14 @@ def est_ref_phase_method2(ifg_paths, params, refpx, refpy):
     thresh = chipsize * chipsize * params[cf.REF_MIN_FRAC]
 
     def _inner(ifg_paths):
-        ifgs = [Ifg(ifg_path) for ifg_path in ifg_paths]
+        if isinstance(ifg_paths[0], Ifg):
+            ifgs = ifg_paths
+        else:
+            ifgs = [Ifg(ifg_path) for ifg_path in ifg_paths]
+
         for ifg in ifgs:
             if not ifg.is_open:
-                ifg.open()
+                ifg.open(readonly=False)
 
         phase_data = [i.phase_data for i in ifgs]
         if params[cf.PARALLEL]:
@@ -182,10 +192,14 @@ def est_ref_phase_method1(ifg_paths, params):
     #   procesor will open the Ifgs and operate on them.
 
     def _inner(ifg_paths):
-        proc_ifgs = [Ifg(ifg_path) for ifg_path in ifg_paths]
+        if isinstance(ifg_paths[0], Ifg):
+            proc_ifgs = ifg_paths
+        else:
+            proc_ifgs = [Ifg(ifg_path) for ifg_path in ifg_paths]
+
         for ifg in proc_ifgs:
             if not ifg.is_open:
-                ifg.open()
+                ifg.open(readonly=False)
 
         ifg_phase_data_sum = np.zeros(proc_ifgs[0].shape, dtype=np.float64)
         phase_data = [i.phase_data for i in proc_ifgs]
