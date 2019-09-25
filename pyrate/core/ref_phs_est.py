@@ -33,17 +33,25 @@ MASTER_PROCESS = 0
 
 def estimate_ref_phase(ifg_paths, params, refpx, refpy):
     """
-    Wrapper function for reference phase estimation and interferogram
-    correction.
+    Main function for reference phase estimation. Perfoms a check to see
+    if correction has already been performed and skips if it has. Otherwise,
+    performs correction based on chosen method.
 
-    :param list ifgs: List of interferogram objects
-    :param dict params: Dictionary of configuration parameters
-    :param int refpx: Reference pixel X found by ref pixel method
-    :param int refpy: Reference pixel Y found by ref pixel method
+    Args:
+        ifg_paths: A list of absolute paths to IFGs to be processed. Will
+            also accept a list of Ifg objects.
+        params: Paramters dictionary.
+        refpx: Reference pixel X found by ref pixel method.
+        refpy: Reference pixel Y found by ref pixel method.
 
-    :return: ref_phs: Numpy array of reference phase values of size (nifgs, 1)
-    :rtype: ndarray
-    :return: ifgs: Reference phase data is removed interferograms in place
+    Returns:
+        ref_phs: Numpy array of reference phase values of size (n_ifgs, 1)
+        ifgs: Returns *unopened* Ifg objects with corrected phase data.
+
+    Raises:
+        ReferencePhaseError: If less than two interferograms are provided.
+        CorrectionStatusError: If a mixture of corrected and uncorrected
+            interferograms are provided.
     """
     # Bren: remove the _check method that was in this module and replace with
     #   the one in shared.py. 
@@ -103,7 +111,7 @@ def est_ref_phase_method2(ifg_paths, params, refpx, refpy):
     Reference phase estimation using method 2. Reference phase is the
     median calculated with a patch around the supplied reference pixel.
 
-    :param list ifgs: List of interferogram objects
+    :param list ifg_paths: List of interferogram paths or objects.
     :param dict params: Dictionary of configuration parameters
     :param int refpx: Reference pixel X found by ref pixel method
     :param int refpy: Reference pixel Y found by ref pixel method
@@ -177,7 +185,7 @@ def est_ref_phase_method1(ifg_paths, params):
     Reference phase estimation using method 1. Reference phase is the
     median of the whole interferogram image.
 
-    :param list ifgs: List of interferogram objects
+    :param list ifg_paths: List of interferogram paths or objects
     :param dict params: Dictionary of configuration parameters
 
     :return: ref_phs: Numpy array of reference phase values of size (nifgs, 1)
