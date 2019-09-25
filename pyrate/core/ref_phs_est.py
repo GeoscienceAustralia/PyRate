@@ -47,11 +47,16 @@ def estimate_ref_phase(ifg_paths, params, refpx, refpy, preread_ifgs=None):
     """
     # Bren: remove the _check method that was in this module and replace with
     #   the one in shared.py. 
+    
+    # Bren: it might be nicer to move this wrapper function to process.py -
+    #   do the correction check, branching based on ref_est_method and saving
+    #   in process.py and just call est_ref_phase_method1 and 
+    #   est_ref_phase_method2 in this module.
 
     # Check if IFGs already corrected.
     if preread_ifgs and mpiops.run_once(check_correction_status, preread_ifgs, 
                                         ifc.PYRATE_REF_PHASE):  
-        log.info('Finished reference phase estimation.')
+        log.info('Skipped: interferograms already corrected')
         return
 
     if params[cf.REF_EST_METHOD] == 1:
@@ -107,6 +112,10 @@ def est_ref_phase_method2(ifg_paths, params, refpx, refpy):
 
     def _inner(ifg_paths):
         ifgs = [Ifg(ifg_path) for ifg_path in ifg_paths]
+        for ifg in ifgs:
+            if not ifg.is_open:
+                ifg.open()
+
         phase_data = [i.phase_data for i in ifgs]
         if params[cf.PARALLEL]:
             ref_phs = Parallel(n_jobs=params[cf.PROCESSES],
@@ -172,6 +181,10 @@ def est_ref_phase_method1(ifg_paths, params):
 
     def _inner(ifg_paths):
         proc_ifgs = [Ifg(ifg_path) for ifg_path in ifg_paths]
+        for ifg in proc_ifgs:
+            if not ifg.is_open:
+                ifg.open()
+
         ifg_phase_data_sum = np.zeros(proc_ifgs[0].shape, dtype=np.float64)
         phase_data = [i.phase_data for i in proc_ifgs]
         for ifg in proc_ifgs:

@@ -369,7 +369,7 @@ def process_ifgs(ifg_paths, params, rows, cols):
     #   be referenced but the all the equivalent functionality is now
     #   in the ref_phs_est module.
     #_ref_phase_estimation(ifg_paths, params, refpx, refpy, preread_ifgs)
-    rpe.estimate_ref_phs(ifg_paths, params, refpx, prefpy, preread_ifgs)    
+    rpe.estimate_ref_phase(ifg_paths, params, refpx, refpy, preread_ifgs)    
 
     _mst_calc(ifg_paths, params, tiles, preread_ifgs)
 
