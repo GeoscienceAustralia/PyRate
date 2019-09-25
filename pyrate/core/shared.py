@@ -1245,9 +1245,21 @@ def check_correction_status(ifgs, meta):  # pragma: no cover
     :return: True if correction has been performed, otherwise False
     :rtype: bool
     """
+    def close_all(ifgs):
+        for ifg in ifgs:
+            ifg.close()
+
+    if not isinstance(ifgs[0], Ifg):
+        ifgs = [Ifg(ifg_path) for ifg_path in ifgs]
+
+    for ifg in ifgs:
+        if not ifg.is_open:
+            ifg.open()
+        
     flags = [meta in ifg.meta_data for ifg in ifgs]
     if all(flags):
         log.info('Skipped: interferograms already corrected')
+        close_all(ifgs)
         return True
     elif not all(flags) and any(flags):
         log.debug('Detected mix of corrected and uncorrected interferograms')
@@ -1257,9 +1269,11 @@ def check_correction_status(ifgs, meta):  # pragma: no cover
             else:
                 msg = '{}: correction NOT detected'.format(i.data_path)
             log.debug(msg)
-            raise CorrectionStatusError(msg)
+        close_all(ifgs)
+        raise CorrectionStatusError(msg)
     else:
         log.info('Calculating corrections')
+        close_all(ifgs)
         return False
 
 

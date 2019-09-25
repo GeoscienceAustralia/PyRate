@@ -174,7 +174,7 @@ def _orb_fit_calc(ifg_paths, params, preread_ifgs=None):
     if preread_ifgs:  # don't check except for mpi tests
         # perform some general error/sanity checks
         log.info('Checking Orbital error correction status')
-        if mpiops.run_once(shared.check_correction_status, preread_ifgs,
+        if mpiops.run_once(shared.check_correction_status, ifg_paths,
                            ifc.PYRATE_ORBITAL_ERROR):
             log.info('Finished Orbital error correction')
             return  # return if True condition returned
@@ -260,7 +260,7 @@ def process_ifgs(ifg_paths, params, rows, cols):
 
     _orb_fit_calc(ifg_paths, params, preread_ifgs)
 
-    rpe.estimate_ref_phase(ifg_paths, params, refpx, refpy, preread_ifgs)    
+    rpe.estimate_ref_phase(ifg_paths, params, refpx, refpy)    
 
     _mst_calc(ifg_paths, params, tiles, preread_ifgs)
 
