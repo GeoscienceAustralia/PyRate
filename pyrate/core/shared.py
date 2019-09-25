@@ -1234,7 +1234,7 @@ def output_tiff_filename(inpath, outpath):
     return name
 
 
-def check_correction_status(preread_ifgs, meta):  # pragma: no cover
+def check_correction_status(ifgs, meta):  # pragma: no cover
     """
     Generic function for checking if a correction has already been performed
     in a previous run by interrogating PyRate meta data entries
@@ -1245,20 +1245,17 @@ def check_correction_status(preread_ifgs, meta):  # pragma: no cover
     :return: True if correction has been performed, otherwise False
     :rtype: bool
     """
-    ifg_paths = sorted(preread_ifgs.keys())
-    # preread_ifgs[i].metadata contains ifg metadata
-    flags = [meta in preread_ifgs[i].metadata
-             for i in ifg_paths]
+    flags = [meta in ifg.meta_data for ifg in ifgs]
     if all(flags):
         log.info('Skipped: interferograms already corrected')
         return True
-    elif (sum(flags) < len(flags)) and (sum(flags) > 0):
+    elif not all(flags) and any(flags):
         log.debug('Detected mix of corrected and uncorrected interferograms')
-        for i, flag in zip(ifg_paths, flags):
+        for i, flag in zip(ifgs, flags):
             if flag:
-                msg = '{}: correction detected'.format(i)
+                msg = '{}: correction detected'.format(i.data_path)
             else:
-                msg = '{}: correction NOT detected'.format(i)
+                msg = '{}: correction NOT detected'.format(i.data_path)
             log.debug(msg)
             raise CorrectionStatusError(msg)
     else:
