@@ -365,7 +365,11 @@ def process_ifgs(ifg_paths, params, rows, cols):
 
     _orb_fit_calc(ifg_paths, params, preread_ifgs)
 
-    _ref_phase_estimation(ifg_paths, params, refpx, refpy, preread_ifgs)
+    # Bren: I've left the ref_phs code in this module untouched so it can
+    #   be referenced but the all the equivalent functionality is now
+    #   in the ref_phs_est module.
+    #_ref_phase_estimation(ifg_paths, params, refpx, refpy, preread_ifgs)
+    rpe.estimate_ref_phs(ifg_paths, params, refpx, prefpy, preread_ifgs)    
 
     _mst_calc(ifg_paths, params, tiles, preread_ifgs)
 
