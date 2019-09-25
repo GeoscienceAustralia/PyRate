@@ -88,7 +88,9 @@ def estimate_ref_phase(ifg_paths, params, refpx, refpy, preread_ifgs=None):
         mpiops.comm.Send(ref_phs, dest=MASTER_PROCESS, tag=mpiops.rank)
     log.info('Finished reference phase estimation')
     
-    return ref_phs, ifg_paths
+    # Preserve old return value so tests don't break.
+    ifgs = [Ifg(ifg_path) for ifg_path in ifg_paths]
+    return ref_phs, ifgs
 
 def est_ref_phase_method2(ifg_paths, params, refpx, refpy):
     """
