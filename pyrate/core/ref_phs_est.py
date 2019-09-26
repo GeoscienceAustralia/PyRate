@@ -33,7 +33,7 @@ MASTER_PROCESS = 0
 
 def estimate_ref_phase(ifg_paths, params, refpx, refpy):
     """
-    Main function for reference phase estimation. Perfoms a check to see
+    Main function for reference phase estimation. Performs a check to see
     if correction has already been performed and skips if it has. Otherwise,
     performs correction based on chosen method.
 
@@ -120,7 +120,7 @@ def est_ref_phase_method2(ifg_paths, params, refpx, refpy):
     :rtype: ndarray
     :return: ifgs: Reference phase data is removed interferograms in place
     """
-    # Bren: see the comment I made in est_ref_phase_method2 - follow the 
+    # Bren: see the comment I made in est_ref_phase_method1 - follow the 
     #   same pattern.
     half_chip_size = int(np.floor(params[cf.REF_CHIP_SIZE] / 2.0))
     chipsize = 2 * half_chip_size + 1
