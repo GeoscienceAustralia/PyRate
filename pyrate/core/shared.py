@@ -121,8 +121,8 @@ class RasterBase(object):
             raise RasterException(msg)
 
         if not os.path.exists(self.data_path):
-            raise IOError('The file {path} does not exist. Consider running '
-                          'prepifg'.format(path=self.data_path))
+            raise IOError('The file {path} does not exist. Consider first '
+                          'running prepifg'.format(path=self.data_path))
 
         # unless read only, by default open files as writeable
         if readonly not in [True, False, None]:
