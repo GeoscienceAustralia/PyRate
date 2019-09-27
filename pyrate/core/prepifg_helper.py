@@ -425,7 +425,7 @@ def _custom_bounds(ifgs, xw, ytop, xe, ybot):
     """
     # pylint: disable=too-many-locals
     # pylint: disable=too-many-branches
-    msg = 'Cropped image bounds exceed original image bounds'
+    msg = 'Cropped image bounds are outside the original image bounds'
     i = ifgs[0]
 
     if ytop < ybot:
