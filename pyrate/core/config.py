@@ -1213,9 +1213,9 @@ def validate_pixel_parameters(n_cols: int, n_rows: int, pars: Dict) -> Optional[
     # Check multilooks (extent/val) >= 1.
     def _validate_multilook(var_name, dim_val, dim_string):
         if dim_val / pars[var_name] < 1:
-            return [f"'{var_name}': ({dim_string} pixel extent: {dim_val} / "
-                    "multilook value: {pars[var_name]}) must be greater than "
-                    "or equal to 1."]
+            return [f"'{var_name}': the quantity ( {dim_string} pixel count: "
+                    f"{dim_val} / multilook factor: {pars[var_name]} ) must "
+                    f"be greater than or equal to 1."]
         return []
 
     errors.extend(_validate_multilook(IFG_LKSX, n_cols, 'x'))
