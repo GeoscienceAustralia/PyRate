@@ -120,11 +120,13 @@ def _orbital_correction(ifgs_or_ifg_paths, params, mlooked=None, offset=True,
     # parallel = params[cf.PARALLEL]  # not implemented
 
     if degree not in [PLANAR, QUADRATIC, PART_CUBIC]:
-        msg = "Invalid degree of %s for orbital correction" % degree
+        msg = "Invalid degree of %s for orbital correction" \
+            % cf.ORB_DEGREE_NAMES.get(degree)
         raise OrbitalError(msg)
 
     log.info('Removing orbital error using {} correction method'
-             ' and degree={}'.format(method, degree))
+             ' and degree={}'.format(cf.ORB_METHOD_NAMES.get(method), 
+                                     cf.ORB_DEGREE_NAMES.get(degree)))
 
     if method == NETWORK_METHOD:
         if mlooked is None:
@@ -176,7 +178,8 @@ def _get_num_params(degree, offset=None):
     elif degree == PART_CUBIC:
         nparams = 6
     else:
-        msg = "Invalid orbital model degree: %s" % degree
+        msg = "Invalid orbital model degree: %s" \
+            % cf.ORB_DEGREE_NAMES.get(degree)
         raise OrbitalError(msg)
 
     # NB: independent method only, network method handles offsets separately
