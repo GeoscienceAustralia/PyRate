@@ -212,8 +212,8 @@ PARAM_CONVERSION = {
     COH_MASK: (int, 0),
     COH_THRESH: (float, 0.1),
 
-    REFX: (int, -1),
-    REFY: (int, -1),
+    REFX: (float, 181),
+    REFY: (float, 91),
     REFNX: (int, 10),
     REFNY: (int, 10),
     REF_CHIP_SIZE: (int, 21),
@@ -846,6 +846,7 @@ def validate_parameters(pars: Dict, requires_tif: bool=False):
         crop_opts = _crop_opts(pars)
         extents, n_cols, n_rows, n_epochs, max_span = \
            _get_ifg_information(pars[IFG_FILE_LIST], pars[OBS_DIR], crop_opts)
+
         validate_pixel_parameters(n_cols, n_rows, pars)
         validate_reference_pixel_search_windows(n_cols, n_rows, pars)
         validate_extent_parameters(extents, pars)
