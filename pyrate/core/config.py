@@ -254,7 +254,7 @@ PARAM_CONVERSION = {
     TIME_SERIES_CAL: (int, 0),
     # pixel thresh based on nepochs? not every project may have 20 epochs
     TIME_SERIES_PTHRESH: (int, 3),
-    TIME_SERIES_SM_FACTOR: (float, None),
+    TIME_SERIES_SM_FACTOR: (float, -1.0),
     TIME_SERIES_SM_ORDER: (int, None),
     TIME_SERIES_METHOD: (int, 2),  # Default to SVD method
 
@@ -781,7 +781,7 @@ _TIME_SERIES_VALIDATION = {
     ),
     #TODO: Matt to investigate smoothing factor values.
     TIME_SERIES_SM_FACTOR: (
-        lambda a: True,
+        lambda a: -5.0 <= a <= 0,
         f"'{TIME_SERIES_SM_FACTOR}':"
     ),
     TIME_SERIES_SM_ORDER: (
@@ -1221,8 +1221,8 @@ def validate_pixel_parameters(n_cols: int, n_rows: int, pars: Dict) -> Optional[
     def _validate_multilook(var_name, dim_val, dim_string):
         if dim_val / pars[var_name] < 1:
             return [f"'{var_name}': ({dim_string} pixel extent: {dim_val} / "
-                    "multilook value: {pars[var_name]}) must be greater than "
-                    "or equal to 1."]
+                    f"multilook value: {pars[var_name]}) must be greater than "
+                    f"or equal to 1."]
         return []
 
     errors.extend(_validate_multilook(IFG_LKSX, n_cols, 'x'))

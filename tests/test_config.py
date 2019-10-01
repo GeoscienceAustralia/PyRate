@@ -309,7 +309,9 @@ class TestConfigValidation(unittest.TestCase):
         self.assertTrue(validate(TIME_SERIES_PTHRESH, 1))
         self.assertFalse(validate(TIME_SERIES_PTHRESH, 0))
         
-        #TODO: SM_FACTOR
+        self.assertTrue(validate(TIME_SERIES_SM_FACTOR, -1.0))
+        self.assertFalse(validate(TIME_SERIES_SM_FACTOR, 0.1))
+        self.assertFalse(validate(TIME_SERIES_SM_FACTOR, -5.1))
 
         self.assertTrue(validate(TIME_SERIES_SM_ORDER, 1))
         self.assertTrue(validate(TIME_SERIES_SM_ORDER, 2))
