@@ -275,7 +275,7 @@ DEFAULT_TO_OBS_DIR = [SLC_DIR, COH_FILE_DIR]
 
 INT_KEYS = [APS_CORRECTION, APS_METHOD]
 
-def get_config_params(path: str, validate: bool=True, requires_tif: bool=False) -> Dict:
+def get_config_params(path: str, validate: bool=True, requires_tif: bool=True) -> Dict:
     """
     Reads the parameters file provided by the user and converts it into
     a dictionary.
@@ -302,7 +302,7 @@ def get_config_params(path: str, validate: bool=True, requires_tif: bool=False) 
 
     return params
 
-def _parse_conf_file(content, validate: bool=True, requires_tif: bool=False) -> Dict:
+def _parse_conf_file(content, validate: bool=True, requires_tif: bool=True) -> Dict:
     """
     Converts the parameters from their text form into a dictionary.
     
@@ -360,7 +360,7 @@ def _handle_extra_parameters(params):
 
     return params
 
-def _parse_pars(pars, validate: bool=True, requires_tif: bool=False) -> Dict:
+def _parse_pars(pars, validate: bool=True, requires_tif: bool=True) -> Dict:
     """
     Takes dictionary of parameters, converting values to required type
     and providing defaults for missing values.
@@ -820,7 +820,21 @@ _REFERENCE_PIXEL_VALIDATION = {
 }
 """dict: basic validation functions for reference pixel search parameters."""
 
-def validate_parameters(pars: Dict, requires_tif: bool=False):
+def convert_geographic_coordinate_to_pixel_value(refpx, refpy, transform):
+
+    # transform = ifg.dataset.GetGeoTransform()
+
+    xOrigin = transform[0]
+    yOrigin = transform[3]
+    pixelWidth = transform[1]
+    pixelHeight = -transform[5]
+
+    refpx = int((refpx - xOrigin) / pixelWidth)
+    refpy = int((yOrigin - refpy) / pixelHeight)
+
+    return int(refpx), int(refpy)
+
+def validate_parameters(pars: Dict, requires_tif: bool=True):
     """
     Main validation function. Calls validation subfunctions and gathers
     some required variables for performing validation.
@@ -846,13 +860,15 @@ def validate_parameters(pars: Dict, requires_tif: bool=False):
 
     validate_ifgs(ifl, pars[OBS_DIR])
 
-    extents, n_cols, n_rows, n_epochs, max_span = None, None, None, None, None
+    extents, n_cols, n_rows, n_epochs, max_span, transform = None, None, None, None, None, None
     if requires_tif:
         validate_tifs_exist(pars[IFG_FILE_LIST], pars[OBS_DIR])
         # Get info regarding epochs and dimensions needed for validation.
         crop_opts = _crop_opts(pars)
-        extents, n_cols, n_rows, n_epochs, max_span = \
+        extents, n_cols, n_rows, n_epochs, max_span, transform = \
            _get_ifg_information(pars[IFG_FILE_LIST], pars[OBS_DIR], crop_opts)
+
+        pars[REFX], pars[REFY] = convert_geographic_coordinate_to_pixel_value(pars[REFX], pars[REFY], transform)
 
         validate_pixel_parameters(n_cols, n_rows, pars)
         validate_reference_pixel_search_windows(n_cols, n_rows, pars)
@@ -950,8 +966,8 @@ def validate_optional_parameters(pars: Dict):
         validate(pars[PROCESSOR] == GAMMA, _GAMMA_VALIDATION, pars))
     errors.extend(
         validate(pars[IFG_CROP_OPT] == 3, _CUSTOM_CROP_VALIDATION, pars))
-    errors.extend(
-        validate(pars[REFX] > 0 and pars[REFY] > 0, _REFERENCE_PIXEL_VALIDATION, pars))
+    # errors.extend(
+    #     validate(pars[REFX] > 0 and pars[REFY] > 0, _REFERENCE_PIXEL_VALIDATION, pars))
 
     return _raise_errors(errors)
 
@@ -1209,6 +1225,7 @@ def validate_pixel_parameters(n_cols: int, n_rows: int, pars: Dict) -> Optional[
     y_dim_string = f"(ymin: 0, ymax: {n_rows}"
 
     # Check reference pixel coordinates within scene.
+
     if pars[REFX] > 0 and pars[REFY] > 0:
         if not 0 < pars[REFX] <= n_cols:
             errors.append(f"'{REFX}': reference pixel coodinate is "
@@ -1374,7 +1391,9 @@ def _get_ifg_information(ifg_file_list: str, obs_dir: str, crop_opts: Tuple) -> 
     n_cols = abs(int(abs(extents[0] - extents[2]) / x_step))
     n_rows = abs(int(abs(extents[1] - extents[3]) / y_step))
 
-    return extents, n_cols, n_rows, n_epochs, max_span
+    transform = rasters[0].dataset.GetGeoTransform()
+
+    return extents, n_cols, n_rows, n_epochs, max_span, transform
 
 def _crop_opts(params: Dict) -> Tuple:
     """

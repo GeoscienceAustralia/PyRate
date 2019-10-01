@@ -100,7 +100,7 @@ def est_ref_phase_method2(ifgs, params, refpx, refpy):
             ref_phs = Parallel(n_jobs=params[cf.PROCESSES],
                                verbose=joblib_log_level(cf.LOG_LEVEL))(
                 delayed(_est_ref_phs_method2)(p, half_chip_size,
-                                              refpx, refpy, thresh, ifg)
+                                              refpx, refpy, thresh)
                 for p in phase_data)
 
             for n, ifg in enumerate(ifgs):
@@ -110,7 +110,7 @@ def est_ref_phase_method2(ifgs, params, refpx, refpy):
             for n, ifg in enumerate(ifgs):
                 ref_phs[n] = \
                     _est_ref_phs_method2(phase_data[n], half_chip_size,
-                                         refpx, refpy, thresh, ifg)
+                                         refpx, refpy, thresh)
                 ifg.phase_data -= ref_phs[n]
 
         for ifg in ifgs:
@@ -122,28 +122,11 @@ def est_ref_phase_method2(ifgs, params, refpx, refpy):
     ref_phs = _inner(process_ifgs_paths)
     return ref_phs   
 
-def convert_geographic_coordinate_to_pixel_value(refpx, refpy, ifg):
-    log.info("***************************************refpx, refpy: " + str(refpx) + " " + str(refpy))
-    transform = ifg.dataset.GetGeoTransform()
 
-    xOrigin = transform[0]
-    yOrigin = transform[3]
-    pixelWidth = transform[1]
-    pixelHeight = -transform[5]
-
-    refpx = int((refpx - xOrigin) / pixelWidth)
-    refpy = int((yOrigin - refpy) / pixelHeight)
-
-    log.info("***************************************refpx, refpy: "+str(refpx)+" "+str(refpy))
-    return int(refpx), int(refpy)
-
-def _est_ref_phs_method2(phase_data, half_chip_size, refpx, refpy, thresh, ifg):
+def _est_ref_phs_method2(phase_data, half_chip_size, refpx, refpy, thresh):
     """
     Convenience function for ref phs estimate method 2 parallelisation
     """
-
-    refpx, refpy = convert_geographic_coordinate_to_pixel_value(refpx, refpy, ifg)
-
     patch = phase_data[refpy - half_chip_size: refpy + half_chip_size + 1,
                        refpx - half_chip_size: refpx + half_chip_size + 1]
     patch = np.reshape(patch, newshape=(-1, 1), order='F')
