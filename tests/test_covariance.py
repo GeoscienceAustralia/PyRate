@@ -197,18 +197,12 @@ class LegacyEqualityTest(unittest.TestCase):
         refx, refy = process._ref_pixel_calc(dest_paths, params)
         pyrate.core.orbital.remove_orbital_error(ifgs, params)
         ifgs = prepare_ifgs_without_phase(dest_paths, params)
-        for ifg in ifgs:
-            ifg.close()
-        _, cls.ifgs = rpe.estimate_ref_phase(dest_paths, params, refx, refy)
-        ifgs[0].open()
+        _, cls.ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
         r_dist = RDist(ifgs[0])()
-        ifgs[0].close()
         # Calculate interferogram noise
         cls.maxvar = [cvd(i, params, r_dist, calc_alpha=True,
-                          save_acg=True, write_vals=True)[0] for i in dest_paths]
+                          save_acg=True, write_vals=True)[0] for i in ifgs]
         cls.vcmt = get_vcmt(ifgs, cls.maxvar)
-        for ifg in ifgs:
-            ifg.close()
 
     @classmethod
     def tearDownClass(cls):
@@ -231,16 +225,12 @@ class LegacyEqualityTest(unittest.TestCase):
 
     def test_metadata(self):
         for ifg in self.ifgs:
-            if not ifg.is_open:
-                ifg.open()
             assert ifc.PYRATE_MAXVAR in ifg.meta_data
             assert ifc.PYRATE_ALPHA in ifg.meta_data
 
     def test_save_cvd_data(self):
         from os.path import join, basename, isfile
         for ifg in self.ifgs:
-            if not ifg.is_open:
-                ifg.open()
             data_file = join(self.params[cf.TMPDIR],
                              'cvd_data_{b}.npy'.format(
                                  b=basename(ifg.data_path).split('.')[0]))

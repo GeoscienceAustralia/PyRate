@@ -121,8 +121,8 @@ class RasterBase(object):
             raise RasterException(msg)
 
         if not os.path.exists(self.data_path):
-            raise IOError('The file {path} does not exist. Consider first '
-                          'running prepifg'.format(path=self.data_path))
+            raise IOError('The file {path} does not exist. Consider running '
+                          'prepifg'.format(path=self.data_path))
 
         # unless read only, by default open files as writeable
         if readonly not in [True, False, None]:
@@ -1234,7 +1234,7 @@ def output_tiff_filename(inpath, outpath):
     return name
 
 
-def check_correction_status(ifgs, meta):  # pragma: no cover
+def check_correction_status(preread_ifgs, meta):  # pragma: no cover
     """
     Generic function for checking if a correction has already been performed
     in a previous run by interrogating PyRate meta data entries
@@ -1245,35 +1245,24 @@ def check_correction_status(ifgs, meta):  # pragma: no cover
     :return: True if correction has been performed, otherwise False
     :rtype: bool
     """
-    def close_all(ifgs):
-        for ifg in ifgs:
-            ifg.close()
-
-    if not isinstance(ifgs[0], Ifg):
-        ifgs = [Ifg(ifg_path) for ifg_path in ifgs]
-
-    for ifg in ifgs:
-        if not ifg.is_open:
-            ifg.open()
-        
-    flags = [meta in ifg.meta_data for ifg in ifgs]
+    ifg_paths = sorted(preread_ifgs.keys())
+    # preread_ifgs[i].metadata contains ifg metadata
+    flags = [meta in preread_ifgs[i].metadata
+             for i in ifg_paths]
     if all(flags):
         log.info('Skipped: interferograms already corrected')
-        close_all(ifgs)
         return True
-    elif not all(flags) and any(flags):
+    elif (sum(flags) < len(flags)) and (sum(flags) > 0):
         log.debug('Detected mix of corrected and uncorrected interferograms')
-        for i, flag in zip(ifgs, flags):
+        for i, flag in zip(ifg_paths, flags):
             if flag:
-                msg = '{}: correction detected'.format(i.data_path)
+                msg = '{}: correction detected'.format(i)
             else:
-                msg = '{}: correction NOT detected'.format(i.data_path)
+                msg = '{}: correction NOT detected'.format(i)
             log.debug(msg)
-        close_all(ifgs)
-        raise CorrectionStatusError(msg)
+            raise CorrectionStatusError(msg)
     else:
         log.info('Calculating corrections')
-        close_all(ifgs)
         return False
 
 

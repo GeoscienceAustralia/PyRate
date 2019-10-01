@@ -85,7 +85,7 @@ def find_min_mean(mean_sds, grid):
     :return: Tuple of (refy, refx) with minimum mean
     :rtype: tuple    
     """
-    log.debug('Ranking ref pixel candidates based on mean values')
+    log.info('Filtering means during reference pixel computation')
     refp_index = np.nanargmin(mean_sds)
     return grid[refp_index]
 
@@ -105,7 +105,7 @@ def ref_pixel_setup(ifgs_or_paths, params):
     :return: list(product(ysteps, xsteps))
     :rtype: list
     """
-    log.debug('Setting up ref pixel computation')
+    log.info('Setting up ref pixel computation')
     refnx, refny, chipsize, min_frac = params[cf.REFNX], \
                                        params[cf.REFNY], \
                                        params[cf.REF_CHIP_SIZE], \
@@ -133,7 +133,7 @@ def ref_pixel_setup(ifgs_or_paths, params):
     rows, cols = head.shape
     ysteps = _step(rows, refny, half_patch_size)
     xsteps = _step(cols, refnx, half_patch_size)
-    log.debug('Ref pixel setup finished')
+    log.info('Ref pixel setup finished')
     return half_patch_size, thresh, list(product(ysteps, xsteps))
 
 
@@ -148,7 +148,7 @@ def save_ref_pixel_blocks(grid, half_patch_size, ifg_paths, params):
 
     :return: None, file saved to disk
     """
-    log.debug('Saving ref pixel blocks')
+    log.info('Saving ref pixel blocks')
     outdir = params[cf.TMPDIR]
     for pth in ifg_paths:
         ifg = Ifg(pth)
@@ -164,14 +164,14 @@ def save_ref_pixel_blocks(grid, half_patch_size, ifg_paths, params):
                     b=os.path.basename(pth).split('.')[0], y=y, x=x))
             np.save(file=data_file, arr=data)
         ifg.close()
-    log.debug('Saved ref pixel blocks')
+    log.info('Saved ref pixel blocks')
 
 
 def _ref_pixel_mpi(process_grid, half_patch_size, ifgs, thresh, params):
     """
     Convenience function for MPI-enabled ref pixel calculation
     """
-    log.debug('Ref pixel calculation started')
+    log.info('Ref pixel calculation started')
     mean_sds = []
     for g in process_grid:
         mean_sds.append(_ref_pixel_multi(g, half_patch_size, ifgs, thresh,
@@ -245,7 +245,7 @@ def _validate_chipsize(chipsize, head):
     if chipsize < 3 or chipsize > head.ncols or (chipsize % 2 == 0):
         msg = "Chipsize setting must be >=3 and at least <= grid width"
         raise ValueError(msg)
-    log.debug('Chipsize validation successful')
+    log.info('Chipsize validation successful')
 
 
 def _validate_minimum_fraction(min_frac):

@@ -49,7 +49,7 @@ def _wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs):
 
     # perform some checks on existing ifgs
     log.info('Checking APS correction status')
-    if mpiops.run_once(shared.check_correction_status, ifg_paths, ifc.PYRATE_APS_ERROR):
+    if mpiops.run_once(shared.check_correction_status, preread_ifgs, ifc.PYRATE_APS_ERROR):
         log.info('Finished APS correction')
         return  # return if True condition returned
 

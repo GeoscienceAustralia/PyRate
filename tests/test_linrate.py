@@ -107,20 +107,12 @@ class LegacyEqualityTest(unittest.TestCase):
         # Estimate and remove orbit errors
         pyrate.core.orbital.remove_orbital_error(ifgs, params)
         ifgs = prepare_ifgs_without_phase(dest_paths, params)
-        for ifg in ifgs:
-            ifg.close()
-        _, ifgs = rpe.estimate_ref_phase(dest_paths, params, refx, refy)
-        ifgs[0].open()
+
+        _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
         r_dist = vcm_module.RDist(ifgs[0])()
-        ifgs[0].close()
-        maxvar = [vcm_module.cvd(i, params, r_dist)[0] for i in dest_paths]
-        for ifg in ifgs:
-            ifg.open()
-        vcmt = vcm_module.get_vcmt(ifgs, maxvar)    
-        for ifg in ifgs:
-            ifg.close()     
-            ifg.open()
-        
+        maxvar = [vcm_module.cvd(i, params, r_dist)[0] for i in ifgs]
+        vcmt = vcm_module.get_vcmt(ifgs, maxvar)
+
         # Calculate linear rate map
         params[cf.PARALLEL] = 1
         cls.rate, cls.error, cls.samples = tests.common.calculate_linear_rate(
@@ -146,9 +138,6 @@ class LegacyEqualityTest(unittest.TestCase):
 
         cls.samples_container = np.genfromtxt(
             os.path.join(linrate_dir, 'coh_sta.csv'), delimiter=',')
-    
-        for ifg in ifgs:
-            ifg.close()
 
     @classmethod
     def tearDownClass(cls):
