@@ -7,7 +7,7 @@ Release History
 Added
 +++++
 - Python 3.7 support.
-- Optional 'converttogeotiff' step.
+- Optional 'conv2tif' step.
 - Building of docs integrated with Travis CI.
 - Coherence masking, view coherence masking section in 'input_parameters.conf'
   for options.
@@ -17,6 +17,7 @@ Added
 Changed
 +++++++
 - 'linrate' command has been renamed to 'process'.
+- 'postprocess' command has been renamed to 'merge'
 - CLI structure, config files now need to provided with '-f' flag.
 - Reduced console output, default setting is now INFO.
 - Restructure of code layout, src modules now in 'core' directory and scripts
