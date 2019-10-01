@@ -172,7 +172,7 @@ def test_vcm_legacy_vs_mpi(mpisync, tempdir, get_config):
                                             tiles=tiles)
     refpx, refpy = process._ref_pixel_calc(dest_paths, params_dict)
     process._orb_fit_calc(dest_paths, params_dict)
-    process._ref_phase_estimation(dest_paths, params_dict, refpx, refpy)
+    rpe.estimate_ref_phase(dest_paths, params_dict, refpx, refpy)
 
     maxvar, vcmt = process._maxvar_vcm_calc(dest_paths, params_dict,
                                             preread_ifgs)

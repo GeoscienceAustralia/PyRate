@@ -72,7 +72,7 @@ NO_DATA_VALUE = 'noDataValue'
 NO_DATA_AVERAGING_THRESHOLD = 'noDataAveragingThreshold'
 #: BOOL (1/2/3); Re-project data from Line of sight, 1 = vertical,
 # 2 = horizontal, 3 = no conversion
-REPROJECTION = 'prjflag' # NOT CURRENTLY USED
+#REPROJECTION = 'prjflag' # NOT CURRENTLY USED
 #: BOOL (0/1): Convert no data values to Nan
 NAN_CONVERSION = 'nan_conversion'
 
@@ -206,7 +206,7 @@ TMPDIR = 'tmpdir'
 # format is	key : (conversion, default value)
 # None = no conversion
 PARAM_CONVERSION = {
-    REPROJECTION : (int, 3), # Default no conversion, CONVERSION NOT IMPLEMENTED
+#    REPROJECTION : (int, 3), # Default no conversion, CONVERSION NOT IMPLEMENTED
     IFG_CROP_OPT : (int, 1), # default to area 'intersection' option
     IFG_LKSX : (int, NO_MULTILOOKING),
     IFG_LKSY : (int, NO_MULTILOOKING),
@@ -219,8 +219,8 @@ PARAM_CONVERSION = {
     COH_MASK: (int, 0),
     COH_THRESH: (float, 0.1),
 
-    REFX: (int, -1),
-    REFY: (int, -1),
+    REFX: (float, 181),
+    REFY: (float, 91),
     REFNX: (int, 10),
     REFNY: (int, 10),
     REF_CHIP_SIZE: (int, 21),
@@ -275,7 +275,7 @@ DEFAULT_TO_OBS_DIR = [SLC_DIR, COH_FILE_DIR]
 
 INT_KEYS = [APS_CORRECTION, APS_METHOD]
 
-def get_config_params(path: str, validate: bool=True, requires_tif: bool=False) -> Dict:
+def get_config_params(path: str, validate: bool=True, requires_tif: bool=True) -> Dict:
     """
     Reads the parameters file provided by the user and converts it into
     a dictionary.
@@ -302,7 +302,7 @@ def get_config_params(path: str, validate: bool=True, requires_tif: bool=False) 
 
     return params
 
-def _parse_conf_file(content, validate: bool=True, requires_tif: bool=False) -> Dict:
+def _parse_conf_file(content, validate: bool=True, requires_tif: bool=True) -> Dict:
     """
     Converts the parameters from their text form into a dictionary.
     
@@ -360,7 +360,7 @@ def _handle_extra_parameters(params):
 
     return params
 
-def _parse_pars(pars, validate: bool=True, requires_tif: bool=False) -> Dict:
+def _parse_pars(pars, validate: bool=True, requires_tif: bool=True) -> Dict:
     """
     Takes dictionary of parameters, converting values to required type
     and providing defaults for missing values.
@@ -820,7 +820,21 @@ _REFERENCE_PIXEL_VALIDATION = {
 }
 """dict: basic validation functions for reference pixel search parameters."""
 
-def validate_parameters(pars: Dict, requires_tif: bool=False):
+def convert_geographic_coordinate_to_pixel_value(refpx, refpy, transform):
+
+    # transform = ifg.dataset.GetGeoTransform()
+
+    xOrigin = transform[0]
+    yOrigin = transform[3]
+    pixelWidth = transform[1]
+    pixelHeight = -transform[5]
+
+    refpx = int((refpx - xOrigin) / pixelWidth)
+    refpy = int((yOrigin - refpy) / pixelHeight)
+
+    return int(refpx), int(refpy)
+
+def validate_parameters(pars: Dict, requires_tif: bool=True):
     """
     Main validation function. Calls validation subfunctions and gathers
     some required variables for performing validation.
@@ -846,13 +860,16 @@ def validate_parameters(pars: Dict, requires_tif: bool=False):
 
     validate_ifgs(ifl, pars[OBS_DIR])
 
-    extents, n_cols, n_rows, n_epochs, max_span = None, None, None, None, None
+    extents, n_cols, n_rows, n_epochs, max_span, transform = None, None, None, None, None, None
     if requires_tif:
         validate_tifs_exist(pars[IFG_FILE_LIST], pars[OBS_DIR])
         # Get info regarding epochs and dimensions needed for validation.
         crop_opts = _crop_opts(pars)
-        extents, n_cols, n_rows, n_epochs, max_span = \
+        extents, n_cols, n_rows, n_epochs, max_span, transform = \
            _get_ifg_information(pars[IFG_FILE_LIST], pars[OBS_DIR], crop_opts)
+
+        pars[REFX], pars[REFY] = convert_geographic_coordinate_to_pixel_value(pars[REFX], pars[REFY], transform)
+
         validate_pixel_parameters(n_cols, n_rows, pars)
         validate_reference_pixel_search_windows(n_cols, n_rows, pars)
         validate_extent_parameters(extents, pars)
@@ -949,8 +966,8 @@ def validate_optional_parameters(pars: Dict):
         validate(pars[PROCESSOR] == GAMMA, _GAMMA_VALIDATION, pars))
     errors.extend(
         validate(pars[IFG_CROP_OPT] == 3, _CUSTOM_CROP_VALIDATION, pars))
-    errors.extend(
-        validate(pars[REFX] > 0 and pars[REFY] > 0, _REFERENCE_PIXEL_VALIDATION, pars))
+    # errors.extend(
+    #     validate(pars[REFX] > 0 and pars[REFY] > 0, _REFERENCE_PIXEL_VALIDATION, pars))
 
     return _raise_errors(errors)
 
@@ -1208,6 +1225,7 @@ def validate_pixel_parameters(n_cols: int, n_rows: int, pars: Dict) -> Optional[
     y_dim_string = f"(ymin: 0, ymax: {n_rows}"
 
     # Check reference pixel coordinates within scene.
+
     if pars[REFX] > 0 and pars[REFY] > 0:
         if not 0 < pars[REFX] <= n_cols:
             errors.append(f"'{REFX}': reference pixel coodinate is "
@@ -1220,9 +1238,10 @@ def validate_pixel_parameters(n_cols: int, n_rows: int, pars: Dict) -> Optional[
     # Check multilooks (extent/val) >= 1.
     def _validate_multilook(var_name, dim_val, dim_string):
         if dim_val / pars[var_name] < 1:
-            return [f"'{var_name}': ({dim_string} pixel extent: {dim_val} / "
-                    f"multilook value: {pars[var_name]}) must be greater than "
-                    f"or equal to 1."]
+            return [f"'{var_name}': the quantity ( {dim_string} pixel count: "
+                    f"{dim_val} / multilook factor: {pars[var_name]} ) must "
+                    f"be greater than or equal to 1."]
+
         return []
 
     errors.extend(_validate_multilook(IFG_LKSX, n_cols, 'x'))
@@ -1373,7 +1392,9 @@ def _get_ifg_information(ifg_file_list: str, obs_dir: str, crop_opts: Tuple) -> 
     n_cols = abs(int(abs(extents[0] - extents[2]) / x_step))
     n_rows = abs(int(abs(extents[1] - extents[3]) / y_step))
 
-    return extents, n_cols, n_rows, n_epochs, max_span
+    transform = rasters[0].dataset.GetGeoTransform()
+
+    return extents, n_cols, n_rows, n_epochs, max_span, transform
 
 def _crop_opts(params: Dict) -> Tuple:
     """
