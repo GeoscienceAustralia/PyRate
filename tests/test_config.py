@@ -467,7 +467,7 @@ class TestConfigValidationWithGeotiffs(unittest.TestCase):
                                                requires_tif=True)
         self.dummy_dir = '/i/should/not/exist'
         crop_opts = config._crop_opts(self.params)
-        self.extents, self.n_cols, self.n_rows, self.n_epochs, self.max_span =\
+        self.extents, self.n_cols, self.n_rows, self.n_epochs, self.max_span, self.transform =\
             config._get_ifg_information(self.params[IFG_FILE_LIST],
                                         self.params[OBS_DIR],
                                         crop_opts)
