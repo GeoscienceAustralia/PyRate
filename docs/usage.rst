@@ -92,13 +92,13 @@ Use ``--help`` for the different command line options:
 
         CLI for carrying out PyRate workflow. Typical workflow:
 
-            Step 1: converttogeotiff
+            Step 1: conv2tif
 
             Step 2: prepifg
 
             Step 3: process
 
-            Step 4: postprocess
+            Step 4: merge
 
         Refer to https://geoscienceaustralia.github.io/PyRate/usage.html for more
         details.
@@ -110,38 +110,38 @@ Use ``--help`` for the different command line options:
       --help                          Show this message and exit.
 
     Commands:
-      converttogeotiff  Convert interferograms to geotiff.
-      postprocess       Reassemble computed tiles and save as geotiffs.
+      conv2tif  Convert interferograms to geotiff.
+      merge       Reassemble computed tiles and save as geotiffs.
       prepifg           Perform multilooking and cropping on geotiffs.
       process           Time series and linear rate computation.
 
 The ``pyrate`` program has four command line options corresponding to
 different parts of the PyRate workflow:
 
-1. converttogeotiff
+1. conv2tif
 2. prepifg
 3. process
-4. postprocess
+4. merge
 
 Below we discuss these options.
 
-converttogeotiff: Converting input intergerograms
+conv2tif: Converting input intergerograms
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Before PyRate can process GAMMA or ROI\_PAC intergerograms, they need to be
-converted into geotiff format by the ``converttogeotiff`` command.
+converted into geotiff format by the ``conv2tif`` command.
 
 ::
 
-    >> pyrate converttogeotiff --help
-    Usage: pyrate converttogeotiff -f CONFIG_FILE
+    >> pyrate conv2tif --help
+    Usage: pyrate conv2tif -f CONFIG_FILE
 
       Convert interferograms to geotiff.
 
     Options:
       --help  Show this message and exit. 
 
-The ``converttogeotiff`` command will determine the input format from the value
+The ``conv2tif`` command will determine the input format from the value
 specified at the *processor:* keyword in the config file (0: ROI\_PAC;
 1: GAMMA)
 
@@ -166,7 +166,7 @@ The geographic projection in the parameter *DATUM:* is extracted from the DEM
 header file.
 
 Upon completion, geotiff formatted copies of the input files will be placed
-in the directory the input files are located in. Note that ``converttogeotiff``
+in the directory the input files are located in. Note that ``conv2tif``
 will not perform the conversion if geotiffs for the provided input files
 already exist.
 
@@ -263,7 +263,7 @@ matrix calculation - Identification of a suitable reference pixel -
 Removal of reference phase from interferograms - Calculation of
 interferogram covariance - Assembly of the variance-covariance matrix
 
-postprocess: Putting the tiles back together
+merge: Putting the tiles back together
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The last step of the PyRate workflow is to re-assemble the tiles and
@@ -271,8 +271,8 @@ save geotiff files of the final time series and linear rate products.
 
 ::
 
-    >> pyrate postprocess --help
-    Usage: pyrate postprocess -f CONFIG_FILE [OPTIONS]
+    >> pyrate merge --help
+    Usage: pyrate merge -f CONFIG_FILE [OPTIONS]
 
     Options:
       -f, --config_file STRING path to configuration file
@@ -285,7 +285,7 @@ the previous ``process`` step:
 
 ::
 
-    pyrate postprocess -f path/to/config_file -c 3 -r 4
+    pyrate merge -f path/to/config_file -c 3 -r 4
 
 Multiprocessing
 ---------------

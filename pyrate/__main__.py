@@ -27,6 +27,11 @@ from pyrate.core import pyratelog
 
 log = logging.getLogger(__name__)
 
+# Step names, used here and in config.py
+CONV2TIF = 'conv2tif' # legacy name: converttogeotiff
+PREPIFG = 'prepifg'
+PROCESS = 'process'
+MERGE = 'merge' # legacy name: postprocess
 
 def converttogeotiff_handler(config_file):
     """
@@ -95,9 +100,9 @@ def main():
     subparsers = parser.add_subparsers(dest='command')
     subparsers.required = True
 
-    # create the parser for the "converttogeotiff" command
+    # create the parser for the "conv2tif" command
     parser_converttogeotiff = \
-        subparsers.add_parser('converttogeotiff',
+        subparsers.add_parser('conv2tif',
                               help='Convert interferograms to geotiff.', 
                               add_help=True)
 
@@ -143,8 +148,8 @@ def main():
         
     parser_process.add_argument(*verbosity_args, **verbosity_kwargs)
 
-    # create the parser for the "postprocess" command
-    parser_postprocess = subparsers.add_parser('postprocess',
+    # create the parser for the "merge" command
+    parser_postprocess = subparsers.add_parser('merge',
                                            help=("Reassemble computed tiles "
                                                  "and save as geotiffs."), 
                                            add_help=True)
@@ -174,7 +179,7 @@ def main():
         pyratelog.configure(args.verbosity)
         log.info("Verbosity set to " + str(args.verbosity) + ".")
 
-    if args.command == "converttogeotiff":
+    if args.command == "conv2tif":
         converttogeotiff_handler(args.config_file)
 
     if args.command == "prepifg":
@@ -183,7 +188,7 @@ def main():
     if args.command == "process":
         process_handler(args.config_file, args.rows, args.cols)
 
-    if args.command == "postprocess":
+    if args.command == "merge":
         postprocess_handler(args.config_file, args.rows, args.cols)
 
 
