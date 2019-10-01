@@ -185,16 +185,12 @@ PARALLEL = 'parallel'
 #: INT; Number of processes for multi-threading
 PROCESSES = 'processes'
 
-# Orbital error correction constants
+# Orbital error correction constants for conversion to readable flags
 INDEPENDENT_METHOD = 1
 NETWORK_METHOD = 2
 PLANAR = 1
 QUADRATIC = 2
 PART_CUBIC = 3
-
-# Orbital error correction names for logging
-ORBITAL_METHOD_NAMES = {1: 'INDEPENDENT', 2: 'NETWORK'}
-ORBITAL_DEGREE_NAMES = {1: 'PLANAR', 2: 'QUADRATIC', 3: 'PART CUBIC'}
 
 # dir for temp files
 TMPDIR = 'tmpdir'
