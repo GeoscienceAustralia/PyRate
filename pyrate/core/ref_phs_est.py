@@ -28,37 +28,7 @@ from pyrate.core.shared import joblib_log_level
 log = logging.getLogger(__name__)
 
 
-def estimate_ref_phase(ifgs, params, refpx, refpy):
-    """
-    Wrapper function for reference phase estimation and interferogram
-    correction.
-
-    :param list ifgs: List of interferogram objects
-    :param dict params: Dictionary of configuration parameters
-    :param int refpx: Reference pixel X found by ref pixel method
-    :param int refpy: Reference pixel Y found by ref pixel method
-
-    :return: ref_phs: Numpy array of reference phase values of size (nifgs, 1)
-    :rtype: ndarray
-    :return: ifgs: Reference phase data is removed interferograms in place
-    """
-    _check_ref_phs_ifgs(ifgs)
-    # set reference phase as the average of the whole image (recommended)
-    if params[cf.REF_EST_METHOD] == 1:
-        ref_phs = est_ref_phase_method1(ifgs, params)
-
-    elif params[cf.REF_EST_METHOD] == 2:
-        ref_phs = est_ref_phase_method2(ifgs, params, refpx, refpy)
-    else:
-        raise ReferencePhaseError('No such option. Use refest=1 or 2')
-
-    for i in ifgs:
-        i.meta_data[ifc.PYRATE_REF_PHASE] = ifc.REF_PHASE_REMOVED
-        i.write_modified_phase()
-    return ref_phs, ifgs
-
-
-def est_ref_phase_method2(ifgs, params, refpx, refpy):
+def est_ref_phase_method2(ifg_paths, params, refpx, refpy):
     """
     Reference phase estimation using method 2. Reference phase is the
     median calculated with a patch around the supplied reference pixel.

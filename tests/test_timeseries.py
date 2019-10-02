@@ -31,6 +31,7 @@ import pyrate.core.orbital
 import tests.common as common
 from pyrate.core import ref_phs_est as rpe, config as cf, mst, covariance
 from pyrate import process, prepifg, converttogtif
+from pyrate.process import _ref_phase_estimation
 from pyrate.core.timeseries import time_series
 
 
@@ -132,7 +133,10 @@ class LegacyTimeSeriesEquality(unittest.TestCase):
         # Estimate and remove orbit errors
         pyrate.core.orbital.remove_orbital_error(ifgs, params)
         ifgs = common.prepare_ifgs_without_phase(dest_paths, params)
-        _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
+        for ifg in ifgs:
+            ifg.close()
+        _, ifgs = _ref_phase_estimation(dest_paths, params, refx, refy)
+        ifgs[0].open()
         r_dist = covariance.RDist(ifgs[0])()
         maxvar = [covariance.cvd(i, params, r_dist)[0] for i in ifgs]
         vcmt = covariance.get_vcmt(ifgs, maxvar)
@@ -239,12 +243,18 @@ class LegacyTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
         # Estimate and remove orbit errors
         pyrate.core.orbital.remove_orbital_error(ifgs, params)
         ifgs = common.prepare_ifgs_without_phase(dest_paths, params)
-
-        _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
+        for ifg in ifgs:
+            ifg.close()
+        _, ifgs = _ref_phase_estimation(dest_paths, params, refx, refy)
+        ifgs[0].open()
         r_dist = covariance.RDist(ifgs[0])()
         # Calculate interferogram noise
         maxvar = [covariance.cvd(i, params, r_dist)[0] for i in ifgs]
         vcmt = covariance.get_vcmt(ifgs, maxvar)
+        for ifg in ifgs:
+            ifg.close()
+            ifg.open()
+            ifg.nodata_value = 0.1
 
         params[cf.TIME_SERIES_METHOD] = 2
         params[cf.PARALLEL] = 1

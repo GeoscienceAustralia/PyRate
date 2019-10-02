@@ -27,6 +27,7 @@ from numpy.testing import assert_array_almost_equal
 
 from pyrate.core import shared, ref_phs_est as rpe, ifgconstants as ifc, config as cf
 from pyrate import process, prepifg, converttogtif
+from pyrate.process import _ref_phase_estimation
 from pyrate.core.covariance import cvd, get_vcmt, RDist
 import pyrate.core.orbital
 from tests import common
@@ -197,7 +198,10 @@ class LegacyEqualityTest(unittest.TestCase):
         refx, refy = process._ref_pixel_calc(dest_paths, params)
         pyrate.core.orbital.remove_orbital_error(ifgs, params)
         ifgs = prepare_ifgs_without_phase(dest_paths, params)
-        _, cls.ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
+        for ifg in ifgs:
+            ifg.close()
+        _, cls.ifgs = _ref_phase_estimation(dest_paths, params, refx, refy)
+        ifgs[0].open()
         r_dist = RDist(ifgs[0])()
         # Calculate interferogram noise
         cls.maxvar = [cvd(i, params, r_dist, calc_alpha=True,
