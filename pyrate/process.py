@@ -124,20 +124,11 @@ def _ref_pixel_calc(ifg_paths, params):
     # unlikely, but possible the refpixel can be (0,0)
     # check if there is a pre-specified reference pixel coord
     refx = params[cf.REFX]
+    refy = params[cf.REFY]
     ifg = Ifg(ifg_paths[0])
     ifg.open(readonly=True)
-    if refx > ifg.ncols - 1:
-        msg = ('Supplied reference pixel X coordinate is greater than '
-               'the number of ifg columns: {}').format(refx)
-        raise ValueError(msg)
 
-    refy = params[cf.REFY]
-    if refy > ifg.nrows - 1:
-        msg = ('Supplied reference pixel Y coordinate is greater than '
-               'the number of ifg rows: {}').format(refy)
-        raise ValueError(msg)
-
-    if refx <= 0 or refy <= 0:  # if either zero or negative
+    if refx < -180 or refx > 180 or refy < -90 or refy > 90:  # if either zero or negative
         log.info('Searching for best reference pixel location')
 
         half_patch_size, thresh, grid = refpixel.ref_pixel_setup(ifg_paths,
