@@ -275,7 +275,7 @@ DEFAULT_TO_OBS_DIR = [SLC_DIR, COH_FILE_DIR]
 
 INT_KEYS = [APS_CORRECTION, APS_METHOD]
 
-def get_config_params(path: str, validate: bool=True, requires_tif: bool=True) -> Dict:
+def get_config_params(path: str, validate: bool=True, requires_tif: bool=False) -> Dict:
     """
     Reads the parameters file provided by the user and converts it into
     a dictionary.
@@ -302,7 +302,7 @@ def get_config_params(path: str, validate: bool=True, requires_tif: bool=True) -
 
     return params
 
-def _parse_conf_file(content, validate: bool=True, requires_tif: bool=True) -> Dict:
+def _parse_conf_file(content, validate: bool=True, requires_tif: bool=False) -> Dict:
     """
     Converts the parameters from their text form into a dictionary.
     
@@ -360,7 +360,7 @@ def _handle_extra_parameters(params):
 
     return params
 
-def _parse_pars(pars, validate: bool=True, requires_tif: bool=True) -> Dict:
+def _parse_pars(pars, validate: bool=True, requires_tif: bool=False) -> Dict:
     """
     Takes dictionary of parameters, converting values to required type
     and providing defaults for missing values.
@@ -622,11 +622,11 @@ _PARAM_VALIDATION = {
     ),
     REFX: (
         lambda a: True,
-        "Any int value valid."
+        "Any float value valid."
     ),
     REFY: (
         lambda a: True,
-        "Any int value valid."
+        "Any float value valid."
     ),
     ORBITAL_FIT: (
         lambda a: a in (0, 1),
@@ -834,7 +834,7 @@ def convert_geographic_coordinate_to_pixel_value(refpx, refpy, transform):
 
     return int(refpx), int(refpy)
 
-def validate_parameters(pars: Dict, requires_tif: bool=True):
+def validate_parameters(pars: Dict, requires_tif: bool=False):
     """
     Main validation function. Calls validation subfunctions and gathers
     some required variables for performing validation.

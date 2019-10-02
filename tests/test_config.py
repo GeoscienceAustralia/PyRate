@@ -571,8 +571,8 @@ class ConfigTest(unittest.TestCase):
         conf_path = join(SML_TEST_CONF, 'pyrate1.conf')
         params = config.get_config_params(conf_path)
 
-        assert params[config.REFX] == -1
-        assert params[config.REFY] == -1
+        assert params[config.REFX] == 181
+        assert params[config.REFY] == 91
 
     @staticmethod
     def test_read_param_file_missing_value():
@@ -580,8 +580,8 @@ class ConfigTest(unittest.TestCase):
         conf_path = join(SML_TEST_CONF, 'pyrate2.conf')
         params = config.get_config_params(conf_path)
 
-        assert params[config.REFX] == -1
-        assert params[config.REFY] == -1
+        assert params[config.REFX] == 181
+        assert params[config.REFY] == 91
 
     @staticmethod
     def test_parse_namelist():
