@@ -554,7 +554,7 @@ def get_ifg_paths(config_file, requires_tif=False):
     :rtype: list
     :rtype: dict
     """
-    params = get_config_params(config_file, requires_tif)
+    params = get_config_params(config_file, requires_tif=requires_tif)
     ifg_file_list = params.get(IFG_FILE_LIST)
 
     xlks, _, crop = transform_params(params)
