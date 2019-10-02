@@ -45,8 +45,6 @@ def est_ref_phase_method2(ifg_paths, params, refpx, refpy):
     :rtype: ndarray
     :return: ifgs: Reference phase data is removed interferograms in place
     """
-    # Bren: see the comment I made in est_ref_phase_method1 - follow the 
-    #   same pattern.
     half_chip_size = int(np.floor(params[cf.REF_CHIP_SIZE] / 2.0))
     chipsize = 2 * half_chip_size + 1
     thresh = chipsize * chipsize * params[cf.REF_MIN_FRAC]
@@ -117,13 +115,6 @@ def est_ref_phase_method1(ifg_paths, params):
     :rtype: ndarray
     :return: ifgs: Reference phase data is removed interferograms in place
     """
-    # Bren: we can preserve the majority of this method, the major changes
-    #   are putting the body of the function in the _inner function and
-    #   changing the params to take ifg_paths instead of ifg objects (MPI has to
-    #   communicate via pickle - it's a lot easier to pickle and pass a 
-    #   string to processes rather than a complex Ifg object) and then each
-    #   procesor will open the Ifgs and operate on them.
-
     def _inner(ifg_paths):
         if isinstance(ifg_paths[0], Ifg):
             proc_ifgs = ifg_paths
