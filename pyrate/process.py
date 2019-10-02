@@ -167,7 +167,7 @@ def _orb_fit_calc(ifg_paths, params, preread_ifgs=None):
     if preread_ifgs:  # don't check except for mpi tests
         # perform some general error/sanity checks
         log.info('Checking Orbital error correction status')
-        if mpiops.run_once(shared.check_correction_status, preread_ifgs,
+        if mpiops.run_once(shared.check_correction_status, ifg_paths,
                            ifc.PYRATE_ORBITAL_ERROR):
             log.info('Finished Orbital error correction')
             return  # return if True condition returned
@@ -190,6 +190,7 @@ def _ref_phase_estimation(ifg_paths, params, refpx, refpy):
     """
     Wrapper for reference phase estimation.
     """
+    print(refpx, refpy)
     log.info("Caluclating reference phase estimation")
     if len(ifg_paths) < 2:
         raise rpe.ReferencePhaseError(
@@ -197,9 +198,9 @@ def _ref_phase_estimation(ifg_paths, params, refpx, refpy):
             f"correction ({len(ifg_paths)} provided).")
 
     if mpiops.run_once(shared.check_correction_status, ifg_paths,
-                       ifc.PYRATE_REF_PHASE):
+                        ifc.PYRATE_REF_PHASE):
         log.info('Finished reference phase estimation')
-        return None, ifg_paths
+        return
 
     if params[cf.REF_EST_METHOD] == 1:
         ref_phs = rpe.est_ref_phase_method1(ifg_paths, params)
@@ -231,64 +232,6 @@ def _ref_phase_estimation(ifg_paths, params, refpx, refpy):
     else:
         ifgs = [Ifg(ifg_path) for ifg_path in ifg_paths]
     return ref_phs, ifgs
-
-
-def _ref_phs_method2(ifg_paths, params, refpx, refpy):
-    """
-    MPI wrapper for reference phase computation using method 2.
-    Refer to documentation for ref_est_phs.est_ref_phase_method2.
-    """
-    half_chip_size = int(np.floor(params[cf.REF_CHIP_SIZE] / 2.0))
-    chipsize = 2 * half_chip_size + 1
-    thresh = chipsize * chipsize * params[cf.REF_MIN_FRAC]
-    process_ifg_paths = mpiops.array_split(ifg_paths)
-
-    def _inner(ifg_path):
-        """
-        Convenient inner loop
-        """
-        ifg = Ifg(ifg_path)
-        ifg.open(readonly=False)
-        phase_data = ifg.phase_data
-        ref_ph = rpe._est_ref_phs_method2(phase_data,
-                                         half_chip_size,
-                                         refpx, refpy, thresh)
-        phase_data -= ref_ph
-        md = ifg.meta_data
-        md[ifc.PYRATE_REF_PHASE] = ifc.REF_PHASE_REMOVED
-        ifg.write_modified_phase(data=phase_data)
-        ifg.close()
-        return ref_ph
-
-    ref_phs = np.array([_inner(p) for p in process_ifg_paths])
-    log.info('Ref phase computed in process {}'.format(mpiops.rank))
-    return ref_phs
-
-
-def _ref_phs_method1(ifg_paths, comp):
-    """
-    MPI wrapper for reference phase computation using method 1.
-    Refer to documentation for ref_est_phs.est_ref_phase_method1.
-    """
-    def _inner(ifg_path):
-        """
-        Convenient inner loop
-        """
-        ifg = Ifg(ifg_path)
-        ifg.open(readonly=False)
-        phase_data = ifg.phase_data
-        ref_phase = rpe._est_ref_phs_method1(phase_data, comp)
-        phase_data -= ref_phase
-        md = ifg.meta_data
-        md[ifc.PYRATE_REF_PHASE] = ifc.REF_PHASE_REMOVED
-        ifg.write_modified_phase(data=phase_data)
-        ifg.close()
-        return ref_phase
-    this_process_ifgs = mpiops.array_split(ifg_paths)
-    ref_phs = np.array([_inner(ifg) for ifg in this_process_ifgs])
-    log.info('Ref phase computed in process {}'.format(mpiops.rank))
-    return ref_phs
-
 
 def process_ifgs(ifg_paths, params, rows, cols):
     """
@@ -322,7 +265,7 @@ def process_ifgs(ifg_paths, params, rows, cols):
     _ = [preread_ifgs.pop(k) for k in ['gt', 'epochlist', 'md', 'wkt']]
 
     _orb_fit_calc(ifg_paths, params, preread_ifgs)
-
+    
     _ref_phase_estimation(ifg_paths, params, refpx, refpy)    
 
     _mst_calc(ifg_paths, params, tiles, preread_ifgs)

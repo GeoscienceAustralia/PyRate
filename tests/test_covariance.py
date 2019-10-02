@@ -27,7 +27,6 @@ from numpy.testing import assert_array_almost_equal
 
 from pyrate.core import shared, ref_phs_est as rpe, ifgconstants as ifc, config as cf
 from pyrate import process, prepifg, converttogtif
-from pyrate.process import _ref_phase_estimation
 from pyrate.core.covariance import cvd, get_vcmt, RDist
 import pyrate.core.orbital
 from tests import common
@@ -200,13 +199,16 @@ class LegacyEqualityTest(unittest.TestCase):
         ifgs = prepare_ifgs_without_phase(dest_paths, params)
         for ifg in ifgs:
             ifg.close()
-        _, cls.ifgs = _ref_phase_estimation(dest_paths, params, refx, refy)
+        _, cls.ifgs = process._ref_phase_estimation(dest_paths, params, refx, refy)
         ifgs[0].open()
         r_dist = RDist(ifgs[0])()
+        ifgs[0].close()
         # Calculate interferogram noise
         cls.maxvar = [cvd(i, params, r_dist, calc_alpha=True,
-                          save_acg=True, write_vals=True)[0] for i in ifgs]
+                          save_acg=True, write_vals=True)[0] for i in dest_paths]
         cls.vcmt = get_vcmt(ifgs, cls.maxvar)
+        for ifg in ifgs:
+            ifg.close()
 
     @classmethod
     def tearDownClass(cls):
@@ -229,12 +231,16 @@ class LegacyEqualityTest(unittest.TestCase):
 
     def test_metadata(self):
         for ifg in self.ifgs:
+            if not ifg.is_open:
+                ifg.open()
             assert ifc.PYRATE_MAXVAR in ifg.meta_data
             assert ifc.PYRATE_ALPHA in ifg.meta_data
 
     def test_save_cvd_data(self):
         from os.path import join, basename, isfile
         for ifg in self.ifgs:
+            if not ifg.is_open:
+                ifg.open()
             data_file = join(self.params[cf.TMPDIR],
                              'cvd_data_{b}.npy'.format(
                                  b=basename(ifg.data_path).split('.')[0]))
