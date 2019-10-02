@@ -95,34 +95,6 @@ def est_ref_phase_method2(ifgs, params, refpx, refpy):
     return ref_phs
 
 
-        phase_data = [i.phase_data for i in ifgs]
-        if params[cf.PARALLEL]:
-            ref_phs = Parallel(n_jobs=params[cf.PROCESSES],
-                               verbose=joblib_log_level(cf.LOG_LEVEL))(
-                delayed(_est_ref_phs_method2)(p, half_chip_size,
-                                              refpx, refpy, thresh)
-                for p in phase_data)
-
-            for n, ifg in enumerate(ifgs):
-                ifg.phase_data -= ref_phs[n]
-        else:
-            ref_phs = np.zeros(len(ifgs))
-            for n, ifg in enumerate(ifgs):
-                ref_phs[n] = \
-                    _est_ref_phs_method2(phase_data[n], half_chip_size,
-                                         refpx, refpy, thresh)
-                ifg.phase_data -= ref_phs[n]
-
-        for ifg in ifgs:
-            _update_phase_metadata(ifg)
-            ifg.close()
-        return ref_phs
-    
-    process_ifgs_paths = mpiops.array_split(ifg_paths)
-    ref_phs = _inner(process_ifgs_paths)
-    return ref_phs   
-
-
 def _est_ref_phs_method2(phase_data, half_chip_size, refpx, refpy, thresh):
     """
     Convenience function for ref phs estimate method 2 parallelisation
