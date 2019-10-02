@@ -24,8 +24,10 @@ import pickle as cp
 from collections import OrderedDict
 import numpy as np
 
-from pyrate.core import shared, algorithm, orbital, ref_phs_est as rpe, ifgconstants as ifc, mpiops, config as cf, \
-    timeseries, mst, covariance as vcm_module, linrate, refpixel
+from pyrate.core import (shared, algorithm, orbital, ref_phs_est as rpe, 
+                         ifgconstants as ifc, mpiops, config as cf, 
+                         timeseries, mst, covariance as vcm_module, 
+                         linrate, refpixel)
 from pyrate.core.aps import _wrap_spatio_temporal_filter
 from pyrate.core.config import ConfigException
 from pyrate.core.shared import Ifg, PrereadIfg, get_tiles
@@ -193,39 +195,47 @@ def _orb_fit_calc(ifg_paths, params, preread_ifgs=None):
     mpiops.comm.barrier()
     log.info('Finished Orbital error correction')
 
-def _phase_sum(ifg_paths, params):
-    """
-    Save phase data and phase sum used in the reference phase estimation
-    """
-    p_paths = mpiops.array_split(ifg_paths)
-    ifg = Ifg(p_paths[0])
-    ifg.open(readonly=True)
-    shape = ifg.shape
-    phs_sum = np.zeros(shape=shape, dtype=np.float64)
-    ifg.close()
+def _ref_phase_estimation(ifg_paths, params, refpx, refpy):
+    if len(ifg_paths) < 2:
+        raise rpe.ReferencePhaseError(
+            f"At least two interferograms required for reference phase "
+            f"correction ({len(ifg_paths)} provided).")
 
-    for d in p_paths:
-        ifg = Ifg(d)
-        ifg.open()
-        ifg.nodata_value = params[cf.NO_DATA_VALUE]
-        phs_sum += ifg.phase_data
-        ifg.close()
+    if mpiops.run_once(shared.check_correction_status, ifg_paths,
+                       ifc.PYRATE_REF_PHASE):
+        log.info("Skipped: interferograms already corrected.")
+        return None, ifg_paths
 
+    if params[cf.REF_EST_METHOD] == 1:
+        ref_phs = rpe.est_ref_phase_method1(ifg_paths, params)
+    elif params[cf.REF_EST_METHOD] == 2:
+        ref_phs = rpe.est_ref_phase_method2(ifg_paths, params, refpx, refpy)
+    else:
+        raise rpe.ReferencePhaseError("No such option, use '1' or '2'.")
+
+    # Save reference phase numpy arrays to disk.
+    ref_phs_file = os.path.join(params[cf.TMPDIR], 'ref_phs.npy')
     if mpiops.rank == MASTER_PROCESS:
-        phase_sum_all = phs_sum
-        # loop is better for memory
-        for i in range(1, mpiops.size):  # pragma: no cover
-            phs_sum = np.zeros(shape=shape, dtype=np.float64)
-            mpiops.comm.Recv(phs_sum, source=i, tag=i)
-            phase_sum_all += phs_sum
-        comp = np.isnan(phase_sum_all)
-        comp = np.ravel(comp, order='F')
-    else:  # pragma: no cover
-        comp = None
-        mpiops.comm.Send(phs_sum, dest=0, tag=mpiops.rank)
+        collected_ref_phs = np.zeros(len(ifg_paths), dtype=np.float64)
+        process_indices = mpiops.array_split(range(len(ifg_paths)))
+        collected_ref_phs[process_indices] = ref_phs
+        for r in range(1, mpiops.size):
+            process_indices = mpiops.array_split(range(len(ifg_paths)), r)
+            this_process_ref_phs = np.zeros(shape=len(process_indices),
+                                            dtype=np.float64)
+            mpiops.comm.Recv(this_process_ref_phs, source=r, tag=r)
+            collected_ref_phs[process_indices] = this_process_ref_phs
+        np.save(file=ref_phs_file, arr=ref_phs)
+    else:
+        mpiops.comm.Send(ref_phs, dest=MASTER_PROCESS, tag=mpiops.rank)
+    log.info('Finished reference phase estimation')
 
-    comp = mpiops.comm.bcast(comp, root=0)
-    return comp
+    # Preserve old return value so tests don't break.
+    if isinstance(ifg_paths[0], Ifg):
+        ifgs = ifg_paths
+    else:
+        ifgs = [Ifg(ifg_path) for ifg_path in ifg_paths]
+    return ref_phs, ifgs
 
 def process_ifgs(ifg_paths, params, rows, cols):
     """
@@ -235,7 +245,7 @@ def process_ifgs(ifg_paths, params, rows, cols):
     :param dict params: Dictionary of configuration parameters
     :param int rows: Number of sub-tiles in y direction
     :param int cols: Number of sub-tiles in x direction
-    
+
     :return: refpt: tuple of reference pixel x and y position
     :rtype: tuple
     :return: maxvar: array of maximum variance values of interferograms
@@ -260,7 +270,7 @@ def process_ifgs(ifg_paths, params, rows, cols):
 
     _orb_fit_calc(ifg_paths, params, preread_ifgs)
 
-    rpe.estimate_ref_phase(ifg_paths, params, refpx, refpy)    
+    _ref_phase_estimation(ifg_paths, params, refpx, refpy)    
 
     _mst_calc(ifg_paths, params, tiles, preread_ifgs)
 

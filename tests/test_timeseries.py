@@ -31,6 +31,7 @@ import pyrate.core.orbital
 import tests.common as common
 from pyrate.core import ref_phs_est as rpe, config as cf, mst, covariance
 from pyrate import process, prepifg, converttogtif
+from pyrate.process import _ref_phase_estimation
 from pyrate.core.timeseries import time_series
 
 
@@ -135,7 +136,7 @@ class LegacyTimeSeriesEquality(unittest.TestCase):
         for ifg in ifgs:
             print(ifg.nodata_value)
             ifg.close()
-        _, ifgs = rpe.estimate_ref_phase(dest_paths, params, refx, refy)
+        _, ifgs = _ref_phase_estimation(dest_paths, params, refx, refy)
         ifgs[0].open()
         r_dist = covariance.RDist(ifgs[0])()
         ifgs[0].close()
@@ -253,7 +254,7 @@ class LegacyTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
         ifgs = common.prepare_ifgs_without_phase(dest_paths, params)
         for ifg in ifgs:
             ifg.close()
-        _, ifgs = rpe.estimate_ref_phase(dest_paths, params, refx, refy)
+        _, ifgs = _ref_phase_estimation(dest_paths, params, refx, refy)
         ifgs[0].open()
         r_dist = covariance.RDist(ifgs[0])()
         ifgs[0].close()
@@ -265,7 +266,7 @@ class LegacyTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
         for ifg in ifgs:
             ifg.close()
             ifg.open()
-            ifg.nodata_value = 0.0
+            ifg.nodata_value = 0.1
 
         params[cf.TIME_SERIES_METHOD] = 2
         params[cf.PARALLEL] = 1

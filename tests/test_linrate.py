@@ -30,6 +30,7 @@ import pyrate.core.orbital
 import tests.common
 from pyrate.core import shared, ref_phs_est as rpe, config as cf, covariance as vcm_module
 from pyrate.core.linrate import linear_rate
+from pyrate.process import _ref_phase_estimation
 from pyrate import process, prepifg, converttogtif
 from tests.common import (SML_TEST_DIR, prepare_ifgs_without_phase,
     TEST_CONF_ROIPAC, pre_prepare_ifgs, remove_tifs)
@@ -109,7 +110,7 @@ class LegacyEqualityTest(unittest.TestCase):
         ifgs = prepare_ifgs_without_phase(dest_paths, params)
         for ifg in ifgs:
             ifg.close()
-        _, ifgs = rpe.estimate_ref_phase(dest_paths, params, refx, refy)
+        _, ifgs = _ref_phase_estimation(dest_paths, params, refx, refy)
         ifgs[0].open()
         r_dist = vcm_module.RDist(ifgs[0])()
         ifgs[0].close()

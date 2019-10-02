@@ -27,6 +27,7 @@ from numpy.testing import assert_array_almost_equal
 
 from pyrate.core import shared, ref_phs_est as rpe, ifgconstants as ifc, config as cf
 from pyrate import process, prepifg, converttogtif
+from pyrate.process import _ref_phase_estimation
 from pyrate.core.covariance import cvd, get_vcmt, RDist
 import pyrate.core.orbital
 from tests import common
@@ -199,7 +200,7 @@ class LegacyEqualityTest(unittest.TestCase):
         ifgs = prepare_ifgs_without_phase(dest_paths, params)
         for ifg in ifgs:
             ifg.close()
-        _, cls.ifgs = rpe.estimate_ref_phase(dest_paths, params, refx, refy)
+        _, cls.ifgs = _ref_phase_estimation(dest_paths, params, refx, refy)
         ifgs[0].open()
         r_dist = RDist(ifgs[0])()
         ifgs[0].close()

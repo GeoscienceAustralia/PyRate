@@ -27,8 +27,9 @@ import numpy as np
 
 import pyrate.core.orbital
 from pyrate.core import ifgconstants as ifc, config as cf
-from pyrate.core.ref_phs_est import estimate_ref_phase, ReferencePhaseError
+from pyrate.core.ref_phs_est import ReferencePhaseError
 from pyrate.core.shared import CorrectionStatusError
+from pyrate.process import _ref_phase_estimation
 from pyrate import prepifg, process, converttogtif
 from tests import common
 
@@ -95,11 +96,11 @@ class RefPhsTests(unittest.TestCase):
             ifg.close()
 
     def test_need_at_least_two_ifgs(self):
-        self.assertRaises(ReferencePhaseError, estimate_ref_phase,
+        self.assertRaises(ReferencePhaseError, _ref_phase_estimation,
                           self.ifgs[:1], self.params, self.refpx, self.refpy)
 
     def test_metadata(self):
-        estimate_ref_phase(self.ifgs, self.params, self.refpx, self.refpy)
+        _ref_phase_estimation(self.ifgs, self.params, self.refpx, self.refpy)
         for ifg in self.ifgs:
             ifg.open()
             self.assertEqual(ifg.dataset.GetMetadataItem(ifc.PYRATE_REF_PHASE),
@@ -107,13 +108,13 @@ class RefPhsTests(unittest.TestCase):
     
     def test_mixed_metadata_raises(self):
         # correct reference phase for some of the ifgs
-        estimate_ref_phase(self.ifgs[:5], self.params, self.refpx, self.refpy)
+        _ref_phase_estimation(self.ifgs[:5], self.params, self.refpx, self.refpy)
         for ifg in self.ifgs:
             ifg.open()
 
         # now it should raise exception if we wnat to correct
         # refernece phase again on all of them
-        self.assertRaises(CorrectionStatusError, estimate_ref_phase,
+        self.assertRaises(CorrectionStatusError, _ref_phase_estimation,
                           self.ifgs, self.params, self.refpx, self.refpy)
         
 
@@ -161,7 +162,7 @@ class RefPhsEstimationLegacyTestMethod1Serial(unittest.TestCase):
         for ifg in ifgs:
             ifg.close()
 
-        cls.ref_phs, cls.ifgs = estimate_ref_phase(dest_paths, params, refx, refy)
+        cls.ref_phs, cls.ifgs = _ref_phase_estimation(dest_paths, params, refx, refy)
 
 
     @classmethod
@@ -256,7 +257,7 @@ class RefPhsEstimationLegacyTestMethod1Parallel(unittest.TestCase):
         for i in ifgs:
             i.close()
 
-        cls.ref_phs, cls.ifgs = estimate_ref_phase(dest_paths, params, refx, refy)
+        cls.ref_phs, cls.ifgs = _ref_phase_estimation(dest_paths, params, refx, refy)
 
         # end run_pyrate copy
 
@@ -354,7 +355,7 @@ class RefPhsEstimationLegacyTestMethod2Serial(unittest.TestCase):
         for i in ifgs:
             i.close()
 
-        cls.ref_phs, cls.ifgs = estimate_ref_phase(dest_paths, params, refx, refy)
+        cls.ref_phs, cls.ifgs = _ref_phase_estimation(dest_paths, params, refx, refy)
 
     @classmethod
     def tearDownClass(cls):
@@ -450,7 +451,7 @@ class RefPhsEstimationLegacyTestMethod2Parallel(unittest.TestCase):
         for i in ifgs:
             i.close()
 
-        cls.ref_phs, cls.ifgs = estimate_ref_phase(dest_paths, params, refx, refy)
+        cls.ref_phs, cls.ifgs = _ref_phase_estimation(dest_paths, params, refx, refy)
 
     @classmethod
     def tearDownClass(cls):
