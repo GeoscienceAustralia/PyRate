@@ -868,7 +868,8 @@ def validate_parameters(pars: Dict, requires_tif: bool=True):
         extents, n_cols, n_rows, n_epochs, max_span, transform = \
            _get_ifg_information(pars[IFG_FILE_LIST], pars[OBS_DIR], crop_opts)
 
-        pars[REFX], pars[REFY] = convert_geographic_coordinate_to_pixel_value(pars[REFX], pars[REFY], transform)
+        pars[REFX], pars[REFY] = \
+            convert_geographic_coordinate_to_pixel_value(pars[REFX], pars[REFY], transform)
 
         validate_pixel_parameters(n_cols, n_rows, pars)
         validate_reference_pixel_search_windows(n_cols, n_rows, pars)
@@ -966,8 +967,8 @@ def validate_optional_parameters(pars: Dict):
         validate(pars[PROCESSOR] == GAMMA, _GAMMA_VALIDATION, pars))
     errors.extend(
         validate(pars[IFG_CROP_OPT] == 3, _CUSTOM_CROP_VALIDATION, pars))
-    # errors.extend(
-    #     validate(pars[REFX] > 0 and pars[REFY] > 0, _REFERENCE_PIXEL_VALIDATION, pars))
+    errors.extend(
+        validate(pars[REFX] > 0 and pars[REFY] > 0, _REFERENCE_PIXEL_VALIDATION, pars))
 
     return _raise_errors(errors)
 
@@ -1384,13 +1385,19 @@ def _get_ifg_information(ifg_file_list: str, obs_dir: str, crop_opts: Tuple) -> 
     y_step = rasters[0].y_step
 
     # Get the pixel bounds. Ifg/Raster objects do have 'ncols'/'nrows' 
-    #  properties, but we'll calculate it off the extents we got above
-    #  because these take into account the chosen cropping option (until
-    #  the stack of interferograms is cropped it's not known what the 
-    #  pixel dimensions will be).
+    # properties, but we'll calculate it off the extents we got above
+    # because these take into account the chosen cropping option (until
+    # the stack of interferograms is cropped it's not known what the 
+    # pixel dimensions will be).
     n_cols = abs(int(abs(extents[0] - extents[2]) / x_step))
     n_rows = abs(int(abs(extents[1] - extents[3]) / y_step))
 
+    # @Sheece: selecting a transform form a single raster will cause bugs
+    # at some point. Refer to the comment above - the rasters might be of
+    # different extents. Depending on the cropping option the user selects,
+    # there's no guarantee the transform of the first raster will be the
+    # transform of the cropped stack of intergerograms which will make 
+    # the conversions incorrect.
     transform = rasters[0].dataset.GetGeoTransform()
 
     return extents, n_cols, n_rows, n_epochs, max_span, transform
