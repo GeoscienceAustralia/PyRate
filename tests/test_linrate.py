@@ -30,6 +30,7 @@ import pyrate.core.orbital
 import tests.common
 from pyrate.core import shared, ref_phs_est as rpe, config as cf, covariance as vcm_module
 from pyrate.core.linrate import linear_rate
+from pyrate.process import _ref_phase_estimation
 from pyrate import process, prepifg, converttogtif
 from tests.common import (SML_TEST_DIR, prepare_ifgs_without_phase,
     TEST_CONF_ROIPAC, pre_prepare_ifgs, remove_tifs)
@@ -107,12 +108,20 @@ class LegacyEqualityTest(unittest.TestCase):
         # Estimate and remove orbit errors
         pyrate.core.orbital.remove_orbital_error(ifgs, params)
         ifgs = prepare_ifgs_without_phase(dest_paths, params)
-
-        _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
+        for ifg in ifgs:
+            ifg.close()
+        _, ifgs = _ref_phase_estimation(dest_paths, params, refx, refy)
+        ifgs[0].open()
         r_dist = vcm_module.RDist(ifgs[0])()
-        maxvar = [vcm_module.cvd(i, params, r_dist)[0] for i in ifgs]
-        vcmt = vcm_module.get_vcmt(ifgs, maxvar)
-
+        ifgs[0].close()
+        maxvar = [vcm_module.cvd(i, params, r_dist)[0] for i in dest_paths]
+        for ifg in ifgs:
+            ifg.open()
+        vcmt = vcm_module.get_vcmt(ifgs, maxvar)    
+        for ifg in ifgs:
+            ifg.close()     
+            ifg.open()
+        
         # Calculate linear rate map
         params[cf.PARALLEL] = 1
         cls.rate, cls.error, cls.samples = tests.common.calculate_linear_rate(
@@ -138,6 +147,9 @@ class LegacyEqualityTest(unittest.TestCase):
 
         cls.samples_container = np.genfromtxt(
             os.path.join(linrate_dir, 'coh_sta.csv'), delimiter=',')
+    
+        for ifg in ifgs:
+            ifg.close()
 
     @classmethod
     def tearDownClass(cls):

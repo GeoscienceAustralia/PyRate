@@ -31,13 +31,15 @@ from subprocess import check_output
 import pyrate.core.orbital
 import pyrate.core.shared
 import tests.common
+from pyrate.process import _ref_phase_estimation
 from pyrate import (
     process, prepifg, postprocess, converttogtif)
 from tests.common import (small_data_setup, reconstruct_mst, 
     reconstruct_linrate, SML_TEST_DEM_HDR_GAMMA, pre_prepare_ifgs)
 from tests import common
 from tests.test_covariance import legacy_maxvar
-from pyrate.core import algorithm, ref_phs_est as rpe, mpiops, config as cf, covariance, refpixel
+from pyrate.core import (algorithm, ref_phs_est as rpe, mpiops, config as cf, 
+                         covariance, refpixel)
 
 TRAVIS = True if 'TRAVIS' in os.environ else False
 PYTHON3P5 = True if ('TRAVIS_PYTHON_VERSION' in os.environ and os.environ['TRAVIS_PYTHON_VERSION'] == '3.5') else False
@@ -172,7 +174,7 @@ def test_vcm_legacy_vs_mpi(mpisync, tempdir, get_config):
                                             tiles=tiles)
     refpx, refpy = process._ref_pixel_calc(dest_paths, params_dict)
     process._orb_fit_calc(dest_paths, params_dict)
-    process._ref_phase_estimation(dest_paths, params_dict, refpx, refpy)
+    _ref_phase_estimation(dest_paths, params_dict, refpx, refpy)
 
     maxvar, vcmt = process._maxvar_vcm_calc(dest_paths, params_dict,
                                             preread_ifgs)
@@ -272,7 +274,7 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
         assert (refx == refpx) and (refy == refpy)  # both must match
         pyrate.core.orbital.remove_orbital_error(ifgs, params_old)
         ifgs = common.prepare_ifgs_without_phase(dest_paths, params_old)
-        rpe.estimate_ref_phase(ifgs, params_old, refx, refy)
+        _ref_phase_estimation(ifgs, params_old, refx, refy)
         ifgs = pre_prepare_ifgs(dest_paths, params_old)
         r_dist = covariance.RDist(ifgs[0])()
         maxvar_s = [covariance.cvd(i, params_old, r_dist)[0] for i in ifgs]

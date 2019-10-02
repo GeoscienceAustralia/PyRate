@@ -72,7 +72,7 @@ NO_DATA_VALUE = 'noDataValue'
 NO_DATA_AVERAGING_THRESHOLD = 'noDataAveragingThreshold'
 #: BOOL (1/2/3); Re-project data from Line of sight, 1 = vertical,
 # 2 = horizontal, 3 = no conversion
-REPROJECTION = 'prjflag' # NOT CURRENTLY USED
+#REPROJECTION = 'prjflag' # NOT CURRENTLY USED
 #: BOOL (0/1): Convert no data values to Nan
 NAN_CONVERSION = 'nan_conversion'
 
@@ -199,7 +199,7 @@ TMPDIR = 'tmpdir'
 # format is	key : (conversion, default value)
 # None = no conversion
 PARAM_CONVERSION = {
-    REPROJECTION : (int, 3), # Default no conversion, CONVERSION NOT IMPLEMENTED
+#    REPROJECTION : (int, 3), # Default no conversion, CONVERSION NOT IMPLEMENTED
     IFG_CROP_OPT : (int, 1), # default to area 'intersection' option
     IFG_LKSX : (int, NO_MULTILOOKING),
     IFG_LKSY : (int, NO_MULTILOOKING),
@@ -1213,9 +1213,9 @@ def validate_pixel_parameters(n_cols: int, n_rows: int, pars: Dict) -> Optional[
     # Check multilooks (extent/val) >= 1.
     def _validate_multilook(var_name, dim_val, dim_string):
         if dim_val / pars[var_name] < 1:
-            return [f"'{var_name}': ({dim_string} pixel extent: {dim_val} / "
-                    "multilook value: {pars[var_name]}) must be greater than "
-                    "or equal to 1."]
+            return [f"'{var_name}': the quantity ( {dim_string} pixel count: "
+                    f"{dim_val} / multilook factor: {pars[var_name]} ) must "
+                    f"be greater than or equal to 1."]
         return []
 
     errors.extend(_validate_multilook(IFG_LKSX, n_cols, 'x'))

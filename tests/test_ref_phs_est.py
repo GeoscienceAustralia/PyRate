@@ -27,7 +27,9 @@ import numpy as np
 
 import pyrate.core.orbital
 from pyrate.core import ifgconstants as ifc, config as cf
-from pyrate.core.ref_phs_est import estimate_ref_phase, ReferencePhaseError
+from pyrate.core.ref_phs_est import ReferencePhaseError
+from pyrate.core.shared import CorrectionStatusError
+from pyrate.process import _ref_phase_estimation
 from pyrate import prepifg, process, converttogtif
 from tests import common
 
@@ -77,35 +79,44 @@ class RefPhsTests(unittest.TestCase):
         self.params = dict()
         self.params[cf.REF_EST_METHOD] = 1
         self.params[cf.PARALLEL] = False
+        self.params[cf.TMPDIR] = self.tmp_dir
         self.refpx, self.refpy = 38, 58
         common.copytree(common.SML_TEST_TIF, self.tmp_dir)
         small_tifs = glob.glob(os.path.join(self.tmp_dir, "*.tif"))
         for s in small_tifs:
             os.chmod(s, 0o644)
         self.ifgs = common.small_data_setup(self.tmp_dir, is_dir=True)
+        for ifg in self.ifgs:
+            ifg.close()
+       
 
     def tearDown(self):
         shutil.rmtree(self.tmp_dir)
+        for ifg in self.ifgs:
+            ifg.close()
 
     def test_need_at_least_two_ifgs(self):
-        self.assertRaises(ReferencePhaseError, estimate_ref_phase,
+        self.assertRaises(ReferencePhaseError, _ref_phase_estimation,
                           self.ifgs[:1], self.params, self.refpx, self.refpy)
 
     def test_metadata(self):
-        estimate_ref_phase(self.ifgs, self.params, self.refpx, self.refpy)
-        for s in self.ifgs:
-            self.assertEqual(s.dataset.GetMetadataItem(ifc.PYRATE_REF_PHASE),
+        _ref_phase_estimation(self.ifgs, self.params, self.refpx, self.refpy)
+        for ifg in self.ifgs:
+            ifg.open()
+            self.assertEqual(ifg.dataset.GetMetadataItem(ifc.PYRATE_REF_PHASE),
                              ifc.REF_PHASE_REMOVED)
-
+    
     def test_mixed_metadata_raises(self):
         # correct reference phase for some of the ifgs
-        estimate_ref_phase(self.ifgs[:5], self.params, self.refpx, self.refpy)
+        _ref_phase_estimation(self.ifgs[:5], self.params, self.refpx, self.refpy)
+        for ifg in self.ifgs:
+            ifg.open()
 
         # now it should raise exception if we wnat to correct
         # refernece phase again on all of them
-        self.assertRaises(ReferencePhaseError, estimate_ref_phase,
+        self.assertRaises(CorrectionStatusError, _ref_phase_estimation,
                           self.ifgs, self.params, self.refpx, self.refpy)
-
+        
 
 class RefPhsEstimationLegacyTestMethod1Serial(unittest.TestCase):
     """
@@ -119,10 +130,10 @@ class RefPhsEstimationLegacyTestMethod1Serial(unittest.TestCase):
         cls.temp_out_dir = tempfile.mkdtemp()
         sys.argv = ['prepifg.py', common.TEST_CONF_ROIPAC]
         params[cf.OUT_DIR] = cls.temp_out_dir
+        params[cf.TMPDIR] = cls.temp_out_dir
         converttogtif.main(params)
         prepifg.main(params)
 
-        params[cf.OUT_DIR] = cls.temp_out_dir
         params[cf.REF_EST_METHOD] = 1
         params[cf.PARALLEL] = False
 
@@ -148,19 +159,19 @@ class RefPhsEstimationLegacyTestMethod1Serial(unittest.TestCase):
 
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
 
-        cls.ref_phs, cls.ifgs = estimate_ref_phase(ifgs, params, refx, refy)
+        for ifg in ifgs:
+            ifg.close()
 
-        # end run_pyrate copy
+        cls.ref_phs, cls.ifgs = _ref_phase_estimation(dest_paths, params, refx, refy)
 
-        # manually close for windows compatibility
-        for i in ifgs:
-            i.close()
 
     @classmethod
     def tearDownClass(cls):
         shutil.rmtree(cls.temp_out_dir)
         common.remove_tifs(
             cf.get_config_params(common.TEST_CONF_ROIPAC)[cf.OBS_DIR])
+        for ifg in cls.ifgs:
+            ifg.close()
 
     def test_estimate_reference_phase(self):
         np.testing.assert_array_almost_equal(legacy_ref_phs_method1,
@@ -168,6 +179,10 @@ class RefPhsEstimationLegacyTestMethod1Serial(unittest.TestCase):
                                              decimal=3)
 
     def test_ifgs_after_ref_phs_est(self):
+        for ifg in self.ifgs:
+            if not ifg.is_open:
+                ifg.open()
+
         LEGACY_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR,
                                                      'ref_phase_est')
 
@@ -210,10 +225,10 @@ class RefPhsEstimationLegacyTestMethod1Parallel(unittest.TestCase):
         cls.temp_out_dir = tempfile.mkdtemp()
         sys.argv = ['prepifg.py', common.TEST_CONF_ROIPAC]
         params[cf.OUT_DIR] = cls.temp_out_dir
+        params[cf.TMPDIR] = cls.temp_out_dir
         converttogtif.main(params)
         prepifg.main(params)
 
-        params[cf.OUT_DIR] = cls.temp_out_dir
         params[cf.REF_EST_METHOD] = 1
         params[cf.PARALLEL] = True
 
@@ -239,16 +254,18 @@ class RefPhsEstimationLegacyTestMethod1Parallel(unittest.TestCase):
 
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
 
-        cls.ref_phs, cls.ifgs = estimate_ref_phase(ifgs, params, refx, refy)
-
-        # end run_pyrate copy
-
-        # manually close for windows compatibility
         for i in ifgs:
             i.close()
 
+        cls.ref_phs, cls.ifgs = _ref_phase_estimation(dest_paths, params, refx, refy)
+
+        # end run_pyrate copy
+
+
     @classmethod
     def tearDownClass(cls):
+        for i in cls.ifgs:
+            i.close()
         shutil.rmtree(cls.temp_out_dir)
         common.remove_tifs(
             cf.get_config_params(common.TEST_CONF_ROIPAC)[cf.OBS_DIR])
@@ -259,6 +276,8 @@ class RefPhsEstimationLegacyTestMethod1Parallel(unittest.TestCase):
                                              decimal=3)
 
     def test_ifgs_after_ref_phs_est(self):
+        for ifg in self.ifgs:
+            ifg.open()
         LEGACY_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR,
                                                      'ref_phase_est')
 
@@ -304,10 +323,10 @@ class RefPhsEstimationLegacyTestMethod2Serial(unittest.TestCase):
         cls.temp_out_dir = tempfile.mkdtemp()
         sys.argv = ['prepifg.py', common.TEST_CONF_ROIPAC]
         params[cf.OUT_DIR] = cls.temp_out_dir
+        params[cf.TMPDIR] = cls.temp_out_dir
         converttogtif.main(params)
         prepifg.main(params)
 
-        params[cf.OUT_DIR] = cls.temp_out_dir
         params[cf.REF_EST_METHOD] = 2
         params[cf.PARALLEL] = False
 
@@ -332,22 +351,24 @@ class RefPhsEstimationLegacyTestMethod2Serial(unittest.TestCase):
             i.close()
 
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
-
-        cls.ref_phs, cls.ifgs = estimate_ref_phase(ifgs, params, refx, refy)
-
-        # end run_pyrate copy
-
+        
         for i in ifgs:
             i.close()
 
+        cls.ref_phs, cls.ifgs = _ref_phase_estimation(dest_paths, params, refx, refy)
+
     @classmethod
     def tearDownClass(cls):
+        for ifg in cls.ifgs:
+            ifg.close()
         shutil.rmtree(cls.temp_out_dir)
         common.remove_tifs(
             cf.get_config_params(common.TEST_CONF_ROIPAC)[cf.OBS_DIR])
 
 
     def test_ifgs_after_ref_phs_est(self):
+        for ifg in self.ifgs:
+            ifg.open()
         LEGACY_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR,
                                                      'ref_phase_est')
 
@@ -398,6 +419,7 @@ class RefPhsEstimationLegacyTestMethod2Parallel(unittest.TestCase):
         cls.temp_out_dir = tempfile.mkdtemp()
         sys.argv = ['prepifg.py', common.TEST_CONF_ROIPAC]
         params[cf.OUT_DIR] = cls.temp_out_dir
+        params[cf.TMPDIR] = cls.temp_out_dir
         converttogtif.main(params)
         prepifg.main(params)
 
@@ -426,19 +448,22 @@ class RefPhsEstimationLegacyTestMethod2Parallel(unittest.TestCase):
 
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
 
-        cls.ref_phs, cls.ifgs = estimate_ref_phase(ifgs, params, refx, refy)
-        # end run_pyrate copy
-
         for i in ifgs:
             i.close()
 
+        cls.ref_phs, cls.ifgs = _ref_phase_estimation(dest_paths, params, refx, refy)
+
     @classmethod
     def tearDownClass(cls):
+        for ifg in cls.ifgs:
+            ifg.close()
         shutil.rmtree(cls.temp_out_dir)
         common.remove_tifs(
             cf.get_config_params(common.TEST_CONF_ROIPAC)[cf.OBS_DIR])
 
     def test_ifgs_after_ref_phs_est(self):
+        for ifg in self.ifgs:
+            ifg.open()
         LEGACY_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR,
                                             'ref_phase_est')
 

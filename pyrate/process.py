@@ -24,8 +24,10 @@ import pickle as cp
 from collections import OrderedDict
 import numpy as np
 
-from pyrate.core import shared, algorithm, orbital, ref_phs_est as rpe, ifgconstants as ifc, mpiops, config as cf, \
-    timeseries, mst, covariance as vcm_module, linrate, refpixel
+from pyrate.core import (shared, algorithm, orbital, ref_phs_est as rpe, 
+                         ifgconstants as ifc, mpiops, config as cf, 
+                         timeseries, mst, covariance as vcm_module, 
+                         linrate, refpixel)
 from pyrate.core.aps import _wrap_spatio_temporal_filter
 from pyrate.core.config import ConfigException
 from pyrate.core.shared import Ifg, PrereadIfg, get_tiles
@@ -105,7 +107,7 @@ def _mst_calc(dest_tifs, params, tiles, preread_ifgs):
         """
         Convenient inner loop for mst tile saving
         """
-        log.info('Calculating minimum spanning tree matrix using NetworkX method')
+        log.info('Calculating minimum spanning tree matrix')
         mst_tile = mst.mst_multiprocessing(tile, dest_tifs, preread_ifgs)
         # locally save the mst_mat
         mst_file_process_n = join(params[cf.TMPDIR], 'mst_mat_{}.npy'.format(i))
@@ -174,7 +176,7 @@ def _orb_fit_calc(ifg_paths, params, preread_ifgs=None):
     if preread_ifgs:  # don't check except for mpi tests
         # perform some general error/sanity checks
         log.info('Checking Orbital error correction status')
-        if mpiops.run_once(shared.check_correction_status, preread_ifgs,
+        if mpiops.run_once(shared.check_correction_status, ifg_paths,
                            ifc.PYRATE_ORBITAL_ERROR):
             log.info('Finished Orbital error correction')
             return  # return if True condition returned
@@ -193,144 +195,51 @@ def _orb_fit_calc(ifg_paths, params, preread_ifgs=None):
     mpiops.comm.barrier()
     log.info('Finished Orbital error correction')
 
+def _ref_phase_estimation(ifg_paths, params, refpx, refpy):
+    """
+    Wrapper for reference phase estimation.
+    """
+    log.info("Caluclating reference phase estimation")
+    if len(ifg_paths) < 2:
+        raise rpe.ReferencePhaseError(
+            f"At least two interferograms required for reference phase "
+            f"correction ({len(ifg_paths)} provided).")
 
-def _ref_phase_estimation(ifg_paths, params, refpx, refpy, preread_ifgs=None):
-    """
-    Wrapper function for MPI-enabled reference phase estimation.
-    Refer to documentation for ref_est_phs.estimate_ref_phase.
-    """
-    # perform some checks on existing ifgs
-    #if preread_ifgs and mpiops.rank == MASTER_PROCESS:
-    #TODO: implement MPI capability into ref_phs_est module and remove here
-    if preread_ifgs:
-        log.info('Checking reference phase estimation status')
-        if mpiops.run_once(shared.check_correction_status, preread_ifgs,
-                           ifc.PYRATE_REF_PHASE):
-            log.info('Finished reference phase estimation')
-            return  # return if True condition returned
+    if mpiops.run_once(shared.check_correction_status, ifg_paths,
+                       ifc.PYRATE_REF_PHASE):
+        log.info('Finished reference phase estimation')
+        return None, ifg_paths
 
     if params[cf.REF_EST_METHOD] == 1:
-        # calculate phase sum for later use in ref phase method 1
-        comp = _phase_sum(ifg_paths, params)
-        log.info('Computing reference phase via method 1')
-        process_ref_phs = _ref_phs_method1(ifg_paths, comp)
+        ref_phs = rpe.est_ref_phase_method1(ifg_paths, params)
     elif params[cf.REF_EST_METHOD] == 2:
-        log.info('Computing reference phase via method 2')
-        process_ref_phs = _ref_phs_method2(ifg_paths, params, refpx, refpy)
+        ref_phs = rpe.est_ref_phase_method2(ifg_paths, params, refpx, refpy)
     else:
-        raise ConfigException('Ref phase estimation method must be 1 or 2')
+        raise rpe.ReferencePhaseError("No such option, use '1' or '2'.")
 
-    # Save reference phase numpy arrays to disk
-    ref_phs_file = join(params[cf.TMPDIR], 'ref_phs.npy')
+    # Save reference phase numpy arrays to disk.
+    ref_phs_file = os.path.join(params[cf.TMPDIR], 'ref_phs.npy')
     if mpiops.rank == MASTER_PROCESS:
-        ref_phs = np.zeros(len(ifg_paths), dtype=np.float64)
+        collected_ref_phs = np.zeros(len(ifg_paths), dtype=np.float64)
         process_indices = mpiops.array_split(range(len(ifg_paths)))
-        ref_phs[process_indices] = process_ref_phs
-        for r in range(1, mpiops.size):  # pragma: no cover
+        collected_ref_phs[process_indices] = ref_phs
+        for r in range(1, mpiops.size):
             process_indices = mpiops.array_split(range(len(ifg_paths)), r)
             this_process_ref_phs = np.zeros(shape=len(process_indices),
                                             dtype=np.float64)
             mpiops.comm.Recv(this_process_ref_phs, source=r, tag=r)
-            ref_phs[process_indices] = this_process_ref_phs
+            collected_ref_phs[process_indices] = this_process_ref_phs
         np.save(file=ref_phs_file, arr=ref_phs)
-    else:  # pragma: no cover
-        # send reference phase data to master process
-        mpiops.comm.Send(process_ref_phs, dest=MASTER_PROCESS,
-                         tag=mpiops.rank)
+    else:
+        mpiops.comm.Send(ref_phs, dest=MASTER_PROCESS, tag=mpiops.rank)
     log.info('Finished reference phase estimation')
 
-
-def _phase_sum(ifg_paths, params):
-    """
-    Save phase data and phase sum used in the reference phase estimation
-    """
-    p_paths = mpiops.array_split(ifg_paths)
-    ifg = Ifg(p_paths[0])
-    ifg.open(readonly=True)
-    shape = ifg.shape
-    phs_sum = np.zeros(shape=shape, dtype=np.float64)
-    ifg.close()
-
-    for d in p_paths:
-        ifg = Ifg(d)
-        ifg.open()
-        ifg.nodata_value = params[cf.NO_DATA_VALUE]
-        phs_sum += ifg.phase_data
-        ifg.close()
-
-    if mpiops.rank == MASTER_PROCESS:
-        phase_sum_all = phs_sum
-        # loop is better for memory
-        for i in range(1, mpiops.size):  # pragma: no cover
-            phs_sum = np.zeros(shape=shape, dtype=np.float64)
-            mpiops.comm.Recv(phs_sum, source=i, tag=i)
-            phase_sum_all += phs_sum
-        comp = np.isnan(phase_sum_all)
-        comp = np.ravel(comp, order='F')
-    else:  # pragma: no cover
-        comp = None
-        mpiops.comm.Send(phs_sum, dest=0, tag=mpiops.rank)
-
-    comp = mpiops.comm.bcast(comp, root=0)
-    return comp
-
-
-def _ref_phs_method2(ifg_paths, params, refpx, refpy):
-    """
-    MPI wrapper for reference phase computation using method 2.
-    Refer to documentation for ref_est_phs.est_ref_phase_method2.
-    """
-    half_chip_size = int(np.floor(params[cf.REF_CHIP_SIZE] / 2.0))
-    chipsize = 2 * half_chip_size + 1
-    thresh = chipsize * chipsize * params[cf.REF_MIN_FRAC]
-    process_ifg_paths = mpiops.array_split(ifg_paths)
-
-    def _inner(ifg_path):
-        """
-        Convenient inner loop
-        """
-        ifg = Ifg(ifg_path)
-        ifg.open(readonly=False)
-        phase_data = ifg.phase_data
-        ref_ph = rpe._est_ref_phs_method2(phase_data,
-                                         half_chip_size,
-                                         refpx, refpy, thresh)
-        phase_data -= ref_ph
-        md = ifg.meta_data
-        md[ifc.PYRATE_REF_PHASE] = ifc.REF_PHASE_REMOVED
-        ifg.write_modified_phase(data=phase_data)
-        ifg.close()
-        return ref_ph
-
-    ref_phs = np.array([_inner(p) for p in process_ifg_paths])
-    log.info('Ref phase computed in process {}'.format(mpiops.rank))
-    return ref_phs
-
-
-def _ref_phs_method1(ifg_paths, comp):
-    """
-    MPI wrapper for reference phase computation using method 1.
-    Refer to documentation for ref_est_phs.est_ref_phase_method1.
-    """
-    def _inner(ifg_path):
-        """
-        Convenient inner loop
-        """
-        ifg = Ifg(ifg_path)
-        ifg.open(readonly=False)
-        phase_data = ifg.phase_data
-        ref_phase = rpe._est_ref_phs_method1(phase_data, comp)
-        phase_data -= ref_phase
-        md = ifg.meta_data
-        md[ifc.PYRATE_REF_PHASE] = ifc.REF_PHASE_REMOVED
-        ifg.write_modified_phase(data=phase_data)
-        ifg.close()
-        return ref_phase
-    this_process_ifgs = mpiops.array_split(ifg_paths)
-    ref_phs = np.array([_inner(ifg) for ifg in this_process_ifgs])
-    log.info('Ref phase computed in process {}'.format(mpiops.rank))
-    return ref_phs
-
+    # Preserve old return value so tests don't break.
+    if isinstance(ifg_paths[0], Ifg):
+        ifgs = ifg_paths
+    else:
+        ifgs = [Ifg(ifg_path) for ifg_path in ifg_paths]
+    return ref_phs, ifgs
 
 def process_ifgs(ifg_paths, params, rows, cols):
     """
@@ -340,7 +249,7 @@ def process_ifgs(ifg_paths, params, rows, cols):
     :param dict params: Dictionary of configuration parameters
     :param int rows: Number of sub-tiles in y direction
     :param int cols: Number of sub-tiles in x direction
-    
+
     :return: refpt: tuple of reference pixel x and y position
     :rtype: tuple
     :return: maxvar: array of maximum variance values of interferograms
@@ -365,7 +274,7 @@ def process_ifgs(ifg_paths, params, rows, cols):
 
     _orb_fit_calc(ifg_paths, params, preread_ifgs)
 
-    _ref_phase_estimation(ifg_paths, params, refpx, refpy, preread_ifgs)
+    _ref_phase_estimation(ifg_paths, params, refpx, refpy)    
 
     _mst_calc(ifg_paths, params, tiles, preread_ifgs)
 
