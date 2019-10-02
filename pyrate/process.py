@@ -196,6 +196,10 @@ def _orb_fit_calc(ifg_paths, params, preread_ifgs=None):
     log.info('Finished Orbital error correction')
 
 def _ref_phase_estimation(ifg_paths, params, refpx, refpy):
+    """
+    Wrapper for reference phase estimation.
+    """
+    log.info("Caluclating reference phase estimation")
     if len(ifg_paths) < 2:
         raise rpe.ReferencePhaseError(
             f"At least two interferograms required for reference phase "
@@ -203,7 +207,7 @@ def _ref_phase_estimation(ifg_paths, params, refpx, refpy):
 
     if mpiops.run_once(shared.check_correction_status, ifg_paths,
                        ifc.PYRATE_REF_PHASE):
-        log.info("Skipped: interferograms already corrected.")
+        log.info('Finished reference phase estimation')
         return None, ifg_paths
 
     if params[cf.REF_EST_METHOD] == 1:
