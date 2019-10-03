@@ -172,7 +172,7 @@ def test_vcm_legacy_vs_mpi(mpisync, tempdir, get_config):
                                             tiles=tiles)
     refpx, refpy = process._ref_pixel_calc(dest_paths, params_dict)
     process._orb_fit_calc(dest_paths, params_dict)
-    rpe.estimate_ref_phase(dest_paths, params_dict, refpx, refpy)
+    process._ref_phase_estimation(dest_paths, params_dict, refpx, refpy)
 
     maxvar, vcmt = process._maxvar_vcm_calc(dest_paths, params_dict,
                                             preread_ifgs)
@@ -272,7 +272,7 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
         assert (refx == refpx) and (refy == refpy)  # both must match
         pyrate.core.orbital.remove_orbital_error(ifgs, params_old)
         ifgs = common.prepare_ifgs_without_phase(dest_paths, params_old)
-        rpe.estimate_ref_phase(ifgs, params_old, refx, refy)
+        process._ref_phase_estimation(ifgs, params_old, refx, refy)
         ifgs = pre_prepare_ifgs(dest_paths, params_old)
         r_dist = covariance.RDist(ifgs[0])()
         maxvar_s = [covariance.cvd(i, params_old, r_dist)[0] for i in ifgs]
