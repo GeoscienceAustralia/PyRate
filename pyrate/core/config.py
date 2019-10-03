@@ -777,12 +777,12 @@ _APSEST_VALIDATION = {
 _TIME_SERIES_VALIDATION = {
     TIME_SERIES_PTHRESH: (
         lambda a: a >= 1,
-        f"'{TIME_SERIES_PTHRESH}': must be >= 1"
+        f"'{TIME_SERIES_PTHRESH}': must be >= 1."
     ),
     #TODO: Matt to investigate smoothing factor values.
     TIME_SERIES_SM_FACTOR: (
         lambda a: -5.0 <= a <= 0,
-        f"'{TIME_SERIES_SM_FACTOR}':"
+        f"'{TIME_SERIES_SM_FACTOR}': must be between -5.0 and 0."
     ),
     TIME_SERIES_SM_ORDER: (
         lambda a: a in (1, 2),
