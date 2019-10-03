@@ -75,7 +75,7 @@ def _save_linrate(ifgs_dict, params, tiles, out_type):
     """
     Save linear rate outputs
     """
-    log.info('Starting PyRate postprocessing {}'.format(out_type))
+    log.info('Merging PyRate outputs {}'.format(out_type))
     gt, md, wkt = ifgs_dict['gt'], ifgs_dict['md'], ifgs_dict['wkt']
     epochlist = ifgs_dict['epochlist']
     ifgs = [v for v in ifgs_dict.values() if isinstance(v, PrereadIfg)]
@@ -98,7 +98,7 @@ def _save_linrate(ifgs_dict, params, tiles, out_type):
     shared.write_output_geotiff(md, gt, wkt, rate, dest, np.nan)
     npy_rate_file = os.path.join(params[cf.OUT_DIR], out_type + '.npy')
     np.save(file=npy_rate_file, arr=rate)
-    log.info('Finished PyRate postprocessing {}'.format(out_type))
+    log.info('Finished PyRate merging {}'.format(out_type))
 
 
 def _postprocess_timeseries(rows, cols, params):

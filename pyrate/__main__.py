@@ -21,7 +21,7 @@ import logging
 import argparse
 from argparse import RawTextHelpFormatter
 from pyrate.core import config as cf
-from pyrate import (conv2tif, prepifg, process, postprocess)
+from pyrate import (conv2tif, prepifg, process, merge)
 from pyrate import __version__
 from pyrate.core import pyratelog
 
@@ -66,7 +66,7 @@ def postprocess_handler(config_file, rows, cols):
     """
     config_file = os.path.abspath(config_file)
     _, _, params = cf.get_ifg_paths(config_file, requires_tif=True)
-    postprocess.main(params, rows, cols)
+    merge.main(params, rows, cols)
 
 CLI_DESC = """
 PyRate workflow: 
