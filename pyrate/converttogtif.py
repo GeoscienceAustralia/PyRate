@@ -76,7 +76,7 @@ def main(params=None):
     process_base_ifgs_paths = \
         np.array_split(base_ifg_paths, mpiops.size)[mpiops.rank]
     gtiff_paths = do_geotiff(process_base_ifgs_paths, params)
-    log.info("Finished converttogtif")
+    log.info("Finished conv2tif")
     return gtiff_paths
 
 
