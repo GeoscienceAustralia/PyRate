@@ -191,7 +191,7 @@ def _ref_phase_estimation(ifg_paths, params, refpx, refpy):
     Wrapper for reference phase estimation.
     """
     print(refpx, refpy)
-    log.info("Caluclating reference phase estimation")
+    log.info("Calculating reference phase estimation")
     if len(ifg_paths) < 2:
         raise rpe.ReferencePhaseError(
             f"At least two interferograms required for reference phase "
