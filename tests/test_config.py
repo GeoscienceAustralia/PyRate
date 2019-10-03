@@ -469,7 +469,8 @@ class TestConfigValidationWithGeotiffs(unittest.TestCase):
                                                requires_tif=True)
         self.dummy_dir = '/i/should/not/exist'
         crop_opts = config._crop_opts(self.params)
-        self.extents, self.n_cols, self.n_rows, self.n_epochs, self.max_span, self.transform =\
+        self.extents, self.min_extents, self.n_cols, self.n_rows, self.n_epochs, \
+        self.max_span, self.transform = \
             config._get_ifg_information(self.params[IFG_FILE_LIST],
                                         self.params[OBS_DIR],
                                         crop_opts)
@@ -522,22 +523,22 @@ class TestConfigValidationWithGeotiffs(unittest.TestCase):
         self.params[IFG_CROP_OPT] = 3
         self.params[IFG_XFIRST] = 150.0
         with pytest.raises(ConfigException):
-            validate_extent_parameters(self.extents, self.params)
+            validate_extent_parameters(self.extents, self.min_extents, self.params)
         self.params[IFG_XFIRST] = 150.92
 
         self.params[IFG_XLAST] = 150.95
         with pytest.raises(ConfigException):
-            validate_extent_parameters(self.extents, self.params)
+            validate_extent_parameters(self.extents, self.min_extents, self.params)
         self.params[IFG_XLAST] = 150.94
 
         self.params[IFG_YFIRST] = -34.16
         with pytest.raises(ConfigException):
-            validate_extent_parameters(self.extents, self.params)
+            validate_extent_parameters(self.extents, self.min_extents, self.params)
         self.params[IFG_YFIRST] = -34.18
 
         self.params[IFG_YLAST] = -34.24
         with pytest.raises(ConfigException):
-            validate_extent_parameters(self.extents, self.params)
+            validate_extent_parameters(self.extents, self.min_extents, self.params)
     
     def test_validate_epoch_thresholds(self):
         with pytest.raises(ConfigException):
