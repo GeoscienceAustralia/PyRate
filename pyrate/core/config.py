@@ -860,12 +860,13 @@ def validate_parameters(pars: Dict, requires_tif: bool=False):
 
     validate_ifgs(ifl, pars[OBS_DIR])
 
-    extents, n_cols, n_rows, n_epochs, max_span, transform = None, None, None, None, None, None
+    extents, min_extents, n_cols, n_rows, n_epochs, max_span, transform = \
+        None, None, None, None, None, None, None
     if requires_tif:
         validate_tifs_exist(pars[IFG_FILE_LIST], pars[OBS_DIR])
         # Get info regarding epochs and dimensions needed for validation.
         crop_opts = _crop_opts(pars)
-        extents, n_cols, n_rows, n_epochs, max_span, transform = \
+        extents, min_extents, n_cols, n_rows, n_epochs, max_span, transform = \
            _get_ifg_information(pars[IFG_FILE_LIST], pars[OBS_DIR], crop_opts)
 
         pars[REFX], pars[REFY] = \
@@ -873,7 +874,7 @@ def validate_parameters(pars: Dict, requires_tif: bool=False):
 
         validate_pixel_parameters(n_cols, n_rows, pars)
         validate_reference_pixel_search_windows(n_cols, n_rows, pars)
-        validate_extent_parameters(extents, pars)
+        validate_extent_parameters(extents, min_extents, pars)
         validate_minimum_epochs(n_epochs, MINIMUM_NUMBER_EPOCHS)
         validate_epoch_thresholds(n_epochs, pars)
         validate_epoch_cutoff(max_span, TLPF_CUTOFF, pars)
@@ -1155,6 +1156,7 @@ def validate_epoch_thresholds(n_epochs: int, pars: Dict) -> Optional[bool]:
     return _raise_errors(errors)
 
 def validate_extent_parameters(extents: Tuple[float, float, float, float], 
+                               min_extents: Tuple[float, float, float, float],
                                pars: Dict) -> Optional[bool]:
     """
     Validate parameters that provide lat/long coordinates by checking they fit
@@ -1172,9 +1174,9 @@ def validate_extent_parameters(extents: Tuple[float, float, float, float],
         ConfigException: If validation fails.
     """
     errors = []
-    xmin, ymin, xmax, ymax = extents
-    x_dim_string = f"(xmin: {xmin}, xmax: {xmax})"
-    y_dim_string = f"(ymin: {ymin}, ymax: {ymax})"
+    min_xmin, min_ymin, min_xmax, min_ymax = min_extents
+    x_dim_string = f"(xmin: {min_xmin}, xmax: {min_xmax})"
+    y_dim_string = f"(ymin: {min_ymin}, ymax: {min_ymax})"
 
     # Check crop coordinates within scene.
     def _validate_crop_coord(var_name, dim_min, dim_max, dim_string):
@@ -1185,11 +1187,12 @@ def validate_extent_parameters(extents: Tuple[float, float, float, float],
         return []
     
     if pars[IFG_CROP_OPT] == 3:
-        errors.extend(_validate_crop_coord(IFG_XFIRST, xmin, xmax, x_dim_string))
-        errors.extend(_validate_crop_coord(IFG_YFIRST, ymin, ymax, y_dim_string))
-        errors.extend(_validate_crop_coord(IFG_XLAST, xmin, xmax, x_dim_string))
-        errors.extend(_validate_crop_coord(IFG_YLAST, ymin, ymax, y_dim_string))
+        errors.extend(_validate_crop_coord(IFG_XFIRST, min_xmin, min_xmax, x_dim_string))
+        errors.extend(_validate_crop_coord(IFG_YFIRST, min_ymin, min_ymax, y_dim_string))
+        errors.extend(_validate_crop_coord(IFG_XLAST, min_xmin, min_xmax, x_dim_string))
+        errors.extend(_validate_crop_coord(IFG_YLAST, min_ymin, min_ymax, y_dim_string))
 
+    xmin, ymin, xmax, ymax = extents
     # Check SLPF_CUTOFF within scene *in kilometeres*.
     DEG_TO_KM = 111.32 # km per degree
     x_extent = abs(xmin - xmax)
@@ -1366,7 +1369,7 @@ def _get_ifg_information(ifg_file_list: str, obs_dir: str, crop_opts: Tuple) -> 
         time span of the data.
     """
     from pyrate.core.shared import Ifg, output_tiff_filename
-    from pyrate.core.prepifg_helper import _get_extents
+    from pyrate.core.prepifg_helper import _get_extents, _min_bounds
     from pyrate.core.algorithm import get_epochs
     ifg_paths = [os.path.join(obs_dir, ifg) for ifg in parse_namelist(ifg_file_list)]
     rasters = [Ifg(output_tiff_filename(f, obs_dir)) for f in ifg_paths]
@@ -1377,6 +1380,7 @@ def _get_ifg_information(ifg_file_list: str, obs_dir: str, crop_opts: Tuple) -> 
 
     # extents = xmin, ymin, xmax, ymax
     extents = _get_extents(rasters, crop_opts[0], crop_opts[1])
+    min_extents = _min_bounds(rasters)
     epoch_list = get_epochs(rasters)[0]
     n_epochs = len(epoch_list.dates)
     max_span = max(epoch_list.spans)
@@ -1400,7 +1404,7 @@ def _get_ifg_information(ifg_file_list: str, obs_dir: str, crop_opts: Tuple) -> 
     # the conversions incorrect.
     transform = rasters[0].dataset.GetGeoTransform()
 
-    return extents, n_cols, n_rows, n_epochs, max_span, transform
+    return extents, min_extents, n_cols, n_rows, n_epochs, max_span, transform
 
 def _crop_opts(params: Dict) -> Tuple:
     """
