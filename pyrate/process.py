@@ -190,7 +190,6 @@ def _ref_phase_estimation(ifg_paths, params, refpx, refpy):
     """
     Wrapper for reference phase estimation.
     """
-    print(refpx, refpy)
     log.info("Calculating reference phase estimation")
     if len(ifg_paths) < 2:
         raise rpe.ReferencePhaseError(
