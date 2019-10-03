@@ -29,7 +29,7 @@ import pyrate.core.orbital
 from pyrate.core import ifgconstants as ifc, config as cf
 from pyrate.core.ref_phs_est import ReferencePhaseError
 from pyrate.core.shared import CorrectionStatusError
-from pyrate import prepifg, process, converttogtif
+from pyrate import prepifg, process, conv2tif
 from tests import common
 
 legacy_ref_phs_method1 = [-18.2191658020020,
@@ -130,7 +130,7 @@ class RefPhsEstimationLegacyTestMethod1Serial(unittest.TestCase):
         sys.argv = ['prepifg.py', common.TEST_CONF_ROIPAC]
         params[cf.OUT_DIR] = cls.temp_out_dir
         params[cf.TMPDIR] = cls.temp_out_dir
-        converttogtif.main(params)
+        conv2tif.main(params)
         prepifg.main(params)
 
         params[cf.REF_EST_METHOD] = 1
@@ -225,7 +225,7 @@ class RefPhsEstimationLegacyTestMethod1Parallel(unittest.TestCase):
         sys.argv = ['prepifg.py', common.TEST_CONF_ROIPAC]
         params[cf.OUT_DIR] = cls.temp_out_dir
         params[cf.TMPDIR] = cls.temp_out_dir
-        converttogtif.main(params)
+        conv2tif.main(params)
         prepifg.main(params)
 
         params[cf.REF_EST_METHOD] = 1
@@ -323,7 +323,7 @@ class RefPhsEstimationLegacyTestMethod2Serial(unittest.TestCase):
         sys.argv = ['prepifg.py', common.TEST_CONF_ROIPAC]
         params[cf.OUT_DIR] = cls.temp_out_dir
         params[cf.TMPDIR] = cls.temp_out_dir
-        converttogtif.main(params)
+        conv2tif.main(params)
         prepifg.main(params)
 
         params[cf.REF_EST_METHOD] = 2
@@ -419,7 +419,7 @@ class RefPhsEstimationLegacyTestMethod2Parallel(unittest.TestCase):
         sys.argv = ['prepifg.py', common.TEST_CONF_ROIPAC]
         params[cf.OUT_DIR] = cls.temp_out_dir
         params[cf.TMPDIR] = cls.temp_out_dir
-        converttogtif.main(params)
+        conv2tif.main(params)
         prepifg.main(params)
 
         params[cf.OUT_DIR] = cls.temp_out_dir

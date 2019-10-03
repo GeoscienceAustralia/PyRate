@@ -34,7 +34,7 @@ from osgeo.gdal import Open, Dataset, UseExceptions
 
 from tests.common import SML_TEST_TIF, SML_TEST_DEM_TIF, TEMPDIR
 from pyrate.core import shared, ifgconstants as ifc, config as cf, prepifg_helper, gamma
-from pyrate import prepifg, converttogtif
+from pyrate import prepifg, conv2tif
 from pyrate.core.shared import Ifg, DEM, RasterException
 from pyrate.core.shared import cell_size, _utm_zone
 
@@ -361,7 +361,7 @@ class WriteUnwTest(unittest.TestCase):
 
         xlks, ylks, crop = cf.transform_params(cls.params)
         # dest_paths are tifs that have been geotif converted and multilooked
-        converttogtif.main(cls.params)
+        conv2tif.main(cls.params)
         prepifg.main(cls.params)
         # run_prepifg.gamma_prepifg(cls.base_unw_paths, cls.params)
         cls.base_unw_paths.pop()  # removed dem as we don't want it in ifgs
@@ -432,7 +432,7 @@ class WriteUnwTest(unittest.TestCase):
             dest_unws.append(dest_unw)
         
         # Convert back to tiff
-        new_geotiffs = converttogtif.do_geotiff(dest_unws, self.params)
+        new_geotiffs = conv2tif.do_geotiff(dest_unws, self.params)
 
         # Ensure original multilooked geotiffs and 
         #  unw back to geotiff are the same

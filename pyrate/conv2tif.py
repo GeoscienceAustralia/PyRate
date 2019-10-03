@@ -46,7 +46,7 @@ def main(params=None):
     # Going to assume base_ifg_paths is ordered correcly
     # pylint: disable=too-many-branches
 
-    usage = 'Usage: pyrate converttogtif <config_file>'
+    usage = 'Usage: pyrate conv2tif -f <config_file>'
     if mpiops.size > 1:  # Over-ride input options if this is an MPI job
         params[cf.PARALLEL] = False
 

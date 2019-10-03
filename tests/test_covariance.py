@@ -26,7 +26,7 @@ import numpy as np
 from numpy.testing import assert_array_almost_equal
 
 from pyrate.core import shared, ref_phs_est as rpe, ifgconstants as ifc, config as cf
-from pyrate import process, prepifg, converttogtif
+from pyrate import process, prepifg, conv2tif
 from pyrate.core.covariance import cvd, get_vcmt, RDist
 import pyrate.core.orbital
 from tests import common
@@ -186,7 +186,7 @@ class LegacyEqualityTest(unittest.TestCase):
         params[cf.TMPDIR] = os.path.join(cls.temp_out_dir, cf.TMPDIR)
         shared.mkdir_p(params[cf.TMPDIR])
         params[cf.REF_EST_METHOD] = 2
-        converttogtif.main(params)
+        conv2tif.main(params)
         prepifg.main(params)
         cls.params = params
         xlks, ylks, crop = cf.transform_params(params)

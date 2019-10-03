@@ -21,7 +21,7 @@ import logging
 import argparse
 from argparse import RawTextHelpFormatter
 from pyrate.core import config as cf
-from pyrate import (converttogtif, prepifg, process, postprocess)
+from pyrate import (conv2tif, prepifg, process, postprocess)
 from pyrate import __version__
 from pyrate.core import pyratelog
 
@@ -39,7 +39,7 @@ def converttogeotiff_handler(config_file):
     """
     config_file = os.path.abspath(config_file)
     params = cf.get_config_params(config_file, requires_tif=False)
-    converttogtif.main(params)
+    conv2tif.main(params)
 
 
 def prepifg_handler(config_file):

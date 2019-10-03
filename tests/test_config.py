@@ -456,9 +456,9 @@ class TestConfigValidation(unittest.TestCase):
 class TestConfigValidationWithGeotiffs(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        from pyrate import converttogtif
+        from pyrate import conv2tif
         cls.params = config.get_config_params(TEST_CONF_GAMMA)
-        converttogtif.main(cls.params)
+        conv2tif.main(cls.params)
     
     @classmethod
     def tearDownClass(cls):

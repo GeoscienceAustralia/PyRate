@@ -39,7 +39,7 @@ from pyrate.core.config import (
     PROCESSOR,
     DEM_HEADER_FILE
 )
-# from pyrate.scripts.converttogtif import main as roipacMain
+# from pyrate.scripts.conv2tif import main as roipacMain
 from pyrate.core.shared import GeotiffException
 from pyrate.core.shared import write_fullres_geotiff
 from tests.common import HEADERS_TEST_DIR, PREP_TEST_OBS, PREP_TEST_TIF

@@ -31,7 +31,7 @@ from numpy.testing import assert_array_almost_equal, assert_array_equal
 
 from osgeo import gdal
 
-from pyrate import prepifg, converttogtif
+from pyrate import prepifg, conv2tif
 from pyrate.core import config as cf
 from pyrate.core.config import mlooked_path
 from pyrate.core.shared import Ifg, DEM
@@ -712,7 +712,7 @@ class TestOneIncidenceOrElevationMap(unittest.TestCase):
     def common_check(self, ele, inc):
         os.path.exists(self.conf_file)
         params = cf.get_config_params(self.conf_file)
-        converttogtif.main(params)
+        conv2tif.main(params)
         sys.argv = ['dummy', self.conf_file]
         prepifg.main(params)
         # test 17 geotiffs created
