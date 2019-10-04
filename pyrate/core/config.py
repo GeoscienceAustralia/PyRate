@@ -915,6 +915,7 @@ def validate_parameters(pars: Dict, step: str=CONV2TIF):
         # Convert refx/refy from lat/long to pixel.
         pars[REFX], pars[REFY] = \
             convert_geographic_coordinate_to_pixel_value(pars[REFX], pars[REFY], transform)
+
         validate_reference_pixel_params(n_cols, n_rows, pars[REFX], pars[REFY])
         validate_reference_pixel_search_windows(n_cols, n_rows, pars)
         validate_multilook_parameters(n_cols, n_rows, 
@@ -1323,11 +1324,11 @@ def validate_reference_pixel_params(looked_cols: int, looked_rows: int,
     # Check reference pixel coordinates within scene.
     if refx != 0 and refy != 0:
         if not 0 < refx <= looked_cols:
-            errors.append(f"'{REFX}': reference pixel coodinate is "
+            errors.append(f"'{REFX}': reference pixel coodinate {refx} is "
                           f"outside bounds of scene ({x_dim_string}).")
 
         if not 0 < refy <= looked_rows:
-            errors.append(f"'{REFY}': reference pixel coodinate is "
+            errors.append(f"'{REFY}': reference pixel coodinate {refy} is "
                           f"outside bounds of scene ({y_dim_string}).")
     
     return _raise_errors(errors)
