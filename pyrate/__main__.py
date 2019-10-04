@@ -21,9 +21,8 @@ import logging
 import argparse
 from argparse import RawTextHelpFormatter
 from pyrate.core import config as cf
-from pyrate import (conv2tif, prepifg, process, merge)
+from pyrate import (converttogeotiff, prepifg, process, postprocess)
 from pyrate import CONV2TIF, PREPIFG, PROCESS, MERGE # Step names
-from pyrate import __version__
 from pyrate.core import pyratelog
 
 log = logging.getLogger(__name__)
@@ -34,7 +33,7 @@ def converttogeotiff_handler(config_file):
     """
     config_file = os.path.abspath(config_file)
     params = cf.get_config_params(config_file, step=CONV2TIF)
-    conv2tif.main(params)
+    converttogeotiff.main(params)
 
 
 def prepifg_handler(config_file):
@@ -61,15 +60,15 @@ def postprocess_handler(config_file, rows, cols):
     """
     config_file = os.path.abspath(config_file)
     _, _, params = cf.get_ifg_paths(config_file, step=MERGE)
-    merge.main(params, rows, cols)
+    postprocess.main(params, rows, cols)
 
 CLI_DESC = """
 PyRate workflow: 
 
-    Step 1: conv2tif
+    Step 1: converttogeotiff
     Step 2: prepifg
     Step 3: process
-    Step 4: merge 
+    Step 4: postprocess 
 
 Refer to https://geoscienceaustralia.github.io/PyRate/usage.html for 
 more details.
@@ -95,9 +94,9 @@ def main():
     subparsers = parser.add_subparsers(dest='command')
     subparsers.required = True
 
-    # create the parser for the "conv2tif" command
+    # create the parser for the "converttogeotiff" command
     parser_converttogeotiff = \
-        subparsers.add_parser('conv2tif',
+        subparsers.add_parser('converttogeotiff',
                               help='Convert interferograms to geotiff.', 
                               add_help=True)
 
@@ -145,8 +144,8 @@ def main():
         
     parser_process.add_argument(*verbosity_args, **verbosity_kwargs)
  
-    # create the parser for the "merge" command
-    parser_postprocess = subparsers.add_parser('merge',
+    # create the parser for the "postprocess" command
+    parser_postprocess = subparsers.add_parser('postprocess',
                                            help=("Reassemble computed tiles "
                                                  "and save as geotiffs."), 
                                            add_help=True)
@@ -176,7 +175,7 @@ def main():
         pyratelog.configure(args.verbosity)
         log.info("Verbosity set to " + str(args.verbosity) + ".")
 
-    if args.command == "conv2tif":
+    if args.command == "converttogeotiff":
         converttogeotiff_handler(args.config_file)
 
     if args.command == "prepifg":
@@ -185,7 +184,7 @@ def main():
     if args.command == "process":
         process_handler(args.config_file, args.rows, args.cols)
 
-    if args.command == "merge":
+    if args.command == "postprocess":
         postprocess_handler(args.config_file, args.rows, args.cols)
 
 

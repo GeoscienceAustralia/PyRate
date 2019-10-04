@@ -38,7 +38,7 @@ from pyrate.core.config import (
     PROCESSOR,
     OUT_DIR,
     SLC_DIR)
-from pyrate import prepifg, conv2tif
+from pyrate import prepifg, converttogeotiff
 from pyrate.core.shared import write_fullres_geotiff, GeotiffException
 from tests import common
 from tests.common import GAMMA_TEST_DIR, SML_TEST_GAMMA
@@ -305,7 +305,7 @@ class TestGammaParallelVsSerial(unittest.TestCase):
         params[cf.PARALLEL] = False
         shared.mkdir_p(cls.serial_dir)
 
-        gtif_paths = conv2tif.main(params)
+        gtif_paths = converttogeotiff.main(params)
         prepifg.main(params)
 
         serial_df = glob.glob(os.path.join(cls.serial_dir, glob_prefix))
@@ -320,7 +320,7 @@ class TestGammaParallelVsSerial(unittest.TestCase):
         params[cf.PARALLEL] = True
         shared.mkdir_p(cls.parallel_dir)
 
-        gtif_paths = conv2tif.main(params)
+        gtif_paths = converttogeotiff.main(params)
         prepifg.main(params)
         
         para_df = glob.glob(os.path.join(cls.parallel_dir, glob_prefix))

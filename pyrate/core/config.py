@@ -322,8 +322,7 @@ def _parse_conf_file(content, validate: bool=True, step: str=CONV2TIF) -> Dict:
     lines = [ln.split() for ln in content.split('\n') if _is_valid(ln)]
 
     # convert "field:   value" lines to [field, value]
-    kvpair = [(e[0].rstrip(":"), e[1]) for e in lines if len(e) == 2] \
-        + [(e[0].rstrip(":"), None) for e in lines if len(e) == 1]
+    kvpair = [(e[0].rstrip(":"), e[1]) for e in lines if len(e) == 2] + [(e[0].rstrip(":"), None) for e in lines if len(e) == 1]
     parameters = dict(kvpair)
     for p in PATHS:
         if p not in parameters:
@@ -376,8 +375,7 @@ def _parse_pars(pars, validate: bool=True, step: str=CONV2TIF) -> Dict:
     for k in PARAM_CONVERSION:
         if pars.get(k) is None:
             pars[k] = PARAM_CONVERSION[k][1]
-            _logger.warning(f"No value found for parameter '{k}'. Providing "
-                            f"default value {pars[k]}.")
+            _logger.warning(f"No value found for parameter '{k}'. Providing "f"default value {pars[k]}.")
         else:
             conversion_func = PARAM_CONVERSION[k][0]
             if conversion_func:
@@ -397,10 +395,7 @@ def _parse_pars(pars, validate: bool=True, step: str=CONV2TIF) -> Dict:
         validate_parameters(pars, step)
     return pars
 
-
-
 # CONFIG UTILS - TO BE MOVED?
-
 def parse_namelist(nml):
     """
     Parses name list file into array of paths
@@ -560,8 +555,7 @@ def get_ifg_paths(config_file, step=CONV2TIF):
 
     xlks, _, crop = transform_params(params)
 
-    # base_unw_paths need to be geotiffed by converttogeotiff
-    #   and multilooked by run_prepifg
+    # base_unw_paths need to be geotiffed by converttogeotiff and multilooked by run_prepifg
     base_unw_paths = original_ifg_paths(ifg_file_list, params[OBS_DIR])
 
     # dest_paths are tifs that have been coherence masked (if enabled),

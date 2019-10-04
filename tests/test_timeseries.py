@@ -30,7 +30,7 @@ from numpy.testing import assert_array_almost_equal
 import pyrate.core.orbital
 import tests.common as common
 from pyrate.core import ref_phs_est as rpe, config as cf, mst, covariance
-from pyrate import process, prepifg, conv2tif
+from pyrate import process, prepifg, converttogeotiff
 from pyrate.core.timeseries import time_series
 
 
@@ -114,7 +114,7 @@ class LegacyTimeSeriesEquality(unittest.TestCase):
         cls.temp_out_dir = tempfile.mkdtemp()
         sys.argv = ['prepifg.py', common.TEST_CONF_ROIPAC]
         params[cf.OUT_DIR] = cls.temp_out_dir
-        conv2tif.main(params)
+        converttogeotiff.main(params)
         prepifg.main(params)
 
         params[cf.REF_EST_METHOD] = 2
@@ -231,7 +231,7 @@ class LegacyTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
         cls.temp_out_dir = tempfile.mkdtemp()
         sys.argv = ['prepifg.py', common.TEST_CONF_ROIPAC]
         params[cf.OUT_DIR] = cls.temp_out_dir
-        conv2tif.main(params)
+        converttogeotiff.main(params)
         prepifg.main(params)
 
         params[cf.REF_EST_METHOD] = 2

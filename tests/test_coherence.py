@@ -5,7 +5,7 @@ import glob
 import copy
 
 import pyrate.core.config as cf
-from pyrate import conv2tif, prepifg
+from pyrate import converttogeotiff, prepifg
 from tests import common
 
 class CoherenceMaskingTest(unittest.TestCase):
@@ -30,14 +30,14 @@ class CoherenceMaskingTest(unittest.TestCase):
     @unittest.skip("Skip this test until actual coherence test files provided")
     def test_coherence_files_converted(self):
         self.params[cf.COH_MASK] = 1
-        gtiff_paths = conv2tif.main(self.params)
+        gtiff_paths = converttogeotiff.main(self.params)
         coh_files = [path for path in gtiff_paths if '_cc.tif' in path]
         self.assertEqual(len(coh_files), 17)
         self.params[cf.COH_MASK] = 0
 
     def test_coherence_files_not_converted(self):
         self.params[cf.COH_MASK] = 0
-        gtiff_paths = conv2tif.main(self.params)
+        gtiff_paths = converttogeotiff.main(self.params)
         coh_files = [path for path in gtiff_paths if '_cc.tif' in path]
         self.assertEqual(len(coh_files), 0)
         self.params[cf.COH_MASK] = 1

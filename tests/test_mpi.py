@@ -32,7 +32,7 @@ import pyrate.core.orbital
 import pyrate.core.shared
 import tests.common
 from pyrate import (
-    process, prepifg, merge, conv2tif)
+    process, prepifg, postprocess, converttogeotiff)
 from tests.common import (small_data_setup, reconstruct_mst, 
     reconstruct_linrate, SML_TEST_DEM_HDR_GAMMA, pre_prepare_ifgs)
 from tests import common
@@ -161,7 +161,7 @@ def test_vcm_legacy_vs_mpi(mpisync, tempdir, get_config):
 
     # run prepifg, create the dest_paths files
     if mpiops.rank == 0:
-        conv2tif.main(params_dict)
+        converttogeotiff.main(params_dict)
         prepifg.main(params_dict)
 
     mpiops.comm.barrier()
@@ -245,8 +245,8 @@ def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
                                                         cols=col_splits)
 
     tiles = mpiops.run_once(pyrate.core.shared.get_tiles, dest_paths[0], rows=row_splits, cols=col_splits)
-    merge._postprocess_linrate(row_splits, col_splits, params)
-    merge._postprocess_timeseries(row_splits, col_splits, params)
+    postprocess._postprocess_linrate(row_splits, col_splits, params)
+    postprocess._postprocess_timeseries(row_splits, col_splits, params)
     ifgs_mpi_out_dir = params[cf.OUT_DIR]
     ifgs_mpi = small_data_setup(datafiles=dest_paths)
 
@@ -355,7 +355,7 @@ def test_prepifg_mpi(mpisync, get_config, tempdir,
         params[cf.OBS_DIR] = common.SML_TEST_GAMMA
         params[cf.DEM_FILE] = common.SML_TEST_DEM_GAMMA
         params[cf.DEM_HEADER_FILE] = common.SML_TEST_DEM_HDR_GAMMA
-    conv2tif.main(params)
+    converttogeotiff.main(params)
     prepifg.main(params)
     common.remove_tifs(params[cf.OBS_DIR])    
 
@@ -368,7 +368,7 @@ def test_prepifg_mpi(mpisync, get_config, tempdir,
         params_s[cf.PARALLEL] = True
         params_s[cf.IFG_LKSX], params_s[cf.IFG_LKSY] = get_lks, get_lks
         params_s[cf.IFG_CROP_OPT] = get_crop
-        conv2tif.main(params)
+        converttogeotiff.main(params)
         if roipac_or_gamma == 1:
             base_unw_paths = glob.glob(join(common.SML_TEST_GAMMA,
                                             "*_utm.unw"))

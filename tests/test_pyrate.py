@@ -27,7 +27,7 @@ import numpy as np
 
 import pyrate.core.shared
 from pyrate.core import shared, config as cf, config, prepifg_helper, mst
-from pyrate import process, prepifg, conv2tif
+from pyrate import process, prepifg, converttogeotiff
 from tests import common
 
 # taken from
@@ -215,7 +215,7 @@ class ParallelPyRateTests(unittest.TestCase):
         # dest_paths are tifs that have been geotif converted and multilooked
         cls.dest_paths = cf.get_dest_paths(
             base_unw_paths, crop, params, xlks)
-        gtif_paths = conv2tif.do_geotiff(base_unw_paths, params)
+        gtif_paths = converttogeotiff.do_geotiff(base_unw_paths, params)
         prepifg.do_prepifg(gtif_paths, params)
         tiles = pyrate.core.shared.get_tiles(cls.dest_paths[0], 3, 3)
         ifgs = common.small_data_setup()
@@ -238,7 +238,7 @@ class ParallelPyRateTests(unittest.TestCase):
         params[cf.TMPDIR] = os.path.join(params[cf.OUT_DIR], cf.TMPDIR)
         cls.dest_paths_s = cf.get_dest_paths(
             base_unw_paths, crop, params, xlks)
-        gtif_paths = conv2tif.do_geotiff(base_unw_paths, params)
+        gtif_paths = converttogeotiff.do_geotiff(base_unw_paths, params)
         prepifg.do_prepifg(gtif_paths, params)
         cls.refpixel, cls.maxvar, cls.vcmt = \
             process.process_ifgs(cls.dest_paths_s, params, 3, 3)
