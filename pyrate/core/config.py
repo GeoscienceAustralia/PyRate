@@ -882,6 +882,7 @@ def validate_parameters(pars: Dict, step: str=CONV2TIF):
             _get_fullres_info(ifl, pars[OBS_DIR], _crop_opts(pars))
 
         validate_crop_parameters(min_extents, pars)
+        validate_multilook_parameters(n_cols, n_rows, IFG_LKSX, IFG_LKSY, pars)
 
         # Check coherence masking if enabled
         if pars[COH_MASK]:
