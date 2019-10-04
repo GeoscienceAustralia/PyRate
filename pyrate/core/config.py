@@ -33,6 +33,7 @@ import logging
 
 from pyrate.core.ifgconstants import YEARS_PER_DAY
 from pyrate import CONV2TIF, PREPIFG, PROCESS, MERGE
+from pyrate.core.shared import Ifg, output_tiff_filename
 
 _logger = logging.getLogger(__name__)
 
@@ -852,51 +853,70 @@ def validate_parameters(pars: Dict, step: str=CONV2TIF):
     ifl = pars[IFG_FILE_LIST]
 
     # TODO: Call bounds checking functions based on the current step
+    # Call basic bounds checking functions for all parameters.
     validate_compulsory_parameters(pars)
     validate_optional_parameters(pars)
-
+    
+    # Validate that provided filenames contain correct epochs and that
+    #  the files exist.
     if is_GAMMA:
         validate_epochs(ifl, SIXTEEN_DIGIT_EPOCH_PAIR)
+        validate_epochs(pars[SLC_FILE_LIST], EIGHT_DIGIT_EPOCH)
+        validate_gamma_headers(ifl, pars[SLC_FILE_LIST], pars[SLC_DIR])
     else:
         validate_epochs(ifl, TWELVE_DIGIT_EPOCH_PAIR)
 
-    validate_ifgs(ifl, pars[OBS_DIR])
+    if step == CONV2TIF:   
+        # Check that unwrapped interferograms exist.
+        validate_ifgs(ifl, pars[OBS_DIR])
 
-    if step == PREPIFG: 
-        # Get stack minimum bounds and full res rows/cols
-        # Verify
-        extents, min_extents, n_cols, n_rows, n_epochs, max_span, transform = \
-        None, None, None, None, None, None, None
-    if requires_tif:
-        validate_tifs_exist(pars[IFG_FILE_LIST], pars[OBS_DIR])
-        # Get info regarding epochs and dimensions needed for validation.
-        crop_opts = _crop_opts(pars)
-        extents, min_extents, n_cols, n_rows, n_epochs, max_span, transform = \
-           _get_ifg_information(pars[IFG_FILE_LIST], pars[OBS_DIR], crop_opts)
+    elif step == PREPIFG: 
+        # Check full res geotiffs exist before continuing.
+        validate_tifs_exist(ifl, pars[OBS_DIR])
 
+        # Check the minimum number of epochs.
+        n_epochs, _ = _get_temporal_info(ifl, pars[OBS_DIR])        
+        validate_minimum_epochs(n_epochs, MINIMUM_NUMBER_EPOCHS)
+        
+        # Check the IFG crop parameters are within scene.
+        min_extents, n_cols, n_rows = \
+            _get_fullres_info(ifl, pars[OBS_DIR], _crop_opts(pars))
+
+        validate_crop_parameters(min_extents, pars)
+
+        # Check coherence masking if enabled
+        if pars[COH_MASK]:
+            validate_epochs(pars[COH_FILE_LIST], SIXTEEN_DIGIT_EPOCH_PAIR)
+            validate_coherence_files(ifl, pars)
+
+    elif step == PROCESS:
+        # Check that cropped/subsampled tifs exist.
+        validate_prepifg_tifs_exist(ifl, pars[OBS_DIR], pars)
+
+        # Check the minimum number of epochs.
+        n_epochs, max_span = _get_temporal_info(ifl, pars[OBS_DIR])
+        validate_minimum_epochs(n_epochs, MINIMUM_NUMBER_EPOCHS)
+        
+        # Get spatial information from tifs.
+        extents, n_cols, n_rows, transform = \
+            _get_prepifg_info(ifl, pars[OBS_DIR], pars)
+        
+        # Convert refx/refy from lat/long to pixel.
         pars[REFX], pars[REFY] = \
             convert_geographic_coordinate_to_pixel_value(pars[REFX], pars[REFY], transform)
-
-        validate_reference_pixel_params(looked_cols, looked_rows, 
-                                        pars[REFX], pars[REFY])
-        validate_multilook_parameters(looked_cols, looked_rows, 
+        
+        validate_reference_pixel_params(n_cols, n_rows, pars[REFX], pars[REFY])
+        validate_reference_pixel_search_windows(n_cols, n_rows, pars)
+        validate_multilook_parameters(n_cols, n_rows, 
                                       ORBITAL_FIT_LOOKS_X, ORBITAL_FIT_LOOKS_Y, 
                                       pars)
-        validate_reference_pixel_search_windows(n_cols, n_rows, pars)
-        validate_extent_parameters(extents, min_extents, pars)
-        validate_minimum_epochs(n_epochs, MINIMUM_NUMBER_EPOCHS)
+        validate_slpf_cutoff(extents, pars)
         validate_epoch_thresholds(n_epochs, pars)
         validate_epoch_cutoff(max_span, TLPF_CUTOFF, pars)
+        validate_obs_thresholds(ifl, pars)
 
-    validate_obs_thresholds(ifl, pars)
-
-    if is_GAMMA:
-        validate_epochs(pars[SLC_FILE_LIST], EIGHT_DIGIT_EPOCH)
-        validate_gamma_headers(ifl, pars[SLC_FILE_LIST], pars[SLC_DIR])
-
-    if pars[COH_MASK]:
-        validate_epochs(pars[COH_FILE_LIST], SIXTEEN_DIGIT_EPOCH_PAIR)
-        validate_coherence_files(ifl, pars)
+    elif step == MERGE:
+        validate_prepifg_tifs_exist(ifl, pars[OBS_DIR], pars)
 
 def _raise_errors(errors: List[str]):
     """
@@ -1057,6 +1077,26 @@ def validate_epoch_cutoff(max_span: float, cutoff: str, pars: Dict) -> Optional[
                       "data in years ({max_span}).")
     return _raise_errors(errors)
 
+def validate_prepifg_tifs_exist(
+        ifg_file_list: str, obs_dir: str, pars: Dict) -> Optional[bool]:
+    """
+    Validates that cropped and multilooked interferograms exist in geotiff
+    format.
+    """
+    errors = []
+    base_paths = [os.path.join(obs_dir, ifg) for ifg in parse_namelist(ifg_file_list)]
+    ifg_paths = get_dest_paths(base_paths, pars[IFG_CROP_OPT], pars, pars[IFG_LKSX])
+    for path in ifg_paths:
+        if not os.path.exists(path):
+            fname = os.path.split(path)[1]
+            errors.append("'{IFG_FILE_LIST}': interferogram '{fname}' is "
+                          "required as a cropped and subsampled geotiff but "
+                          "could not be found. Make sure 'prepifg' has been "
+                          "run and ensure the '{IFG_LKSX}' and '{IFG_CROP_OPT}' "
+                          "parameters have not been changed since 'prepifg' was run.")
+
+    return _raise_errors(errors)
+
 def validate_tifs_exist(ifg_file_list: str, obs_dir: str) -> Optional[bool]:
     """
     Validates that provided interferograms exist in geotiff format.
@@ -1091,7 +1131,7 @@ def validate_ifgs(ifg_file_list: str, obs_dir: str) -> Optional[bool]:
     Validates that provided interferograms exist.
 
     Args:
-        ifg_file_list: Path to file containing interferogram file names..
+        ifg_file_list: Path to file containing interferogram file names.
         obs_dir: Path to observations directory.
 
     Returns:
@@ -1202,16 +1242,15 @@ def validate_crop_parameters(min_extents: Tuple[float, float, float, float],
     return _raise_errors(errors)
 
 
-def validate_extent_parameters(extents: Tuple[float, float, float, float], 
-                               min_extents: Tuple[float, float, float, float],
+def validate_slpf_cutoff(extents: Tuple[float, float, float, float], 
                                pars: Dict) -> Optional[bool]:
     """
-    Validate parameters that provide lat/long coordinates by checking they fit
-    within the scene being processed.
+    Validate SLPF_CUTOFF is within the bounds of the scene being processed
+    (after prepifg cropping/subsampling has occurred).
 
     Args:
         extents : Tuple of (xmin, xmax, ymin, ymax) describing the extents
-            of the scene being processed in degrees.
+            of the scene, after cropping & multisampling, in degrees.
         pars: Parameters dictionary.
 
     Returns:
@@ -1220,25 +1259,6 @@ def validate_extent_parameters(extents: Tuple[float, float, float, float],
     Raises:
         ConfigException: If validation fails.
     """
-    errors = []
-    min_xmin, min_ymin, min_xmax, min_ymax = min_extents
-    x_dim_string = f"(xmin: {min_xmin}, xmax: {min_xmax})"
-    y_dim_string = f"(ymin: {min_ymin}, ymax: {min_ymax})"
-
-    # Check crop coordinates within scene.
-    def _validate_crop_coord(var_name, dim_min, dim_max, dim_string):
-        if not dim_min < pars[var_name] < dim_max:
-            return [f"'{var_name}': crop coordinate ({pars[var_name]}) "
-                    f"is outside bounds of scene {dim_string}."]
-
-        return []
-    
-    if pars[IFG_CROP_OPT] == 3:
-        errors.extend(_validate_crop_coord(IFG_XFIRST, min_xmin, min_xmax, x_dim_string))
-        errors.extend(_validate_crop_coord(IFG_YFIRST, min_ymin, min_ymax, y_dim_string))
-        errors.extend(_validate_crop_coord(IFG_XLAST, min_xmin, min_xmax, x_dim_string))
-        errors.extend(_validate_crop_coord(IFG_YLAST, min_ymin, min_ymax, y_dim_string))
-
     xmin, ymin, xmax, ymax = extents
     # Check SLPF_CUTOFF within scene *in kilometeres*.
     DEG_TO_KM = 111.32 # km per degree
@@ -1247,9 +1267,11 @@ def validate_extent_parameters(extents: Tuple[float, float, float, float],
     x_extent_km = x_extent *  DEG_TO_KM
     y_extent_km = y_extent *  DEG_TO_KM
     if pars[SLPF_CUTOFF] > max(x_extent_km, y_extent_km):
-        errors.append(f"'{SLPF_CUTOFF}': cutoff is out of bounds, must be "
-                      "less than max scene bound (in km) "
-                      f"({max(x_extent_km, y_extent_km)}).")
+        errors = [f"'{SLPF_CUTOFF}': cutoff is out of bounds, must be "
+                  "less than max scene bound (in km) "
+                  f"({max(x_extent_km, y_extent_km)})."]
+    else:
+        errors = []
 
     return _raise_errors(errors)
 
@@ -1419,59 +1441,109 @@ def validate_coherence_files(ifg_file_list: str, pars: Dict) -> Optional[bool]:
 
     return _raise_errors(errors)
 
-def _get_ifg_information(ifg_file_list: str, obs_dir: str, crop_opts: Tuple) -> Tuple:
+def _get_temporal_info(ifg_file_list: str, obs_dir: str) -> Tuple:
     """
-    Retrieves spatial and temporal information from the provided interferograms.
+    Retrieves the number of unique epochs and maximum time span of the 
+    dataset.
+
+    Args:
+        ifg_file_list: Path to file containing list of interferogram file names.
+        obs_dir: Path to observations directory.
+    
+    Returns:
+        Tuple containing the number of unique epochs and the maximum timespan.
+    """
+    from pyrate.core.algorithm import get_epochs
+
+    ifg_paths = \
+        [os.path.join(obs_dir, ifg) for ifg in parse_namelist(ifg_file_list)]
+    rasters = [Ifg(output_tiff_filename(f, obs_dir)) for f in ifg_paths]
+
+    for r in rasters:
+        if not r.is_open:
+            r.open(readonly=True)
+
+    # extents = xmin, ymin, xmax, ymax
+    epoch_list = get_epochs(rasters)[0]
+    n_epochs = len(epoch_list.dates)
+    max_span = max(epoch_list.spans)
+
+    for r in rasters:
+        if not r.is_open:
+            r.close()
+
+    return n_epochs, max_span
+
+def _get_prepifg_info(ifg_file_list: str, obs_dir: str, pars: Dict) -> Tuple:
+    """
+    Retrives spatial information from prepifg interferograms (images that
+    have been cropped and multilooked).
+
+    Args:
+        ifg_file_list: Path to file containing list of interferogram file names.
+        obs_dir: Path to observations directory.
+
+    Returns:
+    """
+    base_paths = [os.path.join(obs_dir, ifg) for ifg in parse_namelist(ifg_file_list)]
+    ifg_paths = get_dest_paths(base_paths, pars[IFG_CROP_OPT], pars, pars[IFG_LKSX])
+
+    # This function assumes the stack of interferograms now have the same
+    # bounds and resolution after going through prepifg.
+    raster = Ifg(ifg_paths[0])
+    if not raster.is_open:
+        raster.open(readonly=True)
+
+    n_cols = raster.ncols
+    n_rows = raster.nrows
+    extents = raster.x_first, raster.y_first, raster.x_last, raster.y_last
+    transform = raster.dataset.GetGeoTransform()
+
+    raster.close()
+
+    return extents, n_cols, n_rows, transform
+
+def _get_fullres_info(ifg_file_list: str, obs_dir: str, crop_opts: Tuple) -> Tuple:
+    """
+    Retrieves spatial information from the provided interferograms.
     Requires the interferograms to exist in geotiff format.
 
     Args:
         ifg_file_list: Path to file containing list of interferogram file names.
         obs_dir: Path to observations directory.
-        crop_opts: Crop options from parameters.
 
     Returns:
         Tuple containing extents (xmin, ymin, xmax, ymax), number of pixel
         columns, number of pixel rows, number of unique epochs and maximum
         time span of the data.
     """
-    from pyrate.core.shared import Ifg, output_tiff_filename
-    from pyrate.core.prepifg_helper import _get_extents, _min_bounds
-    from pyrate.core.algorithm import get_epochs
+    from pyrate.core.prepifg_helper import _min_bounds, _get_extents
 
     ifg_paths = [os.path.join(obs_dir, ifg) for ifg in parse_namelist(ifg_file_list)]
     rasters = [Ifg(output_tiff_filename(f, obs_dir)) for f in ifg_paths]
 
     for r in rasters:
         if not r.is_open:
-            r.open()
+            r.open(readonly=True)
 
     # extents = xmin, ymin, xmax, ymax
-    extents = _get_extents(rasters, crop_opts[0], crop_opts[1])
     min_extents = _min_bounds(rasters)
-    epoch_list = get_epochs(rasters)[0]
-    n_epochs = len(epoch_list.dates)
-    max_span = max(epoch_list.spans)
-    # Assuming resolutions have been verified to be the same.
+    post_crop_extents = \
+        _get_extents(rasters, crop_opts[0], user_exts=crop_opts[1])
     x_step = rasters[0].x_step
     y_step = rasters[0].y_step
-
     # Get the pixel bounds. Ifg/Raster objects do have 'ncols'/'nrows' 
     # properties, but we'll calculate it off the extents we got above
     # because these take into account the chosen cropping option (until
     # the stack of interferograms is cropped it's not known what the 
     # pixel dimensions will be).
-    n_cols = abs(int(abs(extents[0] - extents[2]) / x_step))
-    n_rows = abs(int(abs(extents[1] - extents[3]) / y_step))
+    n_cols = abs(int(abs(post_crop_extents[0] - post_crop_extents[2]) / x_step))
+    n_rows = abs(int(abs(post_crop_extents[1] - post_crop_extents[3]) / y_step))
 
-    # @Sheece: selecting a transform form a single raster will cause bugs
-    # at some point. Refer to the comment above - the rasters might be of
-    # different extents. Depending on the cropping option the user selects,
-    # there's no guarantee the transform of the first raster will be the
-    # transform of the cropped stack of intergerograms which will make 
-    # the conversions incorrect.
-    transform = rasters[0].dataset.GetGeoTransform()
+    for r in rasters:
+        r.close()
 
-    return extents, min_extents, n_cols, n_rows, n_epochs, max_span, transform
+    return min_extents, n_cols, n_rows
 
 def _crop_opts(params: Dict) -> Tuple:
     """
