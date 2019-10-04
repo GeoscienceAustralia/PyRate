@@ -1205,18 +1205,20 @@ def validate_extent_parameters(extents: Tuple[float, float, float, float],
 
     return _raise_errors(errors)
 
-def validate_pixel_parameters(n_cols: int, n_rows: int, pars: Dict) -> Optional[bool]:
+def validate_reference_pixel_params(looked_cols: int, looked_rows: int, 
+                                    refx: int, refy: int) -> Optional[bool]:
     """
-    Validate parameters that provide pixel coordinates by verifying they
-    are within the scene being processed.
+    Validate that reference pixel coordinates are in scene. This must be 
+    performed based on the cropped and subsampled dataset.
 
     Args:
-        extents: Tuple of (xmin, xmax, ymin, ymax) describing the extents
-            of the scene being processed in degrees.
-        n_cols: Number of pixel columns (X) in the raster.
-        n_rows: Number of pixel rows (X) in the raster.
-        pars: Parameters dictionary.
-
+        looked_cols: Number of pixel columns (X) in the raster after cropping
+            and subsampling (the prepifg step).
+        looked_rows: Number of pixel rows (Y) in the raster after cropping
+            and subsampling (the prepifg step).
+        refx: The reference pixel X parameter.
+        refy: The reference pixel Y parameter.
+    
     Returns:
         True if validation is successful.
 
@@ -1224,35 +1226,43 @@ def validate_pixel_parameters(n_cols: int, n_rows: int, pars: Dict) -> Optional[
         ConfigException: If validation fails.
     """
     errors = []
-    x_dim_string = f"(xmin: 0, xmax: {n_cols}"
-    y_dim_string = f"(ymin: 0, ymax: {n_rows}"
+    x_dim_string = f"(xmin: 0, xmax: {looked_cols}"
+    y_dim_string = f"(ymin: 0, ymax: {looked_rows}"
 
     # Check reference pixel coordinates within scene.
-
-    if pars[REFX] > 0 and pars[REFY] > 0:
-        if not 0 < pars[REFX] <= n_cols:
+    if refx != 0 and refy != 0:
+        if not 0 < refx <= looked_cols:
             errors.append(f"'{REFX}': reference pixel coodinate is "
                           f"outside bounds of scene ({x_dim_string}).")
 
-        if not 0 < pars[REFY] <= n_rows:
+        if not 0 < refy <= looked_rows:
             errors.append(f"'{REFY}': reference pixel coodinate is "
                           f"outside bounds of scene ({y_dim_string}).")
-
-    # Check multilooks (extent/val) >= 1.
-    def _validate_multilook(var_name, dim_val, dim_string):
-        if dim_val / pars[var_name] < 1:
-            return [f"'{var_name}': the quantity ( {dim_string} pixel count: "
-                    f"{dim_val} / multilook factor: {pars[var_name]} ) must "
-                    f"be greater than or equal to 1."]
-        return []
-
-    errors.extend(_validate_multilook(IFG_LKSX, n_cols, 'x'))
-    errors.extend(_validate_multilook(IFG_LKSY, n_rows, 'y'))
-    if pars[ORBITAL_FIT]:
-        errors.extend(_validate_multilook(ORBITAL_FIT_LOOKS_X, n_cols, 'x'))
-        errors.extend(_validate_multilook(ORBITAL_FIT_LOOKS_Y, n_rows, 'y'))
-
+    
     return _raise_errors(errors)
+
+def validate_multilook_parameters(dimension: int, 
+                                  looks_factor: int, 
+                                  var_name: str) -> Optional[bool]:
+    """
+    Validate multilook parameters by ensuring resulting resolution will be
+    at least 1 pixel and less than the current resolution.
+
+    Args:
+        dimension: The width or height in pixels of the scene.
+        looks_factor: The value of the multilooking factor.
+        var_name: The name of the multilooking parameter (for error message).
+
+    Returns:
+        True if validation is successful.
+
+    Raises:
+        ConfigException: If validation fails.
+    """
+    if looks_factor > dimension:
+        return _raise_errors(f"'{var_name}': the multilook factor ({looks_factor}) "
+                             f"must be less than the pixel dimension "
+                             f"({looks_factor}) of the image.")
 
 def validate_reference_pixel_search_windows(n_cols: int, n_rows: int, 
                                             pars: Dict) -> Optional[bool]:
@@ -1370,6 +1380,7 @@ def _get_ifg_information(ifg_file_list: str, obs_dir: str, crop_opts: Tuple) -> 
     from pyrate.core.shared import Ifg, output_tiff_filename
     from pyrate.core.prepifg_helper import _get_extents, _min_bounds
     from pyrate.core.algorithm import get_epochs
+
     ifg_paths = [os.path.join(obs_dir, ifg) for ifg in parse_namelist(ifg_file_list)]
     rasters = [Ifg(output_tiff_filename(f, obs_dir)) for f in ifg_paths]
 
