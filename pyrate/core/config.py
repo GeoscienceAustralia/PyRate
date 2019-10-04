@@ -32,6 +32,7 @@ import itertools
 import logging
 
 from pyrate.core.ifgconstants import YEARS_PER_DAY
+from pyrate import CONV2TIF, PREPIFG, PROCESS, MERGE
 
 _logger = logging.getLogger(__name__)
 
@@ -219,8 +220,8 @@ PARAM_CONVERSION = {
     COH_MASK: (int, 0),
     COH_THRESH: (float, 0.1),
 
-    REFX: (float, 181),
-    REFY: (float, 91),
+    REFX: (float, -1.),
+    REFY: (float, -1.),
     REFNX: (int, 10),
     REFNY: (int, 10),
     REF_CHIP_SIZE: (int, 21),
@@ -275,7 +276,7 @@ DEFAULT_TO_OBS_DIR = [SLC_DIR, COH_FILE_DIR]
 
 INT_KEYS = [APS_CORRECTION, APS_METHOD]
 
-def get_config_params(path: str, validate: bool=True, requires_tif: bool=False) -> Dict:
+def get_config_params(path: str, validate: bool=True, step: str=CONV2TIF) -> Dict:
     """
     Reads the parameters file provided by the user and converts it into
     a dictionary.
@@ -283,8 +284,8 @@ def get_config_params(path: str, validate: bool=True, requires_tif: bool=False) 
     Args:
         path: Absolute path to the parameters file.
         validate: Validate the parameters if True, otherwise skip validation.
-        requires_tif: True if the calling process requires interferograms
-            in geotiff format (performs additional validation).
+        step: The current step of the PyRate workflow.
+
     Returns:
        A dictionary of parameters. 
     """
@@ -297,12 +298,12 @@ def get_config_params(path: str, validate: bool=True, requires_tif: bool=False) 
                     # create expanded line
                     line = line[:pos] + os.environ['HOME'] + line[(pos+1):]
             txt += line
-    params = _parse_conf_file(txt, validate, requires_tif)
+    params = _parse_conf_file(txt, validate, step)
     params[TMPDIR] = os.path.join(os.path.abspath(params[OUT_DIR]), 'tmpdir')
 
     return params
 
-def _parse_conf_file(content, validate: bool=True, requires_tif: bool=False) -> Dict:
+def _parse_conf_file(content, validate: bool=True, step: str=CONV2TIF) -> Dict:
     """
     Converts the parameters from their text form into a dictionary.
     
@@ -337,7 +338,7 @@ def _parse_conf_file(content, validate: bool=True, requires_tif: bool=False) -> 
     if not parameters:
         raise ConfigException('Cannot parse any parameters from config file')
 
-    return _parse_pars(parameters, validate, requires_tif)
+    return _parse_pars(parameters, validate, step)
 
 def _handle_extra_parameters(params):
     """
@@ -360,7 +361,7 @@ def _handle_extra_parameters(params):
 
     return params
 
-def _parse_pars(pars, validate: bool=True, requires_tif: bool=False) -> Dict:
+def _parse_pars(pars, validate: bool=True, step: str=CONV2TIF) -> Dict:
     """
     Takes dictionary of parameters, converting values to required type
     and providing defaults for missing values.
@@ -393,7 +394,7 @@ def _parse_pars(pars, validate: bool=True, requires_tif: bool=False) -> Dict:
             pars[p] = pars[OBS_DIR]
 
     if validate:
-        validate_parameters(pars, requires_tif)
+        validate_parameters(pars, step)
     return pars
 
 
@@ -540,7 +541,7 @@ def get_dest_paths(base_paths, crop, params, looks):
 
     return [os.path.join(params[OUT_DIR], p) for p in dest_mlooked_ifgs]
 
-def get_ifg_paths(config_file, requires_tif=False):
+def get_ifg_paths(config_file, step=CONV2TIF):
     """
     Read the configuration file, extract interferogram file list and determine
     input and output interferogram path names.
@@ -554,7 +555,7 @@ def get_ifg_paths(config_file, requires_tif=False):
     :rtype: list
     :rtype: dict
     """
-    params = get_config_params(config_file, requires_tif=requires_tif)
+    params = get_config_params(config_file, step=step)
     ifg_file_list = params.get(IFG_FILE_LIST)
 
     xlks, _, crop = transform_params(params)
@@ -820,7 +821,18 @@ _REFERENCE_PIXEL_VALIDATION = {
 """dict: basic validation functions for reference pixel search parameters."""
 
 def convert_geographic_coordinate_to_pixel_value(refpx, refpy, transform):
+    """
+    Converts a lat/long coordinate to a pixel coordinate given the 
+    geotransform of the image.
 
+    Args:
+        refpx: The longitude of the coordinate.
+        refpx: The latitude of the coordinate.
+        transform: The geotransform array of the image.
+
+    Returns:
+        Tuple of refpx, refpy in pixel values.
+    """
     # transform = ifg.dataset.GetGeoTransform()
 
     xOrigin = transform[0]
@@ -833,15 +845,16 @@ def convert_geographic_coordinate_to_pixel_value(refpx, refpy, transform):
 
     return int(refpx), int(refpy)
 
-def validate_parameters(pars: Dict, requires_tif: bool=False):
+def validate_parameters(pars: Dict, step: str=CONV2TIF):
     """
     Main validation function. Calls validation subfunctions and gathers
     some required variables for performing validation.
 
     Args:
         pars: The parameters dictionary.
-        requires_tif: Whether the currently used workflow requires
-            interferograms in tif format.
+        step: The current step of the PyRate workflow. Determines what 
+            parameters to validate and what resources are available in
+            terms of geotiffs.
 
     Raises:
         ConfigException: If errors occur during parameter validation.
@@ -849,44 +862,75 @@ def validate_parameters(pars: Dict, requires_tif: bool=False):
     is_GAMMA = pars[PROCESSOR] == GAMMA
     ifl = pars[IFG_FILE_LIST]
 
+    # TODO: Call bounds checking functions based on the current step
+    # Call basic bounds checking functions for all parameters.
     validate_compulsory_parameters(pars)
     validate_optional_parameters(pars)
-
+    
+    # Validate that provided filenames contain correct epochs and that
+    #  the files exist.
     if is_GAMMA:
         validate_epochs(ifl, SIXTEEN_DIGIT_EPOCH_PAIR)
+        validate_epochs(pars[SLC_FILE_LIST], EIGHT_DIGIT_EPOCH)
+        validate_gamma_headers(ifl, pars[SLC_FILE_LIST], pars[SLC_DIR])
     else:
         validate_epochs(ifl, TWELVE_DIGIT_EPOCH_PAIR)
 
-    validate_ifgs(ifl, pars[OBS_DIR])
+    if step == CONV2TIF:   
+        # Check that unwrapped interferograms exist.
+        validate_ifgs(ifl, pars[OBS_DIR])
 
-    extents, min_extents, n_cols, n_rows, n_epochs, max_span, transform = \
-        None, None, None, None, None, None, None
-    if requires_tif:
-        validate_tifs_exist(pars[IFG_FILE_LIST], pars[OBS_DIR])
-        # Get info regarding epochs and dimensions needed for validation.
-        crop_opts = _crop_opts(pars)
-        extents, min_extents, n_cols, n_rows, n_epochs, max_span, transform = \
-           _get_ifg_information(pars[IFG_FILE_LIST], pars[OBS_DIR], crop_opts)
+    elif step == PREPIFG: 
+        # Check full res geotiffs exist before continuing.
+        validate_tifs_exist(ifl, pars[OBS_DIR])
 
-        pars[REFX], pars[REFY] = \
-            convert_geographic_coordinate_to_pixel_value(pars[REFX], pars[REFY], transform)
-
-        validate_pixel_parameters(n_cols, n_rows, pars)
-        validate_reference_pixel_search_windows(n_cols, n_rows, pars)
-        validate_extent_parameters(extents, min_extents, pars)
+        # Check the minimum number of epochs.
+        n_epochs, _ = _get_temporal_info(ifl, pars[OBS_DIR])        
         validate_minimum_epochs(n_epochs, MINIMUM_NUMBER_EPOCHS)
+        
+        # Check the IFG crop parameters are within scene.
+        min_extents, n_cols, n_rows = \
+            _get_fullres_info(ifl, pars[OBS_DIR], _crop_opts(pars))
+
+        validate_crop_parameters(min_extents, pars)
+        validate_multilook_parameters(n_cols, n_rows, IFG_LKSX, IFG_LKSY, pars)
+
+        # Check coherence masking if enabled
+        if pars[COH_MASK]:
+            validate_epochs(pars[COH_FILE_LIST], SIXTEEN_DIGIT_EPOCH_PAIR)
+            validate_coherence_files(ifl, pars)
+
+    elif step == PROCESS:
+        # Check that cropped/subsampled tifs exist.
+        validate_prepifg_tifs_exist(ifl, pars[OBS_DIR], pars)
+
+        # Check the minimum number of epochs.
+        n_epochs, max_span = _get_temporal_info(ifl, pars[OBS_DIR])
+        validate_minimum_epochs(n_epochs, MINIMUM_NUMBER_EPOCHS)
+        
+        # Get spatial information from tifs.
+        extents, n_cols, n_rows, transform = \
+            _get_prepifg_info(ifl, pars[OBS_DIR], pars)
+        
+        # Convert refx/refy from lat/long to pixel and validate...
+        if pars[REFX] != -1. and pars[REFY] != -1.:
+            pars[REFX], pars[REFY] = \
+                convert_geographic_coordinate_to_pixel_value(pars[REFX], pars[REFY], transform)
+            validate_reference_pixel_params(n_cols, n_rows, pars[REFX], pars[REFY])
+        # otherwise we need to search for the pixel so validate the search paramters.
+        else:
+            validate_reference_pixel_search_windows(n_cols, n_rows, pars)
+
+        validate_multilook_parameters(n_cols, n_rows, 
+                                      ORBITAL_FIT_LOOKS_X, ORBITAL_FIT_LOOKS_Y, 
+                                      pars)
+        validate_slpf_cutoff(extents, pars)
         validate_epoch_thresholds(n_epochs, pars)
         validate_epoch_cutoff(max_span, TLPF_CUTOFF, pars)
+        validate_obs_thresholds(ifl, pars)
 
-    validate_obs_thresholds(ifl, pars)
-
-    if is_GAMMA:
-        validate_epochs(pars[SLC_FILE_LIST], EIGHT_DIGIT_EPOCH)
-        validate_gamma_headers(ifl, pars[SLC_FILE_LIST], pars[SLC_DIR])
-
-    if pars[COH_MASK]:
-        validate_epochs(pars[COH_FILE_LIST], SIXTEEN_DIGIT_EPOCH_PAIR)
-        validate_coherence_files(ifl, pars)
+    elif step == MERGE:
+        validate_prepifg_tifs_exist(ifl, pars[OBS_DIR], pars)
 
 def _raise_errors(errors: List[str]):
     """
@@ -1047,6 +1091,37 @@ def validate_epoch_cutoff(max_span: float, cutoff: str, pars: Dict) -> Optional[
                       "data in years ({max_span}).")
     return _raise_errors(errors)
 
+def validate_prepifg_tifs_exist(
+        ifg_file_list: str, obs_dir: str, pars: Dict) -> Optional[bool]:
+    """
+    Validates that cropped and multilooked interferograms exist in geotiff
+    format.
+
+    Args:
+        ifg_file_list: Path to file containing interfergram file names.
+        obs_dir: Path to observations directory.
+        pars: Parameters dictionary.
+
+    Returns:
+        True if all interferograms exist in geotiff format.
+
+    Raises:
+        ConfigException: If not all intergerograms exist in geotiff format.
+    """
+    errors = []
+    base_paths = [os.path.join(obs_dir, ifg) for ifg in parse_namelist(ifg_file_list)]
+    ifg_paths = get_dest_paths(base_paths, pars[IFG_CROP_OPT], pars, pars[IFG_LKSX])
+    for path in ifg_paths:
+        if not os.path.exists(path):
+            fname = os.path.split(path)[1]
+            errors.append(f"'{IFG_FILE_LIST}': interferogram '{fname}' is "
+                          f"required as a cropped and subsampled geotiff but "
+                          f"could not be found. Make sure 'prepifg' has been "
+                          f"run and ensure the '{IFG_LKSX}' and '{IFG_CROP_OPT}' "
+                          f"parameters have not been changed since 'prepifg' was run.")
+
+    return _raise_errors(errors)
+
 def validate_tifs_exist(ifg_file_list: str, obs_dir: str) -> Optional[bool]:
     """
     Validates that provided interferograms exist in geotiff format.
@@ -1081,7 +1156,7 @@ def validate_ifgs(ifg_file_list: str, obs_dir: str) -> Optional[bool]:
     Validates that provided interferograms exist.
 
     Args:
-        ifg_file_list: Path to file containing interferogram file names..
+        ifg_file_list: Path to file containing interferogram file names.
         obs_dir: Path to observations directory.
 
     Returns:
@@ -1154,16 +1229,15 @@ def validate_epoch_thresholds(n_epochs: int, pars: Dict) -> Optional[bool]:
 
     return _raise_errors(errors)
 
-def validate_extent_parameters(extents: Tuple[float, float, float, float], 
-                               min_extents: Tuple[float, float, float, float],
-                               pars: Dict) -> Optional[bool]:
+def validate_crop_parameters(min_extents: Tuple[float, float, float, float],
+                             pars: Dict) -> Optional[bool]:
     """
-    Validate parameters that provide lat/long coordinates by checking they fit
-    within the scene being processed.
-
+    Validates IFG crop parameters by ensuring user provided crop coordinates
+    are within the *minimum* (intersecting) bounds of the interferogram stack.
+    
     Args:
-        extents : Tuple of (xmin, xmax, ymin, ymax) describing the extents
-            of the scene being processed in degrees.
+        min_extents: The minimum extents of the interferogram stack. The
+            crop coordinates must be within these extents.
         pars: Parameters dictionary.
 
     Returns:
@@ -1185,12 +1259,31 @@ def validate_extent_parameters(extents: Tuple[float, float, float, float],
 
         return []
     
-    if pars[IFG_CROP_OPT] == 3:
-        errors.extend(_validate_crop_coord(IFG_XFIRST, min_xmin, min_xmax, x_dim_string))
-        errors.extend(_validate_crop_coord(IFG_YFIRST, min_ymin, min_ymax, y_dim_string))
-        errors.extend(_validate_crop_coord(IFG_XLAST, min_xmin, min_xmax, x_dim_string))
-        errors.extend(_validate_crop_coord(IFG_YLAST, min_ymin, min_ymax, y_dim_string))
+    errors.extend(_validate_crop_coord(IFG_XFIRST, min_xmin, min_xmax, x_dim_string))
+    errors.extend(_validate_crop_coord(IFG_YFIRST, min_ymin, min_ymax, y_dim_string))
+    errors.extend(_validate_crop_coord(IFG_XLAST, min_xmin, min_xmax, x_dim_string))
+    errors.extend(_validate_crop_coord(IFG_YLAST, min_ymin, min_ymax, y_dim_string))
+    
+    return _raise_errors(errors)
 
+
+def validate_slpf_cutoff(extents: Tuple[float, float, float, float], 
+                               pars: Dict) -> Optional[bool]:
+    """
+    Validate SLPF_CUTOFF is within the bounds of the scene being processed
+    (after prepifg cropping/subsampling has occurred).
+
+    Args:
+        extents : Tuple of (xmin, xmax, ymin, ymax) describing the extents
+            of the scene, after cropping & multisampling, in degrees.
+        pars: Parameters dictionary.
+
+    Returns:
+        True if validation is successful.
+
+    Raises:
+        ConfigException: If validation fails.
+    """
     xmin, ymin, xmax, ymax = extents
     # Check SLPF_CUTOFF within scene *in kilometeres*.
     DEG_TO_KM = 111.32 # km per degree
@@ -1199,22 +1292,62 @@ def validate_extent_parameters(extents: Tuple[float, float, float, float],
     x_extent_km = x_extent *  DEG_TO_KM
     y_extent_km = y_extent *  DEG_TO_KM
     if pars[SLPF_CUTOFF] > max(x_extent_km, y_extent_km):
-        errors.append(f"'{SLPF_CUTOFF}': cutoff is out of bounds, must be "
-                      "less than max scene bound (in km) "
-                      f"({max(x_extent_km, y_extent_km)}).")
+        errors = [f"'{SLPF_CUTOFF}': cutoff is out of bounds, must be "
+                  "less than max scene bound (in km) "
+                  f"({max(x_extent_km, y_extent_km)})."]
+    else:
+        errors = []
 
     return _raise_errors(errors)
 
-def validate_pixel_parameters(n_cols: int, n_rows: int, pars: Dict) -> Optional[bool]:
+def validate_reference_pixel_params(looked_cols: int, looked_rows: int, 
+                                    refx: int, refy: int) -> Optional[bool]:
     """
-    Validate parameters that provide pixel coordinates by verifying they
-    are within the scene being processed.
+    Validate that reference pixel coordinates are in scene. This must be 
+    performed based on the cropped and subsampled dataset.
 
     Args:
-        extents: Tuple of (xmin, xmax, ymin, ymax) describing the extents
-            of the scene being processed in degrees.
-        n_cols: Number of pixel columns (X) in the raster.
-        n_rows: Number of pixel rows (X) in the raster.
+        looked_cols: Number of pixel columns (X) in the raster after cropping
+            and subsampling (the prepifg step).
+        looked_rows: Number of pixel rows (Y) in the raster after cropping
+            and subsampling (the prepifg step).
+        refx: The reference pixel X parameter.
+        refy: The reference pixel Y parameter.
+    
+    Returns:
+        True if validation is successful.
+
+    Raises:
+        ConfigException: If validation fails.
+    """
+    errors = []
+    x_dim_string = f"xmin: 0, xmax: {looked_cols}"
+    y_dim_string = f"ymin: 0, ymax: {looked_rows}"
+
+    # Check reference pixel coordinates within scene.
+    if refx != 0 and refy != 0:
+        if not 0 < refx <= looked_cols:
+            errors.append(f"'{REFX}': reference pixel coordinate {refx} is "
+                          f"outside bounds of scene ({x_dim_string}).")
+
+        if not 0 < refy <= looked_rows:
+            errors.append(f"'{REFY}': reference pixel coordinate {refy} is "
+                          f"outside bounds of scene ({y_dim_string}).")
+    
+    return _raise_errors(errors)
+
+def validate_multilook_parameters(cols: int, rows: int, 
+                                 xlks_name: str, ylks_name: str, 
+                                 pars: Dict) -> Optional[bool]:
+    """
+    Validate multilook parameters by ensuring resulting resolution will be
+    at least 1 pixel and less than the current resolution.
+
+    Args:
+        cols: Number of pixel columns (X) in the scene.
+        rows: Number of pixel rows (Y) in the scene.
+        xlks_name: Key for looking up the X looks factor.
+        ylks_name: Key for looking up the Y looks factor.
         pars: Parameters dictionary.
 
     Returns:
@@ -1224,34 +1357,16 @@ def validate_pixel_parameters(n_cols: int, n_rows: int, pars: Dict) -> Optional[
         ConfigException: If validation fails.
     """
     errors = []
-    x_dim_string = f"(xmin: 0, xmax: {n_cols}"
-    y_dim_string = f"(ymin: 0, ymax: {n_rows}"
 
-    # Check reference pixel coordinates within scene.
-
-    if pars[REFX] > 0 and pars[REFY] > 0:
-        if not 0 < pars[REFX] <= n_cols:
-            errors.append(f"'{REFX}': reference pixel coodinate is "
-                          f"outside bounds of scene ({x_dim_string}).")
-
-        if not 0 < pars[REFY] <= n_rows:
-            errors.append(f"'{REFY}': reference pixel coodinate is "
-                          f"outside bounds of scene ({y_dim_string}).")
-
-    # Check multilooks (extent/val) >= 1.
-    def _validate_multilook(var_name, dim_val, dim_string):
-        if dim_val / pars[var_name] < 1:
-            return [f"'{var_name}': the quantity ( {dim_string} pixel count: "
-                    f"{dim_val} / multilook factor: {pars[var_name]} ) must "
-                    f"be greater than or equal to 1."]
+    def _validate_mlook(var_name, dim_val, dim_str):
+        if pars[var_name] > dim_val:
+            return [f"'{var_name}': the multilook factor ({pars[var_name]}) "
+                    f"must be less than the number of pixels on the {dim_str} "
+                    f"axis ({dim_val})."]
         return []
 
-    errors.extend(_validate_multilook(IFG_LKSX, n_cols, 'x'))
-    errors.extend(_validate_multilook(IFG_LKSY, n_rows, 'y'))
-    if pars[ORBITAL_FIT]:
-        errors.extend(_validate_multilook(ORBITAL_FIT_LOOKS_X, n_cols, 'x'))
-        errors.extend(_validate_multilook(ORBITAL_FIT_LOOKS_Y, n_rows, 'y'))
-
+    errors.extend(_validate_mlook(xlks_name, cols, 'x'))
+    errors.extend(_validate_mlook(ylks_name, rows, 'y'))
     return _raise_errors(errors)
 
 def validate_reference_pixel_search_windows(n_cols: int, n_rows: int, 
@@ -1352,58 +1467,113 @@ def validate_coherence_files(ifg_file_list: str, pars: Dict) -> Optional[bool]:
 
     return _raise_errors(errors)
 
-def _get_ifg_information(ifg_file_list: str, obs_dir: str, crop_opts: Tuple) -> Tuple:
+def _get_temporal_info(ifg_file_list: str, obs_dir: str) -> Tuple:
     """
-    Retrieves spatial and temporal information from the provided interferograms.
+    Retrieves the number of unique epochs and maximum time span of the 
+    dataset.
+
+    Args:
+        ifg_file_list: Path to file containing list of interferogram file names.
+        obs_dir: Path to observations directory.
+    
+    Returns:
+        Tuple containing the number of unique epochs and the maximum timespan.
+    """
+    from pyrate.core.algorithm import get_epochs
+    from pyrate.core.shared import Ifg, output_tiff_filename
+
+    ifg_paths = \
+        [os.path.join(obs_dir, ifg) for ifg in parse_namelist(ifg_file_list)]
+    rasters = [Ifg(output_tiff_filename(f, obs_dir)) for f in ifg_paths]
+
+    for r in rasters:
+        if not r.is_open:
+            r.open(readonly=True)
+
+    # extents = xmin, ymin, xmax, ymax
+    epoch_list = get_epochs(rasters)[0]
+    n_epochs = len(epoch_list.dates)
+    max_span = max(epoch_list.spans)
+
+    for r in rasters:
+        if not r.is_open:
+            r.close()
+
+    return n_epochs, max_span
+
+def _get_prepifg_info(ifg_file_list: str, obs_dir: str, pars: Dict) -> Tuple:
+    """
+    Retrives spatial information from prepifg interferograms (images that
+    have been cropped and multilooked).
+
+    Args:
+        ifg_file_list: Path to file containing list of interferogram file names.
+        obs_dir: Path to observations directory.
+
+    Returns:
+    """
+    from pyrate.core.shared import Ifg
+
+    base_paths = [os.path.join(obs_dir, ifg) for ifg in parse_namelist(ifg_file_list)]
+    ifg_paths = get_dest_paths(base_paths, pars[IFG_CROP_OPT], pars, pars[IFG_LKSX])
+
+    # This function assumes the stack of interferograms now have the same
+    # bounds and resolution after going through prepifg.
+    raster = Ifg(ifg_paths[0])
+    if not raster.is_open:
+        raster.open(readonly=True)
+
+    n_cols = raster.ncols
+    n_rows = raster.nrows
+    extents = raster.x_first, raster.y_first, raster.x_last, raster.y_last
+    transform = raster.dataset.GetGeoTransform()
+
+    raster.close()
+
+    return extents, n_cols, n_rows, transform
+
+def _get_fullres_info(ifg_file_list: str, obs_dir: str, crop_opts: Tuple) -> Tuple:
+    """
+    Retrieves spatial information from the provided interferograms.
     Requires the interferograms to exist in geotiff format.
 
     Args:
         ifg_file_list: Path to file containing list of interferogram file names.
         obs_dir: Path to observations directory.
-        crop_opts: Crop options from parameters.
 
     Returns:
         Tuple containing extents (xmin, ymin, xmax, ymax), number of pixel
         columns, number of pixel rows, number of unique epochs and maximum
         time span of the data.
     """
+    from pyrate.core.prepifg_helper import _min_bounds, _get_extents
     from pyrate.core.shared import Ifg, output_tiff_filename
-    from pyrate.core.prepifg_helper import _get_extents, _min_bounds
-    from pyrate.core.algorithm import get_epochs
+
     ifg_paths = [os.path.join(obs_dir, ifg) for ifg in parse_namelist(ifg_file_list)]
     rasters = [Ifg(output_tiff_filename(f, obs_dir)) for f in ifg_paths]
 
     for r in rasters:
         if not r.is_open:
-            r.open()
+            r.open(readonly=True)
 
     # extents = xmin, ymin, xmax, ymax
-    extents = _get_extents(rasters, crop_opts[0], crop_opts[1])
     min_extents = _min_bounds(rasters)
-    epoch_list = get_epochs(rasters)[0]
-    n_epochs = len(epoch_list.dates)
-    max_span = max(epoch_list.spans)
-    # Assuming resolutions have been verified to be the same.
+    post_crop_extents = \
+        _get_extents(rasters, crop_opts[0], user_exts=crop_opts[1])
     x_step = rasters[0].x_step
     y_step = rasters[0].y_step
-
     # Get the pixel bounds. Ifg/Raster objects do have 'ncols'/'nrows' 
     # properties, but we'll calculate it off the extents we got above
     # because these take into account the chosen cropping option (until
     # the stack of interferograms is cropped it's not known what the 
     # pixel dimensions will be).
-    n_cols = abs(int(abs(extents[0] - extents[2]) / x_step))
-    n_rows = abs(int(abs(extents[1] - extents[3]) / y_step))
+    n_cols = abs(int(abs(post_crop_extents[0] - post_crop_extents[2]) / x_step))
+    n_rows = abs(int(abs(post_crop_extents[1] - post_crop_extents[3]) / y_step))
 
-    # @Sheece: selecting a transform form a single raster will cause bugs
-    # at some point. Refer to the comment above - the rasters might be of
-    # different extents. Depending on the cropping option the user selects,
-    # there's no guarantee the transform of the first raster will be the
-    # transform of the cropped stack of intergerograms which will make 
-    # the conversions incorrect.
-    transform = rasters[0].dataset.GetGeoTransform()
+    for r in rasters:
+        r.close()
 
-    return extents, min_extents, n_cols, n_rows, n_epochs, max_span, transform
+    return min_extents, n_cols, n_rows
 
 def _crop_opts(params: Dict) -> Tuple:
     """

@@ -22,23 +22,18 @@ import argparse
 from argparse import RawTextHelpFormatter
 from pyrate.core import config as cf
 from pyrate import (conv2tif, prepifg, process, merge)
+from pyrate import CONV2TIF, PREPIFG, PROCESS, MERGE # Step names
 from pyrate import __version__
 from pyrate.core import pyratelog
 
 log = logging.getLogger(__name__)
-
-# Step names, used here and in config.py
-CONV2TIF = 'conv2tif' # legacy name: converttogeotiff
-PREPIFG = 'prepifg'
-PROCESS = 'process'
-MERGE = 'merge' # legacy name: postprocess
 
 def converttogeotiff_handler(config_file):
     """
     Convert interferograms to geotiff.
     """
     config_file = os.path.abspath(config_file)
-    params = cf.get_config_params(config_file, requires_tif=False)
+    params = cf.get_config_params(config_file, step=CONV2TIF)
     conv2tif.main(params)
 
 
@@ -47,7 +42,7 @@ def prepifg_handler(config_file):
     Perform multilooking and cropping on geotiffs.
     """
     config_file = os.path.abspath(config_file)
-    params = cf.get_config_params(config_file, requires_tif=True)
+    params = cf.get_config_params(config_file, step=PREPIFG)
     prepifg.main(params)
 
 
@@ -56,7 +51,7 @@ def process_handler(config_file, rows, cols):
     Time series and linear rate computation.
     """
     config_file = os.path.abspath(config_file)
-    _, dest_paths, params = cf.get_ifg_paths(config_file, requires_tif=True)
+    _, dest_paths, params = cf.get_ifg_paths(config_file, step=PROCESS)
     process.process_ifgs(sorted(dest_paths), params, rows, cols)
 
 
@@ -65,7 +60,7 @@ def postprocess_handler(config_file, rows, cols):
     Reassemble computed tiles and save as geotiffs.
     """
     config_file = os.path.abspath(config_file)
-    _, _, params = cf.get_ifg_paths(config_file, requires_tif=True)
+    _, _, params = cf.get_ifg_paths(config_file, step=MERGE)
     merge.main(params, rows, cols)
 
 CLI_DESC = """
@@ -149,7 +144,7 @@ def main():
                                       "previously in main workflow."))
         
     parser_process.add_argument(*verbosity_args, **verbosity_kwargs)
-
+ 
     # create the parser for the "merge" command
     parser_postprocess = subparsers.add_parser('merge',
                                            help=("Reassemble computed tiles "

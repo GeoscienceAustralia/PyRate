@@ -12,6 +12,8 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
+#
+# pylint: disable=trailing-whitespace, missing-docstring
 '''
 This Python module contains tests for the config.py PyRate module.
 '''
@@ -30,9 +32,14 @@ from pyrate.core import config
 from pyrate.core.config import (
     validate_parameters, validate_optional_parameters, validate_epochs,
     validate_obs_thresholds, validate_ifgs, validate_gamma_headers,
-    validate_coherence_files, validate_tifs_exist, validate_pixel_parameters,
-    validate_minimum_epochs, validate_epoch_thresholds, validate_epoch_cutoff,
-    validate_extent_parameters, validate_reference_pixel_search_windows)
+    validate_coherence_files, validate_tifs_exist, validate_minimum_epochs, 
+    validate_epoch_thresholds, validate_epoch_cutoff,
+    validate_crop_parameters, validate_slpf_cutoff,
+    validate_reference_pixel_search_windows,
+    validate_reference_pixel_params,
+    validate_multilook_parameters,
+    validate_prepifg_tifs_exist,
+    _get_temporal_info, _get_prepifg_info, _get_fullres_info)
 from pyrate.core.config import (
     SIXTEEN_DIGIT_EPOCH_PAIR,
     TWELVE_DIGIT_EPOCH_PAIR,
@@ -453,7 +460,8 @@ class TestConfigValidation(unittest.TestCase):
         with pytest.raises(ConfigException):
             validate_obs_thresholds(self.params[IFG_FILE_LIST], self.params)
 
-class TestConfigValidationWithGeotiffs(unittest.TestCase):
+
+class TestConfigValidationWithFullResGeotiffs(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         from pyrate import conv2tif
@@ -466,14 +474,13 @@ class TestConfigValidationWithGeotiffs(unittest.TestCase):
         
     def setUp(self):
         self.params = config.get_config_params(TEST_CONF_GAMMA,
-                                               requires_tif=True)
+                                               'prepifg')
         self.dummy_dir = '/i/should/not/exist'
         crop_opts = config._crop_opts(self.params)
-        self.extents, self.min_extents, self.n_cols, self.n_rows, self.n_epochs, \
-        self.max_span, self.transform = \
-            config._get_ifg_information(self.params[IFG_FILE_LIST],
-                                        self.params[OBS_DIR],
-                                        crop_opts)
+        self.min_extents, self.n_cols, self.n_rows = \
+            config._get_fullres_info(self.params[IFG_FILE_LIST],
+                                     self.params[OBS_DIR],
+                                     crop_opts)
         if os.path.exists(self.dummy_dir):
             raise IOError("{dummy_dir} needs to not exist for test purposes.")
     
@@ -482,14 +489,95 @@ class TestConfigValidationWithGeotiffs(unittest.TestCase):
         with pytest.raises(ConfigException):
             validate_tifs_exist(self.params[IFG_FILE_LIST], self.dummy_dir)
 
+    def test_validate_ifg_crop_coordinates(self):
+        self.params[IFG_CROP_OPT] = 3
+        self.params[IFG_XFIRST] = 150.0
+        with pytest.raises(ConfigException):
+            validate_crop_parameters(self.min_extents, self.params)
+        self.params[IFG_XFIRST] = 150.92
+
+        self.params[IFG_XLAST] = 150.95
+        with pytest.raises(ConfigException):
+            validate_crop_parameters(self.min_extents, self.params)
+        self.params[IFG_XLAST] = 150.94
+
+        self.params[IFG_YFIRST] = -34.16
+        with pytest.raises(ConfigException):
+            validate_crop_parameters(self.min_extents, self.params)
+        self.params[IFG_YFIRST] = -34.18
+
+        self.params[IFG_YLAST] = -34.24
+        with pytest.raises(ConfigException):
+            validate_crop_parameters(self.min_extents, self.params)
+
+    def test_validate_ifg_multilook(self):
+        self.params[IFG_LKSX] = 48
+        self.params[IFG_LKSY] = 73
+        with pytest.raises(ConfigException):
+            validate_multilook_parameters(self.n_cols, self.n_rows,
+                                          IFG_LKSX, IFG_LKSY, self.params)
+    
+
+class TestConfigValidationWithPrepifgGeotiffs(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        from pyrate import conv2tif, prepifg
+        cls.params = config.get_config_params(TEST_CONF_GAMMA)
+        conv2tif.main(cls.params)
+        prepifg.main(cls.params)
+    
+    @classmethod
+    def tearDownClass(cls):
+        common.remove_tifs(cls.params[OBS_DIR])
+        common.remove_tifs(cls.params[OUT_DIR])
+        
+    def setUp(self):
+        self.params = config.get_config_params(TEST_CONF_GAMMA,
+                                               'process')
+        self.dummy_dir = '/i/should/not/exist'
+        crop_opts = config._crop_opts(self.params)
+        self.extents, self.n_cols, self.n_rows, _ = \
+            _get_prepifg_info(self.params[IFG_FILE_LIST], self.params[OBS_DIR], 
+                              self.params)
+        self.n_epochs, self.max_span = \
+            _get_temporal_info(self.params[IFG_FILE_LIST], self.params[OBS_DIR])
+        if os.path.exists(self.dummy_dir):
+            raise IOError("{dummy_dir} needs to not exist for test purposes.")
+
+    def test_validate_prepifg_tifs_exist(self):
+        validate_prepifg_tifs_exist(self.params[IFG_FILE_LIST], 
+                                    self.params[OBS_DIR],
+                                    self.params)
+        with pytest.raises(ConfigException):
+            self.params[IFG_LKSX] = 100
+            validate_prepifg_tifs_exist(self.params[IFG_FILE_LIST],
+                                        self.params[OBS_DIR],
+                                        self.params)
+
+    def test_validate_epoch_thresholds(self):
+        with pytest.raises(ConfigException):
+            validate_minimum_epochs(self.n_epochs, 50)
+        
+        validate_epoch_thresholds(self.n_epochs, self.params)
+        self.params[LR_PTHRESH] = 20
+        with pytest.raises(ConfigException):
+            validate_epoch_thresholds(self.n_epochs, self.params)
+        self.params[LR_PTHRESH] = 5
+        
+        self.params[SLPF_CUTOFF] = 1000
+        with pytest.raises(ConfigException):
+            validate_epoch_cutoff(self.max_span, SLPF_CUTOFF, self.params)
+        
     def test_validate_refx_refy_parameters(self):
         self.params[REFX] = 20
         self.params[REFY] = 20
-        validate_pixel_parameters(self.n_cols, self.n_rows, self.params)
+        validate_reference_pixel_params(self.n_cols, self.n_rows, 
+                                        self.params[REFX], self.params[REFY])
         self.params[REFX] = 48
         self.params[REFY] = 73
         with pytest.raises(ConfigException):
-            validate_pixel_parameters(self.n_cols, self.n_rows, self.params)
+            validate_reference_pixel_params(self.n_cols, self.n_rows, 
+                                            self.params[REFX], self.params[REFY])
 
     def test_validate_search_windows(self):
         self.params[REF_CHIP_SIZE] = 21
@@ -505,56 +593,19 @@ class TestConfigValidationWithGeotiffs(unittest.TestCase):
         self.params[REFNY] = 4
         with pytest.raises(ConfigException):
             validate_reference_pixel_search_windows(self.n_cols, self.n_rows, self.params)
-
+    
     def test_validate_multilook_parameters(self):
-        self.params[IFG_LKSX] = 48
-        self.params[IFG_LKSY] = 73
-        with pytest.raises(ConfigException):
-            validate_pixel_parameters(self.n_cols, self.n_rows, self.params)
-        
-        self.params[IFG_LKSX] = 1
-        self.params[IFG_LKSY] = 1
         self.params[ORBITAL_FIT_LOOKS_X] = 48
         self.params[ORBITAL_FIT_LOOKS_Y] = 73
         with pytest.raises(ConfigException):
-            validate_pixel_parameters(self.n_cols, self.n_rows, self.params)       
+            validate_multilook_parameters(self.n_cols, self.n_rows,
+                ORBITAL_FIT_LOOKS_X, ORBITAL_FIT_LOOKS_Y, self.params)       
 
-    def test_validate_ifg_crop_coordinates(self):
-        self.params[IFG_CROP_OPT] = 3
-        self.params[IFG_XFIRST] = 150.0
+    def test_validate_slpf_cutoff(self):
+        self.params[SLPF_CUTOFF] = 9999
         with pytest.raises(ConfigException):
-            validate_extent_parameters(self.extents, self.min_extents, self.params)
-        self.params[IFG_XFIRST] = 150.92
+            validate_slpf_cutoff(self.extents, self.params)
 
-        self.params[IFG_XLAST] = 150.95
-        with pytest.raises(ConfigException):
-            validate_extent_parameters(self.extents, self.min_extents, self.params)
-        self.params[IFG_XLAST] = 150.94
-
-        self.params[IFG_YFIRST] = -34.16
-        with pytest.raises(ConfigException):
-            validate_extent_parameters(self.extents, self.min_extents, self.params)
-        self.params[IFG_YFIRST] = -34.18
-
-        self.params[IFG_YLAST] = -34.24
-        with pytest.raises(ConfigException):
-            validate_extent_parameters(self.extents, self.min_extents, self.params)
-    
-    def test_validate_epoch_thresholds(self):
-        with pytest.raises(ConfigException):
-            validate_minimum_epochs(self.n_epochs, 50)
-        
-        validate_epoch_thresholds(self.n_epochs, self.params)
-        self.params[LR_PTHRESH] = 20
-        with pytest.raises(ConfigException):
-            validate_epoch_thresholds(self.n_epochs, self.params)
-        self.params[LR_PTHRESH] = 5
-        
-        self.params[SLPF_CUTOFF] = 1000
-        with pytest.raises(ConfigException):
-            validate_epoch_cutoff(self.max_span, SLPF_CUTOFF, self.params)
-        
-        
 
 class ConfigTest(unittest.TestCase):
 
@@ -572,8 +623,8 @@ class ConfigTest(unittest.TestCase):
         conf_path = join(SML_TEST_CONF, 'pyrate1.conf')
         params = config.get_config_params(conf_path)
 
-        assert params[config.REFX] == 181
-        assert params[config.REFY] == 91
+        assert params[REFX] == -1.
+        assert params[REFY] == -1.
 
     @staticmethod
     def test_read_param_file_missing_value():
@@ -581,8 +632,8 @@ class ConfigTest(unittest.TestCase):
         conf_path = join(SML_TEST_CONF, 'pyrate2.conf')
         params = config.get_config_params(conf_path)
 
-        assert params[config.REFX] == 181
-        assert params[config.REFY] == 91
+        assert params[REFX] == -1.
+        assert params[REFY] == -1.
 
     @staticmethod
     def test_parse_namelist():

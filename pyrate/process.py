@@ -130,7 +130,7 @@ def _ref_pixel_calc(ifg_paths, params):
     ifg = Ifg(ifg_paths[0])
     ifg.open(readonly=True)
 
-    if refx < -180 or refx > 180 or refy < -90 or refy > 90:  # if either zero or negative
+    if refx == -1 or refy == -1: # these are the default refx/refy values
         log.info('Searching for best reference pixel location')
 
         half_patch_size, thresh, grid = refpixel.ref_pixel_setup(ifg_paths,
