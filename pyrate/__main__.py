@@ -22,16 +22,11 @@ import argparse
 from argparse import RawTextHelpFormatter
 from pyrate.core import config as cf
 from pyrate import (conv2tif, prepifg, process, merge)
+from pyrate import CONV2TIF, PREPIFG, PROCESS, MERGE # Step names
 from pyrate import __version__
 from pyrate.core import pyratelog
 
 log = logging.getLogger(__name__)
-
-# Step names, used here and in config.py
-CONV2TIF = 'conv2tif' # legacy name: converttogeotiff
-PREPIFG = 'prepifg'
-PROCESS = 'process'
-MERGE = 'merge' # legacy name: postprocess
 
 def converttogeotiff_handler(config_file):
     """
