@@ -555,7 +555,7 @@ def get_ifg_paths(config_file, step=CONV2TIF):
     :rtype: list
     :rtype: dict
     """
-    params = get_config_params(config_file, step)
+    params = get_config_params(config_file, step=step)
     ifg_file_list = params.get(IFG_FILE_LIST)
 
     xlks, _, crop = transform_params(params)
@@ -915,7 +915,6 @@ def validate_parameters(pars: Dict, step: str=CONV2TIF):
         # Convert refx/refy from lat/long to pixel.
         pars[REFX], pars[REFY] = \
             convert_geographic_coordinate_to_pixel_value(pars[REFX], pars[REFY], transform)
-        
         validate_reference_pixel_params(n_cols, n_rows, pars[REFX], pars[REFY])
         validate_reference_pixel_search_windows(n_cols, n_rows, pars)
         validate_multilook_parameters(n_cols, n_rows, 
@@ -1357,9 +1356,9 @@ def validate_multilook_parameters(cols: int, rows: int,
 
     def _validate_mlook(var_name, dim_val, dim_str):
         if pars[var_name] > dim_val:
-            return (f"'{var_name}': the multilook factor ({pars[var_name]}) "
+            return [f"'{var_name}': the multilook factor ({pars[var_name]}) "
                     f"must be less than the number of pixels on the {dim_str} "
-                    f"axis ({dim_val}).")
+                    f"axis ({dim_val})."]
         return []
 
     errors.extend(_validate_mlook(xlks_name, cols, 'x'))
