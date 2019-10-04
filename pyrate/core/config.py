@@ -871,7 +871,11 @@ def validate_parameters(pars: Dict, requires_tif: bool=False):
         pars[REFX], pars[REFY] = \
             convert_geographic_coordinate_to_pixel_value(pars[REFX], pars[REFY], transform)
 
-        validate_pixel_parameters(n_cols, n_rows, pars)
+        validate_reference_pixel_params(looked_cols, looked_rows, 
+                                        pars[REFX], pars[REFY])
+        validate_multilook_parameters(looked_cols, looked_rows, 
+                                      ORBITAL_FIT_LOOKS_X, ORBITAL_FIT_LOOKS_Y, 
+                                      pars)
         validate_reference_pixel_search_windows(n_cols, n_rows, pars)
         validate_extent_parameters(extents, min_extents, pars)
         validate_minimum_epochs(n_epochs, MINIMUM_NUMBER_EPOCHS)
@@ -1241,17 +1245,19 @@ def validate_reference_pixel_params(looked_cols: int, looked_rows: int,
     
     return _raise_errors(errors)
 
-def validate_multilook_parameters(dimension: int, 
-                                  looks_factor: int, 
-                                  var_name: str) -> Optional[bool]:
+def validate_multilook_parameters(cols: int, rows: int, 
+                                 xlks_name: str, ylks_name: str, 
+                                 pars: Dict) -> Optional[bool]:
     """
     Validate multilook parameters by ensuring resulting resolution will be
     at least 1 pixel and less than the current resolution.
 
     Args:
-        dimension: The width or height in pixels of the scene.
-        looks_factor: The value of the multilooking factor.
-        var_name: The name of the multilooking parameter (for error message).
+        cols: Number of pixel columns (X) in the scene.
+        rows: Number of pixel rows (Y) in the scene.
+        xlks_name: Key for looking up the X looks factor.
+        ylks_name: Key for looking up the Y looks factor.
+        pars: Parameters dictionary.
 
     Returns:
         True if validation is successful.
@@ -1259,10 +1265,17 @@ def validate_multilook_parameters(dimension: int,
     Raises:
         ConfigException: If validation fails.
     """
-    if looks_factor > dimension:
-        return _raise_errors(f"'{var_name}': the multilook factor ({looks_factor}) "
-                             f"must be less than the pixel dimension "
-                             f"({looks_factor}) of the image.")
+    errors = []
+
+    def _validate_mlook(var_name, dim_val, dim_str):
+        if pars[var_name] > dim_val:
+            return (f"'{var_name}': the multilook factor ({pars[var_name]}) "
+                    f"must be less than the number of pixels on the {dim_str} "
+                    f"axis ({dim_val}).")
+
+    errors.extend(_validate_mlook(xlks_name, cols, 'x'))
+    errors.extend(_validate_mlook(ylks_name, rows, 'y'))
+    return _raise_errors(errors)
 
 def validate_reference_pixel_search_windows(n_cols: int, n_rows: int, 
                                             pars: Dict) -> Optional[bool]:
