@@ -33,7 +33,6 @@ import logging
 
 from pyrate.core.ifgconstants import YEARS_PER_DAY
 from pyrate import CONV2TIF, PREPIFG, PROCESS, MERGE
-from pyrate.core.shared import Ifg, output_tiff_filename
 
 _logger = logging.getLogger(__name__)
 
@@ -1454,6 +1453,7 @@ def _get_temporal_info(ifg_file_list: str, obs_dir: str) -> Tuple:
         Tuple containing the number of unique epochs and the maximum timespan.
     """
     from pyrate.core.algorithm import get_epochs
+    from pyrate.core.shared import Ifg, output_tiff_filename
 
     ifg_paths = \
         [os.path.join(obs_dir, ifg) for ifg in parse_namelist(ifg_file_list)]
@@ -1485,6 +1485,8 @@ def _get_prepifg_info(ifg_file_list: str, obs_dir: str, pars: Dict) -> Tuple:
 
     Returns:
     """
+    from pyrate.core.shared import Ifg
+
     base_paths = [os.path.join(obs_dir, ifg) for ifg in parse_namelist(ifg_file_list)]
     ifg_paths = get_dest_paths(base_paths, pars[IFG_CROP_OPT], pars, pars[IFG_LKSX])
 
@@ -1518,6 +1520,7 @@ def _get_fullres_info(ifg_file_list: str, obs_dir: str, crop_opts: Tuple) -> Tup
         time span of the data.
     """
     from pyrate.core.prepifg_helper import _min_bounds, _get_extents
+    from pyrate.core.shared import Ifg, output_tiff_filename
 
     ifg_paths = [os.path.join(obs_dir, ifg) for ifg in parse_namelist(ifg_file_list)]
     rasters = [Ifg(output_tiff_filename(f, obs_dir)) for f in ifg_paths]
