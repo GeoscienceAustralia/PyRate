@@ -601,6 +601,11 @@ class TestConfigValidationWithPrepifgGeotiffs(unittest.TestCase):
             validate_multilook_parameters(self.n_cols, self.n_rows,
                 ORBITAL_FIT_LOOKS_X, ORBITAL_FIT_LOOKS_Y, self.params)       
 
+    def test_validate_slpf_cutoff(self):
+        self.params[SLPF_CUTOFF] = 9999
+        with pytest.raises(ConfigException):
+            validate_slpf_cutoff(self.extents, self.params)
+
 
 class ConfigTest(unittest.TestCase):
 
