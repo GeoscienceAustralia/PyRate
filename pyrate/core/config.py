@@ -32,6 +32,7 @@ import itertools
 import logging
 
 from pyrate.core.ifgconstants import YEARS_PER_DAY
+from pyrate import CONV2TIF, PREPIFG, PROCESS, MERGE
 
 _logger = logging.getLogger(__name__)
 
@@ -275,7 +276,7 @@ DEFAULT_TO_OBS_DIR = [SLC_DIR, COH_FILE_DIR]
 
 INT_KEYS = [APS_CORRECTION, APS_METHOD]
 
-def get_config_params(path: str, validate: bool=True, requires_tif: bool=False) -> Dict:
+def get_config_params(path: str, validate: bool=True, step: str=CONV2TIF) -> Dict:
     """
     Reads the parameters file provided by the user and converts it into
     a dictionary.
@@ -297,12 +298,12 @@ def get_config_params(path: str, validate: bool=True, requires_tif: bool=False) 
                     # create expanded line
                     line = line[:pos] + os.environ['HOME'] + line[(pos+1):]
             txt += line
-    params = _parse_conf_file(txt, validate, requires_tif)
+    params = _parse_conf_file(txt, validate, step)
     params[TMPDIR] = os.path.join(os.path.abspath(params[OUT_DIR]), 'tmpdir')
 
     return params
 
-def _parse_conf_file(content, validate: bool=True, requires_tif: bool=False) -> Dict:
+def _parse_conf_file(content, validate: bool=True, step: str=CONV2TIF) -> Dict:
     """
     Converts the parameters from their text form into a dictionary.
     
@@ -337,7 +338,7 @@ def _parse_conf_file(content, validate: bool=True, requires_tif: bool=False) -> 
     if not parameters:
         raise ConfigException('Cannot parse any parameters from config file')
 
-    return _parse_pars(parameters, validate, requires_tif)
+    return _parse_pars(parameters, validate, step)
 
 def _handle_extra_parameters(params):
     """
@@ -360,7 +361,7 @@ def _handle_extra_parameters(params):
 
     return params
 
-def _parse_pars(pars, validate: bool=True, requires_tif: bool=False) -> Dict:
+def _parse_pars(pars, validate: bool=True, step: str=CONV2TIF) -> Dict:
     """
     Takes dictionary of parameters, converting values to required type
     and providing defaults for missing values.
@@ -393,7 +394,7 @@ def _parse_pars(pars, validate: bool=True, requires_tif: bool=False) -> Dict:
             pars[p] = pars[OBS_DIR]
 
     if validate:
-        validate_parameters(pars, requires_tif)
+        validate_parameters(pars, step)
     return pars
 
 
@@ -540,7 +541,7 @@ def get_dest_paths(base_paths, crop, params, looks):
 
     return [os.path.join(params[OUT_DIR], p) for p in dest_mlooked_ifgs]
 
-def get_ifg_paths(config_file, requires_tif=False):
+def get_ifg_paths(config_file, step=CONV2TIF):
     """
     Read the configuration file, extract interferogram file list and determine
     input and output interferogram path names.
@@ -554,7 +555,7 @@ def get_ifg_paths(config_file, requires_tif=False):
     :rtype: list
     :rtype: dict
     """
-    params = get_config_params(config_file, requires_tif=requires_tif)
+    params = get_config_params(config_file, step)
     ifg_file_list = params.get(IFG_FILE_LIST)
 
     xlks, _, crop = transform_params(params)
@@ -833,15 +834,16 @@ def convert_geographic_coordinate_to_pixel_value(refpx, refpy, transform):
 
     return int(refpx), int(refpy)
 
-def validate_parameters(pars: Dict, requires_tif: bool=False):
+def validate_parameters(pars: Dict, step: str=CONV2TIF):
     """
     Main validation function. Calls validation subfunctions and gathers
     some required variables for performing validation.
 
     Args:
         pars: The parameters dictionary.
-        requires_tif: Whether the currently used workflow requires
-            interferograms in tif format.
+        step: The current step of the PyRate workflow. Determines what 
+            parameters to validate and what resources are available in
+            terms of geotiffs.
 
     Raises:
         ConfigException: If errors occur during parameter validation.
@@ -849,6 +851,7 @@ def validate_parameters(pars: Dict, requires_tif: bool=False):
     is_GAMMA = pars[PROCESSOR] == GAMMA
     ifl = pars[IFG_FILE_LIST]
 
+    # TODO: Call bounds checking functions based on the current step
     validate_compulsory_parameters(pars)
     validate_optional_parameters(pars)
 
@@ -859,7 +862,10 @@ def validate_parameters(pars: Dict, requires_tif: bool=False):
 
     validate_ifgs(ifl, pars[OBS_DIR])
 
-    extents, min_extents, n_cols, n_rows, n_epochs, max_span, transform = \
+    if step == PREPIFG: 
+        # Get stack minimum bounds and full res rows/cols
+        # Verify
+        extents, min_extents, n_cols, n_rows, n_epochs, max_span, transform = \
         None, None, None, None, None, None, None
     if requires_tif:
         validate_tifs_exist(pars[IFG_FILE_LIST], pars[OBS_DIR])
@@ -1157,6 +1163,44 @@ def validate_epoch_thresholds(n_epochs: int, pars: Dict) -> Optional[bool]:
                       f"({n_epochs}) to satisfy threshold ({thresh}).")
 
     return _raise_errors(errors)
+
+def validate_crop_parameters(min_extents: Tuple[float, float, float, float],
+                             pars: Dict) -> Optional[bool]:
+    """
+    Validates IFG crop parameters by ensuring user provided crop coordinates
+    are within the *minimum* (intersecting) bounds of the interferogram stack.
+    
+    Args:
+        min_extents: The minimum extents of the interferogram stack. The
+            crop coordinates must be within these extents.
+        pars: Parameters dictionary.
+
+    Returns:
+        True if validation is successful.
+
+    Raises:
+        ConfigException: If validation fails.
+    """
+    errors = []
+    min_xmin, min_ymin, min_xmax, min_ymax = min_extents
+    x_dim_string = f"(xmin: {min_xmin}, xmax: {min_xmax})"
+    y_dim_string = f"(ymin: {min_ymin}, ymax: {min_ymax})"
+
+    # Check crop coordinates within scene.
+    def _validate_crop_coord(var_name, dim_min, dim_max, dim_string):
+        if not dim_min < pars[var_name] < dim_max:
+            return [f"'{var_name}': crop coordinate ({pars[var_name]}) "
+                    f"is outside bounds of scene {dim_string}."]
+
+        return []
+    
+    errors.extend(_validate_crop_coord(IFG_XFIRST, min_xmin, min_xmax, x_dim_string))
+    errors.extend(_validate_crop_coord(IFG_YFIRST, min_ymin, min_ymax, y_dim_string))
+    errors.extend(_validate_crop_coord(IFG_XLAST, min_xmin, min_xmax, x_dim_string))
+    errors.extend(_validate_crop_coord(IFG_YLAST, min_ymin, min_ymax, y_dim_string))
+    
+    return _raise_errors(errors)
+
 
 def validate_extent_parameters(extents: Tuple[float, float, float, float], 
                                min_extents: Tuple[float, float, float, float],
