@@ -284,8 +284,8 @@ def get_config_params(path: str, validate: bool=True, step: str=CONV2TIF) -> Dic
     Args:
         path: Absolute path to the parameters file.
         validate: Validate the parameters if True, otherwise skip validation.
-        requires_tif: True if the calling process requires interferograms
-            in geotiff format (performs additional validation).
+        step: The current step of the PyRate workflow.
+
     Returns:
        A dictionary of parameters. 
     """
@@ -821,7 +821,18 @@ _REFERENCE_PIXEL_VALIDATION = {
 """dict: basic validation functions for reference pixel search parameters."""
 
 def convert_geographic_coordinate_to_pixel_value(refpx, refpy, transform):
+    """
+    Converts a lat/long coordinate to a pixel coordinate given the 
+    geotransform of the image.
 
+    Args:
+        refpx: The longitude of the coordinate.
+        refpx: The latitude of the coordinate.
+        transform: The geotransform array of the image.
+
+    Returns:
+        Tuple of refpx, refpy in pixel values.
+    """
     # transform = ifg.dataset.GetGeoTransform()
 
     xOrigin = transform[0]
@@ -1082,6 +1093,17 @@ def validate_prepifg_tifs_exist(
     """
     Validates that cropped and multilooked interferograms exist in geotiff
     format.
+
+    Args:
+        ifg_file_list: Path to file containing interfergram file names.
+        obs_dir: Path to observations directory.
+        pars: Parameters dictionary.
+
+    Returns:
+        True if all interferograms exist in geotiff format.
+
+    Raises:
+        ConfigException: If not all intergerograms exist in geotiff format.
     """
     errors = []
     base_paths = [os.path.join(obs_dir, ifg) for ifg in parse_namelist(ifg_file_list)]
