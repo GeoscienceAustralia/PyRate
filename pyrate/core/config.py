@@ -1321,17 +1321,17 @@ def validate_reference_pixel_params(looked_cols: int, looked_rows: int,
         ConfigException: If validation fails.
     """
     errors = []
-    x_dim_string = f"(xmin: 0, xmax: {looked_cols}"
-    y_dim_string = f"(ymin: 0, ymax: {looked_rows}"
+    x_dim_string = f"xmin: 0, xmax: {looked_cols}"
+    y_dim_string = f"ymin: 0, ymax: {looked_rows}"
 
     # Check reference pixel coordinates within scene.
     if refx != 0 and refy != 0:
         if not 0 < refx <= looked_cols:
-            errors.append(f"'{REFX}': reference pixel coodinate {refx} is "
+            errors.append(f"'{REFX}': reference pixel coordinate {refx} is "
                           f"outside bounds of scene ({x_dim_string}).")
 
         if not 0 < refy <= looked_rows:
-            errors.append(f"'{REFY}': reference pixel coodinate {refy} is "
+            errors.append(f"'{REFY}': reference pixel coordinate {refy} is "
                           f"outside bounds of scene ({y_dim_string}).")
     
     return _raise_errors(errors)
