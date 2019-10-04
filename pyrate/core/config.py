@@ -1360,6 +1360,7 @@ def validate_multilook_parameters(cols: int, rows: int,
             return (f"'{var_name}': the multilook factor ({pars[var_name]}) "
                     f"must be less than the number of pixels on the {dim_str} "
                     f"axis ({dim_val}).")
+        return []
 
     errors.extend(_validate_mlook(xlks_name, cols, 'x'))
     errors.extend(_validate_mlook(ylks_name, rows, 'y'))
