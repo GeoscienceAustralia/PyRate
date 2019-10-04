@@ -144,7 +144,7 @@ def main():
                                       "previously in main workflow."))
         
     parser_process.add_argument(*verbosity_args, **verbosity_kwargs)
-t 
+ 
     # create the parser for the "merge" command
     parser_postprocess = subparsers.add_parser('merge',
                                            help=("Reassemble computed tiles "
