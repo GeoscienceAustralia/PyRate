@@ -24,7 +24,7 @@ docs/_build/
 .cache/
 build/
 dist/
-out
+# out
 Py_Rate.egg-info
 
 # files generated during tests
