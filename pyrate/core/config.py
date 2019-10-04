@@ -220,8 +220,8 @@ PARAM_CONVERSION = {
     COH_MASK: (int, 0),
     COH_THRESH: (float, 0.1),
 
-    REFX: (float, 181),
-    REFY: (float, 91),
+    REFX: (float, -1.),
+    REFY: (float, -1.),
     REFNX: (int, 10),
     REFNY: (int, 10),
     REF_CHIP_SIZE: (int, 21),
@@ -912,12 +912,15 @@ def validate_parameters(pars: Dict, step: str=CONV2TIF):
         extents, n_cols, n_rows, transform = \
             _get_prepifg_info(ifl, pars[OBS_DIR], pars)
         
-        # Convert refx/refy from lat/long to pixel.
-        pars[REFX], pars[REFY] = \
-            convert_geographic_coordinate_to_pixel_value(pars[REFX], pars[REFY], transform)
+        # Convert refx/refy from lat/long to pixel and validate...
+        if pars[REFX] != -1. and pars[REFY] != -1.:
+            pars[REFX], pars[REFY] = \
+                convert_geographic_coordinate_to_pixel_value(pars[REFX], pars[REFY], transform)
+            validate_reference_pixel_params(n_cols, n_rows, pars[REFX], pars[REFY])
+        # otherwise we need to search for the pixel so validate the search paramters.
+        else:
+            validate_reference_pixel_search_windows(n_cols, n_rows, pars)
 
-        validate_reference_pixel_params(n_cols, n_rows, pars[REFX], pars[REFY])
-        validate_reference_pixel_search_windows(n_cols, n_rows, pars)
         validate_multilook_parameters(n_cols, n_rows, 
                                       ORBITAL_FIT_LOOKS_X, ORBITAL_FIT_LOOKS_Y, 
                                       pars)
@@ -1111,11 +1114,11 @@ def validate_prepifg_tifs_exist(
     for path in ifg_paths:
         if not os.path.exists(path):
             fname = os.path.split(path)[1]
-            errors.append("'{IFG_FILE_LIST}': interferogram '{fname}' is "
-                          "required as a cropped and subsampled geotiff but "
-                          "could not be found. Make sure 'prepifg' has been "
-                          "run and ensure the '{IFG_LKSX}' and '{IFG_CROP_OPT}' "
-                          "parameters have not been changed since 'prepifg' was run.")
+            errors.append(f"'{IFG_FILE_LIST}': interferogram '{fname}' is "
+                          f"required as a cropped and subsampled geotiff but "
+                          f"could not be found. Make sure 'prepifg' has been "
+                          f"run and ensure the '{IFG_LKSX}' and '{IFG_CROP_OPT}' "
+                          f"parameters have not been changed since 'prepifg' was run.")
 
     return _raise_errors(errors)
 
