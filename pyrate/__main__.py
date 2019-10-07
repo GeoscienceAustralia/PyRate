@@ -132,12 +132,12 @@ def main():
                                 help="Pass configuration file", 
                                 required=True)
 
-    parser_process.add_argument('-r', '--rows', type=int, required=True,
+    parser_process.add_argument('-r', '--rows', type=int, required=False, default=1,
                                 help=("divide ifgs into this many rows. Must "
                                       "be same as number of rows used "
                                       "previously in main workflow."))
 
-    parser_process.add_argument('-c', '--cols', type=int, required=True,
+    parser_process.add_argument('-c', '--cols', type=int, required=False, default=1,
                                 help=("divide ifgs into this many columns. "
                                       "Must be same as number of cols used "
                                       "previously in main workflow."))
@@ -152,14 +152,14 @@ def main():
 
     parser_postprocess.add_argument('-f', '--config_file', action="store", 
                                 type=str, default=None,
-                                help="Pass configuration file", required=True)
+                                help="Pass configuration file", required=False)
 
-    parser_postprocess.add_argument('-r', '--rows', type=int, required=True,
+    parser_postprocess.add_argument('-r', '--rows', type=int, required=False, default=1,
                                 help=("divide ifgs into this many rows. Must "
                                       "be same as number of rows used "
                                       "previously in main workflow."))
 
-    parser_postprocess.add_argument('-c', '--cols', type=int, required=True,
+    parser_postprocess.add_argument('-c', '--cols', type=int, required=False, default=1,
                                 help=("divide ifgs into this many columns. "
                                       "Must be same as number of cols used "
                                       "previously in main workflow."))
