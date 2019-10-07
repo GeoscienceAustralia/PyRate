@@ -375,7 +375,10 @@ def _parse_pars(pars, validate: bool=True, step: str=CONV2TIF) -> Dict:
     for k in PARAM_CONVERSION:
         if pars.get(k) is None:
             pars[k] = PARAM_CONVERSION[k][1]
-            _logger.warning(f"No value found for parameter '{k}'. Providing "f"default value {pars[k]}.")
+            if k in [REFX, REFY]:
+                _logger.warning(f"No value found for parameter '{k}'. PyRate will search for optimal values.")
+            else:
+                _logger.warning(f"No value found for parameter '{k}'. Providing "f"default value {pars[k]}.")
         else:
             conversion_func = PARAM_CONVERSION[k][0]
             if conversion_func:
