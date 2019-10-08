@@ -30,7 +30,7 @@ import pyrate.core.orbital
 import tests.common
 from pyrate.core import shared, ref_phs_est as rpe, config as cf, covariance as vcm_module
 from pyrate.core.linrate import linear_rate
-from pyrate import process, prepifg, converttogeotiff
+from pyrate import process, prepifg, converttogeotif
 from tests.common import (SML_TEST_DIR, prepare_ifgs_without_phase,
     TEST_CONF_ROIPAC, pre_prepare_ifgs, remove_tifs)
 
@@ -85,7 +85,7 @@ class LegacyEqualityTest(unittest.TestCase):
         params[cf.OUT_DIR] = cls.temp_out_dir
         params[cf.TMPDIR] = os.path.join(params[cf.OUT_DIR], cf.TMPDIR)
         shared.mkdir_p(params[cf.TMPDIR])
-        converttogeotiff.main(params)
+        converttogeotif.main(params)
         prepifg.main(params)
 
         params[cf.REF_EST_METHOD] = 2

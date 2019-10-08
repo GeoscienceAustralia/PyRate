@@ -21,7 +21,7 @@ import logging
 import argparse
 from argparse import RawTextHelpFormatter
 from pyrate.core import config as cf
-from pyrate import (converttogeotiff, prepifg, process, postprocess)
+from pyrate import (converttogeotif, prepifg, process, postprocess)
 from pyrate import CONV2TIF, PREPIFG, PROCESS, MERGE # Step names
 from pyrate.core import pyratelog
 
@@ -33,7 +33,7 @@ def converttogeotiff_handler(config_file):
     """
     config_file = os.path.abspath(config_file)
     params = cf.get_config_params(config_file, step=CONV2TIF)
-    converttogeotiff.main(params)
+    converttogeotif.main(params)
 
 
 def prepifg_handler(config_file):
@@ -96,7 +96,7 @@ def main():
 
     # create the parser for the "converttogeotiff" command
     parser_converttogeotiff = \
-        subparsers.add_parser('converttogeotiff',
+        subparsers.add_parser('conv2tif',
                               help='Convert interferograms to geotiff.', 
                               add_help=True)
 
@@ -145,7 +145,7 @@ def main():
     parser_process.add_argument(*verbosity_args, **verbosity_kwargs)
  
     # create the parser for the "postprocess" command
-    parser_postprocess = subparsers.add_parser('postprocess',
+    parser_postprocess = subparsers.add_parser('merge',
                                            help=("Reassemble computed tiles "
                                                  "and save as geotiffs."), 
                                            add_help=True)
@@ -175,7 +175,7 @@ def main():
         pyratelog.configure(args.verbosity)
         log.info("Verbosity set to " + str(args.verbosity) + ".")
 
-    if args.command == "converttogeotiff":
+    if args.command == "conv2tif":
         converttogeotiff_handler(args.config_file)
 
     if args.command == "prepifg":
@@ -184,7 +184,7 @@ def main():
     if args.command == "process":
         process_handler(args.config_file, args.rows, args.cols)
 
-    if args.command == "postprocess":
+    if args.command == "merge":
         postprocess_handler(args.config_file, args.rows, args.cols)
 
 

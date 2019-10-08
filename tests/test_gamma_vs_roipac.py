@@ -47,7 +47,7 @@ from pyrate.core.config import (
     APS_INCIDENCE_MAP,
     APS_ELEVATION_MAP
     )
-from pyrate import prepifg, converttogeotiff
+from pyrate import prepifg, converttogeotif
 from tests.common import SML_TEST_DIR, small_data_setup, remove_tifs
 
 DUMMY_SECTION_NAME = 'pyrate'
@@ -122,7 +122,7 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
             os.path.basename(q).split('.')[1] + '.tif') 
             for q in base_ifg_paths]
         sys.argv = ['pyrate', 'converttogeotiff', conf_file]
-        converttogeotiff.main()
+        converttogeotif.main()
         sys.argv = ['pyrate', 'prepifg', conf_file]
         prepifg.main()
         
@@ -166,7 +166,7 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
     def check_roipac(self):
         self.make_roipac_input_files(self.dataPaths, 'WGS84')
         sys.argv = ['pyrate', 'converttogeotiff', self.confFile]
-        converttogeotiff.main()
+        converttogeotif.main()
         sys.argv = ['pyrate', 'prepifg', self.confFile]
         prepifg.main()
         for path in self.expPaths:

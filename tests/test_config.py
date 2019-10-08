@@ -464,9 +464,9 @@ class TestConfigValidation(unittest.TestCase):
 class TestConfigValidationWithFullResGeotiffs(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        from pyrate import converttogeotiff
+        from pyrate import converttogeotif
         cls.params = config.get_config_params(TEST_CONF_GAMMA)
-        converttogeotiff.main(cls.params)
+        converttogeotif.main(cls.params)
     
     @classmethod
     def tearDownClass(cls):
@@ -521,9 +521,9 @@ class TestConfigValidationWithFullResGeotiffs(unittest.TestCase):
 class TestConfigValidationWithPrepifgGeotiffs(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        from pyrate import converttogeotiff, prepifg
+        from pyrate import converttogeotif, prepifg
         cls.params = config.get_config_params(TEST_CONF_GAMMA)
-        converttogeotiff.main(cls.params)
+        converttogeotif.main(cls.params)
         prepifg.main(cls.params)
     
     @classmethod
