@@ -18,7 +18,7 @@ if __name__ == "__main__":
     gdal.SetCacheMax(GDAL_CACHE_MAX)
 
     # Input parameters
-    config_file_path = "C:/Users/sheec/Desktop/Projects/PyRate/input_parameters.conf"
+    config_file_path = "/home/547/sg4953/PyRate/input_parameters.conf"
     config = Configuration(config_file_path)
 
     if config.processor:

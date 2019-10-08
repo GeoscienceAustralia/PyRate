@@ -24,6 +24,7 @@ from pyrate.core import config as cf
 from pyrate import (converttogeotif, prepifg, process, postprocess)
 from pyrate import CONV2TIF, PREPIFG, PROCESS, MERGE # Step names
 from pyrate.core import pyratelog
+import time
 
 log = logging.getLogger(__name__)
 
@@ -189,4 +190,6 @@ def main():
 
 
 if __name__ == "__main__":
+    start_time = time.time()
     main()
+    print("--- %s seconds ---" % (time.time() - start_time))
