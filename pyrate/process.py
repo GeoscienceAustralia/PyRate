@@ -130,7 +130,7 @@ def _ref_pixel_calc(ifg_paths, params):
     ifg = Ifg(ifg_paths[0])
     ifg.open(readonly=True)
 
-    if refx == -1 or refy == -1: # these are the default refx/refy values
+    if refx < 0 or refy < 0:
         log.info('Searching for best reference pixel location')
 
         half_patch_size, thresh, grid = refpixel.ref_pixel_setup(ifg_paths,
@@ -258,7 +258,7 @@ def process_ifgs(ifg_paths, params, rows, cols):
     # _mst_calc(ifg_paths, params, tiles, preread_ifgs)
 
     refpx, refpy = _ref_pixel_calc(ifg_paths, params)
-
+    print(refpx, refpy)
 
     # remove non ifg keys
     _ = [preread_ifgs.pop(k) for k in ['gt', 'epochlist', 'md', 'wkt']]

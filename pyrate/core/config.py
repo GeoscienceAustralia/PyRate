@@ -220,8 +220,8 @@ PARAM_CONVERSION = {
     COH_MASK: (int, 0),
     COH_THRESH: (float, 0.1),
 
-    REFX: (float, -1.),
-    REFY: (float, -1.),
+    REFX: (float, 181),
+    REFY: (float, 91),
     REFNX: (int, 10),
     REFNY: (int, 10),
     REF_CHIP_SIZE: (int, 21),
@@ -906,16 +906,23 @@ def validate_parameters(pars: Dict, step: str=CONV2TIF):
         validate_minimum_epochs(n_epochs, MINIMUM_NUMBER_EPOCHS)
         
         # Get spatial information from tifs.
-        extents, n_cols, n_rows, transform = \
-            _get_prepifg_info(ifl, pars[OBS_DIR], pars)
-        
+        extents, n_cols, n_rows, transform = _get_prepifg_info(ifl, pars[OBS_DIR], pars)
+
         # Convert refx/refy from lat/long to pixel and validate...
-        if pars[REFX] != -1. and pars[REFY] != -1.:
-            pars[REFX], pars[REFY] = \
-                convert_geographic_coordinate_to_pixel_value(pars[REFX], pars[REFY], transform)
+        if pars[REFX] <= 180 and pars[REFX] >= -180 and pars[REFY] >= -90 and pars[REFY] <= 90:
+            pars[REFX], pars[REFY] = convert_geographic_coordinate_to_pixel_value(pars[REFX], pars[REFY], transform)
+
             validate_reference_pixel_params(n_cols, n_rows, pars[REFX], pars[REFY])
+
+            if pars[REFX] < 0 or pars[REFX] > n_cols:
+                pars[REFX] = - 1
+            if pars[REFY] < 0 or pars[REFY] > n_rows:
+                pars[REFY] = - 1
+
         # otherwise we need to search for the pixel so validate the search paramters.
         else:
+            pars[REFX] = - 1
+            pars[REFY] = - 1
             validate_reference_pixel_search_windows(n_cols, n_rows, pars)
 
         validate_multilook_parameters(n_cols, n_rows, 
@@ -996,20 +1003,13 @@ def validate_optional_parameters(pars: Dict):
 
     errors = []
 
-    errors.extend(
-        validate(pars[COH_MASK], _COHERENCE_VALIDATION, pars))
-    errors.extend(
-        validate(pars[APSEST], _APSEST_VALIDATION, pars))
-    errors.extend(
-        validate(pars[TIME_SERIES_CAL], _TIME_SERIES_VALIDATION, pars))
-    errors.extend(
-        validate(pars[ORBITAL_FIT], _ORBITAL_FIT_VALIDATION, pars))
-    errors.extend(
-        validate(pars[PROCESSOR] == GAMMA, _GAMMA_VALIDATION, pars))
-    errors.extend(
-        validate(pars[IFG_CROP_OPT] == 3, _CUSTOM_CROP_VALIDATION, pars))
-    errors.extend(
-        validate(pars[REFX] > 0 and pars[REFY] > 0, _REFERENCE_PIXEL_VALIDATION, pars))
+    errors.extend(validate(pars[COH_MASK], _COHERENCE_VALIDATION, pars))
+    errors.extend(validate(pars[APSEST], _APSEST_VALIDATION, pars))
+    errors.extend(validate(pars[TIME_SERIES_CAL], _TIME_SERIES_VALIDATION, pars))
+    errors.extend(validate(pars[ORBITAL_FIT], _ORBITAL_FIT_VALIDATION, pars))
+    errors.extend(validate(pars[PROCESSOR] == GAMMA, _GAMMA_VALIDATION, pars))
+    errors.extend(validate(pars[IFG_CROP_OPT] == 3, _CUSTOM_CROP_VALIDATION, pars))
+    errors.extend(validate(pars[REFX] > 0 and pars[REFY] > 0, _REFERENCE_PIXEL_VALIDATION, pars))
 
     return _raise_errors(errors)
 
