@@ -36,7 +36,6 @@ from pyrate.core.config import (
     validate_epoch_thresholds, validate_epoch_cutoff,
     validate_crop_parameters, validate_slpf_cutoff,
     validate_reference_pixel_search_windows,
-    validate_reference_pixel_params,
     validate_multilook_parameters,
     validate_prepifg_tifs_exist,
     _get_temporal_info, _get_prepifg_info, _get_fullres_info)
@@ -568,16 +567,7 @@ class TestConfigValidationWithPrepifgGeotiffs(unittest.TestCase):
         with pytest.raises(ConfigException):
             validate_epoch_cutoff(self.max_span, SLPF_CUTOFF, self.params)
         
-    def test_validate_refx_refy_parameters(self):
-        self.params[REFX] = 20
-        self.params[REFY] = 20
-        validate_reference_pixel_params(self.n_cols, self.n_rows, 
-                                        self.params[REFX], self.params[REFY])
-        self.params[REFX] = 48
-        self.params[REFY] = 73
-        with pytest.raises(ConfigException):
-            validate_reference_pixel_params(self.n_cols, self.n_rows, 
-                                            self.params[REFX], self.params[REFY])
+
 
     def test_validate_search_windows(self):
         self.params[REF_CHIP_SIZE] = 21

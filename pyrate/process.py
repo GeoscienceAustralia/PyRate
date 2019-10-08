@@ -258,7 +258,7 @@ def process_ifgs(ifg_paths, params, rows, cols):
     # _mst_calc(ifg_paths, params, tiles, preread_ifgs)
 
     refpx, refpy = _ref_pixel_calc(ifg_paths, params)
-    print(refpx, refpy)
+    log.info("refpx, refpy: "+str(refpx)+" "+ str(refpy))
 
     # remove non ifg keys
     _ = [preread_ifgs.pop(k) for k in ['gt', 'epochlist', 'md', 'wkt']]

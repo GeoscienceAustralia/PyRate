@@ -910,17 +910,20 @@ def validate_parameters(pars: Dict, step: str=CONV2TIF):
 
         # Convert refx/refy from lat/long to pixel and validate...
         if pars[REFX] <= 180 and pars[REFX] >= -180 and pars[REFY] >= -90 and pars[REFY] <= 90:
-            pars[REFX], pars[REFY] = convert_geographic_coordinate_to_pixel_value(pars[REFX], pars[REFY], transform)
 
-            validate_reference_pixel_params(n_cols, n_rows, pars[REFX], pars[REFY])
+            pars[REFX], pars[REFY] = convert_geographic_coordinate_to_pixel_value(pars[REFX], pars[REFY], transform)
+            _logger.info("converted pars[REFX], pars[REFY] to: "+str(pars[REFX])+" "+str(pars[REFY]))
 
             if pars[REFX] < 0 or pars[REFX] > n_cols:
+                _logger.info("converted pars[REFX] out of range")
                 pars[REFX] = - 1
             if pars[REFY] < 0 or pars[REFY] > n_rows:
+                _logger.info("converted pars[REFY] out of range")
                 pars[REFY] = - 1
 
         # otherwise we need to search for the pixel so validate the search paramters.
         else:
+            _logger.info("given pars[REFX] or pars[REFY] out of range")
             pars[REFX] = - 1
             pars[REFY] = - 1
             validate_reference_pixel_search_windows(n_cols, n_rows, pars)
@@ -1297,41 +1300,7 @@ def validate_slpf_cutoff(extents: Tuple[float, float, float, float],
 
     return _raise_errors(errors)
 
-def validate_reference_pixel_params(looked_cols: int, looked_rows: int, 
-                                    refx: int, refy: int) -> Optional[bool]:
-    """
-    Validate that reference pixel coordinates are in scene. This must be 
-    performed based on the cropped and subsampled dataset.
 
-    Args:
-        looked_cols: Number of pixel columns (X) in the raster after cropping
-            and subsampling (the prepifg step).
-        looked_rows: Number of pixel rows (Y) in the raster after cropping
-            and subsampling (the prepifg step).
-        refx: The reference pixel X parameter.
-        refy: The reference pixel Y parameter.
-    
-    Returns:
-        True if validation is successful.
-
-    Raises:
-        ConfigException: If validation fails.
-    """
-    errors = []
-    x_dim_string = f"xmin: 0, xmax: {looked_cols}"
-    y_dim_string = f"ymin: 0, ymax: {looked_rows}"
-
-    # Check reference pixel coordinates within scene.
-    if refx != 0 and refy != 0:
-        if not 0 < refx <= looked_cols:
-            errors.append(f"'{REFX}': reference pixel coordinate {refx} is "
-                          f"outside bounds of scene ({x_dim_string}).")
-
-        if not 0 < refy <= looked_rows:
-            errors.append(f"'{REFY}': reference pixel coordinate {refy} is "
-                          f"outside bounds of scene ({y_dim_string}).")
-    
-    return _raise_errors(errors)
 
 def validate_multilook_parameters(cols: int, rows: int, 
                                  xlks_name: str, ylks_name: str, 
