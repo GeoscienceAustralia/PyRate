@@ -76,6 +76,7 @@ more details.
 """
 
 def main():
+    start_time = time.time()
     log.debug("Starting PyRate")
     parser = argparse.ArgumentParser(prog='pyrate',
                                      description=CLI_DESC,
@@ -187,9 +188,8 @@ def main():
 
     if args.command == "merge":
         postprocess_handler(args.config_file, args.rows, args.cols)
-
+    print("--- %s seconds ---" % (time.time() - start_time))
 
 if __name__ == "__main__":
-    start_time = time.time()
     main()
-    print("--- %s seconds ---" % (time.time() - start_time))
+
