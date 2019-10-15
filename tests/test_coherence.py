@@ -26,14 +26,6 @@ class CoherenceMaskingTest(unittest.TestCase):
         coherence_files = [cf.coherence_paths_for(path, self.params, tif=False)
                            for path in ifg_paths]
         self.assertEqual(len(coherence_files), 17)
-    
-    @unittest.skip("Skip this test until actual coherence test files provided")
-    def test_coherence_files_converted(self):
-        self.params[cf.COH_MASK] = 1
-        gtiff_paths = converttogeotif.main(self.params)
-        coh_files = [path for path in gtiff_paths if '_cc.tif' in path]
-        self.assertEqual(len(coh_files), 17)
-        self.params[cf.COH_MASK] = 0
 
     def test_coherence_files_not_converted(self):
         self.params[cf.COH_MASK] = 0
