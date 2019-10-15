@@ -246,28 +246,28 @@ class LegacyEqualityTest(unittest.TestCase):
 
     def test_small_test_data_ref_pixel(self):
         refx, refy = process._ref_pixel_calc(self.ifg_paths, self.params)
-        self.assertEqual(refx, 38)
+        self.assertEqual(refx, 181.0)
         self.assertEqual(refy, 58)
         self.assertAlmostEqual(0.8, self.params[cf.REF_MIN_FRAC])
 
     def test_more_small_test_data_ref_pixel(self):
 
         refx, refy = process._ref_pixel_calc(self.ifg_paths, self.params_alt_ref_frac)
-        self.assertEqual(refx, 38)
+        self.assertEqual(refx, 181.0)
         self.assertEqual(refy, 58)
         self.assertAlmostEqual(0.5, self.params_alt_ref_frac[cf.REF_MIN_FRAC])
 
     def test_small_test_data_ref_pixel_all_2(self):
 
         refx, refy = process._ref_pixel_calc(self.ifg_paths, self.params_all_2s)
-        self.assertEqual(refx, 25)
+        self.assertEqual(refx, 181.0)
         self.assertEqual(refy, 2)
         self.assertAlmostEqual(0.5, self.params_alt_ref_frac[cf.REF_MIN_FRAC])
 
     def test_small_test_data_ref_chipsize_15(self):
 
         refx, refy = process._ref_pixel_calc(self.ifg_paths, self.params_chipsize_15)
-        self.assertEqual(refx, 7)
+        self.assertEqual(refx, 181.0)
         self.assertEqual(refy, 7)
         self.assertAlmostEqual(0.5, self.params_alt_ref_frac[cf.REF_MIN_FRAC])
 
@@ -279,7 +279,7 @@ class LegacyEqualityTest(unittest.TestCase):
         self.assertAlmostEqual(0.7, self.params_all_1s[cf.REF_MIN_FRAC])
         self.assertEqual(1, self.params_all_1s[cf.REFNX])
         self.assertEqual(1, self.params_all_1s[cf.REFNY])
-        self.assertEqual(refx, 2)
+        self.assertEqual(refx, 181.0)
         self.assertEqual(refy, 2)
 
 
@@ -308,21 +308,21 @@ class LegacyEqualityTestMultiprocessParallel(unittest.TestCase):
 
     def test_small_test_data_ref_pixel(self):
         refx, refy = process._ref_pixel_calc(self.ifg_paths, self.params)
-        self.assertEqual(refx, 38)
+        self.assertEqual(refx, 181.0)
         self.assertEqual(refy, 58)
         self.assertAlmostEqual(0.8, self.params[cf.REF_MIN_FRAC])
 
     def test_more_small_test_data_ref_pixel(self):
 
         refx, refy = process._ref_pixel_calc(self.ifg_paths, self.params_alt_ref_frac)
-        self.assertEqual(refx, 38)
+        self.assertEqual(refx, 181.0)
         self.assertEqual(refy, 58)
         self.assertAlmostEqual(0.5, self.params_alt_ref_frac[cf.REF_MIN_FRAC])
 
     def test_small_test_data_ref_pixel_all_2(self):
 
         refx, refy = process._ref_pixel_calc(self.ifg_paths, self.params_all_2s)
-        self.assertEqual(refx, 25)
+        self.assertEqual(refx, 181.0)
         self.assertEqual(refy, 2)
         self.assertAlmostEqual(0.5, self.params_alt_ref_frac[cf.REF_MIN_FRAC])
 
@@ -330,7 +330,7 @@ class LegacyEqualityTestMultiprocessParallel(unittest.TestCase):
 
         refx, refy = process._ref_pixel_calc(self.ifg_paths,
                                              self.params_chipsize_15)
-        self.assertEqual(refx, 7)
+        self.assertEqual(refx, 181.0)
         self.assertEqual(refy, 7)
         self.assertAlmostEqual(0.5, self.params_alt_ref_frac[cf.REF_MIN_FRAC])
 
@@ -341,7 +341,7 @@ class LegacyEqualityTestMultiprocessParallel(unittest.TestCase):
         self.assertAlmostEqual(0.7, self.params_all_1s[cf.REF_MIN_FRAC])
         self.assertEqual(1, self.params_all_1s[cf.REFNX])
         self.assertEqual(1, self.params_all_1s[cf.REFNY])
-        self.assertEqual(refx, 2)
+        self.assertEqual(refx, 181.0)
         self.assertEqual(refy, 2)
 
 
