@@ -83,13 +83,13 @@ IFG_CROP_OPT = 'ifgcropopt'
 IFG_LKSX = 'ifglksx'
 #: INT; Multi look factor for interferogram preparation in y dimension
 IFG_LKSY = 'ifglksy'
-#: REAL; Minimum longitude for cropping with method 3
+#: FLOAT; Minimum longitude for cropping with method 3
 IFG_XFIRST = 'ifgxfirst'
-#: REAL; Maximum longitude for cropping with method 3
+#: FLOAT; Maximum longitude for cropping with method 3
 IFG_XLAST = 'ifgxlast'
-#: REAL; Minimum latitude for cropping with method 3
+#: FLOAT; Minimum latitude for cropping with method 3
 IFG_YFIRST = 'ifgyfirst'
-#: REAL; Maximum latitude for cropping with method 3
+#: FLOAT; Maximum latitude for cropping with method 3
 IFG_YLAST = 'ifgylast'
 
 # reference pixel parameters
@@ -103,20 +103,22 @@ REFNX = "refnx"
 REFNY = "refny"
 #: INT; Dimension of reference pixel search window
 REF_CHIP_SIZE = 'refchipsize'
-#: REAL; Minimum fraction of observations required in search window for pixel to be a viable reference pixel
+#: FLOAT; Minimum fraction of observations required in search window for pixel to be a viable reference pixel
 REF_MIN_FRAC = 'refminfrac'
 #: BOOL (1/2); Reference phase estimation method
 REF_EST_METHOD = 'refest'
 
 # coherence masking parameters
+# coherence masking parameters
+#: BOOL (0/1); Perform coherence masking (1: yes, 0: no)
 COH_MASK = 'cohmask'
-"""int: perform coherence masking, 1 = yes, 0 = no"""
+#: FLOAT; Threshold for coherence values
 COH_THRESH = 'cohthresh'
-"""float: coherence treshold"""
+#: STR; Directory containing coherence .cc files; defaults to OBS_DIR if not provided
 COH_FILE_DIR = 'cohfiledir'
-"""str: Directory containing coherence .cc files. Defaults to OBS_DIR if not provided."""
+#: STR; Name of the file list containing the pool of available coherence files
 COH_FILE_LIST = 'cohfilelist'
-"""str: Name of the file list containing the pool of available coherence files"""
+
 
 #atmospheric error correction parameters NOT CURRENTLY USED
 APS_CORRECTION = 'apscorrect'
@@ -139,11 +141,11 @@ ORBITAL_FIT_LOOKS_X = 'orbfitlksx'
 ORBITAL_FIT_LOOKS_Y = 'orbfitlksy'
 
 # Linear rate/stacking parameters
-#: REAL; Threshold ratio between 'model minus observation' residuals and a-priori observation standard deviations for linear rate estimate acceptance (otherwise remove furthest outlier and re-iterate)
+#: FLOAT; Threshold ratio between 'model minus observation' residuals and a-priori observation standard deviations for linear rate estimate acceptance (otherwise remove furthest outlier and re-iterate)
 LR_NSIG = 'nsig'
 #: INT; Number of required observations per pixel for the linear rate inversion
 LR_PTHRESH = 'pthr'
-#: REAL; Maximum allowable standard error for pixels in linear rate inversion.
+#: FLOAT; Maximum allowable standard error for pixels in linear rate inversion.
 LR_MAXSIG = 'maxsig'
 
 # atmospheric delay errors fitting parameters NOT CURRENTLY USED
@@ -155,15 +157,23 @@ LR_MAXSIG = 'maxsig'
 APSEST = 'apsest'
 
 # temporal low-pass filter parameters
+#: INT (1/2/3); Method for temporal filtering (1: Gaussian, 2: Triangular, 3: Mean filter)
 TLPF_METHOD = 'tlpfmethod'
+#: FLOAT; Cutoff time for gaussian filter in years;
 TLPF_CUTOFF = 'tlpfcutoff'
+#: INT; Number of required input observations per pixel for temporal filtering
 TLPF_PTHR = 'tlpfpthr'
 
 # spatially correlated noise low-pass filter parameters
+#: INT (1/2); Method for spatial filtering(1: butterworth; 2: gaussian)
 SLPF_METHOD = 'slpfmethod'
+#: FLOAT; Cutoff  value for both butterworth and gaussian filters in km
 SLPF_CUTOFF = 'slpfcutoff'
+#: INT; Order of butterworth filter (default 1)
 SLPF_ORDER = 'slpforder'
+#: INT (1/0); Do spatial interpolation at NaN locations (1 for interpolation, 0 for zero fill)
 SLPF_NANFILL = 'slpnanfill'
+#: #: STR; Method for spatial interpolation (one of: linear, nearest, cubic), only used when slpnanfill=1
 SLPF_NANFILL_METHOD = 'slpnanfill_method'
 
 # Time series parameters
@@ -175,7 +185,7 @@ TIME_SERIES_METHOD = 'tsmethod'
 TIME_SERIES_PTHRESH = 'ts_pthr'
 #: INT (1/2); Order of Laplacian smoothing operator, first or # second order
 TIME_SERIES_SM_ORDER = 'smorder'
-#: REAL; Laplacian smoothing factor (values used is 10**smfactor)
+#: FLOAT; Laplacian smoothing factor (values used is 10**smfactor)
 TIME_SERIES_SM_FACTOR = 'smfactor'
 # tsinterp is automatically assigned in the code; not needed in conf file
 #TIME_SERIES_INTERP = 'tsinterp'
@@ -272,14 +282,14 @@ def get_config_params(path: str, validate: bool=True, requires_tif: bool=False) 
     """
     Reads the parameters file provided by the user and converts it into
     a dictionary.
-    
+
     Args:
         path: Absolute path to the parameters file.
         validate: Validate the parameters if True, otherwise skip validation.
         requires_tif: True if the calling process requires interferograms
             in geotiff format (performs additional validation).
     Returns:
-       A dictionary of parameters. 
+       A dictionary of parameters.
     """
     txt = ''
     with open(path, 'r') as inputFile:
@@ -298,10 +308,10 @@ def get_config_params(path: str, validate: bool=True, requires_tif: bool=False) 
 def _parse_conf_file(content, validate: bool=True, requires_tif: bool=False) -> Dict:
     """
     Converts the parameters from their text form into a dictionary.
-    
+
     Args:
         content: Parameters as text.
-        
+
     Returns:
         A dictionary of parameters.
     """
@@ -875,13 +885,13 @@ def _raise_errors(errors: List[str]):
 def validate_compulsory_parameters(pars: Dict) -> Optional[bool]:
     """
     Calls the validators for compulsory (always used) parameters.
-    
+
     Args:
         pars: The parameters dictionary.
 
     Returns:
         True if validation is successful.
-        
+
     Raises:
         ConfigException: If validation fails.
     """
@@ -897,29 +907,29 @@ def validate_compulsory_parameters(pars: Dict) -> Optional[bool]:
     return _raise_errors(errors)
 
 def validate_optional_parameters(pars: Dict):
-    """ 
+    """
     Calls the validators for optional parameters.
-    
+
     Args:
         pars: The parameters dictionary.
-        
+
     Returns:
         True if validation successful.
-        
+
     Raises:
         ConfigException: If validation fails.
     """
     def validate(on: bool, validators: Dict, pars: Dict) -> List[str]:
         """
         Convenience method for calling validators.
-    
+
         Args:
             on: Determines whether to call the validators.
             validators: A dictionary of validator functions.
             pars: Parameters dictionary.
 
         Returns:
-            A list of errors.           
+            A list of errors.
         """
         errors = []
         if on:
@@ -950,7 +960,7 @@ def validate_optional_parameters(pars: Dict):
 def validate_minimum_epochs(n_epochs: int, min_epochs: int) -> Optional[bool]:
     """
     Validates the minimum number of epochs required for PyRate to produce
-    good results. 
+    good results.
 
     Args:
         n_epochs: The number of unique epochs in the collection of interferograms
@@ -959,7 +969,7 @@ def validate_minimum_epochs(n_epochs: int, min_epochs: int) -> Optional[bool]:
 
     Returns:
         True if there are enough epochs to satisfy minimum epochs.
-    
+
     Raises:
         ConfigException: If there are not enough epochs to satisfy min epochs.
     """
@@ -1004,15 +1014,15 @@ def validate_epochs(file_list: str, pattern: str) -> Optional[bool]:
 def validate_epoch_cutoff(max_span: float, cutoff: str, pars: Dict) -> Optional[bool]:
     """
     Validate cutoff parameters that rely on the data timespan.
-    
+
     Args:
         max_span: The maximum temporal span of the provided data in years.
         cutoff: The key of the cutoff parameter.
         pars: The parameters dictionary.
-    
+
     Returns:
         True if the cutoff is less than the maximum data timespan.
-    
+
     Raises:
         ConfigException: If the cutoff is greater than the max data timespan.
     """
@@ -1082,7 +1092,7 @@ def validate_obs_thresholds(ifg_file_list: str, pars: Dict) -> Optional[bool]:
     Args:
         ifg_file_list: Path to the file containing interferogram file names.
         pars: Parameters dictionary.
-    
+
     Returns:
         True if there are enough interferograms to satisfy all observation thresholds.
 
@@ -1114,7 +1124,7 @@ def validate_epoch_thresholds(n_epochs: int, pars: Dict) -> Optional[bool]:
         n_epochs: The number of unique epochs in the collection of interferograms
             provided as input.
         pars: Parameters dictionary.
-    
+
     Returns:
         True if there are enough epochs to satisfy all epoch thresholds.
 
@@ -1129,7 +1139,7 @@ def validate_epoch_thresholds(n_epochs: int, pars: Dict) -> Optional[bool]:
 
     return _raise_errors(errors)
 
-def validate_extent_parameters(extents: Tuple[float, float, float, float], 
+def validate_extent_parameters(extents: Tuple[float, float, float, float],
                                pars: Dict) -> Optional[bool]:
     """
     Validate parameters that provide lat/long coordinates by checking they fit
@@ -1158,7 +1168,7 @@ def validate_extent_parameters(extents: Tuple[float, float, float, float],
                     f"is outside bounds of scene {dim_string}."]
 
         return []
-    
+
     if pars[IFG_CROP_OPT] == 3:
         errors.extend(_validate_crop_coord(IFG_XFIRST, xmin, xmax, x_dim_string))
         errors.extend(_validate_crop_coord(IFG_YFIRST, ymin, ymax, y_dim_string))
@@ -1226,7 +1236,7 @@ def validate_pixel_parameters(n_cols: int, n_rows: int, pars: Dict) -> Optional[
 
     return _raise_errors(errors)
 
-def validate_reference_pixel_search_windows(n_cols: int, n_rows: int, 
+def validate_reference_pixel_search_windows(n_cols: int, n_rows: int,
                                             pars: Dict) -> Optional[bool]:
     """
     Validates that the reference pixel search windows provided by user
@@ -1235,7 +1245,7 @@ def validate_reference_pixel_search_windows(n_cols: int, n_rows: int,
     Args:
         n_cols: Number of pixel columns (X) in the scene.
         n_rows: Number of pixel rows (Y) in the scene.
-    
+
     Returns:
         True if the scene can accomodate the search windows (no overlap).
 
@@ -1248,7 +1258,7 @@ def validate_reference_pixel_search_windows(n_cols: int, n_rows: int,
     refnx = pars[REFNX]
     refny = pars[REFNY]
     chip_size = pars[REF_CHIP_SIZE]
-    
+
     x_windows = floor(n_cols/chip_size)
     if refnx > x_windows:
         errors.append(f"'{REFNX}' & '{REF_CHIP_SIZE}': search windows do not "
@@ -1261,10 +1271,10 @@ def validate_reference_pixel_search_windows(n_cols: int, n_rows: int,
                       f"fit in scene on Y axis (number of rows: {n_rows}). "
                       f"Reduce {REF_CHIP_SIZE} or {REFNY} so that {REFNY} "
                       f"is less than or equal to (rows / {REF_CHIP_SIZE}).")
-    
+
     return _raise_errors(errors)
 
-def validate_gamma_headers(ifg_file_list: str, slc_file_list: str, 
+def validate_gamma_headers(ifg_file_list: str, slc_file_list: str,
                            slc_dir: str) -> Optional[bool]:
     """
     Validates that a pair of GAMMA headers exist for each provided
@@ -1358,10 +1368,10 @@ def _get_ifg_information(ifg_file_list: str, obs_dir: str, crop_opts: Tuple) -> 
     x_step = rasters[0].x_step
     y_step = rasters[0].y_step
 
-    # Get the pixel bounds. Ifg/Raster objects do have 'ncols'/'nrows' 
+    # Get the pixel bounds. Ifg/Raster objects do have 'ncols'/'nrows'
     #  properties, but we'll calculate it off the extents we got above
     #  because these take into account the chosen cropping option (until
-    #  the stack of interferograms is cropped it's not known what the 
+    #  the stack of interferograms is cropped it's not known what the
     #  pixel dimensions will be).
     n_cols = abs(int(abs(extents[0] - extents[2]) / x_step))
     n_rows = abs(int(abs(extents[1] - extents[3]) / y_step))
