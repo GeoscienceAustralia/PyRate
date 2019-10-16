@@ -123,33 +123,26 @@ def _ref_pixel_calc(ifg_paths, params):
     """
     Wrapper for reference pixel calculation
     """
-    # unlikely, but possible the refpixel can be (0,0)
-    # check if there is a pre-specified reference pixel coord
     refx = params[cf.REFX]
     refy = params[cf.REFY]
     ifg = Ifg(ifg_paths[0])
     ifg.open(readonly=True)
 
-    if refx < 0 or refy < 0:
+    if refx < -180 or refx > 180 or refy < -180 or refy > 180:
         log.info('Searching for best reference pixel location')
 
-        half_patch_size, thresh, grid = refpixel.ref_pixel_setup(ifg_paths,
-                                                                 params)
+        half_patch_size, thresh, grid = refpixel.ref_pixel_setup(ifg_paths, params)
         process_grid = mpiops.array_split(grid)
-        refpixel.save_ref_pixel_blocks(process_grid, half_patch_size,
-                                       ifg_paths, params)
-        mean_sds = refpixel._ref_pixel_mpi(process_grid, half_patch_size,
-                                           ifg_paths, thresh, params)
+        refpixel.save_ref_pixel_blocks(process_grid, half_patch_size, ifg_paths, params)
+        mean_sds = refpixel._ref_pixel_mpi(process_grid, half_patch_size, ifg_paths, thresh, params)
         mean_sds = mpiops.comm.gather(mean_sds, root=0)
         if mpiops.rank == MASTER_PROCESS:
             mean_sds = np.hstack(mean_sds)
 
         refy, refx = mpiops.run_once(refpixel.find_min_mean, mean_sds, grid)
-        log.info('Selected reference pixel coordinate: '
-                 '({}, {})'.format(refx, refy))
-    else:  # pragma: no cover
-        log.info('Reusing reference pixel from config file: '
-                 '({}, {})'.format(refx, refy))
+        log.info('Selected reference pixel coordinate: ({}, {})'.format(refx, refy))
+    else:
+        log.info('Reusing reference pixel from config file: ({}, {})'.format(refx, refy))
     ifg.close()
     return refx, refy
 
@@ -167,8 +160,7 @@ def _orb_fit_calc(ifg_paths, params, preread_ifgs=None):
     if preread_ifgs:  # don't check except for mpi tests
         # perform some general error/sanity checks
         log.info('Checking Orbital error correction status')
-        if mpiops.run_once(shared.check_correction_status, ifg_paths,
-                           ifc.PYRATE_ORBITAL_ERROR):
+        if mpiops.run_once(shared.check_correction_status, ifg_paths, ifc.PYRATE_ORBITAL_ERROR):
             log.info('Finished Orbital error correction')
             return  # return if True condition returned
 
@@ -194,10 +186,10 @@ def _ref_phase_estimation(ifg_paths, params, refpx, refpy):
     if len(ifg_paths) < 2:
         raise rpe.ReferencePhaseError(
             f"At least two interferograms required for reference phase "
-            f"correction ({len(ifg_paths)} provided).")
+            f"correction ({len(ifg_paths)} provided)."
+        )
 
-    if mpiops.run_once(shared.check_correction_status, ifg_paths,
-                        ifc.PYRATE_REF_PHASE):
+    if mpiops.run_once(shared.check_correction_status, ifg_paths, ifc.PYRATE_REF_PHASE):
         log.info('Finished reference phase estimation')
         return
 
@@ -295,20 +287,12 @@ def _linrate_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
     for t in process_tiles:
         log.info('Calculating linear rate of tile {}'.format(t.index))
         ifg_parts = [shared.IfgPart(p, t, preread_ifgs) for p in ifg_paths]
-        mst_grid_n = np.load(os.path.join(output_dir,
-                                          'mst_mat_{}.npy'.format(t.index)))
-        rate, error, samples = linrate.linear_rate(ifg_parts, params,
-                                                   vcmt, mst_grid_n)
+        mst_grid_n = np.load(os.path.join(output_dir, 'mst_mat_{}.npy'.format(t.index)))
+        rate, error, samples = linrate.linear_rate(ifg_parts, params, vcmt, mst_grid_n)
         # declare file names
-        np.save(file=os.path.join(output_dir,
-                                  'linrate_{}.npy'.format(t.index)),
-                arr=rate)
-        np.save(file=os.path.join(output_dir,
-                                  'linerror_{}.npy'.format(t.index)),
-                arr=error)
-        np.save(file=os.path.join(output_dir,
-                                  'linsamples_{}.npy'.format(t.index)),
-                arr=samples)
+        np.save(file=os.path.join(output_dir, 'linrate_{}.npy'.format(t.index)), arr=rate)
+        np.save(file=os.path.join(output_dir, 'linerror_{}.npy'.format(t.index)), arr=error)
+        np.save(file=os.path.join(output_dir, 'linsamples_{}.npy'.format(t.index)), arr=samples)
     mpiops.comm.barrier()
 
 
@@ -333,25 +317,19 @@ def _maxvar_vcm_calc(ifg_paths, params, preread_ifgs):
     prcs_ifgs = mpiops.array_split(ifg_paths)
     process_maxvar = []
     for n, i in enumerate(prcs_ifgs):
-        log.info('Calculating maxvar for {} of process ifgs {} of '
-                 'total {}'.format(n+1, len(prcs_ifgs), len(ifg_paths)))
-        process_maxvar.append(vcm_module.cvd(i, params, r_dist,
-                                             calc_alpha=True,
-                                             write_vals=True,
-                                             save_acg=True)[0])
+        log.info('Calculating maxvar for {} of process ifgs {} of total {}'.format(n+1, len(prcs_ifgs), len(ifg_paths)))
+        process_maxvar.append(vcm_module.cvd(i, params, r_dist, calc_alpha=True, write_vals=True, save_acg=True)[0])
     if mpiops.rank == MASTER_PROCESS:
         maxvar = np.empty(len(ifg_paths), dtype=np.float64)
         maxvar[process_indices] = process_maxvar
         for i in range(1, mpiops.size):  # pragma: no cover
             rank_indices = mpiops.array_split(range(len(ifg_paths)), i)
-            this_process_ref_phs = np.empty(len(rank_indices),
-                                            dtype=np.float64)
+            this_process_ref_phs = np.empty(len(rank_indices), dtype=np.float64)
             mpiops.comm.Recv(this_process_ref_phs, source=i, tag=i)
             maxvar[rank_indices] = this_process_ref_phs
     else:  # pragma: no cover
         maxvar = np.empty(len(ifg_paths), dtype=np.float64)
-        mpiops.comm.Send(np.array(process_maxvar, dtype=np.float64),
-                         dest=MASTER_PROCESS, tag=mpiops.rank)
+        mpiops.comm.Send(np.array(process_maxvar, dtype=np.float64), dest=MASTER_PROCESS, tag=mpiops.rank)
 
     maxvar = mpiops.comm.bcast(maxvar, root=0)
     vcmt = mpiops.run_once(vcm_module.get_vcmt, preread_ifgs, maxvar)
