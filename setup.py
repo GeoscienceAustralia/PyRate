@@ -18,8 +18,8 @@ from setuptools import setup
 from setuptools.command.test import test as TestCommand
 from subprocess import check_output
 import sys
+import platform
 
-python_version = sys.version_info
 __version__ = "0.4.0"
 
 # Get requirements (and dev requirements for testing) from requirements
@@ -30,14 +30,17 @@ with open('requirements-test.txt') as f:
     test_requirements = f.read().splitlines()
 with open('requirements-dev.txt') as f:
     dev_requirements = f.read().splitlines()
-GDAL_VERSION = check_output(["gdal-config", "--version"]).decode(
-    encoding="utf-8").split('\n')[0]
+
+if platform.system() in 'Windows':
+    GDAL_VERSION = check_output(["gdalinfo", "--version"]).decode(encoding="utf-8").strip().split(" ")[1][:-1]
+else:
+    GDAL_VERSION = check_output(["gdal-config", "--version"]).decode(encoding="utf-8").split('\n')[0]
+
 requirements = [r + f'=={GDAL_VERSION}' if r == 'GDAL'
                 else r for r in requirements]
 setup_requirements = [r for r in requirements if "numpy==" in r]
 
 class PyTest(TestCommand, object):
-    user_options = [('pytest-args=', 'a', "Arguments to pass to py.test")]
 
     def initialize_options(self):
         super(PyTest, self).initialize_options()
@@ -53,7 +56,6 @@ class PyTest(TestCommand, object):
         import pytest
         exit(pytest.main(self.pytest_args))
 
-readme = open('README.rst').read()
 
 doclink = """
 
