@@ -328,9 +328,20 @@ class TestGammaParallelVsSerial(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        shutil.rmtree(cls.parallel_dir)
-        shutil.rmtree(cls.serial_dir)
-        common.remove_tifs(SML_TEST_GAMMA)
+        try:
+            shutil.rmtree(cls.parallel_dir)
+        except PermissionError:
+            print("File opened by another process.")
+
+        try:
+            shutil.rmtree(cls.serial_dir)
+        except PermissionError:
+            print("File opened by another process.")
+
+        try:
+            common.remove_tifs(SML_TEST_GAMMA)
+        except PermissionError:
+            print("File opened by another process.")
 
     def test_equality(self):
         for s, p in zip(self.serial_ifgs, self.para_ifgs):
