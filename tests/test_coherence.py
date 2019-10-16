@@ -14,13 +14,13 @@ class CoherenceMaskingTest(unittest.TestCase):
 
     def test_coherence_files_not_converted(self):
 
-        # create a gdal data set
+        # create a sample gdal dataset
         # create a coherence mask dataset
-        # create a artificial resultant data set
+        # create a artificial masked dataset
 
-        # use the gdal_python.coherence_masking to find the resultant mask data set
+        # use the gdal_python.coherence_masking to find the actual mask dataset
 
-        # compare the artificial and actual resultant data set
+        # compare the artificial masked and actual masked datasets
         self.assertTrue(True)
 
 
