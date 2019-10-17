@@ -90,7 +90,11 @@ class RefPhsTests(unittest.TestCase):
        
 
     def tearDown(self):
-        shutil.rmtree(self.tmp_dir)
+        try:
+            shutil.rmtree(self.tmp_dir)
+        except PermissionError:
+            print("Files still in use.")
+
         for ifg in self.ifgs:
             ifg.close()
 
@@ -166,9 +170,16 @@ class RefPhsEstimationLegacyTestMethod1Serial(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        shutil.rmtree(cls.temp_out_dir)
-        common.remove_tifs(
-            cf.get_config_params(common.TEST_CONF_ROIPAC)[cf.OBS_DIR])
+        try:
+            shutil.rmtree(cls.temp_out_dir)
+        except PermissionError:
+            print("File opened by another process.")
+
+        try:
+            common.remove_tifs(cf.get_config_params(common.TEST_CONF_ROIPAC)[cf.OBS_DIR])
+        except PermissionError:
+            print("File opened by another process.")
+
         for ifg in cls.ifgs:
             ifg.close()
 

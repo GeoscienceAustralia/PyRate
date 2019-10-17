@@ -6,44 +6,73 @@ import copy
 
 import pyrate.core.config as cf
 from pyrate import conv2tif, prepifg
-from tests import common
+from pyrate.core import gdal_python
+
+import os
+import gdal
+import numpy as np
+import osr
+
+
 
 class CoherenceMaskingTest(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.params = cf.get_config_params(common.TEST_CONF_GAMMA)
-        cls.params[cf.COH_MASK] = 1
-        cls.params[cf.COH_FILE_DIR] = common.SML_TEST_COH_DIR
-        cls.params[cf.COH_FILE_LIST] = common.SML_TEST_COH_LIST
 
-    def teardown_method(self, method):
-        common.remove_tifs(self.params[cf.OBS_DIR])
-        common.remove_tifs(self.params[cf.COH_FILE_DIR])
-
-    def test_find_coherence_files_for_ifgs(self):
-        ifg_paths = [os.path.join(self.params[cf.OBS_DIR], ifg) 
-                     for ifg in cf.parse_namelist(self.params[cf.IFG_FILE_LIST])]
-        coherence_files = [cf.coherence_paths_for(path, self.params, tif=False)
-                           for path in ifg_paths]
-        self.assertEqual(len(coherence_files), 17)
-    
-    @unittest.skip("Skip this test until actual coherence test files provided")
-    def test_coherence_files_converted(self):
-        self.params[cf.COH_MASK] = 1
-        gtiff_paths = conv2tif.main(self.params)
-        coh_files = [path for path in gtiff_paths if '_cc.tif' in path]
-        self.assertEqual(len(coh_files), 17)
-        self.params[cf.COH_MASK] = 0
 
     def test_coherence_files_not_converted(self):
-        self.params[cf.COH_MASK] = 0
-        gtiff_paths = conv2tif.main(self.params)
-        coh_files = [path for path in gtiff_paths if '_cc.tif' in path]
-        self.assertEqual(len(coh_files), 0)
-        self.params[cf.COH_MASK] = 1
-        
-    # TOD: Testing actual coherence masking
-    # Need coherence file test data
-    # Need pre-masked IFGs
-    # Compare that output of coherence masking matches pre-masked IFGs   
+        # define constants
+        NO_DATA_VALUE = 0
+        driver = gdal.GetDriverByName('GTiff')
 
+        # create a sample gdal dataset
+
+        # sample gdal dataset
+        sample_gdal_filename = 'sample_gdal_dataset.tif'
+        sample_gdal_dataset = driver.Create(sample_gdal_filename, 5, 5, 1, gdal.GDT_Float32)
+        srs = osr.SpatialReference()
+        wkt_projection = srs.ExportToWkt()
+        sample_gdal_dataset.SetProjection(wkt_projection)
+
+        sample_gdal_band = sample_gdal_dataset.GetRasterBand(1)
+        sample_gdal_band.SetNoDataValue(NO_DATA_VALUE)
+        sample_gdal_band.WriteArray(np.arange(25).reshape(5, 5))
+
+        # create a coherence mask dataset
+        coherence_mask_filename = 'coherence_mask_dataset.tif'
+        coherence_mask_dataset = driver.Create(coherence_mask_filename, 5, 5, 1, gdal.GDT_Float32)
+        srs = osr.SpatialReference()
+        wkt_projection = srs.ExportToWkt()
+        coherence_mask_dataset.SetProjection(wkt_projection)
+        coherence_mask_band = coherence_mask_dataset.GetRasterBand(1)
+        coherence_mask_band.SetNoDataValue(NO_DATA_VALUE)
+        coherence_mask_band.WriteArray(np.arange(0, 75, 3).reshape(5, 5) / 100.0)
+
+        # create a artificial masked dataset
+        expected_result_array = np.nan_to_num(
+            np.array(
+                [[np.nan, np.nan, np.nan, np.nan, np.nan],
+                 [np.nan, np.nan, np.nan, np.nan, np.nan],
+                 [10., 11., 12., 13., 14.],
+                 [15., 16., 17., 18., 19.],
+                 [20., 21., 22., 23., 24.]]
+            )
+        )
+
+        # use the gdal_python.coherence_masking to find the actual mask dataset
+        threshold = 0.3
+        gdal_python.coherence_masking(sample_gdal_dataset, coherence_mask_dataset, threshold)
+        sample_gdal_array = np.nan_to_num(sample_gdal_dataset.GetRasterBand(1).ReadAsArray())
+
+        # compare the artificial masked and actual masked datasets
+        self.assertTrue(np.array_equiv(sample_gdal_array, expected_result_array))
+
+
+        # del the tmp datasets created
+        del coherence_mask_dataset
+        os.remove(coherence_mask_filename)
+
+        del sample_gdal_dataset
+        os.remove(sample_gdal_filename)
+
+
+if __name__ == '__main__':
+    unittest.main()

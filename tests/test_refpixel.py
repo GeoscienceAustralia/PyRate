@@ -32,9 +32,7 @@ from tests.common import small_data_setup, MockIfg, small_ifg_file_list
 # TODO: figure out how  editing  resource.setrlimit fixes the error
 # to fix the open to many files error
 # https://stackoverflow.com/questions/18280612/ioerror-errno-24-too-many-open-files
-import resource
-soft, hard = resource.getrlimit(resource.RLIMIT_NOFILE)
-resource.setrlimit(resource.RLIMIT_NOFILE, (hard, hard))
+
 # default testing values
 REFNX = 5
 REFNY = 7
@@ -249,20 +247,6 @@ class LegacyEqualityTest(unittest.TestCase):
         self.assertEqual(refx, 38)
         self.assertEqual(refy, 58)
         self.assertAlmostEqual(0.8, self.params[cf.REF_MIN_FRAC])
-
-    def test_more_small_test_data_ref_pixel(self):
-
-        refx, refy = process._ref_pixel_calc(self.ifg_paths, self.params_alt_ref_frac)
-        self.assertEqual(refx, 38)
-        self.assertEqual(refy, 58)
-        self.assertAlmostEqual(0.5, self.params_alt_ref_frac[cf.REF_MIN_FRAC])
-
-    def test_small_test_data_ref_pixel_all_2(self):
-
-        refx, refy = process._ref_pixel_calc(self.ifg_paths, self.params_all_2s)
-        self.assertEqual(refx, 25)
-        self.assertEqual(refy, 2)
-        self.assertAlmostEqual(0.5, self.params_alt_ref_frac[cf.REF_MIN_FRAC])
 
     def test_small_test_data_ref_chipsize_15(self):
 

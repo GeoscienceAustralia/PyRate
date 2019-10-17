@@ -51,8 +51,7 @@ def main(params=None):
         params[cf.PARALLEL] = False
 
     if params:
-        base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST],
-                                               params[cf.OBS_DIR])
+        base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST], params[cf.OBS_DIR])
     else:  # if params not provided read from config file
         if (not params) and (len(sys.argv) < 3):
             print(usage)
@@ -67,14 +66,13 @@ def main(params=None):
         base_ifg_paths.append(params[cf.DEM_FILE])
 
     processor = params[cf.PROCESSOR]  # roipac or gamma
-    if processor == GAMMA: # Incidence/elevation only supported for GAMMA
+    if processor == GAMMA:  # Incidence/elevation only supported for GAMMA
         if params[cf.APS_INCIDENCE_MAP]:
             base_ifg_paths.append(params[cf.APS_INCIDENCE_MAP])
         if params[cf.APS_ELEVATION_MAP]:
             base_ifg_paths.append(params[cf.APS_ELEVATION_MAP])
 
-    process_base_ifgs_paths = \
-        np.array_split(base_ifg_paths, mpiops.size)[mpiops.rank]
+    process_base_ifgs_paths = np.array_split(base_ifg_paths, mpiops.size)[mpiops.rank]
     gtiff_paths = do_geotiff(process_base_ifgs_paths, params)
     log.info("Finished conv2tif")
     return gtiff_paths

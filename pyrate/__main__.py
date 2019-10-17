@@ -23,12 +23,12 @@ from argparse import RawTextHelpFormatter
 from pyrate.core import config as cf
 from pyrate import (conv2tif, prepifg, process, merge)
 from pyrate import CONV2TIF, PREPIFG, PROCESS, MERGE # Step names
-from pyrate import __version__
 from pyrate.core import pyratelog
+import time
 
 log = logging.getLogger(__name__)
 
-def converttogeotiff_handler(config_file):
+def conv2tif_handler(config_file):
     """
     Convert interferograms to geotiff.
     """
@@ -55,7 +55,7 @@ def process_handler(config_file, rows, cols):
     process.process_ifgs(sorted(dest_paths), params, rows, cols)
 
 
-def postprocess_handler(config_file, rows, cols):
+def merge_handler(config_file, rows, cols):
     """
     Reassemble computed tiles and save as geotiffs.
     """
@@ -66,16 +66,17 @@ def postprocess_handler(config_file, rows, cols):
 CLI_DESC = """
 PyRate workflow: 
 
-    Step 1: conv2tif
+    Step 1: converttogeotiff
     Step 2: prepifg
     Step 3: process
-    Step 4: merge 
+    Step 4: postprocess 
 
 Refer to https://geoscienceaustralia.github.io/PyRate/usage.html for 
 more details.
 """
 
 def main():
+    start_time = time.time()
     log.debug("Starting PyRate")
     parser = argparse.ArgumentParser(prog='pyrate',
                                      description=CLI_DESC,
@@ -95,7 +96,7 @@ def main():
     subparsers = parser.add_subparsers(dest='command')
     subparsers.required = True
 
-    # create the parser for the "conv2tif" command
+    # create the parser for the "converttogeotiff" command
     parser_converttogeotiff = \
         subparsers.add_parser('conv2tif',
                               help='Convert interferograms to geotiff.', 
@@ -133,19 +134,19 @@ def main():
                                 help="Pass configuration file", 
                                 required=True)
 
-    parser_process.add_argument('-r', '--rows', type=int, required=True,
+    parser_process.add_argument('-r', '--rows', type=int, required=False, default=1,
                                 help=("divide ifgs into this many rows. Must "
                                       "be same as number of rows used "
                                       "previously in main workflow."))
 
-    parser_process.add_argument('-c', '--cols', type=int, required=True,
+    parser_process.add_argument('-c', '--cols', type=int, required=False, default=1,
                                 help=("divide ifgs into this many columns. "
                                       "Must be same as number of cols used "
                                       "previously in main workflow."))
         
     parser_process.add_argument(*verbosity_args, **verbosity_kwargs)
  
-    # create the parser for the "merge" command
+    # create the parser for the "postprocess" command
     parser_postprocess = subparsers.add_parser('merge',
                                            help=("Reassemble computed tiles "
                                                  "and save as geotiffs."), 
@@ -153,14 +154,14 @@ def main():
 
     parser_postprocess.add_argument('-f', '--config_file', action="store", 
                                 type=str, default=None,
-                                help="Pass configuration file", required=True)
+                                help="Pass configuration file", required=False)
 
-    parser_postprocess.add_argument('-r', '--rows', type=int, required=True,
+    parser_postprocess.add_argument('-r', '--rows', type=int, required=False, default=1,
                                 help=("divide ifgs into this many rows. Must "
                                       "be same as number of rows used "
                                       "previously in main workflow."))
 
-    parser_postprocess.add_argument('-c', '--cols', type=int, required=True,
+    parser_postprocess.add_argument('-c', '--cols', type=int, required=False, default=1,
                                 help=("divide ifgs into this many columns. "
                                       "Must be same as number of cols used "
                                       "previously in main workflow."))
@@ -177,7 +178,7 @@ def main():
         log.info("Verbosity set to " + str(args.verbosity) + ".")
 
     if args.command == "conv2tif":
-        converttogeotiff_handler(args.config_file)
+        conv2tif_handler(args.config_file)
 
     if args.command == "prepifg":
         prepifg_handler(args.config_file)
@@ -186,8 +187,9 @@ def main():
         process_handler(args.config_file, args.rows, args.cols)
 
     if args.command == "merge":
-        postprocess_handler(args.config_file, args.rows, args.cols)
-
+        merge_handler(args.config_file, args.rows, args.cols)
+    print("--- %s seconds ---" % (time.time() - start_time))
 
 if __name__ == "__main__":
     main()
+

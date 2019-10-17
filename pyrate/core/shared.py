@@ -788,8 +788,7 @@ def gdal_dataset(out_fname, columns, rows, driver="GTiff", bands=1,
 
     # create output dataset
     driver = gdal.GetDriverByName(driver)
-    outds = driver.Create(out_fname, columns, rows, bands, gdal_dtype,
-                          options=creation_opts)
+    outds = driver.Create(out_fname, columns, rows, bands, gdal_dtype, options=creation_opts)
 
     # geospatial info
     outds.SetGeoTransform(geotransform)

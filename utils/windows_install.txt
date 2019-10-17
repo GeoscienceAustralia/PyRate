@@ -1,0 +1,30 @@
+
+# build PyRate package
+cd /PyRate
+pip install -r requirements-dev.txt
+pip install -r requirements-test.txt
+pip install pyproj==2.2.1
+python setup.py install
+
+# Run workflow
+
+pyrate conv2tif -f input_parameters.conf
+pyrate prepifg -f input_parameters.conf
+pyrate process -f input_parameters.conf -c 3 -r 4
+pyrate merge -f input_parameters.conf -c 3 -r 4
+
+
+# Build Sphinx docs
+cd /PyRate/docs
+make html
+
+# Run tests
+cd /PyRate
+chmod 444 tests/test_data/small_test/tif/geo_070709-070813_unw.tif
+python -m pytest tests/
+
+# Random stuff
+pip install tox
+tox
+
+# 64 failed, 236 passed, 1944 skipped

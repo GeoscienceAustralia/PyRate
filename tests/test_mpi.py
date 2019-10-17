@@ -26,7 +26,6 @@ import os
 import tempfile
 import random
 import string
-from subprocess import check_output
 
 import pyrate.core.orbital
 import pyrate.core.shared
@@ -40,9 +39,6 @@ from tests.test_covariance import legacy_maxvar
 from pyrate.core import algorithm, ref_phs_est as rpe, mpiops, config as cf, covariance, refpixel
 
 TRAVIS = True if 'TRAVIS' in os.environ else False
-PYTHON3P5 = True if ('TRAVIS_PYTHON_VERSION' in os.environ and os.environ['TRAVIS_PYTHON_VERSION'] == '3.5') else False
-GDAL_VERSION = check_output(["gdal-config", "--version"]).decode(encoding="utf-8").split('\n')[0]
-MPITEST = TRAVIS and GDAL_VERSION == '2.0.0'
 
 
 @pytest.fixture()
@@ -154,8 +150,7 @@ def test_vcm_legacy_vs_mpi(mpisync, tempdir, get_config):
     params_dict[cf.OUT_DIR] = outdir
     params_dict[cf.PARALLEL] = False
     xlks, ylks, crop = cf.transform_params(params_dict)
-    base_unw_paths = cf.original_ifg_paths(params_dict[cf.IFG_FILE_LIST],
-                                           params_dict[cf.OBS_DIR])
+    base_unw_paths = cf.original_ifg_paths(params_dict[cf.IFG_FILE_LIST], params_dict[cf.OBS_DIR])
     # dest_paths are tifs that have been geotif converted and multilooked
     dest_paths = cf.get_dest_paths(base_unw_paths, crop, params_dict, xlks)
 
@@ -167,15 +162,12 @@ def test_vcm_legacy_vs_mpi(mpisync, tempdir, get_config):
     mpiops.comm.barrier()
 
     tiles = pyrate.core.shared.get_tiles(dest_paths[0], rows=1, cols=1)
-    preread_ifgs = process._create_ifg_dict(dest_paths,
-                                            params=params_dict,
-                                            tiles=tiles)
+    preread_ifgs = process._create_ifg_dict(dest_paths, params=params_dict, tiles=tiles)
     refpx, refpy = process._ref_pixel_calc(dest_paths, params_dict)
     process._orb_fit_calc(dest_paths, params_dict)
     process._ref_phase_estimation(dest_paths, params_dict, refpx, refpy)
 
-    maxvar, vcmt = process._maxvar_vcm_calc(dest_paths, params_dict,
-                                            preread_ifgs)
+    maxvar, vcmt = process._maxvar_vcm_calc(dest_paths, params_dict, preread_ifgs)
     np.testing.assert_array_almost_equal(maxvar, legacy_maxvar, decimal=4)
     np.testing.assert_array_almost_equal(legacy_vcm, vcmt, decimal=3)
     if mpiops.rank == 0:
@@ -198,144 +190,10 @@ def orbfit_degrees(request):
     return request.param
 
 
-@pytest.mark.skipif(not MPITEST, reason='skipping mpi tests in travis except in TRAVIS and GDAL=2.0.0')
-def test_timeseries_linrate_mpi(mpisync, tempdir, modify_config,
-                                ref_est_method, row_splits, col_splits,
-                                get_crop, orbfit_lks, orbfit_method,
-                                orbfit_degrees):
-    params = modify_config
-    outdir = mpiops.run_once(tempdir)
-    params[cf.OUT_DIR] = outdir
-    params[cf.TMPDIR] = os.path.join(params[cf.OUT_DIR], cf.TMPDIR)
-    params[cf.DEM_HEADER_FILE] = SML_TEST_DEM_HDR_GAMMA
-    params[cf.REF_EST_METHOD] = ref_est_method
-    params[cf.IFG_CROP_OPT] = get_crop
-    params[cf.ORBITAL_FIT_LOOKS_Y] = orbfit_lks
-    params[cf.ORBITAL_FIT_LOOKS_X] = orbfit_lks
-    params[cf.ORBITAL_FIT_METHOD] = orbfit_method
-    params[cf.ORBITAL_FIT_DEGREE] = orbfit_degrees
-    xlks, ylks, crop = cf.transform_params(params)
-    if xlks * col_splits > 45 or ylks * row_splits > 70:
-        print('skipping test because lks and col_splits are not compatible')
-        return
-
-    # skip some tests in travis to run CI faster
-    if TRAVIS and (xlks % 2 or row_splits % 2 or col_splits % 2 or orbfit_lks % 2):
-        print('Skipping in travis env for faster CI run')
-        return
-    print("xlks={}, ref_est_method={}, row_splits={}, col_splits={}, "
-          "get_crop={}, orbfit_lks={}, orbfit_method={}, "
-          "rank={}".format(xlks, ref_est_method, row_splits, col_splits,
-                           get_crop, orbfit_lks, orbfit_method, orbfit_degrees, mpiops.rank))
-
-    base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST],
-                                           params[cf.OBS_DIR])
-    # dest_paths are tifs that have been geotif converted and multilooked
-    dest_paths = cf.get_dest_paths(base_unw_paths, crop, params, xlks)
-
-    # run prepifg, create the dest_paths files
-    if mpiops.rank == 0:
-        prepifg.gamma_prepifg(base_unw_paths, params)
-
-    mpiops.comm.barrier()
-
-    (refpx, refpy), maxvar, vcmt = process.process_ifgs(ifg_paths=dest_paths,
-                                                        params=params,
-                                                        rows=row_splits,
-                                                        cols=col_splits)
-
-    tiles = mpiops.run_once(pyrate.core.shared.get_tiles, dest_paths[0], rows=row_splits, cols=col_splits)
-    merge._postprocess_linrate(row_splits, col_splits, params)
-    merge._postprocess_timeseries(row_splits, col_splits, params)
-    ifgs_mpi_out_dir = params[cf.OUT_DIR]
-    ifgs_mpi = small_data_setup(datafiles=dest_paths)
-
-    # single process timeseries/linrate calculation
-    if mpiops.rank == 0:
-        params_old = modify_config
-        params_old[cf.OUT_DIR] = tempdir()
-        params_old[cf.REF_EST_METHOD] = ref_est_method
-        params_old[cf.IFG_CROP_OPT] = get_crop
-        params_old[cf.ORBITAL_FIT_LOOKS_Y] = orbfit_lks
-        params_old[cf.ORBITAL_FIT_LOOKS_X] = orbfit_lks
-        params_old[cf.ORBITAL_FIT_METHOD] = orbfit_method
-        params_old[cf.ORBITAL_FIT_DEGREE] = orbfit_degrees
-        xlks, ylks, crop = cf.transform_params(params_old)
-        base_unw_paths = cf.original_ifg_paths(params_old[cf.IFG_FILE_LIST],
-                                               params_old[cf.OBS_DIR])
-        dest_paths = cf.get_dest_paths(base_unw_paths, crop, params_old, xlks)
-        prepifg.gamma_prepifg(base_unw_paths, params_old)
-
-        ifgs = pre_prepare_ifgs(dest_paths, params_old)
-        mst_grid = tests.common.mst_calculation(dest_paths, params_old)
-        refy, refx = refpixel.ref_pixel(ifgs, params_old)
-        assert (refx == refpx) and (refy == refpy)  # both must match
-        pyrate.core.orbital.remove_orbital_error(ifgs, params_old)
-        ifgs = common.prepare_ifgs_without_phase(dest_paths, params_old)
-        process._ref_phase_estimation(ifgs, params_old, refx, refy)
-        ifgs = pre_prepare_ifgs(dest_paths, params_old)
-        r_dist = covariance.RDist(ifgs[0])()
-        maxvar_s = [covariance.cvd(i, params_old, r_dist)[0] for i in ifgs]
-        vcmt_s = covariance.get_vcmt(ifgs, maxvar)
-        tsincr, tscum, _ = tests.common.compute_time_series(ifgs, mst_grid, params, vcmt)
-        rate, error, samples = tests.common.calculate_linear_rate(ifgs, params_old, vcmt, mst_grid)
-        mst_mpi = reconstruct_mst(ifgs[0].shape, tiles, params[cf.TMPDIR])
-        np.testing.assert_array_almost_equal(mst_grid, mst_mpi)
-        tsincr_mpi, tscum_mpi = reconstruct_times_series(ifgs[0].shape, tiles, params[cf.TMPDIR])
-
-        rate_mpi, error_mpi, samples_mpi = \
-            [reconstruct_linrate(ifgs[0].shape, tiles, params[cf.TMPDIR], t) for t in ['linrate', 'linerror', 'linsamples']]
-        np.testing.assert_array_almost_equal(maxvar, maxvar_s)
-        np.testing.assert_array_almost_equal(vcmt, vcmt_s)
-        for i, j in zip(ifgs, ifgs_mpi):
-            np.testing.assert_array_almost_equal(i.phase_data, j.phase_data)
-        np.testing.assert_array_almost_equal(tsincr, tsincr_mpi, decimal=4)
-        np.testing.assert_array_almost_equal(tscum, tscum_mpi, decimal=4)
-        np.testing.assert_array_almost_equal(rate, rate_mpi, decimal=4)
-        np.testing.assert_array_almost_equal(error, error_mpi, decimal=4)
-        np.testing.assert_array_almost_equal(samples, samples_mpi, decimal=4)
-
-        # assert linear rate output tifs are same
-        _tifs_same(ifgs_mpi_out_dir, params_old[cf.OUT_DIR], 'linrate.tif')
-        _tifs_same(ifgs_mpi_out_dir, params_old[cf.OUT_DIR], 'linerror.tif')
-        _tifs_same(ifgs_mpi_out_dir, params_old[cf.OUT_DIR], 'linsamples.tif')
-
-        # assert time series output tifs are same
-        epochlist = algorithm.get_epochs(ifgs)[0]
-
-        for i in range(tsincr.shape[2]):
-            _tifs_same(ifgs_mpi_out_dir, params_old[cf.OUT_DIR], 'tsincr' + '_' + str(epochlist.dates[i + 1]) + ".tif")
-
-        # 12 timeseries outputs
-        assert i + 1 == tsincr.shape[2]
-        shutil.rmtree(ifgs_mpi_out_dir)  # remove mpi out dir
-        shutil.rmtree(params_old[cf.OUT_DIR])  # remove serial out dir
-
-
 def _tifs_same(dir1, dir2, tif):
     linrate_tif_s = os.path.join(dir1, tif)
     linrate_tif_m = os.path.join(dir2, tif)
     common.assert_ifg_phase_equal(linrate_tif_m, linrate_tif_s)
-
-
-@pytest.mark.skipif(TRAVIS, reason='skipping mpi tests in travis')
-def reconstruct_times_series(shape, tiles, output_dir):
-    tsincr_file_0 = os.path.join(output_dir, 'tsincr_{}.npy'.format(0))
-    shape3 = np.load(tsincr_file_0).shape[2]
-
-    tsincr_mpi = np.empty(shape=(shape + (shape3,)), dtype=np.float32)
-    tscum_mpi = np.empty_like(tsincr_mpi, dtype=np.float32)
-
-    for i, t in enumerate(tiles):
-        tsincr_file_n = os.path.join(output_dir, 'tsincr_{}.npy'.format(i))
-        tsincr_mpi[t.top_left_y:t.bottom_right_y, t.top_left_x: t.bottom_right_x, :] = np.load(tsincr_file_n)
-
-        tscum_file_n = os.path.join(output_dir, 'tscuml_{}.npy'.format(i))
-
-        tscum_mpi[t.top_left_y:t.bottom_right_y, t.top_left_x: t.bottom_right_x, :] = np.load(tscum_file_n)
-
-    return tsincr_mpi, tscum_mpi
-
 
 def test_prepifg_mpi(mpisync, get_config, tempdir,
                      roipac_or_gamma, get_lks, get_crop):

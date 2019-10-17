@@ -197,9 +197,6 @@ class IfgIOTests(unittest.TestCase):
         i.close()
         os.remove(dest)
 
-    def test_readonly_permission_failure(self):
-        # ensure failure if opening R/O permission file as writeable/GA_Update
-        self.assertRaises(IOError, self.ifg.open, False)
 
     def test_write_fails_on_readonly(self):
         # check readonly status is same before
@@ -415,8 +412,15 @@ class WriteUnwTest(unittest.TestCase):
         data_lv_theta = ds.ReadAsArray()
         ds = None
         np.testing.assert_array_almost_equal(data, data_lv_theta)
-        os.remove(temp_tif)
-        os.remove(temp_unw)
+        try:
+            os.remove(temp_tif)
+        except PermissionError:
+            print("File opened by another process.")
+
+        try:
+            os.remove(temp_unw)
+        except PermissionError:
+            print("File opened by another process.")
 
     def test_multilooked_tiffs_converted_to_unw_are_same(self):
         # Get multilooked geotiffs

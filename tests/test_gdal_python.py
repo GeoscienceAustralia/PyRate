@@ -53,7 +53,10 @@ class TestCrop(unittest.TestCase):
             clipped_ref = gdal.Open(temp_tif).ReadAsArray()
             clipped = gdal_python.crop(s.data_path, extents)[0]
             np.testing.assert_array_almost_equal(clipped_ref, clipped)
-            os.remove(temp_tif)
+            try:
+                os.remove(temp_tif)
+            except PermissionError:
+                print("File opened by another process.")
 
 
 class TestResample(unittest.TestCase):
@@ -91,10 +94,16 @@ class TestResample(unittest.TestCase):
             resampled = gdal_python.resample_nearest_neighbour(s.data_path,
                                                                extents, res,
                                                                resampled_temp_tif)
-            np.testing.assert_array_almost_equal(resampled_ref,
-                                                 resampled[0, :, :])
-            os.remove(temp_tif)
-            os.remove(resampled_temp_tif)  # also proves file was written
+            np.testing.assert_array_almost_equal(resampled_ref, resampled[0, :, :])
+            try:
+                os.remove(temp_tif)
+            except PermissionError:
+                print("File opened by another process.")
+
+            try:
+                os.remove(resampled_temp_tif)  # also proves file was written
+            except PermissionError:
+                print("File opened by another process.")
 
     def test_none_resolution_output(self):
         small_test_ifgs = common.small_data_setup()
@@ -147,7 +156,10 @@ class TestResample(unittest.TestCase):
             dst_ds = gdal.Open(resampled_temp_tif)
             md = dst_ds.GetMetadata()
             self.assertDictEqual(md, s.meta_data)
-            os.remove(resampled_temp_tif)
+            try:
+                os.remove(resampled_temp_tif)
+            except PermissionError:
+                print("File opened by another process.")
 
 
 class BasicReampleTests(unittest.TestCase):
@@ -337,8 +349,7 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
     def setUp(self):
         self.test_dir = tempfile.mktemp()
         common.copytree(common.SML_TEST_TIF, self.test_dir)
-        self.ifgs = common.small_data_setup(
-            datafiles=glob.glob(os.path.join(self.test_dir, "*.tif")))
+        self.ifgs = common.small_data_setup(datafiles=glob.glob(os.path.join(self.test_dir, "*.tif")))
         self.ref_gtif = gdal.Open(self.ifgs[0].data_path, gdalconst.GA_ReadOnly)
         self.ref_proj = self.ref_gtif.GetProjection()
         self.ref_gt = self.ref_gtif.GetGeoTransform()
@@ -346,31 +357,35 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
         self.md = self.ref_gtif.GetMetadata()
         self.temp_tif = tempfile.mktemp(suffix='.tif')
         self.out_tif = tempfile.mktemp(suffix='.tif')
+        del self.ref_gtif
 
     def tearDown(self):
         if os.path.exists(self.temp_tif):
-            os.remove(self.temp_tif)
-        shutil.rmtree(self.test_dir)
+            try:
+                os.remove(self.temp_tif)
+            except PermissionError:
+                print("File opened by another process.")
+        try:
+            shutil.rmtree(self.test_dir)
+        except PermissionError:
+            print("File opened by another process.")
 
     def test_gdal_python_vs_old_prepifg_prep(self):
 
         for i in range(10):
-            data = np.array(np.random.randint(0, 3, size=(10, 10)),
-                            dtype=np.float32)
+            data = np.array(np.random.randint(0, 3, size=(10, 10)), dtype=np.float32)
 
-            src_ds = gdal.GetDriverByName('GTiff').Create(self.temp_tif,
-                                                          10, 10, 2,
-                                                          gdalconst.GDT_Float32)
+            src_ds = gdal.GetDriverByName('GTiff').Create(self.temp_tif, 10, 10, 2, gdalconst.GDT_Float32)
 
             src_ds.GetRasterBand(1).WriteArray(data)
             src_ds.GetRasterBand(1).SetNoDataValue(0)
             nan_matrix = where(data == 0, nan, data)
+
             src_ds.GetRasterBand(2).WriteArray(np.isnan(nan_matrix))
-            src_ds.GetRasterBand(2).SetNoDataValue(-100)
+            src_ds.GetRasterBand(2).SetNoDataValue(0)
             src_ds.SetGeoTransform([10, 1, 0, 10, 0, -1])
 
-            dst_ds = gdal.GetDriverByName('MEM').Create('', 5, 5, 2,
-                                                        gdalconst.GDT_Float32)
+            dst_ds = gdal.GetDriverByName('MEM').Create('', 5, 5, 2, gdalconst.GDT_Float32)
             dst_ds.SetGeoTransform([10, 2, 0, 10, 0, -2])
 
             for k, v in self.md.items():
@@ -381,7 +396,7 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
             gdal.ReprojectImage(src_ds, dst_ds, '', '', gdal.GRA_Average)
             nan_frac = dst_ds.GetRasterBand(2).ReadAsArray()
             avg = dst_ds.GetRasterBand(1).ReadAsArray()
-            thresh = 0.5
+            thresh = 0.1
             avg[nan_frac >= thresh] = np.nan
 
             ifg = Ifg(self.temp_tif)
@@ -398,11 +413,13 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
             extents = [str(e) for e in [10, 0, 20, 10]]
 
             # only band 1 is resapled in warp_old
-            data, self.old_prepifg_path = warp_old(
-                ifg, x_looks, y_looks, extents, resolution,
-                thresh=thresh, crop_out=4, verbose=False)
+            data, self.old_prepifg_path = warp_old(ifg, x_looks, y_looks, extents, resolution,
+                                                   thresh=thresh, crop_out=4, verbose=False)
 
             np.testing.assert_array_equal(data, avg)
+
+            del ifg
+            del src_ds
 
     def test_gdal_python_vs_old_prepifg_prep2(self):
 
@@ -412,45 +429,42 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
             res = 2
             extents = [10, 0, 20, 10]
             extents_str = [str(e) for e in extents]
-            data = np.array(np.random.randint(0, 3, size=(10, 10)),
-                            dtype=np.float32)
+            data = np.array(np.random.randint(0, 3, size=(10, 10)), dtype=np.float32)
 
             # create the  self.temp_tiff
             self.manipulation(data, self.temp_tif, self.md)
 
+            # first file already opened by some process and never closed
+            self.out_tif = self.out_tif.split(".")[0]+"_2.tif"
+
             # only band 1 is resapled in warp_old
-            averaged_and_resampled, _ = gdal_python.crop_resample_average(
-                self.temp_tif, extents, [res, -res], self.out_tif, thresh,
-                match_pyrate=True)
+            averaged_and_resampled, _ = gdal_python.crop_resample_average(self.temp_tif, extents, [res, -res], self.out_tif, thresh, match_pyrate=True)
             ifg = Ifg(self.temp_tif)
             # only band 1 is resampled in warp_old
-            data, self.old_prepifg_path = warp_old(
-                ifg, x_looks, y_looks, extents_str, [res, -res],
-                thresh=thresh, crop_out=4, verbose=False)
+            data, self.old_prepifg_path = warp_old(ifg, x_looks, y_looks, extents_str, [res, -res],
+                                                   thresh=thresh, crop_out=4, verbose=False)
 
-            np.testing.assert_array_almost_equal(
-                data,
-                averaged_and_resampled, decimal=4)
+            np.testing.assert_array_almost_equal(data, averaged_and_resampled, decimal=4)
+            del averaged_and_resampled
 
     @staticmethod
     def manipulation(data, tiff, md):
-        src_ds = gdal.GetDriverByName('GTiff').Create(tiff,
-                                                      10, 10, 2,
-                                                      gdalconst.GDT_Float32)
+        src_ds = gdal.GetDriverByName('GTiff').Create(tiff, 10, 10, 2, gdalconst.GDT_Float32)
         src_ds.GetRasterBand(1).WriteArray(data)
         src_ds.GetRasterBand(1).SetNoDataValue(0)
         nan_matrix = where(data == 0, nan, data)
         src_ds.GetRasterBand(2).WriteArray(np.isnan(nan_matrix))
         src_ds.GetRasterBand(2).SetNoDataValue(-100)
         src_ds.SetGeoTransform([10, 1, 0, 10, 0, -1])
-        dst_ds = gdal.GetDriverByName('MEM').Create('', 5, 5, 2,
-                                                    gdalconst.GDT_Float32)
+        dst_ds = gdal.GetDriverByName('MEM').Create('', 5, 5, 2, gdalconst.GDT_Float32)
         dst_ds.SetGeoTransform([10, 2, 0, 10, 0, -2])
         for k, v in md.items():
             src_ds.SetMetadataItem(k, v)
             dst_ds.SetMetadataItem(k, v)
         src_ds.FlushCache()
-        return dst_ds, src_ds
+
+        del dst_ds
+        del src_ds
 
     def test_gdal_python_vs_old_prepifg_no_match_pyrate(self):
 
@@ -478,19 +492,25 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
                 # row at the bottom if nrows % 2 == 1
                 averaged_and_resapled = averaged_and_resapled[:yres, :xres]
                 nrows, ncols = averaged_and_resapled.shape
-                np.testing.assert_array_almost_equal(
-                    data, averaged_and_resapled, decimal=4)
+                np.testing.assert_array_almost_equal(data, averaged_and_resapled, decimal=4)
 
                 # make sure they are the same after they are opened again
                 # Last [yres:nrows, xres:ncols] won't match due to PyRate
                 # dropping last few rows/columns depending on resolution/looks
                 data_from_file = gdal.Open(self.old_prepifg_path).ReadAsArray()
                 new_from_file = out_ds.ReadAsArray()
-                np.testing.assert_array_almost_equal(
-                    data_from_file[:yres, :xres], new_from_file[:yres, :xres])
-                out_ds = None  # manual close
+                np.testing.assert_array_almost_equal(data_from_file[:yres, :xres], new_from_file[:yres, :xres])
+
+                del out_ds  # manual close
+                del data_from_file
+                del averaged_and_resapled
+                del data
+
 
     def test_gdal_python_vs_old_prepifg(self):
+
+        self.ifgs = common.small_data_setup(
+            datafiles=glob.glob(os.path.join(self.test_dir, "*.tif")))
 
         for ifg in self.ifgs:
             extents = [150.91, -34.229999976, 150.949166651, -34.17]
@@ -513,15 +533,17 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
 
                 # old_prepifg warp resample method loses one row
                 # at the bottom if nrows % 2 == 1
-                np.testing.assert_array_almost_equal(
-                    data, averaged_and_resampled[:yres, :xres], decimal=4)
+                np.testing.assert_array_almost_equal(data, averaged_and_resampled[:yres, :xres], decimal=4)
                 nrows, ncols = averaged_and_resampled.shape
                 # make sure they are the same after they are opened again
                 data_from_file = gdal.Open(self.old_prepifg_path).ReadAsArray()
                 self.assertTrue(os.path.exists(self.temp_tif))
                 new_from_file = gdal.Open(self.temp_tif).ReadAsArray()
-                np.testing.assert_array_almost_equal(data_from_file,
-                                                     new_from_file)
+                np.testing.assert_array_almost_equal(data_from_file, new_from_file)
+
+                del averaged_and_resampled
+                del new_from_file
+                del data_from_file
 
     def test_no_out_file_when_driver_type_is_mem(self):
         for ifg in self.ifgs:
@@ -602,7 +624,10 @@ class TestMEMVsGTiff(unittest.TestCase):
                                                        [0.25, 0., 0.75],
                                                        [0., 0., 0.]]))
         if os.path.exists(temp_tif):
-            os.remove(temp_tif)
+            try:
+                os.remove(temp_tif)
+            except PermissionError:
+                print("File opened by another process.")
 
     def test_mem(self):
         self.check('MEM')
