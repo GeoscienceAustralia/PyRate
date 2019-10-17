@@ -374,17 +374,6 @@ class TestConfigValidation(unittest.TestCase):
         self.params[TIME_SERIES_CAL] = 0
         validate_optional_parameters(self.params)
 
-    def test_ref_pixel_validation_only_performed_when_on(self):
-        self.params[REFX] = 1
-        self.params[REFY] = 1
-        self.params[REFNY] = 100
-        with pytest.raises(ConfigException):
-            validate_optional_parameters(self.params)
-
-        self.params[REFX] = 0
-        self.params[REFY] = 0
-        validate_optional_parameters(self.params)
-
     def test_epochs_in_gamma_obs(self):
         validate_epochs(self.params[IFG_FILE_LIST], SIXTEEN_DIGIT_EPOCH_PAIR)
         self.params[IFG_FILE_LIST] = \
@@ -613,8 +602,8 @@ class ConfigTest(unittest.TestCase):
         conf_path = join(SML_TEST_CONF, 'pyrate1.conf')
         params = config.get_config_params(conf_path)
 
-        assert params[REFX] == 181
-        assert params[REFY] == 91
+        assert params[REFX] == -1
+        assert params[REFY] == -1
 
     @staticmethod
     def test_read_param_file_missing_value():
@@ -622,8 +611,8 @@ class ConfigTest(unittest.TestCase):
         conf_path = join(SML_TEST_CONF, 'pyrate2.conf')
         params = config.get_config_params(conf_path)
 
-        assert params[REFX] == 181
-        assert params[REFY] == 91
+        assert params[REFX] == -1
+        assert params[REFY] == -1
 
     @staticmethod
     def test_parse_namelist():
