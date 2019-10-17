@@ -66,10 +66,10 @@ def merge_handler(config_file, rows, cols):
 CLI_DESC = """
 PyRate workflow: 
 
-    Step 1: converttogeotiff
+    Step 1: conv2tif
     Step 2: prepifg
     Step 3: process
-    Step 4: postprocess 
+    Step 4: merge 
 
 Refer to https://geoscienceaustralia.github.io/PyRate/usage.html for 
 more details.
@@ -125,7 +125,7 @@ def main():
     parser_process = subparsers.add_parser('process',
                                            help=('Main processing workflow '
                                                  'including corrections, time '
-                                                 'series and linear rate '
+                                                 'series and stacking '
                                                  'computation.'),
                                            add_help=True)
 
