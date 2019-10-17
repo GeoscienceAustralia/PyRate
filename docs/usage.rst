@@ -110,10 +110,10 @@ Use ``--help`` for the different command line options:
       --help                          Show this message and exit.
 
     Commands:
-      conv2tif  Convert interferograms to geotiff.
+      conv2tif    Convert interferograms to geotiff.
       merge       Reassemble computed tiles and save as geotiffs.
-      prepifg           Perform multilooking and cropping on geotiffs.
-      process           Time series and linear rate computation.
+      prepifg     Perform multilooking and cropping on geotiffs.
+      process     Time series and linear rate computation.
 
 The ``pyrate`` program has four command line options corresponding to
 different parts of the PyRate workflow:
