@@ -223,8 +223,8 @@ PARAM_CONVERSION = {
     COH_MASK: (int, 0),
     COH_THRESH: (float, 0.1),
 
-    REFX: (float, -1),
-    REFY: (float, -1),
+    REFX: (float, -181),
+    REFY: (float, -91),
     REFNX: (int, 10),
     REFNY: (int, 10),
     REF_CHIP_SIZE: (int, 21),
