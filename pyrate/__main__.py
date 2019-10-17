@@ -146,27 +146,27 @@ def main():
         
     parser_process.add_argument(*verbosity_args, **verbosity_kwargs)
  
-    # create the parser for the "postprocess" command
-    parser_postprocess = subparsers.add_parser('merge',
+    # create the parser for the "merge" command
+    parser_merge = subparsers.add_parser('merge',
                                            help=("Reassemble computed tiles "
                                                  "and save as geotiffs."), 
                                            add_help=True)
 
-    parser_postprocess.add_argument('-f', '--config_file', action="store", 
+    parser_merge.add_argument('-f', '--config_file', action="store", 
                                 type=str, default=None,
                                 help="Pass configuration file", required=False)
 
-    parser_postprocess.add_argument('-r', '--rows', type=int, required=False, default=1,
+    parser_merge.add_argument('-r', '--rows', type=int, required=False, default=1,
                                 help=("divide ifgs into this many rows. Must "
                                       "be same as number of rows used "
                                       "previously in main workflow."))
 
-    parser_postprocess.add_argument('-c', '--cols', type=int, required=False, default=1,
+    parser_merge.add_argument('-c', '--cols', type=int, required=False, default=1,
                                 help=("divide ifgs into this many columns. "
                                       "Must be same as number of cols used "
                                       "previously in main workflow."))
 
-    parser_postprocess.add_argument(*verbosity_args, **verbosity_kwargs)
+    parser_merge.add_argument(*verbosity_args, **verbosity_kwargs)
 
     args = parser.parse_args()
 
