@@ -1270,7 +1270,7 @@ def check_correction_status(ifgs, meta):  # pragma: no cover
             close_all(ifgs)
             raise CorrectionStatusError(msg)
     else:
-        log.info('Calculating corrections')
+        log.debug('Calculating corrections')
         close_all(ifgs)
         return False
 

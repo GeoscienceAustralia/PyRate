@@ -922,7 +922,7 @@ def validate_parameters(pars: Dict, step: str=CONV2TIF):
         if pars[REFX] <= 180 and pars[REFX] >= -180 and pars[REFY] >= -90 and pars[REFY] <= 90:
 
             pars[REFX], pars[REFY] = convert_geographic_coordinate_to_pixel_value(pars[REFX], pars[REFY], transform)
-            _logger.info("converted pars[REFX], pars[REFY] to: "+str(pars[REFX])+" "+str(pars[REFY]))
+            _logger.debug("converted pars[REFX], pars[REFY] to: "+str(pars[REFX])+" "+str(pars[REFY]))
 
             if pars[REFX] < 0 or pars[REFX] > n_cols:
                 _logger.info("converted pars[REFX] out of range")
