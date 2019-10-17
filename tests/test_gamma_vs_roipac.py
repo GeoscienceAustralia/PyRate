@@ -121,7 +121,7 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
             params[cf.OBS_DIR], os.path.basename(q).split('.')[0] + '_' +
             os.path.basename(q).split('.')[1] + '.tif') 
             for q in base_ifg_paths]
-        sys.argv = ['pyrate', 'converttogeotiff', conf_file]
+        sys.argv = ['pyrate', 'conv2tif', conf_file]
         conv2tif.main()
         sys.argv = ['pyrate', 'prepifg', conf_file]
         prepifg.main()
@@ -165,7 +165,7 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
 
     def check_roipac(self):
         self.make_roipac_input_files(self.dataPaths, 'WGS84')
-        sys.argv = ['pyrate', 'converttogeotiff', self.confFile]
+        sys.argv = ['pyrate', 'conv2tif', self.confFile]
         conv2tif.main()
         sys.argv = ['pyrate', 'prepifg', self.confFile]
         prepifg.main()

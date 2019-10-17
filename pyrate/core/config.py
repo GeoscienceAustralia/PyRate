@@ -568,7 +568,7 @@ def get_ifg_paths(config_file, step=CONV2TIF):
 
     xlks, _, crop = transform_params(params)
 
-    # base_unw_paths need to be geotiffed by converttogeotiff and multilooked by run_prepifg
+    # base_unw_paths need to be geotiffed by conv2tif and multilooked by prepifg
     base_unw_paths = original_ifg_paths(ifg_file_list, params[OBS_DIR])
 
     # dest_paths are tifs that have been coherence masked (if enabled),

@@ -96,18 +96,18 @@ def main():
     subparsers = parser.add_subparsers(dest='command')
     subparsers.required = True
 
-    # create the parser for the "converttogeotiff" command
-    parser_converttogeotiff = \
+    # create the parser for the "conv2tif" command
+    parser_conv2tif = \
         subparsers.add_parser('conv2tif',
                               help='Convert interferograms to geotiff.', 
                               add_help=True)
 
-    parser_converttogeotiff.add_argument('-f', '--config_file', action="store", 
+    parser_conv2tif.add_argument('-f', '--config_file', action="store", 
                                          type=str, default=None, 
                                          help="Pass configuration file", 
                                          required=True)
 
-    parser_converttogeotiff.add_argument(*verbosity_args, **verbosity_kwargs)
+    parser_conv2tif.add_argument(*verbosity_args, **verbosity_kwargs)
 
     # create the parser for the "prepifg" command
     parser_prepifg = subparsers.add_parser('prepifg',
