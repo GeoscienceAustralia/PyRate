@@ -223,8 +223,8 @@ PARAM_CONVERSION = {
     COH_MASK: (int, 0),
     COH_THRESH: (float, 0.1),
 
-    REFX: (float, -181),
-    REFY: (float, -91),
+    REFX: (float, -1),
+    REFY: (float, -1),
     REFNX: (int, 10),
     REFNY: (int, 10),
     REF_CHIP_SIZE: (int, 21),
@@ -929,7 +929,7 @@ def validate_parameters(pars: Dict, step: str=CONV2TIF):
                 _logger.info("given pars[REFX] or pars[REFY] out of range")
                 pars[REFX] = -1
                 pars[REFY] = -1
-                validate_reference_pixel_search_windows(n_cols, n_rows, pars)
+                # validate_reference_pixel_search_windows(n_cols, n_rows, pars)
 
         validate_multilook_parameters(n_cols, n_rows, 
                                       ORBITAL_FIT_LOOKS_X, ORBITAL_FIT_LOOKS_Y, 
@@ -1015,7 +1015,7 @@ def validate_optional_parameters(pars: Dict):
     errors.extend(validate(pars[ORBITAL_FIT], _ORBITAL_FIT_VALIDATION, pars))
     errors.extend(validate(pars[PROCESSOR] == GAMMA, _GAMMA_VALIDATION, pars))
     errors.extend(validate(pars[IFG_CROP_OPT] == 3, _CUSTOM_CROP_VALIDATION, pars))
-    errors.extend(validate(pars[REFX] > 0 and pars[REFY] > 0, _REFERENCE_PIXEL_VALIDATION, pars))
+    # errors.extend(validate(pars[REFX] > 0 and pars[REFY] > 0, _REFERENCE_PIXEL_VALIDATION, pars))
 
     return _raise_errors(errors)
 
