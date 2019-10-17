@@ -31,7 +31,7 @@ import pyrate.core.orbital
 import pyrate.core.shared
 import tests.common
 from pyrate import (
-    process, prepifg, postprocess, converttogeotif)
+    process, prepifg, merge, conv2tif)
 from tests.common import (small_data_setup, reconstruct_mst, 
     reconstruct_linrate, SML_TEST_DEM_HDR_GAMMA, pre_prepare_ifgs)
 from tests import common
@@ -156,7 +156,7 @@ def test_vcm_legacy_vs_mpi(mpisync, tempdir, get_config):
 
     # run prepifg, create the dest_paths files
     if mpiops.rank == 0:
-        converttogeotif.main(params_dict)
+        conv2tif.main(params_dict)
         prepifg.main(params_dict)
 
     mpiops.comm.barrier()
@@ -213,7 +213,7 @@ def test_prepifg_mpi(mpisync, get_config, tempdir,
         params[cf.OBS_DIR] = common.SML_TEST_GAMMA
         params[cf.DEM_FILE] = common.SML_TEST_DEM_GAMMA
         params[cf.DEM_HEADER_FILE] = common.SML_TEST_DEM_HDR_GAMMA
-    converttogeotif.main(params)
+    conv2tif.main(params)
     prepifg.main(params)
     common.remove_tifs(params[cf.OBS_DIR])    
 
@@ -226,7 +226,7 @@ def test_prepifg_mpi(mpisync, get_config, tempdir,
         params_s[cf.PARALLEL] = True
         params_s[cf.IFG_LKSX], params_s[cf.IFG_LKSY] = get_lks, get_lks
         params_s[cf.IFG_CROP_OPT] = get_crop
-        converttogeotif.main(params)
+        conv2tif.main(params)
         if roipac_or_gamma == 1:
             base_unw_paths = glob.glob(join(common.SML_TEST_GAMMA,
                                             "*_utm.unw"))

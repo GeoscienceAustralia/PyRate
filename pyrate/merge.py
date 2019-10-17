@@ -35,18 +35,18 @@ MASTER_PROCESS = 0
 
 def main(params, rows, cols):
     """
-    PyRate post-processing main function. Assembles product tiles in to
+    PyRate merge main function. Assembles product tiles in to
     single geotiff files
     """
     # setup paths
-    _postprocess_linrate(rows, cols, params)
+    _merge_linrate(rows, cols, params)
     if params[cf.TIME_SERIES_CAL]:
-        _postprocess_timeseries(rows, cols, params)
+        _merge_timeseries(rows, cols, params)
 
 
-def _postprocess_linrate(rows, cols, params):
+def _merge_linrate(rows, cols, params):
     """
-    Postprocess linear rate outputs
+    Merge linear rate outputs
     """
     # pylint: disable=expression-not-assigned
     # setup paths
@@ -101,9 +101,9 @@ def _save_linrate(ifgs_dict, params, tiles, out_type):
     log.info('Finished PyRate merging {}'.format(out_type))
 
 
-def _postprocess_timeseries(rows, cols, params):
+def _merge_timeseries(rows, cols, params):
     """
-    Postprocess time series output
+    Merge time series output
     """
     # pylint: disable=too-many-locals
     xlks, _, crop = cf.transform_params(params)

@@ -5,7 +5,7 @@ import glob
 import copy
 
 import pyrate.core.config as cf
-from pyrate import converttogeotif, prepifg
+from pyrate import conv2tif, prepifg
 from pyrate.core import gdal_python
 
 import os

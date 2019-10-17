@@ -21,20 +21,20 @@ import logging
 import argparse
 from argparse import RawTextHelpFormatter
 from pyrate.core import config as cf
-from pyrate import (converttogeotif, prepifg, process, postprocess)
+from pyrate import (conv2tif, prepifg, process, merge)
 from pyrate import CONV2TIF, PREPIFG, PROCESS, MERGE # Step names
 from pyrate.core import pyratelog
 import time
 
 log = logging.getLogger(__name__)
 
-def converttogeotiff_handler(config_file):
+def conv2tif_handler(config_file):
     """
     Convert interferograms to geotiff.
     """
     config_file = os.path.abspath(config_file)
     params = cf.get_config_params(config_file, step=CONV2TIF)
-    converttogeotif.main(params)
+    conv2tif.main(params)
 
 
 def prepifg_handler(config_file):
@@ -55,13 +55,13 @@ def process_handler(config_file, rows, cols):
     process.process_ifgs(sorted(dest_paths), params, rows, cols)
 
 
-def postprocess_handler(config_file, rows, cols):
+def merge_handler(config_file, rows, cols):
     """
     Reassemble computed tiles and save as geotiffs.
     """
     config_file = os.path.abspath(config_file)
     _, _, params = cf.get_ifg_paths(config_file, step=MERGE)
-    postprocess.main(params, rows, cols)
+    merge.main(params, rows, cols)
 
 CLI_DESC = """
 PyRate workflow: 
@@ -178,7 +178,7 @@ def main():
         log.info("Verbosity set to " + str(args.verbosity) + ".")
 
     if args.command == "conv2tif":
-        converttogeotiff_handler(args.config_file)
+        conv2tif_handler(args.config_file)
 
     if args.command == "prepifg":
         prepifg_handler(args.config_file)
@@ -187,7 +187,7 @@ def main():
         process_handler(args.config_file, args.rows, args.cols)
 
     if args.command == "merge":
-        postprocess_handler(args.config_file, args.rows, args.cols)
+        merge_handler(args.config_file, args.rows, args.cols)
     print("--- %s seconds ---" % (time.time() - start_time))
 
 if __name__ == "__main__":
