@@ -196,19 +196,12 @@ PARALLEL = 'parallel'
 #: INT; Number of processes for multi-threading
 PROCESSES = 'processes'
 
-# Orbital error correction constants for conversion to readable strings
+# Orbital error correction constants for conversion to readable flags
 INDEPENDENT_METHOD = 1
 NETWORK_METHOD = 2
 PLANAR = 1
 QUADRATIC = 2
 PART_CUBIC = 3
-
-# Orbital error name look up for logging
-ORB_METHOD_NAMES = {INDEPENDENT_METHOD: 'INDEPENDENT', 
-                    NETWORK_METHOD: 'NETWORK'}
-ORB_DEGREE_NAMES = {PLANAR: 'PLANAR', 
-                    QUADRATIC: 'QUADRATIC', 
-                    PART_CUBIC: 'PART CUBIC'}
 
 # dir for temp files
 TMPDIR = 'tmpdir'
@@ -265,7 +258,7 @@ PARAM_CONVERSION = {
     TIME_SERIES_CAL: (int, 0),
     # pixel thresh based on nepochs? not every project may have 20 epochs
     TIME_SERIES_PTHRESH: (int, 3),
-    TIME_SERIES_SM_FACTOR: (float, -1.0),
+    TIME_SERIES_SM_FACTOR: (float, None),
     TIME_SERIES_SM_ORDER: (int, None),
     TIME_SERIES_METHOD: (int, 2),  # Default to SVD method
 
@@ -627,11 +620,11 @@ _PARAM_VALIDATION = {
     ),
     REFX: (
         lambda a: True,
-        "Any float value valid."
+        "Any int value valid."
     ),
     REFY: (
         lambda a: True,
-        "Any float value valid."
+        "Any int value valid."
     ),
     ORBITAL_FIT: (
         lambda a: a in (0, 1),

@@ -1258,6 +1258,7 @@ def check_correction_status(ifgs, meta):  # pragma: no cover
     flags = [meta in ifg.meta_data for ifg in ifgs]
     if all(flags):
         log.info('Skipped: interferograms already corrected')
+        close_all(ifgs)
         return True
     elif not all(flags) and any(flags):
         log.debug('Detected mix of corrected and uncorrected interferograms')

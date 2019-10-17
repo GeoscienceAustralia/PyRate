@@ -124,9 +124,12 @@ def _ref_pixel_calc(ifg_paths, params):
     Wrapper for reference pixel calculation
     """
     refx = params[cf.REFX]
-    refy = params[cf.REFY]
     ifg = Ifg(ifg_paths[0])
     ifg.open(readonly=True)
+    if refx > ifg.ncols - 1:
+        msg = ('Supplied reference pixel X coordinate is greater than '
+               'the number of ifg columns: {}').format(refx)
+        raise ValueError(msg)
 
     if refx == -1 and refy == -1:
         log.info('Searching for best reference pixel location')
