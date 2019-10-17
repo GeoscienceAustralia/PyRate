@@ -230,8 +230,8 @@ PARAM_CONVERSION = {
     COH_MASK: (int, 0),
     COH_THRESH: (float, 0.1),
 
-    REFX: (float, 181),
-    REFY: (float, 91),
+    REFX: (float, -1),
+    REFY: (float, -1),
     REFNX: (int, 10),
     REFNY: (int, 10),
     REF_CHIP_SIZE: (int, 21),
@@ -385,10 +385,7 @@ def _parse_pars(pars, validate: bool=True, step: str=CONV2TIF) -> Dict:
     for k in PARAM_CONVERSION:
         if pars.get(k) is None:
             pars[k] = PARAM_CONVERSION[k][1]
-            if k in [REFX, REFY]:
-                _logger.warning(f"No value found for parameter '{k}'. PyRate will search for optimal values.")
-            else:
-                _logger.warning(f"No value found for parameter '{k}'. Providing "f"default value {pars[k]}.")
+            _logger.warning(f"No value found for parameter '{k}'. Providing "f"default value {pars[k]}.")
         else:
             conversion_func = PARAM_CONVERSION[k][0]
             if conversion_func:
@@ -474,7 +471,7 @@ def coherence_paths_for(path, params, tif=False) -> str:
 
     Example:
         '20151025-20160501_eqa_filt.cc'
-        Datepair is the epoch.
+        Date pair is the epoch.
 
     Args:
         path: Path to intergerogram to find coherence file for.
@@ -918,25 +915,28 @@ def validate_parameters(pars: Dict, step: str=CONV2TIF):
         # Get spatial information from tifs.
         extents, n_cols, n_rows, transform = _get_prepifg_info(ifl, pars[OBS_DIR], pars)
 
-        # Convert refx/refy from lat/long to pixel and validate...
-        if pars[REFX] <= 180 and pars[REFX] >= -180 and pars[REFY] >= -90 and pars[REFY] <= 90:
+        # test if refx/y already set to default value of -1
+        if pars[REFX] != -1 and pars[REFY] != -1:
 
-            pars[REFX], pars[REFY] = convert_geographic_coordinate_to_pixel_value(pars[REFX], pars[REFY], transform)
-            _logger.debug("converted pars[REFX], pars[REFY] to: "+str(pars[REFX])+" "+str(pars[REFY]))
+            # Convert refx/refy from lat/long to pixel and validate...
+            if pars[REFX] <= 180 and pars[REFX] >= -180 and pars[REFY] >= -90 and pars[REFY] <= 90:
 
-            if pars[REFX] < 0 or pars[REFX] > n_cols:
-                _logger.info("converted pars[REFX] out of range")
-                pars[REFX] = - 1
-            if pars[REFY] < 0 or pars[REFY] > n_rows:
-                _logger.info("converted pars[REFY] out of range")
-                pars[REFY] = - 1
+                pars[REFX], pars[REFY] = convert_geographic_coordinate_to_pixel_value(pars[REFX], pars[REFY], transform)
+                _logger.debug("converted pars[REFX], pars[REFY] to: "+str(pars[REFX])+" "+str(pars[REFY]))
 
-        # otherwise we need to search for the pixel so validate the search paramters.
-        else:
-            _logger.info("given pars[REFX] or pars[REFY] out of range")
-            pars[REFX] = - 1
-            pars[REFY] = - 1
-            validate_reference_pixel_search_windows(n_cols, n_rows, pars)
+                if pars[REFX] < 0 or pars[REFX] > n_cols:
+                    _logger.info("converted pars[REFX] out of range")
+                    pars[REFX] = -1
+                if pars[REFY] < 0 or pars[REFY] > n_rows:
+                    _logger.info("converted pars[REFY] out of range")
+                    pars[REFY] = -1
+
+            # otherwise we need to search for the pixel so validate the search parameters.
+            else:
+                _logger.info("given pars[REFX] or pars[REFY] out of range")
+                pars[REFX] = -1
+                pars[REFY] = -1
+                validate_reference_pixel_search_windows(n_cols, n_rows, pars)
 
         validate_multilook_parameters(n_cols, n_rows, 
                                       ORBITAL_FIT_LOOKS_X, ORBITAL_FIT_LOOKS_Y, 
