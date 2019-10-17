@@ -3,8 +3,9 @@
 import os
 import datetime
 import sphinx_rtd_theme
-from pyrate import __version__
 
+
+__version__ = "0.4.0"
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
