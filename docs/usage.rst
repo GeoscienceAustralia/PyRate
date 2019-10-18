@@ -109,7 +109,7 @@ Use ``--help`` for the different command line options:
       --help                          Show this message and exit.
 
     Commands:
-      conv2tif  	Convert interferograms to geotiff.
+      conv2tif    Convert interferograms to geotiff.
       merge             Reassemble computed tiles and save as geotiffs.
       prepifg           Perform multilooking and cropping on geotiffs.
       process           Time series and Stacking computation.
@@ -223,7 +223,7 @@ An example configuration file is provided in the root source directory
 as ``input_parameters.conf``.
 
 process: Main workflow, including stacking and time series analysis
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ::
 
@@ -231,10 +231,10 @@ process: Main workflow, including stacking and time series analysis
     Usage: pyrate process [OPTIONS] CONFIG_FILE
 
     Options:
-      -f, --config_file STRING path to configuration file
-      -r, --rows INTEGER  divide ifgs into this many rows
-      -c, --cols INTEGER  divide ifgs into this many columns
-      --help              Show this message and exit
+      -f,   --config_file   STRING   Path to configuration file
+      -r,   --rows          INTEGER  Divide interferograms into this many rows
+      -c,   --cols          INTEGER  Divide interferograms into this many columns
+      --help                         Show this message and exit
 
 This is the core of the PyRate processing workflow, handled by the
 ``process`` command:
@@ -279,10 +279,10 @@ save geotiff files of the final time series and stacking products.
     Usage: pyrate merge -f CONFIG_FILE [OPTIONS]
 
     Options:
-      -f, --config_file STRING path to configuration file
-      -r, --rows INTEGER  divide ifgs into this many rows
-      -c, --cols INTEGER  divide ifgs into this many columns
-      --help              Show this message and exit.
+      -f,   --config_file   STRING   Path to configuration file
+      -r,   --rows          INTEGER  Divide interferograms into this many rows
+      -c,   --cols          INTEGER  Divide interferograms into this many columns
+      --help                         Show this message and exit
 
 Make sure to use the same number of rows and columns that was used in
 the previous ``process`` step:
