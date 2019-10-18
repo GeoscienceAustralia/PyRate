@@ -65,7 +65,7 @@ def spatio_temporal_filter(tsincr, ifg, params, preread_ifgs):
     """
     Applies a spatio-temporal filter to remove the atmospheric phase screen
     (APS) and saves the corrected interferograms. Before performing this step,
-    the time series must be computed using the SVD method. This function then
+    the time series iscomputed using the SVD method. This function then
     performs temporal and spatial filtering.
 
     :param ndarray tsincr: incremental time series array of size

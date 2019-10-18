@@ -16,7 +16,7 @@
 """
 This Python module implements pixel-by-pixel linear rate
 (velocity) estimation using an iterative weighted least-squares
-method.
+stacking method.
 """
 # pylint: disable= invalid-name
 # pylint: disable= too-many-locals
@@ -34,7 +34,7 @@ from pyrate.core.shared import joblib_log_level
 def linear_rate(ifgs, params, vcmt, mst=None):
     """
     Pixel-by-pixel linear rate (velocity) estimation using iterative
-    weighted least-squares method.
+    weighted least-squares stacking method.
 
     :param Ifg.object ifgs: Sequence of interferogram objects from which to extract observations
     :param dict params: Configuration parameters
