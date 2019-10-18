@@ -7,7 +7,7 @@ Release History
 Added
 +++++
 - Python 3.7 support.
-- Optional 'converttogeotiff' step.
+- Optional 'conv2tif' step.
 - Building of docs integrated with Travis CI.
 - Coherence masking, view coherence masking section in 'input_parameters.conf'
   for options.
