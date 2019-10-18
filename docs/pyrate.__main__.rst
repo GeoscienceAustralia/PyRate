@@ -6,6 +6,7 @@ PyRate Main Script
    .. rubric:: Functions
    .. autosummary::
 
+      conv2tif
       prepifg
       process
-      postprocess
+      merge
