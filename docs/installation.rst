@@ -2,7 +2,7 @@ Installation
 ===============
 
 This is a quick guide to getting the PyRate software up and running in various platforms.
-Step by step guide to install Pyrate and run a toy example.
+Step by step guide to install Pyrate and run toy example.
 
 .. include:: ubuntu.rst
 .. include:: docker.rst
@@ -16,6 +16,7 @@ To verify PyRate has been successfully installed, run the workflow with the
 included example config file and data:
 
 ::
+
     pyrate conv2tif -f input_parameters.conf
     pyrate prepifg -f input_parameters.conf
     pyrate process -f input_parameters.conf
