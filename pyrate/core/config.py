@@ -57,22 +57,22 @@ OBS_DIR = 'obsdir'
 OUT_DIR = 'outdir'
 #: STR; Name of Digital Elevation Model file
 DEM_FILE = 'demfile'
-#: STR; Name of the header for the DEM
+#: STR; Name of the DEM header file
 DEM_HEADER_FILE = 'demHeaderFile'
-#: STR; Name of directory containing GAMMA SLC parameter files
+#: STR; Name of directory containing GAMMA SLC header files
 SLC_DIR = 'slcFileDir'
-# STR; Name of the file list containing the pool of available SLC headers
+#: STR; Name of the file list containing the pool of available SLC headers
 SLC_FILE_LIST = 'slcfilelist'
 
 
-#: STR; The projection of the input interferograms.
+# STR; The projection of the input interferograms.
+# TODO: only used in tests; deprecate?
 INPUT_IFG_PROJECTION = 'projection'
 #: FLOAT; The no data value in the interferogram files.
 NO_DATA_VALUE = 'noDataValue'
 #: FLOAT; No data averaging threshold for prepifg
 NO_DATA_AVERAGING_THRESHOLD = 'noDataAveragingThreshold'
-#: BOOL (1/2/3); Re-project data from Line of sight, 1 = vertical,
-# 2 = horizontal, 3 = no conversion
+# BOOL (1/2/3); Re-project data from Line of sight, 1 = vertical, 2 = horizontal, 3 = no conversion
 #REPROJECTION = 'prjflag' # NOT CURRENTLY USED
 #: BOOL (0/1): Convert no data values to Nan
 NAN_CONVERSION = 'nan_conversion'
@@ -94,32 +94,30 @@ IFG_YFIRST = 'ifgyfirst'
 IFG_YLAST = 'ifgylast'
 
 # reference pixel parameters
-#: INT; Coordinate in x of reference pixel OR -1 = perform search
+#: INT; Longitude (decimal degrees) of reference pixel, or if left blank a search will be performed
 REFX = 'refx'
-#: INT; Coordinate in y of reference pixel OR -1 = perform search
+#: INT; Latitude (decimal degrees) of reference pixel, or if left blank a search will be performed
 REFY = 'refy'
 #: INT; Number of reference pixel grid search nodes in x dimension
 REFNX = "refnx"
 #: INT; Number of reference pixel grid search nodes in y dimension
 REFNY = "refny"
-#: INT; Dimension of reference pixel search window
+#: INT; Dimension of reference pixel search window (in number of pixels)
 REF_CHIP_SIZE = 'refchipsize'
 #: FLOAT; Minimum fraction of observations required in search window for pixel to be a viable reference pixel
 REF_MIN_FRAC = 'refminfrac'
-#: BOOL (1/2); Reference phase estimation method
+#: BOOL (1/2); Reference phase estimation method (1: median of the whole interferogram, 2: median within the window surrounding the reference pixel)
 REF_EST_METHOD = 'refest'
 
 # coherence masking parameters
-# coherence masking parameters
 #: BOOL (0/1); Perform coherence masking (1: yes, 0: no)
 COH_MASK = 'cohmask'
-#: FLOAT; Threshold for coherence values
+#: FLOAT; Coherence threshold for masking
 COH_THRESH = 'cohthresh'
-#: STR; Directory containing coherence .cc files; defaults to OBS_DIR if not provided
+#: STR; Directory containing coherence files; defaults to OBS_DIR if not provided
 COH_FILE_DIR = 'cohfiledir'
 #: STR; Name of the file list containing the pool of available coherence files
 COH_FILE_LIST = 'cohfilelist'
-
 
 #atmospheric error correction parameters NOT CURRENTLY USED
 APS_CORRECTION = 'apscorrect'
@@ -130,23 +128,23 @@ APS_ELEVATION_MAP = 'elevationmap'
 APS_ELEVATION_EXT = 'APS_ELEVATION_EXT'
 
 # orbital error correction/parameters
-#: BOOL (1/0); Flag controlling whether to apply orbital error correction
+#: BOOL (1/0); Perform orbital error correction (1: yes, 0: no)
 ORBITAL_FIT = 'orbfit'
-#: BOOL (1/2); Method for orbital error correction, 1: independent, 2: network
+#: BOOL (1/2); Method for orbital error correction (1: independent, 2: network)
 ORBITAL_FIT_METHOD = 'orbfitmethod'
-#: BOOL (1/2/3) Order of orbital error model, 1 = planar in x and y (2 parameter model, 2 = quadratic in x and y (5 parameter model), 3 = quadratic in x and cubic in y (part-cubic 6 parameter model)
+#: BOOL (1/2/3) Polynomial order of orbital error model (1: planar in x and y - 2 parameter model, 2: quadratic in x and y - 5 parameter model, 3: quadratic in x and cubic in y - part-cubic 6 parameter model)
 ORBITAL_FIT_DEGREE = 'orbfitdegrees'
 #: INT; Multi look factor for orbital error calculation in x dimension
 ORBITAL_FIT_LOOKS_X = 'orbfitlksx'
 #: INT; Multi look factor for orbital error calculation in y dimension
 ORBITAL_FIT_LOOKS_Y = 'orbfitlksy'
 
-# Linear rate/stacking parameters
-#: FLOAT; Threshold ratio between 'model minus observation' residuals and a-priori observation standard deviations for linear rate estimate acceptance (otherwise remove furthest outlier and re-iterate)
+# Stacking parameters
+#: FLOAT; Threshold ratio between 'model minus observation' residuals and a-priori observation standard deviations for stacking estimate acceptance (otherwise remove furthest outlier and re-iterate)
 LR_NSIG = 'nsig'
-#: INT; Number of required observations per pixel for the linear rate inversion
+#: INT; Number of required observations per pixel for stacking to occur
 LR_PTHRESH = 'pthr'
-#: FLOAT; Maximum allowable standard error for pixels in linear rate inversion.
+#: FLOAT; Maximum allowable standard error for pixels in stacking
 LR_MAXSIG = 'maxsig'
 
 # atmospheric delay errors fitting parameters NOT CURRENTLY USED
@@ -154,9 +152,9 @@ LR_MAXSIG = 'maxsig'
 #ATM_FIT = 'atmfit'
 #ATM_FIT_METHOD = 'atmfitmethod'
 
-#: BOOL (0/1) Do spatio-temporal filter
+# APS correction parameters
+#: BOOL (0/1) Perform APS correction (1: yes, 0: no)
 APSEST = 'apsest'
-
 # temporal low-pass filter parameters
 #: INT (1/2/3); Method for temporal filtering (1: Gaussian, 2: Triangular, 3: Mean filter)
 TLPF_METHOD = 'tlpfmethod'
@@ -164,7 +162,6 @@ TLPF_METHOD = 'tlpfmethod'
 TLPF_CUTOFF = 'tlpfcutoff'
 #: INT; Number of required input observations per pixel for temporal filtering
 TLPF_PTHR = 'tlpfpthr'
-
 # spatially correlated noise low-pass filter parameters
 #: INT (1/2); Method for spatial filtering(1: butterworth; 2: gaussian)
 SLPF_METHOD = 'slpfmethod'
@@ -178,20 +175,20 @@ SLPF_NANFILL = 'slpnanfill'
 SLPF_NANFILL_METHOD = 'slpnanfill_method'
 
 # Time series parameters
-#: BOOL (1/0); Do Time series calculation
+#: BOOL (1/0); Perform time series calculation (1: yes, 0: no)
 TIME_SERIES_CAL = 'tscal'
 #: INT (1/2); Method for time series inversion (1: Laplacian Smoothing; 2: SVD)
 TIME_SERIES_METHOD = 'tsmethod'
 #: INT; Number of required input observations per pixel for time series inversion
 TIME_SERIES_PTHRESH = 'ts_pthr'
-#: INT (1/2); Order of Laplacian smoothing operator, first or # second order
+#: INT (1/2); Order of Laplacian smoothing operator, first or second order
 TIME_SERIES_SM_ORDER = 'smorder'
 #: FLOAT; Laplacian smoothing factor (values used is 10**smfactor)
 TIME_SERIES_SM_FACTOR = 'smfactor'
 # tsinterp is automatically assigned in the code; not needed in conf file
 #TIME_SERIES_INTERP = 'tsinterp'
 
-#: BOOL (0/1/2); Use parallelisation/Multi-threading
+#: BOOL (0/1/2); Use parallelisation/Multi-threading (0: in serial, 1: in parallel by rows, 2: in parallel by pixel)
 PARALLEL = 'parallel'
 #: INT; Number of processes for multi-threading
 PROCESSES = 'processes'

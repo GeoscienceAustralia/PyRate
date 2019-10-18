@@ -12,23 +12,22 @@ format interferograms are contained in the example configuration file *input_par
 File Discovery
 ~~~~~~~~~~~~~~
 
-To allow flexibility in the file types the can be processed, PyRate requires
-file lists to be provided. This allow PyRate to identify what files are of
-which type without relying on file extensions. The path to
-these lists are provided under the following keywords in the configuration
-file:
+To allow flexibility in the file types that can be processed, PyRate requires
+file lists to be provided. This allows PyRate to identify files of each
+type without relying on file extensions. The path to these lists are 
+provided under the following keywords in the configuration file:
 
 .. note::
 
-    Filenames should be provided without the preceding path, wtih each
+    Filenames should be provided without the preceding path, with each
     name on a separate line.
 
 ``ifgfilelist``: this is the list of interferograms to be processed.
 
 .. note::
 
-    Interferogram filenames must contain an epoch pair. Any naming convention
-    is appropriate so long as an epoch pair of format ``XXXXXXXX-YYYYYYYY``
+    Interferogram filenames must contain a pair of epochs. Any naming convention
+    is appropriate so long as an epoch pair of format ``YYYYMMDD-YYYYMMDD``
     exists in the filename.
 
     Example of an interferogram file list:
@@ -39,14 +38,14 @@ file:
         20160202-20160415_interferogram
 
 ``slcfilelist``: this is the list which contains the pool of available
-GAMMA headers.
+GAMMA SLC header files.
 
 .. note::
 
     Header filenames must contain an epoch. The epoch must be
-    in the format ``XXXXXXXXX``.
+    in the format ``YYYYMMDD``.
 
-    Example of a GAMMA header file list:
+    Example of a GAMMA SLC header file list:
     ::
 
         20150702_header
@@ -57,12 +56,12 @@ GAMMA headers.
         20160415_header
 
 ``cohfilelist``: this is the list which contains the pool of available
-coherence files (used in optional coherence masking).
+coherence files (used during optional coherence masking).
 
 .. note::
 
-    Coherence filenames must contain an epoch pair. The epoch pair must be
-    in the format ``XXXXXXX-YYYYYYYY``.
+    Coherence filenames must contain a pair of epochs. The epoch pair must be
+    in the format ``YYYYMMDD-YYYYMMDD``.
 
     Example of a coherence file list:
     ::
@@ -74,8 +73,8 @@ coherence files (used in optional coherence masking).
 The epochs in filenames are used to match the corresponding header or coherence
 files to each interferogram. It is recommended to provide all available headers/coherence
 files in their respective lists, as only the necessary files will be
-used. This allows you to process a subset of interferograms by reducing
-the names in ``ifgfilelist`` without needing to modify anything else.
+used. This allows you to process a subset of interferograms by removing
+entries in ``ifgfilelist`` without needing to modify anything else.
 
 
 Workflow
@@ -110,10 +109,10 @@ Use ``--help`` for the different command line options:
       --help                          Show this message and exit.
 
     Commands:
-      conv2tif    Convert interferograms to geotiff.
-      merge       Reassemble computed tiles and save as geotiffs.
-      prepifg     Perform multilooking and cropping on geotiffs.
-      process     Time series and linear rate computation.
+      conv2tif  	Convert interferograms to geotiff.
+      merge             Reassemble computed tiles and save as geotiffs.
+      prepifg           Perform multilooking and cropping on geotiffs.
+      process           Time series and Stacking computation.
 
 The ``pyrate`` program has four command line options corresponding to
 different parts of the PyRate workflow:
@@ -125,11 +124,11 @@ different parts of the PyRate workflow:
 
 Below we discuss these options.
 
-conv2tif: Converting input intergerograms
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+conv2tif: Converting input interferograms to Geotiff format
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Before PyRate can process GAMMA or ROI\_PAC intergerograms, they need to be
-converted into geotiff format by the ``conv2tif`` command.
+Before PyRate can process GAMMA or ROI\_PAC interferograms, they need to be
+converted into geotiff format using the ``conv2tif`` command.
 
 ::
 
@@ -148,13 +147,13 @@ specified at the *processor:* keyword in the config file (0: ROI\_PAC;
 Each GAMMA geocoded unwrapped interferogram requires three header files
 to extract metadata required for data formatting: a geocoded DEM header
 file (``demHeaderFile`` in config) and the master and slave epoch SLC
-parameter files (supplied by ``slcfilelist`` in config).
+header files (supplied by ``slcfilelist`` in config).
 
-The SLC parameter files should be in the directory specified in the
+The SLC header files should be in the directory specified in the
 config file under ``slcFileDir``. SLC files for a
 particular interferogram are found automatically by date-string pattern
 matching based on epochs. If ``slcFileDir`` is not provided, PyRate will
-fallback to looking in the observations direcotry (``obsdir`` in config).
+look in the observations directory by default (``obsdir`` in config).
 
 Each ROI\_PAC geocoded unwrapped interferogram requires its own
 header/resource file. These header files need to be
@@ -174,8 +173,8 @@ prepifg: Preparing input interferograms
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The second step of PyRate is applying multi-looking and cropping
-operations to the converted interferograms.
-These procedures are all performed by the ``pyrate prepifg`` command:
+operations to the geotiff interferograms.
+These procedures are all performed by the ``prepifg`` command:
 
 ::
 
@@ -218,12 +217,12 @@ The ``prepifg`` command will perform multi-looking (image
 sub-sampling) and cropping of the input interferograms in geotiff format.
 The purpose of this is to reduce the resolution of the interferograms to
 reduce the computational complexity of performing the time series and
-linear rate analysis.
+stacking analysis.
 
 An example configuration file is provided in the root source directory
 as ``input_parameters.conf``.
 
-process: Main workflow and linear rate and time series analysis
+process: Main workflow, including stacking and time series analysis
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ::
@@ -244,20 +243,20 @@ This is the core of the PyRate processing workflow, handled by the
 
     pyrate process -f path/to/config_file -c 3 -r 4
 
-This command will perform the time series and linear rate analysis and
+This command will perform the time series and stacking analysis and
 has the option to break the interferograms into a number of tiles in
 ``r`` rows and ``c`` columns. For example, the above command will break
-the interferograms into 12 tiles and will produce 12 linear rate and
+the interferograms into 12 tiles and will produce 12 stacking and
 time series products corresponding to each tile.
 
-The optional rows and columns arguments can be used to create smaller
-tiles of the full size interferograms. This enables large interferograms
-to be more easily be accommodated in memory. The number of tiles chosen
-should be as small as possible that fits in the system memory.
+The optional rows and columns arguments can be used to split the full-size
+interferograms into smaller tiles. This enables large interferograms
+to be more easily accommodated in memory. The number of tiles chosen
+should be as small as possible that fits within the available system memory.
 
 Optionally, an orbital error correction and a spatio-temporal filter
-operation to estimate and remove atmospheric phase screen signals is
-applied to the interferograms prior to time series and linear rate
+operation to estimate and remove atmospheric phase screen (APS) signals is
+applied to the interferograms prior to time series and stacking
 analysis. The corrected interferograms are updated on disk and the
 corrections are not re-applied upon subsequent runs. This functionality
 is controlled by the ``orbfit`` and ``apsest`` options in the
@@ -272,7 +271,7 @@ merge: Putting the tiles back together
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The last step of the PyRate workflow is to re-assemble the tiles and
-save geotiff files of the final time series and linear rate products.
+save geotiff files of the final time series and stacking products.
 
 ::
 
