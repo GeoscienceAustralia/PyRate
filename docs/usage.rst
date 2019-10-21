@@ -14,22 +14,22 @@ File Discovery
 
 To allow flexibility in the file types the can be processed, PyRate requires
 file lists to be provided. This allow PyRate to identify what files are of
-which type without relying on file extensions. The path to 
-these lists are provided under the following keywords in the configuration 
+which type without relying on file extensions. The path to
+these lists are provided under the following keywords in the configuration
 file:
 
 .. note::
-    
+
     Filenames should be provided without the preceding path, wtih each
     name on a separate line.
-    
+
 ``ifgfilelist``: this is the list of interferograms to be processed.
 
 .. note::
 
-    Interferogram filenames must contain an epoch pair. Any naming convention 
-    is appropriate so long as an epoch pair of format ``XXXXXXXX-YYYYYYYY`` 
-    exists in the filename. 
+    Interferogram filenames must contain an epoch pair. Any naming convention
+    is appropriate so long as an epoch pair of format ``XXXXXXXX-YYYYYYYY``
+    exists in the filename.
 
     Example of an interferogram file list:
     ::
@@ -37,9 +37,9 @@ file:
         20150702-20150920_interferogram
         20151219-20160109_interferogram
         20160202-20160415_interferogram
-    
+
 ``slcfilelist``: this is the list which contains the pool of available
-GAMMA headers. 
+GAMMA headers.
 
 .. note::
 
@@ -55,13 +55,13 @@ GAMMA headers.
         20160109_header
         20160202_header
         20160415_header
-       
+
 ``cohfilelist``: this is the list which contains the pool of available
-coherence files (used in optional coherence masking). 
+coherence files (used in optional coherence masking).
 
 .. note::
 
-    Coherence filenames must contain an epoch pair. The epoch pair must be 
+    Coherence filenames must contain an epoch pair. The epoch pair must be
     in the format ``XXXXXXX-YYYYYYYY``.
 
     Example of a coherence file list:
@@ -70,13 +70,13 @@ coherence files (used in optional coherence masking).
         20150702-20150920_coherence
         20151219-20160109_coherence
         20160202-20160415_coherence
-    
+
 The epochs in filenames are used to match the corresponding header or coherence
-files to each interferogram. It is recommended to provide all available headers/coherence 
+files to each interferogram. It is recommended to provide all available headers/coherence
 files in their respective lists, as only the necessary files will be
 used. This allows you to process a subset of interferograms by reducing
 the names in ``ifgfilelist`` without needing to modify anything else.
-    
+
 
 Workflow
 --------
@@ -139,7 +139,7 @@ converted into geotiff format by the ``conv2tif`` command.
       Convert interferograms to geotiff.
 
     Options:
-      --help  Show this message and exit. 
+      --help  Show this message and exit.
 
 The ``conv2tif`` command will determine the input format from the value
 specified at the *processor:* keyword in the config file (0: ROI\_PAC;
@@ -147,14 +147,14 @@ specified at the *processor:* keyword in the config file (0: ROI\_PAC;
 
 Each GAMMA geocoded unwrapped interferogram requires three header files
 to extract metadata required for data formatting: a geocoded DEM header
-file (``demHeaderFile`` in config) and the master and slave epoch SLC 
+file (``demHeaderFile`` in config) and the master and slave epoch SLC
 parameter files (supplied by ``slcfilelist`` in config).
 
 The SLC parameter files should be in the directory specified in the
 config file under ``slcFileDir``. SLC files for a
 particular interferogram are found automatically by date-string pattern
 matching based on epochs. If ``slcFileDir`` is not provided, PyRate will
-fallback to looking in the observations direcotry (``obsdir`` in config). 
+fallback to looking in the observations direcotry (``obsdir`` in config).
 
 Each ROI\_PAC geocoded unwrapped interferogram requires its own
 header/resource file. These header files need to be
@@ -162,7 +162,7 @@ stored in the same directory as the interferograms.
 
 In addition, the geocoded DEM header file is required and
 its path and name are specified in the config file under ``demHeaderFile``.
-The geographic projection in the parameter *DATUM:* is extracted from the DEM 
+The geographic projection in the parameter *DATUM:* is extracted from the DEM
 header file.
 
 Upon completion, geotiff formatted copies of the input files will be placed
@@ -173,8 +173,8 @@ already exist.
 prepifg: Preparing input interferograms
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The second step of PyRate is applying multi-looking and cropping 
-operations to the converted interferograms. 
+The second step of PyRate is applying multi-looking and cropping
+operations to the converted interferograms.
 These procedures are all performed by the ``pyrate prepifg`` command:
 
 ::
@@ -194,16 +194,21 @@ The ``prepifg`` command is used as follows:
 Coherence masking
 ^^^^^^^^^^^^^^^^^
 
-If specified, ``prepifg`` will perform coherence masking of the unwrapped
-interferogram before multilooking and cropping is performed. This requires
-corresponding coherence images for each unwrapped interferogram. 
+If specified, ``prepifg`` will perform coherence masking on the
+interferograms before multilooking and cropping is performed. This requires
+corresponding coherence images for each interferogram. The purpose
+of this is to remove the poor quality phase observations to leave a set of
+high-quality pixels. Pixels with coherence values below a certain threshold
+will be set to the NoDataValue. Note that the number of valid pixels (i.e.
+pixels not equal to NoDataValue) in each interferogram will be different
+after coherence masking.
 
-Coherence masking is enabled  by setting the ``cohmask`` argument to ``1`` in
+Coherence masking is enabled by setting the ``cohmask`` argument to ``1`` in
 the configuration file. A threshold, ``cohthresh`` needs to be provided. If
-``cohfiledir`` is provided, this is where PyRate will look for coherence 
-images. If not provided it will look in observations directory where the
-unwrapped interferograms exist (``obsdir`` in config). The available coherence 
-filenames need tospecified in a file list and provided as the 
+``cohfiledir`` is provided, this is where PyRate will look for coherence
+images. If not provided it will look in the observations directory where the
+interferograms exist (``obsdir`` in config). The available coherence
+filenames need to be specified in a file list and provided as the
 ``cohfilelist`` parameter.
 
 Image transformations: multilooking and cropping
@@ -211,12 +216,12 @@ Image transformations: multilooking and cropping
 
 The ``prepifg`` command will perform multi-looking (image
 sub-sampling) and cropping of the input interferograms in geotiff format.
-The purpose of this is to reduce the resolution of the interferograms to 
-reduce the computational complexity of performing the time series and 
+The purpose of this is to reduce the resolution of the interferograms to
+reduce the computational complexity of performing the time series and
 linear rate analysis.
 
 An example configuration file is provided in the root source directory
-as ``input_parameters.conf``. 
+as ``input_parameters.conf``.
 
 process: Main workflow and linear rate and time series analysis
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
