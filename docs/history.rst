@@ -11,15 +11,16 @@ Added
 - Building of docs integrated with Travis CI.
 - Coherence masking, view coherence masking section in 'input_parameters.conf'
   for options.
-- Parameter validation.
+- Input parameter validation.
 - SLC and coherence file lists for file discovery.
 
 Changed
 +++++++
-- 'linrate' command has been renamed to 'process'.
-- 'postprocess' command has been renamed to 'merge'
-- CLI structure, config files now need to provided with '-f' flag.
-- Reduced console output, default setting is now INFO.
+- 'linrate' step has been renamed to 'process'.
+- 'postprocess' step has been renamed to 'merge'
+- 'converttogeotiff' step has been renamed to 'conv2tif'
+- CLI structure: config files now need to provided with '-f' flag.
+- Reduced console output, default verbosity setting is now INFO.
 - Restructure of code layout, src modules now in 'core' directory and scripts
   at top level.
 
@@ -34,7 +35,7 @@ Removed
 Added
 +++++
 - `apt_install.sh` in utils/ that lists Ubuntu/apt package requirements.
-- `load_modules.sh` in utils/ that sets up Raijin environment.
+- `load_modules.sh` in utils/ that sets up NCI Raijin HPC environment.
 
 Fixed
 +++++
