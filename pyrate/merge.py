@@ -58,8 +58,8 @@ def main(params, rows, cols):
     minimum = -1 * maximum
     step = (maximum - minimum)/256.0
 
-    # read color map from utilites and write it to the output folder
-    with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "utils", "colormap.txt"),"r") as f:
+    # read color map from utilises and write it to the output folder
+    with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "utils", "colormap.txt"), "r") as f:
         color_map_list = []
         for line in f.readlines():
             color_map_list.append(line.strip().split(" "))
@@ -76,7 +76,8 @@ def main(params, rows, cols):
     input_tif_path = os.path.join(output_folder_path, "linrate.tif")
     output_png_path = os.path.join(output_folder_path, "linrate.png")
     subprocess.check_call(["gdaldem", "color-relief", input_tif_path, color_map_path, output_png_path, "-nearest_color_entry"])
-    log.info('Finished creating quicklook results.')
+    del gtif  # manually close raster
+    log.info('Finished creating quick look results.')
 
 
 def _merge_linrate(rows, cols, params):
