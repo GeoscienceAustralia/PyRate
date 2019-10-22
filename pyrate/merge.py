@@ -34,6 +34,41 @@ log = logging.getLogger(__name__)
 MASTER_PROCESS = 0
 
 
+def create_png_from_tif(output_folder_path):
+
+    # open raster and choose band to find min, max
+    raster = os.path.join(output_folder_path, "linrate.tif")
+    gtif = gdal.Open(raster)
+    srcband = gtif.GetRasterBand(1)
+
+    # Get raster statistics
+    minimum, maximum, mean, stddev = srcband.GetStatistics(True, True)
+    maximum = max(abs(minimum), abs(maximum))
+    minimum = -1 * maximum
+    step = (maximum - minimum) / 256.0
+
+    del gtif  # manually close raster
+
+    # read color map from utilises and write it to the output folder
+    ref_color_map_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "utils", "colormap.txt")
+    with open(ref_color_map_path, "r") as f:
+        color_map_list = []
+        for line in f.readlines():
+            color_map_list.append(line.strip().split(" "))
+
+    no_of_data_value = len(np.arange(minimum, maximum, step))
+    for i, no in enumerate(np.arange(minimum, maximum, step)):
+        color_map_list[i][0] = str(no)
+
+    color_map_path = os.path.join(output_folder_path, "colormap.txt")
+    with open(color_map_path, "w") as f:
+        for i in range(no_of_data_value):
+            f.write(' '.join(color_map_list[i]) + "\n")
+
+    input_tif_path = os.path.join(output_folder_path, "linrate.tif")
+    output_png_path = os.path.join(output_folder_path, "linrate.png")
+    subprocess.check_call(["gdaldem", "color-relief", input_tif_path, color_map_path, output_png_path, "-nearest_color_entry"])
+
 def main(params, rows, cols):
     """
     PyRate merge main function. Assembles product tiles in to
@@ -46,37 +81,7 @@ def main(params, rows, cols):
 
     log.info('Start creating quicklook results.')
     output_folder_path = os.path.dirname(params["tmpdir"])
-
-    # open raster and choose band to find min, max
-    raster = os.path.join(output_folder_path, "linrate.tif")
-    gtif = gdal.Open(raster)
-    srcband = gtif.GetRasterBand(1)
-
-    # Get raster statistics
-    minimum, maximum, mean, stddev = srcband.GetStatistics(True, True)
-    maximum = max(abs(minimum), abs(maximum))
-    minimum = -1 * maximum
-    step = (maximum - minimum)/256.0
-
-    # read color map from utilises and write it to the output folder
-    with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "utils", "colormap.txt"), "r") as f:
-        color_map_list = []
-        for line in f.readlines():
-            color_map_list.append(line.strip().split(" "))
-
-    no_of_data_value = len(np.arange(minimum, maximum, step))
-    for i, no in enumerate(np.arange(minimum, maximum, step)):
-        color_map_list[i][0] = str(no)
-
-    color_map_path = os.path.join(output_folder_path,  "colormap.txt")
-    with open(color_map_path, "w") as f:
-        for i in range(no_of_data_value):
-            f.write(' '.join(color_map_list[i]) + "\n")
-
-    input_tif_path = os.path.join(output_folder_path, "linrate.tif")
-    output_png_path = os.path.join(output_folder_path, "linrate.png")
-    subprocess.check_call(["gdaldem", "color-relief", input_tif_path, color_map_path, output_png_path, "-nearest_color_entry"])
-    del gtif  # manually close raster
+    create_png_from_tif(output_folder_path)
     log.info('Finished creating quick look results.')
 
 
