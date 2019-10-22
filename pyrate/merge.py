@@ -67,7 +67,7 @@ def create_png_from_tif(output_folder_path):
 
     input_tif_path = os.path.join(output_folder_path, "linrate.tif")
     output_png_path = os.path.join(output_folder_path, "linrate.png")
-    subprocess.check_call(["gdaldem", "color-relief", input_tif_path, color_map_path, output_png_path, "-nearest_color_entry"])
+    subprocess.check_call(["gdaldem", "color-relief", "-of", "PNG", input_tif_path, color_map_path, output_png_path, "-nearest_color_entry"])
 
 def main(params, rows, cols):
     """
