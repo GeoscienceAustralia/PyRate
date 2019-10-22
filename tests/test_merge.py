@@ -50,7 +50,7 @@ class MergingTest(unittest.TestCase):
         # check entries in color map
         # check if input tiff is broken into 256 steps
         # check if output png is created
-        # save a generated png and test for similarity 
+        # save a generated png and test for similarity
 
         self.assertTrue(True)
 
