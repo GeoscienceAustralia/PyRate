@@ -64,13 +64,14 @@ def main(params, rows, cols):
         for line in f.readlines():
             color_map_list.append(line.strip().split(" "))
 
+    no_of_data_value = len(np.arange(minimum, maximum, step))
     for i, no in enumerate(np.arange(minimum, maximum, step)):
         color_map_list[i][0] = str(no)
 
     color_map_path = os.path.join(output_folder_path,  "colormap.txt")
     with open(color_map_path, "w") as f:
-        for line in color_map_list:
-            f.write(' '.join(line) + "\n")
+        for i in range(no_of_data_value):
+            f.write(' '.join(color_map_list[i]) + "\n")
 
     input_tif_path = os.path.join(output_folder_path, "linrate.tif")
     output_png_path = os.path.join(output_folder_path, "linrate.png")
