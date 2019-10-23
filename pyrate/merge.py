@@ -98,28 +98,6 @@ def create_png_from_tif(output_folder_path):
     output_png_path = os.path.join(output_folder_path, "linrate.png")
     subprocess.check_call(["gdaldem", "color-relief", "-of", "PNG", input_tif_path, "-alpha", color_map_path, output_png_path, "-nearest_color_entry"])
 
-    KML_FORMAT = """
-    <?xml version="1.0" encoding="UTF-8"?>
-    <kml xmlns="http://earth.google.com/kml/2.1">
-      <Document>
-        <name>linrate.kml</name>
-        <GroundOverlay>
-          <name>linrate.png</name>
-          <Icon>
-            <href>linrate.png</href>
-          </Icon>
-          <LatLonBox>
-            <north> -33.8420834 </north>
-            <south> -34.4393056 </south>
-            <east>  151.2162501 </east>
-            <west>  150.4787501 </west>
-          </LatLonBox>
-        </GroundOverlay>
-      </Document>
-    </kml>
-    """
-
-
 
 def main(params, rows, cols):
     """
