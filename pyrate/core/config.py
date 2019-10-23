@@ -398,8 +398,8 @@ def _parse_pars(pars, validate: bool=True, step: str=CONV2TIF) -> Dict:
         if pars.get(p) is None:
             pars[p] = pars[OBS_DIR]
 
-    if validate:
-        validate_parameters(pars, step)
+    # if validate:
+    #     validate_parameters(pars, step)
     return pars
 
 # CONFIG UTILS - TO BE MOVED?
