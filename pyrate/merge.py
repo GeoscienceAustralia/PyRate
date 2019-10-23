@@ -33,13 +33,42 @@ log = logging.getLogger(__name__)
 # Constants
 MASTER_PROCESS = 0
 
-
 def create_png_from_tif(output_folder_path):
 
     # open raster and choose band to find min, max
     raster = os.path.join(output_folder_path, "linrate.tif")
     gtif = gdal.Open(raster)
     srcband = gtif.GetRasterBand(1)
+
+    west, north, east, south = "", "", "", ""
+    for line in gdal.Info(gtif).split('\n'):
+        if "Upper Left" in line:
+            west, north = line.split(")")[0].split("(")[1].split(",")
+        if "Lower Right" in line:
+            east, south = line.split(")")[0].split("(")[1].split(",")
+
+    kml_file_path = os.path.join(output_folder_path, "linrate.kml")
+    kml_file_content = """<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://earth.google.com/kml/2.1">
+  <Document>
+    <name>linrate.kml</name>
+    <GroundOverlay>
+      <name>linrate.png</name>
+      <Icon>
+        <href>linrate.png</href>
+      </Icon>
+      <LatLonBox>
+        <north> """+north+""" </north>
+        <south> """+south+""" </south>
+        <east>  """+east+""" </east>
+        <west>  """+west+""" </west>
+      </LatLonBox>
+    </GroundOverlay>
+  </Document>
+</kml>"""
+
+    with open(kml_file_path, "w") as f:
+        f.write(kml_file_content)
 
     # Get raster statistics
     minimum, maximum, mean, stddev = srcband.GetStatistics(True, True)
@@ -58,7 +87,7 @@ def create_png_from_tif(output_folder_path):
 
     no_of_data_value = len(np.arange(minimum, maximum, step))
     for i, no in enumerate(np.arange(minimum, maximum, step)):
-        color_map_list[i][0] = str(no)
+        color_map_list[i+1][0] = str(no)
 
     color_map_path = os.path.join(output_folder_path, "colormap.txt")
     with open(color_map_path, "w") as f:
@@ -67,7 +96,30 @@ def create_png_from_tif(output_folder_path):
 
     input_tif_path = os.path.join(output_folder_path, "linrate.tif")
     output_png_path = os.path.join(output_folder_path, "linrate.png")
-    subprocess.check_call(["gdaldem", "color-relief", "-of", "PNG", input_tif_path, color_map_path, output_png_path, "-nearest_color_entry"])
+    subprocess.check_call(["gdaldem", "color-relief", "-of", "PNG", input_tif_path, "-alpha", color_map_path, output_png_path, "-nearest_color_entry"])
+
+    KML_FORMAT = """
+    <?xml version="1.0" encoding="UTF-8"?>
+    <kml xmlns="http://earth.google.com/kml/2.1">
+      <Document>
+        <name>linrate.kml</name>
+        <GroundOverlay>
+          <name>linrate.png</name>
+          <Icon>
+            <href>linrate.png</href>
+          </Icon>
+          <LatLonBox>
+            <north> -33.8420834 </north>
+            <south> -34.4393056 </south>
+            <east>  151.2162501 </east>
+            <west>  150.4787501 </west>
+          </LatLonBox>
+        </GroundOverlay>
+      </Document>
+    </kml>
+    """
+
+
 
 def main(params, rows, cols):
     """
