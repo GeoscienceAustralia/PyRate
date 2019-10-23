@@ -28,7 +28,6 @@ Removed
 +++++++
 - Unused luigi code.
 - References to Matlab.
-- Python 3.6 support.
 
 0.3.0 (2019-07-26)
 -----------------------
