@@ -291,9 +291,23 @@ the previous ``process`` step:
 
     pyrate merge -f path/to/config_file -c 3 -r 4
 
-Multiprocessing
----------------
+Parallel processing
+-------------------
 
-PyRate can use standard multi-threading simply by turning
-``parallel:  1`` in the configuration
-file to take advantage of multiple cores on a single PC.
+PyRate can be run in parallel using standard multi-threading simply by turning
+``parallel:  1`` in the configuration file to take advantage of multiple cores
+on a single machine. The parameter ``processes`` sets the number of threads.
+
+Alternatively, PyRate can be parallelised using MPI by using ``mpirun``:
+
+::
+
+    # Modify '-n' based on the number of processors available.
+    mpirun -n 4 pyrate conv2tif -f input_parameters.conf
+    mpirun -n 4 pyrate prepifg -f input_parameters.conf
+    mpirun -n 4 pyrate process -f input_parameters.conf -c 2 -r 2
+    mpirun -n 4 pyrate merge -f input_parameters.conf -c 2 -r 2
+
+In the case that PyRate is run using MPI, standard multi-threading is automatically
+disabled (i.e. equivalent to setting ``parallel:  0``).
+

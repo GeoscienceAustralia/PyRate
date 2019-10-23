@@ -22,16 +22,6 @@ included example config file and data:
     pyrate process -f input_parameters.conf
     pyrate merge -f input_parameters.conf
 
-On Raijin and other HPC systems, you can utilise MPI to run PyRate in parallel:
-
-::
-
-    # Modify 'n' based on the number of processors available.
-    mpirun -n 4 pyrate conv2tif -f input_parameters.conf
-    mpirun -n 4 pyrate prepifg -f input_parameters.conf
-    mpirun -n 4 pyrate process -f input_parameters.conf -c 2 -r 2
-    mpirun -n 4 pyrate merge -f input_parameters.conf -c 2 -r 2
-
 If the installation has been successful, this workflow will complete without 
 errors and results will be available in:
 
