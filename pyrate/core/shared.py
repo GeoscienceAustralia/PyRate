@@ -312,12 +312,7 @@ class Ifg(RasterBase):
             return date(year, month, day)
 
         md = self.dataset.GetMetadata()
-        datestrs = []
-        for k in [ifc.MASTER_DATE, ifc.SLAVE_DATE]:
-            if k in md.keys():
-                datestrs.append(md[k])
-            else:
-                datestrs.append(None)
+        datestrs = [md[k] for k in [ifc.MASTER_DATE, ifc.SLAVE_DATE]]
 
         if all(datestrs):
             self.master, self.slave = [_to_date(s) for s in datestrs]

@@ -887,7 +887,7 @@ def validate_parameters(pars: Dict, step: str=CONV2TIF):
 
         # Check the minimum number of epochs.
         n_epochs, _ = _get_temporal_info(ifl, pars[OBS_DIR])        
-        validate_minimum_epochs(n_epochs, MINIMUM_NUMBER_EPOCHS)
+        # validate_minimum_epochs(n_epochs, MINIMUM_NUMBER_EPOCHS)
         
         # Check the IFG crop parameters are within scene.
         min_extents, n_cols, n_rows = \
