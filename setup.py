@@ -19,7 +19,7 @@ from setuptools.command.test import test as TestCommand
 from subprocess import check_output
 import sys
 import platform
-
+import setuptools
 __version__ = "0.4.0"
 
 # Get requirements (and dev requirements for testing) from requirements
@@ -72,9 +72,11 @@ setup(
     author='Geoscience Australia InSAR team',
     author_email='insar@ga.gov.au',
     url='https://github.com/GeoscienceAustralia/PyRate',
-    packages=['pyrate', 'pyrate.core'],
+    packages=setuptools.find_packages(),
     package_dir={'PyRate': 'pyrate'},
-    include_package_data=True,
+    package_data={
+        'utils': ['colormap.txt']
+    },
     entry_points={
           'console_scripts': [
               'pyrate = pyrate.__main__:main'
