@@ -86,25 +86,23 @@ def do_prepifg(gtiff_paths, params):
     log.info("Preparing interferograms by cropping/multilooking")
     parallel = params[cf.PARALLEL]
 
-    if all([os.path.isfile(f) for f in gtiff_paths]):
-        ifgs = [prepifg_helper.dem_or_ifg(p) for p in gtiff_paths]
-        xlooks, ylooks, crop = cf.transform_params(params)
-        user_exts = (params[cf.IFG_XFIRST], params[cf.IFG_YFIRST],
-                     params[cf.IFG_XLAST], params[cf.IFG_YLAST])
-        exts = prepifg_helper.get_analysis_extent(crop, ifgs, xlooks, ylooks,
-                                                  user_exts=user_exts)
-        thresh = params[cf.NO_DATA_AVERAGING_THRESHOLD]
-        if parallel:
-            Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
-                delayed(_prepifg_multiprocessing)(p, xlooks, ylooks, exts, thresh, crop,
-                        params) for p in gtiff_paths)
-        else:
-            [_prepifg_multiprocessing(p, xlooks, ylooks, exts, thresh, crop,
-                                      params) for p in gtiff_paths]
+    for f in gtiff_paths:
+        if not os.path.isfile(f):
+            raise Exception("Can not find geotiff: " + str(f) + ". Ensure you have converted your interferograms to geotiffs.")
+
+    ifgs = [prepifg_helper.dem_or_ifg(p) for p in gtiff_paths]
+    xlooks, ylooks, crop = cf.transform_params(params)
+    user_exts = (params[cf.IFG_XFIRST], params[cf.IFG_YFIRST],
+                 params[cf.IFG_XLAST], params[cf.IFG_YLAST])
+    exts = prepifg_helper.get_analysis_extent(crop, ifgs, xlooks, ylooks,
+                                              user_exts=user_exts)
+    thresh = params[cf.NO_DATA_AVERAGING_THRESHOLD]
+    if parallel:
+        Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
+            delayed(_prepifg_multiprocessing)(p, xlooks, ylooks, exts, thresh, crop,
+                    params) for p in gtiff_paths)
     else:
-        log.error("Full-res geotiffs do not exist. Ensure you have"
-            " converted your interferograms to geotiffs.")
-        sys.exit(1)
+        [_prepifg_multiprocessing(p, xlooks, ylooks, exts, thresh, crop, params) for p in gtiff_paths]
 
 def _prepifg_multiprocessing(path, xlooks, ylooks, exts, thresh, crop, params):
     """
