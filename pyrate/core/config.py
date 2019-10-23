@@ -398,8 +398,8 @@ def _parse_pars(pars, validate: bool=True, step: str=CONV2TIF) -> Dict:
         if pars.get(p) is None:
             pars[p] = pars[OBS_DIR]
 
-    # if validate:
-    #     validate_parameters(pars, step)
+    if validate:
+        validate_parameters(pars, step)
     return pars
 
 # CONFIG UTILS - TO BE MOVED?
@@ -886,15 +886,23 @@ def validate_parameters(pars: Dict, step: str=CONV2TIF):
         validate_tifs_exist(ifl, pars[OBS_DIR])
 
         # Check the minimum number of epochs.
-        n_epochs, _ = _get_temporal_info(ifl, pars[OBS_DIR])        
-        # validate_minimum_epochs(n_epochs, MINIMUM_NUMBER_EPOCHS)
-        
+        n_epochs = 0
+        with open(ifl, "r") as f:
+            print(pars[OBS_DIR])
+            list_of_epoches = []
+            for line in f.readlines():
+                PTN = re.compile(r'\d{8}')  # match 8 digits for the dates
+                epochs = PTN.findall(line.strip())
+                list_of_epoches.extend(epochs)
+
+        list_of_epoches = set(list_of_epoches)
+        n_epochs = len(list_of_epoches)
+        validate_minimum_epochs(n_epochs, MINIMUM_NUMBER_EPOCHS)
+
         # Check the IFG crop parameters are within scene.
         # min_extents, n_cols, n_rows = _get_fullres_info(ifl, pars[OBS_DIR], _crop_opts(pars))
         # validate_crop_parameters(min_extents, pars)
         # validate_multilook_parameters(n_cols, n_rows, IFG_LKSX, IFG_LKSY, pars)
-        validate_crop_parameters(min_extents, pars)
-        validate_multilook_parameters(n_cols, n_rows, IFG_LKSX, IFG_LKSY, pars)
 
         # Check coherence masking if enabled
         if pars[COH_MASK]:
@@ -1532,8 +1540,7 @@ def _get_fullres_info(ifg_file_list: str, obs_dir: str, crop_opts: Tuple) -> Tup
 
     # extents = xmin, ymin, xmax, ymax
     min_extents = _min_bounds(rasters)
-    post_crop_extents = \
-        _get_extents(rasters, crop_opts[0], user_exts=crop_opts[1])
+    post_crop_extents = _get_extents(rasters, crop_opts[0], user_exts=crop_opts[1])
     x_step = rasters[0].x_step
     y_step = rasters[0].y_step
     # Get the pixel bounds. Ifg/Raster objects do have 'ncols'/'nrows' 
