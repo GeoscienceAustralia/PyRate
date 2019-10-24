@@ -153,7 +153,7 @@ def _orb_fit_calc(ifg_paths, params, preread_ifgs=None):
     """
     MPI wrapper for orbital fit correction
     """
-    log.info('Calculating orbfit correction')
+    log.info('Calculating orbital correction')
 
     if not params[cf.ORBITAL_FIT]:
         log.info('Orbital correction not required')
@@ -184,7 +184,7 @@ def _ref_phase_estimation(ifg_paths, params, refpx, refpy):
     """
     Wrapper for reference phase estimation.
     """
-    log.info("Calculating reference phase estimation")
+    log.info("Calculating reference phase")
     if len(ifg_paths) < 2:
         raise rpe.ReferencePhaseError(
             f"At least two interferograms required for reference phase "
