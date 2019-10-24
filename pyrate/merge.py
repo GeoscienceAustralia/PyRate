@@ -36,8 +36,11 @@ MASTER_PROCESS = 0
 def create_png_from_tif(output_folder_path):
 
     # open raster and choose band to find min, max
-    raster = os.path.join(output_folder_path, "linrate.tif")
-    gtif = gdal.Open(raster)
+    raster_path = os.path.join(output_folder_path, "linrate.tif")
+
+    if not os.path.isfile(raster_path):
+        raise Exception("linrate.tif file not found at: "+raster_path)
+    gtif = gdal.Open(raster_path)
     srcband = gtif.GetRasterBand(1)
 
     west, north, east, south = "", "", "", ""
