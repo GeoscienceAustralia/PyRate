@@ -1097,9 +1097,8 @@ def validate_minimum_epochs(n_epochs: int, min_epochs: int) -> Optional[bool]:
     """
     errors = []
     if n_epochs < min_epochs:
-        errors.append(f"'{IFG_FILE_LIST}': total number of epochs is less "
-                      "than {min_epochs}. {min_epochs} or "
-                      "more unique epochs are required by PyRate.")
+        errors.append(f"'{IFG_FILE_LIST}': total number of epochs given is {n_epochs}."
+                      f" {min_epochs} or more unique epochs are required by PyRate.")
     _raise_errors(errors)
 
 def validate_epochs(file_list: str, pattern: str) -> Optional[bool]:
