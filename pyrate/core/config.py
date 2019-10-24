@@ -902,7 +902,15 @@ def validate_parameters(pars: Dict, step: str=CONV2TIF):
         # validate crop parameters
         with open(ifl, "r") as f:
             for line in f.readlines():
-                tif_file_path = os.path.join(pars["obsdir"], line.strip())
+
+                if ".tif" in line:
+                    tif_file_path = os.path.join(pars["obsdir"], line.strip())
+                else:
+                    base, ext = line.strip().split(".")
+                    tif_file_path = os.path.join(pars["obsdir"], base+"_"+ext+".tif")
+
+                if not os.path.isfile(tif_file_path):
+                    raise Exception("GeoTiff: " + tif_file_path + " not found.")
 
                 raster = os.path.join(tif_file_path)
                 gtif = gdal.Open(raster)
