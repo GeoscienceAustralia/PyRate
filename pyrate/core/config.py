@@ -899,8 +899,9 @@ def validate_parameters(pars: Dict, step: str=CONV2TIF):
         n_epochs = len(list_of_epoches)
         validate_minimum_epochs(n_epochs, MINIMUM_NUMBER_EPOCHS)
 
-        # validate crop parameters
+        # validate
         with open(ifl, "r") as f:
+            # validate params for each geotiff
             for line in f.readlines():
 
                 if ".tif" in line:
@@ -917,13 +918,25 @@ def validate_parameters(pars: Dict, step: str=CONV2TIF):
 
                 latitudes = []
                 longitudes = []
+
                 for line in gdal.Info(gtif).split('\n'):
+                    if "Size is" in line:
+                        x_size,y_size = line.split("Size is")[1].split(",")
+                        x_size, y_size = int(x_size.strip()),int(y_size.strip())
+
                     for line_tag in ["Upper Left", "Lower Left", "Upper Right", "Lower Right"]:
                         if line_tag in line:
                             latitude, longitude = line.split(")")[0].split("(")[1].split(",")
                             latitudes.append(float(latitude.strip()))
                             longitudes.append(float(longitude.strip()))
 
+                # validate multi-look parameters
+                if pars["ifglksx"] < 0 or pars["ifglksx"] > x_size:
+                    raise Exception("Value of ifglksx: "+str(pars["ifglksx"])+" out of bounds: [0,"+str(x_size)+"]")
+                if pars["ifglksy"] < 0 or pars["ifglksy"] > x_size:
+                    raise Exception("Value of ifglksy: "+str(pars["ifglksy"])+" out of bounds: [0,"+str(x_size)+"]")
+
+                # validate crop parameters
                 if pars["ifgxfirst"] < min(latitudes) or pars["ifgxfirst"] > max(latitudes):
                     raise Exception("ifgxfirst: "+str(pars["ifgxfirst"]) + " not with in range {"+str(min(latitudes)) + "," + str(max(latitudes))+"}")
 
@@ -937,8 +950,6 @@ def validate_parameters(pars: Dict, step: str=CONV2TIF):
                     raise Exception("ifgylast: "+str(pars["ifgylast"]) + " not with in range {"+str(min(longitudes)) + "," + str(max(longitudes))+"}")
 
                 del gtif  # manually close raster
-
-
 
         # Check coherence masking if enabled
         if pars[COH_MASK]:
