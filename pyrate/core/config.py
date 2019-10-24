@@ -921,7 +921,7 @@ def validate_parameters(pars: Dict, step: str=CONV2TIF):
 
                 for line in gdal.Info(gtif).split('\n'):
                     if "Size is" in line:
-                        x_size,y_size = line.split("Size is")[1].split(",")
+                        x_size, y_size = line.split("Size is")[1].split(",")
                         x_size, y_size = int(x_size.strip()),int(y_size.strip())
 
                     for line_tag in ["Upper Left", "Lower Left", "Upper Right", "Lower Right"]:
