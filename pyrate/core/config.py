@@ -846,6 +846,7 @@ def convert_geographic_coordinate_to_pixel_value(refpx, refpy, transform):
 
     return int(refpx), int(refpy)
 
+from osgeo import gdal
 def validate_parameters(pars: Dict, step: str=CONV2TIF):
     """
     Main validation function. Calls validation subfunctions and gathers
@@ -888,7 +889,6 @@ def validate_parameters(pars: Dict, step: str=CONV2TIF):
         # Check the minimum number of epochs.
         n_epochs = 0
         with open(ifl, "r") as f:
-            print(pars[OBS_DIR])
             list_of_epoches = []
             for line in f.readlines():
                 PTN = re.compile(r'\d{8}')  # match 8 digits for the dates
@@ -899,10 +899,38 @@ def validate_parameters(pars: Dict, step: str=CONV2TIF):
         n_epochs = len(list_of_epoches)
         validate_minimum_epochs(n_epochs, MINIMUM_NUMBER_EPOCHS)
 
-        # Check the IFG crop parameters are within scene.
-        # min_extents, n_cols, n_rows = _get_fullres_info(ifl, pars[OBS_DIR], _crop_opts(pars))
-        # validate_crop_parameters(min_extents, pars)
-        # validate_multilook_parameters(n_cols, n_rows, IFG_LKSX, IFG_LKSY, pars)
+        # validate crop parameters
+        with open(ifl, "r") as f:
+            for line in f.readlines():
+                tif_file_path = os.path.join(pars["obsdir"], line.strip())
+
+                raster = os.path.join(tif_file_path)
+                gtif = gdal.Open(raster)
+
+                latitudes = []
+                longitudes = []
+                for line in gdal.Info(gtif).split('\n'):
+                    for line_tag in ["Upper Left", "Lower Left", "Upper Right", "Lower Right"]:
+                        if line_tag in line:
+                            latitude, longitude = line.split(")")[0].split("(")[1].split(",")
+                            latitudes.append(float(latitude.strip()))
+                            longitudes.append(float(longitude.strip()))
+
+                if pars["ifgxfirst"] < min(latitudes) or pars["ifgxfirst"] > max(latitudes):
+                    raise Exception("ifgxfirst: "+str(pars["ifgxfirst"]) + " not with in range {"+str(min(latitudes)) + "," + str(max(latitudes))+"}")
+
+                if pars["ifgxlast"] < min(latitudes) or pars["ifgxlast"] > max(latitudes):
+                    raise Exception("ifgxlast: "+str(pars["ifgxlast"]) + " not with in range {"+str(min(latitudes)) + "," + str(max(latitudes))+"}")
+
+                if pars["ifgyfirst"] < min(longitudes) or pars["ifgyfirst"] > max(longitudes):
+                    raise Exception("ifgyfirst: "+str(pars["ifgyfirst"]) + " not with in range {"+str(min(longitudes)) + "," + str(max(longitudes))+"}")
+
+                if pars["ifgylast"] < min(longitudes) or pars["ifgylast"] > max(longitudes):
+                    raise Exception("ifgylast: "+str(pars["ifgylast"]) + " not with in range {"+str(min(longitudes)) + "," + str(max(longitudes))+"}")
+
+                del gtif  # manually close raster
+
+
 
         # Check coherence masking if enabled
         if pars[COH_MASK]:
