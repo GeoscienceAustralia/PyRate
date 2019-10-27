@@ -35,6 +35,8 @@ from osgeo import gdal
 from pyrate.core.gdal_python import crop_resample_average
 from pyrate.core import ifgconstants as ifc, config as cf
 from pyrate.core.shared import Ifg, DEM, output_tiff_filename
+import logging
+log = logging.getLogger(__name__)
 
 CustomExts = namedtuple('CustExtents', ['xfirst', 'yfirst', 'xlast', 'ylast'])
 
@@ -474,7 +476,8 @@ def _check_crop_coords(ifgs, xmin, ymin, xmax, ymax):
         param = getattr(i, par)
         diff = abs(crop - param)
         remainder = abs(modf(diff / step)[0])
-
+        log.debug("remainder > GRID_TOL: "+str(remainder)+" > "+str(GRID_TOL))
+        log.debug("remainder < (1 - GRID_TOL): " + str(remainder ) + " < " + str(1 - GRID_TOL))
         # handle cases where division gives remainder near zero, or just < 1
         if (remainder > GRID_TOL) and (remainder < (1 - GRID_TOL)):  # pragma: no cover
             msg = "%s crop extent not within %s of grid coordinate"
