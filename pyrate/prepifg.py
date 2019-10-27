@@ -94,8 +94,7 @@ def do_prepifg(gtiff_paths, params):
     xlooks, ylooks, crop = cf.transform_params(params)
     user_exts = (params[cf.IFG_XFIRST], params[cf.IFG_YFIRST],
                  params[cf.IFG_XLAST], params[cf.IFG_YLAST])
-    exts = prepifg_helper.get_analysis_extent(crop, ifgs, xlooks, ylooks,
-                                              user_exts=user_exts)
+    exts = prepifg_helper.get_analysis_extent(crop, ifgs, xlooks, ylooks, user_exts=user_exts)
     thresh = params[cf.NO_DATA_AVERAGING_THRESHOLD]
     if parallel:
         Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
