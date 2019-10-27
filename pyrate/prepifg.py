@@ -99,8 +99,8 @@ def do_prepifg(gtiff_paths, params):
     thresh = params[cf.NO_DATA_AVERAGING_THRESHOLD]
     if parallel:
         Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
-            delayed(_prepifg_multiprocessing)(p, xlooks, ylooks, exts, thresh, crop,
-                    params) for p in gtiff_paths)
+            delayed(_prepifg_multiprocessing)(p, xlooks, ylooks, exts, thresh, crop, params) for p in gtiff_paths
+        )
     else:
         [_prepifg_multiprocessing(p, xlooks, ylooks, exts, thresh, crop, params) for p in gtiff_paths]
 
@@ -114,10 +114,8 @@ def _prepifg_multiprocessing(path, xlooks, ylooks, exts, thresh, crop, params):
     elif processor == ROIPAC:
         header = roipac.roipac_header(path, params)
     else:
-        raise PreprocessError('Processor must be ROI_PAC (0) or '
-                                          'GAMMA (1)')
-    # If we're performing coherence masking, find the coherence file for this
-    #  IFG.
+        raise PreprocessError('Processor must be ROI_PAC (0) or GAMMA (1)')
+    # If we're performing coherence masking, find the coherence file for this IFG.
     # TODO: Refactor _is_interferogram to be unprotected (remove '_')
     if params[cf.COH_MASK] and shared._is_interferogram(header):
         coherence_path = cf.coherence_paths_for(path, params, tif=True)[0]
@@ -126,8 +124,5 @@ def _prepifg_multiprocessing(path, xlooks, ylooks, exts, thresh, crop, params):
         coherence_path = None
         coherence_thresh = None
 
-    prepifg_helper.prepare_ifg(path, xlooks, ylooks, exts, thresh, crop,
-                               out_path=params[cf.OUT_DIR], header=header,
-                               coherence_path=coherence_path,
-                               coherence_thresh=coherence_thresh)
+    prepifg_helper.prepare_ifg(path, xlooks, ylooks, exts, thresh, crop, out_path=params[cf.OUT_DIR], header=header, coherence_path=coherence_path, coherence_thresh=coherence_thresh)
 
