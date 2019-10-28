@@ -132,24 +132,20 @@ def _get_extents(ifgs, crop_opt, user_exts=None):
     """
     Convenience function that returns extents/bounding box.
     MINIMUM_CROP = 1
-MAXIMUM_CROP = 2
-CUSTOM_CROP = 3
-ALREADY_SAME_SIZE = 4
+    MAXIMUM_CROP = 2
+    CUSTOM_CROP = 3
+    ALREADY_SAME_SIZE = 4
     """
-    log.debug("ifgs: "+str(ifgs))
-    log.debug("crop_opt: " + str(crop_opt))
-    log.debug("user_exts: " + str(user_exts))
     if crop_opt == MINIMUM_CROP:
         extents = _min_bounds(ifgs)
     elif crop_opt == MAXIMUM_CROP:
         extents = _max_bounds(ifgs)
     elif crop_opt == CUSTOM_CROP:
         extents = _custom_bounds(ifgs, *user_exts)
+        # only need to check crop coords when custom bounds are supplied
         _check_crop_coords(ifgs, *extents)
     else:
         extents = _get_same_bounds(ifgs)
-
-    log.debug("extents: " + str(extents))
 
     return extents
 
@@ -480,22 +476,10 @@ def _check_crop_coords(ifgs, xmin, ymin, xmax, ymax):
                                [xmin, xmax, ymax, ymin],
                                [i.x_step, i.x_step, i.y_step, i.y_step]):
 
-        log.debug("zip " + str(zip(['x_first', 'x_last', 'y_first', 'y_last'],
-                               [xmin, xmax, ymax, ymin],
-                               [i.x_step, i.x_step, i.y_step, i.y_step])))
         # is diff of the given extent from grid a multiple of X|Y_STEP ?
         param = getattr(i, par)
         diff = abs(crop - param)
-        log.debug("ifg[i]: " + str(i))
-        log.debug("par, crop, step, param: " + str(par) + " , " + str(crop) + ", "+str(step)+ ", "+str(param))
-
         remainder = abs(modf(diff / step)[0])
-
-        log.debug("crop: " + str(crop))
-        log.debug("step: " + str(step))
-        log.debug("diff: " + str(diff))
-        log.debug("remainder: "+str(remainder))
-        log.debug("GRID_TOL: " + str(GRID_TOL))
 
         # handle cases where division gives remainder near zero, or just < 1
         if (remainder > GRID_TOL) and (remainder < (1 - GRID_TOL)):  # pragma: no cover

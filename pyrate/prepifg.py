@@ -68,11 +68,8 @@ def main(params=None):
 
     shared.mkdir_p(params[cf.OUT_DIR]) # create output dir
 
-    log.debug("mpiops.size: "+str(mpiops.size))
     process_base_ifgs_paths = np.array_split(base_ifg_paths, mpiops.size)[mpiops.rank]
-    log.debug("process_base_ifgs_paths: "+str(process_base_ifgs_paths))
     gtiff_paths = [shared.output_tiff_filename(f, params[cf.OBS_DIR]) for f in process_base_ifgs_paths]
-    log.debug("gtiff_paths: "+str(gtiff_paths))
     do_prepifg(gtiff_paths, params)
     log.info("Finished prepifg")
 
@@ -93,11 +90,10 @@ def do_prepifg(gtiff_paths, params):
             raise Exception("Can not find geotiff: " + str(f) + ". Ensure you have converted your interferograms to geotiffs.")
 
     ifgs = [prepifg_helper.dem_or_ifg(p) for p in gtiff_paths]
-    log.debug("ifgs used in extent: "+str(ifgs))
     xlooks, ylooks, crop = cf.transform_params(params)
     user_exts = (params[cf.IFG_XFIRST], params[cf.IFG_YFIRST], params[cf.IFG_XLAST], params[cf.IFG_YLAST])
     exts = prepifg_helper.get_analysis_extent(crop, ifgs, xlooks, ylooks, user_exts=user_exts)
-    log.debug("extents: "+str(exts))
+    log.debug("Extents (xmin, ymin, xmax, ymax): "+str(exts))
     thresh = params[cf.NO_DATA_AVERAGING_THRESHOLD]
     if parallel:
         Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
