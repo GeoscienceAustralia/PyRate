@@ -95,8 +95,7 @@ def do_prepifg(gtiff_paths, params):
     ifgs = [prepifg_helper.dem_or_ifg(p) for p in gtiff_paths]
     log.debug("ifgs used in extent: "+str(ifgs))
     xlooks, ylooks, crop = cf.transform_params(params)
-    user_exts = (params[cf.IFG_XFIRST], params[cf.IFG_YFIRST],
-                 params[cf.IFG_XLAST], params[cf.IFG_YLAST])
+    user_exts = (params[cf.IFG_XFIRST], params[cf.IFG_YFIRST], params[cf.IFG_XLAST], params[cf.IFG_YLAST])
     exts = prepifg_helper.get_analysis_extent(crop, ifgs, xlooks, ylooks, user_exts=user_exts)
     log.debug("extents: "+str(exts))
     thresh = params[cf.NO_DATA_AVERAGING_THRESHOLD]

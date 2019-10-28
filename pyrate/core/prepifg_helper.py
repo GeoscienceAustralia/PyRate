@@ -131,6 +131,10 @@ def _check_resolution(ifgs):
 def _get_extents(ifgs, crop_opt, user_exts=None):
     """
     Convenience function that returns extents/bounding box.
+    MINIMUM_CROP = 1
+MAXIMUM_CROP = 2
+CUSTOM_CROP = 3
+ALREADY_SAME_SIZE = 4
     """
     log.debug("ifgs: "+str(ifgs))
     log.debug("crop_opt: " + str(crop_opt))
@@ -141,11 +145,12 @@ def _get_extents(ifgs, crop_opt, user_exts=None):
         extents = _max_bounds(ifgs)
     elif crop_opt == CUSTOM_CROP:
         extents = _custom_bounds(ifgs, *user_exts)
+        _check_crop_coords(ifgs, *extents)
     else:
         extents = _get_same_bounds(ifgs)
 
     log.debug("extents: " + str(extents))
-    # _check_crop_coords(ifgs, *extents)
+
     return extents
 
 
