@@ -71,7 +71,7 @@ class PrepifgConversionTests(unittest.TestCase):
         cls.params = cf.get_config_params(common.TEST_CONF_GAMMA) 
 
     def test_no_tifs_exits(self):
-        with pytest.raises(SystemExit):
+        with pytest.raises(Exception):
             prepifg.main(self.params)
 
     def test_tifs_succeeds(self):

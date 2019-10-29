@@ -33,13 +33,45 @@ log = logging.getLogger(__name__)
 # Constants
 MASTER_PROCESS = 0
 
-
 def create_png_from_tif(output_folder_path):
 
     # open raster and choose band to find min, max
-    raster = os.path.join(output_folder_path, "linrate.tif")
-    gtif = gdal.Open(raster)
+    raster_path = os.path.join(output_folder_path, "linrate.tif")
+
+    if not os.path.isfile(raster_path):
+        raise Exception("linrate.tif file not found at: "+raster_path)
+    gtif = gdal.Open(raster_path)
     srcband = gtif.GetRasterBand(1)
+
+    west, north, east, south = "", "", "", ""
+    for line in gdal.Info(gtif).split('\n'):
+        if "Upper Left" in line:
+            west, north = line.split(")")[0].split("(")[1].split(",")
+        if "Lower Right" in line:
+            east, south = line.split(")")[0].split("(")[1].split(",")
+
+    kml_file_path = os.path.join(output_folder_path, "linrate.kml")
+    kml_file_content = """<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://earth.google.com/kml/2.1">
+  <Document>
+    <name>linrate.kml</name>
+    <GroundOverlay>
+      <name>linrate.png</name>
+      <Icon>
+        <href>linrate.png</href>
+      </Icon>
+      <LatLonBox>
+        <north> """+north+""" </north>
+        <south> """+south+""" </south>
+        <east>  """+east+""" </east>
+        <west>  """+west+""" </west>
+      </LatLonBox>
+    </GroundOverlay>
+  </Document>
+</kml>"""
+
+    with open(kml_file_path, "w") as f:
+        f.write(kml_file_content)
 
     # Get raster statistics
     minimum, maximum, mean, stddev = srcband.GetStatistics(True, True)
@@ -58,7 +90,7 @@ def create_png_from_tif(output_folder_path):
 
     no_of_data_value = len(np.arange(minimum, maximum, step))
     for i, no in enumerate(np.arange(minimum, maximum, step)):
-        color_map_list[i][0] = str(no)
+        color_map_list[i+1][0] = str(no)
 
     color_map_path = os.path.join(output_folder_path, "colormap.txt")
     with open(color_map_path, "w") as f:
@@ -67,7 +99,8 @@ def create_png_from_tif(output_folder_path):
 
     input_tif_path = os.path.join(output_folder_path, "linrate.tif")
     output_png_path = os.path.join(output_folder_path, "linrate.png")
-    subprocess.check_call(["gdaldem", "color-relief", "-of", "PNG", input_tif_path, color_map_path, output_png_path, "-nearest_color_entry"])
+    subprocess.check_call(["gdaldem", "color-relief", "-of", "PNG", input_tif_path, "-alpha", color_map_path, output_png_path, "-nearest_color_entry"])
+
 
 def main(params, rows, cols):
     """
@@ -92,9 +125,14 @@ def _merge_linrate(rows, cols, params):
     # pylint: disable=expression-not-assigned
     # setup paths
     xlks, _, crop = cf.transform_params(params)
-    base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST],
-                                           params[cf.OBS_DIR])
-    dest_tifs = cf.get_dest_paths(base_unw_paths, crop, params, xlks)
+    base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST], params[cf.OBS_DIR])
+
+    if "tif" in base_unw_paths[0].split(".")[1]:
+        dest_tifs = cf.get_dest_paths(base_unw_paths, crop, params, xlks)
+        for i, dest_tif in enumerate(dest_tifs):
+            dest_tifs[i] = dest_tif.replace("_tif","")
+    else:
+        dest_tifs = cf.get_dest_paths(base_unw_paths, crop, params, xlks)
 
     # load previously saved prepread_ifgs dict
     preread_ifgs_file = join(params[cf.TMPDIR], 'preread_ifgs.pk')
@@ -131,11 +169,9 @@ def _save_linrate(ifgs_dict, params, tiles, out_type):
 
     rate = np.zeros(shape=ifgs[0].shape, dtype=np.float32)
     for t in tiles:
-        rate_file = os.path.join(params[cf.TMPDIR], out_type +
-                                 '_{}.npy'.format(t.index))
+        rate_file = os.path.join(params[cf.TMPDIR], out_type + '_{}.npy'.format(t.index))
         rate_tile = np.load(file=rate_file)
-        rate[t.top_left_y:t.bottom_right_y,
-             t.top_left_x:t.bottom_right_x] = rate_tile
+        rate[t.top_left_y:t.bottom_right_y, t.top_left_x:t.bottom_right_x] = rate_tile
     shared.write_output_geotiff(md, gt, wkt, rate, dest, np.nan)
     npy_rate_file = os.path.join(params[cf.OUT_DIR], out_type + '.npy')
     np.save(file=npy_rate_file, arr=rate)
@@ -149,9 +185,16 @@ def _merge_timeseries(rows, cols, params):
     """
     # pylint: disable=too-many-locals
     xlks, _, crop = cf.transform_params(params)
-    base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST], 
-                                           params[cf.OBS_DIR])
-    dest_tifs = cf.get_dest_paths(base_unw_paths, crop, params, xlks)
+    base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST], params[cf.OBS_DIR])
+
+    if "tif" in base_unw_paths[0].split(".")[1]:
+        dest_tifs = cf.get_dest_paths(base_unw_paths, crop, params, xlks)
+        for i, dest_tif in enumerate(dest_tifs):
+            dest_tifs[i] = dest_tif.replace("_tif", "")
+    else:
+        dest_tifs = cf.get_dest_paths(base_unw_paths, crop, params, xlks)
+
+
     output_dir = params[cf.TMPDIR]
 
     # load previously saved prepread_ifgs dict

@@ -35,6 +35,8 @@ from osgeo import gdal
 from pyrate.core.gdal_python import crop_resample_average
 from pyrate.core import ifgconstants as ifc, config as cf
 from pyrate.core.shared import Ifg, DEM, output_tiff_filename
+import logging
+log = logging.getLogger(__name__)
 
 CustomExts = namedtuple('CustExtents', ['xfirst', 'yfirst', 'xlast', 'ylast'])
 
@@ -129,24 +131,26 @@ def _check_resolution(ifgs):
 def _get_extents(ifgs, crop_opt, user_exts=None):
     """
     Convenience function that returns extents/bounding box.
+    MINIMUM_CROP = 1
+    MAXIMUM_CROP = 2
+    CUSTOM_CROP = 3
+    ALREADY_SAME_SIZE = 4
     """
-
     if crop_opt == MINIMUM_CROP:
         extents = _min_bounds(ifgs)
     elif crop_opt == MAXIMUM_CROP:
         extents = _max_bounds(ifgs)
     elif crop_opt == CUSTOM_CROP:
         extents = _custom_bounds(ifgs, *user_exts)
+        # only need to check crop coords when custom bounds are supplied
+        _check_crop_coords(ifgs, *extents)
     else:
         extents = _get_same_bounds(ifgs)
 
-    _check_crop_coords(ifgs, *extents)
     return extents
 
 
-def prepare_ifg(raster_path, xlooks, ylooks, exts, thresh, crop_opt,
-                write_to_disk=True, out_path=None, header=None,
-                coherence_path=None, coherence_thresh=None):
+def prepare_ifg(raster_path, xlooks, ylooks, exts, thresh, crop_opt, write_to_disk=True, out_path=None, header=None, coherence_path=None, coherence_thresh=None):
     """
     Open, resample, crop and optionally save to disk an interferogram or DEM.
     Returns are only given if write_to_disk=False
@@ -177,21 +181,17 @@ def prepare_ifg(raster_path, xlooks, ylooks, exts, thresh, crop_opt,
     if do_multilook:
         resolution = [xlooks * raster.x_step, ylooks * raster.y_step]
     if not do_multilook and crop_opt == ALREADY_SAME_SIZE:
-        renamed_path = \
-            cf.mlooked_path(raster.data_path, looks=xlooks, crop_out=crop_opt)
+        renamed_path = cf.mlooked_path(raster.data_path, looks=xlooks, crop_out=crop_opt)
         shutil.copy(raster.data_path, renamed_path)
         # set metadata to indicated has been cropped and multilooked
         # copy file with mlooked path
         return _dummy_warp(renamed_path)
 
-    return _warp(raster, xlooks, ylooks, exts, resolution, thresh,
-                 crop_opt, write_to_disk, out_path, header,
-		 coherence_path, coherence_thresh)
+    return _warp(raster, xlooks, ylooks, exts, resolution, thresh, crop_opt, write_to_disk, out_path, header, coherence_path, coherence_thresh)
 
 
 # TODO: crop options 0 = no cropping? get rid of same size
-def prepare_ifgs(raster_data_paths, crop_opt, xlooks, ylooks, thresh=0.5,
-                 user_exts=None, write_to_disc=True, out_path=None):
+def prepare_ifgs(raster_data_paths, crop_opt, xlooks, ylooks, thresh=0.5, user_exts=None, write_to_disc=True, out_path=None):
     """
     Wrapper function to prepare a sequence of interferogram files for
     PyRate analysis. See prepifg.prepare_ifg() for full description of
@@ -201,12 +201,10 @@ def prepare_ifgs(raster_data_paths, crop_opt, xlooks, ylooks, thresh=0.5,
 
     :param list raster_data_paths: List of interferogram file paths
     :param int crop_opt: Crop option
-    :param int xlooks: Number of multi-looks in x; 5 is 5 times smaller,
-        1 is no change
+    :param int xlooks: Number of multi-looks in x; 5 is 5 times smaller, 1 is no change
     :param int ylooks: Number of multi-looks in y
     :param float thresh: see thresh in prepare_ifgs()
-    :param tuple user_exts: Tuple of user defined georeferenced extents for
-        new file: (xfirst, yfirst, xlast, ylast)cropping coordinates
+    :param tuple user_exts: Tuple of user defined georeferenced extents for new file: (xfirst, yfirst, xlast, ylast)cropping coordinates
     :param bool write_to_disk: Write new data to disk
 
     :return: resampled_data: output cropped and resampled image
@@ -218,9 +216,7 @@ def prepare_ifgs(raster_data_paths, crop_opt, xlooks, ylooks, thresh=0.5,
     rasters = [dem_or_ifg(r) for r in raster_data_paths]
     exts = get_analysis_extent(crop_opt, rasters, xlooks, ylooks, user_exts)
 
-    return [prepare_ifg(d, xlooks, ylooks, exts, thresh, crop_opt,
-                        write_to_disc, out_path)
-            for d in raster_data_paths]
+    return [prepare_ifg(d, xlooks, ylooks, exts, thresh, crop_opt, write_to_disc, out_path) for d in raster_data_paths]
 
 
 def dem_or_ifg(data_path):
@@ -293,14 +289,7 @@ def _warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out,
     #         #if params.has_key(REPROJECTION_FLAG):
     #         #    reproject()
     driver_type = 'GTiff' if write_to_disk else 'MEM'
-    resampled_data, out_ds = crop_resample_average(
-        input_tif=ifg.data_path,
-        extents=extents,
-        new_res=resolution,
-        output_file=looks_path,
-        thresh=thresh,
-        out_driver_type=driver_type, hdr=header,
-        coherence_path=coherence_path, coherence_thresh=coherence_thresh)
+    resampled_data, out_ds = crop_resample_average( input_tif=ifg.data_path, extents=extents, new_res=resolution, output_file=looks_path, thresh=thresh, out_driver_type=driver_type, hdr=header, coherence_path=coherence_path, coherence_thresh=coherence_thresh)
     if not write_to_disk:
         return resampled_data, out_ds
 
@@ -397,14 +386,24 @@ def _max_bounds(ifgs):
     ymin = min([i.y_last for i in ifgs])
     return xmin, ymin, xmax, ymax
 
-
+from decimal import Decimal
 def _get_same_bounds(ifgs):
     """
     Check and return bounding box for ALREADY_SAME_SIZE option.
     """
 
     tfs = [i.dataset.GetGeoTransform() for i in ifgs]
-    equal = [t == tfs[0] for t in tfs[1:]]
+
+    equal = []
+
+    for t in tfs[1:]:
+        for i,tf in enumerate(tfs[0]):
+
+            if round(Decimal (tf),4) == round(Decimal (t[i]),4):
+                equal.append(True)
+            else:
+                equal.append(False)
+
     if not all(equal):
         msg = 'Ifgs do not have the same bounding box for crop option: %s'
         raise PreprocessError(msg % ALREADY_SAME_SIZE)
@@ -436,13 +435,10 @@ def _custom_bounds(ifgs, xw, ytop, xe, ybot):
         raise PreprocessError('ERROR Custom crop bounds: '
                               'ifgxfirst must be greater than ifgxlast')
 
-    for par, crop, orig, step in zip(['x_first', 'x_last',
-                                      'y_first', 'y_last'],
+    for par, crop, orig, step in zip(['x_first', 'x_last', 'y_first', 'y_last'],
                                      [xw, xe, ytop, ybot],
-                                     [i.x_first, i.x_last,
-                                      i.y_first, i.y_last],
-                                     [i.x_step, i.x_step,
-                                      i.y_step, i.y_step]):
+                                     [i.x_first, i.x_last, i.y_first, i.y_last],
+                                     [i.x_step, i.x_step, i.y_step, i.y_step]):
         diff = crop - orig
         nint = round(diff / step)
 
@@ -496,8 +492,7 @@ def _check_crop_coords(ifgs, xmin, ymin, xmax, ymax):
         remainder = abs(modf(diff / step)[0])
 
         # handle cases where division gives remainder near zero, or just < 1
-        if (remainder > GRID_TOL) and \
-                (remainder < (1 - GRID_TOL)):  # pragma: no cover
+        if (remainder > GRID_TOL) and (remainder < (1 - GRID_TOL)):  # pragma: no cover
             msg = "%s crop extent not within %s of grid coordinate"
             raise PreprocessError(msg % (par, GRID_TOL))
 

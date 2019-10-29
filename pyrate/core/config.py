@@ -567,7 +567,14 @@ def get_ifg_paths(config_file, step=CONV2TIF):
 
     # dest_paths are tifs that have been coherence masked (if enabled),
     #  cropped and multilooked
-    dest_paths = get_dest_paths(base_unw_paths, crop, params, xlks)
+
+    if "tif" in base_unw_paths[0].split(".")[1]:
+
+        dest_paths = get_dest_paths(base_unw_paths, crop, params, xlks)
+        for i, dest_path in enumerate(dest_paths):
+            dest_paths[i] = dest_path.replace("_tif","")
+    else:
+        dest_paths = get_dest_paths(base_unw_paths, crop, params, xlks)
 
     return base_unw_paths, dest_paths, params
 
@@ -846,6 +853,7 @@ def convert_geographic_coordinate_to_pixel_value(refpx, refpy, transform):
 
     return int(refpx), int(refpy)
 
+from osgeo import gdal
 def validate_parameters(pars: Dict, step: str=CONV2TIF):
     """
     Main validation function. Calls validation subfunctions and gathers
@@ -886,15 +894,75 @@ def validate_parameters(pars: Dict, step: str=CONV2TIF):
         validate_tifs_exist(ifl, pars[OBS_DIR])
 
         # Check the minimum number of epochs.
-        n_epochs, _ = _get_temporal_info(ifl, pars[OBS_DIR])        
-        validate_minimum_epochs(n_epochs, MINIMUM_NUMBER_EPOCHS)
-        
-        # Check the IFG crop parameters are within scene.
-        min_extents, n_cols, n_rows = \
-            _get_fullres_info(ifl, pars[OBS_DIR], _crop_opts(pars))
+        n_epochs = 0
+        with open(ifl, "r") as f:
+            list_of_epoches = []
+            for line in f.readlines():
 
-        validate_crop_parameters(min_extents, pars)
-        validate_multilook_parameters(n_cols, n_rows, IFG_LKSX, IFG_LKSY, pars)
+                PTN = re.compile(r'\d{8}')  # match 8 digits for the dates
+
+                # if ROI_PAC
+                if 0 == pars["processor"]:
+                    PTN = re.compile(r'\d{6}')  # match 8 digits for the dates
+
+                epochs = PTN.findall(line.strip())
+                list_of_epoches.extend(epochs)
+
+        list_of_epoches = set(list_of_epoches)
+        n_epochs = len(list_of_epoches)
+        validate_minimum_epochs(n_epochs, MINIMUM_NUMBER_EPOCHS)
+
+        # validate
+        with open(ifl, "r") as f:
+            # validate params for each geotiff
+            for line in f.readlines():
+
+                if ".tif" in line:
+                    tif_file_path = os.path.join(pars["obsdir"], line.strip())
+                else:
+                    base, ext = line.strip().split(".")
+                    tif_file_path = os.path.join(pars["obsdir"], base+"_"+ext+".tif")
+
+                if not os.path.isfile(tif_file_path):
+                    raise Exception("GeoTiff: " + tif_file_path + " not found.")
+
+                raster = os.path.join(tif_file_path)
+                gtif = gdal.Open(raster)
+
+                latitudes = []
+                longitudes = []
+
+                for line in gdal.Info(gtif).split('\n'):
+                    if "Size is" in line:
+                        x_size, y_size = line.split("Size is")[1].split(",")
+                        x_size, y_size = int(x_size.strip()),int(y_size.strip())
+
+                    for line_tag in ["Upper Left", "Lower Left", "Upper Right", "Lower Right"]:
+                        if line_tag in line:
+                            latitude, longitude = line.split(")")[0].split("(")[1].split(",")
+                            latitudes.append(float(latitude.strip()))
+                            longitudes.append(float(longitude.strip()))
+
+                # validate multi-look parameters
+                if pars["ifglksx"] < 0 or pars["ifglksx"] > x_size:
+                    raise Exception("Value of ifglksx: "+str(pars["ifglksx"])+" out of bounds: [0,"+str(x_size)+"]")
+                if pars["ifglksy"] < 0 or pars["ifglksy"] > x_size:
+                    raise Exception("Value of ifglksy: "+str(pars["ifglksy"])+" out of bounds: [0,"+str(x_size)+"]")
+
+                # validate crop parameters
+                if pars["ifgxfirst"] < min(latitudes) or pars["ifgxfirst"] > max(latitudes):
+                    raise Exception("ifgxfirst: "+str(pars["ifgxfirst"]) + " not with in range {"+str(min(latitudes)) + "," + str(max(latitudes))+"}")
+
+                if pars["ifgxlast"] < min(latitudes) or pars["ifgxlast"] > max(latitudes):
+                    raise Exception("ifgxlast: "+str(pars["ifgxlast"]) + " not with in range {"+str(min(latitudes)) + "," + str(max(latitudes))+"}")
+
+                if pars["ifgyfirst"] < min(longitudes) or pars["ifgyfirst"] > max(longitudes):
+                    raise Exception("ifgyfirst: "+str(pars["ifgyfirst"]) + " not with in range {"+str(min(longitudes)) + "," + str(max(longitudes))+"}")
+
+                if pars["ifgylast"] < min(longitudes) or pars["ifgylast"] > max(longitudes):
+                    raise Exception("ifgylast: "+str(pars["ifgylast"]) + " not with in range {"+str(min(longitudes)) + "," + str(max(longitudes))+"}")
+
+                del gtif  # manually close raster
 
         # Check coherence masking if enabled
         if pars[COH_MASK]:
@@ -910,6 +978,7 @@ def validate_parameters(pars: Dict, step: str=CONV2TIF):
         validate_minimum_epochs(n_epochs, MINIMUM_NUMBER_EPOCHS)
         
         # Get spatial information from tifs.
+
         extents, n_cols, n_rows, transform = _get_prepifg_info(ifl, pars[OBS_DIR], pars)
 
         # test if refx/y already set to default value of -1
@@ -1042,9 +1111,8 @@ def validate_minimum_epochs(n_epochs: int, min_epochs: int) -> Optional[bool]:
     """
     errors = []
     if n_epochs < min_epochs:
-        errors.append(f"'{IFG_FILE_LIST}': total number of epochs is less "
-                      "than {min_epochs}. {min_epochs} or "
-                      "more unique epochs are required by PyRate.")
+        errors.append(f"'{IFG_FILE_LIST}': total number of epochs given is {n_epochs}."
+                      f" {min_epochs} or more unique epochs are required by PyRate.")
     _raise_errors(errors)
 
 def validate_epochs(file_list: str, pattern: str) -> Optional[bool]:
@@ -1099,8 +1167,7 @@ def validate_epoch_cutoff(max_span: float, cutoff: str, pars: Dict) -> Optional[
                       "data in years ({max_span}).")
     return _raise_errors(errors)
 
-def validate_prepifg_tifs_exist(
-        ifg_file_list: str, obs_dir: str, pars: Dict) -> Optional[bool]:
+def validate_prepifg_tifs_exist(ifg_file_list: str, obs_dir: str, pars: Dict) -> Optional[bool]:
     """
     Validates that cropped and multilooked interferograms exist in geotiff
     format.
@@ -1116,9 +1183,13 @@ def validate_prepifg_tifs_exist(
     Raises:
         ConfigException: If not all intergerograms exist in geotiff format.
     """
+
     errors = []
     base_paths = [os.path.join(obs_dir, ifg) for ifg in parse_namelist(ifg_file_list)]
     ifg_paths = get_dest_paths(base_paths, pars[IFG_CROP_OPT], pars, pars[IFG_LKSX])
+    for i, ifg_path in enumerate(ifg_paths):
+        ifg_paths[i] = ifg_path.replace("_tif", "")
+
     for path in ifg_paths:
         if not os.path.exists(path):
             fname = os.path.split(path)[1]
@@ -1491,6 +1562,9 @@ def _get_prepifg_info(ifg_file_list: str, obs_dir: str, pars: Dict) -> Tuple:
     base_paths = [os.path.join(obs_dir, ifg) for ifg in parse_namelist(ifg_file_list)]
     ifg_paths = get_dest_paths(base_paths, pars[IFG_CROP_OPT], pars, pars[IFG_LKSX])
 
+    for i, ifg_path in enumerate(ifg_paths):
+        ifg_paths[i] = ifg_path.replace("_tif","")
+
     # This function assumes the stack of interferograms now have the same
     # bounds and resolution after going through prepifg.
     raster = Ifg(ifg_paths[0])
@@ -1532,8 +1606,7 @@ def _get_fullres_info(ifg_file_list: str, obs_dir: str, crop_opts: Tuple) -> Tup
 
     # extents = xmin, ymin, xmax, ymax
     min_extents = _min_bounds(rasters)
-    post_crop_extents = \
-        _get_extents(rasters, crop_opts[0], user_exts=crop_opts[1])
+    post_crop_extents = _get_extents(rasters, crop_opts[0], user_exts=crop_opts[1])
     x_step = rasters[0].x_step
     y_step = rasters[0].y_step
     # Get the pixel bounds. Ifg/Raster objects do have 'ncols'/'nrows' 

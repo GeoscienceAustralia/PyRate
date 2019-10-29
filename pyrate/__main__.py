@@ -78,95 +78,32 @@ more details.
 def main():
     start_time = time.time()
     log.debug("Starting PyRate")
-    parser = argparse.ArgumentParser(prog='pyrate',
-                                     description=CLI_DESC,
-                                     add_help=True, 
-                                     formatter_class=RawTextHelpFormatter)
 
-    # Have to add verbosity argument to each subparser so define args here
-    #  to make life easier.
-    verbosity_args = ['-v', '--verbosity']
-    verbosity_kwargs = {'type': str,
-                        'default': 'INFO',
-                        'choices': ['DEBUG', 'INFO', 'WARNING', 'ERROR'],
-                        'help': "Increase output verbosity"}
-    
-    parser.add_argument(*verbosity_args, **verbosity_kwargs)
+    parser = argparse.ArgumentParser(prog='pyrate', description=CLI_DESC, add_help=True,  formatter_class=RawTextHelpFormatter)
+    parser.add_argument('-v', '--verbosity', type=str, default='INFO', choices=['DEBUG', 'INFO', 'WARNING', 'ERROR'], help="Increase output verbosity")
 
     subparsers = parser.add_subparsers(dest='command')
     subparsers.required = True
 
     # create the parser for the "conv2tif" command
-    parser_conv2tif = \
-        subparsers.add_parser('conv2tif',
-                              help='Convert interferograms to geotiff.', 
-                              add_help=True)
-
-    parser_conv2tif.add_argument('-f', '--config_file', action="store", 
-                                         type=str, default=None, 
-                                         help="Pass configuration file", 
-                                         required=True)
-
-    parser_conv2tif.add_argument(*verbosity_args, **verbosity_kwargs)
+    parser_conv2tif = subparsers.add_parser('conv2tif', help='Convert interferograms to geotiff.', add_help=True)
+    parser_conv2tif.add_argument('-f', '--config_file', action="store", type=str, default=None,  help="Pass configuration file", required=True)
 
     # create the parser for the "prepifg" command
-    parser_prepifg = subparsers.add_parser('prepifg',
-                                           help=('Perform multilooking and '
-                                                 'cropping on geotiffs.'), 
-                                           add_help=True)
-
-    parser_prepifg.add_argument('-f', '--config_file', action="store", 
-                                type=str, default=None, 
-                                help="Pass configuration file", required=True)
-
-    parser_prepifg.add_argument(*verbosity_args, **verbosity_kwargs)
+    parser_prepifg = subparsers.add_parser('prepifg', help='Perform multilooking and cropping on geotiffs.', add_help=True)
+    parser_prepifg.add_argument('-f', '--config_file', action="store", type=str, default=None, help="Pass configuration file", required=True)
 
     # create the parser for the "process" command
-    parser_process = subparsers.add_parser('process',
-                                           help=('Main processing workflow '
-                                                 'including corrections, time '
-                                                 'series and stacking '
-                                                 'computation.'),
-                                           add_help=True)
-
-    parser_process.add_argument('-f', '--config_file', action="store", 
-                                type=str, default=None,
-                                help="Pass configuration file", 
-                                required=True)
-
-    parser_process.add_argument('-r', '--rows', type=int, required=False, default=1,
-                                help=("divide ifgs into this many rows. Must "
-                                      "be same as number of rows used "
-                                      "previously in main workflow."))
-
-    parser_process.add_argument('-c', '--cols', type=int, required=False, default=1,
-                                help=("divide ifgs into this many columns. "
-                                      "Must be same as number of cols used "
-                                      "previously in main workflow."))
-        
-    parser_process.add_argument(*verbosity_args, **verbosity_kwargs)
+    parser_process = subparsers.add_parser('process', help='Main processing workflow including corrections, time series and stacking computation.', add_help=True)
+    parser_process.add_argument('-f', '--config_file', action="store", type=str, default=None, help="Pass configuration file", required=True)
+    parser_process.add_argument('-r', '--rows', type=int, required=False, default=1, help="divide ifgs into this many rows. Must be same as number of rows used previously in main workflow.")
+    parser_process.add_argument('-c', '--cols', type=int, required=False, default=1, help="divide ifgs into this many columns. Must be same as number of cols used previously in main workflow.")
  
     # create the parser for the "merge" command
-    parser_merge = subparsers.add_parser('merge',
-                                           help=("Reassemble computed tiles "
-                                                 "and save as geotiffs."), 
-                                           add_help=True)
-
-    parser_merge.add_argument('-f', '--config_file', action="store", 
-                                type=str, default=None,
-                                help="Pass configuration file", required=False)
-
-    parser_merge.add_argument('-r', '--rows', type=int, required=False, default=1,
-                                help=("divide ifgs into this many rows. Must "
-                                      "be same as number of rows used "
-                                      "previously in main workflow."))
-
-    parser_merge.add_argument('-c', '--cols', type=int, required=False, default=1,
-                                help=("divide ifgs into this many columns. "
-                                      "Must be same as number of cols used "
-                                      "previously in main workflow."))
-
-    parser_merge.add_argument(*verbosity_args, **verbosity_kwargs)
+    parser_merge = subparsers.add_parser('merge', help="Reassemble computed tiles and save as geotiffs.", add_help=True)
+    parser_merge.add_argument('-f', '--config_file', action="store", type=str, default=None, help="Pass configuration file", required=False)
+    parser_merge.add_argument('-r', '--rows', type=int, required=False, default=1, help="divide ifgs into this many rows. Must be same as number of rows used previously in main workflow.")
+    parser_merge.add_argument('-c', '--cols', type=int, required=False, default=1, help="divide ifgs into this many columns. Must be same as number of cols used previously in main workflow.")
 
     args = parser.parse_args()
 
@@ -188,8 +125,9 @@ def main():
 
     if args.command == "merge":
         merge_handler(args.config_file, args.rows, args.cols)
-    print("--- %s seconds ---" % (time.time() - start_time))
+
+    log.debug("--- %s seconds ---" % (time.time() - start_time))
+
 
 if __name__ == "__main__":
     main()
-

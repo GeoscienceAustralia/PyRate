@@ -43,14 +43,25 @@ import unittest
 
 class MergingTest(unittest.TestCase):
 
-
     def test_png_creation(self):
+
+        output_folder_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),"tests", "test_data", "merge")
+        create_png_from_tif(output_folder_path)
+
         # check if color map is created
-        # maybe write a script to generate a color map from scratch
-        # check entries in color map
-        # check if input tiff is broken into 256 steps
-        # check if output png is created
-        # save a generated png and test for similarity
+        output_color_map_path = os.path.join(output_folder_path, "colormap.txt")
+        if not os.path.isfile(output_color_map_path):
+            self.assertTrue(False, "Output color map file not found at: " + output_color_map_path)
+
+        # check if png is created
+        output_image_path = os.path.join(output_folder_path, "linrate.png")
+        if not os.path.isfile(output_image_path):
+            self.assertTrue(False, "Output png file not found at: " + output_image_path)
+
+        # check if kml is created
+        output_kml_path = os.path.join(output_folder_path, "linrate.kml")
+        if not os.path.isfile(output_kml_path):
+            self.assertTrue(False, "Output kml file not found at: " + output_kml_path)
 
         self.assertTrue(True)
 

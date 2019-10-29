@@ -1,0 +1,21 @@
+<PAMDataset>
+  <Metadata>
+    <MDI key="DATA_TYPE">LINEAR_RATE_MAP</MDI>
+    <MDI key="EPOCH_DATE">[datetime.date(2006, 6, 19) datetime.date(2006, 8, 28)
+ datetime.date(2006, 10, 2) datetime.date(2006, 11, 6)
+ datetime.date(2006, 12, 11) datetime.date(2007, 1, 15)
+ datetime.date(2007, 2, 19) datetime.date(2007, 3, 26)
+ datetime.date(2007, 4, 30) datetime.date(2007, 6, 4)
+ datetime.date(2007, 7, 9) datetime.date(2007, 8, 13)
+ datetime.date(2007, 9, 17)]</MDI>
+  </Metadata>
+  <PAMRasterBand band="1">
+    <Metadata>
+      <MDI key="STATISTICS_MAXIMUM">-0</MDI>
+      <MDI key="STATISTICS_MEAN">-8.4672326960268</MDI>
+      <MDI key="STATISTICS_MINIMUM">-16.042793273926</MDI>
+      <MDI key="STATISTICS_STDDEV">2.3288197678111</MDI>
+      <MDI key="STATISTICS_VALID_PERCENT">91.58</MDI>
+    </Metadata>
+  </PAMRasterBand>
+</PAMDataset>
