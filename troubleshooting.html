@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Atmospheric Phase Screen Module &mdash; PyRate 0.4.0 documentation</title>
+  <title>Troubleshooting &mdash; PyRate 0.4.0 documentation</title>
   
 
   
@@ -36,8 +36,8 @@
   <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Config Module" href="config.html" />
-    <link rel="prev" title="Algorithm Module" href="algorithm.html" /> 
+    <link rel="next" title="Contributing" href="contributing.html" />
+    <link rel="prev" title="Usage" href="usage.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -97,9 +97,9 @@
 <li class="toctree-l2"><a class="reference internal" href="usage.html#parallel-processing">Parallel processing</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#out-of-memory-errors">Out of memory errors</a></li>
-<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#incorrect-modules-loaded-on-raijin">Incorrect modules loaded on Raijin</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Troubleshooting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#out-of-memory-errors">Out of memory errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#incorrect-modules-loaded-on-raijin">Incorrect modules loaded on Raijin</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a><ul>
@@ -128,9 +128,9 @@
 <li class="toctree-l2"><a class="reference internal" href="pyrate.__main__.html">PyRate Main Script</a></li>
 </ul>
 </li>
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">Pyrate Modules</a><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="modules.html">Pyrate Modules</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="algorithm.html">Algorithm Module</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Atmospheric Phase Screen Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aps.html">Atmospheric Phase Screen Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="config.html">Config Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="covariance.html">Covariance Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gamma.html">GAMMA Module</a></li>
@@ -192,9 +192,7 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-          <li><a href="modules.html">Pyrate Modules</a> &raquo;</li>
-        
-      <li>Atmospheric Phase Screen Module</li>
+      <li>Troubleshooting</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -208,10 +206,10 @@
   
   <div class="rst-breadcrumbs-buttons" role="navigation" aria-label="breadcrumb navigation">
       
-        <a href="config.html" class="btn btn-neutral float-right" title="Config Module" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="contributing.html" class="btn btn-neutral float-right" title="Contributing" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="algorithm.html" class="btn btn-neutral float-left" title="Algorithm Module" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="usage.html" class="btn btn-neutral float-left" title="Usage" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
   </div>
   
@@ -220,83 +218,40 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="module-pyrate.core.aps">
-<span id="atmospheric-phase-screen-module"></span><h1>Atmospheric Phase Screen Module<a class="headerlink" href="#module-pyrate.core.aps" title="Permalink to this headline">¶</a></h1>
-<p>This Python module implements a spatio-temporal filter method
-for correcting interferograms for atmospheric phase screen (APS)
-signals.</p>
-<dl class="function">
-<dt id="pyrate.core.aps.spatial_low_pass_filter">
-<code class="sig-prename descclassname">pyrate.core.aps.</code><code class="sig-name descname">spatial_low_pass_filter</code><span class="sig-paren">(</span><em class="sig-param">ts_lp</em>, <em class="sig-param">ifg</em>, <em class="sig-param">params</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/aps.html#spatial_low_pass_filter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.aps.spatial_low_pass_filter" title="Permalink to this definition">¶</a></dt>
-<dd><p>Filter time series data spatially using either a Butterworth or Gaussian
-low pass filter defined by a cut-off distance. If the cut-off distance is
-defined as zero in the parameters dictionary then it is calculated for
-each time step using the pyrate.covariance.cvd_from_phase method.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>ts_lp</strong> (<em>ndarray</em>) – Array of time series data, the result of a temporal
-low pass filter operation. shape (ifg.shape, n_epochs)</p></li>
-<li><p><strong>instance ifg</strong> (<a class="reference internal" href="shared.html#pyrate.core.shared.Ifg" title="pyrate.core.shared.Ifg"><em>shared.Ifg</em></a>) – interferogram object</p></li>
-<li><p><strong>params</strong> (<em>dict</em>) – Dictionary of configuration parameters</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>ts_hp: filtered time series data of shape (ifg.shape, n_epochs)</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>ndarray</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyrate.core.aps.spatio_temporal_filter">
-<code class="sig-prename descclassname">pyrate.core.aps.</code><code class="sig-name descname">spatio_temporal_filter</code><span class="sig-paren">(</span><em class="sig-param">tsincr</em>, <em class="sig-param">ifg</em>, <em class="sig-param">params</em>, <em class="sig-param">preread_ifgs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/aps.html#spatio_temporal_filter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.aps.spatio_temporal_filter" title="Permalink to this definition">¶</a></dt>
-<dd><p>Applies a spatio-temporal filter to remove the atmospheric phase screen
-(APS) and saves the corrected interferograms. Before performing this step,
-the time series iscomputed using the SVD method. This function then
-performs temporal and spatial filtering.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>tsincr</strong> (<em>ndarray</em>) – incremental time series array of size
-(ifg.shape, nepochs-1)</p></li>
-<li><p><strong>ifg</strong> (<em>list</em>) – List of pyrate.shared.Ifg class objects.</p></li>
-<li><p><strong>params</strong> (<em>dict</em>) – Dictionary of configuration parameter</p></li>
-<li><p><strong>tiles</strong> (<em>list</em>) – List of pyrate.shared.Tile class objects</p></li>
-<li><p><strong>preread_ifgs</strong> (<em>dict</em>) – Dictionary of shared.PrereadIfg class instances</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>None, corrected interferograms are saved to disk</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyrate.core.aps.temporal_low_pass_filter">
-<code class="sig-prename descclassname">pyrate.core.aps.</code><code class="sig-name descname">temporal_low_pass_filter</code><span class="sig-paren">(</span><em class="sig-param">tsincr</em>, <em class="sig-param">epochlist</em>, <em class="sig-param">params</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/aps.html#temporal_low_pass_filter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.aps.temporal_low_pass_filter" title="Permalink to this definition">¶</a></dt>
-<dd><p>Filter time series data temporally using either a Gaussian, triangular
-or mean low pass filter defined by a cut-off time period (in years).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>tsincr</strong> (<em>ndarray</em>) – Array of incremental time series data of shape
-(ifg.shape, n_epochs)</p></li>
-<li><p><strong>epochlist</strong> (<em>list</em>) – List of shared.EpochList class instances</p></li>
-<li><p><strong>params</strong> (<em>dict</em>) – Dictionary of configuration parameters</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>tsfilt_incr: filtered time series data, shape (ifg.shape, nepochs)</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>ndarray</p>
-</dd>
-</dl>
-</dd></dl>
-
+  <div class="section" id="troubleshooting">
+<h1>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="out-of-memory-errors">
+<h2>Out of memory errors<a class="headerlink" href="#out-of-memory-errors" title="Permalink to this headline">¶</a></h2>
+<p>PyRate is memory intensive. You may recieve various out of memory errors if
+there is not enough memory to accomdate the images being processed.</p>
+<p>Error:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">joblib</span><span class="o">.</span><span class="n">externals</span><span class="o">.</span><span class="n">loky</span><span class="o">.</span><span class="n">process_executor</span><span class="o">.</span><span class="n">TerminatedWorkerError</span><span class="p">:</span> <span class="n">A</span> <span class="n">worker</span> <span class="n">process</span> <span class="n">managed</span> <span class="n">by</span> <span class="n">the</span> <span class="n">executor</span> <span class="n">was</span> <span class="n">unexpectedly</span> <span class="n">terminated</span><span class="o">.</span> <span class="n">This</span> <span class="n">could</span> <span class="n">be</span> <span class="n">caused</span> <span class="n">by</span> <span class="n">a</span> <span class="n">segmentation</span> <span class="n">fault</span> <span class="k">while</span> <span class="n">calling</span> <span class="n">the</span> <span class="n">function</span> <span class="ow">or</span> <span class="n">by</span> <span class="n">an</span> <span class="n">excessive</span> <span class="n">memory</span> <span class="n">usage</span> <span class="n">causing</span> <span class="n">the</span> <span class="n">Operating</span> <span class="n">System</span> <span class="n">to</span> <span class="n">kill</span> <span class="n">the</span> <span class="n">worker</span><span class="o">.</span> <span class="n">The</span> <span class="n">exit</span> <span class="n">codes</span> <span class="n">of</span> <span class="n">the</span> <span class="n">workers</span> <span class="n">are</span> <span class="p">{</span><span class="n">EXIT</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">EXIT</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">EXIT</span><span class="p">(</span><span class="mi">1</span><span class="p">)}</span>
+</pre></div>
+</div>
+<p><strong>Solution</strong>: increase the amount of memory available. On HPC systems this can
+be done by increasing the value provided to the <code class="docutils literal notranslate"><span class="pre">mem</span></code> argument when
+launching a PBS job.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mem</span><span class="o">=</span><span class="mi">32</span><span class="n">gb</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="incorrect-modules-loaded-on-raijin">
+<h2>Incorrect modules loaded on Raijin<a class="headerlink" href="#incorrect-modules-loaded-on-raijin" title="Permalink to this headline">¶</a></h2>
+<p>PyRate requires certain versions of Python, GDAL and OpenMPI to be loaded
+on Raijin and other HPC systems. While sourcing the <code class="docutils literal notranslate"><span class="pre">PyRate/utils/load_modules.sh</span></code>
+script will load the correct modules, you may need to unload previously unloaded modules.</p>
+<p>Example of errors caused by module conflicts:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ERROR</span><span class="p">:</span><span class="mi">150</span><span class="p">:</span> <span class="n">Module</span> <span class="s1">&#39;python3/3.7.2&#39;</span> <span class="n">conflicts</span> <span class="k">with</span> <span class="n">the</span> <span class="n">currently</span> <span class="n">loaded</span> <span class="n">module</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="s1">&#39;python3/3.4.3-matplotlib&#39;</span>
+<span class="n">ERROR</span><span class="p">:</span><span class="mi">150</span><span class="p">:</span> <span class="n">Module</span> <span class="s1">&#39;gdal/2.2.2&#39;</span> <span class="n">conflicts</span> <span class="k">with</span> <span class="n">the</span> <span class="n">currently</span> <span class="n">loaded</span> <span class="n">module</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="s1">&#39;gdal/2.0.0&#39;</span>
+</pre></div>
+</div>
+<p><strong>Solution</strong>: Unload the conflicting modules and re-source the <code class="docutils literal notranslate"><span class="pre">load_modules.sh</span></code> script.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">module</span> <span class="n">unload</span> <span class="n">python3</span><span class="o">/</span><span class="mf">3.4</span><span class="o">.</span><span class="mi">3</span><span class="o">-</span><span class="n">matplotlib</span>
+<span class="n">module</span> <span class="n">unload</span> <span class="n">gdal</span><span class="o">/</span><span class="mf">2.0</span><span class="o">.</span><span class="mi">0</span>
+<span class="n">source</span> <span class="n">PyRate</span><span class="o">/</span><span class="n">utils</span><span class="o">/</span><span class="n">load_modules</span><span class="o">.</span><span class="n">sh</span>
+</pre></div>
+</div>
+</div>
 </div>
 
 

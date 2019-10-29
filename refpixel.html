@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Reference Pixel Calculation Module &mdash; PyRate 0.3.0.post3 documentation</title>
+  <title>Reference Pixel Calculation Module &mdash; PyRate 0.4.0 documentation</title>
   
 
   
@@ -94,7 +94,12 @@
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="usage.html#configuration">Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="usage.html#workflow">Workflow</a></li>
-<li class="toctree-l2"><a class="reference internal" href="usage.html#multiprocessing">Multiprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#parallel-processing">Parallel processing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#out-of-memory-errors">Out of memory errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#incorrect-modules-loaded-on-raijin">Incorrect modules loaded on Raijin</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a><ul>
@@ -109,18 +114,18 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="history.html#unreleased-2019-xx-xx">Unreleased (2019-xx-xx)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id4">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id5">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.0 (2019-09-24)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id6">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id7">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="scripts.html">PyRate Scripts</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.converttogtif.html">PyRate converttogtif Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.run_prepifg.html">PyRate run_prepifg Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.run_pyrate.html">PyRate run_pyrate Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.postprocessing.html">PyRate postprocessing Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.main.html">PyRate main Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.conv2tif.html">PyRate Conv2tif Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.prepifg.html">PyRate Prepifg Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.process.html">PyRate Process Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.merge.html">PyRate Merge Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.__main__.html">PyRate Main Script</a></li>
 </ul>
 </li>
 <li class="toctree-l1 current"><a class="reference internal" href="modules.html">Pyrate Modules</a><ul class="current">
@@ -129,17 +134,16 @@
 <li class="toctree-l2"><a class="reference internal" href="config.html">Config Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="covariance.html">Covariance Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gamma.html">GAMMA Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="gdal_python.html">GDAL-Python Bindings Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="linrate.html">Linrate Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="mst.html">Minimum Spanning Tree Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="orbital.html">Orbital Error Correction Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="prepifg.html">Prepifg Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pyratelog.html">Logging Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ref_phs_est.html">Reference Phase Calculation Module</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Reference Pixel Calculation Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="roipac.html">ROI_PAC Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="shared.html">Shared Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="timeseries.html">Time Series Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gdal_python.html">GDAL-Python Bindings Module</a></li>
 </ul>
 </li>
 </ul>
@@ -216,19 +220,19 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="module-pyrate.refpixel">
-<span id="reference-pixel-calculation-module"></span><h1>Reference Pixel Calculation Module<a class="headerlink" href="#module-pyrate.refpixel" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-pyrate.core.refpixel">
+<span id="reference-pixel-calculation-module"></span><h1>Reference Pixel Calculation Module<a class="headerlink" href="#module-pyrate.core.refpixel" title="Permalink to this headline">¶</a></h1>
 <p>This Python module implements an algorithm to search for the location
 of the interferometric reference pixel</p>
 <dl class="exception">
-<dt id="pyrate.refpixel.RefPixelError">
-<em class="property">exception </em><code class="sig-prename descclassname">pyrate.refpixel.</code><code class="sig-name descname">RefPixelError</code><a class="reference internal" href="_modules/pyrate/refpixel.html#RefPixelError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.refpixel.RefPixelError" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrate.core.refpixel.RefPixelError">
+<em class="property">exception </em><code class="sig-prename descclassname">pyrate.core.refpixel.</code><code class="sig-name descname">RefPixelError</code><a class="reference internal" href="_modules/pyrate/core/refpixel.html#RefPixelError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.refpixel.RefPixelError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generic exception for reference pixel errors.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="pyrate.refpixel.find_min_mean">
-<code class="sig-prename descclassname">pyrate.refpixel.</code><code class="sig-name descname">find_min_mean</code><span class="sig-paren">(</span><em class="sig-param">mean_sds</em>, <em class="sig-param">grid</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/refpixel.html#find_min_mean"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.refpixel.find_min_mean" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrate.core.refpixel.find_min_mean">
+<code class="sig-prename descclassname">pyrate.core.refpixel.</code><code class="sig-name descname">find_min_mean</code><span class="sig-paren">(</span><em class="sig-param">mean_sds</em>, <em class="sig-param">grid</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/refpixel.html#find_min_mean"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.refpixel.find_min_mean" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine the ref pixel block with minimum mean value</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -248,8 +252,8 @@ reference pixel grid</p></li>
 </dd></dl>
 
 <dl class="function">
-<dt id="pyrate.refpixel.ref_pixel">
-<code class="sig-prename descclassname">pyrate.refpixel.</code><code class="sig-name descname">ref_pixel</code><span class="sig-paren">(</span><em class="sig-param">ifgs</em>, <em class="sig-param">params</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/refpixel.html#ref_pixel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.refpixel.ref_pixel" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrate.core.refpixel.ref_pixel">
+<code class="sig-prename descclassname">pyrate.core.refpixel.</code><code class="sig-name descname">ref_pixel</code><span class="sig-paren">(</span><em class="sig-param">ifgs</em>, <em class="sig-param">params</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/refpixel.html#ref_pixel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.refpixel.ref_pixel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determines the most appropriate reference pixel coordinate by conducting
 a grid search and calculating the mean standard deviation with patches
 around candidate pixels from the given interferograms.</p>
@@ -274,8 +278,8 @@ the upper bounds cause an exception.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="pyrate.refpixel.ref_pixel_setup">
-<code class="sig-prename descclassname">pyrate.refpixel.</code><code class="sig-name descname">ref_pixel_setup</code><span class="sig-paren">(</span><em class="sig-param">ifgs_or_paths</em>, <em class="sig-param">params</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/refpixel.html#ref_pixel_setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.refpixel.ref_pixel_setup" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrate.core.refpixel.ref_pixel_setup">
+<code class="sig-prename descclassname">pyrate.core.refpixel.</code><code class="sig-name descname">ref_pixel_setup</code><span class="sig-paren">(</span><em class="sig-param">ifgs_or_paths</em>, <em class="sig-param">params</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/refpixel.html#ref_pixel_setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.refpixel.ref_pixel_setup" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sets up the grid for reference pixel computation and saves numpy files
 to disk for later use during ref pixel computation.</p>
 <dl class="field-list simple">
@@ -307,8 +311,8 @@ to disk for later use during ref pixel computation.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="pyrate.refpixel.save_ref_pixel_blocks">
-<code class="sig-prename descclassname">pyrate.refpixel.</code><code class="sig-name descname">save_ref_pixel_blocks</code><span class="sig-paren">(</span><em class="sig-param">grid</em>, <em class="sig-param">half_patch_size</em>, <em class="sig-param">ifg_paths</em>, <em class="sig-param">params</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/refpixel.html#save_ref_pixel_blocks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.refpixel.save_ref_pixel_blocks" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrate.core.refpixel.save_ref_pixel_blocks">
+<code class="sig-prename descclassname">pyrate.core.refpixel.</code><code class="sig-name descname">save_ref_pixel_blocks</code><span class="sig-paren">(</span><em class="sig-param">grid</em>, <em class="sig-param">half_patch_size</em>, <em class="sig-param">ifg_paths</em>, <em class="sig-param">params</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/refpixel.html#save_ref_pixel_blocks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.refpixel.save_ref_pixel_blocks" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save reference pixel grid blocks to numpy array files on disk</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -365,7 +369,7 @@ to disk for later use during ref pixel computation.</p>
   
     
   
-<p>asdasdasd</p>
+<p>placeHolderText</p>
         <!-- your html code here -->
  
 

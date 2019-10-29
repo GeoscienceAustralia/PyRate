@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Minimum Spanning Tree Module &mdash; PyRate 0.3.0.post3 documentation</title>
+  <title>Minimum Spanning Tree Module &mdash; PyRate 0.4.0 documentation</title>
   
 
   
@@ -94,7 +94,12 @@
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="usage.html#configuration">Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="usage.html#workflow">Workflow</a></li>
-<li class="toctree-l2"><a class="reference internal" href="usage.html#multiprocessing">Multiprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#parallel-processing">Parallel processing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#out-of-memory-errors">Out of memory errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#incorrect-modules-loaded-on-raijin">Incorrect modules loaded on Raijin</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a><ul>
@@ -109,18 +114,18 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="history.html#unreleased-2019-xx-xx">Unreleased (2019-xx-xx)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id4">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id5">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.0 (2019-09-24)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id6">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id7">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="scripts.html">PyRate Scripts</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.converttogtif.html">PyRate converttogtif Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.run_prepifg.html">PyRate run_prepifg Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.run_pyrate.html">PyRate run_pyrate Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.postprocessing.html">PyRate postprocessing Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.main.html">PyRate main Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.conv2tif.html">PyRate Conv2tif Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.prepifg.html">PyRate Prepifg Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.process.html">PyRate Process Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.merge.html">PyRate Merge Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.__main__.html">PyRate Main Script</a></li>
 </ul>
 </li>
 <li class="toctree-l1 current"><a class="reference internal" href="modules.html">Pyrate Modules</a><ul class="current">
@@ -129,17 +134,16 @@
 <li class="toctree-l2"><a class="reference internal" href="config.html">Config Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="covariance.html">Covariance Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gamma.html">GAMMA Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="gdal_python.html">GDAL-Python Bindings Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="linrate.html">Linrate Module</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Minimum Spanning Tree Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="orbital.html">Orbital Error Correction Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="prepifg.html">Prepifg Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pyratelog.html">Logging Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ref_phs_est.html">Reference Phase Calculation Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="refpixel.html">Reference Pixel Calculation Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="roipac.html">ROI_PAC Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="shared.html">Shared Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="timeseries.html">Time Series Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gdal_python.html">GDAL-Python Bindings Module</a></li>
 </ul>
 </li>
 </ul>
@@ -216,13 +220,13 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="module-pyrate.mst">
-<span id="minimum-spanning-tree-module"></span><h1>Minimum Spanning Tree Module<a class="headerlink" href="#module-pyrate.mst" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-pyrate.core.mst">
+<span id="minimum-spanning-tree-module"></span><h1>Minimum Spanning Tree Module<a class="headerlink" href="#module-pyrate.core.mst" title="Permalink to this headline">¶</a></h1>
 <p>This Python module implements the minimum spanning tree
 functionality for selecting interferometric observations.</p>
 <dl class="function">
-<dt id="pyrate.mst.mst_boolean_array">
-<code class="sig-prename descclassname">pyrate.mst.</code><code class="sig-name descname">mst_boolean_array</code><span class="sig-paren">(</span><em class="sig-param">ifgs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/mst.html#mst_boolean_array"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.mst.mst_boolean_array" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrate.core.mst.mst_boolean_array">
+<code class="sig-prename descclassname">pyrate.core.mst.</code><code class="sig-name descname">mst_boolean_array</code><span class="sig-paren">(</span><em class="sig-param">ifgs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/mst.html#mst_boolean_array"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.mst.mst_boolean_array" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a 3D array of booleans constituting valid interferogram connections
 in the Minimum Spanning Tree matrix.</p>
 <dl class="field-list simple">
@@ -239,8 +243,8 @@ in the Minimum Spanning Tree matrix.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="pyrate.mst.mst_from_ifgs">
-<code class="sig-prename descclassname">pyrate.mst.</code><code class="sig-name descname">mst_from_ifgs</code><span class="sig-paren">(</span><em class="sig-param">ifgs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/mst.html#mst_from_ifgs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.mst.mst_from_ifgs" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrate.core.mst.mst_from_ifgs">
+<code class="sig-prename descclassname">pyrate.core.mst.</code><code class="sig-name descname">mst_from_ifgs</code><span class="sig-paren">(</span><em class="sig-param">ifgs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/mst.html#mst_from_ifgs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.mst.mst_from_ifgs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a Minimum Spanning Tree (MST) network from the given interferograms
 using Kruskal’s algorithm. The MST is calculated using a weighting based
 on the number of NaN cells in the phase band.</p>
@@ -276,8 +280,8 @@ on the number of NaN cells in the phase band.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="pyrate.mst.mst_matrix_networkx">
-<code class="sig-prename descclassname">pyrate.mst.</code><code class="sig-name descname">mst_matrix_networkx</code><span class="sig-paren">(</span><em class="sig-param">ifgs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/mst.html#mst_matrix_networkx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.mst.mst_matrix_networkx" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrate.core.mst.mst_matrix_networkx">
+<code class="sig-prename descclassname">pyrate.core.mst.</code><code class="sig-name descname">mst_matrix_networkx</code><span class="sig-paren">(</span><em class="sig-param">ifgs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/mst.html#mst_matrix_networkx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.mst.mst_matrix_networkx" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates MST network for a single pixel for the given ifgs using
 NetworkX-package algorithms.</p>
 <dl class="field-list simple">
@@ -306,8 +310,8 @@ NetworkX-package algorithms.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="pyrate.mst.mst_multiprocessing">
-<code class="sig-prename descclassname">pyrate.mst.</code><code class="sig-name descname">mst_multiprocessing</code><span class="sig-paren">(</span><em class="sig-param">tile</em>, <em class="sig-param">ifgs_or_paths</em>, <em class="sig-param">preread_ifgs=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/mst.html#mst_multiprocessing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.mst.mst_multiprocessing" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrate.core.mst.mst_multiprocessing">
+<code class="sig-prename descclassname">pyrate.core.mst.</code><code class="sig-name descname">mst_multiprocessing</code><span class="sig-paren">(</span><em class="sig-param">tile</em>, <em class="sig-param">ifgs_or_paths</em>, <em class="sig-param">preread_ifgs=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/mst.html#mst_multiprocessing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.mst.mst_multiprocessing" title="Permalink to this definition">¶</a></dt>
 <dd><p>Wrapper function for calculating MST matrix for a tile</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -329,8 +333,8 @@ valid ifg connections</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="pyrate.mst.mst_parallel">
-<code class="sig-prename descclassname">pyrate.mst.</code><code class="sig-name descname">mst_parallel</code><span class="sig-paren">(</span><em class="sig-param">ifgs</em>, <em class="sig-param">params</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/mst.html#mst_parallel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.mst.mst_parallel" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrate.core.mst.mst_parallel">
+<code class="sig-prename descclassname">pyrate.core.mst.</code><code class="sig-name descname">mst_parallel</code><span class="sig-paren">(</span><em class="sig-param">ifgs</em>, <em class="sig-param">params</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/mst.html#mst_parallel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.mst.mst_parallel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Wrapper function for calculating MST matrix in non-MPI runs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -388,7 +392,7 @@ valid ifg connections</p>
   
     
   
-<p>asdasdasd</p>
+<p>placeHolderText</p>
         <!-- your html code here -->
  
 

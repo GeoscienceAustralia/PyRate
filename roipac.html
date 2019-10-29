@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ROI_PAC Module &mdash; PyRate 0.3.0.post3 documentation</title>
+  <title>ROI_PAC Module &mdash; PyRate 0.4.0 documentation</title>
   
 
   
@@ -94,7 +94,12 @@
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="usage.html#configuration">Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="usage.html#workflow">Workflow</a></li>
-<li class="toctree-l2"><a class="reference internal" href="usage.html#multiprocessing">Multiprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#parallel-processing">Parallel processing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#out-of-memory-errors">Out of memory errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#incorrect-modules-loaded-on-raijin">Incorrect modules loaded on Raijin</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a><ul>
@@ -109,18 +114,18 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="history.html#unreleased-2019-xx-xx">Unreleased (2019-xx-xx)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id4">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id5">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.0 (2019-09-24)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id6">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id7">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="scripts.html">PyRate Scripts</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.converttogtif.html">PyRate converttogtif Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.run_prepifg.html">PyRate run_prepifg Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.run_pyrate.html">PyRate run_pyrate Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.postprocessing.html">PyRate postprocessing Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.main.html">PyRate main Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.conv2tif.html">PyRate Conv2tif Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.prepifg.html">PyRate Prepifg Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.process.html">PyRate Process Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.merge.html">PyRate Merge Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.__main__.html">PyRate Main Script</a></li>
 </ul>
 </li>
 <li class="toctree-l1 current"><a class="reference internal" href="modules.html">Pyrate Modules</a><ul class="current">
@@ -129,17 +134,16 @@
 <li class="toctree-l2"><a class="reference internal" href="config.html">Config Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="covariance.html">Covariance Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gamma.html">GAMMA Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="gdal_python.html">GDAL-Python Bindings Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="linrate.html">Linrate Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="mst.html">Minimum Spanning Tree Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="orbital.html">Orbital Error Correction Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="prepifg.html">Prepifg Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pyratelog.html">Logging Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ref_phs_est.html">Reference Phase Calculation Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="refpixel.html">Reference Pixel Calculation Module</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">ROI_PAC Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="shared.html">Shared Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="timeseries.html">Time Series Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gdal_python.html">GDAL-Python Bindings Module</a></li>
 </ul>
 </li>
 </ul>
@@ -216,18 +220,18 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="module-pyrate.roipac">
-<span id="roi-pac-module"></span><h1>ROI_PAC Module<a class="headerlink" href="#module-pyrate.roipac" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-pyrate.core.roipac">
+<span id="roi-pac-module"></span><h1>ROI_PAC Module<a class="headerlink" href="#module-pyrate.core.roipac" title="Permalink to this headline">¶</a></h1>
 <p>This Python module contains tools for reading ROI_PAC format input data.</p>
 <dl class="exception">
-<dt id="pyrate.roipac.RoipacException">
-<em class="property">exception </em><code class="sig-prename descclassname">pyrate.roipac.</code><code class="sig-name descname">RoipacException</code><a class="reference internal" href="_modules/pyrate/roipac.html#RoipacException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.roipac.RoipacException" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrate.core.roipac.RoipacException">
+<em class="property">exception </em><code class="sig-prename descclassname">pyrate.core.roipac.</code><code class="sig-name descname">RoipacException</code><a class="reference internal" href="_modules/pyrate/core/roipac.html#RoipacException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.roipac.RoipacException" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convenience class for throwing exception</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="pyrate.roipac.manage_header">
-<code class="sig-prename descclassname">pyrate.roipac.</code><code class="sig-name descname">manage_header</code><span class="sig-paren">(</span><em class="sig-param">header_file</em>, <em class="sig-param">projection</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/roipac.html#manage_header"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.roipac.manage_header" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrate.core.roipac.manage_header">
+<code class="sig-prename descclassname">pyrate.core.roipac.</code><code class="sig-name descname">manage_header</code><span class="sig-paren">(</span><em class="sig-param">header_file</em>, <em class="sig-param">projection</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/roipac.html#manage_header"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.roipac.manage_header" title="Permalink to this definition">¶</a></dt>
 <dd><p>Manage header files for ROI_PAC interferograms and DEM files.
 NB: projection = roipac.parse_header(dem_file)[ifc.PYRATE_DATUM]</p>
 <dl class="field-list simple">
@@ -247,8 +251,8 @@ NB: projection = roipac.parse_header(dem_file)[ifc.PYRATE_DATUM]</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="pyrate.roipac.parse_date">
-<code class="sig-prename descclassname">pyrate.roipac.</code><code class="sig-name descname">parse_date</code><span class="sig-paren">(</span><em class="sig-param">dstr</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/roipac.html#parse_date"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.roipac.parse_date" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrate.core.roipac.parse_date">
+<code class="sig-prename descclassname">pyrate.core.roipac.</code><code class="sig-name descname">parse_date</code><span class="sig-paren">(</span><em class="sig-param">dstr</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/roipac.html#parse_date"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.roipac.parse_date" title="Permalink to this definition">¶</a></dt>
 <dd><p>Parses ROI_PAC ‘yymmdd’ or ‘yymmdd-yymmdd’ format string to datetime.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -264,8 +268,8 @@ NB: projection = roipac.parse_header(dem_file)[ifc.PYRATE_DATUM]</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="pyrate.roipac.parse_header">
-<code class="sig-prename descclassname">pyrate.roipac.</code><code class="sig-name descname">parse_header</code><span class="sig-paren">(</span><em class="sig-param">hdr_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/roipac.html#parse_header"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.roipac.parse_header" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrate.core.roipac.parse_header">
+<code class="sig-prename descclassname">pyrate.core.roipac.</code><code class="sig-name descname">parse_header</code><span class="sig-paren">(</span><em class="sig-param">hdr_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/roipac.html#parse_header"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.roipac.parse_header" title="Permalink to this definition">¶</a></dt>
 <dd><p>Parses ROI_PAC header file metadata to a dictionary.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -281,8 +285,8 @@ NB: projection = roipac.parse_header(dem_file)[ifc.PYRATE_DATUM]</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="pyrate.roipac.roipac_header">
-<code class="sig-prename descclassname">pyrate.roipac.</code><code class="sig-name descname">roipac_header</code><span class="sig-paren">(</span><em class="sig-param">file_path</em>, <em class="sig-param">params</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/roipac.html#roipac_header"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.roipac.roipac_header" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrate.core.roipac.roipac_header">
+<code class="sig-prename descclassname">pyrate.core.roipac.</code><code class="sig-name descname">roipac_header</code><span class="sig-paren">(</span><em class="sig-param">file_path</em>, <em class="sig-param">params</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/roipac.html#roipac_header"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.roipac.roipac_header" title="Permalink to this definition">¶</a></dt>
 <dd><p>Function to obtain a header for roipac interferogram file or converted
 geotiff.</p>
 </dd></dl>
@@ -327,7 +331,7 @@ geotiff.</p>
   
     
   
-<p>asdasdasd</p>
+<p>placeHolderText</p>
         <!-- your html code here -->
  
 

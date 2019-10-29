@@ -1,5 +1,5 @@
 Orbital Error Correction Module
 ===============================
 
-.. automodule:: pyrate.orbital
+.. automodule:: pyrate.core.orbital
    :members:

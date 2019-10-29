@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Release History &mdash; PyRate 0.3.0.post3 documentation</title>
+  <title>Release History &mdash; PyRate 0.4.0 documentation</title>
   
 
   
@@ -94,7 +94,12 @@
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="usage.html#configuration">Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="usage.html#workflow">Workflow</a></li>
-<li class="toctree-l2"><a class="reference internal" href="usage.html#multiprocessing">Multiprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#parallel-processing">Parallel processing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#out-of-memory-errors">Out of memory errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#incorrect-modules-loaded-on-raijin">Incorrect modules loaded on Raijin</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a><ul>
@@ -109,18 +114,18 @@
 </ul>
 </li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#unreleased-2019-xx-xx">Unreleased (2019-xx-xx)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id1">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id4">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id5">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id1">0.4.0 (2019-09-24)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id2">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id6">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id7">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="scripts.html">PyRate Scripts</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.converttogtif.html">PyRate converttogtif Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.run_prepifg.html">PyRate run_prepifg Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.run_pyrate.html">PyRate run_pyrate Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.postprocessing.html">PyRate postprocessing Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.main.html">PyRate main Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.conv2tif.html">PyRate Conv2tif Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.prepifg.html">PyRate Prepifg Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.process.html">PyRate Process Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.merge.html">PyRate Merge Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.__main__.html">PyRate Main Script</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="modules.html">Pyrate Modules</a><ul>
@@ -129,17 +134,16 @@
 <li class="toctree-l2"><a class="reference internal" href="config.html">Config Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="covariance.html">Covariance Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gamma.html">GAMMA Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="gdal_python.html">GDAL-Python Bindings Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="linrate.html">Linrate Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="mst.html">Minimum Spanning Tree Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="orbital.html">Orbital Error Correction Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="prepifg.html">Prepifg Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pyratelog.html">Logging Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ref_phs_est.html">Reference Phase Calculation Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="refpixel.html">Reference Pixel Calculation Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="roipac.html">ROI_PAC Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="shared.html">Shared Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="timeseries.html">Time Series Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gdal_python.html">GDAL-Python Bindings Module</a></li>
 </ul>
 </li>
 </ul>
@@ -216,28 +220,47 @@
             
   <div class="section" id="release-history">
 <h1>Release History<a class="headerlink" href="#release-history" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="unreleased-2019-xx-xx">
-<h2>Unreleased (2019-xx-xx)<a class="headerlink" href="#unreleased-2019-xx-xx" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id1">
+<h2>0.4.0 (2019-09-24)<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="added">
 <h3>Added<a class="headerlink" href="#added" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
-<li><p>Python 3.7 support</p></li>
+<li><p>Python 3.7 support.</p></li>
+<li><p>Optional ‘conv2tif’ step.</p></li>
+<li><p>Building of docs integrated with Travis CI.</p></li>
+<li><p>Coherence masking, view coherence masking section in ‘input_parameters.conf’
+for options.</p></li>
+<li><p>Input parameter validation.</p></li>
+<li><p>SLC and coherence file lists for file discovery.</p></li>
 </ul>
 </div>
 <div class="section" id="changed">
 <h3>Changed<a class="headerlink" href="#changed" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
-<li><p>‘linrate’ command has been renamed to ‘process’</p></li>
+<li><p>‘linrate’ step has been renamed to ‘process’.</p></li>
+<li><p>‘postprocess’ step has been renamed to ‘merge’</p></li>
+<li><p>‘converttogeotiff’ step has been renamed to ‘conv2tif’</p></li>
+<li><p>CLI structure: config files now need to provided with ‘-f’ flag.</p></li>
+<li><p>Reduced console output, default verbosity setting is now INFO.</p></li>
+<li><p>Restructure of code layout, src modules now in ‘core’ directory and scripts
+at top level.</p></li>
+</ul>
+</div>
+<div class="section" id="removed">
+<h3>Removed<a class="headerlink" href="#removed" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Unused luigi code.</p></li>
+<li><p>References to Matlab.</p></li>
 </ul>
 </div>
 </div>
-<div class="section" id="id1">
-<h2>0.3.0 (2019-07-26)<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="id2">
-<h3>Added<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<h2>0.3.0 (2019-07-26)<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id3">
+<h3>Added<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p><cite>apt_install.sh</cite> in utils/ that lists Ubuntu/apt package requirements.</p></li>
-<li><p><cite>load_modules.sh</cite> in utils/ that sets up Raijin environment.</p></li>
+<li><p><cite>load_modules.sh</cite> in utils/ that sets up NCI Raijin HPC environment.</p></li>
 </ul>
 </div>
 <div class="section" id="fixed">
@@ -246,8 +269,8 @@
 <li><p>Errors being caused by newer version of networkx. Nx 2.3 now supported.</p></li>
 </ul>
 </div>
-<div class="section" id="removed">
-<h3>Removed<a class="headerlink" href="#removed" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id4">
+<h3>Removed<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Unused Python and OS packages.</p></li>
 <li><p>environment.yml - conda env will now be installed using ‘requirements.txt’.</p></li>
@@ -257,8 +280,8 @@
 Single machine parallelism is achieved with joblib.</p></li>
 </ul>
 </div>
-<div class="section" id="id3">
-<h3>Changed<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id5">
+<h3>Changed<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Requirements now managed by ‘requirements.txt’ file, parsed by setup.py.</p></li>
 <li><p>Requirements now split across base ‘requirements.txt’ and files for dev
@@ -272,14 +295,14 @@ Single machine parallelism is achieved with joblib.</p></li>
 </ul>
 </div>
 </div>
-<div class="section" id="id4">
-<h2>0.2.0 (2017-05-22)<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id6">
+<h2>0.2.0 (2017-05-22)<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p>Stable beta release.</p></li>
 </ul>
 </div>
-<div class="section" id="id5">
-<h2>0.1.0 (2017-01-31)<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id7">
+<h2>0.1.0 (2017-01-31)<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p>First release on PyPI.</p></li>
 </ul>
@@ -324,7 +347,7 @@ Single machine parallelism is achieved with joblib.</p></li>
   
     
   
-<p>asdasdasd</p>
+<p>placeHolderText</p>
         <!-- your html code here -->
  
 

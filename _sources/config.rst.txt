@@ -1,5 +1,5 @@
 Config Module
 =============
 
-.. automodule:: pyrate.config
+.. automodule:: pyrate.core.config
    :members:

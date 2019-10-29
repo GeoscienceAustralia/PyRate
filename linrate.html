@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Linrate Module &mdash; PyRate 0.3.0.post3 documentation</title>
+  <title>Linrate Module &mdash; PyRate 0.4.0 documentation</title>
   
 
   
@@ -37,7 +37,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Minimum Spanning Tree Module" href="mst.html" />
-    <link rel="prev" title="GDAL-Python Bindings Module" href="gdal_python.html" /> 
+    <link rel="prev" title="GAMMA Module" href="gamma.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -94,7 +94,12 @@
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="usage.html#configuration">Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="usage.html#workflow">Workflow</a></li>
-<li class="toctree-l2"><a class="reference internal" href="usage.html#multiprocessing">Multiprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#parallel-processing">Parallel processing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#out-of-memory-errors">Out of memory errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#incorrect-modules-loaded-on-raijin">Incorrect modules loaded on Raijin</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a><ul>
@@ -109,18 +114,18 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="history.html#unreleased-2019-xx-xx">Unreleased (2019-xx-xx)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id4">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id5">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.0 (2019-09-24)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id6">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id7">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="scripts.html">PyRate Scripts</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.converttogtif.html">PyRate converttogtif Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.run_prepifg.html">PyRate run_prepifg Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.run_pyrate.html">PyRate run_pyrate Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.postprocessing.html">PyRate postprocessing Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.main.html">PyRate main Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.conv2tif.html">PyRate Conv2tif Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.prepifg.html">PyRate Prepifg Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.process.html">PyRate Process Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.merge.html">PyRate Merge Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.__main__.html">PyRate Main Script</a></li>
 </ul>
 </li>
 <li class="toctree-l1 current"><a class="reference internal" href="modules.html">Pyrate Modules</a><ul class="current">
@@ -129,17 +134,16 @@
 <li class="toctree-l2"><a class="reference internal" href="config.html">Config Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="covariance.html">Covariance Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gamma.html">GAMMA Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="gdal_python.html">GDAL-Python Bindings Module</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Linrate Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="mst.html">Minimum Spanning Tree Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="orbital.html">Orbital Error Correction Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="prepifg.html">Prepifg Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pyratelog.html">Logging Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ref_phs_est.html">Reference Phase Calculation Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="refpixel.html">Reference Pixel Calculation Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="roipac.html">ROI_PAC Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="shared.html">Shared Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="timeseries.html">Time Series Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gdal_python.html">GDAL-Python Bindings Module</a></li>
 </ul>
 </li>
 </ul>
@@ -207,7 +211,7 @@
         <a href="mst.html" class="btn btn-neutral float-right" title="Minimum Spanning Tree Module" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="gdal_python.html" class="btn btn-neutral float-left" title="GDAL-Python Bindings Module" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="gamma.html" class="btn btn-neutral float-left" title="GAMMA Module" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
   </div>
   
@@ -216,17 +220,16 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="module-pyrate.linrate">
-<span id="linrate-module"></span><h1>Linrate Module<a class="headerlink" href="#module-pyrate.linrate" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-pyrate.core.linrate">
+<span id="linrate-module"></span><h1>Linrate Module<a class="headerlink" href="#module-pyrate.core.linrate" title="Permalink to this headline">¶</a></h1>
 <p>This Python module implements pixel-by-pixel linear rate
 (velocity) estimation using an iterative weighted least-squares
-method. The algorithm is based on the Matlab Pirate package ‘stack.m’
-and Matlab ‘lscov.m’ functions.</p>
+stacking method.</p>
 <dl class="function">
-<dt id="pyrate.linrate.linear_rate">
-<code class="sig-prename descclassname">pyrate.linrate.</code><code class="sig-name descname">linear_rate</code><span class="sig-paren">(</span><em class="sig-param">ifgs</em>, <em class="sig-param">params</em>, <em class="sig-param">vcmt</em>, <em class="sig-param">mst=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/linrate.html#linear_rate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.linrate.linear_rate" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrate.core.linrate.linear_rate">
+<code class="sig-prename descclassname">pyrate.core.linrate.</code><code class="sig-name descname">linear_rate</code><span class="sig-paren">(</span><em class="sig-param">ifgs</em>, <em class="sig-param">params</em>, <em class="sig-param">vcmt</em>, <em class="sig-param">mst=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/linrate.html#linear_rate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.linrate.linear_rate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Pixel-by-pixel linear rate (velocity) estimation using iterative
-weighted least-squares method.</p>
+weighted least-squares stacking method.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -297,7 +300,7 @@ weighted least-squares method.</p>
   
     
   
-<p>asdasdasd</p>
+<p>placeHolderText</p>
         <!-- your html code here -->
  
 

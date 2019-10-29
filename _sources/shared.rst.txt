@@ -1,5 +1,5 @@
 Shared Module
 =============
 
-.. automodule:: pyrate.shared
+.. automodule:: pyrate.core.shared
    :members:

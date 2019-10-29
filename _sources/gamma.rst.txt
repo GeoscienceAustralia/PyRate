@@ -1,5 +1,5 @@
 GAMMA Module
 ============
 
-.. automodule:: pyrate.gamma
+.. automodule:: pyrate.core.gamma
    :members:

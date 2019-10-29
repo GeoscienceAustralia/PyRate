@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>pyrate.covariance &mdash; PyRate 0.3.0.post3 documentation</title>
+  <title>pyrate.core.covariance &mdash; PyRate 0.4.0 documentation</title>
   
 
   
@@ -17,25 +17,25 @@
   
 
   
-  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
   
     
-      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../_static/language_data.js"></script>
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
     
-    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
     
 
   
-  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
-    <link rel="index" title="Index" href="../../genindex.html" />
-    <link rel="search" title="Search" href="../../search.html" /> 
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/css/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -49,12 +49,12 @@
           
 
           
-            <a href="../../index.html">
+            <a href="../../../index.html">
           
 
           
             
-            <img src="../../_static/PyRate_logo.png" class="logo" alt="Logo"/>
+            <img src="../../../_static/PyRate_logo.png" class="logo" alt="Logo"/>
           
           </a>
 
@@ -62,7 +62,7 @@
 
           
 <div role="search">
-  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
@@ -82,62 +82,66 @@
             
             
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../installation.html#ubuntu-18-04">Ubuntu 18.04</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../installation.html#docker">Docker</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../installation.html#hpc">HPC</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../installation.html#verify-installation">Verify Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../installation.html#ubuntu-18-04">Ubuntu 18.04</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../installation.html#docker">Docker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../installation.html#hpc">HPC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../installation.html#verify-installation">Verify Installation</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../usage.html">Usage</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../usage.html#configuration">Configuration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../usage.html#workflow">Workflow</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../usage.html#multiprocessing">Multiprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage.html#configuration">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage.html#workflow">Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage.html#parallel-processing">Parallel processing</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../contributing.html#types-of-contributions">Types of Contributions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../contributing.html#get-started">Get Started!</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../contributing.html#pull-request-guidelines">Pull Request Guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../troubleshooting.html">Troubleshooting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../troubleshooting.html#out-of-memory-errors">Out of memory errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../troubleshooting.html#incorrect-modules-loaded-on-raijin">Incorrect modules loaded on Raijin</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../authors.html">Credits</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../authors.html#development-lead">Development Lead</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../authors.html#contributors">Contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../contributing.html#types-of-contributions">Types of Contributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../contributing.html#get-started">Get Started!</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../contributing.html#pull-request-guidelines">Pull Request Guidelines</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../history.html#unreleased-2019-xx-xx">Unreleased (2019-xx-xx)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../history.html#id1">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../history.html#id4">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../history.html#id5">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../authors.html">Credits</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../authors.html#development-lead">Development Lead</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../authors.html#contributors">Contributors</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../scripts.html">PyRate Scripts</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../pyrate.scripts.converttogtif.html">PyRate converttogtif Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../pyrate.scripts.run_prepifg.html">PyRate run_prepifg Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../pyrate.scripts.run_pyrate.html">PyRate run_pyrate Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../pyrate.scripts.postprocessing.html">PyRate postprocessing Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../pyrate.scripts.main.html">PyRate main Script</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../history.html">Release History</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id1">0.4.0 (2019-09-24)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id2">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id6">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id7">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../modules.html">Pyrate Modules</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../algorithm.html">Algorithm Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../aps.html">Atmospheric Phase Screen Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../config.html">Config Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../covariance.html">Covariance Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../gamma.html">GAMMA Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../gdal_python.html">GDAL-Python Bindings Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../linrate.html">Linrate Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../mst.html">Minimum Spanning Tree Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../orbital.html">Orbital Error Correction Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../prepifg.html">Prepifg Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../pyratelog.html">Logging Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../ref_phs_est.html">Reference Phase Calculation Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../refpixel.html">Reference Pixel Calculation Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../roipac.html">ROI_PAC Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../shared.html">Shared Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../timeseries.html">Time Series Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../scripts.html">PyRate Scripts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../pyrate.conv2tif.html">PyRate Conv2tif Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../pyrate.prepifg.html">PyRate Prepifg Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../pyrate.process.html">PyRate Process Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../pyrate.merge.html">PyRate Merge Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../pyrate.__main__.html">PyRate Main Script</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Pyrate Modules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../algorithm.html">Algorithm Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../aps.html">Atmospheric Phase Screen Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../config.html">Config Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../covariance.html">Covariance Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../gamma.html">GAMMA Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../linrate.html">Linrate Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../mst.html">Minimum Spanning Tree Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../orbital.html">Orbital Error Correction Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../pyratelog.html">Logging Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../ref_phs_est.html">Reference Phase Calculation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../refpixel.html">Reference Pixel Calculation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../roipac.html">ROI_PAC Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../shared.html">Shared Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../timeseries.html">Time Series Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../gdal_python.html">GDAL-Python Bindings Module</a></li>
 </ul>
 </li>
 </ul>
@@ -155,7 +159,7 @@
       <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../../index.html">PyRate</a>
+          <a href="../../../index.html">PyRate</a>
         
       </nav>
 
@@ -184,11 +188,11 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../../index.html">Docs</a> &raquo;</li>
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
         
-          <li><a href="../index.html">Module code</a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
         
-      <li>pyrate.covariance</li>
+      <li>pyrate.core.covariance</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -203,7 +207,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <h1>Source code for pyrate.covariance</h1><div class="highlight"><pre>
+  <h1>Source code for pyrate.core.covariance</h1><div class="highlight"><pre>
 <span></span><span class="c1">#   This Python module is part of the PyRate software package.</span>
 <span class="c1">#</span>
 <span class="c1">#   Copyright 2017 Geoscience Australia</span>
@@ -221,9 +225,7 @@
 <span class="c1">#   limitations under the License.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">This Python module implements covariance calculation and</span>
-<span class="sd">Variance/Covariance matrix functionality. The algorithms</span>
-<span class="sd">are based on functions &#39;cvdcalc.m&#39; and &#39;vcmt.m&#39; from</span>
-<span class="sd">the Matlab Pirate package.</span>
+<span class="sd">Variance/Covariance matrix functionality.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="c1"># coding: utf-8</span>
 <span class="kn">from</span> <span class="nn">os.path</span> <span class="k">import</span> <span class="n">basename</span><span class="p">,</span> <span class="n">join</span>
@@ -235,15 +237,12 @@
 <span class="kn">from</span> <span class="nn">scipy.fftpack</span> <span class="k">import</span> <span class="n">fft2</span><span class="p">,</span> <span class="n">ifft2</span><span class="p">,</span> <span class="n">fftshift</span>
 <span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="k">import</span> <span class="n">fmin</span>
 
-<span class="kn">from</span> <span class="nn">pyrate</span> <span class="k">import</span> <span class="n">shared</span>
-<span class="kn">from</span> <span class="nn">pyrate.shared</span> <span class="k">import</span> <span class="n">PrereadIfg</span>
-<span class="kn">from</span> <span class="nn">pyrate.algorithm</span> <span class="k">import</span> <span class="n">master_slave_ids</span>
-<span class="kn">from</span> <span class="nn">pyrate</span> <span class="k">import</span> <span class="n">ifgconstants</span> <span class="k">as</span> <span class="n">ifc</span>
-<span class="kn">from</span> <span class="nn">pyrate</span> <span class="k">import</span> <span class="n">config</span> <span class="k">as</span> <span class="n">cf</span>
+<span class="kn">from</span> <span class="nn">pyrate.core</span> <span class="k">import</span> <span class="n">shared</span><span class="p">,</span> <span class="n">ifgconstants</span> <span class="k">as</span> <span class="n">ifc</span><span class="p">,</span> <span class="n">config</span> <span class="k">as</span> <span class="n">cf</span>
+<span class="kn">from</span> <span class="nn">pyrate.core.shared</span> <span class="k">import</span> <span class="n">PrereadIfg</span>
+<span class="kn">from</span> <span class="nn">pyrate.core.algorithm</span> <span class="k">import</span> <span class="n">master_slave_ids</span>
 
 <span class="c1"># pylint: disable=too-many-arguments</span>
-<span class="c1"># distance division factor of 1000 converts to km and is needed to match</span>
-<span class="c1"># Matlab code output</span>
+<span class="c1"># distance division factor of 1000 converts to km and is needed to match legacy output</span>
 <span class="n">DISTFACT</span> <span class="o">=</span> <span class="mi">1000</span>
 
 <span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
@@ -273,7 +272,7 @@
     <span class="k">return</span> <span class="n">vstack</span><span class="p">([</span><span class="n">array</span><span class="p">(</span><span class="n">u</span><span class="p">)</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">points</span><span class="p">)])</span>
 
 
-<div class="viewcode-block" id="cvd"><a class="viewcode-back" href="../../covariance.html#pyrate.covariance.cvd">[docs]</a><span class="k">def</span> <span class="nf">cvd</span><span class="p">(</span><span class="n">ifg_path</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">r_dist</span><span class="p">,</span> <span class="n">calc_alpha</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<div class="viewcode-block" id="cvd"><a class="viewcode-back" href="../../../covariance.html#pyrate.core.covariance.cvd">[docs]</a><span class="k">def</span> <span class="nf">cvd</span><span class="p">(</span><span class="n">ifg_path</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">r_dist</span><span class="p">,</span> <span class="n">calc_alpha</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">write_vals</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">save_acg</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Calculate the 1D covariance function of an entire interferogram as the</span>
@@ -341,7 +340,7 @@
     <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">data_file</span><span class="p">,</span> <span class="n">arr</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="cvd_from_phase"><a class="viewcode-back" href="../../covariance.html#pyrate.covariance.cvd_from_phase">[docs]</a><span class="k">def</span> <span class="nf">cvd_from_phase</span><span class="p">(</span><span class="n">phase</span><span class="p">,</span> <span class="n">ifg</span><span class="p">,</span> <span class="n">r_dist</span><span class="p">,</span> <span class="n">calc_alpha</span><span class="p">,</span> <span class="n">save_acg</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="cvd_from_phase"><a class="viewcode-back" href="../../../covariance.html#pyrate.core.covariance.cvd_from_phase">[docs]</a><span class="k">def</span> <span class="nf">cvd_from_phase</span><span class="p">(</span><span class="n">phase</span><span class="p">,</span> <span class="n">ifg</span><span class="p">,</span> <span class="n">r_dist</span><span class="p">,</span> <span class="n">calc_alpha</span><span class="p">,</span> <span class="n">save_acg</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A convenience function used to compute radial autocovariance from phase</span>
 <span class="sd">    data</span>
@@ -368,13 +367,12 @@
     <span class="n">acg</span> <span class="o">=</span> <span class="n">reshape</span><span class="p">(</span><span class="n">autocorr_grid</span><span class="p">,</span> <span class="n">phase</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;F&#39;</span><span class="p">)</span>
     <span class="c1"># Symmetry in image; keep only unique points</span>
     <span class="c1"># tmp = _unique_points(zip(acg, r_dist))</span>
-    <span class="c1"># Sudipta: Is this faster than keeping only the 1st half as in Matlab?</span>
     <span class="c1"># Sudipta: Unlikely, as unique_point is a search/comparison,</span>
     <span class="c1"># whereas keeping 1st half is just numpy indexing.</span>
     <span class="c1"># If it is not faster, why was this done differently here?</span>
     <span class="c1"># r_dist = r_dist[:int(ceil(phase.size / 2.0)) + nrows]</span>
     <span class="n">acg</span> <span class="o">=</span> <span class="n">acg</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="n">r_dist</span><span class="p">)]</span>
-    <span class="c1"># Alternative method to remove duplicate cells (from Matlab Pirate code)</span>
+    <span class="c1"># Alternative method to remove duplicate cells</span>
     <span class="c1"># r_dist = r_dist[:ceil(len(r_dist)/2)+nlines]</span>
     <span class="c1">#  Reason for &#39;+nlines&#39; term unknown</span>
     <span class="c1"># eg. array([x for x in set([(1,1), (2,2), (1,1)])])</span>
@@ -404,7 +402,7 @@
         <span class="n">r_dist</span> <span class="o">=</span> <span class="n">r_dist</span><span class="p">[</span><span class="n">indices_to_keep</span><span class="p">]</span>  <span class="c1"># km</span>
         <span class="c1"># classify values of r_dist according to bin number</span>
         <span class="n">rbin</span> <span class="o">=</span> <span class="n">ceil</span><span class="p">(</span><span class="n">r_dist</span> <span class="o">/</span> <span class="n">bin_width</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
-        <span class="n">maxbin</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">rbin</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>  <span class="c1"># consistent with Matlab code</span>
+        <span class="n">maxbin</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">rbin</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>  <span class="c1"># consistent with Legacy data</span>
 
         <span class="n">cvdav</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">maxbin</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
 
@@ -417,7 +415,7 @@
         <span class="n">alphaguess</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="n">maxbin</span> <span class="o">*</span> <span class="n">bin_width</span><span class="p">)</span>
         <span class="n">alpha</span> <span class="o">=</span> <span class="n">fmin</span><span class="p">(</span><span class="n">_pendiffexp</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="n">alphaguess</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">cvdav</span><span class="p">,),</span> <span class="n">disp</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                      <span class="n">xtol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span> <span class="n">ftol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">)</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;1st guess alpha </span><span class="si">{}</span><span class="s2">, converged &quot;</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;1st guess alpha </span><span class="si">{}</span><span class="s2">, converged &quot;</span>
                  <span class="s2">&quot;alpha: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">alphaguess</span><span class="p">,</span> <span class="n">alpha</span><span class="p">))</span>
         <span class="c1"># maximum variance usually at the zero lag: max(acg[:len(r_dist)])</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">acg</span><span class="p">),</span> <span class="n">alpha</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># alpha unit 1/km</span>
@@ -425,7 +423,7 @@
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">acg</span><span class="p">),</span> <span class="kc">None</span></div>
 
 
-<div class="viewcode-block" id="RDist"><a class="viewcode-back" href="../../covariance.html#pyrate.covariance.RDist">[docs]</a><span class="k">class</span> <span class="nc">RDist</span><span class="p">():</span>
+<div class="viewcode-block" id="RDist"><a class="viewcode-back" href="../../../covariance.html#pyrate.core.covariance.RDist">[docs]</a><span class="k">class</span> <span class="nc">RDist</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    RDist class used for caching r_dist during maxvar/alpha computation</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -483,7 +481,7 @@
     <span class="k">return</span> <span class="n">pspec</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="get_vcmt"><a class="viewcode-back" href="../../covariance.html#pyrate.covariance.get_vcmt">[docs]</a><span class="k">def</span> <span class="nf">get_vcmt</span><span class="p">(</span><span class="n">ifgs</span><span class="p">,</span> <span class="n">maxvar</span><span class="p">):</span>
+<div class="viewcode-block" id="get_vcmt"><a class="viewcode-back" href="../../../covariance.html#pyrate.core.covariance.get_vcmt">[docs]</a><span class="k">def</span> <span class="nf">get_vcmt</span><span class="p">(</span><span class="n">ifgs</span><span class="p">,</span> <span class="n">maxvar</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Assembles a temporal variance/covariance matrix using the method</span>
 <span class="sd">    described by Biggs et al., Geophys. J. Int, 2007. Matrix elements are</span>
@@ -576,7 +574,7 @@
   
     
   
-<p>asdasdasd</p>
+<p>placeHolderText</p>
         <!-- your html code here -->
  
 

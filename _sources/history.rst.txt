@@ -2,22 +2,39 @@
 
 Release History
 ===============
-Unreleased (2019-xx-xx)
+0.4.0 (2019-09-24)
 -----------------------
 Added
 +++++
-- Python 3.7 support
+- Python 3.7 support.
+- Optional 'conv2tif' step.
+- Building of docs integrated with Travis CI.
+- Coherence masking, view coherence masking section in 'input_parameters.conf'
+  for options.
+- Input parameter validation.
+- SLC and coherence file lists for file discovery.
 
 Changed
 +++++++
-- 'linrate' command has been renamed to 'process'
+- 'linrate' step has been renamed to 'process'.
+- 'postprocess' step has been renamed to 'merge'
+- 'converttogeotiff' step has been renamed to 'conv2tif'
+- CLI structure: config files now need to provided with '-f' flag.
+- Reduced console output, default verbosity setting is now INFO.
+- Restructure of code layout, src modules now in 'core' directory and scripts
+  at top level.
+
+Removed
++++++++
+- Unused luigi code.
+- References to Matlab.
 
 0.3.0 (2019-07-26)
 -----------------------
 Added
 +++++
 - `apt_install.sh` in utils/ that lists Ubuntu/apt package requirements.
-- `load_modules.sh` in utils/ that sets up Raijin environment.
+- `load_modules.sh` in utils/ that sets up NCI Raijin HPC environment.
 
 Fixed
 +++++
@@ -51,4 +68,3 @@ Changed
 0.1.0 (2017-01-31)
 ------------------
 - First release on PyPI.
-

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Reference Phase Calculation Module &mdash; PyRate 0.3.0.post3 documentation</title>
+  <title>Reference Phase Calculation Module &mdash; PyRate 0.4.0 documentation</title>
   
 
   
@@ -94,7 +94,12 @@
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="usage.html#configuration">Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="usage.html#workflow">Workflow</a></li>
-<li class="toctree-l2"><a class="reference internal" href="usage.html#multiprocessing">Multiprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#parallel-processing">Parallel processing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#out-of-memory-errors">Out of memory errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#incorrect-modules-loaded-on-raijin">Incorrect modules loaded on Raijin</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a><ul>
@@ -109,18 +114,18 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="history.html#unreleased-2019-xx-xx">Unreleased (2019-xx-xx)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id4">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id5">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.0 (2019-09-24)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id6">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id7">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="scripts.html">PyRate Scripts</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.converttogtif.html">PyRate converttogtif Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.run_prepifg.html">PyRate run_prepifg Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.run_pyrate.html">PyRate run_pyrate Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.postprocessing.html">PyRate postprocessing Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.scripts.main.html">PyRate main Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.conv2tif.html">PyRate Conv2tif Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.prepifg.html">PyRate Prepifg Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.process.html">PyRate Process Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.merge.html">PyRate Merge Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.__main__.html">PyRate Main Script</a></li>
 </ul>
 </li>
 <li class="toctree-l1 current"><a class="reference internal" href="modules.html">Pyrate Modules</a><ul class="current">
@@ -129,17 +134,16 @@
 <li class="toctree-l2"><a class="reference internal" href="config.html">Config Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="covariance.html">Covariance Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gamma.html">GAMMA Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="gdal_python.html">GDAL-Python Bindings Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="linrate.html">Linrate Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="mst.html">Minimum Spanning Tree Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="orbital.html">Orbital Error Correction Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="prepifg.html">Prepifg Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pyratelog.html">Logging Module</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Reference Phase Calculation Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="refpixel.html">Reference Pixel Calculation Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="roipac.html">ROI_PAC Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="shared.html">Shared Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="timeseries.html">Time Series Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gdal_python.html">GDAL-Python Bindings Module</a></li>
 </ul>
 </li>
 </ul>
@@ -216,25 +220,24 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="module-pyrate.ref_phs_est">
-<span id="reference-phase-calculation-module"></span><h1>Reference Phase Calculation Module<a class="headerlink" href="#module-pyrate.ref_phs_est" title="Permalink to this headline">¶</a></h1>
-<p>This Python module implements a reference phase estimation algorithm
-and is based on the function ‘refphsest.m’ of the Matlab Pirate package.</p>
+  <div class="section" id="module-pyrate.core.ref_phs_est">
+<span id="reference-phase-calculation-module"></span><h1>Reference Phase Calculation Module<a class="headerlink" href="#module-pyrate.core.ref_phs_est" title="Permalink to this headline">¶</a></h1>
+<p>This Python module implements a reference phase estimation algorithm.</p>
 <dl class="exception">
-<dt id="pyrate.ref_phs_est.ReferencePhaseError">
-<em class="property">exception </em><code class="sig-prename descclassname">pyrate.ref_phs_est.</code><code class="sig-name descname">ReferencePhaseError</code><a class="reference internal" href="_modules/pyrate/ref_phs_est.html#ReferencePhaseError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.ref_phs_est.ReferencePhaseError" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrate.core.ref_phs_est.ReferencePhaseError">
+<em class="property">exception </em><code class="sig-prename descclassname">pyrate.core.ref_phs_est.</code><code class="sig-name descname">ReferencePhaseError</code><a class="reference internal" href="_modules/pyrate/core/ref_phs_est.html#ReferencePhaseError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.ref_phs_est.ReferencePhaseError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generic class for errors in reference phase estimation.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="pyrate.ref_phs_est.est_ref_phase_method1">
-<code class="sig-prename descclassname">pyrate.ref_phs_est.</code><code class="sig-name descname">est_ref_phase_method1</code><span class="sig-paren">(</span><em class="sig-param">ifgs</em>, <em class="sig-param">params</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/ref_phs_est.html#est_ref_phase_method1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.ref_phs_est.est_ref_phase_method1" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrate.core.ref_phs_est.est_ref_phase_method1">
+<code class="sig-prename descclassname">pyrate.core.ref_phs_est.</code><code class="sig-name descname">est_ref_phase_method1</code><span class="sig-paren">(</span><em class="sig-param">ifg_paths</em>, <em class="sig-param">params</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/ref_phs_est.html#est_ref_phase_method1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.ref_phs_est.est_ref_phase_method1" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reference phase estimation using method 1. Reference phase is the
 median of the whole interferogram image.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>ifgs</strong> (<em>list</em>) – List of interferogram objects</p></li>
+<li><p><strong>ifg_paths</strong> (<em>list</em>) – List of interferogram paths or objects</p></li>
 <li><p><strong>params</strong> (<em>dict</em>) – Dictionary of configuration parameters</p></li>
 </ul>
 </dd>
@@ -251,40 +254,14 @@ median of the whole interferogram image.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="pyrate.ref_phs_est.est_ref_phase_method2">
-<code class="sig-prename descclassname">pyrate.ref_phs_est.</code><code class="sig-name descname">est_ref_phase_method2</code><span class="sig-paren">(</span><em class="sig-param">ifgs</em>, <em class="sig-param">params</em>, <em class="sig-param">refpx</em>, <em class="sig-param">refpy</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/ref_phs_est.html#est_ref_phase_method2"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.ref_phs_est.est_ref_phase_method2" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrate.core.ref_phs_est.est_ref_phase_method2">
+<code class="sig-prename descclassname">pyrate.core.ref_phs_est.</code><code class="sig-name descname">est_ref_phase_method2</code><span class="sig-paren">(</span><em class="sig-param">ifg_paths</em>, <em class="sig-param">params</em>, <em class="sig-param">refpx</em>, <em class="sig-param">refpy</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/ref_phs_est.html#est_ref_phase_method2"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.ref_phs_est.est_ref_phase_method2" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reference phase estimation using method 2. Reference phase is the
 median calculated with a patch around the supplied reference pixel.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>ifgs</strong> (<em>list</em>) – List of interferogram objects</p></li>
-<li><p><strong>params</strong> (<em>dict</em>) – Dictionary of configuration parameters</p></li>
-<li><p><strong>refpx</strong> (<em>int</em>) – Reference pixel X found by ref pixel method</p></li>
-<li><p><strong>refpy</strong> (<em>int</em>) – Reference pixel Y found by ref pixel method</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>ref_phs: Numpy array of reference phase values of size (nifgs, 1)</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>ndarray</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>ifgs: Reference phase data is removed interferograms in place</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyrate.ref_phs_est.estimate_ref_phase">
-<code class="sig-prename descclassname">pyrate.ref_phs_est.</code><code class="sig-name descname">estimate_ref_phase</code><span class="sig-paren">(</span><em class="sig-param">ifgs</em>, <em class="sig-param">params</em>, <em class="sig-param">refpx</em>, <em class="sig-param">refpy</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/ref_phs_est.html#estimate_ref_phase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.ref_phs_est.estimate_ref_phase" title="Permalink to this definition">¶</a></dt>
-<dd><p>Wrapper function for reference phase estimation and interferogram
-correction.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>ifgs</strong> (<em>list</em>) – List of interferogram objects</p></li>
+<li><p><strong>ifg_paths</strong> (<em>list</em>) – List of interferogram paths or objects.</p></li>
 <li><p><strong>params</strong> (<em>dict</em>) – Dictionary of configuration parameters</p></li>
 <li><p><strong>refpx</strong> (<em>int</em>) – Reference pixel X found by ref pixel method</p></li>
 <li><p><strong>refpy</strong> (<em>int</em>) – Reference pixel Y found by ref pixel method</p></li>
@@ -342,7 +319,7 @@ correction.</p>
   
     
   
-<p>asdasdasd</p>
+<p>placeHolderText</p>
         <!-- your html code here -->
  
 

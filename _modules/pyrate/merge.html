@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>pyrate.scripts.postprocessing &mdash; PyRate 0.3.0.post3 documentation</title>
+  <title>pyrate.merge &mdash; PyRate 0.4.0 documentation</title>
   
 
   
@@ -17,25 +17,25 @@
   
 
   
-  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
   
     
-      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
     
-    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
     
 
   
-  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/css/custom.css" type="text/css" />
-    <link rel="index" title="Index" href="../../../genindex.html" />
-    <link rel="search" title="Search" href="../../../search.html" /> 
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -49,12 +49,12 @@
           
 
           
-            <a href="../../../index.html">
+            <a href="../../index.html">
           
 
           
             
-            <img src="../../../_static/PyRate_logo.png" class="logo" alt="Logo"/>
+            <img src="../../_static/PyRate_logo.png" class="logo" alt="Logo"/>
           
           </a>
 
@@ -62,7 +62,7 @@
 
           
 <div role="search">
-  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
@@ -82,62 +82,66 @@
             
             
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../installation.html#ubuntu-18-04">Ubuntu 18.04</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../installation.html#docker">Docker</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../installation.html#hpc">HPC</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../installation.html#verify-installation">Verify Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#ubuntu-18-04">Ubuntu 18.04</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#docker">Docker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#hpc">HPC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#verify-installation">Verify Installation</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Usage</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../usage.html#configuration">Configuration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../usage.html#workflow">Workflow</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../usage.html#multiprocessing">Multiprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage.html">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../usage.html#configuration">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage.html#workflow">Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage.html#parallel-processing">Parallel processing</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../contributing.html#types-of-contributions">Types of Contributions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../contributing.html#get-started">Get Started!</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../contributing.html#pull-request-guidelines">Pull Request Guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../troubleshooting.html">Troubleshooting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../troubleshooting.html#out-of-memory-errors">Out of memory errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../troubleshooting.html#incorrect-modules-loaded-on-raijin">Incorrect modules loaded on Raijin</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../../authors.html">Credits</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../authors.html#development-lead">Development Lead</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../authors.html#contributors">Contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../contributing.html#types-of-contributions">Types of Contributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../contributing.html#get-started">Get Started!</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../contributing.html#pull-request-guidelines">Pull Request Guidelines</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../../history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#unreleased-2019-xx-xx">Unreleased (2019-xx-xx)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id1">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id4">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id5">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../authors.html">Credits</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../authors.html#development-lead">Development Lead</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../authors.html#contributors">Contributors</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../../scripts.html">PyRate Scripts</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../pyrate.scripts.converttogtif.html">PyRate converttogtif Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../pyrate.scripts.run_prepifg.html">PyRate run_prepifg Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../pyrate.scripts.run_pyrate.html">PyRate run_pyrate Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../pyrate.scripts.postprocessing.html">PyRate postprocessing Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../pyrate.scripts.main.html">PyRate main Script</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../history.html">Release History</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id1">0.4.0 (2019-09-24)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id2">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id6">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id7">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Pyrate Modules</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../algorithm.html">Algorithm Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../aps.html">Atmospheric Phase Screen Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../config.html">Config Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../covariance.html">Covariance Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../gamma.html">GAMMA Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../gdal_python.html">GDAL-Python Bindings Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../linrate.html">Linrate Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../mst.html">Minimum Spanning Tree Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../orbital.html">Orbital Error Correction Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../prepifg.html">Prepifg Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../pyratelog.html">Logging Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../ref_phs_est.html">Reference Phase Calculation Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../refpixel.html">Reference Pixel Calculation Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../roipac.html">ROI_PAC Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../shared.html">Shared Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../timeseries.html">Time Series Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scripts.html">PyRate Scripts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../pyrate.conv2tif.html">PyRate Conv2tif Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pyrate.prepifg.html">PyRate Prepifg Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pyrate.process.html">PyRate Process Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pyrate.merge.html">PyRate Merge Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pyrate.__main__.html">PyRate Main Script</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">Pyrate Modules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../algorithm.html">Algorithm Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../aps.html">Atmospheric Phase Screen Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../config.html">Config Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../covariance.html">Covariance Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../gamma.html">GAMMA Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../linrate.html">Linrate Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../mst.html">Minimum Spanning Tree Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../orbital.html">Orbital Error Correction Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pyratelog.html">Logging Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../ref_phs_est.html">Reference Phase Calculation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../refpixel.html">Reference Pixel Calculation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../roipac.html">ROI_PAC Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../shared.html">Shared Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../timeseries.html">Time Series Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../gdal_python.html">GDAL-Python Bindings Module</a></li>
 </ul>
 </li>
 </ul>
@@ -155,7 +159,7 @@
       <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../../../index.html">PyRate</a>
+          <a href="../../index.html">PyRate</a>
         
       </nav>
 
@@ -184,11 +188,11 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
         
-          <li><a href="../../index.html">Module code</a> &raquo;</li>
+          <li><a href="../index.html">Module code</a> &raquo;</li>
         
-      <li>pyrate.scripts.postprocessing</li>
+      <li>pyrate.merge</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -203,7 +207,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <h1>Source code for pyrate.scripts.postprocessing</h1><div class="highlight"><pre>
+  <h1>Source code for pyrate.merge</h1><div class="highlight"><pre>
 <span></span><span class="c1">#   This Python module is part of the PyRate software package.</span>
 <span class="c1">#</span>
 <span class="c1">#   Copyright 2017 Geoscience Australia</span>
@@ -229,40 +233,116 @@
 <span class="kn">import</span> <span class="nn">pickle</span> <span class="k">as</span> <span class="nn">cp</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">osgeo</span> <span class="k">import</span> <span class="n">gdal</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
 
-<span class="kn">from</span> <span class="nn">pyrate</span> <span class="k">import</span> <span class="n">config</span> <span class="k">as</span> <span class="n">cf</span>
-<span class="kn">from</span> <span class="nn">pyrate</span> <span class="k">import</span> <span class="n">ifgconstants</span> <span class="k">as</span> <span class="n">ifc</span>
-<span class="kn">from</span> <span class="nn">pyrate</span> <span class="k">import</span> <span class="n">shared</span>
-<span class="kn">from</span> <span class="nn">pyrate</span> <span class="k">import</span> <span class="n">mpiops</span>
-<span class="kn">from</span> <span class="nn">pyrate.shared</span> <span class="k">import</span> <span class="n">PrereadIfg</span>
+<span class="kn">from</span> <span class="nn">pyrate.core</span> <span class="k">import</span> <span class="n">shared</span><span class="p">,</span> <span class="n">ifgconstants</span> <span class="k">as</span> <span class="n">ifc</span><span class="p">,</span> <span class="n">mpiops</span><span class="p">,</span> <span class="n">config</span> <span class="k">as</span> <span class="n">cf</span>
+<span class="kn">from</span> <span class="nn">pyrate.core.shared</span> <span class="k">import</span> <span class="n">PrereadIfg</span>
 <span class="n">gdal</span><span class="o">.</span><span class="n">SetCacheMax</span><span class="p">(</span><span class="mi">64</span><span class="p">)</span>
 <span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 <span class="c1"># Constants</span>
 <span class="n">MASTER_PROCESS</span> <span class="o">=</span> <span class="mi">0</span>
 
+<div class="viewcode-block" id="create_png_from_tif"><a class="viewcode-back" href="../../pyrate.merge.html#pyrate.merge.create_png_from_tif">[docs]</a><span class="k">def</span> <span class="nf">create_png_from_tif</span><span class="p">(</span><span class="n">output_folder_path</span><span class="p">):</span>
 
-<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../../pyrate.scripts.postprocessing.html#pyrate.scripts.postprocessing.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">config_file</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">):</span>
+    <span class="c1"># open raster and choose band to find min, max</span>
+    <span class="n">raster_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_folder_path</span><span class="p">,</span> <span class="s2">&quot;linrate.tif&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">raster_path</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;linrate.tif file not found at: &quot;</span><span class="o">+</span><span class="n">raster_path</span><span class="p">)</span>
+    <span class="n">gtif</span> <span class="o">=</span> <span class="n">gdal</span><span class="o">.</span><span class="n">Open</span><span class="p">(</span><span class="n">raster_path</span><span class="p">)</span>
+    <span class="n">srcband</span> <span class="o">=</span> <span class="n">gtif</span><span class="o">.</span><span class="n">GetRasterBand</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">west</span><span class="p">,</span> <span class="n">north</span><span class="p">,</span> <span class="n">east</span><span class="p">,</span> <span class="n">south</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">gdal</span><span class="o">.</span><span class="n">Info</span><span class="p">(</span><span class="n">gtif</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s2">&quot;Upper Left&quot;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+            <span class="n">west</span><span class="p">,</span> <span class="n">north</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;)&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;(&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;Lower Right&quot;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+            <span class="n">east</span><span class="p">,</span> <span class="n">south</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;)&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;(&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+
+    <span class="n">kml_file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_folder_path</span><span class="p">,</span> <span class="s2">&quot;linrate.kml&quot;</span><span class="p">)</span>
+    <span class="n">kml_file_content</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span>
+<span class="s2">&lt;kml xmlns=&quot;http://earth.google.com/kml/2.1&quot;&gt;</span>
+<span class="s2">  &lt;Document&gt;</span>
+<span class="s2">    &lt;name&gt;linrate.kml&lt;/name&gt;</span>
+<span class="s2">    &lt;GroundOverlay&gt;</span>
+<span class="s2">      &lt;name&gt;linrate.png&lt;/name&gt;</span>
+<span class="s2">      &lt;Icon&gt;</span>
+<span class="s2">        &lt;href&gt;linrate.png&lt;/href&gt;</span>
+<span class="s2">      &lt;/Icon&gt;</span>
+<span class="s2">      &lt;LatLonBox&gt;</span>
+<span class="s2">        &lt;north&gt; &quot;&quot;&quot;</span><span class="o">+</span><span class="n">north</span><span class="o">+</span><span class="s2">&quot;&quot;&quot; &lt;/north&gt;</span>
+<span class="s2">        &lt;south&gt; &quot;&quot;&quot;</span><span class="o">+</span><span class="n">south</span><span class="o">+</span><span class="s2">&quot;&quot;&quot; &lt;/south&gt;</span>
+<span class="s2">        &lt;east&gt;  &quot;&quot;&quot;</span><span class="o">+</span><span class="n">east</span><span class="o">+</span><span class="s2">&quot;&quot;&quot; &lt;/east&gt;</span>
+<span class="s2">        &lt;west&gt;  &quot;&quot;&quot;</span><span class="o">+</span><span class="n">west</span><span class="o">+</span><span class="s2">&quot;&quot;&quot; &lt;/west&gt;</span>
+<span class="s2">      &lt;/LatLonBox&gt;</span>
+<span class="s2">    &lt;/GroundOverlay&gt;</span>
+<span class="s2">  &lt;/Document&gt;</span>
+<span class="s2">&lt;/kml&gt;&quot;&quot;&quot;</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">kml_file_path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">kml_file_content</span><span class="p">)</span>
+
+    <span class="c1"># Get raster statistics</span>
+    <span class="n">minimum</span><span class="p">,</span> <span class="n">maximum</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">stddev</span> <span class="o">=</span> <span class="n">srcband</span><span class="o">.</span><span class="n">GetStatistics</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="n">maximum</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">minimum</span><span class="p">),</span> <span class="nb">abs</span><span class="p">(</span><span class="n">maximum</span><span class="p">))</span>
+    <span class="n">minimum</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">maximum</span>
+    <span class="n">step</span> <span class="o">=</span> <span class="p">(</span><span class="n">maximum</span> <span class="o">-</span> <span class="n">minimum</span><span class="p">)</span> <span class="o">/</span> <span class="mf">256.0</span>
+
+    <span class="k">del</span> <span class="n">gtif</span>  <span class="c1"># manually close raster</span>
+
+    <span class="c1"># read color map from utilises and write it to the output folder</span>
+    <span class="n">ref_color_map_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))),</span> <span class="s2">&quot;utils&quot;</span><span class="p">,</span> <span class="s2">&quot;colormap.txt&quot;</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">ref_color_map_path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">color_map_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">():</span>
+            <span class="n">color_map_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">))</span>
+
+    <span class="n">no_of_data_value</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">minimum</span><span class="p">,</span> <span class="n">maximum</span><span class="p">,</span> <span class="n">step</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">no</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">minimum</span><span class="p">,</span> <span class="n">maximum</span><span class="p">,</span> <span class="n">step</span><span class="p">)):</span>
+        <span class="n">color_map_list</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">no</span><span class="p">)</span>
+
+    <span class="n">color_map_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_folder_path</span><span class="p">,</span> <span class="s2">&quot;colormap.txt&quot;</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">color_map_path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">no_of_data_value</span><span class="p">):</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">color_map_list</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">input_tif_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_folder_path</span><span class="p">,</span> <span class="s2">&quot;linrate.tif&quot;</span><span class="p">)</span>
+    <span class="n">output_png_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_folder_path</span><span class="p">,</span> <span class="s2">&quot;linrate.png&quot;</span><span class="p">)</span>
+    <span class="n">subprocess</span><span class="o">.</span><span class="n">check_call</span><span class="p">([</span><span class="s2">&quot;gdaldem&quot;</span><span class="p">,</span> <span class="s2">&quot;color-relief&quot;</span><span class="p">,</span> <span class="s2">&quot;-of&quot;</span><span class="p">,</span> <span class="s2">&quot;PNG&quot;</span><span class="p">,</span> <span class="n">input_tif_path</span><span class="p">,</span> <span class="s2">&quot;-alpha&quot;</span><span class="p">,</span> <span class="n">color_map_path</span><span class="p">,</span> <span class="n">output_png_path</span><span class="p">,</span> <span class="s2">&quot;-nearest_color_entry&quot;</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../pyrate.merge.html#pyrate.merge.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    PyRate post-processing main function. Assembles product tiles in to</span>
+<span class="sd">    PyRate merge main function. Assembles product tiles in to</span>
 <span class="sd">    single geotiff files</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># setup paths</span>
-    <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">get_ifg_paths</span><span class="p">(</span><span class="n">config_file</span><span class="p">)</span>
-    <span class="n">_postprocess_linrate</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+    <span class="n">_merge_linrate</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TIME_SERIES_CAL</span><span class="p">]:</span>
-        <span class="n">_postprocess_timeseries</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span></div>
+        <span class="n">_merge_timeseries</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Start creating quicklook results.&#39;</span><span class="p">)</span>
+    <span class="n">output_folder_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;tmpdir&quot;</span><span class="p">])</span>
+    <span class="n">create_png_from_tif</span><span class="p">(</span><span class="n">output_folder_path</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Finished creating quick look results.&#39;</span><span class="p">)</span></div>
 
 
-<span class="k">def</span> <span class="nf">_postprocess_linrate</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_merge_linrate</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Postprocess linear rate outputs</span>
+<span class="sd">    Merge linear rate outputs</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># pylint: disable=expression-not-assigned</span>
     <span class="c1"># setup paths</span>
     <span class="n">xlks</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">crop</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">transform_params</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
-    <span class="n">base_unw_paths</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">original_ifg_paths</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">IFG_FILE_LIST</span><span class="p">])</span>
-    <span class="n">dest_tifs</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">get_dest_paths</span><span class="p">(</span><span class="n">base_unw_paths</span><span class="p">,</span> <span class="n">crop</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">xlks</span><span class="p">)</span>
+    <span class="n">base_unw_paths</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">original_ifg_paths</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">IFG_FILE_LIST</span><span class="p">],</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">OBS_DIR</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="s2">&quot;tif&quot;</span> <span class="ow">in</span> <span class="n">base_unw_paths</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="n">dest_tifs</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">get_dest_paths</span><span class="p">(</span><span class="n">base_unw_paths</span><span class="p">,</span> <span class="n">crop</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">xlks</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">dest_tif</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dest_tifs</span><span class="p">):</span>
+            <span class="n">dest_tifs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">dest_tif</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;_tif&quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">dest_tifs</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">get_dest_paths</span><span class="p">(</span><span class="n">base_unw_paths</span><span class="p">,</span> <span class="n">crop</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">xlks</span><span class="p">)</span>
 
     <span class="c1"># load previously saved prepread_ifgs dict</span>
     <span class="n">preread_ifgs_file</span> <span class="o">=</span> <span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TMPDIR</span><span class="p">],</span> <span class="s1">&#39;preread_ifgs.pk&#39;</span><span class="p">)</span>
@@ -284,7 +364,7 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Save linear rate outputs</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Starting PyRate postprocessing </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">out_type</span><span class="p">))</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Merging PyRate outputs </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">out_type</span><span class="p">))</span>
     <span class="n">gt</span><span class="p">,</span> <span class="n">md</span><span class="p">,</span> <span class="n">wkt</span> <span class="o">=</span> <span class="n">ifgs_dict</span><span class="p">[</span><span class="s1">&#39;gt&#39;</span><span class="p">],</span> <span class="n">ifgs_dict</span><span class="p">[</span><span class="s1">&#39;md&#39;</span><span class="p">],</span> <span class="n">ifgs_dict</span><span class="p">[</span><span class="s1">&#39;wkt&#39;</span><span class="p">]</span>
     <span class="n">epochlist</span> <span class="o">=</span> <span class="n">ifgs_dict</span><span class="p">[</span><span class="s1">&#39;epochlist&#39;</span><span class="p">]</span>
     <span class="n">ifgs</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">ifgs_dict</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">PrereadIfg</span><span class="p">)]</span>
@@ -299,25 +379,32 @@
 
     <span class="n">rate</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">ifgs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tiles</span><span class="p">:</span>
-        <span class="n">rate_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TMPDIR</span><span class="p">],</span> <span class="n">out_type</span> <span class="o">+</span>
-                                 <span class="s1">&#39;_</span><span class="si">{}</span><span class="s1">.npy&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">index</span><span class="p">))</span>
+        <span class="n">rate_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TMPDIR</span><span class="p">],</span> <span class="n">out_type</span> <span class="o">+</span> <span class="s1">&#39;_</span><span class="si">{}</span><span class="s1">.npy&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">index</span><span class="p">))</span>
         <span class="n">rate_tile</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">rate_file</span><span class="p">)</span>
-        <span class="n">rate</span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">top_left_y</span><span class="p">:</span><span class="n">t</span><span class="o">.</span><span class="n">bottom_right_y</span><span class="p">,</span>
-             <span class="n">t</span><span class="o">.</span><span class="n">top_left_x</span><span class="p">:</span><span class="n">t</span><span class="o">.</span><span class="n">bottom_right_x</span><span class="p">]</span> <span class="o">=</span> <span class="n">rate_tile</span>
+        <span class="n">rate</span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">top_left_y</span><span class="p">:</span><span class="n">t</span><span class="o">.</span><span class="n">bottom_right_y</span><span class="p">,</span> <span class="n">t</span><span class="o">.</span><span class="n">top_left_x</span><span class="p">:</span><span class="n">t</span><span class="o">.</span><span class="n">bottom_right_x</span><span class="p">]</span> <span class="o">=</span> <span class="n">rate_tile</span>
     <span class="n">shared</span><span class="o">.</span><span class="n">write_output_geotiff</span><span class="p">(</span><span class="n">md</span><span class="p">,</span> <span class="n">gt</span><span class="p">,</span> <span class="n">wkt</span><span class="p">,</span> <span class="n">rate</span><span class="p">,</span> <span class="n">dest</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
     <span class="n">npy_rate_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">OUT_DIR</span><span class="p">],</span> <span class="n">out_type</span> <span class="o">+</span> <span class="s1">&#39;.npy&#39;</span><span class="p">)</span>
     <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">npy_rate_file</span><span class="p">,</span> <span class="n">arr</span><span class="o">=</span><span class="n">rate</span><span class="p">)</span>
-    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Finished PyRate postprocessing </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">out_type</span><span class="p">))</span>
+
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Finished PyRate merging </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">out_type</span><span class="p">))</span>
 
 
-<span class="k">def</span> <span class="nf">_postprocess_timeseries</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_merge_timeseries</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Postprocess time series output</span>
+<span class="sd">    Merge time series output</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># pylint: disable=too-many-locals</span>
     <span class="n">xlks</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">crop</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">transform_params</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
-    <span class="n">base_unw_paths</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">original_ifg_paths</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">IFG_FILE_LIST</span><span class="p">])</span>
-    <span class="n">dest_tifs</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">get_dest_paths</span><span class="p">(</span><span class="n">base_unw_paths</span><span class="p">,</span> <span class="n">crop</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">xlks</span><span class="p">)</span>
+    <span class="n">base_unw_paths</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">original_ifg_paths</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">IFG_FILE_LIST</span><span class="p">],</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">OBS_DIR</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="s2">&quot;tif&quot;</span> <span class="ow">in</span> <span class="n">base_unw_paths</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="n">dest_tifs</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">get_dest_paths</span><span class="p">(</span><span class="n">base_unw_paths</span><span class="p">,</span> <span class="n">crop</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">xlks</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">dest_tif</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dest_tifs</span><span class="p">):</span>
+            <span class="n">dest_tifs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">dest_tif</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;_tif&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">dest_tifs</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">get_dest_paths</span><span class="p">(</span><span class="n">base_unw_paths</span><span class="p">,</span> <span class="n">crop</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">xlks</span><span class="p">)</span>
+
+
     <span class="n">output_dir</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TMPDIR</span><span class="p">]</span>
 
     <span class="c1"># load previously saved prepread_ifgs dict</span>
@@ -424,7 +511,7 @@
   
     
   
-<p>asdasdasd</p>
+<p>placeHolderText</p>
         <!-- your html code here -->
  
 
