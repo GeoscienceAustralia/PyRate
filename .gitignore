@@ -1,6 +1,6 @@
 !*docs/_build/html/404.html
 !*tests/test_data/merge/linrate.tif
-
+!*tests/test_data/small_test/gamma_obs/20060619-20061002_utm_unw.tif
 *data/*
 *out*
 *.pyo
