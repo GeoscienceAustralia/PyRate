@@ -393,6 +393,8 @@ def _get_same_bounds(ifgs):
     """
 
     tfs = [i.dataset.GetGeoTransform() for i in ifgs]
+    for tf in tfs:
+        log.info(tf)
     equal = [t == tfs[0] for t in tfs[1:]]
     if not all(equal):
         msg = 'Ifgs do not have the same bounding box for crop option: %s'
