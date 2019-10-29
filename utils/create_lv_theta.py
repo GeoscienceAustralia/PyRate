@@ -23,9 +23,7 @@ import os
 import numpy as np
 from osgeo import gdal
 
-from pyrate import gamma
-from pyrate import ifgconstants as ifc
-from pyrate import shared
+from pyrate.core import shared, ifgconstants as ifc, gamma
 from tests import common
 
 elevation_file = os.path.join(common.SML_TEST_GAMMA,

@@ -47,5 +47,5 @@ environment and reload the required modules:
 ::
 
     cd ~
-    source PyRateVM/bin/activate
+    source PyRateVenv/bin/activate
     source PyRate/utils/load_modules.sh

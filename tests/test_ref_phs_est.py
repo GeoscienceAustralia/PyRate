@@ -25,15 +25,14 @@ import tempfile
 import unittest
 import numpy as np
 
-import pyrate.orbital
-from pyrate import config as cf
-from pyrate import ifgconstants as ifc
-from pyrate.ref_phs_est import estimate_ref_phase, ReferencePhaseError
-from pyrate.scripts import run_prepifg
-from pyrate.scripts import run_pyrate
+import pyrate.core.orbital
+from pyrate.core import ifgconstants as ifc, config as cf
+from pyrate.core.ref_phs_est import ReferencePhaseError
+from pyrate.core.shared import CorrectionStatusError
+from pyrate import prepifg, process, conv2tif
 from tests import common
 
-matlab_ref_phs_method1 = [-18.2191658020020,
+legacy_ref_phs_method1 = [-18.2191658020020,
                           27.7119445800781,
                           -18.4944229125977,
                           -2.92210483551025,
@@ -52,7 +51,7 @@ matlab_ref_phs_method1 = [-18.2191658020020,
                           -12.7864856719971]
 
 
-matlab_ref_phs_method2 = [-21.4459648132324,
+legacy_ref_phs_method2 = [-21.4459648132324,
                           27.1714553833008,
                           -20.8264484405518,
                           -3.47468209266663,
@@ -79,39 +78,52 @@ class RefPhsTests(unittest.TestCase):
         self.params = dict()
         self.params[cf.REF_EST_METHOD] = 1
         self.params[cf.PARALLEL] = False
+        self.params[cf.TMPDIR] = self.tmp_dir
         self.refpx, self.refpy = 38, 58
         common.copytree(common.SML_TEST_TIF, self.tmp_dir)
         small_tifs = glob.glob(os.path.join(self.tmp_dir, "*.tif"))
         for s in small_tifs:
             os.chmod(s, 0o644)
         self.ifgs = common.small_data_setup(self.tmp_dir, is_dir=True)
+        for ifg in self.ifgs:
+            ifg.close()
+       
 
     def tearDown(self):
-        shutil.rmtree(self.tmp_dir)
+        try:
+            shutil.rmtree(self.tmp_dir)
+        except PermissionError:
+            print("Files still in use.")
+
+        for ifg in self.ifgs:
+            ifg.close()
 
     def test_need_at_least_two_ifgs(self):
-        self.assertRaises(ReferencePhaseError, estimate_ref_phase,
+        self.assertRaises(ReferencePhaseError, process._ref_phase_estimation,
                           self.ifgs[:1], self.params, self.refpx, self.refpy)
 
     def test_metadata(self):
-        estimate_ref_phase(self.ifgs, self.params, self.refpx, self.refpy)
-        for s in self.ifgs:
-            self.assertEqual(s.dataset.GetMetadataItem(ifc.PYRATE_REF_PHASE),
+        process._ref_phase_estimation(self.ifgs, self.params, self.refpx, self.refpy)
+        for ifg in self.ifgs:
+            ifg.open()
+            self.assertEqual(ifg.dataset.GetMetadataItem(ifc.PYRATE_REF_PHASE),
                              ifc.REF_PHASE_REMOVED)
-
+    
     def test_mixed_metadata_raises(self):
         # correct reference phase for some of the ifgs
-        estimate_ref_phase(self.ifgs[:5], self.params, self.refpx, self.refpy)
+        process._ref_phase_estimation(self.ifgs[:5], self.params, self.refpx, self.refpy)
+        for ifg in self.ifgs:
+            ifg.open()
 
         # now it should raise exception if we wnat to correct
         # refernece phase again on all of them
-        self.assertRaises(ReferencePhaseError, estimate_ref_phase,
+        self.assertRaises(CorrectionStatusError, process._ref_phase_estimation,
                           self.ifgs, self.params, self.refpx, self.refpy)
+        
 
-
-class RefPhsEstimationMatlabTestMethod1Serial(unittest.TestCase):
+class RefPhsEstimationLegacyTestMethod1Serial(unittest.TestCase):
     """
-    Reference phase estimation method 1 is tested vs matlab output
+    Reference phase estimation method 1 is tested vs legacy output
     """
 
     @classmethod
@@ -119,17 +131,19 @@ class RefPhsEstimationMatlabTestMethod1Serial(unittest.TestCase):
 
         params = cf.get_config_params(common.TEST_CONF_ROIPAC)
         cls.temp_out_dir = tempfile.mkdtemp()
-        sys.argv = ['run_prepifg.py', common.TEST_CONF_ROIPAC]
+        sys.argv = ['prepifg.py', common.TEST_CONF_ROIPAC]
         params[cf.OUT_DIR] = cls.temp_out_dir
-        run_prepifg.main(params)
+        params[cf.TMPDIR] = cls.temp_out_dir
+        conv2tif.main(params)
+        prepifg.main(params)
 
-        params[cf.OUT_DIR] = cls.temp_out_dir
         params[cf.REF_EST_METHOD] = 1
         params[cf.PARALLEL] = False
 
         xlks, ylks, crop = cf.transform_params(params)
 
-        base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST])
+        base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST],
+                                               params[cf.OBS_DIR])
 
         dest_paths = cf.get_dest_paths(base_ifg_paths, crop,
                                                params, xlks)
@@ -138,45 +152,58 @@ class RefPhsEstimationMatlabTestMethod1Serial(unittest.TestCase):
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         mst_grid = common.mst_calculation(dest_paths, params)
         # Estimate reference pixel location
-        refx, refy = run_pyrate._ref_pixel_calc(dest_paths, params)
+        refx, refy = process._ref_pixel_calc(dest_paths, params)
 
         # Estimate and remove orbit errors
-        pyrate.orbital.remove_orbital_error(ifgs, params)
+        pyrate.core.orbital.remove_orbital_error(ifgs, params)
 
         for i in ifgs:
             i.close()
 
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
 
-        cls.ref_phs, cls.ifgs = estimate_ref_phase(ifgs, params, refx, refy)
+        for ifg in ifgs:
+            ifg.close()
 
-        # end run_pyrate copy
+        cls.ref_phs, cls.ifgs = process._ref_phase_estimation(dest_paths, params, refx, refy)
 
-        # manually close for windows compatibility
-        for i in ifgs:
-            i.close()
 
     @classmethod
     def tearDownClass(cls):
-        shutil.rmtree(cls.temp_out_dir)
+        try:
+            shutil.rmtree(cls.temp_out_dir)
+        except PermissionError:
+            print("File opened by another process.")
+
+        try:
+            common.remove_tifs(cf.get_config_params(common.TEST_CONF_ROIPAC)[cf.OBS_DIR])
+        except PermissionError:
+            print("File opened by another process.")
+
+        for ifg in cls.ifgs:
+            ifg.close()
 
     def test_estimate_reference_phase(self):
-        np.testing.assert_array_almost_equal(matlab_ref_phs_method1,
+        np.testing.assert_array_almost_equal(legacy_ref_phs_method1,
                                              self.ref_phs,
                                              decimal=3)
 
     def test_ifgs_after_ref_phs_est(self):
-        MATLAB_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR,
-                                                     'matlab_ref_phase_est')
+        for ifg in self.ifgs:
+            if not ifg.is_open:
+                ifg.open()
 
-        onlyfiles = [f for f in os.listdir(MATLAB_REF_PHASE_DIR)
-                if os.path.isfile(os.path.join(MATLAB_REF_PHASE_DIR, f))
+        LEGACY_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR,
+                                                     'ref_phase_est')
+
+        onlyfiles = [f for f in os.listdir(LEGACY_REF_PHASE_DIR)
+                if os.path.isfile(os.path.join(LEGACY_REF_PHASE_DIR, f))
                 and f.endswith('.csv') and f.__contains__('_ref_phase_')]
 
         count = 0
         for i, f in enumerate(onlyfiles):
             ifg_data = np.genfromtxt(os.path.join(
-                MATLAB_REF_PHASE_DIR, f), delimiter=',')
+                LEGACY_REF_PHASE_DIR, f), delimiter=',')
             for k, j in enumerate(self.ifgs):
                 if f.split('_corrected')[-1].split('.')[0] == \
                         os.path.split(j.data_path)[-1].split('_unw_1rlks')[0]:
@@ -197,26 +224,28 @@ class RefPhsEstimationMatlabTestMethod1Serial(unittest.TestCase):
         self.assertEqual(count, len(self.ifgs))
 
 
-class RefPhsEstimationMatlabTestMethod1Parallel(unittest.TestCase):
+class RefPhsEstimationLegacyTestMethod1Parallel(unittest.TestCase):
     """
-    Reference phase estimation method 1 is tested vs matlab output
+    Reference phase estimation method 1 is tested vs legacy output
     """
     @classmethod
     def setUpClass(cls):
 
         params = cf.get_config_params(common.TEST_CONF_ROIPAC)
         cls.temp_out_dir = tempfile.mkdtemp()
-        sys.argv = ['run_prepifg.py', common.TEST_CONF_ROIPAC]
+        sys.argv = ['prepifg.py', common.TEST_CONF_ROIPAC]
         params[cf.OUT_DIR] = cls.temp_out_dir
-        run_prepifg.main(params)
+        params[cf.TMPDIR] = cls.temp_out_dir
+        conv2tif.main(params)
+        prepifg.main(params)
 
-        params[cf.OUT_DIR] = cls.temp_out_dir
         params[cf.REF_EST_METHOD] = 1
         params[cf.PARALLEL] = True
 
         xlks, ylks, crop = cf.transform_params(params)
 
-        base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST])
+        base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST],
+                                               params[cf.OBS_DIR])
 
         dest_paths = cf.get_dest_paths(base_ifg_paths, crop,
                                                params, xlks)
@@ -225,45 +254,51 @@ class RefPhsEstimationMatlabTestMethod1Parallel(unittest.TestCase):
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         mst_grid = common.mst_calculation(dest_paths, params)
         # Estimate reference pixel location
-        refx, refy = run_pyrate._ref_pixel_calc(dest_paths, params)
+        refx, refy = process._ref_pixel_calc(dest_paths, params)
 
         # Estimate and remove orbit errors
-        pyrate.orbital.remove_orbital_error(ifgs, params)
+        pyrate.core.orbital.remove_orbital_error(ifgs, params)
 
         for i in ifgs:
             i.close()
 
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
 
-        cls.ref_phs, cls.ifgs = estimate_ref_phase(ifgs, params, refx, refy)
-
-        # end run_pyrate copy
-
-        # manually close for windows compatibility
         for i in ifgs:
             i.close()
 
+        cls.ref_phs, cls.ifgs = process._ref_phase_estimation(dest_paths, params, refx, refy)
+
+        # end run_pyrate copy
+
+
     @classmethod
     def tearDownClass(cls):
+        for i in cls.ifgs:
+            i.close()
         shutil.rmtree(cls.temp_out_dir)
+        common.remove_tifs(
+            cf.get_config_params(common.TEST_CONF_ROIPAC)[cf.OBS_DIR])
 
     def test_estimate_reference_phase(self):
-        np.testing.assert_array_almost_equal(matlab_ref_phs_method1,
+        np.testing.assert_array_almost_equal(legacy_ref_phs_method1,
                                              self.ref_phs,
                                              decimal=3)
 
     def test_ifgs_after_ref_phs_est(self):
-        MATLAB_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR,
-                                                     'matlab_ref_phase_est')
+        for ifg in self.ifgs:
+            ifg.open()
+        LEGACY_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR,
+                                                     'ref_phase_est')
 
-        onlyfiles = [f for f in os.listdir(MATLAB_REF_PHASE_DIR)
-                if os.path.isfile(os.path.join(MATLAB_REF_PHASE_DIR, f))
+        onlyfiles = [f for f in os.listdir(LEGACY_REF_PHASE_DIR)
+                if os.path.isfile(os.path.join(LEGACY_REF_PHASE_DIR, f))
                 and f.endswith('.csv') and f.__contains__('_ref_phase_')]
 
         count = 0
         for i, f in enumerate(onlyfiles):
             ifg_data = np.genfromtxt(os.path.join(
-                MATLAB_REF_PHASE_DIR, f), delimiter=',')
+                LEGACY_REF_PHASE_DIR, f), delimiter=',')
             for k, j in enumerate(self.ifgs):
                 if f.split('_corrected')[-1].split('.')[0] == \
                         os.path.split(j.data_path)[-1].split('_unw_1rlks')[0]:
@@ -286,9 +321,9 @@ class RefPhsEstimationMatlabTestMethod1Parallel(unittest.TestCase):
         self.assertEqual(count, len(self.ifgs))
 
 
-class RefPhsEstimationMatlabTestMethod2Serial(unittest.TestCase):
+class RefPhsEstimationLegacyTestMethod2Serial(unittest.TestCase):
     """
-    Reference phase estimation method 2 is tested vs matlab output
+    Reference phase estimation method 2 is tested vs legacy output
     """
 
     @classmethod
@@ -296,18 +331,19 @@ class RefPhsEstimationMatlabTestMethod2Serial(unittest.TestCase):
 
         params = cf.get_config_params(common.TEST_CONF_ROIPAC)
         cls.temp_out_dir = tempfile.mkdtemp()
-        sys.argv = ['run_prepifg.py', common.TEST_CONF_ROIPAC]
+        sys.argv = ['prepifg.py', common.TEST_CONF_ROIPAC]
         params[cf.OUT_DIR] = cls.temp_out_dir
+        params[cf.TMPDIR] = cls.temp_out_dir
+        conv2tif.main(params)
+        prepifg.main(params)
 
-        run_prepifg.main(params)
-
-        params[cf.OUT_DIR] = cls.temp_out_dir
         params[cf.REF_EST_METHOD] = 2
         params[cf.PARALLEL] = False
 
         xlks, ylks, crop = cf.transform_params(params)
 
-        base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST])
+        base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST],
+                                               params[cf.OBS_DIR])
 
         dest_paths = cf.get_dest_paths(base_ifg_paths, crop,
                                                params, xlks)
@@ -316,40 +352,45 @@ class RefPhsEstimationMatlabTestMethod2Serial(unittest.TestCase):
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         mst_grid = common.mst_calculation(dest_paths, params)
         # Estimate reference pixel location
-        refx, refy = run_pyrate._ref_pixel_calc(dest_paths, params)
+        refx, refy = process._ref_pixel_calc(dest_paths, params)
 
         # Estimate and remove orbit errors
-        pyrate.orbital.remove_orbital_error(ifgs, params)
+        pyrate.core.orbital.remove_orbital_error(ifgs, params)
 
         for i in ifgs:
             i.close()
 
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
-
-        cls.ref_phs, cls.ifgs = estimate_ref_phase(ifgs, params, refx, refy)
-
-        # end run_pyrate copy
-
+        
         for i in ifgs:
             i.close()
 
+        cls.ref_phs, cls.ifgs = process._ref_phase_estimation(dest_paths, params, refx, refy)
+
     @classmethod
     def tearDownClass(cls):
+        for ifg in cls.ifgs:
+            ifg.close()
         shutil.rmtree(cls.temp_out_dir)
+        common.remove_tifs(
+            cf.get_config_params(common.TEST_CONF_ROIPAC)[cf.OBS_DIR])
+
 
     def test_ifgs_after_ref_phs_est(self):
-        MATLAB_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR,
-                                                     'matlab_ref_phase_est')
+        for ifg in self.ifgs:
+            ifg.open()
+        LEGACY_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR,
+                                                     'ref_phase_est')
 
-        onlyfiles = [f for f in os.listdir(MATLAB_REF_PHASE_DIR)
-                if os.path.isfile(os.path.join(MATLAB_REF_PHASE_DIR, f))
+        onlyfiles = [f for f in os.listdir(LEGACY_REF_PHASE_DIR)
+                if os.path.isfile(os.path.join(LEGACY_REF_PHASE_DIR, f))
                 and f.endswith('.csv') and f.__contains__('_ref_phase_')
                      and f.__contains__('method2')]
 
         count = 0
         for i, f in enumerate(onlyfiles):
             ifg_data = np.genfromtxt(os.path.join(
-                MATLAB_REF_PHASE_DIR, f), delimiter=',')
+                LEGACY_REF_PHASE_DIR, f), delimiter=',')
             for k, j in enumerate(self.ifgs):
                 if f.split('_corrected_method2')[-1].split('.')[0] == \
                         os.path.split(j.data_path)[-1].split('_unw_1rlks')[0]:
@@ -371,13 +412,13 @@ class RefPhsEstimationMatlabTestMethod2Serial(unittest.TestCase):
         self.assertEqual(count, len(self.ifgs))
 
     def test_estimate_reference_phase_method2(self):
-        np.testing.assert_array_almost_equal(matlab_ref_phs_method2,
+        np.testing.assert_array_almost_equal(legacy_ref_phs_method2,
                                              self.ref_phs, decimal=3)
 
 
-class RefPhsEstimationMatlabTestMethod2Parallel(unittest.TestCase):
+class RefPhsEstimationLegacyTestMethod2Parallel(unittest.TestCase):
     """
-    Reference phase estimation method 2 is tested vs matlab output
+    Reference phase estimation method 2 is tested vs legacy output
 
     """
     # TODO: Improve the parallel tests to remove duplication from serial tests
@@ -386,10 +427,11 @@ class RefPhsEstimationMatlabTestMethod2Parallel(unittest.TestCase):
 
         params = cf.get_config_params(common.TEST_CONF_ROIPAC)
         cls.temp_out_dir = tempfile.mkdtemp()
-        sys.argv = ['run_prepifg.py', common.TEST_CONF_ROIPAC]
+        sys.argv = ['prepifg.py', common.TEST_CONF_ROIPAC]
         params[cf.OUT_DIR] = cls.temp_out_dir
-
-        run_prepifg.main(params)
+        params[cf.TMPDIR] = cls.temp_out_dir
+        conv2tif.main(params)
+        prepifg.main(params)
 
         params[cf.OUT_DIR] = cls.temp_out_dir
         params[cf.REF_EST_METHOD] = 2
@@ -397,7 +439,8 @@ class RefPhsEstimationMatlabTestMethod2Parallel(unittest.TestCase):
 
         xlks, ylks, crop = cf.transform_params(params)
 
-        base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST])
+        base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST],    
+                                               params[cf.OBS_DIR])
 
         dest_paths = cf.get_dest_paths(base_ifg_paths, crop,
                                        params, xlks)
@@ -405,39 +448,44 @@ class RefPhsEstimationMatlabTestMethod2Parallel(unittest.TestCase):
         # start run_pyrate copy
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         # Estimate reference pixel location
-        refx, refy = run_pyrate._ref_pixel_calc(dest_paths, params)
+        refx, refy = process._ref_pixel_calc(dest_paths, params)
 
         # Estimate and remove orbit errors
-        pyrate.orbital.remove_orbital_error(ifgs, params)
+        pyrate.core.orbital.remove_orbital_error(ifgs, params)
 
         for i in ifgs:
             i.close()
 
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
 
-        cls.ref_phs, cls.ifgs = estimate_ref_phase(ifgs, params, refx, refy)
-        # end run_pyrate copy
-
         for i in ifgs:
             i.close()
 
+        cls.ref_phs, cls.ifgs = process._ref_phase_estimation(dest_paths, params, refx, refy)
+
     @classmethod
     def tearDownClass(cls):
+        for ifg in cls.ifgs:
+            ifg.close()
         shutil.rmtree(cls.temp_out_dir)
+        common.remove_tifs(
+            cf.get_config_params(common.TEST_CONF_ROIPAC)[cf.OBS_DIR])
 
     def test_ifgs_after_ref_phs_est(self):
-        MATLAB_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR,
-                                            'matlab_ref_phase_est')
+        for ifg in self.ifgs:
+            ifg.open()
+        LEGACY_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR,
+                                            'ref_phase_est')
 
-        onlyfiles = [f for f in os.listdir(MATLAB_REF_PHASE_DIR)
-                     if os.path.isfile(os.path.join(MATLAB_REF_PHASE_DIR, f))
+        onlyfiles = [f for f in os.listdir(LEGACY_REF_PHASE_DIR)
+                     if os.path.isfile(os.path.join(LEGACY_REF_PHASE_DIR, f))
                      and f.endswith('.csv') and f.__contains__('_ref_phase_')
                      and f.__contains__('method2')]
 
         count = 0
         for i, f in enumerate(onlyfiles):
             ifg_data = np.genfromtxt(os.path.join(
-                MATLAB_REF_PHASE_DIR, f), delimiter=',')
+                LEGACY_REF_PHASE_DIR, f), delimiter=',')
             for k, j in enumerate(self.ifgs):
                 if f.split('_corrected_method2')[-1].split('.')[0] == \
                         os.path.split(j.data_path)[-1].split('_unw_1rlks')[0]:
@@ -461,7 +509,7 @@ class RefPhsEstimationMatlabTestMethod2Parallel(unittest.TestCase):
         self.assertEqual(count, len(self.ifgs))
 
     def test_estimate_reference_phase_method2(self):
-        np.testing.assert_array_almost_equal(matlab_ref_phs_method2,
+        np.testing.assert_array_almost_equal(legacy_ref_phs_method2,
                                              self.ref_phs, decimal=3)
 
 

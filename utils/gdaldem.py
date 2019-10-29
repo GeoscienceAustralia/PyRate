@@ -38,7 +38,7 @@ import sys
 import os
 import tempfile
 import numpy as np
-from pyrate.shared import Ifg, DEM
+from pyrate.core.shared import DEM
 
 
 def main(input_file, color_file, output_file):

@@ -32,17 +32,16 @@ from numpy.testing import assert_array_equal, assert_array_almost_equal
 from scipy.linalg import lstsq
 
 from .common import small5_mock_ifgs, MockIfg
-from pyrate import algorithm
-from pyrate import config as cf
-from pyrate.orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, \
+from pyrate.core import algorithm, config as cf
+from pyrate.core.orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, \
     QUADRATIC, PART_CUBIC
-from pyrate.orbital import OrbitalError, _orbital_correction
-from pyrate.orbital import get_design_matrix, get_network_design_matrix
-from pyrate.orbital import _get_num_params, remove_orbital_error
-from pyrate.shared import Ifg
-from pyrate.shared import nanmedian
+from pyrate.core.orbital import OrbitalError, _orbital_correction
+from pyrate.core.orbital import get_design_matrix, get_network_design_matrix
+from pyrate.core.orbital import _get_num_params, remove_orbital_error
+from pyrate.core.shared import Ifg
+from pyrate.core.shared import nanmedian
 from tests.common import TEST_CONF_ROIPAC, IFMS16
-from tests.common import SML_TEST_MATLAB_ORBITAL_DIR
+from tests.common import SML_TEST_LEGACY_ORBITAL_DIR
 from tests.common import SML_TEST_TIF, small_data_setup
 from tests.common import small_ifg_file_list
 
@@ -172,7 +171,6 @@ class IndependentCorrectionTests(unittest.TestCase):
             ifg.open()
 
     def alt_orbital_correction(self, ifg, deg, offset):
-        # almost an exact translation of MATLAB version
         data = ifg.phase_data.reshape(ifg.num_cells)
         dm = get_design_matrix(ifg, deg, offset)[~isnan(data)]
         fd = data[~isnan(data)].reshape((dm.shape[0], 1))
@@ -374,7 +372,6 @@ class NetworkDesignMatrixTests(unittest.TestCase):
             exp = unittest_dm(ifg, NETWORK_METHOD, deg, offset)
             self.assertEqual(exp.shape, (ifg.num_cells, ncoef))
 
-            # NB: this is the Matlab Pirate code slightly modified for Py
             ib1, ib2 = [x * self.ncells for x in (i, i+1)] # row start/end
             jbm = ncoef * self.date_ids[ifg.master] # starting col index for master
             jbs = ncoef * self.date_ids[ifg.slave] # col start for slave
@@ -678,9 +675,9 @@ def _add_nodata(ifgs):
     ifgs[4].phase_data[1, 1:3] = nan # 2 err
 
 
-class MatlabComparisonTestsOrbfitMethod1(unittest.TestCase):
+class LegacyComparisonTestsOrbfitMethod1(unittest.TestCase):
     """
-    This is the matlab comparison test of orbital correction functionality.
+    This is the legacy comparison test of orbital correction functionality.
     Tests use the following config
     orbfit:        1
     orbfitmethod:  2
@@ -709,19 +706,19 @@ class MatlabComparisonTestsOrbfitMethod1(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.BASE_DIR)
 
-    def test_orbital_correction_matlab_equality(self):
-        from pyrate.scripts import run_pyrate
+    def test_orbital_correction_legacy_equality(self):
+        from pyrate import process
 
-        run_pyrate._orb_fit_calc(self.ifg_paths, self.params)
+        process._orb_fit_calc(self.ifg_paths, self.params)
 
-        onlyfiles = [f for f in os.listdir(SML_TEST_MATLAB_ORBITAL_DIR)
-            if os.path.isfile(os.path.join(SML_TEST_MATLAB_ORBITAL_DIR, f))
+        onlyfiles = [f for f in os.listdir(SML_TEST_LEGACY_ORBITAL_DIR)
+            if os.path.isfile(os.path.join(SML_TEST_LEGACY_ORBITAL_DIR, f))
             and f.endswith('.csv') and f.__contains__('_method1_')]
 
         count = 0
         for i, f in enumerate(onlyfiles):
             ifg_data = np.genfromtxt(os.path.join(
-                SML_TEST_MATLAB_ORBITAL_DIR, f), delimiter=',')
+                SML_TEST_LEGACY_ORBITAL_DIR, f), delimiter=',')
             for k, j in enumerate(self.ifg_paths):
                 ifg = Ifg(j)
                 ifg.open()
@@ -746,9 +743,9 @@ class MatlabComparisonTestsOrbfitMethod1(unittest.TestCase):
         self.assertEqual(count, len(self.ifg_paths))
 
 
-class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
+class LegacyComparisonTestsOrbfitMethod2(unittest.TestCase):
     """
-    This is the matlab comparison test of orbital correction functionality.
+    This is the legacy comparison test of orbital correction functionality.
     Tests use the following config
     orbfit:        1
     orbfitmethod:  2
@@ -791,28 +788,28 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
             i.close()
         shutil.rmtree(self.BASE_DIR)
 
-    def test_orbital_correction_matlab_equality_orbfit_method_2(self):
+    def test_orbital_correction_legacy_equality_orbfit_method_2(self):
         remove_orbital_error(self.ifgs, self.params)
 
-        onlyfiles = [f for f in os.listdir(SML_TEST_MATLAB_ORBITAL_DIR)
-            if os.path.isfile(os.path.join(SML_TEST_MATLAB_ORBITAL_DIR, f))
+        onlyfiles = [f for f in os.listdir(SML_TEST_LEGACY_ORBITAL_DIR)
+            if os.path.isfile(os.path.join(SML_TEST_LEGACY_ORBITAL_DIR, f))
             and f.endswith('.csv') and f.__contains__('_method2_')]
 
         count = 0
         for i, f in enumerate(onlyfiles):
-            matlab_phase_data = np.genfromtxt(os.path.join(
-                SML_TEST_MATLAB_ORBITAL_DIR, f), delimiter=',')
+            legacy_phase_data = np.genfromtxt(os.path.join(
+                SML_TEST_LEGACY_ORBITAL_DIR, f), delimiter=',')
             for k, j in enumerate(self.ifgs):
                 if os.path.basename(j.data_path).split('_unw.')[0] == \
                         os.path.basename(f).split(
                             '_method2_')[1].split('.')[0]:
                     count += 1
                     # all numbers equal
-                    np.testing.assert_array_almost_equal(matlab_phase_data,
+                    np.testing.assert_array_almost_equal(legacy_phase_data,
                         j.phase_data, decimal=3)
 
                     # number of nans must equal
-                    self.assertEqual(np.sum(np.isnan(matlab_phase_data)),
+                    self.assertEqual(np.sum(np.isnan(legacy_phase_data)),
                                 np.sum(np.isnan(j.phase_data)))
 
         # ensure that we have expected number of matches
@@ -829,25 +826,25 @@ class MatlabComparisonTestsOrbfitMethod2(unittest.TestCase):
 
         remove_orbital_error(self.ifgs, self.params)
 
-        onlyfiles = [f for f in os.listdir(SML_TEST_MATLAB_ORBITAL_DIR)
-            if os.path.isfile(os.path.join(SML_TEST_MATLAB_ORBITAL_DIR, f))
+        onlyfiles = [f for f in os.listdir(SML_TEST_LEGACY_ORBITAL_DIR)
+            if os.path.isfile(os.path.join(SML_TEST_LEGACY_ORBITAL_DIR, f))
             and f.endswith('.csv') and f.__contains__('_method2_')]
 
         count = 0
         for i, f in enumerate(onlyfiles):
-            matlab_phase_data = np.genfromtxt(os.path.join(
-                SML_TEST_MATLAB_ORBITAL_DIR, f), delimiter=',')
+            legacy_phase_data = np.genfromtxt(os.path.join(
+                SML_TEST_LEGACY_ORBITAL_DIR, f), delimiter=',')
             for k, j in enumerate(self.ifgs):
                 if os.path.basename(j.data_path).split('_unw.')[0] == \
                         os.path.basename(f).split(
                             '_method2_')[1].split('.')[0]:
                     count += 1
                     # # all numbers equal
-                    # np.testing.assert_array_almost_equal(matlab_phase_data,
+                    # np.testing.assert_array_almost_equal(legacy_phase_data,
                     #     j.phase_data, decimal=3)
                     #
                     # # number of nans must equal
-                    # self.assertEqual(np.sum(np.isnan(matlab_phase_data)),
+                    # self.assertEqual(np.sum(np.isnan(legacy_phase_data)),
                     #             np.sum(np.isnan(j.phase_data)))
 
         # ensure that we have expected number of matches

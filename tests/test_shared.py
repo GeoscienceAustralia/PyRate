@@ -33,14 +33,10 @@ from osgeo import gdal
 from osgeo.gdal import Open, Dataset, UseExceptions
 
 from tests.common import SML_TEST_TIF, SML_TEST_DEM_TIF, TEMPDIR
-from pyrate import config as cf
-from pyrate import gamma
-from pyrate import ifgconstants as ifc
-from pyrate import prepifg
-from pyrate import shared
-from pyrate.scripts import run_prepifg
-from pyrate.shared import Ifg, DEM, RasterException
-from pyrate.shared import cell_size, _utm_zone
+from pyrate.core import shared, ifgconstants as ifc, config as cf, prepifg_helper, gamma
+from pyrate import prepifg, conv2tif
+from pyrate.core.shared import Ifg, DEM, RasterException
+from pyrate.core.shared import cell_size, _utm_zone
 
 from tests import common
 
@@ -124,7 +120,7 @@ class IfgTests(unittest.TestCase):
         self.assertTrue(self.ifg.y_size > 88.0)
         self.assertTrue(self.ifg.y_size < 92.0, 'Got %s' % self.ifg.y_size)
 
-        width = 76.9 # from nearby Pirate coords
+        width = 76.9 # from nearby PyRate coords
         self.assertTrue(self.ifg.x_size > 0.97 * width)  # ~3% tolerance
         self.assertTrue(self.ifg.x_size < 1.03 * width)
 
@@ -169,11 +165,11 @@ class IfgIOTests(unittest.TestCase):
         gdal.Dataset object as Dataset has already been read in
         """
         paths = [self.ifg.data_path]
-        mlooked_phase_data = prepifg.prepare_ifgs(paths,
-                             crop_opt=prepifg.ALREADY_SAME_SIZE,
-                             xlooks=2,
-                             ylooks=2,
-                             write_to_disc=False)
+        mlooked_phase_data = prepifg_helper.prepare_ifgs(paths,
+                                                         crop_opt=prepifg_helper.ALREADY_SAME_SIZE,
+                                                         xlooks=2,
+                                                         ylooks=2,
+                                                         write_to_disc=False)
         mlooked = [Ifg(m[1]) for m in mlooked_phase_data]
         self.assertRaises(RasterException, mlooked[0].open)
 
@@ -201,9 +197,6 @@ class IfgIOTests(unittest.TestCase):
         i.close()
         os.remove(dest)
 
-    def test_readonly_permission_failure(self):
-        # ensure failure if opening R/O permission file as writeable/GA_Update
-        self.assertRaises(IOError, self.ifg.open, False)
 
     def test_write_fails_on_readonly(self):
         # check readonly status is same before
@@ -360,24 +353,26 @@ class WriteUnwTest(unittest.TestCase):
         cls.params[cf.DEM_FILE] = common.SML_TEST_DEM_GAMMA
         # base_unw_paths need to be geotiffed and multilooked by run_prepifg
         cls.base_unw_paths = cf.original_ifg_paths(
-            cls.params[cf.IFG_FILE_LIST])
+            cls.params[cf.IFG_FILE_LIST], cls.params[cf.OBS_DIR])
         cls.base_unw_paths.append(common.SML_TEST_DEM_GAMMA)
 
         xlks, ylks, crop = cf.transform_params(cls.params)
-
         # dest_paths are tifs that have been geotif converted and multilooked
-        run_prepifg.gamma_prepifg(cls.base_unw_paths, cls.params)
+        conv2tif.main(cls.params)
+        prepifg.main(cls.params)
+        # run_prepifg.gamma_prepifg(cls.base_unw_paths, cls.params)
         cls.base_unw_paths.pop()  # removed dem as we don't want it in ifgs
 
-        dest_paths = cf.get_dest_paths(
+        cls.dest_paths = cf.get_dest_paths(
             cls.base_unw_paths, crop, cls.params, xlks)
-        cls.ifgs = common.small_data_setup(datafiles=dest_paths)
+        cls.ifgs = common.small_data_setup(datafiles=cls.dest_paths)
 
     @classmethod
     def tearDownClass(cls):
         for i in cls.ifgs:
             i.close()
         shutil.rmtree(cls.tif_dir)
+        common.remove_tifs(cls.params[cf.OBS_DIR])
 
     def test_unw_contains_same_data_as_numpy_array(self):
         from datetime import time
@@ -392,8 +387,8 @@ class WriteUnwTest(unittest.TestCase):
             os.path.join(common.SML_TEST_GAMMA, '20060828_slc.par'))
         header.update(dem_header)
 
-        # insert some dummy data so we are the dem in write_geotiff is not
-        # not activated and ifg write_geotiff operation works
+        # insert some dummy data so we are the dem in write_fullres_geotiff is not
+        # not activated and ifg write_fullres_geotiff operation works
         header[ifc.PYRATE_TIME_SPAN] = 0
         header[ifc.SLAVE_DATE] = 0
         header[ifc.DATA_UNITS] = 'degrees'
@@ -409,24 +404,29 @@ class WriteUnwTest(unittest.TestCase):
                                               dest_unw=temp_unw,
                                               ifg_proc=1)
         # convert the .unw to geotif
-        shared.write_geotiff(header=header, data_path=temp_unw,
-                             dest=temp_tif, nodata=np.nan)
+        shared.write_fullres_geotiff(header=header, data_path=temp_unw,
+                                     dest=temp_tif, nodata=np.nan)
 
         # now compare geotiff with original numpy array
         ds = gdal.Open(temp_tif, gdal.GA_ReadOnly)
         data_lv_theta = ds.ReadAsArray()
         ds = None
         np.testing.assert_array_almost_equal(data, data_lv_theta)
-        os.remove(temp_tif)
-        os.remove(temp_unw)
+        try:
+            os.remove(temp_tif)
+        except PermissionError:
+            print("File opened by another process.")
 
-    def test_equality_of_unw_with_geotiff(self):
-        geotiffs = [os.path.join(
-            self.params[cf.OUT_DIR], os.path.basename(b).split('.')[0] + '_' 
-            + os.path.basename(b).split('.')[1] + '.tif')
-            for b in self.base_unw_paths]
+        try:
+            os.remove(temp_unw)
+        except PermissionError:
+            print("File opened by another process.")
 
-        # create .unws from geotiffs and make sure they read the same
+    def test_multilooked_tiffs_converted_to_unw_are_same(self):
+        # Get multilooked geotiffs
+        geotiffs = self.dest_paths
+
+        # Convert back to .unw
         dest_unws = []
         for g in geotiffs:
             dest_unw = os.path.join(self.params[cf.OUT_DIR],
@@ -434,41 +434,12 @@ class WriteUnwTest(unittest.TestCase):
             shared.write_unw_from_data_or_geotiff(
                 geotif_or_data=g, dest_unw= dest_unw, ifg_proc=1)
             dest_unws.append(dest_unw)
+        
+        # Convert back to tiff
+        new_geotiffs = conv2tif.do_geotiff(dest_unws, self.params)
 
-        new_geotiffs = [run_prepifg._gamma_multiprocessing(b, self.params)
-                        for b in dest_unws]
-
-        for g, u in zip(geotiffs, new_geotiffs):
-            g_ds = gdal.Open(g)
-            u_gs = gdal.Open(u)
-            np.testing.assert_array_almost_equal(u_gs.ReadAsArray(),
-                                                 g_ds.ReadAsArray())
-            u_gs = None
-            g_ds = None
-
-    def test_unws_created_are_same_as_original(self):
-        geotiffs = [os.path.join(
-            self.params[cf.OUT_DIR], os.path.basename(b).split('.')[0] + '_' 
-            + os.path.basename(b).split('.')[1] + '.tif')
-            for b in self.base_unw_paths]
-
-        new_base_unw_paths = []
-        # create .unws from geotiffs and make sure they read the same
-        for g in geotiffs:
-            dest_unw = os.path.join(self.params[cf.OUT_DIR],
-                                    os.path.splitext(g)[0] + '.unw')
-            shared.write_unw_from_data_or_geotiff(
-                geotif_or_data=g, dest_unw=dest_unw, ifg_proc=1)
-
-            # unws created
-            assert os.path.exists(dest_unw)
-            new_base_unw_paths.append(dest_unw)
-
-        # make sure we can recovert the unws to gettiffs
-        new_geotiffs = [run_prepifg._gamma_multiprocessing(b, self.params)
-                        for b in new_base_unw_paths]
-
-        # assert data equal
+        # Ensure original multilooked geotiffs and 
+        #  unw back to geotiff are the same
         for g, u in zip(geotiffs, new_geotiffs):
             g_ds = gdal.Open(g)
             u_gs = gdal.Open(u)

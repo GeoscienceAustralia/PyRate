@@ -19,24 +19,20 @@ This Python module contains tests for the linrate.py PyRate module.
 """
 import os
 import shutil
-import sys
 import tempfile
 import unittest
-from numpy import eye, array, ones
 
+from numpy import eye, array, ones
 import numpy as np
 from numpy.testing import assert_array_almost_equal
 
-import pyrate.orbital
+import pyrate.core.orbital
 import tests.common
-from pyrate import config as cf
-from pyrate import ref_phs_est as rpe
-from pyrate import shared
-from pyrate import covariance as vcm_module
-from pyrate.linrate import linear_rate
-from pyrate.scripts import run_pyrate, run_prepifg
-from tests.common import SML_TEST_DIR, prepare_ifgs_without_phase
-from tests.common import TEST_CONF_ROIPAC, pre_prepare_ifgs
+from pyrate.core import shared, ref_phs_est as rpe, config as cf, covariance as vcm_module
+from pyrate.core.linrate import linear_rate
+from pyrate import process, prepifg, conv2tif
+from tests.common import (SML_TEST_DIR, prepare_ifgs_without_phase,
+    TEST_CONF_ROIPAC, pre_prepare_ifgs, remove_tifs)
 
 
 def default_params():
@@ -64,7 +60,7 @@ class LinearRateTests(unittest.TestCase):
     def test_linear_rate(self):
         # Simple test with one pixel and equal weighting
         exprate = array([[5.0]])
-        experr = array([[0.836242010007091]])  # from Matlab Pirate
+        experr = array([[0.836242010007091]])
         expsamp = array([[5]])
         vcmt = eye(6, 6)
         mst = ones((6, 1, 1))
@@ -76,46 +72,55 @@ class LinearRateTests(unittest.TestCase):
         assert_array_almost_equal(samples, expsamp)
 
 
-class MatlabEqualityTest(unittest.TestCase):
+class LegacyEqualityTest(unittest.TestCase):
     """
-    Tests equality vs matlab
+    Tests equality with legacy data
     """
 
     @classmethod
     def setUpClass(cls):
         params = cf.get_config_params(TEST_CONF_ROIPAC)
         cls.temp_out_dir = tempfile.mkdtemp()
-
-        sys.argv = ['run_prepifg.py', TEST_CONF_ROIPAC]
+        
         params[cf.OUT_DIR] = cls.temp_out_dir
         params[cf.TMPDIR] = os.path.join(params[cf.OUT_DIR], cf.TMPDIR)
         shared.mkdir_p(params[cf.TMPDIR])
-        run_prepifg.main(params)
+        conv2tif.main(params)
+        prepifg.main(params)
 
         params[cf.REF_EST_METHOD] = 2
 
         xlks, _, crop = cf.transform_params(params)
 
         base_ifg_paths = cf.original_ifg_paths(
-            params[cf.IFG_FILE_LIST])
-
+            params[cf.IFG_FILE_LIST], params[cf.OBS_DIR])
+        
         dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
-
+        print(f"base_ifg_paths={base_ifg_paths}") 
+        print(f"dest_paths={dest_paths}")
         # start run_pyrate copy
         ifgs = pre_prepare_ifgs(dest_paths, params)
         mst_grid = tests.common.mst_calculation(dest_paths, params)
 
-        refx, refy = run_pyrate._ref_pixel_calc(dest_paths, params)
+        refx, refy = process._ref_pixel_calc(dest_paths, params)
 
         # Estimate and remove orbit errors
-        pyrate.orbital.remove_orbital_error(ifgs, params)
+        pyrate.core.orbital.remove_orbital_error(ifgs, params)
         ifgs = prepare_ifgs_without_phase(dest_paths, params)
-
-        _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
+        for ifg in ifgs:
+            ifg.close()
+        _, ifgs = process._ref_phase_estimation(dest_paths, params, refx, refy)
+        ifgs[0].open()
         r_dist = vcm_module.RDist(ifgs[0])()
-        maxvar = [vcm_module.cvd(i, params, r_dist)[0] for i in ifgs]
-        vcmt = vcm_module.get_vcmt(ifgs, maxvar)
-
+        ifgs[0].close()
+        maxvar = [vcm_module.cvd(i, params, r_dist)[0] for i in dest_paths]
+        for ifg in ifgs:
+            ifg.open()
+        vcmt = vcm_module.get_vcmt(ifgs, maxvar)    
+        for ifg in ifgs:
+            ifg.close()     
+            ifg.open()
+        
         # Calculate linear rate map
         params[cf.PARALLEL] = 1
         cls.rate, cls.error, cls.samples = tests.common.calculate_linear_rate(
@@ -132,19 +137,24 @@ class MatlabEqualityTest(unittest.TestCase):
             tests.common.calculate_linear_rate(ifgs, params, vcmt,
                                                mst_mat=mst_grid)
 
-        matlab_linrate_dir = os.path.join(SML_TEST_DIR, 'matlab_linrate')
+        linrate_dir = os.path.join(SML_TEST_DIR, 'linrate')
 
-        cls.rate_matlab = np.genfromtxt(
-            os.path.join(matlab_linrate_dir, 'stackmap.csv'), delimiter=',')
-        cls.error_matlab = np.genfromtxt(
-            os.path.join(matlab_linrate_dir, 'errormap.csv'), delimiter=',')
+        cls.rate_container = np.genfromtxt(
+            os.path.join(linrate_dir, 'stackmap.csv'), delimiter=',')
+        cls.error_container = np.genfromtxt(
+            os.path.join(linrate_dir, 'errormap.csv'), delimiter=',')
 
-        cls.samples_matlab = np.genfromtxt(
-            os.path.join(matlab_linrate_dir, 'coh_sta.csv'), delimiter=',')
+        cls.samples_container = np.genfromtxt(
+            os.path.join(linrate_dir, 'coh_sta.csv'), delimiter=',')
+    
+        for ifg in ifgs:
+            ifg.close()
 
     @classmethod
     def tearDownClass(cls):
         shutil.rmtree(cls.temp_out_dir)
+        params = cf.get_config_params(TEST_CONF_ROIPAC)
+        remove_tifs(params[cf.OBS_DIR])
 
     def test_linear_rate_full_parallel(self):
         """
@@ -190,24 +200,24 @@ class MatlabEqualityTest(unittest.TestCase):
 
     def test_linear_rate(self):
         """
-        python vs matlab
+        Compare with legacy data
         """
         np.testing.assert_array_almost_equal(
-            self.rate_s, self.rate_matlab, decimal=3)
+            self.rate_s, self.rate_container, decimal=3)
 
     def test_linrate_error(self):
         """
-        python vs matlab
+        Compare with legacy data
         """
         np.testing.assert_array_almost_equal(
-            self.error_s, self.error_matlab, decimal=3)
+            self.error_s, self.error_container, decimal=3)
 
     def test_linrate_samples(self):
         """
-        python linrate samples vs matlab
+        Compare with legacy data
         """
         np.testing.assert_array_almost_equal(
-            self.samples_s, self.samples_matlab, decimal=3)
+            self.samples_s, self.samples_container, decimal=3)
 
 
 if __name__ == "__main__":

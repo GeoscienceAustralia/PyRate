@@ -1,5 +1,5 @@
 Linrate Module
 ==============
 
-.. automodule:: pyrate.linrate
+.. automodule:: pyrate.core.linrate
    :members:

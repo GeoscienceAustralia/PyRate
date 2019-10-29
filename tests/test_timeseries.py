@@ -27,15 +27,11 @@ from numpy import nan, asarray, where
 import numpy as np
 from numpy.testing import assert_array_almost_equal
 
-import pyrate.orbital
+import pyrate.core.orbital
 import tests.common as common
-from pyrate import config as cf
-from pyrate import mst
-from pyrate import ref_phs_est as rpe
-from pyrate import shared
-from pyrate import covariance
-from pyrate.scripts import run_pyrate, run_prepifg
-from pyrate.timeseries import time_series
+from pyrate.core import ref_phs_est as rpe, config as cf, mst, covariance
+from pyrate import process, prepifg, conv2tif
+from pyrate.core.timeseries import time_series
 
 
 def default_params():
@@ -84,24 +80,6 @@ class TimeSeriesTests(unittest.TestCase):
                       for i in cls.ifgs]
         cls.vcmt = covariance.get_vcmt(cls.ifgs, cls.maxvar)
 
-    # def test_time_series(self):
-    # Sudipta:
-    # 1. This has been replaced due to change in the time_series code.
-    # 2. See MatlabTimeSeriesEquality for a more comprehensive test of the
-    # new function.
-    #     """
-    #     Checks that the code works the same as the Matlab Pirate code
-    #     """
-    #     tsincr, tscum, tsvel = time_series(
-    #         self.ifgs, pthresh=self.params[cf.TIME_SERIES_PTHRESH],
-    #         params=self.params, vcmt=self.vcmt, mst=self.mstmat)
-    #     expected = asarray([
-    #         -11.09124207, -2.24628582, -11.37726666, -7.98105646,
-    #         -8.95696049, -4.35343281, -10.64072681, -2.56493343,
-    #         -6.24070214, -7.64697381, -8.59650367, -9.55619863])
-    #
-    #     assert_array_almost_equal(tscum[10, 10, :], expected)
-
     def test_time_series_unit(self):
         """
         Checks that the code works the same as the calculated example
@@ -128,38 +106,48 @@ class TimeSeriesTests(unittest.TestCase):
         assert_array_almost_equal(tscum, expected, decimal=2)
 
 
-class MatlabTimeSeriesEquality(unittest.TestCase):
-    """
-    Checks the python function to that of Matlab Pirate ts.m and tsinvlap.m
-    functionality.
-    """
+class LegacyTimeSeriesEquality(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
         params = cf.get_config_params(common.TEST_CONF_ROIPAC)
         cls.temp_out_dir = tempfile.mkdtemp()
-        sys.argv = ['run_prepifg.py', common.TEST_CONF_ROIPAC]
+        sys.argv = ['prepifg.py', common.TEST_CONF_ROIPAC]
         params[cf.OUT_DIR] = cls.temp_out_dir
-        run_prepifg.main(params)
+        conv2tif.main(params)
+        prepifg.main(params)
 
         params[cf.REF_EST_METHOD] = 2
 
         xlks, ylks, crop = cf.transform_params(params)
 
-        base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST])
+        base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST],
+                                               params[cf.OBS_DIR])
 
         dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
         # start run_pyrate copy
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         mst_grid = common.mst_calculation(dest_paths, params)
-        refx, refy = run_pyrate._ref_pixel_calc(dest_paths, params)
+        refx, refy = process._ref_pixel_calc(dest_paths, params)
         # Estimate and remove orbit errors
-        pyrate.orbital.remove_orbital_error(ifgs, params)
+        pyrate.core.orbital.remove_orbital_error(ifgs, params)
         ifgs = common.prepare_ifgs_without_phase(dest_paths, params)
-        _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
+        for ifg in ifgs:
+            print(ifg.nodata_value)
+            ifg.close()
+        _, ifgs = process._ref_phase_estimation(dest_paths, params, refx, refy)
+        ifgs[0].open()
         r_dist = covariance.RDist(ifgs[0])()
-        maxvar = [covariance.cvd(i, params, r_dist)[0] for i in ifgs]
+        ifgs[0].close()
+        maxvar = [covariance.cvd(i, params, r_dist)[0] for i in dest_paths]
+        for ifg in ifgs:
+            ifg.open()
         vcmt = covariance.get_vcmt(ifgs, maxvar)
+        
+        for ifg in ifgs:
+            ifg.close()
+            ifg.open()
+            ifg.nodata_value = 0.0        
 
         params[cf.TIME_SERIES_METHOD] = 1
         params[cf.PARALLEL] = 0
@@ -175,17 +163,12 @@ class MatlabTimeSeriesEquality(unittest.TestCase):
         cls.tsincr_2, cls.tscum_2, cls.tsvel_2 = \
             common.calculate_time_series(ifgs, params, vcmt, mst=mst_grid)
 
-        # load the matlab data
-        ts_dir = os.path.join(common.SML_TEST_DIR, 'matlab_time_series')
+        # load the legacy data
+        ts_dir = os.path.join(common.SML_TEST_DIR, 'time_series')
         tsincr_path = os.path.join(ts_dir,
                                    'ts_incr_interp0_method1.csv')
         ts_incr = np.genfromtxt(tsincr_path)
 
-        # the matlab tsvel return is a bit pointless and not tested here
-        # tserror is not returned
-        # tserr_path = os.path.join(SML_TIME_SERIES_DIR,
-        # 'ts_error_interp0_method1.csv')
-        # ts_err = np.genfromtxt(tserr_path, delimiter=',')
         tscum_path = os.path.join(ts_dir,
                                   'ts_cum_interp0_method1.csv')
         ts_cum = np.genfromtxt(tscum_path)
@@ -196,6 +179,8 @@ class MatlabTimeSeriesEquality(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         shutil.rmtree(cls.temp_out_dir)
+        common.remove_tifs(
+            cf.get_config_params(common.TEST_CONF_ROIPAC)[cf.OBS_DIR])
 
     def test_time_series_equality_parallel_by_rows(self):
         """
@@ -238,41 +223,49 @@ class MatlabTimeSeriesEquality(unittest.TestCase):
             self.ts_cum, self.tscum_0, decimal=3)
 
 
-class MatlabTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
-    """
-    Checks the python function to that of Matlab Pirate ts.m and tsinvlap.m
-    functionality.
-    """
+class LegacyTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
+
     @classmethod
     def setUpClass(cls):
         params = cf.get_config_params(common.TEST_CONF_ROIPAC)
         cls.temp_out_dir = tempfile.mkdtemp()
-        sys.argv = ['run_prepifg.py', common.TEST_CONF_ROIPAC]
+        sys.argv = ['prepifg.py', common.TEST_CONF_ROIPAC]
         params[cf.OUT_DIR] = cls.temp_out_dir
-        run_prepifg.main(params)
+        conv2tif.main(params)
+        prepifg.main(params)
 
         params[cf.REF_EST_METHOD] = 2
 
         xlks, ylks, crop = cf.transform_params(params)
 
-        base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST])
+        base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST],
+                                               params[cf.OBS_DIR])
 
         dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
         # start run_pyrate copy
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         mst_grid = common.mst_calculation(dest_paths, params)
 
-        refx, refy = run_pyrate._ref_pixel_calc(dest_paths, params)
+        refx, refy = process._ref_pixel_calc(dest_paths, params)
 
         # Estimate and remove orbit errors
-        pyrate.orbital.remove_orbital_error(ifgs, params)
+        pyrate.core.orbital.remove_orbital_error(ifgs, params)
         ifgs = common.prepare_ifgs_without_phase(dest_paths, params)
-
-        _, ifgs = rpe.estimate_ref_phase(ifgs, params, refx, refy)
+        for ifg in ifgs:
+            ifg.close()
+        _, ifgs = process._ref_phase_estimation(dest_paths, params, refx, refy)
+        ifgs[0].open()
         r_dist = covariance.RDist(ifgs[0])()
+        ifgs[0].close()
         # Calculate interferogram noise
-        maxvar = [covariance.cvd(i, params, r_dist)[0] for i in ifgs]
+        maxvar = [covariance.cvd(i, params, r_dist)[0] for i in dest_paths]
+        for ifg in ifgs:
+            ifg.open()
         vcmt = covariance.get_vcmt(ifgs, maxvar)
+        for ifg in ifgs:
+            ifg.close()
+            ifg.open()
+            ifg.nodata_value = 0.0
 
         params[cf.TIME_SERIES_METHOD] = 2
         params[cf.PARALLEL] = 1
@@ -291,18 +284,13 @@ class MatlabTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
         cls.tsincr_0, cls.tscum_0, _ = \
             common.calculate_time_series(ifgs, params, vcmt, mst=mst_grid)
 
-        # copy matlab data
+        # copy legacy data
         SML_TIME_SERIES_DIR = os.path.join(common.SML_TEST_DIR,
-                                   'matlab_time_series')
+                                   'time_series')
         tsincr_path = os.path.join(SML_TIME_SERIES_DIR,
                                    'ts_incr_interp0_method2.csv')
         ts_incr = np.genfromtxt(tsincr_path)
 
-        # the matlab tsvel return is a bit pointless and not tested here
-        # tserror is not returned
-        # tserr_path = os.path.join(SML_TIME_SERIES_DIR,
-        # 'ts_error_interp0_method1.csv')
-        # ts_err = np.genfromtxt(tserr_path, delimiter=',')
         tscum_path = os.path.join(SML_TIME_SERIES_DIR,
                                   'ts_cum_interp0_method2.csv')
         ts_cum = np.genfromtxt(tscum_path)
@@ -314,6 +302,8 @@ class MatlabTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         shutil.rmtree(cls.temp_out_dir)
+        common.remove_tifs(
+            cf.get_config_params(common.TEST_CONF_ROIPAC)[cf.OBS_DIR])
 
     def test_time_series_equality_parallel_by_rows(self):
 

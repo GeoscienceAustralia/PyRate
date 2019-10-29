@@ -4,7 +4,8 @@ PyRate Scripts
 .. toctree::
    :maxdepth: 4
 
-   pyrate.scripts.run_prepifg
-   pyrate.scripts.run_pyrate
-   pyrate.scripts.postprocessing
-   pyrate.scripts.main
+   pyrate.conv2tif
+   pyrate.prepifg
+   pyrate.process
+   pyrate.merge
+   pyrate.__main__

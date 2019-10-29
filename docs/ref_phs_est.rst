@@ -1,5 +1,5 @@
 Reference Phase Calculation Module
 ==================================
 
-.. automodule:: pyrate.ref_phs_est
+.. automodule:: pyrate.core.ref_phs_est
    :members:

@@ -25,10 +25,9 @@ import unittest
 from os.path import join
 import numpy as np
 
-import pyrate.shared
-from pyrate import config as cf
-from pyrate import shared, config, prepifg
-from pyrate.scripts import run_pyrate, run_prepifg
+import pyrate.core.shared
+from pyrate.core import shared, config as cf, config, prepifg_helper, mst
+from pyrate import process, prepifg, conv2tif
 from tests import common
 
 # taken from
@@ -56,20 +55,20 @@ def test_transform_params():
 
 
 def test_warp_required():
-    nocrop = prepifg.ALREADY_SAME_SIZE
+    nocrop = prepifg_helper.ALREADY_SAME_SIZE
     assert shared.warp_required(xlooks=2, ylooks=1, crop=nocrop)
     assert shared.warp_required(xlooks=1, ylooks=2, crop=nocrop)
     assert shared.warp_required(xlooks=1, ylooks=1, crop=nocrop)
     assert not shared.warp_required(xlooks=1, ylooks=1, crop=None)
 
-    for c in prepifg.CROP_OPTIONS[:-1]:
+    for c in prepifg_helper.CROP_OPTIONS[:-1]:
         assert shared.warp_required(xlooks=1, ylooks=1, crop=c)
 
 
 def test_original_ifg_paths():
     ifgdir = common.SML_TEST_TIF
     ifglist_path = join(ifgdir, 'ifms_17')
-    paths = cf.original_ifg_paths(ifglist_path)
+    paths = cf.original_ifg_paths(ifglist_path, ifgdir)
     assert paths[0] == join(ifgdir, 'geo_060619-061002_unw.tif'), str(paths[0])
     assert paths[-1] == join(ifgdir, 'geo_070709-070813_unw.tif')
 
@@ -129,13 +128,16 @@ class PyRateTests(unittest.TestCase):
             os.symlink(orig_dem, cls.BASE_DEM_FILE)
             os.chdir(cls.BASE_DIR)
 
-            params = config.get_config_params(common.TEST_CONF_ROIPAC)
+            # Turn off validation because we're in a different working dir
+            #  and relative paths in config won't be work.
+            params = config.get_config_params(common.TEST_CONF_ROIPAC,
+                                               validate=False)
             params[cf.OUT_DIR] = cls.BASE_OUT_DIR
             params[cf.PROCESSOR] = 0  # roipac
             params[cf.APS_CORRECTION] = 0
             paths = glob.glob(join(cls.BASE_OUT_DIR, 'geo_*-*.tif'))
             params[cf.PARALLEL] = False
-            run_pyrate.process_ifgs(sorted(paths), params, 2, 2)
+            process.process_ifgs(sorted(paths), params, 2, 2)
 
             if not hasattr(cls, 'ifgs'):
                 cls.ifgs = get_ifgs(out_dir=cls.BASE_OUT_DIR)
@@ -199,23 +201,26 @@ class ParallelPyRateTests(unittest.TestCase):
         params[cf.IFG_FILE_LIST] = os.path.join(
             common.SML_TEST_GAMMA, 'ifms_17')
         params[cf.OUT_DIR] = cls.tif_dir
-        params[cf.PARALLEL] = 0
+        params[cf.PARALLEL] = 1
         params[cf.APS_CORRECTION] = False
         params[cf.TMPDIR] = os.path.join(params[cf.OUT_DIR], cf.TMPDIR)
 
         xlks, ylks, crop = cf.transform_params(params)
 
-        # base_unw_paths need to be geotiffed and multilooked by run_prepifg
-        base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST])
+        # base_unw_paths need to be geotiffed by converttogeotif 
+        #  and multilooked by run_prepifg
+        base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST],
+                                               params[cf.OBS_DIR])
 
         # dest_paths are tifs that have been geotif converted and multilooked
         cls.dest_paths = cf.get_dest_paths(
             base_unw_paths, crop, params, xlks)
-        run_prepifg.gamma_prepifg(base_unw_paths, params)
-        tiles = pyrate.shared.get_tiles(cls.dest_paths[0], 3, 3)
+        gtif_paths = conv2tif.do_geotiff(base_unw_paths, params)
+        prepifg.do_prepifg(gtif_paths, params)
+        tiles = pyrate.core.shared.get_tiles(cls.dest_paths[0], 3, 3)
         ifgs = common.small_data_setup()
         cls.refpixel_p, cls.maxvar_p, cls.vcmt_p = \
-            run_pyrate.process_ifgs(cls.dest_paths, params, 3, 3)
+            process.process_ifgs(cls.dest_paths, params, 3, 3)
         cls.mst_p = common.reconstruct_mst(ifgs[0].shape, tiles,
                                            params[cf.TMPDIR])
         cls.rate_p, cls.error_p, cls.samples_p = [
@@ -223,6 +228,8 @@ class ParallelPyRateTests(unittest.TestCase):
                 ifgs[0].shape, tiles, params[cf.TMPDIR], t)
             for t in rate_types
             ]
+        
+        common.remove_tifs(params[cf.OBS_DIR])
 
         # now create the non parallel version
         cls.tif_dir_s = tempfile.mkdtemp()
@@ -231,9 +238,10 @@ class ParallelPyRateTests(unittest.TestCase):
         params[cf.TMPDIR] = os.path.join(params[cf.OUT_DIR], cf.TMPDIR)
         cls.dest_paths_s = cf.get_dest_paths(
             base_unw_paths, crop, params, xlks)
-        run_prepifg.gamma_prepifg(base_unw_paths, params)
+        gtif_paths = conv2tif.do_geotiff(base_unw_paths, params)
+        prepifg.do_prepifg(gtif_paths, params)
         cls.refpixel, cls.maxvar, cls.vcmt = \
-            run_pyrate.process_ifgs(cls.dest_paths_s, params, 3, 3)
+            process.process_ifgs(cls.dest_paths_s, params, 3, 3)
 
         cls.mst = common.reconstruct_mst(ifgs[0].shape, tiles,
                                          params[cf.TMPDIR])
@@ -247,6 +255,7 @@ class ParallelPyRateTests(unittest.TestCase):
     def tearDownClass(cls):
         shutil.rmtree(cls.tif_dir, ignore_errors=True)
         shutil.rmtree(cls.tif_dir_s, ignore_errors=True)
+        common.remove_tifs(cf.get_config_params(cls.test_conf)[cf.OBS_DIR])
 
     def test_orbital_correction(self):
         key = 'ORBITAL_ERROR'
@@ -270,7 +279,6 @@ class ParallelPyRateTests(unittest.TestCase):
             self.key_check(i, key, value)
 
     def test_mst_equal(self):
-        from pyrate import mst
         ifgs = common.small_data_setup(datafiles=self.dest_paths)
         mst_original_p = mst.mst_boolean_array(ifgs)
         ifgs_s = common.small_data_setup(datafiles=self.dest_paths_s)

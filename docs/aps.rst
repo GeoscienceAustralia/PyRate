@@ -1,5 +1,5 @@
 Atmospheric Phase Screen Module
 ===============================
 
-.. automodule:: pyrate.aps
+.. automodule:: pyrate.core.aps
    :members:

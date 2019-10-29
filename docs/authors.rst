@@ -27,3 +27,4 @@ Thanks to `all the contributors`_ who helped in building this project.
 * Brenainn Moushall (GA)
 * Vanessa Newey (GA)
 * Garrick Paskos (GA)
+* Nahidul Samrat (GA)

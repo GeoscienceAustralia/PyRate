@@ -31,15 +31,15 @@ from numpy.testing import assert_array_almost_equal, assert_array_equal
 
 from osgeo import gdal
 
-from pyrate.scripts import run_prepifg
-from pyrate import config as cf
-from pyrate.config import mlooked_path
-from pyrate.shared import Ifg, DEM
-from pyrate.prepifg import CUSTOM_CROP, MAXIMUM_CROP, MINIMUM_CROP, \
+from pyrate import prepifg, conv2tif
+from pyrate.core import config as cf
+from pyrate.core.config import mlooked_path
+from pyrate.core.shared import Ifg, DEM
+from pyrate.core.prepifg_helper import CUSTOM_CROP, MAXIMUM_CROP, MINIMUM_CROP, \
     ALREADY_SAME_SIZE
-from pyrate.prepifg import prepare_ifgs, _resample, PreprocessError, CustomExts
+from pyrate.core.prepifg_helper import prepare_ifgs, _resample, PreprocessError, CustomExts
 # from pyrate.tasks.utils import DUMMY_SECTION_NAME
-from pyrate.config import (
+from pyrate.core.config import (
     DEM_HEADER_FILE,
     NO_DATA_VALUE,
     OBS_DIR,
@@ -47,6 +47,7 @@ from pyrate.config import (
     PROCESSOR,
     OUT_DIR,
     SLC_DIR,
+    SLC_FILE_LIST,
     IFG_LKSX,
     IFG_LKSY,
     IFG_CROP_OPT,
@@ -57,7 +58,7 @@ from pyrate.config import (
     APS_METHOD,
     APS_CORRECTION)
 
-from tests.common import SML_TEST_MATLAB_PREPIFG_DIR
+from tests.common import SML_TEST_LEGACY_PREPIFG_DIR
 from tests.common import PREP_TEST_TIF, SML_TEST_DEM_DIR
 from tests.common import SML_TEST_DEM_TIF
 from tests import common
@@ -512,7 +513,7 @@ def test_mlooked_path():
 # TODO: this needs to work from config and incidence files on disk
 # TODO: is convflag (see 'ifgconv' setting) used or just defaulted?
 # TODO: los conversion has 4 options: 1: ignore, 2: vertical, 3: N/S, 4: E/W
-# also have a 5th option of arbitrary azimuth angle (Pirate doesn't have this)
+# also have a 5th option of arbitrary azimuth angle (PyRate doesn't have this)
 #    params = _default_extents_param()
 #    params[IFG_CROP_OPT] = MINIMUM_CROP
 #    params[PROJECTION_FLAG] = None
@@ -543,8 +544,6 @@ class LocalMultilookTests(unittest.TestCase):
 
 def multilooking(src, xscale, yscale, thresh=0):
     """
-    Implementation of Matlab Pirate looks.m function.
-
     src: numpy array of phase data
     thresh: min number of non-NaNs required for a valid tile resampling
     """
@@ -578,9 +577,9 @@ def multilooking(src, xscale, yscale, thresh=0):
     return dest
 
 
-class MatlabEqualityTestRoipacSmallTestData(unittest.TestCase):
+class LegacyEqualityTestRoipacSmallTestData(unittest.TestCase):
     """
-    Matlab to python roipac prepifg equality test for small test data
+    Legacy roipac prepifg equality test for small test data
     """
 
     def setUp(self):
@@ -600,20 +599,20 @@ class MatlabEqualityTestRoipacSmallTestData(unittest.TestCase):
                 i.close()
                 os.remove(i.data_path)
 
-    def test_matlab_prepifg_equality_array(self):
+    def test_legacy_prepifg_equality_array(self):
         """
-        Matlab to python prepifg equality test
+        Legacy prepifg equality test
         """
-        # path to csv folders from matlab output
+        # path to csv folders from legacy output
         onlyfiles = [
-            fln for fln in os.listdir(SML_TEST_MATLAB_PREPIFG_DIR)
-            if os.path.isfile(os.path.join(SML_TEST_MATLAB_PREPIFG_DIR, fln))
+            fln for fln in os.listdir(SML_TEST_LEGACY_PREPIFG_DIR)
+            if os.path.isfile(os.path.join(SML_TEST_LEGACY_PREPIFG_DIR, fln))
             and fln.endswith('.csv') and fln.__contains__('_rad_')
             ]
 
         for fln in onlyfiles:
             ifg_data = np.genfromtxt(os.path.join(
-                SML_TEST_MATLAB_PREPIFG_DIR, fln), delimiter=',')
+                SML_TEST_LEGACY_PREPIFG_DIR, fln), delimiter=',')
             for k, j in enumerate(self.ifgs):
                 if fln.split('_rad_')[-1].split('.')[0] == \
                         os.path.split(j.data_path)[-1].split('.')[0]:
@@ -622,23 +621,23 @@ class MatlabEqualityTestRoipacSmallTestData(unittest.TestCase):
                                                              k].phase_data,
                                                          decimal=2)
 
-    def test_matlab_prepifg_and_convert_phase(self):
+    def test_legacy_prepifg_and_convert_phase(self):
         """
-        Matlab to python prepifg equality test
+        Legacy data prepifg equality test
         """
-        # path to csv folders from matlab output
+        # path to csv folders from legacy output
         for i in self.ifgs_with_nan:
             if not i.mm_converted:
                 i.convert_to_mm()
         onlyfiles = [
-            f for f in os.listdir(SML_TEST_MATLAB_PREPIFG_DIR)
-            if os.path.isfile(os.path.join(SML_TEST_MATLAB_PREPIFG_DIR, f))
+            f for f in os.listdir(SML_TEST_LEGACY_PREPIFG_DIR)
+            if os.path.isfile(os.path.join(SML_TEST_LEGACY_PREPIFG_DIR, f))
             and f.endswith('.csv') and f.__contains__('_mm_')]
 
         count = 0
         for i, f in enumerate(onlyfiles):
             ifg_data = np.genfromtxt(os.path.join(
-                SML_TEST_MATLAB_PREPIFG_DIR, f), delimiter=',')
+                SML_TEST_LEGACY_PREPIFG_DIR, f), delimiter=',')
             for k, j in enumerate(self.ifgs):
                 if f.split('_mm_')[-1].split('.')[0] == \
                         os.path.split(j.data_path)[-1].split('_unw.')[0]:
@@ -670,7 +669,9 @@ class TestOneIncidenceOrElevationMap(unittest.TestCase):
         self.ifgListFile = os.path.join(common.SML_TEST_GAMMA, 'ifms_17')
 
     def tearDown(self):
+        params = cf.get_config_params(self.conf_file)
         shutil.rmtree(self.base_dir)
+        common.remove_tifs(params[cf.OBS_DIR])
 
     def make_input_files(self, inc='', ele=''):
         with open(self.conf_file, 'w') as conf:
@@ -688,6 +689,8 @@ class TestOneIncidenceOrElevationMap(unittest.TestCase):
             conf.write('{}: {}\n'.format(IFG_CROP_OPT, '1'))
             conf.write('{}: {}\n'.format(NO_DATA_AVERAGING_THRESHOLD, '0.5'))
             conf.write('{}: {}\n'.format(SLC_DIR, ''))
+            conf.write('{}: {}\n'.format(SLC_FILE_LIST,
+                                         common.SML_TEST_GAMMA_HEADER_LIST))
             conf.write('{}: {}\n'.format(DEM_FILE, common.SML_TEST_DEM_GAMMA))
             conf.write('{}: {}\n'.format(APS_INCIDENCE_MAP, inc))
             conf.write('{}: {}\n'.format(APS_ELEVATION_MAP, ele))
@@ -709,16 +712,17 @@ class TestOneIncidenceOrElevationMap(unittest.TestCase):
     def common_check(self, ele, inc):
         os.path.exists(self.conf_file)
         params = cf.get_config_params(self.conf_file)
+        conv2tif.main(params)
         sys.argv = ['dummy', self.conf_file]
-        run_prepifg.main(params)
+        prepifg.main(params)
         # test 17 geotiffs created
-        geotifs = glob.glob(os.path.join(self.base_dir, '*_unw.tif'))
+        geotifs = glob.glob(os.path.join(params[cf.OBS_DIR], '*_unw.tif'))
         self.assertEqual(17, len(geotifs))
         # test dem geotiff created
-        demtif = glob.glob(os.path.join(self.base_dir, '*_dem.tif'))
+        demtif = glob.glob(os.path.join(params[cf.OBS_DIR], '*_dem.tif'))
         self.assertEqual(1, len(demtif))
         # elevation/incidence file
-        ele = glob.glob(os.path.join(self.base_dir,
+        ele = glob.glob(os.path.join(params[cf.OBS_DIR],
                                      '*utm_{ele}.tif'.format(ele=ele)))[0]
         self.assertTrue(os.path.exists(ele))
         # mlooked tifs

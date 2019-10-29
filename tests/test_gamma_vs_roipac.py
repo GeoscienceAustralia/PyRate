@@ -25,13 +25,11 @@ import sys
 import tempfile
 import unittest
 
-import numpy as np
 from tests import common
 
-from pyrate import config as cf
-from pyrate import ifgconstants as ifc
-from pyrate.prepifg import _is_number
-from pyrate.config import (
+from pyrate.core import ifgconstants as ifc, config as cf
+from pyrate.core.prepifg_helper import _is_number
+from pyrate.core.config import (
     DEM_HEADER_FILE,
     NO_DATA_VALUE,
     OBS_DIR,
@@ -44,13 +42,13 @@ from pyrate.config import (
     NO_DATA_AVERAGING_THRESHOLD,
     INPUT_IFG_PROJECTION,
     SLC_DIR,
+    SLC_FILE_LIST,
     DEM_FILE,
     APS_INCIDENCE_MAP,
     APS_ELEVATION_MAP
     )
-from pyrate.scripts import run_prepifg
-from tests.common import SML_TEST_DIR
-from tests.common import small_data_setup
+from pyrate import prepifg, conv2tif
+from tests.common import SML_TEST_DIR, small_data_setup, remove_tifs
 
 DUMMY_SECTION_NAME = 'pyrate'
 
@@ -62,26 +60,29 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.gamma_base_dir = tempfile.mkdtemp()
-        cls.gamma_conffile = os.path.join(cls.gamma_base_dir, 'gamma_test.conf')
+        cls.gamma_conffile = os.path.join(cls.gamma_base_dir, 
+            'gamma_test.conf')
         cls.gamma_ifgListFile = os.path.join(cls.gamma_base_dir,
-                                             'gamma_ifg.list')
+            'gamma_ifg.list')
 
         cls.roipac_base_dir = tempfile.mkdtemp()
         cls.roipac_conffile = os.path.join(cls.roipac_base_dir,
-                                           'roipac_test.conf')
+            'roipac_test.conf')
         cls.roipac_ifgListFile = os.path.join(cls.roipac_base_dir,
-                                              'roipac_ifg.list')
+            'roipac_ifg.list')
 
     @classmethod
     def tearDownClass(cls):
         shutil.rmtree(cls.gamma_base_dir)
         shutil.rmtree(cls.roipac_base_dir)
+        remove_tifs(cls.SMLNEY_GAMMA_TEST)
+        remove_tifs(common.SML_TEST_OBS)
 
     def make_gamma_input_files(self, data):
         with open(self.conf_file, 'w') as conf:
             conf.write('[{}]\n'.format(DUMMY_SECTION_NAME))
             conf.write('{}: {}\n'.format(NO_DATA_VALUE, '0.0'))
-            conf.write('{}: {}\n'.format(OBS_DIR, self.base_dir))
+            conf.write('{}: {}\n'.format(OBS_DIR, self.SMLNEY_GAMMA_TEST))
             conf.write('{}: {}\n'.format(OUT_DIR, self.base_dir))
             conf.write('{}: {}\n'.format(IFG_FILE_LIST, self.ifgListFile))
             conf.write('{}: {}\n'.format(PROCESSOR, '1'))
@@ -93,6 +94,8 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
             conf.write('{}: {}\n'.format(IFG_CROP_OPT, '1'))
             conf.write('{}: {}\n'.format(NO_DATA_AVERAGING_THRESHOLD, '0.5'))
             conf.write('{}: {}\n'.format(SLC_DIR, ''))
+            conf.write('{}: {}\n'.format(SLC_FILE_LIST, 
+                                         common.SML_TEST_GAMMA_HEADER_LIST))
             conf.write('{}: {}\n'.format(DEM_FILE, common.SML_TEST_DEM_GAMMA))
             conf.write('{}: {}\n'.format(APS_INCIDENCE_MAP,
                                          common.SML_TEST_INCIDENCE))
@@ -115,12 +118,14 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
 
         base_ifg_paths, dest_paths, params = cf.get_ifg_paths(conf_file)
         dest_base_ifgs = [os.path.join(
-            params[cf.OUT_DIR], os.path.basename(q).split('.')[0] + '_' +
+            params[cf.OBS_DIR], os.path.basename(q).split('.')[0] + '_' +
             os.path.basename(q).split('.')[1] + '.tif') 
             for q in base_ifg_paths]
+        sys.argv = ['pyrate', 'conv2tif', conf_file]
+        conv2tif.main()
         sys.argv = ['pyrate', 'prepifg', conf_file]
-        run_prepifg.main()
-
+        prepifg.main()
+        
         for p, q in zip(dest_base_ifgs, dest_paths):
             self.assertTrue(os.path.exists(p),
                             '{} does not exist'.format(p))
@@ -132,7 +137,7 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
             conf.write('[{}]\n'.format(DUMMY_SECTION_NAME))
             conf.write('{}: {}\n'.format(INPUT_IFG_PROJECTION, projection))
             conf.write('{}: {}\n'.format(NO_DATA_VALUE, '0.0'))
-            conf.write('{}: {}\n'.format(OBS_DIR, self.base_dir))
+            conf.write('{}: {}\n'.format(OBS_DIR, common.SML_TEST_OBS))
             conf.write('{}: {}\n'.format(OUT_DIR, self.base_dir))
             conf.write('{}: {}\n'.format(IFG_FILE_LIST, self.ifgListFile))
             conf.write('{}: {}\n'.format(PROCESSOR, '0'))
@@ -151,7 +156,7 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
     def test_cmd_ifg_no_roipac_files_created_roipac(self):
         self.dataPaths = common.small_data_roipac_unws()
         base_exp = common.small_ifg_file_list()
-        self.expPaths = [os.path.join(self.roipac_base_dir, os.path.basename(i))
+        self.expPaths = [os.path.join(common.SML_TEST_OBS, os.path.basename(i))
                          for i in base_exp]
         self.confFile = self.roipac_conffile
         self.ifgListFile = self.roipac_ifgListFile
@@ -160,8 +165,10 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
 
     def check_roipac(self):
         self.make_roipac_input_files(self.dataPaths, 'WGS84')
+        sys.argv = ['pyrate', 'conv2tif', self.confFile]
+        conv2tif.main()
         sys.argv = ['pyrate', 'prepifg', self.confFile]
-        run_prepifg.main()
+        prepifg.main()
         for path in self.expPaths:
             self.assertTrue(os.path.exists(path),
                             '{} does not exist'.format(path))

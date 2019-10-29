@@ -18,9 +18,7 @@ This Python module contains tests for the gamma.py PyRate module.
 """
 import glob
 import os
-import re
 import shutil
-import sys
 import tempfile
 import unittest
 from datetime import date, time
@@ -30,27 +28,18 @@ import numpy as np
 from numpy.testing import assert_array_almost_equal
 from osgeo import gdal
 
-import pyrate.ifgconstants as ifc
-from pyrate import config as cf
-from pyrate import gamma
-from pyrate import shared
-from pyrate.config import (
+import pyrate.core.ifgconstants as ifc
+from pyrate.core import shared, config as cf, gamma
+from pyrate.core.config import (
     DEM_HEADER_FILE,
     NO_DATA_VALUE,
     OBS_DIR,
     IFG_FILE_LIST,
     PROCESSOR,
     OUT_DIR,
-    SLC_DIR,
-    IFG_LKSX,
-    IFG_LKSY,
-    IFG_CROP_OPT,
-    NO_DATA_AVERAGING_THRESHOLD,
-    DEM_FILE,
-    APS_INCIDENCE_MAP,
-    APS_ELEVATION_MAP)
-from pyrate.scripts import run_prepifg
-from pyrate.shared import write_geotiff, GeotiffException
+    SLC_DIR)
+from pyrate import prepifg, conv2tif
+from pyrate.core.shared import write_fullres_geotiff, GeotiffException
 from tests import common
 from tests.common import GAMMA_TEST_DIR, SML_TEST_GAMMA
 from tests.common import TEST_CONF_GAMMA, TEMPDIR
@@ -116,7 +105,7 @@ class GammaToGeoTiffTests(unittest.TestCase):
         data_path = join(GAMMA_TEST_DIR, 'dem16x20raw.dem')
         self.dest = os.path.join(TEMPDIR, "tmp_gamma_dem.tif")
 
-        write_geotiff(hdr, data_path, self.dest, nodata=0)
+        write_fullres_geotiff(hdr, data_path, self.dest, nodata=0)
         exp_path = join(GAMMA_TEST_DIR, 'dem16x20_subset_from_gamma.tif')
         exp_ds = gdal.Open(exp_path)
         ds = gdal.Open(self.dest)
@@ -133,7 +122,7 @@ class GammaToGeoTiffTests(unittest.TestCase):
         self.dest = os.path.join(TEMPDIR, 'tmp_gamma_ifg.tif')
         data_path = join(GAMMA_TEST_DIR,
                          '16x20_20090713-20090817_VV_4rlks_utm.unw')
-        write_geotiff(self.COMBINED, data_path, self.dest, nodata=0)
+        write_fullres_geotiff(self.COMBINED, data_path, self.dest, nodata=0)
 
         ds = gdal.Open(self.dest)
         exp_path = join(GAMMA_TEST_DIR, '16x20_20090713-20090817_VV_4rlks_utm.tif')
@@ -159,8 +148,10 @@ class GammaToGeoTiffTests(unittest.TestCase):
     def test_to_geotiff_wrong_input_data(self):
         # use TIF, not UNW for data
         self.dest = os.path.join(TEMPDIR, 'tmp_gamma_ifg.tif')
-        data_path = join(GAMMA_TEST_DIR,'16x20_20090713-20090817_VV_4rlks_utm.tif')
-        self.assertRaises(GeotiffException, write_geotiff, self.COMBINED, data_path, self.dest, nodata=0)
+        data_path = join(GAMMA_TEST_DIR,
+                         '16x20_20090713-20090817_VV_4rlks_utm.tif')
+        self.assertRaises(GeotiffException, write_fullres_geotiff,
+                            self.COMBINED, data_path, self.dest, nodata=0)
 
     def test_mismatching_cell_resolution(self):
         hdrs = self.DEM_HDR.copy()
@@ -168,7 +159,8 @@ class GammaToGeoTiffTests(unittest.TestCase):
         data_path = join(GAMMA_TEST_DIR, '16x20_20090713-20090817_VV_4rlks_utm.unw')
         self.dest = os.path.join(TEMPDIR, 'fake')
 
-        self.assertRaises(GeotiffException, write_geotiff, hdrs, data_path, self.dest, 0)
+        self.assertRaises(GeotiffException, write_fullres_geotiff, hdrs,
+                            data_path, self.dest, 0)
 
     def compare_rasters(self, ds, exp_ds):
         band = ds.GetRasterBand(1)
@@ -189,7 +181,8 @@ class GammaToGeoTiffTests(unittest.TestCase):
         hdr[ifc.PYRATE_DATUM] = 'nonexistent projection'
         data_path = join(GAMMA_TEST_DIR, 'dem16x20raw.dem')
         self.dest = os.path.join(TEMPDIR, 'tmp_gamma_dem2.tif')
-        self.assertRaises(GeotiffException, write_geotiff, hdr, data_path, self.dest, nodata=0)
+        self.assertRaises(GeotiffException, write_fullres_geotiff, hdr,
+                            data_path, self.dest, nodata=0)
 
 
 class GammaHeaderParsingTests(unittest.TestCase):
@@ -295,57 +288,71 @@ class HeaderCombinationTests(unittest.TestCase):
 
 
 class TestGammaParallelVsSerial(unittest.TestCase):
-
+    """
+    Test Gamma prepifg produces correct results when run in serial and 
+    parallel and that metadata is correctly set by both methods. These tests
+    exclude the comparison of DEM files.
+    """
     @classmethod
     def setUpClass(cls):
-
-        cls.serial_dir = tempfile.mkdtemp()
-        cls.parallel_dir = tempfile.mkdtemp()
-        unw_paths = glob.glob(os.path.join(SML_TEST_GAMMA, "*_utm.unw"))
-
         # read in the params
         _, _, params = cf.get_ifg_paths(TEST_CONF_GAMMA)
+        glob_prefix = "*utm_unw_1rlks_1cr.tif"
 
+        # SERIAL
+        cls.serial_dir = tempfile.mkdtemp()
         params[cf.OUT_DIR] = cls.serial_dir
         params[cf.PARALLEL] = False
-
         shared.mkdir_p(cls.serial_dir)
-        run_prepifg.gamma_prepifg(unw_paths, params)
 
+        gtif_paths = conv2tif.main(params)
+        prepifg.main(params)
+
+        serial_df = glob.glob(os.path.join(cls.serial_dir, glob_prefix))
+        cls.serial_ifgs = small_data_setup(datafiles=serial_df)
+
+        # Clean up serial converted tifs so we can test parallel conversion
+        common.remove_tifs(SML_TEST_GAMMA)
+
+        # PARALLEL 
+        cls.parallel_dir = tempfile.mkdtemp()
         params[cf.OUT_DIR] = cls.parallel_dir
         params[cf.PARALLEL] = True
         shared.mkdir_p(cls.parallel_dir)
-        run_prepifg.gamma_prepifg(unw_paths, params)
+
+        gtif_paths = conv2tif.main(params)
+        prepifg.main(params)
+        
+        para_df = glob.glob(os.path.join(cls.parallel_dir, glob_prefix))
+        cls.para_ifgs = small_data_setup(datafiles=para_df)
 
     @classmethod
     def tearDownClass(cls):
-        shutil.rmtree(cls.parallel_dir)
-        shutil.rmtree(cls.serial_dir)
+        try:
+            shutil.rmtree(cls.parallel_dir)
+        except PermissionError:
+            print("File opened by another process.")
+
+        try:
+            shutil.rmtree(cls.serial_dir)
+        except PermissionError:
+            print("File opened by another process.")
+
+        try:
+            common.remove_tifs(SML_TEST_GAMMA)
+        except PermissionError:
+            print("File opened by another process.")
 
     def test_equality(self):
-        serial_ifgs = small_data_setup(
-            datafiles=glob.glob(os.path.join(self.serial_dir, "*_1cr.tif")))
-
-        parallel_ifgs = small_data_setup(
-            datafiles=glob.glob(os.path.join(self.parallel_dir, "*_1cr.tif")))
-
-        for s, p in zip(serial_ifgs, parallel_ifgs):
+        for s, p in zip(self.serial_ifgs, self.para_ifgs):
             np.testing.assert_array_almost_equal(s.phase_data, p.phase_data)
 
     def test_meta_data_exist(self):
-        serial_ifgs = small_data_setup(
-            datafiles=glob.glob(os.path.join(self.serial_dir, "*_1cr.tif")))
-
-        parallel_ifgs = small_data_setup(
-            datafiles=glob.glob(os.path.join(self.parallel_dir, "*_1cr.tif")))
-        for s, p in zip(serial_ifgs, parallel_ifgs):
-
+        for s, p in zip(self.serial_ifgs, self.para_ifgs):
             # all metadata equal
             self.assertDictEqual(s.meta_data, p.meta_data)
-
             # test that DATA_TYPE exists in metadata
             self.assertIn(ifc.DATA_TYPE, s.meta_data.keys())
-
             # test that DATA_TYPE is MULTILOOKED
             self.assertEqual(s.meta_data[ifc.DATA_TYPE], ifc.MULTILOOKED)
 
