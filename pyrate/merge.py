@@ -125,9 +125,14 @@ def _merge_linrate(rows, cols, params):
     # pylint: disable=expression-not-assigned
     # setup paths
     xlks, _, crop = cf.transform_params(params)
-    base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST],
-                                           params[cf.OBS_DIR])
-    dest_tifs = cf.get_dest_paths(base_unw_paths, crop, params, xlks)
+    base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST], params[cf.OBS_DIR])
+
+    if "tif" in base_unw_paths[0].split(".")[1]:
+        dest_tifs = cf.get_dest_paths(base_unw_paths, crop, params, xlks)
+        for i, dest_tif in enumerate(dest_tifs):
+            dest_tifs[i] = dest_tif.replace("_tif","")
+    else:
+        dest_tifs = cf.get_dest_paths(base_unw_paths, crop, params, xlks)
 
     # load previously saved prepread_ifgs dict
     preread_ifgs_file = join(params[cf.TMPDIR], 'preread_ifgs.pk')
@@ -164,11 +169,9 @@ def _save_linrate(ifgs_dict, params, tiles, out_type):
 
     rate = np.zeros(shape=ifgs[0].shape, dtype=np.float32)
     for t in tiles:
-        rate_file = os.path.join(params[cf.TMPDIR], out_type +
-                                 '_{}.npy'.format(t.index))
+        rate_file = os.path.join(params[cf.TMPDIR], out_type + '_{}.npy'.format(t.index))
         rate_tile = np.load(file=rate_file)
-        rate[t.top_left_y:t.bottom_right_y,
-             t.top_left_x:t.bottom_right_x] = rate_tile
+        rate[t.top_left_y:t.bottom_right_y, t.top_left_x:t.bottom_right_x] = rate_tile
     shared.write_output_geotiff(md, gt, wkt, rate, dest, np.nan)
     npy_rate_file = os.path.join(params[cf.OUT_DIR], out_type + '.npy')
     np.save(file=npy_rate_file, arr=rate)
@@ -182,9 +185,16 @@ def _merge_timeseries(rows, cols, params):
     """
     # pylint: disable=too-many-locals
     xlks, _, crop = cf.transform_params(params)
-    base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST], 
-                                           params[cf.OBS_DIR])
-    dest_tifs = cf.get_dest_paths(base_unw_paths, crop, params, xlks)
+    base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST], params[cf.OBS_DIR])
+
+    if "tif" in base_unw_paths[0].split(".")[1]:
+        dest_tifs = cf.get_dest_paths(base_unw_paths, crop, params, xlks)
+        for i, dest_tif in enumerate(dest_tifs):
+            dest_tifs[i] = dest_tif.replace("_tif", "")
+    else:
+        dest_tifs = cf.get_dest_paths(base_unw_paths, crop, params, xlks)
+
+
     output_dir = params[cf.TMPDIR]
 
     # load previously saved prepread_ifgs dict

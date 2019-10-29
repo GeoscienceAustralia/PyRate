@@ -49,6 +49,7 @@ def main(params=None):
 
     if params:
         base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST], params[cf.OBS_DIR])
+
     else:
         # if params not provided read from config file
         if (not params) and (len(sys.argv) < 3):

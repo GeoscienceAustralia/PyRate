@@ -567,7 +567,14 @@ def get_ifg_paths(config_file, step=CONV2TIF):
 
     # dest_paths are tifs that have been coherence masked (if enabled),
     #  cropped and multilooked
-    dest_paths = get_dest_paths(base_unw_paths, crop, params, xlks)
+
+    if "tif" in base_unw_paths[0].split(".")[1]:
+
+        dest_paths = get_dest_paths(base_unw_paths, crop, params, xlks)
+        for i, dest_path in enumerate(dest_paths):
+            dest_paths[i] = dest_path.replace("_tif","")
+    else:
+        dest_paths = get_dest_paths(base_unw_paths, crop, params, xlks)
 
     return base_unw_paths, dest_paths, params
 
@@ -971,6 +978,7 @@ def validate_parameters(pars: Dict, step: str=CONV2TIF):
         validate_minimum_epochs(n_epochs, MINIMUM_NUMBER_EPOCHS)
         
         # Get spatial information from tifs.
+
         extents, n_cols, n_rows, transform = _get_prepifg_info(ifl, pars[OBS_DIR], pars)
 
         # test if refx/y already set to default value of -1
@@ -1159,8 +1167,7 @@ def validate_epoch_cutoff(max_span: float, cutoff: str, pars: Dict) -> Optional[
                       "data in years ({max_span}).")
     return _raise_errors(errors)
 
-def validate_prepifg_tifs_exist(
-        ifg_file_list: str, obs_dir: str, pars: Dict) -> Optional[bool]:
+def validate_prepifg_tifs_exist(ifg_file_list: str, obs_dir: str, pars: Dict) -> Optional[bool]:
     """
     Validates that cropped and multilooked interferograms exist in geotiff
     format.
@@ -1176,9 +1183,13 @@ def validate_prepifg_tifs_exist(
     Raises:
         ConfigException: If not all intergerograms exist in geotiff format.
     """
+
     errors = []
     base_paths = [os.path.join(obs_dir, ifg) for ifg in parse_namelist(ifg_file_list)]
     ifg_paths = get_dest_paths(base_paths, pars[IFG_CROP_OPT], pars, pars[IFG_LKSX])
+    for i, ifg_path in enumerate(ifg_paths):
+        ifg_paths[i] = ifg_path.replace("_tif", "")
+
     for path in ifg_paths:
         if not os.path.exists(path):
             fname = os.path.split(path)[1]
@@ -1550,6 +1561,9 @@ def _get_prepifg_info(ifg_file_list: str, obs_dir: str, pars: Dict) -> Tuple:
 
     base_paths = [os.path.join(obs_dir, ifg) for ifg in parse_namelist(ifg_file_list)]
     ifg_paths = get_dest_paths(base_paths, pars[IFG_CROP_OPT], pars, pars[IFG_LKSX])
+
+    for i, ifg_path in enumerate(ifg_paths):
+        ifg_paths[i] = ifg_path.replace("_tif","")
 
     # This function assumes the stack of interferograms now have the same
     # bounds and resolution after going through prepifg.
