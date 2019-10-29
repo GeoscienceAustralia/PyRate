@@ -386,16 +386,24 @@ def _max_bounds(ifgs):
     ymin = min([i.y_last for i in ifgs])
     return xmin, ymin, xmax, ymax
 
-
+from decimal import Decimal
 def _get_same_bounds(ifgs):
     """
     Check and return bounding box for ALREADY_SAME_SIZE option.
     """
 
     tfs = [i.dataset.GetGeoTransform() for i in ifgs]
-    for tf in tfs:
-        log.info(tf)
-    equal = [t == tfs[0] for t in tfs[1:]]
+
+    equal = []
+
+    for t in tfs[1:]:
+        for i,tf in enumerate(tfs[0]):
+
+            if round(Decimal (tf),4) == round(Decimal (t[i]),4):
+                equal.append(True)
+            else:
+                equal.append(False)
+
     if not all(equal):
         msg = 'Ifgs do not have the same bounding box for crop option: %s'
         raise PreprocessError(msg % ALREADY_SAME_SIZE)
