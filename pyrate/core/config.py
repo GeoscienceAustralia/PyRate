@@ -891,7 +891,13 @@ def validate_parameters(pars: Dict, step: str=CONV2TIF):
         with open(ifl, "r") as f:
             list_of_epoches = []
             for line in f.readlines():
+
                 PTN = re.compile(r'\d{8}')  # match 8 digits for the dates
+
+                # if ROI_PAC
+                if 0 == pars["processor"]:
+                    PTN = re.compile(r'\d{6}')  # match 8 digits for the dates
+
                 epochs = PTN.findall(line.strip())
                 list_of_epoches.extend(epochs)
 

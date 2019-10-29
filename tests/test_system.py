@@ -52,13 +52,12 @@ class SystemTest(unittest.TestCase):
 
     def test_roipac_workflow(self):
 
+        input_config_path = os.path.join(self.root_path, "tests", "test_data", "system", "roipac", "input_parameters.conf")
 
-        # input_config_path = os.path.join(self.root_path, "tests", "test_data", "system", "gamma", "input_parameters.conf")
-        #
-        # conv2tif_handler(input_config_path)
-        # prepifg_handler(input_config_path)
-        # process_handler(input_config_path, self.rows, self.cols)
-        # merge_handler(input_config_path, self.rows, self.cols)
+        conv2tif_handler(input_config_path)
+        prepifg_handler(input_config_path)
+        process_handler(input_config_path, self.rows, self.cols)
+        merge_handler(input_config_path, self.rows, self.cols)
 
         self.assertTrue(True)
 
@@ -74,11 +73,11 @@ class SystemTest(unittest.TestCase):
 
     def test_geotiff_workflow(self):
 
-        # input_config_path = os.path.join(self.root_path, "tests", "test_data", "system", "geotif", "input_parameters.conf")
-        #
-        # prepifg_handler(input_config_path)
-        # process_handler(input_config_path, self.rows, self.cols)
-        # merge_handler(input_config_path, self.rows, self.cols)
+        input_config_path = os.path.join(self.root_path, "tests", "test_data", "system", "geotiff", "input_parameters.conf")
+
+        prepifg_handler(input_config_path)
+        process_handler(input_config_path, self.rows, self.cols)
+        merge_handler(input_config_path, self.rows, self.cols)
         self.assertTrue(True)
 
 if __name__ == '__main__':
