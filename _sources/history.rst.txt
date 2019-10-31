@@ -2,7 +2,7 @@
 
 Release History
 ===============
-0.4.0 (2019-09-24)
+0.4.0 (2019-10-31)
 -----------------------
 Added
 +++++
@@ -13,6 +13,10 @@ Added
   for options.
 - Input parameter validation.
 - SLC and coherence file lists for file discovery.
+- Create quick view png for linrate.
+- Add support for reading interferogram in Geotiff format.
+- Add detailed validation and hints for configuration parameters
+- Add system tests for all 3 types of input formats
 
 Changed
 +++++++
@@ -23,11 +27,13 @@ Changed
 - Reduced console output, default verbosity setting is now INFO.
 - Restructure of code layout, src modules now in 'core' directory and scripts
   at top level.
+- Reference pixel values are expected to be in latitude and longitude values
 
 Removed
 +++++++
 - Unused luigi code.
 - References to Matlab.
+- Unused tests for legacy api.
 
 0.3.0 (2019-07-26)
 -----------------------

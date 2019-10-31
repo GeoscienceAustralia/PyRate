@@ -114,7 +114,7 @@
 </ul>
 </li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#id1">0.4.0 (2019-09-24)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id1">0.4.0 (2019-10-31)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#id2">0.3.0 (2019-07-26)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#id6">0.2.0 (2017-05-22)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#id7">0.1.0 (2017-01-31)</a></li>
@@ -221,7 +221,7 @@
   <div class="section" id="release-history">
 <h1>Release History<a class="headerlink" href="#release-history" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="id1">
-<h2>0.4.0 (2019-09-24)<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<h2>0.4.0 (2019-10-31)<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="added">
 <h3>Added<a class="headerlink" href="#added" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
@@ -232,6 +232,10 @@
 for options.</p></li>
 <li><p>Input parameter validation.</p></li>
 <li><p>SLC and coherence file lists for file discovery.</p></li>
+<li><p>Create quick view png for linrate.</p></li>
+<li><p>Add support for reading interferogram in Geotiff format.</p></li>
+<li><p>Add detailed validation and hints for configuration parameters</p></li>
+<li><p>Add system tests for all 3 types of input formats</p></li>
 </ul>
 </div>
 <div class="section" id="changed">
@@ -244,6 +248,7 @@ for options.</p></li>
 <li><p>Reduced console output, default verbosity setting is now INFO.</p></li>
 <li><p>Restructure of code layout, src modules now in ‘core’ directory and scripts
 at top level.</p></li>
+<li><p>Reference pixel values are expected to be in latitude and longitude values</p></li>
 </ul>
 </div>
 <div class="section" id="removed">
@@ -251,6 +256,7 @@ at top level.</p></li>
 <ul class="simple">
 <li><p>Unused luigi code.</p></li>
 <li><p>References to Matlab.</p></li>
+<li><p>Unused tests for legacy api.</p></li>
 </ul>
 </div>
 </div>
