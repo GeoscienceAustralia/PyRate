@@ -43,3 +43,5 @@ Py_Rate.egg-info
 *tests/test_data/merge/linrate.tif.aux.xml
 
 *tests/test_data/small_test/gamma_obs/*.tif
+
+tests/test_data/small_test/.DS_Store
