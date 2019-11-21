@@ -45,3 +45,21 @@ Py_Rate.egg-info
 *tests/test_data/small_test/gamma_obs/*.tif
 
 tests/test_data/small_test/.DS_Store
+
+tests/test_data/small_test/gamma_obs/tmpdir/
+
+tests/test_data/small_test/gamma_obs/colormap.txt
+
+tests/test_data/small_test/gamma_obs/linerror.npy
+
+tests/test_data/small_test/gamma_obs/linrate.kml
+
+tests/test_data/small_test/gamma_obs/linrate.npy
+
+tests/test_data/small_test/gamma_obs/linrate.png
+
+tests/test_data/small_test/gamma_obs/linrate.png.aux.xml
+
+tests/test_data/small_test/gamma_obs/linrate.tif.aux.xml
+
+tests/test_data/small_test/gamma_obs/linsamples.npy
