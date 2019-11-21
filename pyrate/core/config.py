@@ -536,12 +536,9 @@ def get_dest_paths(base_paths, crop, params, looks):
     :rtype: list
     """
 
-    dest_mlooked_ifgs = [mlooked_path(os.path.basename(q).split('.')[0] + '_'
-                                      + os.path.basename(q).split('.')[1] +
-                                      '.tif', looks=looks, crop_out=crop)
-                         for q in base_paths]
+    dest_mlooked_ifgs = [mlooked_path(os.path.basename(q).split('.')[0] + '_' + os.path.basename(q).split('.')[1] + '.tif', looks=looks, crop_out=crop) for q in base_paths]
 
-    return [os.path.join(params[OUT_DIR], p) for p in dest_mlooked_ifgs]
+    return [os.path.join(params[OBS_DIR], p) for p in dest_mlooked_ifgs]
 
 def get_ifg_paths(config_file, step=CONV2TIF):
     """
@@ -1186,6 +1183,7 @@ def validate_prepifg_tifs_exist(ifg_file_list: str, obs_dir: str, pars: Dict) ->
 
     errors = []
     base_paths = [os.path.join(obs_dir, ifg) for ifg in parse_namelist(ifg_file_list)]
+    print(base_paths)
     ifg_paths = get_dest_paths(base_paths, pars[IFG_CROP_OPT], pars, pars[IFG_LKSX])
     for i, ifg_path in enumerate(ifg_paths):
         ifg_paths[i] = ifg_path.replace("_tif", "")
@@ -1193,7 +1191,7 @@ def validate_prepifg_tifs_exist(ifg_file_list: str, obs_dir: str, pars: Dict) ->
     for path in ifg_paths:
         if not os.path.exists(path):
             fname = os.path.split(path)[1]
-            errors.append(f"'{IFG_FILE_LIST}': interferogram '{fname}' is "
+            errors.append(f"'{path}': interferogram '{fname}' is "
                           f"required as a cropped and subsampled geotiff but "
                           f"could not be found. Make sure 'prepifg' has been "
                           f"run and ensure the '{IFG_LKSX}' and '{IFG_CROP_OPT}' "
