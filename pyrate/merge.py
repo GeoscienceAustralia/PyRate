@@ -24,6 +24,7 @@ import pickle as cp
 import numpy as np
 from osgeo import gdal
 import subprocess
+import pathlib
 
 from pyrate.core import shared, ifgconstants as ifc, mpiops, config as cf
 from pyrate.core.shared import PrereadIfg
@@ -168,7 +169,9 @@ def _save_linrate(ifgs_dict, params, tiles, out_type):
 
     rate = np.zeros(shape=ifgs[0].shape, dtype=np.float32)
     for t in tiles:
-        rate_file = os.path.join(params[cf.TMPDIR], out_type + '_{}.npy'.format(t.index))
+        rate_file = os.path.join(params[cf.TMPDIR], out_type + '_'+str(t.index)+'.npy')
+        rate_file = pathlib.Path(rate_file)
+        log.info(rate_file)
         rate_tile = np.load(file=rate_file)
         rate[t.top_left_y:t.bottom_right_y, t.top_left_x:t.bottom_right_x] = rate_tile
     shared.write_output_geotiff(md, gt, wkt, rate, dest, np.nan)
