@@ -24,12 +24,12 @@ import pickle as cp
 from collections import OrderedDict
 import numpy as np
 
-from pyrate.core import (shared, algorithm, orbital, ref_phs_est as rpe, 
-                         ifgconstants as ifc, mpiops, config as cf, 
-                         timeseries, mst, covariance as vcm_module, 
-                         linrate, refpixel)
+from pyrate.core import shared, algorithm, orbital, ref_phs_est as rpe
+from pyrate.core import ifgconstants as ifc, mpiops, config as cf
+from pyrate.core import timeseries, mst, covariance as vcm_module
+from pyrate.core import linrate, refpixel
+
 from pyrate.core.aps import _wrap_spatio_temporal_filter
-from pyrate.core.config import ConfigException
 from pyrate.core.shared import Ifg, PrereadIfg, get_tiles
 
 MASTER_PROCESS = 0
@@ -252,7 +252,7 @@ def process_ifgs(ifg_paths, params, rows, cols):
     # _mst_calc(ifg_paths, params, tiles, preread_ifgs)
 
     refpx, refpy = _ref_pixel_calc(ifg_paths, params)
-    log.debug("refpx, refpy: "+str(refpx)+" "+ str(refpy))
+    log.debug("refpx, refpy: "+str(refpx) + " " + str(refpy))
 
     # remove non ifg keys
     _ = [preread_ifgs.pop(k) for k in ['gt', 'epochlist', 'md', 'wkt']]

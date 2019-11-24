@@ -122,7 +122,6 @@ def _merge_linrate(rows, cols, params):
     """
     Merge linear rate outputs
     """
-    # pylint: disable=expression-not-assigned
     # setup paths
     xlks, _, crop = cf.transform_params(params)
     base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST], params[cf.OBS_DIR])
@@ -183,7 +182,6 @@ def _merge_timeseries(rows, cols, params):
     """
     Merge time series output
     """
-    # pylint: disable=too-many-locals
     xlks, _, crop = cf.transform_params(params)
     base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST], params[cf.OBS_DIR])
 

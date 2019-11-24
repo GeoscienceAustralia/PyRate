@@ -1183,7 +1183,6 @@ def validate_prepifg_tifs_exist(ifg_file_list: str, obs_dir: str, pars: Dict) ->
 
     errors = []
     base_paths = [os.path.join(obs_dir, ifg) for ifg in parse_namelist(ifg_file_list)]
-    print(base_paths)
     ifg_paths = get_dest_paths(base_paths, pars[IFG_CROP_OPT], pars, pars[IFG_LKSX])
     for i, ifg_path in enumerate(ifg_paths):
         ifg_paths[i] = ifg_path.replace("_tif", "")
