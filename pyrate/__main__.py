@@ -80,7 +80,26 @@ more details.
 """
 
 
-def main(rows, cols):
+def main():
+    memo = {}
+    def factors(n, left=2):
+        if (n, left) in memo:
+            return memo[(n, left)]
+        if left == 1:
+            return (n, [n])
+        i = 2
+        best = n
+        bestTuple = [n]
+        while i * i <= n:
+            if n % i == 0:
+                rem = factors(n / i, left - 1)
+                if rem[0] + i < best:
+                    best = rem[0] + i
+                    bestTuple = [i] + rem[1]
+            i += 1
+        return bestTuple
+    rows, cols = factors(multiprocessing.cpu_count(), left=2)
+    rows, cols = int(rows), int(cols)
     start_time = time.time()
     log.debug("Starting PyRate")
 
@@ -130,26 +149,5 @@ def main(rows, cols):
     log.debug("--- %s seconds ---" % (time.time() - start_time))
 
 
-def factors(n, left=2):
-    if (n, left) in memo:
-        return memo[(n, left)]
-    if left == 1:
-        return (n, [n])
-    i = 2
-    best = n
-    bestTuple = [n]
-    while i * i <= n:
-        if n % i == 0:
-            rem = factors(n / i, left - 1)
-            if rem[0] + i < best:
-                best = rem[0] + i
-                bestTuple = [i] + rem[1]
-        i += 1
-    return bestTuple
-
-
 if __name__ == "__main__":
-    memo = {}
-    rows, cols = factors(multiprocessing.cpu_count(), left=2)
-    rows, cols = int(rows), int(cols)
-    main(rows, cols)
+    main()
