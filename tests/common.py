@@ -30,7 +30,7 @@ import numpy as np
 from numpy import isnan, sum as nsum
 from osgeo import gdal
 
-from pyrate.core import algorithm, ifgconstants as ifc, config as cf, timeseries, mst, linrate
+from pyrate.core import algorithm, ifgconstants as ifc, config as cf, timeseries, mst, stack
 from pyrate.core.shared import (Ifg, nan_and_mm_convert, get_geotiff_header_info,
                                 write_output_geotiff)
 
@@ -357,7 +357,7 @@ def write_timeseries_geotiff(ifgs, params, tsincr, pr_type):
 
 def calculate_linear_rate(ifgs, params, vcmt, mst_mat=None):
     # log.info('Calculating linear rate')
-    res = linrate.linear_rate(ifgs, params, vcmt, mst_mat)
+    res = stack.stack_rate(ifgs, params, vcmt, mst_mat)
     for r in res:
         if r is None:
             raise ValueError('TODO: bad value')

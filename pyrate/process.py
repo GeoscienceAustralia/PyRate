@@ -27,7 +27,7 @@ import numpy as np
 from pyrate.core import shared, algorithm, orbital, ref_phs_est as rpe
 from pyrate.core import ifgconstants as ifc, mpiops, config as cf
 from pyrate.core import timeseries, mst, covariance as vcm_module
-from pyrate.core import linrate, refpixel
+from pyrate.core import stack, refpixel
 
 from pyrate.core.aps import _wrap_spatio_temporal_filter
 from pyrate.core.shared import Ifg, PrereadIfg, get_tiles
@@ -290,7 +290,7 @@ def _linrate_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
         log.debug('Stacking of tile {}'.format(t.index))
         ifg_parts = [shared.IfgPart(p, t, preread_ifgs, params) for p in ifg_paths]
         mst_grid_n = np.load(os.path.join(output_dir, 'mst_mat_{}.npy'.format(t.index)))
-        rate, error, samples = linrate.linear_rate(ifg_parts, params, vcmt, mst_grid_n)
+        rate, error, samples = stack.stack_rate(ifg_parts, params, vcmt, mst_grid_n)
         # declare file names
         np.save(file=os.path.join(output_dir, 'linrate_{}.npy'.format(t.index)), arr=rate)
         np.save(file=os.path.join(output_dir, 'linerror_{}.npy'.format(t.index)), arr=error)
