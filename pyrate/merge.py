@@ -24,6 +24,8 @@ import pickle as cp
 import numpy as np
 from osgeo import gdal
 import subprocess
+import pathlib
+import time
 
 from pyrate.core import shared, ifgconstants as ifc, mpiops, config as cf
 from pyrate.core.shared import PrereadIfg
@@ -122,7 +124,6 @@ def _merge_linrate(rows, cols, params):
     """
     Merge linear rate outputs
     """
-    # pylint: disable=expression-not-assigned
     # setup paths
     xlks, _, crop = cf.transform_params(params)
     base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST], params[cf.OBS_DIR])
@@ -136,6 +137,7 @@ def _merge_linrate(rows, cols, params):
 
     # load previously saved prepread_ifgs dict
     preread_ifgs_file = join(params[cf.TMPDIR], 'preread_ifgs.pk')
+    time.sleep(1) # wait for the file to be created
     ifgs = cp.load(open(preread_ifgs_file, 'rb'))
     tiles = shared.get_tiles(dest_tifs[0], rows, cols)
 
@@ -168,8 +170,11 @@ def _save_linrate(ifgs_dict, params, tiles, out_type):
         md[ifc.DATA_TYPE] = ifc.LINSAMP
 
     rate = np.zeros(shape=ifgs[0].shape, dtype=np.float32)
+
     for t in tiles:
-        rate_file = os.path.join(params[cf.TMPDIR], out_type + '_{}.npy'.format(t.index))
+        rate_file = os.path.join(params[cf.TMPDIR], out_type + '_'+str(t.index)+'.npy')
+        rate_file = pathlib.Path(rate_file)
+        time.sleep(1)  # wait for files to be created
         rate_tile = np.load(file=rate_file)
         rate[t.top_left_y:t.bottom_right_y, t.top_left_x:t.bottom_right_x] = rate_tile
     shared.write_output_geotiff(md, gt, wkt, rate, dest, np.nan)
@@ -183,7 +188,6 @@ def _merge_timeseries(rows, cols, params):
     """
     Merge time series output
     """
-    # pylint: disable=too-many-locals
     xlks, _, crop = cf.transform_params(params)
     base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST], params[cf.OBS_DIR])
 
@@ -194,9 +198,7 @@ def _merge_timeseries(rows, cols, params):
     else:
         dest_tifs = cf.get_dest_paths(base_unw_paths, crop, params, xlks)
 
-
     output_dir = params[cf.TMPDIR]
-
     # load previously saved prepread_ifgs dict
     preread_ifgs_file = join(output_dir, 'preread_ifgs.pk')
     ifgs = cp.load(open(preread_ifgs_file, 'rb'))
@@ -210,6 +212,8 @@ def _merge_timeseries(rows, cols, params):
 
     # load the first tsincr file to determine the number of time series tifs
     tsincr_file = os.path.join(output_dir, 'tsincr_0.npy')
+
+    time.sleep(1) # wait for the file to be written to the disk
     tsincr = np.load(file=tsincr_file)
 
     # pylint: disable=no-member
@@ -260,5 +264,6 @@ def _assemble_tiles(i, n, tile, tsincr_g, output_dir, outtype):
     A reusable time series tile assembly function
     """
     tsincr_file = os.path.join(output_dir, '{}_{}.npy'.format(outtype, n))
+    time.sleep(1)  # wait for the file to be written to the disk
     tsincr = np.load(file=tsincr_file)
     tsincr_g[tile.top_left_y:tile.bottom_right_y, tile.top_left_x:tile.bottom_right_x] = tsincr[:, :, i]

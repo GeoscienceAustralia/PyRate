@@ -105,7 +105,7 @@ def _calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles):
     for t in process_tiles:
         log.debug('Calculating time series for tile {} during APS '
                  'correction'.format(t.index))
-        ifg_parts = [shared.IfgPart(p, t, preread_ifgs) for p in ifg_paths]
+        ifg_parts = [shared.IfgPart(p, t, preread_ifgs, params) for p in ifg_paths]
         mst_tile = np.load(os.path.join(output_dir, 'mst_mat_{}.npy'.format(t.index)))
         tsincr = time_series(ifg_parts, new_params, vcmt=None, mst=mst_tile)[0]
         np.save(file=os.path.join(output_dir, 'tsincr_aps_{}.npy'.format(t.index)), arr=tsincr)
