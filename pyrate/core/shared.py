@@ -482,9 +482,7 @@ class IfgPart(object):
     """
     Create a tile (subset) of an Ifg data object
     """
-    # pylint: disable=missing-docstring
-    # pylint: disable=too-many-instance-attributes
-    def __init__(self, ifg_or_path, tile, ifg_dict=None):
+    def __init__(self, ifg_or_path, tile, ifg_dict=None, params=None):
         """
         Interferogram tile constructor.
 
@@ -501,10 +499,8 @@ class IfgPart(object):
             self.master = ifg.master
             self.slave = ifg.slave
             self.time_span = ifg.time_span
-            phase_file = 'phase_data_{}_{}.npy'.format(
-                basename(ifg_or_path).split('.')[0], tile.index)
-            self.phase_data = np.load(join(dirname(ifg_or_path), cf.TMPDIR,
-                                           phase_file))
+            phase_file = 'phase_data_{}_{}.npy'.format(basename(ifg_or_path).split('.')[0], tile.index)
+            self.phase_data = np.load(join(params[cf.OUT_DIR], cf.TMPDIR, phase_file))
         else:
             # check if Ifg was sent.
             if isinstance(ifg_or_path, Ifg):
