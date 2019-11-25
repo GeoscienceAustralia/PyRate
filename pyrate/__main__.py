@@ -22,12 +22,13 @@ import argparse
 from argparse import RawTextHelpFormatter
 from pyrate.core import config as cf
 from pyrate import (conv2tif, prepifg, process, merge)
-from pyrate import CONV2TIF, PREPIFG, PROCESS, MERGE # Step names
+from pyrate import CONV2TIF, PREPIFG, PROCESS, MERGE
 from pyrate.core import pyratelog
 from pyrate.core import user_experience
 import time
-
+import multiprocessing
 log = logging.getLogger(__name__)
+
 
 def conv2tif_handler(config_file):
     """
@@ -65,6 +66,7 @@ def merge_handler(config_file, rows, cols):
     merge.main(params, rows, cols)
     user_experience.delete_tsincr_files(params)
 
+
 CLI_DESC = """
 PyRate workflow: 
 
@@ -77,7 +79,8 @@ Refer to https://geoscienceaustralia.github.io/PyRate/usage.html for
 more details.
 """
 
-def main():
+
+def main(rows, cols):
     start_time = time.time()
     log.debug("Starting PyRate")
 
@@ -98,14 +101,10 @@ def main():
     # create the parser for the "process" command
     parser_process = subparsers.add_parser('process', help='Main processing workflow including corrections, time series and stacking computation.', add_help=True)
     parser_process.add_argument('-f', '--config_file', action="store", type=str, default=None, help="Pass configuration file", required=True)
-    parser_process.add_argument('-r', '--rows', type=int, required=False, default=1, help="divide ifgs into this many rows. Must be same as number of rows used previously in main workflow.")
-    parser_process.add_argument('-c', '--cols', type=int, required=False, default=1, help="divide ifgs into this many columns. Must be same as number of cols used previously in main workflow.")
- 
+
     # create the parser for the "merge" command
     parser_merge = subparsers.add_parser('merge', help="Reassemble computed tiles and save as geotiffs.", add_help=True)
     parser_merge.add_argument('-f', '--config_file', action="store", type=str, default=None, help="Pass configuration file", required=False)
-    parser_merge.add_argument('-r', '--rows', type=int, required=False, default=1, help="divide ifgs into this many rows. Must be same as number of rows used previously in main workflow.")
-    parser_merge.add_argument('-c', '--cols', type=int, required=False, default=1, help="divide ifgs into this many columns. Must be same as number of cols used previously in main workflow.")
 
     args = parser.parse_args()
 
@@ -123,13 +122,34 @@ def main():
         prepifg_handler(args.config_file)
 
     if args.command == "process":
-        process_handler(args.config_file, args.rows, args.cols)
+        process_handler(args.config_file, rows, cols)
 
     if args.command == "merge":
-        merge_handler(args.config_file, args.rows, args.cols)
+        merge_handler(args.config_file, rows, cols)
 
     log.debug("--- %s seconds ---" % (time.time() - start_time))
 
 
+def factors(n, left=2):
+    if (n, left) in memo:
+        return memo[(n, left)]
+    if left == 1:
+        return (n, [n])
+    i = 2
+    best = n
+    bestTuple = [n]
+    while i * i <= n:
+        if n % i == 0:
+            rem = factors(n / i, left - 1)
+            if rem[0] + i < best:
+                best = rem[0] + i
+                bestTuple = [i] + rem[1]
+        i += 1
+    return bestTuple
+
+
 if __name__ == "__main__":
-    main()
+    memo = {}
+    rows, cols = factors(multiprocessing.cpu_count(), left=2)
+    rows, cols = int(rows), int(cols)
+    main(rows, cols)
