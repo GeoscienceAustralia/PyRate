@@ -25,6 +25,7 @@ import numpy as np
 from osgeo import gdal
 import subprocess
 import pathlib
+import time
 
 from pyrate.core import shared, ifgconstants as ifc, mpiops, config as cf
 from pyrate.core.shared import PrereadIfg
@@ -168,10 +169,10 @@ def _save_linrate(ifgs_dict, params, tiles, out_type):
         md[ifc.DATA_TYPE] = ifc.LINSAMP
 
     rate = np.zeros(shape=ifgs[0].shape, dtype=np.float32)
+    time.sleep(1) # wait for files to be created
     for t in tiles:
         rate_file = os.path.join(params[cf.TMPDIR], out_type + '_'+str(t.index)+'.npy')
         rate_file = pathlib.Path(rate_file)
-        log.info(rate_file)
         rate_tile = np.load(file=rate_file)
         rate[t.top_left_y:t.bottom_right_y, t.top_left_x:t.bottom_right_x] = rate_tile
     shared.write_output_geotiff(md, gt, wkt, rate, dest, np.nan)
