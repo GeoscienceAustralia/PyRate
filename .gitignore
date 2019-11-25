@@ -63,3 +63,5 @@ tests/test_data/small_test/gamma_obs/linrate.png.aux.xml
 tests/test_data/small_test/gamma_obs/linrate.tif.aux.xml
 
 tests/test_data/small_test/gamma_obs/linsamples.npy
+
+*.DS_Store
