@@ -24,6 +24,7 @@ from pyrate.core import config as cf
 from pyrate import (conv2tif, prepifg, process, merge)
 from pyrate import CONV2TIF, PREPIFG, PROCESS, MERGE # Step names
 from pyrate.core import pyratelog
+from pyrate.core import user_experience
 import time
 
 log = logging.getLogger(__name__)
@@ -62,6 +63,7 @@ def merge_handler(config_file, rows, cols):
     config_file = os.path.abspath(config_file)
     _, _, params = cf.get_ifg_paths(config_file, step=MERGE)
     merge.main(params, rows, cols)
+    user_experience.delete_tsincr_files(params)
 
 CLI_DESC = """
 PyRate workflow: 
