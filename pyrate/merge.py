@@ -129,11 +129,11 @@ def _merge_linrate(rows, cols, params):
     base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST], params[cf.OBS_DIR])
 
     if "tif" in base_unw_paths[0].split(".")[1]:
-        dest_tifs = cf.get_dest_paths(base_unw_paths, crop, params, xlks)
+        dest_tifs = base_unw_paths # cf.get_dest_paths(base_unw_paths, crop, params, xlks)
         for i, dest_tif in enumerate(dest_tifs):
             dest_tifs[i] = dest_tif.replace("_tif","")
     else:
-        dest_tifs = cf.get_dest_paths(base_unw_paths, crop, params, xlks)
+        dest_tifs = base_unw_paths # cf.get_dest_paths(base_unw_paths, crop, params, xlks)
 
     # load previously saved prepread_ifgs dict
     preread_ifgs_file = join(params[cf.TMPDIR], 'preread_ifgs.pk')
@@ -192,11 +192,11 @@ def _merge_timeseries(rows, cols, params):
     base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST], params[cf.OBS_DIR])
 
     if "tif" in base_unw_paths[0].split(".")[1]:
-        dest_tifs = cf.get_dest_paths(base_unw_paths, crop, params, xlks)
+        dest_tifs = base_unw_paths  # cf.get_dest_paths(base_unw_paths, crop, params, xlks)
         for i, dest_tif in enumerate(dest_tifs):
             dest_tifs[i] = dest_tif.replace("_tif", "")
     else:
-        dest_tifs = cf.get_dest_paths(base_unw_paths, crop, params, xlks)
+        dest_tifs = base_unw_paths  # cf.get_dest_paths(base_unw_paths, crop, params, xlks)
 
     output_dir = params[cf.TMPDIR]
     # load previously saved prepread_ifgs dict
