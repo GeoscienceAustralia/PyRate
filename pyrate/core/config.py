@@ -30,6 +30,7 @@ from os.path import splitext, split
 import re
 import itertools
 import logging
+import pathlib
 
 from pyrate.core.ifgconstants import YEARS_PER_DAY
 from pyrate import CONV2TIF, PREPIFG, PROCESS, MERGE
@@ -570,11 +571,11 @@ def get_ifg_paths(config_file, step=CONV2TIF):
 
     if "tif" in base_unw_paths[0].split(".")[1]:
 
-        dest_paths = get_dest_paths(base_unw_paths, crop, params, xlks)
+        dest_paths = base_unw_paths # get_dest_paths(base_unw_paths, crop, params, xlks)
         for i, dest_path in enumerate(dest_paths):
             dest_paths[i] = dest_path.replace("_tif","")
     else:
-        dest_paths = get_dest_paths(base_unw_paths, crop, params, xlks)
+        dest_paths = base_unw_paths # get_dest_paths(base_unw_paths, crop, params, xlks)
 
     return base_unw_paths, dest_paths, params
 
@@ -970,16 +971,22 @@ def validate_parameters(pars: Dict, step: str=CONV2TIF):
             validate_coherence_files(ifl, pars)
 
     elif step == PROCESS:
+
+        tmpIfgList = os.path.join(pars[OBS_DIR], "tmpIfgList")
+        with open(ifl, 'w') as fileHandler:
+            for p in pathlib.Path(pars[OBS_DIR]).rglob("*rlks_*cr.tif"):
+                if "dem" not in str(p):
+                    fileHandler.write(p.name+'\n')
         # Check that cropped/subsampled tifs exist.
-        validate_prepifg_tifs_exist(ifl, pars[OBS_DIR], pars)
+        validate_prepifg_tifs_exist(tmpIfgList, pars[OBS_DIR], pars)
 
         # Check the minimum number of epochs.
-        n_epochs, max_span = _get_temporal_info(ifl, pars[OBS_DIR])
+        n_epochs, max_span = _get_temporal_info(tmpIfgList, pars[OBS_DIR])
         validate_minimum_epochs(n_epochs, MINIMUM_NUMBER_EPOCHS)
         
         # Get spatial information from tifs.
 
-        extents, n_cols, n_rows, transform = _get_prepifg_info(ifl, pars[OBS_DIR], pars)
+        extents, n_cols, n_rows, transform = _get_prepifg_info(tmpIfgList, pars[OBS_DIR], pars)
 
         # test if refx/y already set to default value of -1
         if pars[REFX] != -1 and pars[REFY] != -1:
@@ -1186,7 +1193,7 @@ def validate_prepifg_tifs_exist(ifg_file_list: str, obs_dir: str, pars: Dict) ->
 
     errors = []
     base_paths = [os.path.join(obs_dir, ifg) for ifg in parse_namelist(ifg_file_list)]
-    ifg_paths = get_dest_paths(base_paths, pars[IFG_CROP_OPT], pars, pars[IFG_LKSX])
+    ifg_paths = base_paths # get_dest_paths(base_paths, pars[IFG_CROP_OPT], pars, pars[IFG_LKSX])
     for i, ifg_path in enumerate(ifg_paths):
         ifg_paths[i] = ifg_path.replace("_tif", "")
 
@@ -1560,7 +1567,7 @@ def _get_prepifg_info(ifg_file_list: str, obs_dir: str, pars: Dict) -> Tuple:
     from pyrate.core.shared import Ifg
 
     base_paths = [os.path.join(obs_dir, ifg) for ifg in parse_namelist(ifg_file_list)]
-    ifg_paths = get_dest_paths(base_paths, pars[IFG_CROP_OPT], pars, pars[IFG_LKSX])
+    ifg_paths = base_paths # get_dest_paths(base_paths, pars[IFG_CROP_OPT], pars, pars[IFG_LKSX])
 
     for i, ifg_path in enumerate(ifg_paths):
         ifg_paths[i] = ifg_path.replace("_tif","")
