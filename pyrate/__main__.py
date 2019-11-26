@@ -20,6 +20,8 @@ import os
 import logging
 import argparse
 from argparse import RawTextHelpFormatter
+
+from pyrate.constants import CLI_DESCRIPTION
 from pyrate.core import config as cf
 from pyrate import (conv2tif, prepifg, process, merge)
 from pyrate import CONV2TIF, PREPIFG, PROCESS, MERGE
@@ -27,6 +29,9 @@ from pyrate.core import pyratelog
 from pyrate.core import user_experience
 import time
 import multiprocessing
+
+from pyrate.core.user_experience import break_number_into_factors
+
 log = logging.getLogger(__name__)
 
 
@@ -67,43 +72,14 @@ def merge_handler(config_file, rows, cols):
     user_experience.delete_tsincr_files(params)
 
 
-CLI_DESC = """
-PyRate workflow: 
-
-    Step 1: conv2tif
-    Step 2: prepifg
-    Step 3: process
-    Step 4: merge 
-
-Refer to https://geoscienceaustralia.github.io/PyRate/usage.html for 
-more details.
-"""
-
-
 def main():
-    memo = {}
-    def factors(n, left=2):
-        if (n, left) in memo:
-            return memo[(n, left)]
-        if left == 1:
-            return (n, [n])
-        i = 2
-        best = n
-        bestTuple = [n]
-        while i * i <= n:
-            if n % i == 0:
-                rem = factors(n / i, left - 1)
-                if rem[0] + i < best:
-                    best = rem[0] + i
-                    bestTuple = [i] + rem[1]
-            i += 1
-        return bestTuple
-    rows, cols = factors(multiprocessing.cpu_count(), left=2)
-    rows, cols = int(rows), int(cols)
+
+    rows, cols = [int(no) for no in break_number_into_factors(multiprocessing.cpu_count())]
+
     start_time = time.time()
     log.debug("Starting PyRate")
 
-    parser = argparse.ArgumentParser(prog='pyrate', description=CLI_DESC, add_help=True,  formatter_class=RawTextHelpFormatter)
+    parser = argparse.ArgumentParser(prog='pyrate', description=CLI_DESCRIPTION, add_help=True, formatter_class=RawTextHelpFormatter)
     parser.add_argument('-v', '--verbosity', type=str, default='INFO', choices=['DEBUG', 'INFO', 'WARNING', 'ERROR'], help="Increase output verbosity")
 
     subparsers = parser.add_subparsers(dest='command')
