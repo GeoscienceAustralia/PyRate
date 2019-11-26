@@ -486,8 +486,11 @@ def coherence_paths_for(path, params, tif=False) -> str:
                if epoch in name]
     if tif:
         names_exts = [os.path.splitext(m) for m in matches]
-        matches = [ne[0] + ne[1].replace('.', '_') + '.tif'
-                   for ne in names_exts]
+        matches = [ne[0] + ne[1].replace('.', '_') + '.tif' for ne in names_exts]
+
+    for i, m in enumerate(matches):
+        if "_tif" in m:
+            matches[i] = m.replace("_tif", "")
 
     return [os.path.join(coherence_dir, m) for m in matches]
 
