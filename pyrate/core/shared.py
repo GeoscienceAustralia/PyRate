@@ -1079,12 +1079,10 @@ def cell_size(lat, lon, x_step, y_step):
     :return: tuple of X and Y cell size floats
     :rtype: tuple
     """
-    # if lat > 84.0 or lat < -80:
-    #     msg = "No UTM zone for polar region: > 84 degrees N or < 80 degrees S"
-    #     raise ValueError(msg)
+    if lat > 84.0 or lat < -80:
+        msg = "No UTM zone for polar region: > 84 degrees N or < 80 degrees S. Provided values are lat: "+str(lat) +" long: " +str(lon)
+        raise ValueError(msg)
 
-    log.info("lat in cell size: "+str(lat))
-    log.info("lon in cell size: "+str(lon))
     zone = _utm_zone(lon)
     p0 = pyproj.Proj(proj='latlong', ellps='WGS84')
     p1 = pyproj.Proj(proj='utm', zone=zone, ellps='WGS84')
