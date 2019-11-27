@@ -119,7 +119,7 @@ def main(params, rows, cols):
     create_png_from_tif(output_folder_path)
     log.info('Finished creating quick look results.')
 
-
+from pyrate.core.config import OBS_DIR
 def _merge_linrate(rows, cols, params):
     """
     Merge linear rate outputs
@@ -127,6 +127,11 @@ def _merge_linrate(rows, cols, params):
     # setup paths
     xlks, _, crop = cf.transform_params(params)
     base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST], params[cf.OBS_DIR])
+
+    base_unw_paths = []
+    for p in pathlib.Path(params[OBS_DIR]).rglob("*rlks_*cr.tif"):
+        if "dem" not in str(p):
+            base_unw_paths.append(str(p))
 
     if "tif" in base_unw_paths[0].split(".")[1]:
         dest_tifs = base_unw_paths # cf.get_dest_paths(base_unw_paths, crop, params, xlks)
