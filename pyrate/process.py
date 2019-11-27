@@ -244,7 +244,6 @@ def process_ifgs(ifg_paths, params, rows, cols):
     """
     if mpiops.size > 1:  # turn of multiprocessing during mpi jobs
         params[cf.PARALLEL] = False
-
     tiles = mpiops.run_once(get_tiles, ifg_paths[0], rows, cols)
 
     preread_ifgs = _create_ifg_dict(ifg_paths, params=params, tiles=tiles)

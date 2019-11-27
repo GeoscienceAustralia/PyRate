@@ -973,7 +973,7 @@ def validate_parameters(pars: Dict, step: str=CONV2TIF):
     elif step == PROCESS:
 
         tmpIfgList = os.path.join(pars[OBS_DIR], "tmpIfgList")
-        with open(ifl, 'w') as fileHandler:
+        with open(tmpIfgList, 'w') as fileHandler:
             for p in pathlib.Path(pars[OBS_DIR]).rglob("*rlks_*cr.tif"):
                 if "dem" not in str(p):
                     fileHandler.write(p.name+'\n')
@@ -1018,7 +1018,7 @@ def validate_parameters(pars: Dict, step: str=CONV2TIF):
         validate_slpf_cutoff(extents, pars)
         validate_epoch_thresholds(n_epochs, pars)
         validate_epoch_cutoff(max_span, TLPF_CUTOFF, pars)
-        validate_obs_thresholds(ifl, pars)
+        validate_obs_thresholds(tmpIfgList, pars)
 
     elif step == MERGE:
         validate_prepifg_tifs_exist(ifl, pars[OBS_DIR], pars)

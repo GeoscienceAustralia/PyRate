@@ -31,7 +31,8 @@ import time
 import multiprocessing
 
 from pyrate.core.user_experience import break_number_into_factors
-
+from pyrate.core.config import OBS_DIR
+import pathlib
 log = logging.getLogger(__name__)
 
 
@@ -59,6 +60,12 @@ def process_handler(config_file, rows, cols):
     """
     config_file = os.path.abspath(config_file)
     _, dest_paths, params = cf.get_ifg_paths(config_file, step=PROCESS)
+
+    dest_paths = []
+    for p in pathlib.Path(params[OBS_DIR]).rglob("*rlks_*cr.tif"):
+        if "dem" not in str(p):
+            dest_paths.append(str(p))
+
     process.process_ifgs(sorted(dest_paths), params, rows, cols)
 
 
