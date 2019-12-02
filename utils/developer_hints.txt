@@ -11,10 +11,10 @@ pip install pyproj==2.2.1
 cd /PyRate && python3 setup.py install
 
 # Run workflow
-pyrate conv2tif -f input_parameters.conf
-pyrate prepifg -f input_parameters.conf
-pyrate process -f input_parameters.conf
-pyrate merge -f input_parameters.conf
+python pyrate/__main__.py  conv2tif -f  pyrate_gamma.conf
+pyrate prepifg -f pyrate_gamma.conf
+pyrate process -f pyrate_gamma.conf
+pyrate merge -f pyrate_gamma.conf
 
 # Build Sphinx docs
 cd /PyRate/docs && make html

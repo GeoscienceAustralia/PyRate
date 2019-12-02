@@ -142,7 +142,6 @@ def _merge_linrate(rows, cols, params):
 
     # load previously saved prepread_ifgs dict
     preread_ifgs_file = join(params[cf.TMPDIR], 'preread_ifgs.pk')
-    time.sleep(1) # wait for the file to be created
     ifgs = cp.load(open(preread_ifgs_file, 'rb'))
     tiles = shared.get_tiles(dest_tifs[0], rows, cols)
 
@@ -179,7 +178,6 @@ def _save_linrate(ifgs_dict, params, tiles, out_type):
     for t in tiles:
         rate_file = os.path.join(params[cf.TMPDIR], out_type + '_'+str(t.index)+'.npy')
         rate_file = pathlib.Path(rate_file)
-        time.sleep(1)  # wait for files to be created
         rate_tile = np.load(file=rate_file)
         rate[t.top_left_y:t.bottom_right_y, t.top_left_x:t.bottom_right_x] = rate_tile
     shared.write_output_geotiff(md, gt, wkt, rate, dest, np.nan)
@@ -223,7 +221,6 @@ def _merge_timeseries(rows, cols, params):
     # load the first tsincr file to determine the number of time series tifs
     tsincr_file = os.path.join(output_dir, 'tsincr_0.npy')
 
-    time.sleep(1) # wait for the file to be written to the disk
     tsincr = np.load(file=tsincr_file)
 
     # pylint: disable=no-member
@@ -274,6 +271,5 @@ def _assemble_tiles(i, n, tile, tsincr_g, output_dir, outtype):
     A reusable time series tile assembly function
     """
     tsincr_file = os.path.join(output_dir, '{}_{}.npy'.format(outtype, n))
-    time.sleep(1)  # wait for the file to be written to the disk
     tsincr = np.load(file=tsincr_file)
     tsincr_g[tile.top_left_y:tile.bottom_right_y, tile.top_left_x:tile.bottom_right_x] = tsincr[:, :, i]
