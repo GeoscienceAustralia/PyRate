@@ -57,6 +57,12 @@ def prepifg_handler(config_file):
     params = cf.get_config_params(config_file, step=PREPIFG)
     prepifg.main(params)
 
+    for p in pathlib.Path(params[OUT_DIR]).rglob("*rlks_*cr.tif"):
+        if "dem" not in str(p):
+            src = str(p)
+            dst = os.path.join(params[OBS_DIR],p.name)
+            copyfile(src, dst)
+
 
 def process_handler(config_file, rows, cols):
     """
