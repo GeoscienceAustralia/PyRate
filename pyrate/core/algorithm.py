@@ -209,8 +209,7 @@ def get_epochs(ifgs):
     log.info('Found {} unique epochs in the {} interferogram network'.format(len(dates), len(ifgs)))
 
     # absolute span for each date from the zero/start point
-    span = [(dates[i] - dates[0]).days / DAYS_PER_YEAR
-            for i in range(len(dates))]
+    span = [(dates[i] - dates[0]).days / DAYS_PER_YEAR for i in range(len(dates))]
     return EpochList(dates, repeat, span), n
 
 

@@ -47,15 +47,7 @@ def main(params):
     if mpiops.size > 1:  # Over-ride input options if this is an MPI job
         params[cf.PARALLEL] = False
 
-    if params:
-        base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST], params[cf.OBS_DIR])
-
-    else:
-        # if params not provided read from config file
-        if (not params) and (len(sys.argv) < 3):
-            print(usage)
-            return
-        base_ifg_paths, _, params = cf.get_ifg_paths(sys.argv[2])
+    base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST], params[cf.OBS_DIR])
 
     if params[cf.DEM_FILE] is not None: # optional DEM conversion
         base_ifg_paths.append(params[cf.DEM_FILE])
