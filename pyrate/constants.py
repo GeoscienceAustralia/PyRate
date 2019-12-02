@@ -1,3 +1,4 @@
+import os
 __version__ = "0.4.0"
 CLI_DESCRIPTION = """
 PyRate workflow: 
@@ -14,3 +15,5 @@ CONV2TIF = 'conv2tif'
 PREPIFG = 'prepifg'
 PROCESS = 'process'
 MERGE = 'merge'
+
+REF_COLOR_MAP_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "utils", "colormap.txt")

@@ -26,7 +26,7 @@ from osgeo import gdal
 import subprocess
 import pathlib
 import time
-
+from constants import REF_COLOR_MAP_PATH
 from core import shared, ifgconstants as ifc, mpiops, config as cf
 from core.shared import PrereadIfg
 gdal.SetCacheMax(64)
@@ -84,8 +84,8 @@ def create_png_from_tif(output_folder_path):
     del gtif  # manually close raster
 
     # read color map from utilises and write it to the output folder
-    ref_color_map_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "utils", "colormap.txt")
-    with open(ref_color_map_path, "r") as f:
+
+    with open(REF_COLOR_MAP_PATH, "r") as f:
         color_map_list = []
         for line in f.readlines():
             color_map_list.append(line.strip().split(" "))
