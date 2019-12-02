@@ -19,8 +19,8 @@ This Python module contains a collection of generic algorithms used in PyRate
 import logging
 from numpy import sin, cos, unique, histogram, diag, dot
 from scipy.linalg import qr, solve, lstsq
-from pyrate.core.shared import EpochList, IfgException, PrereadIfg
-from pyrate.core.ifgconstants import DAYS_PER_YEAR
+from core.shared import EpochList, IfgException, PrereadIfg
+from core.ifgconstants import DAYS_PER_YEAR
 
 log = logging.getLogger(__name__)
 

@@ -21,18 +21,22 @@ import logging
 import argparse
 from argparse import RawTextHelpFormatter
 
-from pyrate.constants import CLI_DESCRIPTION
-from pyrate.core import config as cf
-from pyrate import (conv2tif, prepifg, process, merge)
-from pyrate import CONV2TIF, PREPIFG, PROCESS, MERGE
-from pyrate.core import pyratelog
-from pyrate.core import user_experience
+from constants import CLI_DESCRIPTION, CONV2TIF, PREPIFG, PROCESS, MERGE
+from core import config as cf
+import conv2tif, prepifg, process, merge
+from core import pyratelog
+from core import user_experience
 import time
 import multiprocessing
+from shutil import copyfile
 
-from pyrate.core.user_experience import break_number_into_factors
-from pyrate.core.config import OBS_DIR
+from core.user_experience import break_number_into_factors
+from core.config import OBS_DIR,OUT_DIR
 import pathlib
+
+# Turn off MPI warning
+os.environ['OMPI_MCA_btl_base_warn_component_unused'] = '0'
+
 log = logging.getLogger(__name__)
 
 

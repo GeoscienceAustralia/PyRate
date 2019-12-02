@@ -22,8 +22,8 @@ import re
 import os
 from datetime import date, time, timedelta
 import numpy as np
-import pyrate.core.ifgconstants as ifc
-from pyrate.core import config as cf
+import core.ifgconstants as ifc
+from core import config as cf
 
 
 # constants

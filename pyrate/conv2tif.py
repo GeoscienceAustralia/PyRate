@@ -24,8 +24,8 @@ import logging
 from joblib import Parallel, delayed
 import numpy as np
 
-from pyrate.core.prepifg_helper import PreprocessError
-from pyrate.core import shared, mpiops, config as cf, gamma, roipac
+from core.prepifg_helper import PreprocessError
+from core import shared, mpiops, config as cf, gamma, roipac
 
 log = logging.getLogger(__name__)
 

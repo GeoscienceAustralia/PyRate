@@ -27,10 +27,10 @@ from numpy.linalg import matrix_rank, pinv, cholesky
 import numpy as np
 from scipy.linalg import qr
 from joblib import Parallel, delayed
-from pyrate.core.shared import joblib_log_level
-from pyrate.core.algorithm import master_slave_ids, get_epochs
-from pyrate.core import config as cf, mst as mst_module
-from pyrate.core.config import ConfigException
+from core.shared import joblib_log_level
+from core.algorithm import master_slave_ids, get_epochs
+from core import config as cf, mst as mst_module
+from core.config import ConfigException
 
 
 def _time_series_setup(ifgs, mst, params):

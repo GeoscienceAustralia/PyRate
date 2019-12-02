@@ -32,8 +32,8 @@ import itertools
 import logging
 import pathlib
 
-from pyrate.core.ifgconstants import YEARS_PER_DAY
-from pyrate import CONV2TIF, PREPIFG, PROCESS, MERGE
+from core.ifgconstants import YEARS_PER_DAY
+from constants import CONV2TIF, PREPIFG, PROCESS, MERGE
 
 _logger = logging.getLogger(__name__)
 
@@ -1222,7 +1222,7 @@ def validate_tifs_exist(ifg_file_list: str, obs_dir: str) -> Optional[bool]:
     Raises:
         ConfigException: If not all intergerograms exist in geotiff format.
     """
-    from pyrate.core.shared import output_tiff_filename
+    from core.shared import output_tiff_filename
 
     errors = []
     ifgs = parse_namelist(ifg_file_list)
@@ -1478,7 +1478,7 @@ def validate_gamma_headers(ifg_file_list: str, slc_file_list: str,
         ConfigException: If there are 0 or more than 2 matching headers
             for an interferogram.
     """
-    from pyrate.core.gamma import get_header_paths
+    from core.gamma import get_header_paths
     errors = []
 
     for ifg in parse_namelist(ifg_file_list):
@@ -1531,8 +1531,8 @@ def _get_temporal_info(ifg_file_list: str, obs_dir: str) -> Tuple:
     Returns:
         Tuple containing the number of unique epochs and the maximum timespan.
     """
-    from pyrate.core.algorithm import get_epochs
-    from pyrate.core.shared import Ifg, output_tiff_filename
+    from core.algorithm import get_epochs
+    from core.shared import Ifg, output_tiff_filename
 
     ifg_paths = \
         [os.path.join(obs_dir, ifg) for ifg in parse_namelist(ifg_file_list)]
@@ -1564,7 +1564,7 @@ def _get_prepifg_info(ifg_file_list: str, obs_dir: str, pars: Dict) -> Tuple:
 
     Returns:
     """
-    from pyrate.core.shared import Ifg
+    from core.shared import Ifg
 
     base_paths = [os.path.join(obs_dir, ifg) for ifg in parse_namelist(ifg_file_list)]
     ifg_paths = base_paths # get_dest_paths(base_paths, pars[IFG_CROP_OPT], pars, pars[IFG_LKSX])
@@ -1601,8 +1601,8 @@ def _get_fullres_info(ifg_file_list: str, obs_dir: str, crop_opts: Tuple) -> Tup
         columns, number of pixel rows, number of unique epochs and maximum
         time span of the data.
     """
-    from pyrate.core.prepifg_helper import _min_bounds, _get_extents
-    from pyrate.core.shared import Ifg, output_tiff_filename
+    from core.prepifg_helper import _min_bounds, _get_extents
+    from core.shared import Ifg, output_tiff_filename
 
     ifg_paths = [os.path.join(obs_dir, ifg) for ifg in parse_namelist(ifg_file_list)]
     rasters = [Ifg(output_tiff_filename(f, obs_dir)) for f in ifg_paths]
@@ -1633,7 +1633,7 @@ def _crop_opts(params: Dict) -> Tuple:
     """
     Convenience function for getting crop options from parameters.
     """
-    from pyrate.core.prepifg_helper import CustomExts
+    from core.prepifg_helper import CustomExts
 
     crop_opt = params[IFG_CROP_OPT]
     if crop_opt == 3:

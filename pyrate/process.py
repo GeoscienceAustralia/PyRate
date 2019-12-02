@@ -24,13 +24,13 @@ import pickle as cp
 from collections import OrderedDict
 import numpy as np
 
-from pyrate.core import shared, algorithm, orbital, ref_phs_est as rpe
-from pyrate.core import ifgconstants as ifc, mpiops, config as cf
-from pyrate.core import timeseries, mst, covariance as vcm_module
-from pyrate.core import stack, refpixel
+from core import shared, algorithm, orbital, ref_phs_est as rpe
+from core import ifgconstants as ifc, mpiops, config as cf
+from core import timeseries, mst, covariance as vcm_module
+from core import stack, refpixel
 
-from pyrate.core.aps import _wrap_spatio_temporal_filter
-from pyrate.core.shared import Ifg, PrereadIfg, get_tiles
+from core.aps import _wrap_spatio_temporal_filter
+from core.shared import Ifg, PrereadIfg, get_tiles
 
 MASTER_PROCESS = 0
 log = logging.getLogger(__name__)

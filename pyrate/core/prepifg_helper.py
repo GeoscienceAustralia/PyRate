@@ -32,9 +32,9 @@ from numpy import array, where, nan, isnan, nanmean, float32, zeros, \
     sum as nsum
 from osgeo import gdal
 
-from pyrate.core.gdal_python import crop_resample_average
-from pyrate.core import ifgconstants as ifc, config as cf
-from pyrate.core.shared import Ifg, DEM, output_tiff_filename
+from core.gdal_python import crop_resample_average
+from core import ifgconstants as ifc, config as cf
+from core.shared import Ifg, DEM, output_tiff_filename
 import logging
 log = logging.getLogger(__name__)
 

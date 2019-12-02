@@ -21,7 +21,7 @@ import sys
 import traceback
 import warnings
 
-from pyrate.core import mpiops
+from core import mpiops
 
 
 def configure(verbosity):

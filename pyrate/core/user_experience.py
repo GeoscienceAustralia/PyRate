@@ -1,7 +1,7 @@
 import os
 import pathlib
-from pyrate.core import config as cf
-from pyrate import CONV2TIF, PREPIFG, PROCESS, MERGE  # Step names
+from core import config as cf
+from constants import CONV2TIF, PREPIFG, PROCESS, MERGE  # Step names
 
 
 def delete_tsincr_files(params):

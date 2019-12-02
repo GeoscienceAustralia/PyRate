@@ -33,7 +33,7 @@ from numpy import where, nan, isnan, sum as nsum, isclose
 import pyproj
 import pkg_resources
 
-from pyrate.core import ifgconstants as ifc, mpiops, config as cf
+from core import ifgconstants as ifc, mpiops, config as cf
 
 VERBOSE = True
 log = logging.getLogger(__name__)
@@ -744,7 +744,6 @@ def write_fullres_geotiff(header, data_path, dest, nodata):
                     f.seek(row_bytes, 1)  # skip interleaved band 1
 
             data = struct.unpack(fmtstr, f.read(row_bytes))
-
             band.WriteArray(np.array(data).reshape(1, ncols), yoff=y)
 
     ds = None  # manual close
@@ -1109,7 +1108,7 @@ def _prep_ifg(ifg_path, params):
     :return: ifg: Interferogram class instance
     :rtype: xxxx (eg flaot)
     """
-    # Only used in pyrate.scripts.run_pyrate?
+    # Only used in scripts.run_pyrate?
     ifg = Ifg(ifg_path)
     ifg.open()
     nan_and_mm_convert(ifg, params)
@@ -1121,7 +1120,7 @@ def save_numpy_phase(ifg_paths, tiles, params):
     Save interferogram phase data as numpy array file on disk.
 
     :param list ifg_paths: List of strings for interferogram paths
-    :param list tiles: List of pyrate.shared.Tile instances
+    :param list tiles: List of shared.Tile instances
     :param dict params: Dictionary of configuration parameters
 
     :return: None, file saved to disk

@@ -23,15 +23,15 @@ import logging
 import os
 from joblib import Parallel, delayed
 import numpy as np
-from pyrate.core import shared, mpiops, config as cf, prepifg_helper, gamma, roipac
-from pyrate.core.prepifg_helper import PreprocessError
+from core import shared, mpiops, config as cf, prepifg_helper, gamma, roipac
+from core.prepifg_helper import PreprocessError
 
 log = logging.getLogger(__name__)
 
 GAMMA = 1
 ROIPAC = 0
 
-def main(params=None):
+def main(params):
     """
     Main workflow function for preparing interferograms for PyRate.
 

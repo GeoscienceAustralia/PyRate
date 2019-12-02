@@ -24,7 +24,7 @@ from PIL import Image, ImageDraw
 import numpy as np
 import numexpr as ne
 
-from pyrate.core import shared, ifgconstants as ifc, prepifg_helper
+from core import shared, ifgconstants as ifc, prepifg_helper
 
 _logger = logging.getLogger(__name__)
 gdal.SetCacheMax(2**15)

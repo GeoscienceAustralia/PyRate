@@ -10,3 +10,7 @@ PyRate workflow:
 Refer to https://geoscienceaustralia.github.io/PyRate/usage.html for 
 more details.
 """
+CONV2TIF = 'conv2tif'
+PREPIFG = 'prepifg'
+PROCESS = 'process'
+MERGE = 'merge'

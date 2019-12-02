@@ -23,9 +23,9 @@ import os
 from joblib import Parallel, delayed
 import numpy as np
 
-from pyrate.core import ifgconstants as ifc, config as cf
-from pyrate.core.shared import joblib_log_level, nanmedian, Ifg
-from pyrate.core import mpiops
+from core import ifgconstants as ifc, config as cf
+from core.shared import joblib_log_level, nanmedian, Ifg
+from core import mpiops
 
 log = logging.getLogger(__name__)
 

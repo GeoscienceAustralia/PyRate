@@ -27,9 +27,9 @@ import numpy as np
 from scipy.fftpack import fft2, ifft2, fftshift
 from scipy.optimize import fmin
 
-from pyrate.core import shared, ifgconstants as ifc, config as cf
-from pyrate.core.shared import PrereadIfg
-from pyrate.core.algorithm import master_slave_ids
+from core import shared, ifgconstants as ifc, config as cf
+from core.shared import PrereadIfg
+from core.algorithm import master_slave_ids
 
 # pylint: disable=too-many-arguments
 # distance division factor of 1000 converts to km and is needed to match legacy output
@@ -69,7 +69,7 @@ def cvd(ifg_path, params, r_dist, calc_alpha=False,
     radial average of its 2D autocorrelation.
 
     :param str ifg_path: An interferogram file path. OR
-    :param Ifg class ifg_path: A pyrate.shared.Ifg class object
+    :param Ifg class ifg_path: A shared.Ifg class object
     :param dict params: Dictionary of configuration parameters
     :param ndarray r_dist: Array of distance values from the image centre
                 (See Rdist class for more details)
@@ -136,7 +136,7 @@ def cvd_from_phase(phase, ifg, r_dist, calc_alpha, save_acg=False, params=None):
     data
 
     :param ndarray phase: An array of interferogram phase data
-    :param Ifg class ifg: A pyrate.shared.Ifg class instance
+    :param Ifg class ifg: A shared.Ifg class instance
     :param ndarray r_dist: Array of distance values from the image centre
                 (See Rdist class for more details)
     :param bool calc_alpha: If True calculate alpha
@@ -283,7 +283,7 @@ def get_vcmt(ifgs, maxvar):
     C = -0.5 if the master of i or j equals the slave of the other
     C = 0 otherwise
 
-    :param list ifgs: A list of pyrate.shared.Ifg class objects.
+    :param list ifgs: A list of shared.Ifg class objects.
     :param ndarray maxvar: numpy array of maximum variance values for the
                 interferograms.
 

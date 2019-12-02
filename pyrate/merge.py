@@ -27,8 +27,8 @@ import subprocess
 import pathlib
 import time
 
-from pyrate.core import shared, ifgconstants as ifc, mpiops, config as cf
-from pyrate.core.shared import PrereadIfg
+from core import shared, ifgconstants as ifc, mpiops, config as cf
+from core.shared import PrereadIfg
 gdal.SetCacheMax(64)
 log = logging.getLogger(__name__)
 
@@ -119,7 +119,7 @@ def main(params, rows, cols):
     create_png_from_tif(output_folder_path)
     log.info('Finished creating quick look results.')
 
-from pyrate.core.config import OBS_DIR
+from core.config import OBS_DIR
 def _merge_linrate(rows, cols, params):
     """
     Merge linear rate outputs

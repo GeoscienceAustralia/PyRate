@@ -21,14 +21,14 @@ import os
 from os.path import join
 import logging
 from itertools import product
-from pyrate.core.shared import joblib_log_level
+from core.shared import joblib_log_level
 
 import numpy as np
 from numpy import isnan, std, mean, sum as nsum
 from joblib import Parallel, delayed
 
-import pyrate.core.config as cf
-from pyrate.core.shared import Ifg
+import core.config as cf
+from core.shared import Ifg
 
 log = logging.getLogger(__name__)
 

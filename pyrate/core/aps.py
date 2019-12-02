@@ -28,12 +28,12 @@ from numpy import isnan
 from scipy.fftpack import fft2, ifft2, fftshift, ifftshift
 from scipy.interpolate import griddata
 
-from pyrate.core import shared, ifgconstants as ifc, mpiops, config as cf
-from pyrate.core.covariance import cvd_from_phase, RDist
-from pyrate.core.algorithm import get_epochs
-from pyrate.merge import _assemble_tiles
-from pyrate.core.shared import Ifg
-from pyrate.core.timeseries import time_series
+from core import shared, ifgconstants as ifc, mpiops, config as cf
+from core.covariance import cvd_from_phase, RDist
+from core.algorithm import get_epochs
+from merge import _assemble_tiles
+from core.shared import Ifg
+from core.timeseries import time_series
 
 log = logging.getLogger(__name__)
 
@@ -171,7 +171,7 @@ def spatial_low_pass_filter(ts_lp, ifg, params):
     Filter time series data spatially using either a Butterworth or Gaussian
     low pass filter defined by a cut-off distance. If the cut-off distance is
     defined as zero in the parameters dictionary then it is calculated for
-    each time step using the pyrate.covariance.cvd_from_phase method.
+    each time step using the covariance.cvd_from_phase method.
 
     :param ndarray ts_lp: Array of time series data, the result of a temporal
                 low pass filter operation. shape (ifg.shape, n_epochs)
