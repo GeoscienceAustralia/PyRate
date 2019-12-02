@@ -29,3 +29,34 @@ pip install tox
 tox
 
 # 64 failed, 236 passed, 1944 skipped
+
+---------------------------------------
+NCI
+
+ssh xyz@raijin.nci.org.au
+
+module unload git
+module load git
+
+cd ~
+
+rm -rf PyRate
+rm -rf PyRateVenv
+
+git clone https://github.com/GeoscienceAustralia/PyRate.git -b test --single-branch
+source PyRate/utils/load_modules.sh
+python3 -m venv ~/PyRateVenv
+source ~/PyRateVenv/bin/activate
+cd ~/PyRate
+pip install -r requirements-dev.txt
+pip install -r requirements-test.txt
+pip install -r requirements.txt
+
+python setup.py install
+
+cd ~/PyRate/pyrate
+python __main__.py -v DEBUG conv2tif -f ~/PyRate/sample_data/input_parameters.conf
+python __main__.py -v DEBUG prepifg  -f ~/PyRate/sample_data/input_parameters.conf
+python __main__.py -v DEBUG process  -f ~/PyRate/sample_data/input_parameters.conf
+python __main__.py -v DEBUG merge    -f ~/PyRate/sample_data/input_parameters.conf
+
