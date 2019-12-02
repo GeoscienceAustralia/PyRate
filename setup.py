@@ -61,8 +61,6 @@ doclink = """
 
 Please see the full documentation at http://geoscienceaustralia.github.io/PyRate/."""
 
-# history = open('docs/history.rst').read().replace('.. :changelog:', '')
-
 setup(
     name='Py-Rate',
     version=__version__,
@@ -72,8 +70,8 @@ setup(
     author='Geoscience Australia InSAR team',
     author_email='insar@ga.gov.au',
     url='https://github.com/GeoscienceAustralia/PyRate',
-    packages=setuptools.find_packages(),
-    package_dir={'PyRate': 'pyrate'},
+    package_dir={'': 'pyrate'},
+    py_modules=["core.algorithm","core.aps","core.config","core.covariance","core.gamma","core.gdal_python","core.ifgconstants","core.mpiops","core.mst","core.orbital","core.prepifg_helper","core.pyratelog","core.ref_phs_est","core.refpixel","core.roipac","core.shared","core.stack","core.timeseries","core.user_experience", "constants", "conv2tif", "merge", "prepifg", "process"],
     package_data={
         'utils': ['colormap.txt']
     },
@@ -82,12 +80,6 @@ setup(
               'pyrate = pyrate.__main__:main'
           ]
       },
-    setup_requires=setup_requirements,
-    install_requires=requirements,
-    extras_require={
-        'dev': dev_requirements
-    },
-    tests_require=test_requirements,
     license="Apache Software License 2.0",
     zip_safe=False,
     keywords='PyRate, Python, InSAR, Geodesy, Remote Sensing, '
