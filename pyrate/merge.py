@@ -22,7 +22,7 @@ from os.path import join
 import logging
 import pickle as cp
 import numpy as np
-from osgeo import gdal
+import gdal
 import subprocess
 import pathlib
 import time

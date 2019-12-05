@@ -26,7 +26,7 @@ from os.path import join
 
 import numpy as np
 from numpy.testing import assert_array_almost_equal
-from osgeo import gdal
+import gdal
 
 import pyrate.core.ifgconstants as ifc
 from pyrate.core import shared, config as cf, gamma

@@ -28,7 +28,7 @@ from os.path import join
 
 import numpy as np
 from numpy import isnan, sum as nsum
-from osgeo import gdal
+import gdal
 
 from pyrate.core import algorithm, ifgconstants as ifc, config as cf, timeseries, mst, stack
 from pyrate.core.shared import (Ifg, nan_and_mm_convert, get_geotiff_header_info,

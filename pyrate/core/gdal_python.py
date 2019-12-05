@@ -19,7 +19,7 @@ This Python module contains bindings for the GDAL library
 # pylint: disable=too-many-arguments,R0914
 import logging
 
-from osgeo import gdal, gdalnumeric, gdalconst
+import gdal, gdalnumeric, gdalconst
 from PIL import Image, ImageDraw
 import numpy as np
 import numexpr as ne

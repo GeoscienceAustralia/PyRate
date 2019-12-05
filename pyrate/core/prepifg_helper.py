@@ -30,7 +30,7 @@ from tempfile import mkstemp
 
 from numpy import array, where, nan, isnan, nanmean, float32, zeros, \
     sum as nsum
-from osgeo import gdal
+import gdal
 
 from core.gdal_python import crop_resample_average
 from core import ifgconstants as ifc, config as cf

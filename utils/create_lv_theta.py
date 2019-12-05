@@ -21,7 +21,7 @@ This is used to create the dummy elevation map file .lv_theta file
 import os
 
 import numpy as np
-from osgeo import gdal
+import gdal
 
 from pyrate.core import shared, ifgconstants as ifc, gamma
 from tests import common

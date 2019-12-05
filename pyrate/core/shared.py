@@ -39,8 +39,8 @@ VERBOSE = True
 log = logging.getLogger(__name__)
 
 try:
-    from osgeo import osr, gdal
-    from osgeo.gdalconst import GA_Update, GA_ReadOnly
+    import osr, gdal
+    from gdalconst import GA_Update, GA_ReadOnly
 except ImportError:
     import gdal
 

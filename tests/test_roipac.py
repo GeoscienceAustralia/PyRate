@@ -26,7 +26,7 @@ from datetime import date
 from os.path import exists, join
 
 from numpy.testing import assert_array_almost_equal
-from osgeo import gdal
+import gdal
 
 import pyrate.core.ifgconstants as ifc
 from pyrate.core import shared, roipac

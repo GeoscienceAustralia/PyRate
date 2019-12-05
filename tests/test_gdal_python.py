@@ -29,7 +29,7 @@ import unittest
 from numpy import where, nan
 
 import numpy as np
-from osgeo import gdal, gdalconst
+import gdal, gdalconst
 
 from pyrate.core import gdal_python, config as cf
 from pyrate.core.shared import Ifg

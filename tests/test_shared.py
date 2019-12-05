@@ -29,8 +29,8 @@ from stat import S_IRGRP, S_IWGRP, S_IWOTH, S_IROTH, S_IRUSR, S_IWUSR
 
 import numpy as np
 from numpy.testing import assert_array_equal
-from osgeo import gdal
-from osgeo.gdal import Open, Dataset, UseExceptions
+import gdal
+from gdal import Open, Dataset, UseExceptions
 
 from tests.common import SML_TEST_TIF, SML_TEST_DEM_TIF, TEMPDIR
 from pyrate.core import shared, ifgconstants as ifc, config as cf, prepifg_helper, gamma
