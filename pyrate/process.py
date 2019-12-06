@@ -351,9 +351,10 @@ def _timeseries_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
         log.info('Calculating time series using SVD method')
 
     output_dir = params[cf.TMPDIR]
+    total_tiles = len(tiles)
     process_tiles = mpiops.array_split(tiles)
     for t in process_tiles:
-        log.debug('Calculating time series for tile {}'.format(t.index))
+        log.debug("Calculating time series for tile "+str(t.index)+" out of "+str(total_tiles))
         ifg_parts = [shared.IfgPart(p, t, preread_ifgs, params) for p in ifg_paths]
         mst_tile = np.load(os.path.join(output_dir, 'mst_mat_{}.npy'.format(t.index)))
         res = timeseries.time_series(ifg_parts, params, vcmt, mst_tile)
