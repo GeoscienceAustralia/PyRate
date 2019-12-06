@@ -26,10 +26,10 @@ import numexpr as ne
 
 from core import shared, ifgconstants as ifc, prepifg_helper
 
-_logger = logging.getLogger(__name__)
 gdal.SetCacheMax(2**15)
 GDAL_WARP_MEMORY_LIMIT = 2**10
 LOW_FLOAT32 = np.finfo(np.float32).min*1e-10
+log = logging.getLogger(__name__)
 
 def coherence_masking(src_ds, coherence_ds, coherence_thresh):
     """
@@ -362,7 +362,7 @@ def crop_resample_average(
                                  geotransform=gt, creation_opts=creation_opts)
 
     shared.write_geotiff(resampled_average, out_ds, np.nan) 
-
+    log.debug("Witting geotiff: "+str(out_ds))
     return resampled_average, out_ds
 
 

@@ -45,6 +45,7 @@ def main(params):
     # pylint: disable=too-many-branches
     usage = 'Usage: pyrate prepifg <config_file>'
     if mpiops.size > 1:  # Over-ride input options if this is an MPI job
+        log.debug("Running using mpi processing. Disabling parallel processing.")
         params[cf.PARALLEL] = False
 
     base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST], params[cf.OBS_DIR])
@@ -86,14 +87,16 @@ def do_prepifg(gtiff_paths, params):
     xlooks, ylooks, crop = cf.transform_params(params)
     user_exts = (params[cf.IFG_XFIRST], params[cf.IFG_YFIRST], params[cf.IFG_XLAST], params[cf.IFG_YLAST])
     exts = prepifg_helper.get_analysis_extent(crop, ifgs, xlooks, ylooks, user_exts=user_exts)
-    log.debug("Extents (xmin, ymin, xmax, ymax): "+str(exts))
     thresh = params[cf.NO_DATA_AVERAGING_THRESHOLD]
     if parallel:
+        log.debug("Running using parallel processing.")
         Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
             delayed(_prepifg_multiprocessing)(p, xlooks, ylooks, exts, thresh, crop, params) for p in gtiff_paths
         )
     else:
+        log.debug("Running using serial processing.")
         [_prepifg_multiprocessing(p, xlooks, ylooks, exts, thresh, crop, params) for p in gtiff_paths]
+
 
 def _prepifg_multiprocessing(path, xlooks, ylooks, exts, thresh, crop, params):
     """
