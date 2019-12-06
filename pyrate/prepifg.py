@@ -95,7 +95,9 @@ def do_prepifg(gtiff_paths, params):
         )
     else:
         log.debug("Running using serial processing.")
-        [_prepifg_multiprocessing(p, xlooks, ylooks, exts, thresh, crop, params) for p in gtiff_paths]
+        for gtiff_path in gtiff_paths:
+            log.debug("Now pre-processing interferogram: "+str(gtiff_path))
+            _prepifg_multiprocessing(gtiff_path, xlooks, ylooks, exts, thresh, crop, params)
 
 
 def _prepifg_multiprocessing(path, xlooks, ylooks, exts, thresh, crop, params):
