@@ -9,5 +9,3 @@ PYTHONPATH=`echo $PYTHONPATH | sed -e 's|/apps/gdal/.*:||'`
 # Required by Click
 export LC_ALL=en_AU.UTF-8
 export LANG=en_AU.UTF-8
-module unload git
-module load git
