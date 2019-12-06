@@ -77,14 +77,19 @@ def spatio_temporal_filter(tsincr, ifg, params, preread_ifgs):
 
     :return: None, corrected interferograms are saved to disk
     """
-    epochlist = get_epochs(preread_ifgs)[0]
-    log.info("epochlist "+str(epochlist))
-    ts_lp = temporal_low_pass_filter(tsincr, epochlist, params)
+    epochlist = mpiops.run_once(get_epochs,preread_ifgs)[0]
+    # epochlist = get_epochs(preread_ifgs)[0]
+    ts_lp = mpiops.run_once(temporal_low_pass_filter,tsincr, epochlist, params)
+    # ts_lp = temporal_low_pass_filter(tsincr, epochlist, params)
+
     ts_hp = tsincr - ts_lp
-    ts_aps = spatial_low_pass_filter(ts_hp, ifg, params)
+
+    ts_aps = mpiops.run_once(spatial_low_pass_filter,ts_hp, ifg, params)
+    # ts_aps = spatial_low_pass_filter(ts_hp, ifg, params)
     tsincr -= ts_aps
 
-    _ts_to_ifgs(tsincr, preread_ifgs)
+    mpiops.run_once(_ts_to_ifgs, tsincr, preread_ifgs)
+    # _ts_to_ifgs(tsincr, preread_ifgs)
 
 
 def _calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles):
