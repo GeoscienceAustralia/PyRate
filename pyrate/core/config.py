@@ -1170,8 +1170,7 @@ def validate_epoch_cutoff(max_span: float, cutoff: str, pars: Dict) -> Optional[
     """
     errors = []
     if pars[cutoff] > max_span:
-        errors.append("'{cutoff}': must be less than max time span of "
-                      "data in years ({max_span}).")
+        errors.append("cutoff: "+str(pars[cutoff])+" must be less than max time span of data in years max_span: "+str(max_span)+".")
     return _raise_errors(errors)
 
 def validate_prepifg_tifs_exist(ifg_file_list: str, obs_dir: str, pars: Dict) -> Optional[bool]:
