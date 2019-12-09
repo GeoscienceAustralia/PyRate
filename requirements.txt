@@ -21,4 +21,4 @@ pytest-cov==2.5.1
 coverage==4.5.3
 codecov==2.0.15
 pytest==5.0.1
-GDAL==2.2.2
+GDAL==3.0.2
