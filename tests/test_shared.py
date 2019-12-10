@@ -29,7 +29,11 @@ from stat import S_IRGRP, S_IWGRP, S_IWOTH, S_IROTH, S_IRUSR, S_IWUSR
 
 import numpy as np
 from numpy.testing import assert_array_equal
-import gdal
+from osgeo import gdal
+from osgeo import osr
+from osgeo import ogr
+from osgeo import gdalconst
+from osgeo import gdal_array
 from gdal import Open, Dataset, UseExceptions
 
 from common import SML_TEST_TIF, SML_TEST_DEM_TIF, TEMPDIR

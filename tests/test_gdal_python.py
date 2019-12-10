@@ -29,8 +29,12 @@ import unittest
 from numpy import where, nan
 
 import numpy as np
-import gdal
-import gdalconst
+from osgeo import gdal
+from osgeo import osr
+from osgeo import ogr
+from osgeo import gdalconst
+from osgeo import gdal_array
+
 
 from core import gdal_python, config as cf
 from core.shared import Ifg

@@ -9,7 +9,11 @@ import conv2tif, prepifg
 from core import gdal_python
 
 import os
-import gdal
+from osgeo import gdal
+from osgeo import osr
+from osgeo import ogr
+from osgeo import gdalconst
+from osgeo import gdal_array
 import numpy as np
 import osr
 

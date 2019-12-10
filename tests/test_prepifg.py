@@ -29,7 +29,11 @@ import numpy as np
 from numpy import isnan, nanmax, nanmin, nanmean, ones, nan, reshape, sum as npsum
 from numpy.testing import assert_array_almost_equal, assert_array_equal
 
-import gdal
+from osgeo import gdal
+from osgeo import osr
+from osgeo import ogr
+from osgeo import gdalconst
+from osgeo import gdal_array
 
 import prepifg, conv2tif
 from core import config as cf

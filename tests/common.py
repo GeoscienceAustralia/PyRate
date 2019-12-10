@@ -28,7 +28,11 @@ from os.path import join
 
 import numpy as np
 from numpy import isnan, sum as nsum
-import gdal
+from osgeo import gdal
+from osgeo import osr
+from osgeo import ogr
+from osgeo import gdalconst
+from osgeo import gdal_array
 
 from core import algorithm, ifgconstants as ifc, config as cf, timeseries, mst, stack
 from core.shared import Ifg, nan_and_mm_convert, get_geotiff_header_info, write_output_geotiff

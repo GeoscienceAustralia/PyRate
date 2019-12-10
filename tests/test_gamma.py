@@ -26,7 +26,11 @@ from os.path import join
 
 import numpy as np
 from numpy.testing import assert_array_almost_equal
-import gdal
+from osgeo import gdal
+from osgeo import osr
+from osgeo import ogr
+from osgeo import gdalconst
+from osgeo import gdal_array
 
 import core.ifgconstants as ifc
 from core import shared, config as cf, gamma
