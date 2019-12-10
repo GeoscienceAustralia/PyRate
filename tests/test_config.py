@@ -108,10 +108,10 @@ DUMMY_SECTION_NAME = 'pyrate'
 
 class ValidateTestConfig(unittest.TestCase):
     def test_gamma_conf_passes(self):
-        config.get_config_params(TEST_CONF_GAMMA)
+        config.get_config_params(TEST_CONF_GAMMA, validate=False)
         
     def test_roipac_conf_passes(self):
-        config.get_config_params(TEST_CONF_ROIPAC)
+        config.get_config_params(TEST_CONF_ROIPAC, validate=False)
 
 class TestConfigValidation(unittest.TestCase):
     def setUp(self):
@@ -119,8 +119,8 @@ class TestConfigValidation(unittest.TestCase):
         Get a copy of the GAMMA params and also use this to verify that 
         they are correct before we start testing.
         """
-        self.params = config.get_config_params(TEST_CONF_GAMMA)  
-        self.roipac_params = config.get_config_params(TEST_CONF_ROIPAC)
+        self.params = config.get_config_params(TEST_CONF_GAMMA, validate=False)
+        self.roipac_params = config.get_config_params(TEST_CONF_ROIPAC , validate=False)
         self.dummy_dir = '/i/should/not/exist/'
         if os.path.exists(self.dummy_dir):
             raise IOError("'dummy_dir' needs to be non-existant for testing.")
@@ -453,7 +453,7 @@ class TestConfigValidationWithFullResGeotiffs(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         import conv2tif
-        cls.params = config.get_config_params(TEST_CONF_GAMMA)
+        cls.params = config.get_config_params(TEST_CONF_GAMMA, validate=False)
         conv2tif.main(cls.params)
     
     @classmethod
@@ -510,7 +510,7 @@ class TestConfigValidationWithPrepifgGeotiffs(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         import conv2tif, prepifg
-        cls.params = config.get_config_params(TEST_CONF_GAMMA)
+        cls.params = config.get_config_params(TEST_CONF_GAMMA, validate=False)
         conv2tif.main(cls.params)
         prepifg.main(cls.params)
     
@@ -590,7 +590,7 @@ class ConfigTest(unittest.TestCase):
 
     @staticmethod
     def test_read_param_file():
-        params = config.get_config_params(TEST_CONF_ROIPAC)
+        params = config.get_config_params(TEST_CONF_ROIPAC, validate=False)
         for k in params.keys():
             assert k and len(k) > 1
             assert params[k] != ''
@@ -630,14 +630,14 @@ class ConfigTest(unittest.TestCase):
 class ConfigWriteTest(unittest.TestCase):
 
     def test_write_config_file(self):
-        params = config.get_config_params(TEST_CONF_GAMMA)
+        params = config.get_config_params(TEST_CONF_GAMMA, validate=False)
         temp_config = tempfile.mktemp(suffix='.conf')
         config.write_config_file(params, temp_config)
         self.assertTrue(os.path.exists(temp_config))
         os.remove(temp_config)
 
     def test_new_config_file_and_original_match(self):
-        params = config.get_config_params(TEST_CONF_GAMMA)
+        params = config.get_config_params(TEST_CONF_GAMMA, validate=False)
         temp_config = tempfile.mktemp(suffix='.conf')
         config.write_config_file(params, temp_config)
         new_params = config.get_config_params(temp_config)
