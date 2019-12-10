@@ -38,11 +38,12 @@ from core import ifgconstants as ifc, mpiops, config as cf
 VERBOSE = True
 log = logging.getLogger(__name__)
 
-try:
-    import osr, gdal
-    from gdalconst import GA_Update, GA_ReadOnly
-except ImportError:
-    import gdal
+from osgeo import gdal
+from osgeo import osr
+from osgeo import ogr
+from osgeo import gdalconst
+from osgeo import gdal_array
+from gdalconst import GA_Update, GA_ReadOnly
 
 gdal.UseExceptions()
 
