@@ -22,11 +22,11 @@ import tempfile
 import shutil
 from numpy import nan, mean, std, isnan
 
-from pyrate.core import config as cf
-from pyrate.core.refpixel import ref_pixel, _step
-from pyrate import process
-from tests.common import TEST_CONF_ROIPAC
-from tests.common import small_data_setup, MockIfg, small_ifg_file_list
+from core import config as cf
+from core.refpixel import ref_pixel, _step
+import process
+from common import TEST_CONF_ROIPAC
+from common import small_data_setup, MockIfg, small_ifg_file_list
 
 
 # TODO: figure out how  editing  resource.setrlimit fixes the error
@@ -42,9 +42,9 @@ PARALLEL = False
 
 
 class ReferencePixelInputTests(unittest.TestCase):
-    '''
+    """
     Verifies error checking capabilities of the reference pixel function
-    '''
+    """
 
     def setUp(self):
         self.ifgs = small_data_setup()
@@ -257,8 +257,7 @@ class LegacyEqualityTest(unittest.TestCase):
 
     def test_small_test_data_ref_all_1(self):
 
-        refx, refy = process._ref_pixel_calc(self.ifg_paths,
-                                             self.params_all_1s)
+        refx, refy = process._ref_pixel_calc(self.ifg_paths, self.params_all_1s)
 
         self.assertAlmostEqual(0.7, self.params_all_1s[cf.REF_MIN_FRAC])
         self.assertEqual(1, self.params_all_1s[cf.REFNX])
@@ -312,8 +311,7 @@ class LegacyEqualityTestMultiprocessParallel(unittest.TestCase):
 
     def test_small_test_data_ref_chipsize_15(self):
 
-        refx, refy = process._ref_pixel_calc(self.ifg_paths,
-                                             self.params_chipsize_15)
+        refx, refy = process._ref_pixel_calc(self.ifg_paths, self.params_chipsize_15)
         self.assertEqual(refx, 7)
         self.assertEqual(refy, 7)
         self.assertAlmostEqual(0.5, self.params_alt_ref_frac[cf.REF_MIN_FRAC])

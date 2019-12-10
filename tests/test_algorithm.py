@@ -26,18 +26,10 @@ from unittest import TestCase
 import numpy as np
 from numpy.testing import assert_array_almost_equal, assert_allclose
 
-from pyrate.core.algorithm import (least_squares_covariance,
-                                   is_square,
-                                   unit_vector,
-                                   ifg_date_lookup,
-                                   get_all_epochs,
-                                   get_epochs,
-                                   master_slave_ids,
-                                   )
-
-from pyrate.core.config import parse_namelist
-from pyrate.core.shared import Ifg, convert_radians_to_mm
-from tests.common import small5_mock_ifgs, SML_TEST_TIF
+from core.algorithm import least_squares_covariance, is_square, unit_vector, ifg_date_lookup, get_all_epochs, get_epochs, master_slave_ids
+from core.config import parse_namelist
+from core.shared import Ifg, convert_radians_to_mm
+from common import small5_mock_ifgs, SML_TEST_TIF
 
 
 class LeastSquaresTests(TestCase):
@@ -59,15 +51,13 @@ class LeastSquaresTests(TestCase):
         b = array([[10]]).T
         A = array([[1]]).T
         v = array([[1]]).T
-        self.assertRaises(ValueError,
-                          least_squares_covariance, A, b, v)
+        self.assertRaises(ValueError, least_squares_covariance, A, b, v)
 
         # try non transposed style
         b = array([[10]])
         A = array([[1]])
         v = array([[1]])
-        self.assertRaises(ValueError,
-                          least_squares_covariance, A, b, v)
+        self.assertRaises(ValueError, least_squares_covariance, A, b, v)
 
 
 class AlgorithmTests(TestCase):
@@ -109,8 +99,7 @@ class AlgorithmTests(TestCase):
         unitv = [a.reshape(sh) for a in unitv]
 
         # NB: assumes radian inputs
-        act = unit_vector(reshape(incidence, sh),
-                                    reshape(azimuth, sh))
+        act = unit_vector(reshape(incidence, sh), reshape(azimuth, sh))
         for a, e in zip(act, unitv):
             assert_array_almost_equal(squeeze(a), e)
 
@@ -158,18 +147,7 @@ class DateLookupTests(TestCase):
                   (date(2007, 3, 26), ""), (date(2007, 3, 26), None)]
 
         for d in inputs:
-            self.assertRaises(ValueError,
-                              ifg_date_lookup, self.ifgs, d)
-
-
-# TODO: InitialModelTests
-#class InitialModelTests(unittest.TestCase):
-
-#    def test_initial_model(self):
-        # 1. fake an RSC file with coords
-        # 2. fake a ones(shape)  # could also make a ramp etc
-        # data is single band of DISPLACEMENT
-        #raise NotImplementedError
+            self.assertRaises(ValueError, ifg_date_lookup, self.ifgs, d)
 
 
 class EpochsTests(TestCase):
@@ -188,8 +166,7 @@ class EpochsTests(TestCase):
 
         exp_dates = [str2date(d) for d in raw_date]
         exp_repeat = [1, 1, 3, 3, 4, 3, 3, 3, 3, 3, 3, 2, 2]
-        exp_spans = [0, 0.1916, 0.2875, 0.3833, 0.4791, 0.5749, 0.6708, 0.7666,
-                            0.8624, 0.9582, 1.0541, 1.1499, 1.2457]
+        exp_spans = [0, 0.1916, 0.2875, 0.3833, 0.4791, 0.5749, 0.6708, 0.7666, 0.8624, 0.9582, 1.0541, 1.1499, 1.2457]
 
         ifms = join(SML_TEST_TIF, "ifms_17")
         ifgs = [Ifg(join(SML_TEST_TIF, p)) for p in parse_namelist(ifms)]
@@ -224,8 +201,8 @@ class EpochsTests(TestCase):
 
         # test unordered and with duplicates
         self.assertEqual(exp, master_slave_ids([d3, d0, d2, d1]))
-        self.assertEqual(exp,
-                         master_slave_ids([d3, d0, d2, d1, d3, d0]))
+        self.assertEqual(exp, master_slave_ids([d3, d0, d2, d1, d3, d0]))
+
 
 if __name__ == "__main__":
     unittest.main()

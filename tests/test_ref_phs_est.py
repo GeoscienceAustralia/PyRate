@@ -25,12 +25,12 @@ import tempfile
 import unittest
 import numpy as np
 
-import pyrate.core.orbital
-from pyrate.core import ifgconstants as ifc, config as cf
-from pyrate.core.ref_phs_est import ReferencePhaseError
-from pyrate.core.shared import CorrectionStatusError
-from pyrate import prepifg, process, conv2tif
-from tests import common
+import core.orbital
+from core import ifgconstants as ifc, config as cf
+from core.ref_phs_est import ReferencePhaseError
+from core.shared import CorrectionStatusError
+import prepifg, process, conv2tif
+import common
 
 legacy_ref_phs_method1 = [-18.2191658020020,
                           27.7119445800781,
@@ -99,15 +99,13 @@ class RefPhsTests(unittest.TestCase):
             ifg.close()
 
     def test_need_at_least_two_ifgs(self):
-        self.assertRaises(ReferencePhaseError, process._ref_phase_estimation,
-                          self.ifgs[:1], self.params, self.refpx, self.refpy)
+        self.assertRaises(ReferencePhaseError, process._ref_phase_estimation, self.ifgs[:1], self.params, self.refpx, self.refpy)
 
     def test_metadata(self):
         process._ref_phase_estimation(self.ifgs, self.params, self.refpx, self.refpy)
         for ifg in self.ifgs:
             ifg.open()
-            self.assertEqual(ifg.dataset.GetMetadataItem(ifc.PYRATE_REF_PHASE),
-                             ifc.REF_PHASE_REMOVED)
+            self.assertEqual(ifg.dataset.GetMetadataItem(ifc.PYRATE_REF_PHASE), ifc.REF_PHASE_REMOVED)
     
     def test_mixed_metadata_raises(self):
         # correct reference phase for some of the ifgs
@@ -117,8 +115,7 @@ class RefPhsTests(unittest.TestCase):
 
         # now it should raise exception if we wnat to correct
         # refernece phase again on all of them
-        self.assertRaises(CorrectionStatusError, process._ref_phase_estimation,
-                          self.ifgs, self.params, self.refpx, self.refpy)
+        self.assertRaises(CorrectionStatusError, process._ref_phase_estimation, self.ifgs, self.params, self.refpx, self.refpy)
         
 
 class RefPhsEstimationLegacyTestMethod1Serial(unittest.TestCase):
@@ -142,11 +139,9 @@ class RefPhsEstimationLegacyTestMethod1Serial(unittest.TestCase):
 
         xlks, ylks, crop = cf.transform_params(params)
 
-        base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST],
-                                               params[cf.OBS_DIR])
+        base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST], params[cf.OBS_DIR])
 
-        dest_paths = cf.get_dest_paths(base_ifg_paths, crop,
-                                               params, xlks)
+        dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
 
         # start run_pyrate copy
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
@@ -155,7 +150,7 @@ class RefPhsEstimationLegacyTestMethod1Serial(unittest.TestCase):
         refx, refy = process._ref_pixel_calc(dest_paths, params)
 
         # Estimate and remove orbit errors
-        pyrate.core.orbital.remove_orbital_error(ifgs, params)
+        core.orbital.remove_orbital_error(ifgs, params)
 
         for i in ifgs:
             i.close()
@@ -184,41 +179,32 @@ class RefPhsEstimationLegacyTestMethod1Serial(unittest.TestCase):
             ifg.close()
 
     def test_estimate_reference_phase(self):
-        np.testing.assert_array_almost_equal(legacy_ref_phs_method1,
-                                             self.ref_phs,
-                                             decimal=3)
+        np.testing.assert_array_almost_equal(legacy_ref_phs_method1, self.ref_phs, decimal=3)
 
     def test_ifgs_after_ref_phs_est(self):
         for ifg in self.ifgs:
             if not ifg.is_open:
                 ifg.open()
 
-        LEGACY_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR,
-                                                     'ref_phase_est')
+        LEGACY_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR, 'ref_phase_est')
 
-        onlyfiles = [f for f in os.listdir(LEGACY_REF_PHASE_DIR)
-                if os.path.isfile(os.path.join(LEGACY_REF_PHASE_DIR, f))
-                and f.endswith('.csv') and f.__contains__('_ref_phase_')]
+        onlyfiles = [f for f in os.listdir(LEGACY_REF_PHASE_DIR) if os.path.isfile(os.path.join(LEGACY_REF_PHASE_DIR, f)) and f.endswith('.csv') and f.__contains__('_ref_phase_')]
 
         count = 0
         for i, f in enumerate(onlyfiles):
-            ifg_data = np.genfromtxt(os.path.join(
-                LEGACY_REF_PHASE_DIR, f), delimiter=',')
+            ifg_data = np.genfromtxt(os.path.join(LEGACY_REF_PHASE_DIR, f), delimiter=',')
             for k, j in enumerate(self.ifgs):
-                if f.split('_corrected')[-1].split('.')[0] == \
-                        os.path.split(j.data_path)[-1].split('_unw_1rlks')[0]:
+                if f.split('_corrected')[-1].split('.')[0] == os.path.split(j.data_path)[-1].split('_unw_1rlks')[0]:
                     count += 1
                     # all numbers equal
                     np.testing.assert_array_almost_equal(ifg_data,
                         self.ifgs[k].phase_data, decimal=3)
 
                     # means must also be equal
-                    self.assertAlmostEqual(np.nanmean(ifg_data),
-                        np.nanmean(self.ifgs[k].phase_data), places=3)
+                    self.assertAlmostEqual(np.nanmean(ifg_data), np.nanmean(self.ifgs[k].phase_data), places=3)
 
                     # number of nans must equal
-                    self.assertEqual(np.sum(np.isnan(ifg_data)),
-                        np.sum(np.isnan(self.ifgs[k].phase_data)))
+                    self.assertEqual(np.sum(np.isnan(ifg_data)), np.sum(np.isnan(self.ifgs[k].phase_data)))
 
         # ensure we have the correct number of matches
         self.assertEqual(count, len(self.ifgs))
@@ -243,12 +229,8 @@ class RefPhsEstimationLegacyTestMethod1Parallel(unittest.TestCase):
         params[cf.PARALLEL] = True
 
         xlks, ylks, crop = cf.transform_params(params)
-
-        base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST],
-                                               params[cf.OBS_DIR])
-
-        dest_paths = cf.get_dest_paths(base_ifg_paths, crop,
-                                               params, xlks)
+        base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST], params[cf.OBS_DIR])
+        dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
 
         # start run_pyrate copy
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
@@ -257,7 +239,7 @@ class RefPhsEstimationLegacyTestMethod1Parallel(unittest.TestCase):
         refx, refy = process._ref_pixel_calc(dest_paths, params)
 
         # Estimate and remove orbit errors
-        pyrate.core.orbital.remove_orbital_error(ifgs, params)
+        core.orbital.remove_orbital_error(ifgs, params)
 
         for i in ifgs:
             i.close()
@@ -277,45 +259,32 @@ class RefPhsEstimationLegacyTestMethod1Parallel(unittest.TestCase):
         for i in cls.ifgs:
             i.close()
         shutil.rmtree(cls.temp_out_dir)
-        common.remove_tifs(
-            cf.get_config_params(common.TEST_CONF_ROIPAC)[cf.OBS_DIR])
+        common.remove_tifs(cf.get_config_params(common.TEST_CONF_ROIPAC)[cf.OBS_DIR])
 
     def test_estimate_reference_phase(self):
-        np.testing.assert_array_almost_equal(legacy_ref_phs_method1,
-                                             self.ref_phs,
-                                             decimal=3)
+        np.testing.assert_array_almost_equal(legacy_ref_phs_method1, self.ref_phs, decimal=3)
 
     def test_ifgs_after_ref_phs_est(self):
         for ifg in self.ifgs:
             ifg.open()
-        LEGACY_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR,
-                                                     'ref_phase_est')
-
-        onlyfiles = [f for f in os.listdir(LEGACY_REF_PHASE_DIR)
-                if os.path.isfile(os.path.join(LEGACY_REF_PHASE_DIR, f))
-                and f.endswith('.csv') and f.__contains__('_ref_phase_')]
+        LEGACY_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR, 'ref_phase_est')
+        onlyfiles = [f for f in os.listdir(LEGACY_REF_PHASE_DIR) if os.path.isfile(os.path.join(LEGACY_REF_PHASE_DIR, f)) and f.endswith('.csv') and f.__contains__('_ref_phase_')]
 
         count = 0
         for i, f in enumerate(onlyfiles):
             ifg_data = np.genfromtxt(os.path.join(
                 LEGACY_REF_PHASE_DIR, f), delimiter=',')
             for k, j in enumerate(self.ifgs):
-                if f.split('_corrected')[-1].split('.')[0] == \
-                        os.path.split(j.data_path)[-1].split('_unw_1rlks')[0]:
+                if f.split('_corrected')[-1].split('.')[0] == os.path.split(j.data_path)[-1].split('_unw_1rlks')[0]:
                     count += 1
                     # all numbers equal
-                    np.testing.assert_array_almost_equal(
-                        ifg_data,
-                        self.ifgs[k].phase_data,
-                        decimal=3)
+                    np.testing.assert_array_almost_equal(ifg_data, self.ifgs[k].phase_data, decimal=3)
 
                     # means must also be equal
-                    self.assertAlmostEqual(np.nanmean(ifg_data),
-                        np.nanmean(self.ifgs[k].phase_data), places=3)
+                    self.assertAlmostEqual(np.nanmean(ifg_data), np.nanmean(self.ifgs[k].phase_data), places=3)
 
                     # number of nans must equal
-                    self.assertEqual(np.sum(np.isnan(ifg_data)),
-                        np.sum(np.isnan(self.ifgs[k].phase_data)))
+                    self.assertEqual(np.sum(np.isnan(ifg_data)), np.sum(np.isnan(self.ifgs[k].phase_data)))
 
         # ensure we have the correct number of matches
         self.assertEqual(count, len(self.ifgs))
@@ -341,12 +310,8 @@ class RefPhsEstimationLegacyTestMethod2Serial(unittest.TestCase):
         params[cf.PARALLEL] = False
 
         xlks, ylks, crop = cf.transform_params(params)
-
-        base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST],
-                                               params[cf.OBS_DIR])
-
-        dest_paths = cf.get_dest_paths(base_ifg_paths, crop,
-                                               params, xlks)
+        base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST], params[cf.OBS_DIR])
+        dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
 
         # start run_pyrate copy
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
@@ -355,7 +320,7 @@ class RefPhsEstimationLegacyTestMethod2Serial(unittest.TestCase):
         refx, refy = process._ref_pixel_calc(dest_paths, params)
 
         # Estimate and remove orbit errors
-        pyrate.core.orbital.remove_orbital_error(ifgs, params)
+        core.orbital.remove_orbital_error(ifgs, params)
 
         for i in ifgs:
             i.close()
@@ -372,15 +337,12 @@ class RefPhsEstimationLegacyTestMethod2Serial(unittest.TestCase):
         for ifg in cls.ifgs:
             ifg.close()
         shutil.rmtree(cls.temp_out_dir)
-        common.remove_tifs(
-            cf.get_config_params(common.TEST_CONF_ROIPAC)[cf.OBS_DIR])
-
+        common.remove_tifs(cf.get_config_params(common.TEST_CONF_ROIPAC)[cf.OBS_DIR])
 
     def test_ifgs_after_ref_phs_est(self):
         for ifg in self.ifgs:
             ifg.open()
-        LEGACY_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR,
-                                                     'ref_phase_est')
+        LEGACY_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR, 'ref_phase_est')
 
         onlyfiles = [f for f in os.listdir(LEGACY_REF_PHASE_DIR)
                 if os.path.isfile(os.path.join(LEGACY_REF_PHASE_DIR, f))
@@ -392,28 +354,22 @@ class RefPhsEstimationLegacyTestMethod2Serial(unittest.TestCase):
             ifg_data = np.genfromtxt(os.path.join(
                 LEGACY_REF_PHASE_DIR, f), delimiter=',')
             for k, j in enumerate(self.ifgs):
-                if f.split('_corrected_method2')[-1].split('.')[0] == \
-                        os.path.split(j.data_path)[-1].split('_unw_1rlks')[0]:
+                if f.split('_corrected_method2')[-1].split('.')[0] == os.path.split(j.data_path)[-1].split('_unw_1rlks')[0]:
                     count += 1
                     # all numbers equal
-                    np.testing.assert_array_almost_equal(ifg_data,
-                        self.ifgs[k].phase_data, decimal=3)
+                    np.testing.assert_array_almost_equal(ifg_data, self.ifgs[k].phase_data, decimal=3)
 
                     # means must also be equal
-                    self.assertAlmostEqual(np.nanmean(ifg_data),
-                        np.nanmean(self.ifgs[k].phase_data), places=3)
+                    self.assertAlmostEqual(np.nanmean(ifg_data), np.nanmean(self.ifgs[k].phase_data), places=3)
 
                     # number of nans must equal
-                    self.assertEqual(np.sum(np.isnan(ifg_data)),
-                        np.sum(np.isnan(self.ifgs[k].phase_data)))
-
+                    self.assertEqual(np.sum(np.isnan(ifg_data)), np.sum(np.isnan(self.ifgs[k].phase_data)))
 
         # ensure we have the correct number of matches
         self.assertEqual(count, len(self.ifgs))
 
     def test_estimate_reference_phase_method2(self):
-        np.testing.assert_array_almost_equal(legacy_ref_phs_method2,
-                                             self.ref_phs, decimal=3)
+        np.testing.assert_array_almost_equal(legacy_ref_phs_method2, self.ref_phs, decimal=3)
 
 
 class RefPhsEstimationLegacyTestMethod2Parallel(unittest.TestCase):
@@ -438,12 +394,9 @@ class RefPhsEstimationLegacyTestMethod2Parallel(unittest.TestCase):
         params[cf.PARALLEL] = True
 
         xlks, ylks, crop = cf.transform_params(params)
+        base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST],     params[cf.OBS_DIR])
 
-        base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST],    
-                                               params[cf.OBS_DIR])
-
-        dest_paths = cf.get_dest_paths(base_ifg_paths, crop,
-                                       params, xlks)
+        dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
 
         # start run_pyrate copy
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
@@ -451,7 +404,7 @@ class RefPhsEstimationLegacyTestMethod2Parallel(unittest.TestCase):
         refx, refy = process._ref_pixel_calc(dest_paths, params)
 
         # Estimate and remove orbit errors
-        pyrate.core.orbital.remove_orbital_error(ifgs, params)
+        core.orbital.remove_orbital_error(ifgs, params)
 
         for i in ifgs:
             i.close()
@@ -474,43 +427,31 @@ class RefPhsEstimationLegacyTestMethod2Parallel(unittest.TestCase):
     def test_ifgs_after_ref_phs_est(self):
         for ifg in self.ifgs:
             ifg.open()
-        LEGACY_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR,
-                                            'ref_phase_est')
+        LEGACY_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR, 'ref_phase_est')
 
-        onlyfiles = [f for f in os.listdir(LEGACY_REF_PHASE_DIR)
-                     if os.path.isfile(os.path.join(LEGACY_REF_PHASE_DIR, f))
-                     and f.endswith('.csv') and f.__contains__('_ref_phase_')
-                     and f.__contains__('method2')]
+        onlyfiles = [f for f in os.listdir(LEGACY_REF_PHASE_DIR) if os.path.isfile(os.path.join(LEGACY_REF_PHASE_DIR, f)) and f.endswith('.csv') and f.__contains__('_ref_phase_') and f.__contains__('method2')]
 
         count = 0
         for i, f in enumerate(onlyfiles):
             ifg_data = np.genfromtxt(os.path.join(
                 LEGACY_REF_PHASE_DIR, f), delimiter=',')
             for k, j in enumerate(self.ifgs):
-                if f.split('_corrected_method2')[-1].split('.')[0] == \
-                        os.path.split(j.data_path)[-1].split('_unw_1rlks')[0]:
+                if f.split('_corrected_method2')[-1].split('.')[0] == os.path.split(j.data_path)[-1].split('_unw_1rlks')[0]:
                     count += 1
                     # all numbers equal
-                    np.testing.assert_array_almost_equal(
-                        ifg_data, self.ifgs[k].phase_data, decimal=3)
+                    np.testing.assert_array_almost_equal(ifg_data, self.ifgs[k].phase_data, decimal=3)
 
                     # means must also be equal
-                    self.assertAlmostEqual(
-                        np.nanmean(ifg_data),
-                        np.nanmean(self.ifgs[k].phase_data),
-                        places=3)
+                    self.assertAlmostEqual(np.nanmean(ifg_data), np.nanmean(self.ifgs[k].phase_data), places=3)
 
                     # number of nans must equal
-                    self.assertEqual(
-                        np.sum(np.isnan(ifg_data)),
-                        np.sum(np.isnan(self.ifgs[k].phase_data)))
+                    self.assertEqual(np.sum(np.isnan(ifg_data)), np.sum(np.isnan(self.ifgs[k].phase_data)))
 
         # ensure we have the correct number of matches
         self.assertEqual(count, len(self.ifgs))
 
     def test_estimate_reference_phase_method2(self):
-        np.testing.assert_array_almost_equal(legacy_ref_phs_method2,
-                                             self.ref_phs, decimal=3)
+        np.testing.assert_array_almost_equal(legacy_ref_phs_method2, self.ref_phs, decimal=3)
 
 
 if __name__ == '__main__':

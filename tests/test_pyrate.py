@@ -25,10 +25,10 @@ import unittest
 from os.path import join
 import numpy as np
 
-import pyrate.core.shared
-from pyrate.core import shared, config as cf, config, prepifg_helper, mst
-from pyrate import process, prepifg, conv2tif
-from tests import common
+import core.shared
+from core import shared, config as cf, config, prepifg_helper, mst
+import process, prepifg, conv2tif
+import common
 
 # taken from
 # http://stackoverflow.com/questions/6260149/os-symlink-support-in-windows
@@ -217,7 +217,7 @@ class ParallelPyRateTests(unittest.TestCase):
             base_unw_paths, crop, params, xlks)
         gtif_paths = conv2tif.do_geotiff(base_unw_paths, params)
         prepifg.do_prepifg(gtif_paths, params)
-        tiles = pyrate.core.shared.get_tiles(cls.dest_paths[0], 3, 3)
+        tiles = core.shared.get_tiles(cls.dest_paths[0], 3, 3)
         ifgs = common.small_data_setup()
         cls.refpixel_p, cls.maxvar_p, cls.vcmt_p = \
             process.process_ifgs(cls.dest_paths, params, 3, 3)

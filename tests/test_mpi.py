@@ -27,16 +27,14 @@ import tempfile
 import random
 import string
 
-import pyrate.core.orbital
-import pyrate.core.shared
-import tests.common
-from pyrate import (
-    process, prepifg, merge, conv2tif)
-from tests.common import (small_data_setup, reconstruct_mst, 
-    reconstruct_linrate, SML_TEST_DEM_HDR_GAMMA, pre_prepare_ifgs)
-from tests import common
-from tests.test_covariance import legacy_maxvar
-from pyrate.core import algorithm, ref_phs_est as rpe, mpiops, config as cf, covariance, refpixel
+import core.orbital
+import core.shared
+import common
+import process, prepifg, merge, conv2tif
+from common import (small_data_setup, reconstruct_mst,  reconstruct_linrate, SML_TEST_DEM_HDR_GAMMA, pre_prepare_ifgs)
+import common
+from test_covariance import legacy_maxvar
+from core import algorithm, ref_phs_est as rpe, mpiops, config as cf, covariance, refpixel
 
 TRAVIS = True if 'TRAVIS' in os.environ else False
 
@@ -137,7 +135,7 @@ def get_crop(request):
 
 
 def test_vcm_legacy_vs_mpi(mpisync, tempdir, get_config):
-    from tests.common import SML_TEST_DIR, TEST_CONF_ROIPAC
+    from common import SML_TEST_DIR, TEST_CONF_ROIPAC
 
     params_dict = get_config(TEST_CONF_ROIPAC)
     LEGACY_VCM_DIR = os.path.join(SML_TEST_DIR, 'vcm')
@@ -161,7 +159,7 @@ def test_vcm_legacy_vs_mpi(mpisync, tempdir, get_config):
 
     mpiops.comm.barrier()
 
-    tiles = pyrate.core.shared.get_tiles(dest_paths[0], rows=1, cols=1)
+    tiles = core.shared.get_tiles(dest_paths[0], rows=1, cols=1)
     preread_ifgs = process._create_ifg_dict(dest_paths, params=params_dict, tiles=tiles)
     refpx, refpy = process._ref_pixel_calc(dest_paths, params_dict)
     process._orb_fit_calc(dest_paths, params_dict)
@@ -195,9 +193,8 @@ def _tifs_same(dir1, dir2, tif):
     linrate_tif_m = os.path.join(dir2, tif)
     common.assert_ifg_phase_equal(linrate_tif_m, linrate_tif_s)
 
-def test_prepifg_mpi(mpisync, get_config, tempdir,
-                     roipac_or_gamma, get_lks, get_crop):
-    from tests.common import TEST_CONF_ROIPAC, TEST_CONF_GAMMA
+def test_prepifg_mpi(mpisync, get_config, tempdir, roipac_or_gamma, get_lks, get_crop):
+    from common import TEST_CONF_ROIPAC, TEST_CONF_GAMMA
     from os.path import join, basename
     if roipac_or_gamma == 1:
         params = get_config(TEST_CONF_GAMMA)
@@ -228,8 +225,7 @@ def test_prepifg_mpi(mpisync, get_config, tempdir,
         params_s[cf.IFG_CROP_OPT] = get_crop
         conv2tif.main(params)
         if roipac_or_gamma == 1:
-            base_unw_paths = glob.glob(join(common.SML_TEST_GAMMA,
-                                            "*_utm.unw"))
+            base_unw_paths = glob.glob(join(common.SML_TEST_GAMMA, "*_utm.unw"))
             prepifg.main(params)
         else:
             base_unw_paths = glob.glob(join(common.SML_TEST_OBS, "*.unw"))

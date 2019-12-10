@@ -18,7 +18,7 @@ This Python module contains tests for the gdal_python.py PyRate module.
 """
 from subprocess import check_call
 
-from pyrate.core.prepifg_helper import _resample_ifg
+from core.prepifg_helper import _resample_ifg
 
 import glob
 import os
@@ -29,11 +29,12 @@ import unittest
 from numpy import where, nan
 
 import numpy as np
-import gdal, gdalconst
+import gdal
+import gdalconst
 
-from pyrate.core import gdal_python, config as cf
-from pyrate.core.shared import Ifg
-from tests import common
+from core import gdal_python, config as cf
+from core.shared import Ifg
+import common
 
 
 
@@ -43,8 +44,7 @@ class TestCrop(unittest.TestCase):
         # minX, minY, maxX, maxY = extents
         extents = [150.91, -34.229999976, 150.949166651, -34.17]
         extents_str = [str(e) for e in extents]
-        cmd = ['gdalwarp', '-overwrite', '-srcnodata', 'None', '-q', '-te'] \
-              + extents_str
+        cmd = ['gdalwarp', '-overwrite', '-srcnodata', 'None', '-q', '-te'] + extents_str
 
         for s in small_test_ifgs:
             temp_tif = tempfile.mktemp(suffix='.tif')
@@ -70,14 +70,10 @@ class TestResample(unittest.TestCase):
 
         for res in resolutions:
             res = [res, -res]
-            self.check_same_resampled_output(extents, extents_str, res,
-                                             small_test_ifgs)
+            self.check_same_resampled_output(extents, extents_str, res, small_test_ifgs)
 
-    def check_same_resampled_output(self, extents, extents_str, res,
-                                    small_test_ifgs):
-        cmd = ['gdalwarp', '-overwrite', '-srcnodata', 'None',
-               '-q', '-r', 'near', '-te'] \
-              + extents_str
+    def check_same_resampled_output(self, extents, extents_str, res, small_test_ifgs):
+        cmd = ['gdalwarp', '-overwrite', '-srcnodata', 'None', '-q', '-r', 'near', '-te'] + extents_str
 
         if res[0]:
             new_res_str = [str(r) for r in res]
@@ -89,11 +85,8 @@ class TestResample(unittest.TestCase):
             resampled_ds = gdal.Open(temp_tif)
             resampled_ref = resampled_ds.ReadAsArray()
 
-            resampled_temp_tif = tempfile.mktemp(suffix='.tif',
-                                                 prefix='resampled_')
-            resampled = gdal_python.resample_nearest_neighbour(s.data_path,
-                                                               extents, res,
-                                                               resampled_temp_tif)
+            resampled_temp_tif = tempfile.mktemp(suffix='.tif', prefix='resampled_')
+            resampled = gdal_python.resample_nearest_neighbour(s.data_path, extents, res, resampled_temp_tif)
             np.testing.assert_array_almost_equal(resampled_ref, resampled[0, :, :])
             try:
                 os.remove(temp_tif)
@@ -111,8 +104,7 @@ class TestResample(unittest.TestCase):
         extents = [150.91, -34.229999976, 150.949166651, -34.17]
         extents_str = [str(e) for e in extents]
 
-        self.check_same_resampled_output(extents, extents_str, [None, None],
-                                         small_test_ifgs)
+        self.check_same_resampled_output(extents, extents_str, [None, None], small_test_ifgs)
 
     def test_output_file_written(self):
         small_test_ifgs = common.small_data_setup()
@@ -120,11 +112,8 @@ class TestResample(unittest.TestCase):
         resolutions = [0.001666666, .001, 0.002, 0.0025, .01]
         for res in resolutions:
             for s in small_test_ifgs:
-                resampled_temp_tif = tempfile.mktemp(suffix='.tif',
-                                                    prefix='resampled_')
-                gdal_python.resample_nearest_neighbour(s.data_path, extents,
-                                                       [res, -res],
-                                                       resampled_temp_tif)
+                resampled_temp_tif = tempfile.mktemp(suffix='.tif', prefix='resampled_')
+                gdal_python.resample_nearest_neighbour(s.data_path, extents, [res, -res], resampled_temp_tif)
                 self.assertTrue(os.path.exists(resampled_temp_tif))
                 os.remove(resampled_temp_tif)
 
@@ -134,10 +123,8 @@ class TestResample(unittest.TestCase):
         extents = [150.91, -34.229999976, 150.949166651, -34.17]
         for s in small_test_ifgs:
             clipped = gdal_python.crop(s.data_path, extents)[0]
-            resampled_temp_tif = tempfile.mktemp(suffix='.tif',
-                                                prefix='resampled_')
-            resampled = gdal_python.resample_nearest_neighbour(
-                s.data_path, extents, [None, None], resampled_temp_tif)
+            resampled_temp_tif = tempfile.mktemp(suffix='.tif', prefix='resampled_')
+            resampled = gdal_python.resample_nearest_neighbour(s.data_path, extents, [None, None], resampled_temp_tif)
             self.assertTrue(os.path.exists(resampled_temp_tif))
             np.testing.assert_array_almost_equal(resampled[0, :, :], clipped)
             os.remove(resampled_temp_tif)
@@ -149,10 +136,8 @@ class TestResample(unittest.TestCase):
         extents = [150.91, -34.229999976, 150.949166651, -34.17]
         for s in small_test_ifgs:
 
-            resampled_temp_tif = tempfile.mktemp(suffix='.tif',
-                                                prefix='resampled_')
-            gdal_python.resample_nearest_neighbour(
-                s.data_path, extents, [None, None], resampled_temp_tif)
+            resampled_temp_tif = tempfile.mktemp(suffix='.tif', prefix='resampled_')
+            gdal_python.resample_nearest_neighbour(s.data_path, extents, [None, None], resampled_temp_tif)
             dst_ds = gdal.Open(resampled_temp_tif)
             md = dst_ds.GetMetadata()
             self.assertDictEqual(md, s.meta_data)
@@ -166,8 +151,7 @@ class BasicReampleTests(unittest.TestCase):
 
     def test_reproject_with_no_data(self):
 
-        data = np.array([[2, 7],
-                         [2, 7]])
+        data = np.array([[2, 7], [2, 7]])
         src_ds = gdal.GetDriverByName('MEM').Create('', 2, 2)
         src_ds.GetRasterBand(1).WriteArray(data)
         src_ds.GetRasterBand(1).SetNoDataValue(2)
@@ -284,14 +268,12 @@ class BasicReampleTests(unittest.TestCase):
                          [4, 7, 7, 2, 2, 7.],
                          [4, 7, 7, 2, 2, 7.],
                          [4, 7, 7, 10, 2, 7.]], dtype=np.float32)
-        src_ds = gdal.GetDriverByName('MEM').Create('', 6, 6, 1,
-                                                    gdalconst.GDT_Float32)
+        src_ds = gdal.GetDriverByName('MEM').Create('', 6, 6, 1, gdalconst.GDT_Float32)
         src_ds.GetRasterBand(1).WriteArray(data)
         src_ds.GetRasterBand(1).SetNoDataValue(2)
         src_ds.SetGeoTransform([10, 1, 0, 10, 0, -1])
 
-        dst_ds = gdal.GetDriverByName('MEM').Create('', 3, 3, 1,
-                                                    gdalconst.GDT_Float32)
+        dst_ds = gdal.GetDriverByName('MEM').Create('', 3, 3, 1, gdalconst.GDT_Float32)
         dst_ds.GetRasterBand(1).SetNoDataValue(3)
         dst_ds.GetRasterBand(1).Fill(3)
         dst_ds.SetGeoTransform([10, 2, 0, 10, 0, -2])
@@ -317,8 +299,7 @@ class BasicReampleTests(unittest.TestCase):
                          [0, 0, 0, 0, 0, 2],
                          [0, 0, 0, 0, 0, 0.],
                          [0, 0, 0, 0, 0, 0.]]], dtype=np.float32)
-        src_ds = gdal.GetDriverByName('MEM').Create('', 6, 6, 2,
-                                                    gdalconst.GDT_Float32)
+        src_ds = gdal.GetDriverByName('MEM').Create('', 6, 6, 2, gdalconst.GDT_Float32)
 
         src_ds.GetRasterBand(1).WriteArray(data[0, :, :])
         src_ds.GetRasterBand(1).SetNoDataValue(2)
@@ -326,8 +307,7 @@ class BasicReampleTests(unittest.TestCase):
         # src_ds.GetRasterBand(1).SetNoDataValue()
         src_ds.SetGeoTransform([10, 1, 0, 10, 0, -1])
 
-        dst_ds = gdal.GetDriverByName('MEM').Create('', 3, 3, 2,
-                                                    gdalconst.GDT_Float32)
+        dst_ds = gdal.GetDriverByName('MEM').Create('', 3, 3, 2, gdalconst.GDT_Float32)
         dst_ds.GetRasterBand(1).SetNoDataValue(3)
         dst_ds.GetRasterBand(1).Fill(3)
         dst_ds.SetGeoTransform([10, 2, 0, 10, 0, -2])
@@ -413,8 +393,7 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
             extents = [str(e) for e in [10, 0, 20, 10]]
 
             # only band 1 is resapled in warp_old
-            data, self.old_prepifg_path = warp_old(ifg, x_looks, y_looks, extents, resolution,
-                                                   thresh=thresh, crop_out=4, verbose=False)
+            data, self.old_prepifg_path = warp_old(ifg, x_looks, y_looks, extents, resolution, thresh=thresh, crop_out=4, verbose=False)
 
             np.testing.assert_array_equal(data, avg)
 
@@ -441,8 +420,7 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
             averaged_and_resampled, _ = gdal_python.crop_resample_average(self.temp_tif, extents, [res, -res], self.out_tif, thresh, match_pyrate=True)
             ifg = Ifg(self.temp_tif)
             # only band 1 is resampled in warp_old
-            data, self.old_prepifg_path = warp_old(ifg, x_looks, y_looks, extents_str, [res, -res],
-                                                   thresh=thresh, crop_out=4, verbose=False)
+            data, self.old_prepifg_path = warp_old(ifg, x_looks, y_looks, extents_str, [res, -res], thresh=thresh, crop_out=4, verbose=False)
 
             np.testing.assert_array_almost_equal(data, averaged_and_resampled, decimal=4)
             del averaged_and_resampled
@@ -477,15 +455,10 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
             for looks in range(10):
                 x_looks = y_looks = looks
                 res = orig_res*x_looks
-                averaged_and_resapled, out_ds = gdal_python.crop_resample_average(
-                    ifg.data_path, extents, new_res=[res, -res],
-                    output_file=self.temp_tif, thresh=thresh,
-                    match_pyrate=False)
+                averaged_and_resapled, out_ds = gdal_python.crop_resample_average(ifg.data_path, extents, new_res=[res, -res], output_file=self.temp_tif, thresh=thresh, match_pyrate=False)
 
                 # only band 1 is resampled in warp_old
-                data, self.old_prepifg_path = warp_old(
-                    ifg, x_looks, y_looks, extents_str, [res, -res],
-                    thresh=thresh, crop_out=4, verbose=False)
+                data, self.old_prepifg_path = warp_old(ifg, x_looks, y_looks, extents_str, [res, -res], thresh=thresh, crop_out=4, verbose=False)
                 yres, xres = data.shape
 
                 # old_prepifg warp resample method loses one
@@ -509,8 +482,7 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
 
     def test_gdal_python_vs_old_prepifg(self):
 
-        self.ifgs = common.small_data_setup(
-            datafiles=glob.glob(os.path.join(self.test_dir, "*.tif")))
+        self.ifgs = common.small_data_setup(datafiles=glob.glob(os.path.join(self.test_dir, "*.tif")))
 
         for ifg in self.ifgs:
             extents = [150.91, -34.229999976, 150.949166651, -34.17]
@@ -520,15 +492,10 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
             for looks in range(1, 10):
                 x_looks = y_looks = looks
                 res = orig_res*x_looks
-                averaged_and_resampled = gdal_python.crop_resample_average(
-                    ifg.data_path, extents, new_res=[res, -res],
-                    output_file=self.temp_tif, thresh=thresh,
-                    match_pyrate=True)[0]
+                averaged_and_resampled = gdal_python.crop_resample_average(ifg.data_path, extents, new_res=[res, -res], output_file=self.temp_tif, thresh=thresh, match_pyrate=True)[0]
 
                 # only band 1 is resampled in warp_old
-                data, self.old_prepifg_path = warp_old(
-                    ifg, x_looks, y_looks, extents_str, [res, -res],
-                    thresh=thresh, crop_out=4, verbose=False)
+                data, self.old_prepifg_path = warp_old(ifg, x_looks, y_looks, extents_str, [res, -res], thresh=thresh, crop_out=4, verbose=False)
                 yres, xres = data.shape
 
                 # old_prepifg warp resample method loses one row
@@ -553,28 +520,21 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
             thresh = 0.5
             x_looks = y_looks = 6
             res = orig_res*x_looks
-            averaged_and_resampled, out_ds = gdal_python.crop_resample_average(
-                ifg.data_path, extents, new_res=[res, -res],
-                output_file=self.temp_tif, thresh=thresh,
-                out_driver_type='MEM', match_pyrate=True)
+            averaged_and_resampled, out_ds = gdal_python.crop_resample_average(ifg.data_path, extents, new_res=[res, -res], output_file=self.temp_tif, thresh=thresh, out_driver_type='MEM', match_pyrate=True)
 
             # only band 1 is resampled in warp_old
-            data, self.old_prepifg_path = warp_old(
-                ifg, x_looks, y_looks, extents_str, [res, -res],
-                thresh=thresh, crop_out=4, verbose=False)
+            data, self.old_prepifg_path = warp_old(ifg, x_looks, y_looks, extents_str, [res, -res], thresh=thresh, crop_out=4, verbose=False)
             yres, xres = data.shape
 
             # old_prepifg warp resample method loses one row at the bottom if
             # nrows % 2 == 1
             averaged_and_resampled = averaged_and_resampled[:yres, :xres]
-            np.testing.assert_array_almost_equal(data, averaged_and_resampled,
-                                                 decimal=4)
+            np.testing.assert_array_almost_equal(data, averaged_and_resampled, decimal=4)
 
             # make sure they are the same after they are opened again
             data_from_file = gdal.Open(self.old_prepifg_path).ReadAsArray()
             new_from_file = out_ds.ReadAsArray()
-            np.testing.assert_array_almost_equal(data_from_file,
-                                                 new_from_file)
+            np.testing.assert_array_almost_equal(data_from_file, new_from_file)
             self.assertFalse(os.path.exists(self.temp_tif))
             out_ds = None  # manual close
 
@@ -598,8 +558,7 @@ class TestMEMVsGTiff(unittest.TestCase):
                          [0, 0, 0, 0, 0, 2],
                          [0, 0, 0, 0, 0, 0.],
                          [0, 0, 0, 0, 0, 0.]]], dtype=np.float32)
-        src_ds = gdal.GetDriverByName(driver_type).Create(temp_tif, 6, 6, 2,
-                                                    gdalconst.GDT_Float32)
+        src_ds = gdal.GetDriverByName(driver_type).Create(temp_tif, 6, 6, 2, gdalconst.GDT_Float32)
 
         src_ds.GetRasterBand(1).WriteArray(data[0, :, :])
         src_ds.GetRasterBand(1).SetNoDataValue(2)
@@ -608,8 +567,7 @@ class TestMEMVsGTiff(unittest.TestCase):
         src_ds.SetGeoTransform([10, 1, 0, 10, 0, -1])
         src_ds.FlushCache()
 
-        dst_ds = gdal.GetDriverByName('MEM').Create('', 3, 3, 2,
-                                                    gdalconst.GDT_Float32)
+        dst_ds = gdal.GetDriverByName('MEM').Create('', 3, 3, 2, gdalconst.GDT_Float32)
         dst_ds.GetRasterBand(1).SetNoDataValue(3)
         dst_ds.GetRasterBand(1).Fill(3)
         dst_ds.SetGeoTransform([10, 2, 0, 10, 0, -2])
@@ -636,12 +594,7 @@ class TestMEMVsGTiff(unittest.TestCase):
         self.check('GTiff')
 
 
-# class TestGDalAverageResampleing(unittest.TestCase):
-#     pass
-
-
-def warp_old(ifg, x_looks, y_looks, extents, resolution, thresh,
-             crop_out, verbose, ret_ifg=True):
+def warp_old(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out, verbose, ret_ifg=True):
     """
     Resamples 'ifg' and returns a new Ifg obj.
 
@@ -699,11 +652,6 @@ def warp_old(ifg, x_looks, y_looks, extents, resolution, thresh,
             data = new_lyr.phase_band.ReadAsArray()
             data = np.where(np.isclose(data, 0.0, atol=1e-6), np.nan, data)
 
-        # TODO: LOS conversion to vertical/horizontal (projection)
-        # TODO: push out to workflow
-        #if params.has_key(REPROJECTION_FLAG):
-        #    reproject()
-
         # tricky: write either resampled or the basic cropped data to new layer
         new_lyr.phase_band.SetNoDataValue(nan)
         new_lyr.phase_band.WriteArray(data)
@@ -713,6 +661,7 @@ def warp_old(ifg, x_looks, y_looks, extents, resolution, thresh,
         return data, looks_path
     else:
         return
+
 
 if __name__ == '__main__':
     unittest.main()

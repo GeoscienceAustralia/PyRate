@@ -4,15 +4,14 @@ import pytest
 import glob
 import copy
 
-import pyrate.core.config as cf
-from pyrate import conv2tif, prepifg
-from pyrate.core import gdal_python
+import core.config as cf
+import conv2tif, prepifg
+from core import gdal_python
 
 import os
 import gdal
 import numpy as np
 import osr
-
 
 
 class CoherenceMaskingTest(unittest.TestCase):
@@ -64,7 +63,6 @@ class CoherenceMaskingTest(unittest.TestCase):
 
         # compare the artificial masked and actual masked datasets
         self.assertTrue(np.array_equiv(sample_gdal_array, expected_result_array))
-
 
         # del the tmp datasets created
         del coherence_mask_dataset

@@ -25,12 +25,12 @@ from numpy import array
 import numpy as np
 from numpy.testing import assert_array_almost_equal
 
-from pyrate.core import shared, ref_phs_est as rpe, ifgconstants as ifc, config as cf
-from pyrate import process, prepifg, conv2tif
-from pyrate.core.covariance import cvd, get_vcmt, RDist
-import pyrate.core.orbital
-from tests import common
-from tests.common import (small5_mock_ifgs, small5_ifgs, TEST_CONF_ROIPAC,
+from core import shared, ref_phs_est as rpe, ifgconstants as ifc, config as cf
+import process, prepifg, conv2tif
+from core.covariance import cvd, get_vcmt, RDist
+import core.orbital
+import common
+from common import (small5_mock_ifgs, small5_ifgs, TEST_CONF_ROIPAC,
     small_data_setup, prepare_ifgs_without_phase)
 
 
@@ -195,7 +195,7 @@ class LegacyEqualityTest(unittest.TestCase):
         dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         refx, refy = process._ref_pixel_calc(dest_paths, params)
-        pyrate.core.orbital.remove_orbital_error(ifgs, params)
+        core.orbital.remove_orbital_error(ifgs, params)
         ifgs = prepare_ifgs_without_phase(dest_paths, params)
         for ifg in ifgs:
             ifg.close()
@@ -223,7 +223,7 @@ class LegacyEqualityTest(unittest.TestCase):
                                              decimal=3)
 
     def test_legacy_vcmt_equality_small_test_files(self):
-        from tests.common import SML_TEST_DIR
+        from common import SML_TEST_DIR
         LEGACY_VCM_DIR = os.path.join(SML_TEST_DIR, 'vcm')
         legacy_vcm = np.genfromtxt(os.path.join(LEGACY_VCM_DIR,
                                    'vcmt.csv'), delimiter=',')

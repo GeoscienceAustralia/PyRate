@@ -22,11 +22,11 @@ from itertools import product
 from numpy import empty, array, nan, isnan, sum as nsum
 
 import numpy as np
-from tests.common import MockIfg, small5_mock_ifgs, small_data_setup
+from common import MockIfg, small5_mock_ifgs, small_data_setup
 
-from pyrate.core import algorithm, config as cf, mst
-from pyrate.core.shared import IfgPart, Tile
-from tests import common
+from core import algorithm, config as cf, mst
+from core.shared import IfgPart, Tile
+import common
 
 
 class MSTTests(unittest.TestCase):

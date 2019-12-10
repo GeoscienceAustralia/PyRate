@@ -26,10 +26,10 @@ from os.path import join
 
 import pytest
 
-from tests.common import SML_TEST_CONF, SML_TEST_TIF
-from tests.common import TEST_CONF_ROIPAC, TEST_CONF_GAMMA
-from pyrate.core import config
-from pyrate.core.config import (
+from common import SML_TEST_CONF, SML_TEST_TIF
+from common import TEST_CONF_ROIPAC, TEST_CONF_GAMMA
+from core import config
+from core.config import (
     validate_parameters, validate_optional_parameters, validate_epochs,
     validate_obs_thresholds, validate_ifgs, validate_gamma_headers,
     validate_coherence_files, validate_tifs_exist, validate_minimum_epochs, 
@@ -39,7 +39,7 @@ from pyrate.core.config import (
     validate_multilook_parameters,
     validate_prepifg_tifs_exist,
     _get_temporal_info, _get_prepifg_info, _get_fullres_info)
-from pyrate.core.config import (
+from core.config import (
     SIXTEEN_DIGIT_EPOCH_PAIR,
     TWELVE_DIGIT_EPOCH_PAIR,
     EIGHT_DIGIT_EPOCH,
@@ -103,7 +103,7 @@ from pyrate.core.config import (
     APS_CORRECTION,
     ConfigException)
 # from pyrate.tasks.utils import DUMMY_SECTION_NAME
-from tests import common
+import common
 DUMMY_SECTION_NAME = 'pyrate'
 
 class ValidateTestConfig(unittest.TestCase):
@@ -452,7 +452,7 @@ class TestConfigValidation(unittest.TestCase):
 class TestConfigValidationWithFullResGeotiffs(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        from pyrate import conv2tif
+        import conv2tif
         cls.params = config.get_config_params(TEST_CONF_GAMMA)
         conv2tif.main(cls.params)
     
@@ -509,7 +509,7 @@ class TestConfigValidationWithFullResGeotiffs(unittest.TestCase):
 class TestConfigValidationWithPrepifgGeotiffs(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        from pyrate import conv2tif, prepifg
+        import conv2tif, prepifg
         cls.params = config.get_config_params(TEST_CONF_GAMMA)
         conv2tif.main(cls.params)
         prepifg.main(cls.params)

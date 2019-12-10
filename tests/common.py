@@ -30,12 +30,10 @@ import numpy as np
 from numpy import isnan, sum as nsum
 import gdal
 
-from pyrate.core import algorithm, ifgconstants as ifc, config as cf, timeseries, mst, stack
-from pyrate.core.shared import (Ifg, nan_and_mm_convert, get_geotiff_header_info,
-                                write_output_geotiff)
+from core import algorithm, ifgconstants as ifc, config as cf, timeseries, mst, stack
+from core.shared import Ifg, nan_and_mm_convert, get_geotiff_header_info, write_output_geotiff
 
-from tests.constants import PYRATEPATH
-
+PYRATEPATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TEMPDIR = tempfile.gettempdir()
 BASE_TEST = join(PYRATEPATH, "tests", "test_data")
 SML_TEST_DIR = join(BASE_TEST, "small_test")

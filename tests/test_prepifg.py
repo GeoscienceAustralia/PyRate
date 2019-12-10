@@ -31,15 +31,14 @@ from numpy.testing import assert_array_almost_equal, assert_array_equal
 
 import gdal
 
-from pyrate import prepifg, conv2tif
-from pyrate.core import config as cf
-from pyrate.core.config import mlooked_path
-from pyrate.core.shared import Ifg, DEM
-from pyrate.core.prepifg_helper import CUSTOM_CROP, MAXIMUM_CROP, MINIMUM_CROP, \
-    ALREADY_SAME_SIZE
-from pyrate.core.prepifg_helper import prepare_ifgs, _resample, PreprocessError, CustomExts
+import prepifg, conv2tif
+from core import config as cf
+from core.config import mlooked_path
+from core.shared import Ifg, DEM
+from core.prepifg_helper import CUSTOM_CROP, MAXIMUM_CROP, MINIMUM_CROP, ALREADY_SAME_SIZE
+from core.prepifg_helper import prepare_ifgs, _resample, PreprocessError, CustomExts
 # from pyrate.tasks.utils import DUMMY_SECTION_NAME
-from pyrate.core.config import (
+from core.config import (
     DEM_HEADER_FILE,
     NO_DATA_VALUE,
     OBS_DIR,
@@ -58,10 +57,10 @@ from pyrate.core.config import (
     APS_METHOD,
     APS_CORRECTION)
 
-from tests.common import SML_TEST_LEGACY_PREPIFG_DIR
-from tests.common import PREP_TEST_TIF, SML_TEST_DEM_DIR
-from tests.common import SML_TEST_DEM_TIF
-from tests import common
+from common import SML_TEST_LEGACY_PREPIFG_DIR
+from common import PREP_TEST_TIF, SML_TEST_DEM_DIR
+from common import SML_TEST_DEM_TIF
+import common
 
 gdal.UseExceptions()
 DUMMY_SECTION_NAME = 'pyrate'
@@ -583,7 +582,7 @@ class LegacyEqualityTestRoipacSmallTestData(unittest.TestCase):
     """
 
     def setUp(self):
-        from tests.common import small_data_setup
+        from common import small_data_setup
         self.ifgs = small_data_setup()
         self.ifg_paths = [i.data_path for i in self.ifgs]
         prepare_ifgs(self.ifg_paths, crop_opt=1, xlooks=1, ylooks=1)

@@ -28,9 +28,9 @@ import numpy as np
 from numpy.testing import assert_array_almost_equal
 import gdal
 
-import pyrate.core.ifgconstants as ifc
-from pyrate.core import shared, config as cf, gamma
-from pyrate.core.config import (
+import core.ifgconstants as ifc
+from core import shared, config as cf, gamma
+from core.config import (
     DEM_HEADER_FILE,
     NO_DATA_VALUE,
     OBS_DIR,
@@ -38,17 +38,16 @@ from pyrate.core.config import (
     PROCESSOR,
     OUT_DIR,
     SLC_DIR)
-from pyrate import prepifg, conv2tif
-from pyrate.core.shared import write_fullres_geotiff, GeotiffException
-from tests import common
-from tests.common import GAMMA_TEST_DIR, SML_TEST_GAMMA
-from tests.common import TEST_CONF_GAMMA, TEMPDIR
-from tests.common import small_data_setup
-from tests.constants import PYRATEPATH
+import prepifg, conv2tif
+from core.shared import write_fullres_geotiff, GeotiffException
+import common
+from common import GAMMA_TEST_DIR, SML_TEST_GAMMA
+from common import TEST_CONF_GAMMA, TEMPDIR
+from common import small_data_setup
 gdal.UseExceptions()
 
 LIGHTSPEED = 3e8  # approx
-
+PYRATEPATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 class GammaCommandLineTests(unittest.TestCase):
 

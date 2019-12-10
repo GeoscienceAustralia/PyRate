@@ -26,13 +26,12 @@ from numpy import eye, array, ones
 import numpy as np
 from numpy.testing import assert_array_almost_equal
 
-import pyrate.core.orbital
-import tests.common
-from pyrate.core import shared, ref_phs_est as rpe, config as cf, covariance as vcm_module
-from pyrate.core.stack import stack_rate
-from pyrate import process, prepifg, conv2tif
-from tests.common import (SML_TEST_DIR, prepare_ifgs_without_phase,
-    TEST_CONF_ROIPAC, pre_prepare_ifgs, remove_tifs)
+import core.orbital
+import common
+from core import shared, ref_phs_est as rpe, config as cf, covariance as vcm_module
+from core.stack import stack_rate
+import process, prepifg, conv2tif
+from common import (SML_TEST_DIR, prepare_ifgs_without_phase, TEST_CONF_ROIPAC, pre_prepare_ifgs, remove_tifs)
 
 
 def default_params():
@@ -99,12 +98,12 @@ class LegacyEqualityTest(unittest.TestCase):
         print(f"dest_paths={dest_paths}")
         # start run_pyrate copy
         ifgs = pre_prepare_ifgs(dest_paths, params)
-        mst_grid = tests.common.mst_calculation(dest_paths, params)
+        mst_grid = common.mst_calculation(dest_paths, params)
 
         refx, refy = process._ref_pixel_calc(dest_paths, params)
 
         # Estimate and remove orbit errors
-        pyrate.core.orbital.remove_orbital_error(ifgs, params)
+        core.orbital.remove_orbital_error(ifgs, params)
         ifgs = prepare_ifgs_without_phase(dest_paths, params)
         for ifg in ifgs:
             ifg.close()
@@ -122,14 +121,14 @@ class LegacyEqualityTest(unittest.TestCase):
         
         # Calculate linear rate map
         params[cf.PARALLEL] = 1
-        cls.rate, cls.error, cls.samples = tests.common.calculate_linear_rate( ifgs, params, vcmt, mst_mat=mst_grid)
+        cls.rate, cls.error, cls.samples = common.calculate_linear_rate( ifgs, params, vcmt, mst_mat=mst_grid)
 
         params[cf.PARALLEL] = 2
-        cls.rate_2, cls.error_2, cls.samples_2 = tests.common.calculate_linear_rate(ifgs, params, vcmt, mst_mat=mst_grid)
+        cls.rate_2, cls.error_2, cls.samples_2 = common.calculate_linear_rate(ifgs, params, vcmt, mst_mat=mst_grid)
 
         params[cf.PARALLEL] = 0
         # Calculate linear rate map
-        cls.rate_s, cls.error_s, cls.samples_s = tests.common.calculate_linear_rate(ifgs, params, vcmt, mst_mat=mst_grid)
+        cls.rate_s, cls.error_s, cls.samples_s = common.calculate_linear_rate(ifgs, params, vcmt, mst_mat=mst_grid)
 
         stackrate_dir = os.path.join(SML_TEST_DIR, 'linrate')
 

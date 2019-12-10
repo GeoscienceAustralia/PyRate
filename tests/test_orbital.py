@@ -32,18 +32,17 @@ from numpy.testing import assert_array_equal, assert_array_almost_equal
 from scipy.linalg import lstsq
 
 from .common import small5_mock_ifgs, MockIfg
-from pyrate.core import algorithm, config as cf
-from pyrate.core.orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, \
-    QUADRATIC, PART_CUBIC
-from pyrate.core.orbital import OrbitalError, _orbital_correction
-from pyrate.core.orbital import get_design_matrix, get_network_design_matrix
-from pyrate.core.orbital import _get_num_params, remove_orbital_error
-from pyrate.core.shared import Ifg
-from pyrate.core.shared import nanmedian
-from tests.common import TEST_CONF_ROIPAC, IFMS16
-from tests.common import SML_TEST_LEGACY_ORBITAL_DIR
-from tests.common import SML_TEST_TIF, small_data_setup
-from tests.common import small_ifg_file_list
+from core import algorithm, config as cf
+from core.orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, QUADRATIC, PART_CUBIC
+from core.orbital import OrbitalError, _orbital_correction
+from core.orbital import get_design_matrix, get_network_design_matrix
+from core.orbital import _get_num_params, remove_orbital_error
+from core.shared import Ifg
+from core.shared import nanmedian
+from common import TEST_CONF_ROIPAC, IFMS16
+from common import SML_TEST_LEGACY_ORBITAL_DIR
+from common import SML_TEST_TIF, small_data_setup
+from common import small_ifg_file_list
 
 #TODO: Purpose of this variable? Degrees are 1, 2 and 3 respectively
 DEG_LOOKUP = {
@@ -707,7 +706,7 @@ class LegacyComparisonTestsOrbfitMethod1(unittest.TestCase):
         shutil.rmtree(self.BASE_DIR)
 
     def test_orbital_correction_legacy_equality(self):
-        from pyrate import process
+        import process
 
         process._orb_fit_calc(self.ifg_paths, self.params)
 
@@ -722,9 +721,7 @@ class LegacyComparisonTestsOrbfitMethod1(unittest.TestCase):
             for k, j in enumerate(self.ifg_paths):
                 ifg = Ifg(j)
                 ifg.open()
-                if os.path.basename(j).split('_unw.')[0] == \
-                        os.path.basename(f).split(
-                            '_orb_planar_1lks_method1_')[1].split('.')[0]:
+                if os.path.basename(j).split('_unw.')[0] == os.path.basename(f).split('_orb_planar_1lks_method1_')[1].split('.')[0]:
                     count += 1
                     # all numbers equal
                     np.testing.assert_array_almost_equal(ifg_data,
