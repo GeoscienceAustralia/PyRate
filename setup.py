@@ -40,7 +40,7 @@ class PyTest(TestCommand, object):
         exit(pytest.main(self.pytest_args))
 
 
-requirements = reversed([line.strip() for line in open("requirements.txt", "r").readlines() if len(line)>2])
+requirements = [line.strip() for line in open("requirements.txt", "r").readlines() if len(line)>2]
 doclink = """
 
 Please see the full documentation at http://geoscienceaustralia.github.io/PyRate/."""
