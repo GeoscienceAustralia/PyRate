@@ -40,7 +40,7 @@ class PyTest(TestCommand, object):
         exit(pytest.main(self.pytest_args))
 
 
-requirements = [line.strip() for line in open("requirements.txt", "r").readlines() if len(line)>2]
+# requirements = [line.strip() for line in open("requirements.txt", "r").readlines() if len(line)>2]
 doclink = """
 
 Please see the full documentation at http://geoscienceaustralia.github.io/PyRate/."""
@@ -54,7 +54,7 @@ setup(
     author='Geoscience Australia InSAR team',
     author_email='insar@ga.gov.au',
     url='https://github.com/GeoscienceAustralia/PyRate',
-    install_requires=requirements,
+    # install_requires=requirements,
     package_dir={'': 'pyrate'},
     py_modules=["core.algorithm", "core.aps", "core.config", "core.covariance", "core.gamma", "core.gdal_python", "core.ifgconstants", "core.mpiops", "core.mst", "core.orbital", "core.prepifg_helper", "core.pyratelog", "core.ref_phs_est", "core.refpixel", "core.roipac", "core.shared", "core.stack", "core.timeseries", "core.user_experience", "constants", "conv2tif", "merge", "prepifg", "process"],
     package_data={
