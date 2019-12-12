@@ -1238,7 +1238,7 @@ def check_correction_status(ifgs, meta):  # pragma: no cover
                 msg = '{}: correction NOT detected'.format(i.data_path)
             log.debug(msg)
             close_all(ifgs)
-            raise CorrectionStatusError(msg)
+            # raise CorrectionStatusError(msg)
     else:
         log.debug('Calculating corrections')
         close_all(ifgs)
