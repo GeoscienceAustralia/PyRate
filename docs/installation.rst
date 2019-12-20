@@ -17,10 +17,10 @@ included example config file and data:
 
 ::
 
-    pyrate conv2tif -f input_parameters.conf
-    pyrate prepifg -f input_parameters.conf
-    pyrate process -f input_parameters.conf
-    pyrate merge -f input_parameters.conf
+    pyrate conv2tif -f sample_data/input_parameters.conf
+    pyrate prepifg -f sample_data/input_parameters.conf
+    pyrate process -f sample_data/input_parameters.conf
+    pyrate merge -f sample_data/input_parameters.conf
 
 If the installation has been successful, this workflow will complete without 
 errors and results will be available in:
