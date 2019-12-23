@@ -16,7 +16,7 @@
 #   limitations under the License.
 """
 This Python module contains tests for mpi operations in PyRate.
-Tun this module as 'mpirun -n 4 pytest tests/test_mpi.py'
+Run this module as 'mpirun -n 4 pytest tests/test_mpi.py'
 """
 import glob
 import shutil
@@ -31,7 +31,7 @@ import core.orbital
 import core.shared
 import common
 import process, prepifg, merge, conv2tif
-from common import (small_data_setup, reconstruct_mst, reconstruct_linrate, SML_TEST_DEM_HDR_GAMMA, pre_prepare_ifgs)
+from common import (small_data_setup, reconstruct_mst, reconstruct_stack_rate, SML_TEST_DEM_HDR_GAMMA, pre_prepare_ifgs)
 import common
 from test_covariance import legacy_maxvar
 from core import algorithm, ref_phs_est as rpe, mpiops, config as cf, covariance, refpixel
@@ -52,12 +52,12 @@ class MergingTest(unittest.TestCase):
             self.assertTrue(False, "Output color map file not found at: " + output_color_map_path)
 
         # check if png is created
-        output_image_path = os.path.join(output_folder_path, "linrate.png")
+        output_image_path = os.path.join(output_folder_path, "stack_rate.png")
         if not os.path.isfile(output_image_path):
             self.assertTrue(False, "Output png file not found at: " + output_image_path)
 
         # check if kml is created
-        output_kml_path = os.path.join(output_folder_path, "linrate.kml")
+        output_kml_path = os.path.join(output_folder_path, "stack_rate.kml")
         if not os.path.isfile(output_kml_path):
             self.assertTrue(False, "Output kml file not found at: " + output_kml_path)
 

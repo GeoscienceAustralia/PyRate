@@ -119,18 +119,18 @@ class LegacyEqualityTest(unittest.TestCase):
             ifg.close()     
             ifg.open()
         
-        # Calculate linear rate map
+        # Calculate stacked rate map
         params[cf.PARALLEL] = 1
-        cls.rate, cls.error, cls.samples = common.calculate_linear_rate( ifgs, params, vcmt, mst_mat=mst_grid)
+        cls.rate, cls.error, cls.samples = common.calculate_stacked_rate( ifgs, params, vcmt, mst_mat=mst_grid)
 
         params[cf.PARALLEL] = 2
-        cls.rate_2, cls.error_2, cls.samples_2 = common.calculate_linear_rate(ifgs, params, vcmt, mst_mat=mst_grid)
+        cls.rate_2, cls.error_2, cls.samples_2 = common.calculate_stacked_rate(ifgs, params, vcmt, mst_mat=mst_grid)
 
         params[cf.PARALLEL] = 0
-        # Calculate linear rate map
-        cls.rate_s, cls.error_s, cls.samples_s = common.calculate_linear_rate(ifgs, params, vcmt, mst_mat=mst_grid)
+        # Calculate stacked rate map
+        cls.rate_s, cls.error_s, cls.samples_s = common.calculate_stacked_rate(ifgs, params, vcmt, mst_mat=mst_grid)
 
-        stackrate_dir = os.path.join(SML_TEST_DIR, 'linrate')
+        stackrate_dir = os.path.join(SML_TEST_DIR, 'stack_rate')
 
         cls.rate_container = np.genfromtxt(os.path.join(stackrate_dir, 'stackmap.csv'), delimiter=',')
         cls.error_container = np.genfromtxt(os.path.join(stackrate_dir, 'errormap.csv'), delimiter=',')

@@ -14,7 +14,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 """
-This Python module does post-processing steps to assemble the linear
+This Python module does post-processing steps to assemble the
 rate and time series outputs and save as geotiff files
 """
 import os
@@ -32,6 +32,7 @@ import pathlib
 import time
 from constants import REF_COLOR_MAP_PATH
 from core import shared, ifgconstants as ifc, mpiops, config as cf
+from core.config import OBS_DIR
 from core.shared import PrereadIfg
 gdal.SetCacheMax(64)
 log = logging.getLogger(__name__)
@@ -39,13 +40,29 @@ log = logging.getLogger(__name__)
 # Constants
 MASTER_PROCESS = 0
 
+def main(params, rows, cols):
+    """
+    PyRate merge main function. Assembles product tiles in to
+    single geotiff files
+    """
+    # setup paths
+    _merge_stack(rows, cols, params)
+    if params[cf.TIME_SERIES_CAL]:
+        _merge_timeseries(rows, cols, params)
+
+    log.info('Start creating quicklook images.')
+    output_folder_path = os.path.dirname(params["tmpdir"])
+    create_png_from_tif(output_folder_path)
+    log.info('Finished creating quicklook images.')
+
+
 def create_png_from_tif(output_folder_path):
 
     # open raster and choose band to find min, max
-    raster_path = os.path.join(output_folder_path, "linrate.tif")
+    raster_path = os.path.join(output_folder_path, "stack_rate.tif")
 
     if not os.path.isfile(raster_path):
-        raise Exception("linrate.tif file not found at: "+raster_path)
+        raise Exception("stack_rate.tif file not found at: "+raster_path)
     gtif = gdal.Open(raster_path)
     srcband = gtif.GetRasterBand(1)
 
@@ -56,15 +73,15 @@ def create_png_from_tif(output_folder_path):
         if "Lower Right" in line:
             east, south = line.split(")")[0].split("(")[1].split(",")
 
-    kml_file_path = os.path.join(output_folder_path, "linrate.kml")
+    kml_file_path = os.path.join(output_folder_path, "stack_rate.kml")
     kml_file_content = """<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://earth.google.com/kml/2.1">
   <Document>
-    <name>linrate.kml</name>
+    <name>stack_rate.kml</name>
     <GroundOverlay>
-      <name>linrate.png</name>
+      <name>stack_rate.png</name>
       <Icon>
-        <href>linrate.png</href>
+        <href>stack_rate.png</href>
       </Icon>
       <LatLonBox>
         <north> """+north+""" </north>
@@ -87,7 +104,7 @@ def create_png_from_tif(output_folder_path):
 
     del gtif  # manually close raster
 
-    # read color map from utilises and write it to the output folder
+    # read color map from utilities and write it to the output folder
 
     with open(REF_COLOR_MAP_PATH, "r") as f:
         color_map_list = []
@@ -103,30 +120,14 @@ def create_png_from_tif(output_folder_path):
         for i in range(no_of_data_value):
             f.write(' '.join(color_map_list[i]) + "\n")
 
-    input_tif_path = os.path.join(output_folder_path, "linrate.tif")
-    output_png_path = os.path.join(output_folder_path, "linrate.png")
+    input_tif_path = os.path.join(output_folder_path, "stack_rate.tif")
+    output_png_path = os.path.join(output_folder_path, "stack_rate.png")
     subprocess.check_call(["gdaldem", "color-relief", "-of", "PNG", input_tif_path, "-alpha", color_map_path, output_png_path, "-nearest_color_entry"])
 
 
-def main(params, rows, cols):
+def _merge_stack(rows, cols, params):
     """
-    PyRate merge main function. Assembles product tiles in to
-    single geotiff files
-    """
-    # setup paths
-    _merge_linrate(rows, cols, params)
-    if params[cf.TIME_SERIES_CAL]:
-        _merge_timeseries(rows, cols, params)
-
-    log.info('Start creating quicklook results.')
-    output_folder_path = os.path.dirname(params["tmpdir"])
-    create_png_from_tif(output_folder_path)
-    log.info('Finished creating quick look results.')
-
-from core.config import OBS_DIR
-def _merge_linrate(rows, cols, params):
-    """
-    Merge linear rate outputs
+    Merge stacking outputs
     """
     # setup paths
     xlks, _, crop = cf.transform_params(params)
@@ -149,20 +150,20 @@ def _merge_linrate(rows, cols, params):
     ifgs = cp.load(open(preread_ifgs_file, 'rb'))
     tiles = shared.get_tiles(dest_tifs[0], rows, cols)
 
-    # linrate aggregation
+    # stacking aggregation
     if mpiops.size >= 3:
-        [_save_linrate(ifgs, params, tiles, out_type=t)
-         for i, t in enumerate(['linrate', 'linerror', 'linsamples'])
+        [_save_stack(ifgs, params, tiles, out_type=t)
+         for i, t in enumerate(['stack_rate', 'stack_error', 'stack_samples'])
          if i == mpiops.rank]
     else:
         if mpiops.rank == MASTER_PROCESS:
-            [_save_linrate(ifgs, params, tiles, out_type=t)
-             for t in ['linrate', 'linerror', 'linsamples']]
+            [_save_stack(ifgs, params, tiles, out_type=t)
+             for t in ['stack_rate', 'stack_error', 'stack_samples']]
 
 
-def _save_linrate(ifgs_dict, params, tiles, out_type):
+def _save_stack(ifgs_dict, params, tiles, out_type):
     """
-    Save linear rate outputs
+    Save stacking outputs
     """
     log.info('Merging PyRate outputs {}'.format(out_type))
     gt, md, wkt = ifgs_dict['gt'], ifgs_dict['md'], ifgs_dict['wkt']
@@ -170,12 +171,12 @@ def _save_linrate(ifgs_dict, params, tiles, out_type):
     ifgs = [v for v in ifgs_dict.values() if isinstance(v, PrereadIfg)]
     dest = os.path.join(params[cf.OUT_DIR], out_type + ".tif")
     md[ifc.EPOCH_DATE] = epochlist.dates
-    if out_type == 'linrate':
-        md[ifc.DATA_TYPE] = ifc.LINRATE
-    elif out_type == 'linerror':
-        md[ifc.DATA_TYPE] = ifc.LINERROR
+    if out_type == 'stack_rate':
+        md[ifc.DATA_TYPE] = ifc.STACKRATE
+    elif out_type == 'stack_error':
+        md[ifc.DATA_TYPE] = ifc.STACKERROR
     else:
-        md[ifc.DATA_TYPE] = ifc.LINSAMP
+        md[ifc.DATA_TYPE] = ifc.STACKSAMP
 
     rate = np.zeros(shape=ifgs[0].shape, dtype=np.float32)
 
