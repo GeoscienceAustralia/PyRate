@@ -42,7 +42,7 @@ def stack_rate(ifgs, params, vcmt, mst=None):
     :rtype: ndarray
     :return: error: Standard deviation of the rate map
     :rtype: ndarray
-    :return: samples: Statistics of observations used in calculation
+    :return: samples: Number of observations used in rate calculation per pixel
     :rtype: ndarray
     """
     maxsig, nsig, pthresh, cols, error, mst, obs, parallel, _, rate, rows, samples, span = _stack_setup(ifgs, mst, params)
