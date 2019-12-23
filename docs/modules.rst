@@ -1,4 +1,4 @@
-Pyrate Modules
+PyRate Modules
 ==============
 
 .. toctree::
@@ -9,7 +9,7 @@ Pyrate Modules
    config
    covariance
    gamma
-   linrate
+   stack
    mst
    orbital
    pyratelog
