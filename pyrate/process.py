@@ -61,6 +61,7 @@ def _create_ifg_dict(dest_tifs, params, tiles):
     :rtype: dict
     """
     ifgs_dict = {}
+    nifgs = len(dest_tifs)
     process_tifs = mpiops.array_split(dest_tifs)
     shared.save_numpy_phase(dest_tifs, tiles, params)
     for d in process_tifs:
@@ -82,7 +83,9 @@ def _create_ifg_dict(dest_tifs, params, tiles):
 
         # add some extra information that's also useful later
         gt, md, wkt = shared.get_geotiff_header_info(process_tifs[0])
-        ifgs_dict['epochlist'] = algorithm.get_epochs(ifgs_dict)[0]
+        epochlist = algorithm.get_epochs(ifgs_dict)[0]
+        log.info('Found {} unique epochs in the {} interferogram network'.format(len(epochlist.dates), nifgs))
+        ifgs_dict['epochlist'] = epochlist
         ifgs_dict['gt'] = gt
         ifgs_dict['md'] = md
         ifgs_dict['wkt'] = wkt
