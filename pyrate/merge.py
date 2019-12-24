@@ -50,10 +50,10 @@ def main(params, rows, cols):
     if params[cf.TIME_SERIES_CAL]:
         _merge_timeseries(rows, cols, params)
 
-    log.info('Start creating quicklook images.')
+    log.info('Creating quicklook images.')
     output_folder_path = os.path.dirname(params["tmpdir"])
     create_png_from_tif(output_folder_path)
-    log.info('Finished creating quicklook images.')
+    log.debug('Finished creating quicklook images.')
 
 
 def create_png_from_tif(output_folder_path):
@@ -189,7 +189,7 @@ def _save_stack(ifgs_dict, params, tiles, out_type):
     npy_rate_file = os.path.join(params[cf.OUT_DIR], out_type + '.npy')
     np.save(file=npy_rate_file, arr=rate)
 
-    log.info('Finished PyRate merging {}'.format(out_type))
+    log.debug('Finished PyRate merging {}'.format(out_type))
 
 
 def _merge_timeseries(rows, cols, params):
@@ -238,7 +238,7 @@ def _merge_timeseries(rows, cols, params):
     # e.g. nvelpar=100, nrows=10000, ncols=10000, 32bit floats need 40GB memory
     # 32 * 100 * 10000 * 10000 / 8 bytes = 4e10 bytes = 40 GB
     # the double for loop helps us overcome the memory limit
-    log.info('process {} will write {} ts (incr/cuml) tifs of '
+    log.info('Process {} writing {} ts (incr/cuml) tifs of '
              'total {}'.format(mpiops.rank, len(process_tifs), no_ts_tifs * 2))
     for i in process_tifs:
         tscum_g = np.empty(shape=ifgs[0].shape, dtype=np.float32)
@@ -266,7 +266,7 @@ def _merge_timeseries(rows, cols, params):
                                     epochlist.dates[i + 1]) + ".tif")
             md[ifc.DATA_TYPE] = ifc.INCR
             shared.write_output_geotiff(md, gt, wkt, tsincr_g, dest, np.nan)
-    log.info('process {} finished writing {} ts (incr/cuml) tifs of '
+    log.debug('Process {} finished writing {} ts (incr/cuml) tifs of '
              'total {}'.format(mpiops.rank, len(process_tifs), no_ts_tifs * 2))
 
 
