@@ -31,7 +31,7 @@ import core.orbital
 import core.shared
 import common
 import process, prepifg, merge, conv2tif
-from common import (small_data_setup, reconstruct_mst,  reconstruct_linrate, SML_TEST_DEM_HDR_GAMMA, pre_prepare_ifgs)
+from common import (small_data_setup, reconstruct_mst,  reconstruct_stack_rate, SML_TEST_DEM_HDR_GAMMA, pre_prepare_ifgs)
 import common
 from test_covariance import legacy_maxvar
 from core import algorithm, ref_phs_est as rpe, mpiops, config as cf, covariance, refpixel
@@ -189,9 +189,9 @@ def orbfit_degrees(request):
 
 
 def _tifs_same(dir1, dir2, tif):
-    linrate_tif_s = os.path.join(dir1, tif)
-    linrate_tif_m = os.path.join(dir2, tif)
-    common.assert_ifg_phase_equal(linrate_tif_m, linrate_tif_s)
+    stack_tif_s = os.path.join(dir1, tif)
+    stack_tif_m = os.path.join(dir2, tif)
+    common.assert_ifg_phase_equal(stack_tif_m, stack_tif_s)
 
 def test_prepifg_mpi(mpisync, get_config, tempdir, roipac_or_gamma, get_lks, get_crop):
     from common import TEST_CONF_ROIPAC, TEST_CONF_GAMMA
