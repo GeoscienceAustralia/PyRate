@@ -62,7 +62,7 @@ setup(
               'pyrate = main:main'
           ]
       },
-    scripts=['scripts/create_local_documentation.py'],
+    # scripts=['scripts/create_html_documentation.sh'],
     license="Apache Software License 2.0",
     zip_safe=False,
     keywords='PyRate, Python, InSAR, Geodesy, Remote Sensing, Image Processing',
