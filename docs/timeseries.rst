@@ -1,5 +1,5 @@
 Time Series Module
 ==================
 
-.. automodule:: pyrate.core.timeseries
+.. automodule:: core.timeseries
    :members:

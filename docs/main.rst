@@ -1,7 +1,7 @@
 PyRate Main Script
 ==================
 
-.. automodule:: pyrate.__main__
+.. automodule:: __main__
 
    .. rubric:: Functions
    .. autosummary::

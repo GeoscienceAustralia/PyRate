@@ -1,5 +1,5 @@
 Stacking Module
 ===============
 
-.. automodule:: pyrate.core.stack
+.. automodule:: core.stack
    :members:

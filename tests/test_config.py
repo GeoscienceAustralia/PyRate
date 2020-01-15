@@ -102,7 +102,7 @@ from core.config import (
     APS_METHOD,
     APS_CORRECTION,
     ConfigException)
-# from pyrate.tasks.utils import DUMMY_SECTION_NAME
+# from tasks.utils import DUMMY_SECTION_NAME
 import common
 DUMMY_SECTION_NAME = 'pyrate'
 

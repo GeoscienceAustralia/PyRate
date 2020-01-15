@@ -1,7 +1,7 @@
 PyRate Merge Script
 ===================
 
-.. automodule:: pyrate.merge
+.. automodule:: merge
     :members:
     :undoc-members:
     :show-inheritance:
