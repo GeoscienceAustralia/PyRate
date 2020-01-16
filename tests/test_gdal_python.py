@@ -42,25 +42,25 @@ from core.shared import Ifg
 
 
 
-class TestCrop(unittest.TestCase):
-    def test_small_data_cropping(self):
-        small_test_ifgs = common.small_data_setup()
-        # minX, minY, maxX, maxY = extents
-        extents = [150.91, -34.229999976, 150.949166651, -34.17]
-        extents_str = [str(e) for e in extents]
-        cmd = ['gdalwarp', '-overwrite', '-srcnodata', 'None', '-q', '-te'] + extents_str
-
-        for s in small_test_ifgs:
-            temp_tif = tempfile.mktemp(suffix='.tif')
-            t_cmd = cmd + [s.data_path,  temp_tif]
-            subprocess.check_call(t_cmd)
-            clipped_ref = gdal.Open(temp_tif).ReadAsArray()
-            clipped = gdal_python.crop(s.data_path, extents)[0]
-            np.testing.assert_array_almost_equal(clipped_ref, clipped)
-            try:
-                os.remove(temp_tif)
-            except PermissionError:
-                print("File opened by another process.")
+# class TestCrop(unittest.TestCase):
+    # def test_small_data_cropping(self):
+    #     small_test_ifgs = common.small_data_setup()
+    #     # minX, minY, maxX, maxY = extents
+    #     extents = [150.91, -34.229999976, 150.949166651, -34.17]
+    #     extents_str = [str(e) for e in extents]
+    #     cmd = ['gdalwarp', '-overwrite', '-srcnodata', 'None', '-q', '-te'] + extents_str
+    #
+    #     for s in small_test_ifgs:
+    #         temp_tif = tempfile.mktemp(suffix='.tif')
+    #         t_cmd = cmd + [s.data_path,  temp_tif]
+    #         subprocess.check_call(t_cmd)
+    #         clipped_ref = gdal.Open(temp_tif).ReadAsArray()
+    #         clipped = gdal_python.crop(s.data_path, extents)[0]
+    #         np.testing.assert_array_almost_equal(clipped_ref, clipped)
+    #         try:
+    #             os.remove(temp_tif)
+    #         except PermissionError:
+    #             print("File opened by another process.")
 
 
 class TestResample(unittest.TestCase):
@@ -121,17 +121,17 @@ class TestResample(unittest.TestCase):
                 self.assertTrue(os.path.exists(resampled_temp_tif))
                 os.remove(resampled_temp_tif)
 
-    def test_small_data_crop_vs_resample(self):
-        small_test_ifgs = common.small_data_setup()
-        # minX, minY, maxX, maxY = extents
-        extents = [150.91, -34.229999976, 150.949166651, -34.17]
-        for s in small_test_ifgs:
-            clipped = gdal_python.crop(s.data_path, extents)[0]
-            resampled_temp_tif = tempfile.mktemp(suffix='.tif', prefix='resampled_')
-            resampled = gdal_python.resample_nearest_neighbour(s.data_path, extents, [None, None], resampled_temp_tif)
-            self.assertTrue(os.path.exists(resampled_temp_tif))
-            np.testing.assert_array_almost_equal(resampled[0, :, :], clipped)
-            os.remove(resampled_temp_tif)
+    # def test_small_data_crop_vs_resample(self):
+    #     small_test_ifgs = common.small_data_setup()
+    #     # minX, minY, maxX, maxY = extents
+    #     extents = [150.91, -34.229999976, 150.949166651, -34.17]
+    #     for s in small_test_ifgs:
+    #         clipped = gdal_python.crop(s.data_path, extents)[0]
+    #         resampled_temp_tif = tempfile.mktemp(suffix='.tif', prefix='resampled_')
+    #         resampled = gdal_python.resample_nearest_neighbour(s.data_path, extents, [None, None], resampled_temp_tif)
+    #         self.assertTrue(os.path.exists(resampled_temp_tif))
+    #         np.testing.assert_array_almost_equal(resampled[0, :, :], clipped)
+    #         os.remove(resampled_temp_tif)
 
     def test_resampled_tif_has_metadata(self):
         small_test_ifgs = common.small_data_setup()

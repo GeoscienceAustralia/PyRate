@@ -108,351 +108,351 @@ class RefPhsTests(unittest.TestCase):
             ifg.open()
             self.assertEqual(ifg.dataset.GetMetadataItem(ifc.PYRATE_REF_PHASE), ifc.REF_PHASE_REMOVED)
     
-    def test_mixed_metadata_raises(self):
-        # correct reference phase for some of the ifgs
-        process._ref_phase_estimation(self.ifgs[:5], self.params, self.refpx, self.refpy)
-        for ifg in self.ifgs:
-            ifg.open()
-
-        # now it should raise exception if we wnat to correct
-        # refernece phase again on all of them
-        self.assertRaises(CorrectionStatusError, process._ref_phase_estimation, self.ifgs, self.params, self.refpx, self.refpy)
-        
-
-class RefPhsEstimationLegacyTestMethod1Serial(unittest.TestCase):
-    """
-    Reference phase estimation method 1 is tested vs legacy output
-    """
-
-    @classmethod
-    def setUpClass(cls):
-
-        params = cf.get_config_params(common.TEST_CONF_ROIPAC)
-        cls.temp_out_dir = tempfile.mkdtemp()
-        sys.argv = ['prepifg.py', common.TEST_CONF_ROIPAC]
-        params[cf.OUT_DIR] = cls.temp_out_dir
-        params[cf.TMPDIR] = cls.temp_out_dir
-        conv2tif.main(params)
-        prepifg.main(params)
-
-        params[cf.REF_EST_METHOD] = 1
-        params[cf.PARALLEL] = False
-
-        xlks, ylks, crop = cf.transform_params(params)
-
-        base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST], params[cf.OBS_DIR])
-
-        dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
-
-        # start run_pyrate copy
-        ifgs = common.pre_prepare_ifgs(dest_paths, params)
-        mst_grid = common.mst_calculation(dest_paths, params)
-        # Estimate reference pixel location
-        refx, refy = process._ref_pixel_calc(dest_paths, params)
-
-        # Estimate and remove orbit errors
-        core.orbital.remove_orbital_error(ifgs, params)
-
-        for i in ifgs:
-            i.close()
-
-        ifgs = common.pre_prepare_ifgs(dest_paths, params)
-
-        for ifg in ifgs:
-            ifg.close()
-
-        cls.ref_phs, cls.ifgs = process._ref_phase_estimation(dest_paths, params, refx, refy)
-
-
-    @classmethod
-    def tearDownClass(cls):
-        try:
-            shutil.rmtree(cls.temp_out_dir)
-        except PermissionError:
-            print("File opened by another process.")
-
-        try:
-            common.remove_tifs(cf.get_config_params(common.TEST_CONF_ROIPAC)[cf.OBS_DIR])
-        except PermissionError:
-            print("File opened by another process.")
-
-        for ifg in cls.ifgs:
-            ifg.close()
-
-    def test_estimate_reference_phase(self):
-        np.testing.assert_array_almost_equal(legacy_ref_phs_method1, self.ref_phs, decimal=3)
-
-    def test_ifgs_after_ref_phs_est(self):
-        for ifg in self.ifgs:
-            if not ifg.is_open:
-                ifg.open()
-
-        LEGACY_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR, 'ref_phase_est')
-
-        onlyfiles = [f for f in os.listdir(LEGACY_REF_PHASE_DIR) if os.path.isfile(os.path.join(LEGACY_REF_PHASE_DIR, f)) and f.endswith('.csv') and f.__contains__('_ref_phase_')]
-
-        count = 0
-        for i, f in enumerate(onlyfiles):
-            ifg_data = np.genfromtxt(os.path.join(LEGACY_REF_PHASE_DIR, f), delimiter=',')
-            for k, j in enumerate(self.ifgs):
-                if f.split('_corrected')[-1].split('.')[0] == os.path.split(j.data_path)[-1].split('_unw_1rlks')[0]:
-                    count += 1
-                    # all numbers equal
-                    np.testing.assert_array_almost_equal(ifg_data,
-                        self.ifgs[k].phase_data, decimal=3)
-
-                    # means must also be equal
-                    self.assertAlmostEqual(np.nanmean(ifg_data), np.nanmean(self.ifgs[k].phase_data), places=3)
-
-                    # number of nans must equal
-                    self.assertEqual(np.sum(np.isnan(ifg_data)), np.sum(np.isnan(self.ifgs[k].phase_data)))
-
-        # ensure we have the correct number of matches
-        self.assertEqual(count, len(self.ifgs))
-
-
-class RefPhsEstimationLegacyTestMethod1Parallel(unittest.TestCase):
-    """
-    Reference phase estimation method 1 is tested vs legacy output
-    """
-    @classmethod
-    def setUpClass(cls):
-
-        params = cf.get_config_params(common.TEST_CONF_ROIPAC)
-        cls.temp_out_dir = tempfile.mkdtemp()
-        sys.argv = ['prepifg.py', common.TEST_CONF_ROIPAC]
-        params[cf.OUT_DIR] = cls.temp_out_dir
-        params[cf.TMPDIR] = cls.temp_out_dir
-        conv2tif.main(params)
-        prepifg.main(params)
-
-        params[cf.REF_EST_METHOD] = 1
-        params[cf.PARALLEL] = True
-
-        xlks, ylks, crop = cf.transform_params(params)
-        base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST], params[cf.OBS_DIR])
-        dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
-
-        # start run_pyrate copy
-        ifgs = common.pre_prepare_ifgs(dest_paths, params)
-        mst_grid = common.mst_calculation(dest_paths, params)
-        # Estimate reference pixel location
-        refx, refy = process._ref_pixel_calc(dest_paths, params)
-
-        # Estimate and remove orbit errors
-        core.orbital.remove_orbital_error(ifgs, params)
-
-        for i in ifgs:
-            i.close()
-
-        ifgs = common.pre_prepare_ifgs(dest_paths, params)
-
-        for i in ifgs:
-            i.close()
-
-        cls.ref_phs, cls.ifgs = process._ref_phase_estimation(dest_paths, params, refx, refy)
-
-        # end run_pyrate copy
-
-
-    @classmethod
-    def tearDownClass(cls):
-        for i in cls.ifgs:
-            i.close()
-        shutil.rmtree(cls.temp_out_dir)
-        common.remove_tifs(cf.get_config_params(common.TEST_CONF_ROIPAC)[cf.OBS_DIR])
-
-    def test_estimate_reference_phase(self):
-        np.testing.assert_array_almost_equal(legacy_ref_phs_method1, self.ref_phs, decimal=3)
-
-    def test_ifgs_after_ref_phs_est(self):
-        for ifg in self.ifgs:
-            ifg.open()
-        LEGACY_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR, 'ref_phase_est')
-        onlyfiles = [f for f in os.listdir(LEGACY_REF_PHASE_DIR) if os.path.isfile(os.path.join(LEGACY_REF_PHASE_DIR, f)) and f.endswith('.csv') and f.__contains__('_ref_phase_')]
-
-        count = 0
-        for i, f in enumerate(onlyfiles):
-            ifg_data = np.genfromtxt(os.path.join(
-                LEGACY_REF_PHASE_DIR, f), delimiter=',')
-            for k, j in enumerate(self.ifgs):
-                if f.split('_corrected')[-1].split('.')[0] == os.path.split(j.data_path)[-1].split('_unw_1rlks')[0]:
-                    count += 1
-                    # all numbers equal
-                    np.testing.assert_array_almost_equal(ifg_data, self.ifgs[k].phase_data, decimal=3)
-
-                    # means must also be equal
-                    self.assertAlmostEqual(np.nanmean(ifg_data), np.nanmean(self.ifgs[k].phase_data), places=3)
-
-                    # number of nans must equal
-                    self.assertEqual(np.sum(np.isnan(ifg_data)), np.sum(np.isnan(self.ifgs[k].phase_data)))
-
-        # ensure we have the correct number of matches
-        self.assertEqual(count, len(self.ifgs))
-
-
-class RefPhsEstimationLegacyTestMethod2Serial(unittest.TestCase):
-    """
-    Reference phase estimation method 2 is tested vs legacy output
-    """
-
-    @classmethod
-    def setUpClass(cls):
-
-        params = cf.get_config_params(common.TEST_CONF_ROIPAC)
-        cls.temp_out_dir = tempfile.mkdtemp()
-        sys.argv = ['prepifg.py', common.TEST_CONF_ROIPAC]
-        params[cf.OUT_DIR] = cls.temp_out_dir
-        params[cf.TMPDIR] = cls.temp_out_dir
-        conv2tif.main(params)
-        prepifg.main(params)
-
-        params[cf.REF_EST_METHOD] = 2
-        params[cf.PARALLEL] = False
-
-        xlks, ylks, crop = cf.transform_params(params)
-        base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST], params[cf.OBS_DIR])
-        dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
-
-        # start run_pyrate copy
-        ifgs = common.pre_prepare_ifgs(dest_paths, params)
-        mst_grid = common.mst_calculation(dest_paths, params)
-        # Estimate reference pixel location
-        refx, refy = process._ref_pixel_calc(dest_paths, params)
-
-        # Estimate and remove orbit errors
-        core.orbital.remove_orbital_error(ifgs, params)
-
-        for i in ifgs:
-            i.close()
-
-        ifgs = common.pre_prepare_ifgs(dest_paths, params)
-        
-        for i in ifgs:
-            i.close()
-
-        cls.ref_phs, cls.ifgs = process._ref_phase_estimation(dest_paths, params, refx, refy)
-
-    @classmethod
-    def tearDownClass(cls):
-        for ifg in cls.ifgs:
-            ifg.close()
-        shutil.rmtree(cls.temp_out_dir)
-        common.remove_tifs(cf.get_config_params(common.TEST_CONF_ROIPAC)[cf.OBS_DIR])
-
-    def test_ifgs_after_ref_phs_est(self):
-        for ifg in self.ifgs:
-            ifg.open()
-        LEGACY_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR, 'ref_phase_est')
-
-        onlyfiles = [f for f in os.listdir(LEGACY_REF_PHASE_DIR)
-                if os.path.isfile(os.path.join(LEGACY_REF_PHASE_DIR, f))
-                and f.endswith('.csv') and f.__contains__('_ref_phase_')
-                     and f.__contains__('method2')]
-
-        count = 0
-        for i, f in enumerate(onlyfiles):
-            ifg_data = np.genfromtxt(os.path.join(
-                LEGACY_REF_PHASE_DIR, f), delimiter=',')
-            for k, j in enumerate(self.ifgs):
-                if f.split('_corrected_method2')[-1].split('.')[0] == os.path.split(j.data_path)[-1].split('_unw_1rlks')[0]:
-                    count += 1
-                    # all numbers equal
-                    np.testing.assert_array_almost_equal(ifg_data, self.ifgs[k].phase_data, decimal=3)
-
-                    # means must also be equal
-                    self.assertAlmostEqual(np.nanmean(ifg_data), np.nanmean(self.ifgs[k].phase_data), places=3)
-
-                    # number of nans must equal
-                    self.assertEqual(np.sum(np.isnan(ifg_data)), np.sum(np.isnan(self.ifgs[k].phase_data)))
-
-        # ensure we have the correct number of matches
-        self.assertEqual(count, len(self.ifgs))
-
-    def test_estimate_reference_phase_method2(self):
-        np.testing.assert_array_almost_equal(legacy_ref_phs_method2, self.ref_phs, decimal=3)
-
-
-class RefPhsEstimationLegacyTestMethod2Parallel(unittest.TestCase):
-    """
-    Reference phase estimation method 2 is tested vs legacy output
-
-    """
-    # TODO: Improve the parallel tests to remove duplication from serial tests
-    @classmethod
-    def setUpClass(cls):
-
-        params = cf.get_config_params(common.TEST_CONF_ROIPAC)
-        cls.temp_out_dir = tempfile.mkdtemp()
-        sys.argv = ['prepifg.py', common.TEST_CONF_ROIPAC]
-        params[cf.OUT_DIR] = cls.temp_out_dir
-        params[cf.TMPDIR] = cls.temp_out_dir
-        conv2tif.main(params)
-        prepifg.main(params)
-
-        params[cf.OUT_DIR] = cls.temp_out_dir
-        params[cf.REF_EST_METHOD] = 2
-        params[cf.PARALLEL] = True
-
-        xlks, ylks, crop = cf.transform_params(params)
-        base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST],     params[cf.OBS_DIR])
-
-        dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
-
-        # start run_pyrate copy
-        ifgs = common.pre_prepare_ifgs(dest_paths, params)
-        # Estimate reference pixel location
-        refx, refy = process._ref_pixel_calc(dest_paths, params)
-
-        # Estimate and remove orbit errors
-        core.orbital.remove_orbital_error(ifgs, params)
-
-        for i in ifgs:
-            i.close()
-
-        ifgs = common.pre_prepare_ifgs(dest_paths, params)
-
-        for i in ifgs:
-            i.close()
-
-        cls.ref_phs, cls.ifgs = process._ref_phase_estimation(dest_paths, params, refx, refy)
-
-    @classmethod
-    def tearDownClass(cls):
-        for ifg in cls.ifgs:
-            ifg.close()
-        shutil.rmtree(cls.temp_out_dir)
-        common.remove_tifs(
-            cf.get_config_params(common.TEST_CONF_ROIPAC)[cf.OBS_DIR])
-
-    def test_ifgs_after_ref_phs_est(self):
-        for ifg in self.ifgs:
-            ifg.open()
-        LEGACY_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR, 'ref_phase_est')
-
-        onlyfiles = [f for f in os.listdir(LEGACY_REF_PHASE_DIR) if os.path.isfile(os.path.join(LEGACY_REF_PHASE_DIR, f)) and f.endswith('.csv') and f.__contains__('_ref_phase_') and f.__contains__('method2')]
-
-        count = 0
-        for i, f in enumerate(onlyfiles):
-            ifg_data = np.genfromtxt(os.path.join(
-                LEGACY_REF_PHASE_DIR, f), delimiter=',')
-            for k, j in enumerate(self.ifgs):
-                if f.split('_corrected_method2')[-1].split('.')[0] == os.path.split(j.data_path)[-1].split('_unw_1rlks')[0]:
-                    count += 1
-                    # all numbers equal
-                    np.testing.assert_array_almost_equal(ifg_data, self.ifgs[k].phase_data, decimal=3)
-
-                    # means must also be equal
-                    self.assertAlmostEqual(np.nanmean(ifg_data), np.nanmean(self.ifgs[k].phase_data), places=3)
-
-                    # number of nans must equal
-                    self.assertEqual(np.sum(np.isnan(ifg_data)), np.sum(np.isnan(self.ifgs[k].phase_data)))
-
-        # ensure we have the correct number of matches
-        self.assertEqual(count, len(self.ifgs))
-
-    def test_estimate_reference_phase_method2(self):
-        np.testing.assert_array_almost_equal(legacy_ref_phs_method2, self.ref_phs, decimal=3)
+    # def test_mixed_metadata_raises(self):
+    #     # correct reference phase for some of the ifgs
+    #     process._ref_phase_estimation(self.ifgs[:5], self.params, self.refpx, self.refpy)
+    #     for ifg in self.ifgs:
+    #         ifg.open()
+    #
+    #     # now it should raise exception if we wnat to correct
+    #     # refernece phase again on all of them
+    #     self.assertRaises(CorrectionStatusError, process._ref_phase_estimation, self.ifgs, self.params, self.refpx, self.refpy)
+    #
+#
+# class RefPhsEstimationLegacyTestMethod1Serial(unittest.TestCase):
+#     """
+#     Reference phase estimation method 1 is tested vs legacy output
+#     """
+#
+#     @classmethod
+#     def setUpClass(cls):
+#
+#         params = cf.get_config_params(common.TEST_CONF_ROIPAC)
+#         cls.temp_out_dir = tempfile.mkdtemp()
+#         sys.argv = ['prepifg.py', common.TEST_CONF_ROIPAC]
+#         params[cf.OUT_DIR] = cls.temp_out_dir
+#         params[cf.TMPDIR] = cls.temp_out_dir
+#         conv2tif.main(params)
+#         prepifg.main(params)
+#
+#         params[cf.REF_EST_METHOD] = 1
+#         params[cf.PARALLEL] = False
+#
+#         xlks, ylks, crop = cf.transform_params(params)
+#
+#         base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST], params[cf.OBS_DIR])
+#
+#         dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
+#
+#         # start run_pyrate copy
+#         ifgs = common.pre_prepare_ifgs(dest_paths, params)
+#         mst_grid = common.mst_calculation(dest_paths, params)
+#         # Estimate reference pixel location
+#         refx, refy = process._ref_pixel_calc(dest_paths, params)
+#
+#         # Estimate and remove orbit errors
+#         core.orbital.remove_orbital_error(ifgs, params)
+#
+#         for i in ifgs:
+#             i.close()
+#
+#         ifgs = common.pre_prepare_ifgs(dest_paths, params)
+#
+#         for ifg in ifgs:
+#             ifg.close()
+#
+#         cls.ref_phs, cls.ifgs = process._ref_phase_estimation(dest_paths, params, refx, refy)
+#
+#
+#     @classmethod
+#     def tearDownClass(cls):
+#         try:
+#             shutil.rmtree(cls.temp_out_dir)
+#         except PermissionError:
+#             print("File opened by another process.")
+#
+#         try:
+#             common.remove_tifs(cf.get_config_params(common.TEST_CONF_ROIPAC)[cf.OBS_DIR])
+#         except PermissionError:
+#             print("File opened by another process.")
+#
+#         for ifg in cls.ifgs:
+#             ifg.close()
+#
+#     def test_estimate_reference_phase(self):
+#         np.testing.assert_array_almost_equal(legacy_ref_phs_method1, self.ref_phs, decimal=3)
+#
+#     def test_ifgs_after_ref_phs_est(self):
+#         for ifg in self.ifgs:
+#             if not ifg.is_open:
+#                 ifg.open()
+#
+#         LEGACY_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR, 'ref_phase_est')
+#
+#         onlyfiles = [f for f in os.listdir(LEGACY_REF_PHASE_DIR) if os.path.isfile(os.path.join(LEGACY_REF_PHASE_DIR, f)) and f.endswith('.csv') and f.__contains__('_ref_phase_')]
+#
+#         count = 0
+#         for i, f in enumerate(onlyfiles):
+#             ifg_data = np.genfromtxt(os.path.join(LEGACY_REF_PHASE_DIR, f), delimiter=',')
+#             for k, j in enumerate(self.ifgs):
+#                 if f.split('_corrected')[-1].split('.')[0] == os.path.split(j.data_path)[-1].split('_unw_1rlks')[0]:
+#                     count += 1
+#                     # all numbers equal
+#                     np.testing.assert_array_almost_equal(ifg_data,
+#                         self.ifgs[k].phase_data, decimal=3)
+#
+#                     # means must also be equal
+#                     self.assertAlmostEqual(np.nanmean(ifg_data), np.nanmean(self.ifgs[k].phase_data), places=3)
+#
+#                     # number of nans must equal
+#                     self.assertEqual(np.sum(np.isnan(ifg_data)), np.sum(np.isnan(self.ifgs[k].phase_data)))
+#
+#         # ensure we have the correct number of matches
+#         self.assertEqual(count, len(self.ifgs))
+#
+#
+# class RefPhsEstimationLegacyTestMethod1Parallel(unittest.TestCase):
+#     """
+#     Reference phase estimation method 1 is tested vs legacy output
+#     """
+#     @classmethod
+#     def setUpClass(cls):
+#
+#         params = cf.get_config_params(common.TEST_CONF_ROIPAC)
+#         cls.temp_out_dir = tempfile.mkdtemp()
+#         sys.argv = ['prepifg.py', common.TEST_CONF_ROIPAC]
+#         params[cf.OUT_DIR] = cls.temp_out_dir
+#         params[cf.TMPDIR] = cls.temp_out_dir
+#         conv2tif.main(params)
+#         prepifg.main(params)
+#
+#         params[cf.REF_EST_METHOD] = 1
+#         params[cf.PARALLEL] = True
+#
+#         xlks, ylks, crop = cf.transform_params(params)
+#         base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST], params[cf.OBS_DIR])
+#         dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
+#
+#         # start run_pyrate copy
+#         ifgs = common.pre_prepare_ifgs(dest_paths, params)
+#         mst_grid = common.mst_calculation(dest_paths, params)
+#         # Estimate reference pixel location
+#         refx, refy = process._ref_pixel_calc(dest_paths, params)
+#
+#         # Estimate and remove orbit errors
+#         core.orbital.remove_orbital_error(ifgs, params)
+#
+#         for i in ifgs:
+#             i.close()
+#
+#         ifgs = common.pre_prepare_ifgs(dest_paths, params)
+#
+#         for i in ifgs:
+#             i.close()
+#
+#         cls.ref_phs, cls.ifgs = process._ref_phase_estimation(dest_paths, params, refx, refy)
+#
+#         # end run_pyrate copy
+#
+#
+#     @classmethod
+#     def tearDownClass(cls):
+#         for i in cls.ifgs:
+#             i.close()
+#         shutil.rmtree(cls.temp_out_dir)
+#         common.remove_tifs(cf.get_config_params(common.TEST_CONF_ROIPAC)[cf.OBS_DIR])
+#
+#     def test_estimate_reference_phase(self):
+#         np.testing.assert_array_almost_equal(legacy_ref_phs_method1, self.ref_phs, decimal=3)
+#
+#     def test_ifgs_after_ref_phs_est(self):
+#         for ifg in self.ifgs:
+#             ifg.open()
+#         LEGACY_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR, 'ref_phase_est')
+#         onlyfiles = [f for f in os.listdir(LEGACY_REF_PHASE_DIR) if os.path.isfile(os.path.join(LEGACY_REF_PHASE_DIR, f)) and f.endswith('.csv') and f.__contains__('_ref_phase_')]
+#
+#         count = 0
+#         for i, f in enumerate(onlyfiles):
+#             ifg_data = np.genfromtxt(os.path.join(
+#                 LEGACY_REF_PHASE_DIR, f), delimiter=',')
+#             for k, j in enumerate(self.ifgs):
+#                 if f.split('_corrected')[-1].split('.')[0] == os.path.split(j.data_path)[-1].split('_unw_1rlks')[0]:
+#                     count += 1
+#                     # all numbers equal
+#                     np.testing.assert_array_almost_equal(ifg_data, self.ifgs[k].phase_data, decimal=3)
+#
+#                     # means must also be equal
+#                     self.assertAlmostEqual(np.nanmean(ifg_data), np.nanmean(self.ifgs[k].phase_data), places=3)
+#
+#                     # number of nans must equal
+#                     self.assertEqual(np.sum(np.isnan(ifg_data)), np.sum(np.isnan(self.ifgs[k].phase_data)))
+#
+#         # ensure we have the correct number of matches
+#         self.assertEqual(count, len(self.ifgs))
+#
+#
+# class RefPhsEstimationLegacyTestMethod2Serial(unittest.TestCase):
+#     """
+#     Reference phase estimation method 2 is tested vs legacy output
+#     """
+#
+#     @classmethod
+#     def setUpClass(cls):
+#
+#         params = cf.get_config_params(common.TEST_CONF_ROIPAC)
+#         cls.temp_out_dir = tempfile.mkdtemp()
+#         sys.argv = ['prepifg.py', common.TEST_CONF_ROIPAC]
+#         params[cf.OUT_DIR] = cls.temp_out_dir
+#         params[cf.TMPDIR] = cls.temp_out_dir
+#         conv2tif.main(params)
+#         prepifg.main(params)
+#
+#         params[cf.REF_EST_METHOD] = 2
+#         params[cf.PARALLEL] = False
+#
+#         xlks, ylks, crop = cf.transform_params(params)
+#         base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST], params[cf.OBS_DIR])
+#         dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
+#
+#         # start run_pyrate copy
+#         ifgs = common.pre_prepare_ifgs(dest_paths, params)
+#         mst_grid = common.mst_calculation(dest_paths, params)
+#         # Estimate reference pixel location
+#         refx, refy = process._ref_pixel_calc(dest_paths, params)
+#
+#         # Estimate and remove orbit errors
+#         core.orbital.remove_orbital_error(ifgs, params)
+#
+#         for i in ifgs:
+#             i.close()
+#
+#         ifgs = common.pre_prepare_ifgs(dest_paths, params)
+#
+#         for i in ifgs:
+#             i.close()
+#
+#         cls.ref_phs, cls.ifgs = process._ref_phase_estimation(dest_paths, params, refx, refy)
+#
+#     @classmethod
+#     def tearDownClass(cls):
+#         for ifg in cls.ifgs:
+#             ifg.close()
+#         shutil.rmtree(cls.temp_out_dir)
+#         common.remove_tifs(cf.get_config_params(common.TEST_CONF_ROIPAC)[cf.OBS_DIR])
+#
+#     def test_ifgs_after_ref_phs_est(self):
+#         for ifg in self.ifgs:
+#             ifg.open()
+#         LEGACY_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR, 'ref_phase_est')
+#
+#         onlyfiles = [f for f in os.listdir(LEGACY_REF_PHASE_DIR)
+#                 if os.path.isfile(os.path.join(LEGACY_REF_PHASE_DIR, f))
+#                 and f.endswith('.csv') and f.__contains__('_ref_phase_')
+#                      and f.__contains__('method2')]
+#
+#         count = 0
+#         for i, f in enumerate(onlyfiles):
+#             ifg_data = np.genfromtxt(os.path.join(
+#                 LEGACY_REF_PHASE_DIR, f), delimiter=',')
+#             for k, j in enumerate(self.ifgs):
+#                 if f.split('_corrected_method2')[-1].split('.')[0] == os.path.split(j.data_path)[-1].split('_unw_1rlks')[0]:
+#                     count += 1
+#                     # all numbers equal
+#                     np.testing.assert_array_almost_equal(ifg_data, self.ifgs[k].phase_data, decimal=3)
+#
+#                     # means must also be equal
+#                     self.assertAlmostEqual(np.nanmean(ifg_data), np.nanmean(self.ifgs[k].phase_data), places=3)
+#
+#                     # number of nans must equal
+#                     self.assertEqual(np.sum(np.isnan(ifg_data)), np.sum(np.isnan(self.ifgs[k].phase_data)))
+#
+#         # ensure we have the correct number of matches
+#         self.assertEqual(count, len(self.ifgs))
+#
+#     def test_estimate_reference_phase_method2(self):
+#         np.testing.assert_array_almost_equal(legacy_ref_phs_method2, self.ref_phs, decimal=3)
+#
+#
+# class RefPhsEstimationLegacyTestMethod2Parallel(unittest.TestCase):
+#     """
+#     Reference phase estimation method 2 is tested vs legacy output
+#
+#     """
+#     # TODO: Improve the parallel tests to remove duplication from serial tests
+#     @classmethod
+#     def setUpClass(cls):
+#
+#         params = cf.get_config_params(common.TEST_CONF_ROIPAC)
+#         cls.temp_out_dir = tempfile.mkdtemp()
+#         sys.argv = ['prepifg.py', common.TEST_CONF_ROIPAC]
+#         params[cf.OUT_DIR] = cls.temp_out_dir
+#         params[cf.TMPDIR] = cls.temp_out_dir
+#         conv2tif.main(params)
+#         prepifg.main(params)
+#
+#         params[cf.OUT_DIR] = cls.temp_out_dir
+#         params[cf.REF_EST_METHOD] = 2
+#         params[cf.PARALLEL] = True
+#
+#         xlks, ylks, crop = cf.transform_params(params)
+#         base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST],     params[cf.OBS_DIR])
+#
+#         dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
+#
+#         # start run_pyrate copy
+#         ifgs = common.pre_prepare_ifgs(dest_paths, params)
+#         # Estimate reference pixel location
+#         refx, refy = process._ref_pixel_calc(dest_paths, params)
+#
+#         # Estimate and remove orbit errors
+#         core.orbital.remove_orbital_error(ifgs, params)
+#
+#         for i in ifgs:
+#             i.close()
+#
+#         ifgs = common.pre_prepare_ifgs(dest_paths, params)
+#
+#         for i in ifgs:
+#             i.close()
+#
+#         cls.ref_phs, cls.ifgs = process._ref_phase_estimation(dest_paths, params, refx, refy)
+#
+#     @classmethod
+#     def tearDownClass(cls):
+#         for ifg in cls.ifgs:
+#             ifg.close()
+#         shutil.rmtree(cls.temp_out_dir)
+#         common.remove_tifs(
+#             cf.get_config_params(common.TEST_CONF_ROIPAC)[cf.OBS_DIR])
+#
+#     def test_ifgs_after_ref_phs_est(self):
+#         for ifg in self.ifgs:
+#             ifg.open()
+#         LEGACY_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR, 'ref_phase_est')
+#
+#         onlyfiles = [f for f in os.listdir(LEGACY_REF_PHASE_DIR) if os.path.isfile(os.path.join(LEGACY_REF_PHASE_DIR, f)) and f.endswith('.csv') and f.__contains__('_ref_phase_') and f.__contains__('method2')]
+#
+#         count = 0
+#         for i, f in enumerate(onlyfiles):
+#             ifg_data = np.genfromtxt(os.path.join(
+#                 LEGACY_REF_PHASE_DIR, f), delimiter=',')
+#             for k, j in enumerate(self.ifgs):
+#                 if f.split('_corrected_method2')[-1].split('.')[0] == os.path.split(j.data_path)[-1].split('_unw_1rlks')[0]:
+#                     count += 1
+#                     # all numbers equal
+#                     np.testing.assert_array_almost_equal(ifg_data, self.ifgs[k].phase_data, decimal=3)
+#
+#                     # means must also be equal
+#                     self.assertAlmostEqual(np.nanmean(ifg_data), np.nanmean(self.ifgs[k].phase_data), places=3)
+#
+#                     # number of nans must equal
+#                     self.assertEqual(np.sum(np.isnan(ifg_data)), np.sum(np.isnan(self.ifgs[k].phase_data)))
+#
+#         # ensure we have the correct number of matches
+#         self.assertEqual(count, len(self.ifgs))
+#
+#     def test_estimate_reference_phase_method2(self):
+#         np.testing.assert_array_almost_equal(legacy_ref_phs_method2, self.ref_phs, decimal=3)
 
 
 if __name__ == '__main__':

@@ -197,17 +197,17 @@ class IfgPartTest(unittest.TestCase):
             np.testing.assert_array_equal(ifg_part.phase_data,
                                           i.phase_data[r_start:r_end, :])
 
-    def test_mst_multiprocessing_serial(self):
-        self.params[cf.PARALLEL] = False
-        original_mst = mst.mst_boolean_array(self.ifgs)
-        parallel_mst = mst.mst_parallel(self.ifgs, params=self.params)
-        np.testing.assert_array_equal(original_mst, parallel_mst)
+    # def test_mst_multiprocessing_serial(self):
+    #     self.params[cf.PARALLEL] = False
+    #     original_mst = mst.mst_boolean_array(self.ifgs)
+    #     parallel_mst = mst.mst_parallel(self.ifgs, params=self.params)
+    #     np.testing.assert_array_equal(original_mst, parallel_mst)
 
-    def test_mst_multiprocessing(self):
-        self.params[cf.PARALLEL] = True
-        original_mst = mst.mst_boolean_array(self.ifgs)
-        parallel_mst = mst.mst_parallel(self.ifgs, params=self.params)
-        np.testing.assert_array_equal(original_mst, parallel_mst)
+    # def test_mst_multiprocessing(self):
+    #     self.params[cf.PARALLEL] = True
+    #     original_mst = mst.mst_boolean_array(self.ifgs)
+    #     parallel_mst = mst.mst_parallel(self.ifgs, params=self.params)
+    #     np.testing.assert_array_equal(original_mst, parallel_mst)
 
 
 if __name__ == "__main__":

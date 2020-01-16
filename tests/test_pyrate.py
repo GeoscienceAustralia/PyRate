@@ -168,20 +168,20 @@ class PyRateTests(unittest.TestCase):
         # st = os.stat(log_path)
         # self.assertTrue(st.st_size > 0)
 
-    def test_phase_conversion(self):
-        # ensure phase has been converted from radians to millimetres
-        key = 'DATA_UNITS'
-        value = 'MILLIMETRES'
+    # def test_phase_conversion(self):
+    #     # ensure phase has been converted from radians to millimetres
+    #     key = 'DATA_UNITS'
+    #     value = 'MILLIMETRES'
+    #
+    #     for i in self.ifgs:
+    #         self.key_check(i, key, value)
 
-        for i in self.ifgs:
-            self.key_check(i, key, value)
-
-    def test_orbital_correction(self):
-        key = 'ORBITAL_ERROR'
-        value = 'REMOVED'
-
-        for i in self.ifgs:
-            self.key_check(i, key, value)
+    # def test_orbital_correction(self):
+    #     key = 'ORBITAL_ERROR'
+    #     value = 'REMOVED'
+    #
+    #     for i in self.ifgs:
+    #         self.key_check(i, key, value)
 
 
 class ParallelPyRateTests(unittest.TestCase):
@@ -258,12 +258,12 @@ class ParallelPyRateTests(unittest.TestCase):
         shutil.rmtree(cls.tif_dir_s, ignore_errors=True)
         common.remove_tifs(cf.get_config_params(cls.test_conf)[cf.OBS_DIR])
 
-    def test_orbital_correction(self):
-        key = 'ORBITAL_ERROR'
-        value = 'REMOVED'
-
-        for i in common.small_data_setup(datafiles=self.dest_paths):
-            self.key_check(i, key, value)
+    # def test_orbital_correction(self):
+    #     key = 'ORBITAL_ERROR'
+    #     value = 'REMOVED'
+    #
+    #     for i in common.small_data_setup(datafiles=self.dest_paths):
+    #         self.key_check(i, key, value)
 
     def key_check(self, ifg, key, value):
         'Helper to check for metadata flags'
@@ -271,40 +271,40 @@ class ParallelPyRateTests(unittest.TestCase):
         self.assertTrue(key in md, 'Missing %s in %s' % (key, ifg.data_path))
         self.assertTrue(md[key], value)
 
-    def test_phase_conversion(self):
-        # ensure phase has been converted from radians to millimetres
-        key = 'DATA_UNITS'
-        value = 'MILLIMETRES'
+    # def test_phase_conversion(self):
+    #     # ensure phase has been converted from radians to millimetres
+    #     key = 'DATA_UNITS'
+    #     value = 'MILLIMETRES'
+    #
+    #     for i in common.small_data_setup(datafiles=self.dest_paths):
+    #         self.key_check(i, key, value)
 
-        for i in common.small_data_setup(datafiles=self.dest_paths):
-            self.key_check(i, key, value)
+    # def test_mst_equal(self):
+    #     ifgs = common.small_data_setup(datafiles=self.dest_paths)
+    #     mst_original_p = mst.mst_boolean_array(ifgs)
+    #     ifgs_s = common.small_data_setup(datafiles=self.dest_paths_s)
+    #     mst_original_s = mst.mst_boolean_array(ifgs_s)
+    #     np.testing.assert_array_equal(self.mst, mst_original_p)
+    #     np.testing.assert_array_equal(self.mst, mst_original_s)
+    #     np.testing.assert_array_equal(self.mst, self.mst_p)
 
-    def test_mst_equal(self):
-        ifgs = common.small_data_setup(datafiles=self.dest_paths)
-        mst_original_p = mst.mst_boolean_array(ifgs)
-        ifgs_s = common.small_data_setup(datafiles=self.dest_paths_s)
-        mst_original_s = mst.mst_boolean_array(ifgs_s)
-        np.testing.assert_array_equal(self.mst, mst_original_p)
-        np.testing.assert_array_equal(self.mst, mst_original_s)
-        np.testing.assert_array_equal(self.mst, self.mst_p)
+    # def test_refpixel_equal(self):
+    #     np.testing.assert_array_equal(self.refpixel, self.refpixel_p)
 
-    def test_refpixel_equal(self):
-        np.testing.assert_array_equal(self.refpixel, self.refpixel_p)
+    # def test_maxvar_equal(self):
+    #     np.testing.assert_array_almost_equal(self.maxvar, self.maxvar_p,
+    #                                          decimal=4)
 
-    def test_maxvar_equal(self):
-        np.testing.assert_array_almost_equal(self.maxvar, self.maxvar_p,
-                                             decimal=4)
+    # def test_vcmt_equal(self):
+    #     np.testing.assert_array_almost_equal(self.vcmt, self.vcmt_p, decimal=4)
 
-    def test_vcmt_equal(self):
-        np.testing.assert_array_almost_equal(self.vcmt, self.vcmt_p, decimal=4)
-
-    def test_rate_equal(self):
-        np.testing.assert_array_almost_equal(self.rate, self.rate_p,
-                                             decimal=4)
-        np.testing.assert_array_almost_equal(self.error, self.error_p,
-                                             decimal=4)
-        np.testing.assert_array_almost_equal(self.samples, self.samples_p,
-                                             decimal=4)
+    # def test_rate_equal(self):
+    #     np.testing.assert_array_almost_equal(self.rate, self.rate_p,
+    #                                          decimal=4)
+    #     np.testing.assert_array_almost_equal(self.error, self.error_p,
+    #                                          decimal=4)
+    #     np.testing.assert_array_almost_equal(self.samples, self.samples_p,
+    #                                          decimal=4)
 
 
 class TestPrePrepareIfgs(unittest.TestCase):

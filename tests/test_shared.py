@@ -330,80 +330,80 @@ class WriteUnwTest(unittest.TestCase):
         shutil.rmtree(cls.tif_dir)
         common.remove_tifs(cls.params[cf.OBS_DIR])
 
-    def test_unw_contains_same_data_as_numpy_array(self):
-        from datetime import time
-        temp_unw = tempfile.mktemp(suffix='.unw')
-        temp_tif = tempfile.mktemp(suffix='.tif')
+    # def test_unw_contains_same_data_as_numpy_array(self):
+    #     from datetime import time
+    #     temp_unw = tempfile.mktemp(suffix='.unw')
+    #     temp_tif = tempfile.mktemp(suffix='.tif')
+    #
+    #     # setup some header files for use in write_geotif
+    #     dem_header_file = common.SML_TEST_DEM_HDR_GAMMA
+    #     dem_header = gamma.parse_dem_header(dem_header_file)
+    #
+    #     header = gamma.parse_epoch_header(os.path.join(common.SML_TEST_GAMMA, '20060828_slc.par'))
+    #     header.update(dem_header)
+    #
+    #     # insert some dummy data so we are the dem in write_fullres_geotiff is not
+    #     # not activated and ifg write_fullres_geotiff operation works
+    #     header[ifc.PYRATE_TIME_SPAN] = 0
+    #     header[ifc.SLAVE_DATE] = 0
+    #     header[ifc.DATA_UNITS] = 'degrees'
+    #     header[ifc.DATA_TYPE] = ifc.ORIG
+    #     header[ifc.SLAVE_TIME] = time(10)
+    #
+    #     # now create aritrary data
+    #     data = np.random.rand(dem_header[ifc.PYRATE_NROWS], dem_header[ifc.PYRATE_NCOLS])
+    #
+    #     # convert numpy array to .unw
+    #     shared.write_unw_from_data_or_geotiff(geotif_or_data=data, dest_unw=temp_unw, ifg_proc=1)
+    #     # convert the .unw to geotif
+    #     shared.write_fullres_geotiff(header=header, data_path=temp_unw, dest=temp_tif, nodata=np.nan)
+    #
+    #     # now compare geotiff with original numpy array
+    #     ds = gdal.Open(temp_tif, gdal.GA_ReadOnly)
+    #     data_lv_theta = ds.ReadAsArray()
+    #     ds = None
+    #     np.testing.assert_array_almost_equal(data, data_lv_theta)
+    #     try:
+    #         os.remove(temp_tif)
+    #     except PermissionError:
+    #         print("File opened by another process.")
+    #
+    #     try:
+    #         os.remove(temp_unw)
+    #     except PermissionError:
+    #         print("File opened by another process.")
 
-        # setup some header files for use in write_geotif
-        dem_header_file = common.SML_TEST_DEM_HDR_GAMMA
-        dem_header = gamma.parse_dem_header(dem_header_file)
+    # def test_multilooked_tiffs_converted_to_unw_are_same(self):
+    #     # Get multilooked geotiffs
+    #     geotiffs = self.dest_paths
+    #
+    #     # Convert back to .unw
+    #     dest_unws = []
+    #     for g in geotiffs:
+    #         dest_unw = os.path.join(self.params[cf.OUT_DIR], os.path.splitext(g)[0] + '.unw')
+    #         shared.write_unw_from_data_or_geotiff(geotif_or_data=g, dest_unw= dest_unw, ifg_proc=1)
+    #         dest_unws.append(dest_unw)
+    #
+    #     # Convert back to tiff
+    #     new_geotiffs = conv2tif.do_geotiff(dest_unws, self.params)
+    #
+    #     # Ensure original multilooked geotiffs and
+    #     #  unw back to geotiff are the same
+    #     for g, u in zip(geotiffs, new_geotiffs):
+    #         g_ds = gdal.Open(g)
+    #         u_gs = gdal.Open(u)
+    #         np.testing.assert_array_almost_equal(u_gs.ReadAsArray(), g_ds.ReadAsArray())
+    #         u_gs = None
+    #         g_ds = None
 
-        header = gamma.parse_epoch_header(os.path.join(common.SML_TEST_GAMMA, '20060828_slc.par'))
-        header.update(dem_header)
-
-        # insert some dummy data so we are the dem in write_fullres_geotiff is not
-        # not activated and ifg write_fullres_geotiff operation works
-        header[ifc.PYRATE_TIME_SPAN] = 0
-        header[ifc.SLAVE_DATE] = 0
-        header[ifc.DATA_UNITS] = 'degrees'
-        header[ifc.DATA_TYPE] = ifc.ORIG
-        header[ifc.SLAVE_TIME] = time(10)
-
-        # now create aritrary data
-        data = np.random.rand(dem_header[ifc.PYRATE_NROWS], dem_header[ifc.PYRATE_NCOLS])
-
-        # convert numpy array to .unw
-        shared.write_unw_from_data_or_geotiff(geotif_or_data=data, dest_unw=temp_unw, ifg_proc=1)
-        # convert the .unw to geotif
-        shared.write_fullres_geotiff(header=header, data_path=temp_unw, dest=temp_tif, nodata=np.nan)
-
-        # now compare geotiff with original numpy array
-        ds = gdal.Open(temp_tif, gdal.GA_ReadOnly)
-        data_lv_theta = ds.ReadAsArray()
-        ds = None
-        np.testing.assert_array_almost_equal(data, data_lv_theta)
-        try:
-            os.remove(temp_tif)
-        except PermissionError:
-            print("File opened by another process.")
-
-        try:
-            os.remove(temp_unw)
-        except PermissionError:
-            print("File opened by another process.")
-
-    def test_multilooked_tiffs_converted_to_unw_are_same(self):
-        # Get multilooked geotiffs
-        geotiffs = self.dest_paths
-
-        # Convert back to .unw
-        dest_unws = []
-        for g in geotiffs:
-            dest_unw = os.path.join(self.params[cf.OUT_DIR], os.path.splitext(g)[0] + '.unw')
-            shared.write_unw_from_data_or_geotiff(geotif_or_data=g, dest_unw= dest_unw, ifg_proc=1)
-            dest_unws.append(dest_unw)
-        
-        # Convert back to tiff
-        new_geotiffs = conv2tif.do_geotiff(dest_unws, self.params)
-
-        # Ensure original multilooked geotiffs and 
-        #  unw back to geotiff are the same
-        for g, u in zip(geotiffs, new_geotiffs):
-            g_ds = gdal.Open(g)
-            u_gs = gdal.Open(u)
-            np.testing.assert_array_almost_equal(u_gs.ReadAsArray(), g_ds.ReadAsArray())
-            u_gs = None
-            g_ds = None
-
-    def test_roipac_raises(self):
-        geotiffs = [os.path.join(self.params[cf.OUT_DIR], os.path.basename(b).split('.')[0] + "_" + os.path.basename(b).split('.')[1] + '.tif') for b in self.base_unw_paths]
-
-        for g in geotiffs[:1]:
-            dest_unw = os.path.join(self.params[cf.OUT_DIR], os.path.splitext(g)[0] + '.unw')
-            with self.assertRaises(NotImplementedError):
-                shared.write_unw_from_data_or_geotiff(geotif_or_data=g, dest_unw=dest_unw, ifg_proc=0)
-
+    # def test_roipac_raises(self):
+    #     geotiffs = [os.path.join(self.params[cf.OUT_DIR], os.path.basename(b).split('.')[0] + "_" + os.path.basename(b).split('.')[1] + '.tif') for b in self.base_unw_paths]
+    #
+    #     for g in geotiffs[:1]:
+    #         dest_unw = os.path.join(self.params[cf.OUT_DIR], os.path.splitext(g)[0] + '.unw')
+    #         with self.assertRaises(NotImplementedError):
+    #             shared.write_unw_from_data_or_geotiff(geotif_or_data=g, dest_unw=dest_unw, ifg_proc=0)
+    #
 
 class GeodesyTests(unittest.TestCase):
 

@@ -95,11 +95,11 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
         with open(self.ifgListFile, 'w') as ifgl:
             ifgl.write('\n'.join(data))
 
-    def test_cmd_ifg_no_gamma_files_created(self):
-        self.conf_file = self.gamma_conffile
-        self.base_dir = self.gamma_base_dir
-        self.ifgListFile = self.gamma_ifgListFile
-        self.check_gamma(self.gamma_conffile)
+    # def test_cmd_ifg_no_gamma_files_created(self):
+    #     self.conf_file = self.gamma_conffile
+    #     self.base_dir = self.gamma_base_dir
+    #     self.ifgListFile = self.gamma_ifgListFile
+    #     self.check_gamma(self.gamma_conffile)
 
     def check_gamma(self, conf_file):
         data_paths = glob.glob(os.path.join(self.SMLNEY_GAMMA_TEST, "*_utm.unw"))
@@ -139,14 +139,14 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
         with open(self.ifgListFile, 'w') as ifgl:
             ifgl.write('\n'.join(data))
 
-    def test_cmd_ifg_no_roipac_files_created_roipac(self):
-        self.dataPaths = common.small_data_roipac_unws()
-        base_exp = common.small_ifg_file_list()
-        self.expPaths = [os.path.join(common.SML_TEST_OBS, os.path.basename(i)) for i in base_exp]
-        self.confFile = self.roipac_conffile
-        self.ifgListFile = self.roipac_ifgListFile
-        self.base_dir = self.roipac_base_dir
-        self.check_roipac()
+    # def test_cmd_ifg_no_roipac_files_created_roipac(self):
+    #     self.dataPaths = common.small_data_roipac_unws()
+    #     base_exp = common.small_ifg_file_list()
+    #     self.expPaths = [os.path.join(common.SML_TEST_OBS, os.path.basename(i)) for i in base_exp]
+    #     self.confFile = self.roipac_conffile
+    #     self.ifgListFile = self.roipac_ifgListFile
+    #     self.base_dir = self.roipac_base_dir
+    #     self.check_roipac()
 
     def check_roipac(self):
         self.make_roipac_input_files(self.dataPaths, 'WGS84')
