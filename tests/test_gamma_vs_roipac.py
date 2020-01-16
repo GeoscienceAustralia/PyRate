@@ -21,12 +21,10 @@ import glob
 import os
 import re
 import shutil
-import sys
 import tempfile
 import unittest
 
 from . import common
-
 
 from core import ifgconstants as ifc, config as cf
 from core.prepifg_helper import _is_number
@@ -48,9 +46,9 @@ from core.config import (
     APS_INCIDENCE_MAP,
     APS_ELEVATION_MAP
     )
-import prepifg
-import conv2tif
+
 from common import SML_TEST_DIR, small_data_setup, remove_tifs
+from main import prepifg_handler, conv2tif_handler
 
 DUMMY_SECTION_NAME = 'pyrate'
 
@@ -107,15 +105,13 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
         data_paths = glob.glob(os.path.join(self.SMLNEY_GAMMA_TEST, "*_utm.unw"))
 
         self.make_gamma_input_files(data_paths)
-        sys.argv = ['pyrate', 'prepifg', conf_file]
 
         base_ifg_paths, dest_paths, params = cf.get_ifg_paths(conf_file)
         dest_base_ifgs = [os.path.join(params[cf.OBS_DIR], os.path.basename(q).split('.')[0] + '_' + os.path.basename(q).split('.')[1] + '.tif')  for q in base_ifg_paths]
-        sys.argv = ['pyrate', 'conv2tif', conf_file]
-        conv2tif.main()
-        sys.argv = ['pyrate', 'prepifg', conf_file]
-        prepifg.main()
-        
+
+        conv2tif_handler(conf_file)
+        prepifg_handler(conf_file)
+
         for p, q in zip(dest_base_ifgs, dest_paths):
             self.assertTrue(os.path.exists(p),
                             '{} does not exist'.format(p))
@@ -154,10 +150,9 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
 
     def check_roipac(self):
         self.make_roipac_input_files(self.dataPaths, 'WGS84')
-        sys.argv = ['pyrate', 'conv2tif', self.confFile]
-        conv2tif.main()
-        sys.argv = ['pyrate', 'prepifg', self.confFile]
-        prepifg.main()
+
+        conv2tif_handler(self.confFile)
+        prepifg_handler(self.confFile)
         for path in self.expPaths:
             self.assertTrue(os.path.exists(path), '{} does not exist'.format(path))
 
