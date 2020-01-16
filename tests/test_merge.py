@@ -34,11 +34,26 @@ import core.shared
 import process, prepifg, merge, conv2tif
 from common import (small_data_setup, reconstruct_mst, reconstruct_stack_rate, SML_TEST_DEM_HDR_GAMMA, pre_prepare_ifgs)
 import common
-from test_covariance import legacy_maxvar
 from core import algorithm, ref_phs_est as rpe, mpiops, config as cf, covariance, refpixel
 from merge import create_png_from_tif
 import unittest
-
+legacy_maxvar = [15.4156637191772,
+                 2.85829424858093,
+                 34.3486289978027,
+                 2.59190344810486,
+                 3.18510007858276,
+                 3.61054635047913,
+                 1.64398515224457,
+                 14.9226036071777,
+                 5.13451862335205,
+                 6.82901763916016,
+                 10.9644861221313,
+                 14.5026779174805,
+                 29.3710079193115,
+                 8.00364685058594,
+                 2.06328082084656,
+                 5.66661834716797,
+                 5.62802362442017]
 
 class MergingTest(unittest.TestCase):
 
