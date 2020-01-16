@@ -24,6 +24,7 @@ import unittest
 from numpy import array
 import numpy as np
 from numpy.testing import assert_array_almost_equal
+from . import common
 
 from core import shared, ref_phs_est as rpe, ifgconstants as ifc, config as cf
 import process, prepifg, conv2tif

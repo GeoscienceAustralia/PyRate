@@ -24,6 +24,7 @@ import tempfile
 import unittest
 from os.path import join
 import numpy as np
+from . import common
 
 import core.shared
 from core import shared, config as cf, config, prepifg_helper, mst

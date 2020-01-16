@@ -35,6 +35,7 @@ from osgeo import ogr
 from osgeo import gdalconst
 from osgeo import gdal_array
 from gdal import Open, Dataset, UseExceptions
+from . import common
 
 from common import SML_TEST_TIF, SML_TEST_DEM_TIF, TEMPDIR
 from core import shared, ifgconstants as ifc, config as cf, prepifg_helper, gamma

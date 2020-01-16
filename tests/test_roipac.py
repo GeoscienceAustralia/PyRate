@@ -31,6 +31,7 @@ from osgeo import osr
 from osgeo import ogr
 from osgeo import gdalconst
 from osgeo import gdal_array
+from . import common
 
 import core.ifgconstants as ifc
 from core import shared, roipac

@@ -4,6 +4,8 @@ import pytest
 import glob
 import copy
 
+from . import common
+
 import core.config as cf
 import conv2tif, prepifg
 from core import gdal_python

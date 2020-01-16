@@ -30,6 +30,7 @@ import numpy as np
 from numpy.linalg import pinv, inv
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 from scipy.linalg import lstsq
+from . import common
 
 from .common import small5_mock_ifgs, MockIfg
 from core import algorithm, config as cf

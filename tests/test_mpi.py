@@ -26,13 +26,13 @@ import os
 import tempfile
 import random
 import string
+from . import common
 
 import core.orbital
 import core.shared
 import common
 import process, prepifg, merge, conv2tif
 from common import (small_data_setup, reconstruct_mst,  reconstruct_stack_rate, SML_TEST_DEM_HDR_GAMMA, pre_prepare_ifgs)
-import common
 from test_covariance import legacy_maxvar
 from core import algorithm, ref_phs_est as rpe, mpiops, config as cf, covariance, refpixel
 

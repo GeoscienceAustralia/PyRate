@@ -25,6 +25,7 @@ import unittest
 from numpy import eye, array, ones
 import numpy as np
 from numpy.testing import assert_array_almost_equal
+from . import common
 
 import core.orbital
 import common

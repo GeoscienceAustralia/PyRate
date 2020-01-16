@@ -25,7 +25,8 @@ import sys
 import tempfile
 import unittest
 
-import common
+from . import common
+
 
 from core import ifgconstants as ifc, config as cf
 from core.prepifg_helper import _is_number

@@ -22,6 +22,8 @@ from itertools import product
 from numpy import empty, array, nan, isnan, sum as nsum
 
 import numpy as np
+from . import common
+
 from common import MockIfg, small5_mock_ifgs, small_data_setup
 
 from core import algorithm, config as cf, mst

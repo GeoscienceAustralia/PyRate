@@ -21,6 +21,7 @@ import unittest
 import tempfile
 import shutil
 from numpy import nan, mean, std, isnan
+from . import common
 
 from core import config as cf
 from core.refpixel import ref_pixel, _step

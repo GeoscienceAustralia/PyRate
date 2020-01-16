@@ -24,6 +24,7 @@ import sys
 import tempfile
 import unittest
 import numpy as np
+from . import common
 
 import core.orbital
 from core import ifgconstants as ifc, config as cf

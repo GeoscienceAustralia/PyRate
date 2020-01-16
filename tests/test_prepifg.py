@@ -35,6 +35,8 @@ from osgeo import ogr
 from osgeo import gdalconst
 from osgeo import gdal_array
 
+from . import common
+
 import prepifg, conv2tif
 from core import config as cf
 from core.config import mlooked_path

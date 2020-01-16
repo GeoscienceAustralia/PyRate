@@ -25,6 +25,7 @@ import copy
 from os.path import join
 
 import pytest
+from . import common
 
 from common import SML_TEST_CONF, SML_TEST_TIF
 from common import TEST_CONF_ROIPAC, TEST_CONF_GAMMA

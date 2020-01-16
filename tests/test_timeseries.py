@@ -27,8 +27,8 @@ from numpy import nan, asarray, where
 import numpy as np
 from numpy.testing import assert_array_almost_equal
 
+from . import common
 import core.orbital
-import common as common
 from core import ref_phs_est as rpe, config as cf, mst, covariance
 import process, prepifg, conv2tif
 from core.timeseries import time_series

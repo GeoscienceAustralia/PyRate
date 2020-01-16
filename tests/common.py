@@ -34,6 +34,12 @@ from osgeo import ogr
 from osgeo import gdalconst
 from osgeo import gdal_array
 
+import sys
+PYRATE_MODULE_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "pyrate")
+TEST_MODULE_PATH = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(PYRATE_MODULE_PATH)
+sys.path.append(TEST_MODULE_PATH)
+
 from core import algorithm, ifgconstants as ifc, config as cf, timeseries, mst, stack
 from core.shared import Ifg, nan_and_mm_convert, get_geotiff_header_info, write_output_geotiff
 
