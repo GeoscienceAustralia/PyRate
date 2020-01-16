@@ -22,3 +22,4 @@ coverage==4.5.3
 codecov==2.0.15
 pytest==5.0.1
 GDAL==3.0.2
+pyproj==2.2.1
