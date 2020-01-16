@@ -175,38 +175,47 @@ legacy_maxvar = [15.4156637191772,
                  5.62802362442017]
 
 
+import multiprocessing
+from main import conv2tif_handler, prepifg_handler, process_handler, merge_handler
+from core.user_experience import break_number_into_factors
+
+
 class LegacyEqualityTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
 
+        conv2tif_handler(TEST_CONF_ROIPAC)
+        prepifg_handler(TEST_CONF_ROIPAC)
+
+        rows, cols = [int(no) for no in break_number_into_factors(multiprocessing.cpu_count())]
+        process_handler(TEST_CONF_ROIPAC, rows, cols)
+
         params = cf.get_config_params(TEST_CONF_ROIPAC)
         cls.temp_out_dir = tempfile.mkdtemp()
-        sys.argv = ['prepifg.py', TEST_CONF_ROIPAC]
         params[cf.OUT_DIR] = cls.temp_out_dir
         params[cf.TMPDIR] = os.path.join(cls.temp_out_dir, cf.TMPDIR)
         shared.mkdir_p(params[cf.TMPDIR])
         params[cf.REF_EST_METHOD] = 2
-        conv2tif.main(params)
-        prepifg.main(params)
+
         cls.params = params
         xlks, ylks, crop = cf.transform_params(params)
-        base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST],
-                                               params[cf.OBS_DIR])
+        base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST], params[cf.OBS_DIR])
         dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         refx, refy = process._ref_pixel_calc(dest_paths, params)
         core.orbital.remove_orbital_error(ifgs, params)
         ifgs = prepare_ifgs_without_phase(dest_paths, params)
+
         for ifg in ifgs:
             ifg.close()
         _, cls.ifgs = process._ref_phase_estimation(dest_paths, params, refx, refy)
         ifgs[0].open()
         r_dist = RDist(ifgs[0])()
         ifgs[0].close()
+
         # Calculate interferogram noise
-        cls.maxvar = [cvd(i, params, r_dist, calc_alpha=True,
-                          save_acg=True, write_vals=True)[0] for i in dest_paths]
+        cls.maxvar = [cvd(i, params, r_dist, calc_alpha=True, save_acg=True, write_vals=True)[0] for i in dest_paths]
         cls.vcmt = get_vcmt(ifgs, cls.maxvar)
         for ifg in ifgs:
             ifg.close()
@@ -220,8 +229,7 @@ class LegacyEqualityTest(unittest.TestCase):
         common.remove_tifs(params[cf.OBS_DIR])
 
     def test_legacy_maxvar_equality_small_test_files(self):
-        np.testing.assert_array_almost_equal(self.maxvar, legacy_maxvar,
-                                             decimal=3)
+        np.testing.assert_array_almost_equal(self.maxvar, legacy_maxvar, decimal=3)
 
     def test_legacy_vcmt_equality_small_test_files(self):
         from common import SML_TEST_DIR
