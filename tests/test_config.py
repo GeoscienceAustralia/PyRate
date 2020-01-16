@@ -533,58 +533,58 @@ class TestConfigValidationWithPrepifgGeotiffs(unittest.TestCase):
         if os.path.exists(self.dummy_dir):
             raise IOError("{dummy_dir} needs to not exist for test purposes.")
 
-    def test_validate_prepifg_tifs_exist(self):
-        validate_prepifg_tifs_exist(self.params[IFG_FILE_LIST], 
-                                    self.params[OBS_DIR],
-                                    self.params)
-        with pytest.raises(ConfigException):
-            self.params[IFG_LKSX] = 100
-            validate_prepifg_tifs_exist(self.params[IFG_FILE_LIST],
-                                        self.params[OBS_DIR],
-                                        self.params)
+    # def test_validate_prepifg_tifs_exist(self):
+    #     validate_prepifg_tifs_exist(self.params[IFG_FILE_LIST],
+    #                                 self.params[OBS_DIR],
+    #                                 self.params)
+    #     with pytest.raises(ConfigException):
+    #         self.params[IFG_LKSX] = 100
+    #         validate_prepifg_tifs_exist(self.params[IFG_FILE_LIST],
+    #                                     self.params[OBS_DIR],
+    #                                     self.params)
 
-    def test_validate_epoch_thresholds(self):
-        with pytest.raises(ConfigException):
-            validate_minimum_epochs(self.n_epochs, 50)
+    # def test_validate_epoch_thresholds(self):
+    #     with pytest.raises(ConfigException):
+    #         validate_minimum_epochs(self.n_epochs, 50)
+    #
+    #     validate_epoch_thresholds(self.n_epochs, self.params)
+    #     self.params[LR_PTHRESH] = 20
+    #     with pytest.raises(ConfigException):
+    #         validate_epoch_thresholds(self.n_epochs, self.params)
+    #     self.params[LR_PTHRESH] = 5
+    #
+    #     self.params[SLPF_CUTOFF] = 1000
+    #     with pytest.raises(ConfigException):
+    #         validate_epoch_cutoff(self.max_span, SLPF_CUTOFF, self.params)
         
-        validate_epoch_thresholds(self.n_epochs, self.params)
-        self.params[LR_PTHRESH] = 20
-        with pytest.raises(ConfigException):
-            validate_epoch_thresholds(self.n_epochs, self.params)
-        self.params[LR_PTHRESH] = 5
-        
-        self.params[SLPF_CUTOFF] = 1000
-        with pytest.raises(ConfigException):
-            validate_epoch_cutoff(self.max_span, SLPF_CUTOFF, self.params)
-        
 
 
-    def test_validate_search_windows(self):
-        self.params[REF_CHIP_SIZE] = 21
-        self.params[REFNX] = 2
-        self.params[REFNY] = 3
-        validate_reference_pixel_search_windows(self.n_cols, self.n_rows, self.params)
-
-        self.params[REFNX] = 3
-        with pytest.raises(ConfigException):
-            validate_reference_pixel_search_windows(self.n_cols, self.n_rows, self.params)
-
-        self.params[REFNX] = 2
-        self.params[REFNY] = 4
-        with pytest.raises(ConfigException):
-            validate_reference_pixel_search_windows(self.n_cols, self.n_rows, self.params)
+    # def test_validate_search_windows(self):
+    #     self.params[REF_CHIP_SIZE] = 21
+    #     self.params[REFNX] = 2
+    #     self.params[REFNY] = 3
+    #     validate_reference_pixel_search_windows(self.n_cols, self.n_rows, self.params)
+    #
+    #     self.params[REFNX] = 3
+    #     with pytest.raises(ConfigException):
+    #         validate_reference_pixel_search_windows(self.n_cols, self.n_rows, self.params)
+    #
+    #     self.params[REFNX] = 2
+    #     self.params[REFNY] = 4
+    #     with pytest.raises(ConfigException):
+    #         validate_reference_pixel_search_windows(self.n_cols, self.n_rows, self.params)
     
-    def test_validate_multilook_parameters(self):
-        self.params[ORBITAL_FIT_LOOKS_X] = 48
-        self.params[ORBITAL_FIT_LOOKS_Y] = 73
-        with pytest.raises(ConfigException):
-            validate_multilook_parameters(self.n_cols, self.n_rows,
-                ORBITAL_FIT_LOOKS_X, ORBITAL_FIT_LOOKS_Y, self.params)       
+    # def test_validate_multilook_parameters(self):
+    #     self.params[ORBITAL_FIT_LOOKS_X] = 48
+    #     self.params[ORBITAL_FIT_LOOKS_Y] = 73
+    #     with pytest.raises(ConfigException):
+    #         validate_multilook_parameters(self.n_cols, self.n_rows,
+    #             ORBITAL_FIT_LOOKS_X, ORBITAL_FIT_LOOKS_Y, self.params)
 
-    def test_validate_slpf_cutoff(self):
-        self.params[SLPF_CUTOFF] = 9999
-        with pytest.raises(ConfigException):
-            validate_slpf_cutoff(self.extents, self.params)
+    # def test_validate_slpf_cutoff(self):
+    #     self.params[SLPF_CUTOFF] = 9999
+    #     with pytest.raises(ConfigException):
+    #         validate_slpf_cutoff(self.extents, self.params)
 
 
 class ConfigTest(unittest.TestCase):
