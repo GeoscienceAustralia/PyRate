@@ -2,14 +2,14 @@ Troubleshooting
 ===============
 
 
-*.tif contain nan values only
+xyz.tif contain nan values only
 -----------------------------
 
 Error::
 
     stact_rate.tif (and stackrate.npy) contain nan values only
 
-**Solution**: increase the parameter “maxsig” which filters pixels according to the error estimate saved in out/tmpdir/* error_*.npy.
+**Solution**: increase the parameter “maxsig” which filters pixels according to the error estimate saved in out/tmpdir/xyz_error_*.npy.
 
 
 Failure of APS spatial low pass fileter
