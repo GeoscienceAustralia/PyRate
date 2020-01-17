@@ -1,10 +1,87 @@
 Troubleshooting
 ===============
 
+
+xyz.tif contain nan values only
+-------------------------------
+
+Error::
+
+    stact_rate.tif (and stackrate.npy) contain nan values only
+
+**Solution**: increase the parameter “maxsig” which filters pixels according to the error estimate saved in out/tmpdir/xyz_error_*.npy.
+
+
+Failure of APS spatial low pass filter
+---------------------------------------
+PyRate is memory intensive. You may receive various out of memory errors if
+there is not enough memory to accommodate the images being processed.
+
+Error::
+
+    +8s pyrate.aps:INFO Applying spatial low pass filter
+    Traceback (most recent call last):
+    File "/home/547/txf547/PyRateVenv/bin/pyrate", line 11, in <module>
+    load_entry_point('Py-Rate==0.3.0.post3', 'console_scripts', 'pyrate')()
+    File "/home/547/txf547/PyRateVenv/lib/python3.6/site-packages/Click-7.0-py3.6.egg/click/core.py", line 764, in __call__
+    return self.main(*args, **kwargs)
+    File "/home/547/txf547/PyRateVenv/lib/python3.6/site-packages/Click-7.0-py3.6.egg/click/core.py", line 717, in main
+    rv = self.invoke(ctx)
+    File "/home/547/txf547/PyRateVenv/lib/python3.6/site-packages/Click-7.0-py3.6.egg/click/core.py", line 1137, in invoke
+    return _process_result(sub_ctx.command.invoke(sub_ctx))
+    File "/home/547/txf547/PyRateVenv/lib/python3.6/site-packages/Click-7.0-py3.6.egg/click/core.py", line 956, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+    File "/home/547/txf547/PyRateVenv/lib/python3.6/site-packages/Click-7.0-py3.6.egg/click/core.py", line 555, in invoke
+    return callback(*args, **kwargs)
+    File "/home/547/txf547/PyRateVenv/lib/python3.6/site-packages/Py_Rate-0.3.0.post3-py3.6.egg/pyrate/scripts/main.py", line 69, in linrate
+    run_pyrate.process_ifgs(sorted(dest_paths), params, rows, cols)
+    File "/home/547/txf547/PyRateVenv/lib/python3.6/site-packages/Py_Rate-0.3.0.post3-py3.6.egg/pyrate/scripts/run_pyrate.py", line 391, in process_ifgs
+    _wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs)
+    File "/home/547/txf547/PyRateVenv/lib/python3.6/site-packages/Py_Rate-0.3.0.post3-py3.6.egg/pyrate/aps.py", line 63, in _wrap_spatio_temporal_filter
+    spatio_temporal_filter(tsincr, ifg, params, preread_ifgs)
+    File "/home/547/txf547/PyRateVenv/lib/python3.6/site-packages/Py_Rate-0.3.0.post3-py3.6.egg/pyrate/aps.py", line 86, in spatio_temporal_filter
+    ts_aps = mpiops.run_once(spatial_low_pass_filter, ts_hp, ifg, params)
+    File "/home/547/txf547/PyRateVenv/lib/python3.6/site-packages/Py_Rate-0.3.0.post3-py3.6.egg/pyrate/mpiops.py", line 54, in run_once
+    f_result = f(*args, **kwargs)
+    File "/home/547/txf547/PyRateVenv/lib/python3.6/site-packages/Py_Rate-0.3.0.post3-py3.6.egg/pyrate/aps.py", line 192, in spatial_low_pass_filter
+    _interpolate_nans(ts_lp, params[cf.SLPF_NANFILL_METHOD])
+    File "/home/547/txf547/PyRateVenv/lib/python3.6/site-packages/Py_Rate-0.3.0.post3-py3.6.egg/pyrate/aps.py", line 208, in _interpolate_nans
+    _interpolate_nans_2d(a, rows, cols, method)
+    File "/home/547/txf547/PyRateVenv/lib/python3.6/site-packages/Py_Rate-0.3.0.post3-py3.6.egg/pyrate/aps.py", line 224, in _interpolate_nans_2d
+    method=method
+    File "/home/547/txf547/PyRateVenv/lib/python3.6/site-packages/scipy-1.3.0-py3.6-linux-x86_64.egg/scipy/interpolate/ndgriddata.py", line 226, in griddata
+    rescale=rescale)
+    File "interpnd.pyx", line 846, in scipy.interpolate.interpnd.CloughTocher2DInterpolator.__init__
+    File "qhull.pyx", line 1836, in scipy.spatial.qhull.Delaunay.__init__
+    File "qhull.pyx", line 276, in scipy.spatial.qhull._Qhull.__init__
+    ValueError: No points given
+
+**Solution**:  use more interferograms as input and/or reduce the two threshold parameters “ts_pthr”, “pthr”, “tlpfpthr” in the .conf file.
+
+In general, users are advised to use a whole network of interferograms (10+) and make sure that “ts_pthr”, “pthr” and “tlpfpthr” are smaller than the number of epochs. To check that “process” worked correctly, users may want to check that the tsincr_*.npy and tscuml*.npy arrays in the /out/tmpdir contain valid values (not nan).
+
+
+Process terminated
+------------------
+PyRate is memory intensive. You may receive various out of memory errors if
+there is not enough memory to accommodate the images being processed.
+
+Error::
+
+    joblib.externals.loky.process_executor.TerminatedWorkerError: A worker process managed by the executor was unexpectedly terminated. This could be caused by a segmentation fault while calling the function or by an excessive memory usage causing the Operating System to kill the worker. The exit codes of the workers are {EXIT(1), EXIT(1), EXIT(1)}
+    (or similar)
+
+**Solution**: Increase memory of the interactive session (e.g. when using expressbw or normalbw set mem=256Gb).
+
+::
+
+    qsub -I -q express -l storage=gdata/dg9,walltime=12:00:00,mem=192Gb,ncpus=2,wd
+
+
 Out of memory errors
 --------------------
-PyRate is memory intensive. You may recieve various out of memory errors if 
-there is not enough memory to accomdate the images being processed.
+PyRate is memory intensive. You may receive various out of memory errors if
+there is not enough memory to accommodate the images being processed.
 
 Error::
 
