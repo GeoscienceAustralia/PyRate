@@ -3,7 +3,7 @@ Troubleshooting
 
 
 xyz.tif contain nan values only
------------------------------
+-------------------------------
 
 Error::
 
@@ -12,10 +12,10 @@ Error::
 **Solution**: increase the parameter “maxsig” which filters pixels according to the error estimate saved in out/tmpdir/xyz_error_*.npy.
 
 
-Failure of APS spatial low pass fileter
+Failure of APS spatial low pass filter
 ---------------------------------------
-PyRate is memory intensive. You may recieve various out of memory errors if
-there is not enough memory to accomdate the images being processed.
+PyRate is memory intensive. You may receive various out of memory errors if
+there is not enough memory to accommodate the images being processed.
 
 Error::
 
@@ -63,8 +63,8 @@ In general, users are advised to use a whole network of interferograms (10+) and
 
 Process terminated
 ------------------
-PyRate is memory intensive. You may recieve various out of memory errors if
-there is not enough memory to accomdate the images being processed.
+PyRate is memory intensive. You may receive various out of memory errors if
+there is not enough memory to accommodate the images being processed.
 
 Error::
 
@@ -80,8 +80,8 @@ Error::
 
 Out of memory errors
 --------------------
-PyRate is memory intensive. You may recieve various out of memory errors if 
-there is not enough memory to accomdate the images being processed.
+PyRate is memory intensive. You may receive various out of memory errors if
+there is not enough memory to accommodate the images being processed.
 
 Error::
 
