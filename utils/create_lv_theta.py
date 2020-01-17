@@ -21,10 +21,14 @@ This is used to create the dummy elevation map file .lv_theta file
 import os
 
 import numpy as np
-import gdal
+from osgeo import gdal
+from osgeo import osr
+from osgeo import ogr
+from osgeo import gdalconst
+from osgeo import gdal_array
 
-from pyrate.core import shared, ifgconstants as ifc, gamma
-from tests import common
+from core import shared, ifgconstants as ifc, gamma
+import common
 
 elevation_file = os.path.join(common.SML_TEST_GAMMA,
                               os.path.splitext(common.SML_TEST_DEM_GAMMA)[0]

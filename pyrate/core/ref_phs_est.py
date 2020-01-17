@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2017 Geoscience Australia
+#   Copyright 2020 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -94,11 +94,11 @@ def _est_ref_phs_method2(phase_data, half_chip_size, refpx, refpy, thresh):
                        refpx - half_chip_size: refpx + half_chip_size + 1]
     patch = np.reshape(patch, newshape=(-1, 1), order='F')
     nanfrac = np.sum(~np.isnan(patch))
-    if nanfrac < thresh:
-        raise ReferencePhaseError('The data window at the reference pixel '
-                                  'does not have enough valid observations. '
-                                  'Actual = {}, Threshold = {}.'.format(
-                                          nanfrac, thresh))
+    #    if nanfrac < thresh:
+    #        raise ReferencePhaseError('The data window at the reference pixel '
+    #                                  'does not have enough valid observations. '
+    #                                  'Actual = {}, Threshold = {}.'.format(
+    #                                          nanfrac, thresh))
     ref_ph = nanmedian(patch)
     return ref_ph
 

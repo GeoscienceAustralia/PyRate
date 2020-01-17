@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2017 Geoscience Australia
+#   Copyright 2020 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -61,6 +61,7 @@ def _create_ifg_dict(dest_tifs, params, tiles):
     :rtype: dict
     """
     ifgs_dict = {}
+    nifgs = len(dest_tifs)
     process_tifs = mpiops.array_split(dest_tifs)
     shared.save_numpy_phase(dest_tifs, tiles, params)
     for d in process_tifs:
@@ -82,7 +83,9 @@ def _create_ifg_dict(dest_tifs, params, tiles):
 
         # add some extra information that's also useful later
         gt, md, wkt = shared.get_geotiff_header_info(process_tifs[0])
-        ifgs_dict['epochlist'] = algorithm.get_epochs(ifgs_dict)[0]
+        epochlist = algorithm.get_epochs(ifgs_dict)[0]
+        log.info('Found {} unique epochs in the {} interferogram network'.format(len(epochlist.dates), nifgs))
+        ifgs_dict['epochlist'] = epochlist
         ifgs_dict['gt'] = gt
         ifgs_dict['md'] = md
         ifgs_dict['wkt'] = wkt
@@ -102,12 +105,12 @@ def _mst_calc(dest_tifs, params, tiles, preread_ifgs):
     MPI wrapper function for MST calculation
     """
     process_tiles = mpiops.array_split(tiles)
+    log.info('Calculating minimum spanning tree matrix')
 
     def _save_mst_tile(tile, i, preread_ifgs):
         """
         Convenient inner loop for mst tile saving
         """
-        log.info('Calculating minimum spanning tree matrix')
         mst_tile = mst.mst_multiprocessing(tile, dest_tifs, preread_ifgs, params)
         # locally save the mst_mat
         mst_file_process_n = join(params[cf.TMPDIR], 'mst_mat_{}.npy'.format(i))
@@ -267,20 +270,20 @@ def process_ifgs(ifg_paths, params, rows, cols):
 
     maxvar, vcmt = _maxvar_vcm_calc(ifg_paths, params, preread_ifgs)
 
-    # save phase data tiles as numpy array for timeseries and linrate calc
+    # save phase data tiles as numpy array for timeseries and stacking calc
     shared.save_numpy_phase(ifg_paths, tiles, params)
 
     _timeseries_calc(ifg_paths, params, vcmt, tiles, preread_ifgs)
 
-    _linrate_calc(ifg_paths, params, vcmt, tiles, preread_ifgs)
+    _stack_calc(ifg_paths, params, vcmt, tiles, preread_ifgs)
 
     log.info('PyRate workflow completed')
     return (refpx, refpy), maxvar, vcmt
 
 
-def _linrate_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
+def _stack_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
     """
-    MPI wrapper for linrate calculation
+    MPI wrapper for stacking calculation
     """
     process_tiles = mpiops.array_split(tiles)
     log.info('Calculating rate map from stacking')
@@ -291,9 +294,9 @@ def _linrate_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
         mst_grid_n = np.load(os.path.join(output_dir, 'mst_mat_{}.npy'.format(t.index)))
         rate, error, samples = stack.stack_rate(ifg_parts, params, vcmt, mst_grid_n)
         # declare file names
-        np.save(file=os.path.join(output_dir, 'linrate_{}.npy'.format(t.index)), arr=rate)
-        np.save(file=os.path.join(output_dir, 'linerror_{}.npy'.format(t.index)), arr=error)
-        np.save(file=os.path.join(output_dir, 'linsamples_{}.npy'.format(t.index)), arr=samples)
+        np.save(file=os.path.join(output_dir, 'stack_rate_{}.npy'.format(t.index)), arr=rate)
+        np.save(file=os.path.join(output_dir, 'stack_error_{}.npy'.format(t.index)), arr=error)
+        np.save(file=os.path.join(output_dir, 'stack_samples_{}.npy'.format(t.index)), arr=samples)
     mpiops.comm.barrier()
 
 

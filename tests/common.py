@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2017 Geoscience Australia
+#   Copyright 2020 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -28,14 +28,22 @@ from os.path import join
 
 import numpy as np
 from numpy import isnan, sum as nsum
-import gdal
+from osgeo import gdal
+from osgeo import osr
+from osgeo import ogr
+from osgeo import gdalconst
+from osgeo import gdal_array
 
-from pyrate.core import algorithm, ifgconstants as ifc, config as cf, timeseries, mst, stack
-from pyrate.core.shared import (Ifg, nan_and_mm_convert, get_geotiff_header_info,
-                                write_output_geotiff)
+import sys
+PYRATE_MODULE_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "pyrate")
+TEST_MODULE_PATH = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(PYRATE_MODULE_PATH)
+sys.path.append(TEST_MODULE_PATH)
 
-from tests.constants import PYRATEPATH
+from core import algorithm, ifgconstants as ifc, config as cf, timeseries, mst, stack
+from core.shared import Ifg, nan_and_mm_convert, get_geotiff_header_info, write_output_geotiff
 
+PYRATEPATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TEMPDIR = tempfile.gettempdir()
 BASE_TEST = join(PYRATEPATH, "tests", "test_data")
 SML_TEST_DIR = join(BASE_TEST, "small_test")
@@ -225,7 +233,7 @@ class MockIfg(object):
         pass
 
 
-def reconstruct_linrate(shape, tiles, output_dir, out_type):
+def reconstruct_stack_rate(shape, tiles, output_dir, out_type):
     rate = np.zeros(shape=shape, dtype=np.float32)
     for t in tiles:
         rate_file = os.path.join(output_dir, out_type +
@@ -355,38 +363,38 @@ def write_timeseries_geotiff(ifgs, params, tsincr, pr_type):
         write_output_geotiff(md, gt, wkt, data, dest, np.nan)
 
 
-def calculate_linear_rate(ifgs, params, vcmt, mst_mat=None):
-    # log.info('Calculating linear rate')
+def calculate_stacked_rate(ifgs, params, vcmt, mst_mat=None):
+    # log.info('Calculating stacked rate')
     res = stack.stack_rate(ifgs, params, vcmt, mst_mat)
     for r in res:
         if r is None:
             raise ValueError('TODO: bad value')
 
     rate, error, samples = res
-    write_linrate_tifs(ifgs, params, res)
-    # log.info('Linear rate calculated')
+    write_stack_tifs(ifgs, params, res)
+    # log.info('Stacked rate calculated')
     return rate, error, samples
 
 
-def write_linrate_tifs(ifgs, params, res):
-    # log.info('Writing linrate results')
+def write_stack_tifs(ifgs, params, res):
+    # log.info('Writing stacking results')
     rate, error, samples = res
     gt, md, wkt = get_geotiff_header_info(ifgs[0].data_path)
     epochlist = algorithm.get_epochs(ifgs)[0]
-    dest = join(params[cf.OUT_DIR], "linrate.tif")
+    dest = join(params[cf.OUT_DIR], "stack_rate.tif")
     md[ifc.EPOCH_DATE] = epochlist.dates
-    md[ifc.DATA_TYPE] = ifc.LINRATE
+    md[ifc.DATA_TYPE] = ifc.STACKRATE
     write_output_geotiff(md, gt, wkt, rate, dest, np.nan)
-    dest = join(params[cf.OUT_DIR], "linerror.tif")
-    md[ifc.DATA_TYPE] = ifc.LINERROR
+    dest = join(params[cf.OUT_DIR], "stack_error.tif")
+    md[ifc.DATA_TYPE] = ifc.STACKERROR
     write_output_geotiff(md, gt, wkt, error, dest, np.nan)
-    dest = join(params[cf.OUT_DIR], "linsamples.tif")
-    md[ifc.DATA_TYPE] = ifc.LINSAMP
+    dest = join(params[cf.OUT_DIR], "stack_samples.tif")
+    md[ifc.DATA_TYPE] = ifc.STACKSAMP
     write_output_geotiff(md, gt, wkt, samples, dest, np.nan)
-    write_linrate_numpy_files(error, rate, samples, params)
+    write_stack_numpy_files(error, rate, samples, params)
 
 
-def write_linrate_numpy_files(error, rate, samples, params):
+def write_stack_numpy_files(error, rate, samples, params):
     rate_file = join(params[cf.OUT_DIR], 'rate.npy')
     error_file = join(params[cf.OUT_DIR], 'error.npy')
     samples_file = join(params[cf.OUT_DIR], 'samples.npy')

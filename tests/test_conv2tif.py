@@ -3,11 +3,11 @@ import unittest
 import pytest
 import glob
 import copy
+from . import common
 
-import pyrate.core.config as cf
-from pyrate import conv2tif, prepifg
-from tests import common
-
+import core.config as cf
+import conv2tif, prepifg
+import common
 
 class ConvertToGeotiffTests(unittest.TestCase):
     """

@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package
 #
-#   Copyright 2017 Geoscience Australia
+#   Copyright 2020 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -30,7 +30,11 @@ from tempfile import mkstemp
 
 from numpy import array, where, nan, isnan, nanmean, float32, zeros, \
     sum as nsum
-import gdal
+from osgeo import gdal
+from osgeo import osr
+from osgeo import ogr
+from osgeo import gdalconst
+from osgeo import gdal_array
 
 from core.gdal_python import crop_resample_average
 from core import ifgconstants as ifc, config as cf

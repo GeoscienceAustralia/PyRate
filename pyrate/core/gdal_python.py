@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2017 Geoscience Australia
+#   Copyright 2020 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -19,7 +19,12 @@ This Python module contains bindings for the GDAL library
 # pylint: disable=too-many-arguments,R0914
 import logging
 
-import gdal, gdalnumeric, gdalconst
+from osgeo import gdal
+from osgeo import osr
+from osgeo import ogr
+from osgeo import gdalconst
+from osgeo import gdal_array
+
 from PIL import Image, ImageDraw
 import numpy as np
 import numexpr as ne
@@ -116,7 +121,7 @@ def crop(input_file, extents, geo_trans=None, nodata=np.nan):
         """
         Converts a Python Imaging Library (PIL) array to a gdalnumeric image.
         """
-        arr = gdalnumeric.fromstring(i.tobytes(), 'b')
+        arr = gdal_array.fromstring(i.tobytes(), 'b')
         arr.shape = i.im.size[1], i.im.size[0]
         return arr
 
@@ -175,7 +180,7 @@ def crop(input_file, extents, geo_trans=None, nodata=np.nan):
 
     # Clip the image using the mask
     try:
-        clip = gdalnumeric.choose(mask, (clip, nodata))
+        clip = gdal_array.choose(mask, (clip, nodata))
 
     # If the clipping features extend out-of-bounds and BELOW the raster...
     except ValueError:
@@ -189,7 +194,7 @@ def crop(input_file, extents, geo_trans=None, nodata=np.nan):
 
         mask.resize(*rshp, refcheck=False)
 
-        clip = gdalnumeric.choose(mask, (clip, nodata))
+        clip = gdal_array.choose(mask, (clip, nodata))
 
     # AttributeError: 'numpy.ndarray' object has no attribute 'close'
     # raster.close()
@@ -362,7 +367,7 @@ def crop_resample_average(
                                  geotransform=gt, creation_opts=creation_opts)
 
     shared.write_geotiff(resampled_average, out_ds, np.nan) 
-    log.debug("Witting geotiff: "+str(out_ds))
+    log.debug("Writing geotiff: "+str(out_ds))
     return resampled_average, out_ds
 
 

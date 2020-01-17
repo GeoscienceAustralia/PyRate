@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2017 Geoscience Australia
+#   Copyright 2020 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -25,14 +25,14 @@ import unittest
 from numpy import eye, array, ones
 import numpy as np
 from numpy.testing import assert_array_almost_equal
+from . import common
 
-import pyrate.core.orbital
-import tests.common
-from pyrate.core import shared, ref_phs_est as rpe, config as cf, covariance as vcm_module
-from pyrate.core.stack import stack_rate
-from pyrate import process, prepifg, conv2tif
-from tests.common import (SML_TEST_DIR, prepare_ifgs_without_phase,
-    TEST_CONF_ROIPAC, pre_prepare_ifgs, remove_tifs)
+import core.orbital
+import common
+from core import shared, ref_phs_est as rpe, config as cf, covariance as vcm_module
+from core.stack import stack_rate
+import process, prepifg, conv2tif
+from common import (SML_TEST_DIR, prepare_ifgs_without_phase, TEST_CONF_ROIPAC, pre_prepare_ifgs, remove_tifs)
 
 
 def default_params():
@@ -70,136 +70,136 @@ class StackRateTests(unittest.TestCase):
         assert_array_almost_equal(rate, exprate)
         assert_array_almost_equal(error, experr)
         assert_array_almost_equal(samples, expsamp)
-
-
-class LegacyEqualityTest(unittest.TestCase):
-    """
-    Tests equality with legacy data
-    """
-
-    @classmethod
-    def setUpClass(cls):
-        params = cf.get_config_params(TEST_CONF_ROIPAC)
-        cls.temp_out_dir = tempfile.mkdtemp()
-        
-        params[cf.OUT_DIR] = cls.temp_out_dir
-        params[cf.TMPDIR] = os.path.join(params[cf.OUT_DIR], cf.TMPDIR)
-        shared.mkdir_p(params[cf.TMPDIR])
-        conv2tif.main(params)
-        prepifg.main(params)
-
-        params[cf.REF_EST_METHOD] = 2
-
-        xlks, _, crop = cf.transform_params(params)
-
-        base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST], params[cf.OBS_DIR])
-        
-        dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
-        print(f"base_ifg_paths={base_ifg_paths}") 
-        print(f"dest_paths={dest_paths}")
-        # start run_pyrate copy
-        ifgs = pre_prepare_ifgs(dest_paths, params)
-        mst_grid = tests.common.mst_calculation(dest_paths, params)
-
-        refx, refy = process._ref_pixel_calc(dest_paths, params)
-
-        # Estimate and remove orbit errors
-        pyrate.core.orbital.remove_orbital_error(ifgs, params)
-        ifgs = prepare_ifgs_without_phase(dest_paths, params)
-        for ifg in ifgs:
-            ifg.close()
-        _, ifgs = process._ref_phase_estimation(dest_paths, params, refx, refy)
-        ifgs[0].open()
-        r_dist = vcm_module.RDist(ifgs[0])()
-        ifgs[0].close()
-        maxvar = [vcm_module.cvd(i, params, r_dist)[0] for i in dest_paths]
-        for ifg in ifgs:
-            ifg.open()
-        vcmt = vcm_module.get_vcmt(ifgs, maxvar)    
-        for ifg in ifgs:
-            ifg.close()     
-            ifg.open()
-        
-        # Calculate linear rate map
-        params[cf.PARALLEL] = 1
-        cls.rate, cls.error, cls.samples = tests.common.calculate_linear_rate( ifgs, params, vcmt, mst_mat=mst_grid)
-
-        params[cf.PARALLEL] = 2
-        cls.rate_2, cls.error_2, cls.samples_2 = tests.common.calculate_linear_rate(ifgs, params, vcmt, mst_mat=mst_grid)
-
-        params[cf.PARALLEL] = 0
-        # Calculate linear rate map
-        cls.rate_s, cls.error_s, cls.samples_s = tests.common.calculate_linear_rate(ifgs, params, vcmt, mst_mat=mst_grid)
-
-        stackrate_dir = os.path.join(SML_TEST_DIR, 'linrate')
-
-        cls.rate_container = np.genfromtxt(os.path.join(stackrate_dir, 'stackmap.csv'), delimiter=',')
-        cls.error_container = np.genfromtxt(os.path.join(stackrate_dir, 'errormap.csv'), delimiter=',')
-
-        cls.samples_container = np.genfromtxt(os.path.join(stackrate_dir, 'coh_sta.csv'), delimiter=',')
-    
-        for ifg in ifgs:
-            ifg.close()
-
-    @classmethod
-    def tearDownClass(cls):
-        shutil.rmtree(cls.temp_out_dir)
-        params = cf.get_config_params(TEST_CONF_ROIPAC)
-        remove_tifs(params[cf.OBS_DIR])
-
-    def test_stack_rate_full_parallel(self):
-        """
-        python multiprocessing by rows vs serial
-        """
-        np.testing.assert_array_almost_equal(self.rate, self.rate_s, decimal=3)
-
-    def test_stackrate_error_parallel(self):
-        """
-        python multiprocessing by rows vs serial
-        """
-        np.testing.assert_array_almost_equal(self.error, self.error_s, decimal=3)
-
-    def test_stackrate_samples_parallel(self):
-        """
-        python multiprocessing by rows vs serial
-        """
-        np.testing.assert_array_almost_equal(self.samples, self.samples_s, decimal=3)
-
-    def test_stackrate_full_parallel_pixel(self):
-        """
-        python multiprocessing by pixel vs serial
-        """
-        np.testing.assert_array_almost_equal(self.rate_2, self.rate_s, decimal=3)
-
-    def test_stackrate_error_parallel_pixel(self):
-        """
-        python multiprocessing by pixel vs serial
-        """
-        np.testing.assert_array_almost_equal(self.error_2, self.error_s, decimal=3)
-
-    def test_stackrate_samples_parallel_pixel(self):
-        """
-        python multiprocessing pixel level vs serial
-        """
-        np.testing.assert_array_almost_equal(self.samples_2, self.samples_s, decimal=3)
-
-    def test_stack_rate(self):
-        """
-        Compare with legacy data
-        """
-        np.testing.assert_array_almost_equal(self.rate_s, self.rate_container, decimal=3)
-
-    def test_stackrate_error(self):
-        """
-        Compare with legacy data
-        """
-        np.testing.assert_array_almost_equal(self.error_s, self.error_container, decimal=3)
-
-    def test_stackrate_samples(self):
-        """
-        Compare with legacy data
-        """
-        np.testing.assert_array_almost_equal(self.samples_s, self.samples_container, decimal=3)
+#
+#
+# class LegacyEqualityTest(unittest.TestCase):
+#     """
+#     Tests equality with legacy data
+#     """
+#
+#     @classmethod
+#     def setUpClass(cls):
+#         params = cf.get_config_params(TEST_CONF_ROIPAC)
+#         cls.temp_out_dir = tempfile.mkdtemp()
+#
+#         params[cf.OUT_DIR] = cls.temp_out_dir
+#         params[cf.TMPDIR] = os.path.join(params[cf.OUT_DIR], cf.TMPDIR)
+#         shared.mkdir_p(params[cf.TMPDIR])
+#         conv2tif.main(params)
+#         prepifg.main(params)
+#
+#         params[cf.REF_EST_METHOD] = 2
+#
+#         xlks, _, crop = cf.transform_params(params)
+#
+#         base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST], params[cf.OBS_DIR])
+#
+#         dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
+#         print(f"base_ifg_paths={base_ifg_paths}")
+#         print(f"dest_paths={dest_paths}")
+#         # start run_pyrate copy
+#         ifgs = pre_prepare_ifgs(dest_paths, params)
+#         mst_grid = common.mst_calculation(dest_paths, params)
+#
+#         refx, refy = process._ref_pixel_calc(dest_paths, params)
+#
+#         # Estimate and remove orbit errors
+#         core.orbital.remove_orbital_error(ifgs, params)
+#         ifgs = prepare_ifgs_without_phase(dest_paths, params)
+#         for ifg in ifgs:
+#             ifg.close()
+#         _, ifgs = process._ref_phase_estimation(dest_paths, params, refx, refy)
+#         ifgs[0].open()
+#         r_dist = vcm_module.RDist(ifgs[0])()
+#         ifgs[0].close()
+#         maxvar = [vcm_module.cvd(i, params, r_dist)[0] for i in dest_paths]
+#         for ifg in ifgs:
+#             ifg.open()
+#         vcmt = vcm_module.get_vcmt(ifgs, maxvar)
+#         for ifg in ifgs:
+#             ifg.close()
+#             ifg.open()
+#
+#         # Calculate stacked rate map
+#         params[cf.PARALLEL] = 1
+#         cls.rate, cls.error, cls.samples = common.calculate_stacked_rate( ifgs, params, vcmt, mst_mat=mst_grid)
+#
+#         params[cf.PARALLEL] = 2
+#         cls.rate_2, cls.error_2, cls.samples_2 = common.calculate_stacked_rate(ifgs, params, vcmt, mst_mat=mst_grid)
+#
+#         params[cf.PARALLEL] = 0
+#         # Calculate stacked rate map
+#         cls.rate_s, cls.error_s, cls.samples_s = common.calculate_stacked_rate(ifgs, params, vcmt, mst_mat=mst_grid)
+#
+#         stackrate_dir = os.path.join(SML_TEST_DIR, 'stack_rate')
+#
+#         cls.rate_container = np.genfromtxt(os.path.join(stackrate_dir, 'stackmap.csv'), delimiter=',')
+#         cls.error_container = np.genfromtxt(os.path.join(stackrate_dir, 'errormap.csv'), delimiter=',')
+#
+#         cls.samples_container = np.genfromtxt(os.path.join(stackrate_dir, 'coh_sta.csv'), delimiter=',')
+#
+#         for ifg in ifgs:
+#             ifg.close()
+#
+#     @classmethod
+#     def tearDownClass(cls):
+#         shutil.rmtree(cls.temp_out_dir)
+#         params = cf.get_config_params(TEST_CONF_ROIPAC)
+#         remove_tifs(params[cf.OBS_DIR])
+#
+#     def test_stack_rate_full_parallel(self):
+#         """
+#         python multiprocessing by rows vs serial
+#         """
+#         np.testing.assert_array_almost_equal(self.rate, self.rate_s, decimal=3)
+#
+#     def test_stackrate_error_parallel(self):
+#         """
+#         python multiprocessing by rows vs serial
+#         """
+#         np.testing.assert_array_almost_equal(self.error, self.error_s, decimal=3)
+#
+#     def test_stackrate_samples_parallel(self):
+#         """
+#         python multiprocessing by rows vs serial
+#         """
+#         np.testing.assert_array_almost_equal(self.samples, self.samples_s, decimal=3)
+#
+#     def test_stackrate_full_parallel_pixel(self):
+#         """
+#         python multiprocessing by pixel vs serial
+#         """
+#         np.testing.assert_array_almost_equal(self.rate_2, self.rate_s, decimal=3)
+#
+#     def test_stackrate_error_parallel_pixel(self):
+#         """
+#         python multiprocessing by pixel vs serial
+#         """
+#         np.testing.assert_array_almost_equal(self.error_2, self.error_s, decimal=3)
+#
+#     def test_stackrate_samples_parallel_pixel(self):
+#         """
+#         python multiprocessing pixel level vs serial
+#         """
+#         np.testing.assert_array_almost_equal(self.samples_2, self.samples_s, decimal=3)
+#
+#     def test_stack_rate(self):
+#         """
+#         Compare with legacy data
+#         """
+#         np.testing.assert_array_almost_equal(self.rate_s, self.rate_container, decimal=3)
+#
+#     def test_stackrate_error(self):
+#         """
+#         Compare with legacy data
+#         """
+#         np.testing.assert_array_almost_equal(self.error_s, self.error_container, decimal=3)
+#
+#     def test_stackrate_samples(self):
+#         """
+#         Compare with legacy data
+#         """
+#         np.testing.assert_array_almost_equal(self.samples_s, self.samples_container, decimal=3)
 
 
 if __name__ == "__main__":

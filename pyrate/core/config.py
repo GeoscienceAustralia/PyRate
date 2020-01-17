@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2017 Geoscience Australia
+#   Copyright 2020 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -854,7 +854,11 @@ def convert_geographic_coordinate_to_pixel_value(refpx, refpy, transform):
 
     return int(refpx), int(refpy)
 
-import gdal
+from osgeo import gdal
+from osgeo import osr
+from osgeo import ogr
+from osgeo import gdalconst
+from osgeo import gdal_array
 def validate_parameters(pars: Dict, step: str=CONV2TIF):
     """
     Main validation function. Calls validation subfunctions and gathers

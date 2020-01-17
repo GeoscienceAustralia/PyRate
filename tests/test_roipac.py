@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2017 Geoscience Australia
+#   Copyright 2020 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -26,11 +26,16 @@ from datetime import date
 from os.path import exists, join
 
 from numpy.testing import assert_array_almost_equal
-import gdal
+from osgeo import gdal
+from osgeo import osr
+from osgeo import ogr
+from osgeo import gdalconst
+from osgeo import gdal_array
+from . import common
 
-import pyrate.core.ifgconstants as ifc
-from pyrate.core import shared, roipac
-from pyrate.core.config import (
+import core.ifgconstants as ifc
+from core import shared, roipac
+from core.config import (
     INPUT_IFG_PROJECTION,
     NO_DATA_VALUE,
     OBS_DIR,
@@ -40,11 +45,11 @@ from pyrate.core.config import (
     DEM_HEADER_FILE
 )
 # from pyrate.scripts.conv2tif import main as roipacMain
-from pyrate.core.shared import GeotiffException
-from pyrate.core.shared import write_fullres_geotiff
-from tests.common import HEADERS_TEST_DIR, PREP_TEST_OBS, PREP_TEST_TIF
-from tests.common import SML_TEST_DEM_DIR, SML_TEST_OBS, TEMPDIR
-from tests.common import SML_TEST_DEM_ROIPAC, SML_TEST_DEM_HDR
+from core.shared import GeotiffException
+from core.shared import write_fullres_geotiff
+from common import HEADERS_TEST_DIR, PREP_TEST_OBS, PREP_TEST_TIF
+from common import SML_TEST_DEM_DIR, SML_TEST_OBS, TEMPDIR
+from common import SML_TEST_DEM_ROIPAC, SML_TEST_DEM_HDR
 
 gdal.UseExceptions()
 
@@ -61,10 +66,8 @@ FULL_HEADER_PATH = join(HEADERS_TEST_DIR, "geo_060619-060828.unw.rsc")
 class RoipacCommandLine(unittest.TestCase):
     def setUp(self):
         random_text = tempfile.mktemp()
-        self.confFile = os.path.join(TEMPDIR,
-                                     '{}/roipac_test.cfg'.format(random_text))
-        self.ifgListFile = os.path.join(
-            TEMPDIR, '{}/roipac_ifg.list'.format(random_text))
+        self.confFile = os.path.join(TEMPDIR, '{}/roipac_test.cfg'.format(random_text))
+        self.ifgListFile = os.path.join(TEMPDIR, '{}/roipac_ifg.list'.format(random_text))
         self.base_dir = os.path.dirname(self.confFile)
         shared.mkdir_p(self.base_dir)
         self.hdr = SML_TEST_DEM_HDR
@@ -153,13 +156,7 @@ class RoipacToGeoTiffTests(unittest.TestCase):
         # ensure failure if TIF/other file used instead of binary UNW data
         self.dest = os.path.join(TEMPDIR, 'tmp_roipac_ifg.tif')
         data_path = join(PREP_TEST_TIF, 'geo_060619-061002.tif')
-        self.assertRaises(
-            GeotiffException,
-            write_fullres_geotiff,
-            self.HDRS,
-            data_path,
-            self.dest,
-            nodata=0)
+        self.assertRaises(GeotiffException, write_fullres_geotiff, self.HDRS, data_path, self.dest, nodata=0)
 
     def test_bad_projection(self):
         hdrs = self.HDRS.copy()
@@ -167,8 +164,7 @@ class RoipacToGeoTiffTests(unittest.TestCase):
         hdrs[ifc.DATA_TYPE] = ifc.ORIG
         self.dest = os.path.join(TEMPDIR, 'tmp_roipac_ifg2.tif')
         data_path = join(PREP_TEST_OBS, 'geo_060619-061002.unw')
-        self.assertRaises(GeotiffException, write_fullres_geotiff, hdrs,
-                          data_path, self.dest, 0)
+        self.assertRaises(GeotiffException, write_fullres_geotiff, hdrs, data_path, self.dest, 0)
 
     def test_mismatching_cell_resolution(self):
         hdrs = self.HDRS.copy()
@@ -177,8 +173,7 @@ class RoipacToGeoTiffTests(unittest.TestCase):
         data_path = join(PREP_TEST_OBS, 'geo_060619-061002.unw')
         self.dest = os.path.join(TEMPDIR, 'fake')
 
-        self.assertRaises(GeotiffException, write_fullres_geotiff, hdrs,
-                            data_path, self.dest, 0)
+        self.assertRaises(GeotiffException, write_fullres_geotiff, hdrs, data_path, self.dest, 0)
 
     def compare_rasters(self, ds, exp_ds):
         band = ds.GetRasterBand(1)
@@ -257,6 +252,7 @@ class HeaderParsingTests(unittest.TestCase):
         hdrs = roipac.parse_header(FULL_HEADER_PATH)
         self.assertAlmostEqual(hdrs[roipac.X_LAST], 151.8519444445)
         self.assertAlmostEqual(hdrs[roipac.Y_LAST], -34.625)
+
 
 if __name__ == "__main__":
     unittest.main()

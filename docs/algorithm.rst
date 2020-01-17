@@ -1,5 +1,5 @@
 Algorithm Module
 ================
 
-.. automodule:: pyrate.core.algorithm
+.. automodule:: core.algorithm
    :members:

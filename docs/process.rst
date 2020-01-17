@@ -1,7 +1,7 @@
 PyRate Process Script
 ========================
 
-.. automodule:: pyrate.process
+.. automodule:: process
     :members:
     :undoc-members:
     :show-inheritance:

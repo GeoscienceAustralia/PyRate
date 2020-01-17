@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import os
+import sys
 import datetime
 import sphinx_rtd_theme
 
@@ -11,6 +12,7 @@ __version__ = "0.4.0"
 # If your documentation needs a minimal Sphinx version, state it here.
 #
 # needs_sphinx = '1.0'
+sys.path.insert(0, os.path.abspath('../../pyrate/'))
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
@@ -23,8 +25,6 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.autosummary',
               'sphinx.ext.napoleon',
               'matplotlib.sphinxext.plot_directive',
-              'IPython.sphinxext.ipython_console_highlighting',
-              'IPython.sphinxext.ipython_directive',
               'sphinxcontrib.programoutput'
               ]
 

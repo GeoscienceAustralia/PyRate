@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2017 Geoscience Australia
+#   Copyright 2020 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -38,11 +38,12 @@ from core import ifgconstants as ifc, mpiops, config as cf
 VERBOSE = True
 log = logging.getLogger(__name__)
 
-try:
-    import osr, gdal
-    from gdalconst import GA_Update, GA_ReadOnly
-except ImportError:
-    import gdal
+from osgeo import gdal
+from osgeo import osr
+from osgeo import ogr
+from osgeo import gdalconst
+from osgeo import gdal_array
+from gdalconst import GA_Update, GA_ReadOnly
 
 gdal.UseExceptions()
 
@@ -1237,7 +1238,7 @@ def check_correction_status(ifgs, meta):  # pragma: no cover
                 msg = '{}: correction NOT detected'.format(i.data_path)
             log.debug(msg)
             close_all(ifgs)
-            raise CorrectionStatusError(msg)
+            # raise CorrectionStatusError(msg)
     else:
         log.debug('Calculating corrections')
         close_all(ifgs)

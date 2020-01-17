@@ -1,7 +1,6 @@
-#!/usr/bin/env python
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2017 Geoscience Australia
+#   Copyright 2020 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -46,7 +45,7 @@ doclink = """
 Please see the full documentation at http://geoscienceaustralia.github.io/PyRate/."""
 
 setup(
-    name='Py-Rate',
+    name='pyrate',
     version=__version__,
     description='A Python tool for estimating velocity and time-series '
                 'from Interferometric Synthetic Aperture Radar (InSAR) data.',
@@ -56,19 +55,17 @@ setup(
     url='https://github.com/GeoscienceAustralia/PyRate',
     install_requires=requirements,
     package_dir={'': 'pyrate'},
-    py_modules=["core.algorithm", "core.aps", "core.config", "core.covariance", "core.gamma", "core.gdal_python", "core.ifgconstants", "core.mpiops", "core.mst", "core.orbital", "core.prepifg_helper", "core.pyratelog", "core.ref_phs_est", "core.refpixel", "core.roipac", "core.shared", "core.stack", "core.timeseries", "core.user_experience", "constants", "conv2tif", "merge", "prepifg", "process"],
-    package_data={
-        'utils': ['colormap.txt']
-    },
+    py_modules=["main", "core.algorithm", "core.aps", "core.config", "core.covariance", "core.gamma", "core.gdal_python", "core.ifgconstants", "core.mpiops", "core.mst", "core.orbital", "core.prepifg_helper", "core.pyratelog", "core.ref_phs_est", "core.refpixel", "core.roipac", "core.shared", "core.stack", "core.timeseries", "core.user_experience", "constants", "conv2tif", "merge", "prepifg", "process"],
+    data_files=[('utils', ['pyrate/utils/colormap.txt'])],
     entry_points={
           'console_scripts': [
-              'pyrate = pyrate.__main__:main'
+              'pyrate = main:main'
           ]
       },
+    # scripts=['scripts/create_html_documentation.sh'],
     license="Apache Software License 2.0",
     zip_safe=False,
-    keywords='PyRate, Python, InSAR, Geodesy, Remote Sensing, '
-             'Image Processing',
+    keywords='PyRate, Python, InSAR, Geodesy, Remote Sensing, Image Processing',
     classifiers=[
         'Development Status :: 4 - Beta',
         "Operating System :: POSIX",
