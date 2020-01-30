@@ -30,6 +30,7 @@ import time
 import multiprocessing
 from shutil import copyfile
 
+from configration import Configration
 from core.user_experience import break_number_into_factors
 from core.config import OBS_DIR,OUT_DIR
 import pathlib
@@ -45,8 +46,8 @@ def conv2tif_handler(config_file):
     Convert interferograms to geotiff.
     """
     config_file = os.path.abspath(config_file)
-    params = cf.get_config_params(config_file, step=CONV2TIF)
-    conv2tif.main(params)
+    params = Configration(config_file)
+    conv2tif.main(params.__dict__)
 
 
 def prepifg_handler(config_file):
@@ -54,13 +55,13 @@ def prepifg_handler(config_file):
     Perform multilooking and cropping on geotiffs.
     """
     config_file = os.path.abspath(config_file)
-    params = cf.get_config_params(config_file, step=PREPIFG)
-    prepifg.main(params)
+    params = Configration(config_file)
+    prepifg.main(params.__dict__)
 
-    for p in pathlib.Path(params[OUT_DIR]).rglob("*rlks_*cr.tif"):
+    for p in pathlib.Path(params.__dict__[OUT_DIR]).rglob("*rlks_*cr.tif"):
         if "dem" not in str(p):
             src = str(p)
-            dst = os.path.join(params[OBS_DIR],p.name)
+            dst = os.path.join(params.__dict__[OBS_DIR],p.name)
             copyfile(src, dst)
 
 
@@ -69,14 +70,14 @@ def process_handler(config_file, rows, cols):
     Time series and linear rate computation.
     """
     config_file = os.path.abspath(config_file)
-    _, dest_paths, params = cf.get_ifg_paths(config_file, step=PROCESS)
+    params = Configration(config_file)
 
     dest_paths = []
-    for p in pathlib.Path(params[OBS_DIR]).rglob("*rlks_*cr.tif"):
+    for p in pathlib.Path(params.__dict__[OBS_DIR]).rglob("*rlks_*cr.tif"):
         if "dem" not in str(p):
             dest_paths.append(str(p))
 
-    process.process_ifgs(sorted(dest_paths), params, rows, cols)
+    process.process_ifgs(sorted(dest_paths), params.__dict__, rows, cols)
 
 
 def merge_handler(config_file, rows, cols):
@@ -84,9 +85,9 @@ def merge_handler(config_file, rows, cols):
     Reassemble computed tiles and save as geotiffs.
     """
     config_file = os.path.abspath(config_file)
-    _, _, params = cf.get_ifg_paths(config_file, step=MERGE)
-    merge.main(params, rows, cols)
-    user_experience.delete_tsincr_files(params)
+    params = Configration(config_file)
+    merge.main(params.__dict__, rows, cols)
+    user_experience.delete_tsincr_files(params.__dict__)
 
 
 def main():
