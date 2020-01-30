@@ -95,10 +95,10 @@ launching a PBS job.
 
     mem=32gb
 
-Incorrect modules loaded on Raijin
+Incorrect modules loaded on Gadi
 ----------------------------------
 PyRate requires certain versions of Python, GDAL and OpenMPI to be loaded
-on Raijin and other HPC systems. While sourcing the ``PyRate/utils/load_modules.sh``
+on Gadi and other HPC systems. While sourcing the ``PyRate/utils/load_modules.sh``
 script will load the correct modules, you may need to unload previously unloaded modules.
 
 Example of errors caused by module conflicts::

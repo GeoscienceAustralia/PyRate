@@ -33,7 +33,7 @@ tox
 ---------------------------------------
 NCI
 
-ssh xyz@raijin.nci.org.au
+ssh xyz@gadi.nci.org.au
 
 module unload git
 module load git
