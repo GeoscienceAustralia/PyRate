@@ -1,8 +1,4 @@
-import os
 import pathlib
-from core import config as cf
-from constants import CONV2TIF, PREPIFG, PROCESS, MERGE  # Step names
-
 
 def delete_tsincr_files(params):
 
@@ -10,14 +6,6 @@ def delete_tsincr_files(params):
     for filePath in outDirPath.iterdir():
         if "tsincr" in str(filePath):
             filePath.unlink()
-
-
-if __name__ == "__main__":
-    config_file = "input_parameters.conf"
-    config_file = os.path.abspath(config_file)
-    params = cf.get_config_params(config_file, step=MERGE)
-    delete_tsincr_files(params)
-
 
 def break_number_into_factors(n, memo={}, left=2):
     if (n, left) in memo:
@@ -34,4 +22,12 @@ def break_number_into_factors(n, memo={}, left=2):
                 best = rem[0] + i
                 bestTuple = [i] + rem[1]
         i += 1
+
+    if bestTuple == [4]:
+        return 2, 2
+
+    if len(bestTuple) == 1:
+        bestTuple.append(1)
+        return bestTuple
+
     return bestTuple
