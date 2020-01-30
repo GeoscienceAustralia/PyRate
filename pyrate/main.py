@@ -21,13 +21,11 @@ import logging
 import argparse
 from argparse import RawTextHelpFormatter
 
-from constants import CLI_DESCRIPTION, CONV2TIF, PREPIFG, PROCESS, MERGE
-from core import config as cf
+from constants import CLI_DESCRIPTION, NO_OF_PARALLEL_PROCESSES
 import conv2tif, prepifg, process, merge
 from core import pyratelog
 from core import user_experience
 import time
-import multiprocessing
 from shutil import copyfile
 
 from configration import Configration
@@ -92,7 +90,7 @@ def merge_handler(config_file, rows, cols):
 
 def main():
 
-    rows, cols = [int(no) for no in break_number_into_factors(multiprocessing.cpu_count())]
+    rows, cols = [int(no) for no in break_number_into_factors(NO_OF_PARALLEL_PROCESSES)]
 
     start_time = time.time()
     log.debug("Starting PyRate")

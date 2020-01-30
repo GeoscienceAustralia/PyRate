@@ -25,7 +25,7 @@ from numpy import array
 import numpy as np
 from numpy.testing import assert_array_almost_equal
 from . import common
-
+from constants import NO_OF_PARALLEL_PROCESSES
 from core import shared, ref_phs_est as rpe, ifgconstants as ifc, config as cf
 import process, prepifg, conv2tif
 from core.covariance import cvd, get_vcmt, RDist
@@ -188,7 +188,7 @@ class LegacyEqualityTest(unittest.TestCase):
         conv2tif_handler(TEST_CONF_ROIPAC)
         prepifg_handler(TEST_CONF_ROIPAC)
 
-        rows, cols = [int(no) for no in break_number_into_factors(multiprocessing.cpu_count())]
+        rows, cols = [int(no) for no in break_number_into_factors(NO_OF_PARALLEL_PROCESSES)]
         process_handler(TEST_CONF_ROIPAC, rows, cols)
 
         params = cf.get_config_params(TEST_CONF_ROIPAC)
