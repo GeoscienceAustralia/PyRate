@@ -75,7 +75,7 @@ def process_handler(config_file, rows, cols):
         if "dem" not in str(p):
             dest_paths.append(str(p))
 
-    process.process_ifgs(sorted(dest_paths), params.__dict__, rows, cols)
+    process.main(sorted(dest_paths), params.__dict__, rows, cols)
 
 
 def merge_handler(config_file, rows, cols):

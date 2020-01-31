@@ -229,7 +229,7 @@ def _ref_phase_estimation(ifg_paths, params, refpx, refpy):
         ifgs = [Ifg(ifg_path) for ifg_path in ifg_paths]
     return ref_phs, ifgs
 
-def process_ifgs(ifg_paths, params, rows, cols):
+def main(ifg_paths, params, rows, cols):
     """
     Top level function to perform PyRate workflow on given interferograms
 
