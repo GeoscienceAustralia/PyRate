@@ -21,16 +21,18 @@ import logging
 import argparse
 from argparse import RawTextHelpFormatter
 
-from constants import CLI_DESCRIPTION, NO_OF_PARALLEL_PROCESSES
+from constants import CLI_DESCRIPTION, CONV2TIF, PREPIFG, PROCESS, MERGE
+from core import config as cf
 import conv2tif, prepifg, process, merge
 from core import pyratelog
 from core import user_experience
 import time
+import multiprocessing
 from shutil import copyfile
 
-from configration import Configration
 from core.user_experience import break_number_into_factors
-from core.config import OBS_DIR,OUT_DIR
+from core.config import OBS_DIR, OUT_DIR
+from configration import Configration
 import pathlib
 
 # Turn off MPI warning
@@ -44,8 +46,8 @@ def conv2tif_handler(config_file):
     Convert interferograms to geotiff.
     """
     config_file = os.path.abspath(config_file)
-    params = Configration(config_file)
-    conv2tif.main(params.__dict__)
+    config = Configration(config_file)
+    conv2tif.main(config.__dict__)
 
 
 def prepifg_handler(config_file):
@@ -53,44 +55,30 @@ def prepifg_handler(config_file):
     Perform multilooking and cropping on geotiffs.
     """
     config_file = os.path.abspath(config_file)
-    params = Configration(config_file)
-    prepifg.main(params.__dict__)
-
-    for p in pathlib.Path(params.__dict__[OUT_DIR]).rglob("*rlks_*cr.tif"):
-        if "dem" not in str(p):
-            src = str(p)
-            dst = os.path.join(params.__dict__[OBS_DIR],p.name)
-            copyfile(src, dst)
+    config = Configration(config_file)
+    prepifg.main(config.__dict__)
 
 
-def process_handler(config_file, rows, cols):
+def process_handler(config_file):
     """
     Time series and linear rate computation.
     """
     config_file = os.path.abspath(config_file)
-    params = Configration(config_file)
-
-    dest_paths = []
-    for p in pathlib.Path(params.__dict__[OBS_DIR]).rglob("*rlks_*cr.tif"):
-        if "dem" not in str(p):
-            dest_paths.append(str(p))
-
-    process.main(sorted(dest_paths), params.__dict__, rows, cols)
+    config = Configration(config_file)
+    process.main(config.__dict__)
 
 
-def merge_handler(config_file, rows, cols):
+def merge_handler(config_file):
     """
     Reassemble computed tiles and save as geotiffs.
     """
     config_file = os.path.abspath(config_file)
-    params = Configration(config_file)
-    merge.main(params.__dict__, rows, cols)
-    user_experience.delete_tsincr_files(params.__dict__)
+    config = Configration(config_file)
+    merge.main(config.__dict__)
+    user_experience.delete_tsincr_files(config.__dict__)
 
 
 def main():
-
-    rows, cols = [int(no) for no in break_number_into_factors(NO_OF_PARALLEL_PROCESSES)]
 
     start_time = time.time()
     log.debug("Starting PyRate")
@@ -113,6 +101,9 @@ def main():
     parser_merge = subparsers.add_parser('merge', help="Reassemble computed tiles and save as geotiffs.", add_help=True)
     parser_merge.add_argument('-f', '--config_file', action="store", type=str, default=None, help="Pass configuration file", required=False)
 
+    parser_workflow = subparsers.add_parser('workflow', help="Run all the PyRate processes", add_help=True)
+    parser_workflow.add_argument('-f', '--config_file', action="store", type=str, default=None, help="Pass configuration file", required=False)
+
     args = parser.parse_args()
 
     log.debug("Arguments supplied at command line: ")
@@ -129,10 +120,20 @@ def main():
         prepifg_handler(args.config_file)
 
     if args.command == "process":
-        process_handler(args.config_file, rows, cols)
+        process_handler(args.config_file)
 
     if args.command == "merge":
-        merge_handler(args.config_file, rows, cols)
+        merge_handler(args.config_file)
+
+    if args.command == "workflow":
+        log.info("***********conv2tif**************")
+        conv2tif_handler(args.config_file)
+        log.info("***********prepifg**************")
+        prepifg_handler(args.config_file)
+        log.info("***********process**************")
+        process_handler(args.config_file)
+        log.info("***********merge**************")
+        merge_handler(args.config_file)
 
     log.debug("--- %s seconds ---" % (time.time() - start_time))
 

@@ -23,6 +23,7 @@ def break_number_into_factors(n, memo={}, left=2):
                 bestTuple = [i] + rem[1]
         i += 1
 
+    # handle edge case when only one processor is available
     if bestTuple == [4]:
         return 2, 2
 

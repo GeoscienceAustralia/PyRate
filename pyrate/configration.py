@@ -133,12 +133,7 @@ class Configration():
         if self.refchipsize % 2 != 1:
             raise ValueError("Configuration parameters refchipsize must be odd: " + str(self.refchipsize))
 
-        factors = [int(no) for no in break_number_into_factors(NO_OF_PARALLEL_PROCESSES)]
-        # handle edge case when only one processor is available
-        if len(factors) < 2:
-            self.rows, self.cols = 1, 1
-        else:
-            self.rows, self.cols = factors
+        self.rows, self.cols = [int(no) for no in break_number_into_factors(NO_OF_PARALLEL_PROCESSES)]
 
         # create a temporary directory
         self.tmpdir = self.outdir / "tmpdir"

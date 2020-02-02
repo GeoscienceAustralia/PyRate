@@ -229,7 +229,7 @@ def _ref_phase_estimation(ifg_paths, params, refpx, refpy):
         ifgs = [Ifg(ifg_path) for ifg_path in ifg_paths]
     return ref_phs, ifgs
 
-def main(ifg_paths, params, rows, cols):
+def main(params):
     """
     Top level function to perform PyRate workflow on given interferograms
 
@@ -245,6 +245,11 @@ def main(ifg_paths, params, rows, cols):
     :return: vcmt: Variance-covariance matrix array
     :rtype: ndarray
     """
+    ifg_paths = []
+    for ifg_path in params["interferogram_files"]:
+        ifg_paths.append(ifg_path.sampled_path)
+
+    rows, cols = params["rows"], params["cols"]
     if mpiops.size > 1:  # turn of multiprocessing during mpi jobs
         params[cf.PARALLEL] = False
     tiles = mpiops.run_once(get_tiles, ifg_paths[0], rows, cols)

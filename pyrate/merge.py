@@ -40,12 +40,13 @@ log = logging.getLogger(__name__)
 # Constants
 MASTER_PROCESS = 0
 
-def main(params, rows, cols):
+def main(params):
     """
     PyRate merge main function. Assembles product tiles in to
     single geotiff files
     """
     # setup paths
+    rows, cols = params["rows"], params["cols"]
     _merge_stack(rows, cols, params)
     if params[cf.TIME_SERIES_CAL]:
         _merge_timeseries(rows, cols, params)
