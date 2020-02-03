@@ -44,18 +44,17 @@ def validate_parameter_value(input_name, input_value, min_value=None, max_value=
         if min_value is not None:
             if input_value < min_value:
                 raise ValueError(
-                    "Invalid value for " + input_name + " supplied: " + input_value + ". Please provided a valid value greater than " + min_value + ".")
+                    "Invalid value for " + str(input_name) + " supplied: " + str(input_value) + ". Please provided a valid value greater than " + str(min_value) + ".")
     if input_value is not None:
         if max_value is not None:
             if input_value > max_value:
                 raise ValueError(
-                    "Invalid value for " + input_name + " supplied: " + input_value + ". Please provided a valid value less than " + max_value + ".")
+                    "Invalid value for " + str(input_name) + " supplied: " + str(input_value) + ". Please provided a valid value less than " + str(max_value) + ".")
 
     if possible_values is not None:
         if input_value not in possible_values:
             raise ValueError(
-                "Invalid value for " + input_name + " supplied: " + input_value + ". Please provided a valid value from with in: " + str(
-                    possible_values) + ".")
+                "Invalid value for " + str(input_name) + " supplied: " + str(input_value) + ". Please provided a valid value from with in: " + str(possible_values) + ".")
     return True
 
 
