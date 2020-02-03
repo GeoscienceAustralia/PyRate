@@ -63,13 +63,6 @@ def _geotiff_multiprocessing(input_file_name, output_file_name, params):
     """
     Multiprocessing wrapper for full-res geotiff conversion
     """
-    # TODO: Need a more robust method for identifying coherence files.
-    if params[cf.COH_FILE_DIR] and input_file_name.endswith('.cc'):
-        # If the user has provided a dir for coherence files, place
-        # converted coherence files in that directory.
-        output_file_name = shared.output_tiff_filename(input_file_name, params[cf.COH_FILE_DIR])
-    else:
-        output_file_name = shared.output_tiff_filename(input_file_name, params[cf.OBS_DIR])
     processor = params[cf.PROCESSOR]  # roipac or gamma
 
     # Create full-res geotiff if not already on disk
