@@ -100,7 +100,7 @@ sampled_path = """ + self.sampled_path+"""
 
 
 
-class Configration():
+class Configuration():
     def __init__(self, config_file_path):
 
         parser = ConfigParser()
@@ -186,6 +186,6 @@ class Configration():
 
 if __name__ == "__main__":
     config_file_path = "C:\\Users\\sheec\\Desktop\\Projects\\PyRate\\sample_data\\input_parameters.conf"
-    config = Configration(config_file_path)
+    config = Configuration(config_file_path)
     for interPath in config.interferogram_files:
         print(interPath)

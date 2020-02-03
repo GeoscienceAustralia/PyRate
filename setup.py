@@ -55,7 +55,7 @@ setup(
     url='https://github.com/GeoscienceAustralia/PyRate',
     install_requires=requirements,
     package_dir={'': 'pyrate'},
-    py_modules=["main", "core.algorithm", "core.aps", "core.config", "core.covariance", "core.gamma", "core.gdal_python", "core.ifgconstants", "core.mpiops", "core.mst", "core.orbital", "core.prepifg_helper", "core.pyratelog", "core.ref_phs_est", "core.refpixel", "core.roipac", "core.shared", "core.stack", "core.timeseries", "core.user_experience", "constants", "conv2tif", "merge", "prepifg", "process"],
+    py_modules=["configuration", "main", "core.algorithm", "core.aps", "core.config", "core.covariance", "core.gamma", "core.gdal_python", "core.ifgconstants", "core.mpiops", "core.mst", "core.orbital", "core.prepifg_helper", "core.pyratelog", "core.ref_phs_est", "core.refpixel", "core.roipac", "core.shared", "core.stack", "core.timeseries", "core.user_experience", "constants", "conv2tif", "merge", "prepifg", "process"],
     data_files=[('utils', ['pyrate/utils/colormap.txt'])],
     entry_points={
           'console_scripts': [

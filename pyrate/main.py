@@ -32,7 +32,7 @@ from shutil import copyfile
 
 from core.user_experience import break_number_into_factors
 from core.config import OBS_DIR, OUT_DIR
-from configration import Configration
+from configuration import Configuration
 import pathlib
 
 # Turn off MPI warning
@@ -62,7 +62,7 @@ def conv2tif_handler(config_file):
     Convert interferograms to geotiff.
     """
     config_file = os.path.abspath(config_file)
-    config = Configration(config_file)
+    config = Configuration(config_file)
     conv2tif.main(config.__dict__)
 
 
@@ -71,7 +71,7 @@ def prepifg_handler(config_file):
     Perform multilooking and cropping on geotiffs.
     """
     config_file = os.path.abspath(config_file)
-    config = Configration(config_file)
+    config = Configuration(config_file)
     prepifg.main(config.__dict__)
 
 
@@ -80,7 +80,7 @@ def process_handler(config_file):
     Time series and linear rate computation.
     """
     config_file = os.path.abspath(config_file)
-    config = Configration(config_file)
+    config = Configuration(config_file)
     process.main(config.__dict__)
 
 
@@ -89,7 +89,7 @@ def merge_handler(config_file):
     Reassemble computed tiles and save as geotiffs.
     """
     config_file = os.path.abspath(config_file)
-    config = Configration(config_file)
+    config = Configuration(config_file)
     merge.main(config.__dict__)
     user_experience.delete_tsincr_files(config.__dict__)
 
