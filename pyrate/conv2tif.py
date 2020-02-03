@@ -56,16 +56,6 @@ def main(params=None):
     if params[cf.DEM_FILE] is not None:
         _geotiff_multiprocessing(params["dem_file"].unwrapped_path, params["dem_file"].converted_path, params)
 
-
-    # processor = params[cf.PROCESSOR] # roipac or gamma
-    # if processor == GAMMA:  # Incidence/elevation only supported for GAMMA
-    #     if params[cf.APS_INCIDENCE_MAP]:
-    #         _geotiff_multiprocessing(params["dem_file"].unwrapped_path, params["dem_file"].converted_path, params)
-    #         base_ifg_paths.append(params[cf.APS_INCIDENCE_MAP])
-    #     if params[cf.APS_ELEVATION_MAP]:
-    #         _geotiff_multiprocessing(params["dem_file"].unwrapped_path, params["dem_file"].converted_path, params)
-    #         base_ifg_paths.append(params[cf.APS_ELEVATION_MAP])
-
     log.info("Finished conv2tif")
 
 
