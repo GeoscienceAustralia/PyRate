@@ -279,36 +279,32 @@ def _gdalwarp_width_and_height(max_x, max_y, min_x, min_y, geo_trans):
     return px_height, px_width  # this is the same as `gdalwarp`
 
 
-def crop_resample_average(
-        input_tif, extents, new_res, output_file, thresh,
-        out_driver_type='GTiff', 
-        match_pyrate=False, hdr=None, coherence_path=None, coherence_thresh=None):
+def crop_resample_average(input_raster, extents, resolution, output_file, thresh,  header=None, coherence_path=None, coherence_thresh=None):
     """
     Crop, resample, and average a geotiff image.
 
-    :param str input_tif: Path to input geotiff to resample/crop
+    :param str input_raster: Path to input geotiff to resample/crop
     :param tuple extents: Cropping extents (xfirst, yfirst, xlast, ylast)
-    :param list new_res: [xres, yres] resolution of output image
+    :param list resolution: [xres, yres] resolution of output image
     :param str output_file: Path to output resampled/cropped geotiff
     :param float thresh: NaN fraction threshold
     :param str out_driver_type: The output driver; `MEM` or `GTiff` (optional)
     :param bool match_pyrate: Match Legacy output (optional)
-    :param dict hdr: dictionary of metadata
+    :param dict header: dictionary of metadata
 
     :return: resampled_average: output cropped and resampled image
     :rtype: ndarray
     :return: out_ds: destination gdal dataset object
     :rtype: gdal.Dataset
     """
-    dst_ds, _, _, _ = _crop_resample_setup(
-        extents, input_tif, new_res, output_file,
-        out_bands=2, dst_driver_type='MEM')
+    out_driver_type = 'GTiff'
+    match_pyrate = False
+    dst_ds, _, _, _ = _crop_resample_setup(extents, input_raster, resolution, output_file, out_bands=2, dst_driver_type='MEM')
 
     # make a temporary copy of the dst_ds for PyRate style prepifg
-    tmp_ds = gdal.GetDriverByName('MEM').CreateCopy('', dst_ds) \
-        if (match_pyrate and new_res[0]) else None
+    tmp_ds = gdal.GetDriverByName('MEM').CreateCopy('', dst_ds) if (match_pyrate and resolution[0]) else None
 
-    src_ds, src_ds_mem = _setup_source(input_tif)   
+    src_ds, src_ds_mem = _setup_source(input_raster)
 
     if coherence_path and coherence_thresh:
         coherence_raster = prepifg_helper.dem_or_ifg(coherence_path)
@@ -320,23 +316,21 @@ def crop_resample_average(
                          f"threshold. Please ensure you provide 'cohthresh' "
                          f"in your config if coherence masking is enabled.")
 
-    resampled_average, src_ds_mem = \
-        gdal_average(dst_ds, src_ds, src_ds_mem, thresh)
+    resampled_average, src_ds_mem = gdal_average(dst_ds, src_ds, src_ds_mem, thresh)
     src_dtype = src_ds_mem.GetRasterBand(1).DataType
     src_gt = src_ds_mem.GetGeoTransform()
 
     # required to match Legacy output
     if tmp_ds:
-        _alignment(input_tif, new_res, resampled_average, src_ds_mem,
-                          src_gt, tmp_ds)
+        _alignment(input_raster, resolution, resampled_average, src_ds_mem, src_gt, tmp_ds)
 
     # grab metadata from existing geotiff
     gt = dst_ds.GetGeoTransform()
     wkt = dst_ds.GetProjection()
 
     # TEST HERE IF EXISTING FILE HAS PYRATE METADATA. IF NOT ADD HERE
-    if not ifc.DATA_TYPE in dst_ds.GetMetadata() and hdr is not None:
-        md = shared.collate_metadata(hdr)
+    if not ifc.DATA_TYPE in dst_ds.GetMetadata() and header is not None:
+        md = shared.collate_metadata(header)
     else: 
         md = dst_ds.GetMetadata()
 
@@ -363,13 +357,10 @@ def crop_resample_average(
 
     # In-memory GDAL driver doesn't support compression so turn it off.
     creation_opts = ['compress=packbits'] if out_driver_type != 'MEM' else []
-    out_ds = shared.gdal_dataset(output_file, dst_ds.RasterXSize, dst_ds.RasterYSize,
-                                 driver=out_driver_type, bands=1, dtype=src_dtype, metadata=md, crs=wkt,
-                                 geotransform=gt, creation_opts=creation_opts)
+    out_ds = shared.gdal_dataset(output_file, dst_ds.RasterXSize, dst_ds.RasterYSize, driver=out_driver_type, bands=1, dtype=src_dtype, metadata=md, crs=wkt, geotransform=gt, creation_opts=creation_opts)
 
     shared.write_geotiff(resampled_average, out_ds, np.nan) 
     log.debug("Writing geotiff: "+str(out_ds))
-    return resampled_average, out_ds
 
 
 def _alignment(input_tif, new_res, resampled_average, src_ds_mem,

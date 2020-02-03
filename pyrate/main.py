@@ -142,13 +142,16 @@ def main():
         merge_handler(args.config_file)
 
     if args.command == "workflow":
-        log.info("***********conv2tif**************")
+        log.info("***********CONV2TIF**************")
         conv2tif_handler(args.config_file)
-        log.info("***********prepifg**************")
+
+        log.info("***********PREPIFG**************")
         prepifg_handler(args.config_file)
-        log.info("***********process**************")
+
+        log.info("***********PROCESS**************")
         process_handler(args.config_file)
-        log.info("***********merge**************")
+
+        log.info("***********MERGE**************")
         merge_handler(args.config_file)
 
     log.debug("--- %s seconds ---" % (time.time() - start_time))

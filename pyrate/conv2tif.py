@@ -18,14 +18,12 @@ This Python script converts ROI_PAC or GAMMA format input interferograms
 into geotiff format files
 """
 # -*- coding: utf-8 -*-
-import sys
+
 import os
 import logging
-from joblib import Parallel, delayed
-import numpy as np
 
 from core.prepifg_helper import PreprocessError
-from core import shared, mpiops, config as cf, gamma, roipac
+from core import shared, config as cf, gamma, roipac
 
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
@@ -47,59 +45,53 @@ def main(params=None):
     # Going to assume base_ifg_paths is ordered correcly
     # pylint: disable=too-many-branches
 
-    base_ifg_paths = []
     for interferogram_file in params["interferogram_files"]:
-        base_ifg_paths.append(interferogram_file.unwrapped_path)
+        _geotiff_multiprocessing(interferogram_file.unwrapped_path, interferogram_file.converted_path, params)
 
     if params[cf.COH_MASK]:
-        base_ifg_paths.extend(cf.coherence_paths(params))
+        for coherence_file in params["coherence_file_paths"]:
+            _geotiff_multiprocessing(coherence_file.unwrapped_path, coherence_file.converted_path, params)
 
     # optional DEM conversion
     if params[cf.DEM_FILE] is not None:
-        base_ifg_paths.append(params[cf.DEM_FILE])
+        _geotiff_multiprocessing(params["dem_file"].unwrapped_path, params["dem_file"].converted_path, params)
 
-    processor = params[cf.PROCESSOR]  # roipac or gamma
-    if processor == GAMMA:  # Incidence/elevation only supported for GAMMA
-        if params[cf.APS_INCIDENCE_MAP]:
-            base_ifg_paths.append(params[cf.APS_INCIDENCE_MAP])
-        if params[cf.APS_ELEVATION_MAP]:
-            base_ifg_paths.append(params[cf.APS_ELEVATION_MAP])
 
-    process_ifgs_paths = np.array_split(base_ifg_paths, mpiops.size)[mpiops.rank]
-
-    log.info("Converting input interferograms to geotiff")
-
-    log.info("Running geotiff conversion in serial")
-    for b in process_ifgs_paths:
-        _geotiff_multiprocessing(b, params)
+    # processor = params[cf.PROCESSOR] # roipac or gamma
+    # if processor == GAMMA:  # Incidence/elevation only supported for GAMMA
+    #     if params[cf.APS_INCIDENCE_MAP]:
+    #         _geotiff_multiprocessing(params["dem_file"].unwrapped_path, params["dem_file"].converted_path, params)
+    #         base_ifg_paths.append(params[cf.APS_INCIDENCE_MAP])
+    #     if params[cf.APS_ELEVATION_MAP]:
+    #         _geotiff_multiprocessing(params["dem_file"].unwrapped_path, params["dem_file"].converted_path, params)
+    #         base_ifg_paths.append(params[cf.APS_ELEVATION_MAP])
 
     log.info("Finished conv2tif")
 
 
-def _geotiff_multiprocessing(unw_path, params):
+def _geotiff_multiprocessing(input_file_name, output_file_name, params):
     """
     Multiprocessing wrapper for full-res geotiff conversion
     """
     # TODO: Need a more robust method for identifying coherence files.
-    if params[cf.COH_FILE_DIR] and unw_path.endswith('.cc'):
-        # If the user has provided a dir for coherence files, place 
-        #  converted coherence files in that directory.
-        dest = shared.output_tiff_filename(unw_path, params[cf.COH_FILE_DIR])
+    if params[cf.COH_FILE_DIR] and input_file_name.endswith('.cc'):
+        # If the user has provided a dir for coherence files, place
+        # converted coherence files in that directory.
+        output_file_name = shared.output_tiff_filename(input_file_name, params[cf.COH_FILE_DIR])
     else:
-        dest = shared.output_tiff_filename(unw_path, params[cf.OBS_DIR])
+        output_file_name = shared.output_tiff_filename(input_file_name, params[cf.OBS_DIR])
     processor = params[cf.PROCESSOR]  # roipac or gamma
 
     # Create full-res geotiff if not already on disk
-    if not os.path.exists(dest):
+    if not os.path.exists(output_file_name):
         if processor == GAMMA:
-            header = gamma.gamma_header(unw_path, params)
+            header = gamma.gamma_header(input_file_name, params)
         elif processor == ROIPAC:
-            header = roipac.roipac_header(unw_path, params)
+            header = roipac.roipac_header(input_file_name, params)
         else:
             raise PreprocessError('Processor must be ROI_PAC (0) or GAMMA (1)')
-        shared.write_fullres_geotiff(header, unw_path, dest, nodata=params[cf.NO_DATA_VALUE])
-        return dest
+        shared.write_fullres_geotiff(header, input_file_name, output_file_name, nodata=params[cf.NO_DATA_VALUE])
+        return output_file_name
     else:
         log.info("Full-res geotiff already exists")
         return None
-
