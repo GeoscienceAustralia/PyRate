@@ -156,7 +156,7 @@ class Configuration():
 
         self.coherence_file_paths = None
         if self.cohfiledir is not None and self.cohfilelist is not None:
-            validate_file_list_values(self.cohfiledir, self.cohfilelist)
+            validate_file_list_values(self.cohfiledir, self.cohfilelist, 1)
             self.coherence_file_paths = []
             for path_str in self.cohfilelist.read_text().split('\n'):
                 # ignore empty lines in file
