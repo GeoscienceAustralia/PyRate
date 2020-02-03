@@ -33,6 +33,7 @@ from core.aps import _wrap_spatio_temporal_filter
 from core.shared import Ifg, PrereadIfg, get_tiles
 
 MASTER_PROCESS = 0
+logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
 

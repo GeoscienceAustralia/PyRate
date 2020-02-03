@@ -35,6 +35,7 @@ from core.algorithm import master_slave_ids
 # distance division factor of 1000 converts to km and is needed to match legacy output
 DISTFACT = 1000
 
+logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
 

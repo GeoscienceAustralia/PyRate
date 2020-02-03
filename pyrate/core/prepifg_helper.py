@@ -40,6 +40,7 @@ from core.gdal_python import crop_resample_average
 from core import ifgconstants as ifc, config as cf
 from core.shared import Ifg, DEM, output_tiff_filename
 import logging
+logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
 CustomExts = namedtuple('CustExtents', ['xfirst', 'yfirst', 'xlast', 'ylast'])

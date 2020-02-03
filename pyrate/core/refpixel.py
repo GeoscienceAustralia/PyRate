@@ -30,6 +30,7 @@ from joblib import Parallel, delayed
 import core.config as cf
 from core.shared import Ifg
 
+logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
 

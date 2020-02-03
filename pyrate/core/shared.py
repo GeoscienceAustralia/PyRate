@@ -36,6 +36,7 @@ import pkg_resources
 from core import ifgconstants as ifc, mpiops, config as cf
 
 VERBOSE = True
+logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
 from osgeo import gdal

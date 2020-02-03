@@ -30,6 +30,7 @@ from core.algorithm import master_slave_ids, get_all_epochs
 from core import shared, ifgconstants as ifc, config as cf, prepifg_helper, mst
 from core.shared import nanmedian, Ifg
 
+logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
 # Orbital correction tasks

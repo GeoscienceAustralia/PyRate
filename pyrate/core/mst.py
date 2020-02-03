@@ -38,6 +38,7 @@ np.seterr(invalid='ignore')  # stops RuntimeWarning in nan conversion
 # TODO: may need to implement memory saving row-by-row access
 # TODO: document weighting by either Nan fraction OR variance
 
+logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
 

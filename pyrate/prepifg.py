@@ -26,6 +26,7 @@ import numpy as np
 from core import shared, mpiops, config as cf, prepifg_helper, gamma, roipac
 from core.prepifg_helper import PreprocessError
 
+logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
 GAMMA = 1

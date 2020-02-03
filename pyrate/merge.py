@@ -35,6 +35,7 @@ from core import shared, ifgconstants as ifc, mpiops, config as cf
 from core.config import OBS_DIR
 from core.shared import PrereadIfg
 gdal.SetCacheMax(64)
+logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
 # Constants

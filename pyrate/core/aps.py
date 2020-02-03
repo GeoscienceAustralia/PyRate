@@ -35,6 +35,7 @@ from merge import _assemble_tiles
 from core.shared import Ifg
 from core.timeseries import time_series
 
+logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
 
