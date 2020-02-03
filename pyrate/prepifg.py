@@ -236,12 +236,12 @@ def get_analysis_extent(ifgs, crop_opt, xlooks, ylooks, user_exts):
         extents = xmin, ymin, xmax, ymax
 
         # only need to check crop coords when custom bounds are supplied
-        for par, crop, step in zip(['x_first', 'x_last', 'y_first', 'y_last'],
+        for par, crop, step, param in zip(['x_first', 'x_last', 'y_first', 'y_last'],
                                    [xmin, xmax, ymax, ymin],
-                                   [x_step, x_step, y_step, y_step]):
+                                   [x_step, x_step, y_step, y_step],
+                                    [x_first, x_last, y_first, y_last]):
 
             # is diff of the given extent from grid a multiple of X|Y_STEP ?
-            param = x_first, x_last, y_first, y_last
             diff = abs(crop - param)
             remainder = abs(modf(diff / step)[0])
 
