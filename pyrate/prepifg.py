@@ -183,8 +183,6 @@ def get_analysis_extent(ifgs, crop_opt, xlooks, ylooks, user_exts):
     if not len(set(y_step_values)) < 2:
         raise ValueError("Grid resolution does not match for y_step: "+str(set(y_step_values)))
 
-
-
     if crop_opt == MINIMUM_CROP:
         extents = max(xmin), max(ymin),  min(xmax), min(ymax)
     elif crop_opt == MAXIMUM_CROP:
@@ -238,19 +236,19 @@ def get_analysis_extent(ifgs, crop_opt, xlooks, ylooks, user_exts):
         extents = xmin, ymin, xmax, ymax
 
         # only need to check crop coords when custom bounds are supplied
-        # for par, crop, step in zip(['x_first', 'x_last', 'y_first', 'y_last'],
-                                   # [xmin, xmax, ymax, ymin],
-                                   # [x_step, x_step, y_step, y_step]):
+        for par, crop, step in zip(['x_first', 'x_last', 'y_first', 'y_last'],
+                                   [xmin, xmax, ymax, ymin],
+                                   [x_step, x_step, y_step, y_step]):
 
             # is diff of the given extent from grid a multiple of X|Y_STEP ?
-            # param = getattr(i, par)
-            # diff = abs(crop - param)
-            # remainder = abs(modf(diff / step)[0])
+            param = x_first, x_last, y_first, y_last
+            diff = abs(crop - param)
+            remainder = abs(modf(diff / step)[0])
 
             # handle cases where division gives remainder near zero, or just < 1
-            # if (remainder > GRID_TOL) and (remainder < (1 - GRID_TOL)):  # pragma: no cover
-            #     msg = "%s crop extent not within %s of grid coordinate"
-                # raise PreprocessError(msg % (par, GRID_TOL))
+            if (remainder > GRID_TOL) and (remainder < (1 - GRID_TOL)):  # pragma: no cover
+                msg = "%s crop extent not within %s of grid coordinate"
+                raise ValueError(msg % (par, GRID_TOL))
     else:
 
         equal = []
