@@ -16,14 +16,10 @@
 """
 This Python module contains MPI convenience functions for PyRate
 """
-# pylint: disable=no-member
-# pylint: disable=invalid-name
-import logging
 import pickle
 from mpi4py import MPI
 import numpy as np
 
-log = logging.getLogger(__name__)
 # We're having trouble with the MPI pickling and 64bit integers
 MPI.pickle.__init__(pickle.dumps, pickle.loads)
 
@@ -71,3 +67,17 @@ def array_split(arr, process=None):
     """
     r = process if process else rank
     return np.array_split(arr, size)[r]
+
+
+def chunks(jobs, size):
+
+    n = int(round(len(jobs) / size, 0))
+    # handle edge case: n <<< size
+    if n == 0:
+        n = 1
+    jobs = [jobs[i * n:(i + 1) * n] for i in range((len(jobs) + n - 1) // n)]
+
+    for i in range(size-len(jobs)):
+        jobs.append([])
+
+    return jobs

@@ -38,7 +38,7 @@ np.seterr(invalid='ignore')  # stops RuntimeWarning in nan conversion
 # TODO: may need to implement memory saving row-by-row access
 # TODO: document weighting by either Nan fraction OR variance
 
-log = logging.getLogger(__name__)
+from core.logger import pyratelogger as log
 
 
 def mst_from_ifgs(ifgs):
@@ -229,7 +229,6 @@ def mst_matrix_networkx(ifgs):
     log.debug("list_of_phase_data length: " + str(len(list_of_phase_data)))
     for row in list_of_phase_data:
         log.debug("row length in list_of_phase_data: " + str(len(row)))
-        log.debug("row in list_of_phase_data: " + str(row))
     data_stack = array(list_of_phase_data, dtype=float32)
 
     # create MSTs for each pixel in the ifg data stack

@@ -36,7 +36,7 @@ import pkg_resources
 from core import ifgconstants as ifc, mpiops, config as cf
 
 VERBOSE = True
-log = logging.getLogger(__name__)
+from core.logger import pyratelogger as log
 
 from osgeo import gdal
 from osgeo import osr

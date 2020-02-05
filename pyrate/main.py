@@ -16,28 +16,22 @@
 """
 This Python module defines executable run configuration for the PyRate software
 """
+import sys
+sys.path.extend(['/usr/share/qgis/python', '/home/sheece/.local/share/QGIS/QGIS3/profiles/default/python', '/home/sheece/.local/share/QGIS/QGIS3/profiles/default/python/plugins', '/usr/share/qgis/python/plugins', '/usr/lib/python36.zip', '/usr/lib/python3.6', '/usr/lib/python3.6/lib-dynload', '/home/sheece/.local/lib/python3.6/site-packages', '/usr/local/lib/python3.6/dist-packages', '/usr/lib/python3/dist-packages', '/home/sheece/.local/share/QGIS/QGIS3/profiles/default/python'])
+
 import os
-import logging
 import argparse
 from argparse import RawTextHelpFormatter
 
-from constants import CLI_DESCRIPTION, CONV2TIF, PREPIFG, PROCESS, MERGE
-from core import config as cf
+from constants import CLI_DESCRIPTION
 import conv2tif, prepifg, process, merge
-from core import pyratelog
+from core.logger import pyratelogger as log
 from core import user_experience
 import time
-import multiprocessing
-from shutil import copyfile
-
-from core.user_experience import break_number_into_factors
-from core.config import OBS_DIR,OUT_DIR
-import pathlib
+from configuration import Configuration
 
 # Turn off MPI warning
 os.environ['OMPI_MCA_btl_base_warn_component_unused'] = '0'
-
-log = logging.getLogger(__name__)
 
 
 def conv2tif_handler(config_file):
@@ -45,8 +39,8 @@ def conv2tif_handler(config_file):
     Convert interferograms to geotiff.
     """
     config_file = os.path.abspath(config_file)
-    params = cf.get_config_params(config_file, step=CONV2TIF)
-    conv2tif.main(params)
+    config = Configuration(config_file)
+    conv2tif.main(config.__dict__)
 
 
 def prepifg_handler(config_file):
@@ -54,44 +48,30 @@ def prepifg_handler(config_file):
     Perform multilooking and cropping on geotiffs.
     """
     config_file = os.path.abspath(config_file)
-    params = cf.get_config_params(config_file, step=PREPIFG)
-    prepifg.main(params)
-
-    for p in pathlib.Path(params[OUT_DIR]).rglob("*rlks_*cr.tif"):
-        if "dem" not in str(p):
-            src = str(p)
-            dst = os.path.join(params[OBS_DIR],p.name)
-            copyfile(src, dst)
+    config = Configuration(config_file)
+    prepifg.main(config.__dict__)
 
 
-def process_handler(config_file, rows, cols):
+def process_handler(config_file):
     """
     Time series and linear rate computation.
     """
     config_file = os.path.abspath(config_file)
-    _, dest_paths, params = cf.get_ifg_paths(config_file, step=PROCESS)
-
-    dest_paths = []
-    for p in pathlib.Path(params[OBS_DIR]).rglob("*rlks_*cr.tif"):
-        if "dem" not in str(p):
-            dest_paths.append(str(p))
-
-    process.process_ifgs(sorted(dest_paths), params, rows, cols)
+    config = Configuration(config_file)
+    process.main(config.__dict__)
 
 
-def merge_handler(config_file, rows, cols):
+def merge_handler(config_file):
     """
     Reassemble computed tiles and save as geotiffs.
     """
     config_file = os.path.abspath(config_file)
-    _, _, params = cf.get_ifg_paths(config_file, step=MERGE)
-    merge.main(params, rows, cols)
-    user_experience.delete_tsincr_files(params)
+    config = Configuration(config_file)
+    merge.main(config.__dict__)
+    user_experience.delete_tsincr_files(config.__dict__)
 
 
 def main():
-
-    rows, cols = [int(no) for no in break_number_into_factors(multiprocessing.cpu_count())]
 
     start_time = time.time()
     log.debug("Starting PyRate")
@@ -114,13 +94,16 @@ def main():
     parser_merge = subparsers.add_parser('merge', help="Reassemble computed tiles and save as geotiffs.", add_help=True)
     parser_merge.add_argument('-f', '--config_file', action="store", type=str, default=None, help="Pass configuration file", required=False)
 
+    parser_workflow = subparsers.add_parser('workflow', help="Run all the PyRate processes", add_help=True)
+    parser_workflow.add_argument('-f', '--config_file', action="store", type=str, default=None, help="Pass configuration file", required=False)
+
     args = parser.parse_args()
 
     log.debug("Arguments supplied at command line: ")
     log.debug(args)
 
     if args.verbosity:
-        pyratelog.configure(args.verbosity)
+        log.setLevel(args.verbosity)
         log.info("Verbosity set to " + str(args.verbosity) + ".")
 
     if args.command == "conv2tif":
@@ -130,10 +113,23 @@ def main():
         prepifg_handler(args.config_file)
 
     if args.command == "process":
-        process_handler(args.config_file, rows, cols)
+        process_handler(args.config_file)
 
     if args.command == "merge":
-        merge_handler(args.config_file, rows, cols)
+        merge_handler(args.config_file)
+
+    if args.command == "workflow":
+        log.info("***********CONV2TIF**************")
+        conv2tif_handler(args.config_file)
+
+        log.info("***********PREPIFG**************")
+        prepifg_handler(args.config_file)
+
+        log.info("***********PROCESS**************")
+        process_handler(args.config_file)
+
+        log.info("***********MERGE**************")
+        merge_handler(args.config_file)
 
     log.debug("--- %s seconds ---" % (time.time() - start_time))
 

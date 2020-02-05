@@ -35,8 +35,7 @@ from merge import _assemble_tiles
 from core.shared import Ifg
 from core.timeseries import time_series
 
-log = logging.getLogger(__name__)
-
+from core.logger import pyratelogger as log
 
 def _wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs):
     """

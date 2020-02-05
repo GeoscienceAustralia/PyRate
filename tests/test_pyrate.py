@@ -138,7 +138,7 @@ class PyRateTests(unittest.TestCase):
             params[cf.APS_CORRECTION] = 0
             paths = glob.glob(join(cls.BASE_OUT_DIR, 'geo_*-*.tif'))
             params[cf.PARALLEL] = False
-            process.process_ifgs(sorted(paths), params, 2, 2)
+            process.main(sorted(paths), params, 2, 2)
 
             if not hasattr(cls, 'ifgs'):
                 cls.ifgs = get_ifgs(out_dir=cls.BASE_OUT_DIR)
@@ -221,7 +221,7 @@ class ParallelPyRateTests(unittest.TestCase):
         tiles = core.shared.get_tiles(cls.dest_paths[0], 3, 3)
         ifgs = common.small_data_setup()
         cls.refpixel_p, cls.maxvar_p, cls.vcmt_p = \
-            process.process_ifgs(cls.dest_paths, params, 3, 3)
+            process.main(cls.dest_paths, params, 3, 3)
         cls.mst_p = common.reconstruct_mst(ifgs[0].shape, tiles,
                                            params[cf.TMPDIR])
         cls.rate_p, cls.error_p, cls.samples_p = [
@@ -242,7 +242,7 @@ class ParallelPyRateTests(unittest.TestCase):
         gtif_paths = conv2tif.do_geotiff(base_unw_paths, params)
         prepifg.do_prepifg(gtif_paths, params)
         cls.refpixel, cls.maxvar, cls.vcmt = \
-            process.process_ifgs(cls.dest_paths_s, params, 3, 3)
+            process.main(cls.dest_paths_s, params, 3, 3)
 
         cls.mst = common.reconstruct_mst(ifgs[0].shape, tiles,
                                          params[cf.TMPDIR])

@@ -30,7 +30,7 @@ from joblib import Parallel, delayed
 import core.config as cf
 from core.shared import Ifg
 
-log = logging.getLogger(__name__)
+from core.logger import pyratelogger as log
 
 
 # TODO: move error checking to config step (for fail fast)
