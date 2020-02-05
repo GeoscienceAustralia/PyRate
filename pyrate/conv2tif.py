@@ -23,19 +23,10 @@ from core.prepifg_helper import PreprocessError
 from core import shared, config as cf, gamma, roipac
 
 from core.logger import pyratelogger as log
-from core.mpiops import rank, comm, size
+from core.mpiops import rank, comm, size, chunks
 
 GAMMA = 1
 ROIPAC = 0
-
-def chunks(jobs,size):
-
-    n = int(round(len(jobs) / size, 0))
-    jobs = [jobs[i * n:(i + 1) * n] for i in range((len(jobs) + n - 1) // n)]
-    if len(jobs) < size:
-        jobs.append([])
-
-    return jobs
 
 
 def main(params=None):
@@ -51,6 +42,7 @@ def main(params=None):
     # Going to assume base_ifg_paths is ordered correcly
     if rank == 0:
         log.info("Collecting jobs: conv2tif")
+        # a job is list of parameters passed to multiprocessing function
         jobs = []
         for interferogram_file in params["interferogram_files"]:
             jobs.append((interferogram_file.unwrapped_path, interferogram_file.converted_path, params))
@@ -71,17 +63,14 @@ def main(params=None):
     for job in jobs:
         _geotiff_multiprocessing(*job)
 
-    log.info("Finished process: conv2tif")
-
 
 def _geotiff_multiprocessing(input_file_name, output_file_name, params):
     """
     Multiprocessing wrapper for full-res geotiff conversion
     """
-    log.info("Started processing: "+str(input_file_name))
     processor = params[cf.PROCESSOR]  # roipac or gamma
-    # Create full-res geotiff if not already on disk
     if not os.path.exists(output_file_name):
+        log.info("Started processing: " + str(input_file_name))
         if processor == GAMMA:
             header = gamma.gamma_header(input_file_name, params)
         elif processor == ROIPAC:

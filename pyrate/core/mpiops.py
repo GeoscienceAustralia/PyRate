@@ -67,3 +67,17 @@ def array_split(arr, process=None):
     """
     r = process if process else rank
     return np.array_split(arr, size)[r]
+
+
+def chunks(jobs, size):
+
+    n = int(round(len(jobs) / size, 0))
+    # handle edge case: n <<< size
+    if n == 0:
+        n = 1
+    jobs = [jobs[i * n:(i + 1) * n] for i in range((len(jobs) + n - 1) // n)]
+
+    for i in range(size-len(jobs)):
+        jobs.append([])
+
+    return jobs
