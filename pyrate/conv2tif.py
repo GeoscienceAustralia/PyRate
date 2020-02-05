@@ -23,9 +23,19 @@ from core.prepifg_helper import PreprocessError
 from core import shared, config as cf, gamma, roipac
 
 from core.logger import pyratelogger as log
+from core.mpiops import rank, comm, size
 
 GAMMA = 1
 ROIPAC = 0
+
+def chunks(jobs,size):
+
+    n = int(round(len(jobs) / size, 0))
+    jobs = [jobs[i * n:(i + 1) * n] for i in range((len(jobs) + n - 1) // n)]
+    if len(jobs) < size:
+        jobs.append([])
+
+    return jobs
 
 
 def main(params=None):
@@ -39,18 +49,27 @@ def main(params=None):
     # and the original gamma generated list is ordered) this may not affect
     # the important pyrate stuff anyway, but might affect gen_thumbs.py.
     # Going to assume base_ifg_paths is ordered correcly
-    # pylint: disable=too-many-branches
+    if rank == 0:
+        log.info("Collecting jobs: conv2tif")
+        jobs = []
+        for interferogram_file in params["interferogram_files"]:
+            jobs.append((interferogram_file.unwrapped_path, interferogram_file.converted_path, params))
 
-    for interferogram_file in params["interferogram_files"]:
-        _geotiff_multiprocessing(interferogram_file.unwrapped_path, interferogram_file.converted_path, params)
+        if params[cf.COH_MASK]:
+            for coherence_file in params["coherence_file_paths"]:
+                jobs.append((coherence_file.unwrapped_path, coherence_file.converted_path, params))
 
-    if params[cf.COH_MASK]:
-        for coherence_file in params["coherence_file_paths"]:
-            _geotiff_multiprocessing(coherence_file.unwrapped_path, coherence_file.converted_path, params)
+        # optional DEM conversion
+        if params[cf.DEM_FILE] is not None:
+            jobs.append((params["dem_file"].unwrapped_path, params["dem_file"].converted_path, params))
+        jobs = chunks(jobs, size)
+    else:
+        jobs = None
 
-    # optional DEM conversion
-    if params[cf.DEM_FILE] is not None:
-        _geotiff_multiprocessing(params["dem_file"].unwrapped_path, params["dem_file"].converted_path, params)
+    jobs = comm.scatter(jobs, root=0)
+
+    for job in jobs:
+        _geotiff_multiprocessing(*job)
 
     log.info("Finished process: conv2tif")
 
@@ -59,8 +78,8 @@ def _geotiff_multiprocessing(input_file_name, output_file_name, params):
     """
     Multiprocessing wrapper for full-res geotiff conversion
     """
+    log.info("Started processing: "+str(input_file_name))
     processor = params[cf.PROCESSOR]  # roipac or gamma
-
     # Create full-res geotiff if not already on disk
     if not os.path.exists(output_file_name):
         if processor == GAMMA:
@@ -70,7 +89,7 @@ def _geotiff_multiprocessing(input_file_name, output_file_name, params):
         else:
             raise PreprocessError('Processor must be ROI_PAC (0) or GAMMA (1)')
         shared.write_fullres_geotiff(header, input_file_name, output_file_name, nodata=params[cf.NO_DATA_VALUE])
-
+        log.info("Finished creating: " + str(output_file_name))
     else:
-        log.info("Full resolution GeoTIFF already exists.")
+        log.info("Full resolution GeoTIFF already exists: "+str(output_file_name))
 
