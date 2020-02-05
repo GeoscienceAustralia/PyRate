@@ -42,6 +42,7 @@ sys.path.append(TEST_MODULE_PATH)
 
 from core import algorithm, ifgconstants as ifc, config as cf, timeseries, mst, stack
 from core.shared import Ifg, nan_and_mm_convert, get_geotiff_header_info, write_output_geotiff
+from core.logger import pyratelogger as log
 
 PYRATEPATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TEMPDIR = tempfile.gettempdir()
@@ -113,8 +114,7 @@ IFMS16 = ['geo_060619-061002_unw.tif',
         'geo_070430-070604_unw.tif',
         'geo_070604-070709_unw.tif']
 
-logging.basicConfig(level=logging.DEBUG)
-log = logging.getLogger(__name__)
+
 
 def remove_tifs(path):
     tifs = glob.glob(os.path.join(path, '*.tif'))

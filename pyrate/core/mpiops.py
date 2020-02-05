@@ -16,15 +16,10 @@
 """
 This Python module contains MPI convenience functions for PyRate
 """
-# pylint: disable=no-member
-# pylint: disable=invalid-name
-import logging
 import pickle
 from mpi4py import MPI
 import numpy as np
 
-logging.basicConfig(level=logging.DEBUG)
-log = logging.getLogger(__name__)
 # We're having trouble with the MPI pickling and 64bit integers
 MPI.pickle.__init__(pickle.dumps, pickle.loads)
 

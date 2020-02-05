@@ -33,9 +33,7 @@ import numpy as np
 from core import shared, mpiops, config as cf, prepifg_helper, gamma, roipac
 from constants import CROP_OPTIONS, CUSTOM_CROP, GRID_TOL, GDAL_X_CELLSIZE, GDAL_Y_CELLSIZE, GDAL_X_FIRST, GDAL_Y_FIRST, MINIMUM_CROP, MAXIMUM_CROP, CUSTOM_CROP, ALREADY_SAME_SIZE
 from core.prepifg_helper import PreprocessError
-
-logging.basicConfig(level=logging.DEBUG)
-log = logging.getLogger(__name__)
+from core.logger import pyratelogger as log
 
 GAMMA = 1
 ROIPAC = 0

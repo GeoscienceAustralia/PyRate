@@ -18,15 +18,11 @@ This Python script converts ROI_PAC or GAMMA format input interferograms
 into geotiff format files
 """
 # -*- coding: utf-8 -*-
-
 import os
-import logging
-
 from core.prepifg_helper import PreprocessError
 from core import shared, config as cf, gamma, roipac
 
-logging.basicConfig(level=logging.DEBUG)
-log = logging.getLogger(__name__)
+from core.logger import pyratelogger as log
 
 GAMMA = 1
 ROIPAC = 0
@@ -56,7 +52,7 @@ def main(params=None):
     if params[cf.DEM_FILE] is not None:
         _geotiff_multiprocessing(params["dem_file"].unwrapped_path, params["dem_file"].converted_path, params)
 
-    log.info("Finished conv2tif")
+    log.info("Finished process: conv2tif")
 
 
 def _geotiff_multiprocessing(input_file_name, output_file_name, params):
@@ -74,7 +70,7 @@ def _geotiff_multiprocessing(input_file_name, output_file_name, params):
         else:
             raise PreprocessError('Processor must be ROI_PAC (0) or GAMMA (1)')
         shared.write_fullres_geotiff(header, input_file_name, output_file_name, nodata=params[cf.NO_DATA_VALUE])
-        return output_file_name
+
     else:
-        log.info("Full-res geotiff already exists")
-        return None
+        log.info("Full resolution GeoTIFF already exists.")
+

@@ -34,9 +34,9 @@ from constants import REF_COLOR_MAP_PATH
 from core import shared, ifgconstants as ifc, mpiops, config as cf
 from core.config import OBS_DIR
 from core.shared import PrereadIfg
+from core.logger import pyratelogger as log
 gdal.SetCacheMax(64)
-logging.basicConfig(level=logging.DEBUG)
-log = logging.getLogger(__name__)
+
 
 # Constants
 MASTER_PROCESS = 0

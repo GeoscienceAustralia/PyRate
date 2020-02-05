@@ -16,45 +16,22 @@
 """
 This Python module defines executable run configuration for the PyRate software
 """
+import sys
+sys.path.extend(['/usr/share/qgis/python', '/home/sheece/.local/share/QGIS/QGIS3/profiles/default/python', '/home/sheece/.local/share/QGIS/QGIS3/profiles/default/python/plugins', '/usr/share/qgis/python/plugins', '/usr/lib/python36.zip', '/usr/lib/python3.6', '/usr/lib/python3.6/lib-dynload', '/home/sheece/.local/lib/python3.6/site-packages', '/usr/local/lib/python3.6/dist-packages', '/usr/lib/python3/dist-packages', '/home/sheece/.local/share/QGIS/QGIS3/profiles/default/python'])
+
 import os
-import logging
 import argparse
 from argparse import RawTextHelpFormatter
 
-from constants import CLI_DESCRIPTION, CONV2TIF, PREPIFG, PROCESS, MERGE
-from core import config as cf
+from constants import CLI_DESCRIPTION
 import conv2tif, prepifg, process, merge
-from core import pyratelog
+from core.logger import pyratelogger as log
 from core import user_experience
 import time
-import multiprocessing
-from shutil import copyfile
-
-from core.user_experience import break_number_into_factors
-from core.config import OBS_DIR, OUT_DIR
 from configuration import Configuration
-import pathlib
 
 # Turn off MPI warning
 os.environ['OMPI_MCA_btl_base_warn_component_unused'] = '0'
-import logging
-
-log = logging.getLogger(__name__)
-
-log.setLevel(logging.DEBUG)
-# create file handler which logs even debug messages
-# fh = logging.FileHandler('logfile.log')
-# fh.setLevel(logging.DEBUG)
-# create console handler with a higher log level
-ch = logging.StreamHandler()
-ch.setLevel(logging.ERROR)
-# create formatter and add it to the handlers
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-# fh.setFormatter(formatter)
-ch.setFormatter(formatter)
-# add the handlers to the logger
-# log.addHandler(fh)
-log.addHandler(ch)
 
 
 def conv2tif_handler(config_file):

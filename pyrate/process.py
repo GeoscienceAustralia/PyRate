@@ -31,10 +31,10 @@ from core import stack, refpixel
 
 from core.aps import _wrap_spatio_temporal_filter
 from core.shared import Ifg, PrereadIfg, get_tiles
+from core.logger import pyratelogger as log
 
 MASTER_PROCESS = 0
-logging.basicConfig(level=logging.DEBUG)
-log = logging.getLogger(__name__)
+
 
 
 def _join_dicts(dicts):
