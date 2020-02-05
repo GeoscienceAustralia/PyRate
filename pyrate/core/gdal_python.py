@@ -359,7 +359,7 @@ def crop_resample_average(input_raster, extents, resolution, output_file, thresh
     out_ds = shared.gdal_dataset(output_file, dst_ds.RasterXSize, dst_ds.RasterYSize, driver=out_driver_type, bands=1, dtype=src_dtype, metadata=md, crs=wkt, geotransform=gt, creation_opts=creation_opts)
 
     shared.write_geotiff(resampled_average, out_ds, np.nan) 
-    log.debug("Writing geotiff: "+str(out_ds))
+
 
 
 def _alignment(input_tif, new_res, resampled_average, src_ds_mem,
