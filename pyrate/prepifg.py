@@ -29,11 +29,11 @@ from osgeo import gdal_array
 from gdalconst import GA_Update, GA_ReadOnly
 from decimal import Decimal
 from math import modf
-import numpy as np
-from core import shared, mpiops, config as cf, prepifg_helper, gamma, roipac
-from constants import CROP_OPTIONS, CUSTOM_CROP, GRID_TOL, GDAL_X_CELLSIZE, GDAL_Y_CELLSIZE, GDAL_X_FIRST, GDAL_Y_FIRST, MINIMUM_CROP, MAXIMUM_CROP, CUSTOM_CROP, ALREADY_SAME_SIZE
+from core import shared, config as cf, prepifg_helper, gamma, roipac
+from constants import CROP_OPTIONS, GRID_TOL, GDAL_X_CELLSIZE, GDAL_Y_CELLSIZE, GDAL_X_FIRST, GDAL_Y_FIRST, MINIMUM_CROP, MAXIMUM_CROP, CUSTOM_CROP, ALREADY_SAME_SIZE
 from core.prepifg_helper import PreprocessError
 from core.logger import pyratelogger as log
+from core.mpiops import rank, comm, size, chunks
 
 GAMMA = 1
 ROIPAC = 0
@@ -45,45 +45,44 @@ def main(params):
 
     :param dict params: Parameters dictionary read in from the config file
     """
-    # TODO: looks like base_ifg_paths are ordered according to ifg list
-    # This probably won't be a problem because input list won't be reordered
-    # and the original gamma generated list is ordered) this may not affect
-    # the important pyrate stuff anyway, but might affect gen_thumbs.py.
-    # Going to assume base_ifg_paths is ordered correctly
+    if rank == 0:
+        log.info("Collecting jobs: prepifg")
+        # a job is list of parameters passed to multiprocessing function
+        jobs = []
+        xlooks, ylooks, crop = cf.transform_params(params)
+        user_extents = (params[cf.IFG_XFIRST], params[cf.IFG_YFIRST], params[cf.IFG_XLAST], params[cf.IFG_YLAST])
+        thresh = params[cf.NO_DATA_AVERAGING_THRESHOLD]
 
-    xlooks, ylooks, crop = cf.transform_params(params)
-    user_extents = (params[cf.IFG_XFIRST], params[cf.IFG_YFIRST], params[cf.IFG_XLAST], params[cf.IFG_YLAST])
-    thresh = params[cf.NO_DATA_AVERAGING_THRESHOLD]
+        datasets_to_calcualte_extents = []
+        for interferogram_file in params["interferogram_files"]:
+            if not os.path.isfile(interferogram_file.converted_path):
+                raise Exception("Can not find geotiff: " + str(interferogram_file.converted_path) + ". Ensure you have converted your interferograms to geotiffs.")
+            datasets_to_calcualte_extents.append(interferogram_file.converted_path)
 
-    datasets_to_calcualte_extents = []
-    for interferogram_file in params["interferogram_files"]:
-        if not os.path.isfile(interferogram_file.converted_path):
-            raise Exception("Can not find geotiff: " + str(interferogram_file.converted_path) + ". Ensure you have converted your interferograms to geotiffs.")
-        datasets_to_calcualte_extents.append(interferogram_file.converted_path)
+        # optional DEM conversion
+        if params["dem_file"] is not None:
+            if not os.path.isfile(params["dem_file"].converted_path):
+                raise Exception("Can not find geotiff: " + str(params["dem_file"].converted_path) + ". Ensure you have converted your interferograms to geotiffs.")
+            datasets_to_calcualte_extents.append(params["dem_file"].converted_path)
 
-    # optional DEM conversion
-    if params["dem_file"] is not None:
-        if not os.path.isfile(params["dem_file"].converted_path):
-            raise Exception("Can not find geotiff: " + str(params["dem_file"].converted_path) + ". Ensure you have converted your interferograms to geotiffs.")
-        datasets_to_calcualte_extents.append(params["dem_file"].converted_path)
+        extents = get_analysis_extent(datasets_to_calcualte_extents, crop, xlooks, ylooks, user_exts=user_extents)
 
-    extents = get_analysis_extent(datasets_to_calcualte_extents, crop, xlooks, ylooks, user_exts=user_extents)
+        log.info("Preparing interferograms by cropping/multilooking")
+        for interferogram_file in params["interferogram_files"]:
+            jobs.append((interferogram_file.converted_path, interferogram_file.sampled_path, xlooks, ylooks, extents, thresh, crop, params))
 
+        # optional DEM conversion
+        if params["dem_file"] is not None:
+            jobs.append((params["dem_file"].converted_path, params["dem_file"].sampled_path, xlooks, ylooks, extents, thresh, crop, params))
+        jobs = chunks(jobs, size)
+    else:
+        jobs = None
 
-    # processor = params[cf.PROCESSOR]  # roipac or gamma
-    # if processor == GAMMA: # Incidence/elevation only supported for GAMMA
-    #     if params[cf.APS_INCIDENCE_MAP]:
-    #         base_ifg_paths.append(params[cf.APS_INCIDENCE_MAP])
-    #     if params[cf.APS_ELEVATION_MAP]:
-    #         base_ifg_paths.append(params[cf.APS_ELEVATION_MAP])
+    jobs = comm.scatter(jobs, root=0)
 
-    log.info("Preparing interferograms by cropping/multilooking")
-    for interferogram_file in params["interferogram_files"]:
-        _prepifg_multiprocessing(interferogram_file.converted_path, interferogram_file.sampled_path, xlooks, ylooks, extents, thresh, crop, params)
+    for job in jobs:
+        _prepifg_multiprocessing(*job)
 
-    # optional DEM conversion
-    if params["dem_file"] is not None:
-        _prepifg_multiprocessing(params["dem_file"].converted_path, params["dem_file"].sampled_path, xlooks, ylooks, extents, thresh, crop, params)
 
 def _prepifg_multiprocessing(input_path, output_path, xlooks, ylooks, extents, thresh, crop_opt, params):
     """
