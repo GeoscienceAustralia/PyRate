@@ -45,7 +45,7 @@ doclink = """
 Please see the full documentation at http://geoscienceaustralia.github.io/PyRate/."""
 
 setup(
-    name='pyrate',
+    name='Py-Rate',
     version=__version__,
     description='A Python tool for estimating velocity and time-series '
                 'from Interferometric Synthetic Aperture Radar (InSAR) data.',
