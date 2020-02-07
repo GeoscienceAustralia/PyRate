@@ -60,3 +60,25 @@ python main.py -v DEBUG prepifg  -f ~/PyRate/sample_data/input_parameters.conf
 python main.py -v DEBUG process  -f ~/PyRate/sample_data/input_parameters.conf
 python main.py -v DEBUG merge    -f ~/PyRate/sample_data/input_parameters.conf
 
+# Following are the step to update the version at PyP
+# ensure prerequisite package are installed
+pip install --upgrade setuptools wheel
+pip install --upgrade twine
+
+# update the version number in code at
+# Pyrate/setup.py line 22 :__version__ = "0.4.0"
+# Pyrate/docs/conf.py line 9 :__version__ = "0.4.0"
+
+# create distribution package
+python setup.py sdist bdist_wheel
+# upload distribution package to PyPI
+twine upload --repository-url https://upload.pypi.org/legacy/ dist/*
+
+# use username: __token__
+# for password: generate password from => https://pypi.org/manage/account/ => Add API token => copy the generated token
+
+# The steps can be found in github repository at:
+# https://github.com/GeoscienceAustralia/PyRate/blob/test/utils/developer_hints.txt
+
+# For detailed documentation visit:
+# https://packaging.python.org/tutorials/packaging-projects/
