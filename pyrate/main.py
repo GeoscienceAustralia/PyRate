@@ -17,8 +17,6 @@
 This Python module defines executable run configuration for the PyRate software
 """
 import sys
-sys.path.extend(['/usr/share/qgis/python', '/home/sheece/.local/share/QGIS/QGIS3/profiles/default/python', '/home/sheece/.local/share/QGIS/QGIS3/profiles/default/python/plugins', '/usr/share/qgis/python/plugins', '/usr/lib/python36.zip', '/usr/lib/python3.6', '/usr/lib/python3.6/lib-dynload', '/home/sheece/.local/lib/python3.6/site-packages', '/usr/local/lib/python3.6/dist-packages', '/usr/lib/python3/dist-packages', '/home/sheece/.local/share/QGIS/QGIS3/profiles/default/python'])
-
 import os
 import argparse
 from argparse import RawTextHelpFormatter
