@@ -28,3 +28,4 @@ Thanks to `all the contributors`_ who helped in building this project.
 * Vanessa Newey (GA)
 * Garrick Paskos (GA)
 * Nahidul Samrat (GA)
+* Fuhrmann Thomas (GA)
