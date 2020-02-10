@@ -26,7 +26,7 @@ from networkx.classes.reportviews import EdgeView
 import networkx as nx
 from joblib import Parallel, delayed
 
-from core.algorithm import ifg_date_lookup
+# from core.algorithm import ifg_date_lookup
 from core.algorithm import ifg_date_index_lookup
 from core import config as cf
 from core.shared import IfgPart, create_tiles
@@ -173,21 +173,21 @@ def mst_boolean_array(ifgs):
     return result
 
 
-def _mst_matrix_ifgs_only(ifgs):
-    """
-    Alternative method for producing 3D MST array
-    """
-    #Currently not used
-    #The MSTs are stripped of connecting edge info, leaving just the ifgs.
-    result = empty(shape=ifgs[0].phase_data.shape, dtype=object)
-
-    for y, x, mst in mst_matrix_networkx(ifgs):
-        if isinstance(mst, EdgeView):
-            ifg_sub = [ifg_date_lookup(ifgs, d) for d in mst]
-            result[(y, x)] = tuple(ifg_sub)
-        else:
-            result[(y, x)] = mst  # usually NaN
-    return result
+# def _mst_matrix_ifgs_only(ifgs):
+#     """
+#     Alternative method for producing 3D MST array
+#     """
+#     #Currently not used
+#     #The MSTs are stripped of connecting edge info, leaving just the ifgs.
+#     result = empty(shape=ifgs[0].phase_data.shape, dtype=object)
+#
+#     for y, x, mst in mst_matrix_networkx(ifgs):
+#         if isinstance(mst, EdgeView):
+#             ifg_sub = [ifg_date_lookup(ifgs, d) for d in mst]
+#             result[(y, x)] = tuple(ifg_sub)
+#         else:
+#             result[(y, x)] = mst  # usually NaN
+#     return result
 
 
 def _mst_matrix_as_array(ifgs):

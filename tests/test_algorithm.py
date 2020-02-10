@@ -28,37 +28,37 @@ from numpy.testing import assert_array_almost_equal, assert_allclose
 
 from . import common
 
-from core.algorithm import least_squares_covariance, is_square, unit_vector, ifg_date_lookup, get_all_epochs, get_epochs, master_slave_ids
+from core.algorithm import is_square, get_all_epochs, get_epochs, master_slave_ids
 from core.config import parse_namelist
 from core.shared import Ifg, convert_radians_to_mm
 
 
-class LeastSquaresTests(TestCase):
-    """
-    Unit tests for the PyRate least_squares_covariance() implementation.
-    """
-
-    @staticmethod
-    def test_least_squares_covariance():
-        b = array([[13, 7.2, 5.7]]).T
-        A = array([[1, 0.4, 0.3], [1, 1, 1]]).T
-        v = array([[1, 1, 1]]).T
-        r = least_squares_covariance(A, b, v)
-        exp = [10.1628, 2.8744]
-        assert_array_almost_equal(r.T.squeeze(), exp, decimal=4)
-
-    def test_least_squares_covariance_overdetermined(self):
-        # must be overdetermined, ie. more observations than params
-        b = array([[10]]).T
-        A = array([[1]]).T
-        v = array([[1]]).T
-        self.assertRaises(ValueError, least_squares_covariance, A, b, v)
-
-        # try non transposed style
-        b = array([[10]])
-        A = array([[1]])
-        v = array([[1]])
-        self.assertRaises(ValueError, least_squares_covariance, A, b, v)
+# class LeastSquaresTests(TestCase):
+#     """
+#     Unit tests for the PyRate least_squares_covariance() implementation.
+#     """
+#
+#     # @staticmethod
+#     # def test_least_squares_covariance():
+#     #     b = array([[13, 7.2, 5.7]]).T
+#     #     A = array([[1, 0.4, 0.3], [1, 1, 1]]).T
+#     #     v = array([[1, 1, 1]]).T
+#     #     r = least_squares_covariance(A, b, v)
+#     #     exp = [10.1628, 2.8744]
+#     #     assert_array_almost_equal(r.T.squeeze(), exp, decimal=4)
+#
+#     # def test_least_squares_covariance_overdetermined(self):
+#     #     # must be overdetermined, ie. more observations than params
+#     #     b = array([[10]]).T
+#     #     A = array([[1]]).T
+#     #     v = array([[1]]).T
+#     #     self.assertRaises(ValueError, least_squares_covariance, A, b, v)
+#
+#         # # try non transposed style
+#         # b = array([[10]])
+#         # A = array([[1]])
+#         # v = array([[1]])
+#         # self.assertRaises(ValueError, least_squares_covariance, A, b, v)
 
 
 class AlgorithmTests(TestCase):
@@ -84,71 +84,71 @@ class AlgorithmTests(TestCase):
         act = convert_radians_to_mm(data, wavelen)
         assert_allclose(exp, act)
 
-    def test_unit_vector(self):
-        # last values here simulate a descending pass
-        incidence = [radians(x) for x in (34.3, 39.3, 29.3, 34.3)]
-        azimuth = [radians(x) for x in (77.8, 77.9, 80.0, 282.2)]
+    # def test_unit_vector(self):
+    #     # last values here simulate a descending pass
+    #     incidence = [radians(x) for x in (34.3, 39.3, 29.3, 34.3)]
+    #     azimuth = [radians(x) for x in (77.8, 77.9, 80.0, 282.2)]
+    #
+    #     vert, ns, ew = [], [], []
+    #     for i, a in zip(incidence, azimuth):
+    #         vert.append(cos(i))
+    #         ns.append(sin(i) * cos(a))
+    #         ew.append(sin(i) * sin(a))
+    #
+    #     sh = 4
+    #     unitv = [array(ew), array(ns), array(vert)]
+    #     unitv = [a.reshape(sh) for a in unitv]
+    #
+    #     # NB: assumes radian inputs
+    #     act = unit_vector(reshape(incidence, sh), reshape(azimuth, sh))
+    #     for a, e in zip(act, unitv):
+    #         assert_array_almost_equal(squeeze(a), e)
+    #
+    #     # check unit vec components have correct signs
+    #     E, N, V = act
+    #     # test E/W component of ascending is +ve
+    #     self.assertTrue((E[:-2]).all() > 0)
+    #     self.assertTrue(E[-1] < 0)  # test E/W component of descending is -ve
+    #     self.assertTrue((N > 0).all())  # ensure all north values are positive
+    #
+    #     # check unit vec components have correct magnitudes
+    #     self.assertTrue((abs(V) > abs(E)).all())
+    #     self.assertTrue((abs(V) > abs(N)).all())
+    #     self.assertTrue((abs(E) > abs(N)).all())
 
-        vert, ns, ew = [], [], []
-        for i, a in zip(incidence, azimuth):
-            vert.append(cos(i))
-            ns.append(sin(i) * cos(a))
-            ew.append(sin(i) * sin(a))
 
-        sh = 4
-        unitv = [array(ew), array(ns), array(vert)]
-        unitv = [a.reshape(sh) for a in unitv]
-
-        # NB: assumes radian inputs
-        act = unit_vector(reshape(incidence, sh), reshape(azimuth, sh))
-        for a, e in zip(act, unitv):
-            assert_array_almost_equal(squeeze(a), e)
-
-        # check unit vec components have correct signs
-        E, N, V = act
-        # test E/W component of ascending is +ve
-        self.assertTrue((E[:-2]).all() > 0)
-        self.assertTrue(E[-1] < 0)  # test E/W component of descending is -ve
-        self.assertTrue((N > 0).all())  # ensure all north values are positive
-
-        # check unit vec components have correct magnitudes
-        self.assertTrue((abs(V) > abs(E)).all())
-        self.assertTrue((abs(V) > abs(N)).all())
-        self.assertTrue((abs(E) > abs(N)).all())
-
-
-class DateLookupTests(TestCase):
-    """
-    Tests for the algorithm.ifg_date_lookup() function.
-    """
-
-    def setUp(self):
-        self.ifgs = common.small5_mock_ifgs()
-
-    def test_ifg_date_lookup(self):
-        # check reverse lookup of ifg given a master and slave date tuple
-        date_pair = (date(2006, 8, 28), date(2006, 12, 11))
-        i = ifg_date_lookup(self.ifgs, date_pair)
-        self.assertEqual(self.ifgs[0], i)
-
-        # test with reversed date tuple, should reorder it according to age
-        date_pair = (date(2006, 12, 11), date(2006, 11, 6))
-        i = ifg_date_lookup(self.ifgs, date_pair)
-        self.assertEqual(self.ifgs[1], i)
-
-    def test_ifg_date_lookup_failure(self):
-        # error when lookup cannot find an ifg given a date pair
-        dates = (date(2006, 12, 11), date(2007, 3, 26))
-        self.assertRaises(ValueError,
-                          ifg_date_lookup, self.ifgs, dates)
-
-    def test_date_lookup_bad_inputs(self):
-        # test some bad inputs to date lookup
-        inputs = [(None, None), (1, 10), (34.56, 345.93),
-                  (date(2007, 3, 26), ""), (date(2007, 3, 26), None)]
-
-        for d in inputs:
-            self.assertRaises(ValueError, ifg_date_lookup, self.ifgs, d)
+# class DateLookupTests(TestCase):
+#     """
+#     Tests for the algorithm.ifg_date_lookup() function.
+#     """
+#
+#     def setUp(self):
+#         self.ifgs = common.small5_mock_ifgs()
+#
+#     def test_ifg_date_lookup(self):
+#         # check reverse lookup of ifg given a master and slave date tuple
+#         date_pair = (date(2006, 8, 28), date(2006, 12, 11))
+#         i = ifg_date_lookup(self.ifgs, date_pair)
+#         self.assertEqual(self.ifgs[0], i)
+#
+#         # test with reversed date tuple, should reorder it according to age
+#         date_pair = (date(2006, 12, 11), date(2006, 11, 6))
+#         i = ifg_date_lookup(self.ifgs, date_pair)
+#         self.assertEqual(self.ifgs[1], i)
+#
+#     def test_ifg_date_lookup_failure(self):
+#         # error when lookup cannot find an ifg given a date pair
+#         dates = (date(2006, 12, 11), date(2007, 3, 26))
+#         self.assertRaises(ValueError,
+#                           ifg_date_lookup, self.ifgs, dates)
+#
+#     def test_date_lookup_bad_inputs(self):
+#         # test some bad inputs to date lookup
+#         inputs = [(None, None), (1, 10), (34.56, 345.93),
+#                   (date(2007, 3, 26), ""), (date(2007, 3, 26), None)]
+#
+#         for d in inputs:
+#             self.assertRaises(ValueError, ifg_date_lookup, self.ifgs, d)
 
 
 class EpochsTests(TestCase):
