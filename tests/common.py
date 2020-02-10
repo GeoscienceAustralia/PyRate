@@ -405,7 +405,6 @@ def write_stack_numpy_files(error, rate, samples, params):
 
 
 def copytree(src, dst, symlinks=False, ignore=None):
-    # pylint: disable=line-too-long
     """
     Copy entire contents of src directory into dst directory.
     See: http://stackoverflow.com/questions/1868714/how-do-i-copy-an-entire-directory-of-files-into-an-existing-directory-using-pyth?lq=1
@@ -415,7 +414,6 @@ def copytree(src, dst, symlinks=False, ignore=None):
     :param bool symlinks: Whether to copy symlink or not
     :param bool ignore:
     """
-    # pylint: disable=invalid-name
     if not os.path.exists(dst):  # pragma: no cover
         os.makedirs(dst)
     shutil.copystat(src, dst)

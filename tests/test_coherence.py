@@ -22,7 +22,6 @@ import osr
 
 class CoherenceMaskingTest(unittest.TestCase):
 
-
     def test_coherence_files_not_converted(self):
         # define constants
         NO_DATA_VALUE = 0

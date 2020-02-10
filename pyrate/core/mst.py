@@ -18,7 +18,6 @@
 This Python module implements the minimum spanning tree
 functionality for selecting interferometric observations.
 """
-# pylint: disable=invalid-name
 import logging
 from itertools import product
 from numpy import array, nan, isnan, float32, empty, sum as nsum

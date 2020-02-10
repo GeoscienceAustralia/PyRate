@@ -184,7 +184,6 @@ def _ref_pixel_multi(g, half_patch_size, phase_data_or_ifg_paths,
     """
     Convenience function for ref pixel optimisation
     """
-    # pylint: disable=invalid-name
     # phase_data_or_ifg is list of ifgs
     y, x, = g
     if isinstance(phase_data_or_ifg_paths[0], str):

@@ -17,8 +17,6 @@
 This Python module contains functions for computing a time series
 inversion in PyRate.
 """
-# pylint: disable=too-many-locals
-# pylint: disable=too-many-arguments
 import itertools
 
 from numpy import (where, isnan, nan, diff, zeros,
@@ -259,7 +257,6 @@ def _solve_ts_lap(nvelpar, velflag, ifgv, mat_b, smorder, smfactor, sel, vcmt):
     Solve the linear least squares system using the Finite Difference
     method using a Laplacian Smoothing operator.
     """
-    # pylint: disable=invalid-name
     # Laplacian observations number
     nlap = nvelpar - smorder
     #  Laplacian smoothing coefficient matrix

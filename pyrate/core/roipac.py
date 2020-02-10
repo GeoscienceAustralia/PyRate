@@ -165,7 +165,6 @@ def parse_header(hdr_file):
 
 def _parse_dates_from(filename):
     """Determine dates from file name"""
-    # pylint: disable=invalid-name
     # process dates from filename if rsc file doesn't have them (skip for DEMs)
     p = re.compile(r'\d{6}-\d{6}')  # match 2 sets of 6 digits separated by '-'
     m = p.search(filename)

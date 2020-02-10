@@ -16,7 +16,6 @@
 """
 This Python module contains bindings for the GDAL library
 """
-# pylint: disable=too-many-arguments,R0914
 import logging
 
 from osgeo import gdal

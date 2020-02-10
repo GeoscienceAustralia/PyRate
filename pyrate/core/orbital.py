@@ -16,7 +16,6 @@
 """
 This Python module implements residual orbital corrections for interferograms.
 """
-# pylint: disable=invalid-name
 import logging
 from collections import OrderedDict
 from numpy import empty, isnan, reshape, float32, squeeze
@@ -249,7 +248,6 @@ def network_orbital_correction(ifgs, degree, offset, params, m_ifgs=None,
 
     :return: None - interferogram phase data is updated and saved to disk
     """
-    # pylint: disable=too-many-locals, too-many-arguments
     src_ifgs = ifgs if m_ifgs is None else m_ifgs
     src_ifgs = mst.mst_from_ifgs(src_ifgs)[3]  # use networkx mst
 
@@ -375,7 +373,6 @@ def get_design_matrix(ifg, degree, offset, scale=100.0):
 
 
 def get_network_design_matrix(ifgs, degree, offset):
-    # pylint: disable=too-many-locals
     """
     Returns larger-format design matrix for network error correction. The
     network design matrix includes rows which relate to those of NaN cells.

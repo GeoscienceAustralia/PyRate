@@ -18,7 +18,6 @@
 This Python module contains utilities and classes shared by
 all other PyRate modules
 """
-# pylint: disable=too-many-lines
 import errno
 import logging
 import math
@@ -261,7 +260,6 @@ class Ifg(RasterBase):
     Interferogram (Ifg) class objects; double as a container for
     interferometric phase raster band data and related data.
     """
-    # pylint: disable=too-many-instance-attributes
     def __init__(self, path):
         """
         Interferogram constructor, for 2-band Ifg raster datasets.
@@ -665,7 +663,6 @@ def nanmedian(x):
     :return: y: median value
     :rtype: float
     """
-    # pylint: disable=no-member
     version = [int(i) for i in pkg_resources.get_distribution("numpy").version.split('.')[:2]]
     if version[0] == 1 and version[1] > 9:
         return np.nanmedian(x)
@@ -688,7 +685,6 @@ def _is_incidence(hdr):
 
 
 def write_fullres_geotiff(header, data_path, dest, nodata):
-    # pylint: disable=too-many-statements
     """
     Creates a copy of input image data (interferograms, DEM, incidence maps
     etc) in GeoTIFF format with PyRate metadata.
@@ -700,8 +696,6 @@ def write_fullres_geotiff(header, data_path, dest, nodata):
 
     :return: None, file saved to disk
     """
-    # pylint: disable=too-many-branches
-    # pylint: disable=too-many-locals
     ifg_proc = header[ifc.PYRATE_INSAR_PROCESSOR]
     ncols = header[ifc.PYRATE_NCOLS]
     nrows = header[ifc.PYRATE_NROWS]
@@ -837,7 +831,6 @@ def _check_pixel_res_mismatch(header):
     """
     Convenience function to check equality of pixel resolution in X and Y dimensions
     """
-    # pylint: disable=invalid-name
     xs, ys = [abs(i) for i in [header[ifc.PYRATE_X_STEP], header[ifc.PYRATE_Y_STEP]]]
 
     if xs != ys:
@@ -879,7 +872,6 @@ def write_unw_from_data_or_geotiff(geotif_or_data, dest_unw, ifg_proc):
 
 # This function may be able to be deprecated
 def write_output_geotiff(md, gt, wkt, data, dest, nodata):
-    # pylint: disable=too-many-arguments
     """
     Writes PyRate output data to a GeoTIFF file.
 
@@ -914,7 +906,6 @@ def write_output_geotiff(md, gt, wkt, data, dest, nodata):
 
 
 def write_geotiff(data, outds, nodata):
-    # pylint: disable=too-many-arguments
     """
     A generic routine for writing a NumPy array to a geotiff.
 
@@ -1042,7 +1033,6 @@ def nan_and_mm_convert(ifg, params):
 
 
 def cell_size(lat, lon, x_step, y_step):
-    # pylint: disable=invalid-name
     """
     Converts X|Y_STEP in degrees to X & Y cell size in metres.
     This function depends on PyProj/PROJ4 to implement the function
@@ -1084,8 +1074,6 @@ class PrereadIfg():
     """
     Convenience class for handling pre-calculated ifg params
     """
-    # pylint: disable=too-many-arguments
-    # pylint: disable=too-many-instance-attributes
     def __init__(self, path, nan_fraction, master, slave, time_span,
                  nrows, ncols, metadata):
         self.path = path

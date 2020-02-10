@@ -13,10 +13,9 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-# pylint: disable=trailing-whitespace, missing-docstring
-'''
+"""
 This Python module contains tests for the config.py PyRate module.
-'''
+"""
 import os
 import shutil
 import tempfile

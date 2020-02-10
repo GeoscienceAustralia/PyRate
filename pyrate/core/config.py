@@ -20,10 +20,6 @@ in configuration files. Examples of PyRate configuration files are
 provided in the configs/ directory
 """
 # coding: utf-8
-# pylint: disable=invalid-name
-# pylint: disable=W1203
-# pylint: disable=too-many-locals
-# pylint: disable=trailing-whitespace
 from typing import List, Tuple, Dict, Optional
 import os
 from os.path import splitext, split

@@ -611,7 +611,6 @@ def warp_old(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out, verbo
     :param thresh: see thresh in prepare_ifgs().
     :param verbose: True to print gdalwarp output to stdout
     """
-    # pylint: disable=too-many-locals
     if x_looks != y_looks:
         raise ValueError('X and Y looks mismatch')
 

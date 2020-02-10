@@ -19,7 +19,6 @@ format with PyRate specific metadata headers. The module also implements
 multilooking/downsampling and cropping operations to reduce the size of
 the computational problem.
 """
-# pylint: disable=too-many-arguments,invalid-name
 import os
 import shutil
 from collections import namedtuple
@@ -415,8 +414,6 @@ def _custom_bounds(ifgs, xw, ytop, xe, ybot):
     """
     Check and modify input custom crop bounds to line up with grid interval
     """
-    # pylint: disable=too-many-locals
-    # pylint: disable=too-many-branches
     msg = 'Cropped image bounds are outside the original image bounds'
     i = ifgs[0]
 

@@ -31,7 +31,6 @@ from core import shared, ifgconstants as ifc, config as cf
 from core.shared import PrereadIfg
 from core.algorithm import master_slave_ids
 
-# pylint: disable=too-many-arguments
 # distance division factor of 1000 converts to km and is needed to match legacy output
 DISTFACT = 1000
 
@@ -46,7 +45,6 @@ def _pendiffexp(alphamod, cvdav):
     :param ndarray cvdav: Function magnitude at 0 radius (2 col array of
     radius, variance)
     """
-    # pylint: disable=invalid-name
     # maxvar usually at zero lag
     mx = cvdav[1, 0]
     return norm(cvdav[1, :] - (mx * exp(-alphamod * cvdav[0, :])))
@@ -150,9 +148,6 @@ def cvd_from_phase(phase, ifg, r_dist, calc_alpha, save_acg=False, params=None):
     :return: alpha: the exponential length-scale of decay factor
     :rtype: float
     """
-    # pylint: disable=invalid-name
-    # pylint: disable=too-many-locals
-
     autocorr_grid = _get_autogrid(phase)
     acg = reshape(autocorr_grid, phase.size, order='F')
     # Symmetry in image; keep only unique points
@@ -217,7 +212,6 @@ class RDist():
     """
     RDist class used for caching r_dist during maxvar/alpha computation
     """
-    # pylint: disable=invalid-name
     def __init__(self, ifg):
         self.r_dist = None
         self.ifg = ifg
@@ -290,7 +284,6 @@ def get_vcmt(ifgs, maxvar):
     :return: vcm_t: temporal variance-covariance matrix
     :rtype: ndarray
     """
-    # pylint: disable=too-many-locals
     # c=0.5 for common master or slave; c=-0.5 if master
     # of one matches slave of another
 
@@ -298,7 +291,6 @@ def get_vcmt(ifgs, maxvar):
         from collections import OrderedDict
         ifgs = {k: v for k, v in ifgs.items() if isinstance(v, PrereadIfg)}
         ifgs = OrderedDict(sorted(ifgs.items()))
-        # pylint: disable=redefined-variable-type
         ifgs = ifgs.values()
 
     nifgs = len(ifgs)

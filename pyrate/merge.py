@@ -230,7 +230,6 @@ def _merge_timeseries(rows, cols, params):
 
     tsincr = np.load(file=tsincr_file)
 
-    # pylint: disable=no-member
     no_ts_tifs = tsincr.shape[2]
     # we create 2 x no_ts_tifs as we are splitting tsincr and tscuml
     # to all processes.
@@ -273,7 +272,6 @@ def _merge_timeseries(rows, cols, params):
 
 
 def _assemble_tiles(i, n, tile, tsincr_g, output_dir, outtype):
-    # pylint: disable=too-many-arguments
     """
     A reusable time series tile assembly function
     """

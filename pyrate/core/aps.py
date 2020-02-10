@@ -18,7 +18,6 @@ This Python module implements a spatio-temporal filter method
 for correcting interferograms for atmospheric phase screen (APS)
 signals.
 """
-# pylint: disable=invalid-name, too-many-locals, too-many-arguments
 import logging
 import os
 from copy import deepcopy
