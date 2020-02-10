@@ -37,7 +37,7 @@ ch.setFormatter(formatter)
 
 
 fh = logging.FileHandler('pyrate.log')
-fh.setLevel(log_level)
+fh.setLevel(logging.DEBUG)
 fh.setFormatter(formatter)
 
 pyratelogger.addHandler(ch)
