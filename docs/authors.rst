@@ -19,6 +19,7 @@ Thanks to `all the contributors`_ who helped in building this project.
 
 * Sudipta Basak (GA)
 * Ben Davies (NCI)
+* Thomas Fuhrmann (GA)
 * Sheece Gardezi (GA)
 * Matt Garthwaite (GA)
 * Simon Knapp (GA)
@@ -28,4 +29,4 @@ Thanks to `all the contributors`_ who helped in building this project.
 * Vanessa Newey (GA)
 * Garrick Paskos (GA)
 * Nahidul Samrat (GA)
-* Fuhrmann Thomas (GA)
+
