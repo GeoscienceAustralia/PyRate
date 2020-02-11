@@ -185,6 +185,11 @@ def prepare_ifg(input_path, output_path, xlooks, ylooks, extents, thresh, crop_o
         input_raster.open()
 
     if do_multilook:
+        log.debug("xlooks: " + str(xlooks))
+        log.debug("input_raster.x_step: " + str(input_raster.x_step))
+        log.debug("ylooks: " + str(ylooks))
+        log.debug("input_raster.y_step" + str(input_raster.y_step))
+
         resolution = [xlooks * input_raster.x_step, ylooks * input_raster.y_step]
 
     if not do_multilook and crop_out == ALREADY_SAME_SIZE:

@@ -49,7 +49,9 @@ def main(params):
         log.info("Collecting jobs: prepifg")
         # a job is list of parameters passed to multiprocessing function
         jobs = []
-        xlooks, ylooks, crop = cf.transform_params(params)
+
+        xlooks, ylooks, crop = params["ifglksx"], params["ifglksy"], params["ifgcropopt"]
+
         user_extents = (params[cf.IFG_XFIRST], params[cf.IFG_YFIRST], params[cf.IFG_XLAST], params[cf.IFG_YLAST])
         thresh = params[cf.NO_DATA_AVERAGING_THRESHOLD]
 
