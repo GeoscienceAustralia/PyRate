@@ -22,7 +22,7 @@ from core.mpiops import size, rank
 
 
 PYRATEPATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-log_setting_file = os.path.join(PYRATEPATH, "log_settings.txt")
+log_setting_file = os.path.join(PYRATEPATH, "utils", "log_settings.txt")
 
 with open(log_setting_file, "r") as myfile:
     log_level = myfile.readlines()[0].strip()

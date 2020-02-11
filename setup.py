@@ -56,7 +56,7 @@ setup(
     install_requires=requirements,
     package_dir={'': 'pyrate'},
     py_modules=["default_parameters","configuration", "main", "core.logger", "core.algorithm", "core.aps", "core.config", "core.covariance", "core.gamma", "core.gdal_python", "core.ifgconstants", "core.mpiops", "core.mst", "core.orbital", "core.prepifg_helper", "core.pyratelog", "core.ref_phs_est", "core.refpixel", "core.roipac", "core.shared", "core.stack", "core.timeseries", "core.user_experience", "constants", "conv2tif", "merge", "prepifg", "process"],
-    data_files=[('utils', ['pyrate/utils/colormap.txt'])],
+    data_files=[('utils', ['pyrate/utils/colormap.txt']), ('utils', ['pyrate/utils/log_settings.txt'])],
     entry_points={
           'console_scripts': [
               'pyrate = main:main'
