@@ -32,15 +32,14 @@ import common
 from core import shared, ref_phs_est as rpe, config as cf, covariance as vcm_module
 from core.stack import stack_rate
 import process, prepifg, conv2tif
-from common import (SML_TEST_DIR, prepare_ifgs_without_phase, TEST_CONF_ROIPAC, pre_prepare_ifgs, remove_tifs)
+from common import SML_TEST_DIR, prepare_ifgs_without_phase, TEST_CONF_ROIPAC, pre_prepare_ifgs, remove_tifs
 
 
 def default_params():
-    return {'pthr': 3, 'nsig': 3, 'maxsig': 2, 'parallel': 1, 'processes': 8}
+    return {"pthr": 3, "nsig": 3, "maxsig": 2, "parallel": 1, "processes": 8}
 
 
 class SinglePixelIfg(object):
-
     def __init__(self, timespan, phase):
         self.time_span = timespan
         self.phase_data = array([[phase]])
@@ -70,6 +69,8 @@ class StackRateTests(unittest.TestCase):
         assert_array_almost_equal(rate, exprate)
         assert_array_almost_equal(error, experr)
         assert_array_almost_equal(samples, expsamp)
+
+
 #
 #
 # class LegacyEqualityTest(unittest.TestCase):

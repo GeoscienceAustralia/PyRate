@@ -30,9 +30,9 @@ import numexpr as ne
 from core.logger import pyratelogger as log
 from core import shared, ifgconstants as ifc, prepifg_helper
 
-gdal.SetCacheMax(2**15)
-GDAL_WARP_MEMORY_LIMIT = 2**10
-LOW_FLOAT32 = np.finfo(np.float32).min*1e-10
+gdal.SetCacheMax(2 ** 15)
+GDAL_WARP_MEMORY_LIMIT = 2 ** 10
+LOW_FLOAT32 = np.finfo(np.float32).min * 1e-10
 
 
 def coherence_masking(src_ds, coherence_ds, coherence_thresh):
@@ -56,11 +56,12 @@ def coherence_masking(src_ds, coherence_ds, coherence_thresh):
     ndv = np.nan
     coherence = coherence_band.ReadAsArray()
     src = src_band.ReadAsArray()
-    var = {'coh': coherence, 'src': src, 't': coherence_thresh, 'ndv': ndv}
-    formula = 'where(coh>=t, src, ndv)'
+    var = {"coh": coherence, "src": src, "t": coherence_thresh, "ndv": ndv}
+    formula = "where(coh>=t, src, ndv)"
     res = ne.evaluate(formula, local_dict=var)
     src_band.WriteArray(res)
-    
+
+
 def world_to_pixel(geo_transform, x, y):
     """
     Uses a gdal geomatrix (gdal.GetGeoTransform()) to calculate
@@ -81,7 +82,7 @@ def world_to_pixel(geo_transform, x, y):
     xres = geo_transform[1]
     yres = geo_transform[5]
     col = int(np.round((x - ul_x) / xres))
-    line = int(np.round((ul_y - y) / abs(yres))) # yres has negative size
+    line = int(np.round((ul_y - y) / abs(yres)))  # yres has negative size
 
     return col, line
 
@@ -120,7 +121,7 @@ def crop(input_file, extents, geo_trans=None, nodata=np.nan):
         """
         Converts a Python Imaging Library (PIL) array to a gdalnumeric image.
         """
-        arr = gdal_array.fromstring(i.tobytes(), 'b')
+        arr = gdal_array.fromstring(i.tobytes(), "b")
         arr.shape = i.im.size[1], i.im.size[0]
         return arr
 
@@ -132,7 +133,7 @@ def crop(input_file, extents, geo_trans=None, nodata=np.nan):
         raster = raster.ReadAsArray()
     else:
         if not geo_trans:
-            raise ValueError('geo transform must be supplied')
+            raise ValueError("geo transform must be supplied")
 
     # Convert the layer extent to image pixel coordinates
     min_x, min_y, max_x, max_y = extents
@@ -166,14 +167,12 @@ def crop(input_file, extents, geo_trans=None, nodata=np.nan):
     points = [(min_x, min_y), (max_x, min_y), (max_x, max_y), (min_y, max_y)]
     pixels = []
 
-
     for point in points:
         pixels.append(world_to_pixel(gt2, point[0], point[1]))
 
-    raster_poly = Image.new('L', size=(px_width, px_height), color=1)
+    raster_poly = Image.new("L", size=(px_width, px_height), color=1)
     rasterize = ImageDraw.Draw(raster_poly)
     rasterize.polygon(pixels, 0)  # Fill with zeroes
-
 
     mask = image_to_array(raster_poly)
 
@@ -214,16 +213,13 @@ def resample_nearest_neighbour(input_tif, extents, new_res, output_file):
     :return: dst: resampled image
     :rtype: ndarray
     """
-    dst, resampled_proj, src, _ = _crop_resample_setup(extents, input_tif,
-                                                       new_res, output_file)
+    dst, resampled_proj, src, _ = _crop_resample_setup(extents, input_tif, new_res, output_file)
     # Do the work
-    gdal.ReprojectImage(src, dst, '', resampled_proj,
-                        gdalconst.GRA_NearestNeighbour)
+    gdal.ReprojectImage(src, dst, "", resampled_proj, gdalconst.GRA_NearestNeighbour)
     return dst.ReadAsArray()
 
 
-def _crop_resample_setup(extents, input_tif, new_res, output_file,
-                         dst_driver_type='GTiff', out_bands=2):
+def _crop_resample_setup(extents, input_tif, new_res, output_file, dst_driver_type="GTiff", out_bands=2):
     """
     Convenience function for crop/resample setup
     """
@@ -249,12 +245,10 @@ def _crop_resample_setup(extents, input_tif, new_res, output_file,
     else:
         resampled_geotrans = gt2
 
-    px_height, px_width = _gdalwarp_width_and_height(max_x, max_y, min_x,
-                                                     min_y, resampled_geotrans)
+    px_height, px_width = _gdalwarp_width_and_height(max_x, max_y, min_x, min_y, resampled_geotrans)
 
     # Output / destination
-    dst = gdal.GetDriverByName(dst_driver_type).Create(
-        output_file, px_width, px_height, out_bands, gdalconst.GDT_Float32)
+    dst = gdal.GetDriverByName(dst_driver_type).Create(output_file, px_width, px_height, out_bands, gdalconst.GDT_Float32)
     dst.SetGeoTransform(resampled_geotrans)
     dst.SetProjection(resampled_proj)
 
@@ -277,7 +271,7 @@ def _gdalwarp_width_and_height(max_x, max_y, min_x, min_y, geo_trans):
     return px_height, px_width  # this is the same as `gdalwarp`
 
 
-def crop_resample_average(input_raster, extents, resolution, output_file, thresh,  header=None, coherence_path=None, coherence_thresh=None):
+def crop_resample_average(input_raster, extents, resolution, output_file, thresh, header=None, coherence_path=None, coherence_thresh=None):
     """
     Crop, resample, and average a geotiff image.
 
@@ -295,12 +289,12 @@ def crop_resample_average(input_raster, extents, resolution, output_file, thresh
     :return: out_ds: destination gdal dataset object
     :rtype: gdal.Dataset
     """
-    out_driver_type = 'GTiff'
+    out_driver_type = "GTiff"
     match_pyrate = False
-    dst_ds, _, _, _ = _crop_resample_setup(extents, input_raster, resolution, output_file, out_bands=2, dst_driver_type='MEM')
+    dst_ds, _, _, _ = _crop_resample_setup(extents, input_raster, resolution, output_file, out_bands=2, dst_driver_type="MEM")
 
     # make a temporary copy of the dst_ds for PyRate style prepifg
-    tmp_ds = gdal.GetDriverByName('MEM').CreateCopy('', dst_ds) if (match_pyrate and resolution[0]) else None
+    tmp_ds = gdal.GetDriverByName("MEM").CreateCopy("", dst_ds) if (match_pyrate and resolution[0]) else None
 
     src_ds, src_ds_mem = _setup_source(input_raster)
 
@@ -310,9 +304,11 @@ def crop_resample_average(input_raster, extents, resolution, output_file, thresh
         coherence_ds = coherence_raster.dataset
         coherence_masking(src_ds_mem, coherence_ds, coherence_thresh)
     elif coherence_path and not coherence_thresh:
-        raise ValueError(f"Coherence file provided without a coherence "
-                         f"threshold. Please ensure you provide 'cohthresh' "
-                         f"in your config if coherence masking is enabled.")
+        raise ValueError(
+            f"Coherence file provided without a coherence "
+            f"threshold. Please ensure you provide 'cohthresh' "
+            f"in your config if coherence masking is enabled."
+        )
 
     resampled_average, src_ds_mem = gdal_average(dst_ds, src_ds, src_ds_mem, thresh)
     src_dtype = src_ds_mem.GetRasterBand(1).DataType
@@ -329,7 +325,7 @@ def crop_resample_average(input_raster, extents, resolution, output_file, thresh
     # TEST HERE IF EXISTING FILE HAS PYRATE METADATA. IF NOT ADD HERE
     if not ifc.DATA_TYPE in dst_ds.GetMetadata() and header is not None:
         md = shared.collate_metadata(header)
-    else: 
+    else:
         md = dst_ds.GetMetadata()
 
     # update metadata for output
@@ -337,32 +333,41 @@ def crop_resample_average(input_raster, extents, resolution, output_file, thresh
         if k == ifc.DATA_TYPE:
             # update data type metadata
             if v == ifc.ORIG and coherence_path:
-                md.update({ifc.DATA_TYPE:ifc.COHERENCE})
+                md.update({ifc.DATA_TYPE: ifc.COHERENCE})
             elif v == ifc.ORIG and not coherence_path:
-                md.update({ifc.DATA_TYPE:ifc.MULTILOOKED})
+                md.update({ifc.DATA_TYPE: ifc.MULTILOOKED})
             elif v == ifc.DEM:
-                md.update({ifc.DATA_TYPE:ifc.MLOOKED_DEM})
+                md.update({ifc.DATA_TYPE: ifc.MLOOKED_DEM})
             elif v == ifc.INCIDENCE:
-                md.update({ifc.DATA_TYPE:ifc.MLOOKED_INC})
+                md.update({ifc.DATA_TYPE: ifc.MLOOKED_INC})
             elif v == ifc.COHERENCE and coherence_path:
                 pass
             elif v == ifc.MULTILOOKED and coherence_path:
-                md.update({ifc.DATA_TYPE:ifc.COHERENCE})
+                md.update({ifc.DATA_TYPE: ifc.COHERENCE})
             elif v == ifc.MULTILOOKED and not coherence_path:
                 pass
             else:
-                raise TypeError('Data Type metadata not recognised')
+                raise TypeError("Data Type metadata not recognised")
 
     # In-memory GDAL driver doesn't support compression so turn it off.
-    creation_opts = ['compress=packbits'] if out_driver_type != 'MEM' else []
-    out_ds = shared.gdal_dataset(output_file, dst_ds.RasterXSize, dst_ds.RasterYSize, driver=out_driver_type, bands=1, dtype=src_dtype, metadata=md, crs=wkt, geotransform=gt, creation_opts=creation_opts)
+    creation_opts = ["compress=packbits"] if out_driver_type != "MEM" else []
+    out_ds = shared.gdal_dataset(
+        output_file,
+        dst_ds.RasterXSize,
+        dst_ds.RasterYSize,
+        driver=out_driver_type,
+        bands=1,
+        dtype=src_dtype,
+        metadata=md,
+        crs=wkt,
+        geotransform=gt,
+        creation_opts=creation_opts,
+    )
 
-    shared.write_geotiff(resampled_average, out_ds, np.nan) 
+    shared.write_geotiff(resampled_average, out_ds, np.nan)
 
 
-
-def _alignment(input_tif, new_res, resampled_average, src_ds_mem,
-                      src_gt, tmp_ds):
+def _alignment(input_tif, new_res, resampled_average, src_ds_mem, src_gt, tmp_ds):
     """
     Correction step to match python multi-look/crop output to match that of
     Legacy data. Modifies the resampled_average array in place.
@@ -377,13 +382,12 @@ def _alignment(input_tif, new_res, resampled_average, src_ds_mem,
     # turn off nan-conversion
     src_ds_mem.GetRasterBand(1).SetNoDataValue(LOW_FLOAT32)
     # nearest neighbor resapling
-    gdal.ReprojectImage(src_ds_mem, tmp_ds, '', '',
-                        gdal.GRA_NearestNeighbour)
+    gdal.ReprojectImage(src_ds_mem, tmp_ds, "", "", gdal.GRA_NearestNeighbour)
     # only take the [yres:nrows, xres:ncols] slice
     if nrows > yres or ncols > xres:
         resampled_nearest_neighbor = tmp_ds.GetRasterBand(1).ReadAsArray()
-        resampled_average[yres - nrows:, xres - ncols:] = \
-            resampled_nearest_neighbor[yres - nrows:, xres - ncols:]
+        resampled_average[yres - nrows :, xres - ncols :] = resampled_nearest_neighbor[yres - nrows :, xres - ncols :]
+
 
 def gdal_average(dst_ds, src_ds, src_ds_mem, thresh):
     """
@@ -404,7 +408,7 @@ def gdal_average(dst_ds, src_ds, src_ds_mem, thresh):
     src_ds_mem.GetRasterBand(2).SetNoDataValue(-100000)
     src_gt = src_ds.GetGeoTransform()
     src_ds_mem.SetGeoTransform(src_gt)
-    gdal.ReprojectImage(src_ds_mem, dst_ds, '', '', gdal.GRA_Average)
+    gdal.ReprojectImage(src_ds_mem, dst_ds, "", "", gdal.GRA_Average)
     # dst_ds band2 average is our nan_fraction matrix
     nan_frac = dst_ds.GetRasterBand(2).ReadAsArray()
     resampled_average = dst_ds.GetRasterBand(1).ReadAsArray()
@@ -417,10 +421,8 @@ def _setup_source(input_tif):
     src_ds = gdal.Open(input_tif)
     data = src_ds.GetRasterBand(1).ReadAsArray()
     src_dtype = src_ds.GetRasterBand(1).DataType
-    mem_driver = gdal.GetDriverByName('MEM')
-    src_ds_mem = mem_driver.Create('',
-                                   src_ds.RasterXSize, src_ds.RasterYSize,
-                                   2, src_dtype)
+    mem_driver = gdal.GetDriverByName("MEM")
+    src_ds_mem = mem_driver.Create("", src_ds.RasterXSize, src_ds.RasterYSize, 2, src_dtype)
     src_ds_mem.GetRasterBand(1).WriteArray(data)
     src_ds_mem.GetRasterBand(1).SetNoDataValue(0)
     # if data==0, then 1, else 0

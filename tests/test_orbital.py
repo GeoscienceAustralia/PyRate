@@ -45,16 +45,10 @@ from common import SML_TEST_LEGACY_ORBITAL_DIR
 from common import SML_TEST_TIF, small_data_setup
 from common import small_ifg_file_list
 
-#TODO: Purpose of this variable? Degrees are 1, 2 and 3 respectively
-DEG_LOOKUP = {
-    2: PLANAR,
-    5: QUADRATIC,
-    6: PART_CUBIC}
+# TODO: Purpose of this variable? Degrees are 1, 2 and 3 respectively
+DEG_LOOKUP = {2: PLANAR, 5: QUADRATIC, 6: PART_CUBIC}
 
-NUM_COEF_LOOKUP = {
-    PLANAR: 2,
-    QUADRATIC: 5,
-    PART_CUBIC: 6}
+NUM_COEF_LOOKUP = {PLANAR: 2, QUADRATIC: 5, PART_CUBIC: 6}
 
 
 class SingleDesignMatrixTests(unittest.TestCase):
@@ -69,7 +63,7 @@ class SingleDesignMatrixTests(unittest.TestCase):
         # faked cell sizes
         self.xs = 0.75
         self.ys = 0.8
-        self.ifg = Ifg(join(SML_TEST_TIF, 'geo_060619-061002_unw.tif'))
+        self.ifg = Ifg(join(SML_TEST_TIF, "geo_060619-061002_unw.tif"))
         self.ifg.open()
         self.ifg.nodata_value = 0
 
@@ -92,7 +86,6 @@ class SingleDesignMatrixTests(unittest.TestCase):
         self.assertEqual(act.shape, (self.m.num_cells, 3))
         exp = unittest_dm(self.m, INDEPENDENT_METHOD, PLANAR, offset)
         assert_array_almost_equal(act, exp)
-
 
     # tests for quadratic model
 
@@ -119,14 +112,12 @@ class SingleDesignMatrixTests(unittest.TestCase):
         exp = unittest_dm(self.m, INDEPENDENT_METHOD, PART_CUBIC, offset)
         assert_array_equal(act, exp)
 
-
     def test_create_partcubic_dm_offsets(self):
         offset = True
         act = get_design_matrix(self.m, PART_CUBIC, offset)
         self.assertEqual(act.shape, (self.m.num_cells, 7))
         exp = unittest_dm(self.m, INDEPENDENT_METHOD, PART_CUBIC, offset)
         assert_array_equal(act, exp)
-
 
     # tests for unittest_dm() assuming network method
 
@@ -185,13 +176,11 @@ class IndependentCorrectionTests(unittest.TestCase):
         dm2 = get_design_matrix(ifg, deg, offset)
 
         if offset:
-            fullorb = np.reshape(np.dot(dm2[:, :-1], orbparams[:-1]),
-                             ifg.phase_data.shape)
+            fullorb = np.reshape(np.dot(dm2[:, :-1], orbparams[:-1]), ifg.phase_data.shape)
         else:
             fullorb = np.reshape(np.dot(dm2, orbparams), ifg.phase_data.shape)
 
-        offset_removal = nanmedian(
-            np.reshape(ifg.phase_data - fullorb, (1, -1)))
+        offset_removal = nanmedian(np.reshape(ifg.phase_data - fullorb, (1, -1)))
         fwd_correction = fullorb - offset_removal
         # ifg.phase_data -= (fullorb - offset_removal)
         return ifg.phase_data - fwd_correction
@@ -315,7 +304,7 @@ class NetworkDesignMatrixTests(unittest.TestCase):
         self.check_equality(ncoef, act, self.ifgs, offset)
 
     def test_planar_network_dm_offset(self):
-        ncoef = 2 # NB: doesn't include offset col
+        ncoef = 2  # NB: doesn't include offset col
         offset = True
         act = get_network_design_matrix(self.ifgs, PLANAR, offset)
         self.assertEqual(act.shape[0], self.ncells * self.nifgs)
@@ -366,29 +355,29 @@ class NetworkDesignMatrixTests(unittest.TestCase):
         offset - boolean to include extra parameters for model offsets
         """
         deg = DEG_LOOKUP[ncoef]
-        np = ncoef * self.nepochs # index of 1st offset col
+        np = ncoef * self.nepochs  # index of 1st offset col
 
         for i, ifg in enumerate(ifgs):
             exp = unittest_dm(ifg, NETWORK_METHOD, deg, offset)
             self.assertEqual(exp.shape, (ifg.num_cells, ncoef))
 
-            ib1, ib2 = [x * self.ncells for x in (i, i+1)] # row start/end
-            jbm = ncoef * self.date_ids[ifg.master] # starting col index for master
-            jbs = ncoef * self.date_ids[ifg.slave] # col start for slave
-            assert_array_almost_equal(-exp, dm[ib1:ib2, jbm:jbm+ncoef])
-            assert_array_almost_equal( exp, dm[ib1:ib2, jbs:jbs+ncoef])
+            ib1, ib2 = [x * self.ncells for x in (i, i + 1)]  # row start/end
+            jbm = ncoef * self.date_ids[ifg.master]  # starting col index for master
+            jbs = ncoef * self.date_ids[ifg.slave]  # col start for slave
+            assert_array_almost_equal(-exp, dm[ib1:ib2, jbm : jbm + ncoef])
+            assert_array_almost_equal(exp, dm[ib1:ib2, jbs : jbs + ncoef])
 
             # ensure remaining rows/cols are zero for this ifg NOT inc offsets
-            assert_array_equal(0, dm[ib1:ib2, :jbm]) # all cols leading up to master
-            assert_array_equal(0, dm[ib1:ib2, jbm + ncoef:jbs]) # cols btwn mas/slv
-            assert_array_equal(0, dm[ib1:ib2, jbs + ncoef:np]) # to end of non offsets
+            assert_array_equal(0, dm[ib1:ib2, :jbm])  # all cols leading up to master
+            assert_array_equal(0, dm[ib1:ib2, jbm + ncoef : jbs])  # cols btwn mas/slv
+            assert_array_equal(0, dm[ib1:ib2, jbs + ncoef : np])  # to end of non offsets
 
             # check offset cols for 1s and 0s
             if offset is True:
-                ip1 = i + np # offset column index
+                ip1 = i + np  # offset column index
                 assert_array_equal(1, dm[ib1:ib2, ip1])
-                assert_array_equal(0, dm[ib1:ib2, np:ip1]) # cols before offset col
-                assert_array_equal(0, dm[ib1:ib2, ip1 + 1:]) # cols after offset col
+                assert_array_equal(0, dm[ib1:ib2, np:ip1])  # cols before offset col
+                assert_array_equal(0, dm[ib1:ib2, ip1 + 1 :])  # cols after offset col
 
 
 # components for network correction testing
@@ -436,9 +425,9 @@ def _expand_corrections(ifgs, dm, params, ncoef, offsets):
 
     corrections = []
     for ifg in ifgs:
-        jbm = date_ids[ifg.master] * ncoef # starting row index for master
-        jbs = date_ids[ifg.slave] * ncoef # row start for slave
-        par = params[jbs:jbs + ncoef] - params[jbm:jbm + ncoef]
+        jbm = date_ids[ifg.master] * ncoef  # starting row index for master
+        jbs = date_ids[ifg.slave] * ncoef  # row start for slave
+        par = params[jbs : jbs + ncoef] - params[jbm : jbm + ncoef]
 
         # estimate orbital correction effects
         # corresponds to "fullorb = B*parm + offset" in orbfwd.m
@@ -472,6 +461,7 @@ class NetworkCorrectionTests(unittest.TestCase):
         """
         Ensure pinv(DM)*obs gives equal results given constant change to fd
         """
+
         def get_orbital_params():
             """Returns pseudo-inverse of the DM"""
             ncells = self.ifgs[0].num_cells
@@ -486,7 +476,7 @@ class NetworkCorrectionTests(unittest.TestCase):
 
         # apply constant change to the observed values (fd)
         for value in [5.2, -23.5]:
-            for i in self.ifgs: # change ifgs in place
+            for i in self.ifgs:  # change ifgs in place
                 i.phase_data += value
                 self.assertTrue(isnan(i.phase_data).any())
 
@@ -546,7 +536,7 @@ class NetworkCorrectionTests(unittest.TestCase):
 
 
 class NetworkCorrectionTestsMultilooking(unittest.TestCase):
-    'Verifies orbital correction with multilooking and network method'
+    "Verifies orbital correction with multilooking and network method"
 
     def setUp(self):
         # fake some real ifg data by adding nans
@@ -561,7 +551,7 @@ class NetworkCorrectionTestsMultilooking(unittest.TestCase):
 
         # add common nodata to all ifgs
         for i in self.ifgs + self.ml_ifgs:
-            i.phase_data[0,:] = nan
+            i.phase_data[0, :] = nan
 
     # These functions test multilooked data for orbital correction. The options
     # are separated as the ifg.phase_data arrays are modified in place, allowing
@@ -609,28 +599,28 @@ class NetworkCorrectionTestsMultilooking(unittest.TestCase):
 
 
 def unittest_dm(ifg, method, degree, offset=False, scale=100.0):
-    '''Helper/test func to create design matrix segments. Includes handling for
+    """Helper/test func to create design matrix segments. Includes handling for
     making quadratic DM segments for use in network method.
     ifg - source interferogram to model design matrix on
     method - INDEPENDENT_METHOD or NETWORK_METHOD
     degree - PLANAR, QUADRATIC or PART_CUBIC
     offset - True/False to include additional cols for offsets
-    '''
+    """
     assert method in [INDEPENDENT_METHOD, NETWORK_METHOD]
 
     xlen = ncoef = NUM_COEF_LOOKUP[degree]
     if offset and method == INDEPENDENT_METHOD:
         ncoef += 1
     else:
-        offset = False # prevent offsets in DM sections for network method
+        offset = False  # prevent offsets in DM sections for network method
 
     # NB: avoids meshgrid to prevent copying production implementation
     data = empty((ifg.num_cells, ncoef), dtype=float32)
     rows = iter(data)
-    yr = range(1, ifg.nrows+1)  # simulate meshgrid starting from 1
-    xr = range(1, ifg.ncols+1)
+    yr = range(1, ifg.nrows + 1)  # simulate meshgrid starting from 1
+    xr = range(1, ifg.ncols + 1)
 
-    xsz, ysz = [i/scale for i in [ifg.x_size, ifg.y_size]]
+    xsz, ysz = [i / scale for i in [ifg.x_size, ifg.y_size]]
 
     if degree == PLANAR:
         for y, x in product(yr, xr):
@@ -641,13 +631,13 @@ def unittest_dm(ifg, method, degree, offset=False, scale=100.0):
             ys = y * ysz
             xs = x * xsz
             row = next(rows)
-            row[:xlen] = [xs**2, ys**2, xs*ys, xs, ys]
+            row[:xlen] = [xs ** 2, ys ** 2, xs * ys, xs, ys]
     else:
         for y, x in product(yr, xr):
             ys = y * ysz
             xs = x * xsz
             row = next(rows)
-            row[:xlen] = [xs*ys**2, xs**2, ys**2, xs*ys, xs, ys]
+            row[:xlen] = [xs * ys ** 2, xs ** 2, ys ** 2, xs * ys, xs, ys]
 
     if offset:
         data[:, -1] = 1
@@ -656,9 +646,9 @@ def unittest_dm(ifg, method, degree, offset=False, scale=100.0):
 
 
 def get_date_ids(ifgs):
-    '''
+    """
     Returns unique master/slave date IDs from the given Ifgs.
-    '''
+    """
 
     dates = []
     for ifg in ifgs:
@@ -668,11 +658,11 @@ def get_date_ids(ifgs):
 
 def _add_nodata(ifgs):
     """Adds some NODATA/nan cells to the small mock ifgs"""
-    ifgs[0].phase_data[0, :] = nan # 3 error cells
-    ifgs[1].phase_data[2, 1:3] = nan # 2 error cells
-    ifgs[2].phase_data[3, 2:3] = nan # 1 err
-    ifgs[3].phase_data[1, 2] = nan # 1 err
-    ifgs[4].phase_data[1, 1:3] = nan # 2 err
+    ifgs[0].phase_data[0, :] = nan  # 3 error cells
+    ifgs[1].phase_data[2, 1:3] = nan  # 2 error cells
+    ifgs[2].phase_data[3, 2:3] = nan  # 1 err
+    ifgs[3].phase_data[1, 2] = nan  # 1 err
+    ifgs[4].phase_data[1, 1:3] = nan  # 2 err
 
 
 class LegacyComparisonTestsOrbfitMethod1(unittest.TestCase):
@@ -697,8 +687,7 @@ class LegacyComparisonTestsOrbfitMethod1(unittest.TestCase):
         self.params[cf.PARALLEL] = False
 
         data_paths = [os.path.join(SML_TEST_TIF, p) for p in IFMS16]
-        self.ifg_paths = [os.path.join(self.BASE_DIR, os.path.basename(d))
-                          for d in data_paths]
+        self.ifg_paths = [os.path.join(self.BASE_DIR, os.path.basename(d)) for d in data_paths]
 
         for d in data_paths:
             shutil.copy(d, os.path.join(self.BASE_DIR, os.path.basename(d)))
@@ -711,30 +700,28 @@ class LegacyComparisonTestsOrbfitMethod1(unittest.TestCase):
 
         process._orb_fit_calc(self.ifg_paths, self.params)
 
-        onlyfiles = [f for f in os.listdir(SML_TEST_LEGACY_ORBITAL_DIR)
-            if os.path.isfile(os.path.join(SML_TEST_LEGACY_ORBITAL_DIR, f))
-            and f.endswith('.csv') and f.__contains__('_method1_')]
+        onlyfiles = [
+            f
+            for f in os.listdir(SML_TEST_LEGACY_ORBITAL_DIR)
+            if os.path.isfile(os.path.join(SML_TEST_LEGACY_ORBITAL_DIR, f)) and f.endswith(".csv") and f.__contains__("_method1_")
+        ]
 
         count = 0
         for i, f in enumerate(onlyfiles):
-            ifg_data = np.genfromtxt(os.path.join(
-                SML_TEST_LEGACY_ORBITAL_DIR, f), delimiter=',')
+            ifg_data = np.genfromtxt(os.path.join(SML_TEST_LEGACY_ORBITAL_DIR, f), delimiter=",")
             for k, j in enumerate(self.ifg_paths):
                 ifg = Ifg(j)
                 ifg.open()
-                if os.path.basename(j).split('_unw.')[0] == os.path.basename(f).split('_orb_planar_1lks_method1_')[1].split('.')[0]:
+                if os.path.basename(j).split("_unw.")[0] == os.path.basename(f).split("_orb_planar_1lks_method1_")[1].split(".")[0]:
                     count += 1
                     # all numbers equal
-                    np.testing.assert_array_almost_equal(ifg_data,
-                        ifg.phase_data, decimal=2)
+                    np.testing.assert_array_almost_equal(ifg_data, ifg.phase_data, decimal=2)
 
                     # means must also be equal
-                    self.assertAlmostEqual(np.nanmean(ifg_data),
-                        np.nanmean(ifg.phase_data), places=2)
+                    self.assertAlmostEqual(np.nanmean(ifg_data), np.nanmean(ifg.phase_data), places=2)
 
                     # number of nans must equal
-                    self.assertEqual(np.sum(np.isnan(ifg_data)),
-                                np.sum(np.isnan(ifg.phase_data)))
+                    self.assertEqual(np.sum(np.isnan(ifg_data)), np.sum(np.isnan(ifg.phase_data)))
                 ifg.close()
 
         # ensure that we have expected number of matches
@@ -752,6 +739,7 @@ class LegacyComparisonTestsOrbfitMethod2(unittest.TestCase):
     orbfitlksy:    1
 
     """
+
     def setUp(self):
         self.BASE_DIR = tempfile.mkdtemp()
         self.params = cf.get_config_params(TEST_CONF_ROIPAC)
@@ -760,10 +748,8 @@ class LegacyComparisonTestsOrbfitMethod2(unittest.TestCase):
         self.params[cf.ORBITAL_FIT_LOOKS_X] = 1
         self.params[cf.ORBITAL_FIT_LOOKS_Y] = 1
 
-        data_paths = [os.path.join(SML_TEST_TIF, p) for p in
-                      small_ifg_file_list()]
-        self.new_data_paths = [os.path.join(self.BASE_DIR, os.path.basename(d))
-                          for d in data_paths]
+        data_paths = [os.path.join(SML_TEST_TIF, p) for p in small_ifg_file_list()]
+        self.new_data_paths = [os.path.join(self.BASE_DIR, os.path.basename(d)) for d in data_paths]
         for d in data_paths:
             d_copy = os.path.join(self.BASE_DIR, os.path.basename(d))
             shutil.copy(d, d_copy)
@@ -789,26 +775,23 @@ class LegacyComparisonTestsOrbfitMethod2(unittest.TestCase):
     def test_orbital_correction_legacy_equality_orbfit_method_2(self):
         remove_orbital_error(self.ifgs, self.params)
 
-        onlyfiles = [f for f in os.listdir(SML_TEST_LEGACY_ORBITAL_DIR)
-            if os.path.isfile(os.path.join(SML_TEST_LEGACY_ORBITAL_DIR, f))
-            and f.endswith('.csv') and f.__contains__('_method2_')]
+        onlyfiles = [
+            f
+            for f in os.listdir(SML_TEST_LEGACY_ORBITAL_DIR)
+            if os.path.isfile(os.path.join(SML_TEST_LEGACY_ORBITAL_DIR, f)) and f.endswith(".csv") and f.__contains__("_method2_")
+        ]
 
         count = 0
         for i, f in enumerate(onlyfiles):
-            legacy_phase_data = np.genfromtxt(os.path.join(
-                SML_TEST_LEGACY_ORBITAL_DIR, f), delimiter=',')
+            legacy_phase_data = np.genfromtxt(os.path.join(SML_TEST_LEGACY_ORBITAL_DIR, f), delimiter=",")
             for k, j in enumerate(self.ifgs):
-                if os.path.basename(j.data_path).split('_unw.')[0] == \
-                        os.path.basename(f).split(
-                            '_method2_')[1].split('.')[0]:
+                if os.path.basename(j.data_path).split("_unw.")[0] == os.path.basename(f).split("_method2_")[1].split(".")[0]:
                     count += 1
                     # all numbers equal
-                    np.testing.assert_array_almost_equal(legacy_phase_data,
-                        j.phase_data, decimal=3)
+                    np.testing.assert_array_almost_equal(legacy_phase_data, j.phase_data, decimal=3)
 
                     # number of nans must equal
-                    self.assertEqual(np.sum(np.isnan(legacy_phase_data)),
-                                np.sum(np.isnan(j.phase_data)))
+                    self.assertEqual(np.sum(np.isnan(legacy_phase_data)), np.sum(np.isnan(j.phase_data)))
 
         # ensure that we have expected number of matches
         self.assertEqual(count, len(self.ifgs))
@@ -824,18 +807,17 @@ class LegacyComparisonTestsOrbfitMethod2(unittest.TestCase):
 
         remove_orbital_error(self.ifgs, self.params)
 
-        onlyfiles = [f for f in os.listdir(SML_TEST_LEGACY_ORBITAL_DIR)
-            if os.path.isfile(os.path.join(SML_TEST_LEGACY_ORBITAL_DIR, f))
-            and f.endswith('.csv') and f.__contains__('_method2_')]
+        onlyfiles = [
+            f
+            for f in os.listdir(SML_TEST_LEGACY_ORBITAL_DIR)
+            if os.path.isfile(os.path.join(SML_TEST_LEGACY_ORBITAL_DIR, f)) and f.endswith(".csv") and f.__contains__("_method2_")
+        ]
 
         count = 0
         for i, f in enumerate(onlyfiles):
-            legacy_phase_data = np.genfromtxt(os.path.join(
-                SML_TEST_LEGACY_ORBITAL_DIR, f), delimiter=',')
+            legacy_phase_data = np.genfromtxt(os.path.join(SML_TEST_LEGACY_ORBITAL_DIR, f), delimiter=",")
             for k, j in enumerate(self.ifgs):
-                if os.path.basename(j.data_path).split('_unw.')[0] == \
-                        os.path.basename(f).split(
-                            '_method2_')[1].split('.')[0]:
+                if os.path.basename(j.data_path).split("_unw.")[0] == os.path.basename(f).split("_method2_")[1].split(".")[0]:
                     count += 1
                     # # all numbers equal
                     # np.testing.assert_array_almost_equal(legacy_phase_data,
@@ -847,6 +829,7 @@ class LegacyComparisonTestsOrbfitMethod2(unittest.TestCase):
 
         # ensure that we have expected number of matches
         self.assertEqual(count, len(self.ifgs))
+
 
 # TODO: Write tests for various looks and degree combinations
 # TODO: write mpi tests

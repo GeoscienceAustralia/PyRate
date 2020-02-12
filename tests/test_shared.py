@@ -55,13 +55,12 @@ class IfgTests(unittest.TestCase):
     """Unit tests for the Ifg/interferogram class."""
 
     def setUp(self):
-        self.ifg = Ifg(join(SML_TEST_TIF, 'geo_060619-061002_unw.tif'))
+        self.ifg = Ifg(join(SML_TEST_TIF, "geo_060619-061002_unw.tif"))
         self.ifg.open()
         self.ifg.nodata_value = 0
 
     def test_headers_as_attr(self):
-        for a in ['ncols', 'nrows', 'x_first', 'x_step',
-                  'y_first', 'y_step', 'wavelength', 'master', 'slave']:
+        for a in ["ncols", "nrows", "x_first", "x_step", "y_first", "y_step", "wavelength", "master", "slave"]:
             self.assertTrue(getattr(self.ifg, a) is not None)
 
     def test_convert_to_nans(self):
@@ -96,12 +95,12 @@ class IfgTests(unittest.TestCase):
 
     def test_phase_band(self):
         data = self.ifg.phase_band.ReadAsArray()
-        self.assertEqual(data.shape, (72, 47) )
+        self.assertEqual(data.shape, (72, 47))
 
     def test_nan_fraction(self):
         # NB: source data lacks 0 -> NaN conversion
         data = self.ifg.phase_data
-        data = where(data == 0, nan, data) # fake 0 -> nan for the count below
+        data = where(data == 0, nan, data)  # fake 0 -> nan for the count below
 
         # manually count # nan cells
         nans = 0
@@ -123,9 +122,9 @@ class IfgTests(unittest.TestCase):
         # test with tolerance from base 90m cell
         # within 2% of cells over small?
         self.assertTrue(self.ifg.y_size > 88.0)
-        self.assertTrue(self.ifg.y_size < 92.0, 'Got %s' % self.ifg.y_size)
+        self.assertTrue(self.ifg.y_size < 92.0, "Got %s" % self.ifg.y_size)
 
-        width = 76.9 # from nearby PyRate coords
+        width = 76.9  # from nearby PyRate coords
         self.assertTrue(self.ifg.x_size > 0.97 * width)  # ~3% tolerance
         self.assertTrue(self.ifg.x_size < 1.03 * width)
 
@@ -147,9 +146,8 @@ class IfgTests(unittest.TestCase):
 
 
 class IfgIOTests(unittest.TestCase):
-
     def setUp(self):
-        self.ifg = Ifg(join(SML_TEST_TIF, 'geo_070709-070813_unw.tif'))
+        self.ifg = Ifg(join(SML_TEST_TIF, "geo_070709-070813_unw.tif"))
 
     def test_open(self):
         self.assertTrue(self.ifg.dataset is None)
@@ -195,7 +193,6 @@ class IfgIOTests(unittest.TestCase):
         i.close()
         os.remove(dest)
 
-
     def test_write_fails_on_readonly(self):
         # check readonly status is same before
         # and after open() for readonly file
@@ -215,8 +212,7 @@ class IfgIOTests(unittest.TestCase):
         try:
             # NB: self.assertRaises doesn't work here (as it is a property?)
             _ = self.ifg.nan_fraction
-            self.fail("Shouldn't be able to "
-                      "call nan_fraction() with unopened Ifg")
+            self.fail("Shouldn't be able to " "call nan_fraction() with unopened Ifg")
         except RasterException:
             pass
 
@@ -234,10 +230,10 @@ class IfgIOTests(unittest.TestCase):
             assert_array_equal(data[y], row)
 
         # test the data is cached if changed
-        crd = (5,4)
+        crd = (5, 4)
         orig = self.ifg.phase_data[crd]
         self.ifg.phase_data[crd] *= 2
-        nv = self.ifg.phase_data[crd] # pull new value out again
+        nv = self.ifg.phase_data[crd]  # pull new value out again
         self.assertEqual(nv, 2 * orig)
 
 
@@ -253,15 +249,15 @@ class DEMTests(unittest.TestCase):
 
     def test_headers_as_attr(self):
         self.ras.open()
-        attrs = ['ncols', 'nrows', 'x_first', 'x_step', 'y_first', 'y_step' ]
+        attrs = ["ncols", "nrows", "x_first", "x_step", "y_first", "y_step"]
 
         # TODO: are 'projection' and 'datum' attrs needed?
         for a in attrs:
             self.assertTrue(getattr(self.ras, a) is not None)
 
     def test_is_dem(self):
-        self.ras = DEM(join(SML_TEST_TIF, 'geo_060619-061002_unw.tif'))
-        self.assertFalse(hasattr(self.ras, 'datum'))
+        self.ras = DEM(join(SML_TEST_TIF, "geo_060619-061002_unw.tif"))
+        self.assertFalse(hasattr(self.ras, "datum"))
 
     def test_open(self):
         self.assertTrue(self.ras.dataset is None)
@@ -286,7 +282,6 @@ class DEMTests(unittest.TestCase):
 
 
 class WriteUnwTest(unittest.TestCase):
-
     @classmethod
     def setUpClass(cls):
         cls.tif_dir = tempfile.mkdtemp()
@@ -296,20 +291,19 @@ class WriteUnwTest(unittest.TestCase):
         cls.params = cf.get_config_params(cls.test_conf)
         cls.params[cf.OBS_DIR] = common.SML_TEST_GAMMA
         cls.params[cf.PROCESSOR] = 1  # gamma
-        file_list = list(cf.parse_namelist(os.path.join(common.SML_TEST_GAMMA, 'ifms_17')))
-        fd, cls.params[cf.IFG_FILE_LIST] = tempfile.mkstemp(suffix='.conf', dir=cls.tif_dir)
+        file_list = list(cf.parse_namelist(os.path.join(common.SML_TEST_GAMMA, "ifms_17")))
+        fd, cls.params[cf.IFG_FILE_LIST] = tempfile.mkstemp(suffix=".conf", dir=cls.tif_dir)
         os.close(fd)
         # write a short filelist with only 3 gamma unws
-        with open(cls.params[cf.IFG_FILE_LIST], 'w') as fp:
+        with open(cls.params[cf.IFG_FILE_LIST], "w") as fp:
             for f in file_list[:3]:
-                fp.write(os.path.join(common.SML_TEST_GAMMA, f) + '\n')
+                fp.write(os.path.join(common.SML_TEST_GAMMA, f) + "\n")
         cls.params[cf.OUT_DIR] = cls.tif_dir
         cls.params[cf.PARALLEL] = 0
         cls.params[cf.REF_EST_METHOD] = 1
         cls.params[cf.DEM_FILE] = common.SML_TEST_DEM_GAMMA
         # base_unw_paths need to be geotiffed and multilooked by run_prepifg
-        cls.base_unw_paths = cf.original_ifg_paths(
-            cls.params[cf.IFG_FILE_LIST], cls.params[cf.OBS_DIR])
+        cls.base_unw_paths = cf.original_ifg_paths(cls.params[cf.IFG_FILE_LIST], cls.params[cf.OBS_DIR])
         cls.base_unw_paths.append(common.SML_TEST_DEM_GAMMA)
 
         xlks, ylks, crop = cf.transform_params(cls.params)
@@ -319,8 +313,7 @@ class WriteUnwTest(unittest.TestCase):
         # run_prepifg.gamma_prepifg(cls.base_unw_paths, cls.params)
         cls.base_unw_paths.pop()  # removed dem as we don't want it in ifgs
 
-        cls.dest_paths = cf.get_dest_paths(
-            cls.base_unw_paths, crop, cls.params, xlks)
+        cls.dest_paths = cf.get_dest_paths(cls.base_unw_paths, crop, cls.params, xlks)
         cls.ifgs = common.small_data_setup(datafiles=cls.dest_paths)
 
     @classmethod
@@ -405,8 +398,8 @@ class WriteUnwTest(unittest.TestCase):
     #             shared.write_unw_from_data_or_geotiff(geotif_or_data=g, dest_unw=dest_unw, ifg_proc=0)
     #
 
-class GeodesyTests(unittest.TestCase):
 
+class GeodesyTests(unittest.TestCase):
     def test_utm_zone(self):
         # test some different zones (collected manually)
         for lon in [174.0, 176.5, 179.999, 180.0]:
@@ -424,21 +417,19 @@ class GeodesyTests(unittest.TestCase):
         for lon in [0.0, 0.275, 3.925, 5.999]:
             self.assertEqual(31, _utm_zone(lon))
 
-
     def test_cell_size_polar_region(self):
         # Can't have polar area zones: see http://www.dmap.co.uk/utmworld.htm
         for lat in [-80.1, -85.0, -90.0, 84.1, 85.0, 89.9999, 90.0]:
             self.assertRaises(ValueError, cell_size, lat, 0, 0.1, 0.1)
-
 
     def test_cell_size_calc(self):
         # test conversion of X|Y_STEP to X|Y_SIZE
         x_deg = 0.000833333
         y_deg = -x_deg
 
-        approx = 90.0 # x_deg is approx 90m
-        exp_low = approx - (.15 * approx) # assumed tolerance
-        exp_high = approx + (.15 * approx)
+        approx = 90.0  # x_deg is approx 90m
+        exp_low = approx - (0.15 * approx)  # assumed tolerance
+        exp_high = approx + (0.15 * approx)
 
         latlons = [(10.0, 15.0), (-10.0, 15.0), (10.0, -15.0), (-10.0, -15.0), (178.0, 33.0), (-178.0, 33.0), (178.0, -33.0), (-178.0, -33.0)]
 

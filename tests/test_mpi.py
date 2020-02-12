@@ -32,45 +32,51 @@ import core.orbital
 import core.shared
 import common
 import process, prepifg, merge, conv2tif
-from common import (small_data_setup, reconstruct_mst,  reconstruct_stack_rate, SML_TEST_DEM_HDR_GAMMA, pre_prepare_ifgs)
+from common import small_data_setup, reconstruct_mst, reconstruct_stack_rate, SML_TEST_DEM_HDR_GAMMA, pre_prepare_ifgs
 from core import algorithm, ref_phs_est as rpe, mpiops, config as cf, covariance, refpixel
 
-TRAVIS = True if 'TRAVIS' in os.environ else False
+TRAVIS = True if "TRAVIS" in os.environ else False
 
-legacy_maxvar = [15.4156637191772,
-                 2.85829424858093,
-                 34.3486289978027,
-                 2.59190344810486,
-                 3.18510007858276,
-                 3.61054635047913,
-                 1.64398515224457,
-                 14.9226036071777,
-                 5.13451862335205,
-                 6.82901763916016,
-                 10.9644861221313,
-                 14.5026779174805,
-                 29.3710079193115,
-                 8.00364685058594,
-                 2.06328082084656,
-                 5.66661834716797,
-                 5.62802362442017]
+legacy_maxvar = [
+    15.4156637191772,
+    2.85829424858093,
+    34.3486289978027,
+    2.59190344810486,
+    3.18510007858276,
+    3.61054635047913,
+    1.64398515224457,
+    14.9226036071777,
+    5.13451862335205,
+    6.82901763916016,
+    10.9644861221313,
+    14.5026779174805,
+    29.3710079193115,
+    8.00364685058594,
+    2.06328082084656,
+    5.66661834716797,
+    5.62802362442017,
+]
+
 
 @pytest.fixture()
 def tempdir():
     """
     tempdir for tests
     """
+
     def tmpdir():
         return tempfile.mkdtemp()
+
     return tmpdir
 
 
 @pytest.fixture
 def random_filename(tmpdir_factory):
-    def make_random_filename(ext=''):
-        dir = str(tmpdir_factory.mktemp('pyrate').realpath())
-        fname = ''.join(random.choice(string.ascii_lowercase) for _ in range(10))
+    def make_random_filename(ext=""):
+        dir = str(tmpdir_factory.mktemp("pyrate").realpath())
+        fname = "".join(random.choice(string.ascii_lowercase) for _ in range(10))
         return os.path.join(dir, fname + ext)
+
     return make_random_filename
 
 
@@ -87,8 +93,10 @@ def get_config():
     params: dict
         dict of params
     """
+
     def params(conf_file):
         return cf.get_config_params(conf_file)
+
     return params
 
 
@@ -132,7 +140,7 @@ def modify_config(request, tempdir, get_config):
     params_dict[cf.IFG_LKSY] = request.param
     params_dict[cf.OBS_DIR] = tempdir()
     common.copytree(common.SML_TEST_GAMMA, params_dict[cf.OBS_DIR])
-    params_dict[cf.IFG_FILE_LIST] = os.path.join(params_dict[cf.OBS_DIR], 'ifms_17')
+    params_dict[cf.IFG_FILE_LIST] = os.path.join(params_dict[cf.OBS_DIR], "ifms_17")
     params_dict[cf.PARALLEL] = False
     params_dict[cf.APS_CORRECTION] = 0
     yield params_dict
@@ -189,6 +197,7 @@ def get_crop(request):
 #         common.remove_tifs(params_dict[cf.OBS_DIR])
 #
 
+
 @pytest.fixture(params=[1, 2, 5])
 def orbfit_lks(request):
     return request.param
@@ -209,9 +218,11 @@ def _tifs_same(dir1, dir2, tif):
     stack_tif_m = os.path.join(dir2, tif)
     common.assert_ifg_phase_equal(stack_tif_m, stack_tif_s)
 
+
 def test_prepifg_mpi(mpisync, get_config, tempdir, roipac_or_gamma, get_lks, get_crop):
     from common import TEST_CONF_ROIPAC, TEST_CONF_GAMMA
     from os.path import join, basename
+
     if roipac_or_gamma == 1:
         params = get_config(TEST_CONF_GAMMA)
     else:
@@ -222,13 +233,13 @@ def test_prepifg_mpi(mpisync, get_config, tempdir, roipac_or_gamma, get_lks, get
     params[cf.IFG_LKSX], params[cf.IFG_LKSY] = get_lks, get_lks
     params[cf.IFG_CROP_OPT] = get_crop
     if roipac_or_gamma == 1:
-        params[cf.IFG_FILE_LIST] = join(common.SML_TEST_GAMMA, 'ifms_17')
+        params[cf.IFG_FILE_LIST] = join(common.SML_TEST_GAMMA, "ifms_17")
         params[cf.OBS_DIR] = common.SML_TEST_GAMMA
         params[cf.DEM_FILE] = common.SML_TEST_DEM_GAMMA
         params[cf.DEM_HEADER_FILE] = common.SML_TEST_DEM_HDR_GAMMA
     conv2tif.main(params)
     prepifg.main(params)
-    common.remove_tifs(params[cf.OBS_DIR])    
+    common.remove_tifs(params[cf.OBS_DIR])
 
     if mpiops.rank == 0:
         if roipac_or_gamma == 1:

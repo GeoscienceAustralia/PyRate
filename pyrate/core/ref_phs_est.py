@@ -31,6 +31,7 @@ from core.logger import pyratelogger as log
 
 MASTER_PROCESS = 0
 
+
 def est_ref_phase_method2(ifg_paths, params, refpx, refpy):
     """
     Reference phase estimation using method 2. Reference phase is the
@@ -61,38 +62,34 @@ def est_ref_phase_method2(ifg_paths, params, refpx, refpy):
 
         phase_data = [i.phase_data for i in ifgs]
         if params[cf.PARALLEL]:
-            ref_phs = Parallel(n_jobs=params[cf.PROCESSES],
-                               verbose=joblib_log_level(cf.LOG_LEVEL))(
-                delayed(_est_ref_phs_method2)(p, half_chip_size,
-                                              refpx, refpy, thresh)
-                for p in phase_data)
+            ref_phs = Parallel(n_jobs=params[cf.PROCESSES], verbose=joblib_log_level(cf.LOG_LEVEL))(
+                delayed(_est_ref_phs_method2)(p, half_chip_size, refpx, refpy, thresh) for p in phase_data
+            )
 
             for n, ifg in enumerate(ifgs):
                 ifg.phase_data -= ref_phs[n]
         else:
             ref_phs = np.zeros(len(ifgs))
             for n, ifg in enumerate(ifgs):
-                ref_phs[n] = \
-                    _est_ref_phs_method2(phase_data[n], half_chip_size,
-                                         refpx, refpy, thresh)
+                ref_phs[n] = _est_ref_phs_method2(phase_data[n], half_chip_size, refpx, refpy, thresh)
                 ifg.phase_data -= ref_phs[n]
 
         for ifg in ifgs:
             _update_phase_metadata(ifg)
             ifg.close()
         return ref_phs
-    
+
     process_ifgs_paths = mpiops.array_split(ifg_paths)
     ref_phs = _inner(process_ifgs_paths)
-    return ref_phs   
+    return ref_phs
+
 
 def _est_ref_phs_method2(phase_data, half_chip_size, refpx, refpy, thresh):
     """
     Convenience function for ref phs estimate method 2 parallelisation
     """
-    patch = phase_data[refpy - half_chip_size: refpy + half_chip_size + 1,
-                       refpx - half_chip_size: refpx + half_chip_size + 1]
-    patch = np.reshape(patch, newshape=(-1, 1), order='F')
+    patch = phase_data[refpy - half_chip_size : refpy + half_chip_size + 1, refpx - half_chip_size : refpx + half_chip_size + 1]
+    patch = np.reshape(patch, newshape=(-1, 1), order="F")
     nanfrac = np.sum(~np.isnan(patch))
     #    if nanfrac < thresh:
     #        raise ReferencePhaseError('The data window at the reference pixel '
@@ -115,6 +112,7 @@ def est_ref_phase_method1(ifg_paths, params):
     :rtype: ndarray
     :return: ifgs: Reference phase data is removed interferograms in place
     """
+
     def _inner(ifg_paths):
         if isinstance(ifg_paths[0], Ifg):
             proc_ifgs = ifg_paths
@@ -131,13 +129,12 @@ def est_ref_phase_method1(ifg_paths, params):
             ifg_phase_data_sum += ifg.phase_data
 
         comp = np.isnan(ifg_phase_data_sum)
-        comp = np.ravel(comp, order='F')
+        comp = np.ravel(comp, order="F")
         if params[cf.PARALLEL]:
             log.info("Calculating ref phase using multiprocessing")
-            ref_phs = Parallel(n_jobs=params[cf.PROCESSES], 
-                               verbose=joblib_log_level(cf.LOG_LEVEL))(
-                delayed(_est_ref_phs_method1)(p, comp)
-                for p in phase_data)
+            ref_phs = Parallel(n_jobs=params[cf.PROCESSES], verbose=joblib_log_level(cf.LOG_LEVEL))(
+                delayed(_est_ref_phs_method1)(p, comp) for p in phase_data
+            )
             for n, ifg in enumerate(proc_ifgs):
                 ifg.phase_data -= ref_phs[n]
         else:
@@ -157,20 +154,24 @@ def est_ref_phase_method1(ifg_paths, params):
     ref_phs = _inner(process_ifg_paths)
     return ref_phs
 
+
 def _est_ref_phs_method1(phase_data, comp):
     """
     Convenience function for ref phs estimate method 1 parallelisation
     """
-    ifgv = np.ravel(phase_data, order='F')
+    ifgv = np.ravel(phase_data, order="F")
     ifgv[comp == 1] = np.nan
     return nanmedian(ifgv)
+
 
 def _update_phase_metadata(ifg):
     ifg.meta_data[ifc.PYRATE_REF_PHASE] = ifc.REF_PHASE_REMOVED
     ifg.write_modified_phase()
 
+
 class ReferencePhaseError(Exception):
     """
     Generic class for errors in reference phase estimation.
     """
+
     pass

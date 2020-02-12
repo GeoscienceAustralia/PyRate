@@ -20,7 +20,6 @@ import sys
 import os
 import argparse
 from argparse import RawTextHelpFormatter
-
 from constants import CLI_DESCRIPTION
 import conv2tif, prepifg, process, merge
 from core.logger import pyratelogger as log
@@ -29,7 +28,7 @@ import time
 from configuration import Configuration
 
 # Turn off MPI warning
-os.environ['OMPI_MCA_btl_base_warn_component_unused'] = '0'
+os.environ["OMPI_MCA_btl_base_warn_component_unused"] = "0"
 
 
 def conv2tif_handler(config_file):
@@ -74,26 +73,30 @@ def main():
     start_time = time.time()
     log.debug("Starting PyRate")
 
-    parser = argparse.ArgumentParser(prog='pyrate', description=CLI_DESCRIPTION, add_help=True, formatter_class=RawTextHelpFormatter)
-    parser.add_argument('-v', '--verbosity', type=str, default='INFO', choices=['DEBUG', 'INFO', 'WARNING', 'ERROR'], help="Increase output verbosity")
+    parser = argparse.ArgumentParser(prog="pyrate", description=CLI_DESCRIPTION, add_help=True, formatter_class=RawTextHelpFormatter)
+    parser.add_argument(
+        "-v", "--verbosity", type=str, default="INFO", choices=["DEBUG", "INFO", "WARNING", "ERROR"], help="Increase output verbosity"
+    )
 
-    subparsers = parser.add_subparsers(dest='command')
+    subparsers = parser.add_subparsers(dest="command")
     subparsers.required = True
 
-    parser_conv2tif = subparsers.add_parser('conv2tif', help='Convert interferograms to geotiff.', add_help=True)
-    parser_conv2tif.add_argument('-f', '--config_file', action="store", type=str, default=None,  help="Pass configuration file", required=True)
+    parser_conv2tif = subparsers.add_parser("conv2tif", help="Convert interferograms to geotiff.", add_help=True)
+    parser_conv2tif.add_argument("-f", "--config_file", action="store", type=str, default=None, help="Pass configuration file", required=True)
 
-    parser_prepifg = subparsers.add_parser('prepifg', help='Perform multilooking and cropping on geotiffs.', add_help=True)
-    parser_prepifg.add_argument('-f', '--config_file', action="store", type=str, default=None, help="Pass configuration file", required=True)
+    parser_prepifg = subparsers.add_parser("prepifg", help="Perform multilooking and cropping on geotiffs.", add_help=True)
+    parser_prepifg.add_argument("-f", "--config_file", action="store", type=str, default=None, help="Pass configuration file", required=True)
 
-    parser_process = subparsers.add_parser('process', help='Main processing workflow including corrections, time series and stacking computation.', add_help=True)
-    parser_process.add_argument('-f', '--config_file', action="store", type=str, default=None, help="Pass configuration file", required=True)
+    parser_process = subparsers.add_parser(
+        "process", help="Main processing workflow including corrections, time series and stacking computation.", add_help=True
+    )
+    parser_process.add_argument("-f", "--config_file", action="store", type=str, default=None, help="Pass configuration file", required=True)
 
-    parser_merge = subparsers.add_parser('merge', help="Reassemble computed tiles and save as geotiffs.", add_help=True)
-    parser_merge.add_argument('-f', '--config_file', action="store", type=str, default=None, help="Pass configuration file", required=False)
+    parser_merge = subparsers.add_parser("merge", help="Reassemble computed tiles and save as geotiffs.", add_help=True)
+    parser_merge.add_argument("-f", "--config_file", action="store", type=str, default=None, help="Pass configuration file", required=False)
 
-    parser_workflow = subparsers.add_parser('workflow', help="Run all the PyRate processes", add_help=True)
-    parser_workflow.add_argument('-f', '--config_file', action="store", type=str, default=None, help="Pass configuration file", required=False)
+    parser_workflow = subparsers.add_parser("workflow", help="Run all the PyRate processes", add_help=True)
+    parser_workflow.add_argument("-f", "--config_file", action="store", type=str, default=None, help="Pass configuration file", required=False)
 
     args = parser.parse_args()
 

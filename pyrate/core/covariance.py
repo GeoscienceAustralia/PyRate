@@ -60,8 +60,7 @@ def _unique_points(points):  # pragma: no cover
     return vstack([array(u) for u in set(points)])
 
 
-def cvd(ifg_path, params, r_dist, calc_alpha=False,
-        write_vals=False, save_acg=False):
+def cvd(ifg_path, params, r_dist, calc_alpha=False, write_vals=False, save_acg=False):
     """
     Calculate the 1D covariance function of an entire interferogram as the
     radial average of its 2D autocorrelation.
@@ -97,8 +96,7 @@ def cvd(ifg_path, params, r_dist, calc_alpha=False,
     else:
         phase = ifg.phase_data
 
-    maxvar, alpha = cvd_from_phase(phase, ifg, r_dist, calc_alpha,
-                                   save_acg=save_acg, params=params)
+    maxvar, alpha = cvd_from_phase(phase, ifg, r_dist, calc_alpha, save_acg=save_acg, params=params)
 
     if write_vals:
         _add_metadata(ifg, maxvar, alpha)
@@ -124,7 +122,7 @@ def _save_cvd_data(acg, r_dist, ifg_path, outdir):
     Function to save numpy array of autocorrelation data to disk
     """
     data = np.column_stack((acg, r_dist))
-    data_file = join(outdir, 'cvd_data_{b}.npy'.format(b=basename(ifg_path).split('.')[0]))
+    data_file = join(outdir, "cvd_data_{b}.npy".format(b=basename(ifg_path).split(".")[0]))
     np.save(file=data_file, arr=data)
 
 
@@ -149,14 +147,14 @@ def cvd_from_phase(phase, ifg, r_dist, calc_alpha, save_acg=False, params=None):
     :rtype: float
     """
     autocorr_grid = _get_autogrid(phase)
-    acg = reshape(autocorr_grid, phase.size, order='F')
+    acg = reshape(autocorr_grid, phase.size, order="F")
     # Symmetry in image; keep only unique points
     # tmp = _unique_points(zip(acg, r_dist))
     # Sudipta: Unlikely, as unique_point is a search/comparison,
     # whereas keeping 1st half is just numpy indexing.
     # If it is not faster, why was this done differently here?
     # r_dist = r_dist[:int(ceil(phase.size / 2.0)) + nrows]
-    acg = acg[:len(r_dist)]
+    acg = acg[: len(r_dist)]
     # Alternative method to remove duplicate cells
     # r_dist = r_dist[:ceil(len(r_dist)/2)+nlines]
     #  Reason for '+nlines' term unknown
@@ -165,9 +163,9 @@ def cvd_from_phase(phase, ifg, r_dist, calc_alpha, save_acg=False, params=None):
 
     # pick the smallest axis to determine circle search radius
     if (ifg.x_centre * ifg.x_size) < (ifg.y_centre * ifg.y_size):
-        maxdist = (ifg.x_centre+1) * ifg.x_size / DISTFACT
+        maxdist = (ifg.x_centre + 1) * ifg.x_size / DISTFACT
     else:
-        maxdist = (ifg.y_centre+1) * ifg.y_size / DISTFACT
+        maxdist = (ifg.y_centre + 1) * ifg.y_size / DISTFACT
 
     # filter out data where the of lag distance is greater than maxdist
     # r_dist = array([e for e in rorig if e <= maxdist]) #
@@ -178,8 +176,7 @@ def cvd_from_phase(phase, ifg, r_dist, calc_alpha, save_acg=False, params=None):
 
     # optionally save acg vs dist observations to disk
     if save_acg:
-        _save_cvd_data(acg, r_dist[indices_to_keep],
-                       ifg.data_path, params[cf.TMPDIR])
+        _save_cvd_data(acg, r_dist[indices_to_keep], ifg.data_path, params[cf.TMPDIR])
 
     if calc_alpha:
         # bin width for collecting data
@@ -198,20 +195,19 @@ def cvd_from_phase(phase, ifg, r_dist, calc_alpha, save_acg=False, params=None):
         cvdav[1, :] = [mean(acg[rbin == b]) for b in range(maxbin + 1)]
         # calculate best fit function maxvar*exp(-alpha*r_dist)
         alphaguess = 2 / (maxbin * bin_width)
-        alpha = fmin(_pendiffexp, x0=alphaguess, args=(cvdav,), disp=False,
-                     xtol=1e-6, ftol=1e-6)
-        log.debug("1st guess alpha {}, converged "
-                 "alpha: {}".format(alphaguess, alpha))
+        alpha = fmin(_pendiffexp, x0=alphaguess, args=(cvdav,), disp=False, xtol=1e-6, ftol=1e-6)
+        log.debug("1st guess alpha {}, converged " "alpha: {}".format(alphaguess, alpha))
         # maximum variance usually at the zero lag: max(acg[:len(r_dist)])
         return np.max(acg), alpha[0]  # alpha unit 1/km
     else:
         return np.max(acg), None
 
 
-class RDist():
+class RDist:
     """
     RDist class used for caching r_dist during maxvar/alpha computation
     """
+
     def __init__(self, ifg):
         self.r_dist = None
         self.ifg = ifg
@@ -226,13 +222,11 @@ class RDist():
             # r_dist is distance from the center
             # doing np.divide and np.sqrt will improve performance as it keeps
             # calculations in the numpy land
-            self.r_dist = np.divide(np.sqrt(((xx - self.ifg.x_centre) *
-                                             self.ifg.x_size) ** 2 +
-                                            ((yy - self.ifg.y_centre) *
-                                             self.ifg.y_size) ** 2),
-                                    DISTFACT)  # km
-            self.r_dist = reshape(self.r_dist, size, order='F')
-            self.r_dist = self.r_dist[:int(ceil(size / 2.0)) + self.nrows]
+            self.r_dist = np.divide(
+                np.sqrt(((xx - self.ifg.x_centre) * self.ifg.x_size) ** 2 + ((yy - self.ifg.y_centre) * self.ifg.y_size) ** 2), DISTFACT
+            )  # km
+            self.r_dist = reshape(self.r_dist, size, order="F")
+            self.r_dist = self.r_dist[: int(ceil(size / 2.0)) + self.nrows]
 
         return self.r_dist
 
@@ -289,6 +283,7 @@ def get_vcmt(ifgs, maxvar):
 
     if isinstance(ifgs, dict):
         from collections import OrderedDict
+
         ifgs = {k: v for k, v in ifgs.items() if isinstance(v, PrereadIfg)}
         ifgs = OrderedDict(sorted(ifgs.items()))
         ifgs = ifgs.values()

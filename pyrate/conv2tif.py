@@ -76,9 +76,8 @@ def _geotiff_multiprocessing(input_file_name, output_file_name, params):
         elif processor == ROIPAC:
             header = roipac.roipac_header(input_file_name, params)
         else:
-            raise PreprocessError('Processor must be ROI_PAC (0) or GAMMA (1)')
+            raise PreprocessError("Processor must be ROI_PAC (0) or GAMMA (1)")
         shared.write_fullres_geotiff(header, input_file_name, output_file_name, nodata=params[cf.NO_DATA_VALUE])
         log.info("Finished creating: " + str(output_file_name))
     else:
-        log.info("Full resolution GeoTIFF already exists: "+str(output_file_name))
-
+        log.info("Full resolution GeoTIFF already exists: " + str(output_file_name))

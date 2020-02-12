@@ -75,9 +75,9 @@ def chunks(jobs, size):
     # handle edge case: n <<< size
     if n == 0:
         n = 1
-    jobs = [jobs[i * n:(i + 1) * n] for i in range((len(jobs) + n - 1) // n)]
+    jobs = [jobs[i * n : (i + 1) * n] for i in range((len(jobs) + n - 1) // n)]
 
-    for i in range(size-len(jobs)):
+    for i in range(size - len(jobs)):
         jobs.append([])
 
     return jobs

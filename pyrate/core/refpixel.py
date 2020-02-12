@@ -55,17 +55,15 @@ def ref_pixel(ifgs, params):
     parallel = params[cf.PARALLEL]
     if parallel:
         phase_data = [i.phase_data for i in ifgs]
-        mean_sds = Parallel(n_jobs=params[cf.PROCESSES], 
-                            verbose=joblib_log_level(cf.LOG_LEVEL))(
-            delayed(_ref_pixel_multi)(g, half_patch_size, phase_data,
-                                     thresh, params) for g in grid)
+        mean_sds = Parallel(n_jobs=params[cf.PROCESSES], verbose=joblib_log_level(cf.LOG_LEVEL))(
+            delayed(_ref_pixel_multi)(g, half_patch_size, phase_data, thresh, params) for g in grid
+        )
         refy, refx = find_min_mean(mean_sds, grid)
     else:
         phase_data = [i.phase_data for i in ifgs]
         mean_sds = []
         for g in grid:
-            mean_sds.append(_ref_pixel_multi(
-                g, half_patch_size, phase_data, thresh, params))
+            mean_sds.append(_ref_pixel_multi(g, half_patch_size, phase_data, thresh, params))
         refy, refx = find_min_mean(mean_sds, grid)
 
     if refy and refx:
@@ -85,7 +83,7 @@ def find_min_mean(mean_sds, grid):
     :return: Tuple of (refy, refx) with minimum mean
     :rtype: tuple    
     """
-    log.debug('Ranking ref pixel candidates based on mean values')
+    log.debug("Ranking ref pixel candidates based on mean values")
     refp_index = np.nanargmin(mean_sds)
     return grid[refp_index]
 
@@ -105,13 +103,10 @@ def ref_pixel_setup(ifgs_or_paths, params):
     :return: list(product(ysteps, xsteps))
     :rtype: list
     """
-    log.debug('Setting up ref pixel computation')
-    refnx, refny, chipsize, min_frac = params[cf.REFNX], \
-                                       params[cf.REFNY], \
-                                       params[cf.REF_CHIP_SIZE], \
-                                       params[cf.REF_MIN_FRAC]
+    log.debug("Setting up ref pixel computation")
+    refnx, refny, chipsize, min_frac = params[cf.REFNX], params[cf.REFNY], params[cf.REF_CHIP_SIZE], params[cf.REF_MIN_FRAC]
     if len(ifgs_or_paths) < 1:
-        msg = 'Reference pixel search requires 2+ interferograms'
+        msg = "Reference pixel search requires 2+ interferograms"
         raise RefPixelError(msg)
 
     if isinstance(ifgs_or_paths[0], str):
@@ -133,7 +128,7 @@ def ref_pixel_setup(ifgs_or_paths, params):
     rows, cols = head.shape
     ysteps = _step(rows, refny, half_patch_size)
     xsteps = _step(cols, refnx, half_patch_size)
-    log.debug('Ref pixel setup finished')
+    log.debug("Ref pixel setup finished")
     return half_patch_size, thresh, list(product(ysteps, xsteps))
 
 
@@ -148,7 +143,7 @@ def save_ref_pixel_blocks(grid, half_patch_size, ifg_paths, params):
 
     :return: None, file saved to disk
     """
-    log.debug('Saving ref pixel blocks')
+    log.debug("Saving ref pixel blocks")
     outdir = params[cf.TMPDIR]
     for pth in ifg_paths:
         ifg = Ifg(pth)
@@ -157,30 +152,26 @@ def save_ref_pixel_blocks(grid, half_patch_size, ifg_paths, params):
         ifg.convert_to_nans()
         ifg.convert_to_mm()
         for y, x in grid:
-            data = ifg.phase_data[y - half_patch_size:y + half_patch_size + 1,
-                                  x - half_patch_size:x + half_patch_size + 1]
+            data = ifg.phase_data[y - half_patch_size : y + half_patch_size + 1, x - half_patch_size : x + half_patch_size + 1]
 
-            data_file = join(outdir, 'ref_phase_data_{b}_{y}_{x}.npy'.format(
-                    b=os.path.basename(pth).split('.')[0], y=y, x=x))
+            data_file = join(outdir, "ref_phase_data_{b}_{y}_{x}.npy".format(b=os.path.basename(pth).split(".")[0], y=y, x=x))
             np.save(file=data_file, arr=data)
         ifg.close()
-    log.debug('Saved ref pixel blocks')
+    log.debug("Saved ref pixel blocks")
 
 
 def _ref_pixel_mpi(process_grid, half_patch_size, ifgs, thresh, params):
     """
     Convenience function for MPI-enabled ref pixel calculation
     """
-    log.debug('Ref pixel calculation started')
+    log.debug("Ref pixel calculation started")
     mean_sds = []
     for g in process_grid:
-        mean_sds.append(_ref_pixel_multi(g, half_patch_size, ifgs, thresh,
-                                        params))
+        mean_sds.append(_ref_pixel_multi(g, half_patch_size, ifgs, thresh, params))
     return mean_sds
 
 
-def _ref_pixel_multi(g, half_patch_size, phase_data_or_ifg_paths,
-                    thresh, params):
+def _ref_pixel_multi(g, half_patch_size, phase_data_or_ifg_paths, thresh, params):
     """
     Convenience function for ref pixel optimisation
     """
@@ -192,15 +183,10 @@ def _ref_pixel_multi(g, half_patch_size, phase_data_or_ifg_paths,
         data = []
         output_dir = params[cf.TMPDIR]
         for p in phase_data_or_ifg_paths:
-            data_file = os.path.join(output_dir,
-                                     'ref_phase_data_{b}_{y}_{x}.npy'.format(
-                                         b=os.path.basename(p).split('.')[0],
-                                         y=y, x=x))
+            data_file = os.path.join(output_dir, "ref_phase_data_{b}_{y}_{x}.npy".format(b=os.path.basename(p).split(".")[0], y=y, x=x))
             data.append(np.load(file=data_file))
     else:  # phase_data_or_ifg is phase_data list
-        data = [p[y - half_patch_size:y + half_patch_size + 1,
-                  x - half_patch_size:x + half_patch_size + 1]
-                for p in phase_data_or_ifg_paths]
+        data = [p[y - half_patch_size : y + half_patch_size + 1, x - half_patch_size : x + half_patch_size + 1] for p in phase_data_or_ifg_paths]
     valid = [nsum(~isnan(d)) > thresh for d in data]
     if all(valid):  # ignore if 1+ ifgs have too many incoherent cells
         sd = [std(i[~isnan(i)]) for i in data]
@@ -231,7 +217,7 @@ def _step(dim, ref, radius):
     # max_dim = dim - (2*radius)  # max possible number for refn(x|y)
     # step = max_dim // (ref-1)
     step_size = dim // ref
-    return range(radius, dim-radius, step_size)
+    return range(radius, dim - radius, step_size)
 
 
 def _validate_chipsize(chipsize, head):
@@ -239,12 +225,12 @@ def _validate_chipsize(chipsize, head):
     Sanity check min chipsize
     """
     if chipsize is None:
-        raise cf.ConfigException('Chipsize is None')
+        raise cf.ConfigException("Chipsize is None")
 
     if chipsize < 3 or chipsize > head.ncols or (chipsize % 2 == 0):
         msg = "Chipsize setting must be >=3 and at least <= grid width"
         raise ValueError(msg)
-    log.debug('Chipsize validation successful')
+    log.debug("Chipsize validation successful")
 
 
 def _validate_minimum_fraction(min_frac):
@@ -252,7 +238,7 @@ def _validate_minimum_fraction(min_frac):
     Sanity check min fraction
     """
     if min_frac is None:
-        raise cf.ConfigException('Minimum fraction is None')
+        raise cf.ConfigException("Minimum fraction is None")
 
     if min_frac < 0.0 or min_frac > 1.0:
         raise ValueError("Minimum fraction setting must be >= 0.0 and <= 1.0 ")
@@ -263,23 +249,23 @@ def _validate_search_win(refnx, refny, chipsize, head):
     Sanity check X|Y steps
     """
     if refnx is None:
-        raise cf.ConfigException('refnx is None')
+        raise cf.ConfigException("refnx is None")
 
-    max_width = (head.ncols - (chipsize-1))
+    max_width = head.ncols - (chipsize - 1)
     if refnx < 1 or refnx > max_width:
         msg = "Invalid refnx setting, must be > 0 and <= %s"
         raise ValueError(msg % max_width)
 
     if refny is None:
-        raise cf.ConfigException('refny is None')
+        raise cf.ConfigException("refny is None")
 
-    max_rows = (head.nrows - (chipsize-1))
+    max_rows = head.nrows - (chipsize - 1)
     if refny < 1 or refny > max_rows:
         msg = "Invalid refny setting, must be > 0 and <= %s"
         raise ValueError(msg % max_rows)
 
 
 class RefPixelError(Exception):
-    '''
+    """
     Generic exception for reference pixel errors.
-    '''
+    """

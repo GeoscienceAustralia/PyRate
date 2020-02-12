@@ -32,7 +32,7 @@ from core import config as cf
 from core.shared import IfgPart, create_tiles
 from core.shared import joblib_log_level
 
-np.seterr(invalid='ignore')  # stops RuntimeWarning in nan conversion
+np.seterr(invalid="ignore")  # stops RuntimeWarning in nan conversion
 
 # TODO: may need to implement memory saving row-by-row access
 # TODO: document weighting by either Nan fraction OR variance
@@ -58,16 +58,14 @@ def mst_from_ifgs(ifgs):
     :rtype: list
     """
 
-    edges_with_weights_for_networkx = [(i.master, i.slave, i.nan_fraction)
-                                       for i in ifgs]
+    edges_with_weights_for_networkx = [(i.master, i.slave, i.nan_fraction) for i in ifgs]
     g_nx = _build_graph_networkx(edges_with_weights_for_networkx)
     mst = nx.minimum_spanning_tree(g_nx)
     # mst_edges, is tree?, number of trees
     edges = mst.edges()
     ifg_sub = [ifg_date_index_lookup(ifgs, d) for d in edges]
     mst_ifgs = [i for k, i in enumerate(ifgs) if k in ifg_sub]
-    return mst.edges(), nx.is_tree(mst), \
-        nx.number_connected_components(mst), mst_ifgs
+    return mst.edges(), nx.is_tree(mst), nx.number_connected_components(mst), mst_ifgs
 
 
 def mst_parallel(ifgs, params):
@@ -81,7 +79,7 @@ def mst_parallel(ifgs, params):
     :rtype: ndarray
     """
 
-    log.info('Calculating MST in tiles')
+    log.info("Calculating MST in tiles")
     ncpus = params[cf.PROCESSES]
     no_ifgs = len(ifgs)
     no_y, no_x = ifgs[0].phase_data.shape
@@ -95,21 +93,16 @@ def mst_parallel(ifgs, params):
     result = empty(shape=(no_ifgs, no_y, no_x), dtype=np.bool)
 
     if params[cf.PARALLEL]:
-        log.info('Calculating MST using {} tiles in parallel using {} ' \
-                 'processes'.format(no_tiles, ncpus))
-        t_msts = Parallel(n_jobs=params[cf.PROCESSES], 
-                          verbose=joblib_log_level(cf.LOG_LEVEL))(
-            delayed(mst_multiprocessing)(t, ifg_paths, params)
-            for t in tiles)
+        log.info("Calculating MST using {} tiles in parallel using {} " "processes".format(no_tiles, ncpus))
+        t_msts = Parallel(n_jobs=params[cf.PROCESSES], verbose=joblib_log_level(cf.LOG_LEVEL))(
+            delayed(mst_multiprocessing)(t, ifg_paths, params) for t in tiles
+        )
         for k, tile in enumerate(tiles):
-            result[:, tile.top_left_y:tile.bottom_right_y,
-                   tile.top_left_x: tile.bottom_right_x] = t_msts[k]
+            result[:, tile.top_left_y : tile.bottom_right_y, tile.top_left_x : tile.bottom_right_x] = t_msts[k]
     else:
-        log.info('Calculating MST using {} tiles in serial'.format(no_tiles))
+        log.info("Calculating MST using {} tiles in serial".format(no_tiles))
         for k, tile in enumerate(tiles):
-            result[:, tile.top_left_y:tile.bottom_right_y,
-                   tile.top_left_x: tile.bottom_right_x] = \
-                mst_multiprocessing(tile, ifg_paths, params)
+            result[:, tile.top_left_y : tile.bottom_right_y, tile.top_left_x : tile.bottom_right_x] = mst_multiprocessing(tile, ifg_paths, params)
 
     return result
 
@@ -127,11 +120,11 @@ def mst_multiprocessing(tile, ifgs_or_paths, preread_ifgs=None, params=None):
         valid ifg connections
     :rtype: ndarray
     """
-    #The memory requirement during MPI MST computation is determined by the
-    #number of interferograms times size of IfgPart. Note that we need all
-    #interferogram header information (like masters/slave dates) for MST
-    #computation. To manage memory we need smaller tiles (IfgPart) as number
-    #of interferograms increases
+    # The memory requirement during MPI MST computation is determined by the
+    # number of interferograms times size of IfgPart. Note that we need all
+    # interferogram header information (like masters/slave dates) for MST
+    # computation. To manage memory we need smaller tiles (IfgPart) as number
+    # of interferograms increases
 
     ifg_parts = [IfgPart(p, tile, preread_ifgs, params) for p in ifgs_or_paths]
     return mst_boolean_array(ifg_parts)
@@ -156,17 +149,16 @@ def mst_boolean_array(ifgs):
     :return: result: Array of booleans representing valid ifg connections
     :rtype: ndarray
     """
-    #The MSTs are stripped of connecting edge info, leaving just the ifgs.
+    # The MSTs are stripped of connecting edge info, leaving just the ifgs.
     nifgs = len(ifgs)
     ny, nx = ifgs[0].phase_data.shape
     result = empty(shape=(nifgs, ny, nx), dtype=np.bool)
-    
+
     for y, x, mst in mst_matrix_networkx(ifgs):
         # mst is a list of datetime.date tuples
         if isinstance(mst, EdgeView):
             ifg_sub = [ifg_date_index_lookup(ifgs, d) for d in mst]
-            ifg_sub_bool = [True if i in ifg_sub else False
-                            for i in range(nifgs)]  # boolean conversion
+            ifg_sub_bool = [True if i in ifg_sub else False for i in range(nifgs)]  # boolean conversion
             result[:, y, x] = np.array(ifg_sub_bool)
         else:
             result[:, y, x] = np.zeros(nifgs, dtype=bool)
@@ -194,8 +186,8 @@ def _mst_matrix_as_array(ifgs):
     """
     Alternative method for producing 3D MST array
     """
-    #Currently not used
-    #Each pixel contains an MST (with connecting edges etc).
+    # Currently not used
+    # Each pixel contains an MST (with connecting edges etc).
     mst_result = empty(shape=ifgs[0].phase_data.shape, dtype=object)
 
     for y, x, mst in mst_matrix_networkx(ifgs):

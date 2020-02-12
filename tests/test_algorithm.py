@@ -77,7 +77,7 @@ class AlgorithmTests(TestCase):
     def test_phase_conversion():
         # ROIPAC interferograms in units of radians, verify conversion to mm
         xs, ys = 5, 7
-        data = (np.arange(xs * ys) - 1.7) * 0.1 # fake a range of values
+        data = (np.arange(xs * ys) - 1.7) * 0.1  # fake a range of values
         data = np.where(data == 0, np.nan, data)
         wavelen = 0.0562356424
         exp = (data * wavelen * 1000) / (4 * pi)
@@ -158,12 +158,24 @@ class EpochsTests(TestCase):
 
     def test_get_epochs(self):
         def str2date(s):
-            segs = s[:4], s[4:6], s[6:] # year, month, day
+            segs = s[:4], s[4:6], s[6:]  # year, month, day
             return date(*[int(sg) for sg in segs])
 
-        raw_date = ['20060619', '20060828', '20061002', '20061106', '20061211',
-                    '20070115', '20070219', '20070326', '20070430', '20070604',
-                    '20070709', '20070813', '20070917']
+        raw_date = [
+            "20060619",
+            "20060828",
+            "20061002",
+            "20061106",
+            "20061211",
+            "20070115",
+            "20070219",
+            "20070326",
+            "20070430",
+            "20070604",
+            "20070709",
+            "20070813",
+            "20070917",
+        ]
 
         exp_dates = [str2date(d) for d in raw_date]
         exp_repeat = [1, 1, 3, 3, 4, 3, 3, 3, 3, 3, 3, 2, 2]
@@ -185,8 +197,7 @@ class EpochsTests(TestCase):
         ifgs = common.small5_mock_ifgs()
         for i in ifgs:
             i.nodata_value = 0
-        dates = [date(2006, 8, 28), date(2006, 11, 6), date(2006, 12, 11),
-                 date(2007, 1, 15), date(2007, 3, 26), date(2007, 9, 17)]
+        dates = [date(2006, 8, 28), date(2006, 11, 6), date(2006, 12, 11), date(2007, 1, 15), date(2007, 3, 26), date(2007, 9, 17)]
 
         self.assertEqual(dates, sorted(set(get_all_epochs(ifgs))))
 

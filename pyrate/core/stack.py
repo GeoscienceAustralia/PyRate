@@ -153,7 +153,7 @@ def _stack_rate_by_pixel(row, col, mst, nsig, obs, pthresh, span, vcmt):
 
         # Factor the design matrix, incorporate covariances or weights into the
         # system of equations, and transform the response vector.
-        Q, R, _ = qr(A, mode='economic', pivoting=True)
+        Q, R, _ = qr(A, mode="economic", pivoting=True)
         z = Q.conj().transpose().dot(b)
 
         # Compute the Lstsq coefficient for the velocity

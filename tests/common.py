@@ -35,6 +35,7 @@ from osgeo import gdalconst
 from osgeo import gdal_array
 
 import sys
+
 PYRATE_MODULE_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "pyrate")
 TEST_MODULE_PATH = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(PYRATE_MODULE_PATH)
@@ -48,37 +49,36 @@ PYRATEPATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TEMPDIR = tempfile.gettempdir()
 BASE_TEST = join(PYRATEPATH, "tests", "test_data")
 SML_TEST_DIR = join(BASE_TEST, "small_test")
-SML_TEST_OBS = join(SML_TEST_DIR, 'roipac_obs')  # roipac processed unws
-SML_TEST_OUT = join(SML_TEST_DIR, 'out')
-SML_TEST_TIF = join(SML_TEST_DIR, 'tif')
-SML_TEST_GAMMA = join(SML_TEST_DIR, 'gamma_obs')  # gamma processed unws
-SML_TEST_CONF = join(SML_TEST_DIR, 'conf')
-SML_TEST_GAMMA_HEADER_LIST = join(SML_TEST_GAMMA, 'headers')
+SML_TEST_OBS = join(SML_TEST_DIR, "roipac_obs")  # roipac processed unws
+SML_TEST_OUT = join(SML_TEST_DIR, "out")
+SML_TEST_TIF = join(SML_TEST_DIR, "tif")
+SML_TEST_GAMMA = join(SML_TEST_DIR, "gamma_obs")  # gamma processed unws
+SML_TEST_CONF = join(SML_TEST_DIR, "conf")
+SML_TEST_GAMMA_HEADER_LIST = join(SML_TEST_GAMMA, "headers")
 
-SML_TEST_DEM_DIR = join(SML_TEST_DIR, 'dem')
-SML_TEST_LEGACY_PREPIFG_DIR = join(SML_TEST_DIR, 'prepifg_output')
-SML_TEST_LEGACY_ORBITAL_DIR = join(SML_TEST_DIR,
-                                   'orbital_error_correction')
-SML_TEST_DEM_ROIPAC = join(SML_TEST_DEM_DIR, 'roipac_test_trimmed.dem')
-SML_TEST_DEM_GAMMA = join(SML_TEST_GAMMA, '20060619_utm.dem')
-SML_TEST_INCIDENCE = join(SML_TEST_GAMMA, '20060619_utm.inc')
-SML_TEST_ELEVATION = join(SML_TEST_GAMMA, '20060619_utm.lv_theta')
-SML_TEST_DEM_HDR_GAMMA = join(SML_TEST_GAMMA, '20060619_utm_dem.par')
-SML_TEST_DEM_HDR = join(SML_TEST_DEM_DIR, 'roipac_test_trimmed.dem.rsc')
-SML_TEST_DEM_TIF = join(SML_TEST_DEM_DIR, 'roipac_test_trimmed.tif')
+SML_TEST_DEM_DIR = join(SML_TEST_DIR, "dem")
+SML_TEST_LEGACY_PREPIFG_DIR = join(SML_TEST_DIR, "prepifg_output")
+SML_TEST_LEGACY_ORBITAL_DIR = join(SML_TEST_DIR, "orbital_error_correction")
+SML_TEST_DEM_ROIPAC = join(SML_TEST_DEM_DIR, "roipac_test_trimmed.dem")
+SML_TEST_DEM_GAMMA = join(SML_TEST_GAMMA, "20060619_utm.dem")
+SML_TEST_INCIDENCE = join(SML_TEST_GAMMA, "20060619_utm.inc")
+SML_TEST_ELEVATION = join(SML_TEST_GAMMA, "20060619_utm.lv_theta")
+SML_TEST_DEM_HDR_GAMMA = join(SML_TEST_GAMMA, "20060619_utm_dem.par")
+SML_TEST_DEM_HDR = join(SML_TEST_DEM_DIR, "roipac_test_trimmed.dem.rsc")
+SML_TEST_DEM_TIF = join(SML_TEST_DEM_DIR, "roipac_test_trimmed.tif")
 
-SML_TEST_COH_DIR = join(SML_TEST_DIR, 'coherence')
-SML_TEST_COH_LIST = join(SML_TEST_COH_DIR, 'coherence_17')
+SML_TEST_COH_DIR = join(SML_TEST_DIR, "coherence")
+SML_TEST_COH_LIST = join(SML_TEST_COH_DIR, "coherence_17")
 
-TEST_CONF_ROIPAC = join(SML_TEST_CONF, 'pyrate_roipac_test.conf')
-TEST_CONF_GAMMA = join(SML_TEST_CONF, 'pyrate_gamma_test.conf')
+TEST_CONF_ROIPAC = join(SML_TEST_CONF, "pyrate_roipac_test.conf")
+TEST_CONF_GAMMA = join(SML_TEST_CONF, "pyrate_gamma_test.conf")
 
-PREP_TEST_DIR = join(BASE_TEST, 'prepifg')
-PREP_TEST_OBS = join(PREP_TEST_DIR, 'obs')
-PREP_TEST_TIF = join(PREP_TEST_DIR, 'tif')
+PREP_TEST_DIR = join(BASE_TEST, "prepifg")
+PREP_TEST_OBS = join(PREP_TEST_DIR, "obs")
+PREP_TEST_TIF = join(PREP_TEST_DIR, "tif")
 
-HEADERS_TEST_DIR = join(BASE_TEST, 'headers')
-INCID_TEST_DIR = join(BASE_TEST, 'incidence')
+HEADERS_TEST_DIR = join(BASE_TEST, "headers")
+INCID_TEST_DIR = join(BASE_TEST, "incidence")
 
 GAMMA_TEST_DIR = join(BASE_TEST, "gamma")
 
@@ -97,29 +97,31 @@ geo_061106-070326.unw
 geo_070326-070917.unw
 """
 
-IFMS16 = ['geo_060619-061002_unw.tif',
-        'geo_060828-061211_unw.tif',
-        'geo_061002-070219_unw.tif',
-        'geo_061002-070430_unw.tif',
-        'geo_061106-061211_unw.tif',
-        'geo_061106-070115_unw.tif',
-        'geo_061106-070326_unw.tif',
-        'geo_061211-070709_unw.tif',
-        'geo_061211-070813_unw.tif',
-        'geo_070115-070326_unw.tif',
-        'geo_070115-070917_unw.tif',
-        'geo_070219-070430_unw.tif',
-        'geo_070219-070604_unw.tif',
-        'geo_070326-070917_unw.tif',
-        'geo_070430-070604_unw.tif',
-        'geo_070604-070709_unw.tif']
-
+IFMS16 = [
+    "geo_060619-061002_unw.tif",
+    "geo_060828-061211_unw.tif",
+    "geo_061002-070219_unw.tif",
+    "geo_061002-070430_unw.tif",
+    "geo_061106-061211_unw.tif",
+    "geo_061106-070115_unw.tif",
+    "geo_061106-070326_unw.tif",
+    "geo_061211-070709_unw.tif",
+    "geo_061211-070813_unw.tif",
+    "geo_070115-070326_unw.tif",
+    "geo_070115-070917_unw.tif",
+    "geo_070219-070430_unw.tif",
+    "geo_070219-070604_unw.tif",
+    "geo_070326-070917_unw.tif",
+    "geo_070430-070604_unw.tif",
+    "geo_070604-070709_unw.tif",
+]
 
 
 def remove_tifs(path):
-    tifs = glob.glob(os.path.join(path, '*.tif'))
+    tifs = glob.glob(os.path.join(path, "*.tif"))
     for tif in tifs:
         os.remove(tif)
+
 
 def small_data_setup(datafiles=None, is_dir=False):
     """Returns Ifg objs for the files in the small test dir
@@ -134,8 +136,8 @@ def small_data_setup(datafiles=None, is_dir=False):
             datafiles = glob.glob(join(SML_TEST_TIF, "*.tif"))
     datafiles.sort()
     ifgs = [Ifg(i) for i in datafiles]
-    
-    for i in ifgs: 
+
+    for i in ifgs:
         i.open()
         i.nodata_value = 0
 
@@ -170,8 +172,7 @@ def small5_ifgs():
     """Convenience func to return a subset of 5 linked Ifgs from the testdata"""
     BASE_DIR = tempfile.mkdtemp()
     data_paths = [os.path.join(SML_TEST_TIF, p) for p in IFMS5.split()]
-    new_data_paths = [os.path.join(BASE_DIR, os.path.basename(d))
-                      for d in data_paths]
+    new_data_paths = [os.path.join(BASE_DIR, os.path.basename(d)) for d in data_paths]
     for d in data_paths:
         shutil.copy(d, os.path.join(BASE_DIR, os.path.basename(d)))
 
@@ -179,7 +180,7 @@ def small5_ifgs():
 
 
 def small5_mock_ifgs(xs=3, ys=4):
-    '''Returns smaller mocked version of small Ifgs for testing'''
+    """Returns smaller mocked version of small Ifgs for testing"""
     ifgs = small5_ifgs()
     for i in ifgs:
         i.open()
@@ -209,11 +210,11 @@ class MockIfg(object):
         self.y_step = ifg.y_step
         self.num_cells = self.ncols * self.nrows
         self.phase_data = ifg.phase_data[:ysize, :xsize]
-        self.nan_fraction = ifg.nan_fraction # use existing overall nan fraction
+        self.nan_fraction = ifg.nan_fraction  # use existing overall nan fraction
         self.is_open = False
 
     def __repr__(self, *args, **kwargs):
-        return 'MockIfg: %s -> %s' % (self.master, self.slave)
+        return "MockIfg: %s -> %s" % (self.master, self.slave)
 
     def open(self):
         # TODO: could move some of the init code here to mimic Ifgs
@@ -227,7 +228,7 @@ class MockIfg(object):
     def shape(self):
         return self.nrows, self.ncols
 
-    def write_modified_phase(self):  #dummy
+    def write_modified_phase(self):  # dummy
         pass
 
     def close(self):  # dummy
@@ -237,27 +238,24 @@ class MockIfg(object):
 def reconstruct_stack_rate(shape, tiles, output_dir, out_type):
     rate = np.zeros(shape=shape, dtype=np.float32)
     for t in tiles:
-        rate_file = os.path.join(output_dir, out_type +
-                                 '_{}.npy'.format(t.index))
+        rate_file = os.path.join(output_dir, out_type + "_{}.npy".format(t.index))
         rate_tile = np.load(file=rate_file)
-        rate[t.top_left_y:t.bottom_right_y,
-             t.top_left_x:t.bottom_right_x] = rate_tile
+        rate[t.top_left_y : t.bottom_right_y, t.top_left_x : t.bottom_right_x] = rate_tile
     return rate
 
 
 def reconstruct_mst(shape, tiles, output_dir):
-    mst_file_0 = os.path.join(output_dir, 'mst_mat_{}.npy'.format(0))
+    mst_file_0 = os.path.join(output_dir, "mst_mat_{}.npy".format(0))
     shape0 = np.load(mst_file_0).shape[0]
 
     mst = np.empty(shape=((shape0,) + shape), dtype=np.float32)
     for i, t in enumerate(tiles):
-        mst_file_n = os.path.join(output_dir, 'mst_mat_{}.npy'.format(i))
-        mst[:, t.top_left_y:t.bottom_right_y,
-                t.top_left_x: t.bottom_right_x] = np.load(mst_file_n)
+        mst_file_n = os.path.join(output_dir, "mst_mat_{}.npy".format(i))
+        mst[:, t.top_left_y : t.bottom_right_y, t.top_left_x : t.bottom_right_x] = np.load(mst_file_n)
     return mst
 
 
-def move_files(source_dir, dest_dir, file_type='*.tif'):
+def move_files(source_dir, dest_dir, file_type="*.tif"):
     for filename in glob.glob(os.path.join(source_dir, file_type)):
         shutil.move(filename, dest_dir)
 
@@ -288,7 +286,7 @@ def mst_calculation(ifg_paths_or_instance, params):
         ifgs = pre_prepare_ifgs(ifg_paths_or_instance, params)
         mst_grid = mst.mst_parallel(ifgs, params)
         # write mst output to a file
-        mst_mat_binary_file = join(params[cf.OUT_DIR], 'mst_mat')
+        mst_mat_binary_file = join(params[cf.OUT_DIR], "mst_mat")
         np.save(file=mst_mat_binary_file, arr=mst_grid)
 
         for i in ifgs:
@@ -297,8 +295,7 @@ def mst_calculation(ifg_paths_or_instance, params):
     return None
 
 
-def get_nml(ifg_list_instance, nodata_value,
-            nan_conversion=False):
+def get_nml(ifg_list_instance, nodata_value, nan_conversion=False):
     """
     :param xxx(eg str, tuple, int, float...) ifg_list_instance: xxxx
     :param float nodata_value: No data value in image
@@ -321,19 +318,18 @@ def get_nml(ifg_list_instance, nodata_value,
 
 def compute_time_series(ifgs, mst_grid, params, vcmt):
     # Calculate time series
-    tsincr, tscum, tsvel = calculate_time_series(
-        ifgs, params, vcmt=vcmt, mst=mst_grid)
+    tsincr, tscum, tsvel = calculate_time_series(ifgs, params, vcmt=vcmt, mst=mst_grid)
 
     # tsvel_file = join(params[cf.OUT_DIR], 'tsvel.npy')
-    tsincr_file = join(params[cf.OUT_DIR], 'tsincr.npy')
-    tscum_file = join(params[cf.OUT_DIR], 'tscum.npy')
+    tsincr_file = join(params[cf.OUT_DIR], "tsincr.npy")
+    tscum_file = join(params[cf.OUT_DIR], "tscum.npy")
     np.save(file=tsincr_file, arr=tsincr)
     np.save(file=tscum_file, arr=tscum)
     # np.save(file=tsvel_file, arr=tsvel)
 
     # TODO: write tests for these functions
-    write_timeseries_geotiff(ifgs, params, tsincr, pr_type='tsincr')
-    write_timeseries_geotiff(ifgs, params, tscum, pr_type='tscuml')
+    write_timeseries_geotiff(ifgs, params, tsincr, pr_type="tsincr")
+    write_timeseries_geotiff(ifgs, params, tscum, pr_type="tscuml")
     # write_timeseries_geotiff(ifgs, params, tsvel, pr_type='tsvel')
     return tsincr, tscum, tsvel
 
@@ -355,11 +351,10 @@ def write_timeseries_geotiff(ifgs, params, tsincr, pr_type):
 
     for i in range(tsincr.shape[2]):
         md[ifc.EPOCH_DATE] = epochlist.dates[i + 1]
-        md['SEQUENCE_POSITION'] = i+1  # sequence position
+        md["SEQUENCE_POSITION"] = i + 1  # sequence position
 
         data = tsincr[:, :, i]
-        dest = join(params[cf.OUT_DIR], pr_type + "_" +
-                    str(epochlist.dates[i + 1]) + ".tif")
+        dest = join(params[cf.OUT_DIR], pr_type + "_" + str(epochlist.dates[i + 1]) + ".tif")
         md[ifc.DATA_TYPE] = pr_type
         write_output_geotiff(md, gt, wkt, data, dest, np.nan)
 
@@ -369,7 +364,7 @@ def calculate_stacked_rate(ifgs, params, vcmt, mst_mat=None):
     res = stack.stack_rate(ifgs, params, vcmt, mst_mat)
     for r in res:
         if r is None:
-            raise ValueError('TODO: bad value')
+            raise ValueError("TODO: bad value")
 
     rate, error, samples = res
     write_stack_tifs(ifgs, params, res)
@@ -396,9 +391,9 @@ def write_stack_tifs(ifgs, params, res):
 
 
 def write_stack_numpy_files(error, rate, samples, params):
-    rate_file = join(params[cf.OUT_DIR], 'rate.npy')
-    error_file = join(params[cf.OUT_DIR], 'error.npy')
-    samples_file = join(params[cf.OUT_DIR], 'samples.npy')
+    rate_file = join(params[cf.OUT_DIR], "rate.npy")
+    error_file = join(params[cf.OUT_DIR], "error.npy")
+    samples_file = join(params[cf.OUT_DIR], "samples.npy")
     np.save(file=rate_file, arr=rate)
     np.save(file=error_file, arr=error)
     np.save(file=samples_file, arr=samples)
@@ -449,5 +444,5 @@ def pre_prepare_ifgs(ifg_paths, params):
         if not i.is_open:
             i.open(readonly=False)
         nan_and_mm_convert(i, params)
-    log.info('Opened ifg for reading')
+    log.info("Opened ifg for reading")
     return ifgs

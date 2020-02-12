@@ -35,15 +35,8 @@ from . import common
 
 import core.ifgconstants as ifc
 from core import shared, roipac
-from core.config import (
-    INPUT_IFG_PROJECTION,
-    NO_DATA_VALUE,
-    OBS_DIR,
-    OUT_DIR,
-    IFG_FILE_LIST,
-    PROCESSOR,
-    DEM_HEADER_FILE
-)
+from core.config import INPUT_IFG_PROJECTION, NO_DATA_VALUE, OBS_DIR, OUT_DIR, IFG_FILE_LIST, PROCESSOR, DEM_HEADER_FILE
+
 # from pyrate.scripts.conv2tif import main as roipacMain
 from core.shared import GeotiffException
 from core.shared import write_fullres_geotiff
@@ -59,15 +52,15 @@ if not exists(HEADERS_TEST_DIR):
     sys.exit("ERROR: Missing the 'headers' data for unittests\n")
 
 # constants
-SHORT_HEADER_PATH = join(SML_TEST_OBS, 'geo_060619-061002.unw.rsc')
+SHORT_HEADER_PATH = join(SML_TEST_OBS, "geo_060619-061002.unw.rsc")
 FULL_HEADER_PATH = join(HEADERS_TEST_DIR, "geo_060619-060828.unw.rsc")
 
 
 class RoipacCommandLine(unittest.TestCase):
     def setUp(self):
         random_text = tempfile.mktemp()
-        self.confFile = os.path.join(TEMPDIR, '{}/roipac_test.cfg'.format(random_text))
-        self.ifgListFile = os.path.join(TEMPDIR, '{}/roipac_ifg.list'.format(random_text))
+        self.confFile = os.path.join(TEMPDIR, "{}/roipac_test.cfg".format(random_text))
+        self.ifgListFile = os.path.join(TEMPDIR, "{}/roipac_ifg.list".format(random_text))
         self.base_dir = os.path.dirname(self.confFile)
         shared.mkdir_p(self.base_dir)
         self.hdr = SML_TEST_DEM_HDR
@@ -75,30 +68,33 @@ class RoipacCommandLine(unittest.TestCase):
     def tearDown(self):
         def rmPaths(paths):
             for path in paths:
-                try: os.remove(path)
-                except: pass
+                try:
+                    os.remove(path)
+                except:
+                    pass
 
         rmPaths(self.expPaths)
         shutil.rmtree(self.base_dir)
 
     def makeInputFiles(self, data, projection):
-        with open(self.confFile, 'w') as conf:
-            conf.write('{}: {}\n'.format(DEM_HEADER_FILE, self.hdr))
-            conf.write('{}: {}\n'.format(INPUT_IFG_PROJECTION, projection))
-            conf.write('{}: {}\n'.format(NO_DATA_VALUE, '0.0'))
-            conf.write('{}: {}\n'.format(OBS_DIR, self.base_dir))
-            conf.write('{}: {}\n'.format(OUT_DIR, self.base_dir))
-            conf.write('{}: {}\n'.format(IFG_FILE_LIST, self.ifgListFile))
-            conf.write('{}: {}\n'.format(PROCESSOR, '0'))
-        with open(self.ifgListFile, 'w') as ifgl:
-            ifgl.write('\n'.join(data))
+        with open(self.confFile, "w") as conf:
+            conf.write("{}: {}\n".format(DEM_HEADER_FILE, self.hdr))
+            conf.write("{}: {}\n".format(INPUT_IFG_PROJECTION, projection))
+            conf.write("{}: {}\n".format(NO_DATA_VALUE, "0.0"))
+            conf.write("{}: {}\n".format(OBS_DIR, self.base_dir))
+            conf.write("{}: {}\n".format(OUT_DIR, self.base_dir))
+            conf.write("{}: {}\n".format(IFG_FILE_LIST, self.ifgListFile))
+            conf.write("{}: {}\n".format(PROCESSOR, "0"))
+        with open(self.ifgListFile, "w") as ifgl:
+            ifgl.write("\n".join(data))
+
 
 class RoipacToGeoTiffTests(unittest.TestCase):
     """Tests conversion of GAMMA rasters to custom PyRate GeoTIFF"""
 
     @classmethod
     def setUpClass(cls):
-        hdr_path = join(PREP_TEST_OBS, 'geo_060619-061002.unw.rsc')
+        hdr_path = join(PREP_TEST_OBS, "geo_060619-061002.unw.rsc")
         cls.HDRS = roipac.parse_header(hdr_path)
 
     def tearDown(self):
@@ -106,11 +102,11 @@ class RoipacToGeoTiffTests(unittest.TestCase):
             os.remove(self.dest)
 
     def test_to_geotiff_dem(self):
-        hdr = roipac.parse_header(SML_TEST_DEM_HDR)        
+        hdr = roipac.parse_header(SML_TEST_DEM_HDR)
         self.dest = os.path.join(TEMPDIR, "tmp_roipac_dem.tif")
 
         write_fullres_geotiff(hdr, SML_TEST_DEM_ROIPAC, self.dest, nodata=0)
-        exp_path = join(SML_TEST_DEM_DIR, 'roipac_test_trimmed.tif')
+        exp_path = join(SML_TEST_DEM_DIR, "roipac_test_trimmed.tif")
         exp_ds = gdal.Open(exp_path)
         ds = gdal.Open(self.dest)
 
@@ -122,18 +118,18 @@ class RoipacToGeoTiffTests(unittest.TestCase):
     def test_to_geotiff_ifg(self):
         # tricker: needs ifg header, and DEM one for extents
         hdrs = self.HDRS.copy()
-        hdrs[ifc.PYRATE_DATUM] = 'WGS84'
+        hdrs[ifc.PYRATE_DATUM] = "WGS84"
         hdrs[ifc.DATA_TYPE] = ifc.ORIG
 
-        self.dest = os.path.join('tmp_roipac_ifg.tif')
-        data_path = join(PREP_TEST_OBS, 'geo_060619-061002.unw')
+        self.dest = os.path.join("tmp_roipac_ifg.tif")
+        data_path = join(PREP_TEST_OBS, "geo_060619-061002.unw")
         write_fullres_geotiff(hdrs, data_path, self.dest, nodata=0)
 
         ds = gdal.Open(self.dest)
         band = ds.GetRasterBand(1)
         self.assertEqual(ds.RasterCount, 1)
 
-        exp_path = join(PREP_TEST_TIF, 'geo_060619-061002.tif')
+        exp_path = join(PREP_TEST_TIF, "geo_060619-061002.tif")
         exp_ds = gdal.Open(exp_path)
         exp_band = exp_ds.GetRasterBand(1)
 
@@ -154,24 +150,24 @@ class RoipacToGeoTiffTests(unittest.TestCase):
 
     def test_to_geotiff_wrong_input_data(self):
         # ensure failure if TIF/other file used instead of binary UNW data
-        self.dest = os.path.join(TEMPDIR, 'tmp_roipac_ifg.tif')
-        data_path = join(PREP_TEST_TIF, 'geo_060619-061002.tif')
+        self.dest = os.path.join(TEMPDIR, "tmp_roipac_ifg.tif")
+        data_path = join(PREP_TEST_TIF, "geo_060619-061002.tif")
         self.assertRaises(GeotiffException, write_fullres_geotiff, self.HDRS, data_path, self.dest, nodata=0)
 
     def test_bad_projection(self):
         hdrs = self.HDRS.copy()
-        hdrs[ifc.PYRATE_DATUM] = 'bad datum string'
+        hdrs[ifc.PYRATE_DATUM] = "bad datum string"
         hdrs[ifc.DATA_TYPE] = ifc.ORIG
-        self.dest = os.path.join(TEMPDIR, 'tmp_roipac_ifg2.tif')
-        data_path = join(PREP_TEST_OBS, 'geo_060619-061002.unw')
+        self.dest = os.path.join(TEMPDIR, "tmp_roipac_ifg2.tif")
+        data_path = join(PREP_TEST_OBS, "geo_060619-061002.unw")
         self.assertRaises(GeotiffException, write_fullres_geotiff, hdrs, data_path, self.dest, 0)
 
     def test_mismatching_cell_resolution(self):
         hdrs = self.HDRS.copy()
-        hdrs[ifc.PYRATE_X_STEP] = 0.1 # fake a mismatch
-        hdrs[ifc.PYRATE_DATUM] = 'WGS84'
-        data_path = join(PREP_TEST_OBS, 'geo_060619-061002.unw')
-        self.dest = os.path.join(TEMPDIR, 'fake')
+        hdrs[ifc.PYRATE_X_STEP] = 0.1  # fake a mismatch
+        hdrs[ifc.PYRATE_DATUM] = "WGS84"
+        data_path = join(PREP_TEST_OBS, "geo_060619-061002.unw")
+        self.dest = os.path.join(TEMPDIR, "fake")
 
         self.assertRaises(GeotiffException, write_fullres_geotiff, hdrs, data_path, self.dest, 0)
 
@@ -184,14 +180,13 @@ class RoipacToGeoTiffTests(unittest.TestCase):
         self.assertEqual(exp_band.GetNoDataValue(), nodata)
 
         pj = ds.GetProjection()
-        self.assertTrue('WGS 84' in pj)
+        self.assertTrue("WGS 84" in pj)
         self.assertEqual(exp_ds.GetProjection(), pj)
         for exp, act in zip(exp_ds.GetGeoTransform(), ds.GetGeoTransform()):
             self.assertAlmostEqual(exp, act, places=4)
 
 
 class DateParsingTests(unittest.TestCase):
-
     def test_parse_short_date_pre2000(self):
         dstr = "980416"
         self.assertEqual(date(1998, 4, 16), roipac.parse_date(dstr))
@@ -237,8 +232,8 @@ class HeaderParsingTests(unittest.TestCase):
         hdrs = roipac.parse_header(FULL_HEADER_PATH)
 
         # check DATE/ DATE12 fields are parsed correctly
-        date0 = date(2006, 6, 19) # from "DATE 060619" header
-        date2 = date(2006, 8, 28) # from DATE12 060619-060828
+        date0 = date(2006, 6, 19)  # from "DATE 060619" header
+        date2 = date(2006, 8, 28)  # from DATE12 060619-060828
         self.assertEqual(hdrs[ifc.MASTER_DATE], date0)
         self.assertEqual(hdrs[ifc.SLAVE_DATE], date2)
 

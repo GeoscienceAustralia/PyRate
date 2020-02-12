@@ -61,7 +61,7 @@ class ReferencePixelInputTests(unittest.TestCase):
         self.assertRaises(cf.ConfigException, ref_pixel, self.ifgs, self.params)
 
     def test_chipsize_valid(self):
-        for illegal in [0, -1, -15, 1, 2, self.ifgs[0].ncols+1, 4, 6, 10, 20]:
+        for illegal in [0, -1, -15, 1, 2, self.ifgs[0].ncols + 1, 4, 6, 10, 20]:
             self.params[cf.REF_CHIP_SIZE] = illegal
             self.assertRaises(ValueError, ref_pixel, self.ifgs, self.params)
 
@@ -222,7 +222,6 @@ def _expected_ref_pixel(ifgs, cs):
 
 
 class LegacyEqualityTest(unittest.TestCase):
-
     def setUp(self):
         self.ifg_paths = small_ifg_file_list()
         self.params = cf.get_config_params(TEST_CONF_ROIPAC)
@@ -268,7 +267,6 @@ class LegacyEqualityTest(unittest.TestCase):
 
 
 class LegacyEqualityTestMultiprocessParallel(unittest.TestCase):
-
     def setUp(self):
         self.ifg_paths = small_ifg_file_list()
         self.params = cf.get_config_params(TEST_CONF_ROIPAC)

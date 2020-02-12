@@ -21,16 +21,15 @@ import osr
 
 
 class CoherenceMaskingTest(unittest.TestCase):
-
     def test_coherence_files_not_converted(self):
         # define constants
         NO_DATA_VALUE = 0
-        driver = gdal.GetDriverByName('GTiff')
+        driver = gdal.GetDriverByName("GTiff")
 
         # create a sample gdal dataset
 
         # sample gdal dataset
-        sample_gdal_filename = 'sample_gdal_dataset.tif'
+        sample_gdal_filename = "sample_gdal_dataset.tif"
         sample_gdal_dataset = driver.Create(sample_gdal_filename, 5, 5, 1, gdal.GDT_Float32)
         srs = osr.SpatialReference()
         wkt_projection = srs.ExportToWkt()
@@ -41,7 +40,7 @@ class CoherenceMaskingTest(unittest.TestCase):
         sample_gdal_band.WriteArray(np.arange(25).reshape(5, 5))
 
         # create a coherence mask dataset
-        coherence_mask_filename = 'coherence_mask_dataset.tif'
+        coherence_mask_filename = "coherence_mask_dataset.tif"
         coherence_mask_dataset = driver.Create(coherence_mask_filename, 5, 5, 1, gdal.GDT_Float32)
         srs = osr.SpatialReference()
         wkt_projection = srs.ExportToWkt()
@@ -53,11 +52,13 @@ class CoherenceMaskingTest(unittest.TestCase):
         # create a artificial masked dataset
         expected_result_array = np.nan_to_num(
             np.array(
-                [[np.nan, np.nan, np.nan, np.nan, np.nan],
-                 [np.nan, np.nan, np.nan, np.nan, np.nan],
-                 [10., 11., 12., 13., 14.],
-                 [15., 16., 17., 18., 19.],
-                 [20., 21., 22., 23., 24.]]
+                [
+                    [np.nan, np.nan, np.nan, np.nan, np.nan],
+                    [np.nan, np.nan, np.nan, np.nan, np.nan],
+                    [10.0, 11.0, 12.0, 13.0, 14.0],
+                    [15.0, 16.0, 17.0, 18.0, 19.0],
+                    [20.0, 21.0, 22.0, 23.0, 24.0],
+                ]
             )
         )
 
@@ -77,5 +78,5 @@ class CoherenceMaskingTest(unittest.TestCase):
         os.remove(sample_gdal_filename)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

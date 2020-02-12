@@ -43,6 +43,7 @@ from core.config import mlooked_path
 from core.shared import Ifg, DEM
 from core.prepifg_helper import CUSTOM_CROP, MAXIMUM_CROP, MINIMUM_CROP, ALREADY_SAME_SIZE
 from core.prepifg_helper import prepare_ifgs, _resample, PreprocessError, CustomExts
+
 # from tasks.utils import DUMMY_SECTION_NAME
 from core.config import (
     DEM_HEADER_FILE,
@@ -61,7 +62,8 @@ from core.config import (
     APS_INCIDENCE_MAP,
     APS_ELEVATION_MAP,
     APS_METHOD,
-    APS_CORRECTION)
+    APS_CORRECTION,
+)
 
 from common import SML_TEST_LEGACY_PREPIFG_DIR
 from common import PREP_TEST_TIF, SML_TEST_DEM_DIR
@@ -69,7 +71,7 @@ from common import SML_TEST_DEM_TIF
 import common
 
 gdal.UseExceptions()
-DUMMY_SECTION_NAME = 'pyrate'
+DUMMY_SECTION_NAME = "pyrate"
 
 if not exists(PREP_TEST_TIF):
     sys.exit("ERROR: Missing 'prepifg' dir for unittests\n")
@@ -78,17 +80,16 @@ if not exists(PREP_TEST_TIF):
 # convenience ifg creation funcs
 def diff_exts_ifgs():
     """Returns pair of test Ifgs with different extents"""
-    bases = ['geo_060619-061002.tif', 'geo_070326-070917.tif']
+    bases = ["geo_060619-061002.tif", "geo_070326-070917.tif"]
     random_dir = tempfile.mkdtemp()
     for p in bases:
-        shutil.copy(src=os.path.join(PREP_TEST_TIF, p),
-                    dst=os.path.join(random_dir, p))
+        shutil.copy(src=os.path.join(PREP_TEST_TIF, p), dst=os.path.join(random_dir, p))
     return [Ifg(join(random_dir, p)) for p in bases], random_dir
 
 
 def same_exts_ifgs():
     """Return pair of Ifgs with same extents"""
-    return [Ifg(join(PREP_TEST_TIF, f)) for f in ('0.tif', '1.tif')]
+    return [Ifg(join(PREP_TEST_TIF, f)) for f in ("0.tif", "1.tif")]
 
 
 def extents_from_params(params):
@@ -100,8 +101,7 @@ def extents_from_params(params):
 def test_extents_from_params():
     xf, yf = 1.0, 2.0
     xl, yl = 5.0, 7.0
-    pars = {cf.IFG_XFIRST: xf, cf.IFG_XLAST: xl,
-            cf.IFG_YFIRST: yf, cf.IFG_YLAST: yl}
+    pars = {cf.IFG_XFIRST: xf, cf.IFG_XLAST: xl, cf.IFG_YFIRST: yf, cf.IFG_YLAST: yl}
 
     assert extents_from_params(pars) == CustomExts(xf, yf, xl, yl)
 
@@ -128,22 +128,23 @@ class PrepifgOutputTests(unittest.TestCase):
         transforms = [ds.GetGeoTransform() for ds in datasets]
         head = transforms[0]
         for t in transforms[1:]:
-            assert_array_almost_equal(t, head, decimal=6,
-                                      err_msg="Extents do not match!")
+            assert_array_almost_equal(t, head, decimal=6, err_msg="Extents do not match!")
 
     def setUp(self):
         self.xs = 0.000833333
         self.ys = -self.xs
         self.ifgs, self.random_dir = diff_exts_ifgs()
         self.ifg_paths = [i.data_path for i in self.ifgs]
-        paths = ["geo_060619-061002_1rlks_1cr.tif",
-                 "geo_060619-061002_1rlks_2cr.tif",
-                 "geo_060619-061002_1rlks_3cr.tif",
-                 "geo_060619-061002_4rlks_3cr.tif",
-                 "geo_070326-070917_1rlks_1cr.tif",
-                 "geo_070326-070917_1rlks_2cr.tif",
-                 "geo_070326-070917_1rlks_3cr.tif",
-                 "geo_070326-070917_4rlks_3cr.tif"]
+        paths = [
+            "geo_060619-061002_1rlks_1cr.tif",
+            "geo_060619-061002_1rlks_2cr.tif",
+            "geo_060619-061002_1rlks_3cr.tif",
+            "geo_060619-061002_4rlks_3cr.tif",
+            "geo_070326-070917_1rlks_1cr.tif",
+            "geo_070326-070917_1rlks_2cr.tif",
+            "geo_070326-070917_1rlks_3cr.tif",
+            "geo_070326-070917_4rlks_3cr.tif",
+        ]
         self.exp_files = [join(self.random_dir, p) for p in paths]
 
     @staticmethod
@@ -163,10 +164,12 @@ class PrepifgOutputTests(unittest.TestCase):
         shutil.rmtree(self.random_dir)
 
     def _custom_ext_latlons(self):
-        return [150.91 + (7 * self.xs),  # xfirst
-                -34.17 + (16 * self.ys),  # yfirst
-                150.91 + (27 * self.xs),  # 20 cells from xfirst
-                -34.17 + (44 * self.ys)]  # 28 cells from yfirst
+        return [
+            150.91 + (7 * self.xs),  # xfirst
+            -34.17 + (16 * self.ys),  # yfirst
+            150.91 + (27 * self.xs),  # 20 cells from xfirst
+            -34.17 + (44 * self.ys),
+        ]  # 28 cells from yfirst
 
     def _custom_extents_tuple(self):
         return CustomExts(*self._custom_ext_latlons())
@@ -191,8 +194,7 @@ class PrepifgOutputTests(unittest.TestCase):
     def test_multilooked_projection_same_as_geotiff(self):
         xlooks = ylooks = 1
         prepare_ifgs(self.ifg_paths, MAXIMUM_CROP, xlooks, ylooks)
-        mlooked_paths = [mlooked_path(f, crop_out=MAXIMUM_CROP, looks=xlooks)
-                         for f in self.ifg_paths]
+        mlooked_paths = [mlooked_path(f, crop_out=MAXIMUM_CROP, looks=xlooks) for f in self.ifg_paths]
         self.assert_projection_equal(self.ifg_paths + mlooked_paths)
 
     def test_default_max_extents(self):
@@ -230,8 +232,7 @@ class PrepifgOutputTests(unittest.TestCase):
         # NB: also verifies gdalwarp correctly copies geotransform across
         # NB: expected data copied from gdalinfo output
         gt = ifg.dataset.GetGeoTransform()
-        exp_gt = (150.911666666, 0.000833333, 0,
-                  -34.172499999, 0, -0.000833333)
+        exp_gt = (150.911666666, 0.000833333, 0, -34.172499999, 0, -0.000833333)
         for i, j in zip(gt, exp_gt):
             self.assertAlmostEqual(i, j)
         self.assert_geotransform_equal([self.exp_files[0], self.exp_files[4]])
@@ -243,8 +244,7 @@ class PrepifgOutputTests(unittest.TestCase):
     def test_custom_extents(self):
         xlooks = ylooks = 1
         cext = self._custom_extents_tuple()
-        prepare_ifgs(self.ifg_paths, CUSTOM_CROP, xlooks, ylooks,
-                     user_exts=cext)
+        prepare_ifgs(self.ifg_paths, CUSTOM_CROP, xlooks, ylooks, user_exts=cext)
 
         ifg = Ifg(self.exp_files[2])
         ifg.open()
@@ -265,14 +265,11 @@ class PrepifgOutputTests(unittest.TestCase):
         """Test misaligned cropping extents raise errors."""
         xlooks = ylooks = 1
         # empty string and none raises exceptio
-        for i in [None, '']:
+        for i in [None, ""]:
             cext = (150.92, -34.18, 150.94, i)
-            self.assertRaises(PreprocessError, prepare_ifgs, self.ifg_paths,
-                              CUSTOM_CROP, xlooks, ylooks, user_exts=cext)
+            self.assertRaises(PreprocessError, prepare_ifgs, self.ifg_paths, CUSTOM_CROP, xlooks, ylooks, user_exts=cext)
         # three parameters provided
-        self.assertRaises(PreprocessError, prepare_ifgs, self.ifg_paths,
-                          CUSTOM_CROP, xlooks, ylooks,
-                          user_exts=(150.92, -34.18, 150.94))
+        self.assertRaises(PreprocessError, prepare_ifgs, self.ifg_paths, CUSTOM_CROP, xlooks, ylooks, user_exts=(150.92, -34.18, 150.94))
         # close ifgs
         for i in self.ifgs:
             i.close()
@@ -281,16 +278,14 @@ class PrepifgOutputTests(unittest.TestCase):
         """Test misaligned cropping extents raise errors."""
         xlooks = ylooks = 1
         latlons = tuple(self._custom_ext_latlons())
-        for i, _ in enumerate(['xfirst', 'yfirst', 'xlast', 'ylast']):
+        for i, _ in enumerate(["xfirst", "yfirst", "xlast", "ylast"]):
             # error = step / pi * [1000 100]
             for error in [0.265258, 0.026526]:
                 tmp_latlon = list(latlons)
                 tmp_latlon[i] += error
                 cext = CustomExts(*tmp_latlon)
 
-                self.assertRaises(PreprocessError, prepare_ifgs,
-                                  self.ifg_paths, CUSTOM_CROP,
-                                  xlooks, ylooks, user_exts=cext)
+                self.assertRaises(PreprocessError, prepare_ifgs, self.ifg_paths, CUSTOM_CROP, xlooks, ylooks, user_exts=cext)
         # close ifgs
         for i in self.ifgs:
             i.close()
@@ -304,8 +299,7 @@ class PrepifgOutputTests(unittest.TestCase):
             ifg = Ifg(ex)
             ifg.open()
             # NB: amplitude band doesn't have a NODATA value
-            self.assertTrue(
-                isnan(ifg.dataset.GetRasterBand(1).GetNoDataValue()))
+            self.assertTrue(isnan(ifg.dataset.GetRasterBand(1).GetNoDataValue()))
             ifg.close()
         for i in self.ifgs:
             i.close()
@@ -336,8 +330,7 @@ class PrepifgOutputTests(unittest.TestCase):
         self.ifg_paths = [i.data_path for i in self.ifgs]
         cext = self._custom_extents_tuple()
         xlooks = ylooks = scale
-        prepare_ifgs(self.ifg_paths, CUSTOM_CROP, xlooks, ylooks,
-                     thresh=1.0, user_exts=cext)
+        prepare_ifgs(self.ifg_paths, CUSTOM_CROP, xlooks, ylooks, thresh=1.0, user_exts=cext)
 
         for n, ipath in enumerate([self.exp_files[3], self.exp_files[7]]):
             i = Ifg(ipath)
@@ -358,7 +351,7 @@ class PrepifgOutputTests(unittest.TestCase):
 
         # verify DEM has been correctly processed
         # ignore output values as resampling has already been tested for phase
-        exp_dem_path = join(SML_TEST_DEM_DIR, 'roipac_test_trimmed_4rlks_3cr.tif')
+        exp_dem_path = join(SML_TEST_DEM_DIR, "roipac_test_trimmed_4rlks_3cr.tif")
         self.assertTrue(exists(exp_dem_path))
         orignal_dem = DEM(SML_TEST_DEM_TIF)
         orignal_dem.open()
@@ -387,8 +380,7 @@ class PrepifgOutputTests(unittest.TestCase):
         self.ifg_paths = [i.data_path for i in self.ifgs] + [SML_TEST_DEM_TIF]
         cext = self._custom_extents_tuple()
         xlooks = ylooks = scale
-        prepare_ifgs(self.ifg_paths, CUSTOM_CROP, xlooks, ylooks,
-                     thresh=1.0, user_exts=cext)
+        prepare_ifgs(self.ifg_paths, CUSTOM_CROP, xlooks, ylooks, thresh=1.0, user_exts=cext)
 
         for i in self.ifg_paths:
             mlooked_ifg = mlooked_path(i, xlooks, CUSTOM_CROP)
@@ -396,19 +388,16 @@ class PrepifgOutputTests(unittest.TestCase):
             ds1.open()
             ds2 = DEM(i)
             ds2.open()
-            self.assertEqual(ds1.dataset.GetRasterBand(1).DataType,
-                             ds2.dataset.GetRasterBand(1).DataType)
+            self.assertEqual(ds1.dataset.GetRasterBand(1).DataType, ds2.dataset.GetRasterBand(1).DataType)
             ds1 = ds2 = None
 
     def test_invalid_looks(self):
         """Verify only numeric values can be given for multilooking"""
         values = [0, -1, -10, -100000.6, ""]
         for v in values:
-            self.assertRaises(PreprocessError, prepare_ifgs, self.ifg_paths,
-                              CUSTOM_CROP, xlooks=v, ylooks=1)
+            self.assertRaises(PreprocessError, prepare_ifgs, self.ifg_paths, CUSTOM_CROP, xlooks=v, ylooks=1)
 
-            self.assertRaises(PreprocessError, prepare_ifgs, self.ifg_paths,
-                              CUSTOM_CROP, xlooks=1, ylooks=v)
+            self.assertRaises(PreprocessError, prepare_ifgs, self.ifg_paths, CUSTOM_CROP, xlooks=1, ylooks=v)
 
 
 class ThresholdTests(unittest.TestCase):
@@ -427,11 +416,13 @@ class ThresholdTests(unittest.TestCase):
         data[1, 7:] = nan
 
         # key: NaN threshold as a % of pixels, expected result
-        expected = [(0.0, [1, nan, nan, nan, nan]),
-                    (0.25, [1, nan, nan, nan, nan]),
-                    (0.5, [1, 1, nan, nan, nan]),
-                    (0.75, [1, 1, 1, nan, nan]),
-                    (1.0, [1, 1, 1, 1, nan])]
+        expected = [
+            (0.0, [1, nan, nan, nan, nan]),
+            (0.25, [1, nan, nan, nan, nan]),
+            (0.5, [1, 1, nan, nan, nan]),
+            (0.75, [1, 1, 1, nan, nan]),
+            (1.0, [1, 1, 1, 1, nan]),
+        ]
 
         for thresh, exp in expected:
             res = _resample(data, xscale=2, yscale=2, thresh=thresh)
@@ -472,8 +463,7 @@ class SameSizeTests(unittest.TestCase):
     def test_already_same_size_mismatch(self):
         ifgs, random_dir = diff_exts_ifgs()
         ifg_data_paths = [d.data_path for d in ifgs]
-        self.assertRaises(PreprocessError, prepare_ifgs,
-                          ifg_data_paths, ALREADY_SAME_SIZE, 1, 1)
+        self.assertRaises(PreprocessError, prepare_ifgs, ifg_data_paths, ALREADY_SAME_SIZE, 1, 1)
         for i in ifgs:
             i.close()
         shutil.rmtree(random_dir)
@@ -485,8 +475,7 @@ class SameSizeTests(unittest.TestCase):
         xlooks = ylooks = 2
         prepare_ifgs(ifg_data_paths, ALREADY_SAME_SIZE, xlooks, ylooks)
 
-        looks_paths = [mlooked_path(d, looks=xlooks, crop_out=ALREADY_SAME_SIZE)
-                       for d in ifg_data_paths]
+        looks_paths = [mlooked_path(d, looks=xlooks, crop_out=ALREADY_SAME_SIZE) for d in ifg_data_paths]
         mlooked = [Ifg(i) for i in looks_paths]
         for m in mlooked:
             m.open()
@@ -499,17 +488,14 @@ class SameSizeTests(unittest.TestCase):
 
 
 def test_mlooked_path():
-    path = 'geo_060619-061002.tif'
-    assert mlooked_path(path, looks=2, crop_out=4) == \
-        'geo_060619-061002_2rlks_4cr.tif'
+    path = "geo_060619-061002.tif"
+    assert mlooked_path(path, looks=2, crop_out=4) == "geo_060619-061002_2rlks_4cr.tif"
 
-    path = 'some/dir/geo_060619-061002.tif'
-    assert mlooked_path(path, looks=4, crop_out=2) == \
-        'some/dir/geo_060619-061002_4rlks_2cr.tif'
+    path = "some/dir/geo_060619-061002.tif"
+    assert mlooked_path(path, looks=4, crop_out=2) == "some/dir/geo_060619-061002_4rlks_2cr.tif"
 
-    path = 'some/dir/geo_060619-061002_4rlks.tif'
-    assert mlooked_path(path, looks=4, crop_out=8) == \
-        'some/dir/geo_060619-061002_4rlks_4rlks_8cr.tif'
+    path = "some/dir/geo_060619-061002_4rlks.tif"
+    assert mlooked_path(path, looks=4, crop_out=8) == "some/dir/geo_060619-061002_4rlks_4rlks_8cr.tif"
 
 
 # class LineOfSightTests(unittest.TestCase):
@@ -538,9 +524,7 @@ class LocalMultilookTests(unittest.TestCase):
         data = ones((3, 6))
         data[0] = nan
         data[1, 2:5] = nan
-        expected = [(6, [nan, nan]),
-                    (5, [1, nan]),
-                    (4, [1, 1])]
+        expected = [(6, [nan, nan]), (5, [1, nan]), (4, [1, 1])]
         scale = 3
         for thresh, exp in expected:
             res = multilooking(data, scale, scale, thresh)
@@ -589,11 +573,11 @@ class LegacyEqualityTestRoipacSmallTestData(unittest.TestCase):
 
     def setUp(self):
         from common import small_data_setup
+
         self.ifgs = small_data_setup()
         self.ifg_paths = [i.data_path for i in self.ifgs]
         prepare_ifgs(self.ifg_paths, crop_opt=1, xlooks=1, ylooks=1)
-        looks_paths = [mlooked_path(d, looks=1, crop_out=1)
-                       for d in self.ifg_paths]
+        looks_paths = [mlooked_path(d, looks=1, crop_out=1) for d in self.ifg_paths]
         self.ifgs_with_nan = [Ifg(i) for i in looks_paths]
         for ifg in self.ifgs_with_nan:
             ifg.open()
@@ -610,21 +594,16 @@ class LegacyEqualityTestRoipacSmallTestData(unittest.TestCase):
         """
         # path to csv folders from legacy output
         onlyfiles = [
-            fln for fln in os.listdir(SML_TEST_LEGACY_PREPIFG_DIR)
-            if os.path.isfile(os.path.join(SML_TEST_LEGACY_PREPIFG_DIR, fln))
-            and fln.endswith('.csv') and fln.__contains__('_rad_')
-            ]
+            fln
+            for fln in os.listdir(SML_TEST_LEGACY_PREPIFG_DIR)
+            if os.path.isfile(os.path.join(SML_TEST_LEGACY_PREPIFG_DIR, fln)) and fln.endswith(".csv") and fln.__contains__("_rad_")
+        ]
 
         for fln in onlyfiles:
-            ifg_data = np.genfromtxt(os.path.join(
-                SML_TEST_LEGACY_PREPIFG_DIR, fln), delimiter=',')
+            ifg_data = np.genfromtxt(os.path.join(SML_TEST_LEGACY_PREPIFG_DIR, fln), delimiter=",")
             for k, j in enumerate(self.ifgs):
-                if fln.split('_rad_')[-1].split('.')[0] == \
-                        os.path.split(j.data_path)[-1].split('.')[0]:
-                    np.testing.assert_array_almost_equal(ifg_data,
-                                                         self.ifgs_with_nan[
-                                                             k].phase_data,
-                                                         decimal=2)
+                if fln.split("_rad_")[-1].split(".")[0] == os.path.split(j.data_path)[-1].split(".")[0]:
+                    np.testing.assert_array_almost_equal(ifg_data, self.ifgs_with_nan[k].phase_data, decimal=2)
 
     def test_legacy_prepifg_and_convert_phase(self):
         """
@@ -635,82 +614,71 @@ class LegacyEqualityTestRoipacSmallTestData(unittest.TestCase):
             if not i.mm_converted:
                 i.convert_to_mm()
         onlyfiles = [
-            f for f in os.listdir(SML_TEST_LEGACY_PREPIFG_DIR)
-            if os.path.isfile(os.path.join(SML_TEST_LEGACY_PREPIFG_DIR, f))
-            and f.endswith('.csv') and f.__contains__('_mm_')]
+            f
+            for f in os.listdir(SML_TEST_LEGACY_PREPIFG_DIR)
+            if os.path.isfile(os.path.join(SML_TEST_LEGACY_PREPIFG_DIR, f)) and f.endswith(".csv") and f.__contains__("_mm_")
+        ]
 
         count = 0
         for i, f in enumerate(onlyfiles):
-            ifg_data = np.genfromtxt(os.path.join(
-                SML_TEST_LEGACY_PREPIFG_DIR, f), delimiter=',')
+            ifg_data = np.genfromtxt(os.path.join(SML_TEST_LEGACY_PREPIFG_DIR, f), delimiter=",")
             for k, j in enumerate(self.ifgs):
-                if f.split('_mm_')[-1].split('.')[0] == \
-                        os.path.split(j.data_path)[-1].split('_unw.')[0]:
+                if f.split("_mm_")[-1].split(".")[0] == os.path.split(j.data_path)[-1].split("_unw.")[0]:
                     count += 1
                     # all numbers equal
-                    np.testing.assert_array_almost_equal(
-                        ifg_data, self.ifgs_with_nan[k].phase_data, decimal=2)
+                    np.testing.assert_array_almost_equal(ifg_data, self.ifgs_with_nan[k].phase_data, decimal=2)
 
                     # means must also be equal
-                    self.assertAlmostEqual(
-                        nanmean(ifg_data),
-                        nanmean(self.ifgs_with_nan[k].phase_data),
-                        places=4)
+                    self.assertAlmostEqual(nanmean(ifg_data), nanmean(self.ifgs_with_nan[k].phase_data), places=4)
 
                     # number of nans must equal
-                    self.assertEqual(
-                        np.sum(np.isnan(ifg_data)),
-                        np.sum(np.isnan(self.ifgs_with_nan[k].phase_data)))
+                    self.assertEqual(np.sum(np.isnan(ifg_data)), np.sum(np.isnan(self.ifgs_with_nan[k].phase_data)))
 
         # ensure we have the correct number of matches
         self.assertEqual(count, len(self.ifgs))
 
 
 class TestOneIncidenceOrElevationMap(unittest.TestCase):
-
     def setUp(self):
         self.base_dir = tempfile.mkdtemp()
-        self.conf_file = tempfile.mktemp(suffix='.conf', dir=self.base_dir)
-        self.ifgListFile = os.path.join(common.SML_TEST_GAMMA, 'ifms_17')
+        self.conf_file = tempfile.mktemp(suffix=".conf", dir=self.base_dir)
+        self.ifgListFile = os.path.join(common.SML_TEST_GAMMA, "ifms_17")
 
     def tearDown(self):
         params = cf.get_config_params(self.conf_file)
         shutil.rmtree(self.base_dir)
         common.remove_tifs(params[cf.OBS_DIR])
 
-    def make_input_files(self, inc='', ele=''):
-        with open(self.conf_file, 'w') as conf:
-            conf.write('[{}]\n'.format(DUMMY_SECTION_NAME))
-            conf.write('{}: {}\n'.format(NO_DATA_VALUE, '0.0'))
-            conf.write('{}: {}\n'.format(OBS_DIR, common.SML_TEST_GAMMA))
-            conf.write('{}: {}\n'.format(OUT_DIR, self.base_dir))
-            conf.write('{}: {}\n'.format(IFG_FILE_LIST, self.ifgListFile))
-            conf.write('{}: {}\n'.format(PROCESSOR, '1'))
-            conf.write('{}: {}\n'.format(
-                DEM_HEADER_FILE, os.path.join(
-                    common.SML_TEST_GAMMA, '20060619_utm_dem.par')))
-            conf.write('{}: {}\n'.format(IFG_LKSX, '1'))
-            conf.write('{}: {}\n'.format(IFG_LKSY, '1'))
-            conf.write('{}: {}\n'.format(IFG_CROP_OPT, '1'))
-            conf.write('{}: {}\n'.format(NO_DATA_AVERAGING_THRESHOLD, '0.5'))
-            conf.write('{}: {}\n'.format(SLC_DIR, ''))
-            conf.write('{}: {}\n'.format(SLC_FILE_LIST,
-                                         common.SML_TEST_GAMMA_HEADER_LIST))
-            conf.write('{}: {}\n'.format(DEM_FILE, common.SML_TEST_DEM_GAMMA))
-            conf.write('{}: {}\n'.format(APS_INCIDENCE_MAP, inc))
-            conf.write('{}: {}\n'.format(APS_ELEVATION_MAP, ele))
-            conf.write('{}: {}\n'.format(APS_CORRECTION, '1'))
-            conf.write('{}: {}\n'.format(APS_METHOD, '2'))
+    def make_input_files(self, inc="", ele=""):
+        with open(self.conf_file, "w") as conf:
+            conf.write("[{}]\n".format(DUMMY_SECTION_NAME))
+            conf.write("{}: {}\n".format(NO_DATA_VALUE, "0.0"))
+            conf.write("{}: {}\n".format(OBS_DIR, common.SML_TEST_GAMMA))
+            conf.write("{}: {}\n".format(OUT_DIR, self.base_dir))
+            conf.write("{}: {}\n".format(IFG_FILE_LIST, self.ifgListFile))
+            conf.write("{}: {}\n".format(PROCESSOR, "1"))
+            conf.write("{}: {}\n".format(DEM_HEADER_FILE, os.path.join(common.SML_TEST_GAMMA, "20060619_utm_dem.par")))
+            conf.write("{}: {}\n".format(IFG_LKSX, "1"))
+            conf.write("{}: {}\n".format(IFG_LKSY, "1"))
+            conf.write("{}: {}\n".format(IFG_CROP_OPT, "1"))
+            conf.write("{}: {}\n".format(NO_DATA_AVERAGING_THRESHOLD, "0.5"))
+            conf.write("{}: {}\n".format(SLC_DIR, ""))
+            conf.write("{}: {}\n".format(SLC_FILE_LIST, common.SML_TEST_GAMMA_HEADER_LIST))
+            conf.write("{}: {}\n".format(DEM_FILE, common.SML_TEST_DEM_GAMMA))
+            conf.write("{}: {}\n".format(APS_INCIDENCE_MAP, inc))
+            conf.write("{}: {}\n".format(APS_ELEVATION_MAP, ele))
+            conf.write("{}: {}\n".format(APS_CORRECTION, "1"))
+            conf.write("{}: {}\n".format(APS_METHOD, "2"))
 
     def test_only_inc_file_created(self):
-        inc_ext = 'inc'
-        ele_ext = 'lv_theta'
+        inc_ext = "inc"
+        ele_ext = "lv_theta"
         self.make_input_files(inc=common.SML_TEST_INCIDENCE)
         self.common_check(inc_ext, ele_ext)
 
     def test_only_ele_file_created(self):
-        inc_ext = 'inc'
-        ele_ext = 'lv_theta'
+        inc_ext = "inc"
+        ele_ext = "lv_theta"
         self.make_input_files(ele=common.SML_TEST_ELEVATION)
         self.common_check(ele_ext, inc_ext)
 
@@ -718,26 +686,22 @@ class TestOneIncidenceOrElevationMap(unittest.TestCase):
         os.path.exists(self.conf_file)
         params = cf.get_config_params(self.conf_file)
         conv2tif.main(params)
-        sys.argv = ['dummy', self.conf_file]
+        sys.argv = ["dummy", self.conf_file]
         prepifg.main(params)
         # test 17 geotiffs created
-        geotifs = glob.glob(os.path.join(params[cf.OBS_DIR], '*_unw.tif'))
+        geotifs = glob.glob(os.path.join(params[cf.OBS_DIR], "*_unw.tif"))
         self.assertEqual(17, len(geotifs))
         # test dem geotiff created
-        demtif = glob.glob(os.path.join(params[cf.OBS_DIR], '*_dem.tif'))
+        demtif = glob.glob(os.path.join(params[cf.OBS_DIR], "*_dem.tif"))
         self.assertEqual(1, len(demtif))
         # elevation/incidence file
-        ele = glob.glob(os.path.join(params[cf.OBS_DIR],
-                                     '*utm_{ele}.tif'.format(ele=ele)))[0]
+        ele = glob.glob(os.path.join(params[cf.OBS_DIR], "*utm_{ele}.tif".format(ele=ele)))[0]
         self.assertTrue(os.path.exists(ele))
         # mlooked tifs
-        mlooked_tifs = [f for f in
-                        glob.glob(os.path.join(self.base_dir, '*.tif'))
-                        if "cr" in f and "rlks" in f]
+        mlooked_tifs = [f for f in glob.glob(os.path.join(self.base_dir, "*.tif")) if "cr" in f and "rlks" in f]
         # 19 including 17 ifgs, 1 dem and one incidence
         self.assertEqual(19, len(mlooked_tifs))
-        inc = glob.glob(os.path.join(self.base_dir,
-                                     '*utm_{inc}.tif'.format(inc=inc)))
+        inc = glob.glob(os.path.join(self.base_dir, "*utm_{inc}.tif".format(inc=inc)))
         self.assertEqual(0, len(inc))
 
 

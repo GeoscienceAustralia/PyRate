@@ -27,8 +27,7 @@ from numbers import Number
 from subprocess import check_call
 from tempfile import mkstemp
 
-from numpy import array, where, nan, isnan, nanmean, float32, zeros, \
-    sum as nsum
+from numpy import array, where, nan, isnan, nanmean, float32, zeros, sum as nsum
 from osgeo import gdal
 from osgeo import osr
 from osgeo import ogr
@@ -41,7 +40,7 @@ from core.shared import Ifg, DEM, output_tiff_filename
 import logging
 from core.logger import pyratelogger as log
 
-CustomExts = namedtuple('CustExtents', ['xfirst', 'yfirst', 'xlast', 'ylast'])
+CustomExts = namedtuple("CustExtents", ["xfirst", "yfirst", "xlast", "ylast"])
 
 
 # Constants
@@ -73,12 +72,12 @@ def get_analysis_extent(crop_opt, rasters, xlooks, ylooks, user_exts):
 
     if crop_opt == CUSTOM_CROP:
         if not user_exts:
-            raise PreprocessError('No custom cropping extents specified')
+            raise PreprocessError("No custom cropping extents specified")
         elif len(user_exts) != 4:  # check for required numbers
-            raise PreprocessError('Custom extents must have all 4 values')
+            raise PreprocessError("Custom extents must have all 4 values")
         elif len(user_exts) == 4:  # check for non floats
             if not all([_is_number(z) for z in user_exts]):
-                raise PreprocessError('Custom extents must be 4 numbers')
+                raise PreprocessError("Custom extents must be 4 numbers")
 
     for raster in rasters:
         if not raster.is_open:
@@ -108,14 +107,12 @@ def _check_looks(xlooks, ylooks):
     Convenience function to verify that looks parameters are valid.
     """
 
-    if not (isinstance(xlooks, Number) and
-            isinstance(ylooks, Number)):  # pragma: no cover
+    if not (isinstance(xlooks, Number) and isinstance(ylooks, Number)):  # pragma: no cover
         msg = "Non-numeric looks parameter(s), x: %s, y: %s" % (xlooks, ylooks)
         raise PreprocessError(msg)
 
     if not (xlooks > 0 and ylooks > 0):  # pragma: no cover
-        msg = "Invalid looks parameter(s), x: %s, y: %s. " \
-              "Looks must be an integer greater than zero" % (xlooks, ylooks)
+        msg = "Invalid looks parameter(s), x: %s, y: %s. " "Looks must be an integer greater than zero" % (xlooks, ylooks)
         raise PreprocessError(msg)
 
 
@@ -124,7 +121,7 @@ def _check_resolution(ifgs):
     Convenience function to verify Ifg resolutions are equal.
     """
 
-    for var in ['x_step', 'y_step']:
+    for var in ["x_step", "y_step"]:
         values = array([getattr(i, var) for i in ifgs])
         if not (values == values[0]).all():  # pragma: no cover
             msg = "Grid resolution does not match for %s" % var
@@ -198,9 +195,8 @@ def prepare_ifg(input_path, output_path, xlooks, ylooks, extents, thresh, crop_o
         # copy file with mlooked path
         _dummy_warp(output_path)
 
-
     if xlooks != ylooks:
-        raise ValueError('X and Y looks mismatch')
+        raise ValueError("X and Y looks mismatch")
 
     #     # Add missing/updated metadata to resampled ifg/DEM
     #     new_lyr = type(ifg)(looks_path)
@@ -212,7 +208,16 @@ def prepare_ifg(input_path, output_path, xlooks, ylooks, extents, thresh, crop_o
     #         #if params.has_key(REPROJECTION_FLAG):
     #         #    reproject()
 
-    crop_resample_average(input_raster=input_raster.data_path, extents=extents, resolution=resolution, output_file=output_path, thresh=thresh, header=header, coherence_path=coherence_path, coherence_thresh=coherence_thresh)
+    crop_resample_average(
+        input_raster=input_raster.data_path,
+        extents=extents,
+        resolution=resolution,
+        output_file=output_path,
+        thresh=thresh,
+        header=header,
+        coherence_path=coherence_path,
+        coherence_thresh=coherence_thresh,
+    )
 
 
 # TODO: crop options 0 = no cropping? get rid of same size
@@ -275,8 +280,7 @@ def _file_ext(raster):
         # Coherence file: single band
         # LOS file:  has 2 bands: beam incidence angle & ground azimuth)
         # Baseline file: perpendicular baselines (single band?)
-        raise NotImplementedError("Missing raster types for LOS, " 
-                                  "Coherence and baseline")
+        raise NotImplementedError("Missing raster types for LOS, " "Coherence and baseline")
 
 
 def _dummy_warp(renamed_path):
@@ -289,6 +293,7 @@ def _dummy_warp(renamed_path):
     ifg.dataset.SetMetadataItem(ifc.DATA_TYPE, ifc.MULTILOOKED)
     data = ifg.dataset.ReadAsArray()
     return data, ifg.dataset
+
 
 # TODO: Not being used. Remove in future?
 def _resample(data, xscale, yscale, thresh):
@@ -318,7 +323,7 @@ def _resample(data, xscale, yscale, thresh):
     # with excess NaNs)
     for x in range(xres):
         for y in range(yres):
-            tile = data[y * yscale: (y+1) * yscale, x * xscale: (x+1) * xscale]
+            tile = data[y * yscale : (y + 1) * yscale, x * xscale : (x + 1) * xscale]
             nan_fraction = nsum(isnan(tile)) / float(tile_cell_count)
             if nan_fraction < thresh or (nan_fraction == 0 and thresh == 0):
                 dest[y, x] = nanmean(tile)
@@ -331,7 +336,7 @@ def _resample_ifg(ifg, cmd, x_looks, y_looks, thresh, md=None):
     Convenience function to resample data from a given Ifg (more coarse).
     """
 
-    fp, tmp_path = mkstemp(suffix='.tif')
+    fp, tmp_path = mkstemp(suffix=".tif")
     check_call(cmd + [ifg.data_path, tmp_path])
 
     # now write the metadata from the input to the output
@@ -383,7 +388,10 @@ def _max_bounds(ifgs):
     ymin = min([i.y_last for i in ifgs])
     return xmin, ymin, xmax, ymax
 
+
 from decimal import Decimal
+
+
 def _get_same_bounds(ifgs):
     """
     Check and return bounding box for ALREADY_SAME_SIZE option.
@@ -394,15 +402,15 @@ def _get_same_bounds(ifgs):
     equal = []
 
     for t in tfs[1:]:
-        for i,tf in enumerate(tfs[0]):
+        for i, tf in enumerate(tfs[0]):
 
-            if round(Decimal (tf),4) == round(Decimal (t[i]),4):
+            if round(Decimal(tf), 4) == round(Decimal(t[i]), 4):
                 equal.append(True)
             else:
                 equal.append(False)
 
     if not all(equal):
-        msg = 'Ifgs do not have the same bounding box for crop option: %s'
+        msg = "Ifgs do not have the same bounding box for crop option: %s"
         raise PreprocessError(msg % ALREADY_SAME_SIZE)
     ifg = ifgs[0]
     xmin, xmax = ifg.x_first, ifg.x_last
@@ -419,45 +427,45 @@ def _custom_bounds(ifgs, xw, ytop, xe, ybot):
     """
     Check and modify input custom crop bounds to line up with grid interval
     """
-    msg = 'Cropped image bounds are outside the original image bounds'
+    msg = "Cropped image bounds are outside the original image bounds"
     i = ifgs[0]
 
     if ytop < ybot:
-        raise PreprocessError('ERROR Custom crop bounds: '
-                              'ifgyfirst must be greater than ifgylast')
+        raise PreprocessError("ERROR Custom crop bounds: " "ifgyfirst must be greater than ifgylast")
 
     if xe < xw:
-        raise PreprocessError('ERROR Custom crop bounds: '
-                              'ifgxfirst must be greater than ifgxlast')
+        raise PreprocessError("ERROR Custom crop bounds: " "ifgxfirst must be greater than ifgxlast")
 
-    for par, crop, orig, step in zip(['x_first', 'x_last', 'y_first', 'y_last'],
-                                     [xw, xe, ytop, ybot],
-                                     [i.x_first, i.x_last, i.y_first, i.y_last],
-                                     [i.x_step, i.x_step, i.y_step, i.y_step]):
+    for par, crop, orig, step in zip(
+        ["x_first", "x_last", "y_first", "y_last"],
+        [xw, xe, ytop, ybot],
+        [i.x_first, i.x_last, i.y_first, i.y_last],
+        [i.x_step, i.x_step, i.y_step, i.y_step],
+    ):
         diff = crop - orig
         nint = round(diff / step)
 
-        if par == 'x_first':
+        if par == "x_first":
             if diff < 0:
                 raise PreprocessError(msg)
             xmin = orig + (nint * step)
 
-        elif par == 'x_last':
+        elif par == "x_last":
             if diff > 0:
                 raise PreprocessError(msg)
             xmax = orig + (nint * step)
 
-        elif par == 'y_first':
+        elif par == "y_first":
             if diff > 0:
                 raise PreprocessError(msg)
             y1 = orig + (nint * step)
 
-        elif par == 'y_last':
+        elif par == "y_last":
             if diff < 0:
                 raise PreprocessError(msg)
             y2 = orig + (nint * step)
         else:
-            raise ValueError('Value error in supplied custom bounds')
+            raise ValueError("Value error in supplied custom bounds")
 
     if y2 > y1:
         ymin = y1
@@ -477,9 +485,7 @@ def _check_crop_coords(ifgs, xmin, ymin, xmax, ymax):
     # NB: assumption is the first Ifg is correct, so only test against it
     i = ifgs[0]
 
-    for par, crop, step in zip(['x_first', 'x_last', 'y_first', 'y_last'],
-                               [xmin, xmax, ymax, ymin],
-                               [i.x_step, i.x_step, i.y_step, i.y_step]):
+    for par, crop, step in zip(["x_first", "x_last", "y_first", "y_last"], [xmin, xmax, ymax, ymin], [i.x_step, i.x_step, i.y_step, i.y_step]):
 
         # is diff of the given extent from grid a multiple of X|Y_STEP ?
         param = getattr(i, par)

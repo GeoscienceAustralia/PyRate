@@ -64,12 +64,12 @@ ROIPAC = "ROIPAC"
 # store type for each of the header items
 INT_HEADERS = [WIDTH, FILE_LENGTH, XMIN, XMAX, YMIN, YMAX, Z_OFFSET, Z_SCALE]
 STR_HEADERS = [X_UNIT, Y_UNIT, ORBIT_NUMBER, DATUM, PROJECTION]
-FLOAT_HEADERS = [X_FIRST, X_STEP, Y_FIRST, Y_STEP, TIME_SPAN_YEAR,
-                 VELOCITY, HEIGHT, EARTH_RADIUS, WAVELENGTH, HEADING_DEG]
+FLOAT_HEADERS = [X_FIRST, X_STEP, Y_FIRST, Y_STEP, TIME_SPAN_YEAR, VELOCITY, HEIGHT, EARTH_RADIUS, WAVELENGTH, HEADING_DEG]
 DATE_HEADERS = [DATE, DATE12]
 
 ROIPAC_HEADER_LEFT_JUSTIFY = 18
 ROI_PAC_HEADER_FILE_EXT = "rsc"
+
 
 def parse_date(dstr):
     """
@@ -80,9 +80,10 @@ def parse_date(dstr):
     :return: dstr: datetime string or tuple
     :rtype: str or tuple
     """
+
     def to_date(date_str):
         """convert string to datetime"""
-        year, month, day = [int(date_str[i:i+2]) for i in range(0, 6, 2)]
+        year, month, day = [int(date_str[i : i + 2]) for i in range(0, 6, 2)]
         year += 1900 if ((year <= 99) and (year >= 50)) else 2000
         return datetime.date(year, month, day)
 
@@ -107,8 +108,7 @@ def parse_header(hdr_file):
     try:
         lines = [e.split() for e in text.split("\n") if e != ""]
         headers = dict(lines)
-        is_dem = True if DATUM in headers or Z_SCALE in headers \
-                         or PROJECTION in headers else False
+        is_dem = True if DATUM in headers or Z_SCALE in headers or PROJECTION in headers else False
         if is_dem and DATUM not in headers:
             msg = 'No "DATUM" parameter in DEM header/resource file'
             raise RoipacException(msg)
@@ -129,12 +129,14 @@ def parse_header(hdr_file):
             pass  # ignore other headers
 
     # grab a subset for GeoTIFF conversion
-    subset = {ifc.PYRATE_NCOLS: headers[WIDTH],
-              ifc.PYRATE_NROWS: headers[FILE_LENGTH],
-              ifc.PYRATE_LAT: headers[Y_FIRST],
-              ifc.PYRATE_LONG: headers[X_FIRST],
-              ifc.PYRATE_X_STEP: headers[X_STEP],
-              ifc.PYRATE_Y_STEP: headers[Y_STEP]}
+    subset = {
+        ifc.PYRATE_NCOLS: headers[WIDTH],
+        ifc.PYRATE_NROWS: headers[FILE_LENGTH],
+        ifc.PYRATE_LAT: headers[Y_FIRST],
+        ifc.PYRATE_LONG: headers[X_FIRST],
+        ifc.PYRATE_X_STEP: headers[X_STEP],
+        ifc.PYRATE_Y_STEP: headers[Y_STEP],
+    }
 
     if is_dem:
         subset[ifc.PYRATE_DATUM] = headers[DATUM]
@@ -166,7 +168,7 @@ def parse_header(hdr_file):
 def _parse_dates_from(filename):
     """Determine dates from file name"""
     # process dates from filename if rsc file doesn't have them (skip for DEMs)
-    p = re.compile(r'\d{6}-\d{6}')  # match 2 sets of 6 digits separated by '-'
+    p = re.compile(r"\d{6}-\d{6}")  # match 2 sets of 6 digits separated by '-'
     m = p.search(filename)
 
     if m:
@@ -207,13 +209,12 @@ def roipac_header(file_path, params):
     if rsc_file is not None:
         projection = parse_header(rsc_file)[ifc.PYRATE_DATUM]
     else:
-        raise RoipacException('No DEM resource/header file is '
-                                     'provided')
-    if file_path.endswith('_dem.tif'):
+        raise RoipacException("No DEM resource/header file is " "provided")
+    if file_path.endswith("_dem.tif"):
         header_file = os.path.join(params[cf.DEM_HEADER_FILE])
-    elif file_path.endswith('_unw.tif'):
+    elif file_path.endswith("_unw.tif"):
         base_file = file_path[:-8]
-        header_file = base_file + '.unw.' + ROI_PAC_HEADER_FILE_EXT
+        header_file = base_file + ".unw." + ROI_PAC_HEADER_FILE_EXT
     else:
         header_file = "%s.%s" % (file_path, ROI_PAC_HEADER_FILE_EXT)
 

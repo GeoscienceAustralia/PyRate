@@ -34,17 +34,20 @@ import common
 # taken from
 # http://stackoverflow.com/questions/6260149/os-symlink-support-in-windows
 if os.name == "nt":
+
     def symlink_ms(source, link_name):
         import ctypes
+
         csl = ctypes.windll.kernel32.CreateSymbolicLinkW
         csl.argtypes = (ctypes.c_wchar_p, ctypes.c_wchar_p, ctypes.c_uint32)
         csl.restype = ctypes.c_ubyte
         flags = 1 if os.path.isdir(source) else 0
         try:
-            if csl(link_name, source.replace('/', '\\'), flags) == 0:
+            if csl(link_name, source.replace("/", "\\"), flags) == 0:
                 raise ctypes.WinError()
         except:
             pass
+
     os.symlink = symlink_ms
 
 CURRENT_DIR = os.getcwd()
@@ -68,10 +71,10 @@ def test_warp_required():
 
 def test_original_ifg_paths():
     ifgdir = common.SML_TEST_TIF
-    ifglist_path = join(ifgdir, 'ifms_17')
+    ifglist_path = join(ifgdir, "ifms_17")
     paths = cf.original_ifg_paths(ifglist_path, ifgdir)
-    assert paths[0] == join(ifgdir, 'geo_060619-061002_unw.tif'), str(paths[0])
-    assert paths[-1] == join(ifgdir, 'geo_070709-070813_unw.tif')
+    assert paths[0] == join(ifgdir, "geo_060619-061002_unw.tif"), str(paths[0])
+    assert paths[-1] == join(ifgdir, "geo_070709-070813_unw.tif")
 
 
 def dest_ifg_paths(ifg_paths, outdir):
@@ -85,17 +88,16 @@ def dest_ifg_paths(ifg_paths, outdir):
 
 def test_dest_ifg_paths():
     # given source ifgs to process, get paths of ifgs in out dir
-    src_paths = ['tif/ifg0.tif', 'tif/ifg1.tif']
-    dest_paths = dest_ifg_paths(src_paths, outdir='out')
-    assert dest_paths == [os.path.join('out', i) for i in ['ifg0.tif',
-                                                           'ifg1.tif']]
+    src_paths = ["tif/ifg0.tif", "tif/ifg1.tif"]
+    dest_paths = dest_ifg_paths(src_paths, outdir="out")
+    assert dest_paths == [os.path.join("out", i) for i in ["ifg0.tif", "ifg1.tif"]]
 
 
 # FIXME: change to read output ifgs
 def get_ifgs(out_dir, _open=True):
-    paths = glob.glob(join(out_dir, 'geo_*-*_unw.tif'))
+    paths = glob.glob(join(out_dir, "geo_*-*_unw.tif"))
     ifgs = [shared.Ifg(p) for p in paths]
-    assert len(ifgs) == 17, 'Got %s' % ifgs
+    assert len(ifgs) == 17, "Got %s" % ifgs
 
     if _open:
         for i in ifgs:
@@ -112,14 +114,14 @@ class PyRateTests(unittest.TestCase):
 
         # testing constants2
         cls.BASE_DIR = tempfile.mkdtemp()
-        cls.BASE_OUT_DIR = join(cls.BASE_DIR, 'out')
-        cls.BASE_DEM_DIR = join(cls.BASE_DIR, 'dem')
-        cls.BASE_DEM_FILE = join(cls.BASE_DEM_DIR, 'roipac_test_trimmed.tif')
+        cls.BASE_OUT_DIR = join(cls.BASE_DIR, "out")
+        cls.BASE_DEM_DIR = join(cls.BASE_DIR, "dem")
+        cls.BASE_DEM_FILE = join(cls.BASE_DEM_DIR, "roipac_test_trimmed.tif")
 
         try:
             # copy source data (treat as prepifg already run)
             os.makedirs(cls.BASE_OUT_DIR)
-            for path in glob.glob(join(common.SML_TEST_TIF, '*')):
+            for path in glob.glob(join(common.SML_TEST_TIF, "*")):
                 dest = join(cls.BASE_OUT_DIR, os.path.basename(path))
                 shutil.copy(path, dest)
                 os.chmod(dest, 0o660)
@@ -131,16 +133,15 @@ class PyRateTests(unittest.TestCase):
 
             # Turn off validation because we're in a different working dir
             #  and relative paths in config won't be work.
-            params = config.get_config_params(common.TEST_CONF_ROIPAC,
-                                               validate=False)
+            params = config.get_config_params(common.TEST_CONF_ROIPAC, validate=False)
             params[cf.OUT_DIR] = cls.BASE_OUT_DIR
             params[cf.PROCESSOR] = 0  # roipac
             params[cf.APS_CORRECTION] = 0
-            paths = glob.glob(join(cls.BASE_OUT_DIR, 'geo_*-*.tif'))
+            paths = glob.glob(join(cls.BASE_OUT_DIR, "geo_*-*.tif"))
             params[cf.PARALLEL] = False
             process.main(sorted(paths), params, 2, 2)
 
-            if not hasattr(cls, 'ifgs'):
+            if not hasattr(cls, "ifgs"):
                 cls.ifgs = get_ifgs(out_dir=cls.BASE_OUT_DIR)
         except:
             # revert working dir & avoid paths busting other tests
@@ -153,9 +154,9 @@ class PyRateTests(unittest.TestCase):
         os.chdir(CURRENT_DIR)
 
     def key_check(self, ifg, key, value):
-        'Helper to check for metadata flags'
+        "Helper to check for metadata flags"
         md = ifg.dataset.GetMetadata()
-        self.assertTrue(key in md, 'Missing %s in %s' % (key, ifg.data_path))
+        self.assertTrue(key in md, "Missing %s in %s" % (key, ifg.data_path))
         self.assertTrue(md[key], value)
 
     def test_basic_outputs(self):
@@ -191,7 +192,7 @@ class ParallelPyRateTests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        rate_types = ['stack_rate', 'stack_error', 'stack_samples']
+        rate_types = ["stack_rate", "stack_error", "stack_samples"]
         cls.tif_dir = tempfile.mkdtemp()
         cls.test_conf = common.TEST_CONF_GAMMA
 
@@ -199,8 +200,7 @@ class ParallelPyRateTests(unittest.TestCase):
         params = cf.get_config_params(cls.test_conf)
         params[cf.OBS_DIR] = common.SML_TEST_GAMMA
         params[cf.PROCESSOR] = 1  # gamma
-        params[cf.IFG_FILE_LIST] = os.path.join(
-            common.SML_TEST_GAMMA, 'ifms_17')
+        params[cf.IFG_FILE_LIST] = os.path.join(common.SML_TEST_GAMMA, "ifms_17")
         params[cf.OUT_DIR] = cls.tif_dir
         params[cf.PARALLEL] = 1
         params[cf.APS_CORRECTION] = False
@@ -208,28 +208,20 @@ class ParallelPyRateTests(unittest.TestCase):
 
         xlks, ylks, crop = cf.transform_params(params)
 
-        # base_unw_paths need to be geotiffed by converttogeotif 
+        # base_unw_paths need to be geotiffed by converttogeotif
         #  and multilooked by run_prepifg
-        base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST],
-                                               params[cf.OBS_DIR])
+        base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST], params[cf.OBS_DIR])
 
         # dest_paths are tifs that have been geotif converted and multilooked
-        cls.dest_paths = cf.get_dest_paths(
-            base_unw_paths, crop, params, xlks)
+        cls.dest_paths = cf.get_dest_paths(base_unw_paths, crop, params, xlks)
         gtif_paths = conv2tif.do_geotiff(base_unw_paths, params)
         prepifg.do_prepifg(gtif_paths, params)
         tiles = core.shared.get_tiles(cls.dest_paths[0], 3, 3)
         ifgs = common.small_data_setup()
-        cls.refpixel_p, cls.maxvar_p, cls.vcmt_p = \
-            process.main(cls.dest_paths, params, 3, 3)
-        cls.mst_p = common.reconstruct_mst(ifgs[0].shape, tiles,
-                                           params[cf.TMPDIR])
-        cls.rate_p, cls.error_p, cls.samples_p = [
-            common.reconstruct_stack_rate(
-                ifgs[0].shape, tiles, params[cf.TMPDIR], t)
-            for t in rate_types
-            ]
-        
+        cls.refpixel_p, cls.maxvar_p, cls.vcmt_p = process.main(cls.dest_paths, params, 3, 3)
+        cls.mst_p = common.reconstruct_mst(ifgs[0].shape, tiles, params[cf.TMPDIR])
+        cls.rate_p, cls.error_p, cls.samples_p = [common.reconstruct_stack_rate(ifgs[0].shape, tiles, params[cf.TMPDIR], t) for t in rate_types]
+
         common.remove_tifs(params[cf.OBS_DIR])
 
         # now create the non parallel version
@@ -237,20 +229,13 @@ class ParallelPyRateTests(unittest.TestCase):
         params[cf.PARALLEL] = 0
         params[cf.OUT_DIR] = cls.tif_dir_s
         params[cf.TMPDIR] = os.path.join(params[cf.OUT_DIR], cf.TMPDIR)
-        cls.dest_paths_s = cf.get_dest_paths(
-            base_unw_paths, crop, params, xlks)
+        cls.dest_paths_s = cf.get_dest_paths(base_unw_paths, crop, params, xlks)
         gtif_paths = conv2tif.do_geotiff(base_unw_paths, params)
         prepifg.do_prepifg(gtif_paths, params)
-        cls.refpixel, cls.maxvar, cls.vcmt = \
-            process.main(cls.dest_paths_s, params, 3, 3)
+        cls.refpixel, cls.maxvar, cls.vcmt = process.main(cls.dest_paths_s, params, 3, 3)
 
-        cls.mst = common.reconstruct_mst(ifgs[0].shape, tiles,
-                                         params[cf.TMPDIR])
-        cls.rate, cls.error, cls.samples = [
-            common.reconstruct_stack_rate(
-                ifgs[0].shape, tiles, params[cf.TMPDIR], t)
-            for t in rate_types
-            ]
+        cls.mst = common.reconstruct_mst(ifgs[0].shape, tiles, params[cf.TMPDIR])
+        cls.rate, cls.error, cls.samples = [common.reconstruct_stack_rate(ifgs[0].shape, tiles, params[cf.TMPDIR], t) for t in rate_types]
 
     @classmethod
     def tearDownClass(cls):
@@ -266,9 +251,9 @@ class ParallelPyRateTests(unittest.TestCase):
     #         self.key_check(i, key, value)
 
     def key_check(self, ifg, key, value):
-        'Helper to check for metadata flags'
+        "Helper to check for metadata flags"
         md = ifg.dataset.GetMetadata()
-        self.assertTrue(key in md, 'Missing %s in %s' % (key, ifg.data_path))
+        self.assertTrue(key in md, "Missing %s in %s" % (key, ifg.data_path))
         self.assertTrue(md[key], value)
 
     # def test_phase_conversion(self):
@@ -308,7 +293,6 @@ class ParallelPyRateTests(unittest.TestCase):
 
 
 class TestPrePrepareIfgs(unittest.TestCase):
-
     @classmethod
     def setUpClass(cls):
         params = config.get_config_params(common.TEST_CONF_ROIPAC)

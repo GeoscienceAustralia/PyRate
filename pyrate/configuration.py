@@ -44,17 +44,38 @@ def validate_parameter_value(input_name, input_value, min_value=None, max_value=
         if min_value is not None:
             if input_value < min_value:
                 raise ValueError(
-                    "Invalid value for " + str(input_name) + " supplied: " + str(input_value) + ". Please provided a valid value greater than " + str(min_value) + ".")
+                    "Invalid value for "
+                    + str(input_name)
+                    + " supplied: "
+                    + str(input_value)
+                    + ". Please provided a valid value greater than "
+                    + str(min_value)
+                    + "."
+                )
     if input_value is not None:
         if max_value is not None:
             if input_value > max_value:
                 raise ValueError(
-                    "Invalid value for " + str(input_name) + " supplied: " + str(input_value) + ". Please provided a valid value less than " + str(max_value) + ".")
+                    "Invalid value for "
+                    + str(input_name)
+                    + " supplied: "
+                    + str(input_value)
+                    + ". Please provided a valid value less than "
+                    + str(max_value)
+                    + "."
+                )
 
     if possible_values is not None:
         if input_value not in possible_values:
             raise ValueError(
-                "Invalid value for " + str(input_name) + " supplied: " + str(input_value) + ". Please provided a valid value from with in: " + str(possible_values) + ".")
+                "Invalid value for "
+                + str(input_name)
+                + " supplied: "
+                + str(input_value)
+                + ". Please provided a valid value from with in: "
+                + str(possible_values)
+                + "."
+            )
     return True
 
 
@@ -64,7 +85,7 @@ def validate_file_list_values(dir, fileList, no_of_epochs):
     if fileList is None:
         raise ValueError("No value supplied for input file list: " + str(fileList))
 
-    for path_str in fileList.read_text().split('\n'):
+    for path_str in fileList.read_text().split("\n"):
         # ignore empty lines in file
         if len(path_str) > 1:
             if not pathlib.Path.exists(dir / path_str):
@@ -72,9 +93,14 @@ def validate_file_list_values(dir, fileList, no_of_epochs):
             else:
                 matches = re.findall("(\d{8})", str(dir / path_str))
                 if len(matches) < no_of_epochs:
-                    raise ValueError("For the given file name: " + str(path_str) + " in: " + str(
-                        dir) + " the number of epochs in file names are less the required number:" + str(
-                        no_of_epochs))
+                    raise ValueError(
+                        "For the given file name: "
+                        + str(path_str)
+                        + " in: "
+                        + str(dir)
+                        + " the number of epochs in file names are less the required number:"
+                        + str(no_of_epochs)
+                    )
 
 
 class MultiplePaths:
@@ -91,15 +117,22 @@ class MultiplePaths:
             self.sampled_path = self.converted_path.split(".tif")[0] + "_" + str(ifglksx) + "rlks_" + str(ifgcropopt) + "cr.tif"
 
     def __str__(self):
-        return"""
-unwrapped_path = """ + self.unwrapped_path+""" 
-converted_path = """ + self.converted_path+""" 
-sampled_path = """ + self.sampled_path+"""    
+        return (
+            """
+unwrapped_path = """
+            + self.unwrapped_path
+            + """ 
+converted_path = """
+            + self.converted_path
+            + """ 
+sampled_path = """
+            + self.sampled_path
+            + """    
 """
+        )
 
 
-
-class Configuration():
+class Configuration:
     def __init__(self, config_file_path):
 
         parser = ConfigParser()
@@ -113,20 +146,28 @@ class Configuration():
 
         # Validate required parameters exist.
         if not set(PYRATE_DEFAULT_CONFIGRATION).issubset(self.__dict__):
-            raise ValueError("Required configuration parameters: " + str(
-                set(PYRATE_DEFAULT_CONFIGRATION).difference(self.__dict__)) + " are missing from input config file.")
+            raise ValueError(
+                "Required configuration parameters: "
+                + str(set(PYRATE_DEFAULT_CONFIGRATION).difference(self.__dict__))
+                + " are missing from input config file."
+            )
 
         # handle control parameters
         for parameter_name in PYRATE_DEFAULT_CONFIGRATION:
-            self.__dict__[parameter_name] = set_parameter_value(PYRATE_DEFAULT_CONFIGRATION[parameter_name]["DataType"],
-                                                                self.__dict__[parameter_name],
-                                                                PYRATE_DEFAULT_CONFIGRATION[parameter_name]["DefaultValue"],
-                                                                PYRATE_DEFAULT_CONFIGRATION[parameter_name]["Required"],
-                                                                parameter_name)
-            validate_parameter_value(parameter_name, self.__dict__[parameter_name],
-                                     PYRATE_DEFAULT_CONFIGRATION[parameter_name]["MinValue"],
-                                     PYRATE_DEFAULT_CONFIGRATION[parameter_name]["MaxValue"],
-                                     PYRATE_DEFAULT_CONFIGRATION[parameter_name]["PossibleValues"])
+            self.__dict__[parameter_name] = set_parameter_value(
+                PYRATE_DEFAULT_CONFIGRATION[parameter_name]["DataType"],
+                self.__dict__[parameter_name],
+                PYRATE_DEFAULT_CONFIGRATION[parameter_name]["DefaultValue"],
+                PYRATE_DEFAULT_CONFIGRATION[parameter_name]["Required"],
+                parameter_name,
+            )
+            validate_parameter_value(
+                parameter_name,
+                self.__dict__[parameter_name],
+                PYRATE_DEFAULT_CONFIGRATION[parameter_name]["MinValue"],
+                PYRATE_DEFAULT_CONFIGRATION[parameter_name]["MaxValue"],
+                PYRATE_DEFAULT_CONFIGRATION[parameter_name]["PossibleValues"],
+            )
 
         # bespoke parameter validation
         if self.refchipsize % 2 != 1:
@@ -158,19 +199,19 @@ class Configuration():
         if self.cohfiledir is not None and self.cohfilelist is not None:
             validate_file_list_values(self.cohfiledir, self.cohfilelist, 1)
             self.coherence_file_paths = []
-            for path_str in self.cohfilelist.read_text().split('\n'):
+            for path_str in self.cohfilelist.read_text().split("\n"):
                 # ignore empty lines in file
                 if len(path_str) > 1:
                     self.coherence_file_paths.append(MultiplePaths(self.cohfiledir, path_str, self.ifglksx, self.ifgcropopt))
 
         self.header_file_paths = []
-        for path_str in self.slcfilelist.read_text().split('\n'):
+        for path_str in self.slcfilelist.read_text().split("\n"):
             # ignore empty lines in file
             if len(path_str) > 1:
                 self.header_file_paths.append(MultiplePaths(self.slcFileDir, path_str, self.ifglksx, self.ifgcropopt))
 
         self.interferogram_files = []
-        for path_str in self.ifgfilelist.read_text().split('\n'):
+        for path_str in self.ifgfilelist.read_text().split("\n"):
             # ignore empty lines in file
             if len(path_str) > 1:
                 self.interferogram_files.append(MultiplePaths(self.obsdir, path_str, self.ifglksx, self.ifgcropopt))

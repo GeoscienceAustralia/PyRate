@@ -22,6 +22,7 @@ from numpy import empty, isnan, reshape, float32, squeeze
 from numpy import dot, vstack, zeros, meshgrid
 import numpy as np
 from numpy.linalg import pinv
+
 # from joblib import Parallel, delayed
 from scipy.linalg import lstsq
 
@@ -30,6 +31,7 @@ from core import shared, ifgconstants as ifc, config as cf, prepifg_helper, mst
 from core.shared import nanmedian, Ifg
 
 from core.logger import pyratelogger as log
+
 # Orbital correction tasks
 #
 # TODO: options for multilooking
@@ -82,8 +84,7 @@ def remove_orbital_error(ifgs, params, preread_ifgs=None):
     :return: None - interferogram phase data is updated and saved to disk
     """
 
-    ifg_paths = [i.data_path for i in ifgs] \
-        if isinstance(ifgs[0], Ifg) else ifgs
+    ifg_paths = [i.data_path for i in ifgs] if isinstance(ifgs[0], Ifg) else ifgs
 
     mlooked = None
     # mlooking is not necessary for independent correction
@@ -95,7 +96,8 @@ def remove_orbital_error(ifgs, params, preread_ifgs=None):
             xlooks=params[cf.ORBITAL_FIT_LOOKS_X],
             ylooks=params[cf.ORBITAL_FIT_LOOKS_Y],
             thresh=params[cf.NO_DATA_AVERAGING_THRESHOLD],
-            write_to_disc=False)
+            write_to_disc=False,
+        )
         mlooked = [Ifg(m[1]) for m in mlooked_dataset]
 
         for m in mlooked:
@@ -104,12 +106,10 @@ def remove_orbital_error(ifgs, params, preread_ifgs=None):
             m.convert_to_nans()
             m.convert_to_mm()
 
-    _orbital_correction(ifgs, params, mlooked=mlooked,
-                        preread_ifgs=preread_ifgs)
+    _orbital_correction(ifgs, params, mlooked=mlooked, preread_ifgs=preread_ifgs)
 
 
-def _orbital_correction(ifgs_or_ifg_paths, params, mlooked=None, offset=True,
-                        preread_ifgs=None):
+def _orbital_correction(ifgs_or_ifg_paths, params, mlooked=None, offset=True, preread_ifgs=None):
     """
     Convenience function to perform orbital correction.
     """
@@ -118,28 +118,24 @@ def _orbital_correction(ifgs_or_ifg_paths, params, mlooked=None, offset=True,
     # parallel = params[cf.PARALLEL]  # not implemented
 
     if degree not in [PLANAR, QUADRATIC, PART_CUBIC]:
-        msg = "Invalid degree of %s for orbital correction" \
-            % cf.ORB_DEGREE_NAMES.get(degree)
+        msg = "Invalid degree of %s for orbital correction" % cf.ORB_DEGREE_NAMES.get(degree)
         raise OrbitalError(msg)
 
-    log.info('Removing orbital error using {} correction method'
-             ' and degree={}'.format(cf.ORB_METHOD_NAMES.get(method), 
-                                     cf.ORB_DEGREE_NAMES.get(degree)))
+    log.info(
+        "Removing orbital error using {} correction method" " and degree={}".format(cf.ORB_METHOD_NAMES.get(method), cf.ORB_DEGREE_NAMES.get(degree))
+    )
 
     if method == NETWORK_METHOD:
         if mlooked is None:
-            network_orbital_correction(ifgs_or_ifg_paths, degree, offset,
-                                       params, m_ifgs=mlooked,
-                                       preread_ifgs=preread_ifgs)
+            network_orbital_correction(ifgs_or_ifg_paths, degree, offset, params, m_ifgs=mlooked, preread_ifgs=preread_ifgs)
         else:
             _validate_mlooked(mlooked, ifgs_or_ifg_paths)
-            network_orbital_correction(ifgs_or_ifg_paths, degree, offset,
-                                       params, mlooked, preread_ifgs)
+            network_orbital_correction(ifgs_or_ifg_paths, degree, offset, params, mlooked, preread_ifgs)
 
     elif method == INDEPENDENT_METHOD:
         # not running in parallel
         # raises swig object pickle error
-        # Parallel(n_jobs=params[cf.PROCESSES], 
+        # Parallel(n_jobs=params[cf.PROCESSES],
         #          verbose=joblib_log_level(cf.LOG_LEVEL))(
         #     delayed(_independent_correction)(ifg, degree, offset, params)
         #     for ifg in ifgs)
@@ -151,23 +147,23 @@ def _orbital_correction(ifgs_or_ifg_paths, params, mlooked=None, offset=True,
 
 
 def _validate_mlooked(mlooked, ifgs):
-    '''
+    """
     Basic sanity checking of the multilooked ifgs.
-    '''
+    """
 
     if len(mlooked) != len(ifgs):
         msg = "Mismatching # ifgs and # multilooked ifgs"
         raise OrbitalError(msg)
 
-    if not all([hasattr(i, 'phase_data') for i in mlooked]):
+    if not all([hasattr(i, "phase_data") for i in mlooked]):
         msg = "Mismatching types in multilooked ifgs arg:\n%s" % mlooked
         raise OrbitalError(msg)
 
 
 def _get_num_params(degree, offset=None):
-    '''
+    """
     Returns number of model parameters from string parameter
-    '''
+    """
 
     if degree == PLANAR:
         nparams = 2
@@ -176,8 +172,7 @@ def _get_num_params(degree, offset=None):
     elif degree == PART_CUBIC:
         nparams = 6
     else:
-        msg = "Invalid orbital model degree: %s" \
-            % cf.ORB_DEGREE_NAMES.get(degree)
+        msg = "Invalid orbital model degree: %s" % cf.ORB_DEGREE_NAMES.get(degree)
         raise OrbitalError(msg)
 
     # NB: independent method only, network method handles offsets separately
@@ -215,21 +210,19 @@ def independent_orbital_correction(ifg, degree, offset, params):
 
     # calculate forward model & morph back to 2D
     if offset:
-        fullorb = np.reshape(np.dot(dm[:, :-1], model[:-1]),
-                             ifg.phase_data.shape)
+        fullorb = np.reshape(np.dot(dm[:, :-1], model[:-1]), ifg.phase_data.shape)
     else:
         fullorb = np.reshape(np.dot(dm, model), ifg.phase_data.shape)
     offset_removal = nanmedian(np.ravel(ifg.phase_data - fullorb))
     # subtract orbital error from the ifg
-    ifg.phase_data -= (fullorb - offset_removal)
+    ifg.phase_data -= fullorb - offset_removal
     # set orbfit meta tag and save phase to file
     _save_orbital_error_corrected_phase(ifg)
     if ifg.open():
         ifg.close()
 
 
-def network_orbital_correction(ifgs, degree, offset, params, m_ifgs=None,
-                               preread_ifgs=None):
+def network_orbital_correction(ifgs, degree, offset, params, m_ifgs=None, preread_ifgs=None):
     """
     This algorithm implements a network inversion to determine orbital
     corrections for a set of interferograms forming a connected network.
@@ -266,8 +259,7 @@ def network_orbital_correction(ifgs, degree, offset, params, m_ifgs=None,
         ids = master_slave_ids(get_all_epochs(temp_ifgs))
     else:
         ids = master_slave_ids(get_all_epochs(ifgs))
-    coefs = [orbparams[i:i+ncoef] for i in
-             range(0, len(set(ids)) * ncoef, ncoef)]
+    coefs = [orbparams[i : i + ncoef] for i in range(0, len(set(ids)) * ncoef, ncoef)]
 
     # create full res DM to expand determined coefficients into full res
     # orbital correction (eg. expand coarser model to full size)
@@ -341,7 +333,7 @@ def get_design_matrix(ifg, degree, offset, scale=100.0):
     ysize = ifg.y_size / scale if scale else ifg.y_size
 
     # mesh needs to start at 1, otherwise first cell resolves to 0 and ignored
-    xg, yg = [g+1 for g in meshgrid(range(ifg.ncols), range(ifg.nrows))]
+    xg, yg = [g + 1 for g in meshgrid(range(ifg.ncols), range(ifg.nrows))]
     x = xg.reshape(ifg.num_cells) * xsize
     y = yg.reshape(ifg.num_cells) * ysize
 
@@ -354,15 +346,15 @@ def get_design_matrix(ifg, degree, offset, scale=100.0):
         dm[:, 0] = x
         dm[:, 1] = y
     elif degree == QUADRATIC:
-        dm[:, 0] = x**2
-        dm[:, 1] = y**2
+        dm[:, 0] = x ** 2
+        dm[:, 1] = y ** 2
         dm[:, 2] = x * y
         dm[:, 3] = x
         dm[:, 4] = y
     elif degree == PART_CUBIC:
-        dm[:, 0] = x * (y**2)
-        dm[:, 1] = x**2
-        dm[:, 2] = y**2
+        dm[:, 0] = x * (y ** 2)
+        dm[:, 1] = x ** 2
+        dm[:, 2] = y ** 2
         dm[:, 3] = x * y
         dm[:, 4] = x
         dm[:, 5] = y
@@ -416,12 +408,12 @@ def get_network_design_matrix(ifgs, degree, offset):
         rs = i * ifg.num_cells  # starting row
         m = ids[ifg.master] * ncoef  # start col for master
         s = ids[ifg.slave] * ncoef  # start col for slave
-        netdm[rs:rs + ifg.num_cells, m:m + ncoef] = -tmpdm
-        netdm[rs:rs + ifg.num_cells, s:s + ncoef] = tmpdm
+        netdm[rs : rs + ifg.num_cells, m : m + ncoef] = -tmpdm
+        netdm[rs : rs + ifg.num_cells, s : s + ncoef] = tmpdm
 
         # offsets are diagonal cols across the extra array block created above
         if offset:
-            netdm[rs:rs + ifg.num_cells, offset_col + i] = 1  # init offset cols
+            netdm[rs : rs + ifg.num_cells, offset_col + i] = 1  # init offset cols
 
     return netdm
 

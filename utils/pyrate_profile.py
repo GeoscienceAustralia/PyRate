@@ -27,17 +27,14 @@ from pycallgraph.output import GraphvizOutput
 from pyrate import process
 
 config = Config()
-config.trace_filter = GlobbingFilter(exclude=[
-    'pycallgraph.*',
-    '*.secret_function',
-])
+config.trace_filter = GlobbingFilter(exclude=["pycallgraph.*", "*.secret_function",])
 
-graphviz = GraphvizOutput(output_file='pyrate_with_roipac.png')
+graphviz = GraphvizOutput(output_file="pyrate_with_roipac.png")
 config = Config(max_depth=6, groups=False, threaded=True)
 
 # sys.argv[0]: name of this script
 # sys.argv[1]: name of the config file
-sys.argv = ['pyrate_profile.py', 'pyrate.conf']
+sys.argv = ["pyrate_profile.py", "pyrate.conf"]
 
 with PyCallGraph(output=graphviz, config=config):
     process.main()

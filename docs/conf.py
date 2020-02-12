@@ -12,40 +12,42 @@ __version__ = "0.4.0"
 # If your documentation needs a minimal Sphinx version, state it here.
 #
 # needs_sphinx = '1.0'
-sys.path.insert(0, os.path.abspath('../../pyrate/'))
+sys.path.insert(0, os.path.abspath("../../pyrate/"))
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc',
-              'sphinx.ext.imgmath',
-              'sphinx.ext.viewcode',
-              'sphinx.ext.githubpages',
-              'sphinx.ext.mathjax',
-              'sphinx.ext.autosummary',
-              'sphinx.ext.napoleon',
-              'matplotlib.sphinxext.plot_directive',
-              'sphinxcontrib.programoutput'
-              ]
+extensions = [
+    "sphinx.ext.autodoc",
+    "sphinx.ext.imgmath",
+    "sphinx.ext.viewcode",
+    "sphinx.ext.githubpages",
+    "sphinx.ext.mathjax",
+    "sphinx.ext.autosummary",
+    "sphinx.ext.napoleon",
+    "matplotlib.sphinxext.plot_directive",
+    "sphinxcontrib.programoutput",
+]
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ["_templates"]
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 #
 from recommonmark.parser import CommonMarkParser
-source_parsers = {'.md': CommonMarkParser}
-source_suffix = ['.rst', '.md']
+
+source_parsers = {".md": CommonMarkParser}
+source_suffix = [".rst", ".md"]
 # source_suffix = '.rst'
 
 # The master toctree document.
-master_doc = 'index'
+master_doc = "index"
 
 # General information about the project.
-project = 'PyRate'
-copyright = str(datetime.datetime.now().year)+', Geoscience Australia'
-author = 'Geoscience Australia InSAR Team'
+project = "PyRate"
+copyright = str(datetime.datetime.now().year) + ", Geoscience Australia"
+author = "Geoscience Australia InSAR Team"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -61,15 +63,15 @@ release = "0.4.0"
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = 'en'
+language = "en"
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+pygments_style = "sphinx"
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
@@ -90,27 +92,26 @@ html_show_sourcelink = False
 #
 # html_theme_options = {}
 html_theme_options = {
-    'collapse_navigation': False,
-    'sticky_navigation': True,
-    'display_version': False,
+    "collapse_navigation": False,
+    "sticky_navigation": True,
+    "display_version": False,
     # 'titles_only': True,
-    'navigation_depth': 2,
-    'logo_only': True,
-    'prev_next_buttons_location': 'top',
-    'style_nav_header_background': 'white'
+    "navigation_depth": 2,
+    "logo_only": True,
+    "prev_next_buttons_location": "top",
+    "style_nav_header_background": "white",
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = [os.path.join('_build', 'html', '_static')]
-
+html_static_path = [os.path.join("_build", "html", "_static")]
 
 
 # -- Options for HTMLHelp output ------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'PyRatedoc'
+htmlhelp_basename = "PyRatedoc"
 
 
 # -- Options for LaTeX output ---------------------------------------------
@@ -119,15 +120,12 @@ latex_elements = {
     # The paper size ('letterpaper' or 'a4paper').
     #
     # 'papersize': 'letterpaper',
-
     # The font size ('10pt', '11pt' or '12pt').
     #
     # 'pointsize': '10pt',
-
     # Additional stuff for the LaTeX preamble.
     #
     # 'preamble': '',
-
     # Latex figure (float) alignment
     #
     # 'figure_align': 'htbp',
@@ -137,8 +135,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'PyRate.tex', 'PyRate Documentation',
-     'Geoscience Australia InSAR team', 'manual'),
+    (master_doc, "PyRate.tex", "PyRate Documentation", "Geoscience Australia InSAR team", "manual"),
 ]
 
 
@@ -146,10 +143,7 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [
-    (master_doc, 'pyrate', 'PyRate Documentation',
-     [author], 1)
-]
+man_pages = [(master_doc, "pyrate", "PyRate Documentation", [author], 1)]
 
 
 # -- Options for Texinfo output -------------------------------------------
@@ -158,11 +152,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'PyRate', 'PyRate Documentation',
-     author, 'PyRate', 'One line description of project.',
-     'Miscellaneous'),
+    (master_doc, "PyRate", "PyRate Documentation", author, "PyRate", "One line description of project.", "Miscellaneous"),
 ]
-
 
 
 # -- Options for Epub output ----------------------------------------------
@@ -183,13 +174,12 @@ epub_copyright = copyright
 # epub_uid = ''
 
 # A list of files that should not be packed into the epub file.
-epub_exclude_files = ['search.html']
+epub_exclude_files = ["search.html"]
 
 
 # link check ignore
-linkcheck_ignore = [r'http://localhost:\d+/',
-                    'https://github.com/Nekroze/PyRate/fork']
+linkcheck_ignore = [r"http://localhost:\d+/", "https://github.com/Nekroze/PyRate/fork"]
 
 
 def setup(app):
-    app.add_stylesheet('css/custom.css')
+    app.add_stylesheet("css/custom.css")

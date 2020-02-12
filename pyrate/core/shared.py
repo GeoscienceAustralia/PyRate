@@ -48,10 +48,10 @@ gdal.UseExceptions()
 
 # Constants
 PHASE_BAND = 1
-RADIANS = 'RADIANS'
-MILLIMETRES = 'MILLIMETRES'
-GAMMA = 'GAMMA'
-ROIPAC = 'ROIPAC'
+RADIANS = "RADIANS"
+MILLIMETRES = "MILLIMETRES"
+GAMMA = "GAMMA"
+ROIPAC = "ROIPAC"
 
 # GDAL projection list
 GDAL_X_CELLSIZE = 1
@@ -59,14 +59,16 @@ GDAL_Y_CELLSIZE = 5
 GDAL_X_FIRST = 0
 GDAL_Y_FIRST = 3
 
+
 def joblib_log_level(level: str) -> int:
     """
     Convert python log level to joblib int verbosity.
-    """ 
-    if level == 'INFO':
+    """
+    if level == "INFO":
         return 0
     else:
         return 60
+
 
 def mkdir_p(path):
     """
@@ -89,6 +91,7 @@ class RasterBase(object):
     """
     Base class for PyRate GeoTIFF based raster datasets.
     """
+
     def __init__(self, path):
         if isinstance(path, gdal.Dataset):
             self.dataset = path  # path will be Dataset in this case
@@ -119,7 +122,7 @@ class RasterBase(object):
             raise RasterException(msg)
 
         if not os.path.exists(self.data_path):
-            raise IOError('The file {path} does not exist. Consider first running prepifg'.format(path=self.data_path))
+            raise IOError("The file {path} does not exist. Consider first running prepifg".format(path=self.data_path))
 
         # unless read only, by default open files as writeable
         if readonly not in [True, False, None]:
@@ -218,7 +221,7 @@ class RasterBase(object):
         if self.is_open:
             return self.dataset.RasterXSize * self.dataset.RasterYSize
         else:
-            raise RasterException('Dataset not open')
+            raise RasterException("Dataset not open")
 
     @property
     def is_open(self):
@@ -260,6 +263,7 @@ class Ifg(RasterBase):
     Interferogram (Ifg) class objects; double as a container for
     interferometric phase raster band data and related data.
     """
+
     def __init__(self, path):
         """
         Interferogram constructor, for 2-band Ifg raster datasets.
@@ -295,14 +299,15 @@ class Ifg(RasterBase):
         md = self.dataset.GetMetadata()
         self.wavelength = float(md[ifc.PYRATE_WAVELENGTH_METRES])
         self.meta_data = md
-        self.nan_converted = False # This flag set True after NaN conversion
+        self.nan_converted = False  # This flag set True after NaN conversion
 
     def _init_dates(self):
         """
         Determine master and slave dates, and interferogram timespan
         """
+
         def _to_date(datestr):
-            year, month, day = [int(i) for i in datestr.split('-')]
+            year, month, day = [int(i) for i in datestr.split("-")]
             return date(year, month, day)
 
         md = self.dataset.GetMetadata()
@@ -310,34 +315,27 @@ class Ifg(RasterBase):
 
         if all(datestrs):
             self.master, self.slave = [_to_date(s) for s in datestrs]
-            self.time_span = (self.slave - self.master).days/ifc.DAYS_PER_YEAR
+            self.time_span = (self.slave - self.master).days / ifc.DAYS_PER_YEAR
         else:
-            msg = 'Missing master and/or slave date in %s' % self.data_path
+            msg = "Missing master and/or slave date in %s" % self.data_path
             raise IfgException(msg)
 
     def convert_to_nans(self):
         """
         Convert phase data of given value to NaN
         """
-        if (self._nodata_value is None) \
-                or (self.dataset is None):  # pragma: no cover
-            msg = 'nodata value needs to be set for nan conversion.' \
-                  'Use ifg.nodata_value = NoDataValue to set nodata_value'
+        if (self._nodata_value is None) or (self.dataset is None):  # pragma: no cover
+            msg = "nodata value needs to be set for nan conversion." "Use ifg.nodata_value = NoDataValue to set nodata_value"
             log.warning(msg)
             raise RasterException(msg)
-        if ((self.dataset.GetMetadataItem(ifc.NAN_STATUS) == ifc.NAN_CONVERTED)
-                or self.nan_converted):
+        if (self.dataset.GetMetadataItem(ifc.NAN_STATUS) == ifc.NAN_CONVERTED) or self.nan_converted:
             self.phase_data = self.phase_data
             self.nan_converted = True
-            msg = '{}: ignored as previous nan ' \
-                  'conversion detected'.format(self.data_path)
+            msg = "{}: ignored as previous nan " "conversion detected".format(self.data_path)
             log.debug(msg)
             return
         else:
-            self.phase_data = where(
-                isclose(self.phase_data, self._nodata_value, atol=1e-6),
-                nan,
-                self.phase_data)
+            self.phase_data = where(isclose(self.phase_data, self._nodata_value, atol=1e-6), nan, self.phase_data)
             self.meta_data[ifc.NAN_STATUS] = ifc.NAN_CONVERTED
             self.nan_converted = True
 
@@ -379,23 +377,21 @@ class Ifg(RasterBase):
         """
         self.mm_converted = True
         if self.dataset.GetMetadataItem(ifc.DATA_UNITS) == MILLIMETRES:
-            msg = '{}: ignored as previous phase unit conversion ' \
-                  'already applied'.format(self.data_path)
+            msg = "{}: ignored as previous phase unit conversion " "already applied".format(self.data_path)
             log.debug(msg)
             self.phase_data = self.phase_data
             return
         elif self.dataset.GetMetadataItem(ifc.DATA_UNITS) == RADIANS:
-            self.phase_data = convert_radians_to_mm(self.phase_data,
-                                                    self.wavelength)
+            self.phase_data = convert_radians_to_mm(self.phase_data, self.wavelength)
             self.meta_data[ifc.DATA_UNITS] = MILLIMETRES
             # self.write_modified_phase()
             # otherwise NaN's don't write to bytecode properly
             # and numpy complains
             # self.dataset.FlushCache()
-            msg = '{}: converted phase units to millimetres'.format(self.data_path)
+            msg = "{}: converted phase units to millimetres".format(self.data_path)
             log.debug(msg)
         else:  # pragma: no cover
-            msg = 'Phase units are not millimetres or radians'
+            msg = "Phase units are not millimetres or radians"
             raise IfgException(msg)
 
     @phase_data.setter
@@ -411,9 +407,8 @@ class Ifg(RasterBase):
         Generator returning each row of the phase data.
         """
         for y in range(self.nrows):
-            r = self.phase_band.ReadAsArray(yoff=y,
-                                            win_xsize=self.ncols, win_ysize=1)
-            yield r[0] # squeezes row from (1, WIDTH) to 1D array
+            r = self.phase_band.ReadAsArray(yoff=y, win_xsize=self.ncols, win_ysize=1)
+            yield r[0]  # squeezes row from (1, WIDTH) to 1D array
 
     @property
     def nan_count(self):
@@ -428,15 +423,13 @@ class Ifg(RasterBase):
         Returns decimal fraction of NaN cells in the phase band.
         """
         if (self._nodata_value is None) or (self.dataset is None):
-            msg = 'nodata_value needs to be set for nan fraction calc.' \
-                  'Use ifg.nondata = NoDataValue to set nodata'
+            msg = "nodata_value needs to be set for nan fraction calc." "Use ifg.nondata = NoDataValue to set nodata"
             raise RasterException(msg)
         # don't cache nan_count as client code may modify phase data
         nan_count = self.nan_count
         # handle datasets with no 0 -> NaN replacement
         if not self.nan_converted and (nan_count == 0):
-            nan_count = nsum(np.isclose(self.phase_data,
-                                        self._nodata_value, atol=1e-6))
+            nan_count = nsum(np.isclose(self.phase_data, self._nodata_value, atol=1e-6))
         return nan_count / float(self.num_cells)
 
     def write_modified_phase(self, data=None):
@@ -463,10 +456,12 @@ class Ifg(RasterBase):
             self.dataset.SetMetadataItem(k, v)
         self.dataset.FlushCache()
 
+
 class IfgPart(object):
     """
     Create a tile (subset) of an Ifg data object
     """
+
     def __init__(self, ifg_or_path, tile, ifg_dict=None, params=None):
         """
         Interferogram tile constructor.
@@ -484,7 +479,7 @@ class IfgPart(object):
             self.master = ifg.master
             self.slave = ifg.slave
             self.time_span = ifg.time_span
-            phase_file = 'phase_data_{}_{}.npy'.format(basename(ifg_or_path).split('.')[0], tile.index)
+            phase_file = "phase_data_{}_{}.npy".format(basename(ifg_or_path).split(".")[0], tile.index)
             self.phase_data = np.load(join(params[cf.OUT_DIR], cf.TMPDIR, phase_file))
         else:
             # check if Ifg was sent.
@@ -508,8 +503,7 @@ class IfgPart(object):
         if not ifg.is_open:
             ifg.open(readonly=True)
         ifg.nodata_value = 0
-        self.phase_data = ifg.phase_data[self.r_start:self.r_end,
-                                         self.c_start:self.c_end]
+        self.phase_data = ifg.phase_data[self.r_start : self.r_end, self.c_start : self.c_end]
         self.nan_fraction = ifg.nan_fraction
         self.master = ifg.master
         self.slave = ifg.slave
@@ -532,7 +526,7 @@ class IfgPart(object):
         return self.c_end - self.c_start
 
 
-class Incidence(RasterBase):   # pragma: no cover
+class Incidence(RasterBase):  # pragma: no cover
     """
     Class for storing viewing geometry data.
     e.g. incidence and azimuth raster values
@@ -629,7 +623,7 @@ class EpochList(object):
         """
         Construct epochlist object
         """
-        self.dates = dates # list of unique dates from all the ifgs
+        self.dates = dates  # list of unique dates from all the ifgs
         self.repeat = repeat
         self.spans = spans  # time span from earliest ifg
 
@@ -663,10 +657,10 @@ def nanmedian(x):
     :return: y: median value
     :rtype: float
     """
-    version = [int(i) for i in pkg_resources.get_distribution("numpy").version.split('.')[:2]]
+    version = [int(i) for i in pkg_resources.get_distribution("numpy").version.split(".")[:2]]
     if version[0] == 1 and version[1] > 9:
         return np.nanmedian(x)
-    else:   # pragma: no cover
+    else:  # pragma: no cover
         return np.median(x[~np.isnan(x)])
 
 
@@ -681,7 +675,7 @@ def _is_incidence(hdr):
     """
     Convenience function to determine if incidence file
     """
-    return 'FILE_TYPE' in hdr
+    return "FILE_TYPE" in hdr
 
 
 def write_fullres_geotiff(header, data_path, dest, nodata):
@@ -702,29 +696,30 @@ def write_fullres_geotiff(header, data_path, dest, nodata):
     bytes_per_col, fmtstr = _data_format(ifg_proc, _is_interferogram(header), ncols)
     if _is_interferogram(header) and ifg_proc == ROIPAC:
         # roipac ifg has 2 bands
-        _check_raw_data(bytes_per_col*2, data_path, ncols, nrows)
+        _check_raw_data(bytes_per_col * 2, data_path, ncols, nrows)
     else:
         _check_raw_data(bytes_per_col, data_path, ncols, nrows)
 
     _check_pixel_res_mismatch(header)
 
     # position and projection data
-    gt = [header[ifc.PYRATE_LONG], header[ifc.PYRATE_X_STEP], 0,
-            header[ifc.PYRATE_LAT], 0, header[ifc.PYRATE_Y_STEP]]
+    gt = [header[ifc.PYRATE_LONG], header[ifc.PYRATE_X_STEP], 0, header[ifc.PYRATE_LAT], 0, header[ifc.PYRATE_Y_STEP]]
     srs = osr.SpatialReference()
     res = srs.SetWellKnownGeogCS(header[ifc.PYRATE_DATUM])
     if res:
-        msg = 'Unrecognised projection: %s' % header[ifc.PYRATE_DATUM]
+        msg = "Unrecognised projection: %s" % header[ifc.PYRATE_DATUM]
         raise GeotiffException(msg)
 
     wkt = srs.ExportToWkt()
-    dtype = 'float32' if (_is_interferogram(header) or _is_incidence(header)) else 'int16'
+    dtype = "float32" if (_is_interferogram(header) or _is_incidence(header)) else "int16"
 
     # get subset of metadata relevant to PyRate
     md = collate_metadata(header)
 
     # create GDAL object
-    ds = gdal_dataset(dest, ncols, nrows, driver="GTiff", bands=1, dtype=dtype, metadata=md, crs=wkt, geotransform=gt, creation_opts=['compress=packbits'])
+    ds = gdal_dataset(
+        dest, ncols, nrows, driver="GTiff", bands=1, dtype=dtype, metadata=md, crs=wkt, geotransform=gt, creation_opts=["compress=packbits"]
+    )
 
     # copy data from the binary file
     band = ds.GetRasterBand(1)
@@ -732,7 +727,7 @@ def write_fullres_geotiff(header, data_path, dest, nodata):
 
     row_bytes = ncols * bytes_per_col
 
-    with open(data_path, 'rb') as f:
+    with open(data_path, "rb") as f:
         for y in range(nrows):
             if ifg_proc == ROIPAC:
                 if _is_interferogram(header):
@@ -745,13 +740,13 @@ def write_fullres_geotiff(header, data_path, dest, nodata):
     del ds
 
 
-def gdal_dataset(out_fname, columns, rows, driver="GTiff", bands=1, dtype='float32', metadata=None, crs=None, geotransform=None, creation_opts=None):
+def gdal_dataset(out_fname, columns, rows, driver="GTiff", bands=1, dtype="float32", metadata=None, crs=None, geotransform=None, creation_opts=None):
     """
     Initialises a py-GDAL dataset object for writing image data.
     """
-    if dtype == 'float32':
+    if dtype == "float32":
         gdal_dtype = gdal.GDT_Float32
-    elif dtype == 'int16':
+    elif dtype == "int16":
         gdal_dtype = gdal.GDT_Int16
     else:
         # assume gdal.GDT val is passed to function
@@ -783,15 +778,23 @@ def collate_metadata(header):
     """
     md = dict()
     if _is_interferogram(header):
-        for k in [ifc.PYRATE_WAVELENGTH_METRES, ifc.PYRATE_TIME_SPAN, ifc.PYRATE_INSAR_PROCESSOR, ifc.MASTER_DATE, ifc.SLAVE_DATE, ifc.DATA_UNITS, ifc.DATA_TYPE]:
+        for k in [
+            ifc.PYRATE_WAVELENGTH_METRES,
+            ifc.PYRATE_TIME_SPAN,
+            ifc.PYRATE_INSAR_PROCESSOR,
+            ifc.MASTER_DATE,
+            ifc.SLAVE_DATE,
+            ifc.DATA_UNITS,
+            ifc.DATA_TYPE,
+        ]:
             md.update({k: str(header[k])})
         if header[ifc.PYRATE_INSAR_PROCESSOR] == GAMMA:
             for k in [ifc.MASTER_TIME, ifc.SLAVE_TIME, ifc.PYRATE_INCIDENCE_DEGREES]:
                 md.update({k: str(header[k])})
     elif _is_incidence(header):
-        md.update({ifc.DATA_TYPE:ifc.INCIDENCE})
-    else: # must be dem
-        md.update({ifc.DATA_TYPE:ifc.DEM})
+        md.update({ifc.DATA_TYPE: ifc.INCIDENCE})
+    else:  # must be dem
+        md.update({ifc.DATA_TYPE: ifc.DEM})
 
     return md
 
@@ -801,17 +804,17 @@ def _data_format(ifg_proc, is_ifg, ncols):
     Convenience function to determine the bytesize and format of input files
     """
     if ifg_proc == GAMMA:
-        fmtstr = '!' + ('f' * ncols)  # data format is big endian float32s
+        fmtstr = "!" + ("f" * ncols)  # data format is big endian float32s
         bytes_per_col = 4
     elif ifg_proc == ROIPAC:
         if is_ifg:
-            fmtstr = '<' + ('f' * ncols)  # roipac ifgs are little endian float32s
+            fmtstr = "<" + ("f" * ncols)  # roipac ifgs are little endian float32s
             bytes_per_col = 4
         else:
-            fmtstr = '<' + ('h' * ncols)  # roipac DEM is little endian signed int16
+            fmtstr = "<" + ("h" * ncols)  # roipac DEM is little endian signed int16
             bytes_per_col = 2
     else:  # pragma: no cover
-        msg = 'Unrecognised InSAR Processor: %s' % ifg_proc
+        msg = "Unrecognised InSAR Processor: %s" % ifg_proc
         raise GeotiffException(msg)
     return bytes_per_col, fmtstr
 
@@ -823,7 +826,7 @@ def _check_raw_data(bytes_per_col, data_path, ncols, nrows):
     size = ncols * nrows * bytes_per_col
     act_size = os.stat(data_path).st_size
     if act_size != size:
-        msg = '%s should have size %s, not %s. Is the correct file being used?'
+        msg = "%s should have size %s, not %s. Is the correct file being used?"
         raise GeotiffException(msg % (data_path, size, act_size))
 
 
@@ -834,7 +837,7 @@ def _check_pixel_res_mismatch(header):
     xs, ys = [abs(i) for i in [header[ifc.PYRATE_X_STEP], header[ifc.PYRATE_Y_STEP]]]
 
     if xs != ys:
-        msg = 'X and Y cell sizes do not match: %s & %s'
+        msg = "X and Y cell sizes do not match: %s & %s"
         raise GeotiffException(msg % (xs, ys))
 
 
@@ -852,9 +855,9 @@ def write_unw_from_data_or_geotiff(geotif_or_data, dest_unw, ifg_proc):
     :return: None, file saved to disk
     """
     if ifg_proc != 1:
-        raise NotImplementedError('only supports GAMMA format for now')
+        raise NotImplementedError("only supports GAMMA format for now")
     if isinstance(geotif_or_data, str):
-        assert os.path.exists(geotif_or_data), 'make sure geotif exists'
+        assert os.path.exists(geotif_or_data), "make sure geotif exists"
         ds = gdal.Open(geotif_or_data)
         data = ds.ReadAsArray()
         ds = None
@@ -862,9 +865,9 @@ def write_unw_from_data_or_geotiff(geotif_or_data, dest_unw, ifg_proc):
         data = geotif_or_data
 
     nrows, ncols = data.shape
-    fmtstr = '!' + ('f' * ncols)  # data format is big endian float32s
+    fmtstr = "!" + ("f" * ncols)  # data format is big endian float32s
 
-    with open(dest_unw, 'wb') as f:
+    with open(dest_unw, "wb") as f:
         for y in range(nrows):
             col_data = struct.pack(fmtstr, *data[y, :])
             f.write(col_data)
@@ -887,17 +890,17 @@ def write_output_geotiff(md, gt, wkt, data, dest, nodata):
 
     driver = gdal.GetDriverByName("GTiff")
     nrows, ncols = data.shape
-    ds = driver.Create(dest, ncols, nrows, 1, gdal.GDT_Float32, options=['compress=packbits'])
+    ds = driver.Create(dest, ncols, nrows, 1, gdal.GDT_Float32, options=["compress=packbits"])
     # set spatial reference for geotiff
     ds.SetGeoTransform(gt)
     ds.SetProjection(wkt)
     ds.SetMetadataItem(ifc.EPOCH_DATE, str(md[ifc.EPOCH_DATE]))
 
     # set other metadata
-    ds.SetMetadataItem('DATA_TYPE', str(md['DATA_TYPE']))
+    ds.SetMetadataItem("DATA_TYPE", str(md["DATA_TYPE"]))
     # sequence position for time series products
-    if 'SEQUENCE_POSITION' in md:
-        ds.SetMetadataItem('SEQUENCE_POSITION', str(md['SEQUENCE_POSITION']))
+    if "SEQUENCE_POSITION" in md:
+        ds.SetMetadataItem("SEQUENCE_POSITION", str(md["SEQUENCE_POSITION"]))
 
     # write data to geotiff
     band = ds.GetRasterBand(1)
@@ -940,6 +943,7 @@ class GeotiffException(Exception):
     Geotiff exception class
     """
 
+
 def create_tiles(shape, nrows=2, ncols=2):
     """
     Return a list of tiles containing nrows x ncols with each tile preserving
@@ -958,15 +962,15 @@ def create_tiles(shape, nrows=2, ncols=2):
     """
 
     if len(shape) != 2:
-        raise ValueError('shape must be a length 2 tuple')
+        raise ValueError("shape must be a length 2 tuple")
 
     no_y, no_x = shape
 
     if ncols > no_x or nrows > no_y:
-        raise ValueError('nrows/cols must be greater than ifg dimensions')
+        raise ValueError("nrows/cols must be greater than ifg dimensions")
     col_arr = np.array_split(range(no_x), ncols)
     row_arr = np.array_split(range(no_y), nrows)
-    return [Tile(i, (r[0], c[0]), (r[-1]+1, c[-1]+1)) for i, (r, c) in enumerate(product(row_arr, col_arr))]
+    return [Tile(i, (r[0], c[0]), (r[-1] + 1, c[-1] + 1)) for i, (r, c) in enumerate(product(row_arr, col_arr))]
 
 
 def get_tiles(ifg_path, rows, cols):
@@ -988,10 +992,11 @@ def get_tiles(ifg_path, rows, cols):
     return tiles
 
 
-class Tile():
+class Tile:
     """
     Tile class for containing a sub-part of an interferogram
     """
+
     def __init__(self, index, top_left, bottom_right):
         """
         Parameters
@@ -1046,12 +1051,12 @@ def cell_size(lat, lon, x_step, y_step):
     :rtype: tuple
     """
     if lat > 84.0 or lat < -80:
-        msg = "No UTM zone for polar region: > 84 degrees N or < 80 degrees S. Provided values are lat: "+str(lat) +" long: " +str(lon)
+        msg = "No UTM zone for polar region: > 84 degrees N or < 80 degrees S. Provided values are lat: " + str(lat) + " long: " + str(lon)
         raise ValueError(msg)
 
     zone = _utm_zone(lon)
-    p0 = pyproj.Proj(proj='latlong', ellps='WGS84')
-    p1 = pyproj.Proj(proj='utm', zone=zone, ellps='WGS84')
+    p0 = pyproj.Proj(proj="latlong", ellps="WGS84")
+    p1 = pyproj.Proj(proj="utm", zone=zone, ellps="WGS84")
 
     x0, y0 = pyproj.transform(p0, p1, lon, lat, errcheck=True)
     x1, y1 = pyproj.transform(p0, p1, lon + x_step, lat + y_step, errcheck=True)
@@ -1070,12 +1075,12 @@ def _utm_zone(longitude):
     return floor((longitude + 180) / 6.0) + 1
 
 
-class PrereadIfg():
+class PrereadIfg:
     """
     Convenience class for handling pre-calculated ifg params
     """
-    def __init__(self, path, nan_fraction, master, slave, time_span,
-                 nrows, ncols, metadata):
+
+    def __init__(self, path, nan_fraction, master, slave, time_span, nrows, ncols, metadata):
         self.path = path
         self.nan_fraction = nan_fraction
         self.master = master
@@ -1122,13 +1127,11 @@ def save_numpy_phase(ifg_paths, tiles, params):
         ifg = Ifg(ifg_path)
         ifg.open()
         phase_data = ifg.phase_data
-        bname = basename(ifg_path).split('.')[0]
+        bname = basename(ifg_path).split(".")[0]
         for t in tiles:
-            p_data = phase_data[t.top_left_y:t.bottom_right_y,
-                                t.top_left_x:t.bottom_right_x]
-            phase_file = 'phase_data_{}_{}.npy'.format(bname, t.index)
-            np.save(file=join(outdir, phase_file),
-                    arr=p_data)
+            p_data = phase_data[t.top_left_y : t.bottom_right_y, t.top_left_x : t.bottom_right_x]
+            phase_file = "phase_data_{}_{}.npy".format(bname, t.index)
+            np.save(file=join(outdir, phase_file), arr=p_data)
         ifg.close()
     mpiops.comm.barrier()
 
@@ -1182,12 +1185,12 @@ def output_tiff_filename(inpath, outpath):
     :return: Geotiff filename for the given file.
     :rtype: str
     """
-    fname, ext = os.path.basename(inpath).split('.')
+    fname, ext = os.path.basename(inpath).split(".")
     outpath = os.path.dirname(inpath) if outpath is None else outpath
-    if ext == 'tif':
-        name = os.path.join(outpath, fname + '.tif')
+    if ext == "tif":
+        name = os.path.join(outpath, fname + ".tif")
     else:
-        name = os.path.join(outpath, fname + '_' + ext + '.tif')
+        name = os.path.join(outpath, fname + "_" + ext + ".tif")
     return name
 
 
@@ -1202,10 +1205,11 @@ def check_correction_status(ifgs, meta):  # pragma: no cover
     :return: True if correction has been performed, otherwise False
     :rtype: bool
     """
-    def close_all(ifgs):    
+
+    def close_all(ifgs):
         for ifg in ifgs:
             ifg.close()
-    
+
     if not isinstance(ifgs[0], Ifg):
         ifgs = [Ifg(ifg_path) for ifg_path in ifgs]
 
@@ -1215,20 +1219,20 @@ def check_correction_status(ifgs, meta):  # pragma: no cover
 
     flags = [meta in ifg.meta_data for ifg in ifgs]
     if all(flags):
-        log.info('Skipped: interferograms already corrected')
+        log.info("Skipped: interferograms already corrected")
         return True
     elif not all(flags) and any(flags):
-        log.debug('Detected mix of corrected and uncorrected interferograms')
+        log.debug("Detected mix of corrected and uncorrected interferograms")
         for i, flag in zip(ifgs, flags):
             if flag:
-                msg = '{}: correction detected'.format(i.data_path)
+                msg = "{}: correction detected".format(i.data_path)
             else:
-                msg = '{}: correction NOT detected'.format(i.data_path)
+                msg = "{}: correction NOT detected".format(i.data_path)
             log.debug(msg)
             close_all(ifgs)
             # raise CorrectionStatusError(msg)
     else:
-        log.debug('Calculating corrections')
+        log.debug("Calculating corrections")
         close_all(ifgs)
         return False
 

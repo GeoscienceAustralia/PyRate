@@ -33,42 +33,46 @@ from core.shared import CorrectionStatusError
 import prepifg, process, conv2tif
 import common
 
-legacy_ref_phs_method1 = [-18.2191658020020,
-                          27.7119445800781,
-                          -18.4944229125977,
-                          -2.92210483551025,
-                          31.1168708801270,
-                          21.2123012542725,
-                          9.01810073852539,
-                          6.08130645751953,
-                          -3.79313516616821,
-                          -11.3826837539673,
-                          -7.28352737426758,
-                          17.6365375518799,
-                          -12.8673439025879,
-                          5.46325922012329,
-                          -35.4149475097656,
-                          -13.5371961593628,
-                          -12.7864856719971]
+legacy_ref_phs_method1 = [
+    -18.2191658020020,
+    27.7119445800781,
+    -18.4944229125977,
+    -2.92210483551025,
+    31.1168708801270,
+    21.2123012542725,
+    9.01810073852539,
+    6.08130645751953,
+    -3.79313516616821,
+    -11.3826837539673,
+    -7.28352737426758,
+    17.6365375518799,
+    -12.8673439025879,
+    5.46325922012329,
+    -35.4149475097656,
+    -13.5371961593628,
+    -12.7864856719971,
+]
 
 
-legacy_ref_phs_method2 = [-21.4459648132324,
-                          27.1714553833008,
-                          -20.8264484405518,
-                          -3.47468209266663,
-                          30.4519863128662,
-                          22.3201427459717,
-                          9.58487224578857,
-                          4.81979084014893,
-                          -3.89160847663879,
-                          -12.0131330490112,
-                          -8.64702987670898,
-                          19.2060871124268,
-                          -9.92049789428711,
-                          4.38952684402466,
-                          -34.9590339660645,
-                          -14.3167810440063,
-                          -11.9066228866577]
+legacy_ref_phs_method2 = [
+    -21.4459648132324,
+    27.1714553833008,
+    -20.8264484405518,
+    -3.47468209266663,
+    30.4519863128662,
+    22.3201427459717,
+    9.58487224578857,
+    4.81979084014893,
+    -3.89160847663879,
+    -12.0131330490112,
+    -8.64702987670898,
+    19.2060871124268,
+    -9.92049789428711,
+    4.38952684402466,
+    -34.9590339660645,
+    -14.3167810440063,
+    -11.9066228866577,
+]
 
 
 class RefPhsTests(unittest.TestCase):
@@ -88,7 +92,6 @@ class RefPhsTests(unittest.TestCase):
         self.ifgs = common.small_data_setup(self.tmp_dir, is_dir=True)
         for ifg in self.ifgs:
             ifg.close()
-       
 
     def tearDown(self):
         try:
@@ -107,7 +110,7 @@ class RefPhsTests(unittest.TestCase):
         for ifg in self.ifgs:
             ifg.open()
             self.assertEqual(ifg.dataset.GetMetadataItem(ifc.PYRATE_REF_PHASE), ifc.REF_PHASE_REMOVED)
-    
+
     # def test_mixed_metadata_raises(self):
     #     # correct reference phase for some of the ifgs
     #     process._ref_phase_estimation(self.ifgs[:5], self.params, self.refpx, self.refpy)
@@ -118,6 +121,8 @@ class RefPhsTests(unittest.TestCase):
     #     # refernece phase again on all of them
     #     self.assertRaises(CorrectionStatusError, process._ref_phase_estimation, self.ifgs, self.params, self.refpx, self.refpy)
     #
+
+
 #
 # class RefPhsEstimationLegacyTestMethod1Serial(unittest.TestCase):
 #     """
@@ -455,5 +460,5 @@ class RefPhsTests(unittest.TestCase):
 #         np.testing.assert_array_almost_equal(legacy_ref_phs_method2, self.ref_phs, decimal=3)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

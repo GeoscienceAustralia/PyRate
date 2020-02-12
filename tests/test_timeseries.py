@@ -35,14 +35,16 @@ from core.timeseries import time_series
 
 
 def default_params():
-    return {cf.TIME_SERIES_METHOD: 1,
-            cf.TIME_SERIES_PTHRESH: 0,
-            cf.TIME_SERIES_SM_ORDER: 2,
-            cf.TIME_SERIES_SM_FACTOR: -0.25,
-            cf.PARALLEL: 0,
-            cf.PROCESSES: 1,
-            cf.NAN_CONVERSION: 1,
-            cf.NO_DATA_VALUE: 0}
+    return {
+        cf.TIME_SERIES_METHOD: 1,
+        cf.TIME_SERIES_PTHRESH: 0,
+        cf.TIME_SERIES_SM_ORDER: 2,
+        cf.TIME_SERIES_SM_FACTOR: -0.25,
+        cf.PARALLEL: 0,
+        cf.PROCESSES: 1,
+        cf.NAN_CONVERSION: 1,
+        cf.NO_DATA_VALUE: 0,
+    }
 
 
 class SinglePixelIfg(object):
@@ -91,7 +93,7 @@ class TimeSeriesTests(unittest.TestCase):
 
         now = date.today()
 
-        dates = [now + timedelta(days=(t*365.25)) for t in timeseries]
+        dates = [now + timedelta(days=(t * 365.25)) for t in timeseries]
         dates.sort()
         master = [dates[m_num - 1] for m_num in imaster]
         slave = [dates[s_num - 1] for s_num in islave]
@@ -101,6 +103,8 @@ class TimeSeriesTests(unittest.TestCase):
         tsincr, tscum, tsvel = time_series(self.ifgs, params=self.params, vcmt=self.vcmt, mst=None)
         expected = asarray([[[0.50, 3.0, 4.0, 5.5, 6.5]]])
         assert_array_almost_equal(tscum, expected, decimal=2)
+
+
 #
 #
 # class LegacyTimeSeriesEquality(unittest.TestCase):
