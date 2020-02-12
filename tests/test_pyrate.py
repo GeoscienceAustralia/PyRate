@@ -36,6 +36,11 @@ import common
 if os.name == "nt":
 
     def symlink_ms(source, link_name):
+        """
+        Args:
+            source:
+            link_name:
+        """
         import ctypes
 
         csl = ctypes.windll.kernel32.CreateSymbolicLinkW
@@ -78,8 +83,11 @@ def test_original_ifg_paths():
 
 
 def dest_ifg_paths(ifg_paths, outdir):
-    """
-    Returns paths to out/dest ifgs.
+    """Returns paths to out/dest ifgs.
+
+    Args:
+        ifg_paths:
+        outdir:
     """
 
     bases = [os.path.basename(p) for p in ifg_paths]
@@ -95,6 +103,11 @@ def test_dest_ifg_paths():
 
 # FIXME: change to read output ifgs
 def get_ifgs(out_dir, _open=True):
+    """
+    Args:
+        out_dir:
+        _open:
+    """
     paths = glob.glob(join(out_dir, "geo_*-*_unw.tif"))
     ifgs = [shared.Ifg(p) for p in paths]
     assert len(ifgs) == 17, "Got %s" % ifgs
@@ -154,7 +167,13 @@ class PyRateTests(unittest.TestCase):
         os.chdir(CURRENT_DIR)
 
     def key_check(self, ifg, key, value):
-        "Helper to check for metadata flags"
+        """Helper to check for metadata flags
+
+        Args:
+            ifg:
+            key:
+            value:
+        """
         md = ifg.dataset.GetMetadata()
         self.assertTrue(key in md, "Missing %s in %s" % (key, ifg.data_path))
         self.assertTrue(md[key], value)
@@ -186,9 +205,7 @@ class PyRateTests(unittest.TestCase):
 
 
 class ParallelPyRateTests(unittest.TestCase):
-    """
-    parallel vs serial pyrate tests verifying results from all steps equal
-    """
+    """parallel vs serial pyrate tests verifying results from all steps equal"""
 
     @classmethod
     def setUpClass(cls):
@@ -251,7 +268,13 @@ class ParallelPyRateTests(unittest.TestCase):
     #         self.key_check(i, key, value)
 
     def key_check(self, ifg, key, value):
-        "Helper to check for metadata flags"
+        """Helper to check for metadata flags
+
+        Args:
+            ifg:
+            key:
+            value:
+        """
         md = ifg.dataset.GetMetadata()
         self.assertTrue(key in md, "Missing %s in %s" % (key, ifg.data_path))
         self.assertTrue(md[key], value)

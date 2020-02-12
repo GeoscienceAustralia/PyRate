@@ -35,16 +35,16 @@ rank = comm.Get_rank()
 
 
 def run_once(f, *args, **kwargs):
-    """
-    Run a function on one node and then broadcast result to all.
+    """Run a function on one node and then broadcast result to all.
 
-    :param str f: The function to be evaluated. Can take arbitrary arguments
-                and return anything or nothing
-    :param str args: Other positional arguments to pass on to f (optional)
-    :param str kwargs: Other named arguments to pass on to f (optional)
+    Args:
+        f (str): The function to be evaluated. Can take arbitrary arguments and
+            return anything or nothing
+        args (str): Other positional arguments to pass on to f (optional)
+        kwargs (str): Other named arguments to pass on to f (optional)
 
-    :return: The value returned by f.
-    :rtype: unknown
+    Returns:
+        unknown: The value returned by f.
     """
     if rank == 0:
         f_result = f(*args, **kwargs)
@@ -55,15 +55,14 @@ def run_once(f, *args, **kwargs):
 
 
 def array_split(arr, process=None):
-    """
-    Convenience function for splitting array elements across MPI processes
+    """Convenience function for splitting array elements across MPI processes
 
-    :param ndarray arr: Numpy array
-    :param int process: Process for which array members are required.
-                If None, MPI.comm.rank is used instead. (optional)
+    :return List corresponding to array members in a process. :rtype: list
 
-    :return List corresponding to array members in a process.
-    :rtype: list
+    Args:
+        arr (ndarray): Numpy array
+        process (int): Process for which array members are required. If None,
+            MPI.comm.rank is used instead. (optional)
     """
     r = process if process else rank
     return np.array_split(arr, size)[r]
@@ -71,6 +70,11 @@ def array_split(arr, process=None):
 
 def chunks(jobs, size):
 
+    """
+    Args:
+        jobs:
+        size:
+    """
     n = int(round(len(jobs) / size, 0))
     # handle edge case: n <<< size
     if n == 0:

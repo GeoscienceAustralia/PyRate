@@ -82,3 +82,8 @@ twine upload --repository-url https://upload.pypi.org/legacy/ dist/*
 
 # For detailed documentation visit:
 # https://packaging.python.org/tutorials/packaging-projects/
+
+
+# code formating
+pip install black
+black -t py37 -v -l 150 .

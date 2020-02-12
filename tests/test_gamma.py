@@ -67,6 +67,10 @@ class GammaCommandLineTests(unittest.TestCase):
         shutil.rmtree(self.base_dir)
 
     def makeInputFiles(self, data):
+        """
+        Args:
+            data:
+        """
         with open(self.confFile, "w") as conf:
             conf.write("{}: {}\n".format(DEM_HEADER_FILE, self.hdr))
             conf.write("{}: {}\n".format(NO_DATA_VALUE, "0.0"))
@@ -157,6 +161,11 @@ class GammaToGeoTiffTests(unittest.TestCase):
         self.assertRaises(GeotiffException, write_fullres_geotiff, hdrs, data_path, self.dest, 0)
 
     def compare_rasters(self, ds, exp_ds):
+        """
+        Args:
+            ds:
+            exp_ds:
+        """
         band = ds.GetRasterBand(1)
         exp_band = exp_ds.GetRasterBand(1)
 
@@ -179,7 +188,7 @@ class GammaToGeoTiffTests(unittest.TestCase):
 
 
 class GammaHeaderParsingTests(unittest.TestCase):
-    "Tests conversion of GAMMA headers to Py dicts"
+    """Tests conversion of GAMMA headers to Py dicts"""
 
     def test_parse_gamma_epoch_header(self):
         # minimal required headers are:
@@ -240,7 +249,9 @@ H1_ERR2 = {
 
 
 class HeaderCombinationTests(unittest.TestCase):
-    "Tests GAMMA epoch and DEM headers can be combined into a single Py dict"
+    """Tests GAMMA epoch and DEM headers can be combined into a single Py
+    dict
+    """
 
     def setUp(self):
         self.err = gamma.GammaException
@@ -285,8 +296,7 @@ class HeaderCombinationTests(unittest.TestCase):
 
 
 class TestGammaParallelVsSerial(unittest.TestCase):
-    """
-    Test Gamma prepifg produces correct results when run in serial and 
+    """Test Gamma prepifg produces correct results when run in serial and
     parallel and that metadata is correctly set by both methods. These tests
     exclude the comparison of DEM files.
     """

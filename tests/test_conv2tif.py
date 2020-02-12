@@ -11,8 +11,7 @@ import common
 
 
 class ConvertToGeotiffTests(unittest.TestCase):
-    """
-    Test basic functionality of converttogeotif - they get placed in the
+    """Test basic functionality of converttogeotif - they get placed in the
     right directory and there's the right amount.
     """
 
@@ -51,23 +50,25 @@ class ConvertToGeotiffTests(unittest.TestCase):
         self.assertEqual(len(gtifs), 18)
 
     def test_conversion_not_recomputed(self):
-        """
-        If a gtif already exists, conv2tif will return None instead
-        of path to the gtif.
+        """If a gtif already exists, conv2tif will return None instead of path
+        to the gtif.
         """
         conv2tif.main(self.gamma_params)
         gtifs = conv2tif.main(self.gamma_params)
         self.assertTrue(all([gt is None for gt in gtifs]))
 
     def teardown_method(self, method):
+        """
+        Args:
+            method:
+        """
         common.remove_tifs(self.gamma_params[cf.OBS_DIR])
         common.remove_tifs(self.roipac_params[cf.OBS_DIR])
 
 
 class PrepifgConversionTests(unittest.TestCase):
-    """
-    Test that prepifg fails if there are no converted IFGs in the observations
-    directory, and that it succeeds if there are.
+    """Test that prepifg fails if there are no converted IFGs in the
+    observations directory, and that it succeeds if there are.
     """
 
     @classmethod
@@ -83,4 +84,8 @@ class PrepifgConversionTests(unittest.TestCase):
         prepifg.main(self.params)
 
     def teardown_method(self, method):
+        """
+        Args:
+            method:
+        """
         common.remove_tifs(self.params[cf.OBS_DIR])

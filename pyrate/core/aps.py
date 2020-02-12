@@ -38,9 +38,14 @@ from core.logger import pyratelogger as log
 
 
 def _wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs):
-    """
-    A wrapper for the spatio-temporal filter so it can be tested.
-    See docstring for spatio_temporal_filter.
+    """A wrapper for the spatio-temporal filter so it can be tested. See
+    docstring for spatio_temporal_filter.
+
+    Args:
+        ifg_paths:
+        params:
+        tiles:
+        preread_ifgs:
     """
     if not params[cf.APSEST]:
         log.info("APS correction not required.")
@@ -61,20 +66,20 @@ def _wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs):
 
 
 def spatio_temporal_filter(tsincr, ifg, params, preread_ifgs):
-    """
-    Applies a spatio-temporal filter to remove the atmospheric phase screen
+    """Applies a spatio-temporal filter to remove the atmospheric phase screen
     (APS) and saves the corrected interferograms. Before performing this step,
-    the time series iscomputed using the SVD method. This function then
-    performs temporal and spatial filtering.
+    the time series iscomputed using the SVD method. This function then performs
+    temporal and spatial filtering.
 
-    :param ndarray tsincr: incremental time series array of size
-                (ifg.shape, nepochs-1)
-    :param list ifg: List of shared.Ifg class objects.
-    :param dict params: Dictionary of configuration parameter
-    :param list tiles: List of shared.Tile class objects
-    :param dict preread_ifgs: Dictionary of shared.PrereadIfg class instances
+    Args:
+        tsincr (ndarray): incremental time series array of size (ifg.shape,
+            nepochs-1)
+        ifg (list): List of shared.Ifg class objects.
+        params (dict): Dictionary of configuration parameter
+        preread_ifgs (dict): Dictionary of shared.PrereadIfg class instances
 
-    :return: None, corrected interferograms are saved to disk
+    Returns:
+        None, corrected interferograms are saved to disk
     """
     epochlist = mpiops.run_once(get_epochs, preread_ifgs)[0]
     # epochlist = get_epochs(preread_ifgs)[0]
@@ -92,9 +97,14 @@ def spatio_temporal_filter(tsincr, ifg, params, preread_ifgs):
 
 
 def _calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles):
-    """
-    Helper function to obtain time series for spatio-temporal filter
-    using SVD method
+    """Helper function to obtain time series for spatio-temporal filter using
+    SVD method
+
+    Args:
+        ifg_paths:
+        params:
+        preread_ifgs:
+        tiles:
     """
     # Is there other existing functions that can perform this same job?
     log.info("Calculating time series via SVD method for " "APS correction")
@@ -122,8 +132,14 @@ def _calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles):
 
 
 def _assemble_tsincr(ifg_paths, params, preread_ifgs, tiles, nvels):
-    """
-    Helper function to reconstruct time series images from tiles
+    """Helper function to reconstruct time series images from tiles
+
+    Args:
+        ifg_paths:
+        params:
+        preread_ifgs:
+        tiles:
+        nvels:
     """
     shape = preread_ifgs[ifg_paths[0]].shape + (nvels,)
     tsincr_g = np.empty(shape=shape, dtype=np.float32)
@@ -135,16 +151,17 @@ def _assemble_tsincr(ifg_paths, params, preread_ifgs, tiles, nvels):
 
 
 def _ts_to_ifgs(tsincr, preread_ifgs):
-    """
-    Function that converts an incremental displacement time series into
+    """Function that converts an incremental displacement time series into
     interferometric phase observations. Used to re-construct an interferogram
     network from a time series.
 
-    :param ndarray tsincr: incremental time series array of size
-                (ifg.shape, nepochs-1)
-    :param dict preread_ifgs: Dictionary of shared.PrereadIfg class instances
+    Args:
+        tsincr (ndarray): incremental time series array of size (ifg.shape,
+            nepochs-1)
+        preread_ifgs (dict): Dictionary of shared.PrereadIfg class instances
 
-    :return: None, interferograms are saved to disk
+    Returns:
+        None, interferograms are saved to disk
     """
     log.debug("Reconstructing interferometric observations from time series")
     ifgs = list(OrderedDict(sorted(preread_ifgs.items())).values())
@@ -156,9 +173,12 @@ def _ts_to_ifgs(tsincr, preread_ifgs):
 
 
 def _save_aps_corrected_phase(ifg_path, phase):
-    """
-    Save (update) interferogram metadata and phase data after
-    spatio-temporal filter (APS) correction.
+    """Save (update) interferogram metadata and phase data after spatio-temporal
+    filter (APS) correction.
+
+    Args:
+        ifg_path:
+        phase:
     """
     ifg = Ifg(ifg_path)
     ifg.open(readonly=False)
@@ -170,19 +190,19 @@ def _save_aps_corrected_phase(ifg_path, phase):
 
 
 def spatial_low_pass_filter(ts_lp, ifg, params):
-    """
-    Filter time series data spatially using either a Butterworth or Gaussian
+    """Filter time series data spatially using either a Butterworth or Gaussian
     low pass filter defined by a cut-off distance. If the cut-off distance is
-    defined as zero in the parameters dictionary then it is calculated for
-    each time step using the covariance.cvd_from_phase method.
+    defined as zero in the parameters dictionary then it is calculated for each
+    time step using the covariance.cvd_from_phase method.
 
-    :param ndarray ts_lp: Array of time series data, the result of a temporal
-                low pass filter operation. shape (ifg.shape, n_epochs)
-    :param shared.Ifg instance ifg: interferogram object
-    :param dict params: Dictionary of configuration parameters
+    Args:
+        ts_lp (ndarray): Array of time series data, the result of a temporal low
+            pass filter operation. shape (ifg.shape, n_epochs)
+        ifg (shared.Ifg instance): interferogram object
+        params (dict): Dictionary of configuration parameters
 
-    :return: ts_hp: filtered time series data of shape (ifg.shape, n_epochs)
-    :rtype: ndarray
+    Returns:
+        ndarray: ts_hp: filtered time series data of shape (ifg.shape, n_epochs)
     """
     log.info("Applying APS spatial low-pass filter")
     if params[cf.SLPF_NANFILL] == 0:
@@ -198,9 +218,12 @@ def spatial_low_pass_filter(ts_lp, ifg, params):
 
 
 def _interpolate_nans(arr, method="linear"):
-    """
-    Fill any NaN values in arr with interpolated values. Nanfill and
+    """Fill any NaN values in arr with interpolated values. Nanfill and
     interpolation are performed in place.
+
+    Args:
+        arr:
+        method:
     """
     rows, cols = np.indices(arr.shape[:2])
     for i in range(arr.shape[2]):
@@ -209,13 +232,13 @@ def _interpolate_nans(arr, method="linear"):
 
 
 def _interpolate_nans_2d(a, rows, cols, method):
-    """
-    In-place array interpolation and nanfill
+    """In-place array interpolation and nanfill
 
-    :param ndarray a: 2d ndarray to be interpolated
-    :param ndarray rows: 2d ndarray of row indices
-    :param ndarray cols: 2d ndarray of col indices
-    :param str method: Method; one of 'nearest', 'linear', and 'cubic'
+    Args:
+        a (ndarray): 2d ndarray to be interpolated
+        rows (ndarray): 2d ndarray of row indices
+        cols (ndarray): 2d ndarray of col indices
+        method (str): Method; one of 'nearest', 'linear', and 'cubic'
     """
     a[np.isnan(a)] = griddata(
         (rows[~np.isnan(a)], cols[~np.isnan(a)]),  # points we know
@@ -227,8 +250,13 @@ def _interpolate_nans_2d(a, rows, cols, method):
 
 
 def _slpfilter(phase, ifg, r_dist, params):
-    """
-    Wrapper function for spatial low pass filter
+    """Wrapper function for spatial low pass filter
+
+    Args:
+        phase:
+        ifg:
+        r_dist:
+        params:
     """
     if np.all(np.isnan(phase)):  # return for nan matrix
         return phase
@@ -242,8 +270,16 @@ def _slpfilter(phase, ifg, r_dist, params):
 
 
 def _slp_filter(phase, cutoff, rows, cols, x_size, y_size, params):
-    """
-    Function to perform spatial low pass filter
+    """Function to perform spatial low pass filter
+
+    Args:
+        phase:
+        cutoff:
+        rows:
+        cols:
+        x_size:
+        y_size:
+        params:
     """
     cx = np.floor(cols / 2)
     cy = np.floor(rows / 2)
@@ -268,17 +304,18 @@ def _slp_filter(phase, cutoff, rows, cols, x_size, y_size, params):
 
 # TODO: use tiles here and distribute amongst processes
 def temporal_low_pass_filter(tsincr, epochlist, params):
-    """
-    Filter time series data temporally using either a Gaussian, triangular
-    or mean low pass filter defined by a cut-off time period (in years).
+    """Filter time series data temporally using either a Gaussian, triangular or
+    mean low pass filter defined by a cut-off time period (in years).
 
-    :param ndarray tsincr: Array of incremental time series data of shape
-                (ifg.shape, n_epochs)
-    :param list epochlist: List of shared.EpochList class instances
-    :param dict params: Dictionary of configuration parameters
+    Args:
+        tsincr (ndarray): Array of incremental time series data of shape
+            (ifg.shape, n_epochs)
+        epochlist (list): List of shared.EpochList class instances
+        params (dict): Dictionary of configuration parameters
 
-    :return: tsfilt_incr: filtered time series data, shape (ifg.shape, nepochs)
-    :rtype: ndarray
+    Returns:
+        ndarray: tsfilt_incr: filtered time series data, shape (ifg.shape,
+        nepochs)
     """
     log.info("Applying APS temporal low-pass filter")
     nanmat = ~isnan(tsincr)
@@ -306,8 +343,12 @@ gauss = lambda m, yr, cutoff: np.exp(-((yr / cutoff) ** 2) / 2)
 
 
 def _triangle(m, yr, cutoff):
-    """
-    Define triangular filter weights
+    """Define triangular filter weights
+
+    Args:
+        m:
+        yr:
+        cutoff:
     """
     wgt = cutoff - abs(yr)
     wgt[wgt < 0] = 0
@@ -319,8 +360,18 @@ mean_filter = lambda m, yr, cutoff: np.ones(m)
 
 
 def _tlpfilter(cols, cutoff, nanmat, rows, span, threshold, tsfilt_incr, tsincr, func):
-    """
-    Wrapper function for temporal low pass filter
+    """Wrapper function for temporal low pass filter
+
+    Args:
+        cols:
+        cutoff:
+        nanmat:
+        rows:
+        span:
+        threshold:
+        tsfilt_incr:
+        tsincr:
+        func:
     """
     for i in range(rows):
         for j in range(cols):

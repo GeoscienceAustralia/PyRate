@@ -27,6 +27,12 @@ import subprocess
 
 def crop_using_gdalwarp(input_file, output_file, extents):
     # TODO: add extents checking between input_file and extents
+    """
+    Args:
+        input_file:
+        output_file:
+        extents:
+    """
     extents_str = [str(e) for e in extents]
     cmd = ["gdalwarp", "-overwrite", "-srcnodata", "None", "-q", "-te"] + extents_str
     cmd += [input_file, output_file]

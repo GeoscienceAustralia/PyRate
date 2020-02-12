@@ -60,9 +60,7 @@ legacy_maxvar = [
 
 @pytest.fixture()
 def tempdir():
-    """
-    tempdir for tests
-    """
+    """tempdir for tests"""
 
     def tmpdir():
         return tempfile.mkdtemp()
@@ -72,6 +70,10 @@ def tempdir():
 
 @pytest.fixture
 def random_filename(tmpdir_factory):
+    """
+    Args:
+        tmpdir_factory:
+    """
     def make_random_filename(ext=""):
         dir = str(tmpdir_factory.mktemp("pyrate").realpath())
         fname = "".join(random.choice(string.ascii_lowercase) for _ in range(10))
@@ -83,15 +85,8 @@ def random_filename(tmpdir_factory):
 @pytest.fixture()
 def get_config():
     """
-    Parameters
-    ----------
-    conf_file: str
-        config file
-
-    Returns
-    -------
-    params: dict
-        dict of params
+    Returns:
+        dict: **params** -- dict of params
     """
 
     def params(conf_file):
@@ -103,6 +98,10 @@ def get_config():
 # Make sure all MPI tests use this fixure
 @pytest.fixture()
 def mpisync(request):
+    """
+    Args:
+        request:
+    """
     mpiops.comm.barrier()
 
     def fin():
@@ -114,26 +113,48 @@ def mpisync(request):
 
 @pytest.fixture(params=[0, 1])
 def roipac_or_gamma(request):
+    """
+    Args:
+        request:
+    """
     return request.param
 
 
 @pytest.fixture(params=[1, 2])
 def ref_est_method(request):
+    """
+    Args:
+        request:
+    """
     return request.param
 
 
 @pytest.fixture(params=[1, 2, 5])
 def row_splits(request):
+    """
+    Args:
+        request:
+    """
     return request.param
 
 
 @pytest.fixture(params=[1, 2, 5])
 def col_splits(request):
+    """
+    Args:
+        request:
+    """
     return request.param
 
 
 @pytest.fixture(params=[1, 2, 5])
 def modify_config(request, tempdir, get_config):
+    """
+    Args:
+        request:
+        tempdir:
+        get_config:
+    """
     test_conf = common.TEST_CONF_ROIPAC
     params_dict = get_config(test_conf)
     params_dict[cf.IFG_LKSX] = request.param
@@ -150,11 +171,19 @@ def modify_config(request, tempdir, get_config):
 
 @pytest.fixture(params=range(1, 6))
 def get_lks(request):
+    """
+    Args:
+        request:
+    """
     return request.param
 
 
 @pytest.fixture(params=range(1, 3))
 def get_crop(request):
+    """
+    Args:
+        request:
+    """
     return request.param
 
 
@@ -200,26 +229,53 @@ def get_crop(request):
 
 @pytest.fixture(params=[1, 2, 5])
 def orbfit_lks(request):
+    """
+    Args:
+        request:
+    """
     return request.param
 
 
 @pytest.fixture(params=[cf.INDEPENDENT_METHOD, cf.NETWORK_METHOD])
 def orbfit_method(request):
+    """
+    Args:
+        request:
+    """
     return request.param
 
 
 @pytest.fixture(params=[cf.PLANAR, cf.QUADRATIC, cf.PART_CUBIC])
 def orbfit_degrees(request):
+    """
+    Args:
+        request:
+    """
     return request.param
 
 
 def _tifs_same(dir1, dir2, tif):
+    """
+    Args:
+        dir1:
+        dir2:
+        tif:
+    """
     stack_tif_s = os.path.join(dir1, tif)
     stack_tif_m = os.path.join(dir2, tif)
     common.assert_ifg_phase_equal(stack_tif_m, stack_tif_s)
 
 
 def test_prepifg_mpi(mpisync, get_config, tempdir, roipac_or_gamma, get_lks, get_crop):
+    """
+    Args:
+        mpisync:
+        get_config:
+        tempdir:
+        roipac_or_gamma:
+        get_lks:
+        get_crop:
+    """
     from common import TEST_CONF_ROIPAC, TEST_CONF_GAMMA
     from os.path import join, basename
 

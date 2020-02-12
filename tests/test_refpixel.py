@@ -43,9 +43,7 @@ PARALLEL = False
 
 
 class ReferencePixelInputTests(unittest.TestCase):
-    """
-    Verifies error checking capabilities of the reference pixel function
-    """
+    """Verifies error checking capabilities of the reference pixel function"""
 
     def setUp(self):
         self.ifgs = small_data_setup()
@@ -96,9 +94,7 @@ class ReferencePixelInputTests(unittest.TestCase):
 
 
 class ReferencePixelTests(unittest.TestCase):
-    """
-    Tests reference pixel search
-    """
+    """Tests reference pixel search"""
 
     def setUp(self):
         self.ifgs = small_data_setup()
@@ -202,7 +198,12 @@ class ReferencePixelTests(unittest.TestCase):
 
 
 def _expected_ref_pixel(ifgs, cs):
-    """Helper function for finding reference pixel when refnx/y=2"""
+    """Helper function for finding reference pixel when refnx/y=2
+
+    Args:
+        ifgs:
+        cs:
+    """
 
     # calculate expected data
     data = [i.phase_data for i in ifgs]  # len 17 list of arrays

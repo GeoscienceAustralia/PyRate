@@ -54,17 +54,17 @@ GRID_TOL = 1e-6
 
 
 def get_analysis_extent(crop_opt, rasters, xlooks, ylooks, user_exts):
-    """
-    Function checks prepifg parameters and returns extents/bounding box.
+    """Function checks prepifg parameters and returns extents/bounding box.
 
-    :param int crop_opt: Cropping option
-    :param list rasters: List of either Ifg or DEM class objects
-    :param int xlooks: Number of multi-looks in x
-    :param int ylooks: Number of multi-looks in y
-    :param tuple user_exts: Tuple of user defined cropping coordinates
+    Args:
+        crop_opt (int): Cropping option
+        rasters (list): List of either Ifg or DEM class objects
+        xlooks (int): Number of multi-looks in x
+        ylooks (int): Number of multi-looks in y
+        user_exts (tuple): Tuple of user defined cropping coordinates
 
-    :return: extents: tuple of four bounding coordinates
-    :rtype: tuple
+    Returns:
+        tuple: extents: tuple of four bounding coordinates
     """
 
     if crop_opt not in CROP_OPTIONS:
@@ -90,8 +90,10 @@ def get_analysis_extent(crop_opt, rasters, xlooks, ylooks, user_exts):
 
 
 def _is_number(s):
-    """
-    Check whether string can be converted to float
+    """Check whether string can be converted to float
+
+    Args:
+        s:
     """
     try:
         float(s)
@@ -103,8 +105,11 @@ def _is_number(s):
 
 
 def _check_looks(xlooks, ylooks):
-    """
-    Convenience function to verify that looks parameters are valid.
+    """Convenience function to verify that looks parameters are valid.
+
+    Args:
+        xlooks:
+        ylooks:
     """
 
     if not (isinstance(xlooks, Number) and isinstance(ylooks, Number)):  # pragma: no cover
@@ -117,8 +122,10 @@ def _check_looks(xlooks, ylooks):
 
 
 def _check_resolution(ifgs):
-    """
-    Convenience function to verify Ifg resolutions are equal.
+    """Convenience function to verify Ifg resolutions are equal.
+
+    Args:
+        ifgs:
     """
 
     for var in ["x_step", "y_step"]:
@@ -129,12 +136,13 @@ def _check_resolution(ifgs):
 
 
 def _get_extents(ifgs, crop_opt, user_exts=None):
-    """
-    Convenience function that returns extents/bounding box.
-    MINIMUM_CROP = 1
-    MAXIMUM_CROP = 2
-    CUSTOM_CROP = 3
-    ALREADY_SAME_SIZE = 4
+    """Convenience function that returns extents/bounding box. MINIMUM_CROP = 1
+    MAXIMUM_CROP = 2 CUSTOM_CROP = 3 ALREADY_SAME_SIZE = 4
+
+    Args:
+        ifgs:
+        crop_opt:
+        user_exts:
     """
     if crop_opt == MINIMUM_CROP:
         extents = _min_bounds(ifgs)
@@ -151,26 +159,27 @@ def _get_extents(ifgs, crop_opt, user_exts=None):
 
 
 def prepare_ifg(input_path, output_path, xlooks, ylooks, extents, thresh, crop_out, header=None, coherence_path=None, coherence_thresh=None):
-    """
-    Open, resample, crop and optionally save to disk an interferogram or DEM.
+    """Open, resample, crop and optionally save to disk an interferogram or DEM.
     Returns are only given if write_to_disk=False
 
-    :param str input_path: Input raster file path name
-    :param int xlooks: Number of multi-looks in x; 5 is 5 times smaller,
-        1 is no change
-    :param int ylooks: Number of multi-looks in y
-    :param tuple extents: Tuple of user defined georeferenced extents for
-        new file: (xfirst, yfirst, xlast, ylast)cropping coordinates
-    :param float thresh: see thresh in prepare_ifgs()
-    :param int crop_out: Crop option
-    :param bool write_to_disk: Write new data to disk
-    :param str output_path: Path for output file
-    :param dict header: dictionary of metadata from header file
+    Args:
+        input_path (str): Input raster file path name
+        output_path (str): Path for output file
+        xlooks (int): Number of multi-looks in x; 5 is 5 times smaller, 1 is no
+            change
+        ylooks (int): Number of multi-looks in y
+        extents (tuple): Tuple of user defined georeferenced extents for new
+            file: (xfirst, yfirst, xlast, ylast)cropping coordinates
+        thresh (float): see thresh in prepare_ifgs()
+        crop_out (int): Crop option
+        header (dict): dictionary of metadata from header file
+        coherence_path:
+        coherence_thresh:
 
-    :return: resampled_data: output cropped and resampled image
-    :rtype: ndarray
-    :return: out_ds: destination gdal dataset object
-    :rtype: gdal.Dataset
+    Returns:
+        ndarray: resampled_data: output cropped and resampled image
+
+        gdal.Dataset: out_ds: destination gdal dataset object
     """
 
     do_multilook = xlooks > 1 or ylooks > 1
@@ -222,25 +231,28 @@ def prepare_ifg(input_path, output_path, xlooks, ylooks, extents, thresh, crop_o
 
 # TODO: crop options 0 = no cropping? get rid of same size
 def prepare_ifgs(raster_data_paths, crop_opt, xlooks, ylooks, thresh=0.5, user_exts=None, write_to_disc=True, out_path=None):
-    """
-    Wrapper function to prepare a sequence of interferogram files for
-    PyRate analysis. See prepifg.prepare_ifg() for full description of
-    inputs and returns.
-    
+    """Wrapper function to prepare a sequence of interferogram files for PyRate
+    analysis. See prepifg.prepare_ifg() for full description of inputs and
+    returns.
+
     Note: function need refining for crop options
 
-    :param list raster_data_paths: List of interferogram file paths
-    :param int crop_opt: Crop option
-    :param int xlooks: Number of multi-looks in x; 5 is 5 times smaller, 1 is no change
-    :param int ylooks: Number of multi-looks in y
-    :param float thresh: see thresh in prepare_ifgs()
-    :param tuple user_exts: Tuple of user defined georeferenced extents for new file: (xfirst, yfirst, xlast, ylast)cropping coordinates
-    :param bool write_to_disk: Write new data to disk
+    Args:
+        raster_data_paths (list): List of interferogram file paths
+        crop_opt (int): Crop option
+        xlooks (int): Number of multi-looks in x; 5 is 5 times smaller, 1 is no
+            change
+        ylooks (int): Number of multi-looks in y
+        thresh (float): see thresh in prepare_ifgs()
+        user_exts (tuple): Tuple of user defined georeferenced extents for new
+            file: (xfirst, yfirst, xlast, ylast)cropping coordinates
+        write_to_disc:
+        out_path:
 
-    :return: resampled_data: output cropped and resampled image
-    :rtype: ndarray
-    :return: out_ds: destination gdal dataset object
-    :rtype: gdal.Dataset
+    Returns:
+        ndarray: resampled_data: output cropped and resampled image
+
+        gdal.Dataset: out_ds: destination gdal dataset object
     """
     # use metadata check to check whether it's a dem or ifg
     rasters = [dem_or_ifg(r) for r in raster_data_paths]
@@ -250,13 +262,13 @@ def prepare_ifgs(raster_data_paths, crop_opt, xlooks, ylooks, thresh=0.5, user_e
 
 
 def dem_or_ifg(data_path):
-    """
-    Returns an Ifg or DEM class object from input geotiff file.
+    """Returns an Ifg or DEM class object from input geotiff file.
 
-    :param str data_path: file path name
+    Args:
+        data_path (str): file path name
 
-    :return: Interferogram or DEM object from input file
-    :rtype: Ifg or DEM class object
+    Returns:
+        Ifg or DEM class object: Interferogram or DEM object from input file
     """
     ds = gdal.Open(data_path)
     md = ds.GetMetadata()
@@ -268,8 +280,10 @@ def dem_or_ifg(data_path):
 
 # TODO: Not currently used; remove in future?
 def _file_ext(raster):
-    """
-    Returns file ext string based on type of raster.
+    """Returns file ext string based on type of raster.
+
+    Args:
+        raster:
     """
     if isinstance(raster, Ifg):
         return "tif"
@@ -284,9 +298,11 @@ def _file_ext(raster):
 
 
 def _dummy_warp(renamed_path):
-    """
-    Convenience dummy operation for when no multi-looking or cropping
+    """Convenience dummy operation for when no multi-looking or cropping
     required
+
+    Args:
+        renamed_path:
     """
     ifg = dem_or_ifg(renamed_path)
     ifg.open()
@@ -297,16 +313,16 @@ def _dummy_warp(renamed_path):
 
 # TODO: Not being used. Remove in future?
 def _resample(data, xscale, yscale, thresh):
-    """
-    Resamples/averages 'data' to return an array from the averaging of blocks
+    """Resamples/averages 'data' to return an array from the averaging of blocks
     of several tiles in 'data'. NB: Assumes incoherent cells are NaNs.
 
-    :param data: source array to resample to different size
-    :param xscale: number of cells to average along X axis
-    :param yscale: number of Y axis cells to average
-    :param thresh: minimum allowable
-        proportion of NaN cells (range from 0.0-1.0), eg. 0.25 = 1/4 or
-        more as NaNs results in a NaN value for the output cell.
+    Args:
+        data: source array to resample to different size
+        xscale: number of cells to average along X axis
+        yscale: number of Y axis cells to average
+        thresh: minimum allowable proportion of NaN cells (range from 0.0-1.0),
+            eg. 0.25 = 1/4 or more as NaNs results in a NaN value for the output
+            cell.
     """
     # TODO: make more efficient
     if thresh < 0 or thresh > 1:
@@ -332,8 +348,15 @@ def _resample(data, xscale, yscale, thresh):
 
 # TODO: Not being used. Remove in future?
 def _resample_ifg(ifg, cmd, x_looks, y_looks, thresh, md=None):
-    """
-    Convenience function to resample data from a given Ifg (more coarse).
+    """Convenience function to resample data from a given Ifg (more coarse).
+
+    Args:
+        ifg:
+        cmd:
+        x_looks:
+        y_looks:
+        thresh:
+        md:
     """
 
     fp, tmp_path = mkstemp(suffix=".tif")
@@ -366,8 +389,10 @@ def _resample_ifg(ifg, cmd, x_looks, y_looks, thresh, md=None):
 
 
 def _min_bounds(ifgs):
-    """
-    Returns bounds for overlapping area of the given interferograms.
+    """Returns bounds for overlapping area of the given interferograms.
+
+    Args:
+        ifgs:
     """
 
     xmin = max([i.x_first for i in ifgs])
@@ -378,8 +403,10 @@ def _min_bounds(ifgs):
 
 
 def _max_bounds(ifgs):
-    """
-    Returns bounds for the total area covered by the given interferograms.
+    """Returns bounds for the total area covered by the given interferograms.
+
+    Args:
+        ifgs:
     """
 
     xmin = min([i.x_first for i in ifgs])
@@ -393,8 +420,10 @@ from decimal import Decimal
 
 
 def _get_same_bounds(ifgs):
-    """
-    Check and return bounding box for ALREADY_SAME_SIZE option.
+    """Check and return bounding box for ALREADY_SAME_SIZE option.
+
+    Args:
+        ifgs:
     """
 
     tfs = [i.dataset.GetGeoTransform() for i in ifgs]
@@ -424,8 +453,14 @@ def _get_same_bounds(ifgs):
 
 
 def _custom_bounds(ifgs, xw, ytop, xe, ybot):
-    """
-    Check and modify input custom crop bounds to line up with grid interval
+    """Check and modify input custom crop bounds to line up with grid interval
+
+    Args:
+        ifgs:
+        xw:
+        ytop:
+        xe:
+        ybot:
     """
     msg = "Cropped image bounds are outside the original image bounds"
     i = ifgs[0]
@@ -478,8 +513,14 @@ def _custom_bounds(ifgs, xw, ytop, xe, ybot):
 
 
 def _check_crop_coords(ifgs, xmin, ymin, xmax, ymax):
-    """
-    Ensures cropping coords line up with grid system within tolerance.
+    """Ensures cropping coords line up with grid system within tolerance.
+
+    Args:
+        ifgs:
+        xmin:
+        ymin:
+        xmax:
+        ymax:
     """
 
     # NB: assumption is the first Ifg is correct, so only test against it
@@ -499,6 +540,4 @@ def _check_crop_coords(ifgs, xmin, ymin, xmax, ymax):
 
 
 class PreprocessError(Exception):
-    """
-    Preprocess exception
-    """
+    """Preprocess exception"""

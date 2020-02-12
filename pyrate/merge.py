@@ -44,9 +44,11 @@ MASTER_PROCESS = 0
 
 
 def main(params):
-    """
-    PyRate merge main function. Assembles product tiles in to
-    single geotiff files
+    """PyRate merge main function. Assembles product tiles in to single geotiff
+    files
+
+    Args:
+        params:
     """
     # setup paths
     rows, cols = params["rows"], params["cols"]
@@ -63,6 +65,10 @@ def main(params):
 def create_png_from_tif(output_folder_path):
 
     # open raster and choose band to find min, max
+    """
+    Args:
+        output_folder_path:
+    """
     raster_path = os.path.join(output_folder_path, "stack_rate.tif")
 
     if not os.path.isfile(raster_path):
@@ -142,8 +148,12 @@ def create_png_from_tif(output_folder_path):
 
 
 def _merge_stack(rows, cols, params):
-    """
-    Merge stacking outputs
+    """Merge stacking outputs
+
+    Args:
+        rows:
+        cols:
+        params:
     """
     # setup paths
     xlks, _, crop = cf.transform_params(params)
@@ -175,8 +185,13 @@ def _merge_stack(rows, cols, params):
 
 
 def _save_stack(ifgs_dict, params, tiles, out_type):
-    """
-    Save stacking outputs
+    """Save stacking outputs
+
+    Args:
+        ifgs_dict:
+        params:
+        tiles:
+        out_type:
     """
     log.info("Merging PyRate outputs {}".format(out_type))
     gt, md, wkt = ifgs_dict["gt"], ifgs_dict["md"], ifgs_dict["wkt"]
@@ -206,8 +221,12 @@ def _save_stack(ifgs_dict, params, tiles, out_type):
 
 
 def _merge_timeseries(rows, cols, params):
-    """
-    Merge time series output
+    """Merge time series output
+
+    Args:
+        rows:
+        cols:
+        params:
     """
     xlks, _, crop = cf.transform_params(params)
     base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST], params[cf.OBS_DIR])
@@ -277,8 +296,15 @@ def _merge_timeseries(rows, cols, params):
 
 
 def _assemble_tiles(i, n, tile, tsincr_g, output_dir, outtype):
-    """
-    A reusable time series tile assembly function
+    """A reusable time series tile assembly function
+
+    Args:
+        i:
+        n:
+        tile:
+        tsincr_g:
+        output_dir:
+        outtype:
     """
     tsincr_file = os.path.join(output_dir, "{}_{}.npy".format(outtype, n))
     tsincr = np.load(file=tsincr_file)

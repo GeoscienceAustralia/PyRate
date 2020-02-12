@@ -41,14 +41,18 @@ def default_params():
 
 class SinglePixelIfg(object):
     def __init__(self, timespan, phase):
+        """
+        Args:
+            timespan:
+            phase:
+        """
         self.time_span = timespan
         self.phase_data = array([[phase]])
 
 
 class StackRateTests(unittest.TestCase):
-    """
-    Tests the weighted least squares algorithm for determinining
-    the best fitting velocity
+    """Tests the weighted least squares algorithm for determinining the best
+    fitting velocity
     """
 
     def setUp(self):

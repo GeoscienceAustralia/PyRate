@@ -72,13 +72,13 @@ ROI_PAC_HEADER_FILE_EXT = "rsc"
 
 
 def parse_date(dstr):
-    """
-    Parses ROI_PAC 'yymmdd' or 'yymmdd-yymmdd' format string to datetime.
+    """Parses ROI_PAC 'yymmdd' or 'yymmdd-yymmdd' format string to datetime.
 
-    :param str dstr: 'date' or 'date1-date2' string
+    Args:
+        dstr (str): 'date' or 'date1-date2' string
 
-    :return: dstr: datetime string or tuple
-    :rtype: str or tuple
+    Returns:
+        str or tuple: dstr: datetime string or tuple
     """
 
     def to_date(date_str):
@@ -94,13 +94,13 @@ def parse_date(dstr):
 
 
 def parse_header(hdr_file):
-    """
-    Parses ROI_PAC header file metadata to a dictionary.
+    """Parses ROI_PAC header file metadata to a dictionary.
 
-    :param str hdr_file: `path to ROI_PAC *.rsc file`
+    Args:
+        hdr_file (str): `path to ROI_PAC *.rsc file`
 
-    :return: subset: subset of metadata
-    :rtype: dict
+    Returns:
+        dict: subset: subset of metadata
     """
     with open(hdr_file) as f:
         text = f.read()
@@ -166,7 +166,11 @@ def parse_header(hdr_file):
 
 
 def _parse_dates_from(filename):
-    """Determine dates from file name"""
+    """Determine dates from file name
+
+    Args:
+        filename:
+    """
     # process dates from filename if rsc file doesn't have them (skip for DEMs)
     p = re.compile(r"\d{6}-\d{6}")  # match 2 sets of 6 digits separated by '-'
     m = p.search(filename)
@@ -182,15 +186,15 @@ def _parse_dates_from(filename):
 
 
 def manage_header(header_file, projection):
-    """
-    Manage header files for ROI_PAC interferograms and DEM files.
-    NB: projection = roipac.parse_header(dem_file)[ifc.PYRATE_DATUM]
+    """Manage header files for ROI_PAC interferograms and DEM files. NB:
+    projection = roipac.parse_header(dem_file)[ifc.PYRATE_DATUM]
 
-    :param str header_file: `ROI_PAC *.rsc header file path`
-    :param projection: Projection obtained from dem header.
+    Args:
+        header_file (str): `ROI_PAC *.rsc header file path`
+        projection: Projection obtained from dem header.
 
-    :return: combined_header: Combined metadata dictionary
-    :rtype: dict
+    Returns:
+        dict: combined_header: Combined metadata dictionary
     """
 
     header = parse_header(header_file)
@@ -201,9 +205,12 @@ def manage_header(header_file, projection):
 
 
 def roipac_header(file_path, params):
-    """
-    Function to obtain a header for roipac interferogram file or converted
+    """Function to obtain a header for roipac interferogram file or converted
     geotiff.
+
+    Args:
+        file_path:
+        params:
     """
     rsc_file = os.path.join(params[cf.DEM_HEADER_FILE])
     if rsc_file is not None:
@@ -224,6 +231,4 @@ def roipac_header(file_path, params):
 
 
 class RoipacException(Exception):
-    """
-    Convenience class for throwing exception
-    """
+    """Convenience class for throwing exception"""

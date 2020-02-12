@@ -161,9 +161,8 @@ class IfgIOTests(unittest.TestCase):
         self.assertRaises(RasterException, self.ifg.open, True)
 
     def test_open_ifg_from_dataset(self):
-        """
-        Test showing open() can not be used for Ifg created with
-        gdal.Dataset object as Dataset has already been read in
+        """Test showing open() can not be used for Ifg created with gdal.Dataset
+        object as Dataset has already been read in
         """
         paths = [self.ifg.data_path]
         mlooked_phase_data = prepifg_helper.prepare_ifgs(paths, crop_opt=prepifg_helper.ALREADY_SAME_SIZE, xlooks=2, ylooks=2, write_to_disc=False)

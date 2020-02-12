@@ -31,8 +31,12 @@ from core.config import ConfigException
 
 
 def _time_series_setup(ifgs, mst, params):
-    """
-    Convenience function for setting up time series computation parameters
+    """Convenience function for setting up time series computation parameters
+
+    Args:
+        ifgs:
+        mst:
+        params:
     """
     if len(ifgs) < 1:
         msg = "Time series requires 2+ interferograms"
@@ -78,8 +82,11 @@ def _time_series_setup(ifgs, mst, params):
 
 
 def _validate_params(params, tsmethod):
-    """
-    Helper function to validate supplied time series parameters
+    """Helper function to validate supplied time series parameters
+
+    Args:
+        params:
+        tsmethod:
     """
     if tsmethod == 1 and params[cf.TIME_SERIES_SM_ORDER] is None:
         _missing_option_error(cf.TIME_SERIES_SM_ORDER)
@@ -100,31 +107,31 @@ def _validate_params(params, tsmethod):
 
 
 def time_series(ifgs, params, vcmt=None, mst=None):
-    """
-    Calculates the displacement time series from the given interferogram
-    network. Solves the linear least squares system using either the SVD
-    method (similar to the SBAS method implemented by Berardino et al. 2002)
-    or a Finite Difference method using a Laplacian Smoothing operator
-    (similar to the method implemented by Schmidt and Burgmann 2003)
+    """Calculates the displacement time series from the given interferogram
+    network. Solves the linear least squares system using either the SVD method
+    (similar to the SBAS method implemented by Berardino et al. 2002) or a
+    Finite Difference method using a Laplacian Smoothing operator (similar to
+    the method implemented by Schmidt and Burgmann 2003)
 
-    :param list ifgs: list of interferogram class objects.
-    :param dict params: Dictionary of configuration parameters
-    :param ndarray vcmt: Positive definite temporal variance covariance matrix
-    :param ndarray mst: [optional] Minimum spanning tree array.
+    Args:
+        ifgs (list): list of interferogram class objects.
+        params (dict): Dictionary of configuration parameters
+        vcmt (ndarray): Positive definite temporal variance covariance matrix
+        mst (ndarray): [optional] Minimum spanning tree array.
 
-    :return: Tuple with the elements:
+    Returns:
+        tuple: Tuple with the elements:
 
         - incremental displacement time series,
         - cumulative displacement time series, and
         - velocity for the epoch interval
 
-        these outputs are multi-dimensional arrays of
-        size(nrows, ncols, nepochs-1), where:
+        these outputs are multi-dimensional arrays of size(nrows, ncols,
+        nepochs-1), where:
 
         - *nrows* is the number of rows in the ifgs,
-        - *ncols* is the  number of columns in the ifgs, and
+        - *ncols* is the number of columns in the ifgs, and
         - *nepochs* is the number of unique epochs (dates)
-    :rtype: tuple
     """
 
     b0_mat, interp, p_thresh, sm_factor, sm_order, ts_method, ifg_data, mst, ncols, nrows, nvelpar, parallel, span, tsvel_matrix = _time_series_setup(
@@ -165,8 +172,21 @@ def time_series(ifgs, params, vcmt=None, mst=None):
 
 
 def _time_series_by_rows(row, b0_mat, sm_factor, sm_order, ifg_data, mst, ncols, nvelpar, p_thresh, vcmt, ts_method, interp):
-    """
-    Wrapper function for splitting time series computation by rows.
+    """Wrapper function for splitting time series computation by rows.
+
+    Args:
+        row:
+        b0_mat:
+        sm_factor:
+        sm_order:
+        ifg_data:
+        mst:
+        ncols:
+        nvelpar:
+        p_thresh:
+        vcmt:
+        ts_method:
+        interp:
     """
     tsvel = np.empty(shape=(ncols, nvelpar), dtype=float32)
     for col in range(ncols):
@@ -176,8 +196,13 @@ def _time_series_by_rows(row, b0_mat, sm_factor, sm_order, ifg_data, mst, ncols,
 
 
 def _remove_rank_def_rows(b_mat, nvelpar, ifgv, sel):
-    """
-    Remove rank deficient rows of design matrix
+    """Remove rank deficient rows of design matrix
+
+    Args:
+        b_mat:
+        nvelpar:
+        ifgv:
+        sel:
     """
     _, _, e_var = qr(b_mat, mode="economic", pivoting=True)
     licols = e_var[matrix_rank(b_mat) : nvelpar]
@@ -189,8 +214,21 @@ def _remove_rank_def_rows(b_mat, nvelpar, ifgv, sel):
 
 
 def _time_series_by_pixel(row, col, b0_mat, sm_factor, sm_order, ifg_data, mst, nvelpar, p_thresh, interp, vcmt, method):
-    """
-    Wrapper function for splitting time series computation by pixels.
+    """Wrapper function for splitting time series computation by pixels.
+
+    Args:
+        row:
+        col:
+        b0_mat:
+        sm_factor:
+        sm_order:
+        ifg_data:
+        mst:
+        nvelpar:
+        p_thresh:
+        interp:
+        vcmt:
+        method:
     """
     # check pixel for non-redundant ifgs
     sel = np.nonzero(mst[:, row, col])[0]  # trues in mst are chosen
@@ -229,8 +267,13 @@ def _time_series_by_pixel(row, col, b0_mat, sm_factor, sm_order, ifg_data, mst, 
 
 
 def _solve_ts_svd(nvelpar, velflag, ifgv, b_mat):
-    """
-    Solve the linear least squares system using the SVD method.
+    """Solve the linear least squares system using the SVD method.
+
+    Args:
+        nvelpar:
+        velflag:
+        ifgv:
+        b_mat:
     """
     # pre-allocate the velocity matrix
     tsvel = np.empty(nvelpar, dtype=float32) * np.nan
@@ -240,9 +283,18 @@ def _solve_ts_svd(nvelpar, velflag, ifgv, b_mat):
 
 
 def _solve_ts_lap(nvelpar, velflag, ifgv, mat_b, smorder, smfactor, sel, vcmt):
-    """
-    Solve the linear least squares system using the Finite Difference
-    method using a Laplacian Smoothing operator.
+    """Solve the linear least squares system using the Finite Difference method
+    using a Laplacian Smoothing operator.
+
+    Args:
+        nvelpar:
+        velflag:
+        ifgv:
+        mat_b:
+        smorder:
+        smfactor:
+        sel:
+        vcmt:
     """
     # Laplacian observations number
     nlap = nvelpar - smorder
@@ -306,14 +358,14 @@ def _solve_ts_lap(nvelpar, velflag, ifgv, mat_b, smorder, smfactor, sel, vcmt):
 
 
 def _missing_option_error(option):
-    """
-    Convenience function for raising similar missing option errors.
+    """Convenience function for raising similar missing option errors.
+
+    Args:
+        option:
     """
     msg = "Missing '%s' option in config file" % option
     raise ConfigException(msg)
 
 
 class TimeSeriesError(Exception):
-    """
-    Generic exception for time series errors.
-    """
+    """Generic exception for time series errors."""

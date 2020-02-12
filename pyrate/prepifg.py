@@ -51,10 +51,10 @@ ROIPAC = 0
 
 
 def main(params):
-    """
-    Main workflow function for preparing interferograms for PyRate.
+    """Main workflow function for preparing interferograms for PyRate.
 
-    :param dict params: Parameters dictionary read in from the config file
+    Args:
+        params (dict): Parameters dictionary read in from the config file
     """
     if rank == 0:
         log.info("Collecting jobs: prepifg")
@@ -102,8 +102,17 @@ def main(params):
 
 
 def _prepifg_multiprocessing(input_path, output_path, xlooks, ylooks, extents, thresh, crop_opt, params):
-    """
-    Multiprocessing wrapper for prepifg
+    """Multiprocessing wrapper for prepifg
+
+    Args:
+        input_path:
+        output_path:
+        xlooks:
+        ylooks:
+        extents:
+        thresh:
+        crop_opt:
+        params:
     """
     processor = params[cf.PROCESSOR]  # roipac or gamma
     if processor == GAMMA:
@@ -126,6 +135,14 @@ def _prepifg_multiprocessing(input_path, output_path, xlooks, ylooks, extents, t
 
 def get_analysis_extent(ifgs, crop_opt, xlooks, ylooks, user_exts):
 
+    """
+    Args:
+        ifgs:
+        crop_opt:
+        xlooks:
+        ylooks:
+        user_exts:
+    """
     if crop_opt not in CROP_OPTIONS:
         raise ValueError("Unrecognised crop option: %s" % crop_opt)
 

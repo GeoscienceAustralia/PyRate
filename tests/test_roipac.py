@@ -77,6 +77,11 @@ class RoipacCommandLine(unittest.TestCase):
         shutil.rmtree(self.base_dir)
 
     def makeInputFiles(self, data, projection):
+        """
+        Args:
+            data:
+            projection:
+        """
         with open(self.confFile, "w") as conf:
             conf.write("{}: {}\n".format(DEM_HEADER_FILE, self.hdr))
             conf.write("{}: {}\n".format(INPUT_IFG_PROJECTION, projection))
@@ -172,6 +177,11 @@ class RoipacToGeoTiffTests(unittest.TestCase):
         self.assertRaises(GeotiffException, write_fullres_geotiff, hdrs, data_path, self.dest, 0)
 
     def compare_rasters(self, ds, exp_ds):
+        """
+        Args:
+            ds:
+            exp_ds:
+        """
         band = ds.GetRasterBand(1)
         exp_band = exp_ds.GetRasterBand(1)
 

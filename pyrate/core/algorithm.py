@@ -1,18 +1,18 @@
-#   This Python module is part of the PyRate software package.
+#  This Python module is part of the PyRate software package.
 #
-#   Copyright 2020 Geoscience Australia
+#  Copyright 2020 Geoscience Australia
 #
-#   Licensed under the Apache License, Version 2.0 (the "License");
-#   you may not use this file except in compliance with the License.
-#   You may obtain a copy of the License at
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
 #
-#       http://www.apache.org/licenses/LICENSE-2.0
+#  http://www.apache.org/licenses/LICENSE-2.0
 #
-#   Unless required by applicable law or agreed to in writing, software
-#   distributed under the License is distributed on an "AS IS" BASIS,
-#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#   See the License for the specific language governing permissions and
-#   limitations under the License.
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
 """
 This Python module contains a collection of generic algorithms used in PyRate
 """
@@ -24,13 +24,13 @@ from core.ifgconstants import DAYS_PER_YEAR
 
 
 def is_square(arr):
-    """
-    Determines whether an array is square or not.
+    """Determines whether an array is square or not.
 
-    :param ndarray arr: numpy array
+    Args:
+        arr (ndarray): numpy array
 
-    :return: condition
-    :rtype: bool
+    Returns:
+        bool: condition
     """
 
     shape = arr.shape
@@ -158,15 +158,15 @@ def is_square(arr):
 
 
 def ifg_date_index_lookup(ifgs, date_pair):
-    """
-    Returns the Interferogram index which has the master and slave dates
+    """Returns the Interferogram index which has the master and slave dates
     given in 'date_pair'.
 
-    :param list ifgs: List of interferogram objects to search
-    :param tuple date_pair: A (datetime.date, datetime.date)
+    Args:
+        ifgs (list): List of interferogram objects to search
+        date_pair (tuple): A (datetime.date, datetime.date)
 
-    :return: interferogram index
-    :rtype: int
+    Returns:
+        int: interferogram index
     """
 
     if len(date_pair) != 2:
@@ -188,13 +188,13 @@ def ifg_date_index_lookup(ifgs, date_pair):
 
 
 def get_epochs(ifgs):
-    """
-    Returns an EpochList derived from the given interferograms.
+    """Returns an EpochList derived from the given interferograms.
 
-    :param list ifgs: List of interferogram objects
+    Args:
+        ifgs (list): List of interferogram objects
 
-    :return: EpochList
-    :rtype: list
+    Returns:
+        list: EpochList
     """
 
     if isinstance(ifgs, dict):
@@ -209,27 +209,27 @@ def get_epochs(ifgs):
 
 
 def get_all_epochs(ifgs):
-    """
-    Returns a sequence of all master and slave dates in given interferograms.
+    """Returns a sequence of all master and slave dates in given interferograms.
 
-    :param list ifgs: List of interferogram objects
+    Args:
+        ifgs (list): List of interferogram objects
 
-    :return: master and slave dates
-    :rtype: list
+    Returns:
+        list: master and slave dates
     """
 
     return [ifg.master for ifg in ifgs] + [ifg.slave for ifg in ifgs]
 
 
 def master_slave_ids(dates):
-    """
-    Returns a dictionary of 'date:unique ID' for each date in 'dates'.
-    IDs are ordered from oldest to newest, starting at 0.
+    """Returns a dictionary of 'date:unique ID' for each date in 'dates'. IDs
+    are ordered from oldest to newest, starting at 0.
 
-    :param list dates: List of dates
+    Args:
+        dates (list): List of dates
 
-    :return: unique dates IDs
-    :rtype: dict
+    Returns:
+        dict: unique dates IDs
     """
 
     dset = sorted(set(dates))

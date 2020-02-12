@@ -43,7 +43,11 @@ GAMMA = "GAMMA"
 
 
 def _parse_header(path):
-    """Parses all GAMMA header file fields into a dictionary"""
+    """Parses all GAMMA header file fields into a dictionary
+
+    Args:
+        path:
+    """
     with open(path) as f:
         text = f.read().splitlines()
         raw_segs = [line.split() for line in text if ":" in line]
@@ -53,13 +57,13 @@ def _parse_header(path):
 
 
 def parse_epoch_header(path):
-    """
-    Returns dictionary of epoch metadata required for PyRate
+    """Returns dictionary of epoch metadata required for PyRate
 
-    :param str path: `Full path to Gamma *slc.par file`
+    Args:
+        path (str): `Full path to Gamma *slc.par file`
 
-    :return: subset: subset of full metadata
-    :rtype: dict
+    Returns:
+        dict: subset: subset of full metadata
     """
     lookup = _parse_header(path)
     subset = _parse_date_time(lookup)
@@ -81,7 +85,11 @@ def parse_epoch_header(path):
 
 
 def _parse_date_time(lookup):
-    """Grab date and time metadata and convert to datetime objects"""
+    """Grab date and time metadata and convert to datetime objects
+
+    Args:
+        lookup:
+    """
     subset = {}
     if len(lookup[GAMMA_DATE]) == 3:  # pragma: no cover
         year, month, day, = [int(float(i)) for i in lookup[GAMMA_DATE][:3]]
@@ -107,13 +115,13 @@ def _parse_date_time(lookup):
 
 
 def parse_dem_header(path):
-    """
-    Returns dictionary of DEM metadata required for PyRate
+    """Returns dictionary of DEM metadata required for PyRate
 
-    :param str path: `Full path to Gamma *dem.par file`
+    Args:
+        path (str): `Full path to Gamma *dem.par file`
 
-    :return: subset: subset of full metadata
-    :rtype: dict
+    Returns:
+        dict: subset: subset of full metadata
     """
     lookup = _parse_header(path)
 
@@ -137,23 +145,25 @@ def parse_dem_header(path):
 
 
 def _frequency_to_wavelength(freq):
-    """
-    Convert radar frequency to wavelength
+    """Convert radar frequency to wavelength
+
+    Args:
+        freq:
     """
     return ifc.SPEED_OF_LIGHT_METRES_PER_SECOND / freq
 
 
 def combine_headers(hdr0, hdr1, dem_hdr):
-    """
-    Combines metadata for master and slave epochs and DEM into a single
+    """Combines metadata for master and slave epochs and DEM into a single
     dictionary for an interferogram.
 
-    :param dict hdr0: Metadata for the master image
-    :param dict hdr1: Metadata for the slave image
-    :param dict dem_hdr: Metadata for the DEM
+    Args:
+        hdr0 (dict): Metadata for the master image
+        hdr1 (dict): Metadata for the slave image
+        dem_hdr (dict): Metadata for the DEM
 
-    :return: chdr: combined metadata
-    :rtype: dict
+    Returns:
+        dict: chdr: combined metadata
     """
     if not all([isinstance(a, dict) for a in [hdr0, hdr1, dem_hdr]]):
         raise GammaException("Header args need to be dicts")
@@ -197,15 +207,15 @@ def combine_headers(hdr0, hdr1, dem_hdr):
 
 
 def manage_headers(dem_header_file, header_paths):
-    """
-    Manage and combine  header files for GAMMA interferograms, DEM and
+    """Manage and combine header files for GAMMA interferograms, DEM and
     incidence files
 
-    :param str dem_header_file: DEM header path
-    :param list header_paths: List of master/slave header paths
+    Args:
+        dem_header_file (str): DEM header path
+        header_paths (list): List of master/slave header paths
 
-    :return: combined_header: Combined metadata dictionary
-    :rtype: dict
+    Returns:
+        dict: combined_header: Combined metadata dictionary
     """
     dem_header = parse_dem_header(dem_header_file)
     # find param files containing filename dates
@@ -221,13 +231,15 @@ def manage_headers(dem_header_file, header_paths):
 
 
 def get_header_paths(input_file, slc_file_list, slc_dir):
-    """
-    Function that matches input GAMMA file names with GAMMA header file names
+    """Function that matches input GAMMA file names with GAMMA header file names
 
-    :param str input_file: input GAMMA image file.
-    :param str slc_dir: GAMMA SLC header file directory
-    :return: list of matching header files
-    :rtype: list
+    Args:
+        input_file (str): input GAMMA image file.
+        slc_file_list:
+        slc_dir (str): GAMMA SLC header file directory
+
+    Returns:
+        list: list of matching header files
     """
     _, file_name = split(input_file)
     PTN = re.compile(r"\d{8}")  # match 8 digits for the dates
@@ -238,16 +250,15 @@ def get_header_paths(input_file, slc_file_list, slc_dir):
 
 
 def gamma_header(ifg_file_path, params):
-    """
-    Function to obtain combined Gamma headers for image file
-    
+    """Function to obtain combined Gamma headers for image file
+
     Args:
         ifg_file_path: Path to interferogram file to find headers for.
         params: PyRate parameters dictionary.
 
     Returns:
-        A combined header dictionary containing metadata from matching
-        gamma headers and DEM header.   
+        A combined header dictionary containing metadata from matching gamma
+        headers and DEM header.
     """
     dem_hdr_path = params[cf.DEM_HEADER_FILE]
     slc_dir = params[cf.SLC_DIR]
@@ -262,6 +273,4 @@ def gamma_header(ifg_file_path, params):
 
 
 class GammaException(Exception):
-    """
-    Gamma generic exception class
-    """
+    """Gamma generic exception class"""

@@ -62,9 +62,7 @@ from core.shared import Ifg, convert_radians_to_mm
 
 
 class AlgorithmTests(TestCase):
-    """
-    Misc unittests for functions in the algorithm module.
-    """
+    """Misc unittests for functions in the algorithm module."""
 
     def test_is_square(self):
         self.assertTrue(is_square(np.empty((2, 2))))
@@ -152,9 +150,7 @@ class AlgorithmTests(TestCase):
 
 
 class EpochsTests(TestCase):
-    """
-    Unittests for the EpochList class.
-    """
+    """Unittests for the EpochList class."""
 
     def test_get_epochs(self):
         def str2date(s):

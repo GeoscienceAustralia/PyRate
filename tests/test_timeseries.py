@@ -48,11 +48,16 @@ def default_params():
 
 
 class SinglePixelIfg(object):
-    """
-    A single pixel ifg (interferogram) solely for unit testing
-    """
+    """A single pixel ifg (interferogram) solely for unit testing"""
 
     def __init__(self, master, slave, phase, nan_fraction):
+        """
+        Args:
+            master:
+            slave:
+            phase:
+            nan_fraction:
+        """
         self.phase_data = asarray([[phase]])
         self.master = master
         self.slave = slave
@@ -61,9 +66,11 @@ class SinglePixelIfg(object):
         self.nan_fraction = asarray([nan_fraction])
 
     def convert_to_nans(self, val=0):
-        """
-        Converts given values in phase data to NaNs
-        val - value to convert, default is 0
+        """Converts given values in phase data to NaNs val - value to convert,
+        default is 0
+
+        Args:
+            val:
         """
         self.phase_data = where(self.phase_data == val, nan, self.phase_data)
         self.nan_converted = True
@@ -82,9 +89,7 @@ class TimeSeriesTests(unittest.TestCase):
         cls.vcmt = covariance.get_vcmt(cls.ifgs, cls.maxvar)
 
     def test_time_series_unit(self):
-        """
-        Checks that the code works the same as the calculated example
-        """
+        """Checks that the code works the same as the calculated example"""
         imaster = asarray([1, 1, 2, 2, 3, 3, 4, 5])
         islave = asarray([2, 4, 3, 4, 5, 6, 6, 6])
         timeseries = asarray([0.0, 0.1, 0.6, 0.8, 1.1, 1.3])

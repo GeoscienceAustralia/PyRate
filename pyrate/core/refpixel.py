@@ -35,21 +35,21 @@ from core.logger import pyratelogger as log
 
 # TODO: move error checking to config step (for fail fast)
 def ref_pixel(ifgs, params):
-    """
-    Determines the most appropriate reference pixel coordinate by conducting
+    """Determines the most appropriate reference pixel coordinate by conducting
     a grid search and calculating the mean standard deviation with patches
     around candidate pixels from the given interferograms.
 
     If the config file REFX or REFY values are empty or negative, the search
     for the reference pixel is performed. If the REFX|Y values are within the
-    bounds of the raster, a search is not performed. REFX|Y values outside
-    the upper bounds cause an exception.
+    bounds of the raster, a search is not performed. REFX|Y values outside the
+    upper bounds cause an exception.
 
-    :param list ifgs: List of interferogram objects
-    :param dict params: Dictionary of configuration parameters
+    Args:
+        ifgs (list): List of interferogram objects
+        params (dict): Dictionary of configuration parameters
 
-    :return: tuple of best REFX and REFY coordinates
-    :rtype: tuple
+    Returns:
+        tuple: tuple of best REFX and REFY coordinates
     """
     half_patch_size, thresh, grid = ref_pixel_setup(ifgs, params)
     parallel = params[cf.PARALLEL]
@@ -73,15 +73,15 @@ def ref_pixel(ifgs, params):
 
 
 def find_min_mean(mean_sds, grid):
-    """
-    Determine the ref pixel block with minimum mean value
+    """Determine the ref pixel block with minimum mean value
 
-    :param list mean_sds: List of mean standard deviations from each
-        reference pixel grid
-    :param list grid: List of ref pixel coordinates tuples
+    Args:
+        mean_sds (list): List of mean standard deviations from each reference
+            pixel grid
+        grid (list): List of ref pixel coordinates tuples
 
-    :return: Tuple of (refy, refx) with minimum mean
-    :rtype: tuple    
+    Returns:
+        tuple: Tuple of (refy, refx) with minimum mean
     """
     log.debug("Ranking ref pixel candidates based on mean values")
     refp_index = np.nanargmin(mean_sds)
@@ -89,19 +89,19 @@ def find_min_mean(mean_sds, grid):
 
 
 def ref_pixel_setup(ifgs_or_paths, params):
-    """
-    Sets up the grid for reference pixel computation and saves numpy files
-    to disk for later use during ref pixel computation.
-        
-    :param list ifgs_or_paths: List of interferogram filenames or Ifg objects
-    :param dict params: Dictionary of configuration parameters
-    
-    :return: half_patch_size: size of patch
-    :rtype: float
-    :return: thresh
-    :rtype: float
-    :return: list(product(ysteps, xsteps))
-    :rtype: list
+    """Sets up the grid for reference pixel computation and saves numpy files to
+    disk for later use during ref pixel computation.
+
+    Args:
+        ifgs_or_paths (list): List of interferogram filenames or Ifg objects
+        params (dict): Dictionary of configuration parameters
+
+    Returns:
+        float: half_patch_size: size of patch
+
+        float: thresh
+
+        list: list(product(ysteps, xsteps))
     """
     log.debug("Setting up ref pixel computation")
     refnx, refny, chipsize, min_frac = params[cf.REFNX], params[cf.REFNY], params[cf.REF_CHIP_SIZE], params[cf.REF_MIN_FRAC]
@@ -133,15 +133,16 @@ def ref_pixel_setup(ifgs_or_paths, params):
 
 
 def save_ref_pixel_blocks(grid, half_patch_size, ifg_paths, params):
-    """
-    Save reference pixel grid blocks to numpy array files on disk
+    """Save reference pixel grid blocks to numpy array files on disk
 
-    :param list grid: List of tuples (y, x) corresponding to ref pixel grids
-    :param int half_patch_size: patch size in pixels
-    :param list ifg_paths: list of interferogram paths
-    :param dict params: Dictionary of configuration parameters
+    Args:
+        grid (list): List of tuples (y, x) corresponding to ref pixel grids
+        half_patch_size (int): patch size in pixels
+        ifg_paths (list): list of interferogram paths
+        params (dict): Dictionary of configuration parameters
 
-    :return: None, file saved to disk
+    Returns:
+        None, file saved to disk
     """
     log.debug("Saving ref pixel blocks")
     outdir = params[cf.TMPDIR]
@@ -161,8 +162,14 @@ def save_ref_pixel_blocks(grid, half_patch_size, ifg_paths, params):
 
 
 def _ref_pixel_mpi(process_grid, half_patch_size, ifgs, thresh, params):
-    """
-    Convenience function for MPI-enabled ref pixel calculation
+    """Convenience function for MPI-enabled ref pixel calculation
+
+    Args:
+        process_grid:
+        half_patch_size:
+        ifgs:
+        thresh:
+        params:
     """
     log.debug("Ref pixel calculation started")
     mean_sds = []
@@ -172,8 +179,14 @@ def _ref_pixel_mpi(process_grid, half_patch_size, ifgs, thresh, params):
 
 
 def _ref_pixel_multi(g, half_patch_size, phase_data_or_ifg_paths, thresh, params):
-    """
-    Convenience function for ref pixel optimisation
+    """Convenience function for ref pixel optimisation
+
+    Args:
+        g:
+        half_patch_size:
+        phase_data_or_ifg_paths:
+        thresh:
+        params:
     """
     # phase_data_or_ifg is list of ifgs
     y, x, = g
@@ -196,16 +209,16 @@ def _ref_pixel_multi(g, half_patch_size, phase_data_or_ifg_paths, thresh, params
 
 
 def _step(dim, ref, radius):
-    """
-    Helper: returns range object of axis indices for a search window.
+    """Helper: returns range object of axis indices for a search window.
 
-    :param int dim: Total length of the grid dimension
-    :param int ref: The desired number of steps
-    :param float radius: The number of cells from the centre of the chip eg.
-        (chipsize / 2)
+    Args:
+        dim (int): Total length of the grid dimension
+        ref (int): The desired number of steps
+        radius (float): The number of cells from the centre of the chip eg.
+            (chipsize / 2)
 
-    :return: range object of axis indices
-    :rtype: range
+    Returns:
+        range: range object of axis indices
     """
 
     # if ref == 1:
@@ -221,8 +234,11 @@ def _step(dim, ref, radius):
 
 
 def _validate_chipsize(chipsize, head):
-    """
-    Sanity check min chipsize
+    """Sanity check min chipsize
+
+    Args:
+        chipsize:
+        head:
     """
     if chipsize is None:
         raise cf.ConfigException("Chipsize is None")
@@ -234,8 +250,10 @@ def _validate_chipsize(chipsize, head):
 
 
 def _validate_minimum_fraction(min_frac):
-    """
-    Sanity check min fraction
+    """Sanity check min fraction
+
+    Args:
+        min_frac:
     """
     if min_frac is None:
         raise cf.ConfigException("Minimum fraction is None")
@@ -245,8 +263,13 @@ def _validate_minimum_fraction(min_frac):
 
 
 def _validate_search_win(refnx, refny, chipsize, head):
-    """
-    Sanity check X|Y steps
+    """Sanity check X|Y steps
+
+    Args:
+        refnx:
+        refny:
+        chipsize:
+        head:
     """
     if refnx is None:
         raise cf.ConfigException("refnx is None")
@@ -266,6 +289,4 @@ def _validate_search_win(refnx, refny, chipsize, head):
 
 
 class RefPixelError(Exception):
-    """
-    Generic exception for reference pixel errors.
-    """
+    """Generic exception for reference pixel errors."""

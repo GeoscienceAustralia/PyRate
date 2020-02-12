@@ -33,18 +33,20 @@ MASTER_PROCESS = 0
 
 
 def est_ref_phase_method2(ifg_paths, params, refpx, refpy):
-    """
-    Reference phase estimation using method 2. Reference phase is the
-    median calculated with a patch around the supplied reference pixel.
+    """Reference phase estimation using method 2. Reference phase is the median
+    calculated with a patch around the supplied reference pixel.
 
-    :param list ifg_paths: List of interferogram paths or objects.
-    :param dict params: Dictionary of configuration parameters
-    :param int refpx: Reference pixel X found by ref pixel method
-    :param int refpy: Reference pixel Y found by ref pixel method
+    Args:
+        ifg_paths (list): List of interferogram paths or objects.
+        params (dict): Dictionary of configuration parameters
+        refpx (int): Reference pixel X found by ref pixel method
+        refpy (int): Reference pixel Y found by ref pixel method
 
-    :return: ref_phs: Numpy array of reference phase values of size (nifgs, 1)
-    :rtype: ndarray
-    :return: ifgs: Reference phase data is removed interferograms in place
+    Returns:
+        ndarray: ref_phs: Numpy array of reference phase values of size (nifgs,
+        1)
+
+        ifgs: Reference phase data is removed interferograms in place
     """
     half_chip_size = int(np.floor(params[cf.REF_CHIP_SIZE] / 2.0))
     chipsize = 2 * half_chip_size + 1
@@ -85,8 +87,14 @@ def est_ref_phase_method2(ifg_paths, params, refpx, refpy):
 
 
 def _est_ref_phs_method2(phase_data, half_chip_size, refpx, refpy, thresh):
-    """
-    Convenience function for ref phs estimate method 2 parallelisation
+    """Convenience function for ref phs estimate method 2 parallelisation
+
+    Args:
+        phase_data:
+        half_chip_size:
+        refpx:
+        refpy:
+        thresh:
     """
     patch = phase_data[refpy - half_chip_size : refpy + half_chip_size + 1, refpx - half_chip_size : refpx + half_chip_size + 1]
     patch = np.reshape(patch, newshape=(-1, 1), order="F")
@@ -101,16 +109,18 @@ def _est_ref_phs_method2(phase_data, half_chip_size, refpx, refpy, thresh):
 
 
 def est_ref_phase_method1(ifg_paths, params):
-    """
-    Reference phase estimation using method 1. Reference phase is the
-    median of the whole interferogram image.
+    """Reference phase estimation using method 1. Reference phase is the median
+    of the whole interferogram image.
 
-    :param list ifg_paths: List of interferogram paths or objects
-    :param dict params: Dictionary of configuration parameters
+    Args:
+        ifg_paths (list): List of interferogram paths or objects
+        params (dict): Dictionary of configuration parameters
 
-    :return: ref_phs: Numpy array of reference phase values of size (nifgs, 1)
-    :rtype: ndarray
-    :return: ifgs: Reference phase data is removed interferograms in place
+    Returns:
+        ndarray: ref_phs: Numpy array of reference phase values of size (nifgs,
+        1)
+
+        ifgs: Reference phase data is removed interferograms in place
     """
 
     def _inner(ifg_paths):
@@ -156,8 +166,11 @@ def est_ref_phase_method1(ifg_paths, params):
 
 
 def _est_ref_phs_method1(phase_data, comp):
-    """
-    Convenience function for ref phs estimate method 1 parallelisation
+    """Convenience function for ref phs estimate method 1 parallelisation
+
+    Args:
+        phase_data:
+        comp:
     """
     ifgv = np.ravel(phase_data, order="F")
     ifgv[comp == 1] = np.nan
@@ -165,13 +178,15 @@ def _est_ref_phs_method1(phase_data, comp):
 
 
 def _update_phase_metadata(ifg):
+    """
+    Args:
+        ifg:
+    """
     ifg.meta_data[ifc.PYRATE_REF_PHASE] = ifc.REF_PHASE_REMOVED
     ifg.write_modified_phase()
 
 
 class ReferencePhaseError(Exception):
-    """
-    Generic class for errors in reference phase estimation.
-    """
+    """Generic class for errors in reference phase estimation."""
 
     pass

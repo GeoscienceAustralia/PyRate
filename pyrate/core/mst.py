@@ -41,21 +41,21 @@ from core.logger import pyratelogger as log
 
 
 def mst_from_ifgs(ifgs):
-    """
-    Returns a Minimum Spanning Tree (MST) network from the given interferograms
-    using Kruskal's algorithm. The MST is calculated using a weighting based
-    on the number of NaN cells in the phase band.
+    """Returns a Minimum Spanning Tree (MST) network from the given
+    interferograms using Kruskal's algorithm. The MST is calculated using a
+    weighting based on the number of NaN cells in the phase band.
 
-    :param list ifgs: List of interferogram objects (Ifg class)
+    Args:
+        ifgs (list): List of interferogram objects (Ifg class)
 
-    :return: edges: The number of network connections
-    :rtype: int
-    :return: is_tree: A boolean that is True if network is a tree
-    :rtype: bool
-    :return: ntrees: The number of disconnected trees
-    :rtype: int
-    :return: mst_ifgs: Minimum Spanning Tree network of interferograms
-    :rtype: list
+    Returns:
+        int: edges: The number of network connections
+
+        bool: is_tree: A boolean that is True if network is a tree
+
+        int: ntrees: The number of disconnected trees
+
+        list: mst_ifgs: Minimum Spanning Tree network of interferograms
     """
 
     edges_with_weights_for_networkx = [(i.master, i.slave, i.nan_fraction) for i in ifgs]
@@ -69,14 +69,14 @@ def mst_from_ifgs(ifgs):
 
 
 def mst_parallel(ifgs, params):
-    """
-    Wrapper function for calculating MST matrix in non-MPI runs.
+    """Wrapper function for calculating MST matrix in non-MPI runs.
 
-    :param list ifgs: List of interferogram objects (Ifg class)
-    :param dict params: Dictionary of parameters
+    Args:
+        ifgs (list): List of interferogram objects (Ifg class)
+        params (dict): Dictionary of parameters
 
-    :return: result: 3-dimensional Minimum Spanning Tree matrix
-    :rtype: ndarray
+    Returns:
+        ndarray: result: 3-dimensional Minimum Spanning Tree matrix
     """
 
     log.info("Calculating MST in tiles")
@@ -108,17 +108,18 @@ def mst_parallel(ifgs, params):
 
 
 def mst_multiprocessing(tile, ifgs_or_paths, preread_ifgs=None, params=None):
-    """
-    Wrapper function for calculating MST matrix for a tile
+    """Wrapper function for calculating MST matrix for a tile
 
-    :param ndarray tile: Tile class instance
-    :param list ifgs_or_paths: All interferograms paths of the problem.
-        List of strings
-    :param dict preread_ifgs: Dictionary of interferogram metadata
+    Args:
+        tile (ndarray): Tile class instance
+        ifgs_or_paths (list): All interferograms paths of the problem. List of
+            strings
+        preread_ifgs (dict): Dictionary of interferogram metadata
+        params:
 
-    :return: mst_tile: MST matrix tile. An array of booleans representing
+    Returns:
+        ndarray: mst_tile: MST matrix tile. An array of booleans representing
         valid ifg connections
-    :rtype: ndarray
     """
     # The memory requirement during MPI MST computation is determined by the
     # number of interferograms times size of IfgPart. Note that we need all
@@ -131,8 +132,10 @@ def mst_multiprocessing(tile, ifgs_or_paths, preread_ifgs=None, params=None):
 
 
 def _build_graph_networkx(edges_with_weights):
-    """
-    Convenience graph builder function: returns a new graph object.
+    """Convenience graph builder function: returns a new graph object.
+
+    Args:
+        edges_with_weights:
     """
     g = nx.Graph()
     g.add_weighted_edges_from(edges_with_weights)
@@ -140,14 +143,14 @@ def _build_graph_networkx(edges_with_weights):
 
 
 def mst_boolean_array(ifgs):
-    """
-    Returns a 3D array of booleans constituting valid interferogram connections
-    in the Minimum Spanning Tree matrix.
+    """Returns a 3D array of booleans constituting valid interferogram
+    connections in the Minimum Spanning Tree matrix.
 
-    :param list ifgs: Sequence of interferogram objects
+    Args:
+        ifgs (list): Sequence of interferogram objects
 
-    :return: result: Array of booleans representing valid ifg connections
-    :rtype: ndarray
+    Returns:
+        ndarray: result: Array of booleans representing valid ifg connections
     """
     # The MSTs are stripped of connecting edge info, leaving just the ifgs.
     nifgs = len(ifgs)
@@ -183,8 +186,10 @@ def mst_boolean_array(ifgs):
 
 
 def _mst_matrix_as_array(ifgs):
-    """
-    Alternative method for producing 3D MST array
+    """Alternative method for producing 3D MST array
+
+    Args:
+        ifgs:
     """
     # Currently not used
     # Each pixel contains an MST (with connecting edges etc).
@@ -198,18 +203,18 @@ def _mst_matrix_as_array(ifgs):
 # TODO: custom edge weighting could be included with an additional
 # 'weights' arg if some other weighting criterion is required later
 def mst_matrix_networkx(ifgs):
-    """
-    Generates MST network for a single pixel for the given ifgs using
+    """Generates MST network for a single pixel for the given ifgs using
     NetworkX-package algorithms.
 
-    :param list ifgs: Sequence of interferogram objects
+    Args:
+        ifgs (list): Sequence of interferogram objects
 
-    :return: y: pixel y coordinate
-    :rtype: int
-    :return: x: pixel x coordinate
-    :rtype: int
-    :return: mst: list of tuples for edges in the minimum spanning tree
-    :rtype: list
+    Returns:
+        int: y: pixel y coordinate
+
+        int: x: pixel x coordinate
+
+        list: mst: list of tuples for edges in the minimum spanning tree
     """
     # make default MST to optimise result when no Ifg cells in a stack are nans
     edges_with_weights = [(i.master, i.slave, i.nan_fraction) for i in ifgs]
@@ -256,8 +261,10 @@ def mst_matrix_networkx(ifgs):
 
 
 def _minimum_spanning_edges_from_mst(edges):
-    """
-    Convenience function to determine MST edges
+    """Convenience function to determine MST edges
+
+    Args:
+        edges:
     """
     g_nx = _build_graph_networkx(edges)
     T = nx.minimum_spanning_tree(g_nx)  # step ifglist_mst in make_mstmat.m

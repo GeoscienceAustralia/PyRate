@@ -75,6 +75,10 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
         remove_tifs(common.SML_TEST_OBS)
 
     def make_gamma_input_files(self, data):
+        """
+        Args:
+            data:
+        """
         with open(self.conf_file, "w") as conf:
             conf.write("[{}]\n".format(DUMMY_SECTION_NAME))
             conf.write("{}: {}\n".format(NO_DATA_VALUE, "0.0"))
@@ -102,6 +106,10 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
     #     self.check_gamma(self.gamma_conffile)
 
     def check_gamma(self, conf_file):
+        """
+        Args:
+            conf_file:
+        """
         data_paths = glob.glob(os.path.join(self.SMLNEY_GAMMA_TEST, "*_utm.unw"))
 
         self.make_gamma_input_files(data_paths)
@@ -120,6 +128,11 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
             self.assertTrue(os.path.exists(q), "{} does not exist".format(q))
 
     def make_roipac_input_files(self, data, projection):
+        """
+        Args:
+            data:
+            projection:
+        """
         with open(self.confFile, "w") as conf:
             conf.write("[{}]\n".format(DUMMY_SECTION_NAME))
             conf.write("{}: {}\n".format(INPUT_IFG_PROJECTION, projection))

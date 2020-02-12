@@ -93,7 +93,11 @@ def same_exts_ifgs():
 
 
 def extents_from_params(params):
-    """Custom extents from supplied parameters"""
+    """Custom extents from supplied parameters
+
+    Args:
+        params:
+    """
     keys = (cf.IFG_XFIRST, cf.IFG_YFIRST, cf.IFG_XLAST, cf.IFG_YLAST)
     return CustomExts(*[params[k] for k in keys])
 
@@ -110,13 +114,20 @@ class PrepifgOutputTests(unittest.TestCase):
     """Tests aspects of the prepifg.py script, such as resampling."""
 
     def __init__(self, *args, **kwargs):
+        """
+        Args:
+            *args:
+            **kwargs:
+        """
         super(PrepifgOutputTests, self).__init__(*args, **kwargs)
 
     @staticmethod
     def assert_geotransform_equal(files):
-        """
-        Asserts geotransforms for the given files are equivalent. Files can be paths
-        to datasets, or GDAL dataset objects.
+        """Asserts geotransforms for the given files are equivalent. Files can
+        be paths to datasets, or GDAL dataset objects.
+
+        Args:
+            files:
         """
         assert len(files) > 1, "Need more than 1 file to compare"
         if not all([hasattr(f, "GetGeoTransform") for f in files]):
@@ -175,9 +186,11 @@ class PrepifgOutputTests(unittest.TestCase):
         return CustomExts(*self._custom_ext_latlons())
 
     def assert_projection_equal(self, files):
-        """
-        Asserts preojections for the given files are equivalent.
-        Files can be paths to datasets, or GDAL dataset objects.
+        """Asserts preojections for the given files are equivalent. Files can be
+        paths to datasets, or GDAL dataset objects.
+
+        Args:
+            files:
         """
         assert len(files) > 1, "Need more than 1 file to compare"
         if not all([hasattr(f, "GetGeoTransform") for f in files]):
@@ -445,6 +458,11 @@ class SameSizeTests(unittest.TestCase):
     """Tests aspects of the prepifg.py script, such as resampling."""
 
     def __init__(self, *args, **kwargs):
+        """
+        Args:
+            *args:
+            **kwargs:
+        """
         super(SameSizeTests, self).__init__(*args, **kwargs)
         self.xs = 0.000833333
         self.ys = -self.xs
@@ -532,9 +550,14 @@ class LocalMultilookTests(unittest.TestCase):
 
 
 def multilooking(src, xscale, yscale, thresh=0):
-    """
-    src: numpy array of phase data
-    thresh: min number of non-NaNs required for a valid tile resampling
+    """src: numpy array of phase data thresh: min number of non-NaNs required
+    for a valid tile resampling
+
+    Args:
+        src:
+        xscale:
+        yscale:
+        thresh:
     """
     thresh = int(thresh)
     num_cells = xscale * yscale
@@ -567,9 +590,7 @@ def multilooking(src, xscale, yscale, thresh=0):
 
 
 class LegacyEqualityTestRoipacSmallTestData(unittest.TestCase):
-    """
-    Legacy roipac prepifg equality test for small test data
-    """
+    """Legacy roipac prepifg equality test for small test data"""
 
     def setUp(self):
         from common import small_data_setup
@@ -589,9 +610,7 @@ class LegacyEqualityTestRoipacSmallTestData(unittest.TestCase):
                 os.remove(i.data_path)
 
     def test_legacy_prepifg_equality_array(self):
-        """
-        Legacy prepifg equality test
-        """
+        """Legacy prepifg equality test"""
         # path to csv folders from legacy output
         onlyfiles = [
             fln
@@ -606,9 +625,7 @@ class LegacyEqualityTestRoipacSmallTestData(unittest.TestCase):
                     np.testing.assert_array_almost_equal(ifg_data, self.ifgs_with_nan[k].phase_data, decimal=2)
 
     def test_legacy_prepifg_and_convert_phase(self):
-        """
-        Legacy data prepifg equality test
-        """
+        """Legacy data prepifg equality test"""
         # path to csv folders from legacy output
         for i in self.ifgs_with_nan:
             if not i.mm_converted:
@@ -650,6 +667,11 @@ class TestOneIncidenceOrElevationMap(unittest.TestCase):
         common.remove_tifs(params[cf.OBS_DIR])
 
     def make_input_files(self, inc="", ele=""):
+        """
+        Args:
+            inc:
+            ele:
+        """
         with open(self.conf_file, "w") as conf:
             conf.write("[{}]\n".format(DUMMY_SECTION_NAME))
             conf.write("{}: {}\n".format(NO_DATA_VALUE, "0.0"))
@@ -683,6 +705,11 @@ class TestOneIncidenceOrElevationMap(unittest.TestCase):
         self.common_check(ele_ext, inc_ext)
 
     def common_check(self, ele, inc):
+        """
+        Args:
+            ele:
+            inc:
+        """
         os.path.exists(self.conf_file)
         params = cf.get_config_params(self.conf_file)
         conv2tif.main(params)

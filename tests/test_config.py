@@ -134,9 +134,8 @@ class ValidateTestConfig(unittest.TestCase):
 
 class TestConfigValidation(unittest.TestCase):
     def setUp(self):
-        """
-        Get a copy of the GAMMA params and also use this to verify that 
-        they are correct before we start testing.
+        """Get a copy of the GAMMA params and also use this to verify that they
+        are correct before we start testing.
         """
         self.params = config.get_config_params(TEST_CONF_GAMMA, validate=False)
         self.roipac_params = config.get_config_params(TEST_CONF_ROIPAC, validate=False)
@@ -145,9 +144,7 @@ class TestConfigValidation(unittest.TestCase):
             raise IOError("'dummy_dir' needs to be non-existant for testing.")
 
     def test_validators(self):
-        """
-        Test validation functions for 'compulsory' parameters.
-        """
+        """Test validation functions for 'compulsory' parameters."""
 
         def validate(key, value):
             return _PARAM_VALIDATION[key][0](value)
@@ -679,6 +676,11 @@ class TestOneIncidenceOrElevationMap(unittest.TestCase):
         shutil.rmtree(self.base_dir)
 
     def make_input_files(self, inc="", ele=""):
+        """
+        Args:
+            inc:
+            ele:
+        """
         with open(self.conf_file, "w") as conf:
             conf.write("[{}]\n".format(DUMMY_SECTION_NAME))
             conf.write("{}: {}\n".format(NO_DATA_VALUE, "0.0"))

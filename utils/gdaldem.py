@@ -42,11 +42,21 @@ from core.shared import DEM
 
 
 def main(input_file, color_file, output_file):
+    """
+    Args:
+        input_file:
+        color_file:
+        output_file:
+    """
     cmd = "gdaldem color-relief " + input_file + " " + color_file + " " + output_file
     subprocess.check_call(cmd, shell=True)
 
 
 def gen_color_file(input_file):
+    """
+    Args:
+        input_file:
+    """
     fp, temp_file = tempfile.mkstemp(suffix=".txt")
 
     dem = DEM(input_file)

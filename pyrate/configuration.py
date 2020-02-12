@@ -22,6 +22,14 @@ from core.user_experience import break_number_into_factors
 
 
 def set_parameter_value(data_type, input_value, default_value, required, input_name):
+    """
+    Args:
+        data_type:
+        input_value:
+        default_value:
+        required:
+        input_name:
+    """
     if len(input_value) < 1:
         input_value = None
         if required:
@@ -35,6 +43,14 @@ def set_parameter_value(data_type, input_value, default_value, required, input_n
 
 
 def validate_parameter_value(input_name, input_value, min_value=None, max_value=None, possible_values=None):
+    """
+    Args:
+        input_name:
+        input_value:
+        min_value:
+        max_value:
+        possible_values:
+    """
     if isinstance(input_value, pathlib.PurePath):
         if input_name in "outdir":
             input_value = input_value.parents[0]
@@ -80,6 +96,12 @@ def validate_parameter_value(input_name, input_value, min_value=None, max_value=
 
 
 def validate_file_list_values(dir, fileList, no_of_epochs):
+    """
+    Args:
+        dir:
+        fileList:
+        no_of_epochs:
+    """
     if dir is None:
         raise ValueError("No value supplied for input directory: " + str(dir))
     if fileList is None:
@@ -105,6 +127,13 @@ def validate_file_list_values(dir, fileList, no_of_epochs):
 
 class MultiplePaths:
     def __init__(self, baseDir, baseName, ifglksx=0, ifgcropopt=0):
+        """
+        Args:
+            baseDir:
+            baseName:
+            ifglksx:
+            ifgcropopt:
+        """
         if ".tif" in baseName:
             self.unwrapped_path = None
             self.converted_path = str(baseDir / baseName)
@@ -135,6 +164,10 @@ sampled_path = """
 class Configuration:
     def __init__(self, config_file_path):
 
+        """
+        Args:
+            config_file_path:
+        """
         parser = ConfigParser()
         parser.optionxform = str
         # mimic header to fulfil the requirement for configparser

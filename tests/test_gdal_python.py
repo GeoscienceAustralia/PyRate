@@ -75,6 +75,13 @@ class TestResample(unittest.TestCase):
             self.check_same_resampled_output(extents, extents_str, res, small_test_ifgs)
 
     def check_same_resampled_output(self, extents, extents_str, res, small_test_ifgs):
+        """
+        Args:
+            extents:
+            extents_str:
+            res:
+            small_test_ifgs:
+        """
         cmd = ["gdalwarp", "-overwrite", "-srcnodata", "None", "-q", "-r", "near", "-te"] + extents_str
 
         if res[0]:
@@ -396,6 +403,12 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
 
     @staticmethod
     def manipulation(data, tiff, md):
+        """
+        Args:
+            data:
+            tiff:
+            md:
+        """
         src_ds = gdal.GetDriverByName("GTiff").Create(tiff, 10, 10, 2, gdalconst.GDT_Float32)
         src_ds.GetRasterBand(1).WriteArray(data)
         src_ds.GetRasterBand(1).SetNoDataValue(0)
@@ -517,6 +530,10 @@ class TestMEMVsGTiff(unittest.TestCase):
     @staticmethod
     def check(driver_type):
 
+        """
+        Args:
+            driver_type:
+        """
         temp_tif = tempfile.mktemp(suffix=".tif")
 
         data = np.array(
@@ -559,17 +576,20 @@ class TestMEMVsGTiff(unittest.TestCase):
 
 
 def warp_old(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out, verbose, ret_ifg=True):
-    """
-    Resamples 'ifg' and returns a new Ifg obj.
+    """Resamples 'ifg' and returns a new Ifg obj.
 
-    :param xlooks: integer factor to scale X axis by, 5 is 5x smaller,
-        1 is no change.
-    :param ylooks: as xlooks, but for Y axis
-    :param extents: georeferenced extents for new file: (xfirst, yfirst, xlast, ylast)
-    :param resolution: [xres, yres] or None. Sets resolution output Ifg metadata.
-         Use *None* if raster size is not being changed.
-    :param thresh: see thresh in prepare_ifgs().
-    :param verbose: True to print gdalwarp output to stdout
+    Args:
+        ifg:
+        x_looks:
+        y_looks:
+        extents: georeferenced extents for new file: (xfirst, yfirst, xlast,
+            ylast)
+        resolution: [xres, yres] or None. Sets resolution output Ifg metadata.
+            Use *None* if raster size is not being changed.
+        thresh: see thresh in prepare_ifgs().
+        crop_out:
+        verbose: True to print gdalwarp output to stdout
+        ret_ifg:
     """
     if x_looks != y_looks:
         raise ValueError("X and Y looks mismatch")
