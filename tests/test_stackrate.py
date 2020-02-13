@@ -36,16 +36,20 @@ from common import SML_TEST_DIR, prepare_ifgs_without_phase, TEST_CONF_ROIPAC, p
 
 
 def default_params():
+    """ """
     return {"pthr": 3, "nsig": 3, "maxsig": 2, "parallel": 1, "processes": 8}
 
 
 class SinglePixelIfg(object):
     def __init__(self, timespan, phase):
-        """
-        Args:
-            timespan:
-            phase:
-        """
+    """
+
+    Args:
+      timespan: param phase:
+
+    Returns:
+
+    """
         self.time_span = timespan
         self.phase_data = array([[phase]])
 
@@ -53,14 +57,21 @@ class SinglePixelIfg(object):
 class StackRateTests(unittest.TestCase):
     """Tests the weighted least squares algorithm for determinining the best
     fitting velocity
+
+    Args:
+
+    Returns:
+
     """
 
     def setUp(self):
+        """ """
         phase = [0.5, 3.5, 4, 2.5, 3.5, 1]
         timespan = [0.1, 0.7, 0.8, 0.5, 0.7, 0.2]
         self.ifgs = [SinglePixelIfg(s, p) for s, p in zip(timespan, phase)]
 
     def test_stack_rate(self):
+        """ """
         # Simple test with one pixel and equal weighting
         exprate = array([[5.0]])
         experr = array([[0.836242010007091]])

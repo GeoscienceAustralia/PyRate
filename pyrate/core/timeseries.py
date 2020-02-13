@@ -33,11 +33,22 @@ from core.shared import joblib_log_level
 
 def _time_series_setup(ifgs, mst, params):
     """Convenience function for setting up time series computation parameters
-
+    
     Args:
         ifgs:
         mst:
-        params:
+    
+    Args:
+      ifgs: param mst:
+
+    Args:
+      mst: 
+      ifgs: 
+      params: 
+
+    Returns:
+      
+
     """
     if len(ifgs) < 1:
         msg = "Time series requires 2+ interferograms"
@@ -84,10 +95,19 @@ def _time_series_setup(ifgs, mst, params):
 
 def _validate_params(params, tsmethod):
     """Helper function to validate supplied time series parameters
+    
+    Args:
+    
+    Args:
+      tsmethod: param params:
 
     Args:
-        params:
-        tsmethod:
+      params: 
+      tsmethod: 
+
+    Returns:
+      
+
     """
     if tsmethod == 1 and params[cf.TIME_SERIES_SM_ORDER] is None:
         _missing_option_error(cf.TIME_SERIES_SM_ORDER)
@@ -114,26 +134,35 @@ def time_series(ifgs, params, vcmt=None, mst=None):
     (similar to the SBAS method implemented by Berardino et al. 2002) or a
     Finite Difference method using a Laplacian Smoothing operator (similar to
     the method implemented by Schmidt and Burgmann 2003)
-
+    
     Args:
         ifgs (list): list of interferogram class objects.
-        params (dict): Dictionary of configuration parameters
-        vcmt (ndarray): Positive definite temporal variance covariance matrix
-        mst (ndarray): [optional] Minimum spanning tree array.
+    
+    Args:
+      vcmt: ndarray (Default value = None)
+      mst: ndarray (Default value = None)
+      ifgs: param params:
+
+    Args:
+      ifgs: 
+      params: 
+      vcmt:  (Default value = None)
+      mst:  (Default value = None)
 
     Returns:
-        tuple: Tuple with the elements:
+      tuple: Tuple with the elements:
+      
+      - incremental displacement time series,
+      - cumulative displacement time series, and
+      - velocity for the epoch interval
+      
+      these outputs are multi-dimensional arrays of size(nrows, ncols,
+      nepochs-1), where:
+      
+      - *nrows* is the number of rows in the ifgs,
+      - *ncols* is the number of columns in the ifgs, and
+      - *nepochs* is the number of unique epochs (dates)
 
-        - incremental displacement time series,
-        - cumulative displacement time series, and
-        - velocity for the epoch interval
-
-        these outputs are multi-dimensional arrays of size(nrows, ncols,
-        nepochs-1), where:
-
-        - *nrows* is the number of rows in the ifgs,
-        - *ncols* is the number of columns in the ifgs, and
-        - *nepochs* is the number of unique epochs (dates)
     """
 
     b0_mat, interp, p_thresh, sm_factor, sm_order, ts_method, ifg_data, mst, ncols, nrows, nvelpar, parallel, span, tsvel_matrix = _time_series_setup(
@@ -180,18 +209,21 @@ def _time_series_by_rows(row, b0_mat, sm_factor, sm_order, ifg_data, mst, ncols,
     """Wrapper function for splitting time series computation by rows.
 
     Args:
-        row:
-        b0_mat:
-        sm_factor:
-        sm_order:
-        ifg_data:
-        mst:
-        ncols:
-        nvelpar:
-        p_thresh:
-        vcmt:
-        ts_method:
-        interp:
+      row: param b0_mat:
+      sm_factor: param sm_order:
+      ifg_data: param mst:
+      ncols: param nvelpar:
+      p_thresh: param vcmt:
+      ts_method: param interp:
+      b0_mat: 
+      sm_order: 
+      mst: 
+      nvelpar: 
+      vcmt: 
+      interp: 
+
+    Returns:
+
     """
     tsvel = np.empty(shape=(ncols, nvelpar), dtype=float32)
     for col in range(ncols):
@@ -205,10 +237,13 @@ def _remove_rank_def_rows(b_mat, nvelpar, ifgv, sel):
     """Remove rank deficient rows of design matrix
 
     Args:
-        b_mat:
-        nvelpar:
-        ifgv:
-        sel:
+      b_mat: param nvelpar:
+      ifgv: param sel:
+      nvelpar: 
+      sel: 
+
+    Returns:
+
     """
     _, _, e_var = qr(b_mat, mode="economic", pivoting=True)
     licols = e_var[matrix_rank(b_mat): nvelpar]
@@ -224,18 +259,21 @@ def _time_series_by_pixel(row, col, b0_mat, sm_factor, sm_order, ifg_data, mst, 
     """Wrapper function for splitting time series computation by pixels.
 
     Args:
-        row:
-        col:
-        b0_mat:
-        sm_factor:
-        sm_order:
-        ifg_data:
-        mst:
-        nvelpar:
-        p_thresh:
-        interp:
-        vcmt:
-        method:
+      row: param col:
+      b0_mat: param sm_factor:
+      sm_order: param ifg_data:
+      mst: param nvelpar:
+      p_thresh: param interp:
+      vcmt: param method:
+      col: 
+      sm_factor: 
+      ifg_data: 
+      nvelpar: 
+      interp: 
+      method: 
+
+    Returns:
+
     """
     # check pixel for non-redundant ifgs
     sel = np.nonzero(mst[:, row, col])[0]  # trues in mst are chosen
@@ -277,10 +315,13 @@ def _solve_ts_svd(nvelpar, velflag, ifgv, b_mat):
     """Solve the linear least squares system using the SVD method.
 
     Args:
-        nvelpar:
-        velflag:
-        ifgv:
-        b_mat:
+      nvelpar: param velflag:
+      ifgv: param b_mat:
+      velflag: 
+      b_mat: 
+
+    Returns:
+
     """
     # pre-allocate the velocity matrix
     tsvel = np.empty(nvelpar, dtype=float32) * np.nan
@@ -294,14 +335,17 @@ def _solve_ts_lap(nvelpar, velflag, ifgv, mat_b, smorder, smfactor, sel, vcmt):
     using a Laplacian Smoothing operator.
 
     Args:
-        nvelpar:
-        velflag:
-        ifgv:
-        mat_b:
-        smorder:
-        smfactor:
-        sel:
-        vcmt:
+      nvelpar: param velflag:
+      ifgv: param mat_b:
+      smorder: param smfactor:
+      sel: param vcmt:
+      velflag: 
+      mat_b: 
+      smfactor: 
+      vcmt: 
+
+    Returns:
+
     """
     # Laplacian observations number
     nlap = nvelpar - smorder
@@ -368,7 +412,10 @@ def _missing_option_error(option):
     """Convenience function for raising similar missing option errors.
 
     Args:
-        option:
+      option: 
+
+    Returns:
+
     """
     msg = "Missing '%s' option in config file" % option
     raise ConfigException(msg)

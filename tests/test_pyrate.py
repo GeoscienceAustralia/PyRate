@@ -37,9 +37,13 @@ if os.name == "nt":
 
     def symlink_ms(source, link_name):
         """
+
         Args:
-            source:
-            link_name:
+          source: param link_name:
+          link_name: 
+
+        Returns:
+
         """
         import ctypes
 
@@ -59,11 +63,13 @@ CURRENT_DIR = os.getcwd()
 
 
 def test_transform_params():
+    """ """
     params = {config.IFG_LKSX: 3, config.IFG_LKSY: 2, config.IFG_CROP_OPT: 1}
     assert cf.transform_params(params) == (3, 2, 1)
 
 
 def test_warp_required():
+    """ """
     nocrop = prepifg_helper.ALREADY_SAME_SIZE
     assert shared.warp_required(xlooks=2, ylooks=1, crop=nocrop)
     assert shared.warp_required(xlooks=1, ylooks=2, crop=nocrop)
@@ -75,6 +81,7 @@ def test_warp_required():
 
 
 def test_original_ifg_paths():
+    """ """
     ifgdir = common.SML_TEST_TIF
     ifglist_path = join(ifgdir, "ifms_17")
     paths = cf.original_ifg_paths(ifglist_path, ifgdir)
@@ -86,8 +93,11 @@ def dest_ifg_paths(ifg_paths, outdir):
     """Returns paths to out/dest ifgs.
 
     Args:
-        ifg_paths:
-        outdir:
+      ifg_paths: param outdir:
+      outdir: 
+
+    Returns:
+
     """
 
     bases = [os.path.basename(p) for p in ifg_paths]
@@ -95,6 +105,7 @@ def dest_ifg_paths(ifg_paths, outdir):
 
 
 def test_dest_ifg_paths():
+    """ """
     # given source ifgs to process, get paths of ifgs in out dir
     src_paths = ["tif/ifg0.tif", "tif/ifg1.tif"]
     dest_paths = dest_ifg_paths(src_paths, outdir="out")
@@ -104,9 +115,13 @@ def test_dest_ifg_paths():
 # FIXME: change to read output ifgs
 def get_ifgs(out_dir, _open=True):
     """
+
     Args:
-        out_dir:
-        _open:
+      out_dir: param _open:  (Default value = True)
+      _open:  (Default value = True)
+
+    Returns:
+
     """
     paths = glob.glob(join(out_dir, "geo_*-*_unw.tif"))
     ifgs = [shared.Ifg(p) for p in paths]
@@ -119,11 +134,13 @@ def get_ifgs(out_dir, _open=True):
 
 
 class PyRateTests(unittest.TestCase):
+    """ """
     # Initialise & run workflow from class setup, ignoring multilooking as it is
     # a separate step. Unit tests verify different steps have completed
 
     @classmethod
     def setUpClass(cls):
+        """ """
 
         # testing constants2
         cls.BASE_DIR = tempfile.mkdtemp()
@@ -163,6 +180,7 @@ class PyRateTests(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        """ """
         shutil.rmtree(cls.BASE_DIR, ignore_errors=True)
         os.chdir(CURRENT_DIR)
 
@@ -170,15 +188,19 @@ class PyRateTests(unittest.TestCase):
         """Helper to check for metadata flags
 
         Args:
-            ifg:
-            key:
-            value:
+          ifg: param key:
+          value: 
+          key: 
+
+        Returns:
+
         """
         md = ifg.dataset.GetMetadata()
         self.assertTrue(key in md, "Missing %s in %s" % (key, ifg.data_path))
         self.assertTrue(md[key], value)
 
     def test_basic_outputs(self):
+        """ """
         self.assertTrue(os.path.exists(self.BASE_OUT_DIR))
 
         for i in self.ifgs:
@@ -209,6 +231,7 @@ class ParallelPyRateTests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        """ """
         rate_types = ["stack_rate", "stack_error", "stack_samples"]
         cls.tif_dir = tempfile.mkdtemp()
         cls.test_conf = common.TEST_CONF_GAMMA
@@ -256,6 +279,7 @@ class ParallelPyRateTests(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        """ """
         shutil.rmtree(cls.tif_dir, ignore_errors=True)
         shutil.rmtree(cls.tif_dir_s, ignore_errors=True)
         common.remove_tifs(cf.get_config_params(cls.test_conf)[cf.OBS_DIR])
@@ -271,9 +295,12 @@ class ParallelPyRateTests(unittest.TestCase):
         """Helper to check for metadata flags
 
         Args:
-            ifg:
-            key:
-            value:
+          ifg: param key:
+          value: 
+          key: 
+
+        Returns:
+
         """
         md = ifg.dataset.GetMetadata()
         self.assertTrue(key in md, "Missing %s in %s" % (key, ifg.data_path))
@@ -316,8 +343,10 @@ class ParallelPyRateTests(unittest.TestCase):
 
 
 class TestPrePrepareIfgs(unittest.TestCase):
+    """ """
     @classmethod
     def setUpClass(cls):
+        """ """
         params = config.get_config_params(common.TEST_CONF_ROIPAC)
         cls.tmp_dir = tempfile.mkdtemp()
         common.copytree(common.SML_TEST_TIF, cls.tmp_dir)
@@ -356,10 +385,12 @@ class TestPrePrepareIfgs(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        """ """
         shutil.rmtree(cls.tmp_dir2)
         shutil.rmtree(cls.tmp_dir)
 
     def test_small_data_prep_phase_equality(self):
+        """ """
         for i, j in zip(self.ifgs, self.ifg_ret):
             np.testing.assert_array_almost_equal(i.phase_data, j.phase_data)
             self.assertFalse((i.phase_data == 0).any())
@@ -368,6 +399,7 @@ class TestPrePrepareIfgs(unittest.TestCase):
             self.assertTrue((i.phase_data == 0).any())
 
     def test_small_data_prep_metadata_equality(self):
+        """ """
         for i, j in zip(self.ifgs, self.ifg_ret):
             self.assertDictEqual(i.meta_data, j.meta_data)
 

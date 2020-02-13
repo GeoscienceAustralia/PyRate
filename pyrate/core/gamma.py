@@ -47,7 +47,10 @@ def _parse_header(path):
     """Parses all GAMMA header file fields into a dictionary
 
     Args:
-        path:
+      path: 
+
+    Returns:
+
     """
     with open(path) as f:
         text = f.read().splitlines()
@@ -61,10 +64,11 @@ def parse_epoch_header(path):
     """Returns dictionary of epoch metadata required for PyRate
 
     Args:
-        path (str): `Full path to Gamma *slc.par file`
+      path(str): Full path to Gamma *slc.par file`
 
     Returns:
-        dict: subset: subset of full metadata
+      dict: subset: subset of full metadata
+
     """
     lookup = _parse_header(path)
     subset = _parse_date_time(lookup)
@@ -89,7 +93,10 @@ def _parse_date_time(lookup):
     """Grab date and time metadata and convert to datetime objects
 
     Args:
-        lookup:
+      lookup: 
+
+    Returns:
+
     """
     subset = {}
     if len(lookup[GAMMA_DATE]) == 3:  # pragma: no cover
@@ -119,10 +126,11 @@ def parse_dem_header(path):
     """Returns dictionary of DEM metadata required for PyRate
 
     Args:
-        path (str): `Full path to Gamma *dem.par file`
+      path(str): Full path to Gamma *dem.par file`
 
     Returns:
-        dict: subset: subset of full metadata
+      dict: subset: subset of full metadata
+
     """
     lookup = _parse_header(path)
 
@@ -149,7 +157,10 @@ def _frequency_to_wavelength(freq):
     """Convert radar frequency to wavelength
 
     Args:
-        freq:
+      freq: 
+
+    Returns:
+
     """
     return ifc.SPEED_OF_LIGHT_METRES_PER_SECOND / freq
 
@@ -159,12 +170,13 @@ def combine_headers(hdr0, hdr1, dem_hdr):
     dictionary for an interferogram.
 
     Args:
-        hdr0 (dict): Metadata for the master image
-        hdr1 (dict): Metadata for the slave image
-        dem_hdr (dict): Metadata for the DEM
+      hdr0(dict): Metadata for the master image
+      hdr1(dict): Metadata for the slave image
+      dem_hdr(dict): Metadata for the DEM
 
     Returns:
-        dict: chdr: combined metadata
+      dict: chdr: combined metadata
+
     """
     if not all([isinstance(a, dict) for a in [hdr0, hdr1, dem_hdr]]):
         raise GammaException("Header args need to be dicts")
@@ -213,11 +225,12 @@ def manage_headers(dem_header_file, header_paths):
     incidence files
 
     Args:
-        dem_header_file (str): DEM header path
-        header_paths (list): List of master/slave header paths
+      dem_header_file(str): DEM header path
+      header_paths(list): List of master/slave header paths
 
     Returns:
-        dict: combined_header: Combined metadata dictionary
+      dict: combined_header: Combined metadata dictionary
+
     """
     dem_header = parse_dem_header(dem_header_file)
     # find param files containing filename dates
@@ -236,12 +249,13 @@ def get_header_paths(input_file, slc_file_list, slc_dir):
     """Function that matches input GAMMA file names with GAMMA header file names
 
     Args:
-        input_file (str): input GAMMA image file.
-        slc_file_list:
-        slc_dir (str): GAMMA SLC header file directory
+      input_file(str): input GAMMA image file.
+      slc_file_list: param slc_dir: GAMMA SLC header file directory
+      slc_dir: 
 
     Returns:
-        list: list of matching header files
+      list: list of matching header files
+
     """
     _, file_name = split(input_file)
     PTN = re.compile(r"\d{8}")  # match 8 digits for the dates
@@ -253,14 +267,21 @@ def get_header_paths(input_file, slc_file_list, slc_dir):
 
 def gamma_header(ifg_file_path, params):
     """Function to obtain combined Gamma headers for image file
-
+    
     Args:
         ifg_file_path: Path to interferogram file to find headers for.
-        params: PyRate parameters dictionary.
+    
+    Args:
+      ifg_file_path: param params:
+
+    Args:
+      ifg_file_path: 
+      params: 
 
     Returns:
-        A combined header dictionary containing metadata from matching gamma
-        headers and DEM header.
+      A combined header dictionary containing metadata from matching gamma
+      headers and DEM header.
+
     """
     dem_hdr_path = params[cf.DEM_HEADER_FILE]
     slc_dir = params[cf.SLC_DIR]

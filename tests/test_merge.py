@@ -60,7 +60,9 @@ legacy_maxvar = [
 
 
 class MergingTest(unittest.TestCase):
+    """ """
     def test_png_creation(self):
+        """ """
 
         output_folder_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "tests", "test_data", "merge")
         create_png_from_tif(output_folder_path)

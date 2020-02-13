@@ -24,12 +24,16 @@ from default_parameters import PYRATE_DEFAULT_CONFIGRATION
 
 def set_parameter_value(data_type, input_value, default_value, required, input_name):
     """
+
     Args:
-        data_type:
-        input_value:
-        default_value:
-        required:
-        input_name:
+      data_type: param input_value:
+      default_value: param required:
+      input_name: 
+      input_value: 
+      required: 
+
+    Returns:
+
     """
     if len(input_value) < 1:
         input_value = None
@@ -45,12 +49,16 @@ def set_parameter_value(data_type, input_value, default_value, required, input_n
 
 def validate_parameter_value(input_name, input_value, min_value=None, max_value=None, possible_values=None):
     """
+
     Args:
-        input_name:
-        input_value:
-        min_value:
-        max_value:
-        possible_values:
+      input_name: param input_value:
+      min_value: Default value = None)
+      max_value: Default value = None)
+      possible_values: Default value = None)
+      input_value: 
+
+    Returns:
+
     """
     if isinstance(input_value, pathlib.PurePath):
         if input_name in "outdir":
@@ -98,10 +106,14 @@ def validate_parameter_value(input_name, input_value, min_value=None, max_value=
 
 def validate_file_list_values(dir, fileList, no_of_epochs):
     """
+
     Args:
-        dir:
-        fileList:
-        no_of_epochs:
+      dir: param fileList:
+      no_of_epochs: 
+      fileList: 
+
+    Returns:
+
     """
     if dir is None:
         raise ValueError("No value supplied for input directory: " + str(dir))
@@ -128,13 +140,15 @@ def validate_file_list_values(dir, fileList, no_of_epochs):
 
 class MultiplePaths:
     def __init__(self, baseDir, baseName, ifglksx=0, ifgcropopt=0):
-        """
-        Args:
-            baseDir:
-            baseName:
-            ifglksx:
-            ifgcropopt:
-        """
+    """
+
+    Args:
+      baseDir: param baseName:
+      ifglksx: param ifgcropopt:
+
+    Returns:
+
+    """
         if ".tif" in baseName:
             self.unwrapped_path = None
             self.converted_path = str(baseDir / baseName)
@@ -167,10 +181,14 @@ sampled_path = """
 class Configuration:
     def __init__(self, config_file_path):
 
-        """
-        Args:
-            config_file_path:
-        """
+    """
+
+    Args:
+      config_file_path: 
+
+    Returns:
+
+    """
         parser = ConfigParser()
         parser.optionxform = str
         # mimic header to fulfil the requirement for configparser

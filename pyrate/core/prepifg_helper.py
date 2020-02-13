@@ -51,14 +51,15 @@ def get_analysis_extent(crop_opt, rasters, xlooks, ylooks, user_exts):
     """Function checks prepifg parameters and returns extents/bounding box.
 
     Args:
-        crop_opt (int): Cropping option
-        rasters (list): List of either Ifg or DEM class objects
-        xlooks (int): Number of multi-looks in x
-        ylooks (int): Number of multi-looks in y
-        user_exts (tuple): Tuple of user defined cropping coordinates
+      crop_opt(int): Cropping option
+      rasters(list): List of either Ifg or DEM class objects
+      xlooks(int): Number of multi-looks in x
+      ylooks(int): Number of multi-looks in y
+      user_exts(tuple): Tuple of user defined cropping coordinates
 
     Returns:
-        tuple: extents: tuple of four bounding coordinates
+      tuple: extents: tuple of four bounding coordinates
+
     """
 
     if crop_opt not in CROP_OPTIONS:
@@ -87,7 +88,10 @@ def _is_number(s):
     """Check whether string can be converted to float
 
     Args:
-        s:
+      s: 
+
+    Returns:
+
     """
     try:
         float(s)
@@ -102,8 +106,11 @@ def _check_looks(xlooks, ylooks):
     """Convenience function to verify that looks parameters are valid.
 
     Args:
-        xlooks:
-        ylooks:
+      xlooks: param ylooks:
+      ylooks: 
+
+    Returns:
+
     """
 
     if not (isinstance(xlooks, Number) and isinstance(ylooks, Number)):  # pragma: no cover
@@ -120,7 +127,10 @@ def _check_resolution(ifgs):
     """Convenience function to verify Ifg resolutions are equal.
 
     Args:
-        ifgs:
+      ifgs: 
+
+    Returns:
+
     """
 
     for var in ["x_step", "y_step"]:
@@ -135,9 +145,12 @@ def _get_extents(ifgs, crop_opt, user_exts=None):
     MAXIMUM_CROP = 2 CUSTOM_CROP = 3 ALREADY_SAME_SIZE = 4
 
     Args:
-        ifgs:
-        crop_opt:
-        user_exts:
+      ifgs: param crop_opt:
+      user_exts: Default value = None)
+      crop_opt: 
+
+    Returns:
+
     """
     if crop_opt == MINIMUM_CROP:
         extents = _min_bounds(ifgs)
@@ -159,23 +172,22 @@ def prepare_ifg(input_path, output_path, xlooks, ylooks, extents, thresh, crop_o
     Returns are only given if write_to_disk=False
 
     Args:
-        input_path (str): Input raster file path name
-        output_path (str): Path for output file
-        xlooks (int): Number of multi-looks in x; 5 is 5 times smaller, 1 is no
-            change
-        ylooks (int): Number of multi-looks in y
-        extents (tuple): Tuple of user defined georeferenced extents for new
-            file: (xfirst, yfirst, xlast, ylast)cropping coordinates
-        thresh (float): see thresh in prepare_ifgs()
-        crop_out (int): Crop option
-        header (dict): dictionary of metadata from header file
-        coherence_path:
-        coherence_thresh:
+      input_path(str): Input raster file path name
+      output_path(str): Path for output file
+      xlooks(int): Number of multi-looks in x; 5 is 5 times smaller, 1 is no
+    change
+      ylooks(int): Number of multi-looks in y
+      extents(tuple): Tuple of user defined georeferenced extents for new
+    file: (xfirst, yfirst, xlast, ylast)cropping coordinates
+      thresh(float): see thresh in prepare_ifgs()
+      crop_out(int): Crop option
+      header(dict, optional): dictionary of metadata from header file (Default value = None)
+      coherence_path: Default value = None)
+      coherence_thresh: Default value = None)
 
     Returns:
-        ndarray: resampled_data: output cropped and resampled image
+      ndarray: resampled_data: output cropped and resampled image
 
-        gdal.Dataset: out_ds: destination gdal dataset object
     """
 
     do_multilook = xlooks > 1 or ylooks > 1
@@ -231,25 +243,24 @@ def prepare_ifgs(raster_data_paths, crop_opt, xlooks, ylooks, thresh=0.5, user_e
     """Wrapper function to prepare a sequence of interferogram files for PyRate
     analysis. See prepifg.prepare_ifg() for full description of inputs and
     returns.
-
+    
     Note: function need refining for crop options
 
     Args:
-        raster_data_paths (list): List of interferogram file paths
-        crop_opt (int): Crop option
-        xlooks (int): Number of multi-looks in x; 5 is 5 times smaller, 1 is no
-            change
-        ylooks (int): Number of multi-looks in y
-        thresh (float): see thresh in prepare_ifgs()
-        user_exts (tuple): Tuple of user defined georeferenced extents for new
-            file: (xfirst, yfirst, xlast, ylast)cropping coordinates
-        write_to_disc:
-        out_path:
+      raster_data_paths(list): List of interferogram file paths
+      crop_opt(int): Crop option
+      xlooks(int): Number of multi-looks in x; 5 is 5 times smaller, 1 is no
+    change
+      ylooks(int): Number of multi-looks in y
+      thresh(float, optional): see thresh in prepare_ifgs() (Default value = 0.5)
+      user_exts(tuple, optional): Tuple of user defined georeferenced extents for new
+    file: (xfirst, yfirst, xlast, ylast)cropping coordinates (Default value = None)
+      write_to_disc: Default value = True)
+      out_path: Default value = None)
 
     Returns:
-        ndarray: resampled_data: output cropped and resampled image
+      ndarray: resampled_data: output cropped and resampled image
 
-        gdal.Dataset: out_ds: destination gdal dataset object
     """
     # use metadata check to check whether it's a dem or ifg
     rasters = [dem_or_ifg(r) for r in raster_data_paths]
@@ -262,10 +273,11 @@ def dem_or_ifg(data_path):
     """Returns an Ifg or DEM class object from input geotiff file.
 
     Args:
-        data_path (str): file path name
+      data_path(str): file path name
 
     Returns:
-        Ifg or DEM class object: Interferogram or DEM object from input file
+      Ifg or DEM class object: Interferogram or DEM object from input file
+
     """
     ds = gdal.Open(data_path)
     md = ds.GetMetadata()
@@ -280,7 +292,10 @@ def _file_ext(raster):
     """Returns file ext string based on type of raster.
 
     Args:
-        raster:
+      raster: 
+
+    Returns:
+
     """
     if isinstance(raster, Ifg):
         return "tif"
@@ -299,7 +314,10 @@ def _dummy_warp(renamed_path):
     required
 
     Args:
-        renamed_path:
+      renamed_path: 
+
+    Returns:
+
     """
     ifg = dem_or_ifg(renamed_path)
     ifg.open()
@@ -314,12 +332,15 @@ def _resample(data, xscale, yscale, thresh):
     of several tiles in 'data'. NB: Assumes incoherent cells are NaNs.
 
     Args:
-        data: source array to resample to different size
-        xscale: number of cells to average along X axis
-        yscale: number of Y axis cells to average
-        thresh: minimum allowable proportion of NaN cells (range from 0.0-1.0),
-            eg. 0.25 = 1/4 or more as NaNs results in a NaN value for the output
-            cell.
+      data: source array to resample to different size
+      xscale: number of cells to average along X axis
+      yscale: number of Y axis cells to average
+      thresh: minimum allowable proportion of NaN cells (range from 0.0-1.0),
+    eg. 0.25 = 1/4 or more as NaNs results in a NaN value for the output
+    cell.
+
+    Returns:
+
     """
     # TODO: make more efficient
     if thresh < 0 or thresh > 1:
@@ -348,12 +369,15 @@ def _resample_ifg(ifg, cmd, x_looks, y_looks, thresh, md=None):
     """Convenience function to resample data from a given Ifg (more coarse).
 
     Args:
-        ifg:
-        cmd:
-        x_looks:
-        y_looks:
-        thresh:
-        md:
+      ifg: param cmd:
+      x_looks: param y_looks:
+      thresh: param md:  (Default value = None)
+      cmd: 
+      y_looks: 
+      md: (Default value = None)
+
+    Returns:
+
     """
 
     fp, tmp_path = mkstemp(suffix=".tif")
@@ -389,7 +413,10 @@ def _min_bounds(ifgs):
     """Returns bounds for overlapping area of the given interferograms.
 
     Args:
-        ifgs:
+      ifgs: 
+
+    Returns:
+
     """
 
     xmin = max([i.x_first for i in ifgs])
@@ -403,7 +430,10 @@ def _max_bounds(ifgs):
     """Returns bounds for the total area covered by the given interferograms.
 
     Args:
-        ifgs:
+      ifgs: 
+
+    Returns:
+
     """
 
     xmin = min([i.x_first for i in ifgs])
@@ -420,7 +450,10 @@ def _get_same_bounds(ifgs):
     """Check and return bounding box for ALREADY_SAME_SIZE option.
 
     Args:
-        ifgs:
+      ifgs: 
+
+    Returns:
+
     """
 
     tfs = [i.dataset.GetGeoTransform() for i in ifgs]
@@ -453,11 +486,14 @@ def _custom_bounds(ifgs, xw, ytop, xe, ybot):
     """Check and modify input custom crop bounds to line up with grid interval
 
     Args:
-        ifgs:
-        xw:
-        ytop:
-        xe:
-        ybot:
+      ifgs: param xw:
+      ytop: param xe:
+      ybot: 
+      xw: 
+      xe: 
+
+    Returns:
+
     """
     msg = "Cropped image bounds are outside the original image bounds"
     i = ifgs[0]
@@ -513,11 +549,14 @@ def _check_crop_coords(ifgs, xmin, ymin, xmax, ymax):
     """Ensures cropping coords line up with grid system within tolerance.
 
     Args:
-        ifgs:
-        xmin:
-        ymin:
-        xmax:
-        ymax:
+      ifgs: param xmin:
+      ymin: param xmax:
+      ymax: 
+      xmin: 
+      xmax: 
+
+    Returns:
+
     """
 
     # NB: assumption is the first Ifg is correct, so only test against it

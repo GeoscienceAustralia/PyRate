@@ -32,19 +32,22 @@ LOW_FLOAT32 = np.finfo(np.float32).min * 1e-10
 
 
 def coherence_masking(src_ds, coherence_ds, coherence_thresh):
-    """
-    Perform coherence masking on raster in-place. 
-  
+    """Perform coherence masking on raster in-place.
+    
     Based on gdal_calc formula provided by Nahidul:
-    gdal_calc.py -A 20151127-20151209_VV_8rlks_flat_eqa.cc.tif 
-     -B 20151127-20151209_VV_8rlks_eqa.unw.tif 
-     --outfile=test_v1.tif --calc="B*(A>=0.8)-999*(A<0.8)" 
+    gdal_calc.py -A 20151127-20151209_VV_8rlks_flat_eqa.cc.tif
+     -B 20151127-20151209_VV_8rlks_eqa.unw.tif
+     --outfile=test_v1.tif --calc="B*(A>=0.8)-999*(A<0.8)"
      --NoDataValue=-999
 
     Args:
-        ds: The interferogram to mask as GDAL dataset.
-        coherence_ds: The coherence GDAL dataset.
-        coherence_thresh: The coherence threshold.
+      ds: The interferogram to mask as GDAL dataset.
+      coherence_ds: The coherence GDAL dataset.
+      coherence_thresh: The coherence threshold.
+      src_ds: 
+
+    Returns:
+
     """
     coherence_band = coherence_ds.GetRasterBand(1)
     src_band = src_ds.GetRasterBand(1)
@@ -59,19 +62,21 @@ def coherence_masking(src_ds, coherence_ds, coherence_thresh):
 
 
 def world_to_pixel(geo_transform, x, y):
-    """
-    Uses a gdal geomatrix (gdal.GetGeoTransform()) to calculate
+    """Uses a gdal geomatrix (gdal.GetGeoTransform()) to calculate
     the pixel location of a geospatial coordinate;
     see: http://pcjericks.github.io/py-gdalogr-cookbook/raster_layers.html
 
-    :param list geo_transform: Affine transformation coefficients
-    :param float x: longitude coordinate
-    :param float y: latitude coordinate
+    Args:
+      list: geo_transform: Affine transformation coefficients
+      float: x: longitude coordinate
+      float: y: latitude coordinate
+      geo_transform: param x:
+      y: returns: col: pixel column number
+      x: 
 
-    :return: col: pixel column number
-    :rtype: int
-    :return: line: pixel line number
-    :rtype: int
+    Returns:
+      int: col: pixel column number
+
     """
     ul_x = geo_transform[0]
     ul_y = geo_transform[3]
@@ -84,38 +89,46 @@ def world_to_pixel(geo_transform, x, y):
 
 
 def crop(input_file, extents, geo_trans=None, nodata=np.nan):
-    """
-    Adapted from http://karthur.org/2015/clipping-rasters-in-python.html
-
+    """Adapted from http://karthur.org/2015/clipping-rasters-in-python.html
+    
     Clips a raster (given as either a gdal.Dataset or as a numpy.array
     instance) to a polygon layer provided by a Shapefile (or other vector
     layer). If a numpy.array is given, a "GeoTransform" must be provided
     (via dataset.GetGeoTransform() in GDAL). Returns an array. Clip features
     must be a dissolved, single-part geometry (not multi-part). Modified from:
-
+    
     http://pcjericks.github.io/py-gdalogr-cookbook/raster_layers.html
     #clip-a-geotiff-with-shapefile
-
+    
     Arguments:
         rast            A gdal.Dataset or a NumPy array
         features_path   The path to the clipping features
         geo_trans              An optional GDAL GeoTransform to use instead
         nodata          The NoData value; defaults to -9999.
 
-    :param str input_file: input image file path
-    :param list extents: extents for the cropped area
-    :param list geo_trans: An optional GDAL GeoTransform to use instead
-    :param int nodata: The NoData value; defaults to -9999
+    Args:
+      str: input_file
+      list: extents
+      list: geo_trans
+      int: nodata
+      input_file: param extents
+      geo_trans: Default value
+      nodata: Default value
+      extents: 
 
-    :return: clip: cropped part of the image
-    :rtype: ndarray
-    :return: gt2: geotransform parameters for the cropped image
-    :rtype: list
+    Returns:
+      ndarray: clip: cropped part of the image
+
     """
 
     def image_to_array(i):
-        """
-        Converts a Python Imaging Library (PIL) array to a gdalnumeric image.
+        """Converts a Python Imaging Library (PIL) array to a gdalnumeric image.
+
+        Args:
+          i: 
+
+        Returns:
+
         """
         arr = gdal_array.fromstring(i.tobytes(), "b")
         arr.shape = i.im.size[1], i.im.size[0]
@@ -198,16 +211,21 @@ def crop(input_file, extents, geo_trans=None, nodata=np.nan):
 
 
 def resample_nearest_neighbour(input_tif, extents, new_res, output_file):
-    """
-    Nearest neighbor resampling and cropping of an image.
+    """Nearest neighbor resampling and cropping of an image.
 
-    :param str input_tif: input geotiff file path
-    :param list extents: new extents for cropping
-    :param float new_res: new resolution for resampling
-    :param str output_file: output geotiff file path
+    Args:
+      str: input_tif: input geotiff file path
+      list: extents: new extents for cropping
+      float: new_res: new resolution for resampling
+      str: output_file: output geotiff file path
+      input_tif: param extents:
+      new_res: param output_file:
+      extents: 
+      output_file: 
 
-    :return: dst: resampled image
-    :rtype: ndarray
+    Returns:
+      ndarray: dst: resampled image
+
     """
     dst, resampled_proj, src, _ = _crop_resample_setup(extents, input_tif, new_res, output_file)
     # Do the work
@@ -216,8 +234,18 @@ def resample_nearest_neighbour(input_tif, extents, new_res, output_file):
 
 
 def _crop_resample_setup(extents, input_tif, new_res, output_file, dst_driver_type="GTiff", out_bands=2):
-    """
-    Convenience function for crop/resample setup
+    """Convenience function for crop/resample setup
+
+    Args:
+      extents: param input_tif:
+      new_res: param output_file:
+      dst_driver_type: Default value = "GTiff")
+      out_bands: Default value = 2)
+      input_tif: 
+      output_file: 
+
+    Returns:
+
     """
     # Source
     src_ds = gdal.Open(input_tif, gdalconst.GA_ReadOnly)
@@ -256,8 +284,17 @@ def _crop_resample_setup(extents, input_tif, new_res, output_file, dst_driver_ty
 
 
 def _gdalwarp_width_and_height(max_x, max_y, min_x, min_y, geo_trans):
-    """
-    Modify pixel height and width
+    """Modify pixel height and width
+
+    Args:
+      max_x: param max_y:
+      min_x: param min_y:
+      geo_trans: 
+      max_y: 
+      min_y: 
+
+    Returns:
+
     """
     # modified image extents
     ul_x, ul_y = world_to_pixel(geo_trans, min_x, max_y)
@@ -270,22 +307,29 @@ def _gdalwarp_width_and_height(max_x, max_y, min_x, min_y, geo_trans):
 
 def crop_resample_average(input_raster, extents, resolution, output_file, thresh, header=None, coherence_path=None,
                           coherence_thresh=None):
-    """
-    Crop, resample, and average a geotiff image.
+    """Crop, resample, and average a geotiff image.
 
-    :param str input_raster: Path to input geotiff to resample/crop
-    :param tuple extents: Cropping extents (xfirst, yfirst, xlast, ylast)
-    :param list resolution: [xres, yres] resolution of output image
-    :param str output_file: Path to output resampled/cropped geotiff
-    :param float thresh: NaN fraction threshold
-    :param str out_driver_type: The output driver; `MEM` or `GTiff` (optional)
-    :param bool match_pyrate: Match Legacy output (optional)
-    :param dict header: dictionary of metadata
+    Args:
+      str: input_raster: Path to input geotiff to resample/crop
+      tuple: extents: Cropping extents (xfirst, yfirst, xlast, ylast)
+      list: resolution: [xres, yres] resolution of output image
+      str: output_file: Path to output resampled/cropped geotiff
+      float: thresh: NaN fraction threshold
+      str: out_driver_type: The output driver; `MEM` or `GTiff` (optional)
+      bool: match_pyrate: Match Legacy output (optional)
+      dict: header: dictionary of metadata
+      input_raster: param extents:
+      resolution: param output_file:
+      thresh: param header:  (Default value = None)
+      coherence_path: Default value = None)
+      coherence_thresh: Default value = None)
+      extents: 
+      output_file: 
+      header: (Default value = None)
 
-    :return: resampled_average: output cropped and resampled image
-    :rtype: ndarray
-    :return: out_ds: destination gdal dataset object
-    :rtype: gdal.Dataset
+    Returns:
+      ndarray: resampled_average: output cropped and resampled image
+
     """
     out_driver_type = "GTiff"
     match_pyrate = False
@@ -367,9 +411,19 @@ def crop_resample_average(input_raster, extents, resolution, output_file, thresh
 
 
 def _alignment(input_tif, new_res, resampled_average, src_ds_mem, src_gt, tmp_ds):
-    """
-    Correction step to match python multi-look/crop output to match that of
+    """Correction step to match python multi-look/crop output to match that of
     Legacy data. Modifies the resampled_average array in place.
+
+    Args:
+      input_tif: param new_res:
+      resampled_average: param src_ds_mem:
+      src_gt: param tmp_ds:
+      new_res: 
+      src_ds_mem: 
+      tmp_ds: 
+
+    Returns:
+
     """
     src_ds = gdal.Open(input_tif)
     data = src_ds.GetRasterBand(1).ReadAsArray()
@@ -389,20 +443,20 @@ def _alignment(input_tif, new_res, resampled_average, src_ds_mem, src_gt, tmp_ds
 
 
 def gdal_average(dst_ds, src_ds, src_ds_mem, thresh):
-    """
-    Perform subsampling of an image by averaging values
+    """Perform subsampling of an image by averaging values
 
-    :param gdal.Dataset dst_ds: Destination gdal dataset object
-    :param str input_tif: Input geotif
-    :param float thresh: NaN fraction threshold
-
+    Args:
+      gdal: Dataset dst_ds: Destination gdal dataset object
+      str: input_tif: Input geotif
+      float: thresh: NaN fraction threshold
     :return resampled_average: resampled image data
-    :rtype: ndarray
-    :return src_ds_mem: Modified in memory src_ds with nan_fraction in Band2. The nan_fraction
-        is computed efficiently here in gdal in the same step as the that of
-        the resampled average (band 1). This results is huge memory and
-        computational efficiency
-    :rtype: gdal.Dataset
+      dst_ds: param src_ds:
+      src_ds_mem: param thresh:
+      src_ds: 
+      thresh: 
+
+    Returns:
+
     """
     src_ds_mem.GetRasterBand(2).SetNoDataValue(-100000)
     src_gt = src_ds.GetGeoTransform()
@@ -416,7 +470,14 @@ def gdal_average(dst_ds, src_ds, src_ds_mem, thresh):
 
 
 def _setup_source(input_tif):
-    """convenience setup function for gdal_average"""
+    """convenience setup function for gdal_average
+
+    Args:
+      input_tif: 
+
+    Returns:
+
+    """
     src_ds = gdal.Open(input_tif)
     data = src_ds.GetRasterBand(1).ReadAsArray()
     src_dtype = src_ds.GetRasterBand(1).DataType
@@ -432,7 +493,16 @@ def _setup_source(input_tif):
 
 
 def _get_resampled_data_size(xscale, yscale, data):
-    """convenience function mimicking the Legacy output size"""
+    """convenience function mimicking the Legacy output size
+
+    Args:
+      xscale: param yscale:
+      data: 
+      yscale: 
+
+    Returns:
+
+    """
     xscale = int(xscale)
     yscale = int(yscale)
     ysize, xsize = data.shape

@@ -63,7 +63,9 @@ from core.shared import Ifg
 
 
 class TestResample(unittest.TestCase):
+    """ """
     def test_small_data_resampling(self):
+        """ """
         small_test_ifgs = common.small_data_setup()
         # minX, minY, maxX, maxY = extents
         extents = [150.91, -34.229999976, 150.949166651, -34.17]
@@ -76,11 +78,15 @@ class TestResample(unittest.TestCase):
 
     def check_same_resampled_output(self, extents, extents_str, res, small_test_ifgs):
         """
+
         Args:
-            extents:
-            extents_str:
-            res:
-            small_test_ifgs:
+          extents: param extents_str:
+          res: param small_test_ifgs:
+          extents_str: 
+          small_test_ifgs: 
+
+        Returns:
+
         """
         cmd = ["gdalwarp", "-overwrite", "-srcnodata", "None", "-q", "-r", "near", "-te"] + extents_str
 
@@ -108,6 +114,7 @@ class TestResample(unittest.TestCase):
                 print("File opened by another process.")
 
     def test_none_resolution_output(self):
+        """ """
         small_test_ifgs = common.small_data_setup()
         # minX, minY, maxX, maxY = extents
         extents = [150.91, -34.229999976, 150.949166651, -34.17]
@@ -116,6 +123,7 @@ class TestResample(unittest.TestCase):
         self.check_same_resampled_output(extents, extents_str, [None, None], small_test_ifgs)
 
     def test_output_file_written(self):
+        """ """
         small_test_ifgs = common.small_data_setup()
         extents = [150.91, -34.229999976, 150.949166651, -34.17]
         resolutions = [0.001666666, 0.001, 0.002, 0.0025, 0.01]
@@ -139,6 +147,7 @@ class TestResample(unittest.TestCase):
     #         os.remove(resampled_temp_tif)
 
     def test_resampled_tif_has_metadata(self):
+        """ """
         small_test_ifgs = common.small_data_setup()
 
         # minX, minY, maxX, maxY = extents
@@ -157,7 +166,9 @@ class TestResample(unittest.TestCase):
 
 
 class BasicReampleTests(unittest.TestCase):
+    """ """
     def test_reproject_with_no_data(self):
+        """ """
 
         data = np.array([[2, 7], [2, 7]])
         src_ds = gdal.GetDriverByName("MEM").Create("", 2, 2)
@@ -176,6 +187,7 @@ class BasicReampleTests(unittest.TestCase):
         np.testing.assert_array_equal(got_data, expected_data)
 
     def test_reproject_with_no_data_2(self):
+        """ """
 
         data = np.array([[2, 7, 7, 7], [2, 7, 7, 2]])
         height, width = data.shape
@@ -195,6 +207,7 @@ class BasicReampleTests(unittest.TestCase):
         np.testing.assert_array_equal(got_data, expected_data)
 
     def test_reproject_with_no_data_3(self):
+        """ """
 
         data = np.array([[2, 7, 7, 7], [2, 7, 7, 7], [2, 7, 7, 7], [2, 7, 7, 2], [2, 7, 7, 2]])
         src_ds = gdal.GetDriverByName("MEM").Create("", 4, 5)
@@ -213,6 +226,7 @@ class BasicReampleTests(unittest.TestCase):
         np.testing.assert_array_equal(got_data, expected_data)
 
     def test_reproject_with_no_data_4(self):
+        """ """
 
         data = np.array([[2, 7, 7, 7, 2], [2, 7, 7, 7, 2], [2, 7, 7, 7, 2], [2, 7, 7, 2, 2], [2, 7, 7, 2, 2]])
         src_ds = gdal.GetDriverByName("MEM").Create("", 5, 5)
@@ -231,6 +245,7 @@ class BasicReampleTests(unittest.TestCase):
         np.testing.assert_array_equal(got_data, expected_data)
 
     def test_reproject_with_no_data_5(self):
+        """ """
 
         data = np.array([[2, 7, 7, 7, 2], [2, 7, 7, 7, 2], [2, 7, 7, 7, 2], [2, 7, 7, 2, 2], [2, 7, 7, 2, 2], [2, 7, 7, 2, 2]])
         src_ds = gdal.GetDriverByName("MEM").Create("", 5, 6)
@@ -249,6 +264,7 @@ class BasicReampleTests(unittest.TestCase):
         np.testing.assert_array_equal(got_data, expected_data)
 
     def test_reproject_average_resampling(self):
+        """ """
 
         data = np.array(
             [[4, 7, 7, 7, 2, 7.0], [4, 7, 7, 7, 2, 7.0], [4, 7, 7, 7, 2, 7.0], [4, 7, 7, 2, 2, 7.0], [4, 7, 7, 2, 2, 7.0], [4, 7, 7, 10, 2, 7.0]],
@@ -270,6 +286,7 @@ class BasicReampleTests(unittest.TestCase):
         np.testing.assert_array_equal(got_data, expected_data)
 
     def test_reproject_average_resampling_with_2bands(self):
+        """ """
 
         data = np.array(
             [
@@ -300,7 +317,9 @@ class BasicReampleTests(unittest.TestCase):
 
 
 class TestOldPrepifgVsGdalPython(unittest.TestCase):
+    """ """
     def setUp(self):
+        """ """
         self.test_dir = tempfile.mktemp()
         common.copytree(common.SML_TEST_TIF, self.test_dir)
         self.ifgs = common.small_data_setup(datafiles=glob.glob(os.path.join(self.test_dir, "*.tif")))
@@ -314,6 +333,7 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
         del self.ref_gtif
 
     def tearDown(self):
+        """ """
         if os.path.exists(self.temp_tif):
             try:
                 os.remove(self.temp_tif)
@@ -325,6 +345,7 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
             print("File opened by another process.")
 
     def test_gdal_python_vs_old_prepifg_prep(self):
+        """ """
 
         for i in range(10):
             data = np.array(np.random.randint(0, 3, size=(10, 10)), dtype=np.float32)
@@ -375,6 +396,7 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
             del src_ds
 
     def test_gdal_python_vs_old_prepifg_prep2(self):
+        """ """
 
         for i in range(10):
             thresh = 0.5
@@ -404,10 +426,14 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
     @staticmethod
     def manipulation(data, tiff, md):
         """
+
         Args:
-            data:
-            tiff:
-            md:
+          data: param tiff:
+          md: 
+          tiff: 
+
+        Returns:
+
         """
         src_ds = gdal.GetDriverByName("GTiff").Create(tiff, 10, 10, 2, gdalconst.GDT_Float32)
         src_ds.GetRasterBand(1).WriteArray(data)
@@ -427,6 +453,7 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
         del src_ds
 
     def test_gdal_python_vs_old_prepifg_no_match_pyrate(self):
+        """ """
 
         for ifg in self.ifgs:
             extents = [150.91, -34.229999976, 150.949166651, -34.17]
@@ -464,6 +491,7 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
                 del data
 
     def test_gdal_python_vs_old_prepifg(self):
+        """ """
 
         self.ifgs = common.small_data_setup(datafiles=glob.glob(os.path.join(self.test_dir, "*.tif")))
 
@@ -498,6 +526,7 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
                 del data_from_file
 
     def test_no_out_file_when_driver_type_is_mem(self):
+        """ """
         for ifg in self.ifgs:
             extents = [150.91, -34.229999976, 150.949166651, -34.17]
             extents_str = [str(e) for e in extents]
@@ -527,12 +556,17 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
 
 
 class TestMEMVsGTiff(unittest.TestCase):
+    """ """
     @staticmethod
     def check(driver_type):
 
         """
+
         Args:
-            driver_type:
+          driver_type: 
+
+        Returns:
+
         """
         temp_tif = tempfile.mktemp(suffix=".tif")
 
@@ -569,9 +603,11 @@ class TestMEMVsGTiff(unittest.TestCase):
                 print("File opened by another process.")
 
     def test_mem(self):
+        """ """
         self.check("MEM")
 
     def test_gtiff(self):
+        """ """
         self.check("GTiff")
 
 
@@ -579,17 +615,20 @@ def warp_old(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out, verbo
     """Resamples 'ifg' and returns a new Ifg obj.
 
     Args:
-        ifg:
-        x_looks:
-        y_looks:
-        extents: georeferenced extents for new file: (xfirst, yfirst, xlast,
-            ylast)
-        resolution: [xres, yres] or None. Sets resolution output Ifg metadata.
-            Use *None* if raster size is not being changed.
-        thresh: see thresh in prepare_ifgs().
-        crop_out:
-        verbose: True to print gdalwarp output to stdout
-        ret_ifg:
+      ifg: param x_looks:
+      y_looks: param extents: georeferenced extents for new file: (xfirst, yfirst, xlast,
+    ylast)
+      resolution: xres, yres] or None. Sets resolution output Ifg metadata.
+    Use *None* if raster size is not being changed.
+      thresh: see thresh in prepare_ifgs().
+      crop_out: param verbose: True to print gdalwarp output to stdout
+      ret_ifg: Default value = True)
+      x_looks: 
+      extents: 
+      verbose: 
+
+    Returns:
+
     """
     if x_looks != y_looks:
         raise ValueError("X and Y looks mismatch")

@@ -39,12 +39,15 @@ from core.logger import pyratelogger as log
 
 def _pendiffexp(alphamod, cvdav):
     """Fits an exponential model to data.
-
+    
     radius, variance)
 
     Args:
-        alphamod (float): Exponential decay exponent.
-        cvdav (ndarray): Function magnitude at 0 radius (2 col array of
+      alphamod(float): Exponential decay exponent.
+      cvdav(ndarray): Function magnitude at 0 radius (2 col array of
+
+    Returns:
+
     """
     # maxvar usually at zero lag
     mx = cvdav[1, 0]
@@ -56,7 +59,10 @@ def _unique_points(points):  # pragma: no cover
     """Returns unique points from a list of coordinates.
 
     Args:
-        points: Sequence of (y,x) or (x,y) tuples.
+      points: Sequence of (y,x) or (x,y) tuples.
+
+    Returns:
+
     """
     return vstack([array(u) for u in set(points)])
 
@@ -64,22 +70,33 @@ def _unique_points(points):  # pragma: no cover
 def cvd(ifg_path, params, r_dist, calc_alpha=False, write_vals=False, save_acg=False):
     """Calculate the 1D covariance function of an entire interferogram as the
     radial average of its 2D autocorrelation.
-
+    
     Args:
         ifg_path (str): An interferogram file path. OR
-        params (dict): Dictionary of configuration parameters
-        r_dist (ndarray): Array of distance values from the image centre (See
-            Rdist class for more details)
-        calc_alpha (bool): If True calculate alpha
-        write_vals (bool): If True write maxvar and alpha values to
-            interferogram metadata
-        save_acg (bool): If True write autocorrelation and radial distance data
-            to numpy array file on disk
+    
+    Args:
+      r_dist: ndarray
+      Rdist: class for more details
+      calc_alpha: bool (Default value = False)
+      write_vals: bool (Default value = False)
+      interferogram: metadata
+      save_acg: bool (Default value = False)
+      to: numpy array file on disk
+      ifg_path: param params:
+
+    Args:
+      ifg_path: 
+      params: 
+      r_dist: 
+      calc_alpha:  (Default value = False)
+      write_vals:  (Default value = False)
+      save_acg:  (Default value = False)
 
     Returns:
-        float: maxvar: The maximum variance (at zero lag)
+      float: maxvar: The maximum variance (at zero lag)
+      
+      float: alpha: the exponential length-scale of decay factor
 
-        float: alpha: the exponential length-scale of decay factor
     """
 
     if isinstance(ifg_path, str):  # used during MPI
@@ -111,9 +128,12 @@ def _add_metadata(ifg, maxvar, alpha):
     """Convenience function for saving metadata to ifg
 
     Args:
-        ifg:
-        maxvar:
-        alpha:
+      ifg: param maxvar:
+      alpha: 
+      maxvar: 
+
+    Returns:
+
     """
     md = ifg.meta_data
     md[ifc.PYRATE_MAXVAR] = str(maxvar)
@@ -125,10 +145,13 @@ def _save_cvd_data(acg, r_dist, ifg_path, outdir):
     """Function to save numpy array of autocorrelation data to disk
 
     Args:
-        acg:
-        r_dist:
-        ifg_path:
-        outdir:
+      acg: param r_dist:
+      ifg_path: param outdir:
+      r_dist: 
+      outdir: 
+
+    Returns:
+
     """
     data = np.column_stack((acg, r_dist))
     data_file = join(outdir, "cvd_data_{b}.npy".format(b=basename(ifg_path).split(".")[0]))
@@ -138,7 +161,7 @@ def _save_cvd_data(acg, r_dist, ifg_path, outdir):
 def cvd_from_phase(phase, ifg, r_dist, calc_alpha, save_acg=False, params=None):
     """A convenience function used to compute radial autocovariance from phase
     data
-
+    
     Args:
         phase (ndarray): An array of interferogram phase data
         ifg (Ifg class): A shared.Ifg class instance
@@ -147,13 +170,26 @@ def cvd_from_phase(phase, ifg, r_dist, calc_alpha, save_acg=False, params=None):
         calc_alpha (bool): If True calculate alpha
         save_acg (bool): If True write autocorrelation and radial distance data
             to numpy array file on disk
-        params (dict): [optional] Dictionary of configuration parameters; Must
-            be provided if save_acg=True
+    
+    Args:
+      be: provided if save_acg
+      phase: param ifg:
+      r_dist: param calc_alpha:
+      save_acg: Default value = False)
+
+    Args:
+      ifg: 
+      calc_alpha: 
+      phase: 
+      r_dist: 
+      save_acg:  (Default value = False)
+      params:  (Default value = None)
 
     Returns:
-        float: maxvar: The maximum variance (at zero lag)
+      float: maxvar: The maximum variance (at zero lag)
+      
+      float: alpha: the exponential length-scale of decay factor
 
-        float: alpha: the exponential length-scale of decay factor
     """
     autocorr_grid = _get_autogrid(phase)
     acg = reshape(autocorr_grid, phase.size, order="F")
@@ -247,7 +283,10 @@ def _get_autogrid(phase):
     calculation
 
     Args:
-        phase:
+      phase: 
+
+    Returns:
+
     """
     autocorr_grid = _calc_autoc_grid(phase)
     nzc = np.sum(np.sum(phase != 0))
@@ -260,7 +299,10 @@ def _calc_autoc_grid(phase):
     calculation
 
     Args:
-        phase:
+      phase: 
+
+    Returns:
+
     """
     pspec = _calc_power_spectrum(phase)
     autocorr_grid = ifft2(pspec)
@@ -272,7 +314,10 @@ def _calc_power_spectrum(phase):
     calculation
 
     Args:
-        phase:
+      phase: 
+
+    Returns:
+
     """
     fft_phase = fft2(phase)
     pspec = real(fft_phase) ** 2 + imag(fft_phase) ** 2
@@ -284,18 +329,19 @@ def get_vcmt(ifgs, maxvar):
     described by Biggs et al., Geophys. J. Int, 2007. Matrix elements are
     evaluated according to sig_i * sig_j * C_ij where i and j are two
     interferograms and C is a matrix of coefficients:
-
+    
     C = 1 if the master and slave epochs of i and j are equal C = 0.5 if have
     i and j share either a common master or slave epoch C = -0.5 if the master
     of i or j equals the slave of the other C = 0 otherwise
 
     Args:
-        ifgs (list): A list of shared.Ifg class objects.
-        maxvar (ndarray): numpy array of maximum variance values for the
-            interferograms.
+      ifgs(list): A list of shared.Ifg class objects.
+      maxvar(ndarray): numpy array of maximum variance values for the
+    interferograms.
 
     Returns:
-        ndarray: vcm_t: temporal variance-covariance matrix
+      ndarray: vcm_t: temporal variance-covariance matrix
+
     """
     # c=0.5 for common master or slave; c=-0.5 if master
     # of one matches slave of another

@@ -46,16 +46,11 @@ def mst_from_ifgs(ifgs):
     weighting based on the number of NaN cells in the phase band.
 
     Args:
-        ifgs (list): List of interferogram objects (Ifg class)
+      ifgs(list): List of interferogram objects (Ifg class)
 
     Returns:
-        int: edges: The number of network connections
+      int: edges: The number of network connections
 
-        bool: is_tree: A boolean that is True if network is a tree
-
-        int: ntrees: The number of disconnected trees
-
-        list: mst_ifgs: Minimum Spanning Tree network of interferograms
     """
 
     edges_with_weights_for_networkx = [(i.master, i.slave, i.nan_fraction) for i in ifgs]
@@ -70,13 +65,20 @@ def mst_from_ifgs(ifgs):
 
 def mst_parallel(ifgs, params):
     """Wrapper function for calculating MST matrix in non-MPI runs.
-
+    
     Args:
         ifgs (list): List of interferogram objects (Ifg class)
-        params (dict): Dictionary of parameters
+    
+    Args:
+      ifgs: param params:
+
+    Args:
+      ifgs: 
+      params: 
 
     Returns:
-        ndarray: result: 3-dimensional Minimum Spanning Tree matrix
+      ndarray: result: 3-dimensional Minimum Spanning Tree matrix
+
     """
 
     log.info("Calculating MST in tiles")
@@ -110,17 +112,27 @@ def mst_parallel(ifgs, params):
 
 def mst_multiprocessing(tile, ifgs_or_paths, preread_ifgs=None, params=None):
     """Wrapper function for calculating MST matrix for a tile
-
+    
     Args:
         tile (ndarray): Tile class instance
         ifgs_or_paths (list): All interferograms paths of the problem. List of
             strings
         preread_ifgs (dict): Dictionary of interferogram metadata
-        params:
+    
+    Args:
+      tile: param ifgs_or_paths:
+      preread_ifgs: Default value = None)
+
+    Args:
+      ifgs_or_paths: 
+      tile: 
+      preread_ifgs:  (Default value = None)
+      params:  (Default value = None)
 
     Returns:
-        ndarray: mst_tile: MST matrix tile. An array of booleans representing
-        valid ifg connections
+      ndarray: mst_tile: MST matrix tile. An array of booleans representing
+      valid ifg connections
+
     """
     # The memory requirement during MPI MST computation is determined by the
     # number of interferograms times size of IfgPart. Note that we need all
@@ -136,7 +148,10 @@ def _build_graph_networkx(edges_with_weights):
     """Convenience graph builder function: returns a new graph object.
 
     Args:
-        edges_with_weights:
+      edges_with_weights: 
+
+    Returns:
+
     """
     g = nx.Graph()
     g.add_weighted_edges_from(edges_with_weights)
@@ -148,10 +163,11 @@ def mst_boolean_array(ifgs):
     connections in the Minimum Spanning Tree matrix.
 
     Args:
-        ifgs (list): Sequence of interferogram objects
+      ifgs(list): Sequence of interferogram objects
 
     Returns:
-        ndarray: result: Array of booleans representing valid ifg connections
+      ndarray: result: Array of booleans representing valid ifg connections
+
     """
     # The MSTs are stripped of connecting edge info, leaving just the ifgs.
     nifgs = len(ifgs)
@@ -190,7 +206,10 @@ def _mst_matrix_as_array(ifgs):
     """Alternative method for producing 3D MST array
 
     Args:
-        ifgs:
+      ifgs: 
+
+    Returns:
+
     """
     # Currently not used
     # Each pixel contains an MST (with connecting edges etc).
@@ -208,14 +227,11 @@ def mst_matrix_networkx(ifgs):
     NetworkX-package algorithms.
 
     Args:
-        ifgs (list): Sequence of interferogram objects
+      ifgs(list): Sequence of interferogram objects
 
     Returns:
-        int: y: pixel y coordinate
+      int: y: pixel y coordinate
 
-        int: x: pixel x coordinate
-
-        list: mst: list of tuples for edges in the minimum spanning tree
     """
     # make default MST to optimise result when no Ifg cells in a stack are nans
     edges_with_weights = [(i.master, i.slave, i.nan_fraction) for i in ifgs]
@@ -265,7 +281,10 @@ def _minimum_spanning_edges_from_mst(edges):
     """Convenience function to determine MST edges
 
     Args:
-        edges:
+      edges: 
+
+    Returns:
+
     """
     g_nx = _build_graph_networkx(edges)
     T = nx.minimum_spanning_tree(g_nx)  # step ifglist_mst in make_mstmat.m

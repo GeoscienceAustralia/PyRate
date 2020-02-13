@@ -88,21 +88,27 @@ def diff_exts_ifgs():
 
 
 def same_exts_ifgs():
-    """Return pair of Ifgs with same extents"""
+    """ """
     return [Ifg(join(PREP_TEST_TIF, f)) for f in ("0.tif", "1.tif")]
 
 
 def extents_from_params(params):
     """Custom extents from supplied parameters
+    
+    Args:
 
     Args:
-        params:
+      params: 
+
+    Returns:
+
     """
     keys = (cf.IFG_XFIRST, cf.IFG_YFIRST, cf.IFG_XLAST, cf.IFG_YLAST)
     return CustomExts(*[params[k] for k in keys])
 
 
 def test_extents_from_params():
+    """ """
     xf, yf = 1.0, 2.0
     xl, yl = 5.0, 7.0
     pars = {cf.IFG_XFIRST: xf, cf.IFG_XLAST: xl, cf.IFG_YFIRST: yf, cf.IFG_YLAST: yl}
@@ -127,7 +133,10 @@ class PrepifgOutputTests(unittest.TestCase):
         be paths to datasets, or GDAL dataset objects.
 
         Args:
-            files:
+          files: 
+
+        Returns:
+
         """
         assert len(files) > 1, "Need more than 1 file to compare"
         if not all([hasattr(f, "GetGeoTransform") for f in files]):
@@ -142,6 +151,7 @@ class PrepifgOutputTests(unittest.TestCase):
             assert_array_almost_equal(t, head, decimal=6, err_msg="Extents do not match!")
 
     def setUp(self):
+        """ """
         self.xs = 0.000833333
         self.ys = -self.xs
         self.ifgs, self.random_dir = diff_exts_ifgs()
@@ -160,13 +170,16 @@ class PrepifgOutputTests(unittest.TestCase):
 
     @staticmethod
     def test_mlooked_paths():
+        """ """
         test_mlooked_path()
 
     @staticmethod
     def test_extents_from_params():
+        """ """
         test_extents_from_params()
 
     def tearDown(self):
+        """ """
         for exp_file in self.exp_files:
             if exists(exp_file):
                 os.remove(exp_file)
@@ -175,6 +188,7 @@ class PrepifgOutputTests(unittest.TestCase):
         shutil.rmtree(self.random_dir)
 
     def _custom_ext_latlons(self):
+        """ """
         return [
             150.91 + (7 * self.xs),  # xfirst
             -34.17 + (16 * self.ys),  # yfirst
@@ -183,6 +197,7 @@ class PrepifgOutputTests(unittest.TestCase):
         ]  # 28 cells from yfirst
 
     def _custom_extents_tuple(self):
+        """ """
         return CustomExts(*self._custom_ext_latlons())
 
     def assert_projection_equal(self, files):
@@ -190,7 +205,10 @@ class PrepifgOutputTests(unittest.TestCase):
         paths to datasets, or GDAL dataset objects.
 
         Args:
-            files:
+          files: 
+
+        Returns:
+
         """
         assert len(files) > 1, "Need more than 1 file to compare"
         if not all([hasattr(f, "GetGeoTransform") for f in files]):
@@ -205,6 +223,7 @@ class PrepifgOutputTests(unittest.TestCase):
             self.assertEqual(t, head)
 
     def test_multilooked_projection_same_as_geotiff(self):
+        """ """
         xlooks = ylooks = 1
         prepare_ifgs(self.ifg_paths, MAXIMUM_CROP, xlooks, ylooks)
         mlooked_paths = [mlooked_path(f, crop_out=MAXIMUM_CROP, looks=xlooks) for f in self.ifg_paths]
@@ -255,6 +274,7 @@ class PrepifgOutputTests(unittest.TestCase):
             i.close()
 
     def test_custom_extents(self):
+        """ """
         xlooks = ylooks = 1
         cext = self._custom_extents_tuple()
         prepare_ifgs(self.ifg_paths, CUSTOM_CROP, xlooks, ylooks, user_exts=cext)
@@ -417,12 +437,14 @@ class ThresholdTests(unittest.TestCase):
     """Tests for threshold of data -> NaN during resampling."""
 
     def test_nan_threshold_inputs(self):
+        """ """
         data = ones((1, 1))
         for thresh in [-10, -1, -0.5, 1.000001, 10]:
             self.assertRaises(ValueError, _resample, data, 2, 2, thresh)
 
     @staticmethod
     def test_nan_threshold():
+        """ """
         # test threshold based on number of NaNs per averaging tile
         data = ones((2, 10))
         data[0, 3:] = nan
@@ -443,6 +465,7 @@ class ThresholdTests(unittest.TestCase):
 
     @staticmethod
     def test_nan_threshold_alt():
+        """ """
         # test threshold on odd numbers
         data = ones((3, 6))
         data[0] = nan
@@ -471,6 +494,7 @@ class SameSizeTests(unittest.TestCase):
     # TODO: make prepifg dir readonly to test output to temp dir
     # TODO: move to class for testing same size option?
     def test_already_same_size(self):
+        """ """
         # should do nothing as layers are same size & no multilooking required
         ifgs = same_exts_ifgs()
         ifg_data_paths = [d.data_path for d in ifgs]
@@ -479,6 +503,7 @@ class SameSizeTests(unittest.TestCase):
         self.assertTrue(all(res))
 
     def test_already_same_size_mismatch(self):
+        """ """
         ifgs, random_dir = diff_exts_ifgs()
         ifg_data_paths = [d.data_path for d in ifgs]
         self.assertRaises(PreprocessError, prepare_ifgs, ifg_data_paths, ALREADY_SAME_SIZE, 1, 1)
@@ -488,6 +513,7 @@ class SameSizeTests(unittest.TestCase):
 
     # TODO: ensure multilooked files written to output dir
     def test_same_size_multilooking(self):
+        """ """
         ifgs = same_exts_ifgs()
         ifg_data_paths = [d.data_path for d in ifgs]
         xlooks = ylooks = 2
@@ -506,6 +532,7 @@ class SameSizeTests(unittest.TestCase):
 
 
 def test_mlooked_path():
+    """ """
     path = "geo_060619-061002.tif"
     assert mlooked_path(path, looks=2, crop_out=4) == "geo_060619-061002_2rlks_4cr.tif"
 
@@ -539,6 +566,7 @@ class LocalMultilookTests(unittest.TestCase):
 
     @staticmethod
     def test_multilooking_thresh():
+        """ """
         data = ones((3, 6))
         data[0] = nan
         data[1, 2:5] = nan
@@ -554,10 +582,13 @@ def multilooking(src, xscale, yscale, thresh=0):
     for a valid tile resampling
 
     Args:
-        src:
-        xscale:
-        yscale:
-        thresh:
+      src: param xscale:
+      yscale: param thresh:  (Default value = 0)
+      xscale: 
+      thresh:  (Default value = 0)
+
+    Returns:
+
     """
     thresh = int(thresh)
     num_cells = xscale * yscale
@@ -593,6 +624,7 @@ class LegacyEqualityTestRoipacSmallTestData(unittest.TestCase):
     """Legacy roipac prepifg equality test for small test data"""
 
     def setUp(self):
+        """ """
         from common import small_data_setup
 
         self.ifgs = small_data_setup()
@@ -604,6 +636,7 @@ class LegacyEqualityTestRoipacSmallTestData(unittest.TestCase):
             ifg.open()
 
     def tearDown(self):
+        """ """
         for i in self.ifgs_with_nan:
             if os.path.exists(i.data_path):
                 i.close()
@@ -656,21 +689,28 @@ class LegacyEqualityTestRoipacSmallTestData(unittest.TestCase):
 
 
 class TestOneIncidenceOrElevationMap(unittest.TestCase):
+    """ """
     def setUp(self):
+        """ """
         self.base_dir = tempfile.mkdtemp()
         self.conf_file = tempfile.mktemp(suffix=".conf", dir=self.base_dir)
         self.ifgListFile = os.path.join(common.SML_TEST_GAMMA, "ifms_17")
 
     def tearDown(self):
+        """ """
         params = cf.get_config_params(self.conf_file)
         shutil.rmtree(self.base_dir)
         common.remove_tifs(params[cf.OBS_DIR])
 
     def make_input_files(self, inc="", ele=""):
         """
+
         Args:
-            inc:
-            ele:
+          inc: Default value = "")
+          ele: Default value = "")
+
+        Returns:
+
         """
         with open(self.conf_file, "w") as conf:
             conf.write("[{}]\n".format(DUMMY_SECTION_NAME))
@@ -693,12 +733,14 @@ class TestOneIncidenceOrElevationMap(unittest.TestCase):
             conf.write("{}: {}\n".format(APS_METHOD, "2"))
 
     def test_only_inc_file_created(self):
+        """ """
         inc_ext = "inc"
         ele_ext = "lv_theta"
         self.make_input_files(inc=common.SML_TEST_INCIDENCE)
         self.common_check(inc_ext, ele_ext)
 
     def test_only_ele_file_created(self):
+        """ """
         inc_ext = "inc"
         ele_ext = "lv_theta"
         self.make_input_files(ele=common.SML_TEST_ELEVATION)
@@ -706,9 +748,13 @@ class TestOneIncidenceOrElevationMap(unittest.TestCase):
 
     def common_check(self, ele, inc):
         """
+
         Args:
-            ele:
-            inc:
+          ele: param inc:
+          inc: 
+
+        Returns:
+
         """
         os.path.exists(self.conf_file)
         params = cf.get_config_params(self.conf_file)

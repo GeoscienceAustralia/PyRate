@@ -63,6 +63,7 @@ def tempdir():
     """tempdir for tests"""
 
     def tmpdir():
+        """ """
         return tempfile.mkdtemp()
 
     return tmpdir
@@ -71,10 +72,22 @@ def tempdir():
 @pytest.fixture
 def random_filename(tmpdir_factory):
     """
+
     Args:
-        tmpdir_factory:
+      tmpdir_factory: 
+
+    Returns:
+
     """
     def make_random_filename(ext=""):
+        """
+
+        Args:
+          ext: Default value = "")
+
+        Returns:
+
+        """
         dir = str(tmpdir_factory.mktemp("pyrate").realpath())
         fname = "".join(random.choice(string.ascii_lowercase) for _ in range(10))
         return os.path.join(dir, fname + ext)
@@ -85,11 +98,23 @@ def random_filename(tmpdir_factory):
 @pytest.fixture()
 def get_config():
     """
+
+    Args:
+
     Returns:
-        dict: **params** -- dict of params
+      dict: params** -- dict of params
+
     """
 
     def params(conf_file):
+        """
+
+        Args:
+          conf_file: 
+
+        Returns:
+
+        """
         return cf.get_config_params(conf_file)
 
     return params
@@ -99,12 +124,17 @@ def get_config():
 @pytest.fixture()
 def mpisync(request):
     """
+
     Args:
-        request:
+      request: 
+
+    Returns:
+
     """
     mpiops.comm.barrier()
 
     def fin():
+        """ """
         mpiops.comm.barrier()
 
     request.addfinalizer(fin)
@@ -114,8 +144,12 @@ def mpisync(request):
 @pytest.fixture(params=[0, 1])
 def roipac_or_gamma(request):
     """
+
     Args:
-        request:
+      request: 
+
+    Returns:
+
     """
     return request.param
 
@@ -123,8 +157,12 @@ def roipac_or_gamma(request):
 @pytest.fixture(params=[1, 2])
 def ref_est_method(request):
     """
+
     Args:
-        request:
+      request: 
+
+    Returns:
+
     """
     return request.param
 
@@ -132,8 +170,12 @@ def ref_est_method(request):
 @pytest.fixture(params=[1, 2, 5])
 def row_splits(request):
     """
+
     Args:
-        request:
+      request: 
+
+    Returns:
+
     """
     return request.param
 
@@ -141,8 +183,12 @@ def row_splits(request):
 @pytest.fixture(params=[1, 2, 5])
 def col_splits(request):
     """
+
     Args:
-        request:
+      request: 
+
+    Returns:
+
     """
     return request.param
 
@@ -150,10 +196,14 @@ def col_splits(request):
 @pytest.fixture(params=[1, 2, 5])
 def modify_config(request, tempdir, get_config):
     """
+
     Args:
-        request:
-        tempdir:
-        get_config:
+      request: param tempdir:
+      get_config: 
+      tempdir: 
+
+    Returns:
+
     """
     test_conf = common.TEST_CONF_ROIPAC
     params_dict = get_config(test_conf)
@@ -172,8 +222,12 @@ def modify_config(request, tempdir, get_config):
 @pytest.fixture(params=range(1, 6))
 def get_lks(request):
     """
+
     Args:
-        request:
+      request: 
+
+    Returns:
+
     """
     return request.param
 
@@ -181,8 +235,12 @@ def get_lks(request):
 @pytest.fixture(params=range(1, 3))
 def get_crop(request):
     """
+
     Args:
-        request:
+      request: 
+
+    Returns:
+
     """
     return request.param
 
@@ -230,8 +288,12 @@ def get_crop(request):
 @pytest.fixture(params=[1, 2, 5])
 def orbfit_lks(request):
     """
+
     Args:
-        request:
+      request: 
+
+    Returns:
+
     """
     return request.param
 
@@ -239,8 +301,12 @@ def orbfit_lks(request):
 @pytest.fixture(params=[cf.INDEPENDENT_METHOD, cf.NETWORK_METHOD])
 def orbfit_method(request):
     """
+
     Args:
-        request:
+      request: 
+
+    Returns:
+
     """
     return request.param
 
@@ -248,18 +314,26 @@ def orbfit_method(request):
 @pytest.fixture(params=[cf.PLANAR, cf.QUADRATIC, cf.PART_CUBIC])
 def orbfit_degrees(request):
     """
+
     Args:
-        request:
+      request: 
+
+    Returns:
+
     """
     return request.param
 
 
 def _tifs_same(dir1, dir2, tif):
     """
+
     Args:
-        dir1:
-        dir2:
-        tif:
+      dir1: param dir2:
+      tif: 
+      dir2: 
+
+    Returns:
+
     """
     stack_tif_s = os.path.join(dir1, tif)
     stack_tif_m = os.path.join(dir2, tif)
@@ -268,13 +342,17 @@ def _tifs_same(dir1, dir2, tif):
 
 def test_prepifg_mpi(mpisync, get_config, tempdir, roipac_or_gamma, get_lks, get_crop):
     """
+
     Args:
-        mpisync:
-        get_config:
-        tempdir:
-        roipac_or_gamma:
-        get_lks:
-        get_crop:
+      mpisync: param get_config:
+      tempdir: param roipac_or_gamma:
+      get_lks: param get_crop:
+      get_config: 
+      roipac_or_gamma: 
+      get_crop: 
+
+    Returns:
+
     """
     from common import TEST_CONF_ROIPAC, TEST_CONF_GAMMA
     from os.path import join, basename

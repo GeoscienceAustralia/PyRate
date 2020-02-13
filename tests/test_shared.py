@@ -55,24 +55,29 @@ class IfgTests(unittest.TestCase):
     """Unit tests for the Ifg/interferogram class."""
 
     def setUp(self):
+        """ """
         self.ifg = Ifg(join(SML_TEST_TIF, "geo_060619-061002_unw.tif"))
         self.ifg.open()
         self.ifg.nodata_value = 0
 
     def test_headers_as_attr(self):
+        """ """
         for a in ["ncols", "nrows", "x_first", "x_step", "y_first", "y_step", "wavelength", "master", "slave"]:
             self.assertTrue(getattr(self.ifg, a) is not None)
 
     def test_convert_to_nans(self):
+        """ """
         self.ifg.convert_to_nans()
         self.assertTrue(self.ifg.nan_converted)
 
     def test_xylast(self):
+        """ """
         # ensure the X|Y_LAST header element has been created
         self.assertAlmostEqual(self.ifg.x_last, 150.9491667)
         self.assertAlmostEqual(self.ifg.y_last, -34.23)
 
     def test_num_cells(self):
+        """ """
         # test cell size from header elements
         data = self.ifg.phase_band.ReadAsArray()
         ys, xs = data.shape
@@ -80,9 +85,11 @@ class IfgTests(unittest.TestCase):
         self.assertEqual(exp_ncells, self.ifg.num_cells)
 
     def test_shape(self):
+        """ """
         self.assertEqual(self.ifg.shape, self.ifg.phase_data.shape)
 
     def test_nan_count(self):
+        """ """
         num_nan = 0
         for row in self.ifg.phase_data:
             for v in row:
@@ -94,10 +101,12 @@ class IfgTests(unittest.TestCase):
             self.assertEqual(num_nan, 0)
 
     def test_phase_band(self):
+        """ """
         data = self.ifg.phase_band.ReadAsArray()
         self.assertEqual(data.shape, (72, 47))
 
     def test_nan_fraction(self):
+        """ """
         # NB: source data lacks 0 -> NaN conversion
         data = self.ifg.phase_data
         data = where(data == 0, nan, data)  # fake 0 -> nan for the count below
@@ -116,6 +125,7 @@ class IfgTests(unittest.TestCase):
         self.assertEqual(nans / num_cells, self.ifg.nan_fraction)
 
     def test_xy_size(self):
+        """ """
         self.assertFalse(self.ifg.ncols is None)
         self.assertFalse(self.ifg.nrows is None)
 
@@ -129,27 +139,34 @@ class IfgTests(unittest.TestCase):
         self.assertTrue(self.ifg.x_size < 1.03 * width)
 
     def test_centre_latlong(self):
+        """ """
         lat_exp = self.ifg.y_first + (int(self.ifg.nrows / 2) * self.ifg.y_step)
         long_exp = self.ifg.x_first + (int(self.ifg.ncols / 2) * self.ifg.x_step)
         self.assertEqual(lat_exp, self.ifg.lat_centre)
         self.assertEqual(long_exp, self.ifg.long_centre)
 
     def test_centre_cell(self):
+        """ """
         self.assertEqual(self.ifg.x_centre, 23)
         self.assertEqual(self.ifg.y_centre, 36)
 
     def test_time_span(self):
+        """ """
         self.assertAlmostEqual(self.ifg.time_span, 0.287474332649)
 
     def test_wavelength(self):
+        """ """
         self.assertEqual(self.ifg.wavelength, 0.0562356424)
 
 
 class IfgIOTests(unittest.TestCase):
+    """ """
     def setUp(self):
+        """ """
         self.ifg = Ifg(join(SML_TEST_TIF, "geo_070709-070813_unw.tif"))
 
     def test_open(self):
+        """ """
         self.assertTrue(self.ifg.dataset is None)
         self.assertTrue(self.ifg.is_open is False)
         self.ifg.open(readonly=True)
@@ -163,6 +180,11 @@ class IfgIOTests(unittest.TestCase):
     def test_open_ifg_from_dataset(self):
         """Test showing open() can not be used for Ifg created with gdal.Dataset
         object as Dataset has already been read in
+
+        Args:
+
+        Returns:
+
         """
         paths = [self.ifg.data_path]
         mlooked_phase_data = prepifg_helper.prepare_ifgs(paths, crop_opt=prepifg_helper.ALREADY_SAME_SIZE, xlooks=2, ylooks=2, write_to_disc=False)
@@ -170,6 +192,7 @@ class IfgIOTests(unittest.TestCase):
         self.assertRaises(RasterException, mlooked[0].open)
 
     def test_write(self):
+        """ """
         base = TEMPDIR
         src = self.ifg.data_path
         dest = join(base, basename(self.ifg.data_path))
@@ -193,6 +216,7 @@ class IfgIOTests(unittest.TestCase):
         os.remove(dest)
 
     def test_write_fails_on_readonly(self):
+        """ """
         # check readonly status is same before
         # and after open() for readonly file
         self.assertTrue(self.ifg.is_read_only)
@@ -201,6 +225,7 @@ class IfgIOTests(unittest.TestCase):
         self.assertRaises(IOError, self.ifg.write_modified_phase)
 
     def test_phase_band_unopened_ifg(self):
+        """ """
         try:
             _ = self.ifg.phase_band
             self.fail("Should not be able to access band without open dataset")
@@ -208,6 +233,7 @@ class IfgIOTests(unittest.TestCase):
             pass
 
     def test_nan_fraction_unopened(self):
+        """ """
         try:
             # NB: self.assertRaises doesn't work here (as it is a property?)
             _ = self.ifg.nan_fraction
@@ -216,6 +242,7 @@ class IfgIOTests(unittest.TestCase):
             pass
 
     def test_phase_data_properties(self):
+        """ """
         # Use raw GDAL to isolate raster reading from Ifg functionality
         ds = Open(self.ifg.data_path)
         data = ds.GetRasterBand(1).ReadAsArray()
@@ -240,13 +267,16 @@ class DEMTests(unittest.TestCase):
     """Unit tests to verify operations on GeoTIFF format DEMs"""
 
     def setUp(self):
+        """ """
         self.ras = DEM(SML_TEST_DEM_TIF)
 
     def test_create_raster(self):
+        """ """
         # validate header path
         self.assertTrue(os.path.exists(self.ras.data_path))
 
     def test_headers_as_attr(self):
+        """ """
         self.ras.open()
         attrs = ["ncols", "nrows", "x_first", "x_step", "y_first", "y_step"]
 
@@ -255,10 +285,12 @@ class DEMTests(unittest.TestCase):
             self.assertTrue(getattr(self.ras, a) is not None)
 
     def test_is_dem(self):
+        """ """
         self.ras = DEM(join(SML_TEST_TIF, "geo_060619-061002_unw.tif"))
         self.assertFalse(hasattr(self.ras, "datum"))
 
     def test_open(self):
+        """ """
         self.assertTrue(self.ras.dataset is None)
         self.ras.open()
         self.assertTrue(self.ras.dataset is not None)
@@ -268,6 +300,7 @@ class DEMTests(unittest.TestCase):
         self.assertRaises(RasterException, self.ras.open)
 
     def test_band(self):
+        """ """
         # test accessing bands with open and unopened datasets
         try:
             _ = self.ras.height_band
@@ -281,8 +314,10 @@ class DEMTests(unittest.TestCase):
 
 
 class WriteUnwTest(unittest.TestCase):
+    """ """
     @classmethod
     def setUpClass(cls):
+        """ """
         cls.tif_dir = tempfile.mkdtemp()
         cls.test_conf = common.TEST_CONF_GAMMA
 
@@ -317,6 +352,7 @@ class WriteUnwTest(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        """ """
         for i in cls.ifgs:
             i.close()
         shutil.rmtree(cls.tif_dir)
@@ -399,7 +435,9 @@ class WriteUnwTest(unittest.TestCase):
 
 
 class GeodesyTests(unittest.TestCase):
+    """ """
     def test_utm_zone(self):
+        """ """
         # test some different zones (collected manually)
         for lon in [174.0, 176.5, 179.999, 180.0]:
             self.assertEqual(60, _utm_zone(lon))
@@ -417,11 +455,13 @@ class GeodesyTests(unittest.TestCase):
             self.assertEqual(31, _utm_zone(lon))
 
     def test_cell_size_polar_region(self):
+        """ """
         # Can't have polar area zones: see http://www.dmap.co.uk/utmworld.htm
         for lat in [-80.1, -85.0, -90.0, 84.1, 85.0, 89.9999, 90.0]:
             self.assertRaises(ValueError, cell_size, lat, 0, 0.1, 0.1)
 
     def test_cell_size_calc(self):
+        """ """
         # test conversion of X|Y_STEP to X|Y_SIZE
         x_deg = 0.000833333
         y_deg = -x_deg

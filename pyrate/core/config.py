@@ -277,17 +277,26 @@ INT_KEYS = [APS_CORRECTION, APS_METHOD]
 
 
 def get_config_params(path: str, validate: bool = True, step: str = CONV2TIF) -> Dict:
-    """
-    Reads the parameters file provided by the user and converts it into
+    """Reads the parameters file provided by the user and converts it into
     a dictionary.
 
     Args:
-        path: Absolute path to the parameters file.
-        validate: Validate the parameters if True, otherwise skip validation.
-        step: The current step of the PyRate workflow.
+      path: Absolute path to the parameters file.
+      validate: Validate the parameters if True, otherwise skip validation.
+      step: The current step of the PyRate workflow.
+      path: str:
+      validate: bool:  (Default value = True)
+      step: str:  (Default value = CONV2TIF)
+      path: str:
+      validate: bool:  (Default value = True)
+      step: str:  (Default value = CONV2TIF)
+      path: str: 
+      validate: bool:  (Default value = True)
+      step: str:  (Default value = CONV2TIF)
 
     Returns:
-       A dictionary of parameters.
+      : A dictionary of parameters.
+
     """
     txt = ""
     with open(path, "r") as inputFile:
@@ -305,19 +314,30 @@ def get_config_params(path: str, validate: bool = True, step: str = CONV2TIF) ->
 
 
 def _parse_conf_file(content, validate: bool = True, step: str = CONV2TIF) -> Dict:
-    """
-    Converts the parameters from their text form into a dictionary.
+    """Converts the parameters from their text form into a dictionary.
 
     Args:
-        content: Parameters as text.
+      content: Parameters as text.
+      validate: bool:  (Default value = True)
+      step: str:  (Default value = CONV2TIF)
+      validate: bool:  (Default value = True)
+      step: str:  (Default value = CONV2TIF)
+      validate: bool:  (Default value = True)
+      step: str:  (Default value = CONV2TIF)
 
     Returns:
-        A dictionary of parameters.
+      : A dictionary of parameters.
+
     """
 
     def _is_valid(line):
-        """
-        Check if line is not empty or has % or #
+        """Check if line is not empty or has % or #
+
+        Args:
+          line: 
+
+        Returns:
+
         """
         return line != "" and line[0] not in "%#"
 
@@ -344,8 +364,16 @@ def _parse_conf_file(content, validate: bool = True, step: str = CONV2TIF) -> Di
 
 
 def _handle_extra_parameters(params):
-    """
-    Function to check if requirements for weather model correction are given.
+    """Function to check if requirements for weather model correction are given.
+    
+    Args:
+
+    Args:
+      params: 
+
+    Returns:
+      
+
     """
     params[APS_INCIDENCE_EXT] = None
     params[APS_ELEVATION_EXT] = None
@@ -364,15 +392,21 @@ def _handle_extra_parameters(params):
 
 
 def _parse_pars(pars, validate: bool = True, step: str = CONV2TIF) -> Dict:
-    """
-    Takes dictionary of parameters, converting values to required type
+    """Takes dictionary of parameters, converting values to required type
     and providing defaults for missing values.
 
     Args:
-        pars: Parameters dictionary.
+      pars: Parameters dictionary.
+      validate: bool:  (Default value = True)
+      step: str:  (Default value = CONV2TIF)
+      validate: bool:  (Default value = True)
+      step: str:  (Default value = CONV2TIF)
+      validate: bool:  (Default value = True)
+      step: str:  (Default value = CONV2TIF)
 
     Returns:
-        Dictionary of converted (and optionally validated) parameters.
+      : Dictionary of converted (and optionally validated) parameters.
+
     """
     # Fallback to default for missing values and perform conversion.
     for k in PARAM_CONVERSION:
@@ -401,13 +435,15 @@ def _parse_pars(pars, validate: bool = True, step: str = CONV2TIF) -> Dict:
 
 # CONFIG UTILS - TO BE MOVED?
 def parse_namelist(nml):
-    """
-    Parses name list file into array of paths
+    """Parses name list file into array of paths
 
-    :param str nml: interferogram file list
+    Args:
+      str: nml: interferogram file list
+      nml: returns: list of interferogram file names
 
-    :return: list of interferogram file names
-    :rtype: list
+    Returns:
+      list: list of interferogram file names
+
     """
     with open(nml) as f_in:
         lines = [line.rstrip() for line in f_in]
@@ -415,14 +451,19 @@ def parse_namelist(nml):
 
 
 def write_config_file(params, output_conf_file):
-    """
-    Takes a param object and writes the config file. Reverse of get_conf_params.
+    """Takes a param object and writes the config file. Reverse of get_conf_params.
+    
+    Args:
+      dict: params: parameter dictionary
+      str: output_conf_file: output file name
 
-    :param dict params: parameter dictionary
-    :param str output_conf_file: output file name
+    Args:
+      output_conf_file: 
+      params: 
 
-    :return: config file
-    :rtype: list
+    Returns:
+      list: config file
+
     """
     with open(output_conf_file, "w") as f:
         for k, v in params.items():
@@ -433,13 +474,17 @@ def write_config_file(params, output_conf_file):
 
 
 def transform_params(params):
-    """
-    Returns subset of all parameters for cropping and multilooking.
+    """Returns subset of all parameters for cropping and multilooking.
+    
+    Args:
+      dict: params: Parameter dictionary
 
-    :param dict params: Parameter dictionary
+    Args:
+      params: 
 
-    :return: xlooks, ylooks, crop
-    :rtype: int
+    Returns:
+      int: xlooks, ylooks, crop
+
     """
 
     t_params = [IFG_LKSX, IFG_LKSY, IFG_CROP_OPT]
@@ -448,36 +493,43 @@ def transform_params(params):
 
 
 def original_ifg_paths(ifglist_path, obs_dir):
-    """
-    Returns sequence of paths to files in given ifglist file.
+    """Returns sequence of paths to files in given ifglist file.
 
     Args:
-        ifglist_path: Absolute path to interferogram file list.
-        obs_dir: Absolute path to observations directory.
+      ifglist_path: Absolute path to interferogram file list.
+      obs_dir: Absolute path to observations directory.
 
     Returns:
-        list: List of full paths to interferogram files.
+      list: List of full paths to interferogram files.
+
     """
     ifglist = parse_namelist(ifglist_path)
     return [os.path.join(obs_dir, p) for p in ifglist]
 
 
 def coherence_paths_for(path, params, tif=False) -> str:
-    """
-    Returns path to coherence file for given interferogram. Pattern matches
+    """Returns path to coherence file for given interferogram. Pattern matches
     based on epoch in filename.
-
+    
     Example:
         '20151025-20160501_eqa_filt.cc'
         Date pair is the epoch.
-
+    
     Args:
         path: Path to intergerogram to find coherence file for.
-        params: Parameter dictionary.
-        tif: Find converted tif if True (_cc.tif), else find .cc file.
+    
+    Args:
+      tif: Find converted tif if True (Default value = False)
+      path: param params:
+
+    Args:
+      path: 
+      params: 
+      tif:  (Default value = False)
 
     Returns:
-        Path to coherence file.
+      Path to coherence file.
+
     """
     _, filename = split(path)
     pattern = re.compile(r"\d{8}-\d{8}")
@@ -496,16 +548,19 @@ def coherence_paths_for(path, params, tif=False) -> str:
 
 
 def coherence_paths(params) -> List[str]:
-    """
-    Returns paths to corresponding coherence files for given IFGs. Assumes
+    """Returns paths to corresponding coherence files for given IFGs. Assumes
     that each IFG has a corresponding coherence file in the coherence file
     directory and they share epoch prefixes.
+    
+    Args:
+      ifg_paths: List of paths to intergerogram files.
 
     Args:
-        ifg_paths: List of paths to intergerogram files.
+      params: 
 
     Returns:
-        A list of full paths to coherence files.
+      A list of full paths to coherence files.
+
     """
     ifg_file_list = params.get(IFG_FILE_LIST)
     ifgs = parse_namelist(ifg_file_list)
@@ -514,31 +569,43 @@ def coherence_paths(params) -> List[str]:
 
 
 def mlooked_path(path, looks, crop_out):
-    """
-    Adds suffix to ifg path, for creating a new path for multilooked files.
+    """Adds suffix to ifg path, for creating a new path for multilooked files.
 
-    :param str path: original interferogram path
-    :param int looks: number of range looks applied
-    :param int crop_out: crop option applied
+    Args:
+      str: path: original interferogram path
+      int: looks: number of range looks applied
+      int: crop_out: crop option applied
+      path: param looks:
+      crop_out: returns: multilooked file name
+      looks: 
 
-    :return: multilooked file name
-    :rtype: str
+    Returns:
+      str: multilooked file name
+
     """
     base, ext = splitext(path)
     return "{base}_{looks}rlks_{crop_out}cr{ext}".format(base=base, looks=looks, crop_out=crop_out, ext=ext)
 
 
 def get_dest_paths(base_paths, crop, params, looks):
-    """
-    Determines the full path names for the destination multilooked files
+    """Determines the full path names for the destination multilooked files
+    
+    Args:
+      list: base_paths: original interferogram paths
+      int: crop: Crop option applied
+      dict: params: Parameters dictionary
+      int: looks: number of range looks applied
+      base_paths: param crop:
 
-    :param list base_paths: original interferogram paths
-    :param int crop: Crop option applied
-    :param dict params: Parameters dictionary
-    :param int looks: number of range looks applied
+    Args:
+      crop: 
+      looks: 
+      base_paths: 
+      params: 
 
-    :return: full path names for destination files
-    :rtype: list
+    Returns:
+      list: full path names for destination files
+
     """
 
     dest_mlooked_ifgs = [
@@ -551,18 +618,17 @@ def get_dest_paths(base_paths, crop, params, looks):
 
 
 def get_ifg_paths(config_file, step=CONV2TIF):
-    """
-    Read the configuration file, extract interferogram file list and determine
+    """Read the configuration file, extract interferogram file list and determine
     input and output interferogram path names.
 
-    :param str config_file: Configuration file path
+    Args:
+      str: config_file: Configuration file path
+      config_file: param step:  (Default value = CONV2TIF)
+      step: (Default value = CONV2TIF)
 
-    :return: base_unw_paths: List of unwrapped inteferograms
-    :return: dest_paths: List of multi-looked and cropped geotifs
-    :return: params: Dictionary corresponding to the config file
-    :rtype: list
-    :rtype: list
-    :rtype: dict
+    Returns:
+      base_unw_paths: List of unwrapped inteferograms
+
     """
     params = get_config_params(config_file, step=step)
     ifg_file_list = params.get(IFG_FILE_LIST)
@@ -685,17 +751,18 @@ _REFERENCE_PIXEL_VALIDATION = {
 
 
 def convert_geographic_coordinate_to_pixel_value(refpx, refpy, transform):
-    """
-    Converts a lat/long coordinate to a pixel coordinate given the 
+    """Converts a lat/long coordinate to a pixel coordinate given the
     geotransform of the image.
 
     Args:
-        refpx: The longitude of the coordinate.
-        refpx: The latitude of the coordinate.
-        transform: The geotransform array of the image.
+      refpx: The longitude of the coordinate.
+      refpx: The latitude of the coordinate.
+      transform: The geotransform array of the image.
+      refpy: returns: Tuple of refpx, refpy in pixel values.
 
     Returns:
-        Tuple of refpx, refpy in pixel values.
+      : Tuple of refpx, refpy in pixel values.
+
     """
     # transform = ifg.dataset.GetGeoTransform()
 
@@ -714,18 +781,20 @@ from osgeo import gdal
 
 
 def validate_parameters(pars: Dict, step: str = CONV2TIF):
-    """
-    Main validation function. Calls validation subfunctions and gathers
+    """Main validation function. Calls validation subfunctions and gathers
     some required variables for performing validation.
 
     Args:
-        pars: The parameters dictionary.
-        step: The current step of the PyRate workflow. Determines what 
-            parameters to validate and what resources are available in
-            terms of geotiffs.
+      pars: The parameters dictionary.
+      step: The current step of the PyRate workflow. Determines what
+      pars: Dict: 
+      step: str:  (Default value = CONV2TIF)
+
+    Returns:
 
     Raises:
-        ConfigException: If errors occur during parameter validation.
+      ConfigException: If errors occur during parameter validation
+
     """
     is_GAMMA = pars[PROCESSOR] == GAMMA
     ifl = pars[IFG_FILE_LIST]
@@ -895,8 +964,15 @@ def validate_parameters(pars: Dict, step: str = CONV2TIF):
 
 
 def _raise_errors(errors: List[str]):
-    """
-    Convenience function for raising an exception with errors.
+    """Convenience function for raising an exception with errors.
+
+    Args:
+      errors: List[str]:
+      errors: List[str]:
+      errors: List[str]: 
+
+    Returns:
+
     """
     if errors:
         errors.insert(0, "invalid parameters")
@@ -905,17 +981,20 @@ def _raise_errors(errors: List[str]):
 
 
 def validate_compulsory_parameters(pars: Dict) -> Optional[bool]:
-    """
-    Calls the validators for compulsory (always used) parameters.
+    """Calls the validators for compulsory (always used) parameters.
 
     Args:
-        pars: The parameters dictionary.
+      pars: The parameters dictionary.
+      pars: Dict:
+      pars: Dict:
+      pars: Dict: 
 
     Returns:
-        True if validation is successful.
+      : True if validation is successful.
 
     Raises:
-        ConfigException: If validation fails.
+      ConfigException: If validation fails.
+
     """
     errors = []
     for k in pars.keys():
@@ -930,30 +1009,42 @@ def validate_compulsory_parameters(pars: Dict) -> Optional[bool]:
 
 
 def validate_optional_parameters(pars: Dict):
-    """
-    Calls the validators for optional parameters.
+    """Calls the validators for optional parameters.
 
     Args:
-        pars: The parameters dictionary.
+      pars: The parameters dictionary.
+      pars: Dict:
+      pars: Dict:
+      pars: Dict: 
 
     Returns:
-        True if validation successful.
+      : True if validation successful.
 
     Raises:
-        ConfigException: If validation fails.
+      ConfigException: If validation fails.
+
     """
 
     def validate(on: bool, validators: Dict, pars: Dict) -> List[str]:
-        """
-        Convenience method for calling validators.
+        """Convenience method for calling validators.
 
         Args:
-            on: Determines whether to call the validators.
-            validators: A dictionary of validator functions.
-            pars: Parameters dictionary.
+          on: Determines whether to call the validators.
+          validators: A dictionary of validator functions.
+          pars: Parameters dictionary.
+          on: bool:
+          validators: Dict:
+          pars: Dict:
+          on: bool:
+          validators: Dict:
+          pars: Dict:
+          on: bool: 
+          validators: Dict: 
+          pars: Dict: 
 
         Returns:
-            A list of errors.
+          : A list of errors.
+
         """
         errors = []
         if on:
@@ -976,20 +1067,26 @@ def validate_optional_parameters(pars: Dict):
 
 
 def validate_minimum_epochs(n_epochs: int, min_epochs: int) -> Optional[bool]:
-    """
-    Validates the minimum number of epochs required for PyRate to produce
+    """Validates the minimum number of epochs required for PyRate to produce
     good results.
 
     Args:
-        n_epochs: The number of unique epochs in the collection of interferograms
-            provided as input.
-        min_epochs: The minimum number of epochs PyRate requires.
+      n_epochs: The number of unique epochs in the collection of interferograms
+    provided as input.
+      min_epochs: The minimum number of epochs PyRate requires.
+      n_epochs: int:
+      min_epochs: int:
+      n_epochs: int:
+      min_epochs: int:
+      n_epochs: int: 
+      min_epochs: int: 
 
     Returns:
-        True if there are enough epochs to satisfy minimum epochs.
+      : True if there are enough epochs to satisfy minimum epochs.
 
     Raises:
-        ConfigException: If there are not enough epochs to satisfy min epochs.
+      ConfigException: If there are not enough epochs to satisfy min epochs.
+
     """
     errors = []
     if n_epochs < min_epochs:
@@ -1000,20 +1097,26 @@ def validate_minimum_epochs(n_epochs: int, min_epochs: int) -> Optional[bool]:
 
 
 def validate_epochs(file_list: str, pattern: str) -> Optional[bool]:
-    """
-    Validate that user provided file names contain the correct pattern of
+    """Validate that user provided file names contain the correct pattern of
     epochs.
 
     Args:
-        file_list: Path to the list of files to validate.
-        pattern: Regex string for finding the epoch(s).
+      file_list: Path to the list of files to validate.
+      pattern: Regex string for finding the epoch(s).
+      file_list: str:
+      pattern: str:
+      file_list: str:
+      pattern: str:
+      file_list: str: 
+      pattern: str: 
 
     Returns:
-        True if all names in file list contain the epoch pattern *once*.
+      : True if all names in file list contain the epoch pattern *once*.
 
     Raises:
-        ConfigException: If not all names in the file list don't contain
-            the epoch pattern or contain it more than once.
+      ConfigException: If not all names in the file list don't contain
+    the epoch pattern or contain it more than once.
+
     """
     errors = []
     PTN = re.compile(pattern)
@@ -1031,19 +1134,28 @@ def validate_epochs(file_list: str, pattern: str) -> Optional[bool]:
 
 
 def validate_epoch_cutoff(max_span: float, cutoff: str, pars: Dict) -> Optional[bool]:
-    """
-    Validate cutoff parameters that rely on the data timespan.
+    """Validate cutoff parameters that rely on the data timespan.
 
     Args:
-        max_span: The maximum temporal span of the provided data in years.
-        cutoff: The key of the cutoff parameter.
-        pars: The parameters dictionary.
+      max_span: The maximum temporal span of the provided data in years.
+      cutoff: The key of the cutoff parameter.
+      pars: The parameters dictionary.
+      max_span: float:
+      cutoff: str:
+      pars: Dict:
+      max_span: float:
+      cutoff: str:
+      pars: Dict:
+      max_span: float: 
+      cutoff: str: 
+      pars: Dict: 
 
     Returns:
-        True if the cutoff is less than the maximum data timespan.
+      : True if the cutoff is less than the maximum data timespan.
 
     Raises:
-        ConfigException: If the cutoff is greater than the max data timespan.
+      ConfigException: If the cutoff is greater than the max data timespan.
+
     """
     errors = []
     if pars[cutoff] > max_span:
@@ -1054,20 +1166,29 @@ def validate_epoch_cutoff(max_span: float, cutoff: str, pars: Dict) -> Optional[
 
 
 def validate_prepifg_tifs_exist(ifg_file_list: str, obs_dir: str, pars: Dict) -> Optional[bool]:
-    """
-    Validates that cropped and multilooked interferograms exist in geotiff
+    """Validates that cropped and multilooked interferograms exist in geotiff
     format.
 
     Args:
-        ifg_file_list: Path to file containing interfergram file names.
-        obs_dir: Path to observations directory.
-        pars: Parameters dictionary.
+      ifg_file_list: Path to file containing interfergram file names.
+      obs_dir: Path to observations directory.
+      pars: Parameters dictionary.
+      ifg_file_list: str:
+      obs_dir: str:
+      pars: Dict:
+      ifg_file_list: str:
+      obs_dir: str:
+      pars: Dict:
+      ifg_file_list: str: 
+      obs_dir: str: 
+      pars: Dict: 
 
     Returns:
-        True if all interferograms exist in geotiff format.
+      : True if all interferograms exist in geotiff format.
 
     Raises:
-        ConfigException: If not all intergerograms exist in geotiff format.
+      ConfigException: If not all intergerograms exist in geotiff format.
+
     """
 
     errors = []
@@ -1091,18 +1212,24 @@ def validate_prepifg_tifs_exist(ifg_file_list: str, obs_dir: str, pars: Dict) ->
 
 
 def validate_tifs_exist(ifg_file_list: str, obs_dir: str) -> Optional[bool]:
-    """
-    Validates that provided interferograms exist in geotiff format.
+    """Validates that provided interferograms exist in geotiff format.
 
     Args:
-        ifg_file_list: Path to file containing interfergram file names.
-        obs_dir: Path to observations directory.
+      ifg_file_list: Path to file containing interfergram file names.
+      obs_dir: Path to observations directory.
+      ifg_file_list: str:
+      obs_dir: str:
+      ifg_file_list: str:
+      obs_dir: str:
+      ifg_file_list: str: 
+      obs_dir: str: 
 
     Returns:
-        True if all interferograms exist in geotiff format.
+      : True if all interferograms exist in geotiff format.
 
     Raises:
-        ConfigException: If not all intergerograms exist in geotiff format.
+      ConfigException: If not all intergerograms exist in geotiff format.
+
     """
     from core.shared import output_tiff_filename
 
@@ -1120,18 +1247,24 @@ def validate_tifs_exist(ifg_file_list: str, obs_dir: str) -> Optional[bool]:
 
 
 def validate_ifgs(ifg_file_list: str, obs_dir: str) -> Optional[bool]:
-    """
-    Validates that provided interferograms exist.
+    """Validates that provided interferograms exist.
 
     Args:
-        ifg_file_list: Path to file containing interferogram file names.
-        obs_dir: Path to observations directory.
+      ifg_file_list: Path to file containing interferogram file names.
+      obs_dir: Path to observations directory.
+      ifg_file_list: str:
+      obs_dir: str:
+      ifg_file_list: str:
+      obs_dir: str:
+      ifg_file_list: str: 
+      obs_dir: str: 
 
     Returns:
-        True if all interferograms exist.
+      : True if all interferograms exist.
 
     Raises:
-        ConfigException: If not all interferograms exist.
+      ConfigException: If not all interferograms exist.
+
     """
     errors = []
     ifgs = parse_namelist(ifg_file_list)
@@ -1145,22 +1278,38 @@ def validate_ifgs(ifg_file_list: str, obs_dir: str) -> Optional[bool]:
 
 
 def validate_obs_thresholds(ifg_file_list: str, pars: Dict) -> Optional[bool]:
-    """
-    Validates parameters that specify an observations threshold.
+    """Validates parameters that specify an observations threshold.
 
     Args:
-        ifg_file_list: Path to the file containing interferogram file names.
-        pars: Parameters dictionary.
+      ifg_file_list: Path to the file containing interferogram file names.
+      pars: Parameters dictionary.
+      ifg_file_list: str:
+      pars: Dict:
+      ifg_file_list: str:
+      pars: Dict:
+      ifg_file_list: str: 
+      pars: Dict: 
 
     Returns:
-        True if there are enough interferograms to satisfy all observation thresholds.
+      : True if there are enough interferograms to satisfy all observation thresholds.
 
     Raises:
-        ConfigException: If there not enough interferograms to satisfy all observation
-            thresholds.
+      ConfigException: If there not enough interferograms to satisfy all observation
+    thresholds.
+
     """
 
     def validate(n, p, k):
+        """
+
+        Args:
+          n: param p:
+          k: 
+          p: 
+
+        Returns:
+
+        """
         thresh = p[k]
         if thresh > n:
             return [f"'{k}': not enough interferograms have been specified " f"({n}) to satisfy threshold ({thresh})."]
@@ -1176,20 +1325,26 @@ def validate_obs_thresholds(ifg_file_list: str, pars: Dict) -> Optional[bool]:
 
 
 def validate_epoch_thresholds(n_epochs: int, pars: Dict) -> Optional[bool]:
-    """
-    Validates threshold paramters that rely on the number of epochs
+    """Validates threshold paramters that rely on the number of epochs
     available.
 
     Args:
-        n_epochs: The number of unique epochs in the collection of interferograms
-            provided as input.
-        pars: Parameters dictionary.
+      n_epochs: The number of unique epochs in the collection of interferograms
+    provided as input.
+      pars: Parameters dictionary.
+      n_epochs: int:
+      pars: Dict:
+      n_epochs: int:
+      pars: Dict:
+      n_epochs: int: 
+      pars: Dict: 
 
     Returns:
-        True if there are enough epochs to satisfy all epoch thresholds.
+      : True if there are enough epochs to satisfy all epoch thresholds.
 
     Raises:
-        ConfigException: If there are not enough epochs to satisfy all epoch thresholds.
+      ConfigException: If there are not enough epochs to satisfy all epoch thresholds.
+
     """
     errors = []
     thresh = pars[LR_PTHRESH]
@@ -1201,20 +1356,28 @@ def validate_epoch_thresholds(n_epochs: int, pars: Dict) -> Optional[bool]:
 
 
 def validate_crop_parameters(min_extents: Tuple[float, float, float, float], pars: Dict) -> Optional[bool]:
-    """
-    Validates IFG crop parameters by ensuring user provided crop coordinates
+    """Validates IFG crop parameters by ensuring user provided crop coordinates
     are within the *minimum* (intersecting) bounds of the interferogram stack.
-    
+
     Args:
-        min_extents: The minimum extents of the interferogram stack. The
-            crop coordinates must be within these extents.
-        pars: Parameters dictionary.
+      min_extents: The minimum extents of the interferogram stack. The
+    crop coordinates must be within these extents.
+      pars: Parameters dictionary.
+      min_extents: Tuple[float:
+      float: param float]:
+      pars: Dict:
+      min_extents: Tuple[float:
+      float]: 
+      pars: Dict:
+      min_extents: Tuple[float: 
+      pars: Dict: 
 
     Returns:
-        True if validation is successful.
+      : True if validation is successful.
 
     Raises:
-        ConfigException: If validation fails.
+      ConfigException: If validation fails.
+
     """
     errors = []
     min_xmin, min_ymin, min_xmax, min_ymax = min_extents
@@ -1223,6 +1386,17 @@ def validate_crop_parameters(min_extents: Tuple[float, float, float, float], par
 
     # Check crop coordinates within scene.
     def _validate_crop_coord(var_name, dim_min, dim_max, dim_string):
+        """
+
+        Args:
+          var_name: param dim_min:
+          dim_max: param dim_string:
+          dim_min: 
+          dim_string: 
+
+        Returns:
+
+        """
         if not dim_min < pars[var_name] < dim_max:
             return [f"'{var_name}': crop coordinate ({pars[var_name]}) " f"is outside bounds of scene {dim_string}."]
 
@@ -1237,20 +1411,28 @@ def validate_crop_parameters(min_extents: Tuple[float, float, float, float], par
 
 
 def validate_slpf_cutoff(extents: Tuple[float, float, float, float], pars: Dict) -> Optional[bool]:
-    """
-    Validate SLPF_CUTOFF is within the bounds of the scene being processed
+    """Validate SLPF_CUTOFF is within the bounds of the scene being processed
     (after prepifg cropping/subsampling has occurred).
 
     Args:
-        extents : Tuple of (xmin, xmax, ymin, ymax) describing the extents
-            of the scene, after cropping & multisampling, in degrees.
-        pars: Parameters dictionary.
+      extents: Tuple of (xmin, xmax, ymin, ymax) describing the extents
+    of the scene, after cropping & multisampling, in degrees.
+      pars: Parameters dictionary.
+      extents: Tuple[float:
+      float: param float]:
+      pars: Dict:
+      extents: Tuple[float:
+      float]: 
+      pars: Dict:
+      extents: Tuple[float: 
+      pars: Dict: 
 
     Returns:
-        True if validation is successful.
+      : True if validation is successful.
 
     Raises:
-        ConfigException: If validation fails.
+      ConfigException: If validation fails.
+
     """
     xmin, ymin, xmax, ymax = extents
     # Check SLPF_CUTOFF within scene *in kilometeres*.
@@ -1269,26 +1451,51 @@ def validate_slpf_cutoff(extents: Tuple[float, float, float, float], pars: Dict)
 
 
 def validate_multilook_parameters(cols: int, rows: int, xlks_name: str, ylks_name: str, pars: Dict) -> Optional[bool]:
-    """
-    Validate multilook parameters by ensuring resulting resolution will be
+    """Validate multilook parameters by ensuring resulting resolution will be
     at least 1 pixel and less than the current resolution.
 
     Args:
-        cols: Number of pixel columns (X) in the scene.
-        rows: Number of pixel rows (Y) in the scene.
-        xlks_name: Key for looking up the X looks factor.
-        ylks_name: Key for looking up the Y looks factor.
-        pars: Parameters dictionary.
+      cols: Number of pixel columns (X) in the scene.
+      rows: Number of pixel rows (Y) in the scene.
+      xlks_name: Key for looking up the X looks factor.
+      ylks_name: Key for looking up the Y looks factor.
+      pars: Parameters dictionary.
+      cols: int:
+      rows: int:
+      xlks_name: str:
+      ylks_name: str:
+      pars: Dict:
+      cols: int:
+      rows: int:
+      xlks_name: str:
+      ylks_name: str:
+      pars: Dict:
+      cols: int: 
+      rows: int: 
+      xlks_name: str: 
+      ylks_name: str: 
+      pars: Dict: 
 
     Returns:
-        True if validation is successful.
+      : True if validation is successful.
 
     Raises:
-        ConfigException: If validation fails.
+      ConfigException: If validation fails.
+
     """
     errors = []
 
     def _validate_mlook(var_name, dim_val, dim_str):
+        """
+
+        Args:
+          var_name: param dim_val:
+          dim_str: 
+          dim_val: 
+
+        Returns:
+
+        """
         if pars[var_name] > dim_val:
             return [
                 f"'{var_name}': the multilook factor ({pars[var_name]}) "
@@ -1303,19 +1510,28 @@ def validate_multilook_parameters(cols: int, rows: int, xlks_name: str, ylks_nam
 
 
 def validate_reference_pixel_search_windows(n_cols: int, n_rows: int, pars: Dict) -> Optional[bool]:
-    """
-    Validates that the reference pixel search windows provided by user
+    """Validates that the reference pixel search windows provided by user
     fit within the scene being processed.
 
     Args:
-        n_cols: Number of pixel columns (X) in the scene.
-        n_rows: Number of pixel rows (Y) in the scene.
+      n_cols: Number of pixel columns (X) in the scene.
+      n_rows: Number of pixel rows (Y) in the scene.
+      n_cols: int:
+      n_rows: int:
+      pars: Dict:
+      n_cols: int:
+      n_rows: int:
+      pars: Dict:
+      n_cols: int: 
+      n_rows: int: 
+      pars: Dict: 
 
     Returns:
-        True if the scene can accomodate the search windows (no overlap).
+      : True if the scene can accomodate the search windows (no overlap).
 
     Raises:
-        ConfigException: If the scene cannot accomodate the search windows.
+      ConfigException: If the scene cannot accomodate the search windows.
+
     """
     from math import floor
 
@@ -1345,22 +1561,31 @@ def validate_reference_pixel_search_windows(n_cols: int, n_rows: int, pars: Dict
 
 
 def validate_gamma_headers(ifg_file_list: str, slc_file_list: str, slc_dir: str) -> Optional[bool]:
-    """
-    Validates that a pair of GAMMA headers exist for each provided
+    """Validates that a pair of GAMMA headers exist for each provided
     GAMMA interferogram.
 
     Args:
-        ifg_file_list: Path to the file listing filenames of interferograms.
-        slc_file_list: Path to the file listing filenames of GAMMA headers.
-        slc_dir: Path to directory containing GAMMA headers.
+      ifg_file_list: Path to the file listing filenames of interferograms.
+      slc_file_list: Path to the file listing filenames of GAMMA headers.
+      slc_dir: Path to directory containing GAMMA headers.
+      ifg_file_list: str:
+      slc_file_list: str:
+      slc_dir: str:
+      ifg_file_list: str:
+      slc_file_list: str:
+      slc_dir: str:
+      ifg_file_list: str: 
+      slc_file_list: str: 
+      slc_dir: str: 
 
     Returns:
-        True if there are exactly 2 headers for each interogram (one for
-        each epoch).
+      : True if there are exactly 2 headers for each interogram (one for
+      each epoch).
 
     Raises:
-        ConfigException: If there are 0 or more than 2 matching headers
-            for an interferogram.
+      ConfigException: If there are 0 or more than 2 matching headers
+    for an interferogram.
+
     """
     from core.gamma import get_header_paths
 
@@ -1375,20 +1600,26 @@ def validate_gamma_headers(ifg_file_list: str, slc_file_list: str, slc_dir: str)
 
 
 def validate_coherence_files(ifg_file_list: str, pars: Dict) -> Optional[bool]:
-    """
-    Validates that there is a matching coherence file for each provided
+    """Validates that there is a matching coherence file for each provided
     interferogram.
 
     Args:
-        ifg_file_list: Path to file listing interferogram names.
-        pars: The parameters dictionary.
+      ifg_file_list: Path to file listing interferogram names.
+      pars: The parameters dictionary.
+      ifg_file_list: str:
+      pars: Dict:
+      ifg_file_list: str:
+      pars: Dict:
+      ifg_file_list: str: 
+      pars: Dict: 
 
     Returns:
-        True if there is exactly 1 coherence file for each interferogram.
+      : True if there is exactly 1 coherence file for each interferogram.
 
     Raises:
-        ConfigException: If there are 0 or more than 1 matching coherence
-            files for an interferogram.
+      ConfigException: If there are 0 or more than 1 matching coherence
+    files for an interferogram.
+
     """
     errors = []
 
@@ -1407,16 +1638,22 @@ def validate_coherence_files(ifg_file_list: str, pars: Dict) -> Optional[bool]:
 
 
 def _get_temporal_info(ifg_file_list: str, obs_dir: str) -> Tuple:
-    """
-    Retrieves the number of unique epochs and maximum time span of the 
+    """Retrieves the number of unique epochs and maximum time span of the
     dataset.
 
     Args:
-        ifg_file_list: Path to file containing list of interferogram file names.
-        obs_dir: Path to observations directory.
-    
+      ifg_file_list: Path to file containing list of interferogram file names.
+      obs_dir: Path to observations directory.
+      ifg_file_list: str:
+      obs_dir: str:
+      ifg_file_list: str:
+      obs_dir: str:
+      ifg_file_list: str: 
+      obs_dir: str: 
+
     Returns:
-        Tuple containing the number of unique epochs and the maximum timespan.
+      : Tuple containing the number of unique epochs and the maximum timespan.
+
     """
     from core.algorithm import get_epochs
     from core.shared import Ifg, output_tiff_filename
@@ -1441,15 +1678,24 @@ def _get_temporal_info(ifg_file_list: str, obs_dir: str) -> Tuple:
 
 
 def _get_prepifg_info(ifg_file_list: str, obs_dir: str, pars: Dict) -> Tuple:
-    """
-    Retrives spatial information from prepifg interferograms (images that
+    """Retrives spatial information from prepifg interferograms (images that
     have been cropped and multilooked).
 
     Args:
-        ifg_file_list: Path to file containing list of interferogram file names.
-        obs_dir: Path to observations directory.
+      ifg_file_list: Path to file containing list of interferogram file names.
+      obs_dir: Path to observations directory.
+      ifg_file_list: str:
+      obs_dir: str:
+      pars: Dict:
+      ifg_file_list: str:
+      obs_dir: str:
+      pars: Dict:
+      ifg_file_list: str: 
+      obs_dir: str: 
+      pars: Dict: 
 
     Returns:
+
     """
     from core.shared import Ifg
 
@@ -1476,18 +1722,27 @@ def _get_prepifg_info(ifg_file_list: str, obs_dir: str, pars: Dict) -> Tuple:
 
 
 def _get_fullres_info(ifg_file_list: str, obs_dir: str, crop_opts: Tuple) -> Tuple:
-    """
-    Retrieves spatial information from the provided interferograms.
+    """Retrieves spatial information from the provided interferograms.
     Requires the interferograms to exist in geotiff format.
 
     Args:
-        ifg_file_list: Path to file containing list of interferogram file names.
-        obs_dir: Path to observations directory.
+      ifg_file_list: Path to file containing list of interferogram file names.
+      obs_dir: Path to observations directory.
+      ifg_file_list: str:
+      obs_dir: str:
+      crop_opts: Tuple:
+      ifg_file_list: str:
+      obs_dir: str:
+      crop_opts: Tuple:
+      ifg_file_list: str: 
+      obs_dir: str: 
+      crop_opts: Tuple: 
 
     Returns:
-        Tuple containing extents (xmin, ymin, xmax, ymax), number of pixel
-        columns, number of pixel rows, number of unique epochs and maximum
-        time span of the data.
+      : Tuple containing extents (xmin, ymin, xmax, ymax), number of pixel
+      columns, number of pixel rows, number of unique epochs and maximum
+      time span of the data.
+
     """
     from core.prepifg_helper import _min_bounds, _get_extents
     from core.shared import Ifg, output_tiff_filename
@@ -1519,8 +1774,17 @@ def _get_fullres_info(ifg_file_list: str, obs_dir: str, crop_opts: Tuple) -> Tup
 
 
 def _crop_opts(params: Dict) -> Tuple:
-    """
-    Convenience function for getting crop options from parameters.
+    """Convenience function for getting crop options from parameters.
+    
+    Args:
+      params: Dict:
+
+    Args:
+      params: Dict: 
+
+    Returns:
+      
+
     """
     from core.prepifg_helper import CustomExts
 
@@ -1536,6 +1800,4 @@ def _crop_opts(params: Dict) -> Tuple:
 
 
 class ConfigException(Exception):
-    """
-    Default exception class for configuration errors.
-    """
+    """Default exception class for configuration errors."""

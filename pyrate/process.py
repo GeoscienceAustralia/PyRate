@@ -36,20 +36,20 @@ MASTER_PROCESS = 0
 
 
 def main(params):
-    """
-    Top level function to perform PyRate workflow on given interferograms
+    """Top level function to perform PyRate workflow on given interferograms
+    
+    Args:
+      list: ifg_paths: List of interferogram paths
+      dict: params: Dictionary of configuration parameters
+      int: rows: Number of sub-tiles in y direction
+      int: cols: Number of sub-tiles in x direction
 
-    :param list ifg_paths: List of interferogram paths
-    :param dict params: Dictionary of configuration parameters
-    :param int rows: Number of sub-tiles in y direction
-    :param int cols: Number of sub-tiles in x direction
+    Args:
+      params: 
 
-    :return: refpt: tuple of reference pixel x and y position
-    :rtype: tuple
-    :return: maxvar: array of maximum variance values of interferograms
-    :rtype: ndarray
-    :return: vcmt: Variance-covariance matrix array
-    :rtype: ndarray
+    Returns:
+      tuple: refpt: tuple of reference pixel x and y position
+
     """
     ifg_paths = []
     for ifg_path in params["interferogram_files"]:
@@ -101,8 +101,13 @@ def main(params):
 
 
 def _join_dicts(dicts):
-    """
-    Function to concatenate dictionaries
+    """Function to concatenate dictionaries
+
+    Args:
+      dicts: 
+
+    Returns:
+
     """
     if dicts is None:  # pragma: no cover
         return
@@ -111,18 +116,27 @@ def _join_dicts(dicts):
 
 
 def _create_ifg_dict(dest_tifs, params, tiles):
-    """
-    1. Convert ifg phase data into numpy binary files.
+    """1. Convert ifg phase data into numpy binary files.
     2. Save the preread_ifgs dict with information about the ifgs that are
     later used for fast loading of Ifg files in IfgPart class
+    
+    Args:
+      list: dest_tifs: List of destination tifs
+      dict: params: Config dictionary
+      list: tiles: List of all Tile instances
+      dest_tifs: param params:
+      tiles: returns: preread_ifgs: Dictionary containing information regarding
+    interferograms that are used later in workflow
 
-    :param list dest_tifs: List of destination tifs
-    :param dict params: Config dictionary
-    :param list tiles: List of all Tile instances
+    Args:
+      dest_tifs: 
+      params: 
+      tiles: 
 
-    :return: preread_ifgs: Dictionary containing information regarding
-                interferograms that are used later in workflow
-    :rtype: dict
+    Returns:
+      dict: preread_ifgs: Dictionary containing information regarding
+      interferograms that are used later in workflow
+
     """
     ifgs_dict = {}
     nifgs = len(dest_tifs)
@@ -164,15 +178,35 @@ def _create_ifg_dict(dest_tifs, params, tiles):
 
 
 def _mst_calc(dest_tifs, params, tiles, preread_ifgs):
-    """
-    MPI wrapper function for MST calculation
+    """MPI wrapper function for MST calculation
+    
+    Args:
+      dest_tifs: param params:
+      tiles: param preread_ifgs:
+
+    Args:
+      preread_ifgs: 
+      dest_tifs: 
+      params: 
+      tiles: 
+
+    Returns:
+      
+
     """
     process_tiles = mpiops.array_split(tiles)
     log.info("Calculating minimum spanning tree matrix")
 
     def _save_mst_tile(tile, i, preread_ifgs):
-        """
-        Convenient inner loop for mst tile saving
+        """Convenient inner loop for mst tile saving
+
+        Args:
+          tile: param i:
+          preread_ifgs: 
+          i: 
+
+        Returns:
+
         """
         mst_tile = mst.mst_multiprocessing(tile, dest_tifs, preread_ifgs, params)
         # locally save the mst_mat
@@ -186,8 +220,18 @@ def _mst_calc(dest_tifs, params, tiles, preread_ifgs):
 
 
 def _ref_pixel_calc(ifg_paths, params):
-    """
-    Wrapper for reference pixel calculation
+    """Wrapper for reference pixel calculation
+    
+    Args:
+      ifg_paths: param params:
+
+    Args:
+      ifg_paths: 
+      params: 
+
+    Returns:
+      
+
     """
     refx = params[cf.REFX]
     refy = params[cf.REFY]
@@ -216,8 +260,20 @@ def _ref_pixel_calc(ifg_paths, params):
 
 
 def _orb_fit_calc(ifg_paths, params, preread_ifgs=None):
-    """
-    MPI wrapper for orbital fit correction
+    """MPI wrapper for orbital fit correction
+    
+    Args:
+      ifg_paths: param params:
+      preread_ifgs: Default value = None)
+
+    Args:
+      ifg_paths: 
+      params: 
+      preread_ifgs:  (Default value = None)
+
+    Returns:
+      
+
     """
     log.info("Calculating orbital correction")
 
@@ -248,8 +304,21 @@ def _orb_fit_calc(ifg_paths, params, preread_ifgs=None):
 
 
 def _ref_phase_estimation(ifg_paths, params, refpx, refpy):
-    """
-    Wrapper for reference phase estimation.
+    """Wrapper for reference phase estimation.
+    
+    Args:
+      ifg_paths: param params:
+      refpx: param refpy:
+
+    Args:
+      refpy: 
+      ifg_paths: 
+      params: 
+      refpx: 
+
+    Returns:
+      
+
     """
     log.info("Calculating reference phase")
     if len(ifg_paths) < 2:
@@ -292,8 +361,23 @@ def _ref_phase_estimation(ifg_paths, params, refpx, refpy):
 
 
 def _stack_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
-    """
-    MPI wrapper for stacking calculation
+    """MPI wrapper for stacking calculation
+    
+    Args:
+      ifg_paths: param params:
+      vcmt: param tiles:
+      preread_ifgs:
+
+    Args:
+      tiles: 
+      ifg_paths: 
+      params: 
+      vcmt: 
+      preread_ifgs: 
+
+    Returns:
+      
+
     """
     process_tiles = mpiops.array_split(tiles)
     log.info("Calculating rate map from stacking")
@@ -311,15 +395,32 @@ def _stack_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
 
 
 def _maxvar_vcm_calc(ifg_paths, params, preread_ifgs):
-    """
-    MPI wrapper for maxvar and vcmt computation
+    """MPI wrapper for maxvar and vcmt computation
+    
+    Args:
+      ifg_paths: param params:
+      preread_ifgs:
+
+    Args:
+      ifg_paths: 
+      params: 
+      preread_ifgs: 
+
+    Returns:
+      
+
     """
     log.info("Calculating the temporal variance-covariance matrix")
     process_indices = mpiops.array_split(range(len(ifg_paths)))
 
     def _get_r_dist(ifg_path):
-        """
-        Get RDIst class object
+        """Get RDIst class object
+
+        Args:
+          ifg_path: 
+
+        Returns:
+
         """
         ifg = Ifg(ifg_path)
         ifg.open()
@@ -352,8 +453,23 @@ def _maxvar_vcm_calc(ifg_paths, params, preread_ifgs):
 
 
 def _timeseries_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
-    """
-    MPI wrapper for time series calculation.
+    """MPI wrapper for time series calculation.
+    
+    Args:
+      ifg_paths: param params:
+      vcmt: param tiles:
+      preread_ifgs:
+
+    Args:
+      tiles: 
+      ifg_paths: 
+      params: 
+      vcmt: 
+      preread_ifgs: 
+
+    Returns:
+      
+
     """
     if params[cf.TIME_SERIES_CAL] == 0:
         log.info("Time Series Calculation not required")

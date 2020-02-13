@@ -17,9 +17,16 @@ import pathlib
 
 
 def delete_tsincr_files(params):
-    """
+    """Args:
+    
     Args:
-        params:
+
+    Args:
+      params: 
+
+    Returns:
+      
+
     """
     outDirPath = pathlib.Path(params["outdir"])
     for filePath in outDirPath.iterdir():
@@ -29,10 +36,14 @@ def delete_tsincr_files(params):
 
 def break_number_into_factors(n, memo={}, left=2):
     """
+
     Args:
-        n:
-        memo:
-        left:
+      n: param memo:  (Default value = {})
+      left: Default value = 2)
+      memo: (Default value = {})
+
+    Returns:
+
     """
     if (n, left) in memo:
         return memo[(n, left)]
@@ -61,4 +72,5 @@ def break_number_into_factors(n, memo={}, left=2):
 
 
 def add_ref_pixel_location_to_interferogram_metadata():
+    """ """
     None

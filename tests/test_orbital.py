@@ -56,9 +56,15 @@ class SingleDesignMatrixTests(unittest.TestCase):
     or DMs. This class serves two purposes, ensuring the independent method DMs
     are produced correctly. Secondly, these indivdual DMs are subsets of the
     larger DM 'grid' required for the networked orbital correction method.
+
+    Args:
+
+    Returns:
+
     """
 
     def setUp(self):
+        """ """
         # faked cell sizes
         self.xs = 0.75
         self.ys = 0.8
@@ -73,6 +79,7 @@ class SingleDesignMatrixTests(unittest.TestCase):
     # tests for planar model
 
     def test_create_planar_dm(self):
+        """ """
         offset = False
         act = get_design_matrix(self.m, PLANAR, offset)
         self.assertEqual(act.shape, (self.m.num_cells, 2))
@@ -80,6 +87,7 @@ class SingleDesignMatrixTests(unittest.TestCase):
         assert_array_equal(act, exp)
 
     def test_create_planar_dm_offsets(self):
+        """ """
         offset = True
         act = get_design_matrix(self.m, PLANAR, offset)
         self.assertEqual(act.shape, (self.m.num_cells, 3))
@@ -89,6 +97,7 @@ class SingleDesignMatrixTests(unittest.TestCase):
     # tests for quadratic model
 
     def test_create_quadratic_dm(self):
+        """ """
         offset = False
         act = get_design_matrix(self.m, QUADRATIC, offset)
         self.assertEqual(act.shape, (self.m.num_cells, 5))
@@ -96,6 +105,7 @@ class SingleDesignMatrixTests(unittest.TestCase):
         assert_array_equal(act, exp)
 
     def test_create_quadratic_dm_offsets(self):
+        """ """
         offset = True
         act = get_design_matrix(self.m, QUADRATIC, offset)
         self.assertEqual(act.shape, (self.m.num_cells, 6))
@@ -105,6 +115,7 @@ class SingleDesignMatrixTests(unittest.TestCase):
     # tests for partial cubic model
 
     def test_create_partcubic_dm(self):
+        """ """
         offset = False
         act = get_design_matrix(self.m, PART_CUBIC, offset)
         self.assertEqual(act.shape, (self.m.num_cells, 6))
@@ -112,6 +123,7 @@ class SingleDesignMatrixTests(unittest.TestCase):
         assert_array_equal(act, exp)
 
     def test_create_partcubic_dm_offsets(self):
+        """ """
         offset = True
         act = get_design_matrix(self.m, PART_CUBIC, offset)
         self.assertEqual(act.shape, (self.m.num_cells, 7))
@@ -121,6 +133,7 @@ class SingleDesignMatrixTests(unittest.TestCase):
     # tests for unittest_dm() assuming network method
 
     def test_create_planar_dm_network(self):
+        """ """
         # networked method planar version should not have offsets col
         ncol_exp = 2
         exp = unittest_dm(self.m, NETWORK_METHOD, PLANAR, False)
@@ -130,6 +143,7 @@ class SingleDesignMatrixTests(unittest.TestCase):
         assert_array_equal(exp, exp2)
 
     def test_create_quadratic_dm_network(self):
+        """ """
         # quadratic version with networked method does not have offsets col
         ncol_exp = 5
         exp = unittest_dm(self.m, NETWORK_METHOD, QUADRATIC, False)
@@ -139,6 +153,7 @@ class SingleDesignMatrixTests(unittest.TestCase):
         assert_array_equal(exp, exp2)
 
     def test_create_partcubic_dm_network(self):
+        """ """
         # partial cubic version with networked method does not have offsets col
         ncol_exp = 6
         exp = unittest_dm(self.m, NETWORK_METHOD, PART_CUBIC, False)
@@ -152,6 +167,7 @@ class IndependentCorrectionTests(unittest.TestCase):
     """Test cases for the orbital correction component of PyRate."""
 
     def setUp(self):
+        """ """
         self.ifgs = small5_mock_ifgs()
         _add_nodata(self.ifgs)
 
@@ -162,10 +178,14 @@ class IndependentCorrectionTests(unittest.TestCase):
 
     def alt_orbital_correction(self, ifg, deg, offset):
         """
+
         Args:
-            ifg:
-            deg:
-            offset:
+          ifg: param deg:
+          offset: 
+          deg: 
+
+        Returns:
+
         """
         data = ifg.phase_data.reshape(ifg.num_cells)
         dm = get_design_matrix(ifg, deg, offset)[~isnan(data)]
@@ -192,11 +212,15 @@ class IndependentCorrectionTests(unittest.TestCase):
 
     def check_correction(self, degree, method, offset, decimal=2):
         """
+
         Args:
-            degree:
-            method:
-            offset:
-            decimal:
+          degree: param method:
+          offset: param decimal:  (Default value = 2)
+          method: 
+          decimal:  (Default value = 2)
+
+        Returns:
+
         """
         orig = array([c.phase_data.copy() for c in self.ifgs])
         exp = [self.alt_orbital_correction(i, degree, offset) for i in self.ifgs]
@@ -222,8 +246,11 @@ class IndependentCorrectionTests(unittest.TestCase):
         """Helper method for result verification
 
         Args:
-            ifgs:
-            corrections:
+          ifgs: param corrections:
+          corrections: 
+
+        Returns:
+
         """
         for i, c in zip(ifgs, corrections):
             ys, xs = c.shape
@@ -236,21 +263,27 @@ class IndependentCorrectionTests(unittest.TestCase):
             self.assertTrue(c.ptp() != 0)  # ensure range of values in grid
 
     def test_independent_correction_planar(self):
+        """ """
         self.check_correction(PLANAR, INDEPENDENT_METHOD, False)
 
     def test_independent_correction_planar_offsets(self):
+        """ """
         self.check_correction(PLANAR, INDEPENDENT_METHOD, True)
 
     def test_independent_correction_quadratic(self):
+        """ """
         self.check_correction(QUADRATIC, INDEPENDENT_METHOD, False)
 
     def test_independent_correction_quadratic_offsets(self):
+        """ """
         self.check_correction(QUADRATIC, INDEPENDENT_METHOD, True)
 
     def test_independent_correction_partcubic(self):
+        """ """
         self.check_correction(PART_CUBIC, INDEPENDENT_METHOD, False)
 
     def test_independent_correction_partcubic_offsets(self):
+        """ """
         self.check_correction(PART_CUBIC, INDEPENDENT_METHOD, True, decimal=1)
 
 
@@ -258,10 +291,12 @@ class ErrorTests(unittest.TestCase):
     """Tests for the networked correction method"""
 
     def test_invalid_ifgs_arg(self):
+        """ """
         # min requirement is 1 ifg, can still subtract one epoch from the other
         self.assertRaises(OrbitalError, get_network_design_matrix, [], PLANAR, True)
 
     def test_invalid_degree_arg(self):
+        """ """
         # test failure of a few different args for 'degree'
         ifgs = small5_mock_ifgs()
         for d in range(-5, 1):
@@ -270,6 +305,7 @@ class ErrorTests(unittest.TestCase):
             self.assertRaises(OrbitalError, get_network_design_matrix, ifgs, d, True)
 
     def test_invalid_method(self):
+        """ """
         # test failure of a few different args for 'method'
         ifgs = small5_mock_ifgs()
         params = dict()
@@ -280,6 +316,7 @@ class ErrorTests(unittest.TestCase):
             self.assertRaises(OrbitalError, _orbital_correction, ifgs, params, None)
 
     def test_multilooked_ifgs_arg(self):
+        """ """
         # check some bad args for network method with multilooked ifgs
         ifgs = small5_mock_ifgs()
         args = [[None, None, None, None, None], ["X"] * 5]
@@ -300,6 +337,7 @@ class NetworkDesignMatrixTests(unittest.TestCase):
     """Contains tests verifying creation of sparse network design matrix."""
 
     def setUp(self):
+        """ """
         self.ifgs = small5_mock_ifgs()
         _add_nodata(self.ifgs)
         self.nifgs = len(self.ifgs)
@@ -313,6 +351,7 @@ class NetworkDesignMatrixTests(unittest.TestCase):
             ifg.Y_SIZE = 89.5
 
     def test_planar_network_dm(self):
+        """ """
         ncoef = 2
         offset = False
         act = get_network_design_matrix(self.ifgs, PLANAR, offset)
@@ -321,6 +360,7 @@ class NetworkDesignMatrixTests(unittest.TestCase):
         self.check_equality(ncoef, act, self.ifgs, offset)
 
     def test_planar_network_dm_offset(self):
+        """ """
         ncoef = 2  # NB: doesn't include offset col
         offset = True
         act = get_network_design_matrix(self.ifgs, PLANAR, offset)
@@ -330,6 +370,7 @@ class NetworkDesignMatrixTests(unittest.TestCase):
         self.check_equality(ncoef, act, self.ifgs, offset)
 
     def test_quadratic_network_dm(self):
+        """ """
         ncoef = 5
         offset = False
         act = get_network_design_matrix(self.ifgs, QUADRATIC, offset)
@@ -338,6 +379,7 @@ class NetworkDesignMatrixTests(unittest.TestCase):
         self.check_equality(ncoef, act, self.ifgs, offset)
 
     def test_quadratic_network_dm_offset(self):
+        """ """
         ncoef = 5
         offset = True
         act = get_network_design_matrix(self.ifgs, QUADRATIC, offset)
@@ -347,6 +389,7 @@ class NetworkDesignMatrixTests(unittest.TestCase):
         self.check_equality(ncoef, act, self.ifgs, offset)
 
     def test_partcubic_network_dm(self):
+        """ """
         ncoef = 6
         offset = False
         act = get_network_design_matrix(self.ifgs, PART_CUBIC, offset)
@@ -355,6 +398,7 @@ class NetworkDesignMatrixTests(unittest.TestCase):
         self.check_equality(ncoef, act, self.ifgs, offset)
 
     def test_partcubic_network_dm_offset(self):
+        """ """
         ncoef = 6
         offset = True
         act = get_network_design_matrix(self.ifgs, PART_CUBIC, offset)
@@ -370,10 +414,13 @@ class NetworkDesignMatrixTests(unittest.TestCase):
         offset - boolean to include extra parameters for model offsets
 
         Args:
-            ncoef:
-            dm:
-            ifgs:
-            offset:
+          ncoef: param dm:
+          ifgs: param offset:
+          dm: 
+          offset: 
+
+        Returns:
+
         """
         deg = DEG_LOOKUP[ncoef]
         np = ncoef * self.nepochs  # index of 1st offset col
@@ -408,11 +455,14 @@ def network_correction(ifgs, deg, off, ml_ifgs=None, tol=1e-6):
     with offsets
 
     Args:
-        ifgs:
-        deg:
-        off:
-        ml_ifgs:
-        tol:
+      ifgs: param deg:
+      off: param ml_ifgs:  (Default value = None)
+      tol: Default value = 1e-6)
+      deg: 
+      ml_ifgs:  (Default value = None)
+
+    Returns:
+
     """
     ncells = ifgs[0].num_cells
 
@@ -444,13 +494,20 @@ def _expand_corrections(ifgs, dm, params, ncoef, offsets):
     matrix (do not filter/remove nan cells) params: model parameters array from
     pinv() * dm ncoef: number of model coefficients (2 planar, 5 quadratic)
     offsets: True/False to calculate correction with offsets
-
+    
     Args:
         ifgs:
         dm:
-        params:
-        ncoef:
-        offsets:
+
+    Args:
+      ncoef: param offsets:
+      ifgs: param dm:
+      params: 
+      dm: 
+      offsets: 
+
+    Returns:
+
     """
     # NB: cannot work on singular ifgs due to date ID id/indexing requirement
     date_ids = get_date_ids(ifgs)
@@ -478,6 +535,7 @@ class NetworkCorrectionTests(unittest.TestCase):
     """Verifies orbital correction using network method and no multilooking"""
 
     def setUp(self):
+        """ """
         # fake some real ifg data by adding nans
         self.ifgs = small5_mock_ifgs()
         _add_nodata(self.ifgs)
@@ -492,6 +550,11 @@ class NetworkCorrectionTests(unittest.TestCase):
     def test_offset_inversion(self):
         """Ensure pinv(DM)*obs gives equal results given constant change to
         fd
+
+        Args:
+
+        Returns:
+
         """
 
         def get_orbital_params():
@@ -526,37 +589,54 @@ class NetworkCorrectionTests(unittest.TestCase):
     # setUp() reset phase data between tests.
 
     def test_network_correction_planar(self):
+        """ """
         deg, offset = PLANAR, False
         exp = network_correction(self.ifgs, deg, offset)
         self.verify_corrections(self.ifgs, exp, deg, offset)
 
     def test_network_correction_planar_offset(self):
+        """ """
         deg, offset = PLANAR, True
         exp = network_correction(self.ifgs, deg, offset)
         self.verify_corrections(self.ifgs, exp, deg, offset)
 
     def test_network_correction_quadratic(self):
+        """ """
         deg, offset = QUADRATIC, False
         exp = network_correction(self.ifgs, deg, offset)
         self.verify_corrections(self.ifgs, exp, deg, offset)
 
     def test_network_correction_quadratic_offset(self):
+        """ """
         deg, offset = QUADRATIC, True
         exp = network_correction(self.ifgs, deg, offset)
         self.verify_corrections(self.ifgs, exp, deg, offset)
 
     def test_network_correction_partcubic(self):
+        """ """
         deg, offset = PART_CUBIC, False
         exp = network_correction(self.ifgs, deg, offset)
         self.verify_corrections(self.ifgs, exp, deg, offset)
 
     def test_network_correction_partcubic_offset(self):
+        """ """
         deg, offset = PART_CUBIC, True
         exp = network_correction(self.ifgs, deg, offset)
         self.verify_corrections(self.ifgs, exp, deg, offset)
 
     @staticmethod
     def verify_corrections(ifgs, exp, deg, offset):
+        """
+
+        Args:
+          ifgs: param exp:
+          deg: param offset:
+          exp: 
+          offset: 
+
+        Returns:
+
+        """
         # checks orbital correction against unit test version
         """
         Args:
@@ -578,6 +658,7 @@ class NetworkCorrectionTestsMultilooking(unittest.TestCase):
     """Verifies orbital correction with multilooking and network method"""
 
     def setUp(self):
+        """ """
         # fake some real ifg data by adding nans
         self.ml_ifgs = small5_mock_ifgs()
         # 2x data of default Small mock
@@ -597,36 +678,53 @@ class NetworkCorrectionTestsMultilooking(unittest.TestCase):
     # setUp() refresh phase data between tests.
 
     def test_mlooked_network_correction_planar(self):
+        """ """
         deg, offset = PLANAR, False
         exp = network_correction(self.ifgs, deg, offset, self.ml_ifgs)
         self.verify_corrections(self.ifgs, exp, deg, offset)
 
     def test_mlooked_network_correction_planar_offset(self):
+        """ """
         deg, offset = PLANAR, True
         exp = network_correction(self.ifgs, deg, offset, self.ml_ifgs)
         self.verify_corrections(self.ifgs, exp, deg, offset)
 
     def test_mlooked_network_correction_quadratic(self):
+        """ """
         deg, offset = QUADRATIC, False
         exp = network_correction(self.ifgs, deg, offset, self.ml_ifgs)
         self.verify_corrections(self.ifgs, exp, deg, offset)
 
     def test_mlooked_network_correction_quadratic_offset(self):
+        """ """
         deg, offset = QUADRATIC, True
         exp = network_correction(self.ifgs, deg, offset, self.ml_ifgs)
         self.verify_corrections(self.ifgs, exp, deg, offset)
 
     def test_mlooked_network_correction_partcubic(self):
+        """ """
         deg, offset = PART_CUBIC, False
         exp = network_correction(self.ifgs, deg, offset, self.ml_ifgs)
         self.verify_corrections(self.ifgs, exp, deg, offset)
 
     def test_mlooked_network_correction_partcubic_offset(self):
+        """ """
         deg, offset = PART_CUBIC, True
         exp = network_correction(self.ifgs, deg, offset, self.ml_ifgs)
         self.verify_corrections(self.ifgs, exp, deg, offset)
 
     def verify_corrections(self, ifgs, exp, deg, offset):
+        """
+
+        Args:
+          ifgs: param exp:
+          deg: param offset:
+          exp: 
+          offset: 
+
+        Returns:
+
+        """
         # checks orbital correction against unit test version
         """
         Args:
@@ -652,11 +750,14 @@ def unittest_dm(ifg, method, degree, offset=False, scale=100.0):
     to include additional cols for offsets
 
     Args:
-        ifg:
-        method:
-        degree:
-        offset:
-        scale:
+      ifg: param method:
+      degree: param offset:  (Default value = False)
+      scale: Default value = 100.0)
+      method: 
+      offset:  (Default value = False)
+
+    Returns:
+
     """
     assert method in [INDEPENDENT_METHOD, NETWORK_METHOD]
 
@@ -701,7 +802,10 @@ def get_date_ids(ifgs):
     """Returns unique master/slave date IDs from the given Ifgs.
 
     Args:
-        ifgs:
+      ifgs: 
+
+    Returns:
+
     """
 
     dates = []
@@ -714,7 +818,10 @@ def _add_nodata(ifgs):
     """Adds some NODATA/nan cells to the small mock ifgs
 
     Args:
-        ifgs:
+      ifgs: 
+
+    Returns:
+
     """
     ifgs[0].phase_data[0, :] = nan  # 3 error cells
     ifgs[1].phase_data[2, 1:3] = nan  # 2 error cells
@@ -727,9 +834,15 @@ class LegacyComparisonTestsOrbfitMethod1(unittest.TestCase):
     """This is the legacy comparison test of orbital correction functionality.
     Tests use the following config orbfit: 1 orbfitmethod: 2 orbfitdegrees: 1
     orbfitlksx: 2 orbfitlksy: 2
+
+    Args:
+
+    Returns:
+
     """
 
     def setUp(self):
+        """ """
         self.BASE_DIR = tempfile.mkdtemp()
         self.params = cf.get_config_params(TEST_CONF_ROIPAC)
         # change to orbital error correction method 1
@@ -745,9 +858,11 @@ class LegacyComparisonTestsOrbfitMethod1(unittest.TestCase):
             shutil.copy(d, os.path.join(self.BASE_DIR, os.path.basename(d)))
 
     def tearDown(self):
+        """ """
         shutil.rmtree(self.BASE_DIR)
 
     def test_orbital_correction_legacy_equality(self):
+        """ """
         import process
 
         process._orb_fit_calc(self.ifg_paths, self.params)
@@ -784,9 +899,15 @@ class LegacyComparisonTestsOrbfitMethod2(unittest.TestCase):
     """This is the legacy comparison test of orbital correction functionality.
     Tests use the following config orbfit: 1 orbfitmethod: 2 orbfitdegrees: 1
     orbfitlksx: 1 orbfitlksy: 1
+
+    Args:
+
+    Returns:
+
     """
 
     def setUp(self):
+        """ """
         self.BASE_DIR = tempfile.mkdtemp()
         self.params = cf.get_config_params(TEST_CONF_ROIPAC)
         # change to orbital error correction method 2
@@ -814,11 +935,13 @@ class LegacyComparisonTestsOrbfitMethod2(unittest.TestCase):
                 i.write_modified_phase()
 
     def tearDown(self):
+        """ """
         for i in self.ifgs:
             i.close()
         shutil.rmtree(self.BASE_DIR)
 
     def test_orbital_correction_legacy_equality_orbfit_method_2(self):
+        """ """
         remove_orbital_error(self.ifgs, self.params)
 
         onlyfiles = [

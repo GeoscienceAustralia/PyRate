@@ -119,8 +119,12 @@ IFMS16 = [
 
 def remove_tifs(path):
     """
+
     Args:
-        path:
+      path: 
+
+    Returns:
+
     """
     tifs = glob.glob(os.path.join(path, "*.tif"))
     for tif in tifs:
@@ -132,8 +136,11 @@ def small_data_setup(datafiles=None, is_dir=False):
     in radians; these ifgs are in radians - not converted to mm
 
     Args:
-        datafiles:
-        is_dir:
+      datafiles: Default value = None)
+      is_dir: Default value = False)
+
+    Returns:
+
     """
     if is_dir:
         datafiles = glob.glob(join(datafiles, "*.tif"))
@@ -159,7 +166,10 @@ def small_ifg_file_list(datafiles=None):
     mm
 
     Args:
-        datafiles:
+      datafiles: Default value = None)
+
+    Returns:
+
     """
     if datafiles:
         for i, d in enumerate(datafiles):
@@ -173,6 +183,11 @@ def small_ifg_file_list(datafiles=None):
 def small_data_roipac_unws():
     """Returns unw file list before prepifg operation input phase data is in
     radians; these ifgs are in radians - not converted to mm
+
+    Args:
+
+    Returns:
+
     """
     return glob.glob(join(SML_TEST_OBS, "*.unw"))
 
@@ -180,6 +195,11 @@ def small_data_roipac_unws():
 def small_data_setup_gamma_unws():
     """Returns unw file list before prepifg operation input phase data is in
     radians; these ifgs are in radians - not converted to mm
+
+    Args:
+
+    Returns:
+
     """
     return glob.glob(join(SML_TEST_GAMMA, "*.unw"))
 
@@ -199,8 +219,11 @@ def small5_mock_ifgs(xs=3, ys=4):
     """Returns smaller mocked version of small Ifgs for testing
 
     Args:
-        xs:
-        ys:
+      xs: Default value = 3)
+      ys: Default value = 4)
+
+    Returns:
+
     """
     ifgs = small5_ifgs()
     for i in ifgs:
@@ -247,31 +270,40 @@ class MockIfg(object):
         return "MockIfg: %s -> %s" % (self.master, self.slave)
 
     def open(self):
+        """ """
         # TODO: could move some of the init code here to mimic Ifgs
         pass  # can't actually open anything!
 
     @property
     def nan_count(self):
+        """ """
         return nsum(isnan(self.phase_data))
 
     @property
     def shape(self):
+        """ """
         return self.nrows, self.ncols
 
     def write_modified_phase(self):  # dummy
+        """ """
         pass
 
     def close(self):  # dummy
+        """ """
         pass
 
 
 def reconstruct_stack_rate(shape, tiles, output_dir, out_type):
     """
+
     Args:
-        shape:
-        tiles:
-        output_dir:
-        out_type:
+      shape: param tiles:
+      output_dir: param out_type:
+      tiles: 
+      out_type: 
+
+    Returns:
+
     """
     rate = np.zeros(shape=shape, dtype=np.float32)
     for t in tiles:
@@ -283,10 +315,14 @@ def reconstruct_stack_rate(shape, tiles, output_dir, out_type):
 
 def reconstruct_mst(shape, tiles, output_dir):
     """
+
     Args:
-        shape:
-        tiles:
-        output_dir:
+      shape: param tiles:
+      output_dir: 
+      tiles: 
+
+    Returns:
+
     """
     mst_file_0 = os.path.join(output_dir, "mst_mat_{}.npy".format(0))
     shape0 = np.load(mst_file_0).shape[0]
@@ -300,10 +336,14 @@ def reconstruct_mst(shape, tiles, output_dir):
 
 def move_files(source_dir, dest_dir, file_type="*.tif"):
     """
+
     Args:
-        source_dir:
-        dest_dir:
-        file_type:
+      source_dir: param dest_dir:
+      file_type: Default value = "*.tif")
+      dest_dir: 
+
+    Returns:
+
     """
     for filename in glob.glob(os.path.join(source_dir, file_type)):
         shutil.move(filename, dest_dir)
@@ -311,9 +351,13 @@ def move_files(source_dir, dest_dir, file_type="*.tif"):
 
 def assert_ifg_phase_equal(ifg_path1, ifg_path2):
     """
+
     Args:
-        ifg_path1:
-        ifg_path2:
+      ifg_path1: param ifg_path2:
+      ifg_path2: 
+
+    Returns:
+
     """
     ds1 = gdal.Open(ifg_path1)
     ds2 = gdal.Open(ifg_path2)
@@ -323,10 +367,15 @@ def assert_ifg_phase_equal(ifg_path1, ifg_path2):
 
 
 def prepare_ifgs_without_phase(ifg_paths, params):
-    """
-    Args:
+    """Args:
         ifg_paths:
-        params:
+
+    Args:
+      ifg_paths: param params:
+      params: 
+
+    Returns:
+
     """
     ifgs = [Ifg(p) for p in ifg_paths]
     for i in ifgs:
@@ -341,10 +390,15 @@ def prepare_ifgs_without_phase(ifg_paths, params):
 
 
 def mst_calculation(ifg_paths_or_instance, params):
-    """
-    Args:
+    """Args:
         ifg_paths_or_instance:
-        params:
+
+    Args:
+      ifg_paths_or_instance: param params:
+      params: 
+
+    Returns:
+
     """
     if isinstance(ifg_paths_or_instance, list):
         ifgs = pre_prepare_ifgs(ifg_paths_or_instance, params)
@@ -361,15 +415,15 @@ def mst_calculation(ifg_paths_or_instance, params):
 
 def get_nml(ifg_list_instance, nodata_value, nan_conversion=False):
     """
+
     Args:
-        ifg_list_instance (xxx(eg str, tuple, int, float...)): xxxx
-        nodata_value (float): No data value in image
-        nan_conversion (bool): Convert NaNs
+      ifg_list_instance(xxx(eg str): xxxx
+      nodata_value(float): No data value in image
+      nan_conversion(bool, optional): Convert NaNs (Default value = False)
 
     Returns:
-        list: ifg_list_instance: replaces in place
+      list: ifg_list_instance: replaces in place
 
-        list: _epoch_list: list of epochs
     """
     _epoch_list, n = algorithm.get_epochs(ifg_list_instance.ifgs)
     ifg_list_instance.reshape_n(n)
@@ -382,6 +436,17 @@ def get_nml(ifg_list_instance, nodata_value, nan_conversion=False):
 
 
 def compute_time_series(ifgs, mst_grid, params, vcmt):
+    """
+
+    Args:
+      ifgs: param mst_grid:
+      params: param vcmt:
+      mst_grid: 
+      vcmt: 
+
+    Returns:
+
+    """
     # Calculate time series
     """
     Args:
@@ -407,12 +472,17 @@ def compute_time_series(ifgs, mst_grid, params, vcmt):
 
 
 def calculate_time_series(ifgs, params, vcmt, mst):
-    """
-    Args:
+    """Args:
         ifgs:
-        params:
-        vcmt:
-        mst:
+
+    Args:
+      vcmt: param mst:
+      ifgs: param params:
+      params: 
+      mst: 
+
+    Returns:
+
     """
     res = timeseries.time_series(ifgs, params, vcmt, mst)
     for r in res:
@@ -424,6 +494,17 @@ def calculate_time_series(ifgs, params, vcmt, mst):
 
 
 def write_timeseries_geotiff(ifgs, params, tsincr, pr_type):
+    """
+
+    Args:
+      ifgs: param params:
+      tsincr: param pr_type:
+      params: 
+      pr_type: 
+
+    Returns:
+
+    """
     # setup metadata for writing into result files
     """
     Args:
@@ -446,6 +527,17 @@ def write_timeseries_geotiff(ifgs, params, tsincr, pr_type):
 
 
 def calculate_stacked_rate(ifgs, params, vcmt, mst_mat=None):
+    """
+
+    Args:
+      ifgs: param params:
+      vcmt: param mst_mat:  (Default value = None)
+      params: 
+      mst_mat:  (Default value = None)
+
+    Returns:
+
+    """
     # log.info('Calculating stacked rate')
     """
     Args:
@@ -466,6 +558,16 @@ def calculate_stacked_rate(ifgs, params, vcmt, mst_mat=None):
 
 
 def write_stack_tifs(ifgs, params, res):
+    """
+
+    Args:
+      ifgs: param params:
+      res: 
+      params: 
+
+    Returns:
+
+    """
     # log.info('Writing stacking results')
     """
     Args:
@@ -490,12 +592,19 @@ def write_stack_tifs(ifgs, params, res):
 
 
 def write_stack_numpy_files(error, rate, samples, params):
-    """
-    Args:
+    """Args:
         error:
         rate:
         samples:
-        params:
+
+    Args:
+      error: param rate:
+      samples: param params:
+      rate: 
+      params: 
+
+    Returns:
+
     """
     rate_file = join(params[cf.OUT_DIR], "rate.npy")
     error_file = join(params[cf.OUT_DIR], "error.npy")
@@ -510,10 +619,13 @@ def copytree(src, dst, symlinks=False, ignore=None):
     http://stackoverflow.com/questions/1868714/how-do-i-copy-an-entire-directory-of-files-into-an-existing-directory-using-pyth?lq=1
 
     Args:
-        src (str): source directory path
-        dst (str): destination directory path (created if does not exist)
-        symlinks (bool): Whether to copy symlink or not
-        ignore (bool):
+      src(str): source directory path
+      dst(str): destination directory path (created if does not exist)
+      symlinks(bool, optional): Whether to copy symlink or not (Default value = False)
+      ignore(bool, optional): Default value = None)
+
+    Returns:
+
     """
     if not os.path.exists(dst):  # pragma: no cover
         os.makedirs(dst)
@@ -543,10 +655,16 @@ def copytree(src, dst, symlinks=False, ignore=None):
 
 def pre_prepare_ifgs(ifg_paths, params):
     """Open ifg for reading
-
+    
     Args:
         ifg_paths:
-        params:
+
+    Args:
+      ifg_paths: param params:
+      params: 
+
+    Returns:
+
     """
     ifgs = [Ifg(p) for p in ifg_paths]
     for i in ifgs:

@@ -35,9 +35,11 @@ class MSTTests(unittest.TestCase):
     """Basic verification of minimum spanning tree (MST) functionality."""
 
     def setUp(self):
+        """ """
         self.ifgs = small_data_setup()
 
     def test_mst_matrix_as_array(self):
+        """ """
         # Verifies MST matrix func returns array with dict/trees in each cell
         for i in self.ifgs[3:]:
             i.phase_data[0, 1] = 0  # partial stack of NODATA to one cell
@@ -66,6 +68,7 @@ class MSTTests(unittest.TestCase):
                 self.assertTrue(num_nodes <= (17 - nc))
 
     def test_mst_matrix_as_ifgs(self):
+        """ """
         # ensure only ifgs are returned, not individual MST graphs
         ifgs = small5_mock_ifgs()
         nifgs = len(ifgs)
@@ -81,10 +84,12 @@ class MSTTests(unittest.TestCase):
             self.assertTrue(all([isinstance(i, MockIfg) for i in ifgs]))
 
     def test_partial_nan_pixel_stack(self):
+        """ """
         # Ensure a limited # of coherent cells results in a smaller MST tree
         num_coherent = 3
 
         def assert_equal():
+            """ """
             res = mst._mst_matrix_as_array(mock_ifgs)
             self.assertEqual(len(res[0, 0]), num_coherent)
 
@@ -100,6 +105,7 @@ class MSTTests(unittest.TestCase):
         assert_equal()
 
     def test_all_nan_pixel_stack(self):
+        """ """
         # ensure full stack of NaNs in an MST pixel classifies to NaN
         mock_ifgs = [MockIfg(i, 1, 1) for i in self.ifgs]
         for m in mock_ifgs:
@@ -116,7 +122,9 @@ class MSTTests(unittest.TestCase):
 
 
 class DefaultMSTTests(unittest.TestCase):
+    """ """
     def test_default_mst(self):
+        """ """
         # default MST from full set of Ifgs shouldn't drop any nodes
         ifgs = small5_mock_ifgs()
         dates = [(i.master, i.slave) for i in ifgs]
@@ -138,10 +146,13 @@ class DefaultMSTTests(unittest.TestCase):
 
 
 class NetworkxMSTTreeCheck(unittest.TestCase):
+    """ """
     def setUp(self):
+        """ """
         self.ifgs = small_data_setup()
 
     def test_assert_is_not_tree(self):
+        """ """
         non_overlapping = [1, 2, 5, 6, 12, 13, 14, 15, 16, 17]
         ifgs_non_overlapping = [ifg for i, ifg in enumerate(self.ifgs) if i + 1 in non_overlapping]
         edges, is_tree, ntrees, _ = mst.mst_from_ifgs(ifgs_non_overlapping)
@@ -149,9 +160,11 @@ class NetworkxMSTTreeCheck(unittest.TestCase):
         self.assertEqual(4, ntrees)
 
     def test_small_data_tree(self):
+        """ """
         self.assertTrue(mst.mst_from_ifgs(self.ifgs)[1])
 
     def test_assert_is_tree(self):
+        """ """
         overlapping = [1, 2, 3, 4, 6, 7, 10, 11, 16, 17]
 
         ifgs_overlapping = [ifg for i, ifg in enumerate(self.ifgs) if (i + 1 in overlapping)]
@@ -160,6 +173,7 @@ class NetworkxMSTTreeCheck(unittest.TestCase):
         self.assertEqual(4, ntrees)
 
     def test_assert_two_trees_overlapping(self):
+        """ """
         overlapping = [3, 4, 5, 6, 7, 8, 9, 10, 11, 16, 17]
 
         ifgs_overlapping = [ifg for i, ifg in enumerate(self.ifgs) if (i + 1 in overlapping)]
@@ -168,6 +182,7 @@ class NetworkxMSTTreeCheck(unittest.TestCase):
         self.assertEqual(2, ntrees)
 
     def test_assert_two_trees_non_overlapping(self):
+        """ """
         non_overlapping = [2, 5, 6, 12, 13, 15]
         ifgs_non_overlapping = [ifg for i, ifg in enumerate(self.ifgs) if i + 1 in non_overlapping]
         edges, is_tree, ntrees, _ = mst.mst_from_ifgs(ifgs_non_overlapping)
@@ -176,11 +191,14 @@ class NetworkxMSTTreeCheck(unittest.TestCase):
 
 
 class IfgPartTest(unittest.TestCase):
+    """ """
     def setUp(self):
+        """ """
         self.ifgs = small_data_setup()
         self.params = cf.get_config_params(common.TEST_CONF_ROIPAC)
 
     def test_ifg_part_shape_and_slice(self):
+        """ """
         r_start = 0
         r_end = 10
         for i in self.ifgs:

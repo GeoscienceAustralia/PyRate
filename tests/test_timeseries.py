@@ -35,6 +35,7 @@ from core.timeseries import time_series
 
 
 def default_params():
+    """ """
     return {
         cf.TIME_SERIES_METHOD: 1,
         cf.TIME_SERIES_PTHRESH: 0,
@@ -70,7 +71,10 @@ class SinglePixelIfg(object):
         default is 0
 
         Args:
-            val:
+          val: Default value = 0)
+
+        Returns:
+
         """
         self.phase_data = where(self.phase_data == val, nan, self.phase_data)
         self.nan_converted = True
@@ -81,6 +85,7 @@ class TimeSeriesTests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        """ """
         cls.ifgs = common.small_data_setup()
         cls.params = default_params()
         cls.mstmat = mst.mst_boolean_array(cls.ifgs)

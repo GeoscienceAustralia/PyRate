@@ -54,11 +54,13 @@ DUMMY_SECTION_NAME = "pyrate"
 
 
 class TestGammaVsRoipacEquality(unittest.TestCase):
+    """ """
 
     SMLNEY_GAMMA_TEST = os.path.join(SML_TEST_DIR, "gamma_obs")
 
     @classmethod
     def setUpClass(cls):
+        """ """
         cls.gamma_base_dir = tempfile.mkdtemp()
         cls.gamma_conffile = os.path.join(cls.gamma_base_dir, "gamma_test.conf")
         cls.gamma_ifgListFile = os.path.join(cls.gamma_base_dir, "gamma_ifg.list")
@@ -69,6 +71,7 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        """ """
         shutil.rmtree(cls.gamma_base_dir)
         shutil.rmtree(cls.roipac_base_dir)
         remove_tifs(cls.SMLNEY_GAMMA_TEST)
@@ -76,8 +79,12 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
 
     def make_gamma_input_files(self, data):
         """
+
         Args:
-            data:
+          data: 
+
+        Returns:
+
         """
         with open(self.conf_file, "w") as conf:
             conf.write("[{}]\n".format(DUMMY_SECTION_NAME))
@@ -107,8 +114,12 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
 
     def check_gamma(self, conf_file):
         """
+
         Args:
-            conf_file:
+          conf_file: 
+
+        Returns:
+
         """
         data_paths = glob.glob(os.path.join(self.SMLNEY_GAMMA_TEST, "*_utm.unw"))
 
@@ -129,9 +140,13 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
 
     def make_roipac_input_files(self, data, projection):
         """
+
         Args:
-            data:
-            projection:
+          data: param projection:
+          projection: 
+
+        Returns:
+
         """
         with open(self.confFile, "w") as conf:
             conf.write("[{}]\n".format(DUMMY_SECTION_NAME))
@@ -163,6 +178,7 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
     #     self.check_roipac()
 
     def check_roipac(self):
+        """ """
         self.make_roipac_input_files(self.dataPaths, "WGS84")
 
         conv2tif_handler(self.confFile)
@@ -171,6 +187,7 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
             self.assertTrue(os.path.exists(path), "{} does not exist".format(path))
 
     def test_equality_of_meta_data(self):
+        """ """
         gamma_PTN = re.compile(r"\d{8}")
         gamma_files = []
         for i in glob.glob(os.path.join(self.gamma_base_dir, "*.tif")):

@@ -61,7 +61,12 @@ def joblib_log_level(level: str) -> int:
     """Convert python log level to joblib int verbosity.
 
     Args:
-        level (str):
+      level: type level: str
+      level: str:
+      level: str: 
+
+    Returns:
+
     """
     if level == "INFO":
         return 0
@@ -75,7 +80,10 @@ def mkdir_p(path):
     http://stackoverflow.com/questions/600268/mkdir-p-functionality-in-python
 
     Args:
-        path (str): Path name for new directory
+      path(str): Path name for new directory
+
+    Returns:
+
     """
     try:
         os.makedirs(path)
@@ -118,7 +126,10 @@ class RasterBase(object):
         """Opens generic raster dataset.
 
         Args:
-            readonly:
+          readonly: Default value = None)
+
+        Returns:
+
         """
         if self.dataset is not None:
             msg = "open() already called for %s" % self
@@ -213,6 +224,11 @@ class RasterBase(object):
         """Explicitly closes file opened by gdal.Open() This is required in
         windows, otherwise opened files can not be removed, because windows
         locks open files.
+
+        Args:
+
+        Returns:
+
         """
         if self.is_open:
             self.dataset = None
@@ -226,7 +242,10 @@ class RasterBase(object):
         """Wrapper (with error checking) for GDAL's Band.GetRasterBand() method.
 
         Args:
-            band (int): number of band, starting at 1
+          band(int): number of band, starting at 1
+
+        Returns:
+
         """
         if self.dataset is not None:
             return self.dataset.GetRasterBand(band)
@@ -237,6 +256,11 @@ class RasterBase(object):
 class Ifg(RasterBase):
     """Interferogram (Ifg) class objects; double as a container for
     interferometric phase raster band data and related data.
+
+    Args:
+
+    Returns:
+
     """
 
     def __init__(self, path):
@@ -261,8 +285,11 @@ class Ifg(RasterBase):
         """Open raster file.
 
         Args:
-            readonly (bool): True/False, or None to open as underlying file
-                setting
+          readonly(bool, optional): True/False, or None to open as underlying file
+        setting (Default value = None)
+
+        Returns:
+
         """
         RasterBase.open(self, readonly)
         self.initialize()
@@ -279,6 +306,14 @@ class Ifg(RasterBase):
         """Determine master and slave dates, and interferogram timespan"""
 
         def _to_date(datestr):
+            """
+
+            Args:
+              datestr: 
+
+            Returns:
+
+            """
             year, month, day = [int(i) for i in datestr.split("-")]
             return date(year, month, day)
 
@@ -326,7 +361,10 @@ class Ifg(RasterBase):
         """Set the no-data value for phase band.
 
         Args:
-            val:
+          val: 
+
+        Returns:
+
         """
         self._nodata_value = val
 
@@ -363,7 +401,10 @@ class Ifg(RasterBase):
         """Set phase data value
 
         Args:
-            data:
+          data: 
+
+        Returns:
+
         """
         self._phase_data = data
 
@@ -396,7 +437,10 @@ class Ifg(RasterBase):
         """Write updated phase data to file on disk.
 
         Args:
-            data:
+          data: Default value = None)
+
+        Returns:
+
         """
         if self.is_read_only:
             raise IOError("Cannot write to read only Ifg")
@@ -463,7 +507,10 @@ class IfgPart(object):
         """Read interferogram file if not already open.
 
         Args:
-            ifg:
+          ifg: 
+
+        Returns:
+
         """
         if not ifg.is_open:
             ifg.open(readonly=True)
@@ -490,6 +537,11 @@ class IfgPart(object):
 class Incidence(RasterBase):  # pragma: no cover
     """Class for storing viewing geometry data. e.g. incidence and azimuth
     raster values
+
+    Args:
+
+    Returns:
+
     """
 
     def __init__(self, path):
@@ -588,11 +640,12 @@ def convert_radians_to_mm(data, wavelength):
     """Function to translates phase in units of radians to units in millimetres.
 
     Args:
-        data (ndarray): Interferogram phase data array
-        wavelength (float): Radar wavelength in metres
+      data(ndarray): Interferogram phase data array
+      wavelength(float): Radar wavelength in metres
 
     Returns:
-        ndarray: data: converted phase data
+      ndarray: data: converted phase data
+
     """
     return data * ifc.MM_PER_METRE * (wavelength / (4 * math.pi))
 
@@ -602,10 +655,11 @@ def nanmedian(x):
     algorithm dependent on numpy version.
 
     Args:
-        x (ndarray): array of numeric data.
+      x(ndarray): array of numeric data.
 
     Returns:
-        float: y: median value
+      float: y: median value
+
     """
     version = [int(i) for i in pkg_resources.get_distribution("numpy").version.split(".")[:2]]
     if version[0] == 1 and version[1] > 9:
@@ -618,7 +672,10 @@ def _is_interferogram(hdr):
     """Convenience function to determine if file is interferogram
 
     Args:
-        hdr:
+      hdr: 
+
+    Returns:
+
     """
     return ifc.PYRATE_WAVELENGTH_METRES in hdr
 
@@ -627,7 +684,10 @@ def _is_incidence(hdr):
     """Convenience function to determine if incidence file
 
     Args:
-        hdr:
+      hdr: 
+
+    Returns:
+
     """
     return "FILE_TYPE" in hdr
 
@@ -637,13 +697,14 @@ def write_fullres_geotiff(header, data_path, dest, nodata):
     etc) in GeoTIFF format with PyRate metadata.
 
     Args:
-        header (dict): Interferogram metadata dictionary
-        data_path (str): Input file
-        dest (str): Output destination file
-        nodata (float): No-data value
+      header(dict): Interferogram metadata dictionary
+      data_path(str): Input file
+      dest(str): Output destination file
+      nodata(float): No-data value
 
     Returns:
-        None, file saved to disk
+      : None, file saved to disk
+
     """
     ifg_proc = header[ifc.PYRATE_INSAR_PROCESSOR]
     ncols = header[ifc.PYRATE_NCOLS]
@@ -701,16 +762,19 @@ def gdal_dataset(out_fname, columns, rows, driver="GTiff", bands=1, dtype="float
     """Initialises a py-GDAL dataset object for writing image data.
 
     Args:
-        out_fname:
-        columns:
-        rows:
-        driver:
-        bands:
-        dtype:
-        metadata:
-        crs:
-        geotransform:
-        creation_opts:
+      out_fname: param columns:
+      rows: param driver:  (Default value = "GTiff")
+      bands: Default value = 1)
+      dtype: Default value = "float32")
+      metadata: Default value = None)
+      crs: Default value = None)
+      geotransform: Default value = None)
+      creation_opts: Default value = None)
+      columns: param driver:  (Default value = "GTiff")
+      driver: (Default value = "GTiff")
+
+    Returns:
+
     """
     if dtype == "float32":
         gdal_dtype = gdal.GDT_Float32
@@ -740,10 +804,11 @@ def collate_metadata(header):
     """Grab metadata relevant to PyRate from input metadata
 
     Args:
-        header (dict): Input file metadata dictionary
+      header(dict): Input file metadata dictionary
 
     Returns:
-        dict of relevant metadata for PyRate
+      : dict of relevant metadata for PyRate
+
     """
     md = dict()
     if _is_interferogram(header):
@@ -772,9 +837,12 @@ def _data_format(ifg_proc, is_ifg, ncols):
     """Convenience function to determine the bytesize and format of input files
 
     Args:
-        ifg_proc:
-        is_ifg:
-        ncols:
+      ifg_proc: param is_ifg:
+      ncols: param is_ifg:
+      is_ifg: 
+
+    Returns:
+
     """
     if ifg_proc == GAMMA:
         fmtstr = "!" + ("f" * ncols)  # data format is big endian float32s
@@ -796,10 +864,13 @@ def _check_raw_data(bytes_per_col, data_path, ncols, nrows):
     """Convenience function to check the file size is as expected
 
     Args:
-        bytes_per_col:
-        data_path:
-        ncols:
-        nrows:
+      bytes_per_col: param data_path:
+      ncols: param nrows:
+      data_path: param nrows:
+      nrows: 
+
+    Returns:
+
     """
     size = ncols * nrows * bytes_per_col
     act_size = os.stat(data_path).st_size
@@ -813,7 +884,10 @@ def _check_pixel_res_mismatch(header):
     dimensions
 
     Args:
-        header:
+      header: 
+
+    Returns:
+
     """
     xs, ys = [abs(i) for i in [header[ifc.PYRATE_X_STEP], header[ifc.PYRATE_Y_STEP]]]
 
@@ -827,12 +901,13 @@ def write_unw_from_data_or_geotiff(geotif_or_data, dest_unw, ifg_proc):
     big-endian float32 .unw file
 
     Args:
-        geotif_or_data (str): path name of geotiff file to convert OR
-        dest_unw (str): destination unw file
-        ifg_proc (int): processor type, GAMMA=1, ROIPAC=0
+      geotif_or_data(str): path name of geotiff file to convert OR
+      dest_unw(str): destination unw file
+      ifg_proc(int): processor type, GAMMA=1, ROIPAC=0
 
     Returns:
-        None, file saved to disk
+      : None, file saved to disk
+
     """
     if ifg_proc != 1:
         raise NotImplementedError("only supports GAMMA format for now")
@@ -856,16 +931,19 @@ def write_unw_from_data_or_geotiff(geotif_or_data, dest_unw, ifg_proc):
 # This function may be able to be deprecated
 def write_output_geotiff(md, gt, wkt, data, dest, nodata):
     """Writes PyRate output data to a GeoTIFF file.
-
+    
     :return None, file saved to disk
 
     Args:
-        md (dict): Dictionary containing PyRate metadata
-        gt (list): GDAL geotransform for the data
-        wkt (list): GDAL projection information for the data
-        data (ndarray): Output data array to save
-        dest (str): Destination file name
-        nodata (float): No data value of data
+      md(dict): Dictionary containing PyRate metadata
+      gt(list): GDAL geotransform for the data
+      wkt(list): GDAL projection information for the data
+      data(ndarray): Output data array to save
+      dest(str): Destination file name
+      nodata(float): No data value of data
+
+    Returns:
+
     """
 
     driver = gdal.GetDriverByName("GTiff")
@@ -890,13 +968,16 @@ def write_output_geotiff(md, gt, wkt, data, dest, nodata):
 
 def write_geotiff(data, outds, nodata):
     """A generic routine for writing a NumPy array to a geotiff.
-
+    
     :return None, file saved to disk
 
     Args:
-        data (ndarray): Output data array to save
-        outds (obj): GDAL destination object
-        nodata (float): No data value of data
+      data(ndarray): Output data array to save
+      outds(obj): GDAL destination object
+      nodata(float): No data value of data
+
+    Returns:
+
     """
     # only support "2 <= dims <= 3"
     if data.ndim == 3:
@@ -931,12 +1012,13 @@ def create_tiles(shape, nrows=2, ncols=2):
     numpy.array_split.
 
     Args:
-        shape (tuple): Shape tuple (2-element) of interferogram.
-        nrows (int): Number of rows of tiles
-        ncols (int): Number of columns of tiles
+      shape: tuple
+      nrows: int (Default value = 2)
+      ncols: int (Default value = 2)
 
     Returns:
-        list: List of Tile class instances.
+      list: List of Tile class instances.
+
     """
 
     if len(shape) != 2:
@@ -956,12 +1038,13 @@ def get_tiles(ifg_path, rows, cols):
     rows and columns.
 
     Args:
-        ifg_path (list): List of destination geotiff file names
-        rows (int): Number of rows to break each interferogram into
-        cols (int): Number of columns to break each interferogram into
+      ifg_path(list): List of destination geotiff file names
+      rows(int): Number of rows to break each interferogram into
+      cols(int): Number of columns to break each interferogram into
 
     Returns:
-        list: tiles: List of shared.Tile instances
+      list: tiles: List of shared.Tile instances
+
     """
     ifg = Ifg(ifg_path)
     ifg.open(readonly=True)
@@ -993,13 +1076,23 @@ class Tile:
 
 def nan_and_mm_convert(ifg, params):
     """Perform millimetre and nan conversion on interferogram data
-
+    
     Args:
         ifg (Ifg instance): Interferogram class instance
-        params (dict): Dictionary of parameters
+    
+    Args:
+      ifg: param params:
+    
+    Args:
+      ifg:
+
+    Args:
+      ifg: 
+      params: 
 
     Returns:
-        None, data modified internally
+      None, data modified internally
+
     """
     nan_conversion = params[cf.NAN_CONVERSION]
     if nan_conversion:  # nan conversion happens here in networkx mst
@@ -1015,13 +1108,14 @@ def cell_size(lat, lon, x_step, y_step):
     depends on PyProj/PROJ4 to implement the function
 
     Args:
-        lat (float): Latitude in degrees
-        lon (float): Longitude in degrees
-        x_step (float): Horizontal step size in degrees
-        y_step (float): Vertical step size in degrees
+      lat(float): Latitude in degrees
+      lon(float): Longitude in degrees
+      x_step(float): Horizontal step size in degrees
+      y_step(float): Vertical step size in degrees
 
     Returns:
-        tuple: tuple of X and Y cell size floats
+      tuple: tuple of X and Y cell size floats
+
     """
     if lat > 84.0 or lat < -80:
         msg = "No UTM zone for polar region: > 84 degrees N or < 80 degrees S. Provided values are lat: " + str(
@@ -1044,7 +1138,10 @@ def _utm_zone(longitude):
     http://www.dmap.co.uk/utmworld.htm
 
     Args:
-        longitude:
+      longitude: 
+
+    Returns:
+
     """
     if longitude == 180:
         return 60.0
@@ -1079,13 +1176,23 @@ class PrereadIfg:
 
 def _prep_ifg(ifg_path, params):
     """Wrapper for reading an interferogram file and creating an Ifg object
-
+    
     Args:
         ifg_path (str): Interferogram file path
-        params (dict): Dictionary of configuration parameters
+    
+    Args:
+      ifg_path: param params:
+    
+    Args:
+      ifg_path:
+
+    Args:
+      ifg_path: 
+      params: 
 
     Returns:
-        xxxx (eg flaot): ifg: Interferogram class instance
+      xxxx (eg flaot): ifg: Interferogram class instance
+
     """
     # Only used in scripts.run_pyrate?
     ifg = Ifg(ifg_path)
@@ -1096,14 +1203,26 @@ def _prep_ifg(ifg_path, params):
 
 def save_numpy_phase(ifg_paths, tiles, params):
     """Save interferogram phase data as numpy array file on disk.
-
+    
     Args:
         ifg_paths (list): List of strings for interferogram paths
         tiles (list): List of shared.Tile instances
-        params (dict): Dictionary of configuration parameters
+    
+    Args:
+      ifg_paths: param tiles:
+    
+    Args:
+      tiles: returns
+      ifg_paths:
+
+    Args:
+      ifg_paths: 
+      tiles: 
+      params: 
 
     Returns:
-        None, file saved to disk
+      None, file saved to disk
+
     """
     process_ifgs = mpiops.array_split(ifg_paths)
     outdir = params[cf.TMPDIR]
@@ -1127,14 +1246,15 @@ def get_geotiff_header_info(ifg_path):
     methods.
 
     Args:
-        ifg_path (str): path to interferogram geotiff file
+      ifg_path: str
 
     Returns:
-        list: md: PyRate metadata
+      list: md: PyRate metadata
+      
+      list: gt: GDAL geotransform for the data
+      
+      list: wkt: GDAL projection information for the data
 
-        list: gt: GDAL geotransform for the data
-
-        list: wkt: GDAL projection information for the data
     """
     ds = gdal.Open(ifg_path)
     md = ds.GetMetadata()  # get metadata for writing on output tifs
@@ -1148,12 +1268,13 @@ def warp_required(xlooks, ylooks, crop):
     """Check if a crop or multi-look operation is required.
 
     Args:
-        xlooks (int): Resampling/multi-looking in x dir
-        ylooks (int): Resampling/multilooking in y dir
-        crop (int): Interferogram crop option
+      xlooks(int): Resampling/multi-looking in x dir
+      ylooks(int): Resampling/multilooking in y dir
+      crop(int): Interferogram crop option
 
     Returns:
-        bool: True if params show rasters need to be cropped and/or resized
+      bool: True if params show rasters need to be cropped and/or resized
+
     """
     if xlooks > 1 or ylooks > 1:
         return True
@@ -1166,11 +1287,12 @@ def output_tiff_filename(inpath, outpath):
     """Output geotiff filename for a given input filename.
 
     Args:
-        inpath (str): path of input file location
-        outpath (str): path of output file location
+      inpath(str): path of input file location
+      outpath(str): path of output file location
 
     Returns:
-        str: Geotiff filename for the given file.
+      str: Geotiff filename for the given file.
+
     """
     fname, ext = os.path.basename(inpath).split(".")
     outpath = os.path.dirname(inpath) if outpath is None else outpath
@@ -1186,14 +1308,23 @@ def check_correction_status(ifgs, meta):  # pragma: no cover
     in a previous run by interrogating PyRate meta data entries
 
     Args:
-        ifgs:
-        meta (str): Meta data flag to check for
+      ifgs: param meta: Meta data flag to check for
+      meta: returns: True if correction has been performed, otherwise False
 
     Returns:
-        bool: True if correction has been performed, otherwise False
+      bool: True if correction has been performed, otherwise False
+
     """
 
     def close_all(ifgs):
+        """
+
+        Args:
+          ifgs: 
+
+        Returns:
+
+        """
         for ifg in ifgs:
             ifg.close()
 

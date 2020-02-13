@@ -35,7 +35,9 @@ from common import small5_mock_ifgs, small5_ifgs, TEST_CONF_ROIPAC, small_data_s
 
 
 class CovarianceTests(unittest.TestCase):
+    """ """
     def setUp(self):
+        """ """
         self.ifgs = small_data_setup()
         for i in self.ifgs:
             i.mm_converted = True
@@ -46,6 +48,7 @@ class CovarianceTests(unittest.TestCase):
         self.r_dist = RDist(self.ifgs[0])()
 
     def test_covariance_basic(self):
+        """ """
         ifgs = small5_ifgs()
         for i in ifgs:
             i.open()
@@ -59,6 +62,7 @@ class CovarianceTests(unittest.TestCase):
             print("maxvar: %s, alpha: %s" % (maxvar, alpha))
 
     def test_covariance_17ifgs(self):
+        """ """
         # After raw data import
         # (no reference pixel correction and units in radians)
         exp_maxvar = [
@@ -123,10 +127,13 @@ class CovarianceTests(unittest.TestCase):
 
 
 class VCMTests(unittest.TestCase):
+    """ """
     def setUp(self):
+        """ """
         self.ifgs = small_data_setup()
 
     def test_vcm_basic(self):
+        """ """
         ifgs = small5_mock_ifgs(5, 9)
         maxvar = [8.486, 12.925, 6.313, 0.788, 0.649]
 
@@ -144,6 +151,7 @@ class VCMTests(unittest.TestCase):
         assert_array_almost_equal(act, exp, decimal=3)
 
     def test_vcm_17ifgs(self):
+        """ """
         # TODO: maxvar should be calculated by vcm.cvd
         maxvar = [2.879, 4.729, 22.891, 4.604, 3.290, 6.923, 2.519, 13.177, 7.548, 6.190, 12.565, 9.822, 18.484, 7.776, 2.734, 6.411, 4.754]
 
@@ -200,8 +208,10 @@ from core.user_experience import break_number_into_factors
 
 
 class LegacyEqualityTest(unittest.TestCase):
+    """ """
     @classmethod
     def setUpClass(cls):
+        """ """
 
         conv2tif_handler(TEST_CONF_ROIPAC)
         prepifg_handler(TEST_CONF_ROIPAC)
@@ -240,6 +250,7 @@ class LegacyEqualityTest(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        """ """
         for i in cls.ifgs:
             i.close()
         shutil.rmtree(cls.temp_out_dir)

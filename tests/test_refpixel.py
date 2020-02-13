@@ -46,6 +46,7 @@ class ReferencePixelInputTests(unittest.TestCase):
     """Verifies error checking capabilities of the reference pixel function"""
 
     def setUp(self):
+        """ """
         self.ifgs = small_data_setup()
         self.params = cf.get_config_params(TEST_CONF_ROIPAC)
         self.params[cf.REFNX] = REFNX
@@ -55,24 +56,29 @@ class ReferencePixelInputTests(unittest.TestCase):
         self.params[cf.PARALLEL] = PARALLEL
 
     def test_missing_chipsize(self):
+        """ """
         self.params[cf.REF_CHIP_SIZE] = None
         self.assertRaises(cf.ConfigException, ref_pixel, self.ifgs, self.params)
 
     def test_chipsize_valid(self):
+        """ """
         for illegal in [0, -1, -15, 1, 2, self.ifgs[0].ncols + 1, 4, 6, 10, 20]:
             self.params[cf.REF_CHIP_SIZE] = illegal
             self.assertRaises(ValueError, ref_pixel, self.ifgs, self.params)
 
     def test_minimum_fraction_missing(self):
+        """ """
         self.params[cf.REF_MIN_FRAC] = None
         self.assertRaises(cf.ConfigException, ref_pixel, self.ifgs, self.params)
 
     def test_minimum_fraction_threshold(self):
+        """ """
         for illegal in [-0.1, 1.1, 1.000001, -0.0000001]:
             self.params[cf.REF_MIN_FRAC] = illegal
             self.assertRaises(ValueError, ref_pixel, self.ifgs, self.params)
 
     def test_search_windows(self):
+        """ """
         # 45 is max # cells a width 3 sliding window can iterate over
         for illegal in [-5, -1, 0, 46, 50, 100]:
             self.params[cf.REFNX] = illegal
@@ -84,6 +90,7 @@ class ReferencePixelInputTests(unittest.TestCase):
             self.assertRaises(ValueError, ref_pixel, self.ifgs, self.params)
 
     def test_missing_search_windows(self):
+        """ """
         self.params[cf.REFNX] = None
         self.assertRaises(cf.ConfigException, ref_pixel, self.ifgs, self.params)
 
@@ -97,6 +104,7 @@ class ReferencePixelTests(unittest.TestCase):
     """Tests reference pixel search"""
 
     def setUp(self):
+        """ """
         self.ifgs = small_data_setup()
         self.params = cf.get_config_params(TEST_CONF_ROIPAC)
         self.params[cf.REFNX] = REFNX
@@ -106,6 +114,7 @@ class ReferencePixelTests(unittest.TestCase):
         self.params[cf.PARALLEL] = PARALLEL
 
     def test_all_below_threshold_exception(self):
+        """ """
         # test failure when no valid stacks in dataset
 
         # rig mock data to be below threshold
@@ -123,6 +132,7 @@ class ReferencePixelTests(unittest.TestCase):
         self.assertRaises(ValueError, ref_pixel, mock_ifgs, self.params)
 
     def test_refnxy_step_1(self):
+        """ """
         # test step of 1 for refnx|y gets the reference pixel for axis centre
         mock_ifgs = [MockIfg(i, 47, 72) for i in self.ifgs]
         for m in mock_ifgs:
@@ -139,6 +149,7 @@ class ReferencePixelTests(unittest.TestCase):
         self.assertEqual(exp_refpx, res)
 
     def test_large_window(self):
+        """ """
         # 5x5 view over a 5x5 ifg with 1 window/ref pix search
         chps = 5
         mockifgs = [MockIfg(i, chps, chps) for i in self.ifgs]
@@ -151,10 +162,20 @@ class ReferencePixelTests(unittest.TestCase):
         self.assertEqual((2, 2), res)
 
     def test_step(self):
+        """ """
         # test different search windows to verify x/y step calculation
 
         # convenience testing function
         def assert_equal(actual, expected):
+            """
+
+            Args:
+              actual: param expected:
+              expected: 
+
+            Returns:
+
+            """
             for a, e in zip(actual, expected):
                 self.assertEqual(a, e)
 
@@ -179,6 +200,7 @@ class ReferencePixelTests(unittest.TestCase):
         assert_equal(act, exp)
 
     def test_ref_pixel(self):
+        """ """
         exp_refpx = (2, 25)
         self.params[cf.REFNX] = 2
         self.params[cf.REFNY] = 2
@@ -201,8 +223,11 @@ def _expected_ref_pixel(ifgs, cs):
     """Helper function for finding reference pixel when refnx/y=2
 
     Args:
-        ifgs:
-        cs:
+      ifgs: param cs:
+      cs: 
+
+    Returns:
+
     """
 
     # calculate expected data
@@ -223,7 +248,9 @@ def _expected_ref_pixel(ifgs, cs):
 
 
 class LegacyEqualityTest(unittest.TestCase):
+    """ """
     def setUp(self):
+        """ """
         self.ifg_paths = small_ifg_file_list()
         self.params = cf.get_config_params(TEST_CONF_ROIPAC)
         self.params[cf.PARALLEL] = False
@@ -241,6 +268,7 @@ class LegacyEqualityTest(unittest.TestCase):
         self.params_all_1s[cf.REF_MIN_FRAC] = 0.7
 
     def tearDown(self):
+        """ """
         shutil.rmtree(self.params[cf.OUT_DIR])
 
     # def test_small_test_data_ref_pixel(self):
@@ -268,7 +296,9 @@ class LegacyEqualityTest(unittest.TestCase):
 
 
 class LegacyEqualityTestMultiprocessParallel(unittest.TestCase):
+    """ """
     def setUp(self):
+        """ """
         self.ifg_paths = small_ifg_file_list()
         self.params = cf.get_config_params(TEST_CONF_ROIPAC)
         self.params[cf.PARALLEL] = True
@@ -287,6 +317,7 @@ class LegacyEqualityTestMultiprocessParallel(unittest.TestCase):
         self.params_all_1s[cf.REF_MIN_FRAC] = 0.7
 
     def tearDown(self):
+        """ """
         shutil.rmtree(self.params[cf.OUT_DIR])
 
     # def test_small_test_data_ref_pixel(self):

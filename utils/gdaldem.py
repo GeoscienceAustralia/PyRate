@@ -43,10 +43,14 @@ from core.shared import DEM
 
 def main(input_file, color_file, output_file):
     """
+
     Args:
-        input_file:
-        color_file:
-        output_file:
+      input_file: param color_file:
+      output_file: 
+      color_file: 
+
+    Returns:
+
     """
     cmd = "gdaldem color-relief " + input_file + " " + color_file + " " + output_file
     subprocess.check_call(cmd, shell=True)
@@ -54,8 +58,12 @@ def main(input_file, color_file, output_file):
 
 def gen_color_file(input_file):
     """
+
     Args:
-        input_file:
+      input_file: 
+
+    Returns:
+
     """
     fp, temp_file = tempfile.mkstemp(suffix=".txt")
 

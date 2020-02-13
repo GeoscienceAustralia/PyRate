@@ -30,9 +30,16 @@ ROIPAC = 0
 
 
 def main(params):
-    """
+    """Args:
+    
     Args:
-        params:
+
+    Args:
+      params: 
+
+    Returns:
+      
+
     """
     # TODO: looks like base_ifg_paths are ordered according to ifg list
     # This probably won't be a problem because input list won't be reordered
@@ -66,12 +73,28 @@ def main(params):
 def _geotiff_multiprocessing(input_file_name, output_file_name, params):
     """Multiprocessing wrapper for full-res geotiff conversion :param
     input_file_name: :type input_file_name: :param output_file_name: :type
-    output_file_name: :param params: :type params:
+    output
+    
+    Args:
+      name: param params: :type params:
+    
+    Args:
+    input_file_name:
+    output_file_name:
+    params:
+      input_file_name: param output_file_name:
+      params:
+      output_file_name:
+    
+    Returns:
 
     Args:
-        input_file_name:
-        output_file_name:
-        params:
+      input_file_name: 
+      output_file_name: 
+      params: 
+
+    Returns:
+
     """
     processor = params[cf.PROCESSOR]  # roipac or gamma
     if not os.path.exists(output_file_name):

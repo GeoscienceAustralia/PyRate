@@ -41,9 +41,17 @@ MASTER_PROCESS = 0
 def main(params):
     """PyRate merge main function. Assembles product tiles in to single geotiff
     files
+    
+    Args:
+    
+    Args:
 
     Args:
-        params:
+      params: 
+
+    Returns:
+      
+
     """
     # setup paths
     rows, cols = params["rows"], params["cols"]
@@ -58,6 +66,14 @@ def main(params):
 
 
 def create_png_from_tif(output_folder_path):
+    """
+
+    Args:
+      output_folder_path: 
+
+    Returns:
+
+    """
     # open raster and choose band to find min, max
     """
     Args:
@@ -144,11 +160,22 @@ def create_png_from_tif(output_folder_path):
 
 def _merge_stack(rows, cols, params):
     """Merge stacking outputs
-
+    
     Args:
         rows:
         cols:
-        params:
+    
+    Args:
+      rows: param cols:
+
+    Args:
+      cols: 
+      rows: 
+      params: 
+
+    Returns:
+      
+
     """
     # setup paths
     xlks, _, crop = cf.transform_params(params)
@@ -182,12 +209,23 @@ def _merge_stack(rows, cols, params):
 
 def _save_stack(ifgs_dict, params, tiles, out_type):
     """Save stacking outputs
-
+    
     Args:
         ifgs_dict:
-        params:
-        tiles:
-        out_type:
+    
+    Args:
+      tiles: param out_type:
+      ifgs_dict: param params:
+
+    Args:
+      out_type: 
+      ifgs_dict: 
+      params: 
+      tiles: 
+
+    Returns:
+      
+
     """
     log.info("Merging PyRate outputs {}".format(out_type))
     gt, md, wkt = ifgs_dict["gt"], ifgs_dict["md"], ifgs_dict["wkt"]
@@ -218,11 +256,22 @@ def _save_stack(ifgs_dict, params, tiles, out_type):
 
 def _merge_timeseries(rows, cols, params):
     """Merge time series output
-
+    
     Args:
         rows:
         cols:
-        params:
+    
+    Args:
+      rows: param cols:
+
+    Args:
+      cols: 
+      rows: 
+      params: 
+
+    Returns:
+      
+
     """
     xlks, _, crop = cf.transform_params(params)
     base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST], params[cf.OBS_DIR])
@@ -297,12 +346,15 @@ def _assemble_tiles(i, n, tile, tsincr_g, output_dir, outtype):
     """A reusable time series tile assembly function
 
     Args:
-        i:
-        n:
-        tile:
-        tsincr_g:
-        output_dir:
-        outtype:
+      i: param n:
+      tile: param tsincr_g:
+      output_dir: param outtype:
+      n: 
+      tsincr_g: 
+      outtype: 
+
+    Returns:
+
     """
     tsincr_file = os.path.join(output_dir, "{}_{}.npy".format(outtype, n))
     tsincr = np.load(file=tsincr_file)

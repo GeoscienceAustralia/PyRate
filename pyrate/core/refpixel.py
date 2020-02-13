@@ -36,18 +36,25 @@ def ref_pixel(ifgs, params):
     """Determines the most appropriate reference pixel coordinate by conducting
     a grid search and calculating the mean standard deviation with patches
     around candidate pixels from the given interferograms.
-
+    
     If the config file REFX or REFY values are empty or negative, the search
     for the reference pixel is performed. If the REFX|Y values are within the
     bounds of the raster, a search is not performed. REFX|Y values outside the
     upper bounds cause an exception.
-
+    
     Args:
         ifgs (list): List of interferogram objects
-        params (dict): Dictionary of configuration parameters
+    
+    Args:
+      ifgs: param params:
+
+    Args:
+      ifgs: 
+      params: 
 
     Returns:
-        tuple: tuple of best REFX and REFY coordinates
+      tuple: tuple of best REFX and REFY coordinates
+
     """
     half_patch_size, thresh, grid = ref_pixel_setup(ifgs, params)
     parallel = params[cf.PARALLEL]
@@ -74,12 +81,13 @@ def find_min_mean(mean_sds, grid):
     """Determine the ref pixel block with minimum mean value
 
     Args:
-        mean_sds (list): List of mean standard deviations from each reference
-            pixel grid
-        grid (list): List of ref pixel coordinates tuples
+      mean_sds(list): List of mean standard deviations from each reference
+    pixel grid
+      grid(list): List of ref pixel coordinates tuples
 
     Returns:
-        tuple: Tuple of (refy, refx) with minimum mean
+      tuple: Tuple of (refy, refx) with minimum mean
+
     """
     log.debug("Ranking ref pixel candidates based on mean values")
     refp_index = np.nanargmin(mean_sds)
@@ -89,17 +97,24 @@ def find_min_mean(mean_sds, grid):
 def ref_pixel_setup(ifgs_or_paths, params):
     """Sets up the grid for reference pixel computation and saves numpy files to
     disk for later use during ref pixel computation.
-
+    
     Args:
         ifgs_or_paths (list): List of interferogram filenames or Ifg objects
-        params (dict): Dictionary of configuration parameters
+    
+    Args:
+      ifgs_or_paths: param params:
+
+    Args:
+      ifgs_or_paths: 
+      params: 
 
     Returns:
-        float: half_patch_size: size of patch
+      float: half_patch_size: size of patch
+      
+      float: thresh
+      
+      list: list(product(ysteps, xsteps))
 
-        float: thresh
-
-        list: list(product(ysteps, xsteps))
     """
     log.debug("Setting up ref pixel computation")
     refnx, refny, chipsize, min_frac = params[cf.REFNX], params[cf.REFNY], params[cf.REF_CHIP_SIZE], params[
@@ -133,15 +148,26 @@ def ref_pixel_setup(ifgs_or_paths, params):
 
 def save_ref_pixel_blocks(grid, half_patch_size, ifg_paths, params):
     """Save reference pixel grid blocks to numpy array files on disk
-
+    
     Args:
         grid (list): List of tuples (y, x) corresponding to ref pixel grids
         half_patch_size (int): patch size in pixels
         ifg_paths (list): list of interferogram paths
-        params (dict): Dictionary of configuration parameters
+    
+    Args:
+      grid: param half_patch_size:
+      ifg_paths: param params:
+      half_patch_size:
+
+    Args:
+      grid: 
+      half_patch_size: 
+      ifg_paths: 
+      params: 
 
     Returns:
-        None, file saved to disk
+      None, file saved to disk
+
     """
     log.debug("Saving ref pixel blocks")
     outdir = params[cf.TMPDIR]
@@ -164,13 +190,27 @@ def save_ref_pixel_blocks(grid, half_patch_size, ifg_paths, params):
 
 def _ref_pixel_mpi(process_grid, half_patch_size, ifgs, thresh, params):
     """Convenience function for MPI-enabled ref pixel calculation
-
+    
     Args:
         process_grid:
         half_patch_size:
         ifgs:
         thresh:
-        params:
+    
+    Args:
+      process_grid: param half_patch_size:
+      ifgs: param thresh:
+
+    Args:
+      half_patch_size: 
+      thresh: 
+      process_grid: 
+      ifgs: 
+      params: 
+
+    Returns:
+      
+
     """
     log.debug("Ref pixel calculation started")
     mean_sds = []
@@ -181,13 +221,27 @@ def _ref_pixel_mpi(process_grid, half_patch_size, ifgs, thresh, params):
 
 def _ref_pixel_multi(g, half_patch_size, phase_data_or_ifg_paths, thresh, params):
     """Convenience function for ref pixel optimisation
-
+    
     Args:
         g:
         half_patch_size:
         phase_data_or_ifg_paths:
         thresh:
-        params:
+    
+    Args:
+      g: param half_patch_size:
+      phase_data_or_ifg_paths: param thresh:
+
+    Args:
+      half_patch_size: 
+      thresh: 
+      g: 
+      phase_data_or_ifg_paths: 
+      params: 
+
+    Returns:
+      
+
     """
     # phase_data_or_ifg is list of ifgs
     y, x, = g
@@ -216,13 +270,14 @@ def _step(dim, ref, radius):
     """Helper: returns range object of axis indices for a search window.
 
     Args:
-        dim (int): Total length of the grid dimension
-        ref (int): The desired number of steps
-        radius (float): The number of cells from the centre of the chip eg.
-            (chipsize / 2)
+      dim(int): Total length of the grid dimension
+      ref(int): The desired number of steps
+      radius(float): The number of cells from the centre of the chip eg.
+    (chipsize / 2)
 
     Returns:
-        range: range object of axis indices
+      range: range object of axis indices
+
     """
 
     # if ref == 1:
@@ -241,8 +296,11 @@ def _validate_chipsize(chipsize, head):
     """Sanity check min chipsize
 
     Args:
-        chipsize:
-        head:
+      chipsize: param head:
+      head: 
+
+    Returns:
+
     """
     if chipsize is None:
         raise cf.ConfigException("Chipsize is None")
@@ -257,7 +315,10 @@ def _validate_minimum_fraction(min_frac):
     """Sanity check min fraction
 
     Args:
-        min_frac:
+      min_frac: 
+
+    Returns:
+
     """
     if min_frac is None:
         raise cf.ConfigException("Minimum fraction is None")
@@ -270,10 +331,13 @@ def _validate_search_win(refnx, refny, chipsize, head):
     """Sanity check X|Y steps
 
     Args:
-        refnx:
-        refny:
-        chipsize:
-        head:
+      refnx: param refny:
+      chipsize: param head:
+      refny: 
+      head: 
+
+    Returns:
+
     """
     if refnx is None:
         raise cf.ConfigException("refnx is None")

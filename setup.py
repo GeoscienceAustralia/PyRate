@@ -24,16 +24,20 @@ __version__ = "0.4.0"
 
 
 class PyTest(TestCommand, object):
+    """ """
     def initialize_options(self):
+        """ """
         super(PyTest, self).initialize_options()
         self.pytest_args = []
 
     def finalize_options(self):
+        """ """
         super(PyTest, self).finalize_options()
         self.test_suite = True
         self.test_args = []
 
     def run_tests(self):
+        """ """
         # import here, cause outside the eggs aren't loaded
         import pytest
 

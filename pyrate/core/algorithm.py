@@ -28,10 +28,11 @@ def is_square(arr):
     """Determines whether an array is square or not.
 
     Args:
-        arr (ndarray): numpy array
+      arr(ndarray): numpy array
 
     Returns:
-        bool: condition
+      bool: condition
+
     """
 
     shape = arr.shape
@@ -163,11 +164,12 @@ def ifg_date_index_lookup(ifgs, date_pair):
     given in 'date_pair'.
 
     Args:
-        ifgs (list): List of interferogram objects to search
-        date_pair (tuple): A (datetime.date, datetime.date)
+      ifgs(list): List of interferogram objects to search
+      date_pair(tuple): A (datetime.date, datetime.date)
 
     Returns:
-        int: interferogram index
+      int: interferogram index
+
     """
 
     if len(date_pair) != 2:
@@ -192,10 +194,11 @@ def get_epochs(ifgs):
     """Returns an EpochList derived from the given interferograms.
 
     Args:
-        ifgs (list): List of interferogram objects
+      ifgs(list): List of interferogram objects
 
     Returns:
-        list: EpochList
+      list: EpochList
+
     """
 
     if isinstance(ifgs, dict):
@@ -213,10 +216,11 @@ def get_all_epochs(ifgs):
     """Returns a sequence of all master and slave dates in given interferograms.
 
     Args:
-        ifgs (list): List of interferogram objects
+      ifgs(list): List of interferogram objects
 
     Returns:
-        list: master and slave dates
+      list: master and slave dates
+
     """
 
     return [ifg.master for ifg in ifgs] + [ifg.slave for ifg in ifgs]
@@ -227,10 +231,11 @@ def master_slave_ids(dates):
     are ordered from oldest to newest, starting at 0.
 
     Args:
-        dates (list): List of dates
+      dates(list): List of dates
 
     Returns:
-        dict: unique dates IDs
+      dict: unique dates IDs
+
     """
 
     dset = sorted(set(dates))

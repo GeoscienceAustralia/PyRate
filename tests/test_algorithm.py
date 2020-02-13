@@ -65,14 +65,17 @@ class AlgorithmTests(TestCase):
     """Misc unittests for functions in the algorithm module."""
 
     def test_is_square(self):
+        """ """
         self.assertTrue(is_square(np.empty((2, 2))))
 
     def test_is_not_square(self):
+        """ """
         for shape in [(3, 2), (2, 3)]:
             self.assertFalse(is_square(np.empty(shape)))
 
     @staticmethod
     def test_phase_conversion():
+        """ """
         # ROIPAC interferograms in units of radians, verify conversion to mm
         xs, ys = 5, 7
         data = (np.arange(xs * ys) - 1.7) * 0.1  # fake a range of values
@@ -153,7 +156,16 @@ class EpochsTests(TestCase):
     """Unittests for the EpochList class."""
 
     def test_get_epochs(self):
+        """ """
         def str2date(s):
+            """
+
+            Args:
+              s: 
+
+            Returns:
+
+            """
             segs = s[:4], s[4:6], s[6:]  # year, month, day
             return date(*[int(sg) for sg in segs])
 
@@ -189,6 +201,7 @@ class EpochsTests(TestCase):
         assert_array_almost_equal(exp_spans, epochs.spans, decimal=4)
 
     def test_get_all_epochs(self):
+        """ """
         # test function to extract all dates from sequence of ifgs
         ifgs = common.small5_mock_ifgs()
         for i in ifgs:
@@ -198,9 +211,11 @@ class EpochsTests(TestCase):
         self.assertEqual(dates, sorted(set(get_all_epochs(ifgs))))
 
     def test_get_epoch_count(self):
+        """ """
         self.assertEqual(6, len(set(get_all_epochs(common.small5_mock_ifgs()))))
 
     def test_master_slave_ids(self):
+        """ """
         d0 = date(2006, 6, 19)
         d1 = date(2006, 8, 28)
         d2 = date(2006, 10, 2)

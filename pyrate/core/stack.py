@@ -32,23 +32,33 @@ from core.shared import joblib_log_level
 def stack_rate(ifgs, params, vcmt, mst=None):
     """Pixel-by-pixel linear rate (velocity) estimation using iterative weighted
     least-squares stacking method.
-
+    
     Args:
         ifgs (Ifg.object): Sequence of interferogram objects from which to
             extract observations
-        params (dict): Configuration parameters
-        vcmt (ndarray): Derived positive definite temporal variance covariance
-            matrix
-        mst (ndarray): Pixel-wise matrix describing the minimum spanning tree
-            network
+    
+    Args:
+      vcmt: ndarray
+      matrix: param mst: ndarray (Default value = None)
+      network: param ifgs:
+
+    Args:
+      ndarray: error
+      ndarray: samples
+      pixel: 
+      ifgs: 
+      mst: Default value
+      params: 
+      vcmt: 
 
     Returns:
-        ndarray: rate: Linear rate (velocity) map
+      ndarray: rate: Linear rate (velocity) map
+      
+      ndarray: error: Standard deviation of the rate map
+      
+      ndarray: samples: Number of observations used in rate calculation per
+      pixel
 
-        ndarray: error: Standard deviation of the rate map
-
-        ndarray: samples: Number of observations used in rate calculation per
-        pixel
     """
     maxsig, nsig, pthresh, cols, error, mst, obs, parallel, _, rate, rows, samples, span = _stack_setup(ifgs, mst,
                                                                                                         params)
@@ -92,11 +102,22 @@ def stack_rate(ifgs, params, vcmt, mst=None):
 
 def _stack_setup(ifgs, mst, params):
     """Convenience function for stack rate setup
-
+    
     Args:
         ifgs:
         mst:
-        params:
+    
+    Args:
+      ifgs: param mst:
+
+    Args:
+      mst: 
+      ifgs: 
+      params: 
+
+    Returns:
+      
+
     """
     # MULTIPROCESSING parameters
     parallel = params[cf.PARALLEL]
@@ -129,14 +150,17 @@ def _stack_rate_by_rows(row, cols, mst, nsig, obs, pthresh, span, vcmt):
     """helper function for parallel 'row' stack rate computation runs
 
     Args:
-        row:
-        cols:
-        mst:
-        nsig:
-        obs:
-        pthresh:
-        span:
-        vcmt:
+      row: param cols:
+      mst: param nsig:
+      obs: param pthresh:
+      span: param vcmt:
+      cols: 
+      nsig: 
+      pthresh: 
+      vcmt: 
+
+    Returns:
+
     """
 
     res = np.empty(shape=(cols, 3), dtype=np.float32)
@@ -150,14 +174,17 @@ def _stack_rate_by_pixel(row, col, mst, nsig, obs, pthresh, span, vcmt):
     """helper function for computing stack rate for one pixel
 
     Args:
-        row:
-        col:
-        mst:
-        nsig:
-        obs:
-        pthresh:
-        span:
-        vcmt:
+      row: param col:
+      mst: param nsig:
+      obs: param pthresh:
+      span: param vcmt:
+      col: 
+      nsig: 
+      pthresh: 
+      vcmt: 
+
+    Returns:
+
     """
 
     # find the indices of independent ifgs for given pixel from MST

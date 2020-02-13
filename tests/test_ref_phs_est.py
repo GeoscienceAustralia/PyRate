@@ -79,6 +79,7 @@ class RefPhsTests(unittest.TestCase):
     """Basic reference phase estimation tests"""
 
     def setUp(self):
+        """ """
         self.tmp_dir = tempfile.mkdtemp()
         self.params = dict()
         self.params[cf.REF_EST_METHOD] = 1
@@ -94,6 +95,7 @@ class RefPhsTests(unittest.TestCase):
             ifg.close()
 
     def tearDown(self):
+        """ """
         try:
             shutil.rmtree(self.tmp_dir)
         except PermissionError:
@@ -103,9 +105,11 @@ class RefPhsTests(unittest.TestCase):
             ifg.close()
 
     def test_need_at_least_two_ifgs(self):
+        """ """
         self.assertRaises(ReferencePhaseError, process._ref_phase_estimation, self.ifgs[:1], self.params, self.refpx, self.refpy)
 
     def test_metadata(self):
+        """ """
         process._ref_phase_estimation(self.ifgs, self.params, self.refpx, self.refpy)
         for ifg in self.ifgs:
             ifg.open()

@@ -35,7 +35,10 @@ def conv2tif_handler(config_file):
     """Convert interferograms to geotiff.
 
     Args:
-        config_file:
+      config_file: 
+
+    Returns:
+
     """
     config_file = os.path.abspath(config_file)
     config = Configuration(config_file)
@@ -46,7 +49,10 @@ def prepifg_handler(config_file):
     """Perform multilooking and cropping on geotiffs.
 
     Args:
-        config_file:
+      config_file: 
+
+    Returns:
+
     """
     config_file = os.path.abspath(config_file)
     config = Configuration(config_file)
@@ -57,7 +63,10 @@ def process_handler(config_file):
     """Time series and linear rate computation.
 
     Args:
-        config_file:
+      config_file: 
+
+    Returns:
+
     """
     config_file = os.path.abspath(config_file)
     config = Configuration(config_file)
@@ -68,7 +77,10 @@ def merge_handler(config_file):
     """Reassemble computed tiles and save as geotiffs.
 
     Args:
-        config_file:
+      config_file: 
+
+    Returns:
+
     """
     config_file = os.path.abspath(config_file)
     config = Configuration(config_file)
@@ -77,6 +89,7 @@ def merge_handler(config_file):
 
 
 def main():
+    """ """
     start_time = time.time()
     log.debug("Starting PyRate")
 
