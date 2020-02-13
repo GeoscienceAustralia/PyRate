@@ -224,7 +224,10 @@ class Configuration:
 
         # bespoke parameter validation
         if self.refchipsize % 2 != 1:
-            raise ValueError("Configuration parameters refchipsize must be odd: " + str(self.refchipsize))
+            if self.refchipsize - 1 > 1:
+                # Configuration parameters refchipsize must be odd
+                # values too large (>101) will slow down the process without significant gains in results.
+                self.refchipsize = self.refchipsize - 1
 
         self.rows, self.cols = [int(no) for no in break_number_into_factors(NO_OF_PARALLEL_PROCESSES)]
 
