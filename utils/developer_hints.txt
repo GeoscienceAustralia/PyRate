@@ -106,3 +106,10 @@ black -t py37 -v -l 150 .
 # convert docs to google style
 pip install pyment
 pyment  -o google -w .
+
+# to get pixel coodinates from lat long
+gdallocationinfo -geoloc 20060619-20061002_utm_unw.tif 150.94211 -34.21916
+# Report:
+#   Location: (38P,58L)
+#   Band 1:
+#     Value: -3.46089482307434
