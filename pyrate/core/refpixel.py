@@ -31,6 +31,31 @@ from core.shared import Ifg
 from core.shared import joblib_log_level
 
 
+
+def convert_geographic_coordinate_to_pixel_value(refx, refy, transform):
+    """
+    Converts a lat/long coordinate to a pixel coordinate given the
+    geotransform of the image.
+    Args:
+        refpx: The longitude of the coordinate.
+        refpx: The latitude of the coordinate.
+        transform: The geotransform array of the image.
+    Returns:
+        Tuple of refpx, refpy in pixel values.
+    """
+    # transform = ifg.dataset.GetGeoTransform()
+
+    xOrigin = transform[0]
+    yOrigin = transform[3]
+    pixelWidth = transform[1]
+    pixelHeight = -transform[5]
+
+    refx = int((refx - xOrigin) / pixelWidth)
+    refy = int((yOrigin - refy) / pixelHeight)
+
+    return int(refx), int(refy)
+
+
 # TODO: move error checking to config step (for fail fast)
 def ref_pixel(ifgs, params):
     """Determines the most appropriate reference pixel coordinate by conducting
