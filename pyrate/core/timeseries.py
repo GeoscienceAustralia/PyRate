@@ -19,15 +19,16 @@ inversion in PyRate.
 """
 import itertools
 
+import numpy as np
+from joblib import Parallel, delayed
 from numpy import where, isnan, nan, diff, zeros, float32, cumsum, dot, delete, asarray
 from numpy.linalg import matrix_rank, pinv, cholesky
-import numpy as np
 from scipy.linalg import qr
-from joblib import Parallel, delayed
-from core.shared import joblib_log_level
-from core.algorithm import master_slave_ids, get_epochs
+
 from core import config as cf, mst as mst_module
+from core.algorithm import master_slave_ids, get_epochs
 from core.config import ConfigException
+from core.shared import joblib_log_level
 
 
 def _time_series_setup(ifgs, mst, params):
@@ -67,7 +68,7 @@ def _time_series_setup(ifgs, mst, params):
     islave = max(imaster, islave)
     b0_mat = zeros((nifgs, nvelpar))
     for i in range(nifgs):
-        b0_mat[i, imaster[i] : islave[i]] = span[imaster[i] : islave[i]]
+        b0_mat[i, imaster[i]: islave[i]] = span[imaster[i]: islave[i]]
 
     # change the sign if slave is earlier than master
     isign = where(imaster > islave)
@@ -102,7 +103,8 @@ def _validate_params(params, tsmethod):
     else:
         pthresh = params[cf.TIME_SERIES_PTHRESH]
         if pthresh < 0.0 or pthresh > 1000:
-            raise ValueError("minimum number of coherent observations for a pixel" " TIME_SERIES_PTHRESH setting must be >= 0.0 and <= 1000")
+            raise ValueError(
+                "minimum number of coherent observations for a pixel" " TIME_SERIES_PTHRESH setting must be >= 0.0 and <= 1000")
     return pthresh, smfactor, smorder
 
 
@@ -140,7 +142,8 @@ def time_series(ifgs, params, vcmt=None, mst=None):
 
     if parallel == 1:
         tsvel_matrix = Parallel(n_jobs=params[cf.PROCESSES], verbose=joblib_log_level(cf.LOG_LEVEL))(
-            delayed(_time_series_by_rows)(r, b0_mat, sm_factor, sm_order, ifg_data, mst, ncols, nvelpar, p_thresh, vcmt, ts_method, interp)
+            delayed(_time_series_by_rows)(r, b0_mat, sm_factor, sm_order, ifg_data, mst, ncols, nvelpar, p_thresh, vcmt,
+                                          ts_method, interp)
             for r in range(nrows)
         )
 
@@ -148,7 +151,8 @@ def time_series(ifgs, params, vcmt=None, mst=None):
 
         res = np.array(
             Parallel(n_jobs=params[cf.PROCESSES], verbose=joblib_log_level(cf.LOG_LEVEL))(
-                delayed(_time_series_by_pixel)(i, j, b0_mat, sm_factor, sm_order, ifg_data, mst, nvelpar, p_thresh, interp, vcmt, ts_method)
+                delayed(_time_series_by_pixel)(i, j, b0_mat, sm_factor, sm_order, ifg_data, mst, nvelpar, p_thresh,
+                                               interp, vcmt, ts_method)
                 for (i, j) in itertools.product(range(nrows), range(ncols))
             )
         )
@@ -171,7 +175,8 @@ def time_series(ifgs, params, vcmt=None, mst=None):
     return tsincr, tscum, tsvel_matrix
 
 
-def _time_series_by_rows(row, b0_mat, sm_factor, sm_order, ifg_data, mst, ncols, nvelpar, p_thresh, vcmt, ts_method, interp):
+def _time_series_by_rows(row, b0_mat, sm_factor, sm_order, ifg_data, mst, ncols, nvelpar, p_thresh, vcmt, ts_method,
+                         interp):
     """Wrapper function for splitting time series computation by rows.
 
     Args:
@@ -190,7 +195,8 @@ def _time_series_by_rows(row, b0_mat, sm_factor, sm_order, ifg_data, mst, ncols,
     """
     tsvel = np.empty(shape=(ncols, nvelpar), dtype=float32)
     for col in range(ncols):
-        tsvel[col, :] = _time_series_by_pixel(row, col, b0_mat, sm_factor, sm_order, ifg_data, mst, nvelpar, p_thresh, interp, vcmt, ts_method)
+        tsvel[col, :] = _time_series_by_pixel(row, col, b0_mat, sm_factor, sm_order, ifg_data, mst, nvelpar, p_thresh,
+                                              interp, vcmt, ts_method)
 
     return tsvel
 
@@ -205,7 +211,7 @@ def _remove_rank_def_rows(b_mat, nvelpar, ifgv, sel):
         sel:
     """
     _, _, e_var = qr(b_mat, mode="economic", pivoting=True)
-    licols = e_var[matrix_rank(b_mat) : nvelpar]
+    licols = e_var[matrix_rank(b_mat): nvelpar]
     [rmrow, _] = where(b_mat[:, licols] != 0)
     b_mat = delete(b_mat, rmrow, axis=0)
     ifgv = delete(ifgv, rmrow)
@@ -213,7 +219,8 @@ def _remove_rank_def_rows(b_mat, nvelpar, ifgv, sel):
     return b_mat, ifgv, sel, rmrow
 
 
-def _time_series_by_pixel(row, col, b0_mat, sm_factor, sm_order, ifg_data, mst, nvelpar, p_thresh, interp, vcmt, method):
+def _time_series_by_pixel(row, col, b0_mat, sm_factor, sm_order, ifg_data, mst, nvelpar, p_thresh, interp, vcmt,
+                          method):
     """Wrapper function for splitting time series computation by pixels.
 
     Args:
@@ -303,9 +310,9 @@ def _solve_ts_lap(nvelpar, velflag, ifgv, mat_b, smorder, smfactor, sel, vcmt):
 
     for i in range(nlap):
         if smorder == 1:
-            b_lap0[i, i : i + 2] = [-1, 1]
+            b_lap0[i, i: i + 2] = [-1, 1]
         else:
-            b_lap0[i, i : i + 3] = [1, -2, 1]
+            b_lap0[i, i: i + 3] = [1, -2, 1]
 
     # Scale the coefficients by Laplacian smoothing factor
     b_lap0 *= smfactor
@@ -322,7 +329,7 @@ def _solve_ts_lap(nvelpar, velflag, ifgv, mat_b, smorder, smfactor, sel, vcmt):
 
     b_lap = np.empty(shape=(nlap + 2, nvelleft))
     b_lap[0, :] = b_lap1
-    b_lap[1 : nlap + 1, :] = b_lap0[0:nlap, 0:nvelleft]
+    b_lap[1: nlap + 1, :] = b_lap0[0:nlap, 0:nvelleft]
     b_lap[-1, :] = b_lapn
 
     nlap += 2

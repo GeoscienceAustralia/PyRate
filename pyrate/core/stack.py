@@ -20,10 +20,11 @@ stacking method.
 """
 import itertools
 
-from scipy.linalg import solve, cholesky, qr, inv
-from numpy import nan, isnan, sqrt, diag, delete, array, float32
 import numpy as np
 from joblib import Parallel, delayed
+from numpy import nan, isnan, sqrt, diag, delete, array, float32
+from scipy.linalg import solve, cholesky, qr, inv
+
 from core import config as cf
 from core.shared import joblib_log_level
 
@@ -49,7 +50,8 @@ def stack_rate(ifgs, params, vcmt, mst=None):
         ndarray: samples: Number of observations used in rate calculation per
         pixel
     """
-    maxsig, nsig, pthresh, cols, error, mst, obs, parallel, _, rate, rows, samples, span = _stack_setup(ifgs, mst, params)
+    maxsig, nsig, pthresh, cols, error, mst, obs, parallel, _, rate, rows, samples, span = _stack_setup(ifgs, mst,
+                                                                                                        params)
 
     # pixel-by-pixel calculation.
     # nested loops to loop over the 2 image dimensions
@@ -64,7 +66,8 @@ def stack_rate(ifgs, params, vcmt, mst=None):
         samples = res[:, :, 2]
     elif parallel == 2:
         res = Parallel(n_jobs=params[cf.PROCESSES], verbose=joblib_log_level(cf.LOG_LEVEL))(
-            delayed(_stack_rate_by_pixel)(r, c, mst, nsig, obs, pthresh, span, vcmt) for r, c in itertools.product(range(rows), range(cols))
+            delayed(_stack_rate_by_pixel)(r, c, mst, nsig, obs, pthresh, span, vcmt) for r, c in
+            itertools.product(range(rows), range(cols))
         )
         res = np.array(res)
 

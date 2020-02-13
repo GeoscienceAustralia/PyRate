@@ -17,17 +17,14 @@
 """
 This Python module implements a reference phase estimation algorithm.
 """
-import logging
-import os
 
-from joblib import Parallel, delayed
 import numpy as np
+from joblib import Parallel, delayed
 
 from core import ifgconstants as ifc, config as cf
-from core.shared import joblib_log_level, nanmedian, Ifg
 from core import mpiops
-
 from core.logger import pyratelogger as log
+from core.shared import joblib_log_level, nanmedian, Ifg
 
 MASTER_PROCESS = 0
 
@@ -96,7 +93,8 @@ def _est_ref_phs_method2(phase_data, half_chip_size, refpx, refpy, thresh):
         refpy:
         thresh:
     """
-    patch = phase_data[refpy - half_chip_size : refpy + half_chip_size + 1, refpx - half_chip_size : refpx + half_chip_size + 1]
+    patch = phase_data[refpy - half_chip_size: refpy + half_chip_size + 1,
+            refpx - half_chip_size: refpx + half_chip_size + 1]
     patch = np.reshape(patch, newshape=(-1, 1), order="F")
     nanfrac = np.sum(~np.isnan(patch))
     #    if nanfrac < thresh:

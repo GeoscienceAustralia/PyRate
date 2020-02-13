@@ -19,18 +19,18 @@ This Python module contains utilities and classes shared by
 all other PyRate modules
 """
 import errno
-import logging
 import math
-from math import floor
 import os
-from os.path import basename, dirname, join
 import struct
 from datetime import date
 from itertools import product
+from math import floor
+from os.path import basename, join
+
 import numpy as np
-from numpy import where, nan, isnan, sum as nsum, isclose
-import pyproj
 import pkg_resources
+import pyproj
+from numpy import where, nan, isnan, sum as nsum, isclose
 
 from core import ifgconstants as ifc, mpiops, config as cf
 
@@ -39,9 +39,6 @@ from core.logger import pyratelogger as log
 
 from osgeo import gdal
 from osgeo import osr
-from osgeo import ogr
-from osgeo import gdalconst
-from osgeo import gdal_array
 from gdalconst import GA_Update, GA_ReadOnly
 
 gdal.UseExceptions()
@@ -471,7 +468,7 @@ class IfgPart(object):
         if not ifg.is_open:
             ifg.open(readonly=True)
         ifg.nodata_value = 0
-        self.phase_data = ifg.phase_data[self.r_start : self.r_end, self.c_start : self.c_end]
+        self.phase_data = ifg.phase_data[self.r_start: self.r_end, self.c_start: self.c_end]
         self.nan_fraction = ifg.nan_fraction
         self.master = ifg.master
         self.slave = ifg.slave
@@ -676,7 +673,8 @@ def write_fullres_geotiff(header, data_path, dest, nodata):
 
     # create GDAL object
     ds = gdal_dataset(
-        dest, ncols, nrows, driver="GTiff", bands=1, dtype=dtype, metadata=md, crs=wkt, geotransform=gt, creation_opts=["compress=packbits"]
+        dest, ncols, nrows, driver="GTiff", bands=1, dtype=dtype, metadata=md, crs=wkt, geotransform=gt,
+        creation_opts=["compress=packbits"]
     )
 
     # copy data from the binary file
@@ -698,7 +696,8 @@ def write_fullres_geotiff(header, data_path, dest, nodata):
     del ds
 
 
-def gdal_dataset(out_fname, columns, rows, driver="GTiff", bands=1, dtype="float32", metadata=None, crs=None, geotransform=None, creation_opts=None):
+def gdal_dataset(out_fname, columns, rows, driver="GTiff", bands=1, dtype="float32", metadata=None, crs=None,
+                 geotransform=None, creation_opts=None):
     """Initialises a py-GDAL dataset object for writing image data.
 
     Args:
@@ -1025,7 +1024,8 @@ def cell_size(lat, lon, x_step, y_step):
         tuple: tuple of X and Y cell size floats
     """
     if lat > 84.0 or lat < -80:
-        msg = "No UTM zone for polar region: > 84 degrees N or < 80 degrees S. Provided values are lat: " + str(lat) + " long: " + str(lon)
+        msg = "No UTM zone for polar region: > 84 degrees N or < 80 degrees S. Provided values are lat: " + str(
+            lat) + " long: " + str(lon)
         raise ValueError(msg)
 
     zone = _utm_zone(lon)
@@ -1115,7 +1115,7 @@ def save_numpy_phase(ifg_paths, tiles, params):
         phase_data = ifg.phase_data
         bname = basename(ifg_path).split(".")[0]
         for t in tiles:
-            p_data = phase_data[t.top_left_y : t.bottom_right_y, t.top_left_x : t.bottom_right_x]
+            p_data = phase_data[t.top_left_y: t.bottom_right_y, t.top_left_x: t.bottom_right_x]
             phase_file = "phase_data_{}_{}.npy".format(bname, t.index)
             np.save(file=join(outdir, phase_file), arr=p_data)
         ifg.close()

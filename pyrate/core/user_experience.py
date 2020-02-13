@@ -17,7 +17,6 @@ import pathlib
 
 
 def delete_tsincr_files(params):
-
     """
     Args:
         params:
@@ -59,6 +58,7 @@ def break_number_into_factors(n, memo={}, left=2):
         return bestTuple
 
     return bestTuple
+
 
 def add_ref_pixel_location_to_interferogram_metadata():
     None

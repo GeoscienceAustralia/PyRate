@@ -16,21 +16,19 @@
 """
 This Python module implements residual orbital corrections for interferograms.
 """
-import logging
 from collections import OrderedDict
-from numpy import empty, isnan, reshape, float32, squeeze
-from numpy import dot, vstack, zeros, meshgrid
-import numpy as np
-from numpy.linalg import pinv
 
+import numpy as np
+from numpy import dot, vstack, zeros, meshgrid
+from numpy import empty, isnan, reshape, float32, squeeze
+from numpy.linalg import pinv
 # from joblib import Parallel, delayed
 from scipy.linalg import lstsq
 
-from core.algorithm import master_slave_ids, get_all_epochs
 from core import shared, ifgconstants as ifc, config as cf, prepifg_helper, mst
-from core.shared import nanmedian, Ifg
-
+from core.algorithm import master_slave_ids, get_all_epochs
 from core.logger import pyratelogger as log
+from core.shared import nanmedian, Ifg
 
 # Orbital correction tasks
 #
@@ -129,12 +127,14 @@ def _orbital_correction(ifgs_or_ifg_paths, params, mlooked=None, offset=True, pr
         raise OrbitalError(msg)
 
     log.info(
-        "Removing orbital error using {} correction method" " and degree={}".format(cf.ORB_METHOD_NAMES.get(method), cf.ORB_DEGREE_NAMES.get(degree))
+        "Removing orbital error using {} correction method" " and degree={}".format(cf.ORB_METHOD_NAMES.get(method),
+                                                                                    cf.ORB_DEGREE_NAMES.get(degree))
     )
 
     if method == NETWORK_METHOD:
         if mlooked is None:
-            network_orbital_correction(ifgs_or_ifg_paths, degree, offset, params, m_ifgs=mlooked, preread_ifgs=preread_ifgs)
+            network_orbital_correction(ifgs_or_ifg_paths, degree, offset, params, m_ifgs=mlooked,
+                                       preread_ifgs=preread_ifgs)
         else:
             _validate_mlooked(mlooked, ifgs_or_ifg_paths)
             network_orbital_correction(ifgs_or_ifg_paths, degree, offset, params, mlooked, preread_ifgs)
@@ -274,7 +274,7 @@ def network_orbital_correction(ifgs, degree, offset, params, m_ifgs=None, prerea
         ids = master_slave_ids(get_all_epochs(temp_ifgs))
     else:
         ids = master_slave_ids(get_all_epochs(ifgs))
-    coefs = [orbparams[i : i + ncoef] for i in range(0, len(set(ids)) * ncoef, ncoef)]
+    coefs = [orbparams[i: i + ncoef] for i in range(0, len(set(ids)) * ncoef, ncoef)]
 
     # create full res DM to expand determined coefficients into full res
     # orbital correction (eg. expand coarser model to full size)
@@ -431,12 +431,12 @@ def get_network_design_matrix(ifgs, degree, offset):
         rs = i * ifg.num_cells  # starting row
         m = ids[ifg.master] * ncoef  # start col for master
         s = ids[ifg.slave] * ncoef  # start col for slave
-        netdm[rs : rs + ifg.num_cells, m : m + ncoef] = -tmpdm
-        netdm[rs : rs + ifg.num_cells, s : s + ncoef] = tmpdm
+        netdm[rs: rs + ifg.num_cells, m: m + ncoef] = -tmpdm
+        netdm[rs: rs + ifg.num_cells, s: s + ncoef] = tmpdm
 
         # offsets are diagonal cols across the extra array block created above
         if offset:
-            netdm[rs : rs + ifg.num_cells, offset_col + i] = 1  # init offset cols
+            netdm[rs: rs + ifg.num_cells, offset_col + i] = 1  # init offset cols
 
     return netdm
 

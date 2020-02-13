@@ -18,17 +18,17 @@
 This Python module implements the minimum spanning tree
 functionality for selecting interferometric observations.
 """
-import logging
 from itertools import product
-from numpy import array, nan, isnan, float32, empty, sum as nsum
-import numpy as np
-from networkx.classes.reportviews import EdgeView
-import networkx as nx
-from joblib import Parallel, delayed
 
+import networkx as nx
+import numpy as np
+from joblib import Parallel, delayed
+from networkx.classes.reportviews import EdgeView
+from numpy import array, nan, isnan, float32, empty, sum as nsum
+
+from core import config as cf
 # from core.algorithm import ifg_date_lookup
 from core.algorithm import ifg_date_index_lookup
-from core import config as cf
 from core.shared import IfgPart, create_tiles
 from core.shared import joblib_log_level
 
@@ -98,11 +98,12 @@ def mst_parallel(ifgs, params):
             delayed(mst_multiprocessing)(t, ifg_paths, params) for t in tiles
         )
         for k, tile in enumerate(tiles):
-            result[:, tile.top_left_y : tile.bottom_right_y, tile.top_left_x : tile.bottom_right_x] = t_msts[k]
+            result[:, tile.top_left_y: tile.bottom_right_y, tile.top_left_x: tile.bottom_right_x] = t_msts[k]
     else:
         log.info("Calculating MST using {} tiles in serial".format(no_tiles))
         for k, tile in enumerate(tiles):
-            result[:, tile.top_left_y : tile.bottom_right_y, tile.top_left_x : tile.bottom_right_x] = mst_multiprocessing(tile, ifg_paths, params)
+            result[:, tile.top_left_y: tile.bottom_right_y, tile.top_left_x: tile.bottom_right_x] = mst_multiprocessing(
+                tile, ifg_paths, params)
 
     return result
 

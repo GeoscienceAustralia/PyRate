@@ -17,8 +17,9 @@
 This Python module contains MPI convenience functions for PyRate
 """
 import pickle
-from mpi4py import MPI
+
 import numpy as np
+from mpi4py import MPI
 
 # We're having trouble with the MPI pickling and 64bit integers
 MPI.pickle.__init__(pickle.dumps, pickle.loads)
@@ -69,7 +70,6 @@ def array_split(arr, process=None):
 
 
 def chunks(jobs, size):
-
     """
     Args:
         jobs:
@@ -79,7 +79,7 @@ def chunks(jobs, size):
     # handle edge case: n <<< size
     if n == 0:
         n = 1
-    jobs = [jobs[i * n : (i + 1) * n] for i in range((len(jobs) + n - 1) // n)]
+    jobs = [jobs[i * n: (i + 1) * n] for i in range((len(jobs) + n - 1) // n)]
 
     for i in range(size - len(jobs)):
         jobs.append([])

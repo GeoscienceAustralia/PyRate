@@ -16,18 +16,14 @@
 """
 This Python module contains bindings for the GDAL library
 """
-import logging
 
-from osgeo import gdal
-from osgeo import osr
-from osgeo import ogr
-from osgeo import gdalconst
-from osgeo import gdal_array
-
-from PIL import Image, ImageDraw
-import numpy as np
 import numexpr as ne
-from core.logger import pyratelogger as log
+import numpy as np
+from PIL import Image, ImageDraw
+from osgeo import gdal
+from osgeo import gdal_array
+from osgeo import gdalconst
+
 from core import shared, ifgconstants as ifc, prepifg_helper
 
 gdal.SetCacheMax(2 ** 15)
@@ -248,7 +244,8 @@ def _crop_resample_setup(extents, input_tif, new_res, output_file, dst_driver_ty
     px_height, px_width = _gdalwarp_width_and_height(max_x, max_y, min_x, min_y, resampled_geotrans)
 
     # Output / destination
-    dst = gdal.GetDriverByName(dst_driver_type).Create(output_file, px_width, px_height, out_bands, gdalconst.GDT_Float32)
+    dst = gdal.GetDriverByName(dst_driver_type).Create(output_file, px_width, px_height, out_bands,
+                                                       gdalconst.GDT_Float32)
     dst.SetGeoTransform(resampled_geotrans)
     dst.SetProjection(resampled_proj)
 
@@ -271,7 +268,8 @@ def _gdalwarp_width_and_height(max_x, max_y, min_x, min_y, geo_trans):
     return px_height, px_width  # this is the same as `gdalwarp`
 
 
-def crop_resample_average(input_raster, extents, resolution, output_file, thresh, header=None, coherence_path=None, coherence_thresh=None):
+def crop_resample_average(input_raster, extents, resolution, output_file, thresh, header=None, coherence_path=None,
+                          coherence_thresh=None):
     """
     Crop, resample, and average a geotiff image.
 
@@ -291,7 +289,8 @@ def crop_resample_average(input_raster, extents, resolution, output_file, thresh
     """
     out_driver_type = "GTiff"
     match_pyrate = False
-    dst_ds, _, _, _ = _crop_resample_setup(extents, input_raster, resolution, output_file, out_bands=2, dst_driver_type="MEM")
+    dst_ds, _, _, _ = _crop_resample_setup(extents, input_raster, resolution, output_file, out_bands=2,
+                                           dst_driver_type="MEM")
 
     # make a temporary copy of the dst_ds for PyRate style prepifg
     tmp_ds = gdal.GetDriverByName("MEM").CreateCopy("", dst_ds) if (match_pyrate and resolution[0]) else None
@@ -386,7 +385,7 @@ def _alignment(input_tif, new_res, resampled_average, src_ds_mem, src_gt, tmp_ds
     # only take the [yres:nrows, xres:ncols] slice
     if nrows > yres or ncols > xres:
         resampled_nearest_neighbor = tmp_ds.GetRasterBand(1).ReadAsArray()
-        resampled_average[yres - nrows :, xres - ncols :] = resampled_nearest_neighbor[yres - nrows :, xres - ncols :]
+        resampled_average[yres - nrows:, xres - ncols:] = resampled_nearest_neighbor[yres - nrows:, xres - ncols:]
 
 
 def gdal_average(dst_ds, src_ds, src_ds_mem, thresh):

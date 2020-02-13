@@ -18,26 +18,21 @@ This Python module does post-processing steps to assemble the
 rate and time series outputs and save as geotiff files
 """
 import os
-from os.path import join
-import logging
+import pathlib
 import pickle as cp
+import subprocess
+from os.path import join
+
 import numpy as np
 from osgeo import gdal
-from osgeo import osr
-from osgeo import ogr
-from osgeo import gdalconst
-from osgeo import gdal_array
-import subprocess
-import pathlib
-import time
+
 from constants import REF_COLOR_MAP_PATH
 from core import shared, ifgconstants as ifc, mpiops, config as cf
 from core.config import OBS_DIR
-from core.shared import PrereadIfg
 from core.logger import pyratelogger as log
+from core.shared import PrereadIfg
 
 gdal.SetCacheMax(64)
-
 
 # Constants
 MASTER_PROCESS = 0
@@ -63,7 +58,6 @@ def main(params):
 
 
 def create_png_from_tif(output_folder_path):
-
     # open raster and choose band to find min, max
     """
     Args:
@@ -85,28 +79,28 @@ def create_png_from_tif(output_folder_path):
 
     kml_file_path = os.path.join(output_folder_path, "stack_rate.kml")
     kml_file_content = (
-        """<?xml version="1.0" encoding="UTF-8"?>
-<kml xmlns="http://earth.google.com/kml/2.1">
-  <Document>
-    <name>stack_rate.kml</name>
-    <GroundOverlay>
-      <name>stack_rate.png</name>
-      <Icon>
-        <href>stack_rate.png</href>
-      </Icon>
-      <LatLonBox>
-        <north> """
-        + north
-        + """ </north>
+            """<?xml version="1.0" encoding="UTF-8"?>
+    <kml xmlns="http://earth.google.com/kml/2.1">
+      <Document>
+        <name>stack_rate.kml</name>
+        <GroundOverlay>
+          <name>stack_rate.png</name>
+          <Icon>
+            <href>stack_rate.png</href>
+          </Icon>
+          <LatLonBox>
+            <north> """
+            + north
+            + """ </north>
         <south> """
-        + south
-        + """ </south>
+            + south
+            + """ </south>
         <east>  """
-        + east
-        + """ </east>
+            + east
+            + """ </east>
         <west>  """
-        + west
-        + """ </west>
+            + west
+            + """ </west>
       </LatLonBox>
     </GroundOverlay>
   </Document>
@@ -143,7 +137,8 @@ def create_png_from_tif(output_folder_path):
     input_tif_path = os.path.join(output_folder_path, "stack_rate.tif")
     output_png_path = os.path.join(output_folder_path, "stack_rate.png")
     subprocess.check_call(
-        ["gdaldem", "color-relief", "-of", "PNG", input_tif_path, "-alpha", color_map_path, output_png_path, "-nearest_color_entry"]
+        ["gdaldem", "color-relief", "-of", "PNG", input_tif_path, "-alpha", color_map_path, output_png_path,
+         "-nearest_color_entry"]
     )
 
 
@@ -178,7 +173,8 @@ def _merge_stack(rows, cols, params):
 
     # stacking aggregation
     if mpiops.size >= 3:
-        [_save_stack(ifgs, params, tiles, out_type=t) for i, t in enumerate(["stack_rate", "stack_error", "stack_samples"]) if i == mpiops.rank]
+        [_save_stack(ifgs, params, tiles, out_type=t) for i, t in
+         enumerate(["stack_rate", "stack_error", "stack_samples"]) if i == mpiops.rank]
     else:
         if mpiops.rank == MASTER_PROCESS:
             [_save_stack(ifgs, params, tiles, out_type=t) for t in ["stack_rate", "stack_error", "stack_samples"]]
@@ -212,7 +208,7 @@ def _save_stack(ifgs_dict, params, tiles, out_type):
         rate_file = os.path.join(params[cf.TMPDIR], out_type + "_" + str(t.index) + ".npy")
         rate_file = pathlib.Path(rate_file)
         rate_tile = np.load(file=rate_file)
-        rate[t.top_left_y : t.bottom_right_y, t.top_left_x : t.bottom_right_x] = rate_tile
+        rate[t.top_left_y: t.bottom_right_y, t.top_left_x: t.bottom_right_x] = rate_tile
     shared.write_output_geotiff(md, gt, wkt, rate, dest, np.nan)
     npy_rate_file = os.path.join(params[cf.OUT_DIR], out_type + ".npy")
     np.save(file=npy_rate_file, arr=rate)
@@ -269,7 +265,8 @@ def _merge_timeseries(rows, cols, params):
     # e.g. nvelpar=100, nrows=10000, ncols=10000, 32bit floats need 40GB memory
     # 32 * 100 * 10000 * 10000 / 8 bytes = 4e10 bytes = 40 GB
     # the double for loop helps us overcome the memory limit
-    log.info("Process {} writing {} ts (incr/cuml) tifs of " "total {}".format(mpiops.rank, len(process_tifs), no_ts_tifs * 2))
+    log.info("Process {} writing {} ts (incr/cuml) tifs of " "total {}".format(mpiops.rank, len(process_tifs),
+                                                                               no_ts_tifs * 2))
     for i in process_tifs:
         tscum_g = np.empty(shape=ifgs[0].shape, dtype=np.float32)
         if i < no_ts_tifs:
@@ -292,7 +289,8 @@ def _merge_timeseries(rows, cols, params):
             dest = os.path.join(params[cf.OUT_DIR], "tsincr" + "_" + str(epochlist.dates[i + 1]) + ".tif")
             md[ifc.DATA_TYPE] = ifc.INCR
             shared.write_output_geotiff(md, gt, wkt, tsincr_g, dest, np.nan)
-    log.debug("Process {} finished writing {} ts (incr/cuml) tifs of " "total {}".format(mpiops.rank, len(process_tifs), no_ts_tifs * 2))
+    log.debug("Process {} finished writing {} ts (incr/cuml) tifs of " "total {}".format(mpiops.rank, len(process_tifs),
+                                                                                         no_ts_tifs * 2))
 
 
 def _assemble_tiles(i, n, tile, tsincr_g, output_dir, outtype):
@@ -308,4 +306,4 @@ def _assemble_tiles(i, n, tile, tsincr_g, output_dir, outtype):
     """
     tsincr_file = os.path.join(output_dir, "{}_{}.npy".format(outtype, n))
     tsincr = np.load(file=tsincr_file)
-    tsincr_g[tile.top_left_y : tile.bottom_right_y, tile.top_left_x : tile.bottom_right_x] = tsincr[:, :, i]
+    tsincr_g[tile.top_left_y: tile.bottom_right_y, tile.top_left_x: tile.bottom_right_x] = tsincr[:, :, i]

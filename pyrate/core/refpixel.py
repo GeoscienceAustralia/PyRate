@@ -18,19 +18,17 @@ This Python module implements an algorithm to search for the location
 of the interferometric reference pixel
 """
 import os
-from os.path import join
-import logging
 from itertools import product
-from core.shared import joblib_log_level
+from os.path import join
 
 import numpy as np
-from numpy import isnan, std, mean, sum as nsum
 from joblib import Parallel, delayed
+from numpy import isnan, std, mean, sum as nsum
 
 import core.config as cf
-from core.shared import Ifg
-
 from core.logger import pyratelogger as log
+from core.shared import Ifg
+from core.shared import joblib_log_level
 
 
 # TODO: move error checking to config step (for fail fast)
@@ -104,7 +102,8 @@ def ref_pixel_setup(ifgs_or_paths, params):
         list: list(product(ysteps, xsteps))
     """
     log.debug("Setting up ref pixel computation")
-    refnx, refny, chipsize, min_frac = params[cf.REFNX], params[cf.REFNY], params[cf.REF_CHIP_SIZE], params[cf.REF_MIN_FRAC]
+    refnx, refny, chipsize, min_frac = params[cf.REFNX], params[cf.REFNY], params[cf.REF_CHIP_SIZE], params[
+        cf.REF_MIN_FRAC]
     if len(ifgs_or_paths) < 1:
         msg = "Reference pixel search requires 2+ interferograms"
         raise RefPixelError(msg)
@@ -153,9 +152,11 @@ def save_ref_pixel_blocks(grid, half_patch_size, ifg_paths, params):
         ifg.convert_to_nans()
         ifg.convert_to_mm()
         for y, x in grid:
-            data = ifg.phase_data[y - half_patch_size : y + half_patch_size + 1, x - half_patch_size : x + half_patch_size + 1]
+            data = ifg.phase_data[y - half_patch_size: y + half_patch_size + 1,
+                   x - half_patch_size: x + half_patch_size + 1]
 
-            data_file = join(outdir, "ref_phase_data_{b}_{y}_{x}.npy".format(b=os.path.basename(pth).split(".")[0], y=y, x=x))
+            data_file = join(outdir,
+                             "ref_phase_data_{b}_{y}_{x}.npy".format(b=os.path.basename(pth).split(".")[0], y=y, x=x))
             np.save(file=data_file, arr=data)
         ifg.close()
     log.debug("Saved ref pixel blocks")
@@ -196,10 +197,13 @@ def _ref_pixel_multi(g, half_patch_size, phase_data_or_ifg_paths, thresh, params
         data = []
         output_dir = params[cf.TMPDIR]
         for p in phase_data_or_ifg_paths:
-            data_file = os.path.join(output_dir, "ref_phase_data_{b}_{y}_{x}.npy".format(b=os.path.basename(p).split(".")[0], y=y, x=x))
+            data_file = os.path.join(output_dir,
+                                     "ref_phase_data_{b}_{y}_{x}.npy".format(b=os.path.basename(p).split(".")[0], y=y,
+                                                                             x=x))
             data.append(np.load(file=data_file))
     else:  # phase_data_or_ifg is phase_data list
-        data = [p[y - half_patch_size : y + half_patch_size + 1, x - half_patch_size : x + half_patch_size + 1] for p in phase_data_or_ifg_paths]
+        data = [p[y - half_patch_size: y + half_patch_size + 1, x - half_patch_size: x + half_patch_size + 1] for p in
+                phase_data_or_ifg_paths]
     valid = [nsum(~isnan(d)) > thresh for d in data]
     if all(valid):  # ignore if 1+ ifgs have too many incoherent cells
         sd = [std(i[~isnan(i)]) for i in data]

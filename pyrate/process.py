@@ -18,19 +18,19 @@
 This Python module runs the main PyRate processing workflow
 """
 import os
-from os.path import join
 import pickle as cp
 from collections import OrderedDict
+from os.path import join
+
 import numpy as np
 
-from core import shared, algorithm, orbital, ref_phs_est
 from core import ifgconstants as ifc, mpiops, config as cf
-from core import timeseries, mst, covariance as vcm_module
+from core import shared, algorithm, orbital, ref_phs_est
 from core import stack, refpixel
-
+from core import timeseries, mst, covariance as vcm_module
 from core.aps import _wrap_spatio_temporal_filter
-from core.shared import Ifg, PrereadIfg
 from core.logger import pyratelogger as log
+from core.shared import Ifg, PrereadIfg
 
 MASTER_PROCESS = 0
 
@@ -146,7 +146,6 @@ def _create_ifg_dict(dest_tifs, params, tiles):
     preread_ifgs_file = join(params[cf.TMPDIR], "preread_ifgs.pk")
 
     if mpiops.rank == MASTER_PROCESS:
-
         # add some extra information that's also useful later
         gt, md, wkt = shared.get_geotiff_header_info(process_tifs[0])
         epochlist = algorithm.get_epochs(ifgs_dict)[0]
@@ -254,7 +253,8 @@ def _ref_phase_estimation(ifg_paths, params, refpx, refpy):
     """
     log.info("Calculating reference phase")
     if len(ifg_paths) < 2:
-        raise ref_phs_est.ReferencePhaseError(f"At least two interferograms required for reference phase " f"correction ({len(ifg_paths)} provided).")
+        raise ref_phs_est.ReferencePhaseError(
+            f"At least two interferograms required for reference phase " f"correction ({len(ifg_paths)} provided).")
 
     if mpiops.run_once(shared.check_correction_status, ifg_paths, ifc.PYRATE_REF_PHASE):
         log.debug("Finished reference phase estimation")
@@ -331,7 +331,8 @@ def _maxvar_vcm_calc(ifg_paths, params, preread_ifgs):
     prcs_ifgs = mpiops.array_split(ifg_paths)
     process_maxvar = []
     for n, i in enumerate(prcs_ifgs):
-        log.debug("Calculating maxvar for {} of process ifgs {} of total {}".format(n + 1, len(prcs_ifgs), len(ifg_paths)))
+        log.debug(
+            "Calculating maxvar for {} of process ifgs {} of total {}".format(n + 1, len(prcs_ifgs), len(ifg_paths)))
         process_maxvar.append(vcm_module.cvd(i, params, r_dist, calc_alpha=True, write_vals=True, save_acg=True)[0])
     if mpiops.rank == MASTER_PROCESS:
         maxvar = np.empty(len(ifg_paths), dtype=np.float64)

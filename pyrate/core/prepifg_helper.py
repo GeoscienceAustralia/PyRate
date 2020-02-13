@@ -29,19 +29,13 @@ from tempfile import mkstemp
 
 from numpy import array, where, nan, isnan, nanmean, float32, zeros, sum as nsum
 from osgeo import gdal
-from osgeo import osr
-from osgeo import ogr
-from osgeo import gdalconst
-from osgeo import gdal_array
 
+from core import ifgconstants as ifc
 from core.gdal_python import crop_resample_average
-from core import ifgconstants as ifc, config as cf
-from core.shared import Ifg, DEM, output_tiff_filename
-import logging
 from core.logger import pyratelogger as log
+from core.shared import Ifg, DEM
 
 CustomExts = namedtuple("CustExtents", ["xfirst", "yfirst", "xlast", "ylast"])
-
 
 # Constants
 MINIMUM_CROP = 1
@@ -117,7 +111,8 @@ def _check_looks(xlooks, ylooks):
         raise PreprocessError(msg)
 
     if not (xlooks > 0 and ylooks > 0):  # pragma: no cover
-        msg = "Invalid looks parameter(s), x: %s, y: %s. " "Looks must be an integer greater than zero" % (xlooks, ylooks)
+        msg = "Invalid looks parameter(s), x: %s, y: %s. " "Looks must be an integer greater than zero" % (
+            xlooks, ylooks)
         raise PreprocessError(msg)
 
 
@@ -158,7 +153,8 @@ def _get_extents(ifgs, crop_opt, user_exts=None):
     return extents
 
 
-def prepare_ifg(input_path, output_path, xlooks, ylooks, extents, thresh, crop_out, header=None, coherence_path=None, coherence_thresh=None):
+def prepare_ifg(input_path, output_path, xlooks, ylooks, extents, thresh, crop_out, header=None, coherence_path=None,
+                coherence_thresh=None):
     """Open, resample, crop and optionally save to disk an interferogram or DEM.
     Returns are only given if write_to_disk=False
 
@@ -230,7 +226,8 @@ def prepare_ifg(input_path, output_path, xlooks, ylooks, extents, thresh, crop_o
 
 
 # TODO: crop options 0 = no cropping? get rid of same size
-def prepare_ifgs(raster_data_paths, crop_opt, xlooks, ylooks, thresh=0.5, user_exts=None, write_to_disc=True, out_path=None):
+def prepare_ifgs(raster_data_paths, crop_opt, xlooks, ylooks, thresh=0.5, user_exts=None, write_to_disc=True,
+                 out_path=None):
     """Wrapper function to prepare a sequence of interferogram files for PyRate
     analysis. See prepifg.prepare_ifg() for full description of inputs and
     returns.
@@ -339,7 +336,7 @@ def _resample(data, xscale, yscale, thresh):
     # with excess NaNs)
     for x in range(xres):
         for y in range(yres):
-            tile = data[y * yscale : (y + 1) * yscale, x * xscale : (x + 1) * xscale]
+            tile = data[y * yscale: (y + 1) * yscale, x * xscale: (x + 1) * xscale]
             nan_fraction = nsum(isnan(tile)) / float(tile_cell_count)
             if nan_fraction < thresh or (nan_fraction == 0 and thresh == 0):
                 dest[y, x] = nanmean(tile)
@@ -472,10 +469,10 @@ def _custom_bounds(ifgs, xw, ytop, xe, ybot):
         raise PreprocessError("ERROR Custom crop bounds: " "ifgxfirst must be greater than ifgxlast")
 
     for par, crop, orig, step in zip(
-        ["x_first", "x_last", "y_first", "y_last"],
-        [xw, xe, ytop, ybot],
-        [i.x_first, i.x_last, i.y_first, i.y_last],
-        [i.x_step, i.x_step, i.y_step, i.y_step],
+            ["x_first", "x_last", "y_first", "y_last"],
+            [xw, xe, ytop, ybot],
+            [i.x_first, i.x_last, i.y_first, i.y_last],
+            [i.x_step, i.x_step, i.y_step, i.y_step],
     ):
         diff = crop - orig
         nint = round(diff / step)
@@ -526,7 +523,8 @@ def _check_crop_coords(ifgs, xmin, ymin, xmax, ymax):
     # NB: assumption is the first Ifg is correct, so only test against it
     i = ifgs[0]
 
-    for par, crop, step in zip(["x_first", "x_last", "y_first", "y_last"], [xmin, xmax, ymax, ymin], [i.x_step, i.x_step, i.y_step, i.y_step]):
+    for par, crop, step in zip(["x_first", "x_last", "y_first", "y_last"], [xmin, xmax, ymax, ymin],
+                               [i.x_step, i.x_step, i.y_step, i.y_step]):
 
         # is diff of the given extent from grid a multiple of X|Y_STEP ?
         param = getattr(i, par)

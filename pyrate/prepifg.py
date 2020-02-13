@@ -18,18 +18,13 @@ This Python script applies optional multilooking and cropping to input
 interferogram geotiff files.
 """
 # -*- coding: utf-8 -*-
-import logging
 import os
-
-from osgeo import gdal
-from osgeo import osr
-from osgeo import ogr
-from osgeo import gdalconst
-from osgeo import gdal_array
-from gdalconst import GA_Update, GA_ReadOnly
 from decimal import Decimal
 from math import modf
-from core import shared, config as cf, prepifg_helper, gamma, roipac
+
+from gdalconst import GA_ReadOnly
+from osgeo import gdal
+
 from constants import (
     CROP_OPTIONS,
     GRID_TOL,
@@ -42,9 +37,10 @@ from constants import (
     CUSTOM_CROP,
     ALREADY_SAME_SIZE,
 )
-from core.prepifg_helper import PreprocessError
+from core import shared, config as cf, prepifg_helper, gamma, roipac
 from core.logger import pyratelogger as log
 from core.mpiops import rank, comm, size, chunks
+from core.prepifg_helper import PreprocessError
 
 GAMMA = 1
 ROIPAC = 0
@@ -70,7 +66,8 @@ def main(params):
         for interferogram_file in params["interferogram_files"]:
             if not os.path.isfile(interferogram_file.converted_path):
                 raise Exception(
-                    "Can not find geotiff: " + str(interferogram_file.converted_path) + ". Ensure you have converted your interferograms to geotiffs."
+                    "Can not find geotiff: " + str(
+                        interferogram_file.converted_path) + ". Ensure you have converted your interferograms to geotiffs."
                 )
             datasets_to_calcualte_extents.append(interferogram_file.converted_path)
 
@@ -78,7 +75,8 @@ def main(params):
         if params["dem_file"] is not None:
             if not os.path.isfile(params["dem_file"].converted_path):
                 raise Exception(
-                    "Can not find geotiff: " + str(params["dem_file"].converted_path) + ". Ensure you have converted your interferograms to geotiffs."
+                    "Can not find geotiff: " + str(params[
+                                                       "dem_file"].converted_path) + ". Ensure you have converted your interferograms to geotiffs."
                 )
             datasets_to_calcualte_extents.append(params["dem_file"].converted_path)
 
@@ -86,11 +84,13 @@ def main(params):
 
         log.info("Preparing interferograms by cropping/multilooking")
         for interferogram_file in params["interferogram_files"]:
-            jobs.append((interferogram_file.converted_path, interferogram_file.sampled_path, xlooks, ylooks, extents, thresh, crop, params))
+            jobs.append((interferogram_file.converted_path, interferogram_file.sampled_path, xlooks, ylooks, extents,
+                         thresh, crop, params))
 
         # optional DEM conversion
         if params["dem_file"] is not None:
-            jobs.append((params["dem_file"].converted_path, params["dem_file"].sampled_path, xlooks, ylooks, extents, thresh, crop, params))
+            jobs.append((params["dem_file"].converted_path, params["dem_file"].sampled_path, xlooks, ylooks, extents,
+                         thresh, crop, params))
         jobs = chunks(jobs, size)
     else:
         jobs = None
@@ -130,11 +130,11 @@ def _prepifg_multiprocessing(input_path, output_path, xlooks, ylooks, extents, t
         coherence_path = None
         coherence_thresh = None
 
-    prepifg_helper.prepare_ifg(input_path, output_path, xlooks, ylooks, extents, thresh, crop_opt, header, coherence_path, coherence_thresh)
+    prepifg_helper.prepare_ifg(input_path, output_path, xlooks, ylooks, extents, thresh, crop_opt, header,
+                               coherence_path, coherence_thresh)
 
 
 def get_analysis_extent(ifgs, crop_opt, xlooks, ylooks, user_exts):
-
     """
     Args:
         ifgs:
@@ -160,7 +160,8 @@ def get_analysis_extent(ifgs, crop_opt, xlooks, ylooks, user_exts):
         raise ValueError(msg)
 
     if not (xlooks > 0 and ylooks > 0):
-        msg = "Invalid looks parameter(s), x: %s, y: %s. " "Looks must be an integer greater than zero" % (xlooks, ylooks)
+        msg = "Invalid looks parameter(s), x: %s, y: %s. " "Looks must be an integer greater than zero" % (
+        xlooks, ylooks)
         raise ValueError(msg)
 
     x_step_values = []
@@ -228,7 +229,8 @@ def get_analysis_extent(ifgs, crop_opt, xlooks, ylooks, user_exts):
         y1 = None
 
         for par, crop, orig, step in zip(
-            ["x_first", "x_last", "y_first", "y_last"], [xw, xe, ytop, ybot], [x_first, x_last, y_first, y_last], [x_step, x_step, y_step, y_step]
+                ["x_first", "x_last", "y_first", "y_last"], [xw, xe, ytop, ybot], [x_first, x_last, y_first, y_last],
+                [x_step, x_step, y_step, y_step]
         ):
             diff = crop - orig
             nint = round(diff / step)
@@ -266,7 +268,8 @@ def get_analysis_extent(ifgs, crop_opt, xlooks, ylooks, user_exts):
 
         # only need to check crop coords when custom bounds are supplied
         for par, crop, step, param in zip(
-            ["x_first", "x_last", "y_first", "y_last"], [xmin, xmax, ymax, ymin], [x_step, x_step, y_step, y_step], [x_first, x_last, y_first, y_last]
+                ["x_first", "x_last", "y_first", "y_last"], [xmin, xmax, ymax, ymin], [x_step, x_step, y_step, y_step],
+                [x_first, x_last, y_first, y_last]
         ):
 
             # is diff of the given extent from grid a multiple of X|Y_STEP ?

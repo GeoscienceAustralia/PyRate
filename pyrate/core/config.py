@@ -19,17 +19,17 @@ files. It also includes numerous general constants relating to options
 in configuration files. Examples of PyRate configuration files are
 provided in the configs/ directory
 """
-# coding: utf-8
-from typing import List, Tuple, Dict, Optional
-import os
-from os.path import splitext, split
-import re
 import itertools
 import logging
+import os
 import pathlib
+import re
+from os.path import splitext, split
+# coding: utf-8
+from typing import List, Tuple, Dict, Optional
 
-from core.ifgconstants import YEARS_PER_DAY
 from constants import CONV2TIF, PREPIFG, PROCESS, MERGE
+from core.ifgconstants import YEARS_PER_DAY
 
 _logger = logging.getLogger(__name__)
 
@@ -60,7 +60,6 @@ DEM_HEADER_FILE = "demHeaderFile"
 SLC_DIR = "slcFileDir"
 #: STR; Name of the file list containing the pool of available SLC headers
 SLC_FILE_LIST = "slcfilelist"
-
 
 # STR; The projection of the input interferograms.
 # TODO: only used in tests; deprecate?
@@ -297,7 +296,7 @@ def get_config_params(path: str, validate: bool = True, step: str = CONV2TIF) ->
                 pos = line.find("~")
                 if pos != -1:
                     # create expanded line
-                    line = line[:pos] + os.environ["HOME"] + line[(pos + 1) :]
+                    line = line[:pos] + os.environ["HOME"] + line[(pos + 1):]
             txt += line
     params = _parse_conf_file(txt, validate, step)
     params[TMPDIR] = os.path.join(os.path.abspath(params[OUT_DIR]), "tmpdir")
@@ -325,7 +324,8 @@ def _parse_conf_file(content, validate: bool = True, step: str = CONV2TIF) -> Di
     lines = [ln.split() for ln in content.split("\n") if _is_valid(ln)]
 
     # convert "field:   value" lines to [field, value]
-    kvpair = [(e[0].rstrip(":"), e[1]) for e in lines if len(e) == 2] + [(e[0].rstrip(":"), None) for e in lines if len(e) == 1]
+    kvpair = [(e[0].rstrip(":"), e[1]) for e in lines if len(e) == 2] + [(e[0].rstrip(":"), None) for e in lines if
+                                                                         len(e) == 1]
     parameters = dict(kvpair)
     for p in PATHS:
         if p not in parameters:
@@ -385,7 +385,8 @@ def _parse_pars(pars, validate: bool = True, step: str = CONV2TIF) -> Dict:
                 try:
                     pars[k] = conversion_func(pars[k])
                 except ValueError as e:
-                    _logger.error(f"Unable to convert '{k}': {pars[k]} to " f"expected type {conversion_func.__name__}.")
+                    _logger.error(
+                        f"Unable to convert '{k}': {pars[k]} to " f"expected type {conversion_func.__name__}.")
                     raise e
 
     # Fallback to default for missing paths.
@@ -541,7 +542,8 @@ def get_dest_paths(base_paths, crop, params, looks):
     """
 
     dest_mlooked_ifgs = [
-        mlooked_path(os.path.basename(q).split(".")[0] + "_" + os.path.basename(q).split(".")[1] + ".tif", looks=looks, crop_out=crop)
+        mlooked_path(os.path.basename(q).split(".")[0] + "_" + os.path.basename(q).split(".")[1] + ".tif", looks=looks,
+                     crop_out=crop)
         for q in base_paths
     ]
 
@@ -587,13 +589,18 @@ def get_ifg_paths(config_file, step=CONV2TIF):
 # ==== PARAMETER VALIDATION ==== #
 
 _PARAM_VALIDATION = {
-    OBS_DIR: (lambda a: a is not None and os.path.exists(a), f"'{OBS_DIR}': directory must be provided and must exist."),
-    IFG_FILE_LIST: (lambda a: a is not None and os.path.exists(a), f"'{IFG_FILE_LIST}': file must be provided and must exist."),
+    OBS_DIR: (
+        lambda a: a is not None and os.path.exists(a), f"'{OBS_DIR}': directory must be provided and must exist."),
+    IFG_FILE_LIST: (
+        lambda a: a is not None and os.path.exists(a), f"'{IFG_FILE_LIST}': file must be provided and must exist."),
     DEM_FILE: (lambda a: a is not None and os.path.exists(a), f"'{DEM_FILE}': file must be provided and must exist."),
-    DEM_HEADER_FILE: (lambda a: a is not None and os.path.exists(a), f"'{DEM_HEADER_FILE}': file must be provided and must exist."),
+    DEM_HEADER_FILE: (
+        lambda a: a is not None and os.path.exists(a), f"'{DEM_HEADER_FILE}': file must be provided and must exist."),
     OUT_DIR: (lambda a: a is not None, f"'{OBS_DIR}': directory must be provided."),
-    APS_INCIDENCE_MAP: (lambda a: os.path.exists(a) if a is not None else True, f"'{APS_INCIDENCE_MAP}': file must exist."),
-    APS_ELEVATION_MAP: (lambda a: os.path.exists(a) if a is not None else True, f"'{APS_ELEVATION_MAP}': file must exists."),
+    APS_INCIDENCE_MAP: (
+        lambda a: os.path.exists(a) if a is not None else True, f"'{APS_INCIDENCE_MAP}': file must exist."),
+    APS_ELEVATION_MAP: (
+        lambda a: os.path.exists(a) if a is not None else True, f"'{APS_ELEVATION_MAP}': file must exists."),
     IFG_CROP_OPT: (lambda a: a in (1, 2, 3, 4), f"'{IFG_CROP_OPT}': must select option 1, 2, 3, or 4."),
     IFG_LKSX: (lambda a: a >= 1, f"'{IFG_LKSX}': must be >= 1."),
     IFG_LKSY: (lambda a: a >= 1, f"'{IFG_LKSY}': must be >= 1."),
@@ -625,14 +632,16 @@ _CUSTOM_CROP_VALIDATION = {
 
 _GAMMA_VALIDATION = {
     SLC_DIR: (lambda a: os.path.exists(a) if a is not None else True, f"'{SLC_DIR}': directory must must exist."),
-    SLC_FILE_LIST: (lambda a: a is not None and os.path.exists(a), f"'{SLC_FILE_LIST}': file must be provided and must exist."),
+    SLC_FILE_LIST: (
+        lambda a: a is not None and os.path.exists(a), f"'{SLC_FILE_LIST}': file must be provided and must exist."),
 }
 """dict: basic validation functions for gamma parameters."""
 
 _COHERENCE_VALIDATION = {
     COH_THRESH: (lambda a: 0.0 <= a <= 1.0, f"'{COH_THRESH}': must be between 0.0 and 1.0 (inclusive)."),
     COH_FILE_DIR: (lambda a: os.path.exists(a) if a is not None else True, f"'{COH_FILE_DIR}': directory must exist."),
-    COH_FILE_LIST: (lambda a: a is not None and os.path.exists(a), f"'{COH_FILE_LIST}': file must be provided and must exist."),
+    COH_FILE_LIST: (
+        lambda a: a is not None and os.path.exists(a), f"'{COH_FILE_LIST}': file must be provided and must exist."),
 }
 """dict: basic validation functions for coherence parameters."""
 
@@ -666,7 +675,9 @@ _TIME_SERIES_VALIDATION = {
 _REFERENCE_PIXEL_VALIDATION = {
     REFNX: (lambda a: 1 <= a <= 50, f"'{REFNX}': must be between 1 and 50 (inclusive)."),
     REFNY: (lambda a: 1 <= a <= 50, f"'{REFNY}': must be between 1 and 50 (inclusive)."),
-    REF_CHIP_SIZE: (lambda a: 1 <= a <= 101 and a % 2 == 1, f"'{REF_CHIP_SIZE}': must be between 1 and 101 (inclusive) and be odd."),
+    REF_CHIP_SIZE: (
+        lambda a: 1 <= a <= 101 and a % 2 == 1,
+        f"'{REF_CHIP_SIZE}': must be between 1 and 101 (inclusive) and be odd."),
     REF_MIN_FRAC: (lambda a: 0.0 <= a <= 1.0, f"'{REF_MIN_FRAC}': must be between 0.0 and 1.0 " "(inclusive)."),
     REF_EST_METHOD: (lambda a: a in (1, 2), f"'{REF_EST_METHOD}': must select option 1 or 2."),
 }
@@ -700,10 +711,6 @@ def convert_geographic_coordinate_to_pixel_value(refpx, refpy, transform):
 
 
 from osgeo import gdal
-from osgeo import osr
-from osgeo import ogr
-from osgeo import gdalconst
-from osgeo import gdal_array
 
 
 def validate_parameters(pars: Dict, step: str = CONV2TIF):
@@ -797,29 +804,35 @@ def validate_parameters(pars: Dict, step: str = CONV2TIF):
 
                 # validate multi-look parameters
                 if pars["ifglksx"] < 0 or pars["ifglksx"] > x_size:
-                    raise Exception("Value of ifglksx: " + str(pars["ifglksx"]) + " out of bounds: [0," + str(x_size) + "]")
+                    raise Exception(
+                        "Value of ifglksx: " + str(pars["ifglksx"]) + " out of bounds: [0," + str(x_size) + "]")
                 if pars["ifglksy"] < 0 or pars["ifglksy"] > x_size:
-                    raise Exception("Value of ifglksy: " + str(pars["ifglksy"]) + " out of bounds: [0," + str(x_size) + "]")
+                    raise Exception(
+                        "Value of ifglksy: " + str(pars["ifglksy"]) + " out of bounds: [0," + str(x_size) + "]")
 
                 # validate crop parameters
                 if pars["ifgxfirst"] < min(latitudes) or pars["ifgxfirst"] > max(latitudes):
                     raise Exception(
-                        "ifgxfirst: " + str(pars["ifgxfirst"]) + " not with in range {" + str(min(latitudes)) + "," + str(max(latitudes)) + "}"
+                        "ifgxfirst: " + str(pars["ifgxfirst"]) + " not with in range {" + str(
+                            min(latitudes)) + "," + str(max(latitudes)) + "}"
                     )
 
                 if pars["ifgxlast"] < min(latitudes) or pars["ifgxlast"] > max(latitudes):
                     raise Exception(
-                        "ifgxlast: " + str(pars["ifgxlast"]) + " not with in range {" + str(min(latitudes)) + "," + str(max(latitudes)) + "}"
+                        "ifgxlast: " + str(pars["ifgxlast"]) + " not with in range {" + str(min(latitudes)) + "," + str(
+                            max(latitudes)) + "}"
                     )
 
                 if pars["ifgyfirst"] < min(longitudes) or pars["ifgyfirst"] > max(longitudes):
                     raise Exception(
-                        "ifgyfirst: " + str(pars["ifgyfirst"]) + " not with in range {" + str(min(longitudes)) + "," + str(max(longitudes)) + "}"
+                        "ifgyfirst: " + str(pars["ifgyfirst"]) + " not with in range {" + str(
+                            min(longitudes)) + "," + str(max(longitudes)) + "}"
                     )
 
                 if pars["ifgylast"] < min(longitudes) or pars["ifgylast"] > max(longitudes):
                     raise Exception(
-                        "ifgylast: " + str(pars["ifgylast"]) + " not with in range {" + str(min(longitudes)) + "," + str(max(longitudes)) + "}"
+                        "ifgylast: " + str(pars["ifgylast"]) + " not with in range {" + str(
+                            min(longitudes)) + "," + str(max(longitudes)) + "}"
                     )
 
                 del gtif  # manually close raster
@@ -1034,7 +1047,9 @@ def validate_epoch_cutoff(max_span: float, cutoff: str, pars: Dict) -> Optional[
     """
     errors = []
     if pars[cutoff] > max_span:
-        errors.append("cutoff: " + str(pars[cutoff]) + " must be less than max time span of data in years max_span: " + str(max_span) + ".")
+        errors.append(
+            "cutoff: " + str(pars[cutoff]) + " must be less than max time span of data in years max_span: " + str(
+                max_span) + ".")
     return _raise_errors(errors)
 
 
@@ -1098,7 +1113,8 @@ def validate_tifs_exist(ifg_file_list: str, obs_dir: str) -> Optional[bool]:
     for gtp in gtiff_paths:
         if not os.path.exists(gtp):
             fname = os.path.split(gtp)[1]
-            errors.append(f"'{IFG_FILE_LIST}': interferogram '{fname}' is " "required in geotiff format but no geotiff file " "could be found.")
+            errors.append(
+                f"'{IFG_FILE_LIST}': interferogram '{fname}' is " "required in geotiff format but no geotiff file " "could be found.")
 
     return _raise_errors(errors)
 
@@ -1178,7 +1194,8 @@ def validate_epoch_thresholds(n_epochs: int, pars: Dict) -> Optional[bool]:
     errors = []
     thresh = pars[LR_PTHRESH]
     if n_epochs < thresh:
-        errors.append(f"'{LR_PTHRESH}': not enough epochs have been specified " f"({n_epochs}) to satisfy threshold ({thresh}).")
+        errors.append(
+            f"'{LR_PTHRESH}': not enough epochs have been specified " f"({n_epochs}) to satisfy threshold ({thresh}).")
 
     return _raise_errors(errors)
 
@@ -1243,7 +1260,8 @@ def validate_slpf_cutoff(extents: Tuple[float, float, float, float], pars: Dict)
     x_extent_km = x_extent * DEG_TO_KM
     y_extent_km = y_extent * DEG_TO_KM
     if pars[SLPF_CUTOFF] > max(x_extent_km, y_extent_km):
-        errors = [f"'{SLPF_CUTOFF}': cutoff is out of bounds, must be " "less than max scene bound (in km) " f"({max(x_extent_km, y_extent_km)})."]
+        errors = [
+            f"'{SLPF_CUTOFF}': cutoff is out of bounds, must be " "less than max scene bound (in km) " f"({max(x_extent_km, y_extent_km)})."]
     else:
         errors = []
 

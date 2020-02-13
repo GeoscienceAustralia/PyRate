@@ -13,12 +13,13 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
-from configparser import ConfigParser
 import pathlib
 import re
+from configparser import ConfigParser
+
 from constants import NO_OF_PARALLEL_PROCESSES
-from default_parameters import PYRATE_DEFAULT_CONFIGRATION
 from core.user_experience import break_number_into_factors
+from default_parameters import PYRATE_DEFAULT_CONFIGRATION
 
 
 def set_parameter_value(data_type, input_value, default_value, required, input_name):
@@ -137,26 +138,28 @@ class MultiplePaths:
         if ".tif" in baseName:
             self.unwrapped_path = None
             self.converted_path = str(baseDir / baseName)
-            self.sampled_path = self.converted_path.split(".tif")[0] + "_" + str(ifglksx) + "rlks_" + str(ifgcropopt) + "cr.tif"
+            self.sampled_path = self.converted_path.split(".tif")[0] + "_" + str(ifglksx) + "rlks_" + str(
+                ifgcropopt) + "cr.tif"
         else:
             self.unwrapped_path = str(baseDir / baseName)
             baseName = baseName.split(".")[0] + "_" + baseName.split(".")[1] + ".tif"
 
             self.converted_path = str(baseDir / baseName)
-            self.sampled_path = self.converted_path.split(".tif")[0] + "_" + str(ifglksx) + "rlks_" + str(ifgcropopt) + "cr.tif"
+            self.sampled_path = self.converted_path.split(".tif")[0] + "_" + str(ifglksx) + "rlks_" + str(
+                ifgcropopt) + "cr.tif"
 
     def __str__(self):
         return (
-            """
-unwrapped_path = """
-            + self.unwrapped_path
-            + """ 
+                """
+    unwrapped_path = """
+                + self.unwrapped_path
+                + """ 
 converted_path = """
-            + self.converted_path
-            + """ 
+                + self.converted_path
+                + """ 
 sampled_path = """
-            + self.sampled_path
-            + """    
+                + self.sampled_path
+                + """    
 """
         )
 
@@ -235,7 +238,8 @@ class Configuration:
             for path_str in self.cohfilelist.read_text().split("\n"):
                 # ignore empty lines in file
                 if len(path_str) > 1:
-                    self.coherence_file_paths.append(MultiplePaths(self.cohfiledir, path_str, self.ifglksx, self.ifgcropopt))
+                    self.coherence_file_paths.append(
+                        MultiplePaths(self.cohfiledir, path_str, self.ifglksx, self.ifgcropopt))
 
         self.header_file_paths = []
         for path_str in self.slcfilelist.read_text().split("\n"):

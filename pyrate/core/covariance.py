@@ -19,17 +19,17 @@ Variance/Covariance matrix functionality.
 """
 # coding: utf-8
 from os.path import basename, join
-import logging
+
+import numpy as np
 from numpy import array, where, isnan, real, imag, sqrt, meshgrid
 from numpy import zeros, vstack, ceil, mean, exp, reshape
 from numpy.linalg import norm
-import numpy as np
 from scipy.fftpack import fft2, ifft2, fftshift
 from scipy.optimize import fmin
 
 from core import shared, ifgconstants as ifc, config as cf
-from core.shared import PrereadIfg
 from core.algorithm import master_slave_ids
+from core.shared import PrereadIfg
 
 # distance division factor of 1000 converts to km and is needed to match legacy output
 DISTFACT = 1000
@@ -225,7 +225,6 @@ class RDist:
         self.nrows, self.ncols = ifg.shape
 
     def __call__(self):
-
         if self.r_dist is None:
             size = self.nrows * self.ncols
             # pixel distances from pixel at zero lag (image centre).
@@ -234,7 +233,8 @@ class RDist:
             # doing np.divide and np.sqrt will improve performance as it keeps
             # calculations in the numpy land
             self.r_dist = np.divide(
-                np.sqrt(((xx - self.ifg.x_centre) * self.ifg.x_size) ** 2 + ((yy - self.ifg.y_centre) * self.ifg.y_size) ** 2), DISTFACT
+                np.sqrt(((xx - self.ifg.x_centre) * self.ifg.x_size) ** 2 + (
+                        (yy - self.ifg.y_centre) * self.ifg.y_size) ** 2), DISTFACT
             )  # km
             self.r_dist = reshape(self.r_dist, size, order="F")
             self.r_dist = self.r_dist[: int(ceil(size / 2.0)) + self.nrows]

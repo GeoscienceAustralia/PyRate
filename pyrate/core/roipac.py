@@ -16,9 +16,10 @@
 """
 This Python module contains tools for reading ROI_PAC format input data.
 """
+import datetime
 import os
 import re
-import datetime
+
 import core.ifgconstants as ifc
 from core import config as cf
 
@@ -64,7 +65,8 @@ ROIPAC = "ROIPAC"
 # store type for each of the header items
 INT_HEADERS = [WIDTH, FILE_LENGTH, XMIN, XMAX, YMIN, YMAX, Z_OFFSET, Z_SCALE]
 STR_HEADERS = [X_UNIT, Y_UNIT, ORBIT_NUMBER, DATUM, PROJECTION]
-FLOAT_HEADERS = [X_FIRST, X_STEP, Y_FIRST, Y_STEP, TIME_SPAN_YEAR, VELOCITY, HEIGHT, EARTH_RADIUS, WAVELENGTH, HEADING_DEG]
+FLOAT_HEADERS = [X_FIRST, X_STEP, Y_FIRST, Y_STEP, TIME_SPAN_YEAR, VELOCITY, HEIGHT, EARTH_RADIUS, WAVELENGTH,
+                 HEADING_DEG]
 DATE_HEADERS = [DATE, DATE12]
 
 ROIPAC_HEADER_LEFT_JUSTIFY = 18
@@ -83,7 +85,7 @@ def parse_date(dstr):
 
     def to_date(date_str):
         """convert string to datetime"""
-        year, month, day = [int(date_str[i : i + 2]) for i in range(0, 6, 2)]
+        year, month, day = [int(date_str[i: i + 2]) for i in range(0, 6, 2)]
         year += 1900 if ((year <= 99) and (year >= 50)) else 2000
         return datetime.date(year, month, day)
 

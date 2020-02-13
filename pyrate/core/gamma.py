@@ -16,15 +16,16 @@
 """
 This Python module contains tools for reading GAMMA format input data.
 """
-# coding: utf-8
-from os.path import join, split
-import re
 import os
+import re
 from datetime import date, time, timedelta
+# coding: utf-8
+from os.path import split
+
 import numpy as np
+
 import core.ifgconstants as ifc
 from core import config as cf
-
 
 # constants
 GAMMA_DATE = "date"
@@ -187,7 +188,8 @@ def combine_headers(hdr0, hdr1, dem_hdr):
     # set incidence angle to mean of master and slave
     inc_ang = hdr0[ifc.PYRATE_INCIDENCE_DEGREES]
     if np.isclose(inc_ang, hdr1[ifc.PYRATE_INCIDENCE_DEGREES], atol=1e-1):
-        chdr[ifc.PYRATE_INCIDENCE_DEGREES] = (hdr0[ifc.PYRATE_INCIDENCE_DEGREES] + hdr1[ifc.PYRATE_INCIDENCE_DEGREES]) / 2
+        chdr[ifc.PYRATE_INCIDENCE_DEGREES] = (hdr0[ifc.PYRATE_INCIDENCE_DEGREES] + hdr1[
+            ifc.PYRATE_INCIDENCE_DEGREES]) / 2
     else:
         msg = "Incidence angles differ by more than 1e-1"
         raise GammaException(msg)

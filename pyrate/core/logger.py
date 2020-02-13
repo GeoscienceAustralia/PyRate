@@ -16,10 +16,10 @@
 """
 This Python module contains functions to control PyRate log outputs
 """
-import os
 import logging
-from core.mpiops import size, rank
+import os
 
+from core.mpiops import size, rank
 
 PYRATEPATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 log_setting_file = os.path.join(PYRATEPATH, "utils", "log_settings.txt")
@@ -29,12 +29,12 @@ with open(log_setting_file, "r") as myfile:
 
 pyratelogger = logging.getLogger(__name__)
 pyratelogger.setLevel(log_level)
-formatter = logging.Formatter("%(asctime)s %(module)s %(lineno)d %(process)d " + str(rank) + "/" + str(size - 1) + " %(message)s", "%H:%M:%S")
+formatter = logging.Formatter(
+    "%(asctime)s %(module)s %(lineno)d %(process)d " + str(rank) + "/" + str(size - 1) + " %(message)s", "%H:%M:%S")
 
 ch = logging.StreamHandler()
 ch.setLevel(log_level)
 ch.setFormatter(formatter)
-
 
 fh = logging.FileHandler("pyrate.log")
 fh.setLevel(logging.DEBUG)

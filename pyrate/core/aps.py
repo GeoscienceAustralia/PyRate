@@ -18,23 +18,22 @@ This Python module implements a spatio-temporal filter method
 for correcting interferograms for atmospheric phase screen (APS)
 signals.
 """
-import logging
 import os
-from copy import deepcopy
 from collections import OrderedDict
+from copy import deepcopy
+
 import numpy as np
 from numpy import isnan
 from scipy.fftpack import fft2, ifft2, fftshift, ifftshift
 from scipy.interpolate import griddata
 
 from core import shared, ifgconstants as ifc, mpiops, config as cf
-from core.covariance import cvd_from_phase, RDist
 from core.algorithm import get_epochs
-from merge import _assemble_tiles
+from core.covariance import cvd_from_phase, RDist
+from core.logger import pyratelogger as log
 from core.shared import Ifg
 from core.timeseries import time_series
-
-from core.logger import pyratelogger as log
+from merge import _assemble_tiles
 
 
 def _wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs):
@@ -166,9 +165,9 @@ def _ts_to_ifgs(tsincr, preread_ifgs):
     log.debug("Reconstructing interferometric observations from time series")
     ifgs = list(OrderedDict(sorted(preread_ifgs.items())).values())
     _, n = get_epochs(ifgs)
-    index_master, index_slave = n[: len(ifgs)], n[len(ifgs) :]
+    index_master, index_slave = n[: len(ifgs)], n[len(ifgs):]
     for i, ifg in enumerate(ifgs):
-        phase = np.sum(tsincr[:, :, index_master[i] : index_slave[i]], axis=2)
+        phase = np.sum(tsincr[:, :, index_master[i]: index_slave[i]], axis=2)
         _save_aps_corrected_phase(ifg.path, phase)
 
 
