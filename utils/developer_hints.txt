@@ -102,3 +102,7 @@ twine upload --repository-url https://upload.pypi.org/legacy/ dist/*
 # code formating
 pip install black
 black -t py37 -v -l 150 .
+
+# convert docs to google style
+pip install pyment
+pyment  -o google -w .
