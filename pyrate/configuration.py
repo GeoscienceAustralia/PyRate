@@ -140,15 +140,15 @@ def validate_file_list_values(dir, fileList, no_of_epochs):
 
 class MultiplePaths:
     def __init__(self, baseDir, baseName, ifglksx=0, ifgcropopt=0):
-    """
+        """
 
-    Args:
-      baseDir: param baseName:
-      ifglksx: param ifgcropopt:
+        Args:
+          baseDir: param baseName:
+          ifglksx: param ifgcropopt:
 
-    Returns:
+        Returns:
 
-    """
+        """
         if ".tif" in baseName:
             self.unwrapped_path = None
             self.converted_path = str(baseDir / baseName)
@@ -180,15 +180,14 @@ sampled_path = """
 
 class Configuration:
     def __init__(self, config_file_path):
+        """
 
-    """
+        Args:
+          config_file_path:
 
-    Args:
-      config_file_path: 
+        Returns:
 
-    Returns:
-
-    """
+        """
         parser = ConfigParser()
         parser.optionxform = str
         # mimic header to fulfil the requirement for configparser
