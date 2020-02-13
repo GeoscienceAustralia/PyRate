@@ -218,6 +218,29 @@ def _mst_calc(dest_tifs, params, tiles, preread_ifgs):
     log.debug("Finished mst calculation for process {}".format(mpiops.rank))
     mpiops.comm.barrier()
 
+def convert_geographic_coordinate_to_pixel_value(refx, refy, transform):
+    """
+    Converts a lat/long coordinate to a pixel coordinate given the
+    geotransform of the image.
+    Args:
+        refpx: The longitude of the coordinate.
+        refpx: The latitude of the coordinate.
+        transform: The geotransform array of the image.
+    Returns:
+        Tuple of refpx, refpy in pixel values.
+    """
+    # transform = ifg.dataset.GetGeoTransform()
+
+    xOrigin = transform[0]
+    yOrigin = transform[3]
+    pixelWidth = transform[1]
+    pixelHeight = -transform[5]
+
+    refx = int((refx - xOrigin) / pixelWidth)
+    refy = int((yOrigin - refy) / pixelHeight)
+
+    return int(refx), int(refy)
+
 
 def _ref_pixel_calc(ifg_paths, params):
     """Wrapper for reference pixel calculation
@@ -254,7 +277,11 @@ def _ref_pixel_calc(ifg_paths, params):
         refy, refx = mpiops.run_once(refpixel.find_min_mean, mean_sds, grid)
         log.info("Selected reference pixel coordinate: ({}, {})".format(refx, refy))
     else:
+        transform = ifg.dataset.GetGeoTransform()
         log.info("Reusing reference pixel from config file: ({}, {})".format(refx, refy))
+        refx, refy = mpiops.run_once(convert_geographic_coordinate_to_pixel_value, refx, refy, transform)
+        log.info("Converted reference pixel coordinates: ({}, {})".format(refx, refy))
+
     ifg.close()
     return refx, refy
 
