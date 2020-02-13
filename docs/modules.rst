@@ -12,7 +12,7 @@ PyRate Modules
    stack
    mst
    orbital
-   pyratelog
+   logger
    ref_phs_est
    refpixel
    roipac

@@ -71,7 +71,7 @@ setup(
         "core.mst",
         "core.orbital",
         "core.prepifg_helper",
-        "core.pyratelog",
+        "core.logger",
         "core.ref_phs_est",
         "core.refpixel",
         "core.roipac",

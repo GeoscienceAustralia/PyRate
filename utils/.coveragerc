@@ -6,7 +6,7 @@ omit =
     # omit everything in
     # pyrate/tasks/*
     # omit these files
-    pyrate/pyratelog.py
+    pyrate/logger.py
     pyrate/scripts/main.py
 
 [report]
