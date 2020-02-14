@@ -31,6 +31,7 @@ from core import timeseries, mst, covariance as vcm_module
 from core.aps import _wrap_spatio_temporal_filter
 from core.logger import pyratelogger as log
 from core.shared import Ifg, PrereadIfg
+from osgeo import osr, gdal
 
 MASTER_PROCESS = 0
 
@@ -237,6 +238,7 @@ def _ref_pixel_calc(ifg_paths, params):
 
     ifg = Ifg(ifg_paths[0])
     ifg.open(readonly=True)
+    transform = ifg.dataset.GetGeoTransform()
 
     if refx == -1 or refy == -1:
 
@@ -251,15 +253,48 @@ def _ref_pixel_calc(ifg_paths, params):
             mean_sds = np.hstack(mean_sds)
 
         refy, refx = mpiops.run_once(refpixel.find_min_mean, mean_sds, grid)
+        pyrate_refpix_x, pyrate_refpix_y = refy, refx
         log.info("Selected reference pixel coordinate: ({}, {})".format(refx, refy))
+        pyrate_refpix_lat, pyrate_refpix_lon = mpiops.run_once(refpixel.convert_pixel_value_to_geographic_coordinate, refx, refy, transform)
+        log.info("Selected reference geographic coordinates: ({}, {})".format(pyrate_refpix_lat, pyrate_refpix_lon))
     else:
-        transform = ifg.dataset.GetGeoTransform()
+
         log.info("Reusing reference pixel from config file: ({}, {})".format(refx, refy))
+        pyrate_refpix_lat = refx
+        pyrate_refpix_lon = refy
+
         refx, refy = mpiops.run_once(refpixel.convert_geographic_coordinate_to_pixel_value, refx, refy, transform)
+
         log.info("Converted reference pixel coordinates: ({}, {})".format(refx, refy))
+        pyrate_refpix_x = refx
+        pyrate_refpix_y = refy
 
     ifg.close()
+
+    # update interferogram metadata
+    os.environ['NUMEXPR_MAX_THREADS'] = params["NUMEXPR_MAX_THREADS"]
+    mpiops.run_once(update_ifg_metadata, ifg_paths, pyrate_refpix_x, pyrate_refpix_y, pyrate_refpix_lat, pyrate_refpix_lon)
+
     return refx, refy
+
+
+def update_ifg_metadata(ifg_paths, pyrate_refpix_x, pyrate_refpix_y, pyrate_refpix_lat, pyrate_refpix_lon):
+
+    for interferogram_file in ifg_paths:
+        output_dataset = gdal.Open(interferogram_file, gdal.GA_Update)
+        metadata = output_dataset.GetMetadata()
+        metadata.update({
+            'PYRATE_REFPIX_X': str(pyrate_refpix_x),
+            'PYRATE_REFPIX_Y': str(pyrate_refpix_y),
+            'PYRATE_REFPIX_LAT': str(pyrate_refpix_lat),
+            'PYRATE_REFPIX_LON': str(pyrate_refpix_lon),
+        })
+        output_dataset.SetMetadata(metadata)
+
+        # manual close dataset
+        output_dataset = None
+        del output_dataset
+
 
 
 def _orb_fit_calc(ifg_paths, params, preread_ifgs=None):
