@@ -2,20 +2,44 @@ Troubleshooting
 ===============
 
 
-xyz.tif contain nan values only
+Failed to compute statistics of final result
 -------------------------------
+Output of “process” contains NaN values only causing “merge“ to fail
 
 Error::
 
-    stact_rate.tif (and stackrate.npy) contain nan values only
+    Traceback (most recent call last):
+    File "/home/547/txf547/PyRateVenv/bin/pyrate", line 11, in <module> load_entry_point('Py-Rate==0.4.0', 'console_scripts', 'pyrate')()
+    File "/home/547/txf547/PyRateVenv/lib/python3.7/site-packages/Py_Rate-0.4.0-py3.7.egg/main.py", line 154, in main merge_handler(args.config_file)
+    File "/home/547/txf547/PyRateVenv/lib/python3.7/site-packages/Py_Rate-0.4.0-py3.7.egg/main.py", line 87, in merge_handler merge.main(config.__dict__)
+    File "/home/547/txf547/PyRateVenv/lib/python3.7/site-packages/Py_Rate-0.4.0-py3.7.egg/merge.py", line 64, in main create_png_from_tif(output_folder_path)
+    File "/home/547/txf547/PyRateVenv/lib/python3.7/site-packages/Py_Rate-0.4.0-py3.7.egg/merge.py", line 130, in create_png_from_tif
+ minimum, maximum, mean, stddev = srcband.GetStatistics(True, True)
+    File "/apps/gdal/3.0.2/lib/python3.7/site-packages/osgeo/gdal.py", line 2610, in GetStatistics return _gdal.Band_GetStatistics(self, *args)
+    RuntimeError: /g/data/dg9/INSAR_ANALYSIS/SURAT/S1/GAMMA/T045D/pyrate/out/stack_rate.tif, band 1: Failed to compute statistics, no valid pixels found in sampling.
+    Traceback (most recent call last):
+    File "/home/547/txf547/PyRateVenv/bin/pyrate", line 11, in <module> load_entry_point('Py-Rate==0.4.0', 'console_scripts', 'pyrate')()
+    File "/home/547/txf547/PyRateVenv/lib/python3.7/site-packages/Py_Rate-0.4.0-py3.7.egg/main.py", line 154, in main merge_handler(args.config_file)
+    File "/home/547/txf547/PyRateVenv/lib/python3.7/site-packages/Py_Rate-0.4.0-py3.7.egg/main.py", line 87, in merge_handler merge.main(config.__dict__)
+    File "/home/547/txf547/PyRateVenv/lib/python3.7/site-packages/Py_Rate-0.4.0-py3.7.egg/merge.py", line 64, in main create_png_from_tif(output_folder_path)
+    File "/home/547/txf547/PyRateVenv/lib/python3.7/site-packages/Py_Rate-0.4.0-py3.7.egg/merge.py", line 130, in create_png_from_tif minimum, maximum, mean, stddev = srcband.GetStatistics(True, True)
+    File "/apps/gdal/3.0.2/lib/python3.7/site-packages/osgeo/gdal.py", line 2610, in GetStatistics return _gdal.Band_GetStatistics(self, *args)
+    RuntimeError: /g/data/dg9/INSAR_ANALYSIS/SURAT/S1/GAMMA/T045D/pyrate/out/stack_rate.tif, band 1: Failed to compute statistics, no valid pixels found in sampling.
+    Traceback (most recent call last):
+    File "/home/547/txf547/PyRateVenv/bin/pyrate", line 11, in <module> load_entry_point('Py-Rate==0.4.0', 'console_scripts', 'pyrate')()
+    File "/home/547/txf547/PyRateVenv/lib/python3.7/site-packages/Py_Rate-0.4.0-py3.7.egg/main.py", line 154, in main merge_handler(args.config_file)
+    File "/home/547/txf547/PyRateVenv/lib/python3.7/site-packages/Py_Rate-0.4.0-py3.7.egg/main.py", line 87, in merge_handler merge.main(config.__dict__)
+    File "/home/547/txf547/PyRateVenv/lib/python3.7/site-packages/Py_Rate-0.4.0-py3.7.egg/merge.py", line 64, in main create_png_from_tif(output_folder_path)
+    File "/home/547/txf547/PyRateVenv/lib/python3.7/site-packages/Py_Rate-0.4.0-py3.7.egg/merge.py", line 130, in create_png_from_tif minimum, maximum, mean, stddev = srcband.GetStatistics(True, True)
+    File "/apps/gdal/3.0.2/lib/python3.7/site-packages/osgeo/gdal.py", line 2610, in GetStatistics return _gdal.Band_GetStatistics(self, *args)
+    RuntimeError: /g/data/dg9/INSAR_ANALYSIS/SURAT/S1/GAMMA/T045D/pyrate/out/stack_rate.tif, band 1: Failed to compute statistics, no valid pixels found in sampling.
 
-**Solution**: increase the parameter “maxsig” which filters pixels according to the error estimate saved in out/tmpdir/xyz_error_*.npy.
+**Solution**: increase the parameter “maxsig” which filters pixels according to the error estimate saved in out/tmpdir/stack_error_*.npy. Then re-run “process” and “merge” step.
 
 
 Failure of APS spatial low pass filter
 ---------------------------------------
-PyRate is memory intensive. You may receive various out of memory errors if
-there is not enough memory to accommodate the images being processed.
+Atmospheric corrections during “process“ fails due to the interpolated grid used for correction being empty. 
 
 Error::
 
