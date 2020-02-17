@@ -21,9 +21,9 @@ interferogram geotiff files.
 import os
 from decimal import Decimal
 from math import modf
-
-from gdalconst import GA_ReadOnly
 from osgeo import gdal
+from osgeo import gdalconst
+
 
 from constants import (
     CROP_OPTIONS,
@@ -217,7 +217,7 @@ def get_analysis_extent(ifgs, crop_opt, xlooks, ylooks, user_exts):
     y_step = None
 
     for data_path in ifgs:
-        dataset = gdal.Open(data_path, GA_ReadOnly)
+        dataset = gdal.Open(data_path, gdalconst.GA_ReadOnly)
 
         x_step = float(dataset.GetGeoTransform()[GDAL_X_CELLSIZE])
         x_step_values.append(x_step)

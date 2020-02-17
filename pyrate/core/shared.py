@@ -39,7 +39,8 @@ from core.logger import pyratelogger as log
 
 from osgeo import gdal
 from osgeo import osr
-from gdalconst import GA_Update, GA_ReadOnly
+from osgeo import gdalconst
+
 
 gdal.UseExceptions()
 
@@ -145,7 +146,7 @@ class RasterBase(object):
         if readonly is False and self._readonly is True:
             raise IOError("Cannot open write protected file for writing")
 
-        flag = GA_ReadOnly if self._readonly else GA_Update
+        flag = gdalconst.GA_ReadOnly if self._readonly else gdalconst.GA_Update
         self.dataset = gdal.Open(self.data_path, flag)
         if self.dataset is None:
             raise RasterException("Error opening %s" % self.data_path)
@@ -447,9 +448,9 @@ class Ifg(RasterBase):
 
         # keep this block
         # if new_data_path is None:
-        #     self.dataset = gdal.Open(self.data_path, GA_Update)
+        #     self.dataset = gdal.Open(self.data_path, gdalconst.GA_Update)
         # else:
-        #     self.dataset = gdal.Open(new_data_path, GA_Update)
+        #     self.dataset = gdal.Open(new_data_path, gdalconst.GA_Update)
         # self._phase_band = None
 
         if data is not None:

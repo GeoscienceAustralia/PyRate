@@ -31,7 +31,8 @@ from core import timeseries, mst, covariance as vcm_module
 from core.aps import _wrap_spatio_temporal_filter
 from core.logger import pyratelogger as log
 from core.shared import Ifg, PrereadIfg
-from osgeo import osr, gdal
+from osgeo import osr
+from osgeo import gdal
 
 MASTER_PROCESS = 0
 

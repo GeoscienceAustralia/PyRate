@@ -17,7 +17,7 @@ from osgeo import ogr
 from osgeo import gdalconst
 from osgeo import gdal_array
 import numpy as np
-import osr
+from osgeo import osr
 
 
 class CoherenceMaskingTest(unittest.TestCase):
