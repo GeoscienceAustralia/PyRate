@@ -254,7 +254,7 @@ def _save_stack(ifgs_dict, params, tiles, out_type):
     log.debug("Finished PyRate merging {}".format(out_type))
 
 
-def _merge_timeseries(rows, cols, params):
+def _merge_timeseries(rows, cols,  params):
     """Merge time series output
     
     Args:
@@ -274,19 +274,10 @@ def _merge_timeseries(rows, cols, params):
 
     """
     xlks, _, crop = cf.transform_params(params)
-    base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST], params[cf.OBS_DIR])
 
-    base_unw_paths = []
-    for p in pathlib.Path(params[OBS_DIR]).rglob("*rlks_*cr.tif"):
-        if "dem" not in str(p):
-            base_unw_paths.append(str(p))
-
-    if "tif" in base_unw_paths[0].split(".")[1]:
-        dest_tifs = base_unw_paths  # cf.get_dest_paths(base_unw_paths, crop, params, xlks)
-        for i, dest_tif in enumerate(dest_tifs):
-            dest_tifs[i] = dest_tif.replace("_tif", "")
-    else:
-        dest_tifs = base_unw_paths  # cf.get_dest_paths(base_unw_paths, crop, params, xlks)
+    dest_tifs = []
+    for interferogram in params["interferogram_files"]:
+        dest_tifs.append(interferogram.sampled_path)
 
     output_dir = params[cf.TMPDIR]
     # load previously saved prepread_ifgs dict
@@ -338,8 +329,8 @@ def _merge_timeseries(rows, cols, params):
             dest = os.path.join(params[cf.OUT_DIR], "tsincr" + "_" + str(epochlist.dates[i + 1]) + ".tif")
             md[ifc.DATA_TYPE] = ifc.INCR
             shared.write_output_geotiff(md, gt, wkt, tsincr_g, dest, np.nan)
-    log.debug("Process {} finished writing {} ts (incr/cuml) tifs of " "total {}".format(mpiops.rank, len(process_tifs),
-                                                                                         no_ts_tifs * 2))
+    log.debug("Process {} finished writing {} ts (incr/cuml) tifs of " "total {}".format(
+        mpiops.rank, len(process_tifs), no_ts_tifs * 2))
 
 
 def _assemble_tiles(i, n, tile, tsincr_g, output_dir, outtype):

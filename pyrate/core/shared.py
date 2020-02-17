@@ -961,6 +961,15 @@ def write_output_geotiff(md, gt, wkt, data, dest, nodata):
     if "SEQUENCE_POSITION" in md:
         ds.SetMetadataItem("SEQUENCE_POSITION", str(md["SEQUENCE_POSITION"]))
 
+    if "PYRATE_REFPIX_LAT" in md:
+        ds.SetMetadataItem("PYRATE_REFPIX_LAT", str(md["PYRATE_REFPIX_LAT"]))
+    if "PYRATE_REFPIX_LON" in md:
+        ds.SetMetadataItem("PYRATE_REFPIX_LON", str(md["PYRATE_REFPIX_LON"]))
+    if "PYRATE_REFPIX_X" in md:
+        ds.SetMetadataItem("PYRATE_REFPIX_X", str(md["PYRATE_REFPIX_X"]))
+    if "PYRATE_REFPIX_Y" in md:
+        ds.SetMetadataItem("PYRATE_REFPIX_Y", str(md["PYRATE_REFPIX_Y"]))
+
     # write data to geotiff
     band = ds.GetRasterBand(1)
     band.SetNoDataValue(nodata)
