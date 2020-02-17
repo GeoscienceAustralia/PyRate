@@ -42,14 +42,14 @@ def default_params():
 
 class SinglePixelIfg(object):
     def __init__(self, timespan, phase):
-    """
+        """
 
-    Args:
-      timespan: param phase:
+        Args:
+          timespan: param phase:
 
-    Returns:
+        Returns:
 
-    """
+        """
         self.time_span = timespan
         self.phase_data = array([[phase]])
 

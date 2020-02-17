@@ -127,8 +127,7 @@ def find_min_mean(mean_sds, grid):
     """Determine the ref pixel block with minimum mean value
 
     Args:
-      mean_sds(list): List of mean standard deviations from each reference
-    pixel grid
+      mean_sds(list): List of mean standard deviations from each reference pixel
       grid(list): List of ref pixel coordinates tuples
 
     Returns:
