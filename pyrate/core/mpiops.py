@@ -71,16 +71,6 @@ def array_split(arr, process=None):
         arr (ndarray): Numpy array
         process (int): Process for which array members are required. If None,
             MPI.comm.rank is used instead. (optional)
-    
-    Args:
-      arr: param process:  (Default value = None)
-      process:  (Default value = None)
-    
-    Returns:
-
-    Args:
-      arr: 
-      process:  (Default value = None)
 
     Returns:
 
@@ -93,8 +83,8 @@ def chunks(jobs, size):
     """
 
     Args:
-      jobs: param size:
-      size: 
+      jobs: total jobs to fulfill
+      size: total number of mpi processor available
 
     Returns:
 

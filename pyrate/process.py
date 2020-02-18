@@ -23,7 +23,6 @@ from collections import OrderedDict
 from os.path import join
 
 import numpy as np
-
 from core import ifgconstants as ifc, mpiops, config as cf
 from core import shared, algorithm, orbital, ref_phs_est
 from core import stack, refpixel
@@ -46,19 +45,14 @@ def main(params):
       int: rows: Number of sub-tiles in y direction
       int: cols: Number of sub-tiles in x direction
 
-    Args:
-      params: 
-
-    Returns:
-      tuple: refpt: tuple of reference pixel x and y position
-
     """
     ifg_paths = []
     for ifg_path in params["interferogram_files"]:
         ifg_paths.append(ifg_path.sampled_path)
 
     rows, cols = params["rows"], params["cols"]
-    if mpiops.size > 1:  # turn of multiprocessing during mpi jobs
+    # turn of multiprocessing during mpi jobs
+    if mpiops.size > 1:
         params[cf.PARALLEL] = False
 
     if mpiops.rank == 0:
@@ -222,20 +216,17 @@ def _mst_calc(dest_tifs, params, tiles, preread_ifgs):
 
 def _ref_pixel_calc(ifg_paths, params):
     """Wrapper for reference pixel calculation
-    
-    Args:
-      ifg_paths: param params:
 
     Args:
-      ifg_paths: 
-      params: 
+      ifg_paths: list of interferogram file paths
+      params: configuration parameters
 
-    Returns:
-      
-
+    Returns
     """
     refx = params[cf.REFX]
     refy = params[cf.REFY]
+
+    # assuming all interferograms have same geographical projections hence will share the same transform
 
     ifg = Ifg(ifg_paths[0])
     ifg.open(readonly=True)
@@ -247,13 +238,16 @@ def _ref_pixel_calc(ifg_paths, params):
 
         half_patch_size, thresh, grid = refpixel.ref_pixel_setup(ifg_paths, params)
         process_grid = mpiops.array_split(grid)
+
         refpixel.save_ref_pixel_blocks(process_grid, half_patch_size, ifg_paths, params)
         mean_sds = refpixel._ref_pixel_mpi(process_grid, half_patch_size, ifg_paths, thresh, params)
         mean_sds = mpiops.comm.gather(mean_sds, root=0)
         if mpiops.rank == MASTER_PROCESS:
             mean_sds = np.hstack(mean_sds)
 
+
         refy, refx = mpiops.run_once(refpixel.find_min_mean, mean_sds, grid)
+
         pyrate_refpix_x, pyrate_refpix_y = refy, refx
         log.info("Selected reference pixel coordinate: ({}, {})".format(refx, refy))
         pyrate_refpix_lat, pyrate_refpix_lon = mpiops.run_once(refpixel.convert_pixel_value_to_geographic_coordinate, refx, refy, transform)
