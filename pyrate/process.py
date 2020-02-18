@@ -268,27 +268,42 @@ def _ref_pixel_calc(ifg_paths, params):
 
     # update interferogram metadata
     os.environ['NUMEXPR_MAX_THREADS'] = params["NUMEXPR_MAX_THREADS"]
-    mpiops.run_once(update_ifg_metadata, ifg_paths, pyrate_refpix_x, pyrate_refpix_y, pyrate_refpix_lat, pyrate_refpix_lon)
+    mpiops.run_once(update_ifg_metadata, ifg_paths, pyrate_refpix_x, pyrate_refpix_y, pyrate_refpix_lat, pyrate_refpix_lon, params)
 
     return refx, refy
 
 
-def update_ifg_metadata(ifg_paths, pyrate_refpix_x, pyrate_refpix_y, pyrate_refpix_lat, pyrate_refpix_lon):
+def update_ifg_metadata(ifg_paths, pyrate_refpix_x, pyrate_refpix_y, pyrate_refpix_lat, pyrate_refpix_lon, params):
 
     for interferogram_file in ifg_paths:
-        output_dataset = gdal.Open(interferogram_file, gdal.GA_Update)
-        metadata = output_dataset.GetMetadata()
+
+        ifg = Ifg(interferogram_file)
+        ifg.open(readonly=True)
+        ifg.nodata_value = params["noDataValue"]
+        ifg.convert_to_nans()
+        ifg.convert_to_mm()
+        half_patch_size = params["refchipsize"] // 2
+        y, x = pyrate_refpix_x, pyrate_refpix_y
+        data = ifg.phase_data[y - half_patch_size: y + half_patch_size + 1, x - half_patch_size: x + half_patch_size + 1]
+        standard_deviation_ref_area = np.std(data[~np.isnan(data)])
+        mean_ref_area = np.mean(data[~np.isnan(data)])
+        ifg.close()
+
+        dataset = gdal.Open(interferogram_file, gdal.GA_Update)
+        metadata = dataset.GetMetadata()
         metadata.update({
             'PYRATE_REFPIX_X': str(pyrate_refpix_x),
             'PYRATE_REFPIX_Y': str(pyrate_refpix_y),
             'PYRATE_REFPIX_LAT': str(pyrate_refpix_lat),
             'PYRATE_REFPIX_LON': str(pyrate_refpix_lon),
+            'PYRATE_MEAN_REF_AREA': str(mean_ref_area),
+            'PYRATE_STANDARD_DEVIATION_REF_AREA': str(standard_deviation_ref_area)
         })
-        output_dataset.SetMetadata(metadata)
+        dataset.SetMetadata(metadata)
 
         # manual close dataset
-        output_dataset = None
-        del output_dataset
+        dataset = None
+        del dataset
 
 
 

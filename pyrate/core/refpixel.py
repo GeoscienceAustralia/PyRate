@@ -178,10 +178,12 @@ def ref_pixel_setup(ifgs_or_paths, params):
     _validate_chipsize(chipsize, head)
     _validate_minimum_fraction(min_frac)
     _validate_search_win(refnx, refny, chipsize, head)
+
     # pre-calculate useful amounts
     half_patch_size = chipsize // 2
     chipsize = half_patch_size * 2 + 1
     thresh = min_frac * chipsize * chipsize
+
     # do window searches across dataset, central pixel of stack with smallest
     # mean is the reference pixel
     rows, cols = head.shape
@@ -223,11 +225,8 @@ def save_ref_pixel_blocks(grid, half_patch_size, ifg_paths, params):
         ifg.convert_to_nans()
         ifg.convert_to_mm()
         for y, x in grid:
-            data = ifg.phase_data[y - half_patch_size: y + half_patch_size + 1,
-                   x - half_patch_size: x + half_patch_size + 1]
-
-            data_file = join(outdir,
-                             "ref_phase_data_{b}_{y}_{x}.npy".format(b=os.path.basename(pth).split(".")[0], y=y, x=x))
+            data = ifg.phase_data[y - half_patch_size: y + half_patch_size + 1, x - half_patch_size: x + half_patch_size + 1]
+            data_file = join(outdir, "ref_phase_data_{b}_{y}_{x}.npy".format(b=os.path.basename(pth).split(".")[0], y=y, x=x))
             np.save(file=data_file, arr=data)
         ifg.close()
     log.debug("Saved ref pixel blocks")

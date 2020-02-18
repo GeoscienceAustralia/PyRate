@@ -969,6 +969,10 @@ def write_output_geotiff(md, gt, wkt, data, dest, nodata):
         ds.SetMetadataItem("PYRATE_REFPIX_X", str(md["PYRATE_REFPIX_X"]))
     if "PYRATE_REFPIX_Y" in md:
         ds.SetMetadataItem("PYRATE_REFPIX_Y", str(md["PYRATE_REFPIX_Y"]))
+    if "PYRATE_MEAN_REF_AREA" in md:
+        ds.SetMetadataItem("PYRATE_MEAN_REF_AREA", str(md["PYRATE_MEAN_REF_AREA"]))
+    if "STANDARD_DEVIATION_REF_AREA" in md:
+        ds.SetMetadataItem("PYRATE_STANDARD_DEVIATION_REF_AREA", str(md["PYRATE_STANDARD_DEVIATION_REF_AREA"]))
 
     # write data to geotiff
     band = ds.GetRasterBand(1)
