@@ -18,25 +18,10 @@
 This Python module contains tests for mpi operations in PyRate.
 Run this module as 'mpirun -n 4 pytest tests/test_mpi.py'
 """
-import glob
-import shutil
-import numpy as np
-import pytest
 import os
-import tempfile
-import random
-import string
-from . import common
-
-import core.orbital
-import core.shared
-
-import process, prepifg, merge, conv2tif
-from common import small_data_setup, reconstruct_mst, reconstruct_stack_rate, SML_TEST_DEM_HDR_GAMMA, pre_prepare_ifgs
-import common
-from core import algorithm, ref_phs_est as rpe, mpiops, config as cf, covariance, refpixel
-from merge import create_png_from_tif
 import unittest
+
+from merge import create_png_from_tif
 
 legacy_maxvar = [
     15.4156637191772,
@@ -61,10 +46,12 @@ legacy_maxvar = [
 
 class MergingTest(unittest.TestCase):
     """ """
+
     def test_png_creation(self):
         """ """
 
-        output_folder_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "tests", "test_data", "merge")
+        output_folder_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "tests",
+                                          "test_data", "merge")
         create_png_from_tif(output_folder_path)
 
         # check if color map is created

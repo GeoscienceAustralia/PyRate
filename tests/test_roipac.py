@@ -27,25 +27,18 @@ from os.path import exists, join
 
 from numpy.testing import assert_array_almost_equal
 from osgeo import gdal
-from osgeo import osr
-from osgeo import ogr
-from osgeo import gdalconst
-from osgeo import gdal_array
-from . import common
 
 import core.ifgconstants as ifc
-from core import shared, roipac
-from core.config import INPUT_IFG_PROJECTION, NO_DATA_VALUE, OBS_DIR, OUT_DIR, IFG_FILE_LIST, PROCESSOR, DEM_HEADER_FILE
-
-# from pyrate.scripts.conv2tif import main as roipacMain
-from core.shared import GeotiffException
-from core.shared import write_fullres_geotiff
 from common import HEADERS_TEST_DIR, PREP_TEST_OBS, PREP_TEST_TIF
 from common import SML_TEST_DEM_DIR, SML_TEST_OBS, TEMPDIR
 from common import SML_TEST_DEM_ROIPAC, SML_TEST_DEM_HDR
+from core import shared, roipac
+from core.config import INPUT_IFG_PROJECTION, NO_DATA_VALUE, OBS_DIR, OUT_DIR, IFG_FILE_LIST, PROCESSOR, DEM_HEADER_FILE
+# from pyrate.scripts.conv2tif import main as roipacMain
+from core.shared import GeotiffException
+from core.shared import write_fullres_geotiff
 
 gdal.UseExceptions()
-
 
 #  sanity checking
 if not exists(HEADERS_TEST_DIR):
@@ -58,6 +51,7 @@ FULL_HEADER_PATH = join(HEADERS_TEST_DIR, "geo_060619-060828.unw.rsc")
 
 class RoipacCommandLine(unittest.TestCase):
     """ """
+
     def setUp(self):
         """ """
         random_text = tempfile.mktemp()
@@ -69,6 +63,7 @@ class RoipacCommandLine(unittest.TestCase):
 
     def tearDown(self):
         """ """
+
         def rmPaths(paths):
             """
 
@@ -224,6 +219,7 @@ class RoipacToGeoTiffTests(unittest.TestCase):
 
 class DateParsingTests(unittest.TestCase):
     """ """
+
     def test_parse_short_date_pre2000(self):
         """ """
         dstr = "980416"

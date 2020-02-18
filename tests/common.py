@@ -495,7 +495,6 @@ def calculate_time_series(ifgs, params, vcmt, mst):
 
 def write_timeseries_geotiff(ifgs, params, tsincr, pr_type):
     """
-
     Args:
       ifgs: param params:
       tsincr: param pr_type:
@@ -506,13 +505,6 @@ def write_timeseries_geotiff(ifgs, params, tsincr, pr_type):
 
     """
     # setup metadata for writing into result files
-    """
-    Args:
-        ifgs:
-        params:
-        tsincr:
-        pr_type:
-    """
     gt, md, wkt = get_geotiff_header_info(ifgs[0].data_path)
     epochlist = algorithm.get_epochs(ifgs)[0]
 
@@ -527,18 +519,6 @@ def write_timeseries_geotiff(ifgs, params, tsincr, pr_type):
 
 
 def calculate_stacked_rate(ifgs, params, vcmt, mst_mat=None):
-    """
-
-    Args:
-      ifgs: param params:
-      vcmt: param mst_mat:  (Default value = None)
-      params: 
-      mst_mat:  (Default value = None)
-
-    Returns:
-
-    """
-    # log.info('Calculating stacked rate')
     """
     Args:
         ifgs:
@@ -558,17 +538,6 @@ def calculate_stacked_rate(ifgs, params, vcmt, mst_mat=None):
 
 
 def write_stack_tifs(ifgs, params, res):
-    """
-
-    Args:
-      ifgs: param params:
-      res: 
-      params: 
-
-    Returns:
-
-    """
-    # log.info('Writing stacking results')
     """
     Args:
         ifgs:
@@ -592,11 +561,7 @@ def write_stack_tifs(ifgs, params, res):
 
 
 def write_stack_numpy_files(error, rate, samples, params):
-    """Args:
-        error:
-        rate:
-        samples:
-
+    """
     Args:
       error: param rate:
       samples: param params:

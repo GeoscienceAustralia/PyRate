@@ -1,23 +1,11 @@
 import os
 import unittest
-import pytest
-import glob
-import copy
 
-from . import common
-
-import core.config as cf
-import conv2tif, prepifg
-from core import gdal_python
-
-import os
+import numpy as np
 from osgeo import gdal
 from osgeo import osr
-from osgeo import ogr
-from osgeo import gdalconst
-from osgeo import gdal_array
-import numpy as np
-from osgeo import osr
+
+from core import gdal_python
 
 
 class CoherenceMaskingTest(unittest.TestCase):

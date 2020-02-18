@@ -18,24 +18,27 @@ This Python module contains tests for the covariance.py PyRate module.
 """
 import os
 import shutil
-import sys
 import tempfile
 import unittest
-from numpy import array
+
 import numpy as np
+from numpy import array
 from numpy.testing import assert_array_almost_equal
-from . import common
-from constants import NO_OF_PARALLEL_PROCESSES
-from core import shared, ref_phs_est as rpe, ifgconstants as ifc, config as cf
-import process, prepifg, conv2tif
-from core.covariance import cvd, get_vcmt, RDist
-import core.orbital
+
 import common
+import core.orbital
+import process
 from common import small5_mock_ifgs, small5_ifgs, TEST_CONF_ROIPAC, small_data_setup, prepare_ifgs_without_phase
+from constants import NO_OF_PARALLEL_PROCESSES
+from core import shared, config as cf
+from core.covariance import cvd, get_vcmt, RDist
+from core.user_experience import break_number_into_factors
+from main import conv2tif_handler, prepifg_handler, process_handler
 
 
 class CovarianceTests(unittest.TestCase):
     """ """
+
     def setUp(self):
         """ """
         self.ifgs = small_data_setup()
@@ -128,6 +131,7 @@ class CovarianceTests(unittest.TestCase):
 
 class VCMTests(unittest.TestCase):
     """ """
+
     def setUp(self):
         """ """
         self.ifgs = small_data_setup()
@@ -153,7 +157,8 @@ class VCMTests(unittest.TestCase):
     def test_vcm_17ifgs(self):
         """ """
         # TODO: maxvar should be calculated by vcm.cvd
-        maxvar = [2.879, 4.729, 22.891, 4.604, 3.290, 6.923, 2.519, 13.177, 7.548, 6.190, 12.565, 9.822, 18.484, 7.776, 2.734, 6.411, 4.754]
+        maxvar = [2.879, 4.729, 22.891, 4.604, 3.290, 6.923, 2.519, 13.177, 7.548, 6.190, 12.565, 9.822, 18.484, 7.776,
+                  2.734, 6.411, 4.754]
 
         exp = array(
             [
@@ -202,13 +207,9 @@ legacy_maxvar = [
 ]
 
 
-import multiprocessing
-from main import conv2tif_handler, prepifg_handler, process_handler, merge_handler
-from core.user_experience import break_number_into_factors
-
-
 class LegacyEqualityTest(unittest.TestCase):
     """ """
+
     @classmethod
     def setUpClass(cls):
         """ """
@@ -257,32 +258,29 @@ class LegacyEqualityTest(unittest.TestCase):
         params = cf.get_config_params(TEST_CONF_ROIPAC)
         common.remove_tifs(params[cf.OBS_DIR])
 
-    # def test_legacy_maxvar_equality_small_test_files(self):
-    #     np.testing.assert_array_almost_equal(self.maxvar, legacy_maxvar, decimal=3)
+    def test_legacy_maxvar_equality_small_test_files(self):
+        np.testing.assert_array_almost_equal(self.maxvar, legacy_maxvar, decimal=3)
 
-    # def test_legacy_vcmt_equality_small_test_files(self):
-    #     from common import SML_TEST_DIR
-    #     LEGACY_VCM_DIR = os.path.join(SML_TEST_DIR, 'vcm')
-    #     legacy_vcm = np.genfromtxt(os.path.join(LEGACY_VCM_DIR,
-    #                                'vcmt.csv'), delimiter=',')
-    #     np.testing.assert_array_almost_equal(legacy_vcm, self.vcmt, decimal=3)
+    def test_legacy_vcmt_equality_small_test_files(self):
+        from common import SML_TEST_DIR
+        LEGACY_VCM_DIR = os.path.join(SML_TEST_DIR, 'vcm')
+        legacy_vcm = np.genfromtxt(os.path.join(LEGACY_VCM_DIR, 'vcmt.csv'), delimiter=',')
+        np.testing.assert_array_almost_equal(legacy_vcm, self.vcmt, decimal=3)
 
-    # def test_metadata(self):
-    #     for ifg in self.ifgs:
-    #         if not ifg.is_open:
-    #             ifg.open()
-    #         assert ifc.PYRATE_MAXVAR in ifg.meta_data
-    #         assert ifc.PYRATE_ALPHA in ifg.meta_data
+    def test_metadata(self):
+        for ifg in self.ifgs:
+            if not ifg.is_open:
+                ifg.open()
+            assert ifg.PYRATE_MAXVAR in ifg.meta_data
+            assert ifg.PYRATE_ALPHA in ifg.meta_data
 
-    # def test_save_cvd_data(self):
-    #     from os.path import join, basename, isfile
-    #     for ifg in self.ifgs:
-    #         if not ifg.is_open:
-    #             ifg.open()
-    #         data_file = join(self.params[cf.TMPDIR],
-    #                          'cvd_data_{b}.npy'.format(
-    #                              b=basename(ifg.data_path).split('.')[0]))
-    #         assert isfile(data_file)
+    def test_save_cvd_data(self):
+        from os.path import join, basename, isfile
+        for ifg in self.ifgs:
+            if not ifg.is_open:
+                ifg.open()
+            data_file = join(self.params[cf.TMPDIR], 'cvd_data_{b}.npy'.format(b=basename(ifg.data_path).split('.')[0]))
+            assert isfile(data_file)
 
 
 if __name__ == "__main__":

@@ -223,7 +223,7 @@ class RasterBase(object):
 
     def close(self):
         """Explicitly closes file opened by gdal.Open() This is required in
-        windows, otherwise opened files can not be removed, because windows
+        windows, otherwise opened files cannot be removed, because windows
         locks open files.
 
         Args:

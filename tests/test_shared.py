@@ -23,27 +23,20 @@ import sys
 import tempfile
 import unittest
 from itertools import product
-from numpy import isnan, where, nan
 from os.path import join, basename, exists
 from stat import S_IRGRP, S_IWGRP, S_IWOTH, S_IROTH, S_IRUSR, S_IWUSR
 
-import numpy as np
-from numpy.testing import assert_array_equal
-from osgeo import gdal
-from osgeo import osr
-from osgeo import ogr
-from osgeo import gdalconst
-from osgeo import gdal_array
 from gdal import Open, Dataset, UseExceptions
-from . import common
+from numpy import isnan, where, nan
+from numpy.testing import assert_array_equal
 
-from common import SML_TEST_TIF, SML_TEST_DEM_TIF, TEMPDIR
-from core import shared, ifgconstants as ifc, config as cf, prepifg_helper, gamma
-import prepifg
+import common
 import conv2tif
+import prepifg
+from common import SML_TEST_TIF, SML_TEST_DEM_TIF, TEMPDIR
+from core import config as cf, prepifg_helper
 from core.shared import Ifg, DEM, RasterException
 from core.shared import cell_size, _utm_zone
-import common
 
 UseExceptions()
 
@@ -161,6 +154,7 @@ class IfgTests(unittest.TestCase):
 
 class IfgIOTests(unittest.TestCase):
     """ """
+
     def setUp(self):
         """ """
         self.ifg = Ifg(join(SML_TEST_TIF, "geo_070709-070813_unw.tif"))
@@ -187,7 +181,8 @@ class IfgIOTests(unittest.TestCase):
 
         """
         paths = [self.ifg.data_path]
-        mlooked_phase_data = prepifg_helper.prepare_ifgs(paths, crop_opt=prepifg_helper.ALREADY_SAME_SIZE, xlooks=2, ylooks=2, write_to_disc=False)
+        mlooked_phase_data = prepifg_helper.prepare_ifgs(paths, crop_opt=prepifg_helper.ALREADY_SAME_SIZE, xlooks=2,
+                                                         ylooks=2, write_to_disc=False)
         mlooked = [Ifg(m[1]) for m in mlooked_phase_data]
         self.assertRaises(RasterException, mlooked[0].open)
 
@@ -315,6 +310,7 @@ class DEMTests(unittest.TestCase):
 
 class WriteUnwTest(unittest.TestCase):
     """ """
+
     @classmethod
     def setUpClass(cls):
         """ """
@@ -358,84 +354,10 @@ class WriteUnwTest(unittest.TestCase):
         shutil.rmtree(cls.tif_dir)
         common.remove_tifs(cls.params[cf.OBS_DIR])
 
-    # def test_unw_contains_same_data_as_numpy_array(self):
-    #     from datetime import time
-    #     temp_unw = tempfile.mktemp(suffix='.unw')
-    #     temp_tif = tempfile.mktemp(suffix='.tif')
-    #
-    #     # setup some header files for use in write_geotif
-    #     dem_header_file = common.SML_TEST_DEM_HDR_GAMMA
-    #     dem_header = gamma.parse_dem_header(dem_header_file)
-    #
-    #     header = gamma.parse_epoch_header(os.path.join(common.SML_TEST_GAMMA, '20060828_slc.par'))
-    #     header.update(dem_header)
-    #
-    #     # insert some dummy data so we are the dem in write_fullres_geotiff is not
-    #     # not activated and ifg write_fullres_geotiff operation works
-    #     header[ifc.PYRATE_TIME_SPAN] = 0
-    #     header[ifc.SLAVE_DATE] = 0
-    #     header[ifc.DATA_UNITS] = 'degrees'
-    #     header[ifc.DATA_TYPE] = ifc.ORIG
-    #     header[ifc.SLAVE_TIME] = time(10)
-    #
-    #     # now create aritrary data
-    #     data = np.random.rand(dem_header[ifc.PYRATE_NROWS], dem_header[ifc.PYRATE_NCOLS])
-    #
-    #     # convert numpy array to .unw
-    #     shared.write_unw_from_data_or_geotiff(geotif_or_data=data, dest_unw=temp_unw, ifg_proc=1)
-    #     # convert the .unw to geotif
-    #     shared.write_fullres_geotiff(header=header, data_path=temp_unw, dest=temp_tif, nodata=np.nan)
-    #
-    #     # now compare geotiff with original numpy array
-    #     ds = gdal.Open(temp_tif, gdal.GA_ReadOnly)
-    #     data_lv_theta = ds.ReadAsArray()
-    #     ds = None
-    #     np.testing.assert_array_almost_equal(data, data_lv_theta)
-    #     try:
-    #         os.remove(temp_tif)
-    #     except PermissionError:
-    #         print("File opened by another process.")
-    #
-    #     try:
-    #         os.remove(temp_unw)
-    #     except PermissionError:
-    #         print("File opened by another process.")
-
-    # def test_multilooked_tiffs_converted_to_unw_are_same(self):
-    #     # Get multilooked geotiffs
-    #     geotiffs = self.dest_paths
-    #
-    #     # Convert back to .unw
-    #     dest_unws = []
-    #     for g in geotiffs:
-    #         dest_unw = os.path.join(self.params[cf.OUT_DIR], os.path.splitext(g)[0] + '.unw')
-    #         shared.write_unw_from_data_or_geotiff(geotif_or_data=g, dest_unw= dest_unw, ifg_proc=1)
-    #         dest_unws.append(dest_unw)
-    #
-    #     # Convert back to tiff
-    #     new_geotiffs = conv2tif.do_geotiff(dest_unws, self.params)
-    #
-    #     # Ensure original multilooked geotiffs and
-    #     #  unw back to geotiff are the same
-    #     for g, u in zip(geotiffs, new_geotiffs):
-    #         g_ds = gdal.Open(g)
-    #         u_gs = gdal.Open(u)
-    #         np.testing.assert_array_almost_equal(u_gs.ReadAsArray(), g_ds.ReadAsArray())
-    #         u_gs = None
-    #         g_ds = None
-
-    # def test_roipac_raises(self):
-    #     geotiffs = [os.path.join(self.params[cf.OUT_DIR], os.path.basename(b).split('.')[0] + "_" + os.path.basename(b).split('.')[1] + '.tif') for b in self.base_unw_paths]
-    #
-    #     for g in geotiffs[:1]:
-    #         dest_unw = os.path.join(self.params[cf.OUT_DIR], os.path.splitext(g)[0] + '.unw')
-    #         with self.assertRaises(NotImplementedError):
-    #             shared.write_unw_from_data_or_geotiff(geotif_or_data=g, dest_unw=dest_unw, ifg_proc=0)
-    #
-
 
 class GeodesyTests(unittest.TestCase):
     """ """
+
     def test_utm_zone(self):
         """ """
         # test some different zones (collected manually)
@@ -470,7 +392,8 @@ class GeodesyTests(unittest.TestCase):
         exp_low = approx - (0.15 * approx)  # assumed tolerance
         exp_high = approx + (0.15 * approx)
 
-        latlons = [(10.0, 15.0), (-10.0, 15.0), (10.0, -15.0), (-10.0, -15.0), (178.0, 33.0), (-178.0, 33.0), (178.0, -33.0), (-178.0, -33.0)]
+        latlons = [(10.0, 15.0), (-10.0, 15.0), (10.0, -15.0), (-10.0, -15.0), (178.0, 33.0), (-178.0, 33.0),
+                   (178.0, -33.0), (-178.0, -33.0)]
 
         for lon, lat in latlons:
             xs, ys = cell_size(lat, lon, x_deg, y_deg)

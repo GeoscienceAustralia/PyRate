@@ -19,21 +19,24 @@ This Python module contains tests for mpi operations in PyRate.
 Tun this module as 'mpirun -n 4 pytest tests/test_mpi.py'
 """
 import glob
+import os
+import random
 import shutil
+import string
+import tempfile
+from os.path import join, basename
+
 import numpy as np
 import pytest
-import os
-import tempfile
-import random
-import string
-from . import common
 
+import common
+import conv2tif
 import core.orbital
 import core.shared
-import common
-import process, prepifg, merge, conv2tif
-from common import small_data_setup, reconstruct_mst, reconstruct_stack_rate, SML_TEST_DEM_HDR_GAMMA, pre_prepare_ifgs
-from core import algorithm, ref_phs_est as rpe, mpiops, config as cf, covariance, refpixel
+import prepifg
+import process
+from common import TEST_CONF_ROIPAC, TEST_CONF_GAMMA
+from core import mpiops, config as cf
 
 TRAVIS = True if "TRAVIS" in os.environ else False
 
@@ -79,6 +82,7 @@ def random_filename(tmpdir_factory):
     Returns:
 
     """
+
     def make_random_filename(ext=""):
         """
 
@@ -245,44 +249,43 @@ def get_crop(request):
     return request.param
 
 
-# def test_vcm_legacy_vs_mpi(mpisync, tempdir, get_config):
-#     from common import SML_TEST_DIR, TEST_CONF_ROIPAC
-#
-#     params_dict = get_config(TEST_CONF_ROIPAC)
-#     LEGACY_VCM_DIR = os.path.join(SML_TEST_DIR, 'vcm')
-#     legacy_vcm = np.genfromtxt(os.path.join(LEGACY_VCM_DIR, 'vcmt.csv'), delimiter=',')
-#     if mpiops.rank == 0:
-#         outdir = tempdir()
-#     else:
-#         outdir = None
-#     outdir = mpiops.comm.bcast(outdir, root=0)
-#     params_dict[cf.OUT_DIR] = outdir
-#     params_dict[cf.PARALLEL] = False
-#     xlks, ylks, crop = cf.transform_params(params_dict)
-#     base_unw_paths = cf.original_ifg_paths(params_dict[cf.IFG_FILE_LIST], params_dict[cf.OBS_DIR])
-#     # dest_paths are tifs that have been geotif converted and multilooked
-#     dest_paths = cf.get_dest_paths(base_unw_paths, crop, params_dict, xlks)
-#
-#     # run prepifg, create the dest_paths files
-#     if mpiops.rank == 0:
-#         conv2tif.main(params_dict)
-#         prepifg.main(params_dict)
-#
-#     mpiops.comm.barrier()
-#
-#     tiles = core.shared.get_tiles(dest_paths[0], rows=1, cols=1)
-#     preread_ifgs = process._create_ifg_dict(dest_paths, params=params_dict, tiles=tiles)
-#     refpx, refpy = process._ref_pixel_calc(dest_paths, params_dict)
-#     process._orb_fit_calc(dest_paths, params_dict)
-#     process._ref_phase_estimation(dest_paths, params_dict, refpx, refpy)
-#
-#     maxvar, vcmt = process._maxvar_vcm_calc(dest_paths, params_dict, preread_ifgs)
-#     np.testing.assert_array_almost_equal(maxvar, legacy_maxvar, decimal=4)
-#     np.testing.assert_array_almost_equal(legacy_vcm, vcmt, decimal=3)
-#     if mpiops.rank == 0:
-#         shutil.rmtree(outdir)
-#         common.remove_tifs(params_dict[cf.OBS_DIR])
-#
+def test_vcm_legacy_vs_mpi(mpisync, tempdir, get_config):
+    from common import SML_TEST_DIR, TEST_CONF_ROIPAC
+
+    params_dict = get_config(TEST_CONF_ROIPAC)
+    LEGACY_VCM_DIR = os.path.join(SML_TEST_DIR, 'vcm')
+    legacy_vcm = np.genfromtxt(os.path.join(LEGACY_VCM_DIR, 'vcmt.csv'), delimiter=',')
+    if mpiops.rank == 0:
+        outdir = tempdir()
+    else:
+        outdir = None
+    outdir = mpiops.comm.bcast(outdir, root=0)
+    params_dict[cf.OUT_DIR] = outdir
+    params_dict[cf.PARALLEL] = False
+    xlks, ylks, crop = cf.transform_params(params_dict)
+    base_unw_paths = cf.original_ifg_paths(params_dict[cf.IFG_FILE_LIST], params_dict[cf.OBS_DIR])
+    # dest_paths are tifs that have been geotif converted and multilooked
+    dest_paths = cf.get_dest_paths(base_unw_paths, crop, params_dict, xlks)
+
+    # run prepifg, create the dest_paths files
+    if mpiops.rank == 0:
+        conv2tif.main(params_dict)
+        prepifg.main(params_dict)
+
+    mpiops.comm.barrier()
+
+    tiles = core.shared.get_tiles(dest_paths[0], rows=1, cols=1)
+    preread_ifgs = process._create_ifg_dict(dest_paths, params=params_dict, tiles=tiles)
+    refpx, refpy = process._ref_pixel_calc(dest_paths, params_dict)
+    process._orb_fit_calc(dest_paths, params_dict)
+    process._ref_phase_estimation(dest_paths, params_dict, refpx, refpy)
+
+    maxvar, vcmt = process._maxvar_vcm_calc(dest_paths, params_dict, preread_ifgs)
+    np.testing.assert_array_almost_equal(maxvar, legacy_maxvar, decimal=4)
+    np.testing.assert_array_almost_equal(legacy_vcm, vcmt, decimal=3)
+    if mpiops.rank == 0:
+        shutil.rmtree(outdir)
+        common.remove_tifs(params_dict[cf.OBS_DIR])
 
 
 @pytest.fixture(params=[1, 2, 5])
@@ -354,8 +357,6 @@ def test_prepifg_mpi(mpisync, get_config, tempdir, roipac_or_gamma, get_lks, get
     Returns:
 
     """
-    from common import TEST_CONF_ROIPAC, TEST_CONF_GAMMA
-    from os.path import join, basename
 
     if roipac_or_gamma == 1:
         params = get_config(TEST_CONF_GAMMA)

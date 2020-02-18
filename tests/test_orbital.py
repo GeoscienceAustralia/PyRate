@@ -22,28 +22,27 @@ import shutil
 import tempfile
 import unittest
 from itertools import product
-from numpy import empty, dot, concatenate, float32
-from numpy import nan, isnan, array
 from os.path import join
 
 import numpy as np
+from numpy import empty, dot, concatenate, float32
+from numpy import nan, isnan, array
 from numpy.linalg import pinv, inv
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 from scipy.linalg import lstsq
-from . import common
 
-from .common import small5_mock_ifgs, MockIfg
+from common import SML_TEST_LEGACY_ORBITAL_DIR
+from common import SML_TEST_TIF, small_data_setup
+from common import TEST_CONF_ROIPAC, IFMS16
+from common import small_ifg_file_list
 from core import algorithm, config as cf
 from core.orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, QUADRATIC, PART_CUBIC
 from core.orbital import OrbitalError, _orbital_correction
-from core.orbital import get_design_matrix, get_network_design_matrix
 from core.orbital import _get_num_params, remove_orbital_error
+from core.orbital import get_design_matrix, get_network_design_matrix
 from core.shared import Ifg
 from core.shared import nanmedian
-from common import TEST_CONF_ROIPAC, IFMS16
-from common import SML_TEST_LEGACY_ORBITAL_DIR
-from common import SML_TEST_TIF, small_data_setup
-from common import small_ifg_file_list
+from .common import small5_mock_ifgs, MockIfg
 
 # TODO: Purpose of this variable? Degrees are 1, 2 and 3 respectively
 DEG_LOOKUP = {2: PLANAR, 5: QUADRATIC, 6: PART_CUBIC}
@@ -432,20 +431,20 @@ class NetworkDesignMatrixTests(unittest.TestCase):
             ib1, ib2 = [x * self.ncells for x in (i, i + 1)]  # row start/end
             jbm = ncoef * self.date_ids[ifg.master]  # starting col index for master
             jbs = ncoef * self.date_ids[ifg.slave]  # col start for slave
-            assert_array_almost_equal(-exp, dm[ib1:ib2, jbm : jbm + ncoef])
-            assert_array_almost_equal(exp, dm[ib1:ib2, jbs : jbs + ncoef])
+            assert_array_almost_equal(-exp, dm[ib1:ib2, jbm: jbm + ncoef])
+            assert_array_almost_equal(exp, dm[ib1:ib2, jbs: jbs + ncoef])
 
             # ensure remaining rows/cols are zero for this ifg NOT inc offsets
             assert_array_equal(0, dm[ib1:ib2, :jbm])  # all cols leading up to master
-            assert_array_equal(0, dm[ib1:ib2, jbm + ncoef : jbs])  # cols btwn mas/slv
-            assert_array_equal(0, dm[ib1:ib2, jbs + ncoef : np])  # to end of non offsets
+            assert_array_equal(0, dm[ib1:ib2, jbm + ncoef: jbs])  # cols btwn mas/slv
+            assert_array_equal(0, dm[ib1:ib2, jbs + ncoef: np])  # to end of non offsets
 
             # check offset cols for 1s and 0s
             if offset is True:
                 ip1 = i + np  # offset column index
                 assert_array_equal(1, dm[ib1:ib2, ip1])
                 assert_array_equal(0, dm[ib1:ib2, np:ip1])  # cols before offset col
-                assert_array_equal(0, dm[ib1:ib2, ip1 + 1 :])  # cols after offset col
+                assert_array_equal(0, dm[ib1:ib2, ip1 + 1:])  # cols after offset col
 
 
 # components for network correction testing
@@ -516,7 +515,7 @@ def _expand_corrections(ifgs, dm, params, ncoef, offsets):
     for ifg in ifgs:
         jbm = date_ids[ifg.master] * ncoef  # starting row index for master
         jbs = date_ids[ifg.slave] * ncoef  # row start for slave
-        par = params[jbs : jbs + ncoef] - params[jbm : jbm + ncoef]
+        par = params[jbs: jbs + ncoef] - params[jbm: jbm + ncoef]
 
         # estimate orbital correction effects
         # corresponds to "fullorb = B*parm + offset" in orbfwd.m
@@ -870,7 +869,8 @@ class LegacyComparisonTestsOrbfitMethod1(unittest.TestCase):
         onlyfiles = [
             f
             for f in os.listdir(SML_TEST_LEGACY_ORBITAL_DIR)
-            if os.path.isfile(os.path.join(SML_TEST_LEGACY_ORBITAL_DIR, f)) and f.endswith(".csv") and f.__contains__("_method1_")
+            if os.path.isfile(os.path.join(SML_TEST_LEGACY_ORBITAL_DIR, f)) and f.endswith(".csv") and f.__contains__(
+                "_method1_")
         ]
 
         count = 0
@@ -879,7 +879,8 @@ class LegacyComparisonTestsOrbfitMethod1(unittest.TestCase):
             for k, j in enumerate(self.ifg_paths):
                 ifg = Ifg(j)
                 ifg.open()
-                if os.path.basename(j).split("_unw.")[0] == os.path.basename(f).split("_orb_planar_1lks_method1_")[1].split(".")[0]:
+                if os.path.basename(j).split("_unw.")[0] == \
+                        os.path.basename(f).split("_orb_planar_1lks_method1_")[1].split(".")[0]:
                     count += 1
                     # all numbers equal
                     np.testing.assert_array_almost_equal(ifg_data, ifg.phase_data, decimal=2)
@@ -947,14 +948,16 @@ class LegacyComparisonTestsOrbfitMethod2(unittest.TestCase):
         onlyfiles = [
             f
             for f in os.listdir(SML_TEST_LEGACY_ORBITAL_DIR)
-            if os.path.isfile(os.path.join(SML_TEST_LEGACY_ORBITAL_DIR, f)) and f.endswith(".csv") and f.__contains__("_method2_")
+            if os.path.isfile(os.path.join(SML_TEST_LEGACY_ORBITAL_DIR, f)) and f.endswith(".csv") and f.__contains__(
+                "_method2_")
         ]
 
         count = 0
         for i, f in enumerate(onlyfiles):
             legacy_phase_data = np.genfromtxt(os.path.join(SML_TEST_LEGACY_ORBITAL_DIR, f), delimiter=",")
             for k, j in enumerate(self.ifgs):
-                if os.path.basename(j.data_path).split("_unw.")[0] == os.path.basename(f).split("_method2_")[1].split(".")[0]:
+                if os.path.basename(j.data_path).split("_unw.")[0] == \
+                        os.path.basename(f).split("_method2_")[1].split(".")[0]:
                     count += 1
                     # all numbers equal
                     np.testing.assert_array_almost_equal(legacy_phase_data, j.phase_data, decimal=3)
@@ -977,14 +980,16 @@ class LegacyComparisonTestsOrbfitMethod2(unittest.TestCase):
         onlyfiles = [
             f
             for f in os.listdir(SML_TEST_LEGACY_ORBITAL_DIR)
-            if os.path.isfile(os.path.join(SML_TEST_LEGACY_ORBITAL_DIR, f)) and f.endswith(".csv") and f.__contains__("_method2_")
+            if os.path.isfile(os.path.join(SML_TEST_LEGACY_ORBITAL_DIR, f)) and f.endswith(".csv") and f.__contains__(
+                "_method2_")
         ]
 
         count = 0
         for i, f in enumerate(onlyfiles):
             legacy_phase_data = np.genfromtxt(os.path.join(SML_TEST_LEGACY_ORBITAL_DIR, f), delimiter=",")
             for k, j in enumerate(self.ifgs):
-                if os.path.basename(j.data_path).split("_unw.")[0] == os.path.basename(f).split("_method2_")[1].split(".")[0]:
+                if os.path.basename(j.data_path).split("_unw.")[0] == \
+                        os.path.basename(f).split("_method2_")[1].split(".")[0]:
                     count += 1
                     # # all numbers equal
                     # np.testing.assert_array_almost_equal(legacy_phase_data,

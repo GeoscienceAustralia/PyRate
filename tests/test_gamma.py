@@ -27,21 +27,17 @@ from os.path import join
 import numpy as np
 from numpy.testing import assert_array_almost_equal
 from osgeo import gdal
-from osgeo import osr
-from osgeo import ogr
-from osgeo import gdalconst
-from osgeo import gdal_array
-from . import common
 
-import core.ifgconstants as ifc
-from core import shared, config as cf, gamma
-from core.config import DEM_HEADER_FILE, NO_DATA_VALUE, OBS_DIR, IFG_FILE_LIST, PROCESSOR, OUT_DIR, SLC_DIR
-import prepifg, conv2tif
-from core.shared import write_fullres_geotiff, GeotiffException
 import common
+import conv2tif
+import core.ifgconstants as ifc
+import prepifg
 from common import GAMMA_TEST_DIR, SML_TEST_GAMMA
 from common import TEST_CONF_GAMMA, TEMPDIR
 from common import small_data_setup
+from core import shared, config as cf, gamma
+from core.config import DEM_HEADER_FILE, NO_DATA_VALUE, OBS_DIR, IFG_FILE_LIST, PROCESSOR, OUT_DIR, SLC_DIR
+from core.shared import write_fullres_geotiff, GeotiffException
 
 gdal.UseExceptions()
 
@@ -51,6 +47,7 @@ PYRATEPATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 class GammaCommandLineTests(unittest.TestCase):
     """ """
+
     def setUp(self):
         """ """
         self.base = join(PYRATEPATH, "tests", "test_data", "gamma")
@@ -211,8 +208,8 @@ class GammaHeaderParsingTests(unittest.TestCase):
     def test_parse_gamma_epoch_header(self):
         """ """
         # minimal required headers are:
-        # date:      2009  7 13
-        # radar_frequency:        5.3310040e+09   Hz
+        # date: 2009 7 13
+        # radar_frequency: 5.3310040e+09 Hz
         path = join(GAMMA_TEST_DIR, "r20090713_VV.slc.par")
         hdrs = gamma.parse_epoch_header(path)
 

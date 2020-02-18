@@ -23,13 +23,15 @@ import shutil
 import tempfile
 import unittest
 from os.path import join
-import numpy as np
-from . import common
 
-import core.shared
-from core import shared, config as cf, config, prepifg_helper, mst
-import process, prepifg, conv2tif
+import numpy as np
+
 import common
+import conv2tif
+import core.shared
+import prepifg
+import process
+from core import shared, config as cf, config, prepifg_helper
 
 # taken from
 # http://stackoverflow.com/questions/6260149/os-symlink-support-in-windows
@@ -56,6 +58,7 @@ if os.name == "nt":
                 raise ctypes.WinError()
         except:
             pass
+
 
     os.symlink = symlink_ms
 
@@ -135,6 +138,7 @@ def get_ifgs(out_dir, _open=True):
 
 class PyRateTests(unittest.TestCase):
     """ """
+
     # Initialise & run workflow from class setup, ignoring multilooking as it is
     # a separate step. Unit tests verify different steps have completed
 
@@ -260,7 +264,8 @@ class ParallelPyRateTests(unittest.TestCase):
         ifgs = common.small_data_setup()
         cls.refpixel_p, cls.maxvar_p, cls.vcmt_p = process.main(cls.dest_paths, params, 3, 3)
         cls.mst_p = common.reconstruct_mst(ifgs[0].shape, tiles, params[cf.TMPDIR])
-        cls.rate_p, cls.error_p, cls.samples_p = [common.reconstruct_stack_rate(ifgs[0].shape, tiles, params[cf.TMPDIR], t) for t in rate_types]
+        cls.rate_p, cls.error_p, cls.samples_p = [
+            common.reconstruct_stack_rate(ifgs[0].shape, tiles, params[cf.TMPDIR], t) for t in rate_types]
 
         common.remove_tifs(params[cf.OBS_DIR])
 
@@ -275,7 +280,8 @@ class ParallelPyRateTests(unittest.TestCase):
         cls.refpixel, cls.maxvar, cls.vcmt = process.main(cls.dest_paths_s, params, 3, 3)
 
         cls.mst = common.reconstruct_mst(ifgs[0].shape, tiles, params[cf.TMPDIR])
-        cls.rate, cls.error, cls.samples = [common.reconstruct_stack_rate(ifgs[0].shape, tiles, params[cf.TMPDIR], t) for t in rate_types]
+        cls.rate, cls.error, cls.samples = [common.reconstruct_stack_rate(ifgs[0].shape, tiles, params[cf.TMPDIR], t)
+                                            for t in rate_types]
 
     @classmethod
     def tearDownClass(cls):
@@ -344,6 +350,7 @@ class ParallelPyRateTests(unittest.TestCase):
 
 class TestPrePrepareIfgs(unittest.TestCase):
     """ """
+
     @classmethod
     def setUpClass(cls):
         """ """

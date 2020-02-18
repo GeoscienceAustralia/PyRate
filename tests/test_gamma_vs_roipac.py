@@ -24,10 +24,8 @@ import shutil
 import tempfile
 import unittest
 
-from . import common
-
+from common import SML_TEST_DIR, small_data_setup, remove_tifs
 from core import ifgconstants as ifc, config as cf
-from core.prepifg_helper import _is_number
 from core.config import (
     DEM_HEADER_FILE,
     NO_DATA_VALUE,
@@ -46,9 +44,9 @@ from core.config import (
     APS_INCIDENCE_MAP,
     APS_ELEVATION_MAP,
 )
-
-from common import SML_TEST_DIR, small_data_setup, remove_tifs
+from core.prepifg_helper import _is_number
 from main import prepifg_handler, conv2tif_handler
+from . import common
 
 DUMMY_SECTION_NAME = "pyrate"
 
@@ -106,11 +104,11 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
         with open(self.ifgListFile, "w") as ifgl:
             ifgl.write("\n".join(data))
 
-    # def test_cmd_ifg_no_gamma_files_created(self):
-    #     self.conf_file = self.gamma_conffile
-    #     self.base_dir = self.gamma_base_dir
-    #     self.ifgListFile = self.gamma_ifgListFile
-    #     self.check_gamma(self.gamma_conffile)
+    def test_cmd_ifg_no_gamma_files_created(self):
+        self.conf_file = self.gamma_conffile
+        self.base_dir = self.gamma_base_dir
+        self.ifgListFile = self.gamma_ifgListFile
+        self.check_gamma(self.gamma_conffile)
 
     def check_gamma(self, conf_file):
         """
@@ -127,7 +125,8 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
 
         base_ifg_paths, dest_paths, params = cf.get_ifg_paths(conf_file)
         dest_base_ifgs = [
-            os.path.join(params[cf.OBS_DIR], os.path.basename(q).split(".")[0] + "_" + os.path.basename(q).split(".")[1] + ".tif")
+            os.path.join(params[cf.OBS_DIR],
+                         os.path.basename(q).split(".")[0] + "_" + os.path.basename(q).split(".")[1] + ".tif")
             for q in base_ifg_paths
         ]
 
@@ -168,14 +167,14 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
         with open(self.ifgListFile, "w") as ifgl:
             ifgl.write("\n".join(data))
 
-    # def test_cmd_ifg_no_roipac_files_created_roipac(self):
-    #     self.dataPaths = common.small_data_roipac_unws()
-    #     base_exp = common.small_ifg_file_list()
-    #     self.expPaths = [os.path.join(common.SML_TEST_OBS, os.path.basename(i)) for i in base_exp]
-    #     self.confFile = self.roipac_conffile
-    #     self.ifgListFile = self.roipac_ifgListFile
-    #     self.base_dir = self.roipac_base_dir
-    #     self.check_roipac()
+    def test_cmd_ifg_no_roipac_files_created_roipac(self):
+        self.dataPaths = common.small_data_roipac_unws()
+        base_exp = common.small_ifg_file_list()
+        self.expPaths = [os.path.join(common.SML_TEST_OBS, os.path.basename(i)) for i in base_exp]
+        self.confFile = self.roipac_conffile
+        self.ifgListFile = self.roipac_ifgListFile
+        self.base_dir = self.roipac_base_dir
+        self.check_roipac()
 
     def check_roipac(self):
         """ """

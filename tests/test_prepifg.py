@@ -28,22 +28,15 @@ from os.path import exists, join
 import numpy as np
 from numpy import isnan, nanmax, nanmin, nanmean, ones, nan, reshape, sum as npsum
 from numpy.testing import assert_array_almost_equal, assert_array_equal
-
 from osgeo import gdal
-from osgeo import osr
-from osgeo import ogr
-from osgeo import gdalconst
-from osgeo import gdal_array
 
-from . import common
-
-import prepifg, conv2tif
+import common
+import conv2tif
+import prepifg
+from common import PREP_TEST_TIF, SML_TEST_DEM_DIR
+from common import SML_TEST_DEM_TIF
+from common import SML_TEST_LEGACY_PREPIFG_DIR
 from core import config as cf
-from core.config import mlooked_path
-from core.shared import Ifg, DEM
-from core.prepifg_helper import CUSTOM_CROP, MAXIMUM_CROP, MINIMUM_CROP, ALREADY_SAME_SIZE
-from core.prepifg_helper import prepare_ifgs, _resample, PreprocessError, CustomExts
-
 # from tasks.utils import DUMMY_SECTION_NAME
 from core.config import (
     DEM_HEADER_FILE,
@@ -64,11 +57,10 @@ from core.config import (
     APS_METHOD,
     APS_CORRECTION,
 )
-
-from common import SML_TEST_LEGACY_PREPIFG_DIR
-from common import PREP_TEST_TIF, SML_TEST_DEM_DIR
-from common import SML_TEST_DEM_TIF
-import common
+from core.config import mlooked_path
+from core.prepifg_helper import CUSTOM_CROP, MAXIMUM_CROP, MINIMUM_CROP, ALREADY_SAME_SIZE
+from core.prepifg_helper import prepare_ifgs, _resample, PreprocessError, CustomExts
+from core.shared import Ifg, DEM
 
 gdal.UseExceptions()
 DUMMY_SECTION_NAME = "pyrate"
@@ -300,9 +292,11 @@ class PrepifgOutputTests(unittest.TestCase):
         # empty string and none raises exceptio
         for i in [None, ""]:
             cext = (150.92, -34.18, 150.94, i)
-            self.assertRaises(PreprocessError, prepare_ifgs, self.ifg_paths, CUSTOM_CROP, xlooks, ylooks, user_exts=cext)
+            self.assertRaises(PreprocessError, prepare_ifgs, self.ifg_paths, CUSTOM_CROP, xlooks, ylooks,
+                              user_exts=cext)
         # three parameters provided
-        self.assertRaises(PreprocessError, prepare_ifgs, self.ifg_paths, CUSTOM_CROP, xlooks, ylooks, user_exts=(150.92, -34.18, 150.94))
+        self.assertRaises(PreprocessError, prepare_ifgs, self.ifg_paths, CUSTOM_CROP, xlooks, ylooks,
+                          user_exts=(150.92, -34.18, 150.94))
         # close ifgs
         for i in self.ifgs:
             i.close()
@@ -318,7 +312,8 @@ class PrepifgOutputTests(unittest.TestCase):
                 tmp_latlon[i] += error
                 cext = CustomExts(*tmp_latlon)
 
-                self.assertRaises(PreprocessError, prepare_ifgs, self.ifg_paths, CUSTOM_CROP, xlooks, ylooks, user_exts=cext)
+                self.assertRaises(PreprocessError, prepare_ifgs, self.ifg_paths, CUSTOM_CROP, xlooks, ylooks,
+                                  user_exts=cext)
         # close ifgs
         for i in self.ifgs:
             i.close()
@@ -648,7 +643,8 @@ class LegacyEqualityTestRoipacSmallTestData(unittest.TestCase):
         onlyfiles = [
             fln
             for fln in os.listdir(SML_TEST_LEGACY_PREPIFG_DIR)
-            if os.path.isfile(os.path.join(SML_TEST_LEGACY_PREPIFG_DIR, fln)) and fln.endswith(".csv") and fln.__contains__("_rad_")
+            if os.path.isfile(os.path.join(SML_TEST_LEGACY_PREPIFG_DIR, fln)) and fln.endswith(
+                ".csv") and fln.__contains__("_rad_")
         ]
 
         for fln in onlyfiles:
@@ -666,7 +662,8 @@ class LegacyEqualityTestRoipacSmallTestData(unittest.TestCase):
         onlyfiles = [
             f
             for f in os.listdir(SML_TEST_LEGACY_PREPIFG_DIR)
-            if os.path.isfile(os.path.join(SML_TEST_LEGACY_PREPIFG_DIR, f)) and f.endswith(".csv") and f.__contains__("_mm_")
+            if os.path.isfile(os.path.join(SML_TEST_LEGACY_PREPIFG_DIR, f)) and f.endswith(".csv") and f.__contains__(
+                "_mm_")
         ]
 
         count = 0
@@ -690,6 +687,7 @@ class LegacyEqualityTestRoipacSmallTestData(unittest.TestCase):
 
 class TestOneIncidenceOrElevationMap(unittest.TestCase):
     """ """
+
     def setUp(self):
         """ """
         self.base_dir = tempfile.mkdtemp()
