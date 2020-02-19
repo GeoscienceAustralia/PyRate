@@ -420,7 +420,7 @@ PYRATE_DEFAULT_CONFIGRATION = {
         "DataType": int,
         "DefaultValue": 3,
         "MinValue": 1,
-        "MaxValue": None,
+        "MaxValue": 1000,
         "PossibleValues": None,
         "Required": False
     },
