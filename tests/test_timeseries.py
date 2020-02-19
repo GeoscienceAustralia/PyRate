@@ -23,18 +23,15 @@ import sys
 import tempfile
 import unittest
 from datetime import date, timedelta
-
-import numpy as np
 from numpy import nan, asarray, where
+import numpy as np
 from numpy.testing import assert_array_almost_equal
 
-import conv2tif
-import core.orbital
-import prepifg
-import process
-from core import config as cf, mst, covariance
-from core.timeseries import time_series
 from . import common
+import core.orbital
+from core import ref_phs_est as rpe, config as cf, mst, covariance
+import process, prepifg, conv2tif
+from core.timeseries import time_series
 
 
 def default_params():
@@ -116,7 +113,6 @@ class TimeSeriesTests(unittest.TestCase):
         tsincr, tscum, tsvel = time_series(self.ifgs, params=self.params, vcmt=self.vcmt, mst=None)
         expected = asarray([[[0.50, 3.0, 4.0, 5.5, 6.5]]])
         assert_array_almost_equal(tscum, expected, decimal=2)
-
 
 class LegacyTimeSeriesEquality(unittest.TestCase):
 
@@ -266,7 +262,7 @@ class LegacyTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
         params[cf.PARALLEL] = 2
 
         # Calculate time series
-        cls.tsincr_2, cls.tscum_2, _ = common.calculate_time_series(ifgs, params, vcmt, mst=mst_grid)
+        cls.tsincr_2, cls.tscum_2, _ =  common.calculate_time_series(ifgs, params, vcmt, mst=mst_grid)
 
         params[cf.PARALLEL] = 0
         # Calculate time series serailly by the pixel
