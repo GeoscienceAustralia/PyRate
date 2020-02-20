@@ -39,11 +39,13 @@ def set_parameter_value(data_type, input_value, default_value, required, input_n
         input_value = None
         if required:
             raise ValueError("A required parameter is missing value in input configuration file: " + str(input_name))
-
-    if input_value is not None:
-        if str(data_type) in "path":
-            return pathlib.Path(input_value)
-        return data_type(input_value)
+    try:
+        if input_value is not None:
+            if str(data_type) in "path":
+                return pathlib.Path(input_value)
+            return data_type(input_value)
+    except ValueError:
+        raise ValueError("A given parameter: "+str(input_name)+" has invalid data type: " +str(input_value)+" in input configuration file.")
     return default_value
 
 
@@ -128,14 +130,16 @@ def validate_file_list_values(dir, fileList, no_of_epochs):
             else:
                 matches = re.findall("(\d{8})", str(dir / path_str))
                 if len(matches) < no_of_epochs:
-                    raise ValueError(
-                        "For the given file name: "
-                        + str(path_str)
-                        + " in: "
-                        + str(dir)
-                        + " the number of epochs in file names are less the required number:"
-                        + str(no_of_epochs)
-                    )
+                    matches = re.findall("(\d{6})", str(dir / path_str))
+                    if len(matches) < no_of_epochs:
+                        raise ValueError(
+                            "For the given file name: "
+                            + str(path_str)
+                            + " in: "
+                            + str(dir)
+                            + " the number of epochs in file names are less the required number:"
+                            + str(no_of_epochs)
+                        )
 
 
 class MultiplePaths:
@@ -181,7 +185,6 @@ sampled_path = """
 class Configuration:
     def __init__(self, config_file_path):
         """
-
         Args:
           config_file_path:
 
