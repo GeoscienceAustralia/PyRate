@@ -17,24 +17,24 @@
 This Python module contains generic utilities and mock objects for use in the
 PyRate test suite.
 """
-
 import glob
 import os
 import shutil
 import stat
+import sys
 import tempfile
-import logging
+import warnings
 from os.path import join
 
 import numpy as np
 from numpy import isnan, sum as nsum
-from osgeo import gdal
-from osgeo import osr
-from osgeo import ogr
-from osgeo import gdalconst
-from osgeo import gdal_array
 
-import sys
+# ignr: DeprecationWarning: the imp module is deprecated in favour of importlib; see the module's
+# documentation for alternative uses
+warnings.filterwarnings("ignore")
+
+from osgeo import gdal
+
 
 PYRATE_MODULE_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "pyrate")
 TEST_MODULE_PATH = os.path.dirname(os.path.abspath(__file__))

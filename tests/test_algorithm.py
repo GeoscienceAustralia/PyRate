@@ -18,8 +18,7 @@ This Python module contains tests for the algorithm.py PyRate module.
 """
 import unittest
 from datetime import date
-from math import pi, cos, sin, radians
-from numpy import array, reshape, squeeze
+from math import pi
 from os.path import join
 from unittest import TestCase
 
@@ -27,7 +26,6 @@ import numpy as np
 from numpy.testing import assert_array_almost_equal, assert_allclose
 
 from . import common
-
 from core.algorithm import get_all_epochs, get_epochs, master_slave_ids
 from core.config import parse_namelist
 from core.shared import Ifg, convert_radians_to_mm
@@ -35,7 +33,6 @@ from core.shared import Ifg, convert_radians_to_mm
 
 class AlgorithmTests(TestCase):
     """Misc unittests for functions in the algorithm module."""
-
     @staticmethod
     def test_phase_conversion():
         """ """
