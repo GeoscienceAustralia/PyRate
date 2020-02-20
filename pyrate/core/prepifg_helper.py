@@ -27,11 +27,12 @@ from numbers import Number
 from subprocess import check_call
 from tempfile import mkstemp
 
+import numpy as np
 from numpy import array, where, nan, isnan, nanmean, float32, zeros, sum as nsum
 from osgeo import gdal
 
-from core import ifgconstants as ifc
-from core.gdal_python import crop_resample_average
+from core import ifgconstants as ifc, shared
+from core.gdal_python import _crop_resample_setup, _setup_source, coherence_masking, gdal_average, _alignment
 from core.logger import pyratelogger as log
 from core.shared import Ifg, DEM
 
@@ -578,3 +579,108 @@ def _check_crop_coords(ifgs, xmin, ymin, xmax, ymax):
 
 class PreprocessError(Exception):
     """Preprocess exception"""
+
+
+def crop_resample_average(input_raster, extents, resolution, output_file, thresh, header=None, coherence_path=None,
+                          coherence_thresh=None):
+    """Crop, resample, and average a geotiff image.
+
+    Args:
+      str: input_raster: Path to input geotiff to resample/crop
+      tuple: extents: Cropping extents (xfirst, yfirst, xlast, ylast)
+      list: resolution: [xres, yres] resolution of output image
+      str: output_file: Path to output resampled/cropped geotiff
+      float: thresh: NaN fraction threshold
+      str: out_driver_type: The output driver; `MEM` or `GTiff` (optional)
+      bool: match_pyrate: Match Legacy output (optional)
+      dict: header: dictionary of metadata
+      input_raster: param extents:
+      resolution: param output_file:
+      thresh: param header:  (Default value = None)
+      coherence_path: Default value = None)
+      coherence_thresh: Default value = None)
+      extents:
+      output_file:
+      header: (Default value = None)
+
+    Returns:
+      ndarray: resampled_average: output cropped and resampled image
+
+    """
+    out_driver_type = "GTiff"
+    match_pyrate = False
+    dst_ds, _, _, _ = _crop_resample_setup(extents, input_raster, resolution, output_file, out_bands=2,
+                                           dst_driver_type="MEM")
+
+    # make a temporary copy of the dst_ds for PyRate style prepifg
+    tmp_ds = gdal.GetDriverByName("MEM").CreateCopy("", dst_ds) if (match_pyrate and resolution[0]) else None
+
+    src_ds, src_ds_mem = _setup_source(input_raster)
+
+    if coherence_path and coherence_thresh:
+        coherence_raster = prepifg_helper.dem_or_ifg(coherence_path)
+        coherence_raster.open()
+        coherence_ds = coherence_raster.dataset
+        coherence_masking(src_ds_mem, coherence_ds, coherence_thresh)
+    elif coherence_path and not coherence_thresh:
+        raise ValueError(
+            f"Coherence file provided without a coherence "
+            f"threshold. Please ensure you provide 'cohthresh' "
+            f"in your config if coherence masking is enabled."
+        )
+
+    resampled_average, src_ds_mem = gdal_average(dst_ds, src_ds, src_ds_mem, thresh)
+    src_dtype = src_ds_mem.GetRasterBand(1).DataType
+    src_gt = src_ds_mem.GetGeoTransform()
+
+    # required to match Legacy output
+    if tmp_ds:
+        _alignment(input_raster, resolution, resampled_average, src_ds_mem, src_gt, tmp_ds)
+
+    # grab metadata from existing geotiff
+    gt = dst_ds.GetGeoTransform()
+    wkt = dst_ds.GetProjection()
+
+    # TEST HERE IF EXISTING FILE HAS PYRATE METADATA. IF NOT ADD HERE
+    if not ifc.DATA_TYPE in dst_ds.GetMetadata() and header is not None:
+        md = shared.collate_metadata(header)
+    else:
+        md = dst_ds.GetMetadata()
+
+    # update metadata for output
+    for k, v in md.items():
+        if k == ifc.DATA_TYPE:
+            # update data type metadata
+            if v == ifc.ORIG and coherence_path:
+                md.update({ifc.DATA_TYPE: ifc.COHERENCE})
+            elif v == ifc.ORIG and not coherence_path:
+                md.update({ifc.DATA_TYPE: ifc.MULTILOOKED})
+            elif v == ifc.DEM:
+                md.update({ifc.DATA_TYPE: ifc.MLOOKED_DEM})
+            elif v == ifc.INCIDENCE:
+                md.update({ifc.DATA_TYPE: ifc.MLOOKED_INC})
+            elif v == ifc.COHERENCE and coherence_path:
+                pass
+            elif v == ifc.MULTILOOKED and coherence_path:
+                md.update({ifc.DATA_TYPE: ifc.COHERENCE})
+            elif v == ifc.MULTILOOKED and not coherence_path:
+                pass
+            else:
+                raise TypeError("Data Type metadata not recognised")
+
+    # In-memory GDAL driver doesn't support compression so turn it off.
+    creation_opts = ["compress=packbits"] if out_driver_type != "MEM" else []
+    out_ds = shared.gdal_dataset(
+        output_file,
+        dst_ds.RasterXSize,
+        dst_ds.RasterYSize,
+        driver=out_driver_type,
+        bands=1,
+        dtype=src_dtype,
+        metadata=md,
+        crs=wkt,
+        geotransform=gt,
+        creation_opts=creation_opts,
+    )
+
+    shared.write_geotiff(resampled_average, out_ds, np.nan)

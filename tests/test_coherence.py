@@ -1,11 +1,10 @@
 import os
 import unittest
-
 import numpy as np
+from . import common
 from osgeo import gdal
 from osgeo import osr
-
-from core import gdal_python
+from core.gdal_python import coherence_masking
 
 
 class CoherenceMaskingTest(unittest.TestCase):
@@ -54,7 +53,7 @@ class CoherenceMaskingTest(unittest.TestCase):
 
         # use the gdal_python.coherence_masking to find the actual mask dataset
         threshold = 0.3
-        gdal_python.coherence_masking(sample_gdal_dataset, coherence_mask_dataset, threshold)
+        coherence_masking(sample_gdal_dataset, coherence_mask_dataset, threshold)
         sample_gdal_array = np.nan_to_num(sample_gdal_dataset.GetRasterBand(1).ReadAsArray())
 
         # compare the artificial masked and actual masked datasets

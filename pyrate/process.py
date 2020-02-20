@@ -368,6 +368,7 @@ def _ref_phase_estimation(ifg_paths, params, refpx, refpy):
       
 
     """
+
     log.info("Calculating reference phase")
     if len(ifg_paths) < 2:
         raise ref_phs_est.ReferencePhaseError(
@@ -375,37 +376,29 @@ def _ref_phase_estimation(ifg_paths, params, refpx, refpy):
 
     if mpiops.run_once(shared.check_correction_status, ifg_paths, ifc.PYRATE_REF_PHASE):
         log.debug("Finished reference phase estimation")
-        return
-
-    if params[cf.REF_EST_METHOD] == 1:
-        ref_phs = ref_phs_est.est_ref_phase_method1(ifg_paths, params)
-    elif params[cf.REF_EST_METHOD] == 2:
-        ref_phs = ref_phs_est.est_ref_phase_method2(ifg_paths, params, refpx, refpy)
     else:
-        raise ref_phs_est.ReferencePhaseError("No such option, use '1' or '2'.")
+        if params[cf.REF_EST_METHOD] == 1:
+            ref_phs = ref_phs_est.est_ref_phase_method1(ifg_paths, params)
+        elif params[cf.REF_EST_METHOD] == 2:
+            ref_phs = ref_phs_est.est_ref_phase_method2(ifg_paths, params, refpx, refpy)
+        else:
+            raise ref_phs_est.ReferencePhaseError("No such option, use '1' or '2'.")
 
-    # Save reference phase numpy arrays to disk.
-    ref_phs_file = os.path.join(params[cf.TMPDIR], "ref_phs.npy")
-    if mpiops.rank == MASTER_PROCESS:
-        collected_ref_phs = np.zeros(len(ifg_paths), dtype=np.float64)
-        process_indices = mpiops.array_split(range(len(ifg_paths)))
-        collected_ref_phs[process_indices] = ref_phs
-        for r in range(1, mpiops.size):
-            process_indices = mpiops.array_split(range(len(ifg_paths)), r)
-            this_process_ref_phs = np.zeros(shape=len(process_indices), dtype=np.float64)
-            mpiops.comm.Recv(this_process_ref_phs, source=r, tag=r)
-            collected_ref_phs[process_indices] = this_process_ref_phs
-        np.save(file=ref_phs_file, arr=ref_phs)
-    else:
-        mpiops.comm.Send(ref_phs, dest=MASTER_PROCESS, tag=mpiops.rank)
-    log.debug("Finished reference phase estimation")
-
-    # Preserve old return value so tests don't break.
-    if isinstance(ifg_paths[0], Ifg):
-        ifgs = ifg_paths
-    else:
-        ifgs = [Ifg(ifg_path) for ifg_path in ifg_paths]
-    return ref_phs, ifgs
+        # Save reference phase numpy arrays to disk.
+        ref_phs_file = os.path.join(params[cf.TMPDIR], "ref_phs.npy")
+        if mpiops.rank == MASTER_PROCESS:
+            collected_ref_phs = np.zeros(len(ifg_paths), dtype=np.float64)
+            process_indices = mpiops.array_split(range(len(ifg_paths)))
+            collected_ref_phs[process_indices] = ref_phs
+            for r in range(1, mpiops.size):
+                process_indices = mpiops.array_split(range(len(ifg_paths)), r)
+                this_process_ref_phs = np.zeros(shape=len(process_indices), dtype=np.float64)
+                mpiops.comm.Recv(this_process_ref_phs, source=r, tag=r)
+                collected_ref_phs[process_indices] = this_process_ref_phs
+            np.save(file=ref_phs_file, arr=ref_phs)
+        else:
+            mpiops.comm.Send(ref_phs, dest=MASTER_PROCESS, tag=mpiops.rank)
+        log.debug("Finished reference phase estimation")
 
 
 def _stack_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
