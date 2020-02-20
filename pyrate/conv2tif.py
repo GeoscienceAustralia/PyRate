@@ -30,22 +30,11 @@ ROIPAC = 0
 
 
 def main(params):
-    """Args:
-    
-    Args:
-
+    """
     Args:
       params: 
 
-    Returns:
-      
-
     """
-    # TODO: looks like base_ifg_paths are ordered according to ifg list
-    # This probably won't be a problem because input list won't be reordered
-    # and the original gamma generated list is ordered) this may not affect
-    # the important pyrate stuff anyway, but might affect gen_thumbs.py.
-    # Going to assume base_ifg_paths is ordered correcly
     if rank == 0:
         log.info("Collecting jobs: conv2tif")
         # a job is list of parameters passed to multiprocessing function

@@ -169,21 +169,7 @@ def cvd_from_phase(phase, ifg, r_dist, calc_alpha, save_acg=False, params=None):
             Rdist class for more details)
         calc_alpha (bool): If True calculate alpha
         save_acg (bool): If True write autocorrelation and radial distance data
-            to numpy array file on disk
-    
-    Args:
-      be: provided if save_acg
-      phase: param ifg:
-      r_dist: param calc_alpha:
-      save_acg: Default value = False)
-
-    Args:
-      ifg: 
-      calc_alpha: 
-      phase: 
-      r_dist: 
-      save_acg:  (Default value = False)
-      params:  (Default value = None)
+            to numpy array file on disk. Default value = False
 
     Returns:
       float: maxvar: The maximum variance (at zero lag)

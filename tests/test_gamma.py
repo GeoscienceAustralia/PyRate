@@ -328,18 +328,13 @@ class TestGammaParallelVsSerial(unittest.TestCase):
     """Test Gamma prepifg produces correct results when run in serial and
     parallel and that metadata is correctly set by both methods. These tests
     exclude the comparison of DEM files.
-
-    Args:
-
-    Returns:
-
     """
 
     @classmethod
     def setUpClass(cls):
         """ """
         # read in the params
-        _, _, params = cf.get_ifg_paths(TEST_CONF_GAMMA)
+        params = Configuration(TEST_CONF_GAMMA).__dict__
         glob_prefix = "*utm_unw_1rlks_1cr.tif"
 
         # SERIAL
