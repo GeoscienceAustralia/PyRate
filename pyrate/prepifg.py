@@ -19,8 +19,11 @@ interferogram geotiff files.
 """
 # -*- coding: utf-8 -*-
 import os
+import shutil
 from decimal import Decimal
 from math import modf
+
+import numpy as np
 from osgeo import gdal
 from osgeo import gdalconst
 
@@ -37,10 +40,11 @@ from constants import (
     CUSTOM_CROP,
     ALREADY_SAME_SIZE,
 )
-from core import shared, config as cf, prepifg_helper, gamma, roipac
+from core import shared, config as cf, gamma, roipac, ifgconstants as ifc
+from core.gdal_python import _crop_resample_setup, _setup_source, coherence_masking, gdal_average, _alignment
 from core.logger import pyratelogger as log
 from core.mpiops import rank, comm, size, chunks
-from core.prepifg_helper import PreprocessError
+from core.shared import Ifg, DEM
 
 GAMMA = 1
 ROIPAC = 0
@@ -48,57 +52,41 @@ ROIPAC = 0
 
 def main(params):
     """Main workflow function for preparing interferograms for PyRate.
-    
-    Args:
-    
-    Args:
-
     Args:
       params: 
 
     Returns:
-      
-
     """
     if rank == 0:
         log.info("Collecting jobs: prepifg")
         # a job is list of parameters passed to multiprocessing function
         jobs = []
 
-        xlooks, ylooks, crop = params["ifglksx"], params["ifglksy"], params["ifgcropopt"]
-
         user_extents = (params[cf.IFG_XFIRST], params[cf.IFG_YFIRST], params[cf.IFG_XLAST], params[cf.IFG_YLAST])
-        thresh = params[cf.NO_DATA_AVERAGING_THRESHOLD]
 
         datasets_to_calcualte_extents = []
         for interferogram_file in params["interferogram_files"]:
             if not os.path.isfile(interferogram_file.converted_path):
-                raise Exception(
-                    "Can not find geotiff: " + str(
-                        interferogram_file.converted_path) + ". Ensure you have converted your interferograms to geotiffs."
-                )
+                raise Exception("Can not find geotiff: " + str(interferogram_file.converted_path) +
+                                ". Ensure you have converted your interferograms to geotiffs.")
             datasets_to_calcualte_extents.append(interferogram_file.converted_path)
 
         # optional DEM conversion
         if params["dem_file"] is not None:
             if not os.path.isfile(params["dem_file"].converted_path):
-                raise Exception(
-                    "Can not find geotiff: " + str(params[
-                                                       "dem_file"].converted_path) + ". Ensure you have converted your interferograms to geotiffs."
-                )
+                raise Exception("Can not find geotiff: " + str(params["dem_file"].converted_path) +
+                                ". Ensure you have converted your interferograms to geotiffs.")
             datasets_to_calcualte_extents.append(params["dem_file"].converted_path)
 
-        extents = get_analysis_extent(datasets_to_calcualte_extents, crop, xlooks, ylooks, user_exts=user_extents)
+        extents = get_analysis_extent(datasets_to_calcualte_extents, params["ifgcropopt"], params["ifglksx"], params["ifglksy"], user_exts=user_extents)
 
         log.info("Preparing interferograms by cropping/multilooking")
         for interferogram_file in params["interferogram_files"]:
-            jobs.append((interferogram_file.converted_path, interferogram_file.sampled_path, xlooks, ylooks, extents,
-                         thresh, crop, params))
+            jobs.append((interferogram_file.converted_path, interferogram_file.sampled_path, extents, params, "interferogram"))
 
         # optional DEM conversion
         if params["dem_file"] is not None:
-            jobs.append((params["dem_file"].converted_path, params["dem_file"].sampled_path, xlooks, ylooks, extents,
-                         thresh, crop, params))
+            jobs.append((params["dem_file"].converted_path, params["dem_file"].sampled_path, extents, params, "dem"))
         jobs = chunks(jobs, size)
     else:
         jobs = None
@@ -109,64 +97,135 @@ def main(params):
         _prepifg_multiprocessing(*job)
 
 
-def _prepifg_multiprocessing(input_path, output_path, xlooks, ylooks, extents, thresh, crop_opt, params):
-    """Multiprocessing wrapper for prepifg
-    
-    Args:
-        input_path:
-        output_path:
-        xlooks:
-        ylooks:
-        extents:
-        thresh:
-        crop_opt:
-    
-    Args:
-      input_path: param output_path:
-      xlooks: param ylooks:
-      extents: param thresh:
-      crop_opt: param params:
-      output_path:
-      ylooks:
-      thresh:
+def _prepifg_multiprocessing(input_path, output_path, extents, params, tag):
 
-    Args:
-      input_path: 
-      output_path: 
-      xlooks: 
-      ylooks: 
-      extents: 
-      thresh: 
-      crop_opt: 
-      params: 
-
-    Returns:
-      
-
-    """
+    xlooks = params["ifglksx"]
+    ylooks = params["ifglksy"]
+    crop_out = params["ifgcropopt"]
+    thresh = params[cf.NO_DATA_AVERAGING_THRESHOLD]
     processor = params[cf.PROCESSOR]  # roipac or gamma
+
     if processor == GAMMA:
         header = gamma.gamma_header(input_path, params)
     elif processor == ROIPAC:
         header = roipac.roipac_header(input_path, params)
     else:
-        raise PreprocessError("Processor must be ROI_PAC (0) or GAMMA (1)")
-    # If we're performing coherence masking, find the coherence file for this IFG.
-    # TODO: Refactor _is_interferogram to be unprotected (remove '_')
-    if params[cf.COH_MASK] and shared._is_interferogram(header):
-        coherence_path = cf.coherence_paths_for(input_path, params, tif=True)[0]
-        coherence_thresh = params[cf.COH_THRESH]
+        raise Exception("Processor must be ROI_PAC (0) or GAMMA (1)")
+
+    do_multilook = xlooks > 1 or ylooks > 1
+    # resolution=None completes faster for non-multilooked layers in gdalwarp
+    resolution = [None, None]
+
+    if "dem" in tag:
+        input_raster = DEM(input_path)
     else:
-        coherence_path = None
-        coherence_thresh = None
+        input_raster = Ifg(input_path)
 
-    prepifg_helper.prepare_ifg(input_path, output_path, xlooks, ylooks, extents, thresh, crop_opt, header,
-                               coherence_path, coherence_thresh)
+    if not input_raster.is_open:
+        input_raster.open()
 
+    if do_multilook:
+        log.debug("xlooks: " + str(xlooks))
+        log.debug("input_raster.x_step: " + str(input_raster.x_step))
+        log.debug("ylooks: " + str(ylooks))
+        log.debug("input_raster.y_step" + str(input_raster.y_step))
+
+        resolution = [xlooks * input_raster.x_step, ylooks * input_raster.y_step]
+
+    if not do_multilook and crop_out == ALREADY_SAME_SIZE:
+        shutil.copy(input_raster.data_path, output_path)
+        # set metadata to indicated has been cropped and multilooked
+        # copy file with mlooked path
+        input_raster.dataset.SetMetadataItem(ifc.DATA_TYPE, ifc.MULTILOOKED)
+
+
+    if xlooks != ylooks:
+        raise ValueError("X and Y looks mismatch")
+
+    #     # Add missing/updated metadata to resampled ifg/DEM
+    #     new_lyr = type(ifg)(looks_path)
+    #     new_lyr.open(readonly=True)
+    #     # for non-DEMs, phase bands need extra metadata & conversions
+    #     if hasattr(new_lyr, "phase_band"):
+    #         # TODO: LOS conversion to vertical/horizontal (projection)
+    #         # TODO: push out to workflow
+    #         #if params.has_key(REPROJECTION_FLAG):
+    #         #    reproject()
+    input_raster = input_raster.data_path
+    output_file = output_path
+
+    out_driver_type = "GTiff"
+    match_pyrate = False
+    dst_ds, _, _, _ = _crop_resample_setup(extents, input_raster, resolution, output_file, out_bands=2, dst_driver_type="MEM")
+
+    # make a temporary copy of the dst_ds for PyRate style prepifg
+    tmp_ds = gdal.GetDriverByName("MEM").CreateCopy("", dst_ds) if (match_pyrate and resolution[0]) else None
+
+    src_ds, src_ds_mem = _setup_source(input_raster)
+
+    if params["cohmask"]:
+        if params["coherence_file_paths"] and params["cohthresh"]:
+            coherence_masking(src_ds_mem, params["coherence_file_paths"], params["cohthresh"])
+
+    resampled_average, src_ds_mem = gdal_average(dst_ds, src_ds, src_ds_mem, thresh)
+    src_dtype = src_ds_mem.GetRasterBand(1).DataType
+    src_gt = src_ds_mem.GetGeoTransform()
+
+    # required to match Legacy output
+    if tmp_ds:
+        _alignment(input_raster, resolution, resampled_average, src_ds_mem, src_gt, tmp_ds)
+
+    # grab metadata from existing geotiff
+    gt = dst_ds.GetGeoTransform()
+    wkt = dst_ds.GetProjection()
+
+    # TEST HERE IF EXISTING FILE HAS PYRATE METADATA. IF NOT ADD HERE
+    if not ifc.DATA_TYPE in dst_ds.GetMetadata() and header is not None:
+        md = shared.collate_metadata(header)
+    else:
+        md = dst_ds.GetMetadata()
+
+    # update metadata for output
+
+    for k, v in md.items():
+        if k == ifc.DATA_TYPE:
+            # update data type metadata
+            if v == ifc.ORIG and params["coherence_file_paths"]:
+                md.update({ifc.DATA_TYPE: ifc.COHERENCE})
+            elif v == ifc.ORIG and not params["coherence_file_paths"]:
+                md.update({ifc.DATA_TYPE: ifc.MULTILOOKED})
+            elif v == ifc.DEM:
+                md.update({ifc.DATA_TYPE: ifc.MLOOKED_DEM})
+            elif v == ifc.INCIDENCE:
+                md.update({ifc.DATA_TYPE: ifc.MLOOKED_INC})
+            elif v == ifc.COHERENCE and params["coherence_file_paths"]:
+                pass
+            elif v == ifc.MULTILOOKED and params["coherence_file_paths"]:
+                md.update({ifc.DATA_TYPE: ifc.COHERENCE})
+            elif v == ifc.MULTILOOKED and not params["coherence_file_paths"]:
+                pass
+            else:
+                raise TypeError("Data Type metadata not recognised")
+
+    # In-memory GDAL driver doesn't support compression so turn it off.
+    creation_opts = ["compress=packbits"] if out_driver_type != "MEM" else []
+    out_ds = shared.gdal_dataset(
+        output_file,
+        dst_ds.RasterXSize,
+        dst_ds.RasterYSize,
+        driver=out_driver_type,
+        bands=1,
+        dtype=src_dtype,
+        metadata=md,
+        crs=wkt,
+        geotransform=gt,
+        creation_opts=creation_opts,
+    )
+
+    shared.write_geotiff(resampled_average, out_ds, np.nan)
 
 def get_analysis_extent(ifgs, crop_opt, xlooks, ylooks, user_exts):
     """
-
     Args:
       ifgs: param crop_opt:
       xlooks: param ylooks:
@@ -328,7 +387,7 @@ def get_analysis_extent(ifgs, crop_opt, xlooks, ylooks, user_exts):
 
         if not all(equal):
             msg = "Ifgs do not have the same bounding box for crop option: %s"
-            raise PreprocessError(msg % ALREADY_SAME_SIZE)
+            raise Exception(msg % ALREADY_SAME_SIZE)
 
         xmin, xmax = x_first, x_last
         ymin, ymax = y_first, y_last

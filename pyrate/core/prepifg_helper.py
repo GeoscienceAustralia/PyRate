@@ -20,29 +20,24 @@ multilooking/downsampling and cropping operations to reduce the size of
 the computational problem.
 """
 import os
-import shutil
 from collections import namedtuple
 from math import modf
 from numbers import Number
 from subprocess import check_call
 from tempfile import mkstemp
 
-import numpy as np
 from numpy import array, where, nan, isnan, nanmean, float32, zeros, sum as nsum
 from osgeo import gdal
 
-from core import ifgconstants as ifc, shared
-from core.gdal_python import _crop_resample_setup, _setup_source, coherence_masking, gdal_average, _alignment
-from core.logger import pyratelogger as log
 from core.shared import Ifg, DEM
 
+ALREADY_SAME_SIZE = 4
 CustomExts = namedtuple("CustExtents", ["xfirst", "yfirst", "xlast", "ylast"])
 
 # Constants
 MINIMUM_CROP = 1
 MAXIMUM_CROP = 2
 CUSTOM_CROP = 3
-ALREADY_SAME_SIZE = 4
 CROP_OPTIONS = [MINIMUM_CROP, MAXIMUM_CROP, CUSTOM_CROP, ALREADY_SAME_SIZE]
 
 GRID_TOL = 1e-6
@@ -167,109 +162,6 @@ def _get_extents(ifgs, crop_opt, user_exts=None):
     return extents
 
 
-def prepare_ifg(input_path, output_path, xlooks, ylooks, extents, thresh, crop_out, header=None, coherence_path=None,
-                coherence_thresh=None):
-    """Open, resample, crop and optionally save to disk an interferogram or DEM.
-    Returns are only given if write_to_disk=False
-
-    Args:
-      input_path(str): Input raster file path name
-      output_path(str): Path for output file
-      xlooks(int): Number of multi-looks in x; 5 is 5 times smaller, 1 is no
-    change
-      ylooks(int): Number of multi-looks in y
-      extents(tuple): Tuple of user defined georeferenced extents for new
-    file: (xfirst, yfirst, xlast, ylast)cropping coordinates
-      thresh(float): see thresh in prepare_ifgs()
-      crop_out(int): Crop option
-      header(dict, optional): dictionary of metadata from header file (Default value = None)
-      coherence_path: Default value = None)
-      coherence_thresh: Default value = None)
-
-    Returns:
-      ndarray: resampled_data: output cropped and resampled image
-
-    """
-
-    do_multilook = xlooks > 1 or ylooks > 1
-    # resolution=None completes faster for non-multilooked layers in gdalwarp
-    resolution = [None, None]
-    input_raster = dem_or_ifg(input_path)
-
-    if not input_raster.is_open:
-        input_raster.open()
-
-    if do_multilook:
-        log.debug("xlooks: " + str(xlooks))
-        log.debug("input_raster.x_step: " + str(input_raster.x_step))
-        log.debug("ylooks: " + str(ylooks))
-        log.debug("input_raster.y_step" + str(input_raster.y_step))
-
-        resolution = [xlooks * input_raster.x_step, ylooks * input_raster.y_step]
-
-    if not do_multilook and crop_out == ALREADY_SAME_SIZE:
-        shutil.copy(input_raster.data_path, output_path)
-        # set metadata to indicated has been cropped and multilooked
-        # copy file with mlooked path
-        _dummy_warp(output_path)
-
-    if xlooks != ylooks:
-        raise ValueError("X and Y looks mismatch")
-
-    #     # Add missing/updated metadata to resampled ifg/DEM
-    #     new_lyr = type(ifg)(looks_path)
-    #     new_lyr.open(readonly=True)
-    #     # for non-DEMs, phase bands need extra metadata & conversions
-    #     if hasattr(new_lyr, "phase_band"):
-    #         # TODO: LOS conversion to vertical/horizontal (projection)
-    #         # TODO: push out to workflow
-    #         #if params.has_key(REPROJECTION_FLAG):
-    #         #    reproject()
-
-    crop_resample_average(
-        input_raster=input_raster.data_path,
-        extents=extents,
-        resolution=resolution,
-        output_file=output_path,
-        thresh=thresh,
-        header=header,
-        coherence_path=coherence_path,
-        coherence_thresh=coherence_thresh,
-    )
-
-
-# TODO: crop options 0 = no cropping? get rid of same size
-def prepare_ifgs(raster_data_paths, crop_opt, xlooks, ylooks, thresh=0.5, user_exts=None, write_to_disc=True,
-                 out_path=None):
-    """Wrapper function to prepare a sequence of interferogram files for PyRate
-    analysis. See prepifg.prepare_ifg() for full description of inputs and
-    returns.
-    
-    Note: function need refining for crop options
-
-    Args:
-      raster_data_paths(list): List of interferogram file paths
-      crop_opt(int): Crop option
-      xlooks(int): Number of multi-looks in x; 5 is 5 times smaller, 1 is no
-    change
-      ylooks(int): Number of multi-looks in y
-      thresh(float, optional): see thresh in prepare_ifgs() (Default value = 0.5)
-      user_exts(tuple, optional): Tuple of user defined georeferenced extents for new
-    file: (xfirst, yfirst, xlast, ylast)cropping coordinates (Default value = None)
-      write_to_disc: Default value = True)
-      out_path: Default value = None)
-
-    Returns:
-      ndarray: resampled_data: output cropped and resampled image
-
-    """
-    # use metadata check to check whether it's a dem or ifg
-    rasters = [dem_or_ifg(r) for r in raster_data_paths]
-    exts = get_analysis_extent(crop_opt, rasters, xlooks, ylooks, user_exts)
-
-    return [prepare_ifg(d, xlooks, ylooks, exts, thresh, crop_opt, write_to_disc, out_path) for d in raster_data_paths]
-
-
 def dem_or_ifg(data_path):
     """Returns an Ifg or DEM class object from input geotiff file.
 
@@ -287,6 +179,39 @@ def dem_or_ifg(data_path):
     else:
         return DEM(data_path)
 
+
+
+# # TODO: crop options 0 = no cropping? get rid of same size
+# def prepare_ifgs(raster_data_paths, crop_opt, xlooks, ylooks, thresh=0.5, user_exts=None, write_to_disc=True,
+#                  out_path=None):
+#     """Wrapper function to prepare a sequence of interferogram files for PyRate
+#     analysis. See prepifg.prepare_ifg() for full description of inputs and
+#     returns.
+#
+#     Note: function need refining for crop options
+#
+#     Args:
+#       raster_data_paths(list): List of interferogram file paths
+#       crop_opt(int): Crop option
+#       xlooks(int): Number of multi-looks in x; 5 is 5 times smaller, 1 is no
+#     change
+#       ylooks(int): Number of multi-looks in y
+#       thresh(float, optional): see thresh in prepare_ifgs() (Default value = 0.5)
+#       user_exts(tuple, optional): Tuple of user defined georeferenced extents for new
+#     file: (xfirst, yfirst, xlast, ylast)cropping coordinates (Default value = None)
+#       write_to_disc: Default value = True)
+#       out_path: Default value = None)
+#
+#     Returns:
+#       ndarray: resampled_data: output cropped and resampled image
+#
+#     """
+#     # use metadata check to check whether it's a dem or ifg
+#     rasters = [dem_or_ifg(r) for r in raster_data_paths]
+#     exts = get_analysis_extent(crop_opt, rasters, xlooks, ylooks, user_exts)
+#
+#     return [prepare_ifg(d, xlooks, ylooks, exts, thresh, crop_opt, write_to_disc, out_path) for d in raster_data_paths]
+#
 
 # TODO: Not currently used; remove in future?
 def _file_ext(raster):
@@ -308,23 +233,6 @@ def _file_ext(raster):
         # LOS file:  has 2 bands: beam incidence angle & ground azimuth)
         # Baseline file: perpendicular baselines (single band?)
         raise NotImplementedError("Missing raster types for LOS, " "Coherence and baseline")
-
-
-def _dummy_warp(renamed_path):
-    """Convenience dummy operation for when no multi-looking or cropping
-    required
-
-    Args:
-      renamed_path: 
-
-    Returns:
-
-    """
-    ifg = dem_or_ifg(renamed_path)
-    ifg.open()
-    ifg.dataset.SetMetadataItem(ifc.DATA_TYPE, ifc.MULTILOOKED)
-    data = ifg.dataset.ReadAsArray()
-    return data, ifg.dataset
 
 
 # TODO: Not being used. Remove in future?
@@ -581,106 +489,3 @@ class PreprocessError(Exception):
     """Preprocess exception"""
 
 
-def crop_resample_average(input_raster, extents, resolution, output_file, thresh, header=None, coherence_path=None,
-                          coherence_thresh=None):
-    """Crop, resample, and average a geotiff image.
-
-    Args:
-      str: input_raster: Path to input geotiff to resample/crop
-      tuple: extents: Cropping extents (xfirst, yfirst, xlast, ylast)
-      list: resolution: [xres, yres] resolution of output image
-      str: output_file: Path to output resampled/cropped geotiff
-      float: thresh: NaN fraction threshold
-      str: out_driver_type: The output driver; `MEM` or `GTiff` (optional)
-      bool: match_pyrate: Match Legacy output (optional)
-      dict: header: dictionary of metadata
-      input_raster: param extents:
-      resolution: param output_file:
-      thresh: param header:  (Default value = None)
-      coherence_path: Default value = None)
-      coherence_thresh: Default value = None)
-      extents:
-      output_file:
-      header: (Default value = None)
-
-    Returns:
-      ndarray: resampled_average: output cropped and resampled image
-
-    """
-    out_driver_type = "GTiff"
-    match_pyrate = False
-    dst_ds, _, _, _ = _crop_resample_setup(extents, input_raster, resolution, output_file, out_bands=2,
-                                           dst_driver_type="MEM")
-
-    # make a temporary copy of the dst_ds for PyRate style prepifg
-    tmp_ds = gdal.GetDriverByName("MEM").CreateCopy("", dst_ds) if (match_pyrate and resolution[0]) else None
-
-    src_ds, src_ds_mem = _setup_source(input_raster)
-
-    if coherence_path and coherence_thresh:
-        coherence_raster = prepifg_helper.dem_or_ifg(coherence_path)
-        coherence_raster.open()
-        coherence_ds = coherence_raster.dataset
-        coherence_masking(src_ds_mem, coherence_ds, coherence_thresh)
-    elif coherence_path and not coherence_thresh:
-        raise ValueError(
-            f"Coherence file provided without a coherence "
-            f"threshold. Please ensure you provide 'cohthresh' "
-            f"in your config if coherence masking is enabled."
-        )
-
-    resampled_average, src_ds_mem = gdal_average(dst_ds, src_ds, src_ds_mem, thresh)
-    src_dtype = src_ds_mem.GetRasterBand(1).DataType
-    src_gt = src_ds_mem.GetGeoTransform()
-
-    # required to match Legacy output
-    if tmp_ds:
-        _alignment(input_raster, resolution, resampled_average, src_ds_mem, src_gt, tmp_ds)
-
-    # grab metadata from existing geotiff
-    gt = dst_ds.GetGeoTransform()
-    wkt = dst_ds.GetProjection()
-
-    # TEST HERE IF EXISTING FILE HAS PYRATE METADATA. IF NOT ADD HERE
-    if not ifc.DATA_TYPE in dst_ds.GetMetadata() and header is not None:
-        md = shared.collate_metadata(header)
-    else:
-        md = dst_ds.GetMetadata()
-
-    # update metadata for output
-    for k, v in md.items():
-        if k == ifc.DATA_TYPE:
-            # update data type metadata
-            if v == ifc.ORIG and coherence_path:
-                md.update({ifc.DATA_TYPE: ifc.COHERENCE})
-            elif v == ifc.ORIG and not coherence_path:
-                md.update({ifc.DATA_TYPE: ifc.MULTILOOKED})
-            elif v == ifc.DEM:
-                md.update({ifc.DATA_TYPE: ifc.MLOOKED_DEM})
-            elif v == ifc.INCIDENCE:
-                md.update({ifc.DATA_TYPE: ifc.MLOOKED_INC})
-            elif v == ifc.COHERENCE and coherence_path:
-                pass
-            elif v == ifc.MULTILOOKED and coherence_path:
-                md.update({ifc.DATA_TYPE: ifc.COHERENCE})
-            elif v == ifc.MULTILOOKED and not coherence_path:
-                pass
-            else:
-                raise TypeError("Data Type metadata not recognised")
-
-    # In-memory GDAL driver doesn't support compression so turn it off.
-    creation_opts = ["compress=packbits"] if out_driver_type != "MEM" else []
-    out_ds = shared.gdal_dataset(
-        output_file,
-        dst_ds.RasterXSize,
-        dst_ds.RasterYSize,
-        driver=out_driver_type,
-        bands=1,
-        dtype=src_dtype,
-        metadata=md,
-        crs=wkt,
-        geotransform=gt,
-        creation_opts=creation_opts,
-    )
-
-    shared.write_geotiff(resampled_average, out_ds, np.nan)
