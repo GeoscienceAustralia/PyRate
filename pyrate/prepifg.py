@@ -163,7 +163,7 @@ def _prepifg_multiprocessing(input_path, output_path, extents, params, tag):
 
     src_ds, src_ds_mem = _setup_source(input_raster)
 
-    if params["cohmask"]:
+    if params["cohmask"] and "interferogram" in tag:
         if params["coherence_file_paths"] and params["cohthresh"]:
             coherence_masking(src_ds_mem, params["coherence_file_paths"], params["cohthresh"])
 
