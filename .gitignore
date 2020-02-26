@@ -20,8 +20,9 @@
 !*sample_data/input/coherence/20070115-20070917_utm_unw.tif
 !*sample_data/input/coherence/20070219-20070430_utm_unw.tif
 !*sample_data/input/coherence/20061106-20070115_utm_unw.tif
-
-*data/*
+*sample_data/input/dem/*.tif
+*sample_data/input/interferograms/*.tif*
+**/data*
 *out*
 *.pyo
 *.pyc
