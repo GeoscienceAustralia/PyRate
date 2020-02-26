@@ -13,15 +13,14 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-
-import sys
-import numexpr as ne
-import re
 import os
 from pyrate.core.gdal_python import coherence_masking
 from pyrate.configuration import Configuration
 from osgeo import gdal, osr, gdalconst
 import numpy as np
+
+# fix seed so same test dataset is being created each time this script is run
+np.random.seed(0)
 
 config_file = "C:/Users/sheec/Desktop/Projects/PyRate/sample_data/input_parameters.conf"
 config_file = os.path.abspath(config_file)
@@ -33,7 +32,7 @@ for interferogram_file in config.interferogram_files:
     output_mask_file = interferogram_file.converted_path.replace("input\\interferograms", "input\\coherence")
 
     gtif = gdal.Open(input_file)
-    gtifMetadata = gtif.GetMetadata()
+    # gtifMetadata = gtif.GetMetadata()
 
     band = 1
     gtifBand = gtif.GetRasterBand(band)
@@ -60,7 +59,7 @@ for interferogram_file in config.interferogram_files:
         "rows":gtif.RasterYSize
     }
 
-    syntactic_data_array = np.arange(0, raster_info["rows"]*raster_info["cols"], 1).reshape(raster_info["rows"], raster_info["cols"])/10000
+    syntactic_data_array = np.random.random((raster_info["rows"], raster_info["cols"]))
 
     driver = gdal.GetDriverByName('GTiff')
     outRaster = driver.Create(output_mask_file, raster_info["cols"], raster_info["rows"], 1, gdal.GDT_Float32)
@@ -77,9 +76,9 @@ for interferogram_file in config.interferogram_files:
     # close dataset
     gtif = None
 
-# masking
-source_dataset_path = "~/PyRate/sample_data/input/interferograms/20060828-20061211_utm_unw_1rlks_4cr.tif"
-source_dataset = gdal.Open(source_dataset_path)
-coherence_thresh = 0.16919
-coherence_file_paths = config.coherence_file_paths
-coherence_masking(source_dataset, coherence_file_paths, coherence_thresh)
+# # masking
+# source_dataset_path = "C:/Users/sheec/Desktop/Projects/PyRate/sample_data/input/interferograms/20060828-20061211_utm_unw_1rlks_4cr.tif"
+# source_dataset = gdal.Open(source_dataset_path)
+# coherence_thresh = 0.16919
+# coherence_file_paths = config.coherence_file_paths
+# coherence_masking(source_dataset, coherence_file_paths, coherence_thresh)

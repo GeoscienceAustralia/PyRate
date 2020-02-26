@@ -165,7 +165,7 @@ def _prepifg_multiprocessing(input_path, output_path, extents, params, tag):
 
     if params["cohmask"] and "interferogram" in tag:
         if params["coherence_file_paths"] and params["cohthresh"]:
-            coherence_masking(src_ds_mem, params["coherence_file_paths"], params["cohthresh"])
+            coherence_masking(src_ds_mem, input_path, params["coherence_file_paths"], params["cohthresh"])
 
     resampled_average, src_ds_mem = gdal_average(dst_ds, src_ds, src_ds_mem, thresh)
     src_dtype = src_ds_mem.GetRasterBand(1).DataType

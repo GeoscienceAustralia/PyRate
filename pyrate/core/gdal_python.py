@@ -29,7 +29,7 @@ gdal.SetCacheMax(2 ** 15)
 GDAL_WARP_MEMORY_LIMIT = 2 ** 10
 LOW_FLOAT32 = np.finfo(np.float32).min * 1e-10
 
-def coherence_masking(src_ds, coherence_file_paths, coherence_thresh):
+def coherence_masking(src_ds, input_path, coherence_file_paths, coherence_thresh):
     """Perform coherence masking on raster in-place.
     
     Based on gdal_calc formula provided by Nahidul:
@@ -48,9 +48,9 @@ def coherence_masking(src_ds, coherence_file_paths, coherence_thresh):
 
     """
 
-    src_epoches = re.findall("(\d{8})", str(src_ds.GetFileList()[0]))
+    src_epoches = re.findall("(\d{8})", str(input_path))
     if not len(src_epoches) > 0:
-        src_epoches = re.findall("(\d{6})", str(src_ds.GetFileList()[0]))
+        src_epoches = re.findall("(\d{6})", str(input_path))
 
     for coherence_file_path in coherence_file_paths:
 
@@ -71,9 +71,6 @@ def coherence_masking(src_ds, coherence_file_paths, coherence_thresh):
             formula = "where(coh>=t, src, ndv)"
             res = ne.evaluate(formula, local_dict=var)
             src_band.WriteArray(res)
-            src_band.FlushCache()
-
-            return
 
 
 def world_to_pixel(geo_transform, x, y):
