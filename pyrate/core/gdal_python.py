@@ -23,13 +23,13 @@ from PIL import Image, ImageDraw
 from osgeo import gdal
 from osgeo import gdal_array
 from osgeo import gdalconst
+import re
 
 gdal.SetCacheMax(2 ** 15)
 GDAL_WARP_MEMORY_LIMIT = 2 ** 10
 LOW_FLOAT32 = np.finfo(np.float32).min * 1e-10
 
-
-def coherence_masking(src_ds, coherence_ds, coherence_thresh):
+def coherence_masking(src_ds, input_path, coherence_file_paths, coherence_thresh):
     """Perform coherence masking on raster in-place.
     
     Based on gdal_calc formula provided by Nahidul:
@@ -47,16 +47,30 @@ def coherence_masking(src_ds, coherence_ds, coherence_thresh):
     Returns:
 
     """
-    coherence_band = coherence_ds.GetRasterBand(1)
-    src_band = src_ds.GetRasterBand(1)
-    # ndv = src_band.GetNoDataValue()
-    ndv = np.nan
-    coherence = coherence_band.ReadAsArray()
-    src = src_band.ReadAsArray()
-    var = {"coh": coherence, "src": src, "t": coherence_thresh, "ndv": ndv}
-    formula = "where(coh>=t, src, ndv)"
-    res = ne.evaluate(formula, local_dict=var)
-    src_band.WriteArray(res)
+
+    src_epoches = re.findall("(\d{8})", str(input_path))
+    if not len(src_epoches) > 0:
+        src_epoches = re.findall("(\d{6})", str(input_path))
+
+    for coherence_file_path in coherence_file_paths:
+
+        coherence_epoches = re.findall("(\d{8})", str(coherence_file_path.converted_path))
+        if not len(coherence_epoches) > 0:
+            coherence_epoches = re.findall("(\d{6})", str(coherence_file_path.converted_path))
+
+        if all(src_epoche in coherence_epoches for src_epoche in src_epoches):
+
+            coherence_ds = gdal.Open(coherence_file_path.converted_path, gdalconst.GA_ReadOnly)
+            coherence_band = coherence_ds.GetRasterBand(1)
+            src_band = src_ds.GetRasterBand(1)
+            # ndv = src_band.GetNoDataValue()
+            ndv = np.nan
+            coherence = coherence_band.ReadAsArray()
+            src = src_band.ReadAsArray()
+            var = {"coh": coherence, "src": src, "t": coherence_thresh, "ndv": ndv}
+            formula = "where(coh>=t, src, ndv)"
+            res = ne.evaluate(formula, local_dict=var)
+            src_band.WriteArray(res)
 
 
 def world_to_pixel(geo_transform, x, y):
