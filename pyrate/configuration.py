@@ -51,7 +51,6 @@ def set_parameter_value(data_type, input_value, default_value, required, input_n
 
 def validate_parameter_value(input_name, input_value, min_value=None, max_value=None, possible_values=None):
     """
-
     Args:
       input_name: param input_value:
       min_value: Default value = None)
@@ -60,7 +59,6 @@ def validate_parameter_value(input_name, input_value, min_value=None, max_value=
       input_value: 
 
     Returns:
-
     """
     if isinstance(input_value, pathlib.PurePath):
         if input_name in "outdir":
