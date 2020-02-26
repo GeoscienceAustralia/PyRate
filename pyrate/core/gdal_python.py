@@ -71,6 +71,7 @@ def coherence_masking(src_ds, coherence_file_paths, coherence_thresh):
             formula = "where(coh>=t, src, ndv)"
             res = ne.evaluate(formula, local_dict=var)
             src_band.WriteArray(res)
+            src_band.FlushCache()
 
             return
 
