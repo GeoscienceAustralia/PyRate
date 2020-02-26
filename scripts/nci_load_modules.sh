@@ -8,3 +8,4 @@ export PYTHONPATH=/apps/gdal/3.0.2/lib64/python3.7/site-packages:$PYTHONPATH
 # Required by Click
 export LC_ALL=en_AU.UTF-8
 export LANG=en_AU.UTF-8
+source ${PYRATE_VENV:-${HOME}/PyRateVenv}/bin/activate
