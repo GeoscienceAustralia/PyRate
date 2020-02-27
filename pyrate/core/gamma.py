@@ -283,9 +283,21 @@ def gamma_header(ifg_file_path, params):
       headers and DEM header.
 
     """
+
     dem_hdr_path = params[cf.DEM_HEADER_FILE]
-    slc_dir = params[cf.SLC_DIR]
-    header_paths = get_header_paths(ifg_file_path, params[cf.SLC_FILE_LIST], slc_dir=slc_dir)
+
+    interferogram_epoches = re.findall("(\d{8})", ifg_file_path)
+    if len(interferogram_epoches) < 2:
+        interferogram_epoches = re.findall("(\d{6})", ifg_file_path)
+
+    header_paths = []
+    for header_path in params["header_file_paths"]:
+        header_epoch = re.findall("(\d{8})", header_path.unwrapped_path)
+        if len(header_epoch) < 1:
+            header_epoch = re.findall("(\d{6})", header_path.unwrapped_path)
+        if header_epoch[0] in interferogram_epoches:
+            header_paths.append(header_path.unwrapped_path)
+
     combined_headers = manage_headers(dem_hdr_path, header_paths)
 
     if os.path.basename(ifg_file_path).split(".")[1] == (params[cf.APS_INCIDENCE_EXT] or params[cf.APS_ELEVATION_EXT]):

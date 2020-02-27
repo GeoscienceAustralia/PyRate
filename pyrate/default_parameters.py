@@ -20,21 +20,13 @@
 YEARS_PER_DAY = 1 / 365.25
 
 PYRATE_DEFAULT_CONFIGRATION = {
-    "obsdir": {
-        "DataType": "path",
-        "DefaultValue": None,
-        "MinValue": None,
-        "MaxValue": None,
-        "PossibleValues": None,
-        "Required": False
-    },
     "ifgfilelist": {
         "DataType": "path",
         "DefaultValue": None,
         "MinValue": None,
         "MaxValue": None,
         "PossibleValues": None,
-        "Required": False
+        "Required": True
     },
     "demfile": {
         "DataType": "path",
@@ -42,7 +34,7 @@ PYRATE_DEFAULT_CONFIGRATION = {
         "MinValue": None,
         "MaxValue": None,
         "PossibleValues": None,
-        "Required": False
+        "Required": True
     },
     "demHeaderFile": {
         "DataType": "path",
@@ -50,15 +42,7 @@ PYRATE_DEFAULT_CONFIGRATION = {
         "MinValue": None,
         "MaxValue": None,
         "PossibleValues": None,
-        "Required": False
-    },
-    "slcFileDir": {
-        "DataType": "path",
-        "DefaultValue": None,
-        "MinValue": None,
-        "MaxValue": None,
-        "PossibleValues": None,
-        "Required": False
+        "Required": True
     },
     "slcfilelist": {
         "DataType": "path",
@@ -66,15 +50,7 @@ PYRATE_DEFAULT_CONFIGRATION = {
         "MinValue": None,
         "MaxValue": None,
         "PossibleValues": None,
-        "Required": False
-    },
-    "cohfiledir": {
-        "DataType": "path",
-        "DefaultValue": None,
-        "MinValue": None,
-        "MaxValue": None,
-        "PossibleValues": None,
-        "Required": False
+        "Required": True
     },
     "cohfilelist": {
         "DataType": "path",
@@ -90,7 +66,7 @@ PYRATE_DEFAULT_CONFIGRATION = {
         "MinValue": None,
         "MaxValue": None,
         "PossibleValues": None,
-        "Required": False
+        "Required": True
     },
     "processor": {
         "DataType": int,

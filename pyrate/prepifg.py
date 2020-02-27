@@ -98,7 +98,6 @@ def main(params):
 
 
 def _prepifg_multiprocessing(input_path, output_path, extents, params, tag):
-
     xlooks = params["ifglksx"]
     ylooks = params["ifglksy"]
     crop_out = params["ifgcropopt"]
