@@ -13,7 +13,9 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
+import os
 from setuptools import setup
+from setuptools.command.install import install
 from setuptools.command.test import test as TestCommand
 from subprocess import check_output
 import sys
@@ -44,8 +46,40 @@ class PyTest(TestCommand, object):
         exit(pytest.main(self.pytest_args))
 
 
+
+class UpdateSamplePaths(install):
+
+    def run(self):
+        install.run(self)
+        root = os.path.dirname(os.path.abspath(__file__))
+        input_parameters_file = os.path.join(root,"sample_data", "input_parameters.conf")
+        self.remove_place_holder(input_parameters_file, root)
+        coherence_list_file = os.path.join(root, "sample_data", "input", "coherence_list.txt")
+        self.remove_place_holder(coherence_list_file, root)
+        headers_list = os.path.join(root, "sample_data", "input", "headers_list.txt")
+        self.remove_place_holder(headers_list, root)
+        interferogram_list = os.path.join(root, "sample_data", "input", "interferogram_list.txt")
+        self.remove_place_holder(interferogram_list, root)
+
+    def remove_place_holder(self, file_path, root):
+
+        root = os.path.dirname(root).replace("\\","/")
+        lines = []
+        with open(file_path) as file_in:
+            for line in file_in:
+                line = line.replace("/absolute/path/to", root)
+                lines.append(line)
+
+        with open(file_path, "w") as f:
+            for line in lines:
+                f.write(line)
+
+
+
+
+
 requirements = [line.strip() for line in open("requirements.txt", "r").readlines() if len(line) > 2]
-doclink = """
+doc_link = """
 
 Please see the full documentation at http://geoscienceaustralia.github.io/PyRate/."""
 
@@ -53,7 +87,7 @@ setup(
     name="Py-Rate",
     version=__version__,
     description="A Python tool for estimating velocity and time-series " "from Interferometric Synthetic Aperture Radar (InSAR) data.",
-    long_description=doclink,
+    long_description=doc_link,
     author="Geoscience Australia InSAR team",
     author_email="insar@ga.gov.au",
     url="https://github.com/GeoscienceAustralia/PyRate",
@@ -108,5 +142,8 @@ setup(
         "Topic :: Software Development :: Libraries :: Python Modules",
         "Topic :: Scientific/Engineering :: Information Analysis",
     ],
-    cmdclass={"test": PyTest,},
+    cmdclass={
+        'install': UpdateSamplePaths,
+        "test": PyTest
+    }
 )
