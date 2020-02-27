@@ -179,24 +179,15 @@ def _merge_stack(rows, cols, params):
     """
     # setup paths
     xlks, _, crop = cf.transform_params(params)
-    base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST], params[cf.OBS_DIR])
 
-    base_unw_paths = []
-    for p in pathlib.Path(params[OBS_DIR]).rglob("*rlks_*cr.tif"):
-        if "dem" not in str(p):
-            base_unw_paths.append(str(p))
-
-    if "tif" in base_unw_paths[0].split(".")[1]:
-        dest_tifs = base_unw_paths  # cf.get_dest_paths(base_unw_paths, crop, params, xlks)
-        for i, dest_tif in enumerate(dest_tifs):
-            dest_tifs[i] = dest_tif.replace("_tif", "")
-    else:
-        dest_tifs = base_unw_paths  # cf.get_dest_paths(base_unw_paths, crop, params, xlks)
+    interferogram_file_paths = []
+    for interferogram_file_path in params["interferogram_files"]:
+        interferogram_file_paths.append(interferogram_file_path.sampled_path)
 
     # load previously saved prepread_ifgs dict
     preread_ifgs_file = join(params[cf.TMPDIR], "preread_ifgs.pk")
     ifgs = cp.load(open(preread_ifgs_file, "rb"))
-    tiles = shared.get_tiles(dest_tifs[0], rows, cols)
+    tiles = shared.get_tiles(interferogram_file_paths[0], rows, cols)
 
     # stacking aggregation
     if mpiops.size >= 3:

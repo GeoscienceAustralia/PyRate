@@ -104,44 +104,37 @@ def validate_parameter_value(input_name, input_value, min_value=None, max_value=
     return True
 
 
-def validate_file_list_values(dir, fileList, no_of_epochs):
+def validate_file_list_values(fileList, no_of_epochs):
     """
-
     Args:
-      dir: param fileList:
-      no_of_epochs: 
-      fileList: 
-
+      fileList:
+      no_of_epochs:
     Returns:
-
     """
-    if dir is None:
-        raise ValueError("No value supplied for input directory: " + str(dir))
     if fileList is None:
         raise ValueError("No value supplied for input file list: " + str(fileList))
 
-    for path_str in fileList.read_text().split("\n"):
+    for file_path_str in fileList.read_text().split("\n"):
         # ignore empty lines in file
-        if len(path_str) > 1:
-            if not pathlib.Path.exists(dir / path_str):
-                raise ValueError("Give file name: " + str(path_str) + " dose not exist at: " + str(dir))
+        if len(file_path_str) > 1:
+
+            if not pathlib.Path.exists(pathlib.Path(file_path_str)):
+                raise ValueError("Give file name: " + str(file_path_str)+" does not exist.")
             else:
-                matches = re.findall("(\d{8})", str(dir / path_str))
+                matches = re.findall("(\d{8})", file_path_str)
                 if len(matches) < no_of_epochs:
-                    matches = re.findall("(\d{6})", str(dir / path_str))
+                    matches = re.findall("(\d{6})", file_path_str)
                     if len(matches) < no_of_epochs:
                         raise ValueError(
                             "For the given file name: "
-                            + str(path_str)
-                            + " in: "
-                            + str(dir)
+                            + str(file_path_str)
                             + " the number of epochs in file names are less the required number:"
                             + str(no_of_epochs)
                         )
 
 
 class MultiplePaths:
-    def __init__(self, baseDir, baseName, ifglksx=0, ifgcropopt=0):
+    def __init__(self, outDir, baseFilePath, ifglksx=0, ifgcropopt=0):
         """
 
         Args:
@@ -151,16 +144,16 @@ class MultiplePaths:
         Returns:
 
         """
-        if ".tif" in baseName:
+        if ".tif" in str(baseFilePath):
             self.unwrapped_path = None
-            self.converted_path = str(baseDir / baseName)
+            self.converted_path = str(baseFilePath)
             self.sampled_path = self.converted_path.split(".tif")[0] + "_" + str(ifglksx) + "rlks_" + str(
                 ifgcropopt) + "cr.tif"
         else:
-            self.unwrapped_path = str(baseDir / baseName)
-            baseName = baseName.split(".")[0] + "_" + baseName.split(".")[1] + ".tif"
+            self.unwrapped_path = str(baseFilePath)
+            baseName = baseFilePath.name.split(".")[0] + "_" + baseFilePath.name.split(".")[1] + ".tif"
 
-            self.converted_path = str(baseDir / baseName)
+            self.converted_path = str(outDir / baseName)
             self.sampled_path = self.converted_path.split(".tif")[0] + "_" + str(ifglksx) + "rlks_" + str(
                 ifgcropopt) + "cr.tif"
 
@@ -248,33 +241,38 @@ class Configuration:
         # define parallel processes that will run
         self.NUMEXPR_MAX_THREADS = str(NO_OF_PARALLEL_PROCESSES)
 
-        # Validate file names supplied in list exist and contain correct epochs in file names
-        validate_file_list_values(self.obsdir, self.ifgfilelist, 2)
-        validate_file_list_values(self.slcFileDir, self.slcfilelist, 1)
-
         self.coherence_file_paths = None
-        if self.cohfiledir is not None and self.cohfilelist is not None:
-            validate_file_list_values(self.cohfiledir, self.cohfilelist, 1)
+        if self.cohfilelist is not None:
+            validate_file_list_values(self.cohfilelist, 1)
             self.coherence_file_paths = []
-            for path_str in self.cohfilelist.read_text().split("\n"):
+            for coherence_file_path in self.cohfilelist.read_text().split("\n"):
                 # ignore empty lines in file
-                if len(path_str) > 1:
+                if len(coherence_file_path) > 1:
+                    coherence_file_path = pathlib.Path(coherence_file_path)
                     self.coherence_file_paths.append(
-                        MultiplePaths(self.cohfiledir, path_str, self.ifglksx, self.ifgcropopt))
+                        MultiplePaths(self.outdir, coherence_file_path, self.ifglksx, self.ifgcropopt)
+                    )
+
+        # Validate file names supplied in list exist and contain correct epochs in file names
+        validate_file_list_values(self.slcfilelist, 1)
 
         self.header_file_paths = []
-        for path_str in self.slcfilelist.read_text().split("\n"):
+        for header_file_path in self.slcfilelist.read_text().split("\n"):
             # ignore empty lines in file
-            if len(path_str) > 1:
-                self.header_file_paths.append(MultiplePaths(self.slcFileDir, path_str, self.ifglksx, self.ifgcropopt))
+            if len(header_file_path) > 1:
+                header_file_path = pathlib.Path(header_file_path)
+                self.header_file_paths.append(MultiplePaths(self.outdir, header_file_path, self.ifglksx, self.ifgcropopt))
+
+        validate_file_list_values(self.ifgfilelist, 2)
 
         self.interferogram_files = []
-        for path_str in self.ifgfilelist.read_text().split("\n"):
+        for interferogram_file_path in self.ifgfilelist.read_text().split("\n"):
             # ignore empty lines in file
-            if len(path_str) > 1:
-                self.interferogram_files.append(MultiplePaths(self.obsdir, path_str, self.ifglksx, self.ifgcropopt))
+            if len(interferogram_file_path) > 1:
+                interferogram_file_path = pathlib.Path(interferogram_file_path)
+                self.interferogram_files.append(MultiplePaths(self.outdir, interferogram_file_path, self.ifglksx, self.ifgcropopt))
 
-        self.dem_file = MultiplePaths(self.demfile.parents[0], self.demfile.name, self.ifglksx, self.ifgcropopt)
+        self.dem_file = MultiplePaths(self.outdir, self.demfile, self.ifglksx, self.ifgcropopt)
 
         # backward compatibility for string paths
         for key in self.__dict__:
