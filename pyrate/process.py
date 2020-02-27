@@ -268,7 +268,8 @@ def _ref_pixel_calc(ifg_paths, params):
 
     # update interferogram metadata
     os.environ['NUMEXPR_MAX_THREADS'] = params["NUMEXPR_MAX_THREADS"]
-    mpiops.run_once(update_ifg_metadata, ifg_paths, pyrate_refpix_x, pyrate_refpix_y, pyrate_refpix_lat, pyrate_refpix_lon, params)
+
+    mpiops.run_once(update_ifg_metadata,ifg_paths, pyrate_refpix_x, pyrate_refpix_y, pyrate_refpix_lat, pyrate_refpix_lon, params)
 
     return refx, refy
 
@@ -276,15 +277,21 @@ def _ref_pixel_calc(ifg_paths, params):
 def update_ifg_metadata(ifg_paths, pyrate_refpix_x, pyrate_refpix_y, pyrate_refpix_lat, pyrate_refpix_lon, params):
 
     for interferogram_file in ifg_paths:
-
+        log.debug("Updating metadata for: "+interferogram_file)
         ifg = Ifg(interferogram_file)
+        log.debug("Open dataset")
         ifg.open(readonly=True)
+        log.debug("Set no data value")
         ifg.nodata_value = params["noDataValue"]
+        log.debug("Update no data values in dataset")
         ifg.convert_to_nans()
+        log.debug("Convert mm")
         ifg.convert_to_mm()
         half_patch_size = params["refchipsize"] // 2
-        y, x = pyrate_refpix_x, pyrate_refpix_y
-        data = ifg.phase_data[y - half_patch_size: y + half_patch_size + 1, x - half_patch_size: x + half_patch_size + 1]
+        x, y = pyrate_refpix_x, pyrate_refpix_y
+        log.debug("Extract reference pixel windows")
+        data = np.array(ifg.phase_data)[y - half_patch_size: y + half_patch_size + 1,x - half_patch_size: x + half_patch_size + 1]
+        log.debug("Calculate standard deviation for reference window")
         standard_deviation_ref_area = np.std(data[~np.isnan(data)])
         mean_ref_area = np.mean(data[~np.isnan(data)])
         ifg.close()
