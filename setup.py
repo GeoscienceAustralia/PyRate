@@ -50,7 +50,7 @@ class PyTest(TestCommand, object):
 class UpdateSamplePaths(install):
 
     def run(self):
-        install.run(self)
+        install.do_egg_install(self)
         root = os.path.dirname(os.path.abspath(__file__))
         input_parameters_file = os.path.join(root,"sample_data", "input_parameters.conf")
         self.remove_place_holder(input_parameters_file, root)
@@ -60,6 +60,7 @@ class UpdateSamplePaths(install):
         self.remove_place_holder(headers_list, root)
         interferogram_list = os.path.join(root, "sample_data", "input", "interferogram_list.txt")
         self.remove_place_holder(interferogram_list, root)
+
 
     def remove_place_holder(self, file_path, root):
 
@@ -74,11 +75,8 @@ class UpdateSamplePaths(install):
             for line in lines:
                 f.write(line)
 
-
-
-
-
 requirements = [line.strip() for line in open("requirements.txt", "r").readlines() if len(line) > 2]
+
 doc_link = """
 
 Please see the full documentation at http://geoscienceaustralia.github.io/PyRate/."""
