@@ -25,11 +25,12 @@ from osgeo import gdal_array
 from osgeo import gdalconst
 import re
 
+gdal.AllRegister()
 gdal.SetCacheMax(2 ** 15)
 GDAL_WARP_MEMORY_LIMIT = 2 ** 10
 LOW_FLOAT32 = np.finfo(np.float32).min * 1e-10
 
-def coherence_masking(src_ds, input_path, coherence_file_paths, coherence_thresh):
+def coherence_masking(input_gdal_dataset, input_dataset_file_name, coherence_file_paths, coherence_thresh):
     """Perform coherence masking on raster in-place.
     
     Based on gdal_calc formula provided by Nahidul:
@@ -48,9 +49,9 @@ def coherence_masking(src_ds, input_path, coherence_file_paths, coherence_thresh
 
     """
 
-    src_epoches = re.findall("(\d{8})", str(input_path))
+    src_epoches = re.findall("(\d{8})", str(input_dataset_file_name))
     if not len(src_epoches) > 0:
-        src_epoches = re.findall("(\d{6})", str(input_path))
+        src_epoches = re.findall("(\d{6})", str(input_dataset_file_name))
 
     for coherence_file_path in coherence_file_paths:
 
@@ -62,7 +63,7 @@ def coherence_masking(src_ds, input_path, coherence_file_paths, coherence_thresh
 
             coherence_ds = gdal.Open(coherence_file_path.converted_path, gdalconst.GA_ReadOnly)
             coherence_band = coherence_ds.GetRasterBand(1)
-            src_band = src_ds.GetRasterBand(1)
+            src_band = input_gdal_dataset.GetRasterBand(1)
             # ndv = src_band.GetNoDataValue()
             ndv = np.nan
             coherence = coherence_band.ReadAsArray()

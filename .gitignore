@@ -78,4 +78,4 @@ pyrate.log
 tests/test_data/small_test/dem/roipac_test_trimmed_dem.tif
 tests/test_data/small_test/dem/roipac_test_trimmed_dem_1rlks_1cr.tif
 
-
+venv/*
