@@ -97,6 +97,21 @@ def main(params):
         _prepifg_multiprocessing(*job)
 
 
+def update_interferogram_metadata(interferogram_file, header):
+    dataset = gdal.Open(interferogram_file, gdal.GA_Update)
+    metadata = dataset.GetMetadata()
+
+    for key, value in header.items():
+        header[key] = str(value)
+
+    metadata.update(header)
+    dataset.SetMetadata(metadata)
+
+    # manual close dataset
+    dataset = None
+    del dataset
+
+
 def _prepifg_multiprocessing(input_path, output_path, extents, params, tag):
     xlooks = params["ifglksx"]
     ylooks = params["ifglksy"]
@@ -111,6 +126,7 @@ def _prepifg_multiprocessing(input_path, output_path, extents, params, tag):
     else:
         raise Exception("Processor must be ROI_PAC (0) or GAMMA (1)")
 
+    update_interferogram_metadata(input_path, header)
     do_multilook = xlooks > 1 or ylooks > 1
     # resolution=None completes faster for non-multilooked layers in gdalwarp
     resolution = [None, None]
