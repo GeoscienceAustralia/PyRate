@@ -13,6 +13,7 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
+import os
 import pathlib
 
 
@@ -31,7 +32,10 @@ def delete_tsincr_files(params):
     outDirPath = pathlib.Path(params["outdir"])
     for filePath in outDirPath.iterdir():
         if "tsincr" in str(filePath):
-            filePath.unlink()
+            try:
+                os.remove(str(filePath))
+            except Exception:
+                print(str(filePath)+" dose not exist.")
 
 
 def break_number_into_factors(n, memo={}, left=2):
