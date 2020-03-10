@@ -26,7 +26,7 @@ from numpy.linalg import pinv
 from scipy.linalg import lstsq
 
 
-from pyrate.core.gdal_python import _crop_resample_setup, _setup_source, gdal_average, _alignment, coherence_masking
+from core.gdal_python import _crop_resample_setup, _setup_source, gdal_average, _alignment, coherence_masking
 
 
 from core import shared, ifgconstants as ifc, config as cf, prepifg_helper, mst
