@@ -37,8 +37,8 @@ from numpy import array, where, nan, isnan, nanmean, float32, zeros, \
     sum as nsum
 from osgeo import gdal
 import shutil
-from pyrate.core import ifgconstants as ifc, config as cf
-from pyrate.core.shared import Ifg, DEM, output_tiff_filename
+from core import ifgconstants as ifc, config as cf
+from core.shared import Ifg, DEM, output_tiff_filename
 import os
 import shutil
 from collections import namedtuple
