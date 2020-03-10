@@ -155,6 +155,7 @@ def _calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles):
         nvels = tsincr.shape[2]
 
     nvels = mpiops.comm.bcast(nvels, root=0)
+    mpiops.comm.barrier()
     # need to assemble tsincr from all processes
     tsincr_g = mpiops.run_once(_assemble_tsincr, ifg_paths, params, preread_ifgs, tiles, nvels)
     log.debug("Finished calculating time series for spatio-temporal filter")
