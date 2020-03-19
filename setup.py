@@ -50,7 +50,6 @@ class UpdateSamplePaths(install):
 
     def run(self):
         install.do_egg_install(self)
-        root = os.path.dirname(os.path.abspath(__file__))
 
         self.remove_place_holder(os.path.join("sample_data", "input_parameters.conf"))
         self.remove_place_holder(os.path.join("sample_data", "input", "coherence_list.txt"))
@@ -87,6 +86,7 @@ class UpdateSamplePaths(install):
         with open(file_path, "w") as f:
             for line in lines:
                 f.write(line)
+
 
 requirements = [line.strip() for line in open("requirements.txt", "r").readlines() if len(line) > 2]
 
