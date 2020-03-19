@@ -46,48 +46,47 @@ class PyTest(TestCommand, object):
         exit(pytest.main(self.pytest_args))
 
 
-
 class UpdateSamplePaths(install):
 
     def run(self):
         install.do_egg_install(self)
         root = os.path.dirname(os.path.abspath(__file__))
 
-        self.remove_place_holder(os.path.join(root,"sample_data", "input_parameters.conf"), root)
-        self.remove_place_holder(os.path.join(root, "sample_data", "input", "coherence_list.txt"), root)
-        self.remove_place_holder(os.path.join(root, "sample_data", "input", "headers_list.txt"), root)
-        self.remove_place_holder(os.path.join(root, "sample_data", "input", "interferogram_list.txt"), root)
-        self.remove_place_holder(os.path.join(root, "tests", "test_data", "small_test", "conf", "pyrate1.conf"), root)
-        self.remove_place_holder(os.path.join(root, "tests", "test_data", "small_test", "conf", "pyrate2.conf"), root)
-        self.remove_place_holder(os.path.join(root, "tests", "test_data", "small_test", "conf", "pyrate_gamma_test.conf"), root)
-        self.remove_place_holder(os.path.join(root, "tests", "test_data", "small_test", "conf", "pyrate_roipac_test.conf"), root)
-        self.remove_place_holder(os.path.join(root, "tests", "test_data", "small_test", "gamma_obs", "headers"), root)
-        self.remove_place_holder(os.path.join(root, "tests", "test_data", "small_test", "gamma_obs", "ifms_17"), root)
-        self.remove_place_holder(os.path.join(root, "tests", "test_data", "small_test", "roipac_obs", "ifms_17"), root)
-        self.remove_place_holder(os.path.join(root, "tests", "test_data", "small_test", "tif", "ifms_17"), root)
-        self.remove_place_holder(os.path.join(root, "tests", "test_data", "system", "gamma", "header_list.txt"), root)
-        self.remove_place_holder(os.path.join(root, "tests", "test_data", "system", "gamma", "input_parameters.conf"), root)
-        self.remove_place_holder(os.path.join(root, "tests", "test_data", "system", "gamma", "interferogram_list.txt"), root)
-        self.remove_place_holder(os.path.join(root, "tests", "test_data", "system", "geotiff", "header_list.txt"), root)
-        self.remove_place_holder(os.path.join(root, "tests", "test_data", "system", "geotiff", "input_parameters.conf"), root)
-        self.remove_place_holder(os.path.join(root, "tests", "test_data", "system", "geotiff", "interferogram_list.txt"), root)
-        self.remove_place_holder(os.path.join(root, "tests", "test_data", "system", "roipac", "header_list.txt"), root)
-        self.remove_place_holder(os.path.join(root, "tests", "test_data", "system", "roipac", "input_parameters.conf"), root)
-        self.remove_place_holder(os.path.join(root, "tests", "test_data", "system", "roipac", "interferogram_list.txt"), root)
+        self.remove_place_holder(os.path.join("sample_data", "input_parameters.conf"))
+        self.remove_place_holder(os.path.join("sample_data", "input", "coherence_list.txt"))
+        self.remove_place_holder(os.path.join("sample_data", "input", "headers_list.txt"))
+        self.remove_place_holder(os.path.join( "sample_data", "input", "interferogram_list.txt"))
+        self.remove_place_holder(os.path.join("tests", "test_data", "small_test", "conf", "pyrate1.conf"))
+        self.remove_place_holder(os.path.join("tests", "test_data", "small_test", "conf", "pyrate2.conf"))
+        self.remove_place_holder(os.path.join("tests", "test_data", "small_test", "conf", "pyrate_gamma_test.conf"))
+        self.remove_place_holder(os.path.join("tests", "test_data", "small_test", "conf", "pyrate_roipac_test.conf"))
+        self.remove_place_holder(os.path.join("tests", "test_data", "small_test", "gamma_obs", "headers"))
+        self.remove_place_holder(os.path.join("tests", "test_data", "small_test", "gamma_obs", "ifms_17"))
+        self.remove_place_holder(os.path.join("tests", "test_data", "small_test", "roipac_obs", "ifms_17"))
+        self.remove_place_holder(os.path.join("tests", "test_data", "small_test", "tif", "ifms_17"))
+        self.remove_place_holder(os.path.join("tests", "test_data", "system", "gamma", "header_list.txt"))
+        self.remove_place_holder(os.path.join("tests", "test_data", "system", "gamma", "input_parameters.conf"))
+        self.remove_place_holder(os.path.join("tests", "test_data", "system", "gamma", "interferogram_list.txt"))
+        self.remove_place_holder(os.path.join("tests", "test_data", "system", "geotiff", "header_list.txt"))
+        self.remove_place_holder(os.path.join("tests", "test_data", "system", "geotiff", "input_parameters.conf"))
+        self.remove_place_holder(os.path.join("tests", "test_data", "system", "geotiff", "interferogram_list.txt"))
+        self.remove_place_holder(os.path.join("tests", "test_data", "system", "roipac", "header_list.txt"))
+        self.remove_place_holder(os.path.join("tests", "test_data", "system", "roipac", "input_parameters.conf"))
+        self.remove_place_holder(os.path.join("tests", "test_data", "system", "roipac", "interferogram_list.txt"))
 
+    def remove_place_holder(self, file_path):
+        root = os.path.dirname(os.path.abspath(__file__))
+        file_path = os.path.join(root, file_path)
+        root = os.path.dirname(root).replace("\\","/")
+        lines = []
+        with open(file_path) as file_in:
+            for line in file_in:
+                line = line.replace("/absolute/path/to", root)
+                lines.append(line)
 
-    def remove_place_holder(self, file_path, root):
-
-            root = os.path.dirname(root).replace("\\","/")
-            lines = []
-            with open(file_path) as file_in:
-                for line in file_in:
-                    line = line.replace("/absolute/path/to", root)
-                    lines.append(line)
-
-            with open(file_path, "w") as f:
-                for line in lines:
-                    f.write(line)
+        with open(file_path, "w") as f:
+            for line in lines:
+                f.write(line)
 
 requirements = [line.strip() for line in open("requirements.txt", "r").readlines() if len(line) > 2]
 
