@@ -28,7 +28,7 @@ from numpy.testing import assert_array_almost_equal
 from . import common
 import core.orbital
 import process
-from common import small5_mock_ifgs, small5_ifgs, TEST_CONF_ROIPAC, small_data_setup, prepare_ifgs_without_phase
+from common import small5_mock_ifgs, small5_ifgs, small_data_setup, prepare_ifgs_without_phase
 from constants import NO_OF_PARALLEL_PROCESSES
 from configuration import Configuration
 from core import shared
@@ -213,22 +213,23 @@ class LegacyEqualityTest(unittest.TestCase):
     """ """
 
     @classmethod
-    def setUpClass(cls):
+    def setUpClass(self):
         """ """
 
-        conv2tif_handler(TEST_CONF_ROIPAC)
-        prepifg_handler(TEST_CONF_ROIPAC)
+        self.TEST_CONF_ROIPAC = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),"tests", "test_data", "small_test","conf","pyrate_roipac_test.conf")
+        conv2tif_handler(self.TEST_CONF_ROIPAC)
+        prepifg_handler(self.TEST_CONF_ROIPAC)
 
-        process_handler(TEST_CONF_ROIPAC)
+        process_handler(self.TEST_CONF_ROIPAC)
 
-        params = Configuration(TEST_CONF_ROIPAC).__dict__
-        cls.temp_out_dir = tempfile.mkdtemp()
-        params["outdir"] = cls.temp_out_dir
-        params["tmpdir"] = os.path.join(cls.temp_out_dir, "tmpdir")
+        params = Configuration(self.TEST_CONF_ROIPAC).__dict__
+        self.temp_out_dir = tempfile.mkdtemp()
+        params["outdir"] = self.temp_out_dir
+        params["tmpdir"] = os.path.join(self.temp_out_dir, "tmpdir")
         shared.mkdir_p(params["tmpdir"])
         params["refest"] = 2
 
-        cls.params = params
+        self.params = params
         xlks, ylks, crop = params["ifglksx"], params["ifglksy"], params["ifgcropopt"]
         base_ifg_paths = []
         dest_paths = []
@@ -245,23 +246,23 @@ class LegacyEqualityTest(unittest.TestCase):
             ifg.close()
 
         process._ref_phase_estimation(dest_paths, params, refx, refy)
-        cls.ifgs = dest_paths
+        self.ifgs = dest_paths
 
         ifgs[0].open()
         r_dist = RDist(ifgs[0])()
         ifgs[0].close()
 
         # Calculate interferogram noise
-        cls.maxvar = [cvd(i, params, r_dist, calc_alpha=True, save_acg=True, write_vals=True)[0] for i in dest_paths]
-        cls.vcmt = get_vcmt(ifgs, cls.maxvar)
+        self.maxvar = [cvd(i, params, r_dist, calc_alpha=True, save_acg=True, write_vals=True)[0] for i in dest_paths]
+        self.vcmt = get_vcmt(ifgs, self.maxvar)
         for ifg in ifgs:
             ifg.close()
 
     @classmethod
-    def tearDownClass(cls):
+    def tearDownClass(self):
         """ """
-        shutil.rmtree(cls.temp_out_dir)
-        params = Configuration(TEST_CONF_ROIPAC).__dict__
+        shutil.rmtree(self.temp_out_dir)
+        params = Configuration(self.TEST_CONF_ROIPAC).__dict__
         common.remove_tifs(params["obsdir"])
 
     def test_legacy_maxvar_equality_small_test_files(self):
@@ -291,7 +292,7 @@ class LegacyEqualityTest(unittest.TestCase):
             del dataset
 
     def test_save_cvd_data(self):
-        params = Configuration(TEST_CONF_ROIPAC).__dict__
+        params = Configuration(self.TEST_CONF_ROIPAC).__dict__
         for ifg in self.ifgs:
             data_file = os.path.join(params["tmpdir"], 'cvd_data_{b}.npy'.format(b=os.path.basename(ifg).split('.')[0]))
             assert os.path.isfile(data_file)
