@@ -147,8 +147,8 @@ class MultiplePaths:
         if ".tif" in str(baseFilePath):
             self.unwrapped_path = None
             self.converted_path = str(baseFilePath)
-            self.sampled_path = self.converted_path.split(".tif")[0] + "_" + str(ifglksx) + "rlks_" + str(
-                ifgcropopt) + "cr.tif"
+            baseName = baseFilePath.name.split(".tif")[0] + "_" + str(ifglksx) + "rlks_" + str(ifgcropopt) + "cr.tif"
+            self.sampled_path = str(outDir / baseName)
         else:
             self.unwrapped_path = str(baseFilePath)
             baseName = baseFilePath.name.split(".")[0] + "_" + baseFilePath.name.split(".")[1] + ".tif"
