@@ -52,17 +52,31 @@ class UpdateSamplePaths(install):
     def run(self):
         install.do_egg_install(self)
         root = os.path.dirname(os.path.abspath(__file__))
-        input_parameters_file = os.path.join(root,"sample_data", "input_parameters.conf")
-        self.remove_place_holder(input_parameters_file, root)
-        coherence_list_file = os.path.join(root, "sample_data", "input", "coherence_list.txt")
-        self.remove_place_holder(coherence_list_file, root)
-        headers_list = os.path.join(root, "sample_data", "input", "headers_list.txt")
-        self.remove_place_holder(headers_list, root)
-        interferogram_list = os.path.join(root, "sample_data", "input", "interferogram_list.txt")
-        self.remove_place_holder(interferogram_list, root)
+
+        self.remove_place_holder(os.path.join(root,"sample_data", "input_parameters.conf"), root)
+        self.remove_place_holder(os.path.join(root, "sample_data", "input", "coherence_list.txt"), root)
+        self.remove_place_holder(os.path.join(root, "sample_data", "input", "headers_list.txt"), root)
+        self.remove_place_holder(os.path.join(root, "sample_data", "input", "interferogram_list.txt"), root)
+        self.remove_place_holder(os.path.join(root, "tests", "test_data", "small_test", "conf", "pyrate1.conf"), root)
+        self.remove_place_holder(os.path.join(root, "tests", "test_data", "small_test", "conf", "pyrate2.conf"), root)
+        self.remove_place_holder(os.path.join(root, "tests", "test_data", "small_test", "conf", "pyrate_gamma_test.conf"), root)
+        self.remove_place_holder(os.path.join(root, "tests", "test_data", "small_test", "conf", "pyrate_roipac_test.conf"), root)
+        self.remove_place_holder(os.path.join(root, "tests", "test_data", "small_test", "gamma_obs", "headers"), root)
+        self.remove_place_holder(os.path.join(root, "tests", "test_data", "small_test", "gamma_obs", "ifms_17"), root)
+        self.remove_place_holder(os.path.join(root, "tests", "test_data", "small_test", "roipac_obs", "ifms_17"), root)
+        self.remove_place_holder(os.path.join(root, "tests", "test_data", "small_test", "tif", "ifms_17"), root)
+        self.remove_place_holder(os.path.join(root, "tests", "test_data", "system", "gamma", "header_list.txt"), root)
+        self.remove_place_holder(os.path.join(root, "tests", "test_data", "system", "gamma", "input_parameters.conf"), root)
+        self.remove_place_holder(os.path.join(root, "tests", "test_data", "system", "gamma", "interferogram_list.txt"), root)
+        self.remove_place_holder(os.path.join(root, "tests", "test_data", "system", "geotiff", "header_list.txt"), root)
+        self.remove_place_holder(os.path.join(root, "tests", "test_data", "system", "geotiff", "input_parameters.conf"), root)
+        self.remove_place_holder(os.path.join(root, "tests", "test_data", "system", "geotiff", "interferogram_list.txt"), root)
+        self.remove_place_holder(os.path.join(root, "tests", "test_data", "system", "roipac", "header_list.txt"), root)
+        self.remove_place_holder(os.path.join(root, "tests", "test_data", "system", "roipac", "input_parameters.conf"), root)
+        self.remove_place_holder(os.path.join(root, "tests", "test_data", "system", "roipac", "interferogram_list.txt"), root)
 
 
-    def remove_place_holder(self, file_path, root):
+def remove_place_holder(self, file_path, root):
 
         root = os.path.dirname(root).replace("\\","/")
         lines = []
