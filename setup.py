@@ -76,18 +76,18 @@ class UpdateSamplePaths(install):
         self.remove_place_holder(os.path.join(root, "tests", "test_data", "system", "roipac", "interferogram_list.txt"), root)
 
 
-def remove_place_holder(self, file_path, root):
+    def remove_place_holder(self, file_path, root):
 
-        root = os.path.dirname(root).replace("\\","/")
-        lines = []
-        with open(file_path) as file_in:
-            for line in file_in:
-                line = line.replace("/absolute/path/to", root)
-                lines.append(line)
+            root = os.path.dirname(root).replace("\\","/")
+            lines = []
+            with open(file_path) as file_in:
+                for line in file_in:
+                    line = line.replace("/absolute/path/to", root)
+                    lines.append(line)
 
-        with open(file_path, "w") as f:
-            for line in lines:
-                f.write(line)
+            with open(file_path, "w") as f:
+                for line in lines:
+                    f.write(line)
 
 requirements = [line.strip() for line in open("requirements.txt", "r").readlines() if len(line) > 2]
 
