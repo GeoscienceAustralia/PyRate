@@ -21,7 +21,7 @@ import numexpr as ne
 import numpy as np
 from PIL import Image, ImageDraw
 from osgeo import gdal
-from osgeo import gdal_array
+from osgeo import gdal_array, gdalnumeric
 from osgeo import gdalconst
 import re
 
@@ -143,7 +143,8 @@ def crop(input_file, extents, geo_trans=None, nodata=np.nan):
         Returns:
 
         """
-        arr = gdal_array.fromstring(i.tobytes(), "b")
+
+        arr = gdalnumeric.numpy.fromstring(i.tobytes(), "b")
         arr.shape = i.im.size[1], i.im.size[0]
         return arr
 
@@ -200,7 +201,7 @@ def crop(input_file, extents, geo_trans=None, nodata=np.nan):
 
     # Clip the image using the mask
     try:
-        clip = gdal_array.choose(mask, (clip, nodata))
+        clip = gdalnumeric.numpy.choose(mask, (clip, nodata))
 
     # If the clipping features extend out-of-bounds and BELOW the raster...
     except ValueError:
@@ -214,7 +215,7 @@ def crop(input_file, extents, geo_trans=None, nodata=np.nan):
 
         mask.resize(*rshp, refcheck=False)
 
-        clip = gdal_array.choose(mask, (clip, nodata))
+        clip = gdalnumeric.numpy.choose(mask, (clip, nodata))
 
     # AttributeError: 'numpy.ndarray' object has no attribute 'close'
     # raster.close()

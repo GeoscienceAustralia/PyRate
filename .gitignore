@@ -22,6 +22,7 @@
 !*sample_data/input/coherence/20061106-20070115_utm_unw.tif
 *sample_data/input/dem/*.tif
 *sample_data/input/interferograms/*.tif*
+**.idea*
 **/data*
 *out*
 *.pyo
