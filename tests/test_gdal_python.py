@@ -30,7 +30,6 @@ from numpy import where, nan
 from osgeo import gdal
 from osgeo import gdalconst
 
-import core.prepifg_helper
 from core import gdal_python, config as cf
 from core.prepifg_helper import _resample_ifg
 from core.shared import Ifg

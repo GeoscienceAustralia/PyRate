@@ -20,7 +20,7 @@ Run this module as 'mpirun -n 4 pytest tests/test_mpi.py'
 """
 import os
 import unittest
-
+from . import common
 from merge import create_png_from_tif
 
 legacy_maxvar = [
