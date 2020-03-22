@@ -62,6 +62,7 @@ class UpdateSamplePaths(install):
         self.remove_place_holder(os.path.join("tests", "test_data", "small_test", "gamma_obs", "headers"))
         self.remove_place_holder(os.path.join("tests", "test_data", "small_test", "gamma_obs", "ifms_17"))
         self.remove_place_holder(os.path.join("tests", "test_data", "small_test", "roipac_obs", "ifms_17"))
+        self.remove_place_holder(os.path.join("tests", "test_data", "small_test", "roipac_obs", "headers_17"))
         self.remove_place_holder(os.path.join("tests", "test_data", "small_test", "tif", "ifms_17"))
         self.remove_place_holder(os.path.join("tests", "test_data", "system", "gamma", "header_list.txt"))
         self.remove_place_holder(os.path.join("tests", "test_data", "system", "gamma", "input_parameters.conf"))

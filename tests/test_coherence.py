@@ -4,6 +4,7 @@ import numpy as np
 from . import common
 from osgeo import gdal
 from osgeo import osr
+import pathlib
 
 from configuration import MultiplePaths
 from core.gdal_python import coherence_masking
@@ -33,8 +34,9 @@ class CoherenceMaskingTest(unittest.TestCase):
         sample_gdal_band.FlushCache()
 
         # create a coherence mask dataset
-        outDir = "" # we won't be creating any output coherence mask files as there are already GeoTIFFs
-        coherence_mask_filename = MultiplePaths(outDir, "coherence_mask_dataset_01122000.tif")
+        outDir = pathlib.Path("/") # we won't be creating any output coherence mask files as there are already GeoTIFFs
+
+        coherence_mask_filename = MultiplePaths(outDir, pathlib.Path("coherence_mask_dataset_01122000.tif"))
         coherence_mask_dataset = driver.Create(coherence_mask_filename.converted_path, 5, 5, 1, gdal.GDT_Float32)
         srs = osr.SpatialReference()
         wkt_projection = srs.ExportToWkt()

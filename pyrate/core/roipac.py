@@ -220,39 +220,45 @@ def manage_header(header_file, projection):
     return header
 
 
-def roipac_header(file_path, params):
+def roipac_header(ifg_file_path, params):
     """Function to obtain a header for roipac interferogram file or converted
     geotiff.
     
     Args:
-        file_path:
+        file_path: input interferogram
+        params: dic of config parameters
     
-    Args:
-      file_path: param params:
-
-    Args:
-      file_path: 
-      params: 
 
     Returns:
       
 
     """
-    rsc_file = os.path.join(params[cf.DEM_HEADER_FILE])
+    rsc_file = params[cf.DEM_HEADER_FILE]
+
     if rsc_file is not None:
         projection = parse_header(rsc_file)[ifc.PYRATE_DATUM]
     else:
         raise RoipacException("No DEM resource/header file is " "provided")
-    if file_path.endswith("_dem.tif"):
-        header_file = os.path.join(params[cf.DEM_HEADER_FILE])
-    elif file_path.endswith("_unw.tif"):
-        base_file = file_path[:-8]
-        header_file = base_file + ".unw." + ROI_PAC_HEADER_FILE_EXT
+
+
+    if "dem" in ifg_file_path:
+        header_file = params[cf.DEM_HEADER_FILE]
     else:
-        header_file = "%s.%s" % (file_path, ROI_PAC_HEADER_FILE_EXT)
+
+        interferogram_epoches = re.findall("(\d{8})", ifg_file_path)
+        if len(interferogram_epoches) < 2:
+            interferogram_epoches = re.findall("(\d{6})", ifg_file_path)
+
+        header_file = ""
+        for header_path in params["header_file_paths"]:
+            header_epoch = re.findall("(\d{8})", header_path.unwrapped_path)
+            if len(header_epoch) < 1:
+                header_epoch = re.findall("(\d{6})", header_path.unwrapped_path)
+            if header_epoch[0] in interferogram_epoches:
+                header_file = header_path.unwrapped_path
+                break
 
     header = manage_header(header_file, projection)
-
     return header
 
 

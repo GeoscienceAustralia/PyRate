@@ -263,7 +263,8 @@ class LegacyEqualityTest(unittest.TestCase):
         """ """
         shutil.rmtree(self.temp_out_dir)
         params = Configuration(self.TEST_CONF_ROIPAC).__dict__
-        common.remove_tifs(params["obsdir"])
+        shutil.rmtree(params["outdir"])
+
 
     def test_legacy_maxvar_equality_small_test_files(self):
 
