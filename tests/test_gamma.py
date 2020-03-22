@@ -332,49 +332,50 @@ class TestGammaParallelVsSerial(unittest.TestCase):
     """
 
     @classmethod
-    def setUpClass(cls):
+    def setUpClass(self):
         """ """
         # read in the params
-        params = Configuration(TEST_CONF_GAMMA).__dict__
+        self.TEST_CONF_GAMMA = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),"tests", "test_data", "small_test","conf","pyrate_gamma_test.conf")
+        params = Configuration(self.TEST_CONF_GAMMA).__dict__
         glob_prefix = "*utm_unw_1rlks_1cr.tif"
 
         # SERIAL
-        cls.serial_dir = tempfile.mkdtemp()
-        params[cf.OUT_DIR] = cls.serial_dir
+        self.serial_dir = tempfile.mkdtemp()
+        params[cf.OUT_DIR] = self.serial_dir
         params[cf.PARALLEL] = False
-        shared.mkdir_p(cls.serial_dir)
+        shared.mkdir_p(self.serial_dir)
 
         conv2tif.main(params)
         prepifg.main(params)
 
-        serial_df = glob.glob(os.path.join(cls.serial_dir, glob_prefix))
-        cls.serial_ifgs = small_data_setup(datafiles=serial_df)
+        serial_df = glob.glob(os.path.join(self.serial_dir, glob_prefix))
+        self.serial_ifgs = small_data_setup(datafiles=serial_df)
 
         # Clean up serial converted tifs so we can test parallel conversion
         common.remove_tifs(SML_TEST_GAMMA)
 
         # PARALLEL
-        cls.parallel_dir = tempfile.mkdtemp()
-        params[cf.OUT_DIR] = cls.parallel_dir
+        self.parallel_dir = tempfile.mkdtemp()
+        params[cf.OUT_DIR] = self.parallel_dir
         params[cf.PARALLEL] = True
-        shared.mkdir_p(cls.parallel_dir)
+        shared.mkdir_p(self.parallel_dir)
 
         conv2tif.main(params)
         prepifg.main(params)
 
-        para_df = glob.glob(os.path.join(cls.parallel_dir, glob_prefix))
-        cls.para_ifgs = small_data_setup(datafiles=para_df)
+        para_df = glob.glob(os.path.join(self.parallel_dir, glob_prefix))
+        self.para_ifgs = small_data_setup(datafiles=para_df)
 
     @classmethod
-    def tearDownClass(cls):
+    def tearDownClass(self):
         """ """
         try:
-            shutil.rmtree(cls.parallel_dir)
+            shutil.rmtree(self.parallel_dir)
         except PermissionError:
             print("File opened by another process.")
 
         try:
-            shutil.rmtree(cls.serial_dir)
+            shutil.rmtree(self.serial_dir)
         except PermissionError:
             print("File opened by another process.")
 

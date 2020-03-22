@@ -47,6 +47,7 @@ from core.logger import pyratelogger as log
 
 PYRATEPATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TEMPDIR = tempfile.gettempdir()
+
 BASE_TEST = join(PYRATEPATH, "tests", "test_data")
 SML_TEST_DIR = join(BASE_TEST, "small_test")
 SML_TEST_OBS = join(SML_TEST_DIR, "roipac_obs")  # roipac processed unws
