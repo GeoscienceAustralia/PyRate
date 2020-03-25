@@ -30,7 +30,7 @@ from numpy import isnan, nanmax, nanmin, nanmean, ones, nan, reshape, sum as nps
 from numpy.testing import assert_array_almost_equal, assert_array_equal
 from osgeo import gdal
 
-import common
+from . import common
 import conv2tif
 import prepifg
 from common import PREP_TEST_TIF, SML_TEST_DEM_DIR
@@ -59,8 +59,9 @@ from core.config import (
 )
 from core.config import mlooked_path
 from core.prepifg_helper import CUSTOM_CROP, MAXIMUM_CROP, MINIMUM_CROP, ALREADY_SAME_SIZE
-from core.prepifg_helper import prepare_ifgs, _resample, PreprocessError, CustomExts
+from core.prepifg_helper import _resample, PreprocessError, CustomExts
 from core.shared import Ifg, DEM
+from core.orbital import prepare_ifgs
 
 gdal.UseExceptions()
 DUMMY_SECTION_NAME = "pyrate"
