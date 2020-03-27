@@ -30,9 +30,10 @@ from gdal import Open, Dataset, UseExceptions
 from numpy import isnan, where, nan
 from numpy.testing import assert_array_equal
 
-import common
+from . import common
 import conv2tif
 import prepifg
+from core.orbital import prepare_ifgs
 from common import SML_TEST_TIF, SML_TEST_DEM_TIF, TEMPDIR
 from core import config as cf, prepifg_helper
 from core.shared import Ifg, DEM, RasterException
@@ -181,7 +182,7 @@ class IfgIOTests(unittest.TestCase):
 
         """
         paths = [self.ifg.data_path]
-        mlooked_phase_data = prepifg_helper.prepare_ifgs(paths, crop_opt=prepifg_helper.ALREADY_SAME_SIZE, xlooks=2,
+        mlooked_phase_data = prepare_ifgs(paths, crop_opt=prepifg_helper.ALREADY_SAME_SIZE, xlooks=2,
                                                          ylooks=2, write_to_disc=False)
         mlooked = [Ifg(m[1]) for m in mlooked_phase_data]
         self.assertRaises(RasterException, mlooked[0].open)

@@ -28,6 +28,7 @@ from os.path import exists, join
 from numpy.testing import assert_array_almost_equal
 from osgeo import gdal
 
+from . import common
 import core.ifgconstants as ifc
 from common import HEADERS_TEST_DIR, PREP_TEST_OBS, PREP_TEST_TIF
 from common import SML_TEST_DEM_DIR, SML_TEST_OBS, TEMPDIR
