@@ -29,14 +29,13 @@ from . import common
 import core.orbital
 import process
 from common import small5_mock_ifgs, small5_ifgs, small_data_setup, prepare_ifgs_without_phase
-from constants import NO_OF_PARALLEL_PROCESSES
 from configuration import Configuration
 from core import shared
 
 from core.covariance import cvd, get_vcmt, RDist
-from core.user_experience import break_number_into_factors
 from main import conv2tif_handler, prepifg_handler, process_handler
 from osgeo import gdal, gdalconst
+
 
 class CovarianceTests(unittest.TestCase):
     """ """
@@ -269,15 +268,14 @@ class LegacyEqualityTest(unittest.TestCase):
     def test_legacy_maxvar_equality_small_test_files(self):
 
         assert len(self.maxvar) == len(legacy_maxvar)
-        #TODO np.testing.assert_array_almost_equal(self.maxvar, legacy_maxvar, decimal=3)
+        # TODO np.testing.assert_array_almost_equal(self.maxvar, legacy_maxvar, decimal=3)
 
     def test_legacy_vcmt_equality_small_test_files(self):
         from common import SML_TEST_DIR
         LEGACY_VCM_DIR = os.path.join(SML_TEST_DIR, 'vcm')
         legacy_vcm = np.genfromtxt(os.path.join(LEGACY_VCM_DIR, 'vcmt.csv'), delimiter=',')
         assert len(self.vcmt) == len(legacy_vcm)
-        #TODO np.testing.assert_array_almost_equal(legacy_vcm, self.vcmt, decimal=3)
-
+        # TODO np.testing.assert_array_almost_equal(legacy_vcm, self.vcmt, decimal=3)
 
     def test_metadata(self):
         for ifg in self.ifgs:

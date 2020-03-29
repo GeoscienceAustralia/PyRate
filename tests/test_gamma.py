@@ -37,7 +37,7 @@ from common import GAMMA_TEST_DIR, SML_TEST_GAMMA
 from common import TEST_CONF_GAMMA, TEMPDIR
 from common import small_data_setup
 from core import shared, config as cf, gamma
-from core.config import DEM_HEADER_FILE, NO_DATA_VALUE, OBS_DIR, IFG_FILE_LIST, PROCESSOR, OUT_DIR, SLC_DIR
+from core.config import DEM_HEADER_FILE, NO_DATA_VALUE, IFG_FILE_LIST, PROCESSOR, OUT_DIR, SLC_DIR
 from core.shared import write_fullres_geotiff, GeotiffException
 
 gdal.UseExceptions()
@@ -79,7 +79,6 @@ class GammaCommandLineTests(unittest.TestCase):
         with open(self.confFile, "w") as conf:
             conf.write("{}: {}\n".format(DEM_HEADER_FILE, self.hdr))
             conf.write("{}: {}\n".format(NO_DATA_VALUE, "0.0"))
-            conf.write("{}: {}\n".format(OBS_DIR, self.base_dir))
             conf.write("{}: {}\n".format(IFG_FILE_LIST, self.ifgListFile))
             conf.write("{}: {}\n".format(PROCESSOR, "1"))
             conf.write("{}: {}\n".format(OUT_DIR, self.base_dir))

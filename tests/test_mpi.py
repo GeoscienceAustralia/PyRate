@@ -264,7 +264,6 @@ def test_vcm_legacy_vs_mpi(mpisync, tempdir, get_config):
     outdir = mpiops.comm.bcast(outdir, root=0)
     params_dict[cf.OUT_DIR] = outdir
     params_dict[cf.PARALLEL] = False
-    xlks, ylks, crop = cf.transform_params(params_dict)
 
     dest_paths = []
     for interferogram_file in params_dict["interferogram_files"]:

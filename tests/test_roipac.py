@@ -34,7 +34,7 @@ from common import HEADERS_TEST_DIR, PREP_TEST_OBS, PREP_TEST_TIF
 from common import SML_TEST_DEM_DIR, SML_TEST_OBS, TEMPDIR
 from common import SML_TEST_DEM_ROIPAC, SML_TEST_DEM_HDR
 from core import shared, roipac
-from core.config import INPUT_IFG_PROJECTION, NO_DATA_VALUE, OBS_DIR, OUT_DIR, IFG_FILE_LIST, PROCESSOR, DEM_HEADER_FILE
+from core.config import INPUT_IFG_PROJECTION, NO_DATA_VALUE, OUT_DIR, IFG_FILE_LIST, PROCESSOR, DEM_HEADER_FILE
 # from pyrate.scripts.conv2tif import main as roipacMain
 from core.shared import GeotiffException
 from core.shared import write_fullres_geotiff
@@ -97,7 +97,6 @@ class RoipacCommandLine(unittest.TestCase):
             conf.write("{}: {}\n".format(DEM_HEADER_FILE, self.hdr))
             conf.write("{}: {}\n".format(INPUT_IFG_PROJECTION, projection))
             conf.write("{}: {}\n".format(NO_DATA_VALUE, "0.0"))
-            conf.write("{}: {}\n".format(OBS_DIR, self.base_dir))
             conf.write("{}: {}\n".format(OUT_DIR, self.base_dir))
             conf.write("{}: {}\n".format(IFG_FILE_LIST, self.ifgListFile))
             conf.write("{}: {}\n".format(PROCESSOR, "0"))

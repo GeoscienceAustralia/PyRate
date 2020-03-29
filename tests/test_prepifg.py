@@ -40,7 +40,6 @@ from core import config as cf
 from core.config import (
     DEM_HEADER_FILE,
     NO_DATA_VALUE,
-    OBS_DIR,
     IFG_FILE_LIST,
     PROCESSOR,
     OUT_DIR,

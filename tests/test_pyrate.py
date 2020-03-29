@@ -65,13 +65,6 @@ if os.name == "nt":
 
 CURRENT_DIR = os.getcwd()
 
-
-def test_transform_params():
-    """ """
-    params = {config.IFG_LKSX: 3, config.IFG_LKSY: 2, config.IFG_CROP_OPT: 1}
-    assert cf.transform_params(params) == (3, 2, 1)
-
-
 def test_warp_required():
     """ """
     nocrop = prepifg_helper.ALREADY_SAME_SIZE
@@ -82,15 +75,6 @@ def test_warp_required():
 
     for c in prepifg_helper.CROP_OPTIONS[:-1]:
         assert shared.warp_required(xlooks=1, ylooks=1, crop=c)
-
-
-def test_original_ifg_paths():
-    """ """
-    ifgdir = common.SML_TEST_TIF
-    ifglist_path = join(ifgdir, "ifms_17")
-    paths = cf.original_ifg_paths(ifglist_path, ifgdir)
-    assert paths[0] == join(ifgdir, "geo_060619-061002_unw.tif"), str(paths[0])
-    assert paths[-1] == join(ifgdir, "geo_070709-070813_unw.tif")
 
 
 def dest_ifg_paths(ifg_paths, outdir):
@@ -244,7 +228,6 @@ class ParallelPyRateTests(unittest.TestCase):
 
         # change the required params
         params = Configuration(cls.test_conf).__dict__
-        params[cf.OBS_DIR] = common.SML_TEST_GAMMA
         params[cf.PROCESSOR] = 1  # gamma
         params[cf.IFG_FILE_LIST] = os.path.join(common.SML_TEST_GAMMA, "ifms_17")
         params[cf.OUT_DIR] = cls.tif_dir

@@ -28,7 +28,6 @@ from osgeo import gdal
 
 from constants import REF_COLOR_MAP_PATH
 from core import shared, ifgconstants as ifc, mpiops, config as cf
-from core.config import OBS_DIR
 from core.logger import pyratelogger as log
 from core.shared import PrereadIfg
 
@@ -178,8 +177,6 @@ def _merge_stack(rows, cols, params):
 
     """
     # setup paths
-    xlks, _, crop = cf.transform_params(params)
-
     interferogram_file_paths = []
     for interferogram_file_path in params["interferogram_files"]:
         interferogram_file_paths.append(interferogram_file_path.sampled_path)
@@ -264,7 +261,6 @@ def _merge_timeseries(rows, cols,  params):
       
 
     """
-    xlks, _, crop = cf.transform_params(params)
 
     dest_tifs = []
     for interferogram in params["interferogram_files"]:

@@ -30,7 +30,6 @@ from core import ifgconstants as ifc, config as cf
 from core.config import (
     DEM_HEADER_FILE,
     NO_DATA_VALUE,
-    OBS_DIR,
     IFG_FILE_LIST,
     PROCESSOR,
     OUT_DIR,
@@ -88,7 +87,6 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
         with open(self.conf_file, "w") as conf:
             conf.write("[{}]\n".format(DUMMY_SECTION_NAME))
             conf.write("{}: {}\n".format("noDataValue", "0.0"))
-            conf.write("{}: {}\n".format(OBS_DIR, self.SMLNEY_GAMMA_TEST))
             conf.write("{}: {}\n".format("outdir", self.base_dir))
             conf.write("{}: {}\n".format(IFG_FILE_LIST, self.ifgListFile))
             conf.write("{}: {}\n".format(PROCESSOR, "1"))
@@ -167,7 +165,6 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
             conf.write("[{}]\n".format(DUMMY_SECTION_NAME))
             conf.write("{}: {}\n".format(INPUT_IFG_PROJECTION, projection))
             conf.write("{}: {}\n".format("noDataValue", "0.0"))
-            conf.write("{}: {}\n".format(OBS_DIR, common.SML_TEST_OBS))
             conf.write("{}: {}\n".format("outdir", self.base_dir))
             conf.write("{}: {}\n".format(IFG_FILE_LIST, self.ifgListFile))
             conf.write("{}: {}\n".format(PROCESSOR, "0"))
