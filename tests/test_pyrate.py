@@ -235,46 +235,42 @@ class ParallelPyRateTests(unittest.TestCase):
         params[cf.APS_CORRECTION] = False
         params[cf.TMPDIR] = os.path.join(params[cf.OUT_DIR], cf.TMPDIR)
 
-        xlks, ylks, crop = cf.transform_params(params)
+        conv2tif.main(params)
+        prepifg.main(params)
 
-        # base_unw_paths need to be geotiffed by converttogeotif
-        #  and multilooked by run_prepifg
-        base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST], params[cf.OBS_DIR])
+        cls.dest_paths = []
+        for interferogram_file in params["interferogram_files"]:
+            cls.dest_paths.append(interferogram_file.sampled_path)
 
-        # dest_paths are tifs that have been geotif converted and multilooked
-        cls.dest_paths = cf.get_dest_paths(base_unw_paths, crop, params, xlks)
-        gtif_paths = conv2tif.do_geotiff(base_unw_paths, params)
-        prepifg.do_prepifg(gtif_paths, params)
         tiles = core.shared.get_tiles(cls.dest_paths[0], 3, 3)
         ifgs = common.small_data_setup()
-        cls.refpixel_p, cls.maxvar_p, cls.vcmt_p = process.main(cls.dest_paths, params, 3, 3)
+        process.main(params)
+
         cls.mst_p = common.reconstruct_mst(ifgs[0].shape, tiles, params[cf.TMPDIR])
         cls.rate_p, cls.error_p, cls.samples_p = [
             common.reconstruct_stack_rate(ifgs[0].shape, tiles, params[cf.TMPDIR], t) for t in rate_types
         ]
 
-        common.remove_tifs(params[cf.OBS_DIR])
+        common.remove_tifs(params[cf.OUT_DIR])
 
         # now create the non parallel version
         cls.tif_dir_s = tempfile.mkdtemp()
         params[cf.PARALLEL] = 0
         params[cf.OUT_DIR] = cls.tif_dir_s
         params[cf.TMPDIR] = os.path.join(params[cf.OUT_DIR], cf.TMPDIR)
-        cls.dest_paths_s = cf.get_dest_paths(base_unw_paths, crop, params, xlks)
-        gtif_paths = conv2tif.do_geotiff(base_unw_paths, params)
-        prepifg.do_prepifg(gtif_paths, params)
-        cls.refpixel, cls.maxvar, cls.vcmt = process.main(cls.dest_paths_s, params, 3, 3)
+
+        conv2tif.main(params)
+        prepifg.main(params)
+        process.main(params)
 
         cls.mst = common.reconstruct_mst(ifgs[0].shape, tiles, params[cf.TMPDIR])
-        cls.rate, cls.error, cls.samples = [common.reconstruct_stack_rate(ifgs[0].shape, tiles, params[cf.TMPDIR], t)
-                                            for t in rate_types]
+        cls.rate, cls.error, cls.samples = [common.reconstruct_stack_rate(ifgs[0].shape, tiles, params[cf.TMPDIR], t) for t in rate_types]
 
     @classmethod
     def tearDownClass(cls):
         """ """
         shutil.rmtree(cls.tif_dir, ignore_errors=True)
         shutil.rmtree(cls.tif_dir_s, ignore_errors=True)
-        common.remove_tifs(cf.get_config_params(cls.test_conf)[cf.OBS_DIR])
 
     # def test_orbital_correction(self):
     #     key = 'ORBITAL_ERROR'

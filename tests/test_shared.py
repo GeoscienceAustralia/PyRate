@@ -38,6 +38,7 @@ from common import SML_TEST_TIF, SML_TEST_DEM_TIF, TEMPDIR
 from core import config as cf, prepifg_helper
 from core.shared import Ifg, DEM, RasterException
 from core.shared import cell_size, _utm_zone
+from configuration import Configuration
 
 UseExceptions()
 
@@ -309,6 +310,7 @@ class DEMTests(unittest.TestCase):
         self.assertEqual(data.shape, (72, 47))
 
 
+
 class WriteUnwTest(unittest.TestCase):
     """ """
 
@@ -316,11 +318,8 @@ class WriteUnwTest(unittest.TestCase):
     def setUpClass(cls):
         """ """
         cls.tif_dir = tempfile.mkdtemp()
-        cls.test_conf = common.TEST_CONF_GAMMA
-
         # change the required params
-        cls.params = cf.get_config_params(cls.test_conf)
-        cls.params[cf.OBS_DIR] = common.SML_TEST_GAMMA
+        cls.params = Configuration(common.TEST_CONF_GAMMA).__dict__
         cls.params[cf.PROCESSOR] = 1  # gamma
         file_list = list(cf.parse_namelist(os.path.join(common.SML_TEST_GAMMA, "ifms_17")))
         fd, cls.params[cf.IFG_FILE_LIST] = tempfile.mkstemp(suffix=".conf", dir=cls.tif_dir)
@@ -333,18 +332,14 @@ class WriteUnwTest(unittest.TestCase):
         cls.params[cf.PARALLEL] = 0
         cls.params[cf.REF_EST_METHOD] = 1
         cls.params[cf.DEM_FILE] = common.SML_TEST_DEM_GAMMA
-        # base_unw_paths need to be geotiffed and multilooked by run_prepifg
-        cls.base_unw_paths = cf.original_ifg_paths(cls.params[cf.IFG_FILE_LIST], cls.params[cf.OBS_DIR])
-        cls.base_unw_paths.append(common.SML_TEST_DEM_GAMMA)
 
-        xlks, ylks, crop = cf.transform_params(cls.params)
-        # dest_paths are tifs that have been geotif converted and multilooked
         conv2tif.main(cls.params)
         prepifg.main(cls.params)
-        # run_prepifg.gamma_prepifg(cls.base_unw_paths, cls.params)
-        cls.base_unw_paths.pop()  # removed dem as we don't want it in ifgs
 
-        cls.dest_paths = cf.get_dest_paths(cls.base_unw_paths, crop, cls.params, xlks)
+        cls.dest_paths = []
+        for interferogram_file in cls.params["interferogram_files"]:
+            cls.dest_paths.append(interferogram_file.sampled_path)
+
         cls.ifgs = common.small_data_setup(datafiles=cls.dest_paths)
 
     @classmethod
@@ -353,7 +348,7 @@ class WriteUnwTest(unittest.TestCase):
         for i in cls.ifgs:
             i.close()
         shutil.rmtree(cls.tif_dir)
-        common.remove_tifs(cls.params[cf.OBS_DIR])
+        common.remove_tifs(cls.params[cf.OUT_DIR])
 
 
 class GeodesyTests(unittest.TestCase):

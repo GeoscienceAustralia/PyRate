@@ -114,7 +114,7 @@ def parse_header(hdr_file):
       dict: subset: subset of metadata
 
     """
-    with open(hdr_file) as f:
+    with open(hdr_file, encoding="utf8", errors='ignore') as f:
         text = f.read()
 
     try:
