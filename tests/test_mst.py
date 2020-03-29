@@ -188,7 +188,7 @@ class NetworkxMSTTreeCheck(unittest.TestCase):
         self.assertFalse(is_tree)
         self.assertEqual(2, ntrees)
 
-
+# TODO figure out reason for failure
 # class IfgPartTest(unittest.TestCase):
 #     """ """
 #     def setUp(self):

@@ -158,7 +158,7 @@ class PyRateTests(unittest.TestCase):
             params[cf.APS_CORRECTION] = 0
 
             params[cf.PARALLEL] = False
-            # TODO figure out why this fail
+            # TODO figure out reason for failure
             # process.main(params)
 
             if not hasattr(cls, "ifgs"):
@@ -199,7 +199,7 @@ class PyRateTests(unittest.TestCase):
         # log_path = self.get_logfile_path()
         # st = os.stat(log_path)
         # self.assertTrue(st.st_size > 0)
-
+    # TODO figure out reason for failure
     # def test_phase_conversion(self):
     #     # ensure phase has been converted from radians to millimetres
     #     key = 'DATA_UNITS'
@@ -207,7 +207,7 @@ class PyRateTests(unittest.TestCase):
     #
     #     for i in self.ifgs:
     #         self.key_check(i, key, value)
-
+    # TODO figure out reason for failure
     # def test_orbital_correction(self):
     #     key = 'ORBITAL_ERROR'
     #     value = 'REMOVED'
@@ -272,6 +272,7 @@ class ParallelPyRateTests(unittest.TestCase):
         shutil.rmtree(cls.tif_dir, ignore_errors=True)
         shutil.rmtree(cls.tif_dir_s, ignore_errors=True)
 
+    # TODO figure out reason for failure
     # def test_orbital_correction(self):
     #     key = 'ORBITAL_ERROR'
     #     value = 'REMOVED'
@@ -294,6 +295,7 @@ class ParallelPyRateTests(unittest.TestCase):
         self.assertTrue(key in md, "Missing %s in %s" % (key, ifg.data_path))
         self.assertTrue(md[key], value)
 
+    # TODO figure out reason for failure
     # def test_phase_conversion(self):
     #     # ensure phase has been converted from radians to millimetres
     #     key = 'DATA_UNITS'
@@ -302,6 +304,7 @@ class ParallelPyRateTests(unittest.TestCase):
     #     for i in common.small_data_setup(datafiles=self.dest_paths):
     #         self.key_check(i, key, value)
 
+    # TODO figure out reason for failure
     # def test_mst_equal(self):
     #     ifgs = common.small_data_setup(datafiles=self.dest_paths)
     #     mst_original_p = mst.mst_boolean_array(ifgs)
@@ -311,16 +314,20 @@ class ParallelPyRateTests(unittest.TestCase):
     #     np.testing.assert_array_equal(self.mst, mst_original_s)
     #     np.testing.assert_array_equal(self.mst, self.mst_p)
 
+    # TODO figure out reason for failure
     # def test_refpixel_equal(self):
     #     np.testing.assert_array_equal(self.refpixel, self.refpixel_p)
 
+    # TODO figure out reason for failure
     # def test_maxvar_equal(self):
     #     np.testing.assert_array_almost_equal(self.maxvar, self.maxvar_p,
     #                                          decimal=4)
 
+    # TODO figure out reason for failure
     # def test_vcmt_equal(self):
     #     np.testing.assert_array_almost_equal(self.vcmt, self.vcmt_p, decimal=4)
 
+    # TODO figure out reason for failure
     # def test_rate_equal(self):
     #     np.testing.assert_array_almost_equal(self.rate, self.rate_p,
     #                                          decimal=4)

@@ -381,18 +381,10 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
             x_looks = y_looks = 2
             res = 2
             resolution = [res, -res]
-            # minX, minY, maxX, maxY = extents
-            # adfGeoTransform[0] /* top left x */
-            # adfGeoTransform[1] /* w-e pixel resolution */
-            # adfGeoTransform[2] /* 0 */
-            # adfGeoTransform[3] /* top left y */
-            # adfGeoTransform[4] /* 0 */
-            # adfGeoTransform[5] /* n-s pixel resolution (negative value) */
             extents = [str(e) for e in [10, 0, 20, 10]]
 
             # only band 1 is resapled in warp_old
-            data, self.old_prepifg_path = warp_old(ifg, x_looks, y_looks, extents, resolution, thresh=thresh,
-                                                   crop_out=4, verbose=False)
+            data, self.old_prepifg_path = warp_old(ifg, x_looks, y_looks, extents, resolution, thresh=thresh, crop_out=4, verbose=False)
 
             np.testing.assert_array_equal(data, avg)
 
@@ -423,8 +415,8 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
             ifg = Ifg(self.temp_tif)
             # only band 1 is resampled in warp_old
             data, self.old_prepifg_path = warp_old(ifg, x_looks, y_looks, extents_str, [res, -res], thresh=thresh, crop_out=4, verbose=False)
-
-            # TODO np.testing.assert_array_almost_equal(data, averaged_and_resampled, decimal=4)
+            # TODO figure out reason for failure
+            # np.testing.assert_array_almost_equal(data, averaged_and_resampled, decimal=4)
             #  del averaged_and_resampled
 
     @staticmethod
@@ -526,6 +518,7 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
                 data_from_file = gdal.Open(self.old_prepifg_path).ReadAsArray()
                 self.assertTrue(os.path.exists(self.temp_tif))
                 new_from_file = gdal.Open(self.temp_tif).ReadAsArray()
+                # TODO figure out reason for failure
                 # np.testing.assert_array_almost_equal(data_from_file, new_from_file)
 
                 del averaged_and_resampled
@@ -558,6 +551,7 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
             # make sure they are the same after they are opened again
             data_from_file = gdal.Open(self.old_prepifg_path).ReadAsArray()
             new_from_file = out_ds.ReadAsArray()
+            # TODO figure out reason for failure
             # np.testing.assert_array_almost_equal(data_from_file, new_from_file)
             self.assertTrue(os.path.exists(self.temp_tif))
             out_ds = None  # manual close

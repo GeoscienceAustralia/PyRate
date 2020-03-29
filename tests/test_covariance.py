@@ -268,14 +268,16 @@ class LegacyEqualityTest(unittest.TestCase):
     def test_legacy_maxvar_equality_small_test_files(self):
 
         assert len(self.maxvar) == len(legacy_maxvar)
-        # TODO np.testing.assert_array_almost_equal(self.maxvar, legacy_maxvar, decimal=3)
+        # TODO figure out reason for failure
+        # np.testing.assert_array_almost_equal(self.maxvar, legacy_maxvar, decimal=3)
 
     def test_legacy_vcmt_equality_small_test_files(self):
         from common import SML_TEST_DIR
         LEGACY_VCM_DIR = os.path.join(SML_TEST_DIR, 'vcm')
         legacy_vcm = np.genfromtxt(os.path.join(LEGACY_VCM_DIR, 'vcmt.csv'), delimiter=',')
         assert len(self.vcmt) == len(legacy_vcm)
-        # TODO np.testing.assert_array_almost_equal(legacy_vcm, self.vcmt, decimal=3)
+        # TODO figure out reason for failure
+        # np.testing.assert_array_almost_equal(legacy_vcm, self.vcmt, decimal=3)
 
     def test_metadata(self):
         for ifg in self.ifgs:

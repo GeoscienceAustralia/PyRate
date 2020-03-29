@@ -1,119 +1,120 @@
-# #   This Python module is part of the PyRate software package.
-# #
-# #   Copyright 2020 Geoscience Australia
-# #
-# #   Licensed under the Apache License, Version 2.0 (the "License");
-# #   you may not use this file except in compliance with the License.
-# #   You may obtain a copy of the License at
-# #
-# #       http://www.apache.org/licenses/LICENSE-2.0
-# #
-# #   Unless required by applicable law or agreed to in writing, software
-# #   distributed under the License is distributed on an "AS IS" BASIS,
-# #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# #   See the License for the specific language governing permissions and
-# #   limitations under the License.
-# # coding: utf-8
-# """
-# This Python module contains tests for the timeseries.py PyRate module.
-# """
-# import os
-# import shutil
-# import sys
-# import tempfile
-# import unittest
-# from datetime import date, timedelta
-# from numpy import nan, asarray, where
-# import numpy as np
-# from numpy.testing import assert_array_almost_equal
+#   This Python module is part of the PyRate software package.
 #
-# from . import common
-# import core.orbital
-# from core import ref_phs_est as rpe, config as cf, mst, covariance
-# import process, prepifg, conv2tif
-# from core.timeseries import time_series
-# from configuration import Configuration
+#   Copyright 2020 Geoscience Australia
 #
-# def default_params():
-#     """ """
-#     return {
-#         cf.TIME_SERIES_METHOD: 1,
-#         cf.TIME_SERIES_PTHRESH: 0,
-#         cf.TIME_SERIES_SM_ORDER: 2,
-#         cf.TIME_SERIES_SM_FACTOR: -0.25,
-#         cf.PARALLEL: 0,
-#         cf.PROCESSES: 1,
-#         cf.NAN_CONVERSION: 1,
-#         cf.NO_DATA_VALUE: 0,
-#     }
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
 #
+#       http://www.apache.org/licenses/LICENSE-2.0
 #
-# class SinglePixelIfg(object):
-#     """A single pixel ifg (interferogram) solely for unit testing"""
-#
-#     def __init__(self, master, slave, phase, nan_fraction):
-#         """
-#         Args:
-#             master:
-#             slave:
-#             phase:
-#             nan_fraction:
-#         """
-#         self.phase_data = asarray([[phase]])
-#         self.master = master
-#         self.slave = slave
-#         self.nrows = 1
-#         self.ncols = 1
-#         self.nan_fraction = asarray([nan_fraction])
-#
-#     def convert_to_nans(self, val=0):
-#         """Converts given values in phase data to NaNs val - value to convert,
-#         default is 0
-#
-#         Args:
-#           val: Default value = 0)
-#
-#         Returns:
-#
-#         """
-#         self.phase_data = where(self.phase_data == val, nan, self.phase_data)
-#         self.nan_converted = True
-#
-#
-# class TimeSeriesTests(unittest.TestCase):
-#     """Verifies error checking capabilities of the time_series function"""
-#
-#     @classmethod
-#     def setUpClass(cls):
-#         """ """
-#         cls.ifgs = common.small_data_setup()
-#         cls.params = default_params()
-#         cls.mstmat = mst.mst_boolean_array(cls.ifgs)
-#         r_dist = covariance.RDist(cls.ifgs[0])()
-#         cls.maxvar = [covariance.cvd(i, cls.params, r_dist)[0] for i in cls.ifgs]
-#         cls.vcmt = covariance.get_vcmt(cls.ifgs, cls.maxvar)
-#
-#     def test_time_series_unit(self):
-#         """Checks that the code works the same as the calculated example"""
-#         imaster = asarray([1, 1, 2, 2, 3, 3, 4, 5])
-#         islave = asarray([2, 4, 3, 4, 5, 6, 6, 6])
-#         timeseries = asarray([0.0, 0.1, 0.6, 0.8, 1.1, 1.3])
-#         phase = asarray([0.5, 4, 2.5, 3.5, 2.5, 3.5, 2.5, 1])
-#         nan_fraction = asarray([0.5, 0.4, 0.2, 0.3, 0.1, 0.3, 0.2, 0.1])
-#
-#         now = date.today()
-#
-#         dates = [now + timedelta(days=(t * 365.25)) for t in timeseries]
-#         dates.sort()
-#         master = [dates[m_num - 1] for m_num in imaster]
-#         slave = [dates[s_num - 1] for s_num in islave]
-#
-#         self.ifgs = [SinglePixelIfg(m, s, p, n) for m, s, p, n in zip(master, slave, phase, nan_fraction)]
-#
-#         tsincr, tscum, tsvel = time_series(self.ifgs, params=self.params, vcmt=self.vcmt, mst=None)
-#         expected = asarray([[[0.50, 3.0, 4.0, 5.5, 6.5]]])
-#         assert_array_almost_equal(tscum, expected, decimal=2)
-#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+# coding: utf-8
+"""
+This Python module contains tests for the timeseries.py PyRate module.
+"""
+import os
+import shutil
+import sys
+import tempfile
+import unittest
+from datetime import date, timedelta
+from numpy import nan, asarray, where
+import numpy as np
+from numpy.testing import assert_array_almost_equal
+
+from . import common
+import core.orbital
+from core import ref_phs_est as rpe, config as cf, mst, covariance
+import process, prepifg, conv2tif
+from core.timeseries import time_series
+from configuration import Configuration
+
+def default_params():
+    """ """
+    return {
+        cf.TIME_SERIES_METHOD: 1,
+        cf.TIME_SERIES_PTHRESH: 0,
+        cf.TIME_SERIES_SM_ORDER: 2,
+        cf.TIME_SERIES_SM_FACTOR: -0.25,
+        cf.PARALLEL: 0,
+        cf.PROCESSES: 1,
+        cf.NAN_CONVERSION: 1,
+        cf.NO_DATA_VALUE: 0,
+    }
+
+
+class SinglePixelIfg(object):
+    """A single pixel ifg (interferogram) solely for unit testing"""
+
+    def __init__(self, master, slave, phase, nan_fraction):
+        """
+        Args:
+            master:
+            slave:
+            phase:
+            nan_fraction:
+        """
+        self.phase_data = asarray([[phase]])
+        self.master = master
+        self.slave = slave
+        self.nrows = 1
+        self.ncols = 1
+        self.nan_fraction = asarray([nan_fraction])
+
+    def convert_to_nans(self, val=0):
+        """Converts given values in phase data to NaNs val - value to convert,
+        default is 0
+
+        Args:
+          val: Default value = 0)
+
+        Returns:
+
+        """
+        self.phase_data = where(self.phase_data == val, nan, self.phase_data)
+        self.nan_converted = True
+
+
+class TimeSeriesTests(unittest.TestCase):
+    """Verifies error checking capabilities of the time_series function"""
+
+    @classmethod
+    def setUpClass(cls):
+        """ """
+        cls.ifgs = common.small_data_setup()
+        cls.params = default_params()
+        cls.mstmat = mst.mst_boolean_array(cls.ifgs)
+        r_dist = covariance.RDist(cls.ifgs[0])()
+        cls.maxvar = [covariance.cvd(i, cls.params, r_dist)[0] for i in cls.ifgs]
+        cls.vcmt = covariance.get_vcmt(cls.ifgs, cls.maxvar)
+
+    def test_time_series_unit(self):
+        """Checks that the code works the same as the calculated example"""
+        imaster = asarray([1, 1, 2, 2, 3, 3, 4, 5])
+        islave = asarray([2, 4, 3, 4, 5, 6, 6, 6])
+        timeseries = asarray([0.0, 0.1, 0.6, 0.8, 1.1, 1.3])
+        phase = asarray([0.5, 4, 2.5, 3.5, 2.5, 3.5, 2.5, 1])
+        nan_fraction = asarray([0.5, 0.4, 0.2, 0.3, 0.1, 0.3, 0.2, 0.1])
+
+        now = date.today()
+
+        dates = [now + timedelta(days=(t * 365.25)) for t in timeseries]
+        dates.sort()
+        master = [dates[m_num - 1] for m_num in imaster]
+        slave = [dates[s_num - 1] for s_num in islave]
+
+        self.ifgs = [SinglePixelIfg(m, s, p, n) for m, s, p, n in zip(master, slave, phase, nan_fraction)]
+
+        tsincr, tscum, tsvel = time_series(self.ifgs, params=self.params, vcmt=self.vcmt, mst=None)
+        expected = asarray([[[0.50, 3.0, 4.0, 5.5, 6.5]]])
+        assert_array_almost_equal(tscum, expected, decimal=2)
+
+# TODO figure out reason for failure
 # class LegacyTimeSeriesEquality(unittest.TestCase):
 #
 #     @classmethod
@@ -132,7 +133,7 @@
 #
 #         # start run_pyrate copy
 #         ifgs = common.pre_prepare_ifgs(dest_paths, params)
-#         mst_grid = common.mst_calculation(dest_paths, params)
+#         # mst_grid = common.mst_calculation(dest_paths, params)
 #         refx, refy = process._ref_pixel_calc(dest_paths, params)
 #         # Estimate and remove orbit errors
 #         core.orbital.remove_orbital_error(ifgs, params)
@@ -209,8 +210,8 @@
 #         self.assertEqual(self.tsincr_0.shape, self.tscum_0.shape)
 #         np.testing.assert_array_almost_equal(self.ts_incr, self.tsincr_0, decimal=3)
 #         np.testing.assert_array_almost_equal(self.ts_cum, self.tscum_0, decimal=3)
-#
-#
+
+# TODO figure out reason for failure
 # class LegacyTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
 #
 #     @classmethod
@@ -278,8 +279,9 @@
 #
 #     @classmethod
 #     def tearDownClass(cls):
-#         shutil.rmtree(cls.temp_out_dir)
-#         common.remove_tifs(cf.get_config_params(common.TEST_CONF_ROIPAC)[cf.OBS_DIR])
+#         None
+#         # shutil.rmtree(cls.temp_out_dir)
+#         # common.remove_tifs(cf.get_config_params(common.TEST_CONF_ROIPAC)[cf.OUT_DIR])
 #
 #     def test_time_series_equality_parallel_by_rows(self):
 #
@@ -298,7 +300,7 @@
 #         self.assertEqual(self.tsincr_0.shape, self.tscum_0.shape)
 #         np.testing.assert_array_almost_equal(self.ts_incr, self.tsincr_0, decimal=3)
 #         np.testing.assert_array_almost_equal(self.ts_cum, self.tscum_0, decimal=3)
-#
-#
-# if __name__ == "__main__":
-#     unittest.main()
+
+
+if __name__ == "__main__":
+    unittest.main()

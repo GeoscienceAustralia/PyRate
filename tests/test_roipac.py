@@ -35,7 +35,6 @@ from common import SML_TEST_DEM_DIR, SML_TEST_OBS, TEMPDIR
 from common import SML_TEST_DEM_ROIPAC, SML_TEST_DEM_HDR
 from core import shared, roipac
 from core.config import INPUT_IFG_PROJECTION, NO_DATA_VALUE, OUT_DIR, IFG_FILE_LIST, PROCESSOR, DEM_HEADER_FILE
-# from pyrate.scripts.conv2tif import main as roipacMain
 from core.shared import GeotiffException
 from core.shared import write_fullres_geotiff
 

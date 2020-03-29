@@ -995,10 +995,12 @@ class LegacyComparisonTestsOrbfitMethod2(unittest.TestCase):
                         os.path.basename(f).split("_method2_")[1].split(".")[0]:
                     count += 1
                     # # all numbers equal
+                    # TODO figure out reason for failure
                     # np.testing.assert_array_almost_equal(legacy_phase_data,
                     #     j.phase_data, decimal=3)
                     #
                     # # number of nans must equal
+                    # TODO figure out reason for failure
                     # self.assertEqual(np.sum(np.isnan(legacy_phase_data)),
                     #             np.sum(np.isnan(j.phase_data)))
 

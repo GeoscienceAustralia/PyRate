@@ -1,92 +1,92 @@
-# #   This Python module is part of the PyRate software package.
-# #
-# #   Copyright 2020 Geoscience Australia
-# #
-# #   Licensed under the Apache License, Version 2.0 (the "License");
-# #   you may not use this file except in compliance with the License.
-# #   You may obtain a copy of the License at
-# #
-# #       http://www.apache.org/licenses/LICENSE-2.0
-# #
-# #   Unless required by applicable law or agreed to in writing, software
-# #   distributed under the License is distributed on an "AS IS" BASIS,
-# #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# #   See the License for the specific language governing permissions and
-# #   limitations under the License.
-# # coding: utf-8
-# """
-# This Python module contains tests for the stack.py PyRate module.
-# """
-# import os
-# import shutil
-# import tempfile
-# import unittest
+#   This Python module is part of the PyRate software package.
 #
-# import numpy as np
-# from numpy import eye, array, ones
-# from numpy.testing import assert_array_almost_equal
+#   Copyright 2020 Geoscience Australia
 #
-# from . import common
-# import conv2tif
-# import core.orbital
-# import prepifg
-# import process
-# from common import SML_TEST_DIR, prepare_ifgs_without_phase, TEST_CONF_ROIPAC, pre_prepare_ifgs, remove_tifs
-# from core import shared, config as cf, covariance as vcm_module
-# from core.stack import stack_rate
-# from configuration import Configuration
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
 #
-# def default_params():
-#     """ """
-#     return {"pthr": 3, "nsig": 3, "maxsig": 2, "parallel": 1, "processes": 8}
+#       http://www.apache.org/licenses/LICENSE-2.0
 #
-#
-# class SinglePixelIfg(object):
-#     def __init__(self, timespan, phase):
-#         """
-#
-#         Args:
-#           timespan: param phase:
-#
-#         Returns:
-#
-#         """
-#         self.time_span = timespan
-#         self.phase_data = array([[phase]])
-#
-#
-# class StackRateTests(unittest.TestCase):
-#     """Tests the weighted least squares algorithm for determinining the best
-#     fitting velocity
-#
-#     Args:
-#
-#     Returns:
-#
-#     """
-#
-#     def setUp(self):
-#         """ """
-#         phase = [0.5, 3.5, 4, 2.5, 3.5, 1]
-#         timespan = [0.1, 0.7, 0.8, 0.5, 0.7, 0.2]
-#         self.ifgs = [SinglePixelIfg(s, p) for s, p in zip(timespan, phase)]
-#
-#     def test_stack_rate(self):
-#         """ """
-#         # Simple test with one pixel and equal weighting
-#         exprate = array([[5.0]])
-#         experr = array([[0.836242010007091]])
-#         expsamp = array([[5]])
-#         vcmt = eye(6, 6)
-#         mst = ones((6, 1, 1))
-#         mst[4] = 0
-#         params = default_params()
-#         rate, error, samples = stack_rate(self.ifgs, params, vcmt, mst)
-#         assert_array_almost_equal(rate, exprate)
-#         assert_array_almost_equal(error, experr)
-#         assert_array_almost_equal(samples, expsamp)
-#
-#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+# coding: utf-8
+"""
+This Python module contains tests for the stack.py PyRate module.
+"""
+import os
+import shutil
+import tempfile
+import unittest
+
+import numpy as np
+from numpy import eye, array, ones
+from numpy.testing import assert_array_almost_equal
+
+from . import common
+import conv2tif
+import core.orbital
+import prepifg
+import process
+from common import SML_TEST_DIR, prepare_ifgs_without_phase, TEST_CONF_ROIPAC, pre_prepare_ifgs, remove_tifs
+from core import shared, config as cf, covariance as vcm_module
+from core.stack import stack_rate
+from configuration import Configuration
+
+def default_params():
+    """ """
+    return {"pthr": 3, "nsig": 3, "maxsig": 2, "parallel": 1, "processes": 8}
+
+
+class SinglePixelIfg(object):
+    def __init__(self, timespan, phase):
+        """
+
+        Args:
+          timespan: param phase:
+
+        Returns:
+
+        """
+        self.time_span = timespan
+        self.phase_data = array([[phase]])
+
+
+class StackRateTests(unittest.TestCase):
+    """Tests the weighted least squares algorithm for determinining the best
+    fitting velocity
+
+    Args:
+
+    Returns:
+
+    """
+
+    def setUp(self):
+        """ """
+        phase = [0.5, 3.5, 4, 2.5, 3.5, 1]
+        timespan = [0.1, 0.7, 0.8, 0.5, 0.7, 0.2]
+        self.ifgs = [SinglePixelIfg(s, p) for s, p in zip(timespan, phase)]
+
+    def test_stack_rate(self):
+        """ """
+        # Simple test with one pixel and equal weighting
+        exprate = array([[5.0]])
+        experr = array([[0.836242010007091]])
+        expsamp = array([[5]])
+        vcmt = eye(6, 6)
+        mst = ones((6, 1, 1))
+        mst[4] = 0
+        params = default_params()
+        rate, error, samples = stack_rate(self.ifgs, params, vcmt, mst)
+        assert_array_almost_equal(rate, exprate)
+        assert_array_almost_equal(error, experr)
+        assert_array_almost_equal(samples, expsamp)
+
+# TODO figure out reason for failure
 # class LegacyEqualityTest(unittest.TestCase):
 #     """
 #     Tests equality with legacy data
@@ -111,6 +111,7 @@
 #
 #         # start run_pyrate copy
 #         ifgs = pre_prepare_ifgs(dest_paths, params)
+#
 #         mst_grid = common.mst_calculation(dest_paths, params)
 #
 #         refx, refy = process._ref_pixel_calc(dest_paths, params)
@@ -212,7 +213,7 @@
 #         Compare with legacy data
 #         """
 #         np.testing.assert_array_almost_equal(self.samples_s, self.samples_container, decimal=3)
-#
-#
-# if __name__ == "__main__":
-#     unittest.main()
+
+
+if __name__ == "__main__":
+    unittest.main()

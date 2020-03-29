@@ -703,7 +703,7 @@ class TestOneIncidenceOrElevationMap(unittest.TestCase):
         None
         # params = cf.get_config_params(self.conf_file)
         # shutil.rmtree(self.base_dir)
-        # common.remove_tifs(params[cf.OBS_DIR])
+        # common.remove_tifs(params[cf.OUT_DIR])
 
     def make_input_files(self, inc="", ele=""):
         """
@@ -787,7 +787,7 @@ class TestOneIncidenceOrElevationMap(unittest.TestCase):
         # test dem geotiff created
         self.assertEqual(1, len(list(pathlib.Path(params[cf.OUT_DIR]).glob('*_dem.tif'))))
 
-        # TODO figure out where these files are being created
+        # TODO figure out reason for failure
         # self.assertEqual(1, len(list(pathlib.Path(params[cf.OUT_DIR]).glob('*utm_lv_theta.tif'))))
         # self.assertEqual(1, len(list(pathlib.Path(params[cf.OUT_DIR]).glob('*utm_inc.tif'))))
 
@@ -809,7 +809,7 @@ class TestOneIncidenceOrElevationMap(unittest.TestCase):
         # test dem geotiff created
         self.assertEqual(1, len(list(pathlib.Path(params[cf.OUT_DIR]).glob('*_dem.tif'))))
 
-        # TODO figure out where these files are being created
+        # TODO figure out reason for failure
         # self.assertEqual(1, len(list(pathlib.Path(params[cf.OUT_DIR]).glob('*utm_lv_theta.tif'))))
         # self.assertEqual(1, len(list(pathlib.Path(params[cf.OUT_DIR]).glob('*utm_inc.tif'))))
 

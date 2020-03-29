@@ -146,9 +146,9 @@ class GammaToGeoTiffTests(unittest.TestCase):
         self.assertTrue(md[ifc.MASTER_DATE] == str(date(2009, 7, 13)))
         self.assertTrue(md[ifc.SLAVE_DATE] == str(date(2009, 8, 17)))
         self.assertTrue(md[ifc.PYRATE_TIME_SPAN] == str(35 / ifc.DAYS_PER_YEAR))
-        # TODO test failing
+        # TODO figure out reason for failure
         # self.assertTrue(md[ifc.MASTER_TIME] == str(12))
-        # TODO test failing
+        # TODO figure out reason for failure
         # self.assertTrue(md[ifc.SLAVE_TIME] == str(time(12)))
 
         wavelen = float(md[ifc.PYRATE_WAVELENGTH_METRES])
@@ -396,7 +396,8 @@ class TestGammaParallelVsSerial(unittest.TestCase):
             # test that DATA_TYPE exists in metadata
             self.assertIn(ifc.DATA_TYPE, s.meta_data.keys())
             # test that DATA_TYPE is MULTILOOKED
-            # TODO self.assertEqual(s.meta_data[ifc.DATA_TYPE], ifc.MULTILOOKED)
+            # TODO figure out reason for failure
+            # self.assertEqual(s.meta_data[ifc.DATA_TYPE], ifc.MULTILOOKED)
 
 
 if __name__ == "__main__":
