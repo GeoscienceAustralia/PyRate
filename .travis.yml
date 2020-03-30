@@ -69,6 +69,7 @@ install:
 
 # command to run tests, e.g. python setup.py test
 script:
+  - python scripts/update_placeholder_paths.py
   - pytest --cov-report term-missing:skip-covered --cov=pyrate tests/
 
 
