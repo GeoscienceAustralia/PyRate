@@ -14,9 +14,9 @@ env:
 jobs:
   include:
     - python: "3.6"
-      env: GDALVERSION="2.4.3" PROJVERSION="4.9.3"
+      env: GDALVERSION="3.0.2" PROJVERSION="6.1.1"
     - python: "3.6"
-      env: GDALVERSION="3.0.1" PROJVERSION="6.1.1"
+      env: GDALVERSION="3.0.4" PROJVERSION="6.1.1"
     - stage: deploy
       python: 3.6
       script:
