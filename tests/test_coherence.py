@@ -1,13 +1,12 @@
 import os
 import unittest
 import numpy as np
-from . import common
 from osgeo import gdal
 from osgeo import osr
 import pathlib
 
-from configuration import MultiplePaths
-from core.gdal_python import coherence_masking
+from pyrate.configuration import MultiplePaths
+from pyrate.core.gdal_python import coherence_masking
 
 
 class CoherenceMaskingTest(unittest.TestCase):
