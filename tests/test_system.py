@@ -18,52 +18,44 @@
 This Python module contains tests for mpi operations in PyRate.
 Tun this module as 'mpirun -n 4 pytest tests/test_mpi.py'
 """
-import os
+from pathlib import Path
 import unittest
 
-from . import common
-import conv2tif
-import prepifg
-import process
-import merge
-from configuration import Configuration
+from pyrate import conv2tif, prepifg, process, merge
+from pyrate.configuration import Configuration
 
 class SystemTest(unittest.TestCase):
     def setUp(self):
-        self.root_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        self.root_path = Path(__file__).parent.parent
 
         self.rows = 1
         self.cols = 1
 
     def test_roipac_workflow(self):
-        input_config_path = os.path.join(self.root_path, "tests", "test_data", "system", "roipac", "input_parameters.conf")
+        input_config_path = self.root_path.joinpath("tests", "test_data", "system", "roipac", "input_parameters.conf")
         params = Configuration(input_config_path).__dict__
 
         conv2tif.main(params)
         prepifg.main(params)
         process.main(params)
         merge.main(params)
-
-        self.assertTrue(True)
 
     def test_gamma_workflow(self):
-        input_config_path = os.path.join(self.root_path, "tests", "test_data", "system", "gamma", "input_parameters.conf")
+        input_config_path = self.root_path.joinpath("tests", "test_data", "system", "gamma", "input_parameters.conf")
         params = Configuration(input_config_path).__dict__
 
         conv2tif.main(params)
         prepifg.main(params)
         process.main(params)
         merge.main(params)
-        self.assertTrue(True)
 
     def test_geotiff_workflow(self):
-        input_config_path = os.path.join(self.root_path, "tests", "test_data", "system", "geotiff",
-                                         "input_parameters.conf")
+        input_config_path = self.root_path.joinpath("tests", "test_data", "system", "geotiff", "input_parameters.conf")
         params = Configuration(input_config_path).__dict__
         prepifg.main(params)
         process.main(params)
         merge.main(params)
-        self.assertTrue(True)
+
 
 if __name__ == '__main__':
     unittest.main()
