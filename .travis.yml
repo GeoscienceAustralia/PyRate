@@ -17,23 +17,7 @@ jobs:
       env: GDALVERSION="3.0.2" PROJVERSION="6.1.1"
     - python: "3.6"
       env: GDALVERSION="3.0.4" PROJVERSION="6.1.1"
-    - stage: deploy
-      python: 3.6
-      script:
-        - pip install numpy==1.16.4
-        - cd docs && make html
-      deploy:
-        provider: pages
-        skip-cleanup: true
-        keep-history: true
-        verbose: true
-        on:
-          branch: master
-        github-token: $GITHUB_TOKEN
-        local-dir: docs/_build/html
-        project_name: PyRate
-        email: insar@ga.gov.au
-        name: InSAR Team
+
 
 addons:
   apt:
