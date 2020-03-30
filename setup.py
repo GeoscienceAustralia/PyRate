@@ -17,10 +17,7 @@ import os
 from setuptools import setup
 from setuptools.command.install import install
 from setuptools.command.test import test as TestCommand
-from subprocess import check_output
-import sys
-import platform
-import setuptools
+
 
 __version__ = "0.4.0"
 
