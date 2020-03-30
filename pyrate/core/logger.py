@@ -17,14 +17,14 @@
 This Python module contains functions to control PyRate log outputs
 """
 import logging
-import os
+from pyrate.core.mpiops import size, rank
+from pyrate.constants import PYRATEPATH
 
-from core.mpiops import size, rank
+log_setting_file = PYRATEPATH.joinpath("utils", "log_settings.txt")
+log_setting_file.parent.mkdir(exist_ok=True)
 
-PYRATEPATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-log_setting_file = os.path.join(PYRATEPATH, "utils", "log_settings.txt")
 
-with open(log_setting_file, "r") as myfile:
+with log_setting_file.open(mode="r") as myfile:
     log_level = myfile.readlines()[0].strip()
 
 pyratelogger = logging.getLogger(__name__)

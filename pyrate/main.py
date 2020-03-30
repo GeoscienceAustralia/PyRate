@@ -16,16 +16,15 @@
 """
 This Python module defines executable run configuration for the PyRate software
 """
-import sys
 import os
 import argparse
 from argparse import RawTextHelpFormatter
-from constants import CLI_DESCRIPTION
-import conv2tif, prepifg, process, merge
-from core.logger import pyratelogger as log
-from core import user_experience
+from pyrate.constants import CLI_DESCRIPTION
+from pyrate import conv2tif, prepifg, process, merge
+from pyrate.core.logger import pyratelogger as log
+from pyrate.core import user_experience
 import time
-from configuration import Configuration
+from pyrate.configuration import Configuration
 
 # Turn off MPI warning
 os.environ["OMPI_MCA_btl_base_warn_component_unused"] = "0"

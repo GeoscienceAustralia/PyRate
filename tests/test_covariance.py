@@ -25,16 +25,17 @@ import numpy as np
 from numpy import array
 from numpy.testing import assert_array_almost_equal
 
-from . import common
-import core.orbital
-import process
-from common import small5_mock_ifgs, small5_ifgs, small_data_setup, prepare_ifgs_without_phase
-from configuration import Configuration
-from core import shared
-
-from core.covariance import cvd, get_vcmt, RDist
-from main import conv2tif_handler, prepifg_handler, process_handler
 from osgeo import gdal, gdalconst
+
+from pyrate import process
+from pyrate.configuration import Configuration
+from pyrate.core import shared
+from pyrate.core import orbital
+from pyrate.core.covariance import cvd, get_vcmt, RDist
+from pyrate.main import conv2tif_handler, prepifg_handler, process_handler
+
+from . import common
+from . common import small5_mock_ifgs, small5_ifgs, small_data_setup, prepare_ifgs_without_phase, SML_TEST_DIR
 
 
 class CovarianceTests(unittest.TestCase):
@@ -215,7 +216,8 @@ class LegacyEqualityTest(unittest.TestCase):
     def setUpClass(self):
         """ """
 
-        self.TEST_CONF_ROIPAC = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),"tests", "test_data", "small_test","conf","pyrate_roipac_test.conf")
+        self.TEST_CONF_ROIPAC = common.TEST_CONF_ROIPAC
+
         conv2tif_handler(self.TEST_CONF_ROIPAC)
         prepifg_handler(self.TEST_CONF_ROIPAC)
 
@@ -229,16 +231,17 @@ class LegacyEqualityTest(unittest.TestCase):
         params["refest"] = 2
 
         self.params = params
-        xlks, ylks, crop = params["ifglksx"], params["ifglksy"], params["ifgcropopt"]
+
         base_ifg_paths = []
         dest_paths = []
+
         for interferogram_file in params["interferogram_files"]:
             base_ifg_paths.append(interferogram_file.unwrapped_path)
             dest_paths.append(interferogram_file.sampled_path)
 
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         refx, refy = process._ref_pixel_calc(dest_paths, params)
-        core.orbital.remove_orbital_error(ifgs, params)
+        orbital.remove_orbital_error(ifgs, params)
         ifgs = prepare_ifgs_without_phase(dest_paths, params)
 
         for ifg in ifgs:
@@ -272,7 +275,6 @@ class LegacyEqualityTest(unittest.TestCase):
         # np.testing.assert_array_almost_equal(self.maxvar, legacy_maxvar, decimal=3)
 
     def test_legacy_vcmt_equality_small_test_files(self):
-        from common import SML_TEST_DIR
         LEGACY_VCM_DIR = os.path.join(SML_TEST_DIR, 'vcm')
         legacy_vcm = np.genfromtxt(os.path.join(LEGACY_VCM_DIR, 'vcmt.csv'), delimiter=',')
         assert len(self.vcmt) == len(legacy_vcm)
