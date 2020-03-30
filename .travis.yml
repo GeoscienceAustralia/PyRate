@@ -17,8 +17,6 @@ jobs:
       env: GDALVERSION="2.4.3" PROJVERSION="4.9.3"
     - python: "3.6"
       env: GDALVERSION="3.0.1" PROJVERSION="6.1.1"
-    - python: "3.7"
-      env: GDALVERSION="3.0.1" PROJVERSION="6.1.1"
     - stage: deploy
       python: 3.6
       script:
@@ -45,6 +43,8 @@ addons:
       - libatlas-dev
       - libatlas-base-dev
       - gfortran
+      - openmpi-bin
+      - libopenmpi-dev
 
 
 before_install:
