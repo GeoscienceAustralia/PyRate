@@ -15,8 +15,8 @@
 #   limitations under the License.
 import os
 from collections import namedtuple
-
 import numpy as np
+from pathlib import Path
 
 __version__ = "0.4.0"
 CLI_DESCRIPTION = """
@@ -207,3 +207,6 @@ MAXIMUM_CROP = 2
 CUSTOM_CROP = 3
 ALREADY_SAME_SIZE = 4
 CROP_OPTIONS = [MINIMUM_CROP, MAXIMUM_CROP, CUSTOM_CROP, ALREADY_SAME_SIZE]
+
+PYRATEPATH = Path(__file__).parent.parent
+
