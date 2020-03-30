@@ -75,3 +75,8 @@ script:
 
 after_success:
   - codecov
+
+cache:
+  directories:
+    - $GDALINST
+    - ~/.cache/pip
