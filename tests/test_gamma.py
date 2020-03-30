@@ -26,19 +26,17 @@ from os.path import join
 
 import numpy as np
 from numpy.testing import assert_array_almost_equal
+from osgeo import gdal
 
 from . import common
-from configuration import Configuration
-from osgeo import gdal
-import conv2tif
-import core.ifgconstants as ifc
-import prepifg
-from common import GAMMA_TEST_DIR, SML_TEST_GAMMA
-from common import TEST_CONF_GAMMA, TEMPDIR
-from common import small_data_setup
-from core import shared, config as cf, gamma
-from core.config import DEM_HEADER_FILE, NO_DATA_VALUE, IFG_FILE_LIST, PROCESSOR, OUT_DIR, SLC_DIR
-from core.shared import write_fullres_geotiff, GeotiffException
+from .common import GAMMA_TEST_DIR, SML_TEST_GAMMA, TEMPDIR, small_data_setup
+from pyrate.configuration import Configuration
+from pyrate import conv2tif
+import pyrate.core.ifgconstants as ifc
+from pyrate import prepifg
+from pyrate.core import shared, config as cf, gamma
+from pyrate.core.config import DEM_HEADER_FILE, NO_DATA_VALUE, IFG_FILE_LIST, PROCESSOR, OUT_DIR, SLC_DIR
+from pyrate.core.shared import write_fullres_geotiff, GeotiffException
 
 gdal.UseExceptions()
 
