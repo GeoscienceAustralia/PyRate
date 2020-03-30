@@ -17,9 +17,9 @@ import pathlib
 import re
 from configparser import ConfigParser
 
-from constants import NO_OF_PARALLEL_PROCESSES
-from core.user_experience import break_number_into_factors
-from default_parameters import PYRATE_DEFAULT_CONFIGRATION
+from pyrate.constants import NO_OF_PARALLEL_PROCESSES
+from pyrate.core.user_experience import break_number_into_factors
+from pyrate.default_parameters import PYRATE_DEFAULT_CONFIGRATION
 
 
 def set_parameter_value(data_type, input_value, default_value, required, input_name):

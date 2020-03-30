@@ -20,10 +20,10 @@ into geotiff format files
 # -*- coding: utf-8 -*-
 import os
 
-from core import shared, config as cf, gamma, roipac
-from core.logger import pyratelogger as log
-from core.mpiops import rank, comm, size, chunks
-from core.prepifg_helper import PreprocessError
+from pyrate.core import shared, config as cf, gamma, roipac
+from pyrate.core.logger import pyratelogger as log
+from pyrate.core.mpiops import rank, comm, size, chunks
+from pyrate.core.prepifg_helper import PreprocessError
 
 GAMMA = 1
 ROIPAC = 0
