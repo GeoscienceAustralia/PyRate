@@ -1,9 +1,9 @@
-branches:
-  only:
-  - develop
-  - /^release-.*$/
-  - /.*-travis$/
-  - master
+#branches:
+#  only:
+#  - develop
+#  - /^release-.*$/
+#  - /.*-travis$/
+#  - master
 
 os: linux
 dist: bionic # Ubuntu 18.04
