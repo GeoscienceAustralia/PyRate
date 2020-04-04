@@ -108,7 +108,7 @@ def _mst_calc(dest_tifs, params, tiles, preread_ifgs):
         Convenient inner loop for mst tile saving
         """
         log.info('Calculating minimum spanning tree matrix')
-        mst_tile = mst.mst_multiprocessing(tile, dest_tifs, preread_ifgs)
+        mst_tile = mst.mst_multiprocessing(tile, dest_tifs, preread_ifgs, params)
         # locally save the mst_mat
         mst_file_process_n = join(params[cf.TMPDIR], 'mst_mat_{}.npy'.format(i))
         np.save(file=mst_file_process_n, arr=mst_tile)
@@ -252,7 +252,7 @@ def process_ifgs(ifg_paths, params, rows, cols):
     # _mst_calc(ifg_paths, params, tiles, preread_ifgs)
 
     refpx, refpy = _ref_pixel_calc(ifg_paths, params)
-    log.debug("refpx, refpy: "+str(refpx)+" "+ str(refpy))
+    log.debug("refpx, refpy: "+str(refpx) + " " + str(refpy))
 
     # remove non ifg keys
     _ = [preread_ifgs.pop(k) for k in ['gt', 'epochlist', 'md', 'wkt']]
@@ -288,7 +288,7 @@ def _linrate_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
     output_dir = params[cf.TMPDIR]
     for t in process_tiles:
         log.debug('Stacking of tile {}'.format(t.index))
-        ifg_parts = [shared.IfgPart(p, t, preread_ifgs) for p in ifg_paths]
+        ifg_parts = [shared.IfgPart(p, t, preread_ifgs, params) for p in ifg_paths]
         mst_grid_n = np.load(os.path.join(output_dir, 'mst_mat_{}.npy'.format(t.index)))
         rate, error, samples = linrate.linear_rate(ifg_parts, params, vcmt, mst_grid_n)
         # declare file names
@@ -355,7 +355,7 @@ def _timeseries_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
     process_tiles = mpiops.array_split(tiles)
     for t in process_tiles:
         log.debug('Calculating time series for tile {}'.format(t.index))
-        ifg_parts = [shared.IfgPart(p, t, preread_ifgs) for p in ifg_paths]
+        ifg_parts = [shared.IfgPart(p, t, preread_ifgs, params) for p in ifg_paths]
         mst_tile = np.load(os.path.join(output_dir, 'mst_mat_{}.npy'.format(t.index)))
         res = timeseries.time_series(ifg_parts, params, vcmt, mst_tile)
         tsincr, tscum, _ = res

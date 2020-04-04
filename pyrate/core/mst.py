@@ -100,7 +100,7 @@ def mst_parallel(ifgs, params):
                  'processes'.format(no_tiles, ncpus))
         t_msts = Parallel(n_jobs=params[cf.PROCESSES], 
                           verbose=joblib_log_level(cf.LOG_LEVEL))(
-            delayed(mst_multiprocessing)(t, ifg_paths)
+            delayed(mst_multiprocessing)(t, ifg_paths, params=params)
             for t in tiles)
         for k, tile in enumerate(tiles):
             result[:, tile.top_left_y:tile.bottom_right_y,
@@ -110,12 +110,12 @@ def mst_parallel(ifgs, params):
         for k, tile in enumerate(tiles):
             result[:, tile.top_left_y:tile.bottom_right_y,
                    tile.top_left_x: tile.bottom_right_x] = \
-                mst_multiprocessing(tile, ifg_paths)
+                mst_multiprocessing(tile, ifg_paths, params=params)
 
     return result
 
 
-def mst_multiprocessing(tile, ifgs_or_paths, preread_ifgs=None):
+def mst_multiprocessing(tile, ifgs_or_paths, preread_ifgs=None, params=None):
     """
     Wrapper function for calculating MST matrix for a tile
 
@@ -134,7 +134,7 @@ def mst_multiprocessing(tile, ifgs_or_paths, preread_ifgs=None):
     #computation. To manage memory we need smaller tiles (IfgPart) as number
     #of interferograms increases
 
-    ifg_parts = [IfgPart(p, tile, preread_ifgs) for p in ifgs_or_paths]
+    ifg_parts = [IfgPart(p, tile, preread_ifgs, params) for p in ifgs_or_paths]
     return mst_boolean_array(ifg_parts)
 
 
