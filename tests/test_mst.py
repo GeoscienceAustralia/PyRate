@@ -189,7 +189,7 @@ class IfgPartTest(unittest.TestCase):
         r_end = 10
         for i in self.ifgs:
             tile = Tile(0, top_left=(r_start, 0), bottom_right=(r_end, i.ncols))
-            ifg_part = IfgPart(i.data_path, tile)
+            ifg_part = IfgPart(i.data_path, tile, params=self.params)
             self.assertEqual(ifg_part.phase_data.shape,
                              (r_end-r_start, i.phase_data.shape[1]))
             np.testing.assert_array_equal(ifg_part.phase_data,

@@ -27,7 +27,7 @@ import numpy as np
 from pyrate.core import (shared, algorithm, orbital, ref_phs_est as rpe, 
                          ifgconstants as ifc, mpiops, config as cf, 
                          timeseries, mst, covariance as vcm_module, 
-                         linrate, refpixel)
+                         stack, refpixel)
 from pyrate.core.aps import _wrap_spatio_temporal_filter
 from pyrate.core.config import ConfigException
 from pyrate.core.shared import Ifg, PrereadIfg, get_tiles
@@ -273,15 +273,15 @@ def process_ifgs(ifg_paths, params, rows, cols):
 
     _timeseries_calc(ifg_paths, params, vcmt, tiles, preread_ifgs)
 
-    _linrate_calc(ifg_paths, params, vcmt, tiles, preread_ifgs)
+    _stack_calc(ifg_paths, params, vcmt, tiles, preread_ifgs)
 
     log.info('PyRate workflow completed')
     return (refpx, refpy), maxvar, vcmt
 
 
-def _linrate_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
+def _stack_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
     """
-    MPI wrapper for linrate calculation
+    MPI wrapper for stack rate calculation
     """
     process_tiles = mpiops.array_split(tiles)
     log.info('Calculating rate map from stacking')
@@ -290,7 +290,7 @@ def _linrate_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
         log.debug('Stacking of tile {}'.format(t.index))
         ifg_parts = [shared.IfgPart(p, t, preread_ifgs, params) for p in ifg_paths]
         mst_grid_n = np.load(os.path.join(output_dir, 'mst_mat_{}.npy'.format(t.index)))
-        rate, error, samples = linrate.linear_rate(ifg_parts, params, vcmt, mst_grid_n)
+        rate, error, samples = stack.stack_rate(ifg_parts, params, vcmt, mst_grid_n)
         # declare file names
         np.save(file=os.path.join(output_dir, 'linrate_{}.npy'.format(t.index)), arr=rate)
         np.save(file=os.path.join(output_dir, 'linerror_{}.npy'.format(t.index)), arr=error)
