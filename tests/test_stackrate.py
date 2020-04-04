@@ -15,7 +15,7 @@
 #   limitations under the License.
 # coding: utf-8
 """
-This Python module contains tests for the linrate.py PyRate module.
+This Python module contains tests for the stack.py PyRate module.
 """
 import os
 import shutil
@@ -29,7 +29,7 @@ from numpy.testing import assert_array_almost_equal
 import pyrate.core.orbital
 import tests.common
 from pyrate.core import shared, ref_phs_est as rpe, config as cf, covariance as vcm_module
-from pyrate.core.linrate import linear_rate
+from pyrate.core.stack import stack_rate
 from pyrate import process, prepifg, conv2tif
 from tests.common import (SML_TEST_DIR, prepare_ifgs_without_phase,
     TEST_CONF_ROIPAC, pre_prepare_ifgs, remove_tifs)
@@ -46,7 +46,7 @@ class SinglePixelIfg(object):
         self.phase_data = array([[phase]])
 
 
-class LinearRateTests(unittest.TestCase):
+class StackRateTests(unittest.TestCase):
     """
     Tests the weighted least squares algorithm for determinining
     the best fitting velocity
@@ -57,7 +57,7 @@ class LinearRateTests(unittest.TestCase):
         timespan = [0.1, 0.7, 0.8, 0.5, 0.7, 0.2]
         self.ifgs = [SinglePixelIfg(s, p) for s, p in zip(timespan, phase)]
 
-    def test_linear_rate(self):
+    def test_stack_rate(self):
         # Simple test with one pixel and equal weighting
         exprate = array([[5.0]])
         experr = array([[0.836242010007091]])
@@ -66,7 +66,7 @@ class LinearRateTests(unittest.TestCase):
         mst = ones((6, 1, 1))
         mst[4] = 0
         params = default_params()
-        rate, error, samples = linear_rate(self.ifgs, params, vcmt, mst)
+        rate, error, samples = stack_rate(self.ifgs, params, vcmt, mst)
         assert_array_almost_equal(rate, exprate)
         assert_array_almost_equal(error, experr)
         assert_array_almost_equal(samples, expsamp)
@@ -92,8 +92,7 @@ class LegacyEqualityTest(unittest.TestCase):
 
         xlks, _, crop = cf.transform_params(params)
 
-        base_ifg_paths = cf.original_ifg_paths(
-            params[cf.IFG_FILE_LIST], params[cf.OBS_DIR])
+        base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST], params[cf.OBS_DIR])
         
         dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
         print(f"base_ifg_paths={base_ifg_paths}") 
@@ -123,29 +122,21 @@ class LegacyEqualityTest(unittest.TestCase):
         
         # Calculate linear rate map
         params[cf.PARALLEL] = 1
-        cls.rate, cls.error, cls.samples = tests.common.calculate_linear_rate(
-            ifgs, params, vcmt, mst_mat=mst_grid)
+        cls.rate, cls.error, cls.samples = tests.common.calculate_linear_rate( ifgs, params, vcmt, mst_mat=mst_grid)
 
         params[cf.PARALLEL] = 2
-        cls.rate_2, cls.error_2, cls.samples_2 = \
-            tests.common.calculate_linear_rate(ifgs, params, vcmt,
-                                               mst_mat=mst_grid)
+        cls.rate_2, cls.error_2, cls.samples_2 = tests.common.calculate_linear_rate(ifgs, params, vcmt, mst_mat=mst_grid)
 
         params[cf.PARALLEL] = 0
         # Calculate linear rate map
-        cls.rate_s, cls.error_s, cls.samples_s = \
-            tests.common.calculate_linear_rate(ifgs, params, vcmt,
-                                               mst_mat=mst_grid)
+        cls.rate_s, cls.error_s, cls.samples_s = tests.common.calculate_linear_rate(ifgs, params, vcmt, mst_mat=mst_grid)
 
-        linrate_dir = os.path.join(SML_TEST_DIR, 'linrate')
+        stackrate_dir = os.path.join(SML_TEST_DIR, 'linrate')
 
-        cls.rate_container = np.genfromtxt(
-            os.path.join(linrate_dir, 'stackmap.csv'), delimiter=',')
-        cls.error_container = np.genfromtxt(
-            os.path.join(linrate_dir, 'errormap.csv'), delimiter=',')
+        cls.rate_container = np.genfromtxt(os.path.join(stackrate_dir, 'stackmap.csv'), delimiter=',')
+        cls.error_container = np.genfromtxt(os.path.join(stackrate_dir, 'errormap.csv'), delimiter=',')
 
-        cls.samples_container = np.genfromtxt(
-            os.path.join(linrate_dir, 'coh_sta.csv'), delimiter=',')
+        cls.samples_container = np.genfromtxt(os.path.join(stackrate_dir, 'coh_sta.csv'), delimiter=',')
     
         for ifg in ifgs:
             ifg.close()
@@ -156,68 +147,59 @@ class LegacyEqualityTest(unittest.TestCase):
         params = cf.get_config_params(TEST_CONF_ROIPAC)
         remove_tifs(params[cf.OBS_DIR])
 
-    def test_linear_rate_full_parallel(self):
+    def test_stack_rate_full_parallel(self):
         """
         python multiprocessing by rows vs serial
         """
-        np.testing.assert_array_almost_equal(
-            self.rate, self.rate_s, decimal=3)
+        np.testing.assert_array_almost_equal(self.rate, self.rate_s, decimal=3)
 
-    def test_linrate_error_parallel(self):
+    def test_stackrate_error_parallel(self):
         """
         python multiprocessing by rows vs serial
         """
-        np.testing.assert_array_almost_equal(
-            self.error, self.error_s, decimal=3)
+        np.testing.assert_array_almost_equal(self.error, self.error_s, decimal=3)
 
-    def test_linrate_samples_parallel(self):
+    def test_stackrate_samples_parallel(self):
         """
         python multiprocessing by rows vs serial
         """
-        np.testing.assert_array_almost_equal(
-            self.samples, self.samples_s, decimal=3)
+        np.testing.assert_array_almost_equal(self.samples, self.samples_s, decimal=3)
 
-    def test_linrate_full_parallel_pixel(self):
+    def test_stackrate_full_parallel_pixel(self):
         """
         python multiprocessing by pixel vs serial
         """
-        np.testing.assert_array_almost_equal(
-            self.rate_2, self.rate_s, decimal=3)
+        np.testing.assert_array_almost_equal(self.rate_2, self.rate_s, decimal=3)
 
-    def test_linrate_error_parallel_pixel(self):
+    def test_stackrate_error_parallel_pixel(self):
         """
         python multiprocessing by pixel vs serial
         """
-        np.testing.assert_array_almost_equal(
-            self.error_2, self.error_s, decimal=3)
+        np.testing.assert_array_almost_equal(self.error_2, self.error_s, decimal=3)
 
-    def test_linrate_samples_parallel_pixel(self):
+    def test_stackrate_samples_parallel_pixel(self):
         """
         python multiprocessing pixel level vs serial
         """
-        np.testing.assert_array_almost_equal(
-            self.samples_2, self.samples_s, decimal=3)
+        np.testing.assert_array_almost_equal(self.samples_2, self.samples_s, decimal=3)
 
-    def test_linear_rate(self):
+    def test_stack_rate(self):
         """
         Compare with legacy data
         """
-        np.testing.assert_array_almost_equal(
-            self.rate_s, self.rate_container, decimal=3)
+        np.testing.assert_array_almost_equal(self.rate_s, self.rate_container, decimal=3)
 
-    def test_linrate_error(self):
+    def test_stackrate_error(self):
         """
         Compare with legacy data
         """
-        np.testing.assert_array_almost_equal(
-            self.error_s, self.error_container, decimal=3)
+        np.testing.assert_array_almost_equal(self.error_s, self.error_container, decimal=3)
 
-    def test_linrate_samples(self):
+    def test_stackrate_samples(self):
         """
         Compare with legacy data
         """
-        np.testing.assert_array_almost_equal(
-            self.samples_s, self.samples_container, decimal=3)
+        np.testing.assert_array_almost_equal(self.samples_s, self.samples_container, decimal=3)
 
 
 if __name__ == "__main__":
