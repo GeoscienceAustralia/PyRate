@@ -48,7 +48,7 @@ before_install:
 
 install:
   - sed -i '/^GDAL/d' requirements.txt
-  - pip install -r requirements.txt
+  - pip install -r requirements.txt -r requirements-dev.txt -r requirements-test.txt
   - pip install GDAL==$(gdal-config --version)
   - python setup.py install
   - export PYRATEPATH=$(pwd)
