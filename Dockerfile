@@ -1,9 +1,8 @@
 FROM ubuntu:16.04
 
 ENV LANG C.UTF-8
-RUN mkdir -p $HOME/.cache/pip/wheels
-ENV PIP_WHEEL_DIR=$HOME/.cache/pip/wheels
-ENV PIP_FIND_LINKS=file://$HOME/.cache/pip/wheels
+ENV LANG=en_AU.UTF-8
+ENV WORKON_HOME=$HOME/venvs
 ENV GDALINST=$HOME/gdalinstall
 ENV GDALBUILD=$HOME/gdalbuild
 ENV PROJINST=$HOME/gdalinstall
@@ -19,14 +18,14 @@ ENV GDAL_DATA=$GDALINST/gdal-$GDALVERSION/share/gdal
 RUN apt-get update \
     && apt-get install -y build-essential checkinstall libreadline-gplv2-dev \
     libncursesw5-dev libssl-dev libsqlite3-dev tk-dev libgdbm-dev libc6-dev \
-    libbz2-dev openssl curl
+    libbz2-dev openssl curl libffi-dev
 
 RUN mkdir -p $HOME/opt
 
 RUN cd $HOME/opt \
-    && curl -O https://www.python.org/ftp/python/3.6.4/Python-3.6.4.tgz \
-    && tar -xzf Python-3.6.4.tgz \
-    && cd Python-3.6.4 \
+    && curl -O https://www.python.org/ftp/python/3.7.7/Python-3.7.7.tgz \
+    && tar -xzf Python-3.7.7.tgz \
+    && cd Python-3.7.7 \
     && ./configure --enable-shared --enable-optimizations --prefix=/usr/local LDFLAGS="-Wl,--rpath=/usr/local/lib" \
     && make altinstall
 
@@ -35,8 +34,8 @@ RUN apt-get install -y build-essential python3-pip \
     libopenmpi-dev gfortran wget libhdf5-serial-dev sqlite3 vim
 
 # update pip
-RUN python3.6 -m pip install pip --upgrade
-RUN python3.6 -m pip install wheel
+RUN python3.7 -m pip install pip --upgrade
+RUN python3.7 -m pip install wheel
 RUN pip3 install --upgrade setuptools
 
 
@@ -96,9 +95,16 @@ RUN cd $GDALBUILD/gdal-$GDALVERSION && make
 
 RUN cd $GDALBUILD/gdal-$GDALVERSION  && make install
 
-ADD . / PyRate/
+RUN pip install virtualenv virtualenvwrapper
+ENV VIRTUALENVWRAPPER_PYTHON=/usr/local/bin/python3.7
 
-RUN cd PyRate && sed -i '/^GDAL/d' requirements.txt
-RUN cd PyRate && pip3 install -r requirements.txt -r requirements-dev.txt -r requirements-test.txt
-RUN pip3 install GDAL==$(gdal-config --version)
-RUN cd PyRate && python3 setup.py install
+ADD . / PyRate/
+SHELL ["/bin/bash", "-c"]
+RUN source /usr/local/bin/virtualenvwrapper.sh \
+    && mkvirtualenv -p python3.7 pyrate \
+    && cd PyRate \
+    && sed -i '/^GDAL/d' requirements.txt \
+    && workon pyrate \
+    && pip install -r requirements.txt -r requirements-dev.txt -r requirements-test.txt \
+    && pip install GDAL==$(gdal-config --version) \
+    && python setup.py install
