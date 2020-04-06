@@ -722,9 +722,7 @@ class LegacyComparisonTestsOrbfitMethod1(unittest.TestCase):
             for k, j in enumerate(self.ifg_paths):
                 ifg = Ifg(j)
                 ifg.open()
-                if os.path.basename(j).split('_unw.')[0] == \
-                        os.path.basename(f).split(
-                            '_orb_planar_1lks_method1_')[1].split('.')[0]:
+                if os.path.basename(j).split('_unw.')[0] == os.path.basename(f).split('_orb_planar_1lks_method1_')[1].split('.')[0]:
                     count += 1
                     # all numbers equal
                     np.testing.assert_array_almost_equal(ifg_data,

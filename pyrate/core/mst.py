@@ -224,7 +224,13 @@ def mst_matrix_networkx(ifgs):
     edges_with_weights = [(i.master, i.slave, i.nan_fraction) for i in ifgs]
     edges, g_nx = _minimum_spanning_edges_from_mst(edges_with_weights)
     # TODO: memory efficiencies can be achieved here with tiling
-    data_stack = array([i.phase_data for i in ifgs], dtype=float32)
+
+    list_of_phase_data = [i.phase_data for i in ifgs]
+    log.debug("list_of_phase_data length: " + str(len(list_of_phase_data)))
+    for row in list_of_phase_data:
+        log.debug("row length in list_of_phase_data: " + str(len(row)))
+        log.debug("row in list_of_phase_data: " + str(row))
+    data_stack = array(list_of_phase_data, dtype=float32)
 
     # create MSTs for each pixel in the ifg data stack
     nifgs = len(ifgs)

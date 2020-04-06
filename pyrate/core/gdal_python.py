@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2017 Geoscience Australia
+#   Copyright 2020 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -19,14 +19,15 @@ This Python module contains bindings for the GDAL library
 # pylint: disable=too-many-arguments,R0914
 import logging
 
-from osgeo import gdal, gdalnumeric, gdalconst
+from osgeo import gdal, gdal_array, gdalconst, gdalnumeric
 from PIL import Image, ImageDraw
 import numpy as np
 import numexpr as ne
 
 from pyrate.core import shared, ifgconstants as ifc, prepifg_helper
 
-_logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
+
 gdal.SetCacheMax(2**15)
 GDAL_WARP_MEMORY_LIMIT = 2**10
 LOW_FLOAT32 = np.finfo(np.float32).min*1e-10
@@ -362,7 +363,7 @@ def crop_resample_average(
                                  geotransform=gt, creation_opts=creation_opts)
 
     shared.write_geotiff(resampled_average, out_ds, np.nan) 
-
+    log.debug("Writing geotiff: "+str(out_ds))
     return resampled_average, out_ds
 
 

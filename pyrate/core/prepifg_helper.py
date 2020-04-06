@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package
 #
-#   Copyright 2017 Geoscience Australia
+#   Copyright 2020 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -150,7 +150,8 @@ def _get_extents(ifgs, crop_opt, user_exts=None):
     return extents
 
 
-def prepare_ifg(raster_path, xlooks, ylooks, exts, thresh, crop_opt, write_to_disk=True, out_path=None, header=None, coherence_path=None, coherence_thresh=None):
+def prepare_ifg(raster_path, xlooks, ylooks, exts, thresh, crop_opt, write_to_disk=True, out_path=None, header=None,
+                coherence_path=None, coherence_thresh=None):
     """
     Open, resample, crop and optionally save to disk an interferogram or DEM.
     Returns are only given if write_to_disk=False
@@ -187,11 +188,13 @@ def prepare_ifg(raster_path, xlooks, ylooks, exts, thresh, crop_opt, write_to_di
         # copy file with mlooked path
         return _dummy_warp(renamed_path)
 
-    return _warp(raster, xlooks, ylooks, exts, resolution, thresh, crop_opt, write_to_disk, out_path, header, coherence_path, coherence_thresh)
+    return _warp(raster, xlooks, ylooks, exts, resolution, thresh, crop_opt, write_to_disk, out_path, header,
+                 coherence_path, coherence_thresh)
 
 
 # TODO: crop options 0 = no cropping? get rid of same size
-def prepare_ifgs(raster_data_paths, crop_opt, xlooks, ylooks, thresh=0.5, user_exts=None, write_to_disc=True, out_path=None):
+def prepare_ifgs(raster_data_paths, crop_opt, xlooks, ylooks, thresh=0.5, user_exts=None, write_to_disc=True,
+                 out_path=None):
     """
     Wrapper function to prepare a sequence of interferogram files for
     PyRate analysis. See prepifg.prepare_ifg() for full description of
@@ -204,7 +207,8 @@ def prepare_ifgs(raster_data_paths, crop_opt, xlooks, ylooks, thresh=0.5, user_e
     :param int xlooks: Number of multi-looks in x; 5 is 5 times smaller, 1 is no change
     :param int ylooks: Number of multi-looks in y
     :param float thresh: see thresh in prepare_ifgs()
-    :param tuple user_exts: Tuple of user defined georeferenced extents for new file: (xfirst, yfirst, xlast, ylast)cropping coordinates
+    :param tuple user_exts: Tuple of user defined georeferenced extents for
+        new file: (xfirst, yfirst, xlast, ylast)cropping coordinates
     :param bool write_to_disk: Write new data to disk
 
     :return: resampled_data: output cropped and resampled image

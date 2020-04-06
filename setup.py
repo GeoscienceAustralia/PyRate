@@ -36,8 +36,9 @@ if platform.system() in 'Windows':
 else:
     GDAL_VERSION = check_output(["gdal-config", "--version"]).decode(encoding="utf-8").split('\n')[0]
 
-requirements = [r + f'=={GDAL_VERSION}' if r == 'GDAL'
-                else r for r in requirements]
+requirements = [r + '=={GDAL_VERSION}'.format(GDAL_VERSION=GDAL_VERSION)
+                if r == 'GDAL' else r for r in requirements]
+
 setup_requirements = [r for r in requirements if "numpy==" in r]
 
 class PyTest(TestCommand, object):

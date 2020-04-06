@@ -21,10 +21,10 @@ import logging
 import argparse
 from argparse import RawTextHelpFormatter
 from pyrate.core import config as cf
-from pyrate import (conv2tif, prepifg, process, merge)
-from pyrate import CONV2TIF, PREPIFG, PROCESS, MERGE
+from pyrate import conv2tif, prepifg, process, merge
+from pyrate.constants import CLI_DESCRIPTION, CONV2TIF, PREPIFG, PROCESS, MERGE
 from pyrate.core import pyratelog
-from pyrate.core import user_experience
+from pyrate.core.user_experience import break_number_into_factors, delete_tsincr_files
 import time
 import multiprocessing
 log = logging.getLogger(__name__)
@@ -64,45 +64,31 @@ def merge_handler(config_file, rows, cols):
     config_file = os.path.abspath(config_file)
     _, _, params = cf.get_ifg_paths(config_file, step=MERGE)
     merge.main(params, rows, cols)
-    user_experience.delete_tsincr_files(params)
+    delete_tsincr_files(params)
 
 
-CLI_DESC = """
-PyRate workflow: 
+def main():
 
-    Step 1: conv2tif
-    Step 2: prepifg
-    Step 3: process
-    Step 4: merge 
+    rows, cols = [int(no) for no in break_number_into_factors(multiprocessing.cpu_count())]
 
-Refer to https://geoscienceaustralia.github.io/PyRate/usage.html for 
-more details.
-"""
-
-
-def main(rows, cols):
     start_time = time.time()
     log.debug("Starting PyRate")
 
-    parser = argparse.ArgumentParser(prog='pyrate', description=CLI_DESC, add_help=True,  formatter_class=RawTextHelpFormatter)
+    parser = argparse.ArgumentParser(prog='pyrate', description=CLI_DESCRIPTION, add_help=True, formatter_class=RawTextHelpFormatter)
     parser.add_argument('-v', '--verbosity', type=str, default='INFO', choices=['DEBUG', 'INFO', 'WARNING', 'ERROR'], help="Increase output verbosity")
 
     subparsers = parser.add_subparsers(dest='command')
     subparsers.required = True
 
-    # create the parser for the "conv2tif" command
     parser_conv2tif = subparsers.add_parser('conv2tif', help='Convert interferograms to geotiff.', add_help=True)
     parser_conv2tif.add_argument('-f', '--config_file', action="store", type=str, default=None,  help="Pass configuration file", required=True)
 
-    # create the parser for the "prepifg" command
     parser_prepifg = subparsers.add_parser('prepifg', help='Perform multilooking and cropping on geotiffs.', add_help=True)
     parser_prepifg.add_argument('-f', '--config_file', action="store", type=str, default=None, help="Pass configuration file", required=True)
 
-    # create the parser for the "process" command
     parser_process = subparsers.add_parser('process', help='Main processing workflow including corrections, time series and stacking computation.', add_help=True)
     parser_process.add_argument('-f', '--config_file', action="store", type=str, default=None, help="Pass configuration file", required=True)
 
-    # create the parser for the "merge" command
     parser_merge = subparsers.add_parser('merge', help="Reassemble computed tiles and save as geotiffs.", add_help=True)
     parser_merge.add_argument('-f', '--config_file', action="store", type=str, default=None, help="Pass configuration file", required=False)
 
@@ -130,26 +116,5 @@ def main(rows, cols):
     log.debug("--- %s seconds ---" % (time.time() - start_time))
 
 
-def factors(n, left=2):
-    if (n, left) in memo:
-        return memo[(n, left)]
-    if left == 1:
-        return (n, [n])
-    i = 2
-    best = n
-    bestTuple = [n]
-    while i * i <= n:
-        if n % i == 0:
-            rem = factors(n / i, left - 1)
-            if rem[0] + i < best:
-                best = rem[0] + i
-                bestTuple = [i] + rem[1]
-        i += 1
-    return bestTuple
-
-
 if __name__ == "__main__":
-    memo = {}
-    rows, cols = factors(multiprocessing.cpu_count(), left=2)
-    rows, cols = int(rows), int(cols)
-    main(rows, cols)
+    main()

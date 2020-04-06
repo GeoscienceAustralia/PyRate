@@ -18,28 +18,8 @@
 This Python module contains tests for mpi operations in PyRate.
 Tun this module as 'mpirun -n 4 pytest tests/test_mpi.py'
 """
-import glob
-import shutil
-import numpy as np
-import pytest
 import os
-import tempfile
-import random
-import string
-
-import pyrate.core.orbital
-import pyrate.core.shared
-import tests.common
-from pyrate import (
-    process, prepifg, merge, conv2tif)
-from tests.common import (small_data_setup, reconstruct_mst,
-    reconstruct_linrate, SML_TEST_DEM_HDR_GAMMA, pre_prepare_ifgs)
-from tests import common
-from tests.test_covariance import legacy_maxvar
-from pyrate.core import algorithm, ref_phs_est as rpe, mpiops, config as cf, covariance, refpixel
-from pyrate.merge import create_png_from_tif
 from pyrate.__main__ import conv2tif_handler, prepifg_handler, process_handler, merge_handler
-import sys
 import unittest
 
 
@@ -52,7 +32,8 @@ class SystemTest(unittest.TestCase):
 
     def test_roipac_workflow(self):
 
-        input_config_path = os.path.join(self.root_path, "tests", "test_data", "system", "roipac", "input_parameters.conf")
+        input_config_path = os.path.join(self.root_path, "tests", "test_data", "system", "roipac",
+                                         "input_parameters.conf")
 
         conv2tif_handler(input_config_path)
         prepifg_handler(input_config_path)
@@ -63,7 +44,8 @@ class SystemTest(unittest.TestCase):
 
     def test_gamma_workflow(self):
 
-        input_config_path = os.path.join(self.root_path, "tests", "test_data", "system", "gamma", "input_parameters.conf")
+        input_config_path = os.path.join(self.root_path, "tests", "test_data", "system", "gamma",
+                                         "input_parameters.conf")
 
         conv2tif_handler(input_config_path)
         prepifg_handler(input_config_path)
@@ -73,7 +55,8 @@ class SystemTest(unittest.TestCase):
 
     def test_geotiff_workflow(self):
 
-        input_config_path = os.path.join(self.root_path, "tests", "test_data", "system", "geotiff", "input_parameters.conf")
+        input_config_path = os.path.join(self.root_path, "tests", "test_data", "system", "geotiff",
+                                         "input_parameters.conf")
 
         prepifg_handler(input_config_path)
         process_handler(input_config_path, self.rows, self.cols)

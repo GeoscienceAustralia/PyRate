@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2017 Geoscience Australia
+#   Copyright 2020 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ from pyrate.core.shared import joblib_log_level
 
 def stack_rate(ifgs, params, vcmt, mst=None):
     """
-    Pixel-by-pixel stack rate (velocity) estimation using iterative
+    Pixel-by-pixel linear rate (velocity) estimation using iterative
     weighted least-squares stacking method.
 
     :param Ifg.object ifgs: Sequence of interferogram objects from which to extract observations
@@ -38,11 +38,11 @@ def stack_rate(ifgs, params, vcmt, mst=None):
     :param ndarray vcmt: Derived positive definite temporal variance covariance matrix
     :param ndarray mst: Pixel-wise matrix describing the minimum spanning tree network
 
-    :return: rate: Stack rate (velocity) map
+    :return: rate: Linear rate (velocity) map
     :rtype: ndarray
     :return: error: Standard deviation of the rate map
     :rtype: ndarray
-    :return: samples: Statistics of observations used in calculation
+    :return: samples: Number of observations used in rate calculation per pixel
     :rtype: ndarray
     """
     maxsig, nsig, pthresh, cols, error, mst, obs, parallel, _, rate, rows, samples, span = _stack_setup(ifgs, mst, params)
@@ -85,12 +85,12 @@ def stack_rate(ifgs, params, vcmt, mst=None):
 
 def _stack_setup(ifgs, mst, params):
     """
-    Convenience function for stackrate setup
+    Convenience function for stack rate setup
     """
     # MULTIPROCESSING parameters
     parallel = params[cf.PARALLEL]
     processes = params[cf.PROCESSES]
-    # linrate parameters from config file
+    # stack rate parameters from config file
     # n-sigma ratio used to threshold 'model minus observation' residuals
     nsig = params[cf.LR_NSIG]
     # Threshold for maximum allowable standard error

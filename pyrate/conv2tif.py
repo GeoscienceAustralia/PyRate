@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2017 Geoscience Australia
+#   Copyright 2020 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -50,10 +50,10 @@ def main(params=None):
     if mpiops.size > 1:  # Over-ride input options if this is an MPI job
         params[cf.PARALLEL] = False
 
-    if params:
+    if params is not None:
         base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST], params[cf.OBS_DIR])
     else:  # if params not provided read from config file
-        if (not params) and (len(sys.argv) < 3):
+        if (params is not None) and (len(sys.argv) < 3):
             print(usage)
             return
         base_ifg_paths, _, params = cf.get_ifg_paths(sys.argv[2])

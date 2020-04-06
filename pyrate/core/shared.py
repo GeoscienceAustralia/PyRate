@@ -121,8 +121,7 @@ class RasterBase(object):
             raise RasterException(msg)
 
         if not os.path.exists(self.data_path):
-            raise IOError('The file {path} does not exist. Consider first '
-                          'running prepifg'.format(path=self.data_path))
+            raise IOError('The file {path} does not exist. Consider first running prepifg'.format(path=self.data_path))
 
         # unless read only, by default open files as writeable
         if readonly not in [True, False, None]:
@@ -148,8 +147,7 @@ class RasterBase(object):
         self.lat_centre = self.y_first + (self.y_step * self.y_centre)
         self.long_centre = self.x_first + (self.x_step * self.x_centre)
         # use cell size from centre of scene
-        self.x_size, self.y_size = cell_size(self.lat_centre, self.long_centre,
-                                             self.x_step, self.y_step)
+        self.x_size, self.y_size = cell_size(self.lat_centre, self.long_centre, self.x_step, self.y_step)
 
     @property
     def ncols(self):
@@ -256,8 +254,7 @@ class RasterBase(object):
         if self.dataset is not None:
             return self.dataset.GetRasterBand(band)
         else:
-            raise RasterException("Raster %s has not been opened"
-                                  % self.data_path)
+            raise RasterException("Raster %s has not been opened" % self.data_path)
 
 
 class Ifg(RasterBase):
@@ -398,8 +395,7 @@ class Ifg(RasterBase):
             # otherwise NaN's don't write to bytecode properly
             # and numpy complains
             # self.dataset.FlushCache()
-            msg = '{}: converted phase units ' \
-                  'to millimetres'.format(self.data_path)
+            msg = '{}: converted phase units to millimetres'.format(self.data_path)
             log.debug(msg)
         else:  # pragma: no cover
             msg = 'Phase units are not millimetres or radians'
@@ -679,8 +675,7 @@ def nanmedian(x):
     :rtype: float
     """
     # pylint: disable=no-member
-    version = [int(i) for i in
-               pkg_resources.get_distribution("numpy").version.split('.')[:2]]
+    version = [int(i) for i in pkg_resources.get_distribution("numpy").version.split('.')[:2]]
     if version[0] == 1 and version[1] > 9:
         return np.nanmedian(x)
     else:   # pragma: no cover
@@ -761,7 +756,6 @@ def write_fullres_geotiff(header, data_path, dest, nodata):
                     f.seek(row_bytes, 1)  # skip interleaved band 1
 
             data = struct.unpack(fmtstr, f.read(row_bytes))
-
             band.WriteArray(np.array(data).reshape(1, ncols), yoff=y)
 
     ds = None  # manual close
@@ -860,8 +854,7 @@ def _check_pixel_res_mismatch(header):
     Convenience function to check equality of pixel resolution in X and Y dimensions
     """
     # pylint: disable=invalid-name
-    xs, ys = [abs(i) for i in [header[ifc.PYRATE_X_STEP],
-                               header[ifc.PYRATE_Y_STEP]]]
+    xs, ys = [abs(i) for i in [header[ifc.PYRATE_X_STEP], header[ifc.PYRATE_Y_STEP]]]
 
     if xs != ys:
         msg = 'X and Y cell sizes do not match: %s & %s'
@@ -998,8 +991,7 @@ def create_tiles(shape, nrows=2, ncols=2):
         raise ValueError('nrows/cols must be greater than ifg dimensions')
     col_arr = np.array_split(range(no_x), ncols)
     row_arr = np.array_split(range(no_y), nrows)
-    return [Tile(i, (r[0], c[0]), (r[-1]+1, c[-1]+1))
-            for i, (r, c) in enumerate(product(row_arr, col_arr))]
+    return [Tile(i, (r[0], c[0]), (r[-1]+1, c[-1]+1)) for i, (r, c) in enumerate(product(row_arr, col_arr))]
 
 
 def get_tiles(ifg_path, rows, cols):
@@ -1080,17 +1072,16 @@ def cell_size(lat, lon, x_step, y_step):
     :rtype: tuple
     """
     if lat > 84.0 or lat < -80:
-        msg = "No UTM zone for polar region: > 84 degrees N or < 80 degrees S"
+        msg = "No UTM zone for polar region: > 84 degrees N or < 80 degrees S. " \
+              "Provided values are lat: "+str(lat) +" long: " +str(lon)
         raise ValueError(msg)
 
     zone = _utm_zone(lon)
     p0 = pyproj.Proj(proj='latlong', ellps='WGS84')
     p1 = pyproj.Proj(proj='utm', zone=zone, ellps='WGS84')
 
-    x0, y0 = pyproj.transform(p0, p1, lon, lat, 
-        errcheck=True)
-    x1, y1 = pyproj.transform(p0, p1, lon + x_step, lat + y_step, 
-        errcheck=True)
+    x0, y0 = pyproj.transform(p0, p1, lon, lat, errcheck=True)
+    x1, y1 = pyproj.transform(p0, p1, lon + x_step, lat + y_step, errcheck=True)
 
     return tuple(abs(e) for e in (x1 - x0, y1 - y0))
 
