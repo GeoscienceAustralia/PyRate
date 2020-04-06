@@ -79,7 +79,8 @@ def do_prepifg(gtiff_paths, params):
 
     for f in gtiff_paths:
         if not os.path.isfile(f):
-            raise Exception("Can not find geotiff: " + str(f) + ". Ensure you have converted your interferograms to geotiffs.")
+            raise Exception("Can not find geotiff: " + str(f) +
+                            ". Ensure you have converted your interferograms to geotiffs.")
 
     ifgs = [prepifg_helper.dem_or_ifg(p) for p in gtiff_paths]
     xlooks, ylooks, crop = cf.transform_params(params)
