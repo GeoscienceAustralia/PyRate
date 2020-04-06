@@ -296,9 +296,9 @@ def _stack_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
         mst_grid_n = np.load(os.path.join(output_dir, 'mst_mat_{}.npy'.format(t.index)))
         rate, error, samples = stack.stack_rate(ifg_parts, params, vcmt, mst_grid_n)
         # declare file names
-        np.save(file=os.path.join(output_dir, 'stackrate_{}.npy'.format(t.index)), arr=rate)
-        np.save(file=os.path.join(output_dir, 'linerror_{}.npy'.format(t.index)), arr=error)
-        np.save(file=os.path.join(output_dir, 'linsamples_{}.npy'.format(t.index)), arr=samples)
+        np.save(file=os.path.join(output_dir, 'stack_rate_{}.npy'.format(t.index)), arr=rate)
+        np.save(file=os.path.join(output_dir, 'stack_error_{}.npy'.format(t.index)), arr=error)
+        np.save(file=os.path.join(output_dir, 'stack_samples_{}.npy'.format(t.index)), arr=samples)
     mpiops.comm.barrier()
 
 
