@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+    <kml xmlns="http://earth.google.com/kml/2.1">
+      <Document>
+        <name>stack_rate.kml</name>
+        <GroundOverlay>
+          <name>stack_rate.png</name>
+          <Icon>
+            <href>stack_rate.png</href>
+          </Icon>
+          <LatLonBox>
+            <north>  -34.1700000 </north>
+        <south>  -34.2300000 </south>
+        <east>   150.9491667 </east>
+        <west>   150.9100000 </west>
+      </LatLonBox>
+    </GroundOverlay>
+  </Document>
+</kml>
