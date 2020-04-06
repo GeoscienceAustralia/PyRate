@@ -290,12 +290,9 @@ class ParallelPyRateTests(unittest.TestCase):
         np.testing.assert_array_almost_equal(self.vcmt, self.vcmt_p, decimal=4)
 
     def test_stack_rate_equal(self):
-        np.testing.assert_array_almost_equal(self.rate, self.rate_p,
-                                             decimal=4)
-        np.testing.assert_array_almost_equal(self.error, self.error_p,
-                                             decimal=4)
-        np.testing.assert_array_almost_equal(self.samples, self.samples_p,
-                                             decimal=4)
+        np.testing.assert_array_almost_equal(self.rate, self.rate_p, decimal=4)
+        np.testing.assert_array_almost_equal(self.error, self.error_p, decimal=4)
+        np.testing.assert_array_almost_equal(self.samples, self.samples_p, decimal=4)
 
 
 class TestPrePrepareIfgs(unittest.TestCase):
