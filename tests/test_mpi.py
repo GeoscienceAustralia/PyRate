@@ -29,16 +29,11 @@ import string
 
 import pyrate.core.orbital
 import pyrate.core.shared
-import tests.common
-from pyrate import (
-    process, prepifg, merge, conv2tif)
-from tests.common import (small_data_setup, reconstruct_mst, 
-    reconstruct_linrate, SML_TEST_DEM_HDR_GAMMA, pre_prepare_ifgs)
+from pyrate import process, prepifg, conv2tif
 from tests import common
 from tests.test_covariance import legacy_maxvar
-from pyrate.core import algorithm, ref_phs_est as rpe, mpiops, config as cf, covariance, refpixel
+from pyrate.core import mpiops, config as cf
 
-TRAVIS = True if 'TRAVIS' in os.environ else False
 
 
 @pytest.fixture()
