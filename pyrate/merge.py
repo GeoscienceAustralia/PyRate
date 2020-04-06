@@ -19,7 +19,6 @@ rate and time series outputs and save as geotiff files
 """
 import os
 from os.path import join
-from itertools import chain
 import logging
 import pickle as cp
 import numpy as np
@@ -131,7 +130,7 @@ def _merge_stack(rows, cols, params):
     xlks, _, crop = cf.transform_params(params)
     base_unw_paths = []
 
-    for p in chain(* [Path(params[OBS_DIR]).rglob("*rlks_*cr.tif"), Path(params[OUT_DIR]).rglob("*rlks_*cr.tif")]):
+    for p in Path(params[OUT_DIR]).rglob("*rlks_*cr.tif"):
         if "dem" not in str(p):
             base_unw_paths.append(str(p))
 
@@ -200,7 +199,7 @@ def _merge_timeseries(rows, cols, params):
 
     base_unw_paths = []
 
-    for p in chain(* [Path(params[OBS_DIR]).rglob("*rlks_*cr.tif"), Path(params[OUT_DIR]).rglob("*rlks_*cr.tif")]):
+    for p in Path(params[OUT_DIR]).rglob("*rlks_*cr.tif"):
         if "dem" not in str(p):
             base_unw_paths.append(str(p))
 
