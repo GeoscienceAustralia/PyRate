@@ -272,7 +272,7 @@ def process_ifgs(ifg_paths, params, rows, cols):
 
     maxvar, vcmt = _maxvar_vcm_calc(ifg_paths, params, preread_ifgs)
 
-    # save phase data tiles as numpy array for timeseries and linrate calc
+    # save phase data tiles as numpy array for timeseries and stackrate calc
     shared.save_numpy_phase(ifg_paths, tiles, params)
 
     _timeseries_calc(ifg_paths, params, vcmt, tiles, preread_ifgs)
@@ -296,7 +296,7 @@ def _stack_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
         mst_grid_n = np.load(os.path.join(output_dir, 'mst_mat_{}.npy'.format(t.index)))
         rate, error, samples = stack.stack_rate(ifg_parts, params, vcmt, mst_grid_n)
         # declare file names
-        np.save(file=os.path.join(output_dir, 'linrate_{}.npy'.format(t.index)), arr=rate)
+        np.save(file=os.path.join(output_dir, 'stackrate_{}.npy'.format(t.index)), arr=rate)
         np.save(file=os.path.join(output_dir, 'linerror_{}.npy'.format(t.index)), arr=error)
         np.save(file=os.path.join(output_dir, 'linsamples_{}.npy'.format(t.index)), arr=samples)
     mpiops.comm.barrier()

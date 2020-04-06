@@ -186,9 +186,9 @@ def orbfit_degrees(request):
 
 
 def _tifs_same(dir1, dir2, tif):
-    linrate_tif_s = os.path.join(dir1, tif)
-    linrate_tif_m = os.path.join(dir2, tif)
-    common.assert_ifg_phase_equal(linrate_tif_m, linrate_tif_s)
+    stackrate_tif_s = os.path.join(dir1, tif)
+    stackrate_tif_m = os.path.join(dir2, tif)
+    common.assert_ifg_phase_equal(stackrate_tif_m, stackrate_tif_s)
 
 def test_prepifg_mpi(mpisync, get_config, tempdir,
                      roipac_or_gamma, get_lks, get_crop):
