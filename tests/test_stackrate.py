@@ -120,14 +120,14 @@ class LegacyEqualityTest(unittest.TestCase):
         
         # Calculate linear rate map
         params[cf.PARALLEL] = 1
-        cls.rate, cls.error, cls.samples = tests.common.calculate_linear_rate( ifgs, params, vcmt, mst_mat=mst_grid)
+        cls.rate, cls.error, cls.samples = tests.common.calculate_stack_rate(ifgs, params, vcmt, mst_mat=mst_grid)
 
         params[cf.PARALLEL] = 2
-        cls.rate_2, cls.error_2, cls.samples_2 = tests.common.calculate_linear_rate(ifgs, params, vcmt, mst_mat=mst_grid)
+        cls.rate_2, cls.error_2, cls.samples_2 = tests.common.calculate_stack_rate(ifgs, params, vcmt, mst_mat=mst_grid)
 
         params[cf.PARALLEL] = 0
         # Calculate linear rate map
-        cls.rate_s, cls.error_s, cls.samples_s = tests.common.calculate_linear_rate(ifgs, params, vcmt, mst_mat=mst_grid)
+        cls.rate_s, cls.error_s, cls.samples_s = tests.common.calculate_stack_rate(ifgs, params, vcmt, mst_mat=mst_grid)
 
         stackrate_dir = os.path.join(SML_TEST_DIR, 'stackrate')
 

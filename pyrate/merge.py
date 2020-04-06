@@ -200,7 +200,7 @@ def _merge_timeseries(rows, cols, params):
 
     base_unw_paths = []
 
-    for p in Path(params[OBS_DIR]).rglob("*rlks_*cr.tif"):
+    for p in chain(* [Path(params[OBS_DIR]).rglob("*rlks_*cr.tif"), Path(params[OUT_DIR]).rglob("*rlks_*cr.tif")]):
         if "dem" not in str(p):
             base_unw_paths.append(str(p))
 

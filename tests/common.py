@@ -227,7 +227,7 @@ class MockIfg(object):
         pass
 
 
-def reconstruct_linrate(shape, tiles, output_dir, out_type):
+def reconstruct_stackrate(shape, tiles, output_dir, out_type):
     rate = np.zeros(shape=shape, dtype=np.float32)
     for t in tiles:
         rate_file = os.path.join(output_dir, out_type +
@@ -357,7 +357,7 @@ def write_timeseries_geotiff(ifgs, params, tsincr, pr_type):
         write_output_geotiff(md, gt, wkt, data, dest, np.nan)
 
 
-def calculate_linear_rate(ifgs, params, vcmt, mst_mat=None):
+def calculate_stack_rate(ifgs, params, vcmt, mst_mat=None):
     # log.info('Calculating linear rate')
     res = stack.stack_rate(ifgs, params, vcmt, mst_mat)
     for r in res:
@@ -365,12 +365,12 @@ def calculate_linear_rate(ifgs, params, vcmt, mst_mat=None):
             raise ValueError('TODO: bad value')
 
     rate, error, samples = res
-    write_linrate_tifs(ifgs, params, res)
+    write_stackrate_tifs(ifgs, params, res)
     # log.info('Linear rate calculated')
     return rate, error, samples
 
 
-def write_linrate_tifs(ifgs, params, res):
+def write_stackrate_tifs(ifgs, params, res):
     rate, error, samples = res
     gt, md, wkt = get_geotiff_header_info(ifgs[0].data_path)
     epochlist = algorithm.get_epochs(ifgs)[0]
@@ -384,10 +384,10 @@ def write_linrate_tifs(ifgs, params, res):
     dest = join(params[cf.OUT_DIR], "stack_samples.tif")
     md[ifc.DATA_TYPE] = ifc.STACKSAMP
     write_output_geotiff(md, gt, wkt, samples, dest, np.nan)
-    write_linrate_numpy_files(error, rate, samples, params)
+    write_stackrate_numpy_files(error, rate, samples, params)
 
 
-def write_linrate_numpy_files(error, rate, samples, params):
+def write_stackrate_numpy_files(error, rate, samples, params):
     rate_file = join(params[cf.OUT_DIR], 'rate.npy')
     error_file = join(params[cf.OUT_DIR], 'error.npy')
     samples_file = join(params[cf.OUT_DIR], 'samples.npy')
