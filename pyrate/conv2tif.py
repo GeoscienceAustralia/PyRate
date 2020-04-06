@@ -128,6 +128,6 @@ def _geotiff_multiprocessing(unw_path, params):
                                      nodata=params[cf.NO_DATA_VALUE])
         return dest
     else:
-        log.info("Full-res geotiff already exists")
-        return None
+        log.warning("Full-res geotiff already exists. Returning existing file!")
+        return dest
 

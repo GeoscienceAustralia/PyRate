@@ -190,7 +190,7 @@ class ParallelPyRateTests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        rate_types = ['stackrate', 'linerror', 'linsamples']
+        rate_types = ['stack_rate', 'stack_error', 'stack_samples']
         cls.tif_dir = tempfile.mkdtemp()
         cls.test_conf = common.TEST_CONF_GAMMA
 
@@ -198,8 +198,7 @@ class ParallelPyRateTests(unittest.TestCase):
         params = cf.get_config_params(cls.test_conf)
         params[cf.OBS_DIR] = common.SML_TEST_GAMMA
         params[cf.PROCESSOR] = 1  # gamma
-        params[cf.IFG_FILE_LIST] = os.path.join(
-            common.SML_TEST_GAMMA, 'ifms_17')
+        params[cf.IFG_FILE_LIST] = os.path.join(common.SML_TEST_GAMMA, 'ifms_17')
         params[cf.OUT_DIR] = cls.tif_dir
         params[cf.PARALLEL] = 1
         params[cf.APS_CORRECTION] = False
@@ -209,12 +208,10 @@ class ParallelPyRateTests(unittest.TestCase):
 
         # base_unw_paths need to be geotiffed by converttogeotif 
         #  and multilooked by run_prepifg
-        base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST],
-                                               params[cf.OBS_DIR])
+        base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST], params[cf.OBS_DIR])
 
         # dest_paths are tifs that have been geotif converted and multilooked
-        cls.dest_paths = cf.get_dest_paths(
-            base_unw_paths, crop, params, xlks)
+        cls.dest_paths = cf.get_dest_paths(base_unw_paths, crop, params, xlks)
         gtif_paths = conv2tif.do_geotiff(base_unw_paths, params)
         prepifg.do_prepifg(gtif_paths, params)
         tiles = pyrate.core.shared.get_tiles(cls.dest_paths[0], 3, 3)
@@ -236,20 +233,15 @@ class ParallelPyRateTests(unittest.TestCase):
         params[cf.PARALLEL] = 0
         params[cf.OUT_DIR] = cls.tif_dir_s
         params[cf.TMPDIR] = os.path.join(params[cf.OUT_DIR], cf.TMPDIR)
-        cls.dest_paths_s = cf.get_dest_paths(
-            base_unw_paths, crop, params, xlks)
+        cls.dest_paths_s = cf.get_dest_paths(base_unw_paths, crop, params, xlks)
         gtif_paths = conv2tif.do_geotiff(base_unw_paths, params)
         prepifg.do_prepifg(gtif_paths, params)
-        cls.refpixel, cls.maxvar, cls.vcmt = \
-            process.process_ifgs(cls.dest_paths_s, params, 3, 3)
+        cls.refpixel, cls.maxvar, cls.vcmt = process.process_ifgs(cls.dest_paths_s, params, 3, 3)
 
         cls.mst = common.reconstruct_mst(ifgs[0].shape, tiles,
                                          params[cf.TMPDIR])
-        cls.rate, cls.error, cls.samples = [
-            common.reconstruct_stackrate(
-                ifgs[0].shape, tiles, params[cf.TMPDIR], t)
-            for t in rate_types
-            ]
+        cls.rate, cls.error, cls.samples = \
+            [common.reconstruct_stackrate(ifgs[0].shape, tiles, params[cf.TMPDIR], t) for t in rate_types]
 
     @classmethod
     def tearDownClass(cls):
@@ -297,7 +289,7 @@ class ParallelPyRateTests(unittest.TestCase):
     def test_vcmt_equal(self):
         np.testing.assert_array_almost_equal(self.vcmt, self.vcmt_p, decimal=4)
 
-    def test_linear_rate_equal(self):
+    def test_stack_rate_equal(self):
         np.testing.assert_array_almost_equal(self.rate, self.rate_p,
                                              decimal=4)
         np.testing.assert_array_almost_equal(self.error, self.error_p,
