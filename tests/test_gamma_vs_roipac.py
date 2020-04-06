@@ -70,13 +70,13 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
         cls.roipac_ifgListFile = os.path.join(cls.roipac_base_dir, "roipac_ifg.list")
         cls.params = None
 
-    # @classmethod
-    # def tearDownClass(cls):
-    #     """ """
-    #     shutil.rmtree(cls.gamma_base_dir)
-    #     shutil.rmtree(cls.roipac_base_dir)
-    #     remove_tifs(cls.SMLNEY_GAMMA_TEST)
-    #     remove_tifs(common.SML_TEST_OBS)
+    @classmethod
+    def tearDownClass(cls):
+        """ """
+        shutil.rmtree(cls.gamma_base_dir)
+        shutil.rmtree(cls.roipac_base_dir)
+        remove_tifs(cls.SMLNEY_GAMMA_TEST)
+        remove_tifs(common.SML_TEST_OBS)
 
     def make_gamma_input_files(self, data, conf_file):
         """ """
