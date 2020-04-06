@@ -37,6 +37,7 @@ from pyrate.core.shared import (Ifg, nan_and_mm_convert, get_geotiff_header_info
 from tests.constants import PYRATEPATH
 
 TEMPDIR = tempfile.gettempdir()
+TESTDIR = join(PYRATEPATH, 'tests')
 BASE_TEST = join(PYRATEPATH, "tests", "test_data")
 SML_TEST_DIR = join(BASE_TEST, "small_test")
 SML_TEST_OBS = join(SML_TEST_DIR, 'roipac_obs')  # roipac processed unws
@@ -88,24 +89,25 @@ geo_061106-070326.unw
 geo_070326-070917.unw
 """
 
-IFMS16 = ['geo_060619-061002_unw.tif',
-        'geo_060828-061211_unw.tif',
-        'geo_061002-070219_unw.tif',
-        'geo_061002-070430_unw.tif',
-        'geo_061106-061211_unw.tif',
-        'geo_061106-070115_unw.tif',
-        'geo_061106-070326_unw.tif',
-        'geo_061211-070709_unw.tif',
-        'geo_061211-070813_unw.tif',
-        'geo_070115-070326_unw.tif',
-        'geo_070115-070917_unw.tif',
-        'geo_070219-070430_unw.tif',
-        'geo_070219-070604_unw.tif',
-        'geo_070326-070917_unw.tif',
-        'geo_070430-070604_unw.tif',
-        'geo_070604-070709_unw.tif']
+IFMS16 = [
+    "geo_060619-061002_unw.tif",
+    "geo_060828-061211_unw.tif",
+    "geo_061002-070219_unw.tif",
+    "geo_061002-070430_unw.tif",
+    "geo_061106-061211_unw.tif",
+    "geo_061106-070115_unw.tif",
+    "geo_061106-070326_unw.tif",
+    "geo_061211-070709_unw.tif",
+    "geo_061211-070813_unw.tif",
+    "geo_070115-070326_unw.tif",
+    "geo_070115-070917_unw.tif",
+    "geo_070219-070430_unw.tif",
+    "geo_070219-070604_unw.tif",
+    "geo_070326-070917_unw.tif",
+    "geo_070430-070604_unw.tif",
+    "geo_070604-070709_unw.tif",
+]
 
-log = logging.getLogger(__name__)
 
 def remove_tifs(path):
     tifs = glob.glob(os.path.join(path, '*.tif'))
@@ -369,19 +371,18 @@ def calculate_linear_rate(ifgs, params, vcmt, mst_mat=None):
 
 
 def write_linrate_tifs(ifgs, params, res):
-    # log.info('Writing linrate results')
     rate, error, samples = res
     gt, md, wkt = get_geotiff_header_info(ifgs[0].data_path)
     epochlist = algorithm.get_epochs(ifgs)[0]
-    dest = join(params[cf.OUT_DIR], "linrate.tif")
+    dest = join(params[cf.OUT_DIR], "stack_rate.tif")
     md[ifc.EPOCH_DATE] = epochlist.dates
-    md[ifc.DATA_TYPE] = ifc.LINRATE
+    md[ifc.DATA_TYPE] = ifc.STACKRATE
     write_output_geotiff(md, gt, wkt, rate, dest, np.nan)
-    dest = join(params[cf.OUT_DIR], "linerror.tif")
-    md[ifc.DATA_TYPE] = ifc.LINERROR
+    dest = join(params[cf.OUT_DIR], "stack_error.tif")
+    md[ifc.DATA_TYPE] = ifc.STACKERROR
     write_output_geotiff(md, gt, wkt, error, dest, np.nan)
-    dest = join(params[cf.OUT_DIR], "linsamples.tif")
-    md[ifc.DATA_TYPE] = ifc.LINSAMP
+    dest = join(params[cf.OUT_DIR], "stack_samples.tif")
+    md[ifc.DATA_TYPE] = ifc.STACKSAMP
     write_output_geotiff(md, gt, wkt, samples, dest, np.nan)
     write_linrate_numpy_files(error, rate, samples, params)
 
@@ -442,5 +443,4 @@ def pre_prepare_ifgs(ifg_paths, params):
         if not i.is_open:
             i.open(readonly=False)
         nan_and_mm_convert(i, params)
-    log.info('Opened ifg for reading')
     return ifgs

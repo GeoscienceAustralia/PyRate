@@ -61,6 +61,7 @@ def _create_ifg_dict(dest_tifs, params, tiles):
     :rtype: dict
     """
     ifgs_dict = {}
+    nifgs = len(dest_tifs)
     process_tifs = mpiops.array_split(dest_tifs)
     shared.save_numpy_phase(dest_tifs, tiles, params)
     for d in process_tifs:
@@ -82,7 +83,9 @@ def _create_ifg_dict(dest_tifs, params, tiles):
 
         # add some extra information that's also useful later
         gt, md, wkt = shared.get_geotiff_header_info(process_tifs[0])
-        ifgs_dict['epochlist'] = algorithm.get_epochs(ifgs_dict)[0]
+        epochlist = algorithm.get_epochs(ifgs_dict)[0]
+        log.info('Found {} unique epochs in the {} interferogram network'.format(len(epochlist.dates), nifgs))
+        ifgs_dict['epochlist'] = epochlist
         ifgs_dict['gt'] = gt
         ifgs_dict['md'] = md
         ifgs_dict['wkt'] = wkt
@@ -102,6 +105,7 @@ def _mst_calc(dest_tifs, params, tiles, preread_ifgs):
     MPI wrapper function for MST calculation
     """
     process_tiles = mpiops.array_split(tiles)
+    log.info('Calculating minimum spanning tree matrix')
 
     def _save_mst_tile(tile, i, preread_ifgs):
         """
@@ -187,8 +191,8 @@ def _ref_phase_estimation(ifg_paths, params, refpx, refpy):
     log.info("Calculating reference phase")
     if len(ifg_paths) < 2:
         raise rpe.ReferencePhaseError(
-            f"At least two interferograms required for reference phase "
-            f"correction ({len(ifg_paths)} provided)."
+            "At least two interferograms required for reference phase correction ({len_ifg_paths} "
+            "provided).".format(len_ifg_paths=len(ifg_paths))
         )
 
     if mpiops.run_once(shared.check_correction_status, ifg_paths, ifc.PYRATE_REF_PHASE):
@@ -281,7 +285,7 @@ def process_ifgs(ifg_paths, params, rows, cols):
 
 def _stack_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
     """
-    MPI wrapper for stack rate calculation
+    MPI wrapper for stacking calculation
     """
     process_tiles = mpiops.array_split(tiles)
     log.info('Calculating rate map from stacking')
@@ -352,9 +356,10 @@ def _timeseries_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
         log.info('Calculating time series using SVD method')
 
     output_dir = params[cf.TMPDIR]
+    total_tiles = len(tiles)
     process_tiles = mpiops.array_split(tiles)
     for t in process_tiles:
-        log.debug('Calculating time series for tile {}'.format(t.index))
+        log.debug("Calculating time series for tile "+str(t.index)+" out of "+str(total_tiles))
         ifg_parts = [shared.IfgPart(p, t, preread_ifgs, params) for p in ifg_paths]
         mst_tile = np.load(os.path.join(output_dir, 'mst_mat_{}.npy'.format(t.index)))
         res = timeseries.time_series(ifg_parts, params, vcmt, mst_tile)

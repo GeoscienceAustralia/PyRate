@@ -95,8 +95,6 @@ class LegacyEqualityTest(unittest.TestCase):
         base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST], params[cf.OBS_DIR])
         
         dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
-        print(f"base_ifg_paths={base_ifg_paths}") 
-        print(f"dest_paths={dest_paths}")
         # start run_pyrate copy
         ifgs = pre_prepare_ifgs(dest_paths, params)
         mst_grid = tests.common.mst_calculation(dest_paths, params)
@@ -131,7 +129,7 @@ class LegacyEqualityTest(unittest.TestCase):
         # Calculate linear rate map
         cls.rate_s, cls.error_s, cls.samples_s = tests.common.calculate_linear_rate(ifgs, params, vcmt, mst_mat=mst_grid)
 
-        stackrate_dir = os.path.join(SML_TEST_DIR, 'linrate')
+        stackrate_dir = os.path.join(SML_TEST_DIR, 'stackrate')
 
         cls.rate_container = np.genfromtxt(os.path.join(stackrate_dir, 'stackmap.csv'), delimiter=',')
         cls.error_container = np.genfromtxt(os.path.join(stackrate_dir, 'errormap.csv'), delimiter=',')

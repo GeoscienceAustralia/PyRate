@@ -18,7 +18,6 @@ This Python script applies optional multilooking and cropping to input
 interferogram geotiff files.
 """
 # -*- coding: utf-8 -*-
-import sys
 import logging
 import os
 from joblib import Parallel, delayed
@@ -31,7 +30,7 @@ log = logging.getLogger(__name__)
 GAMMA = 1
 ROIPAC = 0
 
-def main(params=None):
+def main(params):
     """
     Main workflow function for preparing interferograms for PyRate.
 
@@ -43,19 +42,12 @@ def main(params=None):
     # the important pyrate stuff anyway, but might affect gen_thumbs.py.
     # Going to assume base_ifg_paths is ordered correcly
     # pylint: disable=too-many-branches
-    usage = 'Usage: pyrate prepifg <config_file>'
+
     if mpiops.size > 1:  # Over-ride input options if this is an MPI job
+        log.debug("Running using mpi processing. Disabling parallel processing.")
         params[cf.PARALLEL] = False
 
-    if params:
-        base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST], params[cf.OBS_DIR])
-
-    else:
-        # if params not provided read from config file
-        if (not params) and (len(sys.argv) < 3):
-            print(usage)
-            return
-        base_ifg_paths, _, params = cf.get_ifg_paths(sys.argv[2])
+    base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST], params[cf.OBS_DIR])
 
     if params[cf.DEM_FILE] is not None: # optional DEM conversion
         base_ifg_paths.append(params[cf.DEM_FILE])
@@ -83,7 +75,6 @@ def do_prepifg(gtiff_paths, params):
     :param dict params: Parameters dictionary corresponding to config file
     """
     # pylint: disable=expression-not-assigned
-    log.info("Preparing interferograms by cropping/multilooking")
     parallel = params[cf.PARALLEL]
 
     for f in gtiff_paths:
@@ -94,14 +85,15 @@ def do_prepifg(gtiff_paths, params):
     xlooks, ylooks, crop = cf.transform_params(params)
     user_exts = (params[cf.IFG_XFIRST], params[cf.IFG_YFIRST], params[cf.IFG_XLAST], params[cf.IFG_YLAST])
     exts = prepifg_helper.get_analysis_extent(crop, ifgs, xlooks, ylooks, user_exts=user_exts)
-    log.debug("Extents (xmin, ymin, xmax, ymax): "+str(exts))
     thresh = params[cf.NO_DATA_AVERAGING_THRESHOLD]
     if parallel:
         Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
             delayed(_prepifg_multiprocessing)(p, xlooks, ylooks, exts, thresh, crop, params) for p in gtiff_paths
         )
     else:
-        [_prepifg_multiprocessing(p, xlooks, ylooks, exts, thresh, crop, params) for p in gtiff_paths]
+        for gtiff_path in gtiff_paths:
+            _prepifg_multiprocessing(gtiff_path, xlooks, ylooks, exts, thresh, crop, params)
+
 
 def _prepifg_multiprocessing(path, xlooks, ylooks, exts, thresh, crop, params):
     """
@@ -123,5 +115,6 @@ def _prepifg_multiprocessing(path, xlooks, ylooks, exts, thresh, crop, params):
         coherence_path = None
         coherence_thresh = None
 
-    prepifg_helper.prepare_ifg(path, xlooks, ylooks, exts, thresh, crop, out_path=params[cf.OUT_DIR], header=header, coherence_path=coherence_path, coherence_thresh=coherence_thresh)
+    prepifg_helper.prepare_ifg(path, xlooks, ylooks, exts, thresh, crop, out_path=params[cf.OUT_DIR], header=header,
+                               coherence_path=coherence_path, coherence_thresh=coherence_thresh)
 

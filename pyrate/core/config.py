@@ -30,9 +30,10 @@ from os.path import splitext, split
 import re
 import itertools
 import logging
+from osgeo import gdal
 
 from pyrate.core.ifgconstants import YEARS_PER_DAY
-from pyrate import CONV2TIF, PREPIFG, PROCESS, MERGE
+from pyrate.constants import CONV2TIF, PREPIFG, PROCESS, MERGE
 
 _logger = logging.getLogger(__name__)
 
@@ -853,7 +854,7 @@ def convert_geographic_coordinate_to_pixel_value(refpx, refpy, transform):
 
     return int(refpx), int(refpy)
 
-from osgeo import gdal
+
 def validate_parameters(pars: Dict, step: str=CONV2TIF):
     """
     Main validation function. Calls validation subfunctions and gathers
