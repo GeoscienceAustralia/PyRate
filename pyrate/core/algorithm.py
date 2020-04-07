@@ -17,6 +17,7 @@
 This Python module contains a collection of generic algorithms used in PyRate
 """
 import logging
+from typing import Union, Iterable, Dict, Tuple
 from numpy import sin, cos, unique, histogram, diag, dot
 from scipy.linalg import qr, solve, lstsq
 from pyrate.core.shared import EpochList, IfgException, PrereadIfg
@@ -191,11 +192,11 @@ def ifg_date_index_lookup(ifgs, date_pair):
                      "master/slave of %s" % str(date_pair))
 
 
-def get_epochs(ifgs):
+def get_epochs(ifgs: Union[Iterable, Dict]) -> Tuple[EpochList, int]:
     """
     Returns an EpochList derived from the given interferograms.
 
-    :param list ifgs: List of interferogram objects
+    :param ifgs: List of interferogram objects
 
     :return: EpochList
     :rtype: list
@@ -209,8 +210,7 @@ def get_epochs(ifgs):
     log.info('Found {} unique epochs in the {} interferogram network'.format(len(dates), len(ifgs)))
 
     # absolute span for each date from the zero/start point
-    span = [(dates[i] - dates[0]).days / DAYS_PER_YEAR
-            for i in range(len(dates))]
+    span = [(dates[i] - dates[0]).days / DAYS_PER_YEAR for i in range(len(dates))]
     return EpochList(dates, repeat, span), n
 
 

@@ -20,6 +20,7 @@ This Python module contains MPI convenience functions for PyRate
 # pylint: disable=invalid-name
 import logging
 import pickle
+from typing import Callable, Any, Iterable
 from mpi4py import MPI
 import numpy as np
 
@@ -38,14 +39,14 @@ size = comm.Get_size()
 rank = comm.Get_rank()
 
 
-def run_once(f, *args, **kwargs):
+def run_once(f: Callable, *args, **kwargs) -> Any:
     """
     Run a function on one node and then broadcast result to all.
 
-    :param str f: The function to be evaluated. Can take arbitrary arguments
+    :param Callable f: The function to be evaluated. Can take arbitrary arguments
                 and return anything or nothing
-    :param str args: Other positional arguments to pass on to f (optional)
-    :param str kwargs: Other named arguments to pass on to f (optional)
+    :param list args: Other positional arguments to pass on to f (optional)
+    :param dict kwargs: Other named arguments to pass on to f (optional)
 
     :return: The value returned by f.
     :rtype: unknown
@@ -58,7 +59,7 @@ def run_once(f, *args, **kwargs):
     return result
 
 
-def array_split(arr, process=None):
+def array_split(arr: Iterable, process: int = None) -> np.ndarray:
     """
     Convenience function for splitting array elements across MPI processes
 
