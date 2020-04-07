@@ -330,7 +330,8 @@ def _parse_conf_file(content, validate: bool=True, step: str=CONV2TIF) -> Dict:
     lines = [ln.split() for ln in content.split('\n') if _is_valid(ln)]
 
     # convert "field:   value" lines to [field, value]
-    kvpair = [(e[0].rstrip(":"), e[1]) for e in lines if len(e) == 2] + [(e[0].rstrip(":"), None) for e in lines if len(e) == 1]
+    kvpair = [(e[0].rstrip(":"), e[1]) for e in lines if len(e) == 2] + \
+             [(e[0].rstrip(":"), None) for e in lines if len(e) == 1]
     parameters = dict(kvpair)
     for p in PATHS:
         if p not in parameters:
@@ -462,7 +463,7 @@ def original_ifg_paths(ifglist_path, obs_dir):
     ifglist = parse_namelist(ifglist_path)
     return [os.path.join(obs_dir, p) for p in ifglist]
 
-def coherence_paths_for(path, params, tif=False) -> str:
+def coherence_paths_for(path, params, tif=False) -> List[str]:
     """
     Returns path to coherence file for given interferogram. Pattern matches
     based on epoch in filename.
