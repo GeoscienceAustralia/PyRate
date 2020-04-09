@@ -436,7 +436,8 @@ class WriteUnwTest(unittest.TestCase):
             dest_unws.append(dest_unw)
         
         # Convert back to tiff
-        new_geotiffs = conv2tif.do_geotiff(dest_unws, self.params)
+        new_geotiffs_ = conv2tif.do_geotiff(dest_unws, self.params)
+        new_geotiffs = [gt for gt, b in new_geotiffs_]
 
         # Ensure original multilooked geotiffs and 
         #  unw back to geotiff are the same

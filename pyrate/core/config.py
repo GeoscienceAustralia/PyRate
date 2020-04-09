@@ -1,4 +1,5 @@
 #   This Python module is part of the PyRate software package.
+#   This Python module is part of the PyRate software package.
 #
 #   Copyright 2017 Geoscience Australia
 #
@@ -64,6 +65,8 @@ SLC_DIR = 'slcFileDir'
 #: STR; Name of the file list containing the pool of available SLC headers
 SLC_FILE_LIST = 'slcfilelist'
 
+
+INTERFEROGRAM_FILES = 'interferogram_files'
 
 # STR; The projection of the input interferograms.
 # TODO: only used in tests; deprecate?

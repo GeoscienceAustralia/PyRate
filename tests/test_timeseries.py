@@ -133,7 +133,6 @@ class LegacyTimeSeriesEquality(unittest.TestCase):
         pyrate.core.orbital.remove_orbital_error(ifgs, params)
         ifgs = common.prepare_ifgs_without_phase(dest_paths, params)
         for ifg in ifgs:
-            print(ifg.nodata_value)
             ifg.close()
         _, ifgs = process._ref_phase_estimation(dest_paths, params, refx, refy)
         ifgs[0].open()

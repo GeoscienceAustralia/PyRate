@@ -105,10 +105,9 @@ def _geotiff_multiprocessing(unw_path, params):
             header = roipac.roipac_header(unw_path, params)
         else:
             raise PreprocessError('Processor must be ROI_PAC (0) or GAMMA (1)')
-        shared.write_fullres_geotiff(header, unw_path, dest,
-                                     nodata=params[cf.NO_DATA_VALUE])
-        return dest
+        shared.write_fullres_geotiff(header, unw_path, dest, nodata=params[cf.NO_DATA_VALUE])
+        return dest, True
     else:
-        log.warning("Full-res geotiff already exists!")
-        return None
+        log.warning("Full-res geotiff already exists! Returning existing geotiff!")
+        return dest, False
 
