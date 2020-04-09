@@ -294,9 +294,8 @@ def temporal_low_pass_filter(tsincr, epochlist, params):
     else:
         func = mean_filter
 
-    _tlpfilter(cols, cutoff, nanmat, rows, span, threshold, tsfilt_incr,
-               tsincr, func)
-    log.debug('Finished applying temporal low pass filter')
+    _tlpfilter(cols, cutoff, nanmat, rows, span, threshold, tsfilt_incr, tsincr, func)
+    log.debug("Finished applying temporal low pass filter")
     return tsfilt_incr
 
 # Throwaway function to define Gaussian filter weights
@@ -315,8 +314,7 @@ def _triangle(m, yr, cutoff):
 mean_filter = lambda m, yr, cutoff: np.ones(m)
 
 
-def _tlpfilter(cols, cutoff, nanmat, rows, span, threshold, tsfilt_incr,
-               tsincr, func):
+def _tlpfilter(cols, cutoff, nanmat, rows, span, threshold, tsfilt_incr, tsincr, func):
     """
     Wrapper function for temporal low pass filter
     """
