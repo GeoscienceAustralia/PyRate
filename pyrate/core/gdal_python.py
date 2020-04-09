@@ -17,8 +17,7 @@
 This Python module contains bindings for the GDAL library
 """
 # pylint: disable=too-many-arguments,R0914
-import logging
-
+import re
 from osgeo import gdal, gdal_array, gdalconst, gdalnumeric
 from PIL import Image, ImageDraw
 import numpy as np
@@ -31,33 +30,50 @@ gdal.SetCacheMax(2**15)
 GDAL_WARP_MEMORY_LIMIT = 2**10
 LOW_FLOAT32 = np.finfo(np.float32).min*1e-10
 
+def coherence_masking(input_gdal_dataset, input_dataset_file_name, coherence_file_paths, coherence_thresh):
+    """Perform coherence masking on raster in-place.
 
-def coherence_masking(src_ds, coherence_ds, coherence_thresh):
-    """
-    Perform coherence masking on raster in-place. 
-  
     Based on gdal_calc formula provided by Nahidul:
-    gdal_calc.py -A 20151127-20151209_VV_8rlks_flat_eqa.cc.tif 
-     -B 20151127-20151209_VV_8rlks_eqa.unw.tif 
-     --outfile=test_v1.tif --calc="B*(A>=0.8)-999*(A<0.8)" 
+    gdal_calc.py -A 20151127-20151209_VV_8rlks_flat_eqa.cc.tif
+     -B 20151127-20151209_VV_8rlks_eqa.unw.tif
+     --outfile=test_v1.tif --calc="B*(A>=0.8)-999*(A<0.8)"
      --NoDataValue=-999
 
     Args:
-        ds: The interferogram to mask as GDAL dataset.
-        coherence_ds: The coherence GDAL dataset.
-        coherence_thresh: The coherence threshold.
+      ds: The interferogram to mask as GDAL dataset.
+      coherence_ds: The coherence GDAL dataset.
+      coherence_thresh: The coherence threshold.
+      src_ds:
+
+    Returns:
+
     """
-    coherence_band = coherence_ds.GetRasterBand(1)
-    src_band = src_ds.GetRasterBand(1)
-    # ndv = src_band.GetNoDataValue()
-    ndv = np.nan
-    coherence = coherence_band.ReadAsArray()
-    src = src_band.ReadAsArray()
-    var = {'coh': coherence, 'src': src, 't': coherence_thresh, 'ndv': ndv}
-    formula = 'where(coh>=t, src, ndv)'
-    res = ne.evaluate(formula, local_dict=var)
-    src_band.WriteArray(res)
-    
+
+    src_epoches = re.findall("(\d{8})", str(input_dataset_file_name))
+    if not len(src_epoches) > 0:
+        src_epoches = re.findall("(\d{6})", str(input_dataset_file_name))
+
+    for coherence_file_path in coherence_file_paths:
+
+        coherence_epoches = re.findall("(\d{8})", str(coherence_file_path.converted_path))
+        if not len(coherence_epoches) > 0:
+            coherence_epoches = re.findall("(\d{6})", str(coherence_file_path.converted_path))
+
+        if all(src_epoche in coherence_epoches for src_epoche in src_epoches):
+
+            coherence_ds = gdal.Open(coherence_file_path.converted_path, gdalconst.GA_ReadOnly)
+            coherence_band = coherence_ds.GetRasterBand(1)
+            src_band = input_gdal_dataset.GetRasterBand(1)
+            # ndv = src_band.GetNoDataValue()
+            ndv = np.nan
+            coherence = coherence_band.ReadAsArray()
+            src = src_band.ReadAsArray()
+            var = {"coh": coherence, "src": src, "t": coherence_thresh, "ndv": ndv}
+            formula = "where(coh>=t, src, ndv)"
+            res = ne.evaluate(formula, local_dict=var)
+            src_band.WriteArray(res)
+
+
 def world_to_pixel(geo_transform, x, y):
     """
     Uses a gdal geomatrix (gdal.GetGeoTransform()) to calculate
