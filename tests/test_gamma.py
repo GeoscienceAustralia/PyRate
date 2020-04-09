@@ -40,11 +40,12 @@ from pyrate.core.config import (
     SLC_DIR)
 from pyrate import prepifg, conv2tif
 from pyrate.core.shared import write_fullres_geotiff, GeotiffException
+from pyrate.constants import PYRATEPATH
 from tests import common
 from tests.common import GAMMA_TEST_DIR, SML_TEST_GAMMA
 from tests.common import TEST_CONF_GAMMA, TEMPDIR
 from tests.common import small_data_setup
-from tests.constants import PYRATEPATH
+
 gdal.UseExceptions()
 
 LIGHTSPEED = 3e8  # approx

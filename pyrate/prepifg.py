@@ -18,14 +18,13 @@ This Python script applies optional multilooking and cropping to input
 interferogram geotiff files.
 """
 # -*- coding: utf-8 -*-
-import logging
 import os
 from joblib import Parallel, delayed
 import numpy as np
 from pyrate.core import shared, mpiops, config as cf, prepifg_helper, gamma, roipac
 from pyrate.core.prepifg_helper import PreprocessError
+from pyrate.core.logger import pyratelogger as log
 
-log = logging.getLogger(__name__)
 
 GAMMA = 1
 ROIPAC = 0
@@ -51,13 +50,6 @@ def main(params):
 
     if params[cf.DEM_FILE] is not None: # optional DEM conversion
         base_ifg_paths.append(params[cf.DEM_FILE])
-
-    processor = params[cf.PROCESSOR]  # roipac or gamma
-    if processor == GAMMA: # Incidence/elevation only supported for GAMMA
-        if params[cf.APS_INCIDENCE_MAP]:
-            base_ifg_paths.append(params[cf.APS_INCIDENCE_MAP])
-        if params[cf.APS_ELEVATION_MAP]:
-            base_ifg_paths.append(params[cf.APS_ELEVATION_MAP])
 
     shared.mkdir_p(params[cf.OUT_DIR]) # create output dir
 
@@ -107,8 +99,8 @@ def _prepifg_multiprocessing(path, xlooks, ylooks, exts, thresh, crop, params):
         header = roipac.roipac_header(path, params)
     else:
         raise PreprocessError('Processor must be ROI_PAC (0) or GAMMA (1)')
+
     # If we're performing coherence masking, find the coherence file for this IFG.
-    # TODO: Refactor _is_interferogram to be unprotected (remove '_')
     if params[cf.COH_MASK] and shared._is_interferogram(header):
         coherence_path = cf.coherence_paths_for(path, params, tif=True)[0]
         coherence_thresh = params[cf.COH_THRESH]

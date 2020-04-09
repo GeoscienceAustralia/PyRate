@@ -30,12 +30,13 @@ from scipy.optimize import fmin
 from pyrate.core import shared, ifgconstants as ifc, config as cf
 from pyrate.core.shared import PrereadIfg
 from pyrate.core.algorithm import master_slave_ids
+from pyrate.core.logger import pyratelogger as log
 
 # pylint: disable=too-many-arguments
 # distance division factor of 1000 converts to km and is needed to match legacy output
 DISTFACT = 1000
 
-log = logging.getLogger(__name__)
+
 
 
 def _pendiffexp(alphamod, cvdav):

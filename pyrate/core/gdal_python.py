@@ -25,12 +25,12 @@ import numpy as np
 import numexpr as ne
 
 from pyrate.core import shared, ifgconstants as ifc, prepifg_helper
-
-log = logging.getLogger(__name__)
+from pyrate.core.logger import pyratelogger as log
 
 gdal.SetCacheMax(2**15)
 GDAL_WARP_MEMORY_LIMIT = 2**10
 LOW_FLOAT32 = np.finfo(np.float32).min*1e-10
+
 
 def coherence_masking(src_ds, coherence_ds, coherence_thresh):
     """
@@ -295,15 +295,13 @@ def crop_resample_average(
     :return: out_ds: destination gdal dataset object
     :rtype: gdal.Dataset
     """
-    dst_ds, _, _, _ = _crop_resample_setup(
-        extents, input_tif, new_res, output_file,
-        out_bands=2, dst_driver_type='MEM')
+    dst_ds, _, _, _ = _crop_resample_setup(extents, input_tif, new_res, output_file,
+                                           out_bands=2, dst_driver_type='MEM')
 
     # make a temporary copy of the dst_ds for PyRate style prepifg
-    tmp_ds = gdal.GetDriverByName('MEM').CreateCopy('', dst_ds) \
-        if (match_pyrate and new_res[0]) else None
+    tmp_ds = gdal.GetDriverByName('MEM').CreateCopy('', dst_ds) if (match_pyrate and new_res[0]) else None
 
-    src_ds, src_ds_mem = _setup_source(input_tif)   
+    src_ds, src_ds_mem = _setup_source(input_tif)
 
     if coherence_path and coherence_thresh:
         coherence_raster = prepifg_helper.dem_or_ifg(coherence_path)

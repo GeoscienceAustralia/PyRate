@@ -30,8 +30,7 @@ from pyrate.core.algorithm import master_slave_ids, get_all_epochs
 from pyrate.core import shared, ifgconstants as ifc, config as cf, prepifg_helper, mst
 from pyrate.core.shared import nanmedian, Ifg
 
-log = logging.getLogger(__name__)
-
+from pyrate.core.logger import pyratelogger as log
 # Orbital correction tasks
 #
 # TODO: options for multilooking

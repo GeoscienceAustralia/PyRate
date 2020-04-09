@@ -221,7 +221,7 @@ class ParallelPyRateTests(unittest.TestCase):
         cls.mst_p = common.reconstruct_mst(ifgs[0].shape, tiles,
                                            params[cf.TMPDIR])
         cls.rate_p, cls.error_p, cls.samples_p = [
-            common.reconstruct_stackrate(
+            common.reconstruct_stack_rate(
                 ifgs[0].shape, tiles, params[cf.TMPDIR], t)
             for t in rate_types
             ]
@@ -241,7 +241,7 @@ class ParallelPyRateTests(unittest.TestCase):
         cls.mst = common.reconstruct_mst(ifgs[0].shape, tiles,
                                          params[cf.TMPDIR])
         cls.rate, cls.error, cls.samples = \
-            [common.reconstruct_stackrate(ifgs[0].shape, tiles, params[cf.TMPDIR], t) for t in rate_types]
+            [common.reconstruct_stack_rate( ifgs[0].shape, tiles, params[cf.TMPDIR], t) for t in rate_types]
 
     @classmethod
     def tearDownClass(cls):
