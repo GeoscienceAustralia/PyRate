@@ -1,7 +1,6 @@
-#!/usr/bin/env python
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2017 Geoscience Australia
+#   Copyright 2020 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -17,7 +16,6 @@
 from setuptools import setup
 from setuptools.command.test import test as TestCommand
 from subprocess import check_output
-import sys
 import platform
 import setuptools
 __version__ = "0.4.0"
@@ -91,8 +89,7 @@ setup(
     tests_require=test_requirements,
     license="Apache Software License 2.0",
     zip_safe=False,
-    keywords='PyRate, Python, InSAR, Geodesy, Remote Sensing, '
-             'Image Processing',
+    keywords='PyRate, Python, InSAR, Geodesy, Remote Sensing, Image Processing',
     classifiers=[
         'Development Status :: 4 - Beta',
         "Operating System :: POSIX",
