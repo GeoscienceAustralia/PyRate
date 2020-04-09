@@ -54,8 +54,8 @@ class ConvertToGeotiffTests(unittest.TestCase):
         of path to the gtif.
         """
         conv2tif.main(self.gamma_params)
-        gtifs = conv2tif.main(self.gamma_params)
-        self.assertTrue(all([gt is None for gt in gtifs]))
+        gtifs_and_conversion_bool = conv2tif.main(self.gamma_params)
+        self.assertTrue(all([not b for gt, b in gtifs_and_conversion_bool]))
         
     def teardown_method(self, method):
         common.remove_tifs(self.gamma_params[cf.OBS_DIR])

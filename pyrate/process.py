@@ -231,6 +231,28 @@ def _ref_phase_estimation(ifg_paths, params, refpx, refpy):
         ifgs = [Ifg(ifg_path) for ifg_path in ifg_paths]
     return ref_phs, ifgs
 
+
+def main(params):
+    """
+    Top level function to perform PyRate workflow on given interferograms
+
+    :return: refpt: tuple of reference pixel x and y position
+    :rtype: tuple
+    :return: maxvar: array of maximum variance values of interferograms
+    :rtype: ndarray
+    :return: vcmt: Variance-covariance matrix array
+    :rtype: ndarray
+    """
+
+    ifg_paths = []
+    for ifg_path in params["interferogram_files"]:
+        ifg_paths.append(ifg_path.sampled_path)
+
+    rows, cols = params["rows"], params["cols"]
+
+    return process_ifgs(ifg_paths, params, rows, cols)
+
+
 def process_ifgs(ifg_paths, params, rows, cols):
     """
     Top level function to perform PyRate workflow on given interferograms

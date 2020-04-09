@@ -24,39 +24,30 @@ from pyrate.constants import PYRATEPATH
 
 
 class SystemTest(unittest.TestCase):
-    def setUp(self):
-        self.rows = 1
-        self.cols = 1
 
-    # def test_roipac_workflow(self):
-    #
-    #     input_config_path = PYRATEPATH.joinpath("tests", "test_data", "system", "roipac", "input_parameters.conf")
-    #
-    #     conv2tif_handler(input_config_path)
-    #     prepifg_handler(input_config_path)
-    #     process_handler(input_config_path)
-    #     merge_handler(input_config_path)
-    #
-    #     self.assertTrue(True)
-
-    def test_gamma_workflow(self):
-
-        input_config_path = PYRATEPATH.joinpath("tests", "test_data", "system", "gamma", "input_parameters.conf")
-
+    @staticmethod
+    def test_roipac_workflow():
+        input_config_path = PYRATEPATH.joinpath("tests", "test_data", "system", "roipac", "input_parameters.conf")
         conv2tif_handler(input_config_path)
         prepifg_handler(input_config_path)
         process_handler(input_config_path)
         merge_handler(input_config_path)
-        self.assertTrue(True)
 
-    # def test_geotiff_workflow(self):
-    #
-    #     input_config_path = PYRATEPATH.joinpath("tests", "test_data", "system", "geotiff", "input_parameters.conf")
-    #
-    #     prepifg_handler(input_config_path)
-    #     process_handler(input_config_path)
-    #     merge_handler(input_config_path)
-    #     self.assertTrue(True)
+    @staticmethod
+    def test_gamma_workflow():
+        input_config_path = PYRATEPATH.joinpath("tests", "test_data", "system", "gamma", "input_parameters.conf")
+        conv2tif_handler(input_config_path)
+        prepifg_handler(input_config_path)
+        process_handler(input_config_path)
+        merge_handler(input_config_path)
+
+    @staticmethod
+    def test_geotiff_workflow():
+        input_config_path = PYRATEPATH.joinpath("tests", "test_data", "system", "geotiff", "input_parameters.conf")
+        prepifg_handler(input_config_path)
+        process_handler(input_config_path)
+        merge_handler(input_config_path)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -17,7 +17,7 @@
 This Python module contains functions to control PyRate log outputs
 """
 import logging
-from core.mpiops import size, rank
+from pyrate.core.mpiops import size, rank
 
 
 pyratelogger = logging.getLogger(__name__)

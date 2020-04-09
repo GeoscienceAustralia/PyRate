@@ -77,8 +77,6 @@ if __name__ == '__main__':
         color_file = gen_color_file(input_file)
     with open(color_file, 'r') as f:
         print('\ncolor file contents')
-        print('='*50)
         for l in f.readlines():
             print(l)
-    print('='*50)
     main(input_file, color_file, output_file)
