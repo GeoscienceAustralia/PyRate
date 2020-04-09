@@ -31,9 +31,9 @@ from scipy.interpolate import griddata
 from pyrate.core import shared, ifgconstants as ifc, mpiops, config as cf
 from pyrate.core.covariance import cvd_from_phase, RDist
 from pyrate.core.algorithm import get_epochs
-from pyrate.merge import _assemble_tiles
 from pyrate.core.shared import Ifg
 from pyrate.core.timeseries import time_series
+from pyrate.merge import _assemble_tiles
 
 log = logging.getLogger(__name__)
 

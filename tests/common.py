@@ -34,7 +34,7 @@ from pyrate.core import algorithm, ifgconstants as ifc, config as cf, timeseries
 from pyrate.core.shared import (Ifg, nan_and_mm_convert, get_geotiff_header_info,
                                 write_output_geotiff)
 
-from tests.constants import PYRATEPATH
+from pyrate.constants import PYRATEPATH
 
 TEMPDIR = tempfile.gettempdir()
 TESTDIR = join(PYRATEPATH, 'tests')
@@ -227,7 +227,7 @@ class MockIfg(object):
         pass
 
 
-def reconstruct_stackrate(shape, tiles, output_dir, out_type):
+def reconstruct_stack_rate(shape, tiles, output_dir, out_type):
     rate = np.zeros(shape=shape, dtype=np.float32)
     for t in tiles:
         rate_file = os.path.join(output_dir, out_type +

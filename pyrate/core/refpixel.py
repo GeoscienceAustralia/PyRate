@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2017 Geoscience Australia
+#   Copyright 2020 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -19,17 +19,16 @@ of the interferometric reference pixel
 """
 import os
 from os.path import join
-import logging
 from itertools import product
+
 import numpy as np
 from numpy import isnan, std, mean, sum as nsum
 from joblib import Parallel, delayed
 
-from pyrate.core.shared import joblib_log_level
 import pyrate.core.config as cf
 from pyrate.core.shared import Ifg
-
-log = logging.getLogger(__name__)
+from pyrate.core.shared import joblib_log_level
+from pyrate.core.logger import pyratelogger as log
 
 
 # TODO: move error checking to config step (for fail fast)

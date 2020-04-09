@@ -19,9 +19,9 @@ files. It also includes numerous general constants relating to options
 in configuration files. Examples of PyRate configuration files are
 provided in the configs/ directory
 """
-import os
 import configparser
-import pathlib
+from pathlib import Path
+from pyrate.core import config as cf
 
 class Configuration(object):
     def __init__(self, config_file):
@@ -34,27 +34,28 @@ class Configuration(object):
 
         config = configparser.RawConfigParser()
         config.read_string(file_content)
-        self.root = pathlib.Path(config["root"]["obsdir"])
+        conf_root = config["root"]
+        self.obsdir = Path(config["root"]["obsdir"])
 
-        self.dem_header_path = pathlib.Path(config["root"]["demHeaderFile"])
-        self.dem_path = pathlib.Path(config["root"]["demfile"])
+        self.dem_header_path = Path(config["root"]["demHeaderFile"])
+        self.dem_path = Path(config["root"]["demfile"])
 
         self.header_paths = []
-        with open(self.root/config["root"]["slcfilelist"], 'r') as f:
+
+        with Path(conf_root["slcfilelist"]).open() as f:
             for line in f.readlines():
-                self.header_paths.append(self.root/line.strip())
+                print(self.obsdir / line.strip())
+                self.header_paths.append(self.obsdir / line.strip())
 
-        self.interferogram_paths = []
+        self.ifgfilelist = Path(config["root"]["ifgfilelist"]).as_posix()
 
-        for path_str in pathlib.Path(config["root"]["ifgfilelist"]).read_text().split('\n'):
-            if len(path_str) > 1:
-                path = pathlib.Path(path_str)
-                self.interferogram_paths.append(self.root/path)
-
+        # for path_str in Path(config["root"]["ifgfilelist"]).read_text().split('\n'):
+        #     if len(path_str) > 1:
+        #         self.ifgfilelist.append(self.obsdir.joinpath(path_str).as_posix())
 
         self.processor = config["root"]["processor"]
 
-        self.destination_path = pathlib.Path(config["root"]["outdir"])
+        self.destination_path = Path(config["root"]["outdir"])
         self.destination_path.mkdir(parents=True, exist_ok=True)
 
         self.output_tiff_list = self.destination_path.joinpath('tiff_list.txt')
@@ -72,6 +73,9 @@ class Configuration(object):
 
         self.thresh = config["root"]["noDataAveragingThreshold"]
         self.coherence_thresh = config["root"]["cohthresh"]
+        self.cohmask = conf_root[cf.COH_MASK]
+        self.cohfiledir = conf_root[cf.COH_FILE_DIR]
+        self.cohfilelist = conf_root[cf.COH_FILE_LIST]
 
     def __str__ (self):
         pprint_string = ""

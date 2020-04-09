@@ -35,8 +35,7 @@ from osgeo import gdal
 from pyrate.core.gdal_python import crop_resample_average
 from pyrate.core import ifgconstants as ifc, config as cf
 from pyrate.core.shared import Ifg, DEM, output_tiff_filename
-import logging
-log = logging.getLogger(__name__)
+from pyrate.core.logger import pyratelogger as log
 
 CustomExts = namedtuple('CustExtents', ['xfirst', 'yfirst', 'xlast', 'ylast'])
 
@@ -188,8 +187,29 @@ def prepare_ifg(raster_path, xlooks, ylooks, exts, thresh, crop_opt, write_to_di
         # copy file with mlooked path
         return _dummy_warp(renamed_path)
 
-    return _warp(raster, xlooks, ylooks, exts, resolution, thresh, crop_opt, write_to_disk, out_path, header,
-                 coherence_path, coherence_thresh)
+    if xlooks != ylooks:
+        raise ValueError('X and Y looks mismatch')
+
+    # cut, average, resample the final output layers
+    op = output_tiff_filename(raster.data_path, out_path)
+    looks_path = cf.mlooked_path(op, ylooks, crop_opt)
+
+    #     # Add missing/updated metadata to resampled ifg/DEM
+    #     new_lyr = type(ifg)(looks_path)
+    #     new_lyr.open(readonly=True)
+    #     # for non-DEMs, phase bands need extra metadata & conversions
+    #     if hasattr(new_lyr, "phase_band"):
+    #         # TODO: LOS conversion to vertical/horizontal (projection)
+    #         # TODO: push out to workflow
+    #         #if params.has_key(REPROJECTION_FLAG):
+    #         #    reproject()
+    driver_type = 'GTiff' if write_to_disk else 'MEM'
+    resampled_data, out_ds = crop_resample_average(
+        input_tif=raster.data_path, extents=exts, new_res=resolution, output_file=looks_path, thresh=thresh,
+        out_driver_type=driver_type, hdr=header, coherence_path=coherence_path, coherence_thresh=coherence_thresh
+    )
+    if not write_to_disk:
+        return resampled_data, out_ds
 
 
 # TODO: crop options 0 = no cropping? get rid of same size

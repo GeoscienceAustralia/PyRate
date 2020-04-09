@@ -29,13 +29,12 @@ import os
 from os.path import splitext, split
 import re
 import itertools
-import logging
+from pathlib import Path
 from osgeo import gdal
 
 from pyrate.core.ifgconstants import YEARS_PER_DAY
 from pyrate.constants import CONV2TIF, PREPIFG, PROCESS, MERGE
-
-_logger = logging.getLogger(__name__)
+from pyrate.core.logger import pyratelogger as _logger
 
 # general constants
 NO_MULTILOOKING = 1
@@ -274,11 +273,19 @@ PARAM_CONVERSION = {
     NO_DATA_AVERAGING_THRESHOLD: (float, 0.0),
     }
 
-PATHS = [OBS_DIR, IFG_FILE_LIST, DEM_FILE,
-         DEM_HEADER_FILE, OUT_DIR,
-         SLC_DIR, SLC_FILE_LIST, COH_FILE_DIR, COH_FILE_LIST,
-         APS_INCIDENCE_MAP,
-         APS_ELEVATION_MAP]
+PATHS = [
+    OBS_DIR,
+    IFG_FILE_LIST,
+    DEM_FILE,
+    DEM_HEADER_FILE,
+    OUT_DIR,
+    SLC_DIR,
+    SLC_FILE_LIST,
+    COH_FILE_DIR,
+    COH_FILE_LIST,
+    APS_INCIDENCE_MAP,
+    APS_ELEVATION_MAP,
+]
 
 DEFAULT_TO_OBS_DIR = [SLC_DIR, COH_FILE_DIR]
 
@@ -391,8 +398,8 @@ def _parse_pars(pars, validate: bool=True, step: str=CONV2TIF) -> Dict:
                 try:
                     pars[k] = conversion_func(pars[k])
                 except ValueError as e:
-                    _logger.error(f"Unable to convert '{k}': {pars[k]} to "
-                                  f"expected type {conversion_func.__name__}.")
+                    _logger.error(
+                        f"Unable to convert '{k}': {pars[k]} to " f"expected type {conversion_func.__name__}.")
                     raise e
 
     # Fallback to default for missing paths.
@@ -403,6 +410,7 @@ def _parse_pars(pars, validate: bool=True, step: str=CONV2TIF) -> Dict:
     if validate:
         validate_parameters(pars, step)
     return pars
+
 
 # CONFIG UTILS - TO BE MOVED?
 def parse_namelist(nml):
@@ -923,7 +931,7 @@ def validate_parameters(pars: Dict, step: str=CONV2TIF):
                     tif_file_path = os.path.join(pars["obsdir"], line.strip())
                 else:
                     base, ext = line.strip().split(".")
-                    tif_file_path = os.path.join(pars["obsdir"], base+"_"+ext+".tif")
+                    tif_file_path = os.path.join(pars["obsdir"], base + "_" + ext + ".tif")
 
                 if not os.path.isfile(tif_file_path):
                     raise Exception("GeoTiff: " + tif_file_path + " not found.")
@@ -937,7 +945,7 @@ def validate_parameters(pars: Dict, step: str=CONV2TIF):
                 for line in gdal.Info(gtif).split('\n'):
                     if "Size is" in line:
                         x_size, y_size = line.split("Size is")[1].split(",")
-                        x_size, y_size = int(x_size.strip()),int(y_size.strip())
+                        x_size, y_size = int(x_size.strip()), int(y_size.strip())
 
                     for line_tag in ["Upper Left", "Lower Left", "Upper Right", "Lower Right"]:
                         if line_tag in line:
@@ -953,16 +961,28 @@ def validate_parameters(pars: Dict, step: str=CONV2TIF):
 
                 # validate crop parameters
                 if pars["ifgxfirst"] < min(latitudes) or pars["ifgxfirst"] > max(latitudes):
-                    raise Exception("ifgxfirst: "+str(pars["ifgxfirst"]) + " not with in range {"+str(min(latitudes)) + "," + str(max(latitudes))+"}")
+                    raise Exception(
+                        "ifgxfirst: " + str(pars["ifgxfirst"]) + " not with in range {" + str(
+                            min(latitudes)) + "," + str(max(latitudes)) + "}"
+                    )
 
                 if pars["ifgxlast"] < min(latitudes) or pars["ifgxlast"] > max(latitudes):
-                    raise Exception("ifgxlast: "+str(pars["ifgxlast"]) + " not with in range {"+str(min(latitudes)) + "," + str(max(latitudes))+"}")
+                    raise Exception(
+                        "ifgxlast: " + str(pars["ifgxlast"]) + " not with in range {" + str(min(latitudes)) + "," + str(
+                            max(latitudes)) + "}"
+                    )
 
                 if pars["ifgyfirst"] < min(longitudes) or pars["ifgyfirst"] > max(longitudes):
-                    raise Exception("ifgyfirst: "+str(pars["ifgyfirst"]) + " not with in range {"+str(min(longitudes)) + "," + str(max(longitudes))+"}")
+                    raise Exception(
+                        "ifgyfirst: " + str(pars["ifgyfirst"]) + " not with in range {" + str(
+                            min(longitudes)) + "," + str(max(longitudes)) + "}"
+                    )
 
                 if pars["ifgylast"] < min(longitudes) or pars["ifgylast"] > max(longitudes):
-                    raise Exception("ifgylast: "+str(pars["ifgylast"]) + " not with in range {"+str(min(longitudes)) + "," + str(max(longitudes))+"}")
+                    raise Exception(
+                        "ifgylast: " + str(pars["ifgylast"]) + " not with in range {" + str(
+                            min(longitudes)) + "," + str(max(longitudes)) + "}"
+                    )
 
                 del gtif  # manually close raster
 
@@ -972,25 +992,31 @@ def validate_parameters(pars: Dict, step: str=CONV2TIF):
             validate_coherence_files(ifl, pars)
 
     elif step == PROCESS:
+
+        tmp_ifg_list = os.path.join(pars[OUT_DIR], "tmpIfgList")
+        with open(tmp_ifg_list, "w") as fileHandler:
+            for p in Path(pars[OUT_DIR]).rglob("*rlks_*cr.tif"):
+                if "dem" not in str(p):
+                    fileHandler.write(p.name + "\n")
         # Check that cropped/subsampled tifs exist.
-        validate_prepifg_tifs_exist(ifl, pars[OBS_DIR], pars)
+        validate_prepifg_tifs_exist(tmp_ifg_list, pars[OUT_DIR], pars)
 
         # Check the minimum number of epochs.
-        n_epochs, max_span = _get_temporal_info(ifl, pars[OBS_DIR])
+        n_epochs, max_span = _get_temporal_info(tmp_ifg_list, pars[OBS_DIR])
         validate_minimum_epochs(n_epochs, MINIMUM_NUMBER_EPOCHS)
-        
+
         # Get spatial information from tifs.
 
-        extents, n_cols, n_rows, transform = _get_prepifg_info(ifl, pars[OBS_DIR], pars)
+        extents, n_cols, n_rows, transform = _get_prepifg_info(tmp_ifg_list, pars[OBS_DIR], pars)
 
         # test if refx/y already set to default value of -1
         if pars[REFX] != -1 and pars[REFY] != -1:
 
             # Convert refx/refy from lat/long to pixel and validate...
-            if pars[REFX] <= 180 and pars[REFX] >= -180 and pars[REFY] >= -90 and pars[REFY] <= 90:
+            if (pars[REFX] <= 180) and (pars[REFX] >= -180) and (pars[REFY] >= -90) and (pars[REFY] <= 90):
 
                 pars[REFX], pars[REFY] = convert_geographic_coordinate_to_pixel_value(pars[REFX], pars[REFY], transform)
-                _logger.debug("converted pars[REFX], pars[REFY] to: "+str(pars[REFX])+" "+str(pars[REFY]))
+                _logger.debug("converted pars[REFX], pars[REFY] to: " + str(pars[REFX]) + " " + str(pars[REFY]))
 
                 if pars[REFX] < 0 or pars[REFX] > n_cols:
                     _logger.info("converted pars[REFX] out of range")
@@ -1007,18 +1033,17 @@ def validate_parameters(pars: Dict, step: str=CONV2TIF):
                 # TODO fix tests when below validation is included
                 # validate_reference_pixel_search_windows(n_cols, n_rows, pars)
 
-        validate_multilook_parameters(n_cols, n_rows, 
-                                      ORBITAL_FIT_LOOKS_X, ORBITAL_FIT_LOOKS_Y, 
-                                      pars)
+        validate_multilook_parameters(n_cols, n_rows, ORBITAL_FIT_LOOKS_X, ORBITAL_FIT_LOOKS_Y, pars)
         validate_slpf_cutoff(extents, pars)
         validate_epoch_thresholds(n_epochs, pars)
         validate_epoch_cutoff(max_span, TLPF_CUTOFF, pars)
-        validate_obs_thresholds(ifl, pars)
+        validate_obs_thresholds(tmp_ifg_list, pars)
 
     elif step == MERGE:
         validate_prepifg_tifs_exist(ifl, pars[OBS_DIR], pars)
 
-def _raise_errors(errors: List[str]):
+
+def _raise_errors(errors: List[str]) -> bool:
     """
     Convenience function for raising an exception with errors.
     """
@@ -1505,8 +1530,7 @@ def validate_coherence_files(ifg_file_list: str, pars: Dict) -> Optional[bool]:
     for ifg in parse_namelist(ifg_file_list):
         paths = coherence_paths_for(ifg, pars)
         if not paths:
-            errors.append(f"'{COH_FILE_DIR}': no coherence files found for "
-                          f"intergerogram '{ifg}'.")
+            errors.append(f"'{COH_FILE_DIR}': no coherence files found for intergerogram '{ifg}'.")
         elif len(paths) > 2:
             errors.append(f"'{COH_FILE_DIR}': found more than one coherence "
                           f"file for '{ifg}'. There must be only one "
@@ -1529,8 +1553,7 @@ def _get_temporal_info(ifg_file_list: str, obs_dir: str) -> Tuple:
     from pyrate.core.algorithm import get_epochs
     from pyrate.core.shared import Ifg, output_tiff_filename
 
-    ifg_paths = \
-        [os.path.join(obs_dir, ifg) for ifg in parse_namelist(ifg_file_list)]
+    ifg_paths = [os.path.join(obs_dir, ifg) for ifg in parse_namelist(ifg_file_list)]
     rasters = [Ifg(output_tiff_filename(f, obs_dir)) for f in ifg_paths]
 
     for r in rasters:
@@ -1560,7 +1583,6 @@ def _get_prepifg_info(ifg_file_list: str, obs_dir: str, pars: Dict) -> Tuple:
     Returns:
     """
     from pyrate.core.shared import Ifg
-
     base_paths = [os.path.join(obs_dir, ifg) for ifg in parse_namelist(ifg_file_list)]
     ifg_paths = get_dest_paths(base_paths, pars[IFG_CROP_OPT], pars, pars[IFG_LKSX])
 
@@ -1581,6 +1603,7 @@ def _get_prepifg_info(ifg_file_list: str, obs_dir: str, pars: Dict) -> Tuple:
     raster.close()
 
     return extents, n_cols, n_rows, transform
+
 
 def _get_fullres_info(ifg_file_list: str, obs_dir: str, crop_opts: Tuple) -> Tuple:
     """
@@ -1611,10 +1634,10 @@ def _get_fullres_info(ifg_file_list: str, obs_dir: str, crop_opts: Tuple) -> Tup
     post_crop_extents = _get_extents(rasters, crop_opts[0], user_exts=crop_opts[1])
     x_step = rasters[0].x_step
     y_step = rasters[0].y_step
-    # Get the pixel bounds. Ifg/Raster objects do have 'ncols'/'nrows' 
+    # Get the pixel bounds. Ifg/Raster objects do have 'ncols'/'nrows'
     # properties, but we'll calculate it off the extents we got above
     # because these take into account the chosen cropping option (until
-    # the stack of interferograms is cropped it's not known what the 
+    # the stack of interferograms is cropped it's not known what the
     # pixel dimensions will be).
     n_cols = abs(int(abs(post_crop_extents[0] - post_crop_extents[2]) / x_step))
     n_rows = abs(int(abs(post_crop_extents[1] - post_crop_extents[3]) / y_step))

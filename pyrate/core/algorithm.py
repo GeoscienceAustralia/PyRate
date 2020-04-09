@@ -188,8 +188,7 @@ def ifg_date_index_lookup(ifgs, date_pair):
         if date_pair == (ifgs[i].master, ifgs[i].slave):
             return i
 
-    raise ValueError("Cannot find Ifg with "
-                     "master/slave of %s" % str(date_pair))
+    raise ValueError("Cannot find Ifg with master/slave of %s" % str(date_pair))
 
 
 def get_epochs(ifgs: Union[Iterable, Dict]) -> Tuple[EpochList, int]:

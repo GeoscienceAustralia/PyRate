@@ -20,11 +20,10 @@ all other PyRate modules
 """
 # pylint: disable=too-many-lines
 import errno
-import logging
 import math
 from math import floor
 import os
-from os.path import basename, dirname, join
+from os.path import basename, join
 import struct
 from datetime import date
 from itertools import product
@@ -32,19 +31,19 @@ import numpy as np
 from numpy import where, nan, isnan, sum as nsum, isclose
 import pyproj
 import pkg_resources
-
-from pyrate.core import ifgconstants as ifc, mpiops, config as cf
-
-VERBOSE = True
-log = logging.getLogger(__name__)
-
 try:
     from osgeo import osr, gdal
     from osgeo.gdalconst import GA_Update, GA_ReadOnly
 except ImportError:
     import gdal
 
+from pyrate.core import ifgconstants as ifc, mpiops, config as cf
+from pyrate.core.logger import pyratelogger as log
+
+
 gdal.UseExceptions()
+
+VERBOSE = True
 
 # Constants
 PHASE_BAND = 1
@@ -465,14 +464,6 @@ class Ifg(RasterBase):
         for k, v in self.meta_data.items():
             self.dataset.SetMetadataItem(k, v)
         self.dataset.FlushCache()
-
-# Is this functionality used?
-#    def save_numpy_phase(self, numpy_file):
-#        """
-#        Dump phase data to numpy array file
-#        """
-#        np.save(file=numpy_file, arr=self.phase_data)
-
 
 class IfgPart(object):
     """

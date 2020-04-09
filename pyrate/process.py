@@ -31,6 +31,7 @@ from pyrate.core import (shared, algorithm, orbital, ref_phs_est as rpe,
 from pyrate.core.aps import _wrap_spatio_temporal_filter
 from pyrate.core.config import ConfigException
 from pyrate.core.shared import Ifg, PrereadIfg, get_tiles
+from pyrate.core.logger import pyratelogger as log
 
 MASTER_PROCESS = 0
 log = logging.getLogger(__name__)

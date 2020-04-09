@@ -27,7 +27,7 @@ from pyrate.core import ifgconstants as ifc, config as cf
 from pyrate.core.shared import joblib_log_level, nanmedian, Ifg
 from pyrate.core import mpiops
 
-log = logging.getLogger(__name__)
+from pyrate.core.logger import pyratelogger as log
 
 MASTER_PROCESS = 0
 

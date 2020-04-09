@@ -36,12 +36,12 @@ class ConvertToGeotiffTests(unittest.TestCase):
         # Test tifs in obs dir
         conv2tif.main(self.gamma_params)
         tifs = glob.glob(os.path.join(self.gamma_params[cf.OBS_DIR], '*.tif'))
-        self.assertEqual(len(tifs), 19)
+        self.assertEqual(len(tifs), 18)
 
     def test_num_gamma_tifs_equals_num_unws(self):
         gtifs = conv2tif.main(self.gamma_params)
         # 17 unws + incidence + dem
-        self.assertEqual(len(gtifs), 19)
+        self.assertEqual(len(gtifs), 18)
         
     def test_num_roipac_tifs_equals_num_unws(self):
         gtifs = conv2tif.main(self.roipac_params)

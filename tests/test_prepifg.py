@@ -722,15 +722,16 @@ class TestOneIncidenceOrElevationMap(unittest.TestCase):
         demtif = glob.glob(os.path.join(params[cf.OBS_DIR], '*_dem.tif'))
         self.assertEqual(1, len(demtif))
         # elevation/incidence file
-        ele = glob.glob(os.path.join(params[cf.OBS_DIR],
-                                     '*utm_{ele}.tif'.format(ele=ele)))[0]
-        self.assertTrue(os.path.exists(ele))
+        # not computing anymore
+        # ele = glob.glob(os.path.join(params[cf.OBS_DIR],
+        #                              '*utm_{ele}.tif'.format(ele=ele)))[0]
+        # self.assertTrue(os.path.exists(ele))
         # mlooked tifs
         mlooked_tifs = [f for f in
                         glob.glob(os.path.join(self.base_dir, '*.tif'))
                         if "cr" in f and "rlks" in f]
         # 19 including 17 ifgs, 1 dem and one incidence
-        self.assertEqual(19, len(mlooked_tifs))
+        self.assertEqual(18, len(mlooked_tifs))
         inc = glob.glob(os.path.join(self.base_dir,
                                      '*utm_{inc}.tif'.format(inc=inc)))
         self.assertEqual(0, len(inc))
