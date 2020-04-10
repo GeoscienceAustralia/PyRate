@@ -55,8 +55,7 @@ def coherence_masking(input_gdal_dataset, source_epochs, coherence_file_paths, c
         coherence_epochs = get_source_epochs(coherence_file_path)
 
         if all(src_epoch in coherence_epochs for src_epoch in source_epochs):
-
-            coherence_ds = gdal.Open(coherence_file_path.converted_path, gdalconst.GA_ReadOnly)
+            coherence_ds = gdal.Open(coherence_file_path, gdalconst.GA_ReadOnly)
             coherence_band = coherence_ds.GetRasterBand(1)
             src_band = input_gdal_dataset.GetRasterBand(1)
             ndv = np.nan
