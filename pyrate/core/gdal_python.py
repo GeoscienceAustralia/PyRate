@@ -22,7 +22,7 @@ from osgeo import gdal, gdal_array, gdalconst, gdalnumeric
 from PIL import Image, ImageDraw
 import numpy as np
 import numexpr as ne
-
+from typing import Union, List, Tuple
 from pyrate.core import shared, ifgconstants as ifc, prepifg_helper
 from pyrate.core.logger import pyratelogger as log
 
@@ -30,7 +30,8 @@ gdal.SetCacheMax(2**15)
 GDAL_WARP_MEMORY_LIMIT = 2**10
 LOW_FLOAT32 = np.finfo(np.float32).min*1e-10
 
-def coherence_masking(input_gdal_dataset, input_dataset_file_name, coherence_file_paths, coherence_thresh):
+
+def coherence_masking(input_gdal_dataset, source_epochs, coherence_file_paths, coherence_thresh):
     """Perform coherence masking on raster in-place.
 
     Based on gdal_calc formula provided by Nahidul:
@@ -49,22 +50,15 @@ def coherence_masking(input_gdal_dataset, input_dataset_file_name, coherence_fil
 
     """
 
-    src_epoches = re.findall("(\d{8})", str(input_dataset_file_name))
-    if not len(src_epoches) > 0:
-        src_epoches = re.findall("(\d{6})", str(input_dataset_file_name))
-
     for coherence_file_path in coherence_file_paths:
 
-        coherence_epoches = re.findall("(\d{8})", str(coherence_file_path.converted_path))
-        if not len(coherence_epoches) > 0:
-            coherence_epoches = re.findall("(\d{6})", str(coherence_file_path.converted_path))
+        coherence_epochs = get_source_epochs(coherence_file_path)
 
-        if all(src_epoche in coherence_epoches for src_epoche in src_epoches):
+        if all(src_epoch in coherence_epochs for src_epoch in source_epochs):
 
             coherence_ds = gdal.Open(coherence_file_path.converted_path, gdalconst.GA_ReadOnly)
             coherence_band = coherence_ds.GetRasterBand(1)
             src_band = input_gdal_dataset.GetRasterBand(1)
-            # ndv = src_band.GetNoDataValue()
             ndv = np.nan
             coherence = coherence_band.ReadAsArray()
             src = src_band.ReadAsArray()
@@ -290,8 +284,15 @@ def _gdalwarp_width_and_height(max_x, max_y, min_x, min_y, geo_trans):
     return px_height, px_width  # this is the same as `gdalwarp`
 
 
+def get_source_epochs(tif):
+    src_epochs = re.findall("(\d{8})", str(tif))
+    if not len(src_epochs) > 0:
+        src_epochs = re.findall("(\d{6})", str(tif))
+    return src_epochs
+
+
 def crop_resample_average(
-        input_tif, extents, new_res, output_file, thresh,
+        input_tif, extents: Union[List, Tuple], new_res, output_file, thresh,
         out_driver_type='GTiff', 
         match_pyrate=False, hdr=None, coherence_path=None, coherence_thresh=None):
     """
@@ -318,12 +319,11 @@ def crop_resample_average(
     tmp_ds = gdal.GetDriverByName('MEM').CreateCopy('', dst_ds) if (match_pyrate and new_res[0]) else None
 
     src_ds, src_ds_mem = _setup_source(input_tif)
+    source_epochs = get_source_epochs(input_tif)
 
     if coherence_path and coherence_thresh:
-        coherence_raster = prepifg_helper.dem_or_ifg(coherence_path)
-        coherence_raster.open()
-        coherence_ds = coherence_raster.dataset
-        coherence_masking(src_ds_mem, coherence_ds, coherence_thresh)
+        coherence_masking(src_ds_mem, source_epochs, [coherence_path], coherence_thresh)
+
     elif coherence_path and not coherence_thresh:
         raise ValueError(f"Coherence file provided without a coherence "
                          f"threshold. Please ensure you provide 'cohthresh' "
@@ -438,9 +438,7 @@ def _setup_source(input_tif):
     data = src_ds.GetRasterBand(1).ReadAsArray()
     src_dtype = src_ds.GetRasterBand(1).DataType
     mem_driver = gdal.GetDriverByName('MEM')
-    src_ds_mem = mem_driver.Create('',
-                                   src_ds.RasterXSize, src_ds.RasterYSize,
-                                   2, src_dtype)
+    src_ds_mem = mem_driver.Create('', src_ds.RasterXSize, src_ds.RasterYSize, 2, src_dtype)
     src_ds_mem.GetRasterBand(1).WriteArray(data)
     src_ds_mem.GetRasterBand(1).SetNoDataValue(0)
     # if data==0, then 1, else 0
