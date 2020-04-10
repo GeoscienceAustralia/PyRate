@@ -222,11 +222,8 @@ def test_prepifg_mpi(mpisync, get_config, tempdir,
         params_s[cf.IFG_CROP_OPT] = get_crop
         conv2tif.main(params)
         if roipac_or_gamma == 1:
-            base_unw_paths = glob.glob(join(common.SML_TEST_GAMMA,
-                                            "*_utm.unw"))
             prepifg.main(params)
         else:
-            base_unw_paths = glob.glob(join(common.SML_TEST_OBS, "*.unw"))
             prepifg.main(params_s)
 
         mpi_tifs = glob.glob(join(outdir, "*.tif"))
