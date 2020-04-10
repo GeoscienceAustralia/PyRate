@@ -1,5 +1,6 @@
 import unittest
 import os
+import tempfile
 from osgeo import gdal
 import numpy as np
 import osr
@@ -34,8 +35,8 @@ class CoherenceMaskingTest(unittest.TestCase):
         sample_gdal_band.FlushCache()
 
         # create a coherence mask dataset
-        outDir = Path("/") # we won't be creating any output coherence mask files as there are already GeoTIFFs
-
+        tmpdir = tempfile.mkdtemp()
+        outDir = Path(tmpdir) # we won't be creating any output coherence mask files as there are already GeoTIFFs
         coherence_mask_filename = MultiplePaths(outDir, Path("coherence_mask_dataset_01122000.tif").as_posix())
         coherence_mask_dataset = driver.Create(coherence_mask_filename.converted_path, 5, 5, 1, gdal.GDT_Float32)
         srs = osr.SpatialReference()
