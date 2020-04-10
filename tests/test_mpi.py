@@ -35,7 +35,6 @@ from tests.test_covariance import legacy_maxvar
 from pyrate.core import mpiops, config as cf
 
 
-
 @pytest.fixture()
 def tempdir():
     """
@@ -242,3 +241,16 @@ def test_prepifg_mpi(mpisync, get_config, tempdir,
         shutil.rmtree(outdir)
         shutil.rmtree(params_s[cf.OUT_DIR])
         common.remove_tifs(params[cf.OBS_DIR])
+
+
+# TODO: mpi test for the rest of the pipeline
+def test_convert2tif_mpi():
+    pass
+
+
+def test_process_mpi():
+    pass
+
+
+def test_merge_mpi():
+    pass
