@@ -18,11 +18,12 @@ This Python module contains bindings for the GDAL library
 """
 # pylint: disable=too-many-arguments,R0914
 import re
-from osgeo import gdal, gdal_array, gdalconst, gdalnumeric
+from osgeo import gdal, gdalconst, gdalnumeric
 from PIL import Image, ImageDraw
 import numpy as np
 import numexpr as ne
 from typing import Union, List, Tuple
+from osgeo.gdal import Dataset
 from pyrate.core import shared, ifgconstants as ifc, prepifg_helper
 from pyrate.core.logger import pyratelogger as log
 
@@ -31,7 +32,10 @@ GDAL_WARP_MEMORY_LIMIT = 2**10
 LOW_FLOAT32 = np.finfo(np.float32).min*1e-10
 
 
-def coherence_masking(input_gdal_dataset, source_epochs, coherence_file_paths, coherence_thresh):
+def coherence_masking(input_gdal_dataset: Dataset,
+                      source_epochs: List[str],
+                      coherence_file_paths: List[str],
+                      coherence_thresh: float) -> None:
     """Perform coherence masking on raster in-place.
 
     Based on gdal_calc formula provided by Nahidul:
@@ -39,14 +43,6 @@ def coherence_masking(input_gdal_dataset, source_epochs, coherence_file_paths, c
      -B 20151127-20151209_VV_8rlks_eqa.unw.tif
      --outfile=test_v1.tif --calc="B*(A>=0.8)-999*(A<0.8)"
      --NoDataValue=-999
-
-    Args:
-      ds: The interferogram to mask as GDAL dataset.
-      coherence_ds: The coherence GDAL dataset.
-      coherence_thresh: The coherence threshold.
-      src_ds:
-
-    Returns:
 
     """
 
@@ -283,7 +279,7 @@ def _gdalwarp_width_and_height(max_x, max_y, min_x, min_y, geo_trans):
     return px_height, px_width  # this is the same as `gdalwarp`
 
 
-def extract_epochs_from_filename(tif):
+def extract_epochs_from_filename(tif: str) -> List[str]:
     src_epochs = re.findall("(\d{8})", str(tif))
     if not len(src_epochs) > 0:
         src_epochs = re.findall("(\d{6})", str(tif))
