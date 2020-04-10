@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2017 Geoscience Australia
+#   Copyright 2020 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ This Python module implements the minimum spanning tree
 functionality for selecting interferometric observations.
 """
 # pylint: disable=invalid-name
-import logging
 from itertools import product
 from numpy import array, nan, isnan, float32, empty, sum as nsum
 import numpy as np

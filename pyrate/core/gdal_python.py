@@ -24,7 +24,7 @@ import numpy as np
 import numexpr as ne
 from typing import Union, List, Tuple
 from osgeo.gdal import Dataset
-from pyrate.core import shared, ifgconstants as ifc, prepifg_helper
+from pyrate.core import shared, ifgconstants as ifc
 from pyrate.core.logger import pyratelogger as log
 
 gdal.SetCacheMax(2**15)
