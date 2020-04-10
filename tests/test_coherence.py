@@ -68,7 +68,7 @@ class CoherenceMaskingTest(unittest.TestCase):
 
         gdal_python.coherence_masking(sample_gdal_dataset,
                                       gdal_python.get_source_epochs(sample_gdal_filename),
-                                      [coherence_mask_filename],
+                                      [coherence_mask_filename.converted_path],
                                       coherence_thresh)
 
         sample_gdal_array = np.nan_to_num(sample_gdal_dataset.GetRasterBand(1).ReadAsArray())
