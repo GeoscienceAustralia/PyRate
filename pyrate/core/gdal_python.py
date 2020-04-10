@@ -52,7 +52,7 @@ def coherence_masking(input_gdal_dataset, source_epochs, coherence_file_paths, c
 
     for coherence_file_path in coherence_file_paths:
 
-        coherence_epochs = get_source_epochs(coherence_file_path)
+        coherence_epochs = extract_epochs_from_filename(coherence_file_path)
 
         if all(src_epoch in coherence_epochs for src_epoch in source_epochs):
             coherence_ds = gdal.Open(coherence_file_path, gdalconst.GA_ReadOnly)
@@ -283,7 +283,7 @@ def _gdalwarp_width_and_height(max_x, max_y, min_x, min_y, geo_trans):
     return px_height, px_width  # this is the same as `gdalwarp`
 
 
-def get_source_epochs(tif):
+def extract_epochs_from_filename(tif):
     src_epochs = re.findall("(\d{8})", str(tif))
     if not len(src_epochs) > 0:
         src_epochs = re.findall("(\d{6})", str(tif))
@@ -318,7 +318,7 @@ def crop_resample_average(
     tmp_ds = gdal.GetDriverByName('MEM').CreateCopy('', dst_ds) if (match_pyrate and new_res[0]) else None
 
     src_ds, src_ds_mem = _setup_source(input_tif)
-    source_epochs = get_source_epochs(input_tif)
+    source_epochs = extract_epochs_from_filename(input_tif)
 
     if coherence_path and coherence_thresh:
         coherence_masking(src_ds_mem, source_epochs, [coherence_path], coherence_thresh)
