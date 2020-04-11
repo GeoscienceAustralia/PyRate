@@ -112,8 +112,8 @@ def test_prepifg_mpi(mpisync, get_config, tempdir,
         serial_tifs = glob.glob(join(params[cf.OUT_DIR], "*.tif"))
         mpi_tifs.sort()
         serial_tifs.sort()
-        # 17 geotifs, and 17 mlooked tifs
-        assert len(mpi_tifs) == len(serial_tifs)
+        # 17 geotifs, and 17 mlooked tifs + 1 dem
+        assert len(mpi_tifs) == len(serial_tifs) == 18
         for m_f, s_f in zip(mpi_tifs, serial_tifs):
             assert basename(m_f) == basename(s_f)
 

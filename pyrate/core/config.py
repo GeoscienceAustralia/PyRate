@@ -683,7 +683,7 @@ _PARAM_VALIDATION = {
         f"'{PROCESSES}': must be >= 1."
     ),
     PROCESSOR: (
-        lambda a: a in (0, 1),
+        lambda a: a in (0, 1, 2),
         f"'{PROCESSOR}': must select option 0 or 1."
     ),
     NAN_CONVERSION: (

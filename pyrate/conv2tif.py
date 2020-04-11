@@ -30,6 +30,7 @@ from pyrate.core.logger import pyratelogger as log
 
 GAMMA = 1
 ROIPAC = 0
+GEOTIF = 2
 
 
 def main(params):
@@ -74,8 +75,7 @@ def do_geotiff(base_unw_paths, params):
     parallel = params[cf.PARALLEL]
 
     if parallel:
-        log.info("Running geotiff conversion in parallel with {} "
-                 "processes".format(params[cf.PROCESSES]))
+        log.info("Running geotiff conversion in parallel with {} processes".format(params[cf.PROCESSES]))
         dest_base_ifgs = Parallel(n_jobs=params[cf.PROCESSES], verbose=shared.joblib_log_level(cf.LOG_LEVEL))(
             delayed(_geotiff_multiprocessing)(p, params) for p in base_unw_paths)
     else:

@@ -78,7 +78,7 @@ PYRATE_DEFAULT_CONFIGRATION = {
         "DefaultValue": None,
         "MinValue": None,
         "MaxValue": None,
-        "PossibleValues": [0, 1],
+        "PossibleValues": [0, 1, 2],
         "Required": False
     },
     "noDataAveragingThreshold": {
