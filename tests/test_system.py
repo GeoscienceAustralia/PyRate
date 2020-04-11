@@ -18,36 +18,35 @@
 This Python module contains tests for mpi operations in PyRate.
 Tun this module as 'mpirun -n 4 pytest tests/test_mpi.py'
 """
-import unittest
+import pytest
 from pyrate.main import conv2tif_handler, prepifg_handler, process_handler, merge_handler
 from pyrate.constants import PYRATEPATH
+from pyrate.core.config import write_config_file, get_config_params
+from tests.common import ROIPAC_SYSTEM_CONF, GAMMA_SYSTEM_CONF, GEOTIF_SYSTEM_CONF
 
 
-class SystemTest(unittest.TestCase):
+# @pytest.fixture
+# def roipac_conf():
+#     input_config_path =
+#     params =
 
-    @staticmethod
-    def test_roipac_workflow():
-        input_config_path = PYRATEPATH.joinpath("tests", "test_data", "system", "roipac", "input_parameters.conf")
-        conv2tif_handler(input_config_path)
-        prepifg_handler(input_config_path)
-        process_handler(input_config_path)
-        merge_handler(input_config_path)
-
-    @staticmethod
-    def test_gamma_workflow():
-        input_config_path = PYRATEPATH.joinpath("tests", "test_data", "system", "gamma", "input_parameters.conf")
-        conv2tif_handler(input_config_path)
-        prepifg_handler(input_config_path)
-        process_handler(input_config_path)
-        merge_handler(input_config_path)
-
-    @staticmethod
-    def test_geotiff_workflow():
-        input_config_path = PYRATEPATH.joinpath("tests", "test_data", "system", "geotiff", "input_parameters.conf")
-        prepifg_handler(input_config_path)
-        process_handler(input_config_path)
-        merge_handler(input_config_path)
+def test_roipac_workflow():
+    # joblib_conf_path =  input_config_path.
+    conv2tif_handler(ROIPAC_SYSTEM_CONF)
+    prepifg_handler(ROIPAC_SYSTEM_CONF)
+    process_handler(ROIPAC_SYSTEM_CONF)
+    merge_handler(ROIPAC_SYSTEM_CONF)
 
 
-if __name__ == '__main__':
-    unittest.main()
+def test_gamma_workflow():
+
+    conv2tif_handler(GAMMA_SYSTEM_CONF)
+    prepifg_handler(GAMMA_SYSTEM_CONF)
+    process_handler(GAMMA_SYSTEM_CONF)
+    merge_handler(GAMMA_SYSTEM_CONF)
+
+
+def test_geotiff_workflow():
+    prepifg_handler(GEOTIF_SYSTEM_CONF)
+    process_handler(GEOTIF_SYSTEM_CONF)
+    merge_handler(GEOTIF_SYSTEM_CONF)

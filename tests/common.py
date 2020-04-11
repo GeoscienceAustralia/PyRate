@@ -65,6 +65,11 @@ SML_TEST_COH_LIST = join(SML_TEST_COH_DIR, 'coherence_17')
 TEST_CONF_ROIPAC = join(SML_TEST_CONF, 'pyrate_roipac_test.conf')
 TEST_CONF_GAMMA = join(SML_TEST_CONF, 'pyrate_gamma_test.conf')
 
+ROIPAC_SYSTEM_CONF = PYRATEPATH.joinpath("tests", "test_data", "system", "roipac", "input_parameters.conf")
+GAMMA_SYSTEM_CONF = PYRATEPATH.joinpath("tests", "test_data", "system", "gamma", "input_parameters.conf")
+GEOTIF_SYSTEM_CONF = PYRATEPATH.joinpath("tests", "test_data", "system", "geotiff", "input_parameters.conf")
+
+
 PREP_TEST_DIR = join(BASE_TEST, 'prepifg')
 PREP_TEST_OBS = join(PREP_TEST_DIR, 'obs')
 PREP_TEST_TIF = join(PREP_TEST_DIR, 'tif')
