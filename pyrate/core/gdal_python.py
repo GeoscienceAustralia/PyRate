@@ -280,9 +280,9 @@ def _gdalwarp_width_and_height(max_x, max_y, min_x, min_y, geo_trans):
 
 
 def extract_epochs_from_filename(tif: str) -> List[str]:
-    src_epochs = re.findall("(\d{8})", str(tif))
+    src_epochs = re.findall(r"(\d{8})", str(tif))
     if not len(src_epochs) > 0:
-        src_epochs = re.findall("(\d{6})", str(tif))
+        src_epochs = re.findall(r"(\d{6})", str(tif))
     return src_epochs
 
 
