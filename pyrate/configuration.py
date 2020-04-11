@@ -92,11 +92,10 @@ class MultiplePaths:
 
     def __str__(self):
         return"""
-unwrapped_path = """ + self.unwrapped_path+""" 
-converted_path = """ + self.converted_path+""" 
-sampled_path = """ + self.sampled_path+"""    
-"""
-
+            unwrapped_path = """ + self.unwrapped_path+""" 
+            converted_path = """ + self.converted_path+""" 
+            sampled_path = """ + self.sampled_path+"""    
+            """
 
 
 class Configuration:

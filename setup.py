@@ -78,7 +78,7 @@ setup(
     },
     entry_points={
           'console_scripts': [
-              'pyrate = pyrate.__main__:main'
+              'pyrate = pyrate.main:main'
           ]
       },
     setup_requires=setup_requirements,

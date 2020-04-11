@@ -394,7 +394,7 @@ def _parse_pars(pars, validate: bool=True, step: str=CONV2TIF) -> Dict:
     for k in PARAM_CONVERSION:
         if pars.get(k) is None:
             pars[k] = PARAM_CONVERSION[k][1]
-            _logger.warning(f"No value found for parameter '{k}'. Using "f"default value {pars[k]}.")
+            # _logger.warning(f"No value found for parameter '{k}'. Using "f"default value {pars[k]}.")
         else:
             conversion_func = PARAM_CONVERSION[k][0]
             if conversion_func:
@@ -1072,7 +1072,7 @@ def validate_compulsory_parameters(pars: Dict) -> Optional[bool]:
     for k in pars.keys():
         validator = _PARAM_VALIDATION.get(k)
         if validator is None:
-            _logger.debug(f"No validator implemented for '{k}'.")
+            # _logger.debug(f"No validator implemented for '{k}'.")
             continue
         if not validator[0](pars[k]):
             errors.append(validator[1])

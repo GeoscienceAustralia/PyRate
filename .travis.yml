@@ -57,6 +57,7 @@ install:
 # command to run tests, e.g. python setup.py test
 script:
   #  - python scripts/update_placeholder_paths.py
+  - mpirun -n 3 pytest tests/test_mpi.py -s
   - pytest --cov-report term-missing:skip-covered --cov=pyrate tests/
 
 
