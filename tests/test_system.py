@@ -101,18 +101,32 @@ def modify_config(tempdir, get_config, get_lks, get_crop, orbfit_lks, orbfit_met
     return deliver_params
 
 
-def test_workflow(roipac_or_gamma_params):
-    params_dict = roipac_or_gamma_params
-    if params_dict[PROCESSOR] != 2:  # if not geotif
-        conv2tif.main(params_dict)
-    prepifg.main(params_dict)
-    process.main(params_dict)
-    merge.main(params_dict)
-    shutil.rmtree(params_dict[OBS_DIR])
+# def test_workflow(roipac_or_gamma_params):
+#     params = roipac_or_gamma_params
+#     if params[PROCESSOR] != 2:  # if not geotif
+#         conv2tif.main(params)
+#     prepifg.main(params)
+#     process.main(params)
+#     merge.main(params)
+#     shutil.rmtree(params[OBS_DIR])
 
+# TODO:  MPI comparison system tests
+
+
+def test_roipac_workflow():
+    conv2tif_handler(ROIPAC_SYSTEM_CONF)
+    prepifg_handler(ROIPAC_SYSTEM_CONF)
+    process_handler(ROIPAC_SYSTEM_CONF)
+    merge_handler(ROIPAC_SYSTEM_CONF)
+
+
+def test_geotif_workflow():
+    conv2tif_handler(GEOTIF_SYSTEM_CONF)
+    prepifg_handler(GEOTIF_SYSTEM_CONF)
+    process_handler(GEOTIF_SYSTEM_CONF)
+    merge_handler(GEOTIF_SYSTEM_CONF)
 
 def test_gamma_workflow():
-    """One test to wrap the handlers"""
     conv2tif_handler(GAMMA_SYSTEM_CONF)
     prepifg_handler(GAMMA_SYSTEM_CONF)
     process_handler(GAMMA_SYSTEM_CONF)
