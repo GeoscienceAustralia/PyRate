@@ -1,10 +1,12 @@
 import os
 import random
 import shutil
+from pathlib import Path
 import string
 import tempfile
 import pytest
 from pyrate.core import config as cf, mpiops
+from pyrate.configuration import Configuration
 from tests import common
 
 
@@ -41,7 +43,13 @@ def get_config():
         dict of params
     """
     def params(conf_file):
-        return cf.get_config_params(conf_file)
+        params = cf.get_config_params(conf_file)
+        # hack the rest of the params from Configuration class
+        conf = Configuration(conf_file)
+        params[cf.INTERFEROGRAM_FILES] = conf.interferogram_files
+        params['rows'] = conf.rows
+        params['cols'] = conf.cols
+        return params
     return params
 
 
@@ -77,42 +85,49 @@ def col_splits(request):
     return request.param
 
 
-@pytest.fixture(params=[1, 2, 5])
-def modify_config(request, tempdir, get_config):
-    test_conf = common.TEST_CONF_ROIPAC
-    params_dict = get_config(test_conf)
-    params_dict[cf.IFG_LKSX] = request.param
-    params_dict[cf.IFG_LKSY] = request.param
-    params_dict[cf.OBS_DIR] = tempdir()
-    common.copytree(common.SML_TEST_GAMMA, params_dict[cf.OBS_DIR])
-    params_dict[cf.IFG_FILE_LIST] = os.path.join(params_dict[cf.OBS_DIR], 'ifms_17')
-    params_dict[cf.PARALLEL] = False
-    params_dict[cf.APS_CORRECTION] = 0
-    yield params_dict
-    # clean up
-    shutil.rmtree(params_dict[cf.OBS_DIR])
+@pytest.fixture
+def modify_config(tempdir, get_config, get_lks, get_crop, orbfit_lks, orbfit_method, orbfit_degrees):
+    def deliver_params(conf_file):
+        params = get_config(conf_file)
+        params[cf.IFG_LKSX] = get_lks
+        params[cf.IFG_LKSY] = get_lks
+        params[cf.IFG_CROP_OPT] = get_crop
+        params[cf.ORBITAL_FIT_LOOKS_X] = orbfit_lks
+        params[cf.ORBITAL_FIT_LOOKS_Y] = orbfit_lks
+        params[cf.ORBITAL_FIT_METHOD] = orbfit_method
+        params[cf.ORBITAL_FIT_DEGREE] = orbfit_degrees
+        params[cf.IFG_FILE_LIST] = os.path.join(params[cf.OBS_DIR], 'interferogram_list.txt')
+        tdir = tempdir()
+        common.copytree(params[cf.OBS_DIR], tdir)
+        params[cf.OBS_DIR] = tdir
+        params[cf.OUT_DIR] = Path(tdir).joinpath('out')
+        params[cf.PARALLEL] = True
+        params[cf.APS_CORRECTION] = 0
+        return params
+    return deliver_params
 
 
-@pytest.fixture(params=range(1, 6))
+
+@pytest.fixture(params=range(1, 2))
 def get_lks(request):
     return request.param
 
 
-@pytest.fixture(params=range(1, 3))
+@pytest.fixture(params=range(1, 2))
 def get_crop(request):
     return request.param
 
 
-@pytest.fixture(params=[1, 2, 5])
+@pytest.fixture(params=[1, 2])
 def orbfit_lks(request):
     return request.param
 
 
-@pytest.fixture(params=[cf.INDEPENDENT_METHOD, cf.NETWORK_METHOD])
+@pytest.fixture(params=cf.ORB_METHOD_NAMES.values())
 def orbfit_method(request):
     return request.param
 
 
-@pytest.fixture(params=[cf.PLANAR, cf.QUADRATIC, cf.PART_CUBIC])
+@pytest.fixture(params=cf.ORB_DEGREE_NAMES.values())
 def orbfit_degrees(request):
     return request.param

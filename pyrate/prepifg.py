@@ -28,6 +28,8 @@ from pyrate.core.logger import pyratelogger as log
 
 GAMMA = 1
 ROIPAC = 0
+GEOTIF = 2
+
 
 def main(params):
     """
@@ -92,8 +94,8 @@ def _prepifg_multiprocessing(path, xlooks, ylooks, exts, thresh, crop, params):
     """
     Multiprocessing wrapper for prepifg
     """
-    processor = params[cf.PROCESSOR]  # roipac or gamma
-    if processor == GAMMA:
+    processor = params[cf.PROCESSOR]  # roipac, gamma or geotif
+    if (processor == GAMMA) or (processor == GAMMA):
         header = gamma.gamma_header(path, params)
     elif processor == ROIPAC:
         header = roipac.roipac_header(path, params)

@@ -172,11 +172,7 @@ class Configuration:
             if len(path_str) > 1:
                 self.header_file_paths.append(MultiplePaths(self.slcFileDir, path_str, self.ifglksx, self.ifgcropopt))
 
-        self.interferogram_files = []
-        for path_str in self.ifgfilelist.read_text().split('\n'):
-            # ignore empty lines in file
-            if len(path_str) > 1:
-                self.interferogram_files.append(MultiplePaths(self.outdir, path_str, self.ifglksx, self.ifgcropopt))
+        self.__get_interferrograms_files()
 
         self.dem_file = MultiplePaths(self.demfile.parents[0], self.demfile.name, self.ifglksx, self.ifgcropopt)
 
@@ -184,4 +180,11 @@ class Configuration:
         for key in self.__dict__:
             if isinstance(self.__dict__[key], PurePath):
                 self.__dict__[key] = str(self.__dict__[key])
+
+    def __get_interferrograms_files(self):
+        self.interferogram_files = []
+        for path_str in self.ifgfilelist.read_text().split('\n'):
+            # ignore empty lines in file
+            if len(path_str) > 1:
+                self.interferogram_files.append(MultiplePaths(self.outdir, path_str, self.ifglksx, self.ifgcropopt))
 
