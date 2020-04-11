@@ -22,18 +22,42 @@ import glob
 import shutil
 import numpy as np
 import os
+import pytest
 
 import pyrate.core.orbital
 import pyrate.core.shared
 from pyrate import process, prepifg, conv2tif
 from pyrate.core import mpiops, config as cf
 from tests import common
+from tests.common import SML_TEST_DIR, TEST_CONF_ROIPAC, TEST_CONF_GAMMA
 from tests.test_covariance import legacy_maxvar
 
-def test_vcm_legacy_vs_mpi(mpisync, tempdir, get_config):
-    from tests.common import SML_TEST_DIR, TEST_CONF_ROIPAC
 
-    params_dict = get_config(TEST_CONF_ROIPAC)
+@pytest.fixture()
+def get_mpi_config():
+    def params(conf_file):
+        params = cf.get_config_params(conf_file)
+        return params
+    return params
+
+
+@pytest.fixture(params=[TEST_CONF_ROIPAC, TEST_CONF_GAMMA])
+def roipac_or_gamma(request):
+    return request.param
+
+
+@pytest.fixture(params=range(1, 6))
+def get_lks(request):
+    return request.param
+
+
+@pytest.fixture(params=range(1, 3))
+def get_crop(request):
+    return request.param
+
+
+def test_vcm_legacy_vs_mpi(mpisync, tempdir, get_mpi_config):
+    params_dict = get_mpi_config(TEST_CONF_ROIPAC)
     LEGACY_VCM_DIR = os.path.join(SML_TEST_DIR, 'vcm')
     legacy_vcm = np.genfromtxt(os.path.join(LEGACY_VCM_DIR, 'vcmt.csv'), delimiter=',')
     if mpiops.rank == 0:
@@ -70,14 +94,10 @@ def _tifs_same(dir1, dir2, tif):
     stackrate_tif_m = os.path.join(dir2, tif)
     common.assert_ifg_phase_equal(stackrate_tif_m, stackrate_tif_s)
 
-def test_prepifg_mpi(mpisync, get_config, tempdir,
-                     roipac_or_gamma, get_lks, get_crop):
-    from tests.common import TEST_CONF_ROIPAC, TEST_CONF_GAMMA
+
+def test_prepifg_mpi(mpisync, get_mpi_config, tempdir, roipac_or_gamma, get_lks, get_crop):
     from os.path import join, basename
-    if roipac_or_gamma == 1:
-        params = get_config(TEST_CONF_GAMMA)
-    else:
-        params = get_config(TEST_CONF_ROIPAC)
+    params = get_mpi_config(TEST_CONF_GAMMA)
     outdir = mpiops.run_once(tempdir)
     params[cf.OUT_DIR] = outdir
     params[cf.PARALLEL] = False
@@ -94,10 +114,7 @@ def test_prepifg_mpi(mpisync, get_config, tempdir,
     mpiops.run_once(common.remove_tifs, params[cf.OBS_DIR])
 
     if mpiops.rank == 0:
-        if roipac_or_gamma == 1:
-            params_s = get_config(TEST_CONF_GAMMA)
-        else:
-            params_s = get_config(TEST_CONF_ROIPAC)
+        params_s = get_mpi_config(TEST_CONF_GAMMA)
         params_s[cf.OUT_DIR] = tempdir()
         params_s[cf.PARALLEL] = True
         params_s[cf.IFG_LKSX], params_s[cf.IFG_LKSY] = get_lks, get_lks
