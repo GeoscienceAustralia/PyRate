@@ -221,8 +221,9 @@ class TestConfigValidation(unittest.TestCase):
         
         self.assertTrue(validate(PROCESSOR, 0))
         self.assertTrue(validate(PROCESSOR, 1))
+        self.assertTrue(validate(PROCESSOR, 2))
         self.assertFalse(validate(PROCESSOR, -1))
-        self.assertFalse(validate(PROCESSOR, 2))
+        self.assertFalse(validate(PROCESSOR, 3))
 
         self.assertTrue(validate(NAN_CONVERSION, 0))
         self.assertTrue(validate(NAN_CONVERSION, 1))
