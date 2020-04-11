@@ -372,7 +372,7 @@ def crop_resample_average(
                                  geotransform=gt, creation_opts=creation_opts)
 
     shared.write_geotiff(resampled_average, out_ds, np.nan) 
-    log.debug("Writing geotiff: "+str(out_ds))
+    log.debug(f"Writing geotiff: {output_file}")
     return resampled_average, out_ds
 
 

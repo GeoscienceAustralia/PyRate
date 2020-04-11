@@ -108,6 +108,6 @@ def _geotiff_multiprocessing(unw_path, params):
         shared.write_fullres_geotiff(header, unw_path, dest, nodata=params[cf.NO_DATA_VALUE])
         return dest, True
     else:
-        log.warning("Full-res geotiff already exists! Returning existing geotiff!")
+        log.warning(f"Full-res geotiff already exists in {dest}! Returning existing geotiff!")
         return dest, False
 
