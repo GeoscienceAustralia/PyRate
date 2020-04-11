@@ -70,7 +70,7 @@ def validate_file_list_values(dir, fileList, no_of_epochs):
             if not Path(dir).joinpath(path_str).exists():
                 raise ValueError("Give file name: " + str(path_str) + " dose not exist at: " + str(dir))
             else:
-                matches = re.findall("(\d{8})", str(dir / path_str))
+                matches = re.findall(r"(\d{8})", str(dir / path_str))
                 if len(matches) < no_of_epochs:
                     raise ValueError("For the given file name: " + str(path_str) + " in: " + str(
                         dir) + " the number of epochs in file names are less the required number:" + str(
