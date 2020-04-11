@@ -21,11 +21,7 @@ Tun this module as 'mpirun -n 4 pytest tests/test_mpi.py'
 import glob
 import shutil
 import numpy as np
-import pytest
 import os
-import tempfile
-import random
-import string
 
 import pyrate.core.orbital
 import pyrate.core.shared
@@ -33,102 +29,6 @@ from pyrate import process, prepifg, conv2tif
 from pyrate.core import mpiops, config as cf
 from tests import common
 from tests.test_covariance import legacy_maxvar
-
-
-@pytest.fixture()
-def tempdir():
-    """
-    tempdir for tests
-    """
-    def tmpdir():
-        return tempfile.mkdtemp()
-    return tmpdir
-
-
-@pytest.fixture
-def random_filename(tmpdir_factory):
-    def make_random_filename(ext=''):
-        dir = str(tmpdir_factory.mktemp('pyrate').realpath())
-        fname = ''.join(random.choice(string.ascii_lowercase) for _ in range(10))
-        return os.path.join(dir, fname + ext)
-    return make_random_filename
-
-
-@pytest.fixture()
-def get_config():
-    """
-    Parameters
-    ----------
-    conf_file: str
-        config file
-
-    Returns
-    -------
-    params: dict
-        dict of params
-    """
-    def params(conf_file):
-        return cf.get_config_params(conf_file)
-    return params
-
-
-# Make sure all MPI tests use this fixure
-@pytest.fixture()
-def mpisync(request):
-    mpiops.comm.barrier()
-
-    def fin():
-        mpiops.comm.barrier()
-
-    request.addfinalizer(fin)
-    return mpiops.comm
-
-
-@pytest.fixture(params=[0, 1])
-def roipac_or_gamma(request):
-    return request.param
-
-
-@pytest.fixture(params=[1, 2])
-def ref_est_method(request):
-    return request.param
-
-
-@pytest.fixture(params=[1, 2, 5])
-def row_splits(request):
-    return request.param
-
-
-@pytest.fixture(params=[1, 2, 5])
-def col_splits(request):
-    return request.param
-
-
-@pytest.fixture(params=[1, 2, 5])
-def modify_config(request, tempdir, get_config):
-    test_conf = common.TEST_CONF_ROIPAC
-    params_dict = get_config(test_conf)
-    params_dict[cf.IFG_LKSX] = request.param
-    params_dict[cf.IFG_LKSY] = request.param
-    params_dict[cf.OBS_DIR] = tempdir()
-    common.copytree(common.SML_TEST_GAMMA, params_dict[cf.OBS_DIR])
-    params_dict[cf.IFG_FILE_LIST] = os.path.join(params_dict[cf.OBS_DIR], 'ifms_17')
-    params_dict[cf.PARALLEL] = False
-    params_dict[cf.APS_CORRECTION] = 0
-    yield params_dict
-    # clean up
-    shutil.rmtree(params_dict[cf.OBS_DIR])
-
-
-@pytest.fixture(params=range(1, 6))
-def get_lks(request):
-    return request.param
-
-
-@pytest.fixture(params=range(1, 3))
-def get_crop(request):
-    return request.param
-
 
 def test_vcm_legacy_vs_mpi(mpisync, tempdir, get_config):
     from tests.common import SML_TEST_DIR, TEST_CONF_ROIPAC
@@ -163,21 +63,6 @@ def test_vcm_legacy_vs_mpi(mpisync, tempdir, get_config):
     np.testing.assert_array_almost_equal(legacy_vcm, vcmt, decimal=3)
     mpiops.run_once(shutil.rmtree, outdir)
     mpiops.run_once(common.remove_tifs, params_dict[cf.OBS_DIR])
-
-
-@pytest.fixture(params=[1, 2, 5])
-def orbfit_lks(request):
-    return request.param
-
-
-@pytest.fixture(params=[cf.INDEPENDENT_METHOD, cf.NETWORK_METHOD])
-def orbfit_method(request):
-    return request.param
-
-
-@pytest.fixture(params=[cf.PLANAR, cf.QUADRATIC, cf.PART_CUBIC])
-def orbfit_degrees(request):
-    return request.param
 
 
 def _tifs_same(dir1, dir2, tif):
