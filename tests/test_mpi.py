@@ -30,9 +30,9 @@ import string
 import pyrate.core.orbital
 import pyrate.core.shared
 from pyrate import process, prepifg, conv2tif
+from pyrate.core import mpiops, config as cf
 from tests import common
 from tests.test_covariance import legacy_maxvar
-from pyrate.core import mpiops, config as cf
 
 
 @pytest.fixture()
@@ -148,12 +148,9 @@ def test_vcm_legacy_vs_mpi(mpisync, tempdir, get_config):
     # dest_paths are tifs that have been geotif converted and multilooked
     dest_paths = cf.get_dest_paths(base_unw_paths, crop, params_dict, xlks)
 
-    # run prepifg, create the dest_paths files
-    if mpiops.rank == 0:
-        conv2tif.main(params_dict)
-        prepifg.main(params_dict)
-
-    mpiops.comm.barrier()
+    # run conv2tif and prepifg, create the dest_paths files
+    conv2tif.main(params_dict)
+    prepifg.main(params_dict)
 
     tiles = pyrate.core.shared.get_tiles(dest_paths[0], rows=1, cols=1)
     preread_ifgs = process._create_ifg_dict(dest_paths, params=params_dict, tiles=tiles)
@@ -164,9 +161,8 @@ def test_vcm_legacy_vs_mpi(mpisync, tempdir, get_config):
     maxvar, vcmt = process._maxvar_vcm_calc(dest_paths, params_dict, preread_ifgs)
     np.testing.assert_array_almost_equal(maxvar, legacy_maxvar, decimal=4)
     np.testing.assert_array_almost_equal(legacy_vcm, vcmt, decimal=3)
-    if mpiops.rank == 0:
-        shutil.rmtree(outdir)
-        common.remove_tifs(params_dict[cf.OBS_DIR])
+    mpiops.run_once(shutil.rmtree, outdir)
+    mpiops.run_once(common.remove_tifs, params_dict[cf.OBS_DIR])
 
 
 @pytest.fixture(params=[1, 2, 5])
@@ -209,7 +205,8 @@ def test_prepifg_mpi(mpisync, get_config, tempdir,
         params[cf.DEM_HEADER_FILE] = common.SML_TEST_DEM_HDR_GAMMA
     conv2tif.main(params)
     prepifg.main(params)
-    common.remove_tifs(params[cf.OBS_DIR])    
+    mpiops.comm.barrier()
+    mpiops.run_once(common.remove_tifs, params[cf.OBS_DIR])
 
     if mpiops.rank == 0:
         if roipac_or_gamma == 1:
