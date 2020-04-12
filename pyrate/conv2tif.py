@@ -46,6 +46,10 @@ def main(params):
     # Going to assume base_ifg_paths is ordered correcly
     # pylint: disable=too-many-branches
 
+    if params[cf.PROCESSOR] == 2:  # if geotif
+        log.warning("conv2tif not required for geotiff!")
+        return
+
     if mpiops.size > 1:  # Over-ride input options if this is an MPI job
         params[cf.PARALLEL] = False
 
