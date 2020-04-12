@@ -33,7 +33,7 @@ from osgeo import gdal
 from pyrate.core import algorithm, ifgconstants as ifc, config as cf, timeseries, mst, stack
 from pyrate.core.shared import (Ifg, nan_and_mm_convert, get_geotiff_header_info,
                                 write_output_geotiff)
-
+from pyrate.core import prepifg_helper
 from pyrate.constants import PYRATEPATH
 
 TEMPDIR = tempfile.gettempdir()
@@ -131,13 +131,21 @@ def small_data_setup(datafiles=None, is_dir=False):
         else:
             datafiles = glob.glob(join(SML_TEST_TIF, "*.tif"))
     datafiles.sort()
-    ifgs = [Ifg(i) for i in datafiles]
+    ifgs = [prepifg_helper.dem_or_ifg(i) for i in datafiles]
     
     for i in ifgs: 
         i.open()
         i.nodata_value = 0
 
     return ifgs
+
+
+def assert_tifs_equal(tif1, tif2):
+    mds = gdal.Open(tif1)
+    sds = gdal.Open(tif2)
+    np.testing.assert_array_almost_equal(mds.ReadAsArray(),  sds.ReadAsArray())
+    mds = None  # close datasets
+    sds = None
 
 
 def small_ifg_file_list(datafiles=None):
