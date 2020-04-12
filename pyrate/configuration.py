@@ -187,4 +187,3 @@ class Configuration:
             # ignore empty lines in file
             if len(path_str) > 1:
                 self.interferogram_files.append(MultiplePaths(self.outdir, path_str, self.ifglksx, self.ifgcropopt))
-

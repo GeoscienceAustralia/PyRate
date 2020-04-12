@@ -31,17 +31,17 @@ from pyrate.configuration import Configuration
 from tests.common import ROIPAC_SYSTEM_CONF, GAMMA_SYSTEM_CONF, GEOTIF_SYSTEM_CONF, copytree
 
 
-@pytest.fixture(params=[2])
+@pytest.fixture(params=[1])
 def get_lks(request):
     return request.param
 
 
-@pytest.fixture(params=[2])
+@pytest.fixture(params=[1])
 def get_crop(request):
     return request.param
 
 
-@pytest.fixture(params=[2])
+@pytest.fixture(params=[1])
 def orbfit_lks(request):
     return request.param
 
@@ -56,7 +56,7 @@ def orbfit_degrees(request):
     return request.param
 
 
-@pytest.fixture(params=[GEOTIF_SYSTEM_CONF, GAMMA_SYSTEM_CONF, ROIPAC_SYSTEM_CONF])
+@pytest.fixture(params=[GAMMA_SYSTEM_CONF, GEOTIF_SYSTEM_CONF, ROIPAC_SYSTEM_CONF])
 def conf(request):
     return request.param
 
@@ -90,7 +90,6 @@ def modify_config(tempdir, get_config, get_lks, get_crop, orbfit_lks, orbfit_met
         params[cf.ORBITAL_FIT_LOOKS_Y] = orbfit_lks
         params[cf.ORBITAL_FIT_METHOD] = orbfit_method
         params[cf.ORBITAL_FIT_DEGREE] = orbfit_degrees
-        params[cf.IFG_FILE_LIST] = Path(params[cf.OBS_DIR]).joinpath('interferogram_list.txt')
         tdir = tempdir()
         copytree(params[cf.OBS_DIR], tdir)
         params[cf.OBS_DIR] = tdir
@@ -101,14 +100,14 @@ def modify_config(tempdir, get_config, get_lks, get_crop, orbfit_lks, orbfit_met
     return deliver_params
 
 
-# def test_workflow(roipac_or_gamma_params):
-#     params = roipac_or_gamma_params
-#     if params[PROCESSOR] != 2:  # if not geotif
-#         conv2tif.main(params)
-#     prepifg.main(params)
-#     process.main(params)
-#     merge.main(params)
-#     shutil.rmtree(params[OBS_DIR])
+def test_workflow(roipac_or_gamma_params):
+    params = roipac_or_gamma_params
+    if params[PROCESSOR] != 2:  # if not geotif
+        conv2tif.main(params)
+    prepifg.main(params)
+    # process.main(params)
+    # merge.main(params)
+    shutil.rmtree(params[OBS_DIR])
 
 # TODO:  MPI comparison system tests
 
@@ -121,10 +120,10 @@ def test_roipac_workflow():
 
 
 def test_geotif_workflow():
-    conv2tif_handler(GEOTIF_SYSTEM_CONF)
     prepifg_handler(GEOTIF_SYSTEM_CONF)
     process_handler(GEOTIF_SYSTEM_CONF)
     merge_handler(GEOTIF_SYSTEM_CONF)
+
 
 def test_gamma_workflow():
     conv2tif_handler(GAMMA_SYSTEM_CONF)
