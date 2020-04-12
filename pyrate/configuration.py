@@ -24,7 +24,7 @@ from pyrate.core.user_experience import break_number_into_factors
 def set_parameter_value(data_type, input_value, default_value, required, input_name):
     if len(input_value) < 1:
         input_value = None
-        if required:
+        if required:  # pragma: no cover
             raise ValueError("A required parameter is missing value in input configuration file: " + str(input_name))
 
     if input_value is not None:
@@ -38,40 +38,40 @@ def validate_parameter_value(input_name, input_value, min_value=None, max_value=
     if isinstance(input_value, PurePath):
         if input_name in "outdir":
             input_value = input_value.parents[0]
-        if not Path.exists(input_value):
+        if not Path.exists(input_value):  # pragma: no cover
             raise ValueError("Given path: " + str(input_value) + " dose not exist.")
     if input_value is not None:
         if min_value is not None:
-            if input_value < min_value:
+            if input_value < min_value:  # pragma: no cover
                 raise ValueError(
                     "Invalid value for " + str(input_name) + " supplied: " + str(input_value) + ". Please provided a valid value greater than " + str(min_value) + ".")
     if input_value is not None:
         if max_value is not None:
-            if input_value > max_value:
+            if input_value > max_value:  # pragma: no cover
                 raise ValueError(
                     "Invalid value for " + str(input_name) + " supplied: " + str(input_value) + ". Please provided a valid value less than " + str(max_value) + ".")
 
     if possible_values is not None:
-        if input_value not in possible_values:
+        if input_value not in possible_values:  # pragma: no cover
             raise ValueError(
                 "Invalid value for " + str(input_name) + " supplied: " + str(input_value) + ". Please provided a valid value from with in: " + str(possible_values) + ".")
     return True
 
 
 def validate_file_list_values(dir, fileList, no_of_epochs):
-    if dir is None:
+    if dir is None:  # pragma: no cover
         raise ValueError("No value supplied for input directory: " + str(dir))
-    if fileList is None:
+    if fileList is None:  # pragma: no cover
         raise ValueError("No value supplied for input file list: " + str(fileList))
 
     for path_str in fileList.read_text().split('\n'):
         # ignore empty lines in file
         if len(path_str) > 1:
-            if not Path(dir).joinpath(path_str).exists():
+            if not Path(dir).joinpath(path_str).exists():  # pragma: no cover
                 raise ValueError("Give file name: " + str(path_str) + " dose not exist at: " + str(dir))
             else:
                 matches = re.findall(r"(\d{8})", str(dir / path_str))
-                if len(matches) < no_of_epochs:
+                if len(matches) < no_of_epochs:  # pragma: no cover
                     raise ValueError("For the given file name: " + str(path_str) + " in: " + str(
                         dir) + " the number of epochs in file names are less the required number:" + str(
                         no_of_epochs))
@@ -90,7 +90,7 @@ class MultiplePaths:
             self.converted_path = Path(baseDir).joinpath(baseName).as_posix()
             self.sampled_path = self.converted_path.split(".tif")[0] + "_" + str(ifglksx) + "rlks_" + str(ifgcropopt) + "cr.tif"
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return"""
             unwrapped_path = """ + self.unwrapped_path+""" 
             converted_path = """ + self.converted_path+""" 
@@ -112,7 +112,7 @@ class Configuration:
             self.__dict__[key] = value
 
         # Validate required parameters exist.
-        if not set(PYRATE_DEFAULT_CONFIGRATION).issubset(self.__dict__):
+        if not set(PYRATE_DEFAULT_CONFIGRATION).issubset(self.__dict__):  # pragma: no cover
             raise ValueError("Required configuration parameters: " + str(
                 set(PYRATE_DEFAULT_CONFIGRATION).difference(self.__dict__)) + " are missing from input config file.")
 
@@ -129,7 +129,8 @@ class Configuration:
                                      PYRATE_DEFAULT_CONFIGRATION[parameter_name]["PossibleValues"])
 
         # bespoke parameter validation
-        if self.refchipsize % 2 != 1:
+
+        if self.refchipsize % 2 != 1:  # pragma: no cover
             raise ValueError("Configuration parameters refchipsize must be odd: " + str(self.refchipsize))
 
         self.rows, self.cols = [int(no) for no in break_number_into_factors(NO_OF_PARALLEL_PROCESSES)]
@@ -158,6 +159,7 @@ class Configuration:
 
         self.coherence_file_paths = None
         if self.cohfiledir is not None and self.cohfilelist is not None:
+            # FIXME: tests don't reach here due to configs not having cohfilelist
             if self.processor != 0:  # not roipac
                 validate_file_list_values(self.cohfiledir, self.cohfilelist, 1)
             self.coherence_file_paths = []
