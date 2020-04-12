@@ -66,6 +66,13 @@ def get_params(get_config, conf):
     return get_config(conf)
 
 
+@pytest.fixture
+def coherence_file():
+    def create_file():
+        return None
+    return create_file
+
+
 @pytest.fixture()
 def get_config(tempdir, get_lks, get_crop, orbfit_lks, orbfit_method, orbfit_degrees):
     def modify_params(conf_file):

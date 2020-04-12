@@ -28,6 +28,7 @@ import pyrate.core.orbital
 import pyrate.core.shared
 from pyrate import process, prepifg, conv2tif
 from pyrate.core import mpiops, config as cf
+from pyrate.core.shared import Ifg
 from tests import common
 from tests.common import SML_TEST_DIR, TEST_CONF_ROIPAC, TEST_CONF_GAMMA
 from tests.test_covariance import legacy_maxvar
@@ -95,7 +96,7 @@ def _tifs_same(dir1, dir2, tif):
     common.assert_ifg_phase_equal(stackrate_tif_m, stackrate_tif_s)
 
 
-def test_prepifg_mpi(mpisync, get_mpi_config, tempdir, roipac_or_gamma, get_lks, get_crop):
+def test_conv2tif_prepifg_mpi(mpisync, get_mpi_config, tempdir, roipac_or_gamma, get_lks, get_crop):
     from os.path import join, basename
     params = get_mpi_config(TEST_CONF_GAMMA)
     outdir = mpiops.run_once(tempdir)
@@ -133,6 +134,7 @@ def test_prepifg_mpi(mpisync, get_mpi_config, tempdir, roipac_or_gamma, get_lks,
         assert len(mpi_tifs) == len(serial_tifs) == 18
         for m_f, s_f in zip(mpi_tifs, serial_tifs):
             assert basename(m_f) == basename(s_f)
+            common.assert_tifs_equal(m_f, s_f)
 
         shutil.rmtree(outdir)
         shutil.rmtree(params_s[cf.OUT_DIR])
