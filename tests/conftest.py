@@ -3,7 +3,9 @@ import random
 import string
 import tempfile
 import pytest
-from pyrate.core import mpiops
+from pyrate.core import mpiops, config as cf
+from tests.common import TEST_CONF_ROIPAC, TEST_CONF_GAMMA
+from tests.common import ROIPAC_SYSTEM_CONF, GAMMA_SYSTEM_CONF, GEOTIF_SYSTEM_CONF
 
 
 @pytest.fixture
@@ -16,6 +18,11 @@ def tempdir():
     return tmpdir
 
 
+@pytest.fixture(params=[ROIPAC_SYSTEM_CONF, GEOTIF_SYSTEM_CONF, GAMMA_SYSTEM_CONF])
+def system_conf(request):
+    return request.param
+
+
 @pytest.fixture
 def random_filename(tmpdir_factory):
     def make_random_filename(ext=''):
@@ -23,7 +30,6 @@ def random_filename(tmpdir_factory):
         fname = ''.join(random.choice(string.ascii_lowercase) for _ in range(10))
         return os.path.join(dir, fname + ext)
     return make_random_filename
-
 
 
 # Make sure all MPI tests use this fixure
@@ -43,16 +49,39 @@ def ref_est_method(request):
     return request.param
 
 
-@pytest.fixture(params=[1, 2, 5])
-def row_splits(request):
-    return request.param
-
-
-@pytest.fixture(params=[1, 2, 5])
-def col_splits(request):
-    return request.param
-
-
-@pytest.fixture(params=[1, 2, 5])
+@pytest.fixture(params=[1, 3])
 def orbfit_lks(request):
+    return request.param
+
+
+@pytest.fixture(params=cf.ORB_METHOD_NAMES.keys())
+def orbfit_method(request):
+    return request.param
+
+
+@pytest.fixture(params=cf.ORB_DEGREE_NAMES.keys())
+def orbfit_degrees(request):
+    return request.param
+
+
+@pytest.fixture(params=[1, 3])
+def get_lks(request):
+    return request.param
+
+
+@pytest.fixture(params=[1, 3])
+def get_crop(request):
+    return request.param
+
+
+@pytest.fixture()
+def get_config():
+    def params(conf_file):
+        params = cf.get_config_params(conf_file)
+        return params
+    return params
+
+
+@pytest.fixture(params=[TEST_CONF_ROIPAC, TEST_CONF_GAMMA])
+def roipac_or_gamma_conf(request):
     return request.param

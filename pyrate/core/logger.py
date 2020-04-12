@@ -21,11 +21,11 @@ from pyrate.core.mpiops import size, rank
 
 
 pyratelogger = logging.getLogger(__name__)
-pyratelogger.setLevel(logging.DEBUG)
+pyratelogger.setLevel(logging.INFO)
 formatter = logging.Formatter("%(asctime)s %(module)s %(lineno)d %(process)d " + str(rank) + "/" + str(size-1)+" %(message)s", "%H:%M:%S")
 
 ch = logging.StreamHandler()
-ch.setLevel(logging.DEBUG)
+ch.setLevel(logging.INFO)
 ch.setFormatter(formatter)
 
 
@@ -35,4 +35,3 @@ fh.setFormatter(formatter)
 
 pyratelogger.addHandler(ch)
 pyratelogger.addHandler(fh)
-

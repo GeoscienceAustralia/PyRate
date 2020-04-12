@@ -28,12 +28,12 @@ import pyrate.core.shared
 from pyrate import process, prepifg, conv2tif
 from pyrate.core import mpiops, config as cf
 from tests import common
-from tests.common import SML_TEST_DIR, TEST_CONF_ROIPAC
+from tests.common import SML_TEST_DIR
 from tests.test_covariance import legacy_maxvar
 
 
-def test_vcm_legacy_vs_mpi(mpisync, tempdir, get_mpi_config, roipac_or_gamma_conf):
-    params = get_mpi_config(roipac_or_gamma_conf)
+def test_vcm_legacy_vs_mpi(mpisync, tempdir, get_config, roipac_or_gamma_conf):
+    params = get_config(roipac_or_gamma_conf)
     LEGACY_VCM_DIR = os.path.join(SML_TEST_DIR, 'vcm')
     legacy_vcm = np.genfromtxt(os.path.join(LEGACY_VCM_DIR, 'vcmt.csv'), delimiter=',')
     tmpdir = Path(mpiops.run_once(tempdir))
