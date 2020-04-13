@@ -75,7 +75,7 @@ def array_split(arr: Iterable, process: int = None) -> np.ndarray:
 
 
 def sum_axis_0(x, y, dtype):
-    s = np.ma.sum(np.ma.vstack((x, y)), axis=0)
+    s = np.sum([x, y], axis=0)
     return s
 
 sum0_op = MPI.Op.Create(sum_axis_0, commute=True)

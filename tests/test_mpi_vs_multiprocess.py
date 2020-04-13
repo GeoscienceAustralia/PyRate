@@ -18,7 +18,7 @@ def coherence_file():
 
 
 @pytest.fixture()
-def modified_config(tempdir, get_lks=1, get_crop=1, orbfit_lks=1, orbfit_method=1, orbfit_degrees=1, ref_est_method=1):
+def modified_config(tempdir, get_lks, get_crop, orbfit_lks, orbfit_method, orbfit_degrees, ref_est_method):
     def modify_params(conf_file, output_conf_file):
         params = cf.get_config_params(conf_file)
 
@@ -29,8 +29,7 @@ def modified_config(tempdir, get_lks=1, get_crop=1, orbfit_lks=1, orbfit_method=
         params[cf.OBS_DIR] = tdir.as_posix()
         params[cf.OUT_DIR] = tdir.joinpath('out').as_posix()
         params[cf.PARALLEL] = 1
-        params[cf.APS_CORRECTION] = 0
-        params[cf.APSEST] = 0
+        params[cf.APSEST] = 1
         params[cf.IFG_LKSX] = get_lks
         params[cf.DEM_FILE] = tdir.joinpath(Path(params[cf.DEM_FILE]).name).as_posix()
         params[cf.DEM_HEADER_FILE] = tdir.joinpath(Path(params[cf.DEM_HEADER_FILE]).name).as_posix()
@@ -57,19 +56,21 @@ def test_conv2tif_prepifg_parallel_vs_mpi(modified_config, roipac_or_gamma_conf)
 
     check_call(f"mpirun -n 3 pyrate conv2tif -f {mpi_conf}", shell=True)
     check_call(f"mpirun -n 3 pyrate prepifg -f {mpi_conf}", shell=True)
-    # check_call(f"mpirun -n 3 pyrate process -f {mpi_conf}", shell=True)
+    check_call(f"mpirun -n 3 pyrate process -f {mpi_conf}", shell=True)
 
     sr_conf, params_s = modified_config(roipac_or_gamma_conf, 'multiprocess_conf.conf')
 
     check_call(f"pyrate conv2tif -f {sr_conf}", shell=True)
     check_call(f"pyrate prepifg -f {sr_conf}", shell=True)
-    # check_call(f"pyrate process -f {sr_conf}", shell=True)
+    check_call(f"pyrate process -f {sr_conf}", shell=True)
 
     # convert2tif tests
     __assert_same_files_produced(params[cf.OBS_DIR], params_s[cf.OBS_DIR], "*_unw.tif", 17)
 
     # prepifg tests
     __assert_same_files_produced(params[cf.OUT_DIR], params_s[cf.OUT_DIR], "*cr.tif", 18)
+
+    # TODO: timeseris and stack asserts
 
     shutil.rmtree(params[cf.OBS_DIR])
     shutil.rmtree(params_s[cf.OBS_DIR])

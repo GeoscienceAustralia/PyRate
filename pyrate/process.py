@@ -28,7 +28,7 @@ from pyrate.core import (shared, algorithm, orbital, ref_phs_est as rpe,
                          ifgconstants as ifc, mpiops, config as cf, 
                          timeseries, mst, covariance as vcm_module, 
                          stack, refpixel)
-from pyrate.core.aps import _wrap_spatio_temporal_filter
+from pyrate.core.aps import wrap_spatio_temporal_filter
 from pyrate.core.shared import Ifg, PrereadIfg, get_tiles
 from pyrate.core.logger import pyratelogger as log
 
@@ -272,7 +272,6 @@ def process_ifgs(ifg_paths, params, rows, cols):
     :rtype: ndarray
     """
 
-    print("Inside process ifgs")
     if mpiops.size > 1:  # turn of multiprocessing during mpi jobs
         params[cf.PARALLEL] = False
 
@@ -293,12 +292,11 @@ def process_ifgs(ifg_paths, params, rows, cols):
     _ref_phase_estimation(ifg_paths, params, refpx, refpy)
 
     _mst_calc(ifg_paths, params, tiles, preread_ifgs)
-    mpiops.comm.barrier()
+
     # spatio-temporal aps filter
-    # _wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs)
+    wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs)
 
     maxvar, vcmt = _maxvar_vcm_calc(ifg_paths, params, preread_ifgs)
-    mpiops.comm.barrier()
     # save phase data tiles as numpy array for timeseries and stackrate calc
 
     shared.save_numpy_phase(ifg_paths, tiles, params)
