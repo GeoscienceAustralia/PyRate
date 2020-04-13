@@ -245,13 +245,10 @@ class TestGammaVsRoipacEquality(unittest.TestCase):
         self.make_roipac_input_files(data_paths, conf_file, 'WGS84')
 
         base_ifg_paths, dest_paths, params = cf.get_ifg_paths(conf_file)
-        sys.argv = ['pyrate', 'conv2tif']
         conv2tif.main(params)
-        sys.argv = ['pyrate', 'prepifg']
         prepifg.main(params)
         for path in self.expPaths:
-            self.assertTrue(os.path.exists(path),
-                            '{} does not exist'.format(path))
+            self.assertTrue(os.path.exists(path), '{} does not exist'.format(path))
 
     def test_equality_of_meta_data(self):
         """ """

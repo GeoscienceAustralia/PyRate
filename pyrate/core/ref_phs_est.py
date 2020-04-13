@@ -103,6 +103,14 @@ def _est_ref_phs_method2(phase_data, half_chip_size, refpx, refpy, thresh):
     return ref_ph
 
 
+def sum_axis_0(x, y, dtype):
+    s = np.ma.sum(np.ma.vstack((x, y)), axis=0)
+    return s
+
+from mpi4py import MPI
+sum0_op = MPI.Op.Create(sum_axis_0, commute=True)
+
+
 def est_ref_phase_method1(ifg_paths, params):
     """
     Reference phase estimation using method 1. Reference phase is the
@@ -115,7 +123,8 @@ def est_ref_phase_method1(ifg_paths, params):
     :rtype: ndarray
     :return: ifgs: Reference phase data is removed interferograms in place
     """
-    def _inner(ifg_paths):
+    def _process_phase_sum(ifg_paths):
+
         if isinstance(ifg_paths[0], Ifg):
             proc_ifgs = ifg_paths
         else:
@@ -123,21 +132,34 @@ def est_ref_phase_method1(ifg_paths, params):
 
         for ifg in proc_ifgs:
             if not ifg.is_open:
-                ifg.open(readonly=False)
+                ifg.open(readonly=True)
 
         ifg_phase_data_sum = np.zeros(proc_ifgs[0].shape, dtype=np.float64)
-        phase_data = [i.phase_data for i in proc_ifgs]
+
         for ifg in proc_ifgs:
             ifg_phase_data_sum += ifg.phase_data
+            ifg.close()
+        return ifg_phase_data_sum
 
-        comp = np.isnan(ifg_phase_data_sum)
+    def _inner(proc_ifgs, phase_data_sum):
+        if isinstance(proc_ifgs[0], Ifg):
+            proc_ifgs = proc_ifgs
+        else:
+            proc_ifgs = [Ifg(ifg_path) for ifg_path in proc_ifgs]
+
+        for ifg in proc_ifgs:
+            if not ifg.is_open:
+                ifg.open(readonly=False)
+
+        comp = np.isnan(phase_data_sum)
         comp = np.ravel(comp, order='F')
+
         if params[cf.PARALLEL]:
+            phase_data = [i.phase_data for i in proc_ifgs]
             log.info("Calculating ref phase using multiprocessing")
-            ref_phs = Parallel(n_jobs=params[cf.PROCESSES], 
-                               verbose=joblib_log_level(cf.LOG_LEVEL))(
-                delayed(_est_ref_phs_method1)(p, comp)
-                for p in phase_data)
+            ref_phs = Parallel(n_jobs=params[cf.PROCESSES], verbose=joblib_log_level(cf.LOG_LEVEL))(
+                delayed(_est_ref_phs_method1)(p, comp) for p in phase_data
+            )
             for n, ifg in enumerate(proc_ifgs):
                 ifg.phase_data -= ref_phs[n]
         else:
@@ -150,12 +172,17 @@ def est_ref_phase_method1(ifg_paths, params):
         for ifg in proc_ifgs:
             _update_phase_metadata(ifg)
             ifg.close()
+            print('closed: ', ifg)
 
         return ref_phs
 
     process_ifg_paths = mpiops.array_split(ifg_paths)
-    ref_phs = _inner(process_ifg_paths)
+    ifg_phase_data_sum = mpiops.comm.allreduce(_process_phase_sum(process_ifg_paths), sum0_op)
+    print(process_ifg_paths)
+    print("herehererhereh", ifg_phase_data_sum.shape)
+    ref_phs = _inner(process_ifg_paths, ifg_phase_data_sum)
     return ref_phs
+
 
 def _est_ref_phs_method1(phase_data, comp):
     """
@@ -165,9 +192,12 @@ def _est_ref_phs_method1(phase_data, comp):
     ifgv[comp == 1] = np.nan
     return nanmedian(ifgv)
 
+
 def _update_phase_metadata(ifg):
+    print(ifg, ifg.shape, ifg.phase_data.shape)
     ifg.meta_data[ifc.PYRATE_REF_PHASE] = ifc.REF_PHASE_REMOVED
     ifg.write_modified_phase()
+
 
 class ReferencePhaseError(Exception):
     """
