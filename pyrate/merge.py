@@ -45,6 +45,7 @@ def main(params):
     # setup paths
     rows, cols = params["rows"], params["cols"]
     _merge_stack(rows, cols, params)
+
     if params[cf.TIME_SERIES_CAL]:
         _merge_timeseries(rows, cols, params)
 
@@ -160,6 +161,7 @@ def _merge_stack(rows, cols, params):
         if mpiops.rank == MASTER_PROCESS:
             [_save_stack(ifgs, params, tiles, out_type=t)
              for t in ['stack_rate', 'stack_error', 'stack_samples']]
+    mpiops.comm.barrier()
 
 
 def _save_stack(ifgs_dict, params, tiles, out_type):
@@ -267,6 +269,7 @@ def _merge_timeseries(rows, cols, params):
                                     epochlist.dates[i + 1]) + ".tif")
             md[ifc.DATA_TYPE] = ifc.INCR
             shared.write_output_geotiff(md, gt, wkt, tsincr_g, dest, np.nan)
+    mpiops.comm.barrier()
     log.debug('Process {} finished writing {} ts (incr/cuml) tifs of '
              'total {}'.format(mpiops.rank, len(process_tifs), no_ts_tifs * 2))
 

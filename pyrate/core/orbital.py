@@ -83,8 +83,7 @@ def remove_orbital_error(ifgs, params, preread_ifgs=None):
     :return: None - interferogram phase data is updated and saved to disk
     """
 
-    ifg_paths = [i.data_path for i in ifgs] \
-        if isinstance(ifgs[0], Ifg) else ifgs
+    ifg_paths = [i.data_path for i in ifgs] if isinstance(ifgs[0], Ifg) else ifgs
 
     mlooked = None
     # mlooking is not necessary for independent correction
@@ -105,12 +104,10 @@ def remove_orbital_error(ifgs, params, preread_ifgs=None):
             m.convert_to_nans()
             m.convert_to_mm()
 
-    _orbital_correction(ifgs, params, mlooked=mlooked,
-                        preread_ifgs=preread_ifgs)
+    _orbital_correction(ifgs, params, mlooked=mlooked, preread_ifgs=preread_ifgs)
 
 
-def _orbital_correction(ifgs_or_ifg_paths, params, mlooked=None, offset=True,
-                        preread_ifgs=None):
+def _orbital_correction(ifgs_or_ifg_paths, params, mlooked=None, offset=True, preread_ifgs=None):
     """
     Convenience function to perform orbital correction.
     """
@@ -119,8 +116,7 @@ def _orbital_correction(ifgs_or_ifg_paths, params, mlooked=None, offset=True,
     # parallel = params[cf.PARALLEL]  # not implemented
 
     if degree not in [PLANAR, QUADRATIC, PART_CUBIC]:
-        msg = "Invalid degree of %s for orbital correction" \
-            % cf.ORB_DEGREE_NAMES.get(degree)
+        msg = "Invalid degree of %s for orbital correction" % cf.ORB_DEGREE_NAMES.get(degree)
         raise OrbitalError(msg)
 
     log.info('Removing orbital error using {} correction method'
@@ -129,13 +125,10 @@ def _orbital_correction(ifgs_or_ifg_paths, params, mlooked=None, offset=True,
 
     if method == NETWORK_METHOD:
         if mlooked is None:
-            network_orbital_correction(ifgs_or_ifg_paths, degree, offset,
-                                       params, m_ifgs=mlooked,
-                                       preread_ifgs=preread_ifgs)
+            network_orbital_correction(ifgs_or_ifg_paths, degree, offset, params, mlooked, preread_ifgs)
         else:
             _validate_mlooked(mlooked, ifgs_or_ifg_paths)
-            network_orbital_correction(ifgs_or_ifg_paths, degree, offset,
-                                       params, mlooked, preread_ifgs)
+            network_orbital_correction(ifgs_or_ifg_paths, degree, offset, params, mlooked, preread_ifgs)
 
     elif method == INDEPENDENT_METHOD:
         # not running in parallel

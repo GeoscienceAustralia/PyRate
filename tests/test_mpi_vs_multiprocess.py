@@ -18,7 +18,7 @@ def coherence_file():
 
 
 @pytest.fixture()
-def modified_config(tempdir, get_lks, get_crop, orbfit_lks, orbfit_method, orbfit_degrees, ref_est_method):
+def modified_config(tempdir, get_lks=1, get_crop=1, orbfit_lks=1, orbfit_method=1, orbfit_degrees=1, ref_est_method=1):
     def modify_params(conf_file, output_conf_file):
         params = cf.get_config_params(conf_file)
 
@@ -26,11 +26,16 @@ def modified_config(tempdir, get_lks, get_crop, orbfit_lks, orbfit_method, orbfi
         copytree(params[cf.OBS_DIR], tdir)
 
         # manipulate params
-        params[cf.OBS_DIR] = tdir
-        params[cf.OUT_DIR] = tdir.joinpath('out')
+        params[cf.OBS_DIR] = tdir.as_posix()
+        params[cf.OUT_DIR] = tdir.joinpath('out').as_posix()
         params[cf.PARALLEL] = 1
         params[cf.APS_CORRECTION] = 0
+        params[cf.APSEST] = 0
         params[cf.IFG_LKSX] = get_lks
+        params[cf.DEM_FILE] = tdir.joinpath(Path(params[cf.DEM_FILE]).name).as_posix()
+        params[cf.DEM_HEADER_FILE] = tdir.joinpath(Path(params[cf.DEM_HEADER_FILE]).name).as_posix()
+        params[cf.SLC_FILE_LIST] = tdir.joinpath(Path(params[cf.SLC_FILE_LIST]).name).as_posix()
+        params[cf.SLC_DIR] = tdir.as_posix()
 
         params[cf.IFG_CROP_OPT] = get_crop
         params[cf.ORBITAL_FIT_LOOKS_X], params[cf.ORBITAL_FIT_LOOKS_Y] = orbfit_lks, orbfit_lks
@@ -58,7 +63,7 @@ def test_conv2tif_prepifg_parallel_vs_mpi(modified_config, roipac_or_gamma_conf)
 
     check_call(f"pyrate conv2tif -f {sr_conf}", shell=True)
     check_call(f"pyrate prepifg -f {sr_conf}", shell=True)
-    # check_call(f"pyrate process -f {mpi_conf}", shell=True)
+    # check_call(f"pyrate process -f {sr_conf}", shell=True)
 
     # convert2tif tests
     __assert_same_files_produced(params[cf.OBS_DIR], params_s[cf.OBS_DIR], "*_unw.tif", 17)

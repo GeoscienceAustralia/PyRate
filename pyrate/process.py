@@ -29,7 +29,6 @@ from pyrate.core import (shared, algorithm, orbital, ref_phs_est as rpe,
                          timeseries, mst, covariance as vcm_module, 
                          stack, refpixel)
 from pyrate.core.aps import _wrap_spatio_temporal_filter
-from pyrate.core.config import ConfigException
 from pyrate.core.shared import Ifg, PrereadIfg, get_tiles
 from pyrate.core.logger import pyratelogger as log
 
@@ -158,11 +157,12 @@ def _orb_fit_calc(ifg_paths, params, preread_ifgs=None):
     """
     MPI wrapper for orbital fit correction
     """
-    log.info('Calculating orbital correction')
 
     if not params[cf.ORBITAL_FIT]:
-        log.info('Orbital correction not required')
+        log.info('Orbital correction not required!')
+        print('Orbital correction not required!')
         return
+    log.info('Calculating orbital correction')
 
     if preread_ifgs:  # don't check except for mpi tests
         # perform some general error/sanity checks
@@ -184,6 +184,7 @@ def _orb_fit_calc(ifg_paths, params, preread_ifgs=None):
             orbital.remove_orbital_error(ifg_paths, params, preread_ifgs)
     mpiops.comm.barrier()
     log.debug('Finished Orbital error correction')
+
 
 def _ref_phase_estimation(ifg_paths, params, refpx, refpy):
     """
@@ -219,7 +220,7 @@ def _ref_phase_estimation(ifg_paths, params, refpx, refpy):
                                             dtype=np.float64)
             mpiops.comm.Recv(this_process_ref_phs, source=r, tag=r)
             collected_ref_phs[process_indices] = this_process_ref_phs
-        np.save(file=ref_phs_file, arr=ref_phs)
+        np.save(file=ref_phs_file, arr=collected_ref_phs)
     else:
         mpiops.comm.Send(ref_phs, dest=MASTER_PROCESS, tag=mpiops.rank)
     log.debug('Finished reference phase estimation')
@@ -229,6 +230,7 @@ def _ref_phase_estimation(ifg_paths, params, refpx, refpy):
         ifgs = ifg_paths
     else:
         ifgs = [Ifg(ifg_path) for ifg_path in ifg_paths]
+    mpiops.comm.barrier()
     return ref_phs, ifgs
 
 
@@ -269,6 +271,8 @@ def process_ifgs(ifg_paths, params, rows, cols):
     :return: vcmt: Variance-covariance matrix array
     :rtype: ndarray
     """
+
+    print("Inside process ifgs")
     if mpiops.size > 1:  # turn of multiprocessing during mpi jobs
         params[cf.PARALLEL] = False
 
@@ -285,17 +289,18 @@ def process_ifgs(ifg_paths, params, rows, cols):
     _ = [preread_ifgs.pop(k) for k in ['gt', 'epochlist', 'md', 'wkt']]
 
     _orb_fit_calc(ifg_paths, params, preread_ifgs)
-    
-    _ref_phase_estimation(ifg_paths, params, refpx, refpy)    
+
+    _ref_phase_estimation(ifg_paths, params, refpx, refpy)
 
     _mst_calc(ifg_paths, params, tiles, preread_ifgs)
-
+    mpiops.comm.barrier()
     # spatio-temporal aps filter
-    _wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs)
+    # _wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs)
 
     maxvar, vcmt = _maxvar_vcm_calc(ifg_paths, params, preread_ifgs)
-
+    mpiops.comm.barrier()
     # save phase data tiles as numpy array for timeseries and stackrate calc
+
     shared.save_numpy_phase(ifg_paths, tiles, params)
 
     _timeseries_calc(ifg_paths, params, vcmt, tiles, preread_ifgs)
@@ -323,6 +328,7 @@ def _stack_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
         np.save(file=os.path.join(output_dir, 'stack_error_{}.npy'.format(t.index)), arr=error)
         np.save(file=os.path.join(output_dir, 'stack_samples_{}.npy'.format(t.index)), arr=samples)
     mpiops.comm.barrier()
+    log.info("Finished stack rate calc!")
 
 
 def _maxvar_vcm_calc(ifg_paths, params, preread_ifgs):
@@ -360,8 +366,10 @@ def _maxvar_vcm_calc(ifg_paths, params, preread_ifgs):
         maxvar = np.empty(len(ifg_paths), dtype=np.float64)
         mpiops.comm.Send(np.array(process_maxvar, dtype=np.float64), dest=MASTER_PROCESS, tag=mpiops.rank)
 
+    mpiops.comm.barrier()
     maxvar = mpiops.comm.bcast(maxvar, root=0)
     vcmt = mpiops.run_once(vcm_module.get_vcmt, preread_ifgs, maxvar)
+    log.info("Finished maxvar and vcm calc!")
     return maxvar, vcmt
 
 
@@ -390,3 +398,4 @@ def _timeseries_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
         np.save(file=os.path.join(output_dir, 'tsincr_{}.npy'.format(t.index)), arr=tsincr)
         np.save(file=os.path.join(output_dir, 'tscuml_{}.npy'.format(t.index)), arr=tscum)
     mpiops.comm.barrier()
+    log.info("Finished timeseries calc!")

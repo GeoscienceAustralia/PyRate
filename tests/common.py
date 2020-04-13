@@ -50,12 +50,12 @@ SML_TEST_DEM_DIR = join(SML_TEST_DIR, 'dem')
 SML_TEST_LEGACY_PREPIFG_DIR = join(SML_TEST_DIR, 'prepifg_output')
 SML_TEST_LEGACY_ORBITAL_DIR = join(SML_TEST_DIR,
                                    'orbital_error_correction')
-SML_TEST_DEM_ROIPAC = join(SML_TEST_DEM_DIR, 'roipac_test_trimmed.dem')
+SML_TEST_DEM_ROIPAC = join(SML_TEST_OBS, 'roipac_test_trimmed.dem')
 SML_TEST_DEM_GAMMA = join(SML_TEST_GAMMA, '20060619_utm.dem')
 SML_TEST_INCIDENCE = join(SML_TEST_GAMMA, '20060619_utm.inc')
 SML_TEST_ELEVATION = join(SML_TEST_GAMMA, '20060619_utm.lv_theta')
 SML_TEST_DEM_HDR_GAMMA = join(SML_TEST_GAMMA, '20060619_utm_dem.par')
-SML_TEST_DEM_HDR = join(SML_TEST_DEM_DIR, 'roipac_test_trimmed.dem.rsc')
+SML_TEST_DEM_HDR = join(SML_TEST_OBS, 'roipac_test_trimmed.dem.rsc')
 SML_TEST_DEM_TIF = join(SML_TEST_DEM_DIR, 'roipac_test_trimmed.tif')
 
 SML_TEST_COH_DIR = join(SML_TEST_DIR, 'coherence')
@@ -143,7 +143,7 @@ def small_data_setup(datafiles=None, is_dir=False):
 def assert_tifs_equal(tif1, tif2):
     mds = gdal.Open(tif1)
     sds = gdal.Open(tif2)
-    np.testing.assert_array_almost_equal(mds.ReadAsArray(),  sds.ReadAsArray())
+    np.testing.assert_array_almost_equal(mds.ReadAsArray(),  sds.ReadAsArray(), decimal=3)
     mds = None  # close datasets
     sds = None
 
