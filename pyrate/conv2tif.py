@@ -63,6 +63,7 @@ def main(params):
 
     process_base_ifgs_paths = np.array_split(base_ifg_paths, mpiops.size)[mpiops.rank]
     gtiff_paths = do_geotiff(process_base_ifgs_paths, params)
+    mpiops.comm.barrier()
     log.info("Finished conv2tif")
     return gtiff_paths
 
