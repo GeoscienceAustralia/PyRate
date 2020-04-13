@@ -1,20 +1,20 @@
+import os
 import glob
 import shutil
 import pytest
 from os.path import join, basename
 from pathlib import Path
-from subprocess import check_call
+from subprocess import check_call, check_output
+import numpy as np
 from pyrate.core import mpiops, config as cf
-from pyrate.configuration import Configuration
 from tests import common
 from tests.common import copytree
 
 
-@pytest.fixture
-def coherence_file():
-    def create_file():
-        return None
-    return create_file
+TRAVIS = True if 'TRAVIS' in os.environ else False
+PYTHON3P6 = True if ('TRAVIS_PYTHON_VERSION' in os.environ and os.environ['TRAVIS_PYTHON_VERSION'] == '3.6') else False
+GDAL_VERSION = check_output(["gdal-config", "--version"]).decode(encoding="utf-8").split('\n')[0]
+REGRESSION = PYTHON3P6 or (TRAVIS and ((GDAL_VERSION == '3.0.4') or (GDAL_VERSION == '2.4.2')))
 
 
 @pytest.fixture()
@@ -57,9 +57,16 @@ def modified_config(tempdir, get_lks, get_crop, orbfit_lks, orbfit_method, orbfi
     return modify_params
 
 
+@pytest.mark.skipif(REGRESSION, reason='skipping regression tests in travis except GDAL 3.0.2')
 def test_conv2tif_prepifg_parallel_vs_mpi(modified_config, roipac_or_gamma_conf):
+
+    BOOL = np.random.randint(0, 10) > 0
+    if BOOL:
+        pytest.skip("Skipping as part of 90")
+
     print("\n\n")
     print("===x==="*10)
+
     mpi_conf, params = modified_config(roipac_or_gamma_conf, 'mpi_conf.conf')
 
     check_call(f"mpirun -n 3 pyrate conv2tif -f {mpi_conf}", shell=True)
@@ -71,13 +78,18 @@ def test_conv2tif_prepifg_parallel_vs_mpi(modified_config, roipac_or_gamma_conf)
     check_call(f"pyrate conv2tif -f {sr_conf}", shell=True)
     check_call(f"pyrate prepifg -f {sr_conf}", shell=True)
     check_call(f"pyrate process -f {sr_conf}", shell=True)
+    # TODO: merge step
 
-
-    # convert2tif tests
+    # convert2tif tests, 17 interferograms
     __assert_same_files_produced(params[cf.OBS_DIR], params_s[cf.OBS_DIR], "*_unw.tif", 17)
 
     # prepifg + process steps that overwrite tifs test
-    __assert_same_files_produced(params[cf.OUT_DIR], params_s[cf.OUT_DIR], "*cr.tif", 18)
+    if params[cf.ORBITAL_FIT_METHOD] == cf.NETWORK_METHOD:
+        # 17 ifgs, 17 orbit network method ifgs + 1 dem
+        __assert_same_files_produced(params[cf.OUT_DIR], params_s[cf.OUT_DIR], "*cr.tif", 35)
+    else:
+        # 17 ifgs + 1 dem
+        __assert_same_files_produced(params[cf.OUT_DIR], params_s[cf.OUT_DIR], "*cr.tif", 18)
 
     # TODO: timeseris and stack asserts
     print("==========================xxx===========================")

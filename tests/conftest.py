@@ -3,7 +3,7 @@ import random
 import string
 import tempfile
 import pytest
-from pyrate.core import mpiops, config as cf
+from pyrate.core import mpiops, config as cf, prepifg_helper
 from tests.common import TEST_CONF_ROIPAC, TEST_CONF_GAMMA
 from tests.common import ROIPAC_SYSTEM_CONF, GAMMA_SYSTEM_CONF, GEOTIF_SYSTEM_CONF
 
@@ -69,7 +69,7 @@ def get_lks(request):
     return request.param
 
 
-@pytest.fixture(params=[1, 3])
+@pytest.fixture(params=prepifg_helper.CROP_OPTIONS)
 def get_crop(request):
     return request.param
 

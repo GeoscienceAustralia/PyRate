@@ -17,7 +17,7 @@
 This Python module implements residual orbital corrections for interferograms.
 """
 # pylint: disable=invalid-name
-import logging
+from typing import Optional, List, Dict
 from collections import OrderedDict
 from numpy import empty, isnan, reshape, float32, squeeze
 from numpy import dot, vstack, zeros, meshgrid
@@ -222,8 +222,8 @@ def independent_orbital_correction(ifg, degree, offset, params):
         ifg.close()
 
 
-def network_orbital_correction(ifgs, degree, offset, params, m_ifgs=None,
-                               preread_ifgs=None):
+def network_orbital_correction(ifgs, degree, offset, params, m_ifgs: Optional[List ] = None,
+                               preread_ifgs: Optional[Dict] = None):
     """
     This algorithm implements a network inversion to determine orbital
     corrections for a set of interferograms forming a connected network.
