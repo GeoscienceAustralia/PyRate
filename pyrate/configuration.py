@@ -133,12 +133,17 @@ class Configuration:
         if self.refchipsize % 2 != 1:  # pragma: no cover
             raise ValueError("Configuration parameters refchipsize must be odd: " + str(self.refchipsize))
 
-        self.rows, self.cols = [int(no) for no in break_number_into_factors(NO_OF_PARALLEL_PROCESSES)]
+        # calculate rows and cols if not supplied
+        if any([~hasattr(self, 'rows'), ~hasattr(self, 'cols')]):
+            self.rows, self.cols = [int(no) for no in break_number_into_factors(NO_OF_PARALLEL_PROCESSES)]
 
-        # create a temporary directory
-        self.tmpdir = self.outdir / "tmpdir"
+        # create a temporary directory if not supplied
+        if not hasattr(self, 'tmpdir'):
+            self.tmpdir = Path(self.outdir).joinpath("tmpdir")
+        else:
+            self.tmpdir = Path(self.tmpdir)
+
         self.tmpdir.mkdir(parents=True, exist_ok=True)
-        self.tmpdir = str(self.tmpdir)
 
         # var no longer used
         self.APS_ELEVATION_EXT = None

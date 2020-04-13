@@ -488,7 +488,7 @@ class IfgPart(object):
             self.slave = ifg.slave
             self.time_span = ifg.time_span
             phase_file = 'phase_data_{}_{}.npy'.format(basename(ifg_or_path).split('.')[0], tile.index)
-            self.phase_data = np.load(join(params[cf.OUT_DIR], cf.TMPDIR, phase_file))
+            self.phase_data = np.load(join(params[cf.TMPDIR], phase_file))
         else:
             # check if Ifg was sent.
             if isinstance(ifg_or_path, Ifg):
