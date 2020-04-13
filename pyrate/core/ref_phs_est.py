@@ -29,6 +29,7 @@ from pyrate.core import mpiops
 
 from pyrate.core.logger import pyratelogger as log
 
+
 MASTER_PROCESS = 0
 
 def est_ref_phase_method2(ifg_paths, params, refpx, refpy):
@@ -103,14 +104,6 @@ def _est_ref_phs_method2(phase_data, half_chip_size, refpx, refpy, thresh):
     return ref_ph
 
 
-def sum_axis_0(x, y, dtype):
-    s = np.ma.sum(np.ma.vstack((x, y)), axis=0)
-    return s
-
-from mpi4py import MPI
-sum0_op = MPI.Op.Create(sum_axis_0, commute=True)
-
-
 def est_ref_phase_method1(ifg_paths, params):
     """
     Reference phase estimation using method 1. Reference phase is the
@@ -124,7 +117,6 @@ def est_ref_phase_method1(ifg_paths, params):
     :return: ifgs: Reference phase data is removed interferograms in place
     """
     def _process_phase_sum(ifg_paths):
-
         if isinstance(ifg_paths[0], Ifg):
             proc_ifgs = ifg_paths
         else:
@@ -132,13 +124,13 @@ def est_ref_phase_method1(ifg_paths, params):
 
         for ifg in proc_ifgs:
             if not ifg.is_open:
-                ifg.open(readonly=True)
+                ifg.open(readonly=False)
 
-        ifg_phase_data_sum = np.zeros(proc_ifgs[0].shape, dtype=np.float64)
+        ifg_phase_data_sum = np.zeros(proc_ifgs[0].shape, dtype=np.float32)
 
         for ifg in proc_ifgs:
             ifg_phase_data_sum += ifg.phase_data
-            ifg.close()
+
         return ifg_phase_data_sum
 
     def _inner(proc_ifgs, phase_data_sum):
@@ -172,15 +164,13 @@ def est_ref_phase_method1(ifg_paths, params):
         for ifg in proc_ifgs:
             _update_phase_metadata(ifg)
             ifg.close()
-            print('closed: ', ifg)
 
         return ref_phs
 
     process_ifg_paths = mpiops.array_split(ifg_paths)
-    ifg_phase_data_sum = mpiops.comm.allreduce(_process_phase_sum(process_ifg_paths), sum0_op)
-    print(process_ifg_paths)
-    print("herehererhereh", ifg_phase_data_sum.shape)
+    ifg_phase_data_sum = mpiops.comm.allreduce(_process_phase_sum(process_ifg_paths), mpiops.sum0_op)
     ref_phs = _inner(process_ifg_paths, ifg_phase_data_sum)
+
     return ref_phs
 
 
@@ -194,7 +184,6 @@ def _est_ref_phs_method1(phase_data, comp):
 
 
 def _update_phase_metadata(ifg):
-    print(ifg, ifg.shape, ifg.phase_data.shape)
     ifg.meta_data[ifc.PYRATE_REF_PHASE] = ifc.REF_PHASE_REMOVED
     ifg.write_modified_phase()
 

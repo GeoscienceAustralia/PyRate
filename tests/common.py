@@ -115,7 +115,6 @@ IFMS16 = [
 
 def remove_tifs(path):
     tifs = glob.glob(os.path.join(path, '*.tif'))
-    print('removed==========================', tifs)
     for tif in tifs:
         os.remove(tif)
 

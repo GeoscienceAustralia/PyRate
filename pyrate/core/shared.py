@@ -465,6 +465,7 @@ class Ifg(RasterBase):
             self.dataset.SetMetadataItem(k, v)
         self.dataset.FlushCache()
 
+
 class IfgPart(object):
     """
     Create a tile (subset) of an Ifg data object
