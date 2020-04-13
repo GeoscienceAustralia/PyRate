@@ -82,6 +82,6 @@ def get_config():
     return params
 
 
-@pytest.fixture(params=[TEST_CONF_ROIPAC, TEST_CONF_GAMMA])
+@pytest.fixture(params=[TEST_CONF_GAMMA, TEST_CONF_ROIPAC])
 def roipac_or_gamma_conf(request):
     return request.param

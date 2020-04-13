@@ -38,7 +38,7 @@ from pyrate.merge import _assemble_tiles
 log = logging.getLogger(__name__)
 
 
-def _wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs):
+def wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs):
     """
     A wrapper for the spatio-temporal filter so it can be tested.
     See docstring for spatio_temporal_filter.
@@ -54,18 +54,20 @@ def _wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs):
         return  # return if True condition returned
 
     tsincr = _calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles)
+    mpiops.comm.barrier()
 
     ifg = Ifg(ifg_paths[0])  # just grab any for parameters in slpfilter
     ifg.open()
     spatio_temporal_filter(tsincr, ifg, params, preread_ifgs)
     ifg.close()
+    mpiops.comm.barrier()
 
 
 def spatio_temporal_filter(tsincr, ifg, params, preread_ifgs):
     """
     Applies a spatio-temporal filter to remove the atmospheric phase screen
     (APS) and saves the corrected interferograms. Before performing this step,
-    the time series iscomputed using the SVD method. This function then
+    the time series is computed using the SVD method. This function then
     performs temporal and spatial filtering.
 
     :param ndarray tsincr: incremental time series array of size
@@ -112,6 +114,7 @@ def _calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles):
         nvels = tsincr.shape[2]
 
     nvels = mpiops.comm.bcast(nvels, root=0)
+    mpiops.comm.barrier()
     # need to assemble tsincr from all processes
     tsincr_g = mpiops.run_once(_assemble_tsincr, ifg_paths, params, preread_ifgs, tiles, nvels)
     log.debug('Finished calculating time series for spatio-temporal filter')
