@@ -58,6 +58,7 @@ def main(params):
     process_base_ifgs_paths = np.array_split(base_ifg_paths, mpiops.size)[mpiops.rank]
     gtiff_paths = [shared.output_tiff_filename(f, params[cf.OBS_DIR]) for f in process_base_ifgs_paths]
     do_prepifg(gtiff_paths, params)
+    mpiops.comm.barrier()
     log.info("Finished prepifg")
 
 
