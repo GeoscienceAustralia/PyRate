@@ -86,11 +86,10 @@ def test_conv2tif_prepifg_parallel_vs_mpi(modified_config, roipac_or_gamma_conf)
     # prepifg + process steps that overwrite tifs test
 
     # 17 ifgs + 1 dem
-    __assert_same_files_produced(params[cf.OUT_DIR], params_s[cf.OUT_DIR], f"*{params[cf.IFG_LKSY]}cr.tif", 18)
+    __assert_same_files_produced(params[cf.OUT_DIR], params_s[cf.OUT_DIR], f"*{params[cf.IFG_CROP_OPT]}cr.tif", 18)
 
     # ifg phase checking in the previous step checks the process pipeline upto APS correction
 
-    # TODO: timeseries and stack asserts
     # 2 x because of aps files
     __assert_same_files_produced(params[cf.TMPDIR], params_s[cf.TMPDIR], "tsincr_*.npy", params['tiles'] * 2)
 
@@ -110,9 +109,12 @@ def __assert_same_files_produced(dir1, dir2, ext, num_files):
     mp_files = list(Path(dir2).glob(ext))  # MultiProcess files
     mpi_files.sort()
     mp_files.sort()
+    print(mpi_files)
+    print(mp_files)
     # 17 unwrapped geotifs
     # 17 cropped multilooked tifs + 1 dem
-    assert len(mpi_files) == len(mp_files) == num_files
+    assert len(mpi_files) == num_files
+    assert len(mp_files) == num_files
     if mpi_files[0].suffix == '.tif':
         for m_f, s_f in zip(mpi_files, mp_files):
             assert m_f.name == s_f.name
