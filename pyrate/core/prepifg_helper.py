@@ -180,12 +180,16 @@ def prepare_ifg(raster_path, xlooks, ylooks, exts, thresh, crop_opt, write_to_di
         raster.open()
     if do_multilook:
         resolution = [xlooks * raster.x_step, ylooks * raster.y_step]
+
+    # cut, average, resample the final output layers
+    op = output_tiff_filename(raster.data_path, out_path)
+    looks_path = cf.mlooked_path(op, ylooks, crop_opt)
+
     if not do_multilook and crop_opt == ALREADY_SAME_SIZE:
-        renamed_path = cf.mlooked_path(raster.data_path, looks=xlooks, crop_out=crop_opt)
-        shutil.copy(raster.data_path, renamed_path)
+        shutil.copy(raster.data_path, looks_path)
         # set metadata to indicated has been cropped and multilooked
         # copy file with mlooked path
-        return _dummy_warp(renamed_path)
+        return _dummy_warp(looks_path)
 
     if xlooks != ylooks:
         raise ValueError('X and Y looks mismatch')
