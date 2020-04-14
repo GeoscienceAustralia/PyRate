@@ -314,7 +314,7 @@ def _stack_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
     log.info('Calculating rate map from stacking')
     output_dir = params[cf.TMPDIR]
     for t in process_tiles:
-        log.debug('Stacking of tile {}'.format(t.index))
+        log.info('Stacking of tile {}'.format(t.index))
         ifg_parts = [shared.IfgPart(p, t, preread_ifgs, params) for p in ifg_paths]
         mst_grid_n = np.load(os.path.join(output_dir, 'mst_mat_{}.npy'.format(t.index)))
         rate, error, samples = stack.stack_rate(ifg_parts, params, vcmt, mst_grid_n)

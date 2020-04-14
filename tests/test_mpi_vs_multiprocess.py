@@ -1,8 +1,6 @@
 import os
-import glob
 import shutil
 import pytest
-from os.path import join, basename
 from pathlib import Path
 from subprocess import check_call, check_output
 import numpy as np
@@ -48,6 +46,8 @@ def modified_config(tempdir, get_lks, get_crop, orbfit_lks, orbfit_method, orbfi
         params[cf.ORBITAL_FIT_DEGREE] = orbfit_degrees
         params[cf.REF_EST_METHOD] = ref_est_method
         params["rows"], params["cols"] = 3, 2
+        params["tiles"] = params["rows"] * params["cols"]
+
         print(params)
         # write new temp config
         output_conf = tdir.joinpath(output_conf_file)
@@ -86,9 +86,19 @@ def test_conv2tif_prepifg_parallel_vs_mpi(modified_config, roipac_or_gamma_conf)
     # prepifg + process steps that overwrite tifs test
 
     # 17 ifgs + 1 dem
-    __assert_same_files_produced(params[cf.OUT_DIR], params_s[cf.OUT_DIR], "*cr.tif", 18)
+    __assert_same_files_produced(params[cf.OUT_DIR], params_s[cf.OUT_DIR], f"*{params[cf.IFG_LKSY]}cr.tif", 18)
+
+    # ifg phase checking in the previous step checks the process pipeline upto APS correction
 
     # TODO: timeseries and stack asserts
+    # 2 x because of aps files
+    __assert_same_files_produced(params[cf.TMPDIR], params_s[cf.TMPDIR], "tsincr_*.npy", params['tiles'] * 2)
+
+    __assert_same_files_produced(params[cf.TMPDIR], params_s[cf.TMPDIR], "tscuml_*.npy", params['tiles'])
+
+    __assert_same_files_produced(params[cf.TMPDIR], params_s[cf.TMPDIR], "stack_rate_*.npy", params['tiles'])
+    __assert_same_files_produced(params[cf.TMPDIR], params_s[cf.TMPDIR], "stack_error_*.npy", params['tiles'])
+    __assert_same_files_produced(params[cf.TMPDIR], params_s[cf.TMPDIR], "stack_samples_*.npy", params['tiles'])
     print("==========================xxx===========================")
 
     shutil.rmtree(params[cf.OBS_DIR])
@@ -96,13 +106,21 @@ def test_conv2tif_prepifg_parallel_vs_mpi(modified_config, roipac_or_gamma_conf)
 
 
 def __assert_same_files_produced(dir1, dir2, ext, num_files):
-    full_res_mpi_tifs = glob.glob(join(dir1, ext))
-    full_res_serial_tifs = glob.glob(join(dir2, ext))
-    full_res_mpi_tifs.sort()
-    full_res_serial_tifs.sort()
+    mpi_files = list(Path(dir1).glob(ext))
+    mp_files = list(Path(dir2).glob(ext))  # MultiProcess files
+    mpi_files.sort()
+    mp_files.sort()
     # 17 unwrapped geotifs
     # 17 cropped multilooked tifs + 1 dem
-    assert len(full_res_mpi_tifs) == len(full_res_serial_tifs) == num_files
-    for m_f, s_f in zip(full_res_mpi_tifs, full_res_serial_tifs):
-        assert basename(m_f) == basename(s_f)
-        common.assert_tifs_equal(m_f, s_f)
+    assert len(mpi_files) == len(mp_files) == num_files
+    if mpi_files[0].suffix == '.tif':
+        for m_f, s_f in zip(mpi_files, mp_files):
+            assert m_f.name == s_f.name
+            common.assert_tifs_equal(m_f.as_posix(), s_f.as_posix())
+    elif mpi_files[0].suffix == '.npy':
+        for m_f, s_f in zip(mpi_files, mp_files):
+            print(m_f.name, s_f.name)
+            assert m_f.name == s_f.name
+            np.testing.assert_array_almost_equal(np.load(m_f), np.load(s_f))
+    else:
+        raise

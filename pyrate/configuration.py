@@ -134,7 +134,9 @@ class Configuration:
             raise ValueError("Configuration parameters refchipsize must be odd: " + str(self.refchipsize))
 
         # calculate rows and cols if not supplied
-        if any([~hasattr(self, 'rows'), ~hasattr(self, 'cols')]):
+        if hasattr(self, 'rows') and hasattr(self, 'cols'):
+            self.rows, self.cols = int(self.rows), int(self.cols)
+        else:
             self.rows, self.cols = [int(no) for no in break_number_into_factors(NO_OF_PARALLEL_PROCESSES)]
 
         # create a temporary directory if not supplied
@@ -179,7 +181,7 @@ class Configuration:
             if len(path_str) > 1:
                 self.header_file_paths.append(MultiplePaths(self.slcFileDir, path_str, self.ifglksx, self.ifgcropopt))
 
-        self.__get_interferrograms_files()
+        self.__get_interferograms_files()
 
         self.dem_file = MultiplePaths(self.demfile.parents[0], self.demfile.name, self.ifglksx, self.ifgcropopt)
 
@@ -188,7 +190,7 @@ class Configuration:
             if isinstance(self.__dict__[key], PurePath):
                 self.__dict__[key] = str(self.__dict__[key])
 
-    def __get_interferrograms_files(self):
+    def __get_interferograms_files(self):
         self.interferogram_files = []
         for path_str in self.ifgfilelist.read_text().split('\n'):
             # ignore empty lines in file
