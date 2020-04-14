@@ -84,14 +84,11 @@ def test_conv2tif_prepifg_parallel_vs_mpi(modified_config, roipac_or_gamma_conf)
     __assert_same_files_produced(params[cf.OBS_DIR], params_s[cf.OBS_DIR], "*_unw.tif", 17)
 
     # prepifg + process steps that overwrite tifs test
-    if params[cf.ORBITAL_FIT_METHOD] == cf.NETWORK_METHOD:
-        # 17 ifgs, 17 orbit network method ifgs + 1 dem
-        __assert_same_files_produced(params[cf.OUT_DIR], params_s[cf.OUT_DIR], "*cr.tif", 35)
-    else:
-        # 17 ifgs + 1 dem
-        __assert_same_files_produced(params[cf.OUT_DIR], params_s[cf.OUT_DIR], "*cr.tif", 18)
 
-    # TODO: timeseris and stack asserts
+    # 17 ifgs + 1 dem
+    __assert_same_files_produced(params[cf.OUT_DIR], params_s[cf.OUT_DIR], "*cr.tif", 18)
+
+    # TODO: timeseries and stack asserts
     print("==========================xxx===========================")
 
     shutil.rmtree(params[cf.OBS_DIR])
@@ -99,13 +96,13 @@ def test_conv2tif_prepifg_parallel_vs_mpi(modified_config, roipac_or_gamma_conf)
 
 
 def __assert_same_files_produced(dir1, dir2, ext, num_files):
-    full_res_mpi_rifs = glob.glob(join(dir1, ext))
+    full_res_mpi_tifs = glob.glob(join(dir1, ext))
     full_res_serial_tifs = glob.glob(join(dir2, ext))
-    full_res_mpi_rifs.sort()
+    full_res_mpi_tifs.sort()
     full_res_serial_tifs.sort()
     # 17 unwrapped geotifs
     # 17 cropped multilooked tifs + 1 dem
-    assert len(full_res_mpi_rifs) == len(full_res_serial_tifs) == num_files
-    for m_f, s_f in zip(full_res_mpi_rifs, full_res_serial_tifs):
+    assert len(full_res_mpi_tifs) == len(full_res_serial_tifs) == num_files
+    for m_f, s_f in zip(full_res_mpi_tifs, full_res_serial_tifs):
         assert basename(m_f) == basename(s_f)
         common.assert_tifs_equal(m_f, s_f)

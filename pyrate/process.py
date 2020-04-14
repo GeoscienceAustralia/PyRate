@@ -93,10 +93,8 @@ def _create_ifg_dict(dest_tifs, params, tiles):
         cp.dump(ifgs_dict, open(preread_ifgs_file, 'wb'))
 
     mpiops.comm.barrier()
-    preread_ifgs = OrderedDict(sorted(cp.load(open(preread_ifgs_file,
-                                                   'rb')).items()))
-    log.debug('Finished converting phase_data to numpy '
-             'in process {}'.format(mpiops.rank))
+    preread_ifgs = OrderedDict(sorted(cp.load(open(preread_ifgs_file, 'rb')).items()))
+    log.debug('Finished converting phase_data to numpy in process {}'.format(mpiops.rank))
     return preread_ifgs
 
 
@@ -157,7 +155,6 @@ def _orb_fit_calc(ifg_paths, params, preread_ifgs=None):
     """
     MPI wrapper for orbital fit correction
     """
-
     if not params[cf.ORBITAL_FIT]:
         log.info('Orbital correction not required!')
         print('Orbital correction not required!')
@@ -168,7 +165,7 @@ def _orb_fit_calc(ifg_paths, params, preread_ifgs=None):
         # perform some general error/sanity checks
         log.debug('Checking Orbital error correction status')
         if mpiops.run_once(shared.check_correction_status, ifg_paths, ifc.PYRATE_ORBITAL_ERROR):
-            log.debug('Finished Orbital error correction')
+            log.debug('Orbital error correction not required as all ifgs are already corrected!')
             return  # return if True condition returned
 
     if params[cf.ORBITAL_FIT_METHOD] == 1:

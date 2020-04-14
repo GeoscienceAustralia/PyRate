@@ -19,6 +19,7 @@ This Python module implements residual orbital corrections for interferograms.
 # pylint: disable=invalid-name
 from typing import Optional, List, Dict
 from collections import OrderedDict
+from pathlib import Path
 from numpy import empty, isnan, reshape, float32, squeeze
 from numpy import dot, vstack, zeros, meshgrid
 import numpy as np
@@ -107,7 +108,7 @@ def remove_orbital_error(ifgs, params, preread_ifgs=None):
     _orbital_correction(ifgs, params, mlooked=mlooked, preread_ifgs=preread_ifgs)
 
 
-def _orbital_correction(ifgs_or_ifg_paths, params, mlooked=None, offset=True, preread_ifgs=None):
+def _orbital_correction(ifgs, params, mlooked=None, offset=True, preread_ifgs=None):
     """
     Convenience function to perform orbital correction.
     """
@@ -120,15 +121,20 @@ def _orbital_correction(ifgs_or_ifg_paths, params, mlooked=None, offset=True, pr
         raise OrbitalError(msg)
 
     log.info('Removing orbital error using {} correction method'
-             ' and degree={}'.format(cf.ORB_METHOD_NAMES.get(method), 
-                                     cf.ORB_DEGREE_NAMES.get(degree)))
-
+             ' and degree={}'.format(cf.ORB_METHOD_NAMES.get(method), cf.ORB_DEGREE_NAMES.get(degree)))
     if method == NETWORK_METHOD:
         if mlooked is None:
-            network_orbital_correction(ifgs_or_ifg_paths, degree, offset, params, mlooked, preread_ifgs)
+            network_orbital_correction(ifgs, degree, offset, params, mlooked, preread_ifgs)
         else:
-            _validate_mlooked(mlooked, ifgs_or_ifg_paths)
-            network_orbital_correction(ifgs_or_ifg_paths, degree, offset, params, mlooked, preread_ifgs)
+            _validate_mlooked(mlooked, ifgs)
+            network_orbital_correction(ifgs, degree, offset, params, mlooked, preread_ifgs)
+
+        # clean up if mlooked file was copied
+        ifg_paths = [i.data_path for i in ifgs] if isinstance(ifgs[0], Ifg) else ifgs
+        for i in ifg_paths:
+            m = cf.mlooked_path(i, looks=params[cf.ORBITAL_FIT_LOOKS_X], crop_out=prepifg_helper.ALREADY_SAME_SIZE)
+            if Path(m).exists():
+                Path(m).unlink()
 
     elif method == INDEPENDENT_METHOD:
         # not running in parallel
@@ -137,7 +143,7 @@ def _orbital_correction(ifgs_or_ifg_paths, params, mlooked=None, offset=True, pr
         #          verbose=joblib_log_level(cf.LOG_LEVEL))(
         #     delayed(_independent_correction)(ifg, degree, offset, params)
         #     for ifg in ifgs)
-        for ifg in ifgs_or_ifg_paths:
+        for ifg in ifgs:
             independent_orbital_correction(ifg, degree, offset, params)
     else:
         msg = "Unknown method: '%s', need INDEPENDENT or NETWORK method"
@@ -222,7 +228,7 @@ def independent_orbital_correction(ifg, degree, offset, params):
         ifg.close()
 
 
-def network_orbital_correction(ifgs, degree, offset, params, m_ifgs: Optional[List ] = None,
+def network_orbital_correction(ifgs, degree, offset, params, m_ifgs: Optional[List] = None,
                                preread_ifgs: Optional[Dict] = None):
     """
     This algorithm implements a network inversion to determine orbital
@@ -261,8 +267,7 @@ def network_orbital_correction(ifgs, degree, offset, params, m_ifgs: Optional[Li
         ids = master_slave_ids(get_all_epochs(temp_ifgs))
     else:
         ids = master_slave_ids(get_all_epochs(ifgs))
-    coefs = [orbparams[i:i+ncoef] for i in
-             range(0, len(set(ids)) * ncoef, ncoef)]
+    coefs = [orbparams[i:i+ncoef] for i in range(0, len(set(ids)) * ncoef, ncoef)]
 
     # create full res DM to expand determined coefficients into full res
     # orbital correction (eg. expand coarser model to full size)
@@ -287,8 +292,7 @@ def network_orbital_correction(ifgs, degree, offset, params, m_ifgs: Optional[Li
 
 def _remove_network_orb_error(coefs, dm, ifg, ids, offset):
     """
-    Convenience function to remove network orbital error from input
-    interferograms
+    remove network orbital error from input interferograms
     """
     orb = dm.dot(coefs[ids[ifg.slave]] - coefs[ids[ifg.master]])
     orb = orb.reshape(ifg.shape)
