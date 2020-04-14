@@ -371,7 +371,8 @@ def crop_resample_average(
                                  driver=out_driver_type, bands=1, dtype=src_dtype, metadata=md, crs=wkt,
                                  geotransform=gt, creation_opts=creation_opts)
 
-    shared.write_geotiff(resampled_average, out_ds, np.nan) 
+    if out_driver_type != 'MEM':
+        shared.write_geotiff(resampled_average, out_ds, np.nan)
     log.debug(f"Writing geotiff: {output_file}")
     return resampled_average, out_ds
 
