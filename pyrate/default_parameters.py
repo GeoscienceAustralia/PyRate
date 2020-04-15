@@ -1,21 +1,32 @@
+#   This Python module is part of the PyRate software package.
+#
+#   Copyright 2020 Geoscience Australia
+#
+#   Licensed under the Apache License,
+#   Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing,
+#   software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+#   either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
 YEARS_PER_DAY = 1 / 365.25
 
 PYRATE_DEFAULT_CONFIGRATION = {
-    "obsdir": {
-        "DataType": "path",
-        "DefaultValue": None,
-        "MinValue": None,
-        "MaxValue": None,
-        "PossibleValues": None,
-        "Required": False
-    },
     "ifgfilelist": {
         "DataType": "path",
         "DefaultValue": None,
         "MinValue": None,
         "MaxValue": None,
         "PossibleValues": None,
-        "Required": False
+        "Required": True
     },
     "demfile": {
         "DataType": "path",
@@ -23,7 +34,7 @@ PYRATE_DEFAULT_CONFIGRATION = {
         "MinValue": None,
         "MaxValue": None,
         "PossibleValues": None,
-        "Required": False
+        "Required": True
     },
     "demHeaderFile": {
         "DataType": "path",
@@ -31,15 +42,7 @@ PYRATE_DEFAULT_CONFIGRATION = {
         "MinValue": None,
         "MaxValue": None,
         "PossibleValues": None,
-        "Required": False
-    },
-    "slcFileDir": {
-        "DataType": "path",
-        "DefaultValue": None,
-        "MinValue": None,
-        "MaxValue": None,
-        "PossibleValues": None,
-        "Required": False
+        "Required": True
     },
     "slcfilelist": {
         "DataType": "path",
@@ -47,15 +50,7 @@ PYRATE_DEFAULT_CONFIGRATION = {
         "MinValue": None,
         "MaxValue": None,
         "PossibleValues": None,
-        "Required": False
-    },
-    "cohfiledir": {
-        "DataType": "path",
-        "DefaultValue": None,
-        "MinValue": None,
-        "MaxValue": None,
-        "PossibleValues": None,
-        "Required": False
+        "Required": True
     },
     "cohfilelist": {
         "DataType": "path",
@@ -71,7 +66,7 @@ PYRATE_DEFAULT_CONFIGRATION = {
         "MinValue": None,
         "MaxValue": None,
         "PossibleValues": None,
-        "Required": False
+        "Required": True
     },
     "processor": {
         "DataType": int,
@@ -398,7 +393,7 @@ PYRATE_DEFAULT_CONFIGRATION = {
         "DataType": int,
         "DefaultValue": 3,
         "MinValue": 1,
-        "MaxValue": None,
+        "MaxValue": 1000,
         "PossibleValues": None,
         "Required": False
     },

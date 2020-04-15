@@ -129,9 +129,11 @@ class Configuration:
                                      PYRATE_DEFAULT_CONFIGRATION[parameter_name]["PossibleValues"])
 
         # bespoke parameter validation
-
-        if self.refchipsize % 2 != 1:  # pragma: no cover
-            raise ValueError("Configuration parameters refchipsize must be odd: " + str(self.refchipsize))
+        if self.refchipsize % 2 != 1:
+            if self.refchipsize - 1 > 1:
+                # Configuration parameters refchipsize must be odd
+                # values too large (>101) will slow down the process without significant gains in results.
+                self.refchipsize = self.refchipsize - 1
 
         # calculate rows and cols if not supplied
         if hasattr(self, 'rows') and hasattr(self, 'cols'):
