@@ -17,6 +17,7 @@
 This Python module contains tools for reading ROI_PAC format input data.
 """
 import os
+from pathlib import Path
 import re
 import datetime
 import pyrate.core.ifgconstants as ifc
@@ -191,7 +192,6 @@ def manage_header(header_file, projection):
     :return: combined_header: Combined metadata dictionary
     :rtype: dict
     """
-
     header = parse_header(header_file)
     if ifc.PYRATE_DATUM not in header:  # DEM already has DATUM
         header[ifc.PYRATE_DATUM] = projection
@@ -204,17 +204,17 @@ def roipac_header(file_path, params):
     Function to obtain a header for roipac interferogram file or converted
     geotiff.
     """
-    rsc_file = os.path.join(params[cf.DEM_HEADER_FILE])
+    rsc_file = params[cf.DEM_HEADER_FILE]
     if rsc_file is not None:
         projection = parse_header(rsc_file)[ifc.PYRATE_DATUM]
     else:
-        raise RoipacException('No DEM resource/header file is '
-                                     'provided')
+        raise RoipacException('No DEM resource/header file is provided')
     if file_path.endswith('_dem.tif'):
         header_file = os.path.join(params[cf.DEM_HEADER_FILE])
     elif file_path.endswith('_unw.tif'):
-        base_file = file_path[:-8]
-        header_file = base_file + '.unw.' + ROI_PAC_HEADER_FILE_EXT
+        base_header_file = Path(file_path).stem.split('_unw')[0]
+        header_file_index = [Path(p.converted_path).stem for p in params[cf.HEADER_FILE_PATHS]].index(base_header_file)
+        header_file = [p.unwrapped_path for p in params[cf.HEADER_FILE_PATHS]][header_file_index]
     else:
         header_file = "%s.%s" % (file_path, ROI_PAC_HEADER_FILE_EXT)
 

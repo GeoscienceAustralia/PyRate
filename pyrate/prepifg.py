@@ -19,6 +19,7 @@ interferogram geotiff files.
 """
 # -*- coding: utf-8 -*-
 import os
+from typing import List
 from joblib import Parallel, delayed
 import numpy as np
 from pyrate.core import shared, mpiops, config as cf, prepifg_helper, gamma, roipac
@@ -37,32 +38,31 @@ def main(params):
 
     :param dict params: Parameters dictionary read in from the config file
     """
-    # TODO: looks like base_ifg_paths are ordered according to ifg list
+    # TODO: looks like ifg_paths are ordered according to ifg list
     # This probably won't be a problem because input list won't be reordered
     # and the original gamma generated list is ordered) this may not affect
     # the important pyrate stuff anyway, but might affect gen_thumbs.py.
-    # Going to assume base_ifg_paths is ordered correcly
+    # Going to assume ifg_paths is ordered correcly
     # pylint: disable=too-many-branches
 
     if mpiops.size > 1:  # Over-ride input options if this is an MPI job
         log.debug("Running using mpi processing. Disabling parallel processing.")
         params[cf.PARALLEL] = False
 
-    base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST], params[cf.OBS_DIR])
-
-    if params[cf.DEM_FILE] is not None: # optional DEM conversion
-        base_ifg_paths.append(params[cf.DEM_FILE])
+    ifg_paths = params[cf.INTERFEROGRAM_FILES]
+    if params[cf.DEM_FILE] is not None:  # optional DEM conversion
+        ifg_paths.append(params[cf.DEM_FILE_PATH])
 
     shared.mkdir_p(params[cf.OUT_DIR]) # create output dir
 
-    process_base_ifgs_paths = np.array_split(base_ifg_paths, mpiops.size)[mpiops.rank]
-    gtiff_paths = [shared.output_tiff_filename(f, params[cf.OBS_DIR]) for f in process_base_ifgs_paths]
+    process_base_ifgs_paths = np.array_split(ifg_paths, mpiops.size)[mpiops.rank]
+    gtiff_paths = [p.converted_path for p in process_base_ifgs_paths]
     do_prepifg(gtiff_paths, params)
     mpiops.comm.barrier()
     log.info("Finished prepifg")
 
 
-def do_prepifg(gtiff_paths, params):
+def do_prepifg(gtiff_paths: List[str], params: dict) -> None:
     """
     Prepare interferograms by applying multilooking/cropping operations.
 
@@ -96,7 +96,7 @@ def _prepifg_multiprocessing(path, xlooks, ylooks, exts, thresh, crop, params):
     Multiprocessing wrapper for prepifg
     """
     processor = params[cf.PROCESSOR]  # roipac, gamma or geotif
-    if (processor == GAMMA) or (processor == GAMMA):
+    if (processor == GAMMA) or (processor == GEOTIF):
         header = gamma.gamma_header(path, params)
     elif processor == ROIPAC:
         header = roipac.roipac_header(path, params)
