@@ -4,7 +4,7 @@ from osgeo import gdal
 import numpy as np
 from osgeo import osr
 
-from pyrate import conv2tif, prepifg
+from pyrate.core.shared import extract_epochs_from_filename
 from pyrate.core import gdal_python
 from pyrate.configuration import MultiplePaths
 from pathlib import Path
@@ -73,7 +73,7 @@ def test_coherence_files_not_converted():
     coherence_thresh = 0.3
 
     gdal_python.coherence_masking(sample_gdal_dataset,
-                                  gdal_python.extract_epochs_from_filename(sample_gdal_filename),
+                                  extract_epochs_from_filename(sample_gdal_filename),
                                   [coherence_mask_filename.converted_path],
                                   coherence_thresh)
 

@@ -186,6 +186,7 @@ def combine_headers(hdr0, hdr1, dem_hdr):
     chdr.update(dem_hdr)  # add geographic data
     return chdr
 
+
 def manage_headers(dem_header_file, header_paths):
     """
     Manage and combine  header files for GAMMA interferograms, DEM and

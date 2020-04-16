@@ -17,7 +17,6 @@
 This Python module contains bindings for the GDAL library
 """
 # pylint: disable=too-many-arguments,R0914
-import re
 from osgeo import gdal, gdalconst, gdalnumeric
 from PIL import Image, ImageDraw
 import numpy as np
@@ -26,6 +25,7 @@ from typing import Union, List, Tuple
 from osgeo.gdal import Dataset
 from pyrate.core import shared, ifgconstants as ifc
 from pyrate.core.logger import pyratelogger as log
+from pyrate.core.shared import extract_epochs_from_filename
 
 gdal.SetCacheMax(2**15)
 GDAL_WARP_MEMORY_LIMIT = 2**10
@@ -277,13 +277,6 @@ def _gdalwarp_width_and_height(max_x, max_y, min_x, min_y, geo_trans):
     px_width = int(lr_x - ul_x)
     px_height = int(lr_y - ul_y)
     return px_height, px_width  # this is the same as `gdalwarp`
-
-
-def extract_epochs_from_filename(tif: str) -> List[str]:
-    src_epochs = re.findall(r"(\d{8})", str(tif))
-    if not len(src_epochs) > 0:
-        src_epochs = re.findall(r"(\d{6})", str(tif))
-    return src_epochs
 
 
 def crop_resample_average(
