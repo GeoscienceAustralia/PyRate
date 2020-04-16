@@ -67,6 +67,7 @@ SLC_FILE_LIST = 'slcfilelist'
 
 
 INTERFEROGRAM_FILES = 'interferogram_files'
+HEADER_FILE_PATHS = 'header_file_paths'
 COHERENCE_FILE_PATHS = 'coherence_file_paths'
 DEM_FILE_PATH = 'dem_file'
 
@@ -896,13 +897,13 @@ def validate_parameters(pars: Dict, step: str=CONV2TIF):
     if is_GAMMA:
         validate_epochs(ifl, SIXTEEN_DIGIT_EPOCH_PAIR)
         validate_epochs(pars[SLC_FILE_LIST], EIGHT_DIGIT_EPOCH)
-        validate_gamma_headers(ifl, pars[SLC_FILE_LIST], pars[SLC_DIR])
+        validate_gamma_headers(ifl, pars[SLC_FILE_LIST])
     else:
         validate_epochs(ifl, TWELVE_DIGIT_EPOCH_PAIR)
 
     if step == CONV2TIF:   
         # Check that unwrapped interferograms exist.
-        validate_ifgs(ifl, pars[OBS_DIR])
+        validate_ifgs(ifl)
 
     elif step == PREPIFG: 
         # Check full res geotiffs exist before continuing.
@@ -1262,7 +1263,8 @@ def validate_tifs_exist(ifg_file_list: str, obs_dir: str) -> Optional[bool]:
 
     return _raise_errors(errors)
 
-def validate_ifgs(ifg_file_list: str, obs_dir: str) -> Optional[bool]:
+
+def validate_ifgs(ifg_file_list: str) -> Optional[bool]:
     """
     Validates that provided interferograms exist.
 
@@ -1278,13 +1280,13 @@ def validate_ifgs(ifg_file_list: str, obs_dir: str) -> Optional[bool]:
     """
     errors = []
     ifgs = parse_namelist(ifg_file_list)
-    ifg_paths = [os.path.join(obs_dir, ifg) for ifg in ifgs]
-    for path in ifg_paths:
+    for path in ifgs:
         if not os.path.exists(path):
             fname = os.path.split(path)[1]
             errors.append(f"'{IFG_FILE_LIST}': interferogram '{fname}' does not exist.")
 
     return _raise_errors(errors)
+
 
 def validate_obs_thresholds(ifg_file_list: str, pars: Dict) -> Optional[bool]:
     """
@@ -1484,8 +1486,7 @@ def validate_reference_pixel_search_windows(n_cols: int, n_rows: int,
 
     return _raise_errors(errors)
 
-def validate_gamma_headers(ifg_file_list: str, slc_file_list: str,
-                           slc_dir: str) -> Optional[bool]:
+def validate_gamma_headers(ifg_file_list: str, slc_file_list: str) -> Optional[bool]:
     """
     Validates that a pair of GAMMA headers exist for each provided
     GAMMA interferogram.
@@ -1507,7 +1508,7 @@ def validate_gamma_headers(ifg_file_list: str, slc_file_list: str,
     errors = []
 
     for ifg in parse_namelist(ifg_file_list):
-        headers = get_header_paths(ifg, slc_file_list, slc_dir)
+        headers = get_header_paths(ifg, slc_file_list)
         if len(headers) < 2:
             errors.append(f"'{SLC_DIR}': Headers not found for interferogram "
                           "'{ifg}'.")
