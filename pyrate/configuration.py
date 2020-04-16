@@ -58,37 +58,36 @@ def validate_parameter_value(input_name, input_value, min_value=None, max_value=
     return True
 
 
-def validate_file_list_values(dir, fileList, no_of_epochs):
-    if dir is None:  # pragma: no cover
-        raise ValueError("No value supplied for input directory: " + str(dir))
-    if fileList is None:  # pragma: no cover
-        raise ValueError("No value supplied for input file list: " + str(fileList))
+def validate_file_list_values(file_list, no_of_epochs):
+    if file_list is None:  # pragma: no cover
+        raise ValueError("No value supplied for input file list: " + str(file_list))
 
-    for path_str in fileList.read_text().split('\n'):
+    for path_str in file_list.read_text().split('\n'):
         # ignore empty lines in file
         if len(path_str) > 1:
-            if not Path(dir).joinpath(path_str).exists():  # pragma: no cover
-                raise ValueError("Give file name: " + str(path_str) + " dose not exist at: " + str(dir))
+            if not Path(path_str).exists():  # pragma: no cover
+                raise ValueError("Give file name: " + str(path_str) + " does not exist at: " + str(dir))
             else:
-                matches = re.findall(r"(\d{8})", str(dir / path_str))
+                matches = re.findall(r"(\d{8})", path_str)
                 if len(matches) < no_of_epochs:  # pragma: no cover
-                    raise ValueError("For the given file name: " + str(path_str) + " in: " + str(
-                        dir) + " the number of epochs in file names are less the required number:" + str(
-                        no_of_epochs))
+                    raise ValueError("For the given file name: " + str(path_str) +
+                                     " the number of epochs in file names are less the required number:"
+                                     + str(no_of_epochs))
 
 
 class MultiplePaths:
-    def __init__(self, baseDir, baseName, ifglksx=0, ifgcropopt=0):
-        if ".tif" in baseName:
+    def __init__(self, out_dir, file_name, ifglksx=1, ifgcropopt=1):
+        b = Path(file_name)
+        if b.suffix == ".tif":
             self.unwrapped_path = None
-            self.converted_path = Path(baseDir).joinpath(baseName).as_posix()
-            self.sampled_path = self.converted_path.split(".tif")[0] + "_" + str(ifglksx) + "rlks_" + str(ifgcropopt) + "cr.tif"
+            converted_path = b
         else:
-            self.unwrapped_path = Path(baseDir).joinpath(baseName).as_posix()
-            baseName = baseName.split(".")[0] + "_" + baseName.split(".")[1] + ".tif"
+            self.unwrapped_path = b.as_posix()
+            converted_path = Path(out_dir).joinpath(b.stem + '_' + b.suffix[1:]).with_suffix('.tif')
 
-            self.converted_path = Path(baseDir).joinpath(baseName).as_posix()
-            self.sampled_path = self.converted_path.split(".tif")[0] + "_" + str(ifglksx) + "rlks_" + str(ifgcropopt) + "cr.tif"
+        self.sampled_path = converted_path.with_name(
+            converted_path.stem + '_' + str(ifglksx) + "rlks_" + str(ifgcropopt) + "cr.tif").as_posix()
+        self.converted_path = converted_path.as_posix()
 
     def __str__(self):  # pragma: no cover
         return"""
@@ -161,40 +160,27 @@ class Configuration:
         self.NUMEXPR_MAX_THREADS = str(NO_OF_PARALLEL_PROCESSES)
 
         # Validate file names supplied in list exist and contain correct epochs in file names
-
-        if self.processor != 0:   # not roipac
-            validate_file_list_values(self.obsdir, self.ifgfilelist, 2)
-            validate_file_list_values(self.slcFileDir, self.slcfilelist, 1)
-
-        self.coherence_file_paths = None
-        if self.cohfiledir is not None and self.cohfilelist is not None:
-            # FIXME: tests don't reach here due to configs not having cohfilelist
+        if self.cohfilelist is not None:
             if self.processor != 0:  # not roipac
-                validate_file_list_values(self.cohfiledir, self.cohfilelist, 1)
-            self.coherence_file_paths = []
-            for path_str in self.cohfilelist.read_text().split('\n'):
-                # ignore empty lines in file
-                if len(path_str) > 1:
-                    self.coherence_file_paths.append(MultiplePaths(self.cohfiledir, path_str, self.ifglksx, self.ifgcropopt))
+                validate_file_list_values(self.cohfilelist, 1)
+            self.coherence_file_paths = self.__get_files_from_attr('cohfilelist')
 
-        self.header_file_paths = []
-        for path_str in self.slcfilelist.read_text().split('\n'):
-            # ignore empty lines in file
-            if len(path_str) > 1:
-                self.header_file_paths.append(MultiplePaths(self.slcFileDir, path_str, self.ifglksx, self.ifgcropopt))
+        self.header_file_paths = self.__get_files_from_attr('slcfilelist')
 
-        self.__get_interferograms_files()
+        self.interferogram_files = self.__get_files_from_attr('ifgfilelist')
 
-        self.dem_file = MultiplePaths(self.demfile.parents[0], self.demfile.name, self.ifglksx, self.ifgcropopt)
+        self.dem_file = MultiplePaths(self.outdir, self.demfile, self.ifglksx, self.ifgcropopt)
 
         # backward compatibility for string paths
         for key in self.__dict__:
             if isinstance(self.__dict__[key], PurePath):
                 self.__dict__[key] = str(self.__dict__[key])
 
-    def __get_interferograms_files(self):
-        self.interferogram_files = []
-        for path_str in self.ifgfilelist.read_text().split('\n'):
+    def __get_files_from_attr(self, attr):
+        files = []
+        val = self.__getattribute__(attr)
+        for path_str in val.read_text().split('\n'):
             # ignore empty lines in file
             if len(path_str) > 1:
-                self.interferogram_files.append(MultiplePaths(self.outdir, path_str, self.ifglksx, self.ifgcropopt))
+                files.append(MultiplePaths(self.outdir, path_str, self.ifglksx, self.ifgcropopt))
+        return files

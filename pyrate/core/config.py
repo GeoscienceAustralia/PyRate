@@ -67,6 +67,8 @@ SLC_FILE_LIST = 'slcfilelist'
 
 
 INTERFEROGRAM_FILES = 'interferogram_files'
+COHERENCE_FILE_PATHS = 'coherence_file_paths'
+DEM_FILE_PATH = 'dem_file'
 
 # STR; The projection of the input interferograms.
 # TODO: only used in tests; deprecate?
