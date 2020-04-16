@@ -244,7 +244,7 @@ def main(params):
     """
 
     ifg_paths = []
-    for ifg_path in params["interferogram_files"]:
+    for ifg_path in params[cf.INTERFEROGRAM_FILES]:
         ifg_paths.append(ifg_path.sampled_path)
 
     rows, cols = params["rows"], params["cols"]

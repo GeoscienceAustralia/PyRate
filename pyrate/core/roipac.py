@@ -17,11 +17,11 @@
 This Python module contains tools for reading ROI_PAC format input data.
 """
 import os
-from pathlib import Path
 import re
 import datetime
 import pyrate.core.ifgconstants as ifc
 from pyrate.core import config as cf
+from pyrate.core.shared import extract_epochs_from_filename
 
 # ROIPAC RSC header file constants
 WIDTH = "WIDTH"
@@ -70,7 +70,7 @@ FLOAT_HEADERS = [X_FIRST, X_STEP, Y_FIRST, Y_STEP, TIME_SPAN_YEAR,
 DATE_HEADERS = [DATE, DATE12]
 
 ROIPAC_HEADER_LEFT_JUSTIFY = 18
-ROI_PAC_HEADER_FILE_EXT = "rsc"
+ROI_PAC_HEADER_FILE_EXT = ".rsc"
 
 def parse_date(dstr):
     """
@@ -209,14 +209,17 @@ def roipac_header(file_path, params):
         projection = parse_header(rsc_file)[ifc.PYRATE_DATUM]
     else:
         raise RoipacException('No DEM resource/header file is provided')
-    if file_path.endswith('_dem.tif'):
+    if file_path.endswith('dem.tif'):
         header_file = os.path.join(params[cf.DEM_HEADER_FILE])
-    elif file_path.endswith('_unw.tif'):
-        base_header_file = Path(file_path).stem.split('_unw')[0]
-        header_file_index = [Path(p.converted_path).stem for p in params[cf.HEADER_FILE_PATHS]].index(base_header_file)
-        header_file = [p.unwrapped_path for p in params[cf.HEADER_FILE_PATHS]][header_file_index]
+    elif file_path.endswith('unw.tif'):
+        interferogram_epoches = extract_epochs_from_filename(file_path)
+        for header_path in params[cf.HEADER_FILE_PATHS]:
+            header_epochs = extract_epochs_from_filename(header_path.unwrapped_path)
+            if set(header_epochs).__eq__(set(interferogram_epoches)):
+                header_file = header_path.unwrapped_path
+                break
     else:
-        header_file = "%s.%s" % (file_path, ROI_PAC_HEADER_FILE_EXT)
+        header_file = "%s%s" % (file_path, ROI_PAC_HEADER_FILE_EXT)
 
     header = manage_header(header_file, projection)
 

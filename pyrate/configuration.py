@@ -80,13 +80,14 @@ class MultiplePaths:
         b = Path(file_name)
         if b.suffix == ".tif":
             self.unwrapped_path = None
-            converted_path = b
+            converted_path = b  # original file
+            self.sampled_path = Path(out_dir).joinpath(
+                b.stem + '_' + str(ifglksx) + "rlks_" + str(ifgcropopt) + "cr.tif").as_posix()
         else:
             self.unwrapped_path = b.as_posix()
             converted_path = Path(out_dir).joinpath(b.stem + '_' + b.suffix[1:]).with_suffix('.tif')
-
-        self.sampled_path = converted_path.with_name(
-            converted_path.stem + '_' + str(ifglksx) + "rlks_" + str(ifgcropopt) + "cr.tif").as_posix()
+            self.sampled_path = converted_path.with_name(
+                converted_path.stem + '_' + str(ifglksx) + "rlks_" + str(ifgcropopt) + "cr.tif").as_posix()
         self.converted_path = converted_path.as_posix()
 
     def __str__(self):  # pragma: no cover
@@ -109,6 +110,9 @@ class Configuration:
 
         for key, value in parser._sections["root"].items():
             self.__dict__[key] = value
+
+        # make output path, if not provided will error
+        Path(self.outdir).mkdir(exist_ok=True, parents=True)
 
         # Validate required parameters exist.
         if not set(PYRATE_DEFAULT_CONFIGRATION).issubset(self.__dict__):  # pragma: no cover

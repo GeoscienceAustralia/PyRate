@@ -19,6 +19,9 @@ This Python module contains utilities and classes shared by
 all other PyRate modules
 """
 # pylint: disable=too-many-lines
+import re
+from typing import List
+
 import errno
 import math
 from math import floor
@@ -1258,3 +1261,10 @@ class CorrectionStatusError(Exception):
     """
     Generic class for correction status errors.
     """
+
+
+def extract_epochs_from_filename(tif: str) -> List[str]:
+    src_epochs = re.findall(r"(\d{8})", str(tif))
+    if not len(src_epochs) > 0:
+        src_epochs = re.findall(r"(\d{6})", str(tif))
+    return src_epochs
