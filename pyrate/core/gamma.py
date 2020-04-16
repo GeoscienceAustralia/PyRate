@@ -209,7 +209,8 @@ def manage_headers(dem_header_file, header_paths):
 
     return combined_header
 
-def get_header_paths(input_file, slc_file_list, slc_dir):
+
+def get_header_paths(input_file, slc_file_list):
     """
     Function that matches input GAMMA file names with GAMMA header file names
 
@@ -218,12 +219,12 @@ def get_header_paths(input_file, slc_file_list, slc_dir):
     :return: list of matching header files
     :rtype: list
     """
-    _, file_name = split(input_file)
     PTN = re.compile(r'\d{8}')  # match 8 digits for the dates
-    epochs = PTN.findall(file_name)
+    epochs = PTN.findall(input_file)
     header_names = cf.parse_namelist(slc_file_list)
     matches = [hdr for hdr in header_names if any(e in hdr for e in epochs)]
-    return [os.path.join(slc_dir, hdr) for hdr in matches]
+    return matches
+
 
 def gamma_header(ifg_file_path, params):
     """
@@ -238,12 +239,8 @@ def gamma_header(ifg_file_path, params):
         gamma headers and DEM header.   
     """
     dem_hdr_path = params[cf.DEM_HEADER_FILE]
-    slc_dir = params[cf.SLC_DIR]
-    header_paths = get_header_paths(ifg_file_path, 
-                                    params[cf.SLC_FILE_LIST], 
-                                    slc_dir=slc_dir)
+    header_paths = get_header_paths(ifg_file_path, params[cf.SLC_FILE_LIST])
     combined_headers = manage_headers(dem_hdr_path, header_paths)
-
     if os.path.basename(ifg_file_path).split('.')[1] == \
             (params[cf.APS_INCIDENCE_EXT] or params[cf.APS_ELEVATION_EXT]):
         # TODO: implement incidence class here
@@ -253,6 +250,4 @@ def gamma_header(ifg_file_path, params):
 
 
 class GammaException(Exception):
-    """
-    Gamma generic exception class
-    """
+    """Gamma generic exception class"""

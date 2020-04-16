@@ -716,8 +716,7 @@ def write_fullres_geotiff(header, data_path, dest, nodata):
     _check_pixel_res_mismatch(header)
 
     # position and projection data
-    gt = [header[ifc.PYRATE_LONG], header[ifc.PYRATE_X_STEP], 0,
-            header[ifc.PYRATE_LAT], 0, header[ifc.PYRATE_Y_STEP]]
+    gt = [header[ifc.PYRATE_LONG], header[ifc.PYRATE_X_STEP], 0, header[ifc.PYRATE_LAT], 0, header[ifc.PYRATE_Y_STEP]]
     srs = osr.SpatialReference()
     res = srs.SetWellKnownGeogCS(header[ifc.PYRATE_DATUM])
     if res:
@@ -731,9 +730,10 @@ def write_fullres_geotiff(header, data_path, dest, nodata):
     md = collate_metadata(header)
 
     # create GDAL object
-    ds = gdal_dataset(dest, ncols, nrows, driver="GTiff", bands=1,
-                 dtype=dtype, metadata=md, crs=wkt,
-                 geotransform=gt, creation_opts=['compress=packbits'])
+    ds = gdal_dataset(
+        dest, ncols, nrows, driver="GTiff", bands=1, dtype=dtype, metadata=md, crs=wkt, geotransform=gt,
+        creation_opts=["compress=packbits"]
+    )
 
     # copy data from the binary file
     band = ds.GetRasterBand(1)

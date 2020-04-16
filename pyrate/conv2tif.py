@@ -20,12 +20,14 @@ into geotiff format files
 # -*- coding: utf-8 -*-
 import sys
 import os
+from typing import Tuple, List
 from joblib import Parallel, delayed
 import numpy as np
 
 from pyrate.core.prepifg_helper import PreprocessError
 from pyrate.core import shared, mpiops, config as cf, gamma, roipac
 from pyrate.core.logger import pyratelogger as log
+from pyrate.configuration import MultiplePaths
 
 
 GAMMA = 1
@@ -53,13 +55,13 @@ def main(params):
     if mpiops.size > 1:  # Over-ride input options if this is an MPI job
         params[cf.PARALLEL] = False
 
-    base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST], params[cf.OBS_DIR])
+    base_ifg_paths = params[cf.INTERFEROGRAM_FILES]
 
     if params[cf.COH_MASK]:
-        base_ifg_paths.extend(cf.coherence_paths(params))
+        base_ifg_paths.extend(params[cf.COHERENCE_FILE_PATHS])
 
-    if params[cf.DEM_FILE] is not None: # optional DEM conversion
-        base_ifg_paths.append(params[cf.DEM_FILE])
+    if params[cf.DEM_FILE] is not None:  # optional DEM conversion
+        base_ifg_paths.append(params[cf.DEM_FILE_PATH])
 
     process_base_ifgs_paths = np.array_split(base_ifg_paths, mpiops.size)[mpiops.rank]
     gtiff_paths = do_geotiff(process_base_ifgs_paths, params)
@@ -68,12 +70,9 @@ def main(params):
     return gtiff_paths
 
 
-def do_geotiff(base_unw_paths, params):
+def do_geotiff(unw_paths: MultiplePaths, params: dict) -> List[str]:
     """
     Convert input interferograms to geotiff format.
-
-    :param list base_unw_paths: List of unwrapped interferograms
-    :param dict params: Parameters dictionary corresponding to config file
     """
     # pylint: disable=expression-not-assigned
     log.info("Converting input interferograms to geotiff")
@@ -82,37 +81,31 @@ def do_geotiff(base_unw_paths, params):
     if parallel:
         log.info("Running geotiff conversion in parallel with {} processes".format(params[cf.PROCESSES]))
         dest_base_ifgs = Parallel(n_jobs=params[cf.PROCESSES], verbose=shared.joblib_log_level(cf.LOG_LEVEL))(
-            delayed(_geotiff_multiprocessing)(p, params) for p in base_unw_paths)
+            delayed(_geotiff_multiprocessing)(p, params) for p in unw_paths)
     else:
         log.info("Running geotiff conversion in serial")
-        dest_base_ifgs = [_geotiff_multiprocessing(b, params) for b in base_unw_paths]
+        dest_base_ifgs = [_geotiff_multiprocessing(b, params) for b in unw_paths]
     return dest_base_ifgs
 
 
-def _geotiff_multiprocessing(unw_path, params):
+def _geotiff_multiprocessing(unw_path: MultiplePaths, params: dict) -> Tuple[str, bool]:
     """
     Multiprocessing wrapper for full-res geotiff conversion
     """
     # TODO: Need a more robust method for identifying coherence files.
-    if params[cf.COH_FILE_DIR] and unw_path.endswith('.cc'):
-        # If the user has provided a dir for coherence files, place 
-        #  converted coherence files in that directory.
-        dest = shared.output_tiff_filename(unw_path, params[cf.COH_FILE_DIR])
-    else:
-        dest = shared.output_tiff_filename(unw_path, params[cf.OBS_DIR])
+    dest = unw_path.converted_path
     processor = params[cf.PROCESSOR]  # roipac or gamma
 
     # Create full-res geotiff if not already on disk
     if not os.path.exists(dest):
         if processor == GAMMA:
-            header = gamma.gamma_header(unw_path, params)
+            header = gamma.gamma_header(unw_path.unwrapped_path, params)
         elif processor == ROIPAC:
-            header = roipac.roipac_header(unw_path, params)
+            header = roipac.roipac_header(unw_path.unwrapped_path, params)
         else:
             raise PreprocessError('Processor must be ROI_PAC (0) or GAMMA (1)')
-        shared.write_fullres_geotiff(header, unw_path, dest, nodata=params[cf.NO_DATA_VALUE])
+        shared.write_fullres_geotiff(header, unw_path.unwrapped_path, dest, nodata=params[cf.NO_DATA_VALUE])
         return dest, True
     else:
         log.warning(f"Full-res geotiff already exists in {dest}! Returning existing geotiff!")
         return dest, False
-
