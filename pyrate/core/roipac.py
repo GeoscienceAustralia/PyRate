@@ -212,6 +212,7 @@ def roipac_header(file_path, params):
     if file_path.endswith('dem.tif'):
         header_file = os.path.join(params[cf.DEM_HEADER_FILE])
     elif file_path.endswith('unw.tif'):
+        # TODO: improve this
         interferogram_epoches = extract_epochs_from_filename(file_path)
         for header_path in params[cf.HEADER_FILE_PATHS]:
             header_epochs = extract_epochs_from_filename(header_path.unwrapped_path)
