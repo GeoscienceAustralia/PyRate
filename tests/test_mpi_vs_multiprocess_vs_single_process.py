@@ -68,6 +68,7 @@ def modified_config(tempdir, get_lks, get_crop, orbfit_lks, orbfit_method, orbfi
     return modify_params
 
 
+@pytest.mark.skipif(REGRESSION or REGRESSION, reason="Skip if not python3.7")
 def test_conv2tif_prepifg_parallel_vs_mpi(modified_config, roipac_or_gamma_conf):
 
     BOOL = np.random.randint(0, 10) > 0  # skip 90% of tests randomly
@@ -108,17 +109,17 @@ def test_conv2tif_prepifg_parallel_vs_mpi(modified_config, roipac_or_gamma_conf)
     # ifg phase checking in the previous step checks the process pipeline upto APS correction
 
     # 2 x because of aps files
-    assert_same_files_produced(params[cf.TMPDIR], params_m[cf.OUT_DIR], params_s[cf.TMPDIR], "tsincr_*.npy",
+    assert_same_files_produced(params[cf.TMPDIR], params_m[cf.TMPDIR], params_s[cf.TMPDIR], "tsincr_*.npy",
                                params['tiles'] * 2)
 
-    assert_same_files_produced(params[cf.TMPDIR], params_m[cf.OUT_DIR], params_s[cf.TMPDIR], "tscuml_*.npy",
+    assert_same_files_produced(params[cf.TMPDIR], params_m[cf.TMPDIR], params_s[cf.TMPDIR], "tscuml_*.npy",
                                params['tiles'])
 
-    assert_same_files_produced(params[cf.TMPDIR], params_m[cf.OUT_DIR], params_s[cf.TMPDIR], "stack_rate_*.npy",
+    assert_same_files_produced(params[cf.TMPDIR], params_m[cf.TMPDIR], params_s[cf.TMPDIR], "stack_rate_*.npy",
                                params['tiles'])
-    assert_same_files_produced(params[cf.TMPDIR], params_m[cf.OUT_DIR], params_s[cf.TMPDIR], "stack_error_*.npy",
+    assert_same_files_produced(params[cf.TMPDIR], params_m[cf.TMPDIR], params_s[cf.TMPDIR], "stack_error_*.npy",
                                params['tiles'])
-    assert_same_files_produced(params[cf.TMPDIR], params_m[cf.OUT_DIR], params_s[cf.TMPDIR], "stack_samples_*.npy",
+    assert_same_files_produced(params[cf.TMPDIR], params_m[cf.TMPDIR], params_s[cf.TMPDIR], "stack_samples_*.npy",
                                params['tiles'])
     print("==========================xxx===========================")
 
