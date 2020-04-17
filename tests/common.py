@@ -24,6 +24,7 @@ import shutil
 import stat
 import tempfile
 from os.path import join
+from pathlib import Path
 
 import numpy as np
 from numpy import isnan, sum as nsum
@@ -43,8 +44,10 @@ SML_TEST_OBS = join(SML_TEST_DIR, 'roipac_obs')  # roipac processed unws
 SML_TEST_OUT = join(SML_TEST_DIR, 'out')
 SML_TEST_TIF = join(SML_TEST_DIR, 'tif')
 SML_TEST_GAMMA = join(SML_TEST_DIR, 'gamma_obs')  # gamma processed unws
+SML_TEST_ROIPAC = join(SML_TEST_DIR, 'roipac_obs')  # gamma processed unws
 SML_TEST_CONF = join(SML_TEST_DIR, 'conf')
 SML_TEST_GAMMA_HEADER_LIST = join(SML_TEST_GAMMA, 'headers')
+SML_TEST_ROIPAC_HEADER_LIST = join(SML_TEST_ROIPAC, 'headers')
 
 SML_TEST_DEM_DIR = join(SML_TEST_DIR, 'dem')
 SML_TEST_LEGACY_PREPIFG_DIR = join(SML_TEST_DIR, 'prepifg_output')
@@ -456,3 +459,28 @@ def pre_prepare_ifgs(ifg_paths, params):
             i.open(readonly=False)
         nan_and_mm_convert(i, params)
     return ifgs
+
+
+def assert_same_files_produced(dir1, dir2, ext, num_files):
+    dir1_files = list(Path(dir1).glob(ext))
+    dir2_files = list(Path(dir2).glob(ext))  # MultiProcess files
+    dir1_files.sort()
+    dir2_files.sort()
+    print("==="*10)
+    print(dir1_files)
+    print(dir2_files)
+    # 17 unwrapped geotifs
+    # 17 cropped multilooked tifs + 1 dem
+    assert len(dir1_files) == num_files
+    assert len(dir2_files) == num_files
+    if dir1_files[0].suffix == '.tif':
+        for m_f, s_f in zip(dir1_files, dir2_files):
+            assert m_f.name == s_f.name
+            assert_tifs_equal(m_f.as_posix(), s_f.as_posix())
+    elif dir1_files[0].suffix == '.npy':
+        for m_f, s_f in zip(dir1_files, dir2_files):
+            print(m_f.name, s_f.name)
+            assert m_f.name == s_f.name
+            np.testing.assert_array_almost_equal(np.load(m_f), np.load(s_f))
+    else:
+        raise

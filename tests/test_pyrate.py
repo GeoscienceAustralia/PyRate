@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2017 Geoscience Australia
+#   Copyright 2020 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ import numpy as np
 import pyrate.core.shared
 from pyrate.core import shared, config as cf, config, prepifg_helper, mst
 from pyrate import process, prepifg, conv2tif
+from pyrate.configuration import MultiplePaths
 from tests import common
 
 # taken from
@@ -194,56 +195,62 @@ class ParallelPyRateTests(unittest.TestCase):
         cls.tif_dir = tempfile.mkdtemp()
         cls.test_conf = common.TEST_CONF_GAMMA
 
+        from pyrate.configuration import Configuration
         # change the required params
-        params = cf.get_config_params(cls.test_conf)
+        params = Configuration(cls.test_conf).__dict__
         params[cf.OBS_DIR] = common.SML_TEST_GAMMA
+        params[cf.PROCESSES] = 4
         params[cf.PROCESSOR] = 1  # gamma
         params[cf.IFG_FILE_LIST] = os.path.join(common.SML_TEST_GAMMA, 'ifms_17')
         params[cf.OUT_DIR] = cls.tif_dir
         params[cf.PARALLEL] = 1
         params[cf.APS_CORRECTION] = False
         params[cf.TMPDIR] = os.path.join(params[cf.OUT_DIR], cf.TMPDIR)
+        rows, cols = params["rows"], params["cols"]
 
-        xlks, ylks, crop = cf.transform_params(params)
+        # xlks, ylks, crop = cf.transform_params(params)
 
         # base_unw_paths need to be geotiffed by converttogeotif 
         #  and multilooked by run_prepifg
-        base_unw_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST], params[cf.OBS_DIR])
+        base_unw_paths = list(cf.parse_namelist(params[cf.IFG_FILE_LIST]))
+
+        base_unw_paths_ = [MultiplePaths(params[cf.OUT_DIR], b, ifglksx=params[cf.IFG_LKSX],
+                                         ifgcropopt=params[cf.IFG_CROP_OPT]) for b in base_unw_paths]
 
         # dest_paths are tifs that have been geotif converted and multilooked
-        cls.dest_paths = cf.get_dest_paths(base_unw_paths, crop, params, xlks)
-        gtif_paths_ = conv2tif.do_geotiff(base_unw_paths, params)
+        cls.dest_paths = [b.sampled_path for b in base_unw_paths_]
+        gtif_paths_ = conv2tif.do_geotiff(base_unw_paths_, params)
         gtif_paths = [gt for gt, b in gtif_paths_]
         prepifg.do_prepifg(gtif_paths, params)
-        tiles = pyrate.core.shared.get_tiles(cls.dest_paths[0], 3, 3)
+        tiles = pyrate.core.shared.get_tiles(cls.dest_paths[0], rows, cols)
         ifgs = common.small_data_setup()
-        cls.refpixel_p, cls.maxvar_p, cls.vcmt_p = \
-            process.process_ifgs(cls.dest_paths, params, 3, 3)
-        cls.mst_p = common.reconstruct_mst(ifgs[0].shape, tiles,
-                                           params[cf.TMPDIR])
-        cls.rate_p, cls.error_p, cls.samples_p = [
-            common.reconstruct_stack_rate(
-                ifgs[0].shape, tiles, params[cf.TMPDIR], t)
-            for t in rate_types
-            ]
+
+        cls.refpixel_p, cls.maxvar_p, cls.vcmt_p = process.process_ifgs(cls.dest_paths, params, rows, cols)
+        cls.mst_p = common.reconstruct_mst(ifgs[0].shape, tiles, params[cf.TMPDIR])
+        cls.rate_p, cls.error_p, cls.samples_p = \
+            [common.reconstruct_stack_rate(ifgs[0].shape, tiles, params[cf.TMPDIR], t) for t in rate_types]
         
         common.remove_tifs(params[cf.OBS_DIR])
 
         # now create the non parallel version
         cls.tif_dir_s = tempfile.mkdtemp()
         params[cf.PARALLEL] = 0
+        params[cf.PROCESSES] = 1
         params[cf.OUT_DIR] = cls.tif_dir_s
         params[cf.TMPDIR] = os.path.join(params[cf.OUT_DIR], cf.TMPDIR)
-        cls.dest_paths_s = cf.get_dest_paths(base_unw_paths, crop, params, xlks)
-        gtif_paths_ = conv2tif.do_geotiff(base_unw_paths, params)
+
+        base_unw_paths_ = [MultiplePaths(params[cf.OUT_DIR], b, ifglksx=params[cf.IFG_LKSX], ifgcropopt=params[
+            cf.IFG_CROP_OPT]) for b in base_unw_paths]
+
+        cls.dest_paths_s = [b.sampled_path for b in base_unw_paths_]
+        gtif_paths_ = conv2tif.do_geotiff(base_unw_paths_, params)
         gtif_paths = [gt for gt, b in gtif_paths_]
         prepifg.do_prepifg(gtif_paths, params)
-        cls.refpixel, cls.maxvar, cls.vcmt = process.process_ifgs(cls.dest_paths_s, params, 3, 3)
-
-        cls.mst = common.reconstruct_mst(ifgs[0].shape, tiles,
-                                         params[cf.TMPDIR])
+        cls.refpixel, cls.maxvar, cls.vcmt = process.process_ifgs(cls.dest_paths_s, params, rows, cols)
+        cls.mst = common.reconstruct_mst(ifgs[0].shape, tiles, params[cf.TMPDIR])
         cls.rate, cls.error, cls.samples = \
-            [common.reconstruct_stack_rate( ifgs[0].shape, tiles, params[cf.TMPDIR], t) for t in rate_types]
+            [common.reconstruct_stack_rate(ifgs[0].shape, tiles, params[cf.TMPDIR], t) for t in rate_types]
+
 
     @classmethod
     def tearDownClass(cls):
@@ -273,20 +280,13 @@ class ParallelPyRateTests(unittest.TestCase):
             self.key_check(i, key, value)
 
     def test_mst_equal(self):
-        ifgs = common.small_data_setup(datafiles=self.dest_paths)
-        mst_original_p = mst.mst_boolean_array(ifgs)
-        ifgs_s = common.small_data_setup(datafiles=self.dest_paths_s)
-        mst_original_s = mst.mst_boolean_array(ifgs_s)
-        np.testing.assert_array_equal(self.mst, mst_original_p)
-        np.testing.assert_array_equal(self.mst, mst_original_s)
         np.testing.assert_array_equal(self.mst, self.mst_p)
 
     def test_refpixel_equal(self):
         np.testing.assert_array_equal(self.refpixel, self.refpixel_p)
 
     def test_maxvar_equal(self):
-        np.testing.assert_array_almost_equal(self.maxvar, self.maxvar_p,
-                                             decimal=4)
+        np.testing.assert_array_almost_equal(self.maxvar, self.maxvar_p, decimal=4)
 
     def test_vcmt_equal(self):
         np.testing.assert_array_almost_equal(self.vcmt, self.vcmt_p, decimal=4)
@@ -353,7 +353,3 @@ class TestPrePrepareIfgs(unittest.TestCase):
     def test_small_data_prep_metadata_equality(self):
         for i, j in zip(self.ifgs, self.ifg_ret):
             self.assertDictEqual(i.meta_data, j.meta_data)
-
-
-if __name__ == "__main__":
-    unittest.main()

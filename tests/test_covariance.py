@@ -28,6 +28,7 @@ from numpy.testing import assert_array_almost_equal
 from pyrate.core import shared, ref_phs_est as rpe, ifgconstants as ifc, config as cf
 from pyrate import process, prepifg, conv2tif
 from pyrate.core.covariance import cvd, get_vcmt, RDist
+from pyrate.configuration import Configuration
 import pyrate.core.orbital
 from tests import common
 from tests.common import (small5_mock_ifgs, small5_ifgs, TEST_CONF_ROIPAC,
@@ -179,7 +180,7 @@ class LegacyEqualityTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
 
-        params = cf.get_config_params(TEST_CONF_ROIPAC)
+        params = Configuration(TEST_CONF_ROIPAC).__dict__
         cls.temp_out_dir = tempfile.mkdtemp()
         sys.argv = ['prepifg.py', TEST_CONF_ROIPAC]
         params[cf.OUT_DIR] = cls.temp_out_dir

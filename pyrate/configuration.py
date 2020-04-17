@@ -36,10 +36,8 @@ def set_parameter_value(data_type, input_value, default_value, required, input_n
 
 def validate_parameter_value(input_name, input_value, min_value=None, max_value=None, possible_values=None):
     if isinstance(input_value, PurePath):
-        if input_name in "outdir":
-            input_value = input_value.parents[0]
         if not Path.exists(input_value):  # pragma: no cover
-            raise ValueError("Given path: " + str(input_value) + " dose not exist.")
+            raise ValueError("Given path: " + str(input_value) + " does not exist.")
     if input_value is not None:
         if min_value is not None:
             if input_value < min_value:  # pragma: no cover

@@ -1,9 +1,11 @@
 import os
+import shutil
 import random
 import string
 import tempfile
 import pytest
 from pyrate.core import mpiops, config as cf, prepifg_helper
+from pyrate.configuration import Configuration
 from tests.common import TEST_CONF_ROIPAC, TEST_CONF_GAMMA
 from tests.common import ROIPAC_SYSTEM_CONF, GAMMA_SYSTEM_CONF, GEOTIF_SYSTEM_CONF
 
@@ -80,6 +82,20 @@ def get_config():
         params = cf.get_config_params(conf_file)
         return params
     return params
+
+
+@pytest.fixture
+def gamma_params():
+    params = Configuration(TEST_CONF_GAMMA).__dict__
+    yield params
+    shutil.rmtree(params[cf.OUT_DIR])
+
+
+@pytest.fixture
+def roipac_params():
+    params = Configuration(TEST_CONF_ROIPAC).__dict__
+    yield params
+    shutil.rmtree(params[cf.OUT_DIR])
 
 
 @pytest.fixture(params=[TEST_CONF_GAMMA, TEST_CONF_ROIPAC])

@@ -54,7 +54,7 @@ LIGHTSPEED = 3e8  # approx
 class GammaCommandLineTests(unittest.TestCase):
 
     def setUp(self):
-        self.base = join(PYRATEPATH,'tests', 'test_data', 'gamma')
+        self.base = join(PYRATEPATH, 'tests', 'test_data', 'gamma')
         self.hdr = join(self.base, 'dem16x20raw.dem.par')
         temp_text = tempfile.mktemp()
         self.confFile = os.path.join(TEMPDIR,'{}/gamma_test.cfg'.format(temp_text))
@@ -297,7 +297,8 @@ class TestGammaParallelVsSerial(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # read in the params
-        _, _, params = cf.get_ifg_paths(TEST_CONF_GAMMA)
+        from pyrate.configuration import Configuration
+        params = Configuration(TEST_CONF_GAMMA).__dict__
         glob_prefix = "*utm_unw_1rlks_1cr.tif"
 
         # SERIAL

@@ -30,6 +30,7 @@ from pyrate.core import ifgconstants as ifc, config as cf
 from pyrate.core.ref_phs_est import ReferencePhaseError
 from pyrate.core.shared import CorrectionStatusError
 from pyrate import prepifg, process, conv2tif
+from pyrate.configuration import Configuration
 from tests import common
 
 legacy_ref_phs_method1 = [-18.2191658020020,
@@ -129,7 +130,7 @@ class RefPhsEstimationLegacyTestMethod1Serial(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
 
-        params = cf.get_config_params(common.TEST_CONF_ROIPAC)
+        params = Configuration(common.TEST_CONF_ROIPAC).__dict__
         cls.temp_out_dir = tempfile.mkdtemp()
         sys.argv = ['prepifg.py', common.TEST_CONF_ROIPAC]
         params[cf.OUT_DIR] = cls.temp_out_dir
@@ -166,7 +167,6 @@ class RefPhsEstimationLegacyTestMethod1Serial(unittest.TestCase):
             ifg.close()
 
         cls.ref_phs, cls.ifgs = process._ref_phase_estimation(dest_paths, params, refx, refy)
-
 
     @classmethod
     def tearDownClass(cls):
@@ -213,12 +213,10 @@ class RefPhsEstimationLegacyTestMethod1Serial(unittest.TestCase):
                         self.ifgs[k].phase_data, decimal=3)
 
                     # means must also be equal
-                    self.assertAlmostEqual(np.nanmean(ifg_data),
-                        np.nanmean(self.ifgs[k].phase_data), places=3)
+                    self.assertAlmostEqual(np.nanmean(ifg_data), np.nanmean(self.ifgs[k].phase_data), places=3)
 
                     # number of nans must equal
-                    self.assertEqual(np.sum(np.isnan(ifg_data)),
-                        np.sum(np.isnan(self.ifgs[k].phase_data)))
+                    self.assertEqual(np.sum(np.isnan(ifg_data)), np.sum(np.isnan(self.ifgs[k].phase_data)))
 
         # ensure we have the correct number of matches
         self.assertEqual(count, len(self.ifgs))
@@ -231,7 +229,7 @@ class RefPhsEstimationLegacyTestMethod1Parallel(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
 
-        params = cf.get_config_params(common.TEST_CONF_ROIPAC)
+        params = Configuration(common.TEST_CONF_ROIPAC).__dict__
         cls.temp_out_dir = tempfile.mkdtemp()
         sys.argv = ['prepifg.py', common.TEST_CONF_ROIPAC]
         params[cf.OUT_DIR] = cls.temp_out_dir
@@ -310,8 +308,7 @@ class RefPhsEstimationLegacyTestMethod1Parallel(unittest.TestCase):
                         decimal=3)
 
                     # means must also be equal
-                    self.assertAlmostEqual(np.nanmean(ifg_data),
-                        np.nanmean(self.ifgs[k].phase_data), places=3)
+                    self.assertAlmostEqual(np.nanmean(ifg_data), np.nanmean(self.ifgs[k].phase_data), places=3)
 
                     # number of nans must equal
                     self.assertEqual(np.sum(np.isnan(ifg_data)),
@@ -329,7 +326,7 @@ class RefPhsEstimationLegacyTestMethod2Serial(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
 
-        params = cf.get_config_params(common.TEST_CONF_ROIPAC)
+        params = Configuration(common.TEST_CONF_ROIPAC).__dict__
         cls.temp_out_dir = tempfile.mkdtemp()
         sys.argv = ['prepifg.py', common.TEST_CONF_ROIPAC]
         params[cf.OUT_DIR] = cls.temp_out_dir
@@ -400,8 +397,7 @@ class RefPhsEstimationLegacyTestMethod2Serial(unittest.TestCase):
                         self.ifgs[k].phase_data, decimal=3)
 
                     # means must also be equal
-                    self.assertAlmostEqual(np.nanmean(ifg_data),
-                        np.nanmean(self.ifgs[k].phase_data), places=3)
+                    self.assertAlmostEqual(np.nanmean(ifg_data), np.nanmean(self.ifgs[k].phase_data), places=3)
 
                     # number of nans must equal
                     self.assertEqual(np.sum(np.isnan(ifg_data)),
@@ -425,7 +421,7 @@ class RefPhsEstimationLegacyTestMethod2Parallel(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
 
-        params = cf.get_config_params(common.TEST_CONF_ROIPAC)
+        params = Configuration(common.TEST_CONF_ROIPAC).__dict__
         cls.temp_out_dir = tempfile.mkdtemp()
         sys.argv = ['prepifg.py', common.TEST_CONF_ROIPAC]
         params[cf.OUT_DIR] = cls.temp_out_dir
@@ -495,10 +491,7 @@ class RefPhsEstimationLegacyTestMethod2Parallel(unittest.TestCase):
                         ifg_data, self.ifgs[k].phase_data, decimal=3)
 
                     # means must also be equal
-                    self.assertAlmostEqual(
-                        np.nanmean(ifg_data),
-                        np.nanmean(self.ifgs[k].phase_data),
-                        places=3)
+                    self.assertAlmostEqual(np.nanmean(ifg_data), np.nanmean(self.ifgs[k].phase_data), places=3)
 
                     # number of nans must equal
                     self.assertEqual(
@@ -509,9 +502,4 @@ class RefPhsEstimationLegacyTestMethod2Parallel(unittest.TestCase):
         self.assertEqual(count, len(self.ifgs))
 
     def test_estimate_reference_phase_method2(self):
-        np.testing.assert_array_almost_equal(legacy_ref_phs_method2,
-                                             self.ref_phs, decimal=3)
-
-
-if __name__ == '__main__':
-    unittest.main()
+        np.testing.assert_array_almost_equal(legacy_ref_phs_method2, self.ref_phs, decimal=3)
