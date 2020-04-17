@@ -18,7 +18,6 @@ This Python script converts ROI_PAC or GAMMA format input interferograms
 into geotiff format files
 """
 # -*- coding: utf-8 -*-
-import sys
 import os
 from typing import Tuple, List
 from joblib import Parallel, delayed
@@ -28,7 +27,7 @@ from pyrate.core.prepifg_helper import PreprocessError
 from pyrate.core import shared, mpiops, config as cf, gamma, roipac
 from pyrate.core.logger import pyratelogger as log
 from pyrate.configuration import MultiplePaths
-
+from pyrate.core.shared import mpi_vs_multiprocess_logging
 
 GAMMA = 1
 ROIPAC = 0
@@ -52,8 +51,7 @@ def main(params):
         log.warning("conv2tif not required for geotiff!")
         return
 
-    if mpiops.size > 1:  # Over-ride input options if this is an MPI job
-        params[cf.PARALLEL] = False
+    mpi_vs_multiprocess_logging("conv2tif", params)
 
     base_ifg_paths = params[cf.INTERFEROGRAM_FILES]
 

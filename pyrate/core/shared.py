@@ -1268,3 +1268,14 @@ def extract_epochs_from_filename(tif: str) -> List[str]:
     if not len(src_epochs) > 0:
         src_epochs = re.findall(r"(\d{6})", str(tif))
     return src_epochs
+
+
+def mpi_vs_multiprocess_logging(step, params):
+    if mpiops.size > 1:  # Over-ride input options if this is an MPI job
+        log.info(f"Running {step} using mpi processing. Disabling parallel processing.")
+        params[cf.PARALLEL] = 0
+    else:
+        if params[cf.PARALLEL]:
+            log.info(f"Running prepifg using {params[cf.PROCESSES]} processes")
+        else:
+            log.info(f"Running prepifg serially")

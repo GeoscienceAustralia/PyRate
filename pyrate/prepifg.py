@@ -44,10 +44,7 @@ def main(params):
     # the important pyrate stuff anyway, but might affect gen_thumbs.py.
     # Going to assume ifg_paths is ordered correcly
     # pylint: disable=too-many-branches
-
-    if mpiops.size > 1:  # Over-ride input options if this is an MPI job
-        log.debug("Running using mpi processing. Disabling parallel processing.")
-        params[cf.PARALLEL] = False
+    shared.mpi_vs_multiprocess_logging("prepifg", params)
 
     ifg_paths = params[cf.INTERFEROGRAM_FILES]
     if params[cf.DEM_FILE] is not None:  # optional DEM conversion
