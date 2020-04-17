@@ -10,7 +10,10 @@ from tests.common import copytree, assert_same_files_produced
 TRAVIS = True if 'TRAVIS' in os.environ else False
 PYTHON3P6 = True if ('TRAVIS_PYTHON_VERSION' in os.environ and os.environ['TRAVIS_PYTHON_VERSION'] == '3.6') else False
 GDAL_VERSION = check_output(["gdal-config", "--version"]).decode(encoding="utf-8").split('\n')[0]
+# python3.7 and gdal3.0.4
 REGRESSION = PYTHON3P6 or (TRAVIS and ((GDAL_VERSION == '3.0.4') or (GDAL_VERSION == '2.4.2')))
+
+# python3.7 and gdal3.0.2
 REGRESSION2 = PYTHON3P6 or (TRAVIS and ((GDAL_VERSION == '3.0.2') or (GDAL_VERSION == '2.4.2')))
 
 
@@ -65,50 +68,60 @@ def modified_config(tempdir, get_lks, get_crop, orbfit_lks, orbfit_method, orbfi
     return modify_params
 
 
-def test_conv2tif_prepifg_parallel_vs_mpi(modified_config, roipac_or_gamma_conf, parallel_vs_serial):
+def test_conv2tif_prepifg_parallel_vs_mpi(modified_config, roipac_or_gamma_conf):
 
     BOOL = np.random.randint(0, 10) > 0  # skip 90% of tests randomly
-    if BOOL or ((parallel_vs_serial == 0) and REGRESSION):  # run the parallel vs mpi tests in python3.7 and gdal=3.0.2
-        pytest.skip("Skipping as part of 90")
-
-    if BOOL or ((parallel_vs_serial == 1) and REGRESSION2):  # run the parallel vs mpi tests in python3.7 and gdal=3.0.4
+    if BOOL or REGRESSION or REGRESSION2:  # run the parallel vs mpi tests in python3.7 and gdal=3.0.2
         pytest.skip("Skipping as part of 90")
 
     print("\n\n")
     print("===x==="*10)
 
-    mpi_conf, params = modified_config(roipac_or_gamma_conf, parallel_vs_serial, 'mpi_conf.conf')
+    mpi_conf, params = modified_config(roipac_or_gamma_conf, 0, 'mpi_conf.conf')
 
     check_call(f"mpirun -n 3 pyrate conv2tif -f {mpi_conf}", shell=True)
     check_call(f"mpirun -n 3 pyrate prepifg -f {mpi_conf}", shell=True)
     check_call(f"mpirun -n 3 pyrate process -f {mpi_conf}", shell=True)
 
-    sr_conf, params_s = modified_config(roipac_or_gamma_conf, parallel_vs_serial, 'multiprocess_conf.conf')
+    mr_conf, params_m = modified_config(roipac_or_gamma_conf, 1, 'multiprocess_conf.conf')
+
+    check_call(f"pyrate conv2tif -f {mr_conf}", shell=True)
+    check_call(f"pyrate prepifg -f {mr_conf}", shell=True)
+    check_call(f"pyrate process -f {mr_conf}", shell=True)
+    # TODO: merge step
+
+    sr_conf, params_s = modified_config(roipac_or_gamma_conf, 0, 'singleprocess_conf.conf')
 
     check_call(f"pyrate conv2tif -f {sr_conf}", shell=True)
     check_call(f"pyrate prepifg -f {sr_conf}", shell=True)
     check_call(f"pyrate process -f {sr_conf}", shell=True)
-    # TODO: merge step
 
     # convert2tif tests, 17 interferograms
-    assert_same_files_produced(params[cf.OUT_DIR], params_s[cf.OUT_DIR], "*_unw.tif", 17)
+    assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "*_unw.tif", 17)
 
     # prepifg + process steps that overwrite tifs test
 
     # 17 ifgs + 1 dem
-    assert_same_files_produced(params[cf.OUT_DIR], params_s[cf.OUT_DIR], f"*{params[cf.IFG_CROP_OPT]}cr.tif", 18)
+    assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR],
+                               f"*{params[cf.IFG_CROP_OPT]}cr.tif", 18)
 
     # ifg phase checking in the previous step checks the process pipeline upto APS correction
 
     # 2 x because of aps files
-    assert_same_files_produced(params[cf.TMPDIR], params_s[cf.TMPDIR], "tsincr_*.npy", params['tiles'] * 2)
+    assert_same_files_produced(params[cf.TMPDIR], params_m[cf.OUT_DIR], params_s[cf.TMPDIR], "tsincr_*.npy",
+                               params['tiles'] * 2)
 
-    assert_same_files_produced(params[cf.TMPDIR], params_s[cf.TMPDIR], "tscuml_*.npy", params['tiles'])
+    assert_same_files_produced(params[cf.TMPDIR], params_m[cf.OUT_DIR], params_s[cf.TMPDIR], "tscuml_*.npy",
+                               params['tiles'])
 
-    assert_same_files_produced(params[cf.TMPDIR], params_s[cf.TMPDIR], "stack_rate_*.npy", params['tiles'])
-    assert_same_files_produced(params[cf.TMPDIR], params_s[cf.TMPDIR], "stack_error_*.npy", params['tiles'])
-    assert_same_files_produced(params[cf.TMPDIR], params_s[cf.TMPDIR], "stack_samples_*.npy", params['tiles'])
+    assert_same_files_produced(params[cf.TMPDIR], params_m[cf.OUT_DIR], params_s[cf.TMPDIR], "stack_rate_*.npy",
+                               params['tiles'])
+    assert_same_files_produced(params[cf.TMPDIR], params_m[cf.OUT_DIR], params_s[cf.TMPDIR], "stack_error_*.npy",
+                               params['tiles'])
+    assert_same_files_produced(params[cf.TMPDIR], params_m[cf.OUT_DIR], params_s[cf.TMPDIR], "stack_samples_*.npy",
+                               params['tiles'])
     print("==========================xxx===========================")
 
     shutil.rmtree(params[cf.OBS_DIR])
+    shutil.rmtree(params_m[cf.OBS_DIR])
     shutil.rmtree(params_s[cf.OBS_DIR])
