@@ -297,6 +297,7 @@ DEFAULT_TO_OBS_DIR = [SLC_DIR, COH_FILE_DIR]
 
 INT_KEYS = [APS_CORRECTION, APS_METHOD]
 
+
 def get_config_params(path: str, validate: bool=True, step: str=CONV2TIF) -> Dict:
     """
     Reads the parameters file provided by the user and converts it into
@@ -323,6 +324,7 @@ def get_config_params(path: str, validate: bool=True, step: str=CONV2TIF) -> Dic
     params[TMPDIR] = os.path.join(os.path.abspath(params[OUT_DIR]), 'tmpdir')
 
     return params
+
 
 def _parse_conf_file(content, validate: bool=True, step: str=CONV2TIF) -> Dict:
     """
@@ -361,6 +363,7 @@ def _parse_conf_file(content, validate: bool=True, step: str=CONV2TIF) -> Dict:
 
     return _parse_pars(parameters, validate, step)
 
+
 def _handle_extra_parameters(params):
     """
     Function to check if requirements for weather model correction are given.
@@ -381,6 +384,7 @@ def _handle_extra_parameters(params):
             params[APS_ELEVATION_MAP]).split('.')[-1]
 
     return params
+
 
 def _parse_pars(pars, validate: bool=True, step: str=CONV2TIF) -> Dict:
     """
@@ -497,15 +501,14 @@ def coherence_paths_for(path, params, tif=False) -> List[str]:
     _, filename = split(path)
     pattern = re.compile(r'\d{8}-\d{8}')
     epoch = re.match(pattern, filename).group(0)
-    coherence_dir = params[COH_FILE_DIR]
-    matches = [name for name in parse_namelist(params[COH_FILE_LIST])
-               if epoch in name]
+    matches = [name for name in parse_namelist(params[COH_FILE_LIST]) if epoch in name]
     if tif:
         names_exts = [os.path.splitext(m) for m in matches]
         matches = [ne[0] + ne[1].replace('.', '_') + '.tif'
                    for ne in names_exts]
 
-    return [os.path.join(coherence_dir, m) for m in matches]
+    return matches
+
 
 def coherence_paths(params) -> List[str]:
     """
@@ -597,10 +600,6 @@ def get_ifg_paths(config_file, step=CONV2TIF):
 # ==== PARAMETER VALIDATION ==== #
 
 _PARAM_VALIDATION = {
-    OBS_DIR: (
-        lambda a: a is not None and os.path.exists(a),
-        f"'{OBS_DIR}': directory must be provided and must exist."
-    ),
     IFG_FILE_LIST: (
         lambda a: a is not None and os.path.exists(a),
         f"'{IFG_FILE_LIST}': file must be provided and must exist."
@@ -720,10 +719,6 @@ _CUSTOM_CROP_VALIDATION = {
 """dict: basic validation functions for custom cropping parameters."""
 
 _GAMMA_VALIDATION = {
-    SLC_DIR: (
-        lambda a: os.path.exists(a) if a is not None else True,
-        f"'{SLC_DIR}': directory must must exist."
-    ),
     SLC_FILE_LIST: (
         lambda a: a is not None and os.path.exists(a),
         f"'{SLC_FILE_LIST}': file must be provided and must exist."
@@ -736,13 +731,9 @@ _COHERENCE_VALIDATION = {
         lambda a: 0.0 <= a <= 1.0,
         f"'{COH_THRESH}': must be between 0.0 and 1.0 (inclusive)."
     ),
-    COH_FILE_DIR: (
-        lambda a: os.path.exists(a) if a is not None else True,
-        f"'{COH_FILE_DIR}': directory must exist."
-    ),
     COH_FILE_LIST: (
-        lambda a: a is not None and os.path.exists(a),
-        f"'{COH_FILE_LIST}': file must be provided and must exist."
+        lambda a: a is not None and not os.path.exists(a),
+        f"'{COH_FILE_LIST}': if file is provided it must exist."
     ),
 }
 """dict: basic validation functions for coherence parameters."""
@@ -907,7 +898,7 @@ def validate_parameters(pars: Dict, step: str=CONV2TIF):
 
     elif step == PREPIFG: 
         # Check full res geotiffs exist before continuing.
-        validate_tifs_exist(ifl, pars[OBS_DIR])
+        validate_tifs_exist(ifl, pars[OUT_DIR])
 
         # Check the minimum number of epochs.
         n_epochs = 0
@@ -932,15 +923,16 @@ def validate_parameters(pars: Dict, step: str=CONV2TIF):
         with open(ifl, "r") as f:
             # validate params for each geotiff
             for line in f.readlines():
-
-                if ".tif" in line:
-                    tif_file_path = os.path.join(pars["obsdir"], line.strip())
+                line = line.strip('\n')
+                if line.endswith('.tif'):
+                    tif_file_path = Path(pars[OUT_DIR]).joinpath(Path(line.strip()).name)
                 else:
-                    base, ext = line.strip().split(".")
-                    tif_file_path = os.path.join(pars["obsdir"], base + "_" + ext + ".tif")
+                    p = Path(line)
+                    base, ext = p.stem, p.suffix[1:]
+                    tif_file_path = Path(pars[OUT_DIR]).joinpath(base + "_" + ext + ".tif")
 
-                if not os.path.isfile(tif_file_path):
-                    raise Exception("GeoTiff: " + tif_file_path + " not found.")
+                if not tif_file_path.exists():
+                    raise Exception("GeoTiff: " + tif_file_path.as_posix() + " not found.")
 
                 raster = os.path.join(tif_file_path)
                 gtif = gdal.Open(raster)
@@ -1233,6 +1225,7 @@ def validate_prepifg_tifs_exist(ifg_file_list: str, obs_dir: str, pars: Dict) ->
                           f"parameters have not been changed since 'prepifg' was run.")
 
     return _raise_errors(errors)
+
 
 def validate_tifs_exist(ifg_file_list: str, obs_dir: str) -> Optional[bool]:
     """
@@ -1577,6 +1570,7 @@ def _get_temporal_info(ifg_file_list: str, obs_dir: str) -> Tuple:
 
     return n_epochs, max_span
 
+
 def _get_prepifg_info(ifg_file_list: str, obs_dir: str, pars: Dict) -> Tuple:
     """
     Retrives spatial information from prepifg interferograms (images that
@@ -1611,14 +1605,14 @@ def _get_prepifg_info(ifg_file_list: str, obs_dir: str, pars: Dict) -> Tuple:
     return extents, n_cols, n_rows, transform
 
 
-def _get_fullres_info(ifg_file_list: str, obs_dir: str, crop_opts: Tuple) -> Tuple:
+def _get_fullres_info(ifg_file_list: str, out_dir: str, crop_opts: Tuple) -> Tuple:
     """
     Retrieves spatial information from the provided interferograms.
     Requires the interferograms to exist in geotiff format.
 
     Args:
         ifg_file_list: Path to file containing list of interferogram file names.
-        obs_dir: Path to observations directory.
+        out_dir: Path to observations directory.
 
     Returns:
         Tuple containing extents (xmin, ymin, xmax, ymax), number of pixel
@@ -1628,8 +1622,8 @@ def _get_fullres_info(ifg_file_list: str, obs_dir: str, crop_opts: Tuple) -> Tup
     from pyrate.core.prepifg_helper import _min_bounds, _get_extents
     from pyrate.core.shared import Ifg, output_tiff_filename
 
-    ifg_paths = [os.path.join(obs_dir, ifg) for ifg in parse_namelist(ifg_file_list)]
-    rasters = [Ifg(output_tiff_filename(f, obs_dir)) for f in ifg_paths]
+    ifg_paths = parse_namelist(ifg_file_list)
+    rasters = [Ifg(output_tiff_filename(f, out_dir)) for f in ifg_paths]
 
     for r in rasters:
         if not r.is_open:

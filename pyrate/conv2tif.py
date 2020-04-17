@@ -70,7 +70,7 @@ def main(params):
     return gtiff_paths
 
 
-def do_geotiff(unw_paths: MultiplePaths, params: dict) -> List[str]:
+def do_geotiff(unw_paths: List[MultiplePaths], params: dict) -> List[str]:
     """
     Convert input interferograms to geotiff format.
     """

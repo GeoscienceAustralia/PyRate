@@ -4,10 +4,8 @@ import pytest
 from pathlib import Path
 from subprocess import check_call, check_output
 import numpy as np
-from pyrate.core import mpiops, config as cf
-from tests import common
-from tests.common import copytree
-
+from pyrate.core import config as cf
+from tests.common import copytree, assert_same_files_produced
 
 TRAVIS = True if 'TRAVIS' in os.environ else False
 PYTHON3P6 = True if ('TRAVIS_PYTHON_VERSION' in os.environ and os.environ['TRAVIS_PYTHON_VERSION'] == '3.6') else False
@@ -74,58 +72,34 @@ def test_conv2tif_prepifg_parallel_vs_mpi(modified_config, roipac_or_gamma_conf)
 
     check_call(f"mpirun -n 3 pyrate conv2tif -f {mpi_conf}", shell=True)
     check_call(f"mpirun -n 3 pyrate prepifg -f {mpi_conf}", shell=True)
-    # check_call(f"mpirun -n 3 pyrate process -f {mpi_conf}", shell=True)
+    check_call(f"mpirun -n 3 pyrate process -f {mpi_conf}", shell=True)
 
     sr_conf, params_s = modified_config(roipac_or_gamma_conf, 'multiprocess_conf.conf')
 
     check_call(f"pyrate conv2tif -f {sr_conf}", shell=True)
     check_call(f"pyrate prepifg -f {sr_conf}", shell=True)
-    # check_call(f"pyrate process -f {sr_conf}", shell=True)
+    check_call(f"pyrate process -f {sr_conf}", shell=True)
     # TODO: merge step
 
     # convert2tif tests, 17 interferograms
-    __assert_same_files_produced(params[cf.OUT_DIR], params_s[cf.OUT_DIR], "*_unw.tif", 17)
+    assert_same_files_produced(params[cf.OUT_DIR], params_s[cf.OUT_DIR], "*_unw.tif", 17)
 
     # prepifg + process steps that overwrite tifs test
 
     # 17 ifgs + 1 dem
-    __assert_same_files_produced(params[cf.OUT_DIR], params_s[cf.OUT_DIR], f"*{params[cf.IFG_CROP_OPT]}cr.tif", 18)
+    assert_same_files_produced(params[cf.OUT_DIR], params_s[cf.OUT_DIR], f"*{params[cf.IFG_CROP_OPT]}cr.tif", 18)
 
     # ifg phase checking in the previous step checks the process pipeline upto APS correction
 
     # 2 x because of aps files
-    # __assert_same_files_produced(params[cf.TMPDIR], params_s[cf.TMPDIR], "tsincr_*.npy", params['tiles'] * 2)
-    #
-    # __assert_same_files_produced(params[cf.TMPDIR], params_s[cf.TMPDIR], "tscuml_*.npy", params['tiles'])
-    #
-    # __assert_same_files_produced(params[cf.TMPDIR], params_s[cf.TMPDIR], "stack_rate_*.npy", params['tiles'])
-    # __assert_same_files_produced(params[cf.TMPDIR], params_s[cf.TMPDIR], "stack_error_*.npy", params['tiles'])
-    # __assert_same_files_produced(params[cf.TMPDIR], params_s[cf.TMPDIR], "stack_samples_*.npy", params['tiles'])
+    assert_same_files_produced(params[cf.TMPDIR], params_s[cf.TMPDIR], "tsincr_*.npy", params['tiles'] * 2)
+
+    assert_same_files_produced(params[cf.TMPDIR], params_s[cf.TMPDIR], "tscuml_*.npy", params['tiles'])
+
+    assert_same_files_produced(params[cf.TMPDIR], params_s[cf.TMPDIR], "stack_rate_*.npy", params['tiles'])
+    assert_same_files_produced(params[cf.TMPDIR], params_s[cf.TMPDIR], "stack_error_*.npy", params['tiles'])
+    assert_same_files_produced(params[cf.TMPDIR], params_s[cf.TMPDIR], "stack_samples_*.npy", params['tiles'])
     print("==========================xxx===========================")
 
     shutil.rmtree(params[cf.OBS_DIR])
     shutil.rmtree(params_s[cf.OBS_DIR])
-
-
-def __assert_same_files_produced(dir1, dir2, ext, num_files):
-    mpi_files = list(Path(dir1).glob(ext))
-    mp_files = list(Path(dir2).glob(ext))  # MultiProcess files
-    mpi_files.sort()
-    mp_files.sort()
-    print(mpi_files)
-    print(mp_files)
-    # 17 unwrapped geotifs
-    # 17 cropped multilooked tifs + 1 dem
-    assert len(mpi_files) == num_files
-    assert len(mp_files) == num_files
-    if mpi_files[0].suffix == '.tif':
-        for m_f, s_f in zip(mpi_files, mp_files):
-            assert m_f.name == s_f.name
-            common.assert_tifs_equal(m_f.as_posix(), s_f.as_posix())
-    elif mpi_files[0].suffix == '.npy':
-        for m_f, s_f in zip(mpi_files, mp_files):
-            print(m_f.name, s_f.name)
-            assert m_f.name == s_f.name
-            np.testing.assert_array_almost_equal(np.load(m_f), np.load(s_f))
-    else:
-        raise

@@ -53,7 +53,7 @@ def main(params):
     if params[cf.DEM_FILE] is not None:  # optional DEM conversion
         ifg_paths.append(params[cf.DEM_FILE_PATH])
 
-    shared.mkdir_p(params[cf.OUT_DIR]) # create output dir
+    shared.mkdir_p(params[cf.OUT_DIR])  # create output dir
 
     process_base_ifgs_paths = np.array_split(ifg_paths, mpiops.size)[mpiops.rank]
     gtiff_paths = [p.converted_path for p in process_base_ifgs_paths]

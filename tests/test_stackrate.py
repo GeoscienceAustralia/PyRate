@@ -31,6 +31,7 @@ import tests.common
 from pyrate.core import shared, ref_phs_est as rpe, config as cf, covariance as vcm_module
 from pyrate.core.stack import stack_rate
 from pyrate import process, prepifg, conv2tif
+from pyrate.configuration import Configuration
 from tests.common import (SML_TEST_DIR, prepare_ifgs_without_phase,
     TEST_CONF_ROIPAC, pre_prepare_ifgs, remove_tifs)
 
@@ -79,7 +80,7 @@ class LegacyEqualityTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        params = cf.get_config_params(TEST_CONF_ROIPAC)
+        params = Configuration(TEST_CONF_ROIPAC).__dict__
         cls.temp_out_dir = tempfile.mkdtemp()
         
         params[cf.OUT_DIR] = cls.temp_out_dir
@@ -198,7 +199,3 @@ class LegacyEqualityTest(unittest.TestCase):
         Compare with legacy data
         """
         np.testing.assert_array_almost_equal(self.samples_s, self.samples_container, decimal=3)
-
-
-if __name__ == "__main__":
-    unittest.main()
