@@ -71,7 +71,7 @@ def modified_config(tempdir, get_lks, get_crop, orbfit_lks, orbfit_method, orbfi
 def test_conv2tif_prepifg_parallel_vs_mpi(modified_config, roipac_or_gamma_conf):
 
     BOOL = np.random.randint(0, 10) > 0  # skip 90% of tests randomly
-    if BOOL or REGRESSION or REGRESSION2:  # run the parallel vs mpi tests in python3.7 and gdal=3.0.2
+    if BOOL and (REGRESSION or REGRESSION2):  # run the parallel vs mpi tests in python3.7 and gdal=3.0.2
         pytest.skip("Skipping as part of 90")
 
     print("\n\n")
