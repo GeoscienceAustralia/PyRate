@@ -29,7 +29,7 @@ from pyrate.core import (shared, algorithm, orbital, ref_phs_est as rpe,
                          timeseries, mst, covariance as vcm_module, 
                          stack, refpixel)
 from pyrate.core.aps import wrap_spatio_temporal_filter
-from pyrate.core.shared import Ifg, PrereadIfg, get_tiles
+from pyrate.core.shared import Ifg, PrereadIfg, get_tiles, mpi_vs_multiprocess_logging
 from pyrate.core.logger import pyratelogger as log
 
 MASTER_PROCESS = 0
@@ -242,6 +242,7 @@ def main(params):
     :return: vcmt: Variance-covariance matrix array
     :rtype: ndarray
     """
+    mpi_vs_multiprocess_logging("process", params)
 
     ifg_paths = []
     for ifg_path in params[cf.INTERFEROGRAM_FILES]:

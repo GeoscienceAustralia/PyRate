@@ -467,8 +467,6 @@ def assert_same_files_produced(dir1, dir2, ext, num_files):
     dir1_files.sort()
     dir2_files.sort()
     print("==="*10)
-    print(dir1_files)
-    print(dir2_files)
     # 17 unwrapped geotifs
     # 17 cropped multilooked tifs + 1 dem
     assert len(dir1_files) == num_files
