@@ -62,8 +62,7 @@ def ref_pixel(ifgs, params):
         phase_data = [i.phase_data for i in ifgs]
         mean_sds = []
         for g in grid:
-            mean_sds.append(_ref_pixel_multi(
-                g, half_patch_size, phase_data, thresh, params))
+            mean_sds.append(_ref_pixel_multi(g, half_patch_size, phase_data, thresh, params))
         refy, refx = find_min_mean(mean_sds, grid)
 
     if refy and refx:
@@ -172,8 +171,7 @@ def _ref_pixel_mpi(process_grid, half_patch_size, ifgs, thresh, params):
     log.debug('Ref pixel calculation started')
     mean_sds = []
     for g in process_grid:
-        mean_sds.append(_ref_pixel_multi(g, half_patch_size, ifgs, thresh,
-                                        params))
+        mean_sds.append(_ref_pixel_multi(g, half_patch_size, ifgs, thresh, params))
     return mean_sds
 
 

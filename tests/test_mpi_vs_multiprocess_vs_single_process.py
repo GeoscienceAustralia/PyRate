@@ -36,6 +36,9 @@ def modified_config(tempdir, get_lks, get_crop, orbfit_lks, orbfit_method, orbfi
         outdir.mkdir(exist_ok=True)
         params[cf.OUT_DIR] = outdir.as_posix()
 
+        if params[cf.PROCESSOR] == 1:  # turn on coherence for gamma
+            params[cf.COH_MASK] = 1
+
         params[cf.PARALLEL] = parallel_vs_serial
         params[cf.PROCESSES] = 4
         params[cf.APSEST] = 1
@@ -68,11 +71,10 @@ def modified_config(tempdir, get_lks, get_crop, orbfit_lks, orbfit_method, orbfi
     return modify_params
 
 
-@pytest.mark.skipif(REGRESSION or REGRESSION, reason="Skip if not python3.7")
+@pytest.mark.skipif(PYTHON3P6, reason="Skip if not python3.7")
 def test_conv2tif_prepifg_parallel_vs_mpi(modified_config, roipac_or_gamma_conf):
 
-    BOOL = np.random.randint(0, 10) > 0  # skip 90% of tests randomly
-    if BOOL and (REGRESSION or REGRESSION2):  # run the parallel vs mpi tests in python3.7 and gdal=3.0.2
+    if TRAVIS and np.random.randint(0, 10) > 0:  # skip 90% of tests randomly
         pytest.skip("Skipping as part of 90")
 
     print("\n\n")
@@ -99,6 +101,11 @@ def test_conv2tif_prepifg_parallel_vs_mpi(modified_config, roipac_or_gamma_conf)
 
     # convert2tif tests, 17 interferograms
     assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "*_unw.tif", 17)
+
+    # if coherence masking, comprare coh files were converted
+    if params[cf.COH_MASK]:
+        assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "*_utm.tif", 17)
+        print("coherence files compared")
 
     # prepifg + process steps that overwrite tifs test
 

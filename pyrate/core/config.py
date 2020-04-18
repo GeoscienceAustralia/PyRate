@@ -29,7 +29,6 @@ from typing import List, Tuple, Dict, Optional
 import os
 from os.path import splitext, split
 import re
-import itertools
 from pathlib import Path
 from osgeo import gdal
 
@@ -38,19 +37,21 @@ from pyrate.constants import CONV2TIF, PREPIFG, PROCESS, MERGE
 from pyrate.core.logger import pyratelogger as _logger
 
 # general constants
+SIXTEEN_DIGIT_EPOCH_PAIR = r'\d{8}-\d{8}'
+sixteen_digits_pattern = re.compile(SIXTEEN_DIGIT_EPOCH_PAIR)
+TWELVE_DIGIT_EPOCH_PAIR = r'\d{6}-\d{6}'
+twelve_digits_pattern = re.compile(TWELVE_DIGIT_EPOCH_PAIR)
+EIGHT_DIGIT_EPOCH = r'\d{8}'
+MINIMUM_NUMBER_EPOCHS = 3
 NO_MULTILOOKING = 1
 ROIPAC = 0
 GAMMA = 1
 LOG_LEVEL = 'INFO'
-SIXTEEN_DIGIT_EPOCH_PAIR = r'\d{8}-\d{8}'
-TWELVE_DIGIT_EPOCH_PAIR = r'\d{6}-\d{6}'
-EIGHT_DIGIT_EPOCH = r'\d{8}'
-MINIMUM_NUMBER_EPOCHS = 3
 
 # constants for lookups
 #: STR; Name of input interferogram list file
 IFG_FILE_LIST = 'ifgfilelist'
-#: BOOL (0/1); The interferogram processor used (0==ROIPAC, 1==GAMMA)
+#: (0/1/2); The interferogram processor used (0==ROIPAC, 1==GAMMA, 2: GEOTIF)
 PROCESSOR = 'processor'
 #: STR; Name of directory containing input interferograms.
 OBS_DIR = 'obsdir'
@@ -467,6 +468,7 @@ def transform_params(params):
     xlooks, ylooks, crop = [params[k] for k in t_params]
     return xlooks, ylooks, crop
 
+
 def original_ifg_paths(ifglist_path, obs_dir):
     """
     Returns sequence of paths to files in given ifglist file.
@@ -481,7 +483,8 @@ def original_ifg_paths(ifglist_path, obs_dir):
     ifglist = parse_namelist(ifglist_path)
     return [os.path.join(obs_dir, p) for p in ifglist]
 
-def coherence_paths_for(path, params, tif=False) -> List[str]:
+
+def coherence_paths_for(path: str, params: dict, tif=False) -> str:
     """
     Returns path to coherence file for given interferogram. Pattern matches
     based on epoch in filename.
@@ -499,33 +502,18 @@ def coherence_paths_for(path, params, tif=False) -> List[str]:
         Path to coherence file.
     """
     _, filename = split(path)
-    pattern = re.compile(r'\d{8}-\d{8}')
-    epoch = re.match(pattern, filename).group(0)
-    matches = [name for name in parse_namelist(params[COH_FILE_LIST]) if epoch in name]
+    epoch = re.match(sixteen_digits_pattern, filename).group(0)
     if tif:
-        names_exts = [os.path.splitext(m) for m in matches]
-        matches = [ne[0] + ne[1].replace('.', '_') + '.tif'
-                   for ne in names_exts]
+        coh_file_paths = [f.converted_path for f in params[COHERENCE_FILE_PATHS] if epoch in f.unwrapped_path]
+    else:
+        coh_file_paths = [f.unwrapped_path for f in params[COHERENCE_FILE_PATHS] if epoch in f.unwrapped_path]
 
-    return matches
+    if len(coh_file_paths) > 2:
+        raise ConfigException(f"'{COH_FILE_DIR}': found more than one coherence "
+                      f"file for '{path}'. There must be only one "
+                      f"coherence file per interferogram. Found {coh_file_paths}.")
+    return coh_file_paths[0]
 
-
-def coherence_paths(params) -> List[str]:
-    """
-    Returns paths to corresponding coherence files for given IFGs. Assumes
-    that each IFG has a corresponding coherence file in the coherence file
-    directory and they share epoch prefixes.
-
-    Args:
-        ifg_paths: List of paths to intergerogram files.
-
-    Returns:
-        A list of full paths to coherence files.
-    """
-    ifg_file_list = params.get(IFG_FILE_LIST)
-    ifgs = parse_namelist(ifg_file_list)
-    paths = [coherence_paths_for(ifg, params) for ifg in ifgs]
-    return list(itertools.chain.from_iterable(paths))
 
 def mlooked_path(path, looks, crop_out):
     """
@@ -539,8 +527,8 @@ def mlooked_path(path, looks, crop_out):
     :rtype: str
     """
     base, ext = splitext(path)
-    return "{base}_{looks}rlks_{crop_out}cr{ext}".format(
-        base=base, looks=looks, crop_out=crop_out, ext=ext)
+    return "{base}_{looks}rlks_{crop_out}cr{ext}".format(base=base, looks=looks, crop_out=crop_out, ext=ext)
+
 
 def get_dest_paths(base_paths, crop, params, looks):
     """
@@ -561,6 +549,7 @@ def get_dest_paths(base_paths, crop, params, looks):
                          for q in base_paths]
 
     return [os.path.join(params[OUT_DIR], p) for p in dest_mlooked_ifgs]
+
 
 def get_ifg_paths(config_file, step=CONV2TIF):
     """
@@ -591,7 +580,7 @@ def get_ifg_paths(config_file, step=CONV2TIF):
 
         dest_paths = get_dest_paths(base_unw_paths, crop, params, xlks)
         for i, dest_path in enumerate(dest_paths):
-            dest_paths[i] = dest_path.replace("_tif","")
+            dest_paths[i] = dest_path.replace("_tif", "")
     else:
         dest_paths = get_dest_paths(base_unw_paths, crop, params, xlks)
 
@@ -1479,6 +1468,7 @@ def validate_reference_pixel_search_windows(n_cols: int, n_rows: int,
 
     return _raise_errors(errors)
 
+
 def validate_gamma_headers(ifg_file_list: str, slc_file_list: str) -> Optional[bool]:
     """
     Validates that a pair of GAMMA headers exist for each provided
@@ -1503,10 +1493,10 @@ def validate_gamma_headers(ifg_file_list: str, slc_file_list: str) -> Optional[b
     for ifg in parse_namelist(ifg_file_list):
         headers = get_header_paths(ifg, slc_file_list)
         if len(headers) < 2:
-            errors.append(f"'{SLC_DIR}': Headers not found for interferogram "
-                          "'{ifg}'.")
+            errors.append(f"'{SLC_DIR}': Headers not found for interferogram '{ifg}'.")
 
     return _raise_errors(errors)
+
 
 def validate_coherence_files(ifg_file_list: str, pars: Dict) -> Optional[bool]:
     """
@@ -1530,12 +1520,8 @@ def validate_coherence_files(ifg_file_list: str, pars: Dict) -> Optional[bool]:
         paths = coherence_paths_for(ifg, pars)
         if not paths:
             errors.append(f"'{COH_FILE_DIR}': no coherence files found for intergerogram '{ifg}'.")
-        elif len(paths) > 2:
-            errors.append(f"'{COH_FILE_DIR}': found more than one coherence "
-                          f"file for '{ifg}'. There must be only one "
-                          f"coherence file per interferogram. Found {paths}.")
-
     return _raise_errors(errors)
+
 
 def _get_temporal_info(ifg_file_list: str, obs_dir: str) -> Tuple:
     """

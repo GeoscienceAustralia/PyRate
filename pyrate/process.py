@@ -143,7 +143,11 @@ def _ref_pixel_calc(ifg_paths, params):
         if mpiops.rank == MASTER_PROCESS:
             mean_sds = np.hstack(mean_sds)
 
-        refy, refx = mpiops.run_once(refpixel.find_min_mean, mean_sds, grid)
+        try:
+            refy, refx = mpiops.run_once(refpixel.find_min_mean, mean_sds, grid)
+        except ValueError as v:
+            log.error('Refeence pixel calculation encountered problem!')
+            raise ValueError(v)
         log.info('Selected reference pixel coordinate: ({}, {})'.format(refx, refy))
     else:
         log.info('Reusing reference pixel from config file: ({}, {})'.format(refx, refy))

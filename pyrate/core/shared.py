@@ -61,6 +61,7 @@ GDAL_Y_CELLSIZE = 5
 GDAL_X_FIRST = 0
 GDAL_Y_FIRST = 3
 
+
 def joblib_log_level(level: str) -> int:
     """
     Convert python log level to joblib int verbosity.
@@ -915,8 +916,20 @@ def write_output_geotiff(md, gt, wkt, data, dest, nodata):
     # set other metadata
     ds.SetMetadataItem('DATA_TYPE', str(md['DATA_TYPE']))
     # sequence position for time series products
-    if 'SEQUENCE_POSITION' in md:
-        ds.SetMetadataItem('SEQUENCE_POSITION', str(md['SEQUENCE_POSITION']))
+    if "SEQUENCE_POSITION" in md:
+        ds.SetMetadataItem("SEQUENCE_POSITION", str(md["SEQUENCE_POSITION"]))
+    if "PYRATE_REFPIX_LAT" in md:
+        ds.SetMetadataItem("PYRATE_REFPIX_LAT", str(md["PYRATE_REFPIX_LAT"]))
+    if "PYRATE_REFPIX_LON" in md:
+        ds.SetMetadataItem("PYRATE_REFPIX_LON", str(md["PYRATE_REFPIX_LON"]))
+    if "PYRATE_REFPIX_X" in md:
+        ds.SetMetadataItem("PYRATE_REFPIX_X", str(md["PYRATE_REFPIX_X"]))
+    if "PYRATE_REFPIX_Y" in md:
+        ds.SetMetadataItem("PYRATE_REFPIX_Y", str(md["PYRATE_REFPIX_Y"]))
+    if "PYRATE_MEAN_REF_AREA" in md:
+        ds.SetMetadataItem("PYRATE_MEAN_REF_AREA", str(md["PYRATE_MEAN_REF_AREA"]))
+    if "STANDARD_DEVIATION_REF_AREA" in md:
+        ds.SetMetadataItem("PYRATE_STANDARD_DEVIATION_REF_AREA", str(md["PYRATE_STANDARD_DEVIATION_REF_AREA"]))
 
     # write data to geotiff
     band = ds.GetRasterBand(1)
@@ -1263,10 +1276,10 @@ class CorrectionStatusError(Exception):
     """
 
 
-def extract_epochs_from_filename(tif: str) -> List[str]:
-    src_epochs = re.findall(r"(\d{8})", str(tif))
+def extract_epochs_from_filename(filename_with_epochs: str) -> List[str]:
+    src_epochs = re.findall(r"(\d{8})", str(filename_with_epochs))
     if not len(src_epochs) > 0:
-        src_epochs = re.findall(r"(\d{6})", str(tif))
+        src_epochs = re.findall(r"(\d{6})", str(filename_with_epochs))
     return src_epochs
 
 

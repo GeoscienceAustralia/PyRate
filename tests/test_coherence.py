@@ -1,21 +1,43 @@
 import os
 import tempfile
-from osgeo import gdal
 import numpy as np
 from osgeo import osr
-
-from pyrate.core.shared import extract_epochs_from_filename
-from pyrate.core import gdal_python
-from pyrate.configuration import MultiplePaths
+from osgeo import gdal
 from pathlib import Path
+from copy import copy
+
+from pyrate.core.shared import Ifg
+from pyrate.core import gdal_python
+from pyrate.core import config as cf
+from pyrate.core import prepifg_helper
+from pyrate.configuration import MultiplePaths
+from pyrate import conv2tif
 
 
-def test_multiple_coherence_files():
-    pass
+def test_small_data_coherence(gamma_params):
 
+    gamma_params[cf.COH_MASK] = 1
 
-def test_small_data_covariance():
-    pass
+    ifg_multilist = copy(gamma_params[cf.INTERFEROGRAM_FILES])
+    conv2tif.main(gamma_params)
+
+    for i in ifg_multilist:
+        p = i.converted_path
+        ifg = prepifg_helper.dem_or_ifg(data_path=p)
+        if not isinstance(ifg, Ifg):
+            continue
+        ifg.open()
+        converted_coh_file_path = cf.coherence_paths_for(p, gamma_params, tif=True)
+        gdal_python.coherence_masking(ifg.dataset,
+                                      coherence_file_path=converted_coh_file_path,
+                                      coherence_thresh=gamma_params[cf.COH_THRESH]
+                                      )
+        nans = np.isnan(ifg.phase_data)
+        coherence_path = cf.coherence_paths_for(p, gamma_params, tif=True)
+        cifg = Ifg(coherence_path)
+        cifg.open()
+        cifg_below_thrhold = cifg.phase_data < gamma_params[cf.COH_THRESH]
+        np.testing.assert_array_equal(nans, cifg_below_thrhold)
 
 
 def test_coherence_files_not_converted():
@@ -73,8 +95,7 @@ def test_coherence_files_not_converted():
     coherence_thresh = 0.3
 
     gdal_python.coherence_masking(sample_gdal_dataset,
-                                  extract_epochs_from_filename(sample_gdal_filename),
-                                  [coherence_mask_filename.converted_path],
+                                  coherence_mask_filename.converted_path,
                                   coherence_thresh)
 
     sample_gdal_array = np.nan_to_num(sample_gdal_dataset.GetRasterBand(1).ReadAsArray())
