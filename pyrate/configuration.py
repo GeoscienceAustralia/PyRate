@@ -19,6 +19,8 @@ import re
 from pyrate.constants import NO_OF_PARALLEL_PROCESSES
 from pyrate.default_parameters import PYRATE_DEFAULT_CONFIGRATION
 from pyrate.core.user_experience import break_number_into_factors
+from pyrate.core.shared import extract_epochs_from_filename
+from pyrate.core.config import parse_namelist, ConfigException
 
 
 def set_parameter_value(data_type, input_value, default_value, required, input_name):
@@ -60,17 +62,15 @@ def validate_file_list_values(file_list, no_of_epochs):
     if file_list is None:  # pragma: no cover
         raise ValueError("No value supplied for input file list: " + str(file_list))
 
-    for path_str in file_list.read_text().split('\n'):
-        # ignore empty lines in file
-        if len(path_str) > 1:
-            if not Path(path_str).exists():  # pragma: no cover
-                raise ValueError("Give file name: " + str(path_str) + " does not exist at: " + str(dir))
-            else:
-                matches = re.findall(r"(\d{8})", path_str)
-                if len(matches) < no_of_epochs:  # pragma: no cover
-                    raise ValueError("For the given file name: " + str(path_str) +
-                                     " the number of epochs in file names are less the required number:"
-                                     + str(no_of_epochs))
+    files = parse_namelist(file_list)
+
+    for f in files:
+        if not Path(f).exists():  # pragma: no cover
+            raise ConfigException(f"{f} does not exist")
+        else:
+            matches = extract_epochs_from_filename(filename_with_epochs=f)
+            if len(matches) < no_of_epochs:  # pragma: no cover
+                raise ConfigException(f"the number of epochs in {f} names are less the required number: {no_of_epochs}")
 
 
 class MultiplePaths:
@@ -163,8 +163,8 @@ class Configuration:
 
         # Validate file names supplied in list exist and contain correct epochs in file names
         if self.cohfilelist is not None:
-            if self.processor != 0:  # not roipac
-                validate_file_list_values(self.cohfilelist, 1)
+            # if self.processor != 0:  # not roipac
+            validate_file_list_values(self.cohfilelist, 1)
             self.coherence_file_paths = self.__get_files_from_attr('cohfilelist')
 
         self.header_file_paths = self.__get_files_from_attr('slcfilelist')
@@ -179,10 +179,6 @@ class Configuration:
                 self.__dict__[key] = str(self.__dict__[key])
 
     def __get_files_from_attr(self, attr):
-        files = []
         val = self.__getattribute__(attr)
-        for path_str in val.read_text().split('\n'):
-            # ignore empty lines in file
-            if len(path_str) > 1:
-                files.append(MultiplePaths(self.outdir, path_str, self.ifglksx, self.ifgcropopt))
-        return files
+        files = parse_namelist(val)
+        return [MultiplePaths(self.outdir, p, self.ifglksx, self.ifgcropopt) for p in files]

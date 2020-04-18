@@ -21,7 +21,6 @@ import os
 import shutil
 import tempfile
 import unittest
-import copy
 from os.path import join
 
 import pytest
@@ -32,17 +31,16 @@ from pyrate.core import config
 from pyrate.core.config import (
     validate_parameters, validate_optional_parameters, validate_epochs,
     validate_obs_thresholds, validate_ifgs, validate_gamma_headers,
-    validate_coherence_files, validate_tifs_exist, validate_minimum_epochs, 
+    validate_coherence_files, validate_tifs_exist, validate_minimum_epochs,
     validate_epoch_thresholds, validate_epoch_cutoff,
     validate_crop_parameters, validate_slpf_cutoff,
     validate_reference_pixel_search_windows,
     validate_multilook_parameters,
     validate_prepifg_tifs_exist,
-    _get_temporal_info, _get_prepifg_info, _get_fullres_info)
+    _get_temporal_info, _get_prepifg_info, write_config_file, SIXTEEN_DIGIT_EPOCH_PAIR, TWELVE_DIGIT_EPOCH_PAIR,
+    EIGHT_DIGIT_EPOCH)
+
 from pyrate.core.config import (
-    SIXTEEN_DIGIT_EPOCH_PAIR,
-    TWELVE_DIGIT_EPOCH_PAIR,
-    EIGHT_DIGIT_EPOCH,
     _COHERENCE_VALIDATION,
     _ORBITAL_FIT_VALIDATION,
     _APSEST_VALIDATION,
@@ -138,7 +136,7 @@ class TestConfigValidation(unittest.TestCase):
         self.assertTrue(validate(IFG_FILE_LIST, self.params[IFG_FILE_LIST]))
         self.assertFalse(validate(IFG_FILE_LIST, None))
         self.assertFalse(validate(IFG_FILE_LIST, self.dummy_dir))
-        
+
         self.assertTrue(validate(DEM_FILE, self.params[DEM_FILE]))
         self.assertFalse(validate(DEM_FILE, None))
         self.assertFalse(validate(DEM_FILE, self.dummy_dir))
@@ -151,7 +149,7 @@ class TestConfigValidation(unittest.TestCase):
         self.assertFalse(validate(OUT_DIR, None))
         # OUT_DIR gets created at runtime
         self.assertTrue(validate(OUT_DIR, self.dummy_dir))
-        
+
         self.assertTrue(validate(APS_INCIDENCE_MAP, self.params[APS_INCIDENCE_MAP]))
         self.assertFalse(validate(APS_INCIDENCE_MAP, self.dummy_dir))
         self.assertTrue(validate(APS_INCIDENCE_MAP, None))
@@ -174,7 +172,7 @@ class TestConfigValidation(unittest.TestCase):
         self.assertFalse(validate(IFG_LKSY, 0))
 
         # TODO: IFG_XFIRST, IFG_XLAST, IFG_YFIRST, IFG_YLAST
-    
+
         self.assertTrue(validate(NO_DATA_VALUE, self.params[NO_DATA_VALUE]))
 
         self.assertTrue(validate(COH_MASK, 0))
@@ -186,14 +184,14 @@ class TestConfigValidation(unittest.TestCase):
         self.assertTrue(validate(ORBITAL_FIT, 1))
         self.assertFalse(validate(ORBITAL_FIT, -1))
         self.assertFalse(validate(ORBITAL_FIT, 2))
-        
+
         self.assertTrue(validate(LR_NSIG, self.params[LR_NSIG]))
         self.assertFalse(validate(LR_NSIG, 0))
         self.assertFalse(validate(LR_NSIG, 11))
-        
+
         self.assertTrue(validate(LR_PTHRESH, self.params[LR_PTHRESH]))
         self.assertFalse(validate(LR_PTHRESH, 0))
-        
+
         self.assertTrue(validate(LR_MAXSIG, self.params[LR_MAXSIG]))
         self.assertFalse(validate(LR_MAXSIG, -1))
         self.assertFalse(validate(LR_MAXSIG, 1001))
@@ -202,22 +200,22 @@ class TestConfigValidation(unittest.TestCase):
         self.assertTrue(validate(APSEST, 1))
         self.assertFalse(validate(APSEST, -1))
         self.assertFalse(validate(APSEST, 2))
-        
+
         self.assertTrue(validate(TIME_SERIES_CAL, 0))
         self.assertTrue(validate(TIME_SERIES_CAL, 1))
         self.assertFalse(validate(TIME_SERIES_CAL, -1))
         self.assertFalse(validate(TIME_SERIES_CAL, 2))
-        
+
         self.assertTrue(validate(PARALLEL, 0))
         self.assertTrue(validate(PARALLEL, 1))
         self.assertTrue(validate(PARALLEL, 2))
         self.assertFalse(validate(PARALLEL, -1))
         self.assertFalse(validate(PARALLEL, 3))
-        
+
         self.assertTrue(validate(PROCESSES, 1))
         self.assertFalse(validate(PROCESSES, -1))
         self.assertFalse(validate(PROCESSES, 0))
-        
+
         self.assertTrue(validate(PROCESSOR, 0))
         self.assertTrue(validate(PROCESSOR, 1))
         self.assertTrue(validate(PROCESSOR, 2))
@@ -229,7 +227,7 @@ class TestConfigValidation(unittest.TestCase):
         self.assertFalse(validate(NAN_CONVERSION, -1))
         self.assertFalse(validate(NAN_CONVERSION, 2))
 
-        self.assertTrue(validate(NO_DATA_AVERAGING_THRESHOLD, 
+        self.assertTrue(validate(NO_DATA_AVERAGING_THRESHOLD,
                                  self.params[NO_DATA_AVERAGING_THRESHOLD]))
 
     def test_gamma_validators(self):
@@ -246,9 +244,9 @@ class TestConfigValidation(unittest.TestCase):
         self.assertTrue(validate(COH_THRESH, 0.1))
         self.assertFalse(validate(COH_THRESH, -0.1))
         self.assertFalse(validate(COH_THRESH, 1.1))
-        
+
         self.assertFalse(validate(COH_FILE_LIST, None))
-        
+
     def test_orbital_validators(self):
         def validate(key, value):
             return _ORBITAL_FIT_VALIDATION[key][0](value)
@@ -263,7 +261,7 @@ class TestConfigValidation(unittest.TestCase):
         self.assertTrue(validate(ORBITAL_FIT_DEGREE, 3))
         self.assertFalse(validate(ORBITAL_FIT_DEGREE, 0))
         self.assertFalse(validate(ORBITAL_FIT_DEGREE, 4))
-    
+
         self.assertFalse(validate(ORBITAL_FIT_LOOKS_X, 0))
 
         self.assertFalse(validate(ORBITAL_FIT_LOOKS_Y, 0))
@@ -271,7 +269,7 @@ class TestConfigValidation(unittest.TestCase):
     def test_apsest_validators(self):
         def validate(key, value):
             return _APSEST_VALIDATION[key][0](value)
-        
+
         for i in range(1, 4):
             self.assertTrue(validate(TLPF_METHOD, i))
         self.assertFalse(validate(TLPF_METHOD, 0))
@@ -285,7 +283,7 @@ class TestConfigValidation(unittest.TestCase):
 
         self.assertTrue(validate(SLPF_METHOD, 1))
         self.assertTrue(validate(SLPF_METHOD, 2))
-    
+
         self.assertTrue(validate(SLPF_CUTOFF, 0.001))
         self.assertFalse(validate(SLPF_CUTOFF, 0.0))
 
@@ -305,7 +303,7 @@ class TestConfigValidation(unittest.TestCase):
 
         self.assertTrue(validate(TIME_SERIES_PTHRESH, 1))
         self.assertFalse(validate(TIME_SERIES_PTHRESH, 0))
-        
+
         self.assertTrue(validate(TIME_SERIES_SM_FACTOR, -1.0))
         self.assertFalse(validate(TIME_SERIES_SM_FACTOR, 0.1))
         self.assertFalse(validate(TIME_SERIES_SM_FACTOR, -5.1))
@@ -343,7 +341,7 @@ class TestConfigValidation(unittest.TestCase):
         self.params[ORBITAL_FIT_METHOD] = 0
         with pytest.raises(ConfigException):
             validate_optional_parameters(self.params)
-            
+
         self.params[ORBITAL_FIT] = 0
         validate_optional_parameters(self.params)
 
@@ -361,77 +359,63 @@ class TestConfigValidation(unittest.TestCase):
         self.params[TIME_SERIES_PTHRESH] = 0
         with pytest.raises(ConfigException):
             validate_optional_parameters(self.params)
-        
+
         self.params[TIME_SERIES_CAL] = 0
         validate_optional_parameters(self.params)
 
     def test_epochs_in_gamma_obs(self):
         validate_epochs(self.params[IFG_FILE_LIST], SIXTEEN_DIGIT_EPOCH_PAIR)
-        self.params[IFG_FILE_LIST] = \
-            os.path.join(common.SML_TEST_GAMMA, 'bad_epochs_ifms_17')
+        self.params[IFG_FILE_LIST] = os.path.join(common.SML_TEST_GAMMA, 'bad_epochs_ifms_17')
         with pytest.raises(ConfigException):
-            validate_epochs(self.params[IFG_FILE_LIST],
-                            SIXTEEN_DIGIT_EPOCH_PAIR)
+            validate_epochs(self.params[IFG_FILE_LIST], SIXTEEN_DIGIT_EPOCH_PAIR)
 
     def test_epochs_in_roipac_obs(self):
-        validate_epochs(self.roipac_params[IFG_FILE_LIST], 
-                        TWELVE_DIGIT_EPOCH_PAIR)
-        self.roipac_params[IFG_FILE_LIST] = \
-            os.path.join(common.SML_TEST_OBS, 'bad_epochs_ifms_17')
+        validate_epochs(self.roipac_params[IFG_FILE_LIST], TWELVE_DIGIT_EPOCH_PAIR)
+        self.roipac_params[IFG_FILE_LIST] = os.path.join(common.SML_TEST_OBS, 'bad_epochs_ifms_17')
         with pytest.raises(ConfigException):
-            validate_epochs(self.roipac_params[IFG_FILE_LIST], 
-                            TWELVE_DIGIT_EPOCH_PAIR)
+            validate_epochs(self.roipac_params[IFG_FILE_LIST], TWELVE_DIGIT_EPOCH_PAIR)
 
     def test_epochs_in_gamma_headers(self):
         validate_epochs(self.params[SLC_FILE_LIST], EIGHT_DIGIT_EPOCH)
-        self.params[SLC_FILE_LIST] = \
-            os.path.join(common.SML_TEST_GAMMA, 'bad_epochs_headers')
+        self.params[SLC_FILE_LIST] = os.path.join(common.SML_TEST_GAMMA, 'bad_epochs_headers')
         with pytest.raises(ConfigException):
-            validate_epochs(self.params[SLC_FILE_LIST], 
-                            EIGHT_DIGIT_EPOCH)
+            validate_epochs(self.params[SLC_FILE_LIST], EIGHT_DIGIT_EPOCH)
 
     def test_epochs_in_coherence_files(self):
         self.params[COH_MASK] = 1
-        self.params[COH_FILE_LIST] = \
-            os.path.join(common.SML_TEST_GAMMA, 'ifms_17')
+        self.params[COH_FILE_LIST] = os.path.join(common.SML_TEST_GAMMA, 'ifms_17')
         validate_epochs(self.params[COH_FILE_LIST], SIXTEEN_DIGIT_EPOCH_PAIR)
-        self.params[COH_FILE_LIST] = \
-            os.path.join(common.SML_TEST_GAMMA, 'bad_epochs_ifms_17')
+        self.params[COH_FILE_LIST] = os.path.join(common.SML_TEST_GAMMA, 'bad_epochs_ifms_17')
         with pytest.raises(ConfigException):
-            validate_epochs(self.params[COH_FILE_LIST],     
-                            SIXTEEN_DIGIT_EPOCH_PAIR)
+            validate_epochs(self.params[COH_FILE_LIST], SIXTEEN_DIGIT_EPOCH_PAIR)
 
     def test_ifgs_exist(self):
         validate_ifgs(self.params[IFG_FILE_LIST])
-        self.params[IFG_FILE_LIST] = \
-            os.path.join(common.SML_TEST_GAMMA, 'bad_epochs_ifms_17')
+        self.params[IFG_FILE_LIST] = os.path.join(common.SML_TEST_GAMMA, 'bad_epochs_ifms_17')
         with pytest.raises(ConfigException):
             validate_ifgs(self.params[IFG_FILE_LIST])
 
     def test_gamma_headers_exist(self):
-        validate_gamma_headers(self.params[IFG_FILE_LIST],
-                               self.params[SLC_FILE_LIST])
-        self.params[SLC_FILE_LIST] = \
-            os.path.join(common.SML_TEST_GAMMA, 'bad_epochs_headers')
+        validate_gamma_headers(self.params[IFG_FILE_LIST], self.params[SLC_FILE_LIST])
+        self.params[SLC_FILE_LIST] = os.path.join(common.SML_TEST_GAMMA, 'bad_epochs_headers')
         with pytest.raises(ConfigException):
-            validate_gamma_headers(self.params[IFG_FILE_LIST],
-                                   self.params[SLC_FILE_LIST])
+            validate_gamma_headers(self.params[IFG_FILE_LIST], self.params[SLC_FILE_LIST])
 
     def test_coherence_files_exist(self):
         self.params[COH_MASK] = 1
-        self.params[COH_FILE_LIST] = \
-            os.path.join(common.SML_TEST_GAMMA, 'ifms_17')
+        self.params[COH_FILE_LIST] = os.path.join(common.SML_TEST_GAMMA, 'ifms_17')
         validate_coherence_files(self.params[IFG_FILE_LIST], self.params)
-        self.params[COH_FILE_LIST] = \
-            os.path.join(common.SML_TEST_GAMMA, 'bad_epochs_ifms_17')
+        self.params[COH_FILE_LIST] = os.path.join(common.SML_TEST_GAMMA, 'bad_epochs_ifms_17')
+        tmp_config = tempfile.mktemp('.conf')
+        write_config_file(self.params, output_conf_file=tmp_config)
         with pytest.raises(ConfigException):
-            validate_coherence_files(self.params[IFG_FILE_LIST], self.params)
+            Configuration(tmp_config).__dict__
 
     def test_obs_thresholds(self):
         self.params[TIME_SERIES_PTHRESH] = 16
         self.params[TLPF_PTHR] = 16
         validate_obs_thresholds(self.params[IFG_FILE_LIST], self.params)
-        
+
         self.params[TIME_SERIES_PTHRESH] = 18
         self.params[TLPF_PTHR] = 18
         with pytest.raises(ConfigException):

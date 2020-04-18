@@ -1,4 +1,3 @@
-import os
 import shutil
 import random
 import string
@@ -7,7 +6,7 @@ import pytest
 from pyrate.core import mpiops, config as cf, prepifg_helper
 from pyrate.configuration import Configuration
 from tests.common import TEST_CONF_ROIPAC, TEST_CONF_GAMMA
-from tests.common import ROIPAC_SYSTEM_CONF, GAMMA_SYSTEM_CONF, GEOTIF_SYSTEM_CONF
+from tests.common import ROIPAC_SYSTEM_CONF, GAMMA_SYSTEM_CONF, GEOTIF_SYSTEM_CONF, SML_TEST_COH_LIST
 
 
 @pytest.fixture
@@ -26,11 +25,10 @@ def system_conf(request):
 
 
 @pytest.fixture
-def random_filename(tmpdir_factory):
+def random_filename(tmp_path_factory):
     def make_random_filename(ext=''):
-        dir = str(tmpdir_factory.mktemp('pyrate').realpath())
         fname = ''.join(random.choice(string.ascii_lowercase) for _ in range(10))
-        return os.path.join(dir, fname + ext)
+        return tmp_path_factory.mktemp(basename='pyrate-').joinpath(fname + ext)
     return make_random_filename
 
 
@@ -101,3 +99,8 @@ def roipac_params():
 @pytest.fixture(params=[TEST_CONF_GAMMA, TEST_CONF_ROIPAC])
 def roipac_or_gamma_conf(request):
     return request.param
+
+
+@pytest.fixture
+def coh_list_file():
+    return SML_TEST_COH_LIST

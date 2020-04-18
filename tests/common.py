@@ -51,8 +51,7 @@ SML_TEST_ROIPAC_HEADER_LIST = join(SML_TEST_ROIPAC, 'headers')
 
 SML_TEST_DEM_DIR = join(SML_TEST_DIR, 'dem')
 SML_TEST_LEGACY_PREPIFG_DIR = join(SML_TEST_DIR, 'prepifg_output')
-SML_TEST_LEGACY_ORBITAL_DIR = join(SML_TEST_DIR,
-                                   'orbital_error_correction')
+SML_TEST_LEGACY_ORBITAL_DIR = join(SML_TEST_DIR, 'orbital_error_correction')
 SML_TEST_DEM_ROIPAC = join(SML_TEST_OBS, 'roipac_test_trimmed.dem')
 SML_TEST_DEM_GAMMA = join(SML_TEST_GAMMA, '20060619_utm.dem')
 SML_TEST_INCIDENCE = join(SML_TEST_GAMMA, '20060619_utm.inc')
@@ -120,6 +119,7 @@ def remove_tifs(path):
     tifs = glob.glob(os.path.join(path, '*.tif'))
     for tif in tifs:
         os.remove(tif)
+
 
 def small_data_setup(datafiles=None, is_dir=False):
     """Returns Ifg objs for the files in the small test dir
@@ -305,8 +305,7 @@ def mst_calculation(ifg_paths_or_instance, params):
     return None
 
 
-def get_nml(ifg_list_instance, nodata_value,
-            nan_conversion=False):
+def get_nml(ifg_list_instance, nodata_value, nan_conversion=False):
     """
     :param xxx(eg str, tuple, int, float...) ifg_list_instance: xxxx
     :param float nodata_value: No data value in image
@@ -468,7 +467,6 @@ def assert_same_files_produced(dir1, dir2, dir3, ext, num_files):
     dir1_files.sort()
     dir2_files.sort()
     dir3_files.sort()
-    print("==="*10)
     # 17 unwrapped geotifs
     # 17 cropped multilooked tifs + 1 dem
     assert len(dir1_files) == num_files
