@@ -25,7 +25,7 @@ from typing import Union, List, Tuple
 from osgeo.gdal import Dataset
 from pyrate.core import shared, ifgconstants as ifc
 from pyrate.core.logger import pyratelogger as log
-from pyrate.core.shared import extract_epochs_from_filename
+
 
 gdal.SetCacheMax(2**15)
 GDAL_WARP_MEMORY_LIMIT = 2**10
@@ -33,8 +33,7 @@ LOW_FLOAT32 = np.finfo(np.float32).min*1e-10
 
 
 def coherence_masking(input_gdal_dataset: Dataset,
-                      source_epochs: List[str],
-                      coherence_file_paths: List[str],
+                      coherence_file_path: str,
                       coherence_thresh: float) -> None:
     """Perform coherence masking on raster in-place.
 
@@ -46,21 +45,20 @@ def coherence_masking(input_gdal_dataset: Dataset,
 
     """
 
-    for coherence_file_path in coherence_file_paths:
-
-        coherence_epochs = extract_epochs_from_filename(coherence_file_path)
-
-        if all(src_epoch in coherence_epochs for src_epoch in source_epochs):
-            coherence_ds = gdal.Open(coherence_file_path, gdalconst.GA_ReadOnly)
-            coherence_band = coherence_ds.GetRasterBand(1)
-            src_band = input_gdal_dataset.GetRasterBand(1)
-            ndv = np.nan
-            coherence = coherence_band.ReadAsArray()
-            src = src_band.ReadAsArray()
-            var = {"coh": coherence, "src": src, "t": coherence_thresh, "ndv": ndv}
-            formula = "where(coh>=t, src, ndv)"
-            res = ne.evaluate(formula, local_dict=var)
-            src_band.WriteArray(res)
+    coherence_ds = gdal.Open(coherence_file_path, gdalconst.GA_ReadOnly)
+    coherence_band = coherence_ds.GetRasterBand(1)
+    src_band = input_gdal_dataset.GetRasterBand(1)
+    ndv = np.nan
+    coherence = coherence_band.ReadAsArray()
+    src = src_band.ReadAsArray()
+    var = {"coh": coherence, "src": src, "t": coherence_thresh, "ndv": ndv}
+    formula = "where(coh>=t, src, ndv)"
+    res = ne.evaluate(formula, local_dict=var)
+    src_band.WriteArray(res)
+    # update metadata
+    input_gdal_dataset.SetMetadataItem(ifc.DATA_TYPE, ifc.COHERENCE)
+    input_gdal_dataset.FlushCache()  # write on the disc
+    log.info(f"Applied coherence masking using coh file {coherence_file_path}")
 
 
 def world_to_pixel(geo_transform, x, y):
@@ -307,18 +305,16 @@ def crop_resample_average(
     tmp_ds = gdal.GetDriverByName('MEM').CreateCopy('', dst_ds) if (match_pyrate and new_res[0]) else None
 
     src_ds, src_ds_mem = _setup_source(input_tif)
-    source_epochs = extract_epochs_from_filename(input_tif)
 
     if coherence_path and coherence_thresh:
-        coherence_masking(src_ds_mem, source_epochs, [coherence_path], coherence_thresh)
+        coherence_masking(src_ds_mem, coherence_path, coherence_thresh)
 
     elif coherence_path and not coherence_thresh:
         raise ValueError(f"Coherence file provided without a coherence "
                          f"threshold. Please ensure you provide 'cohthresh' "
                          f"in your config if coherence masking is enabled.")
 
-    resampled_average, src_ds_mem = \
-        gdal_average(dst_ds, src_ds, src_ds_mem, thresh)
+    resampled_average, src_ds_mem = gdal_average(dst_ds, src_ds, src_ds_mem, thresh)
     src_dtype = src_ds_mem.GetRasterBand(1).DataType
     src_gt = src_ds_mem.GetGeoTransform()
 
@@ -342,21 +338,21 @@ def crop_resample_average(
         if k == ifc.DATA_TYPE:
             # update data type metadata
             if v == ifc.ORIG and coherence_path:
-                md.update({ifc.DATA_TYPE:ifc.COHERENCE})
+                md.update({ifc.DATA_TYPE: ifc.COHERENCE})
             elif v == ifc.ORIG and not coherence_path:
-                md.update({ifc.DATA_TYPE:ifc.MULTILOOKED})
+                md.update({ifc.DATA_TYPE: ifc.MULTILOOKED})
             elif v == ifc.DEM:
                 md.update({ifc.DATA_TYPE:ifc.MLOOKED_DEM})
             elif v == ifc.INCIDENCE:
                 md.update({ifc.DATA_TYPE:ifc.MLOOKED_INC})
             elif v == ifc.COHERENCE and coherence_path:
                 pass
-            elif v == ifc.MULTILOOKED and coherence_path:
-                md.update({ifc.DATA_TYPE:ifc.COHERENCE})
-            elif v == ifc.MULTILOOKED and not coherence_path:
+            elif v == ifc.MULTILOOKED and coherence_path is not None:
+                md.update({ifc.DATA_TYPE: ifc.COHERENCE})
+            elif v == ifc.MULTILOOKED and coherence_path is not None:
                 pass
             else:
-                raise TypeError('Data Type metadata not recognised')
+                raise TypeError(f'Data Type metadata {v} not recognised')
 
     # In-memory GDAL driver doesn't support compression so turn it off.
     creation_opts = ['compress=packbits'] if out_driver_type != 'MEM' else []
