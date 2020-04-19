@@ -290,9 +290,8 @@ class Ifg(RasterBase):
 
         :param bool readonly: True/False, or None to open as underlying file setting
         """
-        if not self.is_open:
-            RasterBase.open(self, readonly)
-            self.initialize()
+        RasterBase.open(self, readonly)
+        self.initialize()
 
     def initialize(self):
         """
@@ -1290,6 +1289,6 @@ def mpi_vs_multiprocess_logging(step, params):
         params[cf.PARALLEL] = 0
     else:
         if params[cf.PARALLEL]:
-            log.info(f"Running prepifg using {params[cf.PROCESSES]} processes")
+            log.info(f"Running {step} using {params[cf.PROCESSES]} processes")
         else:
-            log.info(f"Running prepifg serially")
+            log.info(f"Running {step} serially")
