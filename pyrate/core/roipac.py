@@ -17,6 +17,7 @@
 This Python module contains tools for reading ROI_PAC format input data.
 """
 import os
+from pathlib import Path
 import re
 import datetime
 import pyrate.core.ifgconstants as ifc
@@ -205,6 +206,7 @@ def roipac_header(file_path, params):
     geotiff.
     """
     rsc_file = params[cf.DEM_HEADER_FILE]
+    p = Path(file_path)
     if rsc_file is not None:
         projection = parse_header(rsc_file)[ifc.PYRATE_DATUM]
     else:
@@ -213,9 +215,10 @@ def roipac_header(file_path, params):
         header_file = os.path.join(params[cf.DEM_HEADER_FILE])
     elif file_path.endswith('unw.tif'):
         # TODO: improve this
-        interferogram_epoches = extract_epochs_from_filename(file_path)
+        interferogram_epoches = extract_epochs_from_filename(p.name)
         for header_path in params[cf.HEADER_FILE_PATHS]:
-            header_epochs = extract_epochs_from_filename(header_path.unwrapped_path)
+            h = Path(header_path.unwrapped_path)
+            header_epochs = extract_epochs_from_filename(h.name)
             if set(header_epochs).__eq__(set(interferogram_epoches)):
                 header_file = header_path.unwrapped_path
                 break
