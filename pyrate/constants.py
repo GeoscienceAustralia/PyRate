@@ -1,4 +1,5 @@
 import os
+import re
 from pathlib import Path
 import numpy as np
 
@@ -45,3 +46,10 @@ GAMMA_INCIDENCE = 'incidence_angle'
 # GAMMA = 'GAMMA'
 # value assigned to no-data-value
 LOW_FLOAT32 = np.finfo(np.float32).min*1e-10
+
+SIXTEEN_DIGIT_EPOCH_PAIR = r'\d{8}-\d{8}'
+sixteen_digits_pattern = re.compile(SIXTEEN_DIGIT_EPOCH_PAIR)
+TWELVE_DIGIT_EPOCH_PAIR = r'\d{6}-\d{6}'
+twelve_digits_pattern = re.compile(TWELVE_DIGIT_EPOCH_PAIR)
+EIGHT_DIGIT_EPOCH = r'\d{8}'
+PTN = re.compile(EIGHT_DIGIT_EPOCH)  # match 8 digits for the dates
