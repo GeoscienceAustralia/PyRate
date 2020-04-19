@@ -320,8 +320,7 @@ def crop_resample_average(
 
     # required to match Legacy output
     if tmp_ds:
-        _alignment(input_tif, new_res, resampled_average, src_ds_mem,
-                          src_gt, tmp_ds)
+        _alignment(input_tif, new_res, resampled_average, src_ds_mem, src_gt, tmp_ds)
 
     # grab metadata from existing geotiff
     gt = dst_ds.GetGeoTransform()
@@ -388,6 +387,7 @@ def _alignment(input_tif, new_res, resampled_average, src_ds_mem,
         resampled_nearest_neighbor = tmp_ds.GetRasterBand(1).ReadAsArray()
         resampled_average[yres - nrows:, xres - ncols:] = \
             resampled_nearest_neighbor[yres - nrows:, xres - ncols:]
+
 
 def gdal_average(dst_ds, src_ds, src_ds_mem, thresh):
     """

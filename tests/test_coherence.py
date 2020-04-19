@@ -10,6 +10,7 @@ from pyrate.core.shared import Ifg
 from pyrate.core import gdal_python
 from pyrate.core import config as cf
 from pyrate.core import prepifg_helper
+from pyrate.core import ifgconstants as ifc
 from pyrate.configuration import MultiplePaths
 from pyrate import conv2tif
 
@@ -57,9 +58,14 @@ def test_coherence_files_not_converted():
 
     sample_gdal_band = sample_gdal_dataset.GetRasterBand(1)
     sample_gdal_band.SetNoDataValue(NO_DATA_VALUE)
-    arr = np.arange(25).reshape(5, 5)
     sample_gdal_band.WriteArray(np.arange(25).reshape(5, 5))
-    sample_gdal_band.FlushCache()
+    sample_gdal_dataset.SetMetadataItem(ifc.MASTER_DATE, '2019-10-20')
+    sample_gdal_dataset.SetMetadataItem(ifc.SLAVE_DATE, '2019-11-01')
+    sample_gdal_dataset.SetMetadataItem(ifc.PYRATE_WAVELENGTH_METRES, '10.05656')
+    sample_gdal_dataset.FlushCache()
+    sample_gdal_dataset = None
+    ifg = Ifg(sample_gdal_filename)
+    ifg.open()
 
     # create a coherence mask dataset
     tmpdir = tempfile.mkdtemp()
@@ -94,11 +100,9 @@ def test_coherence_files_not_converted():
     # use the gdal_python.coherence_masking to find the actual mask dataset
     coherence_thresh = 0.3
 
-    gdal_python.coherence_masking(sample_gdal_dataset,
-                                  coherence_mask_filename.converted_path,
-                                  coherence_thresh)
+    gdal_python.coherence_masking(ifg.dataset, coherence_mask_filename.converted_path, coherence_thresh)
 
-    sample_gdal_array = np.nan_to_num(sample_gdal_dataset.GetRasterBand(1).ReadAsArray())
+    sample_gdal_array = np.nan_to_num(ifg.phase_data)
 
     # compare the artificial masked and actual masked datasets
     np.testing.assert_array_almost_equal(sample_gdal_array, expected_result_array)
@@ -106,5 +110,5 @@ def test_coherence_files_not_converted():
     # del the tmp datasets created
     os.remove(coherence_mask_filename.converted_path)
 
-    del sample_gdal_dataset
+    ifg.close()
     os.remove(sample_gdal_filename)

@@ -20,7 +20,7 @@ all other PyRate modules
 """
 # pylint: disable=too-many-lines
 import re
-from typing import List
+from typing import List, Union
 
 import errno
 import math
@@ -94,7 +94,7 @@ class RasterBase(object):
     """
     # pylint: disable=missing-docstring
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, path):
+    def __init__(self, path: Union[gdal.Dataset, str]):
         if isinstance(path, gdal.Dataset):
             self.dataset = path  # path will be Dataset in this case
             self.data_path = self.dataset  # data_path dummy
@@ -290,8 +290,9 @@ class Ifg(RasterBase):
 
         :param bool readonly: True/False, or None to open as underlying file setting
         """
-        RasterBase.open(self, readonly)
-        self.initialize()
+        if not self.is_open:
+            RasterBase.open(self, readonly)
+            self.initialize()
 
     def initialize(self):
         """
