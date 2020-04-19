@@ -37,8 +37,10 @@ from pyrate.core.config import (
     validate_reference_pixel_search_windows,
     validate_multilook_parameters,
     validate_prepifg_tifs_exist,
-    _get_temporal_info, _get_prepifg_info, write_config_file, SIXTEEN_DIGIT_EPOCH_PAIR, TWELVE_DIGIT_EPOCH_PAIR,
-    EIGHT_DIGIT_EPOCH)
+    _get_temporal_info, _get_prepifg_info, write_config_file)
+
+from pyrate.constants import SIXTEEN_DIGIT_EPOCH_PAIR, TWELVE_DIGIT_EPOCH_PAIR, \
+    EIGHT_DIGIT_EPOCH
 
 from pyrate.core.config import (
     _COHERENCE_VALIDATION,

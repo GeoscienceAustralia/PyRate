@@ -17,14 +17,14 @@
 This Python module contains tools for reading GAMMA format input data.
 """
 # coding: utf-8
-from os.path import join, split
 import re
 import os
+from pathlib import Path
 from datetime import date, time, timedelta
 import numpy as np
 import pyrate.core.ifgconstants as ifc
 from pyrate.core import config as cf
-
+from pyrate.constants import PTN
 
 # constants
 GAMMA_DATE = 'date'
@@ -40,6 +40,7 @@ GAMMA_FREQUENCY = 'radar_frequency'
 GAMMA_INCIDENCE = 'incidence_angle'
 RADIANS = 'RADIANS'
 GAMMA = 'GAMMA'
+
 
 def _parse_header(path):
     """Parses all GAMMA header file fields into a dictionary"""
@@ -220,8 +221,8 @@ def get_header_paths(input_file, slc_file_list):
     :return: list of matching header files
     :rtype: list
     """
-    PTN = re.compile(r'\d{8}')  # match 8 digits for the dates
-    epochs = PTN.findall(input_file)
+    f = Path(input_file)
+    epochs = PTN.findall(f.name)
     header_names = cf.parse_namelist(slc_file_list)
     matches = [hdr for hdr in header_names if any(e in hdr for e in epochs)]
     return matches

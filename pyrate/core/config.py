@@ -34,14 +34,11 @@ from osgeo import gdal
 
 from pyrate.core.ifgconstants import YEARS_PER_DAY
 from pyrate.constants import CONV2TIF, PREPIFG, PROCESS, MERGE
+from pyrate.constants import SIXTEEN_DIGIT_EPOCH_PAIR, TWELVE_DIGIT_EPOCH_PAIR, EIGHT_DIGIT_EPOCH, \
+    sixteen_digits_pattern
 from pyrate.core.logger import pyratelogger as _logger
 
 # general constants
-SIXTEEN_DIGIT_EPOCH_PAIR = r'\d{8}-\d{8}'
-sixteen_digits_pattern = re.compile(SIXTEEN_DIGIT_EPOCH_PAIR)
-TWELVE_DIGIT_EPOCH_PAIR = r'\d{6}-\d{6}'
-twelve_digits_pattern = re.compile(TWELVE_DIGIT_EPOCH_PAIR)
-EIGHT_DIGIT_EPOCH = r'\d{8}'
 MINIMUM_NUMBER_EPOCHS = 3
 NO_MULTILOOKING = 1
 ROIPAC = 0
