@@ -194,10 +194,6 @@ def prepare_ifg(raster_path, xlooks, ylooks, exts, thresh, crop_opt, write_to_di
     if xlooks != ylooks:
         raise ValueError('X and Y looks mismatch')
 
-    # cut, average, resample the final output layers
-    op = output_tiff_filename(raster.data_path, out_path)
-    looks_path = cf.mlooked_path(op, ylooks, crop_opt)
-
     #     # Add missing/updated metadata to resampled ifg/DEM
     #     new_lyr = type(ifg)(looks_path)
     #     new_lyr.open(readonly=True)

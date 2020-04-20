@@ -336,19 +336,20 @@ def crop_resample_average(
     for k, v in md.items():
         if k == ifc.DATA_TYPE:
             # update data type metadata
-            if v == ifc.ORIG and coherence_path:
+            if (v == ifc.ORIG) and (coherence_path is not None):
                 md.update({ifc.DATA_TYPE: ifc.COHERENCE})
-            elif v == ifc.ORIG and not coherence_path:
+            elif (v == ifc.ORIG) and (coherence_path is None):
                 md.update({ifc.DATA_TYPE: ifc.MULTILOOKED})
             elif v == ifc.DEM:
-                md.update({ifc.DATA_TYPE:ifc.MLOOKED_DEM})
+                md.update({ifc.DATA_TYPE: ifc.MLOOKED_DEM})
             elif v == ifc.INCIDENCE:
-                md.update({ifc.DATA_TYPE:ifc.MLOOKED_INC})
-            elif v == ifc.COHERENCE and coherence_path:
+                md.update({ifc.DATA_TYPE: ifc.MLOOKED_INC})
+            elif (v == ifc.COHERENCE) and (coherence_path is None):
+                # during orbital fit multilooking
                 pass
-            elif v == ifc.MULTILOOKED and coherence_path is not None:
+            elif (v == ifc.MULTILOOKED) and (coherence_path is not None):
                 md.update({ifc.DATA_TYPE: ifc.COHERENCE})
-            elif v == ifc.MULTILOOKED and coherence_path is not None:
+            elif (v == ifc.MULTILOOKED) and (coherence_path is not None):
                 pass
             else:
                 raise TypeError(f'Data Type metadata {v} not recognised')
@@ -360,7 +361,7 @@ def crop_resample_average(
                                  geotransform=gt, creation_opts=creation_opts)
 
     shared.write_geotiff(resampled_average, out_ds, np.nan)
-    log.debug(f"Writing geotiff: {output_file}")
+    log.info(f"Writing geotiff: {output_file}")
     return resampled_average, out_ds
 
 
