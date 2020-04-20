@@ -280,22 +280,18 @@ def process_ifgs(ifg_paths, params, rows, cols):
     tiles = mpiops.run_once(get_tiles, ifg_paths[0], rows, cols)
 
     preread_ifgs = _create_ifg_dict(ifg_paths, params=params, tiles=tiles)
-    print('created prepread ifgs')
     # _mst_calc(ifg_paths, params, tiles, preread_ifgs)
 
     refpx, refpy = _ref_pixel_calc(ifg_paths, params)
 
-    print('calculated ref pixels    ')
     log.debug("refpx, refpy: "+str(refpx) + " " + str(refpy))
 
     # remove non ifg keys
     _ = [preread_ifgs.pop(k) for k in ['gt', 'epochlist', 'md', 'wkt']]
 
     _orb_fit_calc(ifg_paths, params, preread_ifgs)
-    print('calculated orbital fit')
 
     _ref_phase_estimation(ifg_paths, params, refpx, refpy)
-    print('calculated ref phase')
 
     _mst_calc(ifg_paths, params, tiles, preread_ifgs)
 

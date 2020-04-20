@@ -501,7 +501,7 @@ def coherence_paths_for(path: str, params: dict, tif=False) -> str:
     _, filename = split(path)
     epoch = re.match(sixteen_digits_pattern, filename).group(0)
     if tif:
-        coh_file_paths = [f.converted_path for f in params[COHERENCE_FILE_PATHS] if epoch in f.unwrapped_path]
+        coh_file_paths = [f.converted_path for f in params[COHERENCE_FILE_PATHS] if epoch in f.converted_path]
     else:
         coh_file_paths = [f.unwrapped_path for f in params[COHERENCE_FILE_PATHS] if epoch in f.unwrapped_path]
 
