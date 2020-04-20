@@ -290,7 +290,6 @@ def _dummy_warp(renamed_path: str, coh_path: str, coh_threshold: float):
     if isinstance(ifg, Ifg) and (coh_path is not None):
         coherence_masking(ifg.dataset, coh_path, coh_threshold)
     data = ifg.dataset.ReadAsArray()
-    ifg.close()
     return data, ifg.dataset
 
 
@@ -320,6 +319,7 @@ def _warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out,
     resampled_data, out_ds = crop_resample_average( input_tif=ifg.data_path, extents=extents, new_res=resolution, output_file=looks_path, thresh=thresh, out_driver_type=driver_type, hdr=header, coherence_path=coherence_path, coherence_thresh=coherence_thresh)
     if not write_to_disk:
         return resampled_data, out_ds
+
 
 # TODO: Not being used. Remove in future?
 def _resample(data, xscale, yscale, thresh):
