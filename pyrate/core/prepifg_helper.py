@@ -287,7 +287,7 @@ def _dummy_warp(renamed_path: str, coh_path: str, coh_threshold: float):
     ifg = dem_or_ifg(renamed_path)
     ifg.open()
     ifg.dataset.SetMetadataItem(ifc.DATA_TYPE, ifc.MULTILOOKED)
-    if isinstance(ifg, Ifg):
+    if isinstance(ifg, Ifg) and (coh_path is not None):
         coherence_masking(ifg.dataset, coh_path, coh_threshold)
     data = ifg.dataset.ReadAsArray()
     ifg.close()

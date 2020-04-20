@@ -333,6 +333,9 @@ def crop_resample_average(
         md = dst_ds.GetMetadata()
 
     # update metadata for output
+
+    # TODO: Metadata should be updated immediately as a prepifg/process step is applied
+    # move this into the respective steps
     for k, v in md.items():
         if k == ifc.DATA_TYPE:
             # update data type metadata
@@ -347,9 +350,7 @@ def crop_resample_average(
             elif (v == ifc.COHERENCE) and (coherence_path is None):
                 # during orbital fit multilooking
                 pass
-            elif (v == ifc.MULTILOOKED) and (coherence_path is not None):
-                md.update({ifc.DATA_TYPE: ifc.COHERENCE})
-            elif (v == ifc.MULTILOOKED) and (coherence_path is not None):
+            elif v == ifc.MULTILOOKED:
                 pass
             else:
                 raise TypeError(f'Data Type metadata {v} not recognised')
