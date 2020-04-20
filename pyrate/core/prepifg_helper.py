@@ -28,11 +28,12 @@ from numbers import Number
 from subprocess import check_call
 from tempfile import mkstemp
 
+
 from numpy import array, where, nan, isnan, nanmean, float32, zeros, \
     sum as nsum
 from osgeo import gdal
 
-from pyrate.core.gdal_python import crop_resample_average
+from pyrate.core.gdal_python import crop_resample_average, coherence_masking
 from pyrate.core import ifgconstants as ifc, config as cf
 from pyrate.core.shared import Ifg, DEM, output_tiff_filename
 from pyrate.core.logger import pyratelogger as log
@@ -189,7 +190,7 @@ def prepare_ifg(raster_path, xlooks, ylooks, exts, thresh, crop_opt, write_to_di
         shutil.copy(raster.data_path, looks_path)
         # set metadata to indicated has been cropped and multilooked
         # copy file with mlooked path
-        return _dummy_warp(looks_path)
+        return _dummy_warp(looks_path, coherence_path, coherence_thresh)
 
     if xlooks != ylooks:
         raise ValueError('X and Y looks mismatch')
@@ -278,7 +279,7 @@ def _file_ext(raster):
                                   "Coherence and baseline")
 
 
-def _dummy_warp(renamed_path):
+def _dummy_warp(renamed_path: str, coh_path: str, coh_threshold: float):
     """
     Convenience dummy operation for when no multi-looking or cropping
     required
@@ -286,7 +287,10 @@ def _dummy_warp(renamed_path):
     ifg = dem_or_ifg(renamed_path)
     ifg.open()
     ifg.dataset.SetMetadataItem(ifc.DATA_TYPE, ifc.MULTILOOKED)
+    if isinstance(ifg, Ifg):
+        coherence_masking(ifg.dataset, coh_path, coh_threshold)
     data = ifg.dataset.ReadAsArray()
+    ifg.close()
     return data, ifg.dataset
 
 
