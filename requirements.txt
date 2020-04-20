@@ -1,6 +1,6 @@
 Cython==0.29.11
 GDAL
-Pillow==6.2.0
+Pillow==7.1.1
 glob2==0.7
 joblib==0.13.2
 mpi4py==3.0.2
