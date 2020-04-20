@@ -145,7 +145,14 @@ def small_data_setup(datafiles=None, is_dir=False):
 def assert_tifs_equal(tif1, tif2):
     mds = gdal.Open(tif1)
     sds = gdal.Open(tif2)
+    # phase equal
     np.testing.assert_array_almost_equal(mds.ReadAsArray(),  sds.ReadAsArray(), decimal=3)
+
+    md_mds = mds.GetMetadata()
+    md_sds = mds.GetMetadata()
+
+    # meta data equal
+    assert md_mds == md_sds
     mds = None  # close datasets
     sds = None
 
