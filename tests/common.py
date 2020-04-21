@@ -145,14 +145,15 @@ def small_data_setup(datafiles=None, is_dir=False):
 def assert_tifs_equal(tif1, tif2):
     mds = gdal.Open(tif1)
     sds = gdal.Open(tif2)
-    # phase equal
-    np.testing.assert_array_almost_equal(mds.ReadAsArray(),  sds.ReadAsArray(), decimal=3)
 
     md_mds = mds.GetMetadata()
     md_sds = mds.GetMetadata()
-
     # meta data equal
     assert md_mds == md_sds
+
+    # phase equal
+    np.testing.assert_array_almost_equal(mds.ReadAsArray(),  sds.ReadAsArray(), decimal=3)
+
     mds = None  # close datasets
     sds = None
 
@@ -467,27 +468,29 @@ def pre_prepare_ifgs(ifg_paths, params):
     return ifgs
 
 
-def assert_same_files_produced(dir1, dir2, dir3, ext, num_files):
+def assert_two_dirs_equal(dir1, dir2, ext, num_files):
+
     dir1_files = list(Path(dir1).glob(ext))
     dir2_files = list(Path(dir2).glob(ext))  # MultiProcess files
-    dir3_files = list(Path(dir3).glob(ext))  # simple process files
     dir1_files.sort()
     dir2_files.sort()
-    dir3_files.sort()
     # 17 unwrapped geotifs
     # 17 cropped multilooked tifs + 1 dem
     assert len(dir1_files) == num_files
     assert len(dir2_files) == num_files
-    assert len(dir3_files) == num_files
     if dir1_files[0].suffix == '.tif':
-        for m_f, s_f, d_f in zip(dir1_files, dir2_files, dir3_files):
-            assert m_f.name == s_f.name == d_f.name
+        for m_f, s_f in zip(dir1_files, dir2_files):
+            assert m_f.name == s_f.name
             assert_tifs_equal(m_f.as_posix(), s_f.as_posix())
-            assert_tifs_equal(m_f.as_posix(), d_f.as_posix())
+
     elif dir1_files[0].suffix == '.npy':
-        for m_f, s_f, d_f in zip(dir1_files, dir2_files, dir3_files):
-            assert m_f.name == s_f.name == d_f.name
+        for m_f, s_f in zip(dir1_files, dir2_files):
+            assert m_f.name == s_f.name
             np.testing.assert_array_almost_equal(np.load(m_f), np.load(s_f))
-            np.testing.assert_array_almost_equal(np.load(m_f), np.load(d_f))
     else:
         raise
+
+
+def assert_same_files_produced(dir1, dir2, dir3, ext, num_files):
+    assert_two_dirs_equal(dir1, dir2, ext, num_files)
+    assert_two_dirs_equal(dir1, dir3, ext, num_files)
