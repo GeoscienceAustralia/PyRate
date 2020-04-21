@@ -32,6 +32,7 @@ from pyrate.core.logger import pyratelogger as log
 
 
 # TODO: move error checking to config step (for fail fast)
+# TODO: this function is not used. Plan removal
 def ref_pixel(ifgs, params):
     """
     Determines the most appropriate reference pixel coordinate by conducting
@@ -57,13 +58,18 @@ def ref_pixel(ifgs, params):
                             verbose=joblib_log_level(cf.LOG_LEVEL))(
             delayed(_ref_pixel_multi)(g, half_patch_size, phase_data,
                                      thresh, params) for g in grid)
-        refy, refx = find_min_mean(mean_sds, grid)
+        refxy = find_min_mean(mean_sds, grid)
     else:
         phase_data = [i.phase_data for i in ifgs]
         mean_sds = []
         for g in grid:
             mean_sds.append(_ref_pixel_multi(g, half_patch_size, phase_data, thresh, params))
-        refy, refx = find_min_mean(mean_sds, grid)
+        refxy = find_min_mean(mean_sds, grid)
+
+    if isinstance(refxy, ValueError):
+        raise ValueError('Refpixel calculation not possible!')
+
+    refy, refx = refxy
 
     if refy and refx:
         return refy, refx
