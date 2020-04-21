@@ -83,8 +83,12 @@ def find_min_mean(mean_sds, grid):
     :rtype: tuple    
     """
     log.debug('Ranking ref pixel candidates based on mean values')
-    refp_index = np.nanargmin(mean_sds)
-    return grid[refp_index]
+    try:
+        refp_index = np.nanargmin(mean_sds)
+        return grid[refp_index]
+    except ValueError as v:
+        log.error(v)
+        return v
 
 
 def ref_pixel_setup(ifgs_or_paths, params):
