@@ -23,7 +23,7 @@ def parallel_vs_serial(request):
 
 
 @pytest.fixture()
-def modified_config(tempdir, get_lks=3, get_crop=1, orbfit_lks=1, orbfit_method=1, orbfit_degrees=1, ref_est_method=1):
+def modified_config(tempdir, get_lks, get_crop, orbfit_lks, orbfit_method, orbfit_degrees, ref_est_method):
     def modify_params(conf_file, parallel_vs_serial, output_conf_file):
         params = cf.get_config_params(conf_file)
 
