@@ -143,11 +143,17 @@ def _ref_pixel_calc(ifg_paths, params):
         if mpiops.rank == MASTER_PROCESS:
             mean_sds = np.hstack(mean_sds)
 
-        try:
-            refy, refx = mpiops.run_once(refpixel.find_min_mean, mean_sds, grid)
-        except ValueError as v:
-            log.error('Refeence pixel calculation encountered problem!')
-            raise ValueError(v)
+        refpixel_returned = mpiops.run_once(refpixel.find_min_mean, mean_sds, grid)
+
+        if isinstance(refpixel_returned, ValueError):
+            from pyrate.core.refpixel import RefPixelError
+            raise RefPixelError(
+                "Reference pixel calculation returned an all nan slice!\n"
+                "Cannot continue downstream computation. Please change reference pixel algorithm used before "
+                "continuing.")
+
+        refy, refx = refpixel_returned
+
         log.info('Selected reference pixel coordinate: ({}, {})'.format(refx, refy))
     else:
         log.info('Reusing reference pixel from config file: ({}, {})'.format(refx, refy))
