@@ -293,33 +293,6 @@ def _dummy_warp(renamed_path: str, coh_path: str, coh_threshold: float):
     return data, ifg.dataset
 
 
-def _warp(ifg, x_looks, y_looks, extents, resolution, thresh, crop_out,
-          write_to_disk=True, out_path=None, header=None,
-          coherence_path=None, coherence_thresh=None):
-    """
-    Convenience function for calling GDAL functionality
-    """
-    if x_looks != y_looks:
-        raise ValueError('X and Y looks mismatch')
-
-    # cut, average, resample the final output layers
-    op = output_tiff_filename(ifg.data_path, out_path)
-    looks_path = cf.mlooked_path(op, y_looks, crop_out)
-
-    #     # Add missing/updated metadata to resampled ifg/DEM
-    #     new_lyr = type(ifg)(looks_path)
-    #     new_lyr.open(readonly=True)
-    #     # for non-DEMs, phase bands need extra metadata & conversions
-    #     if hasattr(new_lyr, "phase_band"):
-    #         # TODO: LOS conversion to vertical/horizontal (projection)
-    #         # TODO: push out to workflow
-    #         #if params.has_key(REPROJECTION_FLAG):
-    #         #    reproject()
-    driver_type = 'GTiff' if write_to_disk else 'MEM'
-    resampled_data, out_ds = crop_resample_average( input_tif=ifg.data_path, extents=extents, new_res=resolution, output_file=looks_path, thresh=thresh, out_driver_type=driver_type, hdr=header, coherence_path=coherence_path, coherence_thresh=coherence_thresh)
-    if not write_to_disk:
-        return resampled_data, out_ds
-
 
 # TODO: Not being used. Remove in future?
 def _resample(data, xscale, yscale, thresh):

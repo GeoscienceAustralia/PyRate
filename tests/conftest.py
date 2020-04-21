@@ -101,6 +101,11 @@ def roipac_or_gamma_conf(request):
     return request.param
 
 
+@pytest.fixture(params=[TEST_CONF_GAMMA])
+def gamma_conf(request):
+    return request.param
+
+
 @pytest.fixture
 def coh_list_file():
     return SML_TEST_COH_LIST

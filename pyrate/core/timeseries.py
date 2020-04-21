@@ -31,6 +31,7 @@ from pyrate.core.shared import joblib_log_level
 from pyrate.core.algorithm import master_slave_ids, get_epochs
 from pyrate.core import config as cf, mst as mst_module
 from pyrate.core.config import ConfigException
+from pyrate.core.logger import pyratelogger as log
 
 
 def _time_series_setup(ifgs, mst, params):
@@ -139,6 +140,7 @@ def time_series(ifgs, params, vcmt=None, mst=None):
         _time_series_setup(ifgs, mst, params)
 
     if parallel == 1:
+        log.info('Calculating timeseries parallelly by the rows')
         tsvel_matrix = Parallel(n_jobs=params[cf.PROCESSES], 
                                 verbose=joblib_log_level(cf.LOG_LEVEL))(
             delayed(_time_series_by_rows)(r, b0_mat, sm_factor, sm_order,
@@ -147,7 +149,7 @@ def time_series(ifgs, params, vcmt=None, mst=None):
             for r in range(nrows))
 
     elif parallel == 2:
-
+        log.info('Calculating timeseries parallelly by the pixels')
         res = np.array(Parallel(n_jobs=params[cf.PROCESSES], 
                                 verbose=joblib_log_level(cf.LOG_LEVEL))(
             delayed(_time_series_by_pixel)(i, j, b0_mat, sm_factor, sm_order,
@@ -156,6 +158,7 @@ def time_series(ifgs, params, vcmt=None, mst=None):
             for (i, j) in itertools.product(range(nrows), range(ncols))))
         tsvel_matrix = np.reshape(res, newshape=(nrows, ncols, res.shape[1]))
     else:
+        log.info('Calculating timeseries pixel by pixel')
         for row in range(nrows):
             for col in range(ncols):
                 tsvel_matrix[row, col] = _time_series_by_pixel(
