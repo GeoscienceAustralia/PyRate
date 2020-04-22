@@ -435,10 +435,12 @@ class TestOldPrepifgVsGdalPython(unittest.TestCase):
             self.manipulation(data, self.temp_tif, self.md)
 
             # first file already opened by some process and never closed
-            self.out_tif = self.out_tif.split(".")[0]+"_2.tif"
+            self.out_tif = self.out_tif.rsplit(".", maxsplit=1)[0]+"_2.tif"
 
             # only band 1 is resapled in warp_old
-            averaged_and_resampled, _ = gdal_python.crop_resample_average(self.temp_tif, extents, [res, -res], self.out_tif, thresh, match_pyrate=True)
+            averaged_and_resampled, _ = gdal_python.crop_resample_average(
+                self.temp_tif, extents, [res, -res], self.out_tif, thresh, match_pyrate=True
+            )
             ifg = Ifg(self.temp_tif)
             # only band 1 is resampled in warp_old
             data, self.old_prepifg_path = warp_old(ifg, x_looks, y_looks, extents_str, [res, -res],
