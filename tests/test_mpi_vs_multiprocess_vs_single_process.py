@@ -11,10 +11,10 @@ TRAVIS = True if 'TRAVIS' in os.environ else False
 PYTHON3P6 = True if ('TRAVIS_PYTHON_VERSION' in os.environ and os.environ['TRAVIS_PYTHON_VERSION'] == '3.6') else False
 GDAL_VERSION = check_output(["gdal-config", "--version"]).decode(encoding="utf-8").split('\n')[0]
 # python3.7 and gdal3.0.4
-REGRESSION = PYTHON3P6 or (TRAVIS and ((GDAL_VERSION == '3.0.4') or (GDAL_VERSION == '2.4.2')))
+REGRESSION = PYTHON3P6 or (TRAVIS and (GDAL_VERSION == '3.0.4'))
 
 # python3.7 and gdal3.0.2
-REGRESSION2 = PYTHON3P6 or (TRAVIS and ((GDAL_VERSION == '3.0.2') or (GDAL_VERSION == '2.4.2')))
+REGRESSION2 = PYTHON3P6 or (TRAVIS and (GDAL_VERSION == '3.0.2'))
 
 
 @pytest.fixture(params=[0, 1, 2])
@@ -76,8 +76,8 @@ def modified_config(tempdir, get_lks, get_crop, orbfit_lks, orbfit_method, orbfi
     return modify_params
 
 
-@pytest.mark.skipif(PYTHON3P6, reason="Skip if not python3.7")
-def test_conv2tif_prepifg_parallel_vs_mpi(modified_config, roipac_or_gamma_conf):
+@pytest.mark.skipif(REGRESSION, reason="Skip if not python3.7 and gdal=3.0.4")
+def test_pipeline_parallel_vs_mpi(modified_config, gamma_conf):
 
     if TRAVIS and np.random.randint(0, 10) > 0:  # skip 90% of tests randomly
         pytest.skip("Skipping as part of 90")
@@ -85,7 +85,7 @@ def test_conv2tif_prepifg_parallel_vs_mpi(modified_config, roipac_or_gamma_conf)
     print("\n\n")
     print("===x==="*10)
 
-    mpi_conf, params = modified_config(roipac_or_gamma_conf, 0, 'mpi_conf.conf')
+    mpi_conf, params = modified_config(gamma_conf, 0, 'mpi_conf.conf')
 
     check_call(f"mpirun -n 3 pyrate conv2tif -f {mpi_conf}", shell=True)
     check_call(f"mpirun -n 3 pyrate prepifg -f {mpi_conf}", shell=True)
@@ -97,15 +97,14 @@ def test_conv2tif_prepifg_parallel_vs_mpi(modified_config, roipac_or_gamma_conf)
         if TRAVIS:
             pytest.skip("Skipping as part of 90 and process error")
 
-
-    mr_conf, params_m = modified_config(roipac_or_gamma_conf, 1, 'multiprocess_conf.conf')
+    mr_conf, params_m = modified_config(gamma_conf, 1, 'multiprocess_conf.conf')
 
     check_call(f"pyrate conv2tif -f {mr_conf}", shell=True)
     check_call(f"pyrate prepifg -f {mr_conf}", shell=True)
     check_call(f"pyrate process -f {mr_conf}", shell=True)
     # TODO: merge step
 
-    sr_conf, params_s = modified_config(roipac_or_gamma_conf, 0, 'singleprocess_conf.conf')
+    sr_conf, params_s = modified_config(gamma_conf, 0, 'singleprocess_conf.conf')
 
     check_call(f"pyrate conv2tif -f {sr_conf}", shell=True)
     check_call(f"pyrate prepifg -f {sr_conf}", shell=True)
@@ -205,25 +204,38 @@ def modified_config_short(tempdir, local_crop):
     return modify_params
 
 
-@pytest.mark.skipif(REGRESSION2, reason="Skip if not python3.7")
-def test_stack_and_ts_mpi_vs_parallel_vs_serial(modified_config_short, roipac_or_gamma_conf):
+@pytest.fixture
+def create_mpi_files():
+
+    def _create(modified_config_short, gamma_conf):
+
+        mpi_conf, params = modified_config_short(gamma_conf, 0, 'mpi_conf.conf')
+
+        check_call(f"mpirun -n 3 pyrate conv2tif -f {mpi_conf}", shell=True)
+        check_call(f"mpirun -n 3 pyrate prepifg -f {mpi_conf}", shell=True)
+
+        try:
+            check_call(f"mpirun -n 3 pyrate process -f {mpi_conf}", shell=True)
+        except CalledProcessError as c:
+            print(c)
+            if TRAVIS:
+                pytest.skip("Skipping as part of 90 and process error")
+
+        return params
+
+    return _create
+
+
+@pytest.mark.skipif(REGRESSION2, reason="Skip if not python3.7 and ")
+def test_stack_and_ts_mpi_vs_parallel_vs_serial(modified_config_short, gamma_conf, create_mpi_files):
 
     print("\n\n")
+
     print("===x==="*10)
 
-    mpi_conf, params = modified_config_short(roipac_or_gamma_conf, 0, 'mpi_conf.conf')
+    params = create_mpi_files(modified_config_short, gamma_conf)
 
-    check_call(f"mpirun -n 3 pyrate conv2tif -f {mpi_conf}", shell=True)
-    check_call(f"mpirun -n 3 pyrate prepifg -f {mpi_conf}", shell=True)
-
-    try:
-        check_call(f"mpirun -n 3 pyrate process -f {mpi_conf}", shell=True)
-    except CalledProcessError as c:
-        print(c)
-        if TRAVIS:
-            pytest.skip("Skipping as part of 90 and process error")
-
-    sr_conf, params_p = modified_config_short(roipac_or_gamma_conf, 0, 'parallel_conf.conf')
+    sr_conf, params_p = modified_config_short(gamma_conf, 0, 'parallel_conf.conf')
 
     check_call(f"pyrate conv2tif -f {sr_conf}", shell=True)
     check_call(f"pyrate prepifg -f {sr_conf}", shell=True)
