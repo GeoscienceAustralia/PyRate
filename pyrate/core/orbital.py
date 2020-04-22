@@ -17,7 +17,7 @@
 This Python module implements residual orbital corrections for interferograms.
 """
 # pylint: disable=invalid-name
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Iterable
 from collections import OrderedDict
 from pathlib import Path
 from numpy import empty, isnan, reshape, float32, squeeze
@@ -68,7 +68,7 @@ QUADRATIC = cf.QUADRATIC
 PART_CUBIC = cf.PART_CUBIC
 
 
-def remove_orbital_error(ifgs, params, preread_ifgs=None):
+def remove_orbital_error(ifgs: Iterable, params: dict, preread_ifgs=None) -> None:
     """
     Wrapper function for PyRate orbital error removal functionality.
 
