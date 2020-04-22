@@ -186,12 +186,6 @@ def prepare_ifg(raster_path, xlooks, ylooks, exts, thresh, crop_opt, write_to_di
     op = output_tiff_filename(raster.data_path, out_path)
     looks_path = cf.mlooked_path(op, ylooks, crop_opt)
 
-    if not do_multilook and crop_opt == ALREADY_SAME_SIZE:
-        shutil.copy(raster.data_path, looks_path)
-        # set metadata to indicated has been cropped and multilooked
-        # copy file with mlooked path
-        return _dummy_warp(looks_path, coherence_path, coherence_thresh)
-
     if xlooks != ylooks:
         raise ValueError('X and Y looks mismatch')
 
@@ -209,8 +203,8 @@ def prepare_ifg(raster_path, xlooks, ylooks, exts, thresh, crop_opt, write_to_di
         input_tif=raster.data_path, extents=exts, new_res=resolution, output_file=looks_path, thresh=thresh,
         out_driver_type=driver_type, hdr=header, coherence_path=coherence_path, coherence_thresh=coherence_thresh
     )
-    if not write_to_disk:
-        return resampled_data, out_ds
+
+    return resampled_data, out_ds
 
 
 # TODO: crop options 0 = no cropping? get rid of same size
@@ -259,39 +253,6 @@ def dem_or_ifg(data_path):
         return Ifg(data_path)
     else:
         return DEM(data_path)
-
-
-# TODO: Not currently used; remove in future?
-def _file_ext(raster):
-    """
-    Returns file ext string based on type of raster.
-    """
-    if isinstance(raster, Ifg):
-        return "tif"
-    elif isinstance(raster, DEM):
-        return "dem"
-    else:
-        # TODO: several possible file types to implement:
-        # Coherence file: single band
-        # LOS file:  has 2 bands: beam incidence angle & ground azimuth)
-        # Baseline file: perpendicular baselines (single band?)
-        raise NotImplementedError("Missing raster types for LOS, " 
-                                  "Coherence and baseline")
-
-
-def _dummy_warp(renamed_path: str, coh_path: str, coh_threshold: float):
-    """
-    Convenience dummy operation for when no multi-looking or cropping
-    required
-    """
-    ifg = dem_or_ifg(renamed_path)
-    ifg.open()
-    ifg.dataset.SetMetadataItem(ifc.DATA_TYPE, ifc.MULTILOOKED)
-    if isinstance(ifg, Ifg) and (coh_path is not None):
-        coherence_masking(ifg.dataset, coh_path, coh_threshold)
-    data = ifg.dataset.ReadAsArray()
-    return data, ifg.dataset
-
 
 
 # TODO: Not being used. Remove in future?

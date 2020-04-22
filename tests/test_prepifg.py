@@ -16,7 +16,6 @@
 """
 This Python module contains tests for the prepifg.py PyRate module.
 """
-import glob
 import os
 import shutil
 import sys
@@ -31,38 +30,15 @@ from numpy.testing import assert_array_almost_equal, assert_array_equal
 
 from osgeo import gdal
 
-from pyrate import prepifg, conv2tif
 from pyrate.core import config as cf
 from pyrate.core.config import mlooked_path
 from pyrate.core.shared import Ifg, DEM
 from pyrate.core.prepifg_helper import CUSTOM_CROP, MAXIMUM_CROP, MINIMUM_CROP, \
     ALREADY_SAME_SIZE
 from pyrate.core.prepifg_helper import prepare_ifgs, _resample, PreprocessError, CustomExts
-# from pyrate.tasks.utils import DUMMY_SECTION_NAME
-from pyrate.core.config import (
-    DEM_HEADER_FILE,
-    NO_DATA_VALUE,
-    OBS_DIR,
-    IFG_FILE_LIST,
-    PROCESSOR,
-    OUT_DIR,
-    SLC_DIR,
-    SLC_FILE_LIST,
-    IFG_LKSX,
-    IFG_LKSY,
-    IFG_CROP_OPT,
-    NO_DATA_AVERAGING_THRESHOLD,
-    DEM_FILE,
-    APS_INCIDENCE_MAP,
-    APS_ELEVATION_MAP,
-    APS_METHOD,
-    APS_CORRECTION)
-from pyrate.configuration import Configuration
-
 from tests.common import SML_TEST_LEGACY_PREPIFG_DIR
 from tests.common import PREP_TEST_TIF, SML_TEST_DEM_DIR
 from tests.common import SML_TEST_DEM_TIF
-from tests import common
 
 gdal.UseExceptions()
 DUMMY_SECTION_NAME = 'pyrate'
