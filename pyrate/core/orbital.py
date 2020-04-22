@@ -107,12 +107,6 @@ def remove_orbital_error(ifgs, params, preread_ifgs=None):
 
     _orbital_correction(ifgs, params, mlooked=mlooked, preread_ifgs=preread_ifgs)
 
-    # clean up if mlooked file was copied
-    for i in ifg_paths:
-        m = cf.mlooked_path(i, looks=params[cf.ORBITAL_FIT_LOOKS_X], crop_out=prepifg_helper.ALREADY_SAME_SIZE)
-        if Path(m).exists():
-            Path(m).unlink()
-
 
 def _orbital_correction(ifgs, params, mlooked=None, offset=True, preread_ifgs=None):
     """
