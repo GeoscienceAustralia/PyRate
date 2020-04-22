@@ -55,7 +55,7 @@ def modified_config(tempdir, get_lks, get_crop, orbfit_lks, orbfit_method, orbfi
         params[cf.IFG_FILE_LIST] = tdir.joinpath(Path(params[cf.IFG_FILE_LIST]).name).as_posix()
         params[cf.COH_FILE_DIR] = tdir.as_posix()
         params[cf.APS_INCIDENCE_MAP] = tdir.joinpath(Path(params[cf.APS_INCIDENCE_MAP]).name).as_posix()
-        params[cf.REFNX], params[cf.REFNY] = 4, 4
+        params[cf.REFNX], params[cf.REFNY] = 2, 2
         params[cf.TMPDIR] = tdir.joinpath(Path(params[cf.TMPDIR]).name).as_posix()
 
         params[cf.IFG_CROP_OPT] = get_crop
@@ -79,7 +79,7 @@ def modified_config(tempdir, get_lks, get_crop, orbfit_lks, orbfit_method, orbfi
 @pytest.mark.skipif(REGRESSION, reason="Skip if not python3.7 and gdal=3.0.4")
 def test_pipeline_parallel_vs_mpi(modified_config, gamma_conf):
 
-    if TRAVIS and np.random.randint(0, 1000) > 399:  # skip 40% of tests randomly
+    if TRAVIS and np.random.randint(0, 1000) > 249:  # skip 75% of tests randomly
         pytest.skip("Skipping as part of 90")
 
     print("\n\n")
@@ -219,15 +219,15 @@ def create_mpi_files():
         except CalledProcessError as c:
             print(c)
             if TRAVIS:
-                pytest.skip("Skipping as part of 90 and process error")
+                pytest.skip("Skipping as we encountered a process error")
 
         return params
 
     return _create
 
 
-@pytest.mark.skipif(REGRESSION2, reason="Skip if not python3.7 and ")
-def test_stack_and_ts_mpi_vs_parallel_vs_serial(modified_config_short, gamma_conf, create_mpi_files):
+@pytest.mark.skipif(REGRESSION2, reason="Skip if not python3.7 and gdal=3.0.4")
+def test_stack_and_ts_mpi_vs_parallel_vs_serial(modified_config_short, gamma_conf, create_mpi_files, parallel):
 
     print("\n\n")
 
@@ -235,7 +235,7 @@ def test_stack_and_ts_mpi_vs_parallel_vs_serial(modified_config_short, gamma_con
 
     params = create_mpi_files(modified_config_short, gamma_conf)
 
-    sr_conf, params_p = modified_config_short(gamma_conf, 0, 'parallel_conf.conf')
+    sr_conf, params_p = modified_config_short(gamma_conf, parallel, 'parallel_conf.conf')
 
     check_call(f"pyrate conv2tif -f {sr_conf}", shell=True)
     check_call(f"pyrate prepifg -f {sr_conf}", shell=True)
