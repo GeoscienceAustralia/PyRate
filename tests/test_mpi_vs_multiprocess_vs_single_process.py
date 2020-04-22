@@ -79,7 +79,7 @@ def modified_config(tempdir, get_lks, get_crop, orbfit_lks, orbfit_method, orbfi
 @pytest.mark.skipif(REGRESSION, reason="Skip if not python3.7 and gdal=3.0.4")
 def test_pipeline_parallel_vs_mpi(modified_config, gamma_conf):
 
-    if TRAVIS and np.random.randint(0, 10) > 0:  # skip 90% of tests randomly
+    if TRAVIS and np.random.randint(0, 10) > 4:  # skip 50% of tests randomly
         pytest.skip("Skipping as part of 90")
 
     print("\n\n")
