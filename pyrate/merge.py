@@ -37,6 +37,7 @@ gdal.SetCacheMax(64)
 # Constants
 MASTER_PROCESS = 0
 
+
 def main(params):
     """
     PyRate merge main function. Assembles product tiles in to
@@ -50,7 +51,7 @@ def main(params):
         _merge_timeseries(rows, cols, params)
 
     log.info('Creating quicklook images.')
-    output_folder_path = os.path.dirname(params["tmpdir"])
+    output_folder_path = os.path.dirname(params[cf.TMPDIR])
     create_png_from_tif(output_folder_path)
     log.debug('Finished creating quicklook images.')
 

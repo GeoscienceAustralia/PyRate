@@ -21,55 +21,54 @@ import os
 import argparse
 from argparse import RawTextHelpFormatter
 import time
+from pathlib import Path
 
 from pyrate.constants import CLI_DESCRIPTION
 from pyrate import conv2tif, prepifg, process, merge
-from pyrate.core.logger import pyratelogger as log
+from pyrate.core.logger import pyratelogger as log, configure
+from pyrate.core import config as cf
 from pyrate.core import user_experience
 from pyrate.configuration import Configuration
 
 
-def conv2tif_handler(config_file):
+def _params_from_conf(config_file):
+    config_file = os.path.abspath(config_file)
+    config = Configuration(config_file)
+    return config.__dict__
+
+
+def conv2tif_handler(params):
     """
     Convert interferograms to geotiff.
     """
-    config_file = os.path.abspath(config_file)
-    config = Configuration(config_file)
-    conv2tif.main(config.__dict__)
+    conv2tif.main(params)
 
 
-def prepifg_handler(config_file):
+def prepifg_handler(params):
     """
     Perform multilooking and cropping on geotiffs.
     """
-    config_file = os.path.abspath(config_file)
-    config = Configuration(config_file)
-    prepifg.main(config.__dict__)
+    prepifg.main(params)
 
 
-def process_handler(config_file):
+def process_handler(params):
     """
     Time series and linear rate computation.
     """
-    config_file = os.path.abspath(config_file)
-    config = Configuration(config_file)
-    process.main(config.__dict__)
+    process.main(params)
 
 
-def merge_handler(config_file):
+def merge_handler(params):
     """
     Reassemble computed tiles and save as geotiffs.
     """
-    config_file = os.path.abspath(config_file)
-    config = Configuration(config_file)
-    merge.main(config.__dict__)
-    user_experience.delete_tsincr_files(config.__dict__)
+    merge.main(params)
+    user_experience.delete_tsincr_files(params)
 
 
 def main():
 
     start_time = time.time()
-    log.debug("Starting PyRate")
 
     parser = argparse.ArgumentParser(prog='pyrate', description=CLI_DESCRIPTION, add_help=True,
                                      formatter_class=RawTextHelpFormatter)
@@ -105,6 +104,11 @@ def main():
 
     args = parser.parse_args()
 
+    params = _params_from_conf(args.config_file)
+
+    configure(args.verbosity, args.command, Path(params[cf.OUT_DIR]).joinpath('pyrate.log.').as_posix())
+
+    log.debug("Starting PyRate")
     log.debug("Arguments supplied at command line: ")
     log.debug(args)
 
@@ -113,29 +117,29 @@ def main():
         log.info("Verbosity set to " + str(args.verbosity) + ".")
 
     if args.command == "conv2tif":
-        conv2tif_handler(args.config_file)
+        conv2tif_handler(params)
 
     if args.command == "prepifg":
-        prepifg_handler(args.config_file)
+        prepifg_handler(params)
 
     if args.command == "process":
-        process_handler(args.config_file)
+        process_handler(params)
 
     if args.command == "merge":
-        merge_handler(args.config_file)
+        merge_handler(params)
 
     if args.command == "workflow":
         log.info("***********CONV2TIF**************")
-        conv2tif_handler(args.config_file)
+        conv2tif_handler(params)
 
         log.info("***********PREPIFG**************")
-        prepifg_handler(args.config_file)
+        prepifg_handler(params)
 
         log.info("***********PROCESS**************")
-        process_handler(args.config_file)
+        process_handler(params)
 
         log.info("***********MERGE**************")
-        merge_handler(args.config_file)
+        merge_handler(params)
 
     log.debug("--- %s seconds ---" % (time.time() - start_time))
 

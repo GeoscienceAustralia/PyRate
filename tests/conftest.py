@@ -21,7 +21,9 @@ def tempdir():
 
 @pytest.fixture(params=[ROIPAC_SYSTEM_CONF, GEOTIF_SYSTEM_CONF, GAMMA_SYSTEM_CONF])
 def system_conf(request):
-    return request.param
+    params = Configuration(request.param).__dict__
+    yield request.param
+    shutil.rmtree(params[cf.OUT_DIR])
 
 
 @pytest.fixture
@@ -69,7 +71,7 @@ def get_lks(request):
     return request.param
 
 
-@pytest.fixture(params=prepifg_helper.CROP_OPTIONS)
+@pytest.fixture(params=[1, 4])
 def get_crop(request):
     return request.param
 

@@ -17,21 +17,26 @@
 This Python module contains functions to control PyRate log outputs
 """
 import logging
+from datetime import datetime
 from pyrate.core.mpiops import size, rank
 
 
 pyratelogger = logging.getLogger(__name__)
-pyratelogger.setLevel(logging.INFO)
-formatter = logging.Formatter("%(asctime)s %(module)s %(lineno)d %(process)d " + str(rank) + "/" + str(size-1)+" %(message)s", "%H:%M:%S")
-
-ch = logging.StreamHandler()
-ch.setLevel(logging.INFO)
-ch.setFormatter(formatter)
+formatter = logging.Formatter("%(asctime)s %(module)s %(lineno)d %(process)d %(levelname)s " + str(rank) + "/" + str(
+    size-1)+" %(message)s", "%H:%M:%S")
 
 
-fh = logging.FileHandler('pyrate.log')
-fh.setLevel(logging.DEBUG)
-fh.setFormatter(formatter)
+def configure(verbosity, step_name, log_file_name='.pyrate.log.'):
 
-pyratelogger.addHandler(ch)
-pyratelogger.addHandler(fh)
+    log_file_name += step_name + '.' + datetime.now().isoformat()
+
+    ch = logging.StreamHandler()
+    ch.setLevel(verbosity)
+    ch.setFormatter(formatter)
+
+    fh = logging.FileHandler(log_file_name)
+    fh.setLevel(verbosity)
+    fh.setFormatter(formatter)
+
+    pyratelogger.addHandler(ch)
+    pyratelogger.addHandler(fh)
