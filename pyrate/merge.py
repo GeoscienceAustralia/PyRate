@@ -51,8 +51,7 @@ def main(params):
         _merge_timeseries(rows, cols, params)
 
     log.info('Creating quicklook images.')
-    output_folder_path = os.path.dirname(params[cf.TMPDIR])
-    create_png_from_tif(output_folder_path)
+    mpiops.run_once(create_png_from_tif, params[cf.OUT_DIR])
     log.debug('Finished creating quicklook images.')
 
 

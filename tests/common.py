@@ -476,8 +476,9 @@ def assert_two_dirs_equal(dir1, dir2, ext, num_files):
     dir2_files.sort()
     # 17 unwrapped geotifs
     # 17 cropped multilooked tifs + 1 dem
-    assert len(dir1_files) == num_files
-    assert len(dir2_files) == num_files
+    if num_files is not None:
+        assert len(dir1_files) == num_files
+        assert len(dir2_files) == num_files
     if dir1_files[0].suffix == '.tif':
         for m_f, s_f in zip(dir1_files, dir2_files):
             assert m_f.name == s_f.name
@@ -491,6 +492,6 @@ def assert_two_dirs_equal(dir1, dir2, ext, num_files):
         raise
 
 
-def assert_same_files_produced(dir1, dir2, dir3, ext, num_files):
+def assert_same_files_produced(dir1, dir2, dir3, ext, num_files=None):
     assert_two_dirs_equal(dir1, dir2, ext, num_files)
     assert_two_dirs_equal(dir1, dir3, ext, num_files)

@@ -1,11 +1,13 @@
 import pathlib
 
+
 def delete_tsincr_files(params):
 
-    outDirPath = pathlib.Path(params["outdir"])
-    for filePath in outDirPath.iterdir():
-        if "tsincr" in str(filePath):
-            filePath.unlink()
+    out_dir = pathlib.Path(params["outdir"])
+    for file_path in out_dir.iterdir():
+        if "tsincr" in str(file_path):
+            file_path.unlink()
+
 
 def break_number_into_factors(n, memo={}, left=2):
     if (n, left) in memo:
