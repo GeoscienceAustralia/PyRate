@@ -149,9 +149,9 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_conf):
 
     print("==========================xxx===========================")
 
-    # shutil.rmtree(params[cf.OBS_DIR])
-    # shutil.rmtree(params_m[cf.OBS_DIR])
-    # shutil.rmtree(params_s[cf.OBS_DIR])
+    shutil.rmtree(params[cf.OBS_DIR])
+    shutil.rmtree(params_m[cf.OBS_DIR])
+    shutil.rmtree(params_s[cf.OBS_DIR])
 
 
 @pytest.fixture()
@@ -228,7 +228,7 @@ def create_mpi_files():
             print(c)
             if TRAVIS:
                 pytest.skip("Skipping as we encountered a process error")
-
+        check_call(f"mpirun -n 3 pyrate merge -f {mpi_conf}", shell=True)
         return params
 
     return _create
@@ -248,6 +248,8 @@ def test_stack_and_ts_mpi_vs_parallel_vs_serial(modified_config_short, gamma_con
     check_call(f"pyrate conv2tif -f {sr_conf}", shell=True)
     check_call(f"pyrate prepifg -f {sr_conf}", shell=True)
     check_call(f"pyrate process -f {sr_conf}", shell=True)
+    check_call(f"pyrate merge -f {sr_conf}", shell=True)
+
 
     # convert2tif tests, 17 interferograms
     assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "*_unw.tif", 17)
@@ -268,6 +270,11 @@ def test_stack_and_ts_mpi_vs_parallel_vs_serial(modified_config_short, gamma_con
     assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "stack_rate_*.npy", params['tiles'])
     assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "stack_error_*.npy", params['tiles'])
     assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "stack_samples_*.npy", params['tiles'])
+
+    # compare merge step
+    assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "stack*.tif", 3)
+    assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "stack*.npy", 3)
+    assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "tscuml*.tif")
 
     print("==========================xxx===========================")
 
