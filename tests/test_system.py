@@ -18,15 +18,16 @@
 This Python module contains tests for mpi operations in PyRate.
 Tun this module as 'mpirun -n 4 pytest tests/test_mpi.py'
 """
-from pyrate.main import conv2tif_handler, prepifg_handler, process_handler, merge_handler
+from pyrate.main import merge_handler
+from pyrate import conv2tif, prepifg, process
 from pyrate.configuration import Configuration
 
 
 def test_workflow(system_conf):
     """check the handlers are working as expected"""
     params = Configuration(system_conf).__dict__
-    conv2tif_handler(params)
-    prepifg_handler(params)
+    conv2tif.main(params)
+    prepifg.main(params)
     params = Configuration(system_conf).__dict__
-    process_handler(params)
+    process.main(params)
     merge_handler(params)

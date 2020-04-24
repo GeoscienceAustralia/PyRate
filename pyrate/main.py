@@ -38,27 +38,6 @@ def _params_from_conf(config_file):
     return config.__dict__
 
 
-def conv2tif_handler(params):
-    """
-    Convert interferograms to geotiff.
-    """
-    conv2tif.main(params)
-
-
-def prepifg_handler(params):
-    """
-    Perform multilooking and cropping on geotiffs.
-    """
-    prepifg.main(params)
-
-
-def process_handler(params):
-    """
-    Time series and linear rate computation.
-    """
-    process.main(params)
-
-
 def merge_handler(params):
     """
     Reassemble computed tiles and save as geotiffs.
@@ -118,26 +97,26 @@ def main():
         log.info("Verbosity set to " + str(args.verbosity) + ".")
 
     if args.command == "conv2tif":
-        conv2tif_handler(params)
+        conv2tif.main(params)
 
     if args.command == "prepifg":
-        prepifg_handler(params)
+        prepifg.main(params)
 
     if args.command == "process":
-        process_handler(params)
+        process.main(params)
 
     if args.command == "merge":
         merge_handler(params)
 
     if args.command == "workflow":
         log.info("***********CONV2TIF**************")
-        conv2tif_handler(params)
+        conv2tif.main(params)
 
         log.info("***********PREPIFG**************")
-        prepifg_handler(params)
+        prepifg.main(params)
 
         log.info("***********PROCESS**************")
-        process_handler(params)
+        process.main(params)
 
         log.info("***********MERGE**************")
         merge_handler(params)
