@@ -96,19 +96,22 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_conf):
         print(c)
         if TRAVIS:
             pytest.skip("Skipping as part of 90 and process error")
+    # check_call(f"mpirun -n 3 pyrate merge -f {mpi_conf}", shell=True)
+
 
     mr_conf, params_m = modified_config(gamma_conf, 1, 'multiprocess_conf.conf')
 
     check_call(f"pyrate conv2tif -f {mr_conf}", shell=True)
     check_call(f"pyrate prepifg -f {mr_conf}", shell=True)
     check_call(f"pyrate process -f {mr_conf}", shell=True)
-    # TODO: merge step
+    # check_call(f"pyrate merge -f {mr_conf}", shell=True)
 
     sr_conf, params_s = modified_config(gamma_conf, 0, 'singleprocess_conf.conf')
 
     check_call(f"pyrate conv2tif -f {sr_conf}", shell=True)
     check_call(f"pyrate prepifg -f {sr_conf}", shell=True)
     check_call(f"pyrate process -f {sr_conf}", shell=True)
+    # check_call(f"pyrate merge -f {sr_conf}", shell=True)
 
     # convert2tif tests, 17 interferograms
     assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "*_unw.tif", 17)
@@ -139,6 +142,11 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_conf):
                                params['tiles'])
     assert_same_files_produced(params[cf.TMPDIR], params_m[cf.TMPDIR], params_s[cf.TMPDIR], "stack_samples_*.npy",
                                params['tiles'])
+
+    # compare merge step
+    # assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "stack_samples_*.tif",
+    #                            params['tiles'])
+
     print("==========================xxx===========================")
 
     shutil.rmtree(params[cf.OBS_DIR])
