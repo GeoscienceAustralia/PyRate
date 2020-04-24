@@ -79,7 +79,7 @@ def modified_config(tempdir, get_lks, get_crop, orbfit_lks, orbfit_method, orbfi
 @pytest.mark.skipif(REGRESSION, reason="Skip if not python3.7 and gdal=3.0.4")
 def test_pipeline_parallel_vs_mpi(modified_config, gamma_conf):
 
-    if TRAVIS and np.random.randint(0, 1000) > 249:  # skip 75% of tests randomly
+    if TRAVIS and np.random.randint(0, 1000) > 399:  # skip 60% of tests randomly
         pytest.skip("Skipping as part of 90")
 
     print("\n\n")
@@ -95,23 +95,22 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_conf):
     except CalledProcessError as c:
         print(c)
         if TRAVIS:
-            pytest.skip("Skipping as part of 90 and process error")
-    # check_call(f"mpirun -n 3 pyrate merge -f {mpi_conf}", shell=True)
-
+            pytest.skip("Skipping as part of process error")
+    check_call(f"mpirun -n 3 pyrate merge -f {mpi_conf}", shell=True)
 
     mr_conf, params_m = modified_config(gamma_conf, 1, 'multiprocess_conf.conf')
 
     check_call(f"pyrate conv2tif -f {mr_conf}", shell=True)
     check_call(f"pyrate prepifg -f {mr_conf}", shell=True)
     check_call(f"pyrate process -f {mr_conf}", shell=True)
-    # check_call(f"pyrate merge -f {mr_conf}", shell=True)
+    check_call(f"pyrate merge -f {mr_conf}", shell=True)
 
     sr_conf, params_s = modified_config(gamma_conf, 0, 'singleprocess_conf.conf')
 
     check_call(f"pyrate conv2tif -f {sr_conf}", shell=True)
     check_call(f"pyrate prepifg -f {sr_conf}", shell=True)
     check_call(f"pyrate process -f {sr_conf}", shell=True)
-    # check_call(f"pyrate merge -f {sr_conf}", shell=True)
+    check_call(f"pyrate merge -f {sr_conf}", shell=True)
 
     # convert2tif tests, 17 interferograms
     assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "*_unw.tif", 17)
@@ -144,14 +143,15 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_conf):
                                params['tiles'])
 
     # compare merge step
-    # assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "stack_samples_*.tif",
-    #                            params['tiles'])
+    assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "stack*.tif", 3)
+    assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "stack*.npy", 3)
+    assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "tscuml*.tif")
 
     print("==========================xxx===========================")
 
-    shutil.rmtree(params[cf.OBS_DIR])
-    shutil.rmtree(params_m[cf.OBS_DIR])
-    shutil.rmtree(params_s[cf.OBS_DIR])
+    # shutil.rmtree(params[cf.OBS_DIR])
+    # shutil.rmtree(params_m[cf.OBS_DIR])
+    # shutil.rmtree(params_s[cf.OBS_DIR])
 
 
 @pytest.fixture()

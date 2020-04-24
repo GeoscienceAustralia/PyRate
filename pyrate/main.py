@@ -27,6 +27,7 @@ from pyrate.constants import CLI_DESCRIPTION
 from pyrate import conv2tif, prepifg, process, merge
 from pyrate.core.logger import pyratelogger as log, configure
 from pyrate.core import config as cf
+from pyrate.core import mpiops
 from pyrate.core import user_experience
 from pyrate.configuration import Configuration
 
@@ -63,7 +64,7 @@ def merge_handler(params):
     Reassemble computed tiles and save as geotiffs.
     """
     merge.main(params)
-    user_experience.delete_tsincr_files(params)
+    mpiops.run_once(user_experience.delete_tsincr_files, params)
 
 
 def main():
