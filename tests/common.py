@@ -468,7 +468,7 @@ def pre_prepare_ifgs(ifg_paths, params):
     return ifgs
 
 
-def assert_two_dirs_equal(dir1, dir2, ext, num_files):
+def assert_two_dirs_equal(dir1, dir2, ext, num_files=None):
 
     dir1_files = list(Path(dir1).glob(ext))
     dir2_files = list(Path(dir2).glob(ext))  # MultiProcess files
