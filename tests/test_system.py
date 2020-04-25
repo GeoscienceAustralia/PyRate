@@ -18,16 +18,22 @@
 This Python module contains tests for mpi operations in PyRate.
 Tun this module as 'mpirun -n 4 pytest tests/test_mpi.py'
 """
-from pyrate.main import merge_handler
-from pyrate import conv2tif, prepifg, process
+from subprocess import check_call
+from pathlib import Path
+from pyrate.core import config as cf
 from pyrate.configuration import Configuration
 
 
 def test_workflow(system_conf):
     """check the handlers are working as expected"""
+    check_call(f"pyrate conv2tif -f {system_conf}", shell=True)
+    check_call(f"pyrate prepifg -f {system_conf}", shell=True)
+    check_call(f"pyrate process -f {system_conf}", shell=True)
+    check_call(f"pyrate merge -f {system_conf}", shell=True)
+
+    # assert logs generated in the outdir
     params = Configuration(system_conf).__dict__
-    conv2tif.main(params)
-    prepifg.main(params)
-    params = Configuration(system_conf).__dict__
-    process.main(params)
-    merge_handler(params)
+    for stage in ['conv2tif', 'prepifg', 'process', 'merge']:
+        log_file_name = 'pyrate.log.' + stage
+        files = list(Path(params[cf.OUT_DIR]).glob(log_file_name + '.*'))
+        assert len(files) == 1
