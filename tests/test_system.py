@@ -14,9 +14,10 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
+
 """
-This Python module contains tests for mpi operations in PyRate.
-Tun this module as 'mpirun -n 4 pytest tests/test_mpi.py'
+pyrate basic workflow for all supported input datasets
+
 """
 from subprocess import check_call
 from pathlib import Path
@@ -37,3 +38,14 @@ def test_workflow(system_conf):
         log_file_name = 'pyrate.log.' + stage
         files = list(Path(params[cf.OUT_DIR]).glob(log_file_name + '.*'))
         assert len(files) == 1
+
+
+def test_single_workflow(gamma_conf):
+
+    check_call(f"pyrate workflow -f {gamma_conf}", shell=True)
+
+    params = Configuration(gamma_conf).__dict__
+
+    log_file_name = 'pyrate.log.' + 'workflow'
+    files = list(Path(params[cf.OUT_DIR]).glob(log_file_name + '.*'))
+    assert len(files) == 1

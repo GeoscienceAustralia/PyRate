@@ -116,6 +116,9 @@ def main():
         prepifg.main(params)
 
         log.info("***********PROCESS**************")
+
+        # reset params as prepifg modifies params
+        params = _params_from_conf(args.config_file)
         process.main(params)
 
         log.info("***********MERGE**************")
