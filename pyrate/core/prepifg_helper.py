@@ -27,7 +27,7 @@ from math import modf
 from numbers import Number
 from subprocess import check_call
 from tempfile import mkstemp
-
+from decimal import Decimal
 
 from numpy import array, where, nan, isnan, nanmean, float32, zeros, \
     sum as nsum
@@ -348,7 +348,7 @@ def _max_bounds(ifgs):
     ymin = min([i.y_last for i in ifgs])
     return xmin, ymin, xmax, ymax
 
-from decimal import Decimal
+
 def _get_same_bounds(ifgs):
     """
     Check and return bounding box for ALREADY_SAME_SIZE option.

@@ -103,9 +103,11 @@ def roipac_or_gamma_conf(request):
     return request.param
 
 
-@pytest.fixture(params=[TEST_CONF_GAMMA], scope='session')
+@pytest.fixture(params=[TEST_CONF_GAMMA])
 def gamma_conf(request):
-    return request.param
+    params = Configuration(TEST_CONF_GAMMA).__dict__
+    yield request.param
+    shutil.rmtree(params[cf.OUT_DIR])
 
 
 @pytest.fixture
