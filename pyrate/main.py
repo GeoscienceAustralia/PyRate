@@ -25,7 +25,7 @@ from pathlib import Path
 
 from pyrate.constants import CLI_DESCRIPTION
 from pyrate import conv2tif, prepifg, process, merge
-from pyrate.core.logger import pyratelogger as log, configure
+from pyrate.core.logger import pyratelogger as log, configure_stage_log
 from pyrate.core import config as cf
 from pyrate.core import mpiops
 from pyrate.core import user_experience
@@ -86,7 +86,7 @@ def main():
 
     params = _params_from_conf(args.config_file)
 
-    configure(args.verbosity, args.command, Path(params[cf.OUT_DIR]).joinpath('pyrate.log.').as_posix())
+    configure_stage_log(args.verbosity, args.command, Path(params[cf.OUT_DIR]).joinpath('pyrate.log.').as_posix())
 
     log.debug("Starting PyRate")
     log.debug("Arguments supplied at command line: ")

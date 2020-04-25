@@ -26,7 +26,7 @@ formatter = logging.Formatter("%(asctime)s %(module)s %(lineno)d %(process)d %(l
     size-1)+" %(message)s", "%H:%M:%S")
 
 
-def configure(verbosity, step_name, log_file_name='.pyrate.log.'):
+def configure_stage_log(verbosity, step_name, log_file_name='pyrate.log.'):
 
     log_file_name += step_name + '.' + datetime.now().isoformat()
 
