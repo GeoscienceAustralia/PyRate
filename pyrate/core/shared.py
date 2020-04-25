@@ -1288,7 +1288,7 @@ def mpi_vs_multiprocess_logging(step, params):
         log.info(f"Running {step} step using mpi processing. Disabling parallel processing.")
         params[cf.PARALLEL] = 0
     else:
-        if params[cf.PARALLEL]:
+        if params[cf.PARALLEL] == 1:
             log.info(f"Running {step} using {params[cf.PROCESSES]} processes")
         else:
             log.info(f"Running {step} serially")

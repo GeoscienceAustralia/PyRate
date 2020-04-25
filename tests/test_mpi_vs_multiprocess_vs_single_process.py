@@ -5,16 +5,17 @@ from pathlib import Path
 from subprocess import check_call, check_output, CalledProcessError
 import numpy as np
 from pyrate.core import config as cf
-from tests.common import copytree, assert_same_files_produced, assert_two_dirs_equal
+from tests.common import assert_same_files_produced, assert_two_dirs_equal, manipulate_test_conf
 
 TRAVIS = True if 'TRAVIS' in os.environ else False
 PYTHON3P6 = True if ('TRAVIS_PYTHON_VERSION' in os.environ and os.environ['TRAVIS_PYTHON_VERSION'] == '3.6') else False
+PYTHON3P7 = True if ('TRAVIS_PYTHON_VERSION' in os.environ and os.environ['TRAVIS_PYTHON_VERSION'] == '3.7') else False
+PYTHON3P8 = True if ('TRAVIS_PYTHON_VERSION' in os.environ and os.environ['TRAVIS_PYTHON_VERSION'] == '3.8') else False
 GDAL_VERSION = check_output(["gdal-config", "--version"]).decode(encoding="utf-8").split('\n')[0]
 # python3.7 and gdal3.0.4
-REGRESSION = PYTHON3P6 or (TRAVIS and (GDAL_VERSION == '3.0.4'))
-
+REGRESSION = PYTHON3P7 and (TRAVIS and (GDAL_VERSION == '3.0.4'))
 # python3.7 and gdal3.0.2
-REGRESSION2 = PYTHON3P6 or (TRAVIS and (GDAL_VERSION == '3.0.2'))
+REGRESSION2 = PYTHON3P7 and (TRAVIS and (GDAL_VERSION == '3.0.2'))
 
 
 @pytest.fixture(params=[0, 1, 2])
@@ -30,16 +31,8 @@ def local_crop(request):
 @pytest.fixture()
 def modified_config(tempdir, get_lks, get_crop, orbfit_lks, orbfit_method, orbfit_degrees, ref_est_method):
     def modify_params(conf_file, parallel_vs_serial, output_conf_file):
-        params = cf.get_config_params(conf_file)
-
         tdir = Path(tempdir())
-        copytree(params[cf.OBS_DIR], tdir)
-
-        # manipulate params
-        params[cf.OBS_DIR] = tdir.as_posix()
-        outdir = tdir.joinpath('out')
-        outdir.mkdir(exist_ok=True)
-        params[cf.OUT_DIR] = outdir.as_posix()
+        params = manipulate_test_conf(conf_file, tdir)
 
         if params[cf.PROCESSOR] == 1:  # turn on coherence for gamma
             params[cf.COH_MASK] = 1
@@ -48,15 +41,7 @@ def modified_config(tempdir, get_lks, get_crop, orbfit_lks, orbfit_method, orbfi
         params[cf.PROCESSES] = 4
         params[cf.APSEST] = 1
         params[cf.IFG_LKSX], params[cf.IFG_LKSY] = get_lks, get_lks
-        params[cf.DEM_FILE] = tdir.joinpath(Path(params[cf.DEM_FILE]).name).as_posix()
-        params[cf.DEM_HEADER_FILE] = tdir.joinpath(Path(params[cf.DEM_HEADER_FILE]).name).as_posix()
-        params[cf.SLC_FILE_LIST] = tdir.joinpath(Path(params[cf.SLC_FILE_LIST]).name).as_posix()
-        params[cf.SLC_DIR] = tdir.as_posix()
-        params[cf.IFG_FILE_LIST] = tdir.joinpath(Path(params[cf.IFG_FILE_LIST]).name).as_posix()
-        params[cf.COH_FILE_DIR] = tdir.as_posix()
-        params[cf.APS_INCIDENCE_MAP] = tdir.joinpath(Path(params[cf.APS_INCIDENCE_MAP]).name).as_posix()
         params[cf.REFNX], params[cf.REFNY] = 2, 2
-        params[cf.TMPDIR] = tdir.joinpath(Path(params[cf.TMPDIR]).name).as_posix()
 
         params[cf.IFG_CROP_OPT] = get_crop
         params[cf.ORBITAL_FIT_LOOKS_X], params[cf.ORBITAL_FIT_LOOKS_Y] = orbfit_lks, orbfit_lks
@@ -76,11 +61,11 @@ def modified_config(tempdir, get_lks, get_crop, orbfit_lks, orbfit_method, orbfi
     return modify_params
 
 
-@pytest.mark.skipif(REGRESSION, reason="Skip if not python3.7 and gdal=3.0.4")
+@pytest.mark.skipif(REGRESSION or PYTHON3P8, reason="Skip if not python3.7 and gdal=3.0.4")
 def test_pipeline_parallel_vs_mpi(modified_config, gamma_conf):
 
     if TRAVIS and np.random.randint(0, 1000) > 399:  # skip 60% of tests randomly
-        pytest.skip("Skipping as part of 90")
+        pytest.skip("Skipping as part of 60")
 
     print("\n\n")
     print("===x==="*10)
@@ -164,17 +149,9 @@ def modified_config_short(tempdir, local_crop):
 
     def modify_params(conf_file, parallel, output_conf_file):
 
-
-        params = cf.get_config_params(conf_file)
-
         tdir = Path(tempdir())
-        copytree(params[cf.OBS_DIR], tdir)
 
-        # manipulate params
-        params[cf.OBS_DIR] = tdir.as_posix()
-        outdir = tdir.joinpath('out')
-        outdir.mkdir(exist_ok=True)
-        params[cf.OUT_DIR] = outdir.as_posix()
+        params = manipulate_test_conf(conf_file, tdir)
 
         if params[cf.PROCESSOR] == 1:  # turn on coherence for gamma
             params[cf.COH_MASK] = 1
@@ -183,15 +160,7 @@ def modified_config_short(tempdir, local_crop):
         params[cf.PROCESSES] = 4
         params[cf.APSEST] = 1
         params[cf.IFG_LKSX], params[cf.IFG_LKSY] = get_lks, get_lks
-        params[cf.DEM_FILE] = tdir.joinpath(Path(params[cf.DEM_FILE]).name).as_posix()
-        params[cf.DEM_HEADER_FILE] = tdir.joinpath(Path(params[cf.DEM_HEADER_FILE]).name).as_posix()
-        params[cf.SLC_FILE_LIST] = tdir.joinpath(Path(params[cf.SLC_FILE_LIST]).name).as_posix()
-        params[cf.SLC_DIR] = tdir.as_posix()
-        params[cf.IFG_FILE_LIST] = tdir.joinpath(Path(params[cf.IFG_FILE_LIST]).name).as_posix()
-        params[cf.COH_FILE_DIR] = tdir.as_posix()
-        params[cf.APS_INCIDENCE_MAP] = tdir.joinpath(Path(params[cf.APS_INCIDENCE_MAP]).name).as_posix()
         params[cf.REFNX], params[cf.REFNY] = 4, 4
-        params[cf.TMPDIR] = tdir.joinpath(Path(params[cf.TMPDIR]).name).as_posix()
 
         params[cf.IFG_CROP_OPT] = local_crop
         params[cf.ORBITAL_FIT_LOOKS_X], params[cf.ORBITAL_FIT_LOOKS_Y] = orbfit_lks, orbfit_lks
