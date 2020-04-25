@@ -120,7 +120,7 @@ def crop(input_file, extents, geo_trans=None, nodata=np.nan):
         """
         Converts a Python Imaging Library (PIL) array to a gdalnumeric image.
         """
-        arr = gdalnumeric.fromstring(i.tobytes(), 'b')
+        arr = gdalnumeric.frombuffer(i.tobytes(), 'b')
         arr.shape = i.im.size[1], i.im.size[0]
         return arr
 

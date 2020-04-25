@@ -70,7 +70,7 @@ def _time_series_setup(ifgs, mst, params):
         b0_mat[i, imaster[i]:islave[i]] = span[imaster[i]:islave[i]]
 
     # change the sign if slave is earlier than master
-    isign = where(imaster > islave)
+    isign = where(np.atleast_1d(imaster) > np.atleast_1d(islave))
     b0_mat[isign[0], :] = -b0_mat[isign[0], :]
     tsvel_matrix = np.empty(shape=(nrows, ncols, nvelpar),
                             dtype=float32)

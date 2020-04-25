@@ -224,6 +224,7 @@ class LegacyTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
         params = Configuration(common.TEST_CONF_ROIPAC).__dict__
         cls.temp_out_dir = tempfile.mkdtemp()
         params[cf.OUT_DIR] = cls.temp_out_dir
+        params[cf.PARALLEL] = 0
         conv2tif.main(params)
         prepifg.main(params)
 
@@ -313,6 +314,7 @@ class LegacyTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
         np.testing.assert_array_almost_equal(self.ts_incr, self.tsincr_0, decimal=3)
 
         np.testing.assert_array_almost_equal(self.ts_cum, self.tscum_0, decimal=3)
+
 
 if __name__ == "__main__":
     unittest.main()
