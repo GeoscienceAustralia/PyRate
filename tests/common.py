@@ -495,3 +495,22 @@ def assert_two_dirs_equal(dir1, dir2, ext, num_files=None):
 def assert_same_files_produced(dir1, dir2, dir3, ext, num_files=None):
     assert_two_dirs_equal(dir1, dir2, ext, num_files)
     assert_two_dirs_equal(dir1, dir3, ext, num_files)
+
+
+def manipulate_test_conf(conf_file, temp_obs_dir):
+    params = cf.get_config_params(conf_file)
+    copytree(params[cf.OBS_DIR], temp_obs_dir)
+    # manipulate params
+    params[cf.OBS_DIR] = temp_obs_dir.as_posix()
+    outdir = temp_obs_dir.joinpath('out')
+    outdir.mkdir(exist_ok=True)
+    params[cf.OUT_DIR] = outdir.as_posix()
+    params[cf.DEM_FILE] = temp_obs_dir.joinpath(Path(params[cf.DEM_FILE]).name).as_posix()
+    params[cf.DEM_HEADER_FILE] = temp_obs_dir.joinpath(Path(params[cf.DEM_HEADER_FILE]).name).as_posix()
+    params[cf.SLC_FILE_LIST] = temp_obs_dir.joinpath(Path(params[cf.SLC_FILE_LIST]).name).as_posix()
+    params[cf.SLC_DIR] = temp_obs_dir.as_posix()
+    params[cf.IFG_FILE_LIST] = temp_obs_dir.joinpath(Path(params[cf.IFG_FILE_LIST]).name).as_posix()
+    params[cf.COH_FILE_DIR] = temp_obs_dir.as_posix()
+    params[cf.APS_INCIDENCE_MAP] = temp_obs_dir.joinpath(Path(params[cf.APS_INCIDENCE_MAP]).name).as_posix()
+    params[cf.TMPDIR] = temp_obs_dir.joinpath(Path(params[cf.TMPDIR]).name).as_posix()
+    return params
