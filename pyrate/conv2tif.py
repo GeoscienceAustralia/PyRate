@@ -33,11 +33,6 @@ GAMMA = 1
 ROIPAC = 0
 GEOTIF = 2
 
-import warnings
-from pyrate.core.logger import warn_with_traceback
-warnings.showwarning = warn_with_traceback
-
-
 
 def main(params):
     """

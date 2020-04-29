@@ -196,7 +196,7 @@ TIME_SERIES_SM_FACTOR = 'smfactor'
 PARALLEL = 'parallel'
 #: INT; Number of processes for multi-threading
 PROCESSES = 'processes'
-
+LARGE_TIFS = 'largetifs'
 # Orbital error correction constants for conversion to readable strings
 INDEPENDENT_METHOD = 1
 NETWORK_METHOD = 2
