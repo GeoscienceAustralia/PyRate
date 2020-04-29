@@ -20,11 +20,13 @@ interferogram geotiff files.
 # -*- coding: utf-8 -*-
 import os
 from typing import List
+from pathlib import Path
 from joblib import Parallel, delayed
 import numpy as np
 from pyrate.core import shared, mpiops, config as cf, prepifg_helper, gamma, roipac
 from pyrate.core.prepifg_helper import PreprocessError
 from pyrate.core.logger import pyratelogger as log
+from pyrate.core.shared import output_tiff_filename
 
 
 GAMMA = 1
@@ -79,13 +81,63 @@ def do_prepifg(gtiff_paths: List[str], params: dict) -> None:
     user_exts = (params[cf.IFG_XFIRST], params[cf.IFG_YFIRST], params[cf.IFG_XLAST], params[cf.IFG_YLAST])
     exts = prepifg_helper.get_analysis_extent(crop, ifgs, xlooks, ylooks, user_exts=user_exts)
     thresh = params[cf.NO_DATA_AVERAGING_THRESHOLD]
-    if parallel:
-        Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
-            delayed(_prepifg_multiprocessing)(p, xlooks, ylooks, exts, thresh, crop, params) for p in gtiff_paths
-        )
+
+    if params[cf.LARGE_TIFS]:
+        __prepare_prepifg_files(crop, exts, gtiff_paths, ifgs, params, thresh, xlooks, ylooks)
     else:
+        if parallel:
+            Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
+                delayed(_prepifg_multiprocessing)(p, xlooks, ylooks, exts, thresh, crop, params) for p in gtiff_paths
+            )
+        else:
+            for gtiff_path in gtiff_paths:
+                _prepifg_multiprocessing(gtiff_path, xlooks, ylooks, exts, thresh, crop, params)
+
+
+def __prepare_prepifg_files(crop, exts, gtiff_paths, ifgs, params, thresh, xlooks, ylooks):
+    extents = ' '.join([str(e) for e in exts])
+    ifg = ifgs[0]
+    res = [xlooks * ifg.x_step, ylooks * ifg.y_step]
+    res = ' '.join([str(e) for e in res])
+    with open('crop.txt', 'w') as f:
         for gtiff_path in gtiff_paths:
-            _prepifg_multiprocessing(gtiff_path, xlooks, ylooks, exts, thresh, crop, params)
+            p, c, l = _prepifg_multiprocessing(gtiff_path, xlooks, ylooks, exts, thresh, crop, params)
+            f.write('-te\t{extents}\t-tr\t{res}\t-r\taverage\t{p}\t{l}\n'.format(extents=extents, res=res, p=p, l=l))
+    with open('nan_fraction.txt', 'w') as f:
+        for gtiff_path in gtiff_paths:
+            p, c, l = _prepifg_multiprocessing(gtiff_path, xlooks, ylooks, exts, thresh, crop, params)
+            out_file = Path(l).with_suffix('.nanfrac.tif')
+            f.write('-A {p}\t'
+                    '--calc=nan*logical_and(A<.000001,A>-.000001)\t'
+                    '--outfile={out_file}\t'
+                    '--NoDataValue=-100000\n'.format(p=p, out_file=out_file))
+    with open('crop_average_nan_fraction.txt', 'w') as f:
+        for gtiff_path in gtiff_paths:
+            p, c, l = _prepifg_multiprocessing(gtiff_path, xlooks, ylooks, exts, thresh, crop, params)
+            out_file = Path(l).with_suffix('.nanfrac.tif')
+            out_file_avg = Path(l).with_suffix('.nanfrac.avg.tif')
+            f.write('-te\t{extents}\t-tr\t{res}\t-r\taverage\t{p}\t{l}\n'.format(extents=extents, res=res,
+                                                                                 p=out_file, l=out_file_avg))
+    with open('resampled_average.txt', 'w') as f:
+        for gtiff_path in gtiff_paths:
+            p, c, l = _prepifg_multiprocessing(gtiff_path, xlooks, ylooks, exts, thresh, crop, params)
+            out_file_avg = Path(l).with_suffix('.nanfrac.avg.tif')
+            # resampled_average[nan_frac >= thresh] = np.nan
+            f.write('-A {p}\t-B {q}\t'
+                    '--calc=B*(A<{th})+nan*(A>={th})\t'
+                    '--outfile={out_file}\t'
+                    '--NoDataValue=-100000\n'.format(p=out_file_avg, q=p, out_file=l, th=thresh))
+    with open('mask.txt', 'w') as f:
+        for gtiff_path in gtiff_paths:
+            p, c, l = _prepifg_multiprocessing(gtiff_path, xlooks, ylooks, exts, thresh, crop, params)
+            if c is not None:
+                f.write('-A {c}\t-B\t{p} --outfile={p}\t'
+                        '--calc=B*(A>={th})-nan*(A<{th})\t'
+                        '--NoDataValue=nan\n'.format(c=c, p=p, th=params[cf.COH_THRESH]))
+    with open('multilook.txt', 'w') as f:
+        for gtiff_path in gtiff_paths:
+            p, c, l = _prepifg_multiprocessing(gtiff_path, xlooks, ylooks, exts, thresh, crop, params)
+            f.write('{}\t{}\n'.format(p, l))
 
 
 def _prepifg_multiprocessing(path, xlooks, ylooks, exts, thresh, crop, params):
@@ -108,6 +160,10 @@ def _prepifg_multiprocessing(path, xlooks, ylooks, exts, thresh, crop, params):
         coherence_path = None
         coherence_thresh = None
 
-    prepifg_helper.prepare_ifg(path, xlooks, ylooks, exts, thresh, crop, out_path=params[cf.OUT_DIR], header=header,
-                               coherence_path=coherence_path, coherence_thresh=coherence_thresh)
-
+    if params[cf.LARGE_TIFS]:
+        op = output_tiff_filename(path, params[cf.OUT_DIR])
+        looks_path = cf.mlooked_path(op, ylooks, crop)
+        return path, coherence_path, looks_path
+    else:
+        prepifg_helper.prepare_ifg(path, xlooks, ylooks, exts, thresh, crop, out_path=params[cf.OUT_DIR],
+                                   header=header, coherence_path=coherence_path, coherence_thresh=coherence_thresh)

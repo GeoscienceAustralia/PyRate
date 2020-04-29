@@ -113,14 +113,20 @@ class Configuration:
         Path(self.outdir).mkdir(exist_ok=True, parents=True)
 
         # Validate required parameters exist.
-        if not set(PYRATE_DEFAULT_CONFIGRATION).issubset(self.__dict__):  # pragma: no cover
+
+        required = {k for k, v in PYRATE_DEFAULT_CONFIGRATION.items() if v['Required']}
+
+        if not required.issubset(self.__dict__):  # pragma: no cover
             raise ValueError("Required configuration parameters: " + str(
-                set(PYRATE_DEFAULT_CONFIGRATION).difference(self.__dict__)) + " are missing from input config file.")
+                required.difference(self.__dict__)) + " are missing from input config file.")
 
         # handle control parameters
         for parameter_name in PYRATE_DEFAULT_CONFIGRATION:
+            param_value = self.__dict__[parameter_name] if parameter_name in required or \
+                                                           parameter_name in self.__dict__ else ''
+
             self.__dict__[parameter_name] = set_parameter_value(PYRATE_DEFAULT_CONFIGRATION[parameter_name]["DataType"],
-                                                                self.__dict__[parameter_name],
+                                                                param_value,
                                                                 PYRATE_DEFAULT_CONFIGRATION[parameter_name]["DefaultValue"],
                                                                 PYRATE_DEFAULT_CONFIGRATION[parameter_name]["Required"],
                                                                 parameter_name)

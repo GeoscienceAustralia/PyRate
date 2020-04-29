@@ -100,6 +100,14 @@ PYRATE_DEFAULT_CONFIGRATION = {
         "PossibleValues": [0, 1],
         "Required": False
     },
+    "largetifs": {
+        "DataType": int,
+        "DefaultValue": 0,
+        "MinValue": None,
+        "MaxValue": None,
+        "PossibleValues": [0, 1],
+        "Required": False
+    },
     "parallel": {
         "DataType": int,
         "DefaultValue": 0,
