@@ -1,17 +1,10 @@
 #!/usr/bin/env bash
 # inputs are extents, thresh, coherence file, coherence_threshold
-
 # coherence masking
-
-
 # gdal average
-
 # gdal average has two steps
-
 # create a raster with the input raster nan_matrix, then compute the nan_frac of the input raster
-
 # take average of the input raster, and set nan_frac > thresh = nan
-
 
 inputdir=/home/sudipta/repos/PyRate/out/gamma/out
 outdir_crop=/home/sudipta/repos/PyRate/out/gamma/out/cropped
@@ -19,10 +12,6 @@ outdir_coh=/home/sudipta/repos/PyRate/out/gamma/out/coherence
 
 mkdir -p ${outdir_crop}
 mkdir -p ${outdir_coh}
-
-export extents="150.9100000, -34.2300000, 150.9491667, -34.1700000"
-
-# 150.9100000, -34.2300000, 150.9491667, -34.1700000
 
 function crop_resample_average {
     f=$1
@@ -41,25 +30,6 @@ function resampled_average {
     echo ${f}
     python gdal_calc_local.py --overwrite ${f}
 }
-
-
-
-
-#function mask {
-#    f=$1
-#    echo masking ${f}
-#    gdal_calc.py --overwrite ${f}
-#}
-#
-#
-#function multilook {
-#    f=$1
-#    echo $f
-#    # first resample into looks and use average
-#    # use nan fraction to assign nans
-#}
-
-
 
 export -f crop_resample_average
 #export -f mask
@@ -89,5 +59,5 @@ export -f resampled_average
 # cat crop_average_nan_fraction.txt | parallel crop_resample_average
 
 # 5. now resampled
-cat resampled_average.txt | parallel resampled_average
+# cat resampled_average.txt | parallel resampled_average
 
