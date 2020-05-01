@@ -13,9 +13,9 @@ PYTHON3P7 = True if ('TRAVIS_PYTHON_VERSION' in os.environ and os.environ['TRAVI
 PYTHON3P8 = True if ('TRAVIS_PYTHON_VERSION' in os.environ and os.environ['TRAVIS_PYTHON_VERSION'] == '3.8') else False
 GDAL_VERSION = check_output(["gdal-config", "--version"]).decode(encoding="utf-8").split('\n')[0]
 # python3.7 and gdal3.0.4
-REGRESSION = True or PYTHON3P7 and (TRAVIS and (GDAL_VERSION == '3.0.4'))
+REGRESSION = PYTHON3P7 and (TRAVIS and (GDAL_VERSION == '3.0.4'))
 # python3.7 and gdal3.0.2
-REGRESSION2 = True or PYTHON3P7 and (TRAVIS and (GDAL_VERSION == '3.0.2'))
+REGRESSION2 = PYTHON3P7 and (TRAVIS and (GDAL_VERSION == '3.0.2'))
 
 
 @pytest.fixture(params=[0, 1, 2])

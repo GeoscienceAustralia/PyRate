@@ -315,6 +315,7 @@ def crop_resample_average(
                          f"in your config if coherence masking is enabled.")
 
     resampled_average, src_ds_mem = gdal_average(dst_ds, src_ds, src_ds_mem, thresh)
+    src_ds = None
     src_dtype = src_ds_mem.GetRasterBand(1).DataType
     src_gt = src_ds_mem.GetGeoTransform()
 
@@ -407,7 +408,7 @@ def gdal_average(dst_ds, src_ds, src_ds_mem, thresh):
         computational efficiency
     :rtype: gdal.Dataset
     """
-    src_ds_mem.GetRasterBand(2).SetNoDataValue(-100000)
+    src_ds_mem.GetRasterBand(2).SetNoDataValue(-99999)
     src_gt = src_ds.GetGeoTransform()
     src_ds_mem.SetGeoTransform(src_gt)
     gdal.ReprojectImage(src_ds_mem, dst_ds, '', '', gdal.GRA_Average)

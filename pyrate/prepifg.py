@@ -19,6 +19,7 @@ interferogram geotiff files.
 """
 # -*- coding: utf-8 -*-
 import os
+from subprocess import check_call
 from typing import List
 from pathlib import Path
 from joblib import Parallel, delayed
@@ -73,8 +74,8 @@ def do_prepifg(gtiff_paths: List[str], params: dict) -> None:
 
     for f in gtiff_paths:
         if not os.path.isfile(f):
-            raise Exception("Can not find geotiff: " + str(f) +
-                            ". Ensure you have converted your interferograms to geotiffs.")
+            raise FileNotFoundError("Can not find geotiff: " + str(f) + ". Ensure you have converted your "
+                                    "interferograms to geotiffs.")
 
     ifgs = [prepifg_helper.dem_or_ifg(p) for p in gtiff_paths]
     xlooks, ylooks, crop = cf.transform_params(params)
@@ -83,7 +84,16 @@ def do_prepifg(gtiff_paths: List[str], params: dict) -> None:
     thresh = params[cf.NO_DATA_AVERAGING_THRESHOLD]
 
     if params[cf.LARGE_TIFS]:
-        __prepare_prepifg_files(crop, exts, gtiff_paths, ifgs, params, thresh, xlooks, ylooks)
+        ifg = ifgs[0]
+        res_str = [xlooks * ifg.x_step, ylooks * ifg.y_step]
+        res_str = ' '.join([str(e) for e in res_str])
+        # if parallel:
+        #     Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
+        #         delayed(__prepifg_multiprocess_system)(crop, exts, gtiff_paths, res_str, params, thresh, xlooks, ylooks)
+        #     )
+        # else:
+        for gtiff_path in gtiff_paths:
+            __prepifg_multiprocess_system(crop, exts, gtiff_path, params, res_str, thresh, xlooks, ylooks)
     else:
         if parallel:
             Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
@@ -94,52 +104,42 @@ def do_prepifg(gtiff_paths: List[str], params: dict) -> None:
                 _prepifg_multiprocessing(gtiff_path, xlooks, ylooks, exts, thresh, crop, params)
 
 
-def __prepare_prepifg_files(crop, exts, gtiff_paths, ifgs, params, thresh, xlooks, ylooks):
-    extents = ' '.join([str(e) for e in exts])
-    ifg = ifgs[0]
-    res = [xlooks * ifg.x_step, ylooks * ifg.y_step]
-    res = ' '.join([str(e) for e in res])
-
-    from subprocess import check_call
-
-    # coh masking
-    # for gtiff_path in gtiff_paths:
-    #     p, c, l = _prepifg_multiprocessing(gtiff_path, xlooks, ylooks, exts, thresh, crop, params)
-    #     if c is not None:
-    #         check_call('gdal_calc.py --overwrite -A {c} -B {p} --outfile={p}'
-    #                    ' --calc=\"B*(A>={th})-nan*(A<{th})\"'
-    #                    ' --NoDataValue=nan'.format(c=c, p=p, th=params[cf.COH_THRESH]), shell=True)
-
-    # crop resample/average multilook
-    # for gtiff_path in gtiff_paths:
-    #     p, c, l = _prepifg_multiprocessing(gtiff_path, xlooks, ylooks, exts, thresh, crop, params)
-    #     check_call('gdalwarp -overwrite -te\t{extents}\t-tr\t{res}\t-r\taverage\t{p}\t{l}\n'.format(
-    #         extents=extents, res=res, p=p, l=l), shell=True)
-
-    # with open('nan_fraction.txt', 'w') as f:
-    #     for gtiff_path in gtiff_paths:
-    #         p, c, l = _prepifg_multiprocessing(gtiff_path, xlooks, ylooks, exts, thresh, crop, params)
-    #         out_file = Path(l).with_suffix('.nanfrac.tif')
-    #         check_call('gdal_calc.py --overwrite -A {p}\t'
-    #                 '--calc=\"nan*logical_and(A<.000001,A>-.000001)\"\t'
-    #                 '--outfile={out_file}\t'
-    #                 '--NoDataValue=-100000\n'.format(p=p, out_file=out_file), shell=True)
-
-    # for gtiff_path in gtiff_paths:
-    #     p, c, l = _prepifg_multiprocessing(gtiff_path, xlooks, ylooks, exts, thresh, crop, params)
-    #     out_file = Path(l).with_suffix('.nanfrac.tif')
-    #     out_file_avg = Path(l).with_suffix('.nanfrac.avg.tif')
-    #     check_call('gdalwarp -overwrite -te\t{extents}\t-tr\t{res}\t-r\taverage\t{p}\t{l}\n'.format(
-    #         extents=extents, res=res, p=out_file, l=out_file_avg), shell=True)
-
+def __prepare_prepifg_files(crop, exts, gtiff_paths, res, params, thresh, xlooks, ylooks):
+    # calculate nan fraction matrix, crop resample average nan fraction
     for gtiff_path in gtiff_paths:
-        p, c, l = _prepifg_multiprocessing(gtiff_path, xlooks, ylooks, exts, thresh, crop, params)
-        out_file_avg = Path(l).with_suffix('.nanfrac.avg.tif')
-        # resampled_average[nan_frac >= thresh] = np.nan
-        check_call('gdal_calc.py --overwrite -A {p}\t-B {q}\t'
-                '--calc=\"B*(A<{th})+nan*(A>={th})\"\t'
-                '--outfile={out_file}\t'
-                '--NoDataValue=-100000\n'.format(p=out_file_avg, q=p, out_file=l, th=thresh), shell=True)
+        __prepifg_multiprocess_system(crop, exts, gtiff_path, params, res, thresh, xlooks, ylooks)
+
+
+def __prepifg_multiprocess_system(crop, exts, gtiff_path, params, res, thresh, xlooks, ylooks):
+    p, c, l = _prepifg_multiprocessing(gtiff_path, xlooks, ylooks, exts, thresh, crop, params)
+    extents = ' '.join([str(e) for e in exts])
+    out_file = Path(l).with_suffix('.nanfrac.tif')
+    check_call('gdal_calc.py --overwrite -A {p}\t'
+               '--calc=\"-99999*logical_and(A<0.000001,A>-0.000001)\"\t'
+               '--outfile={out_file}\t'
+               '--NoDataValue=-99999\n'.format(p=p, out_file=out_file), shell=True)
+    out_file_avg = Path(l).with_suffix('.nanfrac.avg.tif')
+    # crop resample/average multilooking of nan-fraction
+    check_call('gdalwarp -overwrite -te\t{extents}\t-tr\t{res}\t-r\taverage\t{p}\t{out_file}\n'.format(
+        extents=extents, res=res, p=out_file, out_file=out_file_avg), shell=True)
+    if c is not None:
+        # coh masking
+        coh_corrected_p = Path(p).with_suffix('.coh.corrected.tif')
+        check_call('gdal_calc.py --overwrite\t-A\t{c}\t-B\t{p}\t--outfile={out_file}\t'
+                   '--calc=\"B*(A>={th})-99999*(A<{th})\"\t'
+                   '--NoDataValue=-99999'.format(c=c, p=p, th=params[cf.COH_THRESH], out_file=coh_corrected_p),
+                   shell=True)
+        in_file = coh_corrected_p
+    else:
+        in_file = p
+    # crop resample/average multilooking of raster\
+    check_call('gdalwarp -overwrite -te\t{extents}\t-tr\t{res}\t-r\taverage\t{p}\t{l}\n'.format(
+        extents=extents, res=res, p=in_file, l=l), shell=True)
+    # resampled_average[nan_frac >= thresh] = nodatavalue
+    check_call('gdal_calc.py --overwrite -A {p}\t-B {q}\t'
+               '--calc=\"B*(A<{th})-99999*(A>={th})\"\t'
+               '--outfile={out_file}\t'
+               '--NoDataValue=-99999\n'.format(p=out_file_avg, q=l, out_file=l, th=thresh), shell=True)
 
 
 def _prepifg_multiprocessing(path, xlooks, ylooks, exts, thresh, crop, params):

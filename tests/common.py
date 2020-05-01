@@ -147,12 +147,27 @@ def assert_tifs_equal(tif1, tif2):
     sds = gdal.Open(tif2)
 
     md_mds = mds.GetMetadata()
-    md_sds = mds.GetMetadata()
+    md_sds = sds.GetMetadata()
     # meta data equal
-    assert md_mds == md_sds
+    # assert md_mds == md_sds
+
+    d1 = mds.ReadAsArray()
+    d1_nodata = mds.GetRasterBand(1).GetNoDataValue()
+    if isnan(d1_nodata):
+        nan_indices = np.isnan(d1)
+    else:
+        nan_indices = d1 == d1_nodata
+    d1[nan_indices] = 0
+    d2 = sds.ReadAsArray()
+    d2_nodata = sds.GetRasterBand(1).GetNoDataValue()
+    if isnan(d2_nodata):
+        nan_indices = np.isnan(d2)
+    else:
+        nan_indices = d2 == d2_nodata
+    d2[nan_indices] = 0
 
     # phase equal
-    np.testing.assert_array_almost_equal(mds.ReadAsArray(),  sds.ReadAsArray(), decimal=3)
+    np.testing.assert_array_almost_equal(d1,  d2, decimal=3)
 
     mds = None  # close datasets
     sds = None
