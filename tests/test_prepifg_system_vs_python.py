@@ -34,8 +34,8 @@ def modified_config_short(tempdir, local_crop, get_lks):
 
         params = manipulate_test_conf(conf_file, tdir)
 
-        if params[cf.PROCESSOR] == 1:  # turn on coherence for gamma
-            params[cf.COH_MASK] = 1
+        # if params[cf.PROCESSOR] == 1:  # turn on coherence for gamma
+        #     params[cf.COH_MASK] = 1
 
         params[cf.PARALLEL] = parallel
         params[cf.PROCESSES] = 4
@@ -99,8 +99,8 @@ def modified_config_largetifs(tempdir, local_crop, get_lks):
 
         params = manipulate_test_conf(conf_file, tdir)
 
-        if params[cf.PROCESSOR] == 1:  # turn on coherence for gamma
-            params[cf.COH_MASK] = 1
+        # if params[cf.PROCESSOR] == 1:  # turn on coherence for gamma
+        #     params[cf.COH_MASK] = 1
         params[cf.LARGE_TIFS] = 1
         params[cf.PARALLEL] = parallel
         params[cf.PROCESSES] = 4

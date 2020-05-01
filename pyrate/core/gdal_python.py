@@ -208,7 +208,7 @@ def resample_nearest_neighbour(input_tif, extents, new_res, output_file):
 
     :param str input_tif: input geotiff file path
     :param list extents: new extents for cropping
-    :param float new_res: new resolution for resampling
+    :param list[float] new_res: new resolution for resampling
     :param str output_file: output geotiff file path
 
     :return: dst: resampled image
