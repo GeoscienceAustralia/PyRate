@@ -33,10 +33,7 @@ def modified_config_short(tempdir, local_crop, get_lks):
         tdir = Path(tempdir())
 
         params = manipulate_test_conf(conf_file, tdir)
-
-        # if params[cf.PROCESSOR] == 1:  # turn on coherence for gamma
-        #     params[cf.COH_MASK] = 1
-
+        params[cf.COH_MASK] = 0
         params[cf.PARALLEL] = parallel
         params[cf.PROCESSES] = 4
         params[cf.APSEST] = 1
@@ -65,9 +62,9 @@ def modified_config_short(tempdir, local_crop, get_lks):
 @pytest.fixture
 def create_mpi_files():
 
-    def _create(modified_config_short, gamma_conf):
+    def _create(modified_config_short, conf):
 
-        mpi_conf, params = modified_config_short(gamma_conf, 0, 'mpi_conf.conf')
+        mpi_conf, params = modified_config_short(conf, 0, 'mpi_conf.conf')
 
         check_call(f"mpirun -n 3 pyrate conv2tif -f {mpi_conf}", shell=True)
         check_call(f"mpirun -n 3 pyrate prepifg -f {mpi_conf}", shell=True)
@@ -98,9 +95,7 @@ def modified_config_largetifs(tempdir, local_crop, get_lks):
         tdir = Path(tempdir())
 
         params = manipulate_test_conf(conf_file, tdir)
-
-        # if params[cf.PROCESSOR] == 1:  # turn on coherence for gamma
-        #     params[cf.COH_MASK] = 1
+        params[cf.COH_MASK] = 0
         params[cf.LARGE_TIFS] = 1
         params[cf.PARALLEL] = parallel
         params[cf.PROCESSES] = 4

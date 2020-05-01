@@ -131,10 +131,15 @@ def __prepifg_multiprocess_system(crop, exts, gtiff_path, params, res, thresh, x
         extents=extents, res=res, p=out_file, out_file=out_file_avg), shell=True)
     if c is not None:
         # coh masking
+        # change no data value
+        c_out = Path(c).with_suffix('.coh.tif')
+        check_call('gdal_translate -a_nodata -99999\t'
+                    '{c} {out_file}'.format(c=c, out_file=c_out), shell=True)
+
         coh_corrected_p = Path(p).with_suffix('.coh.corrected.tif')
         check_call('gdal_calc.py \t-A\t{c}\t-B\t{p}\t--outfile={out_file}\t'
                    '--calc=\"B*(A>={th})-99999*(A<{th})\"\t'
-                   '--NoDataValue=-99999'.format(c=c, p=p, th=params[cf.COH_THRESH], out_file=coh_corrected_p),
+                   '--NoDataValue=-99999'.format(c=c_out, p=p, th=params[cf.COH_THRESH], out_file=coh_corrected_p),
                    shell=True)
         in_file = coh_corrected_p
     else:
