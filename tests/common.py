@@ -149,6 +149,7 @@ def assert_tifs_equal(tif1, tif2):
     md_mds = mds.GetMetadata()
     md_sds = sds.GetMetadata()
     # meta data equal
+    # TODO: check metadata in prepifg output
     # assert md_mds == md_sds
 
     d1 = mds.ReadAsArray()
