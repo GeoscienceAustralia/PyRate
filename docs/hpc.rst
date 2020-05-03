@@ -1,23 +1,24 @@
 HPC
 ------
 
-These instructions have been tested with the Raijin platform of the 
-National Computational Infrastructure (NCI). 
+These instructions have been tested with the Gadi supercomputer of the 
+`National Computational Infrastructure (NCI) <https://nci.org.au/>`_. 
 The process for other HPC platforms may differ. 
 
-Login to Raijin:
+Login to Gadi:
 
 ::
 
-    ssh <user_name>@raijin.nci.org.au
+    ssh <user_name>@gadi.nci.org.au
+    cd ~
     git clone https://github.com/GeoscienceAustralia/PyRate.git
 
-Load the required Raijin modules (this will also remove the default NCI GDAL
+Load the required Gadi modules (this will also remove the default NCI GDAL
 Python bindings so we can build and use our own):
 
 ::
 
-    source PyRate/utils/load_modules.sh
+    source ~/PyRate/utils/load_modules.sh
 
 Create a Python virtual environment:
 
@@ -30,7 +31,7 @@ Install PyRate:
 
 ::
 
-    cd PyRate
+    cd ~/PyRate
     python setup.py install
 
 
@@ -39,7 +40,7 @@ installation, first run an interactive session:
 
 ::
 
-    qsub -I -q expressbw -l walltime=01:00:00,mem=16Gb,ncpus=4,wd
+    qsub -I -q express -l walltime=01:00:00,mem=16Gb,ncpus=4,wd
 
 Once the session has started, you will need to reactivate your virtual 
 environment and reload the required modules:
