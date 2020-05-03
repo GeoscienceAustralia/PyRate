@@ -54,6 +54,7 @@ def coherence_masking(input_gdal_dataset: Dataset,
     var = {"coh": coherence, "src": src, "t": coherence_thresh, "ndv": ndv}
     formula = "where(coh>=t, src, ndv)"
     res = ne.evaluate(formula, local_dict=var)
+    res[np.isclose(src, 0, atol=1e-6)] = np.nan   # nan conversion of phase data
     src_band.WriteArray(res)
     # update metadata
     input_gdal_dataset.SetMetadataItem(ifc.DATA_TYPE, ifc.COHERENCE)
@@ -427,7 +428,7 @@ def _setup_source(input_tif):
     mem_driver = gdal.GetDriverByName('MEM')
     src_ds_mem = mem_driver.Create('', src_ds.RasterXSize, src_ds.RasterYSize, 2, src_dtype)
     src_ds_mem.GetRasterBand(1).WriteArray(data)
-    src_ds_mem.GetRasterBand(1).SetNoDataValue(0)
+    src_ds_mem.GetRasterBand(1).SetNoDataValue(np.nan)
     # if data==0, then 1, else 0
     nan_matrix = np.isclose(data, 0, atol=1e-6)
     src_ds_mem.GetRasterBand(2).WriteArray(nan_matrix)
