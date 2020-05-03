@@ -110,15 +110,16 @@ def do_prepifg(gtiff_paths: List[str], params: dict) -> None:
 def __prepifg_multiprocess_system(crop, exts, gtiff, params, res, thresh, xlooks, ylooks):
     p, c, l = _prepifg_multiprocessing(gtiff, xlooks, ylooks, exts, thresh, crop, params)
     extents = ' '.join([str(e) for e in exts])
-    # change nodataval from zero
-    check_call('gdal_edit.py -a_nodata -99999\t{p}'.format(p=p), shell=True)
+    # change nodataval from zero, also leave input geotifs unchanged if one supplies conv2tif output/geotifs
+    p_unset = Path(params[cf.OUT_DIR]).joinpath(Path(p).name).with_suffix('.unset.tif')
+    check_call('gdal_translate -a_nodata -99999\t{p}\t{q}'.format(p=p, q=p_unset), shell=True)
 
     # calculate nan-fraction
     out_file = Path(l).with_suffix('.nanfrac.tif')
     check_call('gdal_calc.py --overwrite -A {p}\t'
                '--calc=\"isclose(A, 0, atol=0.000001)\"\t'
                '--outfile={out_file}\t'
-               '--NoDataValue=-99999\n'.format(p=p, out_file=out_file), shell=True)
+               '--NoDataValue=-99999\n'.format(p=p_unset, out_file=out_file), shell=True)
     out_file_avg = Path(l).with_suffix('.nanfrac.avg.tif')
     # crop resample/average multilooking of nan-fraction
     check_call('gdalwarp -te\t{extents}\t-tr\t{res}\t-r\taverage\t{p}\t{out_file}\n'.format(
@@ -126,14 +127,14 @@ def __prepifg_multiprocess_system(crop, exts, gtiff, params, res, thresh, xlooks
     if c is not None:
         # coh masking
         # change no data value
-        coh_corrected_p = Path(p).with_suffix('.coh.corrected.tif')
+        coh_corrected_p = Path(p_unset).with_suffix('.coh.corrected.tif')
         check_call('gdal_calc.py\t-A\t{p}\t-B\t{c}\t--outfile={out_file}\t'
                    '--calc=\"A*(B>={th})-99999*logical_or((B<{th}), isclose(A,0,atol=0.000001))\"\t'
-                   '--NoDataValue=-99999'.format(c=c, p=p, th=params[cf.COH_THRESH], out_file=coh_corrected_p),
+                   '--NoDataValue=-99999'.format(c=c, p=p_unset, th=params[cf.COH_THRESH], out_file=coh_corrected_p),
                    shell=True)
         in_file = coh_corrected_p
     else:
-        in_file = Path(p)
+        in_file = Path(p_unset)
 
     # crop resample/average multilooking of raster
     check_call('gdalwarp -te\t{extents}\t-tr\t{res}\t-r\taverage \t{p}\t{l}\n'.format(
@@ -146,7 +147,7 @@ def __prepifg_multiprocess_system(crop, exts, gtiff, params, res, thresh, xlooks
                '--NoDataValue=0\n'.format(p=out_file_avg, q=l, out_file=l, th=thresh), shell=True)
 
     # update metadata
-    ds = gdal.Open(p)
+    ds = gdal.Open(p_unset.as_posix())
     md = ds.GetMetadata()
 
     # remove data type
