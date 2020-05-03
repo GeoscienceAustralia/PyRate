@@ -1,38 +1,116 @@
 Troubleshooting
 ===============
 
+
+Failed to compute statistics of final result
+-------------------------------
+Output of Stack Rate algorithm contains NaN values causing “merge“ to fail
+
+Error::
+
+    Traceback (most recent call last):
+    File "~/PyRateVenv/bin/pyrate", line 11, in <module> load_entry_point('Py-Rate==0.4.0', 'console_scripts', 'pyrate')()
+    File "~/PyRateVenv/lib/python3.7/site-packages/Py_Rate-0.4.0-py3.7.egg/main.py", line 154, in main merge_handler(args.config_file)
+    File "~/PyRateVenv/lib/python3.7/site-packages/Py_Rate-0.4.0-py3.7.egg/main.py", line 87, in merge_handler merge.main(config.__dict__)
+    File "~/PyRateVenv/lib/python3.7/site-packages/Py_Rate-0.4.0-py3.7.egg/merge.py", line 64, in main create_png_from_tif(output_folder_path)
+    File "~/PyRateVenv/lib/python3.7/site-packages/Py_Rate-0.4.0-py3.7.egg/merge.py", line 130, in create_png_from_tif
+ minimum, maximum, mean, stddev = srcband.GetStatistics(True, True)
+    File "/apps/gdal/3.0.2/lib/python3.7/site-packages/osgeo/gdal.py", line 2610, in GetStatistics return _gdal.Band_GetStatistics(self, *args)
+    RuntimeError: ~/out/stack_rate.tif, band 1: Failed to compute statistics, no valid pixels found in sampling.
+    Traceback (most recent call last):
+    File "~/PyRateVenv/bin/pyrate", line 11, in <module> load_entry_point('Py-Rate==0.4.0', 'console_scripts', 'pyrate')()
+    File "~/PyRateVenv/lib/python3.7/site-packages/Py_Rate-0.4.0-py3.7.egg/main.py", line 154, in main merge_handler(args.config_file)
+    File "~/PyRateVenv/lib/python3.7/site-packages/Py_Rate-0.4.0-py3.7.egg/main.py", line 87, in merge_handler merge.main(config.__dict__)
+    File "~/PyRateVenv/lib/python3.7/site-packages/Py_Rate-0.4.0-py3.7.egg/merge.py", line 64, in main create_png_from_tif(output_folder_path)
+    File "~/PyRateVenv/lib/python3.7/site-packages/Py_Rate-0.4.0-py3.7.egg/merge.py", line 130, in create_png_from_tif minimum, maximum, mean, stddev = srcband.GetStatistics(True, True)
+    File "/apps/gdal/3.0.2/lib/python3.7/site-packages/osgeo/gdal.py", line 2610, in GetStatistics return _gdal.Band_GetStatistics(self, *args)
+    RuntimeError: ~/out/stack_rate.tif, band 1: Failed to compute statistics, no valid pixels found in sampling.
+    Traceback (most recent call last):
+    File "~/PyRateVenv/bin/pyrate", line 11, in <module> load_entry_point('Py-Rate==0.4.0', 'console_scripts', 'pyrate')()
+    File "~/PyRateVenv/lib/python3.7/site-packages/Py_Rate-0.4.0-py3.7.egg/main.py", line 154, in main merge_handler(args.config_file)
+    File "~/PyRateVenv/lib/python3.7/site-packages/Py_Rate-0.4.0-py3.7.egg/main.py", line 87, in merge_handler merge.main(config.__dict__)
+    File "~/PyRateVenv/lib/python3.7/site-packages/Py_Rate-0.4.0-py3.7.egg/merge.py", line 64, in main create_png_from_tif(output_folder_path)
+    File "~/PyRateVenv/lib/python3.7/site-packages/Py_Rate-0.4.0-py3.7.egg/merge.py", line 130, in create_png_from_tif minimum, maximum, mean, stddev = srcband.GetStatistics(True, True)
+    File "/apps/gdal/3.0.2/lib/python3.7/site-packages/osgeo/gdal.py", line 2610, in GetStatistics return _gdal.Band_GetStatistics(self, *args)
+    RuntimeError: ~/out/stack_rate.tif, band 1: Failed to compute statistics, no valid pixels found in sampling.
+
+**Solution**: increase the parameter “maxsig” which filters pixels according to the error estimate saved in out/tmpdir/stack_error_*.npy. Then re-run “process” and “merge” step.
+
+
+Failure of APS spatial low pass filter
+---------------------------------------
+Atmospheric corrections during “process“ fails due to the interpolated grid used for correction being empty. 
+
+Error::
+
+    +8s pyrate.aps:INFO Applying spatial low pass filter
+    Traceback (most recent call last):
+    File "~/PyRateVenv/bin/pyrate", line 11, in <module>
+    load_entry_point('Py-Rate==0.3.0.post3', 'console_scripts', 'pyrate')()
+    File "~/PyRateVenv/lib/python3.6/site-packages/Click-7.0-py3.6.egg/click/core.py", line 764, in __call__
+    return self.main(*args, **kwargs)
+    File "~/PyRateVenv/lib/python3.6/site-packages/Click-7.0-py3.6.egg/click/core.py", line 717, in main
+    rv = self.invoke(ctx)
+    File "~/PyRateVenv/lib/python3.6/site-packages/Click-7.0-py3.6.egg/click/core.py", line 1137, in invoke
+    return _process_result(sub_ctx.command.invoke(sub_ctx))
+    File "~/PyRateVenv/lib/python3.6/site-packages/Click-7.0-py3.6.egg/click/core.py", line 956, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+    File "~/PyRateVenv/lib/python3.6/site-packages/Click-7.0-py3.6.egg/click/core.py", line 555, in invoke
+    return callback(*args, **kwargs)
+    File "~/PyRateVenv/lib/python3.6/site-packages/Py_Rate-0.3.0.post3-py3.6.egg/pyrate/scripts/main.py", line 69, in linrate
+    run_pyrate.process_ifgs(sorted(dest_paths), params, rows, cols)
+    File "~/PyRateVenv/lib/python3.6/site-packages/Py_Rate-0.3.0.post3-py3.6.egg/pyrate/scripts/run_pyrate.py", line 391, in process_ifgs
+    _wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs)
+    File "~/PyRateVenv/lib/python3.6/site-packages/Py_Rate-0.3.0.post3-py3.6.egg/pyrate/aps.py", line 63, in _wrap_spatio_temporal_filter
+    spatio_temporal_filter(tsincr, ifg, params, preread_ifgs)
+    File "~/PyRateVenv/lib/python3.6/site-packages/Py_Rate-0.3.0.post3-py3.6.egg/pyrate/aps.py", line 86, in spatio_temporal_filter
+    ts_aps = mpiops.run_once(spatial_low_pass_filter, ts_hp, ifg, params)
+    File "~/PyRateVenv/lib/python3.6/site-packages/Py_Rate-0.3.0.post3-py3.6.egg/pyrate/mpiops.py", line 54, in run_once
+    f_result = f(*args, **kwargs)
+    File "~/PyRateVenv/lib/python3.6/site-packages/Py_Rate-0.3.0.post3-py3.6.egg/pyrate/aps.py", line 192, in spatial_low_pass_filter
+    _interpolate_nans(ts_lp, params[cf.SLPF_NANFILL_METHOD])
+    File "~/PyRateVenv/lib/python3.6/site-packages/Py_Rate-0.3.0.post3-py3.6.egg/pyrate/aps.py", line 208, in _interpolate_nans
+    _interpolate_nans_2d(a, rows, cols, method)
+    File "~/PyRateVenv/lib/python3.6/site-packages/Py_Rate-0.3.0.post3-py3.6.egg/pyrate/aps.py", line 224, in _interpolate_nans_2d
+    method=method
+    File "~/PyRateVenv/lib/python3.6/site-packages/scipy-1.3.0-py3.6-linux-x86_64.egg/scipy/interpolate/ndgriddata.py", line 226, in griddata
+    rescale=rescale)
+    File "interpnd.pyx", line 846, in scipy.interpolate.interpnd.CloughTocher2DInterpolator.__init__
+    File "qhull.pyx", line 1836, in scipy.spatial.qhull.Delaunay.__init__
+    File "qhull.pyx", line 276, in scipy.spatial.qhull._Qhull.__init__
+    ValueError: No points given
+
+**Solution**:  use more interferograms as input and/or reduce the two threshold parameters “ts_pthr”, “pthr”, “tlpfpthr” in the .conf file.
+
+In general, users are advised to use a whole network of interferograms (10+) and make sure that “ts_pthr”, “pthr” and “tlpfpthr” are smaller than the number of epochs. To check that “process” worked correctly, users may want to check that the tsincr_*.npy and tscuml*.npy arrays in the /out/tmpdir contain numeric values and not NaNs.
+
+
 Out of memory errors
 --------------------
-PyRate is memory intensive. You may recieve various out of memory errors if 
-there is not enough memory to accomdate the images being processed.
+PyRate is memory intensive. You may receive various out of memory errors if there is not enough memory to accommodate the images being processed.
 
 Error::
 
     joblib.externals.loky.process_executor.TerminatedWorkerError: A worker process managed by the executor was unexpectedly terminated. This could be caused by a segmentation fault while calling the function or by an excessive memory usage causing the Operating System to kill the worker. The exit codes of the workers are {EXIT(1), EXIT(1), EXIT(1)}
 
-**Solution**: increase the amount of memory available. On HPC systems this can
-be done by increasing the value provided to the ``mem`` argument when 
-launching a PBS job.
+**Solution**: increase the amount of memory available. On HPC systems this can be done by increasing the value provided to the ``mem`` argument when submitting a PBS job:
 
 ::
 
-    mem=32gb
+    mem=32Gb
 
-Incorrect modules loaded on Raijin
+Incorrect modules loaded on Gadi
 ----------------------------------
-PyRate requires certain versions of Python, GDAL and OpenMPI to be loaded
-on Raijin and other HPC systems. While sourcing the ``PyRate/utils/load_modules.sh``
-script will load the correct modules, you may need to unload previously unloaded modules.
+PyRate requires certain versions of Python, GDAL and OpenMPI to be loaded on Gadi and other HPC systems. While sourcing the ``PyRate/utils/load_modules.sh`` script will load the correct modules, you may need to unload previously unloaded modules.
 
 Example of errors caused by module conflicts::
 
     ERROR:150: Module 'python3/3.7.2' conflicts with the currently loaded module(s) 'python3/3.4.3-matplotlib'
     ERROR:150: Module 'gdal/2.2.2' conflicts with the currently loaded module(s) 'gdal/2.0.0'
 
-**Solution**: Unload the conflicting modules and re-source the ``load_modules.sh`` script.
+**Solution**: Purge the loaded modules and source the ``load_modules.sh`` script.
 
 ::
 
-    module unload python3/3.4.3-matplotlib
-    module unload gdal/2.0.0
-    source PyRate/utils/load_modules.sh
+    module purge
+    source ~/PyRate/utils/load_modules.sh
