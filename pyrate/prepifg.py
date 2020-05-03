@@ -163,7 +163,7 @@ def __prepifg_multiprocess_system(crop, exts, gtiff, params, res, thresh, xlooks
         md_str = '-mo {k}={v}'.format(k=ifc.DATA_TYPE, v=ifc.MLOOKED_DEM)
 
     for k, v in md.items():
-        md_str += ' -mo {k}={v}'.format(k=k, v=v)
+        md_str += ' -mo \"{k}\"=\"{v}\"'.format(k=k, v=v)
 
     check_call('gdal_edit.py -unsetmd {md} {f}'.format(md=md_str, f=l), shell=True)
     ds = None
