@@ -27,17 +27,17 @@ from pyrate.configuration import Configuration
 
 def test_workflow(system_conf):
     """check the handlers are working as expected"""
-    check_call(f"pyrate conv2tif -f {system_conf}", shell=True)
-    check_call(f"pyrate prepifg -f {system_conf}", shell=True)
-    check_call(f"pyrate process -f {system_conf}", shell=True)
-    check_call(f"pyrate merge -f {system_conf}", shell=True)
+    check_call(f"mpirun -n 3 pyrate conv2tif -f {system_conf}", shell=True)
+    check_call(f"mpirun -n 3 pyrate prepifg -f {system_conf}", shell=True)
+    check_call(f"mpirun -n 3 pyrate process -f {system_conf}", shell=True)
+    check_call(f"mpirun -n 3 pyrate merge -f {system_conf}", shell=True)
 
     # assert logs generated in the outdir
     params = Configuration(system_conf).__dict__
     for stage in ['conv2tif', 'prepifg', 'process', 'merge']:
         log_file_name = 'pyrate.log.' + stage
         files = list(Path(params[cf.OUT_DIR]).glob(log_file_name + '.*'))
-        assert len(files) == 1
+        assert len(files) == 3
 
 
 def test_single_workflow(gamma_conf):
