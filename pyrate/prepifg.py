@@ -24,7 +24,8 @@ from typing import List
 from pathlib import Path
 from joblib import Parallel, delayed
 import numpy as np
-from pyrate.core import shared, mpiops, config as cf, prepifg_helper, gamma, roipac
+from osgeo import gdal
+from pyrate.core import shared, mpiops, config as cf, prepifg_helper, gamma, roipac, ifgconstants as ifc
 from pyrate.core.prepifg_helper import PreprocessError
 from pyrate.core.logger import pyratelogger as log
 from pyrate.core.shared import output_tiff_filename
@@ -125,13 +126,13 @@ def __prepifg_multiprocess_system(crop, exts, gtiff, params, res, thresh, xlooks
         # coh masking
         # change no data value
         coh_corrected_p = Path(p).with_suffix('.coh.corrected.tif')
-        check_call('gdal_calc.py\t-A\t{c}\t-B\t{p}\t--outfile={out_file}\t'
-                   '--calc=\"B*(A>={th})-99999*logical_or((A<{th}), isclose(B,0,atol=0.000001))\"\t'
+        check_call('gdal_calc.py\t-A\t{p}\t-B\t{c}\t--outfile={out_file}\t'
+                   '--calc=\"A*(B>={th})-99999*logical_or((B<{th}), isclose(A,0,atol=0.000001))\"\t'
                    '--NoDataValue=-99999'.format(c=c, p=p, th=params[cf.COH_THRESH], out_file=coh_corrected_p),
                    shell=True)
         in_file = coh_corrected_p
     else:
-        in_file = p
+        in_file = Path(p)
 
     # crop resample/average multilooking of raster
     check_call('gdalwarp -te\t{extents}\t-tr\t{res}\t-r\taverage \t{p}\t{l}\n'.format(
@@ -142,6 +143,28 @@ def __prepifg_multiprocess_system(crop, exts, gtiff, params, res, thresh, xlooks
                '--calc=\"B*(A<{th})-0*(A>={th})\"\t'
                '--outfile={out_file}\t'
                '--NoDataValue=0\n'.format(p=out_file_avg, q=l, out_file=l, th=thresh), shell=True)
+
+    # update metadata
+    ds = gdal.Open(p)
+    md = ds.GetMetadata()
+
+    # remove data type
+    md.pop(ifc.DATA_TYPE)
+
+    # update data type
+    if c is not None:  # it's a interferogram
+        if params[cf.COH_MASK]:
+            md_str = '-mo {k}={v}'.format(k=ifc.DATA_TYPE, v=ifc.COHERENCE)
+        else:
+            md_str = '-mo {k}={v}'.format(k=ifc.DATA_TYPE, v=ifc.MULTILOOKED)
+    else:  # it's a dem
+        md_str = '-mo {k}={v}'.format(k=ifc.DATA_TYPE, v=ifc.MLOOKED_DEM)
+
+    for k, v in md.items():
+        md_str += ' -mo {k}={v}'.format(k=k, v=v)
+
+    check_call('gdal_edit.py -unsetmd {md} {f}'.format(md=md_str, f=l), shell=True)
+    ds = None
 
 
 def _prepifg_multiprocessing(path, xlooks, ylooks, exts, thresh, crop, params):
