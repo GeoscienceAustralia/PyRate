@@ -19,12 +19,14 @@
 pyrate basic workflow for all supported input datasets
 
 """
+import pytest
 from subprocess import check_call
 from pathlib import Path
 from pyrate.core import config as cf
 from pyrate.configuration import Configuration
 
 
+@pytest.mark.slow
 def test_workflow(system_conf):
     """check the handlers are working as expected"""
     check_call(f"mpirun -n 3 pyrate conv2tif -f {system_conf}", shell=True)
@@ -40,12 +42,13 @@ def test_workflow(system_conf):
         assert len(files) == 3
 
 
+@pytest.mark.slow
 def test_single_workflow(gamma_conf):
 
-    check_call(f"pyrate workflow -f {gamma_conf}", shell=True)
+    check_call(f"mpirun -n 4 pyrate workflow -f {gamma_conf}", shell=True)
 
     params = Configuration(gamma_conf).__dict__
 
     log_file_name = 'pyrate.log.' + 'workflow'
     files = list(Path(params[cf.OUT_DIR]).glob(log_file_name + '.*'))
-    assert len(files) == 1
+    assert len(files) == 4

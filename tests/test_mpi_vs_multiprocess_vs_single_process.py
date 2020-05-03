@@ -61,10 +61,11 @@ def modified_config(tempdir, get_lks, get_crop, orbfit_lks, orbfit_method, orbfi
     return modify_params
 
 
+@pytest.mark.slow
 @pytest.mark.skipif(REGRESSION or PYTHON3P8, reason="Skip if not python3.7 and gdal=3.0.4")
 def test_pipeline_parallel_vs_mpi(modified_config, gamma_conf):
 
-    if TRAVIS and np.random.randint(0, 1000) > 399:  # skip 60% of tests randomly
+    if TRAVIS and np.random.randint(0, 1000) > 299:  # skip 70% of tests randomly
         pytest.skip("Skipping as part of 60")
 
     print("\n\n")
@@ -203,6 +204,7 @@ def create_mpi_files():
     return _create
 
 
+@pytest.mark.slow
 @pytest.mark.skipif(REGRESSION2, reason="Skip if not python3.7 and gdal=3.0.4")
 def test_stack_and_ts_mpi_vs_parallel_vs_serial(modified_config_short, gamma_conf, create_mpi_files, parallel):
 
