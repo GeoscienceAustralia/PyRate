@@ -54,9 +54,10 @@ def coherence_masking(input_gdal_dataset: Dataset,
     var = {"coh": coherence, "src": src, "t": coherence_thresh, "ndv": ndv}
     formula = "where(coh>=t, src, ndv)"
     res = ne.evaluate(formula, local_dict=var)
-    res[np.isclose(src, 0, atol=1e-6)] = np.nan   # nan conversion of phase data
+    res[np.isclose(src, 0, atol=1e-6)] = ndv   # nan conversion of phase data
     src_band.WriteArray(res)
     # update metadata
+    input_gdal_dataset.GetRasterBand(1).SetNoDataValue(ndv)
     input_gdal_dataset.SetMetadataItem(ifc.DATA_TYPE, ifc.COHERENCE)
     input_gdal_dataset.FlushCache()  # write on the disc
     log.info(f"Applied coherence masking using coh file {coherence_file_path}")

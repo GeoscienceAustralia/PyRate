@@ -139,16 +139,7 @@ def time_series(ifgs, params, vcmt=None, mst=None):
         ncols, nrows, nvelpar, parallel, span, tsvel_matrix = \
         _time_series_setup(ifgs, mst, params)
 
-    if parallel == 1:
-        log.info('Calculating timeseries parallelly by the rows')
-        tsvel_matrix = Parallel(n_jobs=params[cf.PROCESSES], 
-                                verbose=joblib_log_level(cf.LOG_LEVEL))(
-            delayed(_time_series_by_rows)(r, b0_mat, sm_factor, sm_order,
-                                          ifg_data, mst, ncols, nvelpar,
-                                          p_thresh, vcmt, ts_method, interp)
-            for r in range(nrows))
-
-    elif parallel == 2:
+    if parallel:
         log.info('Calculating timeseries parallelly by the pixels')
         res = np.array(Parallel(n_jobs=params[cf.PROCESSES], 
                                 verbose=joblib_log_level(cf.LOG_LEVEL))(
@@ -174,20 +165,6 @@ def time_series(ifgs, params, vcmt=None, mst=None):
     # saves the step of comparing a large matrix (tsincr) to zero.
     # tscum = where(tscum == 0, nan, tscum)
     return tsincr, tscum, tsvel_matrix
-
-
-def _time_series_by_rows(row, b0_mat, sm_factor, sm_order, ifg_data, mst, ncols,
-                         nvelpar, p_thresh, vcmt, ts_method, interp):
-    """
-    Wrapper function for splitting time series computation by rows.
-    """
-    tsvel = np.empty(shape=(ncols, nvelpar), dtype=float32)
-    for col in range(ncols):
-        tsvel[col, :] = _time_series_by_pixel(
-            row, col, b0_mat, sm_factor, sm_order, ifg_data, mst, nvelpar,
-            p_thresh, interp, vcmt, ts_method)
-
-    return tsvel
 
 
 def _remove_rank_def_rows(b_mat, nvelpar, ifgv, sel):
