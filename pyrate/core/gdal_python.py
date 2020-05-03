@@ -58,7 +58,6 @@ def coherence_masking(input_gdal_dataset: Dataset,
     src_band.WriteArray(res)
     # update metadata
     input_gdal_dataset.GetRasterBand(1).SetNoDataValue(ndv)
-    input_gdal_dataset.SetMetadataItem(ifc.DATA_TYPE, ifc.COHERENCE)
     input_gdal_dataset.FlushCache()  # write on the disc
     log.info(f"Applied coherence masking using coh file {coherence_file_path}")
 
@@ -330,7 +329,7 @@ def crop_resample_average(
     wkt = dst_ds.GetProjection()
 
     # TEST HERE IF EXISTING FILE HAS PYRATE METADATA. IF NOT ADD HERE
-    if not ifc.DATA_TYPE in dst_ds.GetMetadata() and hdr is not None:
+    if ifc.DATA_TYPE not in dst_ds.GetMetadata() and hdr is not None:
         md = shared.collate_metadata(hdr)
     else: 
         md = dst_ds.GetMetadata()
