@@ -33,7 +33,6 @@ from pyrate.core.shared import Ifg, PrereadIfg, get_tiles, mpi_vs_multiprocess_l
 from pyrate.core.logger import pyratelogger as log
 
 MASTER_PROCESS = 0
-log = logging.getLogger(__name__)
 
 
 def _join_dicts(dicts):

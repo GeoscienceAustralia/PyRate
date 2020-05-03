@@ -26,6 +26,7 @@ import numpy as np
 from joblib import Parallel, delayed
 from pyrate.core import config as cf
 from pyrate.core.shared import joblib_log_level
+from pyrate.core.logger import pyratelogger as log
 
 
 def stack_rate(ifgs, params, vcmt, mst=None):
@@ -49,16 +50,8 @@ def stack_rate(ifgs, params, vcmt, mst=None):
 
     # pixel-by-pixel calculation.
     # nested loops to loop over the 2 image dimensions
-    if parallel == 1:
-
-        res = Parallel(n_jobs=params[cf.PROCESSES], verbose=joblib_log_level(cf.LOG_LEVEL))(
-            delayed(_stack_rate_by_rows)(r, cols, mst, nsig, obs, pthresh, span, vcmt) for r in range(rows)
-        )
-        res = np.array(res)
-        rate = res[:, :, 0]
-        error = res[:, :, 1]
-        samples = res[:, :, 2]
-    elif parallel == 2:
+    if parallel:
+        log.info('calculating stack rate by the pixels parallelly')
         res = Parallel(n_jobs=params[cf.PROCESSES], verbose=joblib_log_level(cf.LOG_LEVEL))(
             delayed(_stack_rate_by_pixel)(r, c, mst, nsig, obs, pthresh, span, vcmt) for r, c in itertools.product(range(rows), range(cols))
         )
@@ -68,6 +61,7 @@ def stack_rate(ifgs, params, vcmt, mst=None):
         error = res[:, 1].reshape(rows, cols)
         samples = res[:, 2].reshape(rows, cols)
     else:
+        log.info('calculating stack rate by the pixels serially')
         for i in range(rows):
             for j in range(cols):
                 rate[i, j], error[i, j], samples[i, j] = _stack_rate_by_pixel(i, j, mst, nsig, obs, pthresh, span, vcmt)
@@ -112,16 +106,6 @@ def _stack_setup(ifgs, mst, params):
     rate = np.empty([rows, cols], dtype=float32)
     samples = np.empty([rows, cols], dtype=np.float32)
     return maxsig, nsig, pthresh, cols, error, mst, obs, parallel, processes, rate, rows, samples, span
-
-
-def _stack_rate_by_rows(row, cols, mst, nsig, obs, pthresh, span, vcmt):
-    """helper function for parallel 'row' stack rate computation runs"""
-
-    res = np.empty(shape=(cols, 3), dtype=np.float32)
-    for col in range(cols):
-        res[col, :] = _stack_rate_by_pixel(row, col, mst, nsig, obs, pthresh, span, vcmt)
-
-    return res
 
 
 def _stack_rate_by_pixel(row, col, mst, nsig, obs, pthresh, span, vcmt):

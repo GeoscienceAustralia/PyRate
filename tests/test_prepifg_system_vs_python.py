@@ -121,7 +121,7 @@ def modified_config_largetifs(tempdir, local_crop, get_lks):
     return modify_params
 
 
-@pytest.mark.skipif(REGRESSION2, reason="Skip if python3.7 and gdal=3.0.2")
+@pytest.mark.skipif(REGRESSION2 or PYTHON3P8, reason="Skip if python3.7 and gdal=3.0.2")
 def test_prepifg_largetfs_vs_python(modified_config_short, modified_config_largetifs, gamma_conf, create_mpi_files):
 
     print("\n\n")

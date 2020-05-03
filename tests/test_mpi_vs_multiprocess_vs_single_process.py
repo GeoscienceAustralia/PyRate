@@ -18,7 +18,7 @@ REGRESSION = PYTHON3P7 and (TRAVIS and (GDAL_VERSION == '3.0.4'))
 REGRESSION2 = PYTHON3P7 and (TRAVIS and (GDAL_VERSION == '3.0.2'))
 
 
-@pytest.fixture(params=[0, 1, 2])
+@pytest.fixture(params=[0, 1])
 def parallel(request):
     return request.param
 
