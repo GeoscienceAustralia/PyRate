@@ -66,8 +66,8 @@ def create_mpi_files():
 
         mpi_conf, params = modified_config_short(conf, 0, 'mpi_conf.conf')
 
-        check_call(f"mpirun -n 1 pyrate conv2tif -f {mpi_conf}", shell=True)
-        check_call(f"mpirun -n 1 pyrate prepifg -f {mpi_conf}", shell=True)
+        check_call(f"mpirun -n 3 pyrate conv2tif -f {mpi_conf}", shell=True)
+        check_call(f"mpirun -n 3 pyrate prepifg -f {mpi_conf}", shell=True)
 
         if params[cf.LARGE_TIFS]:
             return params  # don't need the reamining params
