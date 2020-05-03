@@ -28,6 +28,13 @@ def test_small_data_coherence(gamma_params):
         if not isinstance(ifg, Ifg):
             continue
         ifg.open()
+
+        # get the original phase nans
+        incoming_phase_nan = np.isclose(ifg.phase_data, 0, atol=1e-6)
+
+        # now do coherence masking and compare
+        ifg = prepifg_helper.dem_or_ifg(data_path=p)
+        ifg.open()
         converted_coh_file_path = cf.coherence_paths_for(p, gamma_params, tif=True)
         gdal_python.coherence_masking(ifg.dataset,
                                       coherence_file_path=converted_coh_file_path,
@@ -37,7 +44,7 @@ def test_small_data_coherence(gamma_params):
         coherence_path = cf.coherence_paths_for(p, gamma_params, tif=True)
         cifg = Ifg(coherence_path)
         cifg.open()
-        cifg_below_thrhold = cifg.phase_data < gamma_params[cf.COH_THRESH]
+        cifg_below_thrhold = np.logical_or(cifg.phase_data < gamma_params[cf.COH_THRESH], incoming_phase_nan)
         np.testing.assert_array_equal(nans, cifg_below_thrhold)
 
 
