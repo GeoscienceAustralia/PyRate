@@ -24,7 +24,7 @@ from datetime import date, time, timedelta
 import numpy as np
 import pyrate.core.ifgconstants as ifc
 from pyrate.core import config as cf
-from pyrate.constants import PTN
+from pyrate.core.shared import extract_epochs_from_filename
 
 # constants
 GAMMA_DATE = 'date'
@@ -50,6 +50,7 @@ def _parse_header(path):
 
     # convert the content into a giant dict of all key, values
     return dict((i[0][:-1], i[1:]) for i in raw_segs)
+
 
 def parse_epoch_header(path):
     """
@@ -78,21 +79,23 @@ def parse_epoch_header(path):
 
     return subset
 
+
 def _parse_date_time(lookup):
     """Grab date and time metadata and convert to datetime objects"""
     subset = {}
     if len(lookup[GAMMA_DATE]) == 3:  # pragma: no cover
         year, month, day, = [int(float(i)) for i in lookup[GAMMA_DATE][:3]]
-        if lookup.get(GAMMA_TIME) != None:
+        if lookup.get(GAMMA_TIME) is not None:
             t = lookup[GAMMA_TIME][0]
             h, m, s = str(timedelta(seconds=float(t))).split(":")
-            hour = int(h); min = int(m); sec = int(s.split(".")[0])
+            hour = int(h)
+            min = int(m)
+            sec = int(s.split(".")[0])
         else:
             # Occasionally GAMMA header has no time information - default to midnight
             hour, min, sec = 0, 0, 0
     elif len(lookup[GAMMA_DATE]) == 6:
-        year, month, day, hour, min, sec = [int(float(i))
-                                             for i in lookup[GAMMA_DATE][:6]]
+        year, month, day, hour, min, sec = [int(float(i)) for i in lookup[GAMMA_DATE][:6]]
     else:  # pragma: no cover
         msg = "Date and time information not complete in GAMMA headers"
         raise GammaException(msg)
@@ -101,6 +104,7 @@ def _parse_date_time(lookup):
     subset[ifc.MASTER_TIME] = time(hour, min, sec)
 
     return subset
+
 
 def parse_dem_header(path):
     """
@@ -131,11 +135,13 @@ def parse_dem_header(path):
     subset[ifc.PYRATE_INSAR_PROCESSOR] = GAMMA
     return subset
 
+
 def _frequency_to_wavelength(freq):
     """
     Convert radar frequency to wavelength
     """
     return ifc.SPEED_OF_LIGHT_METRES_PER_SECOND / freq
+
 
 def combine_headers(hdr0, hdr1, dem_hdr):
     """
@@ -169,7 +175,8 @@ def combine_headers(hdr0, hdr1, dem_hdr):
     # set incidence angle to mean of master and slave
     inc_ang = hdr0[ifc.PYRATE_INCIDENCE_DEGREES]
     if np.isclose(inc_ang, hdr1[ifc.PYRATE_INCIDENCE_DEGREES], atol=1e-1):
-        chdr[ifc.PYRATE_INCIDENCE_DEGREES] = (hdr0[ifc.PYRATE_INCIDENCE_DEGREES]+hdr1[ifc.PYRATE_INCIDENCE_DEGREES])/2
+        chdr[ifc.PYRATE_INCIDENCE_DEGREES] = (hdr0[ifc.PYRATE_INCIDENCE_DEGREES] + hdr1[
+            ifc.PYRATE_INCIDENCE_DEGREES]) / 2
     else:
         msg = "Incidence angles differ by more than 1e-1"
         raise GammaException(msg)
@@ -222,7 +229,7 @@ def get_header_paths(input_file, slc_file_list):
     :rtype: list
     """
     f = Path(input_file)
-    epochs = PTN.findall(f.name)
+    epochs = extract_epochs_from_filename(f.name)
     header_names = cf.parse_namelist(slc_file_list)
     matches = [hdr for hdr in header_names if any(e in hdr for e in epochs)]
     return matches
