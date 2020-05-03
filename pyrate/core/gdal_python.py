@@ -409,7 +409,6 @@ def gdal_average(dst_ds, src_ds, src_ds_mem, thresh):
         computational efficiency
     :rtype: gdal.Dataset
     """
-    src_ds_mem.GetRasterBand(2).SetNoDataValue(-99999)
     src_gt = src_ds.GetGeoTransform()
     src_ds_mem.SetGeoTransform(src_gt)
     gdal.ReprojectImage(src_ds_mem, dst_ds, '', '', gdal.GRA_Average)
@@ -432,6 +431,7 @@ def _setup_source(input_tif):
     # if data==0, then 1, else 0
     nan_matrix = np.isclose(data, 0, atol=1e-6)
     src_ds_mem.GetRasterBand(2).WriteArray(nan_matrix)
+    src_ds_mem.GetRasterBand(2).SetNoDataValue(-99999)
     src_ds_mem.SetGeoTransform(src_ds.GetGeoTransform())
     return src_ds, src_ds_mem
 

@@ -290,41 +290,6 @@ def _resample(data, xscale, yscale, thresh):
     return dest
 
 
-# TODO: Not being used. Remove in future?
-def _resample_ifg(ifg, cmd, x_looks, y_looks, thresh, md=None):
-    """
-    Convenience function to resample data from a given Ifg (more coarse).
-    """
-
-    fp, tmp_path = mkstemp(suffix='.tif')
-    check_call(cmd + [ifg.data_path, tmp_path])
-
-    # now write the metadata from the input to the output
-    if md is not None:
-        new_lyr = gdal.Open(tmp_path)
-        for k, v in md.iteritems():
-            new_lyr.SetMetadataItem(k, v)
-        new_lyr = None  # manually close
-
-    tmp = type(ifg)(tmp_path)  # dynamically handle Ifgs & Rasters
-    tmp.open()
-
-    if isinstance(ifg, Ifg):
-        # TODO: add an option to retain amplitude band (resample this if reqd)
-        data = tmp.phase_band.ReadAsArray()
-        data = where(data == 0, nan, data)  # flag incoherent cells as NaNs
-    elif isinstance(ifg, DEM):
-        data = tmp.height_band.ReadAsArray()
-    else:
-        # TODO: need to handle resampling of LOS and baseline files
-        raise NotImplementedError("Resampling LOS & baseline not implemented")
-
-    tmp.close()  # manual close
-    os.close(fp)
-    os.remove(tmp_path)
-    return _resample(data, x_looks, y_looks, thresh)
-
-
 def _min_bounds(ifgs):
     """
     Returns bounds for overlapping area of the given interferograms.
