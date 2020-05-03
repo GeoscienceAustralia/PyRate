@@ -1,8 +1,8 @@
 Installation
 ===============
 
-This is a quick guide to getting the PyRate software up and running in various platforms.
-Step by step guide to install Pyrate and run toy example.
+This is an installation guide to get PyRate running on various platforms.
+Follow the instructions to install PyRate and run a small toy example.
 
 .. include:: ubuntu.rst
 .. include:: docker.rst
@@ -13,7 +13,7 @@ Verify Installation
 -------------------
 
 To verify PyRate has been successfully installed, run the workflow with the
-included example config file and data:
+example config file and data included in the repository:
 
 ::
 
@@ -23,7 +23,7 @@ included example config file and data:
     pyrate merge -f input_parameters.conf
 
 If the installation has been successful, this workflow will complete without 
-errors and results will be available in:
+errors and geotiff files will be available in:
 
 :: 
     
