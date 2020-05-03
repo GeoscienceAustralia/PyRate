@@ -115,6 +115,7 @@ def __prepifg_multiprocess_system(crop, exts, gtiff, params, res, thresh, xlooks
     check_call('gdal_translate -a_nodata -99999\t{p}\t{q}'.format(p=p, q=p_unset), shell=True)
 
     # calculate nan-fraction
+    # TODO: use output options and datatypes to reduce size of the next two tifs
     out_file = Path(l).with_suffix('.nanfrac.tif')
     check_call('gdal_calc.py --overwrite -A {p}\t'
                '--calc=\"isclose(A, 0, atol=0.000001)\"\t'
@@ -163,7 +164,7 @@ def __prepifg_multiprocess_system(crop, exts, gtiff, params, res, thresh, xlooks
         md_str = '-mo {k}={v}'.format(k=ifc.DATA_TYPE, v=ifc.MLOOKED_DEM)
 
     for k, v in md.items():
-        md_str += ' -mo \"{k}\"=\"{v}\"'.format(k=k, v=v)
+        md_str += ' -mo {k}={v}'.format(k=k.replace(' ', '_'), v=v.replace(' ', '_'))
 
     check_call('gdal_edit.py -unsetmd {md} {f}'.format(md=md_str, f=l), shell=True)
     ds = None
