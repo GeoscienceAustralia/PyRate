@@ -56,8 +56,9 @@ def main(params):
 
     shared.mkdir_p(params[cf.OUT_DIR])  # create output dir
 
-    process_base_ifgs_paths = np.array_split(ifg_paths, mpiops.size)[mpiops.rank]
-    gtiff_paths = [p.converted_path for p in process_base_ifgs_paths]
+    process_ifgs_paths = np.array_split(ifg_paths, mpiops.size)[mpiops.rank]
+
+    gtiff_paths = [p.converted_path for p in process_ifgs_paths]
     do_prepifg(gtiff_paths, params)
     mpiops.comm.barrier()
     log.info("Finished prepifg")

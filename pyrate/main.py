@@ -84,7 +84,7 @@ def main():
 
     args = parser.parse_args()
 
-    params = _params_from_conf(args.config_file)
+    params = mpiops.run_once(_params_from_conf, args.config_file)
 
     configure_stage_log(args.verbosity, args.command, Path(params[cf.OUT_DIR]).joinpath('pyrate.log.').as_posix())
 
@@ -113,14 +113,16 @@ def main():
         conv2tif.main(params)
 
         log.info("***********PREPIFG**************")
+        params = mpiops.run_once(_params_from_conf, args.config_file)
         prepifg.main(params)
 
         log.info("***********PROCESS**************")
-
         # reset params as prepifg modifies params
-        params = _params_from_conf(args.config_file)
+        params = mpiops.run_once(_params_from_conf, args.config_file)
         process.main(params)
 
+        # process might modify params too
+        params = mpiops.run_once(_params_from_conf, args.config_file)
         log.info("***********MERGE**************")
         merge_handler(params)
 
