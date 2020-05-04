@@ -1,3 +1,4 @@
+#   This Python module is part of the PyRate software package.
 #
 #   Copyright 2020 Geoscience Australia
 #
