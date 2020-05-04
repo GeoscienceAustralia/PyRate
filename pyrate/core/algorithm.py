@@ -16,14 +16,11 @@
 """
 This Python module contains a collection of generic algorithms used in PyRate
 """
-import logging
 from typing import Union, Iterable, Dict, Tuple
 from numpy import sin, cos, unique, histogram, diag, dot
 from scipy.linalg import qr, solve, lstsq
 from pyrate.core.shared import EpochList, IfgException, PrereadIfg
 from pyrate.core.ifgconstants import DAYS_PER_YEAR
-
-log = logging.getLogger(__name__)
 
 
 def is_square(arr):
@@ -206,7 +203,6 @@ def get_epochs(ifgs: Union[Iterable, Dict]) -> Tuple[EpochList, int]:
     combined = get_all_epochs(ifgs)
     dates, n = unique(combined, False, True)
     repeat, _ = histogram(n, bins=len(set(n)))
-    log.info('Found {} unique epochs in the {} interferogram network'.format(len(dates), len(ifgs)))
 
     # absolute span for each date from the zero/start point
     span = [(dates[i] - dates[0]).days / DAYS_PER_YEAR for i in range(len(dates))]

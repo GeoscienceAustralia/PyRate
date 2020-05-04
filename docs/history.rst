@@ -35,7 +35,7 @@ Added
   for options.
 - Input parameter validation.
 - SLC and coherence file lists for file discovery.
-- Create quick view png for linrate.
+- Create quick view png for rate map product.
 - Add support for reading interferogram in Geotiff format.
 - Add detailed validation and hints for configuration parameters
 - Add system tests for all 3 types of input formats
