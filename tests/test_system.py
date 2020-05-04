@@ -39,7 +39,7 @@ def test_workflow(system_conf):
     for stage in ['conv2tif', 'prepifg', 'process', 'merge']:
         log_file_name = 'pyrate.log.' + stage
         files = list(Path(params[cf.OUT_DIR]).glob(log_file_name + '.*'))
-        assert len(files) == 3
+        assert len(files) > 1
 
 
 @pytest.mark.slow
@@ -51,4 +51,4 @@ def test_single_workflow(gamma_conf):
 
     log_file_name = 'pyrate.log.' + 'workflow'
     files = list(Path(params[cf.OUT_DIR]).glob(log_file_name + '.*'))
-    assert len(files) == 4
+    assert len(files) > 1
