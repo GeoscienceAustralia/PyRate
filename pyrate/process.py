@@ -108,7 +108,6 @@ def _mst_calc(dest_tifs, params, tiles, preread_ifgs):
         """
         Convenient inner loop for mst tile saving
         """
-        log.info('Calculating minimum spanning tree matrix')
         mst_tile = mst.mst_multiprocessing(tile, dest_tifs, preread_ifgs, params)
         # locally save the mst_mat
         mst_file_process_n = join(params[cf.TMPDIR], 'mst_mat_{}.npy'.format(i))

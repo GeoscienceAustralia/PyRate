@@ -118,11 +118,12 @@ class LegacyEqualityTest(unittest.TestCase):
         for ifg in ifgs:
             ifg.close()     
             ifg.open()
-        # Calculate linear rate map
+        
+        # Calculate stacked rate map
         params[cf.PARALLEL] = 1
         cls.rate, cls.error, cls.samples = tests.common.calculate_stack_rate(ifgs, params, vcmt, mst_mat=mst_grid)
 
-        # Calculate linear rate map
+        # Calculate stacked rate map
         params[cf.PARALLEL] = 0
         cls.rate_s, cls.error_s, cls.samples_s = tests.common.calculate_stack_rate(ifgs, params, vcmt, mst_mat=mst_grid)
 

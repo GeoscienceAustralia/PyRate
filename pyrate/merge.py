@@ -241,7 +241,7 @@ def _merge_timeseries(rows, cols, params):
     # e.g. nvelpar=100, nrows=10000, ncols=10000, 32bit floats need 40GB memory
     # 32 * 100 * 10000 * 10000 / 8 bytes = 4e10 bytes = 40 GB
     # the double for loop helps us overcome the memory limit
-    log.info('Process {} writing {} ts (incr/cuml) tifs of '
+    log.info('Process {} writing {} timeseries tifs of '
              'total {}'.format(mpiops.rank, len(process_tifs), no_ts_tifs * 2))
     for i in process_tifs:
         tscum_g = np.empty(shape=ifgs[0].shape, dtype=np.float32)
@@ -270,7 +270,7 @@ def _merge_timeseries(rows, cols, params):
             md[ifc.DATA_TYPE] = ifc.INCR
             shared.write_output_geotiff(md, gt, wkt, tsincr_g, dest, np.nan)
     mpiops.comm.barrier()
-    log.debug('Process {} finished writing {} ts (incr/cuml) tifs of '
+    log.debug('Process {} finished writing {} timeseries tifs of '
              'total {}'.format(mpiops.rank, len(process_tifs), no_ts_tifs * 2))
 
 

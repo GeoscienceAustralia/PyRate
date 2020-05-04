@@ -14,7 +14,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 """
-This Python module implements pixel-by-pixel linear rate
+This Python module implements pixel-by-pixel rate
 (velocity) estimation using an iterative weighted least-squares
 stacking method.
 """
@@ -31,7 +31,7 @@ from pyrate.core.logger import pyratelogger as log
 
 def stack_rate(ifgs, params, vcmt, mst=None):
     """
-    Pixel-by-pixel linear rate (velocity) estimation using iterative
+    Pixel-by-pixel rate (velocity) estimation using iterative
     weighted least-squares stacking method.
 
     :param Ifg.object ifgs: Sequence of interferogram objects from which to extract observations
@@ -39,7 +39,7 @@ def stack_rate(ifgs, params, vcmt, mst=None):
     :param ndarray vcmt: Derived positive definite temporal variance covariance matrix
     :param ndarray mst: Pixel-wise matrix describing the minimum spanning tree network
 
-    :return: rate: Linear rate (velocity) map
+    :return: rate: Rate (velocity) map
     :rtype: ndarray
     :return: error: Standard deviation of the rate map
     :rtype: ndarray
