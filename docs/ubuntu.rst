@@ -2,10 +2,8 @@ Ubuntu 18.04
 ------------
 
 These instructions have been tested on Ubuntu 18.04. If using another
-distribution, you will have to install packages equivalent to those listed
-in `apt_install.sh`.
-
-Ensure you have Python 3.6 or 3.7 installed.
+Linux distribution, you will have to install packages equivalent to those
+listed in `apt_install.sh`.
 
 Clone the PyRate repository, install required packages and install PyRate:
 

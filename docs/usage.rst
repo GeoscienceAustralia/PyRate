@@ -14,12 +14,12 @@ File Discovery
 
 To allow flexibility in the file types that can be processed, PyRate requires
 file lists to be provided. This allows PyRate to identify files of each
-type without relying on file extensions. The path to these lists are 
+type without relying on file extensions. The file path to these lists are 
 provided under the following keywords in the configuration file:
 
 .. note::
 
-    Filenames should be provided without the preceding path, with each
+    Filenames should be provided with their absolute system path, with each
     name on a separate line.
 
 ``ifgfilelist``: this is the list of interferograms to be processed.
@@ -33,9 +33,9 @@ provided under the following keywords in the configuration file:
     Example of an interferogram file list:
     ::
 
-        20150702-20150920_interferogram
-        20151219-20160109_interferogram
-        20160202-20160415_interferogram
+        /absolute/path/to/20150702-20150920_interferogram
+        /absolute/path/to/20151219-20160109_interferogram
+        /absolute/path/to/20160202-20160415_interferogram
 
 ``slcfilelist``: this is the list which contains the pool of available
 GAMMA SLC header files.
@@ -48,12 +48,12 @@ GAMMA SLC header files.
     Example of a GAMMA SLC header file list:
     ::
 
-        20150702_header
-        20150920_header
-        20151219_header
-        20160109_header
-        20160202_header
-        20160415_header
+        /absolute/path/to/20150702_header
+        /absolute/path/to/20150920_header
+        /absolute/path/to/20151219_header
+        /absolute/path/to/20160109_header
+        /absolute/path/to/20160202_header
+        /absolute/path/to/20160415_header
 
 ``cohfilelist``: this is the list which contains the pool of available
 coherence files (used during optional coherence masking).
@@ -66,9 +66,9 @@ coherence files (used during optional coherence masking).
     Example of a coherence file list:
     ::
 
-        20150702-20150920_coherence
-        20151219-20160109_coherence
-        20160202-20160415_coherence
+        /absolute/path/to/20150702-20150920_coherence
+        /absolute/path/to/20151219-20160109_coherence
+        /absolute/path/to/20160202-20160415_coherence
 
 The epochs in filenames are used to match the corresponding header or coherence
 files to each interferogram. It is recommended to provide all available headers/coherence
@@ -115,14 +115,14 @@ Use ``--help`` for the different command line options:
       process           Time series and Stacking computation.
 
 The ``pyrate`` program has four command line options corresponding to
-different parts of the PyRate workflow:
+different steps in the PyRate workflow:
 
 1. conv2tif
 2. prepifg
 3. process
 4. merge
 
-Below we discuss these options.
+Below we discuss these steps.
 
 conv2tif: Converting input interferograms to Geotiff format
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -149,11 +149,8 @@ to extract metadata required for data formatting: a geocoded DEM header
 file (``demHeaderFile`` in config) and the master and slave epoch SLC
 header files (supplied by ``slcfilelist`` in config).
 
-The SLC header files should be in the directory specified in the
-config file under ``slcFileDir``. SLC files for a
-particular interferogram are found automatically by date-string pattern
-matching based on epochs. If ``slcFileDir`` is not provided, PyRate will
-look in the observations directory by default (``obsdir`` in config).
+SLC files for a particular interferogram are found automatically by
+date-string pattern matching based on epochs. 
 
 Each ROI\_PAC geocoded unwrapped interferogram requires its own
 header/resource file. These header files need to be
@@ -196,13 +193,12 @@ Coherence masking
 If specified, ``prepifg`` will perform coherence masking on the
 interferograms before multilooking and cropping is performed. This requires
 corresponding coherence images for each interferogram. The purpose
-of this is to remove the poor quality phase observations to leave a set of
-high-quality pixels. Pixels with coherence values below a certain threshold
-will be set to the NoDataValue. Note that the number of valid pixels (i.e.
-pixels not equal to NoDataValue) in each interferogram will be different
-after coherence masking.
+of coherence masking is to remove poor quality phase observations and leave a set of
+high-quality pixels for analysis. Pixels with coherence values below a certain threshold
+will be set to Not-a-Number (NaN). Note that the number of pixels with numeric phase values
+(i.e. pixels not equal to NaN) in each interferogram will be different after coherence masking.
 
-Coherence masking is enabled by setting the ``cohmask`` argument to ``1`` in
+Coherence masking is enabled by setting the ``cohmask`` parameter to ``1`` in
 the configuration file. A threshold, ``cohthresh`` needs to be provided. If
 ``cohfiledir`` is provided, this is where PyRate will look for coherence
 images. If not provided it will look in the observations directory where the
@@ -213,7 +209,7 @@ filenames need to be specified in a file list and provided as the
 Image transformations: multilooking and cropping
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``prepifg`` command will perform multi-looking (image
+The ``prepifg`` step will perform multi-looking (image
 sub-sampling) and cropping of the input interferograms in geotiff format.
 The purpose of this is to reduce the resolution of the interferograms to
 reduce the computational complexity of performing the time series and

@@ -4,6 +4,7 @@ Installation
 This is an installation guide to get PyRate running on various platforms.
 Follow the instructions to install PyRate and run a small toy example.
 
+.. include:: dependencies.rst
 .. include:: ubuntu.rst
 .. include:: docker.rst
 .. include:: hpc.rst
