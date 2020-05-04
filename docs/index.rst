@@ -43,7 +43,7 @@ Feedback
 --------
 
 If you have any suggestions or questions about **PyRate** feel free to
-email Geoscience Australia InSAR team <insar@ga.gov.au>.
+email the Geoscience Australia InSAR team <insar@ga.gov.au>.
 
 If you encounter any errors or problems with **PyRate**, please let us
 know!  Open an Issue_ in the GitHub repository.

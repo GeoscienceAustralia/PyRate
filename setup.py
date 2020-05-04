@@ -18,7 +18,7 @@ from setuptools.command.test import test as TestCommand
 from subprocess import check_output
 import platform
 import setuptools
-__version__ = "0.4.0"
+__version__ = "0.4.1"
 
 # Get requirements (and dev requirements for testing) from requirements
 #  txt files. Also ensure we are using correct GDAL version.
@@ -98,7 +98,9 @@ setup(
         "Natural Language :: English",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
         "Intended Audience :: Science/Research",
         "Intended Audience :: Developers",
         "Topic :: Software Development :: Libraries :: Python Modules",
