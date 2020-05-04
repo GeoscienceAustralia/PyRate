@@ -21,8 +21,13 @@ def local_crop(request):
     return request.param
 
 
+@pytest.fixture(params=[0, 1])
+def coh_mask(request):
+    return request.param
+
+
 @pytest.fixture()
-def modified_config_short(tempdir, local_crop, get_lks):
+def modified_config_short(tempdir, local_crop, get_lks, coh_mask):
     orbfit_lks = 1
     orbfit_method = 1
     orbfit_degrees = 1
@@ -33,7 +38,7 @@ def modified_config_short(tempdir, local_crop, get_lks):
         tdir = Path(tempdir())
 
         params = manipulate_test_conf(conf_file, tdir)
-        params[cf.COH_MASK] = 1
+        params[cf.COH_MASK] = coh_mask
         params[cf.PARALLEL] = parallel
         params[cf.PROCESSES] = 4
         params[cf.APSEST] = 1
@@ -85,7 +90,7 @@ def create_mpi_files():
 
 
 @pytest.fixture()
-def modified_config_largetifs(tempdir, local_crop, get_lks):
+def modified_config_largetifs(tempdir, local_crop, get_lks, coh_mask):
     orbfit_lks = 1
     orbfit_method = 1
     orbfit_degrees = 1
@@ -94,7 +99,7 @@ def modified_config_largetifs(tempdir, local_crop, get_lks):
     def modify_params(conf_file, parallel, output_conf_file):
         tdir = Path(tempdir())
         params = manipulate_test_conf(conf_file, tdir)
-        params[cf.COH_MASK] = 1
+        params[cf.COH_MASK] = coh_mask
         params[cf.LARGE_TIFS] = 1
         params[cf.PARALLEL] = parallel
         params[cf.PROCESSES] = 4

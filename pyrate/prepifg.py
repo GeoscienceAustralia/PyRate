@@ -152,16 +152,16 @@ def __prepifg_system(crop, exts, gtiff, params, res, thresh, xlooks, ylooks):
     md = ds.GetMetadata()
 
     # remove data type
-    md.pop(ifc.DATA_TYPE)
+    v = md.pop(ifc.DATA_TYPE)
 
     # update data type
-    if c is not None:  # it's a interferogram
-        if params[cf.COH_MASK]:
-            md_str = '-mo {k}={v}'.format(k=ifc.DATA_TYPE, v=ifc.COHERENCE)
-        else:
+    if c is not None:  # it's a interferogram when COH_MASK=1
+        md_str = '-mo {k}={v}'.format(k=ifc.DATA_TYPE, v=ifc.COHERENCE)
+    else:
+        if v == ifc.DEM:  # it's a dem
+            md_str = '-mo {k}={v}'.format(k=ifc.DATA_TYPE, v=ifc.MLOOKED_DEM)
+        else:  # it's an ifg
             md_str = '-mo {k}={v}'.format(k=ifc.DATA_TYPE, v=ifc.MULTILOOKED)
-    else:  # it's a dem
-        md_str = '-mo {k}={v}'.format(k=ifc.DATA_TYPE, v=ifc.MLOOKED_DEM)
 
     for k, v in md.items():
         md_str += ' -mo {k}={v}'.format(k=k.replace(' ', '_'), v=v.replace(' ', '_'))
