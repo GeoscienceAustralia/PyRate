@@ -91,12 +91,12 @@ def do_prepifg(gtiff_paths: List[str], params: dict) -> None:
         res_str = ' '.join([str(e) for e in res_str])
         if parallel:
             Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
-                delayed(__prepifg_multiprocess_system)(
+                delayed(__prepifg_system)(
                     crop, exts, gtiff_path, params, res_str, thresh, xlooks, ylooks) for gtiff_path in gtiff_paths
             )
         else:
             for gtiff_path in gtiff_paths:
-                __prepifg_multiprocess_system(crop, exts, gtiff_path, params, res_str, thresh, xlooks, ylooks)
+                __prepifg_system(crop, exts, gtiff_path, params, res_str, thresh, xlooks, ylooks)
     else:
         if parallel:
             Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
@@ -107,7 +107,7 @@ def do_prepifg(gtiff_paths: List[str], params: dict) -> None:
                 _prepifg_multiprocessing(gtiff_path, xlooks, ylooks, exts, thresh, crop, params)
 
 
-def __prepifg_multiprocess_system(crop, exts, gtiff, params, res, thresh, xlooks, ylooks):
+def __prepifg_system(crop, exts, gtiff, params, res, thresh, xlooks, ylooks):
     p, c, l = _prepifg_multiprocessing(gtiff, xlooks, ylooks, exts, thresh, crop, params)
     extents = ' '.join([str(e) for e in exts])
     # change nodataval from zero, also leave input geotifs unchanged if one supplies conv2tif output/geotifs
@@ -143,7 +143,7 @@ def __prepifg_multiprocess_system(crop, exts, gtiff, params, res, thresh, xlooks
 
     # resampled_average[nan_frac >= thresh] = nodatavalue
     check_call('gdal_calc.py --overwrite -A {p}\t-B {q}\t'
-               '--calc=\"B*(A<{th})-0*(A>={th})\"\t'
+               '--calc=\"B*less(A, {th})\"\t'
                '--outfile={out_file}\t'
                '--NoDataValue=0\n'.format(p=out_file_avg, q=l, out_file=l, th=thresh), shell=True)
 
@@ -168,6 +168,11 @@ def __prepifg_multiprocess_system(crop, exts, gtiff, params, res, thresh, xlooks
 
     check_call('gdal_edit.py -unsetmd {md} {f}'.format(md=md_str, f=l), shell=True)
     ds = None
+
+    # clean up
+    out_file_avg.unlink()
+    out_file.unlink()
+    p_unset.unlink()
 
 
 def _prepifg_multiprocessing(path, xlooks, ylooks, exts, thresh, crop, params):
