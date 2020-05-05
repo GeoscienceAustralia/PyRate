@@ -11,9 +11,9 @@ PYTHON3P7 = True if ('TRAVIS_PYTHON_VERSION' in os.environ and os.environ['TRAVI
 PYTHON3P8 = True if ('TRAVIS_PYTHON_VERSION' in os.environ and os.environ['TRAVIS_PYTHON_VERSION'] == '3.8') else False
 GDAL_VERSION = check_output(["gdal-config", "--version"]).decode(encoding="utf-8").split('\n')[0]
 # python3.7 and gdal3.0.4
-REGRESSION = PYTHON3P7 and (TRAVIS and (GDAL_VERSION == '3.0.4'))
+REGRESSION = PYTHON3P7 and (GDAL_VERSION == '3.0.4')
 # python3.7 and gdal3.0.2
-REGRESSION2 = PYTHON3P7 and (TRAVIS and (GDAL_VERSION == '3.0.2'))
+REGRESSION2 = PYTHON3P7 and (GDAL_VERSION == '3.0.2')
 
 
 @pytest.fixture(params=[1, 2, 3, 4])
@@ -127,7 +127,7 @@ def modified_config_largetifs(tempdir, local_crop, get_lks, coh_mask):
 
 
 @pytest.mark.slow
-@pytest.mark.skipif(REGRESSION2 or PYTHON3P8, reason="Skip if python3.7 and gdal=3.0.2")
+@pytest.mark.skipif(TRAVIS, reason="Skip in TRAVIS")
 def test_prepifg_largetfs_vs_python(modified_config_short, modified_config_largetifs, gamma_conf, create_mpi_files):
 
     print("\n\n")

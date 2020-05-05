@@ -13,9 +13,9 @@ PYTHON3P7 = True if ('TRAVIS_PYTHON_VERSION' in os.environ and os.environ['TRAVI
 PYTHON3P8 = True if ('TRAVIS_PYTHON_VERSION' in os.environ and os.environ['TRAVIS_PYTHON_VERSION'] == '3.8') else False
 GDAL_VERSION = check_output(["gdal-config", "--version"]).decode(encoding="utf-8").split('\n')[0]
 # python3.7 and gdal3.0.4
-REGRESSION = PYTHON3P7 and (TRAVIS and (GDAL_VERSION == '3.0.4'))
+REGRESSION = PYTHON3P7 and (GDAL_VERSION == '3.0.4')
 # python3.7 and gdal3.0.2
-REGRESSION2 = PYTHON3P7 and (TRAVIS and (GDAL_VERSION == '3.0.2'))
+REGRESSION2 = PYTHON3P7 and (GDAL_VERSION == '3.0.2')
 
 
 @pytest.fixture(params=[0, 1])
@@ -62,7 +62,7 @@ def modified_config(tempdir, get_lks, get_crop, orbfit_lks, orbfit_method, orbfi
 
 
 @pytest.mark.slow
-@pytest.mark.skipif(REGRESSION or PYTHON3P8, reason="Skip if not python3.7 and gdal=3.0.4")
+@pytest.mark.skipif(REGRESSION or PYTHON3P8 or PYTHON3P6, reason="Skip if not python3.7 and gdal=3.0.4")
 def test_pipeline_parallel_vs_mpi(modified_config, gamma_conf):
 
     if TRAVIS and np.random.randint(0, 1000) > 299:  # skip 70% of tests randomly
@@ -140,26 +140,26 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_conf):
     shutil.rmtree(params_s[cf.OBS_DIR])
 
 
+@pytest.fixture(params=[0, 1])
+def coh_mask(request):
+    return request.param
+
+
 @pytest.fixture()
-def modified_config_short(tempdir, local_crop):
-    get_lks = 1
+def modified_config_short(tempdir, local_crop, get_lks, coh_mask):
     orbfit_lks = 1
     orbfit_method = 1
     orbfit_degrees = 1
     ref_est_method = 1
 
-    def modify_params(conf_file, parallel, output_conf_file):
-
+    def modify_params(conf_file, parallel, output_conf_file, largetifs):
         tdir = Path(tempdir())
-
         params = manipulate_test_conf(conf_file, tdir)
-
-        if params[cf.PROCESSOR] == 1:  # turn on coherence for gamma
-            params[cf.COH_MASK] = 1
-
+        params[cf.COH_MASK] = coh_mask
         params[cf.PARALLEL] = parallel
         params[cf.PROCESSES] = 4
         params[cf.APSEST] = 1
+        params[cf.LARGE_TIFS] = largetifs
         params[cf.IFG_LKSX], params[cf.IFG_LKSY] = get_lks, get_lks
         params[cf.REFNX], params[cf.REFNY] = 4, 4
 
@@ -187,7 +187,7 @@ def create_mpi_files():
 
     def _create(modified_config_short, gamma_conf):
 
-        mpi_conf, params = modified_config_short(gamma_conf, 0, 'mpi_conf.conf')
+        mpi_conf, params = modified_config_short(gamma_conf, 0, 'mpi_conf.conf', 1)
 
         check_call(f"mpirun -n 3 pyrate conv2tif -f {mpi_conf}", shell=True)
         check_call(f"mpirun -n 3 pyrate prepifg -f {mpi_conf}", shell=True)
@@ -205,7 +205,7 @@ def create_mpi_files():
 
 
 @pytest.mark.slow
-@pytest.mark.skipif(REGRESSION2, reason="Skip if not python3.7 and gdal=3.0.4")
+@pytest.mark.skipif(REGRESSION2 or PYTHON3P8 or PYTHON3P6, reason="Skip if not python3.7 and gdal=3.0.4")
 def test_stack_and_ts_mpi_vs_parallel_vs_serial(modified_config_short, gamma_conf, create_mpi_files, parallel):
 
     print("\n\n")
@@ -214,7 +214,7 @@ def test_stack_and_ts_mpi_vs_parallel_vs_serial(modified_config_short, gamma_con
 
     params = create_mpi_files(modified_config_short, gamma_conf)
 
-    sr_conf, params_p = modified_config_short(gamma_conf, parallel, 'parallel_conf.conf')
+    sr_conf, params_p = modified_config_short(gamma_conf, parallel, 'parallel_conf.conf', 0)
 
     check_call(f"pyrate conv2tif -f {sr_conf}", shell=True)
     check_call(f"pyrate prepifg -f {sr_conf}", shell=True)
