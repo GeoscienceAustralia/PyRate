@@ -30,9 +30,6 @@ def test_small_data_coherence(gamma_params):
             continue
         ifg.open()
 
-        # get the original phase nans
-        incoming_phase_nan = np.isclose(ifg.phase_data, 0, atol=1e-6)
-
         # now do coherence masking and compare
         ifg = pyrate.core.shared.dem_or_ifg(data_path=p)
         ifg.open()
@@ -45,7 +42,7 @@ def test_small_data_coherence(gamma_params):
         coherence_path = cf.coherence_paths_for(p, gamma_params, tif=True)
         cifg = Ifg(coherence_path)
         cifg.open()
-        cifg_below_thrhold = np.logical_or(cifg.phase_data < gamma_params[cf.COH_THRESH], incoming_phase_nan)
+        cifg_below_thrhold = cifg.phase_data < gamma_params[cf.COH_THRESH]
         np.testing.assert_array_equal(nans, cifg_below_thrhold)
 
 

@@ -132,7 +132,7 @@ def small_data_setup(datafiles=None, is_dir=False):
         else:
             datafiles = glob.glob(join(SML_TEST_TIF, "*.tif"))
     datafiles.sort()
-    ifgs = [pyrate.core.shared.dem_or_ifg(i) for i in datafiles]
+    ifgs = [dem_or_ifg(i) for i in datafiles]
     
     for i in ifgs: 
         i.open()
