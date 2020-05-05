@@ -31,6 +31,52 @@ from pyrate.core.shared import joblib_log_level
 from pyrate.core.logger import pyratelogger as log
 
 
+def convert_pixel_value_to_geographic_coordinate(refx, refy, transform):
+    """
+    Converts a pixel coordinate to a latitude/longitude coordinate given the
+    geotransform of the image.
+    Args:
+        refx: The pixel x coordinate.
+        refy: The pixel ye coordinate.
+        transform: The geotransform array of the image.
+    Returns:
+        Tuple of lon, lat geographic coordinate.
+    """
+
+    xOrigin = transform[0]
+    yOrigin = transform[3]
+    pixelWidth = transform[1]
+    pixelHeight = -transform[5]
+
+    lon = refx*pixelWidth + xOrigin
+    lat = yOrigin - refy*pixelHeight
+
+    return lon, lat
+
+
+def convert_geographic_coordinate_to_pixel_value(lon, lat, transform):
+    """
+    Converts a latitude/longitude coordinate to a pixel coordinate given the
+    geotransform of the image.
+    Args:
+        lon: Pixel longitude.
+        lat: Pixel latitude.
+        transform: The geotransform array of the image.
+    Returns:
+        Tuple of refx, refy pixel coordinates.
+    """
+
+    xOrigin = transform[0]
+    yOrigin = transform[3]
+    pixelWidth = transform[1]
+    pixelHeight = -transform[5]
+
+    refx = int((lon - xOrigin) / pixelWidth)
+    refy = int((yOrigin - lat) / pixelHeight)
+
+    return int(refx), int(refy)
+
+
 # TODO: move error checking to config step (for fail fast)
 # TODO: this function is not used. Plan removal
 def ref_pixel(ifgs, params):
