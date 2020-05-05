@@ -116,36 +116,46 @@ def __prepifg_system(crop, exts, gtiff, params, res, thresh, xlooks, ylooks):
 
     # calculate nan-fraction
     # TODO: use output options and datatypes to reduce size of the next two tifs
-    out_file = Path(l).with_suffix('.nanfrac.tif')
-    check_call('gdal_calc.py --overwrite -A {p}\t'
-               '--calc=\"isclose(A, 0, atol=0.000001)\"\t'
-               '--outfile={out_file}\t'
-               '--NoDataValue=-99999\n'.format(p=p_unset, out_file=out_file), shell=True)
-    out_file_avg = Path(l).with_suffix('.nanfrac.avg.tif')
-    # crop resample/average multilooking of nan-fraction
-    check_call('gdalwarp -te\t{extents}\t-tr\t{res}\t-r\taverage\t{p}\t{out_file}\n'.format(
-        extents=extents, res=res, p=out_file, out_file=out_file_avg), shell=True)
+    nan_frac = Path(l).with_suffix('.nanfrac.tif')
+    nan_frac_avg = Path(l).with_suffix('.nanfrac.avg.tif')
+
+    corrected_p = Path(p_unset).with_suffix('.corrected.tif')
+
     if c is not None:
         # coh masking
         # change no data value
-        coh_corrected_p = Path(p_unset).with_suffix('.coh.corrected.tif')
-        check_call('gdal_calc.py\t-A\t{p}\t-B\t{c}\t--outfile={out_file}\t'
-                   '--calc=\"A*(B>={th})-99999*logical_or((B<{th}), isclose(A,0,atol=0.000001))\"\t'
-                   '--NoDataValue=-99999'.format(c=c, p=p_unset, th=params[cf.COH_THRESH], out_file=coh_corrected_p),
+        check_call('gdal_calc.py -A {p} -B {c} --outfile={out_file}\t'
+                   '--calc=\"logical_or((B<{th}), isclose(A,0,atol=0.000001))\"\t'
+                   '--NoDataValue=-99999'.format(c=c, p=p_unset, th=params[cf.COH_THRESH], out_file=nan_frac),
                    shell=True)
-        in_file = coh_corrected_p
+        check_call('gdal_calc.py --overwrite -A {p} -B {q}\t'
+                   '--calc=\"A*(B>={th}) - 99999*logical_or((B<{th}), isclose(A,0,atol=0.000001))\"\t'
+                   '--outfile={out_file}\t'
+                   '--NoDataValue=-99999\n'.format(p=p_unset, q=c, th=params[cf.COH_THRESH],
+                                                   out_file=corrected_p), shell=True)
     else:
-        in_file = Path(p_unset)
+        check_call('gdal_calc.py --overwrite -A {p}\t'
+                   '--calc=\"isclose(A, 0, atol=0.000001)\"\t'
+                   '--outfile={out_file}\t'
+                   '--NoDataValue=-99999\n'.format(p=p_unset, out_file=nan_frac), shell=True)
+        check_call('gdal_calc.py --overwrite -A {p}\t'
+                   '--calc=\"A - 99999*isclose(A, 0, atol=0.000001)\"\t'
+                   '--outfile={out_file}\t'
+                   '--NoDataValue=-99999\n'.format(p=p_unset, out_file=corrected_p), shell=True)
+
+    # crop resample/average multilooking of nan-fraction
+    check_call('gdalwarp -te\t{extents}\t-tr\t{res}\t-r\taverage\t{p}\t{out_file}\n'.format(
+        extents=extents, res=res, p=nan_frac, out_file=nan_frac_avg), shell=True)
 
     # crop resample/average multilooking of raster
     check_call('gdalwarp -te\t{extents}\t-tr\t{res}\t-r\taverage \t{p}\t{l}\n'.format(
-        extents=extents, res=res, p=in_file, l=l), shell=True)
+        extents=extents, res=res, p=corrected_p, l=l), shell=True)
 
     # resampled_average[nan_frac >= thresh] = nodatavalue
     check_call('gdal_calc.py --overwrite -A {p}\t-B {q}\t'
                '--calc=\"B*less(A, {th})\"\t'
                '--outfile={out_file}\t'
-               '--NoDataValue=0\n'.format(p=out_file_avg, q=l, out_file=l, th=thresh), shell=True)
+               '--NoDataValue=0\n'.format(p=nan_frac_avg, q=l, out_file=l, th=thresh), shell=True)
 
     # update metadata
     ds = gdal.Open(p_unset.as_posix())
@@ -170,8 +180,9 @@ def __prepifg_system(crop, exts, gtiff, params, res, thresh, xlooks, ylooks):
     ds = None
 
     # clean up
-    out_file_avg.unlink()
-    out_file.unlink()
+    nan_frac_avg.unlink()
+    nan_frac.unlink()
+    corrected_p.unlink()
     p_unset.unlink()
 
 

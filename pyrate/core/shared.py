@@ -1292,3 +1292,20 @@ def mpi_vs_multiprocess_logging(step, params):
             log.info(f"Running {step} using {params[cf.PROCESSES]} processes")
         else:
             log.info(f"Running {step} serially")
+
+
+def dem_or_ifg(data_path):
+    """
+    Returns an Ifg or DEM class object from input geotiff file.
+
+    :param str data_path: file path name
+
+    :return: Interferogram or DEM object from input file
+    :rtype: Ifg or DEM class object
+    """
+    ds = gdal.Open(data_path)
+    md = ds.GetMetadata()
+    if ifc.MASTER_DATE in md:  # ifg
+        return Ifg(data_path)
+    else:
+        return DEM(data_path)
