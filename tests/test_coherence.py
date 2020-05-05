@@ -6,6 +6,7 @@ from osgeo import gdal
 from pathlib import Path
 from copy import copy
 
+import pyrate.core.shared
 from pyrate.core.shared import Ifg
 from pyrate.core import gdal_python
 from pyrate.core import config as cf
@@ -24,7 +25,7 @@ def test_small_data_coherence(gamma_params):
 
     for i in ifg_multilist:
         p = i.converted_path
-        ifg = prepifg_helper.dem_or_ifg(data_path=p)
+        ifg = pyrate.core.shared.dem_or_ifg(data_path=p)
         if not isinstance(ifg, Ifg):
             continue
         ifg.open()
@@ -33,7 +34,7 @@ def test_small_data_coherence(gamma_params):
         incoming_phase_nan = np.isclose(ifg.phase_data, 0, atol=1e-6)
 
         # now do coherence masking and compare
-        ifg = prepifg_helper.dem_or_ifg(data_path=p)
+        ifg = pyrate.core.shared.dem_or_ifg(data_path=p)
         ifg.open()
         converted_coh_file_path = cf.coherence_paths_for(p, gamma_params, tif=True)
         gdal_python.coherence_masking(ifg.dataset,

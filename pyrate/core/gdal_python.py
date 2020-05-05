@@ -54,7 +54,6 @@ def coherence_masking(input_gdal_dataset: Dataset,
     var = {"coh": coherence, "src": src, "t": coherence_thresh, "ndv": ndv}
     formula = "where(coh>=t, src, ndv)"
     res = ne.evaluate(formula, local_dict=var)
-    res[np.isclose(src, 0, atol=1e-6)] = ndv   # nan conversion of phase data
     src_band.WriteArray(res)
     # update metadata
     input_gdal_dataset.GetRasterBand(1).SetNoDataValue(ndv)
@@ -280,7 +279,7 @@ def _gdalwarp_width_and_height(max_x, max_y, min_x, min_y, geo_trans):
 
 def crop_resample_average(
         input_tif, extents: Union[List, Tuple], new_res, output_file, thresh,
-        out_driver_type='GTiff', 
+        out_driver_type='GTiff',
         match_pyrate=False, hdr=None, coherence_path=None, coherence_thresh=None):
     """
     Crop, resample, and average a geotiff image.
@@ -331,7 +330,7 @@ def crop_resample_average(
     # TEST HERE IF EXISTING FILE HAS PYRATE METADATA. IF NOT ADD HERE
     if ifc.DATA_TYPE not in dst_ds.GetMetadata() and hdr is not None:
         md = shared.collate_metadata(hdr)
-    else: 
+    else:
         md = dst_ds.GetMetadata()
 
     # update metadata for output
@@ -412,6 +411,11 @@ def gdal_average(dst_ds, src_ds, src_ds_mem, thresh):
     """
     src_gt = src_ds.GetGeoTransform()
     src_ds_mem.SetGeoTransform(src_gt)
+    data = src_ds_mem.GetRasterBand(1).ReadAsArray()
+    # update nan_matrix
+    # if data==nan, then 1, else 0
+    nan_matrix = np.isnan(data)  # all nans due to phase data + coh masking if used
+    src_ds_mem.GetRasterBand(2).WriteArray(nan_matrix)
     gdal.ReprojectImage(src_ds_mem, dst_ds, '', '', gdal.GRA_Average)
     # dst_ds band2 average is our nan_fraction matrix
     nan_frac = dst_ds.GetRasterBand(2).ReadAsArray()
@@ -427,12 +431,12 @@ def _setup_source(input_tif):
     src_dtype = src_ds.GetRasterBand(1).DataType
     mem_driver = gdal.GetDriverByName('MEM')
     src_ds_mem = mem_driver.Create('', src_ds.RasterXSize, src_ds.RasterYSize, 2, src_dtype)
+    if isinstance(shared.dem_or_ifg(data_path=input_tif), shared.Ifg):
+        data[np.isclose(data, 0, atol=1e-6)] = np.nan   # nan conversion of phase data
     src_ds_mem.GetRasterBand(1).WriteArray(data)
     src_ds_mem.GetRasterBand(1).SetNoDataValue(np.nan)
-    # if data==0, then 1, else 0
-    nan_matrix = np.isclose(data, 0, atol=1e-6)
-    src_ds_mem.GetRasterBand(2).WriteArray(nan_matrix)
-    src_ds_mem.GetRasterBand(2).SetNoDataValue(-99999)
+    # src_ds_mem.GetRasterBand(2).WriteArray(nan_matrix)
+    src_ds_mem.GetRasterBand(2).SetNoDataValue(np.nan)
     src_ds_mem.SetGeoTransform(src_ds.GetGeoTransform())
     return src_ds, src_ds_mem
 

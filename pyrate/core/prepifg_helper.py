@@ -20,23 +20,17 @@ multilooking/downsampling and cropping operations to reduce the size of
 the computational problem.
 """
 # pylint: disable=too-many-arguments,invalid-name
-import os
-import shutil
 from collections import namedtuple
 from math import modf
 from numbers import Number
-from subprocess import check_call
-from tempfile import mkstemp
 from decimal import Decimal
 
-from numpy import array, where, nan, isnan, nanmean, float32, zeros, \
-    sum as nsum
+from numpy import array, nan, isnan, nanmean, float32, zeros, sum as nsum
 from osgeo import gdal
 
-from pyrate.core.gdal_python import crop_resample_average, coherence_masking
-from pyrate.core import ifgconstants as ifc, config as cf
-from pyrate.core.shared import Ifg, DEM, output_tiff_filename
-from pyrate.core.logger import pyratelogger as log
+from pyrate.core.gdal_python import crop_resample_average
+from pyrate.core import config as cf
+from pyrate.core.shared import output_tiff_filename, dem_or_ifg
 
 CustomExts = namedtuple('CustExtents', ['xfirst', 'yfirst', 'xlast', 'ylast'])
 
@@ -236,23 +230,6 @@ def prepare_ifgs(raster_data_paths, crop_opt, xlooks, ylooks, thresh=0.5, user_e
     exts = get_analysis_extent(crop_opt, rasters, xlooks, ylooks, user_exts)
 
     return [prepare_ifg(d, xlooks, ylooks, exts, thresh, crop_opt, write_to_disc, out_path) for d in raster_data_paths]
-
-
-def dem_or_ifg(data_path):
-    """
-    Returns an Ifg or DEM class object from input geotiff file.
-
-    :param str data_path: file path name
-
-    :return: Interferogram or DEM object from input file
-    :rtype: Ifg or DEM class object
-    """
-    ds = gdal.Open(data_path)
-    md = ds.GetMetadata()
-    if ifc.MASTER_DATE in md:  # ifg
-        return Ifg(data_path)
-    else:
-        return DEM(data_path)
 
 
 # TODO: Not being used. Remove in future?
