@@ -1,7 +1,7 @@
 Dependencies
 ------------
 
-The following dependencies need to be on your system prior to PyRate installation:
+The following dependencies need to be on your system prior to `PyRate` installation:
 
 - Python_, versions 3.6, 3.7 or 3.8.
 - GDAL_, versions 3.0.2 or 3.0.4
@@ -13,4 +13,4 @@ The versions of each package stated above have been tested to work.
 .. _GDAL: https://gdal.org/download.html
 .. _`Open MPI`: https://www.open-mpi.org/software/ompi/v4.0/
 
-Other Python dependencies that will be installed are listed in `requirements.txt`.
+Other Python dependencies that will be installed are listed in `PyRate/requirements.txt`.
