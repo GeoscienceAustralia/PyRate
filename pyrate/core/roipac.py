@@ -103,7 +103,7 @@ def parse_header(hdr_file):
     :return: subset: subset of metadata
     :rtype: dict
     """
-    with open(hdr_file) as f:
+    with open(hdr_file, encoding="utf8", errors='ignore') as f:
         text = f.read()
 
     try:
