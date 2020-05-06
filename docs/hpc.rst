@@ -1,11 +1,13 @@
 HPC
 ------
 
-These instructions have been tested with the Gadi supercomputer of the 
-`National Computational Infrastructure (NCI) <https://nci.org.au/>`_. 
-The process for other HPC platforms may differ. 
+These instructions have been written for the Gadi supercomputer of the 
+`National Computational Infrastructure (NCI)`_. The process for other
+HPC platforms may differ. 
 
-Login to Gadi:
+.. _`National Computational Infrastructure (NCI)`: https://nci.org.au/ 
+
+Login to Gadi and clone the `PyRate` repository:
 
 ::
 
@@ -18,7 +20,7 @@ Python bindings so we can build and use our own):
 
 ::
 
-    source ~/PyRate/utils/load_modules.sh
+    source ~/PyRate/scripts/nci_load_modules.sh
 
 Create a Python virtual environment:
 
@@ -27,15 +29,15 @@ Create a Python virtual environment:
     python3 -m venv ~/PyRateVenv
     source ~/PyRateVenv/bin/activate
 
-Install PyRate:
+Install `PyRate`:
 
 ::
 
     cd ~/PyRate
-    python setup.py install
+    python3 setup.py install
 
 
-Following this, PyRate will be available for PBS jobs. To verify the 
+Following this, `PyRate` will be available for PBS jobs. To verify the 
 installation, first run an interactive session:
 
 ::
@@ -47,6 +49,5 @@ environment and reload the required modules:
 
 ::
 
-    cd ~
-    source PyRateVenv/bin/activate
-    source PyRate/utils/load_modules.sh
+    source ~/PyRateVenv/bin/activate
+    source ~/PyRate/scripts/nci_load_modules.sh

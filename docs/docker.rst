@@ -1,8 +1,9 @@
 Docker
 ------
 
-Docker can be used to run PyRate on Linux, Windows and MacOS. Please follow the instruction at https://hub.docker.com/ to
-download and install Docker on your machine. Then run:
+Docker can be used to run `PyRate` on Linux, Windows and MacOS.
+Please follow the instructions at https://hub.docker.com/ to download 
+and install Docker on your machine. Then run:
 
 ::
 

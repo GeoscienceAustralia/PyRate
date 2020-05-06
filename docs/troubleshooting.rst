@@ -1,12 +1,17 @@
 Troubleshooting
 ===============
 
+Some common/known issues with `PyRate` that users may encounter are described below.
 
-Failed to compute statistics of final result
--------------------------------
-Output of Stack Rate algorithm contains NaN values causing “merge“ to fail
+If your issue is not covered below, please contact the `Geoscience Australia InSAR Team`_ for help.
 
-Error::
+.. _`Geoscience Australia InSAR Team`: mailto:insar@ga.gov.au
+
+Stack Rate map appears to be blank/empty
+----------------------------------------
+**Problem**: Output of Stack Rate algorithm contains NaN values causing “merge“ to fail:
+
+::
 
     Traceback (most recent call last):
     File "~/PyRateVenv/bin/pyrate", line 11, in <module> load_entry_point('Py-Rate==0.4.0', 'console_scripts', 'pyrate')()
@@ -34,14 +39,14 @@ Error::
     File "/apps/gdal/3.0.2/lib/python3.7/site-packages/osgeo/gdal.py", line 2610, in GetStatistics return _gdal.Band_GetStatistics(self, *args)
     RuntimeError: ~/out/stack_rate.tif, band 1: Failed to compute statistics, no valid pixels found in sampling.
 
-**Solution**: increase the parameter “maxsig” which filters pixels according to the error estimate saved in out/tmpdir/stack_error_*.npy. Then re-run “process” and “merge” step.
+**Solution**: Increase the parameter ``maxsig``, which is a threshold for masking stack rate pixels according to the corresponding stack error estimate saved in ``out/tmpdir/stack_error_*.npy``. Then re-run “process” and “merge” step.
 
 
 Failure of APS spatial low pass filter
 ---------------------------------------
-Atmospheric corrections during “process“ fails due to the interpolated grid used for correction being empty. 
+**Problem**: Atmospheric corrections during “process“ fails due to the interpolated grid used for correction being empty:
 
-Error::
+::
 
     +8s pyrate.aps:INFO Applying spatial low pass filter
     Traceback (most recent call last):
@@ -80,20 +85,24 @@ Error::
     File "qhull.pyx", line 276, in scipy.spatial.qhull._Qhull.__init__
     ValueError: No points given
 
-**Solution**:  use more interferograms as input and/or reduce the two threshold parameters “ts_pthr”, “pthr”, “tlpfpthr” in the .conf file.
+**Solution**: Use more interferograms as input and/or reduce the two threshold parameters ``ts_pthr``, ``pthr``, ``tlpfpthr`` in the configuration file.
 
-In general, users are advised to use a whole network of interferograms (10+) and make sure that “ts_pthr”, “pthr” and “tlpfpthr” are smaller than the number of epochs. To check that “process” worked correctly, users may want to check that the tsincr_*.npy and tscuml*.npy arrays in the /out/tmpdir contain numeric values and not NaNs.
+In general, users are advised to input a network of small-baseline interferograms
+that has at least 2 interferometric connections per SAR image epoch. Furthermore,
+make sure that ``ts_pthr``, ``pthr`` and ``tlpfpthr`` are smaller than the number
+of image epochs. To check that ``process`` worked correctly, users can check that
+the ``tsincr_*.npy`` and ``tscuml*.npy`` arrays in the ``/<outdir>/tmpdir`` contain numeric values and not NaNs.
 
 
 Out of memory errors
 --------------------
-PyRate is memory intensive. You may receive various out of memory errors if there is not enough memory to accommodate the images being processed.
+**Problem**: `PyRate` is memory intensive. You may receive various out of memory errors if there is not enough memory to accommodate the images being processed.
 
-Error::
+::
 
     joblib.externals.loky.process_executor.TerminatedWorkerError: A worker process managed by the executor was unexpectedly terminated. This could be caused by a segmentation fault while calling the function or by an excessive memory usage causing the Operating System to kill the worker. The exit codes of the workers are {EXIT(1), EXIT(1), EXIT(1)}
 
-**Solution**: increase the amount of memory available. On HPC systems this can be done by increasing the value provided to the ``mem`` argument when submitting a PBS job:
+**Solution**: Increase the amount of memory available. On HPC systems this can be done by increasing the value provided to the ``mem`` argument when submitting a PBS job, e.g.:
 
 ::
 
@@ -101,16 +110,16 @@ Error::
 
 Incorrect modules loaded on Gadi
 ----------------------------------
-PyRate requires certain versions of Python, GDAL and OpenMPI to be loaded on Gadi and other HPC systems. While sourcing the ``PyRate/utils/load_modules.sh`` script will load the correct modules, you may need to unload previously unloaded modules.
+**Problem**: `PyRate` requires certain versions of Python, GDAL and Open MPI to be loaded on Gadi and other HPC systems. While sourcing the `PyRate/scripts/nci_load_modules.sh` script will load the correct modules, you may need to unload previously unloaded modules.
 
 Example of errors caused by module conflicts::
 
     ERROR:150: Module 'python3/3.7.2' conflicts with the currently loaded module(s) 'python3/3.4.3-matplotlib'
     ERROR:150: Module 'gdal/2.2.2' conflicts with the currently loaded module(s) 'gdal/2.0.0'
 
-**Solution**: Purge the loaded modules and source the ``load_modules.sh`` script.
+**Solution**: Purge the loaded modules and source the ``nci_load_modules.sh`` script:
 
 ::
 
     module purge
-    source ~/PyRate/utils/load_modules.sh
+    source ~/PyRate/scripts/nci_load_modules.sh
