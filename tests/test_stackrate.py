@@ -118,23 +118,18 @@ class LegacyEqualityTest(unittest.TestCase):
         for ifg in ifgs:
             ifg.close()     
             ifg.open()
-        
         # Calculate linear rate map
         params[cf.PARALLEL] = 1
         cls.rate, cls.error, cls.samples = tests.common.calculate_stack_rate(ifgs, params, vcmt, mst_mat=mst_grid)
 
-        params[cf.PARALLEL] = 2
-        cls.rate_2, cls.error_2, cls.samples_2 = tests.common.calculate_stack_rate(ifgs, params, vcmt, mst_mat=mst_grid)
-
-        params[cf.PARALLEL] = 0
         # Calculate linear rate map
+        params[cf.PARALLEL] = 0
         cls.rate_s, cls.error_s, cls.samples_s = tests.common.calculate_stack_rate(ifgs, params, vcmt, mst_mat=mst_grid)
 
         stackrate_dir = os.path.join(SML_TEST_DIR, 'stackrate')
 
         cls.rate_container = np.genfromtxt(os.path.join(stackrate_dir, 'stackmap.csv'), delimiter=',')
         cls.error_container = np.genfromtxt(os.path.join(stackrate_dir, 'errormap.csv'), delimiter=',')
-
         cls.samples_container = np.genfromtxt(os.path.join(stackrate_dir, 'coh_sta.csv'), delimiter=',')
     
         for ifg in ifgs:
@@ -163,24 +158,6 @@ class LegacyEqualityTest(unittest.TestCase):
         python multiprocessing by rows vs serial
         """
         np.testing.assert_array_almost_equal(self.samples, self.samples_s, decimal=3)
-
-    def test_stackrate_full_parallel_pixel(self):
-        """
-        python multiprocessing by pixel vs serial
-        """
-        np.testing.assert_array_almost_equal(self.rate_2, self.rate_s, decimal=3)
-
-    def test_stackrate_error_parallel_pixel(self):
-        """
-        python multiprocessing by pixel vs serial
-        """
-        np.testing.assert_array_almost_equal(self.error_2, self.error_s, decimal=3)
-
-    def test_stackrate_samples_parallel_pixel(self):
-        """
-        python multiprocessing pixel level vs serial
-        """
-        np.testing.assert_array_almost_equal(self.samples_2, self.samples_s, decimal=3)
 
     def test_stack_rate(self):
         """
