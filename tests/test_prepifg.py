@@ -276,8 +276,7 @@ class PrepifgOutputTests(unittest.TestCase):
             ifg = Ifg(ex)
             ifg.open()
             # NB: amplitude band doesn't have a NODATA value
-            self.assertTrue(
-                isnan(ifg.dataset.GetRasterBand(1).GetNoDataValue()))
+            self.assertTrue(isnan(ifg.dataset.GetRasterBand(1).GetNoDataValue()))
             ifg.close()
         for i in self.ifgs:
             i.close()

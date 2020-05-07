@@ -157,9 +157,6 @@ class LegacyTimeSeriesEquality(unittest.TestCase):
         params[cf.PARALLEL] = 1
         cls.tsincr_1, cls.tscum_1, cls.tsvel_1 = common.calculate_time_series(ifgs, params, vcmt, mst=mst_grid)
 
-        params[cf.PARALLEL] = 2
-        cls.tsincr_2, cls.tscum_2, cls.tsvel_2 = common.calculate_time_series(ifgs, params, vcmt, mst=mst_grid)
-
         # load the legacy data
         ts_dir = os.path.join(common.SML_TEST_DIR, 'time_series')
         tsincr_path = os.path.join(ts_dir, 'ts_incr_interp0_method1.csv')
@@ -189,19 +186,6 @@ class LegacyTimeSeriesEquality(unittest.TestCase):
 
         np.testing.assert_array_almost_equal(
             self.ts_cum, self.tscum_1, decimal=3)
-
-    def test_time_series_equality_parallel_by_the_pixel(self):
-        """
-        check time series parallel by pixel jobs
-        """
-        self.assertEqual(self.tsincr_2.shape, self.tscum_2.shape)
-        self.assertEqual(self.tsvel_2.shape, self.tsincr_2.shape)
-
-        np.testing.assert_array_almost_equal(
-            self.ts_incr, self.tsincr_2, decimal=3)
-
-        np.testing.assert_array_almost_equal(
-            self.ts_cum, self.tscum_2, decimal=3)
 
     def test_time_series_equality_serial_by_the_pixel(self):
         """
@@ -266,11 +250,6 @@ class LegacyTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
         # Calculate time series
         cls.tsincr, cls.tscum, _ = common.calculate_time_series(ifgs, params, vcmt, mst=mst_grid)
 
-        params[cf.PARALLEL] = 2
-
-        # Calculate time series
-        cls.tsincr_2, cls.tscum_2, _ = common.calculate_time_series(ifgs, params, vcmt, mst=mst_grid)
-
         params[cf.PARALLEL] = 0
         # Calculate time series serailly by the pixel
         cls.tsincr_0, cls.tscum_0, _ = common.calculate_time_series(ifgs, params, vcmt, mst=mst_grid)
@@ -298,14 +277,6 @@ class LegacyTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
         np.testing.assert_array_almost_equal(self.ts_incr, self.tsincr, decimal=1)
 
         np.testing.assert_array_almost_equal(self.ts_cum, self.tscum, decimal=1)
-
-    def test_time_series_equality_parallel_by_the_pixel(self):
-
-        self.assertEqual(self.tsincr_2.shape, self.tscum_2.shape)
-
-        np.testing.assert_array_almost_equal(self.ts_incr, self.tsincr_2, decimal=1)
-
-        np.testing.assert_array_almost_equal(self.ts_cum, self.tscum_2, decimal=1)
 
     def test_time_series_equality_serial_by_the_pixel(self):
 
