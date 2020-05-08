@@ -110,8 +110,15 @@ def do_prepifg(gtiff_paths: List[str], params: dict) -> None:
 def __prepifg_system(crop, exts, gtiff, params, res, thresh, xlooks, ylooks):
     p, c, l = _prepifg_multiprocessing(gtiff, xlooks, ylooks, exts, thresh, crop, params)
     extents = ' '.join([str(e) for e in exts])
-    # change nodataval from zero, also leave input geotifs unchanged if one supplies conv2tif output/geotifs
+
+    if isinstance(prepifg_helper.dem_or_ifg(p), shared.DEM):
+        check_call('gdalwarp -te\t{extents}\t-tr\t{res}\t-r\taverage \t{p}\t{l}\n'.format(
+            extents=extents, res=res, p=p, l=l), shell=True)
+        __update_meta_data(p, c, l)
+        return
+
     p_unset = Path(params[cf.OUT_DIR]).joinpath(Path(p).name).with_suffix('.unset.tif')
+    # change nodataval from zero, also leave input geotifs unchanged if one supplies conv2tif output/geotifs
     check_call('gdal_translate -a_nodata -99999\t{p}\t{q}'.format(p=p, q=p_unset), shell=True)
 
     # calculate nan-fraction
@@ -151,19 +158,26 @@ def __prepifg_system(crop, exts, gtiff, params, res, thresh, xlooks, ylooks):
     check_call('gdalwarp -te\t{extents}\t-tr\t{res}\t-r\taverage \t{p}\t{l}\n'.format(
         extents=extents, res=res, p=corrected_p, l=l), shell=True)
 
-    # resampled_average[nan_frac >= thresh] = nodatavalue
-    check_call('gdal_calc.py --overwrite -A {p}\t-B {q}\t'
+    check_call('gdal_calc_local.py --overwrite -A {p}\t-B {q}\t'
                '--calc=\"B*less(A, {th})\"\t'
                '--outfile={out_file}\t'
-               '--NoDataValue=0\n'.format(p=nan_frac_avg, q=l, out_file=l, th=thresh), shell=True)
+               '--NoDataValue=nan\n'.format(p=nan_frac_avg, q=l, out_file=l, th=thresh), shell=True)
 
+    __update_meta_data(p_unset.as_posix(), c, l)
+
+    # clean up
+    nan_frac_avg.unlink()
+    nan_frac.unlink()
+    corrected_p.unlink()
+    p_unset.unlink()
+
+
+def __update_meta_data(p_unset, c, l):
     # update metadata
-    ds = gdal.Open(p_unset.as_posix())
+    ds = gdal.Open(p_unset)
     md = ds.GetMetadata()
-
     # remove data type
     v = md.pop(ifc.DATA_TYPE)
-
     # update data type
     if c is not None:  # it's a interferogram when COH_MASK=1
         md_str = '-mo {k}={v}'.format(k=ifc.DATA_TYPE, v=ifc.COHERENCE)
@@ -172,18 +186,10 @@ def __prepifg_system(crop, exts, gtiff, params, res, thresh, xlooks, ylooks):
             md_str = '-mo {k}={v}'.format(k=ifc.DATA_TYPE, v=ifc.MLOOKED_DEM)
         else:  # it's an ifg
             md_str = '-mo {k}={v}'.format(k=ifc.DATA_TYPE, v=ifc.MULTILOOKED)
-
     for k, v in md.items():
         md_str += ' -mo {k}={v}'.format(k=k.replace(' ', '_'), v=v.replace(' ', '_'))
-
     check_call('gdal_edit.py -unsetmd {md} {f}'.format(md=md_str, f=l), shell=True)
     ds = None
-
-    # clean up
-    nan_frac_avg.unlink()
-    nan_frac.unlink()
-    corrected_p.unlink()
-    p_unset.unlink()
 
 
 def _prepifg_multiprocessing(path, xlooks, ylooks, exts, thresh, crop, params):

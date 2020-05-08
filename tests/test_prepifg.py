@@ -321,8 +321,7 @@ class PrepifgOutputTests(unittest.TestCase):
             src_data = ds.GetRasterBand(2).ReadAsArray()
             exp_resample = multilooking(src_data, scale, scale, thresh=0)
             self.assertEqual(exp_resample.shape, (7, 5))
-            # Note this changed as the nodata mask in the gdal_python.gdal_average changed to nan from 0
-            # assert_array_almost_equal(exp_resample, i.phase_band.ReadAsArray())
+            assert_array_almost_equal(exp_resample, i.phase_band.ReadAsArray())
             ds = None
             i.close()
             os.remove(ipath)

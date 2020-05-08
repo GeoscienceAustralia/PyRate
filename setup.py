@@ -76,6 +76,7 @@ setup(
     package_data={
         'utils': ['colormap.txt']
     },
+    scripts=['scripts/gdal_calc_local.py'],
     entry_points={
           'console_scripts': [
               'pyrate = pyrate.main:main'
