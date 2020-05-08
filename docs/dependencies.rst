@@ -13,4 +13,4 @@ The versions of each package stated above have been tested to work.
 .. _GDAL: https://gdal.org/download.html
 .. _`Open MPI`: https://www.open-mpi.org/software/ompi/v4.0/
 
-Other Python dependencies that will be installed are listed in `PyRate/requirements.txt`.
+Other Python dependencies that will be installed are listed in ``PyRate/requirements.txt``.
