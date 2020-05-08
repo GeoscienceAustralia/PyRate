@@ -3,7 +3,7 @@ Linux
 
 These instructions have been tested using Ubuntu 18.04. If using another
 Linux distribution, you will have to install packages equivalent to those
-listed in `PyRate/scripts/apt_install.sh`.
+listed in ``PyRate/scripts/apt_install.sh``.
 
 Clone the repository, install required packages and install `PyRate`:
 
