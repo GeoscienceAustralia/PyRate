@@ -363,8 +363,7 @@ def crop_resample_average(
                                  geotransform=gt, creation_opts=creation_opts)
 
     if out_driver_type != 'MEM':
-        resampled_average[np.isnan(resampled_average)] = 0
-        shared.write_geotiff(resampled_average, out_ds, 0)
+        shared.write_geotiff(resampled_average, out_ds, np.nan)
         log.info(f"Writing geotiff: {output_file}")
     return resampled_average, out_ds
 
@@ -385,8 +384,7 @@ def _alignment(input_tif, new_res, resampled_average, src_ds_mem,
     # turn off nan-conversion
     src_ds_mem.GetRasterBand(1).SetNoDataValue(LOW_FLOAT32)
     # nearest neighbor resapling
-    gdal.ReprojectImage(src_ds_mem, tmp_ds, '', '',
-                        gdal.GRA_NearestNeighbour)
+    gdal.ReprojectImage(src_ds_mem, tmp_ds, '', '', gdal.GRA_NearestNeighbour)
     # only take the [yres:nrows, xres:ncols] slice
     if nrows > yres or ncols > xres:
         resampled_nearest_neighbor = tmp_ds.GetRasterBand(1).ReadAsArray()
@@ -436,7 +434,6 @@ def _setup_source(input_tif):
         data[np.isclose(data, 0, atol=1e-6)] = np.nan   # nan conversion of phase data
     src_ds_mem.GetRasterBand(1).WriteArray(data)
     src_ds_mem.GetRasterBand(1).SetNoDataValue(np.nan)
-    # src_ds_mem.GetRasterBand(2).WriteArray(nan_matrix)
     src_ds_mem.GetRasterBand(2).SetNoDataValue(np.nan)
     src_ds_mem.SetGeoTransform(src_ds.GetGeoTransform())
     return src_ds, src_ds_mem
