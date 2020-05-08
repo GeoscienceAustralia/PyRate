@@ -99,6 +99,7 @@ def _geotiff_multiprocessing(unw_path: MultiplePaths, params: dict) -> Tuple[str
         if processor == GAMMA:
             header = gamma.gamma_header(unw_path.unwrapped_path, params)
         elif processor == ROIPAC:
+            log.info("Warning: ROI_PAC support will be deprecated in a future PyRate release")
             header = roipac.roipac_header(unw_path.unwrapped_path, params)
         else:
             raise PreprocessError('Processor must be ROI_PAC (0) or GAMMA (1)')
