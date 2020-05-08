@@ -200,6 +200,7 @@ def _prepifg_multiprocessing(path, xlooks, ylooks, exts, thresh, crop, params):
     if (processor == GAMMA) or (processor == GEOTIF):
         header = gamma.gamma_header(path, params)
     elif processor == ROIPAC:
+        log.info("Warning: ROI_PAC support will be deprecated in a future PyRate release")
         header = roipac.roipac_header(path, params)
     else:
         raise PreprocessError('Processor must be ROI_PAC (0) or GAMMA (1)')
