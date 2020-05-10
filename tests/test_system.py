@@ -1,7 +1,7 @@
 # coding: utf-8
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2017 Geoscience Australia
+#   Copyright 2020 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ def test_workflow(system_conf):
     for stage in ['conv2tif', 'prepifg', 'process', 'merge']:
         log_file_name = 'pyrate.log.' + stage
         files = list(Path(params[cf.OUT_DIR]).glob(log_file_name + '.*'))
-        assert len(files) > 1
+        assert len(files) == 1
 
 
 @pytest.mark.slow
@@ -51,4 +51,4 @@ def test_single_workflow(gamma_conf):
 
     log_file_name = 'pyrate.log.' + 'workflow'
     files = list(Path(params[cf.OUT_DIR]).glob(log_file_name + '.*'))
-    assert len(files) > 1
+    assert len(files) == 1
