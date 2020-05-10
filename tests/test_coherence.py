@@ -110,7 +110,7 @@ def test_coherence_files_not_converted():
     sample_gdal_array = np.nan_to_num(ifg.phase_data)
 
     # compare the artificial masked and actual masked datasets
-    np.testing.assert_array_almost_equal(sample_gdal_array, expected_result_array)
+    np.testing.assert_array_equal(sample_gdal_array, expected_result_array)
 
     # del the tmp datasets created
     os.remove(coherence_mask_filename.converted_path)

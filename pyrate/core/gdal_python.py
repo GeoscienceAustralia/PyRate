@@ -195,8 +195,6 @@ def crop(input_file, extents, geo_trans=None, nodata=np.nan):
 
         clip = gdalnumeric.choose(mask, (clip, nodata))
 
-    # AttributeError: 'numpy.ndarray' object has no attribute 'close'
-    # raster.close()
     raster = None
 
     return clip, gt2
