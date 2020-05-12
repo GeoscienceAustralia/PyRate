@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2017 Geoscience Australia
+#   Copyright 2020 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 """
 This Python module contains tests for the prepifg.py PyRate module.
 """
-import glob
 import os
 import shutil
 import sys
@@ -31,37 +30,17 @@ from numpy.testing import assert_array_almost_equal, assert_array_equal
 
 from osgeo import gdal
 
-from pyrate import prepifg, conv2tif
 from pyrate.core import config as cf
 from pyrate.core.config import mlooked_path
 from pyrate.core.shared import Ifg, DEM
 from pyrate.core.prepifg_helper import CUSTOM_CROP, MAXIMUM_CROP, MINIMUM_CROP, \
     ALREADY_SAME_SIZE
 from pyrate.core.prepifg_helper import prepare_ifgs, _resample, PreprocessError, CustomExts
-# from pyrate.tasks.utils import DUMMY_SECTION_NAME
-from pyrate.core.config import (
-    DEM_HEADER_FILE,
-    NO_DATA_VALUE,
-    OBS_DIR,
-    IFG_FILE_LIST,
-    PROCESSOR,
-    OUT_DIR,
-    SLC_DIR,
-    SLC_FILE_LIST,
-    IFG_LKSX,
-    IFG_LKSY,
-    IFG_CROP_OPT,
-    NO_DATA_AVERAGING_THRESHOLD,
-    DEM_FILE,
-    APS_INCIDENCE_MAP,
-    APS_ELEVATION_MAP,
-    APS_METHOD,
-    APS_CORRECTION)
-
+from tests import common
 from tests.common import SML_TEST_LEGACY_PREPIFG_DIR
 from tests.common import PREP_TEST_TIF, SML_TEST_DEM_DIR
 from tests.common import SML_TEST_DEM_TIF
-from tests import common
+from pyrate import conv2tif, prepifg
 
 gdal.UseExceptions()
 DUMMY_SECTION_NAME = 'pyrate'
@@ -299,8 +278,7 @@ class PrepifgOutputTests(unittest.TestCase):
             ifg = Ifg(ex)
             ifg.open()
             # NB: amplitude band doesn't have a NODATA value
-            self.assertTrue(
-                isnan(ifg.dataset.GetRasterBand(1).GetNoDataValue()))
+            self.assertTrue(isnan(ifg.dataset.GetRasterBand(1).GetNoDataValue()))
             ifg.close()
         for i in self.ifgs:
             i.close()
@@ -331,8 +309,7 @@ class PrepifgOutputTests(unittest.TestCase):
         self.ifg_paths = [i.data_path for i in self.ifgs]
         cext = self._custom_extents_tuple()
         xlooks = ylooks = scale
-        prepare_ifgs(self.ifg_paths, CUSTOM_CROP, xlooks, ylooks,
-                     thresh=1.0, user_exts=cext)
+        prepare_ifgs(self.ifg_paths, CUSTOM_CROP, xlooks, ylooks, thresh=1.0, user_exts=cext)
 
         for n, ipath in enumerate([self.exp_files[3], self.exp_files[7]]):
             i = Ifg(ipath)
@@ -675,27 +652,27 @@ class TestOneIncidenceOrElevationMap(unittest.TestCase):
 
     def make_input_files(self, inc='', ele=''):
         with open(self.conf_file, 'w') as conf:
-            conf.write('[{}]\n'.format(DUMMY_SECTION_NAME))
-            conf.write('{}: {}\n'.format(NO_DATA_VALUE, '0.0'))
-            conf.write('{}: {}\n'.format(OBS_DIR, common.SML_TEST_GAMMA))
-            conf.write('{}: {}\n'.format(OUT_DIR, self.base_dir))
-            conf.write('{}: {}\n'.format(IFG_FILE_LIST, self.ifgListFile))
-            conf.write('{}: {}\n'.format(PROCESSOR, '1'))
+            conf.write('{}: {}\n'.format(cf.NO_DATA_VALUE, '0.0'))
+            conf.write('{}: {}\n'.format(cf.OBS_DIR, common.SML_TEST_GAMMA))
+            conf.write('{}: {}\n'.format(cf.OUT_DIR, self.base_dir))
+            conf.write('{}: {}\n'.format(cf.IFG_FILE_LIST, self.ifgListFile))
+            conf.write('{}: {}\n'.format(cf.PROCESSOR, '1'))
             conf.write('{}: {}\n'.format(
-                DEM_HEADER_FILE, os.path.join(
+                cf.DEM_HEADER_FILE, os.path.join(
                     common.SML_TEST_GAMMA, '20060619_utm_dem.par')))
-            conf.write('{}: {}\n'.format(IFG_LKSX, '1'))
-            conf.write('{}: {}\n'.format(IFG_LKSY, '1'))
-            conf.write('{}: {}\n'.format(IFG_CROP_OPT, '1'))
-            conf.write('{}: {}\n'.format(NO_DATA_AVERAGING_THRESHOLD, '0.5'))
-            conf.write('{}: {}\n'.format(SLC_DIR, ''))
-            conf.write('{}: {}\n'.format(SLC_FILE_LIST,
+            conf.write('{}: {}\n'.format(cf.IFG_LKSX, '1'))
+            conf.write('{}: {}\n'.format(cf.IFG_LKSY, '1'))
+            conf.write('{}: {}\n'.format(cf.IFG_CROP_OPT, '1'))
+            conf.write('{}: {}\n'.format(cf.NO_DATA_AVERAGING_THRESHOLD, '0.5'))
+            conf.write('{}: {}\n'.format(cf.SLC_DIR, ''))
+            conf.write('{}: {}\n'.format(cf.SLC_FILE_LIST,
                                          common.SML_TEST_GAMMA_HEADER_LIST))
-            conf.write('{}: {}\n'.format(DEM_FILE, common.SML_TEST_DEM_GAMMA))
-            conf.write('{}: {}\n'.format(APS_INCIDENCE_MAP, inc))
-            conf.write('{}: {}\n'.format(APS_ELEVATION_MAP, ele))
-            conf.write('{}: {}\n'.format(APS_CORRECTION, '1'))
-            conf.write('{}: {}\n'.format(APS_METHOD, '2'))
+            conf.write('{}: {}\n'.format(cf.DEM_FILE, common.SML_TEST_DEM_GAMMA))
+            conf.write('{}: {}\n'.format(cf.APS_INCIDENCE_MAP, inc))
+            conf.write('{}: {}\n'.format(cf.APS_ELEVATION_MAP, ele))
+            conf.write('{}: {}\n'.format(cf.APS_CORRECTION, '1'))
+            conf.write('{}: {}\n'.format(cf.APS_METHOD, '2'))
+            conf.write('{}: {}\n'.format(cf.TIME_SERIES_SM_ORDER, 1))
 
     def test_only_inc_file_created(self):
         inc_ext = 'inc'
@@ -710,29 +687,31 @@ class TestOneIncidenceOrElevationMap(unittest.TestCase):
         self.common_check(ele_ext, inc_ext)
 
     def common_check(self, ele, inc):
-        os.path.exists(self.conf_file)
-        params = cf.get_config_params(self.conf_file)
+        import glob
+        from pyrate.configuration import Configuration
+        assert os.path.exists(self.conf_file)
+
+        params = Configuration(self.conf_file).__dict__
+
         conv2tif.main(params)
         sys.argv = ['dummy', self.conf_file]
         prepifg.main(params)
         # test 17 geotiffs created
-        geotifs = glob.glob(os.path.join(params[cf.OBS_DIR], '*_unw.tif'))
+        geotifs = glob.glob(os.path.join(params[cf.OUT_DIR], '*_unw.tif'))
         self.assertEqual(17, len(geotifs))
         # test dem geotiff created
-        demtif = glob.glob(os.path.join(params[cf.OBS_DIR], '*_dem.tif'))
+        demtif = glob.glob(os.path.join(params[cf.OUT_DIR], '*_dem.tif'))
         self.assertEqual(1, len(demtif))
         # elevation/incidence file
-        ele = glob.glob(os.path.join(params[cf.OBS_DIR],
-                                     '*utm_{ele}.tif'.format(ele=ele)))[0]
-        self.assertTrue(os.path.exists(ele))
+        # not computing anymore
+        # ele = glob.glob(os.path.join(params[cf.OBS_DIR],
+        #                              '*utm_{ele}.tif'.format(ele=ele)))[0]
+        # self.assertTrue(os.path.exists(ele))
         # mlooked tifs
-        mlooked_tifs = [f for f in
-                        glob.glob(os.path.join(self.base_dir, '*.tif'))
-                        if "cr" in f and "rlks" in f]
+        mlooked_tifs = glob.glob(os.path.join(self.base_dir, '*_1cr.tif'))
         # 19 including 17 ifgs, 1 dem and one incidence
-        self.assertEqual(19, len(mlooked_tifs))
-        inc = glob.glob(os.path.join(self.base_dir,
-                                     '*utm_{inc}.tif'.format(inc=inc)))
+        self.assertEqual(18, len(mlooked_tifs))
+        inc = glob.glob(os.path.join(self.base_dir, '*utm_{inc}.tif'.format(inc=inc)))
         self.assertEqual(0, len(inc))
 
 

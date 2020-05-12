@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2017 Geoscience Australia
+#   Copyright 2020 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -19,12 +19,14 @@ This Python module contains utilities and classes shared by
 all other PyRate modules
 """
 # pylint: disable=too-many-lines
+import re
+from typing import List, Union
+
 import errno
-import logging
 import math
 from math import floor
 import os
-from os.path import basename, dirname, join
+from os.path import basename, join
 import struct
 from datetime import date
 from itertools import product
@@ -32,19 +34,19 @@ import numpy as np
 from numpy import where, nan, isnan, sum as nsum, isclose
 import pyproj
 import pkg_resources
-
-from pyrate.core import ifgconstants as ifc, mpiops, config as cf
-
-VERBOSE = True
-log = logging.getLogger(__name__)
-
 try:
     from osgeo import osr, gdal
     from osgeo.gdalconst import GA_Update, GA_ReadOnly
 except ImportError:
     import gdal
 
+from pyrate.core import ifgconstants as ifc, mpiops, config as cf
+from pyrate.core.logger import pyratelogger as log
+
+
 gdal.UseExceptions()
+
+VERBOSE = True
 
 # Constants
 PHASE_BAND = 1
@@ -58,6 +60,7 @@ GDAL_X_CELLSIZE = 1
 GDAL_Y_CELLSIZE = 5
 GDAL_X_FIRST = 0
 GDAL_Y_FIRST = 3
+
 
 def joblib_log_level(level: str) -> int:
     """
@@ -91,7 +94,7 @@ class RasterBase(object):
     """
     # pylint: disable=missing-docstring
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, path):
+    def __init__(self, path: Union[gdal.Dataset, str]):
         if isinstance(path, gdal.Dataset):
             self.dataset = path  # path will be Dataset in this case
             self.data_path = self.dataset  # data_path dummy
@@ -121,8 +124,7 @@ class RasterBase(object):
             raise RasterException(msg)
 
         if not os.path.exists(self.data_path):
-            raise IOError('The file {path} does not exist. Consider first '
-                          'running prepifg'.format(path=self.data_path))
+            raise IOError('The file {path} does not exist. Consider first running prepifg'.format(path=self.data_path))
 
         # unless read only, by default open files as writeable
         if readonly not in [True, False, None]:
@@ -148,8 +150,7 @@ class RasterBase(object):
         self.lat_centre = self.y_first + (self.y_step * self.y_centre)
         self.long_centre = self.x_first + (self.x_step * self.x_centre)
         # use cell size from centre of scene
-        self.x_size, self.y_size = cell_size(self.lat_centre, self.long_centre,
-                                             self.x_step, self.y_step)
+        self.x_size, self.y_size = cell_size(self.lat_centre, self.long_centre, self.x_step, self.y_step)
 
     @property
     def ncols(self):
@@ -256,8 +257,7 @@ class RasterBase(object):
         if self.dataset is not None:
             return self.dataset.GetRasterBand(band)
         else:
-            raise RasterException("Raster %s has not been opened"
-                                  % self.data_path)
+            raise RasterException("Raster %s has not been opened" % self.data_path)
 
 
 class Ifg(RasterBase):
@@ -398,8 +398,7 @@ class Ifg(RasterBase):
             # otherwise NaN's don't write to bytecode properly
             # and numpy complains
             # self.dataset.FlushCache()
-            msg = '{}: converted phase units ' \
-                  'to millimetres'.format(self.data_path)
+            msg = '{}: converted phase units to millimetres'.format(self.data_path)
             log.debug(msg)
         else:  # pragma: no cover
             msg = 'Phase units are not millimetres or radians'
@@ -470,21 +469,12 @@ class Ifg(RasterBase):
             self.dataset.SetMetadataItem(k, v)
         self.dataset.FlushCache()
 
-# Is this functionality used?
-#    def save_numpy_phase(self, numpy_file):
-#        """
-#        Dump phase data to numpy array file
-#        """
-#        np.save(file=numpy_file, arr=self.phase_data)
-
 
 class IfgPart(object):
     """
     Create a tile (subset) of an Ifg data object
     """
-    # pylint: disable=missing-docstring
-    # pylint: disable=too-many-instance-attributes
-    def __init__(self, ifg_or_path, tile, ifg_dict=None):
+    def __init__(self, ifg_or_path, tile, ifg_dict=None, params=None):
         """
         Interferogram tile constructor.
 
@@ -501,10 +491,8 @@ class IfgPart(object):
             self.master = ifg.master
             self.slave = ifg.slave
             self.time_span = ifg.time_span
-            phase_file = 'phase_data_{}_{}.npy'.format(
-                basename(ifg_or_path).split('.')[0], tile.index)
-            self.phase_data = np.load(join(dirname(ifg_or_path), cf.TMPDIR,
-                                           phase_file))
+            phase_file = 'phase_data_{}_{}.npy'.format(basename(ifg_or_path).split('.')[0], tile.index)
+            self.phase_data = np.load(join(params[cf.TMPDIR], phase_file))
         else:
             # check if Ifg was sent.
             if isinstance(ifg_or_path, Ifg):
@@ -683,8 +671,7 @@ def nanmedian(x):
     :rtype: float
     """
     # pylint: disable=no-member
-    version = [int(i) for i in
-               pkg_resources.get_distribution("numpy").version.split('.')[:2]]
+    version = [int(i) for i in pkg_resources.get_distribution("numpy").version.split('.')[:2]]
     if version[0] == 1 and version[1] > 9:
         return np.nanmedian(x)
     else:   # pragma: no cover
@@ -733,8 +720,7 @@ def write_fullres_geotiff(header, data_path, dest, nodata):
     _check_pixel_res_mismatch(header)
 
     # position and projection data
-    gt = [header[ifc.PYRATE_LONG], header[ifc.PYRATE_X_STEP], 0,
-            header[ifc.PYRATE_LAT], 0, header[ifc.PYRATE_Y_STEP]]
+    gt = [header[ifc.PYRATE_LONG], header[ifc.PYRATE_X_STEP], 0, header[ifc.PYRATE_LAT], 0, header[ifc.PYRATE_Y_STEP]]
     srs = osr.SpatialReference()
     res = srs.SetWellKnownGeogCS(header[ifc.PYRATE_DATUM])
     if res:
@@ -748,9 +734,10 @@ def write_fullres_geotiff(header, data_path, dest, nodata):
     md = collate_metadata(header)
 
     # create GDAL object
-    ds = gdal_dataset(dest, ncols, nrows, driver="GTiff", bands=1,
-                 dtype=dtype, metadata=md, crs=wkt,
-                 geotransform=gt, creation_opts=['compress=packbits'])
+    ds = gdal_dataset(
+        dest, ncols, nrows, driver="GTiff", bands=1, dtype=dtype, metadata=md, crs=wkt, geotransform=gt,
+        creation_opts=["compress=packbits"]
+    )
 
     # copy data from the binary file
     band = ds.GetRasterBand(1)
@@ -765,7 +752,6 @@ def write_fullres_geotiff(header, data_path, dest, nodata):
                     f.seek(row_bytes, 1)  # skip interleaved band 1
 
             data = struct.unpack(fmtstr, f.read(row_bytes))
-
             band.WriteArray(np.array(data).reshape(1, ncols), yoff=y)
 
     ds = None  # manual close
@@ -864,8 +850,7 @@ def _check_pixel_res_mismatch(header):
     Convenience function to check equality of pixel resolution in X and Y dimensions
     """
     # pylint: disable=invalid-name
-    xs, ys = [abs(i) for i in [header[ifc.PYRATE_X_STEP],
-                               header[ifc.PYRATE_Y_STEP]]]
+    xs, ys = [abs(i) for i in [header[ifc.PYRATE_X_STEP], header[ifc.PYRATE_Y_STEP]]]
 
     if xs != ys:
         msg = 'X and Y cell sizes do not match: %s & %s'
@@ -931,8 +916,20 @@ def write_output_geotiff(md, gt, wkt, data, dest, nodata):
     # set other metadata
     ds.SetMetadataItem('DATA_TYPE', str(md['DATA_TYPE']))
     # sequence position for time series products
-    if 'SEQUENCE_POSITION' in md:
-        ds.SetMetadataItem('SEQUENCE_POSITION', str(md['SEQUENCE_POSITION']))
+    if "SEQUENCE_POSITION" in md:
+        ds.SetMetadataItem("SEQUENCE_POSITION", str(md["SEQUENCE_POSITION"]))
+    if "PYRATE_REFPIX_LAT" in md:
+        ds.SetMetadataItem("PYRATE_REFPIX_LAT", str(md["PYRATE_REFPIX_LAT"]))
+    if "PYRATE_REFPIX_LON" in md:
+        ds.SetMetadataItem("PYRATE_REFPIX_LON", str(md["PYRATE_REFPIX_LON"]))
+    if "PYRATE_REFPIX_X" in md:
+        ds.SetMetadataItem("PYRATE_REFPIX_X", str(md["PYRATE_REFPIX_X"]))
+    if "PYRATE_REFPIX_Y" in md:
+        ds.SetMetadataItem("PYRATE_REFPIX_Y", str(md["PYRATE_REFPIX_Y"]))
+    if "PYRATE_MEAN_REF_AREA" in md:
+        ds.SetMetadataItem("PYRATE_MEAN_REF_AREA", str(md["PYRATE_MEAN_REF_AREA"]))
+    if "STANDARD_DEVIATION_REF_AREA" in md:
+        ds.SetMetadataItem("PYRATE_STANDARD_DEVIATION_REF_AREA", str(md["PYRATE_STANDARD_DEVIATION_REF_AREA"]))
 
     # write data to geotiff
     band = ds.GetRasterBand(1)
@@ -1002,8 +999,7 @@ def create_tiles(shape, nrows=2, ncols=2):
         raise ValueError('nrows/cols must be greater than ifg dimensions')
     col_arr = np.array_split(range(no_x), ncols)
     row_arr = np.array_split(range(no_y), nrows)
-    return [Tile(i, (r[0], c[0]), (r[-1]+1, c[-1]+1))
-            for i, (r, c) in enumerate(product(row_arr, col_arr))]
+    return [Tile(i, (r[0], c[0]), (r[-1]+1, c[-1]+1)) for i, (r, c) in enumerate(product(row_arr, col_arr))]
 
 
 def get_tiles(ifg_path, rows, cols):
@@ -1084,17 +1080,16 @@ def cell_size(lat, lon, x_step, y_step):
     :rtype: tuple
     """
     if lat > 84.0 or lat < -80:
-        msg = "No UTM zone for polar region: > 84 degrees N or < 80 degrees S"
+        msg = "No UTM zone for polar region: > 84 degrees N or < 80 degrees S. " \
+              "Provided values are lat: "+str(lat) +" long: " +str(lon)
         raise ValueError(msg)
 
     zone = _utm_zone(lon)
     p0 = pyproj.Proj(proj='latlong', ellps='WGS84')
     p1 = pyproj.Proj(proj='utm', zone=zone, ellps='WGS84')
 
-    x0, y0 = pyproj.transform(p0, p1, lon, lat, 
-        errcheck=True)
-    x1, y1 = pyproj.transform(p0, p1, lon + x_step, lat + y_step, 
-        errcheck=True)
+    x0, y0 = pyproj.transform(p0, p1, lon, lat, errcheck=True)
+    x1, y1 = pyproj.transform(p0, p1, lon + x_step, lat + y_step, errcheck=True)
 
     return tuple(abs(e) for e in (x1 - x0, y1 - y0))
 
@@ -1279,3 +1274,38 @@ class CorrectionStatusError(Exception):
     """
     Generic class for correction status errors.
     """
+
+
+def extract_epochs_from_filename(filename_with_epochs: str) -> List[str]:
+    src_epochs = re.findall(r"(\d{8})", str(filename_with_epochs))
+    if not len(src_epochs) > 0:
+        src_epochs = re.findall(r"(\d{6})", str(filename_with_epochs))
+    return src_epochs
+
+
+def mpi_vs_multiprocess_logging(step, params):
+    if mpiops.size > 1:  # Over-ride input options if this is an MPI job
+        log.info(f"Running {step} step using mpi processing. Disabling parallel processing.")
+        params[cf.PARALLEL] = 0
+    else:
+        if params[cf.PARALLEL] == 1:
+            log.info(f"Running {step} using {params[cf.PROCESSES]} processes")
+        else:
+            log.info(f"Running {step} serially")
+
+
+def dem_or_ifg(data_path):
+    """
+    Returns an Ifg or DEM class object from input geotiff file.
+
+    :param str data_path: file path name
+
+    :return: Interferogram or DEM object from input file
+    :rtype: Ifg or DEM class object
+    """
+    ds = gdal.Open(data_path)
+    md = ds.GetMetadata()
+    if ifc.MASTER_DATE in md:  # ifg
+        return Ifg(data_path)
+    else:
+        return DEM(data_path)

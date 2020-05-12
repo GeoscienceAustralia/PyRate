@@ -1,7 +1,7 @@
 # coding: utf-8
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2017 Geoscience Australia
+#   Copyright 2020 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -14,71 +14,41 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
+
 """
-This Python module contains tests for mpi operations in PyRate.
-Tun this module as 'mpirun -n 4 pytest tests/test_mpi.py'
+pyrate basic workflow for all supported input datasets
+
 """
-import glob
-import shutil
-import numpy as np
 import pytest
-import os
-import tempfile
-import random
-import string
-
-import pyrate.core.orbital
-import pyrate.core.shared
-import tests.common
-from pyrate import (
-    process, prepifg, merge, conv2tif)
-from tests.common import (small_data_setup, reconstruct_mst,
-    reconstruct_linrate, SML_TEST_DEM_HDR_GAMMA, pre_prepare_ifgs)
-from tests import common
-from tests.test_covariance import legacy_maxvar
-from pyrate.core import algorithm, ref_phs_est as rpe, mpiops, config as cf, covariance, refpixel
-from pyrate.merge import create_png_from_tif
-from pyrate.__main__ import conv2tif_handler, prepifg_handler, process_handler, merge_handler
-import sys
-import unittest
+from subprocess import check_call
+from pathlib import Path
+from pyrate.core import config as cf
+from pyrate.configuration import Configuration
 
 
-class SystemTest(unittest.TestCase):
-    def setUp(self):
-        self.root_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+@pytest.mark.slow
+def test_workflow(system_conf):
+    """check the handlers are working as expected"""
+    check_call(f"mpirun -n 3 pyrate conv2tif -f {system_conf}", shell=True)
+    check_call(f"mpirun -n 3 pyrate prepifg -f {system_conf}", shell=True)
+    check_call(f"mpirun -n 3 pyrate process -f {system_conf}", shell=True)
+    check_call(f"mpirun -n 3 pyrate merge -f {system_conf}", shell=True)
 
-        self.rows = 1
-        self.cols = 1
+    # assert logs generated in the outdir
+    params = Configuration(system_conf).__dict__
+    for stage in ['conv2tif', 'prepifg', 'process', 'merge']:
+        log_file_name = 'pyrate.log.' + stage
+        files = list(Path(params[cf.OUT_DIR]).glob(log_file_name + '.*'))
+        assert len(files) == 1
 
-    def test_roipac_workflow(self):
 
-        input_config_path = os.path.join(self.root_path, "tests", "test_data", "system", "roipac", "input_parameters.conf")
+@pytest.mark.slow
+def test_single_workflow(gamma_conf):
 
-        conv2tif_handler(input_config_path)
-        prepifg_handler(input_config_path)
-        process_handler(input_config_path, self.rows, self.cols)
-        merge_handler(input_config_path, self.rows, self.cols)
+    check_call(f"mpirun -n 4 pyrate workflow -f {gamma_conf}", shell=True)
 
-        self.assertTrue(True)
+    params = Configuration(gamma_conf).__dict__
 
-    def test_gamma_workflow(self):
-
-        input_config_path = os.path.join(self.root_path, "tests", "test_data", "system", "gamma", "input_parameters.conf")
-
-        conv2tif_handler(input_config_path)
-        prepifg_handler(input_config_path)
-        process_handler(input_config_path, self.rows, self.cols)
-        merge_handler(input_config_path, self.rows, self.cols)
-        self.assertTrue(True)
-
-    def test_geotiff_workflow(self):
-
-        input_config_path = os.path.join(self.root_path, "tests", "test_data", "system", "geotiff", "input_parameters.conf")
-
-        prepifg_handler(input_config_path)
-        process_handler(input_config_path, self.rows, self.cols)
-        merge_handler(input_config_path, self.rows, self.cols)
-        self.assertTrue(True)
-
-if __name__ == '__main__':
-    unittest.main()
+    log_file_name = 'pyrate.log.' + 'workflow'
+    files = list(Path(params[cf.OUT_DIR]).glob(log_file_name + '.*'))
+    assert len(files) == 1

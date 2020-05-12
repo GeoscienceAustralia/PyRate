@@ -1,4 +1,4 @@
-Pyrate Modules
+PyRate Modules
 ==============
 
 .. toctree::
@@ -9,13 +9,17 @@ Pyrate Modules
    config
    covariance
    gamma
-   linrate
+   gdal_python
+   ifgconstants
+   logger
+   mpiops
    mst
    orbital
-   pyratelog
+   prepifg_helper
    ref_phs_est
    refpixel
    roipac
    shared
+   stack
    timeseries
-   gdal_python
+   user_experience

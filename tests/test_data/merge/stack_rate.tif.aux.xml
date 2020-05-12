@@ -1,6 +1,6 @@
 <PAMDataset>
   <Metadata>
-    <MDI key="DATA_TYPE">LINEAR_RATE_MAP</MDI>
+    <MDI key="DATA_TYPE">STACKED_RATE_MAP</MDI>
     <MDI key="EPOCH_DATE">[datetime.date(2006, 6, 19) datetime.date(2006, 8, 28)
  datetime.date(2006, 10, 2) datetime.date(2006, 11, 6)
  datetime.date(2006, 12, 11) datetime.date(2007, 1, 15)

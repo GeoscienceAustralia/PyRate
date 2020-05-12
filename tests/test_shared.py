@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2017 Geoscience Australia
+#   Copyright 2020 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -35,6 +35,7 @@ from osgeo.gdal import Open, Dataset, UseExceptions
 from tests.common import SML_TEST_TIF, SML_TEST_DEM_TIF, TEMPDIR
 from pyrate.core import shared, ifgconstants as ifc, config as cf, prepifg_helper, gamma
 from pyrate import prepifg, conv2tif
+from pyrate.configuration import Configuration, MultiplePaths
 from pyrate.core.shared import Ifg, DEM, RasterException
 from pyrate.core.shared import cell_size, _utm_zone
 
@@ -335,7 +336,7 @@ class WriteUnwTest(unittest.TestCase):
         cls.test_conf = common.TEST_CONF_GAMMA
 
         # change the required params
-        cls.params = cf.get_config_params(cls.test_conf)
+        cls.params = Configuration(cls.test_conf).__dict__
         cls.params[cf.OBS_DIR] = common.SML_TEST_GAMMA
         cls.params[cf.PROCESSOR] = 1  # gamma
         file_list = list(cf.parse_namelist(os.path.join(common.SML_TEST_GAMMA,
@@ -429,14 +430,16 @@ class WriteUnwTest(unittest.TestCase):
         # Convert back to .unw
         dest_unws = []
         for g in geotiffs:
-            dest_unw = os.path.join(self.params[cf.OUT_DIR],
-                         os.path.splitext(g)[0] + '.unw')
-            shared.write_unw_from_data_or_geotiff(
-                geotif_or_data=g, dest_unw= dest_unw, ifg_proc=1)
+            dest_unw = os.path.join(self.params[cf.OUT_DIR], os.path.splitext(g)[0] + '.unw')
+            shared.write_unw_from_data_or_geotiff(geotif_or_data=g, dest_unw= dest_unw, ifg_proc=1)
             dest_unws.append(dest_unw)
-        
+
+        dest_unws_ = [MultiplePaths(self.params[cf.OUT_DIR], b, self.params[cf.IFG_LKSX], self.params[cf.IFG_CROP_OPT])
+                      for b in dest_unws]
+
         # Convert back to tiff
-        new_geotiffs = conv2tif.do_geotiff(dest_unws, self.params)
+        new_geotiffs_ = conv2tif.do_geotiff(dest_unws_, self.params)
+        new_geotiffs = [gt for gt, b in new_geotiffs_]
 
         # Ensure original multilooked geotiffs and 
         #  unw back to geotiff are the same

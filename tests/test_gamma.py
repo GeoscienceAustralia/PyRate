@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2017 Geoscience Australia
+#   Copyright 2020 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -16,14 +16,14 @@
 """
 This Python module contains tests for the gamma.py PyRate module.
 """
-import glob
 import os
 import shutil
 import tempfile
 import unittest
 from datetime import date, time
 from os.path import join
-
+import pytest
+from pathlib import Path
 import numpy as np
 from numpy.testing import assert_array_almost_equal
 from osgeo import gdal
@@ -40,11 +40,14 @@ from pyrate.core.config import (
     SLC_DIR)
 from pyrate import prepifg, conv2tif
 from pyrate.core.shared import write_fullres_geotiff, GeotiffException
-from tests import common
-from tests.common import GAMMA_TEST_DIR, SML_TEST_GAMMA
-from tests.common import TEST_CONF_GAMMA, TEMPDIR
+from pyrate.constants import PYRATEPATH
+
+from tests.common import manipulate_test_conf
+from pyrate.configuration import Configuration
+from tests.common import GAMMA_TEST_DIR
+from tests.common import TEMPDIR
 from tests.common import small_data_setup
-from tests.constants import PYRATEPATH
+
 gdal.UseExceptions()
 
 LIGHTSPEED = 3e8  # approx
@@ -53,7 +56,7 @@ LIGHTSPEED = 3e8  # approx
 class GammaCommandLineTests(unittest.TestCase):
 
     def setUp(self):
-        self.base = join(PYRATEPATH,'tests', 'test_data', 'gamma')
+        self.base = join(PYRATEPATH, 'tests', 'test_data', 'gamma')
         self.hdr = join(self.base, 'dem16x20raw.dem.par')
         temp_text = tempfile.mktemp()
         self.confFile = os.path.join(TEMPDIR,'{}/gamma_test.cfg'.format(temp_text))
@@ -287,75 +290,79 @@ class HeaderCombinationTests(unittest.TestCase):
         self.assertRaises(self.err, gamma.combine_headers, H1, H0, self.dh)
 
 
-class TestGammaParallelVsSerial(unittest.TestCase):
-    """
-    Test Gamma prepifg produces correct results when run in serial and 
-    parallel and that metadata is correctly set by both methods. These tests
-    exclude the comparison of DEM files.
-    """
-    @classmethod
-    def setUpClass(cls):
-        # read in the params
-        _, _, params = cf.get_ifg_paths(TEST_CONF_GAMMA)
-        glob_prefix = "*utm_unw_1rlks_1cr.tif"
+glob_prefix = "*utm_unw_1rlks_1cr.tif"
 
-        # SERIAL
-        cls.serial_dir = tempfile.mkdtemp()
-        params[cf.OUT_DIR] = cls.serial_dir
-        params[cf.PARALLEL] = False
-        shared.mkdir_p(cls.serial_dir)
 
-        gtif_paths = conv2tif.main(params)
-        prepifg.main(params)
+@pytest.fixture(scope='module')
+def parallel_ifgs(gamma_conf):
 
-        serial_df = glob.glob(os.path.join(cls.serial_dir, glob_prefix))
-        cls.serial_ifgs = small_data_setup(datafiles=serial_df)
+    tdir = Path(tempfile.mkdtemp())
 
-        # Clean up serial converted tifs so we can test parallel conversion
-        common.remove_tifs(SML_TEST_GAMMA)
+    params_p = manipulate_test_conf(gamma_conf, tdir)
+    params_p[cf.PARALLEL] = 1
 
-        # PARALLEL 
-        cls.parallel_dir = tempfile.mkdtemp()
-        params[cf.OUT_DIR] = cls.parallel_dir
-        params[cf.PARALLEL] = True
-        shared.mkdir_p(cls.parallel_dir)
+    output_conf_file = 'conf.conf'
+    output_conf = tdir.joinpath(output_conf_file)
+    cf.write_config_file(params=params_p, output_conf_file=output_conf)
 
-        gtif_paths = conv2tif.main(params)
-        prepifg.main(params)
-        
-        para_df = glob.glob(os.path.join(cls.parallel_dir, glob_prefix))
-        cls.para_ifgs = small_data_setup(datafiles=para_df)
+    params_p = Configuration(output_conf).__dict__
 
-    @classmethod
-    def tearDownClass(cls):
-        try:
-            shutil.rmtree(cls.parallel_dir)
-        except PermissionError:
-            print("File opened by another process.")
+    gtif_paths = conv2tif.main(params_p)
+    prepifg.main(params_p)
 
-        try:
-            shutil.rmtree(cls.serial_dir)
-        except PermissionError:
-            print("File opened by another process.")
+    parallel_df = list(Path(tdir).joinpath('out').glob(glob_prefix))
 
-        try:
-            common.remove_tifs(SML_TEST_GAMMA)
-        except PermissionError:
-            print("File opened by another process.")
+    p_ifgs = small_data_setup(datafiles=parallel_df)
+    yield p_ifgs
 
-    def test_equality(self):
-        for s, p in zip(self.serial_ifgs, self.para_ifgs):
-            np.testing.assert_array_almost_equal(s.phase_data, p.phase_data)
+    shutil.rmtree(params_p[cf.OBS_DIR])
 
-    def test_meta_data_exist(self):
-        for s, p in zip(self.serial_ifgs, self.para_ifgs):
-            # all metadata equal
-            self.assertDictEqual(s.meta_data, p.meta_data)
-            # test that DATA_TYPE exists in metadata
-            self.assertIn(ifc.DATA_TYPE, s.meta_data.keys())
-            # test that DATA_TYPE is MULTILOOKED
-            self.assertEqual(s.meta_data[ifc.DATA_TYPE], ifc.MULTILOOKED)
 
+@pytest.fixture(scope='module')
+def series_ifgs(gamma_conf):
+
+    print('======================setup series==========================')
+    tdir = Path(tempfile.mkdtemp())
+
+    params_s = manipulate_test_conf(gamma_conf, tdir)
+    params_s[cf.PARALLEL] = 0
+
+    output_conf_file = 'conf.conf'
+    output_conf = tdir.joinpath(output_conf_file)
+    cf.write_config_file(params=params_s, output_conf_file=output_conf)
+
+    params_s = Configuration(output_conf).__dict__
+
+    gtif_paths = conv2tif.main(params_s)
+    prepifg.main(params_s)
+
+    parallel_df = list(Path(tdir).joinpath('out').glob(glob_prefix))
+
+    s_ifgs = small_data_setup(datafiles=parallel_df)
+
+    yield s_ifgs
+
+    print('======================teardown series==========================')
+
+    shutil.rmtree(params_s[cf.OBS_DIR])
+
+
+def test_equality(series_ifgs, parallel_ifgs):
+    for s, p in zip(series_ifgs, parallel_ifgs):
+        np.testing.assert_array_almost_equal(s.phase_data, p.phase_data)
+
+
+def test_meta_data_exist(series_ifgs, parallel_ifgs):
+    for i, (s, p) in enumerate(zip(series_ifgs, parallel_ifgs)):
+        print(s, p)
+        # all metadata equal
+        assert s.meta_data == p.meta_data
+        # test that DATA_TYPE exists in metadata
+        assert ifc.DATA_TYPE in s.meta_data.keys()
+        # test that DATA_TYPE is MULTILOOKED
+        assert s.meta_data[ifc.DATA_TYPE] == ifc.MULTILOOKED
+
+    assert i == 16
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,8 +1,21 @@
 Installation
-===============
+============
 
-This is a quick guide to getting the PyRate software up and running in various platforms.
-Step by step guide to install Pyrate and run toy example.
+This is an installation guide to get `PyRate` running on various platforms.
+Follow the instructions to install `PyRate` and run a small toy example.
+
+.. include:: dependencies.rst
+
+PyPI
+----
+
+`PyRate` and its Python dependencies can be installed directly from the Python Package Index (PyPI_):
+
+.. _PyPI: https://pypi.org/project/Py-Rate/
+
+::
+
+    pip install Py-Rate
 
 .. include:: ubuntu.rst
 .. include:: docker.rst
@@ -12,8 +25,8 @@ Step by step guide to install Pyrate and run toy example.
 Verify Installation
 -------------------
 
-To verify PyRate has been successfully installed, run the workflow with the
-included example config file and data:
+To verify `PyRate` has been successfully installed, run the workflow with the
+example config file and the small dataset included in the repository:
 
 ::
 
@@ -23,7 +36,7 @@ included example config file and data:
     pyrate merge -f input_parameters.conf
 
 If the installation has been successful, this workflow will complete without 
-errors and results will be available in:
+errors and geotiff files will be available in:
 
 :: 
     

@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2017 Geoscience Australia
+#   Copyright 2020 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ from pyrate.core.shared import joblib_log_level
 from pyrate.core.algorithm import master_slave_ids, get_epochs
 from pyrate.core import config as cf, mst as mst_module
 from pyrate.core.config import ConfigException
+from pyrate.core.logger import pyratelogger as log
 
 
 def _time_series_setup(ifgs, mst, params):
@@ -69,7 +70,7 @@ def _time_series_setup(ifgs, mst, params):
         b0_mat[i, imaster[i]:islave[i]] = span[imaster[i]:islave[i]]
 
     # change the sign if slave is earlier than master
-    isign = where(imaster > islave)
+    isign = where(np.atleast_1d(imaster) > np.atleast_1d(islave))
     b0_mat[isign[0], :] = -b0_mat[isign[0], :]
     tsvel_matrix = np.empty(shape=(nrows, ncols, nvelpar),
                             dtype=float32)
@@ -138,16 +139,8 @@ def time_series(ifgs, params, vcmt=None, mst=None):
         ncols, nrows, nvelpar, parallel, span, tsvel_matrix = \
         _time_series_setup(ifgs, mst, params)
 
-    if parallel == 1:
-        tsvel_matrix = Parallel(n_jobs=params[cf.PROCESSES], 
-                                verbose=joblib_log_level(cf.LOG_LEVEL))(
-            delayed(_time_series_by_rows)(r, b0_mat, sm_factor, sm_order,
-                                          ifg_data, mst, ncols, nvelpar,
-                                          p_thresh, vcmt, ts_method, interp)
-            for r in range(nrows))
-
-    elif parallel == 2:
-
+    if parallel:
+        log.info('Calculating timeseries parallelly by the pixels')
         res = np.array(Parallel(n_jobs=params[cf.PROCESSES], 
                                 verbose=joblib_log_level(cf.LOG_LEVEL))(
             delayed(_time_series_by_pixel)(i, j, b0_mat, sm_factor, sm_order,
@@ -156,6 +149,7 @@ def time_series(ifgs, params, vcmt=None, mst=None):
             for (i, j) in itertools.product(range(nrows), range(ncols))))
         tsvel_matrix = np.reshape(res, newshape=(nrows, ncols, res.shape[1]))
     else:
+        log.info('Calculating timeseries pixel by pixel')
         for row in range(nrows):
             for col in range(ncols):
                 tsvel_matrix[row, col] = _time_series_by_pixel(
@@ -171,20 +165,6 @@ def time_series(ifgs, params, vcmt=None, mst=None):
     # saves the step of comparing a large matrix (tsincr) to zero.
     # tscum = where(tscum == 0, nan, tscum)
     return tsincr, tscum, tsvel_matrix
-
-
-def _time_series_by_rows(row, b0_mat, sm_factor, sm_order, ifg_data, mst, ncols,
-                         nvelpar, p_thresh, vcmt, ts_method, interp):
-    """
-    Wrapper function for splitting time series computation by rows.
-    """
-    tsvel = np.empty(shape=(ncols, nvelpar), dtype=float32)
-    for col in range(ncols):
-        tsvel[col, :] = _time_series_by_pixel(
-            row, col, b0_mat, sm_factor, sm_order, ifg_data, mst, nvelpar,
-            p_thresh, interp, vcmt, ts_method)
-
-    return tsvel
 
 
 def _remove_rank_def_rows(b_mat, nvelpar, ifgv, sel):

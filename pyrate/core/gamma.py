@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2017 Geoscience Australia
+#   Copyright 2020 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -17,14 +17,14 @@
 This Python module contains tools for reading GAMMA format input data.
 """
 # coding: utf-8
-from os.path import join, split
 import re
 import os
+from pathlib import Path
 from datetime import date, time, timedelta
 import numpy as np
 import pyrate.core.ifgconstants as ifc
 from pyrate.core import config as cf
-
+from pyrate.core.shared import extract_epochs_from_filename
 
 # constants
 GAMMA_DATE = 'date'
@@ -41,6 +41,7 @@ GAMMA_INCIDENCE = 'incidence_angle'
 RADIANS = 'RADIANS'
 GAMMA = 'GAMMA'
 
+
 def _parse_header(path):
     """Parses all GAMMA header file fields into a dictionary"""
     with open(path) as f:
@@ -49,6 +50,7 @@ def _parse_header(path):
 
     # convert the content into a giant dict of all key, values
     return dict((i[0][:-1], i[1:]) for i in raw_segs)
+
 
 def parse_epoch_header(path):
     """
@@ -77,21 +79,23 @@ def parse_epoch_header(path):
 
     return subset
 
+
 def _parse_date_time(lookup):
     """Grab date and time metadata and convert to datetime objects"""
     subset = {}
     if len(lookup[GAMMA_DATE]) == 3:  # pragma: no cover
         year, month, day, = [int(float(i)) for i in lookup[GAMMA_DATE][:3]]
-        if lookup.get(GAMMA_TIME) != None:
+        if lookup.get(GAMMA_TIME) is not None:
             t = lookup[GAMMA_TIME][0]
             h, m, s = str(timedelta(seconds=float(t))).split(":")
-            hour = int(h); min = int(m); sec = int(s.split(".")[0])
+            hour = int(h)
+            min = int(m)
+            sec = int(s.split(".")[0])
         else:
             # Occasionally GAMMA header has no time information - default to midnight
             hour, min, sec = 0, 0, 0
     elif len(lookup[GAMMA_DATE]) == 6:
-        year, month, day, hour, min, sec = [int(float(i))
-                                             for i in lookup[GAMMA_DATE][:6]]
+        year, month, day, hour, min, sec = [int(float(i)) for i in lookup[GAMMA_DATE][:6]]
     else:  # pragma: no cover
         msg = "Date and time information not complete in GAMMA headers"
         raise GammaException(msg)
@@ -100,6 +104,7 @@ def _parse_date_time(lookup):
     subset[ifc.MASTER_TIME] = time(hour, min, sec)
 
     return subset
+
 
 def parse_dem_header(path):
     """
@@ -130,11 +135,13 @@ def parse_dem_header(path):
     subset[ifc.PYRATE_INSAR_PROCESSOR] = GAMMA
     return subset
 
+
 def _frequency_to_wavelength(freq):
     """
     Convert radar frequency to wavelength
     """
     return ifc.SPEED_OF_LIGHT_METRES_PER_SECOND / freq
+
 
 def combine_headers(hdr0, hdr1, dem_hdr):
     """
@@ -168,7 +175,8 @@ def combine_headers(hdr0, hdr1, dem_hdr):
     # set incidence angle to mean of master and slave
     inc_ang = hdr0[ifc.PYRATE_INCIDENCE_DEGREES]
     if np.isclose(inc_ang, hdr1[ifc.PYRATE_INCIDENCE_DEGREES], atol=1e-1):
-        chdr[ifc.PYRATE_INCIDENCE_DEGREES] = (hdr0[ifc.PYRATE_INCIDENCE_DEGREES]+hdr1[ifc.PYRATE_INCIDENCE_DEGREES])/2
+        chdr[ifc.PYRATE_INCIDENCE_DEGREES] = (hdr0[ifc.PYRATE_INCIDENCE_DEGREES] + hdr1[
+            ifc.PYRATE_INCIDENCE_DEGREES]) / 2
     else:
         msg = "Incidence angles differ by more than 1e-1"
         raise GammaException(msg)
@@ -185,6 +193,7 @@ def combine_headers(hdr0, hdr1, dem_hdr):
 
     chdr.update(dem_hdr)  # add geographic data
     return chdr
+
 
 def manage_headers(dem_header_file, header_paths):
     """
@@ -209,7 +218,8 @@ def manage_headers(dem_header_file, header_paths):
 
     return combined_header
 
-def get_header_paths(input_file, slc_file_list, slc_dir):
+
+def get_header_paths(input_file, slc_file_list):
     """
     Function that matches input GAMMA file names with GAMMA header file names
 
@@ -218,12 +228,12 @@ def get_header_paths(input_file, slc_file_list, slc_dir):
     :return: list of matching header files
     :rtype: list
     """
-    _, file_name = split(input_file)
-    PTN = re.compile(r'\d{8}')  # match 8 digits for the dates
-    epochs = PTN.findall(file_name)
+    f = Path(input_file)
+    epochs = extract_epochs_from_filename(f.name)
     header_names = cf.parse_namelist(slc_file_list)
     matches = [hdr for hdr in header_names if any(e in hdr for e in epochs)]
-    return [os.path.join(slc_dir, hdr) for hdr in matches]
+    return matches
+
 
 def gamma_header(ifg_file_path, params):
     """
@@ -238,12 +248,8 @@ def gamma_header(ifg_file_path, params):
         gamma headers and DEM header.   
     """
     dem_hdr_path = params[cf.DEM_HEADER_FILE]
-    slc_dir = params[cf.SLC_DIR]
-    header_paths = get_header_paths(ifg_file_path, 
-                                    params[cf.SLC_FILE_LIST], 
-                                    slc_dir=slc_dir)
+    header_paths = get_header_paths(ifg_file_path, params[cf.SLC_FILE_LIST])
     combined_headers = manage_headers(dem_hdr_path, header_paths)
-
     if os.path.basename(ifg_file_path).split('.')[1] == \
             (params[cf.APS_INCIDENCE_EXT] or params[cf.APS_ELEVATION_EXT]):
         # TODO: implement incidence class here
@@ -253,6 +259,4 @@ def gamma_header(ifg_file_path, params):
 
 
 class GammaException(Exception):
-    """
-    Gamma generic exception class
-    """
+    """Gamma generic exception class"""

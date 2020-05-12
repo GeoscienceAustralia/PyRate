@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2017 Geoscience Australia
+#   Copyright 2020 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -17,8 +17,9 @@
 This Python module implements residual orbital corrections for interferograms.
 """
 # pylint: disable=invalid-name
-import logging
+from typing import Optional, List, Dict, Iterable
 from collections import OrderedDict
+from pathlib import Path
 from numpy import empty, isnan, reshape, float32, squeeze
 from numpy import dot, vstack, zeros, meshgrid
 import numpy as np
@@ -30,8 +31,7 @@ from pyrate.core.algorithm import master_slave_ids, get_all_epochs
 from pyrate.core import shared, ifgconstants as ifc, config as cf, prepifg_helper, mst
 from pyrate.core.shared import nanmedian, Ifg
 
-log = logging.getLogger(__name__)
-
+from pyrate.core.logger import pyratelogger as log
 # Orbital correction tasks
 #
 # TODO: options for multilooking
@@ -68,7 +68,7 @@ QUADRATIC = cf.QUADRATIC
 PART_CUBIC = cf.PART_CUBIC
 
 
-def remove_orbital_error(ifgs, params, preread_ifgs=None):
+def remove_orbital_error(ifgs: Iterable, params: dict, preread_ifgs=None) -> None:
     """
     Wrapper function for PyRate orbital error removal functionality.
 
@@ -84,8 +84,7 @@ def remove_orbital_error(ifgs, params, preread_ifgs=None):
     :return: None - interferogram phase data is updated and saved to disk
     """
 
-    ifg_paths = [i.data_path for i in ifgs] \
-        if isinstance(ifgs[0], Ifg) else ifgs
+    ifg_paths = [i.data_path for i in ifgs] if isinstance(ifgs[0], Ifg) else ifgs
 
     mlooked = None
     # mlooking is not necessary for independent correction
@@ -106,12 +105,10 @@ def remove_orbital_error(ifgs, params, preread_ifgs=None):
             m.convert_to_nans()
             m.convert_to_mm()
 
-    _orbital_correction(ifgs, params, mlooked=mlooked,
-                        preread_ifgs=preread_ifgs)
+    _orbital_correction(ifgs, params, mlooked=mlooked, preread_ifgs=preread_ifgs)
 
 
-def _orbital_correction(ifgs_or_ifg_paths, params, mlooked=None, offset=True,
-                        preread_ifgs=None):
+def _orbital_correction(ifgs, params, mlooked=None, offset=True, preread_ifgs=None):
     """
     Convenience function to perform orbital correction.
     """
@@ -120,23 +117,17 @@ def _orbital_correction(ifgs_or_ifg_paths, params, mlooked=None, offset=True,
     # parallel = params[cf.PARALLEL]  # not implemented
 
     if degree not in [PLANAR, QUADRATIC, PART_CUBIC]:
-        msg = "Invalid degree of %s for orbital correction" \
-            % cf.ORB_DEGREE_NAMES.get(degree)
+        msg = "Invalid degree of %s for orbital correction" % cf.ORB_DEGREE_NAMES.get(degree)
         raise OrbitalError(msg)
 
     log.info('Removing orbital error using {} correction method'
-             ' and degree={}'.format(cf.ORB_METHOD_NAMES.get(method), 
-                                     cf.ORB_DEGREE_NAMES.get(degree)))
-
+             ' and degree={}'.format(cf.ORB_METHOD_NAMES.get(method), cf.ORB_DEGREE_NAMES.get(degree)))
     if method == NETWORK_METHOD:
         if mlooked is None:
-            network_orbital_correction(ifgs_or_ifg_paths, degree, offset,
-                                       params, m_ifgs=mlooked,
-                                       preread_ifgs=preread_ifgs)
+            network_orbital_correction(ifgs, degree, offset, params, mlooked, preread_ifgs)
         else:
-            _validate_mlooked(mlooked, ifgs_or_ifg_paths)
-            network_orbital_correction(ifgs_or_ifg_paths, degree, offset,
-                                       params, mlooked, preread_ifgs)
+            _validate_mlooked(mlooked, ifgs)
+            network_orbital_correction(ifgs, degree, offset, params, mlooked, preread_ifgs)
 
     elif method == INDEPENDENT_METHOD:
         # not running in parallel
@@ -145,7 +136,7 @@ def _orbital_correction(ifgs_or_ifg_paths, params, mlooked=None, offset=True,
         #          verbose=joblib_log_level(cf.LOG_LEVEL))(
         #     delayed(_independent_correction)(ifg, degree, offset, params)
         #     for ifg in ifgs)
-        for ifg in ifgs_or_ifg_paths:
+        for ifg in ifgs:
             independent_orbital_correction(ifg, degree, offset, params)
     else:
         msg = "Unknown method: '%s', need INDEPENDENT or NETWORK method"
@@ -230,8 +221,8 @@ def independent_orbital_correction(ifg, degree, offset, params):
         ifg.close()
 
 
-def network_orbital_correction(ifgs, degree, offset, params, m_ifgs=None,
-                               preread_ifgs=None):
+def network_orbital_correction(ifgs, degree, offset, params, m_ifgs: Optional[List] = None,
+                               preread_ifgs: Optional[Dict] = None):
     """
     This algorithm implements a network inversion to determine orbital
     corrections for a set of interferograms forming a connected network.
@@ -269,8 +260,7 @@ def network_orbital_correction(ifgs, degree, offset, params, m_ifgs=None,
         ids = master_slave_ids(get_all_epochs(temp_ifgs))
     else:
         ids = master_slave_ids(get_all_epochs(ifgs))
-    coefs = [orbparams[i:i+ncoef] for i in
-             range(0, len(set(ids)) * ncoef, ncoef)]
+    coefs = [orbparams[i:i+ncoef] for i in range(0, len(set(ids)) * ncoef, ncoef)]
 
     # create full res DM to expand determined coefficients into full res
     # orbital correction (eg. expand coarser model to full size)
@@ -295,8 +285,7 @@ def network_orbital_correction(ifgs, degree, offset, params, m_ifgs=None,
 
 def _remove_network_orb_error(coefs, dm, ifg, ids, offset):
     """
-    Convenience function to remove network orbital error from input
-    interferograms
+    remove network orbital error from input interferograms
     """
     orb = dm.dot(coefs[ids[ifg.slave]] - coefs[ids[ifg.master]])
     orb = orb.reshape(ifg.shape)

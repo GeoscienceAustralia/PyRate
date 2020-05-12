@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2017 Geoscience Australia
+#   Copyright 2020 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -16,13 +16,11 @@
 """
 This Python module contains a collection of generic algorithms used in PyRate
 """
-import logging
+from typing import Union, Iterable, Dict, Tuple
 from numpy import sin, cos, unique, histogram, diag, dot
 from scipy.linalg import qr, solve, lstsq
 from pyrate.core.shared import EpochList, IfgException, PrereadIfg
 from pyrate.core.ifgconstants import DAYS_PER_YEAR
-
-log = logging.getLogger(__name__)
 
 
 def is_square(arr):
@@ -187,15 +185,14 @@ def ifg_date_index_lookup(ifgs, date_pair):
         if date_pair == (ifgs[i].master, ifgs[i].slave):
             return i
 
-    raise ValueError("Cannot find Ifg with "
-                     "master/slave of %s" % str(date_pair))
+    raise ValueError("Cannot find Ifg with master/slave of %s" % str(date_pair))
 
 
-def get_epochs(ifgs):
+def get_epochs(ifgs: Union[Iterable, Dict]) -> Tuple[EpochList, int]:
     """
     Returns an EpochList derived from the given interferograms.
 
-    :param list ifgs: List of interferogram objects
+    :param ifgs: List of interferogram objects
 
     :return: EpochList
     :rtype: list
@@ -206,11 +203,9 @@ def get_epochs(ifgs):
     combined = get_all_epochs(ifgs)
     dates, n = unique(combined, False, True)
     repeat, _ = histogram(n, bins=len(set(n)))
-    log.info('Found {} unique epochs in the {} interferogram network'.format(len(dates), len(ifgs)))
 
     # absolute span for each date from the zero/start point
-    span = [(dates[i] - dates[0]).days / DAYS_PER_YEAR
-            for i in range(len(dates))]
+    span = [(dates[i] - dates[0]).days / DAYS_PER_YEAR for i in range(len(dates))]
     return EpochList(dates, repeat, span), n
 
 

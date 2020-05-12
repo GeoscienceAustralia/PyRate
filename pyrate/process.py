@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2017 Geoscience Australia
+#   Copyright 2020 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -27,13 +27,12 @@ import numpy as np
 from pyrate.core import (shared, algorithm, orbital, ref_phs_est as rpe, 
                          ifgconstants as ifc, mpiops, config as cf, 
                          timeseries, mst, covariance as vcm_module, 
-                         linrate, refpixel)
-from pyrate.core.aps import _wrap_spatio_temporal_filter
-from pyrate.core.config import ConfigException
-from pyrate.core.shared import Ifg, PrereadIfg, get_tiles
+                         stack, refpixel)
+from pyrate.core.aps import wrap_spatio_temporal_filter
+from pyrate.core.shared import Ifg, PrereadIfg, get_tiles, mpi_vs_multiprocess_logging
+from pyrate.core.logger import pyratelogger as log
 
 MASTER_PROCESS = 0
-log = logging.getLogger(__name__)
 
 
 def _join_dicts(dicts):
@@ -61,6 +60,7 @@ def _create_ifg_dict(dest_tifs, params, tiles):
     :rtype: dict
     """
     ifgs_dict = {}
+    nifgs = len(dest_tifs)
     process_tifs = mpiops.array_split(dest_tifs)
     shared.save_numpy_phase(dest_tifs, tiles, params)
     for d in process_tifs:
@@ -82,7 +82,9 @@ def _create_ifg_dict(dest_tifs, params, tiles):
 
         # add some extra information that's also useful later
         gt, md, wkt = shared.get_geotiff_header_info(process_tifs[0])
-        ifgs_dict['epochlist'] = algorithm.get_epochs(ifgs_dict)[0]
+        epochlist = algorithm.get_epochs(ifgs_dict)[0]
+        log.info('Found {} unique epochs in the {} interferogram network'.format(len(epochlist.dates), nifgs))
+        ifgs_dict['epochlist'] = epochlist
         ifgs_dict['gt'] = gt
         ifgs_dict['md'] = md
         ifgs_dict['wkt'] = wkt
@@ -90,10 +92,8 @@ def _create_ifg_dict(dest_tifs, params, tiles):
         cp.dump(ifgs_dict, open(preread_ifgs_file, 'wb'))
 
     mpiops.comm.barrier()
-    preread_ifgs = OrderedDict(sorted(cp.load(open(preread_ifgs_file,
-                                                   'rb')).items()))
-    log.debug('Finished converting phase_data to numpy '
-             'in process {}'.format(mpiops.rank))
+    preread_ifgs = OrderedDict(sorted(cp.load(open(preread_ifgs_file, 'rb')).items()))
+    log.debug('Finished converting phase_data to numpy in process {}'.format(mpiops.rank))
     return preread_ifgs
 
 
@@ -102,13 +102,13 @@ def _mst_calc(dest_tifs, params, tiles, preread_ifgs):
     MPI wrapper function for MST calculation
     """
     process_tiles = mpiops.array_split(tiles)
+    log.info('Calculating minimum spanning tree matrix')
 
     def _save_mst_tile(tile, i, preread_ifgs):
         """
         Convenient inner loop for mst tile saving
         """
-        log.info('Calculating minimum spanning tree matrix')
-        mst_tile = mst.mst_multiprocessing(tile, dest_tifs, preread_ifgs)
+        mst_tile = mst.mst_multiprocessing(tile, dest_tifs, preread_ifgs, params)
         # locally save the mst_mat
         mst_file_process_n = join(params[cf.TMPDIR], 'mst_mat_{}.npy'.format(i))
         np.save(file=mst_file_process_n, arr=mst_tile)
@@ -141,7 +141,17 @@ def _ref_pixel_calc(ifg_paths, params):
         if mpiops.rank == MASTER_PROCESS:
             mean_sds = np.hstack(mean_sds)
 
-        refy, refx = mpiops.run_once(refpixel.find_min_mean, mean_sds, grid)
+        refpixel_returned = mpiops.run_once(refpixel.find_min_mean, mean_sds, grid)
+
+        if isinstance(refpixel_returned, ValueError):
+            from pyrate.core.refpixel import RefPixelError
+            raise RefPixelError(
+                "Reference pixel calculation returned an all nan slice!\n"
+                "Cannot continue downstream computation. Please change reference pixel algorithm used before "
+                "continuing.")
+
+        refy, refx = refpixel_returned
+
         log.info('Selected reference pixel coordinate: ({}, {})'.format(refx, refy))
     else:
         log.info('Reusing reference pixel from config file: ({}, {})'.format(refx, refy))
@@ -153,17 +163,17 @@ def _orb_fit_calc(ifg_paths, params, preread_ifgs=None):
     """
     MPI wrapper for orbital fit correction
     """
-    log.info('Calculating orbital correction')
-
     if not params[cf.ORBITAL_FIT]:
-        log.info('Orbital correction not required')
+        log.info('Orbital correction not required!')
+        print('Orbital correction not required!')
         return
+    log.info('Calculating orbital correction')
 
     if preread_ifgs:  # don't check except for mpi tests
         # perform some general error/sanity checks
         log.debug('Checking Orbital error correction status')
         if mpiops.run_once(shared.check_correction_status, ifg_paths, ifc.PYRATE_ORBITAL_ERROR):
-            log.debug('Finished Orbital error correction')
+            log.debug('Orbital error correction not required as all ifgs are already corrected!')
             return  # return if True condition returned
 
     if params[cf.ORBITAL_FIT_METHOD] == 1:
@@ -180,6 +190,7 @@ def _orb_fit_calc(ifg_paths, params, preread_ifgs=None):
     mpiops.comm.barrier()
     log.debug('Finished Orbital error correction')
 
+
 def _ref_phase_estimation(ifg_paths, params, refpx, refpy):
     """
     Wrapper for reference phase estimation.
@@ -187,8 +198,8 @@ def _ref_phase_estimation(ifg_paths, params, refpx, refpy):
     log.info("Calculating reference phase")
     if len(ifg_paths) < 2:
         raise rpe.ReferencePhaseError(
-            f"At least two interferograms required for reference phase "
-            f"correction ({len(ifg_paths)} provided)."
+            "At least two interferograms required for reference phase correction ({len_ifg_paths} "
+            "provided).".format(len_ifg_paths=len(ifg_paths))
         )
 
     if mpiops.run_once(shared.check_correction_status, ifg_paths, ifc.PYRATE_REF_PHASE):
@@ -214,7 +225,7 @@ def _ref_phase_estimation(ifg_paths, params, refpx, refpy):
                                             dtype=np.float64)
             mpiops.comm.Recv(this_process_ref_phs, source=r, tag=r)
             collected_ref_phs[process_indices] = this_process_ref_phs
-        np.save(file=ref_phs_file, arr=ref_phs)
+        np.save(file=ref_phs_file, arr=collected_ref_phs)
     else:
         mpiops.comm.Send(ref_phs, dest=MASTER_PROCESS, tag=mpiops.rank)
     log.debug('Finished reference phase estimation')
@@ -224,7 +235,31 @@ def _ref_phase_estimation(ifg_paths, params, refpx, refpy):
         ifgs = ifg_paths
     else:
         ifgs = [Ifg(ifg_path) for ifg_path in ifg_paths]
+    mpiops.comm.barrier()
     return ref_phs, ifgs
+
+
+def main(params):
+    """
+    Top level function to perform PyRate workflow on given interferograms
+
+    :return: refpt: tuple of reference pixel x and y position
+    :rtype: tuple
+    :return: maxvar: array of maximum variance values of interferograms
+    :rtype: ndarray
+    :return: vcmt: Variance-covariance matrix array
+    :rtype: ndarray
+    """
+    mpi_vs_multiprocess_logging("process", params)
+
+    ifg_paths = []
+    for ifg_path in params[cf.INTERFEROGRAM_FILES]:
+        ifg_paths.append(ifg_path.sampled_path)
+
+    rows, cols = params["rows"], params["cols"]
+
+    return process_ifgs(ifg_paths, params, rows, cols)
+
 
 def process_ifgs(ifg_paths, params, rows, cols):
     """
@@ -242,60 +277,62 @@ def process_ifgs(ifg_paths, params, rows, cols):
     :return: vcmt: Variance-covariance matrix array
     :rtype: ndarray
     """
+
     if mpiops.size > 1:  # turn of multiprocessing during mpi jobs
         params[cf.PARALLEL] = False
 
     tiles = mpiops.run_once(get_tiles, ifg_paths[0], rows, cols)
 
     preread_ifgs = _create_ifg_dict(ifg_paths, params=params, tiles=tiles)
-
     # _mst_calc(ifg_paths, params, tiles, preread_ifgs)
 
     refpx, refpy = _ref_pixel_calc(ifg_paths, params)
-    log.debug("refpx, refpy: "+str(refpx)+" "+ str(refpy))
+
+    log.debug("refpx, refpy: "+str(refpx) + " " + str(refpy))
 
     # remove non ifg keys
     _ = [preread_ifgs.pop(k) for k in ['gt', 'epochlist', 'md', 'wkt']]
 
     _orb_fit_calc(ifg_paths, params, preread_ifgs)
-    
-    _ref_phase_estimation(ifg_paths, params, refpx, refpy)    
+
+    _ref_phase_estimation(ifg_paths, params, refpx, refpy)
 
     _mst_calc(ifg_paths, params, tiles, preread_ifgs)
 
     # spatio-temporal aps filter
-    _wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs)
+    wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs)
 
     maxvar, vcmt = _maxvar_vcm_calc(ifg_paths, params, preread_ifgs)
+    # save phase data tiles as numpy array for timeseries and stackrate calc
 
-    # save phase data tiles as numpy array for timeseries and linrate calc
     shared.save_numpy_phase(ifg_paths, tiles, params)
 
     _timeseries_calc(ifg_paths, params, vcmt, tiles, preread_ifgs)
 
-    _linrate_calc(ifg_paths, params, vcmt, tiles, preread_ifgs)
+    _stack_calc(ifg_paths, params, vcmt, tiles, preread_ifgs)
 
     log.info('PyRate workflow completed')
     return (refpx, refpy), maxvar, vcmt
 
 
-def _linrate_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
+def _stack_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
     """
-    MPI wrapper for linrate calculation
+    MPI wrapper for stacking calculation
     """
     process_tiles = mpiops.array_split(tiles)
     log.info('Calculating rate map from stacking')
     output_dir = params[cf.TMPDIR]
     for t in process_tiles:
-        log.debug('Stacking of tile {}'.format(t.index))
-        ifg_parts = [shared.IfgPart(p, t, preread_ifgs) for p in ifg_paths]
+        log.info('Stacking of tile {}'.format(t.index))
+        ifg_parts = [shared.IfgPart(p, t, preread_ifgs, params) for p in ifg_paths]
         mst_grid_n = np.load(os.path.join(output_dir, 'mst_mat_{}.npy'.format(t.index)))
-        rate, error, samples = linrate.linear_rate(ifg_parts, params, vcmt, mst_grid_n)
+        rate, error, samples = stack.stack_rate(ifg_parts, params, vcmt, mst_grid_n)
         # declare file names
-        np.save(file=os.path.join(output_dir, 'linrate_{}.npy'.format(t.index)), arr=rate)
-        np.save(file=os.path.join(output_dir, 'linerror_{}.npy'.format(t.index)), arr=error)
-        np.save(file=os.path.join(output_dir, 'linsamples_{}.npy'.format(t.index)), arr=samples)
+        np.save(file=os.path.join(output_dir, 'stack_rate_{}.npy'.format(t.index)), arr=rate)
+        np.save(file=os.path.join(output_dir, 'stack_error_{}.npy'.format(t.index)), arr=error)
+        np.save(file=os.path.join(output_dir, 'stack_samples_{}.npy'.format(t.index)), arr=samples)
     mpiops.comm.barrier()
+    log.info("Finished stack rate calc!")
 
 
 def _maxvar_vcm_calc(ifg_paths, params, preread_ifgs):
@@ -333,8 +370,10 @@ def _maxvar_vcm_calc(ifg_paths, params, preread_ifgs):
         maxvar = np.empty(len(ifg_paths), dtype=np.float64)
         mpiops.comm.Send(np.array(process_maxvar, dtype=np.float64), dest=MASTER_PROCESS, tag=mpiops.rank)
 
+    mpiops.comm.barrier()
     maxvar = mpiops.comm.bcast(maxvar, root=0)
     vcmt = mpiops.run_once(vcm_module.get_vcmt, preread_ifgs, maxvar)
+    log.info("Finished maxvar and vcm calc!")
     return maxvar, vcmt
 
 
@@ -352,13 +391,15 @@ def _timeseries_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
         log.info('Calculating time series using SVD method')
 
     output_dir = params[cf.TMPDIR]
+    total_tiles = len(tiles)
     process_tiles = mpiops.array_split(tiles)
     for t in process_tiles:
-        log.debug('Calculating time series for tile {}'.format(t.index))
-        ifg_parts = [shared.IfgPart(p, t, preread_ifgs) for p in ifg_paths]
+        log.debug("Calculating time series for tile "+str(t.index)+" out of "+str(total_tiles))
+        ifg_parts = [shared.IfgPart(p, t, preread_ifgs, params) for p in ifg_paths]
         mst_tile = np.load(os.path.join(output_dir, 'mst_mat_{}.npy'.format(t.index)))
         res = timeseries.time_series(ifg_parts, params, vcmt, mst_tile)
         tsincr, tscum, _ = res
         np.save(file=os.path.join(output_dir, 'tsincr_{}.npy'.format(t.index)), arr=tsincr)
         np.save(file=os.path.join(output_dir, 'tscuml_{}.npy'.format(t.index)), arr=tscum)
     mpiops.comm.barrier()
+    log.info("Finished timeseries calc!")

@@ -1,0 +1,62 @@
+git clone git@github.com:GeoscienceAustralia/PyRate.git
+cd PyRate
+
+cd C:/Users/sheec/Desktop/Projects/PyRate
+
+# build PyRate package
+cd /PyRate
+pip install -r requirements-dev.txt
+pip install -r requirements-test.txt
+pip install pyproj==2.2.1
+cd /PyRate && python3 setup.py install
+
+# Run workflow
+python pyrate/__main__.py  conv2tif -f  pyrate_gamma.conf
+pyrate prepifg -f pyrate_gamma.conf
+pyrate process -f pyrate_gamma.conf
+pyrate merge -f pyrate_gamma.conf
+
+# Build Sphinx docs
+cd /PyRate/docs && make html
+
+# Run tests
+cd /PyRate
+chmod 444 tests/test_data/small_test/tif/geo_070709-070813_unw.tif
+cd /PyRate && python -m pytest tests/
+
+# Random stuff
+pip install tox
+tox
+
+# 64 failed, 236 passed, 1944 skipped
+
+---------------------------------------
+NCI
+
+ssh xyz@gadi.nci.org.au
+
+module unload git
+module load git
+
+cd ~
+
+rm -rf PyRate
+rm -rf PyRateVenv
+
+git clone https://github.com/GeoscienceAustralia/PyRate.git -b test --single-branch
+source PyRate/utils/load_modules.sh
+python3 -m venv ~/PyRateVenv
+source ~/PyRateVenv/bin/activate
+cd ~/PyRate
+pip install -r requirements-dev.txt
+pip install -r requirements-test.txt
+pip install -r requirements.txt
+
+python setup.py install
+
+cd ~/PyRate/pyrate
+python main.py -v DEBUG conv2tif -f ~/PyRate/sample_data/input_parameters.conf
+python main.py -v DEBUG prepifg  -f ~/PyRate/sample_data/input_parameters.conf
+python main.py -v DEBUG process  -f ~/PyRate/sample_data/input_parameters.conf
+python main.py -v DEBUG merge    -f ~/PyRate/sample_data/input_parameters.conf
+

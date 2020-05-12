@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2017 Geoscience Australia
+#   Copyright 2020 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -30,12 +30,13 @@ from scipy.optimize import fmin
 from pyrate.core import shared, ifgconstants as ifc, config as cf
 from pyrate.core.shared import PrereadIfg
 from pyrate.core.algorithm import master_slave_ids
+from pyrate.core.logger import pyratelogger as log
 
 # pylint: disable=too-many-arguments
 # distance division factor of 1000 converts to km and is needed to match legacy output
 DISTFACT = 1000
 
-log = logging.getLogger(__name__)
+
 
 
 def _pendiffexp(alphamod, cvdav):

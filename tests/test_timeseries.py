@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2017 Geoscience Australia
+#   Copyright 2020 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ import pyrate.core.orbital
 import tests.common as common
 from pyrate.core import ref_phs_est as rpe, config as cf, mst, covariance
 from pyrate import process, prepifg, conv2tif
+from pyrate.configuration import Configuration
 from pyrate.core.timeseries import time_series
 
 
@@ -110,7 +111,7 @@ class LegacyTimeSeriesEquality(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        params = cf.get_config_params(common.TEST_CONF_ROIPAC)
+        params = Configuration(common.TEST_CONF_ROIPAC).__dict__
         cls.temp_out_dir = tempfile.mkdtemp()
         sys.argv = ['prepifg.py', common.TEST_CONF_ROIPAC]
         params[cf.OUT_DIR] = cls.temp_out_dir
@@ -133,7 +134,6 @@ class LegacyTimeSeriesEquality(unittest.TestCase):
         pyrate.core.orbital.remove_orbital_error(ifgs, params)
         ifgs = common.prepare_ifgs_without_phase(dest_paths, params)
         for ifg in ifgs:
-            print(ifg.nodata_value)
             ifg.close()
         _, ifgs = process._ref_phase_estimation(dest_paths, params, refx, refy)
         ifgs[0].open()
@@ -143,37 +143,28 @@ class LegacyTimeSeriesEquality(unittest.TestCase):
         for ifg in ifgs:
             ifg.open()
         vcmt = covariance.get_vcmt(ifgs, maxvar)
-        
+
         for ifg in ifgs:
             ifg.close()
             ifg.open()
-            ifg.nodata_value = 0.0        
+            ifg.nodata_value = 0.0
 
         params[cf.TIME_SERIES_METHOD] = 1
         params[cf.PARALLEL] = 0
         # Calculate time series
-        cls.tsincr_0, cls.tscum_0, _ = common.calculate_time_series(
-            ifgs, params, vcmt, mst=mst_grid)
+        cls.tsincr_0, cls.tscum_0, _ = common.calculate_time_series(ifgs, params, vcmt, mst=mst_grid)
 
         params[cf.PARALLEL] = 1
-        cls.tsincr_1, cls.tscum_1, cls.tsvel_1 = \
-            common.calculate_time_series(ifgs, params, vcmt, mst=mst_grid)
-
-        params[cf.PARALLEL] = 2
-        cls.tsincr_2, cls.tscum_2, cls.tsvel_2 = \
-            common.calculate_time_series(ifgs, params, vcmt, mst=mst_grid)
+        cls.tsincr_1, cls.tscum_1, cls.tsvel_1 = common.calculate_time_series(ifgs, params, vcmt, mst=mst_grid)
 
         # load the legacy data
         ts_dir = os.path.join(common.SML_TEST_DIR, 'time_series')
-        tsincr_path = os.path.join(ts_dir,
-                                   'ts_incr_interp0_method1.csv')
+        tsincr_path = os.path.join(ts_dir, 'ts_incr_interp0_method1.csv')
         ts_incr = np.genfromtxt(tsincr_path)
 
-        tscum_path = os.path.join(ts_dir,
-                                  'ts_cum_interp0_method1.csv')
+        tscum_path = os.path.join(ts_dir, 'ts_cum_interp0_method1.csv')
         ts_cum = np.genfromtxt(tscum_path)
-        cls.ts_incr = np.reshape(ts_incr,
-                                 newshape=cls.tsincr_0.shape, order='F')
+        cls.ts_incr = np.reshape(ts_incr, newshape=cls.tsincr_0.shape, order='F')
         cls.ts_cum = np.reshape(ts_cum, newshape=cls.tscum_0.shape, order='F')
 
     @classmethod
@@ -196,19 +187,6 @@ class LegacyTimeSeriesEquality(unittest.TestCase):
         np.testing.assert_array_almost_equal(
             self.ts_cum, self.tscum_1, decimal=3)
 
-    def test_time_series_equality_parallel_by_the_pixel(self):
-        """
-        check time series parallel by pixel jobs
-        """
-        self.assertEqual(self.tsincr_2.shape, self.tscum_2.shape)
-        self.assertEqual(self.tsvel_2.shape, self.tsincr_2.shape)
-
-        np.testing.assert_array_almost_equal(
-            self.ts_incr, self.tsincr_2, decimal=3)
-
-        np.testing.assert_array_almost_equal(
-            self.ts_cum, self.tscum_2, decimal=3)
-
     def test_time_series_equality_serial_by_the_pixel(self):
         """
         check time series
@@ -227,10 +205,10 @@ class LegacyTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        params = cf.get_config_params(common.TEST_CONF_ROIPAC)
+        params = Configuration(common.TEST_CONF_ROIPAC).__dict__
         cls.temp_out_dir = tempfile.mkdtemp()
-        sys.argv = ['prepifg.py', common.TEST_CONF_ROIPAC]
         params[cf.OUT_DIR] = cls.temp_out_dir
+        params[cf.PARALLEL] = 0
         conv2tif.main(params)
         prepifg.main(params)
 
@@ -270,70 +248,44 @@ class LegacyTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
         params[cf.TIME_SERIES_METHOD] = 2
         params[cf.PARALLEL] = 1
         # Calculate time series
-        cls.tsincr, cls.tscum, _ = common.calculate_time_series(
-            ifgs, params, vcmt, mst=mst_grid)
-
-        params[cf.PARALLEL] = 2
-
-        # Calculate time series
-        cls.tsincr_2, cls.tscum_2, _ = \
-            common.calculate_time_series(ifgs, params, vcmt, mst=mst_grid)
+        cls.tsincr, cls.tscum, _ = common.calculate_time_series(ifgs, params, vcmt, mst=mst_grid)
 
         params[cf.PARALLEL] = 0
         # Calculate time series serailly by the pixel
-        cls.tsincr_0, cls.tscum_0, _ = \
-            common.calculate_time_series(ifgs, params, vcmt, mst=mst_grid)
+        cls.tsincr_0, cls.tscum_0, _ = common.calculate_time_series(ifgs, params, vcmt, mst=mst_grid)
 
         # copy legacy data
-        SML_TIME_SERIES_DIR = os.path.join(common.SML_TEST_DIR,
-                                   'time_series')
-        tsincr_path = os.path.join(SML_TIME_SERIES_DIR,
-                                   'ts_incr_interp0_method2.csv')
+        SML_TIME_SERIES_DIR = os.path.join(common.SML_TEST_DIR, 'time_series')
+        tsincr_path = os.path.join(SML_TIME_SERIES_DIR, 'ts_incr_interp0_method2.csv')
         ts_incr = np.genfromtxt(tsincr_path)
 
-        tscum_path = os.path.join(SML_TIME_SERIES_DIR,
-                                  'ts_cum_interp0_method2.csv')
+        tscum_path = os.path.join(SML_TIME_SERIES_DIR, 'ts_cum_interp0_method2.csv')
         ts_cum = np.genfromtxt(tscum_path)
 
-        cls.ts_incr = np.reshape(ts_incr,
-                                 newshape=cls.tsincr_0.shape, order='F')
+        cls.ts_incr = np.reshape(ts_incr, newshape=cls.tsincr_0.shape, order='F')
         cls.ts_cum = np.reshape(ts_cum, newshape=cls.tscum_0.shape, order='F')
 
     @classmethod
-    def tearDownClass(cls):
+    def teardown_class(cls):
         shutil.rmtree(cls.temp_out_dir)
-        common.remove_tifs(
-            cf.get_config_params(common.TEST_CONF_ROIPAC)[cf.OBS_DIR])
+        common.remove_tifs(cf.get_config_params(common.TEST_CONF_ROIPAC)[cf.OBS_DIR])
 
     def test_time_series_equality_parallel_by_rows(self):
 
-        self.assertEqual(self.tsincr.shape, self.tscum.shape)
+        assert self.tsincr.shape == self.tscum.shape
 
-        np.testing.assert_array_almost_equal(
-            self.ts_incr, self.tsincr, decimal=1)
+        np.testing.assert_array_almost_equal(self.ts_incr, self.tsincr, decimal=1)
 
-        np.testing.assert_array_almost_equal(
-            self.ts_cum, self.tscum, decimal=1)
-
-    def test_time_series_equality_parallel_by_the_pixel(self):
-
-        self.assertEqual(self.tsincr_2.shape, self.tscum_2.shape)
-
-        np.testing.assert_array_almost_equal(
-            self.ts_incr, self.tsincr_2, decimal=1)
-
-        np.testing.assert_array_almost_equal(
-            self.ts_cum, self.tscum_2, decimal=1)
+        np.testing.assert_array_almost_equal(self.ts_cum, self.tscum, decimal=1)
 
     def test_time_series_equality_serial_by_the_pixel(self):
 
         self.assertEqual(self.tsincr_0.shape, self.tscum_0.shape)
 
-        np.testing.assert_array_almost_equal(
-            self.ts_incr, self.tsincr_0, decimal=3)
+        np.testing.assert_array_almost_equal(self.ts_incr, self.tsincr_0, decimal=3)
 
-        np.testing.assert_array_almost_equal(
-            self.ts_cum, self.tscum_0, decimal=3)
+        np.testing.assert_array_almost_equal(self.ts_cum, self.tscum_0, decimal=3)
+
 
 if __name__ == "__main__":
     unittest.main()

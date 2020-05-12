@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2017 Geoscience Australia
+#   Copyright 2020 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -31,14 +31,14 @@ from scipy.interpolate import griddata
 from pyrate.core import shared, ifgconstants as ifc, mpiops, config as cf
 from pyrate.core.covariance import cvd_from_phase, RDist
 from pyrate.core.algorithm import get_epochs
-from pyrate.merge import _assemble_tiles
 from pyrate.core.shared import Ifg
 from pyrate.core.timeseries import time_series
+from pyrate.merge import _assemble_tiles
 
 log = logging.getLogger(__name__)
 
 
-def _wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs):
+def wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs):
     """
     A wrapper for the spatio-temporal filter so it can be tested.
     See docstring for spatio_temporal_filter.
@@ -54,18 +54,20 @@ def _wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs):
         return  # return if True condition returned
 
     tsincr = _calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles)
+    mpiops.comm.barrier()
 
     ifg = Ifg(ifg_paths[0])  # just grab any for parameters in slpfilter
     ifg.open()
     spatio_temporal_filter(tsincr, ifg, params, preread_ifgs)
     ifg.close()
+    mpiops.comm.barrier()
 
 
 def spatio_temporal_filter(tsincr, ifg, params, preread_ifgs):
     """
     Applies a spatio-temporal filter to remove the atmospheric phase screen
     (APS) and saves the corrected interferograms. Before performing this step,
-    the time series iscomputed using the SVD method. This function then
+    the time series is computed using the SVD method. This function then
     performs temporal and spatial filtering.
 
     :param ndarray tsincr: incremental time series array of size
@@ -105,13 +107,14 @@ def _calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles):
     for t in process_tiles:
         log.debug('Calculating time series for tile {} during APS '
                  'correction'.format(t.index))
-        ifg_parts = [shared.IfgPart(p, t, preread_ifgs) for p in ifg_paths]
+        ifg_parts = [shared.IfgPart(p, t, preread_ifgs, params) for p in ifg_paths]
         mst_tile = np.load(os.path.join(output_dir, 'mst_mat_{}.npy'.format(t.index)))
         tsincr = time_series(ifg_parts, new_params, vcmt=None, mst=mst_tile)[0]
         np.save(file=os.path.join(output_dir, 'tsincr_aps_{}.npy'.format(t.index)), arr=tsincr)
         nvels = tsincr.shape[2]
 
     nvels = mpiops.comm.bcast(nvels, root=0)
+    mpiops.comm.barrier()
     # need to assemble tsincr from all processes
     tsincr_g = mpiops.run_once(_assemble_tsincr, ifg_paths, params, preread_ifgs, tiles, nvels)
     log.debug('Finished calculating time series for spatio-temporal filter')
@@ -294,9 +297,8 @@ def temporal_low_pass_filter(tsincr, epochlist, params):
     else:
         func = mean_filter
 
-    _tlpfilter(cols, cutoff, nanmat, rows, span, threshold, tsfilt_incr,
-               tsincr, func)
-    log.debug('Finished applying temporal low pass filter')
+    _tlpfilter(cols, cutoff, nanmat, rows, span, threshold, tsfilt_incr, tsincr, func)
+    log.debug("Finished applying temporal low pass filter")
     return tsfilt_incr
 
 # Throwaway function to define Gaussian filter weights
@@ -315,8 +317,7 @@ def _triangle(m, yr, cutoff):
 mean_filter = lambda m, yr, cutoff: np.ones(m)
 
 
-def _tlpfilter(cols, cutoff, nanmat, rows, span, threshold, tsfilt_incr,
-               tsincr, func):
+def _tlpfilter(cols, cutoff, nanmat, rows, span, threshold, tsfilt_incr, tsincr, func):
     """
     Wrapper function for temporal low pass filter
     """

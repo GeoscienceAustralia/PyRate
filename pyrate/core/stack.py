@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2017 Geoscience Australia
+#   Copyright 2020 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -14,13 +14,10 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 """
-This Python module implements pixel-by-pixel linear rate
+This Python module implements pixel-by-pixel rate
 (velocity) estimation using an iterative weighted least-squares
 stacking method.
 """
-# pylint: disable= invalid-name
-# pylint: disable= too-many-locals
-# pylint: disable= too-many-arguments
 import itertools
 
 from scipy.linalg import solve, cholesky, qr, inv
@@ -29,11 +26,12 @@ import numpy as np
 from joblib import Parallel, delayed
 from pyrate.core import config as cf
 from pyrate.core.shared import joblib_log_level
+from pyrate.core.logger import pyratelogger as log
 
 
-def linear_rate(ifgs, params, vcmt, mst=None):
+def stack_rate(ifgs, params, vcmt, mst=None):
     """
-    Pixel-by-pixel linear rate (velocity) estimation using iterative
+    Pixel-by-pixel rate (velocity) estimation using iterative
     weighted least-squares stacking method.
 
     :param Ifg.object ifgs: Sequence of interferogram objects from which to extract observations
@@ -41,47 +39,32 @@ def linear_rate(ifgs, params, vcmt, mst=None):
     :param ndarray vcmt: Derived positive definite temporal variance covariance matrix
     :param ndarray mst: Pixel-wise matrix describing the minimum spanning tree network
 
-    :return: rate: Linear rate (velocity) map
+    :return: rate: Rate (velocity) map
     :rtype: ndarray
     :return: error: Standard deviation of the rate map
     :rtype: ndarray
-    :return: samples: Statistics of observations used in calculation
+    :return: samples: Number of observations used in rate calculation per pixel
     :rtype: ndarray
     """
-    maxsig, nsig, pthresh, cols, error, mst, obs, parallel, _, \
-        rate, rows, samples, span = _linrate_setup(ifgs, mst, params)
+    maxsig, nsig, pthresh, cols, error, mst, obs, parallel, _, rate, rows, samples, span = _stack_setup(ifgs, mst, params)
 
     # pixel-by-pixel calculation.
     # nested loops to loop over the 2 image dimensions
-    if parallel == 1:
-
-        res = Parallel(n_jobs=params[cf.PROCESSES], 
-                       verbose=joblib_log_level(cf.LOG_LEVEL))(
-            delayed(_linear_rate_by_rows)(r, cols, mst, nsig, obs,
-                                          pthresh, span, vcmt)
-            for r in range(rows))
-        # pylint: disable=redefined-variable-type
-        res = np.array(res)
-        rate = res[:, :, 0]
-        error = res[:, :, 1]
-        samples = res[:, :, 2]
-    elif parallel == 2:
-        res = Parallel(n_jobs=params[cf.PROCESSES], 
-                       verbose=joblib_log_level(cf.LOG_LEVEL))(
-            delayed(_linear_rate_by_pixel)(r, c, mst, nsig, obs,
-                                           pthresh, span, vcmt)
-            for r, c in itertools.product(range(rows), range(cols)))
+    if parallel:
+        log.info('calculating stack rate by the pixels parallelly')
+        res = Parallel(n_jobs=params[cf.PROCESSES], verbose=joblib_log_level(cf.LOG_LEVEL))(
+            delayed(_stack_rate_by_pixel)(r, c, mst, nsig, obs, pthresh, span, vcmt) for r, c in itertools.product(range(rows), range(cols))
+        )
         res = np.array(res)
 
         rate = res[:, 0].reshape(rows, cols)
         error = res[:, 1].reshape(rows, cols)
         samples = res[:, 2].reshape(rows, cols)
     else:
+        log.info('calculating stack rate by the pixels serially')
         for i in range(rows):
             for j in range(cols):
-                rate[i, j], error[i, j], samples[i, j] = \
-                    _linear_rate_by_pixel(i, j, mst, nsig, obs,
-                                          pthresh, span, vcmt)
+                rate[i, j], error[i, j], samples[i, j] = _stack_rate_by_pixel(i, j, mst, nsig, obs, pthresh, span, vcmt)
 
     # overwrite the data whose error is larger than the
     # maximum sigma user threshold
@@ -89,19 +72,19 @@ def linear_rate(ifgs, params, vcmt, mst=None):
     mask[mask] &= error[mask] > maxsig
     rate[mask] = nan
     error[mask] = nan
-    #samples[mask] = nan # should we also mask the samples?
+    # samples[mask] = nan # should we also mask the samples?
 
     return rate, error, samples
 
 
-def _linrate_setup(ifgs, mst, params):
+def _stack_setup(ifgs, mst, params):
     """
-    Convenience function for linrate setup
+    Convenience function for stack rate setup
     """
     # MULTIPROCESSING parameters
     parallel = params[cf.PARALLEL]
     processes = params[cf.PROCESSES]
-    # linrate parameters from config file
+    # stack rate parameters from config file
     # n-sigma ratio used to threshold 'model minus observation' residuals
     nsig = params[cf.LR_NSIG]
     # Threshold for maximum allowable standard error
@@ -122,23 +105,11 @@ def _linrate_setup(ifgs, mst, params):
     error = np.empty([rows, cols], dtype=float32)
     rate = np.empty([rows, cols], dtype=float32)
     samples = np.empty([rows, cols], dtype=np.float32)
-    return maxsig, nsig, pthresh, cols, error, mst, obs, parallel, processes, \
-           rate, rows, samples, span
+    return maxsig, nsig, pthresh, cols, error, mst, obs, parallel, processes, rate, rows, samples, span
 
 
-def _linear_rate_by_rows(row, cols, mst, nsig, obs, pthresh, span, vcmt):
-    """helper function for parallel 'row' linear rate computation runs"""
-
-    res = np.empty(shape=(cols, 3), dtype=np.float32)
-    for col in range(cols):
-        res[col, :] = _linear_rate_by_pixel(
-            row, col, mst, nsig, obs, pthresh, span, vcmt)
-
-    return res
-
-
-def _linear_rate_by_pixel(row, col, mst, nsig, obs, pthresh, span, vcmt):
-    """helper function for computing linear rate for one pixel"""
+def _stack_rate_by_pixel(row, col, mst, nsig, obs, pthresh, span, vcmt):
+    """helper function for computing stack rate for one pixel"""
 
     # find the indices of independent ifgs for given pixel from MST
     ind = np.nonzero(mst[:, row, col])[0]  # only True's in mst are chosen

@@ -1,71 +1,91 @@
-branches:
-  only:
-  - develop
-  - /^release-.*$/
-  - /.*-travis$/
-  - master
-
-os: linux
-dist: bionic # Ubuntu 18.04
-
 language: python
-cache: pip
 
-python:
-  - "3.6"
-  - "3.7"
+dist: xenial
+
+env:
+  global:
+    - PIP_WHEEL_DIR=$HOME/.cache/pip/wheels
+    - PIP_FIND_LINKS=file://$HOME/.cache/pip/wheels
+    - GDALINST=$HOME/gdalinstall
+    - GDALBUILD=$HOME/gdalbuild
+    - PROJINST=$HOME/gdalinstall
+    - PROJBUILD=$HOME/projbuild
+
+
+# nci verson is GDALVERSION="3.0.2" and python3.7
+jobs:
+  include:
+    - python: "3.6"
+      env: GDALVERSION="3.0.2" PROJVERSION="6.1.1"
+    - python: "3.7"
+      env: GDALVERSION="3.0.2" PROJVERSION="6.2.1"
+    - python: "3.7"
+      env: GDALVERSION="3.0.4" PROJVERSION="6.1.1"
+    - python: "3.8"
+      env: GDALVERSION="3.0.4" PROJVERSION="6.1.1"
+
+addons:
+  apt:
+    packages:
+      - libhdf5-serial-dev
+      - libgdal-dev
+      - libatlas-dev
+      - libatlas-base-dev
+      - gfortran
+      - openmpi-bin
+      - libopenmpi-dev
 
 
 before_install:
-  - sudo apt-get update
-  - sudo apt-get -y install gdal-bin
-  - sudo apt-get -y install libgdal-dev
-  - sudo apt-get -y install openmpi-bin
-  - sudo apt-get -y install libopenmpi-dev
-  - export C_INCLUDE_PATH=$C_INCLUDE_PATH:/usr/include/gdal
-  - export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:/usr/include/gdal
-  - pip install -U pip
-  - pip install codecov
+  - python -m pip install -U pip
+  - python -m pip install wheel
+  - export PATH=$GDALINST/gdal-$GDALVERSION/bin:$PATH
+  - export LD_LIBRARY_PATH=$GDALINST/gdal-$GDALVERSION/lib:$LD_LIBRARY_PATH
+  - . ./scripts/travis_proj_install.sh
+  - travis_wait 20 . ./scripts/travis_gdal_install.sh
+  - export GDAL_DATA=$GDALINST/gdal-$GDALVERSION/share/gdal
+  - export PROJ_LIB=$GDALINST/gdal-$GDALVERSION/share/proj
+
 
 install:
-  - pip install -r requirements-test.txt
-  - pip install -r requirements-dev.txt
+  - sed -i '/^GDAL/d' requirements.txt
+  - pip install -r requirements.txt -r requirements-dev.txt -r requirements-test.txt
+  - pip install GDAL==$(gdal-config --version)
   - python setup.py install
+  - rm -rf Py_Rate.egg-info  # remove the local egg
   - export PYRATEPATH=$(pwd)
   - export PYTHONPATH=$PYRATEPATH:$PYTHONPATH
   - chmod 444 tests/test_data/small_test/tif/geo_070709-070813_unw.tif  # makes the file readonly, used in a test
 
 # command to run tests, e.g. python setup.py test
 script:
-  - pip install numpy==1.16.4
-  - pytest --cov-report term-missing:skip-covered --cov=pyrate tests/
+  #  - python scripts/update_placeholder_paths.py
+  - mpirun -n 3 pytest tests/test_mpi.py
+  - pytest --cov-config=.coveragerc --cov-report term-missing:skip-covered --cov=pyrate tests/
+
 
 after_success:
   - codecov
 
-jobs:
-  include:
-    - stage: deploy
-      python: 3.6
-      script:
-        - pip install numpy==1.16.4
-        - cd docs && make html
-      deploy:
-        provider: pages
-        skip-cleanup: true
-        keep-history: true
-        verbose: true
-        on:
-          branch: master
-        github-token: $GITHUB_TOKEN
-        local-dir: docs/_build/html
-        project_name: PyRate
-        email: insar@ga.gov.au
-        name: InSAR Team
 
-notifications:
-  email:
-    recipients:
-      - $SHEECE_EMAIL
-    on_success: never
-    on_failure: always
+deploy:
+  script:
+    - pip install numpy==1.16.4
+    - cd docs && make html
+  provider: pages
+  skip-cleanup: true
+  keep-history: true
+  verbose: true
+  on:
+    branch: master
+  github-token: $GITHUB_TOKEN
+  local-dir: docs/_build/html
+  project_name: PyRate
+  email: insar@ga.gov.au
+  name: InSAR Team
+
+
+cache:
+  directories:
+    - $GDALINST
+    - ~/.cache/pip
