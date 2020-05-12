@@ -73,6 +73,8 @@ def do_prepifg(gtiff_paths: List[str], params: dict) -> None:
     """
     # pylint: disable=expression-not-assigned
     parallel = params[cf.PARALLEL]
+    if mpiops.size > 1:
+        parallel = False
 
     for f in gtiff_paths:
         if not os.path.isfile(f):
@@ -86,6 +88,7 @@ def do_prepifg(gtiff_paths: List[str], params: dict) -> None:
     thresh = params[cf.NO_DATA_AVERAGING_THRESHOLD]
 
     if params[cf.LARGE_TIFS]:
+        log.info("Using gdal system calls to process prepifg")
         ifg = ifgs[0]
         res_str = [xlooks * ifg.x_step, ylooks * ifg.y_step]
         res_str = ' '.join([str(e) for e in res_str])
@@ -109,17 +112,18 @@ def do_prepifg(gtiff_paths: List[str], params: dict) -> None:
 
 def __prepifg_system(crop, exts, gtiff, params, res, thresh, xlooks, ylooks):
     p, c, l = _prepifg_multiprocessing(gtiff, xlooks, ylooks, exts, thresh, crop, params)
+    log.info("Multilooking {p} into {l}".format(p=p, l=l))
     extents = ' '.join([str(e) for e in exts])
 
     if isinstance(prepifg_helper.dem_or_ifg(p), shared.DEM):
-        check_call('gdalwarp -te\t{extents}\t-tr\t{res}\t-r\taverage \t{p}\t{l}\n'.format(
+        check_call('gdalwarp -q -te\t{extents}\t-tr\t{res}\t-r\taverage \t{p}\t{l}\n'.format(
             extents=extents, res=res, p=p, l=l), shell=True)
         __update_meta_data(p, c, l)
         return
 
     p_unset = Path(params[cf.OUT_DIR]).joinpath(Path(p).name).with_suffix('.unset.tif')
     # change nodataval from zero, also leave input geotifs unchanged if one supplies conv2tif output/geotifs
-    check_call('gdal_translate -a_nodata -99999\t{p}\t{q}'.format(p=p, q=p_unset), shell=True)
+    check_call('gdal_translate -q -a_nodata -99999\t{p}\t{q}'.format(p=p, q=p_unset), shell=True)
 
     # calculate nan-fraction
     # TODO: use output options and datatypes to reduce size of the next two tifs
@@ -133,35 +137,35 @@ def __prepifg_system(crop, exts, gtiff, params, res, thresh, xlooks, ylooks):
         # change no data value
         check_call('gdal_calc.py -A {p} -B {c} --outfile={out_file}\t'
                    '--calc=\"logical_or((B<{th}), isclose(A,0,atol=0.000001))\"\t'
-                   '--NoDataValue=-99999'.format(c=c, p=p_unset, th=params[cf.COH_THRESH], out_file=nan_frac),
+                   '--NoDataValue=-99999 --quiet'.format(c=c, p=p_unset, th=params[cf.COH_THRESH], out_file=nan_frac),
                    shell=True)
         check_call('gdal_calc.py --overwrite -A {p} -B {q}\t'
                    '--calc=\"A*(B>={th}) - 99999*logical_or((B<{th}), isclose(A,0,atol=0.000001))\"\t'
                    '--outfile={out_file}\t'
-                   '--NoDataValue=-99999\n'.format(p=p_unset, q=c, th=params[cf.COH_THRESH],
+                   '--NoDataValue=-99999 --quiet'.format(p=p_unset, q=c, th=params[cf.COH_THRESH],
                                                    out_file=corrected_p), shell=True)
     else:
         check_call('gdal_calc.py --overwrite -A {p}\t'
                    '--calc=\"isclose(A, 0, atol=0.000001)\"\t'
                    '--outfile={out_file}\t'
-                   '--NoDataValue=-99999\n'.format(p=p_unset, out_file=nan_frac), shell=True)
+                   '--NoDataValue=-99999 --quiet\n'.format(p=p_unset, out_file=nan_frac), shell=True)
         check_call('gdal_calc.py --overwrite -A {p}\t'
                    '--calc=\"A - 99999*isclose(A, 0, atol=0.000001)\"\t'
                    '--outfile={out_file}\t'
-                   '--NoDataValue=-99999\n'.format(p=p_unset, out_file=corrected_p), shell=True)
+                   '--NoDataValue=-99999 --quiet'.format(p=p_unset, out_file=corrected_p), shell=True)
 
     # crop resample/average multilooking of nan-fraction
-    check_call('gdalwarp -te\t{extents}\t-tr\t{res}\t-r\taverage\t{p}\t{out_file}\n'.format(
+    check_call('gdalwarp -q -te\t{extents}\t-tr\t{res}\t-r\taverage\t{p}\t{out_file}\n'.format(
         extents=extents, res=res, p=nan_frac, out_file=nan_frac_avg), shell=True)
 
     # crop resample/average multilooking of raster
-    check_call('gdalwarp -te\t{extents}\t-tr\t{res}\t-r\taverage \t{p}\t{l}\n'.format(
+    check_call('gdalwarp -q -te\t{extents}\t-tr\t{res}\t-r\taverage \t{p}\t{l}\n'.format(
         extents=extents, res=res, p=corrected_p, l=l), shell=True)
 
     check_call('gdal_calc_local.py --overwrite -A {p}\t-B {q}\t'
                '--calc=\"B*less(A, {th})\"\t'
                '--outfile={out_file}\t'
-               '--NoDataValue=nan\n'.format(p=nan_frac_avg, q=l, out_file=l, th=thresh), shell=True)
+               '--NoDataValue=nan --quiet\n'.format(p=nan_frac_avg, q=l, out_file=l, th=thresh), shell=True)
 
     __update_meta_data(p_unset.as_posix(), c, l)
 

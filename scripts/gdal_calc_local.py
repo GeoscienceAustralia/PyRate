@@ -56,7 +56,6 @@ DefaultNDVLookup={'Byte':255, 'UInt16':65535, 'Int16':-32767, 'UInt32':429496729
 
 ################################################################
 def doit(opts, args):
-    print(opts)
     if opts.debug:
         print("gdal_calc.py starting calculation %s" %(opts.calc))
 
