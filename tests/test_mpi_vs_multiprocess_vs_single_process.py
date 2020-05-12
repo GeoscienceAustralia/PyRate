@@ -65,8 +65,8 @@ def modified_config(tempdir, get_lks, get_crop, orbfit_lks, orbfit_method, orbfi
 @pytest.mark.skipif(REGRESSION or PYTHON3P8 or PYTHON3P6, reason="Skip if not python3.7 and gdal=3.0.4")
 def test_pipeline_parallel_vs_mpi(modified_config, gamma_conf):
 
-    if TRAVIS and np.random.randint(0, 1000) > 299:  # skip 70% of tests randomly
-        pytest.skip("Skipping as part of 60")
+    if TRAVIS and np.random.randint(0, 1000) > 149:  # skip 85% of tests randomly
+        pytest.skip("Randomly skipping as part of 85 percent")
 
     print("\n\n")
     print("===x==="*10)
