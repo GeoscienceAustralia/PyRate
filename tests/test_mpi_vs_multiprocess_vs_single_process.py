@@ -205,7 +205,7 @@ def create_mpi_files():
 
 
 @pytest.mark.slow
-@pytest.mark.skipif(REGRESSION2 or PYTHON3P7, reason="Skip if not python3.7 and gdal=3.0.4")
+@pytest.mark.skipif(PYTHON3P8 or PYTHON3P7, reason="Skip if not python3.7 and gdal=3.0.4")
 def test_stack_and_ts_mpi_vs_parallel_vs_serial(modified_config_short, gamma_conf, create_mpi_files, parallel):
     """
     Checks performed:

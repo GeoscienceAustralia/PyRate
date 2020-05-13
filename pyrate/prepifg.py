@@ -30,7 +30,6 @@ from pyrate.core.prepifg_helper import PreprocessError
 from pyrate.core.logger import pyratelogger as log
 from pyrate.core.shared import output_tiff_filename
 
-
 GAMMA = 1
 ROIPAC = 0
 GEOTIF = 2
@@ -110,62 +109,69 @@ def do_prepifg(gtiff_paths: List[str], params: dict) -> None:
                 _prepifg_multiprocessing(gtiff_path, xlooks, ylooks, exts, thresh, crop, params)
 
 
+COMMON_OPTIONS = "-co BLOCKXSIZE=256 -co BLOCKYSIZE=256 -co TILED=YES --config GDAL_CACHEMAX=64 -q"
+COMMON_OPTIONS2 = "--co BLOCKXSIZE=256 --co BLOCKYSIZE=256 --co TILED=YES --quiet"
+
+
 def __prepifg_system(crop, exts, gtiff, params, res, thresh, xlooks, ylooks):
     p, c, l = _prepifg_multiprocessing(gtiff, xlooks, ylooks, exts, thresh, crop, params)
     log.info("Multilooking {p} into {l}".format(p=p, l=l))
     extents = ' '.join([str(e) for e in exts])
 
     if isinstance(prepifg_helper.dem_or_ifg(p), shared.DEM):
-        check_call('gdalwarp -q -te\t{extents}\t-tr\t{res}\t-r\taverage \t{p}\t{l}\n'.format(
-            extents=extents, res=res, p=p, l=l), shell=True)
+        check_call('gdalwarp {co} -te\t{extents}\t-tr\t{res}\t-r\taverage \t{p}\t{l}\n'.format(
+            co=COMMON_OPTIONS, extents=extents, res=res, p=p, l=l), shell=True)
         __update_meta_data(p, c, l)
         return
 
     p_unset = Path(params[cf.OUT_DIR]).joinpath(Path(p).name).with_suffix('.unset.tif')
     # change nodataval from zero, also leave input geotifs unchanged if one supplies conv2tif output/geotifs
-    check_call('gdal_translate -q -a_nodata -99999\t{p}\t{q}'.format(p=p, q=p_unset), shell=True)
+    check_call('gdal_translate {co} -a_nodata -99999\t{p}\t{q}'.format(co=COMMON_OPTIONS, p=p, q=p_unset),
+               shell=True)
 
     # calculate nan-fraction
     # TODO: use output options and datatypes to reduce size of the next two tifs
     nan_frac = Path(l).with_suffix('.nanfrac.tif')
     nan_frac_avg = Path(l).with_suffix('.nanfrac.avg.tif')
-
     corrected_p = Path(p_unset).with_suffix('.corrected.tif')
 
     if c is not None:
         # coh masking
         # change no data value
-        check_call('gdal_calc.py -A {p} -B {c} --outfile={out_file}\t'
+        check_call('gdal_calc.py {co} -A {p} -B {c} --outfile={out_file}\t'
                    '--calc=\"logical_or((B<{th}), isclose(A,0,atol=0.000001))\"\t'
-                   '--NoDataValue=-99999 --quiet'.format(c=c, p=p_unset, th=params[cf.COH_THRESH], out_file=nan_frac),
-                   shell=True)
-        check_call('gdal_calc.py --overwrite -A {p} -B {q}\t'
+                   '--NoDataValue=-99999 '.format(co=COMMON_OPTIONS2, c=c, p=p_unset, th=params[cf.COH_THRESH],
+                                                  out_file=nan_frac), shell=True)
+        check_call('gdal_calc.py {co} --overwrite -A {p} -B {q}\t'
                    '--calc=\"A*(B>={th}) - 99999*logical_or((B<{th}), isclose(A,0,atol=0.000001))\"\t'
                    '--outfile={out_file}\t'
-                   '--NoDataValue=-99999 --quiet'.format(p=p_unset, q=c, th=params[cf.COH_THRESH],
-                                                   out_file=corrected_p), shell=True)
+                   '--NoDataValue=-99999 '.format(co=COMMON_OPTIONS2, p=p_unset, q=c, th=params[cf.COH_THRESH],
+                                                  out_file=corrected_p), shell=True)
     else:
-        check_call('gdal_calc.py --overwrite -A {p}\t'
+        check_call('gdal_calc.py {co} --overwrite -A {p}\t'
                    '--calc=\"isclose(A, 0, atol=0.000001)\"\t'
                    '--outfile={out_file}\t'
-                   '--NoDataValue=-99999 --quiet\n'.format(p=p_unset, out_file=nan_frac), shell=True)
-        check_call('gdal_calc.py --overwrite -A {p}\t'
+                   '--NoDataValue=-99999 \n'.format(co=COMMON_OPTIONS2, p=p_unset, out_file=nan_frac),
+                   shell=True)
+        check_call('gdal_calc.py {co} --overwrite -A {p}\t'
                    '--calc=\"A - 99999*isclose(A, 0, atol=0.000001)\"\t'
                    '--outfile={out_file}\t'
-                   '--NoDataValue=-99999 --quiet'.format(p=p_unset, out_file=corrected_p), shell=True)
+                   '--NoDataValue=-99999 '.format(co=COMMON_OPTIONS2, p=p_unset, out_file=corrected_p),
+                   shell=True)
 
     # crop resample/average multilooking of nan-fraction
-    check_call('gdalwarp -q -te\t{extents}\t-tr\t{res}\t-r\taverage\t{p}\t{out_file}\n'.format(
-        extents=extents, res=res, p=nan_frac, out_file=nan_frac_avg), shell=True)
+    check_call('gdalwarp {co} -te\t{extents}\t-tr\t{res}\t-r\taverage\t{p}\t{out_file}\n'.format(
+        co=COMMON_OPTIONS, extents=extents, res=res, p=nan_frac, out_file=nan_frac_avg), shell=True)
 
     # crop resample/average multilooking of raster
-    check_call('gdalwarp -q -te\t{extents}\t-tr\t{res}\t-r\taverage \t{p}\t{l}\n'.format(
-        extents=extents, res=res, p=corrected_p, l=l), shell=True)
+    check_call('gdalwarp {co} -te\t{extents}\t-tr\t{res}\t-r\taverage \t{p}\t{l}\n'.format(
+        co=COMMON_OPTIONS, extents=extents, res=res, p=corrected_p, l=l), shell=True)
 
-    check_call('gdal_calc_local.py --overwrite -A {p}\t-B {q}\t'
+    check_call('gdal_calc_local.py {co} --overwrite -A {p}\t-B {q}\t'
                '--calc=\"B*less(A, {th})\"\t'
                '--outfile={out_file}\t'
-               '--NoDataValue=nan --quiet\n'.format(p=nan_frac_avg, q=l, out_file=l, th=thresh), shell=True)
+               '--NoDataValue=nan \n'.format(co=COMMON_OPTIONS2, p=nan_frac_avg, q=l, out_file=l, th=thresh),
+               shell=True)
 
     __update_meta_data(p_unset.as_posix(), c, l)
 

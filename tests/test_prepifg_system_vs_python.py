@@ -117,7 +117,7 @@ def modified_config_largetifs(tempdir, local_crop, get_lks, coh_mask):
 
 @pytest.mark.slow
 @pytest.mark.skipif(PYTHON3P6 or PYTHON3P7, reason="Only run in python 3.8")
-def test_prepifg_largetfs_vs_python(modified_config_largetifs, gamma_conf, create_mpi_files):
+def test_prepifg_largetifs_vs_python(modified_config_largetifs, gamma_conf, create_mpi_files):
 
     print("\n\n")
     print("===x==="*10)
