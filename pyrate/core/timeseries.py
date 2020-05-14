@@ -140,7 +140,7 @@ def time_series(ifgs, params, vcmt=None, mst=None):
         _time_series_setup(ifgs, mst, params)
 
     if parallel:
-        log.info('Calculating timeseries parallelly by the pixels')
+        log.info('Calculating timeseries in parallel')
         res = np.array(Parallel(n_jobs=params[cf.PROCESSES], 
                                 verbose=joblib_log_level(cf.LOG_LEVEL))(
             delayed(_time_series_by_pixel)(i, j, b0_mat, sm_factor, sm_order,
@@ -149,7 +149,7 @@ def time_series(ifgs, params, vcmt=None, mst=None):
             for (i, j) in itertools.product(range(nrows), range(ncols))))
         tsvel_matrix = np.reshape(res, newshape=(nrows, ncols, res.shape[1]))
     else:
-        log.info('Calculating timeseries pixel by pixel')
+        log.info('Calculating timeseries in serial')
         for row in range(nrows):
             for col in range(ncols):
                 tsvel_matrix[row, col] = _time_series_by_pixel(
