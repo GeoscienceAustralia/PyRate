@@ -26,16 +26,16 @@ Contents:
 ---------
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
    installation
    usage
+   scripts
+   modules
    troubleshooting
    contributing
    authors
    history
-   scripts
-   modules
 
 
 
