@@ -214,6 +214,8 @@ def test_stack_and_ts_mpi_vs_parallel_vs_serial(modified_config_short, gamma_con
     3. Doing 1 and 2 means we have checked single vs parallel python multiprocess pipelines
     4. This also checks the entire pipeline using largetifs (new prepifg) vs old perpifg (python based)
     """
+    if TRAVIS and np.random.randint(0, 1000) > 399:  # skip 60% of tests randomly
+        pytest.skip("Randomly skipping as part of 60 percent")
 
     print("\n\n")
 

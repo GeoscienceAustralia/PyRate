@@ -121,6 +121,9 @@ def test_prepifg_largetifs_vs_python(modified_config_largetifs, gamma_conf, crea
 
     print("\n\n")
     print("===x==="*10)
+    if TRAVIS and np.random.randint(0, 1000) > 499:  # skip 50% of tests randomly
+        pytest.skip("Randomly skipping as part of 50 percent")
+
     params = create_mpi_files(gamma_conf)
     sr_conf, params_p = modified_config_largetifs(gamma_conf, 1, 'parallel_conf.conf')
     check_call(f"pyrate conv2tif -f {sr_conf}", shell=True)
