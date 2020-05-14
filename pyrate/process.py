@@ -332,7 +332,7 @@ def _stack_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
         np.save(file=os.path.join(output_dir, 'stack_error_{}.npy'.format(t.index)), arr=error)
         np.save(file=os.path.join(output_dir, 'stack_samples_{}.npy'.format(t.index)), arr=samples)
     mpiops.comm.barrier()
-    log.info("Finished stack rate calc!")
+    log.debug("Finished stack rate calc!")
 
 
 def _maxvar_vcm_calc(ifg_paths, params, preread_ifgs):
@@ -373,7 +373,7 @@ def _maxvar_vcm_calc(ifg_paths, params, preread_ifgs):
     mpiops.comm.barrier()
     maxvar = mpiops.comm.bcast(maxvar, root=0)
     vcmt = mpiops.run_once(vcm_module.get_vcmt, preread_ifgs, maxvar)
-    log.info("Finished maxvar and vcm calc!")
+    log.debug("Finished maxvar and vcm calc!")
     return maxvar, vcmt
 
 
@@ -402,4 +402,4 @@ def _timeseries_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
         np.save(file=os.path.join(output_dir, 'tsincr_{}.npy'.format(t.index)), arr=tsincr)
         np.save(file=os.path.join(output_dir, 'tscuml_{}.npy'.format(t.index)), arr=tscum)
     mpiops.comm.barrier()
-    log.info("Finished timeseries calc!")
+    log.debug("Finished timeseries calc!")

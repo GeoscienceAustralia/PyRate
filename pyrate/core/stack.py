@@ -51,7 +51,7 @@ def stack_rate(ifgs, params, vcmt, mst=None):
     # pixel-by-pixel calculation.
     # nested loops to loop over the 2 image dimensions
     if parallel:
-        log.info('calculating stack rate by the pixels parallelly')
+        log.info('Calculating stack rate in parallel')
         res = Parallel(n_jobs=params[cf.PROCESSES], verbose=joblib_log_level(cf.LOG_LEVEL))(
             delayed(_stack_rate_by_pixel)(r, c, mst, nsig, obs, pthresh, span, vcmt) for r, c in itertools.product(range(rows), range(cols))
         )
@@ -61,7 +61,7 @@ def stack_rate(ifgs, params, vcmt, mst=None):
         error = res[:, 1].reshape(rows, cols)
         samples = res[:, 2].reshape(rows, cols)
     else:
-        log.info('calculating stack rate by the pixels serially')
+        log.info('Calculating stack rate in serial')
         for i in range(rows):
             for j in range(cols):
                 rate[i, j], error[i, j], samples[i, j] = _stack_rate_by_pixel(i, j, mst, nsig, obs, pthresh, span, vcmt)
