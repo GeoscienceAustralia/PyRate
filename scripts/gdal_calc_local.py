@@ -33,7 +33,7 @@
 ################################################################
 # Command line raster calculator with numpy syntax. Use any basic arithmetic supported by numpy arrays such as +-*\ along with logical operators such as >.  Note that all files must have the same dimensions, but no projection checking is performed.  Use gdal_calc.py --help for list of options.
 
-# This script was modified from the official gdal_calc.py to suit our requirements.
+# This script is a copy of gdal_calc.py included in the GDAL library, modified for use with PyRate.
 
 ################################################################
 
