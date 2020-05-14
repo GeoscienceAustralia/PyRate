@@ -1,5 +1,5 @@
 Docker
-------
+^^^^^^
 
 Docker can be used to run `PyRate` on Linux, Windows and MacOS.
 Please follow the instructions at https://hub.docker.com/ to download 

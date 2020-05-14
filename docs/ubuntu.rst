@@ -1,5 +1,5 @@
 Linux
------
+^^^^^
 
 These instructions have been tested using Ubuntu 18.04. If using another
 Linux distribution, you will have to install packages equivalent to those
