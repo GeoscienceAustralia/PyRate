@@ -145,8 +145,8 @@ def __prepifg_system(crop, exts, gtiff, params, res, thresh, xlooks, ylooks):
 
         # coh masking
         check_call(f'{GDAL_CALC} {COMMON_OPTIONS2} --overwrite -A {p_unset} -B {c}\t'
-                   f'--calc=\"A*(B>={params[cf.COH_THRESH]})'
-                   f'-99999*logical_or((B<{params[cf.COH_THRESH]}),isclose(A,0,atol=0.000001))\"\t'
+                   f'--calc=\"A*(B>={params[cf.COH_THRESH]}) - '
+                   f'99999*logical_or((B<{params[cf.COH_THRESH]}), isclose(A,0,atol=0.000001))\"\t'
                    f'--outfile={corrected_p}\t'
                    f'--NoDataValue=nan', shell=True)
     else:
@@ -156,7 +156,7 @@ def __prepifg_system(crop, exts, gtiff, params, res, thresh, xlooks, ylooks):
                    f'--outfile={nan_frac}\t'
                    f'--NoDataValue=nan', shell=True)
         check_call(f'{GDAL_CALC} {COMMON_OPTIONS2} --overwrite -A {p_unset}\t'
-                   f'--calc=\"A - 99999 *isclose(A, 0, atol=0.000001)\"\t'
+                   f'--calc=\"A - 99999*isclose(A, 0, atol=0.000001)\"\t'
                    f'--outfile={corrected_p}\t'
                    f'--NoDataValue=nan', shell=True)
 
