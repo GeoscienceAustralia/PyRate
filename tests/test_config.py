@@ -57,7 +57,7 @@ from pyrate.core.config import (
     PROCESSOR,
     OUT_DIR,
     SLC_DIR,
-    SLC_FILE_LIST,
+    HDR_FILE_LIST,
     COH_MASK,
     COH_THRESH,
     COH_FILE_DIR,
@@ -237,8 +237,8 @@ class TestConfigValidation(unittest.TestCase):
         def validate(key, value):
             return _GAMMA_VALIDATION[key][0](value)
 
-        self.assertFalse(validate(SLC_FILE_LIST, None))
-        self.assertFalse(validate(SLC_FILE_LIST, self.dummy_dir))
+        self.assertFalse(validate(HDR_FILE_LIST, None))
+        self.assertFalse(validate(HDR_FILE_LIST, self.dummy_dir))
 
     def test_coherence_validators(self):
         def validate(key, value):
@@ -323,7 +323,7 @@ class TestConfigValidation(unittest.TestCase):
 
     def test_gamma_validation_only_performed_when_on(self):
         self.params[PROCESSOR] = 1
-        self.params[SLC_FILE_LIST] = None
+        self.params[HDR_FILE_LIST] = None
         with pytest.raises(ConfigException):
             validate_optional_parameters(self.params)
 
@@ -379,10 +379,10 @@ class TestConfigValidation(unittest.TestCase):
             validate_epochs(self.roipac_params[IFG_FILE_LIST], TWELVE_DIGIT_EPOCH_PAIR)
 
     def test_epochs_in_gamma_headers(self):
-        validate_epochs(self.params[SLC_FILE_LIST], EIGHT_DIGIT_EPOCH)
-        self.params[SLC_FILE_LIST] = os.path.join(common.SML_TEST_GAMMA, 'bad_epochs_headers')
+        validate_epochs(self.params[HDR_FILE_LIST], EIGHT_DIGIT_EPOCH)
+        self.params[HDR_FILE_LIST] = os.path.join(common.SML_TEST_GAMMA, 'bad_epochs_headers')
         with pytest.raises(ConfigException):
-            validate_epochs(self.params[SLC_FILE_LIST], EIGHT_DIGIT_EPOCH)
+            validate_epochs(self.params[HDR_FILE_LIST], EIGHT_DIGIT_EPOCH)
 
     def test_epochs_in_coherence_files(self):
         self.params[COH_MASK] = 1
@@ -399,10 +399,10 @@ class TestConfigValidation(unittest.TestCase):
             validate_ifgs(self.params[IFG_FILE_LIST])
 
     def test_gamma_headers_exist(self):
-        validate_gamma_headers(self.params[IFG_FILE_LIST], self.params[SLC_FILE_LIST])
-        self.params[SLC_FILE_LIST] = os.path.join(common.SML_TEST_GAMMA, 'bad_epochs_headers')
+        validate_gamma_headers(self.params[IFG_FILE_LIST], self.params[HDR_FILE_LIST])
+        self.params[HDR_FILE_LIST] = os.path.join(common.SML_TEST_GAMMA, 'bad_epochs_headers')
         with pytest.raises(ConfigException):
-            validate_gamma_headers(self.params[IFG_FILE_LIST], self.params[SLC_FILE_LIST])
+            validate_gamma_headers(self.params[IFG_FILE_LIST], self.params[HDR_FILE_LIST])
 
     def test_coherence_files_exist(self):
         self.params[COH_MASK] = 1
@@ -669,7 +669,7 @@ class TestOneIncidenceOrElevationMap(unittest.TestCase):
             conf.write('{}: {}\n'.format(IFG_CROP_OPT, '1'))
             conf.write('{}: {}\n'.format(NO_DATA_AVERAGING_THRESHOLD, '0.5'))
             conf.write('{}: {}\n'.format(SLC_DIR, ''))
-            conf.write('{}: {}\n'.format(SLC_FILE_LIST, common.SML_TEST_GAMMA_HEADER_LIST))
+            conf.write('{}: {}\n'.format(HDR_FILE_LIST, common.SML_TEST_GAMMA_HEADER_LIST))
             conf.write('{}: {}\n'.format(DEM_FILE, common.SML_TEST_DEM_GAMMA))
             conf.write('{}: {}\n'.format(APS_INCIDENCE_MAP, inc))
             conf.write('{}: {}\n'.format(APS_ELEVATION_MAP, ele))

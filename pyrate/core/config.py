@@ -59,8 +59,8 @@ DEM_FILE = 'demfile'
 DEM_HEADER_FILE = 'demHeaderFile'
 #: STR; Name of directory containing GAMMA SLC header files
 SLC_DIR = 'slcFileDir'
-#: STR; Name of the file list containing the pool of available SLC headers
-SLC_FILE_LIST = 'slcfilelist'
+#: STR; Name of the file list containing the pool of available header files
+HDR_FILE_LIST = 'hdrfilelist'
 
 
 INTERFEROGRAM_FILES = 'interferogram_files'
@@ -283,7 +283,7 @@ PATHS = [
     DEM_HEADER_FILE,
     OUT_DIR,
     SLC_DIR,
-    SLC_FILE_LIST,
+    HDR_FILE_LIST,
     COH_FILE_DIR,
     COH_FILE_LIST,
     APS_INCIDENCE_MAP,
@@ -662,8 +662,8 @@ _PARAM_VALIDATION = {
         f"'{TIME_SERIES_CAL}': must select option 0 or 1."
     ),
     PARALLEL: (
-        lambda a: a in (0, 1, 2),
-        f"'{PARALLEL}': must select option 0 or 1 or 2."
+        lambda a: a in (0, 1),
+        f"'{PARALLEL}': must select option 0 or 1."
     ),
     PROCESSES: (
         lambda a: a >= 1,
@@ -704,9 +704,9 @@ _CUSTOM_CROP_VALIDATION = {
 """dict: basic validation functions for custom cropping parameters."""
 
 _GAMMA_VALIDATION = {
-    SLC_FILE_LIST: (
+    HDR_FILE_LIST: (
         lambda a: a is not None and os.path.exists(a),
-        f"'{SLC_FILE_LIST}': file must be provided and must exist."
+        f"'{HDR_FILE_LIST}': file must be provided and must exist."
     ),
 }
 """dict: basic validation functions for gamma parameters."""
@@ -872,8 +872,8 @@ def validate_parameters(pars: Dict, step: str=CONV2TIF):
     #  the files exist.
     if is_GAMMA:
         validate_epochs(ifl, SIXTEEN_DIGIT_EPOCH_PAIR)
-        validate_epochs(pars[SLC_FILE_LIST], EIGHT_DIGIT_EPOCH)
-        validate_gamma_headers(ifl, pars[SLC_FILE_LIST])
+        validate_epochs(pars[HDR_FILE_LIST], EIGHT_DIGIT_EPOCH)
+        validate_gamma_headers(ifl, pars[HDR_FILE_LIST])
     else:
         validate_epochs(ifl, TWELVE_DIGIT_EPOCH_PAIR)
 

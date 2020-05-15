@@ -44,7 +44,7 @@ PYRATE_DEFAULT_CONFIGURATION = {
         "PossibleValues": None,
         "Required": True
     },
-    "slcfilelist": {
+    "hdrfilelist": {
         "DataType": "path",
         "DefaultValue": None,
         "MinValue": None,
