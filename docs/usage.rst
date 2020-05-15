@@ -90,7 +90,7 @@ all three lists.
 `PyRate` Workflow
 ^^^^^^^^^^^^^^^^^
 
-After following the steps in `Installation <installation.html>`__, an
+After `Installation <installation.html>`__, an
 executable program ``pyrate`` is created in the system path:
 
 ::
@@ -135,7 +135,10 @@ different steps in the `PyRate` workflow:
 3. ``process``
 4. ``merge``
 
-Below we discuss these steps.
+All four steps are required. 
+A fifth option, ``workflow``, is available that will run all four steps in order.
+In the following sub-sections we discuss each of the available steps.
+
 
 
 ``conv2tif``: Converting flat-binary interferograms to Geotiff format
@@ -158,7 +161,7 @@ The ``conv2tif`` step is used as follows:
 
 ::
 
-    pyrate conv2tif -f /path/to/config_file
+    >> pyrate conv2tif -f /path/to/config_file
 
 .. note::
 
@@ -200,7 +203,7 @@ The ``prepifg`` step is used as follows:
 
 ::
 
-    pyrate prepifg -f /path/to/config_file
+    >> pyrate prepifg -f /path/to/config_file
 
 
 **Coherence masking**
@@ -282,7 +285,7 @@ The ``process`` step is used as follows:
 
 ::
 
-    pyrate process -f path/to/config_file
+    >> pyrate process -f path/to/config_file
 
 
 Optionally, an orbital error correction and a spatio-temporal filter
@@ -308,9 +311,11 @@ calculations are run. Time series is optional, controlled by the
 ``merge``: Reassemble the tiles
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The last step of the `PyRate` workflow is to re-assemble the tiles and
-save geotiff files of the final time series and stacking products.
-Tiling is discussed in the :ref:`parallel_label` section below.
+``merge`` is the last step of the `PyRate` workflow, which produces geotiff
+files containing the final time series and stacking products.
+``merge`` will also re-assemble tiles that were generated during the ``process``
+step when run with MPI. Tiling is discussed in the :ref:`parallel_label` section
+below.
 
 ::
 
@@ -326,7 +331,7 @@ The ``merge`` step is used as follows:
 
 ::
 
-    pyrate merge -f path/to/config_file
+    >> pyrate merge -f path/to/config_file
 
 After running the ``merge`` step, several geotiff products will appear in the
 directory defined by the ``outdir`` parameter.
@@ -413,6 +418,7 @@ It therefore makes sense to parallelise processing operations wherever possible.
 `PyRate` can be run in parallel using standard multi-threading simply by turning
 ``parallel:  1`` in the configuration file to take advantage of multiple cores
 on a single machine. The parameter ``processes`` sets the number of threads.
+
 Alternatively, `PyRate` can be parallelised on a system with an installed MPI library
 by using ``mpirun``:
 
@@ -436,5 +442,5 @@ by using ``mpirun``:
 - In the MPI case, parallelism in the ``process`` step is achieved by splitting the images
   in to a grid of tiles, where the number of tiles equals the number of processes passed with
   the ``-n`` option. The number of tiles in x and y dimension are automatically calculated by
-  `PyRate`, ensuring a roughly equivalent number in both dimensions. The purpose of the 
+  `PyRate`, ensuring a roughly equivalent number in both dimensions. One of the functions of the 
   ``merge`` step is to reassemble these tiles in to the full image for each output product.
