@@ -1,6 +1,7 @@
 import os
 import shutil
 import pytest
+import numpy as np
 from pathlib import Path
 from subprocess import check_call, check_output, CalledProcessError
 from pyrate.core import config as cf
@@ -65,27 +66,16 @@ def modified_config_short(tempdir, local_crop, get_lks, coh_mask):
 
 
 @pytest.fixture
-def create_mpi_files():
+def create_mpi_files(modified_config_short):
 
-    def _create(modified_config_short, conf):
+    def _create(conf):
 
         mpi_conf, params = modified_config_short(conf, 0, 'mpi_conf.conf')
 
         check_call(f"mpirun -n 3 pyrate conv2tif -f {mpi_conf}", shell=True)
         check_call(f"mpirun -n 3 pyrate prepifg -f {mpi_conf}", shell=True)
 
-        if params[cf.LARGE_TIFS]:
-            return params  # don't need the reamining params
-
-        try:
-            check_call(f"mpirun -n 3 pyrate process -f {mpi_conf}", shell=True)
-        except CalledProcessError as c:
-            print(c)
-            if TRAVIS:
-                pytest.skip("Skipping as we encountered a process error")
-        check_call(f"mpirun -n 3 pyrate merge -f {mpi_conf}", shell=True)
-        return params
-
+        return params  # don't need the reamining params
     return _create
 
 
@@ -128,11 +118,14 @@ def modified_config_largetifs(tempdir, local_crop, get_lks, coh_mask):
 
 @pytest.mark.slow
 @pytest.mark.skipif(PYTHON3P6 or PYTHON3P7, reason="Only run in python 3.8")
-def test_prepifg_largetfs_vs_python(modified_config_short, modified_config_largetifs, gamma_conf, create_mpi_files):
+def test_prepifg_largetifs_vs_python(modified_config_largetifs, gamma_conf, create_mpi_files):
 
     print("\n\n")
     print("===x==="*10)
-    params = create_mpi_files(modified_config_short, gamma_conf)
+    if TRAVIS and np.random.randint(0, 1000) > 499:  # skip 50% of tests randomly
+        pytest.skip("Randomly skipping as part of 50 percent")
+
+    params = create_mpi_files(gamma_conf)
     sr_conf, params_p = modified_config_largetifs(gamma_conf, 1, 'parallel_conf.conf')
     check_call(f"pyrate conv2tif -f {sr_conf}", shell=True)
     check_call(f"pyrate prepifg -f {sr_conf}", shell=True)

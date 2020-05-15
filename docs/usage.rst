@@ -40,7 +40,7 @@ The DEM absolute path and filename are set with the ``demfile`` parameter.
 
 Each `ROI\_PAC` geocoded unwrapped interferogram requires its own
 header/resource file (``*.rsc``). These header files need to be
-stored in the same directory as the interferograms. In addition, the geocoded DEM
+listed in the defined ``slcfilelist``. In addition, the geocoded DEM
 header file is required and its path and name are specified in the config file under
 ``demHeaderFile``. The geographic projection in the parameter ``DATUM:`` is extracted
 from the DEM header file.

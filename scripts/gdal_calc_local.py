@@ -56,7 +56,6 @@ DefaultNDVLookup={'Byte':255, 'UInt16':65535, 'Int16':-32767, 'UInt32':429496729
 
 ################################################################
 def doit(opts, args):
-    print(opts)
     if opts.debug:
         print("gdal_calc.py starting calculation %s" %(opts.calc))
 
@@ -287,7 +286,10 @@ def doit(opts, args):
                     raise
 
                 if myNDVs is not None:
-                    myResult[numpy.isclose(myResult, 0, atol=1e-6)] = myOutNDV
+                    myResult[numpy.logical_or(
+                        numpy.isclose(myResult, 0, atol=1e-6),
+                        numpy.isclose(myResult, -99999, atol=1e-6)
+                    )] = myOutNDV
                 elif not isinstance(myResult, numpy.ndarray):
                     myResult = numpy.ones( (nYValid,nXValid) ) * myResult
 
