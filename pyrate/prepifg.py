@@ -111,6 +111,7 @@ def do_prepifg(gtiff_paths: List[str], params: dict) -> None:
 
 COMMON_OPTIONS = "-co BLOCKXSIZE=256 -co BLOCKYSIZE=256 -co TILED=YES --config GDAL_CACHEMAX=64 -q"
 COMMON_OPTIONS2 = "--co BLOCKXSIZE=256 --co BLOCKYSIZE=256 --co TILED=YES --quiet"
+GDAL_CALC = 'gdal_calc_local.py'
 
 
 def __prepifg_system(crop, exts, gtiff, params, res, thresh, xlooks, ylooks):
@@ -126,7 +127,7 @@ def __prepifg_system(crop, exts, gtiff, params, res, thresh, xlooks, ylooks):
 
     p_unset = Path(params[cf.OUT_DIR]).joinpath(Path(p).name).with_suffix('.unset.tif')
     # change nodataval from zero, also leave input geotifs unchanged if one supplies conv2tif output/geotifs
-    check_call('gdal_translate {co} -a_nodata -99999\t{p}\t{q}'.format(co=COMMON_OPTIONS, p=p, q=p_unset),
+    check_call('gdal_translate {co} -a_nodata nan\t{p}\t{q}'.format(co=COMMON_OPTIONS, p=p, q=p_unset),
                shell=True)
 
     # calculate nan-fraction
@@ -138,29 +139,26 @@ def __prepifg_system(crop, exts, gtiff, params, res, thresh, xlooks, ylooks):
     if c is not None:
         # find all the nans
         log.info(f"applying coherence + nodata masking on {p}")
-        check_call('gdal_calc.py {co} -A {p} -B {c} --outfile={out_file}\t'
-                   '--calc=\"logical_or((B<{th}), isclose(A,0,atol=0.000001))\"\t'
-                   '--NoDataValue=-99999'.format(co=COMMON_OPTIONS2, c=c, p=p_unset, th=params[cf.COH_THRESH],
-                                                 out_file=nan_frac), shell=True)
+        check_call(f'{GDAL_CALC} {COMMON_OPTIONS2} -A {p_unset} -B {c} --outfile={nan_frac}\t'
+                   f'--calc=\"logical_or((B<{params[cf.COH_THRESH]}), isclose(A,0,atol=0.000001))\"\t'
+                   f'--NoDataValue=nan', shell=True)
 
         # coh masking
-        check_call('gdal_calc.py {co} --overwrite -A {p} -B {q}\t'
-                   '--calc=\"A*(B>={th}) - 99999*logical_or((B<{th}), isclose(A,0,atol=0.000001))\"\t'
-                   '--outfile={out_file}\t'
-                   '--NoDataValue=-99999'.format(co=COMMON_OPTIONS2, p=p_unset, q=c, th=params[cf.COH_THRESH],
-                                                 out_file=corrected_p), shell=True)
+        check_call(f'{GDAL_CALC} {COMMON_OPTIONS2} --overwrite -A {p_unset} -B {c}\t'
+                   f'--calc=\"A*(B>={params[cf.COH_THRESH]}) - '
+                   f'99999*logical_or((B<{params[cf.COH_THRESH]}), isclose(A,0,atol=0.000001))\"\t'
+                   f'--outfile={corrected_p}\t'
+                   f'--NoDataValue=nan', shell=True)
     else:
         log.info(f"applying nodata masking on {p}")
-        check_call('gdal_calc.py {co} --overwrite -A {p}\t'
-                   '--calc=\"isclose(A, 0, atol=0.000001)\"\t'
-                   '--outfile={out_file}\t'
-                   '--NoDataValue=-99999\n'.format(co=COMMON_OPTIONS2, p=p_unset, out_file=nan_frac),
-                   shell=True)
-        check_call('gdal_calc.py {co} --overwrite -A {p}\t'
-                   '--calc=\"A - 99999*isclose(A, 0, atol=0.000001)\"\t'
-                   '--outfile={out_file}\t'
-                   '--NoDataValue=-99999'.format(co=COMMON_OPTIONS2, p=p_unset, out_file=corrected_p),
-                   shell=True)
+        check_call(f'{GDAL_CALC} {COMMON_OPTIONS2} --overwrite -A {p_unset}\t'
+                   f'--calc=\"isclose(A,0,atol=0.000001)\"\t'
+                   f'--outfile={nan_frac}\t'
+                   f'--NoDataValue=nan', shell=True)
+        check_call(f'{GDAL_CALC} {COMMON_OPTIONS2} --overwrite -A {p_unset}\t'
+                   f'--calc=\"A - 99999*isclose(A, 0, atol=0.000001)\"\t'
+                   f'--outfile={corrected_p}\t'
+                   f'--NoDataValue=nan', shell=True)
 
     # crop resample/average multilooking of nan-fraction
     check_call('gdalwarp {co} -te\t{extents}\t-tr\t{res}\t-r\taverage\t{p}\t{out_file}'.format(
@@ -170,11 +168,10 @@ def __prepifg_system(crop, exts, gtiff, params, res, thresh, xlooks, ylooks):
     check_call('gdalwarp {co} -te\t{extents}\t-tr\t{res}\t-r\taverage \t{p}\t{l}'.format(
         co=COMMON_OPTIONS, extents=extents, res=res, p=corrected_p, l=l), shell=True)
 
-    check_call('gdal_calc_local.py {co} --overwrite -A {p}\t-B {q}\t'
-               '--calc=\"B*less(A, {th})\"\t'
-               '--outfile={out_file}\t'
-               '--NoDataValue=nan'.format(co=COMMON_OPTIONS2, p=nan_frac_avg, q=l, out_file=l, th=thresh),
-               shell=True)
+    check_call(f'{GDAL_CALC} {COMMON_OPTIONS2} --overwrite -A {nan_frac_avg}\t-B {l}\t'
+               f'--calc=\"B*(A < {thresh}) -99999*(A >= {thresh})\"\t'
+               f'--outfile={l}\t'
+               f'--NoDataValue=nan', shell=True)
 
     __update_meta_data(p_unset.as_posix(), c, l)
 
