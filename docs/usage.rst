@@ -21,7 +21,7 @@ File Discovery
 To allow flexibility in the file types that can be processed, `PyRate` requires
 file lists to be provided. This allows `PyRate` to identify files of each
 type without relying on file extensions. The file path to these lists are 
-provided under ``ifgfilelist``, ``slcfilelist`` and ``cohfilelist`` keywords
+provided under ``ifgfilelist``, ``hdrfilelist`` and ``cohfilelist`` keywords
 in the configuration file.
 
 .. note::
@@ -47,7 +47,7 @@ Example of an interferogram file list for `GAMMA` flat-binary files:
       Any naming convention is appropriate as long as an epoch pair of format
       ``YYYYMMDD-YYYYMMDD`` exists in the filename.
 
-The ``slcfilelist`` gives the list of `GAMMA` SLC header text files.
+The ``hdrfilelist`` gives the list of `GAMMA` SLC header text files.
 Example of a `GAMMA` SLC header file list:
 
 ::
@@ -379,7 +379,7 @@ interferometry softwares. `PyRate` will determine the input format from the
 Each `GAMMA` geocoded unwrapped interferogram requires three header files
 to extract metadata required for data formatting: a geocoded DEM header
 file (``demHeaderFile`` keyword in the configuration file) and the relevant
-master and slave epoch SLC header files (``*slc.par``) found in the ``slcfilelist``.
+master and slave epoch SLC header files (``*slc.par``) found in the ``hdrfilelist``.
 SLC header files for a particular interferogram are found automatically by
 date-string pattern matching based on date epochs given in the filenames.
 A DEM with matching size and geometry to the interferograms can also be processed.
@@ -390,7 +390,7 @@ The DEM absolute path and filename are set with the ``demfile`` parameter.
 
 Each `ROI\_PAC` geocoded unwrapped interferogram requires its own
 header/resource file (``*.rsc``). These header files need to be
-listed in the defined ``slcfilelist``. In addition, the geocoded DEM
+listed in the defined ``hdrfilelist``. In addition, the geocoded DEM
 header file is required and its path and name are specified in the config file under
 ``demHeaderFile``. The geographic projection in the parameter ``DATUM:`` is extracted
 from the DEM header file.

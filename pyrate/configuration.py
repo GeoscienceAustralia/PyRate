@@ -173,7 +173,7 @@ class Configuration:
             validate_file_list_values(self.cohfilelist, 1)
             self.coherence_file_paths = self.__get_files_from_attr('cohfilelist')
 
-        self.header_file_paths = self.__get_files_from_attr('slcfilelist')
+        self.header_file_paths = self.__get_files_from_attr('hdrfilelist')
 
         self.interferogram_files = self.__get_files_from_attr('ifgfilelist')
 

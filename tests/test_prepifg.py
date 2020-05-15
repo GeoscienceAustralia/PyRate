@@ -665,7 +665,7 @@ class TestOneIncidenceOrElevationMap(unittest.TestCase):
             conf.write('{}: {}\n'.format(cf.IFG_CROP_OPT, '1'))
             conf.write('{}: {}\n'.format(cf.NO_DATA_AVERAGING_THRESHOLD, '0.5'))
             conf.write('{}: {}\n'.format(cf.SLC_DIR, ''))
-            conf.write('{}: {}\n'.format(cf.SLC_FILE_LIST,
+            conf.write('{}: {}\n'.format(cf.HDR_FILE_LIST,
                                          common.SML_TEST_GAMMA_HEADER_LIST))
             conf.write('{}: {}\n'.format(cf.DEM_FILE, common.SML_TEST_DEM_GAMMA))
             conf.write('{}: {}\n'.format(cf.APS_INCIDENCE_MAP, inc))

@@ -248,7 +248,7 @@ def gamma_header(ifg_file_path, params):
         gamma headers and DEM header.   
     """
     dem_hdr_path = params[cf.DEM_HEADER_FILE]
-    header_paths = get_header_paths(ifg_file_path, params[cf.SLC_FILE_LIST])
+    header_paths = get_header_paths(ifg_file_path, params[cf.HDR_FILE_LIST])
     combined_headers = manage_headers(dem_hdr_path, header_paths)
     if os.path.basename(ifg_file_path).split('.')[1] == \
             (params[cf.APS_INCIDENCE_EXT] or params[cf.APS_ELEVATION_EXT]):
