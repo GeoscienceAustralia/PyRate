@@ -9,7 +9,7 @@ def delete_tsincr_files(params):
             file_path.unlink()
 
 
-def break_number_into_factors(n, memo={}, left=2):
+def factorise_integer(n, memo={}, left=2):
     if (n, left) in memo:
         return memo[(n, left)]
     if left == 1:
@@ -19,7 +19,7 @@ def break_number_into_factors(n, memo={}, left=2):
     bestTuple = [n]
     while i * i <= n:
         if n % i == 0:
-            rem = break_number_into_factors(n / i, memo, left - 1)
+            rem = factorise_integer(n / i, memo, left - 1)
             if rem[0] + i < best:
                 best = rem[0] + i
                 bestTuple = [i] + rem[1]
