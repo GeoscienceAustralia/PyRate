@@ -49,6 +49,7 @@ def main(params):
 
     if params[cf.TIME_SERIES_CAL]:
         _merge_timeseries(rows, cols, params)
+        mpiops.run_once(_delete_tsincr_files, params)
 
     log.info('Creating quicklook images.')
     mpiops.run_once(create_png_from_tif, params[cf.OUT_DIR])
@@ -282,3 +283,13 @@ def _assemble_tiles(i, n, tile, tsincr_g, output_dir, outtype):
     tsincr_file = os.path.join(output_dir, '{}_{}.npy'.format(outtype, n))
     tsincr = np.load(file=tsincr_file)
     tsincr_g[tile.top_left_y:tile.bottom_right_y, tile.top_left_x:tile.bottom_right_x] = tsincr[:, :, i]
+
+
+def _delete_tsincr_files(params):
+    """
+    Convenience function to delete tsincr files
+    """
+    out_dir = Path(params["outdir"])
+    for file_path in out_dir.iterdir():
+        if "tsincr" in str(file_path):
+            file_path.unlink()
