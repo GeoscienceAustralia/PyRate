@@ -49,7 +49,7 @@ def main(params):
 
     if params[cf.TIME_SERIES_CAL]:
         _merge_timeseries(rows, cols, params)
-        mpiops.run_once(_delete_tsincr_files, params)
+        #mpiops.run_once(_delete_tsincr_files, params)
 
     log.info('Creating quicklook images.')
     mpiops.run_once(create_png_from_tif, params[cf.OUT_DIR])
