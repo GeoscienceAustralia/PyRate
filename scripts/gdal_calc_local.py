@@ -286,7 +286,7 @@ def doit(opts, args):
                     raise
 
                 if myNDVs is not None:
-                    myResult[numpy.isclose(myResult, -99999, atol=1e-5)] = myOutNDV
+                    myResult[numpy.isclose(myResult, -99999, atol=1e-6)] = myOutNDV
                 elif not isinstance(myResult, numpy.ndarray):
                     myResult = numpy.ones( (nYValid,nXValid) ) * myResult
 
