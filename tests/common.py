@@ -508,7 +508,7 @@ def manipulate_test_conf(conf_file, temp_obs_dir):
     params[cf.OUT_DIR] = outdir.as_posix()
     params[cf.DEM_FILE] = temp_obs_dir.joinpath(Path(params[cf.DEM_FILE]).name).as_posix()
     params[cf.DEM_HEADER_FILE] = temp_obs_dir.joinpath(Path(params[cf.DEM_HEADER_FILE]).name).as_posix()
-    params[cf.SLC_FILE_LIST] = temp_obs_dir.joinpath(Path(params[cf.SLC_FILE_LIST]).name).as_posix()
+    params[cf.HDR_FILE_LIST] = temp_obs_dir.joinpath(Path(params[cf.HDR_FILE_LIST]).name).as_posix()
     params[cf.SLC_DIR] = temp_obs_dir.as_posix()
     params[cf.IFG_FILE_LIST] = temp_obs_dir.joinpath(Path(params[cf.IFG_FILE_LIST]).name).as_posix()
     params[cf.COH_FILE_DIR] = temp_obs_dir.as_posix()

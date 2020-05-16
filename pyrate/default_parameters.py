@@ -19,7 +19,7 @@
 #   limitations under the License.
 YEARS_PER_DAY = 1 / 365.25
 
-PYRATE_DEFAULT_CONFIGRATION = {
+PYRATE_DEFAULT_CONFIGURATION = {
     "ifgfilelist": {
         "DataType": "path",
         "DefaultValue": None,
@@ -44,7 +44,7 @@ PYRATE_DEFAULT_CONFIGRATION = {
         "PossibleValues": None,
         "Required": True
     },
-    "slcfilelist": {
+    "hdrfilelist": {
         "DataType": "path",
         "DefaultValue": None,
         "MinValue": None,
@@ -113,7 +113,7 @@ PYRATE_DEFAULT_CONFIGRATION = {
         "DefaultValue": 0,
         "MinValue": None,
         "MaxValue": None,
-        "PossibleValues": [0, 1, 2],
+        "PossibleValues": [0, 1],
         "Required": False
     },
     "processes": {
@@ -134,7 +134,7 @@ PYRATE_DEFAULT_CONFIGRATION = {
     },
     "cohthresh": {
         "DataType": float,
-        "DefaultValue": None,
+        "DefaultValue": 0.3,
         "MinValue": 0.0,
         "MaxValue": 1.0,
         "PossibleValues": None,
@@ -142,7 +142,7 @@ PYRATE_DEFAULT_CONFIGRATION = {
     },
     "ifgcropopt": {
         "DataType": int,
-        "DefaultValue": 1,
+        "DefaultValue": 4,
         "MinValue": 1,
         "MaxValue": 4,
         "PossibleValues": [1, 2, 3, 4],
@@ -423,7 +423,7 @@ PYRATE_DEFAULT_CONFIGRATION = {
     },
     "maxsig": {
         "DataType": int,
-        "DefaultValue": 10,
+        "DefaultValue": 1000,
         "MinValue": 0,
         "MaxValue": 1000,
         "PossibleValues": None,

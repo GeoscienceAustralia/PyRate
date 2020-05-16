@@ -17,8 +17,8 @@ from configparser import ConfigParser
 from pathlib import Path, PurePath
 import re
 from pyrate.constants import NO_OF_PARALLEL_PROCESSES
-from pyrate.default_parameters import PYRATE_DEFAULT_CONFIGRATION
-from pyrate.core.user_experience import break_number_into_factors
+from pyrate.default_parameters import PYRATE_DEFAULT_CONFIGURATION
+from pyrate.core.algorithm import factorise_integer
 from pyrate.core.shared import extract_epochs_from_filename
 from pyrate.core.config import parse_namelist, ConfigException
 
@@ -114,26 +114,26 @@ class Configuration:
 
         # Validate required parameters exist.
 
-        required = {k for k, v in PYRATE_DEFAULT_CONFIGRATION.items() if v['Required']}
+        required = {k for k, v in PYRATE_DEFAULT_CONFIGURATION.items() if v['Required']}
 
         if not required.issubset(self.__dict__):  # pragma: no cover
             raise ValueError("Required configuration parameters: " + str(
                 required.difference(self.__dict__)) + " are missing from input config file.")
 
         # handle control parameters
-        for parameter_name in PYRATE_DEFAULT_CONFIGRATION:
+        for parameter_name in PYRATE_DEFAULT_CONFIGURATION:
             param_value = self.__dict__[parameter_name] if parameter_name in required or \
                                                            parameter_name in self.__dict__ else ''
 
-            self.__dict__[parameter_name] = set_parameter_value(PYRATE_DEFAULT_CONFIGRATION[parameter_name]["DataType"],
+            self.__dict__[parameter_name] = set_parameter_value(PYRATE_DEFAULT_CONFIGURATION[parameter_name]["DataType"],
                                                                 param_value,
-                                                                PYRATE_DEFAULT_CONFIGRATION[parameter_name]["DefaultValue"],
-                                                                PYRATE_DEFAULT_CONFIGRATION[parameter_name]["Required"],
+                                                                PYRATE_DEFAULT_CONFIGURATION[parameter_name]["DefaultValue"],
+                                                                PYRATE_DEFAULT_CONFIGURATION[parameter_name]["Required"],
                                                                 parameter_name)
             validate_parameter_value(parameter_name, self.__dict__[parameter_name],
-                                     PYRATE_DEFAULT_CONFIGRATION[parameter_name]["MinValue"],
-                                     PYRATE_DEFAULT_CONFIGRATION[parameter_name]["MaxValue"],
-                                     PYRATE_DEFAULT_CONFIGRATION[parameter_name]["PossibleValues"])
+                                     PYRATE_DEFAULT_CONFIGURATION[parameter_name]["MinValue"],
+                                     PYRATE_DEFAULT_CONFIGURATION[parameter_name]["MaxValue"],
+                                     PYRATE_DEFAULT_CONFIGURATION[parameter_name]["PossibleValues"])
 
         # bespoke parameter validation
         if self.refchipsize % 2 != 1:  # pragma: no cover
@@ -146,7 +146,7 @@ class Configuration:
         if hasattr(self, 'rows') and hasattr(self, 'cols'):
             self.rows, self.cols = int(self.rows), int(self.cols)
         else:
-            self.rows, self.cols = [int(no) for no in break_number_into_factors(NO_OF_PARALLEL_PROCESSES)]
+            self.rows, self.cols = [int(num) for num in factorise_integer(NO_OF_PARALLEL_PROCESSES)]
 
         # create a temporary directory if not supplied
         if not hasattr(self, 'tmpdir'):
@@ -173,7 +173,7 @@ class Configuration:
             validate_file_list_values(self.cohfilelist, 1)
             self.coherence_file_paths = self.__get_files_from_attr('cohfilelist')
 
-        self.header_file_paths = self.__get_files_from_attr('slcfilelist')
+        self.header_file_paths = self.__get_files_from_attr('hdrfilelist')
 
         self.interferogram_files = self.__get_files_from_attr('ifgfilelist')
 

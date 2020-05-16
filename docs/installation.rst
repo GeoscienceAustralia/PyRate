@@ -6,8 +6,11 @@ Follow the instructions to install `PyRate` and run a small toy example.
 
 .. include:: dependencies.rst
 
+Platforms
+---------
+
 PyPI
-----
+^^^^
 
 `PyRate` and its Python dependencies can be installed directly from the Python Package Index (PyPI_):
 

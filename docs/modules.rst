@@ -22,4 +22,3 @@ PyRate Modules
    shared
    stack
    timeseries
-   user_experience

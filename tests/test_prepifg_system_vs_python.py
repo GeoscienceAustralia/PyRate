@@ -1,6 +1,7 @@
 import os
 import shutil
 import pytest
+import numpy as np
 from pathlib import Path
 from subprocess import check_call, check_output, CalledProcessError
 import numpy as np
