@@ -28,7 +28,6 @@ from pyrate import conv2tif, prepifg, process, merge
 from pyrate.core.logger import pyratelogger as log, configure_stage_log
 from pyrate.core import config as cf
 from pyrate.core import mpiops
-from pyrate.core import user_experience
 from pyrate.configuration import Configuration
 
 
@@ -36,14 +35,6 @@ def _params_from_conf(config_file):
     config_file = os.path.abspath(config_file)
     config = Configuration(config_file)
     return config.__dict__
-
-
-def merge_handler(params):
-    """
-    Reassemble computed tiles and save as geotiffs.
-    """
-    merge.main(params)
-    mpiops.run_once(user_experience.delete_tsincr_files, params)
 
 
 def main():
@@ -106,7 +97,7 @@ def main():
         process.main(params)
 
     if args.command == "merge":
-        merge_handler(params)
+        merge.main(params)
 
     if args.command == "workflow":
         log.info("***********CONV2TIF**************")
@@ -124,7 +115,7 @@ def main():
         # process might modify params too
         params = mpiops.run_once(_params_from_conf, args.config_file)
         log.info("***********MERGE**************")
-        merge_handler(params)
+        merge.main(params)
 
     log.debug("--- %s seconds ---" % (time.time() - start_time))
 
