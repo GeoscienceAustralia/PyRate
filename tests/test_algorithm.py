@@ -33,6 +33,7 @@ from pyrate.core.algorithm import (least_squares_covariance,
                                    get_all_epochs,
                                    get_epochs,
                                    master_slave_ids,
+                                   factorise_integer,
                                    )
 
 from pyrate.core.config import parse_namelist
@@ -75,6 +76,14 @@ class AlgorithmTests(TestCase):
     Misc unittests for functions in the algorithm module.
     """
 
+    def test_factorise(self):
+        self.assertEqual(factorise_integer(1), (1, 1))
+        self.assertEqual(factorise_integer(2), (2, 1))
+        self.assertEqual(factorise_integer(4), (2, 2))
+        self.assertEqual(factorise_integer(9), (3, 3))
+        self.assertEqual(factorise_integer(76), (4, 19))
+        self.assertEqual(factorise_integer(76.5), (4, 19))
+    
     def test_is_square(self):
         self.assertTrue(is_square(np.empty((2, 2))))
 

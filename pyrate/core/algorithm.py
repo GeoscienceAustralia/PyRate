@@ -251,6 +251,7 @@ def factorise_integer(n, memo={}, left=2):
     :return: b, factor two
     :rtype: int
     """
+    n = int(n)
     if (n, left) in memo:
         return memo[(n, left)]
     if left == 1:
