@@ -211,7 +211,7 @@ class TestConfigValidation(unittest.TestCase):
 
         self.assertTrue(validate(PARALLEL, 0))
         self.assertTrue(validate(PARALLEL, 1))
-        self.assertTrue(validate(PARALLEL, 2))
+        self.assertFalse(validate(PARALLEL, 2))
         self.assertFalse(validate(PARALLEL, -1))
         self.assertFalse(validate(PARALLEL, 3))
 
