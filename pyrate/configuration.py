@@ -18,7 +18,7 @@ from pathlib import Path, PurePath
 import re
 from pyrate.constants import NO_OF_PARALLEL_PROCESSES
 from pyrate.default_parameters import PYRATE_DEFAULT_CONFIGURATION
-from pyrate.core.user_experience import break_number_into_factors
+from pyrate.core.user_experience import factorise_integer
 from pyrate.core.shared import extract_epochs_from_filename
 from pyrate.core.config import parse_namelist, ConfigException
 
@@ -146,7 +146,7 @@ class Configuration:
         if hasattr(self, 'rows') and hasattr(self, 'cols'):
             self.rows, self.cols = int(self.rows), int(self.cols)
         else:
-            self.rows, self.cols = [int(no) for no in break_number_into_factors(NO_OF_PARALLEL_PROCESSES)]
+            self.rows, self.cols = [int(num) for num in factorise_integer(NO_OF_PARALLEL_PROCESSES)]
 
         # create a temporary directory if not supplied
         if not hasattr(self, 'tmpdir'):
