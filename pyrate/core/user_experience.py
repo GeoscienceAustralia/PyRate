@@ -31,6 +31,5 @@ def factorise_integer(n, memo={}, left=2):
 
     if len(bestTuple) == 1:
         bestTuple.append(1)
-        return bestTuple
 
-    return bestTuple
+    return int(bestTuple[0]), int(bestTuple[1])
