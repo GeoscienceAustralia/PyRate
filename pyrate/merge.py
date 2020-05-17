@@ -289,7 +289,7 @@ def _delete_tsincr_files(params):
     """
     Convenience function to delete tsincr files
     """
-    out_dir = Path(params["outdir"])
+    out_dir = Path(params[cf.OUT_DIR])
     for file_path in out_dir.iterdir():
         if "tsincr" in str(file_path):
             file_path.unlink()
