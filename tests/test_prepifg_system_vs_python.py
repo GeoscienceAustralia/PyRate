@@ -4,6 +4,7 @@ import pytest
 import numpy as np
 from pathlib import Path
 from subprocess import check_call, check_output, CalledProcessError
+import numpy as np
 from pyrate.core import config as cf
 from tests.common import assert_two_dirs_equal, manipulate_test_conf
 TRAVIS = True if 'TRAVIS' in os.environ else False
