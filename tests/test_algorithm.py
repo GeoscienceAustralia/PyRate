@@ -83,6 +83,9 @@ class AlgorithmTests(TestCase):
         self.assertEqual(factorise_integer(9), (3, 3))
         self.assertEqual(factorise_integer(76), (4, 19))
         self.assertEqual(factorise_integer(76.5), (4, 19))
+        a, b = factorise_integer(12)
+        self.assertEqual(type(a), int)
+        self.assertEqual(type(b), int)
     
     def test_is_square(self):
         self.assertTrue(is_square(np.empty((2, 2))))
