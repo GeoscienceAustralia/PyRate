@@ -29,7 +29,7 @@ from numpy.testing import assert_array_almost_equal
 import pyrate.core.orbital
 import tests.common
 from pyrate.core import shared, ref_phs_est as rpe, config as cf, covariance as vcm_module, roipac
-from pyrate.core.stack import stack_rate
+from pyrate.core.stack import stack_rate, mask_rate
 from pyrate import process, prepifg, conv2tif
 from pyrate.configuration import Configuration
 from tests.common import (SML_TEST_DIR, prepare_ifgs_without_phase,
@@ -67,7 +67,8 @@ class StackRateTests(unittest.TestCase):
         mst = ones((6, 1, 1))
         mst[4] = 0
         params = default_params()
-        rate, error, samples = stack_rate(self.ifgs, params, vcmt, mst)
+        r, e, samples = stack_rate(self.ifgs, params, vcmt, mst)
+        rate, error = mask_rate(r, e, params['maxsig'])
         assert_array_almost_equal(rate, exprate)
         assert_array_almost_equal(error, experr)
         assert_array_almost_equal(samples, expsamp)

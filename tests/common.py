@@ -390,7 +390,8 @@ def calculate_stack_rate(ifgs, params, vcmt, mst_mat=None):
         if r is None:
             raise ValueError('TODO: bad value')
 
-    rate, error, samples = res
+    r, e, samples = res
+    rate, error = stack.mask_rate(r, e, params['maxsig'])
     write_stackrate_tifs(ifgs, params, res)
     # log.info('Stacked rate calculated')
     return rate, error, samples
