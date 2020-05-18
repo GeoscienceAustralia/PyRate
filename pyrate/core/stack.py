@@ -21,7 +21,7 @@ stacking method.
 import itertools
 
 from scipy.linalg import solve, cholesky, qr, inv
-from numpy import nan, isnan, sqrt, diag, delete, array, float32
+from numpy import nan, isnan, sqrt, diag, delete, array, float32, size
 import numpy as np
 from joblib import Parallel, delayed
 from pyrate.core import config as cf
@@ -66,15 +66,40 @@ def stack_rate(ifgs, params, vcmt, mst=None):
             for j in range(cols):
                 rate[i, j], error[i, j], samples[i, j] = _stack_rate_by_pixel(i, j, mst, nsig, obs, pthresh, span, vcmt)
 
-    # overwrite the data whose error is larger than the
-    # maximum sigma user threshold
-    mask = ~isnan(error)
-    mask[mask] &= error[mask] > maxsig
-    rate[mask] = nan
-    error[mask] = nan
-    # samples[mask] = nan # should we also mask the samples?
+    rate, error = mask_rate(rate, error, maxsig)
 
     return rate, error, samples
+
+
+def mask_rate(rate, error, maxsig):
+    """
+    Function to mask pixels in the rate and error arrays when the error
+    is greater than the error threshold 'maxsig'.
+
+    :param ndarray rate: array of pixel rates derived by stacking
+    :param ndarray error: array of errors for the pixel rates
+    :param int maxsig: error threshold for masking (in millimetres).
+
+    :return: rate: Masked rate (velocity) map
+    :rtype: ndarray
+    :return: error: Masked error (standard deviation) map
+    :rtype: ndarray
+    """
+    log.info('Masking stack rate and error maps where sigma is greater than {} millimetres'.format(maxsig))
+    # initialise mask array with existing NaNs
+    mask = ~isnan(error)
+    # original Nan count
+    orig = np.count_nonzero(mask)
+    # determine where error is larger than the maximum sigma threshold
+    mask[mask] &= error[mask] > maxsig
+    # replace values with NaNs
+    rate[mask] = nan
+    error[mask] = nan
+    # calculate percentage of masked pixels
+    nummasked = int(np.count_nonzero(mask)/orig*100)
+    log.info('Percentage of pixels masked = {}%'.format(nummasked))
+
+    return rate, error
 
 
 def _stack_setup(ifgs, mst, params):
