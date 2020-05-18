@@ -166,12 +166,15 @@ def _merge_stack(rows, cols, params):
 #             for t in ['stack_rate', 'stack_error', 'stack_samples']]
 #    mpiops.comm.barrier()
     # read and assemble tile outputs
-    r = _merge_tiles(shape, params[cf.TMPDIR], tiles, out_type='stack_rate')
-    e = _merge_tiles(shape, params[cf.TMPDIR], tiles, out_type='stack_error')
+    rate = _merge_tiles(shape, params[cf.TMPDIR], tiles, out_type='stack_rate')
+    error = _merge_tiles(shape, params[cf.TMPDIR], tiles, out_type='stack_error')
     samples = _merge_tiles(shape, params[cf.TMPDIR], tiles, out_type='stack_samples')
 
     # mask pixels according to threshold
-    rate, error = stack.mask_rate(r, e, params[cf.LR_MAXSIG])
+    if params[cf.LR_MAXSIG] > 0:
+        rate, error = stack.mask_rate(rate, error, params[cf.LR_MAXSIG])
+    else:
+        log.info('Skipping stack product masking (maxsig = 0)')
 
     # save geotiff and numpy array files
     _save_stack(ifgs_dict, params[cf.OUT_DIR], rate, out_type='stack_rate')
