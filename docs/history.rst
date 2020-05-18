@@ -21,6 +21,7 @@ Changed
 Removed
 +++++++
 - Deprecate the use of ``obsdir``, ``slcfiledir`` and ``cohdir`` configuration variables.
+- Deprecate ``parallel = 2`` option; splitting image via rows for parallelisation.
 
 0.4.0 (2019-10-31)
 -----------------------
