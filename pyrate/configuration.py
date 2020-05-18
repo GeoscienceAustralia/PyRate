@@ -13,6 +13,10 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
+"""
+This Python module contains utilities to validate user input parameters
+parsed in a PyRate configuration file.
+"""
 from configparser import ConfigParser
 from pathlib import Path, PurePath
 import re
@@ -44,17 +48,17 @@ def validate_parameter_value(input_name, input_value, min_value=None, max_value=
         if min_value is not None:
             if input_value < min_value:  # pragma: no cover
                 raise ValueError(
-                    "Invalid value for " + str(input_name) + " supplied: " + str(input_value) + ". Please provided a valid value greater than " + str(min_value) + ".")
+                    "Invalid value for " + str(input_name) + " supplied: " + str(input_value) + ". Provide a value greater than or equal to " + str(min_value) + ".")
     if input_value is not None:
         if max_value is not None:
             if input_value > max_value:  # pragma: no cover
                 raise ValueError(
-                    "Invalid value for " + str(input_name) + " supplied: " + str(input_value) + ". Please provided a valid value less than " + str(max_value) + ".")
+                    "Invalid value for " + str(input_name) + " supplied: " + str(input_value) + ". Provide a value less than or equal to " + str(max_value) + ".")
 
     if possible_values is not None:
         if input_value not in possible_values:  # pragma: no cover
             raise ValueError(
-                "Invalid value for " + str(input_name) + " supplied: " + str(input_value) + ". Please provided a valid value from with in: " + str(possible_values) + ".")
+                "Invalid value for " + str(input_name) + " supplied: " + str(input_value) + ". Provide a value from: " + str(possible_values) + ".")
     return True
 
 
