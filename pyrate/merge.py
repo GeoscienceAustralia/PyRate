@@ -25,7 +25,7 @@ from osgeo import gdal
 import subprocess
 from pathlib import Path
 
-from pyrate.core import shared, ifgconstants as ifc, mpiops, config as cf
+from pyrate.core import shared, stack, ifgconstants as ifc, mpiops, config as cf
 from pyrate.core.shared import PrereadIfg
 from pyrate.constants import REF_COLOR_MAP_PATH
 from pyrate.core.config import OBS_DIR, OUT_DIR, ConfigException
@@ -45,7 +45,7 @@ def main(params):
     """
     # setup paths
     rows, cols = params["rows"], params["cols"]
-    _merge_stack(rows, cols, params)
+    mpiops.run_once(_merge_stack, rows, cols, params)
 
     if params[cf.TIME_SERIES_CAL]:
         _merge_timeseries(rows, cols, params)
@@ -148,52 +148,74 @@ def _merge_stack(rows, cols, params):
     else:
         dest_tifs = base_unw_paths # cf.get_dest_paths(base_unw_paths, crop, params, xlks)
 
-    # load previously saved prepread_ifgs dict
+    # load previously saved preread_ifgs dict
     preread_ifgs_file = join(params[cf.TMPDIR], 'preread_ifgs.pk')
-    ifgs = cp.load(open(preread_ifgs_file, 'rb'))
+    ifgs_dict = cp.load(open(preread_ifgs_file, 'rb'))
+    ifgs = [v for v in ifgs_dict.values() if isinstance(v, PrereadIfg)]
+    shape = ifgs[0].shape
     tiles = shared.get_tiles(dest_tifs[0], rows, cols)
 
     # stacking aggregation
-    if mpiops.size >= 3:
-        [_save_stack(ifgs, params, tiles, out_type=t)
-         for i, t in enumerate(['stack_rate', 'stack_error', 'stack_samples'])
-         if i == mpiops.rank]
-    else:
-        if mpiops.rank == MASTER_PROCESS:
-            [_save_stack(ifgs, params, tiles, out_type=t)
-             for t in ['stack_rate', 'stack_error', 'stack_samples']]
-    mpiops.comm.barrier()
+#    if mpiops.size >= 3:
+#        [_save_stack(ifgs, params, tiles, out_type=t)
+#         for i, t in enumerate(['stack_rate', 'stack_error', 'stack_samples'])
+#         if i == mpiops.rank]
+#    else:
+#        if mpiops.rank == MASTER_PROCESS:
+#            [_save_stack(ifgs, params, tiles, out_type=t)
+#             for t in ['stack_rate', 'stack_error', 'stack_samples']]
+#    mpiops.comm.barrier()
+    # read and assemble tile outputs
+    r = _merge_tiles(shape, params[cf.TMPDIR], tiles, out_type='stack_rate')
+    e = _merge_tiles(shape, params[cf.TMPDIR], tiles, out_type='stack_error')
+    samples = _merge_tiles(shape, params[cf.TMPDIR], tiles, out_type='stack_samples')
+
+    # mask pixels according to threshold
+    rate, error = stack.mask_rate(r, e, params[cf.LR_MAXSIG])
+
+    # save geotiff and numpy array files
+    _save_stack(ifgs_dict, params[cf.OUT_DIR], rate, out_type='stack_rate')
+    _save_stack(ifgs_dict, params[cf.OUT_DIR], error, out_type='stack_error')
+    _save_stack(ifgs_dict, params[cf.OUT_DIR], samples, out_type='stack_samples')
 
 
-def _save_stack(ifgs_dict, params, tiles, out_type):
+def _save_stack(ifgs_dict, outdir, array, out_type):
     """
-    Save stacking outputs
+    Convenience function to save Stacking geotiff and numpy array files
     """
-    log.info('Merging PyRate outputs {}'.format(out_type))
+    log.info('Saving PyRate outputs {}'.format(out_type))
     gt, md, wkt = ifgs_dict['gt'], ifgs_dict['md'], ifgs_dict['wkt']
     epochlist = ifgs_dict['epochlist']
-    ifgs = [v for v in ifgs_dict.values() if isinstance(v, PrereadIfg)]
-    dest = os.path.join(params[cf.OUT_DIR], out_type + ".tif")
+    dest = os.path.join(outdir, out_type + ".tif")
     md[ifc.EPOCH_DATE] = epochlist.dates
     if out_type == 'stack_rate':
         md[ifc.DATA_TYPE] = ifc.STACKRATE
     elif out_type == 'stack_error':
         md[ifc.DATA_TYPE] = ifc.STACKERROR
-    else:
+    else: # 'stack_samples'
         md[ifc.DATA_TYPE] = ifc.STACKSAMP
 
-    rate = np.zeros(shape=ifgs[0].shape, dtype=np.float32)
+    shared.write_output_geotiff(md, gt, wkt, array, dest, np.nan)
+    npy_rate_file = os.path.join(outdir, out_type + '.npy')
+    np.save(file=npy_rate_file, arr=array)
+
+    log.debug('Finished saving {}'.format(out_type))
+
+
+def _merge_tiles(s, tmpdir, tiles, out_type):
+    """
+    Convenience function to reassemble tiles from numpy files in to an array
+    """
+    log.info('Reading PyRate outputs {}'.format(out_type))
+    merged_array = np.zeros(shape=s, dtype=np.float32)
 
     for t in tiles:
-        rate_file = os.path.join(params[cf.TMPDIR], out_type + '_'+str(t.index)+'.npy')
-        rate_file = Path(rate_file)
-        rate_tile = np.load(file=rate_file)
-        rate[t.top_left_y:t.bottom_right_y, t.top_left_x:t.bottom_right_x] = rate_tile
-    shared.write_output_geotiff(md, gt, wkt, rate, dest, np.nan)
-    npy_rate_file = os.path.join(params[cf.OUT_DIR], out_type + '.npy')
-    np.save(file=npy_rate_file, arr=rate)
+        tile_file = Path(os.path.join(tmpdir, out_type + '_'+str(t.index)+'.npy'))
+        tile = np.load(file=tile_file)
+        merged_array[t.top_left_y:t.bottom_right_y, t.top_left_x:t.bottom_right_x] = tile
 
-    log.debug('Finished PyRate merging {}'.format(out_type))
+    log.debug('Finished merging {}'.format(out_type))
+    return merged_array
 
 
 def _merge_timeseries(rows, cols, params):

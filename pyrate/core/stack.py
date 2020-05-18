@@ -66,8 +66,6 @@ def stack_rate(ifgs, params, vcmt, mst=None):
             for j in range(cols):
                 rate[i, j], error[i, j], samples[i, j] = _stack_rate_by_pixel(i, j, mst, nsig, obs, pthresh, span, vcmt)
 
-    #rate, error = mask_rate(rate, error, maxsig)
-
     return rate, error, samples
 
 
