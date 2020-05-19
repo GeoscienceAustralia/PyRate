@@ -1,7 +1,6 @@
-#!/usr/bin/env python
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2017 Geoscience Australia
+#   Copyright 2020 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -17,10 +16,9 @@
 from setuptools import setup
 from setuptools.command.test import test as TestCommand
 from subprocess import check_output
-import sys
 import platform
 import setuptools
-__version__ = "0.4.0"
+__version__ = "0.4.1"
 
 # Get requirements (and dev requirements for testing) from requirements
 #  txt files. Also ensure we are using correct GDAL version.
@@ -36,8 +34,9 @@ if platform.system() in 'Windows':
 else:
     GDAL_VERSION = check_output(["gdal-config", "--version"]).decode(encoding="utf-8").split('\n')[0]
 
-requirements = [r + f'=={GDAL_VERSION}' if r == 'GDAL'
-                else r for r in requirements]
+requirements = [r + '=={GDAL_VERSION}'.format(GDAL_VERSION=GDAL_VERSION)
+                if r == 'GDAL' else r for r in requirements]
+
 setup_requirements = [r for r in requirements if "numpy==" in r]
 
 class PyTest(TestCommand, object):
@@ -75,11 +74,12 @@ setup(
     packages=setuptools.find_packages(),
     package_dir={'PyRate': 'pyrate'},
     package_data={
-        'utils': ['colormap.txt']
+        'utils': ['colourmap.txt']
     },
+    scripts=['scripts/gdal_calc_local.py'],
     entry_points={
           'console_scripts': [
-              'pyrate = pyrate.__main__:main'
+              'pyrate = pyrate.main:main'
           ]
       },
     setup_requires=setup_requirements,
@@ -90,8 +90,7 @@ setup(
     tests_require=test_requirements,
     license="Apache Software License 2.0",
     zip_safe=False,
-    keywords='PyRate, Python, InSAR, Geodesy, Remote Sensing, '
-             'Image Processing',
+    keywords='PyRate, Python, InSAR, Geodesy, Remote Sensing, Image Processing',
     classifiers=[
         'Development Status :: 4 - Beta',
         "Operating System :: POSIX",
@@ -99,7 +98,9 @@ setup(
         "Natural Language :: English",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
         "Intended Audience :: Science/Research",
         "Intended Audience :: Developers",
         "Topic :: Software Development :: Libraries :: Python Modules",

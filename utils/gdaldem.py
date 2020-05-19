@@ -1,6 +1,6 @@
 # This Python module is part of the PyRate software package
 #
-# Copyright 2017 Geoscience Australia
+# Copyright 2020 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -77,8 +77,6 @@ if __name__ == '__main__':
         color_file = gen_color_file(input_file)
     with open(color_file, 'r') as f:
         print('\ncolor file contents')
-        print('='*50)
         for l in f.readlines():
             print(l)
-    print('='*50)
     main(input_file, color_file, output_file)

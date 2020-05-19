@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2017 Geoscience Australia
+#   Copyright 2020 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ This Python module implements the minimum spanning tree
 functionality for selecting interferometric observations.
 """
 # pylint: disable=invalid-name
-import logging
 from itertools import product
 from numpy import array, nan, isnan, float32, empty, sum as nsum
 import numpy as np
@@ -32,13 +31,14 @@ from pyrate.core.algorithm import ifg_date_index_lookup
 from pyrate.core import config as cf
 from pyrate.core.shared import IfgPart, create_tiles
 from pyrate.core.shared import joblib_log_level
+from pyrate.core.logger import pyratelogger as log
 
 np.seterr(invalid='ignore')  # stops RuntimeWarning in nan conversion
 
 # TODO: may need to implement memory saving row-by-row access
 # TODO: document weighting by either Nan fraction OR variance
 
-log = logging.getLogger(__name__)
+
 
 
 def mst_from_ifgs(ifgs):
@@ -100,7 +100,7 @@ def mst_parallel(ifgs, params):
                  'processes'.format(no_tiles, ncpus))
         t_msts = Parallel(n_jobs=params[cf.PROCESSES], 
                           verbose=joblib_log_level(cf.LOG_LEVEL))(
-            delayed(mst_multiprocessing)(t, ifg_paths)
+            delayed(mst_multiprocessing)(t, ifg_paths, params=params)
             for t in tiles)
         for k, tile in enumerate(tiles):
             result[:, tile.top_left_y:tile.bottom_right_y,
@@ -110,12 +110,12 @@ def mst_parallel(ifgs, params):
         for k, tile in enumerate(tiles):
             result[:, tile.top_left_y:tile.bottom_right_y,
                    tile.top_left_x: tile.bottom_right_x] = \
-                mst_multiprocessing(tile, ifg_paths)
+                mst_multiprocessing(tile, ifg_paths, params=params)
 
     return result
 
 
-def mst_multiprocessing(tile, ifgs_or_paths, preread_ifgs=None):
+def mst_multiprocessing(tile, ifgs_or_paths, preread_ifgs=None, params=None):
     """
     Wrapper function for calculating MST matrix for a tile
 
@@ -134,7 +134,7 @@ def mst_multiprocessing(tile, ifgs_or_paths, preread_ifgs=None):
     #computation. To manage memory we need smaller tiles (IfgPart) as number
     #of interferograms increases
 
-    ifg_parts = [IfgPart(p, tile, preread_ifgs) for p in ifgs_or_paths]
+    ifg_parts = [IfgPart(p, tile, preread_ifgs, params) for p in ifgs_or_paths]
     return mst_boolean_array(ifg_parts)
 
 
@@ -224,7 +224,13 @@ def mst_matrix_networkx(ifgs):
     edges_with_weights = [(i.master, i.slave, i.nan_fraction) for i in ifgs]
     edges, g_nx = _minimum_spanning_edges_from_mst(edges_with_weights)
     # TODO: memory efficiencies can be achieved here with tiling
-    data_stack = array([i.phase_data for i in ifgs], dtype=float32)
+
+    list_of_phase_data = [i.phase_data for i in ifgs]
+    log.debug("list_of_phase_data length: " + str(len(list_of_phase_data)))
+    for row in list_of_phase_data:
+        log.debug("row length in list_of_phase_data: " + str(len(row)))
+        log.debug("row in list_of_phase_data: " + str(row))
+    data_stack = array(list_of_phase_data, dtype=float32)
 
     # create MSTs for each pixel in the ifg data stack
     nifgs = len(ifgs)

@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2017 Geoscience Australia
+#   Copyright 2020 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -19,9 +19,7 @@ of the interferometric reference pixel
 """
 import os
 from os.path import join
-import logging
 from itertools import product
-from pyrate.core.shared import joblib_log_level
 
 import numpy as np
 from numpy import isnan, std, mean, sum as nsum
@@ -29,11 +27,12 @@ from joblib import Parallel, delayed
 
 import pyrate.core.config as cf
 from pyrate.core.shared import Ifg
-
-log = logging.getLogger(__name__)
+from pyrate.core.shared import joblib_log_level
+from pyrate.core.logger import pyratelogger as log
 
 
 # TODO: move error checking to config step (for fail fast)
+# TODO: this function is not used. Plan removal
 def ref_pixel(ifgs, params):
     """
     Determines the most appropriate reference pixel coordinate by conducting
@@ -59,14 +58,18 @@ def ref_pixel(ifgs, params):
                             verbose=joblib_log_level(cf.LOG_LEVEL))(
             delayed(_ref_pixel_multi)(g, half_patch_size, phase_data,
                                      thresh, params) for g in grid)
-        refy, refx = find_min_mean(mean_sds, grid)
+        refxy = find_min_mean(mean_sds, grid)
     else:
         phase_data = [i.phase_data for i in ifgs]
         mean_sds = []
         for g in grid:
-            mean_sds.append(_ref_pixel_multi(
-                g, half_patch_size, phase_data, thresh, params))
-        refy, refx = find_min_mean(mean_sds, grid)
+            mean_sds.append(_ref_pixel_multi(g, half_patch_size, phase_data, thresh, params))
+        refxy = find_min_mean(mean_sds, grid)
+
+    if isinstance(refxy, ValueError):
+        raise ValueError('Refpixel calculation not possible!')
+
+    refy, refx = refxy
 
     if refy and refx:
         return refy, refx
@@ -86,8 +89,12 @@ def find_min_mean(mean_sds, grid):
     :rtype: tuple    
     """
     log.debug('Ranking ref pixel candidates based on mean values')
-    refp_index = np.nanargmin(mean_sds)
-    return grid[refp_index]
+    try:
+        refp_index = np.nanargmin(mean_sds)
+        return grid[refp_index]
+    except ValueError as v:
+        log.error(v)
+        return v
 
 
 def ref_pixel_setup(ifgs_or_paths, params):
@@ -174,8 +181,7 @@ def _ref_pixel_mpi(process_grid, half_patch_size, ifgs, thresh, params):
     log.debug('Ref pixel calculation started')
     mean_sds = []
     for g in process_grid:
-        mean_sds.append(_ref_pixel_multi(g, half_patch_size, ifgs, thresh,
-                                        params))
+        mean_sds.append(_ref_pixel_multi(g, half_patch_size, ifgs, thresh, params))
     return mean_sds
 
 

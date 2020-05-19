@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2017 Geoscience Australia
+#   Copyright 2020 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -17,46 +17,50 @@
 This Python module contains bindings for the GDAL library
 """
 # pylint: disable=too-many-arguments,R0914
-import logging
-
-from osgeo import gdal, gdalnumeric, gdalconst
+from osgeo import gdal, gdalconst, gdalnumeric
 from PIL import Image, ImageDraw
 import numpy as np
 import numexpr as ne
+from typing import Union, List, Tuple
+from osgeo.gdal import Dataset
+from pyrate.core import shared, ifgconstants as ifc
+from pyrate.core.logger import pyratelogger as log
 
-from pyrate.core import shared, ifgconstants as ifc, prepifg_helper
 
-_logger = logging.getLogger(__name__)
 gdal.SetCacheMax(2**15)
 GDAL_WARP_MEMORY_LIMIT = 2**10
 LOW_FLOAT32 = np.finfo(np.float32).min*1e-10
 
-def coherence_masking(src_ds, coherence_ds, coherence_thresh):
-    """
-    Perform coherence masking on raster in-place. 
-  
+
+def coherence_masking(input_gdal_dataset: Dataset,
+                      coherence_file_path: str,
+                      coherence_thresh: float) -> None:
+    """Perform coherence masking on raster in-place.
+
     Based on gdal_calc formula provided by Nahidul:
-    gdal_calc.py -A 20151127-20151209_VV_8rlks_flat_eqa.cc.tif 
-     -B 20151127-20151209_VV_8rlks_eqa.unw.tif 
-     --outfile=test_v1.tif --calc="B*(A>=0.8)-999*(A<0.8)" 
+    gdal_calc.py -A 20151127-20151209_VV_8rlks_flat_eqa.cc.tif
+     -B 20151127-20151209_VV_8rlks_eqa.unw.tif
+     --outfile=test_v1.tif --calc="B*(A>=0.8)-999*(A<0.8)"
      --NoDataValue=-999
 
-    Args:
-        ds: The interferogram to mask as GDAL dataset.
-        coherence_ds: The coherence GDAL dataset.
-        coherence_thresh: The coherence threshold.
     """
+
+    coherence_ds = gdal.Open(coherence_file_path, gdalconst.GA_ReadOnly)
     coherence_band = coherence_ds.GetRasterBand(1)
-    src_band = src_ds.GetRasterBand(1)
-    # ndv = src_band.GetNoDataValue()
+    src_band = input_gdal_dataset.GetRasterBand(1)
     ndv = np.nan
     coherence = coherence_band.ReadAsArray()
     src = src_band.ReadAsArray()
-    var = {'coh': coherence, 'src': src, 't': coherence_thresh, 'ndv': ndv}
-    formula = 'where(coh>=t, src, ndv)'
+    var = {"coh": coherence, "src": src, "t": coherence_thresh, "ndv": ndv}
+    formula = "where(coh>=t, src, ndv)"
     res = ne.evaluate(formula, local_dict=var)
     src_band.WriteArray(res)
-    
+    # update metadata
+    input_gdal_dataset.GetRasterBand(1).SetNoDataValue(ndv)
+    input_gdal_dataset.FlushCache()  # write on the disc
+    log.info(f"Applied coherence masking using coh file {coherence_file_path}")
+
+
 def world_to_pixel(geo_transform, x, y):
     """
     Uses a gdal geomatrix (gdal.GetGeoTransform()) to calculate
@@ -116,7 +120,7 @@ def crop(input_file, extents, geo_trans=None, nodata=np.nan):
         """
         Converts a Python Imaging Library (PIL) array to a gdalnumeric image.
         """
-        arr = gdalnumeric.fromstring(i.tobytes(), 'b')
+        arr = gdalnumeric.frombuffer(i.tobytes(), 'b')
         arr.shape = i.im.size[1], i.im.size[0]
         return arr
 
@@ -191,8 +195,6 @@ def crop(input_file, extents, geo_trans=None, nodata=np.nan):
 
         clip = gdalnumeric.choose(mask, (clip, nodata))
 
-    # AttributeError: 'numpy.ndarray' object has no attribute 'close'
-    # raster.close()
     raster = None
 
     return clip, gt2
@@ -204,7 +206,7 @@ def resample_nearest_neighbour(input_tif, extents, new_res, output_file):
 
     :param str input_tif: input geotiff file path
     :param list extents: new extents for cropping
-    :param float new_res: new resolution for resampling
+    :param list[float] new_res: new resolution for resampling
     :param str output_file: output geotiff file path
 
     :return: dst: resampled image
@@ -274,8 +276,8 @@ def _gdalwarp_width_and_height(max_x, max_y, min_x, min_y, geo_trans):
 
 
 def crop_resample_average(
-        input_tif, extents, new_res, output_file, thresh,
-        out_driver_type='GTiff', 
+        input_tif, extents: Union[List, Tuple], new_res, output_file, thresh,
+        out_driver_type='GTiff',
         match_pyrate=False, hdr=None, coherence_path=None, coherence_thresh=None):
     """
     Crop, resample, and average a geotiff image.
@@ -294,66 +296,63 @@ def crop_resample_average(
     :return: out_ds: destination gdal dataset object
     :rtype: gdal.Dataset
     """
-    dst_ds, _, _, _ = _crop_resample_setup(
-        extents, input_tif, new_res, output_file,
-        out_bands=2, dst_driver_type='MEM')
+    dst_ds, _, _, _ = _crop_resample_setup(extents, input_tif, new_res, output_file,
+                                           out_bands=2, dst_driver_type='MEM')
 
     # make a temporary copy of the dst_ds for PyRate style prepifg
-    tmp_ds = gdal.GetDriverByName('MEM').CreateCopy('', dst_ds) \
-        if (match_pyrate and new_res[0]) else None
+    tmp_ds = gdal.GetDriverByName('MEM').CreateCopy('', dst_ds) if (match_pyrate and new_res[0]) else None
 
-    src_ds, src_ds_mem = _setup_source(input_tif)   
+    src_ds, src_ds_mem = _setup_source(input_tif)
 
     if coherence_path and coherence_thresh:
-        coherence_raster = prepifg_helper.dem_or_ifg(coherence_path)
-        coherence_raster.open()
-        coherence_ds = coherence_raster.dataset
-        coherence_masking(src_ds_mem, coherence_ds, coherence_thresh)
+        coherence_masking(src_ds_mem, coherence_path, coherence_thresh)
+
     elif coherence_path and not coherence_thresh:
         raise ValueError(f"Coherence file provided without a coherence "
                          f"threshold. Please ensure you provide 'cohthresh' "
                          f"in your config if coherence masking is enabled.")
 
-    resampled_average, src_ds_mem = \
-        gdal_average(dst_ds, src_ds, src_ds_mem, thresh)
+    resampled_average, src_ds_mem = gdal_average(dst_ds, src_ds, src_ds_mem, thresh)
+    src_ds = None
     src_dtype = src_ds_mem.GetRasterBand(1).DataType
     src_gt = src_ds_mem.GetGeoTransform()
 
     # required to match Legacy output
     if tmp_ds:
-        _alignment(input_tif, new_res, resampled_average, src_ds_mem,
-                          src_gt, tmp_ds)
+        _alignment(input_tif, new_res, resampled_average, src_ds_mem, src_gt, tmp_ds)
 
     # grab metadata from existing geotiff
     gt = dst_ds.GetGeoTransform()
     wkt = dst_ds.GetProjection()
 
     # TEST HERE IF EXISTING FILE HAS PYRATE METADATA. IF NOT ADD HERE
-    if not ifc.DATA_TYPE in dst_ds.GetMetadata() and hdr is not None:
+    if ifc.DATA_TYPE not in dst_ds.GetMetadata() and hdr is not None:
         md = shared.collate_metadata(hdr)
-    else: 
+    else:
         md = dst_ds.GetMetadata()
 
     # update metadata for output
+
+    # TODO: Metadata should be updated immediately as a prepifg/process step is applied
+    # move this into the respective steps
     for k, v in md.items():
         if k == ifc.DATA_TYPE:
             # update data type metadata
-            if v == ifc.ORIG and coherence_path:
-                md.update({ifc.DATA_TYPE:ifc.COHERENCE})
-            elif v == ifc.ORIG and not coherence_path:
-                md.update({ifc.DATA_TYPE:ifc.MULTILOOKED})
+            if (v == ifc.ORIG) and (coherence_path is not None):
+                md.update({ifc.DATA_TYPE: ifc.COHERENCE})
+            elif (v == ifc.ORIG) and (coherence_path is None):
+                md.update({ifc.DATA_TYPE: ifc.MULTILOOKED})
             elif v == ifc.DEM:
-                md.update({ifc.DATA_TYPE:ifc.MLOOKED_DEM})
+                md.update({ifc.DATA_TYPE: ifc.MLOOKED_DEM})
             elif v == ifc.INCIDENCE:
-                md.update({ifc.DATA_TYPE:ifc.MLOOKED_INC})
-            elif v == ifc.COHERENCE and coherence_path:
+                md.update({ifc.DATA_TYPE: ifc.MLOOKED_INC})
+            elif (v == ifc.COHERENCE) and (coherence_path is None):
+                # during orbital fit multilooking
                 pass
-            elif v == ifc.MULTILOOKED and coherence_path:
-                md.update({ifc.DATA_TYPE:ifc.COHERENCE})
-            elif v == ifc.MULTILOOKED and not coherence_path:
+            elif v == ifc.MULTILOOKED:
                 pass
             else:
-                raise TypeError('Data Type metadata not recognised')
+                raise TypeError(f'Data Type metadata {v} not recognised')
 
     # In-memory GDAL driver doesn't support compression so turn it off.
     creation_opts = ['compress=packbits'] if out_driver_type != 'MEM' else []
@@ -361,8 +360,9 @@ def crop_resample_average(
                                  driver=out_driver_type, bands=1, dtype=src_dtype, metadata=md, crs=wkt,
                                  geotransform=gt, creation_opts=creation_opts)
 
-    shared.write_geotiff(resampled_average, out_ds, np.nan) 
-
+    if out_driver_type != 'MEM':
+        shared.write_geotiff(resampled_average, out_ds, np.nan)
+        log.info(f"Writing geotiff: {output_file}")
     return resampled_average, out_ds
 
 
@@ -382,13 +382,13 @@ def _alignment(input_tif, new_res, resampled_average, src_ds_mem,
     # turn off nan-conversion
     src_ds_mem.GetRasterBand(1).SetNoDataValue(LOW_FLOAT32)
     # nearest neighbor resapling
-    gdal.ReprojectImage(src_ds_mem, tmp_ds, '', '',
-                        gdal.GRA_NearestNeighbour)
+    gdal.ReprojectImage(src_ds_mem, tmp_ds, '', '', gdal.GRA_NearestNeighbour)
     # only take the [yres:nrows, xres:ncols] slice
     if nrows > yres or ncols > xres:
         resampled_nearest_neighbor = tmp_ds.GetRasterBand(1).ReadAsArray()
         resampled_average[yres - nrows:, xres - ncols:] = \
             resampled_nearest_neighbor[yres - nrows:, xres - ncols:]
+
 
 def gdal_average(dst_ds, src_ds, src_ds_mem, thresh):
     """
@@ -406,9 +406,13 @@ def gdal_average(dst_ds, src_ds, src_ds_mem, thresh):
         computational efficiency
     :rtype: gdal.Dataset
     """
-    src_ds_mem.GetRasterBand(2).SetNoDataValue(-100000)
     src_gt = src_ds.GetGeoTransform()
     src_ds_mem.SetGeoTransform(src_gt)
+    data = src_ds_mem.GetRasterBand(1).ReadAsArray()
+    # update nan_matrix
+    # if data==nan, then 1, else 0
+    nan_matrix = np.isnan(data)  # all nans due to phase data + coh masking if used
+    src_ds_mem.GetRasterBand(2).WriteArray(nan_matrix)
     gdal.ReprojectImage(src_ds_mem, dst_ds, '', '', gdal.GRA_Average)
     # dst_ds band2 average is our nan_fraction matrix
     nan_frac = dst_ds.GetRasterBand(2).ReadAsArray()
@@ -423,14 +427,12 @@ def _setup_source(input_tif):
     data = src_ds.GetRasterBand(1).ReadAsArray()
     src_dtype = src_ds.GetRasterBand(1).DataType
     mem_driver = gdal.GetDriverByName('MEM')
-    src_ds_mem = mem_driver.Create('',
-                                   src_ds.RasterXSize, src_ds.RasterYSize,
-                                   2, src_dtype)
+    src_ds_mem = mem_driver.Create('', src_ds.RasterXSize, src_ds.RasterYSize, 2, src_dtype)
+    if isinstance(shared.dem_or_ifg(data_path=input_tif), shared.Ifg):
+        data[np.isclose(data, 0, atol=1e-6)] = np.nan   # nan conversion of phase data
     src_ds_mem.GetRasterBand(1).WriteArray(data)
-    src_ds_mem.GetRasterBand(1).SetNoDataValue(0)
-    # if data==0, then 1, else 0
-    nan_matrix = np.isclose(data, 0, atol=1e-6)
-    src_ds_mem.GetRasterBand(2).WriteArray(nan_matrix)
+    src_ds_mem.GetRasterBand(1).SetNoDataValue(np.nan)
+    src_ds_mem.GetRasterBand(2).SetNoDataValue(np.nan)
     src_ds_mem.SetGeoTransform(src_ds.GetGeoTransform())
     return src_ds, src_ds_mem
 

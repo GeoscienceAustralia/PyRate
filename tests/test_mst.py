@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2017 Geoscience Australia
+#   Copyright 2020 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -13,9 +13,9 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
-'''
+"""
 This module contains tests for the mst.py PyRate module.
-'''
+"""
 
 import unittest
 from itertools import product
@@ -30,7 +30,7 @@ from tests import common
 
 
 class MSTTests(unittest.TestCase):
-    '''Basic verification of minimum spanning tree (MST) functionality.'''
+    """Basic verification of minimum spanning tree (MST) functionality."""
 
     def setUp(self):
         self.ifgs = small_data_setup()
@@ -104,7 +104,7 @@ class MSTTests(unittest.TestCase):
             m.phase_data[:] = nan
 
         res = mst._mst_matrix_as_array(mock_ifgs)
-        exp = empty((1,1)) #, dtype=object)
+        exp = empty((1, 1))  # , dtype=object)
         exp[:] = nan
 
         shape = (mock_ifgs[0].nrows, mock_ifgs[0].ncols)
@@ -142,8 +142,7 @@ class NetworkxMSTTreeCheck(unittest.TestCase):
 
     def test_assert_is_not_tree(self):
         non_overlapping = [1, 2, 5, 6, 12, 13, 14, 15, 16, 17]
-        ifgs_non_overlapping = [ifg for i, ifg in enumerate(self.ifgs)
-                                if i+1 in non_overlapping]
+        ifgs_non_overlapping = [ifg for i, ifg in enumerate(self.ifgs) if i + 1 in non_overlapping]
         edges, is_tree, ntrees, _ = mst.mst_from_ifgs(ifgs_non_overlapping)
         self.assertFalse(is_tree)
         self.assertEqual(4, ntrees)
@@ -154,8 +153,7 @@ class NetworkxMSTTreeCheck(unittest.TestCase):
     def test_assert_is_tree(self):
         overlapping = [1, 2, 3, 4, 6, 7, 10, 11, 16, 17]
 
-        ifgs_overlapping = [ifg for i, ifg in enumerate(self.ifgs)
-                                if (i+1 in overlapping)]
+        ifgs_overlapping = [ifg for i, ifg in enumerate(self.ifgs) if (i + 1 in overlapping)]
         edges, is_tree, ntrees, _ = mst.mst_from_ifgs(ifgs_overlapping)
         self.assertFalse(is_tree)
         self.assertEqual(4, ntrees)
@@ -163,16 +161,14 @@ class NetworkxMSTTreeCheck(unittest.TestCase):
     def test_assert_two_trees_overlapping(self):
         overlapping = [3, 4, 5, 6, 7, 8, 9, 10, 11, 16, 17]
 
-        ifgs_overlapping = [ifg for i, ifg in enumerate(self.ifgs)
-                                if (i+1 in overlapping)]
+        ifgs_overlapping = [ifg for i, ifg in enumerate(self.ifgs) if (i + 1 in overlapping)]
         edges, is_tree, ntrees, _ = mst.mst_from_ifgs(ifgs_overlapping)
         self.assertFalse(is_tree)
         self.assertEqual(2, ntrees)
 
     def test_assert_two_trees_non_overlapping(self):
         non_overlapping = [2, 5, 6, 12, 13, 15]
-        ifgs_non_overlapping = [ifg for i, ifg in enumerate(self.ifgs)
-                                if i+1 in non_overlapping]
+        ifgs_non_overlapping = [ifg for i, ifg in enumerate(self.ifgs) if i + 1 in non_overlapping]
         edges, is_tree, ntrees, _ = mst.mst_from_ifgs(ifgs_non_overlapping)
         self.assertFalse(is_tree)
         self.assertEqual(2, ntrees)
@@ -189,11 +185,9 @@ class IfgPartTest(unittest.TestCase):
         r_end = 10
         for i in self.ifgs:
             tile = Tile(0, top_left=(r_start, 0), bottom_right=(r_end, i.ncols))
-            ifg_part = IfgPart(i.data_path, tile)
-            self.assertEqual(ifg_part.phase_data.shape,
-                             (r_end-r_start, i.phase_data.shape[1]))
-            np.testing.assert_array_equal(ifg_part.phase_data,
-                                          i.phase_data[r_start:r_end, :])
+            ifg_part = IfgPart(i.data_path, tile, params=self.params)
+            self.assertEqual(ifg_part.phase_data.shape, (r_end-r_start, i.phase_data.shape[1]))
+            np.testing.assert_array_equal(ifg_part.phase_data, i.phase_data[r_start:r_end, :])
 
     def test_mst_multiprocessing_serial(self):
         self.params[cf.PARALLEL] = False

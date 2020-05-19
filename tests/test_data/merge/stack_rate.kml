@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://earth.google.com/kml/2.1">
   <Document>
-    <name>linrate.kml</name>
+    <name>stack_rate.kml</name>
     <GroundOverlay>
-      <name>linrate.png</name>
+      <name>stack_rate.png</name>
       <Icon>
-        <href>linrate.png</href>
+        <href>stack_rate.png</href>
       </Icon>
       <LatLonBox>
         <north>  -34.1700000 </north>

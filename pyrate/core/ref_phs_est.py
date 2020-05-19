@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2017 Geoscience Australia
+#   Copyright 2020 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -17,9 +17,6 @@
 """
 This Python module implements a reference phase estimation algorithm.
 """
-import logging
-import os
-
 from joblib import Parallel, delayed
 import numpy as np
 
@@ -27,7 +24,8 @@ from pyrate.core import ifgconstants as ifc, config as cf
 from pyrate.core.shared import joblib_log_level, nanmedian, Ifg
 from pyrate.core import mpiops
 
-log = logging.getLogger(__name__)
+from pyrate.core.logger import pyratelogger as log
+
 
 MASTER_PROCESS = 0
 
@@ -115,7 +113,7 @@ def est_ref_phase_method1(ifg_paths, params):
     :rtype: ndarray
     :return: ifgs: Reference phase data is removed interferograms in place
     """
-    def _inner(ifg_paths):
+    def _process_phase_sum(ifg_paths):
         if isinstance(ifg_paths[0], Ifg):
             proc_ifgs = ifg_paths
         else:
@@ -125,19 +123,32 @@ def est_ref_phase_method1(ifg_paths, params):
             if not ifg.is_open:
                 ifg.open(readonly=False)
 
-        ifg_phase_data_sum = np.zeros(proc_ifgs[0].shape, dtype=np.float64)
-        phase_data = [i.phase_data for i in proc_ifgs]
+        ifg_phase_data_sum = np.zeros(proc_ifgs[0].shape, dtype=np.float32)
+
         for ifg in proc_ifgs:
             ifg_phase_data_sum += ifg.phase_data
 
-        comp = np.isnan(ifg_phase_data_sum)
+        return ifg_phase_data_sum
+
+    def _inner(proc_ifgs, phase_data_sum):
+        if isinstance(proc_ifgs[0], Ifg):
+            proc_ifgs = proc_ifgs
+        else:
+            proc_ifgs = [Ifg(ifg_path) for ifg_path in proc_ifgs]
+
+        for ifg in proc_ifgs:
+            if not ifg.is_open:
+                ifg.open(readonly=False)
+
+        comp = np.isnan(phase_data_sum)
         comp = np.ravel(comp, order='F')
+
         if params[cf.PARALLEL]:
+            phase_data = [i.phase_data for i in proc_ifgs]
             log.info("Calculating ref phase using multiprocessing")
-            ref_phs = Parallel(n_jobs=params[cf.PROCESSES], 
-                               verbose=joblib_log_level(cf.LOG_LEVEL))(
-                delayed(_est_ref_phs_method1)(p, comp)
-                for p in phase_data)
+            ref_phs = Parallel(n_jobs=params[cf.PROCESSES], verbose=joblib_log_level(cf.LOG_LEVEL))(
+                delayed(_est_ref_phs_method1)(p, comp) for p in phase_data
+            )
             for n, ifg in enumerate(proc_ifgs):
                 ifg.phase_data -= ref_phs[n]
         else:
@@ -154,8 +165,11 @@ def est_ref_phase_method1(ifg_paths, params):
         return ref_phs
 
     process_ifg_paths = mpiops.array_split(ifg_paths)
-    ref_phs = _inner(process_ifg_paths)
+    ifg_phase_data_sum = mpiops.comm.allreduce(_process_phase_sum(process_ifg_paths), mpiops.sum0_op)
+    ref_phs = _inner(process_ifg_paths, ifg_phase_data_sum)
+
     return ref_phs
+
 
 def _est_ref_phs_method1(phase_data, comp):
     """
@@ -165,9 +179,11 @@ def _est_ref_phs_method1(phase_data, comp):
     ifgv[comp == 1] = np.nan
     return nanmedian(ifgv)
 
+
 def _update_phase_metadata(ifg):
     ifg.meta_data[ifc.PYRATE_REF_PHASE] = ifc.REF_PHASE_REMOVED
     ifg.write_modified_phase()
+
 
 class ReferencePhaseError(Exception):
     """

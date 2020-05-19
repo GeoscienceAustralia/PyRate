@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2017 Geoscience Australia
+#   Copyright 2020 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -17,10 +17,12 @@
 This Python module contains tools for reading ROI_PAC format input data.
 """
 import os
+from pathlib import Path
 import re
 import datetime
 import pyrate.core.ifgconstants as ifc
 from pyrate.core import config as cf
+from pyrate.core.shared import extract_epochs_from_filename
 
 # ROIPAC RSC header file constants
 WIDTH = "WIDTH"
@@ -69,7 +71,7 @@ FLOAT_HEADERS = [X_FIRST, X_STEP, Y_FIRST, Y_STEP, TIME_SPAN_YEAR,
 DATE_HEADERS = [DATE, DATE12]
 
 ROIPAC_HEADER_LEFT_JUSTIFY = 18
-ROI_PAC_HEADER_FILE_EXT = "rsc"
+ROI_PAC_HEADER_FILE_EXT = ".rsc"
 
 def parse_date(dstr):
     """
@@ -101,7 +103,7 @@ def parse_header(hdr_file):
     :return: subset: subset of metadata
     :rtype: dict
     """
-    with open(hdr_file) as f:
+    with open(hdr_file, encoding="utf8", errors='ignore') as f:
         text = f.read()
 
     try:
@@ -191,7 +193,6 @@ def manage_header(header_file, projection):
     :return: combined_header: Combined metadata dictionary
     :rtype: dict
     """
-
     header = parse_header(header_file)
     if ifc.PYRATE_DATUM not in header:  # DEM already has DATUM
         header[ifc.PYRATE_DATUM] = projection
@@ -204,19 +205,25 @@ def roipac_header(file_path, params):
     Function to obtain a header for roipac interferogram file or converted
     geotiff.
     """
-    rsc_file = os.path.join(params[cf.DEM_HEADER_FILE])
+    rsc_file = params[cf.DEM_HEADER_FILE]
+    p = Path(file_path)
     if rsc_file is not None:
         projection = parse_header(rsc_file)[ifc.PYRATE_DATUM]
     else:
-        raise RoipacException('No DEM resource/header file is '
-                                     'provided')
-    if file_path.endswith('_dem.tif'):
+        raise RoipacException('No DEM resource/header file is provided')
+    if file_path.endswith('dem.tif'):
         header_file = os.path.join(params[cf.DEM_HEADER_FILE])
-    elif file_path.endswith('_unw.tif'):
-        base_file = file_path[:-8]
-        header_file = base_file + '.unw.' + ROI_PAC_HEADER_FILE_EXT
+    elif file_path.endswith('unw.tif'):
+        # TODO: improve this
+        interferogram_epoches = extract_epochs_from_filename(p.name)
+        for header_path in params[cf.HEADER_FILE_PATHS]:
+            h = Path(header_path.unwrapped_path)
+            header_epochs = extract_epochs_from_filename(h.name)
+            if set(header_epochs).__eq__(set(interferogram_epoches)):
+                header_file = header_path.unwrapped_path
+                break
     else:
-        header_file = "%s.%s" % (file_path, ROI_PAC_HEADER_FILE_EXT)
+        header_file = "%s%s" % (file_path, ROI_PAC_HEADER_FILE_EXT)
 
     header = manage_header(header_file, projection)
 

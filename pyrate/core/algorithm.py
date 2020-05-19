@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2017 Geoscience Australia
+#   Copyright 2020 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -16,13 +16,11 @@
 """
 This Python module contains a collection of generic algorithms used in PyRate
 """
-import logging
+from typing import Union, Iterable, Dict, Tuple
 from numpy import sin, cos, unique, histogram, diag, dot
 from scipy.linalg import qr, solve, lstsq
 from pyrate.core.shared import EpochList, IfgException, PrereadIfg
 from pyrate.core.ifgconstants import DAYS_PER_YEAR
-
-log = logging.getLogger(__name__)
 
 
 def is_square(arr):
@@ -187,15 +185,14 @@ def ifg_date_index_lookup(ifgs, date_pair):
         if date_pair == (ifgs[i].master, ifgs[i].slave):
             return i
 
-    raise ValueError("Cannot find Ifg with "
-                     "master/slave of %s" % str(date_pair))
+    raise ValueError("Cannot find Ifg with master/slave of %s" % str(date_pair))
 
 
-def get_epochs(ifgs):
+def get_epochs(ifgs: Union[Iterable, Dict]) -> Tuple[EpochList, int]:
     """
     Returns an EpochList derived from the given interferograms.
 
-    :param list ifgs: List of interferogram objects
+    :param ifgs: List of interferogram objects
 
     :return: EpochList
     :rtype: list
@@ -206,11 +203,9 @@ def get_epochs(ifgs):
     combined = get_all_epochs(ifgs)
     dates, n = unique(combined, False, True)
     repeat, _ = histogram(n, bins=len(set(n)))
-    log.info('Found {} unique epochs in the {} interferogram network'.format(len(dates), len(ifgs)))
 
     # absolute span for each date from the zero/start point
-    span = [(dates[i] - dates[0]).days / DAYS_PER_YEAR
-            for i in range(len(dates))]
+    span = [(dates[i] - dates[0]).days / DAYS_PER_YEAR for i in range(len(dates))]
     return EpochList(dates, repeat, span), n
 
 
@@ -240,3 +235,43 @@ def master_slave_ids(dates):
 
     dset = sorted(set(dates))
     return dict([(date_, i) for i, date_ in enumerate(dset)])
+
+
+def factorise_integer(n, memo={}, left=2):
+    """
+    Returns two factors a and b of a supplied number n such that a * b = n.
+    The two factors are evaluated to be as close to each other in size as possible
+
+    :param int n: Number to factorise
+    :param dict memo: dictionary of candidate factors
+    :param int left: operation flag (default = 2)
+
+    :return: a, factor one
+    :rtype: int
+    :return: b, factor two
+    :rtype: int
+    """
+    n = int(n)
+    if (n, left) in memo:
+        return memo[(n, left)]
+    if left == 1:
+        return n, [n]
+    i = 2
+    best = n
+    bestTuple = [n]
+    while i * i <= n:
+        if n % i == 0:
+            rem = factorise_integer(n / i, memo, left - 1)
+            if rem[0] + i < best:
+                best = rem[0] + i
+                bestTuple = [i] + rem[1]
+        i += 1
+
+    # handle edge case when only one processor is available
+    if bestTuple == [4]:
+        return 2, 2
+
+    if len(bestTuple) == 1:
+        bestTuple.append(1)
+
+    return int(bestTuple[0]), int(bestTuple[1])
