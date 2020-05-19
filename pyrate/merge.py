@@ -115,7 +115,7 @@ def create_png_from_tif(output_folder_path):
     for i, no in enumerate(np.arange(minimum, maximum, step)):
         color_map_list[i+1][0] = str(no)
 
-    color_map_path = os.path.join(output_folder_path, "colormap.txt")
+    color_map_path = os.path.join(output_folder_path, "colourmap.txt")
     with open(color_map_path, "w") as f:
         for i in range(no_of_data_value):
             f.write(' '.join(color_map_list[i]) + "\n")

@@ -27,7 +27,7 @@ PREPIFG = 'prepifg'
 PROCESS = 'process'
 MERGE = 'merge'
 
-REF_COLOR_MAP_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "utils", "colormap.txt")
+REF_COLOR_MAP_PATH = os.path.join(PYRATEPATH, "utils", "colourmap.txt")
 # distance division factor of 1000 converts to km and is needed to match legacy output
 DISTFACT = 1000
 # mappings for metadata in header for interferogram

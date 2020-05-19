@@ -74,7 +74,7 @@ setup(
     packages=setuptools.find_packages(),
     package_dir={'PyRate': 'pyrate'},
     package_data={
-        'utils': ['colormap.txt']
+        'utils': ['colourmap.txt']
     },
     scripts=['scripts/gdal_calc_local.py'],
     entry_points={

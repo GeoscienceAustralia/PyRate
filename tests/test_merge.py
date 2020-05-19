@@ -15,8 +15,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 """
-This Python module contains tests for mpi operations in PyRate.
-Tun this module as 'mpirun -n 4 pytest tests/test_mpi.py'
+This Python module contains tests for the Merge step of PyRate.
 """
 import os
 import unittest
@@ -34,7 +33,7 @@ class MergingTest(unittest.TestCase):
         create_png_from_tif(output_folder_path)
 
         # check if color map is created
-        output_color_map_path = os.path.join(output_folder_path, "colormap.txt")
+        output_color_map_path = os.path.join(output_folder_path, "colourmap.txt")
         if not os.path.isfile(output_color_map_path):
             self.assertTrue(False, "Output color map file not found at: " + output_color_map_path)
 
