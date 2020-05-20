@@ -1,0 +1,669 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pyrate.process &mdash; PyRate 0.4.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: white" >
+          
+
+          
+            <a href="../../index.html">
+          
+
+          
+            
+            <img src="../../_static/PyRate_logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+    <li><a href="https://geoscienceaustralia.github.io/PyRate/">Home</a></li>
+    
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#dependencies">Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#platforms">Platforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#verify-installation">Verify Installation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage.html">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../usage.html#configuration">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage.html#workflow">Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage.html#input-files">Input Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage.html#parallel-processing">Parallel Processing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../scripts.html">PyRate Scripts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../pyrate.conv2tif.html">PyRate Conv2tif Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pyrate.prepifg.html">PyRate Prepifg Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pyrate.process.html">PyRate Process Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pyrate.merge.html">PyRate Merge Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pyrate.__main__.html">PyRate Main Script</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">PyRate Modules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../algorithm.html">Algorithm Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../aps.html">Atmospheric Phase Screen Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../config.html">Config Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../covariance.html">Covariance Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../gamma.html">GAMMA Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../gdal_python.html">GDAL-Python Bindings Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../ifgconstants.html">Ifgconstants Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../logger.html">Logging Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../mpiops.html">MPI operations Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../mst.html">Minimum Spanning Tree Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../orbital.html">Orbital Error Correction Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../prepifg_helper.html">Prepifg Helper Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../ref_phs_est.html">Reference Phase Calculation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../refpixel.html">Reference Pixel Calculation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../roipac.html">ROI_PAC Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../shared.html">Shared Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../stack.html">Stacking Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../timeseries.html">Time Series Module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../troubleshooting.html">Troubleshooting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../troubleshooting.html#corrections-being-skipped">Corrections being skipped</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../troubleshooting.html#valueerror-too-many-values-to-unpack-expected-2">ValueError: too many values to unpack (expected 2)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../troubleshooting.html#stack-rate-map-appears-to-be-blank-empty">Stack Rate map appears to be blank/empty</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../troubleshooting.html#failure-of-aps-spatial-low-pass-filter">Failure of APS spatial low pass filter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../troubleshooting.html#out-of-memory-errors">Out of memory errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../troubleshooting.html#incorrect-modules-loaded-on-gadi">Incorrect modules loaded on Gadi</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../contributing.html#types-of-contributions">Types of Contributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../contributing.html#get-started">Get Started!</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../contributing.html#pull-request-guidelines">Pull Request Guidelines</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../authors.html">Credits</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../authors.html#development-lead">Development Lead</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../authors.html#contributors">Contributors</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../history.html">Release History</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id1">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id2">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id6">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id10">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id11">0.1.0 (2017-01-31)</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">PyRate</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>pyrate.process</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pyrate.process</h1><div class="highlight"><pre>
+<span></span><span class="c1">#   This Python module is part of the PyRate software package.</span>
+<span class="c1">#</span>
+<span class="c1">#   Copyright 2020 Geoscience Australia</span>
+<span class="c1">#</span>
+<span class="c1">#   Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1">#   you may not use this file except in compliance with the License.</span>
+<span class="c1">#   You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#       http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1">#   Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1">#   distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1">#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1">#   See the License for the specific language governing permissions and</span>
+<span class="c1">#   limitations under the License.</span>
+<span class="c1"># coding: utf-8</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This Python module runs the main PyRate processing workflow</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">os.path</span> <span class="kn">import</span> <span class="n">join</span>
+<span class="kn">import</span> <span class="nn">pickle</span> <span class="k">as</span> <span class="nn">cp</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">pyrate.core</span> <span class="kn">import</span> <span class="p">(</span><span class="n">shared</span><span class="p">,</span> <span class="n">algorithm</span><span class="p">,</span> <span class="n">orbital</span><span class="p">,</span> <span class="n">ref_phs_est</span> <span class="k">as</span> <span class="n">rpe</span><span class="p">,</span> 
+                         <span class="n">ifgconstants</span> <span class="k">as</span> <span class="n">ifc</span><span class="p">,</span> <span class="n">mpiops</span><span class="p">,</span> <span class="n">config</span> <span class="k">as</span> <span class="n">cf</span><span class="p">,</span> 
+                         <span class="n">timeseries</span><span class="p">,</span> <span class="n">mst</span><span class="p">,</span> <span class="n">covariance</span> <span class="k">as</span> <span class="n">vcm_module</span><span class="p">,</span> 
+                         <span class="n">stack</span><span class="p">,</span> <span class="n">refpixel</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">pyrate.core.aps</span> <span class="kn">import</span> <span class="n">wrap_spatio_temporal_filter</span>
+<span class="kn">from</span> <span class="nn">pyrate.core.shared</span> <span class="kn">import</span> <span class="n">Ifg</span><span class="p">,</span> <span class="n">PrereadIfg</span><span class="p">,</span> <span class="n">get_tiles</span><span class="p">,</span> <span class="n">mpi_vs_multiprocess_logging</span>
+<span class="kn">from</span> <span class="nn">pyrate.core.logger</span> <span class="kn">import</span> <span class="n">pyratelogger</span> <span class="k">as</span> <span class="n">log</span>
+
+<span class="n">MASTER_PROCESS</span> <span class="o">=</span> <span class="mi">0</span>
+
+
+<span class="k">def</span> <span class="nf">_join_dicts</span><span class="p">(</span><span class="n">dicts</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function to concatenate dictionaries</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">dicts</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+        <span class="k">return</span>
+    <span class="n">assembled_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">D</span> <span class="ow">in</span> <span class="n">dicts</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">D</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+    <span class="k">return</span> <span class="n">assembled_dict</span>
+
+
+<span class="k">def</span> <span class="nf">_create_ifg_dict</span><span class="p">(</span><span class="n">dest_tifs</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">tiles</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    1. Convert ifg phase data into numpy binary files.</span>
+<span class="sd">    2. Save the preread_ifgs dict with information about the ifgs that are</span>
+<span class="sd">    later used for fast loading of Ifg files in IfgPart class</span>
+
+<span class="sd">    :param list dest_tifs: List of destination tifs</span>
+<span class="sd">    :param dict params: Config dictionary</span>
+<span class="sd">    :param list tiles: List of all Tile instances</span>
+
+<span class="sd">    :return: preread_ifgs: Dictionary containing information regarding</span>
+<span class="sd">                interferograms that are used later in workflow</span>
+<span class="sd">    :rtype: dict</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ifgs_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">nifgs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dest_tifs</span><span class="p">)</span>
+    <span class="n">process_tifs</span> <span class="o">=</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">array_split</span><span class="p">(</span><span class="n">dest_tifs</span><span class="p">)</span>
+    <span class="n">shared</span><span class="o">.</span><span class="n">save_numpy_phase</span><span class="p">(</span><span class="n">dest_tifs</span><span class="p">,</span> <span class="n">tiles</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">process_tifs</span><span class="p">:</span>
+        <span class="n">ifg</span> <span class="o">=</span> <span class="n">shared</span><span class="o">.</span><span class="n">_prep_ifg</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+        <span class="n">ifgs_dict</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">=</span> <span class="n">PrereadIfg</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">d</span><span class="p">,</span>
+                                  <span class="n">nan_fraction</span><span class="o">=</span><span class="n">ifg</span><span class="o">.</span><span class="n">nan_fraction</span><span class="p">,</span>
+                                  <span class="n">master</span><span class="o">=</span><span class="n">ifg</span><span class="o">.</span><span class="n">master</span><span class="p">,</span>
+                                  <span class="n">slave</span><span class="o">=</span><span class="n">ifg</span><span class="o">.</span><span class="n">slave</span><span class="p">,</span>
+                                  <span class="n">time_span</span><span class="o">=</span><span class="n">ifg</span><span class="o">.</span><span class="n">time_span</span><span class="p">,</span>
+                                  <span class="n">nrows</span><span class="o">=</span><span class="n">ifg</span><span class="o">.</span><span class="n">nrows</span><span class="p">,</span>
+                                  <span class="n">ncols</span><span class="o">=</span><span class="n">ifg</span><span class="o">.</span><span class="n">ncols</span><span class="p">,</span>
+                                  <span class="n">metadata</span><span class="o">=</span><span class="n">ifg</span><span class="o">.</span><span class="n">meta_data</span><span class="p">)</span>
+        <span class="n">ifg</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="n">ifgs_dict</span> <span class="o">=</span> <span class="n">_join_dicts</span><span class="p">(</span><span class="n">mpiops</span><span class="o">.</span><span class="n">comm</span><span class="o">.</span><span class="n">allgather</span><span class="p">(</span><span class="n">ifgs_dict</span><span class="p">))</span>
+
+    <span class="n">preread_ifgs_file</span> <span class="o">=</span> <span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TMPDIR</span><span class="p">],</span> <span class="s1">&#39;preread_ifgs.pk&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">rank</span> <span class="o">==</span> <span class="n">MASTER_PROCESS</span><span class="p">:</span>
+
+        <span class="c1"># add some extra information that&#39;s also useful later</span>
+        <span class="n">gt</span><span class="p">,</span> <span class="n">md</span><span class="p">,</span> <span class="n">wkt</span> <span class="o">=</span> <span class="n">shared</span><span class="o">.</span><span class="n">get_geotiff_header_info</span><span class="p">(</span><span class="n">process_tifs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">epochlist</span> <span class="o">=</span> <span class="n">algorithm</span><span class="o">.</span><span class="n">get_epochs</span><span class="p">(</span><span class="n">ifgs_dict</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Found </span><span class="si">{}</span><span class="s1"> unique epochs in the </span><span class="si">{}</span><span class="s1"> interferogram network&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">epochlist</span><span class="o">.</span><span class="n">dates</span><span class="p">),</span> <span class="n">nifgs</span><span class="p">))</span>
+        <span class="n">ifgs_dict</span><span class="p">[</span><span class="s1">&#39;epochlist&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">epochlist</span>
+        <span class="n">ifgs_dict</span><span class="p">[</span><span class="s1">&#39;gt&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gt</span>
+        <span class="n">ifgs_dict</span><span class="p">[</span><span class="s1">&#39;md&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">md</span>
+        <span class="n">ifgs_dict</span><span class="p">[</span><span class="s1">&#39;wkt&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">wkt</span>
+        <span class="c1"># dump ifgs_dict file for later use</span>
+        <span class="n">cp</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">ifgs_dict</span><span class="p">,</span> <span class="nb">open</span><span class="p">(</span><span class="n">preread_ifgs_file</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">))</span>
+
+    <span class="n">mpiops</span><span class="o">.</span><span class="n">comm</span><span class="o">.</span><span class="n">barrier</span><span class="p">()</span>
+    <span class="n">preread_ifgs</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">preread_ifgs_file</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">items</span><span class="p">()))</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Finished converting phase_data to numpy in process </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mpiops</span><span class="o">.</span><span class="n">rank</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">preread_ifgs</span>
+
+
+<span class="k">def</span> <span class="nf">_mst_calc</span><span class="p">(</span><span class="n">dest_tifs</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">tiles</span><span class="p">,</span> <span class="n">preread_ifgs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    MPI wrapper function for MST calculation</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">process_tiles</span> <span class="o">=</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">array_split</span><span class="p">(</span><span class="n">tiles</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Calculating minimum spanning tree matrix&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_save_mst_tile</span><span class="p">(</span><span class="n">tile</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">preread_ifgs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convenient inner loop for mst tile saving</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mst_tile</span> <span class="o">=</span> <span class="n">mst</span><span class="o">.</span><span class="n">mst_multiprocessing</span><span class="p">(</span><span class="n">tile</span><span class="p">,</span> <span class="n">dest_tifs</span><span class="p">,</span> <span class="n">preread_ifgs</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+        <span class="c1"># locally save the mst_mat</span>
+        <span class="n">mst_file_process_n</span> <span class="o">=</span> <span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TMPDIR</span><span class="p">],</span> <span class="s1">&#39;mst_mat_</span><span class="si">{}</span><span class="s1">.npy&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">mst_file_process_n</span><span class="p">,</span> <span class="n">arr</span><span class="o">=</span><span class="n">mst_tile</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">process_tiles</span><span class="p">:</span>
+        <span class="n">_save_mst_tile</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">t</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">preread_ifgs</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Finished mst calculation for process </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mpiops</span><span class="o">.</span><span class="n">rank</span><span class="p">))</span>
+    <span class="n">mpiops</span><span class="o">.</span><span class="n">comm</span><span class="o">.</span><span class="n">barrier</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">_ref_pixel_calc</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Wrapper for reference pixel calculation</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">refx</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">REFX</span><span class="p">]</span>
+    <span class="n">refy</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">REFY</span><span class="p">]</span>
+
+    <span class="n">ifg</span> <span class="o">=</span> <span class="n">Ifg</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">ifg</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">readonly</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">refx</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">or</span> <span class="n">refy</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Searching for best reference pixel location&#39;</span><span class="p">)</span>
+
+        <span class="n">half_patch_size</span><span class="p">,</span> <span class="n">thresh</span><span class="p">,</span> <span class="n">grid</span> <span class="o">=</span> <span class="n">refpixel</span><span class="o">.</span><span class="n">ref_pixel_setup</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+        <span class="n">process_grid</span> <span class="o">=</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">array_split</span><span class="p">(</span><span class="n">grid</span><span class="p">)</span>
+        <span class="n">refpixel</span><span class="o">.</span><span class="n">save_ref_pixel_blocks</span><span class="p">(</span><span class="n">process_grid</span><span class="p">,</span> <span class="n">half_patch_size</span><span class="p">,</span> <span class="n">ifg_paths</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+        <span class="n">mean_sds</span> <span class="o">=</span> <span class="n">refpixel</span><span class="o">.</span><span class="n">_ref_pixel_mpi</span><span class="p">(</span><span class="n">process_grid</span><span class="p">,</span> <span class="n">half_patch_size</span><span class="p">,</span> <span class="n">ifg_paths</span><span class="p">,</span> <span class="n">thresh</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+        <span class="n">mean_sds</span> <span class="o">=</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">comm</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="n">mean_sds</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">rank</span> <span class="o">==</span> <span class="n">MASTER_PROCESS</span><span class="p">:</span>
+            <span class="n">mean_sds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">mean_sds</span><span class="p">)</span>
+
+        <span class="n">refpixel_returned</span> <span class="o">=</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">run_once</span><span class="p">(</span><span class="n">refpixel</span><span class="o">.</span><span class="n">find_min_mean</span><span class="p">,</span> <span class="n">mean_sds</span><span class="p">,</span> <span class="n">grid</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">refpixel_returned</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+            <span class="kn">from</span> <span class="nn">pyrate.core.refpixel</span> <span class="kn">import</span> <span class="n">RefPixelError</span>
+            <span class="k">raise</span> <span class="n">RefPixelError</span><span class="p">(</span>
+                <span class="s2">&quot;Reference pixel calculation returned an all nan slice!</span><span class="se">\n</span><span class="s2">&quot;</span>
+                <span class="s2">&quot;Cannot continue downstream computation. Please change reference pixel algorithm used before &quot;</span>
+                <span class="s2">&quot;continuing.&quot;</span><span class="p">)</span>
+
+        <span class="n">refy</span><span class="p">,</span> <span class="n">refx</span> <span class="o">=</span> <span class="n">refpixel_returned</span>
+
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Selected reference pixel coordinate: (</span><span class="si">{}</span><span class="s1">, </span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">refx</span><span class="p">,</span> <span class="n">refy</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Reusing reference pixel from config file: (</span><span class="si">{}</span><span class="s1">, </span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">refx</span><span class="p">,</span> <span class="n">refy</span><span class="p">))</span>
+    <span class="n">ifg</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">refx</span><span class="p">,</span> <span class="n">refy</span>
+
+
+<span class="k">def</span> <span class="nf">_orb_fit_calc</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">preread_ifgs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    MPI wrapper for orbital fit correction</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">ORBITAL_FIT</span><span class="p">]:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Orbital correction not required!&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Orbital correction not required!&#39;</span><span class="p">)</span>
+        <span class="k">return</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Calculating orbital correction&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">preread_ifgs</span><span class="p">:</span>  <span class="c1"># don&#39;t check except for mpi tests</span>
+        <span class="c1"># perform some general error/sanity checks</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Checking Orbital error correction status&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">run_once</span><span class="p">(</span><span class="n">shared</span><span class="o">.</span><span class="n">check_correction_status</span><span class="p">,</span> <span class="n">ifg_paths</span><span class="p">,</span> <span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_ORBITAL_ERROR</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Orbital error correction not required as all ifgs are already corrected!&#39;</span><span class="p">)</span>
+            <span class="k">return</span>  <span class="c1"># return if True condition returned</span>
+
+    <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">ORBITAL_FIT_METHOD</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">prcs_ifgs</span> <span class="o">=</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">array_split</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">)</span>
+        <span class="n">orbital</span><span class="o">.</span><span class="n">remove_orbital_error</span><span class="p">(</span><span class="n">prcs_ifgs</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">preread_ifgs</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Here we do all the multilooking in one process, but in memory</span>
+        <span class="c1"># can use multiple processes if we write data to disc during</span>
+        <span class="c1"># remove_orbital_error step</span>
+        <span class="c1"># A performance comparison should be made for saving multilooked</span>
+        <span class="c1"># files on disc vs in memory single process multilooking</span>
+        <span class="k">if</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">rank</span> <span class="o">==</span> <span class="n">MASTER_PROCESS</span><span class="p">:</span>
+            <span class="n">orbital</span><span class="o">.</span><span class="n">remove_orbital_error</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">preread_ifgs</span><span class="p">)</span>
+    <span class="n">mpiops</span><span class="o">.</span><span class="n">comm</span><span class="o">.</span><span class="n">barrier</span><span class="p">()</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Finished Orbital error correction&#39;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_ref_phase_estimation</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">refpx</span><span class="p">,</span> <span class="n">refpy</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Wrapper for reference phase estimation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Calculating reference phase&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">rpe</span><span class="o">.</span><span class="n">ReferencePhaseError</span><span class="p">(</span>
+            <span class="s2">&quot;At least two interferograms required for reference phase correction (</span><span class="si">{len_ifg_paths}</span><span class="s2"> &quot;</span>
+            <span class="s2">&quot;provided).&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">len_ifg_paths</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">))</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">run_once</span><span class="p">(</span><span class="n">shared</span><span class="o">.</span><span class="n">check_correction_status</span><span class="p">,</span> <span class="n">ifg_paths</span><span class="p">,</span> <span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_REF_PHASE</span><span class="p">):</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Finished reference phase estimation&#39;</span><span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">REF_EST_METHOD</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">ref_phs</span> <span class="o">=</span> <span class="n">rpe</span><span class="o">.</span><span class="n">est_ref_phase_method1</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">REF_EST_METHOD</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">ref_phs</span> <span class="o">=</span> <span class="n">rpe</span><span class="o">.</span><span class="n">est_ref_phase_method2</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">refpx</span><span class="p">,</span> <span class="n">refpy</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">rpe</span><span class="o">.</span><span class="n">ReferencePhaseError</span><span class="p">(</span><span class="s2">&quot;No such option, use &#39;1&#39; or &#39;2&#39;.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Save reference phase numpy arrays to disk.</span>
+    <span class="n">ref_phs_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TMPDIR</span><span class="p">],</span> <span class="s1">&#39;ref_phs.npy&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">rank</span> <span class="o">==</span> <span class="n">MASTER_PROCESS</span><span class="p">:</span>
+        <span class="n">collected_ref_phs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+        <span class="n">process_indices</span> <span class="o">=</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">array_split</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">)))</span>
+        <span class="n">collected_ref_phs</span><span class="p">[</span><span class="n">process_indices</span><span class="p">]</span> <span class="o">=</span> <span class="n">ref_phs</span>
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">size</span><span class="p">):</span>
+            <span class="n">process_indices</span> <span class="o">=</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">array_split</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">)),</span> <span class="n">r</span><span class="p">)</span>
+            <span class="n">this_process_ref_phs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">process_indices</span><span class="p">),</span>
+                                            <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+            <span class="n">mpiops</span><span class="o">.</span><span class="n">comm</span><span class="o">.</span><span class="n">Recv</span><span class="p">(</span><span class="n">this_process_ref_phs</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">r</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="n">r</span><span class="p">)</span>
+            <span class="n">collected_ref_phs</span><span class="p">[</span><span class="n">process_indices</span><span class="p">]</span> <span class="o">=</span> <span class="n">this_process_ref_phs</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">ref_phs_file</span><span class="p">,</span> <span class="n">arr</span><span class="o">=</span><span class="n">collected_ref_phs</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">mpiops</span><span class="o">.</span><span class="n">comm</span><span class="o">.</span><span class="n">Send</span><span class="p">(</span><span class="n">ref_phs</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="n">MASTER_PROCESS</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="n">mpiops</span><span class="o">.</span><span class="n">rank</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Finished reference phase estimation&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Preserve old return value so tests don&#39;t break.</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Ifg</span><span class="p">):</span>
+        <span class="n">ifgs</span> <span class="o">=</span> <span class="n">ifg_paths</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ifgs</span> <span class="o">=</span> <span class="p">[</span><span class="n">Ifg</span><span class="p">(</span><span class="n">ifg_path</span><span class="p">)</span> <span class="k">for</span> <span class="n">ifg_path</span> <span class="ow">in</span> <span class="n">ifg_paths</span><span class="p">]</span>
+    <span class="n">mpiops</span><span class="o">.</span><span class="n">comm</span><span class="o">.</span><span class="n">barrier</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">ref_phs</span><span class="p">,</span> <span class="n">ifgs</span>
+
+
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../pyrate.process.html#pyrate.process.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Top level function to perform PyRate workflow on given interferograms</span>
+
+<span class="sd">    :return: refpt: tuple of reference pixel x and y position</span>
+<span class="sd">    :rtype: tuple</span>
+<span class="sd">    :return: maxvar: array of maximum variance values of interferograms</span>
+<span class="sd">    :rtype: ndarray</span>
+<span class="sd">    :return: vcmt: Variance-covariance matrix array</span>
+<span class="sd">    :rtype: ndarray</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">mpi_vs_multiprocess_logging</span><span class="p">(</span><span class="s2">&quot;process&quot;</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+
+    <span class="n">ifg_paths</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">ifg_path</span> <span class="ow">in</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">INTERFEROGRAM_FILES</span><span class="p">]:</span>
+        <span class="n">ifg_paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ifg_path</span><span class="o">.</span><span class="n">sampled_path</span><span class="p">)</span>
+
+    <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;rows&quot;</span><span class="p">],</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;cols&quot;</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">process_ifgs</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="process_ifgs"><a class="viewcode-back" href="../../pyrate.process.html#pyrate.process.process_ifgs">[docs]</a><span class="k">def</span> <span class="nf">process_ifgs</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Top level function to perform PyRate workflow on given interferograms</span>
+
+<span class="sd">    :param list ifg_paths: List of interferogram paths</span>
+<span class="sd">    :param dict params: Dictionary of configuration parameters</span>
+<span class="sd">    :param int rows: Number of sub-tiles in y direction</span>
+<span class="sd">    :param int cols: Number of sub-tiles in x direction</span>
+
+<span class="sd">    :return: refpt: tuple of reference pixel x and y position</span>
+<span class="sd">    :rtype: tuple</span>
+<span class="sd">    :return: maxvar: array of maximum variance values of interferograms</span>
+<span class="sd">    :rtype: ndarray</span>
+<span class="sd">    :return: vcmt: Variance-covariance matrix array</span>
+<span class="sd">    :rtype: ndarray</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># turn of multiprocessing during mpi jobs</span>
+        <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">PARALLEL</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="n">tiles</span> <span class="o">=</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">run_once</span><span class="p">(</span><span class="n">get_tiles</span><span class="p">,</span> <span class="n">ifg_paths</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">)</span>
+
+    <span class="n">preread_ifgs</span> <span class="o">=</span> <span class="n">_create_ifg_dict</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span> <span class="n">tiles</span><span class="o">=</span><span class="n">tiles</span><span class="p">)</span>
+    <span class="c1"># _mst_calc(ifg_paths, params, tiles, preread_ifgs)</span>
+
+    <span class="n">refpx</span><span class="p">,</span> <span class="n">refpy</span> <span class="o">=</span> <span class="n">_ref_pixel_calc</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+
+    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;refpx, refpy: &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">refpx</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">refpy</span><span class="p">))</span>
+
+    <span class="c1"># remove non ifg keys</span>
+    <span class="n">_</span> <span class="o">=</span> <span class="p">[</span><span class="n">preread_ifgs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;gt&#39;</span><span class="p">,</span> <span class="s1">&#39;epochlist&#39;</span><span class="p">,</span> <span class="s1">&#39;md&#39;</span><span class="p">,</span> <span class="s1">&#39;wkt&#39;</span><span class="p">]]</span>
+
+    <span class="n">_orb_fit_calc</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">preread_ifgs</span><span class="p">)</span>
+
+    <span class="n">_ref_phase_estimation</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">refpx</span><span class="p">,</span> <span class="n">refpy</span><span class="p">)</span>
+
+    <span class="n">_mst_calc</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">tiles</span><span class="p">,</span> <span class="n">preread_ifgs</span><span class="p">)</span>
+
+    <span class="c1"># spatio-temporal aps filter</span>
+    <span class="n">wrap_spatio_temporal_filter</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">tiles</span><span class="p">,</span> <span class="n">preread_ifgs</span><span class="p">)</span>
+
+    <span class="n">maxvar</span><span class="p">,</span> <span class="n">vcmt</span> <span class="o">=</span> <span class="n">_maxvar_vcm_calc</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">preread_ifgs</span><span class="p">)</span>
+    <span class="c1"># save phase data tiles as numpy array for timeseries and stackrate calc</span>
+
+    <span class="n">shared</span><span class="o">.</span><span class="n">save_numpy_phase</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">,</span> <span class="n">tiles</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+
+    <span class="n">_timeseries_calc</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">vcmt</span><span class="p">,</span> <span class="n">tiles</span><span class="p">,</span> <span class="n">preread_ifgs</span><span class="p">)</span>
+
+    <span class="n">_stack_calc</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">vcmt</span><span class="p">,</span> <span class="n">tiles</span><span class="p">,</span> <span class="n">preread_ifgs</span><span class="p">)</span>
+
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;PyRate workflow completed&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">refpx</span><span class="p">,</span> <span class="n">refpy</span><span class="p">),</span> <span class="n">maxvar</span><span class="p">,</span> <span class="n">vcmt</span></div>
+
+
+<span class="k">def</span> <span class="nf">_stack_calc</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">vcmt</span><span class="p">,</span> <span class="n">tiles</span><span class="p">,</span> <span class="n">preread_ifgs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    MPI wrapper for stacking calculation</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">process_tiles</span> <span class="o">=</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">array_split</span><span class="p">(</span><span class="n">tiles</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Calculating rate map from stacking&#39;</span><span class="p">)</span>
+    <span class="n">output_dir</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TMPDIR</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">process_tiles</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Stacking of tile </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">index</span><span class="p">))</span>
+        <span class="n">ifg_parts</span> <span class="o">=</span> <span class="p">[</span><span class="n">shared</span><span class="o">.</span><span class="n">IfgPart</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">preread_ifgs</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">ifg_paths</span><span class="p">]</span>
+        <span class="n">mst_grid_n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="s1">&#39;mst_mat_</span><span class="si">{}</span><span class="s1">.npy&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">index</span><span class="p">)))</span>
+        <span class="n">rate</span><span class="p">,</span> <span class="n">error</span><span class="p">,</span> <span class="n">samples</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">stack_rate</span><span class="p">(</span><span class="n">ifg_parts</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">vcmt</span><span class="p">,</span> <span class="n">mst_grid_n</span><span class="p">)</span>
+        <span class="c1"># declare file names</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="s1">&#39;stack_rate_</span><span class="si">{}</span><span class="s1">.npy&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">index</span><span class="p">)),</span> <span class="n">arr</span><span class="o">=</span><span class="n">rate</span><span class="p">)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="s1">&#39;stack_error_</span><span class="si">{}</span><span class="s1">.npy&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">index</span><span class="p">)),</span> <span class="n">arr</span><span class="o">=</span><span class="n">error</span><span class="p">)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="s1">&#39;stack_samples_</span><span class="si">{}</span><span class="s1">.npy&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">index</span><span class="p">)),</span> <span class="n">arr</span><span class="o">=</span><span class="n">samples</span><span class="p">)</span>
+    <span class="n">mpiops</span><span class="o">.</span><span class="n">comm</span><span class="o">.</span><span class="n">barrier</span><span class="p">()</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Finished stack rate calc!&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_maxvar_vcm_calc</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">preread_ifgs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    MPI wrapper for maxvar and vcmt computation</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Calculating the temporal variance-covariance matrix&#39;</span><span class="p">)</span>
+    <span class="n">process_indices</span> <span class="o">=</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">array_split</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">)))</span>
+
+    <span class="k">def</span> <span class="nf">_get_r_dist</span><span class="p">(</span><span class="n">ifg_path</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get RDIst class object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ifg</span> <span class="o">=</span> <span class="n">Ifg</span><span class="p">(</span><span class="n">ifg_path</span><span class="p">)</span>
+        <span class="n">ifg</span><span class="o">.</span><span class="n">open</span><span class="p">()</span>
+        <span class="n">r_dist</span> <span class="o">=</span> <span class="n">vcm_module</span><span class="o">.</span><span class="n">RDist</span><span class="p">(</span><span class="n">ifg</span><span class="p">)()</span>
+        <span class="n">ifg</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">r_dist</span>
+
+    <span class="n">r_dist</span> <span class="o">=</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">run_once</span><span class="p">(</span><span class="n">_get_r_dist</span><span class="p">,</span> <span class="n">ifg_paths</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">prcs_ifgs</span> <span class="o">=</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">array_split</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">)</span>
+    <span class="n">process_maxvar</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">prcs_ifgs</span><span class="p">):</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Calculating maxvar for </span><span class="si">{}</span><span class="s1"> of process ifgs </span><span class="si">{}</span><span class="s1"> of total </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">prcs_ifgs</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">)))</span>
+        <span class="n">process_maxvar</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vcm_module</span><span class="o">.</span><span class="n">cvd</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">r_dist</span><span class="p">,</span> <span class="n">calc_alpha</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">write_vals</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">save_acg</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">rank</span> <span class="o">==</span> <span class="n">MASTER_PROCESS</span><span class="p">:</span>
+        <span class="n">maxvar</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+        <span class="n">maxvar</span><span class="p">[</span><span class="n">process_indices</span><span class="p">]</span> <span class="o">=</span> <span class="n">process_maxvar</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">size</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+            <span class="n">rank_indices</span> <span class="o">=</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">array_split</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">)),</span> <span class="n">i</span><span class="p">)</span>
+            <span class="n">this_process_ref_phs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">rank_indices</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+            <span class="n">mpiops</span><span class="o">.</span><span class="n">comm</span><span class="o">.</span><span class="n">Recv</span><span class="p">(</span><span class="n">this_process_ref_phs</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">i</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="n">i</span><span class="p">)</span>
+            <span class="n">maxvar</span><span class="p">[</span><span class="n">rank_indices</span><span class="p">]</span> <span class="o">=</span> <span class="n">this_process_ref_phs</span>
+    <span class="k">else</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+        <span class="n">maxvar</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+        <span class="n">mpiops</span><span class="o">.</span><span class="n">comm</span><span class="o">.</span><span class="n">Send</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">process_maxvar</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span> <span class="n">dest</span><span class="o">=</span><span class="n">MASTER_PROCESS</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="n">mpiops</span><span class="o">.</span><span class="n">rank</span><span class="p">)</span>
+
+    <span class="n">mpiops</span><span class="o">.</span><span class="n">comm</span><span class="o">.</span><span class="n">barrier</span><span class="p">()</span>
+    <span class="n">maxvar</span> <span class="o">=</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">comm</span><span class="o">.</span><span class="n">bcast</span><span class="p">(</span><span class="n">maxvar</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">vcmt</span> <span class="o">=</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">run_once</span><span class="p">(</span><span class="n">vcm_module</span><span class="o">.</span><span class="n">get_vcmt</span><span class="p">,</span> <span class="n">preread_ifgs</span><span class="p">,</span> <span class="n">maxvar</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Finished maxvar and vcm calc!&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">maxvar</span><span class="p">,</span> <span class="n">vcmt</span>
+
+
+<span class="k">def</span> <span class="nf">_timeseries_calc</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">vcmt</span><span class="p">,</span> <span class="n">tiles</span><span class="p">,</span> <span class="n">preread_ifgs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    MPI wrapper for time series calculation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TIME_SERIES_CAL</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Time Series Calculation not required&#39;</span><span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TIME_SERIES_METHOD</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Calculating time series using Laplacian Smoothing method&#39;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TIME_SERIES_METHOD</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Calculating time series using SVD method&#39;</span><span class="p">)</span>
+
+    <span class="n">output_dir</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TMPDIR</span><span class="p">]</span>
+    <span class="n">total_tiles</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tiles</span><span class="p">)</span>
+    <span class="n">process_tiles</span> <span class="o">=</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">array_split</span><span class="p">(</span><span class="n">tiles</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">process_tiles</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Calculating time series for tile &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">index</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot; out of &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">total_tiles</span><span class="p">))</span>
+        <span class="n">ifg_parts</span> <span class="o">=</span> <span class="p">[</span><span class="n">shared</span><span class="o">.</span><span class="n">IfgPart</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">preread_ifgs</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">ifg_paths</span><span class="p">]</span>
+        <span class="n">mst_tile</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="s1">&#39;mst_mat_</span><span class="si">{}</span><span class="s1">.npy&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">index</span><span class="p">)))</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">timeseries</span><span class="o">.</span><span class="n">time_series</span><span class="p">(</span><span class="n">ifg_parts</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">vcmt</span><span class="p">,</span> <span class="n">mst_tile</span><span class="p">)</span>
+        <span class="n">tsincr</span><span class="p">,</span> <span class="n">tscum</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">res</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="s1">&#39;tsincr_</span><span class="si">{}</span><span class="s1">.npy&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">index</span><span class="p">)),</span> <span class="n">arr</span><span class="o">=</span><span class="n">tsincr</span><span class="p">)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="s1">&#39;tscuml_</span><span class="si">{}</span><span class="s1">.npy&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">index</span><span class="p">)),</span> <span class="n">arr</span><span class="o">=</span><span class="n">tscum</span><span class="p">)</span>
+    <span class="n">mpiops</span><span class="o">.</span><span class="n">comm</span><span class="o">.</span><span class="n">barrier</span><span class="p">()</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Finished timeseries calc!&quot;</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Geoscience Australia
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+  
+<p>placeHolderText</p>
+        <!-- your html code here -->
+ 
+
+
+</body>
+</html>

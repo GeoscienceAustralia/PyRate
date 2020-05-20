@@ -1,0 +1,672 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Usage &mdash; PyRate 0.4.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="PyRate Scripts" href="scripts.html" />
+    <link rel="prev" title="Installation" href="installation.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: white" >
+          
+
+          
+            <a href="index.html">
+          
+
+          
+            
+            <img src="_static/PyRate_logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+    <li><a href="https://geoscienceaustralia.github.io/PyRate/">Home</a></li>
+    
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#dependencies">Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#platforms">Platforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#verify-installation">Verify Installation</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#configuration">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#workflow">Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#input-files">Input Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#parallel-processing">Parallel Processing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="scripts.html">PyRate Scripts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.conv2tif.html">PyRate Conv2tif Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.prepifg.html">PyRate Prepifg Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.process.html">PyRate Process Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.merge.html">PyRate Merge Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.__main__.html">PyRate Main Script</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">PyRate Modules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="algorithm.html">Algorithm Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aps.html">Atmospheric Phase Screen Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config.html">Config Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="covariance.html">Covariance Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gamma.html">GAMMA Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gdal_python.html">GDAL-Python Bindings Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ifgconstants.html">Ifgconstants Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="logger.html">Logging Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mpiops.html">MPI operations Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mst.html">Minimum Spanning Tree Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="orbital.html">Orbital Error Correction Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepifg_helper.html">Prepifg Helper Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ref_phs_est.html">Reference Phase Calculation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="refpixel.html">Reference Pixel Calculation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="roipac.html">ROI_PAC Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="shared.html">Shared Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stack.html">Stacking Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="timeseries.html">Time Series Module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#corrections-being-skipped">Corrections being skipped</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#valueerror-too-many-values-to-unpack-expected-2">ValueError: too many values to unpack (expected 2)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#stack-rate-map-appears-to-be-blank-empty">Stack Rate map appears to be blank/empty</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#failure-of-aps-spatial-low-pass-filter">Failure of APS spatial low pass filter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#out-of-memory-errors">Out of memory errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#incorrect-modules-loaded-on-gadi">Incorrect modules loaded on Gadi</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#types-of-contributions">Types of Contributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#get-started">Get Started!</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#pull-request-guidelines">Pull Request Guidelines</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="authors.html#development-lead">Development Lead</a></li>
+<li class="toctree-l2"><a class="reference internal" href="authors.html#contributors">Contributors</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">Release History</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id6">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id10">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id11">0.1.0 (2017-01-31)</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PyRate</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Usage</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <div class="rst-breadcrumbs-buttons" role="navigation" aria-label="breadcrumb navigation">
+      
+        <a href="scripts.html" class="btn btn-neutral float-right" title="PyRate Scripts" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="installation.html" class="btn btn-neutral float-left" title="Installation" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+  </div>
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="usage">
+<h1>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h2>
+<p>Various <a class="reference external" href="https://geoscienceaustralia.github.io/PyRate/config.html">parameters</a> are controlled by values given in a text-based configuration file.
+The user can choose any filename for this configuration file.
+Example parameters for running <cite>PyRate</cite> with <cite>GAMMA</cite>-format interferograms are
+contained in the example configuration file <code class="docutils literal notranslate"><span class="pre">PyRate/input_parameters.conf</span></code>.</p>
+</div>
+<div class="section" id="workflow">
+<h2>Workflow<a class="headerlink" href="#workflow" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="file-discovery">
+<h3>File Discovery<a class="headerlink" href="#file-discovery" title="Permalink to this headline">¶</a></h3>
+<p>To allow flexibility in the file types that can be processed, <cite>PyRate</cite> requires
+file lists to be provided. This allows <cite>PyRate</cite> to identify files of each
+type without relying on file extensions. The file path to these lists are
+provided under <code class="docutils literal notranslate"><span class="pre">ifgfilelist</span></code>, <code class="docutils literal notranslate"><span class="pre">hdrfilelist</span></code> and <code class="docutils literal notranslate"><span class="pre">cohfilelist</span></code> keywords
+in the configuration file.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>Filenames should be provided in these lists with their absolute system path,
+with each name on a separate line.</p></li>
+<li><p>Filenames should only have a single period (“.”) delimiting the file extension.
+Multiple periods in a filename will raise an error during runtime.</p></li>
+</ul>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">ifgfilelist</span></code> gives the list of interferograms to be processed.
+Example of an interferogram file list for <cite>GAMMA</cite> flat-binary files:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/</span><span class="n">absolute</span><span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="mi">20150702</span><span class="o">-</span><span class="mf">20150920.</span><span class="n">unw</span>
+<span class="o">/</span><span class="n">absolute</span><span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="mi">20151219</span><span class="o">-</span><span class="mf">20160109.</span><span class="n">unw</span>
+<span class="o">/</span><span class="n">absolute</span><span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="mi">20160202</span><span class="o">-</span><span class="mf">20160415.</span><span class="n">unw</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>Interferogram filenames must contain a pair of date epochs.
+Any naming convention is appropriate as long as an epoch pair of format
+<code class="docutils literal notranslate"><span class="pre">YYYYMMDD-YYYYMMDD</span></code> exists in the filename.</p></li>
+</ul>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">hdrfilelist</span></code> gives the list of <cite>GAMMA</cite> SLC header text files.
+Example of a <cite>GAMMA</cite> SLC header file list:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/</span><span class="n">absolute</span><span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="mi">20150702</span><span class="n">_slc</span><span class="o">.</span><span class="n">par</span>
+<span class="o">/</span><span class="n">absolute</span><span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="mi">20150920</span><span class="n">_slc</span><span class="o">.</span><span class="n">par</span>
+<span class="o">/</span><span class="n">absolute</span><span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="mi">20151219</span><span class="n">_slc</span><span class="o">.</span><span class="n">par</span>
+<span class="o">/</span><span class="n">absolute</span><span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="mi">20160109</span><span class="n">_slc</span><span class="o">.</span><span class="n">par</span>
+<span class="o">/</span><span class="n">absolute</span><span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="mi">20160202</span><span class="n">_slc</span><span class="o">.</span><span class="n">par</span>
+<span class="o">/</span><span class="n">absolute</span><span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="mi">20160415</span><span class="n">_slc</span><span class="o">.</span><span class="n">par</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>SLC header filenames must contain a single date epoch in the format <code class="docutils literal notranslate"><span class="pre">YYYYMMDD</span></code>.</p></li>
+</ul>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">cohfilelist</span></code> is an optional list which contains the pool of all available
+coherence files to be used for optional coherence masking.
+Example of a coherence file list for <cite>GAMMA</cite> flat-binary files:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/</span><span class="n">absolute</span><span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="mi">20150702</span><span class="o">-</span><span class="mf">20150920.</span><span class="n">coh</span>
+<span class="o">/</span><span class="n">absolute</span><span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="mi">20151219</span><span class="o">-</span><span class="mf">20160109.</span><span class="n">coh</span>
+<span class="o">/</span><span class="n">absolute</span><span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="mi">20160202</span><span class="o">-</span><span class="mf">20160415.</span><span class="n">coh</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>Like interferograms, coherence filenames must contain a pair of epochs.
+The epoch pair must be in the format <code class="docutils literal notranslate"><span class="pre">YYYYMMDD-YYYYMMDD</span></code>. Otherwise, any
+naming convention is appropriate.</p></li>
+</ul>
+</div>
+<p>The date epochs in filenames are used to match the corresponding SLC header
+or coherence files to each interferogram. It is recommended to provide a complete
+list of available headers/coherence files for a stack in their respective lists,
+since only the necessary files will be used. This allows you to process a subset
+of interferograms by removing entries in <code class="docutils literal notranslate"><span class="pre">ifgfilelist</span></code> without needing to modify
+all three lists.</p>
+</div>
+<div class="section" id="pyrate-workflow">
+<h3><cite>PyRate</cite> Workflow<a class="headerlink" href="#pyrate-workflow" title="Permalink to this headline">¶</a></h3>
+<p>After <a class="reference external" href="installation.html">Installation</a>, an
+executable program <code class="docutils literal notranslate"><span class="pre">pyrate</span></code> is created in the system path:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>   &gt;&gt; pyrate --help
+   usage: pyrate [-h] [-v {DEBUG,INFO,WARNING,ERROR}]
+                 {conv2tif,prepifg,process,merge,workflow} ...
+
+   PyRate workflow:
+
+       Step 1: conv2tif
+       Step 2: prepifg
+       Step 3: process
+       Step 4: merge
+
+   Refer to https://geoscienceaustralia.github.io/PyRate/usage.html for
+   more details.
+
+   positional arguments:
+     {conv2tif,prepifg,process,merge,workflow}
+       conv2tif            Convert interferograms to geotiff.
+       prepifg             Perform multilooking and cropping on geotiffs.
+       process             Main processing workflow including corrections, time series and stacking computation.
+       merge               Reassemble computed tiles and save as geotiffs.
+       workflow            Run all the PyRate processes
+
+   optional arguments:
+     -h, --help            show this help message and exit
+     -v {DEBUG,INFO,WARNING,ERROR}, --verbosity {DEBUG,INFO,WARNING,ERROR}
+                           Increase output verbosity
+
+.. note::
+
+   - If running on NCI, be sure to first load the correct modules and virtual environment:
+     ``source ~/PyRate/scripts/nci_load_modules.sh``
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">pyrate</span></code> program has four command line options corresponding to
+different steps in the <cite>PyRate</cite> workflow:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">conv2tif</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">prepifg</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">process</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">merge</span></code></p></li>
+</ol>
+<p>All four steps are required.
+A fifth option, <code class="docutils literal notranslate"><span class="pre">workflow</span></code>, is available that will run all four steps in order.
+In the following sub-sections we discuss each of the available steps.</p>
+</div>
+<div class="section" id="conv2tif-converting-flat-binary-interferograms-to-geotiff-format">
+<h3><code class="docutils literal notranslate"><span class="pre">conv2tif</span></code>: Converting flat-binary interferograms to Geotiff format<a class="headerlink" href="#conv2tif-converting-flat-binary-interferograms-to-geotiff-format" title="Permalink to this headline">¶</a></h3>
+<p>Before <cite>PyRate</cite> can process interferograms in flat-binary file format, they need to be
+converted into geotiff format using the <code class="docutils literal notranslate"><span class="pre">conv2tif</span></code> step.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;</span> <span class="n">pyrate</span> <span class="n">conv2tif</span> <span class="o">--</span><span class="n">help</span>
+<span class="n">usage</span><span class="p">:</span> <span class="n">pyrate</span> <span class="n">conv2tif</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="o">-</span><span class="n">f</span> <span class="n">CONFIG_FILE</span>
+
+<span class="n">optional</span> <span class="n">arguments</span><span class="p">:</span>
+  <span class="o">-</span><span class="n">h</span><span class="p">,</span> <span class="o">--</span><span class="n">help</span>            <span class="n">show</span> <span class="n">this</span> <span class="n">help</span> <span class="n">message</span> <span class="ow">and</span> <span class="n">exit</span>
+  <span class="o">-</span><span class="n">f</span> <span class="n">CONFIG_FILE</span><span class="p">,</span> <span class="o">--</span><span class="n">config_file</span> <span class="n">CONFIG_FILE</span>
+                        <span class="n">Pass</span> <span class="n">configuration</span> <span class="n">file</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">conv2tif</span></code> step is used as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;</span> <span class="n">pyrate</span> <span class="n">conv2tif</span> <span class="o">-</span><span class="n">f</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">config_file</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>Users of the <cite>GAMMA</cite> software can skip the <code class="docutils literal notranslate"><span class="pre">conv2tif</span></code> step if they have generated
+geotiffs using the <cite>GAMMA</cite> program <code class="docutils literal notranslate"><span class="pre">data2geotiff</span></code>, which is included in all
+<cite>GAMMA</cite> software distributions.</p></li>
+<li><p>In this case, <code class="docutils literal notranslate"><span class="pre">ifgfilelist</span></code> and <code class="docutils literal notranslate"><span class="pre">cohfilelist</span></code> would contain the absolute
+paths to these geotiff files. Even when using geotiff files, the SLC header files
+are still required by <code class="docutils literal notranslate"><span class="pre">prepifg</span></code>.</p></li>
+<li><p>If a DEM is to be processed by <code class="docutils literal notranslate"><span class="pre">prepifg</span></code>, it’s file format should match the
+input interferograms (e.g. geotiff or flat-binary files).</p></li>
+</ul>
+</div>
+<p>Upon completion of <code class="docutils literal notranslate"><span class="pre">conv2tif</span></code> geotiff formatted copies of the input files will be placed
+in the <code class="docutils literal notranslate"><span class="pre">outdir</span></code> directory defined in the configuration file.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">conv2tif</span></code> will not perform the conversion if geotiffs for the provided
+input files already exist.</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="prepifg-preparing-input-interferograms">
+<h3><code class="docutils literal notranslate"><span class="pre">prepifg</span></code>: Preparing input interferograms<a class="headerlink" href="#prepifg-preparing-input-interferograms" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">prepifg</span></code> is the second step of <cite>PyRate</cite>, which applys multi-looking, cropping
+and coherence masking operations to the geotiff interferograms.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;</span> <span class="n">pyrate</span> <span class="n">prepifg</span> <span class="o">--</span><span class="n">help</span>
+<span class="n">usage</span><span class="p">:</span> <span class="n">pyrate</span> <span class="n">prepifg</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="o">-</span><span class="n">f</span> <span class="n">CONFIG_FILE</span>
+
+<span class="n">optional</span> <span class="n">arguments</span><span class="p">:</span>
+  <span class="o">-</span><span class="n">h</span><span class="p">,</span> <span class="o">--</span><span class="n">help</span>            <span class="n">show</span> <span class="n">this</span> <span class="n">help</span> <span class="n">message</span> <span class="ow">and</span> <span class="n">exit</span>
+  <span class="o">-</span><span class="n">f</span> <span class="n">CONFIG_FILE</span><span class="p">,</span> <span class="o">--</span><span class="n">config_file</span> <span class="n">CONFIG_FILE</span>
+                        <span class="n">Pass</span> <span class="n">configuration</span> <span class="n">file</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">prepifg</span></code> step is used as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;</span> <span class="n">pyrate</span> <span class="n">prepifg</span> <span class="o">-</span><span class="n">f</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">config_file</span>
+</pre></div>
+</div>
+<p><strong>Coherence masking</strong></p>
+<p>If specified via the <code class="docutils literal notranslate"><span class="pre">cohmask</span></code> parameter, <code class="docutils literal notranslate"><span class="pre">prepifg</span></code> will perform coherence masking
+on the interferograms before multi-looking and cropping is performed. This requires
+corresponding coherence images for each interferogram. The purpose
+of coherence masking is to remove poor quality phase observations and leave a set of
+high-quality pixels for analysis. Pixels with coherence values below a certain threshold
+(defined with <code class="docutils literal notranslate"><span class="pre">cohthresh</span></code> parameter) will be set to Not-a-Number (NaN).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>The number of pixels with numeric phase values (i.e. pixels not equal to NaN)
+in each interferogram will be different after coherence masking.</p></li>
+</ul>
+</div>
+<p>Coherence masking is enabled by setting the <code class="docutils literal notranslate"><span class="pre">cohmask</span></code> parameter to <code class="docutils literal notranslate"><span class="pre">1</span></code> in
+the configuration file. A threshold, <code class="docutils literal notranslate"><span class="pre">cohthresh</span></code> needs to be provided.
+For every pixel where the coherence is lower than <code class="docutils literal notranslate"><span class="pre">cohthresh</span></code> the phase will be
+changed to a NaN.
+The available coherence files need to be specified in a list file as described above
+and defined in the <code class="docutils literal notranslate"><span class="pre">cohfilelist</span></code> parameter.</p>
+<p><strong>Multi-looking</strong></p>
+<p>The <code class="docutils literal notranslate"><span class="pre">prepifg</span></code> step will perform optional multi-looking (image sub-sampling)
+of the input interferograms in geotiff format. The purpose of multi-looking is twofold:</p>
+<ul class="simple">
+<li><p>Reduce the spatial resolution of the interferograms in order to improve the</p></li>
+</ul>
+<p>computational efficiency of <cite>PyRate</cite> analysis.
+- Reduce the general phase noise in the interferograms.</p>
+<p>To multi-look, set <code class="docutils literal notranslate"><span class="pre">ifglksx</span></code> and <code class="docutils literal notranslate"><span class="pre">ifglksy</span></code> to the integer subsampling factor
+in the x (easting) and y (northing) dimensions respectively. Separate parameters for x
+and y gives flexibility for users in case they want to achieve different spatial
+resolution in in each dimension.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>For example, a value of <code class="docutils literal notranslate"><span class="pre">2</span></code> will reduce the resolution by half.
+A value of <code class="docutils literal notranslate"><span class="pre">1</span></code> will keep the resolution the same as the input interferograms
+(i.e. no multi-looking).</p></li>
+<li><p>It is recommended to try a large multi-look factor to start with (e.g. <code class="docutils literal notranslate"><span class="pre">10</span></code>
+or greater), and subsequently reduce the multi-looking factor once the user
+has experience with processing a certain dataset.</p></li>
+</ul>
+</div>
+<p><strong>Cropping</strong></p>
+<p>The <code class="docutils literal notranslate"><span class="pre">prepifg</span></code> step will perform optional spatial cropping of the input interferograms.
+This is useful if you are focussing on a specific area of interest within the full
+extent of the input interferograms. The advantage of cropping is that <cite>PyRate</cite>
+analysis will be computationally more efficient.</p>
+<p>To crop, set <code class="docutils literal notranslate"><span class="pre">ifgcropopt</span></code> to <code class="docutils literal notranslate"><span class="pre">3</span></code> and provide the geographic latitude and longitude
+bounds in the <code class="docutils literal notranslate"><span class="pre">ifgxfirst</span></code> (west), <code class="docutils literal notranslate"><span class="pre">ifgxlast</span></code> (east), <code class="docutils literal notranslate"><span class="pre">ifgyfirst</span></code> (north), and
+<code class="docutils literal notranslate"><span class="pre">ifgylast</span></code> (south) parameters.</p>
+</div>
+<div class="section" id="process-main-workflow-including-stacking-and-time-series-analysis">
+<h3><code class="docutils literal notranslate"><span class="pre">process</span></code>: Main workflow, including stacking and time series analysis<a class="headerlink" href="#process-main-workflow-including-stacking-and-time-series-analysis" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">process</span></code> is the core of the <cite>PyRate</cite> processing workflow. This step will perform
+a series of corrections to the interferogram phase data before running the time series
+and stacking analysis.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;</span> <span class="n">pyrate</span> <span class="n">process</span> <span class="o">--</span><span class="n">help</span>
+<span class="n">usage</span><span class="p">:</span> <span class="n">pyrate</span> <span class="n">process</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="o">-</span><span class="n">f</span> <span class="n">CONFIG_FILE</span>
+
+<span class="n">optional</span> <span class="n">arguments</span><span class="p">:</span>
+  <span class="o">-</span><span class="n">h</span><span class="p">,</span> <span class="o">--</span><span class="n">help</span>            <span class="n">show</span> <span class="n">this</span> <span class="n">help</span> <span class="n">message</span> <span class="ow">and</span> <span class="n">exit</span>
+  <span class="o">-</span><span class="n">f</span> <span class="n">CONFIG_FILE</span><span class="p">,</span> <span class="o">--</span><span class="n">config_file</span> <span class="n">CONFIG_FILE</span>
+                        <span class="n">Pass</span> <span class="n">configuration</span> <span class="n">file</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">process</span></code> step is used as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;</span> <span class="n">pyrate</span> <span class="n">process</span> <span class="o">-</span><span class="n">f</span> <span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">config_file</span>
+</pre></div>
+</div>
+<p>Optionally, an orbital error correction and a spatio-temporal filter
+operation to estimate and remove atmospheric phase screen (APS) signals is
+applied to the interferograms prior to time series and stacking
+analysis. The corrected interferograms are updated on disk and the
+corrections are not re-applied upon subsequent runs. This functionality
+is controlled by the <code class="docutils literal notranslate"><span class="pre">orbfit</span></code> and <code class="docutils literal notranslate"><span class="pre">apsest</span></code> options in the
+configuration file.</p>
+<p>Non-optional pre-processing steps include:
+- Minimum Spanning Tree matrix calculation,
+- Identification of a suitable reference phase area,
+- Removal of reference phase from interferograms,
+- Calculation of interferogram covariance,
+- Assembly of the variance-covariance matrix.</p>
+<p>Following the above processing steps the time series and stacking
+calculations are run. Time series is optional, controlled by the
+<code class="docutils literal notranslate"><span class="pre">tscal</span></code> parameter. Stacking is not optional.</p>
+</div>
+<div class="section" id="merge-reassemble-the-tiles">
+<h3><code class="docutils literal notranslate"><span class="pre">merge</span></code>: Reassemble the tiles<a class="headerlink" href="#merge-reassemble-the-tiles" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">merge</span></code> is the last step of the <cite>PyRate</cite> workflow, which produces geotiff
+files containing the final time series and stacking products.
+<code class="docutils literal notranslate"><span class="pre">merge</span></code> will also re-assemble tiles that were generated during the <code class="docutils literal notranslate"><span class="pre">process</span></code>
+step when run with MPI. Tiling is discussed in the <a class="reference internal" href="#parallel-label"><span class="std std-ref">Parallel Processing</span></a> section
+below.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;</span> <span class="n">pyrate</span> <span class="n">merge</span> <span class="o">--</span><span class="n">help</span>
+<span class="n">usage</span><span class="p">:</span> <span class="n">pyrate</span> <span class="n">merge</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">f</span> <span class="n">CONFIG_FILE</span><span class="p">]</span>
+
+<span class="n">optional</span> <span class="n">arguments</span><span class="p">:</span>
+  <span class="o">-</span><span class="n">h</span><span class="p">,</span> <span class="o">--</span><span class="n">help</span>            <span class="n">show</span> <span class="n">this</span> <span class="n">help</span> <span class="n">message</span> <span class="ow">and</span> <span class="n">exit</span>
+  <span class="o">-</span><span class="n">f</span> <span class="n">CONFIG_FILE</span><span class="p">,</span> <span class="o">--</span><span class="n">config_file</span> <span class="n">CONFIG_FILE</span>
+                        <span class="n">Pass</span> <span class="n">configuration</span> <span class="n">file</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">merge</span></code> step is used as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;</span> <span class="n">pyrate</span> <span class="n">merge</span> <span class="o">-</span><span class="n">f</span> <span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">config_file</span>
+</pre></div>
+</div>
+<p>After running the <code class="docutils literal notranslate"><span class="pre">merge</span></code> step, several geotiff products will appear in the
+directory defined by the <code class="docutils literal notranslate"><span class="pre">outdir</span></code> parameter.</p>
+</div>
+<div class="section" id="workflow-run-the-full-pyrate-workflow">
+<h3><code class="docutils literal notranslate"><span class="pre">workflow</span></code>: Run the full PyRate workflow<a class="headerlink" href="#workflow-run-the-full-pyrate-workflow" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">workflow</span></code> is a fifth option that will run all four steps (<code class="docutils literal notranslate"><span class="pre">conv2tif</span></code>, <code class="docutils literal notranslate"><span class="pre">prepifg</span></code>,
+<code class="docutils literal notranslate"><span class="pre">process</span></code>, and <code class="docutils literal notranslate"><span class="pre">merge</span></code>) in order as a single job.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;</span> <span class="n">pyrate</span> <span class="n">workflow</span> <span class="o">--</span><span class="n">help</span>
+<span class="n">usage</span><span class="p">:</span> <span class="n">pyrate</span> <span class="n">workflow</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">f</span> <span class="n">CONFIG_FILE</span><span class="p">]</span>
+
+<span class="n">optional</span> <span class="n">arguments</span><span class="p">:</span>
+  <span class="o">-</span><span class="n">h</span><span class="p">,</span> <span class="o">--</span><span class="n">help</span>            <span class="n">show</span> <span class="n">this</span> <span class="n">help</span> <span class="n">message</span> <span class="ow">and</span> <span class="n">exit</span>
+  <span class="o">-</span><span class="n">f</span> <span class="n">CONFIG_FILE</span><span class="p">,</span> <span class="o">--</span><span class="n">config_file</span> <span class="n">CONFIG_FILE</span>
+                        <span class="n">Pass</span> <span class="n">configuration</span> <span class="n">file</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">workflow</span></code> is used as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pyrate</span> <span class="n">workflow</span> <span class="o">-</span><span class="n">f</span> <span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">config_file</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">workflow</span></code> will only be useful for users starting with flat-binary input files,
+since <code class="docutils literal notranslate"><span class="pre">conv2tif</span></code> is the first step to be run as part of this full workflow.</p></li>
+</ul>
+</div>
+</div>
+</div>
+<div class="section" id="input-files">
+<h2>Input Files<a class="headerlink" href="#input-files" title="Permalink to this headline">¶</a></h2>
+<p><cite>PyRate</cite> currently supports input files generated by the <cite>GAMMA</cite> and <cite>ROI_PAC</cite>
+interferometry softwares. <cite>PyRate</cite> will determine the input format from the
+<code class="docutils literal notranslate"><span class="pre">processor:</span></code> parameter in the configuration file (<code class="docutils literal notranslate"><span class="pre">0</span></code>: <cite>ROI_PAC</cite>;
+<code class="docutils literal notranslate"><span class="pre">1</span></code>: <cite>GAMMA</cite>).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>Support and development of <cite>ROI_PAC</cite> has been discontinued.</p></li>
+<li><p><cite>ROI_PAC</cite> support in <cite>PyRate</cite> will be deprecated in a future release.</p></li>
+</ul>
+</div>
+<div class="section" id="gamma">
+<h3><cite>GAMMA</cite><a class="headerlink" href="#gamma" title="Permalink to this headline">¶</a></h3>
+<p>Each <cite>GAMMA</cite> geocoded unwrapped interferogram requires three header files
+to extract metadata required for data formatting: a geocoded DEM header
+file (<code class="docutils literal notranslate"><span class="pre">demHeaderFile</span></code> keyword in the configuration file) and the relevant
+master and slave epoch SLC header files (<code class="docutils literal notranslate"><span class="pre">*slc.par</span></code>) found in the <code class="docutils literal notranslate"><span class="pre">hdrfilelist</span></code>.
+SLC header files for a particular interferogram are found automatically by
+date-string pattern matching based on date epochs given in the filenames.
+A DEM with matching size and geometry to the interferograms can also be processed.
+The DEM absolute path and filename are set with the <code class="docutils literal notranslate"><span class="pre">demfile</span></code> parameter.</p>
+</div>
+<div class="section" id="roi-pac">
+<h3><cite>ROI_PAC</cite><a class="headerlink" href="#roi-pac" title="Permalink to this headline">¶</a></h3>
+<p>Each <cite>ROI_PAC</cite> geocoded unwrapped interferogram requires its own
+header/resource file (<code class="docutils literal notranslate"><span class="pre">*.rsc</span></code>). These header files need to be
+listed in the defined <code class="docutils literal notranslate"><span class="pre">hdrfilelist</span></code>. In addition, the geocoded DEM
+header file is required and its path and name are specified in the config file under
+<code class="docutils literal notranslate"><span class="pre">demHeaderFile</span></code>. The geographic projection in the parameter <code class="docutils literal notranslate"><span class="pre">DATUM:</span></code> is extracted
+from the DEM header file.
+A DEM with matching size and geometry to the interferograms can also be processed.
+The DEM absolute path and filename are set with the <code class="docutils literal notranslate"><span class="pre">demfile</span></code> parameter.</p>
+</div>
+</div>
+<div class="section" id="parallel-processing">
+<span id="parallel-label"></span><h2>Parallel Processing<a class="headerlink" href="#parallel-processing" title="Permalink to this headline">¶</a></h2>
+<p>By their very nature, interferograms are large files. This is particularly the case
+for <a class="reference external" href="https://sentinel.esa.int/web/sentinel/user-guides/sentinel-1-sar">Sentinel-1</a>, which has an image swath of 250 km and a pixel resolution on the order
+of tens of metres in IW-mode.
+Consequently, InSAR processing can be computationally expensive and time consuming.
+It therefore makes sense to parallelise processing operations wherever possible.</p>
+<p><cite>PyRate</cite> can be run in parallel using standard multi-threading simply by turning
+<code class="docutils literal notranslate"><span class="pre">parallel:</span>&#160; <span class="pre">1</span></code> in the configuration file to take advantage of multiple cores
+on a single machine. The parameter <code class="docutils literal notranslate"><span class="pre">processes</span></code> sets the number of threads.</p>
+<p>Alternatively, <cite>PyRate</cite> can be parallelised on a system with an installed MPI library
+by using <code class="docutils literal notranslate"><span class="pre">mpirun</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Modify &#39;-n&#39; based on the number of processors available.</span>
+<span class="n">mpirun</span> <span class="o">-</span><span class="n">n</span> <span class="mi">4</span> <span class="n">pyrate</span> <span class="n">conv2tif</span> <span class="o">-</span><span class="n">f</span> <span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">config_file</span>
+<span class="n">mpirun</span> <span class="o">-</span><span class="n">n</span> <span class="mi">4</span> <span class="n">pyrate</span> <span class="n">prepifg</span> <span class="o">-</span><span class="n">f</span> <span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">config_file</span>
+<span class="n">mpirun</span> <span class="o">-</span><span class="n">n</span> <span class="mi">4</span> <span class="n">pyrate</span> <span class="n">process</span> <span class="o">-</span><span class="n">f</span> <span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">config_file</span>
+<span class="n">mpirun</span> <span class="o">-</span><span class="n">n</span> <span class="mi">4</span> <span class="n">pyrate</span> <span class="n">merge</span> <span class="o">-</span><span class="n">f</span> <span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">config_file</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>In the case that <cite>PyRate</cite> is run using <code class="docutils literal notranslate"><span class="pre">mpirun</span></code>, standard multi-threading is automatically
+disabled (i.e. equivalent to setting <code class="docutils literal notranslate"><span class="pre">parallel:</span>&#160; <span class="pre">0</span></code>).</p></li>
+</ul>
+</div>
+<ul class="simple">
+<li><p>During <code class="docutils literal notranslate"><span class="pre">conv2tif</span></code> and <code class="docutils literal notranslate"><span class="pre">prepifg</span></code>, parallelism is achieved by sending sub-lists of input
+files to each process.</p></li>
+<li><p>In the multi-threading case, parallelism in the <code class="docutils literal notranslate"><span class="pre">process</span></code> step is achieved by splitting
+individual pixels across the available processes in a pixel-by-pixel nature.</p></li>
+<li><p>In the MPI case, parallelism in the <code class="docutils literal notranslate"><span class="pre">process</span></code> step is achieved by splitting the images
+in to a grid of tiles, where the number of tiles equals the number of processes passed with
+the <code class="docutils literal notranslate"><span class="pre">-n</span></code> option. The number of tiles in x and y dimension are automatically calculated by
+<cite>PyRate</cite>, ensuring a roughly equivalent number in both dimensions. One of the functions of the
+<code class="docutils literal notranslate"><span class="pre">merge</span></code> step is to reassemble these tiles in to the full image for each output product.</p></li>
+</ul>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Geoscience Australia
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+  
+<p>placeHolderText</p>
+        <!-- your html code here -->
+ 
+
+
+</body>
+</html>
