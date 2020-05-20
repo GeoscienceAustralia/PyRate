@@ -49,7 +49,15 @@ Python dependencies are:
 Install
 -------
 
-Details of all install options are given in the `PyRate documentation <http://geoscienceaustralia.github.io/PyRate>`_. For a Linux install, enter these commands in a terminal:
+Details of all install options are given in the `PyRate documentation <http://geoscienceaustralia.github.io/PyRate>`_.
+
+`PyRate` and its Python dependencies can be installed directly from the `Python Package Index (PyPI) <https://pypi.org/project/Py-Rate/>`_:
+
+::
+
+    pip install Py-Rate
+
+To install from source in Linux, enter these commands in a terminal:
 
 ::
 
