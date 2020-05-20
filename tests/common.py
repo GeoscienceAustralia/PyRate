@@ -385,7 +385,7 @@ def write_timeseries_geotiff(ifgs, params, tsincr, pr_type):
 
 def calculate_stack_rate(ifgs, params, vcmt, mst_mat=None):
     # log.info('Calculating stacked rate')
-    res = stack.stack_rate(ifgs, params, vcmt, mst_mat)
+    res = stack.stack_rate_array(ifgs, params, vcmt, mst_mat)
     for r in res:
         if r is None:
             raise ValueError('TODO: bad value')
