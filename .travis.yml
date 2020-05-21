@@ -61,7 +61,7 @@ install:
 script:
   #  - python scripts/update_placeholder_paths.py
   - mpirun -n 3 pytest tests/test_mpi.py
-  - pytest --cov-config=.coveragerc --cov-report term-missing:skip-covered --cov=pyrate tests/
+  - travis_wait 20 pytest --cov-config=.coveragerc --cov-report term-missing:skip-covered --cov=pyrate tests/
 
 
 after_success:
