@@ -53,9 +53,9 @@ def _merge_stack(rows, cols, params):
     shape, tiles, ifgs_dict = _merge_setup(rows, cols, params)
 
     # read and assemble tile outputs
-    rate = _assemble_tiles(shape, params[cf.TMPDIR], tiles, out_type='stack_rate')
-    error = _assemble_tiles(shape, params[cf.TMPDIR], tiles, out_type='stack_error')
-    samples = _assemble_tiles(shape, params[cf.TMPDIR], tiles, out_type='stack_samples')
+    rate = assemble_tiles(shape, params[cf.TMPDIR], tiles, out_type='stack_rate')
+    error = assemble_tiles(shape, params[cf.TMPDIR], tiles, out_type='stack_error')
+    samples = assemble_tiles(shape, params[cf.TMPDIR], tiles, out_type='stack_samples')
 
     # mask pixels according to threshold
     if params[cf.LR_MAXSIG] > 0:
@@ -92,11 +92,11 @@ def _merge_timeseries(rows, cols, params):
              'total {}'.format(mpiops.rank, len(process_tifs), no_ts_tifs * 2))
     for i in process_tifs:
         if i < no_ts_tifs:
-            tscum_g = _assemble_tiles(shape, params[cf.TMPDIR], tiles, out_type='tscuml', index=i)
+            tscum_g = assemble_tiles(shape, params[cf.TMPDIR], tiles, out_type='tscuml', index=i)
             _save_merged_files(ifgs_dict, params[cf.OUT_DIR], tscum_g, out_type='tscuml', index=i)
         else:
             i %= no_ts_tifs
-            tsincr_g = _assemble_tiles(shape, params[cf.TMPDIR], tiles, out_type='tsincr', index=i)
+            tsincr_g = assemble_tiles(shape, params[cf.TMPDIR], tiles, out_type='tsincr', index=i)
             _save_merged_files(ifgs_dict, params[cf.OUT_DIR], tsincr_g, out_type='tsincr', index=i)
     mpiops.comm.barrier()
     log.debug('Process {} finished writing {} timeseries tifs of '
@@ -177,14 +177,23 @@ def create_png_from_tif(output_folder_path):
     log.debug('Finished creating quicklook image.')
 
 
-def _assemble_tiles(s, dir, tiles, out_type, index=None):
-    # pylint: disable=too-many-arguments
+def assemble_tiles(s, dir, tiles, out_type, index=None):
     """
-    Convenience function to reassemble tiles from numpy files in to an array
+    Function to reassemble tiles from numpy files in to a merged array
+
+    :param tuple s: shape for merged array.
+    :param str dir: path to directory containing numpy tile files.
+    :param str out_type: product type string, used to construct numpy tile file name.
+    :param int index: array third dimension index to extract from 3D time series array tiles.
+
+    :return: merged_array: array assembled from all tiles.
+    :rtype: ndarray
     """
     log.info('Re-assembling tiles for {}'.format(out_type))
+    # pre-allocate dest array
     merged_array = np.empty(shape=s, dtype=np.float32)
 
+    # loop over each tile, load and slot in to correct spot
     for t in tiles:
         tile_file = Path(join(dir, out_type + '_'+str(t.index)+'.npy'))
         tile = np.load(file=tile_file)
