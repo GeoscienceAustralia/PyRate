@@ -206,14 +206,7 @@ def _prepifg_multiprocessing(path, xlooks, ylooks, exts, thresh, crop, params):
     """
     Multiprocessing wrapper for prepifg
     """
-    processor = params[cf.PROCESSOR]  # roipac, gamma or geotif
-    if (processor == GAMMA) or (processor == GEOTIF):
-        header = gamma.gamma_header(path, params)
-    elif processor == ROIPAC:
-        log.info("Warning: ROI_PAC support will be deprecated in a future PyRate release")
-        header = roipac.roipac_header(path, params)
-    else:
-        raise PreprocessError('Processor must be ROI_PAC (0) or GAMMA (1)')
+    header = find_header(path, params)
 
     # If we're performing coherence masking, find the coherence file for this IFG.
     if params[cf.COH_MASK] and shared._is_interferogram(header):
@@ -230,3 +223,15 @@ def _prepifg_multiprocessing(path, xlooks, ylooks, exts, thresh, crop, params):
     else:
         prepifg_helper.prepare_ifg(path, xlooks, ylooks, exts, thresh, crop, out_path=params[cf.OUT_DIR],
                                    header=header, coherence_path=coherence_path, coherence_thresh=coherence_thresh)
+
+
+def find_header(path, params):
+    processor = params[cf.PROCESSOR]  # roipac, gamma or geotif
+    if (processor == GAMMA) or (processor == GEOTIF):
+        header = gamma.gamma_header(path, params)
+    elif processor == ROIPAC:
+        log.info("Warning: ROI_PAC support will be deprecated in a future PyRate release")
+        header = roipac.roipac_header(path, params)
+    else:
+        raise PreprocessError('Processor must be ROI_PAC (0) or GAMMA (1)')
+    return header

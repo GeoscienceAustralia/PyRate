@@ -30,7 +30,7 @@ from pyrate.core import (shared, algorithm, orbital, ref_phs_est as rpe,
 from pyrate.core.aps import wrap_spatio_temporal_filter
 from pyrate.core.shared import Ifg, PrereadIfg, get_tiles, mpi_vs_multiprocess_logging
 from pyrate.core.logger import pyratelogger as log
-from pyrate.core.utils import find_header
+from pyrate.prepifg import find_header
 
 MASTER_PROCESS = 0
 
