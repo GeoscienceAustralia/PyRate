@@ -1,13 +1,25 @@
-git clone git@github.com:GeoscienceAustralia/PyRate.git
-cd PyRate
+# publish package to PyPI
 
-cd C:/Users/sheec/Desktop/Projects/PyRate
+follow the steps at: https://medium.com/@joel.barmettler/how-to-upload-your-python-package-to-pypi-65edc5fe9c56
+
+Summary:
+
+1) create new 'release' in Github. this will tag a commit hash.
+2) copy link to tar.gz Source Code from github release, add to download_url in setup.py
+3) update version number in setup.py (to match the Github release)
+4) `python setup.py sdist` - prepare package
+5) `twine upload dist/*` - upload package to PyPI
+
+---------------------------------------------
+# Clone Github repo
+cd ~
+git clone git@github.com:GeoscienceAustralia/PyRate.git
 
 # build PyRate package
-cd /PyRate
+cd ~/PyRate
 pip install -r requirements-dev.txt
 pip install -r requirements-test.txt
-pip install pyproj==2.2.1
+pip install -r requirements-test.txt
 cd /PyRate && python3 setup.py install
 
 # Run workflow
@@ -16,35 +28,30 @@ pyrate prepifg -f pyrate_gamma.conf
 pyrate process -f pyrate_gamma.conf
 pyrate merge -f pyrate_gamma.conf
 
+---------------------------------------
 # Build Sphinx docs
+pip install -r requirements-dev.txt
 cd /PyRate/docs && make html
 
-# Run tests
+---------------------------------------
+# Run unit tests
+pip install -r requirements-test.txt
 cd /PyRate
 chmod 444 tests/test_data/small_test/tif/geo_070709-070813_unw.tif
 cd /PyRate && python -m pytest tests/
 
-# Random stuff
-pip install tox
-tox
-
-# 64 failed, 236 passed, 1944 skipped
-
 ---------------------------------------
-NCI
+NCI Gadi supercomputer
 
-ssh xyz@gadi.nci.org.au
-
-module unload git
-module load git
+ssh <username>@gadi.nci.org.au
 
 cd ~
 
 rm -rf PyRate
 rm -rf PyRateVenv
 
-git clone https://github.com/GeoscienceAustralia/PyRate.git -b test --single-branch
-source PyRate/utils/load_modules.sh
+git clone https://github.com/GeoscienceAustralia/PyRate.git -b develop --single-branch
+source PyRate/scripts/nci_load_modules.sh
 python3 -m venv ~/PyRateVenv
 source ~/PyRateVenv/bin/activate
 cd ~/PyRate

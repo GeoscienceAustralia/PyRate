@@ -56,21 +56,25 @@ class PyTest(TestCommand, object):
         exit(pytest.main(self.pytest_args))
 
 
+readme = open('README.rst').read()
 doclink = """
+Documentation
+-------------
 
-Please see the full documentation at http://geoscienceaustralia.github.io/PyRate/."""
-
-# history = open('docs/history.rst').read().replace('.. :changelog:', '')
+The full documentation is at http://geoscienceaustralia.github.io/PyRate/"""
+history = open('docs/history.rst').read().replace('.. :changelog:', '')
 
 setup(
     name='Py-Rate',
     version=__version__,
-    description='A Python tool for estimating velocity and time-series '
-                'from Interferometric Synthetic Aperture Radar (InSAR) data.',
-    long_description=doclink,
+    license="Apache Software License 2.0",
+    description='A Python tool for estimating velocity and cumulative displacement '
+                'time-series from Interferometric Synthetic Aperture Radar (InSAR) data.',
+    long_description=readme + '\n\n' + doclink + '\n\n' + history,
     author='Geoscience Australia InSAR team',
     author_email='insar@ga.gov.au',
     url='https://github.com/GeoscienceAustralia/PyRate',
+    download_url='https://github.com/GeoscienceAustralia/PyRate/archive/'+__version__+'.tar.gz',
     packages=setuptools.find_packages(),
     package_dir={'PyRate': 'pyrate'},
     package_data={
@@ -88,7 +92,6 @@ setup(
         'dev': dev_requirements
     },
     tests_require=test_requirements,
-    license="Apache Software License 2.0",
     zip_safe=False,
     keywords='PyRate, Python, InSAR, Geodesy, Remote Sensing, Image Processing',
     classifiers=[
