@@ -17,7 +17,6 @@
 """
 This Python module runs the main PyRate processing workflow
 """
-import logging
 import os
 from os.path import join
 import pickle as cp
@@ -31,6 +30,7 @@ from pyrate.core import (shared, algorithm, orbital, ref_phs_est as rpe,
 from pyrate.core.aps import wrap_spatio_temporal_filter
 from pyrate.core.shared import Ifg, PrereadIfg, get_tiles, mpi_vs_multiprocess_logging
 from pyrate.core.logger import pyratelogger as log
+from pyrate.core.utils import find_header
 
 MASTER_PROCESS = 0
 
@@ -186,7 +186,8 @@ def _orb_fit_calc(ifg_paths, params, preread_ifgs=None):
         # A performance comparison should be made for saving multilooked
         # files on disc vs in memory single process multilooking
         if mpiops.rank == MASTER_PROCESS:
-            orbital.remove_orbital_error(ifg_paths, params, preread_ifgs)
+            headers = [find_header(p, params) for p in ifg_paths]
+            orbital.remove_orbital_error(ifg_paths, params, headers, preread_ifgs=preread_ifgs)
     mpiops.comm.barrier()
     log.debug('Finished Orbital error correction')
 
