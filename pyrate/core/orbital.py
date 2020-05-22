@@ -68,7 +68,7 @@ QUADRATIC = cf.QUADRATIC
 PART_CUBIC = cf.PART_CUBIC
 
 
-def remove_orbital_error(ifgs: Iterable, params: dict, preread_ifgs=None) -> None:
+def remove_orbital_error(ifgs: Iterable, params: dict, headers: List[dict], preread_ifgs=None) -> None:
     """
     Wrapper function for PyRate orbital error removal functionality.
 
@@ -96,7 +96,9 @@ def remove_orbital_error(ifgs: Iterable, params: dict, preread_ifgs=None) -> Non
             xlooks=params[cf.ORBITAL_FIT_LOOKS_X],
             ylooks=params[cf.ORBITAL_FIT_LOOKS_Y],
             thresh=params[cf.NO_DATA_AVERAGING_THRESHOLD],
-            write_to_disc=False)
+            write_to_disc=False,
+            headers=headers
+        )
         mlooked = [Ifg(m[1]) for m in mlooked_dataset]
 
         for m in mlooked:

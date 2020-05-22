@@ -40,6 +40,9 @@ from pyrate.core.orbital import get_design_matrix, get_network_design_matrix
 from pyrate.core.orbital import _get_num_params, remove_orbital_error
 from pyrate.core.shared import Ifg
 from pyrate.core.shared import nanmedian
+from pyrate.core import roipac
+from pyrate.configuration import Configuration
+from tests import common
 from tests.common import TEST_CONF_ROIPAC, IFMS16
 from tests.common import SML_TEST_LEGACY_ORBITAL_DIR
 from tests.common import SML_TEST_TIF, small_data_setup
@@ -754,12 +757,11 @@ class LegacyComparisonTestsOrbfitMethod2(unittest.TestCase):
     """
     def setUp(self):
         self.BASE_DIR = tempfile.mkdtemp()
-        self.params = cf.get_config_params(TEST_CONF_ROIPAC)
         # change to orbital error correction method 2
+        self.params = Configuration(common.TEST_CONF_ROIPAC).__dict__
         self.params[cf.ORBITAL_FIT_METHOD] = NETWORK_METHOD
         self.params[cf.ORBITAL_FIT_LOOKS_X] = 1
         self.params[cf.ORBITAL_FIT_LOOKS_Y] = 1
-
         data_paths = [os.path.join(SML_TEST_TIF, p) for p in small_ifg_file_list()]
         self.new_data_paths = [os.path.join(self.BASE_DIR, os.path.basename(d)) for d in data_paths]
         for d in data_paths:
@@ -768,6 +770,7 @@ class LegacyComparisonTestsOrbfitMethod2(unittest.TestCase):
             os.chmod(d_copy, 0o660)
 
         self.ifgs = small_data_setup(datafiles=self.new_data_paths)
+        self.headers = [roipac.roipac_header(i.data_path, self.params) for i in self.ifgs]
 
         for i in self.ifgs:
             if not i.is_open:
@@ -785,7 +788,7 @@ class LegacyComparisonTestsOrbfitMethod2(unittest.TestCase):
         shutil.rmtree(self.BASE_DIR)
 
     def test_orbital_correction_legacy_equality_orbfit_method_2(self):
-        remove_orbital_error(self.ifgs, self.params)
+        remove_orbital_error(self.ifgs, self.params, headers=self.headers)
 
         onlyfiles = [f for f in os.listdir(SML_TEST_LEGACY_ORBITAL_DIR)
                      if os.path.isfile(os.path.join(SML_TEST_LEGACY_ORBITAL_DIR, f))
@@ -818,7 +821,7 @@ class LegacyComparisonTestsOrbfitMethod2(unittest.TestCase):
         self.params[cf.ORBITAL_FIT_LOOKS_X] = 2
         self.params[cf.ORBITAL_FIT_LOOKS_Y] = 2
 
-        remove_orbital_error(self.ifgs, self.params)
+        remove_orbital_error(self.ifgs, self.params, self.headers)
 
         onlyfiles = [f for f in os.listdir(SML_TEST_LEGACY_ORBITAL_DIR)
                      if os.path.isfile(os.path.join(SML_TEST_LEGACY_ORBITAL_DIR, f))

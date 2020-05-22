@@ -28,7 +28,7 @@ from numpy.testing import assert_array_almost_equal
 
 import pyrate.core.orbital
 import tests.common
-from pyrate.core import shared, ref_phs_est as rpe, config as cf, covariance as vcm_module
+from pyrate.core import shared, ref_phs_est as rpe, config as cf, covariance as vcm_module, roipac
 from pyrate.core.stack import stack_rate
 from pyrate import process, prepifg, conv2tif
 from pyrate.configuration import Configuration
@@ -93,8 +93,8 @@ class LegacyEqualityTest(unittest.TestCase):
 
         xlks, _, crop = cf.transform_params(params)
 
-        base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST], params[cf.OBS_DIR])
-        
+        base_ifg_paths = list(cf.parse_namelist(params[cf.IFG_FILE_LIST]))
+        headers = [roipac.roipac_header(i, params) for i in base_ifg_paths]
         dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
         # start run_pyrate copy
         ifgs = pre_prepare_ifgs(dest_paths, params)
@@ -103,7 +103,7 @@ class LegacyEqualityTest(unittest.TestCase):
         refx, refy = process._ref_pixel_calc(dest_paths, params)
 
         # Estimate and remove orbit errors
-        pyrate.core.orbital.remove_orbital_error(ifgs, params)
+        pyrate.core.orbital.remove_orbital_error(ifgs, params, headers)
         ifgs = prepare_ifgs_without_phase(dest_paths, params)
         for ifg in ifgs:
             ifg.close()

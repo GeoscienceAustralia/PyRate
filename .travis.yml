@@ -78,7 +78,7 @@ deploy:
   verbose: true
   on:
     branch: master
-    condition: $GDALVERSION="3.0.2" && $TRAVIS_PYTHON_VERSION=3.8.*
+    python: 3.8
   github-token: $GITHUB_TOKEN2
   local-dir: docs/_build/html
   project_name: PyRate

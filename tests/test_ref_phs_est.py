@@ -29,6 +29,7 @@ import pyrate.core.orbital
 from pyrate.core import ifgconstants as ifc, config as cf
 from pyrate.core.ref_phs_est import ReferencePhaseError
 from pyrate.core.shared import CorrectionStatusError
+from pyrate.core import roipac
 from pyrate import prepifg, process, conv2tif
 from pyrate.configuration import Configuration
 from tests import common
@@ -129,7 +130,8 @@ class RefPhsEstimationLegacyTestMethod1Serial(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-
+        from pyrate.core import roipac
+        from pyrate.core.config import parse_namelist
         params = Configuration(common.TEST_CONF_ROIPAC).__dict__
         cls.temp_out_dir = tempfile.mkdtemp()
         sys.argv = ['prepifg.py', common.TEST_CONF_ROIPAC]
@@ -143,11 +145,10 @@ class RefPhsEstimationLegacyTestMethod1Serial(unittest.TestCase):
 
         xlks, ylks, crop = cf.transform_params(params)
 
-        base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST],
-                                               params[cf.OBS_DIR])
+        base_ifg_paths = list(parse_namelist(params[cf.IFG_FILE_LIST]))
+        headers = [roipac.roipac_header(i, params) for i in base_ifg_paths]
 
-        dest_paths = cf.get_dest_paths(base_ifg_paths, crop,
-                                               params, xlks)
+        dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
 
         # start run_pyrate copy
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
@@ -156,7 +157,7 @@ class RefPhsEstimationLegacyTestMethod1Serial(unittest.TestCase):
         refx, refy = process._ref_pixel_calc(dest_paths, params)
 
         # Estimate and remove orbit errors
-        pyrate.core.orbital.remove_orbital_error(ifgs, params)
+        pyrate.core.orbital.remove_orbital_error(ifgs, params, headers)
 
         for i in ifgs:
             i.close()
@@ -242,11 +243,10 @@ class RefPhsEstimationLegacyTestMethod1Parallel(unittest.TestCase):
 
         xlks, ylks, crop = cf.transform_params(params)
 
-        base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST],
-                                               params[cf.OBS_DIR])
+        base_ifg_paths = list(cf.parse_namelist(params[cf.IFG_FILE_LIST]))
+        headers = [roipac.roipac_header(i, params) for i in base_ifg_paths]
 
-        dest_paths = cf.get_dest_paths(base_ifg_paths, crop,
-                                               params, xlks)
+        dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
 
         # start run_pyrate copy
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
@@ -255,7 +255,7 @@ class RefPhsEstimationLegacyTestMethod1Parallel(unittest.TestCase):
         refx, refy = process._ref_pixel_calc(dest_paths, params)
 
         # Estimate and remove orbit errors
-        pyrate.core.orbital.remove_orbital_error(ifgs, params)
+        pyrate.core.orbital.remove_orbital_error(ifgs, params, headers)
 
         for i in ifgs:
             i.close()
@@ -339,12 +339,9 @@ class RefPhsEstimationLegacyTestMethod2Serial(unittest.TestCase):
 
         xlks, ylks, crop = cf.transform_params(params)
 
-        base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST],
-                                               params[cf.OBS_DIR])
-
-        dest_paths = cf.get_dest_paths(base_ifg_paths, crop,
-                                               params, xlks)
-
+        base_ifg_paths = list(cf.parse_namelist(params[cf.IFG_FILE_LIST]))
+        dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
+        headers = [roipac.roipac_header(i, params) for i in base_ifg_paths]
         # start run_pyrate copy
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         mst_grid = common.mst_calculation(dest_paths, params)
@@ -352,7 +349,7 @@ class RefPhsEstimationLegacyTestMethod2Serial(unittest.TestCase):
         refx, refy = process._ref_pixel_calc(dest_paths, params)
 
         # Estimate and remove orbit errors
-        pyrate.core.orbital.remove_orbital_error(ifgs, params)
+        pyrate.core.orbital.remove_orbital_error(ifgs, params, headers)
 
         for i in ifgs:
             i.close()
@@ -435,11 +432,9 @@ class RefPhsEstimationLegacyTestMethod2Parallel(unittest.TestCase):
 
         xlks, ylks, crop = cf.transform_params(params)
 
-        base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST],    
-                                               params[cf.OBS_DIR])
-
-        dest_paths = cf.get_dest_paths(base_ifg_paths, crop,
-                                       params, xlks)
+        base_ifg_paths = list(cf.parse_namelist(params[cf.IFG_FILE_LIST]))
+        headers = [roipac.roipac_header(i, params) for i in base_ifg_paths]
+        dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
 
         # start run_pyrate copy
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
@@ -447,7 +442,7 @@ class RefPhsEstimationLegacyTestMethod2Parallel(unittest.TestCase):
         refx, refy = process._ref_pixel_calc(dest_paths, params)
 
         # Estimate and remove orbit errors
-        pyrate.core.orbital.remove_orbital_error(ifgs, params)
+        pyrate.core.orbital.remove_orbital_error(ifgs, params, headers)
 
         for i in ifgs:
             i.close()

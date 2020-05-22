@@ -807,9 +807,9 @@ def collate_metadata(header):
             for k in [ifc.MASTER_TIME, ifc.SLAVE_TIME, ifc.PYRATE_INCIDENCE_DEGREES]:
                 md.update({k: str(header[k])})
     elif _is_incidence(header):
-        md.update({ifc.DATA_TYPE:ifc.INCIDENCE})
-    else: # must be dem
-        md.update({ifc.DATA_TYPE:ifc.DEM})
+        md.update({ifc.DATA_TYPE: ifc.INCIDENCE})
+    else:  # must be dem
+        md.update({ifc.DATA_TYPE: ifc.DEM})
 
     return md
 
