@@ -22,6 +22,7 @@ import os
 from typing import Tuple, List
 from joblib import Parallel, delayed
 import numpy as np
+from pathlib import Path
 
 from pyrate.core.prepifg_helper import PreprocessError
 from pyrate.core import shared, mpiops, config as cf, gamma, roipac
@@ -104,6 +105,7 @@ def _geotiff_multiprocessing(unw_path: MultiplePaths, params: dict) -> Tuple[str
         else:
             raise PreprocessError('Processor must be ROI_PAC (0) or GAMMA (1)')
         shared.write_fullres_geotiff(header, unw_path.unwrapped_path, dest, nodata=params[cf.NO_DATA_VALUE])
+        Path(dest).chmod(0o444)  # readonly output
         return dest, True
     else:
         log.warning(f"Full-res geotiff already exists in {dest}! Returning existing geotiff!")

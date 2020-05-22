@@ -1,4 +1,5 @@
 import os
+import stat
 import tempfile
 import numpy as np
 from osgeo import osr
@@ -24,14 +25,14 @@ def test_small_data_coherence(gamma_params):
     conv2tif.main(gamma_params)
 
     for i in ifg_multilist:
-        p = i.converted_path
-        ifg = pyrate.core.shared.dem_or_ifg(data_path=p)
+        p = Path(i.converted_path)
+        p.chmod(0o664)  # assign write permission as conv2tif output is readonly
+        ifg = pyrate.core.shared.dem_or_ifg(data_path=p.as_posix())
         if not isinstance(ifg, Ifg):
             continue
         ifg.open()
-
         # now do coherence masking and compare
-        ifg = pyrate.core.shared.dem_or_ifg(data_path=p)
+        ifg = pyrate.core.shared.dem_or_ifg(data_path=p.as_posix())
         ifg.open()
         converted_coh_file_path = cf.coherence_paths_for(p, gamma_params, tif=True)
         gdal_python.coherence_masking(ifg.dataset,

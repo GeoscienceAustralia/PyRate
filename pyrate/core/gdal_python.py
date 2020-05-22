@@ -328,7 +328,6 @@ def crop_resample_average(
     # insert metadata from the header
     md = shared.collate_metadata(hdr)
 
-
     # update metadata for output
 
     # TODO: Metadata should be updated immediately as a prepifg/process step is applied

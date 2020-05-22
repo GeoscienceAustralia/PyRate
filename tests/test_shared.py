@@ -201,7 +201,6 @@ class IfgIOTests(unittest.TestCase):
         i.close()
         os.remove(dest)
 
-
     def test_write_fails_on_readonly(self):
         # check readonly status is same before
         # and after open() for readonly file

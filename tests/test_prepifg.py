@@ -23,6 +23,8 @@ import tempfile
 import unittest
 from math import floor
 from os.path import exists, join
+from pathlib import Path
+from subprocess import check_call
 
 import numpy as np
 from numpy import isnan, nanmax, nanmin, nanmean, ones, nan, reshape, sum as npsum
@@ -51,10 +53,23 @@ if not exists(PREP_TEST_TIF):
     sys.exit("ERROR: Missing 'prepifg' dir for unittests\n")
 
 
-def test_prepifg_treat_inputs_read_only(gamma_conf):
+def test_prepifg_treat_inputs_read_only(gamma_conf, tempdir, coh_mask):
+    tdir = Path(tempdir())
+    params = common.manipulate_test_conf(gamma_conf, tdir)
+    params[cf.COH_MASK] = coh_mask
+    output_conf = tdir.joinpath('conf.cfg')
+    cf.write_config_file(params=params, output_conf_file=output_conf)
+    check_call(f"mpirun -n 3 pyrate conv2tif -f {output_conf}", shell=True)
+    tifs = list(Path(params[cf.OUT_DIR]).glob('*_unw.tif'))
+    assert len(tifs) == 17
 
-    # 0o444
-    return
+    check_call(f"mpirun -n 3 pyrate prepifg -f {output_conf}", shell=True)
+    cropped = list(Path(params[cf.OUT_DIR]).glob('*cr.tif'))
+    # 17 + 1 dem
+    assert len(cropped) == 18
+    # check all tifs from conv2tif are still readonly
+    for t in tifs:
+        assert t.stat().st_mode == 33060
 
 
 # convenience ifg creation funcs
