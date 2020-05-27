@@ -143,14 +143,14 @@ def est_ref_phase_method1(ifg_paths, params):
         comp = np.ravel(comp, order='F')
 
         if params[cf.PARALLEL]:
-            log.info("Calculating ref phase using multiprocessing")
+            log.debug("Calculating ref phase using multiprocessing")
             ref_phs = Parallel(n_jobs=params[cf.PROCESSES], verbose=joblib_log_level(cf.LOG_LEVEL))(
                 delayed(_est_ref_phs_method1)(p.phase_data, comp) for p in proc_ifgs
             )
             for n, ifg in enumerate(proc_ifgs):
                 ifg.phase_data -= ref_phs[n]
         else:
-            log.info("Calculating ref phase")
+            log.debug("Calculating and subtracting ref phase")
             ref_phs = np.zeros(len(proc_ifgs))
             for n, ifg in enumerate(proc_ifgs):
                 ref_phs[n] = _est_ref_phs_method1(ifg.phase_data, comp)
@@ -181,7 +181,7 @@ def _est_ref_phs_method1(phase_data, comp):
 def _update_phase_metadata(ifg):
     ifg.meta_data[ifc.PYRATE_REF_PHASE] = ifc.REF_PHASE_REMOVED
     ifg.write_modified_phase()
-    log.info(f"Reference phase removed for {ifg.data_path}")
+    log.debug(f"Reference phase subtracted for {ifg.data_path}")
 
 
 class ReferencePhaseError(Exception):
