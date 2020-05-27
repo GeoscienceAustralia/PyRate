@@ -45,15 +45,13 @@ def _join_dicts(dicts):
     return assembled_dict
 
 
-def _create_ifg_dict(dest_tifs, params):
+def create_ifg_dict(dest_tifs, params):
     """
-    1. Convert ifg phase data into numpy binary files.
-    2. Save the preread_ifgs dict with information about the ifgs that are
+    Function to create a dict with information about the ifgs that are
     later used for fast loading of Ifg files in IfgPart class
 
     :param list dest_tifs: List of destination tifs
     :param dict params: Config dictionary
-    :param list tiles: List of all Tile instances
 
     :return: preread_ifgs: Dictionary containing information regarding
                 interferograms that are used later in workflow
@@ -286,7 +284,7 @@ def process_ifgs(ifg_paths, params, rows, cols):
 
     tiles = mpiops.run_once(get_tiles, ifg_paths[0], rows, cols)
 
-    preread_ifgs = _create_ifg_dict(ifg_paths, params=params)
+    preread_ifgs = create_ifg_dict(ifg_paths, params=params)
 
     refpx, refpy = _ref_pixel_calc(ifg_paths, params)
 

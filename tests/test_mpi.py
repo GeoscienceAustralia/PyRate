@@ -54,7 +54,7 @@ def test_vcm_legacy_vs_mpi(mpisync, tempdir, roipac_or_gamma_conf):
     conv2tif.main(params)
     prepifg.main(params)
 
-    preread_ifgs = process._create_ifg_dict(dest_paths, params=params)
+    preread_ifgs = process.create_ifg_dict(dest_paths, params=params)
     refpx, refpy = process._ref_pixel_calc(dest_paths, params)
     process._orb_fit_calc(dest_paths, params)
     process._ref_phase_estimation(dest_paths, params, refpx, refpy)
