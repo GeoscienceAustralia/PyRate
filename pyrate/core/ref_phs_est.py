@@ -181,6 +181,7 @@ def _est_ref_phs_method1(phase_data, comp):
 def _update_phase_metadata(ifg):
     ifg.meta_data[ifc.PYRATE_REF_PHASE] = ifc.REF_PHASE_REMOVED
     ifg.write_modified_phase()
+    log.info(f"Reference phase removed for {ifg.data_path}")
 
 
 class ReferencePhaseError(Exception):
