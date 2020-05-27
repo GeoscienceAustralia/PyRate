@@ -144,7 +144,7 @@ def _get_extents(ifgs, crop_opt, user_exts=None):
     return extents
 
 
-def prepare_ifg(raster_path, xlooks, ylooks, exts, thresh, crop_opt, write_to_disk=True, out_path=None, header=None,
+def prepare_ifg(raster_path, xlooks, ylooks, exts, thresh, crop_opt, header, write_to_disk=True, out_path=None,
                 coherence_path=None, coherence_thresh=None):
     """
     Open, resample, crop and optionally save to disk an interferogram or DEM.
@@ -202,7 +202,7 @@ def prepare_ifg(raster_path, xlooks, ylooks, exts, thresh, crop_opt, write_to_di
 
 
 # TODO: crop options 0 = no cropping? get rid of same size
-def prepare_ifgs(raster_data_paths, crop_opt, xlooks, ylooks, thresh=0.5, user_exts=None, write_to_disc=True,
+def prepare_ifgs(raster_data_paths, crop_opt, xlooks, ylooks, headers, thresh=0.5, user_exts=None, write_to_disc=True,
                  out_path=None):
     """
     Wrapper function to prepare a sequence of interferogram files for
@@ -228,8 +228,8 @@ def prepare_ifgs(raster_data_paths, crop_opt, xlooks, ylooks, thresh=0.5, user_e
     # use metadata check to check whether it's a dem or ifg
     rasters = [dem_or_ifg(r) for r in raster_data_paths]
     exts = get_analysis_extent(crop_opt, rasters, xlooks, ylooks, user_exts)
-
-    return [prepare_ifg(d, xlooks, ylooks, exts, thresh, crop_opt, write_to_disc, out_path) for d in raster_data_paths]
+    return [prepare_ifg(d, xlooks, ylooks, exts, thresh, crop_opt, h, write_to_disc, out_path) for d, h
+            in zip(raster_data_paths, headers)]
 
 
 # TODO: Not being used. Remove in future?

@@ -29,7 +29,7 @@ from numpy.testing import assert_array_almost_equal
 
 import pyrate.core.orbital
 import tests.common as common
-from pyrate.core import ref_phs_est as rpe, config as cf, mst, covariance
+from pyrate.core import ref_phs_est as rpe, config as cf, mst, covariance, roipac
 from pyrate import process, prepifg, conv2tif
 from pyrate.configuration import Configuration
 from pyrate.core.timeseries import time_series
@@ -122,16 +122,15 @@ class LegacyTimeSeriesEquality(unittest.TestCase):
 
         xlks, ylks, crop = cf.transform_params(params)
 
-        base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST],
-                                               params[cf.OBS_DIR])
-
+        base_ifg_paths = list(cf.parse_namelist(params[cf.IFG_FILE_LIST]))
+        headers = [roipac.roipac_header(i, params) for i in base_ifg_paths]
         dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
         # start run_pyrate copy
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         mst_grid = common.mst_calculation(dest_paths, params)
         refx, refy = process._ref_pixel_calc(dest_paths, params)
         # Estimate and remove orbit errors
-        pyrate.core.orbital.remove_orbital_error(ifgs, params)
+        pyrate.core.orbital.remove_orbital_error(ifgs, params, headers)
         ifgs = common.prepare_ifgs_without_phase(dest_paths, params)
         for ifg in ifgs:
             ifg.close()
@@ -216,8 +215,8 @@ class LegacyTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
 
         xlks, ylks, crop = cf.transform_params(params)
 
-        base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST],
-                                               params[cf.OBS_DIR])
+        base_ifg_paths = list(cf.parse_namelist(params[cf.IFG_FILE_LIST]))
+        headers = [roipac.roipac_header(i, params) for i in base_ifg_paths]
 
         dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
         # start run_pyrate copy
@@ -227,7 +226,7 @@ class LegacyTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
         refx, refy = process._ref_pixel_calc(dest_paths, params)
 
         # Estimate and remove orbit errors
-        pyrate.core.orbital.remove_orbital_error(ifgs, params)
+        pyrate.core.orbital.remove_orbital_error(ifgs, params, headers)
         ifgs = common.prepare_ifgs_without_phase(dest_paths, params)
         for ifg in ifgs:
             ifg.close()

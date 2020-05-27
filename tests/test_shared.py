@@ -148,6 +148,7 @@ class IfgIOTests(unittest.TestCase):
 
     def setUp(self):
         self.ifg = Ifg(join(SML_TEST_TIF, 'geo_070709-070813_unw.tif'))
+        self.header = join(common.SML_TEST_OBS, 'geo_070709-070813_unw.rsc')
 
     def test_open(self):
         self.assertTrue(self.ifg.dataset is None)
@@ -166,11 +167,13 @@ class IfgIOTests(unittest.TestCase):
         gdal.Dataset object as Dataset has already been read in
         """
         paths = [self.ifg.data_path]
+        headers = [self.header]
         mlooked_phase_data = prepifg_helper.prepare_ifgs(paths,
                                                          crop_opt=prepifg_helper.ALREADY_SAME_SIZE,
                                                          xlooks=2,
                                                          ylooks=2,
-                                                         write_to_disc=False)
+                                                         write_to_disc=False,
+                                                         headers=headers)
         mlooked = [Ifg(m[1]) for m in mlooked_phase_data]
         self.assertRaises(RasterException, mlooked[0].open)
 
@@ -197,7 +200,6 @@ class IfgIOTests(unittest.TestCase):
         assert_array_equal(True, isnan(i.phase_data[0, 1:]))
         i.close()
         os.remove(dest)
-
 
     def test_write_fails_on_readonly(self):
         # check readonly status is same before

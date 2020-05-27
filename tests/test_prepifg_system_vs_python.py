@@ -23,11 +23,6 @@ def local_crop(request):
     return request.param
 
 
-@pytest.fixture(params=[0, 1])
-def coh_mask(request):
-    return request.param
-
-
 @pytest.fixture()
 def modified_config_short(tempdir, local_crop, get_lks, coh_mask):
     orbfit_lks = 1

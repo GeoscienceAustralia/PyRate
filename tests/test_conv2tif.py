@@ -2,6 +2,7 @@ import os
 import pytest
 import glob
 import copy
+from pathlib import Path
 
 import pyrate.core.config as cf
 from pyrate import conv2tif, prepifg
@@ -33,6 +34,8 @@ def test_num_gamma_tifs_equals_num_unws(gamma_params):
     # 17 unws + dem
     assert len(gtifs) == 18
 
+    for g, _ in gtifs:   # assert all output from conv2tfi are readonly
+        assert Path(g).stat().st_mode == 33060
 
 def test_num_roipac_tifs_equals_num_unws(roipac_params):
     gtifs = conv2tif.main(roipac_params)

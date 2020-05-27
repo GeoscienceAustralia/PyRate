@@ -807,9 +807,9 @@ def collate_metadata(header):
             for k in [ifc.MASTER_TIME, ifc.SLAVE_TIME, ifc.PYRATE_INCIDENCE_DEGREES]:
                 md.update({k: str(header[k])})
     elif _is_incidence(header):
-        md.update({ifc.DATA_TYPE:ifc.INCIDENCE})
-    else: # must be dem
-        md.update({ifc.DATA_TYPE:ifc.DEM})
+        md.update({ifc.DATA_TYPE: ifc.INCIDENCE})
+    else:  # must be dem
+        md.update({ifc.DATA_TYPE: ifc.DEM})
 
     return md
 
@@ -1285,13 +1285,13 @@ def extract_epochs_from_filename(filename_with_epochs: str) -> List[str]:
 
 def mpi_vs_multiprocess_logging(step, params):
     if mpiops.size > 1:  # Over-ride input options if this is an MPI job
-        log.info(f"Running {step} step using mpi processing. Disabling parallel processing.")
+        log.info(f"Running {step} step using MPI processing. Disabling parallel processing.")
         params[cf.PARALLEL] = 0
     else:
         if params[cf.PARALLEL] == 1:
-            log.info(f"Running {step} using {params[cf.PROCESSES]} processes")
+            log.info(f"Running {step} step in parallel using {params[cf.PROCESSES]} processes")
         else:
-            log.info(f"Running {step} serially")
+            log.info(f"Running {step} step in serial")
 
 
 def dem_or_ifg(data_path):

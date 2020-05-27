@@ -274,9 +274,12 @@ def reconstruct_mst(shape, tiles, output_dir):
     return mst
 
 
-def move_files(source_dir, dest_dir, file_type='*.tif'):
+def move_files(source_dir, dest_dir, file_type='*.tif', copy=False):
     for filename in glob.glob(os.path.join(source_dir, file_type)):
-        shutil.move(filename, dest_dir)
+        if copy:
+            shutil.copy(filename, dest_dir)
+        else:
+            shutil.move(filename, dest_dir)
 
 
 def assert_ifg_phase_equal(ifg_path1, ifg_path2):

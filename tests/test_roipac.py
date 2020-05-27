@@ -130,7 +130,7 @@ class RoipacToGeoTiffTests(unittest.TestCase):
         band = ds.GetRasterBand(1)
         self.assertEqual(ds.RasterCount, 1)
 
-        exp_path = join(PREP_TEST_TIF, 'geo_060619-061002.tif')
+        exp_path = join(PREP_TEST_TIF, 'geo_060619-061002_unw.tif')
         exp_ds = gdal.Open(exp_path)
         exp_band = exp_ds.GetRasterBand(1)
 
@@ -152,7 +152,7 @@ class RoipacToGeoTiffTests(unittest.TestCase):
     def test_to_geotiff_wrong_input_data(self):
         # ensure failure if TIF/other file used instead of binary UNW data
         self.dest = os.path.join(TEMPDIR, 'tmp_roipac_ifg.tif')
-        data_path = join(PREP_TEST_TIF, 'geo_060619-061002.tif')
+        data_path = join(PREP_TEST_TIF, 'geo_060619-061002_unw.tif')
         self.assertRaises(
             GeotiffException,
             write_fullres_geotiff,
