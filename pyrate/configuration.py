@@ -74,7 +74,7 @@ def validate_file_list_values(file_list, no_of_epochs):
 
 
 class MultiplePaths:
-    def __init__(self, out_dir, file_name, ifglksx=1, ifgcropopt=1):
+    def __init__(self, out_dir, file_name, ifglksx=1, ifgcropopt=1, file_type=''):
         b = Path(file_name)
         if b.suffix == ".tif":
             self.unwrapped_path = None
@@ -83,7 +83,7 @@ class MultiplePaths:
                 b.stem + '_' + str(ifglksx) + "rlks_" + str(ifgcropopt) + "cr.tif").as_posix()
         else:
             self.unwrapped_path = b.as_posix()
-            converted_path = Path(out_dir).joinpath(b.stem + '_' + b.suffix[1:]).with_suffix('.tif')
+            converted_path = Path(out_dir).joinpath(b.stem + '_' + b.suffix[1:] + '_' + file_type).with_suffix('.tif')
             self.sampled_path = converted_path.with_name(
                 converted_path.stem + '_' + str(ifglksx) + "rlks_" + str(ifgcropopt) + "cr.tif").as_posix()
         self.converted_path = converted_path.as_posix()
@@ -171,20 +171,20 @@ class Configuration:
         if self.cohfilelist is not None:
             # if self.processor != 0:  # not roipac
             validate_file_list_values(self.cohfilelist, 1)
-            self.coherence_file_paths = self.__get_files_from_attr('cohfilelist')
+            self.coherence_file_paths = self.__get_files_from_attr('cohfilelist', file_type='coh')
 
         self.header_file_paths = self.__get_files_from_attr('hdrfilelist')
 
-        self.interferogram_files = self.__get_files_from_attr('ifgfilelist')
+        self.interferogram_files = self.__get_files_from_attr('ifgfilelist', file_type='ifg')
 
-        self.dem_file = MultiplePaths(self.outdir, self.demfile, self.ifglksx, self.ifgcropopt)
+        self.dem_file = MultiplePaths(self.outdir, self.demfile, self.ifglksx, self.ifgcropopt, file_type='dem')
 
         # backward compatibility for string paths
         for key in self.__dict__:
             if isinstance(self.__dict__[key], PurePath):
                 self.__dict__[key] = str(self.__dict__[key])
 
-    def __get_files_from_attr(self, attr):
+    def __get_files_from_attr(self, attr, file_type=''):
         val = self.__getattribute__(attr)
         files = parse_namelist(val)
-        return [MultiplePaths(self.outdir, p, self.ifglksx, self.ifgcropopt) for p in files]
+        return [MultiplePaths(self.outdir, p, self.ifglksx, self.ifgcropopt, file_type=file_type) for p in files]
