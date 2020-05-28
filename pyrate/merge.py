@@ -52,6 +52,8 @@ def _merge_stack(rows, cols, params):
     """
     shape, tiles, ifgs_dict = _merge_setup(rows, cols, params)
 
+    log.info('Merging and writing Stack Rate product geotiffs')
+
     # read and assemble tile outputs
     rate = assemble_tiles(shape, params[cf.TMPDIR], tiles, out_type='stack_rate')
     error = assemble_tiles(shape, params[cf.TMPDIR], tiles, out_type='stack_error')
@@ -189,7 +191,7 @@ def assemble_tiles(s, dir, tiles, out_type, index=None):
     :return: merged_array: array assembled from all tiles.
     :rtype: ndarray
     """
-    log.info('Re-assembling tiles for {}'.format(out_type))
+    log.debug('Re-assembling tiles for {}'.format(out_type))
     # pre-allocate dest array
     merged_array = np.empty(shape=s, dtype=np.float32)
 
@@ -210,7 +212,7 @@ def _save_merged_files(ifgs_dict, outdir, array, out_type, index=None, savenpy=N
     """
     Convenience function to save PyRate geotiff and numpy array files
     """
-    log.info('Saving PyRate outputs {}'.format(out_type))
+    log.debug('Saving PyRate outputs {}'.format(out_type))
     gt, md, wkt = ifgs_dict['gt'], ifgs_dict['md'], ifgs_dict['wkt']
     epochlist = ifgs_dict['epochlist']
 
