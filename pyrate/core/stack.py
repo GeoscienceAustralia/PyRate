@@ -110,8 +110,8 @@ def stack_rate_pixel(obs, mst, vcmt, span, nsig, pthresh):
     :param ndarray mst: Vector describing the minimum spanning tree network for the pixel
     :param ndarray vcmt: Derived positive definite temporal variance covariance matrix
     :param ndarray span: Vector of interferometric time spans
-    :param int nsig:
-    :param int pthresh:
+    :param int nsig: Threshold for iterative removal of interferometric observations
+    :param int pthresh: Threshold for minimum number of observations for the pixel
 
     :return: rate: Estimated rate (velocity) for the pixel
     :rtype: float64
@@ -187,7 +187,7 @@ def _stack_setup(ifgs, mst, params):
     # stack rate parameters from config file
     # n-sigma ratio used to threshold 'model minus observation' residuals
     nsig = params[cf.LR_NSIG]
-    # Pixel threshold; minimum number of coherent observations for a pixel
+    # Pixel threshold; minimum number of observations for a pixel
     pthresh = params[cf.LR_PTHRESH]
     rows, cols = ifgs[0].phase_data.shape
     # make 3D block of observations
@@ -199,7 +199,7 @@ def _stack_setup(ifgs, mst, params):
     else:
         mst[isnan(obs)] = 0
 
-    # preallocate empty arrays. No need to preallocation NaNs with new code
+    # preallocate empty arrays (no need to preallocate NaNs)
     error = np.empty([rows, cols], dtype=float32)
     rate = np.empty([rows, cols], dtype=float32)
     samples = np.empty([rows, cols], dtype=np.float32)
