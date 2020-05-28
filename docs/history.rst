@@ -2,8 +2,36 @@
 
 Release History
 ===============
+
+0.4.2 (2020-06-##)
+------------------
+Added
++++++
+- Nil
+
+Changed
++++++++
+- Bugfix: ensure ``prepifg`` treats input data files as `read only`.
+- Bugfix: fix the way that the reference phase is subtracted from interferograms
+  during ``process`` step. 
+- Move ``Stack Rate`` masking to a standalone function ``pyrate.core.stack.mask_rate``,
+  applied during the ``merge`` step and add unit tests.
+- Skip ``Stack Rate`` masking if threshold parameter ``maxsig = 0``.
+- Provide log message indicating the percentage of pixels masked by 
+  ``pyrate.core.stack.mask_rate``.
+- Refactor ``pyrate.core.stack`` module; expose two functions in documentation:
+  i) single pixel stacking algorithm, and
+  ii) loop function for processing full ifg array.
+- Refactor ``pyrate.merge`` script; remove duplicated code and create reusable
+  generic functions.
+- Updated ``test`` and ``dev`` requirements.
+
+Removed
++++++++
+- Nil
+
 0.4.1 (2020-05-19)
------------------------
+------------------
 Added
 +++++
 - Python 3.8 support.
@@ -31,7 +59,7 @@ Removed
 - Deprecate ``parallel = 2`` option; splitting image via rows for parallelisation.
 
 0.4.0 (2019-10-31)
------------------------
+------------------
 Added
 +++++
 - Python 3.7 support.
@@ -64,7 +92,7 @@ Removed
 - Unused tests for legacy api.
 
 0.3.0 (2019-07-26)
------------------------
+------------------
 Added
 +++++
 - ``utils/apt_install.sh`` script that lists Ubuntu/apt package requirements.
