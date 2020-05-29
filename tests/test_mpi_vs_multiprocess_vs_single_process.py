@@ -99,11 +99,11 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_conf):
     check_call(f"pyrate merge -f {sr_conf}", shell=True)
 
     # convert2tif tests, 17 interferograms
-    assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "*_unw.tif", 17)
+    assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "*_unw_ifg.tif", 17)
 
     # if coherence masking, comprare coh files were converted
     if params[cf.COH_MASK]:
-        assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "*_utm.tif", 17)
+        assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "*_coh.tif", 17)
         print("coherence files compared")
 
     # prepifg + process steps that overwrite tifs test
@@ -232,11 +232,11 @@ def test_stack_and_ts_mpi_vs_parallel_vs_serial(modified_config_short, gamma_con
 
 
     # convert2tif tests, 17 interferograms
-    assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "*_unw.tif", 17)
+    assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "*_unw_ifg.tif", 17)
 
     # if coherence masking, compare coh files were converted
     if params[cf.COH_MASK]:
-        assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "*_utm.tif", 17)
+        assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "*_coh.tif", 17)
         print("coherence files compared")
 
     # prepifg + process steps that overwrite tifs test

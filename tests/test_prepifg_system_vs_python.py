@@ -127,11 +127,11 @@ def test_prepifg_largetifs_vs_python(modified_config_largetifs, gamma_conf, crea
     check_call(f"pyrate prepifg -f {sr_conf}", shell=True)
 
     # convert2tif tests, 17 interferograms
-    assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "*_unw.tif", 17)
+    assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "*_unw_ifg.tif", 17)
 
     # if coherence masking, compare coh files were converted
     if params[cf.COH_MASK]:
-        assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "*_utm.tif", 17)
+        assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "*_coh.tif", 17)
         print("coherence files compared")
 
     # prepifg
