@@ -60,7 +60,7 @@ def test_prepifg_treat_inputs_read_only(gamma_conf, tempdir, coh_mask):
     output_conf = tdir.joinpath('conf.cfg')
     cf.write_config_file(params=params, output_conf_file=output_conf)
     check_call(f"mpirun -n 3 pyrate conv2tif -f {output_conf}", shell=True)
-    tifs = list(Path(params[cf.OUT_DIR]).glob('*_unw.tif'))
+    tifs = list(Path(params[cf.OUT_DIR]).glob('*_unw_ifg.tif'))
     assert len(tifs) == 17
 
     check_call(f"mpirun -n 3 pyrate prepifg -f {output_conf}", shell=True)
@@ -741,7 +741,7 @@ class TestOneIncidenceOrElevationMap(unittest.TestCase):
         sys.argv = ['dummy', self.conf_file]
         prepifg.main(params)
         # test 17 geotiffs created
-        geotifs = glob.glob(os.path.join(params[cf.OUT_DIR], '*_unw.tif'))
+        geotifs = glob.glob(os.path.join(params[cf.OUT_DIR], '*_unw_ifg.tif'))
         self.assertEqual(17, len(geotifs))
         # test dem geotiff created
         demtif = glob.glob(os.path.join(params[cf.OUT_DIR], '*_dem.tif'))

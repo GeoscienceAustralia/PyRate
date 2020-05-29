@@ -34,6 +34,7 @@ from pyrate.core import algorithm, ifgconstants as ifc, config as cf, timeseries
 from pyrate.core.shared import (Ifg, nan_and_mm_convert, get_geotiff_header_info,
                                 write_output_geotiff, dem_or_ifg)
 from pyrate.constants import PYRATEPATH
+from pyrate.configuration import Configuration
 
 TEMPDIR = tempfile.gettempdir()
 TESTDIR = join(PYRATEPATH, 'tests')

@@ -22,6 +22,7 @@ import shutil
 import sys
 import tempfile
 import unittest
+from pathlib import Path
 from itertools import product
 from numpy import isnan, where, nan
 from os.path import join, basename, exists
@@ -341,10 +342,8 @@ class WriteUnwTest(unittest.TestCase):
         cls.params = Configuration(cls.test_conf).__dict__
         cls.params[cf.OBS_DIR] = common.SML_TEST_GAMMA
         cls.params[cf.PROCESSOR] = 1  # gamma
-        file_list = list(cf.parse_namelist(os.path.join(common.SML_TEST_GAMMA,
-                                                        'ifms_17')))
-        fd, cls.params[cf.IFG_FILE_LIST] = tempfile.mkstemp(suffix='.conf',
-                                                            dir=cls.tif_dir)
+        file_list = list(cf.parse_namelist(os.path.join(common.SML_TEST_GAMMA, 'ifms_17')))
+        fd, cls.params[cf.IFG_FILE_LIST] = tempfile.mkstemp(suffix='.conf', dir=cls.tif_dir)
         os.close(fd)
         # write a short filelist with only 3 gamma unws
         with open(cls.params[cf.IFG_FILE_LIST], 'w') as fp:
@@ -359,15 +358,13 @@ class WriteUnwTest(unittest.TestCase):
             cls.params[cf.IFG_FILE_LIST], cls.params[cf.OBS_DIR])
         cls.base_unw_paths.append(common.SML_TEST_DEM_GAMMA)
 
-        xlks, ylks, crop = cf.transform_params(cls.params)
         # dest_paths are tifs that have been geotif converted and multilooked
         conv2tif.main(cls.params)
         prepifg.main(cls.params)
-        # run_prepifg.gamma_prepifg(cls.base_unw_paths, cls.params)
-        cls.base_unw_paths.pop()  # removed dem as we don't want it in ifgs
 
-        cls.dest_paths = cf.get_dest_paths(
-            cls.base_unw_paths, crop, cls.params, xlks)
+        cls.dest_paths = [Path(cls.tif_dir).joinpath(Path(c.sampled_path).name).as_posix()
+                          for c in cls.params[cf.INTERFEROGRAM_FILES][:-2]]
+
         cls.ifgs = common.small_data_setup(datafiles=cls.dest_paths)
 
     @classmethod

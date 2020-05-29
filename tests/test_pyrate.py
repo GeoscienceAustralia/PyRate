@@ -131,8 +131,7 @@ class PyRateTests(unittest.TestCase):
 
             # Turn off validation because we're in a different working dir
             #  and relative paths in config won't be work.
-            params = config.get_config_params(common.TEST_CONF_ROIPAC,
-                                               validate=False)
+            params = config.get_config_params(common.TEST_CONF_ROIPAC)
             params[cf.OUT_DIR] = cls.BASE_OUT_DIR
             params[cf.PROCESSOR] = 0  # roipac
             params[cf.APS_CORRECTION] = 0
@@ -239,8 +238,8 @@ class ParallelPyRateTests(unittest.TestCase):
         params[cf.OUT_DIR] = cls.tif_dir_s
         params[cf.TMPDIR] = os.path.join(params[cf.OUT_DIR], cf.TMPDIR)
 
-        base_unw_paths_ = [MultiplePaths(params[cf.OUT_DIR], b, ifglksx=params[cf.IFG_LKSX], ifgcropopt=params[
-            cf.IFG_CROP_OPT]) for b in base_unw_paths]
+        base_unw_paths_ = [MultiplePaths(params[cf.OUT_DIR], b, ifglksx=params[cf.IFG_LKSX],
+                                         ifgcropopt=params[cf.IFG_CROP_OPT]) for b in base_unw_paths]
 
         cls.dest_paths_s = [b.sampled_path for b in base_unw_paths_]
         gtif_paths_ = conv2tif.do_geotiff(base_unw_paths_, params)
@@ -250,7 +249,6 @@ class ParallelPyRateTests(unittest.TestCase):
         cls.mst = common.reconstruct_mst(ifgs[0].shape, tiles, params[cf.TMPDIR])
         cls.rate, cls.error, cls.samples = \
             [common.reconstruct_stack_rate(ifgs[0].shape, tiles, params[cf.TMPDIR], t) for t in rate_types]
-
 
     @classmethod
     def tearDownClass(cls):

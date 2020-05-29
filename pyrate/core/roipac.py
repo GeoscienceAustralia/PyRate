@@ -213,7 +213,7 @@ def roipac_header(file_path, params):
         raise RoipacException('No DEM resource/header file is provided')
     if file_path.endswith('_dem.tif'):
         header_file = os.path.join(params[cf.DEM_HEADER_FILE])
-    elif file_path.endswith('unw_ifg.tif'):
+    elif file_path.endswith('unw_ifg.tif') or file_path.endswith('unw.tif'):
         # TODO: improve this
         interferogram_epoches = extract_epochs_from_filename(p.name)
         for header_path in params[cf.HEADER_FILE_PATHS]:

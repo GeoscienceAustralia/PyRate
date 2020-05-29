@@ -290,7 +290,7 @@ class HeaderCombinationTests(unittest.TestCase):
         self.assertRaises(self.err, gamma.combine_headers, H1, H0, self.dh)
 
 
-glob_prefix = "*utm_unw_1rlks_1cr.tif"
+glob_prefix = "*utm_unw_ifg_1rlks_1cr.tif"
 
 
 @pytest.fixture(scope='module')
