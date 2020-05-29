@@ -211,9 +211,9 @@ def roipac_header(file_path, params):
         projection = parse_header(rsc_file)[ifc.PYRATE_DATUM]
     else:
         raise RoipacException('No DEM resource/header file is provided')
-    if file_path.endswith('dem.tif'):
+    if file_path.endswith('_dem.tif'):
         header_file = os.path.join(params[cf.DEM_HEADER_FILE])
-    elif file_path.endswith('unw.tif'):
+    elif file_path.endswith('unw_ifg.tif'):
         # TODO: improve this
         interferogram_epoches = extract_epochs_from_filename(p.name)
         for header_path in params[cf.HEADER_FILE_PATHS]:

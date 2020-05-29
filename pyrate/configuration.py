@@ -16,11 +16,19 @@
 from configparser import ConfigParser
 from pathlib import Path, PurePath
 import re
+from enum import Enum
 from pyrate.constants import NO_OF_PARALLEL_PROCESSES
 from pyrate.default_parameters import PYRATE_DEFAULT_CONFIGURATION
 from pyrate.core.algorithm import factorise_integer
 from pyrate.core.shared import extract_epochs_from_filename
 from pyrate.core.config import parse_namelist, ConfigException
+
+
+class InputTypes(Enum):
+    IFG = 1
+    COH = 2
+    DEM = 3
+    HEADER = 4
 
 
 def set_parameter_value(data_type, input_value, default_value, required, input_name):
@@ -83,7 +91,8 @@ class MultiplePaths:
                 b.stem + '_' + str(ifglksx) + "rlks_" + str(ifgcropopt) + "cr.tif").as_posix()
         else:
             self.unwrapped_path = b.as_posix()
-            converted_path = Path(out_dir).joinpath(b.stem + '_' + b.suffix[1:] + '_' + file_type).with_suffix('.tif')
+            converted_path = Path(out_dir).joinpath(
+                b.stem.split('.')[0] + '_' + b.suffix[1:] + '_' + file_type).with_suffix('.tif')
             self.sampled_path = converted_path.with_name(
                 converted_path.stem + '_' + str(ifglksx) + "rlks_" + str(ifgcropopt) + "cr.tif").as_posix()
         self.converted_path = converted_path.as_posix()
@@ -173,7 +182,7 @@ class Configuration:
             validate_file_list_values(self.cohfilelist, 1)
             self.coherence_file_paths = self.__get_files_from_attr('cohfilelist', file_type='coh')
 
-        self.header_file_paths = self.__get_files_from_attr('hdrfilelist')
+        self.header_file_paths = self.__get_files_from_attr('hdrfilelist', 'header')
 
         self.interferogram_files = self.__get_files_from_attr('ifgfilelist', file_type='ifg')
 

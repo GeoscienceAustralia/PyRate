@@ -462,7 +462,7 @@ def copytree(src, dst, symlinks=False, ignore=None):
 
 def pre_prepare_ifgs(ifg_paths, params):
     """
-    Open ifg for reading
+    nan and mm convert ifgs
     """
     ifgs = [Ifg(p) for p in ifg_paths]
     for i in ifgs:
