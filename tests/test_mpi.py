@@ -22,6 +22,7 @@ import shutil
 import numpy as np
 import os
 from pathlib import Path
+import pytest
 
 import pyrate.core.orbital
 import pyrate.core.shared
@@ -33,6 +34,10 @@ from tests.test_covariance import legacy_maxvar
 
 
 def test_vcm_legacy_vs_mpi(mpisync, tempdir, roipac_or_gamma_conf):
+
+    pytest.skip("# phase data after ref pixel has changed due to commit bf2f7ebd \n"
+                " Legacy tests won't match anymore!")
+
     params = configuration.Configuration(roipac_or_gamma_conf).__dict__
     LEGACY_VCM_DIR = os.path.join(SML_TEST_DIR, 'vcm')
     legacy_vcm = np.genfromtxt(os.path.join(LEGACY_VCM_DIR, 'vcmt.csv'), delimiter=',')
@@ -49,13 +54,15 @@ def test_vcm_legacy_vs_mpi(mpisync, tempdir, roipac_or_gamma_conf):
     conv2tif.main(params)
     prepifg.main(params)
 
-    tiles = pyrate.core.shared.get_tiles(dest_paths[0], rows=1, cols=1)
-    preread_ifgs = process._create_ifg_dict(dest_paths, params=params, tiles=tiles)
+    preread_ifgs = process.create_ifg_dict(dest_paths, params=params)
     refpx, refpy = process._ref_pixel_calc(dest_paths, params)
     process._orb_fit_calc(dest_paths, params)
     process._ref_phase_estimation(dest_paths, params, refpx, refpy)
 
     maxvar, vcmt = process._maxvar_vcm_calc(dest_paths, params, preread_ifgs)
+
+    # phase data after ref pixel has changed due to commit bf2f7ebd
+    # Legacy tests won't match anymore
     np.testing.assert_array_almost_equal(maxvar, legacy_maxvar, decimal=4)
     np.testing.assert_array_almost_equal(legacy_vcm, vcmt, decimal=3)
     mpiops.run_once(shutil.rmtree, tmpdir)

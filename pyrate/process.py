@@ -45,15 +45,13 @@ def _join_dicts(dicts):
     return assembled_dict
 
 
-def _create_ifg_dict(dest_tifs, params, tiles):
+def create_ifg_dict(dest_tifs, params):
     """
-    1. Convert ifg phase data into numpy binary files.
-    2. Save the preread_ifgs dict with information about the ifgs that are
+    Function to create a dict with information about the ifgs that are
     later used for fast loading of Ifg files in IfgPart class
 
     :param list dest_tifs: List of destination tifs
     :param dict params: Config dictionary
-    :param list tiles: List of all Tile instances
 
     :return: preread_ifgs: Dictionary containing information regarding
                 interferograms that are used later in workflow
@@ -62,7 +60,6 @@ def _create_ifg_dict(dest_tifs, params, tiles):
     ifgs_dict = {}
     nifgs = len(dest_tifs)
     process_tifs = mpiops.array_split(dest_tifs)
-    shared.save_numpy_phase(dest_tifs, tiles, params)
     for d in process_tifs:
         ifg = shared._prep_ifg(d, params)
         ifgs_dict[d] = PrereadIfg(path=d,
@@ -281,11 +278,13 @@ def process_ifgs(ifg_paths, params, rows, cols):
 
     if mpiops.size > 1:  # turn of multiprocessing during mpi jobs
         params[cf.PARALLEL] = False
+    outdir = params[cf.TMPDIR]
+    if not os.path.exists(outdir):
+        shared.mkdir_p(outdir)
 
     tiles = mpiops.run_once(get_tiles, ifg_paths[0], rows, cols)
 
-    preread_ifgs = _create_ifg_dict(ifg_paths, params=params, tiles=tiles)
-    # _mst_calc(ifg_paths, params, tiles, preread_ifgs)
+    preread_ifgs = create_ifg_dict(ifg_paths, params=params)
 
     refpx, refpy = _ref_pixel_calc(ifg_paths, params)
 
@@ -298,6 +297,7 @@ def process_ifgs(ifg_paths, params, rows, cols):
 
     _ref_phase_estimation(ifg_paths, params, refpx, refpy)
 
+    shared.save_numpy_phase(ifg_paths, tiles, params)
     _mst_calc(ifg_paths, params, tiles, preread_ifgs)
 
     # spatio-temporal aps filter

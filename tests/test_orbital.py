@@ -31,7 +31,7 @@ from numpy.linalg import pinv, inv
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 from scipy.linalg import lstsq
 
-from .common import small5_mock_ifgs, MockIfg
+from tests.common import small5_mock_ifgs, MockIfg
 from pyrate.core import algorithm, config as cf
 from pyrate.core.orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, \
     QUADRATIC, PART_CUBIC
