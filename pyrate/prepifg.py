@@ -228,9 +228,9 @@ def _prepifg_multiprocessing(m_path: MultiplePaths, xlooks, ylooks, exts, thresh
                                    coherence_thresh=coherence_thresh)
 
 
-def find_header(path: Union[MultiplePaths, str], params: dict):
+def find_header(path: MultiplePaths, params: dict):
     processor = params[cf.PROCESSOR]  # roipac, gamma or geotif
-    tif_path = path.converted_path if isinstance(path, MultiplePaths) else path
+    tif_path = path.converted_path
     if (processor == GAMMA) or (processor == GEOTIF):
         header = gamma.gamma_header(tif_path, params)
     elif processor == ROIPAC:

@@ -21,6 +21,7 @@ import os
 from os.path import join
 import pickle as cp
 from collections import OrderedDict
+from typing import List
 import numpy as np
 
 from pyrate.core import (shared, algorithm, orbital, ref_phs_est as rpe, 
@@ -31,6 +32,7 @@ from pyrate.core.aps import wrap_spatio_temporal_filter
 from pyrate.core.shared import Ifg, PrereadIfg, get_tiles, mpi_vs_multiprocess_logging
 from pyrate.core.logger import pyratelogger as log
 from pyrate.prepifg import find_header
+from pyrate.configuration import MultiplePaths
 
 MASTER_PROCESS = 0
 
@@ -158,7 +160,7 @@ def _ref_pixel_calc(ifg_paths, params):
     return refx, refy
 
 
-def _orb_fit_calc(ifg_paths, params, preread_ifgs=None):
+def _orb_fit_calc(multi_paths: List[MultiplePaths], params, preread_ifgs=None) -> None:
     """
     MPI wrapper for orbital fit correction
     """
@@ -168,6 +170,7 @@ def _orb_fit_calc(ifg_paths, params, preread_ifgs=None):
         return
     log.info('Calculating orbital correction')
 
+    ifg_paths = [p.sampled_path for p in multi_paths]
     if preread_ifgs:  # don't check except for mpi tests
         # perform some general error/sanity checks
         log.debug('Checking Orbital error correction status')
@@ -185,7 +188,7 @@ def _orb_fit_calc(ifg_paths, params, preread_ifgs=None):
         # A performance comparison should be made for saving multilooked
         # files on disc vs in memory single process multilooking
         if mpiops.rank == MASTER_PROCESS:
-            headers = [find_header(p, params) for p in ifg_paths]
+            headers = [find_header(p, params) for p in multi_paths]
             orbital.remove_orbital_error(ifg_paths, params, headers, preread_ifgs=preread_ifgs)
     mpiops.comm.barrier()
     log.debug('Finished Orbital error correction')
@@ -295,7 +298,8 @@ def process_ifgs(ifg_paths, params, rows, cols):
     # remove non ifg keys
     _ = [preread_ifgs.pop(k) for k in ['gt', 'epochlist', 'md', 'wkt']]
 
-    _orb_fit_calc(ifg_paths, params, preread_ifgs)
+    multi_paths = params[cf.INTERFEROGRAM_FILES]
+    _orb_fit_calc(multi_paths, params, preread_ifgs)
 
     _ref_phase_estimation(ifg_paths, params, refpx, refpy)
 

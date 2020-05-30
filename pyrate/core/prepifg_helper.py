@@ -223,7 +223,7 @@ def prepare_ifgs(raster_data_paths, crop_opt, xlooks, ylooks, headers, thresh=0.
     :return: resampled_data: output cropped and resampled image
     :rtype: ndarray
     :return: out_ds: destination gdal dataset object
-    :rtype: gdal.Dataset
+    :rtype: List[gdal.Dataset]
     """
     # use metadata check to check whether it's a dem or ifg
     rasters = [dem_or_ifg(r) for r in raster_data_paths]
