@@ -3,7 +3,7 @@ import random
 import string
 import tempfile
 import pytest
-from pyrate.core import mpiops, config as cf, prepifg_helper
+from pyrate.core import mpiops, config as cf, prepifg_helper, shared
 from pyrate.configuration import Configuration
 from tests.common import TEST_CONF_ROIPAC, TEST_CONF_GAMMA
 from tests.common import ROIPAC_SYSTEM_CONF, GAMMA_SYSTEM_CONF, GEOTIF_SYSTEM_CONF, SML_TEST_COH_LIST
@@ -92,6 +92,8 @@ def get_config():
 @pytest.fixture
 def gamma_params():
     params = Configuration(TEST_CONF_GAMMA).__dict__
+    shutil.rmtree(params[cf.OUT_DIR])
+    shared.mkdir_p(params[cf.OUT_DIR])
     yield params
     shutil.rmtree(params[cf.OUT_DIR])
 
@@ -112,7 +114,7 @@ def roipac_or_gamma_conf(request):
 def gamma_conf(request):
     params = Configuration(TEST_CONF_GAMMA).__dict__
     yield request.param
-    # shutil.rmtree(params[cf.OUT_DIR])
+    shutil.rmtree(params[cf.OUT_DIR], ignore_errors=True)
 
 
 @pytest.fixture
