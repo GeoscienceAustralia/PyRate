@@ -333,7 +333,7 @@ def _stack_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
         log.info('Stacking of tile {}'.format(t.index))
         ifg_parts = [shared.IfgPart(p, t, preread_ifgs, params) for p in ifg_paths]
         mst_grid_n = np.load(os.path.join(output_dir, 'mst_mat_{}.npy'.format(t.index)))
-        rate, error, samples = stack.stack_rate(ifg_parts, params, vcmt, mst_grid_n)
+        rate, error, samples = stack.stack_rate_array(ifg_parts, params, vcmt, mst_grid_n)
         # declare file names
         np.save(file=os.path.join(output_dir, 'stack_rate_{}.npy'.format(t.index)), arr=rate)
         np.save(file=os.path.join(output_dir, 'stack_error_{}.npy'.format(t.index)), arr=error)

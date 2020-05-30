@@ -16,8 +16,7 @@
 """
 This Python module contains utilities to parse PyRate configuration
 files. It also includes numerous general constants relating to options
-in configuration files. Examples of PyRate configuration files are
-provided in the configs/ directory
+in configuration files.
 """
 # coding: utf-8
 # pylint: disable=invalid-name

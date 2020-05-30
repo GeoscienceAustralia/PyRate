@@ -7,8 +7,10 @@ Summary:
 1) create new 'release' in Github. this will tag a commit hash.
 2) copy link to tar.gz Source Code from github release, add to download_url in setup.py
 3) update version number in setup.py (to match the Github release)
-4) `python setup.py sdist` - prepare package
+4) `python setup.py sdist bdist_wheel` - prepare package
 5) `twine upload dist/*` - upload package to PyPI
+
+check out here also: https://packaging.python.org/tutorials/packaging-projects/
 
 ---------------------------------------------
 # Clone Github repo
