@@ -27,9 +27,11 @@ import math
 from math import floor
 import os
 from os.path import basename, join
+from pathlib import Path
 import struct
 from datetime import date
 from itertools import product
+from enum import Enum
 import numpy as np
 from numpy import where, nan, isnan, sum as nsum, isclose
 import pyproj
@@ -60,6 +62,13 @@ GDAL_X_CELLSIZE = 1
 GDAL_Y_CELLSIZE = 5
 GDAL_X_FIRST = 0
 GDAL_Y_FIRST = 3
+
+
+class InputTypes(Enum):
+    IFG = '_ifg'
+    COH = '_coh'
+    DEM = '_dem'
+    HEADER = '_header'
 
 
 def joblib_log_level(level: str) -> int:
@@ -266,12 +275,13 @@ class Ifg(RasterBase):
     interferometric phase raster band data and related data.
     """
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, path):
+    def __init__(self, path: Union[str, Path]):
         """
         Interferogram constructor, for 2-band Ifg raster datasets.
 
         :param str path: Path to interferogram file
         """
+        path = path.as_posix() if isinstance(path, Path) else path
         RasterBase.__init__(self, path)
         self._phase_band = None
         self._phase_data = None
@@ -682,7 +692,16 @@ def _is_interferogram(hdr):
     """
     Convenience function to determine if file is interferogram
     """
-    return ifc.PYRATE_WAVELENGTH_METRES in hdr
+    return (ifc.PYRATE_WAVELENGTH_METRES in hdr) and \
+           (hdr[ifc.INPUT_TYPE] == InputTypes.IFG if ifc.INPUT_TYPE in hdr else True)
+
+
+def _is_coherence(hdr):
+    """
+    Convenience function to determine if file is interferogram
+    """
+    return (ifc.PYRATE_WAVELENGTH_METRES in hdr) and \
+           (hdr[ifc.INPUT_TYPE] == InputTypes.COH if ifc.INPUT_TYPE in hdr else False)
 
 
 def _is_incidence(hdr):
@@ -728,7 +747,7 @@ def write_fullres_geotiff(header, data_path, dest, nodata):
         raise GeotiffException(msg)
 
     wkt = srs.ExportToWkt()
-    dtype = 'float32' if (_is_interferogram(header) or _is_incidence(header)) else 'int16'
+    dtype = 'float32' if (_is_interferogram(header) or _is_incidence(header) or _is_coherence(header)) else 'int16'
 
     # get subset of metadata relevant to PyRate
     md = collate_metadata(header)
@@ -797,15 +816,23 @@ def collate_metadata(header):
     :return: dict of relevant metadata for PyRate
     """
     md = dict()
-    if _is_interferogram(header):
+
+    def __common_ifg_coh_update(header, md):
         for k in [ifc.PYRATE_WAVELENGTH_METRES, ifc.PYRATE_TIME_SPAN,
                   ifc.PYRATE_INSAR_PROCESSOR,
                   ifc.MASTER_DATE, ifc.SLAVE_DATE,
-                  ifc.DATA_UNITS, ifc.DATA_TYPE]:
+                  ifc.DATA_UNITS]:
             md.update({k: str(header[k])})
         if header[ifc.PYRATE_INSAR_PROCESSOR] == GAMMA:
             for k in [ifc.MASTER_TIME, ifc.SLAVE_TIME, ifc.PYRATE_INCIDENCE_DEGREES]:
                 md.update({k: str(header[k])})
+
+    if _is_coherence(header):
+        __common_ifg_coh_update(header, md)
+        md.update({ifc.DATA_TYPE: ifc.COH})
+    elif _is_interferogram(header):
+        __common_ifg_coh_update(header, md)
+        md.update({ifc.DATA_TYPE: ifc.ORIG})
     elif _is_incidence(header):
         md.update({ifc.DATA_TYPE: ifc.INCIDENCE})
     else:  # must be dem

@@ -39,12 +39,14 @@ from pyrate.core.prepifg_helper import CUSTOM_CROP, MAXIMUM_CROP, MINIMUM_CROP, 
     ALREADY_SAME_SIZE
 from pyrate.core import roipac
 from pyrate.core.prepifg_helper import prepare_ifgs, _resample, PreprocessError, CustomExts
+from pyrate.core import ifgconstants as ifc
 from pyrate.configuration import Configuration
 from pyrate import conv2tif, prepifg
+
 from tests import common
 from tests.common import SML_TEST_LEGACY_PREPIFG_DIR
 from tests.common import PREP_TEST_TIF, SML_TEST_DEM_DIR, PREP_TEST_OBS
-from tests.common import SML_TEST_DEM_TIF, SML_TEST_DEM_HDR
+from tests.common import SML_TEST_DEM_TIF, SML_TEST_DEM_HDR, manipulate_test_conf
 
 gdal.UseExceptions()
 DUMMY_SECTION_NAME = 'pyrate'
@@ -70,6 +72,60 @@ def test_prepifg_treat_inputs_read_only(gamma_conf, tempdir, coh_mask):
     # check all tifs from conv2tif are still readonly
     for t in tifs:
         assert t.stat().st_mode == 33060
+
+
+def test_prepifg_file_types(tempdir, gamma_conf, coh_mask):
+    tdir = Path(tempdir())
+    params = manipulate_test_conf(gamma_conf, tdir)
+    params[cf.COH_MASK] = coh_mask
+    params[cf.PARALLEL] = 0
+    output_conf_file = 'conf.conf'
+    output_conf = tdir.joinpath(output_conf_file)
+    cf.write_config_file(params=params, output_conf_file=output_conf)
+    params_s = Configuration(output_conf).__dict__
+    conv2tif.main(params_s)
+    prepifg.main(params_s)
+    ifg_files = list(Path(tdir.joinpath(params_s[cf.OUT_DIR])).glob('*_ifg.tif'))
+    mlooked_files = list(Path(tdir.joinpath(params_s[cf.OUT_DIR])).glob('*_ifg_1rlks_1cr.tif'))
+    coh_files = list(Path(tdir.joinpath(params_s[cf.OUT_DIR])).glob('*_cc_coh.tif'))
+    mlooked_coh_files = list(Path(tdir.joinpath(params_s[cf.OUT_DIR])).glob('*_cc_coh_1rlks_1cr.tif'))
+    dem_file = list(Path(tdir.joinpath(params_s[cf.OUT_DIR])).glob('*_dem.tif'))[0]
+    mlooked_dem_file = list(Path(tdir.joinpath(params_s[cf.OUT_DIR])).glob('*_dem_1rlks_1cr.tif'))[0]
+    import itertools
+
+    # assert coherence and ifgs have correct metadata
+    for i in itertools.chain(*[ifg_files, mlooked_files, coh_files, mlooked_coh_files]):
+        print(i)
+        ifg = Ifg(i)
+        ifg.open()
+        md = ifg.meta_data
+        if i.name.endswith('_ifg.tif'):
+            assert md[ifc.DATA_TYPE] == ifc.ORIG
+            continue
+        if i.name.endswith('_coh.tif'):
+            assert md[ifc.DATA_TYPE] == ifc.COH
+            continue
+        if i.name.endswith('_cc_coh_1rlks_1cr.tif'):
+            assert md[ifc.DATA_TYPE] == ifc.MULTILOOKED_COH
+            continue
+        if i.name.endswith('_ifg_1rlks_1cr.tif'):
+            if coh_mask:
+                assert md[ifc.DATA_TYPE] == ifc.COHERENCE
+            else:
+                assert md[ifc.DATA_TYPE] == ifc.MULTILOOKED
+            continue
+
+    # assert dem has correct metadata
+    dem = DEM(dem_file.as_posix())
+    dem.open()
+    md = dem.dataset.GetMetadata()
+    assert md[ifc.DATA_TYPE] == ifc.DEM
+
+    dem = DEM(mlooked_dem_file.as_posix())
+    dem.open()
+    md = dem.dataset.GetMetadata()
+    assert md[ifc.DATA_TYPE] == ifc.MLOOKED_DEM
+    shutil.rmtree(tdir)
 
 
 # convenience ifg creation funcs

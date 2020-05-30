@@ -213,14 +213,14 @@ class ParallelPyRateTests(unittest.TestCase):
         #  and multilooked by run_prepifg
         base_unw_paths = list(cf.parse_namelist(params[cf.IFG_FILE_LIST]))
 
-        base_unw_paths_ = [MultiplePaths(params[cf.OUT_DIR], b, ifglksx=params[cf.IFG_LKSX],
-                                         ifgcropopt=params[cf.IFG_CROP_OPT]) for b in base_unw_paths]
+        multi_paths = [MultiplePaths(params[cf.OUT_DIR], b, ifglksx=params[cf.IFG_LKSX],
+                                     ifgcropopt=params[cf.IFG_CROP_OPT]) for b in base_unw_paths]
 
         # dest_paths are tifs that have been geotif converted and multilooked
-        cls.dest_paths = [b.sampled_path for b in base_unw_paths_]
-        gtif_paths_ = conv2tif.do_geotiff(base_unw_paths_, params)
-        gtif_paths = [gt for gt, b in gtif_paths_]
-        prepifg.do_prepifg(gtif_paths, params)
+        cls.dest_paths = [b.sampled_path for b in multi_paths]
+        _ = conv2tif.do_geotiff(multi_paths, params)
+        # gtif_paths = [b.converted_path for b in multi_paths]
+        prepifg.do_prepifg(multi_paths, params)
         tiles = pyrate.core.shared.get_tiles(cls.dest_paths[0], rows, cols)
         ifgs = common.small_data_setup()
 
@@ -238,13 +238,12 @@ class ParallelPyRateTests(unittest.TestCase):
         params[cf.OUT_DIR] = cls.tif_dir_s
         params[cf.TMPDIR] = os.path.join(params[cf.OUT_DIR], cf.TMPDIR)
 
-        base_unw_paths_ = [MultiplePaths(params[cf.OUT_DIR], b, ifglksx=params[cf.IFG_LKSX],
-                                         ifgcropopt=params[cf.IFG_CROP_OPT]) for b in base_unw_paths]
+        multi_paths = [MultiplePaths(params[cf.OUT_DIR], b, ifglksx=params[cf.IFG_LKSX],
+                                     ifgcropopt=params[cf.IFG_CROP_OPT]) for b in base_unw_paths]
 
-        cls.dest_paths_s = [b.sampled_path for b in base_unw_paths_]
-        gtif_paths_ = conv2tif.do_geotiff(base_unw_paths_, params)
-        gtif_paths = [gt for gt, b in gtif_paths_]
-        prepifg.do_prepifg(gtif_paths, params)
+        cls.dest_paths_s = [b.sampled_path for b in multi_paths]
+        conv2tif.do_geotiff(multi_paths, params)
+        prepifg.do_prepifg(multi_paths, params)
         cls.refpixel, cls.maxvar, cls.vcmt = process.process_ifgs(cls.dest_paths_s, params, rows, cols)
         cls.mst = common.reconstruct_mst(ifgs[0].shape, tiles, params[cf.TMPDIR])
         cls.rate, cls.error, cls.samples = \

@@ -15,20 +15,11 @@
 #   limitations under the License.
 from configparser import ConfigParser
 from pathlib import Path, PurePath
-import re
-from enum import Enum
 from pyrate.constants import NO_OF_PARALLEL_PROCESSES
 from pyrate.default_parameters import PYRATE_DEFAULT_CONFIGURATION
 from pyrate.core.algorithm import factorise_integer
-from pyrate.core.shared import extract_epochs_from_filename
+from pyrate.core.shared import extract_epochs_from_filename, InputTypes
 from pyrate.core.config import parse_namelist, ConfigException
-
-
-class InputTypes(Enum):
-    IFG = 1
-    COH = 2
-    DEM = 3
-    HEADER = 4
 
 
 def set_parameter_value(data_type, input_value, default_value, required, input_name):
@@ -82,7 +73,9 @@ def validate_file_list_values(file_list, no_of_epochs):
 
 
 class MultiplePaths:
-    def __init__(self, out_dir, file_name, ifglksx=1, ifgcropopt=1, file_type=''):
+    def __init__(self, out_dir: str, file_name: str, ifglksx: int = 1, ifgcropopt: int = 1,
+                 input_type: InputTypes = InputTypes.IFG):
+        self.input_type = input_type
         b = Path(file_name)
         if b.suffix == ".tif":
             self.unwrapped_path = None
@@ -92,7 +85,7 @@ class MultiplePaths:
         else:
             self.unwrapped_path = b.as_posix()
             converted_path = Path(out_dir).joinpath(
-                b.stem.split('.')[0] + '_' + b.suffix[1:] + '_' + file_type).with_suffix('.tif')
+                b.stem.split('.')[0] + '_' + b.suffix[1:] + input_type.value).with_suffix('.tif')
             self.sampled_path = converted_path.with_name(
                 converted_path.stem + '_' + str(ifglksx) + "rlks_" + str(ifgcropopt) + "cr.tif").as_posix()
         self.converted_path = converted_path.as_posix()
@@ -180,20 +173,21 @@ class Configuration:
         if self.cohfilelist is not None:
             # if self.processor != 0:  # not roipac
             validate_file_list_values(self.cohfilelist, 1)
-            self.coherence_file_paths = self.__get_files_from_attr('cohfilelist', file_type='coh')
+            self.coherence_file_paths = self.__get_files_from_attr('cohfilelist', input_type=InputTypes.COH)
 
-        self.header_file_paths = self.__get_files_from_attr('hdrfilelist', 'header')
+        self.header_file_paths = self.__get_files_from_attr('hdrfilelist', input_type=InputTypes.HEADER)
 
-        self.interferogram_files = self.__get_files_from_attr('ifgfilelist', file_type='ifg')
+        self.interferogram_files = self.__get_files_from_attr('ifgfilelist')
 
-        self.dem_file = MultiplePaths(self.outdir, self.demfile, self.ifglksx, self.ifgcropopt, file_type='dem')
+        self.dem_file = MultiplePaths(self.outdir, self.demfile, self.ifglksx, self.ifgcropopt,
+                                      input_type=InputTypes.DEM)
 
         # backward compatibility for string paths
         for key in self.__dict__:
             if isinstance(self.__dict__[key], PurePath):
                 self.__dict__[key] = str(self.__dict__[key])
 
-    def __get_files_from_attr(self, attr, file_type=''):
+    def __get_files_from_attr(self, attr, input_type=InputTypes.IFG):
         val = self.__getattribute__(attr)
         files = parse_namelist(val)
-        return [MultiplePaths(self.outdir, p, self.ifglksx, self.ifgcropopt, file_type=file_type) for p in files]
+        return [MultiplePaths(self.outdir, p, self.ifglksx, self.ifgcropopt, input_type=input_type) for p in files]
