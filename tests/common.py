@@ -485,6 +485,8 @@ def assert_two_dirs_equal(dir1, dir2, ext, num_files=None):
     if num_files is not None:
         assert len(dir1_files) == num_files
         assert len(dir2_files) == num_files
+    else:
+        assert len(dir1_files) == len(dir2_files)
     if dir1_files[0].suffix == '.tif':
         for m_f, s_f in zip(dir1_files, dir2_files):
             assert m_f.name == s_f.name
