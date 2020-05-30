@@ -137,6 +137,9 @@ class PyRateTests(unittest.TestCase):
             params[cf.APS_CORRECTION] = 0
             paths = glob.glob(join(cls.BASE_OUT_DIR, 'geo_*-*.tif'))
             params[cf.PARALLEL] = False
+            params[cf.INTERFEROGRAM_FILES] = [MultiplePaths(cls.BASE_OUT_DIR, p) for p in paths]
+            for p in params[cf.INTERFEROGRAM_FILES]:  # cheat
+                p.sampled_path = p.converted_path
             process.process_ifgs(sorted(paths), params, 2, 2)
 
             if not hasattr(cls, 'ifgs'):
@@ -217,14 +220,15 @@ class ParallelPyRateTests(unittest.TestCase):
                                      ifgcropopt=params[cf.IFG_CROP_OPT]) for b in base_unw_paths]
 
         # dest_paths are tifs that have been geotif converted and multilooked
-        cls.dest_paths = [b.sampled_path for b in multi_paths]
-        _ = conv2tif.do_geotiff(multi_paths, params)
-        # gtif_paths = [b.converted_path for b in multi_paths]
+        cls.converted_paths = [b.converted_path for b in multi_paths]
+        cls.sampled_paths = [b.sampled_path for b in multi_paths]
+        conv2tif.do_geotiff(multi_paths, params)
         prepifg.do_prepifg(multi_paths, params)
-        tiles = pyrate.core.shared.get_tiles(cls.dest_paths[0], rows, cols)
+        tiles = pyrate.core.shared.get_tiles(cls.sampled_paths[0], rows, cols)
         ifgs = common.small_data_setup()
+        params[cf.INTERFEROGRAM_FILES] = multi_paths
 
-        cls.refpixel_p, cls.maxvar_p, cls.vcmt_p = process.process_ifgs(cls.dest_paths, params, rows, cols)
+        cls.refpixel_p, cls.maxvar_p, cls.vcmt_p = process.process_ifgs(cls.sampled_paths, params, rows, cols)
         cls.mst_p = common.reconstruct_mst(ifgs[0].shape, tiles, params[cf.TMPDIR])
         cls.rate_p, cls.error_p, cls.samples_p = \
             [common.reconstruct_stack_rate(ifgs[0].shape, tiles, params[cf.TMPDIR], t) for t in rate_types]
@@ -237,14 +241,15 @@ class ParallelPyRateTests(unittest.TestCase):
         params[cf.PROCESSES] = 1
         params[cf.OUT_DIR] = cls.tif_dir_s
         params[cf.TMPDIR] = os.path.join(params[cf.OUT_DIR], cf.TMPDIR)
-
         multi_paths = [MultiplePaths(params[cf.OUT_DIR], b, ifglksx=params[cf.IFG_LKSX],
                                      ifgcropopt=params[cf.IFG_CROP_OPT]) for b in base_unw_paths]
 
-        cls.dest_paths_s = [b.sampled_path for b in multi_paths]
+        cls.converted_paths_s = [b.converted_path for b in multi_paths]
+        cls.sampled_paths_s = [b.sampled_path for b in multi_paths]
         conv2tif.do_geotiff(multi_paths, params)
         prepifg.do_prepifg(multi_paths, params)
-        cls.refpixel, cls.maxvar, cls.vcmt = process.process_ifgs(cls.dest_paths_s, params, rows, cols)
+        params[cf.INTERFEROGRAM_FILES] = multi_paths
+        cls.refpixel, cls.maxvar, cls.vcmt = process.process_ifgs(cls.sampled_paths_s, params, rows, cols)
         cls.mst = common.reconstruct_mst(ifgs[0].shape, tiles, params[cf.TMPDIR])
         cls.rate, cls.error, cls.samples = \
             [common.reconstruct_stack_rate(ifgs[0].shape, tiles, params[cf.TMPDIR], t) for t in rate_types]
@@ -259,7 +264,7 @@ class ParallelPyRateTests(unittest.TestCase):
         key = 'ORBITAL_ERROR'
         value = 'REMOVED'
 
-        for i in common.small_data_setup(datafiles=self.dest_paths):
+        for i in common.small_data_setup(datafiles=self.sampled_paths):
             self.key_check(i, key, value)
 
     def key_check(self, ifg, key, value):
@@ -273,7 +278,7 @@ class ParallelPyRateTests(unittest.TestCase):
         key = 'DATA_UNITS'
         value = 'MILLIMETRES'
 
-        for i in common.small_data_setup(datafiles=self.dest_paths):
+        for i in common.small_data_setup(datafiles=self.sampled_paths):
             self.key_check(i, key, value)
 
     def test_mst_equal(self):

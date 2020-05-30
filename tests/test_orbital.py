@@ -700,8 +700,7 @@ class LegacyComparisonTestsOrbfitMethod1(unittest.TestCase):
         self.params[cf.PARALLEL] = False
 
         data_paths = [os.path.join(SML_TEST_TIF, p) for p in IFMS16]
-        self.ifg_paths = [os.path.join(self.BASE_DIR, os.path.basename(d))
-                          for d in data_paths]
+        self.ifg_paths = [os.path.join(self.BASE_DIR, os.path.basename(d)) for d in data_paths]
 
         for d in data_paths:
             shutil.copy(d, os.path.join(self.BASE_DIR, os.path.basename(d)))
@@ -711,8 +710,12 @@ class LegacyComparisonTestsOrbfitMethod1(unittest.TestCase):
 
     def test_orbital_correction_legacy_equality(self):
         from pyrate import process
+        from pyrate.configuration import MultiplePaths
 
-        process._orb_fit_calc(self.ifg_paths, self.params)
+        multi_paths = [MultiplePaths(self.BASE_DIR, p) for p in self.ifg_paths]
+        for m in multi_paths:  # cheat
+            m.sampled_path = m.converted_path
+        process._orb_fit_calc(multi_paths, self.params)
 
         onlyfiles = [f for f in os.listdir(SML_TEST_LEGACY_ORBITAL_DIR)
             if os.path.isfile(os.path.join(SML_TEST_LEGACY_ORBITAL_DIR, f))
