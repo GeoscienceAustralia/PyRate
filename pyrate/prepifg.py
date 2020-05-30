@@ -23,6 +23,7 @@ from subprocess import check_call
 from typing import List
 from pathlib import Path
 from joblib import Parallel, delayed
+from typing import Union
 import numpy as np
 from osgeo import gdal
 from pyrate.core import shared, mpiops, config as cf, prepifg_helper, gamma, roipac, ifgconstants as ifc
@@ -227,13 +228,14 @@ def _prepifg_multiprocessing(m_path: MultiplePaths, xlooks, ylooks, exts, thresh
                                    coherence_thresh=coherence_thresh)
 
 
-def find_header(path: MultiplePaths, params: dict):
+def find_header(path: Union[MultiplePaths, str], params: dict):
     processor = params[cf.PROCESSOR]  # roipac, gamma or geotif
+    tif_path = path.converted_path if isinstance(path, MultiplePaths) else path
     if (processor == GAMMA) or (processor == GEOTIF):
-        header = gamma.gamma_header(path.converted_path, params)
+        header = gamma.gamma_header(tif_path, params)
     elif processor == ROIPAC:
         log.info("Warning: ROI_PAC support will be deprecated in a future PyRate release")
-        header = roipac.roipac_header(path.converted_path, params)
+        header = roipac.roipac_header(tif_path, params)
     else:
         raise PreprocessError('Processor must be ROI_PAC (0) or GAMMA (1)')
     header[ifc.INPUT_TYPE] = path.input_type

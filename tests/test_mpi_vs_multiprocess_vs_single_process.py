@@ -65,7 +65,7 @@ def modified_config(tempdir, get_lks, get_crop, orbfit_lks, orbfit_method, orbfi
 @pytest.mark.skipif(REGRESSION or PYTHON3P8 or PYTHON3P6, reason="Skip if not python3.7 and gdal=3.0.4")
 def test_pipeline_parallel_vs_mpi(modified_config, gamma_conf):
 
-    if TRAVIS and np.random.randint(0, 1000) > 149:  # skip 85% of tests randomly
+    if np.random.randint(0, 1000) > 149:  # skip 85% of tests randomly
         pytest.skip("Randomly skipping as part of 85 percent")
 
     print("\n\n")
@@ -214,7 +214,7 @@ def test_stack_and_ts_mpi_vs_parallel_vs_serial(modified_config_short, gamma_con
     3. Doing 1 and 2 means we have checked single vs parallel python multiprocess pipelines
     4. This also checks the entire pipeline using largetifs (new prepifg) vs old perpifg (python based)
     """
-    if TRAVIS and np.random.randint(0, 1000) > 399:  # skip 60% of tests randomly
+    if np.random.randint(0, 1000) > 399:  # skip 60% of tests randomly
         pytest.skip("Randomly skipping as part of 60 percent")
 
     print("\n\n")
