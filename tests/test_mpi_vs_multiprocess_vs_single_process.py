@@ -148,7 +148,7 @@ def coh_mask(request):
 
 
 @pytest.fixture()
-def modified_config_short(tempdir, local_crop, get_lks, coh_mask):
+def modified_config_short(tempdir, local_crop, get_lks, coh_mask, ref_pixel):
     orbfit_lks = 1
     orbfit_method = 1
     orbfit_degrees = 1
@@ -163,6 +163,7 @@ def modified_config_short(tempdir, local_crop, get_lks, coh_mask):
         params[cf.APSEST] = 1
         params[cf.LARGE_TIFS] = largetifs
         params[cf.IFG_LKSX], params[cf.IFG_LKSY] = get_lks, get_lks
+        params[cf.REFX], params[cf.REFY] = ref_pixel
         params[cf.REFNX], params[cf.REFNY] = 4, 4
 
         params[cf.IFG_CROP_OPT] = local_crop
