@@ -156,8 +156,9 @@ def _ref_pixel_calc(ifg_paths, params):
         log.info('Selected reference pixel coordinate: ({}, {})'.format(refx, refy))
     else:
         log.info('Reusing reference pixel from config file: ({}, {})'.format(refx, refy))
+    log.debug("refpx, refpy: "+str(refx) + " " + str(refy))
     ifg.close()
-    return refx, refy
+    return int(refx), int(refy)
 
 
 def _orb_fit_calc(multi_paths: List[MultiplePaths], params, preread_ifgs=None) -> None:
@@ -292,8 +293,6 @@ def process_ifgs(ifg_paths, params, rows, cols):
     preread_ifgs = _create_ifg_dict(ifg_paths, params=params)
 
     refpx, refpy = _ref_pixel_calc(ifg_paths, params)
-
-    log.debug("refpx, refpy: "+str(refpx) + " " + str(refpy))
 
     # remove non ifg keys
     _ = [preread_ifgs.pop(k) for k in ['gt', 'epochlist', 'md', 'wkt']]
