@@ -942,21 +942,13 @@ def write_output_geotiff(md, gt, wkt, data, dest, nodata):
 
     # set other metadata
     ds.SetMetadataItem('DATA_TYPE', str(md['DATA_TYPE']))
+
     # sequence position for time series products
-    if "SEQUENCE_POSITION" in md:
-        ds.SetMetadataItem("SEQUENCE_POSITION", str(md["SEQUENCE_POSITION"]))
-    if "PYRATE_REFPIX_LAT" in md:
-        ds.SetMetadataItem("PYRATE_REFPIX_LAT", str(md["PYRATE_REFPIX_LAT"]))
-    if "PYRATE_REFPIX_LON" in md:
-        ds.SetMetadataItem("PYRATE_REFPIX_LON", str(md["PYRATE_REFPIX_LON"]))
-    if "PYRATE_REFPIX_X" in md:
-        ds.SetMetadataItem("PYRATE_REFPIX_X", str(md["PYRATE_REFPIX_X"]))
-    if "PYRATE_REFPIX_Y" in md:
-        ds.SetMetadataItem("PYRATE_REFPIX_Y", str(md["PYRATE_REFPIX_Y"]))
-    if "PYRATE_MEAN_REF_AREA" in md:
-        ds.SetMetadataItem("PYRATE_MEAN_REF_AREA", str(md["PYRATE_MEAN_REF_AREA"]))
-    if "PYRATE_STDDEV_REF_AREA" in md:
-        ds.SetMetadataItem("PYRATE_STDDEV_REF_AREA", str(md["PYRATE_STDDEV_REF_AREA"]))
+
+    for k in [ifc.SEQUENCE_POSITION, ifc.PYRATE_REFPIX_X, ifc.PYRATE_REFPIX_Y, ifc.PYRATE_REFPIX_LAT,
+              ifc.PYRATE_REFPIX_LON, ifc.PYRATE_MEAN_REF_AREA, ifc.PYRATE_STDDEV_REF_AREA]:
+        if k in md:
+            ds.SetMetadataItem(str(md[k]))
 
     # write data to geotiff
     band = ds.GetRasterBand(1)

@@ -25,10 +25,58 @@ import numpy as np
 from numpy import isnan, std, mean, sum as nsum
 from joblib import Parallel, delayed
 
+from osgeo import gdal
+
 import pyrate.core.config as cf
+from pyrate.core import ifgconstants as ifc
+from pyrate.core import mpiops
 from pyrate.core.shared import Ifg
 from pyrate.core.shared import joblib_log_level
 from pyrate.core.logger import pyratelogger as log
+
+
+def update_refpix_metadata(ifg_paths, pyrate_refpix_x, pyrate_refpix_y, pyrate_refpix_lat, pyrate_refpix_lon, params):
+    """
+    Function that adds metadata about the chosen reference pixel to each interferogram.
+    """
+    process_ifgs_paths = mpiops.array_split(ifg_paths)
+
+    for ifg_file in process_ifgs_paths:
+        log.debug("Updating metadata for: "+ifg_file)
+        ifg = Ifg(ifg_file)
+        log.debug("Open dataset")
+        ifg.open(readonly=True)
+        log.debug("Set no data value")
+        ifg.nodata_value = params["noDataValue"]
+        log.debug("Update no data values in dataset")
+        ifg.convert_to_nans()
+        log.debug("Convert mm")
+        ifg.convert_to_mm()
+        half_patch_size = params["refchipsize"] // 2
+        x, y = pyrate_refpix_x, pyrate_refpix_y
+        log.debug("Extract reference pixel windows")
+        data = ifg.phase_data[y - half_patch_size: y + half_patch_size + 1,
+                              x - half_patch_size: x + half_patch_size + 1]
+        log.debug("Calculate standard deviation for reference window")
+        stddev_ref_area = np.std(data[~np.isnan(data)])
+        log.debug("Calculate mean for reference window")
+        mean_ref_area = np.mean(data[~np.isnan(data)])
+        ifg.close()
+
+        dataset = gdal.Open(ifg_file, gdal.GA_Update)
+        metadata = dataset.GetMetadata()
+        metadata.update({
+            ifc.PYRATE_REFPIX_X: str(pyrate_refpix_x),
+            ifc.PYRATE_REFPIX_Y: str(pyrate_refpix_y),
+            ifc.PYRATE_REFPIX_LAT: str(pyrate_refpix_lat),
+            ifc.PYRATE_REFPIX_LON: str(pyrate_refpix_lon),
+            ifc.PYRATE_MEAN_REF_AREA: str(mean_ref_area),
+            ifc.PYRATE_STDDEV_REF_AREA: str(stddev_ref_area)
+        })
+        dataset.SetMetadata(metadata)
+
+        # manual close dataset
+        dataset = None
 
 
 def convert_pixel_value_to_geographic_coordinate(refx, refy, transform):
