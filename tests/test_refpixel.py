@@ -26,7 +26,7 @@ from pyrate.core import config as cf
 from pyrate.core.refpixel import ref_pixel, _step
 from pyrate import process
 from tests.common import TEST_CONF_ROIPAC
-from tests.common import small_data_setup, MockIfg, small_ifg_file_list
+from tests.common import small_data_setup, MockIfg, small_ifg_file_list, copy_small_ifg_file_list
 
 
 # TODO: figure out how  editing  resource.setrlimit fixes the error
@@ -223,9 +223,9 @@ def _expected_ref_pixel(ifgs, cs):
 class LegacyEqualityTest(unittest.TestCase):
 
     def setUp(self):
-        self.ifg_paths = small_ifg_file_list()
         self.params = cf.get_config_params(TEST_CONF_ROIPAC)
         self.params[cf.PARALLEL] = False
+        self.params[cf.OUT_DIR], self.ifg_paths = copy_small_ifg_file_list()
         self.params[cf.OUT_DIR] = tempfile.mkdtemp()
         self.params_alt_ref_frac = copy.copy(self.params)
         self.params_alt_ref_frac[cf.REF_MIN_FRAC] = 0.5
@@ -256,9 +256,7 @@ class LegacyEqualityTest(unittest.TestCase):
         self.assertAlmostEqual(0.5, self.params_alt_ref_frac[cf.REF_MIN_FRAC])
 
     def test_small_test_data_ref_all_1(self):
-
-        refx, refy = process._ref_pixel_calc(self.ifg_paths,
-                                             self.params_all_1s)
+        refx, refy = process._ref_pixel_calc(self.ifg_paths, self.params_all_1s)
 
         self.assertAlmostEqual(0.7, self.params_all_1s[cf.REF_MIN_FRAC])
         self.assertEqual(1, self.params_all_1s[cf.REFNX])
@@ -270,11 +268,9 @@ class LegacyEqualityTest(unittest.TestCase):
 class LegacyEqualityTestMultiprocessParallel(unittest.TestCase):
 
     def setUp(self):
-        self.ifg_paths = small_ifg_file_list()
         self.params = cf.get_config_params(TEST_CONF_ROIPAC)
         self.params[cf.PARALLEL] = True
-        self.params[cf.OUT_DIR] = tempfile.mkdtemp()
-
+        self.params[cf.OUT_DIR], self.ifg_paths = copy_small_ifg_file_list()
         self.params_alt_ref_frac = copy.copy(self.params)
         self.params_alt_ref_frac[cf.REF_MIN_FRAC] = 0.5
         self.params_all_2s = copy.copy(self.params)

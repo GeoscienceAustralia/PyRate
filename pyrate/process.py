@@ -157,7 +157,7 @@ def _ref_pixel_calc(ifg_paths, params):
     else:
         refx, refy = refpixel.convert_geographic_coordinate_to_pixel_value(lon, lat, transform)
         log.info('Using reference pixel from config file (lat, lon): ({}, {})'.format(lat, lon))
-        log.warn("Ensure reference pixel values are in lat/lon")
+        log.warning("Ensure reference pixel values are in lat/lon")
 
     log.info('Selected reference pixel coordinate: ({}, {})'.format(refx, refy))
 

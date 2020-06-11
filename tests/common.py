@@ -160,6 +160,15 @@ def assert_tifs_equal(tif1, tif2):
     sds = None
 
 
+def copy_small_ifg_file_list():
+    temp_dir = tempfile.mkdtemp()
+    move_files(SML_TEST_TIF, temp_dir, file_type='*.tif', copy=True)
+    datafiles = glob.glob(join(temp_dir, "*.tif"))
+    for d in datafiles:
+        Path(d).chmod(0o664)  # assign write permission as conv2tif output is readonly
+    return temp_dir, datafiles
+
+
 def small_ifg_file_list(datafiles=None):
     """Returns the file list of all the .tif files after prepifg conversion
     input phase data is in radians; these ifgs are in radians - not converted to mm"""
