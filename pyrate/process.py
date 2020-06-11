@@ -124,15 +124,15 @@ def _ref_pixel_calc(ifg_paths, params):
     """
     Wrapper for reference pixel calculation
     """
-    refx = params[cf.REFX]
-    refy = params[cf.REFY]
+    lon = params[cf.REFX]
+    lat = params[cf.REFY]
 
     ifg = Ifg(ifg_paths[0])
     ifg.open(readonly=True)
     # assume all interferograms have same projection and will share the same transform
     transform = ifg.dataset.GetGeoTransform()
 
-    if refx == -1 or refy == -1:
+    if lon == -1 or lat == -1:
 
         log.info('Searching for best reference pixel location')
 
@@ -152,13 +152,16 @@ def _ref_pixel_calc(ifg_paths, params):
                 "Reference pixel calculation returned an all nan slice!\n"
                 "Cannot continue downstream computation. Please change reference pixel algorithm used before "
                 "continuing.")
-        refy, refx = refpixel_returned
+        refy, refx = refpixel_returned   # row first means first value is latitude
 
-        log.info('Selected reference pixel coordinate: ({}, {})'.format(refx, refy))
     else:
-        refx, refy = refpixel.convert_geographic_coordinate_to_pixel_value(refx, refy, transform)
-        log.info('Reusing reference pixel from config file: ({}, {})'.format(refx, refy))
+        refx, refy = refpixel.convert_geographic_coordinate_to_pixel_value(lon, lat, transform)
+        log.info('Using reference pixel from config file (lat, lon): ({}, {})'.format(lat, lon))
         log.warn("Ensure reference pixel values are in lat/lon")
+
+    log.info('Selected reference pixel coordinate: ({}, {})'.format(refx, refy))
+
+    refpixel.update_refpix_metadata(ifg_paths, refx, refy, transform, params)
 
     log.debug("refpx, refpy: "+str(refx) + " " + str(refy))
     ifg.close()

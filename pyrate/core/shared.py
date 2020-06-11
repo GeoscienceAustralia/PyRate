@@ -948,7 +948,7 @@ def write_output_geotiff(md, gt, wkt, data, dest, nodata):
     for k in [ifc.SEQUENCE_POSITION, ifc.PYRATE_REFPIX_X, ifc.PYRATE_REFPIX_Y, ifc.PYRATE_REFPIX_LAT,
               ifc.PYRATE_REFPIX_LON, ifc.PYRATE_MEAN_REF_AREA, ifc.PYRATE_STDDEV_REF_AREA]:
         if k in md:
-            ds.SetMetadataItem(str(md[k]))
+            ds.SetMetadataItem(k, str(md[k]))
 
     # write data to geotiff
     band = ds.GetRasterBand(1)

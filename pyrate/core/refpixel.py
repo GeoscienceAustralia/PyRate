@@ -35,10 +35,14 @@ from pyrate.core.shared import joblib_log_level
 from pyrate.core.logger import pyratelogger as log
 
 
-def update_refpix_metadata(ifg_paths, pyrate_refpix_x, pyrate_refpix_y, pyrate_refpix_lat, pyrate_refpix_lon, params):
+def update_refpix_metadata(ifg_paths, refx, refy, transform, params):
     """
     Function that adds metadata about the chosen reference pixel to each interferogram.
     """
+
+    pyrate_refpix_lat, pyrate_refpix_lon = mpiops.run_once(convert_pixel_value_to_geographic_coordinate,
+                                                           refx, refy, transform)
+
     process_ifgs_paths = mpiops.array_split(ifg_paths)
 
     for ifg_file in process_ifgs_paths:
@@ -53,21 +57,21 @@ def update_refpix_metadata(ifg_paths, pyrate_refpix_x, pyrate_refpix_y, pyrate_r
         log.debug("Convert mm")
         ifg.convert_to_mm()
         half_patch_size = params["refchipsize"] // 2
-        x, y = pyrate_refpix_x, pyrate_refpix_y
+        x, y = refx, refy
         log.debug("Extract reference pixel windows")
         data = ifg.phase_data[y - half_patch_size: y + half_patch_size + 1,
                               x - half_patch_size: x + half_patch_size + 1]
         log.debug("Calculate standard deviation for reference window")
-        stddev_ref_area = np.std(data[~np.isnan(data)])
+        stddev_ref_area = np.nanstd(data)
         log.debug("Calculate mean for reference window")
-        mean_ref_area = np.mean(data[~np.isnan(data)])
+        mean_ref_area = np.nanmean(data)
         ifg.close()
 
         dataset = gdal.Open(ifg_file, gdal.GA_Update)
         metadata = dataset.GetMetadata()
         metadata.update({
-            ifc.PYRATE_REFPIX_X: str(pyrate_refpix_x),
-            ifc.PYRATE_REFPIX_Y: str(pyrate_refpix_y),
+            ifc.PYRATE_REFPIX_X: str(refx),
+            ifc.PYRATE_REFPIX_Y: str(refy),
             ifc.PYRATE_REFPIX_LAT: str(pyrate_refpix_lat),
             ifc.PYRATE_REFPIX_LON: str(pyrate_refpix_lon),
             ifc.PYRATE_MEAN_REF_AREA: str(mean_ref_area),
@@ -122,7 +126,7 @@ def convert_geographic_coordinate_to_pixel_value(lon, lat, transform):
     refx = int((lon - xOrigin) / pixelWidth)
     refy = int((yOrigin - lat) / pixelHeight)
 
-    return int(refx), int(refy)
+    return refx, refy
 
 
 # TODO: move error checking to config step (for fail fast)
