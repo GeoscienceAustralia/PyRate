@@ -24,6 +24,7 @@ import numpy as np
 from osgeo import gdal
 import subprocess
 from pathlib import Path
+import math
 
 from pyrate.core import shared, ifgconstants as ifc, mpiops, config as cf
 from pyrate.core.shared import PrereadIfg
@@ -92,33 +93,40 @@ def create_png_from_tif(output_folder_path):
     </GroundOverlay>
   </Document>
 </kml>"""
-
     with open(kml_file_path, "w") as f:
         f.write(kml_file_content)
 
+
+    # Create a png quickview image using GDAL
     # Get raster statistics
     minimum, maximum, mean, stddev = srcband.GetStatistics(True, True)
     maximum = max(abs(minimum), abs(maximum))
     minimum = -1 * maximum
-    step = (maximum - minimum) / 256.0
+    # this will result in a vector with 255 values ranging from min to max:
+    step = (maximum - minimum) / 254.0
+    no_of_data_value = len(np.arange(minimum, maximum, step))
 
     del gtif  # manually close raster
-
-    # read color map from utilities and write it to the output folder
-
-    with open(REF_COLOR_MAP_PATH, "r") as f:
-        color_map_list = []
-        for line in f.readlines():
-            color_map_list.append(line.strip().split(" "))
-
-    no_of_data_value = len(np.arange(minimum, maximum, step))
-    for i, no in enumerate(np.arange(minimum, maximum, step)):
-        color_map_list[i+1][0] = str(no)
-
+    
+    # generate a colourmap for odd number of values (currently hard-coded to 255)
+    mid = math.floor(no_of_data_value*0.5)
+    # allocate RGB values to three numpy arrays r, g, b
+    r = np.arange(0,mid)/mid
+    g = r
+    r = np.concatenate((r, np.ones(mid+1)))
+    g = np.concatenate((g, np.array([1]), np.flipud(g)))
+    b = np.flipud(r)
+    # change direction of colours (blue: positve, red: negative)
+    r = np.flipud(r)*255
+    g = np.flipud(g)*255
+    b = np.flipud(b)*255
+    
+    # generate the colourmap file in the output folder
     color_map_path = os.path.join(output_folder_path, "colourmap.txt")
     with open(color_map_path, "w") as f:
-        for i in range(no_of_data_value):
-            f.write(' '.join(color_map_list[i]) + "\n")
+        f.write("nan 0 0 0 0\n") 
+        for i, value in enumerate(np.arange(minimum, maximum+step, step)):
+            f.write("%f %f %f %f 255\n" % (value, r[i], g[i], b[i]))  
 
     input_tif_path = os.path.join(output_folder_path, "stack_rate.tif")
     output_png_path = os.path.join(output_folder_path, "stack_rate.png")
