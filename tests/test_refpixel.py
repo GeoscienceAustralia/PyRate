@@ -273,6 +273,7 @@ class LegacyEqualityTest(unittest.TestCase):
                             [str(refx), str(refy), 0, 0, 0, 0]):
                 assert k in md  # metadata present
                 # assert values
+            ifg.close()
 
     def test_small_test_data_ref_all_1(self):
         refx, refy = process._ref_pixel_calc(self.ifg_paths, self.params_all_1s)

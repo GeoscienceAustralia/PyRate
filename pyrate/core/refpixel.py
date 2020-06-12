@@ -65,11 +65,7 @@ def update_refpix_metadata(ifg_paths, refx, refy, transform, params):
         stddev_ref_area = np.nanstd(data)
         log.debug("Calculate mean for reference window")
         mean_ref_area = np.nanmean(data)
-        ifg.close()
-
-        dataset = gdal.Open(ifg_file, gdal.GA_Update)
-        metadata = dataset.GetMetadata()
-        metadata.update({
+        ifg.add_metadata(**{
             ifc.PYRATE_REFPIX_X: str(refx),
             ifc.PYRATE_REFPIX_Y: str(refy),
             ifc.PYRATE_REFPIX_LAT: str(pyrate_refpix_lat),
@@ -77,10 +73,8 @@ def update_refpix_metadata(ifg_paths, refx, refy, transform, params):
             ifc.PYRATE_MEAN_REF_AREA: str(mean_ref_area),
             ifc.PYRATE_STDDEV_REF_AREA: str(stddev_ref_area)
         })
-        dataset.SetMetadata(metadata)
 
-        # manual close dataset
-        dataset = None
+        ifg.close()
 
 
 def convert_pixel_value_to_geographic_coordinate(refx, refy, transform):
