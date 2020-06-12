@@ -250,6 +250,13 @@ class LegacyEqualityTest(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.params[cf.OUT_DIR])
 
+    def test_small_test_data_ref_pixel_lat_lon_provided(self):
+        self.params[cf.REFX], self.params[cf.REFY] = 150.941666654, -34.218333314
+        refx, refy = process._ref_pixel_calc(self.ifg_paths, self.params)
+        self.assertEqual(refx, 38)
+        self.assertEqual(refy, 58)
+        self.assertAlmostEqual(0.8, self.params[cf.REF_MIN_FRAC])
+
     def test_small_test_data_ref_pixel(self):
         refx, refy = process._ref_pixel_calc(self.ifg_paths, self.params)
         self.assertEqual(refx, 38)
