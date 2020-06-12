@@ -25,6 +25,8 @@ from numpy import nan, mean, std, isnan
 
 from pyrate.core import config as cf
 from pyrate.core.refpixel import ref_pixel, _step
+from pyrate.core import shared, ifgconstants as ifc
+
 from pyrate import process
 from pyrate.configuration import Configuration
 from tests.common import TEST_CONF_ROIPAC
@@ -259,6 +261,18 @@ class LegacyEqualityTest(unittest.TestCase):
         self.assertEqual(refx, 7)
         self.assertEqual(refy, 7)
         self.assertAlmostEqual(0.5, self.params_alt_ref_frac[cf.REF_MIN_FRAC])
+
+    def test_metadata(self):
+        refx, refy = process._ref_pixel_calc(self.ifg_paths, self.params_chipsize_15)
+        for i in self.ifg_paths:
+            ifg = shared.Ifg(i)
+            ifg.open(readonly=True)
+            md = ifg.meta_data
+            for k, v in zip([ifc.PYRATE_REFPIX_X, ifc.PYRATE_REFPIX_Y, ifc.PYRATE_REFPIX_LAT,
+                            ifc.PYRATE_REFPIX_LON, ifc.PYRATE_MEAN_REF_AREA, ifc.PYRATE_STDDEV_REF_AREA],
+                            [str(refx), str(refy), 0, 0, 0, 0]):
+                assert k in md  # metadata present
+                # assert values
 
     def test_small_test_data_ref_all_1(self):
         refx, refy = process._ref_pixel_calc(self.ifg_paths, self.params_all_1s)

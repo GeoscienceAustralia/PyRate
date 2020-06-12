@@ -40,7 +40,7 @@ def update_refpix_metadata(ifg_paths, refx, refy, transform, params):
     Function that adds metadata about the chosen reference pixel to each interferogram.
     """
 
-    pyrate_refpix_lat, pyrate_refpix_lon = mpiops.run_once(convert_pixel_value_to_geographic_coordinate,
+    pyrate_refpix_lon, pyrate_refpix_lat = mpiops.run_once(convert_pixel_value_to_geographic_coordinate,
                                                            refx, refy, transform)
 
     process_ifgs_paths = mpiops.array_split(ifg_paths)
