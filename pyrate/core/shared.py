@@ -480,11 +480,8 @@ class Ifg(RasterBase):
         self.dataset.FlushCache()
 
     def add_metadata(self, **kwargs):
-        if self.is_read_only:
-            raise IOError("Cannot write to read only Ifg")
-
-        if self.meta_data is None:
-            raise IOError("Ifg not open")
+        if (not self.is_open) or self.is_read_only:
+            raise IOError("Ifg not open or readonly. Cannot write!")
 
         for k, v in kwargs.items():
             self.dataset.SetMetadataItem(k, v)
