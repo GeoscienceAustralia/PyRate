@@ -24,7 +24,7 @@ import numpy as np
 from osgeo import gdal
 import subprocess
 from pathlib import Path
-import math
+from math import floor
 
 from pyrate.core import shared, ifgconstants as ifc, mpiops, config as cf
 from pyrate.core.shared import PrereadIfg
@@ -109,7 +109,7 @@ def create_png_from_tif(output_folder_path):
     del gtif  # manually close raster
     
     # generate a colourmap for odd number of values (currently hard-coded to 255)
-    mid = math.floor(no_of_data_value*0.5)
+    mid = floor(no_of_data_value*0.5)
     # allocate RGB values to three numpy arrays r, g, b
     r = np.arange(0,mid)/mid
     g = r
