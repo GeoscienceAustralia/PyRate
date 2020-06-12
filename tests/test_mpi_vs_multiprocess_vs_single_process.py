@@ -87,17 +87,11 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_conf):
 
     mr_conf, params_m = modified_config(gamma_conf, 1, 'multiprocess_conf.conf')
 
-    check_call(f"pyrate conv2tif -f {mr_conf}", shell=True)
-    check_call(f"pyrate prepifg -f {mr_conf}", shell=True)
-    check_call(f"pyrate process -f {mr_conf}", shell=True)
-    check_call(f"pyrate merge -f {mr_conf}", shell=True)
+    check_call(f"pyrate workflow -f {mr_conf}", shell=True)
 
     sr_conf, params_s = modified_config(gamma_conf, 0, 'singleprocess_conf.conf')
 
-    check_call(f"pyrate conv2tif -f {sr_conf}", shell=True)
-    check_call(f"pyrate prepifg -f {sr_conf}", shell=True)
-    check_call(f"pyrate process -f {sr_conf}", shell=True)
-    check_call(f"pyrate merge -f {sr_conf}", shell=True)
+    check_call(f"pyrate workflow -f {sr_conf}", shell=True)
 
     # convert2tif tests, 17 interferograms
     assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "*_unw_ifg.tif", 17)
@@ -229,11 +223,7 @@ def test_stack_and_ts_mpi_vs_parallel_vs_serial(modified_config_short, gamma_con
 
     sr_conf, params_p = modified_config_short(gamma_conf, parallel, 'parallel_conf.conf', 0)
 
-    check_call(f"pyrate conv2tif -f {sr_conf}", shell=True)
-    check_call(f"pyrate prepifg -f {sr_conf}", shell=True)
-    check_call(f"pyrate process -f {sr_conf}", shell=True)
-    check_call(f"pyrate merge -f {sr_conf}", shell=True)
-
+    check_call(f"pyrate workflow -f {sr_conf}", shell=True)
 
     # convert2tif tests, 17 interferograms
     assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "*_unw_ifg.tif", 17)

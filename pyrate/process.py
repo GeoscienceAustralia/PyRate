@@ -154,8 +154,6 @@ def _ref_pixel_calc(ifg_paths, params):
                 "continuing.")
         refy, refx = refpixel_returned   # row first means first value is latitude
 
-        # get the actual lon/lat
-        lon, lat = mpiops.run_once(refpixel.convert_pixel_value_to_geographic_coordinate, refx, refy, transform)
     else:
         refx, refy = refpixel.convert_geographic_coordinate_to_pixel_value(lon, lat, transform)
         log.info('Using reference pixel from config file (lat, lon): ({}, {})'.format(lat, lon))
@@ -163,7 +161,7 @@ def _ref_pixel_calc(ifg_paths, params):
 
     log.info('Selected reference pixel coordinate: ({}, {})'.format(refx, refy))
 
-    refpixel.update_refpix_metadata(ifg_paths, refx, refy, lon, lat, params)
+    refpixel.update_refpix_metadata(ifg_paths, refx, refy, transform, params)
 
     log.debug("refpx, refpy: "+str(refx) + " " + str(refy))
     ifg.close()

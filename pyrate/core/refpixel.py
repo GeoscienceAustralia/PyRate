@@ -35,10 +35,13 @@ from pyrate.core.shared import joblib_log_level
 from pyrate.core.logger import pyratelogger as log
 
 
-def update_refpix_metadata(ifg_paths, refx, refy, lon, lat, params):
+def update_refpix_metadata(ifg_paths, refx, refy, transform, params):
     """
     Function that adds metadata about the chosen reference pixel to each interferogram.
     """
+
+    pyrate_refpix_lon, pyrate_refpix_lat = mpiops.run_once(convert_pixel_value_to_geographic_coordinate,
+                                                           refx, refy, transform)
 
     process_ifgs_paths = mpiops.array_split(ifg_paths)
 
@@ -65,8 +68,8 @@ def update_refpix_metadata(ifg_paths, refx, refy, lon, lat, params):
         ifg.add_metadata(**{
             ifc.PYRATE_REFPIX_X: str(refx),
             ifc.PYRATE_REFPIX_Y: str(refy),
-            ifc.PYRATE_REFPIX_LAT: str(lat),
-            ifc.PYRATE_REFPIX_LON: str(lon),
+            ifc.PYRATE_REFPIX_LAT: str(pyrate_refpix_lat),
+            ifc.PYRATE_REFPIX_LON: str(pyrate_refpix_lon),
             ifc.PYRATE_MEAN_REF_AREA: str(mean_ref_area),
             ifc.PYRATE_STDDEV_REF_AREA: str(stddev_ref_area)
         })
@@ -117,7 +120,7 @@ def convert_geographic_coordinate_to_pixel_value(lon, lat, transform):
     refx = int((lon - xOrigin) / pixelWidth)
     refy = int((yOrigin - lat) / pixelHeight)
 
-    return refx, refy
+    return refx + 1, refy + 1
 
 
 # TODO: move error checking to config step (for fail fast)
