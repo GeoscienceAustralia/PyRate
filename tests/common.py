@@ -169,6 +169,17 @@ def copy_small_ifg_file_list():
     return temp_dir, datafiles
 
 
+def copy_and_setup_small_data():
+    temp_dir, datafiles = copy_small_ifg_file_list()
+    datafiles.sort()
+    ifgs = [dem_or_ifg(i) for i in datafiles]
+
+    for i in ifgs:
+        i.open()
+        i.nodata_value = 0
+    return temp_dir, ifgs
+
+
 def small_ifg_file_list(datafiles=None):
     """Returns the file list of all the .tif files after prepifg conversion
     input phase data is in radians; these ifgs are in radians - not converted to mm"""

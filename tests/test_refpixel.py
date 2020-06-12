@@ -20,13 +20,16 @@ import copy
 import unittest
 import tempfile
 import shutil
+from pathlib import Path
 from numpy import nan, mean, std, isnan
 
 from pyrate.core import config as cf
 from pyrate.core.refpixel import ref_pixel, _step
 from pyrate import process
+from pyrate.configuration import Configuration
 from tests.common import TEST_CONF_ROIPAC
-from tests.common import small_data_setup, MockIfg, small_ifg_file_list, copy_small_ifg_file_list
+from tests.common import small_data_setup, MockIfg, small_ifg_file_list, copy_small_ifg_file_list, \
+    copy_and_setup_small_data
 
 
 # TODO: figure out how  editing  resource.setrlimit fixes the error
@@ -100,8 +103,8 @@ class ReferencePixelTests(unittest.TestCase):
     """
 
     def setUp(self):
-        self.ifgs = small_data_setup()
         self.params = cf.get_config_params(TEST_CONF_ROIPAC)
+        self.params[cf.OUT_DIR], self.ifgs = copy_and_setup_small_data()
         self.params[cf.REFNX] = REFNX
         self.params[cf.REFNY] = REFNY
         self.params[cf.REF_CHIP_SIZE] = CHIPSIZE
@@ -224,9 +227,11 @@ class LegacyEqualityTest(unittest.TestCase):
 
     def setUp(self):
         self.params = cf.get_config_params(TEST_CONF_ROIPAC)
-        self.params[cf.PARALLEL] = False
+        self.params[cf.PARALLEL] = 0
         self.params[cf.OUT_DIR], self.ifg_paths = copy_small_ifg_file_list()
-        self.params[cf.OUT_DIR] = tempfile.mkdtemp()
+        conf_file = Path(self.params[cf.OUT_DIR], 'conf_file.conf')
+        cf.write_config_file(params=self.params, output_conf_file=conf_file)
+        self.params = Configuration(conf_file).__dict__
         self.params_alt_ref_frac = copy.copy(self.params)
         self.params_alt_ref_frac[cf.REF_MIN_FRAC] = 0.5
         self.params_all_2s = copy.copy(self.params)
@@ -257,7 +262,6 @@ class LegacyEqualityTest(unittest.TestCase):
 
     def test_small_test_data_ref_all_1(self):
         refx, refy = process._ref_pixel_calc(self.ifg_paths, self.params_all_1s)
-
         self.assertAlmostEqual(0.7, self.params_all_1s[cf.REF_MIN_FRAC])
         self.assertEqual(1, self.params_all_1s[cf.REFNX])
         self.assertEqual(1, self.params_all_1s[cf.REFNY])
