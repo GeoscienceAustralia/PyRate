@@ -33,7 +33,7 @@ from pyrate.core.covariance import cvd_from_phase, RDist
 from pyrate.core.algorithm import get_epochs
 from pyrate.core.shared import Ifg
 from pyrate.core.timeseries import time_series
-from pyrate.merge import _assemble_tiles
+from pyrate.merge import assemble_tiles
 
 log = logging.getLogger(__name__)
 
@@ -101,16 +101,15 @@ def _calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles):
     new_params[cf.TIME_SERIES_METHOD] = 2  # use SVD method
 
     process_tiles = mpiops.array_split(tiles)
-    output_dir = params[cf.TMPDIR]
 
     nvels = None
     for t in process_tiles:
         log.debug('Calculating time series for tile {} during APS '
                  'correction'.format(t.index))
         ifg_parts = [shared.IfgPart(p, t, preread_ifgs, params) for p in ifg_paths]
-        mst_tile = np.load(os.path.join(output_dir, 'mst_mat_{}.npy'.format(t.index)))
+        mst_tile = np.load(os.path.join(params[cf.TMPDIR], 'mst_mat_{}.npy'.format(t.index)))
         tsincr = time_series(ifg_parts, new_params, vcmt=None, mst=mst_tile)[0]
-        np.save(file=os.path.join(output_dir, 'tsincr_aps_{}.npy'.format(t.index)), arr=tsincr)
+        np.save(file=os.path.join(params[cf.TMPDIR], 'tsincr_aps_{}.npy'.format(t.index)), arr=tsincr)
         nvels = tsincr.shape[2]
 
     nvels = mpiops.comm.bcast(nvels, root=0)
@@ -125,11 +124,14 @@ def _assemble_tsincr(ifg_paths, params, preread_ifgs, tiles, nvels):
     """
     Helper function to reconstruct time series images from tiles
     """
+    # pre-allocate dest 3D array
     shape = preread_ifgs[ifg_paths[0]].shape + (nvels,)
     tsincr_g = np.empty(shape=shape, dtype=np.float32)
+    # shape of one 2D time-slice array
+    s = preread_ifgs[ifg_paths[0]].shape
+    # loop over the time slices and assemble dest 3D array
     for i in range(nvels):
-        for n, t in enumerate(tiles):
-            _assemble_tiles(i, n, t, tsincr_g[:, :, i], params[cf.TMPDIR], 'tsincr_aps')
+        tsincr_g[:, :, i] = assemble_tiles(s, params[cf.TMPDIR], tiles, out_type='tsincr_aps', index=i)
 
     return tsincr_g
 
