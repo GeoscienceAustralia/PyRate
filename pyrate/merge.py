@@ -222,11 +222,13 @@ def _save_merged_files(ifgs_dict, outdir, array, out_type, index=None, savenpy=N
     if out_type in ('tsincr', 'tscuml'):
         epoch = epochlist.dates[index + 1]
         dest = join(outdir, out_type + "_" + str(epoch) + ".tif")
+        npy_file = join(outdir, out_type + "_" + str(epoch) + ".npy")
         # sequence position; first time slice is #0
         md['SEQUENCE_POSITION'] = index+1
         md[ifc.EPOCH_DATE] = epoch
     else:
         dest = join(outdir, out_type + ".tif")
+        npy_file = join(outdir, out_type + '.npy')
         md[ifc.EPOCH_DATE] = epochlist.dates
 
     if out_type == 'stack_rate':
@@ -242,8 +244,7 @@ def _save_merged_files(ifgs_dict, outdir, array, out_type, index=None, savenpy=N
 
     shared.write_output_geotiff(md, gt, wkt, array, dest, np.nan)
     if savenpy:
-        npy_rate_file = join(outdir, out_type + '.npy')
-        np.save(file=npy_rate_file, arr=array)
+        np.save(file=npy_file, arr=array)
 
     log.debug('Finished saving {}'.format(out_type))
 
