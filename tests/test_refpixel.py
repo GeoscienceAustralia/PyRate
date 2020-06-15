@@ -18,10 +18,10 @@ This Python module contains tests for the refpixel.py PyRate module.
 """
 import copy
 import unittest
-import tempfile
 import shutil
 from subprocess import check_call
 from pathlib import Path
+import pytest
 from numpy import nan, mean, std, isnan
 
 from pyrate.core import config as cf
@@ -352,6 +352,7 @@ class LegacyEqualityTestMultiprocessParallel(unittest.TestCase):
         self.assertEqual(refy, 2)
 
 
+@pytest.mark.slow
 def test_gamma_ref_pixel_search_vs_lat_lon(tempdir, gamma_conf):
     # refx, refy: 38 58
     # refx:          150.94211
