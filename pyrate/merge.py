@@ -74,7 +74,7 @@ def _merge_timeseries(rows, cols, params):
     """
     Merge time series output
     """
-    log.info("Mering timeseries output")
+    log.info("Merging timeseries output")
     shape, tiles, ifgs_dict = _merge_setup(rows, cols, params)
 
     # load the first tsincr file to determine the number of time series tifs
@@ -102,6 +102,7 @@ def _merge_timeseries(rows, cols, params):
             tsincr_g = assemble_tiles(shape, params[cf.TMPDIR], tiles, out_type='tsincr', index=i)
             _save_merged_files(ifgs_dict, params[cf.OUT_DIR], tsincr_g, out_type='tsincr', index=i,
                                savenpy=params["savenpy"])
+
     mpiops.comm.barrier()
     log.debug('Process {} finished writing {} timeseries tifs of '
              'total {}'.format(mpiops.rank, len(process_tifs), no_ts_tifs * 2))
