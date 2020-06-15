@@ -140,7 +140,8 @@ class PyRateTests(unittest.TestCase):
             params[cf.INTERFEROGRAM_FILES] = [MultiplePaths(cls.BASE_OUT_DIR, p) for p in paths]
             for p in params[cf.INTERFEROGRAM_FILES]:  # cheat
                 p.sampled_path = p.converted_path
-            process.process_ifgs(sorted(paths), params, 2, 2)
+            params["rows"], params["cols"] = 2, 2
+            process.process_ifgs(sorted(paths), params)
 
             if not hasattr(cls, 'ifgs'):
                 cls.ifgs = get_ifgs(out_dir=cls.BASE_OUT_DIR)
@@ -227,8 +228,8 @@ class ParallelPyRateTests(unittest.TestCase):
         tiles = pyrate.core.shared.get_tiles(cls.sampled_paths[0], rows, cols)
         ifgs = common.small_data_setup()
         params[cf.INTERFEROGRAM_FILES] = multi_paths
-
-        cls.refpixel_p, cls.maxvar_p, cls.vcmt_p = process.process_ifgs(cls.sampled_paths, params, rows, cols)
+        params["rows"], params["cols"] = rows, cols
+        cls.refpixel_p, cls.maxvar_p, cls.vcmt_p = process.process_ifgs(cls.sampled_paths, params)
         cls.mst_p = common.reconstruct_mst(ifgs[0].shape, tiles, params[cf.TMPDIR])
         cls.rate_p, cls.error_p, cls.samples_p = \
             [common.reconstruct_stack_rate(ifgs[0].shape, tiles, params[cf.TMPDIR], t) for t in rate_types]
@@ -249,7 +250,8 @@ class ParallelPyRateTests(unittest.TestCase):
         conv2tif.do_geotiff(multi_paths, params)
         prepifg.do_prepifg(multi_paths, params)
         params[cf.INTERFEROGRAM_FILES] = multi_paths
-        cls.refpixel, cls.maxvar, cls.vcmt = process.process_ifgs(cls.sampled_paths_s, params, rows, cols)
+        params["rows"], params["cols"] = rows, cols
+        cls.refpixel, cls.maxvar, cls.vcmt = process.process_ifgs(cls.sampled_paths_s, params)
         cls.mst = common.reconstruct_mst(ifgs[0].shape, tiles, params[cf.TMPDIR])
         cls.rate, cls.error, cls.samples = \
             [common.reconstruct_stack_rate(ifgs[0].shape, tiles, params[cf.TMPDIR], t) for t in rate_types]

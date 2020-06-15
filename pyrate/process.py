@@ -267,12 +267,10 @@ def main(params):
     for ifg_path in params[cf.INTERFEROGRAM_FILES]:
         ifg_paths.append(ifg_path.sampled_path)
 
-    rows, cols = params["rows"], params["cols"]
-
-    return process_ifgs(ifg_paths, params, rows, cols)
+    return process_ifgs(ifg_paths, params)
 
 
-def process_ifgs(ifg_paths, params, rows, cols):
+def process_ifgs(ifg_paths, params):
     """
     Top level function to perform PyRate workflow on given interferograms
 
@@ -294,11 +292,10 @@ def process_ifgs(ifg_paths, params, rows, cols):
     outdir = params[cf.TMPDIR]
     if not os.path.exists(outdir):
         shared.mkdir_p(outdir)
-
+    rows, cols = params["rows"], params["cols"]
     tiles = mpiops.run_once(get_tiles, ifg_paths[0], rows, cols)
 
     preread_ifgs = _create_ifg_dict(ifg_paths, params=params)
-
     refpx, refpy = _ref_pixel_calc(ifg_paths, params)
 
     # remove non ifg keys
