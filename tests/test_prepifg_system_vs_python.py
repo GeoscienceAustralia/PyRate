@@ -6,11 +6,7 @@ from pathlib import Path
 from subprocess import check_call, check_output, CalledProcessError
 import numpy as np
 from pyrate.core import config as cf
-from tests.common import assert_two_dirs_equal, manipulate_test_conf
-TRAVIS = True if 'TRAVIS' in os.environ else False
-PYTHON3P6 = True if ('TRAVIS_PYTHON_VERSION' in os.environ and os.environ['TRAVIS_PYTHON_VERSION'] == '3.6') else False
-PYTHON3P7 = True if ('TRAVIS_PYTHON_VERSION' in os.environ and os.environ['TRAVIS_PYTHON_VERSION'] == '3.7') else False
-PYTHON3P8 = True if ('TRAVIS_PYTHON_VERSION' in os.environ and os.environ['TRAVIS_PYTHON_VERSION'] == '3.8') else False
+from tests.common import assert_two_dirs_equal, manipulate_test_conf, PYTHON3P8, PYTHON3P6, PYTHON3P7, TRAVIS
 GDAL_VERSION = check_output(["gdal-config", "--version"]).decode(encoding="utf-8").split('\n')[0]
 # python3.7 and gdal3.0.4
 REGRESSION = PYTHON3P7 and (GDAL_VERSION == '3.0.4')

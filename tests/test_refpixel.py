@@ -32,7 +32,7 @@ from pyrate import process
 from pyrate.configuration import Configuration
 from tests.common import TEST_CONF_ROIPAC
 from tests.common import small_data_setup, MockIfg, copy_small_ifg_file_list, \
-    copy_and_setup_small_data, manipulate_test_conf, assert_two_dirs_equal
+    copy_and_setup_small_data, manipulate_test_conf, assert_two_dirs_equal, PYTHON3P7, PYTHON3P6
 
 
 # TODO: figure out how  editing  resource.setrlimit fixes the error
@@ -353,10 +353,8 @@ class LegacyEqualityTestMultiprocessParallel(unittest.TestCase):
 
 
 @pytest.mark.slow
+@pytest.mark.skipif(PYTHON3P6 or PYTHON3P7, reason="Only run in python 3.8")
 def test_gamma_ref_pixel_search_vs_lat_lon(tempdir, gamma_conf):
-    # refx, refy: 38 58
-    # refx:          150.94211
-    # refy:          -34.21916
     params_1 = _get_mlooked_files(gamma_conf, Path(tempdir()), refx=-1, refy=-1)
     params_2 = _get_mlooked_files(gamma_conf, Path(tempdir()), refx=150.941666654, refy=-34.218333314)
     assert_two_dirs_equal(params_1[cf.OUT_DIR], params_2[cf.OUT_DIR], f"*{params_1[cf.IFG_CROP_OPT]}cr.tif", 18)
