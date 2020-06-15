@@ -247,7 +247,7 @@ def test_stack_and_ts_mpi_vs_parallel_vs_serial(modified_config_short, gamma_con
 
     # compare merge step
     assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "stack*.tif", 3)
-    assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "stack*.npy", 3)
+    #assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "stack*.npy", 3) not saved by default
     assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "tscuml*.tif")
 
     print("==========================xxx===========================")

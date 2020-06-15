@@ -74,7 +74,7 @@ def _merge_timeseries(rows, cols, params):
     """
     Merge time series output
     """
-    log.info("Mering timeseries output")
+    log.info("Merging timeseries output")
     shape, tiles, ifgs_dict = _merge_setup(rows, cols, params)
 
     # load the first tsincr file to determine the number of time series tifs
@@ -102,6 +102,7 @@ def _merge_timeseries(rows, cols, params):
             tsincr_g = assemble_tiles(shape, params[cf.TMPDIR], tiles, out_type='tsincr', index=i)
             _save_merged_files(ifgs_dict, params[cf.OUT_DIR], tsincr_g, out_type='tsincr', index=i,
                                savenpy=params["savenpy"])
+
     mpiops.comm.barrier()
     log.debug('Process {} finished writing {} timeseries tifs of '
              'total {}'.format(mpiops.rank, len(process_tifs), no_ts_tifs * 2))
@@ -221,11 +222,13 @@ def _save_merged_files(ifgs_dict, outdir, array, out_type, index=None, savenpy=N
     if out_type in ('tsincr', 'tscuml'):
         epoch = epochlist.dates[index + 1]
         dest = join(outdir, out_type + "_" + str(epoch) + ".tif")
+        npy_file = join(outdir, out_type + "_" + str(epoch) + ".npy")
         # sequence position; first time slice is #0
         md['SEQUENCE_POSITION'] = index+1
         md[ifc.EPOCH_DATE] = epoch
     else:
         dest = join(outdir, out_type + ".tif")
+        npy_file = join(outdir, out_type + '.npy')
         md[ifc.EPOCH_DATE] = epochlist.dates
 
     if out_type == 'stack_rate':
@@ -241,8 +244,7 @@ def _save_merged_files(ifgs_dict, outdir, array, out_type, index=None, savenpy=N
 
     shared.write_output_geotiff(md, gt, wkt, array, dest, np.nan)
     if savenpy:
-        npy_rate_file = join(outdir, out_type + '.npy')
-        np.save(file=npy_rate_file, arr=array)
+        np.save(file=npy_file, arr=array)
 
     log.debug('Finished saving {}'.format(out_type))
 

@@ -86,16 +86,20 @@ def test_prepifg_file_types(tempdir, gamma_conf, coh_mask):
     conv2tif.main(params_s)
     prepifg.main(params_s)
     ifg_files = list(Path(tdir.joinpath(params_s[cf.OUT_DIR])).glob('*_ifg.tif'))
+    assert len(ifg_files) == 17
     mlooked_files = list(Path(tdir.joinpath(params_s[cf.OUT_DIR])).glob('*_ifg_1rlks_1cr.tif'))
+    assert len(mlooked_files) == 17
     coh_files = list(Path(tdir.joinpath(params_s[cf.OUT_DIR])).glob('*_cc_coh.tif'))
     mlooked_coh_files = list(Path(tdir.joinpath(params_s[cf.OUT_DIR])).glob('*_cc_coh_1rlks_1cr.tif'))
+    if coh_mask:
+        assert len(coh_files) == 17
+        assert len(mlooked_coh_files) == 17
     dem_file = list(Path(tdir.joinpath(params_s[cf.OUT_DIR])).glob('*_dem.tif'))[0]
     mlooked_dem_file = list(Path(tdir.joinpath(params_s[cf.OUT_DIR])).glob('*_dem_1rlks_1cr.tif'))[0]
     import itertools
 
     # assert coherence and ifgs have correct metadata
     for i in itertools.chain(*[ifg_files, mlooked_files, coh_files, mlooked_coh_files]):
-        print(i)
         ifg = Ifg(i)
         ifg.open()
         md = ifg.meta_data
