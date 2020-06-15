@@ -62,7 +62,6 @@ def _create_ifg_dict(dest_tifs, params):
     :rtype: dict
     """
     ifgs_dict = {}
-    nifgs = len(dest_tifs)
     process_tifs = mpiops.array_split(dest_tifs)
     for d in process_tifs:
         ifg = shared._prep_ifg(d, params)
@@ -77,25 +76,31 @@ def _create_ifg_dict(dest_tifs, params):
         ifg.close()
     ifgs_dict = _join_dicts(mpiops.comm.allgather(ifgs_dict))
 
-    preread_ifgs_file = join(params[cf.TMPDIR], 'preread_ifgs.pk')
+    ifgs_dict = mpiops.run_once(__save_ifgs_dict_with_headers_and_epochs, dest_tifs, ifgs_dict, params, process_tifs)
 
-    if mpiops.rank == MASTER_PROCESS:
-
-        # add some extra information that's also useful later
-        gt, md, wkt = shared.get_geotiff_header_info(process_tifs[0])
-        epochlist = algorithm.get_epochs(ifgs_dict)[0]
-        log.info('Found {} unique epochs in the {} interferogram network'.format(len(epochlist.dates), nifgs))
-        ifgs_dict['epochlist'] = epochlist
-        ifgs_dict['gt'] = gt
-        ifgs_dict['md'] = md
-        ifgs_dict['wkt'] = wkt
-        # dump ifgs_dict file for later use
-        cp.dump(ifgs_dict, open(preread_ifgs_file, 'wb'))
-
-    mpiops.comm.barrier()
-    preread_ifgs = OrderedDict(sorted(cp.load(open(preread_ifgs_file, 'rb')).items()))
     log.debug('Finished converting phase_data to numpy in process {}'.format(mpiops.rank))
-    return preread_ifgs
+
+    return ifgs_dict
+
+
+def __save_ifgs_dict_with_headers_and_epochs(dest_tifs, ifgs_dict, params, process_tifs):
+    preread_ifgs_file = join(params[cf.TMPDIR], 'preread_ifgs.pk')
+    nifgs = len(dest_tifs)
+    # add some extra information that's also useful later
+    gt, md, wkt = shared.get_geotiff_header_info(process_tifs[0])
+    epochlist = algorithm.get_epochs(ifgs_dict)[0]
+    log.info('Found {} unique epochs in the {} interferogram network'.format(len(epochlist.dates), nifgs))
+    ifgs_dict['epochlist'] = epochlist
+    ifgs_dict['gt'] = gt
+    ifgs_dict['md'] = md
+    ifgs_dict['wkt'] = wkt
+    # dump ifgs_dict file for later use
+    cp.dump(ifgs_dict, open(preread_ifgs_file, 'wb'))
+
+    for k in ['gt', 'epochlist', 'md', 'wkt']:
+        ifgs_dict.pop(k)
+
+    return ifgs_dict
 
 
 def _mst_calc(dest_tifs, params, tiles, preread_ifgs):
@@ -270,61 +275,6 @@ def main(params):
     return process_ifgs(ifg_paths, params)
 
 
-def process_ifgs(ifg_paths, params):
-    """
-    Top level function to perform PyRate workflow on given interferograms
-
-    :param list ifg_paths: List of interferogram paths
-    :param dict params: Dictionary of configuration parameters
-    :param int rows: Number of sub-tiles in y direction
-    :param int cols: Number of sub-tiles in x direction
-
-    :return: refpt: tuple of reference pixel x and y position
-    :rtype: tuple
-    :return: maxvar: array of maximum variance values of interferograms
-    :rtype: ndarray
-    :return: vcmt: Variance-covariance matrix array
-    :rtype: ndarray
-    """
-
-    if mpiops.size > 1:  # turn of multiprocessing during mpi jobs
-        params[cf.PARALLEL] = False
-    outdir = params[cf.TMPDIR]
-    if not os.path.exists(outdir):
-        shared.mkdir_p(outdir)
-    rows, cols = params["rows"], params["cols"]
-    tiles = mpiops.run_once(get_tiles, ifg_paths[0], rows, cols)
-
-    preread_ifgs = _create_ifg_dict(ifg_paths, params=params)
-    refpx, refpy = _ref_pixel_calc(ifg_paths, params)
-
-    # remove non ifg keys
-    _ = [preread_ifgs.pop(k) for k in ['gt', 'epochlist', 'md', 'wkt']]
-
-    multi_paths = params[cf.INTERFEROGRAM_FILES]
-    _orb_fit_calc(multi_paths, params, preread_ifgs)
-
-    _ref_phase_estimation(ifg_paths, params, refpx, refpy)
-
-    shared.save_numpy_phase(ifg_paths, tiles, params)
-    _mst_calc(ifg_paths, params, tiles, preread_ifgs)
-
-    # spatio-temporal aps filter
-    wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs)
-
-    maxvar, vcmt = _maxvar_vcm_calc(ifg_paths, params, preread_ifgs)
-    # save phase data tiles as numpy array for timeseries and stackrate calc
-
-    shared.save_numpy_phase(ifg_paths, tiles, params)
-
-    _timeseries_calc(ifg_paths, params, vcmt, tiles, preread_ifgs)
-
-    _stack_calc(ifg_paths, params, vcmt, tiles, preread_ifgs)
-
-    log.info('PyRate workflow completed')
-    return (refpx, refpy), maxvar, vcmt
-
-
 def _stack_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
     """
     MPI wrapper for stacking calculation
@@ -413,3 +363,67 @@ def _timeseries_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
         np.save(file=os.path.join(output_dir, 'tscuml_{}.npy'.format(t.index)), arr=tscum)
     mpiops.comm.barrier()
     log.debug("Finished timeseries calc!")
+
+
+process_steps = {
+    'refpixel': _ref_pixel_calc,
+    'orbfit': _orb_fit_calc,
+    'refphase': _ref_phase_estimation,
+    'mst': _mst_calc,
+    'apscorrect': wrap_spatio_temporal_filter,
+    'maxvar': _maxvar_vcm_calc,
+    'timeseries': _timeseries_calc,
+    'stack': _stack_calc
+}
+
+
+def process_ifgs(ifg_paths, params):
+    """
+    Top level function to perform PyRate workflow on given interferograms
+
+    :param list ifg_paths: List of interferogram paths
+    :param dict params: Dictionary of configuration parameters
+    :param int rows: Number of sub-tiles in y direction
+    :param int cols: Number of sub-tiles in x direction
+
+    :return: refpt: tuple of reference pixel x and y position
+    :rtype: tuple
+    :return: maxvar: array of maximum variance values of interferograms
+    :rtype: ndarray
+    :return: vcmt: Variance-covariance matrix array
+    :rtype: ndarray
+    """
+
+    if mpiops.size > 1:  # turn of multiprocessing during mpi jobs
+        params[cf.PARALLEL] = False
+    outdir = params[cf.TMPDIR]
+    if not os.path.exists(outdir):
+        shared.mkdir_p(outdir)
+    rows, cols = params["rows"], params["cols"]
+    tiles = mpiops.run_once(get_tiles, ifg_paths[0], rows, cols)
+
+    preread_ifgs = _create_ifg_dict(ifg_paths, params=params)
+    refpx, refpy = _ref_pixel_calc(ifg_paths, params)
+
+    multi_paths = params[cf.INTERFEROGRAM_FILES]
+    _orb_fit_calc(multi_paths, params, preread_ifgs)
+
+    _ref_phase_estimation(ifg_paths, params, refpx, refpy)
+
+    shared.save_numpy_phase(ifg_paths, tiles, params)
+    _mst_calc(ifg_paths, params, tiles, preread_ifgs)
+
+    # spatio-temporal aps filter
+    wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs)
+
+    maxvar, vcmt = _maxvar_vcm_calc(ifg_paths, params, preread_ifgs)
+    # save phase data tiles as numpy array for timeseries and stackrate calc
+
+    shared.save_numpy_phase(ifg_paths, tiles, params)
+
+    _timeseries_calc(ifg_paths, params, vcmt, tiles, preread_ifgs)
+
+    _stack_calc(ifg_paths, params, vcmt, tiles, preread_ifgs)
+
+    log.info('PyRate workflow completed')
+    return (refpx, refpy), maxvar, vcmt

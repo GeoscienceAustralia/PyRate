@@ -112,11 +112,15 @@ class Configuration:
         with open(config_file_path) as stream:
             parser.read_string("[root]\n" + stream.read())
 
-        for key, value in parser._sections["root"].items():
+        for key, value in parser["root"].items():
             self.__dict__[key] = value
 
         # make output path, if not provided will error
         Path(self.outdir).mkdir(exist_ok=True, parents=True)
+
+        # custom process sequence if 'process' section is provided in config
+        if 'process' in parser and 'steps' in parser['process']:
+            self.__dict__['process'] = list(filter(None, parser['process'].get('steps').splitlines()))
 
         # Validate required parameters exist.
 
