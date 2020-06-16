@@ -224,9 +224,7 @@ def _prepifg_multiprocessing(m_path: MultiplePaths, xlooks, ylooks, exts, thresh
         coherence_thresh = None
 
     if params[cf.LARGE_TIFS]:
-        op = output_tiff_filename(m_path.converted_path, params[cf.OUT_DIR])
-        looks_path = cf.mlooked_path(op, ylooks, crop)
-        return m_path.converted_path, coherence_path, looks_path
+        return m_path.converted_path, coherence_path, m_path.sampled_path
     else:
         prepifg_helper.prepare_ifg(m_path.converted_path, xlooks, ylooks, exts, thresh, crop,
                                    out_path=params[cf.OUT_DIR], header=header, coherence_path=coherence_path,

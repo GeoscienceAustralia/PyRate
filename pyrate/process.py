@@ -398,9 +398,9 @@ def process_ifgs(ifg_paths, params):
 
     if mpiops.size > 1:  # turn of multiprocessing during mpi jobs
         params[cf.PARALLEL] = False
-    outdir = params[cf.TMPDIR]
-    if not os.path.exists(outdir):
-        shared.mkdir_p(outdir)
+    tmpdir = params[cf.TMPDIR]
+    if not os.path.exists(tmpdir):
+        shared.mkdir_p(tmpdir)
     rows, cols = params["rows"], params["cols"]
     tiles = mpiops.run_once(get_tiles, ifg_paths[0], rows, cols)
 
