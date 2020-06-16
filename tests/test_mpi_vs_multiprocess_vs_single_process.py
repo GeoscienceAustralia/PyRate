@@ -97,13 +97,15 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_conf):
     if params[cf.COH_MASK]:
         assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "*_coh.tif", 17)
         print("coherence files compared")
-
-    # prepifg + process steps that overwrite tifs test
-
-    # 17 ifgs + 1 dem
-    assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR],
+        # 17 ifgs + 1 dem + 17 mlooked coh files
+        assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR],
+                                   f"*{params[cf.IFG_CROP_OPT]}cr.tif", 35)
+    else:
+        # 17 ifgs + 1 dem
+        assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR],
                                f"*{params[cf.IFG_CROP_OPT]}cr.tif", 18)
 
+    # prepifg + process steps that overwrite tifs test
     # ifg phase checking in the previous step checks the process pipeline upto APS correction
 
     # 2 x because of aps files
@@ -231,9 +233,11 @@ def test_stack_and_ts_mpi_vs_parallel_vs_serial(modified_config_short, gamma_con
         print("coherence files compared")
 
     # prepifg + process steps that overwrite tifs test
-
-    # 17 ifgs + 1 dem
-    assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], f"*{params[cf.IFG_CROP_OPT]}cr.tif", 18)
+    # 17 mlooked ifgs + 1 dem + 17 mlooked coherence files
+    if params[cf.COH_MASK]:
+        assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], f"*{params[cf.IFG_CROP_OPT]}cr.tif", 35)
+    else:
+        assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], f"*{params[cf.IFG_CROP_OPT]}cr.tif", 18)
 
     # ifg phase checking in the previous step checks the process pipeline upto APS correction
     assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "tsincr_*.npy", params['tiles'] * 2)
@@ -244,7 +248,7 @@ def test_stack_and_ts_mpi_vs_parallel_vs_serial(modified_config_short, gamma_con
 
     # compare merge step
     assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "stack*.tif", 3)
-    #assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "stack*.npy", 3) not saved by default
+    assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "stack*.npy", 3)
     assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "tscuml*.tif")
 
     print("==========================xxx===========================")
