@@ -366,7 +366,7 @@ def _timeseries_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
 
 
 process_steps = {
-    'refpixel': _ref_pixel_calc,
+    'refpixel': lambda ifg_paths, tiles, params, preread_ifgs: _ref_pixel_calc(ifg_paths, params),
     'orbfit': _orb_fit_calc,
     'refphase': _ref_phase_estimation,
     'mst': _mst_calc,
@@ -403,6 +403,9 @@ def process_ifgs(ifg_paths, params):
     tiles = mpiops.run_once(get_tiles, ifg_paths[0], rows, cols)
 
     preread_ifgs = _create_ifg_dict(ifg_paths, params=params)
+    # for step in params['process']:
+    #     process_steps[step](ifg_paths, tiles, params, preread_ifgs)
+
     refpx, refpy = _ref_pixel_calc(ifg_paths, params)
 
     multi_paths = params[cf.INTERFEROGRAM_FILES]
