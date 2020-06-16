@@ -153,13 +153,15 @@ def _ref_pixel_calc(ifg_paths, params):
                 "Cannot continue downstream computation. Please change reference pixel algorithm used before "
                 "continuing.")
         refy, refx = refpixel_returned   # row first means first value is latitude
+        log.info('Selected reference pixel coordinate (x, y): ({}, {})'.format(refx, refy))
+        lon, lat = refpixel.convert_pixel_value_to_geographic_coordinate(refx, refy, transform)
+        log.info('Selected reference pixel coordinate (lon, lat): ({}, {})'.format(lon, lat))
 
     else:
+        log.info('Using reference pixel from config file (lon, lat): ({}, {})'.format(lon, lat))
+        log.warning("Ensure user supplied reference pixel values are in lon/lat")
         refx, refy = refpixel.convert_geographic_coordinate_to_pixel_value(lon, lat, transform)
-        log.info('Using reference pixel from config file (lat, lon): ({}, {})'.format(lat, lon))
-        log.warning("Ensure reference pixel values are in lat/lon")
-
-    log.info('Selected reference pixel coordinate: ({}, {})'.format(refx, refy))
+        log.info('Converted reference pixel coordinate (x, y): ({}, {})'.format(refx, refy))
 
     refpixel.update_refpix_metadata(ifg_paths, refx, refy, transform, params)
 
