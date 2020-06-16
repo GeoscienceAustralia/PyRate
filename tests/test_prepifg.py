@@ -67,8 +67,11 @@ def test_prepifg_treat_inputs_read_only(gamma_conf, tempdir, coh_mask):
 
     check_call(f"mpirun -n 3 pyrate prepifg -f {output_conf}", shell=True)
     cropped = list(Path(params[cf.OUT_DIR]).glob('*cr.tif'))
-    # 17 + 1 dem
-    assert len(cropped) == 18
+
+    if coh_mask:  # 17 + 1 dem + 17 coh files
+        assert len(cropped) == 35
+    else:  # 17 + 1 dem
+        assert len(cropped) == 18
     # check all tifs from conv2tif are still readonly
     for t in tifs:
         assert t.stat().st_mode == 33060
@@ -84,6 +87,7 @@ def test_prepifg_file_types(tempdir, gamma_conf, coh_mask):
     cf.write_config_file(params=params, output_conf_file=output_conf)
     params_s = Configuration(output_conf).__dict__
     conv2tif.main(params_s)
+    params_s = Configuration(output_conf).__dict__
     prepifg.main(params_s)
     ifg_files = list(Path(tdir.joinpath(params_s[cf.OUT_DIR])).glob('*_ifg.tif'))
     assert len(ifg_files) == 17
@@ -129,7 +133,7 @@ def test_prepifg_file_types(tempdir, gamma_conf, coh_mask):
     dem.open()
     md = dem.dataset.GetMetadata()
     assert md[ifc.DATA_TYPE] == ifc.MLOOKED_DEM
-    shutil.rmtree(tdir)
+    # shutil.rmtree(tdir)
 
 
 # convenience ifg creation funcs

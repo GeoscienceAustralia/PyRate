@@ -7,13 +7,18 @@ Release History
 ------------------
 Added
 +++++
-- Nil
+- Save full-res coherence files to disk in ``conv2tif`` step if ``cohmask = 1``.
+- Save multi-looked coherence files to disk in ``prepifg`` step if ``cohmask = 1``.
+- Additional ``DATA_TYPE`` geotiff header metadata for above coherence files.
+- ``conv2tif`` and ``prepifg`` output files have a tag applied to filename dependent
+  on data type, i.e. ``_ifg.tif``, ``_coh.tif``,`` _dem.tif``.  
 
 Changed
 +++++++
 - Bugfix: ensure ``prepifg`` treats input data files as `read only`.
 - Bugfix: fix the way that the reference phase is subtracted from interferograms
-  during ``process`` step. 
+  during ``process`` step.
+- Bugfix: manual entry of ``refx/y`` converted to type ``int``.
 - Move ``Stack Rate`` masking to a standalone function ``pyrate.core.stack.mask_rate``,
   applied during the ``merge`` step and add unit tests.
 - Skip ``Stack Rate`` masking if threshold parameter ``maxsig = 0``.
@@ -28,7 +33,7 @@ Changed
 
 Removed
 +++++++
-- Nil
+- Deprecate unused functions in ``pyrate.core.config`` and corresponding tests.
 
 0.4.1 (2020-05-19)
 ------------------
