@@ -50,6 +50,7 @@ def modified_config(tempdir, get_lks, get_crop, orbfit_lks, orbfit_method, orbfi
         params[cf.ORBITAL_FIT_DEGREE] = orbfit_degrees
         params[cf.REF_EST_METHOD] = ref_est_method
         params["rows"], params["cols"] = 3, 2
+        params["savenpy"] = 1
         params["tiles"] = params["rows"] * params["cols"]
 
         print(params)
@@ -65,7 +66,7 @@ def modified_config(tempdir, get_lks, get_crop, orbfit_lks, orbfit_method, orbfi
 @pytest.mark.skipif(REGRESSION or PYTHON3P8 or PYTHON3P6, reason="Skip if not python3.7 and gdal=3.0.4")
 def test_pipeline_parallel_vs_mpi(modified_config, gamma_conf):
 
-    if TRAVIS and np.random.randint(0, 1000) > 149:  # skip 85% of tests randomly
+    if np.random.randint(0, 1000) > 149:  # skip 85% of tests randomly
         pytest.skip("Randomly skipping as part of 85 percent")
 
     print("\n\n")
@@ -99,19 +100,21 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_conf):
     check_call(f"pyrate merge -f {sr_conf}", shell=True)
 
     # convert2tif tests, 17 interferograms
-    assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "*_unw.tif", 17)
+    assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "*_unw_ifg.tif", 17)
 
     # if coherence masking, comprare coh files were converted
     if params[cf.COH_MASK]:
-        assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "*_utm.tif", 17)
+        assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "*_coh.tif", 17)
         print("coherence files compared")
-
-    # prepifg + process steps that overwrite tifs test
-
-    # 17 ifgs + 1 dem
-    assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR],
+        # 17 ifgs + 1 dem + 17 mlooked coh files
+        assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR],
+                                   f"*{params[cf.IFG_CROP_OPT]}cr.tif", 35)
+    else:
+        # 17 ifgs + 1 dem
+        assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR],
                                f"*{params[cf.IFG_CROP_OPT]}cr.tif", 18)
 
+    # prepifg + process steps that overwrite tifs test
     # ifg phase checking in the previous step checks the process pipeline upto APS correction
 
     # 2 x because of aps files
@@ -130,7 +133,7 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_conf):
 
     # compare merge step
     assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "stack*.tif", 3)
-    #assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "stack*.npy", 3) not saved by default
+    assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "stack*.npy", 3)
     assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "tscuml*.tif", 12)
     assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "tsincr*.tif", 12)
 
@@ -147,7 +150,7 @@ def coh_mask(request):
 
 
 @pytest.fixture()
-def modified_config_short(tempdir, local_crop, get_lks, coh_mask):
+def modified_config_short(tempdir, local_crop, get_lks, coh_mask, ref_pixel):
     orbfit_lks = 1
     orbfit_method = 1
     orbfit_degrees = 1
@@ -162,6 +165,7 @@ def modified_config_short(tempdir, local_crop, get_lks, coh_mask):
         params[cf.APSEST] = 1
         params[cf.LARGE_TIFS] = largetifs
         params[cf.IFG_LKSX], params[cf.IFG_LKSY] = get_lks, get_lks
+        params[cf.REFX], params[cf.REFY] = ref_pixel
         params[cf.REFNX], params[cf.REFNY] = 4, 4
 
         params[cf.IFG_CROP_OPT] = local_crop
@@ -171,6 +175,7 @@ def modified_config_short(tempdir, local_crop, get_lks, coh_mask):
         params[cf.ORBITAL_FIT_DEGREE] = orbfit_degrees
         params[cf.REF_EST_METHOD] = ref_est_method
         params["rows"], params["cols"] = 3, 2
+        params["savenpy"] = 1
         params["tiles"] = params["rows"] * params["cols"]
 
         print(params)
@@ -215,7 +220,7 @@ def test_stack_and_ts_mpi_vs_parallel_vs_serial(modified_config_short, gamma_con
     3. Doing 1 and 2 means we have checked single vs parallel python multiprocess pipelines
     4. This also checks the entire pipeline using largetifs (new prepifg) vs old perpifg (python based)
     """
-    if TRAVIS and np.random.randint(0, 1000) > 399:  # skip 60% of tests randomly
+    if np.random.randint(0, 1000) > 399:  # skip 60% of tests randomly
         pytest.skip("Randomly skipping as part of 60 percent")
 
     print("\n\n")
@@ -233,17 +238,20 @@ def test_stack_and_ts_mpi_vs_parallel_vs_serial(modified_config_short, gamma_con
 
 
     # convert2tif tests, 17 interferograms
-    assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "*_unw.tif", 17)
+    assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "*_unw_ifg.tif", 17)
 
     # if coherence masking, compare coh files were converted
     if params[cf.COH_MASK]:
-        assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "*_utm.tif", 17)
+        assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "*_coh.tif", 17)
         print("coherence files compared")
 
     # prepifg + process steps that overwrite tifs test
 
     # 17 ifgs + 1 dem
-    assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], f"*{params[cf.IFG_CROP_OPT]}cr.tif", 18)
+    if params[cf.COH_MASK]:
+        assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], f"*{params[cf.IFG_CROP_OPT]}cr.tif", 35)
+    else:
+        assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], f"*{params[cf.IFG_CROP_OPT]}cr.tif", 18)
 
     # ifg phase checking in the previous step checks the process pipeline upto APS correction
     assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "tsincr_*.npy", params['tiles'] * 2)

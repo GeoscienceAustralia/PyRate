@@ -39,12 +39,14 @@ from pyrate.core.prepifg_helper import CUSTOM_CROP, MAXIMUM_CROP, MINIMUM_CROP, 
     ALREADY_SAME_SIZE
 from pyrate.core import roipac
 from pyrate.core.prepifg_helper import prepare_ifgs, _resample, PreprocessError, CustomExts
+from pyrate.core import ifgconstants as ifc
 from pyrate.configuration import Configuration
 from pyrate import conv2tif, prepifg
+
 from tests import common
 from tests.common import SML_TEST_LEGACY_PREPIFG_DIR
 from tests.common import PREP_TEST_TIF, SML_TEST_DEM_DIR, PREP_TEST_OBS
-from tests.common import SML_TEST_DEM_TIF, SML_TEST_DEM_HDR
+from tests.common import SML_TEST_DEM_TIF, SML_TEST_DEM_HDR, manipulate_test_conf
 
 gdal.UseExceptions()
 DUMMY_SECTION_NAME = 'pyrate'
@@ -60,16 +62,78 @@ def test_prepifg_treat_inputs_read_only(gamma_conf, tempdir, coh_mask):
     output_conf = tdir.joinpath('conf.cfg')
     cf.write_config_file(params=params, output_conf_file=output_conf)
     check_call(f"mpirun -n 3 pyrate conv2tif -f {output_conf}", shell=True)
-    tifs = list(Path(params[cf.OUT_DIR]).glob('*_unw.tif'))
+    tifs = list(Path(params[cf.OUT_DIR]).glob('*_unw_ifg.tif'))
     assert len(tifs) == 17
 
     check_call(f"mpirun -n 3 pyrate prepifg -f {output_conf}", shell=True)
     cropped = list(Path(params[cf.OUT_DIR]).glob('*cr.tif'))
-    # 17 + 1 dem
-    assert len(cropped) == 18
+
+    if coh_mask:  # 17 + 1 dem + 17 coh files
+        assert len(cropped) == 35
+    else:  # 17 + 1 dem
+        assert len(cropped) == 18
     # check all tifs from conv2tif are still readonly
     for t in tifs:
         assert t.stat().st_mode == 33060
+
+
+def test_prepifg_file_types(tempdir, gamma_conf, coh_mask):
+    tdir = Path(tempdir())
+    params = manipulate_test_conf(gamma_conf, tdir)
+    params[cf.COH_MASK] = coh_mask
+    params[cf.PARALLEL] = 0
+    output_conf_file = 'conf.conf'
+    output_conf = tdir.joinpath(output_conf_file)
+    cf.write_config_file(params=params, output_conf_file=output_conf)
+    params_s = Configuration(output_conf).__dict__
+    conv2tif.main(params_s)
+    params_s = Configuration(output_conf).__dict__
+    prepifg.main(params_s)
+    ifg_files = list(Path(tdir.joinpath(params_s[cf.OUT_DIR])).glob('*_ifg.tif'))
+    assert len(ifg_files) == 17
+    mlooked_files = list(Path(tdir.joinpath(params_s[cf.OUT_DIR])).glob('*_ifg_1rlks_1cr.tif'))
+    assert len(mlooked_files) == 17
+    coh_files = list(Path(tdir.joinpath(params_s[cf.OUT_DIR])).glob('*_cc_coh.tif'))
+    mlooked_coh_files = list(Path(tdir.joinpath(params_s[cf.OUT_DIR])).glob('*_cc_coh_1rlks_1cr.tif'))
+    if coh_mask:
+        assert len(coh_files) == 17
+        assert len(mlooked_coh_files) == 17
+    dem_file = list(Path(tdir.joinpath(params_s[cf.OUT_DIR])).glob('*_dem.tif'))[0]
+    mlooked_dem_file = list(Path(tdir.joinpath(params_s[cf.OUT_DIR])).glob('*_dem_1rlks_1cr.tif'))[0]
+    import itertools
+
+    # assert coherence and ifgs have correct metadata
+    for i in itertools.chain(*[ifg_files, mlooked_files, coh_files, mlooked_coh_files]):
+        ifg = Ifg(i)
+        ifg.open()
+        md = ifg.meta_data
+        if i.name.endswith('_ifg.tif'):
+            assert md[ifc.DATA_TYPE] == ifc.ORIG
+            continue
+        if i.name.endswith('_coh.tif'):
+            assert md[ifc.DATA_TYPE] == ifc.COH
+            continue
+        if i.name.endswith('_cc_coh_1rlks_1cr.tif'):
+            assert md[ifc.DATA_TYPE] == ifc.MULTILOOKED_COH
+            continue
+        if i.name.endswith('_ifg_1rlks_1cr.tif'):
+            if coh_mask:
+                assert md[ifc.DATA_TYPE] == ifc.COHERENCE
+            else:
+                assert md[ifc.DATA_TYPE] == ifc.MULTILOOKED
+            continue
+
+    # assert dem has correct metadata
+    dem = DEM(dem_file.as_posix())
+    dem.open()
+    md = dem.dataset.GetMetadata()
+    assert md[ifc.DATA_TYPE] == ifc.DEM
+
+    dem = DEM(mlooked_dem_file.as_posix())
+    dem.open()
+    md = dem.dataset.GetMetadata()
+    assert md[ifc.DATA_TYPE] == ifc.MLOOKED_DEM
+    # shutil.rmtree(tdir)
 
 
 # convenience ifg creation funcs
@@ -741,7 +805,7 @@ class TestOneIncidenceOrElevationMap(unittest.TestCase):
         sys.argv = ['dummy', self.conf_file]
         prepifg.main(params)
         # test 17 geotiffs created
-        geotifs = glob.glob(os.path.join(params[cf.OUT_DIR], '*_unw.tif'))
+        geotifs = glob.glob(os.path.join(params[cf.OUT_DIR], '*_unw_ifg.tif'))
         self.assertEqual(17, len(geotifs))
         # test dem geotiff created
         demtif = glob.glob(os.path.join(params[cf.OUT_DIR], '*_dem.tif'))

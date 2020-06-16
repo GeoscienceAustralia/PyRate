@@ -43,7 +43,7 @@ def main(params):
 
     if params[cf.TIME_SERIES_CAL]:
         _merge_timeseries(rows, cols, params)
-        #mpiops.run_once(_delete_tsincr_files, params)
+        # mpiops.run_once(_delete_tsincr_files, params)
 
 
 def _merge_stack(rows, cols, params):
@@ -66,15 +66,15 @@ def _merge_stack(rows, cols, params):
         log.info('Skipping stack product masking (maxsig = 0)')
 
     # save geotiff and numpy array files
-    _save_merged_files(ifgs_dict, params[cf.OUT_DIR], rate, out_type='stack_rate')
-    _save_merged_files(ifgs_dict, params[cf.OUT_DIR], error, out_type='stack_error')
-    _save_merged_files(ifgs_dict, params[cf.OUT_DIR], samples, out_type='stack_samples')
+    for out, ot in zip([rate, error, samples], ['stack_rate', 'stack_error', 'stack_samples']):
+        _save_merged_files(ifgs_dict, params[cf.OUT_DIR], out, ot, savenpy=params["savenpy"])
 
 
 def _merge_timeseries(rows, cols, params):
     """
     Merge time series output
     """
+    log.info("Merging timeseries output")
     shape, tiles, ifgs_dict = _merge_setup(rows, cols, params)
 
     # load the first tsincr file to determine the number of time series tifs
@@ -95,11 +95,14 @@ def _merge_timeseries(rows, cols, params):
     for i in process_tifs:
         if i < no_ts_tifs:
             tscum_g = assemble_tiles(shape, params[cf.TMPDIR], tiles, out_type='tscuml', index=i)
-            _save_merged_files(ifgs_dict, params[cf.OUT_DIR], tscum_g, out_type='tscuml', index=i)
+            _save_merged_files(ifgs_dict, params[cf.OUT_DIR], tscum_g, out_type='tscuml', index=i,
+                               savenpy=params["savenpy"])
         else:
             i %= no_ts_tifs
             tsincr_g = assemble_tiles(shape, params[cf.TMPDIR], tiles, out_type='tsincr', index=i)
-            _save_merged_files(ifgs_dict, params[cf.OUT_DIR], tsincr_g, out_type='tsincr', index=i)
+            _save_merged_files(ifgs_dict, params[cf.OUT_DIR], tsincr_g, out_type='tsincr', index=i,
+                               savenpy=params["savenpy"])
+
     mpiops.comm.barrier()
     log.debug('Process {} finished writing {} timeseries tifs of '
              'total {}'.format(mpiops.rank, len(process_tifs), no_ts_tifs * 2))
@@ -219,11 +222,13 @@ def _save_merged_files(ifgs_dict, outdir, array, out_type, index=None, savenpy=N
     if out_type in ('tsincr', 'tscuml'):
         epoch = epochlist.dates[index + 1]
         dest = join(outdir, out_type + "_" + str(epoch) + ".tif")
+        npy_file = join(outdir, out_type + "_" + str(epoch) + ".npy")
         # sequence position; first time slice is #0
         md['SEQUENCE_POSITION'] = index+1
         md[ifc.EPOCH_DATE] = epoch
     else:
         dest = join(outdir, out_type + ".tif")
+        npy_file = join(outdir, out_type + '.npy')
         md[ifc.EPOCH_DATE] = epochlist.dates
 
     if out_type == 'stack_rate':
@@ -239,8 +244,7 @@ def _save_merged_files(ifgs_dict, outdir, array, out_type, index=None, savenpy=N
 
     shared.write_output_geotiff(md, gt, wkt, array, dest, np.nan)
     if savenpy:
-        npy_rate_file = join(outdir, out_type + '.npy')
-        np.save(file=npy_rate_file, arr=array)
+        np.save(file=npy_file, arr=array)
 
     log.debug('Finished saving {}'.format(out_type))
 

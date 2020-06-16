@@ -75,13 +75,6 @@ def remove_orbital_error(ifgs: Iterable, params: dict, headers: List[dict], prer
     NB: the ifg data is modified in situ, rather than create intermediate
     files. The network method assumes the given ifgs have already been reduced
     to a minimum spanning tree network.
-
-    :param list ifgs: List of interferograms class objects
-    :param dict params: Dictionary containing configuration parameters
-    :param dict preread_ifgs: Dictionary containing information specifically
-        for MPI jobs (optional)
-
-    :return: None - interferogram phase data is updated and saved to disk
     """
 
     ifg_paths = [i.data_path for i in ifgs] if isinstance(ifgs[0], Ifg) else ifgs

@@ -21,6 +21,7 @@ import os
 import shutil
 import tempfile
 import unittest
+from pathlib import Path
 
 from numpy import eye, array, ones, nan
 import numpy as np
@@ -121,9 +122,10 @@ class LegacyEqualityTest(unittest.TestCase):
 
         xlks, _, crop = cf.transform_params(params)
 
-        base_ifg_paths = list(cf.parse_namelist(params[cf.IFG_FILE_LIST]))
+        base_ifg_paths = [c.unwrapped_path for c in params[cf.INTERFEROGRAM_FILES]]
         headers = [roipac.roipac_header(i, params) for i in base_ifg_paths]
-        dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
+        dest_paths = [Path(cls.temp_out_dir).joinpath(Path(c.sampled_path).name).as_posix()
+                      for c in params[cf.INTERFEROGRAM_FILES][:-2]]
         # start run_pyrate copy
         ifgs = pre_prepare_ifgs(dest_paths, params)
         mst_grid = tests.common.mst_calculation(dest_paths, params)

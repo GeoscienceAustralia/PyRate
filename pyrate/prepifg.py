@@ -23,12 +23,14 @@ from subprocess import check_call
 from typing import List
 from pathlib import Path
 from joblib import Parallel, delayed
+from typing import Union
 import numpy as np
 from osgeo import gdal
 from pyrate.core import shared, mpiops, config as cf, prepifg_helper, gamma, roipac, ifgconstants as ifc
 from pyrate.core.prepifg_helper import PreprocessError
 from pyrate.core.logger import pyratelogger as log
 from pyrate.core.shared import output_tiff_filename
+from pyrate.configuration import MultiplePaths
 
 GAMMA = 1
 ROIPAC = 0
@@ -53,21 +55,23 @@ def main(params):
     if params[cf.DEM_FILE] is not None:  # optional DEM conversion
         ifg_paths.append(params[cf.DEM_FILE_PATH])
 
+    if params[cf.COH_MASK]:
+        ifg_paths.extend(params[cf.COHERENCE_FILE_PATHS])
+
     shared.mkdir_p(params[cf.OUT_DIR])  # create output dir
 
     process_ifgs_paths = np.array_split(ifg_paths, mpiops.size)[mpiops.rank]
 
-    gtiff_paths = [p.converted_path for p in process_ifgs_paths]
-    do_prepifg(gtiff_paths, params)
+    do_prepifg(process_ifgs_paths, params)
     mpiops.comm.barrier()
     log.info("Finished prepifg")
 
 
-def do_prepifg(gtiff_paths: List[str], params: dict) -> None:
+def do_prepifg(multi_paths: List[MultiplePaths], params: dict) -> None:
     """
     Prepare interferograms by applying multilooking/cropping operations.
 
-    :param list gtiff_paths: List of full-res geotiffs
+    :param list multi_paths: List of full-res geotiffs
     :param dict params: Parameters dictionary corresponding to config file
     """
     # pylint: disable=expression-not-assigned
@@ -75,12 +79,12 @@ def do_prepifg(gtiff_paths: List[str], params: dict) -> None:
     if mpiops.size > 1:
         parallel = False
 
-    for f in gtiff_paths:
-        if not os.path.isfile(f):
+    for f in multi_paths:
+        if not os.path.isfile(f.converted_path):
             raise FileNotFoundError("Can not find geotiff: " + str(f) + ". Ensure you have converted your "
                                     "interferograms to geotiffs.")
 
-    ifgs = [prepifg_helper.dem_or_ifg(p) for p in gtiff_paths]
+    ifgs = [prepifg_helper.dem_or_ifg(p.converted_path) for p in multi_paths]
     xlooks, ylooks, crop = cf.transform_params(params)
     user_exts = (params[cf.IFG_XFIRST], params[cf.IFG_YFIRST], params[cf.IFG_XLAST], params[cf.IFG_YLAST])
     exts = prepifg_helper.get_analysis_extent(crop, ifgs, xlooks, ylooks, user_exts=user_exts)
@@ -94,19 +98,19 @@ def do_prepifg(gtiff_paths: List[str], params: dict) -> None:
         if parallel:
             Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
                 delayed(__prepifg_system)(
-                    crop, exts, gtiff_path, params, res_str, thresh, xlooks, ylooks) for gtiff_path in gtiff_paths
+                    crop, exts, gtiff_path, params, res_str, thresh, xlooks, ylooks) for gtiff_path in multi_paths
             )
         else:
-            for gtiff_path in gtiff_paths:
-                __prepifg_system(crop, exts, gtiff_path, params, res_str, thresh, xlooks, ylooks)
+            for m_path in multi_paths:
+                __prepifg_system(crop, exts, m_path, params, res_str, thresh, xlooks, ylooks)
     else:
         if parallel:
             Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
-                delayed(_prepifg_multiprocessing)(p, xlooks, ylooks, exts, thresh, crop, params) for p in gtiff_paths
+                delayed(_prepifg_multiprocessing)(p, xlooks, ylooks, exts, thresh, crop, params) for p in multi_paths
             )
         else:
-            for gtiff_path in gtiff_paths:
-                _prepifg_multiprocessing(gtiff_path, xlooks, ylooks, exts, thresh, crop, params)
+            for m_path in multi_paths:
+                _prepifg_multiprocessing(m_path, xlooks, ylooks, exts, thresh, crop, params)
 
 
 COMMON_OPTIONS = "-co BLOCKXSIZE=256 -co BLOCKYSIZE=256 -co TILED=YES --config GDAL_CACHEMAX=64 -q"
@@ -194,6 +198,8 @@ def __update_meta_data(p_unset, c, l):
     else:
         if v == ifc.DEM:  # it's a dem
             md_str = '-mo {k}={v}'.format(k=ifc.DATA_TYPE, v=ifc.MLOOKED_DEM)
+        elif v == ifc.COH:
+            md_str = '-mo {k}={v}'.format(k=ifc.DATA_TYPE, v=ifc.MULTILOOKED_COH)
         else:  # it's an ifg
             md_str = '-mo {k}={v}'.format(k=ifc.DATA_TYPE, v=ifc.MULTILOOKED)
     for k, v in md.items():
@@ -202,36 +208,40 @@ def __update_meta_data(p_unset, c, l):
     ds = None
 
 
-def _prepifg_multiprocessing(path, xlooks, ylooks, exts, thresh, crop, params):
+def _prepifg_multiprocessing(m_path: MultiplePaths, xlooks, ylooks, exts, thresh, crop, params):
     """
     Multiprocessing wrapper for prepifg
     """
-    header = find_header(path, params)
+    header = find_header(m_path, params)
+    header[ifc.INPUT_TYPE] = m_path.input_type
 
     # If we're performing coherence masking, find the coherence file for this IFG.
     if params[cf.COH_MASK] and shared._is_interferogram(header):
-        coherence_path = cf.coherence_paths_for(path, params, tif=True)
+        coherence_path = cf.coherence_paths_for(m_path.converted_path, params, tif=True)
         coherence_thresh = params[cf.COH_THRESH]
     else:
         coherence_path = None
         coherence_thresh = None
 
     if params[cf.LARGE_TIFS]:
-        op = output_tiff_filename(path, params[cf.OUT_DIR])
+        op = output_tiff_filename(m_path.converted_path, params[cf.OUT_DIR])
         looks_path = cf.mlooked_path(op, ylooks, crop)
-        return path, coherence_path, looks_path
+        return m_path.converted_path, coherence_path, looks_path
     else:
-        prepifg_helper.prepare_ifg(path, xlooks, ylooks, exts, thresh, crop, out_path=params[cf.OUT_DIR],
-                                   header=header, coherence_path=coherence_path, coherence_thresh=coherence_thresh)
+        prepifg_helper.prepare_ifg(m_path.converted_path, xlooks, ylooks, exts, thresh, crop,
+                                   out_path=params[cf.OUT_DIR], header=header, coherence_path=coherence_path,
+                                   coherence_thresh=coherence_thresh)
 
 
-def find_header(path, params):
+def find_header(path: MultiplePaths, params: dict):
     processor = params[cf.PROCESSOR]  # roipac, gamma or geotif
+    tif_path = path.converted_path
     if (processor == GAMMA) or (processor == GEOTIF):
-        header = gamma.gamma_header(path, params)
+        header = gamma.gamma_header(tif_path, params)
     elif processor == ROIPAC:
         log.info("Warning: ROI_PAC support will be deprecated in a future PyRate release")
-        header = roipac.roipac_header(path, params)
+        header = roipac.roipac_header(tif_path, params)
     else:
         raise PreprocessError('Processor must be ROI_PAC (0) or GAMMA (1)')
+    header[ifc.INPUT_TYPE] = path.input_type
     return header

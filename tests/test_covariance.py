@@ -17,6 +17,7 @@
 This Python module contains tests for the covariance.py PyRate module.
 """
 import os
+from pathlib import Path
 import shutil
 import sys
 import tempfile
@@ -183,7 +184,6 @@ class LegacyEqualityTest(unittest.TestCase):
     def setUpClass(cls):
         params = Configuration(TEST_CONF_ROIPAC).__dict__
         cls.temp_out_dir = tempfile.mkdtemp()
-        common.move_files(common.SML_TEST_OBS, cls.temp_out_dir, file_type='*.rsc', copy=True)
         sys.argv = ['prepifg.py', TEST_CONF_ROIPAC]
         params[cf.OUT_DIR] = cls.temp_out_dir
         params[cf.TMPDIR] = os.path.join(cls.temp_out_dir, cf.TMPDIR)
@@ -192,9 +192,11 @@ class LegacyEqualityTest(unittest.TestCase):
         conv2tif.main(params)
         prepifg.main(params)
         cls.params = params
-        xlks, ylks, crop = cf.transform_params(params)
-        base_ifg_paths = parse_namelist(params[cf.IFG_FILE_LIST])
-        dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
+        base_ifg_paths = [c.unwrapped_path for c in params[cf.INTERFEROGRAM_FILES]]
+        dest_paths = [c.converted_path for c in params[cf.INTERFEROGRAM_FILES]]
+        dest_paths = dest_paths[:-2]
+        for i in dest_paths:
+            Path(i).chmod(0o664)  # assign write permission as conv2tif output is readonly
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         refx, refy = process._ref_pixel_calc(dest_paths, params)
         headers = [roipac.roipac_header(i, cls.params) for i in base_ifg_paths]

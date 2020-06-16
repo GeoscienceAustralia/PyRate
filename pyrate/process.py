@@ -21,6 +21,7 @@ import os
 from os.path import join
 import pickle as cp
 from collections import OrderedDict
+from typing import List
 import numpy as np
 
 from pyrate.core import (shared, algorithm, orbital, ref_phs_est as rpe, 
@@ -31,6 +32,7 @@ from pyrate.core.aps import wrap_spatio_temporal_filter
 from pyrate.core.shared import Ifg, PrereadIfg, get_tiles, mpi_vs_multiprocess_logging
 from pyrate.core.logger import pyratelogger as log
 from pyrate.prepifg import find_header
+from pyrate.configuration import MultiplePaths
 
 MASTER_PROCESS = 0
 
@@ -45,13 +47,15 @@ def _join_dicts(dicts):
     return assembled_dict
 
 
-def create_ifg_dict(dest_tifs, params):
+def _create_ifg_dict(dest_tifs, params):
     """
-    Function to create a dict with information about the ifgs that are
+    1. Convert ifg phase data into numpy binary files.
+    2. Save the preread_ifgs dict with information about the ifgs that are
     later used for fast loading of Ifg files in IfgPart class
 
     :param list dest_tifs: List of destination tifs
     :param dict params: Config dictionary
+    :param list tiles: List of all Tile instances
 
     :return: preread_ifgs: Dictionary containing information regarding
                 interferograms that are used later in workflow
@@ -152,11 +156,12 @@ def _ref_pixel_calc(ifg_paths, params):
         log.info('Selected reference pixel coordinate: ({}, {})'.format(refx, refy))
     else:
         log.info('Reusing reference pixel from config file: ({}, {})'.format(refx, refy))
+    log.debug("refpx, refpy: "+str(refx) + " " + str(refy))
     ifg.close()
-    return refx, refy
+    return int(refx), int(refy)
 
 
-def _orb_fit_calc(ifg_paths, params, preread_ifgs=None):
+def _orb_fit_calc(multi_paths: List[MultiplePaths], params, preread_ifgs=None) -> None:
     """
     MPI wrapper for orbital fit correction
     """
@@ -166,6 +171,7 @@ def _orb_fit_calc(ifg_paths, params, preread_ifgs=None):
         return
     log.info('Calculating orbital correction')
 
+    ifg_paths = [p.sampled_path for p in multi_paths]
     if preread_ifgs:  # don't check except for mpi tests
         # perform some general error/sanity checks
         log.debug('Checking Orbital error correction status')
@@ -183,7 +189,7 @@ def _orb_fit_calc(ifg_paths, params, preread_ifgs=None):
         # A performance comparison should be made for saving multilooked
         # files on disc vs in memory single process multilooking
         if mpiops.rank == MASTER_PROCESS:
-            headers = [find_header(p, params) for p in ifg_paths]
+            headers = [find_header(p, params) for p in multi_paths]
             orbital.remove_orbital_error(ifg_paths, params, headers, preread_ifgs=preread_ifgs)
     mpiops.comm.barrier()
     log.debug('Finished Orbital error correction')
@@ -284,16 +290,15 @@ def process_ifgs(ifg_paths, params, rows, cols):
 
     tiles = mpiops.run_once(get_tiles, ifg_paths[0], rows, cols)
 
-    preread_ifgs = create_ifg_dict(ifg_paths, params=params)
+    preread_ifgs = _create_ifg_dict(ifg_paths, params=params)
 
     refpx, refpy = _ref_pixel_calc(ifg_paths, params)
-
-    log.debug("refpx, refpy: "+str(refpx) + " " + str(refpy))
 
     # remove non ifg keys
     _ = [preread_ifgs.pop(k) for k in ['gt', 'epochlist', 'md', 'wkt']]
 
-    _orb_fit_calc(ifg_paths, params, preread_ifgs)
+    multi_paths = params[cf.INTERFEROGRAM_FILES]
+    _orb_fit_calc(multi_paths, params, preread_ifgs)
 
     _ref_phase_estimation(ifg_paths, params, refpx, refpy)
 

@@ -19,6 +19,7 @@ This Python module contains tests for the ref_phs_est.py PyRate module.
 """
 import glob
 import os
+from pathlib import Path
 import shutil
 import sys
 import tempfile
@@ -90,7 +91,6 @@ class RefPhsTests(unittest.TestCase):
         for ifg in self.ifgs:
             ifg.close()
        
-
     def tearDown(self):
         try:
             shutil.rmtree(self.tmp_dir)
@@ -131,7 +131,9 @@ class RefPhsEstimationLegacyTestMethod1Serial(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         from pyrate.core import roipac
-        from pyrate.core.config import parse_namelist
+        # start with a clean output dir
+        params = Configuration(common.TEST_CONF_ROIPAC).__dict__
+        shutil.rmtree(params[cf.OUT_DIR])
         params = Configuration(common.TEST_CONF_ROIPAC).__dict__
         cls.temp_out_dir = tempfile.mkdtemp()
         sys.argv = ['prepifg.py', common.TEST_CONF_ROIPAC]
@@ -143,12 +145,10 @@ class RefPhsEstimationLegacyTestMethod1Serial(unittest.TestCase):
         params[cf.REF_EST_METHOD] = 1
         params[cf.PARALLEL] = False
 
-        xlks, ylks, crop = cf.transform_params(params)
-
-        base_ifg_paths = list(parse_namelist(params[cf.IFG_FILE_LIST]))
+        base_ifg_paths = [c.unwrapped_path for c in params[cf.INTERFEROGRAM_FILES]]
         headers = [roipac.roipac_header(i, params) for i in base_ifg_paths]
-
-        dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
+        dest_paths = [Path(cls.temp_out_dir).joinpath(Path(c.sampled_path).name).as_posix()
+                      for c in params[cf.INTERFEROGRAM_FILES][:-2]]
 
         # start run_pyrate copy
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
@@ -207,7 +207,7 @@ class RefPhsEstimationLegacyTestMethod1Serial(unittest.TestCase):
                 LEGACY_REF_PHASE_DIR, f), delimiter=',')
             for k, j in enumerate(self.ifgs):
                 if f.split('_corrected')[-1].split('.')[0] == \
-                        os.path.split(j.data_path)[-1].split('_unw_1rlks')[0]:
+                        os.path.split(j.data_path)[-1].split('_unw_ifg_1rlks')[0]:
                     count += 1
                     # all numbers equal
                     np.testing.assert_array_almost_equal(ifg_data,
@@ -229,7 +229,8 @@ class RefPhsEstimationLegacyTestMethod1Parallel(unittest.TestCase):
     """
     @classmethod
     def setUpClass(cls):
-
+        params = Configuration(common.TEST_CONF_ROIPAC).__dict__
+        shutil.rmtree(params[cf.OUT_DIR])
         params = Configuration(common.TEST_CONF_ROIPAC).__dict__
         cls.temp_out_dir = tempfile.mkdtemp()
         sys.argv = ['prepifg.py', common.TEST_CONF_ROIPAC]
@@ -243,10 +244,10 @@ class RefPhsEstimationLegacyTestMethod1Parallel(unittest.TestCase):
 
         xlks, ylks, crop = cf.transform_params(params)
 
-        base_ifg_paths = list(cf.parse_namelist(params[cf.IFG_FILE_LIST]))
+        base_ifg_paths = [c.unwrapped_path for c in params[cf.INTERFEROGRAM_FILES]]
         headers = [roipac.roipac_header(i, params) for i in base_ifg_paths]
-
-        dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
+        dest_paths = [Path(cls.temp_out_dir).joinpath(Path(c.sampled_path).name).as_posix()
+                      for c in params[cf.INTERFEROGRAM_FILES][:-2]]
 
         # start run_pyrate copy
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
@@ -299,7 +300,7 @@ class RefPhsEstimationLegacyTestMethod1Parallel(unittest.TestCase):
                 LEGACY_REF_PHASE_DIR, f), delimiter=',')
             for k, j in enumerate(self.ifgs):
                 if f.split('_corrected')[-1].split('.')[0] == \
-                        os.path.split(j.data_path)[-1].split('_unw_1rlks')[0]:
+                        os.path.split(j.data_path)[-1].split('_unw_ifg_1rlks')[0]:
                     count += 1
                     # all numbers equal
                     np.testing.assert_array_almost_equal(
@@ -325,7 +326,8 @@ class RefPhsEstimationLegacyTestMethod2Serial(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-
+        params = Configuration(common.TEST_CONF_ROIPAC).__dict__
+        shutil.rmtree(params[cf.OUT_DIR])
         params = Configuration(common.TEST_CONF_ROIPAC).__dict__
         cls.temp_out_dir = tempfile.mkdtemp()
         sys.argv = ['prepifg.py', common.TEST_CONF_ROIPAC]
@@ -337,11 +339,10 @@ class RefPhsEstimationLegacyTestMethod2Serial(unittest.TestCase):
         params[cf.REF_EST_METHOD] = 2
         params[cf.PARALLEL] = False
 
-        xlks, ylks, crop = cf.transform_params(params)
-
-        base_ifg_paths = list(cf.parse_namelist(params[cf.IFG_FILE_LIST]))
-        dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
+        base_ifg_paths = [c.unwrapped_path for c in params[cf.INTERFEROGRAM_FILES]]
         headers = [roipac.roipac_header(i, params) for i in base_ifg_paths]
+        dest_paths = [Path(cls.temp_out_dir).joinpath(Path(c.sampled_path).name).as_posix()
+                      for c in params[cf.INTERFEROGRAM_FILES][:-2]]
         # start run_pyrate copy
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         mst_grid = common.mst_calculation(dest_paths, params)
@@ -387,7 +388,7 @@ class RefPhsEstimationLegacyTestMethod2Serial(unittest.TestCase):
                 LEGACY_REF_PHASE_DIR, f), delimiter=',')
             for k, j in enumerate(self.ifgs):
                 if f.split('_corrected_method2')[-1].split('.')[0] == \
-                        os.path.split(j.data_path)[-1].split('_unw_1rlks')[0]:
+                        os.path.split(j.data_path)[-1].split('_unw_ifg_1rlks')[0]:
                     count += 1
                     # all numbers equal
                     np.testing.assert_array_almost_equal(ifg_data,
@@ -417,10 +418,10 @@ class RefPhsEstimationLegacyTestMethod2Parallel(unittest.TestCase):
     # TODO: Improve the parallel tests to remove duplication from serial tests
     @classmethod
     def setUpClass(cls):
-
+        params = Configuration(common.TEST_CONF_ROIPAC).__dict__
+        shutil.rmtree(params[cf.OUT_DIR])
         params = Configuration(common.TEST_CONF_ROIPAC).__dict__
         cls.temp_out_dir = tempfile.mkdtemp()
-        sys.argv = ['prepifg.py', common.TEST_CONF_ROIPAC]
         params[cf.OUT_DIR] = cls.temp_out_dir
         params[cf.TMPDIR] = cls.temp_out_dir
         conv2tif.main(params)
@@ -428,13 +429,14 @@ class RefPhsEstimationLegacyTestMethod2Parallel(unittest.TestCase):
 
         params[cf.OUT_DIR] = cls.temp_out_dir
         params[cf.REF_EST_METHOD] = 2
-        params[cf.PARALLEL] = True
+        params[cf.PARALLEL] = 1
 
-        xlks, ylks, crop = cf.transform_params(params)
-
-        base_ifg_paths = list(cf.parse_namelist(params[cf.IFG_FILE_LIST]))
+        base_ifg_paths = [c.unwrapped_path for c in params[cf.INTERFEROGRAM_FILES]]
         headers = [roipac.roipac_header(i, params) for i in base_ifg_paths]
-        dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
+
+        # leave 2 out due to conv2tif and prepifg dems
+        dest_paths = [Path(cls.temp_out_dir).joinpath(Path(c.sampled_path).name).as_posix()
+                      for c in params[cf.INTERFEROGRAM_FILES][:-2]]
 
         # start run_pyrate copy
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
@@ -479,7 +481,7 @@ class RefPhsEstimationLegacyTestMethod2Parallel(unittest.TestCase):
                 LEGACY_REF_PHASE_DIR, f), delimiter=',')
             for k, j in enumerate(self.ifgs):
                 if f.split('_corrected_method2')[-1].split('.')[0] == \
-                        os.path.split(j.data_path)[-1].split('_unw_1rlks')[0]:
+                        os.path.split(j.data_path)[-1].split('_unw_ifg_1rlks')[0]:
                     count += 1
                     # all numbers equal
                     np.testing.assert_array_almost_equal(

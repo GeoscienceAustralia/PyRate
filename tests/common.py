@@ -34,6 +34,7 @@ from pyrate.core import algorithm, ifgconstants as ifc, config as cf, timeseries
 from pyrate.core.shared import (Ifg, nan_and_mm_convert, get_geotiff_header_info,
                                 write_output_geotiff, dem_or_ifg)
 from pyrate.constants import PYRATEPATH
+from pyrate.configuration import Configuration
 
 TEMPDIR = tempfile.gettempdir()
 TESTDIR = join(PYRATEPATH, 'tests')
@@ -463,7 +464,7 @@ def copytree(src, dst, symlinks=False, ignore=None):
 
 def pre_prepare_ifgs(ifg_paths, params):
     """
-    Open ifg for reading
+    nan and mm convert ifgs
     """
     ifgs = [Ifg(p) for p in ifg_paths]
     for i in ifgs:
@@ -484,6 +485,8 @@ def assert_two_dirs_equal(dir1, dir2, ext, num_files=None):
     if num_files is not None:
         assert len(dir1_files) == num_files
         assert len(dir2_files) == num_files
+    else:
+        assert len(dir1_files) == len(dir2_files)
     if dir1_files[0].suffix == '.tif':
         for m_f, s_f in zip(dir1_files, dir2_files):
             assert m_f.name == s_f.name
