@@ -44,6 +44,7 @@ def create_stack_output(tempdir, gamma_conf):
     return params, tdir
 
 
+@pytest.mark.slow
 def test_png_creation(create_stack_output):
     params, tdir = create_stack_output
 
