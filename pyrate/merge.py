@@ -23,6 +23,7 @@ import numpy as np
 from osgeo import gdal
 import subprocess
 from pathlib import Path
+from math import floor
 
 from pyrate.core import shared, stack, ifgconstants as ifc, mpiops, config as cf
 from pyrate.constants import REF_COLOR_MAP_PATH
@@ -155,28 +156,105 @@ def create_png_from_tif(output_folder_path):
     minimum, maximum, mean, stddev = srcband.GetStatistics(True, True)
     maximum = max(abs(minimum), abs(maximum))
     minimum = -1 * maximum
-    step = (maximum - minimum) / 256.0
+    # this will result in a vector with 255 values ranging from min to max:
+    step = (maximum - minimum) / 254.0
+    # note that an extra value will be added for zero (i.e. white: 255 255 255)
+    no_of_data_value = len(np.arange(minimum, maximum, step))
 
     del gtif  # manually close raster
 
-    # read color map from utilities and write it to the output folder
+    # generate a colourmap for odd number of values (currently hard-coded to 255)
+    mid = floor(no_of_data_value*0.5)
+    # allocate RGB values to three numpy arrays r, g, b
+    r = np.arange(0,mid)/mid
+    g = r
+    r = np.concatenate((r, np.ones(mid+1)))
+    g = np.concatenate((g, np.array([1]), np.flipud(g)))
+    b = np.flipud(r)
+    # change direction of colours (blue: positve, red: negative)
+    r = np.flipud(r)*255
+    g = np.flipud(g)*255
+    b = np.flipud(b)*255
 
-    with open(REF_COLOR_MAP_PATH, "r") as f:
-        color_map_list = []
-        for line in f.readlines():
-            color_map_list.append(line.strip().split(" "))
-
-    no_of_data_value = len(np.arange(minimum, maximum, step))
-    for i, no in enumerate(np.arange(minimum, maximum, step)):
-        color_map_list[i+1][0] = str(no)
-
+    # generate the colourmap file in the output folder
     color_map_path = join(output_folder_path, "colourmap.txt")
+    log.info('Saving red-white-blue colour map to file {}; min/max values: {:.2f}/{:.2f}'.format(color_map_path, minimum, maximum))
     with open(color_map_path, "w") as f:
-        for i in range(no_of_data_value):
-            f.write(' '.join(color_map_list[i]) + "\n")
+        f.write("nan 0 0 0 0\n")
+        for i, value in enumerate(np.arange(minimum, maximum+step, step)):
+            f.write("%f %f %f %f 255\n" % (value, r[i], g[i], b[i]))
 
     input_tif_path = join(output_folder_path, "stack_rate.tif")
     output_png_path = join(output_folder_path, "stack_rate.png")
+    subprocess.check_call(["gdaldem", "color-relief", "-of", "PNG", input_tif_path, "-alpha",
+                           color_map_path, output_png_path, "-nearest_color_entry"])
+    log.debug('Finished creating quicklook image.')
+
+
+    # for velocity error map
+    log.info('Creating quicklook image for velocity error map')
+    # open raster and choose band to find min, max
+    raster_path = join(output_folder_path, "stack_error.tif")
+
+    if not isfile(raster_path):
+        raise Exception("stack_rate.tif file not found at: "+raster_path)
+    gtif = gdal.Open(raster_path)
+    srcband = gtif.GetRasterBand(1)
+
+    west, north, east, south = "", "", "", ""
+    for line in gdal.Info(gtif).split('\n'):
+        if "Upper Left" in line:
+            west, north = line.split(")")[0].split("(")[1].split(",")
+        if "Lower Right" in line:
+            east, south = line.split(")")[0].split("(")[1].split(",")
+
+    kml_file_path = join(output_folder_path, "stack_error.kml")
+    kml_file_content = """<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://earth.google.com/kml/2.1">
+  <Document>
+    <name>stack_error.kml</name>
+    <GroundOverlay>
+      <name>stack_error.png</name>
+      <Icon>
+        <href>stack_error.png</href>
+      </Icon>
+      <LatLonBox>
+        <north> """+north+""" </north>
+        <south> """+south+""" </south>
+        <east>  """+east+""" </east>
+        <west>  """+west+""" </west>
+      </LatLonBox>
+    </GroundOverlay>
+  </Document>
+</kml>"""
+
+    with open(kml_file_path, "w") as f:
+        f.write(kml_file_content)
+
+    # Get raster statistics
+    minimum, maximum, mean, stddev = srcband.GetStatistics(True, True)
+    # this will result in a vector with 255 values ranging from min to max:
+    step = (maximum - minimum) / 254.0
+    no_of_data_value = len(np.arange(minimum, maximum+step, step))
+
+    del gtif  # manually close raster
+
+    # allocate RGB values to three numpy arrays r, g, b
+    r = np.ones(no_of_data_value)*255
+    g = np.arange(0,no_of_data_value)/(no_of_data_value-1)
+    g = np.flipud(g)*255
+    b = g
+
+    # generate the colourmap file in the output folder
+    color_map_path = join(output_folder_path, "colourmap_error.txt")
+    log.info('Saving white-red colour map to file {}; min/max values: {:.2f}/{:.2f}'.format(color_map_path, minimum, maximum))
+    with open(color_map_path, "w") as f:
+        f.write("nan 0 0 0 0\n")
+        for i, value in enumerate(np.arange(minimum, maximum+step, step)):
+            f.write("%f %f %f %f 255\n" % (value, r[i], g[i], b[i]))
+
+    input_tif_path = join(output_folder_path, "stack_error.tif")
+    output_png_path = join(output_folder_path, "stack_error.png")
     subprocess.check_call(["gdaldem", "color-relief", "-of", "PNG", input_tif_path, "-alpha",
                            color_map_path, output_png_path, "-nearest_color_entry"])
     log.debug('Finished creating quicklook image.')
