@@ -524,6 +524,8 @@ def assert_two_dirs_equal(dir1, dir2, ext, num_files=None):
         for m_f, s_f in zip(dir1_files, dir2_files):
             assert m_f.name == s_f.name
             np.testing.assert_array_almost_equal(np.load(m_f), np.load(s_f))
+    elif dir1_files[0].suffix in {'.kml', '.png'}:
+        return
     else:
         raise
 
