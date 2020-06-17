@@ -18,37 +18,47 @@
 This Python module contains tests for the Merge step of PyRate.
 """
 import os
-import unittest
+from subprocess import check_call
+import pytest
 from pathlib import Path
 from pyrate.merge import create_png_from_tif
-from tests.common import TESTDIR
+from pyrate.core import config as cf
+from pyrate.merge import _merge_stack
+from pyrate.configuration import Configuration
+from tests.common import manipulate_test_conf
 
 
+@pytest.fixture
+def create_stack_output(tempdir, gamma_conf):
+    tdir = Path(tempdir())
+    params = manipulate_test_conf(gamma_conf, tdir)
+    output_conf_file = tdir.joinpath('conf.cfg')
+    output_conf = tdir.joinpath(output_conf_file)
+    cf.write_config_file(params=params, output_conf_file=output_conf)
+    check_call(f"pyrate conv2tif -f {output_conf}", shell=True)
+    check_call(f"pyrate prepifg -f {output_conf}", shell=True)
+    check_call(f"pyrate process -f {output_conf}", shell=True)
 
-class MergingTest(unittest.TestCase):
-
-    def test_png_creation(self):
-
-        output_folder_path = Path(TESTDIR).joinpath("test_data", "merge")
-        create_png_from_tif(output_folder_path)
-
-        # check if color map is created
-        output_color_map_path = os.path.join(output_folder_path, "colourmap.txt")
-        if not os.path.isfile(output_color_map_path):
-            self.assertTrue(False, "Output color map file not found at: " + output_color_map_path)
-
-        # check if png is created
-        output_image_path = os.path.join(output_folder_path, "stack_rate.png")
-        if not os.path.isfile(output_image_path):
-            self.assertTrue(False, "Output png file not found at: " + output_image_path)
-
-        # check if kml is created
-        output_kml_path = os.path.join(output_folder_path, "stack_rate.kml")
-        if not os.path.isfile(output_kml_path):
-            self.assertTrue(False, "Output kml file not found at: " + output_kml_path)
-
-        self.assertTrue(True)
+    params = Configuration(output_conf).__dict__
+    return params, tdir
 
 
-if __name__ == '__main__':
-    unittest.main()
+def test_png_creation(create_stack_output):
+    params, tdir = create_stack_output
+
+    output_folder_path = params[cf.OUT_DIR]
+
+    rows, cols = params["rows"], params["cols"]
+    _merge_stack(rows, cols, params)
+    create_png_from_tif(output_folder_path)
+
+    # check if color map is created
+    output_color_map_path = os.path.join(output_folder_path, "colourmap.txt")
+    assert Path(output_color_map_path).exists(), "Output color map file not found at: " + output_color_map_path
+
+    # check if png is created
+    import itertools
+    for _type, output_type in itertools.product(["stack_rate", "stack_error"], ['.tif', '.png', '.kml']):
+        output_image_path = os.path.join(output_folder_path, _type + output_type)
+        print(f"checking {output_image_path}")
+        assert Path(output_image_path).exists(), f"Output {output_type} file not found at {output_image_path}"
