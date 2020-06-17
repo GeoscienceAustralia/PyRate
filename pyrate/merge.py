@@ -112,31 +112,34 @@ def create_png_from_tif(output_folder_path):
     """
     Function to create a preview PNG format image from a geotiff
     """
-    log.info('Creating quicklook image.')
-    # open raster and choose band to find min, max
-    raster_path = join(output_folder_path, "stack_rate.tif")
+    __create_png_and_kml_from_tif(output_folder_path, output_type='rate')
 
+    __create_png_and_kml_from_tif(output_folder_path, output_type='error')
+
+
+def __create_png_and_kml_from_tif(output_folder_path, output_type):
+    log.info(f'Creating quicklook image for stack_{output_type}')
+    # open raster and choose band to find min, max
+    raster_path = join(output_folder_path, f"stack_{output_type}.tif")
     if not isfile(raster_path):
-        raise Exception("stack_rate.tif file not found at: " + raster_path)
+        raise Exception(f"stack_{output_type}.tif file not found at: " + raster_path)
     gtif = gdal.Open(raster_path)
     srcband = gtif.GetRasterBand(1)
-
     west, north, east, south = "", "", "", ""
     for line in gdal.Info(gtif).split('\n'):
         if "Upper Left" in line:
             west, north = line.split(")")[0].split("(")[1].split(",")
         if "Lower Right" in line:
             east, south = line.split(")")[0].split("(")[1].split(",")
-
-    kml_file_path = join(output_folder_path, "stack_rate.kml")
-    kml_file_content = """<?xml version="1.0" encoding="UTF-8"?>
+    kml_file_path = join(output_folder_path, f"stack_{output_type}.kml")
+    kml_file_content = f"""<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://earth.google.com/kml/2.1">
   <Document>
-    <name>stack_rate.kml</name>
+    <name>stack_{output_type}.kml</name>
     <GroundOverlay>
-      <name>stack_rate.png</name>
+      <name>stack_{output_type}.png</name>
       <Icon>
-        <href>stack_rate.png</href>
+        <href>stack_{output_type}.png</href>
       </Icon>
       <LatLonBox>
         <north> """ + north + """ </north>
@@ -147,10 +150,8 @@ def create_png_from_tif(output_folder_path):
     </GroundOverlay>
   </Document>
 </kml>"""
-
     with open(kml_file_path, "w") as f:
         f.write(kml_file_content)
-
     # Get raster statistics
     minimum, maximum, mean, stddev = srcband.GetStatistics(True, True)
     maximum = max(abs(minimum), abs(maximum))
@@ -159,9 +160,7 @@ def create_png_from_tif(output_folder_path):
     step = (maximum - minimum) / 254.0
     # note that an extra value will be added for zero (i.e. white: 255 255 255)
     no_of_data_value = len(np.arange(minimum, maximum, step))
-
     del gtif  # manually close raster
-
     # generate a colourmap for odd number of values (currently hard-coded to 255)
     mid = floor(no_of_data_value * 0.5)
     # allocate RGB values to three numpy arrays r, g, b
@@ -174,93 +173,20 @@ def create_png_from_tif(output_folder_path):
     r = np.flipud(r) * 255
     g = np.flipud(g) * 255
     b = np.flipud(b) * 255
-
     # generate the colourmap file in the output folder
-    color_map_path = join(output_folder_path, "colourmap.txt")
+    color_map_path = join(output_folder_path, f"colourmap_{output_type}.txt")
     log.info(
         'Saving red-white-blue colour map to file {}; min/max values: {:.2f}/{:.2f}'.format(color_map_path, minimum,
                                                                                             maximum))
-
     with open(color_map_path, "w") as f:
         f.write("nan 0 0 0 0\n")
         for i, value in enumerate(np.arange(minimum, maximum + step, step)):
             f.write("%f %f %f %f 255\n" % (value, r[i], g[i], b[i]))
-
-    input_tif_path = join(output_folder_path, "stack_rate.tif")
-    output_png_path = join(output_folder_path, "stack_rate.png")
+    input_tif_path = join(output_folder_path, f"stack_{output_type}.tif")
+    output_png_path = join(output_folder_path, f"stack_{output_type}.png")
     subprocess.check_call(["gdaldem", "color-relief", "-of", "PNG", input_tif_path, "-alpha",
                            color_map_path, output_png_path, "-nearest_color_entry"])
-    log.debug('Finished creating quicklook image.')
-
-    # for velocity error map
-    log.info('Creating quicklook image for velocity error map')
-    # open raster and choose band to find min, max
-    raster_path = join(output_folder_path, "stack_error.tif")
-
-    if not isfile(raster_path):
-        raise Exception("stack_rate.tif file not found at: " + raster_path)
-    gtif = gdal.Open(raster_path)
-    srcband = gtif.GetRasterBand(1)
-
-    west, north, east, south = "", "", "", ""
-    for line in gdal.Info(gtif).split('\n'):
-        if "Upper Left" in line:
-            west, north = line.split(")")[0].split("(")[1].split(",")
-        if "Lower Right" in line:
-            east, south = line.split(")")[0].split("(")[1].split(",")
-
-    kml_file_path = join(output_folder_path, "stack_error.kml")
-    kml_file_content = """<?xml version="1.0" encoding="UTF-8"?>
-<kml xmlns="http://earth.google.com/kml/2.1">
-  <Document>
-    <name>stack_error.kml</name>
-    <GroundOverlay>
-      <name>stack_error.png</name>
-      <Icon>
-        <href>stack_error.png</href>
-      </Icon>
-      <LatLonBox>
-        <north> """ + north + """ </north>
-        <south> """ + south + """ </south>
-        <east>  """ + east + """ </east>
-        <west>  """ + west + """ </west>
-      </LatLonBox>
-    </GroundOverlay>
-  </Document>
-</kml>"""
-
-    with open(kml_file_path, "w") as f:
-        f.write(kml_file_content)
-
-    # Get raster statistics
-    minimum, maximum, mean, stddev = srcband.GetStatistics(True, True)
-    # this will result in a vector with 255 values ranging from min to max:
-    step = (maximum - minimum) / 254.0
-    no_of_data_value = len(np.arange(minimum, maximum + step, step))
-
-    del gtif  # manually close raster
-
-    # allocate RGB values to three numpy arrays r, g, b
-    r = np.ones(no_of_data_value) * 255
-    g = np.arange(0, no_of_data_value) / (no_of_data_value - 1)
-    g = np.flipud(g) * 255
-    b = g
-
-    # generate the colourmap file in the output folder
-    color_map_path = join(output_folder_path, "colourmap_error.txt")
-    log.info('Saving white-red colour map to file {}; min/max values: {:.2f}/{:.2f}'.format(color_map_path, minimum,
-                                                                                            maximum))
-
-    with open(color_map_path, "w") as f:
-        f.write("nan 0 0 0 0\n")
-        for i, value in enumerate(np.arange(minimum, maximum + step, step)):
-            f.write("%f %f %f %f 255\n" % (value, r[i], g[i], b[i]))
-
-    input_tif_path = join(output_folder_path, "stack_error.tif")
-    output_png_path = join(output_folder_path, "stack_error.png")
-    subprocess.check_call(["gdaldem", "color-relief", "-of", "PNG", input_tif_path, "-alpha",
-                           color_map_path, output_png_path, "-nearest_color_entry"])
-    log.debug('Finished creating quicklook image.')
+    log.debug(f'Finished creating quicklook image for stack_{output_type}')
 
 
 def assemble_tiles(s, dir, tiles, out_type, index=None):

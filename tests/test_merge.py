@@ -19,6 +19,7 @@ This Python module contains tests for the Merge step of PyRate.
 """
 import os
 from subprocess import check_call
+import itertools
 import pytest
 from pathlib import Path
 from pyrate.merge import create_png_from_tif
@@ -53,11 +54,11 @@ def test_png_creation(create_stack_output):
     create_png_from_tif(output_folder_path)
 
     # check if color map is created
-    output_color_map_path = os.path.join(output_folder_path, "colourmap.txt")
-    assert Path(output_color_map_path).exists(), "Output color map file not found at: " + output_color_map_path
+    for out_type in ['rate', 'error']:
+        output_color_map_path = os.path.join(output_folder_path, f"colourmap_{out_type}.txt")
+        assert Path(output_color_map_path).exists(), "Output color map file not found at: " + output_color_map_path
 
-    # check if png is created
-    import itertools
+    # check if merged files are created
     for _type, output_type in itertools.product(["stack_rate", "stack_error"], ['.tif', '.png', '.kml']):
         output_image_path = os.path.join(output_folder_path, _type + output_type)
         print(f"checking {output_image_path}")
