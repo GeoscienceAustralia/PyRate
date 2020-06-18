@@ -162,8 +162,6 @@ def __create_png_and_kml_from_tif(output_folder_path, output_type):
         # minimum value might be negative
         maximum = max(abs(minimum), abs(maximum))
         minimum = -1 * maximum
-        # this will result in a vector with 255 values ranging from min to max:
-        step = (maximum - minimum) / no_of_steps
         # colours: blue -> white -> red (white==0) 
         # note that an extra value will be added for zero (i.e. white: 255 255 255)
         # generate a colourmap for odd number of values (currently hard-coded to 255)
@@ -179,8 +177,6 @@ def __create_png_and_kml_from_tif(output_folder_path, output_type):
         g = np.flipud(g) * 255
         b = np.flipud(b) * 255
     if output_type == 'error':
-        # this will result in a vector with 255 values ranging from min to max:
-        step = (maximum - minimum) / no_of_steps
         # colours: white -> red (minimum error -> maximum error  
         # allocate RGB values to three numpy arrays r, g, b
         r = np.ones(no_of_steps+1)*255
@@ -194,7 +190,7 @@ def __create_png_and_kml_from_tif(output_folder_path, output_type):
                                                                                             maximum))
     with open(color_map_path, "w") as f:
         f.write("nan 0 0 0 0\n")
-        for i, value in enumerate(np.arange(minimum, maximum + step, step)):
+        for i, value in enumerate(np.linspace(minimum, maximum, no_of_steps+1)):
             f.write("%f %f %f %f 255\n" % (value, r[i], g[i], b[i]))
     input_tif_path = join(output_folder_path, f"stack_{output_type}.tif")
     output_png_path = join(output_folder_path, f"stack_{output_type}.png")
