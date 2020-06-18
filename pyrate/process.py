@@ -21,7 +21,7 @@ import os
 from os.path import join
 import pickle as cp
 from collections import OrderedDict
-from typing import List
+from typing import List, Tuple
 import numpy as np
 
 from pyrate.core import (shared, algorithm, orbital, ref_phs_est as rpe, 
@@ -120,7 +120,7 @@ def _mst_calc(dest_tifs, params, tiles, preread_ifgs):
     mpiops.comm.barrier()
 
 
-def _ref_pixel_calc(ifg_paths, params):
+def _ref_pixel_calc(ifg_paths: List[str], params: dict) -> Tuple[int, int]:
     """
     Wrapper for reference pixel calculation
     """

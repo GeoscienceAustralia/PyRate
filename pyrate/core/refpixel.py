@@ -117,10 +117,10 @@ def convert_geographic_coordinate_to_pixel_value(lon, lat, transform):
     pixelWidth = transform[1]
     pixelHeight = -transform[5]
 
-    refx = int((lon - xOrigin) / pixelWidth)
-    refy = int((yOrigin - lat) / pixelHeight)
+    refx = round((lon - xOrigin) / pixelWidth)
+    refy = round((yOrigin - lat) / pixelHeight)
 
-    return refx + 1, refy + 1
+    return refx, refy
 
 
 # TODO: move error checking to config step (for fail fast)
