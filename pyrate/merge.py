@@ -155,38 +155,39 @@ def __create_png_and_kml_from_tif(output_folder_path, output_type):
     # Get raster statistics
     minimum, maximum, mean, stddev = srcband.GetStatistics(True, True)
     del gtif  # manually close raster (used to calculate statistics)
+    # steps used for the colourmap, must be even (currently hard-coded to 254 resulting in 255 values)
+    no_of_steps = 254
+    # slightly different code required for rate map and rate error map
     if output_type == 'rate':
-      # minimum value might be negative
-      maximum = max(abs(minimum), abs(maximum))
-      minimum = -1 * maximum
-      # this will result in a vector with 255 values ranging from min to max:
-      step = (maximum - minimum) / 254.0
-      # colours: blue-white-red (white==0) 
-      # note that an extra value will be added for zero (i.e. white: 255 255 255)
-      no_of_data_value = len(np.arange(minimum, maximum, step))
-      # generate a colourmap for odd number of values (currently hard-coded to 255)
-      mid = floor(no_of_data_value * 0.5)
-      # allocate RGB values to three numpy arrays r, g, b
-      r = np.arange(0, mid) / mid
-      g = r
-      r = np.concatenate((r, np.ones(mid + 1)))
-      g = np.concatenate((g, np.array([1]), np.flipud(g)))
-      b = np.flipud(r)
-      # change direction of colours (blue: positve, red: negative)
-      r = np.flipud(r) * 255
-      g = np.flipud(g) * 255
-      b = np.flipud(b) * 255
-      # generate the colourmap file in the output folder
+        # minimum value might be negative
+        maximum = max(abs(minimum), abs(maximum))
+        minimum = -1 * maximum
+        # this will result in a vector with 255 values ranging from min to max:
+        step = (maximum - minimum) / no_of_steps
+        # colours: blue -> white -> red (white==0) 
+        # note that an extra value will be added for zero (i.e. white: 255 255 255)
+        # generate a colourmap for odd number of values (currently hard-coded to 255)
+        mid = int(no_of_steps * 0.5)
+        # allocate RGB values to three numpy arrays r, g, b
+        r = np.arange(0, mid) / mid
+        g = r
+        r = np.concatenate((r, np.ones(mid + 1)))
+        g = np.concatenate((g, np.array([1]), np.flipud(g)))
+        b = np.flipud(r)
+        # change direction of colours (blue: positve, red: negative)
+        r = np.flipud(r) * 255
+        g = np.flipud(g) * 255
+        b = np.flipud(b) * 255
     if output_type == 'error':
-      # this will result in a vector with 255 values ranging from min to max:
-      step = (maximum - minimum) / 254.0
-      # colours: white-red 
-      no_of_data_value = len(np.arange(minimum, maximum+step, step)) 
-      # allocate RGB values to three numpy arrays r, g, b
-      r = np.ones(no_of_data_value)*255
-      g = np.arange(0,no_of_data_value)/(no_of_data_value-1)
-      g = np.flipud(g)*255
-      b = g   
+        # this will result in a vector with 255 values ranging from min to max:
+        step = (maximum - minimum) / no_of_steps
+        # colours: white -> red (minimum error -> maximum error  
+        # allocate RGB values to three numpy arrays r, g, b
+        r = np.ones(no_of_steps+1)*255
+        g = np.arange(0,no_of_steps+1)/(no_of_steps)
+        g = np.flipud(g)*255
+        b = g  
+    # generate the colourmap file in the output folder   
     color_map_path = join(output_folder_path, f"colourmap_{output_type}.txt")
     log.info(
         'Saving red-white-blue colour map to file {}; min/max values: {:.2f}/{:.2f}'.format(color_map_path, minimum,
