@@ -120,20 +120,29 @@ def _mst_calc(dest_tifs, params, tiles, preread_ifgs):
     mpiops.comm.barrier()
 
 
-def __validate_ref_pixel(params):
-        from pyrate.core import prepifg_helper
-        extents = prepifg_helper.get_analysis_extent(
-            crop_opt=params[cf.IFG_CROP_OPT],
-            rasters=[prepifg_helper.dem_or_ifg(p.converted_path) for p in params[cf.INTERFEROGRAM_FILES]],
-            xlooks=params[cf.IFG_LKSX], ylooks=params[cf.IFG_LKSY],
-            user_exts=(params[cf.IFG_XFIRST], params[cf.IFG_YFIRST], params[cf.IFG_XLAST], params[cf.IFG_YLAST])
-        )
+def __validate_ref_pixel(params: dict) -> None:
+    lon, lat = params[cf.REFX], params[cf.REFY]
+    if lon == -1 or lat == -1:
+        return
+    from pyrate.core import prepifg_helper
+    xmin, ymin, xmax, ymax = prepifg_helper.get_analysis_extent(
+        crop_opt=params[cf.IFG_CROP_OPT],
+        rasters=[prepifg_helper.dem_or_ifg(p.sampled_path) for p in params[cf.INTERFEROGRAM_FILES]],
+        xlooks=params[cf.IFG_LKSX], ylooks=params[cf.IFG_LKSY],
+        user_exts=(params[cf.IFG_XFIRST], params[cf.IFG_YFIRST], params[cf.IFG_XLAST], params[cf.IFG_YLAST])
+    )
+    msg = f"Supplied reference pixel is out of bounds for the ananlysis extents"
+    if (lon < xmin) or (lon > xmax):
+        raise ValueError(msg)
+    if (lat < ymin) or (lat > ymax):
+        raise ValueError(msg)
 
 
 def _ref_pixel_calc(ifg_paths: List[str], params: dict) -> Tuple[int, int]:
     """
     Wrapper for reference pixel calculation
     """
+
     lon = params[cf.REFX]
     lat = params[cf.REFY]
 
@@ -300,6 +309,8 @@ def process_ifgs(ifg_paths, params, rows, cols):
     :return: vcmt: Variance-covariance matrix array
     :rtype: ndarray
     """
+    # validate refpixel
+    __validate_ref_pixel(params)
 
     if mpiops.size > 1:  # turn of multiprocessing during mpi jobs
         params[cf.PARALLEL] = False
