@@ -20,10 +20,9 @@ interferogram geotiff files.
 # -*- coding: utf-8 -*-
 import os
 from subprocess import check_call
-from typing import List
+from typing import List, Tuple
 from pathlib import Path
 from joblib import Parallel, delayed
-from typing import Union
 import numpy as np
 from osgeo import gdal
 from pyrate.core import shared, mpiops, config as cf, prepifg_helper, gamma, roipac, ifgconstants as ifc
@@ -60,19 +59,21 @@ def main(params):
 
     shared.mkdir_p(params[cf.OUT_DIR])  # create output dir
 
-    process_ifgs_paths = np.array_split(ifg_paths, mpiops.size)[mpiops.rank]
+    user_exts = (params[cf.IFG_XFIRST], params[cf.IFG_YFIRST], params[cf.IFG_XLAST], params[cf.IFG_YLAST])
+    xlooks, ylooks, crop = cf.transform_params(params)
+    ifgs = [prepifg_helper.dem_or_ifg(p.converted_path) for p in ifg_paths]
+    exts = prepifg_helper.get_analysis_extent(crop, ifgs, xlooks, ylooks, user_exts=user_exts)
 
-    do_prepifg(process_ifgs_paths, params)
+    process_ifgs_paths = np.array_split(ifg_paths, mpiops.size)[mpiops.rank]
+    do_prepifg(process_ifgs_paths, exts, params)
     mpiops.comm.barrier()
     log.info("Finished prepifg")
 
 
-def do_prepifg(multi_paths: List[MultiplePaths], params: dict) -> None:
+def do_prepifg(multi_paths: List[MultiplePaths], exts: Tuple[float, float, float, float], params: dict) -> None:
     """
     Prepare interferograms by applying multilooking/cropping operations.
 
-    :param list multi_paths: List of full-res geotiffs
-    :param dict params: Parameters dictionary corresponding to config file
     """
     # pylint: disable=expression-not-assigned
     parallel = params[cf.PARALLEL]
@@ -84,33 +85,26 @@ def do_prepifg(multi_paths: List[MultiplePaths], params: dict) -> None:
             raise FileNotFoundError("Can not find geotiff: " + str(f) + ". Ensure you have converted your "
                                     "interferograms to geotiffs.")
 
-    ifgs = [prepifg_helper.dem_or_ifg(p.converted_path) for p in multi_paths]
-    xlooks, ylooks, crop = cf.transform_params(params)
-    user_exts = (params[cf.IFG_XFIRST], params[cf.IFG_YFIRST], params[cf.IFG_XLAST], params[cf.IFG_YLAST])
-    exts = prepifg_helper.get_analysis_extent(crop, ifgs, xlooks, ylooks, user_exts=user_exts)
-    thresh = params[cf.NO_DATA_AVERAGING_THRESHOLD]
-
     if params[cf.LARGE_TIFS]:
         log.info("Using gdal system calls to process prepifg")
-        ifg = ifgs[0]
+        ifg = prepifg_helper.dem_or_ifg(multi_paths[0].converted_path)
+        xlooks, ylooks = params[cf.IFG_LKSX], params[cf.IFG_LKSY]
         res_str = [xlooks * ifg.x_step, ylooks * ifg.y_step]
         res_str = ' '.join([str(e) for e in res_str])
         if parallel:
             Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
-                delayed(__prepifg_system)(
-                    crop, exts, gtiff_path, params, res_str, thresh, xlooks, ylooks) for gtiff_path in multi_paths
-            )
+                delayed(__prepifg_system)(exts, gtiff_path, params, res_str) for gtiff_path in multi_paths)
         else:
             for m_path in multi_paths:
-                __prepifg_system(crop, exts, m_path, params, res_str, thresh, xlooks, ylooks)
+                __prepifg_system(exts, m_path, params, res_str)
     else:
         if parallel:
             Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
-                delayed(_prepifg_multiprocessing)(p, xlooks, ylooks, exts, thresh, crop, params) for p in multi_paths
+                delayed(_prepifg_multiprocessing)(p, exts, params) for p in multi_paths
             )
         else:
             for m_path in multi_paths:
-                _prepifg_multiprocessing(m_path, xlooks, ylooks, exts, thresh, crop, params)
+                _prepifg_multiprocessing(m_path, exts, params)
 
 
 COMMON_OPTIONS = "-co BLOCKXSIZE=256 -co BLOCKYSIZE=256 -co TILED=YES --config GDAL_CACHEMAX=64 -q"
@@ -118,8 +112,9 @@ COMMON_OPTIONS2 = "--co BLOCKXSIZE=256 --co BLOCKYSIZE=256 --co TILED=YES --quie
 GDAL_CALC = 'gdal_calc_local.py'
 
 
-def __prepifg_system(crop, exts, gtiff, params, res, thresh, xlooks, ylooks):
-    p, c, l = _prepifg_multiprocessing(gtiff, xlooks, ylooks, exts, thresh, crop, params)
+def __prepifg_system(exts, gtiff, params, res):
+    thresh = params[cf.NO_DATA_AVERAGING_THRESHOLD]
+    p, c, l = _prepifg_multiprocessing(gtiff, exts, params)
     log.info("Multilooking {p} into {l}".format(p=p, l=l))
     extents = ' '.join([str(e) for e in exts])
 
@@ -208,10 +203,12 @@ def __update_meta_data(p_unset, c, l):
     ds = None
 
 
-def _prepifg_multiprocessing(m_path: MultiplePaths, xlooks, ylooks, exts, thresh, crop, params):
+def _prepifg_multiprocessing(m_path: MultiplePaths, exts: Tuple[float, float, float, float], params: dict):
     """
     Multiprocessing wrapper for prepifg
     """
+    xlooks, ylooks, crop = cf.transform_params(params)
+    thresh = params[cf.NO_DATA_AVERAGING_THRESHOLD]
     header = find_header(m_path, params)
     header[ifc.INPUT_TYPE] = m_path.input_type
 
