@@ -33,6 +33,7 @@ from pyrate.core import mpiops
 from pyrate.core.shared import Ifg
 from pyrate.core.shared import joblib_log_level
 from pyrate.core.logger import pyratelogger as log
+from pyrate.core import prepifg_helper
 
 
 def update_refpix_metadata(ifg_paths, refx, refy, transform, params):
@@ -158,8 +159,8 @@ def ref_pixel(ifgs, params):
             mean_sds.append(_ref_pixel_multi(g, half_patch_size, phase_data, thresh, params))
         refxy = find_min_mean(mean_sds, grid)
 
-    if isinstance(refxy, ValueError):
-        raise ValueError('Refpixel calculation not possible!')
+    if isinstance(refxy, RefPixelError):
+        raise RefPixelError('Refpixel calculation not possible!')
 
     refy, refx = refxy
 
@@ -184,7 +185,7 @@ def find_min_mean(mean_sds, grid):
     try:
         refp_index = np.nanargmin(mean_sds)
         return grid[refp_index]
-    except ValueError as v:
+    except RefPixelError as v:
         log.error(v)
         return v
 
@@ -342,7 +343,7 @@ def _validate_chipsize(chipsize, head):
 
     if chipsize < 3 or chipsize > head.ncols or (chipsize % 2 == 0):
         msg = "Chipsize setting must be >=3 and at least <= grid width"
-        raise ValueError(msg)
+        raise RefPixelError(msg)
     log.debug('Chipsize validation successful')
 
 
@@ -354,7 +355,7 @@ def _validate_minimum_fraction(min_frac):
         raise cf.ConfigException('Minimum fraction is None')
 
     if min_frac < 0.0 or min_frac > 1.0:
-        raise ValueError("Minimum fraction setting must be >= 0.0 and <= 1.0 ")
+        raise RefPixelError("Minimum fraction setting must be >= 0.0 and <= 1.0 ")
 
 
 def _validate_search_win(refnx, refny, chipsize, head):
@@ -367,7 +368,7 @@ def _validate_search_win(refnx, refny, chipsize, head):
     max_width = (head.ncols - (chipsize-1))
     if refnx < 1 or refnx > max_width:
         msg = "Invalid refnx setting, must be > 0 and <= %s"
-        raise ValueError(msg % max_width)
+        raise RefPixelError(msg % max_width)
 
     if refny is None:
         raise cf.ConfigException('refny is None')
@@ -375,10 +376,36 @@ def _validate_search_win(refnx, refny, chipsize, head):
     max_rows = (head.nrows - (chipsize-1))
     if refny < 1 or refny > max_rows:
         msg = "Invalid refny setting, must be > 0 and <= %s"
-        raise ValueError(msg % max_rows)
+        raise RefPixelError(msg % max_rows)
+
+
+def _validate_ref_pixel(params: dict) -> None:
+    """
+    Sanity check that supplied lat/lon values sit within image bounds
+    """
+    lon, lat = params[cf.REFX], params[cf.REFY]
+    if lon == -1 or lat == -1:
+        return
+    xmin, ymin, xmax, ymax = prepifg_helper.get_analysis_extent(
+        crop_opt=params[cf.IFG_CROP_OPT],
+        rasters=[prepifg_helper.dem_or_ifg(p.sampled_path) for p in params[cf.INTERFEROGRAM_FILES]],
+        xlooks=params[cf.IFG_LKSX], ylooks=params[cf.IFG_LKSY],
+        user_exts=(params[cf.IFG_XFIRST], params[cf.IFG_YFIRST], params[cf.IFG_XLAST], params[cf.IFG_YLAST])
+    )
+    err = 0
+    if (lon < xmin) or (lon > xmax): err += 1
+    if (lat < ymin) or (lat > ymax): err += 2
+    if err == 1:
+        msg = f"Supplied longitude value is outside the bounds of the interferogram data"
+    elif err == 2:
+        msg = f"Supplied latitude value is outside the bounds of the interferogram data"
+    elif err == 3:
+        msg = f"Supplied latitude and longitude values are outside the bounds of the interferogram data"
+
+    if err != 0: raise RefPixelError(msg)
 
 
 class RefPixelError(Exception):
-    '''
+    """
     Generic exception for reference pixel errors.
-    '''
+    """

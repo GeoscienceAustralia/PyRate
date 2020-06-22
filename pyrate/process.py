@@ -120,24 +120,6 @@ def _mst_calc(dest_tifs, params, tiles, preread_ifgs):
     mpiops.comm.barrier()
 
 
-def __validate_ref_pixel(params: dict) -> None:
-    lon, lat = params[cf.REFX], params[cf.REFY]
-    if lon == -1 or lat == -1:
-        return
-    from pyrate.core import prepifg_helper
-    xmin, ymin, xmax, ymax = prepifg_helper.get_analysis_extent(
-        crop_opt=params[cf.IFG_CROP_OPT],
-        rasters=[prepifg_helper.dem_or_ifg(p.sampled_path) for p in params[cf.INTERFEROGRAM_FILES]],
-        xlooks=params[cf.IFG_LKSX], ylooks=params[cf.IFG_LKSY],
-        user_exts=(params[cf.IFG_XFIRST], params[cf.IFG_YFIRST], params[cf.IFG_XLAST], params[cf.IFG_YLAST])
-    )
-    msg = f"Supplied reference pixel is out of bounds for the ananlysis extents"
-    if (lon < xmin) or (lon > xmax):
-        raise ValueError(msg)
-    if (lat < ymin) or (lat > ymax):
-        raise ValueError(msg)
-
-
 def _ref_pixel_calc(ifg_paths: List[str], params: dict) -> Tuple[int, int]:
     """
     Wrapper for reference pixel calculation
@@ -154,7 +136,6 @@ def _ref_pixel_calc(ifg_paths: List[str], params: dict) -> Tuple[int, int]:
     if lon == -1 or lat == -1:
 
         log.info('Searching for best reference pixel location')
-
         half_patch_size, thresh, grid = refpixel.ref_pixel_setup(ifg_paths, params)
         process_grid = mpiops.array_split(grid)
         refpixel.save_ref_pixel_blocks(process_grid, half_patch_size, ifg_paths, params)
@@ -177,6 +158,8 @@ def _ref_pixel_calc(ifg_paths: List[str], params: dict) -> Tuple[int, int]:
         log.info('Selected reference pixel coordinate (lon, lat): ({}, {})'.format(lon, lat))
 
     else:
+        # validate user supplied ref pixel
+        refpixel._validate_ref_pixel(params)
         log.info('Using reference pixel from config file (lon, lat): ({}, {})'.format(lon, lat))
         log.warning("Ensure user supplied reference pixel values are in lon/lat")
         refx, refy = refpixel.convert_geographic_coordinate_to_pixel_value(lon, lat, transform)
@@ -309,8 +292,6 @@ def process_ifgs(ifg_paths, params, rows, cols):
     :return: vcmt: Variance-covariance matrix array
     :rtype: ndarray
     """
-    # validate refpixel
-    __validate_ref_pixel(params)
 
     if mpiops.size > 1:  # turn of multiprocessing during mpi jobs
         params[cf.PARALLEL] = False
