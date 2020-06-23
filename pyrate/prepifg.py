@@ -88,6 +88,7 @@ def do_prepifg(multi_paths: List[MultiplePaths], exts: Tuple[float, float, float
     if params[cf.LARGE_TIFS]:
         log.info("Using gdal system calls to process prepifg")
         ifg = prepifg_helper.dem_or_ifg(multi_paths[0].converted_path)
+        ifg.open()
         xlooks, ylooks = params[cf.IFG_LKSX], params[cf.IFG_LKSY]
         res_str = [xlooks * ifg.x_step, ylooks * ifg.y_step]
         res_str = ' '.join([str(e) for e in res_str])
