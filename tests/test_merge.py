@@ -22,7 +22,7 @@ from subprocess import check_call
 import itertools
 import pytest
 from pathlib import Path
-from pyrate.merge import create_png_from_tif
+from pyrate.merge import _create_png_from_tif
 from pyrate.core import config as cf
 from pyrate.merge import _merge_stack
 from pyrate.configuration import Configuration
@@ -52,7 +52,7 @@ def test_png_creation(create_stack_output):
 
     rows, cols = params["rows"], params["cols"]
     _merge_stack(rows, cols, params)
-    create_png_from_tif(output_folder_path)
+    _create_png_from_tif(output_folder_path)
 
     # check if color map is created
     for out_type in ['rate', 'error']:

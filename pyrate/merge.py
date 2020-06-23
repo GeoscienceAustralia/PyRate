@@ -39,7 +39,7 @@ def main(params):
     # setup paths
     rows, cols = params["rows"], params["cols"]
     mpiops.run_once(_merge_stack, rows, cols, params)
-    mpiops.run_once(create_png_from_tif, params[cf.OUT_DIR])
+    mpiops.run_once(_create_png_from_tif, params[cf.OUT_DIR])
 
     if params[cf.TIME_SERIES_CAL]:
         _merge_timeseries(rows, cols, params)
@@ -108,29 +108,32 @@ def _merge_timeseries(rows, cols, params):
              'total {}'.format(mpiops.rank, len(process_tifs), no_ts_tifs * 2))
 
 
-def create_png_from_tif(output_folder_path):
+def _create_png_from_tif(output_folder_path):
     """
-    Function to create a preview PNG format image from a geotiff
+    Wrapper for rate and error png/kml generation
     """
-    __create_png_and_kml_from_tif(output_folder_path, output_type='rate')
+    create_png_and_kml_from_tif(output_folder_path, output_type='rate')
+    create_png_and_kml_from_tif(output_folder_path, output_type='error')
 
-    __create_png_and_kml_from_tif(output_folder_path, output_type='error')
 
-
-def __create_png_and_kml_from_tif(output_folder_path, output_type):
+def create_png_and_kml_from_tif(output_folder_path: str, output_type: str) -> None:
+    """
+    Function to create a preview PNG format image from a geotiff, and a KML file
+    """
     log.info(f'Creating quicklook image for stack_{output_type}')
     # open raster and choose band to find min, max
     raster_path = join(output_folder_path, f"stack_{output_type}.tif")
     if not isfile(raster_path):
         raise Exception(f"stack_{output_type}.tif file not found at: " + raster_path)
     gtif = gdal.Open(raster_path)
-    srcband = gtif.GetRasterBand(1)
+    # find bounds of image
     west, north, east, south = "", "", "", ""
     for line in gdal.Info(gtif).split('\n'):
         if "Upper Left" in line:
             west, north = line.split(")")[0].split("(")[1].split(",")
         if "Lower Right" in line:
             east, south = line.split(")")[0].split("(")[1].split(",")
+    # write KML file
     kml_file_path = join(output_folder_path, f"stack_{output_type}.kml")
     kml_file_content = f"""<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://earth.google.com/kml/2.1">
@@ -152,9 +155,11 @@ def __create_png_and_kml_from_tif(output_folder_path, output_type):
 </kml>"""
     with open(kml_file_path, "w") as f:
         f.write(kml_file_content)
+    
     # Get raster statistics
-    minimum, maximum, mean, stddev = srcband.GetStatistics(True, True)
-    del gtif  # manually close raster (used to calculate statistics)
+    srcband = gtif.GetRasterBand(1)
+    minimum, maximum, _, _ = srcband.GetStatistics(True, True)
+    del gtif  # close geotiff (used to calculate statistics)
     # steps used for the colourmap, must be even (currently hard-coded to 254 resulting in 255 values)
     no_of_steps = 254
     # slightly different code required for rate map and rate error map
@@ -186,7 +191,7 @@ def __create_png_and_kml_from_tif(output_folder_path, output_type):
     # generate the colourmap file in the output folder   
     color_map_path = join(output_folder_path, f"colourmap_{output_type}.txt")
     log.info(
-        'Saving red-white-blue colour map to file {}; min/max values: {:.2f}/{:.2f}'.format(color_map_path, minimum,
+        'Saving colour map to file {}; min/max values: {:.2f}/{:.2f}'.format(color_map_path, minimum,
                                                                                             maximum))
     with open(color_map_path, "w") as f:
         f.write("nan 0 0 0 0\n")
