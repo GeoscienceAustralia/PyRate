@@ -24,6 +24,7 @@ import shutil
 import stat
 import tempfile
 from os.path import join
+from subprocess import check_output
 from pathlib import Path
 
 import numpy as np
@@ -35,6 +36,13 @@ from pyrate.core.shared import (Ifg, nan_and_mm_convert, get_geotiff_header_info
                                 write_output_geotiff, dem_or_ifg)
 from pyrate.constants import PYRATEPATH
 from pyrate.configuration import Configuration
+
+TRAVIS = True if 'TRAVIS' in os.environ else False
+PYTHON3P6 = True if ('TRAVIS_PYTHON_VERSION' in os.environ and os.environ['TRAVIS_PYTHON_VERSION'] == '3.6') else False
+PYTHON3P7 = True if ('TRAVIS_PYTHON_VERSION' in os.environ and os.environ['TRAVIS_PYTHON_VERSION'] == '3.7') else False
+PYTHON3P8 = True if ('TRAVIS_PYTHON_VERSION' in os.environ and os.environ['TRAVIS_PYTHON_VERSION'] == '3.8') else False
+GDAL_VERSION = check_output(["gdal-config", "--version"]).decode(encoding="utf-8").split('\n')[0]
+
 
 TEMPDIR = tempfile.gettempdir()
 TESTDIR = join(PYRATEPATH, 'tests')

@@ -32,7 +32,7 @@ from pyrate import process
 from pyrate.configuration import Configuration
 from tests.common import TEST_CONF_ROIPAC
 from tests.common import small_data_setup, MockIfg, copy_small_ifg_file_list, \
-    copy_and_setup_small_data, manipulate_test_conf, assert_two_dirs_equal
+    copy_and_setup_small_data, manipulate_test_conf, assert_two_dirs_equal, PYTHON3P6
 
 
 # TODO: figure out how  editing  resource.setrlimit fixes the error
@@ -353,6 +353,7 @@ class LegacyEqualityTestMultiprocessParallel(unittest.TestCase):
 
 
 @pytest.mark.slow
+@pytest.mark.skip(PYTHON3P6, reason='Skipped in python3p6')
 def test_error_msg_refpixel_out_out_bounds(tempdir, gamma_conf):
     "check correct latitude/longitude refpixel error is raised when specified refpixel is out of bounds"
     for x, (refx, refy) in zip(['longitude', 'latitude', 'longitude and latitude'],
@@ -363,6 +364,7 @@ def test_error_msg_refpixel_out_out_bounds(tempdir, gamma_conf):
 
 
 @pytest.mark.slow
+@pytest.mark.skip(PYTHON3P6, reason='Skipped in python3p6')
 def test_gamma_ref_pixel_search_vs_lat_lon(tempdir, gamma_conf):
     params_1, _ = _get_mlooked_files(gamma_conf, Path(tempdir()), refx=-1, refy=-1)
     params_2, _ = _get_mlooked_files(gamma_conf, Path(tempdir()), refx=150.941666654, refy=-34.218333314)
