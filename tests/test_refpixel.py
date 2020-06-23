@@ -19,7 +19,7 @@ This Python module contains tests for the refpixel.py PyRate module.
 import copy
 import unittest
 import shutil
-from subprocess import check_call
+from subprocess import check_call, run
 from pathlib import Path
 import pytest
 from numpy import nan, mean, std, isnan
@@ -353,12 +353,19 @@ class LegacyEqualityTestMultiprocessParallel(unittest.TestCase):
 
 
 @pytest.mark.slow
+def test_error_msg_refpixel_out_out_bounds(tempdir, gamma_conf):
+    "check correct latitude/longitude refpixel error is raised when specified refpixel is out of bounds"
+    for x, (refx, refy) in zip(['longitude', 'latitude', 'longitude and latitude'],
+                               [(150., -34.218333314), (150.941666654, -34.), (150, -34)]):
+        _, out = _get_mlooked_files(gamma_conf, Path(tempdir()), refx=refx, refy=refy)
+        msg = "Supplied {} value is outside the bounds of the interferogram data"
+        assert msg.format(x) in out.stderr
+
+
+@pytest.mark.slow
 def test_gamma_ref_pixel_search_vs_lat_lon(tempdir, gamma_conf):
-    # refx, refy: 38 58
-    # refx:          150.94211
-    # refy:          -34.21916
-    params_1 = _get_mlooked_files(gamma_conf, Path(tempdir()), refx=-1, refy=-1)
-    params_2 = _get_mlooked_files(gamma_conf, Path(tempdir()), refx=150.941666654, refy=-34.218333314)
+    params_1, _ = _get_mlooked_files(gamma_conf, Path(tempdir()), refx=-1, refy=-1)
+    params_2, _ = _get_mlooked_files(gamma_conf, Path(tempdir()), refx=150.941666654, refy=-34.218333314)
     assert_two_dirs_equal(params_1[cf.OUT_DIR], params_2[cf.OUT_DIR], f"*{params_1[cf.IFG_CROP_OPT]}cr.tif", 18)
 
 
@@ -371,5 +378,6 @@ def _get_mlooked_files(gamma_conf, tdir, refx, refy):
     cf.write_config_file(params=params, output_conf_file=output_conf)
     check_call(f"pyrate conv2tif -f {output_conf}", shell=True)
     check_call(f"pyrate prepifg -f {output_conf}", shell=True)
-    check_call(f"pyrate process -f {output_conf}", shell=True)
-    return params
+    stdout = run(f"pyrate process -f {output_conf}", shell=True, capture_output=True, text=True)
+    print("============================================", stdout)
+    return params, stdout
