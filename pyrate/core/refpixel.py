@@ -379,9 +379,9 @@ def _validate_search_win(refnx, refny, chipsize, head):
         raise RefPixelError(msg % max_rows)
 
 
-def _validate_ref_pixel(params: dict) -> None:
+def validate_supplied_lat_lon(params: dict) -> None:
     """
-    Sanity check that supplied lat/lon values sit within image bounds
+    Function to validate that the user supplied lat/lon values sit within image bounds
     """
     lon, lat = params[cf.REFX], params[cf.REFY]
     if lon == -1 or lat == -1:

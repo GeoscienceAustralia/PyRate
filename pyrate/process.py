@@ -158,8 +158,6 @@ def _ref_pixel_calc(ifg_paths: List[str], params: dict) -> Tuple[int, int]:
         log.info('Selected reference pixel coordinate (lon, lat): ({}, {})'.format(lon, lat))
 
     else:
-        # validate user supplied ref pixel
-        refpixel._validate_ref_pixel(params)
         log.info('Using reference pixel from config file (lon, lat): ({}, {})'.format(lon, lat))
         log.warning("Ensure user supplied reference pixel values are in lon/lat")
         refx, refy = refpixel.convert_geographic_coordinate_to_pixel_value(lon, lat, transform)
@@ -303,6 +301,8 @@ def process_ifgs(ifg_paths, params, rows, cols):
 
     preread_ifgs = _create_ifg_dict(ifg_paths, params=params)
 
+    # validate user supplied ref pixel
+    refpixel.validate_supplied_lat_lon(params)
     refpx, refpy = _ref_pixel_calc(ifg_paths, params)
 
     # remove non ifg keys

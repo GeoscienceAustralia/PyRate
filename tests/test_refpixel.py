@@ -25,7 +25,7 @@ import pytest
 from numpy import nan, mean, std, isnan
 
 from pyrate.core import config as cf
-from pyrate.core.refpixel import ref_pixel, _step
+from pyrate.core.refpixel import ref_pixel, _step, RefPixelError
 from pyrate.core import shared, ifgconstants as ifc
 
 from pyrate import process
@@ -68,7 +68,7 @@ class ReferencePixelInputTests(unittest.TestCase):
     def test_chipsize_valid(self):
         for illegal in [0, -1, -15, 1, 2, self.ifgs[0].ncols+1, 4, 6, 10, 20]:
             self.params[cf.REF_CHIP_SIZE] = illegal
-            self.assertRaises(ValueError, ref_pixel, self.ifgs, self.params)
+            self.assertRaises(RefPixelError, ref_pixel, self.ifgs, self.params)
 
     def test_minimum_fraction_missing(self):
         self.params[cf.REF_MIN_FRAC] = None
@@ -77,18 +77,18 @@ class ReferencePixelInputTests(unittest.TestCase):
     def test_minimum_fraction_threshold(self):
         for illegal in [-0.1, 1.1, 1.000001, -0.0000001]:
             self.params[cf.REF_MIN_FRAC] = illegal
-            self.assertRaises(ValueError, ref_pixel, self.ifgs, self.params)
+            self.assertRaises(RefPixelError, ref_pixel, self.ifgs, self.params)
 
     def test_search_windows(self):
         # 45 is max # cells a width 3 sliding window can iterate over
         for illegal in [-5, -1, 0, 46, 50, 100]:
             self.params[cf.REFNX] = illegal
-            self.assertRaises(ValueError, ref_pixel, self.ifgs, self.params)
+            self.assertRaises(RefPixelError, ref_pixel, self.ifgs, self.params)
 
         # 40 is max # cells a width 3 sliding window can iterate over
         for illegal in [-5, -1, 0, 71, 85, 100]:
             self.params[cf.REFNY] = illegal
-            self.assertRaises(ValueError, ref_pixel, self.ifgs, self.params)
+            self.assertRaises(RefPixelError, ref_pixel, self.ifgs, self.params)
 
     def test_missing_search_windows(self):
         self.params[cf.REFNX] = None
