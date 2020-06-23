@@ -392,17 +392,14 @@ def validate_supplied_lat_lon(params: dict) -> None:
         xlooks=params[cf.IFG_LKSX], ylooks=params[cf.IFG_LKSY],
         user_exts=(params[cf.IFG_XFIRST], params[cf.IFG_YFIRST], params[cf.IFG_XLAST], params[cf.IFG_YLAST])
     )
-    err = 0
-    if (lon < xmin) or (lon > xmax): err += 1
-    if (lat < ymin) or (lat > ymax): err += 2
-    if err == 1:
-        msg = f"Supplied longitude value is outside the bounds of the interferogram data"
-    elif err == 2:
-        msg = f"Supplied latitude value is outside the bounds of the interferogram data"
-    elif err == 3:
-        msg = f"Supplied latitude and longitude values are outside the bounds of the interferogram data"
-
-    if err != 0: raise RefPixelError(msg)
+    msg = "Supplied {} value is outside the bounds of the interferogram data"
+    lat_lon_txt = ''
+    if (lon < xmin) or (lon > xmax):
+        lat_lon_txt += 'longitude'
+    if (lat < ymin) or (lat > ymax):
+        lat_lon_txt += ' and latitude' if lat_lon_txt else 'latitude'
+    if lat_lon_txt:
+        raise RefPixelError(msg.format(lat_lon_txt))
 
 
 class RefPixelError(Exception):

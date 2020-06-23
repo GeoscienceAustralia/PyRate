@@ -23,7 +23,7 @@ def parallel(request):
     return request.param
 
 
-@pytest.fixture(params=[1, 2, 3, 4])
+@pytest.fixture(params=[1, 2, 4])
 def local_crop(request):
     return request.param
 
