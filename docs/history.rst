@@ -3,7 +3,7 @@
 Release History
 ===============
 
-0.4.2 (2020-06-##)
+0.4.2 (2020-06-26)
 ------------------
 Added
 +++++
@@ -11,7 +11,10 @@ Added
 - Save multi-looked coherence files to disk in ``prepifg`` step if ``cohmask = 1``.
 - Additional ``DATA_TYPE`` geotiff header metadata for above coherence files.
 - ``conv2tif`` and ``prepifg`` output files have a tag applied to filename dependent
-  on data type, i.e. ``_ifg.tif``, ``_coh.tif``,`` _dem.tif``.  
+  on data type, i.e. ``_ifg.tif``, ``_coh.tif``, ``_dem.tif``.
+- Metadata about used reference pixel is added to interferogram geotiff headers:
+  lat/lon and x/y values; mean and standard deviation of reference window samples.
+- Quicklook PNG and KML files are generated for the ``Stack Rate`` error map by default.
 
 Changed
 +++++++
@@ -19,6 +22,8 @@ Changed
 - Bugfix: fix the way that the reference phase is subtracted from interferograms
   during ``process`` step.
 - Bugfix: manual entry of ``refx/y`` converted to type ``int``.
+- User supplies latitude and longitude values when specifying a reference pixel in
+  the config file. Pixel x/y values are calculated and used internally.
 - Move ``Stack Rate`` masking to a standalone function ``pyrate.core.stack.mask_rate``,
   applied during the ``merge`` step and add unit tests.
 - Skip ``Stack Rate`` masking if threshold parameter ``maxsig = 0``.
@@ -29,11 +34,15 @@ Changed
   ii) loop function for processing full ifg array.
 - Refactor ``pyrate.merge`` script; remove duplicated code and create reusable
   generic functions.
+- Colourmap used to render quicklook PNG images is calculated from min/max values of
+  the geotiff band.
 - Updated ``test`` and ``dev`` requirements.
 
 Removed
 +++++++
 - Deprecate unused functions in ``pyrate.core.config`` and corresponding tests.
+- Static colourmap ``utils/colourmap.txt`` that was previously used to render
+  quicklook PNG images is removed. 
 
 0.4.1 (2020-05-19)
 ------------------
