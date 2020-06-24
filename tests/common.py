@@ -24,6 +24,7 @@ import shutil
 import stat
 import tempfile
 from os.path import join
+from subprocess import check_output
 from pathlib import Path
 
 import numpy as np
@@ -35,6 +36,13 @@ from pyrate.core.shared import (Ifg, nan_and_mm_convert, get_geotiff_header_info
                                 write_output_geotiff, dem_or_ifg)
 from pyrate.constants import PYRATEPATH
 from pyrate.configuration import Configuration
+
+TRAVIS = True if 'TRAVIS' in os.environ else False
+PYTHON3P6 = True if ('TRAVIS_PYTHON_VERSION' in os.environ and os.environ['TRAVIS_PYTHON_VERSION'] == '3.6') else False
+PYTHON3P7 = True if ('TRAVIS_PYTHON_VERSION' in os.environ and os.environ['TRAVIS_PYTHON_VERSION'] == '3.7') else False
+PYTHON3P8 = True if ('TRAVIS_PYTHON_VERSION' in os.environ and os.environ['TRAVIS_PYTHON_VERSION'] == '3.8') else False
+GDAL_VERSION = check_output(["gdal-config", "--version"]).decode(encoding="utf-8").split('\n')[0]
+
 
 TEMPDIR = tempfile.gettempdir()
 TESTDIR = join(PYRATEPATH, 'tests')
@@ -158,6 +166,26 @@ def assert_tifs_equal(tif1, tif2):
 
     mds = None  # close datasets
     sds = None
+
+
+def copy_small_ifg_file_list():
+    temp_dir = tempfile.mkdtemp()
+    move_files(SML_TEST_TIF, temp_dir, file_type='*.tif', copy=True)
+    datafiles = glob.glob(join(temp_dir, "*.tif"))
+    for d in datafiles:
+        Path(d).chmod(0o664)  # assign write permission as conv2tif output is readonly
+    return temp_dir, datafiles
+
+
+def copy_and_setup_small_data():
+    temp_dir, datafiles = copy_small_ifg_file_list()
+    datafiles.sort()
+    ifgs = [dem_or_ifg(i) for i in datafiles]
+
+    for i in ifgs:
+        i.open()
+        i.nodata_value = 0
+    return temp_dir, ifgs
 
 
 def small_ifg_file_list(datafiles=None):

@@ -21,7 +21,7 @@ import os
 from os.path import join
 import pickle as cp
 from collections import OrderedDict
-from typing import List
+from typing import List, Tuple
 import numpy as np
 
 from pyrate.core import (shared, algorithm, orbital, ref_phs_est as rpe, 
@@ -120,20 +120,22 @@ def _mst_calc(dest_tifs, params, tiles, preread_ifgs):
     mpiops.comm.barrier()
 
 
-def _ref_pixel_calc(ifg_paths, params):
+def _ref_pixel_calc(ifg_paths: List[str], params: dict) -> Tuple[int, int]:
     """
     Wrapper for reference pixel calculation
     """
-    refx = params[cf.REFX]
-    refy = params[cf.REFY]
+
+    lon = params[cf.REFX]
+    lat = params[cf.REFY]
 
     ifg = Ifg(ifg_paths[0])
     ifg.open(readonly=True)
+    # assume all interferograms have same projection and will share the same transform
+    transform = ifg.dataset.GetGeoTransform()
 
-    if refx == -1 or refy == -1:
+    if lon == -1 or lat == -1:
 
         log.info('Searching for best reference pixel location')
-
         half_patch_size, thresh, grid = refpixel.ref_pixel_setup(ifg_paths, params)
         process_grid = mpiops.array_split(grid)
         refpixel.save_ref_pixel_blocks(process_grid, half_patch_size, ifg_paths, params)
@@ -150,12 +152,19 @@ def _ref_pixel_calc(ifg_paths, params):
                 "Reference pixel calculation returned an all nan slice!\n"
                 "Cannot continue downstream computation. Please change reference pixel algorithm used before "
                 "continuing.")
+        refy, refx = refpixel_returned   # row first means first value is latitude
+        log.info('Selected reference pixel coordinate (x, y): ({}, {})'.format(refx, refy))
+        lon, lat = refpixel.convert_pixel_value_to_geographic_coordinate(refx, refy, transform)
+        log.info('Selected reference pixel coordinate (lon, lat): ({}, {})'.format(lon, lat))
 
-        refy, refx = refpixel_returned
-
-        log.info('Selected reference pixel coordinate: ({}, {})'.format(refx, refy))
     else:
-        log.info('Reusing reference pixel from config file: ({}, {})'.format(refx, refy))
+        log.info('Using reference pixel from config file (lon, lat): ({}, {})'.format(lon, lat))
+        log.warning("Ensure user supplied reference pixel values are in lon/lat")
+        refx, refy = refpixel.convert_geographic_coordinate_to_pixel_value(lon, lat, transform)
+        log.info('Converted reference pixel coordinate (x, y): ({}, {})'.format(refx, refy))
+
+    refpixel.update_refpix_metadata(ifg_paths, refx, refy, transform, params)
+
     log.debug("refpx, refpy: "+str(refx) + " " + str(refy))
     ifg.close()
     return int(refx), int(refy)
@@ -292,6 +301,8 @@ def process_ifgs(ifg_paths, params, rows, cols):
 
     preread_ifgs = _create_ifg_dict(ifg_paths, params=params)
 
+    # validate user supplied ref pixel
+    refpixel.validate_supplied_lat_lon(params)
     refpx, refpy = _ref_pixel_calc(ifg_paths, params)
 
     # remove non ifg keys

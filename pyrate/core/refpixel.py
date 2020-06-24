@@ -25,10 +25,103 @@ import numpy as np
 from numpy import isnan, std, mean, sum as nsum
 from joblib import Parallel, delayed
 
+from osgeo import gdal
+
 import pyrate.core.config as cf
+from pyrate.core import ifgconstants as ifc
+from pyrate.core import mpiops
 from pyrate.core.shared import Ifg
 from pyrate.core.shared import joblib_log_level
 from pyrate.core.logger import pyratelogger as log
+from pyrate.core import prepifg_helper
+
+
+def update_refpix_metadata(ifg_paths, refx, refy, transform, params):
+    """
+    Function that adds metadata about the chosen reference pixel to each interferogram.
+    """
+
+    pyrate_refpix_lon, pyrate_refpix_lat = mpiops.run_once(convert_pixel_value_to_geographic_coordinate,
+                                                           refx, refy, transform)
+
+    process_ifgs_paths = mpiops.array_split(ifg_paths)
+
+    for ifg_file in process_ifgs_paths:
+        log.debug("Updating metadata for: "+ifg_file)
+        ifg = Ifg(ifg_file)
+        log.debug("Open dataset")
+        ifg.open(readonly=True)
+        log.debug("Set no data value")
+        ifg.nodata_value = params["noDataValue"]
+        log.debug("Update no data values in dataset")
+        ifg.convert_to_nans()
+        log.debug("Convert mm")
+        ifg.convert_to_mm()
+        half_patch_size = params["refchipsize"] // 2
+        x, y = refx, refy
+        log.debug("Extract reference pixel windows")
+        data = ifg.phase_data[y - half_patch_size: y + half_patch_size + 1,
+                              x - half_patch_size: x + half_patch_size + 1]
+        log.debug("Calculate standard deviation for reference window")
+        stddev_ref_area = np.nanstd(data)
+        log.debug("Calculate mean for reference window")
+        mean_ref_area = np.nanmean(data)
+        ifg.add_metadata(**{
+            ifc.PYRATE_REFPIX_X: str(refx),
+            ifc.PYRATE_REFPIX_Y: str(refy),
+            ifc.PYRATE_REFPIX_LAT: str(pyrate_refpix_lat),
+            ifc.PYRATE_REFPIX_LON: str(pyrate_refpix_lon),
+            ifc.PYRATE_MEAN_REF_AREA: str(mean_ref_area),
+            ifc.PYRATE_STDDEV_REF_AREA: str(stddev_ref_area)
+        })
+
+        ifg.close()
+
+
+def convert_pixel_value_to_geographic_coordinate(refx, refy, transform):
+    """
+    Converts a pixel coordinate to a latitude/longitude coordinate given the
+    geotransform of the image.
+    Args:
+        refx: The pixel x coordinate.
+        refy: The pixel ye coordinate.
+        transform: The geotransform array of the image.
+    Returns:
+        Tuple of lon, lat geographic coordinate.
+    """
+
+    xOrigin = transform[0]
+    yOrigin = transform[3]
+    pixelWidth = transform[1]
+    pixelHeight = -transform[5]
+
+    lon = refx*pixelWidth + xOrigin
+    lat = yOrigin - refy*pixelHeight
+
+    return lon, lat
+
+
+def convert_geographic_coordinate_to_pixel_value(lon, lat, transform):
+    """
+    Converts a latitude/longitude coordinate to a pixel coordinate given the
+    geotransform of the image.
+    Args:
+        lon: Pixel longitude.
+        lat: Pixel latitude.
+        transform: The geotransform array of the image.
+    Returns:
+        Tuple of refx, refy pixel coordinates.
+    """
+
+    xOrigin = transform[0]
+    yOrigin = transform[3]
+    pixelWidth = transform[1]
+    pixelHeight = -transform[5]
+
+    refx = round((lon - xOrigin) / pixelWidth)
+    refy = round((yOrigin - lat) / pixelHeight)
+
+    return refx, refy
 
 
 # TODO: move error checking to config step (for fail fast)
@@ -66,8 +159,8 @@ def ref_pixel(ifgs, params):
             mean_sds.append(_ref_pixel_multi(g, half_patch_size, phase_data, thresh, params))
         refxy = find_min_mean(mean_sds, grid)
 
-    if isinstance(refxy, ValueError):
-        raise ValueError('Refpixel calculation not possible!')
+    if isinstance(refxy, RefPixelError):
+        raise RefPixelError('Refpixel calculation not possible!')
 
     refy, refx = refxy
 
@@ -92,7 +185,7 @@ def find_min_mean(mean_sds, grid):
     try:
         refp_index = np.nanargmin(mean_sds)
         return grid[refp_index]
-    except ValueError as v:
+    except RefPixelError as v:
         log.error(v)
         return v
 
@@ -250,7 +343,7 @@ def _validate_chipsize(chipsize, head):
 
     if chipsize < 3 or chipsize > head.ncols or (chipsize % 2 == 0):
         msg = "Chipsize setting must be >=3 and at least <= grid width"
-        raise ValueError(msg)
+        raise RefPixelError(msg)
     log.debug('Chipsize validation successful')
 
 
@@ -262,7 +355,7 @@ def _validate_minimum_fraction(min_frac):
         raise cf.ConfigException('Minimum fraction is None')
 
     if min_frac < 0.0 or min_frac > 1.0:
-        raise ValueError("Minimum fraction setting must be >= 0.0 and <= 1.0 ")
+        raise RefPixelError("Minimum fraction setting must be >= 0.0 and <= 1.0 ")
 
 
 def _validate_search_win(refnx, refny, chipsize, head):
@@ -275,7 +368,7 @@ def _validate_search_win(refnx, refny, chipsize, head):
     max_width = (head.ncols - (chipsize-1))
     if refnx < 1 or refnx > max_width:
         msg = "Invalid refnx setting, must be > 0 and <= %s"
-        raise ValueError(msg % max_width)
+        raise RefPixelError(msg % max_width)
 
     if refny is None:
         raise cf.ConfigException('refny is None')
@@ -283,10 +376,33 @@ def _validate_search_win(refnx, refny, chipsize, head):
     max_rows = (head.nrows - (chipsize-1))
     if refny < 1 or refny > max_rows:
         msg = "Invalid refny setting, must be > 0 and <= %s"
-        raise ValueError(msg % max_rows)
+        raise RefPixelError(msg % max_rows)
+
+
+def validate_supplied_lat_lon(params: dict) -> None:
+    """
+    Function to validate that the user supplied lat/lon values sit within image bounds
+    """
+    lon, lat = params[cf.REFX], params[cf.REFY]
+    if lon == -1 or lat == -1:
+        return
+    xmin, ymin, xmax, ymax = prepifg_helper.get_analysis_extent(
+        crop_opt=params[cf.IFG_CROP_OPT],
+        rasters=[prepifg_helper.dem_or_ifg(p.sampled_path) for p in params[cf.INTERFEROGRAM_FILES]],
+        xlooks=params[cf.IFG_LKSX], ylooks=params[cf.IFG_LKSY],
+        user_exts=(params[cf.IFG_XFIRST], params[cf.IFG_YFIRST], params[cf.IFG_XLAST], params[cf.IFG_YLAST])
+    )
+    msg = "Supplied {} value is outside the bounds of the interferogram data"
+    lat_lon_txt = ''
+    if (lon < xmin) or (lon > xmax):
+        lat_lon_txt += 'longitude'
+    if (lat < ymin) or (lat > ymax):
+        lat_lon_txt += ' and latitude' if lat_lon_txt else 'latitude'
+    if lat_lon_txt:
+        raise RefPixelError(msg.format(lat_lon_txt))
 
 
 class RefPixelError(Exception):
-    '''
+    """
     Generic exception for reference pixel errors.
-    '''
+    """

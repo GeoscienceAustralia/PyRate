@@ -56,7 +56,7 @@ def ref_est_method(request):
     return request.param
 
 
-@pytest.fixture(params=[(-1, -1), (38, 58)])
+@pytest.fixture(params=[(-1, -1), (150.941666654, -34.218333314)])
 def ref_pixel(request):
     return request.param
 
