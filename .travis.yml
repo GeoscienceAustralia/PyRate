@@ -53,7 +53,6 @@ install:
   - pip install GDAL==$(gdal-config --version)
   - python setup.py install
   - rm -rf Py_Rate.egg-info  # remove the local egg
-  - export PYRATEPATH=$(pwd)
   - export PYTHONPATH=$PYRATEPATH:$PYTHONPATH
   - chmod 444 tests/test_data/small_test/tif/geo_070709-070813_unw.tif  # makes the file readonly, used in a test
 
