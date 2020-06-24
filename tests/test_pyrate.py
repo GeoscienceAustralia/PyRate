@@ -136,12 +136,13 @@ class PyRateTests(unittest.TestCase):
             params[cf.PROCESSOR] = 0  # roipac
             params[cf.APS_CORRECTION] = 0
             paths = glob.glob(join(cls.BASE_OUT_DIR, 'geo_*-*.tif'))
+            paths = sorted(paths)
             params[cf.PARALLEL] = False
             params[cf.INTERFEROGRAM_FILES] = [MultiplePaths(cls.BASE_OUT_DIR, p) for p in paths]
             for p in params[cf.INTERFEROGRAM_FILES]:  # cheat
                 p.sampled_path = p.converted_path
             params["rows"], params["cols"] = 2, 2
-            process.process_ifgs(sorted(paths), params)
+            process.process_ifgs(params)
 
             if not hasattr(cls, 'ifgs'):
                 cls.ifgs = get_ifgs(out_dir=cls.BASE_OUT_DIR)
@@ -231,7 +232,7 @@ class ParallelPyRateTests(unittest.TestCase):
         ifgs = common.small_data_setup()
         params[cf.INTERFEROGRAM_FILES] = multi_paths
         params["rows"], params["cols"] = rows, cols
-        cls.refpixel_p, cls.maxvar_p, cls.vcmt_p = process.process_ifgs(cls.sampled_paths, params)
+        cls.refpixel_p, cls.maxvar_p, cls.vcmt_p = process.process_ifgs(params)
         cls.mst_p = common.reconstruct_mst(ifgs[0].shape, tiles, params[cf.TMPDIR])
         cls.rate_p, cls.error_p, cls.samples_p = \
             [common.reconstruct_stack_rate(ifgs[0].shape, tiles, params[cf.TMPDIR], t) for t in rate_types]
@@ -254,7 +255,7 @@ class ParallelPyRateTests(unittest.TestCase):
         prepifg.main(orig_params)
         params[cf.INTERFEROGRAM_FILES] = multi_paths
         params["rows"], params["cols"] = rows, cols
-        cls.refpixel, cls.maxvar, cls.vcmt = process.process_ifgs(cls.sampled_paths_s, params)
+        cls.refpixel, cls.maxvar, cls.vcmt = process.process_ifgs(params)
         cls.mst = common.reconstruct_mst(ifgs[0].shape, tiles, params[cf.TMPDIR])
         cls.rate, cls.error, cls.samples = \
             [common.reconstruct_stack_rate(ifgs[0].shape, tiles, params[cf.TMPDIR], t) for t in rate_types]

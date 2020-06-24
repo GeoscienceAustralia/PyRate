@@ -19,6 +19,7 @@ parsed in a PyRate configuration file.
 """
 from configparser import ConfigParser
 from pathlib import Path, PurePath
+from typing import Union
 from pyrate.constants import NO_OF_PARALLEL_PROCESSES
 from pyrate.default_parameters import PYRATE_DEFAULT_CONFIGURATION
 from pyrate.core.algorithm import factorise_integer
@@ -199,3 +200,9 @@ class Configuration:
         val = self.__getattribute__(attr)
         files = parse_namelist(val)
         return [MultiplePaths(self.outdir, p, self.ifglksx, self.ifgcropopt, input_type=input_type) for p in files]
+
+
+def write_config_parser_file(conf: ConfigParser, output_conf_file: Union[str, Path]):
+    """replacement function for write_config_file which uses dict instead of a ConfigParser instance"""
+    with open(output_conf_file, 'w') as configfile:
+        conf.write(configfile)

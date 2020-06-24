@@ -269,11 +269,7 @@ def main(params):
     """
     mpi_vs_multiprocess_logging("process", params)
 
-    ifg_paths = []
-    for ifg_path in params[cf.INTERFEROGRAM_FILES]:
-        ifg_paths.append(ifg_path.sampled_path)
-
-    return process_ifgs(ifg_paths, params)
+    return process_ifgs(params)
 
 
 def _stack_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
@@ -368,25 +364,20 @@ def _timeseries_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
 
 process_steps = {
     'refpixel': lambda ifg_paths, tiles, params, preread_ifgs: _ref_pixel_calc(ifg_paths, params),
-    'orbfit': _orb_fit_calc,
-    'refphase': _ref_phase_estimation,
-    'mst': _mst_calc,
-    'apscorrect': wrap_spatio_temporal_filter,
+    'orbfit': lambda ifg_paths, tiles, params, preread_ifgs: _orb_fit_calc(ifg_paths, tiles, params, preread_ifgs),
+    'refphase': lambda ifg_paths, tiles, params, preread_ifgs: _ref_phase_estimation,
+    'mst': lambda ifg_paths, tiles, params, preread_ifgs: _mst_calc,
+    'apscorrect': lambda ifg_paths, tiles, params, preread_ifgs:wrap_spatio_temporal_filter,
     'maxvar': _maxvar_vcm_calc,
     'timeseries': _timeseries_calc,
     'stack': _stack_calc
 }
 
 
-def process_ifgs(ifg_paths, params):
+def process_ifgs(params):
     """
     Top level function to perform PyRate workflow on given interferograms
-
-    :param list ifg_paths: List of interferogram paths
     :param dict params: Dictionary of configuration parameters
-    :param int rows: Number of sub-tiles in y direction
-    :param int cols: Number of sub-tiles in x direction
-
     :return: refpt: tuple of reference pixel x and y position
     :rtype: tuple
     :return: maxvar: array of maximum variance values of interferograms
@@ -394,6 +385,8 @@ def process_ifgs(ifg_paths, params):
     :return: vcmt: Variance-covariance matrix array
     :rtype: ndarray
     """
+
+    ifg_paths = [ifg_path.sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
 
     if mpiops.size > 1:  # turn of multiprocessing during mpi jobs
         params[cf.PARALLEL] = False
@@ -404,6 +397,8 @@ def process_ifgs(ifg_paths, params):
     tiles = mpiops.run_once(get_tiles, ifg_paths[0], rows, cols)
 
     preread_ifgs = _create_ifg_dict(ifg_paths, params=params)
+
+    # import IPython; IPython.embed(); import sys; sys.exit()
     # for step in params['process']:
     #     process_steps[step](ifg_paths, tiles, params, preread_ifgs)
 

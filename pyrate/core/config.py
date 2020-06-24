@@ -23,18 +23,13 @@ in configuration files.
 # pylint: disable=W1203
 # pylint: disable=too-many-locals
 # pylint: disable=trailing-whitespace
-from typing import List, Tuple, Dict, Optional, Union
+from typing import Dict
 import os
 from os.path import splitext, split
 import re
-from configparser import ConfigParser
-from pathlib import Path
-from osgeo import gdal
 
 from pyrate.core.ifgconstants import YEARS_PER_DAY
-from pyrate.constants import CONV2TIF, PREPIFG, PROCESS, MERGE
-from pyrate.constants import SIXTEEN_DIGIT_EPOCH_PAIR, TWELVE_DIGIT_EPOCH_PAIR, EIGHT_DIGIT_EPOCH, \
-    sixteen_digits_pattern
+from pyrate.constants import sixteen_digits_pattern
 from pyrate.core.logger import pyratelogger as _logger
 
 # general constants
@@ -448,12 +443,6 @@ def write_config_file(params, output_conf_file):
                 f.write(''.join([k, ':\t', str(v), '\n']))
             else:
                 f.write(''.join([k, ':\t', '', '\n']))
-
-
-def write_config_parser_file(conf: ConfigParser, output_conf_file: Union[str, Path]):
-    """replacement function for write_config_file which uses dict instead of a ConfigParser instance"""
-    with open(output_conf_file, 'w') as configfile:
-        conf.write(configfile)
 
 
 def transform_params(params):

@@ -32,7 +32,6 @@ from pyrate.core.covariance import cvd, get_vcmt, RDist
 from pyrate.configuration import Configuration
 import pyrate.core.orbital
 from pyrate.core import roipac
-from pyrate.core.config import parse_namelist
 from tests import common
 from tests.common import (small5_mock_ifgs, small5_ifgs, TEST_CONF_ROIPAC,
     small_data_setup, prepare_ifgs_without_phase)
