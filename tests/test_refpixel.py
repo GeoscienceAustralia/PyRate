@@ -19,20 +19,20 @@ This Python module contains tests for the refpixel.py PyRate module.
 import copy
 import unittest
 import shutil
-from subprocess import check_call
+from subprocess import check_call, run
 from pathlib import Path
 import pytest
 from numpy import nan, mean, std, isnan
 
 from pyrate.core import config as cf
-from pyrate.core.refpixel import ref_pixel, _step
+from pyrate.core.refpixel import ref_pixel, _step, RefPixelError
 from pyrate.core import shared, ifgconstants as ifc
 
 from pyrate import process
 from pyrate.configuration import Configuration
 from tests.common import TEST_CONF_ROIPAC
 from tests.common import small_data_setup, MockIfg, copy_small_ifg_file_list, \
-    copy_and_setup_small_data, manipulate_test_conf, assert_two_dirs_equal, PYTHON3P7, PYTHON3P6
+    copy_and_setup_small_data, manipulate_test_conf, assert_two_dirs_equal, PYTHON3P6
 
 
 # TODO: figure out how  editing  resource.setrlimit fixes the error
@@ -68,7 +68,7 @@ class ReferencePixelInputTests(unittest.TestCase):
     def test_chipsize_valid(self):
         for illegal in [0, -1, -15, 1, 2, self.ifgs[0].ncols+1, 4, 6, 10, 20]:
             self.params[cf.REF_CHIP_SIZE] = illegal
-            self.assertRaises(ValueError, ref_pixel, self.ifgs, self.params)
+            self.assertRaises(RefPixelError, ref_pixel, self.ifgs, self.params)
 
     def test_minimum_fraction_missing(self):
         self.params[cf.REF_MIN_FRAC] = None
@@ -77,18 +77,18 @@ class ReferencePixelInputTests(unittest.TestCase):
     def test_minimum_fraction_threshold(self):
         for illegal in [-0.1, 1.1, 1.000001, -0.0000001]:
             self.params[cf.REF_MIN_FRAC] = illegal
-            self.assertRaises(ValueError, ref_pixel, self.ifgs, self.params)
+            self.assertRaises(RefPixelError, ref_pixel, self.ifgs, self.params)
 
     def test_search_windows(self):
         # 45 is max # cells a width 3 sliding window can iterate over
         for illegal in [-5, -1, 0, 46, 50, 100]:
             self.params[cf.REFNX] = illegal
-            self.assertRaises(ValueError, ref_pixel, self.ifgs, self.params)
+            self.assertRaises(RefPixelError, ref_pixel, self.ifgs, self.params)
 
         # 40 is max # cells a width 3 sliding window can iterate over
         for illegal in [-5, -1, 0, 71, 85, 100]:
             self.params[cf.REFNY] = illegal
-            self.assertRaises(ValueError, ref_pixel, self.ifgs, self.params)
+            self.assertRaises(RefPixelError, ref_pixel, self.ifgs, self.params)
 
     def test_missing_search_windows(self):
         self.params[cf.REFNX] = None
@@ -353,10 +353,21 @@ class LegacyEqualityTestMultiprocessParallel(unittest.TestCase):
 
 
 @pytest.mark.slow
-@pytest.mark.skipif(PYTHON3P6 or PYTHON3P7, reason="Only run in python 3.8")
+@pytest.mark.skip(PYTHON3P6, reason='Skipped in python3p6')
+def test_error_msg_refpixel_out_out_bounds(tempdir, gamma_conf):
+    "check correct latitude/longitude refpixel error is raised when specified refpixel is out of bounds"
+    for x, (refx, refy) in zip(['longitude', 'latitude', 'longitude and latitude'],
+                               [(150., -34.218333314), (150.941666654, -34.), (150, -34)]):
+        _, out = _get_mlooked_files(gamma_conf, Path(tempdir()), refx=refx, refy=refy)
+        msg = "Supplied {} value is outside the bounds of the interferogram data"
+        assert msg.format(x) in out.stderr
+
+
+@pytest.mark.slow
+@pytest.mark.skip(PYTHON3P6, reason='Skipped in python3p6')
 def test_gamma_ref_pixel_search_vs_lat_lon(tempdir, gamma_conf):
-    params_1 = _get_mlooked_files(gamma_conf, Path(tempdir()), refx=-1, refy=-1)
-    params_2 = _get_mlooked_files(gamma_conf, Path(tempdir()), refx=150.941666654, refy=-34.218333314)
+    params_1, _ = _get_mlooked_files(gamma_conf, Path(tempdir()), refx=-1, refy=-1)
+    params_2, _ = _get_mlooked_files(gamma_conf, Path(tempdir()), refx=150.941666654, refy=-34.218333314)
     assert_two_dirs_equal(params_1[cf.OUT_DIR], params_2[cf.OUT_DIR], f"*{params_1[cf.IFG_CROP_OPT]}cr.tif", 18)
 
 
@@ -369,5 +380,6 @@ def _get_mlooked_files(gamma_conf, tdir, refx, refy):
     cf.write_config_file(params=params, output_conf_file=output_conf)
     check_call(f"pyrate conv2tif -f {output_conf}", shell=True)
     check_call(f"pyrate prepifg -f {output_conf}", shell=True)
-    check_call(f"pyrate process -f {output_conf}", shell=True)
-    return params
+    stdout = run(f"pyrate process -f {output_conf}", shell=True, capture_output=True, text=True)
+    print("============================================", stdout)
+    return params, stdout

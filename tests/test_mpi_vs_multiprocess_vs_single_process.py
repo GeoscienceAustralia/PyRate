@@ -5,10 +5,17 @@ from pathlib import Path
 from subprocess import check_call, check_output, CalledProcessError
 import numpy as np
 from pyrate.core import config as cf
-from tests.common import assert_same_files_produced, assert_two_dirs_equal, manipulate_test_conf, TRAVIS, PYTHON3P7, \
-    PYTHON3P6, PYTHON3P8
+from tests.common import (
+    assert_same_files_produced,
+    assert_two_dirs_equal,
+    manipulate_test_conf,
+    TRAVIS,
+    PYTHON3P6,
+    PYTHON3P7,
+    PYTHON3P8,
+    GDAL_VERSION
+)
 
-GDAL_VERSION = check_output(["gdal-config", "--version"]).decode(encoding="utf-8").split('\n')[0]
 # python3.7 and gdal3.0.4
 REGRESSION = PYTHON3P7 and (GDAL_VERSION == '3.0.4')
 # python3.7 and gdal3.0.2
@@ -20,7 +27,7 @@ def parallel(request):
     return request.param
 
 
-@pytest.fixture(params=[1, 2, 3, 4])
+@pytest.fixture(params=[1, 2, 4])
 def local_crop(request):
     return request.param
 
@@ -124,6 +131,8 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_conf):
 
     # compare merge step
     assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "stack*.tif", 3)
+    assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "stack*.kml", 2)
+    assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "stack*.png", 2)
     assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "stack*.npy", 3)
     assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "tscuml*.tif", 12)
     assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "tsincr*.tif", 12)
@@ -248,6 +257,8 @@ def test_stack_and_ts_mpi_vs_parallel_vs_serial(modified_config_short, gamma_con
 
     # compare merge step
     assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "stack*.tif", 3)
+    assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "stack*.kml", 2)
+    assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "stack*.png", 2)
     assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "stack*.npy", 3)
     assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "tscuml*.tif")
 

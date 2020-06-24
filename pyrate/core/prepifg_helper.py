@@ -24,13 +24,13 @@ from collections import namedtuple
 from math import modf
 from numbers import Number
 from decimal import Decimal
-
+from typing import List, Tuple, Union
 from numpy import array, nan, isnan, nanmean, float32, zeros, sum as nsum
 from osgeo import gdal
 
 from pyrate.core.gdal_python import crop_resample_average
 from pyrate.core import config as cf
-from pyrate.core.shared import output_tiff_filename, dem_or_ifg
+from pyrate.core.shared import output_tiff_filename, dem_or_ifg, Ifg, DEM
 
 CustomExts = namedtuple('CustExtents', ['xfirst', 'yfirst', 'xlast', 'ylast'])
 
@@ -45,7 +45,8 @@ CROP_OPTIONS = [MINIMUM_CROP, MAXIMUM_CROP, CUSTOM_CROP, ALREADY_SAME_SIZE]
 GRID_TOL = 1e-6
 
 
-def get_analysis_extent(crop_opt, rasters, xlooks, ylooks, user_exts):
+def get_analysis_extent(crop_opt: int, rasters: List[Union[Ifg, DEM]], xlooks: int, ylooks: int,
+                        user_exts: Tuple[float, float, float, float]) -> Tuple[float, float, float, float]:
     """
     Function checks prepifg parameters and returns extents/bounding box.
 
@@ -267,7 +268,7 @@ def _resample(data, xscale, yscale, thresh):
     return dest
 
 
-def _min_bounds(ifgs):
+def _min_bounds(ifgs: List[Ifg]) -> Tuple[float, float, float, float]:
     """
     Returns bounds for overlapping area of the given interferograms.
     """
@@ -279,7 +280,7 @@ def _min_bounds(ifgs):
     return xmin, ymin, xmax, ymax
 
 
-def _max_bounds(ifgs):
+def _max_bounds(ifgs: List[Ifg]) -> Tuple[float, float, float, float]:
     """
     Returns bounds for the total area covered by the given interferograms.
     """
@@ -291,7 +292,7 @@ def _max_bounds(ifgs):
     return xmin, ymin, xmax, ymax
 
 
-def _get_same_bounds(ifgs):
+def _get_same_bounds(ifgs: List[Ifg]) -> Tuple[float, float, float, float]:
     """
     Check and return bounding box for ALREADY_SAME_SIZE option.
     """

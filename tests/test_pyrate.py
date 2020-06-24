@@ -223,8 +223,10 @@ class ParallelPyRateTests(unittest.TestCase):
         # dest_paths are tifs that have been geotif converted and multilooked
         cls.converted_paths = [b.converted_path for b in multi_paths]
         cls.sampled_paths = [b.sampled_path for b in multi_paths]
-        conv2tif.do_geotiff(multi_paths, params)
-        prepifg.do_prepifg(multi_paths, params)
+        from copy import copy
+        orig_params = copy(params)
+        conv2tif.main(params)
+        prepifg.main(orig_params)
         tiles = pyrate.core.shared.get_tiles(cls.sampled_paths[0], rows, cols)
         ifgs = common.small_data_setup()
         params[cf.INTERFEROGRAM_FILES] = multi_paths
@@ -247,8 +249,9 @@ class ParallelPyRateTests(unittest.TestCase):
 
         cls.converted_paths_s = [b.converted_path for b in multi_paths]
         cls.sampled_paths_s = [b.sampled_path for b in multi_paths]
-        conv2tif.do_geotiff(multi_paths, params)
-        prepifg.do_prepifg(multi_paths, params)
+        orig_params = copy(params)
+        conv2tif.main(params)
+        prepifg.main(orig_params)
         params[cf.INTERFEROGRAM_FILES] = multi_paths
         params["rows"], params["cols"] = rows, cols
         cls.refpixel, cls.maxvar, cls.vcmt = process.process_ifgs(cls.sampled_paths_s, params)

@@ -1,13 +1,17 @@
-import os
 import shutil
 import pytest
-import numpy as np
 from pathlib import Path
-from subprocess import check_call, check_output, CalledProcessError
+from subprocess import check_call
 import numpy as np
 from pyrate.core import config as cf
-from tests.common import assert_two_dirs_equal, manipulate_test_conf, PYTHON3P8, PYTHON3P6, PYTHON3P7, TRAVIS
-GDAL_VERSION = check_output(["gdal-config", "--version"]).decode(encoding="utf-8").split('\n')[0]
+from tests.common import (
+    assert_two_dirs_equal,
+    manipulate_test_conf,
+    TRAVIS,
+    PYTHON3P6,
+    PYTHON3P7,
+    GDAL_VERSION
+)
 # python3.7 and gdal3.0.4
 REGRESSION = PYTHON3P7 and (GDAL_VERSION == '3.0.4')
 # python3.7 and gdal3.0.2
