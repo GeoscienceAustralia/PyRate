@@ -43,6 +43,7 @@ def wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs):
     A wrapper for the spatio-temporal filter so it can be tested.
     See docstring for spatio_temporal_filter.
     """
+    ifg_paths = [ifg_path.sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
     if not params[cf.APSEST]:
         log.info('APS correction not required.')
         return

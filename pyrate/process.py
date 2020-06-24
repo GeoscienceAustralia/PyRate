@@ -45,13 +45,12 @@ def _join_dicts(dicts):
     return assembled_dict
 
 
-def _create_ifg_dict(dest_tifs, params):
+def _create_ifg_dict(params):
     """
     1. Convert ifg phase data into numpy binary files.
     2. Save the preread_ifgs dict with information about the ifgs that are
     later used for fast loading of Ifg files in IfgPart class
 
-    :param list dest_tifs: List of destination tifs
     :param dict params: Config dictionary
     :param list tiles: List of all Tile instances
 
@@ -59,6 +58,7 @@ def _create_ifg_dict(dest_tifs, params):
                 interferograms that are used later in workflow
     :rtype: dict
     """
+    dest_tifs = [ifg_path.sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
     ifgs_dict = {}
     process_tifs = mpiops.array_split(dest_tifs)
     for d in process_tifs:
@@ -101,10 +101,11 @@ def __save_ifgs_dict_with_headers_and_epochs(dest_tifs, ifgs_dict, params, proce
     return ifgs_dict
 
 
-def _mst_calc(dest_tifs, params, tiles, preread_ifgs):
+def _mst_calc(params, tiles, preread_ifgs):
     """
     MPI wrapper function for MST calculation
     """
+    dest_tifs = [ifg_path.sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
     process_tiles = mpiops.array_split(tiles)
     log.info('Calculating minimum spanning tree matrix')
 
@@ -123,10 +124,11 @@ def _mst_calc(dest_tifs, params, tiles, preread_ifgs):
     mpiops.comm.barrier()
 
 
-def _ref_pixel_calc(ifg_paths: List[str], params: dict) -> Tuple[int, int]:
+def _ref_pixel_calc(params: dict) -> Tuple[int, int]:
     """
     Wrapper for reference pixel calculation
     """
+    ifg_paths = [ifg_path.sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
     lon = params[cf.REFX]
     lat = params[cf.REFY]
 
@@ -208,10 +210,11 @@ def _orb_fit_calc(params, preread_ifgs=None) -> None:
     log.debug('Finished Orbital error correction')
 
 
-def _ref_phase_estimation(ifg_paths, params, refpx, refpy):
+def _ref_phase_estimation(params, refpx, refpy):
     """
     Wrapper for reference phase estimation.
     """
+    ifg_paths = [ifg_path.sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
     log.info("Calculating reference phase")
     if len(ifg_paths) < 2:
         raise rpe.ReferencePhaseError(
@@ -272,10 +275,11 @@ def main(params):
     return process_ifgs(params)
 
 
-def _stack_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
+def _stack_calc(params, vcmt, tiles, preread_ifgs):
     """
     MPI wrapper for stacking calculation
     """
+    ifg_paths = [ifg_path.sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
     process_tiles = mpiops.array_split(tiles)
     log.info('Calculating rate map from stacking')
     output_dir = params[cf.TMPDIR]
@@ -292,10 +296,11 @@ def _stack_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
     log.debug("Finished stack rate calc!")
 
 
-def _maxvar_vcm_calc(ifg_paths, params, preread_ifgs):
+def _maxvar_vcm_calc(params, preread_ifgs):
     """
     MPI wrapper for maxvar and vcmt computation
     """
+    ifg_paths = [ifg_path.sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
     log.info('Calculating the temporal variance-covariance matrix')
     process_indices = mpiops.array_split(range(len(ifg_paths)))
 
@@ -334,10 +339,11 @@ def _maxvar_vcm_calc(ifg_paths, params, preread_ifgs):
     return maxvar, vcmt
 
 
-def _timeseries_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
+def _timeseries_calc(params, vcmt, tiles, preread_ifgs):
     """
     MPI wrapper for time series calculation.
     """
+    ifg_paths = [ifg_path.sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
     if params[cf.TIME_SERIES_CAL] == 0:
         log.info('Time Series Calculation not required')
         return
@@ -396,32 +402,32 @@ def process_ifgs(params):
     rows, cols = params["rows"], params["cols"]
     tiles = mpiops.run_once(get_tiles, ifg_paths[0], rows, cols)
 
-    preread_ifgs = _create_ifg_dict(ifg_paths, params=params)
+    preread_ifgs = _create_ifg_dict(params=params)
 
     # import IPython; IPython.embed(); import sys; sys.exit()
     # for step in params['process']:
     #     process_steps[step](ifg_paths, tiles, params, preread_ifgs)
 
-    refpx, refpy = _ref_pixel_calc(ifg_paths, params)
+    refpx, refpy = _ref_pixel_calc(params)
 
     _orb_fit_calc(params, preread_ifgs)
 
-    _ref_phase_estimation(ifg_paths, params, refpx, refpy)
+    _ref_phase_estimation(params, refpx, refpy)
 
     shared.save_numpy_phase(ifg_paths, tiles, params)
-    _mst_calc(ifg_paths, params, tiles, preread_ifgs)
+    _mst_calc(params, tiles, preread_ifgs)
 
     # spatio-temporal aps filter
-    wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs)
+    wrap_spatio_temporal_filter(params, tiles, preread_ifgs)
 
-    maxvar, vcmt = _maxvar_vcm_calc(ifg_paths, params, preread_ifgs)
+    maxvar, vcmt = _maxvar_vcm_calc(params, preread_ifgs)
     # save phase data tiles as numpy array for timeseries and stackrate calc
 
     shared.save_numpy_phase(ifg_paths, tiles, params)
 
-    _timeseries_calc(ifg_paths, params, vcmt, tiles, preread_ifgs)
+    _timeseries_calc(params, vcmt, tiles, preread_ifgs)
 
-    _stack_calc(ifg_paths, params, vcmt, tiles, preread_ifgs)
+    _stack_calc(params, vcmt, tiles, preread_ifgs)
 
     log.info('PyRate workflow completed')
     return (refpx, refpy), maxvar, vcmt
