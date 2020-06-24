@@ -20,7 +20,6 @@ This Python module runs the main PyRate processing workflow
 import os
 from os.path import join
 import pickle as cp
-from collections import OrderedDict
 from typing import List, Tuple
 import numpy as np
 
@@ -32,7 +31,6 @@ from pyrate.core.aps import wrap_spatio_temporal_filter
 from pyrate.core.shared import Ifg, PrereadIfg, get_tiles, mpi_vs_multiprocess_logging
 from pyrate.core.logger import pyratelogger as log
 from pyrate.prepifg import find_header
-from pyrate.configuration import MultiplePaths
 
 MASTER_PROCESS = 0
 
@@ -175,10 +173,11 @@ def _ref_pixel_calc(ifg_paths: List[str], params: dict) -> Tuple[int, int]:
     return int(refx), int(refy)
 
 
-def _orb_fit_calc(multi_paths: List[MultiplePaths], params, preread_ifgs=None) -> None:
+def _orb_fit_calc(params, preread_ifgs=None) -> None:
     """
     MPI wrapper for orbital fit correction
     """
+    multi_paths = params[cf.INTERFEROGRAM_FILES]
     if not params[cf.ORBITAL_FIT]:
         log.info('Orbital correction not required!')
         print('Orbital correction not required!')
@@ -410,8 +409,7 @@ def process_ifgs(ifg_paths, params):
 
     refpx, refpy = _ref_pixel_calc(ifg_paths, params)
 
-    multi_paths = params[cf.INTERFEROGRAM_FILES]
-    _orb_fit_calc(multi_paths, params, preread_ifgs)
+    _orb_fit_calc(params, preread_ifgs)
 
     _ref_phase_estimation(ifg_paths, params, refpx, refpy)
 
