@@ -113,26 +113,25 @@ def time_series(ifgs, params, vcmt=None, mst=None):
     network. Solves the linear least squares system using either the SVD
     method (similar to the SBAS method implemented by Berardino et al. 2002)
     or a Finite Difference method using a Laplacian Smoothing operator
-    (similar to the method implemented by Schmidt and Burgmann 2003)
+    (similar to the method implemented by Schmidt and Burgmann 2003).
+    The returned outputs are multi-dimensional arrays of
+    size(nrows, ncols, nepochs-1), where:
+
+        - *nrows* is the number of rows in the ifgs,
+        - *ncols* is the  number of columns in the ifgs, and
+        - *nepochs* is the number of unique epochs (dates)
 
     :param list ifgs: list of interferogram class objects.
     :param dict params: Dictionary of configuration parameters
     :param ndarray vcmt: Positive definite temporal variance covariance matrix
     :param ndarray mst: [optional] Minimum spanning tree array.
 
-    :return: Tuple with the elements:
-
-        - incremental displacement time series,
-        - cumulative displacement time series, and
-        - velocity for the epoch interval
-
-        these outputs are multi-dimensional arrays of
-        size(nrows, ncols, nepochs-1), where:
-
-        - *nrows* is the number of rows in the ifgs,
-        - *ncols* is the  number of columns in the ifgs, and
-        - *nepochs* is the number of unique epochs (dates)
-    :rtype: tuple
+    :return: tsincr: incremental displacement time series.
+    :rtype: ndarray
+    :return: tscuml: cumulative displacement time series.
+    :rtype: ndarray
+    :return: tsvel_matrix: velocity for each epoch interval.
+    :rtype: ndarray
     """
 
     b0_mat, interp, p_thresh, sm_factor, sm_order, ts_method, ifg_data, mst, \
@@ -160,11 +159,11 @@ def time_series(ifgs, params, vcmt=None, mst=None):
     # SB: do the span multiplication as a numpy linalg operation, MUCH faster
     #  not even this is necessary here, perform late for performance
     tsincr = tsvel_matrix * span
-    tscum = cumsum(tsincr, 2)
+    tscuml = cumsum(tsincr, 2)
     # SB: perform this after tsvel_matrix has been nan converted,
     # saves the step of comparing a large matrix (tsincr) to zero.
-    # tscum = where(tscum == 0, nan, tscum)
-    return tsincr, tscum, tsvel_matrix
+    # tscuml = where(tscuml == 0, nan, tscuml)
+    return tsincr, tscuml, tsvel_matrix
 
 
 def _remove_rank_def_rows(b_mat, nvelpar, ifgv, sel):

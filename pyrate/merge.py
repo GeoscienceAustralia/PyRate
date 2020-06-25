@@ -31,26 +31,26 @@ from pyrate.core.logger import pyratelogger as log
 gdal.SetCacheMax(64)
 
 
-def main(params):
+def main(params: dict) -> None:
     """
     PyRate merge main function. Assembles product tiles in to
     single geotiff files
     """
     # setup paths
-    rows, cols = params["rows"], params["cols"]
-    mpiops.run_once(_merge_stack, rows, cols, params)
+    mpiops.run_once(_merge_stack, params)
     mpiops.run_once(_create_png_from_tif, params[cf.OUT_DIR])
 
     if params[cf.TIME_SERIES_CAL]:
-        _merge_timeseries(rows, cols, params)
-        # mpiops.run_once(_delete_tsincr_files, params)
+        _merge_timeseries(params, 'tscuml')
+        # optional save of merged tsincr products
+        if params["savetsincr"] == 1: _merge_timeseries(params, 'tsincr')
 
 
-def _merge_stack(rows, cols, params):
+def _merge_stack(params: dict) -> None:
     """
     Merge stacking outputs
     """
-    shape, tiles, ifgs_dict = _merge_setup(rows, cols, params)
+    shape, tiles, ifgs_dict = _merge_setup(params)
 
     log.info('Merging and writing Stack Rate product geotiffs')
 
@@ -70,42 +70,33 @@ def _merge_stack(rows, cols, params):
         _save_merged_files(ifgs_dict, params[cf.OUT_DIR], out, ot, savenpy=params["savenpy"])
 
 
-def _merge_timeseries(rows, cols, params):
+def _merge_timeseries(params: dict, tstype: str) -> None:
     """
-    Merge time series output
+    Merge tiled time series outputs
     """
-    log.info("Merging timeseries output")
-    shape, tiles, ifgs_dict = _merge_setup(rows, cols, params)
+    log.info('Merging {} time series outputs'.format(tstype))
+    shape, tiles, ifgs_dict = _merge_setup(params)
 
-    # load the first tsincr file to determine the number of time series tifs
-    tsincr_file = join(params[cf.TMPDIR], 'tsincr_0.npy')
-    tsincr = np.load(file=tsincr_file)
+    # load the first time series file to determine the number of time series tifs
+    ts_file = join(params[cf.TMPDIR], tstype + '_0.npy')
+    ts = np.load(file=ts_file)
     # pylint: disable=no-member
-    no_ts_tifs = tsincr.shape[2]
-
-    # create 2 x no_ts_tifs as we are splitting tsincr and tscuml to all processes.
-    process_tifs = mpiops.array_split(range(2 * no_ts_tifs))
-
+    no_ts_tifs = ts.shape[2]
+    process_tifs = mpiops.array_split(range(no_ts_tifs))
     # depending on nvelpar, this will not fit in memory
     # e.g. nvelpar=100, nrows=10000, ncols=10000, 32bit floats need 40GB memory
     # 32 * 100 * 10000 * 10000 / 8 bytes = 4e10 bytes = 40 GB
     # the double for loop helps us overcome the memory limit
-    log.info('Process {} writing {} timeseries tifs of '
-             'total {}'.format(mpiops.rank, len(process_tifs), no_ts_tifs * 2))
+    log.info('Process {} writing {} {} time series tifs of '
+             'total {}'.format(mpiops.rank, len(process_tifs), tstype, no_ts_tifs))
     for i in process_tifs:
-        if i < no_ts_tifs:
-            tscum_g = assemble_tiles(shape, params[cf.TMPDIR], tiles, out_type='tscuml', index=i)
-            _save_merged_files(ifgs_dict, params[cf.OUT_DIR], tscum_g, out_type='tscuml', index=i,
-                               savenpy=params["savenpy"])
-        else:
-            i %= no_ts_tifs
-            tsincr_g = assemble_tiles(shape, params[cf.TMPDIR], tiles, out_type='tsincr', index=i)
-            _save_merged_files(ifgs_dict, params[cf.OUT_DIR], tsincr_g, out_type='tsincr', index=i,
-                               savenpy=params["savenpy"])
+        ts_arr = assemble_tiles(shape, params[cf.TMPDIR], tiles, out_type=tstype, index=i)
+        _save_merged_files(ifgs_dict, params[cf.OUT_DIR], ts_arr, out_type=tstype, index=i,
+                           savenpy=params["savenpy"])
 
     mpiops.comm.barrier()
-    log.debug('Process {} finished writing {} timeseries tifs of '
-             'total {}'.format(mpiops.rank, len(process_tifs), no_ts_tifs * 2))
+    log.debug('Process {} finished writing {} {} time series tifs of '
+             'total {}'.format(mpiops.rank, len(process_tifs), tstype, no_ts_tifs))
 
 
 def _create_png_from_tif(output_folder_path):
@@ -271,7 +262,7 @@ def _save_merged_files(ifgs_dict, outdir, array, out_type, index=None, savenpy=N
     log.debug('Finished saving {}'.format(out_type))
 
 
-def _merge_setup(rows, cols, params):
+def _merge_setup(params):
     """
     Convenience function for Merge set up steps
     """
@@ -295,15 +286,6 @@ def _merge_setup(rows, cols, params):
     ifgs_dict = pickle.load(open(preread_ifgs_file, 'rb'))
     ifgs = [v for v in ifgs_dict.values() if isinstance(v, shared.PrereadIfg)]
     shape = ifgs[0].shape
+    rows, cols = params["rows"], params["cols"]
     tiles = shared.get_tiles(dest_tifs[0], rows, cols)
     return shape, tiles, ifgs_dict
-
-
-def _delete_tsincr_files(params):
-    """
-    Convenience function to delete tsincr files
-    """
-    out_dir = Path(params[cf.OUT_DIR])
-    for file_path in out_dir.iterdir():
-        if "tsincr" in str(file_path):
-            file_path.unlink()
