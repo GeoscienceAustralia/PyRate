@@ -38,7 +38,7 @@ from pyrate.merge import assemble_tiles
 log = logging.getLogger(__name__)
 
 
-def wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs):
+def wrap_spatio_temporal_filter(params, tiles, preread_ifgs):
     """
     A wrapper for the spatio-temporal filter so it can be tested.
     See docstring for spatio_temporal_filter.
