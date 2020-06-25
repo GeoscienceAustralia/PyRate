@@ -96,11 +96,16 @@ class MultiplePaths:
         self.converted_path = converted_path.as_posix()
 
     def __str__(self):  # pragma: no cover
-        return"""
-            unwrapped_path = """ + self.unwrapped_path+""" 
+        st = ""
+        if self.unwrapped_path is not None:
+            st += """\nunwrapped_path = """ + self.unwrapped_path
+        else:
+            st += """\nunwrapped_path = None"""
+        st += """
             converted_path = """ + self.converted_path+""" 
             sampled_path = """ + self.sampled_path+"""    
             """
+        return st
 
 
 class Configuration:

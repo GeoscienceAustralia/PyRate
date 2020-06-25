@@ -32,7 +32,7 @@ from pyrate.core.ref_phs_est import ReferencePhaseError
 from pyrate.core.shared import CorrectionStatusError
 from pyrate.core import roipac
 from pyrate import prepifg, process, conv2tif
-from pyrate.configuration import Configuration
+from pyrate.configuration import Configuration, MultiplePaths
 from tests import common
 
 legacy_ref_phs_method1 = [-18.2191658020020,
@@ -79,15 +79,19 @@ class RefPhsTests(unittest.TestCase):
     def setUp(self):
         self.tmp_dir = tempfile.mkdtemp()
         self.params = dict()
+        self.params[cf.OUT_DIR] = self.tmp_dir
         self.params[cf.REF_EST_METHOD] = 1
         self.params[cf.PARALLEL] = False
         self.params[cf.TMPDIR] = self.tmp_dir
         self.refpx, self.refpy = 38, 58
         common.copytree(common.SML_TEST_TIF, self.tmp_dir)
-        small_tifs = glob.glob(os.path.join(self.tmp_dir, "*.tif"))
-        for s in small_tifs:
+        self.small_tifs = glob.glob(os.path.join(self.tmp_dir, "*.tif"))
+        for s in self.small_tifs:
             os.chmod(s, 0o644)
         self.ifgs = common.small_data_setup(self.tmp_dir, is_dir=True)
+        self.params[cf.INTERFEROGRAM_FILES] = [MultiplePaths(self.tmp_dir, p) for p in self.small_tifs]
+        for p in self.params[cf.INTERFEROGRAM_FILES]:  # hack
+            p.sampled_path = p.converted_path
         for ifg in self.ifgs:
             ifg.close()
        
@@ -101,26 +105,41 @@ class RefPhsTests(unittest.TestCase):
             ifg.close()
 
     def test_need_at_least_two_ifgs(self):
+        self.params[cf.INTERFEROGRAM_FILES] = [MultiplePaths(self.tmp_dir, p) for p in self.small_tifs[:1]]
+        for p in self.params[cf.INTERFEROGRAM_FILES]:  # hack
+            p.sampled_path = p.converted_path
         self.assertRaises(ReferencePhaseError, process._ref_phase_estimation,
-                          self.ifgs[:1], self.params, self.refpx, self.refpy)
+                          self.params, self.refpx, self.refpy)
 
     def test_metadata(self):
-        process._ref_phase_estimation(self.ifgs, self.params, self.refpx, self.refpy)
+        process._ref_phase_estimation(self.params, self.refpx, self.refpy)
         for ifg in self.ifgs:
             ifg.open()
             self.assertEqual(ifg.dataset.GetMetadataItem(ifc.PYRATE_REF_PHASE),
                              ifc.REF_PHASE_REMOVED)
     
     def test_mixed_metadata_raises(self):
+
+        # change config to 5 ifgs
+        self.params[cf.INTERFEROGRAM_FILES] = [MultiplePaths(self.tmp_dir, p) for p in self.small_tifs[:5]]
+        for p in self.params[cf.INTERFEROGRAM_FILES]:  # hack
+            p.sampled_path = p.converted_path
+
         # correct reference phase for some of the ifgs
-        process._ref_phase_estimation(self.ifgs[:5], self.params, self.refpx, self.refpy)
+        process._ref_phase_estimation(self.params, self.refpx, self.refpy)
+        for i in self.params[cf.INTERFEROGRAM_FILES]:
+            print(i)
         for ifg in self.ifgs:
             ifg.open()
 
-        # now it should raise exception if we wnat to correct
-        # refernece phase again on all of them
+        # change config to all ifgs
+        self.params[cf.INTERFEROGRAM_FILES] = [MultiplePaths(self.tmp_dir, p) for p in self.small_tifs]
+        for p in self.params[cf.INTERFEROGRAM_FILES]:  # hack
+            p.sampled_path = p.converted_path
+
+        # now it should raise exception if we want to correct refernece phase again on all of them
         self.assertRaises(CorrectionStatusError, process._ref_phase_estimation,
-                          self.ifgs, self.params, self.refpx, self.refpy)
+                          self.params, self.refpx, self.refpy)
         
 
 class RefPhsEstimationLegacyTestMethod1Serial(unittest.TestCase):
@@ -147,6 +166,7 @@ class RefPhsEstimationLegacyTestMethod1Serial(unittest.TestCase):
 
         base_ifg_paths = [c.unwrapped_path for c in params[cf.INTERFEROGRAM_FILES]]
         headers = [roipac.roipac_header(i, params) for i in base_ifg_paths]
+        params = Configuration(common.TEST_CONF_ROIPAC).__dict__
         dest_paths = [Path(cls.temp_out_dir).joinpath(Path(c.sampled_path).name).as_posix()
                       for c in params[cf.INTERFEROGRAM_FILES][:-2]]
 
@@ -154,7 +174,7 @@ class RefPhsEstimationLegacyTestMethod1Serial(unittest.TestCase):
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         mst_grid = common.mst_calculation(dest_paths, params)
         # Estimate reference pixel location
-        refx, refy = process._ref_pixel_calc(dest_paths, params)
+        refx, refy = process._ref_pixel_calc(params)
 
         # Estimate and remove orbit errors
         pyrate.core.orbital.remove_orbital_error(ifgs, params, headers)
@@ -167,7 +187,7 @@ class RefPhsEstimationLegacyTestMethod1Serial(unittest.TestCase):
         for ifg in ifgs:
             ifg.close()
 
-        cls.ref_phs, cls.ifgs = process._ref_phase_estimation(dest_paths, params, refx, refy)
+        cls.ref_phs, cls.ifgs = process._ref_phase_estimation(params, refx, refy)
 
     @classmethod
     def tearDownClass(cls):

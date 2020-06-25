@@ -1266,6 +1266,9 @@ def check_correction_status(ifgs, meta):  # pragma: no cover
     :return: True if correction has been performed, otherwise False
     :rtype: bool
     """
+    print("here in checking ==========================")
+    for i in ifgs:
+        print(i)
     def close_all(ifgs):    
         for ifg in ifgs:
             ifg.close()
@@ -1278,6 +1281,7 @@ def check_correction_status(ifgs, meta):  # pragma: no cover
             ifg.open()
 
     flags = [meta in ifg.meta_data for ifg in ifgs]
+    print(flags)
     if all(flags):
         log.info('Skipped: interferograms already corrected')
         return True
