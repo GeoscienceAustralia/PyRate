@@ -208,7 +208,7 @@ def _ref_phase_estimation(ifg_paths, params, refpx, refpy):
     """
     Wrapper for reference phase estimation.
     """
-    log.info("Calculating reference phase")
+    log.info("Calculating reference phase and correcting each interferogram")
     if len(ifg_paths) < 2:
         raise rpe.ReferencePhaseError(
             "At least two interferograms required for reference phase correction ({len_ifg_paths} "
@@ -216,7 +216,7 @@ def _ref_phase_estimation(ifg_paths, params, refpx, refpy):
         )
 
     if mpiops.run_once(shared.check_correction_status, ifg_paths, ifc.PYRATE_REF_PHASE):
-        log.debug('Finished reference phase estimation')
+        log.debug('Finished reference phase correction')
         return
 
     if params[cf.REF_EST_METHOD] == 1:
@@ -241,7 +241,7 @@ def _ref_phase_estimation(ifg_paths, params, refpx, refpy):
         np.save(file=ref_phs_file, arr=collected_ref_phs)
     else:
         mpiops.comm.Send(ref_phs, dest=MASTER_PROCESS, tag=mpiops.rank)
-    log.debug('Finished reference phase estimation')
+    log.debug('Finished reference phase correction')
 
     # Preserve old return value so tests don't break.
     if isinstance(ifg_paths[0], Ifg):
