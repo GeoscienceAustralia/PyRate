@@ -414,9 +414,9 @@ def _timeseries_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
         log.debug("Calculating time series for tile "+str(t.index)+" out of "+str(total_tiles))
         ifg_parts = [shared.IfgPart(p, t, preread_ifgs, params) for p in ifg_paths]
         mst_tile = np.load(os.path.join(output_dir, 'mst_mat_{}.npy'.format(t.index)))
-        res = timeseries.time_series(ifg_parts, params, vcmt, mst_tile)
-        tsincr, tscum, _ = res
-        np.save(file=os.path.join(output_dir, 'tsincr_{}.npy'.format(t.index)), arr=tsincr)
-        np.save(file=os.path.join(output_dir, 'tscuml_{}.npy'.format(t.index)), arr=tscum)
+        tsincr, tscuml, _ = timeseries.time_series(ifg_parts, params, vcmt, mst_tile)
+        np.save(file=os.path.join(output_dir, 'tscuml_{}.npy'.format(t.index)), arr=tscuml)
+        # optional save of tsincr npy tiles
+        if params["savetsincr"] == 1: np.save(file=os.path.join(output_dir, 'tsincr_{}.npy'.format(t.index)), arr=tsincr)
     mpiops.comm.barrier()
     log.debug("Finished timeseries calc!")

@@ -437,5 +437,13 @@ PYRATE_DEFAULT_CONFIGURATION = {
         "PossibleValues": [1, 0],
         "Required": False
     },
+    "savetsincr": {
+        "DataType": int,
+        "DefaultValue": 1,
+        "MinValue": 0,
+        "MaxValue": 1,
+        "PossibleValues": [1, 0],
+        "Required": False
+    },
 
 }
