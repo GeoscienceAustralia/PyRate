@@ -24,13 +24,13 @@ from collections import namedtuple
 from math import modf
 from numbers import Number
 from decimal import Decimal
-
+from typing import List, Tuple, Union
 from numpy import array, nan, isnan, nanmean, float32, zeros, sum as nsum
 from osgeo import gdal
 
 from pyrate.core.gdal_python import crop_resample_average
 from pyrate.core import config as cf
-from pyrate.core.shared import output_tiff_filename, dem_or_ifg
+from pyrate.core.shared import output_tiff_filename, dem_or_ifg, Ifg, DEM
 
 CustomExts = namedtuple('CustExtents', ['xfirst', 'yfirst', 'xlast', 'ylast'])
 
@@ -45,7 +45,8 @@ CROP_OPTIONS = [MINIMUM_CROP, MAXIMUM_CROP, CUSTOM_CROP, ALREADY_SAME_SIZE]
 GRID_TOL = 1e-6
 
 
-def get_analysis_extent(crop_opt, rasters, xlooks, ylooks, user_exts):
+def get_analysis_extent(crop_opt: int, rasters: List[Union[Ifg, DEM]], xlooks: int, ylooks: int,
+                        user_exts: Tuple[float, float, float, float]) -> Tuple[float, float, float, float]:
     """
     Function checks prepifg parameters and returns extents/bounding box.
 
@@ -144,7 +145,7 @@ def _get_extents(ifgs, crop_opt, user_exts=None):
     return extents
 
 
-def prepare_ifg(raster_path, xlooks, ylooks, exts, thresh, crop_opt, write_to_disk=True, out_path=None, header=None,
+def prepare_ifg(raster_path, xlooks, ylooks, exts, thresh, crop_opt, header, write_to_disk=True, out_path=None,
                 coherence_path=None, coherence_thresh=None):
     """
     Open, resample, crop and optionally save to disk an interferogram or DEM.
@@ -202,7 +203,7 @@ def prepare_ifg(raster_path, xlooks, ylooks, exts, thresh, crop_opt, write_to_di
 
 
 # TODO: crop options 0 = no cropping? get rid of same size
-def prepare_ifgs(raster_data_paths, crop_opt, xlooks, ylooks, thresh=0.5, user_exts=None, write_to_disc=True,
+def prepare_ifgs(raster_data_paths, crop_opt, xlooks, ylooks, headers, thresh=0.5, user_exts=None, write_to_disc=True,
                  out_path=None):
     """
     Wrapper function to prepare a sequence of interferogram files for
@@ -223,13 +224,13 @@ def prepare_ifgs(raster_data_paths, crop_opt, xlooks, ylooks, thresh=0.5, user_e
     :return: resampled_data: output cropped and resampled image
     :rtype: ndarray
     :return: out_ds: destination gdal dataset object
-    :rtype: gdal.Dataset
+    :rtype: List[gdal.Dataset]
     """
     # use metadata check to check whether it's a dem or ifg
     rasters = [dem_or_ifg(r) for r in raster_data_paths]
     exts = get_analysis_extent(crop_opt, rasters, xlooks, ylooks, user_exts)
-
-    return [prepare_ifg(d, xlooks, ylooks, exts, thresh, crop_opt, write_to_disc, out_path) for d in raster_data_paths]
+    return [prepare_ifg(d, xlooks, ylooks, exts, thresh, crop_opt, h, write_to_disc, out_path) for d, h
+            in zip(raster_data_paths, headers)]
 
 
 # TODO: Not being used. Remove in future?
@@ -267,7 +268,7 @@ def _resample(data, xscale, yscale, thresh):
     return dest
 
 
-def _min_bounds(ifgs):
+def _min_bounds(ifgs: List[Ifg]) -> Tuple[float, float, float, float]:
     """
     Returns bounds for overlapping area of the given interferograms.
     """
@@ -279,7 +280,7 @@ def _min_bounds(ifgs):
     return xmin, ymin, xmax, ymax
 
 
-def _max_bounds(ifgs):
+def _max_bounds(ifgs: List[Ifg]) -> Tuple[float, float, float, float]:
     """
     Returns bounds for the total area covered by the given interferograms.
     """
@@ -291,7 +292,7 @@ def _max_bounds(ifgs):
     return xmin, ymin, xmax, ymax
 
 
-def _get_same_bounds(ifgs):
+def _get_same_bounds(ifgs: List[Ifg]) -> Tuple[float, float, float, float]:
     """
     Check and return bounding box for ALREADY_SAME_SIZE option.
     """

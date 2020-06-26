@@ -22,6 +22,7 @@ import shutil
 import sys
 import tempfile
 import unittest
+from pathlib import Path
 from datetime import date, timedelta
 from numpy import nan, asarray, where
 import numpy as np
@@ -29,7 +30,7 @@ from numpy.testing import assert_array_almost_equal
 
 import pyrate.core.orbital
 import tests.common as common
-from pyrate.core import ref_phs_est as rpe, config as cf, mst, covariance
+from pyrate.core import ref_phs_est as rpe, config as cf, mst, covariance, roipac
 from pyrate import process, prepifg, conv2tif
 from pyrate.configuration import Configuration
 from pyrate.core.timeseries import time_series
@@ -120,18 +121,16 @@ class LegacyTimeSeriesEquality(unittest.TestCase):
 
         params[cf.REF_EST_METHOD] = 2
 
-        xlks, ylks, crop = cf.transform_params(params)
-
-        base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST],
-                                               params[cf.OBS_DIR])
-
-        dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
+        base_ifg_paths = [c.unwrapped_path for c in params[cf.INTERFEROGRAM_FILES]]
+        headers = [roipac.roipac_header(i, params) for i in base_ifg_paths]
+        dest_paths = [Path(cls.temp_out_dir).joinpath(Path(c.sampled_path).name).as_posix()
+                      for c in params[cf.INTERFEROGRAM_FILES][:-2]]
         # start run_pyrate copy
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         mst_grid = common.mst_calculation(dest_paths, params)
         refx, refy = process._ref_pixel_calc(dest_paths, params)
         # Estimate and remove orbit errors
-        pyrate.core.orbital.remove_orbital_error(ifgs, params)
+        pyrate.core.orbital.remove_orbital_error(ifgs, params, headers)
         ifgs = common.prepare_ifgs_without_phase(dest_paths, params)
         for ifg in ifgs:
             ifg.close()
@@ -214,12 +213,10 @@ class LegacyTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
 
         params[cf.REF_EST_METHOD] = 2
 
-        xlks, ylks, crop = cf.transform_params(params)
-
-        base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST],
-                                               params[cf.OBS_DIR])
-
-        dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
+        base_ifg_paths = [c.unwrapped_path for c in params[cf.INTERFEROGRAM_FILES]]
+        headers = [roipac.roipac_header(i, params) for i in base_ifg_paths]
+        dest_paths = [Path(cls.temp_out_dir).joinpath(Path(c.sampled_path).name).as_posix()
+                      for c in params[cf.INTERFEROGRAM_FILES][:-2]]
         # start run_pyrate copy
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         mst_grid = common.mst_calculation(dest_paths, params)
@@ -227,7 +224,7 @@ class LegacyTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
         refx, refy = process._ref_pixel_calc(dest_paths, params)
 
         # Estimate and remove orbit errors
-        pyrate.core.orbital.remove_orbital_error(ifgs, params)
+        pyrate.core.orbital.remove_orbital_error(ifgs, params, headers)
         ifgs = common.prepare_ifgs_without_phase(dest_paths, params)
         for ifg in ifgs:
             ifg.close()

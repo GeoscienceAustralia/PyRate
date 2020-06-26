@@ -68,20 +68,13 @@ QUADRATIC = cf.QUADRATIC
 PART_CUBIC = cf.PART_CUBIC
 
 
-def remove_orbital_error(ifgs: Iterable, params: dict, preread_ifgs=None) -> None:
+def remove_orbital_error(ifgs: Iterable, params: dict, headers: List[dict], preread_ifgs=None) -> None:
     """
     Wrapper function for PyRate orbital error removal functionality.
 
     NB: the ifg data is modified in situ, rather than create intermediate
     files. The network method assumes the given ifgs have already been reduced
     to a minimum spanning tree network.
-
-    :param list ifgs: List of interferograms class objects
-    :param dict params: Dictionary containing configuration parameters
-    :param dict preread_ifgs: Dictionary containing information specifically
-        for MPI jobs (optional)
-
-    :return: None - interferogram phase data is updated and saved to disk
     """
 
     ifg_paths = [i.data_path for i in ifgs] if isinstance(ifgs[0], Ifg) else ifgs
@@ -96,7 +89,9 @@ def remove_orbital_error(ifgs: Iterable, params: dict, preread_ifgs=None) -> Non
             xlooks=params[cf.ORBITAL_FIT_LOOKS_X],
             ylooks=params[cf.ORBITAL_FIT_LOOKS_Y],
             thresh=params[cf.NO_DATA_AVERAGING_THRESHOLD],
-            write_to_disc=False)
+            write_to_disc=False,
+            headers=headers
+        )
         mlooked = [Ifg(m[1]) for m in mlooked_dataset]
 
         for m in mlooked:

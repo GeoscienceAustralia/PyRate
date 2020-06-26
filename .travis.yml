@@ -53,14 +53,11 @@ install:
   - pip install GDAL==$(gdal-config --version)
   - python setup.py install
   - rm -rf Py_Rate.egg-info  # remove the local egg
-  - export PYRATEPATH=$(pwd)
   - export PYTHONPATH=$PYRATEPATH:$PYTHONPATH
   - chmod 444 tests/test_data/small_test/tif/geo_070709-070813_unw.tif  # makes the file readonly, used in a test
 
 # command to run tests, e.g. python setup.py test
 script:
-  #  - python scripts/update_placeholder_paths.py
-  - mpirun -n 3 pytest tests/test_mpi.py
   - pytest --cov-config=.coveragerc --cov-report term-missing:skip-covered --cov=pyrate tests/
 
 
@@ -79,7 +76,7 @@ deploy:
   verbose: true
   on:
     branch: master
-    condition: $GDALVERSION="3.0.2" && $TRAVIS_PYTHON_VERSION=3.8.*
+    python: 3.8
   github_token: $GITHUB_TOKEN2
   local_dir: docs/_build/html
   project_name: PyRate

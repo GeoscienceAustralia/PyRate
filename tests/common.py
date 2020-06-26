@@ -24,6 +24,7 @@ import shutil
 import stat
 import tempfile
 from os.path import join
+from subprocess import check_output
 from pathlib import Path
 
 import numpy as np
@@ -34,6 +35,14 @@ from pyrate.core import algorithm, ifgconstants as ifc, config as cf, timeseries
 from pyrate.core.shared import (Ifg, nan_and_mm_convert, get_geotiff_header_info,
                                 write_output_geotiff, dem_or_ifg)
 from pyrate.constants import PYRATEPATH
+from pyrate.configuration import Configuration
+
+TRAVIS = True if 'TRAVIS' in os.environ else False
+PYTHON3P6 = True if ('TRAVIS_PYTHON_VERSION' in os.environ and os.environ['TRAVIS_PYTHON_VERSION'] == '3.6') else False
+PYTHON3P7 = True if ('TRAVIS_PYTHON_VERSION' in os.environ and os.environ['TRAVIS_PYTHON_VERSION'] == '3.7') else False
+PYTHON3P8 = True if ('TRAVIS_PYTHON_VERSION' in os.environ and os.environ['TRAVIS_PYTHON_VERSION'] == '3.8') else False
+GDAL_VERSION = check_output(["gdal-config", "--version"]).decode(encoding="utf-8").split('\n')[0]
+
 
 TEMPDIR = tempfile.gettempdir()
 TESTDIR = join(PYRATEPATH, 'tests')
@@ -159,6 +168,26 @@ def assert_tifs_equal(tif1, tif2):
     sds = None
 
 
+def copy_small_ifg_file_list():
+    temp_dir = tempfile.mkdtemp()
+    move_files(SML_TEST_TIF, temp_dir, file_type='*.tif', copy=True)
+    datafiles = glob.glob(join(temp_dir, "*.tif"))
+    for d in datafiles:
+        Path(d).chmod(0o664)  # assign write permission as conv2tif output is readonly
+    return temp_dir, datafiles
+
+
+def copy_and_setup_small_data():
+    temp_dir, datafiles = copy_small_ifg_file_list()
+    datafiles.sort()
+    ifgs = [dem_or_ifg(i) for i in datafiles]
+
+    for i in ifgs:
+        i.open()
+        i.nodata_value = 0
+    return temp_dir, ifgs
+
+
 def small_ifg_file_list(datafiles=None):
     """Returns the file list of all the .tif files after prepifg conversion
     input phase data is in radians; these ifgs are in radians - not converted to mm"""
@@ -274,9 +303,12 @@ def reconstruct_mst(shape, tiles, output_dir):
     return mst
 
 
-def move_files(source_dir, dest_dir, file_type='*.tif'):
+def move_files(source_dir, dest_dir, file_type='*.tif', copy=False):
     for filename in glob.glob(os.path.join(source_dir, file_type)):
-        shutil.move(filename, dest_dir)
+        if copy:
+            shutil.copy(filename, dest_dir)
+        else:
+            shutil.move(filename, dest_dir)
 
 
 def assert_ifg_phase_equal(ifg_path1, ifg_path2):
@@ -382,12 +414,13 @@ def write_timeseries_geotiff(ifgs, params, tsincr, pr_type):
 
 def calculate_stack_rate(ifgs, params, vcmt, mst_mat=None):
     # log.info('Calculating stacked rate')
-    res = stack.stack_rate(ifgs, params, vcmt, mst_mat)
+    res = stack.stack_rate_array(ifgs, params, vcmt, mst_mat)
     for r in res:
         if r is None:
             raise ValueError('TODO: bad value')
 
-    rate, error, samples = res
+    r, e, samples = res
+    rate, error = stack.mask_rate(r, e, params['maxsig'])
     write_stackrate_tifs(ifgs, params, res)
     # log.info('Stacked rate calculated')
     return rate, error, samples
@@ -459,7 +492,7 @@ def copytree(src, dst, symlinks=False, ignore=None):
 
 def pre_prepare_ifgs(ifg_paths, params):
     """
-    Open ifg for reading
+    nan and mm convert ifgs
     """
     ifgs = [Ifg(p) for p in ifg_paths]
     for i in ifgs:
@@ -480,6 +513,8 @@ def assert_two_dirs_equal(dir1, dir2, ext, num_files=None):
     if num_files is not None:
         assert len(dir1_files) == num_files
         assert len(dir2_files) == num_files
+    else:
+        assert len(dir1_files) == len(dir2_files)
     if dir1_files[0].suffix == '.tif':
         for m_f, s_f in zip(dir1_files, dir2_files):
             assert m_f.name == s_f.name
@@ -489,6 +524,8 @@ def assert_two_dirs_equal(dir1, dir2, ext, num_files=None):
         for m_f, s_f in zip(dir1_files, dir2_files):
             assert m_f.name == s_f.name
             np.testing.assert_array_almost_equal(np.load(m_f), np.load(s_f))
+    elif dir1_files[0].suffix in {'.kml', '.png'}:
+        return
     else:
         raise
 

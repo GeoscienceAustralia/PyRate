@@ -17,7 +17,7 @@
 python utility to crop an interferogram
 
 example usage:
-python pyrate/utils/crop_ifgs.py -i tests/test_data/small_test/tif/geo_060619-061002.tif
+python pyrate/utils/crop_ifgs.py -i tests/test_data/small_test/tif/geo_060619-061002_unw.tif
 -o out.tif -e '150.91 -34.229999976 150.949166651  -34.17'
 
 """

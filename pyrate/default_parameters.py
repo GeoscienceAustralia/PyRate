@@ -428,5 +428,14 @@ PYRATE_DEFAULT_CONFIGURATION = {
         "MaxValue": 1000,
         "PossibleValues": None,
         "Required": False
-    }
+    },
+    "savenpy": {
+        "DataType": int,
+        "DefaultValue": 0,
+        "MinValue": 0,
+        "MaxValue": 1,
+        "PossibleValues": [1, 0],
+        "Required": False
+    },
+
 }

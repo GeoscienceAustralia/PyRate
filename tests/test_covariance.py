@@ -17,6 +17,7 @@
 This Python module contains tests for the covariance.py PyRate module.
 """
 import os
+from pathlib import Path
 import shutil
 import sys
 import tempfile
@@ -30,6 +31,8 @@ from pyrate import process, prepifg, conv2tif
 from pyrate.core.covariance import cvd, get_vcmt, RDist
 from pyrate.configuration import Configuration
 import pyrate.core.orbital
+from pyrate.core import roipac
+from pyrate.core.config import parse_namelist
 from tests import common
 from tests.common import (small5_mock_ifgs, small5_ifgs, TEST_CONF_ROIPAC,
     small_data_setup, prepare_ifgs_without_phase)
@@ -179,7 +182,6 @@ class LegacyEqualityTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-
         params = Configuration(TEST_CONF_ROIPAC).__dict__
         cls.temp_out_dir = tempfile.mkdtemp()
         sys.argv = ['prepifg.py', TEST_CONF_ROIPAC]
@@ -190,13 +192,15 @@ class LegacyEqualityTest(unittest.TestCase):
         conv2tif.main(params)
         prepifg.main(params)
         cls.params = params
-        xlks, ylks, crop = cf.transform_params(params)
-        base_ifg_paths = cf.original_ifg_paths(params[cf.IFG_FILE_LIST],
-                                               params[cf.OBS_DIR])
-        dest_paths = cf.get_dest_paths(base_ifg_paths, crop, params, xlks)
+        base_ifg_paths = [c.unwrapped_path for c in params[cf.INTERFEROGRAM_FILES]]
+        dest_paths = [c.converted_path for c in params[cf.INTERFEROGRAM_FILES]]
+        dest_paths = dest_paths[:-2]
+        for i in dest_paths:
+            Path(i).chmod(0o664)  # assign write permission as conv2tif output is readonly
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         refx, refy = process._ref_pixel_calc(dest_paths, params)
-        pyrate.core.orbital.remove_orbital_error(ifgs, params)
+        headers = [roipac.roipac_header(i, cls.params) for i in base_ifg_paths]
+        pyrate.core.orbital.remove_orbital_error(ifgs, params, headers)
         ifgs = prepare_ifgs_without_phase(dest_paths, params)
         for ifg in ifgs:
             ifg.close()
@@ -205,8 +209,7 @@ class LegacyEqualityTest(unittest.TestCase):
         r_dist = RDist(ifgs[0])()
         ifgs[0].close()
         # Calculate interferogram noise
-        cls.maxvar = [cvd(i, params, r_dist, calc_alpha=True,
-                          save_acg=True, write_vals=True)[0] for i in dest_paths]
+        cls.maxvar = [cvd(i, params, r_dist, calc_alpha=True, save_acg=True, write_vals=True)[0] for i in dest_paths]
         cls.vcmt = get_vcmt(ifgs, cls.maxvar)
         for ifg in ifgs:
             ifg.close()
@@ -226,8 +229,7 @@ class LegacyEqualityTest(unittest.TestCase):
     def test_legacy_vcmt_equality_small_test_files(self):
         from tests.common import SML_TEST_DIR
         LEGACY_VCM_DIR = os.path.join(SML_TEST_DIR, 'vcm')
-        legacy_vcm = np.genfromtxt(os.path.join(LEGACY_VCM_DIR,
-                                   'vcmt.csv'), delimiter=',')
+        legacy_vcm = np.genfromtxt(os.path.join(LEGACY_VCM_DIR, 'vcmt.csv'), delimiter=',')
         np.testing.assert_array_almost_equal(legacy_vcm, self.vcmt, decimal=3)
 
     def test_metadata(self):
@@ -243,8 +245,7 @@ class LegacyEqualityTest(unittest.TestCase):
             if not ifg.is_open:
                 ifg.open()
             data_file = join(self.params[cf.TMPDIR],
-                             'cvd_data_{b}.npy'.format(
-                                 b=basename(ifg.data_path).split('.')[0]))
+                             'cvd_data_{b}.npy'.format(b=basename(ifg.data_path).split('.')[0]))
             assert isfile(data_file)
 
 if __name__ == "__main__":

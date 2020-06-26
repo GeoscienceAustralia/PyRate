@@ -19,7 +19,6 @@ for correcting interferograms for atmospheric phase screen (APS)
 signals.
 """
 # pylint: disable=invalid-name, too-many-locals, too-many-arguments
-import logging
 import os
 from copy import deepcopy
 from collections import OrderedDict
@@ -27,15 +26,14 @@ import numpy as np
 from numpy import isnan
 from scipy.fftpack import fft2, ifft2, fftshift, ifftshift
 from scipy.interpolate import griddata
+from pyrate.core.logger import pyratelogger as log
 
 from pyrate.core import shared, ifgconstants as ifc, mpiops, config as cf
 from pyrate.core.covariance import cvd_from_phase, RDist
 from pyrate.core.algorithm import get_epochs
 from pyrate.core.shared import Ifg
 from pyrate.core.timeseries import time_series
-from pyrate.merge import _assemble_tiles
-
-log = logging.getLogger(__name__)
+from pyrate.merge import assemble_tiles
 
 
 def wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs):
@@ -43,8 +41,10 @@ def wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs):
     A wrapper for the spatio-temporal filter so it can be tested.
     See docstring for spatio_temporal_filter.
     """
-    if not params[cf.APSEST]:
-        log.info('APS correction not required.')
+    if params[cf.APSEST]:
+        log.info('Doing APS spatio-temporal filtering')
+    else:
+        log.info('APS spatio-temporal filtering not required')
         return
 
     # perform some checks on existing ifgs
@@ -101,16 +101,15 @@ def _calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles):
     new_params[cf.TIME_SERIES_METHOD] = 2  # use SVD method
 
     process_tiles = mpiops.array_split(tiles)
-    output_dir = params[cf.TMPDIR]
 
     nvels = None
     for t in process_tiles:
         log.debug('Calculating time series for tile {} during APS '
                  'correction'.format(t.index))
         ifg_parts = [shared.IfgPart(p, t, preread_ifgs, params) for p in ifg_paths]
-        mst_tile = np.load(os.path.join(output_dir, 'mst_mat_{}.npy'.format(t.index)))
+        mst_tile = np.load(os.path.join(params[cf.TMPDIR], 'mst_mat_{}.npy'.format(t.index)))
         tsincr = time_series(ifg_parts, new_params, vcmt=None, mst=mst_tile)[0]
-        np.save(file=os.path.join(output_dir, 'tsincr_aps_{}.npy'.format(t.index)), arr=tsincr)
+        np.save(file=os.path.join(params[cf.TMPDIR], 'tsincr_aps_{}.npy'.format(t.index)), arr=tsincr)
         nvels = tsincr.shape[2]
 
     nvels = mpiops.comm.bcast(nvels, root=0)
@@ -125,11 +124,14 @@ def _assemble_tsincr(ifg_paths, params, preread_ifgs, tiles, nvels):
     """
     Helper function to reconstruct time series images from tiles
     """
+    # pre-allocate dest 3D array
     shape = preread_ifgs[ifg_paths[0]].shape + (nvels,)
     tsincr_g = np.empty(shape=shape, dtype=np.float32)
+    # shape of one 2D time-slice array
+    s = preread_ifgs[ifg_paths[0]].shape
+    # loop over the time slices and assemble dest 3D array
     for i in range(nvels):
-        for n, t in enumerate(tiles):
-            _assemble_tiles(i, n, t, tsincr_g[:, :, i], params[cf.TMPDIR], 'tsincr_aps')
+        tsincr_g[:, :, i] = assemble_tiles(s, params[cf.TMPDIR], tiles, out_type='tsincr_aps', index=i)
 
     return tsincr_g
 
@@ -184,7 +186,7 @@ def spatial_low_pass_filter(ts_lp, ifg, params):
     :return: ts_hp: filtered time series data of shape (ifg.shape, n_epochs)
     :rtype: ndarray
     """
-    log.info('Applying APS spatial low-pass filter')
+    log.info('Applying spatial low-pass filter')
     if params[cf.SLPF_NANFILL] == 0:
         ts_lp[np.isnan(ts_lp)] = 0  # need it here for cvd and fft
     else:
@@ -281,7 +283,7 @@ def temporal_low_pass_filter(tsincr, epochlist, params):
     :return: tsfilt_incr: filtered time series data, shape (ifg.shape, nepochs)
     :rtype: ndarray
     """
-    log.info('Applying APS temporal low-pass filter')
+    log.info('Applying temporal low-pass filter')
     nanmat = ~isnan(tsincr)
     tsfilt_incr = np.empty_like(tsincr, dtype=np.float32) * np.nan
     intv = np.diff(epochlist.spans)  # time interval for the neighboring epoch
@@ -298,7 +300,7 @@ def temporal_low_pass_filter(tsincr, epochlist, params):
         func = mean_filter
 
     _tlpfilter(cols, cutoff, nanmat, rows, span, threshold, tsfilt_incr, tsincr, func)
-    log.debug("Finished applying temporal low pass filter")
+    log.debug("Finished applying temporal low-pass filter")
     return tsfilt_incr
 
 # Throwaway function to define Gaussian filter weights

@@ -276,9 +276,9 @@ def _gdalwarp_width_and_height(max_x, max_y, min_x, min_y, geo_trans):
 
 
 def crop_resample_average(
-        input_tif, extents: Union[List, Tuple], new_res, output_file, thresh,
-        out_driver_type='GTiff',
-        match_pyrate=False, hdr=None, coherence_path=None, coherence_thresh=None):
+        input_tif, extents: Union[List, Tuple], new_res, output_file, thresh, hdr, out_driver_type='GTiff',
+        match_pyrate=False, coherence_path=None, coherence_thresh=None
+        ):
     """
     Crop, resample, and average a geotiff image.
 
@@ -325,11 +325,8 @@ def crop_resample_average(
     gt = dst_ds.GetGeoTransform()
     wkt = dst_ds.GetProjection()
 
-    # TEST HERE IF EXISTING FILE HAS PYRATE METADATA. IF NOT ADD HERE
-    if ifc.DATA_TYPE not in dst_ds.GetMetadata() and hdr is not None:
-        md = shared.collate_metadata(hdr)
-    else:
-        md = dst_ds.GetMetadata()
+    # insert metadata from the header
+    md = shared.collate_metadata(hdr)
 
     # update metadata for output
 
@@ -342,15 +339,12 @@ def crop_resample_average(
                 md.update({ifc.DATA_TYPE: ifc.COHERENCE})
             elif (v == ifc.ORIG) and (coherence_path is None):
                 md.update({ifc.DATA_TYPE: ifc.MULTILOOKED})
+            elif v == ifc.COH:
+                md.update({ifc.DATA_TYPE: ifc.MULTILOOKED_COH})
             elif v == ifc.DEM:
                 md.update({ifc.DATA_TYPE: ifc.MLOOKED_DEM})
             elif v == ifc.INCIDENCE:
                 md.update({ifc.DATA_TYPE: ifc.MLOOKED_INC})
-            elif (v == ifc.COHERENCE) and (coherence_path is None):
-                # during orbital fit multilooking
-                pass
-            elif v == ifc.MULTILOOKED:
-                pass
             else:
                 raise TypeError(f'Data Type metadata {v} not recognised')
 

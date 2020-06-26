@@ -17,11 +17,11 @@
 """
 This Python module runs the main PyRate processing workflow
 """
-import logging
 import os
 from os.path import join
 import pickle as cp
 from collections import OrderedDict
+from typing import List, Tuple
 import numpy as np
 
 from pyrate.core import (shared, algorithm, orbital, ref_phs_est as rpe, 
@@ -31,6 +31,8 @@ from pyrate.core import (shared, algorithm, orbital, ref_phs_est as rpe,
 from pyrate.core.aps import wrap_spatio_temporal_filter
 from pyrate.core.shared import Ifg, PrereadIfg, get_tiles, mpi_vs_multiprocess_logging
 from pyrate.core.logger import pyratelogger as log
+from pyrate.prepifg import find_header
+from pyrate.configuration import MultiplePaths
 
 MASTER_PROCESS = 0
 
@@ -45,7 +47,7 @@ def _join_dicts(dicts):
     return assembled_dict
 
 
-def _create_ifg_dict(dest_tifs, params, tiles):
+def _create_ifg_dict(dest_tifs, params):
     """
     1. Convert ifg phase data into numpy binary files.
     2. Save the preread_ifgs dict with information about the ifgs that are
@@ -62,7 +64,6 @@ def _create_ifg_dict(dest_tifs, params, tiles):
     ifgs_dict = {}
     nifgs = len(dest_tifs)
     process_tifs = mpiops.array_split(dest_tifs)
-    shared.save_numpy_phase(dest_tifs, tiles, params)
     for d in process_tifs:
         ifg = shared._prep_ifg(d, params)
         ifgs_dict[d] = PrereadIfg(path=d,
@@ -119,20 +120,22 @@ def _mst_calc(dest_tifs, params, tiles, preread_ifgs):
     mpiops.comm.barrier()
 
 
-def _ref_pixel_calc(ifg_paths, params):
+def _ref_pixel_calc(ifg_paths: List[str], params: dict) -> Tuple[int, int]:
     """
     Wrapper for reference pixel calculation
     """
-    refx = params[cf.REFX]
-    refy = params[cf.REFY]
+
+    lon = params[cf.REFX]
+    lat = params[cf.REFY]
 
     ifg = Ifg(ifg_paths[0])
     ifg.open(readonly=True)
+    # assume all interferograms have same projection and will share the same transform
+    transform = ifg.dataset.GetGeoTransform()
 
-    if refx == -1 or refy == -1:
+    if lon == -1 or lat == -1:
 
         log.info('Searching for best reference pixel location')
-
         half_patch_size, thresh, grid = refpixel.ref_pixel_setup(ifg_paths, params)
         process_grid = mpiops.array_split(grid)
         refpixel.save_ref_pixel_blocks(process_grid, half_patch_size, ifg_paths, params)
@@ -149,17 +152,25 @@ def _ref_pixel_calc(ifg_paths, params):
                 "Reference pixel calculation returned an all nan slice!\n"
                 "Cannot continue downstream computation. Please change reference pixel algorithm used before "
                 "continuing.")
+        refy, refx = refpixel_returned   # row first means first value is latitude
+        log.info('Selected reference pixel coordinate (x, y): ({}, {})'.format(refx, refy))
+        lon, lat = refpixel.convert_pixel_value_to_geographic_coordinate(refx, refy, transform)
+        log.info('Selected reference pixel coordinate (lon, lat): ({}, {})'.format(lon, lat))
 
-        refy, refx = refpixel_returned
-
-        log.info('Selected reference pixel coordinate: ({}, {})'.format(refx, refy))
     else:
-        log.info('Reusing reference pixel from config file: ({}, {})'.format(refx, refy))
+        log.info('Using reference pixel from config file (lon, lat): ({}, {})'.format(lon, lat))
+        log.warning("Ensure user supplied reference pixel values are in lon/lat")
+        refx, refy = refpixel.convert_geographic_coordinate_to_pixel_value(lon, lat, transform)
+        log.info('Converted reference pixel coordinate (x, y): ({}, {})'.format(refx, refy))
+
+    refpixel.update_refpix_metadata(ifg_paths, refx, refy, transform, params)
+
+    log.debug("refpx, refpy: "+str(refx) + " " + str(refy))
     ifg.close()
-    return refx, refy
+    return int(refx), int(refy)
 
 
-def _orb_fit_calc(ifg_paths, params, preread_ifgs=None):
+def _orb_fit_calc(multi_paths: List[MultiplePaths], params, preread_ifgs=None) -> None:
     """
     MPI wrapper for orbital fit correction
     """
@@ -169,6 +180,7 @@ def _orb_fit_calc(ifg_paths, params, preread_ifgs=None):
         return
     log.info('Calculating orbital correction')
 
+    ifg_paths = [p.sampled_path for p in multi_paths]
     if preread_ifgs:  # don't check except for mpi tests
         # perform some general error/sanity checks
         log.debug('Checking Orbital error correction status')
@@ -186,7 +198,8 @@ def _orb_fit_calc(ifg_paths, params, preread_ifgs=None):
         # A performance comparison should be made for saving multilooked
         # files on disc vs in memory single process multilooking
         if mpiops.rank == MASTER_PROCESS:
-            orbital.remove_orbital_error(ifg_paths, params, preread_ifgs)
+            headers = [find_header(p, params) for p in multi_paths]
+            orbital.remove_orbital_error(ifg_paths, params, headers, preread_ifgs=preread_ifgs)
     mpiops.comm.barrier()
     log.debug('Finished Orbital error correction')
 
@@ -195,7 +208,7 @@ def _ref_phase_estimation(ifg_paths, params, refpx, refpy):
     """
     Wrapper for reference phase estimation.
     """
-    log.info("Calculating reference phase")
+    log.info("Calculating reference phase and correcting each interferogram")
     if len(ifg_paths) < 2:
         raise rpe.ReferencePhaseError(
             "At least two interferograms required for reference phase correction ({len_ifg_paths} "
@@ -203,7 +216,7 @@ def _ref_phase_estimation(ifg_paths, params, refpx, refpy):
         )
 
     if mpiops.run_once(shared.check_correction_status, ifg_paths, ifc.PYRATE_REF_PHASE):
-        log.debug('Finished reference phase estimation')
+        log.debug('Finished reference phase correction')
         return
 
     if params[cf.REF_EST_METHOD] == 1:
@@ -228,7 +241,7 @@ def _ref_phase_estimation(ifg_paths, params, refpx, refpy):
         np.save(file=ref_phs_file, arr=collected_ref_phs)
     else:
         mpiops.comm.Send(ref_phs, dest=MASTER_PROCESS, tag=mpiops.rank)
-    log.debug('Finished reference phase estimation')
+    log.debug('Finished reference phase correction')
 
     # Preserve old return value so tests don't break.
     if isinstance(ifg_paths[0], Ifg):
@@ -280,23 +293,27 @@ def process_ifgs(ifg_paths, params, rows, cols):
 
     if mpiops.size > 1:  # turn of multiprocessing during mpi jobs
         params[cf.PARALLEL] = False
+    outdir = params[cf.TMPDIR]
+    if not os.path.exists(outdir):
+        shared.mkdir_p(outdir)
 
     tiles = mpiops.run_once(get_tiles, ifg_paths[0], rows, cols)
 
-    preread_ifgs = _create_ifg_dict(ifg_paths, params=params, tiles=tiles)
-    # _mst_calc(ifg_paths, params, tiles, preread_ifgs)
+    preread_ifgs = _create_ifg_dict(ifg_paths, params=params)
 
+    # validate user supplied ref pixel
+    refpixel.validate_supplied_lat_lon(params)
     refpx, refpy = _ref_pixel_calc(ifg_paths, params)
-
-    log.debug("refpx, refpy: "+str(refpx) + " " + str(refpy))
 
     # remove non ifg keys
     _ = [preread_ifgs.pop(k) for k in ['gt', 'epochlist', 'md', 'wkt']]
 
-    _orb_fit_calc(ifg_paths, params, preread_ifgs)
+    multi_paths = params[cf.INTERFEROGRAM_FILES]
+    _orb_fit_calc(multi_paths, params, preread_ifgs)
 
     _ref_phase_estimation(ifg_paths, params, refpx, refpy)
 
+    shared.save_numpy_phase(ifg_paths, tiles, params)
     _mst_calc(ifg_paths, params, tiles, preread_ifgs)
 
     # spatio-temporal aps filter
@@ -326,7 +343,7 @@ def _stack_calc(ifg_paths, params, vcmt, tiles, preread_ifgs):
         log.info('Stacking of tile {}'.format(t.index))
         ifg_parts = [shared.IfgPart(p, t, preread_ifgs, params) for p in ifg_paths]
         mst_grid_n = np.load(os.path.join(output_dir, 'mst_mat_{}.npy'.format(t.index)))
-        rate, error, samples = stack.stack_rate(ifg_parts, params, vcmt, mst_grid_n)
+        rate, error, samples = stack.stack_rate_array(ifg_parts, params, vcmt, mst_grid_n)
         # declare file names
         np.save(file=os.path.join(output_dir, 'stack_rate_{}.npy'.format(t.index)), arr=rate)
         np.save(file=os.path.join(output_dir, 'stack_error_{}.npy'.format(t.index)), arr=error)

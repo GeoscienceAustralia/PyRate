@@ -29,6 +29,7 @@ from pyrate.core.logger import pyratelogger as log
 
 MASTER_PROCESS = 0
 
+
 def est_ref_phase_method2(ifg_paths, params, refpx, refpy):
     """
     Reference phase estimation using method 2. Reference phase is the
@@ -61,8 +62,7 @@ def est_ref_phase_method2(ifg_paths, params, refpx, refpy):
         if params[cf.PARALLEL]:
             ref_phs = Parallel(n_jobs=params[cf.PROCESSES],
                                verbose=joblib_log_level(cf.LOG_LEVEL))(
-                delayed(_est_ref_phs_method2)(p, half_chip_size,
-                                              refpx, refpy, thresh)
+                delayed(_est_ref_phs_method2)(p, half_chip_size, refpx, refpy, thresh)
                 for p in phase_data)
 
             for n, ifg in enumerate(ifgs):
@@ -70,19 +70,19 @@ def est_ref_phase_method2(ifg_paths, params, refpx, refpy):
         else:
             ref_phs = np.zeros(len(ifgs))
             for n, ifg in enumerate(ifgs):
-                ref_phs[n] = \
-                    _est_ref_phs_method2(phase_data[n], half_chip_size,
-                                         refpx, refpy, thresh)
+                ref_phs[n] = _est_ref_phs_method2(phase_data[n], half_chip_size, refpx, refpy, thresh)
                 ifg.phase_data -= ref_phs[n]
 
         for ifg in ifgs:
             _update_phase_metadata(ifg)
             ifg.close()
+
         return ref_phs
     
     process_ifgs_paths = mpiops.array_split(ifg_paths)
     ref_phs = _inner(process_ifgs_paths)
     return ref_phs   
+
 
 def _est_ref_phs_method2(phase_data, half_chip_size, refpx, refpy, thresh):
     """
@@ -144,10 +144,9 @@ def est_ref_phase_method1(ifg_paths, params):
         comp = np.ravel(comp, order='F')
 
         if params[cf.PARALLEL]:
-            phase_data = [i.phase_data for i in proc_ifgs]
             log.info("Calculating ref phase using multiprocessing")
             ref_phs = Parallel(n_jobs=params[cf.PROCESSES], verbose=joblib_log_level(cf.LOG_LEVEL))(
-                delayed(_est_ref_phs_method1)(p, comp) for p in phase_data
+                delayed(_est_ref_phs_method1)(p.phase_data, comp) for p in proc_ifgs
             )
             for n, ifg in enumerate(proc_ifgs):
                 ifg.phase_data -= ref_phs[n]
@@ -183,6 +182,7 @@ def _est_ref_phs_method1(phase_data, comp):
 def _update_phase_metadata(ifg):
     ifg.meta_data[ifc.PYRATE_REF_PHASE] = ifc.REF_PHASE_REMOVED
     ifg.write_modified_phase()
+    log.debug(f"Reference phase corrected for {ifg.data_path}")
 
 
 class ReferencePhaseError(Exception):

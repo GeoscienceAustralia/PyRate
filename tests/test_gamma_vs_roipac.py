@@ -42,7 +42,7 @@ def test_files_are_same(tempdir, get_config):
     gamma_params = __workflow(gamma_params, gamma_tdir)
 
     # conv2tif output equal
-    __assert_same_files_produced(roipac_params[cf.OUT_DIR], gamma_params[cf.OUT_DIR], "*_unw.tif", 17)
+    __assert_same_files_produced(roipac_params[cf.OUT_DIR], gamma_params[cf.OUT_DIR], "*_unw_ifg.tif", 17)
 
     # prepifg output equal
     __assert_same_files_produced(roipac_params[cf.OUT_DIR], gamma_params[cf.OUT_DIR],
